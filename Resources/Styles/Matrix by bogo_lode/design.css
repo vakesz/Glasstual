@@ -250,7 +250,15 @@ body div[type=nick] .message:before {
   	margin-right: 3px;
 }
 
+/* Nickname Colors */
+
+body .inline_nickname { color: #21DB00; }
+
 /* mIRC Color Codes */
+
+/* DEVELOPERS DO NOT MODIFY ANY OF THE BELOW MENTIONED CSS ELEMENTS 
+ THESE ELEMENTS MUST BE PRESERVED TO MATCH STATIC DEFENITIONS IN THE
+ TEXTUAL SOURCE CODE. — DO NOT MODIFY OR DELETE! */
 
 .effect[color-number='0'] { color: #ffffff; }
 .effect[color-number='1'] { color: #000000; }
@@ -285,7 +293,3 @@ body div[type=nick] .message:before {
 .effect[bgcolor-number='13'] { background-color: #ff00ff; }
 .effect[bgcolor-number='14'] { background-color: #888888; }
 .effect[bgcolor-number='15'] { background-color: #cccccc; }
-
-/* Nickname Colors */
-
-body .inline_nickname { color: #21DB00; }
