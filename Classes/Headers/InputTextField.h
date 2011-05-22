@@ -2,11 +2,6 @@
 // You can redistribute it and/or modify it under the new BSD license.
 
 @interface InputTextField : TextField
-{
-	NSInteger oldHeight;
-}
-
-@property (nonatomic, readonly) NSInteger oldHeight;
 @end
 
 @interface InputTextFieldCell : NSTextFieldCell 
