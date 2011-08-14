@@ -4,8 +4,6 @@
 <dict>
 	<key>Nickname Format</key>
 	<string></string>
-	<key>Nickname Format Fixed Width</key>
-	<integer>0</integer>
 	<key>Override Channel Font</key>
 	<dict>
 		<key>Font Name</key>
@@ -15,7 +13,7 @@
 	</dict>
 	<key>Timestamp Format</key>
 	<string></string>
-	<key>Layout Engine Version</key>
-	<string>2.0</string>
+	<key>Indentation Offset</key>
+	<integer>6</integer>
 </dict>
 </plist>
