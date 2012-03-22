@@ -74,25 +74,22 @@ a:hover {
     top: 0;
     left: 0;
     right: 0;
-    color: #000;
     z-index: 400;
     opacity: 0.95;
+    color: #8E8E8E;
     position: fixed;
-    background: #CFD4DD;
     padding: 2px 0.5em 3px;
-    border-bottom: 1px solid #8387B6;
-    -webkit-box-shadow: 0 1px 5px #777;
-	text-shadow: 1px 1px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 1px 5px #777;
+    border-bottom: 1px solid #404040;
+	text-shadow: 1px 1px rgba(10, 10, 10, 0.7);
+	background: -webkit-linear-gradient(top, #0F0F0F 0%, #262626 100%);
 }
 
-#topic_bar a {
-    color: #00e;
-    border-color: #00e;
-}
-
-#topic_bar a:hover {
-    color: #0080FF;
-    border-color: #0080FF;
+#topic_bar a, 
+#topic_bar span.channel {
+    color: #8E8E8E;
+    border-color: #8E8E8E;
+	text-shadow: 1px 1px rgba(10, 10, 10, 0.7);
 }
 
 /* Images */
