@@ -71,4 +71,14 @@
 
 - (NSView *)preferencesView;
 - (NSString *)preferencesMenuItemName;
+
+/* Process user input before Textual does. */
+/* This command may be fed an NSAttributedString or NSString. If it is an
+ NSAttributedString it most likely contains user defined text formatting.
+ Honor that formatting. Do not turn an NSAttributedString into an NSString.
+
+ Return the type you are given and make sure you check the type you get to
+ make sure it is handled appropriately. Do not give us a clean NSString if
+ we handed you an NSAttributedString that contains formatting. */
+- (id)interceptUserInput:(id)input command:(NSString *)command;
 @end
