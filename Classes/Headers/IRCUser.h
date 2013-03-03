@@ -48,6 +48,7 @@
 @property (nonatomic, assign) BOOL o;
 @property (nonatomic, assign) BOOL h;
 @property (nonatomic, assign) BOOL v;
+@property (nonatomic, assign) BOOL isCop;
 
 - (NSString *)mark;
 
