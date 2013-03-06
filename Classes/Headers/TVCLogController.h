@@ -99,7 +99,4 @@ typedef id (^TVCLogMessageBlock)(void);
 - (void)executeScriptCommand:(NSString *)command withArguments:(NSArray *)args;
 
 - (void)handleMessageBlock:(id)messageBlock withContext:(NSDictionary *)context;
-
-- (void)enqueueMessageBlock:(id)messageBlock fromSender:(TVCLogController *)sender withContext:(NSDictionary *)context;
-- (void)enqueueMessageBlock:(id)messageBlock fromSender:(TVCLogController *)sender;
 @end
