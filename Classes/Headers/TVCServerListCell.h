@@ -56,8 +56,5 @@
 @end
 
 @interface TVCServerListCellItemTextField : NSTextFieldCell
-@property (nonatomic, assign) BOOL isSelected;        //       <------ Information defined by parent cell for badge drawing.
-@property (nonatomic, assign) BOOL isKeyWindow;       //       <-----/
-@property (nonatomic, assign) BOOL drawMessageCountBadge;
-@property (nonatomic, nweak) IRCChannel *channelPointer; // Must be set to gather badge information.
+@property (nonatomic, strong) NSDictionary *drawContext; // Passed by parent for badge drawing.
 @end
