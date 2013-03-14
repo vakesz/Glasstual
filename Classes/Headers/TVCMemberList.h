@@ -73,6 +73,12 @@
 - (NSInteger)userMarkBadgeWidth;
 @end
 
+@interface TVCMemberListScrollClipView : NSClipView
+@end
+
+@interface TVCMemberListScrollView : NSScrollView
+@end
+
 @interface NSObject (TVCMemberListDelegate)
 - (void)memberListViewKeyDown:(NSEvent *)e;
 @end
