@@ -51,6 +51,13 @@
 
 - (NSColor *)selectedCellTextColor;
 
+- (NSColor *)userMarkBadgeBackgroundColor_YDefault;
+- (NSColor *)userMarkBadgeBackgroundColor_ADefault;
+- (NSColor *)userMarkBadgeBackgroundColor_HDefault;
+- (NSColor *)userMarkBadgeBackgroundColor_ODefault;
+- (NSColor *)userMarkBadgeBackgroundColor_QDefault;
+- (NSColor *)userMarkBadgeBackgroundColor_VDefault;
+
 - (NSColor *)userMarkBadgeBackgroundColor_Y;
 - (NSColor *)userMarkBadgeBackgroundColor_A;
 - (NSColor *)userMarkBadgeBackgroundColor_H;
