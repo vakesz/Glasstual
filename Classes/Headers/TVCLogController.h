@@ -52,10 +52,11 @@
 @property (nonatomic, strong) NSString *lastVisitedHighlight;
 @property (nonatomic, strong) NSMutableArray *highlightedLineNumbers;
 
-/* These two properties are VERY important to be in sync accross 
+/* These three properties are VERY important to be in sync accross 
  multiple threads. Therefore, these are not delcared nonatomic. */
 @property (assign) BOOL reloadingBacklog;
 @property (assign) BOOL reloadingHistory;
+@property (strong) NSMutableArray *pendingPrintOperations; // Plugins… do not try and modify this array. EVER!
 
 - (void)setUp;
 - (void)notifyDidBecomeVisible;
@@ -93,5 +94,6 @@
 
 - (void)logViewOnDoubleClick:(NSString *)e;
 
-- (void)executeScriptCommand:(NSString *)command withArguments:(NSArray *)args;
+- (void)executeScriptCommand:(NSString *)command withArguments:(NSArray *)args; // Defaults to onQueue YES
+- (void)executeScriptCommand:(NSString *)command withArguments:(NSArray *)args onQueue:(BOOL)onQueue;
 @end
