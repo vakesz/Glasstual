@@ -38,6 +38,8 @@
 
 #import "TextualApplication.h"
 
+/* This is the class used for logging to text in Textual… */
+
 #define TLOFileLoggerConsoleDirectoryName				@"Console"
 #define TLOFileLoggerChannelDirectoryName				@"Channels"
 #define TLOFileLoggerPrivateMessageDirectoryName		@"Queries"
@@ -45,11 +47,7 @@
 @interface TLOFileLogger : NSObject
 @property (nonatomic, nweak) IRCClient *client;
 @property (nonatomic, nweak) IRCChannel *channel;
-@property (nonatomic, assign) BOOL writePlainText; // Plain text or property list.
-@property (nonatomic, assign) BOOL flatFileStructure; // Flat directory structure.
-@property (nonatomic, assign) NSInteger maxEntryCount; // Only used if (writePlainText == NO)
 @property (nonatomic, strong) NSString *filename;
-@property (nonatomic, strong) NSString *filenameOverride;
 @property (nonatomic, strong) NSString *fileWritePath;
 @property (nonatomic, strong) NSFileHandle *file;
 
@@ -58,17 +56,7 @@
 - (void)reset;
 - (void)reopenIfNeeded;
 
-- (void)updateCache; // Force update property list cache.
-
-// Data read is pretty hit-or-miss for plain text logging.
-// This class is designed to be used internally by Textual.
-// It is not recommended to try using it inside a plugin.
-- (id)data; // Types: (NSData			writePlainText == YES),
-			//		  (NSDictionary		writePlainText == NO)
-			//			or nil
-
 - (NSString *)buildPath;
 
 - (void)writePlainTextLine:(NSString *)s;
-- (void)writePropertyListEntry:(NSDictionary *)s toKey:(NSString *)key;
 @end
