@@ -43,4 +43,7 @@
 @property (nonatomic, assign) NSInteger x;
 @property (nonatomic, assign) NSInteger y;
 @property (nonatomic, assign) NSTimeInterval lastClickTime;
+
+/* Used internally to toggle inline image state. */
+- (NSString *)toggleInlineImage:(NSString *)object withKeyCheck:(BOOL)checkShiftKey;
 @end
