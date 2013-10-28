@@ -37,8 +37,15 @@
 
 #import "TextualApplication.h"
 
+#define TPCPreferencesImportExportVersionKeyName		@"Dictionary Version"
+#define TPCPreferencesImportExportVersionKeyValue		@"2.0"
+
 /* Absolutely no plugin should call this class. */
 @interface TPCPreferencesImportExport : NSObject
 + (void)import;
 + (void)export;
+
+/* For iCloud purposes. */
++ (void)importContentsOfDictionary:(NSDictionary *)aDict;
++ (NSDictionary *)exportedPreferencesDictionaryRepresentation;
 @end
