@@ -60,7 +60,7 @@ typedef enum TLOPopupPromptReturnType : NSInteger {
 + (NSString *)suppressionKeyWithBase:(NSString *)base;
 
 /* Alerts. */
-+ (void)popupPromptNilSelector:(TLOPopupPromptReturnType)returnCode;
++ (void)popupPromptNilSelector:(TLOPopupPromptReturnType)returnCode withOriginalAlert:(NSAlert *)originalAlert;
 
 + (BOOL)dialogWindowWithQuestion:(NSString *)bodyText
 						   title:(NSString *)titleText
