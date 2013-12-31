@@ -50,6 +50,7 @@
 @property (nonatomic, nweak) IBOutlet NSButton *ignorePrivateMessagesCheck;
 @property (nonatomic, nweak) IBOutlet NSButton *ignorePublicHighlightsCheck;
 @property (nonatomic, nweak) IBOutlet NSButton *ignorePublicMessagesCheck;
+@property (nonatomic, nweak) IBOutlet NSButton *ignoreFileTransferRequestsCheck;
 @property (nonatomic, nweak) IBOutlet NSButton *notifyJoinsCheck;
 @property (nonatomic, nweak) IBOutlet NSTextField *hostmaskField;
 @property (nonatomic, nweak) IBOutlet NSTextField *nicknameField;
