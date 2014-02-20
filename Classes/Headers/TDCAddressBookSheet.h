@@ -1,4 +1,4 @@
-/* ********************************************************************* 
+/* *********************************************************************
        _____        _               _    ___ ____   ____
       |_   _|___  _| |_ _   _  __ _| |  |_ _|  _ \ / ___|
        | |/ _ \ \/ / __| | | |/ _` | |   | || |_) | |
@@ -52,8 +52,10 @@
 @property (nonatomic, nweak) IBOutlet NSButton *ignorePublicMessagesCheck;
 @property (nonatomic, nweak) IBOutlet NSButton *ignoreFileTransferRequestsCheck;
 @property (nonatomic, nweak) IBOutlet NSButton *notifyJoinsCheck;
-@property (nonatomic, nweak) IBOutlet NSTextField *hostmaskField;
-@property (nonatomic, nweak) IBOutlet NSTextField *nicknameField;
+@property (nonatomic, nweak) IBOutlet NSButton *ignoreEntrySaveButton;
+@property (nonatomic, nweak) IBOutlet NSButton *userTrackingEntrySaveButton;
+@property (nonatomic, nweak) IBOutlet TVCTextFieldWithValueValidation *ignoreEntryHostmaskField;
+@property (nonatomic, nweak) IBOutlet TVCTextFieldWithValueValidation *userTrackingEntryNicknameField;
 @property (nonatomic, strong) IBOutlet NSWindow *ignoreView;
 @property (nonatomic, strong) IBOutlet NSWindow *notifyView;
 
