@@ -43,111 +43,10 @@
 @property (nonatomic, assign) BOOL cachedValidValue;
 @end
 
-@interface TVCTextFieldComboBoxWithValueValidation ()
-/* Maintain cached value so that the drawing does not call
- the validaton block every time that it is called. */
-@property (nonatomic, assign) BOOL cachedValidValue;
-@end
-
 @implementation TVCTextFieldWithValueValidation
 
 #pragma mark -
 #pragma mark Public API (Normal Text Field)
-
-- (NSString *)value
-{
-	NSString *stringValue = nil;
-	
-	if (self.stringValueUsesOnlyFirstToken) {
-		stringValue = [self firstTokenStringValue];
-	} else {
-		stringValue = [self stringValue];
-		
-		if (self.stringValueIsTrimmed) {
-			stringValue = [stringValue trim];
-		}
-	}
-	
-	return stringValue;
-}
-
-- (NSString *)lowercaseValue
-{
-	return [[self value] lowercaseString];
-}
-
-- (NSString *)uppercaseValue
-{
-	return [[self value] uppercaseString];
-}
-
-- (NSInteger)integerValue
-{
-	return [[self value] integerValue];
-}
-
-- (BOOL)valueIsEmpty
-{
-	return NSObjectIsEmpty([self value]);
-}
-
-- (BOOL)valueIsValid
-{
-	return self.cachedValidValue;
-}
-
-#pragma mark -
-#pragma mark Interval Validation
-
-- (void)textDidChange:(NSNotification *)notification
-{
-	/* Validate new value. */
-	[self performValidation];
-	
-	[self informCallbackTextDidChange];
-}
-
-- (void)setStringValue:(NSString *)aString
-{
-	/* Set string value. */
-	[super setStringValue:aString];
-	
-	/* Validate new value. */
-	[self performValidation];
-	
-	[self informCallbackTextDidChange];
-}
-
-- (void)informCallbackTextDidChange
-{
-	if (self.textDidChangeCallback) {
-		if ([self.textDidChangeCallback respondsToSelector:@selector(validatedTextFieldTextDidChange:)]) {
-			[self.textDidChangeCallback performSelector:@selector(validatedTextFieldTextDidChange:) withObject:self];
-		}
-	}
-}
-
-- (void)performValidation
-{
-	if ([self valueIsEmpty] == NO) {
-		if (self.validationBlock) {
-			self.cachedValidValue = self.validationBlock([self stringValue]);
-		} else {
-			self.cachedValidValue = YES;
-		}
-	} else {
-		self.cachedValidValue = (self.stringValueIsInvalidOnEmpty == NO);
-	}
-	
-	[self setNeedsDisplay:YES];
-}
-
-@end
-
-@implementation TVCTextFieldComboBoxWithValueValidation
-
-#pragma mark -
-#pragma mark Public API (Combo Box Text Field)
 
 - (NSString *)value
 {
@@ -369,11 +268,6 @@
 - (BOOL)onlyShowStatusIfErrorOccurs
 {
 	return [[self parentField] onlyShowStatusIfErrorOccurs];
-}
-
-- (BOOL)parentIsComboBox
-{
-	return [[self parentField] isKindOfClass:[TVCTextFieldComboBoxWithValueValidation class]];
 }
 
 @end
