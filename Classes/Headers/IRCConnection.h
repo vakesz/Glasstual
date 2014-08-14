@@ -59,14 +59,7 @@
 @property (nonatomic, copy) NSString *proxyUsername;
 @property (nonatomic, assign) NSInteger proxyPort;
 @property (nonatomic, assign) NSInteger proxySocksVersion;
-
-/* These should be considered readonly. */
-/* Trying to modify/access them directly with a plugin will result in a bad time. */
-@property (nonatomic, assign) BOOL isConnectedWithClientSideCertificate;
-@property (nonatomic, strong) dispatch_queue_t dispatchQueue;
-@property (nonatomic, strong) dispatch_queue_t socketQueue;
-@property (nonatomic, copy) NSData *bufferOverflowString;
-@property (nonatomic, strong) id socketConnection;
+@property (nonatomic, assign) BOOL isConnectedWithClientSideCertificate; // Consider this readonly
 
 - (void)open;
 - (void)close;
