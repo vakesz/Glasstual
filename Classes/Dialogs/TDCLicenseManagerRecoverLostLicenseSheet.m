@@ -76,10 +76,10 @@
 
 - (void)ok:(id)sender
 {
-	if ([self.delegate respondsToSelector:@selector(licenseManagerRecoverLostLicense:onOk:)]) {
+	if ([self.delegate respondsToSelector:@selector(licenseManagerRecoverLostLicenseSheet:onOk:)]) {
 		NSString *contactAddress = [self.contactAddressTextField value];
 
-		[self.delegate licenseManagerRecoverLostLicense:self onOk:contactAddress];
+		[self.delegate licenseManagerRecoverLostLicenseSheet:self onOk:contactAddress];
 	}
 
 	[super ok:sender];
