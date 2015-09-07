@@ -39,9 +39,9 @@
 #import "TextualApplication.h"
 
 @interface IRCMessage : NSObject
-@property (nonatomic, assign) NSInteger numericReply;
 @property (nonatomic, copy) IRCPrefix *sender;
 @property (nonatomic, copy) NSString *command;
+@property (nonatomic, assign) NSInteger commandNumeric;
 @property (nonatomic, copy) NSArray *params;
 @property (nonatomic, copy) NSDate *receivedAt;
 @property (nonatomic, assign) BOOL isPrintOnlyMessage; /* The message should be parsed and passed to print: but special actions such as adding/removing user from member list should be ignored. */
