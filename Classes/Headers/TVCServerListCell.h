@@ -61,12 +61,3 @@
 @interface TVCServerListRowCell : NSTableRowView
 @property (nonatomic, assign) BOOL isGroupItem;
 @end
-
-@interface TVCServerListCellMavericksTextField : NSTextField
-@end
-
-@interface TVCServerListCellMavericksTextFieldBackingLayer : CALayer
-@end
-
-@interface TVCServerListCellYosemiteTextFieldInterior : NSTextFieldCell
-@end
