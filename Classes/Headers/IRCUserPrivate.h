@@ -37,6 +37,10 @@
 
 @interface IRCUserNicknameColorStyleGenerator : NSObject
 + (NSString *)nicknameColorStyleForString:(NSString *)inputString;
++ (NSString *)nicknameColorStyleForString:(NSString *)inputString isOverride:(BOOL *)isOverride;
 
 + (NSNumber *)hashForString:(NSString *)inputString colorStyle:(TPCThemeSettingsNicknameColorStyle)colorStyle;
+
++ (NSColor *)nicknameColorStyleOverrideForKey:(NSString *)styleKey;
++ (void)setNicknameColorStyleOverride:(NSColor *)styleValue forKey:(NSString *)styleKey;
 @end
