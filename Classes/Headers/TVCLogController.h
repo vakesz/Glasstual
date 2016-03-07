@@ -42,16 +42,10 @@
 
 TEXTUAL_EXTERN NSString * const TVCLogControllerViewFinishedLoadingNotification;
 
-#ifdef TXSystemIsOSXElCapitanOrLater
-@interface TVCLogController : NSObject <TVCLogViewDelegate, TVCImageURLoaderDelegate, WebFrameLoadDelegate, WebResourceLoadDelegate>
-#else
 @interface TVCLogController : NSObject <TVCLogViewDelegate, TVCImageURLoaderDelegate>
-#endif
-
 @property (nonatomic, weak) IRCClient *associatedClient;
 @property (nonatomic, weak) IRCChannel *associatedChannel;
-@property (nonatomic, strong) TVCLogView *webView;
-@property (nonatomic, strong) TVCLogPolicy *webViewPolicy;
+@property (nonatomic, strong) TVCLogView *backingView;
 @property (nonatomic, assign) BOOL isLoaded;
 @property (nonatomic, assign) BOOL viewIsEncrypted;
 @property (nonatomic, assign) NSInteger maximumLineCount;
