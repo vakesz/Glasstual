@@ -37,6 +37,7 @@
 
 #import "TextualApplication.h"
 
+#import "TVCLogViewInternalWK1.h"
 #import "TVCLogViewInternalWK2.h"
 
 @interface TVCLogController ()
