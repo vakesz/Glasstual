@@ -56,6 +56,15 @@ Textual.notifyDidBecomeHidden = function()
 	Textual.clearSelection();
 };
 
+Textual.notifySelectionChanged = function(isSelected)
+{
+	if (isSelected) {
+		Textual.setTopicBarVisible(true);
+	} else {
+		Textual.setTopicBarVisible(false);
+	}
+};
+
 /* Events */
 Textual.mouseUpEventCallback = function()
 {
