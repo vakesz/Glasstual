@@ -49,13 +49,13 @@ typedef NS_ENUM(NSUInteger, TPCThemeSettingsNicknameColorStyle) {
 };
 
 @interface TPCThemeSettings : NSObject
-@property (readonly) BOOL forceInvertSidebarColors;
+@property (readonly) BOOL invertSidebarColors;
 @property (readonly) BOOL js_postHandleEventNotifications;
 @property (readonly) BOOL js_postPreferencesDidChangesNotifications;
 @property (readonly) BOOL usesIncompatibleTemplateEngineVersion;
-@property (readonly, copy) NSFont *channelViewFont;
-@property (readonly, copy) NSString *nicknameFormat;
-@property (readonly, copy) NSString *timestampFormat;
+@property (readonly, copy) NSFont *themeChannelViewFont;
+@property (readonly, copy) NSString *themeNicknameFormat;
+@property (readonly, copy) NSString *themeTimestampFormat;
 @property (readonly, copy) NSString *settingsKeyValueStoreName;
 @property (readonly, copy) NSColor *underlyingWindowColor;
 @property (readonly) double indentationOffset;
