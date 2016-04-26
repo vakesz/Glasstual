@@ -63,10 +63,6 @@ typedef NS_ENUM(NSUInteger, TPCThemeSettingsNicknameColorStyle) {
 @property (readonly) double indentationOffset;
 @property (readonly) TPCThemeSettingsNicknameColorStyle nicknameColorStyle;
 
-- (void)reloadWithPath:(NSString *)path;
-
-- (NSString *)templateNameWithLineType:(TVCLogLineType)type;
-
 - (nullable id)styleSettingsRetrieveValueForKey:(NSString *)key error:(NSString * _Nullable * _Nullable)resultError;
 - (BOOL)styleSettingsSetValue:(nullable id)objectValue forKey:(NSString *)objectKey error:(NSString * _Nullable * _Nullable)resultError;
 
