@@ -52,10 +52,6 @@ TEXTUAL_EXTERN NSString * const TPCPreferencesUserDefaultsDidChangeNotification;
 @interface TPCPreferencesUserDefaults : NSUserDefaults
 + (TPCPreferencesUserDefaults *)sharedUserDefaults;
 
-- (void)setColor:(nullable NSColor *)color forKey:(NSString *)defaultName;
-
-- (nullable NSColor *)colorForKey:(NSString *)defaultName;
-
 + (BOOL)keyIsExcludedFromBeingExported:(NSString *)key;
 @end
 
