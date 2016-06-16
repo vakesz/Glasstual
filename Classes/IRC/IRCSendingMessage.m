@@ -36,25 +36,30 @@
 
  *********************************************************************** */
 
-#import "TextualApplication.h"
+NS_ASSUME_NONNULL_BEGIN
 
 @implementation IRCSendingMessage
 
-+ (NSString *)stringWithCommand:(NSString *)command arguments:(NSArray *)argList
++ (NSString *)stringWithCommand:(NSString *)command arguments:(nullable NSArray<NSString *> *)arguments
 {
-	NSMutableString *builtString = [NSMutableString string];
+	NSParameterAssert(command != nil);
 
-	[builtString appendString:[command uppercaseString]];
+	NSString *commandUppercase = command.uppercaseString;
 
-	NSObjectIsEmptyAssertReturn(argList, builtString);
+	if (arguments.count == 0) {
+		return commandUppercase;
+	}
+
+	NSMutableString *builtString = [NSMutableString stringWithString:commandUppercase];
 
 	NSInteger colonIndexBase = [IRCCommandIndex colonIndexForCommand:command];
+
 	NSInteger colonIndexCount = 0;
 
-	for (NSString *param in argList) {
+	for (NSString *argument in arguments) {
 		[builtString appendString:NSStringWhitespacePlaceholder];
 
-		if (colonIndexBase == -1) {
+		if (colonIndexBase == (-1)) {
 			// Guess where the colon (:) should go.
 			//
 			// A colon is supposed to represent a section of an outgoing command
@@ -62,23 +67,25 @@
 			// is in the formoat "PRIVMSG #channel :long message" — The message
 			// will have spaces part of it, so we inform the server.
 			
-			if (colonIndexCount == ([argList count] - 1) && ([param hasPrefix:@":"] || [param contains:NSStringWhitespacePlaceholder])) {
+			if (colonIndexCount == (arguments.count - 1) && ([argument hasPrefix:@":"] || [argument contains:NSStringWhitespacePlaceholder])) {
 				[builtString appendString:@":"];
 			}
 		} else {
-			// We know where it goes thanks to the command index.
-			
+			// We know where it goes thanks to the command index
+
 			if (colonIndexCount == colonIndexBase) {
 				[builtString appendString:@":"];
 			}
 		}
 
-		[builtString appendString:param];
+		[builtString appendString:argument];
 
 		colonIndexCount += 1;
 	}
 
-	return builtString;
+	return builtString.copy;
 }
 
 @end
+
+NS_ASSUME_NONNULL_END
