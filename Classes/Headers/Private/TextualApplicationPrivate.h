@@ -35,6 +35,8 @@
 
  *********************************************************************** */
 
+@class TVCLogControllerOperationQueue;
+
 #import "BuildConfig.h"
 
 #import "TextualApplication.h"
@@ -43,6 +45,7 @@
 #import "GCDAsyncSocketExtensions.h"
 #import "IRCConnectionPrivate.h"
 #import "IRCHighlightLogEntryPrivate.h"
+#import "IRCTreeItemPrivate.h"
 #import "IRCUserPrivate.h"
 #import "IRCWorldPrivate.h"
 #import "IRCWorldPrivateCloudExtension.h"
