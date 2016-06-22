@@ -37,15 +37,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NSView (TXViewHelper)
+@interface NSView (TXViewHelperPrivate)
 /* If this view is attached to an instance of TXMainWindow,
  then this returns the instance its attached to. */
 @property (readonly, nullable) TVCMainWindow *mainWindow;
-
-- (void)attachSubview:(NSView *)subview adjustedWidthConstraint:(NSLayoutConstraint *)parentViewWidthConstraint adjustedHeightConstraint:(NSLayoutConstraint *)parentViewHeightConstraint;
 @end
 
-@interface NSCell (TXCellHelper)
+@interface NSCell (TXCellHelperPrivate)
 @property (readonly, nullable) TVCMainWindow *mainWindow;
 @end
 
