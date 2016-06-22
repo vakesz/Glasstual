@@ -63,7 +63,7 @@ Textual.notifySelectionChanged = function(isSelected)
 	Textual.setDocumentBodyPointerEventsEnabled(isSelected);
 };
 
-Textual.viewFinishedLoadingInt = function(isVisible, isSelected, isReloadingBacklog, textSizeMultiplier)
+Textual.viewFinishedLoadingInt = function(isSelected, isVisible, isReloadingBacklog, textSizeMultiplier)
 {
 	if (isVisible) {
 		Textual.notifyDidBecomeVisible();
