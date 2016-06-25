@@ -38,27 +38,24 @@
 
 #import "TextualApplication.h"
 
-#if TEXTUAL_BUILT_WITH_HOCKEYAPP_SDK_ENABLED == 1
-@interface TXMasterController : NSObject <NSApplicationDelegate, BITHockeyManagerDelegate>
-#else
-@interface TXMasterController : NSObject <NSApplicationDelegate>
-#endif
+NS_ASSUME_NONNULL_BEGIN
 
-@property (nonatomic, strong) IRCWorld *world;
-@property (nonatomic, assign) BOOL ghostModeIsOn;
-@property (nonatomic, assign) BOOL debugModeIsOn;
+@interface TXMasterController : NSObject
+@property (readonly) BOOL debugModeIsOn;
+@property (readonly) BOOL ghostModeIsOn;
+
+@property (readonly) BOOL applicationIsActive;
+@property (readonly) BOOL applicationIsChangingActiveState;
+
+@property (readonly) BOOL applicationIsTerminating;
+
+@property (readonly) IRCWorld *world;
+
+@property (readonly) TVCMainWindow *mainWindow;
+
+@property (readonly, weak) TXMenuController *menuController;
+
 @property (nonatomic, assign) BOOL skipTerminateSave;
-@property (nonatomic, assign) BOOL applicationIsActive;
-@property (nonatomic, assign) BOOL applicationIsTerminating;
-@property (nonatomic, assign) BOOL applicationIsChangingActiveState;
-@property (nonatomic, assign) NSInteger terminatingClientCount;
-@property (nonatomic, strong) IBOutlet TVCMainWindow *mainWindow;
-@property (nonatomic, weak) IBOutlet TXMenuController *menuController;
-@property (nonatomic, strong) NSCache *sharedApplicationCacheObject;
-
-/* Both wake cycle methods are invoked by TVCMainWindow -awakeFromNib */
-- (void)performAwakeningBeforeMainWindowDidLoad;
-- (void)performAwakeningAfterMainWindowDidLoad;
-
-- (void)prepareThirdPartyServiceSparkleFramework;
 @end
+
+NS_ASSUME_NONNULL_END
