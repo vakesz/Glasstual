@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSColor *)whiteInputTextFieldOutsideBottomPrimaryGrayShadowColorWithRetina;
 + (NSColor *)whiteInputTextFieldOutsideBottomSecondaryGrayShadowColorWithRetina;
 
-+ (NSColor *)whiteInputTextFieldOutsideBottomGrayShadowColorWithoutRetina;
++ (NSColor *)whiteInputTextFieldOutsideBottomPrimaryGrayShadowColorWithoutRetina;
 
 + (NSColor *)writersProTextFieldCursorPinkColor;
 + (NSColor *)writersProTextFieldCursorBlueColor;
