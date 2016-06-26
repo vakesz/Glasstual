@@ -6,7 +6,7 @@
                    |_|\___/_/\_\\__|\__,_|\__,_|_|
 
  Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- Copyright (c) 2010 - 2015 Codeux Software, LLC & respective contributors.
+ Copyright (c) 2010 - 2016 Codeux Software, LLC & respective contributors.
         Please see Acknowledgements.pdf for additional information.
 
  Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 
 #import "TextualApplication.h"
 
-#import <Growl/Growl.h>
+NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, TXNotificationType) {
 	TXNotificationHighlightType							= 1000,
@@ -59,23 +59,10 @@ typedef NS_ENUM(NSUInteger, TXNotificationType) {
 	TXNotificationFileTransferReceiveRequestedType		= 1015,
 };
 
-TEXTUAL_EXTERN NSString * const TXNotificationDialogStandardNicknameFormat;
-TEXTUAL_EXTERN NSString * const TXNotificationDialogActionNicknameFormat;
-
-TEXTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardActionFormat;
-TEXTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardMessageFormat;
-TEXTUAL_EXTERN NSString * const TXNotificationHighlightLogAlternativeActionFormat;
-
-@interface TLOGrowlController : NSObject <GrowlApplicationBridgeDelegate, NSUserNotificationCenterDelegate>
+@interface TLOGrowlController : NSObject
 @property (nonatomic, assign) BOOL areNotificationsDisabled;
-@property (nonatomic, assign) BOOL areNotificationSoundsDisabled;
 
 - (NSString *)titleForEvent:(TXNotificationType)event;
-
-- (void)notify:(TXNotificationType)eventType
-		 title:(NSString *)eventTitle
-   description:(NSString *)eventDescription
-	  userInfo:(NSDictionary *)eventContext;
-
-- (void)dismissNotificationsInNotificationCenterForClient:(IRCClient *)client channel:(IRCChannel *)channel;
 @end
+
+NS_ASSUME_NONNULL_END
