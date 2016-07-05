@@ -37,20 +37,22 @@
 
 #import "TextualApplication.h"
 
-/* Command index. */
-TEXTUAL_EXTERN NSString *IRCPrivateCommandIndex(const char *key);
-TEXTUAL_EXTERN NSString *IRCPublicCommandIndex(const char *key);
+NS_ASSUME_NONNULL_BEGIN
 
-/* Controlling class. */
+/* Command index */
+TEXTUAL_EXTERN NSString * _Nullable IRCPrivateCommandIndex(const char *indexKey);
+TEXTUAL_EXTERN NSString * _Nullable IRCPublicCommandIndex(const char *indexKey);
+
+/* Controlling class */
 @interface IRCCommandIndex : NSObject
-+ (void)populateCommandIndex;
++ (NSArray<NSString *> *)publicIRCCommandList;
 
-+ (NSArray *)publicIRCCommandList;
++ (NSUInteger)indexOfIRCommand:(NSString *)command;
++ (NSUInteger)indexOfIRCommand:(NSString *)command publicSearch:(BOOL)publicSearch;
 
-+ (NSInteger)indexOfIRCommand:(NSString *)command;
-+ (NSInteger)indexOfIRCommand:(NSString *)command publicSearch:(BOOL)isPublic;
++ (NSDictionary<NSString *, NSDictionary *> *)IRCCommandIndex:(BOOL)publicIndex;
 
-+ (NSDictionary *)IRCCommandIndex:(BOOL)isPublic;
-
-+ (NSInteger)colonIndexForCommand:(NSString *)command;
++ (NSUInteger)colonIndexForCommand:(NSString *)command;
 @end
+
+NS_ASSUME_NONNULL_END
