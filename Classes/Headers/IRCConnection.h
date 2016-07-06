@@ -38,30 +38,18 @@
 
 #import "TextualApplication.h"
 
-#import "IRCClientConfig.h"
+NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCConnection : NSObject
-@property (nonatomic, weak) IRCClient *associatedClient;
-@property (nonatomic, strong) TLOTimer *floodTimer;
+@property (readonly, strong) IRCClient *cilent;
+@property (readonly, copy) IRCConnectionConfig *config;
 @property (readonly) BOOL isConnected;
-@property (readonly) BOOL isConnecting;
-@property (readonly) BOOL isSending;
-@property (readonly) BOOL isSecured;
 @property (readonly) BOOL isConnectedWithClientSideCertificate;
-@property (nonatomic, assign) BOOL connectionPrefersIPv4;
-@property (nonatomic, assign) BOOL connectionPrefersModernCiphers;
-@property (nonatomic, assign) BOOL connectionPrefersSecuredConnection;
-@property (nonatomic, assign) BOOL connectionShouldValidateCertificateChain;
-@property (nonatomic, copy) NSData *identityClientSideCertificate;
-@property (nonatomic, assign) NSInteger floodControlDelayInterval;
-@property (nonatomic, assign) NSInteger floodControlMaximumMessageCount;
-@property (nonatomic, copy) NSString *serverAddress;
-@property (nonatomic, assign) NSInteger serverPort;
-@property (nonatomic, copy) NSString *proxyAddress;
-@property (nonatomic, copy) NSString *proxyPassword;
-@property (nonatomic, copy) NSString *proxyUsername;
-@property (nonatomic, assign) NSInteger proxyPort;
-@property (nonatomic, assign) IRCConnectionSocketProxyType proxyType;
+@property (readonly) BOOL isConnecting;
+@property (readonly) BOOL isSecured;
+@property (readonly) BOOL isSending;
+
+- (instancetype)initWithConfig:(IRCConnectionConfig *)config onClient:(IRCClient *)client NS_DESIGNATED_INITIALIZER;
 
 - (void)open;
 - (void)close;
@@ -69,20 +57,19 @@
 - (void)sendLine:(NSString *)line;
 
 - (void)clearSendQueue;
-
-- (NSString *)convertFromCommonEncoding:(NSData *)data;
-- (NSData *)convertToCommonEncoding:(NSString *)data;
 @end
 
 @protocol IRCConnectionDelegate <NSObject>
 @required
 
 - (void)ircConnectionDidConnect:(IRCConnection *)sender;
-- (void)ircConnectionWillConnectToProxy:(NSString *)proxyHost port:(NSInteger)proxyPort;
-- (void)ircConnectionDidDisconnect:(IRCConnection *)sender withError:(NSError *)distcError;
-- (void)ircConnectionDidError:(NSString *)error;
-- (void)ircConnectionDidReceive:(NSString *)data;
-- (void)ircConnectionWillSend:(NSString *)line;
-- (void)ircConnectionDidSecureConnection;
-- (void)ircConnectionDidReceivedAnInsecureCertificate;
+- (void)ircConnection:(IRCConnection *)sender willConnectToProxy:(NSString *)proxyHost port:(uint16_t)proxyPort;
+- (void)ircConnection:(IRCConnection *)sender didDisconnectWithError:(nullable NSError *)disconnectError;
+- (void)ircConnection:(IRCConnection *)sender didError:(NSString *)error;
+- (void)ircConnection:(IRCConnection *)sender didReceiveData:(NSString *)data;
+- (void)ircConnection:(IRCConnection *)sender willSendData:(NSString *)data;
+- (void)ircConnectionDidSecureConnection:(IRCConnection *)sender;
+- (void)ircConnectionDidReceivedAnInsecureCertificate:(IRCConnection *)sender;
 @end
+
+NS_ASSUME_NONNULL_END
