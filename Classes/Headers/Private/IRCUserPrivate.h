@@ -35,12 +35,18 @@
 
  *********************************************************************** */
 
-@interface IRCUserNicknameColorStyleGenerator : NSObject
-+ (NSString *)nicknameColorStyleForString:(NSString *)inputString;
-+ (NSString *)nicknameColorStyleForString:(NSString *)inputString isOverride:(BOOL *)isOverride;
+NS_ASSUME_NONNULL_BEGIN
 
-+ (NSNumber *)hashForString:(NSString *)inputString colorStyle:(TPCThemeSettingsNicknameColorStyle)colorStyle;
+@interface IRCUser ()
+- (instancetype)initWithClient:(IRCClient *)client;
 
-+ (NSColor *)nicknameColorStyleOverrideForKey:(NSString *)styleKey;
-+ (void)setNicknameColorStyleOverride:(NSColor *)styleValue forKey:(NSString *)styleKey;
+- (void)conversation;
+- (void)incomingConversation;
+- (void)outgoingConversation;
+
+- (NSComparisonResult)compare:(id)other;
+
++ (NSComparator)nicknameLengthComparator;
 @end
+
+NS_ASSUME_NONNULL_END
