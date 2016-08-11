@@ -37,6 +37,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class IRCUserRelations;
+
 @interface IRCUser ()
 {
 @protected
@@ -44,12 +46,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_username;
 	NSString *_address;
 	NSString *_realName;
-	NSString *_modes;
 	BOOL _isAway;
-	BOOL _isCop;
-	double _incomingWeight;
-	double _outgoingWeight;
-	CFAbsoluteTime _lastWeightFade;
+	BOOL _isIRCop;
 
 @private
 	BOOL _objectInitialized;

@@ -6,7 +6,7 @@
                    |_|\___/_/\_\\__|\__,_|\__,_|_|
 
  Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- Copyright (c) 2010 - 2015 Codeux Software, LLC & respective contributors.
+ Copyright (c) 2010 - 2016 Codeux Software, LLC & respective contributors.
         Please see Acknowledgements.pdf for additional information.
 
  Redistribution and use in source and binary forms, with or without
@@ -38,17 +38,15 @@
 
 #import "TextualApplication.h"
 
-NS_ASSUME_NONNULL_BEGIN
+/* Each user on a server is allocated one instance of IRCUser. 
+ IRCUser is used to keep track of information related to the user. */
+/* There is ever only one instance of IRCUser kept track of by the
+ IRCClient class. It is possible to create a mutable copy of a user
+ to change properties, but those changes will not be recognized until
+ the modified user is given to IRCClient. IRCClient will then perform
+ the actions necessary to update all components depending on the user. */
 
-typedef NS_OPTIONS(NSUInteger, IRCUserRank) {
-	IRCUserNoRank				= 1 << 0,	// nothing
-	IRCUserIRCopByModeRank		= 1 << 1,	// +y/+Y
-	IRCUserChannelOwnerRank		= 1 << 2,	// +q
-	IRCUserSuperOperatorRank	= 1 << 3,	// +a
-	IRCUserNormalOperatorRank	= 1 << 4,	// +o
-	IRCUserHalfOperatorRank		= 1 << 5,	// +h
-	IRCUserVoicedRank			= 1 << 6	// +v
-};
+NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark -
 #pragma mark Immutable Object
@@ -60,36 +58,12 @@ typedef NS_OPTIONS(NSUInteger, IRCUserRank) {
 @property (readonly, copy, nullable) NSString *hostmask;
 @property (readonly, copy, nullable) NSString *realName;
 @property (readonly) BOOL isAway;
-@property (readonly) BOOL isCop;
-@property (readonly) double totalWeight;
-
-// Custom user modes are becoming more and more popular so it is better
-// to move away from hard coded booleans for these modes and instead use
-// -rank and -ranks for Textual to make an educated guess about where the
-// user stands based off what it knows so far.
-@property (readonly) BOOL q TEXTUAL_DEPRECATED("Use -rank or -ranks instead");
-@property (readonly) BOOL a TEXTUAL_DEPRECATED("Use -rank or -ranks instead");
-@property (readonly) BOOL o TEXTUAL_DEPRECATED("Use -rank or -ranks instead");
-@property (readonly) BOOL h TEXTUAL_DEPRECATED("Use -rank or -ranks instead");
-@property (readonly) BOOL v TEXTUAL_DEPRECATED("Use -rank or -ranks instead");
-
-@property (getter=isOp, readonly) BOOL op;
-@property (getter=isHalfOp, readonly) BOOL halfOp;
+@property (readonly) BOOL isIRCop;
 
 @property (readonly, copy) NSString *banMask;
 
 @property (readonly, copy) NSString *lowercaseNickname;
 @property (readonly, copy) NSString *uppercaseNickname;
-
-// -rank(s) returns IRCUserIRCopByModeRank if the +Y/+y modes defined
-// by InspIRCd-2.0 for IRC operators are in use by this user. It does not
-// return this if the user is an IRC operator, but lacks these modes.
-// Use -isCop for the status of the user regardless of these modes.
-@property (readonly) IRCUserRank rank; // Highest rank user has
-@property (readonly) IRCUserRank ranks; // All ranks user as a bitmask
-
-@property (readonly, copy) NSString *modes; // List of all user modes, ranked highest to lowest
-@property (readonly, copy) NSString *mark; // Returns mode symbol for highest rank (-modes)
 
 /* -presentAwayMessageFor301 keeps track of the last time raw numeric
  301 (away message) is recieved and will return YES if the message
@@ -110,9 +84,10 @@ typedef NS_OPTIONS(NSUInteger, IRCUserRank) {
 @property (nonatomic, copy, readwrite, nullable) NSString *username;
 @property (nonatomic, copy, readwrite, nullable) NSString *address;
 @property (nonatomic, copy, readwrite, nullable) NSString *realName;
-@property (nonatomic, copy, readwrite) NSString *modes;
 @property (nonatomic, assign, readwrite) BOOL isAway;
-@property (nonatomic, assign, readwrite) BOOL isCop;
+@property (nonatomic, assign, readwrite) BOOL isIRCop;
+
+- (instancetype)initWithClient:(IRCClient *)client;
 @end
 
 NS_ASSUME_NONNULL_END
