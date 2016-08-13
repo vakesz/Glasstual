@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCBuddyListDialog ()
 @property (nonatomic, weak) IBOutlet TDCBuddyListDialogDropView *dropView;
-@property (nonatomic, weak) IBOutlet NSOutlineView *buddyListTable;
+@property (nonatomic, weak) IBOutlet TVCBasicTableView *buddyListTable;
 @property (nonatomic, weak) IBOutlet NSArrayController *buddyListController;
 @property (nonatomic, weak) IBOutlet NSSegmentedControl *navigationController;
 @end
