@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface THOPluginDispatcher : NSObject
 + (dispatch_queue_t)dispatchQueue;
 
-+ (BOOL)receivedCommand:(NSString *)command withText:(nullable NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt;
++ (BOOL)receivedCommand:(NSString *)command withText:(nullable NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt referenceMessage:(nullable IRCMessage *)referenceMessage;
 + (BOOL)receivedText:(NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination asLineType:(TVCLogLineType)lineType onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt wasEncrypted:(BOOL)wasEncrypted;
 + (nullable IRCMessage *)interceptServerInput:(IRCMessage *)inputObject for:(IRCClient *)client;
 + (nullable id)interceptUserInput:(id)inputObject command:(IRCPrivateCommand)commandString;
