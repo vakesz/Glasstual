@@ -57,10 +57,8 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 
 /* Acts as easy access for internal relations object */
-@interface IRCUser (IRCUserRelations)
+@interface IRCUser (IRCUserRelationsPrivate)
 - (void)becamePrimaryUser;
-
-@property (readonly, copy) NSDictionary<IRCChannel *, IRCChannelUser *> *relations;
 
 - (void)associateUser:(IRCChannelUser *)user withChannel:(IRCChannel *)channel;
 - (void)disassociateUserWithChannel:(IRCChannel *)channel;
@@ -70,7 +68,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)enumerateRelations:(void (NS_NOESCAPE ^)(IRCChannel *channel, IRCChannelUser *member, BOOL *stop))block;
 @end
 
-@interface IRCChannelUser (IRCUserRelations)
+@interface IRCChannelUser (IRCUserRelationsPrivate)
 - (void)associateWithChannel:(IRCChannel *)channel;
 - (void)disassociateWithChannel:(IRCChannel *)channel;
 @end
