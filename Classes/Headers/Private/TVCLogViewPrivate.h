@@ -44,6 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, copy, readwrite, nullable) NSString *selection;
 
+@property (nonatomic, assign) BOOL viewingBottom;
+
 - (instancetype)initWithViewController:(TVCLogController *)viewController NS_DESIGNATED_INITIALIZER;
 
 - (void)informDelegateWebViewClosedUnexpectedly;
@@ -69,8 +71,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)findString:(NSString *)searchString movingForward:(BOOL)movingForward;
 
-- (void)webViewScrollAreaSizeChanged:(NSSize)newSize;
-- (void)scrollWebViewToLastSize;
+- (void)redrawViewIfNeeded;
+- (void)redrawView;
+
+- (void)restoreScrollerPosition;
 @end
 
 @interface TVCLogView (TVCLogViewJavaScriptHandlerPrivate)
