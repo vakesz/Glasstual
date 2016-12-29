@@ -53,7 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)fetchEntriesForChannel:(IRCChannel *)channell
 					fetchLimit:(NSUInteger)fetchLimit
 				   limitToDate:(nullable NSDate *)limitToDate
-		   withCompletionBlock:(void (^)(NSArray<TVCLogLineManaged *> *entries))completionBlock;
+		   withCompletionBlock:(void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
 @end
 
 NS_ASSUME_NONNULL_END
