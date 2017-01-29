@@ -55,7 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 				   limitToDate:(nullable NSDate *)limitToDate
 		   withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
 
-- (void)resizeDatabaseToConformToRowLimit:(NSUInteger)rowLimit;
+- (void)setMaximumLineCount:(NSUInteger)maximumLineCount;
 @end
 
 NS_ASSUME_NONNULL_END
