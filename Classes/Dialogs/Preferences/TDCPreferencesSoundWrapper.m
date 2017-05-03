@@ -38,40 +38,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TXEmptyAlertSoundPreferenceValue = @"None";
-
-@interface TDCPreferencesSoundWrapper ()
-@property (nonatomic, assign, readwrite) TXNotificationType eventType;
-@end
-
 @implementation TDCPreferencesSoundWrapper
-
-ClassWithDesignatedInitializerInitMethod
-
-- (instancetype)initWithEventType:(TXNotificationType)aEventType
-{
-	if ((self = [super init])) {
-		self.eventType = aEventType;
-		
-		return self;
-	}
-
-	return nil;
-}
 
 + (TDCPreferencesSoundWrapper *)soundWrapperWithEventType:(TXNotificationType)eventType
 {
-	return [[TDCPreferencesSoundWrapper alloc] initWithEventType:eventType];
-}
-
-+ (NSString *)localizedAlertEmptySoundTitle
-{
-	return TXTLS(@"TDCPreferencesController[1011]");
-}
-
-- (NSString *)displayName
-{
-	return [sharedGrowlController() titleForEvent:self.eventType];
+	return [[self alloc] initWithEventType:eventType];
 }
 
 - (NSString *)alertSound
@@ -79,23 +50,23 @@ ClassWithDesignatedInitializerInitMethod
 	NSString *sound = [TPCPreferences soundForEvent:self.eventType];
 
 	if (sound == nil) {
-		return [TDCPreferencesSoundWrapper localizedAlertEmptySoundTitle];
+		return [TLONotificationConfiguration localizedAlertEmptySoundTitle];
 	}
 
 	return sound;
 }
 
-- (void)setAlertSound:(NSString *)value
+- (void)setAlertSound:(NSString *)alertSound
 {
-	if ([value isEqualToString:[TDCPreferencesSoundWrapper localizedAlertEmptySoundTitle]]) { // Do not set the default, none label
-		value = TXEmptyAlertSoundPreferenceValue;
+	if ([alertSound isEqualToString:[TLONotificationConfiguration localizedAlertEmptySoundTitle]]) { // Do not set the default, none label
+		alertSound = TXEmptyAlertSoundPreferenceValue;
 	}
-	
-	if (value) {
-		[TLOSoundPlayer playAlertSound:value];
+
+	if (alertSound) {
+		[TLOSoundPlayer playAlertSound:alertSound];
 	}
-	
-	[TPCPreferences setSound:value forEvent:self.eventType];
+
+	[TPCPreferences setSound:alertSound forEvent:self.eventType];
 }
 
 - (BOOL)pushNotification
@@ -103,9 +74,9 @@ ClassWithDesignatedInitializerInitMethod
 	return [TPCPreferences growlEnabledForEvent:self.eventType];
 }
 
-- (void)setPushNotification:(BOOL)value
+- (void)setPushNotification:(BOOL)pushNotification
 {
-	[TPCPreferences setGrowlEnabled:value forEvent:self.eventType];
+	[TPCPreferences setGrowlEnabled:pushNotification forEvent:self.eventType];
 }
 
 - (BOOL)speakEvent
@@ -113,9 +84,9 @@ ClassWithDesignatedInitializerInitMethod
 	return [TPCPreferences speakEvent:self.eventType];
 }
 
-- (void)setSpeakEvent:(BOOL)value
+- (void)setSpeakEvent:(BOOL)speakEvent
 {
-	[TPCPreferences setEventIsSpoken:value forEvent:self.eventType];
+	[TPCPreferences setEventIsSpoken:speakEvent forEvent:self.eventType];
 }
 
 - (BOOL)disabledWhileAway
@@ -123,30 +94,31 @@ ClassWithDesignatedInitializerInitMethod
 	return [TPCPreferences disabledWhileAwayForEvent:self.eventType];
 }
 
-- (void)setDisabledWhileAway:(BOOL)value
+- (void)setDisabledWhileAway:(BOOL)disabledWhileAway
 {
-	[TPCPreferences setDisabledWhileAway:value forEvent:self.eventType];
+	[TPCPreferences setDisabledWhileAway:disabledWhileAway forEvent:self.eventType];
 }
 
 - (BOOL)bounceDockIcon
 {
-    return [TPCPreferences bounceDockIconForEvent:self.eventType];
+	return [TPCPreferences bounceDockIconForEvent:self.eventType];
 }
 
-- (void)setBounceDockIcon:(BOOL)value
+- (void)setBounceDockIcon:(BOOL)bounceDockIcon
 {
-    [TPCPreferences setBounceDockIcon:value forEvent:self.eventType];
+	[TPCPreferences setBounceDockIcon:bounceDockIcon forEvent:self.eventType];
 }
 
 - (BOOL)bounceDockIconRepeatedly
 {
-    return [TPCPreferences bounceDockIconRepeatedlyForEvent:self.eventType];
+	return [TPCPreferences bounceDockIconRepeatedlyForEvent:self.eventType];
 }
 
-- (void)setBounceDockIconRepeatedly:(BOOL)value
+- (void)setBounceDockIconRepeatedly:(BOOL)bounceDockIconRepeatedly
 {
-    [TPCPreferences setBounceDockIconRepeatedly:value forEvent:self.eventType];
+	[TPCPreferences setBounceDockIconRepeatedly:bounceDockIconRepeatedly forEvent:self.eventType];
 }
+
 
 @end
 

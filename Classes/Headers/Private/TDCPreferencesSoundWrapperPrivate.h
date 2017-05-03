@@ -36,25 +36,12 @@
 
  *********************************************************************** */
 
+#import "TLONotificationConfigurationPrivate.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-TEXTUAL_EXTERN NSString * const TXEmptyAlertSoundPreferenceValue;
-
-@interface TDCPreferencesSoundWrapper : NSObject
-@property (readonly) TXNotificationType eventType;
-@property (readonly, copy) NSString *displayName;
-@property (nonatomic, copy) NSString *alertSound;
-@property (nonatomic, assign) BOOL speakEvent;
-@property (nonatomic, assign) BOOL pushNotification;
-@property (nonatomic, assign) BOOL disabledWhileAway;
-@property (nonatomic, assign) BOOL bounceDockIcon;
-@property (nonatomic, assign) BOOL bounceDockIconRepeatedly;
-
-+ (NSString *)localizedAlertEmptySoundTitle;
-
+@interface TDCPreferencesSoundWrapper : TLONotificationConfiguration
 + (TDCPreferencesSoundWrapper *)soundWrapperWithEventType:(TXNotificationType)eventType;
-
-- (instancetype)initWithEventType:(TXNotificationType)aEventType NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END
