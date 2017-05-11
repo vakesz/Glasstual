@@ -58,14 +58,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setAlertSound:(NSString *)alertSound
 {
-	if ([alertSound isEqualToString:[TLONotificationConfiguration localizedAlertEmptySoundTitle]]) { // Do not set the default, none label
-		alertSound = TXEmptyAlertSoundPreferenceValue;
-	}
-
-	if (alertSound) {
-		[TLOSoundPlayer playAlertSound:alertSound];
-	}
-
 	[TPCPreferences setSound:alertSound forEvent:self.eventType];
 }
 
@@ -118,7 +110,6 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[TPCPreferences setBounceDockIconRepeatedly:bounceDockIconRepeatedly forEvent:self.eventType];
 }
-
 
 @end
 
