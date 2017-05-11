@@ -37,7 +37,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TXEmptyAlertSoundPreferenceValue = @"None";
+NSString * const TXDefaultAlertSoundPreferenceValue = @"Default";
+NSString * const TXNoAlertSoundPreferenceValue = @"None";
 
 @interface TLONotificationConfiguration ()
 @property (nonatomic, assign, readwrite) TXNotificationType eventType;
@@ -63,9 +64,14 @@ ClassWithDesignatedInitializerInitMethod
 	return [[self alloc] initWithEventType:eventType];
 }
 
-+ (NSString *)localizedAlertEmptySoundTitle
++ (NSString *)localizedAlertDefaultSoundTitle
 {
-	return TXTLS(@"TDCPreferencesController[1011]");
+	return TXTLS(@"TVCNotificationConfigurationView[1004]");
+}
+
++ (NSString *)localizedAlertNoSoundTitle
+{
+	return TXTLS(@"TVCNotificationConfigurationView[1003]");
 }
 
 - (NSString *)displayName
@@ -73,14 +79,14 @@ ClassWithDesignatedInitializerInitMethod
 	return [sharedGrowlController() titleForEvent:self.eventType];
 }
 
-- (NSString *)alertSound
+- (nullable NSString *)alertSound
 {
 	[self doesNotRecognizeSelector:_cmd];
 
 	return nil;
 }
 
-- (void)setAlertSound:(NSString *)alertSound
+- (void)setAlertSound:(nullable NSString *)alertSound
 {
 	[self doesNotRecognizeSelector:_cmd];
 }

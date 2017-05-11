@@ -43,6 +43,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL allowsMixedState; // Default: NO
 
 - (void)attachToView:(NSView *)view;
+
+- (void)reload;
 @end
 
 NS_ASSUME_NONNULL_END
