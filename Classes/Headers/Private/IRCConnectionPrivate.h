@@ -38,19 +38,19 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCConnection ()
-- (nullable NSString *)convertFromCommonEncoding:(NSData *)data;
-- (nullable NSData *)convertToCommonEncoding:(NSString *)data;
+@property (nonatomic, copy, readwrite) IRCConnectionConfig *config;
+@property (nonatomic, assign, readwrite) BOOL isConnected;
+@property (nonatomic, assign, readwrite) BOOL isConnecting;
+@property (nonatomic, assign, readwrite) BOOL isDisconnecting;
+@property (nonatomic, assign, readwrite) BOOL isSending;
+@property (nonatomic, assign, readwrite) BOOL isSecured;
+@property (nonatomic, assign, readwrite) BOOL isConnectedWithClientSideCertificate;
+@property (nonatomic, assign, readwrite) BOOL EOFReceived;
+@property (nonatomic, copy, readwrite, nullable) NSString *connectedAddress;
 
-- (void)tcpClientDidConnect;
-- (void)tpcClientWillConnectToProxy:(NSString *)proxyHost port:(uint16_t)proxyPort;
-- (void)tcpClientDidError:(NSString *)error;
-- (void)tcpClientDidDisconnect:(nullable NSError *)disconnectError;
-- (void)tcpClientDidCloseReadStream;
-- (void)tcpClientDidReceiveData:(NSString *)data;
-- (void)tcpClientDidSecureConnection;
-- (void)tcpClientDidReceivedAnInsecureCertificate;
-- (void)tcpClientWillSendData:(NSString *)data;
-- (void)tcpClientDidSendData;
+- (void)enforceFloodControl;
+
+- (void)openSecuredConnectionCertificateModal;
 @end
 
 NS_ASSUME_NONNULL_END
