@@ -43,6 +43,13 @@ NS_ASSUME_NONNULL_BEGIN
  TLOLicenseManagerLastGen is swizzled. */
 
 #if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
+typedef NS_ENUM(NSUInteger, TLOLicenseUpgradeEligibility) {
+	TLOLicenseUpgradeEligibilityUnknown = LONG_MAX,
+	TLOLicenseUpgradeNotEligible = 0,
+	TLOLicenseUpgradeEligible = 1,
+	TLOLicenseUpgradeAlreadyUpgraded = 2,
+};
+
 @interface TLOLicenseManagerLastGen : NSObject
 @property (class, copy, nullable, readonly) NSString *licenseKey;
 
