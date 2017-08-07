@@ -66,6 +66,10 @@ NS_ASSUME_NONNULL_BEGIN
 + (TDCLicenseManagerDialog *)sharedLicenseManagerDialog;
 #endif
 
+#if TEXTUAL_BUILT_FOR_APP_STORE_DISTRIBUTION == 1
++ (TDCInAppPurchaseDialog *)sharedInAppPurchaseDialog;
+#endif
+
 + (TDCFileTransferDialog *)sharedFileTransferDialog;
 @end
 
