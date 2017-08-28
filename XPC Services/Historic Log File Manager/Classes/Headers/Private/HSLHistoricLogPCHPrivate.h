@@ -44,6 +44,7 @@
 #import "TVCLogLineXPCPrivate.h"
 
 #import "HLSHistoricLogProtocol.h"
+#import "HLSHistoricLogLineEntityMigrationPrivate.h"
 #import "HLSHistoricLogViewContextPrivate.h"
 #import "HLSHistoricLogProcessMainPrivate.h"
 #import "HSLHistoricLogProcessDelegatePrivate.h"
