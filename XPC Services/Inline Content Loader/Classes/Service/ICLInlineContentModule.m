@@ -35,12 +35,9 @@
 
  *********************************************************************** */
 
-NS_ASSUME_NONNULL_BEGIN
+#import "ICLInlineContentModuleInternal.h"
 
-@interface ICLInlineContentModule ()
-@property (nonatomic, strong, readwrite) ICLPayloadMutable *payload;
-@property (nonatomic, copy, readwrite) ICLInlineContentModuleCompletionBlock completionBlock;
-@end
+NS_ASSUME_NONNULL_BEGIN
 
 @implementation ICLInlineContentModule (ICLInlineContentModulePrivate)
 
