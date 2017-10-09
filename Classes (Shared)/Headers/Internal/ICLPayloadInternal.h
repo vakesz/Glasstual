@@ -52,6 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _objectInitialized;
 	BOOL _objectInitializedAsCopy;
 	NSURL *_url;
+	NSString *_lineNumber;
 	NSString *_uniqueIdentifier;
 	NSString *_viewIdentifier;
 }
