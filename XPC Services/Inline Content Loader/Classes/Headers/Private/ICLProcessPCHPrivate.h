@@ -58,3 +58,7 @@
 #import "ICLInlineContentProtocol.h"
 #import "ICLProcessDelegatePrivate.h"
 #import "ICLProcessMainPrivate.h"
+
+/* Modules */
+#import "ICMInlineImageCheck.h"
+#import "ICMInlineImage.h"
