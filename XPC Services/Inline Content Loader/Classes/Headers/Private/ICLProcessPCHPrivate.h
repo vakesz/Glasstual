@@ -62,3 +62,4 @@
 /* Modules */
 #import "ICMInlineImageCheck.h"
 #import "ICMInlineImage.h"
+#import "ICMCommonInlineImages.h"
