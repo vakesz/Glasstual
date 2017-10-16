@@ -64,4 +64,5 @@
 #import "ICMInlineImage.h"
 #import "ICMCommonInlineImages.h"
 #import "ICMCommonInlineVideos.h"
+#import "ICMVimeo.h"
 #import "ICMYouTube.h"
