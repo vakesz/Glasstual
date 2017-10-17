@@ -62,8 +62,10 @@
 /* Modules */
 #import "ICMInlineVideo.h"
 #import "ICMInlineImage.h"
+
 #import "ICMCommonInlineImages.h"
 #import "ICMCommonInlineVideos.h"
+#import "ICMDailymotion.h"
 #import "ICMImgurGifv.h"
 #import "ICMVimeo.h"
 #import "ICMYouTube.h"
