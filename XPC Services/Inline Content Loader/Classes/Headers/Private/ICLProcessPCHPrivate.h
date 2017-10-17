@@ -67,5 +67,6 @@
 #import "ICMCommonInlineVideos.h"
 #import "ICMDailymotion.h"
 #import "ICMImgurGifv.h"
+#import "ICMStreamable.h"
 #import "ICMVimeo.h"
 #import "ICMYouTube.h"
