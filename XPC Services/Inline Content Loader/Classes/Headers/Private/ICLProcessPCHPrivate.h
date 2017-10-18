@@ -71,4 +71,5 @@
 #import "ICMPornhub.h"
 #import "ICMStreamable.h"
 #import "ICMVimeo.h"
+#import "ICMXkcd.h"
 #import "ICMYouTube.h"
