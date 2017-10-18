@@ -70,6 +70,7 @@
 #import "ICMImgurGifv.h"
 #import "ICMPornhub.h"
 #import "ICMStreamable.h"
+#import "ICMTwitchClips.h"
 #import "ICMVimeo.h"
 #import "ICMXkcd.h"
 #import "ICMYouTube.h"
