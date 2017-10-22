@@ -60,6 +60,7 @@
 #import "ICLProcessMainPrivate.h"
 
 /* Modules */
+#import "ICMInlineHTML.h"
 #import "ICMInlineVideo.h"
 #import "ICMInlineImage.h"
 
