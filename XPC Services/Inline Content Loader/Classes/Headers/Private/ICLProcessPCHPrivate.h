@@ -72,6 +72,7 @@
 #import "ICMLiveLeak.h"
 #import "ICMPornhub.h"
 #import "ICMStreamable.h"
+#import "ICMTweet.h"
 #import "ICMTwitchClips.h"
 #import "ICMTwitchLive.h"
 #import "ICMVimeo.h"
