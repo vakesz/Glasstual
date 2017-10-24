@@ -64,6 +64,7 @@
 #import "ICMInlineVideo.h"
 #import "ICMInlineImage.h"
 
+#import "ICMAssessedMedia.h"
 #import "ICMCommonInlineImages.h"
 #import "ICMCommonInlineVideos.h"
 #import "ICMDailymotion.h"
