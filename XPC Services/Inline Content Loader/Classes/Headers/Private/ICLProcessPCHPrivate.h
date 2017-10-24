@@ -51,13 +51,13 @@
 
 /* Service */
 #import "ICLPayload.h"
-#import "ICLPayloadMutable.h"
 #import "ICLPayloadPrivate.h"
 #import "ICLInlineContentModule.h"
 #import "ICLInlineContentModulePrivate.h"
 #import "ICLInlineContentProtocol.h"
 #import "ICLProcessDelegatePrivate.h"
 #import "ICLProcessMainPrivate.h"
+#import "ICLMediaAssessorPrivate.h"
 
 /* Modules */
 #import "ICMInlineHTML.h"
