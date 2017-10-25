@@ -68,43 +68,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)_unsafeToLoadMedia
 {
-	self.completionBlock(self.genericValidationFailedError);
+	[self cancel];
 }
 
 - (void)_safeToLoadMediaOfType:(ICLMediaType)mediaType atURL:(NSURL *)url
 {
-	ICLPayloadMutable *payload = self.payload;
-
-	ICLInlineContentModuleCompletionBlock completionBlock = self.completionBlock;
-
-	switch (mediaType) {
-		case ICLMediaTypeImage:
-		{
-			  ICMInlineImage *module =
-			[[ICMInlineImage alloc] initWithPayload:payload
-									completionBlock:completionBlock];
-
-			[module performActionForFinalAddress:url.absoluteString bypassImageCheck:YES];
-
-			break;
-		}
-		case ICLMediaTypeVideo:
-		{
-			  ICMInlineVideo *module =
-			[[ICMInlineVideo alloc] initWithPayload:payload
-									completionBlock:completionBlock];
-
-			[module performActionForFinalAddress:url.absoluteString bypassVideoCheck:YES];
-
-			break;
-		}
-		default:
-		{
-			LogToConsoleError("Unknown media type: %ld", mediaType);
-
-			break;
-		} // case
-	} // switch
+	[self deferAsType:mediaType withURL:url performCheck:NO];
 }
 
 #pragma mark -
