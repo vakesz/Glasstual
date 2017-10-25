@@ -43,21 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nullable) NSURL *templateURL;
 @property (readonly, nullable) GRMustacheTemplate *template;
 
-/* The generic validation error is a static error that the service
- recognizes as a sign that the URL in the payload shouldn't be displayed,
- but a specific reason why isn't exactly known. */
-@property (copy, readonly) NSError *genericValidationFailedError;
-@property (copy, readonly, class) NSError *genericValidationFailedError;
-
 - (instancetype)initWithPayload:(ICLPayloadMutable *)payload inProcess:(ICLProcessMain *)process;
-@end
-
-@interface ICLInlineContentModule (JSON)
-- (NSURLSessionDataTask *)requestJSONDataFromURL:(NSURL *)url completionBlock:(void (^)(BOOL success, NSDictionary<NSString *, id> * _Nullable data))completionBlock;
-- (NSURLSessionDataTask *)requestJSONDataFromAddress:(NSString *)address completionBlock:(void (^)(BOOL success, NSDictionary<NSString *, id> * _Nullable data))completionBlock;
-
-- (NSURLSessionDataTask *)requestJSONObject:(NSString *)objectKey ofType:(Class)objectType inHierarchy:(nullable NSArray<NSString *> *)hierarchy fromURL:(NSURL *)url completionBlock:(void (^)(id _Nullable object))completionBlock;
-- (NSURLSessionDataTask *)requestJSONObject:(NSString *)objectKey ofType:(Class)objectType inHierarchy:(nullable NSArray<NSString *> *)hierarchy fromAddress:(NSString *)address completionBlock:(void (^)(id _Nullable object))completionBlock;
 @end
 
 NS_ASSUME_NONNULL_END
