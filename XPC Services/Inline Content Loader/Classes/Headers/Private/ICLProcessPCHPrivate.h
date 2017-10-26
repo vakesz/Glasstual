@@ -69,6 +69,7 @@
 #import "ICMCommonInlineVideos.h"
 #import "ICMDailymotion.h"
 #import "ICMGfycat.h"
+#import "ICMGyazo.h"
 #import "ICMImgurGifv.h"
 #import "ICMLiveLeak.h"
 #import "ICMPornhub.h"
