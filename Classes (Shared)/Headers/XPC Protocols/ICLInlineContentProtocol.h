@@ -47,14 +47,12 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol ICLInlineContentServerProtocol
 @required
 
+- (void)warmServiceByLoadingPluginsAtLocations:(NSArray<NSURL *> *)pluginLocations;
+- (void)warmServiceByRegisteringDefaults:(NSDictionary<NSString *, id> *)defaults;
+
 - (void)processURL:(NSURL *)url withUniqueIdentifier:(NSString *)uniqueIdentifier atLineNumber:(NSString *)lineNumber index:(NSUInteger)index inView:(NSString *)viewIdentifier;
 
 - (void)processPayload:(ICLPayload *)payload;
-
-/* NSUserDefaults does not share registered defaults between processes
- which means we have a responsiblity to pass that information along to
- the XPC service by calling this method. */
-- (void)registerDefaults:(NSDictionary<NSString *, id> *)registrationDictionary;
 @end
 
 #pragma mark -
