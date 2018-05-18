@@ -35,7 +35,7 @@
 
  *********************************************************************** */
 
-/* Next unusued key: 1006 */
+/* Next unusued key: 1007 */
 
 "Accessibility[1000]" = "User %@ in User List";
 
@@ -50,3 +50,5 @@
 "Accessibility[1004]" = "Main Window"; // Main window title description
 
 "Accessibility[1005]" = "Chat View";
+
+"Accessibility[1006]" = "Alert dialog %@";
