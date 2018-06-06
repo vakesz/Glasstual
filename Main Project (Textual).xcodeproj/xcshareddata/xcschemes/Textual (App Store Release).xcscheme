@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0940"
+   LastUpgradeVersion = "1000"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "NO"
@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "&#10;&quot;${PROJECT_DIR}/Main Project (Textual).xcodeproj/CleanUpResources.sh&quot;&#10;&#10;mkdir -p &quot;${PROJECT_DIR}/.tmp/Script-Logs/&quot;&#10;&#10;&quot;${PROJECT_DIR}/Main Project (Textual).xcodeproj/UpdateVersionInfo.sh&quot; &gt; &quot;${PROJECT_DIR}/.tmp/Script-Logs/UpdateVersionInfo.txt&quot;&#10;"
+               scriptText = "&#10;mkdir -p &quot;${PROJECT_DIR}/.tmp/Script-Logs/&quot;&#10;&#10;&quot;${PROJECT_DIR}/Main Project (Textual).xcodeproj/UpdateVersionInfo.sh&quot; &gt; &quot;${PROJECT_DIR}/.tmp/Script-Logs/UpdateVersionInfo.txt&quot;&#10;"
                shellToInvoke = "/bin/sh">
                <EnvironmentBuildable>
                   <BuildableReference
@@ -42,7 +42,7 @@
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Release (App Store)"
+      buildConfiguration = "App Store"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
@@ -61,7 +61,7 @@
       </AdditionalOptions>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release (App Store)"
+      buildConfiguration = "App Store"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
@@ -84,7 +84,7 @@
       </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "Release (App Store)"
+      buildConfiguration = "App Store"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
@@ -101,10 +101,10 @@
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "Release (App Store)">
+      buildConfiguration = "App Store">
    </AnalyzeAction>
    <ArchiveAction
-      buildConfiguration = "Release (App Store)"
+      buildConfiguration = "App Store"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>
