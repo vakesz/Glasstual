@@ -39,10 +39,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TVCServerList;
+@class TVCServerList, TVCMainWindowAppearance;
 
 @interface TVCServerListAppearance ()
-- (nullable instancetype)initWithServerList:(TVCServerList *)serverList;
+- (nullable instancetype)initWithServerList:(TVCServerList *)serverList parentAppearance:(TVCMainWindowAppearance *)appearance;
 
 - (void)setOutlineViewDefaultDisclosureTriangle:(NSImage *)image;
 - (void)setOutlineViewAlternateDisclosureTriangle:(NSImage *)image;
