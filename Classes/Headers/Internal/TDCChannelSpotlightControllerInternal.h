@@ -39,9 +39,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TDCChannelSpotlightSearchResult;
+@class TDCChannelSpotlightAppearance, TDCChannelSpotlightSearchResult;
 
 @interface TDCChannelSpotlightController ()
+- (TDCChannelSpotlightAppearance *)userInterfaceObjects;
+
 @property (readonly, copy) NSString *searchString;
 @property (readonly) NSArray<TDCChannelSpotlightSearchResult *> *searchResults;
 @property (readonly) NSArray<TDCChannelSpotlightSearchResult *> *searchResultsFiltered;
