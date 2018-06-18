@@ -53,4 +53,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)flushAppearanceProperties;
 @end
 
+@interface TVCApplicationAppearance ()
+/* Appearance name is inherited from TXApplication */
+- (nullable instancetype)initWithAppearanceAtURL:(NSURL *)appearanceLocation
+								forRetinaDisplay:(BOOL)forRetinaDisplay NS_DESIGNATED_INITIALIZER;
+@end
+
 NS_ASSUME_NONNULL_END
