@@ -47,7 +47,7 @@
 #import "RCMSecureTransport.h"
 #import "RCMTrustPanel.h"
 #import "NSObjectHelperPrivate.h"
-#import "TLOLanguagePreferences.h"
+#import "TLOLocalization.h"
 #import "TLOTimer.h"
 #import "IRCConnectionConfig.h"
 #import "IRCConnectionPrivate.h"
