@@ -50,6 +50,7 @@
 #import "TLOLocalization.h"
 #import "TLOTimer.h"
 #import "IRCConnectionConfig.h"
+#import "IRCConnectionErrors.h"
 #import "IRCConnectionPrivate.h"
 #import "RCMConnectionManagerProtocol.h"
 #import "RCMProcessDelegatePrivate.h"
