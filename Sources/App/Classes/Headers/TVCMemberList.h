@@ -41,11 +41,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 TEXTUAL_EXTERN NSString * const TVCMemberListDragType;
 
-@interface TVCMemberList : NSOutlineView
+@interface TVCMemberList : NSTableView
 @property (nonatomic, assign) BOOL isHiddenByUser;
 
 - (void)refreshDrawingForMember:(IRCChannelUser *)cellItem;
 - (void)refreshDrawingForRow:(NSInteger)rowIndex;
+
+- (nullable id)itemAtRow:(NSInteger)row;
+- (NSInteger)rowForItem:(nullable id)item; // -1 = not found
 @end
 
 NS_ASSUME_NONNULL_END

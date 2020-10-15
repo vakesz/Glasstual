@@ -41,6 +41,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class TVCMemberListUserInfoPopover;
+@class IRCChannel;
+@class IRCChannelMemberListController;
 
 @interface TVCMemberList ()
 @property (nonatomic, weak) id keyDelegate;
@@ -48,15 +50,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (TVCMemberListAppearance *)userInterfaceObjects;
 - (nullable NSVisualEffectView *)visualEffectView;
 - (TVCMemberListUserInfoPopover *)memberListUserInfoPopover;
-
-- (void)addItemToList:(NSUInteger)rowIndex;
-
-- (void)removeItemFromList:(id)object;
-- (void)removeItemFromListAtIndex:(NSUInteger)rowIndex;
+- (IRCChannelMemberListController *)contentController;
 
 - (void)refreshAllDrawings;
 
 - (void)refreshDrawingForChangesToPreference:(NSString *)preferenceKey;
+
+- (void)assignToChannel:(nullable IRCChannel *)channel;
 @end
 
 @protocol TVCMemberListDelegate <NSObject>
