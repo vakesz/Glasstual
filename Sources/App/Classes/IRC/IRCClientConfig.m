@@ -244,6 +244,10 @@ NS_ASSUME_NONNULL_BEGIN
 							  applyDefaults:NO
 						  bypassIsCopyCheck:YES];
 
+	if ([self isMutable]) {
+		return config1Mutable;
+	}
+
 	return [config1Mutable copy];
 }
 
@@ -263,6 +267,10 @@ NS_ASSUME_NONNULL_BEGIN
 	server.prefersSecuredConnection = network.prefersSecuredConnection;
 
 	configMutable.serverList = @[[server copy]];
+
+	if ([self isMutable]) {
+		return configMutable;
+	}
 
 	return [configMutable copy];
 }
