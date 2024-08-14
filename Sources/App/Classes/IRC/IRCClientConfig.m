@@ -1044,7 +1044,7 @@ TEXTUAL_IGNORE_DEPRECATION_END
 @dynamic zncIgnoreUserNotifications;
 @dynamic zncOnlyPlaybackLatest;
 
-- (BOOL)isMutable
++ (BOOL)isMutable
 {
 	return YES;
 }
