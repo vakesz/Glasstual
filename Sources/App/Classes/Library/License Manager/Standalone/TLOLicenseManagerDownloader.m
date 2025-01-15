@@ -61,7 +61,7 @@ NSUInteger const TLOLicenseManagerDownloaderRequestHTTPStatusTryAgainLater = 503
  contents of a license API response body. This is not a complete list. */
 NSUInteger const TLOLicenseManagerDownloaderRequestStatusCodeSuccess = 0;
 NSUInteger const TLOLicenseManagerDownloaderRequestStatusCodeGenericError = 2000000;
-NSUInteger const TLOLicenseManagerDownloaderRequestStatusCodeTryAgainLater = 2000001;
+NSUInteger const TLOLicenseManagerDownloaderRequestStatusCodeServiceIsBusy = 2000001;
 
 /* Private header */
 typedef void (^TLOLicenseManagerDownloaderConnectionCompletionBlock)(TLOLicenseManagerDownloaderRequestType requestType, NSURLResponse * _Nullable response, NSData * _Nullable data);
@@ -237,13 +237,7 @@ typedef void (^TLOLicenseManagerDownloaderConnectionCompletionBlock)(TLOLicenseM
 	/* Define defaults */
 	id propertyList = nil;
 
-	__block NSUInteger apiStatusCode = 0;
-
-	if (responseStatusCode == TLOLicenseManagerDownloaderRequestHTTPStatusTryAgainLater) {
-		apiStatusCode = TLOLicenseManagerDownloaderRequestStatusCodeTryAgainLater;
-	} else {
-		apiStatusCode = TLOLicenseManagerDownloaderRequestStatusCodeGenericError;
-	}
+	__block NSUInteger apiStatusCode = TLOLicenseManagerDownloaderRequestStatusCodeGenericError;
 
 	__block id apiStatusContext = nil;
 
@@ -442,7 +436,14 @@ typedef void (^TLOLicenseManagerDownloaderConnectionCompletionBlock)(TLOLicenseM
 		/* Errors related to license activation. */
 		BOOL presentError = NO;
 
-		if (requestType == TLOLicenseManagerDownloaderRequestTypeActivation && apiStatusCode == 6500000)
+		if (apiStatusCode == TLOLicenseManagerDownloaderRequestStatusCodeServiceIsBusy)
+		{
+			[TDCAlert modalAlertWithMessage:TXTLS(@"TLOLicenseManager[fvx-90]")
+									  title:TXTLS(@"TLOLicenseManager[13u-4p]")
+							  defaultButton:TXTLS(@"Prompts[c7s-dq]")
+							alternateButton:nil];
+		}
+		else if (requestType == TLOLicenseManagerDownloaderRequestTypeActivation && apiStatusCode == 6500000)
 		{
 			[TDCAlert modalAlertWithMessage:TXTLS(@"TLOLicenseManager[wc7-mn]")
 									  title:TXTLS(@"TLOLicenseManager[fg6-gf]")
