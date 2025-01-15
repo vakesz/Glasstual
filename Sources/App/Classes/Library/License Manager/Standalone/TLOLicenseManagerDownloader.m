@@ -693,7 +693,7 @@ typedef void (^TLOLicenseManagerDownloaderConnectionCompletionBlock)(TLOLicenseM
 	{
 		NSString *encodedContextInfo = [self encodedRequestContextValue:@"licenseKey"];
 
-		requestBodyString = [NSString stringWithFormat:@"licenseKey=%@&lang=%@&outputFormat=plist&version=%@",
+		requestBodyString = [NSString stringWithFormat:@"licenseKey=%@&lang=%@&version=%@",
 				 encodedContextInfo, currentUserLanguage, applicationVersion];
 	}
 	else if (self.requestType == TLOLicenseManagerDownloaderRequestTypeReceiptUpgradeEligibility)
@@ -701,7 +701,7 @@ typedef void (^TLOLicenseManagerDownloaderConnectionCompletionBlock)(TLOLicenseM
 		NSString *receiptData = [self encodedRequestContextValue:@"receiptData"];
 		NSString *licenseOwnerMacAddress = [self encodedRequestContextValue:@"licenseOwnerMacAddress"];
 
-		requestBodyString = [NSString stringWithFormat:@"receiptData=%@&licenseOwnerMacAddress=%@&lang=%@&outputFormat=plist&version=%@",
+		requestBodyString = [NSString stringWithFormat:@"receiptData=%@&licenseOwnerMacAddress=%@&lang=%@&version=%@",
 				 receiptData, licenseOwnerMacAddress, currentUserLanguage, applicationVersion];
 	}
 
