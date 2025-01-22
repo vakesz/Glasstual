@@ -46,11 +46,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /* URLs for performing certain actions with license keys. */
-NSString * const TLOLicenseManagerDownloaderLicenseAPIActivationURL						= @"https://license-manager.textualapp.com/activateLicense.cs";
-NSString * const TLOLicenseManagerDownloaderLicenseAPISendLostLicenseURL				= @"https://license-manager.textualapp.com/sendLostLicense.cs";
-NSString * const TLOLicenseManagerDownloaderLicenseAPIMigrateAppStoreURL				= @"https://license-manager.textualapp.com/convertReceiptToLicense.cs";
-NSString * const TLOLicenseManagerDownloaderLicenseAPILicenseUpgradeEligibilityURL		= @"https://license-manager.textualapp.com/upgradeEligibility.cs";
-NSString * const TLOLicenseManagerDownloaderLicenseAPIReceiptUpgradeEligibilityURL		= @"https://license-manager.textualapp.com/upgradeEligibilityForReceipt.cs";
+NSString * const TLOLicenseManagerDownloaderLicenseAPIActivationURL						= @"https://licensing.textualapp.com/activateLicense.cs";
+NSString * const TLOLicenseManagerDownloaderLicenseAPISendLostLicenseURL				= @"https://licensing.textualapp.com/sendLostLicense.cs";
+NSString * const TLOLicenseManagerDownloaderLicenseAPIMigrateAppStoreURL				= @"https://licensing.textualapp.com/convertReceiptToLicense.cs";
+NSString * const TLOLicenseManagerDownloaderLicenseAPILicenseUpgradeEligibilityURL		= @"https://licensing.textualapp.com/upgradeEligibility.cs";
+NSString * const TLOLicenseManagerDownloaderLicenseAPIReceiptUpgradeEligibilityURL		= @"https://licensing.textualapp.com/upgradeEligibilityForReceipt.cs";
 
 /* The license API throttles requests to prevent abuse. The following HTTP status 
  code will inform Textual if it the license API has been overwhelmed. */
