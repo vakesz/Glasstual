@@ -56,6 +56,7 @@ NSString * const TLOLicenseManagerDownloaderLicenseAPIReceiptUpgradeEligibilityU
 /* The license API throttles requests to prevent abuse. The following HTTP status 
  code will inform Textual if it the license API has been overwhelmed. */
 NSUInteger const TLOLicenseManagerDownloaderRequestHTTPStatusSuccess = 200; // OK
+NSUInteger const TLOLicenseManagerDownloaderRequestHTTPStatusServiceIsBusy = 429; // Service is Busy
 NSUInteger const TLOLicenseManagerDownloaderRequestHTTPStatusTryAgainLater = 503; // Service Unavailable
 
 /* The following constants note status codes that may be returned part of the 
@@ -239,6 +240,10 @@ typedef void (^TLOLicenseManagerDownloaderConnectionCompletionBlock)(TLOLicenseM
 	id propertyList = nil;
 
 	__block NSUInteger apiStatusCode = TLOLicenseManagerDownloaderRequestStatusCodeGenericError;
+
+	if (responseStatusCode == TLOLicenseManagerDownloaderRequestHTTPStatusServiceIsBusy) {
+		apiStatusCode = TLOLicenseManagerDownloaderRequestStatusCodeServiceIsBusy;
+	}
 
 	__block id apiStatusContext = nil;
 
