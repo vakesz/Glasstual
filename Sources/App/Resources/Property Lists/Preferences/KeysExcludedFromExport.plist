@@ -49,7 +49,7 @@
 	<key>LogTranscriptDestinationSecurityBookmark_5</key>
 	<integer>0</integer>
 	<key>TLOLicenseManagerAuthorizationCode</key>
-	<string></string>
+	<integer>0</integer>
 	<key>TVCLogControllerHistoricLogFileSavePath_v3</key>
 	<integer>0</integer>
 	<key>Sandbox Migration -&gt; Migrated Resources</key>

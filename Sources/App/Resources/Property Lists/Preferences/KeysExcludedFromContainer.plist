@@ -23,6 +23,6 @@
 	<key>SUUpdateGroupIdentifier</key>
 	<integer>0</integer>
 	<key>TLOLicenseManagerAuthorizationCode</key>
-	<string></string>
+	<integer>0</integer>
 </dict>
 </plist>
