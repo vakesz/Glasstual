@@ -1,10 +1,13 @@
+> [!IMPORTANT]
+> Textual is no longer being actively maintained. For the life of the project, it only ever had one full time maintainer whom has now moved on to different ventures in their life. To all that have contributed to Textual in some form in the past; be it a suggestion, bug report, pull request, financial support, or some other form of contribvution, you will forever be loved. Thank you so much. Words cannot properly express the gratitude we have for every single user. 
+
 # Textual [![GitHub release](https://img.shields.io/github/tag/Codeux-Software/Textual.svg)](https://github.com/Codeux-Software/Textual/blob/master) [![Platform](https://img.shields.io/badge/platform-OS%20X-lightgrey.svg)](http://www.textualapp.com/mac-app-store)
 
 Textual is a highly customizable app for interacting with Internet Relay Chat (IRC) chatrooms on macOS.
 
 Textual can be customized with styles written in CSS, HTML, and JavaScript; [plugins](https://help.codeux.com/textual/Writing-Plugins.kb) written in Objective-C & Swift, and [scripts](https://help.codeux.com/textual/Writing-Scripts.kb) written in AppleScript (plus many other languages)
 
-Precompiled versions of Textual can be purchased in the [Mac App Store](http://www.textualapp.com/mac-app-store) or [directly from Codeux Software](https://www.textualapp.com/fastspring-store/).
+Precompiled versions of Textual can be purchased in the [directly from codeux.com](https://www.textualapp.com/).
 
 ## Screenshots
 
@@ -55,7 +58,7 @@ Build Textual using the "Standard Release" build scheme.
 
 ## Original Limechat License
 
-Textual began as a "fork" of [LimeChat](https://github.com/psychs/limechat) in 2010
+Textual began as a fork of [LimeChat](https://github.com/psychs/limechat) in 2010
 
 LimeChat's original license is presented below.
 
