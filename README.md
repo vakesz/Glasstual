@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> Textual is no longer being actively maintained. For the life of the project, it only ever had one full time maintainer whom has now moved on to different ventures in their life. To all that have contributed to Textual in some form in the past; be it a suggestion, bug report, pull request, financial support, or some other form of contribvution, you will forever be loved. Thank you so much. Words cannot properly express the gratitude we have for every single user. 
+> Textual is no longer being actively maintained. For the life of the project, it only ever had one full time maintainer whom has now moved on to different ventures in their life. To all that have contributed to Textual in some form in the past; be it a suggestion, bug report, pull request, financial support, or some other form of contribution, you will forever be loved. Thank you so much. Words cannot properly express the gratitude we have for every single user. 
 
 # Textual [![GitHub release](https://img.shields.io/github/tag/Codeux-Software/Textual.svg)](https://github.com/Codeux-Software/Textual/blob/master) [![Platform](https://img.shields.io/badge/platform-OS%20X-lightgrey.svg)](http://www.textualapp.com/mac-app-store)
 
