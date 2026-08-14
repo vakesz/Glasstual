@@ -14,8 +14,6 @@
 	<integer>0</integer>
 	<key>Text Input Prompt Suppression -&gt; </key>
 	<integer>1</integer>
-	<key>Textual 7 Upgrade -&gt; </key>
-	<integer>1</integer>
 	<key>TPCPreferences -&gt; Migration -&gt; </key>
 	<integer>1</integer>
 	<key>NSWindow Frame -&gt; Internal (v3) -&gt; </key>
@@ -47,8 +45,6 @@
 	<key>File Transfers -&gt; File Transfer Download Folder Bookmark</key>
 	<integer>0</integer>
 	<key>LogTranscriptDestinationSecurityBookmark_5</key>
-	<integer>0</integer>
-	<key>TLOLicenseManagerAuthorizationCode</key>
 	<integer>0</integer>
 	<key>TVCLogControllerHistoricLogFileSavePath_v3</key>
 	<integer>0</integer>

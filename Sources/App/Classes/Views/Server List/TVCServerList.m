@@ -275,15 +275,7 @@ NSString * const TVCServerListDragType = @"TVCServerListDragType";
 {
 	NSParameterAssert(appearance != nil);
 
-	NSVisualEffectView *visualEffectView = self.visualEffectView;
-
-	if ([TPCPreferences disableSidebarTranslucency]) {
-		visualEffectView.state = NSVisualEffectStateInactive;
-	} else {
-		visualEffectView.state = NSVisualEffectStateFollowsWindowActiveState;
-	}
-
-	visualEffectView.material = NSVisualEffectMaterialSidebar;
+	self.style = NSTableViewStyleSourceList;
 }
 
 - (void)applicationAppearanceChanged

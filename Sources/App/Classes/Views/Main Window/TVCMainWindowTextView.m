@@ -658,17 +658,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)drawRect:(NSRect)dirtyRect
 {
-	if ([self needsToDrawRect:dirtyRect] == NO) {
-		return;
-	}
-
-	TVCMainWindowTextViewAppearance *appearance = self.textView.userInterfaceObjects;
-
-	if (appearance == nil) {
-		return;
-	}
-
-	[self drawControllerForWithAppearance:appearance];
 }
 
 @end
@@ -680,38 +669,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)drawRect:(NSRect)dirtyRect
 {
-	if ([self needsToDrawRect:dirtyRect] == NO) {
-		return;
-	}
-
-	TVCMainWindowTextViewAppearance *appearance = self.textView.userInterfaceObjects;
-
-	if (appearance == nil) {
-		return;
-	}
-
-	/* Draw background color */
-	NSColor *backgroundColor = appearance.backgroundViewBackgroundColor;
-
-	[backgroundColor set];
-
-	NSRectFill(dirtyRect);
-
-	/* Draw divider */
-	NSRect contentViewFrame = self.frame;
-
-	contentViewFrame.origin.x = 0.0;
-	contentViewFrame.origin.y = (NSMaxY(contentViewFrame) - 1.0);
-
-	contentViewFrame.size.height = 1.0;
-
-	NSBezierPath *dividerPath = [NSBezierPath bezierPathWithRect:contentViewFrame];
-
-	NSColor *dividerColor = appearance.backgroundViewDividerColor;
-
-	[dividerColor set];
-
-	[dividerPath fill];
 }
 
 - (BOOL)allowsVibrancy

@@ -168,15 +168,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Table View Delegate
 
-- (BOOL)tableView:(NSTableView *)tableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pasteboard
+- (nullable id<NSPasteboardWriting>)tableView:(NSTableView *)tableView pasteboardWriterForRow:(NSInteger)row
 {
-	NSData *draggedData = [NSKeyedArchiver archivedDataWithRootObject:rowIndexes];
-
-	[pasteboard declareTypes:@[_endpointEntryTableDragToken] owner:self];
-
-	[pasteboard setData:draggedData forType:_endpointEntryTableDragToken];
-
-	return YES;
+	NSPasteboardItem *item = [[NSPasteboardItem alloc] init];
+	[item setString:@(row).stringValue forType:_endpointEntryTableDragToken];
+	return item;
 }
 
 - (NSDragOperation)tableView:(NSTableView *)tableView validateDrop:(id<NSDraggingInfo>)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)dropOperation
@@ -188,11 +184,9 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSPasteboard *pasteboard = [info draggingPasteboard];
 
-	NSData *draggedData = [pasteboard dataForType:_endpointEntryTableDragToken];
+	NSString *draggedRowString = [pasteboard stringForType:_endpointEntryTableDragToken];
 
-	NSIndexSet *draggedRowIndexes = [NSKeyedUnarchiver unarchiveObjectWithData:draggedData];
-
-	NSUInteger draggedRowIndex = draggedRowIndexes.firstIndex;
+	NSUInteger draggedRowIndex = draggedRowString.integerValue;
 
 	[self.entryTableController moveObjectAtArrangedObjectIndex:draggedRowIndex toIndex:row];
 

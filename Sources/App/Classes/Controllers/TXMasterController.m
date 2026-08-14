@@ -42,11 +42,9 @@
 #import "OELReachability.h"
 #import "TDCAlert.h"
 #import "TLOEncryptionManagerPrivate.h"
-#import "TLOLicenseManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TLOSpeechSynthesizerPrivate.h"
 #import "THOPluginManagerPrivate.h"
-#import "TDCLicenseManagerDialogPrivate.h"
 #import "TVCLogControllerHistoricLogFilePrivate.h"
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 #import "TVCLogControllerOperationQueuePrivate.h"
@@ -199,10 +197,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.applicationLaunchRemainder = 1;
 
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-	[self prepareLicenseManager];
-#endif
-
 	[self prepareThirdPartyServices];
 
 	/* Load plugins last so that -applicationDidFinishLaunching is posted
@@ -274,15 +268,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[notifier startNotifier];
 }
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-- (void)prepareLicenseManager
-{
-	TLOLicenseManagerSetup();
-
-	[[TXSharedApplication sharedLicenseManagerDialog] applicationDidFinishLaunching];
-}
-#endif
 
 #pragma mark -
 #pragma mark NSApplication Delegate

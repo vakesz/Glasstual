@@ -45,7 +45,7 @@
 #import "TVCMemberListAppearance.h"
 #import "TVCMainWindow.h"
 #import "TVCMainWindowAppearance.h"
-#import "TVCMainWindowSplitViewPrivate.h"
+#import "TVCMainWindowSplitView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -59,6 +59,8 @@ NSString * const _userDefaultsKey	  = @"Window -> Main Window -> Split Channel V
 @property (nonatomic, strong) IBOutlet NSLayoutConstraint *serverListWidthMaxConstraint;
 @property (nonatomic, strong) IBOutlet NSLayoutConstraint *memberListWidthMinConstraint;
 @property (nonatomic, strong) IBOutlet NSLayoutConstraint *memberListWidthMaxConstraint;
+@property (nonatomic, weak) NSSplitViewItem *serverListSplitItem;
+@property (nonatomic, weak) NSSplitViewItem *memberListSplitItem;
 @end
 
 @implementation TVCMainWindowSplitView
@@ -142,6 +144,12 @@ NSString * const _userDefaultsKey	  = @"Window -> Main Window -> Split Channel V
 
 - (void)expandServerList
 {
+	if (self.serverListSplitItem) {
+		self.serverListSplitItem.animator.collapsed = NO;
+		self.stopFrameUpdatesForServerList = NO;
+		return;
+	}
+
 	NSScrollView *scrollView = self.mainWindow.serverList.enclosingScrollView;
 
 	scrollView.hasVerticalScroller = YES;
@@ -159,6 +167,12 @@ NSString * const _userDefaultsKey	  = @"Window -> Main Window -> Split Channel V
 
 - (void)expandMemberList
 {
+	if (self.memberListSplitItem) {
+		self.memberListSplitItem.animator.collapsed = NO;
+		self.stopFrameUpdatesForMemberList = NO;
+		return;
+	}
+
 	NSScrollView *scrollView = self.mainWindow.memberList.enclosingScrollView;
 
 	scrollView.hasVerticalScroller = YES;
@@ -176,6 +190,12 @@ NSString * const _userDefaultsKey	  = @"Window -> Main Window -> Split Channel V
 
 - (void)collapseServerList
 {
+	if (self.serverListSplitItem) {
+		self.stopFrameUpdatesForServerList = YES;
+		self.serverListSplitItem.animator.collapsed = YES;
+		return;
+	}
+
 	self.stopFrameUpdatesForServerList = YES;
 
 	self.serverListWidthMinConstraint.active = NO;
@@ -193,6 +213,12 @@ NSString * const _userDefaultsKey	  = @"Window -> Main Window -> Split Channel V
 
 - (void)collapseMemberList
 {
+	if (self.memberListSplitItem) {
+		self.stopFrameUpdatesForMemberList = YES;
+		self.memberListSplitItem.animator.collapsed = YES;
+		return;
+	}
+
 	self.stopFrameUpdatesForMemberList = YES;
 
 	self.memberListWidthMinConstraint.active = NO;
@@ -349,11 +375,19 @@ NSString * const _userDefaultsKey	  = @"Window -> Main Window -> Split Channel V
 
 - (BOOL)isServerListCollapsed
 {
+	if (self.serverListSplitItem) {
+		return self.serverListSplitItem.isCollapsed;
+	}
+
 	return [self isSubviewCollapsed:self.subviews[0]];
 }
 
 - (BOOL)isMemberListCollapsed
 {
+	if (self.memberListSplitItem) {
+		return self.memberListSplitItem.isCollapsed;
+	}
+
 	return [self isSubviewCollapsed:self.subviews[2]];
 }
 

@@ -42,17 +42,21 @@ git submodule update --init --recursive
 
 **TEXTUAL DOES NOT REQUIRE A CERTIFICATE ISSUED BY APPLE TO BUILD** which means there is absolutely no reason to turn code signing off.
 
-## Note Regarding Trial Mode
-
-The code which is responsible for licensing paid copies of Textual is in the source code that you download from here.
-
-If you do not have a license key, then set the ``TEXTUAL_BUILT_WITH_LICENSE_MANAGER`` flag to `0` in the `Standard Release` configuration file to disable the inclusion of this code at build time.
-
 ## Building Textual
 
-The latest version of Textual requires two things to be built. One is a valid (does not need to be issued by Apple) code signing certificate. The second is an installation of Xcode 10.0 or newer on macOS High Sierra. **Building on anything earlier is not supported because of Swift 4.2 code.**
+The latest version of Textual requires a valid code signing certificate (it does not need to be issued by Apple) and Xcode 26 on macOS Tahoe 26.
 
-**DO NOT change the Code Signing Identity setting through Xcode.** Modify the file located at _[Configurations ➜ Build ➜ Code Signing Identity.xcconfig](https://github.com/Codeux-Software/Textual/blob/master/Configurations/Build/Code%20Signing%20Identity.xcconfig)_ instead.
+This tree has **no paid-license or trial checks**. Precompiled store builds from codeux.com are a separate product.
+
+**DO NOT change the Code Signing Identity setting through Xcode.** Modify the file located at _[Configurations ➜ Build ➜ Code Signing Identity.xcconfig](Configurations/Build/Code%20Signing%20Identity.xcconfig)_ instead.
+
+Set your Apple Developer **Team ID** there, and set `TEXTUAL_BUNDLE_IDENTIFIER` in `Configurations/Build/Standard Release/Textual.xcconfig` (and the Debug copy) to an identifier you own. This fork defaults to:
+
+- Bundle ID: `com.vakesz.textual`
+- Team ID: `H8W5DK3FN2`
+- App Group: `H8W5DK3FN2.com.vakesz.textual`
+
+Register that App ID and App Group on [developer.apple.com](https://developer.apple.com/account/resources/identifiers/list), then enable **Automatic signing**.
 
 Build Textual using the "Standard Release" build scheme.
 

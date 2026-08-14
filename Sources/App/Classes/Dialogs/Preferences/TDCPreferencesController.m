@@ -68,6 +68,55 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@interface TXColorUnarchiveFromDataTransformer : NSSecureUnarchiveFromDataTransformer
+@end
+
+@implementation TXColorUnarchiveFromDataTransformer
+
++ (void)load
+{
+	[NSValueTransformer setValueTransformer:[self new] forName:@"TXColorUnarchiveFromData"];
+}
+
++ (Class)transformedValueClass
+{
+	return [NSColor class];
+}
+
++ (BOOL)allowsReverseTransformation
+{
+	return YES;
+}
+
++ (NSArray<Class> *)allowedTopLevelClasses
+{
+	return [[super allowedTopLevelClasses] arrayByAddingObject:[NSColor class]];
+}
+
+- (nullable id)transformedValue:(nullable id)value
+{
+	if ([value isKindOfClass:[NSColor class]]) {
+		return value;
+	}
+
+	if ([value isKindOfClass:[NSData class]] == NO) {
+		return nil;
+	}
+
+	return [NSKeyedUnarchiver legacyCompatUnarchivedObjectOfClass:[NSColor class] fromData:value];
+}
+
+- (nullable id)reverseTransformedValue:(nullable id)value
+{
+	if ([value isKindOfClass:[NSColor class]] == NO) {
+		return nil;
+	}
+
+	return [NSKeyedArchiver archivedDataWithRootObject:value requiringSecureCoding:YES error:NULL];
+}
+
+@end
+
 #define _scrollbackSaveLinesMin		100
 #define _scrollbackSaveLinesMax		50000
 #define _scrollbackVisibleLinesMin	100
@@ -108,7 +157,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define _unsignedIntegerString(_value_)			[NSString stringWithUnsignedInteger:_value_]
 
-@interface TDCPreferencesController ()
+@interface TDCPreferencesController () <NSTableViewDataSource, NSTableViewDelegate>
 @property (nonatomic, strong) IBOutlet NSArrayController *excludeKeywordsArrayController;
 @property (nonatomic, strong) IBOutlet NSArrayController *highlightKeywordsArrayController;
 @property (nonatomic, strong) IBOutlet NSArrayController *installedScriptsController;
@@ -157,6 +206,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) IBOutlet NSView *contentViewGeneralShareDataView;
 @property (nonatomic, strong) IBOutlet NSToolbar *navigationToolbar;
 @property (nonatomic, strong) IBOutlet NSMenu *installedAddonsMenu;
+@property (nonatomic, strong) NSArray<NSDictionary *> *settingsSidebarItems;
+@property (nonatomic, strong) NSTableView *settingsSidebarTable;
+@property (nonatomic, strong) NSView *settingsContentHost;
 @property (nonatomic, assign) BOOL reloadingTheme;
 @property (nonatomic, assign) BOOL reloadingThemeBySelection;
 @property (nonatomic, weak) IBOutlet NSView *notificationControllerHostView;
@@ -300,6 +352,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self.contentViewGeneral layoutSubtreeIfNeeded];
 
+	[self installSettingsSidebar];
+
 	[self restoreWindowFrame];
 }
 
@@ -432,22 +486,221 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)firstPane:(NSView *)view selectedItem:(NSInteger)selectedItem
 {
-	[self.window replaceContentView:view];
+	if (self.settingsContentHost) {
+		[self.settingsContentHost.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+
+		view.translatesAutoresizingMaskIntoConstraints = NO;
+		view.prefersCompactControlSizeMetrics = YES;
+		[self.settingsContentHost addSubview:view];
+
+		NSLayoutConstraint *trailingStretch = [view.trailingAnchor constraintEqualToAnchor:self.settingsContentHost.trailingAnchor];
+		trailingStretch.priority = NSLayoutPriorityDefaultLow;
+
+		NSLayoutConstraint *bottomStretch = [view.bottomAnchor constraintEqualToAnchor:self.settingsContentHost.bottomAnchor];
+		bottomStretch.priority = NSLayoutPriorityDefaultLow;
+
+		[NSLayoutConstraint activateConstraints:@[
+			[view.leadingAnchor constraintEqualToAnchor:self.settingsContentHost.leadingAnchor],
+			[view.topAnchor constraintEqualToAnchor:self.settingsContentHost.topAnchor],
+			[view.trailingAnchor constraintLessThanOrEqualToAnchor:self.settingsContentHost.trailingAnchor],
+			[view.bottomAnchor constraintLessThanOrEqualToAnchor:self.settingsContentHost.bottomAnchor],
+			trailingStretch,
+			bottomStretch
+		]];
+	} else {
+		[self.window replaceContentView:view];
+	}
 
 	if (selectedItem >= 0) {
 		self.navigationToolbar.selectedItemIdentifier = _unsignedIntegerString(selectedItem);
+
+		[self.settingsSidebarItems enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger index, BOOL *stop) {
+			if ([item[@"tag"] integerValue] == selectedItem && self.settingsSidebarTable.selectedRow != (NSInteger)index) {
+				[self.settingsSidebarTable selectRowIndexes:[NSIndexSet indexSetWithIndex:index] byExtendingSelection:NO];
+				*stop = YES;
+			}
+		}];
 	} else {
 		self.navigationToolbar.selectedItemIdentifier = nil;
 	}
+}
+
+- (void)installSettingsSidebar
+{
+	self.settingsSidebarItems = @[
+		@{@"title": @"General", @"symbol": @"gearshape", @"tag": @(_toolbarItemIndexGeneral)},
+		@{@"title": @"Behavior", @"symbol": @"slider.horizontal.3", @"tag": @(_toolbarItemIndexBehavior)},
+		@{@"title": @"Notifications", @"symbol": @"bell", @"tag": @(_toolbarItemIndexNotifications)},
+		@{@"title": @"Highlights", @"symbol": @"text.magnifyingglass", @"tag": @(_toolbarItemIndexHighlights)},
+		@{@"title": @"Interface", @"symbol": @"rectangle.split.3x1", @"tag": @(_toolbarItemIndexInterface)},
+		@{@"title": @"Style", @"symbol": @"paintbrush", @"tag": @(_toolbarItemIndexStyle)},
+		@{@"title": @"Controls", @"symbol": @"keyboard", @"tag": @(_toolbarItemIndexControls)},
+		@{@"title": @"Addons", @"symbol": @"puzzlepiece.extension", @"tag": @(_toolbarItemIndexAddons)},
+		@{@"title": @"Advanced", @"symbol": @"gearshape.2", @"tag": @(_toolbarItemIndexAdvanced)}
+	];
+
+	NSTableView *tableView = [[NSTableView alloc] initWithFrame:NSZeroRect];
+	tableView.style = NSTableViewStyleSourceList;
+	tableView.headerView = nil;
+	tableView.delegate = (id <NSTableViewDelegate>)self;
+	tableView.dataSource = (id <NSTableViewDataSource>)self;
+	tableView.allowsEmptySelection = NO;
+
+	NSTableColumn *column = [[NSTableColumn alloc] initWithIdentifier:@"title"];
+	column.resizingMask = NSTableColumnAutoresizingMask;
+	[tableView addTableColumn:column];
+
+	NSScrollView *scrollView = [[NSScrollView alloc] initWithFrame:NSZeroRect];
+	scrollView.documentView = tableView;
+	scrollView.hasVerticalScroller = YES;
+	scrollView.borderType = NSNoBorder;
+	scrollView.drawsBackground = NO;
+
+	NSViewController *sidebarController = [[NSViewController alloc] init];
+	sidebarController.view = scrollView;
+
+	NSView *contentHost = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 700, 500)];
+	contentHost.translatesAutoresizingMaskIntoConstraints = YES;
+	contentHost.autoresizingMask = (NSViewWidthSizable | NSViewHeightSizable);
+	[contentHost setContentHuggingPriority:NSLayoutPriorityFittingSizeCompression - 1
+							forOrientation:NSLayoutConstraintOrientationHorizontal];
+	[contentHost setContentCompressionResistancePriority:NSLayoutPriorityFittingSizeCompression - 1
+										  forOrientation:NSLayoutConstraintOrientationHorizontal];
+
+	NSViewController *contentController = [[NSViewController alloc] init];
+	contentController.view = contentHost;
+
+	NSSplitViewItem *sidebarItem = [NSSplitViewItem splitViewItemWithViewController:sidebarController];
+	sidebarItem.canCollapse = NO;
+	sidebarItem.minimumThickness = 180.0;
+	sidebarItem.maximumThickness = 240.0;
+	sidebarItem.holdingPriority = (NSLayoutPriorityDefaultLow + 10);
+
+	NSSplitViewItem *contentItem = [NSSplitViewItem splitViewItemWithViewController:contentController];
+	contentItem.canCollapse = NO;
+	contentItem.holdingPriority = NSLayoutPriorityDefaultLow;
+
+	NSSplitViewController *splitViewController = [[NSSplitViewController alloc] init];
+	[splitViewController addSplitViewItem:sidebarItem];
+	[splitViewController addSplitViewItem:contentItem];
+
+	NSWindow *window = self.window;
+	window.toolbar = nil;
+	window.toolbarStyle = NSWindowToolbarStyleUnified;
+	window.title = @"Settings";
+	window.titlebarAppearsTransparent = NO;
+	window.titlebarSeparatorStyle = NSTitlebarSeparatorStyleLine;
+	window.styleMask = (NSWindowStyleMaskTitled |
+						NSWindowStyleMaskClosable |
+						NSWindowStyleMaskMiniaturizable |
+						NSWindowStyleMaskResizable);
+	window.contentViewController = splitViewController;
+	window.minSize = NSMakeSize(860.0, 560.0);
+	window.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+	window.contentMinSize = NSMakeSize(640.0, 480.0);
+	window.contentMaxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+
+	self.settingsSidebarTable = tableView;
+	self.settingsContentHost = contentHost;
+
+	[tableView reloadData];
+}
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
+{
+	if (tableView != self.settingsSidebarTable) {
+		return 0;
+	}
+
+	return (NSInteger)self.settingsSidebarItems.count;
+}
+
+- (nullable NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(nullable NSTableColumn *)tableColumn row:(NSInteger)row
+{
+	if (tableView != self.settingsSidebarTable) {
+		return nil;
+	}
+
+	NSTableCellView *cell = [tableView makeViewWithIdentifier:@"SettingsSidebarCell" owner:self];
+
+	if (cell == nil) {
+		cell = [[NSTableCellView alloc] initWithFrame:NSMakeRect(0, 0, 180, 24)];
+		cell.identifier = @"SettingsSidebarCell";
+
+		NSImageView *imageView = [[NSImageView alloc] initWithFrame:NSMakeRect(4, 2, 18, 18)];
+		imageView.translatesAutoresizingMaskIntoConstraints = NO;
+		imageView.identifier = @"symbol";
+
+		NSTextField *textField = [NSTextField labelWithString:@""];
+		textField.translatesAutoresizingMaskIntoConstraints = NO;
+
+		cell.imageView = imageView;
+		cell.textField = textField;
+
+		[cell addSubview:imageView];
+		[cell addSubview:textField];
+
+		[NSLayoutConstraint activateConstraints:@[
+			[imageView.leadingAnchor constraintEqualToAnchor:cell.leadingAnchor constant:8],
+			[imageView.centerYAnchor constraintEqualToAnchor:cell.centerYAnchor],
+			[imageView.widthAnchor constraintEqualToConstant:16],
+			[imageView.heightAnchor constraintEqualToConstant:16],
+			[textField.leadingAnchor constraintEqualToAnchor:imageView.trailingAnchor constant:8],
+			[textField.trailingAnchor constraintEqualToAnchor:cell.trailingAnchor constant:-8],
+			[textField.centerYAnchor constraintEqualToAnchor:cell.centerYAnchor]
+		]];
+	}
+
+	NSDictionary *item = self.settingsSidebarItems[(NSUInteger)row];
+	cell.textField.stringValue = item[@"title"];
+	cell.imageView.image = [NSImage imageWithSystemSymbolName:item[@"symbol"] accessibilityDescription:item[@"title"]];
+
+	return cell;
+}
+
+- (void)tableViewSelectionDidChange:(NSNotification *)notification
+{
+	if (notification.object != self.settingsSidebarTable) {
+		return;
+	}
+
+	NSInteger row = self.settingsSidebarTable.selectedRow;
+
+	if (row < 0 || row >= (NSInteger)self.settingsSidebarItems.count) {
+		return;
+	}
+
+	NSInteger tag = [self.settingsSidebarItems[(NSUInteger)row][@"tag"] integerValue];
+
+	NSMenuItem *sender = [[NSMenuItem alloc] init];
+	sender.tag = tag;
+
+	[self onPrefPaneSelected:sender];
 }
 
 - (void)restoreWindowFrame
 {
 	NSWindow *window = self.window;
 
+	window.styleMask = (NSWindowStyleMaskTitled |
+						NSWindowStyleMaskClosable |
+						NSWindowStyleMaskMiniaturizable |
+						NSWindowStyleMaskResizable);
+	window.minSize = NSMakeSize(860.0, 560.0);
+	window.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+	window.contentMinSize = NSMakeSize(640.0, 480.0);
+	window.contentMaxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+
 	[window saveSizeAsDefault];
 
 	[window restoreWindowStateForClass:self.class];
+
+	NSSize frameSize = window.frame.size;
+
+	if (frameSize.width < 860.0 || frameSize.height < 560.0) {
+		[window setContentSize:NSMakeSize(960.0, 640.0)];
+		[window center];
+	}
 }
 
 - (void)saveWindowFrame
@@ -1052,36 +1305,11 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[self.themeSelectionButton removeAllItems];
 
-	NSString *currentThemeName = themeController().name;
-
-	TPCThemeStorageLocation currentStorageLocation = themeController().storageLocation;
-
-	[themeController() enumerateAvailableThemesWithBlock:^(NSString *themeName, TPCThemeStorageLocation storageLocation, BOOL multipleVariants, BOOL *stop) {
-		NSString *displayName = themeName;
-
-		if (multipleVariants) {
-			displayName = [NSString stringWithFormat:@"%@ (%@)",
-				themeName, [TPCThemeController descriptionForStorageLocation:storageLocation]];
-		}
-
-		NSMenuItem *item = [NSMenuItem menuItemWithTitle:displayName target:nil action:nil];
-
-		item.representedObject =
-		@{
-		  @"themeName" : themeName,
-		  @"storageLocation" : @(storageLocation)
-		};
-
-		if ([currentThemeName isEqualToString:themeName] &&
-			currentStorageLocation == storageLocation)
-		{
-			item.tag = 100; // Tag for item to select
-		}
-
-		[self.themeSelectionButton.menu addItem:item];
-	}];
-
+	NSMenuItem *nativeItem = [NSMenuItem menuItemWithTitle:@"Native" target:nil action:nil];
+	nativeItem.tag = 100;
+	[self.themeSelectionButton.menu addItem:nativeItem];
 	[self.themeSelectionButton selectItemWithTag:100];
+	self.themeSelectionButton.enabled = NO;
 }
 
 - (void)onChangedThemeSelection:(id)sender

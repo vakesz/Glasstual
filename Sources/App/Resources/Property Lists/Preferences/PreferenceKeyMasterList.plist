@@ -288,14 +288,6 @@
 	<integer>0</integer>
 	<key>TextualDeveloperEnvironment</key>
 	<integer>0</integer>
-	<key>Textual 7 Upgrade -&gt; Tv7 -&gt; Remind Me Later</key>
-	<integer>0</integer>
-	<key>Textual 7 Upgrade -&gt; Tv7 -&gt; Last Dialog Presentation (LMD)</key>
-	<integer>0</integer>
-	<key>Textual 7 Upgrade -&gt; Tv7 -&gt; Eligible License Key</key>
-	<integer>0</integer>
-	<key>Textual 7 Upgrade -&gt; Tv7 -&gt; Eligibility</key>
-	<integer>0</integer>
 	<key>Textual Chat Filter Extension -&gt; Filters</key>
 	<integer>0</integer>
 	<key>Theme -&gt; Channel Font Preference Enabled</key>
@@ -345,8 +337,6 @@
 	<key>Sandbox Migration -&gt; All Extensions Pruned</key>
 	<integer>0</integer>
 	<key>Sandbox Migration -&gt; Imported Keys</key>
-	<integer>0</integer>
-	<key>TLOLicenseManagerAuthorizationCode</key>
 	<integer>0</integer>
 	<key>THOPluginManager -&gt; Extras Installer Last Check for Update Payload</key>
 	<integer>0</integer>

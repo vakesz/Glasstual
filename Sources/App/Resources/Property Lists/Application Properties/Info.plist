@@ -9,7 +9,7 @@
 	<key>CFBundleSignature</key>
 	<string>TXTL</string>
 	<key>CFBundleDisplayName</key>
-	<string>Textual IRC Client</string>
+	<string>Glasstual</string>
 	<key>CFBundleIdentifier</key>
 	<string>${PRODUCT_BUNDLE_IDENTIFIER}</string>
 	<key>CFBundleName</key>
@@ -17,9 +17,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleVersion</key>
-	<string>7.2.7</string>
+	<string>1.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>7.2.7</string>
+	<string>1.0</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2010 - 2023 Codeux Software, LLC. All rights reserved.</string>
 	<key>CFBundleExecutable</key>
@@ -31,7 +31,7 @@
 	<key>NSMainNibFile</key>
 	<string>TXCMainMenu</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>12.0</string>
+	<string>26.0</string>
 	<key>NSPrincipalClass</key>
 	<string>TXApplication</string>
 	<key>NSContactsUsageDescription</key>

@@ -59,6 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.dataSource = (id)self;
 	self.delegate = (id)self;
+	self.style = NSTableViewStyleSourceList;
 
 	self.doubleAction = @selector(outlineViewDoubleClicked:);
 }

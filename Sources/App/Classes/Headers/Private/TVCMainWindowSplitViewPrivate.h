@@ -40,6 +40,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCMainWindowSplitView ()
+@property (nonatomic, weak) NSSplitViewItem *serverListSplitItem;
+@property (nonatomic, weak) NSSplitViewItem *memberListSplitItem;
 - (void)restorePositions;
 @end
 

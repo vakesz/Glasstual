@@ -9,7 +9,19 @@
 		<key>resource:Simplified Dark</key>
 		<string>resource:Simplified</string>
 		<key>resource:Tomorrow Night (Eighties)</key>
-		<string>resource:Tomorrow</string>
+		<string>resource:Simplified</string>
+		<key>resource:Tomorrow</key>
+		<string>resource:Simplified</string>
+		<key>resource:Astria</key>
+		<string>resource:Simplified</string>
+		<key>resource:Equinox</key>
+		<string>resource:Simplified</string>
+		<key>resource:Sapientia</key>
+		<string>resource:Simplified</string>
+		<key>resource:Sulaco</key>
+		<string>resource:Simplified</string>
+		<key>resource:Total Sublime</key>
+		<string>resource:Simplified</string>
 	</dict>
 	<key>IRCClient List of NickServ Successfully Identified Tokens</key>
 	<array>

@@ -1614,7 +1614,14 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		channelFont = [TPCPreferences themeChannelViewFont];
 	}
 
-	templateTokens[@"userConfiguredFontName"] =   channelFont.fontName;
+	NSString *fontName = channelFont.fontName;
+
+	if ([fontName hasPrefix:@"."]) {
+		templateTokens[@"userConfiguredFontName"] = @"-apple-system, BlinkMacSystemFont, system-ui, sans-serif";
+	} else {
+		templateTokens[@"userConfiguredFontName"] = [NSString stringWithFormat:@"\"%@\"", fontName];
+	}
+
 	templateTokens[@"userConfiguredFontSize"] = @(channelFont.pointSize * (72.0 / 96.0));
 
 	// ---- //

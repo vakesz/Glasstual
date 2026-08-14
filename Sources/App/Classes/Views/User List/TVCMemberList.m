@@ -72,7 +72,7 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 
 	[self updateTrackingAreas];
 
-	[self registerForDraggedTypes:@[NSFilenamesPboardType]];
+	[self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
 }
 
 - (void)viewDidMoveToWindow
@@ -297,7 +297,18 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 
 - (NSArray *)draggedFiles:(id <NSDraggingInfo>)sender
 {
-	return [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+	NSArray<NSURL *> *fileURLs = [[sender draggingPasteboard] readObjectsForClasses:@[[NSURL class]]
+																			options:@{ NSPasteboardURLReadingFileURLsOnlyKey: @YES }];
+
+	NSMutableArray<NSString *> *filePaths = [NSMutableArray array];
+
+	for (NSURL *fileURL in fileURLs) {
+		if (fileURL.path.length > 0) {
+			[filePaths addObject:fileURL.path];
+		}
+	}
+
+	return [filePaths copy];
 }
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
@@ -457,15 +468,7 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 {
 	NSParameterAssert(appearance != nil);
 
-	NSVisualEffectView *visualEffectView = self.visualEffectView;
-
-	if ([TPCPreferences disableSidebarTranslucency]) {
-		visualEffectView.state = NSVisualEffectStateInactive;
-	} else {
-		visualEffectView.state = NSVisualEffectStateFollowsWindowActiveState;
-	}
-
-	visualEffectView.material = NSVisualEffectMaterialSidebar;
+	self.style = NSTableViewStyleSourceList;
 }
 
 - (void)applicationAppearanceChanged

@@ -173,35 +173,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[mutableStringValue beginEditing];
 
-	NSFont *controlFont = nil;
-
-	if (isSelected) {
-		controlFont = appearance.cellFontSelected;
-	} else {
-		controlFont = appearance.cellFont;
-	} // isSelected
-
+	NSFont *controlFont = [NSFont systemFontOfSize:13.0];
 	NSColor *controlColor = nil;
 
-	if (isSelected) {
-		if (isWindowActive) {
-			controlColor = appearance.cellSelectedTextColorActiveWindow;
-		} else {
-			controlColor = appearance.cellSelectedTextColorInactiveWindow;
-		} // isWindowActive
-	} else if (cellItem.user.isAway) {
-		if (isWindowActive) {
-			controlColor = appearance.cellAwayTextColorActiveWindow;
-		} else {
-			controlColor = appearance.cellAwayTextColorInactiveWindow;
-		} // isWindowActive
+	if (cellItem.user.isAway) {
+		controlColor = [NSColor secondaryLabelColor];
 	} else {
-		if (isWindowActive) {
-			controlColor = appearance.cellTextColorActiveWindow;
-		} else {
-			controlColor = appearance.cellTextColorInactiveWindow;
-		} // isWindowActive
+		controlColor = [NSColor labelColor];
 	}
+
+	(void)isSelected;
+	(void)isWindowActive;
+	(void)appearance;
 
 	NSRange stringValueRange = stringValue.range;
 
@@ -641,31 +624,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)drawSelectionInRect:(NSRect)dirtyRect
 {
-	if ([self needsToDrawRect:dirtyRect] == NO) {
-		return;
-	}
-
-	BOOL isWindowActive = self.mainWindow.isActiveForDrawing;
-
-	TVCMemberListAppearance *appearance = self.userInterfaceObjects;
-
-	NSColor *selectionColor = nil;
-
-	if (isWindowActive) {
-		selectionColor = appearance.rowSelectionColorActiveWindow;
-	} else {
-		selectionColor = appearance.rowSelectionColorInactiveWindow;
-	} // isWindowActive
-
-	if (selectionColor) {
-		[selectionColor set];
-
-		NSRect selectionRect = self.bounds;
-
-		NSRectFill(selectionRect);
-	} else {
-		[super drawSelectionInRect:dirtyRect];
-	} // selectionColor
+	[super drawSelectionInRect:dirtyRect];
 }
 
 - (void)didAddSubview:(NSView *)subview

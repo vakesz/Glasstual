@@ -56,10 +56,6 @@ NS_ASSUME_NONNULL_BEGIN
 @class TLOEncryptionManager;
 #endif
 
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-@class TDCLicenseManagerDialog;
-#endif
-
 @interface TXSharedApplication ()
 #if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 + (TLOEncryptionManager *)sharedEncryptionManager;
@@ -71,10 +67,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (TVCLogControllerPrintingOperationQueue *)sharedPrintingQueue;
 + (TLOSpeechSynthesizer *)sharedSpeechSynthesizer;
 + (TXWindowController *)sharedWindowController;
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-+ (TDCLicenseManagerDialog *)sharedLicenseManagerDialog;
-#endif
 
 + (TDCFileTransferDialog *)sharedFileTransferDialog;
 @end

@@ -515,6 +515,8 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 				return ConnectionError(nwPOSIXError: errorCode.rawValue)
 			case .tls(let errorCode):
 				return ConnectionError(nwTLSError: errorCode)
+			case .wifiAware(_):
+				return ConnectionError(otherError: "Wi-Fi Aware error")
 			@unknown default:
 				fatalError("Unexpected switch case")
 		}

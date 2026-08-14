@@ -130,7 +130,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)warmProcess
 {
-	NSXPCConnection *serviceConnection = [[NSXPCConnection alloc] initWithServiceName:@"com.codeux.app-utilities.Textual-IRCConnectionHost"];
+	NSXPCConnection *serviceConnection = [[NSXPCConnection alloc] initWithServiceName:@"com.vakesz.textual.IRCConnectionHost"];
 
 	NSXPCInterface *remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(RCMConnectionManagerServerProtocol)];
 

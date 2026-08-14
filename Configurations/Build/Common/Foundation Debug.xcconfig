@@ -35,3 +35,5 @@ VERSION_INFO_BUILDER = ${USER}
 // but support for this mode will be removed in a future build.
 //
 ENABLE_DEBUG_DYLIB = NO
+ENABLE_HARDENED_RUNTIME = NO
+CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES

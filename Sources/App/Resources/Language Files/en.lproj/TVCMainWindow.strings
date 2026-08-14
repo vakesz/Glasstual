@@ -62,6 +62,14 @@
 "nxz-l9" = " (away)";
 "6wz-pd" = "%1$@ (%2$@)";
 
+"st-dc" = "Disconnected";
+"st-wr" = "Waiting to reconnect";
+"st-cn" = "Connecting";
+"st-rc" = "Reconnecting";
+"st-lo" = "Logging on";
+"st-dq" = "Disconnecting";
+"st-uc" = "%@ users";
+
 "iph-a9" = "Loading configuration…";
 "5g1-i9" = "Importing preferences…";
 
