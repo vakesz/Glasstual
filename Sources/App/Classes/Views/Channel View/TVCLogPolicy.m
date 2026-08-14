@@ -259,7 +259,7 @@ TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
 {
 	NSPasteboard *pboard = [draggingInfo draggingPasteboard];
 
-	if ([pboard.types containsObject:NSFilenamesPboardType]) {
+	if ([pboard.types containsObject:NSPasteboardTypeFileURL]) {
 		return WebDragDestinationActionAny;
 	}
 

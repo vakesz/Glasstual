@@ -34,6 +34,9 @@
 // For more information see: https://github.com/robbiehanson/CocoaAsyncSocket/wiki/ARC
 #endif
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #define GCDAsyncSocketReadEOFPollsSocketForWriteStatus	1
 
 #ifndef GCDAsyncSocketLoggingEnabled
@@ -8492,4 +8495,6 @@ static void CFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType ty
 		dispatch_async(socketQueue, block);
 }
 
-@end	
+@end
+
+#pragma clang diagnostic pop

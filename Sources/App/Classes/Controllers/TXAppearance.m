@@ -100,11 +100,11 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 	switch (type) {
 		case TXAppearanceTypeBigSurLight:
 		{
-			return @"BigSurLight";
+			return @"TahoeLight";
 		}
 		case TXAppearanceTypeBigSurDark:
 		{
-			return @"BigSurDark";
+			return @"TahoeDark";
 		}
 		default:
 		{
@@ -233,6 +233,14 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 	newProperties.appKitAppearanceTarget = appKitAppearanceTarget;
 
 	self.properties = newProperties;
+
+	if (preferredAppearance == TXPreferredAppearanceInherited) {
+		NSApp.appearance = nil;
+	} else if (isAppearanceDark) {
+		NSApp.appearance = [TXAppearancePropertyCollection appKitDarkAppearance];
+	} else {
+		NSApp.appearance = [TXAppearancePropertyCollection appKitLightAppearance];
+	}
 
 	/* Notify observers */
 	if (systemChanged == NO) {

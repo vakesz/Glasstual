@@ -63,8 +63,6 @@ enum
 	MTMMAppAboutApp = 100, // "About Textual"
 	MTMMAppAboutAppSeparator = 101, // "-"
 	MTMMAppPreferences = 102, // "Preferences…"
-	MTMMAppManageLicense = 103, // "Manage license…"
-//	MTMMAppInAppPurchase = 104, // "In-app Purchase…"
 	MTMMAppCheckForUpdates = 105, // "Check for updates…"
 	MTMMAppCheckForUpdatesSeparator = 106, // "-"
 	MTMMAppServices = 107, // "Services"
@@ -447,8 +445,6 @@ enum
 - (IBAction)onNextHighlight:(id)sender;
 - (IBAction)onPreviousHighlight:(id)sender;
 
-- (IBAction)openStandaloneStoreWebpage:(id)sender;;
-
 - (IBAction)openChannelLogs:(id)sender;
 - (IBAction)openLogLocation:(id)sender;
 
@@ -499,8 +495,6 @@ enum
 
 - (IBAction)toggleMuteOnNotifications:(id)sender;
 - (IBAction)toggleMuteOnNotificationSounds:(id)sender;
-
-- (IBAction)manageLicense:(id)sender;
 
 #if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (IBAction)encryptionWhatIsThisInformation:(id)sender;

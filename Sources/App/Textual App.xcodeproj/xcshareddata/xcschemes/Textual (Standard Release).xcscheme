@@ -15,7 +15,7 @@
                   <BuildableReference
                      BuildableIdentifier = "primary"
                      BlueprintIdentifier = "4C1DC5511580420500A47BC9"
-                     BuildableName = "Textual.app"
+                     BuildableName = "Glasstual.app"
                      BlueprintName = "Textual (Standard Release)"
                      ReferencedContainer = "container:Textual App.xcodeproj">
                   </BuildableReference>
@@ -33,7 +33,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4C1DC5511580420500A47BC9"
-               BuildableName = "Textual.app"
+               BuildableName = "Glasstual.app"
                BlueprintName = "Textual (Standard Release)"
                ReferencedContainer = "container:Textual App.xcodeproj">
             </BuildableReference>
@@ -63,7 +63,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4C1DC5511580420500A47BC9"
-            BuildableName = "Textual.app"
+            BuildableName = "Glasstual.app"
             BlueprintName = "Textual (Standard Release)"
             ReferencedContainer = "container:Textual App.xcodeproj">
          </BuildableReference>
@@ -80,7 +80,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4C1DC5511580420500A47BC9"
-            BuildableName = "Textual.app"
+            BuildableName = "Glasstual.app"
             BlueprintName = "Textual (Standard Release)"
             ReferencedContainer = "container:Textual App.xcodeproj">
          </BuildableReference>
@@ -102,7 +102,7 @@
                   <BuildableReference
                      BuildableIdentifier = "primary"
                      BlueprintIdentifier = "4C1DC5511580420500A47BC9"
-                     BuildableName = "Textual.app"
+                     BuildableName = "Glasstual.app"
                      BlueprintName = "Textual (Standard Release)"
                      ReferencedContainer = "container:Textual App.xcodeproj">
                   </BuildableReference>

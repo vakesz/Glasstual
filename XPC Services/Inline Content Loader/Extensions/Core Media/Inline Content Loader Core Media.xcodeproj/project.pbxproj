@@ -496,7 +496,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				CLASSPREFIX = ICP;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2700;
 				ORGANIZATIONNAME = "Codeux Software, LLC";
 				TargetAttributes = {
 					4CA1FE571FA606890095901F = {
@@ -583,7 +583,7 @@
 			buildSettings = {
 				GCC_PREFIX_HEADER = "${PROJECT_DIR}/Classes/Headers/Private/ICPCoreMediaPCHPrivate.h";
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.InlineContentLoader-CoreMedia";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.textual.InlineContentLoader.CoreMedia";
 				PRODUCT_NAME = "Core Media";
 				WRAPPER_EXTENSION = mediaPlugin;
 			};
@@ -594,7 +594,7 @@
 			buildSettings = {
 				GCC_PREFIX_HEADER = "${PROJECT_DIR}/Classes/Headers/Private/ICPCoreMediaPCHPrivate.h";
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.InlineContentLoader-CoreMedia";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.textual.InlineContentLoader.CoreMedia";
 				PRODUCT_NAME = "Core Media";
 				WRAPPER_EXTENSION = mediaPlugin;
 			};

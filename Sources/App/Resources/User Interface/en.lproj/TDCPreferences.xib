@@ -56,13 +56,13 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <window title="Textual Preferences" allowsToolTipsWhenApplicationIsInactive="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" toolbarStyle="preference" id="4929" userLabel="Toolbar Window">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
-            <rect key="contentRect" x="367" y="318" width="670" height="240"/>
+        <window title="Settings" allowsToolTipsWhenApplicationIsInactive="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" toolbarStyle="unified" id="4929" userLabel="Toolbar Window">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <rect key="contentRect" x="367" y="318" width="960" height="640"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1055"/>
-            <value key="minSize" type="size" width="670" height="240"/>
+            <value key="minSize" type="size" width="860" height="560"/>
             <view key="contentView" id="4930">
-                <rect key="frame" x="0.0" y="0.0" width="670" height="240"/>
+                <rect key="frame" x="0.0" y="0.0" width="960" height="640"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             </view>
             <toolbar key="toolbar" implicitIdentifier="25C855D8-AFA8-4FA8-B807-F4295AE35603" autosavesConfiguration="NO" allowsUserCustomization="NO" showsBaselineSeparator="NO" displayMode="iconAndLabel" sizeMode="regular" id="T7o-OY-4Q7">
@@ -263,7 +263,7 @@
             <subviews>
                 <button translatesAutoresizingMaskIntoConstraints="NO" id="bKt-Ac-1I2">
                     <rect key="frame" x="40" y="152" width="295" height="18"/>
-                    <buttonCell key="cell" type="check" title="Request confirmation before quitting Textual" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="XAa-aA-vKv">
+                    <buttonCell key="cell" type="check" title="Request confirmation before quitting Glasstual" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="XAa-aA-vKv">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
@@ -795,7 +795,7 @@
                                         <subviews>
                                             <button translatesAutoresizingMaskIntoConstraints="NO" id="Oe8-JD-drm">
                                                 <rect key="frame" x="-2" y="29" width="420" height="18"/>
-                                                <buttonCell key="cell" type="check" title="Show number of unread private messages on Textual's Dock icon" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="JLd-nU-beO">
+                                                <buttonCell key="cell" type="check" title="Show number of unread private messages on Glasstual's Dock icon" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="JLd-nU-beO">
                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                     <font key="font" metaFont="system"/>
                                                 </buttonCell>
@@ -805,7 +805,7 @@
                                             </button>
                                             <button translatesAutoresizingMaskIntoConstraints="NO" id="CzB-hl-Vy9">
                                                 <rect key="frame" x="-2" y="-1" width="426" height="18"/>
-                                                <buttonCell key="cell" type="check" title="Show number of unread channel messages on Textual's Dock icon" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="8oW-yL-fGe">
+                                                <buttonCell key="cell" type="check" title="Show number of unread channel messages on Glasstual's Dock icon" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="8oW-yL-fGe">
                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                     <font key="font" metaFont="system"/>
                                                 </buttonCell>
@@ -825,7 +825,7 @@
                                     </stackView>
                                     <button translatesAutoresizingMaskIntoConstraints="NO" id="5zM-ja-Fht">
                                         <rect key="frame" x="40" y="91" width="286" height="18"/>
-                                        <buttonCell key="cell" type="check" title="Show notifications when Textual is focused" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="gmn-OS-fhp">
+                                        <buttonCell key="cell" type="check" title="Show notifications when Glasstual is focused" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="gmn-OS-fhp">
                                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                             <font key="font" metaFont="system"/>
                                         </buttonCell>
@@ -1639,12 +1639,12 @@
                                             <gridCell row="mZ9-hx-ewv" column="Lzf-OU-P1K" id="Iv6-fi-vMO">
                                                 <popUpButton key="contentView" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="IpK-gF-a4e">
                                                     <rect key="frame" x="171" y="25" width="154" height="25"/>
-                                                    <popUpButtonCell key="cell" type="push" title="Your Mac's Default" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Css-S7-CuP" id="Vx1-Tf-9xQ">
+                                                    <popUpButtonCell key="cell" type="push" title="System" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Css-S7-CuP" id="Vx1-Tf-9xQ">
                                                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                         <font key="font" usesAppearanceFont="YES"/>
                                                         <menu key="menu" id="EVK-x2-XAx">
                                                             <items>
-                                                                <menuItem title="Your Mac's Default" state="on" id="Css-S7-CuP"/>
+                                                                <menuItem title="System" state="on" id="Css-S7-CuP"/>
                                                                 <menuItem isSeparatorItem="YES" id="blI-1A-aBK"/>
                                                                 <menuItem title="Light" tag="1" id="FcH-RG-lTN"/>
                                                                 <menuItem title="Dark" tag="2" id="mub-Pt-QHm">
@@ -1899,7 +1899,7 @@
                                                         <action selector="onChangedUserListModeColor:" target="-2" id="IXq-I3-M72"/>
                                                         <binding destination="G2Q-fc-ddg" name="value" keyPath="values.User List Mode Badge Colors -&gt; +y" id="GzY-Ki-kDQ">
                                                             <dictionary key="options">
-                                                                <string key="NSValueTransformerName">NSUnarchiveFromData</string>
+                                                                <string key="NSValueTransformerName">TXColorUnarchiveFromData</string>
                                                             </dictionary>
                                                         </binding>
                                                     </connections>
@@ -1928,7 +1928,7 @@
                                                         <action selector="onChangedUserListModeColor:" target="-2" id="meL-e3-Oab"/>
                                                         <binding destination="G2Q-fc-ddg" name="value" keyPath="values.User List Mode Badge Colors -&gt; +q" id="jNB-MT-zjP">
                                                             <dictionary key="options">
-                                                                <string key="NSValueTransformerName">NSUnarchiveFromData</string>
+                                                                <string key="NSValueTransformerName">TXColorUnarchiveFromData</string>
                                                             </dictionary>
                                                         </binding>
                                                     </connections>
@@ -1957,7 +1957,7 @@
                                                         <action selector="onChangedUserListModeColor:" target="-2" id="qyJ-DW-aTf"/>
                                                         <binding destination="G2Q-fc-ddg" name="value" keyPath="values.User List Mode Badge Colors -&gt; +a" id="OpN-Q4-qQT">
                                                             <dictionary key="options">
-                                                                <string key="NSValueTransformerName">NSUnarchiveFromData</string>
+                                                                <string key="NSValueTransformerName">TXColorUnarchiveFromData</string>
                                                             </dictionary>
                                                         </binding>
                                                     </connections>
@@ -1986,7 +1986,7 @@
                                                         <action selector="onChangedUserListModeColor:" target="-2" id="d9J-XE-tNi"/>
                                                         <binding destination="G2Q-fc-ddg" name="value" keyPath="values.User List Mode Badge Colors -&gt; +o" id="Dbp-qa-FSS">
                                                             <dictionary key="options">
-                                                                <string key="NSValueTransformerName">NSUnarchiveFromData</string>
+                                                                <string key="NSValueTransformerName">TXColorUnarchiveFromData</string>
                                                             </dictionary>
                                                         </binding>
                                                     </connections>
@@ -2015,7 +2015,7 @@
                                                         <action selector="onChangedUserListModeColor:" target="-2" id="Y7e-RA-FfC"/>
                                                         <binding destination="G2Q-fc-ddg" name="value" keyPath="values.User List Mode Badge Colors -&gt; +h" id="AnD-Pz-Jld">
                                                             <dictionary key="options">
-                                                                <string key="NSValueTransformerName">NSUnarchiveFromData</string>
+                                                                <string key="NSValueTransformerName">TXColorUnarchiveFromData</string>
                                                             </dictionary>
                                                         </binding>
                                                     </connections>
@@ -2044,7 +2044,7 @@
                                                         <action selector="onChangedUserListModeColor:" target="-2" id="jdM-Ar-u3T"/>
                                                         <binding destination="G2Q-fc-ddg" name="value" keyPath="values.User List Mode Badge Colors -&gt; +v" id="LGN-uw-k3a">
                                                             <dictionary key="options">
-                                                                <string key="NSValueTransformerName">NSUnarchiveFromData</string>
+                                                                <string key="NSValueTransformerName">TXColorUnarchiveFromData</string>
                                                             </dictionary>
                                                         </binding>
                                                     </connections>
@@ -4832,7 +4832,7 @@ You should therefore not rely solely on this preference.</string>
             <subviews>
                 <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="V0L-wf-MX5">
                     <rect key="frame" x="151" y="30" width="369" height="15"/>
-                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Some preferences may require a restart of Textual to take effect." id="uly-It-UKM">
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Some preferences may require a restart of Glasstual to take effect." id="uly-It-UKM">
                         <font key="font" metaFont="cellTitle"/>
                         <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

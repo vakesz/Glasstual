@@ -408,7 +408,7 @@ Gw
                     <subviews>
                         <button translatesAutoresizingMaskIntoConstraints="NO" id="1531">
                             <rect key="frame" x="-2" y="43" width="201" height="18"/>
-                            <buttonCell key="cell" type="check" title="Connect when Textual opens" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="1536">
+                            <buttonCell key="cell" type="check" title="Connect when Glasstual opens" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="1536">
                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                 <font key="font" metaFont="system"/>
                             </buttonCell>

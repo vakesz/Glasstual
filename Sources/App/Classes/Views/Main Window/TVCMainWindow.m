@@ -53,6 +53,7 @@
 #import "TVCMainWindowLoadingScreenPrivate.h"
 #import "TVCMainWindowSplitViewPrivate.h"
 #import "TVCMainWindowTextViewPrivate.h"
+#import "TVCMainWindowSegmentedControlPrivate.h"
 #import "TVCMainWindowTitlebarAccessoryViewPrivate.h"
 #import "TVCServerListPrivate.h"
 #import "TVCServerListAppearancePrivate.h"
@@ -73,11 +74,9 @@
 #import "TLOKeyEventHandler.h"
 #import "TLOInputHistoryPrivate.h"
 #import "TLOLocalization.h"
-#import "TLOLicenseManagerPrivate.h"
 #import "TLONicknameCompletionStatusPrivate.h"
 #import "TLONotificationControllerPrivate.h"
 #import "TLOSpeechSynthesizerPrivate.h"
-#import "TDCLicenseManagerDialogPrivate.h"
 #import "TVCMainWindowPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -102,6 +101,9 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 @property (nonatomic, weak, readwrite) IBOutlet TVCMainWindowLoadingScreenView *loadingScreen;
 @property (nonatomic, weak, readwrite) IBOutlet TVCMemberList *memberList;
 @property (nonatomic, weak, readwrite) IBOutlet TVCServerList *serverList;
+@property (nonatomic, strong) NSSplitViewController *tahoeSplitViewController;
+@property (nonatomic, strong) NSToolbarItem *lockToolbarItem;
+@property (nonatomic, strong) TVCMainWindowSplitView *preservedContentSplitView;
 @property (nonatomic, strong) TLOInputHistory *inputHistoryManager;
 @property (nonatomic, strong) TLONicknameCompletionStatus *nicknameCompletionStatus;
 @property (nonatomic, strong, readwrite) TVCMainWindowAppearance *userInterfaceObjects;
@@ -115,6 +117,9 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 @property (nonatomic, copy, nullable) NSValue *cachedSwipeOriginPoint;
 @property (nonatomic, assign, readwrite) double textSizeMultiplier;
 @property (nonatomic, assign, readwrite) BOOL reloadingTheme;
+@end
+
+@interface TVCMainWindow (TahoeToolbar) <NSToolbarDelegate>
 @end
 
 #define _treeDragItemType		TVCServerListDragType
@@ -172,7 +177,7 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 
 	self.alphaValue = [TPCPreferences mainWindowTransparency];
 
-	[self addAccessoryViewsToTitlebar];
+	[self installTahoeWindowChrome];
 
 	[self updateAppearance];
 
@@ -205,25 +210,260 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 	[masterController() applicationWakeStepTwo];
 }
 
+static void TVCMainWindowApplySidebarMaterial(NSView *view)
+{
+	if ([view isKindOfClass:[NSVisualEffectView class]] == NO) {
+		return;
+	}
+
+	NSVisualEffectView *effectView = (NSVisualEffectView *)view;
+	effectView.material = NSVisualEffectMaterialSidebar;
+	effectView.blendingMode = NSVisualEffectBlendingModeWithinWindow;
+	effectView.state = NSVisualEffectStateFollowsWindowActiveState;
+	effectView.emphasized = YES;
+}
+
+static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier identifier, NSString *symbolName, NSString *label, id target, SEL action, BOOL navigational)
+{
+	NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:identifier];
+	item.image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:label];
+	item.label = label;
+	item.paletteLabel = label;
+	item.toolTip = label;
+	item.target = target;
+	item.action = action;
+	item.bordered = YES;
+	item.navigational = navigational;
+
+	return item;
+}
+
+- (void)installTahoeWindowChrome
+{
+	self.styleMask &= ~NSWindowStyleMaskFullSizeContentView;
+	self.titlebarAppearsTransparent = NO;
+	self.titlebarSeparatorStyle = NSTitlebarSeparatorStyleLine;
+	self.toolbarStyle = NSWindowToolbarStyleUnified;
+	self.titleVisibility = NSWindowTitleVisible;
+
+	[self installTahoeToolbar];
+	[self installTahoeSplitViewController];
+}
+
+- (void)installTahoeToolbar
+{
+	NSToolbar *toolbar = [[NSToolbar alloc] initWithIdentifier:@"TVCMainWindowToolbar"];
+	toolbar.delegate = (id <NSToolbarDelegate>)self;
+	toolbar.allowsUserCustomization = NO;
+	toolbar.autosavesConfiguration = NO;
+	toolbar.displayMode = NSToolbarDisplayModeIconOnly;
+	self.toolbar = toolbar;
+}
+
+- (NSArray<NSToolbarItemIdentifier> *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
+{
+	return @[
+		@"TVCMainWindowToolbarSidebarItem",
+		@"TVCMainWindowToolbarMemberListItem",
+		NSToolbarFlexibleSpaceItemIdentifier,
+		@"TVCMainWindowToolbarLockItem"
+	];
+}
+
+- (NSArray<NSToolbarItemIdentifier> *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
+{
+	return @[
+		@"TVCMainWindowToolbarSidebarItem",
+		NSToolbarFlexibleSpaceItemIdentifier,
+		@"TVCMainWindowToolbarLockItem",
+		@"TVCMainWindowToolbarMemberListItem"
+	];
+}
+
+- (nullable NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSToolbarItemIdentifier)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
+{
+	if ([itemIdentifier isEqualToString:@"TVCMainWindowToolbarSidebarItem"]) {
+		return TVCMainWindowMakeToolbarItem(itemIdentifier,
+										   @"sidebar.leading",
+										   @"Toggle Server List",
+										   self,
+										   @selector(toggleServerListFromToolbar:),
+										   YES);
+	}
+
+	if ([itemIdentifier isEqualToString:@"TVCMainWindowToolbarMemberListItem"]) {
+		return TVCMainWindowMakeToolbarItem(itemIdentifier,
+										   @"person.2",
+										   @"Toggle Member List",
+										   self,
+										   @selector(toggleMemberListFromToolbar:),
+										   NO);
+	}
+
+	if ([itemIdentifier isEqualToString:@"TVCMainWindowToolbarLockItem"] == NO) {
+		return nil;
+	}
+
+	NSToolbarItem *item = TVCMainWindowMakeToolbarItem(itemIdentifier,
+													  @"lock.fill",
+													  @"Connection security",
+													  self,
+													  @selector(presentCertificateTrustInformation:),
+													  NO);
+	item.hidden = YES;
+	self.lockToolbarItem = item;
+
+	return item;
+}
+
+- (void)toggleServerListFromToolbar:(id)sender
+{
+	[self.contentSplitView toggleServerListVisibility];
+}
+
+- (void)toggleMemberListFromToolbar:(id)sender
+{
+	[self.contentSplitView toggleMemberListVisibility];
+}
+
+- (void)installTahoeSplitViewController
+{
+	TVCMainWindowSplitView *legacySplitView = self.contentSplitView;
+
+	if (legacySplitView == nil || legacySplitView.subviews.count < 3) {
+		return;
+	}
+
+	self.preservedContentSplitView = legacySplitView;
+
+	NSView *serverListView = legacySplitView.subviews[0];
+	NSView *channelView = legacySplitView.subviews[1];
+	NSView *memberListView = legacySplitView.subviews[2];
+
+	TVCMainWindowApplySidebarMaterial(serverListView);
+	TVCMainWindowApplySidebarMaterial(memberListView);
+
+	[serverListView removeFromSuperview];
+	[channelView removeFromSuperview];
+	[memberListView removeFromSuperview];
+
+	serverListView.translatesAutoresizingMaskIntoConstraints = YES;
+	serverListView.autoresizingMask = (NSViewWidthSizable | NSViewHeightSizable);
+	channelView.translatesAutoresizingMaskIntoConstraints = YES;
+	channelView.autoresizingMask = (NSViewWidthSizable | NSViewHeightSizable);
+	memberListView.translatesAutoresizingMaskIntoConstraints = YES;
+	memberListView.autoresizingMask = (NSViewWidthSizable | NSViewHeightSizable);
+
+	NSViewController *serverListViewController = [[NSViewController alloc] init];
+	serverListViewController.view = serverListView;
+
+	NSViewController *channelViewController = [[NSViewController alloc] init];
+	channelViewController.view = channelView;
+
+	NSViewController *memberListViewController = [[NSViewController alloc] init];
+	memberListViewController.view = memberListView;
+
+	NSSplitViewItem *sidebarItem = [NSSplitViewItem splitViewItemWithViewController:serverListViewController];
+	sidebarItem.canCollapse = YES;
+	sidebarItem.collapseBehavior = NSSplitViewItemCollapseBehaviorPreferResizingSiblingsWithFixedSplitView;
+	sidebarItem.minimumThickness = 180.0;
+	sidebarItem.maximumThickness = 280.0;
+	sidebarItem.preferredThicknessFraction = 0.22;
+	sidebarItem.holdingPriority = NSLayoutPriorityDefaultLow + 1;
+
+	NSSplitViewItem *contentItem = [NSSplitViewItem splitViewItemWithViewController:channelViewController];
+	contentItem.automaticallyAdjustsSafeAreaInsets = NO;
+
+	NSSplitViewItem *inspectorItem = [NSSplitViewItem splitViewItemWithViewController:memberListViewController];
+	inspectorItem.canCollapse = YES;
+	inspectorItem.collapseBehavior = NSSplitViewItemCollapseBehaviorPreferResizingSiblingsWithFixedSplitView;
+	inspectorItem.minimumThickness = 160.0;
+	inspectorItem.maximumThickness = 260.0;
+	inspectorItem.preferredThicknessFraction = 0.18;
+	inspectorItem.holdingPriority = NSLayoutPriorityDefaultLow + 1;
+
+	NSView *inputBar = self.inputTextField.contentView;
+
+	if (inputBar) {
+		[inputBar removeFromSuperview];
+		inputBar.translatesAutoresizingMaskIntoConstraints = YES;
+		inputBar.autoresizingMask = (NSViewWidthSizable | NSViewHeightSizable);
+
+		NSGlassEffectView *inputGlass = [[NSGlassEffectView alloc] initWithFrame:NSMakeRect(0.0, 0.0, 400.0, 44.0)];
+		inputGlass.cornerRadius = 22.0;
+		inputGlass.contentView = inputBar;
+		inputGlass.style = NSGlassEffectViewStyleRegular;
+
+		NSSplitViewItemAccessoryViewController *inputAccessory = [[NSSplitViewItemAccessoryViewController alloc] init];
+		inputAccessory.view = inputGlass;
+		inputAccessory.automaticallyAppliesContentInsets = YES;
+
+		[contentItem addBottomAlignedAccessoryViewController:inputAccessory];
+	}
+
+	NSSplitViewController *splitViewController = [[NSSplitViewController alloc] init];
+	[splitViewController addSplitViewItem:sidebarItem];
+	[splitViewController addSplitViewItem:contentItem];
+	[splitViewController addSplitViewItem:inspectorItem];
+	splitViewController.splitView.dividerStyle = NSSplitViewDividerStyleThin;
+	splitViewController.splitView.vertical = YES;
+
+	NSView *splitHost = splitViewController.view;
+	splitHost.translatesAutoresizingMaskIntoConstraints = NO;
+
+	NSView *contentView = self.contentView;
+	NSView *loadingScreen = self.loadingScreen;
+
+	[contentView addSubview:splitHost positioned:NSWindowBelow relativeTo:loadingScreen];
+
+	[NSLayoutConstraint activateConstraints:@[
+		[splitHost.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor],
+		[splitHost.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor],
+		[splitHost.topAnchor constraintEqualToAnchor:contentView.topAnchor],
+		[splitHost.bottomAnchor constraintEqualToAnchor:contentView.bottomAnchor]
+	]];
+
+	[legacySplitView removeFromSuperview];
+
+	if (loadingScreen) {
+		loadingScreen.translatesAutoresizingMaskIntoConstraints = NO;
+
+		[NSLayoutConstraint activateConstraints:@[
+			[loadingScreen.leadingAnchor constraintEqualToAnchor:contentView.leadingAnchor],
+			[loadingScreen.trailingAnchor constraintEqualToAnchor:contentView.trailingAnchor],
+			[loadingScreen.topAnchor constraintEqualToAnchor:contentView.topAnchor],
+			[loadingScreen.bottomAnchor constraintEqualToAnchor:contentView.bottomAnchor]
+		]];
+	}
+
+	self.tahoeSplitViewController = splitViewController;
+
+	legacySplitView.serverListSplitItem = sidebarItem;
+	legacySplitView.memberListSplitItem = inspectorItem;
+
+	self.serverList.style = NSTableViewStyleSourceList;
+	self.serverList.selectionHighlightStyle = NSTableViewSelectionHighlightStyleRegular;
+	self.serverList.usesAutomaticRowHeights = NO;
+	self.serverList.rowSizeStyle = NSTableViewRowSizeStyleCustom;
+	self.serverList.rowHeight = 28.0;
+	self.serverList.indentationPerLevel = 14.0;
+	self.serverList.floatsGroupRows = NO;
+
+	self.memberList.style = NSTableViewStyleSourceList;
+	self.memberList.selectionHighlightStyle = NSTableViewSelectionHighlightStyleRegular;
+	self.memberList.usesAutomaticRowHeights = NO;
+	self.memberList.rowSizeStyle = NSTableViewRowSizeStyleCustom;
+	self.memberList.rowHeight = 24.0;
+
+	NSSegmentedControl *segmentedController = self.inputTextField.segmentedController;
+	segmentedController.segmentStyle = NSSegmentStyleRounded;
+	[segmentedController setImage:[NSImage imageWithSystemSymbolName:@"plus" accessibilityDescription:@"Add"] forSegment:0];
+	[segmentedController setImage:[NSImage imageWithSystemSymbolName:@"ellipsis" accessibilityDescription:@"Manage"] forSegment:1];
+	[segmentedController setImage:[NSImage imageWithSystemSymbolName:@"person" accessibilityDescription:@"Address Book"] forSegment:2];
+}
+
 - (void)observeNotifications
 {
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-	[RZNotificationCenter() addObserver:self
-							   selector:@selector(licenseManagerActivatedLicense:)
-								   name:TDCLicenseManagerActivatedLicenseNotification
-								 object:nil];
-
-	[RZNotificationCenter() addObserver:self
-							   selector:@selector(licenseManagerDeactivatedLicense:)
-								   name:TDCLicenseManagerDeactivatedLicenseNotification
-								 object:nil];
-
-	[RZNotificationCenter() addObserver:self
-							   selector:@selector(licenseManagerTrialExpired:)
-								   name:TDCLicenseManagerTrialExpiredNotification
-								 object:nil];
-#endif
-
 	[RZNotificationCenter() addObserver:self
 							   selector:@selector(applicationAppearanceChanged:)
 								   name:TXApplicationAppearanceChangedNotification
@@ -1797,26 +2037,6 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 }
 
 #pragma mark -
-#pragma mark License Manager
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-- (void)licenseManagerActivatedLicense:(NSNotification *)notification
-{
-	[self reloadLoadingScreen];
-}
-
-- (void)licenseManagerDeactivatedLicense:(NSNotification *)notification
-{
-	[self reloadLoadingScreen];
-}
-
-- (void)licenseManagerTrialExpired:(NSNotification *)notification
-{
-	[self reloadLoadingScreen];
-}
-#endif
-
-#pragma mark -
 #pragma mark Loading Screen
 
 - (void)setLoadingScreenProgressViewReason:(NSString *)progressReason
@@ -1839,14 +2059,6 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 
 		return NO;
 	}
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-	if (TLOLicenseManagerTextualIsRegistered() == NO && TLOLicenseManagerIsTrialExpired()) {
-		[self.loadingScreen showTrialExpiredView];
-
-		return NO;
-	}
-#endif
 
 	if (worldController().clientCount <= 0) {
 		[self.loadingScreen showWelcomeAddServerView];
@@ -1876,15 +2088,36 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 {
 	NSMenu *statusMenu = menuController().encryptionManagerStatusMenu;
 
+	NSView *positioningView = nil;
+
+	if ([sender isKindOfClass:[NSView class]]) {
+		positioningView = sender;
+	} else if ([sender isKindOfClass:[NSToolbarItem class]]) {
+		positioningView = ((NSToolbarItem *)sender).view;
+	}
+
+	if (positioningView == nil) {
+		positioningView = self.lockToolbarItem.view;
+	}
+
+	NSPoint location = NSZeroPoint;
+
+	if (positioningView) {
+		location = NSMakePoint(0.0, NSHeight(positioningView.bounds));
+	}
+
 	[statusMenu popUpMenuPositioningItem:nil
-							  atLocation:self.titlebarAccessoryViewLockButton.frame.origin
-								  inView:self.titlebarAccessoryViewLockButton];
+							  atLocation:location
+								  inView:positioningView];
 }
 #endif
 
 - (void)updateAccessoryViewLockButton
 {
 	IRCClient *u = self.selectedClient;
+	BOOL showLock = NO;
+	SEL lockAction = @selector(presentCertificateTrustInformation:);
+	NSString *symbolName = @"lock.fill";
 
 #if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	IRCChannel *c = self.selectedChannel;
@@ -1892,58 +2125,33 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 	BOOL updateEncryption = (c.isPrivateMessage && [u encryptionAllowedForTarget:c.name]);
 
 	if (updateEncryption) {
-		self.titlebarAccessoryViewLockButton.action = @selector(titlebarAccessoryViewLockButtonClicked:);
-
-		[self.titlebarAccessoryViewLockButton enableDrawingCustomBackgroundColor];
-
-		[self.titlebarAccessoryViewLockButton positionImageOnLeftSide];
-
-		[sharedEncryptionManager() updateLockIconButton:self.titlebarAccessoryViewLockButton
-											withStateOf:[u encryptionAccountNameForUser:c.name]
-												   from:[u encryptionAccountNameForLocalUser]];
-
-		self.titlebarAccessoryView.hidden = NO;
+		showLock = YES;
+		lockAction = @selector(titlebarAccessoryViewLockButtonClicked:);
+		symbolName = @"lock.fill";
 	}
 	else
 	{
 #endif
 
-		self.titlebarAccessoryViewLockButton.action = @selector(presentCertificateTrustInformation:);
-
-		[self.titlebarAccessoryViewLockButton disableDrawingCustomBackgroundColor];
-
-		[self.titlebarAccessoryViewLockButton positionImageOverContent];
-
-		self.titlebarAccessoryViewLockButton.title = @"";
-
 		if (u.isSecured) {
-			[self.titlebarAccessoryViewLockButton setIconAsLocked];
-
-			self.titlebarAccessoryView.hidden = NO;
-		} else {
-			self.titlebarAccessoryView.hidden = YES;
+			showLock = YES;
+			symbolName = @"lock.fill";
 		}
 
 #if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	}
 #endif
 
-	if (self.titlebarAccessoryView.hidden == NO) {
-		[self.titlebarAccessoryViewLockButton sizeToFit];
-	}
+	self.titlebarAccessoryView.hidden = YES;
+
+	self.lockToolbarItem.hidden = (showLock == NO);
+	self.lockToolbarItem.action = lockAction;
+	self.lockToolbarItem.image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:@"Connection security"];
+	self.lockToolbarItem.style = showLock ? NSToolbarItemStyleProminent : NSToolbarItemStylePlain;
 }
 
 - (void)addAccessoryViewsToTitlebar
 {
-	NSThemeFrame *themeFrame = (NSThemeFrame *)self.contentView.superview;
-
-	themeFrame.usesCustomTitlebarTitlePositioning = YES;
-
-	NSTitlebarAccessoryViewController *accessoryView = self.titlebarAccessoryViewController;
-
-	accessoryView.layoutAttribute = NSLayoutAttributeRight;
-
-	[self addTitlebarAccessoryViewController:accessoryView];
 }
 
 - (void)updateTitleFor:(IRCTreeItem *)item
@@ -1966,96 +2174,97 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 
 	if (u == nil && c == nil) {
 		self.title = [TPCApplicationInfo applicationName];
+		self.subtitle = @"";
 
 		return;
 	}
 
-	NSMutableString *title = [NSMutableString string];
+	NSString *status = nil;
 
 	if (u.isConnected == NO && u.isConnecting == NO) {
-		if (u.isReconnecting) {
-			[title appendString:TXTLS(@"TVCMainWindow[3yn-wd]")];
-		} else {
-			[title appendString:TXTLS(@"TVCMainWindow[q42-an]")];
-		}
+		status = (u.isReconnecting) ? TXTLS(@"TVCMainWindow[st-wr]") : TXTLS(@"TVCMainWindow[st-dc]");
 	} else if (u.isConnecting && u.isLoggedIn == NO) {
 		if (u.connectType == IRCClientConnectModeRetry || u.connectType == IRCClientConnectModeReconnect) {
-			[title appendString:TXTLS(@"TVCMainWindow[s23-zd]")];
+			status = TXTLS(@"TVCMainWindow[st-rc]");
 		} else {
-			[title appendString:TXTLS(@"TVCMainWindow[8eu-c7]")];
+			status = TXTLS(@"TVCMainWindow[st-cn]");
 		}
 	} else if (u.isConnected && u.isLoggedIn == NO) {
-		[title appendString:TXTLS(@"TVCMainWindow[wcb-y8]")];
+		status = TXTLS(@"TVCMainWindow[st-lo]");
 	} else if (u.isQuitting) {
-		[title appendString:TXTLS(@"TVCMainWindow[xqd-h9]")];
+		status = TXTLS(@"TVCMainWindow[st-dq]");
 	}
-	
-	NSString *awayStatus = ((u.userIsAway) ? TXTLS(@"TVCMainWindow[nxz-l9]") : @"");
 
-	[title appendString:TXTLS(@"TVCMainWindow[19v-bc]", u.userNickname, awayStatus, u.networkNameAlt)];
+	NSString *nickname = u.userNickname ?: @"";
 
-	if (c == nil) // = Client
-	{
-		/* If we have the actual server that the client is connected
-		 to, then we we append that. Otherwise, we just leave it blank. */
-		NSString *serverAddress = u.serverAddress;
+	if (u.userIsAway && nickname.length > 0) {
+		nickname = [nickname stringByAppendingString:TXTLS(@"TVCMainWindow[nxz-l9]")];
+	}
 
-		if (serverAddress) {
-			[title appendString:TXTLS(@"TVCMainWindow[jqk-ha]")]; // divider
+	NSString *network = u.networkNameAlt ?: @"";
 
-			[title appendString:serverAddress];
+	NSMutableArray<NSString *> *subtitleParts = [NSMutableArray array];
+
+	if (c == nil) {
+		self.title = (network.length > 0) ? network : [TPCApplicationInfo applicationName];
+
+		if (status.length > 0) {
+			[subtitleParts addObject:status];
 		}
-	}
-	else
-	{
-		[title appendString:TXTLS(@"TVCMainWindow[jqk-ha]")]; // divider
 
-		NSString *channelName = c.name;
+		if (nickname.length > 0) {
+			[subtitleParts addObject:nickname];
+		}
+
+		if (u.serverAddress.length > 0) {
+			[subtitleParts addObject:u.serverAddress];
+		}
+	} else {
+		self.title = c.name;
+
+		if (status.length > 0) {
+			[subtitleParts addObject:status];
+		}
+
+		if (network.length > 0) {
+			[subtitleParts addObject:network];
+		}
+
+		if (nickname.length > 0) {
+			[subtitleParts addObject:nickname];
+		}
 
 		switch (c.type) {
 			case IRCChannelTypeChannel:
 			{
-				[title appendString:channelName];
-
-				NSString *userCount = TXFormattedNumber(c.numberOfMembers);
-
-				[title appendString:TXTLS(@"TVCMainWindow[v6i-zb]", userCount)];
+				[subtitleParts addObject:TXTLS(@"TVCMainWindow[st-uc]", TXFormattedNumber(c.numberOfMembers))];
 
 				NSString *modeSymbols = c.modeInfo.stringWithMaskedPassword;
 
 				if (modeSymbols.length > 1) {
-					[title appendString:TXTLS(@"TVCMainWindow[cyg-g9]", modeSymbols)];
+					[subtitleParts addObject:modeSymbols];
 				}
 
 				break;
 			}
 			case IRCChannelTypePrivateMessage:
 			{
-				/* Textual defines the topic of a private message as the user host. */
-				/* If it is not defined yet, then we just use the channel name
-				 which is equal to the nickname of the private message owner. */
-				IRCUser *user = [u findUser:channelName];
+				IRCUser *user = [u findUser:c.name];
 
-				NSString *hostmask = user.hostmaskFragment;
-
-				if (hostmask) {
-					[title appendString:TXTLS(@"TVCMainWindow[6wz-pd]", channelName, hostmask)];
-				} else {
-					[title appendString:channelName];
+				if (user.hostmaskFragment.length > 0) {
+					[subtitleParts addObject:user.hostmaskFragment];
 				}
 
 				break;
 			}
 			case IRCChannelTypeUtility:
 			{
-				[title appendString:channelName];
-
 				break;
 			}
 		}
 	}
 
-	self.title = title;
+	self.subtitle = [subtitleParts componentsJoinedByString:@" · "];
 
 	[self setAccessibilityTitle:TXTLS(@"Accessibility[k79-1a]")];
 }

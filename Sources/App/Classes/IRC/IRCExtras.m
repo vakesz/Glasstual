@@ -64,7 +64,6 @@ NS_ASSUME_NONNULL_BEGIN
 	Reserved tokens:
 
 	acknowledgements					— Open acknowledgements file
-	activate-license					— Activate a license key
 	application-support-folder			— Open the Application Support folder
 	contributors						— Open contributors file
 	custom-scripts-folder				– Open the custom scripts storage location folder
@@ -84,16 +83,6 @@ NS_ASSUME_NONNULL_BEGIN
 	{
 		[menuController() openAcknowledgements:nil];
 	}
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-	else if ([action isEqualToString:@"activate-license"])
-	{
-		NSURL *licenseKeyURL = [NSURL URLWithString:sourceLocation];
-
-		[menuController() manageLicense:nil activateLicenseKeyWithURL:licenseKeyURL];
-	}
-#endif
-
 	else if ([action isEqualToString:@"application-support-folder"])
 	{
 		[RZWorkspace() openURL:[TPCPathInfo groupContainerApplicationSupportURL]];

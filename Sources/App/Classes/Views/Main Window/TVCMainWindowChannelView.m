@@ -324,11 +324,7 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 
 - (void)updateVibrancy
 {
-	if (theme().appearance == TPCThemeAppearanceTypeDark || themeSettings().underlyingWindowColorIsDark) {
-		self.appearance = [TXAppearancePropertyCollection appKitDarkAppearance];
-	} else {
-		self.appearance = [TXAppearancePropertyCollection appKitLightAppearance];
-	}
+	self.appearance = nil;
 }
 
 - (BOOL)needsDisplayWhenApplicationAppearanceChanges

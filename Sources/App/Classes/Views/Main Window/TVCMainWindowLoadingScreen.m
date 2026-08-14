@@ -50,7 +50,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) IBOutlet NSView *progressView;
 @property (nonatomic, weak) IBOutlet NSTextField *progressViewDescriptionTextField;
 @property (nonatomic, weak) IBOutlet NSProgressIndicator *progressViewIndicator;
-@property (nonatomic, strong) IBOutlet NSView *trialExpiredView;
 @end
 
 @implementation TVCMainWindowLoadingScreenView
@@ -79,11 +78,6 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(progressReason != nil);
 
 	self.progressViewDescriptionTextField.stringValue = progressReason;
-}
-
-- (void)showTrialExpiredView
-{
-	[self displayView:self.trialExpiredView];
 }
 
 #pragma mark -

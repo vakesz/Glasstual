@@ -174,30 +174,21 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(appearance != nil);
 	NSParameterAssert(drawingContext != nil);
 
-	BOOL isActive = drawingContext.isActive;
 	BOOL isGroupItem = drawingContext.isGroupItem;
-	BOOL isSelected = drawingContext.isSelected;
-	BOOL isWindowActive = drawingContext.isWindowActive;
+	BOOL isActive = drawingContext.isActive;
 
 	if (isGroupItem == NO) {
 		IRCTreeItem *cellItem = self.cellItem;
 
 		IRCChannel *channel = (IRCChannel *)cellItem;
 
-		NSString *iconName = nil;
+		NSString *symbolName = channel.isChannel ? @"number" : @"person.fill";
 
-		BOOL iconIsTemplate = NO;
+		NSImage *icon = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:channel.name];
+		icon.template = YES;
 
-		if (channel.isChannel) {
-			iconName = [appearance statusIconForActiveChannel:isActive selected:isSelected activeWindow:isWindowActive treatAsTemplate:&iconIsTemplate];
-		} else {
-			iconName = [appearance statusIconForActiveQuery:isActive selected:isSelected activeWindow:isWindowActive treatAsTemplate:&iconIsTemplate];
-		} // isChannel
-
-		NSImage *icon = [NSImage imageNamed:iconName];
-
-		icon.template = iconIsTemplate;
-
+		self.imageView.symbolConfiguration = [NSImageSymbolConfiguration configurationWithPointSize:12.0 weight:NSFontWeightMedium];
+		self.imageView.contentTintColor = isActive ? [NSColor secondaryLabelColor] : [NSColor tertiaryLabelColor];
 		self.imageView.image = icon;
 	}
 
@@ -243,83 +234,28 @@ NS_ASSUME_NONNULL_BEGIN
 	[mutableStringValue beginEditing];
 
 	NSFont *controlFont = nil;
-
 	NSColor *controlColor = nil;
 
-	if (isGroupItem)
-	{
-		if (isSelected) {
-			controlFont = appearance.serverFontSelected;
-		} else {
-			controlFont = appearance.serverFont;
-		} // isSelected
+	if (isGroupItem) {
+		controlFont = [NSFont systemFontOfSize:13.0 weight:NSFontWeightSemibold];
+		controlColor = [NSColor labelColor];
+	} else {
+		controlFont = [NSFont systemFontOfSize:13.0];
 
-		if (isSelected) {
-			if (isWindowActive) {
-				controlColor = appearance.serverSelectedTextColorActiveWindow;
-			} else {
-				controlColor = appearance.serverSelectedTextColorInactiveWindow;
-			} // isWindowActive
-		} else if (isActive) {
-			if (isWindowActive) {
-				controlColor = appearance.serverTextColorActiveWindow;
-			} else {
-				controlColor = appearance.serverTextColorInactiveWindow;
-			} // isWindowActive
+		if (isErroneous) {
+			controlColor = [NSColor systemRedColor];
+		} else if (isActive && isHighlight) {
+			controlColor = [NSColor systemBlueColor];
+		} else if (isActive == NO) {
+			controlColor = [NSColor tertiaryLabelColor];
 		} else {
-			if (isWindowActive) {
-				controlColor = appearance.serverDisabledTextColorActiveWindow;
-			} else {
-				controlColor = appearance.serverDisabledTextColorInactiveWindow;
-			} // isWindowActive
+			controlColor = [NSColor labelColor];
 		}
 	}
-	else // isGroupItem
-	{
-		if (isSelected) {
-			controlFont = appearance.channelFontSelected;
-		} else {
-			controlFont = appearance.channelFont;
-		} // isSelected
 
-		if (isSelected) {
-			if (isWindowActive) {
-				controlColor = appearance.channelSelectedTextColorActiveWindow;
-			} else {
-				controlColor = appearance.channelSelectedTextColorInactiveWindow;
-			} // isWindowActive
-		} else if (isActive && isHighlight) {
-			NSColor *customColor = appearance.unreadBadgeHighlightBackgroundColorByUser;
-
-			if (customColor && [customColor isEqual:[NSColor clearColor]] == NO) {
-				controlColor = customColor;
-			} else {
-				if (isWindowActive) {
-					controlColor = appearance.channelHighlightTextColorActiveWindow;
-				} else {
-					controlColor = appearance.channelHighlightTextColorInactiveWindow;
-				} // isWindowActive
-			} // custom color set
-		} else if (isActive) {
-			if (isWindowActive) {
-				controlColor = appearance.channelTextColorActiveWindow;
-			} else {
-				controlColor = appearance.channelTextColorInactiveWindow;
-			} // isWindowActive
-		} else if (isErroneous) {
-			if (isWindowActive) {
-				controlColor = appearance.channelErroneousTextColorActiveWindow;
-			} else {
-				controlColor = appearance.channelErroneousTextColorInactiveWindow;
-			} // isWindowActive
-		} else {
-			if (isWindowActive) {
-				controlColor = appearance.channelDisabledTextColorActiveWindow;
-			} else {
-				controlColor = appearance.channelDisabledTextColorInactiveWindow;
-			} // isWindowActive
-		}
-	} // isGroupItem
+	(void)isSelected;
+	(void)isWindowActive;
+	(void)appearance;
 
 	NSRange stringValueRange = stringValue.range;
 
@@ -613,6 +549,31 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @implementation TVCServerListCellChildItem
+
+- (void)defineConstraints
+{
+	NSImageView *imageView = self.imageView;
+
+	if (imageView == nil) {
+		return;
+	}
+
+	imageView.imageScaling = NSImageScaleProportionallyUpOrDown;
+
+	for (NSLayoutConstraint *constraint in imageView.constraints) {
+		if (constraint.firstAttribute == NSLayoutAttributeWidth ||
+			constraint.firstAttribute == NSLayoutAttributeHeight)
+		{
+			return;
+		}
+	}
+
+	[NSLayoutConstraint activateConstraints:@[
+		[imageView.widthAnchor constraintEqualToConstant:16.0],
+		[imageView.heightAnchor constraintEqualToConstant:16.0]
+	]];
+}
+
 @end
 
 @implementation TVCServerListCellDrawingContext
@@ -657,31 +618,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)drawSelectionInRect:(NSRect)dirtyRect
 {
-	if ([self needsToDrawRect:dirtyRect] == NO) {
-		return;
-	}
-
-	BOOL isWindowActive = self.mainWindow.isActiveForDrawing;
-
-	TVCServerListAppearance *appearance = self.userInterfaceObjects;
-
-	NSColor *selectionColor = nil;
-
-	if (isWindowActive) {
-		selectionColor = appearance.rowSelectionColorActiveWindow;
-	} else {
-		selectionColor = appearance.rowSelectionColorInactiveWindow;
-	} // isWindowActive
-
-	if (selectionColor) {
-		[selectionColor set];
-
-		NSRect selectionRect = self.bounds;
-
-		NSRectFill(selectionRect);
-	} else {
-		[super drawSelectionInRect:dirtyRect];
-	} // selectionColor
+	[super drawSelectionInRect:dirtyRect];
 }
 
 - (void)didAddSubview:(NSView *)subview

@@ -123,5 +123,15 @@
 		<key>inheritFrom</key>
 		<string>CommonModernLight</string>
 	</dict>
+	<key>TahoeDark</key>
+	<dict>
+		<key>inheritFrom</key>
+		<string>BigSurDark</string>
+	</dict>
+	<key>TahoeLight</key>
+	<dict>
+		<key>inheritFrom</key>
+		<string>BigSurLight</string>
+	</dict>
 </dict>
 </plist>

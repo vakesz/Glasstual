@@ -55,7 +55,6 @@
 #import "TVCMainWindowSplitView.h"
 #import "TVCMainWindowTextView.h"
 #import "TLOEncryptionManagerPrivate.h"
-#import "TLOLicenseManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TLOpenLink.h"
 #import "TDCAboutDialogPrivate.h"
@@ -67,7 +66,6 @@
 #import "TDCChannelSpotlightControllerPrivate.h"
 #import "TDCFileTransferDialogPrivate.h"
 #import "TDCInputPrompt.h"
-#import "TDCLicenseManagerDialogPrivate.h"
 #import "TDCNicknameColorSheetPrivate.h"
 #import "TDCPreferencesControllerPrivate.h"
 #import "TDCServerChangeNicknameSheetPrivate.h"
@@ -142,6 +140,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self setupOtherServices];
 
+	[self applyMenuSymbols];
+
 	[RZNotificationCenter() addObserver:self selector:@selector(menuItemWillPerformedAction:) name:NSMenuWillSendActionNotification object:nil];
 	[RZNotificationCenter() addObserver:self selector:@selector(menuItemPerformedAction:) name:NSMenuDidSendActionNotification object:nil];
 
@@ -151,6 +151,52 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setupOtherServices
 {
 	[self.fileTransferController startUsingDownloadDestinationURL];
+}
+
+- (nullable NSMenuItem *)menuItemWithTag:(NSInteger)tag inMenu:(NSMenu *)menu
+{
+	for (NSMenuItem *item in menu.itemArray) {
+		if (item.tag == tag) {
+			return item;
+		}
+
+		if (item.hasSubmenu) {
+			NSMenuItem *nestedItem = [self menuItemWithTag:tag inMenu:item.submenu];
+
+			if (nestedItem) {
+				return nestedItem;
+			}
+		}
+	}
+
+	return nil;
+}
+
+- (void)applyMenuSymbols
+{
+	NSDictionary<NSNumber *, NSString *> *symbols = @{
+		@(MTMMAppPreferences): @"gearshape",
+		@(MTMMAppAboutApp): @"info.circle",
+		@(MTMMFilePrint): @"printer",
+		@(MTMMViewToggleFullscreen): @"arrow.up.left.and.arrow.down.right",
+		@(MTMMServerConnect): @"bolt.horizontal.circle",
+		@(MTMMWindowFileTransfers): @"arrow.down.app",
+		@(MTMMNavigationSearchChannels): @"magnifyingglass",
+	};
+
+	NSMenu *mainMenu = [NSApp mainMenu];
+
+	[symbols enumerateKeysAndObjectsUsingBlock:^(NSNumber *tag, NSString *symbolName, BOOL *stop) {
+		NSMenuItem *item = [self menuItemWithTag:tag.integerValue inMenu:mainMenu];
+
+		if (item == nil) {
+			return;
+		}
+
+		NSImage *image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:item.title];
+		image.size = NSMakeSize(16.0, 16.0);
+		item.image = image;
+	}];
 }
 
 - (void)prepareForApplicationTermination
@@ -268,26 +314,11 @@ NS_ASSUME_NONNULL_BEGIN
 		validationResult = NO;
 	}
 
-	/* If trial is expired, then default everything to disabled. */
-	BOOL isTrialExpired = NO;
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-	if (TLOLicenseManagerTextualIsRegistered() == NO && TLOLicenseManagerIsTrialExpired()) {
-		/* Set flag letting logic know trial expired */
-		isTrialExpired = YES;
-
-		/* Disable everything by default except "Manage license…" */
-		validationResult = (tag == MTMMAppManageLicense);
-	} // if
-#endif
-
-	/* If certain items are hidden because of sheet but not because
-	 of the trial being expired, then enable additional items. */
-	if (validationResult == NO && defaultToNoForSheet && isTrialExpired == NO) {
+	/* If certain items are hidden because of a sheet, then enable additional items. */
+	if (validationResult == NO && defaultToNoForSheet) {
 		switch (tag) {
 			case MTMMAppAboutApp: // "About Textual"
 			case MTMMAppPreferences: // "Preferences…"
-			case MTMMAppManageLicense: // "Manage license…"
 			case MTMMAppCheckForUpdates: // "Check for updates…"
 			case MTMMHelpAdvancedMenuEnableDeveloperMode: // "Enable Developer Mode"
 			case MTMMHelpAdvancedMenuHiddenPreferences: // "Hidden Preferences…"
@@ -382,14 +413,6 @@ NS_ASSUME_NONNULL_BEGIN
 			return YES;
 		}
 
-		case MTMMAppManageLicense: // "Manage license…"
-		{
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 0
-			menuItem.hidden = YES;
-#endif
-
-			return YES;
-		}
 		case MTMMAppCheckForUpdates: // "Check for Updates"
 		{
 #if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
@@ -2464,11 +2487,6 @@ NS_ASSUME_NONNULL_BEGIN
 	[TLOpenLink openWithString:link inBackground:NO];
 }
 
-- (void)openStandaloneStoreWebpage:(id)sender
-{
-	[TLOpenLink openWithString:@"https://www.textualapp.com/standalone-store" inBackground:NO];
-}
-
 - (void)contactSupport:(id)sender
 {
 	[TLOpenLink openWithString:@"https://contact.codeux.com/" inBackground:NO];
@@ -2905,55 +2923,6 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[mainWindow() reloadTheme];
 }
-
-#pragma mark -
-#pragma mark License Manager
-
-- (void)manageLicense:(id)sender
-{
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-	[self manageLicense:sender activateLicenseKey:nil licenseKeyPassedByArgument:NO];
-#endif
-}
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-- (void)manageLicense:(id)sender activateLicenseKey:(nullable NSString *)licenseKey
-{
-	[self manageLicense:sender activateLicenseKey:licenseKey licenseKeyPassedByArgument:NO];
-}
-
-- (void)manageLicense:(id)sender activateLicenseKeyWithURL:(NSURL *)licenseKeyURL
-{
-	NSParameterAssert(licenseKeyURL != nil);
-
-	NSString *path = licenseKeyURL.path;
-
-	if (path == nil) {
-		return;
-	}
-
-	NSCharacterSet *slashCharacterSet = [NSCharacterSet characterSetWithCharactersInString:@"/"];
-
-	NSString *licenseKey = [path stringByTrimmingCharactersInSet:slashCharacterSet];
-
-	if (licenseKey.length == 0) {
-		return;
-	}
-
-	[self manageLicense:sender activateLicenseKey:licenseKey licenseKeyPassedByArgument:NO];
-}
-
-- (void)manageLicense:(id)sender activateLicenseKey:(nullable NSString *)licenseKey licenseKeyPassedByArgument:(BOOL)licenseKeyPassedByArgument
-{
-	TDCLicenseManagerDialog *licenseDialog = [TXSharedApplication sharedLicenseManagerDialog];
-
-	[licenseDialog show];
-
-	if (licenseKey) {
-		[licenseDialog activateLicenseKey:licenseKey silently:licenseKeyPassedByArgument];
-	}
-}
-#endif
 
 #pragma mark -
 #pragma mark Developer
@@ -3777,16 +3746,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Main Window Proxy
 
 @implementation TXMenuControllerMainWindowProxy
-
-- (void)openStandaloneStoreWebpage:(id)sender
-{
-	[menuController() openStandaloneStoreWebpage:sender];
-}
-
-- (void)manageLicense:(id)sender
-{
-	[menuController() manageLicense:sender];
-}
 
 - (void)showWelcomeSheet:(id)sender
 {

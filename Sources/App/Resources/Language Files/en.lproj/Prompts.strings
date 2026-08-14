@@ -52,8 +52,8 @@
 
 "68u-z9" = "Do not show this message again";
 
-"6vj-2p" = "Are you sure you want to quit Textual?";
-"77u-vp" = "Quitting will disconnect you from any server that you are connected to until you restart Textual.";
+"6vj-2p" = "Are you sure you want to quit Glasstual?";
+"77u-vp" = "Quitting will disconnect you from any server that you are connected to until you restart Glasstual.";
 "1bf-k0" = "Quit";
 
 "7gr-e4" = "Set User vHost";
@@ -122,7 +122,7 @@ If you are the developer of one of these addons: In the Info.plist file of your 
 "2a3-5s" = "Choose Different Style";
 
 "ezn-rm" = "The style named “%@” wants to enable dark mode but styles are no longer allowed to change that preference";
-"193-6o" = "Do you want to keep Textual's light appearance or switch to dark mode?";
+"193-6o" = "Do you want to keep Glasstual's light appearance or switch to dark mode?";
 "hf0-w3" = "Keep It Light";
 "hv0-79" = "Paint It Black";
 

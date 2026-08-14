@@ -99,7 +99,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)connectToService
 {
-	NSXPCConnection *serviceConnection = [[NSXPCConnection alloc] initWithServiceName:@"com.codeux.app-utilities.Textual-InlineContentLoader"];
+	NSXPCConnection *serviceConnection = [[NSXPCConnection alloc] initWithServiceName:@"com.vakesz.textual.InlineContentLoader"];
 
 	NSXPCInterface *remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentServerProtocol)];
 
