@@ -1176,9 +1176,9 @@ static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL * __str
 
 	self.settingsKeyValueStoreName = [self.class _stringForKey:@"Key-value Store Name" fromDictionary:settings];
 
-	self.js_postHandleEventNotifications = [settings boolForKey:@"Post Textual.handleEvent() Notifications"];
-	self.js_postAppearanceChangesNotification = [settings boolForKey:@"Post Textual.appearanceDidChange() Notifications"];
-	self.js_postPreferencesDidChangesNotifications = [settings boolForKey:@"Post Textual.preferencesDidChange() Notifications"];
+	self.js_postHandleEventNotifications = [settings boolForKey:@"Post Glasstual.handleEvent() Notifications"];
+	self.js_postAppearanceChangesNotification = [settings boolForKey:@"Post Glasstual.appearanceDidChange() Notifications"];
+	self.js_postPreferencesDidChangesNotifications = [settings boolForKey:@"Post Glasstual.preferencesDidChange() Notifications"];
 
 	/* Disable indentation? */
 	id indentationOffset = settings[@"Indentation Offset"];
@@ -1397,12 +1397,8 @@ static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL * __str
 		return NO;
 	}
 
-	BOOL removeValue = ( objectValue == nil ||
-						[objectValue isKindOfClass:[NSNull class]] ||
-
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
-						[objectValue isKindOfClass:[WebUndefined class]]);
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
+	BOOL removeValue = (objectValue == nil ||
+						[objectValue isKindOfClass:[NSNull class]]);
 
 	NSDictionary *styleSettings = [RZUserDefaults() dictionaryForKey:storeKey];
 

@@ -147,24 +147,24 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 		/* Begin version comparison */
 		NSDictionary *infoDictionary = bundle.infoDictionary;
 
-		NSString *comparisonVersion = infoDictionary[@"MinimumTextualVersion"];
+		NSString *comparisonVersion = infoDictionary[@"MinimumGlasstualVersion"];
 
 		if (comparisonVersion == nil) {
 			[obsoleteBundles addObject:bundle];
 
 			NSLog(@" ---------------------------- ERROR ---------------------------- ");
 			NSLog(@"                                                                 ");
-			NSLog(@"  Textual has failed to load the bundle at the following path    ");
+			NSLog(@"  Glasstual has failed to load the bundle at the following path    ");
 			NSLog(@"  which did not specify a minimum version:                       ");
 			NSLog(@"                                                                 ");
 			NSLog(@"     Bundle Path: %@", bundle.bundlePath);
 			NSLog(@"                                                                 ");
 			NSLog(@"  Please add a key-value pair in the bundle's Info.plist file    ");
-			NSLog(@"  with the key name as \"MinimumTextualVersion\"                 ");
+			NSLog(@"  with the key name as \"MinimumGlasstualVersion\"                 ");
 			NSLog(@"                                                                 ");
 			NSLog(@"  For example, to support this version and later:                ");
 			NSLog(@"                                                                 ");
-			NSLog(@"     <key>MinimumTextualVersion</key>                            ");
+			NSLog(@"     <key>MinimumGlasstualVersion</key>                            ");
 			NSLog(@"     <string>%@</string>", THOPluginProtocolCompatibilityMinimumVersion);
 			NSLog(@"                                                                 ");
 			NSLog(@" --------------------------------------------------------------- ");
@@ -180,13 +180,13 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 
 			NSLog(@" ---------------------------- ERROR ---------------------------- ");
 			NSLog(@"                                                                 ");
-			NSLog(@"  Textual has failed to load the bundle at the following path    ");
+			NSLog(@"  Glasstual has failed to load the bundle at the following path    ");
 			NSLog(@"  because the specified minimum version is out of range:         ");
 			NSLog(@"                                                                 ");
 			NSLog(@"     Bundle Path: %@", bundle.bundlePath);
 			NSLog(@"                                                                 ");
 			NSLog(@"     Minimum version specified by bundle: %@", comparisonVersion);
-			NSLog(@"     Version used by Textual for comparison: %@", THOPluginProtocolCompatibilityMinimumVersion);
+			NSLog(@"     Version used by Glasstual for comparison: %@", THOPluginProtocolCompatibilityMinimumVersion);
 			NSLog(@"                                                                 ");
 			NSLog(@" --------------------------------------------------------------- ");
 
@@ -368,22 +368,31 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 		return;
 	}
 
-	NSArray *thirdPartyBundles = [obsoleteThirdParty copy];
+	[self _presentObsoleteBundlesAlertForBundles:[obsoleteThirdParty copy]];
+}
 
+- (void)_presentObsoleteBundlesAlertForBundles:(NSArray *)thirdPartyBundles
+{
 	NSString *bundlesName = [NSBundle formattedDisplayNamesForBundles:thirdPartyBundles];
 
-	TVCAlert *alert =
 	[TDCAlert alertWithMessage:TXTLS(@"Prompts[45a-df]", THOPluginProtocolCompatibilityMinimumVersion)
 						 title:TXTLS(@"Prompts[af6-45]", bundlesName)
 				 defaultButton:TXTLS(@"Prompts[324-5d]")
 			   alternateButton:nil
-				   otherButton:TXTLS(@"Prompts[0ik-o9]")];
+				   otherButton:TXTLS(@"Prompts[0ik-o9]")
+				suppressionKey:nil
+			   suppressionText:nil
+			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id _Nullable underlyingAlert) {
+		if (buttonClicked != TDCAlertResponseOther) {
+			return;
+		}
 
-	[alert setButtonClickedBlock:^BOOL(TVCAlert *sender, TVCAlertResponseButton buttonClicked) {
+		/* Revealing the bundles is not an answer to the question the alert
+		 asks, so ask it again once the user has had a look. */
 		[NSBundle openInstallationLocationsForBundles:thirdPartyBundles];
 
-		return NO;
-	} forButton:TVCAlertResponseButtonThird];
+		[self _presentObsoleteBundlesAlertForBundles:thirdPartyBundles];
+	}];
 }
 
 - (void)extrasInstallerCheckForUpdates
@@ -462,7 +471,7 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 	NSParameterAssert(bundles != nil);
 
 	/* Append the current version to the suppression key so that updates 
-	 aren't refused forever. Only until the next version of Textual is out. */
+	 aren't refused forever. Only until the next version of Glasstual is out. */
 	NSString *suppressionKey = nil;
 
 	if (updateOptional) {
@@ -479,7 +488,6 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 	NSString *promptAlternateButton = ((updateOptional) ? @"Prompts[ioq-nf]" : @"Prompts[467-5l]");
 	NSString *promptOtherButton = ((updateOptional) ? nil : TXTLS(@"Prompts[h78-9e]"));
 
-	TVCAlert *alert =
 	[TDCAlert alertWithMessage:TXTLS(promptMessage)
 						 title:TXTLS(promptTitle, bundlesName)
 				 defaultButton:TXTLS(promptDefaultButton)
@@ -488,16 +496,12 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 				suppressionKey:suppressionKey
 			   suppressionText:nil
 			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id  _Nullable underlyingAlert) {
-				   if (buttonClicked == TDCAlertResponseAlternate) {
-					   [self extrasInstallerLaunchInstaller];
-				   }
-			   }];
-
-	[alert setButtonClickedBlock:^BOOL(TVCAlert *sender, TVCAlertResponseButton buttonClicked) {
-		[NSBundle openInstallationLocationsForBundles:bundles];
-
-		return NO;
-	} forButton:TVCAlertResponseButtonThird];
+		if (buttonClicked == TDCAlertResponseAlternate) {
+			[self extrasInstallerLaunchInstaller];
+		} else if (buttonClicked == TDCAlertResponseOther) {
+			[NSBundle openInstallationLocationsForBundles:bundles];
+		}
+	}];
 }
 
 - (NSArray<NSString *> *)extrasInstallerBundleIdentifiers
@@ -599,7 +603,7 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 
 - (void)extrasInstallerLaunchInstaller
 {
-	NSURL *extrasURL = [RZMainBundle() URLForResource:@"Textual-Extras" withExtension:@"pkg"];
+	NSURL *extrasURL = [RZMainBundle() URLForResource:@"Glasstual-Extras" withExtension:@"pkg"];
 
 	NSURL *installerURL =
 	[RZWorkspace() URLForApplicationWithBundleIdentifier:@"com.apple.installer"];

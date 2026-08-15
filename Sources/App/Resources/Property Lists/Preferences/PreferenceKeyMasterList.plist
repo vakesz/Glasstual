@@ -286,9 +286,9 @@
 	<integer>0</integer>
 	<key>TextFieldTextReplacement</key>
 	<integer>0</integer>
-	<key>TextualDeveloperEnvironment</key>
+	<key>GlasstualDeveloperEnvironment</key>
 	<integer>0</integer>
-	<key>Textual Chat Filter Extension -&gt; Filters</key>
+	<key>Glasstual Chat Filter Extension -&gt; Filters</key>
 	<integer>0</integer>
 	<key>Theme -&gt; Channel Font Preference Enabled</key>
 	<integer>0</integer>
@@ -361,8 +361,6 @@
 	<key>User List Mode Badge Colors -&gt; no mode</key>
 	<integer>0</integer>
 	<key>UserListDoubleClickAction</key>
-	<integer>0</integer>
-	<key>UsesWebKit2WhenAvailable</key>
 	<integer>0</integer>
 	<key>WebViewDoNotUsesCustomScrollers</key>
 	<integer>0</integer>

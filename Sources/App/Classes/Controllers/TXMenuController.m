@@ -52,7 +52,6 @@
 #import "TVCLogViewInternalWK2.h"
 #import "TVCMemberList.h"
 #import "TVCMainWindowPrivate.h"
-#import "TVCMainWindowSplitView.h"
 #import "TVCMainWindowTextView.h"
 #import "TLOEncryptionManagerPrivate.h"
 #import "TLOLocalization.h"
@@ -81,7 +80,7 @@
 #import "TXWindowControllerPrivate.h"
 #import "TXMenuControllerPrivate.h"
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 #import <Sparkle/Sparkle.h>
 #endif
 
@@ -105,7 +104,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readwrite) IBOutlet NSMenu *channelViewURLMenu;
 @property (nonatomic, strong, readwrite) IBOutlet NSMenu *dockMenu;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 @property (nonatomic, strong, readwrite) IBOutlet NSMenu *encryptionManagerStatusMenu;
 #endif
 
@@ -317,7 +316,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* If certain items are hidden because of a sheet, then enable additional items. */
 	if (validationResult == NO && defaultToNoForSheet) {
 		switch (tag) {
-			case MTMMAppAboutApp: // "About Textual"
+			case MTMMAppAboutApp: // "About Glasstual"
 			case MTMMAppPreferences: // "Preferences…"
 			case MTMMAppCheckForUpdates: // "Check for updates…"
 			case MTMMHelpAdvancedMenuEnableDeveloperMode: // "Enable Developer Mode"
@@ -341,18 +340,14 @@ NS_ASSUME_NONNULL_BEGIN
 	 controller which means they never pass through this logic. */
 	if (validationResult == NO) {
 		switch (tag) {
-			case MTMMAppAboutApp: // "About Textual"
-			case MTMMAppQuitApp: // "Quit Textual & IRC"
+			case MTMMAppAboutApp: // "About Glasstual"
+			case MTMMAppQuitApp: // "Quit Glasstual & IRC"
 			case MTMMFilePrint: // "Print"
 			case MTMMFileCloseWindow: // "Close Window"
 			case MTMMEditPaste: // "Paste"
 			case MTMMViewToggleFullscreen: // "Toggle Fullscreen"
 			case MTMMWindowMainWindow: // "Main Window"
 			case MTMMHelpAcknowledgements: // "Acknowledgements"
-			case MTMMHelpLicenseAgreement: // "License Agreement"
-			case MTMMHelpPrivacyPolicy: // "Privacy Policy"
-			case MTMMHelpFrequentlyAskedQuestions: // "Frequently Asked Questions"
-			case MTMMHelpKnowledgeBaseMenu: // "Knowledge Base"
 			case MTMMHelpAdvancedMenu: // "Advanced"
 			case MTMMHelpAdvancedMenuExportPreferences: // "Export Preferences"
 			{
@@ -362,10 +357,6 @@ NS_ASSUME_NONNULL_BEGIN
 			}
 			default:
 			{
-				if (menuItem.parentItem.tag == MTMMHelpKnowledgeBaseMenu) {
-					validationResult = YES;
-				}
-
 				break;
 			}
 		} // switch
@@ -415,7 +406,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		case MTMMAppCheckForUpdates: // "Check for Updates"
 		{
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
 			menuItem.hidden = YES;
 #endif
 
@@ -519,7 +510,13 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 		case MTMMViewToggleFullscreen:
 		{
-			NSWindowCollectionBehavior collectionBehavior = [NSApp keyWindow].collectionBehavior;
+			NSWindow *keyWindow = [NSApp keyWindow];
+
+			BOOL inFullscreen = ((keyWindow.styleMask & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen);
+
+			menuItem.title = (inFullscreen ? TXTLS(@"TVCMainWindow[mnu-xfs]") : TXTLS(@"TVCMainWindow[mnu-efs]"));
+
+			NSWindowCollectionBehavior collectionBehavior = keyWindow.collectionBehavior;
 
 			return ((collectionBehavior & NSWindowCollectionBehaviorFullScreenAuxiliary) == NSWindowCollectionBehaviorFullScreenAuxiliary ||
 					(collectionBehavior & NSWindowCollectionBehaviorFullScreenPrimary) == NSWindowCollectionBehaviorFullScreenPrimary);
@@ -672,7 +669,7 @@ NS_ASSUME_NONNULL_BEGIN
 			return [TPCPreferences logToDiskIsEnabled];
 		}
 
-		case MTMMWindowToggleVisibilityOfServerList: // "Toggle Visibility of Server List"
+		case MTMMWindowToggleVisibilityOfServerList: // "Show / Hide Server List"
 		case MTMMWindowSortChannelList: // "Sort Channel List"
 		case MTMMWindowCenterWindow: // "Center Window"
 		case MTMMWindowResetWindowToDefaultSize: // "Reset Window to Default Size"
@@ -681,7 +678,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 			menuItem.hidden = (isMainWindowMain == NO);
 
-			if (tag == MTMMWindowSortChannelList) {
+			if (tag == MTMMWindowToggleVisibilityOfServerList) {
+				menuItem.title = (mainWindow().serverListVisible ?
+								  TXTLS(@"TVCMainWindow[mnu-hsl]") : TXTLS(@"TVCMainWindow[mnu-ssl]"));
+			} else if (tag == MTMMWindowSortChannelList) {
 				[menuItem.menu itemWithTag:MTMMWindowSortChannelListSeparator].hidden = (isMainWindowMain == NO);
 			} else if (tag == MTMMWindowResetWindowToDefaultSize) {
 				[menuItem.menu itemWithTag:MTMMWindowResetWindowToDefaultSizeSeparator].hidden = (isMainWindowMain == NO);
@@ -698,11 +698,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 			return (isMainWindowDisabled == NO);
 		}
-		case MTMMWindowToggleVisibilityOfMemberList: // "Toggle Visibility of Member List"
+		case MTMMWindowToggleVisibilityOfMemberList: // "Show / Hide Member List"
 		{
 			BOOL isMainWindowMain = mainWindow().mainWindow;
 
 			menuItem.hidden = (isMainWindowMain == NO);
+
+			menuItem.title = (mainWindow().memberListVisible ?
+							  TXTLS(@"TVCMainWindow[mnu-hml]") : TXTLS(@"TVCMainWindow[mnu-sml]"));
 
 			return c.isChannel;
 		}
@@ -935,7 +938,7 @@ NS_ASSUME_NONNULL_BEGIN
 			return (u.isLoggedIn && c.isUtility == NO);
 		}
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 		case MTOTRStatusButtonStartPrivateConversation:
 		case MTOTRStatusButtonRefreshPrivateConversation:
 		case MTOTRStatusButtonEndPrivateConversation:
@@ -1270,7 +1273,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *resultString = nil;
 
-	TVCAlertResponseButton response =
+	NSModalResponse response =
 	[TDCInputPrompt promptWithMessage:TXTLS(@"Prompts[d2w-4o]")
 								title:TXTLS(@"Prompts[akr-eh]")
 						defaultButton:TXTLS(@"Prompts[q5h-xx]")
@@ -1278,7 +1281,7 @@ NS_ASSUME_NONNULL_BEGIN
 						prefillString:self.currentSearchPhrase
 						 resultString:&resultString];
 
-	if (response == TVCAlertResponseButtonFirst) {
+	if (response == NSAlertFirstButtonReturn) {
 		promptCompletionBlock(resultString);
 	}
 }
@@ -2273,7 +2276,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *vhost = nil;
 
-	TVCAlertResponseButton response =
+	NSModalResponse response =
 	[TDCInputPrompt promptWithMessage:TXTLS(@"Prompts[2mx-jf]")
 								title:TXTLS(@"Prompts[7gr-e4]")
 						defaultButton:TXTLS(@"Prompts[c7s-dq]")
@@ -2281,7 +2284,7 @@ NS_ASSUME_NONNULL_BEGIN
 						prefillString:nil
 						 resultString:&vhost];
 
-	if (response == TVCAlertResponseButtonFirst) {
+	if (response == NSAlertFirstButtonReturn) {
 		promptCompletionBlock(vhost);
 	}
 }
@@ -2460,46 +2463,20 @@ NS_ASSUME_NONNULL_BEGIN
 	[RZWorkspace() openURL:Acknowledgements];
 }
 
-- (void)openHelpMenuItem:(id)sender
-{
-	NSParameterAssert(sender != nil);
-
-	NSDictionary *_helpMenuLinks = @{
-	   @(MTMMHelpLicenseAgreement) 					: @"https://help.codeux.com/textual/End-User-License-Agreement.kb",
-	   @(MTMMHelpPrivacyPolicy) 					: @"https://help.codeux.com/textual/Privacy-Policy.kb",
-	   @(MTMMHelpFrequentlyAskedQuestions) 			: @"https://help.codeux.com/textual/Frequently-Asked-Questions.kb",
-	   @(MTMMHelpKBMenuKnowledgeBaseHome) 			: @"https://help.codeux.com/textual/home.kb",
-	   @(MTMMHelpKBMenuChatEncryption) 				: @"https://help.codeux.com/textual/Off-the-Record-Messaging.kb",
-	   @(MTMMHelpKBMenuCommandReference) 			: @"https://help.codeux.com/textual/Command-Reference.kb",
-	   @(MTMMHelpKBMenuFeatureRequests) 			: @"https://help.codeux.com/textual/Support.kb",
-	   @(MTMMHelpKBMenuKeyboardShortcuts) 			: @"https://help.codeux.com/textual/Keyboard-Shortcuts.kb",
-	   @(MTMMHelpKBMenuMemoryManagement) 			: @"https://help.codeux.com/textual/Memory-Management.kb",
-	   @(MTMMHelpKBMenuNetworkTimeouts)				: @"https://help.codeux.com/textual/Network-Timeouts.kb",
-	   @(MTMMHelpKBMenuTextFormatting) 				: @"https://help.codeux.com/textual/Text-Formatting.kb",
-	   @(MTMMHelpKBMenuStylingInformation) 			: @"https://help.codeux.com/textual/Styles.kb",
-	   @(MTMMHelpKBMenuConnectingWithCertificate) 	: @"https://help.codeux.com/textual/Using-CertFP.kb",
-	   @(MTMMHelpKBMenuConnectingToBouncer)			: @"https://help.codeux.com/textual/Connecting-to-ZNC-Bouncer.kb",
-	   @(MTMMHelpKBMenuDCCFileTransferInformation) 	: @"https://help.codeux.com/textual/DCC-File-Transfer-Information.kb"
-	};
-
-	NSString *link = _helpMenuLinks[@([sender tag])];
-
-	[TLOpenLink openWithString:link inBackground:NO];
-}
 
 - (void)contactSupport:(id)sender
 {
 	[TLOpenLink openWithString:@"https://contact.codeux.com/" inBackground:NO];
 }
 
-- (void)connectToTextualHelpChannel:(id)sender
+- (void)connectToGlasstualHelpChannel:(id)sender
 {
-	[IRCExtras createConnectionToServer:@"irc.libera.chat +6697" channelList:@"#textual" connectWhenCreated:YES mergeConnectionIfPossible:YES selectFirstChannelAdded:YES];
+	[IRCExtras createConnectionToServer:@"irc.libera.chat +6697" channelList:@"#glasstual" connectWhenCreated:YES mergeConnectionIfPossible:YES selectFirstChannelAdded:YES];
 }
 
-- (void)connectToTextualTestingChannel:(id)sender
+- (void)connectToGlasstualTestingChannel:(id)sender
 {
-	[IRCExtras createConnectionToServer:@"irc.libera.chat +6697" channelList:@"#textual-testing" connectWhenCreated:YES mergeConnectionIfPossible:YES selectFirstChannelAdded:YES];
+	[IRCExtras createConnectionToServer:@"irc.libera.chat +6697" channelList:@"#glasstual-testing" connectWhenCreated:YES mergeConnectionIfPossible:YES selectFirstChannelAdded:YES];
 }
 
 #pragma mark -
@@ -2750,7 +2727,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Off-the-Record Messaging
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 #define _encryptionNotEnabled		([TPCPreferences textEncryptionIsEnabled] == NO)
 
 - (void)encryptionStartPrivateConversation:(id)sender
@@ -2808,11 +2785,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)encryptionListFingerprints:(id)sender
 {
 	[sharedEncryptionManager() presentListOfFingerprints];
-}
-
-- (void)encryptionWhatIsThisInformation:(id)sender
-{
-	[TLOpenLink openWithString:@"https://help.codeux.com/textual/Off-the-Record-Messaging.kb" inBackground:NO];
 }
 
 #undef _encryptionNotEnabled
@@ -2909,14 +2881,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)toggleServerListVisibility:(id)sender
 {
-	[mainWindow().contentSplitView toggleServerListVisibility];
+	[mainWindow() toggleServerListVisibility];
 }
 
 - (void)toggleMemberListVisibility:(id)sender
 {
 	mainWindowMemberList().isHiddenByUser = (mainWindowMemberList().isHiddenByUser == NO);
 
-	[mainWindow().contentSplitView toggleMemberListVisibility];
+	[mainWindow() toggleMemberListVisibility];
 }
 
 - (void)forceReloadTheme:(id)sender
@@ -2952,7 +2924,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)checkForUpdates:(id)sender
 {
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	SPUStandardUpdaterController *controller = masterController().updateController;
 
 	[controller checkForUpdates:sender];

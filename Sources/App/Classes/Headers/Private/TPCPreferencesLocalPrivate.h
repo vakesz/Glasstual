@@ -47,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)setDeveloperModeEnabled:(BOOL)developerModeEnabled;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 + (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic;
 + (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired;
 + (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled;
@@ -116,7 +116,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)setTextFieldDataDetectors:(BOOL)value;
 + (void)setTextFieldTextReplacement:(BOOL)value;
 
-+ (void)setWebKit2Enabled:(BOOL)webKit2Enabled;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -47,24 +47,24 @@ typedef NSString *TVCLogRendererResultsAttribute NS_STRING_ENUM;
 /* Properties to configure the renderer and provide additional
  context so that it can provide the best possible results. */
 /* These properties do not apply to attributed strings */
-TEXTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationRenderLinksAttribute; // BOOL
-TEXTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationLineTypeAttribute; // TVCLogLineType
-TEXTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationMemberTypeAttribute; // TVCLogMemberType
-TEXTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationHighlightKeywordsAttribute; // NSArray<NSString *>
-TEXTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationExcludedKeywordsAttribute; // NSArray<NSString *>
-TEXTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationDoNotEscapeBodyAttribute; // BOOL
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationRenderLinksAttribute; // BOOL
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationLineTypeAttribute; // TVCLogLineType
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationMemberTypeAttribute; // TVCLogMemberType
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationHighlightKeywordsAttribute; // NSArray<NSString *>
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationExcludedKeywordsAttribute; // NSArray<NSString *>
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationDoNotEscapeBodyAttribute; // BOOL
 
 /* These properties apply to attributed strings */
-TEXTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationAttributedStringPreferredFontAttribute; // NSFont
-TEXTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute; // NSColor
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationAttributedStringPreferredFontAttribute; // NSFont
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute; // NSColor
 
 /* Properties that are returned in the outputDictionary of a render */
 /* The output dictionary is not guaranteed to contain any key. */
-TEXTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsListOfLinksInBodyAttribute; // NSArray<AHHyperlinkScannerResult *>
-TEXTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsListOfLinksMappedInBodyAttribute; // NSDictionary<NSString *, NSString *>
-TEXTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsKeywordMatchFoundAttribute; // BOOL
-TEXTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsListOfUsersFoundAttribute; // NSSet<IRCChannelUser *>
-TEXTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute; // NSString
+GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsListOfLinksInBodyAttribute; // NSArray<AHHyperlinkScannerResult *>
+GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsListOfLinksMappedInBodyAttribute; // NSDictionary<NSString *, NSString *>
+GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsKeywordMatchFoundAttribute; // BOOL
+GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsListOfUsersFoundAttribute; // NSSet<IRCChannelUser *>
+GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute; // NSString
 
 @interface TVCLogRenderer : NSObject
 + (NSString *)escapeHTML:(NSString *)html;

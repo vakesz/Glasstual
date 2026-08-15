@@ -96,7 +96,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Process commands */
 	if ([commandString isEqualToStringIgnoringCase:@"ZNCCERT"])
 	{
-		/* Textual is designed not to import partial content. It will either
+		/* Glasstual is designed not to import partial content. It will either
 		 return the complete certificate chain at this point, or nil. */
 		NSData *certificateData = client.zncBouncerCertificateChainData;
 
@@ -343,7 +343,7 @@ NS_ASSUME_NONNULL_BEGIN
 	else if ([stringIn hasPrefix:@"changed the topic to: "])
 	{
 		/* Begin topic change */
-		/* We get the latest topic on join so we tell Textual to ignore this line. */
+		/* We get the latest topic on join so we tell Glasstual to ignore this line. */
 
 		return nil;
 		/* End topic change */

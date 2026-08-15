@@ -156,17 +156,17 @@
 		4C9A93391FA65970003C3DB5 /* Core Media.mediaPlugin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "Core Media.mediaPlugin"; path = "../../../.tmp/SharedBuildProducts-ICLExtension/Core Media.mediaPlugin"; sourceTree = "<group>"; };
 		4CA1FE8D1FA6261A0095901F /* BuildExtensions.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = BuildExtensions.sh; sourceTree = "<group>"; };
 		4CE1447F20EC01AD000E01C9 /* CocoaExtensions.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CocoaExtensions.framework; path = "../../.tmp/SharedBuildProducts-Frameworks/CocoaExtensions.framework"; sourceTree = SOURCE_ROOT; };
-		4CE1448720EC02A3000E01C9 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
+		4CE1448720EC02A3000E01C9 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
 		4CE1448920EC02A3000E01C9 /* XPC Service - ICL.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "XPC Service - ICL.xcconfig"; sourceTree = "<group>"; };
 		4CE1448A20EC02A3000E01C9 /* XPC Services.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "XPC Services.xcconfig"; sourceTree = "<group>"; };
 		4CE1448C20EC02A3000E01C9 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
-		4CE1449A20EC02A3000E01C9 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
+		4CE1449A20EC02A3000E01C9 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
 		4CE1449B20EC02A3000E01C9 /* Preserve Symbols.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Preserve Symbols.xcconfig"; sourceTree = "<group>"; };
 		4CE1449D20EC02A3000E01C9 /* XPC Service - ICL.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "XPC Service - ICL.xcconfig"; sourceTree = "<group>"; };
 		4CE1449E20EC02A3000E01C9 /* Foundation.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Foundation.xcconfig; sourceTree = "<group>"; };
 		4CE1449F20EC02A3000E01C9 /* XPC Services.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "XPC Services.xcconfig"; sourceTree = "<group>"; };
 		4CE144A120EC02A3000E01C9 /* Foundation Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Foundation Debug.xcconfig"; sourceTree = "<group>"; };
-		4CE144AF20EC02A3000E01C9 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
+		4CE144AF20EC02A3000E01C9 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
 		4CE144B120EC02A3000E01C9 /* XPC Service - ICL.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "XPC Service - ICL.xcconfig"; sourceTree = "<group>"; };
 		4CE144B220EC02A3000E01C9 /* XPC Services.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "XPC Services.xcconfig"; sourceTree = "<group>"; };
 		4CE144B420EC02A3000E01C9 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
@@ -456,7 +456,7 @@
 			isa = PBXGroup;
 			children = (
 				4CE1448C20EC02A3000E01C9 /* Enabled Features.xcconfig */,
-				4CE1448720EC02A3000E01C9 /* Textual.xcconfig */,
+				4CE1448720EC02A3000E01C9 /* Glasstual.xcconfig */,
 				4CE1448920EC02A3000E01C9 /* XPC Service - ICL.xcconfig */,
 				4CE1448A20EC02A3000E01C9 /* XPC Services.xcconfig */,
 			);
@@ -469,7 +469,7 @@
 				4CE144A120EC02A3000E01C9 /* Foundation Debug.xcconfig */,
 				4CE1449E20EC02A3000E01C9 /* Foundation.xcconfig */,
 				4CE1449B20EC02A3000E01C9 /* Preserve Symbols.xcconfig */,
-				4CE1449A20EC02A3000E01C9 /* Textual.xcconfig */,
+				4CE1449A20EC02A3000E01C9 /* Glasstual.xcconfig */,
 				4CE1449D20EC02A3000E01C9 /* XPC Service - ICL.xcconfig */,
 				4CE1449F20EC02A3000E01C9 /* XPC Services.xcconfig */,
 			);
@@ -480,7 +480,7 @@
 			isa = PBXGroup;
 			children = (
 				4CE144B420EC02A3000E01C9 /* Enabled Features.xcconfig */,
-				4CE144AF20EC02A3000E01C9 /* Textual.xcconfig */,
+				4CE144AF20EC02A3000E01C9 /* Glasstual.xcconfig */,
 				4CE144B120EC02A3000E01C9 /* XPC Service - ICL.xcconfig */,
 				4CE144B220EC02A3000E01C9 /* XPC Services.xcconfig */,
 			);
@@ -613,7 +613,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\nexec \"${PROJECT_DIR}/Build Scripts/BuildExtensions.sh\" | tee \"${TEXTUAL_WORKSPACE_TEMP_DIR}/Script-Logs/BuildExtensions (ICL).txt\"\n";
+			shellScript = "\nexec \"${PROJECT_DIR}/Build Scripts/BuildExtensions.sh\" | tee \"${GLASSTUAL_WORKSPACE_TEMP_DIR}/Script-Logs/BuildExtensions (ICL).txt\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -664,7 +664,7 @@
 				CODE_SIGN_ENTITLEMENTS = "${PROJECT_DIR}/Configurations/Sandbox/Release.entitlements";
 				GCC_PREFIX_HEADER = "${PROJECT_DIR}/Classes/Headers/Private/ICLProcessPCHPrivate.h";
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.textual.InlineContentLoader";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.glasstual.InlineContentLoader";
 				PRODUCT_NAME = "Inline Content Loader";
 			};
 			name = Debug;
@@ -675,7 +675,7 @@
 				CODE_SIGN_ENTITLEMENTS = "${PROJECT_DIR}/Configurations/Sandbox/Release.entitlements";
 				GCC_PREFIX_HEADER = "${PROJECT_DIR}/Classes/Headers/Private/ICLProcessPCHPrivate.h";
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.textual.InlineContentLoader";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.glasstual.InlineContentLoader";
 				PRODUCT_NAME = "Inline Content Loader";
 			};
 			name = Release;

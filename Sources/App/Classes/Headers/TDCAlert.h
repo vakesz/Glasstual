@@ -35,11 +35,9 @@
  *
  *********************************************************************** */
 
-#import "TVCAlert.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
-TEXTUAL_EXTERN NSString * const TDCAlertSuppressionPrefix;
+GLASSTUAL_EXTERN NSString * const TDCAlertSuppressionPrefix;
 
 typedef NS_ENUM(NSUInteger, TDCAlertResponse) {
 	TDCAlertResponseDefault = 1000,
@@ -122,43 +120,43 @@ typedef void (^TDCAlertCompletionBlock)(TDCAlertResponse buttonClicked, BOOL sup
 #pragma mark -
 #pragma mark Non-blocking Alerts (Panel)
 
-/* The underlying TVCAlert object returned by the non-blocking
+/* The underlying NSAlert object returned by the non-blocking
  methods does NOT need to be retained. Simply ignore the return
  value if you have no use in accessing the object. */
 /* Return value is only nil if completion block is immediately
  returned for suppression. */
-+ (TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (NSAlert *)alertWithMessage:(NSString *)bodyText
 						 title:(NSString *)titleText
 				 defaultButton:(NSString *)buttonDefault
 			   alternateButton:(nullable NSString *)buttonAlternate;
 
-+ (TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (NSAlert *)alertWithMessage:(NSString *)bodyText
 						 title:(NSString *)titleText
 				 defaultButton:(NSString *)buttonDefault
 			   alternateButton:(nullable NSString *)buttonAlternate
 				   otherButton:(nullable NSString *)buttonOther;
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
 						 suppressionKey:(nullable NSString *)suppressKey
 						suppressionText:(nullable NSString *)suppressText;
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
 						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
 							otherButton:(nullable NSString *)buttonOther
 						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -166,7 +164,7 @@ typedef void (^TDCAlertCompletionBlock)(TDCAlertResponse buttonClicked, BOOL sup
 						suppressionText:(nullable NSString *)suppressText
 						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -175,7 +173,7 @@ typedef void (^TDCAlertCompletionBlock)(TDCAlertResponse buttonClicked, BOOL sup
 						suppressionText:(nullable NSString *)suppressText
 						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -184,7 +182,7 @@ typedef void (^TDCAlertCompletionBlock)(TDCAlertResponse buttonClicked, BOOL sup
 						  accessoryView:(nullable NSView *)accessoryView
 						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate

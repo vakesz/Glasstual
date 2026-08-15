@@ -40,7 +40,6 @@
 #import "TXMenuControllerPrivate.h"
 #import "TVCMainWindowPrivate.h"
 #import "TPCPreferencesLocal.h"
-#import "TVCServerListAppearancePrivate.h"
 #import "TVCServerListCellPrivate.h"
 #import "TVCServerListPrivate.h"
 
@@ -49,8 +48,6 @@ NS_ASSUME_NONNULL_BEGIN
 NSString * const TVCServerListDragType = @"TVCServerListDragType";
 
 @interface TVCServerList ()
-@property (nonatomic, strong, readwrite) TVCServerListAppearance *userInterfaceObjects;
-@property (nonatomic, weak, readwrite) IBOutlet NSVisualEffectView *visualEffectView;
 @property (nonatomic, assign, readwrite) BOOL leftMouseIsDownInView;
 @end
 
@@ -271,46 +268,18 @@ NSString * const TVCServerListDragType = @"TVCServerListDragType";
 	return YES;
 }
 
-- (void)updateVibrancyWithAppearance:(TVCServerListAppearance *)appearance
-{
-	NSParameterAssert(appearance != nil);
-
-	self.style = NSTableViewStyleSourceList;
-}
-
 - (void)applicationAppearanceChanged
 {
-	TVCServerListAppearance *appearance = self.mainWindow.userInterfaceObjects.serverList;
-
-	[self _updateAppearance:appearance];
-
 	[self invalidateBackgroundForSelection];
 
 	[self refreshAllDrawings:YES];
+
+	self.needsDisplay = YES;
 }
 
 - (void)systemAppearanceChanged
 {
-//	[self invalidateBackgroundForSelection];
-}
-
-- (void)_updateAppearance:(TVCServerListAppearance *)appearance
-{
-	NSParameterAssert(appearance != nil);
-
-	/* We assign a strong reference to these instead of returning the original
-	 value every time so that there are no race conditions for when it changes. */
-	self.userInterfaceObjects = appearance;
-
-	[self updateVibrancyWithAppearance:appearance];
-
-	if (appearance.isDarkAppearance) {
-		self.enclosingScrollView.scrollerKnobStyle = NSScrollerKnobStyleLight;
-	} else {
-		self.enclosingScrollView.scrollerKnobStyle = NSScrollerKnobStyleDark;
-	}
-
-	self.needsDisplay = YES;
+	[self applicationAppearanceChanged];
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification

@@ -51,9 +51,9 @@ NS_ASSUME_NONNULL_BEGIN
 	__block SSLProtocol protocol;
 
 	dispatch_block_t block = ^{
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 		OSStatus status = SSLGetNegotiatedProtocolVersion(self.sslContext, &protocol);
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 #pragma unused(status)
 	};
@@ -68,9 +68,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 	__block SSLCipherSuite cipher;
 
 	dispatch_block_t block = ^{
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 		OSStatus status = SSLGetNegotiatedCipher(self.sslContext, &cipher);
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 #pragma unused(status)
 	};
@@ -86,9 +86,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 	__block SecTrustRef trust;
 
 	dispatch_block_t block = ^{
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 		OSStatus status = SSLCopyPeerTrust(self.sslContext, &trust);
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 #pragma unused(status)
 	};

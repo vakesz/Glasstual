@@ -41,14 +41,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-TEXTUAL_EXTERN NSString * const TPCPreferencesThemeNameDefaultsKey;
-TEXTUAL_EXTERN NSString * const TPCPreferencesThemeFontNameDefaultsKey;
-TEXTUAL_EXTERN NSString * const TPCPreferencesThemeFontSizeDefaultsKey;
+GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeNameDefaultsKey;
+GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeFontNameDefaultsKey;
+GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeFontSizeDefaultsKey;
 
-TEXTUAL_EXTERN NSString * const TPCPreferencesThemeNameMissingLocallyDefaultsKey;
-TEXTUAL_EXTERN NSString * const TPCPreferencesThemeFontNameMissingLocallyDefaultsKey;
+GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeNameMissingLocallyDefaultsKey;
+GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeFontNameMissingLocallyDefaultsKey;
 
-TEXTUAL_EXTERN NSUInteger const TPCPreferencesDictionaryVersion;
+GLASSTUAL_EXTERN NSUInteger const TPCPreferencesDictionaryVersion;
 
 typedef NS_ENUM(NSUInteger, TXNicknameHighlightMatchType) {
 	TXNicknameHighlightMatchTypePartial = 0,
@@ -127,7 +127,7 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 
 + (nullable NSString *)masqueradeCTCPVersion;
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 + (BOOL)receiveBetaUpdates;
 #endif
 
@@ -159,7 +159,7 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (NSString *)IRCopDefaultGlineMessage;
 + (NSString *)IRCopDefaultShunMessage;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 + (BOOL)textEncryptionIsOpportunistic;
 + (BOOL)textEncryptionIsRequired;
 + (BOOL)textEncryptionIsEnabled;
@@ -239,7 +239,6 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 
 + (TXHostmaskBanFormat)banFormat;
 
-+ (BOOL)webKit2Enabled;
 + (BOOL)webKit2ProcessPoolSizeLimited;
 + (BOOL)webKit2PreviewLinks;
 

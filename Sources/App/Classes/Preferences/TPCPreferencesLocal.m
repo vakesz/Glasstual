@@ -183,7 +183,7 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 	return [RZUserDefaults() boolForKey:@"ApplyCommandToAllConnections -> clearall"];
 }
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 + (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
 {
 	[RZUserDefaults() setBool:textEncryptionIsOpportunistic forKey:@"Off-the-Record Messaging -> Automatically Enable Service"];
@@ -519,7 +519,7 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 #pragma mark -
 #pragma mark Updates
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 + (BOOL)receiveBetaUpdates
 {
 	return [RZUserDefaults() boolForKey:@"ReceiveBetaUpdates"];
@@ -531,12 +531,12 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
 + (void)setDeveloperModeEnabled:(BOOL)developerModeEnabled
 {
-	[RZUserDefaults() setBool:developerModeEnabled forKey:@"TextualDeveloperEnvironment"];
+	[RZUserDefaults() setBool:developerModeEnabled forKey:@"GlasstualDeveloperEnvironment"];
 }
 
 + (BOOL)developerModeEnabled
 {
-	return [RZUserDefaults() boolForKey:@"TextualDeveloperEnvironment"];
+	return [RZUserDefaults() boolForKey:@"GlasstualDeveloperEnvironment"];
 }
 
 #pragma mark -
@@ -701,16 +701,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 + (BOOL)automaticallyReloadCustomThemesWhenTheyChange
 {
 	return [RZUserDefaults() boolForKey:@"AutomaticallyReloadCustomThemesWhenTheyChange"];
-}
-
-+ (void)setWebKit2Enabled:(BOOL)webKit2Enabled
-{
-	[RZUserDefaults() setBool:webKit2Enabled forKey:@"UsesWebKit2WhenAvailable"];
-}
-
-+ (BOOL)webKit2Enabled
-{
-	return [RZUserDefaults() boolForKey:@"UsesWebKit2WhenAvailable"];
 }
 
 + (BOOL)webKit2ProcessPoolSizeLimited
@@ -1201,7 +1191,7 @@ static NSArray<NSString *> *_matchKeywords = nil;
 #undef _defaultsKey
 }
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 + (void)_migrateSparkleConfigurationToVersion601
 {
 
@@ -1270,10 +1260,10 @@ static NSArray<NSString *> *_matchKeywords = nil;
 
 + (void)registerWebKit2DynamicDefaults
 {
-	/* The WebKit2 Web Inspector cannot work attached to Textual's main window.
+	/* The WebKit2 Web Inspector cannot work attached to Glasstual's main window.
 	 Whose fault this is isn't clear, but I do not have time to take a deep
 	 look at it at this time. To fix it temporarily, we always force it as
-	 window. To prevent the user breaking Textual by attaching it, we force
+	 window. To prevent the user breaking Glasstual by attaching it, we force
 	 reset the default here, every run. */
 
 	[[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"__WebInspectorPageGroupLevel1__.WebKit2InspectorStartsAttached"];
@@ -1281,7 +1271,7 @@ static NSArray<NSString *> *_matchKeywords = nil;
 
 + (void)registerPreferencesDictionaryVersion
 {
-	/* We do not allow Textual to register a version lower than what is 
+	/* We do not allow Glasstual to register a version lower than what is 
 	 already set so that if the user opens an older version, we do not
 	 perform migrations more than once. Probably would have been smart
 	 to do this from the beginning. */
@@ -1333,13 +1323,13 @@ static NSArray<NSString *> *_matchKeywords = nil;
 	[dynamicDefaults setBool:YES									forKey:@"System -> Running Mac OS High Sierra Or Newer"];
 	[dynamicDefaults setBool:YES									forKey:@"System -> Running Mac OS Mojave Or Newer"];
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	[dynamicDefaults setBool:YES forKey:@"System -> 3rd-party Services -> Built with Sparkle Framework"];
 #else
 	[dynamicDefaults setBool:NO forKey:@"System -> 3rd-party Services -> Built with Sparkle Framework"];
 #endif
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	[dynamicDefaults setBool:YES forKey:@"System -> Built with Off-the-Record Messaging Support"];
 #else
 	[dynamicDefaults setBool:NO forKey:@"System -> Built with Off-the-Record Messaging Support"];
@@ -1375,7 +1365,7 @@ static NSArray<NSString *> *_matchKeywords = nil;
 
 	[self _migrateWorldControllerToVersion600];
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	[self _migrateSparkleConfigurationToVersion601];
 #endif
 

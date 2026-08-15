@@ -40,18 +40,13 @@
 #import "TXMasterController.h"
 #import "TXMenuController.h"
 #import "TPCPreferencesLocal.h"
-#import "TVCMainWindow.h"
+#import "TVCMainWindowPrivate.h"
 #import "TVCMainWindowLoadingScreen.h"
 #import "IRCClient.h"
 #import "IRCWorld.h"
 #import "TVCMainWindowSegmentedControlPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-@interface TVCMainWindowSegmentedController ()
-@property (nonatomic, weak) IBOutlet NSLayoutConstraint *segmentedControllerLeadingConstraint;
-@property (nonatomic, weak) IBOutlet NSLayoutConstraint *segmentedControllerWidthConstraint;
-@end
 
 @implementation TVCMainWindowSegmentedController
 
@@ -66,13 +61,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateSegmentedControllerOrigin
 {
-	if ([TPCPreferences hideMainWindowSegmentedController]) {
-		[self.segmentedControllerLeadingConstraint archiveConstantAndZeroOut];
-		[self.segmentedControllerWidthConstraint archiveConstantAndZeroOut];
-	} else {
-		[self.segmentedControllerLeadingConstraint restoreArchivedConstant];
-		[self.segmentedControllerWidthConstraint restoreArchivedConstant];
-	}
+	/* The control is hosted by the server list's bottom accessory, which owns
+	 the height that has to collapse when the user hides it. */
+	[self.mainWindow updateSegmentedControllerVisibility];
 }
 
 - (void)updateSegmentedController

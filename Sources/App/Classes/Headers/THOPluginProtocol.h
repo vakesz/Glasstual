@@ -61,22 +61,22 @@ NS_ASSUME_NONNULL_BEGIN
 #define TPIBundleFromClass()				[NSBundle bundleForClass:[self class]]
 
 /**
- * A plugin must declare the minimum version of Textual that it is compatible with.
+ * A plugin must declare the minimum version of Glasstual that it is compatible with.
  *
- * Textual declares the constant named THOPluginProtocolCompatibilityMinimumVersion.
+ * Glasstual declares the constant named THOPluginProtocolCompatibilityMinimumVersion.
  * This constant is compared against the minimum version that a plugin specifies.
  * If the plugin's value is equal to or greater than this constant, then the plugin
  * is considered safe to load. 
  *
  * Unlike the version information that visible to the end user, this constant does
- * not change often. It only changes when modifications have been made to Textual’s
+ * not change often. It only changes when modifications have been made to Glasstual’s
  * codebase that may result in crashes when loading existing plugins.
  *
- * For example, even though Textual’s visible version number is “5.0.4”, the value
+ * For example, even though Glasstual’s visible version number is “5.0.4”, the value
  * of this constant is “5.0.0”
  *
  * To declare compatibility, add a new entry to a plugin's Info.plist file with 
- * the key named: "MinimumTextualVersion" - Set the value of this entry, as a 
+ * the key named: "MinimumGlasstualVersion" - Set the value of this entry, as a 
  * String, to the return value of THOPluginProtocolCompatibilityMinimumVersion.
  *
  * @return "7.2.4" as of June 30, 2024
@@ -120,7 +120,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *  (*PRIVMSG*, *ACTION*, or *NOTICE*)
  *
  * @discussion This method is invoked on the main thread which means that slow code
- *  can lockup the user interface of Textual. If you have no intent to ignore content,
+ *  can lockup the user interface of Glasstual. If you have no intent to ignore content,
  *  then do work in the background and immediately return `YES`.
  *
  * @param text The message contents
@@ -153,8 +153,8 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *  does not stop for the first result returned which means that value being passed may
  *  have been modified by a plugin above the one being talked to.
  *
- * @warning Textual does not perform validation against the instance of `IRCMessage` that
- *  is returned which means that if Textual tries to access specific information which
+ * @warning Glasstual does not perform validation against the instance of `IRCMessage` that
+ *  is returned which means that if Glasstual tries to access specific information which
  *  has been improperly modified or removed, then the entire application may crash.
  *
  * @param input An instance of `IRCMessage`
@@ -167,7 +167,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
 
 /**
  * @brief Method used to modify and/or completely ignore text entered into the main text
- *  field of Textual.
+ *  field of Glasstual.
  *
  * @warning This method is invoked on each plugin in the order loaded. This method
  *  does not stop for the first result returned which means that value being passed may
@@ -175,8 +175,8 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *
  * @param input The value of the text field as either an instance of `NSString` or
  *  `NSAttributedString`.
- * @param command Textual allows the end user to send text entered into the text field as
- *  an action without using the `/me` command. When this occurs, Textual informs lower-level
+ * @param command Glasstual allows the end user to send text entered into the text field as
+ *  an action without using the `/me` command. When this occurs, Glasstual informs lower-level
  *  APIs of this intent by changing the value of this parameter from “privmsg” to “action” —
  *  In most cases a plugin should disregard this parameter and pass it untouched.
  *
@@ -191,7 +191,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
 /** @name Preferences */
 
 /**
- * @brief Defines an `NSView` used by the Preferences window of Textual to
+ * @brief Defines an `NSView` used by the Preferences window of Glasstual to
  *  allow user-interactive configuration of the plugin.
  *
  * @return An instance of NSView with a width of at least 590.
@@ -200,7 +200,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
 
 /**
  * @brief Defines an `NSString` which is used by the Preferences window of
- *  Textual to create a new entry in its navigation list.
+ *  Glasstual to create a new entry in its navigation list.
  */
 @property (nonatomic, readonly, copy) NSString *pluginPreferencesPaneMenuItemName;
 
@@ -254,7 +254,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  * @discussion Considerations:
  *
  * 1. If a command is a number, then insert it into the array as an `NSString`
- * 2. If a plugin tries to add a command already built into Textual onto
+ * 2. If a plugin tries to add a command already built into Glasstual onto
  *  this list, it will not work.
  * 3. It is possible, but unlikely, that another plugin the end user has
  *  loaded is subscribed to the same command. When that occurs, all plugins
@@ -327,7 +327,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
 /**
  * @brief Method invoked when the JavaScript function `app.sendPluginPayload()` is executed.
  *
- * @discussion A plugin that injects JavaScript into Textual's WebView can use this method
+ * @discussion A plugin that injects JavaScript into Glasstual's WebView can use this method
  *  to send data back to the plugin.
  * 
  * A payload can be passed by invoking the JavaScript function 
@@ -348,7 +348,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
 #pragma mark Reserved Calls
 
 /* The behavior of this method call is undefined. It exists for internal
- purposes for the plugins packaged with Textual by default. It is not
+ purposes for the plugins packaged with Glasstual by default. It is not
  recommended to use it, or try to understand it. */
 @property (nonatomic, readonly, copy) NSArray<THOPluginOutputSuppressionRule *> *pluginOutputSuppressionRules;
 @end
@@ -481,7 +481,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  * @brief The server address of the IRC network
  *
  * @discussion The value of this attribute is the address of the server that 
- *  Textual is currently connected to and may differ from senderNickname even
+ *  Glasstual is currently connected to and may differ from senderNickname even
  *  if senderIsServer is `YES`
  */
 @property (readonly, copy, nullable) NSString *networkAddress;

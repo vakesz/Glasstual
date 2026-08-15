@@ -1,4 +1,4 @@
 
 #include "../Common/Foundation.xcconfig"
-#include "Textual.xcconfig"
-#include "../Common/Textual Extensions.xcconfig"
+#include "Glasstual.xcconfig"
+#include "../Common/Glasstual Extensions.xcconfig"

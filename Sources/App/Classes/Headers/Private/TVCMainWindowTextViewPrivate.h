@@ -62,9 +62,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)resetSpellingIgnores;
 @end
 
-@interface TVCMainWindowTextViewBackground : NSView
-@end
-
 @interface TVCMainWindowTextViewContentView : NSView
 @end
 

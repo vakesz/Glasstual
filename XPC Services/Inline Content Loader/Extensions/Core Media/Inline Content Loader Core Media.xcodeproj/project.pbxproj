@@ -72,15 +72,15 @@
 		4C469F3620EC608E00094EA4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4CA1FE581FA606890095901F /* Core Media.mediaPlugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Core Media.mediaPlugin"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CE144E720EC0448000E01C9 /* CocoaExtensions.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CocoaExtensions.framework; path = "../../../../.tmp/SharedBuildProducts-Frameworks/CocoaExtensions.framework"; sourceTree = SOURCE_ROOT; };
-		4CE145B220EC0D5A000E01C9 /* Textual.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
+		4CE145B220EC0D5A000E01C9 /* Glasstual.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
 		4CE145B620EC0D5A000E01C9 /* XPC Service - ICL Extensions.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "XPC Service - ICL Extensions.xcconfig"; sourceTree = "<group>"; };
 		4CE145B720EC0D5A000E01C9 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
-		4CE145C520EC0D5A000E01C9 /* Textual.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
+		4CE145C520EC0D5A000E01C9 /* Glasstual.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
 		4CE145C620EC0D5A000E01C9 /* Preserve Symbols.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Preserve Symbols.xcconfig"; sourceTree = "<group>"; };
 		4CE145C920EC0D5A000E01C9 /* Foundation.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Foundation.xcconfig; sourceTree = "<group>"; };
 		4CE145CB20EC0D5A000E01C9 /* XPC Service - ICL Extensions.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "XPC Service - ICL Extensions.xcconfig"; sourceTree = "<group>"; };
 		4CE145CC20EC0D5A000E01C9 /* Foundation Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Foundation Debug.xcconfig"; sourceTree = "<group>"; };
-		4CE145DA20EC0D5A000E01C9 /* Textual.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
+		4CE145DA20EC0D5A000E01C9 /* Glasstual.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
 		4CE145DE20EC0D5A000E01C9 /* XPC Service - ICL Extensions.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "XPC Service - ICL Extensions.xcconfig"; sourceTree = "<group>"; };
 		4CE145DF20EC0D5A000E01C9 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -440,7 +440,7 @@
 			isa = PBXGroup;
 			children = (
 				4CE145B720EC0D5A000E01C9 /* Enabled Features.xcconfig */,
-				4CE145B220EC0D5A000E01C9 /* Textual.xcconfig */,
+				4CE145B220EC0D5A000E01C9 /* Glasstual.xcconfig */,
 				4CE145B620EC0D5A000E01C9 /* XPC Service - ICL Extensions.xcconfig */,
 			);
 			path = "Standard Release";
@@ -452,7 +452,7 @@
 				4CE145CC20EC0D5A000E01C9 /* Foundation Debug.xcconfig */,
 				4CE145C920EC0D5A000E01C9 /* Foundation.xcconfig */,
 				4CE145C620EC0D5A000E01C9 /* Preserve Symbols.xcconfig */,
-				4CE145C520EC0D5A000E01C9 /* Textual.xcconfig */,
+				4CE145C520EC0D5A000E01C9 /* Glasstual.xcconfig */,
 				4CE145CB20EC0D5A000E01C9 /* XPC Service - ICL Extensions.xcconfig */,
 			);
 			path = Common;
@@ -462,7 +462,7 @@
 			isa = PBXGroup;
 			children = (
 				4CE145DF20EC0D5A000E01C9 /* Enabled Features.xcconfig */,
-				4CE145DA20EC0D5A000E01C9 /* Textual.xcconfig */,
+				4CE145DA20EC0D5A000E01C9 /* Glasstual.xcconfig */,
 				4CE145DE20EC0D5A000E01C9 /* XPC Service - ICL Extensions.xcconfig */,
 			);
 			path = Debug;
@@ -583,7 +583,7 @@
 			buildSettings = {
 				GCC_PREFIX_HEADER = "${PROJECT_DIR}/Classes/Headers/Private/ICPCoreMediaPCHPrivate.h";
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.textual.InlineContentLoader.CoreMedia";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.glasstual.InlineContentLoader.CoreMedia";
 				PRODUCT_NAME = "Core Media";
 				WRAPPER_EXTENSION = mediaPlugin;
 			};
@@ -594,7 +594,7 @@
 			buildSettings = {
 				GCC_PREFIX_HEADER = "${PROJECT_DIR}/Classes/Headers/Private/ICPCoreMediaPCHPrivate.h";
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.textual.InlineContentLoader.CoreMedia";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.glasstual.InlineContentLoader.CoreMedia";
 				PRODUCT_NAME = "Core Media";
 				WRAPPER_EXTENSION = mediaPlugin;
 			};

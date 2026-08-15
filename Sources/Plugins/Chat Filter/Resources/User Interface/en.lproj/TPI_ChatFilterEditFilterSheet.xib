@@ -130,26 +130,6 @@ Gw
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <button horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ahe-EZ-5US">
-                                            <rect key="frame" x="486" y="404" width="25" height="25"/>
-                                            <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="SoU-I7-Ehd">
-                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="system"/>
-                                            </buttonCell>
-                                            <connections>
-                                                <action selector="viewFilterMatchHelpText:" target="-2" id="PHY-Vd-fiz"/>
-                                            </connections>
-                                        </button>
-                                        <button horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="b1E-IB-AAD">
-                                            <rect key="frame" x="490" y="252" width="25" height="25"/>
-                                            <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ebt-DO-KSD">
-                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="system"/>
-                                            </buttonCell>
-                                            <connections>
-                                                <action selector="viewFilterActionHelpText:" target="-2" id="f8o-6s-571"/>
-                                            </connections>
-                                        </button>
                                         <box autoresizesSubviews="NO" borderType="line" title="Filter Action Tokens" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="4wE-6t-SLO">
                                             <rect key="frame" x="27" y="16" width="489" height="121"/>
                                             <view key="contentView" id="aRg-yo-qrI">
@@ -342,21 +322,15 @@ Gw
                                         <constraint firstItem="4wE-6t-SLO" firstAttribute="trailing" secondItem="wGy-N2-oQL" secondAttribute="trailing" id="5xH-ll-bkW"/>
                                         <constraint firstItem="sfN-Ws-FW8" firstAttribute="top" secondItem="8Ux-sm-Alm" secondAttribute="top" constant="20" id="60s-J4-QOT"/>
                                         <constraint firstItem="wGy-N2-oQL" firstAttribute="top" secondItem="CsT-6O-3Gc" secondAttribute="bottom" constant="8" id="78a-4y-slF"/>
-                                        <constraint firstItem="b1E-IB-AAD" firstAttribute="trailing" secondItem="wGy-N2-oQL" secondAttribute="trailing" id="AIP-Do-42R"/>
-                                        <constraint firstItem="ahe-EZ-5US" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="vBs-bR-T5n" secondAttribute="trailing" constant="20" id="S8g-3K-5yr"/>
                                         <constraint firstItem="CsT-6O-3Gc" firstAttribute="top" secondItem="TYu-Qh-WKq" secondAttribute="bottom" constant="21" id="VXC-4m-cK5"/>
-                                        <constraint firstItem="b1E-IB-AAD" firstAttribute="centerY" secondItem="CsT-6O-3Gc" secondAttribute="centerY" id="Vb8-4f-n7k"/>
-                                        <constraint firstItem="ahe-EZ-5US" firstAttribute="trailing" secondItem="TYu-Qh-WKq" secondAttribute="trailing" id="Wpc-hI-476"/>
                                         <constraint firstItem="sfN-Ws-FW8" firstAttribute="leading" secondItem="IBT-nM-IFM" secondAttribute="trailing" constant="8" id="bUd-YZ-T36"/>
                                         <constraint firstItem="IBT-nM-IFM" firstAttribute="firstBaseline" secondItem="sfN-Ws-FW8" secondAttribute="firstBaseline" id="dX9-RR-dma"/>
                                         <constraint firstItem="IBT-nM-IFM" firstAttribute="leading" secondItem="8Ux-sm-Alm" secondAttribute="leading" constant="30" id="eYP-8D-7RG"/>
                                         <constraint firstAttribute="trailing" secondItem="wGy-N2-oQL" secondAttribute="trailing" constant="30" id="eaM-WM-N3n"/>
                                         <constraint firstItem="4wE-6t-SLO" firstAttribute="leading" secondItem="wGy-N2-oQL" secondAttribute="leading" id="fTa-TE-fSg"/>
                                         <constraint firstItem="TYu-Qh-WKq" firstAttribute="leading" secondItem="8Ux-sm-Alm" secondAttribute="leading" constant="30" id="gq9-mQ-3v1"/>
-                                        <constraint firstItem="b1E-IB-AAD" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="CsT-6O-3Gc" secondAttribute="trailing" constant="20" id="h2o-iU-GnS"/>
                                         <constraint firstAttribute="bottom" secondItem="4wE-6t-SLO" secondAttribute="bottom" constant="20" id="hPm-fc-6Ds"/>
                                         <constraint firstAttribute="trailing" secondItem="TYu-Qh-WKq" secondAttribute="trailing" constant="34" id="hj1-MQ-CDy"/>
-                                        <constraint firstItem="ahe-EZ-5US" firstAttribute="centerY" secondItem="vBs-bR-T5n" secondAttribute="centerY" id="iIi-c3-jb4"/>
                                         <constraint firstItem="TYu-Qh-WKq" firstAttribute="top" secondItem="vBs-bR-T5n" secondAttribute="bottom" constant="8" id="j1O-Xo-MDh"/>
                                         <constraint firstItem="vBs-bR-T5n" firstAttribute="top" secondItem="sfN-Ws-FW8" secondAttribute="bottom" constant="20" id="qJC-UH-vFT"/>
                                         <constraint firstItem="CsT-6O-3Gc" firstAttribute="leading" secondItem="wGy-N2-oQL" secondAttribute="leading" id="tWy-Gb-x5s"/>
@@ -781,16 +755,6 @@ Gw
                                         <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="U3o-oI-ojF">
                                             <rect key="frame" x="40" y="348" width="463" height="5"/>
                                         </box>
-                                        <button horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gFi-Zi-mq8">
-                                            <rect key="frame" x="462" y="307" width="25" height="25"/>
-                                            <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="W0h-79-O1n">
-                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="system"/>
-                                            </buttonCell>
-                                            <connections>
-                                                <action selector="viewFilterSenderMatchHelpText:" target="-2" id="yKh-Vf-d1t"/>
-                                            </connections>
-                                        </button>
                                         <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Gvj-AU-dTW">
                                             <rect key="frame" x="78" y="369" width="363" height="45"/>
                                             <textFieldCell key="cell" selectable="YES" sendsActionOnEndEditing="YES" id="tBf-Xx-fOd">
@@ -900,7 +864,7 @@ Gw
                                         <constraint firstItem="U3o-oI-ojF" firstAttribute="leading" secondItem="Sbg-tS-i4H" secondAttribute="leading" constant="40" id="VsR-Z3-W0Y"/>
                                         <constraint firstItem="U3o-oI-ojF" firstAttribute="top" secondItem="Gvj-AU-dTW" secondAttribute="bottom" constant="18" id="ZUm-q4-kBk"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Gvj-AU-dTW" secondAttribute="trailing" constant="20" id="bix-b2-pEJ"/>
-                                        <constraint firstAttribute="trailing" secondItem="gFi-Zi-mq8" secondAttribute="trailing" constant="58" id="d0Q-98-fkW"/>
+                                        <constraint firstAttribute="trailing" secondItem="ovl-ei-0Qj" secondAttribute="trailing" constant="91" id="d0Q-98-fkW"/>
                                         <constraint firstItem="U3o-oI-ojF" firstAttribute="centerX" secondItem="Sbg-tS-i4H" secondAttribute="centerX" id="dlQ-cJ-LQZ"/>
                                         <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="dTa-NJ-Hl9" secondAttribute="trailing" constant="20" id="gOc-f6-iDW"/>
                                         <constraint firstItem="ovl-ei-0Qj" firstAttribute="top" secondItem="U3o-oI-ojF" secondAttribute="bottom" constant="18" id="j5j-iC-JlJ"/>
@@ -908,9 +872,7 @@ Gw
                                         <constraint firstItem="lpB-Zj-mN2" firstAttribute="top" secondItem="PKp-Xg-xep" secondAttribute="bottom" constant="18" id="p4y-g1-eUJ"/>
                                         <constraint firstItem="k4d-KT-PP4" firstAttribute="leading" secondItem="Sbg-tS-i4H" secondAttribute="leading" constant="58" id="pYh-vh-LHX"/>
                                         <constraint firstItem="dTa-NJ-Hl9" firstAttribute="top" secondItem="lpB-Zj-mN2" secondAttribute="bottom" constant="8" id="rdt-rO-u8O"/>
-                                        <constraint firstItem="gFi-Zi-mq8" firstAttribute="centerY" secondItem="ovl-ei-0Qj" secondAttribute="centerY" id="sOp-7n-imY"/>
                                         <constraint firstItem="PKp-Xg-xep" firstAttribute="leading" secondItem="U3o-oI-ojF" secondAttribute="leading" id="uc3-Sc-neH"/>
-                                        <constraint firstItem="gFi-Zi-mq8" firstAttribute="leading" secondItem="ovl-ei-0Qj" secondAttribute="trailing" constant="8" id="w3d-TM-7cv"/>
                                         <constraint firstItem="vGk-i7-DUZ" firstAttribute="top" secondItem="Sbg-tS-i4H" secondAttribute="top" constant="20" id="w9D-9e-zzK"/>
                                     </constraints>
                                 </view>
@@ -1029,16 +991,6 @@ This information is for your records and does not alter the behavior of the filt
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <button horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="CCU-H7-ovf">
-                                            <rect key="frame" x="452" y="360" width="25" height="25"/>
-                                            <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="bqh-Kx-AHH">
-                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="system"/>
-                                            </buttonCell>
-                                            <connections>
-                                                <action selector="viewFilterForwardToDestinationHelpText:" target="-2" id="LrC-Sd-sXV"/>
-                                            </connections>
-                                        </button>
                                         <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="x0Z-6b-fhh">
                                             <rect key="frame" x="40" y="342" width="463" height="5"/>
                                         </box>
@@ -1103,8 +1055,6 @@ This information is for your records and does not alter the behavior of the filt
                                         <constraint firstItem="1Dp-RH-HQY" firstAttribute="leading" secondItem="hsJ-a5-uAO" secondAttribute="leading" constant="68" id="5FQ-9w-ilQ"/>
                                         <constraint firstItem="1cG-xA-EzB" firstAttribute="top" secondItem="uPY-hj-XMJ" secondAttribute="bottom" constant="8" symbolic="YES" id="8hG-ls-tyW"/>
                                         <constraint firstItem="FeH-nM-2Zz" firstAttribute="centerX" secondItem="hsJ-a5-uAO" secondAttribute="centerX" id="8ns-fi-qk0"/>
-                                        <constraint firstItem="CCU-H7-ovf" firstAttribute="centerY" secondItem="muN-88-pns" secondAttribute="centerY" id="HS8-Js-fkv"/>
-                                        <constraint firstItem="CCU-H7-ovf" firstAttribute="leading" secondItem="muN-88-pns" secondAttribute="trailing" constant="8" symbolic="YES" id="L18-G1-B1D"/>
                                         <constraint firstItem="ZVP-ho-Ddx" firstAttribute="trailing" secondItem="1Dp-RH-HQY" secondAttribute="trailing" id="LEG-jQ-J6K"/>
                                         <constraint firstItem="1cG-xA-EzB" firstAttribute="leading" secondItem="uPY-hj-XMJ" secondAttribute="leading" constant="18" id="N3T-bA-mzw"/>
                                         <constraint firstItem="muN-88-pns" firstAttribute="top" secondItem="FeH-nM-2Zz" secondAttribute="bottom" constant="18" id="RBe-oV-HsK"/>
@@ -1114,7 +1064,7 @@ This information is for your records and does not alter the behavior of the filt
                                         <constraint firstItem="x0Z-6b-fhh" firstAttribute="leading" secondItem="FeH-nM-2Zz" secondAttribute="leading" id="ea7-9z-kos"/>
                                         <constraint firstItem="RDw-Uz-qQG" firstAttribute="top" secondItem="hsJ-a5-uAO" secondAttribute="top" constant="20" id="ffL-o5-ThR"/>
                                         <constraint firstItem="ZVP-ho-Ddx" firstAttribute="top" secondItem="1Dp-RH-HQY" secondAttribute="bottom" id="jal-lM-72v"/>
-                                        <constraint firstAttribute="trailing" secondItem="CCU-H7-ovf" secondAttribute="trailing" constant="68" id="oEd-kO-GLM"/>
+                                        <constraint firstAttribute="trailing" secondItem="muN-88-pns" secondAttribute="trailing" constant="101" id="oEd-kO-GLM"/>
                                         <constraint firstItem="x0Z-6b-fhh" firstAttribute="top" secondItem="muN-88-pns" secondAttribute="bottom" constant="18" id="pqg-DL-RAN"/>
                                         <constraint firstItem="uPY-hj-XMJ" firstAttribute="centerX" secondItem="hsJ-a5-uAO" secondAttribute="centerX" id="saF-XN-Pou"/>
                                         <constraint firstItem="RDw-Uz-qQG" firstAttribute="centerX" secondItem="hsJ-a5-uAO" secondAttribute="centerX" id="t3r-Ea-PjA"/>

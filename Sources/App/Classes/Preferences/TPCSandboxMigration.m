@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 		If yes, perform migration on that installation.
 	4. 	If migration is not performed, then locate
 		Mac App Store preferences if this is the first
-		time this installation of Textual has launched.
+		time this installation of Glasstual has launched.
 	5. 	If located, is the value of TXRunCount >= 1
 		If yes, have the preferences been modified with
 		the last 30 days (see MaximumAgeOfStalePreferences)
@@ -73,7 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
  they want to remove (delete / erase) the old contents.
 */
 
-/* Textual will import preferences from a Mac App Store purchase
+/* Glasstual will import preferences from a Mac App Store purchase
  if this is the first launch. This macro defines the maximum amount
  of time that was allowed to elapse since the preferences for that
  installation was last modified. We don't want to import an installation
@@ -426,12 +426,11 @@ typedef NS_ENUM(NSUInteger, TPCMigrateSandboxInstallation)
 	LogToConsole("Notifying user that installation of type [%{public}@] migration performed",
 		[self _descriptionOfInstallation:installation]);
 
-	TVCAlert *alert =
 	[TDCAlert alertWithMessage:TXTLS(@"Prompts[qy4-5o]")
 						 title:TXTLS(@"Prompts[ios-na]")
 				 defaultButton:TXTLS(@"Prompts[zjw-bd]")
 			   alternateButton:nil
-				   otherButton:TXTLS(@"Prompts[d90-au]")
+				   otherButton:nil
 				suppressionKey:nil
 			   suppressionText:TXTLS(@"Prompts[q3t-45]")
 			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id  _Nullable underlyingAlert) 
@@ -447,12 +446,6 @@ typedef NS_ENUM(NSUInteger, TPCMigrateSandboxInstallation)
 			[self _unsetListOfImportedKeys];
 		}
 	}];
-
-	[alert setButtonClickedBlock:^BOOL(TVCAlert *sender, TVCAlertResponseButton buttonClicked) {
-		[TLOpenLink openWithString:@"https://help.codeux.com/textual/miscellaneous/Why-Did-Textual-Copy-Files-to-a-New-Location.kb" inBackground:NO];
-
-		return NO;
-	} forButton:TVCAlertResponseButtonThird];
 }
 
 + (void)_notifyGroupContainerMigratedFromDefaults
@@ -673,6 +666,9 @@ typedef NS_ENUM(NSUInteger, TPCMigrateSandboxInstallation)
 	}
 }
 
+/* Every identifier and path returned below belongs to upstream Textual, which is
+ the installation being migrated *from*. They must keep the Textual spelling or
+ migration silently finds nothing. Do not rename them to Glasstual. */
 + (nullable NSString *)_groupContainerIdentifierForInstallation:(TPCMigrateSandboxInstallation)installation
 {
 	switch (installation) {

@@ -48,11 +48,9 @@
                                 </segmentedCell>
                                 <accessibility description="Main Window Segmented Controller"/>
                                 <connections>
-                                    <outlet property="segmentedControllerLeadingConstraint" destination="BVS-64-Ck9" id="gEb-sq-vxO"/>
-                                    <outlet property="segmentedControllerWidthConstraint" destination="1ir-ed-Ia3" id="dNR-4h-5xG"/>
                                 </connections>
                             </segmentedControl>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="nbK-l5-9k5" customClass="TVCMainWindowTextViewBackground">
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="nbK-l5-9k5" userLabel="Input Bar Container">
                                 <rect key="frame" x="172" y="6" width="618" height="25"/>
                                 <subviews>
                                     <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xnK-JZ-PNd">
@@ -71,7 +69,6 @@
                                                     <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                     <accessibility description="Main Text Field"/>
                                                     <connections>
-                                                        <outlet property="backgroundView" destination="nbK-l5-9k5" id="9hb-sC-ujn"/>
                                                         <outlet property="contentView" destination="phB-0r-qij" id="q5a-XP-rcM"/>
                                                         <outlet property="segmentedController" destination="Q9x-Ny-Yn4" id="Wfb-bb-UFY"/>
                                                         <outlet property="segmentedControllerCell" destination="l5w-Kh-b34" id="bCl-8m-PYT"/>
@@ -97,18 +94,13 @@
                                     <constraint firstItem="xnK-JZ-PNd" firstAttribute="top" secondItem="nbK-l5-9k5" secondAttribute="top" constant="3" id="lXH-1e-q4x"/>
                                     <constraint firstAttribute="trailing" secondItem="xnK-JZ-PNd" secondAttribute="trailing" constant="10" id="xYw-C2-alv"/>
                                 </constraints>
-                                <connections>
-                                    <outlet property="textView" destination="Ub5-no-pBU" id="bkZ-AY-i7H"/>
-                                </connections>
                             </customView>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="nbK-l5-9k5" secondAttribute="trailing" constant="10" id="4Uj-Jq-fdw"/>
                             <constraint firstAttribute="height" constant="38" id="4wi-57-9OA"/>
-                            <constraint firstItem="Q9x-Ny-Yn4" firstAttribute="leading" secondItem="phB-0r-qij" secondAttribute="leading" constant="10" id="BVS-64-Ck9"/>
-                            <constraint firstItem="Q9x-Ny-Yn4" firstAttribute="centerY" secondItem="phB-0r-qij" secondAttribute="centerY" id="WNs-kr-fBb"/>
                             <constraint firstItem="nbK-l5-9k5" firstAttribute="top" secondItem="phB-0r-qij" secondAttribute="top" constant="7" id="awN-Bn-Ddd"/>
-                            <constraint firstItem="nbK-l5-9k5" firstAttribute="leading" secondItem="Q9x-Ny-Yn4" secondAttribute="trailing" constant="10" id="bvY-ST-GSO"/>
+                            <constraint firstItem="nbK-l5-9k5" firstAttribute="leading" secondItem="phB-0r-qij" secondAttribute="leading" constant="10" id="bvY-ST-GSO"/>
                             <constraint firstAttribute="bottom" secondItem="nbK-l5-9k5" secondAttribute="bottom" constant="6" id="hXg-Rj-6BH"/>
                         </constraints>
                         <connections>
@@ -116,10 +108,10 @@
                             <outlet property="textView" destination="Ub5-no-pBU" id="tIm-bm-cE5"/>
                         </connections>
                     </customView>
-                    <splitView autosaveName="" dividerStyle="thin" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dVR-2U-X51" userLabel="Thin Split View" customClass="TVCMainWindowSplitView">
+                    <splitView autosaveName="" dividerStyle="thin" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dVR-2U-X51" userLabel="Thin Split View">
                         <rect key="frame" x="0.0" y="38" width="800" height="439"/>
                         <subviews>
-                            <visualEffectView blendingMode="withinWindow" material="sidebar" state="followsWindowActiveState" translatesAutoresizingMaskIntoConstraints="NO" id="KgM-JY-9PC">
+                            <view translatesAutoresizingMaskIntoConstraints="NO" id="KgM-JY-9PC">
                                 <rect key="frame" x="0.0" y="0.0" width="150" height="439"/>
                                 <subviews>
                                     <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="23" horizontalPageScroll="10" verticalLineScroll="23" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KbE-36-qMw">
@@ -166,7 +158,6 @@
                                                                     </constraints>
                                                                     <connections>
                                                                         <outlet property="cellTextField" destination="wBU-6B-7f4" id="jkE-JW-N5b"/>
-                                                                        <outlet property="cellTextFieldLeftMarginConstraint" destination="b3P-cC-qaP" id="Dar-F2-ajG"/>
                                                                     </connections>
                                                                 </tableCellView>
                                                                 <tableCellView identifier="ChildView" translatesAutoresizingMaskIntoConstraints="NO" id="AKs-o3-7CO" customClass="TVCServerListCellChildItem">
@@ -218,7 +209,6 @@
                                                     <connections>
                                                         <outlet property="dataSource" destination="21" id="doc-Ux-ZeS"/>
                                                         <outlet property="delegate" destination="21" id="3S0-9E-ZM8"/>
-                                                        <outlet property="visualEffectView" destination="KgM-JY-9PC" id="qaq-vu-mgs"/>
                                                     </connections>
                                                 </outlineView>
                                             </subviews>
@@ -241,14 +231,14 @@
                                     <constraint firstItem="KbE-36-qMw" firstAttribute="top" secondItem="KgM-JY-9PC" secondAttribute="top" id="hKK-kV-GA5"/>
                                     <constraint firstAttribute="width" relation="lessThanOrEqual" constant="300" id="uvA-9N-e8z"/>
                                 </constraints>
-                            </visualEffectView>
+                            </view>
                             <splitView dividerStyle="thin" translatesAutoresizingMaskIntoConstraints="NO" id="dCp-Wp-aIX" customClass="TVCMainWindowChannelView">
                                 <rect key="frame" x="151" y="0.0" width="498" height="439"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="100" id="mtt-4n-lrH"/>
                                 </constraints>
                             </splitView>
-                            <visualEffectView blendingMode="withinWindow" material="sidebar" state="followsWindowActiveState" translatesAutoresizingMaskIntoConstraints="NO" id="2k7-ax-6YE">
+                            <view translatesAutoresizingMaskIntoConstraints="NO" id="2k7-ax-6YE">
                                 <rect key="frame" x="650" y="0.0" width="150" height="439"/>
                                 <subviews>
                                     <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="20" horizontalPageScroll="10" verticalLineScroll="20" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KMX-Oo-KOu">
@@ -306,7 +296,6 @@
                                                                     <connections>
                                                                         <outlet property="cellTextField" destination="jld-0X-vn0" id="L5s-IO-xaA"/>
                                                                         <outlet property="imageView" destination="Lq2-t9-aDp" id="3RI-Vl-ylD"/>
-                                                                        <outlet property="markBadgeLeftMarginConstraint" destination="fBT-mI-gYa" id="h1u-iC-3ui"/>
                                                                     </connections>
                                                                 </tableCellView>
                                                             </prototypeCellViews>
@@ -316,7 +305,6 @@
                                                         <binding destination="hdH-wA-Q1P" name="content" keyPath="arrangedObjects" id="kGZ-Mq-rJ7"/>
                                                         <outlet property="contentController" destination="hdH-wA-Q1P" id="ADE-cR-3al"/>
                                                         <outlet property="memberListUserInfoPopover" destination="iYh-l7-KsB" id="vr3-QJ-1MS"/>
-                                                        <outlet property="visualEffectView" destination="2k7-ax-6YE" id="IbW-dz-7Os"/>
                                                     </connections>
                                                 </tableView>
                                             </subviews>
@@ -339,7 +327,7 @@
                                     <constraint firstItem="KMX-Oo-KOu" firstAttribute="top" secondItem="2k7-ax-6YE" secondAttribute="top" id="e3L-2B-wg6"/>
                                     <constraint firstAttribute="bottom" secondItem="KMX-Oo-KOu" secondAttribute="bottom" id="jjE-gq-Ni4"/>
                                 </constraints>
-                            </visualEffectView>
+                            </view>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="35" id="XJm-Dd-FjI"/>
@@ -351,12 +339,6 @@
                             <real value="350"/>
                             <real value="355"/>
                         </holdingPriorities>
-                        <connections>
-                            <outlet property="memberListWidthMaxConstraint" destination="1fo-ar-fxS" id="fY7-yG-bAU"/>
-                            <outlet property="memberListWidthMinConstraint" destination="FXS-Qi-nKW" id="xIo-k6-eNI"/>
-                            <outlet property="serverListWidthMaxConstraint" destination="uvA-9N-e8z" id="Laj-nP-kTh"/>
-                            <outlet property="serverListWidthMinConstraint" destination="5hi-RS-NLb" id="hAB-Sl-TOZ"/>
-                        </connections>
                     </splitView>
                     <visualEffectView blendingMode="withinWindow" material="underWindowBackground" state="followsWindowActiveState" translatesAutoresizingMaskIntoConstraints="NO" id="Se1-ja-hFN" customClass="TVCMainWindowLoadingScreenView">
                         <rect key="frame" x="0.0" y="38" width="800" height="439"/>
@@ -385,16 +367,13 @@
             </view>
             <connections>
                 <outlet property="channelView" destination="dCp-Wp-aIX" id="SRq-MD-Vzk"/>
-                <outlet property="contentSplitView" destination="dVR-2U-X51" id="UTS-m3-2nd"/>
+                <outlet property="nibContentSplitView" destination="dVR-2U-X51" id="UTS-m3-2nd"/>
                 <outlet property="formattingMenu" destination="j7v-mc-UwU" id="4X3-MP-pDp"/>
                 <outlet property="inputTextField" destination="Ub5-no-pBU" id="mCF-mM-bHc"/>
                 <outlet property="loadingScreen" destination="Se1-ja-hFN" id="niK-Fq-MHr"/>
                 <outlet property="mainMenuProxy" destination="U6M-jc-NbT" id="QeA-Xy-1ah"/>
                 <outlet property="memberList" destination="bgh-q2-4XX" id="j80-GF-rXN"/>
                 <outlet property="serverList" destination="MLD-Aa-PLM" id="SZb-p4-bEc"/>
-                <outlet property="titlebarAccessoryView" destination="asp-kn-ubA" id="M0x-e3-Mna"/>
-                <outlet property="titlebarAccessoryViewController" destination="Yr8-XA-FFO" id="3cU-yb-0Yx"/>
-                <outlet property="titlebarAccessoryViewLockButton" destination="eFh-15-nxS" id="izN-Fu-EpE"/>
             </connections>
             <point key="canvasLocation" x="1461" y="752.5"/>
         </window>
@@ -1850,35 +1829,6 @@
             </connections>
         </customObject>
         <customObject id="U6M-jc-NbT" customClass="TXMenuControllerMainWindowProxy"/>
-        <customView hidden="YES" translatesAutoresizingMaskIntoConstraints="NO" id="asp-kn-ubA" customClass="TVCMainWindowTitlebarAccessoryView">
-            <rect key="frame" x="0.0" y="0.0" width="110" height="22"/>
-            <subviews>
-                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="eFh-15-nxS" customClass="TVCMainWindowTitlebarAccessoryViewLockButton">
-                    <rect key="frame" x="3" y="1" width="104" height="19"/>
-                    <buttonCell key="cell" type="recessed" title="Not Private" bezelStyle="recessed" image="NSLockUnlockedTemplate" imagePosition="left" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="HaN-Sj-wDl">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="systemBold" size="12"/>
-                    </buttonCell>
-                    <connections>
-                        <action selector="titlebarAccessoryViewLockButtonClicked:" target="21" id="a6q-QT-SVd"/>
-                        <outlet property="lockButtonLeftMarginConstraint" destination="qts-vn-Wxx" id="cye-ff-geo"/>
-                        <outlet property="lockButtonRightMarginConstraint" destination="Ref-Vz-BjG" id="wYT-1a-NLy"/>
-                        <outlet property="mainWindowRef" destination="21" id="IBC-I6-WlA"/>
-                    </connections>
-                </button>
-            </subviews>
-            <constraints>
-                <constraint firstItem="eFh-15-nxS" firstAttribute="centerY" secondItem="asp-kn-ubA" secondAttribute="centerY" id="C2d-bm-bgM"/>
-                <constraint firstAttribute="trailing" secondItem="eFh-15-nxS" secondAttribute="trailing" constant="3" id="Ref-Vz-BjG"/>
-                <constraint firstItem="eFh-15-nxS" firstAttribute="leading" secondItem="asp-kn-ubA" secondAttribute="leading" constant="3" id="qts-vn-Wxx"/>
-            </constraints>
-            <point key="canvasLocation" x="51" y="117"/>
-        </customView>
-        <viewController id="Yr8-XA-FFO" customClass="TVCMainWindowTitlebarAccessoryViewController">
-            <connections>
-                <outlet property="view" destination="asp-kn-ubA" id="6kH-ZT-LxG"/>
-            </connections>
-        </viewController>
         <customView translatesAutoresizingMaskIntoConstraints="NO" id="9NQ-ho-u6f" userLabel="Loading Screen: Progress Message">
             <rect key="frame" x="0.0" y="0.0" width="404" height="257"/>
             <subviews>
@@ -1959,7 +1909,7 @@
                     <rect key="frame" x="33" y="56" width="416" height="48"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="center" id="bTX-Jn-rpL">
                         <font key="font" metaFont="system"/>
-                        <string key="title">Textual is a powerful, yet lightweight, IRC client built exclusively for the Mac. To get started, Textual will walk you through adding your first server. Click the button below to get started.</string>
+                        <string key="title">Glasstual is a powerful, yet lightweight, IRC client built exclusively for the Mac. To get started, Glasstual will walk you through adding your first server. Click the button below to get started.</string>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>

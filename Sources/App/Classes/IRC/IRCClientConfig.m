@@ -442,9 +442,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(dic != nil);
 	NSParameterAssert(defaultsMutable != nil);
 
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	if (self.connectionPrefersIPv4) {
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 		self->_addressType = IRCConnectionAddressTypeIPv4;
 	}
@@ -583,9 +583,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 	BOOL prefersSecuredConnection = [dic boolForKey:@"prefersSecuredConnection"];
 
-	NSString *serverPasswordServiceName = [NSString stringWithFormat:@"textual.server.%@", self.uniqueIdentifier];
+	NSString *serverPasswordServiceName = [NSString stringWithFormat:@"glasstual.server.%@", self.uniqueIdentifier];
 
-	NSString *serverPassword = [XRKeychain getPasswordFromKeychainItem:@"Textual (Server Password)"
+	NSString *serverPassword = [XRKeychain getPasswordFromKeychainItem:@"Glasstual (Server Password)"
 														  withItemKind:@"application password"
 														   forUsername:nil
 														   serviceName:serverPasswordServiceName];
@@ -743,10 +743,10 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 	/* Deprecated */
 	/* These values are inserted here for backwards compatibility 
-	 with earlier versions of Textual */
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+	 with earlier versions of Glasstual */
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	[dic setBool:self.connectionPrefersIPv4 forKey:@"connectionPrefersIPv4"];
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 	[dic setBool:self.legacyConnectionPrefersModernCiphers forKey:@"connectionPrefersModernCiphers"];
 
@@ -834,9 +834,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 - (nullable NSString *)nicknamePasswordFromKeychain
 {
-	NSString *nicknamePasswordServiceName = [NSString stringWithFormat:@"textual.nickserv.%@", self.uniqueIdentifier];
+	NSString *nicknamePasswordServiceName = [NSString stringWithFormat:@"glasstual.nickserv.%@", self.uniqueIdentifier];
 
-	NSString *kcPassword = [XRKeychain getPasswordFromKeychainItem:@"Textual (NickServ)"
+	NSString *kcPassword = [XRKeychain getPasswordFromKeychainItem:@"Glasstual (NickServ)"
 													  withItemKind:@"application password"
 													   forUsername:nil
 													   serviceName:nicknamePasswordServiceName];
@@ -855,9 +855,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 - (nullable NSString *)proxyPasswordFromKeychain
 {
-	NSString *proxyPasswordServiceName = [NSString stringWithFormat:@"textual.proxy-server.%@", self.uniqueIdentifier];
+	NSString *proxyPasswordServiceName = [NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
 
-	NSString *kcPassword = [XRKeychain getPasswordFromKeychainItem:@"Textual (Proxy Server Password)"
+	NSString *kcPassword = [XRKeychain getPasswordFromKeychainItem:@"Glasstual (Proxy Server Password)"
 													  withItemKind:@"application password"
 													   forUsername:nil
 													   serviceName:proxyPasswordServiceName];
@@ -871,9 +871,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 		return;
 	}
 
-	NSString *nicknamePasswordServiceName = [NSString stringWithFormat:@"textual.nickserv.%@", self.uniqueIdentifier];
+	NSString *nicknamePasswordServiceName = [NSString stringWithFormat:@"glasstual.nickserv.%@", self.uniqueIdentifier];
 
-	[XRKeychain modifyOrAddKeychainItem:@"Textual (NickServ)"
+	[XRKeychain modifyOrAddKeychainItem:@"Glasstual (NickServ)"
 						   withItemKind:@"application password"
 							forUsername:nil
 						withNewPassword:self->_nicknamePassword
@@ -888,9 +888,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 		return;
 	}
 
-	NSString *proxyPasswordServiceName = [NSString stringWithFormat:@"textual.proxy-server.%@", self.uniqueIdentifier];
+	NSString *proxyPasswordServiceName = [NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
 
-	[XRKeychain modifyOrAddKeychainItem:@"Textual (Proxy Server Password)"
+	[XRKeychain modifyOrAddKeychainItem:@"Glasstual (Proxy Server Password)"
 						   withItemKind:@"application password"
 							forUsername:nil
 						withNewPassword:self->_proxyPassword
@@ -901,9 +901,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 - (void)destroyNicknamePasswordKeychainItem
 {
-	NSString *nicknamePasswordServiceName = [NSString stringWithFormat:@"textual.nickserv.%@", self.uniqueIdentifier];
+	NSString *nicknamePasswordServiceName = [NSString stringWithFormat:@"glasstual.nickserv.%@", self.uniqueIdentifier];
 
-	[XRKeychain deleteKeychainItem:@"Textual (NickServ)"
+	[XRKeychain deleteKeychainItem:@"Glasstual (NickServ)"
 					  withItemKind:@"application password"
 					   forUsername:nil
 					   serviceName:nicknamePasswordServiceName];
@@ -913,9 +913,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 - (void)destroyProxyPasswordKeychainItem
 {
-	NSString *proxyPasswordServiceName = [NSString stringWithFormat:@"textual.proxy-server.%@", self.uniqueIdentifier];
+	NSString *proxyPasswordServiceName = [NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
 
-	[XRKeychain deleteKeychainItem:@"Textual (Proxy Server Password)"
+	[XRKeychain deleteKeychainItem:@"Glasstual (Proxy Server Password)"
 					  withItemKind:@"application password"
 					   forUsername:nil
 					   serviceName:proxyPasswordServiceName];
@@ -931,9 +931,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 	self->_migratedServerPasswordPendingDestroy = NO;
 
-	NSString *serverPasswordServiceName = [NSString stringWithFormat:@"textual.server.%@", self.uniqueIdentifier];
+	NSString *serverPasswordServiceName = [NSString stringWithFormat:@"glasstual.server.%@", self.uniqueIdentifier];
 
-	[XRKeychain deleteKeychainItem:@"Textual (Server Password)"
+	[XRKeychain deleteKeychainItem:@"Glasstual (Server Password)"
 					  withItemKind:@"application password"
 					   forUsername:nil
 					   serviceName:serverPasswordServiceName];
@@ -982,9 +982,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 - (BOOL)showConnectionPrefersIPv4Warning
 {
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	return (self.addressType == IRCConnectionAddressTypeIPv4 && self.connectionPrefersIPv4);
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 }
 
 @end
@@ -1081,7 +1081,7 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 - (void)setConnectionPrefersIPv4:(BOOL)connectionPrefersIPv4
 {
-	TEXTUAL_DEPRECATED_WARNING
+	GLASSTUAL_DEPRECATED_WARNING
 
 	if (self->_connectionPrefersIPv4 != connectionPrefersIPv4) {
 		self->_connectionPrefersIPv4 = connectionPrefersIPv4;

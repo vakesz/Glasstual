@@ -109,7 +109,6 @@
 	#import "TPCTheme.h"
 
 	/* View Controllers */
-	#import "TVCAlert.h"
 	#import "TVCAppearance.h"
 	#import "TVCAutoExpandingTextField.h"
 	#import "TVCAutoExpandingTokenField.h"
@@ -121,7 +120,6 @@
 	#import "TVCLogView.h"
 	#import "TVCMainWindow.h"
 	#import "TVCMainWindowLoadingScreen.h"
-	#import "TVCMainWindowSplitView.h"
 	#import "TVCMainWindowTextView.h"
 	#import "TVCMemberList.h"
 	#import "TVCServerList.h"

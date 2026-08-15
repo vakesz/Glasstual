@@ -171,9 +171,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableData *hashedData = [NSMutableData dataWithLength:CC_MD5_DIGEST_LENGTH];
 
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	CC_MD5(stringToHashData.bytes, (CC_LONG)stringToHashData.length, hashedData.mutableBytes);
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 	unsigned int hashedValue;
 	[hashedData getBytes:&hashedValue length:sizeof(unsigned int)];
@@ -197,9 +197,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 	NSMutableDictionary<NSString *, NSData *> *newOverrides = [NSMutableDictionary dictionaryWithCapacity:legacyOverrides.count];
 
 	[legacyOverrides enumerateKeysAndObjectsUsingBlock:^(NSString *key, id obj, BOOL *stop) {
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 		id override = [NSUnarchiver unarchiveObjectWithData:obj];
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 		if (override == nil || [override isKindOfClass:[NSColor class]] == NO) {
 			LogToConsoleError("Failed to decode contents of '%{private}@'", key);

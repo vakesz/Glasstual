@@ -45,22 +45,19 @@
 #import "TVCLogControllerPrivate.h"
 #import "TVCLogScriptEventSinkPrivate.h"
 #import "TVCLogViewPrivate.h"
-#import "TVCLogViewInternalWK1.h"
 #import "TVCLogViewInternalWK2.h"
 #import "TVCMainWindowPrivate.h"
-#import "WebScriptObjectHelperPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCLogView ()
 @property (nonatomic, strong) id webViewBacking;
-@property (nonatomic, readwrite, assign) BOOL isUsingWebKit2;
 @property (nonatomic, getter=isLayingOutView, readwrite) BOOL layingOutView;
 @end
 
 @implementation TVCLogView
 
-NSString * const TVCLogViewCommonUserAgentString = @"Textual/1.0 (+https://help.codeux.com/textual/Inline-Media-Scanner-User-Agent.kb)";
+NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 - (instancetype)init
 {
@@ -89,31 +86,14 @@ NSString * const TVCLogViewCommonUserAgentString = @"Textual/1.0 (+https://help.
 	self.webViewBacking = nil;
 }
 
-+ (BOOL)webKit2Enabled
-{
-	if ([TVCLogViewInternalWK2 t_safeToUse] == NO) {
-		return NO;
-	}
-
-	return [TPCPreferences webKit2Enabled];
-}
-
 - (void)constructWebView
 {
-	BOOL isUsingWebKit2 = [self.class webKit2Enabled];
-
-	self.isUsingWebKit2 = isUsingWebKit2;
-
-	if (isUsingWebKit2) {
-		self.webViewBacking = [[TVCLogViewInternalWK2 alloc] initWithHostView:self];
-	} else {
-		self.webViewBacking = [[TVCLogViewInternalWK1 alloc] initWithHostView:self];
-	}
+	self.webViewBacking = [[TVCLogViewInternalWK2 alloc] initWithHostView:self];
 }
 
 - (void)copyContentString
 {
-	[self stringByEvaluatingFunction:@"Textual.documentHTML" completionHandler:^(NSString *result) {
+	[self stringByEvaluatingFunction:@"Glasstual.documentHTML" completionHandler:^(NSString *result) {
 		RZPasteboard().stringContent = result;
 	}];
 }
@@ -127,7 +107,7 @@ NSString * const TVCLogViewCommonUserAgentString = @"Textual/1.0 (+https://help.
 
 - (void)clearSelection
 {
-	[self evaluateFunction:@"Textual.clearSelection"];
+	[self evaluateFunction:@"Glasstual.clearSelection"];
 }
 
 - (void)print
@@ -174,6 +154,20 @@ NSString * const TVCLogViewCommonUserAgentString = @"Textual/1.0 (+https://help.
 
 - (void)informDelegateWebViewFinishedLoading
 {
+	LogToConsoleDebug("View finished loading: %{public}@", self.description);
+
+	/* The style tears down the anti-flash overlay by calling
+	 app.finishedLayingOutView() from a requestAnimationFrame() callback.
+	 WebKit does not service animation frames for a view it considers to
+	 not be rendering, so that callback is not guaranteed to ever run. When
+	 it does not, -isLayingOutView never returns to NO and the overlay stays
+	 on top of the view forever, hiding everything printed into it.
+
+	 Loading has genuinely finished by the time we are called, so lift the
+	 overlay ourselves. This is idempotent: the style calling through to
+	 -setViewFinishedLayout afterwards is harmless. */
+	[self setViewFinishedLayout];
+
 	[self.viewController logViewWebViewFinishedLoading];
 }
 
@@ -205,7 +199,6 @@ NSString * const TVCLogViewCommonUserAgentString = @"Textual/1.0 (+https://help.
 
 + (void)emptyCaches
 {
-	[TVCLogViewInternalWK1 emptyCaches];
 	[TVCLogViewInternalWK2 emptyCaches];
 }
 
@@ -237,16 +230,6 @@ NSString * const TVCLogViewCommonUserAgentString = @"Textual/1.0 (+https://help.
 	NSParameterAssert(string != nil);
 	NSParameterAssert(baseURL != nil);
 
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
-	if (self.isUsingWebKit2 == NO) {
-		WebFrame *webViewFrame = [self.webViewBacking mainFrame];
-
-		[webViewFrame loadHTMLString:string baseURL:baseURL];
-
-		return;
-	}
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
-
 	[self recreateTemporaryCopyOfThemeIfNecessary];
 
 	WKWebView *webView = self.webViewBacking;
@@ -269,16 +252,6 @@ TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
 
 - (void)stopLoading
 {
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
-	if (self.isUsingWebKit2 == NO) {
-		WebFrame *webViewFrame = [self.webViewBacking mainFrame];
-
-		[webViewFrame stopLoading];
-
-		return;
-	}
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
-
 	WKWebView *webView = self.webViewBacking;
 
 	[webView stopLoading];
@@ -369,15 +342,9 @@ TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
 {
 	NSParameterAssert(code != nil);
 
-	dispatch_block_t blockToPerform = ^{
+	XRPerformBlockAsynchronouslyOnMainQueue(^{
 		[self.webViewBacking _t_evaluateJavaScript:code completionHandler:completionHandler];
-	};
-
-//	if (self.isUsingWebKit2) {
-//		blockToPerform();
-//	} else {
-		XRPerformBlockAsynchronouslyOnMainQueue(blockToPerform);
-//	}
+	});
 }
 
 + (NSString *)descriptionOfJavaScriptResult:(id)scriptResult
@@ -682,21 +649,6 @@ TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
 	return [compiledScript copy];
 }
 
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
-- (id)webScriptObjectToCommon:(WebScriptObject *)object
-{
-	NSParameterAssert(object != nil);
-
-	NSAssert((self.isUsingWebKit2 == NO),
-		@"Cannot use feature when WebKit2 is in use");
-
-	WebFrame *webViewFrame = [self.webViewBacking mainFrame];
-
-	JSGlobalContextRef jsContextRef = webViewFrame.globalContext;
-
-	return [object toCommonInContext:jsContextRef];
-}
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
 
 @end
 

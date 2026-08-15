@@ -74,11 +74,11 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 	fileprivate func createDispatchQueues()
 	{
-		let socketDelegateQueueName = "Textual.ConnectionSocket.socketDelegateQueue.\(uniqueIdentifier)"
+		let socketDelegateQueueName = "Glasstual.ConnectionSocket.socketDelegateQueue.\(uniqueIdentifier)"
 
 		socketDelegateQueue = DispatchQueue(label: socketDelegateQueueName)
 
-		let socketReadWriteQueueName = "Textual.ConnectionSocket.socketReadWriteQueue.\(uniqueIdentifier)"
+		let socketReadWriteQueueName = "Glasstual.ConnectionSocket.socketReadWriteQueue.\(uniqueIdentifier)"
 
 		socketReadWriteQueue = DispatchQueue(label: socketReadWriteQueueName)
 	}
@@ -478,7 +478,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 				let queryStatus = SecItemCopyMatching(queryParameters as CFDictionary, &queryResultRef)
 
 				if (queryStatus != noErr) {
-					failureReason = "SOCKS Error: Textual encountered a problem trying to retrieve the SOCKS proxy password from System Settings"
+					failureReason = "SOCKS Error: Glasstual encountered a problem trying to retrieve the SOCKS proxy password from System Settings"
 
 					return false
 				}
@@ -901,7 +901,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 	fileprivate var socks4ConnectAddress: String?
 	{
 		/* SOCKS4 proxies do not support anything other than IPv4 addresses
-		 (unless you support SOCKS4a, which Textual does not) which means we
+		 (unless you support SOCKS4a, which Glasstual does not) which means we
 		 perform manual DNS lookup for SOCKS4 and rely on end-point proxy to
 		 perform lookup when using other proxy types. */
 		let serverAddress = config.serverAddress

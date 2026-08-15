@@ -6,7 +6,7 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>H8W5DK3FN2.com.vakesz.textual</string>
+		<string>H8W5DK3FN2.com.vakesz.glasstual</string>
 	</array>
 	<key>com.apple.security.network.client</key>
 	<true/>

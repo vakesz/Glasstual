@@ -99,7 +99,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSString *sourcePath = NSHomeDirectory();
 
-	NSString *basePath = [NSString stringWithFormat:@"/Textual-importBackup-%@.plist", [NSString stringWithUUID]];
+	NSString *basePath = [NSString stringWithFormat:@"/Glasstual-importBackup-%@.plist", [NSString stringWithUUID]];
 
 	NSString *backupPath = [sourcePath stringByAppendingPathComponent:basePath];
 
@@ -316,7 +316,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	d.canCreateDirectories = YES;
 
-	d.nameFieldStringValue = TXLocalizationNotNeeded(@"TextualPreferences.plist");
+	d.nameFieldStringValue = TXLocalizationNotNeeded(@"GlasstualPreferences.plist");
 
 	[d beginWithCompletionHandler:^(NSInteger returnCode) {
 		if (returnCode == NSModalResponseOK) {

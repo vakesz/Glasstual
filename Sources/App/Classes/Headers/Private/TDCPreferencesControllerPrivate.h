@@ -53,6 +53,9 @@ typedef NS_ENUM(NSUInteger, TDCPreferencesControllerSelection) {
 + (void)openProxySettingsInSystemPreferences;
 
 - (void)show:(TDCPreferencesControllerSelection)selection;
+
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)settingsSidebarCatalog;
+- (nullable NSView *)viewForSettingsPaneIdentifier:(NSString *)identifier;
 @end
 
 @protocol TDCPreferencesControllerDelegate <NSObject>

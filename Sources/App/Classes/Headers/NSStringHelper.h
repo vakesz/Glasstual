@@ -40,8 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient;
 
-TEXTUAL_EXTERN NSStringEncoding const TXDefaultPrimaryStringEncoding;
-TEXTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
+GLASSTUAL_EXTERN NSStringEncoding const TXDefaultPrimaryStringEncoding;
+GLASSTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
 
 @interface NSString (TXStringHelper)
 @property (readonly, copy) NSString *stringByAppendingIRCFormattingStop;

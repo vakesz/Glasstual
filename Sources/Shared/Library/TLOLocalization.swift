@@ -44,7 +44,7 @@
 /// When the "specialKey" argument is false, the input string is not treated special.
 /// It and the other arguments are handed directly to NSLocalizedString().
 ///
-/// Textual has a unique localization system, which is enabled by setting "specialKey" to true.
+/// Glasstual has a unique localization system, which is enabled by setting "specialKey" to true.
 /// When set to true, the input string is expected to be in the format: "<table>[<key>]"
 ///
 /// Everything left of the first open bracket ("[") is treated as the table name.

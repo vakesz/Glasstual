@@ -35,10 +35,8 @@
 *
 *********************************************************************** */
 
-#if canImport(Network)
 import Network
 
-@available(macOS 10.14, *)
 final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 {
 	fileprivate var readInBuffer: Data?
@@ -58,7 +56,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 
 	fileprivate func createDispatchQueues()
 	{
-		let socketDelegateQueueName = "Textual.ConnectionSocket.socketDelegateQueue.\(uniqueIdentifier)"
+		let socketDelegateQueueName = "Glasstual.ConnectionSocket.socketDelegateQueue.\(uniqueIdentifier)"
 
 		socketDelegateQueue = DispatchQueue(label: socketDelegateQueueName)
 	}
@@ -635,5 +633,3 @@ fileprivate extension ConnectionError
 		self.init(tlsError: errorCode)
 	}
 }
-
-#endif

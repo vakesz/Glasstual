@@ -69,51 +69,33 @@
 #define NSIsCurrentThreadMain()					[[NSThread isMainThread]]
 
 /* Deprecation and symbol visibility. */
-#define TEXTUAL_EXTERN							extern
+#define GLASSTUAL_EXTERN							extern
 
-#define TEXTUAL_SYMBOL_USED						__attribute__((used))
+#define GLASSTUAL_SYMBOL_USED						__attribute__((used))
 
-#define TEXTUAL_RUNNING_ON(version, name)		COCOA_EXTENSIONS_RUNNING_ON(version, name)
-#define TEXTUAL_RUNNING_ON_BIGSUR 				TEXTUAL_RUNNING_ON(11.0, BigSur)
-#define TEXTUAL_RUNNING_ON_MOJAVE 				TEXTUAL_RUNNING_ON(10.14, Mojave)
-#define TEXTUAL_RUNNING_ON_HIGHSIERRA 			TEXTUAL_RUNNING_ON(10.13, HighSierra)
-#define TEXTUAL_RUNNING_ON_SIERRA 				TEXTUAL_RUNNING_ON(10.12, Sierra)
-#define TEXTUAL_RUNNING_ON_ELCAPITAN 			TEXTUAL_RUNNING_ON(10.11, ElCapitan)
-#define TEXTUAL_RUNNING_ON_YOSEMITE 			TEXTUAL_RUNNING_ON(10.10, Yosemite)
-#define TEXTUAL_RUNNING_ON_MAVERICKS 			TEXTUAL_RUNNING_ON(10.9, Mavericks)
+#define GLASSTUAL_RUNNING_ON(version, name)		COCOA_EXTENSIONS_RUNNING_ON(version, name)
+#define GLASSTUAL_RUNNING_ON_BIGSUR 				GLASSTUAL_RUNNING_ON(11.0, BigSur)
+#define GLASSTUAL_RUNNING_ON_MOJAVE 				GLASSTUAL_RUNNING_ON(10.14, Mojave)
+#define GLASSTUAL_RUNNING_ON_HIGHSIERRA 			GLASSTUAL_RUNNING_ON(10.13, HighSierra)
+#define GLASSTUAL_RUNNING_ON_SIERRA 				GLASSTUAL_RUNNING_ON(10.12, Sierra)
+#define GLASSTUAL_RUNNING_ON_ELCAPITAN 			GLASSTUAL_RUNNING_ON(10.11, ElCapitan)
+#define GLASSTUAL_RUNNING_ON_YOSEMITE 			GLASSTUAL_RUNNING_ON(10.10, Yosemite)
+#define GLASSTUAL_RUNNING_ON_MAVERICKS 			GLASSTUAL_RUNNING_ON(10.9, Mavericks)
 
-#define TEXTUAL_DEPRECATED(reason)				COCOA_EXTENSIONS_DEPRECATED(reason)
+#define GLASSTUAL_DEPRECATED(reason)				COCOA_EXTENSIONS_DEPRECATED(reason)
 
-#define TEXTUAL_DEPRECATED_ASSERT				COCOA_EXTENSIONS_DEPRECATED_ASSERT
-#define TEXTUAL_DEPRECATED_ASSERT_C				COCOA_EXTENSIONS_DEPRECATED_ASSERT_C
+#define GLASSTUAL_DEPRECATED_ASSERT				COCOA_EXTENSIONS_DEPRECATED_ASSERT
+#define GLASSTUAL_DEPRECATED_ASSERT_C				COCOA_EXTENSIONS_DEPRECATED_ASSERT_C
 
-#define TEXTUAL_DEPRECATED_WARNING				COCOA_EXTENSIONS_DEPRECATED_WARNING
+#define GLASSTUAL_DEPRECATED_WARNING				COCOA_EXTENSIONS_DEPRECATED_WARNING
 
-#define TEXTUAL_IGNORE_DEPRECATION_BEGIN		COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
-#define TEXTUAL_IGNORE_DEPRECATION_END			COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
+#define GLASSTUAL_IGNORE_DEPRECATION_BEGIN		COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
+#define GLASSTUAL_IGNORE_DEPRECATION_END			COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
-#define TEXTUAL_IGNORE_AVAILABILITY_BEGIN		_Pragma("clang diagnostic push")									\
+#define GLASSTUAL_IGNORE_AVAILABILITY_BEGIN		_Pragma("clang diagnostic push")									\
 												_Pragma("clang diagnostic ignored \"-Wpartial-availability\"")
 
-#define TEXTUAL_IGNORE_AVAILABILITY_END			_Pragma("clang diagnostic pop")
-
-/* WebView deprecation */
-/* The entirety of pre-WebKit2 code is deprecated by Apple.
- Textual uses a great deal of this code and if left unchecked, a large number
- of deprecation warnings will appear during build. It would be overwhelming
- to suppress every warning individually. Entire files have been marked to
- ignore deprecation warnings. As we cannot ignore WebKit specific deprecation
- warnings, this leaves the problem of unrelated deprecation warnings ignored.
- Modify the following flag routinely to check for unrelated deprecations. */
-#define TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS	1
-
-#if TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS == 1
-	#define TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN TEXTUAL_IGNORE_DEPRECATION_BEGIN
-	#define TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END TEXTUAL_IGNORE_DEPRECATION_END
-#else
-	#define TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
-	#define TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
-#endif
+#define GLASSTUAL_IGNORE_AVAILABILITY_END			_Pragma("clang diagnostic pop")
 
 /* Helper function */
 #define StringFromBOOL(value) ((value) ? @"YES" : @"NO")

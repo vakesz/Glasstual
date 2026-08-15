@@ -203,7 +203,7 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 {
 	self.preferencesDidChangeTimerIsActive = NO;
 
-	[self evaluateFunctionOnAllViews:@"Textual.preferencesDidChange" arguments:nil onQueue:YES];
+	[self evaluateFunctionOnAllViews:@"Glasstual.preferencesDidChange" arguments:nil onQueue:YES];
 }
 
 - (void)mainWindowAppearanceChanged:(NSNotification *)notification
@@ -219,7 +219,7 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 {
 	TVCMainWindowAppearance *appearance = mainWindow().userInterfaceObjects;
 
-	[self evaluateFunctionOnAllViews:@"Textual.appearanceDidChange" arguments:@[appearance.shortAppearanceDescription] onQueue:YES];
+	[self evaluateFunctionOnAllViews:@"Glasstual.appearanceDidChange" arguments:@[appearance.shortAppearanceDescription] onQueue:YES];
 }
 
 #pragma mark -
@@ -398,7 +398,7 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 	if (fireNotification) {
 		[RZNotificationCenter() postNotificationName:IRCWorldDateHasChangedNotification object:nil userInfo:nil];
 
-		[self evaluateFunctionOnAllViews:@"Textual.dateChanged"
+		[self evaluateFunctionOnAllViews:@"Glasstual.dateChanged"
 							   arguments:@[@(currentDayComponents.year),
 										   @(currentDayComponents.month),
 										   @(currentDayComponents.day)]

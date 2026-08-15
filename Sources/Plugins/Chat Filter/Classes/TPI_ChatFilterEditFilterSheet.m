@@ -97,10 +97,6 @@ typedef NS_ENUM(NSUInteger, TPI_ChatFilterEditFilterSheetSelection)
 @property (nonatomic, copy) NSArray<NSString *> *filterActionAutoCompletedTokens;
 @property (nonatomic, strong) IBOutlet TVCChannelSelectionViewController *filterLimitToSelectionOutlineView;
 
-- (IBAction)viewFilterMatchHelpText:(id)sender;
-- (IBAction)viewFilterActionHelpText:(id)sender;
-- (IBAction)viewFilterSenderMatchHelpText:(id)sender;
-- (IBAction)viewFilterForwardToDestinationHelpText:(id)sender;
 
 - (IBAction)filterLimitedToMatrixChanged:(id)sender;
 - (IBAction)filterIgnoreContentCheckChanged:(id)sender;
@@ -793,26 +789,6 @@ typedef NS_ENUM(NSUInteger, TPI_ChatFilterEditFilterSheetSelection)
 - (void)filterEventTypeChanged:(id)sender
 {
 	[self updateEnabledStateOfComponentsConstrainedByFilterEvents];
-}
-
-- (void)viewFilterMatchHelpText:(id)sender
-{
-	[TLOpenLink openWithString:@"https://help.codeux.com/textual/Introduction-to-the-Chat-Filter-Addon.kb#faq-entry-1" inBackground:NO];
-}
-
-- (void)viewFilterActionHelpText:(id)sender
-{
-	[TLOpenLink openWithString:@"https://help.codeux.com/textual/Introduction-to-the-Chat-Filter-Addon.kb#faq-entry-2" inBackground:NO];
-}
-
-- (void)viewFilterSenderMatchHelpText:(id)sender
-{
-	[TLOpenLink openWithString:@"https://help.codeux.com/textual/Introduction-to-the-Chat-Filter-Addon.kb#faq-entry-3" inBackground:NO];
-}
-
-- (void)viewFilterForwardToDestinationHelpText:(id)sender
-{
-	[TLOpenLink openWithString:@"https://help.codeux.com/textual/Introduction-to-the-Chat-Filter-Addon.kb#faq-entry-4" inBackground:NO];
 }
 
 - (void)filterLimitedToMatrixChanged:(id)sender
