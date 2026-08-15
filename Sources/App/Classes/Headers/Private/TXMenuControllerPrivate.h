@@ -48,14 +48,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)populateNavigationChannelList;
 
-- (IBAction)performNavigationAction:(id)sender;
+- (IBAction)performNavigationAction:(nullable id)sender;
 
 
-- (IBAction)joinChannelClicked:(id)sender;
+- (IBAction)joinChannelClicked:(nullable id)sender;
 
 - (void)memberChangeColor:(NSString *)nickname;
 
-- (void)memberInChannelViewDoubleClicked:(id)sender;
+- (void)memberInChannelViewDoubleClicked:(nullable id)sender;
 - (void)memberInMemberListDoubleClicked:(id)sender;
 
 - (void)memberSendDroppedFiles:(NSArray<NSString *> *)files to:(NSString *)nickname;
@@ -71,11 +71,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)navigateToTreeItemWithIdentifier:(NSString *)identifier;
 - (void)navigateToTreeItem:(IRCTreeItem *)item;
 
-- (IBAction)emptyAction:(id)sender GLASSTUAL_DEPRECATED("Do not target this method");
+- (IBAction)emptyAction:(nullable id)sender GLASSTUAL_DEPRECATED("Do not target this method");
 @end
 
 @interface TXMenuControllerMainWindowProxy : NSObject
-- (IBAction)showWelcomeSheet:(id)sender;
+- (IBAction)showWelcomeSheet:(nullable id)sender;
 @end
 
 NS_ASSUME_NONNULL_END

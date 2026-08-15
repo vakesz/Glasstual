@@ -61,7 +61,6 @@ typedef NS_OPTIONS(NSUInteger, TPCPreferencesReloadAction) {
 //	TPCPreferencesReloadActionStyleWithTableViews					= 1 << 18,
 	TPCPreferencesReloadActionTextDirection							= 1 << 19,
 	TPCPreferencesReloadActionTextFieldFontSize						= 1 << 20,
-	TPCPreferencesReloadActionTextFieldSegmentedControllerOrigin	= 1 << 21,
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	TPCPreferencesReloadActionEncryptionPolicy						= 1 << 22,

@@ -50,7 +50,7 @@
 */
 @property (nonatomic, strong) NSMutableDictionary *keyExchangeRequests;
 
-- (IBAction)preferencesChanged:(id)sender;
+- (IBAction)preferencesChanged:(nullable id)sender;
 @end
 
 @implementation TPIBlowfishEncryption
@@ -107,7 +107,7 @@
 	return self.preferencePaneView;
 }
 
-- (void)preferencesChanged:(id)sender
+- (void)preferencesChanged:(nullable id)sender
 {
 	[TDCAlert alertSheetWithWindow:[NSApp keyWindow]
 							  body:TPILocalizedString(@"BasicLanguage[ei0-4a]")

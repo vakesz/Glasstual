@@ -114,11 +114,6 @@ NS_ASSUME_NONNULL_BEGIN
 		reloadAction |= TPCPreferencesReloadActionInputHistoryScope;
 	}
 
-	/* Main window segmented controller */
-	if ([keys containsObject:@"DisableMainWindowSegmentedController"]) {
-		reloadAction |= TPCPreferencesReloadActionTextFieldSegmentedControllerOrigin;
-	}
-
 	/* Main window alpha level */
 	if ([keys containsObject:@"MainWindowTransparencyLevel"]) {
 		reloadAction |= TPCPreferencesReloadActionMainWindowTransparencyLevel;
@@ -292,11 +287,6 @@ NS_ASSUME_NONNULL_BEGIN
 		if (didReloadMemberListSortOrder == NO) {
 			[mainWindowMemberList() refreshAllDrawings];
 		}
-	}
-
-	/* Main window segmented controller */
-	if ((reloadAction & TPCPreferencesReloadActionTextFieldSegmentedControllerOrigin) == TPCPreferencesReloadActionTextFieldSegmentedControllerOrigin) {
-		[mainWindowTextField() reloadOriginPointsAndRecalculateSize];
 	}
 
 	/* Main window alpha level */

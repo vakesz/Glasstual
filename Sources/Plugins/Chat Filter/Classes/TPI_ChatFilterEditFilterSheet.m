@@ -98,10 +98,10 @@ typedef NS_ENUM(NSUInteger, TPI_ChatFilterEditFilterSheetSelection)
 @property (nonatomic, strong) IBOutlet TVCChannelSelectionViewController *filterLimitToSelectionOutlineView;
 
 
-- (IBAction)filterLimitedToMatrixChanged:(id)sender;
-- (IBAction)filterIgnoreContentCheckChanged:(id)sender;
-- (IBAction)filterEventTypeChanged:(id)sender;
-- (IBAction)filterLimitedToMyselfChanged:(id)sender;
+- (IBAction)filterLimitedToMatrixChanged:(nullable id)sender;
+- (IBAction)filterIgnoreContentCheckChanged:(nullable id)sender;
+- (IBAction)filterEventTypeChanged:(nullable id)sender;
+- (IBAction)filterLimitedToMyselfChanged:(nullable id)sender;
 @end
 
 #pragma mark -
@@ -387,7 +387,7 @@ typedef NS_ENUM(NSUInteger, TPI_ChatFilterEditFilterSheetSelection)
 	return filterEvents;
 }
 
-- (void)ok:(id)sender
+- (void)ok:(nullable id)sender
 {
 	if ([self okOrError] == NO) {
 		return;
@@ -781,17 +781,17 @@ typedef NS_ENUM(NSUInteger, TPI_ChatFilterEditFilterSheetSelection)
 	self.filterLimitToSpecificItemsButton.state = (limitedTo == TPI_ChatFilterLimitToValueSpecificItems);
 }
 
-- (void)filterLimitedToMyselfChanged:(id)sender
+- (void)filterLimitedToMyselfChanged:(nullable id)sender
 {
 	[self updateEnabledStateOfSenderMatch];
 }
 
-- (void)filterEventTypeChanged:(id)sender
+- (void)filterEventTypeChanged:(nullable id)sender
 {
 	[self updateEnabledStateOfComponentsConstrainedByFilterEvents];
 }
 
-- (void)filterLimitedToMatrixChanged:(id)sender
+- (void)filterLimitedToMatrixChanged:(nullable id)sender
 {
 	self.filter.filterLimitedToValue = [sender tag];
 
@@ -800,7 +800,7 @@ typedef NS_ENUM(NSUInteger, TPI_ChatFilterEditFilterSheetSelection)
 	[self updateEnabledStateOfFilterEvents];
 }
 
-- (void)filterIgnoreContentCheckChanged:(id)sender
+- (void)filterIgnoreContentCheckChanged:(nullable id)sender
 {
 	[self updateEnableStateOfFilterActionTokenField];
 

@@ -78,15 +78,19 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN
 }
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
+/* The archive already holds a fully formed line, so the receiver that +alloc
+ produced is discarded in favour of it. Nothing is assigned to self because
+ nothing reads it afterwards; -[super init] still runs so the receiver is in a
+ valid state when it is released. */
 - (nullable instancetype)initWithData:(NSData *)data
 {
 	NSParameterAssert(data != nil);
 
-	if ((self = [super init])) {
-		return [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:data error:NULL];
+	if ([super init] == nil) {
+		return nil;
 	}
 
-	return nil;
+	return [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:data error:NULL];
 }
 
 + (TVCLogLine *)logLineFromXPCObject:(TVCLogLineXPC *)xpcObject

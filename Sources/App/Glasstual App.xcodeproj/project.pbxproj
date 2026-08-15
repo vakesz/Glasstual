@@ -31,10 +31,8 @@
 		4C06DF3520EC49A60055D09A /* IRCNetworks.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4C3153A220EB676400448776 /* IRCNetworks.plist */; };
 		4C06DF3820EC49A60055D09A /* StaticStore.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4C3153A420EB676400448776 /* StaticStore.plist */; };
 		4C06DF3920EC49A60055D09A /* TemplateLineTypes.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4C3153A120EB676400448776 /* TemplateLineTypes.plist */; };
-		4C06DFC920EC49FA0055D09A /* MainWindowSegmentedControlUserTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 4C31537820EB676400448776 /* MainWindowSegmentedControlUserTemplate.pdf */; };
 		4C06DFCA20EC49FA0055D09A /* MainWindowSpotlightIconTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 4C31537920EB676400448776 /* MainWindowSpotlightIconTemplate.pdf */; };
 		4C06DFCB20EC49FA0055D09A /* ErroneousTextFieldValueIndicator.tif in Resources */ = {isa = PBXBuildFile; fileRef = 4C31537B20EB676400448776 /* ErroneousTextFieldValueIndicator.tif */; };
-		4C06DFE420EC49FB0055D09A /* MainWindowSegmentedControlUserTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 4C31537820EB676400448776 /* MainWindowSegmentedControlUserTemplate.pdf */; };
 		4C06DFE520EC49FB0055D09A /* MainWindowSpotlightIconTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 4C31537920EB676400448776 /* MainWindowSpotlightIconTemplate.pdf */; };
 		4C06DFE620EC49FB0055D09A /* ErroneousTextFieldValueIndicator.tif in Resources */ = {isa = PBXBuildFile; fileRef = 4C31537B20EB676400448776 /* ErroneousTextFieldValueIndicator.tif */; };
 		4C06E02020EC4A060055D09A /* DIRedBadgeRight.png in Resources */ = {isa = PBXBuildFile; fileRef = 4C31537020EB676400448776 /* DIRedBadgeRight.png */; };
@@ -50,6 +48,8 @@
 		4C06E03F20EC4A100055D09A /* DIGreenBadgeRight.png in Resources */ = {isa = PBXBuildFile; fileRef = 4C31536020EB676400448776 /* DIGreenBadgeRight.png */; };
 		4C06E04020EC4A100055D09A /* DIGreenBadgeCenter.png in Resources */ = {isa = PBXBuildFile; fileRef = 4C31536120EB676400448776 /* DIGreenBadgeCenter.png */; };
 		8A7C02022026081500000002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A7C02012026081500000001 /* Assets.xcassets */; };
+		8A7C02112026081500000011 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 8A7C02102026081500000010 /* AppIcon.icon */; };
+		8A7C02122026081500000012 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 8A7C02102026081500000010 /* AppIcon.icon */; };
 		8A7C02032026081500000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A7C02012026081500000001 /* Assets.xcassets */; };
 		4C06E04D20EC4A2E0055D09A /* applicationIconBirthday.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4C31535A20EB676400448776 /* applicationIconBirthday.icns */; };
 		4C06E04F20EC4A2F0055D09A /* applicationIconBirthday.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4C31535A20EB676400448776 /* applicationIconBirthday.icns */; };
@@ -431,7 +431,6 @@
 		4C06E62320EC553A0055D09A /* TVCMainWindowAppearance.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D520EB673E00448776 /* TVCMainWindowAppearance.m */; };
 		4C06E62420EC553A0055D09A /* TVCMainWindowChannelView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D820EB673E00448776 /* TVCMainWindowChannelView.m */; };
 		4C06E62520EC553A0055D09A /* TVCMainWindowLoadingScreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D220EB673E00448776 /* TVCMainWindowLoadingScreen.m */; };
-		4C06E62620EC553A0055D09A /* TVCMainWindowSegmentedControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D420EB673E00448776 /* TVCMainWindowSegmentedControl.m */; };
 		4C06E62920EC553A0055D09A /* TVCMainWindowTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D620EB673E00448776 /* TVCMainWindowTextView.m */; };
 		4C06E62A20EC553A0055D09A /* TVCMainWindowTextViewAppearance.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152CF20EB673E00448776 /* TVCMainWindowTextViewAppearance.m */; };
 		4C06E62C20EC553A0055D09A /* TVCNotificationConfigurationViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152AC20EB673E00448776 /* TVCNotificationConfigurationViewController.m */; };
@@ -582,7 +581,6 @@
 		4C06E6DC20EC55B90055D09A /* TVCMainWindowAppearance.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D520EB673E00448776 /* TVCMainWindowAppearance.m */; };
 		4C06E6DD20EC55B90055D09A /* TVCMainWindowChannelView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D820EB673E00448776 /* TVCMainWindowChannelView.m */; };
 		4C06E6DE20EC55B90055D09A /* TVCMainWindowLoadingScreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D220EB673E00448776 /* TVCMainWindowLoadingScreen.m */; };
-		4C06E6DF20EC55B90055D09A /* TVCMainWindowSegmentedControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D420EB673E00448776 /* TVCMainWindowSegmentedControl.m */; };
 		4C06E6E220EC55B90055D09A /* TVCMainWindowTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152D620EB673E00448776 /* TVCMainWindowTextView.m */; };
 		4C06E6E320EC55B90055D09A /* TVCMainWindowTextViewAppearance.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152CF20EB673E00448776 /* TVCMainWindowTextViewAppearance.m */; };
 		4C06E6E520EC55B90055D09A /* TVCNotificationConfigurationViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3152AC20EB673E00448776 /* TVCNotificationConfigurationViewController.m */; };
@@ -866,7 +864,6 @@
 		4C31575B20EB6D0500448776 /* TVCMainWindowChannelViewPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151C820EB673E00448776 /* TVCMainWindowChannelViewPrivate.h */; };
 		4C31575C20EB6D0500448776 /* TVCMainWindowLoadingScreenPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151F420EB673E00448776 /* TVCMainWindowLoadingScreenPrivate.h */; };
 		4C31575D20EB6D0500448776 /* TVCMainWindowPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31523820EB673E00448776 /* TVCMainWindowPrivate.h */; };
-		4C31575E20EB6D0500448776 /* TVCMainWindowSegmentedControlPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31522D20EB673E00448776 /* TVCMainWindowSegmentedControlPrivate.h */; };
 		4C31576120EB6D0500448776 /* TVCMainWindowTextViewAppearancePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151F320EB673E00448776 /* TVCMainWindowTextViewAppearancePrivate.h */; };
 		4C31576220EB6D0500448776 /* TVCMainWindowTextViewPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151BB20EB673E00448776 /* TVCMainWindowTextViewPrivate.h */; };
 		4C31576520EB6D0500448776 /* TVCMemberListCellPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151C520EB673E00448776 /* TVCMemberListCellPrivate.h */; };
@@ -980,7 +977,6 @@
 		4C3157EE20EB6D0600448776 /* TVCMainWindowChannelViewPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151C820EB673E00448776 /* TVCMainWindowChannelViewPrivate.h */; };
 		4C3157EF20EB6D0600448776 /* TVCMainWindowLoadingScreenPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151F420EB673E00448776 /* TVCMainWindowLoadingScreenPrivate.h */; };
 		4C3157F020EB6D0600448776 /* TVCMainWindowPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31523820EB673E00448776 /* TVCMainWindowPrivate.h */; };
-		4C3157F120EB6D0600448776 /* TVCMainWindowSegmentedControlPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31522D20EB673E00448776 /* TVCMainWindowSegmentedControlPrivate.h */; };
 		4C3157F420EB6D0600448776 /* TVCMainWindowTextViewAppearancePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151F320EB673E00448776 /* TVCMainWindowTextViewAppearancePrivate.h */; };
 		4C3157F520EB6D0600448776 /* TVCMainWindowTextViewPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151BB20EB673E00448776 /* TVCMainWindowTextViewPrivate.h */; };
 		4C3157F820EB6D0600448776 /* TVCMemberListCellPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3151C520EB673E00448776 /* TVCMemberListCellPrivate.h */; };
@@ -1576,7 +1572,6 @@
 		4C31522A20EB673E00448776 /* TXWindowControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TXWindowControllerPrivate.h; sourceTree = "<group>"; };
 		4C31522B20EB673E00448776 /* TDCChannelSpotlightControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCChannelSpotlightControllerPrivate.h; sourceTree = "<group>"; };
 		4C31522C20EB673E00448776 /* TDCChannelSpotlightSearchResultsTablePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCChannelSpotlightSearchResultsTablePrivate.h; sourceTree = "<group>"; };
-		4C31522D20EB673E00448776 /* TVCMainWindowSegmentedControlPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCMainWindowSegmentedControlPrivate.h; sourceTree = "<group>"; };
 		4C31522F20EB673E00448776 /* TDCServerEndpointListSheetPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCServerEndpointListSheetPrivate.h; sourceTree = "<group>"; };
 		4C31523020EB673E00448776 /* TVCLogLinePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCLogLinePrivate.h; sourceTree = "<group>"; };
 		4C31523120EB673E00448776 /* WKWebViewPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WKWebViewPrivate.h; sourceTree = "<group>"; };
@@ -1695,7 +1690,6 @@
 		4C3152CF20EB673E00448776 /* TVCMainWindowTextViewAppearance.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindowTextViewAppearance.m; sourceTree = "<group>"; };
 		4C3152D120EB673E00448776 /* TVCMainWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindow.m; sourceTree = "<group>"; };
 		4C3152D220EB673E00448776 /* TVCMainWindowLoadingScreen.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindowLoadingScreen.m; sourceTree = "<group>"; };
-		4C3152D420EB673E00448776 /* TVCMainWindowSegmentedControl.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindowSegmentedControl.m; sourceTree = "<group>"; };
 		4C3152D520EB673E00448776 /* TVCMainWindowAppearance.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindowAppearance.m; sourceTree = "<group>"; };
 		4C3152D620EB673E00448776 /* TVCMainWindowTextView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindowTextView.m; sourceTree = "<group>"; };
 		4C3152D820EB673E00448776 /* TVCMainWindowChannelView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindowChannelView.m; sourceTree = "<group>"; };
@@ -1746,6 +1740,7 @@
 		4C31535620EB676400448776 /* Copyright Information for Images.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Copyright Information for Images.txt"; sourceTree = "<group>"; };
 		4C31535820EB676400448776 /* applicationIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = applicationIcon.icns; sourceTree = "<group>"; };
 		8A7C02012026081500000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8A7C02102026081500000010 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4C31535920EB676400448776 /* applicationIcon.iconset */ = {isa = PBXFileReference; lastKnownFileType = folder.iconset; path = applicationIcon.iconset; sourceTree = "<group>"; };
 		4C31535A20EB676400448776 /* applicationIconBirthday.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = applicationIconBirthday.icns; sourceTree = "<group>"; };
 		4C31535F20EB676400448776 /* DIGreenBadgeLeft.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = DIGreenBadgeLeft.png; sourceTree = "<group>"; };
@@ -1754,7 +1749,6 @@
 		4C31537020EB676400448776 /* DIRedBadgeRight.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = DIRedBadgeRight.png; sourceTree = "<group>"; };
 		4C31537120EB676400448776 /* DIRedBadgeLeft.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = DIRedBadgeLeft.png; sourceTree = "<group>"; };
 		4C31537220EB676400448776 /* DIRedBadgeCenter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = DIRedBadgeCenter.png; sourceTree = "<group>"; };
-		4C31537820EB676400448776 /* MainWindowSegmentedControlUserTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = MainWindowSegmentedControlUserTemplate.pdf; sourceTree = "<group>"; };
 		4C31537920EB676400448776 /* MainWindowSpotlightIconTemplate.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = MainWindowSpotlightIconTemplate.pdf; sourceTree = "<group>"; };
 		4C31537B20EB676400448776 /* ErroneousTextFieldValueIndicator.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = ErroneousTextFieldValueIndicator.tif; sourceTree = "<group>"; };
 		4C31539F20EB676400448776 /* IRCCommandIndexRemoteData.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = IRCCommandIndexRemoteData.plist; sourceTree = "<group>"; };
@@ -2503,7 +2497,6 @@
 				4C3151C820EB673E00448776 /* TVCMainWindowChannelViewPrivate.h */,
 				4C3151F420EB673E00448776 /* TVCMainWindowLoadingScreenPrivate.h */,
 				4C31523820EB673E00448776 /* TVCMainWindowPrivate.h */,
-				4C31522D20EB673E00448776 /* TVCMainWindowSegmentedControlPrivate.h */,
 				4C3151F320EB673E00448776 /* TVCMainWindowTextViewAppearancePrivate.h */,
 				4C3151BB20EB673E00448776 /* TVCMainWindowTextViewPrivate.h */,
 				4C3151C520EB673E00448776 /* TVCMemberListCellPrivate.h */,
@@ -2722,7 +2715,6 @@
 				4C3152D520EB673E00448776 /* TVCMainWindowAppearance.m */,
 				4C3152D820EB673E00448776 /* TVCMainWindowChannelView.m */,
 				4C3152D220EB673E00448776 /* TVCMainWindowLoadingScreen.m */,
-				4C3152D420EB673E00448776 /* TVCMainWindowSegmentedControl.m */,
 				4C3152D620EB673E00448776 /* TVCMainWindowTextView.m */,
 				4C3152CF20EB673E00448776 /* TVCMainWindowTextViewAppearance.m */,
 			);
@@ -2885,6 +2877,7 @@
 			isa = PBXGroup;
 			children = (
 				8A7C02012026081500000001 /* Assets.xcassets */,
+				8A7C02102026081500000010 /* AppIcon.icon */,
 				4C31535920EB676400448776 /* applicationIcon.iconset */,
 				4C31535820EB676400448776 /* applicationIcon.icns */,
 				4C31535A20EB676400448776 /* applicationIconBirthday.icns */,
@@ -2924,7 +2917,6 @@
 		4C31537720EB676400448776 /* User Interface */ = {
 			isa = PBXGroup;
 			children = (
-				4C31537820EB676400448776 /* MainWindowSegmentedControlUserTemplate.pdf */,
 				4C31537920EB676400448776 /* MainWindowSpotlightIconTemplate.pdf */,
 				4C31537A20EB676400448776 /* Miscellaneous */,
 			);
@@ -3208,7 +3200,6 @@
 				4C3157FB20EB6D0600448776 /* TVCNotificationConfigurationViewControllerPrivate.h in Headers */,
 				4C31559620EB6CB300448776 /* TVCMemberList.h in Headers */,
 				4C31558320EB6CB300448776 /* TPCTheme.h in Headers */,
-				4C3157F120EB6D0600448776 /* TVCMainWindowSegmentedControlPrivate.h in Headers */,
 				4C31556B20EB6CB300448776 /* TDCSheetBase.h in Headers */,
 				4C31559120EB6CB300448776 /* TVCMainWindowAppearance.h in Headers */,
 				4C3157A620EB6D0600448776 /* TDCChannelSpotlightSearchResultsTablePrivate.h in Headers */,
@@ -3455,7 +3446,6 @@
 				4C31576820EB6D0500448776 /* TVCNotificationConfigurationViewControllerPrivate.h in Headers */,
 				4C3155ED20EB6CB400448776 /* TVCMemberList.h in Headers */,
 				4C3155DA20EB6CB400448776 /* TPCTheme.h in Headers */,
-				4C31575E20EB6D0500448776 /* TVCMainWindowSegmentedControlPrivate.h in Headers */,
 				4C3155C220EB6CB400448776 /* TDCSheetBase.h in Headers */,
 				4C3155E820EB6CB400448776 /* TVCMainWindowAppearance.h in Headers */,
 				4C31571320EB6D0500448776 /* TDCChannelSpotlightSearchResultsTablePrivate.h in Headers */,
@@ -3814,6 +3804,7 @@
 				4C06E1C420EC4AC40055D09A /* TVCChannelSelectionView.xib in Resources */,
 				4C06E03920EC4A0F0055D09A /* DIGreenBadgeRight.png in Resources */,
 				8A7C02032026081500000003 /* Assets.xcassets in Resources */,
+				8A7C02112026081500000011 /* AppIcon.icon in Resources */,
 				4C06E1FC20EC4AC50055D09A /* TDCAboutDialog.xib in Resources */,
 				4C06E05320EC4A3D0055D09A /* Copyright Information for Images.txt in Resources */,
 				4C06E07A20EC4A540055D09A /* FormattingColor_11.png in Resources */,
@@ -3888,7 +3879,6 @@
 				4C06E08920EC4A540055D09A /* FormattingColor_3.png in Resources */,
 				4C06E11F20EC4A630055D09A /* TPWTB_Notifications@2x.png in Resources */,
 				4C06E11720EC4A630055D09A /* TPWTB_Highlights.png in Resources */,
-				4C06DFE420EC49FB0055D09A /* MainWindowSegmentedControlUserTemplate.pdf in Resources */,
 				4C06E07920EC4A540055D09A /* FormattingColor_9.png in Resources */,
 				4C52379415C18F6700414852 /* Style Default Templates in Resources */,
 				4C06E30220EC4FF00055D09A /* TDCFileTransferDialog.strings in Resources */,
@@ -3927,6 +3917,7 @@
 				4C06E1C320EC4AC40055D09A /* TVCChannelSelectionView.xib in Resources */,
 				4C06E03F20EC4A100055D09A /* DIGreenBadgeRight.png in Resources */,
 				8A7C02022026081500000002 /* Assets.xcassets in Resources */,
+				8A7C02122026081500000012 /* AppIcon.icon in Resources */,
 				4C06E1FB20EC4AC50055D09A /* TDCAboutDialog.xib in Resources */,
 				4C06E05420EC4A3E0055D09A /* Copyright Information for Images.txt in Resources */,
 				4C06E08C20EC4A540055D09A /* FormattingColor_11.png in Resources */,
@@ -4001,7 +3992,6 @@
 				4C06E09B20EC4A540055D09A /* FormattingColor_3.png in Resources */,
 				4C06E10F20EC4A630055D09A /* TPWTB_Notifications@2x.png in Resources */,
 				4C06E10720EC4A630055D09A /* TPWTB_Highlights.png in Resources */,
-				4C06DFC920EC49FA0055D09A /* MainWindowSegmentedControlUserTemplate.pdf in Resources */,
 				4C06E08B20EC4A540055D09A /* FormattingColor_9.png in Resources */,
 				4C5BA3CB16F1302F00A96CA2 /* Style Default Templates in Resources */,
 				4C06E30120EC4FF00055D09A /* TDCFileTransferDialog.strings in Resources */,
@@ -4313,7 +4303,6 @@
 				4C06E62320EC553A0055D09A /* TVCMainWindowAppearance.m in Sources */,
 				4C06E62420EC553A0055D09A /* TVCMainWindowChannelView.m in Sources */,
 				4C06E62520EC553A0055D09A /* TVCMainWindowLoadingScreen.m in Sources */,
-				4C06E62620EC553A0055D09A /* TVCMainWindowSegmentedControl.m in Sources */,
 				4C06E62920EC553A0055D09A /* TVCMainWindowTextView.m in Sources */,
 				4C06E62A20EC553A0055D09A /* TVCMainWindowTextViewAppearance.m in Sources */,
 				4C06E62C20EC553A0055D09A /* TVCNotificationConfigurationViewController.m in Sources */,
@@ -4480,7 +4469,6 @@
 				4C06E6DC20EC55B90055D09A /* TVCMainWindowAppearance.m in Sources */,
 				4C06E6DD20EC55B90055D09A /* TVCMainWindowChannelView.m in Sources */,
 				4C06E6DE20EC55B90055D09A /* TVCMainWindowLoadingScreen.m in Sources */,
-				4C06E6DF20EC55B90055D09A /* TVCMainWindowSegmentedControl.m in Sources */,
 				4C06E6E220EC55B90055D09A /* TVCMainWindowTextView.m in Sources */,
 				4C06E6E320EC55B90055D09A /* TVCMainWindowTextViewAppearance.m in Sources */,
 				4C06E6E520EC55B90055D09A /* TVCNotificationConfigurationViewController.m in Sources */,

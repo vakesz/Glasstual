@@ -53,6 +53,43 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TVCMainWindowLoadingScreenView
 
+- (void)awakeFromNib
+{
+	[super awakeFromNib];
+
+	[self applyWelcomeViewAppearance];
+}
+
+/* The nib describes this screen with a hard coded 30pt title and an untinted
+ push button. A first run screen is the one place the app has a single obvious
+ next step, so the button is made the default: AppKit then tints it with the
+ accent colour and Return triggers it. The title and the body move onto the
+ semantic text styles so they track the system text size rather than a number
+ frozen into the nib. */
+- (void)applyWelcomeViewAppearance
+{
+	NSButton *continueButton = self.welcomeAddServerViewContinueButton;
+
+	continueButton.keyEquivalent = @"\r";
+
+	for (NSView *subview in self.welcomeAddServerView.subviews) {
+		if ([subview isKindOfClass:[NSTextField class]] == NO) {
+			continue;
+		}
+
+		NSTextField *textField = (NSTextField *)subview;
+
+		/* The title is the only field set in a large size by the nib; the body
+		 is left at the system size. That difference is what tells them apart. */
+		if (textField.font.pointSize > 20.0) {
+			textField.font = [NSFont preferredFontForTextStyle:NSFontTextStyleLargeTitle options:@{}];
+		} else {
+			textField.font = [NSFont preferredFontForTextStyle:NSFontTextStyleBody options:@{}];
+			textField.textColor = [NSColor secondaryLabelColor];
+		}
+	}
+}
+
 #pragma mark -
 #pragma mark Display View (Public)
 
@@ -226,7 +263,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	textField.selectable = NO;
 
-	[textField updateSegmentedController];
 }
 
 - (void)enableBackgroundControlsStepOne
@@ -242,7 +278,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	textField.selectable = YES;
 
-	[textField updateSegmentedController];
 }
 
 @end

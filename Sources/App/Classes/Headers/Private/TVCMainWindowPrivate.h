@@ -67,7 +67,6 @@ typedef NS_OPTIONS(NSUInteger, TVCMainWindowMouseLocation) {
 
 - (TLOInputHistory *)inputHistoryManager;
 - (TVCMainWindowChannelView *)channelView;
-- (void)updateSegmentedControllerVisibility;
 
 - (TVCTextViewIRCFormattingMenu *)formattingMenu;
 - (TXMenuControllerMainWindowProxy *)mainMenuProxy;

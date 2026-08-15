@@ -42,7 +42,6 @@
 #import "TPCPreferencesLocalPrivate.h"
 #import "TPCPreferencesUserDefaults.h"
 #import "TVCMainWindow.h"
-#import "TVCMainWindowSegmentedControlPrivate.h"
 #import "TVCTextViewWithIRCFormatterPrivate.h"
 #import "TVCMainWindowTextViewAppearancePrivate.h"
 #import "TVCMainWindowTextViewPrivate.h"
@@ -64,15 +63,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) IBOutlet NSLayoutConstraint *textViewHeightConstraint;
 @property (nonatomic, weak) IBOutlet NSLayoutConstraint *windowContentViewMinimumHeight;
 @property (nonatomic, weak) IBOutlet TVCMainWindowTextViewContentView *contentView;
-@property (nonatomic, weak) IBOutlet TVCMainWindowSegmentedController *segmentedController;
-@property (nonatomic, weak) IBOutlet TVCMainWindowSegmentedControllerCell *segmentedControllerCell;
 @property (nonatomic, strong) TVCMainWindowTextViewAppearance *userInterfaceObjects;
+@property (nonatomic, assign) BOOL observingUserDefaults;
 @property (readonly) NSArray<NSString *> *defaultSpellingIgnores;
 @end
 
 @interface TVCMainWindowTextViewContentView ()
 @property (nonatomic, unsafe_unretained) IBOutlet TVCMainWindowTextView *textView;
-@property (nonatomic, weak) IBOutlet TVCMainWindowSegmentedController *segmentedController;
 @end
 
 @implementation TVCMainWindowTextView
@@ -94,24 +91,42 @@ NS_ASSUME_NONNULL_BEGIN
 	[self updateTextDirection];
 }
 
+/* -viewDidMoveToWindow is not guaranteed to alternate between a window and nil.
+ It also fires when the view is reparented inside the window it is already in,
+ which is exactly what the main window does when it moves the input bar into the
+ glass that hosts it. Registering on every call left a second set of observers
+ behind each time, and the matching -removeObserver: for a registration that was
+ never made raises. The flag makes both directions idempotent. */
 - (void)viewDidMoveToWindow
 {
 	[super viewDidMoveToWindow];
 
-	NSWindow *window = self.window;
+	[self setUserDefaultsObserved:(self.window != nil)];
+}
 
-	if (window)
-	{
-		for (NSString *key in _KeyObservingArray) {
-			[RZUserDefaults() addObserver:self forKeyPath:key options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew) context:NULL];
-		}
+- (void)setUserDefaultsObserved:(BOOL)observed
+{
+	if (self->_observingUserDefaults == observed) {
+		return;
 	}
-	else // window
-	{
-		for (NSString *key in _KeyObservingArray) {
+
+	self->_observingUserDefaults = observed;
+
+	for (NSString *key in _KeyObservingArray) {
+		if (observed) {
+			[RZUserDefaults() addObserver:self
+							   forKeyPath:key
+								  options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew)
+								  context:NULL];
+		} else {
 			[RZUserDefaults() removeObserver:self forKeyPath:key];
 		}
 	}
+}
+
+- (void)dealloc
+{
+	[self setUserDefaultsObserved:NO];
 }
 
 - (void)updateVibrancyWithAppearance:(TVCMainWindowTextViewAppearance *)appearance
@@ -147,36 +162,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.preferredFontColor = appearance.textViewTextColor;
 
-	[self reloadOriginPoints];
-
 	[self updateTextBoxCachedPreferredFontSize];
 
 	[self resetTypeSetterAttributes];
 
 	[self updateAllFontColorsToMatchTheDefaultFont];
-}
-
-#pragma mark -
-#pragma mark Segmented Controller
-
-- (void)reloadOriginPointsAndRecalculateSize
-{
-	[self reloadOriginPoints];
-
-	/* Reload size on next go around to allow constraint layout to occur before so */
-	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[self recalculateTextViewSizeForced];
-	});
-}
-
-- (void)reloadOriginPoints
-{
-	[self.segmentedController updateSegmentedControllerOrigin];
-}
-
-- (void)updateSegmentedController
-{
-	[self.segmentedController updateSegmentedController];
 }
 
 #pragma mark -

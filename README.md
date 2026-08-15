@@ -1,4 +1,12 @@
-# Glasstual
+<p align="center">
+  <img src="Documentation/Images/AppIcon.png" width="160" alt="Glasstual app icon">
+</p>
+
+<h1 align="center">Glasstual</h1>
+
+<p align="center">
+  A highly customizable IRC client for macOS 26 and later.
+</p>
 
 Glasstual is a highly customizable app for interacting with Internet Relay Chat (IRC) chatrooms on macOS.
 
@@ -16,16 +24,24 @@ A number of identifiers keep the Textual spelling on purpose, because they name 
 
 ## Screenshots
 
-<!-- TODO: add screenshots of Glasstual here (light and dark). -->
+![The Glasstual main window, showing the channel list, a conversation and the member list](Documentation/Screenshots/main-window-light.png)
 
-_Screenshots pending — insert image here._
+<details>
+<summary>First launch</summary>
+
+![The Glasstual welcome screen](Documentation/Screenshots/welcome-light.png)
+
+</details>
+
+<!-- TODO: add dark appearance screenshots alongside these. -->
+<!-- Conversation shown is from a local demo network, not a real one. -->
 
 ## Note Regarding Downloading Source Code
 
 Glasstual depends on several other projects to build. This repository is linked against them using submodules — clicking "Download ZIP" will not download a copy of those projects. Clone the source instead:
 
 ```
-git clone https://github.com/vakesz/Textual.git Glasstual
+git clone https://github.com/vakesz/Glasstual.git
 cd Glasstual
 git submodule update --init --recursive
 ```

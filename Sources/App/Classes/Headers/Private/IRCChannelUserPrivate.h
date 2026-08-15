@@ -48,6 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)incomingConversation;
 - (void)outgoingConversation;
 
+- (NSComparisonResult)compareUsingWeights:(IRCChannelUser *)other;
+
 + (NSComparator)channelRankComparator;
 + (NSComparator)nicknameLengthComparator;
 @end

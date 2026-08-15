@@ -204,7 +204,6 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (TXPreferredAppearance)appearance;
 
 + (BOOL)disableSidebarTranslucency;
-+ (BOOL)hideMainWindowSegmentedController;
 
 + (BOOL)reloadScrollbackOnLaunch;
 

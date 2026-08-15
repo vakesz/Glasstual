@@ -127,13 +127,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *stringValueOld = textField.stringValue;
 
-	if ([stringValueOld isEqualTo:stringValueNew]) {
-		return;
+	if ([stringValueOld isEqualTo:stringValueNew] == NO) {
+		textField.stringValue = stringValueNew;
 	}
 
-	textField.stringValue = stringValueNew;
-
-	/* Update accessibility */
+	/* The accessibility description spells out the state as well as the name, so
+	 it is rebuilt on every pass. Returning early when only the name is unchanged
+	 left VoiceOver announcing a channel as joined after it had been parted. */
 	BOOL isActive = drawingContext.isActive;
 	BOOL isGroupItem = drawingContext.isGroupItem;
 
@@ -379,7 +379,10 @@ static const CGFloat _unreadBadgeTextPadding	= 7.0;
 		backgroundColor = ([self messageCountBadgeHighlightColorByUser] ?: [NSColor controlAccentColor]);
 		textColor = [NSColor alternateSelectedControlTextColor];
 	} else {
-		backgroundColor = [[NSColor tertiaryLabelColor] colorWithAlphaComponent:0.35];
+		/* tertiaryLabelColor is already translucent; scaling it again left the
+		 capsule at roughly 9% alpha, which read as no capsule at all. The system
+		 fill colors are the semantic answer for a shape behind small text. */
+		backgroundColor = [NSColor secondarySystemFillColor];
 		textColor = [NSColor secondaryLabelColor];
 	}
 

@@ -67,7 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *channelUserLimitMode;
 @property (nonatomic, assign) BOOL secretKeyLengthAlertDisplayed;
 
-- (IBAction)onChangeCheck:(id)sender;
+- (IBAction)onChangeCheck:(nullable id)sender;
 @end
 
 @implementation TDCChannelModifyModesSheet
@@ -155,7 +155,7 @@ NS_ASSUME_NONNULL_BEGIN
 	self.lText.enabled = (self.lCheck.state == NSControlStateValueOn);
 }
 
-- (void)onChangeCheck:(id)sender
+- (void)onChangeCheck:(nullable id)sender
 {
 	[self updateTextFields];
 
@@ -208,7 +208,7 @@ NS_ASSUME_NONNULL_BEGIN
 				   completionBlock:nil];
 }
 
-- (void)ok:(id)sender
+- (void)ok:(nullable id)sender
 {
 	[self.modes changeMode:@"i"
 				 modeIsSet:(self.iCheck.state == NSControlStateValueOn)];

@@ -53,6 +53,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL t_observingLoadingProperty;
 @end
 
+/* WebKit private API. It is reached through -respondsToSelector: and an
+ NSInvocation below, never called directly, so this declaration exists only to
+ name the selector. Without it the selector is undeclared and the search bar
+ silently does nothing on a WebKit that drops it. */
+@interface WKWebView (TVCLogViewInternalWK2PrivateFind)
+- (void)_findString:(NSString *)string options:(NSUInteger)options maxCount:(NSUInteger)maxCount;
+@end
+
 @implementation TVCLogViewInternalWK2
 
 static WKUserContentController *_sharedUserContentController = nil;

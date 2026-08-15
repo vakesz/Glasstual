@@ -68,8 +68,6 @@
 	<integer>0</integer>
 	<key>DestinationOfNonserverNotices</key>
 	<integer>0</integer>
-	<key>DisableMainWindowSegmentedController</key>
-	<integer>0</integer>
 	<key>DisableRemoteNicknameColorHashing</key>
 	<integer>0</integer>
 	<key>DisableSidebarTranslucency</key>

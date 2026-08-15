@@ -5211,7 +5211,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	return [buffer copy];
 }
 
-- (void)printAndLog:(TVCLogLine *)logLine completionBlock:(TVCLogControllerPrintOperationCompletionBlock)completionBlock
+- (void)printAndLog:(TVCLogLine *)logLine completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock
 {
 	NSParameterAssert(logLine != nil);
 
@@ -5514,22 +5514,22 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	[self printDebugInformation:message inChannel:channel asCommand:TVCLogLineDefaultCommandValue escapeMessage:YES];
 }
 
-- (void)printDebugInformation:(NSString *)message inChannel:(IRCChannel *)channel
+- (void)printDebugInformation:(NSString *)message inChannel:(nullable IRCChannel *)channel
 {
 	[self printDebugInformation:message inChannel:channel asCommand:TVCLogLineDefaultCommandValue escapeMessage:YES];
 }
 
-- (void)printDebugInformation:(NSString *)message inChannel:(IRCChannel *)channel asCommand:(NSString *)command
+- (void)printDebugInformation:(NSString *)message inChannel:(nullable IRCChannel *)channel asCommand:(NSString *)command
 {
 	[self print:message by:nil inChannel:channel asType:TVCLogLineTypeDebug command:command escapeMessage:YES];
 }
 
-- (void)printDebugInformation:(NSString *)message inChannel:(IRCChannel *)channel escapeMessage:(BOOL)escapeMessage
+- (void)printDebugInformation:(NSString *)message inChannel:(nullable IRCChannel *)channel escapeMessage:(BOOL)escapeMessage
 {
 	[self printDebugInformation:message inChannel:channel asCommand:TVCLogLineDefaultCommandValue escapeMessage:escapeMessage];
 }
 
-- (void)printDebugInformation:(NSString *)message inChannel:(IRCChannel *)channel asCommand:(NSString *)command escapeMessage:(BOOL)escapeMessage
+- (void)printDebugInformation:(NSString *)message inChannel:(nullable IRCChannel *)channel asCommand:(NSString *)command escapeMessage:(BOOL)escapeMessage
 {
 	[self print:message by:nil inChannel:channel asType:TVCLogLineTypeDebug command:command escapeMessage:escapeMessage];
 }
@@ -8803,8 +8803,6 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	[mainWindow() reloadTreeItem:self];
 
 	[mainWindow() updateTitleFor:self];
-
-	[mainWindowTextField() updateSegmentedController];
 
 	/* Everything else */
 	if (self.config.autojoinWaitsForNickServ == NO || [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL]) {

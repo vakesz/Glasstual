@@ -1473,17 +1473,6 @@
                                             <real value="3.4028234663852886e+38"/>
                                         </customSpacing>
                                     </stackView>
-                                    <button translatesAutoresizingMaskIntoConstraints="NO" id="KBt-zr-O6u">
-                                        <rect key="frame" x="40" y="423" width="281" height="18"/>
-                                        <buttonCell key="cell" type="check" title="Hide the buttons left of the input text field" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="45X-la-mo0">
-                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                            <font key="font" metaFont="system"/>
-                                        </buttonCell>
-                                        <connections>
-                                            <action selector="onChangedMainWindowSegmentedController:" target="-2" id="bVN-xI-Sod"/>
-                                            <binding destination="G2Q-fc-ddg" name="value" keyPath="values.DisableMainWindowSegmentedController" id="icZ-6P-wKs"/>
-                                        </connections>
-                                    </button>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="7dN-Dw-p6U" firstAttribute="leading" secondItem="Pwx-16-f5L" secondAttribute="leading" id="0QG-k4-6fW"/>
@@ -1496,14 +1485,11 @@
                                     <constraint firstItem="7dN-Dw-p6U" firstAttribute="trailing" secondItem="Pwx-16-f5L" secondAttribute="trailing" id="HBg-Dx-JiY"/>
                                     <constraint firstItem="z2E-fq-Jyq" firstAttribute="trailing" secondItem="Pwx-16-f5L" secondAttribute="trailing" id="IAl-Gc-QdL"/>
                                     <constraint firstItem="gGb-wc-eZP" firstAttribute="centerX" secondItem="Jbg-Wd-zzj" secondAttribute="centerX" id="Tbo-AT-PlI"/>
-                                    <constraint firstItem="KBt-zr-O6u" firstAttribute="leading" secondItem="Jbg-Wd-zzj" secondAttribute="leading" constant="42" id="Tvt-TR-jZa"/>
-                                    <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="KBt-zr-O6u" secondAttribute="trailing" constant="20" id="UhQ-sy-bzt"/>
                                     <constraint firstItem="tcb-mG-sBA" firstAttribute="trailing" secondItem="Pwx-16-f5L" secondAttribute="trailing" id="Uqd-TB-MY4"/>
                                     <constraint firstItem="qdK-c5-LSO" firstAttribute="top" secondItem="7dN-Dw-p6U" secondAttribute="bottom" constant="18" id="Wl8-3o-kbO"/>
                                     <constraint firstItem="z2E-fq-Jyq" firstAttribute="top" secondItem="gGb-wc-eZP" secondAttribute="bottom" constant="18" id="YCw-Wp-Fv5"/>
                                     <constraint firstItem="z2E-fq-Jyq" firstAttribute="leading" secondItem="Pwx-16-f5L" secondAttribute="leading" id="aER-aY-Yum"/>
-                                    <constraint firstItem="KBt-zr-O6u" firstAttribute="top" secondItem="Jbg-Wd-zzj" secondAttribute="top" constant="30" id="bH8-sa-dqc"/>
-                                    <constraint firstItem="Pwx-16-f5L" firstAttribute="top" secondItem="KBt-zr-O6u" secondAttribute="bottom" constant="18" id="bdA-m7-Lp6"/>
+                                    <constraint firstItem="Pwx-16-f5L" firstAttribute="top" secondItem="Jbg-Wd-zzj" secondAttribute="top" constant="30" id="bdA-m7-Lp6"/>
                                     <constraint firstItem="gGb-wc-eZP" firstAttribute="top" secondItem="tcb-mG-sBA" secondAttribute="bottom" constant="18" id="cbz-4l-vZh"/>
                                     <constraint firstItem="qdK-c5-LSO" firstAttribute="leading" secondItem="Jbg-Wd-zzj" secondAttribute="leading" constant="43" id="dnA-d9-1ED"/>
                                     <constraint firstItem="tcb-mG-sBA" firstAttribute="top" secondItem="qdK-c5-LSO" secondAttribute="bottom" constant="18" id="sJI-8K-QmO"/>

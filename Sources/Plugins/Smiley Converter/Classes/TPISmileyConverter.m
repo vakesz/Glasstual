@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSArray<NSString *> *sortedSmileyList;
 @property (nonatomic, strong) IBOutlet NSView *preferencesPane;
 
-- (IBAction)preferenceChanged:(id)sender;
+- (IBAction)preferenceChanged:(nullable id)sender;
 @end
 
 @implementation TPISmileyConverter
@@ -111,7 +111,7 @@ NS_ASSUME_NONNULL_BEGIN
 	self.sortedSmileyList = nil;
 }
 
-- (void)preferenceChanged:(id)sender
+- (void)preferenceChanged:(nullable id)sender
 {
 	[self destroyConversionTable];
 

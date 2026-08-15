@@ -64,8 +64,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) IBOutlet TVCBasicTableView *entryTable;
 @property (nonatomic, strong) IBOutlet NSArrayController *entryTableController;
 
-- (IBAction)onUpdate:(id)sender;
-- (IBAction)onRemoveEntry:(id)sender;
+- (IBAction)onUpdate:(nullable id)sender;
+- (IBAction)onRemoveEntry:(nullable id)sender;
 @end
 
 @implementation TDCChannelBanListSheet
@@ -157,7 +157,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Actions
 
-- (void)onUpdate:(id)sender
+- (void)onUpdate:(nullable id)sender
 {
 	[self clear];
 
@@ -166,7 +166,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)onRemoveEntry:(id)sender
+- (void)onRemoveEntry:(nullable id)sender
 {
 	NSIndexSet *selectedRows = self.entryTable.selectedRowIndexes;
 

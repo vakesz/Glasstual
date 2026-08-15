@@ -149,7 +149,7 @@ body[data-custom-scroller="true"]::-webkit-scrollbar-thumb:hover {
 /* Time */
 
 .time {
-	color: -apple-system-tertiary-label;
+	color: -apple-system-secondary-label;
 	white-space: nowrap;
 	font-variant-numeric: tabular-nums;
 	font-feature-settings: "tnum";
@@ -292,7 +292,7 @@ a:hover {
 	font-size: 0.85em;
 	font-weight: 500;
 	margin: 0 0.9em;
-	color: -apple-system-tertiary-label;
+	color: -apple-system-secondary-label;
 }
 
 .date_indicator + #mark,
@@ -492,7 +492,7 @@ div.line[data-line-type="nick"],
 div.line[data-line-type="mode"],
 div.line[data-line-type="topic"],
 div.line[data-line-type="website"] {
-	color: -apple-system-tertiary-label;
+	color: -apple-system-secondary-label;
 }
 
 div.line[data-line-type="join"] .message:before {
@@ -532,4 +532,71 @@ body[dir="rtl"] div.line[data-line-type="nick"] .message:before {
 
 div.line[data-line-type="privmsg"] .sender[data-member-type="myself"] {
 	color: var(--me);
+}
+/* Accessibility
+
+ Reduce Motion turns off the fades and the loading animation. Everything they
+ belong to still arrives, it just arrives already at its final state, so no
+ content depends on an animation having run.
+
+ Increase Contrast strengthens the hairlines and the tints, which are otherwise
+ mixed at a deliberately low alpha, and lifts the quiet lines the rest of the
+ way to full label colour. */
+
+@media (prefers-reduced-motion: reduce) {
+	#body,
+	#topicBar,
+	#loadingScreen,
+	#mark,
+	div.line[data-line-type="privmsg"]:not(.selectedUser),
+	div.line[data-line-type="action"]:not(.selectedUser),
+	div.line[data-line-type="privmsg"] .time:not(.selectedUser),
+	div.line[data-line-type="action"] .time:not(.selectedUser),
+	div.line.selectedUser[data-highlight="false"],
+	div.line.selectedUser[data-highlight="false"] .time {
+		-webkit-transition: none;
+		transition: none;
+	}
+
+	.message_buffer_loading_indicator span {
+		-webkit-animation: none;
+		animation: none;
+		opacity: 1;
+	}
+}
+
+@media (prefers-contrast: more) {
+	:root {
+		--rule: rgba(60, 60, 67, 0.32);
+		--fill-quiet: rgba(120, 120, 128, 0.16);
+		--rail-quiet: rgba(120, 120, 128, 0.70);
+
+		--fill-highlight: rgba(255, 204, 0, 0.34);
+		--fill-selected: rgba(175, 82, 222, 0.24);
+
+		--scroll-thumb: rgba(0, 0, 0, 0.44);
+		--scroll-thumb-active: rgba(0, 0, 0, 0.64);
+	}
+
+	.time,
+	.date_indicator > span,
+	.session_indicator > span,
+	div.line[data-line-type="invite"],
+	div.line[data-line-type="debug"],
+	div.line[data-line-type="dcc-file-transfer"],
+	div.line[data-line-type="join"],
+	div.line[data-line-type="part"],
+	div.line[data-line-type="kick"],
+	div.line[data-line-type="quit"],
+	div.line[data-line-type="kill"],
+	div.line[data-line-type="nick"],
+	div.line[data-line-type="mode"],
+	div.line[data-line-type="topic"],
+	div.line[data-line-type="website"] {
+		color: -apple-system-label;
+	}
+
+	a {
+		text-decoration: underline;
+	}
 }

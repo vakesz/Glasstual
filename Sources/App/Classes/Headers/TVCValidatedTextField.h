@@ -43,6 +43,14 @@ NS_ASSUME_NONNULL_BEGIN
  to the user as an error description. */
 typedef NSString * _Nullable (^TVCValidatedTextFieldValidationBlock)(NSString *currentValue);
 
+/* The callback was described only in a comment, which left the selector
+ undeclared everywhere it is sent from. Naming it here keeps -Wundeclared-selector
+ able to catch a genuine misspelling. Conformance is optional: the property stays
+ a plain id so existing callbacks do not have to be re-declared. */
+@protocol TVCValidatedTextFieldTextDidChangeCallback <NSObject>
+- (void)validatedTextFieldTextDidChange:(id)sender;
+@end
+
 @interface TVCValidatedTextField : NSTextField
 @property (nonatomic, copy, nullable) TVCValidatedTextFieldValidationBlock validationBlock;
 @property (nonatomic, assign) BOOL stringValueUsesOnlyFirstToken; // Only use everything before first space (" ") as value.

@@ -101,7 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self.sheet makeFirstResponder:self.tnewNicknameTextField];
 }
 
-- (void)ok:(id)sender
+- (void)ok:(nullable id)sender
 {
 	if ([self okOrError] == NO) {
 		return;

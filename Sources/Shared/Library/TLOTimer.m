@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 	return [[self alloc] initWithActionBlock:actionBlock onQueue:nil];
 }
 
-+ (instancetype)timerWithActionBlock:(TLOTimerActionBlock)actionBlock onQueue:(dispatch_queue_t)queue
++ (instancetype)timerWithActionBlock:(TLOTimerActionBlock)actionBlock onQueue:(nullable dispatch_queue_t)queue
 {
 	NSParameterAssert(actionBlock != NULL);
 	NSParameterAssert(queue != NULL);
@@ -79,7 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
 	return [self initWithActionBlock:actionBlock onQueue:nil];
 }
 
-- (instancetype)initWithActionBlock:(TLOTimerActionBlock)actionBlock onQueue:(dispatch_queue_t)queue
+- (instancetype)initWithActionBlock:(TLOTimerActionBlock)actionBlock onQueue:(nullable dispatch_queue_t)queue
 {
 	NSParameterAssert(actionBlock != NULL);
 

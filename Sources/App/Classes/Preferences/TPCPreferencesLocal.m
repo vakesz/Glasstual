@@ -168,11 +168,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 	return [RZUserDefaults() boolForKey:@"DisableSidebarTranslucency"];
 }
 
-+ (BOOL)hideMainWindowSegmentedController
-{
-	return [RZUserDefaults() boolForKey:@"DisableMainWindowSegmentedController"];
-}
-
 + (BOOL)logHighlights
 {
 	return [RZUserDefaults() boolForKey:@"LogHighlights"];

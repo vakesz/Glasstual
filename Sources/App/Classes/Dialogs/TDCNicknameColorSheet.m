@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *nickname;
 @property (nonatomic, weak) IBOutlet NSColorWell *nicknameColorWell;
 
-- (IBAction)resetNicknameColor:(id)sender;
+- (IBAction)resetNicknameColor:(nullable id)sender;
 @end
 
 @implementation TDCNicknameColorSheet
@@ -84,7 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self startSheet];
 }
 
-- (void)ok:(id)sender
+- (void)ok:(nullable id)sender
 {
 	NSColor *nicknameColor = self.nicknameColorWell.color;
 
@@ -101,7 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[super ok:nil];
 }
 
-- (void)resetNicknameColor:(id)sender
+- (void)resetNicknameColor:(nullable id)sender
 {
 	if ([NSColorPanel sharedColorPanelExists]) {
 		[[NSColorPanel sharedColorPanel] close];
