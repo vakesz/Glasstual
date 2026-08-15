@@ -157,6 +157,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define _unsignedIntegerString(_value_)			[NSString stringWithUnsignedInteger:_value_]
 
+/* Declared by hand rather than imported from the generated Swift header: the
+ Swift side references TDCPreferencesController, so importing it here would be
+ circular. Kept in step with TDCPreferencesSettingsView.swift. */
+@interface TDCPreferencesSettingsBridge : NSObject
+- (void)selectPane:(NSString *)identifier;
+- (NSViewController *)makeViewControllerWithController:(TDCPreferencesController *)controller;
+@end
+
 @interface TDCPreferencesController ()
 @property (nonatomic, strong) IBOutlet NSArrayController *excludeKeywordsArrayController;
 @property (nonatomic, strong) IBOutlet NSArrayController *highlightKeywordsArrayController;
@@ -207,6 +215,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) IBOutlet NSToolbar *navigationToolbar;
 @property (nonatomic, strong) IBOutlet NSMenu *installedAddonsMenu;
 @property (nonatomic, strong) NSViewController *settingsHostingController;
+@property (nonatomic, strong) TDCPreferencesSettingsBridge *settingsBridge;
 @property (nonatomic, assign) BOOL reloadingTheme;
 @property (nonatomic, assign) BOOL reloadingThemeBySelection;
 @property (nonatomic, weak) IBOutlet NSView *notificationControllerHostView;
@@ -250,11 +259,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (IBAction)offRecordMessagingPolicyChanged:(id)sender;
 - (IBAction)offRecordMessagingOpenOfficialWebsite:(id)sender;
 #endif
-@end
-
-@interface TDCPreferencesSettingsBridge : NSObject
-+ (void)selectPane:(NSString *)identifier;
-+ (NSViewController *)makeViewControllerWithController:(TDCPreferencesController *)controller;
 @end
 
 @implementation TDCPreferencesController
@@ -393,7 +397,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	[TDCPreferencesSettingsBridge selectPane:identifier];
+	[self.settingsBridge selectPane:identifier];
 
 	[super show];
 }
@@ -428,7 +432,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *identifier = [self settingsPaneIdentifierForTag:tag];
 
 	if (identifier) {
-		[TDCPreferencesSettingsBridge selectPane:identifier];
+		[self.settingsBridge selectPane:identifier];
 	}
 }
 
@@ -600,7 +604,10 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 	window.contentMaxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
 	window.toolbar = nil;
 
-	NSViewController *hostingController = [TDCPreferencesSettingsBridge makeViewControllerWithController:self];
+	TDCPreferencesSettingsBridge *settingsBridge = [TDCPreferencesSettingsBridge new];
+	self.settingsBridge = settingsBridge;
+
+	NSViewController *hostingController = [settingsBridge makeViewControllerWithController:self];
 	self.settingsHostingController = hostingController;
 	window.contentViewController = hostingController;
 }
