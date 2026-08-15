@@ -1005,9 +1005,9 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 		return [NSAttributedString attributedString];
 	}
 
-	NSFont *defaultFont = inputDictionary[TVCLogRendererConfigurationAttributedStringPreferredFontAttribute];
-
-	NSAssert((defaultFont != nil),
+	/* Read inline rather than into a local, which would be unused once
+	 assertions are compiled out of a release build. */
+	NSAssert((inputDictionary[TVCLogRendererConfigurationAttributedStringPreferredFontAttribute] != nil),
 		@"FATAL ERROR: TVCLogRenderer cannot be supplied with a nil 'TVCLogRendererAttributedStringPreferredFontAttribute' attribute when rendering an attributed string");
 
 	TVCLogRenderer *renderer = [self new];

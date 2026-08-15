@@ -489,18 +489,18 @@ static const CGFloat _unreadBadgeTextPadding	= 7.0;
 
 	imageView.imageScaling = NSImageScaleProportionallyUpOrDown;
 
+	/* Only the width is pinned. Symbols differ in width, and the label is laid
+	 out against the trailing edge of this view, so without a fixed width the
+	 names in the list do not line up with one another. The height is left
+	 alone: the nib already fixes it by insetting the image view from the top
+	 and the bottom of the row, and adding a height here conflicts with that. */
 	for (NSLayoutConstraint *constraint in imageView.constraints) {
-		if (constraint.firstAttribute == NSLayoutAttributeWidth ||
-			constraint.firstAttribute == NSLayoutAttributeHeight)
-		{
+		if (constraint.firstAttribute == NSLayoutAttributeWidth) {
 			return;
 		}
 	}
 
-	[NSLayoutConstraint activateConstraints:@[
-		[imageView.widthAnchor constraintEqualToConstant:16.0],
-		[imageView.heightAnchor constraintEqualToConstant:16.0]
-	]];
+	[imageView.widthAnchor constraintEqualToConstant:16.0].active = YES;
 }
 
 @end

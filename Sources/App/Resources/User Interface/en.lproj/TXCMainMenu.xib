@@ -127,13 +127,6 @@
         </menu>
         <menu id="edI-1l-81o" userLabel="Encryption Manager Status Menu">
             <items>
-                <menuItem title="What is this?" tag="1500" id="fdJ-Px-D0q">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="encryptionWhatIsThisInformation:" target="267" id="kzN-uE-GOs"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" tag="1501" id="Rqm-1P-8cE"/>
                 <menuItem title="Start Private Conversation" tag="1502" id="wTZ-NT-MgD">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>

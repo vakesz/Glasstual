@@ -37,7 +37,6 @@
 
 #import "TDCAlert.h"
 #import "TLOLocalization.h"
-#import "TPCApplicationInfo.h"
 #import "TXApplicationPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -48,14 +47,26 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	pid_t ourProcessIdentifier = [[NSProcessInfo processInfo] processIdentifier];
 
-	/* These are the bundle identifiers of upstream Textual, not of Glasstual.
-	 They are matched verbatim so that a running copy of the app this one was
-	 forked from is still detected. Do not rename them. */
+	/* Our own identifier is read from the bundle rather than written out so
+	 that every configuration of the app matches itself. The rest are the
+	 bundle identifiers of upstream Textual, not of Glasstual. They are matched
+	 verbatim so that a running copy of the app this one was forked from is
+	 still detected, because it reads the same preferences. Do not rename them. */
+	NSMutableArray<NSString *> *identifiers =
+	[NSMutableArray arrayWithObjects:@"com.codeux.apps.textual",
+									 @"com.codeux.apps.textual-mas",
+									 @"com.codeux.irc.textual5", nil];
+
+	NSString *ourIdentifier = RZMainBundle().bundleIdentifier;
+
+	if (ourIdentifier && [identifiers containsObject:ourIdentifier] == NO) {
+		[identifiers addObject:ourIdentifier];
+	}
+
 	for (NSRunningApplication *application in RZWorkspace().runningApplications) {
-		if ([application.bundleIdentifier isEqualToString:@"com.codeux.apps.textual"] ||
-			[application.bundleIdentifier isEqualToString:@"com.codeux.apps.textual-mas"] ||
-			[application.bundleIdentifier isEqualToString:@"com.codeux.irc.textual5"])
-		{
+		NSString *bundleIdentifier = application.bundleIdentifier;
+
+		if (bundleIdentifier && [identifiers containsObject:bundleIdentifier]) {
 			if (application.processIdentifier == ourProcessIdentifier) {
 				continue;
 			}
