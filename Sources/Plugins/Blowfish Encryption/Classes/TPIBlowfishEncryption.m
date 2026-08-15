@@ -316,17 +316,17 @@
 + (void)setEncryptionKey:(NSString *)encryptionKey forChannel:(IRCChannel *)channel
 {
 	if (channel) {
-		NSString *serviceName = [NSString stringWithFormat:@"textual.cblowfish.%@", [channel uniqueIdentifier]];
+		NSString *serviceName = [NSString stringWithFormat:@"glasstual.cblowfish.%@", [channel uniqueIdentifier]];
 
 		if (encryptionKey == nil) {
-			[XRKeychain deleteKeychainItem:@"Textual (Blowfish Encryption)"
+			[XRKeychain deleteKeychainItem:@"Glasstual (Blowfish Encryption)"
 							  withItemKind:@"application password"
 							   forUsername:nil
 							   serviceName:serviceName];
 
 			[[channel viewController] setEncrypted:NO];
 		} else {
-			[XRKeychain modifyOrAddKeychainItem:@"Textual (Blowfish Encryption)"
+			[XRKeychain modifyOrAddKeychainItem:@"Glasstual (Blowfish Encryption)"
 								   withItemKind:@"application password"
 									forUsername:nil
 								withNewPassword:encryptionKey
@@ -340,9 +340,9 @@
 + (NSString *)encryptionKeyForChannel:(IRCChannel *)channel
 {
 	if (channel) {
-		NSString *serviceName = [NSString stringWithFormat:@"textual.cblowfish.%@", [channel uniqueIdentifier]];
+		NSString *serviceName = [NSString stringWithFormat:@"glasstual.cblowfish.%@", [channel uniqueIdentifier]];
 
-		return [XRKeychain getPasswordFromKeychainItem:@"Textual (Blowfish Encryption)"
+		return [XRKeychain getPasswordFromKeychainItem:@"Glasstual (Blowfish Encryption)"
 										  withItemKind:@"application password"
 										   forUsername:nil
 										   serviceName:serviceName];

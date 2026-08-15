@@ -98,20 +98,22 @@ class ConnectionSocket: NSObject
 			return
 		}
 
+		var error: CFError?
+
+		if SecTrustEvaluateWithError(trust, &error) {
+			response(true)
+
+			return
+		}
+
 		var evaluationResult: SecTrustResultType = .invalid
 
-		let evaluationStatus = SecTrustEvaluate(trust, &evaluationResult)
+		SecTrustGetTrustResult(trust, &evaluationResult)
 
-		if (evaluationStatus == errSecSuccess) {
-			if (evaluationResult == .unspecified || evaluationResult == .proceed) {
-				response(true)
+		if evaluationResult == .recoverableTrustFailure {
+			delegate?.connection(self, requiresTrust: response)
 
-				return
-			} else if (evaluationResult == .recoverableTrustFailure) {
-				delegate?.connection(self, requiresTrust: response)
-
-				return
-			}
+			return
 		}
 
 		response(false)
@@ -125,24 +127,26 @@ class ConnectionSocket: NSObject
 
 		/* ====================================== */
 
-		var keychainRef: SecKeychainItem?
+		var certificateObject: CFTypeRef?
 
-		let certificateDataInRef = certificateDataIn as CFData
+		var status = SecItemCopyMatching([
+			kSecClass: kSecClassCertificate,
+			kSecValuePersistentRef: certificateDataIn,
+			kSecReturnRef: true
+		] as CFDictionary, &certificateObject)
 
-		var status = SecKeychainItemCopyFromPersistentReference(certificateDataInRef, &keychainRef)
-
-		if (status != noErr) {
+		if status != errSecSuccess {
 			Logging.defaultSubsystem?.error("Operation Failed (1): \(status, privacy: .public)")
 
 			return nil
 		}
 
-		/* "A SecKeychainItem object for a certificate that is stored
-		 in a keychain can be safely cast to a SecCertificate for use
-		 with Certificate, Key, and Trust Services." */
-		/* Contrary to the statement above, as stated in documentation,
-		 casting was crashing. This is a workaround until that's fixed. */
-		let certificateRef = unsafeBitCast(keychainRef, to: SecCertificate.self)
+		guard let certificateObject,
+			  CFGetTypeID(certificateObject) == SecCertificateGetTypeID() else {
+			return nil
+		}
+
+		let certificateRef = certificateObject as! SecCertificate
 
 		/* ====================================== */
 

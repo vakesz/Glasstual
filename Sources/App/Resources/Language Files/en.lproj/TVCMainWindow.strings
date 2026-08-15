@@ -62,9 +62,31 @@
 "nxz-l9" = " (away)";
 "6wz-pd" = "%1$@ (%2$@)";
 
+"st-dc" = "Disconnected";
+"st-wr" = "Waiting to reconnect";
+"st-cn" = "Connecting";
+"st-rc" = "Reconnecting";
+"st-lo" = "Logging on";
+"st-dq" = "Disconnecting";
+"st-uc" = "%@ users";
+
 "iph-a9" = "Loading configuration…";
 "5g1-i9" = "Importing preferences…";
 
 "4yo-mk" = "Current Session";
 
 "vi3-23" = "(No Topic)";
+
+/* Toolbar & input bar accessibility */
+"tb-cs" = "Connection Security";
+"ib-ad" = "Add Server or Channel";
+"ib-mg" = "Manage Selection";
+"ib-ab" = "Address Book";
+
+/* Dynamic View/Window menu titles */
+"mnu-ssl" = "Show Server List";
+"mnu-hsl" = "Hide Server List";
+"mnu-sml" = "Show Member List";
+"mnu-hml" = "Hide Member List";
+"mnu-efs" = "Enter Full Screen";
+"mnu-xfs" = "Exit Full Screen";

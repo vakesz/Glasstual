@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class THOPluginOutputSuppressionRule;
 
-TEXTUAL_EXTERN NSNotificationName const THOPluginManagerFinishedLoadingPluginsNotification;
+GLASSTUAL_EXTERN NSNotificationName const THOPluginManagerFinishedLoadingPluginsNotification;
 
 @interface THOPluginManager : NSObject
 - (void)loadPlugins;

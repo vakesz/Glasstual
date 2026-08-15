@@ -37,6 +37,8 @@
 
 #import "TLOLocalization.h"
 #import "TPCPreferencesUserDefaults.h"
+#import "TVCMainWindow.h"
+#import "TXMasterController.h"
 #import "TDCAlert.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -257,13 +259,13 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 #pragma mark -
 #pragma mark Non-blocking Alerts (Panel)
 
-+ (TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (NSAlert *)alertWithMessage:(NSString *)bodyText
 						 title:(NSString *)titleText
 				 defaultButton:(NSString *)buttonDefault
 			   alternateButton:(nullable NSString *)buttonAlternate
 {
 	/* Will never return nil because no suppression. */
-	return (TVCAlert * _Nonnull)
+	return (NSAlert * _Nonnull)
 	[self alertWithMessage:bodyText
 					 title:titleText
 			 defaultButton:buttonDefault
@@ -275,13 +277,13 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		   completionBlock:nil];
 }
 
-+ (TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (NSAlert *)alertWithMessage:(NSString *)bodyText
 						 title:(NSString *)titleText
 				 defaultButton:(NSString *)buttonDefault
 			   alternateButton:(nullable NSString *)buttonAlternate
 				   otherButton:(nullable NSString *)buttonOther
 {
-	return (TVCAlert * _Nonnull)
+	return (NSAlert * _Nonnull)
 	[self alertWithMessage:bodyText
 					 title:titleText
 			 defaultButton:buttonDefault
@@ -293,7 +295,7 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		   completionBlock:nil];
 }
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -312,7 +314,7 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		   completionBlock:nil];
 }
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -330,7 +332,7 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		   completionBlock:completionBlock];
 }
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -349,7 +351,7 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		   completionBlock:completionBlock];
 }
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -369,7 +371,7 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		   completionBlock:completionBlock];
 }
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -390,7 +392,7 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		   completionBlock:completionBlock];
 }
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -411,7 +413,7 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		   completionBlock:completionBlock];
 }
 
-+ (nullable TVCAlert *)alertWithMessage:(NSString *)bodyText
++ (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
 								  title:(NSString *)titleText
 						  defaultButton:(NSString *)buttonDefault
 						alternateButton:(nullable NSString *)buttonAlternate
@@ -427,7 +429,7 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 
 	/* Require main thread */
 	if ([NSThread isMainThread] == NO) {
-		__block TVCAlert *alert = nil;
+		__block NSAlert *alert = nil;
 
 		XRPerformBlockSynchronouslyOnQueue(dispatch_get_main_queue(), ^{
 			alert =
@@ -463,19 +465,21 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 	}
 
 	/* Construct alert */
-	TVCAlert *alert = [TVCAlert new];
+	NSAlert *alert = [NSAlert new];
+
+	alert.alertStyle = NSAlertStyleInformational;
 
 	alert.messageText = titleText;
 	alert.informativeText = bodyText;
 
-	[alert setTitle:buttonDefault forButton:TVCAlertResponseButtonFirst];
+	[alert addButtonWithTitle:buttonDefault];
 
 	if (buttonAlternate) {
-		[alert setTitle:buttonAlternate forButton:TVCAlertResponseButtonSecond];
+		[alert addButtonWithTitle:buttonAlternate];
 	}
 
 	if (buttonOther) {
-		[alert setTitle:buttonOther forButton:TVCAlertResponseButtonThird];
+		[alert addButtonWithTitle:buttonOther];
 	}
 
 	if (suppressKey || suppressText) {
@@ -488,15 +492,29 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		alert.accessoryView = accessoryView;
 	}
 
-	/* Pop alert */
-	[alert showAlertWithCompletionBlock:^(TVCAlert *sender, TVCAlertResponseButton buttonClicked)
-	 {
-		[self _finalizeAlert:alert
-				withResponse:[self _convertResponseFromTVCAlert:buttonClicked]
-			 completionBlock:completionBlock
-			  suppressionKey:suppressKey
-		 suppressionResponse:NULL];
-	}];
+	/* Construct alert context */
+	TDCAlertContext *context = [TDCAlertContext new];
+
+	context.suppressionKey = suppressKey;
+
+	context.completionBlock = completionBlock;
+
+	/* Pop alert. A sheet on the main window is preferred so that the alert is
+	 attached to what it is about. During launch and migration the window may
+	 not exist yet, in which case fall back to an application modal alert. */
+	NSWindow *hostWindow = mainWindow();
+
+	if (hostWindow.isVisible) {
+		[alert beginSheetModalForWindow:hostWindow completionHandler:^(NSModalResponse returnCode) {
+			[self _alertSheetResponseCallback:alert returnCode:returnCode contextInfo:context];
+		}];
+	} else {
+		/* Return to the caller before blocking so that this method stays
+		 non-blocking regardless of how the alert is presented. */
+		XRPerformBlockAsynchronouslyOnMainQueue(^{
+			[self _alertSheetResponseCallback:alert returnCode:[alert runModal] contextInfo:context];
+		});
+	}
 
 	return alert;
 }
@@ -750,24 +768,6 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 			return TDCAlertResponseAlternate;
 		}
 		case NSAlertThirdButtonReturn:
-		{
-			return TDCAlertResponseOther;
-		}
-		default:
-		{
-			return TDCAlertResponseDefault;
-		}
-	}
-}
-
-+ (TDCAlertResponse)_convertResponseFromTVCAlert:(TVCAlertResponseButton)response
-{
-	switch (response) {
-		case TVCAlertResponseButtonSecond:
-		{
-			return TDCAlertResponseAlternate;
-		}
-		case TVCAlertResponseButtonThird:
 		{
 			return TDCAlertResponseOther;
 		}

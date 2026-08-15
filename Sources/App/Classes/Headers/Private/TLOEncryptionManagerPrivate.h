@@ -41,13 +41,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class IRCClient, TVCMainWindowTitlebarAccessoryViewLockButton;
+@class IRCClient;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 #define sharedEncryptionManager()			[TXSharedApplication sharedEncryptionManager]
 #endif
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 @interface TLOEncryptionManager : NSObject
 /* Returns unique "account name" used for messageFrom and messageTo parameters */
 - (NSString *)accountNameForUser:(NSString *)nickname onClient:(IRCClient *)client;
@@ -69,8 +69,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* State information */
 - (OTRKitMessageState)messageStateFor:(NSString *)messageTo from:(NSString *)messageFrom;
-
-- (void)updateLockIconButton:(TVCMainWindowTitlebarAccessoryViewLockButton *)button withStateOf:(NSString *)messageTo from:(NSString *)messageFrom;
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem withStateOf:(NSString *)messageTo from:(NSString *)messageFrom;
 

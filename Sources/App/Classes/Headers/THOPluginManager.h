@@ -40,8 +40,8 @@
 /**
  * Subsystem that plugin can use for logging using `os_log` and related systems.
  *
- * Plugins are loaded directly into Textual and are not executed on a separate
- * process. As such, the returned subsystem uses the same identifier of Textual.
+ * Plugins are loaded directly into Glasstual and are not executed on a separate
+ * process. As such, the returned subsystem uses the same identifier of Glasstual.
  * The category is different. The category is in the format:
  * `Extension['<BUNDLE NAME>']`
  *
@@ -54,4 +54,4 @@
 #define THOPluginLoggingSubsystem()		\
 	_THOPluginLoggingSubsystemForBundle([NSBundle bundleForClass:[self class]])
 
-TEXTUAL_EXTERN os_log_t _THOPluginLoggingSubsystemForBundle(NSBundle *bundle);
+GLASSTUAL_EXTERN os_log_t _THOPluginLoggingSubsystemForBundle(NSBundle *bundle);

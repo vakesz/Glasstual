@@ -136,7 +136,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *filename = path.lastPathComponent;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	if ([TPCPreferences textEncryptionIsEnabled]) {
 		/* Ask whether we should be allowed to add the file. */
 		BOOL allowWithOTR = [sharedEncryptionManager()
@@ -278,12 +278,12 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSString *uniqueId = [NSString stringWithUUID];
 
-	NSString *dispatchQueueName = [NSString stringWithFormat:@"Textual.TDCFileTransferDialogTransferController.DCC-SocketDispatchQueue-%@", uniqueId];
+	NSString *dispatchQueueName = [NSString stringWithFormat:@"Glasstual.TDCFileTransferDialogTransferController.DCC-SocketDispatchQueue-%@", uniqueId];
 
 	self.serverDispatchQueue =
 	XRCreateDispatchQueueWithPriority(dispatchQueueName.UTF8String, DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT);
 
-	NSString *socketQueueName = [NSString stringWithFormat:@"Textual.TDCFileTransferDialogTransferController.DCC-SocketReadWriteQueue-%@", uniqueId];
+	NSString *socketQueueName = [NSString stringWithFormat:@"Glasstual.TDCFileTransferDialogTransferController.DCC-SocketReadWriteQueue-%@", uniqueId];
 
 	self.serverSocketQueue =
 	XRCreateDispatchQueueWithPriority(socketQueueName.UTF8String, DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT);
@@ -317,7 +317,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)receiveUnencryptedFile
 {
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	if ([TPCPreferences textEncryptionIsEnabled]) {
 		BOOL allowWithOTR = [sharedEncryptionManager()
 							 safeToTransferFile:self.filename

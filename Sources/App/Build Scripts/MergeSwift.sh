@@ -3,13 +3,13 @@
 set -e
 
 #
-# Textual and Remote Connection Manager service both use Swift.
-# Textual embeds the library and the service will inherit that.
+# Glasstual and Remote Connection Manager service both use Swift.
+# Glasstual embeds the library and the service will inherit that.
 # For some reason, during development, I found that the service
 # would not launch because "libswiftSwiftOnoneSupport.dylib"
-# was missing in Textual's copy of the library.
+# was missing in Glasstual's copy of the library.
 #
-# Textual and the service both declare -Onone optimization level
+# Glasstual and the service both declare -Onone optimization level
 # at the same time, so I don't know why one will have it and
 # the other does not.
 #

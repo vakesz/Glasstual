@@ -101,16 +101,16 @@ appPrivate.finishedLayingOutView = function()
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.finishedLayingOutView.postMessage(null);
 	} else {
-		TextualScriptSink.finishedLayingOutView();
+		GlasstualScriptSink.finishedLayingOutView();
 	}
 };
 
 appPrivate.setAutomaticScrollingEnabled = function(enabled)
 {
 	if (app.isWebKit2()) {
-		TextualScroller.setAutomaticScrollingEnabled(enabled);
+		GlasstualScroller.setAutomaticScrollingEnabled(enabled);
 	} else {
-		TextualScriptSink.setAutomaticScrollingEnabled(enabled);
+		GlasstualScriptSink.setAutomaticScrollingEnabled(enabled);
 	}
 };
 
@@ -119,7 +119,7 @@ appPrivate.setURLAddress = function(object)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.setURLAddress.postMessage(object);
 	} else {
-		TextualScriptSink.setURLAddress(object);
+		GlasstualScriptSink.setURLAddress(object);
 	}
 };
 
@@ -128,7 +128,7 @@ appPrivate.setSelection = function(object)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.setSelection.postMessage(object);
 	} else {
-		TextualScriptSink.setSelection(object);
+		GlasstualScriptSink.setSelection(object);
 	}
 };
 
@@ -137,7 +137,7 @@ appPrivate.setChannelName = function(object)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.setChannelName.postMessage(object);
 	} else {
-		TextualScriptSink.setChannelName(object);
+		GlasstualScriptSink.setChannelName(object);
 	}
 };
 
@@ -146,7 +146,7 @@ appPrivate.setNickname = function(object)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.setNickname.postMessage(object);
 	} else {
-		TextualScriptSink.setNickname(object);
+		GlasstualScriptSink.setNickname(object);
 	}
 };
 
@@ -155,7 +155,7 @@ appPrivate.channelNameDoubleClicked = function()
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.channelNameDoubleClicked.postMessage(null);
 	} else {
-		TextualScriptSink.channelNameDoubleClicked();
+		GlasstualScriptSink.channelNameDoubleClicked();
 	}
 };
 
@@ -164,7 +164,7 @@ appPrivate.nicknameDoubleClicked = function()
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.nicknameDoubleClicked.postMessage(null);
 	} else {
-		TextualScriptSink.nicknameDoubleClicked();
+		GlasstualScriptSink.nicknameDoubleClicked();
 	}
 };
 
@@ -173,7 +173,7 @@ appPrivate.topicBarDoubleClicked = function()
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.topicBarDoubleClicked.postMessage(null);
 	} else {
-		TextualScriptSink.topicBarDoubleClicked();
+		GlasstualScriptSink.topicBarDoubleClicked();
 	}
 };
 
@@ -186,7 +186,7 @@ appPrivate.copySelectionWhenPermitted = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.copySelectionWhenPermitted.postMessage(dataValue);
 	} else {
-		TextualScriptSink.copySelectionWhenPermitted(dataValue);
+		GlasstualScriptSink.copySelectionWhenPermitted(dataValue);
 	}
 };
 
@@ -204,7 +204,7 @@ appPrivate.renderMessagesBefore = function(lineNumber, maximumNumberOfLines, cal
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.renderMessagesBefore.postMessage(dataValue);
 	} else {
-		TextualScriptSink.renderMessagesBefore(dataValue);
+		GlasstualScriptSink.renderMessagesBefore(dataValue);
 	}
 };
 
@@ -217,7 +217,7 @@ appPrivate.renderMessagesAfter = function(lineNumber, maximumNumberOfLines, call
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.renderMessagesAfter.postMessage(dataValue);
 	} else {
-		TextualScriptSink.renderMessagesAfter(dataValue);
+		GlasstualScriptSink.renderMessagesAfter(dataValue);
 	}
 };
 
@@ -230,7 +230,7 @@ appPrivate.renderMessagesInRange = function(lineNumberAfter, lineNumberBefore, m
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.renderMessagesInRange.postMessage(dataValue);
 	} else {
-		TextualScriptSink.renderMessagesInRange(dataValue);
+		GlasstualScriptSink.renderMessagesInRange(dataValue);
 	}
 };
 
@@ -243,7 +243,7 @@ appPrivate.renderMessageWithSiblings = function(lineNumber, numberOfLinesBefore,
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.renderMessageWithSiblings.postMessage(dataValue);
 	} else {
-		TextualScriptSink.renderMessageWithSiblings(dataValue);
+		GlasstualScriptSink.renderMessageWithSiblings(dataValue);
 	}
 };
 
@@ -256,7 +256,7 @@ appPrivate.renderTemplate = function(templateName, templateAttributes, callbackF
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.renderTemplate.postMessage(dataValue);
 	} else {
-		TextualScriptSink.renderTemplate(dataValue);
+		GlasstualScriptSink.renderTemplate(dataValue);
 	}
 };
 
@@ -267,7 +267,7 @@ appPrivate.notifyJumpToLineCallback = function(lineNumber, successful, scrolledT
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.notifyJumpToLineCallback.postMessage(dataValue);
 	} else {
-		TextualScriptSink.notifyJumpToLineCallback(dataValue);
+		GlasstualScriptSink.notifyJumpToLineCallback(dataValue);
 	}
 };
 
@@ -276,7 +276,7 @@ appPrivate.notifyLinesAddedToView = function(lineNumbers)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.notifyLinesAddedToView.postMessage(lineNumbers);
 	} else {
-		TextualScriptSink.notifyLinesAddedToView(lineNumbers);
+		GlasstualScriptSink.notifyLinesAddedToView(lineNumbers);
 	}
 };
 
@@ -285,7 +285,7 @@ appPrivate.notifyLinesRemovedFromView = function(lineNumbers)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.notifyLinesRemovedFromView.postMessage(lineNumbers);
 	} else {
-		TextualScriptSink.notifyLinesRemovedFromView(lineNumbers);
+		GlasstualScriptSink.notifyLinesRemovedFromView(lineNumbers);
 	}
 };
 
@@ -296,7 +296,7 @@ appPrivate.loadInlineMedia = function(address, uniqueIdentifier, lineNumber, ind
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.loadInlineMedia.postMessage(dataValue);
 	} else {
-		TextualScriptSink.loadInlineMedia(dataValue);
+		GlasstualScriptSink.loadInlineMedia(dataValue);
 	}
 };
 
@@ -305,7 +305,7 @@ appPrivate.encryptionAuthenticateUser = function()
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.encryptionAuthenticateUser.postMessage(null);
 	} else {
-		TextualScriptSink.encryptionAuthenticateUser();
+		GlasstualScriptSink.encryptionAuthenticateUser();
 	}
 };
 
@@ -331,7 +331,7 @@ app.channelMemberCount = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.channelMemberCount.postMessage(dataValue);
 	} else {
-		TextualScriptSink.channelMemberCount(dataValue);
+		GlasstualScriptSink.channelMemberCount(dataValue);
 	}
 };
 
@@ -344,7 +344,7 @@ app.serverChannelCount = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.serverChannelCount.postMessage(dataValue);
 	} else {
-		TextualScriptSink.serverChannelCount(dataValue);
+		GlasstualScriptSink.serverChannelCount(dataValue);
 	}
 };
 
@@ -357,7 +357,7 @@ app.serverIsConnected = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.serverIsConnected.postMessage(dataValue);
 	} else {
-		TextualScriptSink.serverIsConnected(dataValue);
+		GlasstualScriptSink.serverIsConnected(dataValue);
 	}
 };
 
@@ -370,7 +370,7 @@ app.channelIsActive = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.channelIsActive.postMessage(dataValue);
 	} else {
-		TextualScriptSink.channelIsActive(dataValue);
+		GlasstualScriptSink.channelIsActive(dataValue);
 	}
 };
 
@@ -390,7 +390,7 @@ app.channelName = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.channelName.postMessage(dataValue);
 	} else {
-		TextualScriptSink.channelName(dataValue);
+		GlasstualScriptSink.channelName(dataValue);
 	}
 };
 
@@ -403,7 +403,7 @@ app.serverAddress = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.serverAddress.postMessage(dataValue);
 	} else {
-		TextualScriptSink.serverAddress(dataValue);
+		GlasstualScriptSink.serverAddress(dataValue);
 	}
 };
 
@@ -416,7 +416,7 @@ app.networkName = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.networkName.postMessage(dataValue);
 	} else {
-		TextualScriptSink.networkName(dataValue);
+		GlasstualScriptSink.networkName(dataValue);
 	}
 };
 
@@ -429,7 +429,7 @@ app.localUserNickname = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.localUserNickname.postMessage(dataValue);
 	} else {
-		TextualScriptSink.localUserNickname(dataValue);
+		GlasstualScriptSink.localUserNickname(dataValue);
 	}
 };
 
@@ -442,7 +442,7 @@ app.localUserHostmask = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.localUserHostmask.postMessage(dataValue);
 	} else {
-		TextualScriptSink.localUserHostmask(dataValue);
+		GlasstualScriptSink.localUserHostmask(dataValue);
 	}
 };
 
@@ -451,7 +451,7 @@ app.logToConsole = function(message)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.logToConsole.postMessage(message);
 	} else {
-		TextualScriptSink.logToConsole(message);
+		GlasstualScriptSink.logToConsole(message);
 	}
 };
 
@@ -460,7 +460,7 @@ app.printDebugInformationToConsole = function(message)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.printDebugInformationToConsole.postMessage(message);
 	} else {
-		TextualScriptSink.printDebugInformationToConsole(message);
+		GlasstualScriptSink.printDebugInformationToConsole(message);
 	}
 };
 
@@ -469,7 +469,7 @@ app.printDebugInformation = function(message)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.printDebugInformation.postMessage(message);
 	} else {
-		TextualScriptSink.printDebugInformation(message);
+		GlasstualScriptSink.printDebugInformation(message);
 	}
 };
 
@@ -482,7 +482,7 @@ app.inlineMediaEnabledForView = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.inlineMediaEnabledForView.postMessage(dataValue);
 	} else {
-		TextualScriptSink.inlineMediaEnabledForView(dataValue);
+		GlasstualScriptSink.inlineMediaEnabledForView(dataValue);
 	}
 };
 
@@ -497,7 +497,7 @@ app.sidebarInversionIsEnabled = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.sidebarInversionIsEnabled.postMessage(dataValue);
 	} else {
-		TextualScriptSink.sidebarInversionIsEnabled(dataValue);
+		GlasstualScriptSink.sidebarInversionIsEnabled(dataValue);
 	}
 };
 
@@ -510,7 +510,7 @@ app.appearance = function(callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.appearance.postMessage(dataValue);
 	} else {
-		TextualScriptSink.appearance(dataValue);
+		GlasstualScriptSink.appearance(dataValue);
 	}
 };
 
@@ -523,7 +523,7 @@ app.nicknameColorStyleHash = function(nickname, nicknameColorStyle, callbackFunc
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.nicknameColorStyleHash.postMessage(dataValue);
 	} else {
-		TextualScriptSink.nicknameColorStyleHash(dataValue);
+		GlasstualScriptSink.nicknameColorStyleHash(dataValue);
 	}
 };
 
@@ -534,7 +534,7 @@ app.sendPluginPayload = function(payloadLabel, payloadContent)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.sendPluginPayload.postMessage(dataValue);
 	} else {
-		TextualScriptSink.sendPluginPayload(dataValue);
+		GlasstualScriptSink.sendPluginPayload(dataValue);
 	}
 };
 
@@ -547,7 +547,7 @@ app.styleSettingsRetrieveValue = function(key, callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.styleSettingsRetrieveValue.postMessage(dataValue);
 	} else {
-		TextualScriptSink.styleSettingsRetrieveValue(dataValue);
+		GlasstualScriptSink.styleSettingsRetrieveValue(dataValue);
 	}
 };
 
@@ -560,7 +560,7 @@ app.styleSettingsSetValue = function(key, value, callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.styleSettingsSetValue.postMessage(dataValue);
 	} else {
-		TextualScriptSink.styleSettingsSetValue(dataValue);
+		GlasstualScriptSink.styleSettingsSetValue(dataValue);
 	}
 };
 
@@ -573,6 +573,6 @@ app.retrievePreferencesWithMethodName = function(name, callbackFunction)
 	if (app.isWebKit2()) {
 		window.webkit.messageHandlers.retrievePreferencesWithMethodName.postMessage(dataValue);
 	} else {
-		TextualScriptSink.retrievePreferencesWithMethodName(dataValue);
+		GlasstualScriptSink.retrievePreferencesWithMethodName(dataValue);
 	}
 };

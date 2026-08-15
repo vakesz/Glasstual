@@ -62,11 +62,60 @@
 #import "TDCPreferencesUserStyleSheetPrivate.h"
 #import "TDCPreferencesControllerPrivate.h"
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 #import <Sparkle/Sparkle.h>
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
+
+@interface TXColorUnarchiveFromDataTransformer : NSSecureUnarchiveFromDataTransformer
+@end
+
+@implementation TXColorUnarchiveFromDataTransformer
+
++ (void)load
+{
+	[NSValueTransformer setValueTransformer:[self new] forName:@"TXColorUnarchiveFromData"];
+}
+
++ (Class)transformedValueClass
+{
+	return [NSColor class];
+}
+
++ (BOOL)allowsReverseTransformation
+{
+	return YES;
+}
+
++ (NSArray<Class> *)allowedTopLevelClasses
+{
+	return [[super allowedTopLevelClasses] arrayByAddingObject:[NSColor class]];
+}
+
+- (nullable id)transformedValue:(nullable id)value
+{
+	if ([value isKindOfClass:[NSColor class]]) {
+		return value;
+	}
+
+	if ([value isKindOfClass:[NSData class]] == NO) {
+		return nil;
+	}
+
+	return [NSKeyedUnarchiver legacyCompatUnarchivedObjectOfClass:[NSColor class] fromData:value];
+}
+
+- (nullable id)reverseTransformedValue:(nullable id)value
+{
+	if ([value isKindOfClass:[NSColor class]] == NO) {
+		return nil;
+	}
+
+	return [NSKeyedArchiver archivedDataWithRootObject:value requiringSecureCoding:YES error:NULL];
+}
+
+@end
 
 #define _scrollbackSaveLinesMin		100
 #define _scrollbackSaveLinesMax		50000
@@ -101,7 +150,7 @@ NS_ASSUME_NONNULL_BEGIN
 #define _toolbarItemIndexDefaultIdentity			108008
 #define _toolbarItemIndexDefaultIRCopMessages		108009
 #define _toolbarItemIndexOffRecordMessaging			108010
-#define _toolbarItemIndexHiddenPreferences			108011 // unused
+#define _toolbarItemIndexHiddenPreferences			108011
 
 #define _addonsToolbarInstalledAddonsMenuItemIndex		109000
 #define _addonsToolbarItemMultiplier					995
@@ -140,7 +189,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) IBOutlet NSView *contentViewDefaultIdentity;
 @property (nonatomic, strong) IBOutlet NSView *contentViewDefaultIRCopMessages;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 @property (nonatomic, strong) IBOutlet NSView *contentViewOffRecordMessaging;
 #endif
 
@@ -157,6 +206,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) IBOutlet NSView *contentViewGeneralShareDataView;
 @property (nonatomic, strong) IBOutlet NSToolbar *navigationToolbar;
 @property (nonatomic, strong) IBOutlet NSMenu *installedAddonsMenu;
+@property (nonatomic, strong) NSViewController *settingsHostingController;
 @property (nonatomic, assign) BOOL reloadingTheme;
 @property (nonatomic, assign) BOOL reloadingThemeBySelection;
 @property (nonatomic, weak) IBOutlet NSView *notificationControllerHostView;
@@ -196,11 +246,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (IBAction)onResetUserListModeColorsToDefaults:(id)sender;
 - (IBAction)onSelectNewFont:(id)sender;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (IBAction)offRecordMessagingPolicyChanged:(id)sender;
 - (IBAction)offRecordMessagingOpenOfficialWebsite:(id)sender;
-- (IBAction)offRecordMessagingOpenHelpDocument:(id)sender;
 #endif
+@end
+
+@interface TDCPreferencesSettingsBridge : NSObject
++ (void)selectPane:(NSString *)identifier;
++ (NSViewController *)makeViewControllerWithController:(TDCPreferencesController *)controller;
 @end
 
 @implementation TDCPreferencesController
@@ -292,13 +346,15 @@ NS_ASSUME_NONNULL_BEGIN
 								   name:TVCMainWindowDidReloadThemeNotification
 								 object:nil];
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
 	/* Hide preferences for updates when support is not enabled. */
 	[self.contentViewGeneralStackView setVisibilityPriority:NSStackViewVisibilityPriorityNotVisible
 													forView:self.contentViewGeneralCheckForUpdatesView];
 #endif
 
 	[self.contentViewGeneral layoutSubtreeIfNeeded];
+
+	[self installSettingsSidebar];
 
 	[self restoreWindowFrame];
 }
@@ -313,37 +369,31 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)show:(TDCPreferencesControllerSelection)selection
 {
+	NSString *identifier = @"general";
+
 	switch (selection) {
 		case TDCPreferencesControllerSelectionNotifications:
 		{
-			[self _showPane:self.contentViewNotifications selectedItem:_toolbarItemIndexNotifications];
-
+			identifier = @"notifications";
 			break;
 		}
 		case TDCPreferencesControllerSelectionStyle:
 		{
-			[self _showPane:self.contentViewStyle selectedItem:_toolbarItemIndexStyle];
-
+			identifier = @"style";
 			break;
 		}
 		case TDCPreferencesControllerSelectionHiddenPreferences:
 		{
-			[self _showPane:self.contentViewHiddenPreferences selectedItem:_toolbarItemIndexAdvanced];
-
+			identifier = @"hidden";
 			break;
 		}
 		default:
 		{
-			[self _showPane:self.contentViewGeneral selectedItem:_toolbarItemIndexGeneral];
-
 			break;
 		}
 	}
-}
 
-- (void)_showPane:(NSView *)view selectedItem:(NSInteger)selectedItem
-{
-	[self firstPane:view selectedItem:selectedItem];
+	[TDCPreferencesSettingsBridge selectPane:identifier];
 
 	[super show];
 }
@@ -374,81 +424,213 @@ NS_ASSUME_NONNULL_BEGIN
 
  - (void)onPrefPaneSelected:(id)sender
 {
-#define _de(matchTag, view, selectionIndex)		\
-		case (matchTag): {	\
-			[self firstPane:(view) selectedItem:(selectionIndex)];	\
-			break;		\
-		}
+	NSInteger tag = [sender tag];
+	NSString *identifier = [self settingsPaneIdentifierForTag:tag];
 
-	switch ([sender tag]) {
-
-		_de(_toolbarItemIndexGeneral, self.contentViewGeneral, _toolbarItemIndexGeneral)
-
-		_de(_toolbarItemIndexHighlights, self.contentViewHighlights, _toolbarItemIndexHighlights)
-		_de(_toolbarItemIndexNotifications, self.contentViewNotifications, _toolbarItemIndexNotifications)
-
-		_de(_toolbarItemIndexBehavior, self.contentViewBehavior, _toolbarItemIndexBehavior)
-		_de(_toolbarItemIndexControls, self.contentViewControls, _toolbarItemIndexControls)
-		_de(_toolbarItemIndexInterface, self.contentViewInterface, _toolbarItemIndexInterface)
-		_de(_toolbarItemIndexStyle, self.contentViewStyle, _toolbarItemIndexStyle)
-
-		_de(_toolbarItemIndexChannelManagement, self.contentViewChannelManagement, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexCommandScope, self.contentViewCommandScope, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexCompatibility, self.contentViewCompatibility, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexFloodControl, self.contentViewFloodControl, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexIncomingData, self.contentViewIncomingData, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexFileTransfers, self.contentViewFileTransfers, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexInlineMedia, self.contentViewInlineMedia, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexLogLocation, self.contentViewLogLocation, _toolbarItemIndexAdvanced);
-		_de(_toolbarItemIndexDefaultIdentity, self.contentViewDefaultIdentity, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexDefaultIRCopMessages, self.contentViewDefaultIRCopMessages, _toolbarItemIndexAdvanced)
-
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-		_de(_toolbarItemIndexOffRecordMessaging, self.contentViewOffRecordMessaging, _toolbarItemIndexAdvanced)
-#endif
-
-		_de(_addonsToolbarInstalledAddonsMenuItemIndex, self.contentViewInstalledAddons, _toolbarItemIndexAddons)
-
-		default:
-		{
-			if ([sender tag] < _addonsToolbarItemMultiplier) {
-				break;
-			}
-
-			NSUInteger pluginIndex = ([sender tag] - _addonsToolbarItemMultiplier);
-
-			THOPluginItem *plugin = sharedPluginManager().pluginsWithPreferencePanes[pluginIndex];
-
-			NSView *preferencesView = plugin.pluginPreferencesPaneView;
-
-			[self firstPane:preferencesView selectedItem:_toolbarItemIndexAddons];
-
-			break;
-		}
+	if (identifier) {
+		[TDCPreferencesSettingsBridge selectPane:identifier];
 	}
-
-#undef _de
 }
 
-- (void)firstPane:(NSView *)view selectedItem:(NSInteger)selectedItem
-{
-	[self.window replaceContentView:view];
+/* Group identifiers are a contract with TDCPreferencesSettingsView.swift,
+ which uses them to build the sidebar's sections. */
+#define _settingsGroupMain			@"main"
+#define _settingsGroupAddons		@"addons"
+#define _settingsGroupAdvanced		@"advanced"
 
-	if (selectedItem >= 0) {
-		self.navigationToolbar.selectedItemIdentifier = _unsignedIntegerString(selectedItem);
-	} else {
-		self.navigationToolbar.selectedItemIdentifier = nil;
+/* One table drives the sidebar, the toolbar/menu tag lookup, and the pane
+ lookup. Keeping them in a single place is deliberate: when they were three
+ separate switch statements the Compatibility pane silently fell out of the
+ sidebar while remaining reachable everywhere else. */
+typedef struct {
+	NSInteger tag;
+	__unsafe_unretained NSString *identifier;
+	__unsafe_unretained NSString *symbolName;
+	__unsafe_unretained NSString *contentViewKey;
+	__unsafe_unretained NSString *group;
+} TDCPreferencesSettingsPane;
+
+static const TDCPreferencesSettingsPane _settingsPanes[] = {
+	{_toolbarItemIndexGeneral,				@"general",					@"gearshape",				@"contentViewGeneral",					_settingsGroupMain},
+	{_toolbarItemIndexBehavior,				@"behavior",				@"slider.horizontal.3",		@"contentViewBehavior",					_settingsGroupMain},
+	{_toolbarItemIndexNotifications,		@"notifications",			@"bell",					@"contentViewNotifications",			_settingsGroupMain},
+	{_toolbarItemIndexHighlights,			@"highlights",				@"text.magnifyingglass",	@"contentViewHighlights",				_settingsGroupMain},
+	{_toolbarItemIndexInterface,			@"interface",				@"macwindow",				@"contentViewInterface",				_settingsGroupMain},
+	{_toolbarItemIndexStyle,				@"style",					@"paintbrush",				@"contentViewStyle",					_settingsGroupMain},
+	{_toolbarItemIndexControls,				@"controls",				@"keyboard",				@"contentViewControls",					_settingsGroupMain},
+
+	{_toolbarItemIndexAddons,				@"addons",					@"puzzlepiece.extension",	@"contentViewInstalledAddons",			_settingsGroupAddons},
+
+	{_toolbarItemIndexChannelManagement,	@"channelManagement",		@"person.2",				@"contentViewChannelManagement",		_settingsGroupAdvanced},
+	{_toolbarItemIndexCommandScope,			@"commandScope",			@"terminal",				@"contentViewCommandScope",				_settingsGroupAdvanced},
+	{_toolbarItemIndexCompatibility,		@"compatibility",			@"wrench.and.screwdriver",	@"contentViewCompatibility",			_settingsGroupAdvanced},
+	{_toolbarItemIndexFloodControl,			@"floodControl",			@"timer",					@"contentViewFloodControl",				_settingsGroupAdvanced},
+	{_toolbarItemIndexIncomingData,			@"incomingData",			@"arrow.down.circle",		@"contentViewIncomingData",				_settingsGroupAdvanced},
+	{_toolbarItemIndexFileTransfers,		@"fileTransfers",			@"arrow.down.app",			@"contentViewFileTransfers",			_settingsGroupAdvanced},
+	{_toolbarItemIndexInlineMedia,			@"inlineMedia",				@"photo",					@"contentViewInlineMedia",				_settingsGroupAdvanced},
+	{_toolbarItemIndexLogLocation,			@"logLocation",				@"folder",					@"contentViewLogLocation",				_settingsGroupAdvanced},
+	{_toolbarItemIndexDefaultIdentity,		@"defaultIdentity",			@"person.crop.circle",		@"contentViewDefaultIdentity",			_settingsGroupAdvanced},
+	{_toolbarItemIndexDefaultIRCopMessages,	@"defaultIRCopMessages",	@"shield",					@"contentViewDefaultIRCopMessages",		_settingsGroupAdvanced},
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+	{_toolbarItemIndexOffRecordMessaging,	@"offRecordMessaging",		@"lock.fill",				@"contentViewOffRecordMessaging",		_settingsGroupAdvanced},
+#endif
+	{_toolbarItemIndexHiddenPreferences,	@"hidden",					@"eye.slash",				@"contentViewHiddenPreferences",		_settingsGroupAdvanced},
+};
+
+static const NSUInteger _settingsPaneCount = (sizeof(_settingsPanes) / sizeof(TDCPreferencesSettingsPane));
+
+static NSString *TDCPreferencesSettingsPluginIdentifier(NSUInteger index)
+{
+	return [NSString stringWithFormat:@"plugin-%lu", (unsigned long)index];
+}
+
+static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier(NSString *identifier)
+{
+	for (NSUInteger i = 0; i < _settingsPaneCount; i++) {
+		if ([_settingsPanes[i].identifier isEqualToString:identifier]) {
+			return &_settingsPanes[i];
+		}
 	}
+
+	return NULL;
+}
+
+- (nullable NSString *)settingsPaneIdentifierForTag:(NSInteger)tag
+{
+	if (tag == _addonsToolbarInstalledAddonsMenuItemIndex) {
+		return @"addons";
+	}
+
+	for (NSUInteger i = 0; i < _settingsPaneCount; i++) {
+		if (_settingsPanes[i].tag == tag) {
+			return _settingsPanes[i].identifier;
+		}
+	}
+
+	if (tag >= _addonsToolbarItemMultiplier) {
+		return TDCPreferencesSettingsPluginIdentifier((NSUInteger)(tag - _addonsToolbarItemMultiplier));
+	}
+
+	return nil;
+}
+
+- (NSDictionary<NSString *, NSString *> *)settingsCatalogItemWithID:(NSString *)identifier title:(NSString *)title symbol:(NSString *)symbol group:(NSString *)group
+{
+	return @{
+		@"id": identifier,
+		@"title": title,
+		@"symbol": symbol,
+		@"group": group
+	};
+}
+
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)settingsSidebarCatalog
+{
+	NSMutableArray<NSDictionary<NSString *, NSString *> *> *items = [NSMutableArray arrayWithCapacity:_settingsPaneCount];
+
+	for (NSUInteger i = 0; i < _settingsPaneCount; i++) {
+		const TDCPreferencesSettingsPane *pane = &_settingsPanes[i];
+
+		[items addObject:[self settingsCatalogItemWithID:pane->identifier
+												   title:TXTLS(([NSString stringWithFormat:@"TDCPreferencesController[sb-%@]", pane->identifier]))
+												  symbol:pane->symbolName
+												   group:pane->group]];
+
+		/* Plug-in panes are listed directly beneath the add-ons pane they belong to. */
+		if ([pane->group isEqualToString:_settingsGroupAddons] == NO) {
+			continue;
+		}
+
+		[sharedPluginManager().pluginsWithPreferencePanes enumerateObjectsUsingBlock:^(THOPluginItem *plugin, NSUInteger index, BOOL *stop) {
+			NSString *title = plugin.pluginPreferencesPaneMenuItemTitle;
+
+			if (title.length == 0) {
+				title = TXTLS(@"TDCPreferencesController[sb-plugin]");
+			}
+
+			[items addObject:[self settingsCatalogItemWithID:TDCPreferencesSettingsPluginIdentifier(index)
+													   title:title
+													  symbol:@"puzzlepiece.extension"
+													   group:_settingsGroupAddons]];
+		}];
+	}
+
+	return [items copy];
+}
+
+- (nullable NSView *)viewForSettingsPaneIdentifier:(NSString *)identifier
+{
+	NSParameterAssert(identifier != nil);
+
+	if ([identifier hasPrefix:@"plugin-"]) {
+		NSInteger pluginIndex = [[identifier substringFromIndex:7] integerValue];
+
+		NSArray *plugins = sharedPluginManager().pluginsWithPreferencePanes;
+
+		if (pluginIndex < 0 || pluginIndex >= (NSInteger)plugins.count) {
+			return nil;
+		}
+
+		return [plugins[(NSUInteger)pluginIndex] pluginPreferencesPaneView];
+	}
+
+	const TDCPreferencesSettingsPane *pane = TDCPreferencesSettingsPaneForIdentifier(identifier);
+
+	if (pane == NULL) {
+		return nil;
+	}
+
+	return [self valueForKey:pane->contentViewKey];
+}
+
+- (void)installSettingsSidebar
+{
+	NSWindow *window = self.window;
+	window.toolbarStyle = NSWindowToolbarStyleUnified;
+	window.titlebarAppearsTransparent = NO;
+	window.titlebarSeparatorStyle = NSTitlebarSeparatorStyleAutomatic;
+	window.styleMask = (NSWindowStyleMaskTitled |
+						NSWindowStyleMaskClosable |
+						NSWindowStyleMaskMiniaturizable |
+						NSWindowStyleMaskResizable |
+						NSWindowStyleMaskFullSizeContentView);
+	window.minSize = NSMakeSize(860.0, 560.0);
+	window.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+	window.contentMinSize = NSMakeSize(640.0, 480.0);
+	window.contentMaxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+	window.toolbar = nil;
+
+	NSViewController *hostingController = [TDCPreferencesSettingsBridge makeViewControllerWithController:self];
+	self.settingsHostingController = hostingController;
+	window.contentViewController = hostingController;
 }
 
 - (void)restoreWindowFrame
 {
 	NSWindow *window = self.window;
 
+	window.styleMask = (NSWindowStyleMaskTitled |
+						NSWindowStyleMaskClosable |
+						NSWindowStyleMaskMiniaturizable |
+						NSWindowStyleMaskResizable |
+						NSWindowStyleMaskFullSizeContentView);
+	window.minSize = NSMakeSize(860.0, 560.0);
+	window.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+	window.contentMinSize = NSMakeSize(640.0, 480.0);
+	window.contentMaxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+
 	[window saveSizeAsDefault];
 
 	[window restoreWindowStateForClass:self.class];
+
+	NSSize frameSize = window.frame.size;
+
+	if (frameSize.width < 860.0 || frameSize.height < 560.0) {
+		[window setContentSize:NSMakeSize(960.0, 640.0)];
+		[window center];
+	}
 }
+
 
 - (void)saveWindowFrame
 {
@@ -564,7 +746,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[TPCPreferences setFileTransferPortRangeEnd:value.integerValue];
 }
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
 {
 	[TPCPreferences setTextEncryptionIsOpportunistic:textEncryptionIsOpportunistic];
@@ -1052,36 +1234,11 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[self.themeSelectionButton removeAllItems];
 
-	NSString *currentThemeName = themeController().name;
-
-	TPCThemeStorageLocation currentStorageLocation = themeController().storageLocation;
-
-	[themeController() enumerateAvailableThemesWithBlock:^(NSString *themeName, TPCThemeStorageLocation storageLocation, BOOL multipleVariants, BOOL *stop) {
-		NSString *displayName = themeName;
-
-		if (multipleVariants) {
-			displayName = [NSString stringWithFormat:@"%@ (%@)",
-				themeName, [TPCThemeController descriptionForStorageLocation:storageLocation]];
-		}
-
-		NSMenuItem *item = [NSMenuItem menuItemWithTitle:displayName target:nil action:nil];
-
-		item.representedObject =
-		@{
-		  @"themeName" : themeName,
-		  @"storageLocation" : @(storageLocation)
-		};
-
-		if ([currentThemeName isEqualToString:themeName] &&
-			currentStorageLocation == storageLocation)
-		{
-			item.tag = 100; // Tag for item to select
-		}
-
-		[self.themeSelectionButton.menu addItem:item];
-	}];
-
+	NSMenuItem *nativeItem = [NSMenuItem menuItemWithTitle:@"Native" target:nil action:nil];
+	nativeItem.tag = 100;
+	[self.themeSelectionButton.menu addItem:nativeItem];
 	[self.themeSelectionButton selectItemWithTag:100];
+	self.themeSelectionButton.enabled = NO;
 }
 
 - (void)onChangedThemeSelection:(id)sender
@@ -1232,7 +1389,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateCheckForUpdatesMatrix
 {
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	SPUUpdater *updater = masterController().updateController.updater;
 
 	self.checkForUpdatesAutomaticallyDownload.state = updater.automaticallyDownloadsUpdates;
@@ -1244,7 +1401,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)onChangedCheckForUpdates:(id)sender
 {
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	SPUUpdater *updater = masterController().updateController.updater;
 
 	updater.automaticallyChecksForUpdates = (self.checkForUpdatesAutomaticallyCheck.state == NSControlStateValueOn);
@@ -1254,7 +1411,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)onChangedCheckForBetaUpdates:(id)sender
 {
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	[TPCPreferences performReloadAction:TPCPreferencesReloadActionSparkleFrameworkFeedURL];
 
 	if ([TPCPreferences receiveBetaUpdates]) {
@@ -1271,7 +1428,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self onChangedTheme:nil];
 }
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (void)offRecordMessagingPolicyChanged:(id)sender
 {
 	[TPCPreferences performReloadAction:TPCPreferencesReloadActionEncryptionPolicy];
@@ -1280,11 +1437,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)offRecordMessagingOpenOfficialWebsite:(id)sender
 {
 	[TLOpenLink openWithString:@"https://otr.cypherpunks.ca/"];
-}
-
-- (void)offRecordMessagingOpenHelpDocument:(id)sender
-{
-	[TLOpenLink openWithString:@"https://help.codeux.com/textual/Off-the-Record-Messaging.kb"];
 }
 #endif
 

@@ -39,12 +39,13 @@
 #import "TLOSpokenNotificationPrivate.h"
 #import "TLOSpeechSynthesizerPrivate.h"
 
+#import <AVFoundation/AVFoundation.h>
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TLOSpeechSynthesizer ()
-@property (nonatomic, strong) NSSpeechSynthesizer *speechSynthesizer;
+@interface TLOSpeechSynthesizer () <AVSpeechSynthesizerDelegate>
+@property (nonatomic, strong) AVSpeechSynthesizer *speechSynthesizer;
 @property (nonatomic, strong) NSMutableArray *itemsToBeSpoken;
-@property (nonatomic, assign) BOOL isWaitingForSystemToStopSpeaking;
 @end
 
 @implementation TLOSpeechSynthesizer
@@ -64,8 +65,8 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	self.itemsToBeSpoken = [NSMutableArray array];
 
-	self.speechSynthesizer = [NSSpeechSynthesizer new];
-	self.speechSynthesizer.delegate = (id)self;
+	self.speechSynthesizer = [[AVSpeechSynthesizer alloc] init];
+	self.speechSynthesizer.delegate = self;
 
 	self.isStopped = NO;
 }
@@ -95,19 +96,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)speakNextItemWhenSystemFinishes
-{
-	/* This method sleeps the thread for one second each pass then
-	 to check if another application on the system is speaking. */
-	while ([NSSpeechSynthesizer isAnyApplicationSpeaking]) {
-		[NSThread sleepForTimeInterval:1.0];
-	}
-
-	self.isWaitingForSystemToStopSpeaking = NO;
-
-	[self speakNextItem];
-}
-
 - (void)speakNextItem
 {
 	if (self.isStopped) {
@@ -121,15 +109,7 @@ NS_ASSUME_NONNULL_BEGIN
 			return;
 		}
 
-		if ([NSSpeechSynthesizer isAnyApplicationSpeaking]) {
-			if (self.isWaitingForSystemToStopSpeaking == NO) {
-				self.isWaitingForSystemToStopSpeaking = YES;
-
-				XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(^{
-					[self speakNextItemWhenSystemFinishes];
-				}, DISPATCH_QUEUE_PRIORITY_LOW);
-			}
-
+		if (self.speechSynthesizer.isSpeaking) {
 			return;
 		}
 
@@ -147,7 +127,9 @@ NS_ASSUME_NONNULL_BEGIN
 			}
 		}
 
-		[self.speechSynthesizer startSpeakingString:nextMessage];
+		AVSpeechUtterance *utterance = [AVSpeechUtterance speechUtteranceWithString:nextMessage];
+		utterance.rate = AVSpeechUtteranceDefaultSpeechRate;
+		[self.speechSynthesizer speakUtterance:utterance];
 	}
 }
 
@@ -157,7 +139,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[self.speechSynthesizer stopSpeaking]; // Will call delegate to do next item
+	[self.speechSynthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate]; // Will call delegate to do next item
 }
 
 - (void)stopSpeakingIfSet
@@ -166,7 +148,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[self.speechSynthesizer stopSpeaking];
+	[self.speechSynthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
 }
 
 - (BOOL)isSpeaking
@@ -212,7 +194,12 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Delegate Callback
 
-- (void)speechSynthesizer:(NSSpeechSynthesizer *)sender didFinishSpeaking:(BOOL)finishedSpeaking
+- (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didFinishSpeechUtterance:(AVSpeechUtterance *)utterance
+{
+	[self speakNextItem];
+}
+
+- (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didCancelSpeechUtterance:(AVSpeechUtterance *)utterance
 {
 	[self speakNextItem];
 }

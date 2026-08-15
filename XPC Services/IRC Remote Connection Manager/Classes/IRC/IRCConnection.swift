@@ -103,7 +103,7 @@ final class Connection: NSObject, ConnectionSocketDelegate
 
 	fileprivate func createWorkerDispatchQueue()
 	{
-		let workerQueueName = "Textual.IRCConnection.workerQueue.\(socket.uniqueIdentifier)"
+		let workerQueueName = "Glasstual.IRCConnection.workerQueue.\(socket.uniqueIdentifier)"
 
 		workerQueue = DispatchQueue(label: workerQueueName)
 	}
@@ -460,13 +460,11 @@ fileprivate extension ConnectionSocket
 {
 	static func socket(with config: IRCConnectionConfig) -> ConnectionSocket & ConnectionSocketProtocol
 	{
-#if canImport(Network)
-		if #available(macOS 10.14, *) {
-			if (config.connectionPrefersModernSockets) {
-				return ConnectionSocketNWF(with: config)
-			}
+		/* Network.framework cannot honour a custom proxy, so the classic
+		 Secure Transport socket is still reachable for those connections. */
+		if (config.connectionPrefersModernSockets) {
+			return ConnectionSocketNWF(with: config)
 		}
-#endif
 
 		return ConnectionSocketClassic(with: config)
 	}

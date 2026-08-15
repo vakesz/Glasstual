@@ -42,10 +42,8 @@
 #import "IRCWorld.h"
 #import "TPCPreferencesLocal.h"
 #import "TPCPreferencesUserDefaults.h"
-#import "TLOLicenseManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TVCMainWindowPrivate.h"
-#import "TDCLicenseManagerDialogPrivate.h"
 #import "TDCChannelSpotlightAppearanceInternal.h"
 #import "TDCChannelSpotlightSearchResultPrivate.h"
 #import "TDCChannelSpotlightSearchResultsTablePrivate.h"
@@ -105,12 +103,23 @@ NS_ASSUME_NONNULL_BEGIN
 	[RZNotificationCenter() addObserver:self selector:@selector(mainWindowSelectionChanged:) name:TVCMainWindowSelectionChangedNotification object:nil];
 	[RZNotificationCenter() addObserver:self selector:@selector(preferencesChanged:) name:TPCPreferencesUserDefaultsDidChangeNotification object:nil];
 
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-	[RZNotificationCenter() addObserver:self selector:@selector(licenseManagerDeactivatedLicense:) name:TDCLicenseManagerDeactivatedLicenseNotification object:nil];
-	[RZNotificationCenter() addObserver:self selector:@selector(licenseManagerTrialExpired:) name:TDCLicenseManagerTrialExpiredNotification object:nil];
-#endif
-
 	[self populateArrayController];
+
+	self.searchField.controlSize = NSControlSizeLarge;
+
+	if (self.visualEffectView) {
+		NSView *parentView = self.visualEffectView.superview;
+		NSView *innerView = self.visualEffectView.subviews.firstObject;
+
+		if (parentView && innerView) {
+			NSGlassEffectView *glassView = [[NSGlassEffectView alloc] initWithFrame:self.visualEffectView.frame];
+			glassView.autoresizingMask = self.visualEffectView.autoresizingMask;
+			glassView.cornerRadius = 22.0;
+			[innerView removeFromSuperview];
+			glassView.contentView = innerView;
+			[parentView replaceSubview:self.visualEffectView with:glassView];
+		}
+	}
 
 	[self applicationAppearanceChanged];
 
@@ -571,22 +580,6 @@ NS_ASSUME_NONNULL_BEGIN
 		[self searchStringChanged];
 	}
 }
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-- (void)licenseManagerDeactivatedLicense:(NSNotification *)notification
-{
-	if (TLOLicenseManagerIsTrialExpired() == NO) {
-		return;
-	}
-
-	[self close];
-}
-
-- (void)licenseManagerTrialExpired:(NSNotification *)notification
-{
-	[self close];
-}
-#endif
 
 - (void)windowWillClose:(NSNotification *)notification
 {

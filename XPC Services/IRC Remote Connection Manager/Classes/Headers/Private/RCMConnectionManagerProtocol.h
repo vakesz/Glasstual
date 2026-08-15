@@ -80,7 +80,7 @@ typedef void (^RCMSecureConnectionInformationCompletionBlock)(
 #pragma mark -
 #pragma mark Client Protocol
 
-/* The client protocol is what Textual (the client) implements
+/* The client protocol is what Glasstual (the client) implements
  so that the daemon can communicate state with it. */
 @protocol RCMConnectionManagerClientProtocol
 @required

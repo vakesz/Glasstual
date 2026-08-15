@@ -43,56 +43,56 @@
 /*                                                    */
 /* ************************************************** */
 
-var TextualScroller = {};
-var _TextualScroller = {};
+var GlasstualScroller = {};
+var _GlasstualScroller = {};
 
 /* ************************************************** */
 /*                   State Tracking                   */
 /* ************************************************** */
 
 /* Element to scroll */
-_TextualScroller._scrolledElement = null;
+_GlasstualScroller._scrolledElement = null;
 
 /* Minimum distance from bottom to be scrolled upwards
-before TextualScroller.userScrolled is true. */
-_TextualScroller._userScrolledMinimum = 25; /* PRIVATE */
+before GlasstualScroller.userScrolled is true. */
+_GlasstualScroller._userScrolledMinimum = 25; /* PRIVATE */
 
 /* Whether or not we are scrolled above the bottom. */
-TextualScroller.userScrolled = false; /* PUBLIC */
+GlasstualScroller.userScrolled = false; /* PUBLIC */
 
 /* Set to true when scrolled upwards. */
-TextualScroller.scrolledUpwards = false; /* PUBLIC */
+GlasstualScroller.scrolledUpwards = false; /* PUBLIC */
 
 /* Cached scroll position */
-TextualScroller.scrollPositionCurrentValue = 0; /* PUBLIC */
-TextualScroller.scrollPositionPreviousValue = 0; /* PUBLIC */
+GlasstualScroller.scrollPositionCurrentValue = 0; /* PUBLIC */
+GlasstualScroller.scrollPositionPreviousValue = 0; /* PUBLIC */
 
 /* Cached scroll height */
-TextualScroller.scrollHeightCurrentValue = 0; /* PUBLIC */
-TextualScroller.scrollHeightPreviousValue = 0; /* PUBLIC */
+GlasstualScroller.scrollHeightCurrentValue = 0; /* PUBLIC */
+GlasstualScroller.scrollHeightPreviousValue = 0; /* PUBLIC */
 
-_TextualScroller._documentScrolledCallback = function() /* PRIVATE */
+_GlasstualScroller._documentScrolledCallback = function() /* PRIVATE */
 {
 	/* Fix for scrolling on macOS 27.
-	 To quote "ilikepeaches" in the #textual support channel:
+	 To quote "ilikepeaches" in the #glasstual support channel:
 	 
-	 "FYI I encountered some annoying behavior with Textual on the macOS 27 beta.
+	 "FYI I encountered some annoying behavior with Glasstual on the macOS 27 beta.
 	 When the user switches away from a channel and new messages arrive in that
-	 background channel, Textual fails to scroll to the bottom of the channel
+	 background channel, Glasstual fails to scroll to the bottom of the channel
 	 when the user returns to it. The cause here is that WebKit in macOS 27 has
 	 changed: it suspends the hidden view and shrinks the client height to zero,
 	 confusing the scroll script into thinking the user scrolled up."
 	 
-	"TextualScroller.documentIsVisible" is not used here in case of a possible
+	"GlasstualScroller.documentIsVisible" is not used here in case of a possible
 	 unforseen race condition between the callback that sets this and here. */
 	if (document.hidden) {
 		return;
 	}
 	
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
 	/* Height of scrollable area */
-	var scrollHeightPrevious = TextualScroller.scrollHeightCurrentValue;
+	var scrollHeightPrevious = GlasstualScroller.scrollHeightCurrentValue;
 
 	var scrollHeightCurrent = scrolledElement.scrollHeight;
 
@@ -101,7 +101,7 @@ _TextualScroller._documentScrolledCallback = function() /* PRIVATE */
 
 	var scrollPositionCurrent = (scrolledElement.scrollTop + clientHeight);
 
-	var scrollPositionPrevious = TextualScroller.scrollPositionCurrentValue;
+	var scrollPositionPrevious = GlasstualScroller.scrollPositionCurrentValue;
 
 	/* If nothing changed, we ignore the event.
 	It is possible to receive a scroll event but nothing changes
@@ -116,8 +116,8 @@ _TextualScroller._documentScrolledCallback = function() /* PRIVATE */
 
 	/* Even if user is elastic scrolling, we want to record
 	the latest scroll height values. */
-	TextualScroller.scrollHeightPreviousValue = scrollHeightPrevious;
-	TextualScroller.scrollHeightCurrentValue = scrollHeightCurrent;
+	GlasstualScroller.scrollHeightPreviousValue = scrollHeightPrevious;
+	GlasstualScroller.scrollHeightCurrentValue = scrollHeightCurrent;
 
 	/* Ignore elastic scrolling */
 	if (scrollPositionCurrent < clientHeight ||
@@ -127,18 +127,18 @@ _TextualScroller._documentScrolledCallback = function() /* PRIVATE */
 	}
 
 	/* Only record scroll position changes if we weren't elastic scrolling. */
-	TextualScroller.scrollPositionPreviousValue = scrollPositionPrevious;
-	TextualScroller.scrollPositionCurrentValue = scrollPositionCurrent;
+	GlasstualScroller.scrollPositionPreviousValue = scrollPositionPrevious;
+	GlasstualScroller.scrollPositionCurrentValue = scrollPositionCurrent;
 
 	/* Scrolled upwards? */
 	var scrolledUpwards = (scrollPositionCurrent < scrollPositionPrevious);
 
-	TextualScroller.scrolledUpwards = scrolledUpwards;
+	GlasstualScroller.scrolledUpwards = scrolledUpwards;
 
 	/* User scrolled above bottom? */
-	var userScrolled = ((scrollHeightCurrent - scrollPositionCurrent) > _TextualScroller._userScrolledMinimum);
+	var userScrolled = ((scrollHeightCurrent - scrollPositionCurrent) > _GlasstualScroller._userScrolledMinimum);
 
-	TextualScroller.userScrolled = userScrolled;
+	GlasstualScroller.userScrolled = userScrolled;
 
 	/* Post custom scroll event */
 	if (scrolledUpwards) {
@@ -152,40 +152,40 @@ _TextualScroller._documentScrolledCallback = function() /* PRIVATE */
 /*               Position Restore                     */
 /* ************************************************** */
 
-_TextualScroller._restoreScrolledUpwards = undefined; /* PRIVATE */
-_TextualScroller._restoreScrollHeightFirstValue = undefined; /* PRIVATE */
-_TextualScroller._restoreScrollHeightSecondValue = undefined; /* PRIVATE */
+_GlasstualScroller._restoreScrolledUpwards = undefined; /* PRIVATE */
+_GlasstualScroller._restoreScrollHeightFirstValue = undefined; /* PRIVATE */
+_GlasstualScroller._restoreScrollHeightSecondValue = undefined; /* PRIVATE */
 
-TextualScroller.saveRestorationFirstDataPoint = function() /* PUBLIC */
+GlasstualScroller.saveRestorationFirstDataPoint = function() /* PUBLIC */
 {
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
-	_TextualScroller._restoreScrollHeightFirstValue = scrolledElement.scrollHeight;
+	_GlasstualScroller._restoreScrollHeightFirstValue = scrolledElement.scrollHeight;
 
-	_TextualScroller._restoreScrolledUpwards = TextualScroller.scrolledUpwards;
+	_GlasstualScroller._restoreScrolledUpwards = GlasstualScroller.scrolledUpwards;
 };
 
-TextualScroller.saveRestorationSecondDataPoint = function() /* PUBLIC */
+GlasstualScroller.saveRestorationSecondDataPoint = function() /* PUBLIC */
 {
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
-	_TextualScroller._restoreScrollHeightSecondValue = scrolledElement.scrollHeight;
+	_GlasstualScroller._restoreScrollHeightSecondValue = scrolledElement.scrollHeight;
 };
 
-TextualScroller.restoreScrollPosition = function() /* PUBLIC */
+GlasstualScroller.restoreScrollPosition = function() /* PUBLIC */
 {
-	var scrollHeightDifference = (_TextualScroller._restoreScrollHeightSecondValue - 
-								  _TextualScroller._restoreScrollHeightFirstValue);
+	var scrollHeightDifference = (_GlasstualScroller._restoreScrollHeightSecondValue - 
+								  _GlasstualScroller._restoreScrollHeightFirstValue);
 
 	if (scrollHeightDifference === 0) {
 		return;
 	}
 
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
 	var scrollTo = 0;
 
-	if (_TextualScroller._restoreScrolledUpwards === false) {
+	if (_GlasstualScroller._restoreScrolledUpwards === false) {
 		scrollTo = (scrolledElement.scrollHeight - scrollHeightDifference);
 	} else {
 		scrollTo = (scrolledElement.scrollHeight + scrollHeightDifference);
@@ -197,16 +197,16 @@ TextualScroller.restoreScrollPosition = function() /* PUBLIC */
 
 	scrolledElement.scrollTop = scrollTo;
 
-	_TextualScroller._restoreScrollHeightFirstValue = undefined;
-	_TextualScroller._restoreScrollHeightSecondValue = undefined;
+	_GlasstualScroller._restoreScrollHeightFirstValue = undefined;
+	_GlasstualScroller._restoreScrollHeightSecondValue = undefined;
 
-	_TextualScroller._restoreScrolledUpwards = undefined;
+	_GlasstualScroller._restoreScrolledUpwards = undefined;
 };
 
-TextualScroller.restoreScrolledToBottom = function() /* PUBLIC */
+GlasstualScroller.restoreScrolledToBottom = function() /* PUBLIC */
 {
-	if (TextualScroller.userScrolled === false) {
-		TextualScroller.scrollToBottom();
+	if (GlasstualScroller.userScrolled === false) {
+		GlasstualScroller.scrollToBottom();
 	}
 };
 
@@ -270,56 +270,56 @@ Element.prototype.scrollToBottom = function() /* PUBLIC */
 /*              Element Prototype Proxies             */
 /* ************************************************** */
 
-TextualScroller.scrollElementToCenter = function(element) /* PUBLIC */
+GlasstualScroller.scrollElementToCenter = function(element) /* PUBLIC */
 {
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
 	var scrollCenter = element.scrollCenterIn(scrolledElement);
 
 	scrolledElement.scrollTop = scrollCenter;
 };
 
-TextualScroller.percentScrolled = function() /* PUBLIC */
+GlasstualScroller.percentScrolled = function() /* PUBLIC */
 {
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
 	return scrolledElement.percentScrolled();
 };
 
-TextualScroller.isScrolledToTop = function() /* PUBLIC */
+GlasstualScroller.isScrolledToTop = function() /* PUBLIC */
 {
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
 	return scrolledElement.isScrolledToTop();
 };
 
-TextualScroller.scrollToTop = function() /* PUBLIC */
+GlasstualScroller.scrollToTop = function() /* PUBLIC */
 {
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
 	scrolledElement.scrollToTop();
 };
 
-TextualScroller.isScrolledToBottom = function() /* PUBLIC */
+GlasstualScroller.isScrolledToBottom = function() /* PUBLIC */
 {
 	/* If a timer is set to scroll to the bottom already,
 	then we lie about our current position. */
-	if (_TextualScroller._performScrollTimeout) {
+	if (_GlasstualScroller._performScrollTimeout) {
 		return true;
 	}
 
-	if (!TextualScroller.userScrolled) {
+	if (!GlasstualScroller.userScrolled) {
 		return true;
 	}
 
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
 	return scrolledElement.isScrolledToBottom();
 };
 
-TextualScroller.scrollToBottom = function() /* PUBLIC */
+GlasstualScroller.scrollToBottom = function() /* PUBLIC */
 {
-	var scrolledElement = _TextualScroller._scrolledElement;
+	var scrolledElement = _GlasstualScroller._scrolledElement;
 
 	scrolledElement.scrollToBottom();
 };
@@ -330,7 +330,7 @@ TextualScroller.scrollToBottom = function() /* PUBLIC */
 
 /* This function is public interface which styles are 
 allowed to override which we should add extra sanity. */
-TextualScroller.bindToElement = function(newElement) /* PUBLIC */
+GlasstualScroller.bindToElement = function(newElement) /* PUBLIC */
 {
 	if (!newElement ||
 		!newElement.nodeType ||
@@ -339,33 +339,33 @@ TextualScroller.bindToElement = function(newElement) /* PUBLIC */
 		throw "Argument is not an element";
 	}
 
-	var oldElement = _TextualScroller._scrolledElement;
+	var oldElement = _GlasstualScroller._scrolledElement;
 
 	if (oldElement) {
 		if (oldElement !== document.body) {
-			oldElement.removeEventListener("scroll", _TextualScroller._documentScrolledCallback);
+			oldElement.removeEventListener("scroll", _GlasstualScroller._documentScrolledCallback);
 		} else {
-			window.removeEventListener("scroll", _TextualScroller._documentScrolledCallback);
+			window.removeEventListener("scroll", _GlasstualScroller._documentScrolledCallback);
 		}
 	}
 
 	if (newElement !== document.body) {
-		newElement.addEventListener("scroll", _TextualScroller._documentScrolledCallback, false);
+		newElement.addEventListener("scroll", _GlasstualScroller._documentScrolledCallback, false);
 	} else {
-		window.addEventListener("scroll", _TextualScroller._documentScrolledCallback, false);
+		window.addEventListener("scroll", _GlasstualScroller._documentScrolledCallback, false);
 	}
 
-	_TextualScroller._scrolledElement = newElement;
+	_GlasstualScroller._scrolledElement = newElement;
 };
 
-_TextualScroller.bindToBestElement = function()
+_GlasstualScroller.bindToBestElement = function()
 {
 	var bindToElement = (function(element) {
 		if (window.getComputedStyle(element).overflowY === "hidden") {
 			return false;
 		}
 
-		TextualScroller.bindToElement(element);
+		GlasstualScroller.bindToElement(element);
 
 		return true;
 	});
@@ -374,7 +374,7 @@ _TextualScroller.bindToBestElement = function()
 		console.log("Binding to document body");
 
 		return;
-	} else if (bindToElement(Textual.documentBodyElement())) {
+	} else if (bindToElement(Glasstual.documentBodyElement())) {
 		console.log("Binding to #body_home");
 
 		return;
@@ -384,5 +384,5 @@ _TextualScroller.bindToBestElement = function()
 		return;
 	}
 
-	console.error("No element to bind to. Manually call TextualScroller.bindToElement()");
+	console.error("No element to bind to. Manually call GlasstualScroller.bindToElement()");
 };

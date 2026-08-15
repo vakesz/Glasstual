@@ -40,8 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient;
 
-TEXTUAL_EXTERN NSStringEncoding const TXDefaultPrimaryStringEncoding;
-TEXTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
+GLASSTUAL_EXTERN NSStringEncoding const TXDefaultPrimaryStringEncoding;
+GLASSTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
 
 @interface NSString (TXStringHelper)
 @property (readonly, copy) NSString *stringByAppendingIRCFormattingStop;
@@ -100,8 +100,6 @@ TEXTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
 						 backgroundColor:(id _Nullable * _Nullable)backgroundColor;
 
 - (nullable NSString *)padNicknameWithCharacter:(UniChar)padCharacter maximumLength:(NSUInteger)maximumLength;
-
-@property (readonly, copy, nullable) NSString *prettyLicenseKey;
 
 @property (readonly, copy) NSString *encodedMessageTagString;
 @property (readonly, copy) NSString *decodedMessageTagString;

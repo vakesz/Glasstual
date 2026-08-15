@@ -35,7 +35,7 @@
  *
  *********************************************************************** */
 
-#import "Textual.h"
+#import "Glasstual.h"
 
 @interface TPIWikiStyleLinkParser : NSObject <THOPluginProtocol, NSTableViewDataSource, NSTableViewDelegate>
 @end

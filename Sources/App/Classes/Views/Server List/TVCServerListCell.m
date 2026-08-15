@@ -36,14 +36,15 @@
  *
  *********************************************************************** */
 
+#import "NSColorHelper.h"
 #import "NSViewHelperPrivate.h"
+#import "TPCPreferencesUserDefaults.h"
 #import "TXGlobalModels.h"
 #import "TLOLocalization.h"
 #import "TPCPreferencesLocal.h"
 #import "IRCClient.h"
 #import "IRCChannel.h"
 #import "TVCMainWindow.h"
-#import "TVCServerListAppearancePrivate.h"
 #import "TVCServerListPrivate.h"
 #import "TVCServerListCellPrivate.h"
 
@@ -54,7 +55,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TVCServerListRowCell ()
 @property (nonatomic, weak) TVCServerList *serverList;
 @property (nonatomic, weak) __kindof TVCServerListCell *childCell;
-@property (readonly) TVCServerListAppearance *userInterfaceObjects;
 @property (readonly) BOOL isGroupItem;
 @end
 
@@ -63,25 +63,18 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) IBOutlet NSImageView *messageCountBadgeImageView;
 // Deactivating the constraints will dereference them.
 // We need to maintain a strong reference.
-@property (nonatomic, strong) IBOutlet NSLayoutConstraint *cellTextFieldLeftMarginConstraint;
 @property (nonatomic, strong) IBOutlet NSLayoutConstraint *messageCountBadgeLeadingConstraint;
 @property (nonatomic, strong) IBOutlet NSLayoutConstraint *messageCountBadgeTrailingConstraint;
 @property (readonly) BOOL isGroupItem;
 @property (readonly) TVCServerList *serverList;
 @property (readonly) __kindof TVCServerListRowCell *rowCell;
-@property (readonly) TVCServerListAppearance *userInterfaceObjects;
 @property (readonly) TVCServerListCellDrawingContext *drawingContext;
 @property (readonly) IRCTreeItem *cellItem;
-@end
-
-@interface TVCServerListCellGroupItem ()
-@property (nonatomic, weak, nullable) NSButton *disclosureTriangle;
 @end
 
 @interface TVCServerListCellDrawingContext : NSObject
 @property (nonatomic, assign) BOOL isActive;
 @property (nonatomic, assign) BOOL isGroupItem;
-@property (nonatomic, assign) BOOL isInverted;
 @property (nonatomic, assign) BOOL isSelected;
 @property (nonatomic, assign) BOOL isSelectedFrontmost;
 @property (nonatomic, assign) BOOL isWindowActive;
@@ -118,9 +111,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self updateTextFieldInContext:drawingContext];
 
-	TVCServerListAppearance *appearance = self.userInterfaceObjects;
-
-	[self updateDrawingForWithAppearance:appearance inContext:drawingContext];
+	[self updateDrawingInContext:drawingContext];
 }
 
 - (void)updateTextFieldInContext:(TVCServerListCellDrawingContext *)drawingContext
@@ -169,62 +160,45 @@ NS_ASSUME_NONNULL_BEGIN
 	} // isGroupItem
 }
 
-- (void)updateDrawingForWithAppearance:(TVCServerListAppearance *)appearance inContext:(TVCServerListCellDrawingContext *)drawingContext
+- (void)updateDrawingInContext:(TVCServerListCellDrawingContext *)drawingContext
 {
-	NSParameterAssert(appearance != nil);
 	NSParameterAssert(drawingContext != nil);
 
-	BOOL isActive = drawingContext.isActive;
 	BOOL isGroupItem = drawingContext.isGroupItem;
-	BOOL isSelected = drawingContext.isSelected;
-	BOOL isWindowActive = drawingContext.isWindowActive;
+	BOOL isActive = drawingContext.isActive;
 
 	if (isGroupItem == NO) {
 		IRCTreeItem *cellItem = self.cellItem;
 
 		IRCChannel *channel = (IRCChannel *)cellItem;
 
-		NSString *iconName = nil;
+		NSString *symbolName = channel.isChannel ? @"number" : @"person.fill";
 
-		BOOL iconIsTemplate = NO;
+		NSImage *icon = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:channel.name];
+		icon.template = YES;
 
-		if (channel.isChannel) {
-			iconName = [appearance statusIconForActiveChannel:isActive selected:isSelected activeWindow:isWindowActive treatAsTemplate:&iconIsTemplate];
-		} else {
-			iconName = [appearance statusIconForActiveQuery:isActive selected:isSelected activeWindow:isWindowActive treatAsTemplate:&iconIsTemplate];
-		} // isChannel
-
-		NSImage *icon = [NSImage imageNamed:iconName];
-
-		icon.template = iconIsTemplate;
-
+		self.imageView.symbolConfiguration = [NSImageSymbolConfiguration configurationWithPointSize:12.0 weight:NSFontWeightMedium];
+		self.imageView.contentTintColor = isActive ? [NSColor secondaryLabelColor] : [NSColor tertiaryLabelColor];
 		self.imageView.image = icon;
 	}
 
-	NSAttributedString *newValue = [self attributedTextFieldValueWithAppearance:appearance inContext:drawingContext];
-
-	self.cellTextField.attributedStringValue = newValue;
+	self.cellTextField.attributedStringValue = [self attributedTextFieldValueInContext:drawingContext];
 
 	if (isGroupItem == NO) {
-		[self populateMessageCountBadgeWithAppearance:appearance inContext:drawingContext];
+		[self populateMessageCountBadgeInContext:drawingContext];
 	}
 }
 
-- (NSAttributedString *)attributedTextFieldValueWithAppearance:(TVCServerListAppearance *)appearance inContext:(TVCServerListCellDrawingContext *)drawingContext
+- (NSAttributedString *)attributedTextFieldValueInContext:(TVCServerListCellDrawingContext *)drawingContext
 {
-	NSParameterAssert(appearance != nil);
 	NSParameterAssert(drawingContext != nil);
 
 	BOOL isActive = drawingContext.isActive;
 	BOOL isGroupItem = drawingContext.isGroupItem;
-	BOOL isSelected = drawingContext.isSelected;
-	BOOL isWindowActive = drawingContext.isWindowActive;
-
-	IRCTreeItem *cellItem = self.cellItem;
-
+	BOOL isHighlight = NO;
 	BOOL isErroneous = NO;
 
-	BOOL isHighlight = NO;
+	IRCTreeItem *cellItem = self.cellItem;
 
 	if (isGroupItem == NO) {
 		IRCChannel *associatedChannel = (id)cellItem;
@@ -243,83 +217,24 @@ NS_ASSUME_NONNULL_BEGIN
 	[mutableStringValue beginEditing];
 
 	NSFont *controlFont = nil;
-
 	NSColor *controlColor = nil;
 
-	if (isGroupItem)
-	{
-		if (isSelected) {
-			controlFont = appearance.serverFontSelected;
-		} else {
-			controlFont = appearance.serverFont;
-		} // isSelected
+	if (isGroupItem) {
+		controlFont = [NSFont systemFontOfSize:NSFont.systemFontSize weight:NSFontWeightSemibold];
+		controlColor = [NSColor labelColor];
+	} else {
+		controlFont = [NSFont systemFontOfSize:NSFont.systemFontSize];
 
-		if (isSelected) {
-			if (isWindowActive) {
-				controlColor = appearance.serverSelectedTextColorActiveWindow;
-			} else {
-				controlColor = appearance.serverSelectedTextColorInactiveWindow;
-			} // isWindowActive
-		} else if (isActive) {
-			if (isWindowActive) {
-				controlColor = appearance.serverTextColorActiveWindow;
-			} else {
-				controlColor = appearance.serverTextColorInactiveWindow;
-			} // isWindowActive
+		if (isErroneous) {
+			controlColor = [NSColor systemRedColor];
+		} else if (isActive && isHighlight) {
+			controlColor = [NSColor systemBlueColor];
+		} else if (isActive == NO) {
+			controlColor = [NSColor tertiaryLabelColor];
 		} else {
-			if (isWindowActive) {
-				controlColor = appearance.serverDisabledTextColorActiveWindow;
-			} else {
-				controlColor = appearance.serverDisabledTextColorInactiveWindow;
-			} // isWindowActive
+			controlColor = [NSColor labelColor];
 		}
 	}
-	else // isGroupItem
-	{
-		if (isSelected) {
-			controlFont = appearance.channelFontSelected;
-		} else {
-			controlFont = appearance.channelFont;
-		} // isSelected
-
-		if (isSelected) {
-			if (isWindowActive) {
-				controlColor = appearance.channelSelectedTextColorActiveWindow;
-			} else {
-				controlColor = appearance.channelSelectedTextColorInactiveWindow;
-			} // isWindowActive
-		} else if (isActive && isHighlight) {
-			NSColor *customColor = appearance.unreadBadgeHighlightBackgroundColorByUser;
-
-			if (customColor && [customColor isEqual:[NSColor clearColor]] == NO) {
-				controlColor = customColor;
-			} else {
-				if (isWindowActive) {
-					controlColor = appearance.channelHighlightTextColorActiveWindow;
-				} else {
-					controlColor = appearance.channelHighlightTextColorInactiveWindow;
-				} // isWindowActive
-			} // custom color set
-		} else if (isActive) {
-			if (isWindowActive) {
-				controlColor = appearance.channelTextColorActiveWindow;
-			} else {
-				controlColor = appearance.channelTextColorInactiveWindow;
-			} // isWindowActive
-		} else if (isErroneous) {
-			if (isWindowActive) {
-				controlColor = appearance.channelErroneousTextColorActiveWindow;
-			} else {
-				controlColor = appearance.channelErroneousTextColorInactiveWindow;
-			} // isWindowActive
-		} else {
-			if (isWindowActive) {
-				controlColor = appearance.channelDisabledTextColorActiveWindow;
-			} else {
-				controlColor = appearance.channelDisabledTextColorInactiveWindow;
-			} // isWindowActive
-		}
-	} // isGroupItem
 
 	NSRange stringValueRange = stringValue.range;
 
@@ -331,26 +246,72 @@ NS_ASSUME_NONNULL_BEGIN
 		[mutableStringValue addAttribute:NSForegroundColorAttributeName value:controlColor	range:stringValueRange];
 	}
 
+	/* Mark connections secured by TLS alongside the name they belong to, which
+	 keeps the indicator visible for every connection instead of only whichever
+	 one happens to be frontmost. */
+	if (isGroupItem) {
+		NSAttributedString *securedBadge = [self attributedSecuredBadgeForClient:(id)cellItem];
+
+		if (securedBadge) {
+			[mutableStringValue appendAttributedString:securedBadge];
+		}
+	}
+
 	[mutableStringValue endEditing];
 
 	return mutableStringValue;
 }
 
+- (nullable NSAttributedString *)attributedSecuredBadgeForClient:(IRCClient *)client
+{
+	if ([client isKindOfClass:[IRCClient class]] == NO || client.isSecured == NO) {
+		return nil;
+	}
+
+	NSImageSymbolConfiguration *symbolConfiguration =
+	[NSImageSymbolConfiguration configurationWithPointSize:9.0
+													weight:NSFontWeightSemibold
+													 scale:NSImageSymbolScaleSmall];
+
+	NSImage *lockImage =
+	[[NSImage imageWithSystemSymbolName:@"lock.fill"
+			   accessibilityDescription:TXTLS(@"TVCMainWindow[tb-cs]")]
+	 imageWithSymbolConfiguration:symbolConfiguration];
+
+	if (lockImage == nil) {
+		return nil;
+	}
+
+	NSTextAttachment *attachment = [NSTextAttachment new];
+
+	attachment.image = lockImage;
+
+	NSMutableAttributedString *badge = [[NSMutableAttributedString alloc] initWithString:@" "];
+
+	[badge appendAttributedString:[NSAttributedString attributedStringWithAttachment:attachment]];
+
+	[badge addAttribute:NSForegroundColorAttributeName
+				  value:[NSColor secondaryLabelColor]
+				  range:NSMakeRange(0, badge.length)];
+
+	return badge;
+}
+
 #pragma mark -
 #pragma mark Badge Drawing
 
+/* Badge metrics track the sidebar's text size rather than a fixed table. */
+static const CGFloat _unreadBadgeMinimumWidth	= 22.0;
+static const CGFloat _unreadBadgeHeight			= 16.0;
+static const CGFloat _unreadBadgeTextPadding	= 7.0;
+
 - (void)populateMessageCountBadge
 {
-	TVCServerListAppearance *appearance = self.userInterfaceObjects;
-
-	TVCServerListCellDrawingContext *drawingContext = self.drawingContext;
-
-	[self populateMessageCountBadgeWithAppearance:appearance inContext:drawingContext];
+	[self populateMessageCountBadgeInContext:self.drawingContext];
 }
 
-- (void)populateMessageCountBadgeWithAppearance:(TVCServerListAppearance *)appearance inContext:(TVCServerListCellDrawingContext *)drawingContext
+- (void)populateMessageCountBadgeInContext:(TVCServerListCellDrawingContext *)drawingContext
 {
-	NSParameterAssert(appearance != nil);
 	NSParameterAssert(drawingContext != nil);
 
 	BOOL isSelected = drawingContext.isSelected;
@@ -369,165 +330,92 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	NSUInteger treeUnreadCount = associatedChannel.treeUnreadCount;
-	NSUInteger nicknameHighlightCount = associatedChannel.nicknameHighlightCount;
 
-	BOOL isHighlight = (nicknameHighlightCount > 0);
+	BOOL isHighlight = (associatedChannel.nicknameHighlightCount > 0);
 
 	if (associatedChannel.config.ignoreHighlights) {
 		isHighlight = NO;
 	}
 
-	/* Begin draw if we want to. */
-	if (treeUnreadCount > 0 && drawMessageBadge) {
-		NSAttributedString *stringToDraw = [self messageCountBadgeTextForCount:treeUnreadCount isHighlight:isHighlight withAppearance:appearance inContext:drawingContext];
-
-		NSRect badgeRect = [self messageCountBadgeRectForText:stringToDraw withAppearance:appearance inContext:drawingContext];
-
-		[self drawMessageCountBadgeWithString:stringToDraw inRect:badgeRect isHighlight:isHighlight withAppearance:appearance inContext:drawingContext];
-
-		self.messageCountBadgeLeadingConstraint.active = YES;
-		self.messageCountBadgeTrailingConstraint.active = YES;
-	} else {
+	if (treeUnreadCount == 0 || drawMessageBadge == NO) {
 		self.messageCountBadgeImageView.image = nil;
 
 		/* Disable constraints when badge is not visible to
 		 allow text field to hug the right of the table view. */
 		self.messageCountBadgeLeadingConstraint.active = NO;
 		self.messageCountBadgeTrailingConstraint.active = NO;
-	}
-}
 
-- (NSAttributedString *)messageCountBadgeTextForCount:(NSUInteger)messageCount isHighlight:(BOOL)isHighlight withAppearance:(TVCServerListAppearance *)appearance inContext:(TVCServerListCellDrawingContext *)drawingContext
-{
-	NSParameterAssert(appearance != nil);
-	NSParameterAssert(drawingContext != nil);
-
-	BOOL isSelected = drawingContext.isSelected;
-	BOOL isWindowActive = drawingContext.isWindowActive;
-
-	NSString *messageCountString = TXFormattedNumber(messageCount);
-
-	NSFont *controlFont = nil;
-
-	if (isSelected) {
-		controlFont = appearance.unreadBadgeFontSelected;
-	} else {
-		controlFont = appearance.unreadBadgeFont;
-	} // isSelected
-
-	NSColor *controlColor = nil;
-
-	if (isSelected) {
-		if (isWindowActive) {
-			controlColor = appearance.unreadBadgeSelectedTextColorActiveWindow;
-		} else {
-			controlColor = appearance.unreadBadgeSelectedTextColorInactiveWindow;
-		} // isWindowActive
-	} else if (isHighlight) {
-		if (isWindowActive) {
-			controlColor = appearance.unreadBadgeHighlightTextColorActiveWindow;
-		} else {
-			controlColor = appearance.unreadBadgeHighlightTextColorInactiveWindow;
-		} // isWindowActive
-	} else {
-		if (isWindowActive) {
-			controlColor = appearance.unreadBadgeTextColorActiveWindow;
-		} else {
-			controlColor = appearance.unreadBadgeTextColorInactiveWindow;
-		} // isWindowActive
+		return;
 	}
 
-	NSDictionary *attributes = @{NSForegroundColorAttributeName : controlColor, NSFontAttributeName : controlFont};
+	self.messageCountBadgeImageView.image =
+	[self messageCountBadgeForCount:treeUnreadCount isHighlight:isHighlight isSelected:isSelected];
 
-	NSAttributedString *stringToDraw = [NSAttributedString attributedStringWithString:messageCountString attributes:attributes];
-
-	return stringToDraw;
+	self.messageCountBadgeLeadingConstraint.active = YES;
+	self.messageCountBadgeTrailingConstraint.active = YES;
 }
 
-- (NSRect)messageCountBadgeRectForText:(NSAttributedString *)stringToDraw withAppearance:(TVCServerListAppearance *)appearance inContext:(TVCServerListCellDrawingContext *)drawingContext
+- (nullable NSColor *)messageCountBadgeHighlightColorByUser
 {
-	NSParameterAssert(appearance != nil);
-	NSParameterAssert(drawingContext != nil);
+	NSColor *color = [RZUserDefaults() colorForKey:@"Server List Unread Message Count Badge Colors -> Highlight"];
 
-	CGFloat messageCountWidth = (stringToDraw.size.width + (appearance.unreadBadgePadding * 2.0));
-
-	NSRect badgeFrame = NSMakeRect(0.0, 0.0, messageCountWidth, appearance.unreadBadgeHeight);
-
-	CGFloat minimumWidth = appearance.unreadBadgeMinimumWidth;
-
-	if (badgeFrame.size.width < minimumWidth) {
-		CGFloat widthDiff  = (minimumWidth - badgeFrame.size.width);
-
-		badgeFrame.size.width += widthDiff;
-
-		badgeFrame.origin.x -= widthDiff;
+	if (color == nil || [color isEqual:[NSColor clearColor]]) {
+		return nil;
 	}
 
-	return badgeFrame;
+	return color;
 }
 
-- (void)drawMessageCountBadgeWithString:(NSAttributedString *)stringToDraw inRect:(NSRect)rectToDraw isHighlight:(BOOL)isHighlight withAppearance:(TVCServerListAppearance *)appearance inContext:(TVCServerListCellDrawingContext *)drawingContext
+- (NSImage *)messageCountBadgeForCount:(NSUInteger)messageCount isHighlight:(BOOL)isHighlight isSelected:(BOOL)isSelected
 {
-	NSParameterAssert(appearance != nil);
-	NSParameterAssert(drawingContext != nil);
-
-	BOOL isSelected = drawingContext.isSelected;
-	BOOL isWindowActive = drawingContext.isWindowActive;
-
-	/* Create image that we will draw into. */
-	NSRect badgeFrame = NSMakeRect(0.0, 0.0, NSWidth(rectToDraw), NSHeight(rectToDraw));
-
-	NSImage *badgeImage = [NSImage newImageWithSize:NSMakeSize(NSWidth(rectToDraw),  NSHeight(rectToDraw))];
-
-	[badgeImage lockFocus];
-
-	/* Draw the background color. */
 	NSColor *backgroundColor = nil;
+	NSColor *textColor = nil;
 
 	if (isSelected) {
-		if (isWindowActive) {
-			backgroundColor = appearance.unreadBadgeSelectedBackgroundColorActiveWindow;
-		} else {
-			backgroundColor = appearance.unreadBadgeSelectedBackgroundColorInactiveWindow;
-		} // isWindowActive
+		/* Invert against the row's selection fill so the badge stays legible. */
+		backgroundColor = [NSColor alternateSelectedControlTextColor];
+		textColor = [NSColor selectedContentBackgroundColor];
 	} else if (isHighlight) {
-		NSColor *customColor = appearance.unreadBadgeHighlightBackgroundColorByUser;
-
-		if (customColor && [customColor isEqual:[NSColor clearColor]] == NO) {
-			backgroundColor = customColor;
-		} else {
-			if (isWindowActive) {
-				backgroundColor = appearance.unreadBadgeHighlightBackgroundColorActiveWindow;
-			} else {
-				backgroundColor = appearance.unreadBadgeHighlightBackgroundColorInactiveWindow;
-			} // isWindowActive
-		} // custom color set
+		backgroundColor = ([self messageCountBadgeHighlightColorByUser] ?: [NSColor controlAccentColor]);
+		textColor = [NSColor alternateSelectedControlTextColor];
 	} else {
-		if (isWindowActive) {
-			backgroundColor = appearance.unreadBadgeBackgroundColorActiveWindow;
-		} else {
-			backgroundColor = appearance.unreadBadgeBackgroundColorActiveWindow;
-		} // isWindowActive
+		backgroundColor = [[NSColor tertiaryLabelColor] colorWithAlphaComponent:0.35];
+		textColor = [NSColor secondaryLabelColor];
 	}
 
-	/* Draw the background of the badge */
-	NSBezierPath *badgePath = [NSBezierPath bezierPathWithRoundedRect:badgeFrame xRadius:7.0 yRadius:7.0];
+	NSFont *controlFont = [NSFont monospacedDigitSystemFontOfSize:11.0 weight:NSFontWeightMedium];
 
-	[backgroundColor set];
+	NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
+	paragraphStyle.alignment = NSTextAlignmentCenter;
 
-	[badgePath fill];
+	NSAttributedString *stringToDraw =
+	[NSAttributedString attributedStringWithString:TXFormattedNumber(messageCount)
+										attributes:@{
+		NSForegroundColorAttributeName: textColor,
+		NSFontAttributeName: controlFont,
+		NSParagraphStyleAttributeName: paragraphStyle
+	}];
 
-	/* Center the text relative to the badge itself */
-	NSPoint badgeTextPoint =
-	NSMakePoint((NSMidX(badgeFrame) - (stringToDraw.size.width  / 2.0)),
-				(NSMidY(badgeFrame) - (stringToDraw.size.height / 2.0)));
+	CGFloat badgeWidth = MAX((stringToDraw.size.width + (_unreadBadgeTextPadding * 2.0)), _unreadBadgeMinimumWidth);
 
-	/* Perform draw and set image */
-	[stringToDraw drawAtPoint:badgeTextPoint];
+	return [NSImage imageWithSize:NSMakeSize(badgeWidth, _unreadBadgeHeight)
+						  flipped:NO
+				   drawingHandler:^BOOL(NSRect dstRect) {
+		[backgroundColor setFill];
 
-	[badgeImage unlockFocus];
+		[[NSBezierPath bezierPathWithRoundedRect:dstRect
+										 xRadius:(NSHeight(dstRect) / 2.0)
+										 yRadius:(NSHeight(dstRect) / 2.0)] fill];
 
-	self.messageCountBadgeImageView.image = badgeImage;
+		/* Centre on the font's cap height so the digits sit optically level. */
+		NSRect textRect = dstRect;
+		textRect.origin.y = (NSMidY(dstRect) - (controlFont.capHeight / 2.0) + controlFont.descender);
+		textRect.size.height = (NSHeight(dstRect) - NSMinY(textRect));
+
+		[stringToDraw drawInRect:textRect];
+
+		return YES;
+	}];
 }
 
 #pragma mark -
@@ -553,16 +441,9 @@ NS_ASSUME_NONNULL_BEGIN
 	return self.rowCell.serverList;
 }
 
-- (TVCServerListAppearance *)userInterfaceObjects
-{
-	return self.rowCell.userInterfaceObjects;
-}
-
 - (TVCServerListCellDrawingContext *)drawingContext
 {
 	TVCServerList *serverList = self.serverList;
-
-	TVCServerListAppearance *appearance = self.userInterfaceObjects;
 
 	IRCTreeItem *cellItem = self.cellItem;
 
@@ -574,7 +455,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	drawingContext.isActive = cellItem.isActive;
 	drawingContext.isGroupItem = self.isGroupItem;
-	drawingContext.isInverted = appearance.isDarkAppearance;
 	drawingContext.isSelected = [serverList isRowSelected:rowIndex];
 	drawingContext.isSelectedFrontmost = [mainWindow isItemSelected:cellItem];
 	drawingContext.isWindowActive = mainWindow.isActiveForDrawing;
@@ -595,24 +475,34 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @implementation TVCServerListCellGroupItem
-
-- (void)defineConstraints
-{
-	TVCServerListAppearance *appearance = self.userInterfaceObjects;
-
-	self.cellTextFieldLeftMarginConstraint.constant = appearance.serverLabelLeftMargin;
-}
-
-- (void)applicationAppearanceChanged
-{
-	[super defineConstraints];
-
-	[self defineConstraints];
-}
-
 @end
 
 @implementation TVCServerListCellChildItem
+
+- (void)defineConstraints
+{
+	NSImageView *imageView = self.imageView;
+
+	if (imageView == nil) {
+		return;
+	}
+
+	imageView.imageScaling = NSImageScaleProportionallyUpOrDown;
+
+	for (NSLayoutConstraint *constraint in imageView.constraints) {
+		if (constraint.firstAttribute == NSLayoutAttributeWidth ||
+			constraint.firstAttribute == NSLayoutAttributeHeight)
+		{
+			return;
+		}
+	}
+
+	[NSLayoutConstraint activateConstraints:@[
+		[imageView.widthAnchor constraintEqualToConstant:16.0],
+		[imageView.heightAnchor constraintEqualToConstant:16.0]
+	]];
+}
+
 @end
 
 @implementation TVCServerListCellDrawingContext
@@ -657,31 +547,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)drawSelectionInRect:(NSRect)dirtyRect
 {
-	if ([self needsToDrawRect:dirtyRect] == NO) {
-		return;
-	}
-
-	BOOL isWindowActive = self.mainWindow.isActiveForDrawing;
-
-	TVCServerListAppearance *appearance = self.userInterfaceObjects;
-
-	NSColor *selectionColor = nil;
-
-	if (isWindowActive) {
-		selectionColor = appearance.rowSelectionColorActiveWindow;
-	} else {
-		selectionColor = appearance.rowSelectionColorInactiveWindow;
-	} // isWindowActive
-
-	if (selectionColor) {
-		[selectionColor set];
-
-		NSRect selectionRect = self.bounds;
-
-		NSRectFill(selectionRect);
-	} else {
-		[super drawSelectionInRect:dirtyRect];
-	} // selectionColor
+	[super drawSelectionInRect:dirtyRect];
 }
 
 - (void)didAddSubview:(NSView *)subview
@@ -696,24 +562,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Cell Information
 
-- (BOOL)isEmphasized
-{
-	TVCServerListAppearance *appearance = self.userInterfaceObjects;
-
-	BOOL emphasized = NO;
-
-	if (self.isGroupItem) {
-		emphasized = appearance.serverRowEmphasized;
-	} else {
-		emphasized = appearance.channelRowEmphasized;
-	}
-
-	NSWindow *window = self.window;
-
-	return (emphasized &&
-			(window == nil || window.isKeyWindow));
-}
-
 - (__kindof TVCServerListCell * _Nullable)childCell
 {
 	if (self->_childCell == nil) {
@@ -725,11 +573,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	return self->_childCell;
-}
-
-- (TVCServerListAppearance *)userInterfaceObjects
-{
-	return self.serverList.userInterfaceObjects;
 }
 
 - (BOOL)isGroupItem

@@ -878,7 +878,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	return self.config.nickname;
 }
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (NSString *)encryptionAccountNameForLocalUser
 {
 	return [sharedEncryptionManager() accountNameForUser:self.userNickname onClient:self];
@@ -1466,7 +1466,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	return [TPCResourceManager dictionaryFromResources:@"StaticStore" key:@"IRCClient List of Nicknames that Encryption Forbids"];
 }
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (BOOL)encryptionAllowedForTarget:(NSString *)target
 {
 	return [self encryptionAllowedForTarget:target lenient:NO];
@@ -1530,7 +1530,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	NSParameterAssert(encodingCallback != nil);
 	NSParameterAssert(injectionCallback != nil);
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	/* Check if we are accepting encryption from this user */
 	if (messageBody.length == 0 || [self encryptionAllowedForTarget:messageTo] == NO) {
 #endif
@@ -1542,7 +1542,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 			injectionCallback(messageBody);
 		}
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 		return;
 	}
 
@@ -1562,7 +1562,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	NSParameterAssert(target != nil);
 	NSParameterAssert(decodingCallback != nil);
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	/* Check if we are accepting encryption from this user */
 	if (messageBody.length == 0 || [self encryptionAllowedForTarget:target lenient:YES] == NO) {
 #endif
@@ -1570,7 +1570,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 			decodingCallback(messageBody, NO);
 		}
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 		return;
 	}
 
@@ -1586,7 +1586,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 {
 	NSParameterAssert(nickname != nil);
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	/* Encryption is disabled */
 	if ([TPCPreferences textEncryptionIsEnabled] == NO) {
 		return;
@@ -3385,14 +3385,6 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 				break;
 			}
 
-			/* Present list of features */
-			else if ([action isEqualToString:@"features"])
-			{
-				[TLOpenLink openWithString:@"https://help.codeux.com/textual/Command-Reference.kb#cr=defaults" inBackground:NO];
-
-				break;
-			}
-
 			/* Prepare to toggle feature */
 			NSString *feature = stringIn.tokenInsideQuotes.string;
 
@@ -3979,7 +3971,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 			NSString *downloadSource = @""; // Assume standalone by default
 			NSString *buildType = @""; // Assume universal binary by default
 
-#if TEXTUAL_BUILT_AS_UNIVERSAL_BINARY == 0
+#if GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY == 0
 			NSString *hostType = nil;
 
 #if TARGET_CPU_ARM64
@@ -4980,7 +4972,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 
 				[context maybeSetObject:targetChannel.name forKey:@"targetChannel"];
 
-				[self executeTextualCmdScriptInContext:context];
+				[self executeGlasstualCmdScriptInContext:context];
 
 				break;
 			}
@@ -6910,7 +6902,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 		return;
 	}
 
-	/* Ignore query if the user has configured Textual to do so */
+	/* Ignore query if the user has configured Glasstual to do so */
 	if ([TPCPreferences replyToCTCPRequests] == NO) {
 		[self printDebugInformationToConsole:TXTLS(@"IRC[bg3-h2]", command, sender)];
 
@@ -7239,7 +7231,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	/* ZNC sends PART messages for every channel when the client disconnects to force
 	 it to update its local status. This is incredibly misleading to the user, as they
 	 see the message that they left the channel and believe they did. This condition
-	 filters out these messages. Because Textual is intelligent enough to clear status
+	 filters out these messages. Because Glasstual is intelligent enough to clear status
 	 related to channels when the connection is quit, this is safe. */
 	if (self.isQuitting && self.isConnectedToZNC) {
 		return;
@@ -7906,7 +7898,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 
 	NSAssertReturn([m paramsCount] == 2);
 
-	/* CERTINFO is not a standard command for Textual to
+	/* CERTINFO is not a standard command for Glasstual to
 	 receive which means we should be strict about what
 	 conditions we will accept it under. */
 	if (self.zncBouncerIsSendingCertificateInfo == NO ||
@@ -8822,7 +8814,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 		 When this timer is executed, if we do not have any knowledge of NickServ existing
 		 on the current server, then we perform the autojoin. This is primarily a fix for the
 		 ZNC SASL module which will complete identification before connecting and once connected
-		 Textual will have no knowledge of whether the local user is identified or not. */
+		 Glasstual will have no knowledge of whether the local user is identified or not. */
 		/* NickServ will send a notice asking for identification as soon as connection occurs so
 		 this is the best patch. At least for right now. */
 
@@ -10164,10 +10156,10 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 		}
 		case ERR_TOOMANYWATCH:
 		{
-			/* This message is always printed because Textual does not
+			/* This message is always printed because Glasstual does not
 			 make an effort to check the maximum allowance for this
 			 command. We therefore want a user to know why tracking
-			 breaks in Textual instead of blaming it on a bug. */
+			 breaks in Glasstual instead of blaming it on a bug. */
 			if (printMessage) {
 				[self printErrorReply:m];
 			}
@@ -10833,7 +10825,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 		return;
 	}
 
-	[item.viewController evaluateFunction:@"Textual.handleEvent" withArguments:@[eventToken] onQueue:NO];
+	[item.viewController evaluateFunction:@"Glasstual.handleEvent" withArguments:@[eventToken] onQueue:NO];
 }
 
 #pragma mark -
@@ -11011,7 +11003,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 #pragma mark -
 #pragma mark Plugins and Scripts
 
-- (void)outputDescriptionForError:(NSError *)error forTextualCmdScriptAtPath:(NSString *)path inputString:(NSString *)inputString
+- (void)outputDescriptionForError:(NSError *)error forGlasstualCmdScriptAtPath:(NSString *)path inputString:(NSString *)inputString
 {
 	NSString *filename = path.lastPathComponent;
 
@@ -11038,7 +11030,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	LogToConsoleError("%{public}@", TXTLS(@"IRC[ax0-mt]", errorDescription));
 }
 
-- (void)sendTextualCmdScriptResult:(NSString *)resultString toChannel:(nullable NSString *)channel
+- (void)sendGlasstualCmdScriptResult:(NSString *)resultString toChannel:(nullable NSString *)channel
 {
 	NSParameterAssert(resultString != nil);
 
@@ -11063,14 +11055,14 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	});
 }
 
-- (void)executeTextualCmdScriptInContext:(NSDictionary<NSString *, NSString *> *)context
+- (void)executeGlasstualCmdScriptInContext:(NSDictionary<NSString *, NSString *> *)context
 {
 	XRPerformBlockAsynchronouslyOnQueue([THOPluginDispatcher dispatchQueue], ^{
-		[self _executeTextualCmdScriptInContext:context];
+		[self _executeGlasstualCmdScriptInContext:context];
 	});
 }
 
-- (void)_executeTextualCmdScriptInContext:(NSDictionary<NSString *, NSString *> *)context
+- (void)_executeGlasstualCmdScriptInContext:(NSDictionary<NSString *, NSString *> *)context
 {
 	NSParameterAssert(context != nil);
 
@@ -11106,7 +11098,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 																						bytes:&process
 																					   length:sizeof(ProcessSerialNumber)];
 
-		NSAppleEventDescriptor *handler = [NSAppleEventDescriptor descriptorWithString:@"textualcmd"];
+		NSAppleEventDescriptor *handler = [NSAppleEventDescriptor descriptorWithString:@"glasstualcmd"];
 
 		NSAppleEventDescriptor *event = [NSAppleEventDescriptor appleEventWithEventClass:kASAppleScriptSuite
 																				 eventID:kASSubroutineEvent
@@ -11141,7 +11133,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 				return;
 			}
 
-			[self sendTextualCmdScriptResult:result.stringValue toChannel:targetChannel];
+			[self sendGlasstualCmdScriptResult:result.stringValue toChannel:targetChannel];
 		}
 		else // isBuiltinScript
 		{
@@ -11150,7 +11142,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 			NSUserAppleScriptTask *appleScript = [[NSUserAppleScriptTask alloc] initWithURL:pathURL error:&appleScriptError];
 
 			if (appleScript == nil) {
-				[self outputDescriptionForError:appleScriptError forTextualCmdScriptAtPath:path inputString:inputString];
+				[self outputDescriptionForError:appleScriptError forGlasstualCmdScriptAtPath:path inputString:inputString];
 
 				return;
 			}
@@ -11159,9 +11151,9 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 							 completionHandler:^(NSAppleEventDescriptor *result, NSError *error)
 			 {
 				 if (result == nil) {
-					 [self outputDescriptionForError:error forTextualCmdScriptAtPath:path inputString:inputString];
+					 [self outputDescriptionForError:error forGlasstualCmdScriptAtPath:path inputString:inputString];
 				 } else {
-					 [self sendTextualCmdScriptResult:result.stringValue toChannel:targetChannel];
+					 [self sendGlasstualCmdScriptResult:result.stringValue toChannel:targetChannel];
 				 }
 			 }];
 		}
@@ -11192,7 +11184,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	NSUserUnixTask *task = [[NSUserUnixTask alloc] initWithURL:pathURL error:&taskError];
 
 	if (task == nil) {
-		[self outputDescriptionForError:taskError forTextualCmdScriptAtPath:path inputString:inputString];
+		[self outputDescriptionForError:taskError forGlasstualCmdScriptAtPath:path inputString:inputString];
 
 		return;
 	}
@@ -11208,7 +11200,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	/* Try performing task */
 	[task executeWithArguments:taskArguments completionHandler:^(NSError *error) {
 		if (error) {
-			[self outputDescriptionForError:error forTextualCmdScriptAtPath:path inputString:inputString];
+			[self outputDescriptionForError:error forGlasstualCmdScriptAtPath:path inputString:inputString];
 
 			return;
 		}
@@ -11217,7 +11209,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 
 		NSString *resultString = [NSString stringWithData:result encoding:NSUTF8StringEncoding];
 
-		[self sendTextualCmdScriptResult:resultString toChannel:targetChannel];
+		[self sendGlasstualCmdScriptResult:resultString toChannel:targetChannel];
 	}];
 }
 
@@ -11958,7 +11950,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 
 		/* If we have an away nickname configured but no preAwayNickname set,
 		 then use the configured nickname instead. User probably was on bouncer
-		 and relaunched Textual, losing preAwayNickname.*/
+		 and relaunched Glasstual, losing preAwayNickname.*/
 		if (newNickname == nil && self.config.awayNickname.length > 0) {
 			newNickname = self.config.nickname;
 		}
@@ -12141,7 +12133,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	NSParameterAssert(nicknames != nil);
 
 	/* Split nicknames into fixed number per-command in case there are a lot or are long. */
-	/* June 11, 2018: Disabled this because Textual expects nicknames to appear in ISON
+	/* June 11, 2018: Disabled this because Glasstual expects nicknames to appear in ISON
 	 response or they are considered offline. If we chunk out results, then user may
 	 disappear in one ISON response and then appear in another. The long term solution
 	 is to stop relying on ISON but no idea when that will come. */

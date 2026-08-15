@@ -131,6 +131,8 @@ NS_ASSUME_NONNULL_BEGIN
 	[self updateDeleteChannelButton];
 
 	self.nicknameTextField.stringValue = [TPCPreferences defaultNickname];
+
+	self.okButton.controlSize = NSControlSizeExtraLarge;
 }
 
 #pragma mark -

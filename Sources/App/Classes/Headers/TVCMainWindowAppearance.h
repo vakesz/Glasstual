@@ -39,11 +39,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TVCServerListAppearance, TVCMemberListAppearance, TVCMainWindowTextViewAppearance;
+@class TVCMainWindowTextViewAppearance;
 
 @interface TVCMainWindowAppearance : TVCApplicationAppearance
-@property (readonly) TVCServerListAppearance *serverList;
-@property (readonly) TVCMemberListAppearance *memberList;
 @property (readonly) TVCMainWindowTextViewAppearance *textView;
 
 @property (readonly) NSSize defaultWindowSize;
@@ -51,15 +49,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, copy, nullable) NSColor *channelViewOverlayDefaultBackgroundColorActiveWindow;
 @property (readonly, copy, nullable) NSColor *channelViewOverlayDefaultBackgroundColorInactiveWindow;
 
-@property (readonly, copy, nullable) NSColor *loadingScreenBackgroundColor;
 
-@property (readonly, copy, nullable) NSColor *splitViewDividerColor;
 
-@property (readonly, copy, nullable) NSColor *titlebarAccessoryViewBackgroundColorActiveWindow;
-@property (readonly, copy, nullable) NSColor *titlebarAccessoryViewBackgroundColorInactiveWindow;
 
-@property (readonly) CGFloat titlebarAccessoryViewLeftMargin;
-@property (readonly) CGFloat titlebarAccessoryViewRightMargin;
 @end
 
 NS_ASSUME_NONNULL_END

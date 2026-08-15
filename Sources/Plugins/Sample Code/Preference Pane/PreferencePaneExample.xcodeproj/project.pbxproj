@@ -168,15 +168,15 @@
 		1DEB911B08733D790010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = /Applications/Textual.app/Contents/MacOS/Textual;
+				BUNDLE_LOADER = /Applications/Glasstual.app/Contents/MacOS/Glasstual;
 				CLANG_ENABLE_MODULES = YES;
 				ENABLE_TESTABILITY = YES;
-				FRAMEWORK_SEARCH_PATHS = "\"/Applications/Textual.app/Contents/Frameworks/**\"";
+				FRAMEWORK_SEARCH_PATHS = "\"/Applications/Glasstual.app/Contents/Frameworks/**\"";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				HEADER_SEARCH_PATHS = "\"/Applications/Textual.app/Contents/Headers/**\"";
+				HEADER_SEARCH_PATHS = "\"/Applications/Glasstual.app/Contents/Headers/**\"";
 				INFOPLIST_FILE = "Resources/Property List/Info.plist";
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.textual-PreferencePaneExample";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.glasstual-PreferencePaneExample";
 				PRODUCT_NAME = PreferencePaneExample;
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -185,13 +185,13 @@
 		1DEB911C08733D790010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = /Applications/Textual.app/Contents/MacOS/Textual;
+				BUNDLE_LOADER = /Applications/Glasstual.app/Contents/MacOS/Glasstual;
 				CLANG_ENABLE_MODULES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = "\"/Applications/Textual.app/Contents/Frameworks/**\"";
-				HEADER_SEARCH_PATHS = "\"/Applications/Textual.app/Contents/Headers/**\"";
+				FRAMEWORK_SEARCH_PATHS = "\"/Applications/Glasstual.app/Contents/Frameworks/**\"";
+				HEADER_SEARCH_PATHS = "\"/Applications/Glasstual.app/Contents/Headers/**\"";
 				INFOPLIST_FILE = "Resources/Property List/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.textual-PreferencePaneExample";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.glasstual-PreferencePaneExample";
 				PRODUCT_NAME = PreferencePaneExample;
 				WRAPPER_EXTENSION = bundle;
 			};

@@ -40,7 +40,6 @@
 #import "TDCAlert.h"
 #import "TLOLocalization.h"
 #import "TVCMainWindow.h"
-#import "TVCMainWindowTitlebarAccessoryViewPrivate.h"
 #import "TVCLogRenderer.h"
 #import "TPCPathInfoPrivate.h"
 #import "TPCPreferencesLocal.h"
@@ -51,7 +50,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 @interface TLOEncryptionManager () <OTRKitDelegate, OTRKitFingerprintManagerDialogDelegate>
 @property (nonatomic, strong, nullable) OTRKitFingerprintManagerDialog *fingerprintManagerDialog;
 @end
@@ -385,39 +384,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	return YES;
-}
-
-- (void)updateLockIconButton:(TVCMainWindowTitlebarAccessoryViewLockButton *)button withStateOf:(NSString *)messageTo from:(NSString *)messageFrom
-{
-	NSParameterAssert(button != nil);
-	NSParameterAssert(messageTo != nil);
-	NSParameterAssert(messageFrom != nil);
-
-	OTRKitMessageState currentState = [[OTRKit sharedInstance] messageStateForUsername:messageTo
-																		   accountName:messageFrom
-																			  protocol:[self otrKitProtocol]];
-
-	if (currentState == OTRKitMessageStateEncrypted) {
-		BOOL hasVerifiedKey = [[OTRKit sharedInstance] activeFingerprintIsVerifiedForUsername:messageTo
-																				  accountName:messageFrom
-																					 protocol:[self otrKitProtocol]];
-
-		if (hasVerifiedKey) {
-			button.title = TXTLS(@"OffTheRecord[l9n-p9]");
-
-			[button setIconAsLocked];
-		} else {
-			button.title = TXTLS(@"OffTheRecord[w34-mg]");
-
-			/* Even though we are encrypted, our icon is still set to unlocked because
-			 the identity of messageTo still has not been authenticated. */
-			[button setIconAsUnlocked];
-		}
-	} else {
-		button.title = TXTLS(@"OffTheRecord[anu-ky]");
-
-		[button setIconAsUnlocked];
-	}
 }
 
 - (void)performBlock:(void (^)(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel))block inRelationToAccountName:(NSString *)accountName

@@ -2,7 +2,7 @@
 
 set -e
 
-cd "${TEXTUAL_WORKSPACE_TEMP_DIR}/"
+cd "${GLASSTUAL_WORKSPACE_TEMP_DIR}/"
 
 # Make a copy of the Info.plist file in the .tmp folder
 # This will be the Info.plist file manipulated with the version
@@ -10,7 +10,7 @@ cd "${TEXTUAL_WORKSPACE_TEMP_DIR}/"
 
 infoPlistSource="${PROJECT_DIR}/Resources/Property Lists/Application Properties/Info.plist"
 
-infoPlistTarget="${TEXTUAL_WORKSPACE_TEMP_DIR}/Info.plist"
+infoPlistTarget="${GLASSTUAL_WORKSPACE_TEMP_DIR}/Info.plist"
 
 if [ ! -f "${infoPlistTarget}" ] || [ "${infoPlistTarget}" -ot "${infoPlistSource}" ]; then
 	echo "Step 1: Info.plist file doesn't exist and/or is oudated. Performing copy."
@@ -45,7 +45,7 @@ fi
 
 # ------ #
 
-# Gather the information necessary for building Textual's BuildConfig.h
+# Gather the information necessary for building Glasstual's BuildConfig.h
 # header. This header file gives various section of the code base version
 # information so it does not need to constantly access the Info.plist file.
 bundleVersionShort=$(/usr/libexec/PlistBuddy -c "Print \"CFBundleShortVersionString\"" Info.plist)
@@ -60,10 +60,10 @@ echo "
 #define TXBundleBuildProductName					@\"${PRODUCT_NAME}\"
 #define TXBundleBuildProductIdentifier				@\"${PRODUCT_BUNDLE_IDENTIFIER}\"
 #define TXBundleBuildProductIdentifierCString		 \"${PRODUCT_BUNDLE_IDENTIFIER}\"
-#define TXBundleBuildGroupContainerIdentifier		@\"${TEXTUAL_GROUP_CONTAINER_IDENTIFIER}\"
+#define TXBundleBuildGroupContainerIdentifier		@\"${GLASSTUAL_GROUP_CONTAINER_IDENTIFIER}\"
 #define TXBundleBuildVersion						@\"${bundleVersionNew}\"
 #define TXBundleBuildVersionShort					@\"${bundleVersionShort}\"
-#define TXBundleBuildScheme							@\"${TEXTUAL_BUILD_SCHEME_TOKEN}\"
+#define TXBundleBuildScheme							@\"${GLASSTUAL_BUILD_SCHEME_TOKEN}\"
 " > _BuildConfig.h
 
 if [ -z "$CODE_SIGN_IDENTITY" ]; then
@@ -84,7 +84,7 @@ fi
 # ------ #
 
 # Compile list of enabled features
-exec "${PROJECT_DIR}/Build Scripts/UpdateFeatureFlags.sh" > "${TEXTUAL_WORKSPACE_TEMP_DIR}/Script-Logs/UpdateFeatureFlags.txt"
+exec "${PROJECT_DIR}/Build Scripts/UpdateFeatureFlags.sh" > "${GLASSTUAL_WORKSPACE_TEMP_DIR}/Script-Logs/UpdateFeatureFlags.txt"
 
 # ------ #
 

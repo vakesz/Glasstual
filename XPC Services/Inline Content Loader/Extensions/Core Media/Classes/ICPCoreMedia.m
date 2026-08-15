@@ -68,7 +68,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		/* Twitch now requires a parent= argument when embedding content.
 		 This argument acts as the domain that the content will be embedded in the
-		 context of to allow security headers to be set. Textual is not a
+		 context of to allow security headers to be set. Glasstual is not a
 		 web server. It loads files using file:// scheme. Even using "localhost"
 		 will not allow embeds to work. Is embedding Twitch really worth the
 		 cost of hosting a local server to spoof a localhost? Probably not.  */

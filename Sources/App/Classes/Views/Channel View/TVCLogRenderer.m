@@ -561,7 +561,7 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 	/* Calculate how much of the message is just nicknames.
 	 This is used when trying to stop highlight spam.
-	 Textual counts anything above 75% spam. */
+	 Glasstual counts anything above 75% spam. */
 	if ([TPCPreferences automaticallyDetectHighlightSpam]) {
 		double nicknamePercent = (((double)totalNicknameLength / bodyLength) * 100.0);
 

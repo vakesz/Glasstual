@@ -81,18 +81,18 @@ typedef NS_OPTIONS(NSUInteger, ClientIRCv3SupportedCapability) {
 	ClientIRCv3SupportedCapabilityChangeHost			= 1 << 15  // YES if the CHGHOST CAP supported
 };
 
-TEXTUAL_EXTERN NSNotificationName const IRCClientConfigurationWasUpdatedNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCClientConfigurationWasUpdatedNotification;
 
-TEXTUAL_EXTERN NSNotificationName const IRCClientChannelListWasModifiedNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCClientChannelListWasModifiedNotification;
 
-TEXTUAL_EXTERN NSNotificationName const IRCClientWillConnectNotification;
-TEXTUAL_EXTERN NSNotificationName const IRCClientDidConnectNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCClientWillConnectNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCClientDidConnectNotification;
 
-TEXTUAL_EXTERN NSNotificationName const IRCClientWillSendQuitNotification;
-TEXTUAL_EXTERN NSNotificationName const IRCClientWillDisconnectNotification;
-TEXTUAL_EXTERN NSNotificationName const IRCClientDidDisconnectNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCClientWillSendQuitNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCClientWillDisconnectNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCClientDidDisconnectNotification;
 
-TEXTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotification;
 
 @interface IRCClient : IRCTreeItem <IRCConnectionDelegate>
 @property (readonly, copy) IRCClientConfig *config;
@@ -104,7 +104,7 @@ TEXTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotification
 @property (readonly) BOOL isAutojoining;				// YES if autojoin is in progress
 @property (readonly) BOOL isConnecting;					// YES if socket is connecting. Set to NO on raw numeric 001.
 @property (readonly) BOOL isConnected;					// YES if socket is connected
-@property (readonly) BOOL isConnectedToZNC;				// YES if Textual detected that this connection is ZNC
+@property (readonly) BOOL isConnectedToZNC;				// YES if Glasstual detected that this connection is ZNC
 @property (readonly) BOOL isLoggedIn;					// YES if logged into server. Set to YES on raw numeric 001.
 @property (readonly) BOOL isQuitting;					// YES if socket is disconnecting
 @property (readonly) BOOL isReconnecting;				// YES if reconnect is pending
@@ -289,7 +289,7 @@ TEXTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotification
 
 #pragma mark -
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (NSUInteger)lengthOfEncryptedMessageDirectedAt:(NSString *)messageTo thatFitsWithinBounds:(NSUInteger)maximumLength;
 
 - (BOOL)encryptionAllowedForTarget:(NSString *)target;

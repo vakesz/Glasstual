@@ -10,6 +10,3 @@
 [submodule "Frameworks/Static Libraries"]
 	path = Frameworks/Static Libraries
 	url = https://github.com/Codeux-Software/Static-Libraries.git
-[submodule "Sources/Plugins/Sample Code/Swift Bot"]
-	path = Sources/Plugins/Sample Code/Swift Bot
-	url = https://github.com/Codeux/Textual-Swift-Plugin.git

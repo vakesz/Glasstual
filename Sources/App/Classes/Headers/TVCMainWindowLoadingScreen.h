@@ -43,7 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)showProgressViewWithReason:(NSString *)progressReason;
 - (void)setProgressViewReason:(NSString *)progressReason;
 
-- (void)showTrialExpiredView;
 - (void)showWelcomeAddServerView;
 
 @property (readonly) BOOL viewIsVisible;

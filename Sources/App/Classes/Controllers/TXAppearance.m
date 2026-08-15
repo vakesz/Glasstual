@@ -98,13 +98,13 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 + (nullable NSString *)appearanceNameForType:(TXAppearanceType)type
 {
 	switch (type) {
-		case TXAppearanceTypeBigSurLight:
+		case TXAppearanceTypeLight:
 		{
-			return @"BigSurLight";
+			return @"TahoeLight";
 		}
-		case TXAppearanceTypeBigSurDark:
+		case TXAppearanceTypeDark:
 		{
-			return @"BigSurDark";
+			return @"TahoeDark";
 		}
 		default:
 		{
@@ -155,7 +155,7 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 
 - (void)updateAppearanceBySystemChange:(BOOL)systemChanged
 {
-	TXAppearanceType appearanceType = TXAppearanceTypeBigSurLight;
+	TXAppearanceType appearanceType = TXAppearanceTypeLight;
 
 	TXPreferredAppearance preferredAppearance = [TPCPreferences appearance];
 
@@ -164,14 +164,14 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 		case TXPreferredAppearanceInherited:
 		{
 			if ([TXAppearancePropertyCollection systemWideDarkModeEnabled]) {
-				appearanceType = TXAppearanceTypeBigSurDark;
+				appearanceType = TXAppearanceTypeDark;
 			}
 
 			break;
 		}
 		case TXPreferredAppearanceDark:
 		{
-			appearanceType = TXAppearanceTypeBigSurDark;
+			appearanceType = TXAppearanceTypeDark;
 
 			break;
 		}
@@ -181,7 +181,7 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 		}
 	}
 
-	BOOL isAppearanceDark = (appearanceType == TXAppearanceTypeBigSurDark);
+	BOOL isAppearanceDark = (appearanceType == TXAppearanceTypeDark);
 
 	/* Determine best appearance inheritance approach */
 	/* Before Mojave, appearance needs to be applied to every view.
@@ -233,6 +233,14 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 	newProperties.appKitAppearanceTarget = appKitAppearanceTarget;
 
 	self.properties = newProperties;
+
+	if (preferredAppearance == TXPreferredAppearanceInherited) {
+		NSApp.appearance = nil;
+	} else if (isAppearanceDark) {
+		NSApp.appearance = [TXAppearancePropertyCollection appKitDarkAppearance];
+	} else {
+		NSApp.appearance = [TXAppearancePropertyCollection appKitLightAppearance];
+	}
 
 	/* Notify observers */
 	if (systemChanged == NO) {

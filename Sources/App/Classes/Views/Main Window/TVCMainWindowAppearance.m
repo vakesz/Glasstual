@@ -36,8 +36,6 @@
  *********************************************************************** */
 
 #import "TVCAppearancePrivate.h"
-#import "TVCServerListAppearancePrivate.h"
-#import "TVCMemberListAppearancePrivate.h"
 #import "TVCMainWindowTextViewAppearancePrivate.h"
 #import "TVCMainWindow.h"
 #import "TVCMainWindowAppearancePrivate.h"
@@ -45,18 +43,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCMainWindowAppearance ()
-@property (nonatomic, strong, readwrite) TVCServerListAppearance *serverList;
-@property (nonatomic, strong, readwrite) TVCMemberListAppearance *memberList;
 @property (nonatomic, strong, readwrite) TVCMainWindowTextViewAppearance *textView;
 @property (nonatomic, assign, readwrite) NSSize defaultWindowSize;
 @property (nonatomic, copy, nullable, readwrite) NSColor *channelViewOverlayDefaultBackgroundColorActiveWindow;
 @property (nonatomic, copy, nullable, readwrite) NSColor *channelViewOverlayDefaultBackgroundColorInactiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *loadingScreenBackgroundColor;
-@property (nonatomic, copy, nullable, readwrite) NSColor *splitViewDividerColor;
-@property (nonatomic, copy, nullable, readwrite) NSColor *titlebarAccessoryViewBackgroundColorActiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *titlebarAccessoryViewBackgroundColorInactiveWindow;
-@property (nonatomic, assign, readwrite) CGFloat titlebarAccessoryViewLeftMargin;
-@property (nonatomic, assign, readwrite) CGFloat titlebarAccessoryViewRightMargin;
 @end
 
 @implementation TVCMainWindowAppearance
@@ -95,18 +85,10 @@ NS_ASSUME_NONNULL_BEGIN
 	self.channelViewOverlayDefaultBackgroundColorActiveWindow = [self colorForKey:@"channelViewOverlayDefaultBackgroundColor" forActiveWindow:YES];
 	self.channelViewOverlayDefaultBackgroundColorInactiveWindow = [self colorForKey:@"channelViewOverlayDefaultBackgroundColor" forActiveWindow:NO];
 
-	self.loadingScreenBackgroundColor = [self colorForKey:@"loadingScreenBackgroundColor"];
 
-	self.splitViewDividerColor = [self colorForKey:@"splitViewDividerColor"];
 
-	self.titlebarAccessoryViewBackgroundColorActiveWindow = [self colorForKey:@"titlebarAccessoryViewBackgroundColor" forActiveWindow:YES];
-	self.titlebarAccessoryViewBackgroundColorInactiveWindow = [self colorForKey:@"titlebarAccessoryViewBackgroundColor" forActiveWindow:NO];
 
-	self.titlebarAccessoryViewLeftMargin = [self measurementForKey:@"titlebarAccessoryViewLeftMargin"];
-	self.titlebarAccessoryViewRightMargin = [self measurementForKey:@"titlebarAccessoryViewRightMargin"];
 
-	self.serverList = [[TVCServerListAppearance alloc] initWithServerList:mainWindow.serverList inWindow:mainWindow];
-	self.memberList = [[TVCMemberListAppearance alloc] initWithMemberList:mainWindow.memberList inWindow:mainWindow];
 	self.textView = [[TVCMainWindowTextViewAppearance alloc] initWithWindow:mainWindow];
 
 	[self flushAppearanceProperties];

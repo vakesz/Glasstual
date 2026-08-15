@@ -49,13 +49,12 @@
 #import "TLONotificationController.h"
 #import "TLOSpeechSynthesizerPrivate.h"
 #import "TDCFileTransferDialogPrivate.h"
-#import "TDCLicenseManagerDialogPrivate.h"
 #import "TVCLogControllerOperationQueuePrivate.h"
 #import "TXSharedApplicationPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TXErrorDomain = @"TextualErrorDomain";
+NSString * const TXErrorDomain = @"GlasstualErrorDomain";
 
 #define _defineSharedInstance(si_name, si_class, si_init_method)	\
 			+ (si_class *)si_name									\
@@ -75,7 +74,7 @@ NSString * const TXErrorDomain = @"TextualErrorDomain";
 
 _defineSharedInstance(sharedAppearance, TXAppearance, new)
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 _defineSharedInstance(sharedEncryptionManager, TLOEncryptionManager, new)
 #endif
 
@@ -86,10 +85,6 @@ _defineSharedInstance(sharedPrintingQueue, TVCLogControllerPrintingOperationQueu
 _defineSharedInstance(sharedSpeechSynthesizer, TLOSpeechSynthesizer, new)
 _defineSharedInstance(sharedThemeController, TPCThemeController, new)
 _defineSharedInstance(sharedWindowController, TXWindowController, new)
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-_defineSharedInstance(sharedLicenseManagerDialog, TDCLicenseManagerDialog, new)
-#endif
 
 _defineSharedInstance(sharedFileTransferDialog, TDCFileTransferDialog, new)
 

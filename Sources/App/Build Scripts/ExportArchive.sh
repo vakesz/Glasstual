@@ -2,7 +2,7 @@
 
 set -e
 
-WORKING_PATH="${TEXTUAL_WORKSPACE_TEMP_DIR}/ArchiveTan"
+WORKING_PATH="${GLASSTUAL_WORKSPACE_TEMP_DIR}/ArchiveTan"
 
 mkdir -p "${WORKING_PATH}"
 
@@ -11,7 +11,7 @@ cd "${WORKING_PATH}"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 xcodebuild -exportArchive \
--exportOptionsPlist "${TEXTUAL_WORKSPACE_DIR}/Configurations/ExportArchiveConfiguration.plist" \
+-exportOptionsPlist "${GLASSTUAL_WORKSPACE_DIR}/Configurations/ExportArchiveConfiguration.plist" \
 -archivePath "${ARCHIVE_PATH}" \
 -exportPath "${WORKING_PATH}"
 
@@ -20,7 +20,7 @@ xcodebuild -exportArchive \
 #
 # Format to add notary to keychain:
 #
-# xcrun notarytool store-credentials "Textual Notary"
+# xcrun notarytool store-credentials "Glasstual Notary"
 #	--apple-id "<e-mail address>"
 #	--team-id <team id>
 #	--password "<password>"
@@ -31,7 +31,7 @@ WORKING_ZIP_PATH="./${FULL_PRODUCT_NAME}.zip"
 zip -y -r -X "${WORKING_ZIP_PATH}" "./${FULL_PRODUCT_NAME}/"
 
 xcrun notarytool submit "${WORKING_ZIP_PATH}" \
-                   --keychain-profile "Textual Notary" \
+                   --keychain-profile "Glasstual Notary" \
                    --wait \
                    --verbose \
                    --progress
@@ -54,14 +54,14 @@ WORKING_ZIP_FILE_SIZE=$(stat -f%z "${WORKING_ZIP_PATH}")
 # sure we are in a directory of a git repository.
 GIT_COMMIT_HASH=`git rev-parse --short HEAD`
 
-EXPORT_PATH_NAME="Textual-${GIT_COMMIT_HASH}"
+EXPORT_PATH_NAME="Glasstual-${GIT_COMMIT_HASH}"
 EXPORT_PATH="${HOME}/Desktop/${EXPORT_PATH_NAME}"
 
 mkdir -p "${EXPORT_PATH}"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-if [ "${TEXTUAL_BUILT_AS_UNIVERSAL_BINARY}" == "1" ]; then
+if [ "${GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY}" == "1" ]; then
 	ARCHSPEC_TITLE="unviersal"
 else
 	ARCHSPEC_TITLE="intel"
@@ -73,17 +73,17 @@ ARCHSPEC_PATH="${EXPORT_PATH}/${ARCHSPEC_TITLE}"
 	
 mkdir -p "${ARCHSPEC_PATH}"
 
-ZIP_EXPORT_PATH="${ARCHSPEC_PATH}/Textual.zip"
+ZIP_EXPORT_PATH="${ARCHSPEC_PATH}/Glasstual.zip"
 
 mv "${WORKING_ZIP_PATH}" "${ZIP_EXPORT_PATH}"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-ONLINE_PATH_BASE="${EXPORT_PATH_NAME}/${ARCHSPEC_TITLE}/Textual"
+ONLINE_PATH_BASE="${EXPORT_PATH_NAME}/${ARCHSPEC_TITLE}/Glasstual"
 
-ONLINE_DMG_PATH_STABLE="/textual/downloads/builds/stable/${ONLINE_PATH_BASE}.dmg"
-ONLINE_ZIP_PATH_STABLE="/textual/downloads/builds/stable/${ONLINE_PATH_BASE}.zip"
-ONLINE_ZIP_PATH_BETA="/textual/downloads/builds/beta/${ONLINE_PATH_BASE}.zip"
+ONLINE_DMG_PATH_STABLE="/glasstual/downloads/builds/stable/${ONLINE_PATH_BASE}.dmg"
+ONLINE_ZIP_PATH_STABLE="/glasstual/downloads/builds/stable/${ONLINE_PATH_BASE}.zip"
+ONLINE_ZIP_PATH_BETA="/glasstual/downloads/builds/beta/${ONLINE_PATH_BASE}.zip"
 
 ONLINE_EXPORTER="cached.codeux.com"
 ONLINE_EXPORTER_DMG_PATH_STABLE="https://${ONLINE_EXPORTER}${ONLINE_DMG_PATH_STABLE}"
@@ -100,18 +100,18 @@ ARCHIVE_DATE=$(date -R -u)
 
 echo "
 # Stable
-rewrite ^/textual/downloads/Textual\.zip$ /${ONLINE_ZIP_PATH_STABLE} break;
-rewrite ^/textual/downloads/Textual\.dmg$ ${ONLINE_DMG_PATH_STABLE} break;
-rewrite ^/textual/downloads/Textual-Universal\.dmg$ ${ONLINE_DMG_PATH_STABLE} break;
-rewrite ^/textual/downloads/Textual7\.dmg$ ${ONLINE_DMG_PATH_STABLE} break;
+rewrite ^/glasstual/downloads/Glasstual\.zip$ /${ONLINE_ZIP_PATH_STABLE} break;
+rewrite ^/glasstual/downloads/Glasstual\.dmg$ ${ONLINE_DMG_PATH_STABLE} break;
+rewrite ^/glasstual/downloads/Glasstual-Universal\.dmg$ ${ONLINE_DMG_PATH_STABLE} break;
+rewrite ^/glasstual/downloads/Glasstual7\.dmg$ ${ONLINE_DMG_PATH_STABLE} break;
 
 # Stable Beta
-rewrite ^/textual/downloads/Textual-Beta\.zip$ ${ONLINE_ZIP_PATH_STABLE} break;
-rewrite ^/textual/downloads/Textual-Beta-Universal\.zip$ ${ONLINE_ZIP_PATH_STABLE} break;
+rewrite ^/glasstual/downloads/Glasstual-Beta\.zip$ ${ONLINE_ZIP_PATH_STABLE} break;
+rewrite ^/glasstual/downloads/Glasstual-Beta-Universal\.zip$ ${ONLINE_ZIP_PATH_STABLE} break;
 
 # Beta
-rewrite ^/textual/downloads/Textual-Beta\.zip$ ${ONLINE_ZIP_PATH_BETA} break;
-rewrite ^/textual/downloads/Textual-Beta-Universal\.zip$ ${ONLINE_ZIP_PATH_BETA} break;
+rewrite ^/glasstual/downloads/Glasstual-Beta\.zip$ ${ONLINE_ZIP_PATH_BETA} break;
+rewrite ^/glasstual/downloads/Glasstual-Beta-Universal\.zip$ ${ONLINE_ZIP_PATH_BETA} break;
 " > redirect.txt
 
 mv "./redirect.txt" "${EXPORT_PATH}"
@@ -123,8 +123,7 @@ echo "
 
 		<item>
 			<title>Version ${BUNDLE_VERSION_LONG}</title>
-			<sparkle:releaseNotesLink>https://updates.textualapp.com/sparkle/release-notes/v7/feed-one.html</sparkle:releaseNotesLink>
-			<sparkle:fullReleaseNotesLink>https://help.codeux.com/textual/Release-Notes.kb</sparkle:fullReleaseNotesLink>
+			<sparkle:releaseNotesLink>https://updates.glasstualapp.com/sparkle/release-notes/v7/feed-one.html</sparkle:releaseNotesLink>
 			<pubDate>${ARCHIVE_DATE}</pubDate>
 			<enclosure  url=\"${ONLINE_EXPORTER_ZIP_PATH_STABLE}\"
 						sparkle:version=\"${BUNDLE_VERSION_LONG}\"
@@ -138,8 +137,7 @@ echo "
 
 		<item>
 			<title>Version ${BUNDLE_VERSION_LONG}</title>
-			<sparkle:releaseNotesLink>https://updates.textualapp.com/sparkle/release-notes/v7/feed-one-beta.html</sparkle:releaseNotesLink>
-			<sparkle:fullReleaseNotesLink>https://help.codeux.com/textual/Release-Notes.kb</sparkle:fullReleaseNotesLink>
+			<sparkle:releaseNotesLink>https://updates.glasstualapp.com/sparkle/release-notes/v7/feed-one-beta.html</sparkle:releaseNotesLink>
 			<sparkle:channel>beta</sparkle:channel>
 			<pubDate>${ARCHIVE_DATE}</pubDate>
 			<enclosure  url=\"${ONLINE_EXPORTER_ZIP_PATH_BETA}\"

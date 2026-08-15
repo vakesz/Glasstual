@@ -7,6 +7,7 @@
 
 :root {
 	supported-color-schemes: light;
+	color-scheme: light;
 }
 
 * {
@@ -18,13 +19,14 @@
 }
 
 body {
-	color: #000;
+	color: -apple-system-label;
 	height: 100%;
  	z-index: 100;
-	font-size: 12px;
+	font-size: 13px;
 	overflow: hidden;
-	background-color: #fff;
-	font-family: "Lucida Grande";
+	background-color: transparent;
+	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+	-webkit-font-smoothing: antialiased;
 }
 
 #body {

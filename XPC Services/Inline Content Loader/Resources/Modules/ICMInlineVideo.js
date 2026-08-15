@@ -72,5 +72,5 @@ _ICMInlineVideo.dataLoadedCallback = function()
 	we know what it truly will be. We therefore have to tell
 	the scroller to restore the scroll position. */
 
-	TextualScroller.restoreScrolledToBottom();
+	GlasstualScroller.restoreScrolledToBottom();
 };

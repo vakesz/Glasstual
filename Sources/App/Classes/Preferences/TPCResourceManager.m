@@ -364,7 +364,7 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 		return; // Do not install.
 	}
 
-#if TEXTUAL_BUILT_INSIDE_SANDBOX == 0
+#if GLASSTUAL_BUILT_INSIDE_SANDBOX == 0
 	NSURL *newPath = [[TPCPathInfo customScriptsURL] URLByAppendingPathComponent:filename];
 
 	BOOL didImport = [self import:url into:newPath];

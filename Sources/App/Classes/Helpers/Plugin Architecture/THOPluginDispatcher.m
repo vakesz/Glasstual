@@ -60,7 +60,7 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 
 	dispatch_once(&onceToken, ^{
 		dispatchQueue =
-		XRCreateDispatchQueueWithPriority("Textual.THOPluginDispatcher.PluginManagerDispatchQueue", DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT);
+		XRCreateDispatchQueueWithPriority("Glasstual.THOPluginDispatcher.PluginManagerDispatchQueue", DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT);
 	});
 
 	return dispatchQueue;

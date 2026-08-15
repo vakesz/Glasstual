@@ -12,7 +12,9 @@ build
 Build Results
 xcuserdata
 *.xcworkspace
-Sources/App/Resources/Scripting/Script Files/Textual Extras Installer/Installation Files/Extensions/*
-Sources/App/Resources/Scripting/Script Files/Textual Extras Installer/Packages/MACAPPSTORE/*
-Sources/App/Resources/Scripting/Script Files/Textual Extras Installer/Packages/STANDALONE/*
+Sources/App/Resources/Scripting/Script Files/Glasstual Extras Installer/Installation Files/Extensions/*
+Sources/App/Resources/Scripting/Script Files/Glasstual Extras Installer/Packages/MACAPPSTORE/*
+Sources/App/Resources/Scripting/Script Files/Glasstual Extras Installer/Packages/STANDALONE/*
 !/Configurations/Build
+.agents/
+skills-lock.json
