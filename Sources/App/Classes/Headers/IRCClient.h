@@ -331,8 +331,8 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 - (void)printDebugInformation:(NSString *)message;
 - (void)printDebugInformation:(NSString *)message asCommand:(NSString *)command;
 
-- (void)printDebugInformation:(NSString *)message inChannel:(IRCChannel *)channel;
-- (void)printDebugInformation:(NSString *)message inChannel:(IRCChannel *)channel asCommand:(NSString *)command;
+- (void)printDebugInformation:(NSString *)message inChannel:(nullable IRCChannel *)channel;
+- (void)printDebugInformation:(NSString *)message inChannel:(nullable IRCChannel *)channel asCommand:(NSString *)command;
 
 #pragma mark -
 

@@ -165,7 +165,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self toggleSleepMode];
 }
 
-- (IBAction)toggledDisableSleepModeWhileConnected:(id)sender
+- (IBAction)toggledDisableSleepModeWhileConnected:(nullable id)sender
 {
 	[self rebuildObservedClients];
 }

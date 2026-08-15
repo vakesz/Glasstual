@@ -85,11 +85,17 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	self.maximumLineCount = 100;
 }
 
-- (void)_resetDatabaseFilename
+/* Returns the filename it stored so that the caller does not have to read the
+ defaults back to learn what it is. The previous shape wrote the new name and
+ returned the stale nil the caller had already read, which left the first run
+ on a fresh database building a path out of nothing. */
+- (NSString *)_resetDatabaseFilename
 {
 	NSString *filename = [NSString stringWithFormat:@"logControllerHistoricLog_%@.sqlite", [NSString stringWithUUID]];
 
 	[RZUserDefaults() setObject:filename forKey:@"TVCLogControllerHistoricLogFileSavePath_v3"];
+
+	return filename;
 }
 
 - (NSString *)_databaseSaveFilename
@@ -97,7 +103,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	NSString *filename = [RZUserDefaults() objectForKey:@"TVCLogControllerHistoricLogFileSavePath_v3"];
 
 	if (filename == nil) {
-		[self _resetDatabaseFilename];
+		filename = [self _resetDatabaseFilename];
 	}
 
 	return filename;

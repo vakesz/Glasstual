@@ -41,6 +41,7 @@
 #import "IRCClient.h"
 #import "IRCUserPersistentStorePrivate.h"
 #import "IRCUserRelationsPrivate.h"
+#import "IRCChannelUserPrivate.h"
 #import "IRCUserInternal.h"
 
 NS_ASSUME_NONNULL_BEGIN

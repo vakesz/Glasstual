@@ -52,7 +52,6 @@
 #import "TVCMainWindowChannelViewPrivate.h"
 #import "TVCMainWindowLoadingScreenPrivate.h"
 #import "TVCMainWindowTextViewPrivate.h"
-#import "TVCMainWindowSegmentedControlPrivate.h"
 #import "TVCServerListPrivate.h"
 #import "TVCServerListCellPrivate.h"
 #import "TVCMemberListPrivate.h"
@@ -98,8 +97,7 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 @property (nonatomic, strong, readwrite) NSSplitViewController *contentSplitViewController;
 @property (nonatomic, strong) NSSplitViewItem *serverListSplitItem;
 @property (nonatomic, strong) NSSplitViewItem *memberListSplitItem;
-@property (nonatomic, strong) NSSplitViewItemAccessoryViewController *sidebarAccessoryController;
-@property (nonatomic, strong) NSLayoutConstraint *sidebarAccessoryHeightConstraint;
+@property (nonatomic, strong) NSSplitViewItemAccessoryViewController *sidebarFooterController;
 @property (nonatomic, weak) NSToolbarItem *lockToolbarItem;
 @property (nonatomic, assign) SEL lockToolbarItemAction;
 @property (nonatomic, strong) TLOInputHistory *inputHistoryManager;
@@ -210,7 +208,7 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 
 static NSToolbarItemIdentifier const TVCMainWindowToolbarLockItemIdentifier = @"TVCMainWindowToolbarLockItem";
 
-static const CGFloat _sidebarAccessoryHeight = 32.0;
+static const CGFloat _sidebarFooterHeight = 32.0;
 
 static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier identifier, NSString *symbolName, NSString *label, id target, SEL action, BOOL navigational)
 {
@@ -360,6 +358,17 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 {
 	NSSplitView *nibSplitView = self.nibContentSplitView;
 
+	/* Returning here leaves the window with no content at all: the split view
+	 controller is never built, so the server list, the message view and the
+	 member list are never installed. That is a broken nib rather than a state
+	 to recover from, so say so instead of presenting an empty window. */
+	NSAssert(nibSplitView != nil,
+			 @"TVCMainWindow.xib did not supply the content split view");
+
+	NSAssert(nibSplitView.subviews.count >= 3,
+			 @"TVCMainWindow.xib content split view has %lu panes, expected at least 3",
+			 (unsigned long)nibSplitView.subviews.count);
+
 	if (nibSplitView == nil || nibSplitView.subviews.count < 3) {
 		return;
 	}
@@ -410,41 +419,43 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	inspectorItem.preferredThicknessFraction = 0.18;
 	inspectorItem.holdingPriority = NSLayoutPriorityDefaultLow + 1;
 
-	/* The "+ / ⋯ / Address Book" controls act on the server list, not on the
-	 message being composed, so they belong under the list they operate on. */
-	NSSegmentedControl *segmentedController = self.inputTextField.segmentedController;
+	/* The sidebar footer follows the shape Mail, Notes and Reminders use: a single
+	 borderless "+" pinned to the leading edge, opening a menu of what the list can
+	 gain. It replaces a three part segmented control that also carried the server
+	 or channel menu and the address book. Neither was reachable only from here —
+	 the server and channel menus are on the menu bar and on each row's contextual
+	 menu, and the address book has a menu bar item of its own. */
+	NSButton *addButton =
+	[NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"plus"
+									   accessibilityDescription:TXTLS(@"TVCMainWindow[ib-ad]")]
+					   target:self
+					   action:@selector(presentSidebarAddMenu:)];
 
-	if (segmentedController) {
-		[segmentedController removeFromSuperview];
+	addButton.translatesAutoresizingMaskIntoConstraints = NO;
+	addButton.bezelStyle = NSBezelStyleAccessoryBarAction;
+	addButton.bordered = NO;
+	addButton.toolTip = TXTLS(@"TVCMainWindow[ib-ad]");
 
-		segmentedController.translatesAutoresizingMaskIntoConstraints = NO;
-		segmentedController.controlSize = NSControlSizeSmall;
+	NSView *footerHost = [[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, 180.0, _sidebarFooterHeight)];
+	footerHost.translatesAutoresizingMaskIntoConstraints = NO;
 
-		NSView *segmentedHost = [[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, 180.0, _sidebarAccessoryHeight)];
-		segmentedHost.translatesAutoresizingMaskIntoConstraints = NO;
+	[footerHost addSubview:addButton];
 
-		[segmentedHost addSubview:segmentedController];
+	NSLayoutConstraint *footerHeight = [footerHost.heightAnchor constraintEqualToConstant:_sidebarFooterHeight];
 
-		NSLayoutConstraint *hostHeight = [segmentedHost.heightAnchor constraintEqualToConstant:_sidebarAccessoryHeight];
+	[NSLayoutConstraint activateConstraints:@[
+		footerHeight,
+		[addButton.leadingAnchor constraintEqualToAnchor:footerHost.leadingAnchor constant:10.0],
+		[addButton.centerYAnchor constraintEqualToAnchor:footerHost.centerYAnchor]
+	]];
 
-		[NSLayoutConstraint activateConstraints:@[
-			hostHeight,
-			[segmentedController.leadingAnchor constraintEqualToAnchor:segmentedHost.leadingAnchor constant:10.0],
-			[segmentedController.trailingAnchor constraintLessThanOrEqualToAnchor:segmentedHost.trailingAnchor constant:-10.0],
-			[segmentedController.centerYAnchor constraintEqualToAnchor:segmentedHost.centerYAnchor]
-		]];
+	NSSplitViewItemAccessoryViewController *footerAccessory = [[NSSplitViewItemAccessoryViewController alloc] init];
+	footerAccessory.view = footerHost;
+	footerAccessory.automaticallyAppliesContentInsets = YES;
 
-		NSSplitViewItemAccessoryViewController *segmentedAccessory = [[NSSplitViewItemAccessoryViewController alloc] init];
-		segmentedAccessory.view = segmentedHost;
-		segmentedAccessory.automaticallyAppliesContentInsets = YES;
+	[sidebarItem addBottomAlignedAccessoryViewController:footerAccessory];
 
-		[sidebarItem addBottomAlignedAccessoryViewController:segmentedAccessory];
-
-		self.sidebarAccessoryController = segmentedAccessory;
-		self.sidebarAccessoryHeightConstraint = hostHeight;
-
-		[self updateSegmentedControllerVisibility];
-	}
+	self.sidebarFooterController = footerAccessory;
 
 	NSView *inputBar = self.inputTextField.contentView;
 
@@ -519,20 +530,29 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	self.memberList.rowSizeStyle = NSTableViewRowSizeStyleCustom;
 	self.memberList.rowHeight = 24.0;
 
-	segmentedController.segmentStyle = NSSegmentStyleRounded;
-	[segmentedController setImage:[NSImage imageWithSystemSymbolName:@"plus" accessibilityDescription:TXTLS(@"TVCMainWindow[ib-ad]")] forSegment:0];
-	[segmentedController setImage:[NSImage imageWithSystemSymbolName:@"ellipsis" accessibilityDescription:TXTLS(@"TVCMainWindow[ib-mg]")] forSegment:1];
-	[segmentedController setImage:[NSImage imageWithSystemSymbolName:@"person" accessibilityDescription:TXTLS(@"TVCMainWindow[ib-ab]")] forSegment:2];
 }
 
-- (void)updateSegmentedControllerVisibility
+/* Anchored to the button's top leading corner so the menu grows up and over the
+ list, which is where the equivalent menus in Mail and Notes appear. */
+- (void)presentSidebarAddMenu:(id)sender
 {
-	BOOL hidden = [TPCPreferences hideMainWindowSegmentedController];
+	if ([sender isKindOfClass:[NSView class]] == NO) {
+		return;
+	}
 
-	self.sidebarAccessoryController.view.hidden = hidden;
+	NSMenu *menu = menuController().mainWindowSegmentedControllerCellMenu;
 
-	self.sidebarAccessoryHeightConstraint.constant = (hidden ? 0.0 : _sidebarAccessoryHeight);
+	if (menu == nil) {
+		return;
+	}
+
+	NSView *anchor = sender;
+
+	[menu popUpMenuPositioningItem:nil
+						atLocation:NSMakePoint(0.0, NSHeight(anchor.bounds))
+							inView:anchor];
 }
+
 
 - (void)observeNotifications
 {
@@ -1166,12 +1186,12 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	[self selectPreviousItem];
 }
 
-- (void)selectNextWindow:(NSEvent *)e
+- (void)selectNextWindow:(nullable NSEvent *)e
 {
 	[self navigateToNextEntry:YES];
 }
 
-- (void)selectPreviousWindow:(NSEvent *)e
+- (void)selectPreviousWindow:(nullable NSEvent *)e
 {
 	[self navigateToNextEntry:NO];
 }
@@ -1865,7 +1885,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	return ([self isItemSelected:item] || [self isItemInSelectedGroup:item]);
 }
 
-- (BOOL)isItemSelected:(IRCTreeItem *)item
+- (BOOL)isItemSelected:(nullable IRCTreeItem *)item
 {
 	if (item == nil) {
 		return NO;
@@ -2034,7 +2054,6 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		[self.inputTextField focus];
 	}
 
-	[self.inputTextField updateSegmentedController];
 
 	/* Setup text field value with history item when we have
 	 history setup to be channel specific. */
@@ -2462,8 +2481,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 	[self restoreSelectionDuringSetup];
 
-	/* Fake the delegate call */
-	[self outlineViewSelectionDidChange:nil];
+	[self serverListSelectionDidChangeFor:nil];
 
 	/* Populate navigation list */
 	[menuController() populateNavigationChannelList];
@@ -3068,7 +3086,16 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 - (void)outlineViewSelectionDidChange:(NSNotification *)notification
 {
-	TVCServerList *serverList = (id)((notification.object) ?: self.serverList);
+	[self serverListSelectionDidChangeFor:(id)notification.object];
+}
+
+/* Setup needs to run this once the first selection is restored, when there is no
+ notification to hand over. It used to call the delegate method with a nil
+ notification, which is a lie the analyzer rightly objected to: the delegate
+ protocol declares that parameter nonnull. */
+- (void)serverListSelectionDidChangeFor:(nullable TVCServerList *)changedServerList
+{
+	TVCServerList *serverList = (changedServerList ?: self.serverList);
 
 	if (serverList.invalidatingBackgroundForSelection) {
 		return;

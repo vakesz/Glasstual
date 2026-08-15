@@ -1286,7 +1286,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)showFindPrompt:(id)sender
+- (void)showFindPrompt:(nullable id)sender
 {
 	NSParameterAssert(sender != nil);
 
@@ -1313,7 +1313,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Edit
 
-- (void)copy:(id)sender
+- (void)copy:(nullable id)sender
 {
 	id firstResponder = [NSApp keyWindow].firstResponder;
 
@@ -1322,7 +1322,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)paste:(id)sender
+- (void)paste:(nullable id)sender
 {
 	if (mainWindow().keyWindow) {
 		[mainWindowTextField() focus];
@@ -1339,7 +1339,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)print:(id)sender
+- (void)print:(nullable id)sender
 {
 	if (mainWindow().keyWindow) {
 		TVCLogView *webView = self.selectedViewControllerBackingView;
@@ -1363,7 +1363,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Backing View
 
-- (void)copyLogAsHtml:(id)sender
+- (void)copyLogAsHtml:(nullable id)sender
 {
 	TVCLogView *webView = self.selectedViewControllerBackingView;
 
@@ -1374,7 +1374,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[webView copyContentString];
 }
 
-- (void)openWebInspector:(id)sender
+- (void)openWebInspector:(nullable id)sender
 {
 	/*
 	 When WebKit2 first announced, there was no way for an
@@ -1407,7 +1407,7 @@ NS_ASSUME_NONNULL_BEGIN
 			   alternateButton:nil];
 }
 
-- (void)markScrollback:(id)sender
+- (void)markScrollback:(nullable id)sender
 {
 	TVCLogController *viewController = self.selectedViewController;
 
@@ -1418,7 +1418,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[viewController mark];
 }
 
-- (void)gotoScrollbackMarker:(id)sender
+- (void)gotoScrollbackMarker:(nullable id)sender
 {
 	TVCLogController *viewController = self.selectedViewController;
 
@@ -1429,7 +1429,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[viewController goToMark];
 }
 
-- (void)clearScrollback:(id)sender
+- (void)clearScrollback:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -1445,12 +1445,12 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)increaseLogFontSize:(id)sender
+- (void)increaseLogFontSize:(nullable id)sender
 {
 	[mainWindow() changeTextSize:YES];
 }
 
-- (void)decreaseLogFontSize:(id)sender
+- (void)decreaseLogFontSize:(nullable id)sender
 {
 	[mainWindow() changeTextSize:NO];
 }
@@ -1471,7 +1471,7 @@ NS_ASSUME_NONNULL_BEGIN
 	return searchProviderName;
 }
 
-- (void)searchGoogle:(id)sender
+- (void)searchGoogle:(nullable id)sender
 {
 	TVCLogView *webView = self.selectedViewControllerBackingView;
 
@@ -1492,7 +1492,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSPerformService(@"Search With %WebSearchProvider@", searchPasteboard);
 }
 
-- (void)lookUpInDictionary:(id)sender
+- (void)lookUpInDictionary:(nullable id)sender
 {
 	TVCLogView *webView = self.selectedViewControllerBackingView;
 
@@ -1514,7 +1514,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Server
 
-- (void)connect:(id)sender
+- (void)connect:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -1527,7 +1527,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[mainWindow() expandClient:u];
 }
 
-- (void)connectBypassingProxy:(id)sender
+- (void)connectBypassingProxy:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -1540,7 +1540,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[mainWindow() expandClient:u];
 }
 
-- (void)disconnect:(id)sender
+- (void)disconnect:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -1551,7 +1551,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u quit];
 }
 
-- (void)cancelReconnection:(id)sender
+- (void)cancelReconnection:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -1562,7 +1562,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u cancelReconnect];
 }
 
-- (void)showServerChannelList:(id)sender
+- (void)showServerChannelList:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -1575,7 +1575,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u requestChannelList];
 }
 
-- (void)addServer:(id)sender
+- (void)addServer:(nullable id)sender
 {
 	[windowController() popMainWindowSheetIfExists];
 
@@ -1591,7 +1591,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[windowController() addWindowToWindowList:sheet];
 }
 
-- (void)duplicateServer:(id)sender
+- (void)duplicateServer:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -1612,7 +1612,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[worldController() save];
 }
 
-- (void)deleteServer:(id)sender
+- (void)deleteServer:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -1637,7 +1637,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Channel
 
-- (void)joinChannel:(id)sender
+- (void)joinChannel:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -1651,7 +1651,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[mainWindow() select:c];
 }
 
-- (void)leaveChannel:(id)sender
+- (void)leaveChannel:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -1670,7 +1670,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[worldController() destroyChannel:c];
 }
 
-- (void)addChannel:(id)sender
+- (void)addChannel:(nullable id)sender
 {
 	[windowController() popMainWindowSheetIfExists];
 
@@ -1692,7 +1692,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[windowController() addWindowToWindowList:sheet];
 }
 
-- (void)deleteChannel:(id)sender
+- (void)deleteChannel:(nullable id)sender
 {
 	IRCChannel *c = self.selectedChannel;
 
@@ -1718,7 +1718,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[worldController() save];
 }
 
-- (void)copyUniqueIdentifier:(id)sender
+- (void)copyUniqueIdentifier:(nullable id)sender
 {
 	IRCChannel *c = self.selectedChannel;
 
@@ -1732,7 +1732,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Other Actions
 
-- (void)copyUrl:(id)sender
+- (void)copyUrl:(nullable id)sender
 {
 	NSString *pointedUrl = ((NSMenuItem *)sender).userInfo;
 
@@ -1743,7 +1743,7 @@ NS_ASSUME_NONNULL_BEGIN
 	RZPasteboard().stringContent = pointedUrl;
 }
 
-- (void)joinChannelClicked:(id)sender
+- (void)joinChannelClicked:(nullable id)sender
 {
 	NSParameterAssert(sender != nil);
 
@@ -1774,7 +1774,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[mainWindow() select:c];
 }
 
-- (void)emptyAction:(id)sender
+- (void)emptyAction:(nullable id)sender
 {
 	/* Empty action used to validate submenus */
 }
@@ -1782,7 +1782,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Ignores
 
-- (void)memberAddIgnore:(id)sender
+- (void)memberAddIgnore:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -1804,7 +1804,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u sendCommand:command completeTarget:YES target:c.name];
 }
 
-- (void)memberRemoveIgnore:(id)sender
+- (void)memberRemoveIgnore:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -1826,7 +1826,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u sendCommand:command completeTarget:YES target:c.name];
 }
 
-- (void)memberModifyIgnore:(id)sender
+- (void)memberModifyIgnore:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -1884,7 +1884,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)memberInChannelViewDoubleClicked:(id)sender
+- (void)memberInChannelViewDoubleClicked:(nullable id)sender
 {
 	TXUserDoubleClickAction action = [TPCPreferences userDoubleClickOption];
 
@@ -1945,7 +1945,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[textView focus];
 }
 
-- (void)memberSendWhois:(id)sender
+- (void)memberSendWhois:(nullable id)sender
 {
 	[self whoisSelectedMembers:sender];
 }
@@ -1966,7 +1966,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberStartPrivateMessage:(id)sender
+- (void)memberStartPrivateMessage:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -1984,7 +1984,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberSendCTCPPing:(id)sender
+- (void)memberSendCTCPPing:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2000,7 +2000,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberSendCTCPFinger:(id)sender
+- (void)memberSendCTCPFinger:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2016,7 +2016,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberSendCTCPTime:(id)sender
+- (void)memberSendCTCPTime:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2032,7 +2032,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberSendCTCPVersion:(id)sender
+- (void)memberSendCTCPVersion:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2048,7 +2048,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberSendCTCPUserinfo:(id)sender
+- (void)memberSendCTCPUserinfo:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2064,7 +2064,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberSendCTCPClientInfo:(id)sender
+- (void)memberSendCTCPClientInfo:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2100,37 +2100,37 @@ NS_ASSUME_NONNULL_BEGIN
 	[u sendCommand:command completeTarget:YES target:c.name];
 }
 
-- (void)memberModeGiveOp:(id)sender
+- (void)memberModeGiveOp:(nullable id)sender
 {
 	[self _processModeChange:sender usingCommand:@"OP"];
 }
 
-- (void)memberModeTakeOp:(id)sender
+- (void)memberModeTakeOp:(nullable id)sender
 { 
 	[self _processModeChange:sender usingCommand:@"DEOP"];
 }
 
-- (void)memberModeGiveHalfop:(id)sender
+- (void)memberModeGiveHalfop:(nullable id)sender
 { 
 	[self _processModeChange:sender usingCommand:@"HALFOP"];
 }
 
-- (void)memberModeTakeHalfop:(id)sender
+- (void)memberModeTakeHalfop:(nullable id)sender
 { 
 	[self _processModeChange:sender usingCommand:@"DEHALFOP"];
 }
 
-- (void)memberModeGiveVoice:(id)sender
+- (void)memberModeGiveVoice:(nullable id)sender
 { 
 	[self _processModeChange:sender usingCommand:@"VOICE"];
 }
 
-- (void)memberModeTakeVoice:(id)sender
+- (void)memberModeTakeVoice:(nullable id)sender
 { 
 	[self _processModeChange:sender usingCommand:@"DEVOICE"];
 }
 
-- (void)memberKickFromChannel:(id)sender
+- (void)memberKickFromChannel:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2146,7 +2146,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberBanFromChannel:(id)sender
+- (void)memberBanFromChannel:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2164,7 +2164,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberKickbanFromChannel:(id)sender
+- (void)memberKickbanFromChannel:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2182,7 +2182,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberKillFromServer:(id)sender
+- (void)memberKillFromServer:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2200,7 +2200,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberBanFromServer:(id)sender
+- (void)memberBanFromServer:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2224,7 +2224,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self deselectMembers:sender];
 }
 
-- (void)memberShunOnServer:(id)sender
+- (void)memberShunOnServer:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2289,7 +2289,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)showSetVhostPrompt:(id)sender
+- (void)showSetVhostPrompt:(nullable id)sender
 {
 	[self _showSetVhostPromptOpenDialog:sender];
 }
@@ -2302,12 +2302,12 @@ NS_ASSUME_NONNULL_BEGIN
 	return [TXSharedApplication sharedFileTransferDialog];
 }
 
-- (void)showFileTransfersWindow:(id)sender
+- (void)showFileTransfersWindow:(nullable id)sender
 {
 	[self.fileTransferController show:YES restorePosition:YES];
 }
 
-- (void)memberSendFileRequest:(id)sender
+- (void)memberSendFileRequest:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2406,7 +2406,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Logging
 
-- (void)openLogLocation:(id)sender
+- (void)openLogLocation:(nullable id)sender
 {	
 	NSURL *path = [TPCPathInfo transcriptFolderURL];
 
@@ -2426,7 +2426,7 @@ NS_ASSUME_NONNULL_BEGIN
 					alternateButton:nil];
 }
 
-- (void)openChannelLogs:(id)sender
+- (void)openChannelLogs:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2456,7 +2456,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Help
 
-- (void)openAcknowledgements:(id)sender
+- (void)openAcknowledgements:(nullable id)sender
 {
 	NSURL *Acknowledgements = [RZMainBundle() URLForResource:@"Acknowledgements" withExtension:@"pdf" subdirectory:@"Documentation"];
 
@@ -2464,17 +2464,17 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 
-- (void)contactSupport:(id)sender
+- (void)contactSupport:(nullable id)sender
 {
 	[TLOpenLink openWithString:@"https://contact.codeux.com/" inBackground:NO];
 }
 
-- (void)connectToGlasstualHelpChannel:(id)sender
+- (void)connectToGlasstualHelpChannel:(nullable id)sender
 {
 	[IRCExtras createConnectionToServer:@"irc.libera.chat +6697" channelList:@"#glasstual" connectWhenCreated:YES mergeConnectionIfPossible:YES selectFirstChannelAdded:YES];
 }
 
-- (void)connectToGlasstualTestingChannel:(id)sender
+- (void)connectToGlasstualTestingChannel:(nullable id)sender
 {
 	[IRCExtras createConnectionToServer:@"irc.libera.chat +6697" channelList:@"#glasstual-testing" connectWhenCreated:YES mergeConnectionIfPossible:YES selectFirstChannelAdded:YES];
 }
@@ -2482,7 +2482,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark IRC
 
-- (void)showChannelBanList:(id)sender
+- (void)showChannelBanList:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2496,7 +2496,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u sendModes:@"+b" withParameters:nil inChannel:c];
 }
 
-- (void)showChannelBanExceptionList:(id)sender
+- (void)showChannelBanExceptionList:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2510,7 +2510,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u sendModes:@"+e" withParameters:nil inChannel:c];
 }
 
-- (void)showChannelInviteExceptionList:(id)sender
+- (void)showChannelInviteExceptionList:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2524,7 +2524,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u sendModes:@"+I" withParameters:nil inChannel:c];
 }
 
-- (void)showChannelQuietList:(id)sender
+- (void)showChannelQuietList:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2538,7 +2538,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u sendModes:@"+q" withParameters:nil inChannel:c];
 }
 
-- (void)toggleChannelModerationMode:(id)sender
+- (void)toggleChannelModerationMode:(nullable id)sender
 {
 	NSParameterAssert(sender != nil);
 
@@ -2560,7 +2560,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[u sendModes:modeSymbol withParameters:nil inChannel:c];
 }
 
-- (void)toggleChannelInviteMode:(id)sender
+- (void)toggleChannelInviteMode:(nullable id)sender
 {
 	NSParameterAssert(sender != nil);
 
@@ -2585,7 +2585,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Window
 
-- (void)closeWindow:(id)sender
+- (void)closeWindow:(nullable id)sender
 {
 	TXCommandWKeyAction keyAction = [TPCPreferences commandWKeyAction];
 
@@ -2652,22 +2652,22 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)showMainWindow:(id)sender
+- (void)showMainWindow:(nullable id)sender
 {
 	[mainWindow() makeKeyAndOrderFront:sender];
 }
 
-- (void)centerMainWindow:(id)sender
+- (void)centerMainWindow:(nullable id)sender
 {
 	[mainWindow() exactlyCenterWindow];
 }
 
-- (void)toggleFullscreen:(id)sender
+- (void)toggleFullscreen:(nullable id)sender
 {
 	[[NSApp keyWindow] toggleFullScreen:sender];
 }
 
-- (void)resetMainWindowFrame:(id)sender
+- (void)resetMainWindowFrame:(nullable id)sender
 {
 	if (mainWindow().inFullscreenMode) {
 		[mainWindow() toggleFullScreen:sender];
@@ -2678,7 +2678,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[mainWindow() exactlyCenterWindow];
 }
 
-- (void)sortChannelListNames:(id)sender
+- (void)sortChannelListNames:(nullable id)sender
 {
 	for (IRCClient *u in worldController().clientList) {
 		NSMutableArray *channelList = [u.channelList mutableCopy];
@@ -2706,7 +2706,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[worldController() save];
 }
 
-- (void)markAllAsRead:(id)sender
+- (void)markAllAsRead:(nullable id)sender
 {
 	[mainWindow() markAllAsRead];
 }
@@ -2714,12 +2714,12 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Preferences
 
-- (void)importPreferences:(id)sender
+- (void)importPreferences:(nullable id)sender
 {
 	[TPCPreferencesImportExport importInWindow:mainWindow()];
 }
 
-- (void)exportPreferences:(id)sender
+- (void)exportPreferences:(nullable id)sender
 {
 	[TPCPreferencesImportExport exportInWindow:mainWindow()];
 }
@@ -2730,7 +2730,7 @@ NS_ASSUME_NONNULL_BEGIN
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 #define _encryptionNotEnabled		([TPCPreferences textEncryptionIsEnabled] == NO)
 
-- (void)encryptionStartPrivateConversation:(id)sender
+- (void)encryptionStartPrivateConversation:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2743,7 +2743,7 @@ NS_ASSUME_NONNULL_BEGIN
 												from:[u encryptionAccountNameForLocalUser]];
 }
 
-- (void)encryptionRefreshPrivateConversation:(id)sender
+- (void)encryptionRefreshPrivateConversation:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2756,7 +2756,7 @@ NS_ASSUME_NONNULL_BEGIN
 												  from:[u encryptionAccountNameForLocalUser]];
 }
 
-- (void)encryptionEndPrivateConversation:(id)sender
+- (void)encryptionEndPrivateConversation:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2769,7 +2769,7 @@ NS_ASSUME_NONNULL_BEGIN
 											  from:[u encryptionAccountNameForLocalUser]];
 }
 
-- (void)encryptionAuthenticateChatPartner:(id)sender
+- (void)encryptionAuthenticateChatPartner:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
@@ -2782,7 +2782,7 @@ NS_ASSUME_NONNULL_BEGIN
 										   from:[u encryptionAccountNameForLocalUser]];
 }
 
-- (void)encryptionListFingerprints:(id)sender
+- (void)encryptionListFingerprints:(nullable id)sender
 {
 	[sharedEncryptionManager() presentListOfFingerprints];
 }
@@ -2815,7 +2815,7 @@ NS_ASSUME_NONNULL_BEGIN
 	self.muteNotificationsSoundsFileMenuItem.state = state;
 }
 
-- (void)toggleMuteOnNotificationSounds:(id)sender
+- (void)toggleMuteOnNotificationSounds:(nullable id)sender
 {
 	if ([TPCPreferences soundIsMuted]) {
 		[self toggleMuteOnNotificationSoundsShortcutOn:NO];
@@ -2824,7 +2824,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)toggleMuteOnNotifications:(id)sender
+- (void)toggleMuteOnNotifications:(nullable id)sender
 {
 	if (sharedNotificationController().areNotificationsDisabled) {
 		[self toggleMuteOnNotificationsShortcutOn:NO];
@@ -2836,14 +2836,14 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Appearance
 
-- (void)resetMainWindowAppearance:(id)sender
+- (void)resetMainWindowAppearance:(nullable id)sender
 {
 	[TPCPreferences setAppearance:TXPreferredAppearanceInherited];
 
 	[TPCPreferences performReloadAction:TPCPreferencesReloadActionAppearance];
 }
 
-- (void)toggleMainWindowAppearance:(id)sender
+- (void)toggleMainWindowAppearance:(nullable id)sender
 {
 	TXPreferredAppearance appearance = [TPCPreferences appearance];
 
@@ -2879,19 +2879,19 @@ NS_ASSUME_NONNULL_BEGIN
 	[TPCPreferences performReloadAction:TPCPreferencesReloadActionAppearance];
 }
 
-- (void)toggleServerListVisibility:(id)sender
+- (void)toggleServerListVisibility:(nullable id)sender
 {
 	[mainWindow() toggleServerListVisibility];
 }
 
-- (void)toggleMemberListVisibility:(id)sender
+- (void)toggleMemberListVisibility:(nullable id)sender
 {
 	mainWindowMemberList().isHiddenByUser = (mainWindowMemberList().isHiddenByUser == NO);
 
 	[mainWindow() toggleMemberListVisibility];
 }
 
-- (void)forceReloadTheme:(id)sender
+- (void)forceReloadTheme:(nullable id)sender
 {
 	[mainWindow() reloadTheme];
 }
@@ -2899,14 +2899,14 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Developer
 
-- (void)toggleDeveloperMode:(id)sender
+- (void)toggleDeveloperMode:(nullable id)sender
 {
 	[TPCPreferences setDeveloperModeEnabled:([TPCPreferences developerModeEnabled] == NO)];
 
 	[TPCPreferences performReloadAction:TPCPreferencesReloadActionIRCCommandCache];
 }
 
-- (void)resetDoNotAskMePopupWarnings:(id)sender
+- (void)resetDoNotAskMePopupWarnings:(nullable id)sender
 {
 	NSDictionary *settings = [RZUserDefaults() dictionaryRepresentation];
 
@@ -2922,7 +2922,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Sparkle Framework
 
-- (void)checkForUpdates:(id)sender
+- (void)checkForUpdates:(nullable id)sender
 {
 #if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	SPUStandardUpdaterController *controller = masterController().updateController;
@@ -3039,7 +3039,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[mainWindow() select:treeItem];
 }
 
-- (void)performNavigationAction:(id)sender
+- (void)performNavigationAction:(nullable id)sender
 {
 	NSParameterAssert(sender != nil);
 
@@ -3131,7 +3131,7 @@ NS_ASSUME_NONNULL_BEGIN
 	} // switch()
 }
 
-- (void)onNextHighlight:(id)sender
+- (void)onNextHighlight:(nullable id)sender
 {
 	TVCLogController *viewController = self.selectedViewController;
 
@@ -3142,7 +3142,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[viewController nextHighlight];
 }
 
-- (void)onPreviousHighlight:(id)sender
+- (void)onPreviousHighlight:(nullable id)sender
 {
 	TVCLogController *viewController = self.selectedViewController;
 
@@ -3153,7 +3153,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[viewController previousHighlight];
 }
 
-- (void)jumpToCurrentSession:(id)sender
+- (void)jumpToCurrentSession:(nullable id)sender
 {
 	TVCLogController *viewController = self.selectedViewController;
 
@@ -3164,7 +3164,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[viewController jumpToCurrentSession];
 }
 
-- (void)jumpToPresent:(id)sender
+- (void)jumpToPresent:(nullable id)sender
 {
 	TVCLogController *viewController = self.selectedViewController;
 
@@ -3178,7 +3178,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Channel Properties Sheet
 
-- (void)showChannelPropertiesSheet:(id)sender
+- (void)showChannelPropertiesSheet:(nullable id)sender
 {
 	[windowController() popMainWindowSheetIfExists];
 
@@ -3232,7 +3232,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Channel Invite Sheet
 
-- (void)memberSendInvite:(id)sender
+- (void)memberSendInvite:(nullable id)sender
 {
 	[windowController() popMainWindowSheetIfExists];
 
@@ -3296,7 +3296,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Address Book Sheet
 
-- (void)showAddressBook:(id)sender
+- (void)showAddressBook:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -3309,7 +3309,7 @@ NS_ASSUME_NONNULL_BEGIN
 									 context:nil];
 }
 
-- (void)showIgnoreList:(id)sender
+- (void)showIgnoreList:(nullable id)sender
 {
 	[self showAddressBook:sender];
 }
@@ -3317,7 +3317,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Welcome Sheet
 
-- (void)showWelcomeSheet:(id)sender
+- (void)showWelcomeSheet:(nullable id)sender
 {
 	[windowController() popMainWindowSheetIfExists];
 
@@ -3352,7 +3352,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark About Window
 
-- (void)showAboutWindow:(id)sender
+- (void)showAboutWindow:(nullable id)sender
 {
 	_popWindowViewIfExists(@"TDCAboutDialog");
 
@@ -3390,7 +3390,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[windowController() addWindowToWindowList:sheet];
 }
 
-- (void)showServerPropertiesSheet:(id)sender
+- (void)showServerPropertiesSheet:(nullable id)sender
 {
 	IRCClient *u = self.selectedClient;
 
@@ -3438,7 +3438,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Highlight List Sheet
 
-- (void)showServerHighlightList:(id)sender
+- (void)showServerHighlightList:(nullable id)sender
 {
 	[windowController() popMainWindowSheetIfExists];
 
@@ -3505,7 +3505,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Channel Topic Sheet
 
-- (void)showChannelModifyTopicSheet:(id)sender
+- (void)showChannelModifyTopicSheet:(nullable id)sender
 {
 	[windowController() popMainWindowSheetIfExists];
 
@@ -3548,7 +3548,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Channel Mode Sheet
 
-- (void)showChannelModifyModesSheet:(id)sender
+- (void)showChannelModifyModesSheet:(nullable id)sender
 {
 	[windowController() popMainWindowSheetIfExists];
 
@@ -3597,7 +3597,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Channel Spotlight Window
 
-- (void)showChannelSpotlightWindow:(id)sender
+- (void)showChannelSpotlightWindow:(nullable id)sender
 {
 	_popWindowViewIfExists(@"TDCChannelSpotlightController");
 
@@ -3623,7 +3623,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Change Nickname Sheet
 
-- (void)showServerChangeNicknameSheet:(id)sender
+- (void)showServerChangeNicknameSheet:(nullable id)sender
 {
 	[windowController() popMainWindowSheetIfExists];
 
@@ -3664,22 +3664,22 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Preferences Dialog
 
-- (void)showPreferencesWindow:(id)sender
+- (void)showPreferencesWindow:(nullable id)sender
 {
 	[self showPreferencesWindowWithSelection:TDCPreferencesControllerSelectionDefault];
 }
 
-- (void)showNotificationPreferences:(id)sender
+- (void)showNotificationPreferences:(nullable id)sender
 {
 	[self showPreferencesWindowWithSelection:TDCPreferencesControllerSelectionNotifications];
 }
 
-- (void)showStylePreferences:(id)sender
+- (void)showStylePreferences:(nullable id)sender
 {
 	[self showPreferencesWindowWithSelection:TDCPreferencesControllerSelectionStyle];
 }
 
-- (void)showHiddenPreferences:(id)sender
+- (void)showHiddenPreferences:(nullable id)sender
 {
 	[self showPreferencesWindowWithSelection:TDCPreferencesControllerSelectionHiddenPreferences];
 }
@@ -3719,7 +3719,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TXMenuControllerMainWindowProxy
 
-- (void)showWelcomeSheet:(id)sender
+- (void)showWelcomeSheet:(nullable id)sender
 {
 	[menuController() showWelcomeSheet:sender];
 }

@@ -94,7 +94,7 @@ GLASSTUAL_EXTERN NSString * const TVCServerListDragType;
 - (void)deselectGroup:(IRCTreeItem *)item;
 
 - (BOOL)isItemVisible:(IRCTreeItem *)item;
-- (BOOL)isItemSelected:(IRCTreeItem *)item;
+- (BOOL)isItemSelected:(nullable IRCTreeItem *)item;
 - (BOOL)isItemInSelectedGroup:(IRCTreeItem *)item;
 
 - (void)expandClient:(IRCClient *)client;
@@ -107,10 +107,10 @@ GLASSTUAL_EXTERN NSString * const TVCServerListDragType;
 
 - (void)selectNextServer:(NSEvent *)e;
 - (void)selectNextChannel:(NSEvent *)e;
-- (void)selectNextWindow:(NSEvent *)e;
+- (void)selectNextWindow:(nullable NSEvent *)e;
 - (void)selectPreviousServer:(NSEvent *)e;
 - (void)selectPreviousChannel:(NSEvent *)e;
-- (void)selectPreviousWindow:(NSEvent *)e;
+- (void)selectPreviousWindow:(nullable NSEvent *)e;
 - (void)selectNextActiveServer:(NSEvent *)e;
 - (void)selectNextUnreadChannel:(NSEvent *)e;
 - (void)selectNextActiveChannel:(NSEvent *)e;

@@ -49,6 +49,7 @@
 #import "TPCPreferencesLocal.h"
 #import "TVCMainWindow.h"
 #import "TVCMainWindowTextView.h"
+#import "IRCChannelUserPrivate.h"
 #import "TLONicknameCompletionStatusPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN

@@ -18,3 +18,6 @@ Sources/App/Resources/Scripting/Script Files/Glasstual Extras Installer/Packages
 !/Configurations/Build
 .agents/
 skills-lock.json
+
+# Local operator notes, not project documentation.
+CI-SETUP.md

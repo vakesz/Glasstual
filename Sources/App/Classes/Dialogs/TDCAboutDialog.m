@@ -46,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TDCAboutDialog ()
 @property (nonatomic, weak) IBOutlet NSTextField *versionInfoTextField;
 
-- (IBAction)displayAcknowledgements:(id)sender;
+- (IBAction)displayAcknowledgements:(nullable id)sender;
 @end
 
 @implementation TDCAboutDialog
@@ -82,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[super show];
 }
 
-- (void)displayAcknowledgements:(id)sender
+- (void)displayAcknowledgements:(nullable id)sender
 {
 	[menuController() openAcknowledgements:sender];
 }

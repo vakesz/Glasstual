@@ -4,5 +4,5 @@
 @interface TPI_PreferencePaneExample : NSObject <THOPluginProtocol>
 @property (nonatomic, strong) IBOutlet NSView *ourView;
 
-- (IBAction)preferenceChanged:(id)sender;
+- (IBAction)preferenceChanged:(nullable id)sender;
 @end

@@ -216,8 +216,17 @@ static NSColor * _Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 	self.imageView.image = [self markBadgeForRank:userRankToDraw symbol:modeSymbol isSelected:isSelected];
 }
 
-- (NSImage *)markBadgeForRank:(IRCUserRank)userRank symbol:(NSString *)modeSymbol isSelected:(BOOL)isSelected
+/* Returns nil when the image view has not been laid out yet. The caller assigns
+ the result straight to -[NSImageView image], which takes nil, so the type is
+ annotated rather than the nil replaced with an empty image. */
+- (nullable NSImage *)markBadgeForRank:(IRCUserRank)userRank symbol:(NSString *)modeSymbol isSelected:(BOOL)isSelected
 {
+	NSRect badgeFrame = self.imageView.bounds;
+
+	if (NSIsEmptyRect(badgeFrame)) {
+		return nil;
+	}
+
 	NSString *stringToDraw = modeSymbol;
 
 	if (stringToDraw.length == 0 && [TPCPreferences memberListDisplayNoModeSymbol]) {
@@ -235,16 +244,12 @@ static NSColor * _Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 		backgroundColor = TVCMemberListCellColorForRank(userRank);
 
 		if (backgroundColor == nil) {
-			backgroundColor = [[NSColor tertiaryLabelColor] colorWithAlphaComponent:0.35];
+			/* tertiaryLabelColor is already translucent; scaling it again left the
+			 capsule at roughly 9% alpha. See the matching note in the server list. */
+			backgroundColor = [NSColor secondarySystemFillColor];
 		}
 
 		textColor = [NSColor labelColor];
-	}
-
-	NSRect badgeFrame = self.imageView.bounds;
-
-	if (NSIsEmptyRect(badgeFrame)) {
-		return nil;
 	}
 
 	NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];

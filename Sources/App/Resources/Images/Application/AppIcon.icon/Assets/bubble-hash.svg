@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- One silhouette: a speech bubble with the channel hash knocked out of it.
+       The hash is traced as a single union outline rather than four crossing
+       bars, because even-odd fills in the places where crossing bars overlap.
+       Its enclosed centre square is a third subpath, nested one level deeper,
+       so even-odd paints that back in.
+
+       Geometry: bubble body 176,208 to 848,720. The hash is 298 square,
+       centred on the body, with a 58pt stroke and a true 58pt square at its
+       centre so it reads as a hash rather than a grid. -->
+  <path fill="#FFFFFF" fill-rule="evenodd" d="
+    M 316 208
+    L 708 208
+    A 140 140 0 0 1 848 348
+    L 848 580
+    A 140 140 0 0 1 708 720
+    L 452 720
+    C 452 782 408 830 350 844
+    Q 320 850 332 822
+    C 350 792 358 757 358 720
+    L 316 720
+    A 140 140 0 0 1 176 580
+    L 176 348
+    A 140 140 0 0 1 316 208
+    Z
+    M 425 316
+    L 483 316 L 483 378 L 541 378 L 541 316
+    L 599 316 L 599 378 L 661 378 L 661 436
+    L 599 436 L 599 494 L 661 494 L 661 552
+    L 599 552 L 599 614 L 541 614 L 541 552
+    L 483 552 L 483 614 L 425 614 L 425 552
+    L 363 552 L 363 494 L 425 494 L 425 436
+    L 363 436 L 363 378 L 425 378
+    Z
+    M 483 436
+    L 483 494 L 541 494 L 541 436
+    Z
+  "/>
+</svg>

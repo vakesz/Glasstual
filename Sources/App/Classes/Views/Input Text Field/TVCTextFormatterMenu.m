@@ -55,7 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, readwrite) IBOutlet NSMenuItem *foregroundColorSetMenuItem;
 @property (nonatomic, weak, readwrite) IBOutlet NSMenuItem *backgroundColorSetMenuItem;
 
-- (IBAction)emptyAction:(id)sender;
+- (IBAction)emptyAction:(nullable id)sender;
 @end
 
 @implementation TVCTextViewIRCFormattingMenu
@@ -207,7 +207,7 @@ NS_ASSUME_NONNULL_BEGIN
 	return YES;
 }
 
-- (void)emptyAction:(id)sender
+- (void)emptyAction:(nullable id)sender
 {
 	/* Empty action used to validate submenus */
 }
@@ -282,7 +282,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Formatting Storage Helpers
 
-- (void)applyEffectToTextBox:(IRCTextFormatterEffectType)formatterEffect withValue:(id)value inRange:(NSRange)limitRange
+- (void)applyEffectToTextBox:(IRCTextFormatterEffectType)formatterEffect withValue:(nullable id)value inRange:(NSRange)limitRange
 {
 	NSMutableAttributedString *stringMutableCopy = [self mutableStringAtRange:limitRange];
 
@@ -317,12 +317,12 @@ NS_ASSUME_NONNULL_BEGIN
 	return [stringSubstring mutableCopy];
 }
 
-- (void)applyEffect:(IRCTextFormatterEffectType)formatterEffect withValue:(id)value toMutableString:(NSMutableAttributedString *)mutableString
+- (void)applyEffect:(IRCTextFormatterEffectType)formatterEffect withValue:(nullable id)value toMutableString:(NSMutableAttributedString *)mutableString
 {
 	[self applyEffect:formatterEffect withValue:value inRange:mutableString.range toMutableString:mutableString];
 }
 
-- (void)applyEffect:(IRCTextFormatterEffectType)formatterEffect withValue:(id)value inRange:(NSRange)limitRange toMutableString:(NSMutableAttributedString *)mutableString
+- (void)applyEffect:(IRCTextFormatterEffectType)formatterEffect withValue:(nullable id)value inRange:(NSRange)limitRange toMutableString:(NSMutableAttributedString *)mutableString
 {
 	if (value) {
 		[mutableString setIRCFormatterAttribute:formatterEffect value:value range:limitRange];
@@ -347,42 +347,42 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Add Formatting
 
-- (void)insertBoldCharIntoTextBox:(id)sender
+- (void)insertBoldCharIntoTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectBold withValue:@(YES) inRange:selectedTextRange];
 }
 
-- (void)insertItalicCharIntoTextBox:(id)sender
+- (void)insertItalicCharIntoTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectItalic withValue:@(YES) inRange:selectedTextRange];
 }
 
-- (void)insertMonospaceCharIntoTextBox:(id)sender
+- (void)insertMonospaceCharIntoTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectMonospace withValue:@(YES) inRange:selectedTextRange];
 }
 
-- (void)insertStrikethroughCharIntoTextBox:(id)sender
+- (void)insertStrikethroughCharIntoTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectStrikethrough withValue:@(YES) inRange:selectedTextRange];
 }
 
-- (void)insertUnderlineCharIntoTextBox:(id)sender
+- (void)insertUnderlineCharIntoTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectUnderline withValue:@(YES) inRange:selectedTextRange];
 }
 
-- (void)insertForegroundColorCharIntoTextBox:(id)sender
+- (void)insertForegroundColorCharIntoTextBox:(nullable id)sender
 {
 	if ([sender tag] == _formattingMenuRainbowColorMenuItemTag) {
 		[self insertRainbowColorCharInfoTextBox:sender asForegroundColor:YES];
@@ -407,7 +407,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self applyEffectToTextBox:IRCTextFormatterEffectForegroundColor withValue:@([sender tag]) inRange:selectedTextRange];
 }
 
-- (void)insertBackgroundColorCharIntoTextBox:(id)sender
+- (void)insertBackgroundColorCharIntoTextBox:(nullable id)sender
 {
 	if ([sender tag] == _formattingMenuRainbowColorMenuItemTag)
 	{
@@ -502,7 +502,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)insertSpoilerCharIntoTextBox:(id)sender
+- (void)insertSpoilerCharIntoTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
@@ -515,56 +515,56 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Remove Formatting
 
-- (void)removeBoldCharFromTextBox:(id)sender
+- (void)removeBoldCharFromTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectBold withValue:nil inRange:selectedTextRange];
 }
 
-- (void)removeItalicCharFromTextBox:(id)sender
+- (void)removeItalicCharFromTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectItalic withValue:nil inRange:selectedTextRange];
 }
 
-- (void)removeMonospaceCharFromTextBox:(id)sender
+- (void)removeMonospaceCharFromTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectMonospace withValue:nil inRange:selectedTextRange];
 }
 
-- (void)removeStrikethroughCharFromTextBox:(id)sender
+- (void)removeStrikethroughCharFromTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectStrikethrough withValue:nil inRange:selectedTextRange];
 }
 
-- (void)removeUnderlineCharFromTextBox:(id)sender
+- (void)removeUnderlineCharFromTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectUnderline withValue:nil inRange:selectedTextRange];
 }
 
-- (void)removeForegroundColorCharFromTextBox:(id)sender
+- (void)removeForegroundColorCharFromTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectForegroundColor withValue:nil inRange:selectedTextRange];
 }
 
-- (void)removeBackgroundColorCharFromTextBox:(id)sender
+- (void)removeBackgroundColorCharFromTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 
 	[self applyEffectToTextBox:IRCTextFormatterEffectBackgroundColor withValue:nil inRange:selectedTextRange];
 }
 
-- (void)removeSpoilerCharFromTextBox:(id)sender
+- (void)removeSpoilerCharFromTextBox:(nullable id)sender
 {
 	NSRange selectedTextRange = self.textField.selectedRange;
 

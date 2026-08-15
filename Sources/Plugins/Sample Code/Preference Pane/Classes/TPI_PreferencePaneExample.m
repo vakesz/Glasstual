@@ -32,7 +32,7 @@
 	}
 }
 
-- (IBAction)preferenceChanged:(id)sender
+- (IBAction)preferenceChanged:(nullable id)sender
 {
 	[self doSomethingWithPreferences];
 }
