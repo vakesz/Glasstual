@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 /* This flag will be YES unless a WebKit2 processes terminates for
  an unexpected reason such as a crash or memory exhaustion.
  In those cases, this property will become NO.
- The rest of Textual will give it priority over any other user
+ The rest of Glasstual will give it priority over any other user
  preference asking for asking access to WebKit2. */
 @property (readonly, class) BOOL t_safeToUse;
 

@@ -39,6 +39,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-TEXTUAL_EXTERN NSDateFormatter *TXSharedISOStandardDateFormatter(void);
+GLASSTUAL_EXTERN NSDateFormatter *TXSharedISOStandardDateFormatter(void);
 
 NS_ASSUME_NONNULL_END

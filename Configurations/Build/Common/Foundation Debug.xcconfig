@@ -17,8 +17,8 @@ SWIFT_OPTIMIZATION_LEVEL = -Onone
 VERSION_INFO_BUILDER = ${USER}
 
 //
-// On Xcode 16, Textual failed to run in debug mode because
-// a "Textual.debug.dylib" file was missing in the @rpath
+// On Xcode 16, Glasstual failed to run in debug mode because
+// a "Glasstual.debug.dylib" file was missing in the @rpath
 // of extensions and services. Going to disable this feature
 // of Xcode until a later release of Xcode.
 //

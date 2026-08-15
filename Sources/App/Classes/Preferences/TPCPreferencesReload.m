@@ -53,7 +53,6 @@
 #import "TVCMainWindowTextViewPrivate.h"
 #import "TVCServerListPrivate.h"
 #import "TVCMemberListPrivate.h"
-#import "TVCMemberListAppearance.h"
 #import "TPCPreferencesReload.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -162,14 +161,14 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Sparkle framework update feed URL */
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	if ([keys containsObject:@"ReceiveBetaUpdates"]) {
 		reloadAction |= TPCPreferencesReloadActionSparkleFrameworkFeedURL;
 	}
 #endif
 
 	/* Developer mode */
-	if ([keys containsObject:@"TextualDeveloperEnvironment"]) {
+	if ([keys containsObject:@"GlasstualDeveloperEnvironment"]) {
 		reloadAction |= TPCPreferencesReloadActionIRCCommandCache;
 	}
 
@@ -188,7 +187,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Encryption policy */
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	if ([keys containsObject:@"Off-the-Record Messaging -> Enable Encryption"] ||
 		[keys containsObject:@"Off-the-Record Messaging -> Automatically Enable Service"] ||
 		[keys containsObject:@"Off-the-Record Messaging -> Require Encryption"])
@@ -230,12 +229,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 		/* If we know FOR CERTAIN we only are ONLY reloading the user badges
 		 and we have a key for context, then be more efficient by only updating
-		 drawings related to this preference. The member list automatically
-		 invalidates its caches when passing a recognized key. */ 
+		 drawings related to this preference. */
 		if (reloadAction == TPCPreferencesReloadActionMemberListUserBadges && key != nil) {
 			[mainWindowMemberList() refreshDrawingForChangesToPreference:key];
 		} else {
-			[mainWindowMemberList().userInterfaceObjects invalidateUserMarkBadgeCaches];
+			[mainWindowMemberList() refreshAllDrawings];
 		}
 	}
 
@@ -340,7 +338,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Sparkle framework update feed URL */
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	if ((reloadAction & TPCPreferencesReloadActionSparkleFrameworkFeedURL) == TPCPreferencesReloadActionSparkleFrameworkFeedURL) {
 		[masterController() prepareThirdPartyServiceSparkleFramework];
 	}
@@ -383,7 +381,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Encryption policy */
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	if ((reloadAction & TPCPreferencesReloadActionEncryptionPolicy) == TPCPreferencesReloadActionEncryptionPolicy) {
 		[sharedEncryptionManager() updatePolicy];
 

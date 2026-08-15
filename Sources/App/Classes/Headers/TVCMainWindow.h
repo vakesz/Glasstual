@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient, IRCChannel, IRCTreeItem;
 @class TVCMainWindowLoadingScreenView;
-@class TVCMainWindowSplitView, TVCMainWindowTextView;
+@class TVCMainWindowTextView;
 @class TVCServerList, TVCMemberList;
 @class TVCLogController;
 
@@ -58,15 +58,15 @@ typedef NS_ENUM(NSUInteger, TVCServerListNavigationSelectionType) {
 	TVCServerListNavigationSelectionTypeServer,		// Move to next server item
 };
 
-TEXTUAL_EXTERN NSNotificationName const TVCMainWindowAppearanceChangedNotification;
-TEXTUAL_EXTERN NSNotificationName const TVCMainWindowRedrawSubviewsNotification;
+GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowAppearanceChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowRedrawSubviewsNotification;
 
-TEXTUAL_EXTERN NSNotificationName const TVCMainWindowWillReloadThemeNotification;
-TEXTUAL_EXTERN NSNotificationName const TVCMainWindowDidReloadThemeNotification;
+GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowWillReloadThemeNotification;
+GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowDidReloadThemeNotification;
 
-TEXTUAL_EXTERN NSNotificationName const TVCMainWindowSelectionChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowSelectionChangedNotification;
 
-TEXTUAL_EXTERN NSString * const TVCServerListDragType;
+GLASSTUAL_EXTERN NSString * const TVCServerListDragType;
 
 @interface TVCMainWindow : NSWindow
 @property (readonly, getter=isDisabled) BOOL disabled;
@@ -74,7 +74,7 @@ TEXTUAL_EXTERN NSString * const TVCServerListDragType;
 @property (readonly) TVCMainWindowAppearance *userInterfaceObjects;
 
 @property (readonly, weak) TVCMainWindowLoadingScreenView *loadingScreen;
-@property (readonly, weak) TVCMainWindowSplitView *contentSplitView;
+@property (readonly) NSSplitViewController *contentSplitViewController;
 @property (readonly, unsafe_unretained) TVCMainWindowTextView *inputTextField;
 @property (readonly, weak) TVCMemberList *memberList;
 @property (readonly, weak) TVCServerList *serverList;
@@ -139,6 +139,14 @@ TEXTUAL_EXTERN NSString * const TVCServerListDragType;
 
 @property (getter=isMemberListVisible, readonly) BOOL memberListVisible;
 @property (getter=isServerListVisible, readonly) BOOL serverListVisible;
+
+- (void)expandServerList;
+- (void)collapseServerList;
+- (void)toggleServerListVisibility;
+
+- (void)expandMemberList;
+- (void)collapseMemberList;
+- (void)toggleMemberListVisibility;
 
 - (NSRect)defaultWindowFrame;
 @end

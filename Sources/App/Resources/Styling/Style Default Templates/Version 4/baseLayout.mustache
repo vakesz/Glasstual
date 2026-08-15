@@ -12,7 +12,7 @@
 		<script src="{{applicationResourcePath}}/JavaScript/API/corePrivate.js" type="text/javascript" charset="UTF-8"></script>
 
 		<script type="text/javascript">
-			Textual.initializeCore("{{applicationResourcePath}}");
+			Glasstual.initializeCore("{{applicationResourcePath}}");
 		</script>
 
 		{{#activeStyleJSFiles}}
@@ -44,7 +44,7 @@
 
 		dir="{{textDirectionToken}}"
 
-		onload="_Textual.viewBodyDidLoad()"
+		onload="_Glasstual.viewBodyDidLoad()"
 
 		data-appearance="{{appearanceToken}}"
 
@@ -70,12 +70,12 @@
 		data-view-type="{{viewTypeToken}}">
 			{{! The elements "body," "messageBuffer," "loadingScreen,"
 			"topicBar," and "mark" must always remain the same id= as these
-			elements are used internally by Textual. }}
+			elements are used internally by Glasstual. }}
 
 			<div id="loadingScreen">View is Loading…</div>
 
 			{{#isChannelView}}
-				<div id="topicBar" ondblclick="Textual.topicBarDoubleClicked()">(No Topic)</div>
+				<div id="topicBar" ondblclick="Glasstual.topicBarDoubleClicked()">(No Topic)</div>
 			{{/isChannelView}}
 
 			<div id="body">

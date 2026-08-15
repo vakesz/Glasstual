@@ -45,7 +45,6 @@
 #import "TVCLogView.h"
 #import "TVCMainWindowAppearance.h"
 #import "TVCMainWindowPrivate.h"
-#import "TVCMainWindowSplitViewPrivate.h"
 #import "TVCMainWindowChannelViewPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -307,7 +306,7 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 
 - (NSColor *)dividerColor
 {
-	return self.mainWindow.contentSplitView.dividerColor;
+	return [NSColor separatorColor];
 }
 
 - (void)updateArrangement
@@ -358,6 +357,23 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 - (void)prepareInitialState
 {
 	self.translatesAutoresizingMaskIntoConstraints = NO;
+}
+
+- (void)drawRect:(NSRect)dirtyRect
+{
+	/* The web view stops at the safe area so the input bar does not cover the
+	 last lines of the view. Nothing painted the strip that leaves behind, so it
+	 showed the window's own background. Fill it with the style's window color
+	 to make it continuous with the message area above it. */
+	NSColor *backgroundColor = themeSettings().underlyingWindowColor;
+
+	if (backgroundColor == nil) {
+		backgroundColor = [NSColor textBackgroundColor];
+	}
+
+	[backgroundColor set];
+
+	NSRectFill(dirtyRect);
 }
 
 - (BOOL)backingViewIsLoading
@@ -424,11 +440,14 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 											 metrics:nil
 											   views:NSDictionaryOfVariableBindings(webView)]];
 
-	[self addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[webView(>=30)]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(webView)]];
+	/* The bottom is pinned to the safe area rather than to the edge so that the
+	 last lines of the view are not covered by the input bar floating above it.
+	 The safe area matches the edge when nothing is overlaid. */
+	[NSLayoutConstraint activateConstraints:@[
+		[webView.topAnchor constraintEqualToAnchor:self.topAnchor],
+		[webView.bottomAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.bottomAnchor],
+		[webView.heightAnchor constraintGreaterThanOrEqualToConstant:30.0]
+	]];
 }
 
 - (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context

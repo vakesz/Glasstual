@@ -35,6 +35,6 @@
  *
  *********************************************************************** */
 
-#warning "TextualApplication.h" is old header file. Please use "Textual.h"
+#warning "GlasstualApplication.h" is old header file. Please use "Glasstual.h"
 
-#import "Textual.h"
+#import "Glasstual.h"

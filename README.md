@@ -1,68 +1,78 @@
-> [!IMPORTANT]
-> Textual is no longer being actively maintained. For the life of the project, it only ever had one full time maintainer whom has now moved on to different ventures in their life. To all that have contributed to Textual in some form in the past; be it a suggestion, bug report, pull request, financial support, or some other form of contribution, you will forever be loved. Thank you so much. Words cannot properly express the gratitude we have for every single user. 
+# Glasstual
 
-# Textual [![GitHub release](https://img.shields.io/github/tag/Codeux-Software/Textual.svg)](https://github.com/Codeux-Software/Textual/blob/master) [![Platform](https://img.shields.io/badge/platform-OS%20X-lightgrey.svg)](http://www.textualapp.com/mac-app-store)
+Glasstual is a highly customizable app for interacting with Internet Relay Chat (IRC) chatrooms on macOS.
 
-Textual is a highly customizable app for interacting with Internet Relay Chat (IRC) chatrooms on macOS.
+Glasstual can be customized with styles written in CSS, HTML, and JavaScript; plugins written in Objective-C & Swift; and scripts written in AppleScript (plus many other languages).
 
-Textual can be customized with styles written in CSS, HTML, and JavaScript; [plugins](https://help.codeux.com/textual/Writing-Plugins.kb) written in Objective-C & Swift, and [scripts](https://help.codeux.com/textual/Writing-Scripts.kb) written in AppleScript (plus many other languages)
+## Relationship to Textual
 
-Precompiled versions of Textual can be purchased in the [directly from codeux.com](https://www.textualapp.com/).
+**Glasstual is a fork and continuation of [Textual](https://github.com/Codeux-Software/Textual)**, the IRC client by Codeux Software, LLC. Upstream Textual is no longer actively maintained — it had a single full-time maintainer for the life of the project, who has since moved on. Everyone who contributed to Textual in any form, be it a suggestion, bug report, pull request, financial support, or anything else, made this codebase what it is.
+
+This fork exists to carry that work forward on **macOS 26 (Tahoe) and later**. It is an independent project: it is not published, endorsed, or supported by Codeux Software, LLC, and it does not offer, replace, or update Codeux's builds of Textual.
+
+Copyright and license notices from Textual and LimeChat are left intact throughout the source tree, including the BSD non-endorsement clause naming Textual. Those notices cover code this project did not write and are deliberately unchanged. See [Licenses](#licenses) below and [Acknowledgements.pdf](Acknowledgements.pdf).
+
+A number of identifiers keep the Textual spelling on purpose, because they name upstream Textual rather than this app — the sandbox-migration sources in `TPCSandboxMigration.m` and the running-app check in `TXApplication.m`. Renaming those breaks importing data from an existing Textual install.
 
 ## Screenshots
 
-[![Light Screenshot](https://www.codeux.com/textual/private/images/v600media/YosemiteLightThumbnail.png)](https://www.codeux.com/textual/private/images/v600media/YosemiteLightFullscreen.png) 
-[![Dark Screenshot](https://www.codeux.com/textual/private/images/v600media/YosemiteDarkThumbnail.png)](https://www.codeux.com/textual/private/images/v600media/YosemiteDarkFullscreen.png)
+<!-- TODO: add screenshots of Glasstual here (light and dark). -->
 
-## Resources
-
-- [Homepage](https://codeux.com/textual)
-- [Frequently Asked Questions](https://help.codeux.com/textual/Frequently-Asked-Questions.kb)
-- [Support](https://help.codeux.com/textual/Support.kb)
-- \#textual on irc.libera.chat
-- Guides: [Writing Plugins](https://help.codeux.com/textual/Writing-Plugins.kb), [Writing Scripts](https://help.codeux.com/textual/Writing-Scripts.kb)
+_Screenshots pending — insert image here._
 
 ## Note Regarding Downloading Source Code
 
-Textual is dependent on several other projects to build. This repository is automatically linked against these other projects using what are known as "submodules" — Clicking the "Download ZIP" button to build a copy of Textual will not download a copy of these projects. The source code must be cloned using [Github for Mac](https://mac.github.com/) or by using the following commands in Terminal:
+Glasstual depends on several other projects to build. This repository is linked against them using submodules — clicking "Download ZIP" will not download a copy of those projects. Clone the source instead:
 
 ```
-git clone https://github.com/Codeux-Software/Textual.git Textual
-cd Textual
+git clone https://github.com/vakesz/Textual.git Glasstual
+cd Glasstual
 git submodule update --init --recursive
 ```
 
 ## Note Regarding Code Signing
 
-**DO NOT change the Code Signing Identity setting through Xcode.** Textual uses a configuration file to specify the code signing identity. This allows it to be used across all projects associated with Textual without having to modify each.
+**DO NOT change the Code Signing Identity setting through Xcode.** Glasstual uses a configuration file to specify the code signing identity. This allows it to be used across all projects associated with Glasstual without having to modify each.
 
-**DO** edit the file located at _[Configurations ➜ Build ➜ Code Signing Identity.xcconfig](https://github.com/Codeux-Software/Textual/blob/master/Configurations/Build/Code%20Signing%20Identity.xcconfig)_
+**DO** edit the file located at _[Configurations ➜ Build ➜ Code Signing Identity.xcconfig](Configurations/Build/Code%20Signing%20Identity.xcconfig)_
 
-**It is HIGHLY DISCOURAGED to turn off code signing.** Certain features rely on the fact that Textual is properly signed and is within a sandboxed environment.
+**It is HIGHLY DISCOURAGED to turn off code signing.** Certain features rely on the fact that Glasstual is properly signed and is within a sandboxed environment.
 
-**TEXTUAL DOES NOT REQUIRE A CERTIFICATE ISSUED BY APPLE TO BUILD** which means there is absolutely no reason to turn code signing off.
+**GLASSTUAL DOES NOT REQUIRE A CERTIFICATE ISSUED BY APPLE TO BUILD** which means there is absolutely no reason to turn code signing off.
 
-## Building Textual
+## Building Glasstual
 
-The latest version of Textual requires a valid code signing certificate (it does not need to be issued by Apple) and Xcode 26 on macOS Tahoe 26.
+The latest version of Glasstual requires a valid code signing certificate (it does not need to be issued by Apple) and Xcode 26 on macOS Tahoe 26.
 
-This tree has **no paid-license or trial checks**. Precompiled store builds from codeux.com are a separate product.
+This tree has **no paid-license or trial checks**. Precompiled store builds of Textual from codeux.com are a separate product.
 
 **DO NOT change the Code Signing Identity setting through Xcode.** Modify the file located at _[Configurations ➜ Build ➜ Code Signing Identity.xcconfig](Configurations/Build/Code%20Signing%20Identity.xcconfig)_ instead.
 
-Set your Apple Developer **Team ID** there, and set `TEXTUAL_BUNDLE_IDENTIFIER` in `Configurations/Build/Standard Release/Textual.xcconfig` (and the Debug copy) to an identifier you own. This fork defaults to:
+Set your Apple Developer **Team ID** there, and set `GLASSTUAL_BUNDLE_IDENTIFIER` in `Configurations/Build/Standard Release/Glasstual.xcconfig` (and the Debug copy) to an identifier you own. This fork defaults to:
 
-- Bundle ID: `com.vakesz.textual`
+- Bundle ID: `com.vakesz.glasstual`
 - Team ID: `H8W5DK3FN2`
-- App Group: `H8W5DK3FN2.com.vakesz.textual`
+- App Group: `H8W5DK3FN2.com.vakesz.glasstual`
 
 Register that App ID and App Group on [developer.apple.com](https://developer.apple.com/account/resources/identifiers/list), then enable **Automatic signing**.
 
-Build Textual using the "Standard Release" build scheme.
+Build Glasstual using the "Standard Release" build scheme.
 
-## Original Limechat License
+### Software Updates
 
-Textual began as a fork of [LimeChat](https://github.com/psychs/limechat) in 2010
+The Standard Release scheme builds with Sparkle enabled but **no `SUFeedURL`** — the
+upstream Textual appcast was removed so that this fork can never offer Codeux's builds
+as an update to itself. Set `SUFeedURL` in
+_[Sources ➜ App ➜ Resources ➜ Property Lists ➜ Application Properties ➜ Info.plist](Sources/App/Resources/Property%20Lists/Application%20Properties/Info.plist)_
+to your own appcast, or drop `GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED` from
+_Configurations ➜ Build ➜ Standard Release ➜ Enabled Features.xcconfig_ to compile
+updating out entirely.
+
+## Licenses
+
+### Original LimeChat License
+
+Textual began as a fork of [LimeChat](https://github.com/psychs/limechat) in 2010, and Glasstual continues from Textual.
 
 LimeChat's original license is presented below.
 
@@ -94,9 +104,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
 </pre>
 
-## License for content originating from Textual
+### License for content originating from Textual
 
-Unless stated otherwise by Textual's [Acknowledgements.pdf](Acknowledgements.pdf) document, the license presented below shall govern the distribution of and modifications to; the work hosted by this repository.
+Unless stated otherwise by the [Acknowledgements.pdf](Acknowledgements.pdf) document, the license presented below shall govern the distribution of and modifications to; the work hosted by this repository.
 
 <pre>
 Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.

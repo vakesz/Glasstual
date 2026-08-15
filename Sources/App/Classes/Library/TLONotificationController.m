@@ -467,7 +467,7 @@ NSString * const TXNotificationActionIdentifierPrivateMessageReply = @"TXNotific
 	/* The notification identifier should be unique to the specific notification
 	 because otherwise the system will replace existing notifications of the
 	 same identifier. That's not a bad behavior. Just not one we want. */
-	/* Textual will format the identifier as such:
+	/* Glasstual will format the identifier as such:
 	 TXNotification[-<clientID>[-<channelId>]]-<eventTitle hash>-<eventDescription hash> */
 	if (notificationIdentifier == nil) {
 		notificationIdentifier = [NSString stringWithFormat:@"TXNotification-%@-%ld-%ld",

@@ -47,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init
 {
 	if ((self = [super init])) {
-		self.monitorQueue = dispatch_queue_create("com.vakesz.textual.reachability", DISPATCH_QUEUE_SERIAL);
+		self.monitorQueue = dispatch_queue_create("com.vakesz.glasstual.reachability", DISPATCH_QUEUE_SERIAL);
 		self.monitor = nw_path_monitor_create();
 	}
 

@@ -30,7 +30,7 @@
  *
  *********************************************************************** */
 
-#import "Textual.h"
+#import "Glasstual.h"
 
 #import "BlowfishEncryption.h"
 #import "BlowfishEncryptionKeyExchange.h"

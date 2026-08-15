@@ -1447,13 +1447,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)preferredInternetProtocolChanged:(id)sender
 {
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	/* Changing the property triggers a deprecation log to console
 	 which is just unnecessary output when each time we change it. */
 	if (self.config.connectionPrefersIPv4) {
 		self.config.connectionPrefersIPv4 = NO;
 	}
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 	self.config.addressType = [sender tag];
 }
@@ -1679,13 +1679,7 @@ TEXTUAL_IGNORE_DEPRECATION_END
 		[TDCAlert alertWithMessage:TXTLS(@"TDCServerPropertiesSheet[489-hG]")
 							 title:TXTLS(@"TDCServerPropertiesSheet[pmk-os]")
 					 defaultButton:TXTLS(@"Prompts[c7s-dq]")
-				   alternateButton:nil
-					   otherButton:TXTLS(@"TDCServerPropertiesSheet[3ju-lo]")
-				   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
-			if (buttonClicked == TDCAlertResponseOther) {
-				[TLOpenLink openWithString:@"https://help.codeux.com/textual/Using-CertFP.kb" inBackground:NO];
-			}
-		}];
+				   alternateButton:nil];
 
 		return;
 	}

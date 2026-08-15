@@ -19,7 +19,7 @@ pkgbuild \
 --ownership recommended \
 --sign "Developer ID Installer: Codeux Software, LLC (8482Q6EPL6)" \
 --quiet \
---identifier "com.codeux.app-extensions.textual-scripts-installer-${1}" \
+--identifier "com.codeux.app-extensions.glasstual-scripts-installer-${1}" \
 --version "1.0" \
 "${PACKAGES_DESTINATION}/STANDALONE/Scripts-${1}.pkg"
 

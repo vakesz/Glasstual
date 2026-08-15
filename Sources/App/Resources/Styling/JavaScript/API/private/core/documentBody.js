@@ -44,18 +44,18 @@
 /* ************************************************** */
 
 /* Loading screen */
-Textual.loadingScreenElement = function() /* PUBLIC */
+Glasstual.loadingScreenElement = function() /* PUBLIC */
 {
 	return document.getElementById("loadingScreen");
 };
 
-Textual.fadeOutLoadingScreen = function(bodyOp, topicOp) /* PUBLIC */
+Glasstual.fadeOutLoadingScreen = function(bodyOp, topicOp) /* PUBLIC */
 {
-	var documentBody = Textual.documentBodyElement();
+	var documentBody = Glasstual.documentBodyElement();
 
-	var topicBar = Textual.topicBarElement();
+	var topicBar = Glasstual.topicBarElement();
 
-	var loadingScreen = Textual.loadingScreenElement();
+	var loadingScreen = Glasstual.loadingScreenElement();
 
 	/* Modify the opacity values of the various elements */
 	loadingScreen.style.opacity = 0.00;
@@ -71,27 +71,27 @@ Textual.fadeOutLoadingScreen = function(bodyOp, topicOp) /* PUBLIC */
 	We will wait that amount of time before setting the overlay to hidden.
 	Setting it to hidden makes it not copiable after it is not visible. */
 	setTimeout(function() {
-		var loadingScreen = Textual.loadingScreenElement();
+		var loadingScreen = Glasstual.loadingScreenElement();
 
 		loadingScreen.style.display = "none";
 	}, 5000);
 };
 
 /* Topic bar */
-Textual._topicBarElementReference = null; /* PRIVATE */
+Glasstual._topicBarElementReference = null; /* PRIVATE */
 
-Textual.topicBarElement = function() /* PUBLIC */
+Glasstual.topicBarElement = function() /* PUBLIC */
 {
-	if (Textual._topicBarElementReference === null) {
-		Textual._topicBarElementReference = document.getElementById("topicBar");
+	if (Glasstual._topicBarElementReference === null) {
+		Glasstual._topicBarElementReference = document.getElementById("topicBar");
 	}
 
-	return Textual._topicBarElementReference;
+	return Glasstual._topicBarElementReference;
 };
 
-Textual.topicBarValue = function(asText) /* PUBLIC */
+Glasstual.topicBarValue = function(asText) /* PUBLIC */
 {
-	var topicBar = Textual.topicBarElement();
+	var topicBar = Glasstual.topicBarElement();
 
 	if (topicBar) {
 		if (typeof asText === 'undefined' || asText === true) {
@@ -104,14 +104,14 @@ Textual.topicBarValue = function(asText) /* PUBLIC */
 	return null;
 };
 
-Textual.setTopicBarValue = function(topicValue, topicValueHTML) /* PUBLIC */
+Glasstual.setTopicBarValue = function(topicValue, topicValueHTML) /* PUBLIC */
 {
-	var topicBar = Textual.topicBarElement();
+	var topicBar = Glasstual.topicBarElement();
 
 	if (topicBar) {
 		topicBar.innerHTML = topicValueHTML;
 
-		Textual.topicBarValueChanged(topicValue);
+		Glasstual.topicBarValueChanged(topicValue);
 
 		return true;
 	}
@@ -119,9 +119,9 @@ Textual.setTopicBarValue = function(topicValue, topicValueHTML) /* PUBLIC */
 	return false;
 };
 
-Textual.setTopicBarVisible = function(isVisible) /* PUBLIC */
+Glasstual.setTopicBarVisible = function(isVisible) /* PUBLIC */
 {
-	var topicBar = Textual.topicBarElement();
+	var topicBar = Glasstual.topicBarElement();
 
 	if (topicBar) {
 		if (isVisible) {
@@ -132,69 +132,69 @@ Textual.setTopicBarVisible = function(isVisible) /* PUBLIC */
 	}
 };
 
-Textual.topicBarDoubleClicked = function() /* PUBLIC */
+Glasstual.topicBarDoubleClicked = function() /* PUBLIC */
 {
 	appPrivate.topicBarDoubleClicked();
 };
 
 /* History indicator */
-_Textual.historyIndicatorAdd = function(templateHTML) /* PRIVATE */
+_Glasstual.historyIndicatorAdd = function(templateHTML) /* PRIVATE */
 {
-	_Textual.historyIndicatorRemove();
+	_Glasstual.historyIndicatorRemove();
 
 	MessageBuffer.bufferElementAppend(templateHTML);
 
-	Textual.historyIndicatorAddedToView();
+	Glasstual.historyIndicatorAddedToView();
 };
 
-_Textual.historyIndicatorRemove = function() /* PRIVATE */
+_Glasstual.historyIndicatorRemove = function() /* PRIVATE */
 {
 	var e = document.getElementById("mark");
 
 	if (e) {
 		e.remove();
 
-		Textual.historyIndicatorRemovedFromView();
+		Glasstual.historyIndicatorRemovedFromView();
 	}
 };
 
 /* Document body */
-Textual._documentBodyElementReference = null; /* PRIVATE */
+Glasstual._documentBodyElementReference = null; /* PRIVATE */
 
-Textual.documentBodyElement = function() /* PUBLIC */
+Glasstual.documentBodyElement = function() /* PUBLIC */
 {
-	if (Textual._documentBodyElementReference === null) {
-		Textual._documentBodyElementReference = document.getElementById("body");
+	if (Glasstual._documentBodyElementReference === null) {
+		Glasstual._documentBodyElementReference = document.getElementById("body");
 	}
 
-	return Textual._documentBodyElementReference;
+	return Glasstual._documentBodyElementReference;
 };
 
-Textual.documentHTML = function() /* PUBLIC */
+Glasstual.documentHTML = function() /* PUBLIC */
 {
 	return document.documentElement.innerHTML;
 };
 
 /* History */
-_Textual.documentBodyAppendHistoric = function(templateHTML, lineNumbers, isReload) /* PRIVATE */
+_Glasstual.documentBodyAppendHistoric = function(templateHTML, lineNumbers, isReload) /* PRIVATE */
 {
-	var atBottom = TextualScroller.isScrolledToBottom();
+	var atBottom = GlasstualScroller.isScrolledToBottom();
 
 	if (atBottom === false) {
-		TextualScroller.saveRestorationFirstDataPoint();
+		GlasstualScroller.saveRestorationFirstDataPoint();
 	}
 
 	MessageBuffer.bufferElementPrepend(templateHTML, lineNumbers);
 
 	if (atBottom === false) {
-		TextualScroller.saveRestorationSecondDataPoint();
+		GlasstualScroller.saveRestorationSecondDataPoint();
 
-		TextualScroller.restoreScrollPosition();
+		GlasstualScroller.restoreScrollPosition();
 	}
 };
 
 /* Text */
-Textual.changeTextSizeMultiplier = function(sizeMultiplier) /* PUBLIC */
+Glasstual.changeTextSizeMultiplier = function(sizeMultiplier) /* PUBLIC */
 {
 	if (sizeMultiplier === 1.0) {
 		document.body.style.fontSize = "";

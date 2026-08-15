@@ -5,7 +5,7 @@ int main(int argc, const char *argv[])
 {
 	@autoreleasepool {
 #ifndef DEBUG
-		if ([TXApplication checkForOtherCopiesOfTextualRunning] == NO) {
+		if ([TXApplication checkForOtherCopiesOfGlasstualRunning] == NO) {
 			exit(0);
 		}
 #endif

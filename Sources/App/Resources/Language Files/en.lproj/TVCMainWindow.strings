@@ -76,3 +76,17 @@
 "4yo-mk" = "Current Session";
 
 "vi3-23" = "(No Topic)";
+
+/* Toolbar & input bar accessibility */
+"tb-cs" = "Connection Security";
+"ib-ad" = "Add Server or Channel";
+"ib-mg" = "Manage Selection";
+"ib-ab" = "Address Book";
+
+/* Dynamic View/Window menu titles */
+"mnu-ssl" = "Show Server List";
+"mnu-hsl" = "Hide Server List";
+"mnu-sml" = "Show Member List";
+"mnu-hml" = "Hide Member List";
+"mnu-efs" = "Enter Full Screen";
+"mnu-xfs" = "Exit Full Screen";

@@ -80,7 +80,7 @@ _ICMTweetPrototype.prototype.didLoadMedia = function(mediaId, mediaElement)
 
 _ICMTweetPrototype.prototype.tweetRendered = function(event)
 {
-	TextualScroller.restoreScrolledToBottom();
+	GlasstualScroller.restoreScrolledToBottom();
 };
 
 var _ICMTweet = null;

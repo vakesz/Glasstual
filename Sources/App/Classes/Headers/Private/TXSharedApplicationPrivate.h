@@ -52,12 +52,12 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogControllerPrintingOperationQueue;
 @class TXWindowController;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 @class TLOEncryptionManager;
 #endif
 
 @interface TXSharedApplication ()
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 + (TLOEncryptionManager *)sharedEncryptionManager;
 #endif
 
@@ -75,7 +75,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)setGlobalMasterControllerClassReference:(TXMasterController *)masterController;
 @end
 
-TEXTUAL_EXTERN os_log_t ApplicationTerminationLogSubsystem(void);
+GLASSTUAL_EXTERN os_log_t ApplicationTerminationLogSubsystem(void);
 
 #define LogToConsoleTerminationProgress(_message, ...)	\
 	LogToConsoleDebugWithSubsystem(ApplicationTerminationLogSubsystem(), _message, ##__VA_ARGS__)	\

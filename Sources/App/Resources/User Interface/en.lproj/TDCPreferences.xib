@@ -57,7 +57,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <window title="Settings" allowsToolTipsWhenApplicationIsInactive="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" toolbarStyle="unified" id="4929" userLabel="Toolbar Window">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" fullSizeContentView="YES"/>
             <rect key="contentRect" x="367" y="318" width="960" height="640"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1055"/>
             <value key="minSize" type="size" width="860" height="560"/>
@@ -2803,7 +2803,7 @@ Messages are not saved between app launches unless “Restore scrollback from pr
                     <rect key="frame" x="98" y="68" width="474" height="48"/>
                     <textFieldCell key="cell" selectable="YES" sendsActionOnEndEditing="YES" alignment="left" id="pVP-3h-Oiy">
                         <font key="font" metaFont="system"/>
-                        <string key="title">The commands listed above are performed like any other: write a forward slash (/) followed by the name of the command plus any required arguments. Textual will perform the command and output the results accordingly.</string>
+                        <string key="title">The commands listed above are performed like any other: write a forward slash (/) followed by the name of the command plus any required arguments. Glasstual will perform the command and output the results accordingly.</string>
                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
@@ -3254,7 +3254,7 @@ Messages are not saved between app launches unless “Restore scrollback from pr
                             <rect key="frame" x="-2" y="0.0" width="466" height="75"/>
                             <textFieldCell key="cell" selectable="YES" sendsActionOnEndEditing="YES" id="juM-7X-6WQ">
                                 <font key="font" metaFont="cellTitle"/>
-                                <string key="title">Textual must periodically poll the channels that you are in to find out when the away status of each user changes. This preference defines the maximum number of users a channel can contain before the channel is skipped over.
+                                <string key="title">Glasstual must periodically poll the channels that you are in to find out when the away status of each user changes. This preference defines the maximum number of users a channel can contain before the channel is skipped over.
 
 A lower value is always better especially when in a large number of channels.</string>
                                 <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
@@ -4754,34 +4754,21 @@ You should therefore not rely solely on this preference.</string>
                         <action selector="offRecordMessagingOpenOfficialWebsite:" target="-2" id="Rln-xV-DfK"/>
                     </connections>
                 </button>
-                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="guD-BE-Zzc">
-                    <rect key="frame" x="121" y="144" width="281" height="32"/>
-                    <buttonCell key="cell" type="push" title="Learn more about how it works in Textual" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="8KP-Mk-tom">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <connections>
-                        <action selector="offRecordMessagingOpenHelpDocument:" target="-2" id="N6j-be-YVx"/>
-                    </connections>
-                </button>
             </subviews>
             <constraints>
                 <constraint firstItem="yGO-On-ZvN" firstAttribute="leading" secondItem="lYh-JG-BN5" secondAttribute="leading" constant="18" id="1dF-VB-Zu9"/>
                 <constraint firstItem="kwB-LQ-B19" firstAttribute="leading" secondItem="c2f-dF-OoT" secondAttribute="leading" constant="18" id="6mp-U9-7u9"/>
                 <constraint firstItem="kwB-LQ-B19" firstAttribute="top" secondItem="c2f-dF-OoT" secondAttribute="bottom" constant="8" symbolic="YES" id="7iI-bo-lEf"/>
-                <constraint firstItem="lVR-sX-Fvg" firstAttribute="top" secondItem="guD-BE-Zzc" secondAttribute="bottom" constant="18" id="BjB-po-Xmg"/>
+                <constraint firstItem="lVR-sX-Fvg" firstAttribute="top" secondItem="u4s-fg-bNo" secondAttribute="bottom" constant="18" id="BjB-po-Xmg"/>
                 <constraint firstItem="lYh-JG-BN5" firstAttribute="top" secondItem="ZYk-23-zvA" secondAttribute="top" constant="30" id="Bs8-VT-PLv"/>
                 <constraint firstItem="lVR-sX-Fvg" firstAttribute="leading" secondItem="ZYk-23-zvA" secondAttribute="leading" constant="40" id="EKG-ZG-0TJ"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="kwB-LQ-B19" secondAttribute="trailing" constant="20" id="Evq-cT-4c7"/>
                 <constraint firstItem="318-ie-koO" firstAttribute="top" secondItem="lVR-sX-Fvg" secondAttribute="bottom" constant="18" id="Eyl-rW-vkH"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="yGO-On-ZvN" secondAttribute="trailing" constant="20" id="IwK-MZ-nUH"/>
-                <constraint firstItem="guD-BE-Zzc" firstAttribute="leading" secondItem="u4s-fg-bNo" secondAttribute="leading" id="KGA-1N-c4N"/>
                 <constraint firstItem="u4s-fg-bNo" firstAttribute="trailing" relation="lessThanOrEqual" secondItem="yGO-On-ZvN" secondAttribute="trailing" id="LIn-vf-16E"/>
                 <constraint firstItem="c2f-dF-OoT" firstAttribute="top" secondItem="318-ie-koO" secondAttribute="bottom" constant="14" id="N3o-wf-4q0"/>
-                <constraint firstItem="guD-BE-Zzc" firstAttribute="top" secondItem="u4s-fg-bNo" secondAttribute="bottom" constant="10" id="PMx-JX-Bu0"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="318-ie-koO" secondAttribute="trailing" constant="20" id="QrJ-aH-ugh"/>
                 <constraint firstItem="lYh-JG-BN5" firstAttribute="leading" secondItem="ZYk-23-zvA" secondAttribute="leading" constant="110" id="Stq-SX-6sM"/>
-                <constraint firstItem="guD-BE-Zzc" firstAttribute="trailing" relation="lessThanOrEqual" secondItem="yGO-On-ZvN" secondAttribute="trailing" id="Z2a-8k-AL1"/>
                 <constraint firstAttribute="bottom" secondItem="kwB-LQ-B19" secondAttribute="bottom" constant="30" id="eeQ-Ja-LDM"/>
                 <constraint firstItem="318-ie-koO" firstAttribute="leading" secondItem="c2f-dF-OoT" secondAttribute="leading" id="gLD-YE-ihs"/>
                 <constraint firstItem="318-ie-koO" firstAttribute="leading" secondItem="ZYk-23-zvA" secondAttribute="leading" constant="110" id="iIb-sE-07M"/>
@@ -4846,16 +4833,6 @@ You should therefore not rely solely on this preference.</string>
                     </buttonCell>
                     <connections>
                         <binding destination="-2" name="value" keyPath="self.appNapEnabled" id="kVr-7F-VmC"/>
-                    </connections>
-                </button>
-                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="2Bh-Ce-CLv">
-                    <rect key="frame" x="175" y="337" width="122" height="18"/>
-                    <buttonCell key="cell" type="check" title="Enable WebKit2" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="W5w-EG-kiD">
-                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <connections>
-                        <binding destination="G2Q-fc-ddg" name="value" keyPath="values.UsesWebKit2WhenAvailable" id="Xds-VT-o1A"/>
                     </connections>
                 </button>
                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="adq-18-C3D">
@@ -5057,7 +5034,6 @@ You should therefore not rely solely on this preference.</string>
             <constraints>
                 <constraint firstAttribute="bottom" secondItem="V0L-wf-MX5" secondAttribute="bottom" constant="30" id="0Fr-aZ-e5g"/>
                 <constraint firstItem="1g9-Qk-YQN" firstAttribute="leading" secondItem="dAH-Sl-d77" secondAttribute="leading" constant="177" id="1CJ-7V-YNV"/>
-                <constraint firstItem="2Bh-Ce-CLv" firstAttribute="leading" secondItem="1g9-Qk-YQN" secondAttribute="leading" id="5rh-fw-QlF"/>
                 <constraint firstItem="wM2-5T-Kcv" firstAttribute="leading" secondItem="r5x-9F-a6i" secondAttribute="leading" id="6Dq-GT-HFz"/>
                 <constraint firstItem="V0L-wf-MX5" firstAttribute="top" secondItem="f8P-S1-YSA" secondAttribute="bottom" constant="30" id="6vT-lm-ST7"/>
                 <constraint firstItem="Xl2-g8-NiZ" firstAttribute="top" secondItem="p75-KN-Sms" secondAttribute="bottom" constant="14" id="7Ne-Xm-P3m"/>
@@ -5065,7 +5041,7 @@ You should therefore not rely solely on this preference.</string>
                 <constraint firstItem="Xl2-g8-NiZ" firstAttribute="leading" secondItem="p75-KN-Sms" secondAttribute="leading" id="8T5-Jf-1tN"/>
                 <constraint firstItem="r5x-9F-a6i" firstAttribute="top" secondItem="adq-18-C3D" secondAttribute="bottom" constant="14" id="FCc-GZ-gYS"/>
                 <constraint firstItem="1g9-Qk-YQN" firstAttribute="top" secondItem="eAs-xY-p50" secondAttribute="bottom" constant="20" id="HMb-sy-AN0"/>
-                <constraint firstItem="adq-18-C3D" firstAttribute="top" secondItem="2Bh-Ce-CLv" secondAttribute="bottom" constant="14" id="J1W-A9-0fe"/>
+                <constraint firstItem="adq-18-C3D" firstAttribute="top" secondItem="1g9-Qk-YQN" secondAttribute="bottom" constant="14" id="J1W-A9-0fe"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="1g9-Qk-YQN" secondAttribute="trailing" constant="20" id="Lb5-wb-qfE"/>
                 <constraint firstItem="p75-KN-Sms" firstAttribute="top" secondItem="wM2-5T-Kcv" secondAttribute="bottom" constant="14" id="N4f-uj-Iz9"/>
                 <constraint firstItem="f8P-S1-YSA" firstAttribute="top" secondItem="84h-O7-xuk" secondAttribute="bottom" constant="20" id="O4J-YF-RNM"/>
@@ -5073,11 +5049,9 @@ You should therefore not rely solely on this preference.</string>
                 <constraint firstItem="b9a-MV-ff4" firstAttribute="leading" secondItem="Xl2-g8-NiZ" secondAttribute="leading" id="U90-po-07Z"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="wM2-5T-Kcv" secondAttribute="trailing" constant="20" id="ZFf-wU-k9n"/>
                 <constraint firstItem="eAs-xY-p50" firstAttribute="leading" secondItem="dAH-Sl-d77" secondAttribute="leading" constant="180" id="aKK-Ts-ebc"/>
-                <constraint firstItem="2Bh-Ce-CLv" firstAttribute="top" secondItem="1g9-Qk-YQN" secondAttribute="bottom" constant="14" id="aLP-1I-qPp"/>
-                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="2Bh-Ce-CLv" secondAttribute="trailing" constant="20" id="aSY-hh-GGq"/>
                 <constraint firstItem="r5x-9F-a6i" firstAttribute="leading" secondItem="adq-18-C3D" secondAttribute="leading" id="aqP-MD-gGa"/>
                 <constraint firstItem="V0L-wf-MX5" firstAttribute="centerX" secondItem="dAH-Sl-d77" secondAttribute="centerX" id="b3i-fV-DOR"/>
-                <constraint firstItem="adq-18-C3D" firstAttribute="leading" secondItem="2Bh-Ce-CLv" secondAttribute="leading" id="bde-YN-Yv0"/>
+                <constraint firstItem="adq-18-C3D" firstAttribute="leading" secondItem="1g9-Qk-YQN" secondAttribute="leading" id="bde-YN-Yv0"/>
                 <constraint firstItem="p75-KN-Sms" firstAttribute="leading" secondItem="wM2-5T-Kcv" secondAttribute="leading" id="e4k-oI-brN"/>
                 <constraint firstItem="b9a-MV-ff4" firstAttribute="top" secondItem="Xl2-g8-NiZ" secondAttribute="bottom" constant="14" id="gmW-wv-0i4"/>
                 <constraint firstItem="84h-O7-xuk" firstAttribute="top" secondItem="b9a-MV-ff4" secondAttribute="bottom" constant="20" id="hSG-4J-THF"/>

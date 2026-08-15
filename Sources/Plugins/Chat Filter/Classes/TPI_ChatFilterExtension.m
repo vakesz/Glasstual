@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define _filterTableDragToken			@"filterTableDragToken"
 
-#define _filterListUserDefaultsKey		@"Textual Chat Filter Extension -> Filters"
+#define _filterListUserDefaultsKey		@"Glasstual Chat Filter Extension -> Filters"
 
 @interface TPI_ChatFilterExtension () <NSTableViewDataSource, NSTableViewDelegate>
 @property (nonatomic, strong) IBOutlet NSView *preferencesPaneView;

@@ -136,7 +136,15 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 	LogToConsoleInfo("Opening database at path: %{public}@", self.databasePath.standardizedTildePath);
 
-	BOOL success = [self _createBaseModel];
+	/* NSXPCConnection can service messages concurrently, so a fetch sent
+	 immediately after this one can land while the stack is still being built.
+	 -contextForView: takes this same lock, so holding it here makes such a
+	 fetch wait for the stack rather than observe it half-constructed. */
+	BOOL success = NO;
+
+	@synchronized(self.contextObjects) {
+		success = [self _createBaseModel];
+	}
 
 	if (completionBlock) {
 		completionBlock(success);
@@ -319,6 +327,12 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 	HLSHistoricLogViewContext *viewContext = [self contextForView:viewId];
 
+	if (viewContext == nil) {
+		completionBlock(@[]);
+
+		return;
+	}
+
 	[viewContext performBlockAndWait:^{
 		NSUInteger firstEntryId = [self _identifierInViewContext:viewContext
 											 forUniqueIdentifier:uniqueId
@@ -375,6 +389,12 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	NSParameterAssert(uniqueIdBefore != nil);
 
 	HLSHistoricLogViewContext *viewContext = [self contextForView:viewId];
+
+	if (viewContext == nil) {
+		completionBlock(@[]);
+
+		return;
+	}
 
 	[viewContext performBlockAndWait:^{
 		NSUInteger firstEntryId = [self _identifierInViewContext:viewContext
@@ -440,6 +460,12 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	NSParameterAssert(fetchLimit > 0);
 
 	HLSHistoricLogViewContext *viewContext = [self contextForView:viewId];
+
+	if (viewContext == nil) {
+		completionBlock(@[]);
+
+		return;
+	}
 
 	[viewContext performBlockAndWait:^{
 		/* Unique identifiers are strings. We find what is the the entry identifier
@@ -526,6 +552,12 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	NSParameterAssert(completionBlock != nil);
 
 	HLSHistoricLogViewContext *viewContext = [self contextForView:viewId];
+
+	if (viewContext == nil) {
+		completionBlock(@[]);
+
+		return;
+	}
 
 	[viewContext performBlockAndWait:^{
 		NSFetchRequest *fetchRequest = [self _fetchRequestForView:viewContext.hls_viewId
@@ -950,7 +982,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 #pragma mark -
 #pragma mark Identifier Cache Management
 
-- (HLSHistoricLogViewContext *)contextForView:(NSString *)viewId
+- (nullable HLSHistoricLogViewContext *)contextForView:(NSString *)viewId
 {
 	NSParameterAssert(viewId != nil);
 
@@ -963,6 +995,17 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 		}
 
 		NSManagedObjectContext *parentObjectContext = self.managedObjectContext;
+
+		/* -setParentContext: raises NSInvalidArgumentException ("Parent
+		 NSManagedObjectContext must not be nil.") when the stack is absent,
+		 which terminates this service and takes the client's history with it.
+		 The stack is absent when the database has not been opened yet, or
+		 when opening it failed. Refuse to vend a context instead. */
+		if (parentObjectContext == nil) {
+			LogToConsoleError("Requested context for %{public}@ before the database was opened", viewId);
+
+			return nil;
+		}
 
 		viewContext = [[HLSHistoricLogViewContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
 

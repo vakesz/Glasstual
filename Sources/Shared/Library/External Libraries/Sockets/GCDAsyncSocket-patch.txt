@@ -2,7 +2,7 @@ commit c0e472e058df72293d9a313dc1b0d8437f3af4ae
 Author: Michael Morris <michael@codeux.com>
 Date:   Tue Jul 5 21:21:13 2016 -0400
 
-    Patches for Textual
+    Patches for Glasstual
 
 diff --git a/Source/GCD/GCDAsyncSocket.m b/Source/GCD/GCDAsyncSocket.m
 old mode 100644

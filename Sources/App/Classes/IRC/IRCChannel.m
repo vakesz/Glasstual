@@ -42,7 +42,6 @@
 #import "TXMasterController.h"
 #import "TXWindowControllerPrivate.h"
 #import "TVCMainWindowPrivate.h"
-#import "TVCMemberListAppearance.h"
 #import "TVCMemberListPrivate.h"
 #import "TVCMemberListCellPrivate.h"
 #import "TVCLogControllerPrivate.h"
@@ -319,7 +318,7 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 	}
 }
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (OTRKitMessageState)encryptionState
 {
 	if ([TPCPreferences textEncryptionIsEnabled] == NO) {
@@ -456,7 +455,7 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 
 - (void)deactivate
 {
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	if (self.isPrivateMessage) {
 		[self closeOpenEncryptionSessions];
 	}

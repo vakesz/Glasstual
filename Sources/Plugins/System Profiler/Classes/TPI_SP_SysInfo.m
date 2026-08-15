@@ -119,9 +119,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSUInteger dateFormat = (NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond);
 
 	NSString *systemUptime = TXHumanReadableTimeInterval([TPI_SP_SysInfo systemUptime], NO, dateFormat);
-	NSString *textualUptime = TXHumanReadableTimeInterval([TPI_SP_SysInfo applicationUptime], NO, dateFormat);
+	NSString *glasstualUptime = TXHumanReadableTimeInterval([TPI_SP_SysInfo applicationUptime], NO, dateFormat);
 
-	return TPILocalizedString(@"BasicLanguage[v03-jx]", systemUptime, textualUptime);
+	return TPILocalizedString(@"BasicLanguage[v03-jx]", systemUptime, glasstualUptime);
 }
 
 + (NSString *)applicationBandwidthStatistics
@@ -150,10 +150,10 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	uint64_t textualMemoryUse = [TPI_SP_SysInfo applicationMemoryInformation];
+	uint64_t glasstualMemoryUse = [TPI_SP_SysInfo applicationMemoryInformation];
 
 	return TPILocalizedString(@"BasicLanguage[scn-br]",
-		[TPI_SP_SysInfo formattedDiskSize:textualMemoryUse],
+		[TPI_SP_SysInfo formattedDiskSize:glasstualMemoryUse],
 		 TXFormattedNumber(totalScrollbackSize));
 }
 
@@ -332,11 +332,11 @@ NS_ASSUME_NONNULL_BEGIN
 			modelTitle = modelsDictionary[modelIdentifier];
 		}
 
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 		if (modelTitle == nil) {
 			modelTitle = [XRSystemInformation systemModelName];
 		}
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 		[resultString appendString:
 		 TPILocalizedString(@"BasicLanguage[7g5-pf]", modelTitle)];

@@ -94,7 +94,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (BOOL)sandboxEnabled
 {
-#if TEXTUAL_BUILT_INSIDE_SANDBOX == 1
+#if GLASSTUAL_BUILT_INSIDE_SANDBOX == 1
 	return YES;
 #else
 	return NO;
@@ -150,7 +150,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSTimeInterval)applicationBirthday
 {
 	/* The reference date is the date & time of the first commit to the
-	 Textual repo. Textual existed before then, of course, but the date
+	 Glasstual repo. Glasstual existed before then, of course, but the date
 	 will remain as the official reference date for its birthday. */
 	/* The date decodes to July 23, 2010 03:53:00 AM */
 

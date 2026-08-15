@@ -371,10 +371,9 @@ static NSUInteger _numberOfViews = 0;
 		}
 
 		if (result) {
-			if ([result isKindOfClass:[NSNull class]] ||
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
-				[result isKindOfClass:[WebUndefined class]])
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
+			/* WKWebView reports JavaScript "undefined" as a nil result and
+			 "null" as NSNull; the legacy WebUndefined never appears. */
+			if ([result isKindOfClass:[NSNull class]])
 			{
 				if (completionHandler) {
 					completionHandler(nil);

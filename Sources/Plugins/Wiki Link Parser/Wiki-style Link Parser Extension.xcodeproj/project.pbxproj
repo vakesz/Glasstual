@@ -17,22 +17,22 @@
 		4C36AACA20F27B2E007CA939 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/BasicLanguage.strings; sourceTree = "<group>"; };
 		4C36AACD20F27B85007CA939 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TPIWikiStyleLinkParser.xib; sourceTree = "<group>"; };
 		4C46A0E420EC6DD900094EA4 /* Inherited.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Inherited.entitlements; sourceTree = "<group>"; };
-		4C46A0E820EC6DD900094EA4 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
-		4C46A0E920EC6DD900094EA4 /* Textual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Textual Extensions.xcconfig"; sourceTree = "<group>"; };
+		4C46A0E820EC6DD900094EA4 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
+		4C46A0E920EC6DD900094EA4 /* Glasstual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Glasstual Extensions.xcconfig"; sourceTree = "<group>"; };
 		4C46A0ED20EC6DD900094EA4 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
-		4C46A0F020EC6DD900094EA4 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
-		4C46A0F120EC6DD900094EA4 /* Textual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Textual Extensions.xcconfig"; sourceTree = "<group>"; };
+		4C46A0F020EC6DD900094EA4 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
+		4C46A0F120EC6DD900094EA4 /* Glasstual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Glasstual Extensions.xcconfig"; sourceTree = "<group>"; };
 		4C46A0F520EC6DD900094EA4 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
-		4C46A0F920EC6DD900094EA4 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
+		4C46A0F920EC6DD900094EA4 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
 		4C46A0FA20EC6DD900094EA4 /* Preserve Symbols.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Preserve Symbols.xcconfig"; sourceTree = "<group>"; };
-		4C46A0FB20EC6DD900094EA4 /* Textual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Textual Extensions.xcconfig"; sourceTree = "<group>"; };
+		4C46A0FB20EC6DD900094EA4 /* Glasstual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Glasstual Extensions.xcconfig"; sourceTree = "<group>"; };
 		4C46A0FD20EC6DD900094EA4 /* Foundation.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Foundation.xcconfig; sourceTree = "<group>"; };
 		4C46A10020EC6DD900094EA4 /* Foundation Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Foundation Debug.xcconfig"; sourceTree = "<group>"; };
-		4C46A10420EC6DD900094EA4 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
-		4C46A10520EC6DD900094EA4 /* Textual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Textual Extensions.xcconfig"; sourceTree = "<group>"; };
+		4C46A10420EC6DD900094EA4 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
+		4C46A10520EC6DD900094EA4 /* Glasstual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Glasstual Extensions.xcconfig"; sourceTree = "<group>"; };
 		4C46A10920EC6DD900094EA4 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
-		4C46A10C20EC6DD900094EA4 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
-		4C46A10D20EC6DD900094EA4 /* Textual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Textual Extensions.xcconfig"; sourceTree = "<group>"; };
+		4C46A10C20EC6DD900094EA4 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
+		4C46A10D20EC6DD900094EA4 /* Glasstual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Glasstual Extensions.xcconfig"; sourceTree = "<group>"; };
 		4C46A11120EC6DD900094EA4 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
 		4C46A13B20EC6E3C00094EA4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4C46A14520EC6E4D00094EA4 /* TPIWikiStyleLinkParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TPIWikiStyleLinkParser.m; sourceTree = "<group>"; };
@@ -125,8 +125,8 @@
 			isa = PBXGroup;
 			children = (
 				4C46A0ED20EC6DD900094EA4 /* Enabled Features.xcconfig */,
-				4C46A0E920EC6DD900094EA4 /* Textual Extensions.xcconfig */,
-				4C46A0E820EC6DD900094EA4 /* Textual.xcconfig */,
+				4C46A0E920EC6DD900094EA4 /* Glasstual Extensions.xcconfig */,
+				4C46A0E820EC6DD900094EA4 /* Glasstual.xcconfig */,
 			);
 			path = "Standard Release";
 			sourceTree = "<group>";
@@ -135,8 +135,8 @@
 			isa = PBXGroup;
 			children = (
 				4C46A0F520EC6DD900094EA4 /* Enabled Features.xcconfig */,
-				4C46A0F120EC6DD900094EA4 /* Textual Extensions.xcconfig */,
-				4C46A0F020EC6DD900094EA4 /* Textual.xcconfig */,
+				4C46A0F120EC6DD900094EA4 /* Glasstual Extensions.xcconfig */,
+				4C46A0F020EC6DD900094EA4 /* Glasstual.xcconfig */,
 			);
 			path = "App Store Release";
 			sourceTree = "<group>";
@@ -147,8 +147,8 @@
 				4C46A10020EC6DD900094EA4 /* Foundation Debug.xcconfig */,
 				4C46A0FD20EC6DD900094EA4 /* Foundation.xcconfig */,
 				4C46A0FA20EC6DD900094EA4 /* Preserve Symbols.xcconfig */,
-				4C46A0FB20EC6DD900094EA4 /* Textual Extensions.xcconfig */,
-				4C46A0F920EC6DD900094EA4 /* Textual.xcconfig */,
+				4C46A0FB20EC6DD900094EA4 /* Glasstual Extensions.xcconfig */,
+				4C46A0F920EC6DD900094EA4 /* Glasstual.xcconfig */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -157,8 +157,8 @@
 			isa = PBXGroup;
 			children = (
 				4C46A10920EC6DD900094EA4 /* Enabled Features.xcconfig */,
-				4C46A10520EC6DD900094EA4 /* Textual Extensions.xcconfig */,
-				4C46A10420EC6DD900094EA4 /* Textual.xcconfig */,
+				4C46A10520EC6DD900094EA4 /* Glasstual Extensions.xcconfig */,
+				4C46A10420EC6DD900094EA4 /* Glasstual.xcconfig */,
 			);
 			path = "Standard Release Sandboxed";
 			sourceTree = "<group>";
@@ -167,8 +167,8 @@
 			isa = PBXGroup;
 			children = (
 				4C46A11120EC6DD900094EA4 /* Enabled Features.xcconfig */,
-				4C46A10D20EC6DD900094EA4 /* Textual Extensions.xcconfig */,
-				4C46A10C20EC6DD900094EA4 /* Textual.xcconfig */,
+				4C46A10D20EC6DD900094EA4 /* Glasstual Extensions.xcconfig */,
+				4C46A10C20EC6DD900094EA4 /* Glasstual.xcconfig */,
 			);
 			path = Debug;
 			sourceTree = "<group>";
@@ -305,7 +305,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.textual-WikiStyleLinkParser";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.glasstual-WikiStyleLinkParser";
 				PRODUCT_NAME = WikiStyleLinkParser;
 			};
 			name = Debug;
@@ -314,28 +314,28 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.textual-WikiStyleLinkParser";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.glasstual-WikiStyleLinkParser";
 				PRODUCT_NAME = WikiStyleLinkParser;
 			};
 			name = Release;
 		};
 		1DEB911F08733D790010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4C46A10D20EC6DD900094EA4 /* Textual Extensions.xcconfig */;
+			baseConfigurationReference = 4C46A10D20EC6DD900094EA4 /* Glasstual Extensions.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		1DEB912008733D790010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4C46A0E920EC6DD900094EA4 /* Textual Extensions.xcconfig */;
+			baseConfigurationReference = 4C46A0E920EC6DD900094EA4 /* Glasstual Extensions.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
 		};
 		4C9580241FA41FA800F18BC8 /* Release (App Store) */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4C46A0F120EC6DD900094EA4 /* Textual Extensions.xcconfig */;
+			baseConfigurationReference = 4C46A0F120EC6DD900094EA4 /* Glasstual Extensions.xcconfig */;
 			buildSettings = {
 			};
 			name = "Release (App Store)";
@@ -344,7 +344,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.textual-WikiStyleLinkParser";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.glasstual-WikiStyleLinkParser";
 				PRODUCT_NAME = WikiStyleLinkParser;
 			};
 			name = "Release (App Store)";

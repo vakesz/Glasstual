@@ -6,8 +6,6 @@
 	<string>public.app-category.social-networking</string>
 	<key>LSRequiresNativeExecution</key>
 	<false/>
-	<key>CFBundleSignature</key>
-	<string>TXTL</string>
 	<key>CFBundleDisplayName</key>
 	<string>Glasstual</string>
 	<key>CFBundleIdentifier</key>
@@ -21,11 +19,11 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2010 - 2023 Codeux Software, LLC. All rights reserved.</string>
+	<string>Glasstual is an independent fork of Textual, continuing it on macOS 26 and later. Copyright © 2010 - 2026 Codeux Software, LLC and respective contributors.</string>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
-	<key>CFBundleIconFile</key>
-	<string>applicationIcon.icns</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>NSMainNibFile</key>
@@ -35,7 +33,7 @@
 	<key>NSPrincipalClass</key>
 	<string>TXApplication</string>
 	<key>NSContactsUsageDescription</key>
-	<string>Textual accesses contacts to automatically populate certain forms with your name and/or e-mail address. Access to this information is not required.</string>
+	<string>${PRODUCT_NAME} accesses contacts to automatically populate certain forms with your name and/or e-mail address. Access to this information is not required.</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -51,11 +49,7 @@
 				<string>scpt</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>Textual IRC Client Script</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>****</string>
-			</array>
+			<string>Glasstual IRC Client Script</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>LSHandlerRank</key>
@@ -71,7 +65,7 @@
 				<string>bundle</string>
 			</array>
 			<key>CFBundleTypeName</key>
-			<string>Textual IRC Client Extension</string>
+			<string>Glasstual IRC Client Extension</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
@@ -87,30 +81,26 @@
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
-			<key>CFBundleURLIconFile</key>
-			<string>application</string>
 			<key>CFBundleURLName</key>
 			<string>Internet Relay Chat</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>irc</string>
 				<string>ircs</string>
-				<string>textual</string>
+				<string>glasstual</string>
 			</array>
 		</dict>
 	</array>
 	<key>SUAllowsAutomaticUpdates</key>
 	<true/>
 	<key>SUBundleName</key>
-	<string>Textual</string>
+	<string>${PRODUCT_NAME}</string>
 	<key>SUEnableDownloaderService</key>
 	<false/>
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
 	<key>SUEnableSystemProfiling</key>
 	<false/>
-	<key>SUFeedURL</key>
-	<string>https://updates.textualapp.com/sparkle/feeds/v7/feed-one-merged.xml</string>
 	<key>SUScheduledCheckInterval</key>
 	<string>345600</string>
 </dict>

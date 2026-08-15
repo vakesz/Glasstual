@@ -304,9 +304,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSString *)secretKeyFromKeychain
 {
-	NSString *secretKeyServiceName = [NSString stringWithFormat:@"textual.cjoinkey.%@", self.uniqueIdentifier];
+	NSString *secretKeyServiceName = [NSString stringWithFormat:@"glasstual.cjoinkey.%@", self.uniqueIdentifier];
 
-	NSString *kcPassword = [XRKeychain getPasswordFromKeychainItem:@"Textual (Channel JOIN Key)"
+	NSString *kcPassword = [XRKeychain getPasswordFromKeychainItem:@"Glasstual (Channel JOIN Key)"
 													  withItemKind:@"application password"
 													   forUsername:nil
 													   serviceName:secretKeyServiceName];
@@ -320,9 +320,9 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	NSString *secretKeyServiceName = [NSString stringWithFormat:@"textual.cjoinkey.%@", self.uniqueIdentifier];
+	NSString *secretKeyServiceName = [NSString stringWithFormat:@"glasstual.cjoinkey.%@", self.uniqueIdentifier];
 
-	[XRKeychain modifyOrAddKeychainItem:@"Textual (Channel JOIN Key)"
+	[XRKeychain modifyOrAddKeychainItem:@"Glasstual (Channel JOIN Key)"
 						   withItemKind:@"application password"
 							forUsername:nil
 						withNewPassword:self->_secretKey
@@ -333,9 +333,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)destroySecretKeyKeychainItem
 {
-	NSString *secretKeyServiceName = [NSString stringWithFormat:@"textual.cjoinkey.%@", self.uniqueIdentifier];
+	NSString *secretKeyServiceName = [NSString stringWithFormat:@"glasstual.cjoinkey.%@", self.uniqueIdentifier];
 
-	[XRKeychain deleteKeychainItem:@"Textual (Channel JOIN Key)"
+	[XRKeychain deleteKeychainItem:@"Glasstual (Channel JOIN Key)"
 					  withItemKind:@"application password"
 					   forUsername:nil
 					   serviceName:secretKeyServiceName];

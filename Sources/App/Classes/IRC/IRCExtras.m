@@ -56,10 +56,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation IRCExtras
 
-+ (void)performSpecialActionForTextualScheme:(NSString *)action source:(NSString *)sourceLocation
++ (void)performSpecialActionForGlasstualScheme:(NSString *)action source:(NSString *)sourceLocation
 {
 /*
-	Syntax: textual://<token>
+	Syntax: glasstual://<token>
 
 	Reserved tokens:
 
@@ -71,10 +71,8 @@ NS_ASSUME_NONNULL_BEGIN
 	custom-styles-folder				— Open the custom style storage location folder
 	diagnostic-reports-folder			— System diagnostic reports folder
 	goto 								— Navigate to an item
-	knowledge-base						— Open the homepage of our knowledge base
-	newsletter							— Open the subscription page for the newsletter
-	support-channel						— Connect to the #textual channel
-	testing-channel						— Connect to the #textual-testing channel
+	support-channel						— Connect to the #glasstual channel
+	testing-channel						— Connect to the #glasstual-testing channel
 	unsupervised-script-folder			— Open the custom scripts storage location folder
 	unsupervised-scripts-folder			— Open the custom scripts storage location folder
 */
@@ -113,21 +111,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 		[menuController() navigateToTreeItemAtURL:url];
 	}
-	else if ([action isEqualToString:@"knowledge-base"])
-	{
-		[TLOpenLink openWithString:@"https://help.codeux.com/textual/" inBackground:NO];
-	}
-	else if ([action isEqualToString:@"newsletter"])
-	{
-		[TLOpenLink openWithString:@"https://www.codeux.com/textual/newsletter/" inBackground:NO];
-	}
 	else if ([action isEqualToString:@"support-channel"])
 	{
-		[menuController() connectToTextualHelpChannel:nil];
+		[menuController() connectToGlasstualHelpChannel:nil];
 	}
 	else if ([action isEqualToString:@"testing-channel"])
 	{
-		[menuController() connectToTextualTestingChannel:nil];
+		[menuController() connectToGlasstualTestingChannel:nil];
 	}
 }
 
@@ -182,8 +172,8 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	if ([addressScheme isEqualToString:@"textual"]) {
-		[self performSpecialActionForTextualScheme:serverAddress source:locationValue];
+	if ([addressScheme isEqualToString:@"glasstual"]) {
+		[self performSpecialActionForGlasstualScheme:serverAddress source:locationValue];
 
 		return;
 	}

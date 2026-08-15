@@ -63,16 +63,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSAttributedString *placeholderAttributedString;
 @property (nonatomic, weak) IBOutlet NSLayoutConstraint *textViewHeightConstraint;
 @property (nonatomic, weak) IBOutlet NSLayoutConstraint *windowContentViewMinimumHeight;
-@property (nonatomic, weak) IBOutlet TVCMainWindowTextViewBackground *backgroundView;
 @property (nonatomic, weak) IBOutlet TVCMainWindowTextViewContentView *contentView;
 @property (nonatomic, weak) IBOutlet TVCMainWindowSegmentedController *segmentedController;
 @property (nonatomic, weak) IBOutlet TVCMainWindowSegmentedControllerCell *segmentedControllerCell;
 @property (nonatomic, strong) TVCMainWindowTextViewAppearance *userInterfaceObjects;
 @property (readonly) NSArray<NSString *> *defaultSpellingIgnores;
-@end
-
-@interface TVCMainWindowTextViewBackground ()
-@property (nonatomic, unsafe_unretained) IBOutlet TVCMainWindowTextView *textView;
 @end
 
 @interface TVCMainWindowTextViewContentView ()
@@ -90,6 +85,11 @@ NS_ASSUME_NONNULL_BEGIN
 	[super awakeFromNib];
 
 	self.backgroundColor = [NSColor clearColor];
+
+	/* The nib leaves the scroll view drawing its background, which paints
+	 controlBackgroundColor (white in a light appearance) inside the glass the
+	 input bar is hosted in. */
+	self.enclosingScrollView.drawsBackground = NO;
 
 	[self updateTextDirection];
 }
@@ -117,8 +117,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)updateVibrancyWithAppearance:(TVCMainWindowTextViewAppearance *)appearance
 {
 	NSParameterAssert(appearance != nil);
-
-	self.backgroundView.needsDisplay = YES;
 
 	self.contentView.needsDisplay = YES;
 }
@@ -353,6 +351,16 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	TVCMainWindowTextViewAppearance *appearance = self.userInterfaceObjects;
 
+	/* Without an appearance the border padding reads as zero, which sizes the
+	 content view to the bare line height. That is smaller than the insets the
+	 nib places inside it, so the resulting layout is unsatisfiable and AppKit
+	 spends startup breaking constraints. The nib's own height is correct until
+	 the appearance arrives, and -updateTextBoxCachedPreferredFontSize
+	 recalculates the size once it does. */
+	if (appearance == nil) {
+		return;
+	}
+
 	NSWindow *window = self.window;
 
 	NSRect windowFrame = window.frame;
@@ -484,184 +492,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Background Drawing
 
-@implementation TVCMainWindowTextViewBackground
-
-- (void)drawControllerForWithAppearance:(TVCMainWindowTextViewAppearance *)appearance
-{
-	NSParameterAssert(appearance != nil);
-
-	if (appearance.isDarkAppearance == NO) {
-		[self drawLightControllerForWithAppearance:appearance];
-	} else {
-		[self drawDarkControllerForWithAppearance:appearance];
-	}
-}
-
-- (void)drawDarkControllerForWithAppearance:(TVCMainWindowTextViewAppearance *)appearance
-{
-	NSParameterAssert(appearance != nil);
-
-	BOOL isWindowActive = self.mainWindow.activeForDrawing;
-
-	NSRect cellBounds = self.frame;
-
-	NSRect controlFrame = NSMakeRect(0.0, 1.0,   cellBounds.size.width,
-												(cellBounds.size.height - 2.0));
-
-	/* Inner background color */
-	NSColor *backgroundColor = nil;
-
-	if (isWindowActive) {
-		backgroundColor = appearance.textViewBackgroundColorActiveWindow;
-	} else {
-		backgroundColor = appearance.textViewBackgroundColorInactiveWindow;
-	} // isWindowActive
-
-	/* Shadow colors */
-	NSShadow *outsideShadow = [NSShadow new];
-
-	outsideShadow.shadowBlurRadius = 0.0;
-	outsideShadow.shadowOffset = NSMakeSize(0.0, (-1.0));
-
-	if (isWindowActive) {
-		outsideShadow.shadowColor = appearance.textViewOutsidePrimaryShadowColorActiveWindow;
-	} else {
-		outsideShadow.shadowColor = appearance.textViewOutsidePrimaryShadowColorInactiveWindow;
-	} // isWindowActive
-
-	/* Rectangle drawing */
-	NSBezierPath *rectanglePath = [NSBezierPath bezierPathWithRoundedRect:controlFrame xRadius:3.0 yRadius:3.0];
-
-	[NSGraphicsContext saveGraphicsState];
-
-	[outsideShadow set];
-
-	[backgroundColor setFill];
-
-	[rectanglePath fill];
-
-	[NSGraphicsContext restoreGraphicsState];
-}
-
-- (void)drawLightControllerForWithAppearance:(TVCMainWindowTextViewAppearance *)appearance
-{
-	NSParameterAssert(appearance != nil);
-
-	/* To be honest, I don't remember what any of this does. */
-
-	BOOL isWindowActive = self.mainWindow.activeForDrawing;
-
-	NSRect cellBounds = self.frame;
-
-	NSRect controlFrame = NSMakeRect(0.0, 1.0,   cellBounds.size.width,
-												(cellBounds.size.height - 2.0));
-
-	CGContextRef context = RZGraphicsCurrentContext().CGContext;
-
-	/* Inner gradient color */
-	NSGradient *insideGradient = nil;
-
-	if (isWindowActive) {
-		insideGradient = appearance.textViewInsideGradientActiveWindow;
-	} else {
-		insideGradient = appearance.textViewInsideGradientInactiveWindow;
-	} // isWindowActive
-
-	/* Inside shadow */
-	NSShadow *insideShadow = [NSShadow new];
-
-	insideShadow.shadowBlurRadius = 0.0;
-	insideShadow.shadowOffset = NSMakeSize(0.0, (-1.0));
-
-	NSColor *insideShadowColor = nil;
-
-	if (isWindowActive) {
-		insideShadowColor = appearance.textViewInsideShadowColorActiveWindow;
-	} else {
-		insideShadowColor = appearance.textViewInsideShadowColorInactiveWindow;
-	}
-
-	insideShadow.shadowColor = insideShadowColor;
-
-	/* Outside shadow */
-	NSShadow *outsideShadow = [NSShadow new];
-
-	if (appearance.isHighResolutionAppearance == NO) {
-		outsideShadow.shadowBlurRadius = 0.0;
-		outsideShadow.shadowOffset = NSMakeSize(0.0, (-1.0));
-	} else {
-		outsideShadow.shadowBlurRadius = 0.0;
-		outsideShadow.shadowOffset = NSMakeSize(0.0, (-0.5));
-	} // high resolution
-
-	if (isWindowActive) {
-		outsideShadow.shadowColor = appearance.textViewOutsidePrimaryShadowColorActiveWindow;
-	} else {
-		outsideShadow.shadowColor = appearance.textViewOutsidePrimaryShadowColorInactiveWindow;
-	} // isWindowActive
-
-	/* Rectangle drawing */
-	NSBezierPath *rectanglePath = [NSBezierPath bezierPathWithRoundedRect:controlFrame xRadius:3.0 yRadius:3.0];
-
-	[outsideShadow set];
-
-	CGContextBeginTransparencyLayer(context, NULL);
-
-	[insideGradient drawInBezierPath:rectanglePath angle:(-90)];
-
-	CGContextEndTransparencyLayer(context);
-
-	/* Prepare drawing for inside shadow */
-	CGContextSetShadowWithColor(context, CGSizeZero, 0, NULL);
-
-	CGContextSetAlpha(context, insideShadowColor.alphaComponent);
-
-	CGContextBeginTransparencyLayer(context, NULL);
-
-	{
-		/* Inside shadow drawing */
-		[insideShadow set];
-
-		CGContextSetBlendMode(context, kCGBlendModeSourceOut);
-
-		CGContextBeginTransparencyLayer(context, NULL);
-
-		/* Fill shadow */
-		[insideShadowColor setFill];
-
-		[rectanglePath fill];
-
-		/* Complete drawing */
-		CGContextEndTransparencyLayer(context);
-	}
-
-	CGContextEndTransparencyLayer(context);
-
-	/* On retina, we fake a second shadow under the bottommost one */
-	if (appearance.isHighResolutionAppearance) {
-		NSColor *controlColor = nil;
-
-		if (isWindowActive) {
-			controlColor = appearance.textViewOutsideSecondaryShadowColorActiveWindow;
-		} else {
-			controlColor = appearance.textViewOutsideSecondaryShadowColorInactiveWindow;
-		} // isWindowActive
-
-		[controlColor setStroke];
-
-		NSPoint linePoint1 = NSMakePoint(2.0, 0.0);
-		NSPoint linePoint2 = NSMakePoint((cellBounds.size.width - 2.0), 0.0);
-
-		[NSBezierPath strokeLineFromPoint:linePoint1 toPoint:linePoint2];
-	} // high resolution
-}
-
-- (void)drawRect:(NSRect)dirtyRect
-{
-}
-
-@end
-
 #pragma mark -
 #pragma mark Text Field Background Vibrant View
 
@@ -678,7 +508,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)isOpaque
 {
-	return YES;
+	/* -drawRect: paints nothing. Claiming to be opaque tells AppKit it need
+	 not draw what sits behind this view, leaving the window's material
+	 covered by an undrawn (white) rectangle. */
+	return NO;
 }
 
 @end

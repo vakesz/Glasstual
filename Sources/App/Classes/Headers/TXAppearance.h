@@ -39,8 +39,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, TXAppearanceType)
 {
-	TXAppearanceTypeBigSurLight,
-	TXAppearanceTypeBigSurDark,
+	TXAppearanceTypeLight,
+	TXAppearanceTypeDark,
 };
 
 /* TXAppKitAppearanceTarget defines which items the NSAppearance
@@ -85,8 +85,8 @@ typedef NS_ENUM(NSUInteger, TXAppKitAppearanceTarget)
 @property (readonly, strong) TXAppearancePropertyCollection *properties;
 @end
 
-TEXTUAL_EXTERN NSNotificationName const TXApplicationAppearanceChangedNotification;
-TEXTUAL_EXTERN NSNotificationName const TXSystemAppearanceChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const TXApplicationAppearanceChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const TXSystemAppearanceChangedNotification;
 
 NS_ASSUME_NONNULL_END
 

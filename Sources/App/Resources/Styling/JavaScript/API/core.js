@@ -37,20 +37,20 @@
 
 "use strict";
 
-var Textual = {};
+var Glasstual = {};
 
 /* *********************************************************************** */
 /*                              View Callbacks                             */
 /* *********************************************************************** */
 
-/*  Callbacks for each WebView in Textual. */
+/*  Callbacks for each WebView in Glasstual. */
 
 /*  These callbacks are limited to the context of this view. The view can represent either
     a server console, a channel, or a private message. See viewInitiated() for information
     about determining which type of view this is. */
 
 /*  In the context of these callbacks, "client" or "associated client" is an abstract concept.
-    When you create a new connection in Textual, you set it up by entering where to connect to
+    When you create a new connection in Glasstual, you set it up by entering where to connect to
     and what your identity will be (nickname, username, etc.). You also choose channels to join.
     You may configure it other ways as well. Client is an encapsulation of this.
     Client is the stateful part of the connection that keeps track of everything. */
@@ -64,55 +64,55 @@ var Textual = {};
     @viewHash:	    A unique identifier for the view. null for server console (use clientHash for that).
     @viewName:      Name of view: Channel name, nickname for a private message, or null for server console.
 */
-Textual.viewInitiated 					= function(viewType, clientHash, viewHash, viewName) {};
+Glasstual.viewInitiated 					= function(viewType, clientHash, viewHash, viewName) {};
 
-Textual.messageAddedToView 				= function(lineNumber, fromBuffer) {};
-Textual.messageRemovedFromView 			= function(lineNumber) {};
+Glasstual.messageAddedToView 				= function(lineNumber, fromBuffer) {};
+Glasstual.messageRemovedFromView 			= function(lineNumber) {};
 
-Textual.historyIndicatorAddedToView			= function() {};
-Textual.historyIndicatorRemovedFromView 	= function() {};
+Glasstual.historyIndicatorAddedToView			= function() {};
+Glasstual.historyIndicatorRemovedFromView 	= function() {};
 
-Textual.topicBarValueChanged 				= function(newTopic) {};
+Glasstual.topicBarValueChanged 				= function(newTopic) {};
 
-Textual.viewFinishedLoading 					= function() {};
-Textual.viewFinishedLoadingHistory				= function() {};
-Textual.viewFinishedReload 						= function() {};
-Textual.viewFontSizeChanged						= function(bigger) {};
-Textual.viewPositionMovedToBottom				= function() {};
-Textual.viewPositionMovedToHistoryIndicator 	= function() {};
-Textual.viewPositionMovedToLine 				= function(lineNumber) {};
-Textual.viewPositionMovedToTop 					= function() {};
+Glasstual.viewFinishedLoading 					= function() {};
+Glasstual.viewFinishedLoadingHistory				= function() {};
+Glasstual.viewFinishedReload 						= function() {};
+Glasstual.viewFontSizeChanged						= function(bigger) {};
+Glasstual.viewPositionMovedToBottom				= function() {};
+Glasstual.viewPositionMovedToHistoryIndicator 	= function() {};
+Glasstual.viewPositionMovedToLine 				= function(lineNumber) {};
+Glasstual.viewPositionMovedToTop 					= function() {};
 
 /*  This function is called when one of two conditions are met:
     1. The day has changed by reaching midnight (00:00)
     2. The system clock changes
 
-    For the second condition, Textual does not make an effort
+    For the second condition, Glasstual does not make an effort
     to compare if the day has in-fact changed. It merely passes
     the change down to the style to let it know.  */
-Textual.dateChanged						= function(dayYear, dayMonth, dayDay) {};
+Glasstual.dateChanged						= function(dayYear, dayMonth, dayDay) {};
 
-/*  This function is not called by Textual itself, but by WebKit.
+/*  This function is not called by Glasstual itself, but by WebKit.
     It is appended to <body> as the function to call during onload phase.
     It is used by the newer templates to replace viewDidFinishLoading()
     as the function responsible for fading out the loading screen. */
-Textual.viewBodyDidLoad					= function() {};
+Glasstual.viewBodyDidLoad					= function() {};
 
 /* *********************************************************************** */
 /*						         Appearance								   */
 /* *********************************************************************** */
 
-/*  app.appearance() can be used to determine the current appearance of Textual.
+/*  app.appearance() can be used to determine the current appearance of Glasstual.
     The return value is a string. For example: "light" or "dark" */
-/*  Textual.appearanceDidChange() can be used to observe changes to the appearance. */
+/*  Glasstual.appearanceDidChange() can be used to observe changes to the appearance. */
 // app.appearance(callbackFunction);
 
-/*  A boolean entry named "Post Textual.appearanceDidChange() Notifications" must
+/*  A boolean entry named "Post Glasstual.appearanceDidChange() Notifications" must
     be added to the settings.plist file in order to enable use of this callback. */
 /*  A style that has a variety for each appearance type will never receive a callback.
-    Those styles will have the best variety automatically selected by Textual and the
+    Those styles will have the best variety automatically selected by Glasstual and the
     style will be reloaded to refresh the view. */
-Textual.appearanceDidChange					= function(changedTo) {};
+Glasstual.appearanceDidChange					= function(changedTo) {};
 
 /* *********************************************************************** */
 /*                             Event Handling                              */
@@ -138,16 +138,16 @@ Textual.appearanceDidChange					= function(changedTo) {};
     means to save them if they are important.
 */
 
-/*  A boolean entry named "Post Textual.handleEvent() Notifications" must be
+/*  A boolean entry named "Post Glasstual.handleEvent() Notifications" must be
     added to the settings.plist file in order to enable use of this callback. */
-Textual.handleEvent                            = function(eventToken) {};
+Glasstual.handleEvent                            = function(eventToken) {};
 
 /* *********************************************************************** */
 /*						Application Object								   */
 /* *********************************************************************** */
 
 /* 
-    The "app" object provides a communication channel between the style and Textual.
+    The "app" object provides a communication channel between the style and Glasstual.
 
     Functions are performed asynchronously which means a callback function is required
     to receive return values. If a callback function is required, then the callback
@@ -266,8 +266,8 @@ Textual.handleEvent                            = function(eventToken) {};
 /* *********************************************************************** */
 
 /*
-    Textual provides styles the ability to store values within a key-value store
-    which is shared amongst all views. This store is saved in Textual's preference
+    Glasstual provides styles the ability to store values within a key-value store
+    which is shared amongst all views. This store is saved in Glasstual's preference
     file and will persist even if the style is renamed, removed, or replaced.
 
     - Enabling:
@@ -289,16 +289,16 @@ Textual.handleEvent                            = function(eventToken) {};
 
 /*  This function is performed when a style setting changed. It is performed on
     all views, including the one that was responsible for changing the value. */
-Textual.styleSettingDidChange                       = function(changedKey) {};
+Glasstual.styleSettingDidChange                       = function(changedKey) {};
 
 /* *********************************************************************** */
-/*                          Textual Preferences                            */
+/*                          Glasstual Preferences                            */
 /* *********************************************************************** */
 
-/*  A boolean entry named "Post Textual.preferencesDidChange() Notifications" must
+/*  A boolean entry named "Post Glasstual.preferencesDidChange() Notifications" must
     be added to the settings.plist file in order to enable use of this callback. */
 /*  This callback is rate-limit at one call per-second, per-view. */
 /*  This callback exists for extremely specific use cases. In general, if you need
     something that doesn't exist above, then it's better to ask for it to be added
     and not rely on this callback. */
-Textual.preferencesDidChange			= function() {};
+Glasstual.preferencesDidChange			= function() {};

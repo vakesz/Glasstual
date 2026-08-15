@@ -62,7 +62,7 @@
 #import "TDCPreferencesUserStyleSheetPrivate.h"
 #import "TDCPreferencesControllerPrivate.h"
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 #import <Sparkle/Sparkle.h>
 #endif
 
@@ -150,14 +150,14 @@ NS_ASSUME_NONNULL_BEGIN
 #define _toolbarItemIndexDefaultIdentity			108008
 #define _toolbarItemIndexDefaultIRCopMessages		108009
 #define _toolbarItemIndexOffRecordMessaging			108010
-#define _toolbarItemIndexHiddenPreferences			108011 // unused
+#define _toolbarItemIndexHiddenPreferences			108011
 
 #define _addonsToolbarInstalledAddonsMenuItemIndex		109000
 #define _addonsToolbarItemMultiplier					995
 
 #define _unsignedIntegerString(_value_)			[NSString stringWithUnsignedInteger:_value_]
 
-@interface TDCPreferencesController () <NSTableViewDataSource, NSTableViewDelegate>
+@interface TDCPreferencesController ()
 @property (nonatomic, strong) IBOutlet NSArrayController *excludeKeywordsArrayController;
 @property (nonatomic, strong) IBOutlet NSArrayController *highlightKeywordsArrayController;
 @property (nonatomic, strong) IBOutlet NSArrayController *installedScriptsController;
@@ -189,7 +189,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) IBOutlet NSView *contentViewDefaultIdentity;
 @property (nonatomic, strong) IBOutlet NSView *contentViewDefaultIRCopMessages;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 @property (nonatomic, strong) IBOutlet NSView *contentViewOffRecordMessaging;
 #endif
 
@@ -206,9 +206,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak) IBOutlet NSView *contentViewGeneralShareDataView;
 @property (nonatomic, strong) IBOutlet NSToolbar *navigationToolbar;
 @property (nonatomic, strong) IBOutlet NSMenu *installedAddonsMenu;
-@property (nonatomic, strong) NSArray<NSDictionary *> *settingsSidebarItems;
-@property (nonatomic, strong) NSTableView *settingsSidebarTable;
-@property (nonatomic, strong) NSView *settingsContentHost;
+@property (nonatomic, strong) NSViewController *settingsHostingController;
 @property (nonatomic, assign) BOOL reloadingTheme;
 @property (nonatomic, assign) BOOL reloadingThemeBySelection;
 @property (nonatomic, weak) IBOutlet NSView *notificationControllerHostView;
@@ -248,11 +246,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (IBAction)onResetUserListModeColorsToDefaults:(id)sender;
 - (IBAction)onSelectNewFont:(id)sender;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (IBAction)offRecordMessagingPolicyChanged:(id)sender;
 - (IBAction)offRecordMessagingOpenOfficialWebsite:(id)sender;
-- (IBAction)offRecordMessagingOpenHelpDocument:(id)sender;
 #endif
+@end
+
+@interface TDCPreferencesSettingsBridge : NSObject
++ (void)selectPane:(NSString *)identifier;
++ (NSViewController *)makeViewControllerWithController:(TDCPreferencesController *)controller;
 @end
 
 @implementation TDCPreferencesController
@@ -344,7 +346,7 @@ NS_ASSUME_NONNULL_BEGIN
 								   name:TVCMainWindowDidReloadThemeNotification
 								 object:nil];
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
 	/* Hide preferences for updates when support is not enabled. */
 	[self.contentViewGeneralStackView setVisibilityPriority:NSStackViewVisibilityPriorityNotVisible
 													forView:self.contentViewGeneralCheckForUpdatesView];
@@ -367,37 +369,31 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)show:(TDCPreferencesControllerSelection)selection
 {
+	NSString *identifier = @"general";
+
 	switch (selection) {
 		case TDCPreferencesControllerSelectionNotifications:
 		{
-			[self _showPane:self.contentViewNotifications selectedItem:_toolbarItemIndexNotifications];
-
+			identifier = @"notifications";
 			break;
 		}
 		case TDCPreferencesControllerSelectionStyle:
 		{
-			[self _showPane:self.contentViewStyle selectedItem:_toolbarItemIndexStyle];
-
+			identifier = @"style";
 			break;
 		}
 		case TDCPreferencesControllerSelectionHiddenPreferences:
 		{
-			[self _showPane:self.contentViewHiddenPreferences selectedItem:_toolbarItemIndexAdvanced];
-
+			identifier = @"hidden";
 			break;
 		}
 		default:
 		{
-			[self _showPane:self.contentViewGeneral selectedItem:_toolbarItemIndexGeneral];
-
 			break;
 		}
 	}
-}
 
-- (void)_showPane:(NSView *)view selectedItem:(NSInteger)selectedItem
-{
-	[self firstPane:view selectedItem:selectedItem];
+	[TDCPreferencesSettingsBridge selectPane:identifier];
 
 	[super show];
 }
@@ -428,254 +424,185 @@ NS_ASSUME_NONNULL_BEGIN
 
  - (void)onPrefPaneSelected:(id)sender
 {
-#define _de(matchTag, view, selectionIndex)		\
-		case (matchTag): {	\
-			[self firstPane:(view) selectedItem:(selectionIndex)];	\
-			break;		\
-		}
+	NSInteger tag = [sender tag];
+	NSString *identifier = [self settingsPaneIdentifierForTag:tag];
 
-	switch ([sender tag]) {
-
-		_de(_toolbarItemIndexGeneral, self.contentViewGeneral, _toolbarItemIndexGeneral)
-
-		_de(_toolbarItemIndexHighlights, self.contentViewHighlights, _toolbarItemIndexHighlights)
-		_de(_toolbarItemIndexNotifications, self.contentViewNotifications, _toolbarItemIndexNotifications)
-
-		_de(_toolbarItemIndexBehavior, self.contentViewBehavior, _toolbarItemIndexBehavior)
-		_de(_toolbarItemIndexControls, self.contentViewControls, _toolbarItemIndexControls)
-		_de(_toolbarItemIndexInterface, self.contentViewInterface, _toolbarItemIndexInterface)
-		_de(_toolbarItemIndexStyle, self.contentViewStyle, _toolbarItemIndexStyle)
-
-		_de(_toolbarItemIndexChannelManagement, self.contentViewChannelManagement, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexCommandScope, self.contentViewCommandScope, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexCompatibility, self.contentViewCompatibility, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexFloodControl, self.contentViewFloodControl, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexIncomingData, self.contentViewIncomingData, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexFileTransfers, self.contentViewFileTransfers, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexInlineMedia, self.contentViewInlineMedia, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexLogLocation, self.contentViewLogLocation, _toolbarItemIndexAdvanced);
-		_de(_toolbarItemIndexDefaultIdentity, self.contentViewDefaultIdentity, _toolbarItemIndexAdvanced)
-		_de(_toolbarItemIndexDefaultIRCopMessages, self.contentViewDefaultIRCopMessages, _toolbarItemIndexAdvanced)
-
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-		_de(_toolbarItemIndexOffRecordMessaging, self.contentViewOffRecordMessaging, _toolbarItemIndexAdvanced)
-#endif
-
-		_de(_addonsToolbarInstalledAddonsMenuItemIndex, self.contentViewInstalledAddons, _toolbarItemIndexAddons)
-
-		default:
-		{
-			if ([sender tag] < _addonsToolbarItemMultiplier) {
-				break;
-			}
-
-			NSUInteger pluginIndex = ([sender tag] - _addonsToolbarItemMultiplier);
-
-			THOPluginItem *plugin = sharedPluginManager().pluginsWithPreferencePanes[pluginIndex];
-
-			NSView *preferencesView = plugin.pluginPreferencesPaneView;
-
-			[self firstPane:preferencesView selectedItem:_toolbarItemIndexAddons];
-
-			break;
-		}
+	if (identifier) {
+		[TDCPreferencesSettingsBridge selectPane:identifier];
 	}
-
-#undef _de
 }
 
-- (void)firstPane:(NSView *)view selectedItem:(NSInteger)selectedItem
+/* Group identifiers are a contract with TDCPreferencesSettingsView.swift,
+ which uses them to build the sidebar's sections. */
+#define _settingsGroupMain			@"main"
+#define _settingsGroupAddons		@"addons"
+#define _settingsGroupAdvanced		@"advanced"
+
+/* One table drives the sidebar, the toolbar/menu tag lookup, and the pane
+ lookup. Keeping them in a single place is deliberate: when they were three
+ separate switch statements the Compatibility pane silently fell out of the
+ sidebar while remaining reachable everywhere else. */
+typedef struct {
+	NSInteger tag;
+	__unsafe_unretained NSString *identifier;
+	__unsafe_unretained NSString *symbolName;
+	__unsafe_unretained NSString *contentViewKey;
+	__unsafe_unretained NSString *group;
+} TDCPreferencesSettingsPane;
+
+static const TDCPreferencesSettingsPane _settingsPanes[] = {
+	{_toolbarItemIndexGeneral,				@"general",					@"gearshape",				@"contentViewGeneral",					_settingsGroupMain},
+	{_toolbarItemIndexBehavior,				@"behavior",				@"slider.horizontal.3",		@"contentViewBehavior",					_settingsGroupMain},
+	{_toolbarItemIndexNotifications,		@"notifications",			@"bell",					@"contentViewNotifications",			_settingsGroupMain},
+	{_toolbarItemIndexHighlights,			@"highlights",				@"text.magnifyingglass",	@"contentViewHighlights",				_settingsGroupMain},
+	{_toolbarItemIndexInterface,			@"interface",				@"macwindow",				@"contentViewInterface",				_settingsGroupMain},
+	{_toolbarItemIndexStyle,				@"style",					@"paintbrush",				@"contentViewStyle",					_settingsGroupMain},
+	{_toolbarItemIndexControls,				@"controls",				@"keyboard",				@"contentViewControls",					_settingsGroupMain},
+
+	{_toolbarItemIndexAddons,				@"addons",					@"puzzlepiece.extension",	@"contentViewInstalledAddons",			_settingsGroupAddons},
+
+	{_toolbarItemIndexChannelManagement,	@"channelManagement",		@"person.2",				@"contentViewChannelManagement",		_settingsGroupAdvanced},
+	{_toolbarItemIndexCommandScope,			@"commandScope",			@"terminal",				@"contentViewCommandScope",				_settingsGroupAdvanced},
+	{_toolbarItemIndexCompatibility,		@"compatibility",			@"wrench.and.screwdriver",	@"contentViewCompatibility",			_settingsGroupAdvanced},
+	{_toolbarItemIndexFloodControl,			@"floodControl",			@"timer",					@"contentViewFloodControl",				_settingsGroupAdvanced},
+	{_toolbarItemIndexIncomingData,			@"incomingData",			@"arrow.down.circle",		@"contentViewIncomingData",				_settingsGroupAdvanced},
+	{_toolbarItemIndexFileTransfers,		@"fileTransfers",			@"arrow.down.app",			@"contentViewFileTransfers",			_settingsGroupAdvanced},
+	{_toolbarItemIndexInlineMedia,			@"inlineMedia",				@"photo",					@"contentViewInlineMedia",				_settingsGroupAdvanced},
+	{_toolbarItemIndexLogLocation,			@"logLocation",				@"folder",					@"contentViewLogLocation",				_settingsGroupAdvanced},
+	{_toolbarItemIndexDefaultIdentity,		@"defaultIdentity",			@"person.crop.circle",		@"contentViewDefaultIdentity",			_settingsGroupAdvanced},
+	{_toolbarItemIndexDefaultIRCopMessages,	@"defaultIRCopMessages",	@"shield",					@"contentViewDefaultIRCopMessages",		_settingsGroupAdvanced},
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+	{_toolbarItemIndexOffRecordMessaging,	@"offRecordMessaging",		@"lock.fill",				@"contentViewOffRecordMessaging",		_settingsGroupAdvanced},
+#endif
+	{_toolbarItemIndexHiddenPreferences,	@"hidden",					@"eye.slash",				@"contentViewHiddenPreferences",		_settingsGroupAdvanced},
+};
+
+static const NSUInteger _settingsPaneCount = (sizeof(_settingsPanes) / sizeof(TDCPreferencesSettingsPane));
+
+static NSString *TDCPreferencesSettingsPluginIdentifier(NSUInteger index)
 {
-	if (self.settingsContentHost) {
-		[self.settingsContentHost.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+	return [NSString stringWithFormat:@"plugin-%lu", (unsigned long)index];
+}
 
-		view.translatesAutoresizingMaskIntoConstraints = NO;
-		view.prefersCompactControlSizeMetrics = YES;
-		[self.settingsContentHost addSubview:view];
-
-		NSLayoutConstraint *trailingStretch = [view.trailingAnchor constraintEqualToAnchor:self.settingsContentHost.trailingAnchor];
-		trailingStretch.priority = NSLayoutPriorityDefaultLow;
-
-		NSLayoutConstraint *bottomStretch = [view.bottomAnchor constraintEqualToAnchor:self.settingsContentHost.bottomAnchor];
-		bottomStretch.priority = NSLayoutPriorityDefaultLow;
-
-		[NSLayoutConstraint activateConstraints:@[
-			[view.leadingAnchor constraintEqualToAnchor:self.settingsContentHost.leadingAnchor],
-			[view.topAnchor constraintEqualToAnchor:self.settingsContentHost.topAnchor],
-			[view.trailingAnchor constraintLessThanOrEqualToAnchor:self.settingsContentHost.trailingAnchor],
-			[view.bottomAnchor constraintLessThanOrEqualToAnchor:self.settingsContentHost.bottomAnchor],
-			trailingStretch,
-			bottomStretch
-		]];
-	} else {
-		[self.window replaceContentView:view];
+static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier(NSString *identifier)
+{
+	for (NSUInteger i = 0; i < _settingsPaneCount; i++) {
+		if ([_settingsPanes[i].identifier isEqualToString:identifier]) {
+			return &_settingsPanes[i];
+		}
 	}
 
-	if (selectedItem >= 0) {
-		self.navigationToolbar.selectedItemIdentifier = _unsignedIntegerString(selectedItem);
+	return NULL;
+}
 
-		[self.settingsSidebarItems enumerateObjectsUsingBlock:^(NSDictionary *item, NSUInteger index, BOOL *stop) {
-			if ([item[@"tag"] integerValue] == selectedItem && self.settingsSidebarTable.selectedRow != (NSInteger)index) {
-				[self.settingsSidebarTable selectRowIndexes:[NSIndexSet indexSetWithIndex:index] byExtendingSelection:NO];
-				*stop = YES;
+- (nullable NSString *)settingsPaneIdentifierForTag:(NSInteger)tag
+{
+	if (tag == _addonsToolbarInstalledAddonsMenuItemIndex) {
+		return @"addons";
+	}
+
+	for (NSUInteger i = 0; i < _settingsPaneCount; i++) {
+		if (_settingsPanes[i].tag == tag) {
+			return _settingsPanes[i].identifier;
+		}
+	}
+
+	if (tag >= _addonsToolbarItemMultiplier) {
+		return TDCPreferencesSettingsPluginIdentifier((NSUInteger)(tag - _addonsToolbarItemMultiplier));
+	}
+
+	return nil;
+}
+
+- (NSDictionary<NSString *, NSString *> *)settingsCatalogItemWithID:(NSString *)identifier title:(NSString *)title symbol:(NSString *)symbol group:(NSString *)group
+{
+	return @{
+		@"id": identifier,
+		@"title": title,
+		@"symbol": symbol,
+		@"group": group
+	};
+}
+
+- (NSArray<NSDictionary<NSString *, NSString *> *> *)settingsSidebarCatalog
+{
+	NSMutableArray<NSDictionary<NSString *, NSString *> *> *items = [NSMutableArray arrayWithCapacity:_settingsPaneCount];
+
+	for (NSUInteger i = 0; i < _settingsPaneCount; i++) {
+		const TDCPreferencesSettingsPane *pane = &_settingsPanes[i];
+
+		[items addObject:[self settingsCatalogItemWithID:pane->identifier
+												   title:TXTLS(([NSString stringWithFormat:@"TDCPreferencesController[sb-%@]", pane->identifier]))
+												  symbol:pane->symbolName
+												   group:pane->group]];
+
+		/* Plug-in panes are listed directly beneath the add-ons pane they belong to. */
+		if ([pane->group isEqualToString:_settingsGroupAddons] == NO) {
+			continue;
+		}
+
+		[sharedPluginManager().pluginsWithPreferencePanes enumerateObjectsUsingBlock:^(THOPluginItem *plugin, NSUInteger index, BOOL *stop) {
+			NSString *title = plugin.pluginPreferencesPaneMenuItemTitle;
+
+			if (title.length == 0) {
+				title = TXTLS(@"TDCPreferencesController[sb-plugin]");
 			}
+
+			[items addObject:[self settingsCatalogItemWithID:TDCPreferencesSettingsPluginIdentifier(index)
+													   title:title
+													  symbol:@"puzzlepiece.extension"
+													   group:_settingsGroupAddons]];
 		}];
-	} else {
-		self.navigationToolbar.selectedItemIdentifier = nil;
 	}
+
+	return [items copy];
+}
+
+- (nullable NSView *)viewForSettingsPaneIdentifier:(NSString *)identifier
+{
+	NSParameterAssert(identifier != nil);
+
+	if ([identifier hasPrefix:@"plugin-"]) {
+		NSInteger pluginIndex = [[identifier substringFromIndex:7] integerValue];
+
+		NSArray *plugins = sharedPluginManager().pluginsWithPreferencePanes;
+
+		if (pluginIndex < 0 || pluginIndex >= (NSInteger)plugins.count) {
+			return nil;
+		}
+
+		return [plugins[(NSUInteger)pluginIndex] pluginPreferencesPaneView];
+	}
+
+	const TDCPreferencesSettingsPane *pane = TDCPreferencesSettingsPaneForIdentifier(identifier);
+
+	if (pane == NULL) {
+		return nil;
+	}
+
+	return [self valueForKey:pane->contentViewKey];
 }
 
 - (void)installSettingsSidebar
 {
-	self.settingsSidebarItems = @[
-		@{@"title": @"General", @"symbol": @"gearshape", @"tag": @(_toolbarItemIndexGeneral)},
-		@{@"title": @"Behavior", @"symbol": @"slider.horizontal.3", @"tag": @(_toolbarItemIndexBehavior)},
-		@{@"title": @"Notifications", @"symbol": @"bell", @"tag": @(_toolbarItemIndexNotifications)},
-		@{@"title": @"Highlights", @"symbol": @"text.magnifyingglass", @"tag": @(_toolbarItemIndexHighlights)},
-		@{@"title": @"Interface", @"symbol": @"rectangle.split.3x1", @"tag": @(_toolbarItemIndexInterface)},
-		@{@"title": @"Style", @"symbol": @"paintbrush", @"tag": @(_toolbarItemIndexStyle)},
-		@{@"title": @"Controls", @"symbol": @"keyboard", @"tag": @(_toolbarItemIndexControls)},
-		@{@"title": @"Addons", @"symbol": @"puzzlepiece.extension", @"tag": @(_toolbarItemIndexAddons)},
-		@{@"title": @"Advanced", @"symbol": @"gearshape.2", @"tag": @(_toolbarItemIndexAdvanced)}
-	];
-
-	NSTableView *tableView = [[NSTableView alloc] initWithFrame:NSZeroRect];
-	tableView.style = NSTableViewStyleSourceList;
-	tableView.headerView = nil;
-	tableView.delegate = (id <NSTableViewDelegate>)self;
-	tableView.dataSource = (id <NSTableViewDataSource>)self;
-	tableView.allowsEmptySelection = NO;
-
-	NSTableColumn *column = [[NSTableColumn alloc] initWithIdentifier:@"title"];
-	column.resizingMask = NSTableColumnAutoresizingMask;
-	[tableView addTableColumn:column];
-
-	NSScrollView *scrollView = [[NSScrollView alloc] initWithFrame:NSZeroRect];
-	scrollView.documentView = tableView;
-	scrollView.hasVerticalScroller = YES;
-	scrollView.borderType = NSNoBorder;
-	scrollView.drawsBackground = NO;
-
-	NSViewController *sidebarController = [[NSViewController alloc] init];
-	sidebarController.view = scrollView;
-
-	NSView *contentHost = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 700, 500)];
-	contentHost.translatesAutoresizingMaskIntoConstraints = YES;
-	contentHost.autoresizingMask = (NSViewWidthSizable | NSViewHeightSizable);
-	[contentHost setContentHuggingPriority:NSLayoutPriorityFittingSizeCompression - 1
-							forOrientation:NSLayoutConstraintOrientationHorizontal];
-	[contentHost setContentCompressionResistancePriority:NSLayoutPriorityFittingSizeCompression - 1
-										  forOrientation:NSLayoutConstraintOrientationHorizontal];
-
-	NSViewController *contentController = [[NSViewController alloc] init];
-	contentController.view = contentHost;
-
-	NSSplitViewItem *sidebarItem = [NSSplitViewItem splitViewItemWithViewController:sidebarController];
-	sidebarItem.canCollapse = NO;
-	sidebarItem.minimumThickness = 180.0;
-	sidebarItem.maximumThickness = 240.0;
-	sidebarItem.holdingPriority = (NSLayoutPriorityDefaultLow + 10);
-
-	NSSplitViewItem *contentItem = [NSSplitViewItem splitViewItemWithViewController:contentController];
-	contentItem.canCollapse = NO;
-	contentItem.holdingPriority = NSLayoutPriorityDefaultLow;
-
-	NSSplitViewController *splitViewController = [[NSSplitViewController alloc] init];
-	[splitViewController addSplitViewItem:sidebarItem];
-	[splitViewController addSplitViewItem:contentItem];
-
 	NSWindow *window = self.window;
-	window.toolbar = nil;
 	window.toolbarStyle = NSWindowToolbarStyleUnified;
-	window.title = @"Settings";
 	window.titlebarAppearsTransparent = NO;
-	window.titlebarSeparatorStyle = NSTitlebarSeparatorStyleLine;
+	window.titlebarSeparatorStyle = NSTitlebarSeparatorStyleAutomatic;
 	window.styleMask = (NSWindowStyleMaskTitled |
 						NSWindowStyleMaskClosable |
 						NSWindowStyleMaskMiniaturizable |
-						NSWindowStyleMaskResizable);
-	window.contentViewController = splitViewController;
+						NSWindowStyleMaskResizable |
+						NSWindowStyleMaskFullSizeContentView);
 	window.minSize = NSMakeSize(860.0, 560.0);
 	window.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
 	window.contentMinSize = NSMakeSize(640.0, 480.0);
 	window.contentMaxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
+	window.toolbar = nil;
 
-	self.settingsSidebarTable = tableView;
-	self.settingsContentHost = contentHost;
-
-	[tableView reloadData];
-}
-
-- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
-{
-	if (tableView != self.settingsSidebarTable) {
-		return 0;
-	}
-
-	return (NSInteger)self.settingsSidebarItems.count;
-}
-
-- (nullable NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(nullable NSTableColumn *)tableColumn row:(NSInteger)row
-{
-	if (tableView != self.settingsSidebarTable) {
-		return nil;
-	}
-
-	NSTableCellView *cell = [tableView makeViewWithIdentifier:@"SettingsSidebarCell" owner:self];
-
-	if (cell == nil) {
-		cell = [[NSTableCellView alloc] initWithFrame:NSMakeRect(0, 0, 180, 24)];
-		cell.identifier = @"SettingsSidebarCell";
-
-		NSImageView *imageView = [[NSImageView alloc] initWithFrame:NSMakeRect(4, 2, 18, 18)];
-		imageView.translatesAutoresizingMaskIntoConstraints = NO;
-		imageView.identifier = @"symbol";
-
-		NSTextField *textField = [NSTextField labelWithString:@""];
-		textField.translatesAutoresizingMaskIntoConstraints = NO;
-
-		cell.imageView = imageView;
-		cell.textField = textField;
-
-		[cell addSubview:imageView];
-		[cell addSubview:textField];
-
-		[NSLayoutConstraint activateConstraints:@[
-			[imageView.leadingAnchor constraintEqualToAnchor:cell.leadingAnchor constant:8],
-			[imageView.centerYAnchor constraintEqualToAnchor:cell.centerYAnchor],
-			[imageView.widthAnchor constraintEqualToConstant:16],
-			[imageView.heightAnchor constraintEqualToConstant:16],
-			[textField.leadingAnchor constraintEqualToAnchor:imageView.trailingAnchor constant:8],
-			[textField.trailingAnchor constraintEqualToAnchor:cell.trailingAnchor constant:-8],
-			[textField.centerYAnchor constraintEqualToAnchor:cell.centerYAnchor]
-		]];
-	}
-
-	NSDictionary *item = self.settingsSidebarItems[(NSUInteger)row];
-	cell.textField.stringValue = item[@"title"];
-	cell.imageView.image = [NSImage imageWithSystemSymbolName:item[@"symbol"] accessibilityDescription:item[@"title"]];
-
-	return cell;
-}
-
-- (void)tableViewSelectionDidChange:(NSNotification *)notification
-{
-	if (notification.object != self.settingsSidebarTable) {
-		return;
-	}
-
-	NSInteger row = self.settingsSidebarTable.selectedRow;
-
-	if (row < 0 || row >= (NSInteger)self.settingsSidebarItems.count) {
-		return;
-	}
-
-	NSInteger tag = [self.settingsSidebarItems[(NSUInteger)row][@"tag"] integerValue];
-
-	NSMenuItem *sender = [[NSMenuItem alloc] init];
-	sender.tag = tag;
-
-	[self onPrefPaneSelected:sender];
+	NSViewController *hostingController = [TDCPreferencesSettingsBridge makeViewControllerWithController:self];
+	self.settingsHostingController = hostingController;
+	window.contentViewController = hostingController;
 }
 
 - (void)restoreWindowFrame
@@ -685,7 +612,8 @@ NS_ASSUME_NONNULL_BEGIN
 	window.styleMask = (NSWindowStyleMaskTitled |
 						NSWindowStyleMaskClosable |
 						NSWindowStyleMaskMiniaturizable |
-						NSWindowStyleMaskResizable);
+						NSWindowStyleMaskResizable |
+						NSWindowStyleMaskFullSizeContentView);
 	window.minSize = NSMakeSize(860.0, 560.0);
 	window.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
 	window.contentMinSize = NSMakeSize(640.0, 480.0);
@@ -702,6 +630,7 @@ NS_ASSUME_NONNULL_BEGIN
 		[window center];
 	}
 }
+
 
 - (void)saveWindowFrame
 {
@@ -817,7 +746,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[TPCPreferences setFileTransferPortRangeEnd:value.integerValue];
 }
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
 {
 	[TPCPreferences setTextEncryptionIsOpportunistic:textEncryptionIsOpportunistic];
@@ -1460,7 +1389,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateCheckForUpdatesMatrix
 {
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	SPUUpdater *updater = masterController().updateController.updater;
 
 	self.checkForUpdatesAutomaticallyDownload.state = updater.automaticallyDownloadsUpdates;
@@ -1472,7 +1401,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)onChangedCheckForUpdates:(id)sender
 {
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	SPUUpdater *updater = masterController().updateController.updater;
 
 	updater.automaticallyChecksForUpdates = (self.checkForUpdatesAutomaticallyCheck.state == NSControlStateValueOn);
@@ -1482,7 +1411,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)onChangedCheckForBetaUpdates:(id)sender
 {
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	[TPCPreferences performReloadAction:TPCPreferencesReloadActionSparkleFrameworkFeedURL];
 
 	if ([TPCPreferences receiveBetaUpdates]) {
@@ -1499,7 +1428,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self onChangedTheme:nil];
 }
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (void)offRecordMessagingPolicyChanged:(id)sender
 {
 	[TPCPreferences performReloadAction:TPCPreferencesReloadActionEncryptionPolicy];
@@ -1508,11 +1437,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)offRecordMessagingOpenOfficialWebsite:(id)sender
 {
 	[TLOpenLink openWithString:@"https://otr.cypherpunks.ca/"];
-}
-
-- (void)offRecordMessagingOpenHelpDocument:(id)sender
-{
-	[TLOpenLink openWithString:@"https://help.codeux.com/textual/Off-the-Record-Messaging.kb"];
 }
 #endif
 

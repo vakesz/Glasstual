@@ -151,7 +151,7 @@ _MessageBuffer.bufferElementInsert = function(placement, html, lineNumbers) /* P
 		_MessageBuffer.resizeBufferIfNeeded();
 
 		try {
-			_Textual.messageAddedToView(lineNumbers, false);
+			_Glasstual.messageAddedToView(lineNumbers, false);
 		} catch (error) {
 			console.error(error);			
 		}
@@ -220,7 +220,7 @@ _MessageBuffer.resizeBufferIfNeeded = function() /* PRIVATE */
 	}
 
 	/* Enforce hard limit for #3 and #4 */
-	var scrollPercent = TextualScroller.percentScrolled();
+	var scrollPercent = GlasstualScroller.percentScrolled();
 
 	var removeFromTop = (scrollPercent > 50.0);
 
@@ -319,7 +319,7 @@ _MessageBuffer.resizeBuffer = function(numberToRemove, fromTop) /* PRIVATE */
 	if (lineNumbersCount > 0) {
 		_MessageBuffer._bufferCurrentSize -= lineNumbersCount;
 
-		_Textual.messageRemovedFromView(lineNumbers);
+		_Glasstual.messageRemovedFromView(lineNumbers);
 	}
 
 	console.log("Removed " + lineNumbersCount + " lines from buffer");
@@ -398,7 +398,7 @@ _MessageBuffer.loadMessagesDuringScroll = function(before) /* PRIVATE */
 
 	if (before) 
 	{
-		if (Textual.finishedLoadingHistory === false) {
+		if (Glasstual.finishedLoadingHistory === false) {
 			console.log("Cancelled request to load messages above line because history isn't loaded");
 
 			return;
@@ -581,7 +581,7 @@ _MessageBuffer.loadMessagesDuringScrollWithPayloadPostflight = function(requestP
 
 		/* Post line numbers so style can do something with them. */
 		try {
-			_Textual.messageAddedToView(lineNumbers, true);
+			_Glasstual.messageAddedToView(lineNumbers, true);
 		} catch (error) {
 			console.error(error);			
 		}
@@ -615,7 +615,7 @@ _MessageBuffer.loadMessagesWithJump = function(lineNumber, callbackFunction) /* 
 		return;
 	}
 
-	if (Textual.finishedLoadingHistory === false) {
+	if (Glasstual.finishedLoadingHistory === false) {
 		console.log("Cancelled request to load messages because history isn't loaded");
 
 		return;
@@ -735,7 +735,7 @@ _MessageBuffer.loadMessagesWithJumpPostflight = function(requestPayload) /* PRIV
 
 		/* Post line numbers so style can do something with them. */
 		try {
-			_Textual.messageAddedToView(lineNumbers, true);
+			_Glasstual.messageAddedToView(lineNumbers, true);
 		} catch (error) {
 			console.error(error);			
 		}
@@ -747,7 +747,7 @@ _MessageBuffer.loadMessagesWithJumpPostflight = function(requestPayload) /* PRIV
 
 	/* Try jumping to line and inform callback of result. */
 	callbackFunction( 
-		Textual.scrollToElement(lineNumberStandardized) 
+		Glasstual.scrollToElement(lineNumberStandardized) 
 	);
 
 	/* Flush state */
@@ -776,14 +776,14 @@ _MessageBuffer.removeLoadingIndicator = function(fromLine) /* PRIVATE */
 _MessageBuffer._documentScrolledCallback = function(scrolledUpward) /* PRIVATE */
 {
 	if (scrolledUpward) {
-		if (TextualScroller.isScrolledToTop()) {
+		if (GlasstualScroller.isScrolledToTop()) {
 			_MessageBuffer.loadMessagesDuringScroll(true);
 		}
 
 		_MessageBuffer.cancelHardLimitResize();
 	}
 
-	if (scrolledUpward === false && TextualScroller.isScrolledToBottom()) {
+	if (scrolledUpward === false && GlasstualScroller.isScrolledToBottom()) {
 		_MessageBuffer.loadMessagesDuringScroll(false);
 
 		_MessageBuffer.scheduleHardLimitResize();
@@ -825,14 +825,14 @@ _MessageBuffer.toggleAutomaticScrolling = function() /* PRIVATE */
 _MessageBuffer.scrolledToBottomOfBuffer = function() /* PRIVATE */
 {
 	return (_MessageBuffer._bufferBottomIsComplete &&
-			TextualScroller.isScrolledToBottom());
+			GlasstualScroller.isScrolledToBottom());
 };
 
 MessageBuffer.jumpToLine = function(lineNumber, callbackFunction) /* PUBLIC */
 {
 	var lineNumberStandardized = lineNumber.standardizedLineNumber();
 
-	if (Textual.scrollToElement(lineNumberStandardized)) {
+	if (Glasstual.scrollToElement(lineNumberStandardized)) {
 		callbackFunction(true);
 
 		return;

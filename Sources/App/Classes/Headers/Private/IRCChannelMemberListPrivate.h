@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addMember:(IRCChannelUser *)member checkForDuplicates:(BOOL)checkForDuplicates;
 
 /* The replaceInAllChannels: flag should only be used in extreme cases because there is A LOT
- of overhead to setting it. Textual only does it when the user list is configured to sort IRCop
+ of overhead to setting it. Glasstual only does it when the user list is configured to sort IRCop
  at top and IRCop status changes. That change requires the user to be resorted in every channel
  they are in. Knowing which channels they are in is easy because of IRCUserRelations, but the
  actual process of finding where to sort them at is very expensive. */

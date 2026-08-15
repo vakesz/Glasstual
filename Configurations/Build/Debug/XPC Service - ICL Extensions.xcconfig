@@ -1,4 +1,4 @@
 
 #include "../Common/Foundation Debug.xcconfig"
-#include "Textual.xcconfig"
+#include "Glasstual.xcconfig"
 #include "../Common/XPC Service - ICL Extensions.xcconfig"

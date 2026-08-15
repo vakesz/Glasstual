@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCTreeItem;
 
-TEXTUAL_EXTERN NSString * const TVCServerListDragType;
+GLASSTUAL_EXTERN NSString * const TVCServerListDragType;
 
 @interface TVCServerList : NSOutlineView
 - (void)refreshDrawingForItem:(IRCTreeItem *)cellItem;

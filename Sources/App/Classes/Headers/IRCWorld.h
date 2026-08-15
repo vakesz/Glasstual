@@ -40,14 +40,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient, IRCClientConfig, IRCChannel, IRCChannelConfig, IRCTreeItem;
 
-TEXTUAL_EXTERN NSString * const IRCWorldClientListDefaultsKey;
+GLASSTUAL_EXTERN NSString * const IRCWorldClientListDefaultsKey;
 
-TEXTUAL_EXTERN NSNotificationName const IRCWorldClientListWasModifiedNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCWorldClientListWasModifiedNotification;
 
-TEXTUAL_EXTERN NSNotificationName const IRCWorldDateHasChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCWorldDateHasChangedNotification;
 
-TEXTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyClientNotification;
-TEXTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyChannelNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyClientNotification;
+GLASSTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyChannelNotification;
 
 @interface IRCWorld : NSObject
 @property (readonly) NSUInteger messagesSent;

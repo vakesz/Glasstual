@@ -43,31 +43,31 @@
 /*                                                    */
 /* ************************************************** */
 
-Textual.finishedLoadingView = false; /* PUBLIC */
-Textual.finishedLoadingHistory = false; /* PUBLIC */
+Glasstual.finishedLoadingView = false; /* PUBLIC */
+Glasstual.finishedLoadingHistory = false; /* PUBLIC */
 
 /* State management */
-_Textual.notifyDidBecomeVisible = function() /* PRIVATE */
+_Glasstual.notifyDidBecomeVisible = function() /* PRIVATE */
 {
-	Textual.clearSelection();
+	Glasstual.clearSelection();
 
 	document.body.dataset.visible = "true";
 };
 
-_Textual.notifyDidBecomeHidden = function() /* PRIVATE */
+_Glasstual.notifyDidBecomeHidden = function() /* PRIVATE */
 {
-	Textual.clearSelection();
+	Glasstual.clearSelection();
 
 	document.body.dataset.visible = false;
 };
 
-_Textual.notifySelectionChanged = function(isSelected) /* PRIVATE */
+_Glasstual.notifySelectionChanged = function(isSelected) /* PRIVATE */
 {
 	/* Changing this attribute may change the height of the body 
 	because of the disappearance and reappearance of the topic.
 	It is easiest for us to keep a record of where we were before
 	changing this attribute, then scroll to that. */
-	var scrolledToBottom = TextualScroller.isScrolledToBottom();
+	var scrolledToBottom = GlasstualScroller.isScrolledToBottom();
 
 	if (isSelected) {
 		document.body.dataset.selected = "true";
@@ -76,50 +76,50 @@ _Textual.notifySelectionChanged = function(isSelected) /* PRIVATE */
 	}
 
 	if (scrolledToBottom) {
-		TextualScroller.scrollToBottom();
+		GlasstualScroller.scrollToBottom();
 	}
 };
 
-Textual.viewBodyDidLoadInt = function() /* PRIVATE */
+Glasstual.viewBodyDidLoadInt = function() /* PRIVATE */
 {
-	console.warn("Textual.viewBodyDidLoadInt() is deprecated. Use _Textual.viewBodyDidLoad() instead.");
+	console.warn("Glasstual.viewBodyDidLoadInt() is deprecated. Use _Glasstual.viewBodyDidLoad() instead.");
 
-	_Textual.viewBodyDidLoad();
+	_Glasstual.viewBodyDidLoad();
 };
 
-_Textual._viewBodyDidLoadAnimationFrame = null; /* PRIVATE */
+_Glasstual._viewBodyDidLoadAnimationFrame = null; /* PRIVATE */
 
-_Textual.viewBodyDidLoad = function() /* PRIVATE */
+_Glasstual.viewBodyDidLoad = function() /* PRIVATE */
 {
 	/* Wait until element is available before binding to it. */
-	_TextualScroller.bindToBestElement();
+	_GlasstualScroller.bindToBestElement();
 
 	/* On styles with a dark background, a white flash occurs because there is a very
 	 small delay between the view being created and the background process laying out
-	 its contents. To work around this, Textual presents an overlay view that matches
+	 its contents. To work around this, Glasstual presents an overlay view that matches
 	 the background color of the style. We then request an animation frame that calls
-	 app.finishedLayingOutView, instructing Textual that it can destroy the overlay view. */
+	 app.finishedLayingOutView, instructing Glasstual that it can destroy the overlay view. */
 
 	if (app.isWebKit2()) {
-		_Textual._viewBodyDidLoadAnimationFrame =
+		_Glasstual._viewBodyDidLoadAnimationFrame =
 		window.requestAnimationFrame(function() {
-			_Textual._viewBodyDidLoad();
+			_Glasstual._viewBodyDidLoad();
 		});
 	} else {
-		_Textual._viewBodyDidLoad();
+		_Glasstual._viewBodyDidLoad();
 	}
 };
 
-_Textual._viewBodyDidLoad = function() /* PRIVATE */
+_Glasstual._viewBodyDidLoad = function() /* PRIVATE */
 {
-	_Textual._viewBodyDidLoadAnimationFrame = null;
+	_Glasstual._viewBodyDidLoadAnimationFrame = null;
 
 	appPrivate.finishedLayingOutView();
 
-	Textual.viewBodyDidLoad();
+	Glasstual.viewBodyDidLoad();
 };
 
-_Textual.viewFinishedLoading = function(configuration) /* PRIVATE */
+_Glasstual.viewFinishedLoading = function(configuration) /* PRIVATE */
 {
 	var isSelected = configuration.selected;
 	var isVisible = configuration.visible;
@@ -127,79 +127,79 @@ _Textual.viewFinishedLoading = function(configuration) /* PRIVATE */
 	var textSizeMultiplier = configuration.textSizeMultiplier;
 	var scrollbackLimit = configuration.scrollbackLimit;
 
-	_TextualScroller.createMutationObserver();
+	_GlasstualScroller.createMutationObserver();
 
 	if (isVisible) {
-		_Textual.notifyDidBecomeVisible();
+		_Glasstual.notifyDidBecomeVisible();
 
-		_Textual.notifySelectionChanged(isSelected);
+		_Glasstual.notifySelectionChanged(isSelected);
 	} else {
-		_Textual.notifyDidBecomeHidden();
+		_Glasstual.notifyDidBecomeHidden();
 	}
 
 	if (isReloadingTheme) {
-		Textual.viewFinishedReload();
+		Glasstual.viewFinishedReload();
 	} else {
-		Textual.viewFinishedLoading();
+		Glasstual.viewFinishedLoading();
 	}
 
 	/* If this view is not visible to the user, then cancel the animation
-	 frame set by Textual.viewBodyDidLoadInt() because there is no use for it. */
+	 frame set by Glasstual.viewBodyDidLoadInt() because there is no use for it. */
 	if (isVisible === false && isSelected === false) {
-		if (_Textual._viewBodyDidLoadAnimationFrame) {
-			window.cancelAnimationFrame(_Textual._viewBodyDidLoadAnimationFrame);
+		if (_Glasstual._viewBodyDidLoadAnimationFrame) {
+			window.cancelAnimationFrame(_Glasstual._viewBodyDidLoadAnimationFrame);
 
-			_Textual._viewBodyDidLoad();
+			_Glasstual._viewBodyDidLoad();
 		}
 	}
 
-	Textual.changeTextSizeMultiplier(textSizeMultiplier);
+	Glasstual.changeTextSizeMultiplier(textSizeMultiplier);
 
 	if (scrollbackLimit !== 0) { // 0 = use default
 		_MessageBuffer.setBufferLimit(scrollbackLimit);
 	}
 };
 
-_Textual.viewFinishedLoadingHistory = function() /* PRIVATE */
+_Glasstual.viewFinishedLoadingHistory = function() /* PRIVATE */
 {
-	Textual.finishedLoadingHistory = true;
+	Glasstual.finishedLoadingHistory = true;
 
-	Textual.viewFinishedLoadingHistory();
+	Glasstual.viewFinishedLoadingHistory();
 };
 
-_Textual.messageAddedToView = function(lineNumber, fromBuffer) /* PRIVATE */
+_Glasstual.messageAddedToView = function(lineNumber, fromBuffer) /* PRIVATE */
 {
 	/* Allow lineNumber to be an array of line numbers or a single line number. */
 	if (Array.isArray(lineNumber)) {
 		for (var i = 0; i < lineNumber.length; i++) {
-			Textual.messageAddedToView(lineNumber[i], fromBuffer);
+			Glasstual.messageAddedToView(lineNumber[i], fromBuffer);
 		}
 	} else {
-		Textual.messageAddedToView(lineNumber, fromBuffer);
+		Glasstual.messageAddedToView(lineNumber, fromBuffer);
 	}
 
 	appPrivate.notifyLinesAddedToView(lineNumber);
 };
 
-_Textual.messageRemovedFromView = function(lineNumber) /* PRIVATE */
+_Glasstual.messageRemovedFromView = function(lineNumber) /* PRIVATE */
 {
 	/* Allow lineNumber to be an array of line numbers or a single line number. */
 	if (Array.isArray(lineNumber)) {
 		for (var i = 0; i < lineNumber.length; i++) {
-			Textual.messageRemovedFromView(lineNumber[i]);
+			Glasstual.messageRemovedFromView(lineNumber[i]);
 		}
 	} else {
-		Textual.messageRemovedFromView(lineNumber);
+		Glasstual.messageRemovedFromView(lineNumber);
 	}
 
 	appPrivate.notifyLinesRemovedFromView(lineNumber);
 };
 
 /* Events */
-_Textual._mouseUpEventCallback = function() /* PRIVATE */
+_Glasstual._mouseUpEventCallback = function() /* PRIVATE */
 {
-	_Textual.copySelectionOnMouseUpEvent();
+	_Glasstual.copySelectionOnMouseUpEvent();
 };
 
 /* Bind to events */
-document.addEventListener("mouseup", _Textual._mouseUpEventCallback, false);
+document.addEventListener("mouseup", _Glasstual._mouseUpEventCallback, false);

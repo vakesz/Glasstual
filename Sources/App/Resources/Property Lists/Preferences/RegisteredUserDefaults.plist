@@ -13,7 +13,7 @@
 		<string>sftp</string>
 		<string>ssh</string>
 		<string>telnet</string>
-		<string>textual</string>
+		<string>glasstual</string>
 		<string>webcal</string>
 		<string>x-man-page</string>
 	</array>

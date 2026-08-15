@@ -47,107 +47,107 @@
 /*                     Visibility                     */
 /* ************************************************** */
 
-TextualScroller.documentIsVisible = undefined; /* PUBLIC */
+GlasstualScroller.documentIsVisible = undefined; /* PUBLIC */
 
-_TextualScroller._documentVisibilityChangedCallback = function() /* PRIVATE */
+_GlasstualScroller._documentVisibilityChangedCallback = function() /* PRIVATE */
 {
 	var documentHidden = document.hidden;
 
 	if (documentHidden) {
-		TextualScroller.documentIsVisible = false;
+		GlasstualScroller.documentIsVisible = false;
 	} else {
-		TextualScroller.documentIsVisible = true;
+		GlasstualScroller.documentIsVisible = true;
 
-		TextualScroller.restoreScrolledToBottom();
+		GlasstualScroller.restoreScrolledToBottom();
 	}
 };
 
-_TextualScroller._documentResizedCallback = function()
+_GlasstualScroller._documentResizedCallback = function()
 {
-	TextualScroller.restoreScrolledToBottom();
+	GlasstualScroller.restoreScrolledToBottom();
 };
 
 /* ************************************************** */
 /*                 Automatic Scroller                 */
 /* ************************************************** */
 
-_TextualScroller._performScrollTimeout = null; /* PRIVATE */
-_TextualScroller._performScrollNextPass = undefined; /* PRIVATE */
+_GlasstualScroller._performScrollTimeout = null; /* PRIVATE */
+_GlasstualScroller._performScrollNextPass = undefined; /* PRIVATE */
 
-_TextualScroller.performScrollPreflight = function() /* PRIVATE */
+_GlasstualScroller.performScrollPreflight = function() /* PRIVATE */
 {
 	/* Do nothing if we are already planning to scroll. */
-	if (_TextualScroller._performScrollTimeout) {
+	if (_GlasstualScroller._performScrollTimeout) {
 		return;
 	}
 
-	if (_TextualScroller._performScrollNextPass) {
+	if (_GlasstualScroller._performScrollNextPass) {
 		return;
 	}
 
 	/* Are we at the bottom? */
-	_TextualScroller._performScrollNextPass =
-	TextualScroller.isScrolledToBottom();
+	_GlasstualScroller._performScrollNextPass =
+	GlasstualScroller.isScrolledToBottom();
 };
 
-_TextualScroller.performScrollCancel = function() /* PRIVATE */
+_GlasstualScroller.performScrollCancel = function() /* PRIVATE */
 {
-	if (_TextualScroller._performScrollTimeout) {
-		clearTimeout(_TextualScroller._performScrollTimeout);
+	if (_GlasstualScroller._performScrollTimeout) {
+		clearTimeout(_GlasstualScroller._performScrollTimeout);
 
-		_TextualScroller._performScrollTimeout = null;
+		_GlasstualScroller._performScrollTimeout = null;
 	}
 
-	_TextualScroller._performScrollNextPass = undefined;
+	_GlasstualScroller._performScrollNextPass = undefined;
 };
 
-TextualScroller.performScroll = function() /* PUBLIC */
+GlasstualScroller.performScroll = function() /* PUBLIC */
 {
 	/* Do nothing if we are already planning to scroll. */
-	if (_TextualScroller._performScrollTimeout) {
+	if (_GlasstualScroller._performScrollTimeout) {
 		return;
 	}
 
 	/* Do not perform automatic scroll if we weren't at bottom. */
-	if (!_TextualScroller._performScrollNextPass) {
+	if (!_GlasstualScroller._performScrollNextPass) {
 		return;
 	}
 
 	var performAutomaticScroll = (function() {
-		_TextualScroller._performScrollTimeout = null;
-		_TextualScroller._performScrollNextPass = undefined;
+		_GlasstualScroller._performScrollTimeout = null;
+		_GlasstualScroller._performScrollNextPass = undefined;
 
-		_TextualScroller.performScroll();
+		_GlasstualScroller.performScroll();
 	});
 
-	_TextualScroller._performScrollTimeout = 
+	_GlasstualScroller._performScrollTimeout = 
 	setTimeout(performAutomaticScroll, 0);
 };
 
-_TextualScroller.performScroll = function() /* PRIVATE */
+_GlasstualScroller.performScroll = function() /* PRIVATE */
 {	
 	/* Do not perform automatic scroll if is disabled. */
-	if (!TextualScroller.automaticScrollingEnabled) {
+	if (!GlasstualScroller.automaticScrollingEnabled) {
 		return;
 	}
 
 	/* Do not perform automatic scroll if the document is not visible. */
-	if (!TextualScroller.documentIsVisible) {
+	if (!GlasstualScroller.documentIsVisible) {
 		return;
 	}
 
 	/* Scroll to bottom */
-	TextualScroller.scrollToBottom();
+	GlasstualScroller.scrollToBottom();
 };
 
 /* This function sets a flag that tells the scroller not to do anything,
 regardless of whether it is visible or not. Visibility will control whether
 the timer itself is activate, not this function. */
-TextualScroller.automaticScrollingEnabled = true; /* PRIVATE */
+GlasstualScroller.automaticScrollingEnabled = true; /* PRIVATE */
 
-TextualScroller.setAutomaticScrollingEnabled = function(enabled) /* PUBLIC */
+GlasstualScroller.setAutomaticScrollingEnabled = function(enabled) /* PUBLIC */
 {
-	TextualScroller.automaticScrollingEnabled = enabled;
+	GlasstualScroller.automaticScrollingEnabled = enabled;
 };
 
 /* ************************************************** */
@@ -156,12 +156,12 @@ TextualScroller.setAutomaticScrollingEnabled = function(enabled) /* PUBLIC */
 
 HTMLDocument.prototype.prepareForMutation = function() /* PUBLIC */
 {
-	_TextualScroller.prepareForMutation();
+	_GlasstualScroller.prepareForMutation();
 };
 
 HTMLDocument.prototype.cancelMutation = function() /* PUBLIC */
 {
-	_TextualScroller.cancelMutation();
+	_GlasstualScroller.cancelMutation();
 };
 
 Element.prototype.prepareForMutation = function() /* PUBLIC */
@@ -174,32 +174,32 @@ Element.prototype.cancelMutation = function() /* PUBLIC */
 	document.cancelMutation();
 };
 
-_TextualScroller.prepareForMutation = function()
+_GlasstualScroller.prepareForMutation = function()
 {
-	_TextualScroller.performScrollPreflight();
+	_GlasstualScroller.performScrollPreflight();
 };
 
-_TextualScroller.cancelMutation = function()
+_GlasstualScroller.cancelMutation = function()
 {
-	_TextualScroller.performScrollCancel();
+	_GlasstualScroller.performScrollCancel();
 };
 
 /* ************************************************** */
 /*                 Mutation Observer                  */
 /* ************************************************** */
 
-_TextualScroller._mutationObserver = null; /* PRIVATE */
+_GlasstualScroller._mutationObserver = null; /* PRIVATE */
 
-_TextualScroller._mutationObserverCallback = function(mutations) /* PRIVATE */
+_GlasstualScroller._mutationObserverCallback = function(mutations) /* PRIVATE */
 {
-	TextualScroller.performScroll();
+	GlasstualScroller.performScroll();
 };
 
-_TextualScroller.createMutationObserver = function() /* PRIVATE */
+_GlasstualScroller.createMutationObserver = function() /* PRIVATE */
 {
 	var buffer = MessageBuffer.bufferElement();
 
-	var observer = new MutationObserver(_TextualScroller._mutationObserverCallback);
+	var observer = new MutationObserver(_GlasstualScroller._mutationObserverCallback);
 
 	observer.observe(
 		buffer, 
@@ -212,16 +212,16 @@ _TextualScroller.createMutationObserver = function() /* PRIVATE */
 		}
 	);
 
-	_TextualScroller._mutationObserver = observer;
+	_GlasstualScroller._mutationObserver = observer;
 };
 
 /* ************************************************** */
 /*                      Events                        */
 /* ************************************************** */
 
-window.addEventListener("resize", _TextualScroller._documentResizedCallback, false);
+window.addEventListener("resize", _GlasstualScroller._documentResizedCallback, false);
 
-document.addEventListener("visibilitychange", _TextualScroller._documentVisibilityChangedCallback, false);
+document.addEventListener("visibilitychange", _GlasstualScroller._documentVisibilityChangedCallback, false);
 
 /* Populate initial visibility state and maybe create timer */
-_TextualScroller._documentVisibilityChangedCallback();
+_GlasstualScroller._documentVisibilityChangedCallback();

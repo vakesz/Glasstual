@@ -10,10 +10,10 @@ productbuild \
 --resources "./Installer Resources" \
 --package-path "${PACKAGES_DESTINATION}/STANDALONE/" \
 --sign "Developer ID Installer: Codeux Software, LLC (8482Q6EPL6)" \
---identifier "com.codeux.app-extensions.textual-extras-installer" \
+--identifier "com.codeux.app-extensions.glasstual-extras-installer" \
 --version "1.0" \
 --quiet \
-"${PACKAGES_DESTINATION}/Textual-Extras.pkg"
+"${PACKAGES_DESTINATION}/Glasstual-Extras.pkg"
 
 rm -f "${PACKAGES_DESTINATION}/STANDALONE/*.pkg"
 

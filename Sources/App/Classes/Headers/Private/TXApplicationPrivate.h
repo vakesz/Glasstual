@@ -38,7 +38,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TXApplication : NSApplication
-+ (BOOL)checkForOtherCopiesOfTextualRunning;
++ (BOOL)checkForOtherCopiesOfGlasstualRunning;
 @end
 
 NS_ASSUME_NONNULL_END

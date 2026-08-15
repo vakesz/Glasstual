@@ -35,10 +35,12 @@
  *
  *********************************************************************** */
 
-#import "TextualPrivate.h"
+#import "GlasstualPrivate.h"
 
 // TLOpenLink.swift
 #import "TPCPreferencesLocal.h"
+
+#import "TDCPreferencesControllerPrivate.h"
 
 // TLOLinkParser.swift
 #import "TVCLogLine.h"

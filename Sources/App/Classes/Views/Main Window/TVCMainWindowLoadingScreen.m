@@ -36,7 +36,6 @@
  *********************************************************************** */
 
 #import "NSViewHelperPrivate.h"
-#import "TVCMainWindowSplitView.h"
 #import "TVCMainWindowTextViewPrivate.h"
 #import "TVCMainWindowPrivate.h"
 #import "TVCMainWindowLoadingScreenPrivate.h"
@@ -216,7 +215,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)disableBackgroundControlsStepOne
 {
-	self.mainWindow.contentSplitView.hidden = YES;
+	self.mainWindow.contentSplitViewController.view.hidden = YES;
 }
 
 - (void)disableBackgroundControlsStepTwo
@@ -232,7 +231,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)enableBackgroundControlsStepOne
 {
-	self.mainWindow.contentSplitView.hidden = NO;
+	self.mainWindow.contentSplitViewController.view.hidden = NO;
 }
 
 - (void)enableBackgroundControlsStepTwo

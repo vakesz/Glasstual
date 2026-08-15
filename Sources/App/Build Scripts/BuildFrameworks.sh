@@ -4,12 +4,12 @@ set -e
 
 echo "Building using architecture: ${ARCHS}"
 
-CONFIGURATION_BUILD_DIR="${TEXTUAL_WORKSPACE_TEMP_DIR}/SharedBuildProducts-Frameworks"
+CONFIGURATION_BUILD_DIR="${GLASSTUAL_WORKSPACE_TEMP_DIR}/SharedBuildProducts-Frameworks"
 
 xcb() {
     target=$1
     xcodebuild -target "$target" \
-        -configuration "${TEXTUAL_FRAMEWORK_BUILD_SCHEME}" \
+        -configuration "${GLASSTUAL_FRAMEWORK_BUILD_SCHEME}" \
         ARCHS="${ARCHS}" \
         CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" \
         CONFIGURATION_BUILD_DIR="${CONFIGURATION_BUILD_DIR}" \
@@ -27,7 +27,7 @@ frameworks=(
 )
 
 for framework in "${frameworks[@]}"; do
-    cd "${TEXTUAL_WORKSPACE_DIR}/Frameworks/${framework}/"
+    cd "${GLASSTUAL_WORKSPACE_DIR}/Frameworks/${framework}/"
     xcb "${framework// /}.framework"
 done
 
