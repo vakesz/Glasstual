@@ -234,7 +234,6 @@ Gw
                                                 <connections>
                                                     <outlet property="dataSource" destination="-2" id="182"/>
                                                     <outlet property="delegate" destination="-2" id="181"/>
-                                                    <outlet property="textDelegate" destination="-2" id="184"/>
                                                 </connections>
                                             </tableView>
                                         </subviews>

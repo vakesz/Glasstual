@@ -100,7 +100,8 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 @property (nonatomic, strong) NSSplitViewItem *memberListSplitItem;
 @property (nonatomic, strong) NSSplitViewItemAccessoryViewController *sidebarAccessoryController;
 @property (nonatomic, strong) NSLayoutConstraint *sidebarAccessoryHeightConstraint;
-@property (nonatomic, strong) NSToolbarItem *lockToolbarItem;
+@property (nonatomic, weak) NSToolbarItem *lockToolbarItem;
+@property (nonatomic, assign) SEL lockToolbarItemAction;
 @property (nonatomic, strong) TLOInputHistory *inputHistoryManager;
 @property (nonatomic, strong) TLONicknameCompletionStatus *nicknameCompletionStatus;
 @property (nonatomic, strong, readwrite) TVCMainWindowAppearance *userInterfaceObjects;
@@ -207,8 +208,6 @@ NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSele
 	[masterController() applicationWakeStepTwo];
 }
 
-static NSToolbarItemIdentifier const TVCMainWindowToolbarSidebarItemIdentifier = @"TVCMainWindowToolbarSidebarItem";
-static NSToolbarItemIdentifier const TVCMainWindowToolbarMemberListItemIdentifier = @"TVCMainWindowToolbarMemberListItem";
 static NSToolbarItemIdentifier const TVCMainWindowToolbarLockItemIdentifier = @"TVCMainWindowToolbarLockItem";
 
 static const CGFloat _sidebarAccessoryHeight = 32.0;
@@ -253,9 +252,6 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 /* AppKit supplies the sidebar and inspector tracking separators, along with
  their toggle items, for any NSSplitViewController that vends a sidebar and an
  inspector. We only contribute the connection security indicator. */
-/* The lock item is drawn with the prominent style, which tints the background
- of the group it belongs to. A space keeps it out of the group that the
- inspector toggle lives in so that only the lock is tinted. */
 - (NSArray<NSToolbarItemIdentifier> *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
 	return @[
@@ -268,13 +264,14 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	];
 }
 
+/* The lock item is absent from the default set. It is inserted and removed as
+ the selection changes rather than hidden in place. See -setLockToolbarItemVisible:action: */
 - (NSArray<NSToolbarItemIdentifier> *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
 	return @[
 		NSToolbarToggleSidebarItemIdentifier,
 		NSToolbarSidebarTrackingSeparatorItemIdentifier,
 		NSToolbarFlexibleSpaceItemIdentifier,
-		TVCMainWindowToolbarLockItemIdentifier,
 		NSToolbarSpaceItemIdentifier,
 		NSToolbarToggleInspectorItemIdentifier
 	];
@@ -286,21 +283,77 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		return nil;
 	}
 
+	SEL action = self.lockToolbarItemAction;
+
+	if (action == NULL) {
+		action = @selector(presentCertificateTrustInformation:);
+	}
+
 	NSToolbarItem *item = TVCMainWindowMakeToolbarItem(itemIdentifier,
 													  @"lock.fill",
 													  TXTLS(@"TVCMainWindow[tb-cs]"),
 													  self,
-													  @selector(presentCertificateTrustInformation:),
+													  action,
 													  NO);
 	/* Assign the style once, here, rather than each time the item is updated.
 	 AppKit only reconsiders which group an item belongs to when the item is
 	 inserted, so a style applied later tints whichever group it landed in. */
 	item.style = NSToolbarItemStyleProminent;
 
-	item.hidden = YES;
 	self.lockToolbarItem = item;
 
 	return item;
+}
+
+- (NSUInteger)indexOfToolbarItemWithIdentifier:(NSToolbarItemIdentifier)identifier
+{
+	return [self.toolbar.items indexOfObjectPassingTest:^BOOL(NSToolbarItem *item, NSUInteger index, BOOL *stop) {
+		return [item.itemIdentifier isEqualToString:identifier];
+	}];
+}
+
+/* The item is added to and removed from the toolbar instead of being hidden in
+ place. AppKit builds an item's backing control — and the SwiftUI hosting graph
+ that draws its glass — while the item is being inserted. An item that is hidden
+ at that moment never gets one, and the empty item viewer left behind still
+ takes part in hit testing: the next mouse down anywhere in the title bar walks
+ into a view graph that was never rooted and crashes inside AppKit. */
+- (void)setLockToolbarItemVisible:(BOOL)visible action:(SEL)action
+{
+	NSToolbar *toolbar = self.toolbar;
+
+	NSUInteger currentIndex = [self indexOfToolbarItemWithIdentifier:TVCMainWindowToolbarLockItemIdentifier];
+
+	if (visible == NO) {
+		if (currentIndex != NSNotFound) {
+			[toolbar removeItemAtIndex:currentIndex];
+		}
+
+		return;
+	}
+
+	/* The action is decided by the selection, but it has to be in place before
+	 the item is built, which is why it is stashed for the delegate to read. */
+	if (currentIndex != NSNotFound) {
+		if (self.lockToolbarItemAction == action) {
+			return;
+		}
+
+		[toolbar removeItemAtIndex:currentIndex];
+	}
+
+	self.lockToolbarItemAction = action;
+
+	/* The prominent style tints the background of the group an item belongs to.
+	 Inserting ahead of the space keeps the lock out of the group the inspector
+	 toggle lives in so that only the lock is tinted. */
+	NSUInteger insertionIndex = [self indexOfToolbarItemWithIdentifier:NSToolbarSpaceItemIdentifier];
+
+	if (insertionIndex == NSNotFound) {
+		insertionIndex = toolbar.items.count;
+	}
+
+	[toolbar insertItemWithItemIdentifier:TVCMainWindowToolbarLockItemIdentifier atIndex:insertionIndex];
 }
 
 - (void)installContentSplitViewController
@@ -2178,9 +2231,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	}
 #endif
 
-	self.lockToolbarItem.hidden = (showLock == NO);
-	self.lockToolbarItem.action = lockAction;
-	self.lockToolbarItem.image = [NSImage imageWithSystemSymbolName:@"lock.fill" accessibilityDescription:TXTLS(@"TVCMainWindow[tb-cs]")];
+	[self setLockToolbarItemVisible:showLock action:lockAction];
 }
 
 - (void)updateTitleFor:(IRCTreeItem *)item

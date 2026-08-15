@@ -256,8 +256,8 @@ enum
 	MTMainWindowServerListAddServer = 1400, // "Add Server…"
 
 	/* Off-the-Record Messaging status button */
-	MTOTRStatusButtonWhatIsThis = 1500, // "What is this?"
-	MTOTRStatusButtonWhatIsThisSeparator = 1501, // "-"
+	/* 1500 and 1501 belonged to a "What is this?" item, and the separator
+	 beneath it, which linked to documentation this fork does not host. */
 	MTOTRStatusButtonStartPrivateConversation = 1502, // "Start Private Conversation"
 	MTOTRStatusButtonRefreshPrivateConversation = 1503, // "Refresh Private Conversation"
 	MTOTRStatusButtonEndPrivateConversation = 1504, // "End Private Conversation"

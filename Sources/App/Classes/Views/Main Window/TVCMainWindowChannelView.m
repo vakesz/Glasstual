@@ -434,19 +434,33 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 		[self addSubview:webView];
 	}
 
-	[self addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[webView(>=30)]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(webView)]];
+	/* The sides and the bottom are pinned to the safe area rather than to the
+	 edges. The server list, the member list and the input bar all float above
+	 the channel view instead of taking space from it, which is why this view is
+	 handed the full width of the window: the strips they cover are reported
+	 through safeAreaInsets and nothing else. Pinning to the edges is what puts
+	 the first and last characters of every line underneath them.
 
-	/* The bottom is pinned to the safe area rather than to the edge so that the
-	 last lines of the view are not covered by the input bar floating above it.
-	 The safe area matches the edge when nothing is overlaid. */
+	 The top is deliberately left on the edge. The web view is told about the
+	 title bar through the same safe area and answers it by insetting its own
+	 scroll view, which is what lets messages scroll up behind the toolbar. */
+	NSLayoutGuide *safeArea = self.safeAreaLayoutGuide;
+
+	/* Kept below required so that a window narrow or short enough to violate
+	 them breaks these rather than the pins above. */
+	NSLayoutConstraint *minimumWidth = [webView.widthAnchor constraintGreaterThanOrEqualToConstant:30.0];
+	NSLayoutConstraint *minimumHeight = [webView.heightAnchor constraintGreaterThanOrEqualToConstant:30.0];
+
+	minimumWidth.priority = NSLayoutPriorityDefaultHigh;
+	minimumHeight.priority = NSLayoutPriorityDefaultHigh;
+
 	[NSLayoutConstraint activateConstraints:@[
 		[webView.topAnchor constraintEqualToAnchor:self.topAnchor],
-		[webView.bottomAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.bottomAnchor],
-		[webView.heightAnchor constraintGreaterThanOrEqualToConstant:30.0]
+		[webView.leadingAnchor constraintEqualToAnchor:safeArea.leadingAnchor],
+		[webView.trailingAnchor constraintEqualToAnchor:safeArea.trailingAnchor],
+		[webView.bottomAnchor constraintEqualToAnchor:safeArea.bottomAnchor],
+		minimumWidth,
+		minimumHeight
 	]];
 }
 

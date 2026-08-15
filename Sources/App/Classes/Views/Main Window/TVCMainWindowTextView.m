@@ -490,16 +490,9 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 #pragma mark -
-#pragma mark Background Drawing
-
-#pragma mark -
 #pragma mark Text Field Background Vibrant View
 
 @implementation TVCMainWindowTextViewContentView
-
-- (void)drawRect:(NSRect)dirtyRect
-{
-}
 
 - (BOOL)allowsVibrancy
 {
@@ -508,9 +501,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)isOpaque
 {
-	/* -drawRect: paints nothing. Claiming to be opaque tells AppKit it need
-	 not draw what sits behind this view, leaving the window's material
-	 covered by an undrawn (white) rectangle. */
+	/* The view paints nothing; it only hosts the field inside the glass the
+	 input bar is placed in. Claiming to be opaque tells AppKit it need not
+	 draw what sits behind this view, leaving the glass covered by an undrawn
+	 (white) rectangle. */
 	return NO;
 }
 
