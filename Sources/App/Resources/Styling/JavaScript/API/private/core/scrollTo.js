@@ -44,30 +44,30 @@
 /* ************************************************** */
 
 /* Scrolling */
-Textual.scrollToBottomOfView = function(fireNotification) /* PUBLIC */
+Glasstual.scrollToBottomOfView = function(fireNotification) /* PUBLIC */
 {
-	TextualScroller.scrollToBottom();
+	GlasstualScroller.scrollToBottom();
 
 	if (fireNotification) {
-		Textual.viewPositionMovedToBottom();
+		Glasstual.viewPositionMovedToBottom();
 	}
 };
 
-Textual.scrollToTopOfView = function(fireNotification) /* PUBLIC */
+Glasstual.scrollToTopOfView = function(fireNotification) /* PUBLIC */
 {
-	TextualScroller.scrollToTop();
+	GlasstualScroller.scrollToTop();
 
 	if (fireNotification) {
-		Textual.viewPositionMovedToTop();
+		Glasstual.viewPositionMovedToTop();
 	}
 };
 
-Textual.scrollToLine = function(lineNumber) /* PUBLIC */
+Glasstual.scrollToLine = function(lineNumber) /* PUBLIC */
 {
-	Textual.jumpToLine(lineNumber);
+	Glasstual.jumpToLine(lineNumber);
 };
 
-Textual.jumpToLine = function(lineNumber) /* PUBLIC */
+Glasstual.jumpToLine = function(lineNumber) /* PUBLIC */
 {
 	MessageBuffer.jumpToLine(
 		lineNumber, 
@@ -76,9 +76,9 @@ Textual.jumpToLine = function(lineNumber) /* PUBLIC */
 			var scrolledToBottom = false;
 
 			if (success) {
-				scrolledToBottom = TextualScroller.isScrolledToBottom();
+				scrolledToBottom = GlasstualScroller.isScrolledToBottom();
 
-				Textual.viewPositionMovedToLine(lineNumber);
+				Glasstual.viewPositionMovedToLine(lineNumber);
 			}
 
 			appPrivate.notifyJumpToLineCallback(lineNumber, success, scrolledToBottom);
@@ -86,12 +86,12 @@ Textual.jumpToLine = function(lineNumber) /* PUBLIC */
 	);
 };
 
-Textual.scrollToElement = function(elementName) /* PUBLIC */
+Glasstual.scrollToElement = function(elementName) /* PUBLIC */
 {
 	var element = document.getElementById(elementName);
 
 	if (element) {
-		TextualScroller.scrollElementToCenter(element);
+		GlasstualScroller.scrollElementToCenter(element);
 
 		return true;
 	}
@@ -99,9 +99,9 @@ Textual.scrollToElement = function(elementName) /* PUBLIC */
 	return false;
 };
 
-Textual.scrollToHistoryIndicator = function() /* PUBLIC */
+Glasstual.scrollToHistoryIndicator = function() /* PUBLIC */
 {
-	if (Textual.scrollToElement("mark")) {
-		Textual.viewPositionModToHistoryIndicator();
+	if (Glasstual.scrollToElement("mark")) {
+		Glasstual.viewPositionModToHistoryIndicator();
 	}
 };

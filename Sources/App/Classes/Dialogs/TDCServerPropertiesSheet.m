@@ -1447,13 +1447,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)preferredInternetProtocolChanged:(id)sender
 {
-TEXTUAL_IGNORE_DEPRECATION_BEGIN
+GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	/* Changing the property triggers a deprecation log to console
 	 which is just unnecessary output when each time we change it. */
 	if (self.config.connectionPrefersIPv4) {
 		self.config.connectionPrefersIPv4 = NO;
 	}
-TEXTUAL_IGNORE_DEPRECATION_END
+GLASSTUAL_IGNORE_DEPRECATION_END
 
 	self.config.addressType = [sender tag];
 }
@@ -1511,11 +1511,13 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 	/* ====================================== */
 
-	SecKeychainItemRef certificateRef;
+	SecCertificateRef certificateRef = NULL;
 
-	CFDataRef certificateDataInRef = (__bridge CFDataRef)certificateDataIn;
-
-	OSStatus status = SecKeychainItemCopyFromPersistentReference(certificateDataInRef, &certificateRef);
+	OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)@{
+		(__bridge id)kSecClass: (__bridge id)kSecClassCertificate,
+		(__bridge id)kSecValuePersistentRef: certificateDataIn,
+		(__bridge id)kSecReturnRef: @YES
+	}, (CFTypeRef *)&certificateRef);
 
 	if (status != noErr) {
 		return;
@@ -1525,7 +1527,7 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 	CFStringRef commonNameRef;
 
-	status = SecCertificateCopyCommonName((SecCertificateRef)certificateRef, &commonNameRef);
+	status = SecCertificateCopyCommonName(certificateRef, &commonNameRef);
 
 	if (status != noErr) {
 		CFRelease(certificateRef);
@@ -1539,7 +1541,7 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 	/* ====================================== */
 
-	CFDataRef certificateDataRef = SecCertificateCopyData((SecCertificateRef)certificateRef);
+	CFDataRef certificateDataRef = SecCertificateCopyData(certificateRef);
 
 	if (certificateDataRef) {
 		NSData *certificateData = (__bridge NSData *)certificateDataRef;
@@ -1577,9 +1579,13 @@ TEXTUAL_IGNORE_DEPRECATION_END
 
 	/* ====================================== */
 
-	CFDataRef certificateDataRef;
+	CFTypeRef certificateDataRef = NULL;
 
-	status = SecKeychainItemCreatePersistentReference((SecKeychainItemRef)certificateRef, &certificateDataRef);
+	status = SecItemCopyMatching((__bridge CFDictionaryRef)@{
+		(__bridge id)kSecClass: (__bridge id)kSecClassCertificate,
+		(__bridge id)kSecValueRef: (__bridge id)certificateRef,
+		(__bridge id)kSecReturnPersistentRef: @YES
+	}, &certificateDataRef);
 
 	if (status != noErr) {
 		CFRelease(certificateRef);
@@ -1673,13 +1679,7 @@ TEXTUAL_IGNORE_DEPRECATION_END
 		[TDCAlert alertWithMessage:TXTLS(@"TDCServerPropertiesSheet[489-hG]")
 							 title:TXTLS(@"TDCServerPropertiesSheet[pmk-os]")
 					 defaultButton:TXTLS(@"Prompts[c7s-dq]")
-				   alternateButton:nil
-					   otherButton:TXTLS(@"TDCServerPropertiesSheet[3ju-lo]")
-				   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
-			if (buttonClicked == TDCAlertResponseOther) {
-				[TLOpenLink openWithString:@"https://help.codeux.com/textual/Using-CertFP.kb" inBackground:NO];
-			}
-		}];
+				   alternateButton:nil];
 
 		return;
 	}
@@ -2236,15 +2236,11 @@ TEXTUAL_IGNORE_DEPRECATION_END
 	}
 }
 
-- (BOOL)tableView:(NSTableView *)tableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pasteboard
+- (nullable id<NSPasteboardWriting>)tableView:(NSTableView *)tableView pasteboardWriterForRow:(NSInteger)row
 {
-	NSData *draggedData = [NSKeyedArchiver archivedDataWithRootObject:rowIndexes];
-
-	[pasteboard declareTypes:@[_tableDragToken] owner:self];
-
-	[pasteboard setData:draggedData forType:_tableDragToken];
-
-	return YES;
+	NSPasteboardItem *item = [[NSPasteboardItem alloc] init];
+	[item setString:@(row).stringValue forType:_tableDragToken];
+	return item;
 }
 
 - (NSDragOperation)tableView:(NSTableView *)tableView validateDrop:(id <NSDraggingInfo>)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)dropOperation
@@ -2256,11 +2252,9 @@ TEXTUAL_IGNORE_DEPRECATION_END
 {
 	NSPasteboard *pasteboard = [info draggingPasteboard];
 
-	NSData *draggedData = [pasteboard dataForType:_tableDragToken];
+	NSString *draggedRowString = [pasteboard stringForType:_tableDragToken];
 
-	NSIndexSet *draggedRowIndexes = [NSKeyedUnarchiver unarchiveObjectWithData:draggedData];
-
-	NSUInteger draggedRowIndex = draggedRowIndexes.firstIndex;
+	NSUInteger draggedRowIndex = draggedRowString.integerValue;
 
 	if (tableView == self.channelListTable) {
 		[self clearChannelListPredicate];

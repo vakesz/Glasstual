@@ -66,28 +66,28 @@ typedef NS_ENUM(NSUInteger, TPCThemeSettingsNicknameColorStyle) {
  that it can no longer be used, then this notification is posted.
  A way, amongst many, in which the integrity of a theme can
  be compromised is by deleting the CSS or JavaScript file. */
-TEXTUAL_EXTERN NSNotificationName const TPCThemeIntegrityCompromisedNotification;
+GLASSTUAL_EXTERN NSNotificationName const TPCThemeIntegrityCompromisedNotification;
 
 /* If theme has been restored to a usable state. */
-TEXTUAL_EXTERN NSNotificationName const TPCThemeIntegrityRestoredNotification;
+GLASSTUAL_EXTERN NSNotificationName const TPCThemeIntegrityRestoredNotification;
 
 /* If the theme has been deleted. Drop reference to theme object
  when this occurs. Holding a reference to a theme object after
  it has been deleted can result in undefined behavior especially
  if another theme is installed using the same URL. */
-TEXTUAL_EXTERN NSNotificationName const TPCThemeWasDeletedNotification;
+GLASSTUAL_EXTERN NSNotificationName const TPCThemeWasDeletedNotification;
 
 /* The theme can change the variety to match appearance changes,
  or when one variety becomes compromised and another must be used. */
 /* Notification used for first case. */
-TEXTUAL_EXTERN NSNotificationName const TPCThemeAppearanceChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const TPCThemeAppearanceChangedNotification;
 
 /* Notification used for second case. */
-TEXTUAL_EXTERN NSNotificationName const TPCThemeVarietyChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const TPCThemeVarietyChangedNotification;
 
 /* A CSS or JavaScript file within the global variety or the variety
  in use was modified. */
-TEXTUAL_EXTERN NSNotificationName const TPCThemeWasModifiedNotification;
+GLASSTUAL_EXTERN NSNotificationName const TPCThemeWasModifiedNotification;
 
 @class GRMustacheTemplate, GRMustacheTemplateRepository;
 @class TPCThemeSettings;

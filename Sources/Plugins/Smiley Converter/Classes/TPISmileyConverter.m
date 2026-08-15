@@ -159,7 +159,7 @@ NS_ASSUME_NONNULL_BEGIN
 	return [finalString copy];
 }
 
-/* The replacement call uses a lot of work done by the actual Textual rendering engine. */
+/* The replacement call uses a lot of work done by the actual Glasstual rendering engine. */
 - (void)stringWithReplacedSmiley:(NSString *)smiley inString:(NSMutableString *)inString
 {
 	NSUInteger currentPosition = 0;

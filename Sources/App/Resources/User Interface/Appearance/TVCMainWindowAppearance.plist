@@ -79,12 +79,12 @@
 			<string>1.0</string>
 		</dict>
 	</dict>
-	<key>BigSurDark</key>
+	<key>TahoeDark</key>
 	<dict>
 		<key>inheritFrom</key>
 		<string>CommonModernDark</string>
 	</dict>
-	<key>BigSurLight</key>
+	<key>TahoeLight</key>
 	<dict>
 		<key>inheritFrom</key>
 		<string>CommonModernLight</string>

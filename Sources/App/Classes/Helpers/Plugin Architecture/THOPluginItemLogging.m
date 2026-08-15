@@ -59,7 +59,7 @@ os_log_t _THOPluginLoggingSubsystemForBundle(NSBundle *bundle)
 			/* There was some debate whether to make the bundle identifier
 			 the identifier of the logging system instead of having the
 			 name in the category. Chose not to do that because seeing as
-			 the plugins are loaded as part of Textual and are not running
+			 the plugins are loaded as part of Glasstual and are not running
 			 in a separate process, it just makes more sense to filter. */
 			subsystem = os_log_create(TXBundleBuildProductIdentifierCString, category.UTF8String);
 			

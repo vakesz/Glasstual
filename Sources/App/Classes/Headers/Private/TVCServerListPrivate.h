@@ -43,8 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TVCServerList ()
 @property (nonatomic, weak) id keyDelegate;
 
-- (TVCServerListAppearance *)userInterfaceObjects;
-- (nullable NSVisualEffectView *)visualEffectView;
 
 - (BOOL)leftMouseIsDownInView;
 

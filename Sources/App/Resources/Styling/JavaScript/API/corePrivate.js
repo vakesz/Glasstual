@@ -44,31 +44,31 @@
 /* ************************************************** */
 
 /* Private objects */
-var _Textual = {};
+var _Glasstual = {};
 
 /* Resource management */
-Textual.initializeCore = function(resourcesPath)
+Glasstual.initializeCore = function(resourcesPath)
 {
-	Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/clickMenuSelection.js");
-	Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/documentBody.js");
-	Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/events.js");
-	Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/inlineMedia.js");
-	Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/messageBuffer.js");
-	Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/scrollTo.js");
-	Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/state.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/clickMenuSelection.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/documentBody.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/events.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/inlineMedia.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/messageBuffer.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/scrollTo.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/state.js");
 
 	/* Only load auto scroller if we believe this is WebKit2 */
 	if (window.webkit && typeof window.webkit.messageHandlers === "undefined") {
-		Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/automaticEmpty.js");
+		Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/automaticEmpty.js");
 	} else {
-		Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/automatic.js");
+		Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/automatic.js");
 	}
 
-	Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/conversationTracking.js");
-	Textual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scriptSink.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/conversationTracking.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scriptSink.js");
 };
 
-Textual.includeStyleResourceFile = function(file)
+Glasstual.includeStyleResourceFile = function(file)
 {
 	if (/loaded|complete/.test(document.readyState)) {
 		var newFile = document.createElement("link");
@@ -85,7 +85,7 @@ Textual.includeStyleResourceFile = function(file)
 	}
 };
 
-Textual.includeScriptResourceFile = function(file)
+Glasstual.includeScriptResourceFile = function(file)
 {
 	if (/loaded|complete/.test(document.readyState)) {
 		var newFile = document.createElement("script");

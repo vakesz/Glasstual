@@ -352,7 +352,7 @@ _InlineMediaLoader.processPayload = function(payload) /* PRIVATE */
 			if (_InlineMediaLoader._loadedStyleResources.indexOf(file) < 0) {
 				_InlineMediaLoader._loadedStyleResources.push(file);
 
-				Textual.includeStyleResourceFile(file);
+				Glasstual.includeStyleResourceFile(file);
 			}
 		}
 	}
@@ -367,7 +367,7 @@ _InlineMediaLoader.processPayload = function(payload) /* PRIVATE */
 			if (_InlineMediaLoader._loadedScriptResources.indexOf(file) < 0) {
 				_InlineMediaLoader._loadedScriptResources.push(file);
 
-				Textual.includeScriptResourceFile(file);
+				Glasstual.includeScriptResourceFile(file);
 			}
 		}
 	}

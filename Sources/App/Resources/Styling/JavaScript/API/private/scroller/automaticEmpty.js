@@ -47,12 +47,12 @@
 /*                 Automatic Scroller                 */
 /* ************************************************** */
 
-TextualScroller.performScroll = function() /* PUBLIC */
+GlasstualScroller.performScroll = function() /* PUBLIC */
 {
 
 };
 
-TextualScroller.setAutomaticScrollingEnabled = function(enabled) /* PUBLIC */
+GlasstualScroller.setAutomaticScrollingEnabled = function(enabled) /* PUBLIC */
 {
 
 };
@@ -81,7 +81,7 @@ Element.prototype.cancelMutation = function() /* PUBLIC */
 
 };
 
-_TextualScroller.createMutationObserver = function() /* PRIVATE */
+_GlasstualScroller.createMutationObserver = function() /* PRIVATE */
 {
 
 };

@@ -60,20 +60,18 @@ enum
 	MTMainMenuHelp = 10,
 
 	/* Main menu - App menu */
-	MTMMAppAboutApp = 100, // "About Textual"
+	MTMMAppAboutApp = 100, // "About Glasstual"
 	MTMMAppAboutAppSeparator = 101, // "-"
 	MTMMAppPreferences = 102, // "Preferences…"
-	MTMMAppManageLicense = 103, // "Manage license…"
-//	MTMMAppInAppPurchase = 104, // "In-app Purchase…"
 	MTMMAppCheckForUpdates = 105, // "Check for updates…"
 	MTMMAppCheckForUpdatesSeparator = 106, // "-"
 	MTMMAppServices = 107, // "Services"
 	MTMMAppServicesSeparator = 108, // "-"
-	MTMMAppHideApp = 109, // "Hide Textual"
+	MTMMAppHideApp = 109, // "Hide Glasstual"
 	MTMMAppHideOthers = 110, // "Hide Others"
 	MTMMAppShowAll = 111, // "Show All"
 	MTMMAppShowAllSeparator = 112, // "-"
-	MTMMAppQuitApp = 113, // "Quit Textual & IRC"
+	MTMMAppQuitApp = 113, // "Quit Glasstual & IRC"
 
 	/* Main menu - File menu */
 	MTMMFileDisableAllNotifications = 200, // "Disable All Notifications"
@@ -108,7 +106,7 @@ enum
 	MTMMViewIncreaseFontSize = 406, // "Increase Font Size"
 	MTMMViewDecreaseFontSize = 407, // "Decrease Font Size"
 	MTMMViewDecreaseFontSizeSeparator = 408, // "-"
-	MTMMViewToggleFullscreen = 409, // "Toggle Fullscreen"
+	MTMMViewToggleFullscreen = 409, // "Enter / Exit Full Screen"
 
 	/* Main menu - Server menu */
 	MTMMServerConnect = 500, // "Connect"
@@ -194,8 +192,8 @@ enum
 	MTMMWindowMinimize = 800, // "Minimize"
 	MTMMWindowZoom = 801, // "Zoom"
 	MTMMWindowZoomSeparator = 802, // "-"
-	MTMMWindowToggleVisibilityOfMemberList = 803, // "Toggle Visibility of Member List"
-	MTMMWindowToggleVisibilityOfServerList = 804, // "Toggle Visibility of Server List"
+	MTMMWindowToggleVisibilityOfMemberList = 803, // "Show / Hide Member List"
+	MTMMWindowToggleVisibilityOfServerList = 804, // "Show / Hide Server List"
 	MTMMWindowToggleWindowAppearance = 805, // "Toggle Window Appearance"
 	MTMMWindowToggleWindowAppearanceSeparator = 806, // "-"
 	MTMMWindowSortChannelList = 807, // "Sort Channel List"
@@ -214,27 +212,9 @@ enum
 
 	/* Main menu - Help menu */
 	MTMMHelpAcknowledgements = 900, // "Acknowledgements"
-	MTMMHelpLicenseAgreement = 901, // "License Agreement"
-	MTMMHelpPrivacyPolicy = 902, // "Privacy Policy"
-	MTMMHelpPrivacyPolicySeparator = 903, // "-"
-	MTMMHelpFrequentlyAskedQuestions = 904, // "Frequently Asked Questions"
-	MTMMHelpKnowledgeBaseMenu = 905, // "Knowledge Base"
-	/* Highest: 9050016 */
-	MTMMHelpKBMenuKnowledgeBaseHome = 9050000, // "Knowledge Base Home"
-	MTMMHelpKBMenuKnowledgeBaseHomeSeparator = 9050001, // "-"
-	MTMMHelpKBMenuChatEncryption = 9050004, // "Chat Encryption"
-	MTMMHelpKBMenuCommandReference = 9050005, // "Command Reference"
-	MTMMHelpKBMenuFeatureRequests = 9050006, // "Feature Requests"
-	MTMMHelpKBMenuKeyboardShortcuts = 9050007, // "Keyboard Shortcuts"
-	MTMMHelpKBMenuMemoryManagement = 9050008, // "Memory Management"
-	MTMMHelpKBMenuNetworkTimeouts = 9050016, // "Network Timeouts"
-	MTMMHelpKBMenuTextFormatting = 9050009, // "Text Formatting"
-	MTMMHelpKBMenuStylingInformation = 9050010, // "Styling Information"
-	MTMMHelpKBMenuStylingInformationSeparator = 9050011, // "-"
-	MTMMHelpKBMenuConnectingWithCertificate = 9050012, // "Connecting with Certificate"
-	MTMMHelpKBMenuConnectingToBouncer = 9050013, // "Connecting to a ZNC Bouncer"
-	MTMMHelpKBMenuConnectingToBouncerSeparator = 9050014, // "-"
-	MTMMHelpKBMenuDCCFileTransferInformation = 9050015, // "DCC File Transfer Information"
+	/* Tags 901 - 905 and 9050000 - 9050016 belonged to the Knowledge Base menu,
+	 which pointed at documentation hosted for upstream Textual. Those items were
+	 removed from the menu, so the tags are retired rather than reused. */
 	MTMMHelpKnowledgeBaseMenuSeparator = 906, // "-"
 	MTMMHelpConnectToHelpChannel = 907, // "Connect to Help Channel"
 	MTMMHelpConnectToTestingChannel = 908, // "Connect to Testing Channel"
@@ -343,7 +323,7 @@ enum
 
 @property (readonly, strong) NSMenu *dockMenu;
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 @property (readonly,strong) NSMenu *encryptionManagerStatusMenu;
 #endif
 
@@ -389,8 +369,8 @@ enum
 - (IBAction)connect:(id)sender;
 - (IBAction)connectBypassingProxy:(id)sender;
 
-- (IBAction)connectToTextualHelpChannel:(id)sender;
-- (IBAction)connectToTextualTestingChannel:(id)sender;
+- (IBAction)connectToGlasstualHelpChannel:(id)sender;
+- (IBAction)connectToGlasstualTestingChannel:(id)sender;
 
 - (IBAction)disconnect:(id)sender;
 - (IBAction)cancelReconnection:(id)sender;
@@ -447,8 +427,6 @@ enum
 - (IBAction)onNextHighlight:(id)sender;
 - (IBAction)onPreviousHighlight:(id)sender;
 
-- (IBAction)openStandaloneStoreWebpage:(id)sender;;
-
 - (IBAction)openChannelLogs:(id)sender;
 - (IBAction)openLogLocation:(id)sender;
 
@@ -500,10 +478,7 @@ enum
 - (IBAction)toggleMuteOnNotifications:(id)sender;
 - (IBAction)toggleMuteOnNotificationSounds:(id)sender;
 
-- (IBAction)manageLicense:(id)sender;
-
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (IBAction)encryptionWhatIsThisInformation:(id)sender;
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 - (IBAction)encryptionStartPrivateConversation:(id)sender;
 - (IBAction)encryptionRefreshPrivateConversation:(id)sender;
 - (IBAction)encryptionEndPrivateConversation:(id)sender;

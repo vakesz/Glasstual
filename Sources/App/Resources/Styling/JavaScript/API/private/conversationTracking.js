@@ -64,7 +64,7 @@ ConversationTracking.nicknameSingleClickEventCallback = function(senderElement)
 	}
 
 	/* Gather basic information */
-	var documentBody = Textual.documentBodyElement();
+	var documentBody = Glasstual.documentBodyElement();
 
 	var plainTextLines = documentBody.querySelectorAll('div[data-line-type="privmsg"], div[data-line-type="action"]');
 

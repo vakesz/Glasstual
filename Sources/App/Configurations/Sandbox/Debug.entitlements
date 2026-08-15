@@ -4,12 +4,11 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<key>com.apple.security.get-task-allow</key>
+	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>com.codeux.apps.textual</string>
-		<string>com.codeux.apps.textual.group</string>
-		<string>8482Q6EPL6.com.codeux.apps.textual</string>
-		<string>8482Q6EPL6.com.codeux.irc.textual</string>
+		<string>H8W5DK3FN2.com.vakesz.glasstual</string>
 	</array>
 	<key>com.apple.security.automation.apple-events</key>
 	<true/>
@@ -31,11 +30,6 @@
 	<array>
 		<string>com.apple.itunes</string>
 		<string>com.apple.safari</string>
-	</array>
-	<key>com.apple.security.temporary-exception.shared-preference.read-write</key>
-	<array>
-		<string>com.codeux.apps.textual</string>
-		<string>com.codeux.apps.textual-mas</string>
 	</array>
 </dict>
 </plist>

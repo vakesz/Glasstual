@@ -44,10 +44,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TXApplication
 
-+ (BOOL)checkForOtherCopiesOfTextualRunning
++ (BOOL)checkForOtherCopiesOfGlasstualRunning
 {
 	pid_t ourProcessIdentifier = [[NSProcessInfo processInfo] processIdentifier];
 
+	/* These are the bundle identifiers of upstream Textual, not of Glasstual.
+	 They are matched verbatim so that a running copy of the app this one was
+	 forked from is still detected. Do not rename them. */
 	for (NSRunningApplication *application in RZWorkspace().runningApplications) {
 		if ([application.bundleIdentifier isEqualToString:@"com.codeux.apps.textual"] ||
 			[application.bundleIdentifier isEqualToString:@"com.codeux.apps.textual-mas"] ||

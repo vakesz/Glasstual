@@ -30,7 +30,7 @@
  *
  *********************************************************************** */
 
-#import "Textual.h"
+#import "Glasstual.h"
 
 @interface TPCPreferencesUserDefaults (TPCPreferencesUserDefaultsSwizzled)
 @end

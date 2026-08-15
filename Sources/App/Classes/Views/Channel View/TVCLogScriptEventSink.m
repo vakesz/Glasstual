@@ -39,7 +39,6 @@
 #include <objc/message.h>
 
 #import "GTMEncodeHTML.h"
-#import "WebScriptObjectHelperPrivate.h"
 #import "NSObjectHelperPrivate.h"
 #import "TXMasterController.h"
 #import "TPCPreferencesLocal.h"
@@ -57,7 +56,6 @@
 #import "TVCLogPolicyPrivate.h"
 #import "TVCLogRenderer.h"
 #import "TVCLogViewPrivate.h"
-#import "TVCLogViewInternalWK1.h"
 #import "TVCLogViewInternalWK2.h"
 #import "TVCLogScriptEventSinkPrivate.h"
 
@@ -96,88 +94,9 @@ NS_ASSUME_NONNULL_BEGIN
 	return nil;
 }
 
-+ (BOOL)isSelectorExcludedFromWebScript:(SEL)selector
-{
-	if (selector == @selector(init) ||
-		selector == @selector(initWithWebView:) ||
-		selector == @selector(webView) ||
-		selector == @selector(webViewPolicy) ||
-		selector == @selector(associatedClient) ||
-		selector == @selector(associatedChannel) ||
-		selector == @selector(objectValueToCommon:) ||
-		selector == @selector(userContentController:didReceiveScriptMessage:) ||
-		selector == @selector(processInputData:inWebView:withSelector:) ||
-		selector == @selector(processInputData:inWebView:withSelector:minimumArgumentCount:withValidation:))
-	{
-		return YES;
-	}
-
-	if ([NSStringFromSelector(selector) hasPrefix:@"_"]) {
-		return NO;
-	}
-
-	return NO;
-}
-
-+ (nullable NSString *)webScriptNameForSelector:(SEL)sel
-{
-	return nil;
-}
-
-- (id)invokeUndefinedMethodFromWebScript:(NSString *)name withArguments:(NSArray *)arguments
-{
-	SEL handlerSelector = NSSelectorFromString([name stringByAppendingString:@":inWebView:"]);
-
-	if ([self respondsToSelector:handlerSelector] == NO) {
-		return @(NO);
-	}
-
-	id argument = nil;
-
-	if (arguments && arguments.count > 0) {
-		argument = arguments[0];
-
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
-		if ([argument isKindOfClass:[WebScriptObject class]]) {
-			argument = [self.webView webScriptObjectToCommon:argument];
-		}
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
-	}
-
-	NSMethodSignature *signature = [self methodSignatureForSelector:handlerSelector];
-
-	NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
-
-	[invocation setTarget:self];
-
-	[invocation setSelector:handlerSelector];
-	[invocation setArgument:&argument atIndex:2];
-
-	TVCLogView *webView = self.webView;
-	[invocation setArgument:&webView atIndex:3];
-
-	[invocation invoke];
-
-	return @(YES);
-}
-
-+ (BOOL)isKeyExcludedFromWebScript:(const char *)name
-{
-	return YES;
-}
-
-+ (nullable NSString *)webScriptNameForKey:(const char *)name
-{
-	return nil;
-}
-
 + (nullable id)objectValueToCommon:(id)object
 {
-	if ([object isKindOfClass:[NSNull class]] ||
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
-		[object isKindOfClass:[WebUndefined class]])
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
-	{
+	if ([object isKindOfClass:[NSNull class]]) {
 		return nil;
 	}
 
@@ -267,9 +186,7 @@ TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
 
 	if ([webView isKindOfClass:[TVCLogView class]]) {
 		intWebView = webView;
-	} else if ([webView isKindOfClass:[TVCLogViewInternalWK1 class]] ||
-			   [webView isKindOfClass:[TVCLogViewInternalWK2 class]])
-	{
+	} else if ([webView isKindOfClass:[TVCLogViewInternalWK2 class]]) {
 		intWebView = [webView t_parentView];
 	} else {
 		return;
@@ -340,10 +257,7 @@ TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
 			values = inputData;
 		}
 	}
-	else if ([inputData isKindOfClass:[NSNull class]] ||
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_BEGIN
-			 [inputData isKindOfClass:[WebUndefined class]])
-TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
+	else if ([inputData isKindOfClass:[NSNull class]])
 	{
 		if (minimumArgumentCount > 0) {
 			values = @[[NSNull null]];
@@ -1027,7 +941,7 @@ TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
 
 - (void)_encryptionAuthenticateUser:(TVCLogScriptEventSinkContext *)context
 {
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	IRCClient *client = context.associatedClient;
 
 	if (client.isLoggedIn == NO) {
@@ -1589,7 +1503,7 @@ TEXTUAL_IGNORE_WEBKIT_DEPRECATIONS_END
 	}
 
 	if (result) {
-		[worldController() evaluateFunctionOnAllViews:@"Textual.styleSettingDidChange" arguments:@[keyName]];
+		[worldController() evaluateFunctionOnAllViews:@"Glasstual.styleSettingDidChange" arguments:@[keyName]];
 	}
 
 	context.completionBlock( @(result) );

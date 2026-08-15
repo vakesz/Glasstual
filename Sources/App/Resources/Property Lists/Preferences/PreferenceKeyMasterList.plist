@@ -286,17 +286,9 @@
 	<integer>0</integer>
 	<key>TextFieldTextReplacement</key>
 	<integer>0</integer>
-	<key>TextualDeveloperEnvironment</key>
+	<key>GlasstualDeveloperEnvironment</key>
 	<integer>0</integer>
-	<key>Textual 7 Upgrade -&gt; Tv7 -&gt; Remind Me Later</key>
-	<integer>0</integer>
-	<key>Textual 7 Upgrade -&gt; Tv7 -&gt; Last Dialog Presentation (LMD)</key>
-	<integer>0</integer>
-	<key>Textual 7 Upgrade -&gt; Tv7 -&gt; Eligible License Key</key>
-	<integer>0</integer>
-	<key>Textual 7 Upgrade -&gt; Tv7 -&gt; Eligibility</key>
-	<integer>0</integer>
-	<key>Textual Chat Filter Extension -&gt; Filters</key>
+	<key>Glasstual Chat Filter Extension -&gt; Filters</key>
 	<integer>0</integer>
 	<key>Theme -&gt; Channel Font Preference Enabled</key>
 	<integer>0</integer>
@@ -346,8 +338,6 @@
 	<integer>0</integer>
 	<key>Sandbox Migration -&gt; Imported Keys</key>
 	<integer>0</integer>
-	<key>TLOLicenseManagerAuthorizationCode</key>
-	<integer>0</integer>
 	<key>THOPluginManager -&gt; Extras Installer Last Check for Update Payload</key>
 	<integer>0</integer>
 	<key>TVCLogControllerHistoricLogFileSavePath_v3</key>
@@ -371,8 +361,6 @@
 	<key>User List Mode Badge Colors -&gt; no mode</key>
 	<integer>0</integer>
 	<key>UserListDoubleClickAction</key>
-	<integer>0</integer>
-	<key>UsesWebKit2WhenAvailable</key>
 	<integer>0</integer>
 	<key>WebViewDoNotUsesCustomScrollers</key>
 	<integer>0</integer>

@@ -92,6 +92,8 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[RZMainBundle() loadNibNamed:@"TDCFileTransferDialog" owner:self topLevelObjects:nil];
 
+	self.fileTransferTable.style = NSTableViewStyleInset;
+
 	self.maintenanceTimer =
 	[TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
 		[self onMaintenanceTimer];

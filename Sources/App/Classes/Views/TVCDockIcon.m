@@ -87,7 +87,7 @@ static NSInteger _cachedMessageCount = (-1);
 
 	NSDateComponents *breakdownInfo = [sysCalendar components:(NSCalendarUnitMonth | NSCalendarUnitDay) fromDate:[NSDate date]];
 
-	/* The first public commit of Textual occurred on July, 23, 2010. This is the day
+	/* The first public commit of Glasstual occurred on July, 23, 2010. This is the day
 	 that we consider the birthday of the application. */
 	if (breakdownInfo.month == 7 && breakdownInfo.day == 23) {
 		return [NSImage imageNamed:@"applicationIconBirthday"];

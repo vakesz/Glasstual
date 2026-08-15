@@ -69,6 +69,10 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *bundleVersion = [TPCApplicationInfo applicationVersionShort];
 
 	self.versionInfoTextField.stringValue = TXTLS(@"TDCAboutDialog[zjd-al]", bundleVersion);
+
+	self.window.styleMask |= NSWindowStyleMaskFullSizeContentView;
+	self.window.titlebarAppearsTransparent = YES;
+	self.window.titleVisibility = NSWindowTitleHidden;
 }
 
 - (void)show

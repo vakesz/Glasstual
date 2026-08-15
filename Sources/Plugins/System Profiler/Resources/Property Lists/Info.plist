@@ -14,7 +14,7 @@
 	<string>1.0.1</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2012 - 2020 Codeux Software, LLC. All rights reserved.</string>
-	<key>MinimumTextualVersion</key>
+	<key>MinimumGlasstualVersion</key>
 	<string>7.2.4</string>
 	<key>NSPrincipalClass</key>
 	<string>TPISystemProfiler</string>

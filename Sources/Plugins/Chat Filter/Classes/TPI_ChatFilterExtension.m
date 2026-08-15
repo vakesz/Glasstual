@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define _filterTableDragToken			@"filterTableDragToken"
 
-#define _filterListUserDefaultsKey		@"Textual Chat Filter Extension -> Filters"
+#define _filterListUserDefaultsKey		@"Glasstual Chat Filter Extension -> Filters"
 
 @interface TPI_ChatFilterExtension () <NSTableViewDataSource, NSTableViewDelegate>
 @property (nonatomic, strong) IBOutlet NSView *preferencesPaneView;
@@ -369,15 +369,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Table View Delegate
 
-- (BOOL)tableView:(NSTableView *)tableView writeRowsWithIndexes:(NSIndexSet *)rowIndexes toPasteboard:(NSPasteboard *)pasteboard
+- (nullable id<NSPasteboardWriting>)tableView:(NSTableView *)tableView pasteboardWriterForRow:(NSInteger)row
 {
-	NSData *draggedData = [NSKeyedArchiver archivedDataWithRootObject:rowIndexes];
-
-	[pasteboard declareTypes:@[_filterTableDragToken] owner:self];
-
-	[pasteboard setData:draggedData forType:_filterTableDragToken];
-
-	return YES;
+	NSPasteboardItem *item = [[NSPasteboardItem alloc] init];
+	[item setString:@(row).stringValue forType:_filterTableDragToken];
+	return item;
 }
 
 - (NSDragOperation)tableView:(NSTableView *)tableView validateDrop:(id<NSDraggingInfo>)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)dropOperation
@@ -389,11 +385,9 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSPasteboard *pasteboard = [info draggingPasteboard];
 
-	NSData *draggedData = [pasteboard dataForType:_filterTableDragToken];
+	NSString *draggedRowString = [pasteboard stringForType:_filterTableDragToken];
 
-	NSIndexSet *draggedRowIndexes = [NSKeyedUnarchiver unarchiveObjectWithData:draggedData];
-
-	NSUInteger draggedRowIndex = draggedRowIndexes.firstIndex;
+	NSUInteger draggedRowIndex = draggedRowString.integerValue;
 
 	[self.filterArrayController moveObjectAtArrangedObjectIndex:draggedRowIndex toIndex:row];
 

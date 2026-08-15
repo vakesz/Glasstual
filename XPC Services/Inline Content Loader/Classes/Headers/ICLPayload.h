@@ -138,7 +138,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  - Inheritance
 
- Textual offers a prototype named InlineMediaPrototype that your
+ Glasstual offers a prototype named InlineMediaPrototype that your
  object can inherit from. This prototype already contains an
  entrypoint() function which you can override.
 

@@ -44,8 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCUser;
 @class TLOInputHistory;
 @class TVCMainWindowChannelView;
-@class TVCMainWindowTitlebarAccessoryView, TVCMainWindowTitlebarAccessoryViewController;
-@class TVCMainWindowTitlebarAccessoryViewLockButton;
 @class TVCTextViewIRCFormattingMenu;
 @class TXMenuControllerMainWindowProxy;
 
@@ -69,9 +67,8 @@ typedef NS_OPTIONS(NSUInteger, TVCMainWindowMouseLocation) {
 
 - (TLOInputHistory *)inputHistoryManager;
 - (TVCMainWindowChannelView *)channelView;
-- (TVCMainWindowTitlebarAccessoryView *)titlebarAccessoryView;
-- (nullable TVCMainWindowTitlebarAccessoryViewController *)titlebarAccessoryViewController;
-- (TVCMainWindowTitlebarAccessoryViewLockButton *)titlebarAccessoryViewLockButton;
+- (void)updateSegmentedControllerVisibility;
+
 - (TVCTextViewIRCFormattingMenu *)formattingMenu;
 - (TXMenuControllerMainWindowProxy *)mainMenuProxy;
 

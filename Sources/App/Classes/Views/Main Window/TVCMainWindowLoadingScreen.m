@@ -36,7 +36,6 @@
  *********************************************************************** */
 
 #import "NSViewHelperPrivate.h"
-#import "TVCMainWindowSplitView.h"
 #import "TVCMainWindowTextViewPrivate.h"
 #import "TVCMainWindowPrivate.h"
 #import "TVCMainWindowLoadingScreenPrivate.h"
@@ -50,7 +49,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) IBOutlet NSView *progressView;
 @property (nonatomic, weak) IBOutlet NSTextField *progressViewDescriptionTextField;
 @property (nonatomic, weak) IBOutlet NSProgressIndicator *progressViewIndicator;
-@property (nonatomic, strong) IBOutlet NSView *trialExpiredView;
 @end
 
 @implementation TVCMainWindowLoadingScreenView
@@ -79,11 +77,6 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(progressReason != nil);
 
 	self.progressViewDescriptionTextField.stringValue = progressReason;
-}
-
-- (void)showTrialExpiredView
-{
-	[self displayView:self.trialExpiredView];
 }
 
 #pragma mark -
@@ -222,7 +215,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)disableBackgroundControlsStepOne
 {
-	self.mainWindow.contentSplitView.hidden = YES;
+	self.mainWindow.contentSplitViewController.view.hidden = YES;
 }
 
 - (void)disableBackgroundControlsStepTwo
@@ -238,7 +231,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)enableBackgroundControlsStepOne
 {
-	self.mainWindow.contentSplitView.hidden = NO;
+	self.mainWindow.contentSplitViewController.view.hidden = NO;
 }
 
 - (void)enableBackgroundControlsStepTwo

@@ -42,11 +42,9 @@
 #import "OELReachability.h"
 #import "TDCAlert.h"
 #import "TLOEncryptionManagerPrivate.h"
-#import "TLOLicenseManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TLOSpeechSynthesizerPrivate.h"
 #import "THOPluginManagerPrivate.h"
-#import "TDCLicenseManagerDialogPrivate.h"
 #import "TVCLogControllerHistoricLogFilePrivate.h"
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 #import "TVCLogControllerOperationQueuePrivate.h"
@@ -67,7 +65,7 @@
 #import "TXMasterControllerPrivate.h"
 #import "IRCClient.h"
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 #import <Sparkle/Sparkle.h>
 #endif
 
@@ -87,7 +85,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, weak, readwrite) IBOutlet TXMenuController *menuController;
 @property (nonatomic, assign) NSUInteger applicationLaunchRemainder;
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 @property (nonatomic, strong, readwrite) SPUStandardUpdaterController *updateController;
 #endif
 @end
@@ -199,10 +197,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.applicationLaunchRemainder = 1;
 
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-	[self prepareLicenseManager];
-#endif
-
 	[self prepareThirdPartyServices];
 
 	/* Load plugins last so that -applicationDidFinishLaunching is posted
@@ -229,7 +223,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)prepareThirdPartyServiceSparkleFramework
 {
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	  SPUStandardUpdaterController *controller =
 	[[SPUStandardUpdaterController alloc] initWithStartingUpdater:NO
 												  updaterDelegate:(id <SPUUpdaterDelegate>)self
@@ -274,15 +268,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[notifier startNotifier];
 }
-
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-- (void)prepareLicenseManager
-{
-	TLOLicenseManagerSetup();
-
-	[[TXSharedApplication sharedLicenseManagerDialog] applicationDidFinishLaunching];
-}
-#endif
 
 #pragma mark -
 #pragma mark NSApplication Delegate
@@ -465,7 +450,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[TVCLogControllerInlineMediaSharedInstance() prepareForApplicationTermination];
 
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	[sharedEncryptionManager() prepareForApplicationTermination];
 #endif
 
@@ -616,7 +601,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Sparkle Delegate
 
-#if TEXTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
+#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 - (void)updaterWillRelaunchApplication:(SPUUpdater *)updater
 {
 	self.applicationIsTerminating = YES;

@@ -1,0 +1,25 @@
+
+// Main application, extensions, and XPC services
+
+GLASSTUAL_PRODUCT_NAME = Glasstual
+
+// GLASSTUAL_PRODUCT_LOCATION is replaced by the build script
+GLASSTUAL_PRODUCT_LOCATION = /Applications/${GLASSTUAL_PRODUCT_NAME}.app
+
+// GLASSTUAL_PRODUCT_BINARY is replaced by the build script
+GLASSTUAL_PRODUCT_BINARY = ${GLASSTUAL_PRODUCT_LOCATION}/Contents/MacOS/${GLASSTUAL_PRODUCT_NAME}
+
+// GLASSTUAL_WORKSPACE_TEMP_DIR should be same for every
+// project so only override GLASSTUAL_WORKSPACE_DIR, not this.
+GLASSTUAL_WORKSPACE_TEMP_DIR = ${GLASSTUAL_WORKSPACE_DIR}/.tmp
+
+SHARED_PRECOMPS_DIR = ${GLASSTUAL_WORKSPACE_TEMP_DIR}/SharedPCH
+
+DWARF_DSYM_FOLDER_PATH = ${GLASSTUAL_WORKSPACE_TEMP_DIR}/SharedSymbols
+
+// GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY acts an easy way to
+// modify code based on the type of binary being built.
+// As with other feature flags, changing this value only
+// adds or excludes certain chunks of code. It doesn't
+// change the underlying build process.
+GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY = 1

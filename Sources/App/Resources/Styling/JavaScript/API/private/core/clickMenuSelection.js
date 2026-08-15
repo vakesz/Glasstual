@@ -44,36 +44,36 @@
 /* ************************************************** */
 
 /* Selection */
-Textual.currentSelection = function() /* PUBLIC */
+Glasstual.currentSelection = function() /* PUBLIC */
 {
 	return window.getSelection().toString();
 };
 
-Textual.clearSelection = function() /* PUBLIC */
+Glasstual.clearSelection = function() /* PUBLIC */
 {
 	window.getSelection().empty();
 };
 
-_Textual.clearSelectionAndPreventDefault = function() /* PRIVATE */
+_Glasstual.clearSelectionAndPreventDefault = function() /* PRIVATE */
 {
-	Textual.clearSelection();
+	Glasstual.clearSelection();
 
 	event.preventDefault();
 };
 
-_Textual.recordSelection = function() /* PRIVATE */
+_Glasstual.recordSelection = function() /* PRIVATE */
 {
-	var selectedText = Textual.currentSelection();
+	var selectedText = Glasstual.currentSelection();
 
 	appPrivate.setSelection(selectedText);
 };
 
-_Textual._selectionChangedCallback = function() /* PRIVATE */
+_Glasstual._selectionChangedCallback = function() /* PRIVATE */
 {
-	_Textual.recordSelection();
+	_Glasstual.recordSelection();
 };
 
-_Textual.copySelectionOnMouseUpEvent = function() /* PRIVATE */
+_Glasstual.copySelectionOnMouseUpEvent = function() /* PRIVATE */
 {
 	if (window.event.metaKey || window.event.altKey) {
 		return;
@@ -82,45 +82,45 @@ _Textual.copySelectionOnMouseUpEvent = function() /* PRIVATE */
 	appPrivate.copySelectionWhenPermitted(
 	   function(returnValue) {
 			if (returnValue) {
-				Textual.clearSelection();
+				Glasstual.clearSelection();
 			}
 	   }
 	);
 };
 
-_Textual._openGenericContextualMenu = function() /* PRIVATE */
+_Glasstual._openGenericContextualMenu = function() /* PRIVATE */
 {
 
 };
 
-Textual.openChannelNameContextualMenu = function() /* PUBLIC */
+Glasstual.openChannelNameContextualMenu = function() /* PUBLIC */
 {
-	_Textual.setPolicyChannelName();
+	_Glasstual.setPolicyChannelName();
 };
 
-Textual.openURLManagementContextualMenu = function() /* PUBLIC */
+Glasstual.openURLManagementContextualMenu = function() /* PUBLIC */
 {
-	_Textual.setPolicyURLAddress();
+	_Glasstual.setPolicyURLAddress();
 };
 
-Textual.openStandardNicknameContextualMenu = function() /* PUBLIC */
+Glasstual.openStandardNicknameContextualMenu = function() /* PUBLIC */
 {
-	_Textual.setPolicyStandardNickname();
+	_Glasstual.setPolicyStandardNickname();
 };
 
-Textual.openInlineNicknameContextualMenu = function() /* PUBLIC */
+Glasstual.openInlineNicknameContextualMenu = function() /* PUBLIC */
 {
-	_Textual.setPolicyInlineNickname();
+	_Glasstual.setPolicyInlineNickname();
 };
 
-_Textual.setPolicyStandardNickname = function() /* PRIVATE */
+_Glasstual.setPolicyStandardNickname = function() /* PRIVATE */
 {
 	var userNickname = event.target.dataset.nickname;
 
 	appPrivate.setNickname(userNickname);
 };
 
-_Textual.setPolicyInlineNickname = function() /* PRIVATE */
+_Glasstual.setPolicyInlineNickname = function() /* PRIVATE */
 {
 	var userNickname = event.target.textContent;
 
@@ -133,69 +133,69 @@ _Textual.setPolicyInlineNickname = function() /* PRIVATE */
 	}
 };
 
-_Textual.setPolicyURLAddress = function() /* PRIVATE */
+_Glasstual.setPolicyURLAddress = function() /* PRIVATE */
 {
 	appPrivate.setURLAddress(event.target.getAttribute("href"));
 };
 
-_Textual.setPolicyChannelName = function() /* PRIVATE */
+_Glasstual.setPolicyChannelName = function() /* PRIVATE */
 {
 	appPrivate.setChannelName(event.target.textContent);
 };
 
 /* Double click actions */
-Textual._nicknameDoubleClickTimer = null;
+Glasstual._nicknameDoubleClickTimer = null;
 
-Textual.nicknameMaybeWasDoubleClicked = function(e) /* PUBLIC */
+Glasstual.nicknameMaybeWasDoubleClicked = function(e) /* PUBLIC */
 {
-	if (Textual._nicknameDoubleClickTimer) {
-		clearTimeout(Textual._nicknameDoubleClickTimer);
+	if (Glasstual._nicknameDoubleClickTimer) {
+		clearTimeout(Glasstual._nicknameDoubleClickTimer);
 
-		Textual._nicknameDoubleClickTimer = null;
+		Glasstual._nicknameDoubleClickTimer = null;
 
-		Textual.nicknameDoubleClicked(e);
+		Glasstual.nicknameDoubleClicked(e);
 	} else {
-		Textual._nicknameDoubleClickTimer = setTimeout(function() {
-			Textual._nicknameDoubleClickTimer = null;
+		Glasstual._nicknameDoubleClickTimer = setTimeout(function() {
+			Glasstual._nicknameDoubleClickTimer = null;
 
-			Textual.nicknameSingleClicked(e);
+			Glasstual.nicknameSingleClicked(e);
 		}, 250);
 	}
 };
 
-Textual.nicknameSingleClicked = function(e) /* PUBLIC */
+Glasstual.nicknameSingleClicked = function(e) /* PUBLIC */
 {
 	// API does not handle this action by default...
 };
 
-Textual.channelNameDoubleClicked = function() /* PUBLIC */
+Glasstual.channelNameDoubleClicked = function() /* PUBLIC */
 {
-	_Textual.clearSelectionAndPreventDefault();
+	_Glasstual.clearSelectionAndPreventDefault();
 
-	_Textual.setPolicyChannelName();
+	_Glasstual.setPolicyChannelName();
 
 	appPrivate.channelNameDoubleClicked();
 };
 
-Textual.nicknameDoubleClicked = function() /* PUBLIC */
+Glasstual.nicknameDoubleClicked = function() /* PUBLIC */
 {
-	_Textual.clearSelectionAndPreventDefault();
+	_Glasstual.clearSelectionAndPreventDefault();
 
-	_Textual.setPolicyStandardNickname();
+	_Glasstual.setPolicyStandardNickname();
 
 	appPrivate.nicknameDoubleClicked();
 };
 
-Textual.inlineNicknameDoubleClicked = function() /* PUBLIC */
+Glasstual.inlineNicknameDoubleClicked = function() /* PUBLIC */
 {
-	_Textual.clearSelectionAndPreventDefault();
+	_Glasstual.clearSelectionAndPreventDefault();
 
-	_Textual.setPolicyInlineNickname();
+	_Glasstual.setPolicyInlineNickname();
 
 	appPrivate.nicknameDoubleClicked();
 };
 
 /* Bind to events */
-document.addEventListener("contextmenu", _Textual._openGenericContextualMenu, false);
+document.addEventListener("contextmenu", _Glasstual._openGenericContextualMenu, false);
 
-document.addEventListener("selectionchange", _Textual._selectionChangedCallback, false);
+document.addEventListener("selectionchange", _Glasstual._selectionChangedCallback, false);

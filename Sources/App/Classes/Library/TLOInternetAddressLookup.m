@@ -45,9 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TLOInternetAddressLookup ()
 @property (nonatomic, weak) id requestDelegate;
-@property (nonatomic, strong) NSURLConnection *connection;
-@property (nonatomic, strong) NSURLResponse *connectionResponse;
-@property (nonatomic, strong) NSMutableData *connectionResponseData;
+@property (nonatomic, strong, nullable) NSURLSession *session;
+@property (nonatomic, strong, nullable) NSURLSessionDataTask *connection;
 @property (nonatomic, copy, nullable) NSString *address;
 @end
 
@@ -94,28 +93,33 @@ NS_ASSUME_NONNULL_BEGIN
 	NSAssert((self.connection == nil),
 		@"A lookup is already in progress");
 
-	self.connectionResponseData = [NSMutableData data];
-
 	NSURL *requestURL = [NSURL URLWithString:[self addressSourceURL]];
 
-	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requestURL
-														   cachePolicy:NSURLRequestReloadIgnoringCacheData
-													   timeoutInterval:_requestTimeoutInterval];
+	NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+	configuration.requestCachePolicy = NSURLRequestReloadIgnoringCacheData;
+	configuration.timeoutIntervalForRequest = _requestTimeoutInterval;
+	configuration.timeoutIntervalForResource = _requestTimeoutInterval;
 
-	request.HTTPMethod = @"GET";
+	self.session = [NSURLSession sessionWithConfiguration:configuration];
 
-	self.connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
+	__weak typeof(self) weakSelf = self;
+
+	self.connection = [self.session dataTaskWithURL:requestURL completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[weakSelf completeLookupWithData:data response:response error:error];
+		});
+	}];
+
+	[self.connection resume];
 }
 
 - (void)_teardownConnectionRequest
 {
-	if (self.connection) {
-		[self.connection cancel];
-	}
-
+	[self.connection cancel];
 	self.connection = nil;
-	self.connectionResponse = nil;
-	self.connectionResponseData = nil;
+
+	[self.session invalidateAndCancel];
+	self.session = nil;
 }
 
 - (void)teardownConnectionRequest
@@ -178,61 +182,21 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection
+- (void)completeLookupWithData:(NSData *)data response:(NSURLResponse *)response error:(NSError *)error
 {
-	id connectionResponse = self.connectionResponse;
+	if (error == nil && [response isKindOfClass:[NSHTTPURLResponse class]] && ((NSHTTPURLResponse *)response).statusCode == 200 && data.length > 0 && data.length <= 1024) {
+		NSString *address = [[NSString stringWithData:data encoding:NSUTF8StringEncoding] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 
-	// connectionResponse may not be NSHTTPURLResponse if the website
-	// requested performs a location redirect to a data resource.
-	if ([connectionResponse isKindOfClass:[NSHTTPURLResponse class]]) {
-		BOOL isValidResponse = ([connectionResponse statusCode] == 200);
-
-		if (isValidResponse) {
-			NSData *addressData = self.connectionResponseData;
-
-			NSString *address = [NSString stringWithData:addressData encoding:NSUTF8StringEncoding];
-
-			address = [address stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-
-			if ((address.isIPv4Address && self.IPv4AddressIsValid) ||
-				(address.isIPv6Address && self.IPv6AddressIsValid))
-			{
-				self.address = address;
-			}
+		if ((address.isIPv4Address && self.IPv4AddressIsValid) ||
+			(address.isIPv6Address && self.IPv6AddressIsValid))
+		{
+			self.address = address;
 		}
+	} else if (error) {
+		LogToConsole("Lookup failed with error: %{public}@", error.localizedDescription);
 	}
 
 	[self teardownConnectionRequest];
-}
-
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
-{
-	LogToConsole("Lookup failed with error: %{public}@", error.localizedDescription);
-
-	[self teardownConnectionRequest];
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
-	[self.connectionResponseData appendData:data];
-
-	// There is no reasonable explanation for the content of a request,
-	// without headers, to exceed this length when it's sent in plain text.
-	if (self.connectionResponseData.length > 1024) {
-		LogToConsoleError("Too much data has been received for this to be a valid request");
-
-		[self teardownConnectionRequest];
-	}
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-	self.connectionResponse = response;
-}
-
-- (nullable NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse
-{
-	return nil;
 }
 
 @end

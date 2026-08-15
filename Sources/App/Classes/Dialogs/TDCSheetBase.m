@@ -73,6 +73,8 @@ NS_ASSUME_NONNULL_BEGIN
 	 completionHandler:^(NSModalResponse returnCode) {
 		[self sheetDidEndWithReturnCode:returnCode];
 	}];
+
+	self.sheet.contentView.prefersCompactControlSizeMetrics = YES;
 }
 
 - (void)endSheet

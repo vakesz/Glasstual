@@ -52,14 +52,14 @@ typedef NS_ENUM(NSUInteger, IRCTextFormatterEffectType) {
 
 typedef NSString *IRCTextFormatterAttributeName NS_EXTENSIBLE_STRING_ENUM;
 
-TEXTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterBoldAttributeName; // BOOL
-TEXTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterItalicAttributeName; // BOOL
-TEXTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterMonospaceAttributeName; // BOOL
-TEXTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterStrikethroughAttributeName; // BOOL
-TEXTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterUnderlineAttributeName; // BOOL
-TEXTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterForegroundColorAttributeName; // NSNumber, 0-15 - or, NSColor
-TEXTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterBackgroundColorAttributeName; // NSNumber, 0-15 - or, NSColor
-TEXTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterSpoilerAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterBoldAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterItalicAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterMonospaceAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterStrikethroughAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterUnderlineAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterForegroundColorAttributeName; // NSNumber, 0-15 - or, NSColor
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterBackgroundColorAttributeName; // NSNumber, 0-15 - or, NSColor
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterSpoilerAttributeName; // BOOL
 
 #define IRCTextFormatterEffectColorAsDigitCharacter		0x03
 #define IRCTextFormatterEffectColorAsHexCharacter		0x04

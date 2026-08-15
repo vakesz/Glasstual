@@ -52,3 +52,32 @@ Click “Edit Style” to add your own style sheet rules. This feature can also 
 "77t-de" = "• Nickname Format";
 "ddh-hr" = "• Timestamp Format";
 "we8-i8" = "• Channel View Font";
+
+/* Settings window sidebar */
+"sb-tt" = "Settings";
+"sb-gr-ad" = "Add-ons";
+"sb-gr-av" = "Advanced";
+
+"sb-general" = "General";
+"sb-behavior" = "Behavior";
+"sb-notifications" = "Notifications";
+"sb-highlights" = "Highlights";
+"sb-interface" = "Interface";
+"sb-style" = "Style";
+"sb-controls" = "Controls";
+"sb-addons" = "Installed Add-ons";
+"sb-channelManagement" = "Channel Management";
+"sb-commandScope" = "Command Scope";
+"sb-compatibility" = "Compatibility";
+"sb-floodControl" = "Flood Control";
+"sb-incomingData" = "Incoming Data";
+"sb-fileTransfers" = "File Transfers";
+"sb-inlineMedia" = "Inline Media";
+"sb-logLocation" = "Log Location";
+"sb-defaultIdentity" = "Default Identity";
+"sb-defaultIRCopMessages" = "IRCop Messages";
+"sb-offRecordMessaging" = "Off-the-Record Messaging";
+"sb-hidden" = "Hidden";
+"sb-plugin" = "Add-on";
+
+"sb-vers" = "Version %1$@ (%2$@)";

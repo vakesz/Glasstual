@@ -50,7 +50,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (IBAction)performNavigationAction:(id)sender;
 
-- (IBAction)openHelpMenuItem:(id)sender;
 
 - (IBAction)joinChannelClicked:(id)sender;
 
@@ -65,13 +64,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)showServerPropertiesSheetForClient:(IRCClient *)client withSelection:(TDCServerPropertiesSheetSelection)selection context:(nullable id)context;
 
-#if TEXTUAL_BUILT_WITH_LICENSE_MANAGER == 1
-- (void)manageLicense:(id)sender activateLicenseKeyWithURL:(NSURL *)licenseKeyURL;
-
-- (void)manageLicense:(id)sender activateLicenseKey:(nullable NSString *)licenseKey;
-- (void)manageLicense:(id)sender activateLicenseKey:(nullable NSString *)licenseKey licenseKeyPassedByArgument:(BOOL)licenseKeyPassedByArgument;
-#endif
-
 - (void)toggleMuteOnNotificationsShortcutOn:(BOOL)toggleOn;
 - (void)toggleMuteOnNotificationSoundsShortcutOn:(BOOL)toggleOn;
 
@@ -79,15 +71,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)navigateToTreeItemWithIdentifier:(NSString *)identifier;
 - (void)navigateToTreeItem:(IRCTreeItem *)item;
 
-- (IBAction)emptyAction:(id)sender TEXTUAL_DEPRECATED("Do not target this method");
+- (IBAction)emptyAction:(id)sender GLASSTUAL_DEPRECATED("Do not target this method");
 @end
 
 @interface TXMenuControllerMainWindowProxy : NSObject
 - (IBAction)showWelcomeSheet:(id)sender;
-
-- (IBAction)manageLicense:(id)sender;
-
-- (IBAction)openStandaloneStoreWebpage:(id)sender;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -25,43 +25,30 @@
  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <SystemConfiguration/SystemConfiguration.h>
+#import <Network/Network.h>
 
 #import "OELReachability.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OELReachability ()
-@property (nonatomic, assign) SCNetworkReachabilityRef reachabilityRef;
-
-- (void)reachabilityChanged:(SCNetworkReachabilityFlags)flags;
+@property (nonatomic, strong) nw_path_monitor_t monitor;
+@property (nonatomic, strong) dispatch_queue_t monitorQueue;
+@property (nonatomic, assign) BOOL currentlyReachable;
 @end
-
-static void TMReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info)
-{
-	OELReachability *reachability = ((__bridge OELReachability *)info);
-
-	[reachability reachabilityChanged:flags];
-}
 
 @implementation OELReachability
 
 + (nullable OELReachability *)reachabilityForInternetConnection
 {
-	SCNetworkReachabilityRef ref = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, "www.google.com");
-
-	if (ref) {
-		return [[self alloc] initWithReachabilityRef:ref];
-	}
-
-	return nil;
+	return [[self alloc] init];
 }
 
-- (OELReachability *)initWithReachabilityRef:(SCNetworkReachabilityRef)ref
+- (instancetype)init
 {
-	if ((self = [super init]))
-	{
-		self.reachabilityRef = ref;
+	if ((self = [super init])) {
+		self.monitorQueue = dispatch_queue_create("com.vakesz.glasstual.reachability", DISPATCH_QUEUE_SERIAL);
+		self.monitor = nw_path_monitor_create();
 	}
 
 	return self;
@@ -71,60 +58,51 @@ static void TMReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkRea
 {
 	[self stopNotifier];
 
-	if (self.reachabilityRef)
-	{
-		CFRelease(self.reachabilityRef);
-				  self.reachabilityRef = nil;
-	}
-
-	self.reachableBlock	= nil;
+	self.reachableBlock = nil;
 	self.unreachableBlock = nil;
 }
 
 - (BOOL)startNotifier
 {
-	SCNetworkReachabilityContext context = {0, (__bridge void *)(self), NULL, NULL, NULL};
+	__weak typeof(self) weakSelf = self;
 
-	if (SCNetworkReachabilitySetCallback(self.reachabilityRef, TMReachabilityCallback, &context)) {
-		if (SCNetworkReachabilityScheduleWithRunLoop(self.reachabilityRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode))
-		{
-			return YES;
-		}
-	}
+	nw_path_monitor_set_queue(self.monitor, self.monitorQueue);
+	nw_path_monitor_set_update_handler(self.monitor, ^(nw_path_t path) {
+		BOOL reachable = (nw_path_get_status(path) == nw_path_status_satisfied);
 
-	return NO;
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[weakSelf pathChangedReachable:reachable];
+		});
+	});
+
+	nw_path_monitor_start(self.monitor);
+
+	return YES;
 }
 
 - (void)stopNotifier
 {
-	SCNetworkReachabilitySetCallback(self.reachabilityRef, NULL, NULL);
-
-	SCNetworkReachabilityUnscheduleFromRunLoop(self.reachabilityRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-}
-
-- (BOOL)isReachableWithFlags:(SCNetworkReachabilityFlags)flags
-{
-	if ((flags & kSCNetworkReachabilityFlagsReachable) == kSCNetworkReachabilityFlagsReachable) {
-		return YES;
-	} else {
-		return NO;
+	if (self.monitor) {
+		nw_path_monitor_cancel(self.monitor);
 	}
 }
 
 - (BOOL)isReachable
 {
-	SCNetworkReachabilityFlags flags;
-
-	if (SCNetworkReachabilityGetFlags(self.reachabilityRef, &flags) == FALSE) {
-		return NO;
-	}
-
-	return [self isReachableWithFlags:flags];
+	return self.currentlyReachable;
 }
 
-- (void)reachabilityChanged:(SCNetworkReachabilityFlags)flags
+- (void)pathChangedReachable:(BOOL)reachable
 {
-	if ([self isReachableWithFlags:flags]) {
+	BOOL wasReachable = self.currentlyReachable;
+
+	self.currentlyReachable = reachable;
+
+	if (reachable == wasReachable) {
+		return;
+	}
+
+	if (reachable) {
 		if (self.reachableBlock) {
 			self.reachableBlock(self);
 		}

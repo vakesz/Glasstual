@@ -42,14 +42,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient;
 
-TEXTUAL_EXTERN NSString * const TXNotificationUserInfoClientIdentifierKey;
-TEXTUAL_EXTERN NSString * const TXNotificationUserInfoChannelIdentifierKey;
+GLASSTUAL_EXTERN NSString * const TXNotificationUserInfoClientIdentifierKey;
+GLASSTUAL_EXTERN NSString * const TXNotificationUserInfoChannelIdentifierKey;
 
-TEXTUAL_EXTERN NSString * const TXNotificationDialogStandardNicknameFormat;
-TEXTUAL_EXTERN NSString * const TXNotificationDialogActionNicknameFormat;
+GLASSTUAL_EXTERN NSString * const TXNotificationDialogStandardNicknameFormat;
+GLASSTUAL_EXTERN NSString * const TXNotificationDialogActionNicknameFormat;
 
-TEXTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardActionFormat;
-TEXTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardMessageFormat;
+GLASSTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardActionFormat;
+GLASSTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardMessageFormat;
 
 @interface TLONotificationController ()
 /* All methods in this controller do not honor any user preference for

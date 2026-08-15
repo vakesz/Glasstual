@@ -14,16 +14,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4C1D102820EBF29F00E72D80 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
-		4C1D102920EBF29F00E72D80 /* Textual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Textual Extensions.xcconfig"; sourceTree = "<group>"; };
+		4C1D102820EBF29F00E72D80 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
+		4C1D102920EBF29F00E72D80 /* Glasstual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Glasstual Extensions.xcconfig"; sourceTree = "<group>"; };
 		4C1D102D20EBF29F00E72D80 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
-		4C1D103B20EBF29F00E72D80 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
+		4C1D103B20EBF29F00E72D80 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
 		4C1D103C20EBF29F00E72D80 /* Preserve Symbols.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Preserve Symbols.xcconfig"; sourceTree = "<group>"; };
-		4C1D103D20EBF29F00E72D80 /* Textual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Textual Extensions.xcconfig"; sourceTree = "<group>"; };
+		4C1D103D20EBF29F00E72D80 /* Glasstual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Glasstual Extensions.xcconfig"; sourceTree = "<group>"; };
 		4C1D103F20EBF29F00E72D80 /* Foundation.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Foundation.xcconfig; sourceTree = "<group>"; };
 		4C1D104220EBF29F00E72D80 /* Foundation Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Foundation Debug.xcconfig"; sourceTree = "<group>"; };
-		4C1D105020EBF29F00E72D80 /* Textual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Textual.xcconfig; sourceTree = "<group>"; };
-		4C1D105120EBF29F00E72D80 /* Textual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Textual Extensions.xcconfig"; sourceTree = "<group>"; };
+		4C1D105020EBF29F00E72D80 /* Glasstual.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Glasstual.xcconfig; sourceTree = "<group>"; };
+		4C1D105120EBF29F00E72D80 /* Glasstual Extensions.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Glasstual Extensions.xcconfig"; sourceTree = "<group>"; };
 		4C1D105520EBF29F00E72D80 /* Enabled Features.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Enabled Features.xcconfig"; sourceTree = "<group>"; };
 		4C36AAC720F27AB4007CA939 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/BasicLanguage.strings; sourceTree = "<group>"; };
 		4C46A07A20EC6A5000094EA4 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -99,8 +99,8 @@
 			isa = PBXGroup;
 			children = (
 				4C1D102D20EBF29F00E72D80 /* Enabled Features.xcconfig */,
-				4C1D102920EBF29F00E72D80 /* Textual Extensions.xcconfig */,
-				4C1D102820EBF29F00E72D80 /* Textual.xcconfig */,
+				4C1D102920EBF29F00E72D80 /* Glasstual Extensions.xcconfig */,
+				4C1D102820EBF29F00E72D80 /* Glasstual.xcconfig */,
 			);
 			path = "Standard Release";
 			sourceTree = "<group>";
@@ -111,8 +111,8 @@
 				4C1D104220EBF29F00E72D80 /* Foundation Debug.xcconfig */,
 				4C1D103F20EBF29F00E72D80 /* Foundation.xcconfig */,
 				4C1D103C20EBF29F00E72D80 /* Preserve Symbols.xcconfig */,
-				4C1D103D20EBF29F00E72D80 /* Textual Extensions.xcconfig */,
-				4C1D103B20EBF29F00E72D80 /* Textual.xcconfig */,
+				4C1D103D20EBF29F00E72D80 /* Glasstual Extensions.xcconfig */,
+				4C1D103B20EBF29F00E72D80 /* Glasstual.xcconfig */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -121,8 +121,8 @@
 			isa = PBXGroup;
 			children = (
 				4C1D105520EBF29F00E72D80 /* Enabled Features.xcconfig */,
-				4C1D105120EBF29F00E72D80 /* Textual Extensions.xcconfig */,
-				4C1D105020EBF29F00E72D80 /* Textual.xcconfig */,
+				4C1D105120EBF29F00E72D80 /* Glasstual Extensions.xcconfig */,
+				4C1D105020EBF29F00E72D80 /* Glasstual.xcconfig */,
 			);
 			path = Debug;
 			sourceTree = "<group>";
@@ -189,7 +189,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					8D57630D048677EA00EA77CD = {
 						DevelopmentTeam = 8482Q6EPL6;
@@ -252,7 +252,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.textual-ZNCAdditions";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.glasstual-ZNCAdditions";
 				PRODUCT_NAME = "ZNC Additions";
 			};
 			name = Debug;
@@ -261,21 +261,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.textual-ZNCAdditions";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.glasstual-ZNCAdditions";
 				PRODUCT_NAME = "ZNC Additions";
 			};
 			name = Release;
 		};
 		1DEB911F08733D790010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4C1D105120EBF29F00E72D80 /* Textual Extensions.xcconfig */;
+			baseConfigurationReference = 4C1D105120EBF29F00E72D80 /* Glasstual Extensions.xcconfig */;
 			buildSettings = {
 			};
 			name = Debug;
 		};
 		1DEB912008733D790010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4C1D102920EBF29F00E72D80 /* Textual Extensions.xcconfig */;
+			baseConfigurationReference = 4C1D102920EBF29F00E72D80 /* Glasstual Extensions.xcconfig */;
 			buildSettings = {
 			};
 			name = Release;
@@ -290,7 +290,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.textual-ZNCAdditions";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.codeux.app-extensions.glasstual-ZNCAdditions";
 				PRODUCT_NAME = "ZNC Additions";
 			};
 			name = "Release (App Store)";

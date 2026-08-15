@@ -1,0 +1,21 @@
+
+// Glasstual Extensions *.xcconfig file contains settings that
+// are specific to extensions for Glasstual (main application).
+
+// GLASSTUAL_WORKSPACE_DIR is replaced by the build script
+GLASSTUAL_WORKSPACE_DIR = ${PROJECT_DIR}/../../..
+
+CONFIGURATION_BUILD_DIR = ${GLASSTUAL_WORKSPACE_TEMP_DIR}/SharedBuildProducts-Extensions
+
+CODE_SIGN_ENTITLEMENTS = ${GLASSTUAL_WORKSPACE_DIR}/Configurations/Sandbox/Inherited.entitlements
+
+HEADER_SEARCH_PATHS = ${inherited} "${GLASSTUAL_WORKSPACE_TEMP_DIR}/Build Headers/" "${GLASSTUAL_WORKSPACE_DIR}/Sources/App/Classes/Headers/**" "${GLASSTUAL_WORKSPACE_DIR}/Sources/Shared/Headers/**"
+LIBRARY_SEARCH_PATHS = ${inherited} "${GLASSTUAL_WORKSPACE_TEMP_DIR}/SharedBuildProducts-Frameworks/**" "${GLASSTUAL_WORKSPACE_DIR}/Frameworks/Static Libraries/Libraries"
+FRAMEWORK_SEARCH_PATHS = ${inherited} "${GLASSTUAL_WORKSPACE_TEMP_DIR}/SharedBuildProducts-Frameworks/**" "${GLASSTUAL_WORKSPACE_DIR}/Frameworks/Static Libraries/Libraries"
+
+WRAPPER_EXTENSION = bundle
+
+PROVISIONING_PROFILE =
+PROVISIONING_PROFILE_SPECIFIER =
+
+BUNDLE_LOADER = ${GLASSTUAL_PRODUCT_BINARY}

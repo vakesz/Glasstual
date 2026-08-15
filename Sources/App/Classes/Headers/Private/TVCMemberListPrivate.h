@@ -47,8 +47,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TVCMemberList ()
 @property (nonatomic, weak) id keyDelegate;
 
-- (TVCMemberListAppearance *)userInterfaceObjects;
-- (nullable NSVisualEffectView *)visualEffectView;
 - (TVCMemberListUserInfoPopover *)memberListUserInfoPopover;
 - (IRCChannelMemberListController *)contentController;
 

@@ -47,7 +47,6 @@
 #import "TPCPathInfoPrivate.h"
 #import "TPCPreferencesUserDefaults.h"
 #import "TDCPreferencesControllerPrivate.h"
-#import "TVCAlert.h"
 #import "TVCLogControllerPrivate.h"
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 
@@ -99,7 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)connectToService
 {
-	NSXPCConnection *serviceConnection = [[NSXPCConnection alloc] initWithServiceName:@"com.codeux.app-utilities.Textual-InlineContentLoader"];
+	NSXPCConnection *serviceConnection = [[NSXPCConnection alloc] initWithServiceName:@"com.vakesz.glasstual.InlineContentLoader"];
 
 	NSXPCInterface *remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentServerProtocol)];
 
@@ -302,26 +301,30 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	TVCAlert *alert = [TVCAlert new];
+	NSAlert *alert = [NSAlert new];
+
+	alert.alertStyle = NSAlertStyleWarning;
 
 	alert.messageText = TXTLS(@"Prompts[82q-zi]");
 	alert.informativeText = TXTLS(@"Prompts[vcq-sz]");
 
-	alert.type = TVCAlertTypeWarning;
+	[alert addButtonWithTitle:TXTLS(@"Prompts[xkj-nw]")];
+	[alert addButtonWithTitle:TXTLS(@"Prompts[qso-2g]")];
+	[alert addButtonWithTitle:TXTLS(@"Prompts[x3e-ur]")];
 
-	[alert setTitle:TXTLS(@"Prompts[xkj-nw]") forButton:TVCAlertResponseButtonFirst];
-	[alert setTitle:TXTLS(@"Prompts[qso-2g]") forButton:TVCAlertResponseButtonSecond];
-	[alert setTitle:TXTLS(@"Prompts[x3e-ur]") forButton:TVCAlertResponseButtonThird];
+	NSModalResponse response = NSAlertThirdButtonReturn;
 
-	[alert setButtonClickedBlock:^BOOL(TVCAlert *sender, TVCAlertResponseButton buttonClicked) {
-		[TDCPreferencesController openProxySettingsInSystemPreferences];
+	/* Opening proxy settings does not answer the question the alert asks,
+	 so present it again once the user returns. */
+	while (response == NSAlertThirdButtonReturn) {
+		response = [alert runModal];
 
-		return NO;
-	} forButton:TVCAlertResponseButtonThird];
+		if (response == NSAlertThirdButtonReturn) {
+			[TDCPreferencesController openProxySettingsInSystemPreferences];
+		}
+	}
 
-	TVCAlertResponseButton response = [alert runModal];
-
-	completionBlock(response == TVCAlertResponseButtonFirst);
+	completionBlock(response == NSAlertFirstButtonReturn);
 }
 
 

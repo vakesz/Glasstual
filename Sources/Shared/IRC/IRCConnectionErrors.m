@@ -39,6 +39,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const IRCConnectionErrorDomain = @"Textual.ConnectionError";
+NSString * const IRCConnectionErrorDomain = @"Glasstual.ConnectionError";
 
 NS_ASSUME_NONNULL_END

@@ -44,7 +44,6 @@
 #import "TVCMainWindow.h"
 #import "TPCPreferencesLocal.h"
 #import "TVCMemberListCellPrivate.h"
-#import "TVCMemberListAppearancePrivate.h"
 #import "TVCMemberListUserInfoPopoverPrivate.h"
 #import "TVCMemberListPrivate.h"
 
@@ -58,8 +57,6 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 @property (nonatomic, assign) BOOL userPopoverTimerIsActive;
 @property (nonatomic, assign) NSPoint userPopoverLastKnownLocalPoint;
 @property (nonatomic, assign) NSInteger lastRowShownUserInfoPopover;
-@property (nonatomic, strong, readwrite) TVCMemberListAppearance *userInterfaceObjects;
-@property (nonatomic, weak, readwrite) IBOutlet NSVisualEffectView *visualEffectView;
 @property (nonatomic, strong, readwrite) IBOutlet TVCMemberListUserInfoPopover *memberListUserInfoPopover;
 @property (nonatomic, strong, readwrite) IBOutlet IRCChannelMemberListController *contentController;
 @end
@@ -72,7 +69,7 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 
 	[self updateTrackingAreas];
 
-	[self registerForDraggedTypes:@[NSFilenamesPboardType]];
+	[self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
 }
 
 - (void)viewDidMoveToWindow
@@ -297,7 +294,18 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 
 - (NSArray *)draggedFiles:(id <NSDraggingInfo>)sender
 {
-	return [[sender draggingPasteboard] propertyListForType:NSFilenamesPboardType];
+	NSArray<NSURL *> *fileURLs = [[sender draggingPasteboard] readObjectsForClasses:@[[NSURL class]]
+																			options:@{ NSPasteboardURLReadingFileURLsOnlyKey: @YES }];
+
+	NSMutableArray<NSString *> *filePaths = [NSMutableArray array];
+
+	for (NSURL *fileURL in fileURLs) {
+		if (fileURL.path.length > 0) {
+			[filePaths addObject:fileURL.path];
+		}
+	}
+
+	return [filePaths copy];
 }
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
@@ -428,16 +436,12 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 
 - (void)refreshDrawingForMembersWithRank:(IRCUserRank)rank isIRCop:(BOOL)isIRCop
 {
-	TVCMemberListAppearance *appearance = self.userInterfaceObjects;
-
 	NSArray *rows = self.contentController.arrangedObjects;
 
 	[rows enumerateObjectsUsingBlock:^(IRCChannelUser *member, NSUInteger index, BOOL *stop) {
 		if ((member.ranks & rank) == 0 && (isIRCop && isIRCop != member.user.isIRCop)) {
 			return;
 		}
-
-		[appearance invalidateUserMarkBadgeCacheForSymbol:member.mark rank:rank];
 
 		[self refreshDrawingForRow:index];
 	}];
@@ -453,54 +457,18 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 	return YES;
 }
 
-- (void)updateVibrancyWithAppearance:(TVCMemberListAppearance *)appearance
-{
-	NSParameterAssert(appearance != nil);
-
-	NSVisualEffectView *visualEffectView = self.visualEffectView;
-
-	if ([TPCPreferences disableSidebarTranslucency]) {
-		visualEffectView.state = NSVisualEffectStateInactive;
-	} else {
-		visualEffectView.state = NSVisualEffectStateFollowsWindowActiveState;
-	}
-
-	visualEffectView.material = NSVisualEffectMaterialSidebar;
-}
-
 - (void)applicationAppearanceChanged
 {
-	TVCMemberListAppearance *appearance = self.mainWindow.userInterfaceObjects.memberList;
-
-	[self _updateAppearance:appearance];
-
 	[self invalidateBackgroundForSelection];
 
 	[self refreshAllDrawings:YES];
+
+	self.needsDisplay = YES;
 }
 
 - (void)systemAppearanceChanged
 {
-//	[self invalidateBackgroundForSelection];
-}
-
-- (void)_updateAppearance:(TVCMemberListAppearance *)appearance
-{
-	NSParameterAssert(appearance != nil);
-
-	/* We assign a strong reference to these instead of returning the original
-	 value every time so that there are no race conditions for when it changes. */
-	self.userInterfaceObjects = appearance;
-
-	[self updateVibrancyWithAppearance:appearance];
-
-	if (appearance.isDarkAppearance) {
-		self.enclosingScrollView.scrollerKnobStyle = NSScrollerKnobStyleLight;
-	} else {
-		self.enclosingScrollView.scrollerKnobStyle = NSScrollerKnobStyleDark;
-	}
-
-	self.needsDisplay = YES;
+	[self applicationAppearanceChanged];
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification

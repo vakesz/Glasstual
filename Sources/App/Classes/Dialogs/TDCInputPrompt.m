@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TDCInputPrompt
 
-+ (TVCAlertResponseButton)promptWithMessage:(NSString *)bodyText
++ (NSModalResponse)promptWithMessage:(NSString *)bodyText
 									  title:(NSString *)titleText
 							  defaultButton:(NSString *)buttonDefault
 							alternateButton:(nullable NSString *)buttonAlternate
@@ -91,20 +91,22 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Create alert */
-	TVCAlert *alert = [TVCAlert new];
+	NSAlert *alert = [NSAlert new];
+
+	alert.alertStyle = NSAlertStyleInformational;
 
 	alert.messageText = titleText;
 	alert.informativeText = bodyText;
 
-	[alert setTitle:buttonDefault forButton:TVCAlertResponseButtonFirst];
-	[alert setTitle:buttonAlternate forButton:TVCAlertResponseButtonSecond];
+	[alert addButtonWithTitle:buttonDefault];
+	[alert addButtonWithTitle:buttonAlternate];
 
 	alert.accessoryView = textField;
 
 	alert.window.initialFirstResponder = textField;
 
 	/* Run modal */
-	TVCAlertResponseButton response = [alert runModal];
+	NSModalResponse response = [alert runModal];
 
 	/* Assign result */
 	*resultString = textField.stringValue;

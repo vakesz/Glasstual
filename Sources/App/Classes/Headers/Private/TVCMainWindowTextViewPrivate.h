@@ -40,9 +40,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TVCMainWindowSegmentedController, TVCMainWindowSegmentedControllerCell;
+@class TVCMainWindowSegmentedController, TVCMainWindowSegmentedControllerCell, TVCMainWindowTextViewContentView;
 
 @interface TVCMainWindowTextView ()
+- (TVCMainWindowTextViewContentView *)contentView;
 - (TVCMainWindowSegmentedController *)segmentedController;
 - (TVCMainWindowSegmentedControllerCell *)segmentedControllerCell;
 
@@ -59,9 +60,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)recalculateTextViewSizeForced;
 
 - (void)resetSpellingIgnores;
-@end
-
-@interface TVCMainWindowTextViewBackground : NSView
 @end
 
 @interface TVCMainWindowTextViewContentView : NSView

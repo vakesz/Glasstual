@@ -9,7 +9,19 @@
 		<key>resource:Simplified Dark</key>
 		<string>resource:Simplified</string>
 		<key>resource:Tomorrow Night (Eighties)</key>
-		<string>resource:Tomorrow</string>
+		<string>resource:Simplified</string>
+		<key>resource:Tomorrow</key>
+		<string>resource:Simplified</string>
+		<key>resource:Astria</key>
+		<string>resource:Simplified</string>
+		<key>resource:Equinox</key>
+		<string>resource:Simplified</string>
+		<key>resource:Sapientia</key>
+		<string>resource:Simplified</string>
+		<key>resource:Sulaco</key>
+		<string>resource:Simplified</string>
+		<key>resource:Total Sublime</key>
+		<string>resource:Simplified</string>
 	</dict>
 	<key>IRCClient List of NickServ Successfully Identified Tokens</key>
 	<array>
@@ -88,7 +100,7 @@
 	</array>
 	<key>THOPluginManager List of Forbidden Extensions</key>
 	<array>
-		<string>com.codeux.app-extensions.textual-Caffeine</string>
+		<string>com.codeux.app-extensions.glasstual-Caffeine</string>
 	</array>
 	<key>THOPluginManager List of Reserved Commands</key>
 	<array>
@@ -115,9 +127,9 @@
 	</array>
 	<key>THOPluginManager Extras Installer Latest Extension Versions</key>
 	<dict>
-		<key>com.codeux.app-extensions.textual-BlowfishEncryption</key>
+		<key>com.codeux.app-extensions.glasstual-BlowfishEncryption</key>
 		<string>1.0.18</string>
-		<key>com.codeux.app-extensions.textual-WikiStyleLinkParser</key>
+		<key>com.codeux.app-extensions.glasstual-WikiStyleLinkParser</key>
 		<string>1.0.9</string>
 	</dict>
 	<key>Spelling Ignores</key>

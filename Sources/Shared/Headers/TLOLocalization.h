@@ -37,10 +37,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-TEXTUAL_EXTERN NSString *TXTLS(NSString *key, ...);
+GLASSTUAL_EXTERN NSString *TXTLS(NSString *key, ...);
 
-TEXTUAL_EXTERN NSString *TXLocalizedString(NSBundle *bundle, NSString *key, va_list arguments) TEXTUAL_SYMBOL_USED;
-TEXTUAL_EXTERN NSString *TXLocalizedStringAlternative(NSBundle *bundle, NSString *key, ...) TEXTUAL_SYMBOL_USED;
+GLASSTUAL_EXTERN NSString *TXLocalizedString(NSBundle *bundle, NSString *key, va_list arguments) GLASSTUAL_SYMBOL_USED;
+GLASSTUAL_EXTERN NSString *TXLocalizedStringAlternative(NSBundle *bundle, NSString *key, ...) GLASSTUAL_SYMBOL_USED;
 
 /* This function exists so that static analyzer doesn't warn
  certain static strings aren't localized. Some strings wont

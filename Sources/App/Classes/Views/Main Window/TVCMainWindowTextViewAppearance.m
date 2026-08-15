@@ -49,30 +49,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign, readwrite) NSSize textViewInset;
 @property (nonatomic, copy, nullable, readwrite) NSColor *textViewTextColor;
 @property (nonatomic, copy, nullable, readwrite) NSColor *textViewPlaceholderTextColor;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewBackgroundColorActiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewBackgroundColorInactiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewOutlineColorActiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewOutlineColorInactiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewInsideShadowColorActiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewInsideShadowColorInactiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSGradient *textViewInsideGradientActiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSGradient *textViewInsideGradientInactiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewOutsidePrimaryShadowColorActiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewOutsidePrimaryShadowColorInactiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewOutsideSecondaryShadowColorActiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewOutsideSecondaryShadowColorInactiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSFont *textViewFont;
-@property (nonatomic, copy, nullable, readwrite) NSFont *textViewFontLarge;
-@property (nonatomic, copy, nullable, readwrite) NSFont *textViewFontExtraLarge;
-@property (nonatomic, copy, nullable, readwrite) NSFont *textViewFontHumongous;
 
 @property (nonatomic, assign, readwrite) TVCMainWindowTextViewFontSize textViewPreferredFontSize;
 
 #pragma mark -
 #pragma mark Background View
 
-@property (nonatomic, copy, nullable, readwrite) NSColor *backgroundViewBackgroundColor;
-@property (nonatomic, copy, nullable, readwrite) NSColor *backgroundViewDividerColor;
 @property (nonatomic, assign, readwrite) CGFloat backgroundViewContentBorderPadding;
 @end
 
@@ -112,27 +94,9 @@ NS_ASSUME_NONNULL_BEGIN
 	self.textViewInset = [self sizeInGroup:textView withKey:@"inset"];
 	self.textViewTextColor = [self colorInGroup:textView withKey:@"normalTextColor"];
 	self.textViewPlaceholderTextColor = [self colorInGroup:textView withKey:@"placeholderTextColor"];
-	self.textViewBackgroundColorActiveWindow = [self colorInGroup:textView withKey:@"backgroundColor" forActiveWindow:YES];
-	self.textViewBackgroundColorInactiveWindow = [self colorInGroup:textView withKey:@"backgroundColor" forActiveWindow:NO];
-	self.textViewOutlineColorActiveWindow = [self colorInGroup:textView withKey:@"outlineColor" forActiveWindow:YES];
-	self.textViewOutlineColorInactiveWindow = [self colorInGroup:textView withKey:@"outlineColor" forActiveWindow:NO];
-	self.textViewInsideShadowColorActiveWindow = [self colorInGroup:textView withKey:@"insideShadowColor" forActiveWindow:YES];
-	self.textViewInsideShadowColorInactiveWindow = [self colorInGroup:textView withKey:@"insideShadowColor" forActiveWindow:NO];
-	self.textViewInsideGradientActiveWindow = [self gradientInGroup:textView withKey:@"insideGradient" forActiveWindow:YES];
-	self.textViewInsideGradientInactiveWindow = [self gradientInGroup:textView withKey:@"insideGradient" forActiveWindow:NO];
-	self.textViewOutsidePrimaryShadowColorActiveWindow = [self colorInGroup:textView withKey:@"outsidePrimaryShadowColor" forActiveWindow:YES];
-	self.textViewOutsidePrimaryShadowColorInactiveWindow = [self colorInGroup:textView withKey:@"outsidePrimaryShadowColor" forActiveWindow:NO];
-	self.textViewOutsideSecondaryShadowColorActiveWindow = [self colorInGroup:textView withKey:@"outsideSecondaryShadowColor" forActiveWindow:YES];
-	self.textViewOutsideSecondaryShadowColorInactiveWindow = [self colorInGroup:textView withKey:@"outsideSecondaryShadowColor" forActiveWindow:NO];
-	self.textViewFont = [self fontInGroup:textView withKey:@"font"];
-	self.textViewFontLarge = [self fontInGroup:textView withKey:@"fontLarge"];
-	self.textViewFontExtraLarge = [self fontInGroup:textView withKey:@"fontExtraLarge"];
-	self.textViewFontHumongous = [self fontInGroup:textView withKey:@"fontHumongous"];
 
 	NSDictionary *backgroundView = properties[@"Background View"];
 
-	self.backgroundViewBackgroundColor = [self colorInGroup:backgroundView withKey:@"backgroundColor"];
-	self.backgroundViewDividerColor = [self colorInGroup:backgroundView withKey:@"dividerColor"];
 	self.backgroundViewContentBorderPadding = [self measurementInGroup:backgroundView withKey:@"contentBorderPadding"];
 
 	[self flushAppearanceProperties];
@@ -152,19 +116,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.textViewPreferredFontSize = preferredFontSize;
 
-	NSFont *preferredFont = nil;
+	CGFloat pointSize = 0.0;
 
-	if (preferredFontSize == TVCMainWindowTextViewFontSizeNormal) {
-		preferredFont = self.textViewFont;
-	} else if (preferredFontSize == TVCMainWindowTextViewFontSizeLarge) {
-		preferredFont = self.textViewFontLarge;
-	} else if (preferredFontSize == TVCMainWindowTextViewFontSizeExtraLarge) {
-		preferredFont = self.textViewFontExtraLarge;
-	} else if (preferredFontSize == TVCMainWindowTextViewFontSizeHumongous) {
-		preferredFont = self.textViewFontHumongous;
+	switch (preferredFontSize) {
+		case TVCMainWindowTextViewFontSizeLarge:		pointSize = 14.0; break;
+		case TVCMainWindowTextViewFontSizeExtraLarge:	pointSize = 16.0; break;
+		case TVCMainWindowTextViewFontSizeHumongous:	pointSize = 24.0; break;
+		default:										pointSize = [NSFont systemFontSize]; break;
 	}
 
-	return preferredFont;
+	return [NSFont systemFontOfSize:pointSize];
 }
 
 @end

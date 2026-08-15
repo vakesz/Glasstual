@@ -161,7 +161,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 - (void)prepareInitialState
 {
-#if TEXTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	self.encrypted = self.associatedChannel.encryptionStateIsEncrypted;
 #endif
 
@@ -261,10 +261,10 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 - (void)closeHistoricLog
 {
 	/* The historic log file is always open regardless of whether the user asked
-	 Textual to remember the history between restarts. It is always open because
+	 Glasstual to remember the history between restarts. It is always open because
 	 the reloading of a theme uses it to fill in the backlog after a reload.
 	 -closeHistoricLog is the point where we decide to actually save the file
-	 or erase it. If the user has Textual configured to remember between restarts,
+	 or erase it. If the user has Glasstual configured to remember between restarts,
 	 then we call a save before terminating. Or, we just erase the file from the
 	 path that it is written to entirely. */
 
@@ -416,7 +416,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 															}
 												  resultInfo:NULL];
 
-		[self _evaluateFunction:@"Textual.setTopicBarValue" withArguments:@[topicString, topicTemplate]];
+		[self _evaluateFunction:@"Glasstual.setTopicBarValue" withArguments:@[topicString, topicTemplate]];
 
 		[self.backingView redrawView];
 	};
@@ -429,12 +429,12 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 - (void)moveToTop
 {
-	[self _evaluateFunction:@"Textual.scrollToTopOfView" withArguments:@[@(YES)]];
+	[self _evaluateFunction:@"Glasstual.scrollToTopOfView" withArguments:@[@(YES)]];
 }
 
 - (void)moveToBottom
 {
-	[self _evaluateFunction:@"Textual.scrollToBottomOfView" withArguments:@[@(YES)]];
+	[self _evaluateFunction:@"Glasstual.scrollToBottomOfView" withArguments:@[@(YES)]];
 }
 
 #pragma mark -
@@ -445,7 +445,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
 		NSString *markTemplate = [TVCLogRenderer renderTemplateNamed:@"historyIndicator"];
 
-		[self _evaluateFunction:@"_Textual.historyIndicatorAdd" withArguments:@[markTemplate]];
+		[self _evaluateFunction:@"_Glasstual.historyIndicatorAdd" withArguments:@[markTemplate]];
 	};
 
 	_enqueueBlock(operationBlock);
@@ -453,12 +453,12 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 - (void)unmark
 {
-	[self _evaluateFunction:@"_Textual.historyIndicatorRemove" withArguments:nil];
+	[self _evaluateFunction:@"_Glasstual.historyIndicatorRemove" withArguments:nil];
 }
 
 - (void)goToMark
 {
-	[self _evaluateFunction:@"Textual.scrollToHistoryIndicator" withArguments:nil];
+	[self _evaluateFunction:@"Glasstual.scrollToHistoryIndicator" withArguments:nil];
 }
 
 #pragma mark -
@@ -468,7 +468,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 {
 	NSParameterAssert(html != nil);
 
-	[self _evaluateFunction:@"_Textual.documentBodyAppendHistoric" withArguments:@[html, lineNumbers, @(isReload)]];
+	[self _evaluateFunction:@"_Glasstual.documentBodyAppendHistoric" withArguments:@[html, lineNumbers, @(isReload)]];
 }
 
 /* reloadOldLines: is supposed to be called from inside a queue. */
@@ -718,12 +718,12 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		[self.jumpToLineCallbacks setObject:completionHandler forKey:lineNumber];
 	}
 
-	[self.backingView evaluateFunction:@"Textual.jumpToLine" withArguments:@[lineNumber]];
+	[self.backingView evaluateFunction:@"Glasstual.jumpToLine" withArguments:@[lineNumber]];
 }
 
 - (void)notifyDidBecomeVisible /* When the view is switched to */
 {
-	[self _evaluateFunction:@"_Textual.notifyDidBecomeVisible" withArguments:nil];
+	[self _evaluateFunction:@"_Glasstual.notifyDidBecomeVisible" withArguments:nil];
 
 	[self maybeReloadHistory];
 
@@ -736,12 +736,12 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 - (void)notifySelectionChanged
 {
-	[self _evaluateFunction:@"_Textual.notifySelectionChanged" withArguments:@[@(self.selected)]];
+	[self _evaluateFunction:@"_Glasstual.notifySelectionChanged" withArguments:@[@(self.selected)]];
 }
 
 - (void)notifyDidBecomeHidden
 {
-	[self _evaluateFunction:@"_Textual.notifyDidBecomeHidden" withArguments:nil];
+	[self _evaluateFunction:@"_Glasstual.notifyDidBecomeHidden" withArguments:nil];
 
 	[self.backingView saveScrollerPosition];
 
@@ -750,16 +750,16 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 - (void)notifyViewFinishedLoadingHistory
 {
-	[self _evaluateFunction:@"_Textual.viewFinishedLoadingHistory" withArguments:nil];
+	[self _evaluateFunction:@"_Glasstual.viewFinishedLoadingHistory" withArguments:nil];
 }
 
 - (void)changeTextSize:(BOOL)bigger
 {
 	double sizeMultiplier = self.attachedWindow.textSizeMultiplier;
 
-	[self _evaluateFunction:@"Textual.changeTextSizeMultiplier" withArguments:@[@(sizeMultiplier)]];
+	[self _evaluateFunction:@"Glasstual.changeTextSizeMultiplier" withArguments:@[@(sizeMultiplier)]];
 
-	[self _evaluateFunction:@"Textual.viewFontSizeChanged" withArguments:@[@(bigger)]];
+	[self _evaluateFunction:@"Glasstual.viewFontSizeChanged" withArguments:@[@(bigger)]];
 }
 
 - (void)changeScrollbackLimit
@@ -1010,10 +1010,6 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	self.reloadingHistory = NO;
 
 	self.historyLoaded = NO;
-
-	if (self.backingView.isUsingWebKit2 != [TVCLogView webKit2Enabled]) {
-		[self rebuildBackingView];
-	}
 
 	[self loadInitialDocument];
 }
@@ -1536,9 +1532,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	BOOL usesCustomScrollers = [TPCPreferences themeChannelViewUsesCustomScrollers];
 
-	BOOL usingWebKit2 = self.backingView.isUsingWebKit2;
-
-	return (onlyShowDuringScrolling == NO && usesCustomScrollers && usingWebKit2);
+	return (onlyShowDuringScrolling == NO && usesCustomScrollers);
 }
 
 - (NSString *)initialDocument
@@ -1614,7 +1608,14 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		channelFont = [TPCPreferences themeChannelViewFont];
 	}
 
-	templateTokens[@"userConfiguredFontName"] =   channelFont.fontName;
+	NSString *fontName = channelFont.fontName;
+
+	if ([fontName hasPrefix:@"."]) {
+		templateTokens[@"userConfiguredFontName"] = @"-apple-system, BlinkMacSystemFont, system-ui, sans-serif";
+	} else {
+		templateTokens[@"userConfiguredFontName"] = [NSString stringWithFormat:@"\"%@\"", fontName];
+	}
+
 	templateTokens[@"userConfiguredFontSize"] = @(channelFont.pointSize * (72.0 / 96.0));
 
 	// ---- //
@@ -1667,7 +1668,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		viewType = @"server";
 	}
 
-	[self _evaluateFunction:@"Textual.viewInitiated" withArguments:@[
+	[self _evaluateFunction:@"Glasstual.viewInitiated" withArguments:@[
 		 NSDictionaryNilValue(viewType),
 		 NSDictionaryNilValue(self.associatedClient.uniqueIdentifier),
 		 NSDictionaryNilValue(channel.uniqueIdentifier),
@@ -1678,7 +1679,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	NSUInteger scrollbackLimit = [TPCPreferences scrollbackVisibleLimit];
 
-	[self _evaluateFunction:@"_Textual.viewFinishedLoading"
+	[self _evaluateFunction:@"_Glasstual.viewFinishedLoading"
 			  withArguments:
 	 @[
 		  @{

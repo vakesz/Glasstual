@@ -37,14 +37,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-TEXTUAL_EXTERN NSString * const TPCResourceManagerBundleDocumentTypeExtension;
-TEXTUAL_EXTERN NSString * const TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod;
+GLASSTUAL_EXTERN NSString * const TPCResourceManagerBundleDocumentTypeExtension;
+GLASSTUAL_EXTERN NSString * const TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod;
 
-TEXTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtension;
-TEXTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod;
+GLASSTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtension;
+GLASSTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod;
 
 @interface TPCResourceManager : NSObject
-/* Open a property list file in the Resources folder of Textual named `name` in optional
+/* Open a property list file in the Resources folder of Glasstual named `name` in optional
  subdirectory `subpath`. If `key` is specified, then the object value of `key` is returned
  from the root object of the property list as long as that object is a dictionary.
  The root object is returned if `key` is not specified if it is a dictionary.
@@ -59,7 +59,7 @@ TEXTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtensionWit
 + (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key;
 + (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key cacheValue:(BOOL)cacheValue;
 
-/* Open a property list file in the Resources folder of Textual named `name` in optional
+/* Open a property list file in the Resources folder of Glasstual named `name` in optional
  subdirectory `subpath`. If `key` is specified, then the object value of `key` is returned
  from the root object of the property list as long as that object is an array.
  The root object is returned if `key` is not specified if it is an array.
@@ -74,7 +74,7 @@ TEXTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtensionWit
 + (nullable NSArray *)arrayFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key;
 + (nullable NSArray *)arrayFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key cacheValue:(BOOL)cacheValue;
 
-/* Open a property list file in the Resources folder of Textual named `name` in optional
+/* Open a property list file in the Resources folder of Glasstual named `name` in optional
  subdirectory `subpath`. If `key` is specified, then the object value of `key` is returned
  from the root object of the property list as long as that object is kind of `class`.
  The root object is returned if `key` is not specified if it is kind of `class`.

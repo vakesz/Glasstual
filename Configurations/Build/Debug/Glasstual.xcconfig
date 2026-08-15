@@ -1,0 +1,11 @@
+
+#include "../Common/Glasstual.xcconfig"
+#include "Enabled Features.xcconfig"
+
+GLASSTUAL_BUNDLE_IDENTIFIER = com.vakesz.glasstual
+GLASSTUAL_GROUP_CONTAINER_IDENTIFIER = H8W5DK3FN2.com.vakesz.glasstual
+GLASSTUAL_BUILD_SCHEME_TOKEN = debug
+
+GLASSTUAL_EXTENSION_BUILD_SCHEME = Debug
+GLASSTUAL_FRAMEWORK_BUILD_SCHEME = Release // Frameworks don't have a Debug scheme
+GLASSTUAL_XPC_SERVICE_BUILD_SCHEME = Debug

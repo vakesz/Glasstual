@@ -185,7 +185,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return nil;
 	}
 
-	NSString *basePath = [pathArray.firstObject stringByAppendingPathComponent:@"/Textual/"];
+	NSString *basePath = [pathArray.firstObject stringByAppendingPathComponent:@"/Glasstual/"];
 
 	[self _createDirectoryAtPath:basePath];
 
@@ -222,7 +222,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return nil;
 	}
 
-	NSURL *baseURL = [sourceURL URLByAppendingPathComponent:@"/Library/Application Support/Textual/"];
+	NSURL *baseURL = [sourceURL URLByAppendingPathComponent:@"/Library/Application Support/Glasstual/"];
 
 	[self _createDirectoryAtURL:baseURL];
 
@@ -367,7 +367,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *basePath = pathArray.firstObject;
 
-#if TEXTUAL_BUILT_INSIDE_SANDBOX == 0
+#if GLASSTUAL_BUILT_INSIDE_SANDBOX == 0
 	[self _createDirectoryAtPath:basePath];
 #endif
 
