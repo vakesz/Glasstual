@@ -53,6 +53,8 @@ Click “Edit Style” to add your own style sheet rules. This feature can also 
 "ddh-hr" = "• Timestamp Format";
 "we8-i8" = "• Channel View Font";
 
+"native-style" = "Native";
+
 /* Settings window sidebar */
 "sb-tt" = "Settings";
 "sb-gr-ad" = "Add-ons";

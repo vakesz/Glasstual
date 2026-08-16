@@ -278,15 +278,18 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSString *uniqueId = [NSString stringWithUUID];
 
+	dispatch_queue_attr_t attributes =
+	dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
+
 	NSString *dispatchQueueName = [NSString stringWithFormat:@"Glasstual.TDCFileTransferDialogTransferController.DCC-SocketDispatchQueue-%@", uniqueId];
 
 	self.serverDispatchQueue =
-	XRCreateDispatchQueueWithPriority(dispatchQueueName.UTF8String, DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT);
+	dispatch_queue_create(dispatchQueueName.UTF8String, attributes);
 
 	NSString *socketQueueName = [NSString stringWithFormat:@"Glasstual.TDCFileTransferDialogTransferController.DCC-SocketReadWriteQueue-%@", uniqueId];
 
 	self.serverSocketQueue =
-	XRCreateDispatchQueueWithPriority(socketQueueName.UTF8String, DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT);
+	dispatch_queue_create(socketQueueName.UTF8String, attributes);
 }
 
 - (void)destroyDispatchQueues

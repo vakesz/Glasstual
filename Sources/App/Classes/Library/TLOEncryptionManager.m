@@ -721,7 +721,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)otrKit:(OTRKit *)otrKit handleMessageEvent:(OTRKitMessageEvent)event message:(NSString *)message username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol tag:(nullable id)tag error:(nullable NSError *)error
 {
 	if (event == OTRKitMessageEventReceivedMessageUnencrypted) {
-		[self otrKit:otrKit decodedMessage:message wasEncrypted:NO tlvs:nil username:username accountName:accountName protocol:protocol tag:tag];
+		[self otrKit:otrKit decodedMessage:message wasEncrypted:NO tlvs:@[] username:username accountName:accountName protocol:protocol tag:tag];
 
 		return;
 	}

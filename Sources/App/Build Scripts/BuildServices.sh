@@ -19,6 +19,8 @@ for service in "${services[@]}"; do
     xcodebuild -target "$service" \
         -configuration "${GLASSTUAL_XPC_SERVICE_BUILD_SCHEME}" \
         ARCHS="${ARCHS}" \
+        CODE_SIGNING_ALLOWED="${CODE_SIGNING_ALLOWED}" \
+        CODE_SIGNING_REQUIRED="${CODE_SIGNING_REQUIRED}" \
         CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" \
         CODE_SIGN_STYLE="${CODE_SIGN_STYLE}" \
         DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}" \

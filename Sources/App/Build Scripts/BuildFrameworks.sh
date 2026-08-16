@@ -11,6 +11,8 @@ xcb() {
     xcodebuild -target "$target" \
         -configuration "${GLASSTUAL_FRAMEWORK_BUILD_SCHEME}" \
         ARCHS="${ARCHS}" \
+        CODE_SIGNING_ALLOWED="${CODE_SIGNING_ALLOWED}" \
+        CODE_SIGNING_REQUIRED="${CODE_SIGNING_REQUIRED}" \
         CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" \
         CODE_SIGN_STYLE="${CODE_SIGN_STYLE}" \
         CONFIGURATION_BUILD_DIR="${CONFIGURATION_BUILD_DIR}" \

@@ -26,6 +26,7 @@ private let settingsFallbackPaneID = "general"
  observing that one object: a single selection change then invalidated every
  root view the process had ever created instead of only the live one. */
 @objc(TDCPreferencesSettingsBridge)
+@MainActor
 final class PreferencesSettingsBridge: NSObject {
 	private let navigation = SettingsNavigation()
 
@@ -66,6 +67,7 @@ final class PreferencesSettingsBridge: NSObject {
  has no Combine publisher to send, and folds the change into the next update
  pass instead of re-entering the current one. */
 @Observable
+@MainActor
 private final class SettingsNavigation {
 	private(set) var selectedID = settingsFallbackPaneID
 
@@ -114,6 +116,7 @@ private final class SettingsNavigation {
  purpose: it owns the window, which owns the hosting controller, which owns
  this. A strong reference closes that ring and keeps every settings window
  that has ever been opened -- and its panes -- alive for the session. */
+@MainActor
 private struct SettingsPaneProvider {
 	private weak var controller: TDCPreferencesController?
 

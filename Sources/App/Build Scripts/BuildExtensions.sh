@@ -21,6 +21,8 @@ for plugin in "${plugins[@]}"; do
     xcodebuild -target "$plugin Extension" \
         -configuration "${GLASSTUAL_EXTENSION_BUILD_SCHEME}" \
         ARCHS="${ARCHS}" \
+        CODE_SIGNING_ALLOWED="${CODE_SIGNING_ALLOWED}" \
+        CODE_SIGNING_REQUIRED="${CODE_SIGNING_REQUIRED}" \
         CODE_SIGN_IDENTITY="${CODE_SIGN_IDENTITY}" \
         CODE_SIGN_STYLE="${CODE_SIGN_STYLE}" \
         DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}" \

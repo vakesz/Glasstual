@@ -310,7 +310,7 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	return config;
 }
 
-- (nullable ICLMediaAssessorState *)_readHeadersInWithError:(NSError **)error
+- (nullable ICLMediaAssessorState *)_readHeadersInWithError:(NSError * _Nullable __autoreleasing * _Nonnull)error
 {
 	NSParameterAssert(error != NULL);
 
@@ -610,7 +610,7 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	return (downloadProgress > maximumFilesize);
 }
 
-- (BOOL)_performExtendedValidationAtURL:(NSURL *)url withError:(NSError **)error
+- (BOOL)_performExtendedValidationAtURL:(NSURL *)url withError:(NSError * _Nullable __autoreleasing * _Nonnull)error
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(error != NULL);
@@ -631,7 +631,7 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	return YES; /* Success */
 }
 
-- (BOOL)_performExtendedValidationForImageAtURL:(NSURL *)url withError:(NSError **)error
+- (BOOL)_performExtendedValidationForImageAtURL:(NSURL *)url withError:(NSError * _Nullable __autoreleasing * _Nonnull)error
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(error != NULL);
@@ -700,17 +700,21 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 		case ICLMediaAssessorErrorCodeMalformedContentLength:
 		case ICLMediaAssessorErrorCodeUnexpectedResponse:
 		{
-			LogToConsoleDebug("Assessor fatal error: %{public}@",
-				error.localizedDescription);
-		}
+				LogToConsoleDebug("Assessor fatal error: %{public}@",
+					error.localizedDescription);
+
+				break;
+			}
 		case ICLMediaAssessorErrorCodeUnexpectedType:
 		case ICLMediaAssessorErrorCodeContentLengthExceeded:
 		case ICLMediaAssessorErrorCodeMaximumWidthExceeded:
 		case ICLMediaAssessorErrorCodeMaximumHeightExceeded:
 		{
-			LogToConsoleDebug("Assessor validation error: %{public}@",
-				error.localizedDescription);
-		}
+				LogToConsoleDebug("Assessor validation error: %{public}@",
+					error.localizedDescription);
+
+				break;
+			}
 	} // switch()
 }
 

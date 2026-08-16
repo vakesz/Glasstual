@@ -68,11 +68,33 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TVCMainWindowChannelViewSubviewOverlayView : NSView
 @end
 
+/* The delegate lives in an object of its own rather than on the split view.
+ AppKit answers -respondsToSelector: for toggleSidebar: on any NSSplitView by
+ putting the same question to that view's delegate, so a split view that is its
+ own delegate asks itself forever. Toolbar validation of the sidebar toggle item
+ walks the responder chain from the first responder, which passes through this
+ view whenever the message area holds focus, and the recursion runs the stack
+ out before an answer comes back. */
+@interface TVCMainWindowChannelViewDelegate : NSObject <NSSplitViewDelegate>
+@end
+
 @interface TVCMainWindowChannelView ()
 @property (nonatomic, assign) BOOL isMovingDividers;
 @property (nonatomic, assign) NSUInteger itemIndexSelected;
 
+/* -[NSSplitView delegate] is weak, so the delegate is owned here. */
+@property (nonatomic, strong) TVCMainWindowChannelViewDelegate *splitViewDelegate;
+
 - (void)selectionChangeTo:(NSUInteger)itemIndex;
+@end
+
+@implementation TVCMainWindowChannelViewDelegate
+
+- (BOOL)splitView:(NSSplitView *)splitView canCollapseSubview:(NSView *)subview
+{
+	return NO;
+}
+
 @end
 
 @implementation TVCMainWindowChannelView
@@ -97,7 +119,9 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 {
 	[super awakeFromNib];
 
-	self.delegate = (id)self;
+	self.splitViewDelegate = [TVCMainWindowChannelViewDelegate new];
+
+	self.delegate = self.splitViewDelegate;
 }
 
 - (void)viewDidMoveToWindow
@@ -292,11 +316,6 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 - (NSLayoutPriority)holdingPriorityForSubviewAtIndex:(NSInteger)subviewIndex
 {
 	return 350.0;
-}
-
-- (BOOL)splitView:(NSSplitView *)splitView canCollapseSubview:(NSView *)subview
-{
-	return NO;
 }
 
 - (CGFloat)dividerThickness
