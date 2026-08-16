@@ -42,10 +42,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCContentNavigationOutlineView () <NSOutlineViewDelegate, NSOutlineViewDataSource>
-@property (nonatomic, strong) IBOutlet NSView *contentView;
-@property (nonatomic, weak, nullable, readwrite) TVCContentNavigationOutlineViewItem *selectedItem;
-@property (nonatomic, weak, nullable) TVCContentNavigationOutlineViewItem *lastSelection;
-@property (readonly, nullable) TVCContentNavigationOutlineViewItem *parentOfLastSelection;
+@property(nonatomic, strong) IBOutlet NSView *contentView;
+@property(nonatomic, weak, nullable, readwrite) TVCContentNavigationOutlineViewItem *selectedItem;
+@property(nonatomic, weak, nullable) TVCContentNavigationOutlineViewItem *lastSelection;
+@property(readonly, nullable) TVCContentNavigationOutlineViewItem *parentOfLastSelection;
 @end
 
 @implementation TVCContentNavigationOutlineView
@@ -141,7 +141,8 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark NSOutlineViewDelegate Delegates
 
-- (NSInteger)outlineView:(NSOutlineView *)sender numberOfChildrenOfItem:(nullable TVCContentNavigationOutlineViewItem *)item
+- (NSInteger)outlineView:(NSOutlineView *)sender
+	numberOfChildrenOfItem:(nullable TVCContentNavigationOutlineViewItem *)item
 {
 	if (item.isGroupItem) {
 		return item.children.count;
@@ -150,7 +151,9 @@ NS_ASSUME_NONNULL_BEGIN
 	return self.navigationTreeMatrix.count;
 }
 
-- (id)outlineView:(NSOutlineView *)outlineView child:(NSInteger)index ofItem:(nullable TVCContentNavigationOutlineViewItem *)item
+- (id)outlineView:(NSOutlineView *)outlineView
+			child:(NSInteger)index
+		   ofItem:(nullable TVCContentNavigationOutlineViewItem *)item
 {
 	if (item.isGroupItem) {
 		return item.children[index];
@@ -186,7 +189,9 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (nullable id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(nullable NSTableColumn *)tableColumn byItem:(nullable TVCContentNavigationOutlineViewItem *)item
+- (nullable id)outlineView:(NSOutlineView *)outlineView
+	objectValueForTableColumn:(nullable NSTableColumn *)tableColumn
+					   byItem:(nullable TVCContentNavigationOutlineViewItem *)item
 {
 	return item.label;
 }
@@ -196,7 +201,9 @@ NS_ASSUME_NONNULL_BEGIN
 	return (item.view != nil);
 }
 
-- (nullable id)outlineView:(NSOutlineView *)outlineView viewForTableColumn:(nullable NSTableColumn *)tableColumn item:(id)item
+- (nullable id)outlineView:(NSOutlineView *)outlineView
+		viewForTableColumn:(nullable NSTableColumn *)tableColumn
+					  item:(id)item
 {
 	NSTableCellView *newView = [outlineView makeViewWithIdentifier:@"navEntry" owner:self];
 
@@ -242,11 +249,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Item Parent
 
 @interface TVCContentNavigationOutlineViewItem ()
-@property (nonatomic, copy, readwrite) NSString *label;
-@property (nonatomic, assign, readwrite) NSUInteger identifier;
-@property (nonatomic, weak, nullable, readwrite) NSView *view;
-@property (nonatomic, weak, nullable, readwrite) NSControl *firstResponder;
-@property (nonatomic, copy, nullable, readwrite) NSArray<TVCContentNavigationOutlineViewItem *> *children;
+@property(nonatomic, copy, readwrite) NSString *label;
+@property(nonatomic, assign, readwrite) NSUInteger identifier;
+@property(nonatomic, weak, nullable, readwrite) NSView *view;
+@property(nonatomic, weak, nullable, readwrite) NSControl *firstResponder;
+@property(nonatomic, copy, nullable, readwrite) NSArray<TVCContentNavigationOutlineViewItem *> *children;
 @end
 
 @implementation TVCContentNavigationOutlineViewItem
@@ -258,7 +265,10 @@ NS_ASSUME_NONNULL_BEGIN
 	return nil;
 }
 
-- (instancetype)initWithLabel:(NSString *)label identifier:(NSUInteger)identifier view:(NSView *)view firstResponder:(nullable NSControl *)firstResponder
+- (instancetype)initWithLabel:(NSString *)label
+				   identifier:(NSUInteger)identifier
+						 view:(NSView *)view
+			   firstResponder:(nullable NSControl *)firstResponder
 {
 	NSParameterAssert(label != nil);
 	NSParameterAssert(view != nil);
@@ -266,7 +276,11 @@ NS_ASSUME_NONNULL_BEGIN
 	return [self initWithLabel:label identifier:identifier view:view firstResponder:firstResponder children:nil];
 }
 
-- (instancetype)initWithLabel:(NSString *)label identifier:(NSUInteger)identifier view:(nullable NSView *)view firstResponder:(nullable NSControl *)firstResponder children:(nullable NSArray<TVCContentNavigationOutlineViewItem *> *)children
+- (instancetype)initWithLabel:(NSString *)label
+				   identifier:(NSUInteger)identifier
+						 view:(nullable NSView *)view
+			   firstResponder:(nullable NSControl *)firstResponder
+					 children:(nullable NSArray<TVCContentNavigationOutlineViewItem *> *)children
 {
 	NSParameterAssert(label != nil);
 	NSParameterAssert(view != nil || children != nil);

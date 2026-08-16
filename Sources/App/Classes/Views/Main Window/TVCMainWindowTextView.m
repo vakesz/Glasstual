@@ -48,28 +48,31 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _KeyObservingArray 	@[	@"TextFieldAutomaticSpellCheck", \
-								@"TextFieldAutomaticGrammarCheck", \
-								@"TextFieldAutomaticSpellCorrection", \
-								@"TextFieldSmartCopyPaste", \
-								@"TextFieldSmartQuotes", \
-								@"TextFieldSmartDashes", \
-								@"TextFieldSmartLinks", \
-								@"TextFieldDataDetectors", \
-								@"TextFieldTextReplacement"]
+#define _KeyObservingArray                                                                                             \
+	@[                                                                                                                 \
+		@"TextFieldAutomaticSpellCheck",                                                                               \
+		@"TextFieldAutomaticGrammarCheck",                                                                             \
+		@"TextFieldAutomaticSpellCorrection",                                                                          \
+		@"TextFieldSmartCopyPaste",                                                                                    \
+		@"TextFieldSmartQuotes",                                                                                       \
+		@"TextFieldSmartDashes",                                                                                       \
+		@"TextFieldSmartLinks",                                                                                        \
+		@"TextFieldDataDetectors",                                                                                     \
+		@"TextFieldTextReplacement"                                                                                    \
+	]
 
 @interface TVCMainWindowTextView ()
-@property (nonatomic, copy) NSAttributedString *placeholderAttributedString;
-@property (nonatomic, weak) IBOutlet NSLayoutConstraint *textViewHeightConstraint;
-@property (nonatomic, weak) IBOutlet NSLayoutConstraint *windowContentViewMinimumHeight;
-@property (nonatomic, weak) IBOutlet TVCMainWindowTextViewContentView *contentView;
-@property (nonatomic, strong) TVCMainWindowTextViewAppearance *userInterfaceObjects;
-@property (nonatomic, assign) BOOL observingUserDefaults;
-@property (readonly) NSArray<NSString *> *defaultSpellingIgnores;
+@property(nonatomic, copy) NSAttributedString *placeholderAttributedString;
+@property(nonatomic, weak) IBOutlet NSLayoutConstraint *textViewHeightConstraint;
+@property(nonatomic, weak) IBOutlet NSLayoutConstraint *windowContentViewMinimumHeight;
+@property(nonatomic, weak) IBOutlet TVCMainWindowTextViewContentView *contentView;
+@property(nonatomic, strong) TVCMainWindowTextViewAppearance *userInterfaceObjects;
+@property(nonatomic, assign) BOOL observingUserDefaults;
+@property(readonly) NSArray<NSString *> *defaultSpellingIgnores;
 @end
 
 @interface TVCMainWindowTextViewContentView ()
-@property (nonatomic, unsafe_unretained) IBOutlet TVCMainWindowTextView *textView;
+@property(nonatomic, unsafe_unretained) IBOutlet TVCMainWindowTextView *textView;
 @end
 
 @implementation TVCMainWindowTextView
@@ -197,14 +200,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self.textStorage enumerateAttributesInRange:self.range
 										 options:0
-									  usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop)
-		{
-			if ([attributes containsKey:IRCTextFormatterForegroundColorAttributeName]) {
-				return;
-			}
+									  usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop) {
+										  if ([attributes containsKey:IRCTextFormatterForegroundColorAttributeName]) {
+											  return;
+										  }
 
-			[self resetFontColorInRange:effectiveRange];
-		}];
+										  [self resetFontColorInRange:effectiveRange];
+									  }];
 
 	[self.textStorage endEditing];
 }
@@ -272,8 +274,7 @@ NS_ASSUME_NONNULL_BEGIN
 	TVCMainWindowTextViewFontSize preferredFontSize = self.userInterfaceObjects.textViewPreferredFontSize;
 
 	if (preferredFontSize == TVCMainWindowTextViewFontSizeNormal ||
-		preferredFontSize == TVCMainWindowTextViewFontSizeLarge)
-	{
+		preferredFontSize == TVCMainWindowTextViewFontSizeLarge) {
 		selectedRect.origin.y -= 1;
 	}
 
@@ -296,13 +297,11 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Update the placeholder string */
 	NSColor *placeholderTextColor = appearance.textViewPlaceholderTextColor;
 
-	NSDictionary *placeholderStringAttributes = @{
-		NSFontAttributeName	: preferredFont,
-		NSForegroundColorAttributeName : placeholderTextColor
-	};
+	NSDictionary *placeholderStringAttributes =
+		@{NSFontAttributeName : preferredFont, NSForegroundColorAttributeName : placeholderTextColor};
 
-	self.placeholderAttributedString =
-	[NSAttributedString attributedStringWithString:TXTLS(@"TVCMainWindow[8r3-ih]") attributes:placeholderStringAttributes];
+	self.placeholderAttributedString = [NSAttributedString attributedStringWithString:TXTLS(@"TVCMainWindow[8r3-ih]")
+																		   attributes:placeholderStringAttributes];
 
 	self.needsDisplay = YES;
 }
@@ -364,7 +363,8 @@ NS_ASSUME_NONNULL_BEGIN
 	if (self.stringLength < 1) {
 		backgroundHeight = (backgroundHeightDefault + contentBorderPadding);
 	} else {
-		CGFloat backgroundHeightMaximum = (NSHeight(windowFrame) - (self.windowContentViewMinimumHeight.constant + contentBorderPadding));
+		CGFloat backgroundHeightMaximum =
+			(NSHeight(windowFrame) - (self.windowContentViewMinimumHeight.constant + contentBorderPadding));
 
 		backgroundHeight = [self highestHeightBelowHeight:backgroundHeightMaximum withPadding:contentBorderPadding];
 
@@ -389,7 +389,10 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark NSTextView Context Menu Preferences
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary *)change
+					   context:(nullable void *)context
 {
 	if ([keyPath isEqualToString:@"TextFieldAutomaticSpellCheck"]) {
 		self.continuousSpellCheckingEnabled = [TPCPreferences textFieldAutomaticSpellCheck];

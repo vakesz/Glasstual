@@ -46,16 +46,16 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Text View
 
-@property (nonatomic, assign, readwrite) NSSize textViewInset;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewTextColor;
-@property (nonatomic, copy, nullable, readwrite) NSColor *textViewPlaceholderTextColor;
+@property(nonatomic, assign, readwrite) NSSize textViewInset;
+@property(nonatomic, copy, nullable, readwrite) NSColor *textViewTextColor;
+@property(nonatomic, copy, nullable, readwrite) NSColor *textViewPlaceholderTextColor;
 
-@property (nonatomic, assign, readwrite) TVCMainWindowTextViewFontSize textViewPreferredFontSize;
+@property(nonatomic, assign, readwrite) TVCMainWindowTextViewFontSize textViewPreferredFontSize;
 
 #pragma mark -
 #pragma mark Background View
 
-@property (nonatomic, assign, readwrite) CGFloat backgroundViewContentBorderPadding;
+@property(nonatomic, assign, readwrite) CGFloat backgroundViewContentBorderPadding;
 @end
 
 @implementation TVCMainWindowTextViewAppearance
@@ -119,10 +119,18 @@ NS_ASSUME_NONNULL_BEGIN
 	CGFloat pointSize = 0.0;
 
 	switch (preferredFontSize) {
-		case TVCMainWindowTextViewFontSizeLarge:		pointSize = 14.0; break;
-		case TVCMainWindowTextViewFontSizeExtraLarge:	pointSize = 16.0; break;
-		case TVCMainWindowTextViewFontSizeHumongous:	pointSize = 24.0; break;
-		default:										pointSize = [NSFont systemFontSize]; break;
+	case TVCMainWindowTextViewFontSizeLarge:
+		pointSize = 14.0;
+		break;
+	case TVCMainWindowTextViewFontSizeExtraLarge:
+		pointSize = 16.0;
+		break;
+	case TVCMainWindowTextViewFontSizeHumongous:
+		pointSize = 24.0;
+		break;
+	default:
+		pointSize = [NSFont systemFontSize];
+		break;
 	}
 
 	return [NSFont systemFontOfSize:pointSize];

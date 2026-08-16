@@ -48,10 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 	ICLPayloadMutable *payload = self.payload;
 
 	NSDictionary *templateAttributes =
-	@{
-	  @"uniqueIdentifier" : payload.uniqueIdentifier,
-	  @"videoIdentifier" : videoIdentifier
-	};
+		@{@"uniqueIdentifier" : payload.uniqueIdentifier, @"videoIdentifier" : videoIdentifier};
 
 	NSError *templateRenderError = nil;
 
@@ -110,13 +107,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"pornhub.com",
-		  @"www.pornhub.com",
-		  @"pornhubpremium.com",
-		  @"www.pornhubpremium.com"
-		];
+		domains = @[ @"pornhub.com", @"www.pornhub.com", @"pornhubpremium.com", @"www.pornhubpremium.com" ];
 	});
 
 	return domains;

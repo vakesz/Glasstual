@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCUserNicknameColorStyleGenerator : NSObject
 + (NSString *)nicknameColorStyleForString:(NSString *)inputString;
-+ (NSString *)nicknameColorStyleForString:(NSString *)inputString isOverride:(BOOL * _Nullable)isOverride;
++ (NSString *)nicknameColorStyleForString:(NSString *)inputString isOverride:(BOOL *_Nullable)isOverride;
 
 + (NSNumber *)hashForString:(NSString *)inputString colorStyle:(TPCThemeSettingsNicknameColorStyle)colorStyle;
 

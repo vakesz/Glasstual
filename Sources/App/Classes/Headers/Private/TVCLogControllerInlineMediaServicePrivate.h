@@ -39,16 +39,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCTreeItem;
 
-#define TVCLogControllerInlineMediaSharedInstance()				[TVCLogControllerInlineMediaService sharedInstance]
+#define TVCLogControllerInlineMediaSharedInstance() [TVCLogControllerInlineMediaService sharedInstance]
 
 @interface TVCLogControllerInlineMediaService : NSObject
 + (TVCLogControllerInlineMediaService *)sharedInstance;
 
 - (void)processAddress:(NSString *)address
-  withUniqueIdentifier:(NSString *)uniqueIdentifier
-		  atLineNumber:(NSString *)lineNumber
-				 index:(NSUInteger)index
-			   forItem:(IRCTreeItem *)item;
+	withUniqueIdentifier:(NSString *)uniqueIdentifier
+			atLineNumber:(NSString *)lineNumber
+				   index:(NSUInteger)index
+				 forItem:(IRCTreeItem *)item;
 
 - (void)reloadService;
 
@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
  to enable inline media so that they are aware of the risk of
  IP address leaks. Completion block returns YES on permission
  granted. NO in all other cases. */
-+ (void)askPermissionToEnableInlineMediaWithCompletionBlock:(void (NS_NOESCAPE ^)(BOOL granted))completionBlock;
++ (void)askPermissionToEnableInlineMediaWithCompletionBlock:(void(NS_NOESCAPE ^)(BOOL granted))completionBlock;
 @end
 
 NS_ASSUME_NONNULL_END

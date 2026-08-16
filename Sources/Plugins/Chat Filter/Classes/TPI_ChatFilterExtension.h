@@ -40,7 +40,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TPI_ChatFilterExtension : NSObject <THOPluginProtocol>
-@property (readonly) NSArrayController *filterArrayController;
+@property(readonly) NSArrayController *filterArrayController;
 @end
 
 NS_ASSUME_NONNULL_END

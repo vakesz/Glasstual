@@ -51,18 +51,21 @@ NS_ASSUME_NONNULL_BEGIN
 	NSUInteger filesizeTag = [RZUserDefaults() unsignedIntegerForKey:@"InlineMediaMaximumFilesize"];
 
 	switch (filesizeTag) {
-#define _dv(key, value)		case (key): { return (value); }
+#define _dv(key, value)                                                                                                \
+	case (key): {                                                                                                      \
+		return (value);                                                                                                \
+	}
 
-		_dv(1, (uint64_t)1048576) // 1 MB
-		_dv(2, (uint64_t)2097152) // 2 MB
-		_dv(3, (uint64_t)3145728) // 3 MB
-		_dv(4, (uint64_t)4194304) // 4 MB
-		_dv(5, (uint64_t)5242880) // 5 MB
-		_dv(6, (uint64_t)10485760) // 10 MB
-		_dv(7, (uint64_t)15728640) // 15 MB
-		_dv(8, (uint64_t)20971520) // 20 MB
-		_dv(9, (uint64_t)52428800) // 50 MB
-		_dv(10, (uint64_t)104857600) // 100 MB
+		_dv(1, (uint64_t)1048576)		 // 1 MB
+			_dv(2, (uint64_t)2097152)	 // 2 MB
+			_dv(3, (uint64_t)3145728)	 // 3 MB
+			_dv(4, (uint64_t)4194304)	 // 4 MB
+			_dv(5, (uint64_t)5242880)	 // 5 MB
+			_dv(6, (uint64_t)10485760)	 // 10 MB
+			_dv(7, (uint64_t)15728640)	 // 15 MB
+			_dv(8, (uint64_t)20971520)	 // 20 MB
+			_dv(9, (uint64_t)52428800)	 // 50 MB
+			_dv(10, (uint64_t)104857600) // 100 MB
 
 #undef _dv
 	}

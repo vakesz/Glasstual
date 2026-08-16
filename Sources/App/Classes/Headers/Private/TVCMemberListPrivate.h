@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannelMemberListController;
 
 @interface TVCMemberList ()
-@property (nonatomic, weak) id keyDelegate;
+@property(nonatomic, weak) id keyDelegate;
 
 - (TVCMemberListUserInfoPopover *)memberListUserInfoPopover;
 - (IRCChannelMemberListController *)contentController;

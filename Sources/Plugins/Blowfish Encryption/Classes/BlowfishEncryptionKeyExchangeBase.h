@@ -44,7 +44,7 @@
 
 #import <Foundation/Foundation.h>
 
-#define EKBlowfishEncryptionKeyExchangeRequiredKeyLength             135
+#define EKBlowfishEncryptionKeyExchangeRequiredKeyLength 135
 
 @interface EKBlowfishEncryptionKeyExchangeBase : NSObject
 - (void)computeKey;

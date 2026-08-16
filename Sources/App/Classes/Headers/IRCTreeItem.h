@@ -41,20 +41,20 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClient, IRCChannel, TVCLogController;
 
 @interface IRCTreeItem : NSObject
-@property (readonly) BOOL isActive;
-@property (readonly) BOOL isUnread;
-@property (readonly) BOOL isClient;
-@property (readonly) BOOL isChannel;
-@property (readonly) BOOL isPrivateMessage;
-@property (readonly, weak) IRCClient *associatedClient;
-@property (readonly, weak) IRCChannel *associatedChannel;
-@property (readonly) NSString *label;
-@property (readonly) NSString *name;
-@property (readonly) NSString *uniqueIdentifier;
-@property (readonly) NSUInteger dockUnreadCount;
-@property (readonly) NSUInteger nicknameHighlightCount;
-@property (readonly) NSUInteger treeUnreadCount;
-@property (readonly) TVCLogController *viewController;
+@property(readonly) BOOL isActive;
+@property(readonly) BOOL isUnread;
+@property(readonly) BOOL isClient;
+@property(readonly) BOOL isChannel;
+@property(readonly) BOOL isPrivateMessage;
+@property(readonly, weak) IRCClient *associatedClient;
+@property(readonly, weak) IRCChannel *associatedChannel;
+@property(readonly) NSString *label;
+@property(readonly) NSString *name;
+@property(readonly) NSString *uniqueIdentifier;
+@property(readonly) NSUInteger dockUnreadCount;
+@property(readonly) NSUInteger nicknameHighlightCount;
+@property(readonly) NSUInteger treeUnreadCount;
+@property(readonly) TVCLogController *viewController;
 @end
 
 NS_ASSUME_NONNULL_END

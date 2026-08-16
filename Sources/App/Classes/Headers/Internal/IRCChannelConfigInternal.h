@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCChannelConfig ()
 {
-@protected
+  @protected
 	BOOL _autoJoin;
 	BOOL _ignoreGeneralEventMessages;
 	BOOL _ignoreHighlights;
@@ -57,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_secretKey;
 	NSMutableDictionary *_notificationsMutable;
 
-@private
+  @private
 	NSString *_uniqueIdentifier;
 	NSDictionary *_defaults;
 }

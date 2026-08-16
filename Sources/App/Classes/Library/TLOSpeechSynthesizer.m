@@ -44,8 +44,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TLOSpeechSynthesizer () <AVSpeechSynthesizerDelegate>
-@property (nonatomic, strong) AVSpeechSynthesizer *speechSynthesizer;
-@property (nonatomic, strong) NSMutableArray *itemsToBeSpoken;
+@property(nonatomic, strong) AVSpeechSynthesizer *speechSynthesizer;
+@property(nonatomic, strong) NSMutableArray *itemsToBeSpoken;
 @end
 
 @implementation TLOSpeechSynthesizer
@@ -175,13 +175,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)clearQueueForClient:(IRCClient *)client
 {
 	@synchronized(self.itemsToBeSpoken) {
-		NSIndexSet *indexesToRemove = [self.itemsToBeSpoken indexesOfObjectsPassingTest:^BOOL(id object, NSUInteger index, BOOL *stop) {
-			if ([object isKindOfClass:[TLOSpokenNotification class]]) {
-				return ((IRCClient *)[object client] == client);
-			}
+		NSIndexSet *indexesToRemove =
+			[self.itemsToBeSpoken indexesOfObjectsPassingTest:^BOOL(id object, NSUInteger index, BOOL *stop) {
+				if ([object isKindOfClass:[TLOSpokenNotification class]]) {
+					return ((IRCClient *)[object client] == client);
+				}
 
-			return NO;
-		}];
+				return NO;
+			}];
 
 		if (indexesToRemove.count == 0) {
 			return;

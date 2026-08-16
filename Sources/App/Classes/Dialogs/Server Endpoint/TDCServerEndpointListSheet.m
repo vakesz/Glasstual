@@ -41,12 +41,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _endpointEntryTableDragToken		@"TDCServerEndpointListSheetEntryTableDragToken"
+#define _endpointEntryTableDragToken @"TDCServerEndpointListSheetEntryTableDragToken"
 
 @interface TDCServerEndpointListSheet ()
-@property (nonatomic, strong) IBOutlet NSArrayController *entryTableController;
-@property (nonatomic, weak) IBOutlet TVCBasicTableView *entryTable;
-@property (nonatomic, weak) IBOutlet NSSegmentedControl *entryActionsSegmentedControl;
+@property(nonatomic, strong) IBOutlet NSArrayController *entryTableController;
+@property(nonatomic, weak) IBOutlet TVCBasicTableView *entryTable;
+@property(nonatomic, weak) IBOutlet NSSegmentedControl *entryActionsSegmentedControl;
 
 - (IBAction)entryActionsSegmentedControlClicked:(nullable id)sender;
 @end
@@ -68,7 +68,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[RZMainBundle() loadNibNamed:@"TDCServerEndpointListSheet" owner:self topLevelObjects:nil];
 
-	[self.entryTable registerForDraggedTypes:@[_endpointEntryTableDragToken]];
+	[self.entryTable registerForDraggedTypes:@[ _endpointEntryTableDragToken ]];
 
 	[self.entryTableController addObserver:self
 								forKeyPath:@"canRemove"
@@ -91,8 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSArray *serverListIn = self.entryTableController.arrangedObjects;
 
-	NSMutableArray<IRCServer *> *serverListOut =
-	[[NSMutableArray alloc] initWithCapacity:serverListIn.count];
+	NSMutableArray<IRCServer *> *serverListOut = [[NSMutableArray alloc] initWithCapacity:serverListIn.count];
 
 	for (IRCServerMutable *server in serverListIn) {
 		/* New entries that are blank do not perform validation
@@ -113,7 +112,10 @@ NS_ASSUME_NONNULL_BEGIN
 	[super ok:sender];
 }
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 {
 	if ([keyPath isEqualToString:@"canRemove"]) {
 		[self updateEntryActionsSegmentedControlEnabledState];
@@ -175,12 +177,18 @@ NS_ASSUME_NONNULL_BEGIN
 	return item;
 }
 
-- (NSDragOperation)tableView:(NSTableView *)tableView validateDrop:(id<NSDraggingInfo>)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)dropOperation
+- (NSDragOperation)tableView:(NSTableView *)tableView
+				validateDrop:(id<NSDraggingInfo>)info
+				 proposedRow:(NSInteger)row
+	   proposedDropOperation:(NSTableViewDropOperation)dropOperation
 {
 	return NSDragOperationGeneric;
 }
 
-- (BOOL)tableView:(NSTableView *)tableView acceptDrop:(id <NSDraggingInfo>)info row:(NSInteger)row dropOperation:(NSTableViewDropOperation)dropOperation
+- (BOOL)tableView:(NSTableView *)tableView
+	   acceptDrop:(id<NSDraggingInfo>)info
+			  row:(NSInteger)row
+	dropOperation:(NSTableViewDropOperation)dropOperation
 {
 	NSPasteboard *pasteboard = [info draggingPasteboard];
 

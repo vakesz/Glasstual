@@ -43,11 +43,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCChannelInviteSheet ()
-@property (nonatomic, strong, readwrite) IRCClient *client;
-@property (nonatomic, copy, readwrite) NSString *clientId;
-@property (nonatomic, copy, readwrite) NSArray<NSString *> *nicknames;
-@property (nonatomic, weak) IBOutlet NSTextField *headerTitleTextField;
-@property (nonatomic, weak) IBOutlet NSPopUpButton *channelListPopup;
+@property(nonatomic, strong, readwrite) IRCClient *client;
+@property(nonatomic, copy, readwrite) NSString *clientId;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *nicknames;
+@property(nonatomic, weak) IBOutlet NSTextField *headerTitleTextField;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *channelListPopup;
 @end
 
 @implementation TDCChannelInviteSheet

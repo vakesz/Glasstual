@@ -72,21 +72,21 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TXMasterController ()
-@property (nonatomic, strong, readwrite) IRCWorld *world;
-@property (nonatomic, assign, readwrite) BOOL debugModeIsOn;
-@property (nonatomic, assign, readwrite) BOOL ghostModeIsOn;
-@property (nonatomic, assign, readwrite) BOOL applicationIsActive;
-@property (nonatomic, assign, readwrite) BOOL applicationIsLaunched;
-@property (nonatomic, assign, readwrite) BOOL applicationIsTerminating;
-@property (nonatomic, assign, readwrite) BOOL applicationIsChangingActiveState;
-@property (readonly) BOOL isSafeToPerformApplicationTermination;
-@property (nonatomic, assign, readwrite) BOOL terminateHistoricLogSaveFinished;
-@property (nonatomic, strong, readwrite) IBOutlet TVCMainWindow *mainWindow;
-@property (nonatomic, weak, readwrite) IBOutlet TXMenuController *menuController;
-@property (nonatomic, assign) NSUInteger applicationLaunchRemainder;
+@property(nonatomic, strong, readwrite) IRCWorld *world;
+@property(nonatomic, assign, readwrite) BOOL debugModeIsOn;
+@property(nonatomic, assign, readwrite) BOOL ghostModeIsOn;
+@property(nonatomic, assign, readwrite) BOOL applicationIsActive;
+@property(nonatomic, assign, readwrite) BOOL applicationIsLaunched;
+@property(nonatomic, assign, readwrite) BOOL applicationIsTerminating;
+@property(nonatomic, assign, readwrite) BOOL applicationIsChangingActiveState;
+@property(readonly) BOOL isSafeToPerformApplicationTermination;
+@property(nonatomic, assign, readwrite) BOOL terminateHistoricLogSaveFinished;
+@property(nonatomic, strong, readwrite) IBOutlet TVCMainWindow *mainWindow;
+@property(nonatomic, weak, readwrite) IBOutlet TXMenuController *menuController;
+@property(nonatomic, assign) NSUInteger applicationLaunchRemainder;
 
 #if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-@property (nonatomic, strong, readwrite) SPUStandardUpdaterController *updateController;
+@property(nonatomic, strong, readwrite) SPUStandardUpdaterController *updateController;
 #endif
 @end
 
@@ -169,23 +169,47 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self prepareNetworkReachabilityNotifier];
 
-	[RZWorkspaceNotificationCenter() addObserver:self selector:@selector(computerDidWakeUp:) name:NSWorkspaceDidWakeNotification object:nil];
-	[RZWorkspaceNotificationCenter() addObserver:self selector:@selector(computerWillSleep:) name:NSWorkspaceWillSleepNotification object:nil];
-	[RZWorkspaceNotificationCenter() addObserver:self selector:@selector(computerWillPowerOff:) name:NSWorkspaceWillPowerOffNotification object:nil];
-	[RZWorkspaceNotificationCenter() addObserver:self selector:@selector(computerScreenDidWake:) name:NSWorkspaceScreensDidWakeNotification object:nil];
-	[RZWorkspaceNotificationCenter() addObserver:self selector:@selector(computerScreenWillSleep:) name:NSWorkspaceScreensDidSleepNotification object:nil];
+	[RZWorkspaceNotificationCenter() addObserver:self
+										selector:@selector(computerDidWakeUp:)
+											name:NSWorkspaceDidWakeNotification
+										  object:nil];
+	[RZWorkspaceNotificationCenter() addObserver:self
+										selector:@selector(computerWillSleep:)
+											name:NSWorkspaceWillSleepNotification
+										  object:nil];
+	[RZWorkspaceNotificationCenter() addObserver:self
+										selector:@selector(computerWillPowerOff:)
+											name:NSWorkspaceWillPowerOffNotification
+										  object:nil];
+	[RZWorkspaceNotificationCenter() addObserver:self
+										selector:@selector(computerScreenDidWake:)
+											name:NSWorkspaceScreensDidWakeNotification
+										  object:nil];
+	[RZWorkspaceNotificationCenter() addObserver:self
+										selector:@selector(computerScreenWillSleep:)
+											name:NSWorkspaceScreensDidSleepNotification
+										  object:nil];
 
-	[RZNotificationCenter() addObserver:self selector:@selector(pluginsFinishedLoading:) name:THOPluginManagerFinishedLoadingPluginsNotification object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(pluginsFinishedLoading:)
+								   name:THOPluginManagerFinishedLoadingPluginsNotification
+								 object:nil];
 
-	[RZAppleEventManager() setEventHandler:self andSelector:@selector(handleURLEvent:withReplyEvent:) forEventClass:kInternetEventClass andEventID:kAEGetURL];
+	[RZAppleEventManager() setEventHandler:self
+							   andSelector:@selector(handleURLEvent:withReplyEvent:)
+							 forEventClass:kInternetEventClass
+								andEventID:kAEGetURL];
 
-	[NSColorPanel setPickerMask:(NSColorPanelRGBModeMask | NSColorPanelGrayModeMask | NSColorPanelColorListModeMask | NSColorPanelWheelModeMask | NSColorPanelCrayonModeMask)];
+	[NSColorPanel setPickerMask:(NSColorPanelRGBModeMask | NSColorPanelGrayModeMask | NSColorPanelColorListModeMask |
+								 NSColorPanelWheelModeMask | NSColorPanelCrayonModeMask)];
 
 	[[NSColorPanel sharedColorPanel] setShowsAlpha:YES];
 
-	XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(^{
-		[TPCResourceManager copyResourcesToApplicationSupportFolder];
-	}, DISPATCH_QUEUE_PRIORITY_BACKGROUND);
+	XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(
+		^{
+			[TPCResourceManager copyResourcesToApplicationSupportFolder];
+		},
+		DISPATCH_QUEUE_PRIORITY_BACKGROUND);
 
 	/* We want to guarantee some specific things happen before the
 	 app is considered "launched" and ready to use. This property
@@ -204,7 +228,10 @@ NS_ASSUME_NONNULL_BEGIN
 	[sharedPluginManager() loadPlugins];
 }
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 {
 	if ([keyPath isEqualToString:@"applicationLaunchRemainder"]) {
 		if (self.applicationLaunchRemainder == 0) {
@@ -224,10 +251,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)prepareThirdPartyServiceSparkleFramework
 {
 #if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	  SPUStandardUpdaterController *controller =
-	[[SPUStandardUpdaterController alloc] initWithStartingUpdater:NO
-												  updaterDelegate:(id <SPUUpdaterDelegate>)self
-											   userDriverDelegate:nil];
+	SPUStandardUpdaterController *controller =
+		[[SPUStandardUpdaterController alloc] initWithStartingUpdater:NO
+													  updaterDelegate:(id<SPUUpdaterDelegate>)self
+												   userDriverDelegate:nil];
 
 	self.updateController = controller;
 
@@ -277,8 +304,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* UserNotifications.framework wants delegation set before app has
 	 finished launching. A simple access to the singleton will set this
 	 for us which we can just do here. */
-	LogToConsoleDebug("Preparing notification controller singeton: %@",
-			sharedNotificationController().description);
+	LogToConsoleDebug("Preparing notification controller singeton: %@", sharedNotificationController().description);
 }
 
 - (void)applicationDidFinishLaunching
@@ -405,9 +431,8 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL condition1 = (self.terminatingClientCount == 0);
 
 	/* Core Data is saving */
-	BOOL condition2 = (TVCLogControllerHistoricLogSharedInstance().isSaving == NO &&
-							self.terminateHistoricLogSaveFinished);
-
+	BOOL condition2 =
+		(TVCLogControllerHistoricLogSharedInstance().isSaving == NO && self.terminateHistoricLogSaveFinished);
 
 	LogToConsoleTerminationProgress("Conditions: %{BOOL}d %{BOOL}d", condition1, condition2);
 
@@ -480,25 +505,27 @@ NS_ASSUME_NONNULL_BEGIN
 	/* We want certain things to 100% happen before the app completely closes.
 	 This block that is performed below loops until all these actions are completed.
 	 Notable actions: gracefully leaving IRC, saving historic logs, etc. */
-	XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(^{
-		do {
-			/* We wait until this value reaches zero so that
+	XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(
+		^{
+			do {
+				/* We wait until this value reaches zero so that
 			 view controllers had the chance to perform any
 			 changes they want to historic log. */
-			if (self.terminatingClientCount == 0) {
-				[TVCLogControllerHistoricLogSharedInstance() prepareForApplicationTermination];
+				if (self.terminatingClientCount == 0) {
+					[TVCLogControllerHistoricLogSharedInstance() prepareForApplicationTermination];
 
-				self.terminateHistoricLogSaveFinished = YES;
-			}
+					self.terminateHistoricLogSaveFinished = YES;
+				}
 
-			/* Sleep a little bit so we aren't looping a lot. */
-			[NSThread sleepForTimeInterval:0.5];
-		} while (self.isSafeToPerformApplicationTermination == NO);
+				/* Sleep a little bit so we aren't looping a lot. */
+				[NSThread sleepForTimeInterval:0.5];
+			} while (self.isSafeToPerformApplicationTermination == NO);
 
-		XRPerformBlockAsynchronouslyOnMainQueue(^{
-			[self performApplicationTerminationStepThree];
-		});
-	}, DISPATCH_QUEUE_PRIORITY_HIGH);
+			XRPerformBlockAsynchronouslyOnMainQueue(^{
+				[self performApplicationTerminationStepThree];
+			});
+		},
+		DISPATCH_QUEUE_PRIORITY_HIGH);
 }
 
 - (void)performApplicationTerminationStepThree
@@ -546,8 +573,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark NSWorkspace Notifications
 
-- (void)handleURLEvent:(NSAppleEventDescriptor *)event
-		withReplyEvent:(NSAppleEventDescriptor *)replyEvent
+- (void)handleURLEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent
 {
 	NSAppleEventDescriptor *description = [event descriptorAtIndex:1];
 

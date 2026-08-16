@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClient;
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-#define sharedEncryptionManager()			[TXSharedApplication sharedEncryptionManager]
+#define sharedEncryptionManager() [TXSharedApplication sharedEncryptionManager]
 #endif
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
@@ -72,7 +72,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem withStateOf:(NSString *)messageTo from:(NSString *)messageFrom;
 
-- (BOOL)safeToTransferFile:(NSString *)filename to:(NSString *)messageTo from:(NSString *)messageFrom isIncomingFileTransfer:(BOOL)isIncomingFileTransfer;
+- (BOOL)safeToTransferFile:(NSString *)filename
+						to:(NSString *)messageTo
+					  from:(NSString *)messageFrom
+	isIncomingFileTransfer:(BOOL)isIncomingFileTransfer;
 
 /* Define configuration options */
 - (void)updatePolicy;

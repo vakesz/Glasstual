@@ -42,5 +42,6 @@
 + (void)setEncryptionKey:(NSString *)encryptionKey forChannel:(IRCChannel *)channel;
 
 + (EKBlowfishEncryptionModeOfOperation)encryptionModeOfOperationForChannel:(IRCChannel *)channel;
-+ (void)setEncryptionModeOfOperation:(EKBlowfishEncryptionModeOfOperation)modeOfOperation forChannel:(IRCChannel *)channel;
++ (void)setEncryptionModeOfOperation:(EKBlowfishEncryptionModeOfOperation)modeOfOperation
+						  forChannel:(IRCChannel *)channel;
 @end

@@ -51,16 +51,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TVCLogLineUndefinedNicknameFormat = @"<%@%n>";
-NSString * const TVCLogLineActionNicknameFormat	= @"%@ ";
-NSString * const TVCLogLineNoticeNicknameFormat	= @"-%@-";
+NSString *const TVCLogLineUndefinedNicknameFormat = @"<%@%n>";
+NSString *const TVCLogLineActionNicknameFormat = @"%@ ";
+NSString *const TVCLogLineNoticeNicknameFormat = @"-%@-";
 
-NSString * const TVCLogLineSpecialNoticeMessageFormat = @"[%@]: %@";
+NSString *const TVCLogLineSpecialNoticeMessageFormat = @"[%@]: %@";
 
-NSString * const TVCLogLineDefaultCommandValue = @"-100";
+NSString *const TVCLogLineDefaultCommandValue = @"-100";
 
 @interface TVCLogLine ()
-@property (readonly, copy) NSDictionary<NSString *, id> *dictionaryValue;
+@property(readonly, copy) NSDictionary<NSString *, id> *dictionaryValue;
 @end
 
 @implementation TVCLogLine
@@ -104,7 +104,9 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	 attaches the unique identifier to the XPC object. We can then write it out here. */
 	/* We check if the object's unique identifier is nil before setting the database's
 	 value because the value may have already been unarchived if it is present. */
-	TVCLogLine *object = [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:xpcObject.data error:NULL];
+	TVCLogLine *object = [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class]
+														   fromData:xpcObject.data
+															  error:NULL];
 
 	if (object->_uniqueIdentifier == nil) {
 		object->_uniqueIdentifier = [xpcObject.uniqueIdentifier copy];
@@ -117,11 +119,13 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 {
 	self->_receivedAt = [aDecoder decodeObjectOfClass:[NSDate class] forKey:@"receivedAt"];
 
-	self->_excludeKeywords = [aDecoder decodeObjectOfClasses:[NSSet setWithObjects:[NSArray class], [NSString class], nil]
-												   forKey:@"excludeKeywords"];
+	self->_excludeKeywords =
+		[aDecoder decodeObjectOfClasses:[NSSet setWithObjects:[NSArray class], [NSString class], nil]
+								 forKey:@"excludeKeywords"];
 
-	self->_highlightKeywords = [aDecoder decodeObjectOfClasses:[NSSet setWithObjects:[NSArray class], [NSString class], nil]
-													 forKey:@"highlightKeywords"];
+	self->_highlightKeywords =
+		[aDecoder decodeObjectOfClasses:[NSSet setWithObjects:[NSArray class], [NSString class], nil]
+								 forKey:@"highlightKeywords"];
 
 	self->_rendererAttributes = [aDecoder decodeDictionaryForKey:@"rendererAttributes"];
 
@@ -149,15 +153,17 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	[self populateDefaultUniqueIdentifier];
 	[self populateDefaultSessionIdentifier];
 
-	SetVariableIfNil(self->_command, TVCLogLineDefaultCommandValue)
-	SetVariableIfNil(self->_messageBody, @"")
-	SetVariableIfNil(self->_receivedAt, [NSDate date])
+	SetVariableIfNil(self->_command, TVCLogLineDefaultCommandValue) SetVariableIfNil(self->_messageBody, @"")
+		SetVariableIfNil(self->_receivedAt, [NSDate date])
 
-	if (self->_lineType == TVCLogLineTypeActionNoHighlight) {
+			if (self->_lineType == TVCLogLineTypeActionNoHighlight)
+	{
 		self->_lineType = TVCLogLineTypeAction;
 
 		self->_highlightKeywords = nil;
-	} else if (self->_lineType == TVCLogLineTypePrivateMessageNoHighlight) {
+	}
+	else if (self->_lineType == TVCLogLineTypePrivateMessageNoHighlight)
+	{
 		self->_lineType = TVCLogLineTypePrivateMessage;
 
 		self->_highlightKeywords = nil;
@@ -216,13 +222,12 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self requiringSecureCoding:YES error:NULL];
 
-	TVCLogLineXPC *xpcObject =
-	[[TVCLogLineXPC alloc] initWithLogLineData:data
-							  uniqueIdentifier:self.uniqueIdentifier
-								viewIdentifier:treeItem.uniqueIdentifier
-							 sessionIdentifier:self.sessionIdentifier];
+	TVCLogLineXPC *xpcObject = [[TVCLogLineXPC alloc] initWithLogLineData:data
+														 uniqueIdentifier:self.uniqueIdentifier
+														   viewIdentifier:treeItem.uniqueIdentifier
+														sessionIdentifier:self.sessionIdentifier];
 
-	 return xpcObject;
+	return xpcObject;
 }
 
 + (NSString *)newUniqueIdentifier
@@ -252,32 +257,27 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 + (nullable NSString *)stringForLineType:(TVCLogLineType)type
 {
-#define _dv(lineType, returnValue)			case (lineType): { return (returnValue); break; }
+#define _dv(lineType, returnValue)                                                                                     \
+	case (lineType): {                                                                                                 \
+		return (returnValue);                                                                                          \
+		break;                                                                                                         \
+	}
 
 	switch (type) {
-		_dv(TVCLogLineTypeAction, @"action")
-		_dv(TVCLogLineTypeActionNoHighlight, @"action")
-		_dv(TVCLogLineTypeCTCP, @"ctcp")
-		_dv(TVCLogLineTypeCTCPQuery, @"ctcp")
-		_dv(TVCLogLineTypeCTCPReply, @"ctcp")
-		_dv(TVCLogLineTypeDCCFileTransfer, @"dcc-file-transfer")
-		_dv(TVCLogLineTypeDebug, @"debug")
-		_dv(TVCLogLineTypeInvite, @"invite")
-		_dv(TVCLogLineTypeJoin, @"join")
-		_dv(TVCLogLineTypeKick, @"kick")
-		_dv(TVCLogLineTypeKill, @"kill")
-		_dv(TVCLogLineTypeMode, @"mode")
-		_dv(TVCLogLineTypeNick, @"nick")
-		_dv(TVCLogLineTypeNotice, @"notice")
-		_dv(TVCLogLineTypeOffTheRecordEncryptionStatus, @"off-the-record-encryption-status")
-		_dv(TVCLogLineTypePart, @"part")
-		_dv(TVCLogLineTypePrivateMessage, @"privmsg")
-		_dv(TVCLogLineTypePrivateMessageNoHighlight, @"privmsg")
-		_dv(TVCLogLineTypeQuit, @"quit")
-		_dv(TVCLogLineTypeTopic, @"topic")
-		_dv(TVCLogLineTypeWebsite, @"website")
+		_dv(TVCLogLineTypeAction, @"action") _dv(TVCLogLineTypeActionNoHighlight, @"action")
+			_dv(TVCLogLineTypeCTCP, @"ctcp") _dv(TVCLogLineTypeCTCPQuery, @"ctcp") _dv(TVCLogLineTypeCTCPReply, @"ctcp")
+				_dv(TVCLogLineTypeDCCFileTransfer, @"dcc-file-transfer") _dv(TVCLogLineTypeDebug, @"debug")
+					_dv(TVCLogLineTypeInvite, @"invite") _dv(TVCLogLineTypeJoin, @"join")
+						_dv(TVCLogLineTypeKick, @"kick") _dv(TVCLogLineTypeKill, @"kill")
+							_dv(TVCLogLineTypeMode, @"mode") _dv(TVCLogLineTypeNick, @"nick")
+								_dv(TVCLogLineTypeNotice, @"notice")
+									_dv(TVCLogLineTypeOffTheRecordEncryptionStatus, @"off-the-record-encryption-status")
+										_dv(TVCLogLineTypePart, @"part") _dv(TVCLogLineTypePrivateMessage, @"privmsg")
+											_dv(TVCLogLineTypePrivateMessageNoHighlight, @"privmsg")
+												_dv(TVCLogLineTypeQuit, @"quit") _dv(TVCLogLineTypeTopic, @"topic")
+													_dv(TVCLogLineTypeWebsite, @"website")
 
-		default:
+														default:
 		{
 			return nil;
 		}
@@ -390,15 +390,12 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 - (void)computeNicknameColorStyle
 {
 	if (self.nickname != nil &&
-		(self.lineType == TVCLogLineTypePrivateMessage ||
-		 self.lineType == TVCLogLineTypePrivateMessageNoHighlight ||
-		 self.lineType == TVCLogLineTypeAction ||
-		 self.lineType == TVCLogLineTypeActionNoHighlight))
-	{
+		(self.lineType == TVCLogLineTypePrivateMessage || self.lineType == TVCLogLineTypePrivateMessageNoHighlight ||
+		 self.lineType == TVCLogLineTypeAction || self.lineType == TVCLogLineTypeActionNoHighlight)) {
 		BOOL isOverride = NO;
 
-		self->_nicknameColorStyle =
-		[IRCUserNicknameColorStyleGenerator nicknameColorStyleForString:self.nickname isOverride:&isOverride];
+		self->_nicknameColorStyle = [IRCUserNicknameColorStyleGenerator nicknameColorStyleForString:self.nickname
+																						 isOverride:&isOverride];
 
 		self->_nicknameColorStyleOverride = isOverride;
 	} else {

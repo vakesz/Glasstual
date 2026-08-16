@@ -40,10 +40,10 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TVCErrorMessagePopoverDelegate;
 
 @interface TVCErrorMessagePopover : NSObject
-@property (nonatomic, weak) id <TVCErrorMessagePopoverDelegate> delegate;
+@property(nonatomic, weak) id<TVCErrorMessagePopoverDelegate> delegate;
 
-@property (readonly, copy) NSString *message;
-@property (readonly, weak) NSView *view;
+@property(readonly, copy) NSString *message;
+@property(readonly, weak) NSView *view;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithMessage:(NSString *)message relativeToView:(NSView *)view NS_DESIGNATED_INITIALIZER;

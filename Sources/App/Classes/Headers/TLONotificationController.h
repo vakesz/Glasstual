@@ -43,29 +43,29 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannel;
 
 typedef NS_ENUM(NSUInteger, TXNotificationType) {
-	TXNotificationTypeHighlight							= 1000,
-	TXNotificationTypeNewPrivateMessage					= 1001,
-	TXNotificationTypeChannelMessage					= 1002,
-	TXNotificationTypeChannelNotice						= 1003,
-	TXNotificationTypePrivateMessage					= 1004,
-	TXNotificationTypePrivateNotice						= 1005,
-	TXNotificationTypeKick								= 1006,
-	TXNotificationTypeInvite							= 1007,
-	TXNotificationTypeConnect							= 1008,
-	TXNotificationTypeDisconnect						= 1009,
-	TXNotificationTypeAddressBookMatch					= 1010,
-	TXNotificationTypeFileTransferSendSuccessful		= 1011,
-	TXNotificationTypeFileTransferReceiveSuccessful		= 1012,
-	TXNotificationTypeFileTransferSendFailed			= 1013,
-	TXNotificationTypeFileTransferReceiveFailed			= 1014,
-	TXNotificationTypeFileTransferReceiveRequested		= 1015,
-	TXNotificationTypeUserJoined						= 1016,
-	TXNotificationTypeUserParted						= 1017,
-	TXNotificationTypeUserDisconnected					= 1018
+	TXNotificationTypeHighlight = 1000,
+	TXNotificationTypeNewPrivateMessage = 1001,
+	TXNotificationTypeChannelMessage = 1002,
+	TXNotificationTypeChannelNotice = 1003,
+	TXNotificationTypePrivateMessage = 1004,
+	TXNotificationTypePrivateNotice = 1005,
+	TXNotificationTypeKick = 1006,
+	TXNotificationTypeInvite = 1007,
+	TXNotificationTypeConnect = 1008,
+	TXNotificationTypeDisconnect = 1009,
+	TXNotificationTypeAddressBookMatch = 1010,
+	TXNotificationTypeFileTransferSendSuccessful = 1011,
+	TXNotificationTypeFileTransferReceiveSuccessful = 1012,
+	TXNotificationTypeFileTransferSendFailed = 1013,
+	TXNotificationTypeFileTransferReceiveFailed = 1014,
+	TXNotificationTypeFileTransferReceiveRequested = 1015,
+	TXNotificationTypeUserJoined = 1016,
+	TXNotificationTypeUserParted = 1017,
+	TXNotificationTypeUserDisconnected = 1018
 };
 
 @interface TLONotificationController : NSObject
-@property (nonatomic, assign) BOOL areNotificationsDisabled;
+@property(nonatomic, assign) BOOL areNotificationsDisabled;
 
 - (NSString *)titleForEvent:(TXNotificationType)event;
 @end

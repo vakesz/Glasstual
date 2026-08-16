@@ -66,46 +66,46 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _enqueueBlock(operationBlock)			\
+#define _enqueueBlock(operationBlock)                                                                                  \
 	[self.printingQueue enqueueMessageBlock:(operationBlock) for:self isStandalone:NO];
 
-#define _enqueueBlockStandalone(operationBlock)			\
+#define _enqueueBlockStandalone(operationBlock)                                                                        \
 	[self.printingQueue enqueueMessageBlock:(operationBlock) for:self isStandalone:YES];
 
 @interface TVCLogControllerPrintOperationContext ()
-@property (nonatomic, weak, readwrite) IRCClient *client;
-@property (nonatomic, weak, readwrite) IRCChannel *channel;
-@property (nonatomic, assign, readwrite, getter=isHighlight) BOOL highlight;
-@property (nonatomic, copy, readwrite) TVCLogLine *logLine;
-@property (nonatomic, copy, readwrite) NSString *lineNumber;
+@property(nonatomic, weak, readwrite) IRCClient *client;
+@property(nonatomic, weak, readwrite) IRCChannel *channel;
+@property(nonatomic, assign, readwrite, getter=isHighlight) BOOL highlight;
+@property(nonatomic, copy, readwrite) TVCLogLine *logLine;
+@property(nonatomic, copy, readwrite) NSString *lineNumber;
 @end
 
 @interface TVCLogController ()
-@property (nonatomic, assign, readwrite, getter=viewIsLoaded) BOOL loaded;
-@property (nonatomic, assign) BOOL terminating;
-@property (nonatomic, assign) BOOL historyLoadedForFirstTime;
-@property (nonatomic, assign) BOOL reloadingHistory;
-@property (nonatomic, assign) BOOL reloadingTheme;
-@property (nonatomic, assign) BOOL historyLoaded;
-@property (nonatomic, assign) NSInteger activeLineCount;
-@property (nonatomic, copy, nullable) NSString *lastVisitedHighlight;
-@property (nonatomic, copy, nullable, readwrite) NSString *newestLineNumberFromPreviousSession;
-@property (nonatomic, copy, nullable, readwrite) NSString *oldestLineNumber;
-@property (nonatomic, copy, nullable, readwrite) NSString *newestLineNumber;
-@property (nonatomic, strong, nullable) TVCLogLine *lastLine;
-@property (nonatomic, strong) NSMutableArray<NSString *> *highlightedLineNumbers;
-@property (nonatomic, strong) NSCache *jumpToLineCallbacks;
-@property (nonatomic, strong, readwrite) TVCLogView *backingView;
-@property (weak, readonly) IRCTreeItem *associatedItem;
-@property (nonatomic, weak, readwrite) IRCClient *associatedClient;
-@property (nonatomic, weak, readwrite) IRCChannel *associatedChannel;
-@property (nonatomic, weak, readwrite) TVCMainWindow *attachedWindow;
-@property (nonatomic, assign) NSTimeInterval viewLoadedTimestamp;
-@property (readonly) TVCLogControllerPrintingOperationQueue *printingQueue;
-@property (readonly, copy) NSURL *baseURL;
+@property(nonatomic, assign, readwrite, getter=viewIsLoaded) BOOL loaded;
+@property(nonatomic, assign) BOOL terminating;
+@property(nonatomic, assign) BOOL historyLoadedForFirstTime;
+@property(nonatomic, assign) BOOL reloadingHistory;
+@property(nonatomic, assign) BOOL reloadingTheme;
+@property(nonatomic, assign) BOOL historyLoaded;
+@property(nonatomic, assign) NSInteger activeLineCount;
+@property(nonatomic, copy, nullable) NSString *lastVisitedHighlight;
+@property(nonatomic, copy, nullable, readwrite) NSString *newestLineNumberFromPreviousSession;
+@property(nonatomic, copy, nullable, readwrite) NSString *oldestLineNumber;
+@property(nonatomic, copy, nullable, readwrite) NSString *newestLineNumber;
+@property(nonatomic, strong, nullable) TVCLogLine *lastLine;
+@property(nonatomic, strong) NSMutableArray<NSString *> *highlightedLineNumbers;
+@property(nonatomic, strong) NSCache *jumpToLineCallbacks;
+@property(nonatomic, strong, readwrite) TVCLogView *backingView;
+@property(weak, readonly) IRCTreeItem *associatedItem;
+@property(nonatomic, weak, readwrite) IRCClient *associatedClient;
+@property(nonatomic, weak, readwrite) IRCChannel *associatedChannel;
+@property(nonatomic, weak, readwrite) TVCMainWindow *attachedWindow;
+@property(nonatomic, assign) NSTimeInterval viewLoadedTimestamp;
+@property(readonly) TVCLogControllerPrintingOperationQueue *printingQueue;
+@property(readonly, copy) NSURL *baseURL;
 @end
 
-NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogControllerViewFinishedLoadingNotification";
+NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogControllerViewFinishedLoadingNotification";
 
 @implementation TVCLogController
 
@@ -166,7 +166,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	self.encrypted = self.associatedChannel.encryptionStateIsEncrypted;
 #endif
 
-	self.highlightedLineNumbers	= [NSMutableArray new];
+	self.highlightedLineNumbers = [NSMutableArray new];
 
 	self.jumpToLineCallbacks = [NSCache new];
 }
@@ -273,11 +273,9 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	if (
 		/* 1 */ [TPCPreferences reloadScrollbackOnLaunch] == NO ||
-		/* 2 */  channel.isUtility ||
-		/* 3 */ (channel.isPrivateMessage &&
-				 [TPCPreferences rememberServerListQueryStates] == NO) ||
-		/* 4 */ self.encrypted)
-	{
+		/* 2 */ channel.isUtility ||
+		/* 3 */ (channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO) ||
+		/* 4 */ self.encrypted) {
 		[self historicLogResetChannel];
 	}
 }
@@ -319,8 +317,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	IRCChannelConfig *config = channel.config;
 
-	return (([TPCPreferences showInlineMedia]		&& config.inlineMediaDisabled == NO) ||
-			([TPCPreferences showInlineMedia] == NO	&& config.inlineMediaEnabled));
+	return (([TPCPreferences showInlineMedia] && config.inlineMediaDisabled == NO) ||
+			([TPCPreferences showInlineMedia] == NO && config.inlineMediaEnabled));
 }
 
 - (BOOL)viewIsSelected
@@ -381,7 +379,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 {
 	NSParameterAssert(html != nil);
 
-	[self _evaluateFunction:@"MessageBuffer.bufferElementAppend" withArguments:@[html, lineNumbers]];
+	[self _evaluateFunction:@"MessageBuffer.bufferElementAppend" withArguments:@[ html, lineNumbers ]];
 }
 
 #pragma mark -
@@ -412,12 +410,12 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		NSString *topicTemplate = [TVCLogRenderer renderBody:topicString
 										   forViewController:self
 											  withAttributes:@{
-													TVCLogRendererConfigurationRenderLinksAttribute : @YES,
-													TVCLogRendererConfigurationLineTypeAttribute : @(TVCLogLineTypeTopic)
-															}
+												  TVCLogRendererConfigurationRenderLinksAttribute : @YES,
+												  TVCLogRendererConfigurationLineTypeAttribute : @(TVCLogLineTypeTopic)
+											  }
 												  resultInfo:NULL];
 
-		[self _evaluateFunction:@"Glasstual.setTopicBarValue" withArguments:@[topicString, topicTemplate]];
+		[self _evaluateFunction:@"Glasstual.setTopicBarValue" withArguments:@[ topicString, topicTemplate ]];
 
 		[self.backingView redrawView];
 	};
@@ -430,12 +428,12 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 - (void)moveToTop
 {
-	[self _evaluateFunction:@"Glasstual.scrollToTopOfView" withArguments:@[@(YES)]];
+	[self _evaluateFunction:@"Glasstual.scrollToTopOfView" withArguments:@[ @(YES) ]];
 }
 
 - (void)moveToBottom
 {
-	[self _evaluateFunction:@"Glasstual.scrollToBottomOfView" withArguments:@[@(YES)]];
+	[self _evaluateFunction:@"Glasstual.scrollToBottomOfView" withArguments:@[ @(YES) ]];
 }
 
 #pragma mark -
@@ -446,7 +444,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
 		NSString *markTemplate = [TVCLogRenderer renderTemplateNamed:@"historyIndicator"];
 
-		[self _evaluateFunction:@"_Glasstual.historyIndicatorAdd" withArguments:@[markTemplate]];
+		[self _evaluateFunction:@"_Glasstual.historyIndicatorAdd" withArguments:@[ markTemplate ]];
 	};
 
 	_enqueueBlock(operationBlock);
@@ -465,11 +463,13 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 #pragma mark -
 #pragma mark Reload Scrollback
 
-- (void)appendHistoricMessageFragment:(NSString *)html withLineNumbers:(NSArray<NSString *> *)lineNumbers isReload:(BOOL)isReload
+- (void)appendHistoricMessageFragment:(NSString *)html
+					  withLineNumbers:(NSArray<NSString *> *)lineNumbers
+							 isReload:(BOOL)isReload
 {
 	NSParameterAssert(html != nil);
 
-	[self _evaluateFunction:@"_Glasstual.documentBodyAppendHistoric" withArguments:@[html, lineNumbers, @(isReload)]];
+	[self _evaluateFunction:@"_Glasstual.documentBodyAppendHistoric" withArguments:@[ html, lineNumbers, @(isReload) ]];
 }
 
 /* reloadOldLines: is supposed to be called from inside a queue. */
@@ -559,13 +559,10 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	if (
 		/* 1 */ self.encrypted ||
-		/* 2 */ (firstTimeLoadingHistory &&
-				 [TPCPreferences reloadScrollbackOnLaunch] == NO) ||
-		/* 3 */  channel.isUtility ||
-		/* 4 */ (firstTimeLoadingHistory &&
-				 channel.isPrivateMessage &&
-				 [TPCPreferences rememberServerListQueryStates] == NO))
-	{
+		/* 2 */ (firstTimeLoadingHistory && [TPCPreferences reloadScrollbackOnLaunch] == NO) ||
+		/* 3 */ channel.isUtility ||
+		/* 4 */
+		(firstTimeLoadingHistory && channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO)) {
 		self.historyLoadedForFirstTime = YES;
 
 		self.historyLoaded = YES;
@@ -614,18 +611,17 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
 		NSDate *limitToDate = [NSDate dateWithTimeIntervalSince1970:self.viewLoadedTimestamp];
 
-		[TVCLogControllerHistoricLogSharedInstance()
-		 fetchEntriesForItem:self.associatedItem
-				   ascending:NO
-				  fetchLimit:100
-				 limitToDate:limitToDate
-		 withCompletionBlock:^(NSArray<TVCLogLine *> *objects) {
-				if ([operation isCancelled]) {
-					return;
-				}
+		[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
+															   ascending:NO
+															  fetchLimit:100
+															 limitToDate:limitToDate
+													 withCompletionBlock:^(NSArray<TVCLogLine *> *objects) {
+														 if ([operation isCancelled]) {
+															 return;
+														 }
 
-				reloadBlock(objects.reverseObjectEnumerator.allObjects);
-		 }];
+														 reloadBlock(objects.reverseObjectEnumerator.allObjects);
+													 }];
 	};
 
 	_enqueueBlockStandalone(operationBlock)
@@ -707,7 +703,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	[self jumpToLine:lineNumber completionHandler:nil];
 }
 
-- (void)jumpToLine:(NSString *)lineNumber completionHandler:(void (^ _Nullable)(BOOL result))completionHandler
+- (void)jumpToLine:(NSString *)lineNumber completionHandler:(void (^_Nullable)(BOOL result))completionHandler
 {
 	NSParameterAssert(lineNumber != nil);
 
@@ -719,7 +715,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		[self.jumpToLineCallbacks setObject:completionHandler forKey:lineNumber];
 	}
 
-	[self.backingView evaluateFunction:@"Glasstual.jumpToLine" withArguments:@[lineNumber]];
+	[self.backingView evaluateFunction:@"Glasstual.jumpToLine" withArguments:@[ lineNumber ]];
 }
 
 - (void)notifyDidBecomeVisible /* When the view is switched to */
@@ -737,7 +733,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 - (void)notifySelectionChanged
 {
-	[self _evaluateFunction:@"_Glasstual.notifySelectionChanged" withArguments:@[@(self.selected)]];
+	[self _evaluateFunction:@"_Glasstual.notifySelectionChanged" withArguments:@[ @(self.selected) ]];
 }
 
 - (void)notifyDidBecomeHidden
@@ -758,16 +754,16 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 {
 	double sizeMultiplier = self.attachedWindow.textSizeMultiplier;
 
-	[self _evaluateFunction:@"Glasstual.changeTextSizeMultiplier" withArguments:@[@(sizeMultiplier)]];
+	[self _evaluateFunction:@"Glasstual.changeTextSizeMultiplier" withArguments:@[ @(sizeMultiplier) ]];
 
-	[self _evaluateFunction:@"Glasstual.viewFontSizeChanged" withArguments:@[@(bigger)]];
+	[self _evaluateFunction:@"Glasstual.viewFontSizeChanged" withArguments:@[ @(bigger) ]];
 }
 
 - (void)changeScrollbackLimit
 {
 	NSUInteger scrollbackLimit = [TPCPreferences scrollbackVisibleLimit];
 
-	[self _evaluateFunction:@"_MessageBuffer.setBufferLimit" withArguments:@[@(scrollbackLimit)]];
+	[self _evaluateFunction:@"_MessageBuffer.setBufferLimit" withArguments:@[ @(scrollbackLimit) ]];
 }
 
 #pragma mark -
@@ -851,13 +847,15 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 - (void)processingInlineMediaPayloadSucceeded:(ICLPayload *)payload
 {
-	[self _evaluateFunction:@"_InlineMediaLoader.processPayload" withArguments:@[payload.javaScriptObject]];
+	[self _evaluateFunction:@"_InlineMediaLoader.processPayload" withArguments:@[ payload.javaScriptObject ]];
 }
 
 - (void)processingInlineMediaPayload:(ICLPayload *)payload failedWithError:(NSError *)error
 {
 	LogToConsoleError("Processing request for '%{public}@' at '%{public}@' failed with error: %{public}@",
-		payload.uniqueIdentifier, payload.lineNumber, error.localizedDescription);
+					  payload.uniqueIdentifier,
+					  payload.lineNumber,
+					  error.localizedDescription);
 }
 
 - (void)processInlineMedia:(NSArray<AHHyperlinkScannerResult *> *)mediaLinks atLineNumber:(NSString *)lineNumber
@@ -890,7 +888,10 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	}];
 }
 
-- (void)processInlineMediaAtAddress:(NSString *)address withUniqueIdentifier:(NSString *)uniqueIdentifier atLineNumber:(NSString *)lineNumber index:(NSUInteger)index
+- (void)processInlineMediaAtAddress:(NSString *)address
+			   withUniqueIdentifier:(NSString *)uniqueIdentifier
+					   atLineNumber:(NSString *)lineNumber
+							  index:(NSUInteger)index
 {
 	NSParameterAssert(address != nil);
 	NSParameterAssert(uniqueIdentifier != nil);
@@ -898,12 +899,11 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	IRCTreeItem *associatedItem = self.associatedItem;
 
-	[TVCLogControllerInlineMediaSharedInstance()
-			 processAddress:address
-	   withUniqueIdentifier:uniqueIdentifier
-			   atLineNumber:lineNumber
-					  index:index
-					forItem:associatedItem];
+	[TVCLogControllerInlineMediaSharedInstance() processAddress:address
+										   withUniqueIdentifier:uniqueIdentifier
+												   atLineNumber:lineNumber
+														  index:index
+														forItem:associatedItem];
 }
 
 #pragma mark -
@@ -1036,17 +1036,30 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 #pragma mark -
 #pragma mark History
 
-- (void)renderLogLinesBeforeLineNumber:(NSString *)lineNumber maximumNumberOfLines:(NSUInteger)maximumNumberOfLines completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
+- (void)renderLogLinesBeforeLineNumber:(NSString *)lineNumber
+				  maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+					   completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
 {
-	[self _renderLogLinesAfter:NO lineNumber:lineNumber maximumNumberOfLines:maximumNumberOfLines completionBlock:completionBlock];
+	[self _renderLogLinesAfter:NO
+					lineNumber:lineNumber
+		  maximumNumberOfLines:maximumNumberOfLines
+			   completionBlock:completionBlock];
 }
 
-- (void)renderLogLinesAfterLineNumber:(NSString *)lineNumber maximumNumberOfLines:(NSUInteger)maximumNumberOfLines completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
+- (void)renderLogLinesAfterLineNumber:(NSString *)lineNumber
+				 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+					  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
 {
-	[self _renderLogLinesAfter:YES lineNumber:lineNumber maximumNumberOfLines:maximumNumberOfLines completionBlock:completionBlock];
+	[self _renderLogLinesAfter:YES
+					lineNumber:lineNumber
+		  maximumNumberOfLines:maximumNumberOfLines
+			   completionBlock:completionBlock];
 }
 
-- (void)_renderLogLinesAfter:(BOOL)after lineNumber:(NSString *)lineNumber maximumNumberOfLines:(NSUInteger)maximumNumberOfLines completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
+- (void)_renderLogLinesAfter:(BOOL)after
+				  lineNumber:(NSString *)lineNumber
+		maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+			 completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
 {
 	NSParameterAssert(lineNumber != nil);
 	NSParameterAssert(maximumNumberOfLines > 0);
@@ -1062,26 +1075,27 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		};
 
 		if (after == NO) {
-			[TVCLogControllerHistoricLogSharedInstance()
-			 fetchEntriesForItem:self.associatedItem
-		  beforeUniqueIdentifier:lineNumber
-					  fetchLimit:maximumNumberOfLines
-					 limitToDate:nil
-			 withCompletionBlock:historicLogCompletionBlock];
+			[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
+													  beforeUniqueIdentifier:lineNumber
+																  fetchLimit:maximumNumberOfLines
+																 limitToDate:nil
+														 withCompletionBlock:historicLogCompletionBlock];
 		} else {
-			[TVCLogControllerHistoricLogSharedInstance()
-			 fetchEntriesForItem:self.associatedItem
-		   afterUniqueIdentifier:lineNumber
-					  fetchLimit:maximumNumberOfLines
-					 limitToDate:nil
-			 withCompletionBlock:historicLogCompletionBlock];
+			[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
+													   afterUniqueIdentifier:lineNumber
+																  fetchLimit:maximumNumberOfLines
+																 limitToDate:nil
+														 withCompletionBlock:historicLogCompletionBlock];
 		}
 	};
 
 	_enqueueBlockStandalone(operationBlock)
 }
 
-- (void)renderLogLinesAfterLineNumber:(NSString *)lineNumberAfter beforeLineNumber:(NSString *)lineNumberBefore maximumNumberOfLines:(NSUInteger)maximumNumberOfLines completionBlock:(void (^)(NSArray<NSDictionary<NSString *,id> *> * _Nonnull))completionBlock
+- (void)renderLogLinesAfterLineNumber:(NSString *)lineNumberAfter
+					 beforeLineNumber:(NSString *)lineNumberBefore
+				 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+					  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))completionBlock
 {
 	NSParameterAssert(lineNumberAfter != nil);
 	NSParameterAssert(lineNumberBefore != nil);
@@ -1096,18 +1110,20 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 			[self _renderLogLinesAfterLineNumberPostFlight:entries completionBlock:completionBlock];
 		};
 
-		[TVCLogControllerHistoricLogSharedInstance()
-			 fetchEntriesForItem:self.associatedItem
-		   afterUniqueIdentifier:lineNumberAfter
-		  beforeUniqueIdentifier:lineNumberBefore
-					  fetchLimit:maximumNumberOfLines
-			 withCompletionBlock:historicLogCompletionBlock];
+		[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
+												   afterUniqueIdentifier:lineNumberAfter
+												  beforeUniqueIdentifier:lineNumberBefore
+															  fetchLimit:maximumNumberOfLines
+													 withCompletionBlock:historicLogCompletionBlock];
 	};
 
 	_enqueueBlockStandalone(operationBlock)
 }
 
-- (void)renderLogLineAtLineNumber:(NSString *)lineNumber numberOfLinesBefore:(NSUInteger)numberOfLinesBefore numberOfLinesAfter:(NSUInteger)numberOfLinesAfter completionBlock:(void (^)(NSArray<NSDictionary<NSString *,id> *> * _Nonnull))completionBlock
+- (void)renderLogLineAtLineNumber:(NSString *)lineNumber
+			  numberOfLinesBefore:(NSUInteger)numberOfLinesBefore
+			   numberOfLinesAfter:(NSUInteger)numberOfLinesAfter
+				  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))completionBlock
 {
 	NSParameterAssert(lineNumber != nil);
 	NSParameterAssert(completionBlock != nil);
@@ -1121,24 +1137,25 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 			[self _renderLogLinesAfterLineNumberPostFlight:entries completionBlock:completionBlock];
 		};
 
-		[TVCLogControllerHistoricLogSharedInstance()
-			 fetchEntriesForItem:self.associatedItem
-			withUniqueIdentifier:lineNumber
-				beforeFetchLimit:numberOfLinesBefore
-				 afterFetchLimit:numberOfLinesAfter
-					 limitToDate:nil
-			 withCompletionBlock:historicLogCompletionBlock];
+		[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
+													withUniqueIdentifier:lineNumber
+														beforeFetchLimit:numberOfLinesBefore
+														 afterFetchLimit:numberOfLinesAfter
+															 limitToDate:nil
+													 withCompletionBlock:historicLogCompletionBlock];
 	};
 
 	_enqueueBlockStandalone(operationBlock)
 }
 
-- (void)_renderLogLinesAfterLineNumberPostFlight:(NSArray<TVCLogLine *> *)logLines completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
+- (void)_renderLogLinesAfterLineNumberPostFlight:(NSArray<TVCLogLine *> *)logLines
+								 completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
 {
 	NSParameterAssert(logLines != nil);
 	NSParameterAssert(completionBlock != nil);
 
-	NSMutableArray<NSDictionary<NSString *, id> *> *renderedLogLines = [NSMutableArray arrayWithCapacity:logLines.count];
+	NSMutableArray<NSDictionary<NSString *, id> *> *renderedLogLines =
+		[NSMutableArray arrayWithCapacity:logLines.count];
 
 	NSMutableArray<THOPluginDidPostNewMessageConcreteObject *> *pluginObjects = nil;
 
@@ -1194,7 +1211,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	[self print:logLine completionBlock:NULL];
 }
 
-- (void)print:(TVCLogLine *)logLine completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)postPrintBlock
+- (void)print:(TVCLogLine *)logLine
+	completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)postPrintBlock
 {
 	NSParameterAssert(logLine != nil);
 
@@ -1255,7 +1273,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 				[THOPluginDispatcher enqueueDidPostNewMessage:resultInfo[@"pluginConcreteObject"]];
 			}
 
-			[self appendToDocumentBody:html withLineNumbers:@[lineNumber]];
+			[self appendToDocumentBody:html withLineNumbers:@[ lineNumber ]];
 
 			/* TODO: Modify logic of inline media to only truly
 			 process images if the line is in fact on the WebView. */
@@ -1263,7 +1281,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 			/* We go through the inline media list here and pass to the loader now so
 			 that we know the links have hit the WebView before we even try loading them. */
 			if (processInlineMedia) {
-				NSArray<AHHyperlinkScannerResult *> *listOfLinks = resultInfo[TVCLogRendererResultsListOfLinksInBodyAttribute];
+				NSArray<AHHyperlinkScannerResult *> *listOfLinks =
+					resultInfo[TVCLogRendererResultsListOfLinksInBodyAttribute];
 
 				[self processInlineMedia:listOfLinks atLineNumber:lineNumber];
 			}
@@ -1276,7 +1295,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 			 in the view as well as playback on restart, but the added
 			 security can be seen as a bonus. */
 			if (self.encrypted == NO) {
-				[TVCLogControllerHistoricLogSharedInstance() writeNewEntryWithLogLine:logLine forItem:self.associatedItem];
+				[TVCLogControllerHistoricLogSharedInstance() writeNewEntryWithLogLine:logLine
+																			  forItem:self.associatedItem];
 			}
 
 			/* Redraw view if needed */
@@ -1294,8 +1314,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 				return;
 			}
 
-			 TVCLogControllerPrintOperationContext *contextObject =
-			[TVCLogControllerPrintOperationContext new];
+			TVCLogControllerPrintOperationContext *contextObject = [TVCLogControllerPrintOperationContext new];
 
 			contextObject.client = client;
 			contextObject.channel = channel;
@@ -1310,7 +1329,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	_enqueueBlock(printBlock)
 }
 
-- (nullable NSString *)renderLogLine:(TVCLogLine *)logLine resultInfo:(NSDictionary<NSString *, id> ** _Nullable)resultInfo
+- (nullable NSString *)renderLogLine:(TVCLogLine *)logLine
+						  resultInfo:(NSDictionary<NSString *, id> **_Nullable)resultInfo
 {
 	NSParameterAssert(logLine != nil);
 
@@ -1328,8 +1348,10 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		[rendererAttributes addEntriesFromDictionary:logLine.rendererAttributes];
 	}
 
-	[rendererAttributes maybeSetObject:logLine.excludeKeywords forKey:TVCLogRendererConfigurationExcludedKeywordsAttribute];
-	[rendererAttributes maybeSetObject:logLine.highlightKeywords forKey:TVCLogRendererConfigurationHighlightKeywordsAttribute];
+	[rendererAttributes maybeSetObject:logLine.excludeKeywords
+								forKey:TVCLogRendererConfigurationExcludedKeywordsAttribute];
+	[rendererAttributes maybeSetObject:logLine.highlightKeywords
+								forKey:TVCLogRendererConfigurationHighlightKeywordsAttribute];
 
 	[rendererAttributes setBool:renderLinks forKey:TVCLogRendererConfigurationRenderLinksAttribute];
 
@@ -1338,11 +1360,10 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	NSDictionary<NSString *, id> *rendererResults = nil;
 
-	NSString *renderedBody =
-	[TVCLogRenderer renderBody:logLine.messageBody
-			 forViewController:self
-				withAttributes:rendererAttributes
-					resultInfo:&rendererResults];
+	NSString *renderedBody = [TVCLogRenderer renderBody:logLine.messageBody
+									  forViewController:self
+										 withAttributes:rendererAttributes
+											 resultInfo:&rendererResults];
 
 	if (renderedBody == nil) {
 		return nil;
@@ -1356,9 +1377,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	BOOL highlighted = [rendererResults boolForKey:TVCLogRendererResultsKeywordMatchFoundAttribute];
 
-	BOOL inlineMedia =
-		(self.inlineMediaEnabledForView &&
-		 (lineType == TVCLogLineTypePrivateMessage || lineType == TVCLogLineTypeAction));
+	BOOL inlineMedia = (self.inlineMediaEnabledForView &&
+						(lineType == TVCLogLineTypePrivateMessage || lineType == TVCLogLineTypeAction));
 
 	NSString *lineNumber = logLine.uniqueIdentifier;
 
@@ -1398,8 +1418,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 		templateAttributes[@"formattedNickname"] = nickname.trim;
 
-		templateAttributes[@"nickname"]	= logLine.nickname;
-		templateAttributes[@"nicknameType"]	= logLine.memberTypeString;
+		templateAttributes[@"nickname"] = logLine.nickname;
+		templateAttributes[@"nicknameType"] = logLine.memberTypeString;
 	}
 
 	// ---- //
@@ -1413,7 +1433,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	NSString *classAttribute = nil;
 
-	if (lineType == TVCLogLineTypePrivateMessage || lineType == TVCLogLineTypeAction || lineType == TVCLogLineTypeNotice) {
+	if (lineType == TVCLogLineTypePrivateMessage || lineType == TVCLogLineTypeAction ||
+		lineType == TVCLogLineTypeNotice) {
 		classAttribute = @"text";
 	} else {
 		classAttribute = @"event";
@@ -1433,7 +1454,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	templateAttributes[@"message"] = logLine.messageBody;
 
-	templateAttributes[@"formattedMessage"]	= renderedBody;
+	templateAttributes[@"formattedMessage"] = renderedBody;
 
 	templateAttributes[@"isHighlight"] = @(highlighted);
 
@@ -1481,10 +1502,11 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		resultInfoTemp[@"processInlineMedia"] = @(inlineMedia);
 
 		if ([sharedPluginManager() supportsFeature:THOPluginItemSupportedFeatureNewMessagePostedEvent]) {
-			NSArray<AHHyperlinkScannerResult *> *listOfLinks = rendererResults[TVCLogRendererResultsListOfLinksInBodyAttribute];
+			NSArray<AHHyperlinkScannerResult *> *listOfLinks =
+				rendererResults[TVCLogRendererResultsListOfLinksInBodyAttribute];
 
-			 THOPluginDidPostNewMessageConcreteObject *pluginConcreteObject =
-			[THOPluginDidPostNewMessageConcreteObject new];
+			THOPluginDidPostNewMessageConcreteObject *pluginConcreteObject =
+				[THOPluginDidPostNewMessageConcreteObject new];
 
 			pluginConcreteObject.keywordMatchFound = highlighted;
 
@@ -1497,7 +1519,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 			pluginConcreteObject.lineNumber = lineNumber;
 
-			pluginConcreteObject.messageContents = rendererResults[TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute];
+			pluginConcreteObject.messageContents =
+				rendererResults[TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute];
 
 			pluginConcreteObject.listOfHyperlinks = listOfLinks;
 
@@ -1509,7 +1532,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 	// ************************************************************************** /
 
-	if ( resultInfo) {
+	if (resultInfo) {
 		*resultInfo = [resultInfoTemp copy];
 	}
 
@@ -1562,7 +1585,8 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	templateTokens[@"appearanceDescription"] = appearance.shortAppearanceDescription;
 	templateTokens[@"sidebarInversionIsEnabled"] = @(appearance.isDarkAppearance);
 
-	templateTokens[@"userConfiguredTextEncoding"] = [NSString charsetRepFromStringEncoding:self.associatedClient.config.primaryEncoding];
+	templateTokens[@"userConfiguredTextEncoding"] =
+		[NSString charsetRepFromStringEncoding:self.associatedClient.config.primaryEncoding];
 
 	templateTokens[@"userStyleSheetRules"] = [TPCPreferences themeUserStyleSheetRules];
 
@@ -1669,28 +1693,26 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 		viewType = @"server";
 	}
 
-	[self _evaluateFunction:@"Glasstual.viewInitiated" withArguments:@[
-		 NSDictionaryNilValue(viewType),
-		 NSDictionaryNilValue(self.associatedClient.uniqueIdentifier),
-		 NSDictionaryNilValue(channel.uniqueIdentifier),
-		 NSDictionaryNilValue(channel.name)
-	]];
+	[self _evaluateFunction:@"Glasstual.viewInitiated"
+			  withArguments:@[
+				  NSDictionaryNilValue(viewType),
+				  NSDictionaryNilValue(self.associatedClient.uniqueIdentifier),
+				  NSDictionaryNilValue(channel.uniqueIdentifier),
+				  NSDictionaryNilValue(channel.name)
+			  ]];
 
 	double textSizeMultiplier = self.attachedWindow.textSizeMultiplier;
 
 	NSUInteger scrollbackLimit = [TPCPreferences scrollbackVisibleLimit];
 
 	[self _evaluateFunction:@"_Glasstual.viewFinishedLoading"
-			  withArguments:
-	 @[
-		  @{
-			  @"selected" : @(self.selected),
-			  @"visible" : @(self.visible),
-			  @"reloadingTheme" : @(self.reloadingTheme), // TODO: Fix this always being false
-			  @"textSizeMultiplier" : @(textSizeMultiplier),
-			  @"scrollbackLimit" : @(scrollbackLimit)
-		  }
-	  ]];
+			  withArguments:@[ @{
+				  @"selected" : @(self.selected),
+				  @"visible" : @(self.visible),
+				  @"reloadingTheme" : @(self.reloadingTheme), // TODO: Fix this always being false
+				  @"textSizeMultiplier" : @(textSizeMultiplier),
+				  @"scrollbackLimit" : @(scrollbackLimit)
+			  } ]];
 
 	[self setInitialTopic];
 
@@ -1713,7 +1735,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 
 - (void)logViewWebViewReceivedDropWithFile:(NSString *)filename
 {
-	[menuController() memberSendDroppedFilesToSelectedChannel:@[filename]];
+	[menuController() memberSendDroppedFilesToSelectedChannel:@[ filename ]];
 }
 
 @end

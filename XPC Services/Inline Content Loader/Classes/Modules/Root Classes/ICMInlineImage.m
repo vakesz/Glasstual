@@ -43,7 +43,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ICMInlineImage ()
-@property (nonatomic, strong, nullable) ICLMediaAssessor *imageCheck;
+@property(nonatomic, strong, nullable) ICLMediaAssessor *imageCheck;
 @end
 
 @implementation ICMInlineImage
@@ -96,22 +96,21 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	ICLPayload *payload = self.payload;
 
-	ICLMediaAssessor *imageCheck =
-	[ICLMediaAssessor assessorForURL:payload.urlToInline
-							withType:ICLMediaTypeImage
-					 completionBlock:^(ICLMediaAssessment *assessment, NSError *error) {
-						 BOOL safeToLoad = (error == nil);
+	ICLMediaAssessor *imageCheck = [ICLMediaAssessor assessorForURL:payload.urlToInline
+														   withType:ICLMediaTypeImage
+													completionBlock:^(ICLMediaAssessment *assessment, NSError *error) {
+														BOOL safeToLoad = (error == nil);
 
-						 if (safeToLoad) {
-							 [self _safeToLoadImage];
-						 } else {
-							 [self _unsafeToLoadImage];
+														if (safeToLoad) {
+															[self _safeToLoadImage];
+														} else {
+															[self _unsafeToLoadImage];
 
-							 [ICLMediaAssessor logError:error];
-						 }
+															[ICLMediaAssessor logError:error];
+														}
 
-						 self.imageCheck = nil;
-					 }];
+														self.imageCheck = nil;
+													}];
 
 	self.imageCheck = imageCheck;
 
@@ -127,8 +126,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	ICLPayloadMutable *payload = self.payload;
 
-	NSDictionary *templateAttributes =
-	@{
+	NSDictionary *templateAttributes = @{
 		@"anchorLink" : payload.address,
 		@"classAttribute" : payload.classAttribute,
 		@"imageURL" : payload.addressToInline,
@@ -192,12 +190,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	dispatch_once(&onceToken, ^{
 		cachedValue =
-		@[@"image/gif",
-		  @"image/jpeg",
-		  @"image/png",
-		  @"image/svg+xml",
-		  @"image/tiff",
-		  @"image/x-ms-bmp"];
+			@[ @"image/gif", @"image/jpeg", @"image/png", @"image/svg+xml", @"image/tiff", @"image/x-ms-bmp" ];
 	});
 
 	return cachedValue;
@@ -210,12 +203,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		cachedValue =
-		@[@"video/3gpp",
-		  @"video/3gpp2",
-		  @"video/mp4",
-		  @"video/quicktime",
-		  @"video/x-m4v"];
+		cachedValue = @[ @"video/3gpp", @"video/3gpp2", @"video/mp4", @"video/quicktime", @"video/x-m4v" ];
 	});
 
 	return cachedValue;
@@ -245,10 +233,9 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		styleResources =
-		@[
-		  [RZMainBundle() URLForResource:@"ICMInlineImage" withExtension:@"css" subdirectory:@"Components"]
-		];
+		styleResources = @[ [RZMainBundle() URLForResource:@"ICMInlineImage"
+											 withExtension:@"css"
+											  subdirectory:@"Components"] ];
 	});
 
 	return styleResources;
@@ -261,10 +248,9 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		scriptResources =
-		@[
-		  [RZMainBundle() URLForResource:@"InlineImageLiveResize" withExtension:@"js"],
-		  [RZMainBundle() URLForResource:@"ICMInlineImage" withExtension:@"js" subdirectory:@"Components"]
+		scriptResources = @[
+			[RZMainBundle() URLForResource:@"InlineImageLiveResize" withExtension:@"js"],
+			[RZMainBundle() URLForResource:@"ICMInlineImage" withExtension:@"js" subdirectory:@"Components"]
 		];
 	});
 

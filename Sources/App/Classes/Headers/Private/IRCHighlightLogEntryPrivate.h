@@ -42,15 +42,15 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannel;
 
 @interface IRCHighlightLogEntry ()
-@property (readonly, weak) IRCChannel *channel;
-@property (readonly, copy) NSString *channelName;
-@property (readonly, copy) NSString *timeLoggedFormatted;
+@property(readonly, weak) IRCChannel *channel;
+@property(readonly, copy) NSString *channelName;
+@property(readonly, copy) NSString *timeLoggedFormatted;
 @end
 
 @interface IRCHighlightLogEntryMutable : IRCHighlightLogEntry
-@property (nonatomic, copy, readwrite) TVCLogLine *lineLogged;
-@property (nonatomic, copy, readwrite) NSString *clientId;
-@property (nonatomic, copy, readwrite) NSString *channelId;
+@property(nonatomic, copy, readwrite) TVCLogLine *lineLogged;
+@property(nonatomic, copy, readwrite) NSString *clientId;
+@property(nonatomic, copy, readwrite) NSString *channelId;
 @end
 
 NS_ASSUME_NONNULL_END

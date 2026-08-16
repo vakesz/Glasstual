@@ -44,32 +44,31 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCAddressBookSheet ()
-@property (nonatomic, strong) IRCAddressBookEntryMutable *config;
-@property (nonatomic, assign) IRCAddressBookEntryType entryType;
-@property (nonatomic, strong) IBOutlet NSButton *ignoreClientToClientProtocolCheck;
-@property (nonatomic, strong) IBOutlet NSButton *ignoreFileTransferRequestsCheck;
-@property (nonatomic, strong) IBOutlet NSButton *ignoreGeneralEventMessagesCheck;
-@property (nonatomic, strong) IBOutlet NSButton *ignoreInlineMediaCheck;
-@property (nonatomic, strong) IBOutlet NSButton *ignoreNoticeMessagesCheck;
-@property (nonatomic, strong) IBOutlet NSButton *ignorePrivateMessageHighlightsCheck;
-@property (nonatomic, strong) IBOutlet NSButton *ignorePrivateMessagesCheck;
-@property (nonatomic, strong) IBOutlet NSButton *ignorePublicMessageHighlightsCheck;
-@property (nonatomic, strong) IBOutlet NSButton *ignorePublicMessagesCheck;
-@property (nonatomic, strong) IBOutlet NSButton *trackUserActivityCheck;
-@property (nonatomic, strong) IBOutlet NSButton *ignoreEntrySaveButton;
-@property (nonatomic, strong) IBOutlet NSButton *userTrackingEntrySaveButton;
-@property (nonatomic, strong) IBOutlet TVCValidatedTextField *ignoreEntryHostmaskTextField;
-@property (nonatomic, strong) IBOutlet TVCValidatedTextField *userTrackingEntryNicknameTextField;
-@property (nonatomic, strong) IBOutlet NSWindow *ignoreEntryView;
-@property (nonatomic, strong) IBOutlet NSWindow *userTrackingEntryView;
+@property(nonatomic, strong) IRCAddressBookEntryMutable *config;
+@property(nonatomic, assign) IRCAddressBookEntryType entryType;
+@property(nonatomic, strong) IBOutlet NSButton *ignoreClientToClientProtocolCheck;
+@property(nonatomic, strong) IBOutlet NSButton *ignoreFileTransferRequestsCheck;
+@property(nonatomic, strong) IBOutlet NSButton *ignoreGeneralEventMessagesCheck;
+@property(nonatomic, strong) IBOutlet NSButton *ignoreInlineMediaCheck;
+@property(nonatomic, strong) IBOutlet NSButton *ignoreNoticeMessagesCheck;
+@property(nonatomic, strong) IBOutlet NSButton *ignorePrivateMessageHighlightsCheck;
+@property(nonatomic, strong) IBOutlet NSButton *ignorePrivateMessagesCheck;
+@property(nonatomic, strong) IBOutlet NSButton *ignorePublicMessageHighlightsCheck;
+@property(nonatomic, strong) IBOutlet NSButton *ignorePublicMessagesCheck;
+@property(nonatomic, strong) IBOutlet NSButton *trackUserActivityCheck;
+@property(nonatomic, strong) IBOutlet NSButton *ignoreEntrySaveButton;
+@property(nonatomic, strong) IBOutlet NSButton *userTrackingEntrySaveButton;
+@property(nonatomic, strong) IBOutlet TVCValidatedTextField *ignoreEntryHostmaskTextField;
+@property(nonatomic, strong) IBOutlet TVCValidatedTextField *userTrackingEntryNicknameTextField;
+@property(nonatomic, strong) IBOutlet NSWindow *ignoreEntryView;
+@property(nonatomic, strong) IBOutlet NSWindow *userTrackingEntryView;
 @end
 
 @implementation TDCAddressBookSheet
 
 - (instancetype)initWithEntryType:(IRCAddressBookEntryType)entryType
 {
-	NSParameterAssert(entryType == IRCAddressBookEntryTypeIgnore ||
-					  entryType == IRCAddressBookEntryTypeUserTracking);
+	NSParameterAssert(entryType == IRCAddressBookEntryTypeIgnore || entryType == IRCAddressBookEntryTypeUserTracking);
 
 	if ((self = [super initWithWindow:nil])) {
 		if (entryType == IRCAddressBookEntryTypeIgnore) {
@@ -142,8 +141,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)loadConfig
 {
-	if (self.entryType == IRCAddressBookEntryTypeIgnore)
-	{
+	if (self.entryType == IRCAddressBookEntryTypeIgnore) {
 		self.ignoreEntryHostmaskTextField.stringValue = self.config.hostmask;
 
 		self.ignoreClientToClientProtocolCheck.state = self.config.ignoreClientToClientProtocol;
@@ -155,9 +153,7 @@ NS_ASSUME_NONNULL_BEGIN
 		self.ignorePrivateMessagesCheck.state = self.config.ignorePrivateMessages;
 		self.ignorePublicMessageHighlightsCheck.state = self.config.ignorePublicMessageHighlights;
 		self.ignorePublicMessagesCheck.state = self.config.ignorePublicMessages;
-	}
-	else if (self.entryType == IRCAddressBookEntryTypeUserTracking)
-	{
+	} else if (self.entryType == IRCAddressBookEntryTypeUserTracking) {
 		self.userTrackingEntryNicknameTextField.stringValue = self.config.hostmask;
 
 		self.trackUserActivityCheck.state = self.config.trackUserActivity;
@@ -166,14 +162,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)start
 {
-	if (self.entryType == IRCAddressBookEntryTypeIgnore)
-	{
+	if (self.entryType == IRCAddressBookEntryTypeIgnore) {
 		self.sheet = self.ignoreEntryView;
 
 		[self.sheet makeFirstResponder:self.ignoreEntryHostmaskTextField];
-	}
-	else if (self.entryType == IRCAddressBookEntryTypeUserTracking)
-	{
+	} else if (self.entryType == IRCAddressBookEntryTypeUserTracking) {
 		self.sheet = self.userTrackingEntryView;
 
 		[self.sheet makeFirstResponder:self.userTrackingEntryNicknameTextField];
@@ -188,22 +181,22 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	if (self.entryType == IRCAddressBookEntryTypeIgnore)
-	{
+	if (self.entryType == IRCAddressBookEntryTypeIgnore) {
 		self.config.hostmask = self.ignoreEntryHostmaskTextField.value;
 
-		self.config.ignoreClientToClientProtocol = (self.ignoreClientToClientProtocolCheck.state == NSControlStateValueOn);
+		self.config.ignoreClientToClientProtocol =
+			(self.ignoreClientToClientProtocolCheck.state == NSControlStateValueOn);
 		self.config.ignoreFileTransferRequests = (self.ignoreFileTransferRequestsCheck.state == NSControlStateValueOn);
 		self.config.ignoreGeneralEventMessages = (self.ignoreGeneralEventMessagesCheck.state == NSControlStateValueOn);
 		self.config.ignoreInlineMedia = (self.ignoreInlineMediaCheck.state == NSControlStateValueOn);
 		self.config.ignoreNoticeMessages = (self.ignoreNoticeMessagesCheck.state == NSControlStateValueOn);
-		self.config.ignorePrivateMessageHighlights = (self.ignorePrivateMessageHighlightsCheck.state == NSControlStateValueOn);
+		self.config.ignorePrivateMessageHighlights =
+			(self.ignorePrivateMessageHighlightsCheck.state == NSControlStateValueOn);
 		self.config.ignorePrivateMessages = (self.ignorePrivateMessagesCheck.state == NSControlStateValueOn);
-		self.config.ignorePublicMessageHighlights = (self.ignorePublicMessageHighlightsCheck.state == NSControlStateValueOn);
+		self.config.ignorePublicMessageHighlights =
+			(self.ignorePublicMessageHighlightsCheck.state == NSControlStateValueOn);
 		self.config.ignorePublicMessages = (self.ignorePublicMessagesCheck.state == NSControlStateValueOn);
-	}
-	else if (self.entryType == IRCAddressBookEntryTypeUserTracking)
-	{
+	} else if (self.entryType == IRCAddressBookEntryTypeUserTracking) {
 		self.config.hostmask = self.userTrackingEntryNicknameTextField.value;
 
 		self.config.trackUserActivity = (self.trackUserActivityCheck.state == NSControlStateValueOn);
@@ -218,12 +211,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)okOrError
 {
-	if (self.entryType == IRCAddressBookEntryTypeIgnore)
-	{
+	if (self.entryType == IRCAddressBookEntryTypeIgnore) {
 		return [self okOrErrorForTextField:self.ignoreEntryHostmaskTextField];
-	}
-	else if (self.entryType == IRCAddressBookEntryTypeUserTracking)
-	{
+	} else if (self.entryType == IRCAddressBookEntryTypeUserTracking) {
 		return [self okOrErrorForTextField:self.userTrackingEntryNicknameTextField];
 	}
 

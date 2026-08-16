@@ -44,9 +44,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Reading & Writing
 
 typedef NS_ENUM(NSUInteger, TPCPreferencesComparator) {
-	TPCPreferencesComparatorEqual 			= 0,
-	TPCPreferencesComparatorAnchorFront		= 1,
-	TPCPreferencesComparatorAnchorBack		= 2
+	TPCPreferencesComparatorEqual = 0,
+	TPCPreferencesComparatorAnchorFront = 1,
+	TPCPreferencesComparatorAnchorBack = 2
 };
 
 @interface TPCPreferencesUserDefaults ()
@@ -55,7 +55,9 @@ typedef NS_ENUM(NSUInteger, TPCPreferencesComparator) {
 
 @implementation TPCPreferencesUserDefaults (TPCPreferencesUserDefaultsLocal)
 
-+ (BOOL)key:(NSString *)defaultName1 matchesKey:(NSString *)defaultName2 usingComparator:(TPCPreferencesComparator)comparator
++ (BOOL)key:(NSString *)defaultName1
+		 matchesKey:(NSString *)defaultName2
+	usingComparator:(TPCPreferencesComparator)comparator
 {
 	NSParameterAssert(defaultName1 != nil);
 	NSParameterAssert(defaultName2 != nil);
@@ -82,7 +84,7 @@ typedef NS_ENUM(NSUInteger, TPCPreferencesComparator) {
 	NSParameterAssert(defaultName != nil);
 
 	NSDictionary<NSString *, NSNumber *> *cachedValues =
-	[TPCResourceManager dictionaryFromResources:@"KeysExcludedFromExport" inDirectory:@"Preferences"];
+		[TPCResourceManager dictionaryFromResources:@"KeysExcludedFromExport" inDirectory:@"Preferences"];
 
 	__block BOOL returnValue = NO;
 
@@ -106,7 +108,7 @@ typedef NS_ENUM(NSUInteger, TPCPreferencesComparator) {
 	NSParameterAssert(defaultName != nil);
 
 	NSDictionary<NSString *, NSNumber *> *cachedValues =
-	[TPCResourceManager dictionaryFromResources:@"KeysExcludedFromMigrate" inDirectory:@"Preferences"];
+		[TPCResourceManager dictionaryFromResources:@"KeysExcludedFromMigrate" inDirectory:@"Preferences"];
 
 	__block BOOL returnValue = NO;
 
@@ -128,7 +130,7 @@ typedef NS_ENUM(NSUInteger, TPCPreferencesComparator) {
 + (BOOL)keyAppearsInMasterList:(NSString *)defaultName
 {
 	NSDictionary<NSString *, NSNumber *> *cachedValues =
-	[TPCResourceManager dictionaryFromResources:@"PreferenceKeyMasterList" inDirectory:@"Preferences"];
+		[TPCResourceManager dictionaryFromResources:@"PreferenceKeyMasterList" inDirectory:@"Preferences"];
 
 	__block BOOL returnValue = NO;
 
@@ -148,7 +150,7 @@ typedef NS_ENUM(NSUInteger, TPCPreferencesComparator) {
 	NSParameterAssert(defaultName != nil);
 
 	NSDictionary<NSString *, NSNumber *> *cachedValues =
-	[TPCResourceManager dictionaryFromResources:@"KeysExcludedFromContainer" inDirectory:@"Preferences"];
+		[TPCResourceManager dictionaryFromResources:@"KeysExcludedFromContainer" inDirectory:@"Preferences"];
 
 	__block BOOL returnValue = NO;
 

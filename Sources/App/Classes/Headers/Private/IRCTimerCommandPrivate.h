@@ -41,30 +41,34 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClient, IRCChannel;
 
 @interface IRCTimedCommand : NSObject
-@property (readonly, copy) NSString *identifier;
+@property(readonly, copy) NSString *identifier;
 
-@property (readonly, copy) NSString *clientId;
-@property (readonly, copy, nullable) NSString *channelId;
+@property(readonly, copy) NSString *clientId;
+@property(readonly, copy, nullable) NSString *channelId;
 
-@property (readonly, copy) NSString *command;
+@property(readonly, copy) NSString *command;
 
-@property (readonly) NSTimeInterval startTime;
-@property (readonly) NSTimeInterval timeRemaining;
+@property(readonly) NSTimeInterval startTime;
+@property(readonly) NSTimeInterval timeRemaining;
 
-@property (readonly) NSTimeInterval timerInterval;
-@property (readonly) BOOL timerIsActive;
-@property (readonly) BOOL repeatTimer;
-@property (readonly) NSUInteger iterations;
+@property(readonly) NSTimeInterval timerInterval;
+@property(readonly) BOOL timerIsActive;
+@property(readonly) BOOL repeatTimer;
+@property(readonly) NSUInteger iterations;
 
-@property (readonly) NSUInteger currentIteration;
+@property(readonly) NSUInteger currentIteration;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithCommand:(NSString *)command onClient:(IRCClient *)client;
-- (instancetype)initWithCommand:(NSString *)command onClient:(IRCClient *)client inChannel:(nullable IRCChannel *)channel NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithCommand:(NSString *)command
+					   onClient:(IRCClient *)client
+					  inChannel:(nullable IRCChannel *)channel NS_DESIGNATED_INITIALIZER;
 
-- (void)start:(NSTimeInterval)interval; // repeatTimer = NO
+- (void)start:(NSTimeInterval)interval;									// repeatTimer = NO
 - (void)start:(NSTimeInterval)timerInterval onRepeat:(BOOL)repeatTimer; // iterations = 0
-- (void)start:(NSTimeInterval)timerInterval onRepeat:(BOOL)repeatTimer iterations:(NSUInteger)iterations; // 0 iterations = infinite
+- (void)start:(NSTimeInterval)timerInterval
+	  onRepeat:(BOOL)repeatTimer
+	iterations:(NSUInteger)iterations; // 0 iterations = infinite
 
 - (void)stop;
 

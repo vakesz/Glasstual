@@ -9,9 +9,9 @@ echo "
 " > _FeatureFlags.h
 
 featureNames=("GLASSTUAL_BUILT_INSIDE_SANDBOX"
-			"GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED"
-			"GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION"
-			"GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY")
+	"GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED"
+	"GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION"
+	"GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY")
 
 for feature in "${featureNames[@]}"; do
 	featureValue="${!feature}"
@@ -37,4 +37,4 @@ fi
 # ------ #
 
 # Exit with success
-exit 0;
+exit 0

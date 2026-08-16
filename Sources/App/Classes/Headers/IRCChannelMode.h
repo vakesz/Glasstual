@@ -45,10 +45,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable IRCModeInfo *)modeInfoFor:(NSString *)modeSymbol;
 
-@property (readonly, copy) IRCChannelModeContainer *modes;
+@property(readonly, copy) IRCChannelModeContainer *modes;
 
-@property (readonly, copy) NSString *string;
-@property (readonly, copy) NSString *stringWithMaskedPassword;
+@property(readonly, copy) NSString *string;
+@property(readonly, copy) NSString *stringWithMaskedPassword;
 
 - (NSString *)getChangeCommand:(IRCChannelModeContainer *)modes;
 
@@ -58,7 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 
 @interface IRCChannelModeContainer : NSObject <NSCopying>
-@property (readonly, copy) NSDictionary<NSString *, IRCModeInfo *> *modes;
+@property(readonly, copy) NSDictionary<NSString *, IRCModeInfo *> *modes;
 
 - (BOOL)modeIsDefined:(NSString *)modeSymbol;
 

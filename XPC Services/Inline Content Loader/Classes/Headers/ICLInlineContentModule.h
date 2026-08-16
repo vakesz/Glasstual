@@ -56,7 +56,7 @@ typedef void (^ICLInlineContentModuleActionBlock)(ICLInlineContentModule *module
  * Mutable copy of the payload this module has access to modify.
  * This payload includes the address and the unique identifier.
  */
-@property (readonly, strong) ICLPayloadMutable *payload;
+@property(readonly, strong) ICLPayloadMutable *payload;
 
 /**
  * Module objects are not allowed to be allocated by a plugin.
@@ -73,7 +73,7 @@ typedef void (^ICLInlineContentModuleActionBlock)(ICLInlineContentModule *module
  array, then the module is skipped over. One of the action methods
  defined below is never called.
  */
-@property (readonly, copy, nullable, class) NSArray<NSString *> *domains;
+@property(readonly, copy, nullable, class) NSArray<NSString *> *domains;
 
 #pragma mark -
 #pragma mark Action
@@ -120,14 +120,14 @@ typedef void (^ICLInlineContentModuleActionBlock)(ICLInlineContentModule *module
  Whether the module's content is an image or video.
  This can include video services, not just video files.
  */
-@property (readonly, class) BOOL contentImageOrVideo;
+@property(readonly, class) BOOL contentImageOrVideo;
 
 /**
  Whether the module's content is a regular file,
  such as an image or video. Not an iframe, embedded,
  or dynamic content (such as JavaScript).
  */
-@property (readonly, class) BOOL contentIsFile;
+@property(readonly, class) BOOL contentIsFile;
 
 /**
  Whether the module might add content to the DOM which
@@ -135,12 +135,12 @@ typedef void (^ICLInlineContentModuleActionBlock)(ICLInlineContentModule *module
  A module that loads remote JavaScript libraries is also
  considered untrusted.
  */
-@property (readonly, class) BOOL contentUntrusted;
+@property(readonly, class) BOOL contentUntrusted;
 
 /**
  Whether module might load content that is not safe for work.
  */
-@property (readonly, class) BOOL contentNotSafeForWork;
+@property(readonly, class) BOOL contentNotSafeForWork;
 
 #pragma mark -
 #pragma mark Resources
@@ -148,9 +148,9 @@ typedef void (^ICLInlineContentModuleActionBlock)(ICLInlineContentModule *module
 /* If a non-nil value is returned for any of these properties,
  then that value is inserted into the payload. */
 /* See ICLPayload.h for a description of each property. */
-@property (copy, readonly, nullable) NSArray<NSURL *> *styleResources;
-@property (copy, readonly, nullable) NSArray<NSURL *> *scriptResources;
-@property (copy, readonly, nullable) NSString *entrypoint;
+@property(copy, readonly, nullable) NSArray<NSURL *> *styleResources;
+@property(copy, readonly, nullable) NSArray<NSURL *> *scriptResources;
+@property(copy, readonly, nullable) NSString *entrypoint;
 
 /**
  URL to a file that is a mustache template.
@@ -161,12 +161,12 @@ typedef void (^ICLInlineContentModuleActionBlock)(ICLInlineContentModule *module
  It is possible to render HTML multiple ways which means you
  do not need a template unless you want one.
  */
-@property (readonly, nullable) NSURL *templateURL;
+@property(readonly, nullable) NSURL *templateURL;
 
 /**
  Reference to mustache template found at -templateURL
  */
-@property (readonly, nullable) GRMustacheTemplate *template;
+@property(readonly, nullable) GRMustacheTemplate *template;
 @end
 
 #pragma mark -

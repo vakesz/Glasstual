@@ -42,15 +42,27 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface ICLHelpers (JSON)
-+ (NSURLSessionDataTask *)requestJSONDataFromURL:(NSURL *)url completionBlock:(void (^)(BOOL success, NSDictionary<NSString *, id> * _Nullable data))completionBlock;
-+ (NSURLSessionDataTask *)requestJSONDataFromAddress:(NSString *)address completionBlock:(void (^)(BOOL success, NSDictionary<NSString *, id> * _Nullable data))completionBlock;
++ (NSURLSessionDataTask *)requestJSONDataFromURL:(NSURL *)url
+								 completionBlock:(void (^)(BOOL success, NSDictionary<NSString *, id> *_Nullable data))
+													 completionBlock;
++ (NSURLSessionDataTask *)
+	requestJSONDataFromAddress:(NSString *)address
+			   completionBlock:(void (^)(BOOL success, NSDictionary<NSString *, id> *_Nullable data))completionBlock;
 
-+ (NSURLSessionDataTask *)requestJSONObject:(NSString *)objectKey ofType:(Class)objectType inHierarchy:(nullable NSArray<NSString *> *)hierarchy fromURL:(NSURL *)url completionBlock:(void (^)(id _Nullable object))completionBlock;
-+ (NSURLSessionDataTask *)requestJSONObject:(NSString *)objectKey ofType:(Class)objectType inHierarchy:(nullable NSArray<NSString *> *)hierarchy fromAddress:(NSString *)address completionBlock:(void (^)(id _Nullable object))completionBlock;
++ (NSURLSessionDataTask *)requestJSONObject:(NSString *)objectKey
+									 ofType:(Class)objectType
+								inHierarchy:(nullable NSArray<NSString *> *)hierarchy
+									fromURL:(NSURL *)url
+							completionBlock:(void (^)(id _Nullable object))completionBlock;
++ (NSURLSessionDataTask *)requestJSONObject:(NSString *)objectKey
+									 ofType:(Class)objectType
+								inHierarchy:(nullable NSArray<NSString *> *)hierarchy
+								fromAddress:(NSString *)address
+							completionBlock:(void (^)(id _Nullable object))completionBlock;
 @end
 
 @interface ICLHelpers (Errors)
-@property (copy, readonly, class) NSError *genericValidationFailedError;
+@property(copy, readonly, class) NSError *genericValidationFailedError;
 @end
 
 @interface NSString (ICLHelpers)

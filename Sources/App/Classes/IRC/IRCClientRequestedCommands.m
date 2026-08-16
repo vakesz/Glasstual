@@ -39,25 +39,24 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, IRCClientRequestedCommandVisibility)
-{
+typedef NS_ENUM(NSUInteger, IRCClientRequestedCommandVisibility) {
 	IRCClientRequestedCommandVisibilityUnknown = 0,
 	IRCClientRequestedCommandVisibilityHidden,
 	IRCClientRequestedCommandVisibilityVisible
 };
 
 @interface IRCClientRequestedCommand : NSObject
-@property (nonatomic, assign) IRCRemoteCommand command;
-@property (nonatomic, assign) BOOL hiddenResponse;
-@property (nonatomic, assign) BOOL enforceCount;
-@property (nonatomic, assign) NSUInteger count;
+@property(nonatomic, assign) IRCRemoteCommand command;
+@property(nonatomic, assign) BOOL hiddenResponse;
+@property(nonatomic, assign) BOOL enforceCount;
+@property(nonatomic, assign) NSUInteger count;
 @end
 
 @interface IRCClientRequestedCommands ()
 /* We could use a dictionary or cache with command as key
  and an array of objects for the assigned object but that
  is much more complex than just scanning a one level array. */
-@property (nonatomic, strong) NSMutableArray<IRCClientRequestedCommand *> *invokedCommandsInt;
+@property(nonatomic, strong) NSMutableArray<IRCClientRequestedCommand *> *invokedCommandsInt;
 @end
 
 @implementation IRCClientRequestedCommands
@@ -80,10 +79,11 @@ typedef NS_ENUM(NSUInteger, IRCClientRequestedCommandVisibility)
 
 - (nullable IRCClientRequestedCommand *)findCommand:(IRCRemoteCommand)command
 {
-	@synchronized (self.invokedCommandsInt) {
-		return [self.invokedCommandsInt objectPassingTest:^BOOL(IRCClientRequestedCommand *object, NSUInteger index, BOOL *stop) {
-			return (object.command == command);
-		}];
+	@synchronized(self.invokedCommandsInt) {
+		return [self.invokedCommandsInt
+			objectPassingTest:^BOOL(IRCClientRequestedCommand *object, NSUInteger index, BOOL *stop) {
+				return (object.command == command);
+			}];
 	}
 }
 
@@ -101,14 +101,14 @@ typedef NS_ENUM(NSUInteger, IRCClientRequestedCommandVisibility)
 	commandObject.enforceCount = (count > 0);
 	commandObject.count = count;
 
-	@synchronized (self.invokedCommandsInt) {
+	@synchronized(self.invokedCommandsInt) {
 		[self.invokedCommandsInt addObject:commandObject];
 	}
 }
 
 - (void)removeCommands
 {
-	@synchronized (self.invokedCommandsInt) {
+	@synchronized(self.invokedCommandsInt) {
 		[self.invokedCommandsInt removeAllObjects];
 	}
 }
@@ -131,7 +131,7 @@ typedef NS_ENUM(NSUInteger, IRCClientRequestedCommandVisibility)
 {
 	NSParameterAssert(commandObject != nil);
 
-	@synchronized (self.invokedCommandsInt) {
+	@synchronized(self.invokedCommandsInt) {
 		[self.invokedCommandsInt removeObject:commandObject];
 	}
 }

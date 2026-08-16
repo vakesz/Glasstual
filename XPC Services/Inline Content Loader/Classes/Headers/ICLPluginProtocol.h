@@ -55,7 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
  It is recommended that classes inside a plugin use the prefix ICP
  so that their classes do not conflict with those that already exist.
  */
-@property (readonly, copy, class) NSArray<Class> *modules;
+@property(readonly, copy, class) NSArray<Class> *modules;
 
 @end
 

@@ -46,7 +46,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TPCPreferencesUserDefaultsDidChangeNotification = @"TPCPreferencesUserDefaultsDidChangeNotification";
+NSString *const TPCPreferencesUserDefaultsDidChangeNotification = @"TPCPreferencesUserDefaultsDidChangeNotification";
 
 #pragma mark -
 #pragma mark Reading & Writing
@@ -206,7 +206,7 @@ NSString * const TPCPreferencesUserDefaultsDidChangeNotification = @"TPCPreferen
 	[self setObject:nil forKey:defaultName];
 }
 
-- (void)registerDefault:(id <NSCopying>)value forKey:(NSString *)defaultName
+- (void)registerDefault:(id<NSCopying>)value forKey:(NSString *)defaultName
 {
 	NSParameterAssert(value != nil);
 	NSParameterAssert(defaultName != nil);
@@ -243,7 +243,8 @@ NSString * const TPCPreferencesUserDefaultsDidChangeNotification = @"TPCPreferen
 	return [self _initWithSharedDefaults];
 }
 
-- (instancetype)initWithDefaults:(nullable NSUserDefaults *)defaults initialValues:(nullable NSDictionary<NSString *, id> *)initialValues
+- (instancetype)initWithDefaults:(nullable NSUserDefaults *)defaults
+				   initialValues:(nullable NSDictionary<NSString *, id> *)initialValues
 {
 	return [self _initWithSharedDefaults];
 }

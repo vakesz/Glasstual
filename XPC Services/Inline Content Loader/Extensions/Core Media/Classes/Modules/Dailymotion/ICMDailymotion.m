@@ -48,10 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 	ICLPayloadMutable *payload = self.payload;
 
 	NSDictionary *templateAttributes =
-	@{
-	  @"uniqueIdentifier" : payload.uniqueIdentifier,
-	  @"videoIdentifier" : videoIdentifier
-	};
+		@{@"uniqueIdentifier" : payload.uniqueIdentifier, @"videoIdentifier" : videoIdentifier};
 
 	NSError *templateRenderError = nil;
 
@@ -118,12 +115,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"dailymotion.com",
-		  @"www.dailymotion.com",
-		  @"mobile.dailymotion.com"
-		];
+		domains = @[ @"dailymotion.com", @"www.dailymotion.com", @"mobile.dailymotion.com" ];
 	});
 
 	return domains;

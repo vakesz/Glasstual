@@ -51,16 +51,15 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	self->_defaults = @{
-		@"filterEvents"					: @(TPI_ChatFilterEventTypePlainTextMessage |
-											TPI_ChatFilterEventTypeActionMessage),
+		@"filterEvents" : @(TPI_ChatFilterEventTypePlainTextMessage | TPI_ChatFilterEventTypeActionMessage),
 
-		@"filterIgnoreContent"			: @(NO),
-		@"filterIgnoresOperators"		: @(YES),
-		@"filterLimitedToMyself"		: @(NO),
-		@"filterLogMatch"				: @(NO),
+		@"filterIgnoreContent" : @(NO),
+		@"filterIgnoresOperators" : @(YES),
+		@"filterLimitedToMyself" : @(NO),
+		@"filterLogMatch" : @(NO),
 
-		@"filterLimitedToValue"			: @(TPI_ChatFilterLimitToValueNoLimit),
-		@"filterAgeComparator"			: @(TPI_ChatFilterAgeComparatorGreaterThan)
+		@"filterLimitedToValue" : @(TPI_ChatFilterLimitToValueNoLimit),
+		@"filterAgeComparator" : @(TPI_ChatFilterAgeComparatorGreaterThan)
 	};
 }
 
@@ -70,18 +69,14 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	SetVariableIfNil(self->_filterLimitedToChannelsIDs, @[])
-	SetVariableIfNil(self->_filterLimitedToClientsIDs, @[])
-	SetVariableIfNil(self->_filterEventsNumerics, @[])
+	SetVariableIfNil(self->_filterLimitedToChannelsIDs, @[]) SetVariableIfNil(self->_filterLimitedToClientsIDs, @[])
+		SetVariableIfNil(self->_filterEventsNumerics, @[])
 
-	SetVariableIfNil(self->_filterAction, @"")
-	SetVariableIfNil(self->_filterForwardToDestination, @"")
-	SetVariableIfNil(self->_filterMatch, @"")
-	SetVariableIfNil(self->_filterNotes, @"")
-	SetVariableIfNil(self->_filterSenderMatch, @"")
-	SetVariableIfNil(self->_filterTitle, @"")
+			SetVariableIfNil(self->_filterAction, @"") SetVariableIfNil(self->_filterForwardToDestination, @"")
+				SetVariableIfNil(self->_filterMatch, @"") SetVariableIfNil(self->_filterNotes, @"")
+					SetVariableIfNil(self->_filterSenderMatch, @"") SetVariableIfNil(self->_filterTitle, @"")
 
-	SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
+						SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
 }
 
 - (instancetype)init
@@ -138,7 +133,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[defaultsMutable assignStringTo:&self->_uniqueIdentifier forKey:@"uniqueIdentifier"];
 
-	[defaultsMutable assignUnsignedIntegerTo:&self->_filterActionFloodControlInterval forKey:@"filterActionFloodControlInterval"];
+	[defaultsMutable assignUnsignedIntegerTo:&self->_filterActionFloodControlInterval
+									  forKey:@"filterActionFloodControlInterval"];
 	[defaultsMutable assignUnsignedIntegerTo:&self->_filterLimitedToValue forKey:@"filterLimitedToValue"];
 	[defaultsMutable assignUnsignedIntegerTo:&self->_filterAgeComparator forKey:@"filterAgeComparator"];
 	[defaultsMutable assignUnsignedIntegerTo:&self->_filterAgeLimit forKey:@"filterAgeLimit"];
@@ -148,13 +144,11 @@ NS_ASSUME_NONNULL_BEGIN
 	 exist in defaultsMutable */
 	id filterEvents = dic[@"filterEvents"];
 
-	if (filterEvents && [filterEvents isKindOfClass:[NSNumber class]])
-	{
+	if (filterEvents && [filterEvents isKindOfClass:[NSNumber class]]) {
 		self->_filterEvents = [filterEvents unsignedIntegerValue];
-	}
-	else
-	{
-		TPI_ChatFilterEventType filterEventsMask = (TPI_ChatFilterEventTypePlainTextMessage | TPI_ChatFilterEventTypeActionMessage);
+	} else {
+		TPI_ChatFilterEventType filterEventsMask =
+			(TPI_ChatFilterEventTypePlainTextMessage | TPI_ChatFilterEventTypeActionMessage);
 
 		id filterCommandPRIVMSG = defaultsMutable[@"filterCommandPRIVMSG"];
 
@@ -182,8 +176,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Maintain backwards compatibility by setting old key names */
 	[dic setBool:[self isEventTypeEnabled:TPI_ChatFilterEventTypePlainTextMessage] forKey:@"filterCommandPRIVMSG"];
-	[dic setBool:[self isEventTypeEnabled:TPI_ChatFilterEventTypeActionMessage]	forKey:@"filterCommandPRIVMSG_ACTION"];
-	[dic setBool:[self isEventTypeEnabled:TPI_ChatFilterEventTypeNoticeMessage]	forKey:@"filterCommandNOTICE"];
+	[dic setBool:[self isEventTypeEnabled:TPI_ChatFilterEventTypeActionMessage] forKey:@"filterCommandPRIVMSG_ACTION"];
+	[dic setBool:[self isEventTypeEnabled:TPI_ChatFilterEventTypeNoticeMessage] forKey:@"filterCommandNOTICE"];
 
 	/* Set regular key names */
 	[dic maybeSetObject:self.filterLimitedToChannelsIDs forKey:@"filterLimitedToChannelsIDs"];
@@ -209,9 +203,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[dic setUnsignedInteger:self.filterAgeComparator forKey:@"filterAgeComparator"];
 	[dic setUnsignedInteger:self.filterAgeLimit forKey:@"filterAgeLimit"];
 
-	if (target == XRPortablePropertyDictTargetCopy ||
-		target == XRPortablePropertyDictTargetMutableCopy)
-	{
+	if (target == XRPortablePropertyDictTargetCopy || target == XRPortablePropertyDictTargetMutableCopy) {
 		return [dic copy];
 	}
 
@@ -247,22 +239,18 @@ NS_ASSUME_NONNULL_BEGIN
 	if (cachedResponse == nil) {
 		TPI_ChatFilterEventType filterEvents = self.filterEvents;
 
-#define _commandMatchesEvent(_command_, _event_)	\
-	if ([command isEqualToString:(_command_)]) {	\
-		cachedResponse = @((filterEvents & _event_) == _event_);	\
+#define _commandMatchesEvent(_command_, _event_)                                                                       \
+	if ([command isEqualToString:(_command_)]) {                                                                       \
+		cachedResponse = @((filterEvents & _event_) == _event_);                                                       \
 	}
 
-		_commandMatchesEvent(@"JOIN", TPI_ChatFilterEventTypeUserJoinedChannel)
-		else _commandMatchesEvent(@"PART", TPI_ChatFilterEventTypeUserLeftChannel)
-		else _commandMatchesEvent(@"KICK", TPI_ChatFilterEventTypeUserKickedFromChannel)
-		else _commandMatchesEvent(@"QUIT", TPI_ChatFilterEventTypeUserDisconnected)
-		else _commandMatchesEvent(@"NICK", TPI_ChatFilterEventTypeUserChangedNickname)
-		else _commandMatchesEvent(@"TOPIC", TPI_ChatFilterEventTypeChannelTopicChanged)
-		else _commandMatchesEvent(@"MODE", TPI_ChatFilterEventTypeChannelModeChanged)
-		else _commandMatchesEvent(@"332", TPI_ChatFilterEventTypeChannelTopicReceived)
-		else _commandMatchesEvent(@"333", TPI_ChatFilterEventTypeChannelTopicReceived)
-		else _commandMatchesEvent(@"324", TPI_ChatFilterEventTypeChannelModeReceived)
-		else
+		_commandMatchesEvent(
+			@"JOIN", TPI_ChatFilterEventTypeUserJoinedChannel) else _commandMatchesEvent(@"PART", TPI_ChatFilterEventTypeUserLeftChannel) else _commandMatchesEvent(@"KICK", TPI_ChatFilterEventTypeUserKickedFromChannel) else _commandMatchesEvent(@"QUIT", TPI_ChatFilterEventTypeUserDisconnected) else _commandMatchesEvent(@"NICK", TPI_ChatFilterEventTypeUserChangedNickname) else _commandMatchesEvent(@"TOPIC",
+																																																																																																				TPI_ChatFilterEventTypeChannelTopicChanged) else _commandMatchesEvent(@"MODE",
+																																																																																																																					  TPI_ChatFilterEventTypeChannelModeChanged) else _commandMatchesEvent(@"332",
+																																																																																																																																						   TPI_ChatFilterEventTypeChannelTopicReceived) else _commandMatchesEvent(@"333",
+																																																																																																																																																								  TPI_ChatFilterEventTypeChannelTopicReceived) else _commandMatchesEvent(@"324",
+																																																																																																																																																																										 TPI_ChatFilterEventTypeChannelModeReceived) else
 		{
 			cachedResponse = @([self.filterEventsNumerics containsObject:command]);
 		}
@@ -311,14 +299,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSError *parseError = nil;
 
-	NSData *propertyList =
-	[NSPropertyListSerialization dataWithPropertyList:dictionaryValue format:NSPropertyListBinaryFormat_v1_0 options:0 error:&parseError];
+	NSData *propertyList = [NSPropertyListSerialization dataWithPropertyList:dictionaryValue
+																	  format:NSPropertyListBinaryFormat_v1_0
+																	 options:0
+																	   error:&parseError];
 
 	if (propertyList == nil) {
 		if (parseError) {
-			LogToConsoleErrorWithSubsystem(THOPluginLoggingSubsystem(),
-				"Error Creating Property List: %@",
-				parseError.localizedDescription);
+			LogToConsoleErrorWithSubsystem(
+				THOPluginLoggingSubsystem(), "Error Creating Property List: %@", parseError.localizedDescription);
 		}
 
 		return NO;

@@ -40,19 +40,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _messageMaximumWidth 			330.0
-#define _messageHorizontalPadding		5.0
-#define _messageVerticalPadding			5.0
-#define _errorIconWidth					15.0
-#define _errorIconHeight				15.0
-#define _errorIconHorizontalPadding		5.0
-#define _errorIconVerticalPadding		6.0
+#define _messageMaximumWidth 330.0
+#define _messageHorizontalPadding 5.0
+#define _messageVerticalPadding 5.0
+#define _errorIconWidth 15.0
+#define _errorIconHeight 15.0
+#define _errorIconHorizontalPadding 5.0
+#define _errorIconVerticalPadding 6.0
 
 @interface TVCErrorMessagePopoverView : NSPopover
 @end
 
 @interface TVCErrorMessagePopover ()
-@property (nonatomic, strong, nullable) NSPopover *popover;
+@property(nonatomic, strong, nullable) NSPopover *popover;
 @end
 
 @implementation TVCErrorMessagePopover
@@ -106,47 +106,43 @@ NS_ASSUME_NONNULL_BEGIN
 
 	errorIcon.image = [NSImage imageNamed:@"ErroneousTextFieldValueIndicator"];
 
-	[errorIcon addConstraints:
-	 	@[
-		 [NSLayoutConstraint constraintWithItem:errorIcon
-									  attribute:NSLayoutAttributeWidth
-									  relatedBy:NSLayoutRelationEqual
-										 toItem:nil
-									  attribute:NSLayoutAttributeNotAnAttribute
-									 multiplier:1.0
-									   constant:_errorIconWidth],
+	[errorIcon addConstraints:@[
+		[NSLayoutConstraint constraintWithItem:errorIcon
+									 attribute:NSLayoutAttributeWidth
+									 relatedBy:NSLayoutRelationEqual
+										toItem:nil
+									 attribute:NSLayoutAttributeNotAnAttribute
+									multiplier:1.0
+									  constant:_errorIconWidth],
 
-		 [NSLayoutConstraint constraintWithItem:errorIcon
-									  attribute:NSLayoutAttributeHeight
-									  relatedBy:NSLayoutRelationEqual
-										 toItem:nil
-									  attribute:NSLayoutAttributeNotAnAttribute
-									 multiplier:1.0
-									   constant:_errorIconHeight]
-	 	]
-	 ];
+		[NSLayoutConstraint constraintWithItem:errorIcon
+									 attribute:NSLayoutAttributeHeight
+									 relatedBy:NSLayoutRelationEqual
+										toItem:nil
+									 attribute:NSLayoutAttributeNotAnAttribute
+									multiplier:1.0
+									  constant:_errorIconHeight]
+	]];
 
 	[popoverView addSubview:errorIcon];
 
-	[popoverView addConstraints:
-	 	@[
-		  [NSLayoutConstraint constraintWithItem:errorIcon
-									   attribute:NSLayoutAttributeLeading
-									   relatedBy:NSLayoutRelationEqual
-										  toItem:popoverView
-									   attribute:NSLayoutAttributeLeading
-									  multiplier:1.0
-										constant:_errorIconHorizontalPadding],
+	[popoverView addConstraints:@[
+		[NSLayoutConstraint constraintWithItem:errorIcon
+									 attribute:NSLayoutAttributeLeading
+									 relatedBy:NSLayoutRelationEqual
+										toItem:popoverView
+									 attribute:NSLayoutAttributeLeading
+									multiplier:1.0
+									  constant:_errorIconHorizontalPadding],
 
-		  [NSLayoutConstraint constraintWithItem:errorIcon
-									   attribute:NSLayoutAttributeTop
-									   relatedBy:NSLayoutRelationEqual
-										  toItem:popoverView
-									   attribute:NSLayoutAttributeTop
-									  multiplier:1.0
-										constant:_errorIconVerticalPadding],
-		]
-	 ];
+		[NSLayoutConstraint constraintWithItem:errorIcon
+									 attribute:NSLayoutAttributeTop
+									 relatedBy:NSLayoutRelationEqual
+										toItem:popoverView
+									 attribute:NSLayoutAttributeTop
+									multiplier:1.0
+									  constant:_errorIconVerticalPadding],
+	]];
 
 	/* Create message */
 	NSTextField *errorMessage = [NSTextField new];
@@ -167,17 +163,21 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Add message */
 	[popoverView addSubview:errorMessage];
 
-	[popoverView addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"H:[errorIcon]-messageHorizontalPadding-[errorMessage]-messageHorizontalPadding-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:@{@"messageHorizontalPadding" : @(_messageHorizontalPadding)}
-											   views:NSDictionaryOfVariableBindings(errorIcon, errorMessage)]];
+	[popoverView
+		addConstraints:[NSLayoutConstraint
+						   constraintsWithVisualFormat:
+							   @"H:[errorIcon]-messageHorizontalPadding-[errorMessage]-messageHorizontalPadding-|"
+											   options:NSLayoutFormatDirectionLeadingToTrailing
+											   metrics:@{@"messageHorizontalPadding" : @(_messageHorizontalPadding)}
+												 views:NSDictionaryOfVariableBindings(errorIcon, errorMessage)]];
 
-	[popoverView addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-messageVerticalPadding-[errorMessage]-messageVerticalPadding-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:@{@"messageVerticalPadding" : @(_messageVerticalPadding)}
-											   views:NSDictionaryOfVariableBindings(errorMessage)]];
+	[popoverView
+		addConstraints:
+			[NSLayoutConstraint
+				constraintsWithVisualFormat:@"V:|-messageVerticalPadding-[errorMessage]-messageVerticalPadding-|"
+									options:NSLayoutFormatDirectionLeadingToTrailing
+									metrics:@{@"messageVerticalPadding" : @(_messageVerticalPadding)}
+									  views:NSDictionaryOfVariableBindings(errorMessage)]];
 
 	/* Create popover */
 	NSPopover *popover = [TVCErrorMessagePopoverView new];

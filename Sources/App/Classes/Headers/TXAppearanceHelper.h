@@ -44,11 +44,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* Can return YES to change default implementation of
  -applicationAppearanceChanged to set needsDisplay to YES. */
-@property (readonly) BOOL needsDisplayWhenApplicationAppearanceChanges;
+@property(readonly) BOOL needsDisplayWhenApplicationAppearanceChanges;
 
 /* Returns YES by default. If NO, -applicationAppearanceChanged
  will not be sent beyond the view that returned NO. */
-@property (readonly) BOOL sendApplicationAppearanceChangedToSubviews;
+@property(readonly) BOOL sendApplicationAppearanceChangedToSubviews;
 
 /* Performs -applicationAppearanceChanged on view and all subviews
  if -sendApplicationAppearanceChangedToSubviews doesn't return NO. */
@@ -60,11 +60,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* Can return YES to change default implementation of
  -systemAppearanceChanged to set needsDisplay to YES. */
-@property (readonly) BOOL needsDisplayWhenSystemAppearanceChanges;
+@property(readonly) BOOL needsDisplayWhenSystemAppearanceChanges;
 
 /* Returns YES by default. If NO, -systemAppearanceChanged
  will not be sent beyond the view that returned NO. */
-@property (readonly) BOOL sendSystemAppearanceChangedToSubviews;
+@property(readonly) BOOL sendSystemAppearanceChangedToSubviews;
 
 /* Performs -systemAppearanceChanged on view and all subviews
  if -sendSystemAppearanceChangedToSubviews doesn't return NO. */

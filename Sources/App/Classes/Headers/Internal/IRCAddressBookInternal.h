@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCAddressBookEntry ()
 {
-@protected
+  @protected
 	BOOL _ignoreClientToClientProtocol;
 	BOOL _ignoreFileTransferRequests;
 	BOOL _ignoreGeneralEventMessages;
@@ -58,7 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_trackingNickname;
 	NSArray<IRCAddressBookEntry *> *_parentEntries;
 
-@private
+  @private
 	NSString *_uniqueIdentifier;
 	NSDictionary *_defaults;
 }

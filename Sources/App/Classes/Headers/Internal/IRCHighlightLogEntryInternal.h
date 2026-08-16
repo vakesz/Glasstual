@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCHighlightLogEntry ()
 {
-@protected
+  @protected
 	TVCLogLine *_lineLogged;
 	NSString *_clientId;
 	NSString *_channelId;

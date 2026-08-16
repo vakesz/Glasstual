@@ -45,7 +45,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _overridesDefaultsKey			@"Nickname Color Style Overrides (v2)"
+#define _overridesDefaultsKey @"Nickname Color Style Overrides (v2)"
 
 @implementation IRCUserNicknameColorStyleGenerator
 
@@ -54,7 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
 	return [self nicknameColorStyleForString:inputString isOverride:NULL];
 }
 
-+ (NSString *)nicknameColorStyleForString:(NSString *)inputString isOverride:(BOOL * _Nullable)isOverride
++ (NSString *)nicknameColorStyleForString:(NSString *)inputString isOverride:(BOOL *_Nullable)isOverride
 {
 	NSParameterAssert(inputString != nil);
 
@@ -76,8 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	TPCThemeSettingsNicknameColorStyle colorStyle = themeSettings().nicknameColorStyle;
 
-	NSNumber *stringHash =
-	[self hashForString:unshuffledString colorStyle:colorStyle];
+	NSNumber *stringHash = [self hashForString:unshuffledString colorStyle:colorStyle];
 
 	return [self nicknameColorStyleForHash:stringHash colorStyle:colorStyle];
 }
@@ -98,19 +97,18 @@ NS_ASSUME_NONNULL_BEGIN
 	int s;
 	int l;
 
-	if (onLightBackground)
-	{
-		s = (shash % 50 + 35);   // 35 - 85
-		l = (lhash % 38 + 20);   // 20 - 58
+	if (onLightBackground) {
+		s = (shash % 50 + 35); // 35 - 85
+		l = (lhash % 38 + 20); // 20 - 58
 
 		// Lower lightness for Yellow, Green, Cyan
 		if (h > 45 && h <= 195) {
-			l = (lhash % 21 + 20);   // 20 - 41
+			l = (lhash % 21 + 20); // 20 - 41
 
 			if (l > 31) {
-				s = (shash % 40 + 55);   // 55 - 95
+				s = (shash % 40 + 55); // 55 - 95
 			} else {
-				s = (shash % 35 + 65);   // 65 - 95
+				s = (shash % 35 + 65); // 65 - 95
 			}
 		}
 
@@ -118,11 +116,9 @@ NS_ASSUME_NONNULL_BEGIN
 		if (h <= 25 || h >= 335) {
 			s = (shash % 33 + 45); // 45 - 78
 		}
-	}
-	else
-	{
-		s = (shash % 50 + 45);   // 50 - 95
-		l = (lhash % 36 + 45);   // 45 - 81
+	} else {
+		s = (shash % 50 + 45); // 50 - 95
+		l = (lhash % 36 + 45); // 45 - 81
 
 		// give the pinks a wee bit more lightness
 		if (h >= 280 && h < 335) {
@@ -171,9 +167,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableData *hashedData = [NSMutableData dataWithLength:CC_MD5_DIGEST_LENGTH];
 
-GLASSTUAL_IGNORE_DEPRECATION_BEGIN
+	GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	CC_MD5(stringToHashData.bytes, (CC_LONG)stringToHashData.length, hashedData.mutableBytes);
-GLASSTUAL_IGNORE_DEPRECATION_END
+	GLASSTUAL_IGNORE_DEPRECATION_END
 
 	unsigned int hashedValue;
 	[hashedData getBytes:&hashedValue length:sizeof(unsigned int)];
@@ -194,12 +190,13 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 	NSDictionary *legacyOverrides = [RZUserDefaults() dictionaryForKey:@"Nickname Color Style Overrides"];
 
-	NSMutableDictionary<NSString *, NSData *> *newOverrides = [NSMutableDictionary dictionaryWithCapacity:legacyOverrides.count];
+	NSMutableDictionary<NSString *, NSData *> *newOverrides =
+		[NSMutableDictionary dictionaryWithCapacity:legacyOverrides.count];
 
 	[legacyOverrides enumerateKeysAndObjectsUsingBlock:^(NSString *key, id obj, BOOL *stop) {
-GLASSTUAL_IGNORE_DEPRECATION_BEGIN
+		GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 		id override = [NSUnarchiver unarchiveObjectWithData:obj];
-GLASSTUAL_IGNORE_DEPRECATION_END
+		GLASSTUAL_IGNORE_DEPRECATION_END
 
 		if (override == nil || [override isKindOfClass:[NSColor class]] == NO) {
 			LogToConsoleError("Failed to decode contents of '%{private}@'", key);
@@ -209,13 +206,10 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 		NSError *error;
 
-		override = [NSKeyedArchiver archivedDataWithRootObject:override
-										 requiringSecureCoding:YES
-														 error:&error];
+		override = [NSKeyedArchiver archivedDataWithRootObject:override requiringSecureCoding:YES error:&error];
 
 		if (error) {
-			LogToConsoleError("Failed to decode contents for '%{private}@': %{public}@",
-				 key, error.description);
+			LogToConsoleError("Failed to decode contents for '%{private}@': %{public}@", key, error.description);
 
 			return;
 		}
@@ -244,13 +238,10 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 	NSError *error;
 
-	NSColor *colorValue = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class]
-															fromData:colorObject
-															   error:&error];
+	NSColor *colorValue = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class] fromData:colorObject error:&error];
 
 	if (error) {
-		LogToConsoleError("Failed to decode color for '%{private}@': %{public}@",
-				styleKey, error.description);
+		LogToConsoleError("Failed to decode color for '%{private}@': %{public}@", styleKey, error.description);
 	}
 
 	return colorValue;
@@ -271,13 +262,10 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	if (styleValue) {
 		NSError *error;
 
-		colorObject = [NSKeyedArchiver archivedDataWithRootObject:styleValue
-											requiringSecureCoding:YES
-															error:&error];
+		colorObject = [NSKeyedArchiver archivedDataWithRootObject:styleValue requiringSecureCoding:YES error:&error];
 
 		if (error) {
-			LogToConsoleError("Failed to decode color for '%{private}@': %{public}@",
-				 styleKey, error.description);
+			LogToConsoleError("Failed to decode color for '%{private}@': %{public}@", styleKey, error.description);
 
 			return;
 		}

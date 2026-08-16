@@ -125,8 +125,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSError *parseError = nil;
 
-	NSDictionary *propertyList =
-	[NSPropertyListSerialization propertyListWithData:fileContents options:NSPropertyListImmutable format:NULL error:&parseError];
+	NSDictionary *propertyList = [NSPropertyListSerialization propertyListWithData:fileContents
+																		   options:NSPropertyListImmutable
+																			format:NULL
+																			 error:&parseError];
 
 	/* Perform actual import if we have the dictionary. */
 	if (propertyList == nil) {
@@ -149,7 +151,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Do not push the loading screen right away. Add a little delay to give everything
 	 a chance to settle down before presenting the changes to the user. */
-	[self performSelectorInCommonModes:@selector(importPostflightCleanup:) withObject:propertyList.allKeys afterDelay:2.0];
+	[self performSelectorInCommonModes:@selector(importPostflightCleanup:)
+							withObject:propertyList.allKeys
+							afterDelay:2.0];
 }
 
 + (void)importContentsOfDictionary:(NSDictionary<NSString *, id> *)aDict
@@ -174,24 +178,19 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(key != nil);
 
-	if ([key isEqualToString:TPCPreferencesThemeNameDefaultsKey])
-	{
+	if ([key isEqualToString:TPCPreferencesThemeNameDefaultsKey]) {
 		if ([object isKindOfClass:[NSString class]] == NO) {
 			return;
 		}
 
 		[TPCPreferences setThemeNameWithExistenceCheck:object];
-	}
-	else if ([key isEqualToString:TPCPreferencesThemeFontNameDefaultsKey])
-	{
+	} else if ([key isEqualToString:TPCPreferencesThemeFontNameDefaultsKey]) {
 		if ([object isKindOfClass:[NSString class]] == NO) {
 			return;
 		}
 
 		[TPCPreferences setThemeChannelViewFontNameWithExistenceCheck:object];
-	}
-	else if ([key isEqualToString:IRCWorldClientListDefaultsKey])
-	{
+	} else if ([key isEqualToString:IRCWorldClientListDefaultsKey]) {
 		if ([object isKindOfClass:[NSArray class]] == NO) {
 			return;
 		}
@@ -199,9 +198,7 @@ NS_ASSUME_NONNULL_BEGIN
 		[object enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop) {
 			[self importClientConfiguration:object];
 		}];
-	}
-	else
-	{
+	} else {
 		[RZUserDefaults() _migrateObject:object forKey:key];
 	}
 }
@@ -280,8 +277,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Strip keys that must be checked dynamically */
 	if (filterJunk) {
-		NSSet *keysToStrip2 =
-		[finalDictionary keysOfEntriesPassingTest:^BOOL(NSString *key, id object, BOOL *stop) {
+		NSSet *keysToStrip2 = [finalDictionary keysOfEntriesPassingTest:^BOOL(NSString *key, id object, BOOL *stop) {
 			return [self isKeyNameSupposedToBeIgnored:key];
 		}];
 
@@ -356,8 +352,10 @@ NS_ASSUME_NONNULL_BEGIN
 	 trying to tamper with stuff. 2) Smaller, faster. Mostly #1. */
 	NSError *parseError = nil;
 
-	NSData *propertyList =
-	[NSPropertyListSerialization dataWithPropertyList:exportedPreferences format:NSPropertyListBinaryFormat_v1_0 options:0 error:&parseError];
+	NSData *propertyList = [NSPropertyListSerialization dataWithPropertyList:exportedPreferences
+																	  format:NSPropertyListBinaryFormat_v1_0
+																	 options:0
+																	   error:&parseError];
 
 	if (propertyList == nil) {
 		if (parseError) {

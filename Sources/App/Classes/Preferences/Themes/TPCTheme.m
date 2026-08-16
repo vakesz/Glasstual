@@ -46,15 +46,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _templateEngineVersionMaximum			TPCThemeSettingsNewestTemplateEngineVersion
-#define _templateEngineVersionMinimum			TPCThemeSettingsNewestTemplateEngineVersion
+#define _templateEngineVersionMaximum TPCThemeSettingsNewestTemplateEngineVersion
+#define _templateEngineVersionMinimum TPCThemeSettingsNewestTemplateEngineVersion
 
-NSString * const TPCThemeIntegrityCompromisedNotification	= @"TPCThemeIntegrityCompromisedNotification";
-NSString * const TPCThemeIntegrityRestoredNotification		= @"TPCThemeIntegrityRestoredNotification";
-NSString * const TPCThemeAppearanceChangedNotification		= @"TPCThemeAppearanceChangedNotification";
-NSString * const TPCThemeVarietyChangedNotification			= @"TPCThemeVarietyChangedNotification";
-NSString * const TPCThemeWasModifiedNotification			= @"TPCThemeWasModifiedNotification";
-NSString * const TPCThemeWasDeletedNotification				= @"TPCThemeWasDeletedNotification";
+NSString *const TPCThemeIntegrityCompromisedNotification = @"TPCThemeIntegrityCompromisedNotification";
+NSString *const TPCThemeIntegrityRestoredNotification = @"TPCThemeIntegrityRestoredNotification";
+NSString *const TPCThemeAppearanceChangedNotification = @"TPCThemeAppearanceChangedNotification";
+NSString *const TPCThemeVarietyChangedNotification = @"TPCThemeVarietyChangedNotification";
+NSString *const TPCThemeWasModifiedNotification = @"TPCThemeWasModifiedNotification";
+NSString *const TPCThemeWasDeletedNotification = @"TPCThemeWasDeletedNotification";
 
 typedef NS_ENUM(NSUInteger, _TPCThemeChooseVarietyResult) {
 	_TPCThemeChooseVarietyResultNoChange,
@@ -63,45 +63,47 @@ typedef NS_ENUM(NSUInteger, _TPCThemeChooseVarietyResult) {
 };
 
 typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
-	_TPCThemeMonitoringResultNoChange					= 0, // Default
-	_TPCThemeMonitoringResultReloadableFileModified		= 1 << 0, // Any CSS or JavaScript file was changed in the current variety
-	_TPCThemeMonitoringResultCriticalFileDeleted		= 1 << 1, // The design.css or scripts.js file of any variety was deleted
-	_TPCThemeMonitoringResultVarietyCreated				= 1 << 2, // A variety was created
-	_TPCThemeMonitoringResultVarietyDeleted				= 1 << 3, // A variety was deleted
-	_TPCThemeMonitoringResultThemeDeleted				= 1 << 4  // The theme was deleted
+	_TPCThemeMonitoringResultNoChange = 0, // Default
+	_TPCThemeMonitoringResultReloadableFileModified =
+		1 << 0, // Any CSS or JavaScript file was changed in the current variety
+	_TPCThemeMonitoringResultCriticalFileDeleted = 1
+												   << 1, // The design.css or scripts.js file of any variety was deleted
+	_TPCThemeMonitoringResultVarietyCreated = 1 << 2,	 // A variety was created
+	_TPCThemeMonitoringResultVarietyDeleted = 1 << 3,	 // A variety was deleted
+	_TPCThemeMonitoringResultThemeDeleted = 1 << 4		 // The theme was deleted
 };
 
 @class TPCThemeVariety;
 
 @interface TPCTheme ()
-@property (nonatomic, copy, readwrite) NSString *name;
-@property (nonatomic, copy, readwrite) NSURL *originalURL;
-@property (nonatomic, copy, readwrite) NSURL *temporaryURL;
-@property (nonatomic, assign, readwrite) TPCThemeStorageLocation storageLocation;
-@property (nonatomic, assign, readwrite) BOOL usable;
-@property (nonatomic, strong) TPCThemeVariety *globalVariety;
-@property (nonatomic, strong, nullable) TPCThemeVariety *variety;
-@property (nonatomic, copy) NSArray<TPCThemeVariety *> *varieties;
-@property (nonatomic, strong, nullable) NSCache *templateCache;
-@property (nonatomic, copy, readwrite) NSArray<NSURL *> *cssFiles;
-@property (nonatomic, copy, readwrite) NSArray<NSURL *> *jsFiles;
-@property (nonatomic, copy, readwrite) NSArray<NSURL *> *temporaryCSSFiles;
-@property (nonatomic, copy, readwrite) NSArray<NSURL *> *temporaryJSFiles;
-@property (nonatomic, copy, readwrite) NSArray<GRMustacheTemplateRepository *> *templateRepositories;
-@property (nonatomic, strong) GRMustacheTemplateRepository *defaultTemplateRepository;
-@property (nonatomic, strong, readwrite) TPCThemeSettings *settings;
-@property (nonatomic, strong, nullable) XRFileSystemMonitor *fileSystemMonitor;
+@property(nonatomic, copy, readwrite) NSString *name;
+@property(nonatomic, copy, readwrite) NSURL *originalURL;
+@property(nonatomic, copy, readwrite) NSURL *temporaryURL;
+@property(nonatomic, assign, readwrite) TPCThemeStorageLocation storageLocation;
+@property(nonatomic, assign, readwrite) BOOL usable;
+@property(nonatomic, strong) TPCThemeVariety *globalVariety;
+@property(nonatomic, strong, nullable) TPCThemeVariety *variety;
+@property(nonatomic, copy) NSArray<TPCThemeVariety *> *varieties;
+@property(nonatomic, strong, nullable) NSCache *templateCache;
+@property(nonatomic, copy, readwrite) NSArray<NSURL *> *cssFiles;
+@property(nonatomic, copy, readwrite) NSArray<NSURL *> *jsFiles;
+@property(nonatomic, copy, readwrite) NSArray<NSURL *> *temporaryCSSFiles;
+@property(nonatomic, copy, readwrite) NSArray<NSURL *> *temporaryJSFiles;
+@property(nonatomic, copy, readwrite) NSArray<GRMustacheTemplateRepository *> *templateRepositories;
+@property(nonatomic, strong) GRMustacheTemplateRepository *defaultTemplateRepository;
+@property(nonatomic, strong, readwrite) TPCThemeSettings *settings;
+@property(nonatomic, strong, nullable) XRFileSystemMonitor *fileSystemMonitor;
 @end
 
 @interface TPCThemeVariety : NSObject
-@property (nonatomic, copy) NSURL *url;
-@property (nonatomic, weak) TPCTheme *theme;
-@property (nonatomic, assign) BOOL isGlobalVariety;
-@property (nonatomic, assign) TPCThemeAppearanceType appearance;
-@property (nonatomic, copy, nullable) NSURL *cssFile;
-@property (nonatomic, copy, nullable) NSURL *jsFile;
-@property (nonatomic, copy) NSDictionary<NSString *, id> *settings;
-@property (nonatomic, strong, nullable) GRMustacheTemplateRepository *templateRepository;
+@property(nonatomic, copy) NSURL *url;
+@property(nonatomic, weak) TPCTheme *theme;
+@property(nonatomic, assign) BOOL isGlobalVariety;
+@property(nonatomic, assign) TPCThemeAppearanceType appearance;
+@property(nonatomic, copy, nullable) NSURL *cssFile;
+@property(nonatomic, copy, nullable) NSURL *jsFile;
+@property(nonatomic, copy) NSDictionary<NSString *, id> *settings;
+@property(nonatomic, strong, nullable) GRMustacheTemplateRepository *templateRepository;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithURL:(NSURL *)url NS_DESIGNATED_INITIALIZER;
@@ -110,23 +112,23 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 @end
 
 @interface TPCThemeSettings ()
-@property (nonatomic, assign, readwrite) BOOL supportsMultipleAppearances;
-@property (nonatomic, assign, readwrite) BOOL invertSidebarColors;
-@property (nonatomic, assign, readwrite) BOOL js_postHandleEventNotifications;
-@property (nonatomic, assign, readwrite) BOOL js_postAppearanceChangesNotification;
-@property (nonatomic, assign, readwrite) BOOL js_postPreferencesDidChangesNotifications;
-@property (nonatomic, assign, readwrite) BOOL usesIncompatibleTemplateEngineVersion;
-@property (nonatomic, copy, readwrite, nullable) NSFont *themeChannelViewFont;
-@property (nonatomic, copy, readwrite, nullable) NSString *themeNicknameFormat;
-@property (nonatomic, copy, readwrite, nullable) NSString *themeTimestampFormat;
-@property (nonatomic, copy, readwrite, nullable) NSString *settingsKeyValueStoreName;
-@property (nonatomic, copy, readwrite, nullable) NSColor *channelViewOverlayColor;
-@property (nonatomic, copy, readwrite, nullable) NSColor *underlyingWindowColor;
-@property (nonatomic, copy, readwrite, nullable) NSURL *cssFile;
-@property (nonatomic, copy, readwrite, nullable) NSURL *jsFile;
-@property (nonatomic, assign, readwrite) double indentationOffset;
-@property (nonatomic, assign, readwrite) TPCThemeSettingsNicknameColorStyle nicknameColorStyle;
-@property (nonatomic, assign, readwrite) NSUInteger templateEngineVersion;
+@property(nonatomic, assign, readwrite) BOOL supportsMultipleAppearances;
+@property(nonatomic, assign, readwrite) BOOL invertSidebarColors;
+@property(nonatomic, assign, readwrite) BOOL js_postHandleEventNotifications;
+@property(nonatomic, assign, readwrite) BOOL js_postAppearanceChangesNotification;
+@property(nonatomic, assign, readwrite) BOOL js_postPreferencesDidChangesNotifications;
+@property(nonatomic, assign, readwrite) BOOL usesIncompatibleTemplateEngineVersion;
+@property(nonatomic, copy, readwrite, nullable) NSFont *themeChannelViewFont;
+@property(nonatomic, copy, readwrite, nullable) NSString *themeNicknameFormat;
+@property(nonatomic, copy, readwrite, nullable) NSString *themeTimestampFormat;
+@property(nonatomic, copy, readwrite, nullable) NSString *settingsKeyValueStoreName;
+@property(nonatomic, copy, readwrite, nullable) NSColor *channelViewOverlayColor;
+@property(nonatomic, copy, readwrite, nullable) NSColor *underlyingWindowColor;
+@property(nonatomic, copy, readwrite, nullable) NSURL *cssFile;
+@property(nonatomic, copy, readwrite, nullable) NSURL *jsFile;
+@property(nonatomic, assign, readwrite) double indentationOffset;
+@property(nonatomic, assign, readwrite) TPCThemeSettingsNicknameColorStyle nicknameColorStyle;
+@property(nonatomic, assign, readwrite) NSUInteger templateEngineVersion;
 
 - (instancetype)initWithTheme:(TPCTheme *)theme NS_DESIGNATED_INITIALIZER;
 @end
@@ -184,8 +186,7 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 	}
 
 	/* During init there should be not variety already set. */
-	self.usable =
-	([self _chooseBestVariety] == _TPCThemeChooseVarietyResultChanged);
+	self.usable = ([self _chooseBestVariety] == _TPCThemeChooseVarietyResultChanged);
 
 	[self _startMonitoring];
 }
@@ -211,15 +212,14 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 
 	NSError *preFileListError;
 
-	NSArray *preFileList =
-	[RZFileManager() contentsOfDirectoryAtURL:varietiesURL
-				   includingPropertiesForKeys:@[NSURLNameKey, NSURLIsDirectoryKey]
-									  options:NSDirectoryEnumerationSkipsHiddenFiles
-										error:&preFileListError];
+	NSArray *preFileList = [RZFileManager() contentsOfDirectoryAtURL:varietiesURL
+										  includingPropertiesForKeys:@[ NSURLNameKey, NSURLIsDirectoryKey ]
+															 options:NSDirectoryEnumerationSkipsHiddenFiles
+															   error:&preFileListError];
 
 	if (preFileListError) {
 		LogToConsoleError("Failed to list contents of Varieties folder: %{public}@",
-			preFileListError.localizedDescription);
+						  preFileListError.localizedDescription);
 	}
 
 	NSMutableArray<TPCThemeVariety *> *varieties = [NSMutableArray array];
@@ -255,17 +255,17 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 {
 	NSURL *repositoryURL = [self _applicationTemplateRepositoryURL];
 
-	GRMustacheTemplateRepository *repository = [GRMustacheTemplateRepository templateRepositoryWithBaseURL:repositoryURL];
+	GRMustacheTemplateRepository *repository =
+		[GRMustacheTemplateRepository templateRepositoryWithBaseURL:repositoryURL];
 
-	NSAssert((repository != nil),
-		@"Default template repository not found");
+	NSAssert((repository != nil), @"Default template repository not found");
 
 	self.defaultTemplateRepository = repository;
 }
 
 - (void)_assignTemporaryURL
 {
-//	NSURL *sourceURL = [TPCPathInfo applicationTemporaryProcessSpecificURL];
+	//	NSURL *sourceURL = [TPCPathInfo applicationTemporaryProcessSpecificURL];
 	NSURL *sourceURL = [TPCPathInfo applicationCachesURL];
 
 	NSURL *baseURL = [sourceURL URLByAppendingPathComponent:@"/Cached-Style-Resources/"];
@@ -309,11 +309,11 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 	NSArray *varieties = self.varieties;
 
 	TPCThemeVariety *variety =
-	[varieties objectPassingTest:^BOOL(TPCThemeVariety *variety, NSUInteger index, BOOL *stop) {
-		NSURL *varietyURL = variety.url;
+		[varieties objectPassingTest:^BOOL(TPCThemeVariety *variety, NSUInteger index, BOOL *stop) {
+			NSURL *varietyURL = variety.url;
 
-		return [self _isDirectoryURL:url equalTo:varietyURL];
-	}];
+			return [self _isDirectoryURL:url equalTo:varietyURL];
+		}];
 
 	return variety;
 }
@@ -337,10 +337,11 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 
 	__weak TPCTheme *weakSelf = self;
 
-	  XRFileSystemMonitor *monitor =
-	[[XRFileSystemMonitor alloc] initWithFileURL:url callbackBlock:^(NSArray<XRFileSystemEvent *> *events) {
-		[weakSelf _reactToMonitoringEvents:events];
-	}];
+	XRFileSystemMonitor *monitor =
+		[[XRFileSystemMonitor alloc] initWithFileURL:url
+									   callbackBlock:^(NSArray<XRFileSystemEvent *> *events) {
+										   [weakSelf _reactToMonitoringEvents:events];
+									   }];
 
 	[monitor startMonitoringWithLatency:5.0];
 
@@ -360,14 +361,13 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 	 and possibly a new best choice is chosen. */
 	if ((result & _TPCThemeMonitoringResultCriticalFileDeleted) == _TPCThemeMonitoringResultCriticalFileDeleted ||
 		(result & _TPCThemeMonitoringResultVarietyCreated) == _TPCThemeMonitoringResultVarietyCreated ||
-		(result & _TPCThemeMonitoringResultVarietyDeleted) == _TPCThemeMonitoringResultVarietyDeleted)
-	{
+		(result & _TPCThemeMonitoringResultVarietyDeleted) == _TPCThemeMonitoringResultVarietyDeleted) {
 		[self _verifyIntegrity];
 	}
 
 	/* CSS or JavaScript file in the current variety was modified. */
-	else if ((result & _TPCThemeMonitoringResultReloadableFileModified) == _TPCThemeMonitoringResultReloadableFileModified)
-	{
+	else if ((result & _TPCThemeMonitoringResultReloadableFileModified) ==
+			 _TPCThemeMonitoringResultReloadableFileModified) {
 		[self _notifyRecentlyModified];
 	}
 }
@@ -427,25 +427,22 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 	}
 
 	/* Limit #2 to scope of active variety. */
-	if (variety != self.variety &&
-		variety != self.globalVariety)
-	{
+	if (variety != self.variety && variety != self.globalVariety) {
 		return result;
 	}
 
 	/* Do #2 */
 	NSString *fileExtension = url.pathExtension;
 
-	if ([fileExtension isEqual:@"css"] ||
-		[fileExtension isEqual:@"js"])
-	{
+	if ([fileExtension isEqual:@"css"] || [fileExtension isEqual:@"js"]) {
 		result |= _TPCThemeMonitoringResultReloadableFileModified;
 	}
 
 	return result; // No change
 }
 
-- (_TPCThemeMonitoringResult)_reactToMonitoringEventForDirectoryAtURL:(NSURL *)url withFlags:(FSEventStreamEventFlags)flags
+- (_TPCThemeMonitoringResult)_reactToMonitoringEventForDirectoryAtURL:(NSURL *)url
+															withFlags:(FSEventStreamEventFlags)flags
 {
 	NSParameterAssert(url != nil);
 
@@ -472,7 +469,8 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 	return _TPCThemeMonitoringResultNoChange;
 }
 
-- (_TPCThemeMonitoringResult)_reactToMonitoringVarietyDirectoryEventAtURL:(NSURL *)url withFlags:(FSEventStreamEventFlags)flags
+- (_TPCThemeMonitoringResult)_reactToMonitoringVarietyDirectoryEventAtURL:(NSURL *)url
+																withFlags:(FSEventStreamEventFlags)flags
 {
 	NSParameterAssert(url != nil);
 
@@ -498,9 +496,7 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 
 	self.varieties = varieties;
 
-	return ((varietyDeleted) ?
-			_TPCThemeMonitoringResultVarietyDeleted :
-			_TPCThemeMonitoringResultVarietyCreated);
+	return ((varietyDeleted) ? _TPCThemeMonitoringResultVarietyDeleted : _TPCThemeMonitoringResultVarietyCreated);
 }
 
 - (void)_reactToDeletion
@@ -543,8 +539,7 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 	 After action is performed by the variety, we can decide
 	 wether to do anything depending on whether a change
 	 actually took place. */
-	BOOL fileChanged =
-	[variety _reevaluateFileDuringMonitoringAtURL:url];
+	BOOL fileChanged = [variety _reevaluateFileDuringMonitoringAtURL:url];
 
 	if (fileChanged == NO) {
 		return NO; // No change
@@ -576,8 +571,7 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 
 			[RZNotificationCenter() postNotificationName:TPCThemeIntegrityCompromisedNotification object:self];
 		}
-	}
-	else // usable
+	} else // usable
 	{
 		if (varietyChanged == _TPCThemeChooseVarietyResultNoBestChoice) {
 			return NO; // No change
@@ -622,17 +616,16 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 	NSString *originalRemapPath = self.originalURL.path;
 
 	if ([originalRemapPath hasSuffix:@"/"]) {
-		 originalRemapPath = [originalRemapPath substringAtIndex:0 toLength:(-1)];
+		originalRemapPath = [originalRemapPath substringAtIndex:0 toLength:(-1)];
 	}
 
 	NSString *temporaryRemapPath = self.temporaryURL.path;
 
 	if ([temporaryRemapPath hasSuffix:@"/"]) {
-		 temporaryRemapPath = [temporaryRemapPath substringAtIndex:0 toLength:(-1)];
+		temporaryRemapPath = [temporaryRemapPath substringAtIndex:0 toLength:(-1)];
 	}
 
-	NSURL *(^_remapTemporaryFile)(NSURL *) = ^NSURL *(NSURL *url)
-	{
+	NSURL * (^_remapTemporaryFile)(NSURL *) = ^NSURL *(NSURL *url) {
 		NSString *path = url.path;
 
 		if ([path hasPrefix:originalRemapPath] == NO) {
@@ -778,8 +771,7 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 
 		/* Perform first pass based on appearance criteria. */
 		if ((variety.appearance == TPCThemeAppearanceTypeLight && isDarkAppearance == NO) ||
-			(variety.appearance == TPCThemeAppearanceTypeDark && isDarkAppearance))
-		{
+			(variety.appearance == TPCThemeAppearanceTypeDark && isDarkAppearance)) {
 			isBestVariety = YES;
 		}
 
@@ -787,16 +779,13 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 		 so that we can at least have one to work off of. Of course if we find
 		 a better variety while enumerating, such as one that does match the
 		 appearance, then the default is discarded. */
-		else if (bestVariety == nil)
-		{
+		else if (bestVariety == nil) {
 			isBestVariety = YES;
 		}
 
 		if (isBestVariety) {
 			/* Ensure someone has a CSS and JavaScript file. */
-			if ((globalHasCSS == NO && variety.cssFile == nil) ||
-				(globalHasJS == NO && variety.jsFile == nil))
-			{
+			if ((globalHasCSS == NO && variety.cssFile == nil) || (globalHasJS == NO && variety.jsFile == nil)) {
 				isBestVariety = NO;
 			}
 		}
@@ -860,7 +849,7 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 #pragma mark Templates
 
 + (NSDictionary<NSString *, NSString *> *)_templateLineTypes
-{	
+{
 	return [TPCResourceManager dictionaryFromResources:@"TemplateLineTypes"];
 }
 
@@ -868,7 +857,8 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 {
 	TPCThemeSettings *settings = self.settings;
 
-	NSString *filename = [NSString stringWithFormat:@"/Style Default Templates/Version %lu/", settings.templateEngineVersion];
+	NSString *filename =
+		[NSString stringWithFormat:@"/Style Default Templates/Version %lu/", settings.templateEngineVersion];
 
 	NSURL *templatesPath = [[TPCPathInfo applicationResourcesURL] URLByAppendingPathComponent:filename];
 
@@ -926,8 +916,8 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 		}
 	}
 
-	 GRMustacheTemplate * _Nullable (^_loadTemplate)(GRMustacheTemplateRepository *) =
-	^GRMustacheTemplate * _Nullable (GRMustacheTemplateRepository *repository)
+	GRMustacheTemplate *_Nullable (^_loadTemplate)(GRMustacheTemplateRepository *) =
+		^GRMustacheTemplate *_Nullable(GRMustacheTemplateRepository *repository)
 	{
 		NSError *loadError = nil;
 
@@ -939,7 +929,8 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 
 		if (loadError && logErrors) {
 			LogToConsoleError("Failed to load template '%{public}@' with error: '%{public}@'",
-				templateName, loadError.localizedDescription);
+							  templateName,
+							  loadError.localizedDescription);
 			LogStackTrace();
 		}
 
@@ -1047,7 +1038,7 @@ typedef NS_OPTIONS(NSUInteger, _TPCThemeMonitoringResult) {
 	self.appearance = appearance;
 }
 
-static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL * __strong *setter)
+static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL *__strong *setter)
 {
 	BOOL fileExists = [RZFileManager() fileExistsAtURL:fileURL];
 
@@ -1177,8 +1168,10 @@ static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL * __str
 	self.settingsKeyValueStoreName = [self.class _stringForKey:@"Key-value Store Name" fromDictionary:settings];
 
 	self.js_postHandleEventNotifications = [settings boolForKey:@"Post Glasstual.handleEvent() Notifications"];
-	self.js_postAppearanceChangesNotification = [settings boolForKey:@"Post Glasstual.appearanceDidChange() Notifications"];
-	self.js_postPreferencesDidChangesNotifications = [settings boolForKey:@"Post Glasstual.preferencesDidChange() Notifications"];
+	self.js_postAppearanceChangesNotification =
+		[settings boolForKey:@"Post Glasstual.appearanceDidChange() Notifications"];
+	self.js_postPreferencesDidChangesNotifications =
+		[settings boolForKey:@"Post Glasstual.preferencesDidChange() Notifications"];
 
 	/* Disable indentation? */
 	id indentationOffset = settings[@"Indentation Offset"];
@@ -1271,8 +1264,7 @@ static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL * __str
 		if (brightness < 0.5) {
 			return YES;
 		}
-	}
-	@catch (NSException *exception) {
+	} @catch (NSException *exception) {
 		LogToConsoleError("Caught exception: %{public}@", exception.reason);
 		LogStackTrace();
 	}
@@ -1348,10 +1340,10 @@ static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL * __str
 	return [NSString stringWithFormat:@"Internal Theme Settings Key-value Store -> %@", storeName];
 }
 
-- (nullable id)styleSettingsRetrieveValueForKey:(NSString *)key error:(NSString * _Nullable *)resultError
+- (nullable id)styleSettingsRetrieveValueForKey:(NSString *)key error:(NSString *_Nullable *)resultError
 {
 	if (key == nil || key.length == 0) {
-		if ( resultError) {
+		if (resultError) {
 			*resultError = @"Empty key value";
 		}
 
@@ -1361,8 +1353,9 @@ static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL * __str
 	NSString *storeKey = [self _keyValueStoreName];
 
 	if (storeKey == nil) {
-		if ( resultError) {
-			*resultError = @"Empty key-value store name in settings.plist — Set the key \"Key-value Store Name\" in settings.plist as a string. The current style name is the recommended value.";
+		if (resultError) {
+			*resultError = @"Empty key-value store name in settings.plist — Set the key \"Key-value Store Name\" in "
+						   @"settings.plist as a string. The current style name is the recommended value.";
 		}
 
 		return nil;
@@ -1377,7 +1370,9 @@ static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL * __str
 	return styleSettings[key];
 }
 
-- (BOOL)styleSettingsSetValue:(nullable id)objectValue forKey:(NSString *)objectKey error:(NSString * _Nullable *)resultError
+- (BOOL)styleSettingsSetValue:(nullable id)objectValue
+					   forKey:(NSString *)objectKey
+						error:(NSString *_Nullable *)resultError
 {
 	if (objectKey == nil || objectKey.length <= 0) {
 		if (resultError) {
@@ -1391,14 +1386,14 @@ static inline BOOL _reevaluateFileDuringSetOrUnset(NSURL *fileURL, NSURL * __str
 
 	if (storeKey == nil) {
 		if (resultError) {
-			*resultError = @"Empty key-value store name in settings.plist — Set the key \"Key-value Store Name\" in settings.plist as a string. The current style name is the recommended value.";
+			*resultError = @"Empty key-value store name in settings.plist — Set the key \"Key-value Store Name\" in "
+						   @"settings.plist as a string. The current style name is the recommended value.";
 		}
 
 		return NO;
 	}
 
-	BOOL removeValue = (objectValue == nil ||
-						[objectValue isKindOfClass:[NSNull class]]);
+	BOOL removeValue = (objectValue == nil || [objectValue isKindOfClass:[NSNull class]]);
 
 	NSDictionary *styleSettings = [RZUserDefaults() dictionaryForKey:storeKey];
 

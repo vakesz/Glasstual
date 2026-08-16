@@ -41,11 +41,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCMessageBatchMessageContainer ()
-@property (nonatomic, strong) NSMutableDictionary *internalBatchEntries;
+@property(nonatomic, strong) NSMutableDictionary *internalBatchEntries;
 @end
 
 @interface IRCMessageBatchMessage ()
-@property (nonatomic, strong) NSMutableArray *internalBatchEntries;
+@property(nonatomic, strong) NSMutableArray *internalBatchEntries;
 @end
 
 #pragma mark -
@@ -167,9 +167,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(entry != nil);
 
-	if ([entry isKindOfClass:[IRCMessage class]] == NO &&
-		[entry isKindOfClass:[IRCMessageBatchMessage class]] == NO)
-	{
+	if ([entry isKindOfClass:[IRCMessage class]] == NO && [entry isKindOfClass:[IRCMessageBatchMessage class]] == NO) {
 		return;
 	}
 
@@ -186,9 +184,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(entry != nil);
 
-	if ([entry isKindOfClass:[IRCMessage class]] == NO &&
-		[entry isKindOfClass:[IRCMessageBatchMessage class]] == NO)
-	{
+	if ([entry isKindOfClass:[IRCMessage class]] == NO && [entry isKindOfClass:[IRCMessageBatchMessage class]] == NO) {
 		return;
 	}
 

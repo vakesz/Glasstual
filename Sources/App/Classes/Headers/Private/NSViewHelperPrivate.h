@@ -42,12 +42,12 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSView (TXViewHelperPrivate)
 /* If this view is attached to an instance of TXMainWindow,
  then this returns the instance its attached to. */
-@property (readonly, nullable) TVCMainWindow *mainWindow;
+@property(readonly, nullable) TVCMainWindow *mainWindow;
 @end
 
 @interface NSCell (TXCellHelperPrivate)
-@property (readonly, nullable) NSWindow *window;
-@property (readonly, nullable) TVCMainWindow *mainWindow;
+@property(readonly, nullable) NSWindow *window;
+@property(readonly, nullable) TVCMainWindow *mainWindow;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -42,15 +42,12 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCMainWindowTextViewAppearance;
 
 @interface TVCMainWindowAppearance : TVCApplicationAppearance
-@property (readonly) TVCMainWindowTextViewAppearance *textView;
+@property(readonly) TVCMainWindowTextViewAppearance *textView;
 
-@property (readonly) NSSize defaultWindowSize;
+@property(readonly) NSSize defaultWindowSize;
 
-@property (readonly, copy, nullable) NSColor *channelViewOverlayDefaultBackgroundColorActiveWindow;
-@property (readonly, copy, nullable) NSColor *channelViewOverlayDefaultBackgroundColorInactiveWindow;
-
-
-
+@property(readonly, copy, nullable) NSColor *channelViewOverlayDefaultBackgroundColorActiveWindow;
+@property(readonly, copy, nullable) NSColor *channelViewOverlayDefaultBackgroundColorInactiveWindow;
 
 @end
 

@@ -40,9 +40,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TPISmileyConverter ()
-@property (nonatomic, copy) NSDictionary<NSString *, NSString *> *conversionTable;
-@property (nonatomic, copy) NSArray<NSString *> *sortedSmileyList;
-@property (nonatomic, strong) IBOutlet NSView *preferencesPane;
+@property(nonatomic, copy) NSDictionary<NSString *, NSString *> *conversionTable;
+@property(nonatomic, copy) NSArray<NSString *> *sortedSmileyList;
+@property(nonatomic, strong) IBOutlet NSView *preferencesPane;
 
 - (IBAction)preferenceChanged:(nullable id)sender;
 @end
@@ -81,8 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Load primary table */
 	NSDictionary *tableData = [NSDictionary dictionaryWithContentsOfURL:tablePath];
 
-	NSAssert((tableData != nil),
-		@"Failed to load conversion table");
+	NSAssert((tableData != nil), @"Failed to load conversion table");
 
 	[conversionTable addEntriesFromDictionary:tableData];
 
@@ -92,8 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		NSDictionary *tableData2 = [NSDictionary dictionaryWithContentsOfURL:tablePath2];
 
-		NSAssert((tableData2 != nil),
-			@"Failed to load conversion table");
+		NSAssert((tableData2 != nil), @"Failed to load conversion table");
 
 		[conversionTable addEntriesFromDictionary:tableData2];
 	}
@@ -128,7 +126,10 @@ NS_ASSUME_NONNULL_BEGIN
 	return TPILocalizedString(@"BasicLanguage[3kj-8f]");
 }
 
-- (NSString *)willRenderMessage:(NSString *)newMessage forViewController:(TVCLogController *)viewController lineType:(TVCLogLineType)lineType memberType:(TVCLogLineMemberType)memberType
+- (nullable NSString *)willRenderMessage:(NSString *)newMessage
+					   forViewController:(TVCLogController *)viewController
+								lineType:(TVCLogLineType)lineType
+							  memberType:(TVCLogLineMemberType)memberType
 {
 	BOOL serviceEnabled = [RZUserDefaults() boolForKey:@"Smiley Converter Extension -> Enable Service"];
 
@@ -136,9 +137,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return newMessage;
 	}
 
-	if (lineType == TVCLogLineTypeAction ||
-		lineType == TVCLogLineTypePrivateMessage)
-	{
+	if (lineType == TVCLogLineTypeAction || lineType == TVCLogLineTypePrivateMessage) {
 		return [self convertStringToEmoji:newMessage];
 	}
 
@@ -199,7 +198,7 @@ NS_ASSUME_NONNULL_BEGIN
 			}
 		}
 
-next_pass:
+	next_pass:
 		if (enabled) {
 			NSString *emoji = self.conversionTable[smiley];
 

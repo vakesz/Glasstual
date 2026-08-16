@@ -84,11 +84,8 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 - (void)populateDefaultsPostflight
 {
-	SetVariableIfNil(self->_command, @"")
-	SetVariableIfNil(self->_messageTags, @{})
-	SetVariableIfNil(self->_params, @[])
-	SetVariableIfNil(self->_receivedAt, [NSDate date])
-	SetVariableIfNil(self->_sender, [IRCPrefix new])
+	SetVariableIfNil(self->_command, @"") SetVariableIfNil(self->_messageTags, @{}) SetVariableIfNil(self->_params, @[])
+		SetVariableIfNil(self->_receivedAt, [NSDate date]) SetVariableIfNil(self->_sender, [IRCPrefix new])
 }
 
 - (NSUInteger)paramsCount
@@ -230,7 +227,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 		 connected anywhere. We are parsing messages when
 		 connected somewhere so it's safe to cast it as
 		 as non-nil at least here. */
-		NSString * _Nonnull serverAddress = (NSString * _Nonnull)client.serverAddress;
+		NSString *_Nonnull serverAddress = (NSString *_Nonnull)client.serverAddress;
 
 		IRCPrefixMutable *sender = [IRCPrefixMutable new];
 
@@ -264,16 +261,13 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	NSMutableArray<NSString *> *parameters = [NSMutableArray new];
 
 	while (lineMutable.length > 0) {
-		if ([lineMutable hasPrefix:@":"])
-		{
+		if ([lineMutable hasPrefix:@":"]) {
 			NSString *sequence = [lineMutable substringFromIndex:1];
 
 			[parameters addObject:sequence];
 
 			break;
-		}
-		else
-		{
+		} else {
 			NSString *sequence = lineMutable.token;
 
 			[parameters addObject:sequence];
@@ -295,9 +289,10 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	/* An example grouping would look like the following:
 	 @aaa=bbb;ccc;example.com/ddd=eee */
 	NSDictionary<NSString *, NSString *> *extensions =
-	[extensionInfo formDataUsingSeparator:@";" decodingBlock:^NSString *(NSString *value) {
-		return value.decodedMessageTagString;
-	}];
+		[extensionInfo formDataUsingSeparator:@";"
+								decodingBlock:^NSString *(NSString *value) {
+									return value.decodedMessageTagString;
+								}];
 
 	self->_messageTags = [extensions copy];
 
@@ -356,10 +351,13 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	NSString *senderUsername = nil;
 	NSString *senderAddress = nil;
 
-	sender.hostmask = senderInfo;// Declare entire section as host
+	sender.hostmask = senderInfo; // Declare entire section as host
 
 	/* Parse the user info into their appropriate sections or return NO if we can't. */
-	if ([senderInfo hostmaskComponents:&senderNickname username:&senderUsername address:&senderAddress onClient:client]) {
+	if ([senderInfo hostmaskComponents:&senderNickname
+							  username:&senderUsername
+							   address:&senderAddress
+							  onClient:client]) {
 		sender.nickname = senderNickname;
 		sender.username = senderUsername;
 		sender.address = senderAddress;

@@ -43,16 +43,19 @@ NS_ASSUME_NONNULL_BEGIN
  Core Data store. -data is the secure coded version of the class which is
  portable and can be stored in an offline database. */
 @interface TVCLogLineXPC ()
-@property (nonatomic, copy, readwrite) NSData *data;
-@property (nonatomic, copy, readwrite) NSString *uniqueIdentifier;
-@property (nonatomic, copy, readwrite) NSString *viewIdentifier;
-@property (nonatomic, assign, readwrite) NSUInteger sessionIdentifier;
-@property (nonatomic, assign, readwrite) NSTimeInterval creationDate;
+@property(nonatomic, copy, readwrite) NSData *data;
+@property(nonatomic, copy, readwrite) NSString *uniqueIdentifier;
+@property(nonatomic, copy, readwrite) NSString *viewIdentifier;
+@property(nonatomic, assign, readwrite) NSUInteger sessionIdentifier;
+@property(nonatomic, assign, readwrite) NSTimeInterval creationDate;
 @end
 
 @implementation TVCLogLineXPC
 
-- (instancetype)initWithLogLineData:(NSData *)data uniqueIdentifier:(NSString *)uniqueIdentifier viewIdentifier:(NSString *)viewIdentifier sessionIdentifier:(NSUInteger)sessionIdentifier
+- (instancetype)initWithLogLineData:(NSData *)data
+				   uniqueIdentifier:(NSString *)uniqueIdentifier
+					 viewIdentifier:(NSString *)viewIdentifier
+				  sessionIdentifier:(NSUInteger)sessionIdentifier
 {
 	NSParameterAssert(data != nil);
 	NSParameterAssert(uniqueIdentifier != nil);

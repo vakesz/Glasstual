@@ -48,34 +48,34 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Defaults
 
 - (void)populateDefaultsPreflight
-{	
+{
 	if (self.initializedAsCopy) {
 		return;
 	}
 
 	self->_defaults = @{
-	  @"autoJoin" : @(YES),
-	  @"channelType" : @(IRCChannelTypeChannel),
-	  @"ignoreGeneralEventMessages"	: @(NO),
-	  @"ignoreHighlights" : @(NO),
-	  @"inlineMediaEnabled" : @(NO),
-	  @"inlineMediaDisabled" : @(NO),
-	  @"pushNotifications" : @(YES),
-	  @"showTreeBadgeCount" : @(YES)
+		@"autoJoin" : @(YES),
+		@"channelType" : @(IRCChannelTypeChannel),
+		@"ignoreGeneralEventMessages" : @(NO),
+		@"ignoreHighlights" : @(NO),
+		@"inlineMediaEnabled" : @(NO),
+		@"inlineMediaDisabled" : @(NO),
+		@"pushNotifications" : @(YES),
+		@"showTreeBadgeCount" : @(YES)
 	};
 }
 
 - (void)populateDefaultsPostflight
-{	
+{
 	if (self.initializedAsCopy) {
 		return;
 	}
 
 	SetVariableIfNil(self->_channelName, @"")
 
-	SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
+		SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
 
-	SetVariableIfNil(self->_notificationsMutable, [NSMutableDictionary dictionary])
+			SetVariableIfNil(self->_notificationsMutable, [NSMutableDictionary dictionary])
 }
 
 - (void)populateDefaultsByAppendingDictionary:(NSDictionary<NSString *, id> *)defaultsToAppend
@@ -171,9 +171,7 @@ NS_ASSUME_NONNULL_BEGIN
 	 up into two properties and this logic performs migration. */
 	{
 		/* Do new keys exist in incoming dictionary/ */
-		if (dic[@"inlineMediaEnabled"] != nil &&
-			dic[@"inlineMediaDisabled"] != nil)
-		{
+		if (dic[@"inlineMediaEnabled"] != nil && dic[@"inlineMediaDisabled"] != nil) {
 			return;
 		}
 
@@ -199,7 +197,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSMutableDictionary<NSString *, id> *dic = [NSMutableDictionary dictionary];
 
-	[dic setBool:self.pushNotifications	forKey:@"pushNotifications"];
+	[dic setBool:self.pushNotifications forKey:@"pushNotifications"];
 	[dic setBool:self.showTreeBadgeCount forKey:@"showTreeBadgeCount"];
 
 	if (self.type == IRCChannelTypeChannel) {
@@ -224,9 +222,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[dic setUnsignedInteger:self.type forKey:@"channelType"];
 
-	if (target == XRPortablePropertyDictTargetCopy ||
-		target == XRPortablePropertyDictTargetMutableCopy)
-	{
+	if (target == XRPortablePropertyDictTargetCopy || target == XRPortablePropertyDictTargetMutableCopy) {
 		return [dic copy];
 	}
 
@@ -253,9 +249,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSDictionary *s2 = objectCast.dictionaryValue;
 
-	return ([s1 isEqualToDictionary:s2] &&
-			((self->_secretKey == nil && objectCast->_secretKey == nil) ||
-			 [self->_secretKey isEqualToString:objectCast->_secretKey]));
+	return ([s1 isEqualToDictionary:s2] && ((self->_secretKey == nil && objectCast->_secretKey == nil) ||
+											[self->_secretKey isEqualToString:objectCast->_secretKey]));
 }
 
 - (NSUInteger)hash
@@ -285,7 +280,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSDictionary<NSString *, NSNumber *> *)notifications
 {
-	@synchronized (self->_notificationsMutable) {
+	@synchronized(self->_notificationsMutable) {
 		return [self->_notificationsMutable copy];
 	}
 }
@@ -357,7 +352,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* @synchronized is used here because IRCChannelConfigMutable can modify
 	 this value underneath us. */
-	@synchronized (self->_notificationsMutable) {
+	@synchronized(self->_notificationsMutable) {
 		return self->_notificationsMutable[eventKey];
 	}
 }
@@ -366,7 +361,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(eventKey != nil);
 
-	@synchronized (self->_notificationsMutable) {
+	@synchronized(self->_notificationsMutable) {
 		NSNumber *value = self->_notificationsMutable[eventKey];
 
 		if (value == nil) {
@@ -567,7 +562,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	@synchronized (self->_notificationsMutable) {
+	@synchronized(self->_notificationsMutable) {
 		if (value == nil) {
 			[self->_notificationsMutable removeObjectForKey:eventKey];
 		} else {
@@ -580,30 +575,26 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(eventKey != nil);
 
-	@synchronized (self->_notificationsMutable) {
+	@synchronized(self->_notificationsMutable) {
 		switch (state) {
-			case NSControlStateValueOn:
-			{
-				self->_notificationsMutable[eventKey] = @(YES);
+		case NSControlStateValueOn: {
+			self->_notificationsMutable[eventKey] = @(YES);
 
-				break;
-			}
-			case NSControlStateValueOff:
-			{
-				self->_notificationsMutable[eventKey] = @(NO);
+			break;
+		}
+		case NSControlStateValueOff: {
+			self->_notificationsMutable[eventKey] = @(NO);
 
-				break;
-			}
-			case NSControlStateValueMixed:
-			{
-				[self->_notificationsMutable removeObjectForKey:eventKey];
+			break;
+		}
+		case NSControlStateValueMixed: {
+			[self->_notificationsMutable removeObjectForKey:eventKey];
 
-				break;
-			}
-			default:
-			{
-				NSAssert(NO, @"Bad 'state'");
-			}
+			break;
+		}
+		default: {
+			NSAssert(NO, @"Bad 'state'");
+		}
 		}
 	}
 }

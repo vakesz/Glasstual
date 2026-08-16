@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCMessage ()
 {
-@protected
+  @protected
 	BOOL _isHistoric;
 	BOOL _isEventOnlyMessage;
 	BOOL _isPrintOnlyMessage;

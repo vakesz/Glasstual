@@ -40,16 +40,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const IRCAddressBookUserTrackingStatusChangedNotification = @"IRCAddressBookUserTrackingStatusChangedNotification";
+NSString *const IRCAddressBookUserTrackingStatusChangedNotification =
+	@"IRCAddressBookUserTrackingStatusChangedNotification";
 
-NSString * const IRCAddressBookUserTrackingAddedTrackedUserNotification = @"IRCAddressBookUserTrackingAddedTrackedUserNotification";
+NSString *const IRCAddressBookUserTrackingAddedTrackedUserNotification =
+	@"IRCAddressBookUserTrackingAddedTrackedUserNotification";
 
-NSString * const IRCAddressBookUserTrackingRemovedTrackedUserNotification = @"IRCAddressBookUserTrackingRemovedTrackedUserNotification";
-NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = @"IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification";
+NSString *const IRCAddressBookUserTrackingRemovedTrackedUserNotification =
+	@"IRCAddressBookUserTrackingRemovedTrackedUserNotification";
+NSString *const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification =
+	@"IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification";
 
 @interface IRCAddressBookUserTrackingContainer ()
-@property (nonatomic, weak) IRCClient *client;
-@property (nonatomic, strong) NSMutableDictionary<NSString *, NSNumber *> *trackedUsersInt;
+@property(nonatomic, weak) IRCClient *client;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, NSNumber *> *trackedUsersInt;
 @end
 
 @implementation IRCAddressBookUserTrackingContainer
@@ -78,7 +82,7 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 {
 	NSParameterAssert(nickname != nil);
 
-	@synchronized (self.trackedUsersInt) {
+	@synchronized(self.trackedUsersInt) {
 		NSString *trackingNickname = [self.trackedUsersInt keyIgnoringCase:nickname];
 
 		if (trackingNickname != nil) {
@@ -93,7 +97,7 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 {
 	NSParameterAssert(nickname != nil);
 
-	@synchronized (self.trackedUsersInt) {
+	@synchronized(self.trackedUsersInt) {
 		self.trackedUsersInt[nickname] = @(NO);
 
 		[RZNotificationCenter() postNotificationName:IRCAddressBookUserTrackingAddedTrackedUserNotification
@@ -106,7 +110,7 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 {
 	NSParameterAssert(nickname != nil);
 
-	@synchronized (self.trackedUsersInt) {
+	@synchronized(self.trackedUsersInt) {
 		NSString *trackingNickname = [self.trackedUsersInt keyIgnoringCase:nickname];
 
 		if (trackingNickname == nil) {
@@ -121,7 +125,7 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 {
 	NSParameterAssert(nickname != nil);
 
-	@synchronized (self.trackedUsersInt) {
+	@synchronized(self.trackedUsersInt) {
 		[self.trackedUsersInt removeObjectForKey:nickname];
 
 		[RZNotificationCenter() postNotificationName:IRCAddressBookUserTrackingRemovedTrackedUserNotification
@@ -132,7 +136,7 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 
 - (void)clearTrackedUsers
 {
-	@synchronized (self.trackedUsersInt) {
+	@synchronized(self.trackedUsersInt) {
 		[self.trackedUsersInt removeAllObjects];
 
 		[RZNotificationCenter() postNotificationName:IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification
@@ -144,7 +148,7 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 {
 	NSParameterAssert(nickname != nil);
 
-	@synchronized (self.trackedUsersInt) {
+	@synchronized(self.trackedUsersInt) {
 		NSString *trackingNickname = [self.trackedUsersInt keyIgnoringCase:nickname];
 
 		if (trackingNickname == nil) {
@@ -159,7 +163,7 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 {
 	NSParameterAssert(nickname != nil);
 
-	@synchronized (self.trackedUsersInt) {
+	@synchronized(self.trackedUsersInt) {
 		BOOL ison = self.trackedUsersInt[nickname].boolValue;
 
 		if (ison) {
@@ -185,7 +189,7 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 
 - (NSDictionary<NSString *, NSNumber *> *)trackedUsers
 {
-	@synchronized (self.trackedUsersInt) {
+	@synchronized(self.trackedUsersInt) {
 		return [self.trackedUsersInt copy];
 	}
 }
@@ -198,30 +202,25 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 		return;
 	}
 
-	@synchronized (self.trackedUsersInt) {
+	@synchronized(self.trackedUsersInt) {
 		NSString *trackingNickname = [self.trackedUsersInt keyIgnoringCase:nickname];
 
 		if (newStatus == IRCAddressBookUserTrackingStatusAvailable ||
-			newStatus == IRCAddressBookUserTrackingStatusSignedOn)
-		{
+			newStatus == IRCAddressBookUserTrackingStatusSignedOn) {
 			if (trackingNickname == nil) {
 				trackingNickname = nickname;
 			}
 
 			self.trackedUsersInt[trackingNickname] = @(YES);
-		}
-		else if (newStatus == IRCAddressBookUserTrackingStatusNotAvailable ||
-				 newStatus == IRCAddressBookUserTrackingStatusSignedOff)
-		{
+		} else if (newStatus == IRCAddressBookUserTrackingStatusNotAvailable ||
+				   newStatus == IRCAddressBookUserTrackingStatusSignedOff) {
 			if (trackingNickname == nil) {
 				return;
 			}
 
 			self.trackedUsersInt[trackingNickname] = @(NO);
-		}
-		else if (newStatus == IRCAddressBookUserTrackingStatusNotAway ||
-				 newStatus == IRCAddressBookUserTrackingStatusAway)
-		{
+		} else if (newStatus == IRCAddressBookUserTrackingStatusNotAway ||
+				   newStatus == IRCAddressBookUserTrackingStatusAway) {
 			if (trackingNickname == nil) {
 				return;
 			}
@@ -229,8 +228,7 @@ NSString * const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification = 
 
 		[RZNotificationCenter() postNotificationName:IRCAddressBookUserTrackingStatusChangedNotification
 											  object:self
-											userInfo:@{@"nickname" : nickname,
-													   @"status" : @(newStatus)}];
+											userInfo:@{@"nickname" : nickname, @"status" : @(newStatus)}];
 	}
 }
 

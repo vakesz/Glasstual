@@ -44,18 +44,20 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogLine;
 
 @interface IRCChannel () <IRCChannelMemberListPrivatePrototype>
-@property (nonatomic, assign, readwrite) IRCChannelStatus status;
-@property (nonatomic, assign) BOOL sentInitialWhoRequest;
-@property (nonatomic, assign) BOOL channelModesReceived;
-@property (nonatomic, assign) BOOL channelNamesReceived;
-@property (nonatomic, assign, readwrite) BOOL errorOnLastJoinAttempt;
+@property(nonatomic, assign, readwrite) IRCChannelStatus status;
+@property(nonatomic, assign) BOOL sentInitialWhoRequest;
+@property(nonatomic, assign) BOOL channelModesReceived;
+@property(nonatomic, assign) BOOL channelNamesReceived;
+@property(nonatomic, assign, readwrite) BOOL errorOnLastJoinAttempt;
 
 - (instancetype)initWithConfig:(IRCChannelConfig *)config NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithConfigDictionary:(NSDictionary<NSString *, id> *)dic;
 
 - (void)updateConfig:(IRCChannelConfig *)config;
 - (void)updateConfig:(IRCChannelConfig *)config fireChangedNotification:(BOOL)fireChangedNotification;
-- (void)updateConfig:(IRCChannelConfig *)config fireChangedNotification:(BOOL)fireChangedNotification updateStoredChannelList:(BOOL)updateStoredChannelList;
+- (void)updateConfig:(IRCChannelConfig *)config
+	fireChangedNotification:(BOOL)fireChangedNotification
+	updateStoredChannelList:(BOOL)updateStoredChannelList;
 
 - (NSDictionary<NSString *, id> *)configurationDictionary;
 
@@ -68,7 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)logFileWriteSessionEnd;
 
 - (void)print:(TVCLogLine *)logLine;
-- (void)print:(TVCLogLine *)logLine completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock;
+- (void)print:(TVCLogLine *)logLine
+	completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock;
 
 - (void)reopenLogFileIfNeeded;
 - (void)closeLogFile;

@@ -48,7 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
 {
-	NSXPCInterface *exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentServerProtocol)];
+	NSXPCInterface *exportedInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentServerProtocol)];
 
 	[exportedInterface setClasses:[NSSet setWithObjects:[NSArray class], [NSURL class], nil]
 					  forSelector:@selector(warmServiceByLoadingPluginsAtLocations:)
@@ -61,7 +62,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	newConnection.exportedObject = exportedObject;
 
-	NSXPCInterface *remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentClientProtocol)];
+	NSXPCInterface *remoteObjectInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentClientProtocol)];
 
 	newConnection.remoteObjectInterface = remoteObjectInterface;
 

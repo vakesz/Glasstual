@@ -102,7 +102,9 @@ NS_ASSUME_NONNULL_BEGIN
 	return [self soundFilesAtPath:folder];
 }
 
-+ (void)doesSoundFileDictionary:(NSDictionary<NSString *, NSString *> *)fileList containName:(NSString *)name returnedPath:(NSString **)path
++ (void)doesSoundFileDictionary:(NSDictionary<NSString *, NSString *> *)fileList
+					containName:(NSString *)name
+				   returnedPath:(NSString **)path
 {
 	NSString *filePath = fileList[name];
 
@@ -120,7 +122,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	if ( path) {
+	if (path) {
 		*path = filePath;
 	}
 }
@@ -160,7 +162,8 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	LogToConsoleError("Returned error code %{public}i when loading file at path: %{public}@",
-		soundLoadError, soundPathURL.standardizedTildePath);
+					  soundLoadError,
+					  soundPathURL.standardizedTildePath);
 
 	return 0;
 }

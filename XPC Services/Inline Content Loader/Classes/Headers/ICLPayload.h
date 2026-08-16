@@ -51,12 +51,12 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The URL associated with this payload.
  */
-@property (copy, readonly) NSURL *url;
+@property(copy, readonly) NSURL *url;
 
 /**
  String value of -url property.
  */
-@property (copy, readonly) NSString *address;
+@property(copy, readonly) NSString *address;
 
 /**
  The URL of the content to inline, such as an image, can be
@@ -66,55 +66,55 @@ NS_ASSUME_NONNULL_BEGIN
 
  If left unchanged, the value of this property mirrors -url
  */
-@property (copy, readonly) NSURL *urlToInline;
+@property(copy, readonly) NSURL *urlToInline;
 
 /**
  String value of the -urlToInline property.
  */
-@property (copy, readonly) NSString *addressToInline;
+@property(copy, readonly) NSString *addressToInline;
 
 /**
  The unique identifier associated with this payload.
  */
-@property (copy, readonly) NSString *uniqueIdentifier;
+@property(copy, readonly) NSString *uniqueIdentifier;
 
 /**
  The view responsible for this payload.
  */
-@property (copy, readonly) NSString *viewIdentifier;
+@property(copy, readonly) NSString *viewIdentifier;
 
 /**
  The line number associated with this payload.
  */
-@property (copy, readonly) NSString *lineNumber;
+@property(copy, readonly) NSString *lineNumber;
 
 /**
  Position of payload in relation to others with same line number.
  */
-@property (readonly) NSUInteger index;
+@property(readonly) NSUInteger index;
 
 /**
  The length of the content. This value is optional.
  */
-@property (readonly) unsigned long long contentLength;
+@property(readonly) unsigned long long contentLength;
 
 /**
  The size of the content. This value is optional.
  */
-@property (readonly) NSSize contentSize;
+@property(readonly) NSSize contentSize;
 
 /**
  A collection of paths for .css files that need to be loaded to allow the
  rendered HTML to appear correct.
  */
-@property (copy, readonly) NSArray<NSURL *> *styleResources;
+@property(copy, readonly) NSArray<NSURL *> *styleResources;
 
 /**
  A collection of paths for .js files that need to be loaded to allow the
  rendered HTML to appear correct.
 
  */
-@property (copy, readonly) NSArray<NSURL *> *scriptResources;
+@property(copy, readonly) NSArray<NSURL *> *scriptResources;
 
 /**
  Rendered HTML or an empty string
@@ -127,7 +127,7 @@ NS_ASSUME_NONNULL_BEGIN
  If a module renders HTML using Objective-C, then the final result
  can be assigned to this property.
  */
-@property (copy, readonly) NSString *html;
+@property(copy, readonly) NSString *html;
 
 #pragma mark -
 #pragma mark Advanced
@@ -176,7 +176,7 @@ NS_ASSUME_NONNULL_BEGIN
  ````
 
  */
-@property (copy, readonly, nullable) NSString *entrypoint;
+@property(copy, readonly, nullable) NSString *entrypoint;
 
 /**
  A dictionary that is passed as the first argument to -entrypoint.
@@ -212,7 +212,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  Custom types are treated as "undefined"
  */
-@property (copy, readonly) NSDictionary<NSString *, id <NSCopying>> *entrypointPayload;
+@property(copy, readonly) NSDictionary<NSString *, id<NSCopying>> *entrypointPayload;
 
 /**
  An optional class that is appended to the inlined media.
@@ -223,22 +223,22 @@ NS_ASSUME_NONNULL_BEGIN
  • inlineVimeo is used for Vimeo,
  • inlineYouTube is used for YouTube
  */
-@property (copy, readonly) NSString *classAttribute;
+@property(copy, readonly) NSString *classAttribute;
 @end
 
 #pragma mark -
 #pragma mark Mutable Object
 
 @interface ICLPayloadMutable : ICLPayload
-@property (nonatomic, copy, readwrite) NSURL *urlToInline;
-@property (nonatomic, assign, readwrite) unsigned long long contentLength;
-@property (nonatomic, assign, readwrite) NSSize contentSize;
-@property (nonatomic, copy, readwrite) NSArray<NSURL *> *styleResources;
-@property (nonatomic, copy, readwrite) NSArray<NSURL *> *scriptResources;
-@property (nonatomic, copy, readwrite) NSString *html;
-@property (nonatomic, copy, nullable, readwrite) NSString *entrypoint;
-@property (nonatomic, copy, null_resettable, readwrite) NSDictionary<NSString *, id <NSCopying>> *entrypointPayload;
-@property (nonatomic, copy, readwrite) NSString *classAttribute;
+@property(nonatomic, copy, readwrite) NSURL *urlToInline;
+@property(nonatomic, assign, readwrite) unsigned long long contentLength;
+@property(nonatomic, assign, readwrite) NSSize contentSize;
+@property(nonatomic, copy, readwrite) NSArray<NSURL *> *styleResources;
+@property(nonatomic, copy, readwrite) NSArray<NSURL *> *scriptResources;
+@property(nonatomic, copy, readwrite) NSString *html;
+@property(nonatomic, copy, nullable, readwrite) NSString *entrypoint;
+@property(nonatomic, copy, null_resettable, readwrite) NSDictionary<NSString *, id<NSCopying>> *entrypointPayload;
+@property(nonatomic, copy, readwrite) NSString *classAttribute;
 
 - (instancetype)init;
 @end

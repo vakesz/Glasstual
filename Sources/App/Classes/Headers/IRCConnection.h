@@ -41,17 +41,17 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClient, IRCConnectionConfig;
 
 @interface IRCConnection : NSObject
-@property (readonly, weak) IRCClient *client;
-@property (readonly, copy) IRCConnectionConfig *config;
-@property (readonly) BOOL isConnected;
-@property (readonly) BOOL isConnectedWithClientSideCertificate;
-@property (readonly) BOOL isConnecting;
-@property (readonly) BOOL isDisconnecting;
-@property (readonly) BOOL isSecured;
-@property (readonly) BOOL isSending;
-@property (readonly) BOOL EOFReceived;
-@property (readonly, nullable) NSString *connectedAddress; // nil if connected to a proxy
-@property (readonly, copy) NSString *uniqueIdentifier;
+@property(readonly, weak) IRCClient *client;
+@property(readonly, copy) IRCConnectionConfig *config;
+@property(readonly) BOOL isConnected;
+@property(readonly) BOOL isConnectedWithClientSideCertificate;
+@property(readonly) BOOL isConnecting;
+@property(readonly) BOOL isDisconnecting;
+@property(readonly) BOOL isSecured;
+@property(readonly) BOOL isSending;
+@property(readonly) BOOL EOFReceived;
+@property(readonly, nullable) NSString *connectedAddress; // nil if connected to a proxy
+@property(readonly, copy) NSString *uniqueIdentifier;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithConfig:(IRCConnectionConfig *)config onClient:(IRCClient *)client NS_DESIGNATED_INITIALIZER;
@@ -67,9 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol IRCConnectionDelegate <NSObject>
 @required
 
-- (void)ircConnection:(IRCConnection *)sender
-   willConnectToProxy:(NSString *)proxyHost
-				 port:(uint16_t)proxyPort;
+- (void)ircConnection:(IRCConnection *)sender willConnectToProxy:(NSString *)proxyHost port:(uint16_t)proxyPort;
 - (void)ircConnectionDidConnect:(IRCConnection *)sender;
 - (void)ircConnectionDidSecureConnection:(IRCConnection *)sender
 						withProtocolType:(tls_protocol_version_t)protocolType

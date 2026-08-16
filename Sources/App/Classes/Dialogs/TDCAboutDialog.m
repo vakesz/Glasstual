@@ -44,7 +44,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCAboutDialog ()
-@property (nonatomic, weak) IBOutlet NSTextField *versionInfoTextField;
+@property(nonatomic, weak) IBOutlet NSTextField *versionInfoTextField;
 
 - (IBAction)displayAcknowledgements:(nullable id)sender;
 @end

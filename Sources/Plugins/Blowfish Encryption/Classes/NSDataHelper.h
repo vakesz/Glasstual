@@ -43,5 +43,7 @@
 
 /* If the data object does not fit in the block size, then the
  tail is truncated and the number of bytes lost is returned. */
-- (NSData *)dataUsingEncoding:(NSStringEncoding)encoding fitToPadding:(NSInteger)bytePadding trimmedCharacters:(NSInteger *)bytesRemoved;
+- (NSData *)dataUsingEncoding:(NSStringEncoding)encoding
+				 fitToPadding:(NSInteger)bytePadding
+			trimmedCharacters:(NSInteger *)bytesRemoved;
 @end

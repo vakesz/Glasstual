@@ -40,9 +40,9 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannel, TDCChannelSpotlightController;
 
 @interface TDCChannelSpotlightSearchResult : NSObject
-@property (readonly, weak) IRCChannel *channel;
-@property (readonly, copy) NSString *clientId;
-@property (readonly, copy) NSNumber *distance;
+@property(readonly, weak) IRCChannel *channel;
+@property(readonly, copy) NSString *clientId;
+@property(readonly, copy) NSNumber *distance;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithChannel:(IRCChannel *)channel NS_DESIGNATED_INITIALIZER;

@@ -41,18 +41,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _localVolumeBaseDirectory		@"/Volumes"
+#define _localVolumeBaseDirectory @"/Volumes"
 
-#define _systemMemoryDivisor			1.073741824
+#define _systemMemoryDivisor 1.073741824
 
 @interface WKWebView ()
-@property (nonatomic, readonly) pid_t _webProcessIdentifier;
+@property(nonatomic, readonly) pid_t _webProcessIdentifier;
 @end
 
 @interface TPI_SP_WebViewProcessInfo : NSObject
-@property (nonatomic, assign) pid_t processIdentifier;
-@property (nonatomic, assign) uint64_t processMemoryUse;
-@property (nonatomic, strong) NSArray<NSString *> *processViewNames;
+@property(nonatomic, assign) pid_t processIdentifier;
+@property(nonatomic, assign) uint64_t processMemoryUse;
+@property(nonatomic, strong) NSArray<NSString *> *processViewNames;
 @end
 
 @interface TPI_SP_SysInfo : NSObject
@@ -110,8 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 		appearanceText = TPILocalizedString(@"BasicLanguage[843-z4]", themeAppearance, sidebarAppearance);
 	}
 
-	return TPILocalizedString(@"BasicLanguage[z37-85]",
-		   themeName, storageLocationLabel, appearanceText);
+	return TPILocalizedString(@"BasicLanguage[z37-85]", themeName, storageLocationLabel, appearanceText);
 }
 
 + (NSString *)applicationAndSystemUptime
@@ -131,11 +130,11 @@ NS_ASSUME_NONNULL_BEGIN
 	NSTimeInterval lastMessage = [NSDate timeIntervalSinceNow:client.lastMessageReceived];
 
 	return TPILocalizedString(@"BasicLanguage[rua-9r]",
-			  TXFormattedNumber(worldController().messagesSent),
-			  TXFormattedNumber(worldController().messagesReceived),
-			  TXHumanReadableTimeInterval(lastMessage, YES, NSCalendarUnitSecond),
-			  [TPI_SP_SysInfo formattedDiskSize:worldController().bandwidthIn],
-			  [TPI_SP_SysInfo formattedDiskSize:worldController().bandwidthOut]);
+							  TXFormattedNumber(worldController().messagesSent),
+							  TXFormattedNumber(worldController().messagesReceived),
+							  TXHumanReadableTimeInterval(lastMessage, YES, NSCalendarUnitSecond),
+							  [TPI_SP_SysInfo formattedDiskSize:worldController().bandwidthIn],
+							  [TPI_SP_SysInfo formattedDiskSize:worldController().bandwidthOut]);
 }
 
 + (NSString *)applicationMemoryUsage
@@ -153,8 +152,8 @@ NS_ASSUME_NONNULL_BEGIN
 	uint64_t glasstualMemoryUse = [TPI_SP_SysInfo applicationMemoryInformation];
 
 	return TPILocalizedString(@"BasicLanguage[scn-br]",
-		[TPI_SP_SysInfo formattedDiskSize:glasstualMemoryUse],
-		 TXFormattedNumber(totalScrollbackSize));
+							  [TPI_SP_SysInfo formattedDiskSize:glasstualMemoryUse],
+							  TXFormattedNumber(totalScrollbackSize));
 }
 
 + (nullable NSString *)webKitFrameworkMemoryUsage
@@ -178,17 +177,15 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableString *resultString = [NSMutableString string];
 
 	if (viewNameArray.count == 1) {
-		[resultString appendString:
-		 TPILocalizedString(@"BasicLanguage[ioy-qc]",
-			topProcess.processIdentifier,
-			 viewName,
-			[TPI_SP_SysInfo formattedDiskSize:topProcess.processMemoryUse])];
+		[resultString appendString:TPILocalizedString(@"BasicLanguage[ioy-qc]",
+													  topProcess.processIdentifier,
+													  viewName,
+													  [TPI_SP_SysInfo formattedDiskSize:topProcess.processMemoryUse])];
 	} else {
-		[resultString appendString:
-		 TPILocalizedString(@"BasicLanguage[a00-8n]",
-			topProcess.processIdentifier,
-			 viewName,
-			[TPI_SP_SysInfo formattedDiskSize:topProcess.processMemoryUse])];
+		[resultString appendString:TPILocalizedString(@"BasicLanguage[a00-8n]",
+													  topProcess.processIdentifier,
+													  viewName,
+													  [TPI_SP_SysInfo formattedDiskSize:topProcess.processMemoryUse])];
 	}
 
 	[resultString appendString:@"\n"];
@@ -199,10 +196,9 @@ NS_ASSUME_NONNULL_BEGIN
 		totalMemoryUse += processInfo.processMemoryUse;
 	}
 
-	[resultString appendString:
-	 TPILocalizedString(@"BasicLanguage[a5u-m1]",
-		webViewProcesses.count,
-		[TPI_SP_SysInfo formattedDiskSize:totalMemoryUse])];
+	[resultString appendString:TPILocalizedString(@"BasicLanguage[a5u-m1]",
+												  webViewProcesses.count,
+												  [TPI_SP_SysInfo formattedDiskSize:totalMemoryUse])];
 
 	return [resultString copy];
 }
@@ -218,17 +214,19 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	return TPILocalizedString(@"BasicLanguage[6fn-xh]",
-			TXFormattedNumber([TPCApplicationInfo applicationRunCount]),
-			TXHumanReadableTimeInterval(runtime, NO, 0));
+							  TXFormattedNumber([TPCApplicationInfo applicationRunCount]),
+							  TXHumanReadableTimeInterval(runtime, NO, 0));
 }
 
 + (NSString *)systemDiskspaceInformation
 {
 	NSMutableString *resultString = [NSMutableString string];
 
-	NSArray *volumeAttributes = @[NSURLVolumeNameKey, NSURLVolumeTotalCapacityKey, NSURLVolumeAvailableCapacityKey];
+	NSArray *volumeAttributes = @[ NSURLVolumeNameKey, NSURLVolumeTotalCapacityKey, NSURLVolumeAvailableCapacityKey ];
 
-	NSArray *volumes = [RZFileManager() mountedVolumeURLsIncludingResourceValuesForKeys:volumeAttributes options:NSVolumeEnumerationSkipHiddenVolumes];
+	NSArray *volumes =
+		[RZFileManager() mountedVolumeURLsIncludingResourceValuesForKeys:volumeAttributes
+																 options:NSVolumeEnumerationSkipHiddenVolumes];
 
 	[volumes enumerateObjectsUsingBlock:^(NSURL *volume, NSUInteger index, BOOL *stop) {
 		NSString *volumeName = [volume resourceValueForKey:NSURLVolumeNameKey];
@@ -237,13 +235,15 @@ NS_ASSUME_NONNULL_BEGIN
 		uint64_t freeSpace = [[volume resourceValueForKey:NSURLVolumeAvailableCapacityKey] longLongValue];
 
 		if (index == 0) {
-			[resultString appendString:TPILocalizedString(@"BasicLanguage[bvr-wz]", volumeName,
-										[TPI_SP_SysInfo formattedDiskSize:totalSpace],
-										[TPI_SP_SysInfo formattedDiskSize:freeSpace])];
+			[resultString appendString:TPILocalizedString(@"BasicLanguage[bvr-wz]",
+														  volumeName,
+														  [TPI_SP_SysInfo formattedDiskSize:totalSpace],
+														  [TPI_SP_SysInfo formattedDiskSize:freeSpace])];
 		} else {
-			[resultString appendString:TPILocalizedString(@"BasicLanguage[lct-7h]", volumeName,
-										 [TPI_SP_SysInfo formattedDiskSize:totalSpace],
-										 [TPI_SP_SysInfo formattedDiskSize:freeSpace])];
+			[resultString appendString:TPILocalizedString(@"BasicLanguage[lct-7h]",
+														  volumeName,
+														  [TPI_SP_SysInfo formattedDiskSize:totalSpace],
+														  [TPI_SP_SysInfo formattedDiskSize:freeSpace])];
 		}
 	}];
 
@@ -285,11 +285,8 @@ NS_ASSUME_NONNULL_BEGIN
 			refreshRate = @"";
 		}
 
-		[resultString appendString:
-		 TPILocalizedString(localization,
-			screenNumber,
-			screen.screenResolutionString,
-			refreshRate)];
+		[resultString
+			appendString:TPILocalizedString(localization, screenNumber, screen.screenResolutionString, refreshRate)];
 	}];
 
 	return [resultString copy];
@@ -297,19 +294,26 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString *)systemInformation
 {
-	BOOL showCPUModel = ([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> CPU Model"] == NO);
+	BOOL showCPUModel =
+		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> CPU Model"] == NO);
 
 #if TARGET_CPU_ARM64
 	BOOL showGPUModel = NO;
 #elif TARGET_CPU_X86_64
-	BOOL showGPUModel = ([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> GPU Model"] == NO);
+	BOOL showGPUModel =
+		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> GPU Model"] == NO);
 #endif
 
-	BOOL showDiskInfo = ([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> Disk Information"] == NO);
-	BOOL showMemory = ([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> Memory Information"] == NO);
-	BOOL showOperatingSystem = ([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> OS Version"] == NO);
-	BOOL showScreenResolution = ([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> Screen Resolution"] == NO);
-	BOOL showUptime = ([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> System Uptime"] == NO);
+	BOOL showDiskInfo =
+		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> Disk Information"] == NO);
+	BOOL showMemory =
+		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> Memory Information"] == NO);
+	BOOL showOperatingSystem =
+		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> OS Version"] == NO);
+	BOOL showScreenResolution =
+		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> Screen Resolution"] == NO);
+	BOOL showUptime =
+		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> System Uptime"] == NO);
 
 	NSMutableString *resultString = [NSMutableString string];
 
@@ -332,72 +336,64 @@ NS_ASSUME_NONNULL_BEGIN
 			modelTitle = modelsDictionary[modelIdentifier];
 		}
 
-GLASSTUAL_IGNORE_DEPRECATION_BEGIN
+		GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 		if (modelTitle == nil) {
 			modelTitle = [XRSystemInformation systemModelName];
 		}
-GLASSTUAL_IGNORE_DEPRECATION_END
+		GLASSTUAL_IGNORE_DEPRECATION_END
 
-		[resultString appendString:
-		 TPILocalizedString(@"BasicLanguage[7g5-pf]", modelTitle)];
+		[resultString appendString:TPILocalizedString(@"BasicLanguage[7g5-pf]", modelTitle)];
 	}
 
 	if (showCPUModel) {
 		NSString *_cpu_model = [TPI_SP_SysInfo processor];
 
-		NSUInteger _cpu_count_p	= [TPI_SP_SysInfo processorPhysicalCoreCount];
-		
+		NSUInteger _cpu_count_p = [TPI_SP_SysInfo processorPhysicalCoreCount];
+
 #if TARGET_CPU_ARM64
-		
+
 		if (_cpu_model.length > 0) {
-			[resultString appendString:
-			 TPILocalizedString(@"BasicLanguage[ifk-s5]",
-					_cpu_model,
-					_cpu_count_p)];
+			[resultString appendString:TPILocalizedString(@"BasicLanguage[ifk-s5]", _cpu_model, _cpu_count_p)];
 		}
-		
+
 #elif TARGET_CPU_X86_64
 
 		NSString *_cpu_speed = [TPI_SP_SysInfo processorClockSpeed];
 
-		NSUInteger _cpu_count_v	= [TPI_SP_SysInfo processorVirtualCoreCount];
+		NSUInteger _cpu_count_v = [TPI_SP_SysInfo processorVirtualCoreCount];
 
-		_cpu_model = [XRRegularExpression string:_cpu_model replacedByRegex:@"(\\s*@.*)|CPU|\\(R\\)|\\(TM\\)"	withString:@" "];
-		_cpu_model = [XRRegularExpression string:_cpu_model replacedByRegex:@"\\s+"								withString:@" "];
+		_cpu_model = [XRRegularExpression string:_cpu_model
+								 replacedByRegex:@"(\\s*@.*)|CPU|\\(R\\)|\\(TM\\)"
+									  withString:@" "];
+		_cpu_model = [XRRegularExpression string:_cpu_model replacedByRegex:@"\\s+" withString:@" "];
 
 		_cpu_model = _cpu_model.trim;
 
 		if (_cpu_model.length > 0 && _cpu_speed.length > 0) {
-			[resultString appendString:
-			 TPILocalizedString(@"BasicLanguage[mnc-vx]",
-					_cpu_model,
-					_cpu_count_v,
-					_cpu_count_p,
-					_cpu_speed)];
+			[resultString
+				appendString:TPILocalizedString(
+								 @"BasicLanguage[mnc-vx]", _cpu_model, _cpu_count_v, _cpu_count_p, _cpu_speed)];
 		}
 
 #endif
-
 	}
 
 	if (showMemory) {
-		[resultString appendString:
-		 TPILocalizedString(@"BasicLanguage[1am-io]",
-			[TPI_SP_SysInfo formattedTotalMemorySize])];
+		[resultString
+			appendString:TPILocalizedString(@"BasicLanguage[1am-io]", [TPI_SP_SysInfo formattedTotalMemorySize])];
 	}
 
 	if (showUptime) {
-		[resultString appendString:
-		 TPILocalizedString(@"BasicLanguage[xb6-bh]",
-			TXHumanReadableTimeInterval([TPI_SP_SysInfo systemUptime], YES, 0))];
+		[resultString
+			appendString:TPILocalizedString(@"BasicLanguage[xb6-bh]",
+											TXHumanReadableTimeInterval([TPI_SP_SysInfo systemUptime], YES, 0))];
 	}
 
 	if (showDiskInfo) {
 		NSString *_disk_info = [TPI_SP_SysInfo formattedLocalVolumeDiskUsage];
 
 		if (_disk_info != nil) {
-			[resultString appendString:
-			 TPILocalizedString(@"BasicLanguage[yrc-6l]", _disk_info)];
+			[resultString appendString:TPILocalizedString(@"BasicLanguage[yrc-6l]", _disk_info)];
 		}
 	}
 
@@ -405,8 +401,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 		NSString *_gpu_model = [TPI_SP_SysInfo formattedGraphicsCardInformation];
 
 		if (_gpu_model != nil) {
-			[resultString appendString:
-			 TPILocalizedString(@"BasicLanguage[q5v-uq]", _gpu_model)];
+			[resultString appendString:TPILocalizedString(@"BasicLanguage[q5v-uq]", _gpu_model)];
 		}
 	}
 
@@ -416,23 +411,18 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 		NSString *refreshRate = [TPI_SP_SysInfo refreshRateForScreen:mainScreen];
 
 		if (refreshRate == nil) {
-			[resultString appendString:
-		     TPILocalizedString(@"BasicLanguage[22o-rg]",
-			 mainScreen.screenResolutionString)];
+			[resultString appendString:TPILocalizedString(@"BasicLanguage[22o-rg]", mainScreen.screenResolutionString)];
 		} else {
-			[resultString appendString:
-		     TPILocalizedString(@"BasicLanguage[b7c-qd]",
-			 mainScreen.screenResolutionString,
-			 refreshRate)];
+			[resultString appendString:TPILocalizedString(
+										   @"BasicLanguage[b7c-qd]", mainScreen.screenResolutionString, refreshRate)];
 		}
 	}
 
 	if (showOperatingSystem) {
-		[resultString appendString:
-		 TPILocalizedString(@"BasicLanguage[g41-p7]",
-			[XRSystemInformation systemOperatingSystemName],
-			[XRSystemInformation systemStandardVersion],
-			[XRSystemInformation systemBuildVersion])];
+		[resultString appendString:TPILocalizedString(@"BasicLanguage[g41-p7]",
+													  [XRSystemInformation systemOperatingSystemName],
+													  [XRSystemInformation systemStandardVersion],
+													  [XRSystemInformation systemBuildVersion])];
 	}
 
 	if ([resultString hasSuffix:@" \002•\002"]) {
@@ -480,10 +470,10 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	/* ======================================== */
 
 	return TPILocalizedString(@"BasicLanguage[cfs-b1]",
-			[TPI_SP_SysInfo formattedDiskSize:freeMemory],
-			[TPI_SP_SysInfo formattedDiskSize:usedMemory],
-			[TPI_SP_SysInfo formattedDiskSize:totalMemory],
-					resultString);
+							  [TPI_SP_SysInfo formattedDiskSize:freeMemory],
+							  [TPI_SP_SysInfo formattedDiskSize:usedMemory],
+							  [TPI_SP_SysInfo formattedDiskSize:totalMemory],
+							  resultString);
 }
 
 + (NSString *)systemNetworkInformation
@@ -521,14 +511,14 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 		if (objectIndex == 0) {
 			[resultString appendString:TPILocalizedString(@"BasicLanguage[ca4-25]",
-										 @(ifa->ifa_name),
-										 [TPI_SP_SysInfo formattedDiskSize:if_data->ifi_ibytes],
-										 [TPI_SP_SysInfo formattedDiskSize:if_data->ifi_obytes])];
+														  @(ifa->ifa_name),
+														  [TPI_SP_SysInfo formattedDiskSize:if_data->ifi_ibytes],
+														  [TPI_SP_SysInfo formattedDiskSize:if_data->ifi_obytes])];
 		} else {
 			[resultString appendString:TPILocalizedString(@"BasicLanguage[mjo-o0]",
-										 @(ifa->ifa_name),
-										 [TPI_SP_SysInfo formattedDiskSize:if_data->ifi_ibytes],
-										 [TPI_SP_SysInfo formattedDiskSize:if_data->ifi_obytes])];
+														  @(ifa->ifa_name),
+														  [TPI_SP_SysInfo formattedDiskSize:if_data->ifi_ibytes],
+														  [TPI_SP_SysInfo formattedDiskSize:if_data->ifi_obytes])];
 		}
 
 		objectIndex += 1;
@@ -552,7 +542,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 @implementation TPI_SP_SysInfo
 
 #pragma mark -
-#pragma mark Formatting/Processing 
+#pragma mark Formatting/Processing
 
 + (NSString *)formattedDiskSize:(uint64_t)diskSize
 {
@@ -604,10 +594,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 		CFMutableDictionaryRef serviceDictionary;
 
 		kern_return_t status =
-		IORegistryEntryCreateCFProperties(serviceObject,
-										  &serviceDictionary,
-										  kCFAllocatorDefault,
-										  kNilOptions);
+			IORegistryEntryCreateCFProperties(serviceObject, &serviceDictionary, kCFAllocatorDefault, kNilOptions);
 
 		if (status != kIOReturnSuccess) {
 			IOObjectRelease(serviceObject);
@@ -621,7 +608,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 		if (classCode == NULL) {
 			cleanResult = NO;
-		} if (CFGetTypeID(classCode) != CFDataGetTypeID()) {
+		}
+		if (CFGetTypeID(classCode) != CFDataGetTypeID()) {
 			cleanResult = NO;
 		} else if (CFDataGetLength(classCode) == 0) {
 			cleanResult = NO;
@@ -640,7 +628,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 		}
 
 		if (cleanResult) {
-			NSString *modelString = [NSString stringWithData:(__bridge NSData *)(CFDataRef)model encoding:NSASCIIStringEncoding];
+			NSString *modelString = [NSString stringWithData:(__bridge NSData *)(CFDataRef)model
+													encoding:NSASCIIStringEncoding];
 
 			modelString = [modelString stringByReplacingOccurrencesOfString:@"\0" withString:@""];
 
@@ -800,7 +789,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 	mach_msg_type_number_t host_info_outCnt = (sizeof(vm_statistics_data_t) / sizeof(natural_t));
 
-	if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&host_info_out, &host_info_outCnt) != KERN_SUCCESS) {
+	if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&host_info_out, &host_info_outCnt) !=
+		KERN_SUCCESS) {
 		return 0;
 	}
 
@@ -844,8 +834,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	int memoryPageSize = getpagesize();
 
 	do {
-		processLookupResult =
-		proc_pidinfo(processIdentifier, PROC_PIDREGIONINFO, processAddress, &processRegionInfo, PROC_PIDREGIONINFO_SIZE);
+		processLookupResult = proc_pidinfo(
+			processIdentifier, PROC_PIDREGIONINFO, processAddress, &processRegionInfo, PROC_PIDREGIONINFO_SIZE);
 
 		processAddress = (processRegionInfo.pri_address + processRegionInfo.pri_size);
 
@@ -863,8 +853,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	 views managed by the process. */
 	NSMutableDictionary<NSNumber *, __kindof NSArray *> *webViewProcesses = [NSMutableDictionary dictionary];
 
-	void (^_addEntry)(IRCTreeItem *) = ^void (IRCTreeItem *treeItem)
-	{
+	void (^_addEntry)(IRCTreeItem *) = ^void(IRCTreeItem *treeItem) {
 		pid_t processIdentifier = [TPI_SP_SysInfo webViewProcessIdentifierForTreeItem:treeItem];
 
 		if (processIdentifier == 0) {
@@ -898,7 +887,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 	/* Create array of TPI_SP_WebViewProcessInfo objects */
 	NSMutableArray<TPI_SP_WebViewProcessInfo *> *webViewProcessObjects =
-	[NSMutableArray arrayWithCapacity:webViewProcesses.count];
+		[NSMutableArray arrayWithCapacity:webViewProcesses.count];
 
 	[webViewProcesses enumerateKeysAndObjectsUsingBlock:^(id key, id object, BOOL *stop) {
 		/* Object values */
@@ -965,7 +954,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	 The values I picked below for excluding this information
 	 were picked arbitrarily and do not reflect any real
 	 world testing. */
-//	if (fabs(refreshRate) == 60.0) {
+	//	if (fabs(refreshRate) == 60.0) {
 	if (refreshRate > 58.5 && refreshRate < 61.5) {
 		return nil;
 	}

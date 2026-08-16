@@ -43,8 +43,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCAddressBookMatchCache ()
-@property (nonatomic, weak) IRCClient *client;
-@property (nonatomic, strong) NSCache<NSString *, id> *cachedMatchesInt;
+@property(nonatomic, weak) IRCClient *client;
+@property(nonatomic, strong) NSCache<NSString *, id> *cachedMatchesInt;
 @end
 
 @implementation IRCAddressBookMatchCache
@@ -67,7 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)prepareInitialState
 {
 	NSCache *cachedMatches = [NSCache new];
-	
+
 	cachedMatches.countLimit = 100;
 
 	self.cachedMatchesInt = cachedMatches;
@@ -81,26 +81,26 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)clearCachedMatchesForHostmask:(NSString *)hostmask
 {
 	NSParameterAssert(hostmask != nil);
-	
+
 	[self.cachedMatchesInt removeObjectForKey:hostmask];
 }
 
 - (NSArray<IRCAddressBookEntry *> *)findIgnoresForHostmask:(NSString *)hostmask
 {
 	IRCAddressBookEntry *match = [self findAddressBookEntryForHostmask:hostmask];
-	
+
 	if (match && match.entryType == IRCAddressBookEntryTypeIgnore) {
-		return @[match];
+		return @[ match ];
 	}
 
 	if (match && match.entryType == IRCAddressBookEntryTypeMixed) {
 		NSArray *parentEntries = match.parentEntries;
-		
+
 		return
-		[parentEntries filteredArrayUsingPredicate:
-		 [NSPredicate predicateWithFormat:@"entryType == %d", IRCAddressBookEntryTypeIgnore]];
+			[parentEntries filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"entryType == %d",
+																						IRCAddressBookEntryTypeIgnore]];
 	}
-	
+
 	return @[];
 }
 
@@ -109,7 +109,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(hostmask != nil);
 
 	IRCAddressBookEntry *cachedEntry = [self.cachedMatchesInt objectForKey:hostmask];
-	
+
 	if (cachedEntry) {
 		/* We reset the cache when new items are added to the client
 		 which means we are perfectly fine keeping a cache of when
@@ -121,28 +121,28 @@ NS_ASSUME_NONNULL_BEGIN
 
 		return cachedEntry;
 	}
-	
+
 	/* A separate variable is used to store a single entry
 	 and multiple so that we don’t allocate an array when
 	 it is very infrequent for there to be multiple. */
 	IRCAddressBookEntry *matchedEntry = nil;
 
-	NSMutableArray <IRCAddressBookEntry *> *matchedEntries = nil;
+	NSMutableArray<IRCAddressBookEntry *> *matchedEntries = nil;
 
 	for (IRCAddressBookEntry *entry in self.client.config.ignoreList) {
 		if ([entry checkMatch:hostmask] == NO) {
 			continue;
 		}
-		
+
 		if (matchedEntries) {
 			[matchedEntries addObject:entry];
 		} else if (matchedEntry) {
 			matchedEntries = [NSMutableArray array];
 
 			[matchedEntries addObject:matchedEntry];
-			
+
 			[matchedEntries addObject:entry];
-			
+
 			matchedEntry = nil;
 		} else {
 			matchedEntry = entry;
@@ -152,24 +152,29 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Combine multiple entries */
 	if (matchedEntries) {
 		IRCAddressBookEntryMutable *mixedEntry = [IRCAddressBookEntryMutable new];
-		
+
 		mixedEntry.entryType = IRCAddressBookEntryTypeMixed;
-		
+
 		mixedEntry.parentEntries = matchedEntries;
 
 		for (IRCAddressBookEntry *entry in matchedEntries) {
-			mixedEntry.ignoreClientToClientProtocol = ((entry.ignoreClientToClientProtocol) ? YES : mixedEntry.ignoreClientToClientProtocol);
-			mixedEntry.ignoreGeneralEventMessages = ((entry.ignoreGeneralEventMessages) ? YES : mixedEntry.ignoreGeneralEventMessages);
+			mixedEntry.ignoreClientToClientProtocol =
+				((entry.ignoreClientToClientProtocol) ? YES : mixedEntry.ignoreClientToClientProtocol);
+			mixedEntry.ignoreGeneralEventMessages =
+				((entry.ignoreGeneralEventMessages) ? YES : mixedEntry.ignoreGeneralEventMessages);
 			mixedEntry.ignoreNoticeMessages = ((entry.ignoreNoticeMessages) ? YES : mixedEntry.ignoreNoticeMessages);
-			mixedEntry.ignorePrivateMessageHighlights = ((entry.ignorePrivateMessageHighlights) ? YES : mixedEntry.ignorePrivateMessageHighlights);
+			mixedEntry.ignorePrivateMessageHighlights =
+				((entry.ignorePrivateMessageHighlights) ? YES : mixedEntry.ignorePrivateMessageHighlights);
 			mixedEntry.ignorePrivateMessages = ((entry.ignorePrivateMessages) ? YES : mixedEntry.ignorePrivateMessages);
-			mixedEntry.ignorePublicMessageHighlights = ((entry.ignorePublicMessageHighlights) ? YES : mixedEntry.ignorePublicMessageHighlights);
+			mixedEntry.ignorePublicMessageHighlights =
+				((entry.ignorePublicMessageHighlights) ? YES : mixedEntry.ignorePublicMessageHighlights);
 			mixedEntry.ignorePublicMessages = ((entry.ignorePublicMessages) ? YES : mixedEntry.ignorePublicMessages);
-			mixedEntry.ignoreFileTransferRequests = ((entry.ignoreFileTransferRequests) ? YES : mixedEntry.ignoreFileTransferRequests);
+			mixedEntry.ignoreFileTransferRequests =
+				((entry.ignoreFileTransferRequests) ? YES : mixedEntry.ignoreFileTransferRequests);
 			mixedEntry.ignoreInlineMedia = ((entry.ignoreInlineMedia) ? YES : mixedEntry.ignoreInlineMedia);
 			mixedEntry.trackUserActivity = ((entry.trackUserActivity) ? YES : mixedEntry.trackUserActivity);
 		}
-		
+
 		matchedEntry = [mixedEntry copy];
 	}
 
@@ -179,7 +184,7 @@ NS_ASSUME_NONNULL_BEGIN
 	} else {
 		[self.cachedMatchesInt setObject:[NSNull null] forKey:hostmask];
 	}
-	
+
 	return matchedEntry;
 }
 

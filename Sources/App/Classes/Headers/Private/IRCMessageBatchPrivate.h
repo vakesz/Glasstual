@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
  IRCMessageBatchMessageContainer which acts as a container for
  all BATCH command events that the client may receive. */
 @interface IRCMessageBatchMessageContainer : NSObject
-@property (readonly, copy) NSDictionary *queuedEntries;
+@property(readonly, copy) NSDictionary *queuedEntries;
 
 - (void)queueEntry:(id)entry;
 - (void)dequeueEntry:(id)entry;
@@ -54,11 +54,11 @@ NS_ASSUME_NONNULL_BEGIN
  on its token value. Queued entries can either be an IRCMessage
  instance or IRCMessageBatchMessage (for nested batch events). */
 @interface IRCMessageBatchMessage : NSObject
-@property (nonatomic, assign) BOOL batchIsOpen;
-@property (nonatomic, copy) NSString *batchToken;
-@property (nonatomic, copy, nullable) NSString *batchType;
-@property (readonly, copy) NSArray *queuedEntries;
-@property (nonatomic, weak) IRCMessageBatchMessage *parentBatchMessage;
+@property(nonatomic, assign) BOOL batchIsOpen;
+@property(nonatomic, copy) NSString *batchToken;
+@property(nonatomic, copy, nullable) NSString *batchType;
+@property(readonly, copy) NSArray *queuedEntries;
+@property(nonatomic, weak) IRCMessageBatchMessage *parentBatchMessage;
 
 - (void)queueEntry:(id)entry;
 - (void)dequeueEntry:(id)entry;

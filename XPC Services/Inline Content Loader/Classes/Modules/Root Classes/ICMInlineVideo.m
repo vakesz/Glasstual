@@ -44,7 +44,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ICMInlineVideo ()
-@property (nonatomic, strong, nullable) ICLMediaAssessor *videoCheck;
+@property(nonatomic, strong, nullable) ICLMediaAssessor *videoCheck;
 @end
 
 @implementation ICMInlineVideo
@@ -97,22 +97,21 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	ICLPayload *payload = self.payload;
 
-	ICLMediaAssessor *videoCheck =
-	[ICLMediaAssessor assessorForURL:payload.urlToInline
-							withType:ICLMediaTypeVideo
-					 completionBlock:^(ICLMediaAssessment *assessment, NSError *error) {
-						 BOOL safeToLoad = (error == nil);
+	ICLMediaAssessor *videoCheck = [ICLMediaAssessor assessorForURL:payload.urlToInline
+														   withType:ICLMediaTypeVideo
+													completionBlock:^(ICLMediaAssessment *assessment, NSError *error) {
+														BOOL safeToLoad = (error == nil);
 
-						 if (safeToLoad) {
-							 [self _safeToLoadVideo];
-						 } else {
-							 [self _unsafeToLoadVideo];
+														if (safeToLoad) {
+															[self _safeToLoadVideo];
+														} else {
+															[self _unsafeToLoadVideo];
 
-							 [ICLMediaAssessor logError:error];
-						 }
+															[ICLMediaAssessor logError:error];
+														}
 
-						 self.videoCheck = nil;
-					 }];
+														self.videoCheck = nil;
+													}];
 
 	self.videoCheck = videoCheck;
 
@@ -134,8 +133,7 @@ NS_ASSUME_NONNULL_BEGIN
 		playbackSpeed = 1.0;
 	}
 
-	NSDictionary *templateAttributes =
-	@{
+	NSDictionary *templateAttributes = @{
 		@"anchorLink" : payload.address,
 		@"classAttribute" : payload.classAttribute,
 		@"preferredMaximumWidth" : @([TPCPreferences inlineMediaMaxWidth]),
@@ -236,10 +234,9 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		styleResources =
-		@[
-		  [RZMainBundle() URLForResource:@"ICMInlineVideo" withExtension:@"css" subdirectory:@"Components"]
-		];
+		styleResources = @[ [RZMainBundle() URLForResource:@"ICMInlineVideo"
+											 withExtension:@"css"
+											  subdirectory:@"Components"] ];
 	});
 
 	return styleResources;
@@ -252,10 +249,9 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		scriptResources =
-		@[
-		  [RZMainBundle() URLForResource:@"ICMInlineVideo" withExtension:@"js" subdirectory:@"Components"]
-		];
+		scriptResources = @[ [RZMainBundle() URLForResource:@"ICMInlineVideo"
+											  withExtension:@"js"
+											   subdirectory:@"Components"] ];
 	});
 
 	return scriptResources;
@@ -269,44 +265,43 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSTimeInterval)parseYouTubeEsqueTimestamp:(NSString *)timestamp
 {
 	NSParameterAssert(timestamp != nil);
-	
+
 	if (timestamp.isPositiveWholeNumber) {
 		return timestamp.doubleValue;
 	}
-	
+
 	__block NSTimeInterval startTime = 0;
-	
+
 	__block BOOL matchedHour = NO;
 	__block BOOL matchedMinute = NO;
 	__block BOOL matchedSecond = NO;
 
 	[timestamp enumerateMatchesOfRegularExpression:@"[0-9]+[hms]"
-										 withBlock:^(NSRange range, BOOL *stop)
-	 {
-		 NSString *fragment = [timestamp substringWithRange:range];
-		 
-		 NSString *fragmentUnit = [fragment substringAtIndex:0 toLength:(-1)];
-		 NSString *fragmentValue = [fragment substringAtIndex:(-1) toLength:0];
-		 
-		 /* Could use dictionary to index each formatter, but
+										 withBlock:^(NSRange range, BOOL *stop) {
+											 NSString *fragment = [timestamp substringWithRange:range];
+
+											 NSString *fragmentUnit = [fragment substringAtIndex:0 toLength:(-1)];
+											 NSString *fragmentValue = [fragment substringAtIndex:(-1) toLength:0];
+
+											 /* Could use dictionary to index each formatter, but
 		  that seemed like overkill for this implemention. */
-		 if (matchedHour == NO && [fragmentUnit isEqualToString:@"h"]) {
-			 matchedHour = YES;
-			 startTime += (fragmentValue.integerValue * 3600); // 1 hour
-		 } else if (matchedMinute == NO && [fragmentUnit isEqualToString:@"m"]) {
-			 matchedMinute = YES;
-			 startTime += (fragmentValue.integerValue * 60); // 1 minute
-		 } else if (matchedSecond == NO && [fragmentUnit isEqualToString:@"s"]) {
-			 matchedSecond = YES;
-			 startTime += fragmentValue.integerValue;
-		 }
-		 
-		 if (matchedHour && matchedMinute && matchedSecond) {
-			*stop = YES;
-		 }
-	 }
+											 if (matchedHour == NO && [fragmentUnit isEqualToString:@"h"]) {
+												 matchedHour = YES;
+												 startTime += (fragmentValue.integerValue * 3600); // 1 hour
+											 } else if (matchedMinute == NO && [fragmentUnit isEqualToString:@"m"]) {
+												 matchedMinute = YES;
+												 startTime += (fragmentValue.integerValue * 60); // 1 minute
+											 } else if (matchedSecond == NO && [fragmentUnit isEqualToString:@"s"]) {
+												 matchedSecond = YES;
+												 startTime += fragmentValue.integerValue;
+											 }
+
+											 if (matchedHour && matchedMinute && matchedSecond) {
+												 *stop = YES;
+											 }
+										 }
 										   options:NSCaseInsensitiveSearch];
-	
+
 	return startTime;
 }
 

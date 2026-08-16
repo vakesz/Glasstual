@@ -41,19 +41,19 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Immutable Object
 
 @interface IRCHighlightMatchCondition : XRPortablePropertyDict
-@property (readonly, copy) NSString *uniqueIdentifier;
-@property (readonly, copy) NSString *matchKeyword;
-@property (readonly, copy, nullable) NSString *matchChannelId;
-@property (readonly) BOOL matchIsExcluded;
+@property(readonly, copy) NSString *uniqueIdentifier;
+@property(readonly, copy) NSString *matchKeyword;
+@property(readonly, copy, nullable) NSString *matchChannelId;
+@property(readonly) BOOL matchIsExcluded;
 @end
 
 #pragma mark -
 #pragma mark Mutable Object
 
 @interface IRCHighlightMatchConditionMutable : IRCHighlightMatchCondition
-@property (nonatomic, copy, readwrite) NSString *matchKeyword;
-@property (nonatomic, copy, readwrite, nullable) NSString *matchChannelId;
-@property (nonatomic, assign, readwrite) BOOL matchIsExcluded;
+@property(nonatomic, copy, readwrite) NSString *matchKeyword;
+@property(nonatomic, copy, readwrite, nullable) NSString *matchChannelId;
+@property(nonatomic, assign, readwrite) BOOL matchIsExcluded;
 @end
 
 NS_ASSUME_NONNULL_END

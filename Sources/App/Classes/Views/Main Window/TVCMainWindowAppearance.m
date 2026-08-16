@@ -43,10 +43,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCMainWindowAppearance ()
-@property (nonatomic, strong, readwrite) TVCMainWindowTextViewAppearance *textView;
-@property (nonatomic, assign, readwrite) NSSize defaultWindowSize;
-@property (nonatomic, copy, nullable, readwrite) NSColor *channelViewOverlayDefaultBackgroundColorActiveWindow;
-@property (nonatomic, copy, nullable, readwrite) NSColor *channelViewOverlayDefaultBackgroundColorInactiveWindow;
+@property(nonatomic, strong, readwrite) TVCMainWindowTextViewAppearance *textView;
+@property(nonatomic, assign, readwrite) NSSize defaultWindowSize;
+@property(nonatomic, copy, nullable, readwrite) NSColor *channelViewOverlayDefaultBackgroundColorActiveWindow;
+@property(nonatomic, copy, nullable, readwrite) NSColor *channelViewOverlayDefaultBackgroundColorInactiveWindow;
 @end
 
 @implementation TVCMainWindowAppearance
@@ -82,12 +82,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.defaultWindowSize = [self sizeForKey:@"defaultWindowSize"];
 
-	self.channelViewOverlayDefaultBackgroundColorActiveWindow = [self colorForKey:@"channelViewOverlayDefaultBackgroundColor" forActiveWindow:YES];
-	self.channelViewOverlayDefaultBackgroundColorInactiveWindow = [self colorForKey:@"channelViewOverlayDefaultBackgroundColor" forActiveWindow:NO];
-
-
-
-
+	self.channelViewOverlayDefaultBackgroundColorActiveWindow =
+		[self colorForKey:@"channelViewOverlayDefaultBackgroundColor" forActiveWindow:YES];
+	self.channelViewOverlayDefaultBackgroundColorInactiveWindow =
+		[self colorForKey:@"channelViewOverlayDefaultBackgroundColor" forActiveWindow:NO];
 
 	self.textView = [[TVCMainWindowTextViewAppearance alloc] initWithWindow:mainWindow];
 

@@ -41,11 +41,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TXDefaultAlertSoundPreferenceValue = @"Default";
-NSString * const TXNoAlertSoundPreferenceValue = @"None";
+NSString *const TXDefaultAlertSoundPreferenceValue = @"Default";
+NSString *const TXNoAlertSoundPreferenceValue = @"None";
 
 @interface TLONotificationConfiguration ()
-@property (nonatomic, assign, readwrite) TXNotificationType eventType;
+@property(nonatomic, assign, readwrite) TXNotificationType eventType;
 @end
 
 @implementation TLONotificationConfiguration

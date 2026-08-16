@@ -44,10 +44,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* Top level group */
 /* Nonnull until -flushAppearanceProperties is called. */
-@property (readonly, copy, nullable) NSDictionary<NSString *, id> *appearanceProperties;
+@property(readonly, copy, nullable) NSDictionary<NSString *, id> *appearanceProperties;
 
 /* Properties */
-@property (readonly) BOOL isHighResolutionAppearance;
+@property(readonly) BOOL isHighResolutionAppearance;
 
 /* Stateless Accessors */
 - (nullable NSColor *)colorForKey:(NSString *)key;
@@ -94,16 +94,24 @@ NS_ASSUME_NONNULL_BEGIN
  </dict>
 */
 - (nullable NSColor *)colorForKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
-- (nullable NSColor *)colorInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
+- (nullable NSColor *)colorInGroup:(NSDictionary<NSString *, id> *)group
+						   withKey:(NSString *)key
+				   forActiveWindow:(BOOL)forActiveWindow;
 
 - (nullable NSGradient *)gradientForKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
-- (nullable NSGradient *)gradientInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
+- (nullable NSGradient *)gradientInGroup:(NSDictionary<NSString *, id> *)group
+								 withKey:(NSString *)key
+						 forActiveWindow:(BOOL)forActiveWindow;
 
 - (nullable NSFont *)fontForKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
-- (nullable NSFont *)fontInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
+- (nullable NSFont *)fontInGroup:(NSDictionary<NSString *, id> *)group
+						 withKey:(NSString *)key
+				 forActiveWindow:(BOOL)forActiveWindow;
 
 - (nullable NSImage *)imageForKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
-- (nullable NSImage *)imageInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
+- (nullable NSImage *)imageInGroup:(NSDictionary<NSString *, id> *)group
+						   withKey:(NSString *)key
+				   forActiveWindow:(BOOL)forActiveWindow;
 @end
 
 /* TVCApplicationAppearance keeps a copy of TXAppearance properties.

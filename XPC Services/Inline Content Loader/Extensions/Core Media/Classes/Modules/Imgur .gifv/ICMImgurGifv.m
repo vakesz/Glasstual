@@ -40,7 +40,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ICMImgurGifv ()
-@property (readonly, copy, class) NSArray<NSString *> *validFileExtensions;
+@property(readonly, copy, class) NSArray<NSString *> *validFileExtensions;
 @end
 
 @implementation ICMImgurGifv
@@ -88,10 +88,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"i.imgur.com"
-		];
+		domains = @[ @"i.imgur.com" ];
 	});
 
 	return domains;
@@ -104,11 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		cachedValue =
-		@[@"mp4",
-		  @"gif",
-		  @"gifv",
-		  @"webp"];
+		cachedValue = @[ @"mp4", @"gif", @"gifv", @"webp" ];
 	});
 
 	return cachedValue;

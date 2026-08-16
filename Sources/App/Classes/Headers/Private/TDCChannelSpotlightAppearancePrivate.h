@@ -43,21 +43,21 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Search Field
 
-@property (readonly, copy, nullable) NSColor *searchFieldTextColor;
-@property (readonly, copy, nullable) NSColor *searchFieldNoResultsTextColor;
+@property(readonly, copy, nullable) NSColor *searchFieldTextColor;
+@property(readonly, copy, nullable) NSColor *searchFieldNoResultsTextColor;
 
 #pragma mark -
 #pragma mark Search Result
 
-@property (readonly, copy, nullable) NSColor *searchResultRowSelectionColorActiveWindow;
-@property (readonly, copy, nullable) NSColor *searchResultRowSelectionColorInactiveWindow;
-@property (readonly) BOOL searchResultRowEmphasized;
-@property (readonly, copy, nullable) NSColor *searchResultChannelNameTextColor;
-@property (readonly, copy, nullable) NSColor *searchResultChannelDescriptionTextColor;
-@property (readonly, copy, nullable) NSColor *searchResultKeyboardShortcutTextColor;
-@property (readonly) CGFloat searchResultKeyboardShortcutDeselectedOffset;
-@property (readonly) CGFloat searchResultKeyboardShortcutSelectedOffset;
-@property (readonly, copy, nullable) NSColor *searchResultSelectedTextColor;
+@property(readonly, copy, nullable) NSColor *searchResultRowSelectionColorActiveWindow;
+@property(readonly, copy, nullable) NSColor *searchResultRowSelectionColorInactiveWindow;
+@property(readonly) BOOL searchResultRowEmphasized;
+@property(readonly, copy, nullable) NSColor *searchResultChannelNameTextColor;
+@property(readonly, copy, nullable) NSColor *searchResultChannelDescriptionTextColor;
+@property(readonly, copy, nullable) NSColor *searchResultKeyboardShortcutTextColor;
+@property(readonly) CGFloat searchResultKeyboardShortcutDeselectedOffset;
+@property(readonly) CGFloat searchResultKeyboardShortcutSelectedOffset;
+@property(readonly, copy, nullable) NSColor *searchResultSelectedTextColor;
 @end
 
 NS_ASSUME_NONNULL_END

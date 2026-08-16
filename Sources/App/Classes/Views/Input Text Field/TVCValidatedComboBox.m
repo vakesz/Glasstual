@@ -44,19 +44,19 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TVCValidatedComboBox ()
 /* Maintain cached value so that the drawing does not call
  the validation block every time that it is called. */
-@property (nonatomic, assign) BOOL cachedValidValue;
-@property (nonatomic, assign, readwrite) BOOL valueIsPredefined;
-@property (nonatomic, assign) BOOL validationPerformed;
-@property (nonatomic, assign) BOOL listVisible;
-@property (nonatomic, assign) BOOL selectionChangedWhileListVisible;
-@property (nonatomic, assign) BOOL selectionChangedWhileSetting;
-@property (nonatomic, copy, nullable, readwrite) NSString *lastValidationErrorDescription;
+@property(nonatomic, assign) BOOL cachedValidValue;
+@property(nonatomic, assign, readwrite) BOOL valueIsPredefined;
+@property(nonatomic, assign) BOOL validationPerformed;
+@property(nonatomic, assign) BOOL listVisible;
+@property(nonatomic, assign) BOOL selectionChangedWhileListVisible;
+@property(nonatomic, assign) BOOL selectionChangedWhileSetting;
+@property(nonatomic, copy, nullable, readwrite) NSString *lastValidationErrorDescription;
 @end
 
 @interface TVCValidatedComboBoxCell ()
-@property (readonly) NSColor *erroneousValueBackgroundColor;
-@property (readonly) BOOL parentValueIsValid;
-@property (readonly) TVCValidatedComboBox *parentField;
+@property(readonly) NSColor *erroneousValueBackgroundColor;
+@property(readonly) BOOL parentValueIsValid;
+@property(readonly) TVCValidatedComboBox *parentField;
 @end
 
 @implementation TVCValidatedComboBox
@@ -84,7 +84,6 @@ NS_ASSUME_NONNULL_BEGIN
 							   selector:@selector(comboBoxWillDismiss:)
 								   name:NSComboBoxWillDismissNotification
 								 object:self];
-
 }
 
 - (void)dealloc
@@ -116,7 +115,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if (stringValue.length == 0) {
-		if (	   self.defaultValue && self.stringValueIsInvalidOnEmpty == NO) {
+		if (self.defaultValue && self.stringValueIsInvalidOnEmpty == NO) {
 			return self.defaultValue;
 		}
 	}

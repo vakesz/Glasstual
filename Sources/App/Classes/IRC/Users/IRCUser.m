@@ -49,14 +49,14 @@ NS_ASSUME_NONNULL_BEGIN
 /* IRCUser has an internal timer that is started when relations reach zero.
  This timer runs for five minutes, using a GCD timer. When the timer fires,
  it removes the user from the client, thus remove any trace of it. */
-#define _removeUserTimerInterval					(60 * 5) // 5 minutes
+#define _removeUserTimerInterval (60 * 5) // 5 minutes
 
-#define _presentAwayMessageFor301Threshold			300.0
+#define _presentAwayMessageFor301Threshold 300.0
 
 @interface IRCUser ()
-@property (nonatomic, weak, readwrite) IRCClient *client;
-@property (nonatomic, strong) IRCUserPersistentStore *persistentStore;
-@property (readonly) IRCUserRelations *relationsInt;
+@property(nonatomic, weak, readwrite) IRCClient *client;
+@property(nonatomic, strong) IRCUserPersistentStore *persistentStore;
+@property(readonly) IRCUserRelations *relationsInt;
 @end
 
 @implementation IRCUser
@@ -123,7 +123,7 @@ NS_ASSUME_NONNULL_BEGIN
 	CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
 
 	if ((self.persistentStore.presentAwayMessageFor301LastEvent + _presentAwayMessageFor301Threshold) < now) {
-		 self.persistentStore.presentAwayMessageFor301LastEvent = now;
+		self.persistentStore.presentAwayMessageFor301LastEvent = now;
 
 		return YES;
 	}
@@ -167,22 +167,18 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	switch ([TPCPreferences banFormat]) {
-		case TXHostmaskBanFormatWHNIN:
-		{
-			return [NSString stringWithFormat:@"*!*@%@", address];
-		}
-		case TXHostmaskBanFormatWHAINN:
-		{
-			return [NSString stringWithFormat:@"*!%@@%@", username, address];
-		}
-		case TXHostmaskBanFormatWHANNI:
-		{
-			return [NSString stringWithFormat:@"%@!*%@", nickname, address];
-		}
-		case TXHostmaskBanFormatExact:
-		{
-			return [NSString stringWithFormat:@"%@!%@@%@", nickname, username, address];
-		}
+	case TXHostmaskBanFormatWHNIN: {
+		return [NSString stringWithFormat:@"*!*@%@", address];
+	}
+	case TXHostmaskBanFormatWHAINN: {
+		return [NSString stringWithFormat:@"*!%@@%@", username, address];
+	}
+	case TXHostmaskBanFormatWHANNI: {
+		return [NSString stringWithFormat:@"%@!*%@", nickname, address];
+	}
+	case TXHostmaskBanFormatExact: {
+		return [NSString stringWithFormat:@"%@!%@@%@", nickname, username, address];
+	}
 	}
 
 	return nil;
@@ -219,22 +215,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 	IRCUser *objectCast = (IRCUser *)object;
 
-	return (self.client == objectCast.client &&
+	return (
+		self.client == objectCast.client &&
 
-			((self.nickname == nil && objectCast.nickname == nil) ||
-			 [self.nickname isEqualToString:objectCast.nickname]) &&
+		((self.nickname == nil && objectCast.nickname == nil) || [self.nickname isEqualToString:objectCast.nickname]) &&
 
-			((self.username == nil && objectCast.username == nil) ||
-			 [self.username isEqualToString:objectCast.username]) &&
+		((self.username == nil && objectCast.username == nil) || [self.username isEqualToString:objectCast.username]) &&
 
-			((self.address == nil && objectCast.address == nil) ||
-			 [self.address isEqualToString:objectCast.address]) &&
+		((self.address == nil && objectCast.address == nil) || [self.address isEqualToString:objectCast.address]) &&
 
-			((self.realName == nil && objectCast.realName == nil) ||
-			 [self.realName isEqualToString:objectCast.realName]) &&
+		((self.realName == nil && objectCast.realName == nil) || [self.realName isEqualToString:objectCast.realName]) &&
 
-			self.isAway == objectCast.isAway &&
-			self.isIRCop == objectCast.isIRCop);
+		self.isAway == objectCast.isAway && self.isIRCop == objectCast.isIRCop);
 }
 
 - (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing
@@ -377,7 +369,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[self relinkRelations];
 }
 
-- (void)enumerateRelations:(void (NS_NOESCAPE ^)(IRCChannel *channel, IRCChannelUser *member, BOOL *stop))block
+- (void)enumerateRelations:(void(NS_NOESCAPE ^)(IRCChannel *channel, IRCChannelUser *member, BOOL *stop))block
 {
 	[self.relationsInt enumerateRelations:block];
 }
@@ -425,7 +417,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(nickname != nil);
 
-	if (self->_nickname	!= nickname) {
+	if (self->_nickname != nickname) {
 		self->_nickname = [nickname copy];
 	}
 }

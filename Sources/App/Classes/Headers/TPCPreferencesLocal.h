@@ -41,19 +41,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeNameDefaultsKey;
-GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeFontNameDefaultsKey;
-GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeFontSizeDefaultsKey;
+GLASSTUAL_EXTERN NSString *const TPCPreferencesThemeNameDefaultsKey;
+GLASSTUAL_EXTERN NSString *const TPCPreferencesThemeFontNameDefaultsKey;
+GLASSTUAL_EXTERN NSString *const TPCPreferencesThemeFontSizeDefaultsKey;
 
-GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeNameMissingLocallyDefaultsKey;
-GLASSTUAL_EXTERN NSString * const TPCPreferencesThemeFontNameMissingLocallyDefaultsKey;
+GLASSTUAL_EXTERN NSString *const TPCPreferencesThemeNameMissingLocallyDefaultsKey;
+GLASSTUAL_EXTERN NSString *const TPCPreferencesThemeFontNameMissingLocallyDefaultsKey;
 
 GLASSTUAL_EXTERN NSUInteger const TPCPreferencesDictionaryVersion;
 
 typedef NS_ENUM(NSUInteger, TXNicknameHighlightMatchType) {
 	TXNicknameHighlightMatchTypePartial = 0,
 	TXNicknameHighlightMatchTypeExact,
-    TXNicknameHighlightMatchTypeRegularExpression,
+	TXNicknameHighlightMatchTypeRegularExpression,
 };
 
 typedef NS_ENUM(NSUInteger, TXTabKeyAction) {
@@ -82,42 +82,41 @@ typedef NS_ENUM(NSUInteger, TXCommandWKeyAction) {
 };
 
 typedef NS_ENUM(NSUInteger, TXHostmaskBanFormat) {
-	TXHostmaskBanFormatWHNIN  = 0, // With Hostmask, No Username/Nickname
+	TXHostmaskBanFormatWHNIN = 0,  // With Hostmask, No Username/Nickname
 	TXHostmaskBanFormatWHAINN = 1, // With Hostmask and Username, No Nickname
 	TXHostmaskBanFormatWHANNI = 2, // With Hostmask and Nickname, No Username
-	TXHostmaskBanFormatExact  = 3, // Exact Match
+	TXHostmaskBanFormatExact = 3,  // Exact Match
 };
 
 typedef NS_ENUM(NSUInteger, TVCMainWindowTextViewFontSize) {
-	TVCMainWindowTextViewFontSizeNormal			= 1,
-	TVCMainWindowTextViewFontSizeLarge			= 2,
-	TVCMainWindowTextViewFontSizeExtraLarge		= 3,
-	TVCMainWindowTextViewFontSizeHumongous		= 4,
+	TVCMainWindowTextViewFontSizeNormal = 1,
+	TVCMainWindowTextViewFontSizeLarge = 2,
+	TVCMainWindowTextViewFontSizeExtraLarge = 3,
+	TVCMainWindowTextViewFontSizeHumongous = 4,
 };
 
 typedef NS_ENUM(NSUInteger, TXFileTransferRequestReply) {
-	TXFileTransferRequestReplyIgnore					= 1,
-	TXFileTransferRequestReplyOpenDialog				= 2,
-	TXFileTransferRequestReplyAutomaticallyDownload		= 3,
+	TXFileTransferRequestReplyIgnore = 1,
+	TXFileTransferRequestReplyOpenDialog = 2,
+	TXFileTransferRequestReplyAutomaticallyDownload = 3,
 };
 
 typedef NS_ENUM(NSUInteger, TXFileTransferIPAddressMethodDetection) {
 	/* integers are out of order to preserve existing preferences */
-	TXFileTransferIPAddressMethodRouterOnly 			NS_SWIFT_NAME(routerOnly)			= 3,
-	TXFileTransferIPAddressMethodRouterAndFirstParty 	NS_SWIFT_NAME(routerAndFirstParty)	= 1,
-	TXFileTransferIPAddressMethodRouterAndThirdParty	NS_SWIFT_NAME(routerAndThirdParty)	= 4,
-	TXFileTransferIPAddressMethodManual					NS_SWIFT_NAME(manual)				= 2,
-};
+	TXFileTransferIPAddressMethodRouterOnly NS_SWIFT_NAME(routerOnly) = 3,
+		TXFileTransferIPAddressMethodRouterAndFirstParty NS_SWIFT_NAME(routerAndFirstParty) = 1,
+			TXFileTransferIPAddressMethodRouterAndThirdParty NS_SWIFT_NAME(routerAndThirdParty) = 4,
+				TXFileTransferIPAddressMethodManual NS_SWIFT_NAME(manual) = 2,
+			};
 
 typedef NS_ENUM(NSUInteger, TXChannelViewArrangement) {
-	TXChannelViewArrangedHorizontally	NS_SWIFT_NAME(horizontal) 	= 0,
-	TXChannelViewArrangedVertically 	NS_SWIFT_NAME(vertical)		= 1
-};
+	TXChannelViewArrangedHorizontally NS_SWIFT_NAME(horizontal) = 0,
+													TXChannelViewArrangedVertically NS_SWIFT_NAME(vertical) = 1 };
 
 typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
-	TXPreferredAppearanceInherited 	= 0,
-	TXPreferredAppearanceLight 		= 1,
-	TXPreferredAppearanceDark		= 2
+	TXPreferredAppearanceInherited = 0,
+	TXPreferredAppearanceLight = 1,
+	TXPreferredAppearanceDark = 2
 };
 
 @interface TPCPreferences (TPCPreferencesLocal)
@@ -140,7 +139,7 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (TVCMainWindowTextViewFontSize)mainTextViewFontSize;
 + (BOOL)focusMainTextViewOnSelectionChange;
 
-+ (BOOL)logToDisk; // Checks whether checkbox for logging is checked.
++ (BOOL)logToDisk;			// Checks whether checkbox for logging is checked.
 + (BOOL)logToDiskIsEnabled; // Checks whether checkbox is checked and whether an actual path is configured.
 
 + (BOOL)postNotificationsWhileInFocus;

@@ -37,8 +37,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, ICLMediaType)
-{
+typedef NS_ENUM(NSUInteger, ICLMediaType) {
 	ICLMediaTypeUnknown = 0,
 	ICLMediaTypeImage,
 	ICLMediaTypeVideo,

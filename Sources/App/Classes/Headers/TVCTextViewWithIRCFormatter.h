@@ -39,8 +39,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, TVCTextViewCaretLocation)
-{
+typedef NS_ENUM(NSUInteger, TVCTextViewCaretLocation) {
 	TVCTextViewCaretLocationOnlyLine, // There isn't more than one line
 	TVCTextViewCaretLocationFirstLine,
 	TVCTextViewCaretLocationMiddle,
@@ -48,16 +47,16 @@ typedef NS_ENUM(NSUInteger, TVCTextViewCaretLocation)
 };
 
 @interface TVCTextViewWithIRCFormatter : NSTextView <NSTextDelegate, TLOKeyEventHandlerPrototype>
-@property (readonly) TVCTextViewCaretLocation caretLocation;
+@property(readonly) TVCTextViewCaretLocation caretLocation;
 
 - (CGFloat)highestHeightBelowHeight:(CGFloat)maximumHeight withPadding:(CGFloat)valuePadding;
 
-@property (readonly) NSRect selectedRect;
+@property(readonly) NSRect selectedRect;
 
-@property (nonatomic, copy) NSString *stringValue;
-@property (nonatomic, copy) NSString *stringValueWithIRCFormatting;
+@property(nonatomic, copy) NSString *stringValue;
+@property(nonatomic, copy) NSString *stringValueWithIRCFormatting;
 
-@property (nonatomic, copy) NSAttributedString *attributedStringValue;
+@property(nonatomic, copy) NSAttributedString *attributedStringValue;
 
 - (void)resetFontInRange:(NSRange)range;
 - (void)resetFontColorInRange:(NSRange)range;

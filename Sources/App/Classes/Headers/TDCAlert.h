@@ -37,7 +37,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString * const TDCAlertSuppressionPrefix;
+GLASSTUAL_EXTERN NSString *const TDCAlertSuppressionPrefix;
 
 typedef NS_ENUM(NSUInteger, TDCAlertResponse) {
 	TDCAlertResponseDefault = 1000,
@@ -126,71 +126,71 @@ typedef void (^TDCAlertCompletionBlock)(TDCAlertResponse buttonClicked, BOOL sup
 /* Return value is only nil if completion block is immediately
  returned for suppression. */
 + (NSAlert *)alertWithMessage:(NSString *)bodyText
-						 title:(NSString *)titleText
-				 defaultButton:(NSString *)buttonDefault
-			   alternateButton:(nullable NSString *)buttonAlternate;
+						title:(NSString *)titleText
+				defaultButton:(NSString *)buttonDefault
+			  alternateButton:(nullable NSString *)buttonAlternate;
 
 + (NSAlert *)alertWithMessage:(NSString *)bodyText
-						 title:(NSString *)titleText
-				 defaultButton:(NSString *)buttonDefault
-			   alternateButton:(nullable NSString *)buttonAlternate
-				   otherButton:(nullable NSString *)buttonOther;
+						title:(NSString *)titleText
+				defaultButton:(NSString *)buttonDefault
+			  alternateButton:(nullable NSString *)buttonAlternate
+				  otherButton:(nullable NSString *)buttonOther;
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText;
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText;
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-							otherButton:(nullable NSString *)buttonOther
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						   otherButton:(nullable NSString *)buttonOther
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-							otherButton:(nullable NSString *)buttonOther
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						   otherButton:(nullable NSString *)buttonOther
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText
-						  accessoryView:(nullable NSView *)accessoryView
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText
+						 accessoryView:(nullable NSView *)accessoryView
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-							otherButton:(nullable NSString *)buttonOther
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText
-						  accessoryView:(nullable NSView *)accessoryView
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						   otherButton:(nullable NSString *)buttonOther
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText
+						 accessoryView:(nullable NSView *)accessoryView
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock;
 
 #pragma mark -
 #pragma mark Non-blocking Alerts (Sheet)

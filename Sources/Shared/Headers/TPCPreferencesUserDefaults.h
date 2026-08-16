@@ -37,7 +37,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define RZUserDefaults()						[TPCPreferencesUserDefaults sharedUserDefaults]
+#define RZUserDefaults() [TPCPreferencesUserDefaults sharedUserDefaults]
 
 /* The user info dictionary of this notification contains the changed key. */
 GLASSTUAL_EXTERN NSNotificationName const TPCPreferencesUserDefaultsDidChangeNotification;
@@ -49,9 +49,9 @@ GLASSTUAL_EXTERN NSNotificationName const TPCPreferencesUserDefaultsDidChangeNot
 @interface TPCPreferencesUserDefaults : NSUserDefaults
 + (TPCPreferencesUserDefaults *)sharedUserDefaults;
 
-- (void)registerDefault:(id <NSCopying>)value forKey:(NSString *)defaultName;
+- (void)registerDefault:(id<NSCopying>)value forKey:(NSString *)defaultName;
 
-@property (copy, readonly) NSDictionary<NSString *, id> *registeredDefaults;
+@property(copy, readonly) NSDictionary<NSString *, id> *registeredDefaults;
 @end
 
 /* Trying to create a new instance of TPCPreferencesUserDefaultsController will

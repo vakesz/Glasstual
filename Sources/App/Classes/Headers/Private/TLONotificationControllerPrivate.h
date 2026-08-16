@@ -42,14 +42,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient;
 
-GLASSTUAL_EXTERN NSString * const TXNotificationUserInfoClientIdentifierKey;
-GLASSTUAL_EXTERN NSString * const TXNotificationUserInfoChannelIdentifierKey;
+GLASSTUAL_EXTERN NSString *const TXNotificationUserInfoClientIdentifierKey;
+GLASSTUAL_EXTERN NSString *const TXNotificationUserInfoChannelIdentifierKey;
 
-GLASSTUAL_EXTERN NSString * const TXNotificationDialogStandardNicknameFormat;
-GLASSTUAL_EXTERN NSString * const TXNotificationDialogActionNicknameFormat;
+GLASSTUAL_EXTERN NSString *const TXNotificationDialogStandardNicknameFormat;
+GLASSTUAL_EXTERN NSString *const TXNotificationDialogActionNicknameFormat;
 
-GLASSTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardActionFormat;
-GLASSTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardMessageFormat;
+GLASSTUAL_EXTERN NSString *const TXNotificationHighlightLogStandardActionFormat;
+GLASSTUAL_EXTERN NSString *const TXNotificationHighlightLogStandardMessageFormat;
 
 @interface TLONotificationController ()
 /* All methods in this controller do not honor any user preference for
@@ -61,9 +61,9 @@ GLASSTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardMessageForma
  formatter stripping if need be. In addition to properly separating
  notifications by threads. */
 - (void)notify:(TXNotificationType)eventType
-		 title:(nullable NSString *)eventTitle
-   description:(nullable NSString *)eventDescription
-	  userInfo:(nullable NSDictionary<NSString *, id> *)eventContext;
+		  title:(nullable NSString *)eventTitle
+	description:(nullable NSString *)eventDescription
+	   userInfo:(nullable NSDictionary<NSString *, id> *)eventContext;
 
 - (void)dismissNotificationsForChannel:(nullable IRCChannel *)channel onClient:(IRCClient *)client;
 
@@ -71,13 +71,9 @@ GLASSTUAL_EXTERN NSString * const TXNotificationHighlightLogStandardMessageForma
  Nothing more. -notify:title:description:userInfo: is the proper entry point
  for sending notifications related to IRC. These entry points are conveniences
  for sending unrelated notifications such as from the license manager or addons. */
-- (void)scheduleNotificationWithTitle:(NSString *)title
-							  message:(NSString *)message
-							 onClient:(IRCClient *)client;
+- (void)scheduleNotificationWithTitle:(NSString *)title message:(NSString *)message onClient:(IRCClient *)client;
 
-- (void)scheduleNotificationWithTitle:(NSString *)title
-							  message:(NSString *)message
-						   forChannel:(IRCChannel *)channel;
+- (void)scheduleNotificationWithTitle:(NSString *)title message:(NSString *)message forChannel:(IRCChannel *)channel;
 
 - (void)scheduleNotificationWithTitle:(NSString *)title
 							  message:(NSString *)message

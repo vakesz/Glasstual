@@ -41,11 +41,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCConnectionConfig;
 
-typedef void (^RCMSecureConnectionInformationCompletionBlock)(
-										NSString * _Nullable policyName,
-										tls_protocol_version_t ptocoolType,
-										tls_ciphersuite_t cipherSuites,
-										NSArray<NSData *> *certificateChain);
+typedef void (^RCMSecureConnectionInformationCompletionBlock)(NSString *_Nullable policyName,
+															  tls_protocol_version_t ptocoolType,
+															  tls_ciphersuite_t cipherSuites,
+															  NSArray<NSData *> *certificateChain);
 
 #pragma mark -
 #pragma mark Server Protocol

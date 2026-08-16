@@ -42,11 +42,11 @@ NS_ASSUME_NONNULL_BEGIN
 @implementation TDCInputPrompt
 
 + (NSModalResponse)promptWithMessage:(NSString *)bodyText
-									  title:(NSString *)titleText
-							  defaultButton:(NSString *)buttonDefault
-							alternateButton:(nullable NSString *)buttonAlternate
-							  prefillString:(nullable NSString *)prefillString
-							   resultString:(NSString * _Nonnull * _Nonnull )resultString
+							   title:(NSString *)titleText
+					   defaultButton:(NSString *)buttonDefault
+					 alternateButton:(nullable NSString *)buttonAlternate
+					   prefillString:(nullable NSString *)prefillString
+						resultString:(NSString *_Nonnull *_Nonnull)resultString
 {
 	NSParameterAssert(bodyText != nil);
 	NSParameterAssert(titleText != nil);
@@ -57,25 +57,23 @@ NS_ASSUME_NONNULL_BEGIN
 
 	textField.translatesAutoresizingMaskIntoConstraints = NO;
 
-	[textField addConstraints:
-	 @[
-	   [NSLayoutConstraint constraintWithItem:textField
-									attribute:NSLayoutAttributeWidth
-									relatedBy:NSLayoutRelationEqual
-									   toItem:nil
-									attribute:NSLayoutAttributeNotAnAttribute
-								   multiplier:1.0
-									 constant:295.0],
+	[textField addConstraints:@[
+		[NSLayoutConstraint constraintWithItem:textField
+									 attribute:NSLayoutAttributeWidth
+									 relatedBy:NSLayoutRelationEqual
+										toItem:nil
+									 attribute:NSLayoutAttributeNotAnAttribute
+									multiplier:1.0
+									  constant:295.0],
 
-	   [NSLayoutConstraint constraintWithItem:textField
-									attribute:NSLayoutAttributeHeight
-									relatedBy:NSLayoutRelationEqual
-									   toItem:nil
-									attribute:NSLayoutAttributeNotAnAttribute
-								   multiplier:1.0
-									 constant:22.0]
-	   ]
-	 ];
+		[NSLayoutConstraint constraintWithItem:textField
+									 attribute:NSLayoutAttributeHeight
+									 relatedBy:NSLayoutRelationEqual
+										toItem:nil
+									 attribute:NSLayoutAttributeNotAnAttribute
+									multiplier:1.0
+									  constant:22.0]
+	]];
 
 	textField.editable = YES;
 	textField.selectable = YES;

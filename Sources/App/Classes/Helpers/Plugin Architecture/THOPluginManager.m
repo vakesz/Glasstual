@@ -50,15 +50,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _extrasInstallerExtensionUpdateCheckInterval			345600
+#define _extrasInstallerExtensionUpdateCheckInterval 345600
 
-NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPluginManagerFinishedLoadingPluginsNotification";
+NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
+	@"THOPluginManagerFinishedLoadingPluginsNotification";
 
 @interface THOPluginManager ()
-@property (nonatomic, assign, readwrite) BOOL pluginsLoaded;
-@property (nonatomic, copy, readwrite, nullable) NSArray<THOPluginItem *> *loadedPlugins;
-@property (nonatomic, copy, nullable) NSArray<NSBundle *> *obsoleteBundles;
-@property (nonatomic, assign) THOPluginItemSupportedFeature supportedFeatures;
+@property(nonatomic, assign, readwrite) BOOL pluginsLoaded;
+@property(nonatomic, copy, readwrite, nullable) NSArray<THOPluginItem *> *loadedPlugins;
+@property(nonatomic, copy, nullable) NSArray<NSBundle *> *obsoleteBundles;
+@property(nonatomic, assign) THOPluginItemSupportedFeature supportedFeatures;
 @end
 
 @implementation THOPluginManager
@@ -98,10 +99,7 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 	NSMutableArray<NSBundle *> *obsoleteBundles = [NSMutableArray array];
 
 	NSArray *pathsToLoad =
-	[RZFileManager() buildPathArray:
-		[TPCPathInfo customExtensions],
-		[TPCPathInfo bundledExtensions],
-		nil];
+		[RZFileManager() buildPathArray:[TPCPathInfo customExtensions], [TPCPathInfo bundledExtensions], nil];
 
 	for (NSString *path in pathsToLoad) {
 		NSArray *pathFiles = [RZFileManager() contentsOfDirectoryAtPath:path error:NULL];
@@ -172,8 +170,8 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 			continue;
 		}
 
-		NSComparisonResult comparisonResult =
-		[comparisonVersion compare:THOPluginProtocolCompatibilityMinimumVersion options:NSNumericSearch];
+		NSComparisonResult comparisonResult = [comparisonVersion compare:THOPluginProtocolCompatibilityMinimumVersion
+																 options:NSNumericSearch];
 
 		if (comparisonResult == NSOrderedAscending) {
 			[obsoleteBundles addObject:bundle];
@@ -249,10 +247,7 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 	NSArray *forbiddenCommands = self.listOfForbiddenCommandNames;
 
 	NSArray *scriptPaths =
-	[RZFileManager() buildPathArray:
-		[TPCPathInfo customScripts],
-		[TPCPathInfo bundledScripts],
-		nil];
+		[RZFileManager() buildPathArray:[TPCPathInfo customScripts], [TPCPathInfo bundledScripts], nil];
 
 	id returnValue = nil;
 
@@ -276,12 +271,17 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 
 			BOOL executable = [RZFileManager() isExecutableFileAtPath:filePath];
 
-			if (executable == NO && [fileExtension isEqualToString:TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod] == NO) {
-				LogToConsoleInfo("WARNING: File “%{public}@“ found in unsupervised script folder but it isn't AppleScript or an executable. It will be ignored.", file);
+			if (executable == NO &&
+				[fileExtension isEqualToString:TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod] == NO) {
+				LogToConsoleInfo("WARNING: File “%{public}@“ found in unsupervised script folder but it isn't "
+								 "AppleScript or an executable. It will be ignored.",
+								 file);
 
 				continue;
 			} else if ([forbiddenCommands containsObject:command]) {
-				LogToConsoleInfo("WARNING: The command “%{public}@“ exists as a script file, but it is being ignored because the command name is forbidden.", fileWithoutExtension);
+				LogToConsoleInfo("WARNING: The command “%{public}@“ exists as a script file, but it is being ignored "
+								 "because the command name is forbidden.",
+								 fileWithoutExtension);
 
 				continue;
 			}
@@ -383,22 +383,22 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 				suppressionKey:nil
 			   suppressionText:nil
 			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id _Nullable underlyingAlert) {
-		if (buttonClicked != TDCAlertResponseOther) {
-			return;
-		}
+				   if (buttonClicked != TDCAlertResponseOther) {
+					   return;
+				   }
 
-		/* Revealing the bundles is not an answer to the question the alert
+				   /* Revealing the bundles is not an answer to the question the alert
 		 asks, so ask it again once the user has had a look. */
-		[NSBundle openInstallationLocationsForBundles:thirdPartyBundles];
+				   [NSBundle openInstallationLocationsForBundles:thirdPartyBundles];
 
-		[self _presentObsoleteBundlesAlertForBundles:thirdPartyBundles];
-	}];
+				   [self _presentObsoleteBundlesAlertForBundles:thirdPartyBundles];
+			   }];
 }
 
 - (void)extrasInstallerCheckForUpdates
 {
 	/* Do not check for updates too often */
-#define _defaultsKey 	@"THOPluginManager -> Extras Installer Last Check for Update Payload"
+#define _defaultsKey @"THOPluginManager -> Extras Installer Last Check for Update Payload"
 
 	NSTimeInterval currentTime = [[NSDate date] timeIntervalSince1970];
 
@@ -412,17 +412,14 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 		NSString *lastVersion = [lastUpdatePayload stringForKey:@"lastVersion"];
 
 		if ((currentTime - lastCheckTime) < _extrasInstallerExtensionUpdateCheckInterval &&
-			[lastVersion isEqualToString:applicationVersion])
-		{
+			[lastVersion isEqualToString:applicationVersion]) {
 			return;
 		}
 	}
 
 	/* Record the last time updates were checked for */
-	[RZUserDefaults() setObject:@{
-		@"lastCheck" : @(currentTime),
-		@"lastVersion" : applicationVersion
-	} forKey:_defaultsKey];
+	[RZUserDefaults() setObject:@{@"lastCheck" : @(currentTime), @"lastVersion" : applicationVersion}
+						 forKey:_defaultsKey];
 
 	/* Check for updates */
 	[self _extrasInstallerCheckForUpdates];
@@ -466,7 +463,8 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 	[self _extrasInstallerInformUserAboutUpdateForBundles:[outdatedBundles copy] updateOptional:YES];
 }
 
-- (void)_extrasInstallerInformUserAboutUpdateForBundles:(NSArray<NSBundle *> *)bundles updateOptional:(BOOL)updateOptional
+- (void)_extrasInstallerInformUserAboutUpdateForBundles:(NSArray<NSBundle *> *)bundles
+										 updateOptional:(BOOL)updateOptional
 {
 	NSParameterAssert(bundles != nil);
 
@@ -475,9 +473,8 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 	NSString *suppressionKey = nil;
 
 	if (updateOptional) {
-		suppressionKey =
-		[@"plugin_manager_extension_update_dialog_"
-	  stringByAppendingString:[TPCApplicationInfo applicationVersionShort]];
+		suppressionKey = [@"plugin_manager_extension_update_dialog_"
+			stringByAppendingString:[TPCApplicationInfo applicationVersionShort]];
 	}
 
 	NSString *bundlesName = [NSBundle formattedDisplayNamesForBundles:bundles];
@@ -495,13 +492,13 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 				   otherButton:promptOtherButton
 				suppressionKey:suppressionKey
 			   suppressionText:nil
-			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id  _Nullable underlyingAlert) {
-		if (buttonClicked == TDCAlertResponseAlternate) {
-			[self extrasInstallerLaunchInstaller];
-		} else if (buttonClicked == TDCAlertResponseOther) {
-			[NSBundle openInstallationLocationsForBundles:bundles];
-		}
-	}];
+			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id _Nullable underlyingAlert) {
+				   if (buttonClicked == TDCAlertResponseAlternate) {
+					   [self extrasInstallerLaunchInstaller];
+				   } else if (buttonClicked == TDCAlertResponseOther) {
+					   [NSBundle openInstallationLocationsForBundles:bundles];
+				   }
+			   }];
 }
 
 - (NSArray<NSString *> *)extrasInstallerBundleIdentifiers
@@ -512,7 +509,8 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 - (NSDictionary<NSString *, NSString *> *)extrasInstallerLatestBundleVersions
 {
 	/* List of extra bundles and their latest version number. */
-	return [TPCResourceManager dictionaryFromResources:@"StaticStore" key:@"THOPluginManager Extras Installer Latest Extension Versions"];
+	return [TPCResourceManager dictionaryFromResources:@"StaticStore"
+												   key:@"THOPluginManager Extras Installer Latest Extension Versions"];
 }
 
 - (NSArray<NSString *> *)extrasInstallerReservedCommands
@@ -523,7 +521,7 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 }
 
 - (void)findHandlerForOutgoingCommand:(NSString *)command
-								 path:(NSString * _Nullable *)path
+								 path:(NSString *_Nullable *)path
 						   isReserved:(BOOL *)isReserved
 							 isScript:(BOOL *)isScript
 						  isExtension:(BOOL *)isExtension
@@ -531,19 +529,19 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 	NSParameterAssert(command != nil);
 
 	/* Reset context pointers */
-	if ( path) {
+	if (path) {
 		*path = nil;
 	}
 
-	if ( isReserved) {
+	if (isReserved) {
 		*isReserved = NO;
 	}
 
-	if ( isScript) {
+	if (isScript) {
 		*isScript = NO;
 	}
 
-	if ( isExtension) {
+	if (isExtension) {
 		*isExtension = NO;
 	}
 
@@ -555,11 +553,11 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 			continue;
 		}
 
-		if ( path) {
+		if (path) {
 			*path = scriptPaths[scriptCommand];
 		}
 
-		if ( isScript) {
+		if (isScript) {
 			*isScript = YES;
 		}
 
@@ -570,7 +568,7 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 	BOOL pluginFound = [self.supportedUserInputCommands containsObject:command];
 
 	if (pluginFound) {
-		if ( isExtension) {
+		if (isExtension) {
 			*isExtension = YES;
 		}
 
@@ -580,7 +578,7 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 	/* Find a reserved command */
 	NSArray *reservedCommands = self.extrasInstallerReservedCommands;
 
-	if ( isReserved) {
+	if (isReserved) {
 		*isReserved = [reservedCommands containsObject:command];
 	}
 }
@@ -605,13 +603,13 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 {
 	NSURL *extrasURL = [RZMainBundle() URLForResource:@"Glasstual-Extras" withExtension:@"pkg"];
 
-	NSURL *installerURL =
-	[RZWorkspace() URLForApplicationWithBundleIdentifier:@"com.apple.installer"];
+	NSURL *installerURL = [RZWorkspace() URLForApplicationWithBundleIdentifier:@"com.apple.installer"];
 
-	[RZWorkspace() openURLs:@[extrasURL]
-	   withApplicationAtURL:installerURL
-			  configuration:[NSWorkspaceOpenConfiguration new]
-		  completionHandler:nil];;
+	[RZWorkspace() openURLs:@[ extrasURL ]
+		withApplicationAtURL:installerURL
+			   configuration:[NSWorkspaceOpenConfiguration new]
+		   completionHandler:nil];
+	;
 }
 
 #pragma mark -
@@ -621,22 +619,22 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 {
 	NSParameterAssert(plugin != nil);
 
-#define _ef(_feature)		if ([plugin supportsFeature:(_feature)] && [self supportsFeature:(_feature)] == NO) {		\
-								self->_supportedFeatures |= (_feature);														\
-							}
+#define _ef(_feature)                                                                                                  \
+	if ([plugin supportsFeature:(_feature)] && [self supportsFeature:(_feature)] == NO) {                              \
+		self->_supportedFeatures |= (_feature);                                                                        \
+	}
 
 	_ef(THOPluginItemSupportedFeatureDidReceiveCommandEvent)
-	_ef(THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent)
-//	_ef(THOPluginItemSupportedFeatureInlineMediaManipulation)
-	_ef(THOPluginItemSupportedFeatureNewMessagePostedEvent)
-	_ef(THOPluginItemSupportedFeatureOutputSuppressionRules)
-	_ef(THOPluginItemSupportedFeaturePreferencePane)
-	_ef(THOPluginItemSupportedFeatureServerInputDataInterception)
-	_ef(THOPluginItemSupportedFeatureSubscribedServerInputCommands)
-	_ef(THOPluginItemSupportedFeatureSubscribedUserInputCommands)
-	_ef(THOPluginItemSupportedFeatureUserInputDataInterception)
-	_ef(THOPluginItemSupportedFeatureWebViewJavaScriptPayloads)
-	_ef(THOPluginItemSupportedFeatureWillRenderMessageEvent)
+		_ef(THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent)
+		//	_ef(THOPluginItemSupportedFeatureInlineMediaManipulation)
+		_ef(THOPluginItemSupportedFeatureNewMessagePostedEvent) _ef(THOPluginItemSupportedFeatureOutputSuppressionRules)
+			_ef(THOPluginItemSupportedFeaturePreferencePane)
+				_ef(THOPluginItemSupportedFeatureServerInputDataInterception)
+					_ef(THOPluginItemSupportedFeatureSubscribedServerInputCommands)
+						_ef(THOPluginItemSupportedFeatureSubscribedUserInputCommands)
+							_ef(THOPluginItemSupportedFeatureUserInputDataInterception)
+								_ef(THOPluginItemSupportedFeatureWebViewJavaScriptPayloads)
+									_ef(THOPluginItemSupportedFeatureWillRenderMessageEvent)
 
 #undef _ef
 }
@@ -765,8 +763,7 @@ NSString * const THOPluginManagerFinishedLoadingPluginsNotification = @"THOPlugi
 		}
 
 		[allExtensions sortUsingComparator:^NSComparisonResult(THOPluginItem *object1, THOPluginItem *object2) {
-			return [object1.pluginPreferencesPaneMenuItemTitle compare:
-					object2.pluginPreferencesPaneMenuItemTitle];
+			return [object1.pluginPreferencesPaneMenuItemTitle compare:object2.pluginPreferencesPaneMenuItemTitle];
 		}];
 
 		cachedValue = [allExtensions copy];

@@ -43,12 +43,12 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClient, IRCChannel, IRCTreeItem;
 
 @interface TLOSpokenNotification : NSObject
-@property (nonatomic, weak, null_unspecified, readonly) IRCClient *client;
-@property (nonatomic, weak, null_unspecified, readonly) IRCChannel *channel;
-@property (nonatomic, copy, null_unspecified, readonly) NSString *nickname;
-@property (nonatomic, copy, null_unspecified, readonly) NSString *text;
-@property (nonatomic, readonly) TVCLogLineType lineType;
-@property (nonatomic, readonly) TXNotificationType notificationType;
+@property(nonatomic, weak, null_unspecified, readonly) IRCClient *client;
+@property(nonatomic, weak, null_unspecified, readonly) IRCChannel *channel;
+@property(nonatomic, copy, null_unspecified, readonly) NSString *nickname;
+@property(nonatomic, copy, null_unspecified, readonly) NSString *text;
+@property(nonatomic, readonly) TVCLogLineType lineType;
+@property(nonatomic, readonly) TXNotificationType notificationType;
 
 - (instancetype)initWithNotification:(TXNotificationType)notificationType
 							lineType:(TVCLogLineType)lineType

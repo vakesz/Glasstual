@@ -66,17 +66,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConfigurationWasUpdatedNotification";
+NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConfigurationWasUpdatedNotification";
 
 @interface IRCChannel ()
-@property (readonly) BOOL isSelectedChannel;
-@property (nonatomic, assign) BOOL statusChangedByAction;
-@property (nonatomic, copy, readwrite) IRCChannelConfig *config;
-@property (nonatomic, assign, readwrite) NSTimeInterval channelJoinTime;
-@property (nonatomic, strong, readwrite, nullable) IRCChannelMode *modeInfo;
-@property (nonatomic, strong, readwrite, nullable) IRCChannelMemberList *memberInfo;
-@property (nonatomic, strong, nullable) TLOFileLogger *logFile;
-@property (nonatomic, assign, readwrite) NSUInteger logFileSessionCount;
+@property(readonly) BOOL isSelectedChannel;
+@property(nonatomic, assign) BOOL statusChangedByAction;
+@property(nonatomic, copy, readwrite) IRCChannelConfig *config;
+@property(nonatomic, assign, readwrite) NSTimeInterval channelJoinTime;
+@property(nonatomic, strong, readwrite, nullable) IRCChannelMode *modeInfo;
+@property(nonatomic, strong, readwrite, nullable) IRCChannelMemberList *memberInfo;
+@property(nonatomic, strong, nullable) TLOFileLogger *logFile;
+@property(nonatomic, assign, readwrite) NSUInteger logFileSessionCount;
 @end
 
 @implementation IRCChannel
@@ -120,7 +120,9 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 	[self updateConfig:config fireChangedNotification:fireChangedNotification updateStoredChannelList:YES];
 }
 
-- (void)updateConfig:(IRCChannelConfig *)config fireChangedNotification:(BOOL)fireChangedNotification updateStoredChannelList:(BOOL)updateStoredChannelList
+- (void)updateConfig:(IRCChannelConfig *)config
+	fireChangedNotification:(BOOL)fireChangedNotification
+	updateStoredChannelList:(BOOL)updateStoredChannelList
 {
 	NSParameterAssert(config != nil);
 
@@ -130,10 +132,8 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 		return;
 	}
 
-	if (currentConfig.type != config.type ||
-		[currentConfig.channelName isEqualToString:config.channelName] == NO ||
-		[currentConfig.uniqueIdentifier isEqualToString:config.uniqueIdentifier] == NO)
-	{
+	if (currentConfig.type != config.type || [currentConfig.channelName isEqualToString:config.channelName] == NO ||
+		[currentConfig.uniqueIdentifier isEqualToString:config.uniqueIdentifier] == NO) {
 		LogToConsoleError("Tried to load configuration for incorrect channel");
 
 		return;
@@ -227,18 +227,15 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 - (NSString *)channelTypeString
 {
 	switch (self.config.type) {
-		case IRCChannelTypeChannel:
-		{
-			return @"channel";
-		}
-		case IRCChannelTypePrivateMessage:
-		{
-			return @"query";
-		}
-		case IRCChannelTypeUtility:
-		{
-			return @"utility";
-		}
+	case IRCChannelTypeChannel: {
+		return @"channel";
+	}
+	case IRCChannelTypePrivateMessage: {
+		return @"query";
+	}
+	case IRCChannelTypeUtility: {
+		return @"utility";
+	}
 	}
 }
 
@@ -480,13 +477,14 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 
 	[self.config destroySecretKeyKeychainItem];
 
-	NSArray *openWindows = [windowController()
-							windowsFromWindowList:@[@"TDCChannelPropertiesSheet",
-													@"TDCChannelModifyTopicSheet",
-													@"TDCChannelModifyModesSheet",
-													@"TDCChannelBanListSheet"]];
+	NSArray *openWindows = [windowController() windowsFromWindowList:@[
+		@"TDCChannelPropertiesSheet",
+		@"TDCChannelModifyTopicSheet",
+		@"TDCChannelModifyModesSheet",
+		@"TDCChannelBanListSheet"
+	]];
 
-	for (TDCSheetBase <TDCChannelPrototype> *windowObject in openWindows) {
+	for (TDCSheetBase<TDCChannelPrototype> *windowObject in openWindows) {
 		if ([windowObject.channelId isEqualToString:self.uniqueIdentifier]) {
 			[windowObject close];
 		}
@@ -512,12 +510,15 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 	[self closeLogFile];
 
 	if (self.isPrivateMessage) {
-		LogToConsoleTerminationProgress("[%{public}@] Destroying keychain items for private message", self.uniqueIdentifier);
+		LogToConsoleTerminationProgress("[%{public}@] Destroying keychain items for private message",
+										self.uniqueIdentifier);
 
 		[self.config destroySecretKeyKeychainItem];
 	}
 
-	LogToConsoleTerminationProgress("[%{public}@] Preparing view controller: <%{public}@>", self.uniqueIdentifier, self.viewController.uniqueIdentifier);
+	LogToConsoleTerminationProgress("[%{public}@] Preparing view controller: <%{public}@>",
+									self.uniqueIdentifier,
+									self.viewController.uniqueIdentifier);
 
 	[self.viewController prepareForApplicationTermination];
 }
@@ -528,7 +529,7 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 - (void)reopenLogFileIfNeeded
 {
 	if ([TPCPreferences logToDiskIsEnabled] && self.isUtility == NO) {
-		if ( self.logFile) {
+		if (self.logFile) {
 			[self.logFile reopenIfNeeded];
 		}
 	} else {
@@ -587,7 +588,8 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 	[self print:logLine completionBlock:nil];
 }
 
-- (void)print:(TVCLogLine *)logLine completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock
+- (void)print:(TVCLogLine *)logLine
+	completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock
 {
 	NSParameterAssert(logLine != nil);
 
@@ -639,7 +641,10 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 	[self.memberInfo replaceMember:member1 withMember:member2 resort:resort];
 }
 
-- (void)replaceMember:(IRCChannelUser *)member1 withMember:(IRCChannelUser *)member2 resort:(BOOL)resort replaceInAllChannels:(BOOL)replaceInAllChannels
+- (void)replaceMember:(IRCChannelUser *)member1
+			  withMember:(IRCChannelUser *)member2
+				  resort:(BOOL)resort
+	replaceInAllChannels:(BOOL)replaceInAllChannels
 {
 	[self.memberInfo replaceMember:member1 withMember:member2 resort:resort replaceInAllChannels:replaceInAllChannels];
 }
@@ -669,12 +674,16 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 	return [self.memberInfo pasteboardDataForMembers:members];
 }
 
-+ (BOOL)readNicknamesFromPasteboardData:(NSData *)pasteboardData withBlock:(void (NS_NOESCAPE ^)(IRCChannel *channel, NSArray<NSString *> *nicknames))callbackBlock
++ (BOOL)readNicknamesFromPasteboardData:(NSData *)pasteboardData
+							  withBlock:(void(NS_NOESCAPE ^)(IRCChannel *channel, NSArray<NSString *> *nicknames))
+											callbackBlock
 {
 	return [IRCChannelMemberList readNicknamesFromPasteboardData:pasteboardData withBlock:callbackBlock];
 }
 
-+ (BOOL)readMembersFromPasteboardData:(NSData *)pasteboardData withBlock:(void (NS_NOESCAPE ^)(IRCChannel *channel, NSArray<IRCChannelUser *> *members))callbackBlock
++ (BOOL)readMembersFromPasteboardData:(NSData *)pasteboardData
+							withBlock:(void(NS_NOESCAPE ^)(IRCChannel *channel, NSArray<IRCChannelUser *> *members))
+										  callbackBlock
 {
 	return [IRCChannelMemberList readMembersFromPasteboardData:pasteboardData withBlock:callbackBlock];
 }
@@ -697,7 +706,9 @@ NSString * const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelCon
 #pragma mark -
 #pragma mark Table View Delegate
 
-- (nullable NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(nullable NSTableColumn *)tableColumn row:(NSInteger)row
+- (nullable NSView *)tableView:(NSTableView *)tableView
+			viewForTableColumn:(nullable NSTableColumn *)tableColumn
+						   row:(NSInteger)row
 {
 	NSView *newView = [tableView makeViewWithIdentifier:@"GroupView" owner:self];
 

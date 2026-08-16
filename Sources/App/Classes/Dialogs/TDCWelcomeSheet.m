@@ -51,14 +51,14 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCWelcomeSheet ()
-@property (nonatomic, weak) IBOutlet NSButton *autoConnectCheck;
-@property (nonatomic, weak) IBOutlet NSButton *addChannelButton;
-@property (nonatomic, weak) IBOutlet NSButton *deleteChannelButton;
-@property (nonatomic, weak) IBOutlet TVCValidatedTextField *nicknameTextField;
-@property (nonatomic, weak) IBOutlet TVCValidatedComboBox *serverAddressComboBox;
-@property (nonatomic, weak) IBOutlet TVCBasicTableView *channelTable;
-@property (nonatomic, strong) NSMutableArray<NSString *> *channelList;
-@property (nonatomic, strong) IRCNetworkList *networkList;
+@property(nonatomic, weak) IBOutlet NSButton *autoConnectCheck;
+@property(nonatomic, weak) IBOutlet NSButton *addChannelButton;
+@property(nonatomic, weak) IBOutlet NSButton *deleteChannelButton;
+@property(nonatomic, weak) IBOutlet TVCValidatedTextField *nicknameTextField;
+@property(nonatomic, weak) IBOutlet TVCValidatedComboBox *serverAddressComboBox;
+@property(nonatomic, weak) IBOutlet TVCBasicTableView *channelTable;
+@property(nonatomic, strong) NSMutableArray<NSString *> *channelList;
+@property(nonatomic, strong) IRCNetworkList *networkList;
 
 - (IBAction)onAddChannel:(nullable id)sender;
 - (IBAction)onDeleteChannel:(nullable id)sender;
@@ -177,7 +177,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		server.serverAddress = serverAddress;
 
-		config.serverList = @[[server copy]];
+		config.serverList = @[ [server copy] ];
 	}
 
 	config.autoConnect = (self.autoConnectCheck.state == NSControlStateValueOn);

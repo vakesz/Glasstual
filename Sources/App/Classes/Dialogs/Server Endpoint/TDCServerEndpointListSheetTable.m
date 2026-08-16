@@ -43,11 +43,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCServerEndpointListSheetTableCellView ()
-@property (nonatomic, copy) NSString *serverAddress;
-@property (nonatomic, copy) NSString *serverPort;
-@property (nonatomic, copy) NSNumber *prefersSecuredConnection;
-@property (nonatomic, copy) NSString *serverPassword;
-@property (nonatomic, assign) BOOL observersRegistered;
+@property(nonatomic, copy) NSString *serverAddress;
+@property(nonatomic, copy) NSString *serverPort;
+@property(nonatomic, copy) NSNumber *prefersSecuredConnection;
+@property(nonatomic, copy) NSString *serverPassword;
+@property(nonatomic, assign) BOOL observersRegistered;
 @end
 
 @implementation TDCServerEndpointListSheetTableCellView
@@ -57,12 +57,13 @@ NS_ASSUME_NONNULL_BEGIN
 	if ([inKeyPath isEqualToString:@"serverAddress"]) {
 		if (((NSString *)*ioValue).isValidInternetAddress == NO) {
 			if (outError) {
-				*outError = [NSError errorWithDomain:TXErrorDomain
-												 code:71013
-											userInfo:@{
-					NSLocalizedDescriptionKey : TXTLS(@"TDCServerEndpointListSheet[iis-gr]"),
-					NSLocalizedRecoverySuggestionErrorKey : TXTLS(@"TDCServerEndpointListSheet[k0c-3u]")}
-							 ];
+				*outError = [NSError
+					errorWithDomain:TXErrorDomain
+							   code:71013
+						   userInfo:@{
+							   NSLocalizedDescriptionKey : TXTLS(@"TDCServerEndpointListSheet[iis-gr]"),
+							   NSLocalizedRecoverySuggestionErrorKey : TXTLS(@"TDCServerEndpointListSheet[k0c-3u]")
+						   }];
 			}
 
 			return NO;
@@ -70,12 +71,13 @@ NS_ASSUME_NONNULL_BEGIN
 	} else if ([inKeyPath isEqualToString:@"serverPort"]) {
 		if (((NSString *)*ioValue).isValidInternetPort == NO) {
 			if (outError) {
-				*outError = [NSError errorWithDomain:TXErrorDomain
-												code:71014
-											userInfo:@{
-						NSLocalizedDescriptionKey : TXTLS(@"TDCServerEndpointListSheet[qeb-ip]"),
-						NSLocalizedRecoverySuggestionErrorKey : TXTLS(@"TDCServerEndpointListSheet[ox2-od]")}
-							 ];
+				*outError = [NSError
+					errorWithDomain:TXErrorDomain
+							   code:71014
+						   userInfo:@{
+							   NSLocalizedDescriptionKey : TXTLS(@"TDCServerEndpointListSheet[qeb-ip]"),
+							   NSLocalizedRecoverySuggestionErrorKey : TXTLS(@"TDCServerEndpointListSheet[ox2-od]")
+						   }];
 			}
 
 			return NO;
@@ -152,8 +154,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	BOOL l_prefersSecuredConnection =
-	(prefersSecuredConnection.unsignedIntegerValue == NSControlStateValueOn);
+	BOOL l_prefersSecuredConnection = (prefersSecuredConnection.unsignedIntegerValue == NSControlStateValueOn);
 
 	if (l_prefersSecuredConnection) {
 		objectValue.prefersSecuredConnection = YES;
@@ -240,7 +241,10 @@ NS_ASSUME_NONNULL_BEGIN
 	self.observersRegistered = NO;
 }
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 {
 	if ([keyPath isEqualToString:@"serverPort"]) {
 		[self willChangeValueForKey:@"serverPort"];

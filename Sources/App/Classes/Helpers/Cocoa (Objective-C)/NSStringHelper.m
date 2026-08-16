@@ -60,8 +60,7 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 		return YES;
 	}
 
-	return [self onlyContainsCharactersFromCharacterSet:
-			[NSCharacterSet Ato9UnderscoreDashPeriod]];
+	return [self onlyContainsCharactersFromCharacterSet:[NSCharacterSet Ato9UnderscoreDashPeriod]];
 }
 
 - (BOOL)isValidInternetPort
@@ -80,12 +79,17 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 	return [self stringByAppendingFormat:@"%C", IRCTextFormatterTerminatingCharacter];
 }
 
-- (BOOL)hostmaskComponents:(NSString * _Nullable * _Nullable)nickname username:(NSString * _Nullable * _Nullable)username address:(NSString * _Nullable * _Nullable)address
+- (BOOL)hostmaskComponents:(NSString *_Nullable *_Nullable)nickname
+				  username:(NSString *_Nullable *_Nullable)username
+				   address:(NSString *_Nullable *_Nullable)address
 {
 	return [self hostmaskComponents:nickname username:username address:address onClient:nil];
 }
 
-- (BOOL)hostmaskComponents:(NSString * _Nullable * _Nullable)nickname username:(NSString * _Nullable * _Nullable)username address:(NSString * _Nullable * _Nullable)address onClient:(nullable IRCClient *)client
+- (BOOL)hostmaskComponents:(NSString *_Nullable *_Nullable)nickname
+				  username:(NSString *_Nullable *_Nullable)username
+				   address:(NSString *_Nullable *_Nullable)address
+				  onClient:(nullable IRCClient *)client
 {
 	if (self.length == 0) {
 		return NO;
@@ -97,37 +101,32 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 	/* Find first @ starting from the right side of string */
 	NSRange bang2pos = [self rangeOfString:@"@" options:(NSLiteralSearch | NSBackwardsSearch)];
 
-	if ((bang1pos.location == NSNotFound) ||
-		(bang2pos.location == NSNotFound) ||
-		(bang2pos.location <= bang1pos.location))
-	{
+	if ((bang1pos.location == NSNotFound) || (bang2pos.location == NSNotFound) ||
+		(bang2pos.location <= bang1pos.location)) {
 		return NO;
 	}
 
 	NSString *nicknameInt = [self substringToIndex:bang1pos.location];
 
-	NSString *usernameInt = [self substringWithRange:
-							 NSMakeRange((bang1pos.location + 1),
-										 (bang2pos.location - (bang1pos.location + 1)))];
+	NSString *usernameInt =
+		[self substringWithRange:NSMakeRange((bang1pos.location + 1), (bang2pos.location - (bang1pos.location + 1)))];
 
 	NSString *addressInt = [self substringAfterIndex:bang2pos.location];
 
-	if ([nicknameInt isHostmaskNicknameOn:client] == NO ||
-		[usernameInt isHostmaskUsernameOn:client] == NO ||
-		[addressInt isHostmaskAddressOn:client] == NO)
-	{
+	if ([nicknameInt isHostmaskNicknameOn:client] == NO || [usernameInt isHostmaskUsernameOn:client] == NO ||
+		[addressInt isHostmaskAddressOn:client] == NO) {
 		return NO;
 	}
 
-	if ( nickname) {
+	if (nickname) {
 		*nickname = nicknameInt;
 	}
 
-	if ( username) {
+	if (username) {
 		*username = usernameInt;
 	}
 
-	if ( address) {
+	if (address) {
 		*address = addressInt;
 	}
 
@@ -146,8 +145,7 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 
 - (BOOL)isHostmaskAddressOn:(nullable IRCClient *)client
 {
-	return (self.length > 0 &&
-			[self containsCharacters:@"\x021\x040\x000\x020\x00d\x00a"] == NO);
+	return (self.length > 0 && [self containsCharacters:@"\x021\x040\x000\x020\x00d\x00a"] == NO);
 }
 
 - (BOOL)isHostmaskUsername
@@ -157,8 +155,7 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 
 - (BOOL)isHostmaskUsernameOn:(nullable IRCClient *)client
 {
-	return (self.length > 0 &&
-			self.length <= TXMaximumIRCUsernameLength &&
+	return (self.length > 0 && self.length <= TXMaximumIRCUsernameLength &&
 			[self containsCharacters:@"\x000\x020\x00d\x00a"] == NO);
 }
 
@@ -199,9 +196,7 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 		maximumLength = TXMaximumIRCNicknameLength;
 	}
 
-	return ([self isNotEqualTo:@"*"] &&
-			self.length > 0 &&
-			self.length <= maximumLength &&
+	return ([self isNotEqualTo:@"*"] && self.length > 0 && self.length <= maximumLength &&
 			[self containsCharacters:@"\x021\x040\x000\x020\x00d\x00a"] == NO);
 }
 
@@ -246,12 +241,7 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 
 	UniChar c = [self characterAtIndex:0];
 
-	return (c == '#' ||
-			c == '&' ||
-			c == '+' ||
-			c == '!' ||
-			c == '~' ||
-			c == '?');
+	return (c == '#' || c == '&' || c == '+' || c == '!' || c == '~' || c == '?');
 }
 
 - (nullable NSString *)channelNameWithoutBang
@@ -324,7 +314,9 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 	return [AHHyperlinkScanner URLWithProperScheme:self];
 }
 
-- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont preferredFontColor:(nullable NSColor *)preferredFontColor honorFormattingPreference:(BOOL)formattingPreference
+- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont
+												preferredFontColor:(nullable NSColor *)preferredFontColor
+										 honorFormattingPreference:(BOOL)formattingPreference
 {
 	if (formattingPreference && [TPCPreferences removeAllFormatting]) {
 		NSString *string = self.stripIRCEffects;
@@ -345,9 +337,12 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 	return [TVCLogRenderer renderBodyAsAttributedString:self withAttributes:attributes];
 }
 
-- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont preferredFontColor:(nullable NSColor *)preferredFontColor
+- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont
+												preferredFontColor:(nullable NSColor *)preferredFontColor
 {
-	return [self attributedStringWithIRCFormatting:preferredFont preferredFontColor:preferredFontColor honorFormattingPreference:NO];
+	return [self attributedStringWithIRCFormatting:preferredFont
+								preferredFontColor:preferredFontColor
+						 honorFormattingPreference:NO];
 }
 
 - (NSString *)stripIRCEffects
@@ -371,37 +366,38 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 		UniChar character = inputBuffer[i];
 
 		switch (character) {
-			case IRCTextFormatterEffectBoldCharacter:
-			case IRCTextFormatterEffectItalicCharacter:
-			case IRCTextFormatterEffectItalicCharacterOld:
-			case IRCTextFormatterEffectMonospaceCharacter:
-			case IRCTextFormatterEffectStrikethroughCharacter:
-			case IRCTextFormatterEffectUnderlineCharacter:
-			case IRCTextFormatterTerminatingCharacter:
-			{
-				break;
-			}
-			case IRCTextFormatterEffectColorAsDigitCharacter:
-			case IRCTextFormatterEffectColorAsHexCharacter:
-			{
-				// One is subtracted because the for loop will increment by one for us
-				i += ([self colorComponentsOfCharacter:character startingAt:i foregroundColor:NULL backgroundColor:NULL] - 1);
+		case IRCTextFormatterEffectBoldCharacter:
+		case IRCTextFormatterEffectItalicCharacter:
+		case IRCTextFormatterEffectItalicCharacterOld:
+		case IRCTextFormatterEffectMonospaceCharacter:
+		case IRCTextFormatterEffectStrikethroughCharacter:
+		case IRCTextFormatterEffectUnderlineCharacter:
+		case IRCTextFormatterTerminatingCharacter: {
+			break;
+		}
+		case IRCTextFormatterEffectColorAsDigitCharacter:
+		case IRCTextFormatterEffectColorAsHexCharacter: {
+			// One is subtracted because the for loop will increment by one for us
+			i += ([self colorComponentsOfCharacter:character startingAt:i foregroundColor:NULL backgroundColor:NULL] -
+				  1);
 
-				break;
-			}
-			default:
-			{
-				outputBuffer[currentPosition++] = character;
+			break;
+		}
+		default: {
+			outputBuffer[currentPosition++] = character;
 
-				break;
-			}
+			break;
+		}
 		}
 	}
 
 	return [NSString stringWithCharacters:outputBuffer length:currentPosition];
 }
 
-- (NSUInteger)colorComponentsOfCharacter:(UniChar)character startingAt:(NSUInteger)rangeStart foregroundColor:(id _Nullable * _Nullable)foregroundColor backgroundColor:(id _Nullable * _Nullable)backgroundColor
+- (NSUInteger)colorComponentsOfCharacter:(UniChar)character
+							  startingAt:(NSUInteger)rangeStart
+						 foregroundColor:(id _Nullable *_Nullable)foregroundColor
+						 backgroundColor:(id _Nullable *_Nullable)backgroundColor
 {
 	if (character == IRCTextFormatterEffectColorAsDigitCharacter) {
 		return [self colorAsDigitStartingAt:rangeStart foregroundColor:foregroundColor backgroundColor:backgroundColor];
@@ -412,7 +408,9 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 	return 0;
 }
 
-- (NSUInteger)colorAsHexStartingAt:(NSUInteger)rangeStart foregroundColor:(NSColor * _Nullable * _Nullable)foregroundColor backgroundColor:(NSColor * _Nullable * _Nullable)backgroundColor
+- (NSUInteger)colorAsHexStartingAt:(NSUInteger)rangeStart
+				   foregroundColor:(NSColor *_Nullable *_Nullable)foregroundColor
+				   backgroundColor:(NSColor *_Nullable *_Nullable)backgroundColor
 {
 	NSUInteger selfLength = self.length;
 
@@ -486,18 +484,20 @@ return_method:
 		currentPosition -= 1;
 	}
 
-	if ( foregroundColor && m_foregroundColor != nil) {
+	if (foregroundColor && m_foregroundColor != nil) {
 		*foregroundColor = [NSColor colorWithHexadecimalValue:m_foregroundColor.uppercaseString];
 	}
 
-	if ( backgroundColor && m_backgroundColor != nil) {
+	if (backgroundColor && m_backgroundColor != nil) {
 		*backgroundColor = [NSColor colorWithHexadecimalValue:m_backgroundColor.uppercaseString];
 	}
 
 	return (currentPosition - rangeStart);
 }
 
-- (NSUInteger)colorAsDigitStartingAt:(NSUInteger)rangeStart foregroundColor:(NSNumber * _Nullable * _Nullable)foregroundColor backgroundColor:(NSNumber * _Nullable * _Nullable)backgroundColor
+- (NSUInteger)colorAsDigitStartingAt:(NSUInteger)rangeStart
+					 foregroundColor:(NSNumber *_Nullable *_Nullable)foregroundColor
+					 backgroundColor:(NSNumber *_Nullable *_Nullable)backgroundColor
 {
 	NSUInteger selfLength = self.length;
 
@@ -605,17 +605,13 @@ return_method:
 		currentPosition -= 1;
 	}
 
-	if (  foregroundColor &&
-		m_foregroundColor != NSNotFound &&
-		m_foregroundColor <= IRCTextFormatterEffectColorHighestDigit)
-	{
+	if (foregroundColor && m_foregroundColor != NSNotFound &&
+		m_foregroundColor <= IRCTextFormatterEffectColorHighestDigit) {
 		*foregroundColor = @(m_foregroundColor);
 	}
 
-	if (  backgroundColor &&
-		m_backgroundColor != NSNotFound &&
-		m_backgroundColor <= IRCTextFormatterEffectColorHighestDigit)
-	{
+	if (backgroundColor && m_backgroundColor != NSNotFound &&
+		m_backgroundColor <= IRCTextFormatterEffectColorHighestDigit) {
 		*backgroundColor = @(m_backgroundColor);
 	}
 
@@ -625,7 +621,7 @@ return_method:
 - (NSArray<NSString *> *)base64EncodingWithLineLength:(NSUInteger)lineLength
 {
 	if (self.length == 0) {
-		return @[self];
+		return @[ self ];
 	}
 
 	NSData *selfData = [self dataUsingEncoding:NSUTF8StringEncoding];
@@ -677,13 +673,13 @@ return_method:
 	}
 
 	NSMutableString *bob = [self mutableCopy];
-	
+
 	[bob replaceOccurrencesOfString:@"\\" withString:@"\\\\" options:0 range:bob.range];
 	[bob replaceOccurrencesOfString:@";" withString:@"\\:" options:0 range:bob.range];
 	[bob replaceOccurrencesOfString:@" " withString:@"\\s" options:0 range:bob.range];
 	[bob replaceOccurrencesOfString:@"\r" withString:@"\\r" options:0 range:bob.range];
 	[bob replaceOccurrencesOfString:@"\n" withString:@"\\n" options:0 range:bob.range];
-	
+
 	return [bob copy];
 }
 
@@ -694,17 +690,17 @@ return_method:
 	}
 
 	NSMutableString *bob = [self mutableCopy];
-	
+
 	if ([bob hasSuffix:@"\\"]) {
 		[bob deleteCharactersInRange:NSMakeRange((bob.length - 1), 1)];
 	}
-	
+
 	[bob replaceOccurrencesOfString:@"\\:" withString:@";" options:0 range:bob.range];
 	[bob replaceOccurrencesOfString:@"\\\\" withString:@"\\" options:0 range:bob.range];
 	[bob replaceOccurrencesOfString:@"\\s" withString:@" " options:0 range:bob.range];
 	[bob replaceOccurrencesOfString:@"\\r" withString:@"\r" options:0 range:bob.range];
 	[bob replaceOccurrencesOfString:@"\\n" withString:@"\n" options:0 range:bob.range];
-	
+
 	return [bob copy];
 }
 

@@ -41,29 +41,29 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCWorld, TVCMainWindow, TXMenuController;
 
 @interface TXMasterController : NSObject
-@property (readonly) BOOL debugModeIsOn;
-@property (readonly) BOOL ghostModeIsOn;
+@property(readonly) BOOL debugModeIsOn;
+@property(readonly) BOOL ghostModeIsOn;
 
-@property (readonly) BOOL applicationIsActive;
-@property (readonly) BOOL applicationIsChangingActiveState;
+@property(readonly) BOOL applicationIsActive;
+@property(readonly) BOOL applicationIsChangingActiveState;
 
-@property (readonly) BOOL applicationIsLaunched;
-@property (readonly) BOOL applicationIsTerminating;
+@property(readonly) BOOL applicationIsLaunched;
+@property(readonly) BOOL applicationIsTerminating;
 
-@property (readonly) IRCWorld *world;
+@property(readonly) IRCWorld *world;
 
-@property (readonly) TVCMainWindow *mainWindow;
+@property(readonly) TVCMainWindow *mainWindow;
 
-@property (readonly, weak) TXMenuController *menuController;
+@property(readonly, weak) TXMenuController *menuController;
 
-@property (nonatomic, assign) BOOL skipTerminateSave;
+@property(nonatomic, assign) BOOL skipTerminateSave;
 @end
 
 #if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 @class SPUStandardUpdaterController;
 
 @interface TXMasterController (Sparkle)
-@property (readonly) SPUStandardUpdaterController *updateController;
+@property(readonly) SPUStandardUpdaterController *updateController;
 @end
 #endif
 

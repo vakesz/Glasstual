@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCAddressBookEntry, IRCClient;
 
 @interface IRCAddressBookMatchCache : NSObject
-@property (readonly, weak) IRCClient *client;
+@property(readonly, weak) IRCClient *client;
 
 - (instancetype)initWithClient:(IRCClient *)client;
 

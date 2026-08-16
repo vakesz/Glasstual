@@ -46,13 +46,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCChannelSelectionViewController ()
-@property (nonatomic, strong) IBOutlet NSScrollView *outlineViewScrollView;
-@property (nonatomic, weak) IBOutlet NSOutlineView *outlineView;
-@property (nonatomic, weak) NSView *attachedView;
-@property (nonatomic, strong) NSMutableArray<NSString *> *cachedSelectedClientIds;
-@property (nonatomic, strong) NSMutableArray<NSString *> *cachedSelectedChannelIds;
-@property (nonatomic, copy) NSDictionary<IRCClient *, NSArray<IRCChannel *> *> *cachedChannelList;
-@property (nonatomic, strong) dispatch_source_t expandOutlineViewTimer;
+@property(nonatomic, strong) IBOutlet NSScrollView *outlineViewScrollView;
+@property(nonatomic, weak) IBOutlet NSOutlineView *outlineView;
+@property(nonatomic, weak) NSView *attachedView;
+@property(nonatomic, strong) NSMutableArray<NSString *> *cachedSelectedClientIds;
+@property(nonatomic, strong) NSMutableArray<NSString *> *cachedSelectedChannelIds;
+@property(nonatomic, copy) NSDictionary<IRCClient *, NSArray<IRCChannel *> *> *cachedChannelList;
+@property(nonatomic, strong) dispatch_source_t expandOutlineViewTimer;
 @end
 
 @implementation TVCChannelSelectionViewController
@@ -96,17 +96,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[view addSubview:outlineViewScroller];
 
-	[view addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[outlineViewScroller]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(outlineViewScroller)]];
+	[view addConstraints:[NSLayoutConstraint
+							 constraintsWithVisualFormat:@"H:|-0-[outlineViewScroller]-0-|"
+												 options:NSLayoutFormatDirectionLeadingToTrailing
+												 metrics:nil
+												   views:NSDictionaryOfVariableBindings(outlineViewScroller)]];
 
-	[view addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[outlineViewScroller]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(outlineViewScroller)]];
+	[view addConstraints:[NSLayoutConstraint
+							 constraintsWithVisualFormat:@"V:|-0-[outlineViewScroller]-0-|"
+												 options:NSLayoutFormatDirectionLeadingToTrailing
+												 metrics:nil
+												   views:NSDictionaryOfVariableBindings(outlineViewScroller)]];
 }
 
 - (nullable IRCTreeItem *)itemFromCellView:(TVCChannelSelectionOutlineCellView *)cellView
@@ -178,7 +178,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSInteger parentItemRow = [outlineView rowForItem:parentItem];
 
-	TVCChannelSelectionOutlineCellView *parentItemView = [outlineView viewAtColumn:0 row:parentItemRow makeIfNecessary:NO];
+	TVCChannelSelectionOutlineCellView *parentItemView = [outlineView viewAtColumn:0
+																			   row:parentItemRow
+																   makeIfNecessary:NO];
 
 	BOOL parentItemInFilter = [self.cachedSelectedClientIds containsObject:parentItem.uniqueIdentifier];
 
@@ -189,7 +191,9 @@ NS_ASSUME_NONNULL_BEGIN
 	for (IRCTreeItem *childItem in childrenItems) {
 		NSInteger childItemRow = [outlineView rowForItem:childItem];
 
-		TVCChannelSelectionOutlineCellView *childItemView = [outlineView viewAtColumn:0 row:childItemRow makeIfNecessary:NO];
+		TVCChannelSelectionOutlineCellView *childItemView = [outlineView viewAtColumn:0
+																				  row:childItemRow
+																	  makeIfNecessary:NO];
 
 		BOOL childItemInFilter = [self.cachedSelectedChannelIds containsObject:childItem.uniqueIdentifier];
 
@@ -223,21 +227,21 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray<NSString *> *)selectedClientIds
 {
-	@synchronized (self.cachedSelectedClientIds) {
+	@synchronized(self.cachedSelectedClientIds) {
 		return [self.cachedSelectedClientIds copy];
 	}
 }
 
 - (NSArray<NSString *> *)selectedChannelIds
 {
-	@synchronized (self.cachedSelectedChannelIds) {
+	@synchronized(self.cachedSelectedChannelIds) {
 		return [self.cachedSelectedChannelIds copy];
 	}
 }
 
 - (void)setSelectedClientIds:(NSArray<NSString *> *)selectedClientIds
 {
-	@synchronized (self.cachedSelectedClientIds) {
+	@synchronized(self.cachedSelectedClientIds) {
 		if (self->_cachedSelectedClientIds != selectedClientIds) {
 			self->_cachedSelectedClientIds = [selectedClientIds mutableCopy];
 
@@ -248,7 +252,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setSelectedChannelIds:(NSArray<NSString *> *)selectedChannelIds
 {
-	@synchronized (self.cachedSelectedChannelIds) {
+	@synchronized(self.cachedSelectedChannelIds) {
 		if (self->_cachedSelectedChannelIds != selectedChannelIds) {
 			self->_cachedSelectedChannelIds = [selectedChannelIds mutableCopy];
 
@@ -262,9 +266,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)addObserverForChannelListUpdates
 {
-	[RZNotificationCenter() addObserver:self selector:@selector(channelListChanged:) name:IRCWorldClientListWasModifiedNotification object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(channelListChanged:)
+								   name:IRCWorldClientListWasModifiedNotification
+								 object:nil];
 
-	[RZNotificationCenter() addObserver:self selector:@selector(channelListChanged:) name:IRCClientChannelListWasModifiedNotification object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(channelListChanged:)
+								   name:IRCClientChannelListWasModifiedNotification
+								 object:nil];
 }
 
 - (void)removeObserverForChannelListUpdates
@@ -292,16 +302,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 	__weak TVCChannelSelectionViewController *weakSelf = self;
 
-	dispatch_source_t expandOutlineViewTimer =
-	XRScheduleBlockOnMainQueue(^{
-		if (weakSelf == nil) {
-			return;
-		}
+	dispatch_source_t expandOutlineViewTimer = XRScheduleBlockOnMainQueue(
+		^{
+			if (weakSelf == nil) {
+				return;
+			}
 
-		[weakSelf.outlineView expandItem:nil expandChildren:YES];
+			[weakSelf.outlineView expandItem:nil expandChildren:YES];
 
-		weakSelf.expandOutlineViewTimer = nil;
-	}, 0.5);
+			weakSelf.expandOutlineViewTimer = nil;
+		},
+		0.5);
 
 	XRResumeScheduledBlock(expandOutlineViewTimer);
 
@@ -361,15 +372,19 @@ NS_ASSUME_NONNULL_BEGIN
 	return self.cachedChannelList.allKeys[index];
 }
 
-- (nullable id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(nullable NSTableColumn *)tableColumn byItem:(nullable id)item
+- (nullable id)outlineView:(NSOutlineView *)outlineView
+	objectValueForTableColumn:(nullable NSTableColumn *)tableColumn
+					   byItem:(nullable id)item
 {
 	return item;
 }
 
-- (nullable NSView *)outlineView:(NSOutlineView *)outlineView viewForTableColumn:(nullable NSTableColumn *)tableColumn item:(id)item
+- (nullable NSView *)outlineView:(NSOutlineView *)outlineView
+			  viewForTableColumn:(nullable NSTableColumn *)tableColumn
+							item:(id)item
 {
 	TVCChannelSelectionOutlineCellView *newView = nil;
-	
+
 	if ([item isClient]) {
 		newView = (id)[outlineView makeViewWithIdentifier:@"serverEntry" owner:self];
 	} else {

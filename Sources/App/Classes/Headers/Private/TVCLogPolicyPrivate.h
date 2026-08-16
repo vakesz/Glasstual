@@ -41,9 +41,9 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogView;
 
 @interface TVCLogPolicy : NSObject
-@property (nonatomic, copy, nullable) NSString *anchorURL;
-@property (nonatomic, copy, nullable) NSString *channelName;
-@property (nonatomic, copy, nullable) NSString *nickname;
+@property(nonatomic, copy, nullable) NSString *anchorURL;
+@property(nonatomic, copy, nullable) NSString *channelName;
+@property(nonatomic, copy, nullable) NSString *nickname;
 
 - (void)displayContextMenuInWebView:(TVCLogView *)webView;
 
@@ -51,9 +51,18 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)nicknameDoubleClicked;
 - (void)topicBarDoubleClicked;
 
-- (void)webView2:(WKWebView *)webView logView:(TVCLogView *)logView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler;
-- (void)webView2:(WKWebView *)webView logView:(TVCLogView *)logView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler;
-- (NSMenu *)webView2:(WKWebView *)webView logView:(TVCLogView *)logView contextMenuWithDefaultMenu:(NSMenu *)defaultMenu;
+- (void)webView2:(WKWebView *)webView
+							  logView:(TVCLogView *)logView
+	didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
+					completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition,
+												NSURLCredential *credential))completionHandler;
+- (void)webView2:(WKWebView *)webView
+							logView:(TVCLogView *)logView
+	decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+					decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler;
+- (NSMenu *)webView2:(WKWebView *)webView
+					   logView:(TVCLogView *)logView
+	contextMenuWithDefaultMenu:(NSMenu *)defaultMenu;
 @end
 
 NS_ASSUME_NONNULL_END

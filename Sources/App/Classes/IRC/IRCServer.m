@@ -76,9 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	self->_defaults = @{
-		@"serverPort" : @(IRCConnectionDefaultServerPort)
-	};
+	self->_defaults = @{@"serverPort" : @(IRCConnectionDefaultServerPort)};
 }
 
 - (void)populateDefaultsPostflight
@@ -89,7 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	SetVariableIfNil(self->_serverAddress, @"")
 
-	SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
+		SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
 }
 
 - (void)populateDictionaryValues:(NSDictionary<NSString *, id> *)dic

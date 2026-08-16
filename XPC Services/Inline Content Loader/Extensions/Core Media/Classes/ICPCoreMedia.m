@@ -57,8 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSArray<Class> *)modules
 {
-	return
-	@[
+	return @[
 		[ICMDailymotion class],
 		[ICMGyazo class],
 		[ICMImgurGifv class],
@@ -72,8 +71,8 @@ NS_ASSUME_NONNULL_BEGIN
 		 web server. It loads files using file:// scheme. Even using "localhost"
 		 will not allow embeds to work. Is embedding Twitch really worth the
 		 cost of hosting a local server to spoof a localhost? Probably not.  */
-//		[ICMTwitchClips class],
-//		[ICMTwitchLive class],
+		//		[ICMTwitchClips class],
+		//		[ICMTwitchLive class],
 
 		[ICMVimeo class],
 		[ICMXkcd class],

@@ -38,10 +38,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCWindowBase : NSObject
-@property (nonatomic, weak) id delegate;
-@property (nonatomic, strong) IBOutlet NSWindow *window;
-@property (nonatomic, weak) IBOutlet NSButton *okButton;
-@property (nonatomic, weak) IBOutlet NSButton *cancelButton;
+@property(nonatomic, weak) id delegate;
+@property(nonatomic, strong) IBOutlet NSWindow *window;
+@property(nonatomic, weak) IBOutlet NSButton *okButton;
+@property(nonatomic, weak) IBOutlet NSButton *cancelButton;
 
 - (void)show;
 - (void)close;

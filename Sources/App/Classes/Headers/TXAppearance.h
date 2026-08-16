@@ -37,16 +37,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, TXAppearanceType)
-{
+typedef NS_ENUM(NSUInteger, TXAppearanceType) {
 	TXAppearanceTypeLight,
 	TXAppearanceTypeDark,
 };
 
 /* TXAppKitAppearanceTarget defines which items the NSAppearance
  object returned by -appKitAppearance should be assigned to. */
-typedef NS_ENUM(NSUInteger, TXAppKitAppearanceTarget)
-{
+typedef NS_ENUM(NSUInteger, TXAppKitAppearanceTarget) {
 	/* The NSAppearance object should be assigned to the window. */
 	TXAppKitAppearanceTargetWindow,
 
@@ -57,23 +55,23 @@ typedef NS_ENUM(NSUInteger, TXAppKitAppearanceTarget)
 /* None of these properties are observable.
  See -[TXAppearance properties] for information about observing. */
 @protocol TXAppearanceProperties <NSObject>
-@property (readonly, copy) NSString *appearanceName;
+@property(readonly, copy) NSString *appearanceName;
 
-@property (readonly) TXAppearanceType appearanceType;
+@property(readonly) TXAppearanceType appearanceType;
 
-@property (readonly, copy) NSString *shortAppearanceDescription; // e.g. "light", "dark"
+@property(readonly, copy) NSString *shortAppearanceDescription; // e.g. "light", "dark"
 
-@property (readonly) BOOL isDarkAppearance;
+@property(readonly) BOOL isDarkAppearance;
 
-@property (readonly) TXAppKitAppearanceTarget appKitAppearanceTarget;
-@property (readonly, nullable) NSAppearance *appKitAppearance; // nil when -appKitAppearanceTarget = none
+@property(readonly) TXAppKitAppearanceTarget appKitAppearanceTarget;
+@property(readonly, nullable) NSAppearance *appKitAppearance; // nil when -appKitAppearanceTarget = none
 @end
 
 @interface TXAppearancePropertyCollection : NSObject <TXAppearanceProperties>
-@property (readonly, class) BOOL systemWideDarkModeEnabled;
+@property(readonly, class) BOOL systemWideDarkModeEnabled;
 
-@property (readonly, class, nullable) NSAppearance *appKitLightAppearance;
-@property (readonly, class, nullable) NSAppearance *appKitDarkAppearance;
+@property(readonly, class, nullable) NSAppearance *appKitLightAppearance;
+@property(readonly, class, nullable) NSAppearance *appKitDarkAppearance;
 @end
 
 /* Access through +[TXSharedApplication sharedAppearance] */
@@ -82,7 +80,7 @@ typedef NS_ENUM(NSUInteger, TXAppKitAppearanceTarget)
  appearance changes so that there is no delay from when one property
  is set and another is set. Observe changes to the properties collection
  object and not an individual property. Latter will not work. */
-@property (readonly, strong) TXAppearancePropertyCollection *properties;
+@property(readonly, strong) TXAppearancePropertyCollection *properties;
 @end
 
 GLASSTUAL_EXTERN NSNotificationName const TXApplicationAppearanceChangedNotification;

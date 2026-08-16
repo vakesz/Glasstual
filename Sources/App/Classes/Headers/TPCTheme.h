@@ -40,9 +40,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define TPCThemeSettingsDisabledIndentationOffset	 -99
+#define TPCThemeSettingsDisabledIndentationOffset -99
 
-#define TPCThemeSettingsNewestTemplateEngineVersion		4
+#define TPCThemeSettingsNewestTemplateEngineVersion 4
 
 typedef NS_ENUM(NSUInteger, TPCThemeAppearanceType) {
 	TPCThemeAppearanceTypeDefault = 0, // Automatically picked based on window appearance
@@ -93,41 +93,41 @@ GLASSTUAL_EXTERN NSNotificationName const TPCThemeWasModifiedNotification;
 @class TPCThemeSettings;
 
 @interface TPCTheme : NSObject
-@property (readonly, copy) NSString *name;
+@property(readonly, copy) NSString *name;
 
-@property (readonly, copy) NSURL *originalURL;
-@property (readonly) TPCThemeStorageLocation storageLocation;
+@property(readonly, copy) NSURL *originalURL;
+@property(readonly) TPCThemeStorageLocation storageLocation;
 
-@property (readonly) BOOL usable; // If the theme is in a state that can be selected by the user.
+@property(readonly) BOOL usable; // If the theme is in a state that can be selected by the user.
 
-@property (readonly) TPCThemeAppearanceType appearance;
+@property(readonly) TPCThemeAppearanceType appearance;
 
 /* Global files are listed first with variety specific files second. */
 /* These properties DO NOT list all files of these types.
  Only files named "design.css" and "scripts.js" respectively. */
-@property (readonly, copy) NSArray<NSURL *> *cssFiles;
-@property (readonly, copy) NSArray<NSURL *> *jsFiles;
+@property(readonly, copy) NSArray<NSURL *> *cssFiles;
+@property(readonly, copy) NSArray<NSURL *> *jsFiles;
 
-@property (readonly, copy) NSArray<NSString *> *cssFilePaths;
-@property (readonly, copy) NSArray<NSString *> *jsFilePaths;
+@property(readonly, copy) NSArray<NSString *> *cssFilePaths;
+@property(readonly, copy) NSArray<NSString *> *jsFilePaths;
 
 /* Order of repositories is: variety specific -> global -> app */
-@property (readonly, copy) NSArray<GRMustacheTemplateRepository *> *templateRepositories;
+@property(readonly, copy) NSArray<GRMustacheTemplateRepository *> *templateRepositories;
 
 /* Settings */
-@property (readonly, strong) TPCThemeSettings *settings;
+@property(readonly, strong) TPCThemeSettings *settings;
 
 /* Temporary location */
 /* Themes are copied to a temporary location when they are in use. */
 /* These properties remap the relevant URLs to the temporary location. */
 /* These files will not exist until the theme is in use. */
-@property (readonly, copy) NSURL *temporaryURL;
+@property(readonly, copy) NSURL *temporaryURL;
 
-@property (readonly, copy) NSArray<NSURL *> *temporaryCSSFiles;
-@property (readonly, copy) NSArray<NSURL *> *temporaryJSFiles;
+@property(readonly, copy) NSArray<NSURL *> *temporaryCSSFiles;
+@property(readonly, copy) NSArray<NSURL *> *temporaryJSFiles;
 
-@property (readonly, copy) NSArray<NSString *> *temporaryCSSFilePaths;
-@property (readonly, copy) NSArray<NSString *> *temporaryJSFilePaths;
+@property(readonly, copy) NSArray<NSString *> *temporaryCSSFilePaths;
+@property(readonly, copy) NSArray<NSString *> *temporaryJSFilePaths;
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -137,27 +137,29 @@ GLASSTUAL_EXTERN NSNotificationName const TPCThemeWasModifiedNotification;
 @end
 
 @interface TPCThemeSettings : NSObject
-@property (readonly) TPCThemeAppearanceType appearance;
-@property (readonly) BOOL invertSidebarColors;
-@property (readonly) BOOL js_postHandleEventNotifications;
-@property (readonly) BOOL js_postAppearanceChangesNotification;
-@property (readonly) BOOL js_postPreferencesDidChangesNotifications;
-@property (readonly) BOOL usesIncompatibleTemplateEngineVersion;
-@property (readonly, copy, nullable) NSFont *themeChannelViewFont;
-@property (readonly, copy, nullable) NSString *themeNicknameFormat;
-@property (readonly, copy, nullable) NSString *themeTimestampFormat;
-@property (readonly, copy, nullable) NSString *settingsKeyValueStoreName;
-@property (readonly, copy, nullable) NSColor *channelViewOverlayColor;
-@property (readonly, copy, nullable) NSColor *underlyingWindowColor;
-@property (readonly) BOOL underlyingWindowColorIsDark;
-@property (readonly) double indentationOffset;
-@property (readonly) TPCThemeSettingsNicknameColorStyle nicknameColorStyle;
-@property (readonly) NSUInteger templateEngineVersion;
+@property(readonly) TPCThemeAppearanceType appearance;
+@property(readonly) BOOL invertSidebarColors;
+@property(readonly) BOOL js_postHandleEventNotifications;
+@property(readonly) BOOL js_postAppearanceChangesNotification;
+@property(readonly) BOOL js_postPreferencesDidChangesNotifications;
+@property(readonly) BOOL usesIncompatibleTemplateEngineVersion;
+@property(readonly, copy, nullable) NSFont *themeChannelViewFont;
+@property(readonly, copy, nullable) NSString *themeNicknameFormat;
+@property(readonly, copy, nullable) NSString *themeTimestampFormat;
+@property(readonly, copy, nullable) NSString *settingsKeyValueStoreName;
+@property(readonly, copy, nullable) NSColor *channelViewOverlayColor;
+@property(readonly, copy, nullable) NSColor *underlyingWindowColor;
+@property(readonly) BOOL underlyingWindowColorIsDark;
+@property(readonly) double indentationOffset;
+@property(readonly) TPCThemeSettingsNicknameColorStyle nicknameColorStyle;
+@property(readonly) NSUInteger templateEngineVersion;
 
 - (instancetype)init NS_UNAVAILABLE;
 
-- (nullable id)styleSettingsRetrieveValueForKey:(NSString *)key error:(NSString * _Nullable * _Nullable)resultError;
-- (BOOL)styleSettingsSetValue:(nullable id)objectValue forKey:(NSString *)objectKey error:(NSString * _Nullable * _Nullable)resultError;
+- (nullable id)styleSettingsRetrieveValueForKey:(NSString *)key error:(NSString *_Nullable *_Nullable)resultError;
+- (BOOL)styleSettingsSetValue:(nullable id)objectValue
+					   forKey:(NSString *)objectKey
+						error:(NSString *_Nullable *_Nullable)resultError;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -52,40 +52,39 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, TDCChannelPropertiesSheetSelection)
-{
+typedef NS_ENUM(NSUInteger, TDCChannelPropertiesSheetSelection) {
 	TDCChannelPropertiesSheetSelectionGeneral = 0,
 	TDCChannelPropertiesSheetSelectionDefaults = 1,
 	TDCChannelPropertiesSheetSelectionNotifications = 2
 };
 
 @interface TDCChannelPropertiesSheet () <NSControlTextEditingDelegate>
-@property (nonatomic, strong, readwrite, nullable) IRCClient *client;
-@property (nonatomic, strong, readwrite, nullable) IRCChannel *channel;
-@property (nonatomic, copy, readwrite, nullable) NSString *clientId;
-@property (nonatomic, copy, readwrite, nullable) NSString *channelId;
-@property (nonatomic, assign) BOOL isNewConfiguration;
-@property (nonatomic, assign) BOOL secretKeyLengthAlertDisplayed;
-@property (nonatomic, copy) NSArray *navigationTree;
-@property (nonatomic, weak) IBOutlet NSButton *autoJoinCheck;
-@property (nonatomic, weak) IBOutlet NSButton *disableInlineMediaCheck;
-@property (nonatomic, weak) IBOutlet NSButton *enableInlineMediaCheck;
-@property (nonatomic, weak) IBOutlet NSButton *pushNotificationsCheck;
-@property (nonatomic, weak) IBOutlet NSButton *showTreeBadgeCountCheck;
-@property (nonatomic, weak) IBOutlet NSButton *ignoreHighlightsCheck;
-@property (nonatomic, weak) IBOutlet NSButton *ignoreGeneralEventMessagesCheck;
-@property (nonatomic, weak) IBOutlet NSSegmentedControl *contentViewTabView;
-@property (nonatomic, weak) IBOutlet TVCValidatedTextField *channelNameTextField;
-@property (nonatomic, weak) IBOutlet NSTextField *labelTextField;
-@property (nonatomic, weak) IBOutlet NSTextField *defaultModesTextField;
-@property (nonatomic, weak) IBOutlet NSTextField *defaultTopicTextField;
-@property (nonatomic, weak) IBOutlet NSTextField *secretKeyTextField;
-@property (nonatomic, strong) IBOutlet NSView *contentView;
-@property (nonatomic, strong) IBOutlet NSView *contentViewDefaultsView;
-@property (nonatomic, strong) IBOutlet NSView *contentViewGeneralView;
-@property (nonatomic, strong) IBOutlet NSView *contentViewNotifications;
-@property (nonatomic, strong) IBOutlet NSView *contentViewNotificationsHost;
-@property (nonatomic, strong) IBOutlet TVCNotificationConfigurationViewController *notificationsController;
+@property(nonatomic, strong, readwrite, nullable) IRCClient *client;
+@property(nonatomic, strong, readwrite, nullable) IRCChannel *channel;
+@property(nonatomic, copy, readwrite, nullable) NSString *clientId;
+@property(nonatomic, copy, readwrite, nullable) NSString *channelId;
+@property(nonatomic, assign) BOOL isNewConfiguration;
+@property(nonatomic, assign) BOOL secretKeyLengthAlertDisplayed;
+@property(nonatomic, copy) NSArray *navigationTree;
+@property(nonatomic, weak) IBOutlet NSButton *autoJoinCheck;
+@property(nonatomic, weak) IBOutlet NSButton *disableInlineMediaCheck;
+@property(nonatomic, weak) IBOutlet NSButton *enableInlineMediaCheck;
+@property(nonatomic, weak) IBOutlet NSButton *pushNotificationsCheck;
+@property(nonatomic, weak) IBOutlet NSButton *showTreeBadgeCountCheck;
+@property(nonatomic, weak) IBOutlet NSButton *ignoreHighlightsCheck;
+@property(nonatomic, weak) IBOutlet NSButton *ignoreGeneralEventMessagesCheck;
+@property(nonatomic, weak) IBOutlet NSSegmentedControl *contentViewTabView;
+@property(nonatomic, weak) IBOutlet TVCValidatedTextField *channelNameTextField;
+@property(nonatomic, weak) IBOutlet NSTextField *labelTextField;
+@property(nonatomic, weak) IBOutlet NSTextField *defaultModesTextField;
+@property(nonatomic, weak) IBOutlet NSTextField *defaultTopicTextField;
+@property(nonatomic, weak) IBOutlet NSTextField *secretKeyTextField;
+@property(nonatomic, strong) IBOutlet NSView *contentView;
+@property(nonatomic, strong) IBOutlet NSView *contentViewDefaultsView;
+@property(nonatomic, strong) IBOutlet NSView *contentViewGeneralView;
+@property(nonatomic, strong) IBOutlet NSView *contentViewNotifications;
+@property(nonatomic, strong) IBOutlet NSView *contentViewNotificationsHost;
+@property(nonatomic, strong) IBOutlet TVCNotificationConfigurationViewController *notificationsController;
 
 - (IBAction)onMenuBarItemChanged:(nullable id)sender;
 
@@ -203,9 +202,9 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	self.navigationTree = @[
 		//		view								first responder
-		@[self.contentViewGeneralView,			self.channelNameTextField],
-		@[self.contentViewDefaultsView,			self.defaultTopicTextField],
-		@[self.contentViewNotifications,		[NSNull null]],
+		@[ self.contentViewGeneralView, self.channelNameTextField ],
+		@[ self.contentViewDefaultsView, self.defaultTopicTextField ],
+		@[ self.contentViewNotifications, [NSNull null] ],
 	];
 
 	self.channelNameTextField.stringValueIsInvalidOnEmpty = YES;
@@ -232,13 +231,23 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	NSMutableArray *notifications = [NSMutableArray array];
 
-	[notifications addObject:[[TDCChannelPropertiesNotificationConfiguration alloc] initWithEventType:TXNotificationTypeHighlight inSheet:self]];
+	[notifications
+		addObject:[[TDCChannelPropertiesNotificationConfiguration alloc] initWithEventType:TXNotificationTypeHighlight
+																				   inSheet:self]];
 	[notifications addObject:@" "];
-	[notifications addObject:[[TDCChannelPropertiesNotificationConfiguration alloc] initWithEventType:TXNotificationTypeChannelMessage inSheet:self]];
-	[notifications addObject:[[TDCChannelPropertiesNotificationConfiguration alloc] initWithEventType:TXNotificationTypeChannelNotice inSheet:self]];
+	[notifications addObject:[[TDCChannelPropertiesNotificationConfiguration alloc]
+								 initWithEventType:TXNotificationTypeChannelMessage
+										   inSheet:self]];
+	[notifications addObject:[[TDCChannelPropertiesNotificationConfiguration alloc]
+								 initWithEventType:TXNotificationTypeChannelNotice
+										   inSheet:self]];
 	[notifications addObject:@" "];
-	[notifications addObject:[[TDCChannelPropertiesNotificationConfiguration alloc] initWithEventType:TXNotificationTypeUserJoined inSheet:self]];
-	[notifications addObject:[[TDCChannelPropertiesNotificationConfiguration alloc] initWithEventType:TXNotificationTypeUserParted inSheet:self]];
+	[notifications
+		addObject:[[TDCChannelPropertiesNotificationConfiguration alloc] initWithEventType:TXNotificationTypeUserJoined
+																				   inSheet:self]];
+	[notifications
+		addObject:[[TDCChannelPropertiesNotificationConfiguration alloc] initWithEventType:TXNotificationTypeUserParted
+																				   inSheet:self]];
 
 	self.notificationsController.notifications = notifications;
 
@@ -347,15 +356,16 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 		return;
 	}
 
-	[TDCAlert alertSheetWithWindow:self.sheet
-							  body:TXTLS(@"TDCChannelPropertiesSheet[op4-gg]")
-							 title:TXTLS(@"TDCChannelPropertiesSheet[zf2-r7]", self.client.networkNameAlt, maximumKeyLength)
-					 defaultButton:TXTLS(@"Prompts[c7s-dq]")
-				   alternateButton:nil
-					   otherButton:nil
-					suppressionKey:@"maximum_secret_key_length"
-				   suppressionText:nil
-				   completionBlock:nil];
+	[TDCAlert
+		alertSheetWithWindow:self.sheet
+						body:TXTLS(@"TDCChannelPropertiesSheet[op4-gg]")
+					   title:TXTLS(@"TDCChannelPropertiesSheet[zf2-r7]", self.client.networkNameAlt, maximumKeyLength)
+			   defaultButton:TXTLS(@"Prompts[c7s-dq]")
+			 alternateButton:nil
+				 otherButton:nil
+			  suppressionKey:@"maximum_secret_key_length"
+			 suppressionText:nil
+			 completionBlock:nil];
 }
 
 - (void)addConfigurationDidChangeObserver
@@ -380,7 +390,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	IRCChannel *channel = notification.object;
 
 	NSWindow *window = self.sheet;
-	
+
 	[TDCAlert alertSheetWithWindow:window
 							  body:TXTLS(@"TDCChannelPropertiesSheet[qby-hi]")
 							 title:TXTLS(@"TDCChannelPropertiesSheet[mvl-r5]")
@@ -391,15 +401,15 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 					   if (buttonClicked != TDCAlertResponseDefault) {
 						   return;
 					   }
-					   
+
 					   [self close];
-					   
+
 					   self.config = [channel.config copy];
-					   
+
 					   [self loadConfig];
-					   
+
 					   [self reloadNotificationsController];
-					   
+
 					   [self start];
 				   }];
 }
@@ -471,7 +481,8 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	return [self okOrErrorForTextField:self.channelNameTextField inSelection:TDCChannelPropertiesSheetSelectionGeneral];
 }
 
-- (BOOL)okOrErrorForTextField:(TVCValidatedTextField *)textField inSelection:(TDCChannelPropertiesSheetSelection)selection
+- (BOOL)okOrErrorForTextField:(TVCValidatedTextField *)textField
+				  inSelection:(TDCChannelPropertiesSheetSelection)selection
 {
 	if (textField.valueIsValid) {
 		return YES;

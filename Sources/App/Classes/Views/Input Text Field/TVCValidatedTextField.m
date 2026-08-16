@@ -44,15 +44,15 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TVCValidatedTextField ()
 /* Maintain cached value so that the drawing does not call
  the validation block every time that it is called. */
-@property (nonatomic, assign) BOOL cachedValidValue;
-@property (nonatomic, assign) BOOL validationPerformed;
-@property (nonatomic, copy, nullable, readwrite) NSString *lastValidationErrorDescription;
+@property(nonatomic, assign) BOOL cachedValidValue;
+@property(nonatomic, assign) BOOL validationPerformed;
+@property(nonatomic, copy, nullable, readwrite) NSString *lastValidationErrorDescription;
 @end
 
 @interface TVCValidatedTextFieldCell ()
-@property (readonly) NSColor *erroneousValueBackgroundColor;
-@property (readonly) BOOL parentValueIsValid;
-@property (readonly) TVCValidatedTextField *parentField;
+@property(readonly) NSColor *erroneousValueBackgroundColor;
+@property(readonly) BOOL parentValueIsValid;
+@property(readonly) TVCValidatedTextField *parentField;
 @end
 
 @implementation TVCValidatedTextField
@@ -88,7 +88,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if (stringValue.length == 0) {
-		if (	   self.defaultValue && self.stringValueIsInvalidOnEmpty == NO) {
+		if (self.defaultValue && self.stringValueIsInvalidOnEmpty == NO) {
 			return self.defaultValue;
 		}
 	}

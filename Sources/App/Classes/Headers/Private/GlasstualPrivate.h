@@ -50,15 +50,15 @@
 /* Defines for script support instead of importing the
  entire Carbon framework for three items. */
 #ifndef kASAppleScriptSuite
-	#define kASAppleScriptSuite 'ascr'
+#define kASAppleScriptSuite 'ascr'
 #endif
 
 #ifndef kASSubroutineEvent
-	#define kASSubroutineEvent 'psbr'
+#define kASSubroutineEvent 'psbr'
 #endif
 
 #ifndef keyASSubroutineName
-	#define keyASSubroutineName 'snam'
+#define keyASSubroutineName 'snam'
 #endif
 
 #import "TXSharedApplicationPrivate.h"

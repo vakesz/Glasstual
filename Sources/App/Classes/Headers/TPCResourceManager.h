@@ -37,11 +37,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString * const TPCResourceManagerBundleDocumentTypeExtension;
-GLASSTUAL_EXTERN NSString * const TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod;
+GLASSTUAL_EXTERN NSString *const TPCResourceManagerBundleDocumentTypeExtension;
+GLASSTUAL_EXTERN NSString *const TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod;
 
-GLASSTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtension;
-GLASSTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod;
+GLASSTUAL_EXTERN NSString *const TPCResourceManagerScriptDocumentTypeExtension;
+GLASSTUAL_EXTERN NSString *const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod;
 
 @interface TPCResourceManager : NSObject
 /* Open a property list file in the Resources folder of Glasstual named `name` in optional
@@ -52,12 +52,22 @@ GLASSTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtensionW
  Cache is also bypassed when `cacheValue` is NO. */
 + (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name;
 + (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name cacheValue:(BOOL)cacheValue;
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath;
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath cacheValue:(BOOL)cacheValue;
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+													   inDirectory:(nullable NSString *)subpath;
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+													   inDirectory:(nullable NSString *)subpath
+														cacheValue:(BOOL)cacheValue;
 + (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name key:(nullable NSString *)key;
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name key:(nullable NSString *)key cacheValue:(BOOL)cacheValue;
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key;
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key cacheValue:(BOOL)cacheValue;
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+															   key:(nullable NSString *)key
+														cacheValue:(BOOL)cacheValue;
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+													   inDirectory:(nullable NSString *)subpath
+															   key:(nullable NSString *)key;
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+													   inDirectory:(nullable NSString *)subpath
+															   key:(nullable NSString *)key
+														cacheValue:(BOOL)cacheValue;
 
 /* Open a property list file in the Resources folder of Glasstual named `name` in optional
  subdirectory `subpath`. If `key` is specified, then the object value of `key` is returned
@@ -68,11 +78,18 @@ GLASSTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtensionW
 + (nullable NSArray *)arrayFromResources:(NSString *)name;
 + (nullable NSArray *)arrayFromResources:(NSString *)name cacheValue:(BOOL)cacheValue;
 + (nullable NSArray *)arrayFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath;
-+ (nullable NSArray *)arrayFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath cacheValue:(BOOL)cacheValue;
++ (nullable NSArray *)arrayFromResources:(NSString *)name
+							 inDirectory:(nullable NSString *)subpath
+							  cacheValue:(BOOL)cacheValue;
 + (nullable NSArray *)arrayFromResources:(NSString *)name key:(nullable NSString *)key;
 + (nullable NSArray *)arrayFromResources:(NSString *)name key:(nullable NSString *)key cacheValue:(BOOL)cacheValue;
-+ (nullable NSArray *)arrayFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key;
-+ (nullable NSArray *)arrayFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key cacheValue:(BOOL)cacheValue;
++ (nullable NSArray *)arrayFromResources:(NSString *)name
+							 inDirectory:(nullable NSString *)subpath
+									 key:(nullable NSString *)key;
++ (nullable NSArray *)arrayFromResources:(NSString *)name
+							 inDirectory:(nullable NSString *)subpath
+									 key:(nullable NSString *)key
+							  cacheValue:(BOOL)cacheValue;
 
 /* Open a property list file in the Resources folder of Glasstual named `name` in optional
  subdirectory `subpath`. If `key` is specified, then the object value of `key` is returned
@@ -80,11 +97,15 @@ GLASSTUAL_EXTERN NSString * const TPCResourceManagerScriptDocumentTypeExtensionW
  The root object is returned if `key` is not specified if it is kind of `class`.
  The value of this returned object is cached unless `cacheValue` is NO.
  Cache is also bypassed when `cacheValue` is NO. */
-+ (nullable id)objectFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key kindOf:(Class)class cacheValue:(BOOL)cacheValue;
++ (nullable id)objectFromResources:(NSString *)name
+					   inDirectory:(nullable NSString *)subpath
+							   key:(nullable NSString *)key
+							kindOf:(Class)class
+						cacheValue:(BOOL)cacheValue;
 
 /* This cache object is used for loading resources using the methods above.
  The key used for each cache entry is an implementation detail and is subject to change. */
-@property (class, strong, readonly) NSCache *sharedResourcesCache;
+@property(class, strong, readonly) NSCache *sharedResourcesCache;
 @end
 
 NS_ASSUME_NONNULL_END

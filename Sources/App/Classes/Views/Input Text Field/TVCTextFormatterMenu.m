@@ -44,16 +44,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _formattingMenuRainbowColorMenuItemTag			299
-#define _formattingMenuHexColorMenuItemTag				300
+#define _formattingMenuRainbowColorMenuItemTag 299
+#define _formattingMenuHexColorMenuItemTag 300
 
 @interface TVCTextViewIRCFormattingMenu () <NSMenuItemValidation>
-@property (readonly, nullable) TVCTextViewWithIRCFormatter *textField;
-@property (nonatomic, weak, readwrite) IBOutlet NSMenuItem *formatterMenu;
-@property (nonatomic, weak, readwrite) IBOutlet NSMenu *foregroundColorMenu;
-@property (nonatomic, weak, readwrite) IBOutlet NSMenu *backgroundColorMenu;
-@property (nonatomic, weak, readwrite) IBOutlet NSMenuItem *foregroundColorSetMenuItem;
-@property (nonatomic, weak, readwrite) IBOutlet NSMenuItem *backgroundColorSetMenuItem;
+@property(readonly, nullable) TVCTextViewWithIRCFormatter *textField;
+@property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *formatterMenu;
+@property(nonatomic, weak, readwrite) IBOutlet NSMenu *foregroundColorMenu;
+@property(nonatomic, weak, readwrite) IBOutlet NSMenu *backgroundColorMenu;
+@property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *foregroundColorSetMenuItem;
+@property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *backgroundColorSetMenuItem;
 
 - (IBAction)emptyAction:(nullable id)sender;
 @end
@@ -88,120 +88,119 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	switch (item.tag) {
-		case 100: // Bold
-		{
-			BOOL boldText = self.textIsBold;
+	case 100: // Bold
+	{
+		BOOL boldText = self.textIsBold;
 
-			item.state = boldText;
+		item.state = boldText;
 
-			if (boldText) {
-				item.action = @selector(removeBoldCharFromTextBox:);
-			} else {
-				item.action = @selector(insertBoldCharIntoTextBox:);
-			}
-
-			return YES;
+		if (boldText) {
+			item.action = @selector(removeBoldCharFromTextBox:);
+		} else {
+			item.action = @selector(insertBoldCharIntoTextBox:);
 		}
-		case 101: // Italics
-		{
-			BOOL italicText = self.textIsItalicized;
 
-			item.state = italicText;
+		return YES;
+	}
+	case 101: // Italics
+	{
+		BOOL italicText = self.textIsItalicized;
 
-			if (italicText) {
-				item.action = @selector(removeItalicCharFromTextBox:);
-			} else {
-				item.action = @selector(insertItalicCharIntoTextBox:);
-			}
+		item.state = italicText;
 
-			return YES;
+		if (italicText) {
+			item.action = @selector(removeItalicCharFromTextBox:);
+		} else {
+			item.action = @selector(insertItalicCharIntoTextBox:);
 		}
-		case 102: // Monospace
-		{
-			BOOL monospaceText = self.textIsMonospace;
 
-			item.state = monospaceText;
+		return YES;
+	}
+	case 102: // Monospace
+	{
+		BOOL monospaceText = self.textIsMonospace;
 
-			if (monospaceText) {
-				item.action = @selector(removeMonospaceCharFromTextBox:);
-			} else {
-				item.action = @selector(insertMonospaceCharIntoTextBox:);
-			}
+		item.state = monospaceText;
 
-			return YES;
+		if (monospaceText) {
+			item.action = @selector(removeMonospaceCharFromTextBox:);
+		} else {
+			item.action = @selector(insertMonospaceCharIntoTextBox:);
 		}
-		case 103: // Spoiler
-		{
-			BOOL spoilerText = self.textHasSpoiler;
 
-			item.state = spoilerText;
+		return YES;
+	}
+	case 103: // Spoiler
+	{
+		BOOL spoilerText = self.textHasSpoiler;
 
-			if (spoilerText) {
-				item.action = @selector(removeSpoilerCharFromTextBox:);
-			} else {
-				item.action = @selector(insertSpoilerCharIntoTextBox:);
-			}
+		item.state = spoilerText;
 
-			return YES;
+		if (spoilerText) {
+			item.action = @selector(removeSpoilerCharFromTextBox:);
+		} else {
+			item.action = @selector(insertSpoilerCharIntoTextBox:);
 		}
-		case 104: // Strikethrough
-		{
-			BOOL struckthroughText = self.textIsStruckthrough;
 
-			item.state = struckthroughText;
+		return YES;
+	}
+	case 104: // Strikethrough
+	{
+		BOOL struckthroughText = self.textIsStruckthrough;
 
-			if (struckthroughText) {
-				item.action = @selector(removeStrikethroughCharFromTextBox:);
-			} else {
-				item.action = @selector(insertStrikethroughCharIntoTextBox:);
-			}
+		item.state = struckthroughText;
 
-			return YES;
+		if (struckthroughText) {
+			item.action = @selector(removeStrikethroughCharFromTextBox:);
+		} else {
+			item.action = @selector(insertStrikethroughCharIntoTextBox:);
 		}
-		case 105: // Underline
-		{
-			BOOL underlineText = self.textIsUnderlined;
 
-			item.state = underlineText;
+		return YES;
+	}
+	case 105: // Underline
+	{
+		BOOL underlineText = self.textIsUnderlined;
 
-			if (underlineText) {
-				item.action = @selector(removeUnderlineCharFromTextBox:);
-			} else {
-				item.action = @selector(insertUnderlineCharIntoTextBox:);
-			}
+		item.state = underlineText;
 
-			return YES;
+		if (underlineText) {
+			item.action = @selector(removeUnderlineCharFromTextBox:);
+		} else {
+			item.action = @selector(insertUnderlineCharIntoTextBox:);
 		}
-		case 108: // Foreground Color Missing
-		{
-			item.hidden = self.textHasForegroundColor;
 
-			return YES;
-		}
-		case 107: // Foreground Color Set
-		{
-			item.hidden = (self.textHasForegroundColor == NO);
+		return YES;
+	}
+	case 108: // Foreground Color Missing
+	{
+		item.hidden = self.textHasForegroundColor;
 
-			/* Do not enable menu item when there is spoiler */
-			return (self.textHasSpoiler == NO);
-		}
-		case 110: // Background Color Missing
-		{
-			item.hidden = self.textHasBackgroundColor;
+		return YES;
+	}
+	case 107: // Foreground Color Set
+	{
+		item.hidden = (self.textHasForegroundColor == NO);
 
-			/* Require foreground color before background color can be set */
-			return self.textHasForegroundColor;
-		}
-		case 109: // Background Color Set
-		{
-			item.hidden = (self.textHasBackgroundColor == NO);
+		/* Do not enable menu item when there is spoiler */
+		return (self.textHasSpoiler == NO);
+	}
+	case 110: // Background Color Missing
+	{
+		item.hidden = self.textHasBackgroundColor;
 
-			return (self.textHasSpoiler == NO);
-		}
-		default:
-		{
-			break;
-		}
+		/* Require foreground color before background color can be set */
+		return self.textHasForegroundColor;
+	}
+	case 109: // Background Color Set
+	{
+		item.hidden = (self.textHasBackgroundColor == NO);
+
+		return (self.textHasSpoiler == NO);
+	}
+	default: {
+		break;
+	}
 	}
 
 	return YES;
@@ -282,7 +281,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Formatting Storage Helpers
 
-- (void)applyEffectToTextBox:(IRCTextFormatterEffectType)formatterEffect withValue:(nullable id)value inRange:(NSRange)limitRange
+- (void)applyEffectToTextBox:(IRCTextFormatterEffectType)formatterEffect
+				   withValue:(nullable id)value
+					 inRange:(NSRange)limitRange
 {
 	NSMutableAttributedString *stringMutableCopy = [self mutableStringAtRange:limitRange];
 
@@ -294,10 +295,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self applyAttributedStringToTextBox:stringMutableCopy inRange:limitRange];
 
-	if (value == nil &&
-		(formatterEffect == IRCTextFormatterEffectForegroundColor ||
-		 formatterEffect == IRCTextFormatterEffectSpoiler))
-	{
+	if (value == nil && (formatterEffect == IRCTextFormatterEffectForegroundColor ||
+						 formatterEffect == IRCTextFormatterEffectSpoiler)) {
 		[self.textField resetFontColorInRange:limitRange];
 	}
 
@@ -317,12 +316,17 @@ NS_ASSUME_NONNULL_BEGIN
 	return [stringSubstring mutableCopy];
 }
 
-- (void)applyEffect:(IRCTextFormatterEffectType)formatterEffect withValue:(nullable id)value toMutableString:(NSMutableAttributedString *)mutableString
+- (void)applyEffect:(IRCTextFormatterEffectType)formatterEffect
+		  withValue:(nullable id)value
+	toMutableString:(NSMutableAttributedString *)mutableString
 {
 	[self applyEffect:formatterEffect withValue:value inRange:mutableString.range toMutableString:mutableString];
 }
 
-- (void)applyEffect:(IRCTextFormatterEffectType)formatterEffect withValue:(nullable id)value inRange:(NSRange)limitRange toMutableString:(NSMutableAttributedString *)mutableString
+- (void)applyEffect:(IRCTextFormatterEffectType)formatterEffect
+		  withValue:(nullable id)value
+			inRange:(NSRange)limitRange
+	toMutableString:(NSMutableAttributedString *)mutableString
 {
 	if (value) {
 		[mutableString setIRCFormatterAttribute:formatterEffect value:value range:limitRange];
@@ -388,9 +392,7 @@ NS_ASSUME_NONNULL_BEGIN
 		[self insertRainbowColorCharInfoTextBox:sender asForegroundColor:YES];
 
 		return;
-	}
-	else if ([sender tag] == _formattingMenuHexColorMenuItemTag)
-	{
+	} else if ([sender tag] == _formattingMenuHexColorMenuItemTag) {
 		NSColorPanel *colorPanel = [NSColorPanel sharedColorPanel];
 
 		[colorPanel setTarget:self];
@@ -404,19 +406,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSRange selectedTextRange = self.textField.selectedRange;
 
-	[self applyEffectToTextBox:IRCTextFormatterEffectForegroundColor withValue:@([sender tag]) inRange:selectedTextRange];
+	[self applyEffectToTextBox:IRCTextFormatterEffectForegroundColor
+					 withValue:@([sender tag])
+					   inRange:selectedTextRange];
 }
 
 - (void)insertBackgroundColorCharIntoTextBox:(nullable id)sender
 {
-	if ([sender tag] == _formattingMenuRainbowColorMenuItemTag)
-	{
+	if ([sender tag] == _formattingMenuRainbowColorMenuItemTag) {
 		[self insertRainbowColorCharInfoTextBox:sender asForegroundColor:NO];
 
 		return;
-	}
-	else if ([sender tag] == _formattingMenuHexColorMenuItemTag)
-	{
+	} else if ([sender tag] == _formattingMenuHexColorMenuItemTag) {
 		NSColorPanel *colorPanel = [NSColorPanel sharedColorPanel];
 
 		[colorPanel setTarget:self];
@@ -430,7 +431,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSRange selectedTextRange = self.textField.selectedRange;
 
-	[self applyEffectToTextBox:IRCTextFormatterEffectBackgroundColor withValue:@([sender tag]) inRange:selectedTextRange];
+	[self applyEffectToTextBox:IRCTextFormatterEffectBackgroundColor
+					 withValue:@([sender tag])
+					   inRange:selectedTextRange];
 }
 
 - (void)insertRainbowColorCharInfoTextBox:(id)sender asForegroundColor:(BOOL)asForegroundColor
@@ -447,7 +450,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSUInteger rainbowArrayIndex = 0;
 
-	NSArray *colorCodes = @[@(4), @(7), @(8), @(3), @(12), @(2), @(6)];
+	NSArray *colorCodes = @[ @(4), @(7), @(8), @(3), @(12), @(2), @(6) ];
 
 	for (NSUInteger charCountIndex = 0; charCountIndex < mutableStringCopy.length; charCountIndex++) {
 		if (rainbowArrayIndex > 6) {
@@ -459,9 +462,15 @@ NS_ASSUME_NONNULL_BEGIN
 		NSRange currentCharacterRange = NSMakeRange(charCountIndex, 1);
 
 		if (asForegroundColor) {
-			[self applyEffect:IRCTextFormatterEffectForegroundColor withValue:@(currentColorCode) inRange:currentCharacterRange toMutableString:mutableStringCopy];
+			[self applyEffect:IRCTextFormatterEffectForegroundColor
+					  withValue:@(currentColorCode)
+						inRange:currentCharacterRange
+				toMutableString:mutableStringCopy];
 		} else {
-			[self applyEffect:IRCTextFormatterEffectBackgroundColor withValue:@(currentColorCode) inRange:currentCharacterRange toMutableString:mutableStringCopy];
+			[self applyEffect:IRCTextFormatterEffectBackgroundColor
+					  withValue:@(currentColorCode)
+						inRange:currentCharacterRange
+				toMutableString:mutableStringCopy];
 		}
 
 		rainbowArrayIndex += 1;
@@ -483,7 +492,9 @@ NS_ASSUME_NONNULL_BEGIN
 	if (colorDigit == NSNotFound) {
 		[self applyEffectToTextBox:IRCTextFormatterEffectForegroundColor withValue:color inRange:selectedTextRange];
 	} else {
-		[self applyEffectToTextBox:IRCTextFormatterEffectForegroundColor withValue:@(colorDigit) inRange:selectedTextRange];
+		[self applyEffectToTextBox:IRCTextFormatterEffectForegroundColor
+						 withValue:@(colorDigit)
+						   inRange:selectedTextRange];
 	}
 }
 
@@ -498,7 +509,9 @@ NS_ASSUME_NONNULL_BEGIN
 	if (colorDigit == NSNotFound) {
 		[self applyEffectToTextBox:IRCTextFormatterEffectBackgroundColor withValue:color inRange:selectedTextRange];
 	} else {
-		[self applyEffectToTextBox:IRCTextFormatterEffectBackgroundColor withValue:@(colorDigit) inRange:selectedTextRange];
+		[self applyEffectToTextBox:IRCTextFormatterEffectBackgroundColor
+						 withValue:@(colorDigit)
+						   inRange:selectedTextRange];
 	}
 }
 

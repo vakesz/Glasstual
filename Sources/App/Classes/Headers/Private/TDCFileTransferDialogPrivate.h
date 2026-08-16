@@ -60,16 +60,16 @@ typedef NS_ENUM(NSUInteger, TDCFileTransferDialogTransferStatus) {
 };
 
 typedef NS_ENUM(NSUInteger, TDCFileTransferDialogSelection) {
-	TDCFileTransferDialogSelectionAll			= 0,
-	TDCFileTransferDialogSelectionSending		= 1,
-	TDCFileTransferDialogSelectionReceiving		= 2
+	TDCFileTransferDialogSelectionAll = 0,
+	TDCFileTransferDialogSelectionSending = 1,
+	TDCFileTransferDialogSelectionReceiving = 2
 };
 
 @class TDCFileTransferDialogTransferController;
 
 @interface TDCFileTransferDialog : TDCWindowBase
-@property (readonly, weak) TVCBasicTableView *fileTransferTable;
-@property (readonly, copy, nullable) NSString *IPAddress;
+@property(readonly, weak) TVCBasicTableView *fileTransferTable;
+@property(readonly, copy, nullable) NSString *IPAddress;
 
 - (void)show:(BOOL)makeKeyWindow;
 - (void)show:(BOOL)makeKeyWindow restorePosition:(BOOL)restorePosition;

@@ -36,15 +36,13 @@
 *********************************************************************** */
 
 @objc(TLOpenLink)
-public class OpenLink: NSObject
-{
+public class OpenLink: NSObject {
 	@objc(open:inBackground:)
-	public static func open(url: URL, inBackground: Bool = TPCPreferences.openBrowserInBackground())
-	{
+	public static func open(url: URL, inBackground: Bool = TPCPreferences.openBrowserInBackground()) {
 		if inBackground {
 			/* User should not be clicking links frequently enough that
 			 we need to worry about making the configuration static. */
-			let configuration = NSWorkspace.OpenConfiguration();
+			let configuration = NSWorkspace.OpenConfiguration()
 			configuration.activates = false
 
 			NSWorkspace.shared.open(url, configuration: configuration)
@@ -56,8 +54,7 @@ public class OpenLink: NSObject
 	}
 
 	@objc(openWithString:inBackground:)
-	public static func open(string: String, inBackground: Bool = TPCPreferences.openBrowserInBackground())
-	{
+	public static func open(string: String, inBackground: Bool = TPCPreferences.openBrowserInBackground()) {
 		guard let urlToOpen = URL(string: string) else {
 			return
 		}
@@ -68,14 +65,12 @@ public class OpenLink: NSObject
 
 extension OpenLink {
 	@objc(open:)
-	public static func openBridged(url: URL)
-	{
+	public static func openBridged(url: URL) {
 		open(url: url)
 	}
 
 	@objc(openWithString:)
-	public static func openBridged(string: String)
-	{
+	public static func openBridged(string: String) {
 		open(string: string)
 	}
 }

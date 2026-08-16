@@ -70,9 +70,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)startSheetWithWindow:(NSWindow *)window
 {
 	[window beginSheet:self.sheet
-	 completionHandler:^(NSModalResponse returnCode) {
-		[self sheetDidEndWithReturnCode:returnCode];
-	}];
+		completionHandler:^(NSModalResponse returnCode) {
+			[self sheetDidEndWithReturnCode:returnCode];
+		}];
 
 	self.sheet.contentView.prefersCompactControlSizeMetrics = YES;
 }

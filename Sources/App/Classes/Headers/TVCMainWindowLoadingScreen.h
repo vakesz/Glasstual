@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)showWelcomeAddServerView;
 
-@property (readonly) BOOL viewIsVisible;
+@property(readonly) BOOL viewIsVisible;
 
 - (void)hide;
 - (void)hideAnimated;

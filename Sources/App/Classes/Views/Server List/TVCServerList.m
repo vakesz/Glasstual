@@ -45,10 +45,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TVCServerListDragType = @"TVCServerListDragType";
+NSString *const TVCServerListDragType = @"TVCServerListDragType";
 
 @interface TVCServerList ()
-@property (nonatomic, assign, readwrite) BOOL leftMouseIsDownInView;
+@property(nonatomic, assign, readwrite) BOOL leftMouseIsDownInView;
 @end
 
 @implementation TVCServerList
@@ -99,8 +99,7 @@ NSString * const TVCServerListDragType = @"TVCServerListDragType";
 {
 	NSParameterAssert(object != nil);
 
-	NSAssert(([self rowForItem:object] >= 0),
-		@"Object does not exist on outline view");
+	NSAssert(([self rowForItem:object] >= 0), @"Object does not exist on outline view");
 
 	id parentItem = [self parentForItem:object];
 	NSUInteger rowIndex;
@@ -126,7 +125,10 @@ NSString * const TVCServerListDragType = @"TVCServerListDragType";
 	}
 }
 
-- (void)moveItemAtIndex:(NSInteger)fromIndex inParent:(nullable id)oldParent toIndex:(NSInteger)toIndex inParent:(nullable id)newParent
+- (void)moveItemAtIndex:(NSInteger)fromIndex
+			   inParent:(nullable id)oldParent
+				toIndex:(NSInteger)toIndex
+			   inParent:(nullable id)newParent
 {
 	if (fromIndex < toIndex) {
 		[super moveItemAtIndex:fromIndex inParent:oldParent toIndex:(toIndex - 1) inParent:newParent];
@@ -345,21 +347,20 @@ NSString * const TVCServerListDragType = @"TVCServerListDragType";
 	}
 
 	switch (e.keyCode) {
-		case 125: // down arrow
-		case 126: // up arrow
-		case 123: // left arrow
-		case 124: // right arrow
-		case 116: // page up
-		case 121: // page down
-		{
-			break;
-		}
-		default:
-		{
-			[self.keyDelegate serverListKeyDown:e];
+	case 125: // down arrow
+	case 126: // up arrow
+	case 123: // left arrow
+	case 124: // right arrow
+	case 116: // page up
+	case 121: // page down
+	{
+		break;
+	}
+	default: {
+		[self.keyDelegate serverListKeyDown:e];
 
-			break;
-		}
+		break;
+	}
 	}
 }
 

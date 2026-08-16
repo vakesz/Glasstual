@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark ISON Command (Default: hidden)
 
-@property (readonly, getter=inVisibleIsonRequest) BOOL visibleIsonRequest;
+@property(readonly, getter=inVisibleIsonRequest) BOOL visibleIsonRequest;
 - (void)recordIsonRequestOpened;
 - (void)recordIsonRequestOpenedAsVisible;
 - (void)recordIsonRequestClosed;
@@ -103,7 +103,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark WHO Command (Default: hidden)
 
-@property (readonly, getter=inVisibleWhoRequest) BOOL visibleWhoRequest;
+@property(readonly, getter=inVisibleWhoRequest) BOOL visibleWhoRequest;
 - (void)recordWhoRequestOpened;
 - (void)recordWhoRequestOpenedAsVisible;
 - (void)recordWhoRequestClosed;

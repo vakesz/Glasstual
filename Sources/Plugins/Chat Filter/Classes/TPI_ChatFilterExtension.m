@@ -43,23 +43,23 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _filterTableDragToken			@"filterTableDragToken"
+#define _filterTableDragToken @"filterTableDragToken"
 
-#define _filterListUserDefaultsKey		@"Glasstual Chat Filter Extension -> Filters"
+#define _filterListUserDefaultsKey @"Glasstual Chat Filter Extension -> Filters"
 
 @interface TPI_ChatFilterExtension () <NSTableViewDataSource, NSTableViewDelegate>
-@property (nonatomic, strong) IBOutlet NSView *preferencesPaneView;
-@property (nonatomic, strong) IBOutlet NSMenu *filterAddMenu;
-@property (nonatomic, weak) IBOutlet NSButton *filterAddButton;
-@property (nonatomic, weak) IBOutlet NSButton *filterRemoveButton;
-@property (nonatomic, weak) IBOutlet NSButton *filterEditButton;
-@property (nonatomic, weak) IBOutlet TVCBasicTableView *filterTable;
-@property (nonatomic, strong, readwrite) IBOutlet NSArrayController *filterArrayController;
-@property (nonatomic, assign) BOOL atleastOneFilterExists;
-@property (nonatomic, assign) NSInteger activeChatFilterIndex;
-@property (nonatomic, strong) TPI_ChatFilterEditFilterSheet *activeChatFilterEditSheet;
-@property (nonatomic, strong) TPI_ChatFilterLogic *filterLogicController;
-@property (nonatomic, assign) BOOL savingFilters;
+@property(nonatomic, strong) IBOutlet NSView *preferencesPaneView;
+@property(nonatomic, strong) IBOutlet NSMenu *filterAddMenu;
+@property(nonatomic, weak) IBOutlet NSButton *filterAddButton;
+@property(nonatomic, weak) IBOutlet NSButton *filterRemoveButton;
+@property(nonatomic, weak) IBOutlet NSButton *filterEditButton;
+@property(nonatomic, weak) IBOutlet TVCBasicTableView *filterTable;
+@property(nonatomic, strong, readwrite) IBOutlet NSArrayController *filterArrayController;
+@property(nonatomic, assign) BOOL atleastOneFilterExists;
+@property(nonatomic, assign) NSInteger activeChatFilterIndex;
+@property(nonatomic, strong) TPI_ChatFilterEditFilterSheet *activeChatFilterEditSheet;
+@property(nonatomic, strong) TPI_ChatFilterLogic *filterLogicController;
+@property(nonatomic, assign) BOOL savingFilters;
 
 - (IBAction)filterTableDoubleClicked:(nullable id)sender;
 
@@ -78,14 +78,38 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Filter Logic
 
-- (BOOL)receivedCommand:(NSString *)command withText:(nullable NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt referenceMessage:(nullable IRCMessage *)referenceMessage
+- (BOOL)receivedCommand:(NSString *)command
+			   withText:(nullable NSString *)text
+			 authoredBy:(IRCPrefix *)textAuthor
+			destinedFor:(nullable IRCChannel *)textDestination
+			   onClient:(IRCClient *)client
+			 receivedAt:(NSDate *)receivedAt
+	   referenceMessage:(nullable IRCMessage *)referenceMessage
 {
-	return [self.filterLogicController receivedCommand:command withText:text authoredBy:textAuthor destinedFor:textDestination onClient:client receivedAt:receivedAt referenceMessage:referenceMessage];
+	return [self.filterLogicController receivedCommand:command
+											  withText:text
+											authoredBy:textAuthor
+										   destinedFor:textDestination
+											  onClient:client
+											receivedAt:receivedAt
+									  referenceMessage:referenceMessage];
 }
 
-- (BOOL)receivedText:(NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination asLineType:(TVCLogLineType)lineType onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt wasEncrypted:(BOOL)wasEncrypted
+- (BOOL)receivedText:(NSString *)text
+		  authoredBy:(IRCPrefix *)textAuthor
+		 destinedFor:(nullable IRCChannel *)textDestination
+		  asLineType:(TVCLogLineType)lineType
+			onClient:(IRCClient *)client
+		  receivedAt:(NSDate *)receivedAt
+		wasEncrypted:(BOOL)wasEncrypted
 {
-	return [self.filterLogicController receivedText:text authoredBy:textAuthor destinedFor:textDestination asLineType:lineType onClient:client receivedAt:receivedAt wasEncrypted:wasEncrypted];
+	return [self.filterLogicController receivedText:text
+										 authoredBy:textAuthor
+										destinedFor:textDestination
+										 asLineType:lineType
+										   onClient:client
+										 receivedAt:receivedAt
+									   wasEncrypted:wasEncrypted];
 }
 
 #pragma mark -
@@ -141,7 +165,10 @@ NS_ASSUME_NONNULL_BEGIN
 	self.atleastOneFilterExists = (arrangedObjects.count > 0);
 }
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 {
 	if ([keyPath isEqualToString:_filterListUserDefaultsKey]) {
 		if (self.savingFilters) {
@@ -161,7 +188,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	XRPerformBlockSynchronouslyOnMainQueue(^{
 		NSAssert([TPIBundleFromClass() loadNibNamed:@"TPI_ChatFilterExtension" owner:self topLevelObjects:nil],
-			@"Failed to load user interface");
+				 @"Failed to load user interface");
 	});
 
 	self.activeChatFilterIndex = (-1);
@@ -172,7 +199,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self loadFilters];
 
-	[RZUserDefaults() addObserver:self forKeyPath:_filterListUserDefaultsKey options:NSKeyValueObservingOptionNew context:NULL];
+	[RZUserDefaults() addObserver:self
+					   forKeyPath:_filterListUserDefaultsKey
+						  options:NSKeyValueObservingOptionNew
+						  context:NULL];
 }
 
 - (void)pluginWillBeUnloadedFromMemory
@@ -194,7 +224,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)awakeFromNib
 {
-	[self.filterTable registerForDraggedTypes:@[_filterTableDragToken]];
+	[self.filterTable registerForDraggedTypes:@[ _filterTableDragToken ]];
 }
 
 - (void)filterTableDoubleClicked:(nullable id)sender
@@ -251,8 +281,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	self.activeChatFilterIndex = filterIndex;
 
-	TPI_ChatFilterEditFilterSheet *sheet =
-	[[TPI_ChatFilterEditFilterSheet alloc] initWithFilter:filter];
+	TPI_ChatFilterEditFilterSheet *sheet = [[TPI_ChatFilterEditFilterSheet alloc] initWithFilter:filter];
 
 	sheet.delegate = self;
 
@@ -312,15 +341,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 	saveDialog.nameFieldStringValue = TXLocalizationNotNeeded(@"filter.plist");
 
-	[saveDialog beginSheetModalForWindow:[NSApp keyWindow] completionHandler:^(NSInteger returnCode) {
-		if (returnCode != NSModalResponseOK) {
-			return;
-		}
+	[saveDialog beginSheetModalForWindow:[NSApp keyWindow]
+					   completionHandler:^(NSInteger returnCode) {
+						   if (returnCode != NSModalResponseOK) {
+							   return;
+						   }
 
-		NSURL *pathURL = saveDialog.URL;
+						   NSURL *pathURL = saveDialog.URL;
 
-		[filter writeToURL:pathURL];
-	}];
+						   [filter writeToURL:pathURL];
+					   }];
 }
 
 - (void)filterImport:(nullable id)sender
@@ -337,28 +367,29 @@ NS_ASSUME_NONNULL_BEGIN
 
 	openDialog.prompt = TPILocalizedString(@"TPI_ChatFilterExtension[2tc-m7]");
 
-	[openDialog beginSheetModalForWindow:[NSApp keyWindow] completionHandler:^(NSInteger returnCode) {
-		if (returnCode != NSModalResponseOK) {
-			return;
-		}
+	[openDialog beginSheetModalForWindow:[NSApp keyWindow]
+					   completionHandler:^(NSInteger returnCode) {
+						   if (returnCode != NSModalResponseOK) {
+							   return;
+						   }
 
-		[openDialog orderOut:nil];
+						   [openDialog orderOut:nil];
 
-		NSURL *pathURL = openDialog.URL;
+						   NSURL *pathURL = openDialog.URL;
 
-		TPI_ChatFilter *filter = [[TPI_ChatFilter alloc] initWithContentsOfURL:pathURL];
+						   TPI_ChatFilter *filter = [[TPI_ChatFilter alloc] initWithContentsOfURL:pathURL];
 
-		if (filter == nil) {
-			[TDCAlert modalAlertWithMessage:@""
-									  title:TPILocalizedString(@"TPI_ChatFilterExtension[eqr-7t]")
-							  defaultButton:TPILocalizedString(@"TPI_ChatFilterExtension[ybz-7i]")
-							alternateButton:nil];
+						   if (filter == nil) {
+							   [TDCAlert modalAlertWithMessage:@""
+														 title:TPILocalizedString(@"TPI_ChatFilterExtension[eqr-7t]")
+												 defaultButton:TPILocalizedString(@"TPI_ChatFilterExtension[ybz-7i]")
+											   alternateButton:nil];
 
-			return;
-		}
+							   return;
+						   }
 
-		[self editFilter:filter];
-	}];
+						   [self editFilter:filter];
+					   }];
 }
 
 - (void)presentFilterAddMenu:(nullable id)sender
@@ -376,12 +407,18 @@ NS_ASSUME_NONNULL_BEGIN
 	return item;
 }
 
-- (NSDragOperation)tableView:(NSTableView *)tableView validateDrop:(id<NSDraggingInfo>)info proposedRow:(NSInteger)row proposedDropOperation:(NSTableViewDropOperation)dropOperation
+- (NSDragOperation)tableView:(NSTableView *)tableView
+				validateDrop:(id<NSDraggingInfo>)info
+				 proposedRow:(NSInteger)row
+	   proposedDropOperation:(NSTableViewDropOperation)dropOperation
 {
 	return NSDragOperationGeneric;
 }
 
-- (BOOL)tableView:(NSTableView *)tableView acceptDrop:(id <NSDraggingInfo>)info row:(NSInteger)row dropOperation:(NSTableViewDropOperation)dropOperation
+- (BOOL)tableView:(NSTableView *)tableView
+	   acceptDrop:(id<NSDraggingInfo>)info
+			  row:(NSInteger)row
+	dropOperation:(NSTableViewDropOperation)dropOperation
 {
 	NSPasteboard *pasteboard = [info draggingPasteboard];
 

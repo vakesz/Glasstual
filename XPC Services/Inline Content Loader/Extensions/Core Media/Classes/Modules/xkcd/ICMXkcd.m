@@ -52,16 +52,15 @@ NS_ASSUME_NONNULL_BEGIN
 						   ofType:[NSString class]
 					  inHierarchy:nil
 					  fromAddress:addressToRequest
-				  completionBlock:^(id object)
-	 {
-		 if (object == nil) {
-			 [self notifyUnsafeToLoadImage];
+				  completionBlock:^(id object) {
+					  if (object == nil) {
+						  [self notifyUnsafeToLoadImage];
 
-			 return;
-		 }
+						  return;
+					  }
 
-		 [self performActionForAddress:object];
-	 }];
+					  [self performActionForAddress:object];
+				  }];
 }
 
 #pragma mark -
@@ -108,11 +107,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"xkcd.com",
-		  @"www.xkcd.com"
-		];
+		domains = @[ @"xkcd.com", @"www.xkcd.com" ];
 	});
 
 	return domains;

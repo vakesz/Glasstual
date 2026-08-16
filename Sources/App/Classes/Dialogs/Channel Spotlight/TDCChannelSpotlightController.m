@@ -53,16 +53,16 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCChannelSpotlightController () <NSTableViewDataSource, NSTableViewDelegate>
-@property (nonatomic, strong, readwrite) TDCChannelSpotlightAppearance *userInterfaceObjects;
-@property (nonatomic, weak) IBOutlet NSVisualEffectView *visualEffectView;
-@property (nonatomic, weak) IBOutlet NSTextField *noResultsLabel;
-@property (nonatomic, weak) IBOutlet NSLayoutConstraint *noResultsLabelLeadingConstraint;
-@property (nonatomic, weak) IBOutlet NSView *searchResultsView;
-@property (nonatomic, weak) IBOutlet NSLayoutConstraint *searchResultsViewHeightConstraint;
-@property (nonatomic, weak) IBOutlet NSTextField *searchField;
-@property (nonatomic, weak) IBOutlet NSTableView *searchResultsTable;
-@property (nonatomic, strong) IBOutlet NSArrayController *searchResultsController;
-@property (nonatomic, strong) id mouseEventMonitor;
+@property(nonatomic, strong, readwrite) TDCChannelSpotlightAppearance *userInterfaceObjects;
+@property(nonatomic, weak) IBOutlet NSVisualEffectView *visualEffectView;
+@property(nonatomic, weak) IBOutlet NSTextField *noResultsLabel;
+@property(nonatomic, weak) IBOutlet NSLayoutConstraint *noResultsLabelLeadingConstraint;
+@property(nonatomic, weak) IBOutlet NSView *searchResultsView;
+@property(nonatomic, weak) IBOutlet NSLayoutConstraint *searchResultsViewHeightConstraint;
+@property(nonatomic, weak) IBOutlet NSTextField *searchField;
+@property(nonatomic, weak) IBOutlet NSTableView *searchResultsTable;
+@property(nonatomic, strong) IBOutlet NSArrayController *searchResultsController;
+@property(nonatomic, strong) id mouseEventMonitor;
 @end
 
 @implementation TDCChannelSpotlightController
@@ -87,21 +87,35 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.searchResultsTable.doubleAction = @selector(delegatePostSelectChannelForDoubleClickedRow:);
 
-	self.mouseEventMonitor =
-	[NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
-										  handler:^NSEvent *(NSEvent *event) {
-											  return [self respondToKeyDownEvent:event];
-										  }];
+	self.mouseEventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
+																   handler:^NSEvent *(NSEvent *event) {
+																	   return [self respondToKeyDownEvent:event];
+																   }];
 
-	self.searchResultsController.sortDescriptors = @[
-		[NSSortDescriptor sortDescriptorWithKey:@"distance" ascending:NO selector:@selector(compare:)]
-	];
+	self.searchResultsController.sortDescriptors = @[ [NSSortDescriptor sortDescriptorWithKey:@"distance"
+																					ascending:NO
+																					 selector:@selector(compare:)] ];
 
-	[RZNotificationCenter() addObserver:self selector:@selector(applicationAppearanceChanged:) name:TXApplicationAppearanceChangedNotification object:nil];
-	[RZNotificationCenter() addObserver:self selector:@selector(channelListChanged:) name:IRCClientChannelListWasModifiedNotification object:nil];
-	[RZNotificationCenter() addObserver:self selector:@selector(clientListChanged:) name:IRCWorldClientListWasModifiedNotification object:nil];
-	[RZNotificationCenter() addObserver:self selector:@selector(mainWindowSelectionChanged:) name:TVCMainWindowSelectionChangedNotification object:nil];
-	[RZNotificationCenter() addObserver:self selector:@selector(preferencesChanged:) name:TPCPreferencesUserDefaultsDidChangeNotification object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(applicationAppearanceChanged:)
+								   name:TXApplicationAppearanceChangedNotification
+								 object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(channelListChanged:)
+								   name:IRCClientChannelListWasModifiedNotification
+								 object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(clientListChanged:)
+								   name:IRCWorldClientListWasModifiedNotification
+								 object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(mainWindowSelectionChanged:)
+								   name:TVCMainWindowSelectionChangedNotification
+								 object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(preferencesChanged:)
+								   name:TPCPreferencesUserDefaultsDidChangeNotification
+								 object:nil];
 
 	[self populateArrayController];
 
@@ -158,16 +172,14 @@ NS_ASSUME_NONNULL_BEGIN
 	NSAppearance *appKitAppearance = appearance.appKitAppearance;
 
 	switch (appearance.appKitAppearanceTarget) {
-		case TXAppKitAppearanceTargetWindow:
-		{
-			self.window.appearance = appKitAppearance;
+	case TXAppKitAppearanceTargetWindow: {
+		self.window.appearance = appKitAppearance;
 
-			break;
-		}
-		default:
-		{
-			break;
-		}
+		break;
+	}
+	default: {
+		break;
+	}
 	} // switch()
 }
 
@@ -230,41 +242,41 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	switch (event.keyCode) {
-		case 18 ... 23: // 0-9 (top row)
-		case 25 ... 26:
-		case 28 ... 29:
-		case 82 ... 92: // 0-9 (number pad)
-		{
-			NSUInteger keyboardKeys = (event.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask);
+	case 18 ... 23: // 0-9 (top row)
+	case 25 ... 26:
+	case 28 ... 29:
+	case 82 ... 92: // 0-9 (number pad)
+	{
+		NSUInteger keyboardKeys = (event.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask);
 
-			keyboardKeys &= ~NSEventModifierFlagNumericPad;
+		keyboardKeys &= ~NSEventModifierFlagNumericPad;
 
-			if (keyboardKeys == NSEventModifierFlagCommand) {
-				return [self handleCommandNumberEvent:event];
-			}
-
-			return event;
+		if (keyboardKeys == NSEventModifierFlagCommand) {
+			return [self handleCommandNumberEvent:event];
 		}
-		case 36: // return
-		case 76: // enter
-		{
-			[self delegatePostSelectChannelForSelectedRow];
 
-			return nil;
-		}
-		case 53: // escape
-		{
-			[self clearSearchStringOrClose];
+		return event;
+	}
+	case 36: // return
+	case 76: // enter
+	{
+		[self delegatePostSelectChannelForSelectedRow];
 
-			return nil;
-		}
-		case 126: // arrow up
-		case 125: // arrow down
-		case 116: // page up
-		case 121: // page down
-		{
-			return [self handlePageUpDownEvent:event];
-		}
+		return nil;
+	}
+	case 53: // escape
+	{
+		[self clearSearchStringOrClose];
+
+		return nil;
+	}
+	case 126: // arrow up
+	case 125: // arrow down
+	case 116: // page up
+	case 121: // page down
+	{
+		return [self handlePageUpDownEvent:event];
+	}
 	}
 
 	return event;
@@ -302,7 +314,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSEvent *)handleCommandNumberEvent:(NSEvent *)event
 {
-	 NSInteger numberPressed = event.characters.integerValue;
+	NSInteger numberPressed = event.characters.integerValue;
 
 	if (numberPressed < 0 || numberPressed > 9) {
 		return event;
@@ -432,7 +444,8 @@ NS_ASSUME_NONNULL_BEGIN
 	if ([TPCPreferences channelNavigationIsServerSpecific]) {
 		NSString *clientId = mainWindow().selectedClient.uniqueIdentifier;
 
-		self.searchResultsController.filterPredicate = [NSPredicate predicateWithFormat:@"distance >= 0.5 && clientId LIKE[c] %@", clientId];
+		self.searchResultsController.filterPredicate =
+			[NSPredicate predicateWithFormat:@"distance >= 0.5 && clientId LIKE[c] %@", clientId];
 	} else {
 		self.searchResultsController.filterPredicate = [NSPredicate predicateWithFormat:@"distance >= 0.5"];
 	}

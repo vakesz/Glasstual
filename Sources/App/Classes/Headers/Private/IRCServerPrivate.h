@@ -48,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
  of, so the -destroyKeychainItemsDuringDealloc flag is used.
  This tells the IRCServer instance to hold onto the keychain
  item until there is no longer a reference to it. */
-@property (nonatomic, assign) BOOL destroyKeychainItemsDuringDealloc;
+@property(nonatomic, assign) BOOL destroyKeychainItemsDuringDealloc;
 
 - (void)writeServerPasswordToKeychain;
 

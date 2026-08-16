@@ -41,14 +41,14 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCUserRelations ()
-@property (nonatomic, strong, nullable) NSMutableDictionary<IRCChannel *, IRCChannelUser *> *relationsPrivate;
+@property(nonatomic, strong, nullable) NSMutableDictionary<IRCChannel *, IRCChannelUser *> *relationsPrivate;
 @end
 
 @implementation IRCUserRelations
 
 - (NSDictionary<IRCChannel *, IRCChannelUser *> *)relations
 {
-	@synchronized (self.relationsPrivate) {
+	@synchronized(self.relationsPrivate) {
 		if (self.relationsPrivate == nil) {
 			return @{};
 		}
@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray<IRCChannel *> *)relatedChannels
 {
-	@synchronized (self.relationsPrivate) {
+	@synchronized(self.relationsPrivate) {
 		if (self.relationsPrivate == nil) {
 			return @[];
 		}
@@ -70,7 +70,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray<IRCChannelUser *> *)relatedUsers
 {
-	@synchronized (self.relationsPrivate) {
+	@synchronized(self.relationsPrivate) {
 		if (self.relationsPrivate == nil) {
 			return @[];
 		}
@@ -79,9 +79,9 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)enumerateRelations:(void (NS_NOESCAPE ^)(IRCChannel *channel, IRCChannelUser *member, BOOL *stop))block
+- (void)enumerateRelations:(void(NS_NOESCAPE ^)(IRCChannel *channel, IRCChannelUser *member, BOOL *stop))block
 {
-	@synchronized (self.relationsPrivate) {
+	@synchronized(self.relationsPrivate) {
 		if (self.relationsPrivate == nil) {
 			return;
 		}
@@ -92,7 +92,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSUInteger)numberOfRelations
 {
-	@synchronized (self.relationsPrivate) {
+	@synchronized(self.relationsPrivate) {
 		if (self.relationsPrivate == nil) {
 			return 0;
 		}
@@ -110,7 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	@synchronized (self.relationsPrivate) {
+	@synchronized(self.relationsPrivate) {
 		if (self.relationsPrivate == nil) {
 			self.relationsPrivate = [NSMutableDictionary dictionary];
 		}
@@ -118,7 +118,7 @@ NS_ASSUME_NONNULL_BEGIN
 		/* IRCChannel does not really support copying. It returns self.
 		 The protocol is declared here in a cast, instead of in the
 		 header for IRCChannel, so plugin author's don't make a mistake. */
-		self.relationsPrivate[(IRCChannel <NSCopying> *)channel] = user;
+		self.relationsPrivate[(IRCChannel<NSCopying> *)channel] = user;
 	}
 }
 
@@ -130,7 +130,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	@synchronized (self.relationsPrivate) {
+	@synchronized(self.relationsPrivate) {
 		if (self.relationsPrivate == nil) {
 			return;
 		}
@@ -151,7 +151,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return nil;
 	}
 
-	@synchronized (self.relationsPrivate) {
+	@synchronized(self.relationsPrivate) {
 		if (self.relationsPrivate == nil) {
 			return nil;
 		}

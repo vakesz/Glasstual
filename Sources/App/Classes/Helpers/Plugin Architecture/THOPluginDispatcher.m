@@ -44,7 +44,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
+NSString *const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 
 @interface IRCMessage (IRCMessagePluginExtension)
 - (THOPluginDidReceiveServerInputConcreteObject *)didReceiveServerInputConcreteObject;
@@ -60,28 +60,38 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 
 	dispatch_once(&onceToken, ^{
 		dispatch_queue_attr_t attributes =
-		dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
+			dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
 
-		dispatchQueue =
-		dispatch_queue_create("Glasstual.THOPluginDispatcher.PluginManagerDispatchQueue", attributes);
+		dispatchQueue = dispatch_queue_create("Glasstual.THOPluginDispatcher.PluginManagerDispatchQueue", attributes);
 	});
 
 	return dispatchQueue;
 }
 
-+ (BOOL)receivedCommand:(NSString *)command withText:(nullable NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt referenceMessage:(nullable IRCMessage *)referenceMessage
++ (BOOL)receivedCommand:(NSString *)command
+			   withText:(nullable NSString *)text
+			 authoredBy:(IRCPrefix *)textAuthor
+			destinedFor:(nullable IRCChannel *)textDestination
+			   onClient:(IRCClient *)client
+			 receivedAt:(NSDate *)receivedAt
+	   referenceMessage:(nullable IRCMessage *)referenceMessage
 {
 	NSParameterAssert(command != nil);
 	NSParameterAssert(client != nil);
 	NSParameterAssert(receivedAt != nil);
 
-	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins)
-	{
+	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins) {
 		if ([plugin supportsFeature:THOPluginItemSupportedFeatureDidReceiveCommandEvent] == NO) {
 			continue;
 		}
 
-		BOOL returnedValue = [plugin.primaryClass receivedCommand:command withText:text authoredBy:textAuthor destinedFor:textDestination onClient:client receivedAt:receivedAt referenceMessage:referenceMessage];
+		BOOL returnedValue = [plugin.primaryClass receivedCommand:command
+														 withText:text
+													   authoredBy:textAuthor
+													  destinedFor:textDestination
+														 onClient:client
+													   receivedAt:receivedAt
+												 referenceMessage:referenceMessage];
 
 		if (returnedValue == NO) {
 			return NO;
@@ -91,20 +101,31 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 	return YES;
 }
 
-+ (BOOL)receivedText:(NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination asLineType:(TVCLogLineType)lineType onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt wasEncrypted:(BOOL)wasEncrypted
++ (BOOL)receivedText:(NSString *)text
+		  authoredBy:(IRCPrefix *)textAuthor
+		 destinedFor:(nullable IRCChannel *)textDestination
+		  asLineType:(TVCLogLineType)lineType
+			onClient:(IRCClient *)client
+		  receivedAt:(NSDate *)receivedAt
+		wasEncrypted:(BOOL)wasEncrypted
 {
 	NSParameterAssert(text != nil);
 	NSParameterAssert(textAuthor != nil);
 	NSParameterAssert(client != nil);
 	NSParameterAssert(receivedAt != nil);
 
-	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins)
-	{
+	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins) {
 		if ([plugin supportsFeature:THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent] == NO) {
 			continue;
 		}
 
-		BOOL returnedValue = [plugin.primaryClass receivedText:text authoredBy:textAuthor destinedFor:textDestination asLineType:lineType onClient:client receivedAt:receivedAt wasEncrypted:wasEncrypted];
+		BOOL returnedValue = [plugin.primaryClass receivedText:text
+													authoredBy:textAuthor
+												   destinedFor:textDestination
+													asLineType:lineType
+													  onClient:client
+													receivedAt:receivedAt
+												  wasEncrypted:wasEncrypted];
 
 		if (returnedValue == NO) {
 			return NO;
@@ -121,8 +142,7 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 
 	IRCMessage *returnValue = inputObject;
 
-	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins)
-	{
+	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins) {
 		if ([plugin supportsFeature:THOPluginItemSupportedFeatureServerInputDataInterception] == NO) {
 			continue;
 		}
@@ -149,8 +169,7 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 
 	id returnValue = inputObject;
 
-	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins)
-	{
+	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins) {
 		if ([plugin supportsFeature:THOPluginItemSupportedFeatureUserInputDataInterception] == NO) {
 			continue;
 		}
@@ -161,11 +180,9 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 			return nil;
 		} else if ([returnedValue isEqual:returnValue] == NO &&
 				   ([returnedValue isKindOfClass:[NSString class]] ||
-					[returnedValue isKindOfClass:[NSAttributedString class]]))
-		{
+					[returnedValue isKindOfClass:[NSAttributedString class]])) {
 			if ([returnedValue isKindOfClass:[NSMutableString class]] ||
-				[returnedValue isKindOfClass:[NSMutableAttributedString class]])
-			{
+				[returnedValue isKindOfClass:[NSMutableAttributedString class]]) {
 				returnValue = [returnedValue copy];
 			} else {
 				returnValue = returnedValue;
@@ -176,20 +193,25 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 	return returnValue;
 }
 
-+ (NSString *)willRenderMessage:(NSString *)newMessage forViewController:(TVCLogController *)viewController lineType:(TVCLogLineType)lineType memberType:(TVCLogLineMemberType)memberType
++ (NSString *)willRenderMessage:(NSString *)newMessage
+			  forViewController:(TVCLogController *)viewController
+					   lineType:(TVCLogLineType)lineType
+					 memberType:(TVCLogLineMemberType)memberType
 {
 	NSParameterAssert(newMessage != nil);
 	NSParameterAssert(viewController != nil);
 
 	NSString *returnValue = newMessage;
 
-	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins)
-	{
+	for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins) {
 		if ([plugin supportsFeature:THOPluginItemSupportedFeatureWillRenderMessageEvent] == NO) {
 			continue;
 		}
 
-		NSString *returnedValue = [plugin.primaryClass willRenderMessage:returnValue forViewController:viewController lineType:lineType memberType:memberType];
+		NSString *returnedValue = [plugin.primaryClass willRenderMessage:returnValue
+													   forViewController:viewController
+																lineType:lineType
+															  memberType:memberType];
 
 		if (returnedValue.length == 0) {
 			continue;
@@ -203,7 +225,9 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 	return returnValue;
 }
 
-+ (void)userInputCommandInvokedOnClient:(IRCClient *)client commandString:(NSString *)commandString messageString:(NSString *)messageString
++ (void)userInputCommandInvokedOnClient:(IRCClient *)client
+						  commandString:(NSString *)commandString
+						  messageString:(NSString *)messageString
 {
 	NSParameterAssert(client != nil);
 	NSParameterAssert(commandString != nil);
@@ -214,8 +238,7 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 
 		NSString *uppercaseCommand = commandString.uppercaseString;
 
-		for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins)
-		{
+		for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins) {
 			if ([plugin supportsFeature:THOPluginItemSupportedFeatureSubscribedUserInputCommands] == NO) {
 				continue;
 			}
@@ -224,19 +247,21 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 				continue;
 			}
 
-			[plugin.primaryClass userInputCommandInvokedOnClient:client commandString:uppercaseCommand messageString:messageString];
+			[plugin.primaryClass userInputCommandInvokedOnClient:client
+												   commandString:uppercaseCommand
+												   messageString:messageString];
 		}
 	});
 }
 
-+ (void)didReceiveJavaScriptPayload:(THOPluginWebViewJavaScriptPayloadConcreteObject *)payloadObject fromViewController:(TVCLogController *)viewController
++ (void)didReceiveJavaScriptPayload:(THOPluginWebViewJavaScriptPayloadConcreteObject *)payloadObject
+				 fromViewController:(TVCLogController *)viewController
 {
 	NSParameterAssert(payloadObject != nil);
 	NSParameterAssert(viewController != nil);
 
 	XRPerformBlockAsynchronouslyOnQueue([self dispatchQueue], ^{
-		for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins)
-		{
+		for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins) {
 			if ([plugin supportsFeature:THOPluginItemSupportedFeatureWebViewJavaScriptPayloads] == NO) {
 				continue;
 			}
@@ -252,16 +277,14 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 	NSParameterAssert(client != nil);
 
 	XRPerformBlockAsynchronouslyOnQueue([self dispatchQueue], ^{
-		THOPluginDidReceiveServerInputConcreteObject *messageObject =
-		inputObject.didReceiveServerInputConcreteObject;
+		THOPluginDidReceiveServerInputConcreteObject *messageObject = inputObject.didReceiveServerInputConcreteObject;
 
 		messageObject.networkAddress = client.serverAddress;
 		messageObject.networkName = client.networkName;
 
 		NSString *lowercaseCommand = inputObject.command.lowercaseString;
 
-		for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins)
-		{
+		for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins) {
 			if ([plugin supportsFeature:THOPluginItemSupportedFeatureSubscribedServerInputCommands] == NO) {
 				continue;
 			}
@@ -295,20 +318,21 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 	[[self didPostNewMessageObjectCache] setObject:messageObject forKey:messageObject.lineNumber];
 }
 
-+ (void)dequeueDidPostNewMessageWithLineNumber:(NSString *)messageLineNumber forViewController:(TVCLogController *)viewController
++ (void)dequeueDidPostNewMessageWithLineNumber:(NSString *)messageLineNumber
+							 forViewController:(TVCLogController *)viewController
 {
 	NSParameterAssert(messageLineNumber != nil);
 	NSParameterAssert(viewController != nil);
 
-	THOPluginDidPostNewMessageConcreteObject *messageObject = [[self didPostNewMessageObjectCache] objectForKey:messageLineNumber];
+	THOPluginDidPostNewMessageConcreteObject *messageObject =
+		[[self didPostNewMessageObjectCache] objectForKey:messageLineNumber];
 
 	if (messageObject == nil) {
 		return;
 	}
 
 	XRPerformBlockAsynchronouslyOnQueue([self dispatchQueue], ^{
-		for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins)
-		{
+		for (THOPluginItem *plugin in sharedPluginManager().loadedPlugins) {
 			if ([plugin supportsFeature:THOPluginItemSupportedFeatureNewMessagePostedEvent] == NO) {
 				continue;
 			}
@@ -326,8 +350,7 @@ NSString * const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 
 - (THOPluginDidReceiveServerInputConcreteObject *)didReceiveServerInputConcreteObject
 {
-	 THOPluginDidReceiveServerInputConcreteObject *messageObject =
-	[THOPluginDidReceiveServerInputConcreteObject new];
+	THOPluginDidReceiveServerInputConcreteObject *messageObject = [THOPluginDidReceiveServerInputConcreteObject new];
 
 	messageObject.senderIsServer = self.senderIsServer;
 

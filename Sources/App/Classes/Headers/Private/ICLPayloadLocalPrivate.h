@@ -40,7 +40,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ICLPayload (ICLPayloadLocalPrivate)
-@property (copy, readonly) NSDictionary<NSString *, id> *javaScriptObject;
+@property(copy, readonly) NSDictionary<NSString *, id> *javaScriptObject;
 @end
 
 NS_ASSUME_NONNULL_END

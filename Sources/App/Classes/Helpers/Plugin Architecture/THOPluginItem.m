@@ -42,21 +42,21 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface THOPluginItem ()
-@property (nonatomic, strong, readwrite, nullable) NSBundle *bundle;
-@property (nonatomic, strong, readwrite, nullable) id primaryClass;
-@property (nonatomic, assign, readwrite) THOPluginItemSupportedFeature supportedFeatures;
-@property (nonatomic, copy, readwrite, nullable) NSArray<NSString *> *supportedUserInputCommands;
-@property (nonatomic, copy, readwrite, nullable) NSArray<NSString *> *supportedServerInputCommands;
-@property (nonatomic, copy, readwrite, nullable) NSArray<THOPluginOutputSuppressionRule *> *outputSuppressionRules;
-@property (nonatomic, copy, readwrite, nullable) NSString *pluginPreferencesPaneMenuItemTitle;
-@property (nonatomic, strong, readwrite, nullable) NSView *pluginPreferencesPaneView;
+@property(nonatomic, strong, readwrite, nullable) NSBundle *bundle;
+@property(nonatomic, strong, readwrite, nullable) id primaryClass;
+@property(nonatomic, assign, readwrite) THOPluginItemSupportedFeature supportedFeatures;
+@property(nonatomic, copy, readwrite, nullable) NSArray<NSString *> *supportedUserInputCommands;
+@property(nonatomic, copy, readwrite, nullable) NSArray<NSString *> *supportedServerInputCommands;
+@property(nonatomic, copy, readwrite, nullable) NSArray<THOPluginOutputSuppressionRule *> *outputSuppressionRules;
+@property(nonatomic, copy, readwrite, nullable) NSString *pluginPreferencesPaneMenuItemTitle;
+@property(nonatomic, strong, readwrite, nullable) NSView *pluginPreferencesPaneView;
 @end
 
 @implementation THOPluginItem
 
-#define _isClass(o, t)				 [o isKindOfClass:[t class]]
-#define _isNotEmptyArray(o)			([o isKindOfClass:[NSArray class]] && [(NSArray *)o count] > 0)
-#define _isNotEmptyString(o)		([o isKindOfClass:[NSString class]] && [(NSString *)o length] > 0)
+#define _isClass(o, t) [o isKindOfClass:[t class]]
+#define _isNotEmptyArray(o) ([o isKindOfClass:[NSArray class]] && [(NSArray *)o count] > 0)
+#define _isNotEmptyString(o) ([o isKindOfClass:[NSString class]] && [(NSString *)o length] > 0)
 
 - (BOOL)loadBundle:(NSBundle *)bundle
 {
@@ -69,7 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return NO;
 	}
 
-	id <THOPluginProtocol> primaryClass = [[principalClass alloc] init];
+	id<THOPluginProtocol> primaryClass = [[principalClass alloc] init];
 
 	if ([primaryClass respondsToSelector:@selector(pluginLoadedIntoMemory)]) {
 		[primaryClass pluginLoadedIntoMemory];
@@ -79,8 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
 	THOPluginItemSupportedFeature supportedFeatures = 0;
 
 	/* Process server output suppression rules */
-	if ([primaryClass respondsToSelector:@selector(pluginOutputSuppressionRules)])
-	{
+	if ([primaryClass respondsToSelector:@selector(pluginOutputSuppressionRules)]) {
 		id outputRules = primaryClass.pluginOutputSuppressionRules;
 
 		if (_isNotEmptyArray(outputRules)) {
@@ -102,8 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Does the bundle have a preference pane?... */
 	if ([primaryClass respondsToSelector:@selector(pluginPreferencesPaneMenuItemName)] &&
-		[primaryClass respondsToSelector:@selector(pluginPreferencesPaneView)])
-	{
+		[primaryClass respondsToSelector:@selector(pluginPreferencesPaneView)]) {
 		id itemTitle = primaryClass.pluginPreferencesPaneMenuItemName;
 		id itemView = primaryClass.pluginPreferencesPaneView;
 
@@ -117,8 +115,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Process user input commands */
 	if ([primaryClass respondsToSelector:@selector(subscribedUserInputCommands)] &&
-		[primaryClass respondsToSelector:@selector(userInputCommandInvokedOnClient:commandString:messageString:)])
-	{
+		[primaryClass respondsToSelector:@selector(userInputCommandInvokedOnClient:commandString:messageString:)]) {
 		id subscribedCommands = primaryClass.subscribedUserInputCommands;
 
 		if (_isNotEmptyArray(subscribedCommands)) {
@@ -140,8 +137,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Process server input commands */
 	if ([primaryClass respondsToSelector:@selector(subscribedServerInputCommands)] &&
-		[primaryClass respondsToSelector:@selector(didReceiveServerInput:onClient:)])
-	{
+		[primaryClass respondsToSelector:@selector(didReceiveServerInput:onClient:)]) {
 		id subscribedCommands = primaryClass.subscribedServerInputCommands;
 
 		if (_isNotEmptyArray(subscribedCommands)) {
@@ -186,11 +182,13 @@ NS_ASSUME_NONNULL_BEGIN
 		supportedFeatures |= THOPluginItemSupportedFeatureUserInputDataInterception;
 	}
 
-	if ([primaryClass respondsToSelector:@selector(receivedText:authoredBy:destinedFor:asLineType:onClient:receivedAt:wasEncrypted:)]) {
+	if ([primaryClass respondsToSelector:@selector
+					  (receivedText:authoredBy:destinedFor:asLineType:onClient:receivedAt:wasEncrypted:)]) {
 		supportedFeatures |= THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent;
 	}
 
-	if ([primaryClass respondsToSelector:@selector(receivedCommand:withText:authoredBy:destinedFor:onClient:receivedAt:referenceMessage:)]) {
+	if ([primaryClass respondsToSelector:@selector
+					  (receivedCommand:withText:authoredBy:destinedFor:onClient:receivedAt:referenceMessage:)]) {
 		supportedFeatures |= THOPluginItemSupportedFeatureDidReceiveCommandEvent;
 	}
 

@@ -77,57 +77,60 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TVCMainWindowAppearanceChangedNotification = @"TVCMainWindowAppearanceChangedNotification";
-NSString * const TVCMainWindowRedrawSubviewsNotification = @"TVCMainWindowRedrawSubviewsNotification";
+NSString *const TVCMainWindowAppearanceChangedNotification = @"TVCMainWindowAppearanceChangedNotification";
+NSString *const TVCMainWindowRedrawSubviewsNotification = @"TVCMainWindowRedrawSubviewsNotification";
 
-NSString * const TVCMainWindowWillReloadThemeNotification = @"TVCMainWindowWillReloadThemeNotification";
-NSString * const TVCMainWindowDidReloadThemeNotification = @"TVCMainWindowDidReloadThemeNotification";
+NSString *const TVCMainWindowWillReloadThemeNotification = @"TVCMainWindowWillReloadThemeNotification";
+NSString *const TVCMainWindowDidReloadThemeNotification = @"TVCMainWindowDidReloadThemeNotification";
 
-NSString * const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelectionChangedNotification";
+NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelectionChangedNotification";
 
 @interface TVCMainWindow ()
-@property (nonatomic, weak, readwrite) IBOutlet TVCMainWindowChannelView *channelView;
-@property (nonatomic, strong, readwrite) IBOutlet TXMenuControllerMainWindowProxy *mainMenuProxy;
-@property (nonatomic, strong, readwrite) IBOutlet TVCTextViewIRCFormattingMenu *formattingMenu;
-@property (nonatomic, unsafe_unretained, readwrite) IBOutlet TVCMainWindowTextView *inputTextField;
-@property (nonatomic, weak) IBOutlet NSSplitView *nibContentSplitView;
-@property (nonatomic, weak, readwrite) IBOutlet TVCMainWindowLoadingScreenView *loadingScreen;
-@property (nonatomic, weak, readwrite) IBOutlet TVCMemberList *memberList;
-@property (nonatomic, weak, readwrite) IBOutlet TVCServerList *serverList;
-@property (nonatomic, strong, readwrite) NSSplitViewController *contentSplitViewController;
-@property (nonatomic, strong) NSSplitViewItem *serverListSplitItem;
-@property (nonatomic, strong) NSSplitViewItem *memberListSplitItem;
-@property (nonatomic, strong) NSSplitViewItemAccessoryViewController *sidebarFooterController;
-@property (nonatomic, weak) NSToolbarItem *lockToolbarItem;
-@property (nonatomic, assign) SEL lockToolbarItemAction;
-@property (nonatomic, strong) TLOInputHistory *inputHistoryManager;
-@property (nonatomic, strong) TLONicknameCompletionStatus *nicknameCompletionStatus;
-@property (nonatomic, strong, readwrite) TVCMainWindowAppearance *userInterfaceObjects;
-@property (nonatomic, readwrite, copy) NSArray *selectedItems;
-@property (nonatomic, readwrite, strong, nullable) IRCTreeItem *selectedItem;
-@property (nonatomic, copy, nullable) NSArray *previousSelectedItemsId;
-@property (nonatomic, copy, nullable) NSString *previousSelectedItemId;
-@property (nonatomic, assign) NSTimeInterval lastKeyWindowStateChange;
-@property (nonatomic, assign) BOOL lastKeyWindowRedrawFailedBecauseOfOcclusion;
-@property (nonatomic, strong) TLOKeyEventHandler *keyEventHandler;
-@property (nonatomic, copy, nullable) NSValue *cachedSwipeOriginPoint;
-@property (nonatomic, assign, readwrite) double textSizeMultiplier;
-@property (nonatomic, assign, readwrite) BOOL reloadingTheme;
+@property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowChannelView *channelView;
+@property(nonatomic, strong, readwrite) IBOutlet TXMenuControllerMainWindowProxy *mainMenuProxy;
+@property(nonatomic, strong, readwrite) IBOutlet TVCTextViewIRCFormattingMenu *formattingMenu;
+@property(nonatomic, unsafe_unretained, readwrite) IBOutlet TVCMainWindowTextView *inputTextField;
+@property(nonatomic, weak) IBOutlet NSSplitView *nibContentSplitView;
+@property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowLoadingScreenView *loadingScreen;
+@property(nonatomic, weak, readwrite) IBOutlet TVCMemberList *memberList;
+@property(nonatomic, weak, readwrite) IBOutlet TVCServerList *serverList;
+@property(nonatomic, strong, readwrite) NSSplitViewController *contentSplitViewController;
+@property(nonatomic, strong) NSSplitViewItem *serverListSplitItem;
+@property(nonatomic, strong) NSSplitViewItem *memberListSplitItem;
+@property(nonatomic, strong) NSSplitViewItemAccessoryViewController *sidebarFooterController;
+@property(nonatomic, weak) NSToolbarItem *lockToolbarItem;
+@property(nonatomic, assign) SEL lockToolbarItemAction;
+@property(nonatomic, strong) TLOInputHistory *inputHistoryManager;
+@property(nonatomic, strong) TLONicknameCompletionStatus *nicknameCompletionStatus;
+@property(nonatomic, strong, readwrite) TVCMainWindowAppearance *userInterfaceObjects;
+@property(nonatomic, readwrite, copy) NSArray *selectedItems;
+@property(nonatomic, readwrite, strong, nullable) IRCTreeItem *selectedItem;
+@property(nonatomic, copy, nullable) NSArray *previousSelectedItemsId;
+@property(nonatomic, copy, nullable) NSString *previousSelectedItemId;
+@property(nonatomic, assign) NSTimeInterval lastKeyWindowStateChange;
+@property(nonatomic, assign) BOOL lastKeyWindowRedrawFailedBecauseOfOcclusion;
+@property(nonatomic, strong) TLOKeyEventHandler *keyEventHandler;
+@property(nonatomic, copy, nullable) NSValue *cachedSwipeOriginPoint;
+@property(nonatomic, assign, readwrite) double textSizeMultiplier;
+@property(nonatomic, assign, readwrite) BOOL reloadingTheme;
 @end
 
 @interface TVCMainWindow (TahoeToolbar) <NSToolbarDelegate>
 @end
 
-#define _treeDragItemType		TVCServerListDragType
+#define _treeDragItemType TVCServerListDragType
 
-#define _treeDragItemTypes		[NSArray arrayWithObject:_treeDragItemType]
+#define _treeDragItemTypes [NSArray arrayWithObject:_treeDragItemType]
 
 @implementation TVCMainWindow
 
 #pragma mark -
 #pragma mark Awakening
 
-- (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag
+- (instancetype)initWithContentRect:(NSRect)contentRect
+						  styleMask:(NSWindowStyleMask)style
+							backing:(NSBackingStoreType)bufferingType
+							  defer:(BOOL)flag
 {
 	if ((self = [super initWithContentRect:contentRect styleMask:style backing:bufferingType defer:flag])) {
 		[self prepareInitialState];
@@ -210,7 +213,8 @@ static NSToolbarItemIdentifier const TVCMainWindowToolbarLockItemIdentifier = @"
 
 static const CGFloat _sidebarFooterHeight = 32.0;
 
-static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier identifier, NSString *symbolName, NSString *label, id target, SEL action, BOOL navigational)
+static NSToolbarItem *TVCMainWindowMakeToolbarItem(
+	NSToolbarItemIdentifier identifier, NSString *symbolName, NSString *label, id target, SEL action, BOOL navigational)
 {
 	NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:identifier];
 	item.image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:label];
@@ -240,7 +244,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 - (void)installToolbar
 {
 	NSToolbar *toolbar = [[NSToolbar alloc] initWithIdentifier:@"TVCMainWindowToolbar"];
-	toolbar.delegate = (id <NSToolbarDelegate>)self;
+	toolbar.delegate = (id<NSToolbarDelegate>)self;
 	toolbar.allowsUserCustomization = NO;
 	toolbar.autosavesConfiguration = NO;
 	toolbar.displayMode = NSToolbarDisplayModeIconOnly;
@@ -275,7 +279,9 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	];
 }
 
-- (nullable NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSToolbarItemIdentifier)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
+- (nullable NSToolbarItem *)toolbar:(NSToolbar *)toolbar
+			  itemForItemIdentifier:(NSToolbarItemIdentifier)itemIdentifier
+		  willBeInsertedIntoToolbar:(BOOL)flag
 {
 	if ([itemIdentifier isEqualToString:TVCMainWindowToolbarLockItemIdentifier] == NO) {
 		return nil;
@@ -287,12 +293,8 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		action = @selector(presentCertificateTrustInformation:);
 	}
 
-	NSToolbarItem *item = TVCMainWindowMakeToolbarItem(itemIdentifier,
-													  @"lock.fill",
-													  TXTLS(@"TVCMainWindow[tb-cs]"),
-													  self,
-													  action,
-													  NO);
+	NSToolbarItem *item =
+		TVCMainWindowMakeToolbarItem(itemIdentifier, @"lock.fill", TXTLS(@"TVCMainWindow[tb-cs]"), self, action, NO);
 	/* Assign the style once, here, rather than each time the item is updated.
 	 AppKit only reconsiders which group an item belongs to when the item is
 	 inserted, so a style applied later tints whichever group it landed in. */
@@ -362,8 +364,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	 controller is never built, so the server list, the message view and the
 	 member list are never installed. That is a broken nib rather than a state
 	 to recover from, so say so instead of presenting an empty window. */
-	NSAssert(nibSplitView != nil,
-			 @"TVCMainWindow.xib did not supply the content split view");
+	NSAssert(nibSplitView != nil, @"TVCMainWindow.xib did not supply the content split view");
 
 	NSAssert(nibSplitView.subviews.count >= 3,
 			 @"TVCMainWindow.xib content split view has %lu panes, expected at least 3",
@@ -425,11 +426,10 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	 or channel menu and the address book. Neither was reachable only from here —
 	 the server and channel menus are on the menu bar and on each row's contextual
 	 menu, and the address book has a menu bar item of its own. */
-	NSButton *addButton =
-	[NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"plus"
-									   accessibilityDescription:TXTLS(@"TVCMainWindow[ib-ad]")]
-					   target:self
-					   action:@selector(presentSidebarAddMenu:)];
+	NSButton *addButton = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:@"plus"
+															  accessibilityDescription:TXTLS(@"TVCMainWindow[ib-ad]")]
+											 target:self
+											 action:@selector(presentSidebarAddMenu:)];
 
 	addButton.translatesAutoresizingMaskIntoConstraints = NO;
 	addButton.bezelStyle = NSBezelStyleAccessoryBarAction;
@@ -529,7 +529,6 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	self.memberList.usesAutomaticRowHeights = NO;
 	self.memberList.rowSizeStyle = NSTableViewRowSizeStyleCustom;
 	self.memberList.rowHeight = 24.0;
-
 }
 
 /* Anchored to the button's top leading corner so the menu grows up and over the
@@ -548,11 +547,8 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 	NSView *anchor = sender;
 
-	[menu popUpMenuPositioningItem:nil
-						atLocation:NSMakePoint(0.0, NSHeight(anchor.bounds))
-							inView:anchor];
+	[menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(0.0, NSHeight(anchor.bounds)) inView:anchor];
 }
-
 
 - (void)observeNotifications
 {
@@ -768,7 +764,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 - (void)windowDidDeminiaturize:(NSNotification *)notification
 {
-//	[self reloadViewControllerDrawings];
+	//	[self reloadViewControllerDrawings];
 }
 
 - (void)windowDidChangeScreen:(NSNotification *)notification
@@ -811,7 +807,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 	[self reloadSubviewDrawings];
 
-//	[self reloadViewControllerDrawings];
+	//	[self reloadViewControllerDrawings];
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
@@ -826,7 +822,10 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	return NO;
 }
 
-- (BOOL)window:(NSWindow *)window shouldDragDocumentWithEvent:(NSEvent *)event from:(NSPoint)dragImageLocation withPasteboard:(NSPasteboard *)pasteboard
+- (BOOL)window:(NSWindow *)window
+	shouldDragDocumentWithEvent:(NSEvent *)event
+						   from:(NSPoint)dragImageLocation
+				 withPasteboard:(NSPasteboard *)pasteboard
 {
 	return NO;
 }
@@ -846,7 +845,8 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	return proposedSize;
 }
 
-- (NSApplicationPresentationOptions)window:(NSWindow *)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
+- (NSApplicationPresentationOptions)window:(NSWindow *)window
+	  willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
 {
 	return proposedOptions;
 }
@@ -925,9 +925,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 {
 	[self.inputTextField focus];
 
-	if (e.keyCode == TXKeyEnterCode ||
-		e.keyCode == TXKeyReturnCode)
-	{
+	if (e.keyCode == TXKeyEnterCode || e.keyCode == TXKeyReturnCode) {
 		return;
 	}
 
@@ -952,34 +950,54 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	[self registerSelector:@selector(exitFullscreenMode:) key:TXKeyEscapeCode modifiers:0];
 
 	[self registerSelector:@selector(tab:) key:TXKeyTabCode modifiers:0];
-	[self registerSelector:@selector(shiftTab:)	key:TXKeyTabCode modifiers:NSEventModifierFlagShift];
+	[self registerSelector:@selector(shiftTab:) key:TXKeyTabCode modifiers:NSEventModifierFlagShift];
 
 	[self registerSelector:@selector(selectPreviousSelection:) key:TXKeyTabCode modifiers:NSEventModifierFlagOption];
 
 	[self registerSelector:@selector(textFormattingBold:) character:'b' modifiers:NSEventModifierFlagCommand];
-	[self registerSelector:@selector(textFormattingUnderline:) character:'u' modifiers:(NSEventModifierFlagControl | NSEventModifierFlagShift)];
-	[self registerSelector:@selector(textFormattingItalic:)	character:'i' modifiers:(NSEventModifierFlagControl | NSEventModifierFlagShift)];
-	[self registerSelector:@selector(textFormattingForegroundColor:) character:'c' modifiers:(NSEventModifierFlagControl | NSEventModifierFlagShift)];
-	[self registerSelector:@selector(textFormattingBackgroundColor:) character:'h' modifiers:(NSEventModifierFlagControl | NSEventModifierFlagShift)];
+	[self registerSelector:@selector(textFormattingUnderline:)
+				 character:'u'
+				 modifiers:(NSEventModifierFlagControl | NSEventModifierFlagShift)];
+	[self registerSelector:@selector(textFormattingItalic:)
+				 character:'i'
+				 modifiers:(NSEventModifierFlagControl | NSEventModifierFlagShift)];
+	[self registerSelector:@selector(textFormattingForegroundColor:)
+				 character:'c'
+				 modifiers:(NSEventModifierFlagControl | NSEventModifierFlagShift)];
+	[self registerSelector:@selector(textFormattingBackgroundColor:)
+				 character:'h'
+				 modifiers:(NSEventModifierFlagControl | NSEventModifierFlagShift)];
 
 	[self registerSelector:@selector(speakPendingNotifications:) character:'.' modifiers:NSEventModifierFlagCommand];
 
 	[self registerSelector:@selector(inputHistoryUp:) character:'p' modifiers:NSEventModifierFlagControl];
-	[self registerSelector:@selector(inputHistoryDown:)	character:'n' modifiers:NSEventModifierFlagControl];
+	[self registerSelector:@selector(inputHistoryDown:) character:'n' modifiers:NSEventModifierFlagControl];
 
 	/* Text field keyboard shortcuts */
-	[self registerInputSelector:@selector(sendControlEnterMessageMaybe:) key:TXKeyEnterCode modifiers:NSEventModifierFlagControl];
+	[self registerInputSelector:@selector(sendControlEnterMessageMaybe:)
+							key:TXKeyEnterCode
+					  modifiers:NSEventModifierFlagControl];
 
-	[self registerInputSelector:@selector(sendMessageAsAction:) key:TXKeyReturnCode modifiers:NSEventModifierFlagCommand];
-	[self registerInputSelector:@selector(sendMessageAsAction:) key:TXKeyEnterCode modifiers:NSEventModifierFlagCommand];
+	[self registerInputSelector:@selector(sendMessageAsAction:)
+							key:TXKeyReturnCode
+					  modifiers:NSEventModifierFlagCommand];
+	[self registerInputSelector:@selector(sendMessageAsAction:)
+							key:TXKeyEnterCode
+					  modifiers:NSEventModifierFlagCommand];
 
-	[self registerInputSelector:@selector(focusWebview:) character:'l' modifiers:(NSEventModifierFlagOption | NSEventModifierFlagCommand)];
+	[self registerInputSelector:@selector(focusWebview:)
+					  character:'l'
+					  modifiers:(NSEventModifierFlagOption | NSEventModifierFlagCommand)];
 
 	[self registerInputSelector:@selector(inputHistoryUpWithScrollCheck:) key:TXKeyUpArrowCode modifiers:0];
-	[self registerInputSelector:@selector(inputHistoryUpWithScrollCheck:) key:TXKeyUpArrowCode modifiers:NSEventModifierFlagOption];
+	[self registerInputSelector:@selector(inputHistoryUpWithScrollCheck:)
+							key:TXKeyUpArrowCode
+					  modifiers:NSEventModifierFlagOption];
 
 	[self registerInputSelector:@selector(inputHistoryDownWithScrollCheck:) key:TXKeyDownArrowCode modifiers:0];
-	[self registerInputSelector:@selector(inputHistoryDownWithScrollCheck:) key:TXKeyDownArrowCode modifiers:NSEventModifierFlagOption];
+	[self registerInputSelector:@selector(inputHistoryDownWithScrollCheck:)
+							key:TXKeyDownArrowCode
+					  modifiers:NSEventModifierFlagOption];
 }
 
 #pragma mark -
@@ -1028,36 +1046,28 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		}
 
 		/* Skip entries depending on navigation type */
-		if (selectionType == TVCServerListNavigationSelectionTypeChannel)
-		{
+		if (selectionType == TVCServerListNavigationSelectionTypeChannel) {
 			if ([item isChannel] == NO && [item isPrivateMessage] == NO) {
 				continue;
 			}
-		}
-		else if (selectionType == TVCServerListNavigationSelectionTypeServer)
-		{
+		} else if (selectionType == TVCServerListNavigationSelectionTypeServer) {
 			if ([item isClient] == NO) {
 				continue;
 			}
 		}
 
 		/* Select current item if it is matched by our condition */
-		if (navigationType == TVCServerListNavigationMovementTypeAll)
-		{
+		if (navigationType == TVCServerListNavigationMovementTypeAll) {
 			[self select:item];
 
 			break;
-		}
-		else if (navigationType == TVCServerListNavigationMovementTypeActive)
-		{
+		} else if (navigationType == TVCServerListNavigationMovementTypeActive) {
 			if ([item isActive]) {
 				[self select:item];
 
 				break;
 			}
-		}
-		else if (navigationType == TVCServerListNavigationMovementTypeUnread)
-		{
+		} else if (navigationType == TVCServerListNavigationMovementTypeUnread) {
 			if ([item isUnread]) {
 				[self select:item];
 
@@ -1076,7 +1086,8 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	}
 }
 
-- (void)navigateChannelEntriesOutsideServerScope:(BOOL)isMovingDown withNavigationType:(TVCServerListNavigationMovementType)navigationType
+- (void)navigateChannelEntriesOutsideServerScope:(BOOL)isMovingDown
+							  withNavigationType:(TVCServerListNavigationMovementType)navigationType
 {
 	NSInteger entryCount = self.serverList.numberOfRows;
 
@@ -1090,7 +1101,8 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 					  selectionType:TVCServerListNavigationSelectionTypeChannel];
 }
 
-- (void)navigateChannelEntriesWithinServerScope:(BOOL)isMovingDown withNavigationType:(TVCServerListNavigationMovementType)navigationType
+- (void)navigateChannelEntriesWithinServerScope:(BOOL)isMovingDown
+							 withNavigationType:(TVCServerListNavigationMovementType)navigationType
 {
 	NSArray *scannedRows = [self.serverList itemsFromParentGroup:self.selectedItem];
 
@@ -1201,10 +1213,10 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 - (void)changeTextSize:(BOOL)bigger
 {
-#define MinimumZoomMultiplier	   0.5
-#define MaximumZoomMultiplier	   3.0
+#define MinimumZoomMultiplier 0.5
+#define MaximumZoomMultiplier 3.0
 
-#define ZoomMultiplierRatio			1.2
+#define ZoomMultiplierRatio 1.2
 
 	double textSizeMultiplier = self.textSizeMultiplier;
 
@@ -1404,10 +1416,8 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 			BOOL atTop = (caretLocation == TVCTextViewCaretLocationFirstLine);
 			BOOL atBottom = (caretLocation == TVCTextViewCaretLocationLastLine);
 
-			if ((atTop			&& event.keyCode == TXKeyDownArrowCode) ||
-				(atBottom		&& event.keyCode == TXKeyUpArrowCode) ||
-				(atTop == NO	&& atBottom == NO))
-			{
+			if ((atTop && event.keyCode == TXKeyDownArrowCode) || (atBottom && event.keyCode == TXKeyUpArrowCode) ||
+				(atTop == NO && atBottom == NO)) {
 				[self.inputTextField keyDownToSuper:event];
 
 				return;
@@ -1509,7 +1519,9 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	textFieldFrame.origin.y -= 200;
 	textFieldFrame.origin.x += 100;
 
-	[self.formattingMenu.foregroundColorMenu popUpMenuPositioningItem:nil atLocation:textFieldFrame.origin inView:self.inputTextField];
+	[self.formattingMenu.foregroundColorMenu popUpMenuPositioningItem:nil
+														   atLocation:textFieldFrame.origin
+															   inView:self.inputTextField];
 }
 
 - (void)textFormattingBackgroundColor:(NSEvent *)e
@@ -1533,7 +1545,9 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	textFieldFrame.origin.y -= 200;
 	textFieldFrame.origin.x += 100;
 
-	[self.formattingMenu.backgroundColorMenu popUpMenuPositioningItem:nil atLocation:textFieldFrame.origin inView:self.inputTextField];
+	[self.formattingMenu.backgroundColorMenu popUpMenuPositioningItem:nil
+														   atLocation:textFieldFrame.origin
+															   inView:self.inputTextField];
 }
 
 - (void)exitFullscreenMode:(NSEvent *)e // escape key
@@ -1603,7 +1617,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	}
 
 	NSString *stringValue = [THOPluginDispatcher interceptUserInput:string command:command];
-	
+
 	if (stringValue == nil) {
 		return;
 	}
@@ -1692,8 +1706,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 	self.cachedSwipeOriginPoint = nil;
 
-	NSPoint delta = NSMakePoint((origin.x - destination.x),
-								(origin.y - destination.y));
+	NSPoint delta = NSMakePoint((origin.x - destination.x), (origin.y - destination.y));
 
 	if (fabs(delta.y) > fabs(delta.x)) {
 		return;
@@ -1748,19 +1761,17 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 	mouseLocationEnum |= TVCMainWindowMouseLocationInsideWindowTitle;
 
-#define ConvertRectToScreen(rect)	\
-	NSMakeRect( (titlebarFrame.origin.x + rect.origin.x),	\
-				(titlebarFrame.origin.y + rect.origin.y),	\
-				rect.size.width,	\
-				rect.size.height)	\
+#define ConvertRectToScreen(rect)                                                                                      \
+	NSMakeRect((titlebarFrame.origin.x + rect.origin.x),                                                               \
+			   (titlebarFrame.origin.y + rect.origin.y),                                                               \
+			   rect.size.width,                                                                                        \
+			   rect.size.height)
 
-#define PointInRect(view)	\
-	NSPointInRect(mouseLocation, ConvertRectToScreen(view.frame))
+#define PointInRect(view) NSPointInRect(mouseLocation, ConvertRectToScreen(view.frame))
 
 	if (PointInRect([self standardWindowButton:NSWindowCloseButton]) ||
 		PointInRect([self standardWindowButton:NSWindowMiniaturizeButton]) ||
-		PointInRect([self standardWindowButton:NSWindowZoomButton]))
-	{
+		PointInRect([self standardWindowButton:NSWindowZoomButton])) {
 		mouseLocationEnum |= TVCMainWindowMouseLocationOnTopOfWindowTitleControl;
 
 		return mouseLocationEnum;
@@ -2054,7 +2065,6 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		[self.inputTextField focus];
 	}
 
-
 	/* Setup text field value with history item when we have
 	 history setup to be channel specific. */
 	[self.inputHistoryManager moveFocusTo:itemChangedTo];
@@ -2089,8 +2099,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 - (void)saveContentSplitViewState
 {
-	[RZUserDefaults() setBool:self.serverListVisible
-					   forKey:@"Window -> Main Window -> Server List is Visible"];
+	[RZUserDefaults() setBool:self.serverListVisible forKey:@"Window -> Main Window -> Server List is Visible"];
 
 	[RZUserDefaults() setBool:(self.memberList.isHiddenByUser == NO)
 					   forKey:@"Window -> Main Window -> Member List is Visible"];
@@ -2225,9 +2234,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		location = NSMakePoint(0.0, NSHeight(positioningView.bounds));
 	}
 
-	[statusMenu popUpMenuPositioningItem:nil
-							  atLocation:location
-								  inView:positioningView];
+	[statusMenu popUpMenuPositioningItem:nil atLocation:location inView:positioningView];
 }
 #endif
 
@@ -2334,32 +2341,29 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		}
 
 		switch (c.type) {
-			case IRCChannelTypeChannel:
-			{
-				[subtitleParts addObject:TXTLS(@"TVCMainWindow[st-uc]", TXFormattedNumber(c.numberOfMembers))];
+		case IRCChannelTypeChannel: {
+			[subtitleParts addObject:TXTLS(@"TVCMainWindow[st-uc]", TXFormattedNumber(c.numberOfMembers))];
 
-				NSString *modeSymbols = c.modeInfo.stringWithMaskedPassword;
+			NSString *modeSymbols = c.modeInfo.stringWithMaskedPassword;
 
-				if (modeSymbols.length > 1) {
-					[subtitleParts addObject:modeSymbols];
-				}
-
-				break;
+			if (modeSymbols.length > 1) {
+				[subtitleParts addObject:modeSymbols];
 			}
-			case IRCChannelTypePrivateMessage:
-			{
-				IRCUser *user = [u findUser:c.name];
 
-				if (user.hostmaskFragment.length > 0) {
-					[subtitleParts addObject:user.hostmaskFragment];
-				}
+			break;
+		}
+		case IRCChannelTypePrivateMessage: {
+			IRCUser *user = [u findUser:c.name];
 
-				break;
+			if (user.hostmaskFragment.length > 0) {
+				[subtitleParts addObject:user.hostmaskFragment];
 			}
-			case IRCChannelTypeUtility:
-			{
-				break;
-			}
+
+			break;
+		}
+		case IRCChannelTypeUtility: {
+			break;
+		}
 		}
 	}
 
@@ -2399,8 +2403,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		[selectedIdentifiers addObject:item.uniqueIdentifier];
 	}
 
-	[RZUserDefaults() setObject:[selectedIdentifiers copy]
-						 forKey:@"Window -> Main Window -> Server List Selection"];
+	[RZUserDefaults() setObject:[selectedIdentifiers copy] forKey:@"Window -> Main Window -> Server List Selection"];
 }
 
 - (void)restoreExpandedClients
@@ -2489,7 +2492,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 - (nullable IRCClient *)selectedClient
 {
-	if (	   self.selectedItem) {
+	if (self.selectedItem) {
 		return self.selectedItem.associatedClient;
 	} else {
 		return nil;
@@ -2498,7 +2501,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 - (nullable IRCChannel *)selectedChannel
 {
-	if (	self.selectedItem) {
+	if (self.selectedItem) {
 		if (self.selectedItem.isClient) {
 			return nil;
 		} else {
@@ -2520,7 +2523,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 - (nullable TVCLogController *)selectedViewController
 {
-	if (	   self.selectedChannel) {
+	if (self.selectedChannel) {
 		return self.selectedChannel.viewController;
 	} else if (self.selectedClient) {
 		return self.selectedClient.viewController;
@@ -2566,7 +2569,8 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	[self adjustSelectionWithItems:self.selectedItems selectedItem:self.selectedItem];
 }
 
-- (void)adjustSelectionWithItems:(NSArray<IRCTreeItem *> *)selectedItems selectedItem:(nullable IRCTreeItem *)selectedItem
+- (void)adjustSelectionWithItems:(NSArray<IRCTreeItem *> *)selectedItems
+					selectedItem:(nullable IRCTreeItem *)selectedItem
 {
 	NSParameterAssert(selectedItems != nil);
 
@@ -2583,7 +2587,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		/* Find the row of the item */
 		NSInteger itemRow = [self.serverList rowForItem:item];
 
-		if ( itemRow >= 0) {
+		if (itemRow >= 0) {
 			[itemRows addIndex:itemRow];
 		}
 	}
@@ -2596,9 +2600,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		 the correct next item is selected when moving to previous group. */
 		self.ignoreNextOutlineViewSelectionChange = YES;
 
-		[self.serverList selectRowIndexes:itemRows
-					 byExtendingSelection:NO
-						scrollToSelection:YES];
+		[self.serverList selectRowIndexes:itemRows byExtendingSelection:NO scrollToSelection:YES];
 	}
 
 	/* Perform selection logic */
@@ -2644,9 +2646,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 - (void)selectPreviousItem
 {
 	/* Do not try to browse backwards without these items */
-	if (self.previousSelectedItemId == nil ||
-		self.previousSelectedItemsId == nil)
-	{
+	if (self.previousSelectedItemId == nil || self.previousSelectedItemsId == nil) {
 		return;
 	}
 
@@ -2663,7 +2663,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	for (NSString *itemIdentifier in self.previousSelectedItemsId) {
 		IRCTreeItem *item = [worldController() findItemWithId:itemIdentifier];
 
-		if ( item) {
+		if (item) {
 			[itemsPrevious addObject:item];
 		}
 	}
@@ -2713,9 +2713,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 {
 	NSParameterAssert(item != nil);
 
-	[self shiftSelection:item
-				  toItem:nil
-				 options:TVCMainWindowShiftSelectionFlagPerformDeselect];
+	[self shiftSelection:item toItem:nil options:TVCMainWindowShiftSelectionFlagPerformDeselect];
 }
 
 - (void)deselectGroup:(IRCTreeItem *)item
@@ -2732,7 +2730,9 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 						  TVCMainWindowShiftSelectionFlagPerformDeselectChildren)];
 }
 
-- (void)shiftSelection:(nullable IRCTreeItem *)oldItem toItem:(nullable IRCTreeItem *)newItem options:(TVCMainWindowShiftSelectionFlags)selectionOptions
+- (void)shiftSelection:(nullable IRCTreeItem *)oldItem
+				toItem:(nullable IRCTreeItem *)newItem
+			   options:(TVCMainWindowShiftSelectionFlags)selectionOptions
 {
 	if (oldItem == newItem) {
 		return;
@@ -2747,11 +2747,14 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	}
 
 	/* Context */
-	BOOL optionMaintainGrouping = ((selectionOptions & TVCMainWindowShiftSelectionFlagMaintainGrouping) == TVCMainWindowShiftSelectionFlagMaintainGrouping);
+	BOOL optionMaintainGrouping = ((selectionOptions & TVCMainWindowShiftSelectionFlagMaintainGrouping) ==
+								   TVCMainWindowShiftSelectionFlagMaintainGrouping);
 
 	BOOL optionPerformDeselectAll = NO;
-	BOOL optionPerformDeselectOld = ((selectionOptions & TVCMainWindowShiftSelectionFlagPerformDeselect) == TVCMainWindowShiftSelectionFlagPerformDeselect);
-	BOOL optionPerformDeselectChildren = ((selectionOptions & TVCMainWindowShiftSelectionFlagPerformDeselectChildren) == TVCMainWindowShiftSelectionFlagPerformDeselectChildren);
+	BOOL optionPerformDeselectOld = ((selectionOptions & TVCMainWindowShiftSelectionFlagPerformDeselect) ==
+									 TVCMainWindowShiftSelectionFlagPerformDeselect);
+	BOOL optionPerformDeselectChildren = ((selectionOptions & TVCMainWindowShiftSelectionFlagPerformDeselectChildren) ==
+										  TVCMainWindowShiftSelectionFlagPerformDeselectChildren);
 
 	BOOL optionPerformDeselect = (optionPerformDeselectChildren || optionPerformDeselectOld);
 
@@ -2770,8 +2773,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 	/* If we are not performing a deselect for the old item and both items
 	 are selected, then simply update selection inside grouping. */
-	if (optionMaintainGrouping &&
-		(itemIndexOld >= 0 && [selectedRows containsIndex:itemIndexOld]) &&
+	if (optionMaintainGrouping && (itemIndexOld >= 0 && [selectedRows containsIndex:itemIndexOld]) &&
 		(itemIndexNew >= 0 && [selectedRows containsIndex:itemIndexNew]) &&
 		newItem != nil) // This condition is impossible but static analyzer doesn't know that.
 						// Condition is impossible because itemIndexNew will never return
@@ -2824,9 +2826,8 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	if (newItem == nil) {
 		/* If there is an item in the current selection that is before 
 		 or after the row removed, then we can use that. */
-		BOOL selectedRowsComplete =
-		([selectedRowsNew indexLessThanIndex:itemIndexOld] != NSNotFound ||
-		 [selectedRowsNew indexGreaterThanIndex:itemIndexOld] != NSNotFound);
+		BOOL selectedRowsComplete = ([selectedRowsNew indexLessThanIndex:itemIndexOld] != NSNotFound ||
+									 [selectedRowsNew indexGreaterThanIndex:itemIndexOld] != NSNotFound);
 
 		/* If there is not an item in the current selection that can take over,
 		 then the first step is to try to find an item newer than the current. */
@@ -2874,9 +2875,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		return;
 	}
 
-	[self.serverList selectRowIndexes:selectedRowsNew
-				 byExtendingSelection:NO
-					scrollToSelection:YES];
+	[self.serverList selectRowIndexes:selectedRowsNew byExtendingSelection:NO scrollToSelection:YES];
 }
 
 #pragma mark -
@@ -2891,41 +2890,30 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		return;
 	}
 
-	if (u && c == nil)
-	{
-		if (u.isConnecting || u.isConnected)
-		{
+	if (u && c == nil) {
+		if (u.isConnecting || u.isConnected) {
 			if ([TPCPreferences disconnectOnDoubleclick]) {
 				[u quit];
 			}
-		}
-		else if (u.isQuitting)
-		{
+		} else if (u.isQuitting) {
 			LogToConsole("Double click event ignored because client is quitting");
-		}
-		else
-		{
+		} else {
 			if ([TPCPreferences connectOnDoubleclick]) {
 				[u connect];
 			}
 		}
 
 		[self expandClient:u];
-	}
-	else
-	{
+	} else {
 		if (u.isLoggedIn == NO) {
 			return;
 		}
 
-		if (c.isActive)
-		{
+		if (c.isActive) {
 			if ([TPCPreferences leaveOnDoubleclick]) {
 				[u partChannel:c];
 			}
-		}
-		else
-		{
+		} else {
 			if ([TPCPreferences joinOnDoubleclick]) {
 				[u joinChannel:c];
 			}
@@ -2956,7 +2944,9 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	return worldController().clientList[index];
 }
 
-- (nullable id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(nullable NSTableColumn *)tableColumn byItem:(nullable id)item
+- (nullable id)outlineView:(NSOutlineView *)outlineView
+	objectValueForTableColumn:(nullable NSTableColumn *)tableColumn
+					   byItem:(nullable id)item
 {
 	return item;
 }
@@ -2970,7 +2960,9 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	}
 }
 
-- (nullable NSView *)outlineView:(NSOutlineView *)outlineView viewForTableColumn:(nullable NSTableColumn *)tableColumn item:(id)item
+- (nullable NSView *)outlineView:(NSOutlineView *)outlineView
+			  viewForTableColumn:(nullable NSTableColumn *)tableColumn
+							item:(id)item
 {
 	NSString *viewIdentifier = nil;
 
@@ -3020,7 +3012,6 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 - (void)outlineViewItemWillCollapse:(NSNotification *)notification
 {
-
 }
 
 - (BOOL)selectionShouldChangeInOutlineView:(NSOutlineView *)outlineView
@@ -3047,8 +3038,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	NSUInteger keyboardKeys = ([NSEvent modifierFlags] & NSEventModifierFlagDeviceIndependentFlagsMask);
 
 	if ((keyboardKeys & NSEventModifierFlagCommand) == NSEventModifierFlagCommand ||
-		(keyboardKeys & NSEventModifierFlagShift) == NSEventModifierFlagShift)
-	{
+		(keyboardKeys & NSEventModifierFlagShift) == NSEventModifierFlagShift) {
 		return YES;
 	}
 
@@ -3075,11 +3065,13 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	return NO;
 }
 
-- (NSIndexSet *)outlineView:(NSOutlineView *)outlineView selectionIndexesForProposedSelection:(NSIndexSet *)proposedSelectionIndexes
+- (NSIndexSet *)outlineView:(NSOutlineView *)outlineView
+	selectionIndexesForProposedSelection:(NSIndexSet *)proposedSelectionIndexes
 {
-#define _maximumSelectedRows	6
+#define _maximumSelectedRows 6
 
-	return [outlineView selectionIndexesForProposedSelection:proposedSelectionIndexes maximumNumberOfSelections:_maximumSelectedRows];
+	return [outlineView selectionIndexesForProposedSelection:proposedSelectionIndexes
+								   maximumNumberOfSelections:_maximumSelectedRows];
 
 #undef _maximumSelectedRows
 }
@@ -3146,7 +3138,10 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	return YES;
 }
 
-- (NSDragOperation)outlineView:(NSOutlineView *)outlineView validateDrop:(id <NSDraggingInfo>)info proposedItem:(nullable id)item proposedChildIndex:(NSInteger)index
+- (NSDragOperation)outlineView:(NSOutlineView *)outlineView
+				  validateDrop:(id<NSDraggingInfo>)info
+				  proposedItem:(nullable id)item
+			proposedChildIndex:(NSInteger)index
 {
 	if (index < 0) {
 		return NSDragOperationNone;
@@ -3170,14 +3165,11 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		return NSDragOperationNone;
 	}
 
-	if (draggedItem.isClient)
-	{
+	if (draggedItem.isClient) {
 		if (item) {
 			return NSDragOperationNone;
 		}
-	}
-	else
-	{
+	} else {
 		IRCChannel *channel = (IRCChannel *)draggedItem;
 
 		if (channel.associatedClient != item) {
@@ -3214,7 +3206,10 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 	return NSDragOperationGeneric;
 }
 
-- (BOOL)outlineView:(NSOutlineView *)outlineView acceptDrop:(id <NSDraggingInfo>)info item:(nullable id)item childIndex:(NSInteger)index
+- (BOOL)outlineView:(NSOutlineView *)outlineView
+		 acceptDrop:(id<NSDraggingInfo>)info
+			   item:(nullable id)item
+		 childIndex:(NSInteger)index
 {
 	if (index < 0) {
 		return NSDragOperationNone;
@@ -3240,8 +3235,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 
 	TVCServerList *serverList = (id)outlineView;
 
-	if (draggedItem.isClient)
-	{
+	if (draggedItem.isClient) {
 		NSArray *clientList = worldController().clientList;
 
 		NSMutableArray *clientListMutable = [clientList mutableCopy];
@@ -3253,9 +3247,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(NSToolbarItemIdentifier ident
 		worldController().clientList = clientListMutable;
 
 		[serverList moveItemAtIndex:originalIndex inParent:nil toIndex:index inParent:nil];
-	}
-	else
-	{
+	} else {
 		if (item == nil || item != draggedItem.associatedClient) {
 			return NO;
 		}

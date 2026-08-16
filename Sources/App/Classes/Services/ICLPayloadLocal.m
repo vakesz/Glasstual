@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString *)_resourcesTemporaryLocation
 {
-//	NSString *sourcePath = [TPCPathInfo applicationTemporaryProcessSpecific];
+	//	NSString *sourcePath = [TPCPathInfo applicationTemporaryProcessSpecific];
 	NSString *sourcePath = themeController().temporaryPath;
 
 	NSString *basePath = [sourcePath stringByAppendingPathComponent:@"/ICLPayload-Resources/"];
@@ -65,18 +65,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *basePath = [self _resourcesTemporaryLocation];
 
-	NSString *(^copyOperation)(NSURL *) = ^NSString *(NSURL *resourceURL)
-	{
+	NSString * (^copyOperation)(NSURL *) = ^NSString *(NSURL *resourceURL) {
 		if (resourceURL.isFileURL == NO) {
 			return resourceURL.absoluteString;
 		}
 
 		NSString *resourcePath = resourceURL.relativePath;
 
-		NSString *filename =
-		[NSString stringWithFormat:@"%@.%@",
-		 resourcePath.md5,
-		 resourcePath.pathExtension];
+		NSString *filename = [NSString stringWithFormat:@"%@.%@", resourcePath.md5, resourcePath.pathExtension];
 
 		NSString *destinationPath = [basePath stringByAppendingPathComponent:filename];
 
@@ -86,14 +82,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 		NSError *copyError;
 
-		BOOL copyResult =
-		[RZFileManager() copyItemAtPath:resourcePath
-								 toPath:destinationPath
-								  error:&copyError];
+		BOOL copyResult = [RZFileManager() copyItemAtPath:resourcePath toPath:destinationPath error:&copyError];
 
 		if (copyResult == NO) {
 			LogToConsoleError("Copy operation for '%{public}@' failed with error: %{public}@",
-				resourcePath.standardizedTildePath, copyError.localizedDescription);
+							  resourcePath.standardizedTildePath,
+							  copyError.localizedDescription);
 		}
 
 		return destinationPath;
@@ -116,16 +110,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[dic setUnsignedInteger:self->_contentLength forKey:@"contentLength"];
 
-	[dic setObject:@{
-		@"width" : @(self->_contentSize.width),
-		@"height" : @(self->_contentSize.height)
-	} forKey:@"contentSize"];
+	[dic setObject:@{@"width" : @(self->_contentSize.width), @"height" : @(self->_contentSize.height)}
+			forKey:@"contentSize"];
 
-	[dic maybeSetObject:[self _copyResourcesToTemporaryLocation:self->_styleResources]
-				 forKey:@"styleResources"];
+	[dic maybeSetObject:[self _copyResourcesToTemporaryLocation:self->_styleResources] forKey:@"styleResources"];
 
-	[dic maybeSetObject:[self _copyResourcesToTemporaryLocation:self->_scriptResources]
-				 forKey:@"scriptResources"];
+	[dic maybeSetObject:[self _copyResourcesToTemporaryLocation:self->_scriptResources] forKey:@"scriptResources"];
 
 	[dic setObject:self->_html forKey:@"html"];
 
@@ -145,7 +135,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[dic setObject:self->_lineNumber forKey:@"lineNumber"];
 
 	[dic setObject:self->_uniqueIdentifier forKey:@"uniqueIdentifier"];
-//	[dic setObject:self->_viewIdentifier forKey:@"viewIdentifier"];
+	//	[dic setObject:self->_viewIdentifier forKey:@"viewIdentifier"];
 
 	[dic setUnsignedInteger:self->_index forKey:@"index"];
 

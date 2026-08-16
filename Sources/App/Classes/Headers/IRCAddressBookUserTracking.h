@@ -49,10 +49,10 @@ GLASSTUAL_EXTERN NSNotificationName const IRCAddressBookUserTrackingRemovedTrack
 GLASSTUAL_EXTERN NSNotificationName const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification;
 
 @interface IRCAddressBookUserTrackingContainer : NSObject
-@property (readonly, weak) IRCClient *client;
+@property(readonly, weak) IRCClient *client;
 
 // value is boolean, whether tracked user is online
-@property (readonly, copy) NSDictionary<NSString *, NSNumber *> *trackedUsers;
+@property(readonly, copy) NSDictionary<NSString *, NSNumber *> *trackedUsers;
 
 - (IRCAddressBookUserTrackingStatus)statusOfUser:(NSString *)nickname;
 - (IRCAddressBookUserTrackingStatus)statusOfEntry:(IRCAddressBookEntry *)addressBookEntry;

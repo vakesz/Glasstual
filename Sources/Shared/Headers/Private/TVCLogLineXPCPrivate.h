@@ -40,11 +40,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCLogLineXPC : NSObject <NSCoding, NSSecureCoding>
-@property (copy, readonly) NSData *data;
-@property (copy, readonly) NSString *uniqueIdentifier;
-@property (copy, readonly) NSString *viewIdentifier;
-@property (readonly) NSUInteger sessionIdentifier;
-@property (readonly) NSTimeInterval creationDate;
+@property(copy, readonly) NSData *data;
+@property(copy, readonly) NSString *uniqueIdentifier;
+@property(copy, readonly) NSString *viewIdentifier;
+@property(readonly) NSUInteger sessionIdentifier;
+@property(readonly) NSTimeInterval creationDate;
 
 - (instancetype)initWithLogLineData:(NSData *)data
 				   uniqueIdentifier:(NSString *)uniqueIdentifier

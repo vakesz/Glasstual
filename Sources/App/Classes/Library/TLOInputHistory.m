@@ -51,20 +51,20 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Private Interface
 
-#define _inputHistoryMax						100
+#define _inputHistoryMax 100
 
-NSString * const _inputHistoryGlobalObjectKey	= @"TLOInputHistoryDefaultObject";
+NSString *const _inputHistoryGlobalObjectKey = @"TLOInputHistoryDefaultObject";
 
 @interface TLOInputHistory ()
-@property (nonatomic, weak) TVCMainWindow *window;
-@property (nonatomic, strong) NSMutableDictionary *historyObjects;
-@property (nonatomic, copy, nullable) NSString *currentTreeItem;
+@property(nonatomic, weak) TVCMainWindow *window;
+@property(nonatomic, strong) NSMutableDictionary *historyObjects;
+@property(nonatomic, copy, nullable) NSString *currentTreeItem;
 @end
 
 @interface TLOInputHistoryObject : NSObject <NSCopying>
-@property (nonatomic, assign) NSInteger historyBufferPosition;
-@property (nonatomic, strong) NSMutableArray *historyBuffer;
-@property (nonatomic, copy, nullable) NSAttributedString *lastHistoryItem;
+@property(nonatomic, assign) NSInteger historyBufferPosition;
+@property(nonatomic, strong) NSMutableArray *historyBuffer;
+@property(nonatomic, copy, nullable) NSAttributedString *lastHistoryItem;
 
 - (void)add:(NSAttributedString *)string;
 
@@ -166,8 +166,7 @@ NSString * const _inputHistoryGlobalObjectKey	= @"TLOInputHistoryDefaultObject";
 	@synchronized(self.historyObjects) {
 		/* If the input history was made channel specific, then we copy the current
 		 value of the global input history to all tree items. */
-		if ([TPCPreferences inputHistoryIsChannelSpecific])
-		{
+		if ([TPCPreferences inputHistoryIsChannelSpecific]) {
 			for (IRCClient *u in worldController().clientList) {
 				[self inputHistoryObjectScopeDidChangeApplyToItem:u.uniqueIdentifier];
 
@@ -177,9 +176,7 @@ NSString * const _inputHistoryGlobalObjectKey	= @"TLOInputHistoryDefaultObject";
 			}
 
 			[self.historyObjects removeObjectForKey:_inputHistoryGlobalObjectKey];
-		}
-		else
-		{
+		} else {
 			[self.historyObjects removeAllObjects];
 
 			self.currentTreeItem = nil;
@@ -373,8 +370,7 @@ NSString * const _inputHistoryGlobalObjectKey	= @"TLOInputHistoryDefaultObject";
 
 - (BOOL)bufferPositionIsInRange
 {
-	return (self.historyBufferPosition >= 0 &&
-			self.historyBufferPosition < self.historyBuffer.count);
+	return (self.historyBufferPosition >= 0 && self.historyBufferPosition < self.historyBuffer.count);
 }
 
 - (nullable NSAttributedString *)entryAtBufferPosition

@@ -40,11 +40,11 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TLOInternetAddressLookupDelegate;
 
 @interface TLOInternetAddressLookup : NSObject
-@property (nonatomic, assign) BOOL IPv4AddressIsValid; // Defaults to YES
-@property (nonatomic, assign) BOOL IPv6AddressIsValid; // ^
+@property(nonatomic, assign) BOOL IPv4AddressIsValid; // Defaults to YES
+@property(nonatomic, assign) BOOL IPv6AddressIsValid; // ^
 
 - (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithDelegate:(id <TLOInternetAddressLookupDelegate>)delegate NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithDelegate:(id<TLOInternetAddressLookupDelegate>)delegate NS_DESIGNATED_INITIALIZER;
 
 - (void)performLookup;
 - (void)cancelLookup;

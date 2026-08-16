@@ -45,17 +45,17 @@ NS_ASSUME_NONNULL_BEGIN
  In those cases, this property will become NO.
  The rest of Glasstual will give it priority over any other user
  preference asking for asking access to WebKit2. */
-@property (readonly, class) BOOL t_safeToUse;
+@property(readonly, class) BOOL t_safeToUse;
 
-@property (nonatomic, weak) TVCLogView *t_parentView;
-@property (nonatomic, assign) BOOL t_viewIsLoading;
-@property (nonatomic, assign) BOOL t_viewIsNavigating;
+@property(nonatomic, weak) TVCLogView *t_parentView;
+@property(nonatomic, assign) BOOL t_viewIsLoading;
+@property(nonatomic, assign) BOOL t_viewIsNavigating;
 
 - (instancetype)initWithHostView:(TVCLogView *)hostView;
 
-- (void)_t_evaluateJavaScript:(NSString *)code completionHandler:(void (^ _Nullable)(id _Nullable))completionHandler;
+- (void)_t_evaluateJavaScript:(NSString *)code completionHandler:(void (^_Nullable)(id _Nullable))completionHandler;
 
-@property (readonly) TVCLogPolicy *webViewPolicy;
+@property(readonly) TVCLogPolicy *webViewPolicy;
 
 - (void)findString:(NSString *)searchString movingForward:(BOOL)movingForward;
 

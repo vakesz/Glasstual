@@ -49,16 +49,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
+NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 
 @interface TVCMemberList ()
-@property (nonatomic, strong) id userPopoverTrackingArea;
-@property (nonatomic, assign) BOOL userPopoverMouseIsInView;
-@property (nonatomic, assign) BOOL userPopoverTimerIsActive;
-@property (nonatomic, assign) NSPoint userPopoverLastKnownLocalPoint;
-@property (nonatomic, assign) NSInteger lastRowShownUserInfoPopover;
-@property (nonatomic, strong, readwrite) IBOutlet TVCMemberListUserInfoPopover *memberListUserInfoPopover;
-@property (nonatomic, strong, readwrite) IBOutlet IRCChannelMemberListController *contentController;
+@property(nonatomic, strong) id userPopoverTrackingArea;
+@property(nonatomic, assign) BOOL userPopoverMouseIsInView;
+@property(nonatomic, assign) BOOL userPopoverTimerIsActive;
+@property(nonatomic, assign) NSPoint userPopoverLastKnownLocalPoint;
+@property(nonatomic, assign) NSInteger lastRowShownUserInfoPopover;
+@property(nonatomic, strong, readwrite) IBOutlet TVCMemberListUserInfoPopover *memberListUserInfoPopover;
+@property(nonatomic, strong, readwrite) IBOutlet IRCChannelMemberListController *contentController;
 @end
 
 @implementation TVCMemberList
@@ -69,7 +69,7 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 
 	[self updateTrackingAreas];
 
-	[self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
+	[self registerForDraggedTypes:@[ NSPasteboardTypeFileURL ]];
 }
 
 - (void)viewDidMoveToWindow
@@ -154,11 +154,11 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 		[self removeTrackingArea:self.userPopoverTrackingArea];
 	}
 
-	self.userPopoverTrackingArea =
-	[[NSTrackingArea alloc] initWithRect:self.frame
-								 options:(NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInActiveApp)
-								   owner:self
-								userInfo:nil];
+	self.userPopoverTrackingArea = [[NSTrackingArea alloc]
+		initWithRect:self.frame
+			 options:(NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInActiveApp)
+			   owner:self
+			userInfo:nil];
 
 	[self addTrackingArea:self.userPopoverTrackingArea];
 }
@@ -285,17 +285,18 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 #pragma mark -
 #pragma mark Drag and Drop
 
-- (NSInteger)draggedRow:(id <NSDraggingInfo>)sender
+- (NSInteger)draggedRow:(id<NSDraggingInfo>)sender
 {
 	NSPoint p = [self convertPoint:[sender draggingLocation] fromView:nil];
 
 	return [self rowAtPoint:p];
 }
 
-- (NSArray *)draggedFiles:(id <NSDraggingInfo>)sender
+- (NSArray *)draggedFiles:(id<NSDraggingInfo>)sender
 {
-	NSArray<NSURL *> *fileURLs = [[sender draggingPasteboard] readObjectsForClasses:@[[NSURL class]]
-																			options:@{ NSPasteboardURLReadingFileURLsOnlyKey: @YES }];
+	NSArray<NSURL *> *fileURLs =
+		[[sender draggingPasteboard] readObjectsForClasses:@[ [NSURL class] ]
+												   options:@{NSPasteboardURLReadingFileURLsOnlyKey : @YES}];
 
 	NSMutableArray<NSString *> *filePaths = [NSMutableArray array];
 
@@ -308,12 +309,12 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 	return [filePaths copy];
 }
 
-- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender
 {
 	return [self draggingUpdated:sender];
 }
 
-- (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender
 {
 	NSArray *files = [self draggedFiles:sender];
 
@@ -324,14 +325,14 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 	}
 }
 
-- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
+- (BOOL)prepareForDragOperation:(id<NSDraggingInfo>)sender
 {
 	NSArray *files = [self draggedFiles:sender];
 
 	return (files.count > 0 && [self draggedRow:sender] >= 0);
 }
 
-- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
 {
 	NSArray *files = [self draggedFiles:sender];
 
@@ -523,26 +524,25 @@ NSString * const TVCMemberListDragType = @"TVCMemberListDragType";
 	}
 
 	switch (e.keyCode) {
-		case 125: // down arrow
-		case 126: // up arrow
-		{
-			[super keyDown:e];
+	case 125: // down arrow
+	case 126: // up arrow
+	{
+		[super keyDown:e];
 
-			break;
-		}
-		case 123: // left arrow
-		case 124: // right arrow
-		case 116: // page up
-		case 121: // page down
-		{
-			break;
-		}
-		default:
-		{
-			[self.keyDelegate memberListKeyDown:e];
+		break;
+	}
+	case 123: // left arrow
+	case 124: // right arrow
+	case 116: // page up
+	case 121: // page down
+	{
+		break;
+	}
+	default: {
+		[self.keyDelegate memberListKeyDown:e];
 
-			break;
-		}
+		break;
+	}
 	}
 }
 

@@ -2,6 +2,8 @@
 
 set -e
 
+: "${ARCHIVE_PATH:?ARCHIVE_PATH must be set by Xcode}"
+
 WORKING_PATH="${GLASSTUAL_WORKSPACE_TEMP_DIR}/ArchiveTan"
 
 mkdir -p "${WORKING_PATH}"
@@ -11,9 +13,9 @@ cd "${WORKING_PATH}"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 xcodebuild -exportArchive \
--exportOptionsPlist "${GLASSTUAL_WORKSPACE_DIR}/Configurations/ExportArchiveConfiguration.plist" \
--archivePath "${ARCHIVE_PATH}" \
--exportPath "${WORKING_PATH}"
+	-exportOptionsPlist "${GLASSTUAL_WORKSPACE_DIR}/Configurations/ExportArchiveConfiguration.plist" \
+	-archivePath "${ARCHIVE_PATH}" \
+	-exportPath "${WORKING_PATH}"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Zip product and send to notary
@@ -31,10 +33,10 @@ WORKING_ZIP_PATH="./${FULL_PRODUCT_NAME}.zip"
 zip -y -r -X "${WORKING_ZIP_PATH}" "./${FULL_PRODUCT_NAME}/"
 
 xcrun notarytool submit "${WORKING_ZIP_PATH}" \
-                   --keychain-profile "Glasstual Notary" \
-                   --wait \
-                   --verbose \
-                   --progress
+	--keychain-profile "Glasstual Notary" \
+	--wait \
+	--verbose \
+	--progress
 
 # Remove uploaded product
 rm "${WORKING_ZIP_PATH}"
@@ -52,7 +54,7 @@ WORKING_ZIP_FILE_SIZE=$(stat -f%z "${WORKING_ZIP_PATH}")
 
 # Call `git` after `cd` into working path to make
 # sure we are in a directory of a git repository.
-GIT_COMMIT_HASH=`git rev-parse --short HEAD`
+GIT_COMMIT_HASH=$(git rev-parse --short HEAD)
 
 EXPORT_PATH_NAME="Glasstual-${GIT_COMMIT_HASH}"
 EXPORT_PATH="${HOME}/Desktop/${EXPORT_PATH_NAME}"
@@ -61,8 +63,8 @@ mkdir -p "${EXPORT_PATH}"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-if [ "${GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY}" == "1" ]; then
-	ARCHSPEC_TITLE="unviersal"
+if [ "${GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY}" = "1" ]; then
+	ARCHSPEC_TITLE="universal"
 else
 	ARCHSPEC_TITLE="intel"
 fi
@@ -70,7 +72,7 @@ fi
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 ARCHSPEC_PATH="${EXPORT_PATH}/${ARCHSPEC_TITLE}"
-	
+
 mkdir -p "${ARCHSPEC_PATH}"
 
 ZIP_EXPORT_PATH="${ARCHSPEC_PATH}/Glasstual.zip"
@@ -86,7 +88,6 @@ ONLINE_ZIP_PATH_STABLE="/glasstual/downloads/builds/stable/${ONLINE_PATH_BASE}.z
 ONLINE_ZIP_PATH_BETA="/glasstual/downloads/builds/beta/${ONLINE_PATH_BASE}.zip"
 
 ONLINE_EXPORTER="cached.codeux.com"
-ONLINE_EXPORTER_DMG_PATH_STABLE="https://${ONLINE_EXPORTER}${ONLINE_DMG_PATH_STABLE}"
 ONLINE_EXPORTER_ZIP_PATH_STABLE="https://${ONLINE_EXPORTER}${ONLINE_ZIP_PATH_STABLE}"
 ONLINE_EXPORTER_ZIP_PATH_BETA="https://${ONLINE_EXPORTER}${ONLINE_ZIP_PATH_BETA}"
 
@@ -176,12 +177,12 @@ mv "./buildLog.txt" "${EXPORT_PATH}"
 
 cd "${DWARF_DSYM_FOLDER_PATH}"
 
-DYSM_EXPORT_PATH="${ARCHSPEC_PATH}/Debug symbols.zip"
+DSYM_EXPORT_PATH="${ARCHSPEC_PATH}/Debug symbols.zip"
 
-zip -y -r -X "${DYSM_EXPORT_PATH}" *
+zip -y -r -X "${DSYM_EXPORT_PATH}" ./*
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 rm -rf "${WORKING_PATH}"
 
-exit 0;
+exit 0

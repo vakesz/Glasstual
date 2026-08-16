@@ -52,24 +52,24 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Immutable Object
 
 @interface IRCUser : XRPortablePropertyObject
-@property (readonly, copy) NSString *nickname;
-@property (readonly, copy, nullable) NSString *username;
-@property (readonly, copy, nullable) NSString *address;
-@property (readonly, copy, nullable) NSString *hostmask;
-@property (readonly, copy, nullable) NSString *hostmaskFragment; // -hostmask without nickname
-@property (readonly, copy, nullable) NSString *realName;
-@property (readonly) BOOL isAway;
-@property (readonly) BOOL isIRCop;
+@property(readonly, copy) NSString *nickname;
+@property(readonly, copy, nullable) NSString *username;
+@property(readonly, copy, nullable) NSString *address;
+@property(readonly, copy, nullable) NSString *hostmask;
+@property(readonly, copy, nullable) NSString *hostmaskFragment; // -hostmask without nickname
+@property(readonly, copy, nullable) NSString *realName;
+@property(readonly) BOOL isAway;
+@property(readonly) BOOL isIRCop;
 
-@property (readonly, copy) NSString *banMask;
+@property(readonly, copy) NSString *banMask;
 
-@property (readonly, copy) NSString *lowercaseNickname;
-@property (readonly, copy) NSString *uppercaseNickname;
+@property(readonly, copy) NSString *lowercaseNickname;
+@property(readonly, copy) NSString *uppercaseNickname;
 
 /* -presentAwayMessageFor301 keeps track of the last time raw numeric
  301 (away message) is received and will return YES if the message
  should be presented, NO otherwise. */
-@property (readonly) BOOL presentAwayMessageFor301;
+@property(readonly) BOOL presentAwayMessageFor301;
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -83,12 +83,12 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Mutable Object
 
 @interface IRCUserMutable : IRCUser
-@property (nonatomic, copy, readwrite) NSString *nickname; // Defaults to empty string
-@property (nonatomic, copy, readwrite, nullable) NSString *username;
-@property (nonatomic, copy, readwrite, nullable) NSString *address;
-@property (nonatomic, copy, readwrite, nullable) NSString *realName;
-@property (nonatomic, assign, readwrite) BOOL isAway;
-@property (nonatomic, assign, readwrite) BOOL isIRCop;
+@property(nonatomic, copy, readwrite) NSString *nickname; // Defaults to empty string
+@property(nonatomic, copy, readwrite, nullable) NSString *username;
+@property(nonatomic, copy, readwrite, nullable) NSString *address;
+@property(nonatomic, copy, readwrite, nullable) NSString *realName;
+@property(nonatomic, assign, readwrite) BOOL isAway;
+@property(nonatomic, assign, readwrite) BOOL isIRCop;
 
 - (instancetype)initWithClient:(IRCClient *)client;
 @end

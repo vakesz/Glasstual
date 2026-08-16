@@ -41,11 +41,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _reservedSlotDictionaryKey			@"Reserved Information"
+#define _reservedSlotDictionaryKey @"Reserved Information"
 
 @implementation IRCCommandIndex
 
-static NSArray * _Nullable _cachedLocalCommandList = nil;
+static NSArray *_Nullable _cachedLocalCommandList = nil;
 
 static NSDictionary *IRCCommandIndexLocalData = nil;
 static NSDictionary *IRCCommandIndexRemoteData = nil;
@@ -73,7 +73,8 @@ static NSDictionary *IRCCommandIndexRemoteData = nil;
 	}
 
 	/* Populate private data */
-	NSDictionary *privateValues = [TPCResourceManager dictionaryFromResources:@"IRCCommandIndexRemoteData" cacheValue:NO];
+	NSDictionary *privateValues = [TPCResourceManager dictionaryFromResources:@"IRCCommandIndexRemoteData"
+																   cacheValue:NO];
 
 	if (privateValues) {
 		NSMutableDictionary *privateValuesMutable = [privateValues mutableCopy];
@@ -96,19 +97,20 @@ static NSDictionary *IRCCommandIndexRemoteData = nil;
 + (void)rebuildLocalCommandList
 {
 	NSMutableArray<NSString *> *commandList = [NSMutableArray array];
-	
+
 	BOOL developerModeEnabled = [TPCPreferences developerModeEnabled];
-	
-	[IRCCommandIndexLocalData enumerateKeysAndObjectsUsingBlock:^(NSString *indexKey, NSDictionary *indexValue, BOOL *stop) {
-		BOOL developerOnly = [indexValue boolForKey:@"developerModeOnly"];
-		
-		if (developerModeEnabled == NO && developerOnly) {
-			return;
-		}
-		
-		[commandList addObject:indexKey.uppercaseString];
-	}];
-	
+
+	[IRCCommandIndexLocalData
+		enumerateKeysAndObjectsUsingBlock:^(NSString *indexKey, NSDictionary *indexValue, BOOL *stop) {
+			BOOL developerOnly = [indexValue boolForKey:@"developerModeOnly"];
+
+			if (developerModeEnabled == NO && developerOnly) {
+				return;
+			}
+
+			[commandList addObject:indexKey.uppercaseString];
+		}];
+
 	_cachedLocalCommandList = [commandList copy];
 }
 
@@ -134,23 +136,23 @@ static NSDictionary *IRCCommandIndexRemoteData = nil;
 + (NSUInteger)indexOfCommand:(NSString *)command isLocal:(BOOL)isLocalCommand
 {
 	NSDictionary *index = nil;
-	
+
 	if (isLocalCommand) {
 		index = IRCCommandIndexLocalData[command.lowercaseString];
 	} else {
 		index = IRCCommandIndexRemoteData[command.lowercaseString];
 	}
-	
+
 	if (index == nil) {
 		return NSNotFound;
 	}
-	
+
 	if (isLocalCommand) {
 		if ([index boolForKey:@"developerModeOnly"] && [TPCPreferences developerModeEnabled] == NO) {
 			return NSNotFound;
 		}
 	}
-	
+
 	return [index unsignedIntegerForKey:@"indexValue"];
 }
 
@@ -159,17 +161,17 @@ static NSDictionary *IRCCommandIndexRemoteData = nil;
 	NSParameterAssert(command != nil);
 
 	NSDictionary *index = IRCCommandIndexRemoteData[command.lowercaseString];
-	
+
 	if (index == nil) {
 		return NSNotFound;
 	}
-	
+
 	NSInteger position = [index integerForKey:@"outgoingColonIndex"];
-	
+
 	if (position < 0) {
 		return NSNotFound;
 	}
-	
+
 	return position;
 }
 
@@ -186,11 +188,11 @@ static NSDictionary *IRCCommandIndexRemoteData = nil;
 	NSString *commandFormatted = command.uppercaseString;
 
 	NSString *argumentFormat = index[@"arguments"];
-	
+
 	if (argumentFormat) {
 		return [NSString stringWithFormat:@"%@ %@", commandFormatted, argumentFormat];
 	}
-	
+
 	return commandFormatted;
 }
 

@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class ICLPayload;
 
 @interface TVCLogController ()
-@property (nonatomic, assign, readwrite, getter=viewIsEncrypted) BOOL encrypted;
+@property(nonatomic, assign, readwrite, getter=viewIsEncrypted) BOOL encrypted;
 
 - (instancetype)initWithClient:(IRCClient *)client inWindow:(TVCMainWindow *)window NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithChannel:(IRCChannel *)channel inWindow:(TVCMainWindow *)window NS_DESIGNATED_INITIALIZER;
@@ -58,12 +58,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)reloadTheme;
 
 - (void)print:(TVCLogLine *)logLine;
-- (void)print:(TVCLogLine *)logLine completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock;
+- (void)print:(TVCLogLine *)logLine
+	completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock;
 
 - (void)renderLogLineAtLineNumber:(NSString *)lineNumber
 			  numberOfLinesBefore:(NSUInteger)numberOfLinesBefore
 			   numberOfLinesAfter:(NSUInteger)numberOfLinesAfter
-				  completionBlock:(void (^)(NSArray<NSDictionary<NSString *,id> *> * _Nonnull))completionBlock;
+				  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))completionBlock;
 
 - (void)renderLogLinesBeforeLineNumber:(NSString *)lineNumber
 				  maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
@@ -76,7 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)renderLogLinesAfterLineNumber:(NSString *)lineNumberAfter
 					 beforeLineNumber:(NSString *)lineNumberBefore
 				 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
-					  completionBlock:(void (^)(NSArray<NSDictionary<NSString *,id> *> * _Nonnull))completionBlock;
+					  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))completionBlock;
 
 - (void)notifyLinesAddedToView:(NSArray<NSString *> *)lineNumbers;
 - (void)notifyLinesRemovedFromView:(NSArray<NSString *> *)lineNumbers;
@@ -85,7 +86,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)notifyHistoricLogWillDeleteLines:(NSArray<NSString *> *)lineNumbers;
 
-- (void)processInlineMediaAtAddress:(NSString *)address withUniqueIdentifier:(NSString *)uniqueIdentifier atLineNumber:(NSString *)lineNumber index:(NSUInteger)index;
+- (void)processInlineMediaAtAddress:(NSString *)address
+			   withUniqueIdentifier:(NSString *)uniqueIdentifier
+					   atLineNumber:(NSString *)lineNumber
+							  index:(NSUInteger)index;
 
 - (void)processingInlineMediaPayloadSucceeded:(ICLPayload *)payload;
 - (void)processingInlineMediaPayload:(ICLPayload *)payload failedWithError:(NSError *)error;

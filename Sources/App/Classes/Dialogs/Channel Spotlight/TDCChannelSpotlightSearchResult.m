@@ -43,8 +43,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCChannelSpotlightSearchResult ()
-@property (nonatomic, weak, readwrite) IRCChannel *channel;
-@property (nonatomic, copy, readwrite) NSNumber *distance;
+@property(nonatomic, weak, readwrite) IRCChannel *channel;
+@property(nonatomic, copy, readwrite) NSNumber *distance;
 @end
 
 @implementation TDCChannelSpotlightSearchResult

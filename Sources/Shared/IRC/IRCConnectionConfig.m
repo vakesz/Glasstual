@@ -84,7 +84,8 @@ uint16_t const IRCConnectionDefaultProxyPort = 1080;
 	self->_connectionPrefersModernCiphersOnly = [aDecoder decodeBoolForKey:@"connectionPrefersModernCiphersOnly"];
 	self->_connectionPrefersModernSockets = [aDecoder decodeBoolForKey:@"connectionPrefersModernSockets"];
 	self->_connectionPrefersSecuredConnection = [aDecoder decodeBoolForKey:@"connectionPrefersSecuredConnection"];
-	self->_connectionShouldValidateCertificateChain = [aDecoder decodeBoolForKey:@"connectionShouldValidateCertificateChain"];
+	self->_connectionShouldValidateCertificateChain =
+		[aDecoder decodeBoolForKey:@"connectionShouldValidateCertificateChain"];
 	self->_floodControlDelayInterval = [aDecoder decodeUnsignedIntegerForKey:@"floodControlDelayInterval"];
 	self->_floodControlMaximumMessages = [aDecoder decodeUnsignedIntegerForKey:@"floodControlMaximumMessages"];
 	self->_identityClientSideCertificate = [aDecoder decodeDataForKey:@"identityClientSideCertificate"];
@@ -110,7 +111,8 @@ uint16_t const IRCConnectionDefaultProxyPort = 1080;
 	[aCoder encodeBool:self->_connectionPrefersModernCiphersOnly forKey:@"connectionPrefersModernCiphersOnly"];
 	[aCoder encodeBool:self->_connectionPrefersModernSockets forKey:@"connectionPrefersModernSockets"];
 	[aCoder encodeBool:self->_connectionPrefersSecuredConnection forKey:@"connectionPrefersSecuredConnection"];
-	[aCoder encodeBool:self->_connectionShouldValidateCertificateChain forKey:@"connectionShouldValidateCertificateChain"];
+	[aCoder encodeBool:self->_connectionShouldValidateCertificateChain
+				forKey:@"connectionShouldValidateCertificateChain"];
 	[aCoder encodeUnsignedInteger:self->_floodControlDelayInterval forKey:@"floodControlDelayInterval"];
 	[aCoder encodeUnsignedInteger:self->_floodControlMaximumMessages forKey:@"floodControlMaximumMessages"];
 	[aCoder maybeEncodeObject:self->_identityClientSideCertificate forKey:@"identityClientSideCertificate"];

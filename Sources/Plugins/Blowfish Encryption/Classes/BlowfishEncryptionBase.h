@@ -35,6 +35,13 @@
 @interface EKBlowfishEncryptionBase : NSObject
 + (NSUInteger)estimatedLengthOfEncodedDataOfLength:(NSUInteger)dataLength;
 
-+ (NSString *)encrypt:(NSString *)rawInput key:(NSString *)secretKey mode:(EKBlowfishEncryptionModeOfOperation)mode encoding:(NSStringEncoding)dataEncoding;
-+ (NSString *)decrypt:(NSString *)rawInput key:(NSString *)secretKey mode:(EKBlowfishEncryptionModeOfOperation)mode encoding:(NSStringEncoding)dataEncoding lostBytes:(NSInteger *)lostBytes;
++ (NSString *)encrypt:(NSString *)rawInput
+				  key:(NSString *)secretKey
+				 mode:(EKBlowfishEncryptionModeOfOperation)mode
+			 encoding:(NSStringEncoding)dataEncoding;
++ (NSString *)decrypt:(NSString *)rawInput
+				  key:(NSString *)secretKey
+				 mode:(EKBlowfishEncryptionModeOfOperation)mode
+			 encoding:(NSStringEncoding)dataEncoding
+			lostBytes:(NSInteger *)lostBytes;
 @end

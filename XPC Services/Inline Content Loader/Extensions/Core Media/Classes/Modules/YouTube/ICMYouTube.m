@@ -48,11 +48,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	ICLPayloadMutable *payload = self.payload;
 
-	NSDictionary *templateAttributes =
-	@{
-	  @"uniqueIdentifier" : payload.uniqueIdentifier,
-	  @"videoIdentifier" : videoIdentifier,
-	  @"videoStartTime" : @(self.videoStartTime)
+	NSDictionary *templateAttributes = @{
+		@"uniqueIdentifier" : payload.uniqueIdentifier,
+		@"videoIdentifier" : videoIdentifier,
+		@"videoStartTime" : @(self.videoStartTime)
 	};
 
 	NSError *templateRenderError = nil;
@@ -70,7 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable ICLInlineContentModuleActionBlock)actionBlockForURL:(NSURL *)url
 {
 	NSParameterAssert(url != nil);
-	
+
 	NSTimeInterval startPosition = 0;
 
 	NSString *videoIdentifier = [self _videoIdentifierForURL:url startPosition:&startPosition];
@@ -83,7 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 		__weak ICMYouTube *moduleTyped = (id)module;
 
 		moduleTyped.videoStartTime = startPosition;
-		
+
 		[moduleTyped _performActionForVideo:videoIdentifier];
 	} copy];
 }
@@ -94,11 +93,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *urlHost = url.host;
 	NSString *urlQuery = url.query.percentEncodedURLQuery;
-	
+
 	NSDictionary *queryItems = urlQuery.URLQueryItems;
 
-	if ([urlHost isEqualToString:@"youtu.be"])
-	{
+	if ([urlHost isEqualToString:@"youtu.be"]) {
 		NSString *urlPath = url.path.percentEncodedURLPath;
 
 		if (urlPath.length <= 1) {
@@ -106,9 +104,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		videoIdentifier = [urlPath substringFromIndex:1];
-	}
-	else if ([urlHost isDomainOrSubdomain:@"youtube.com"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"youtube.com"]) {
 		NSString *urlPath = url.path.percentEncodedURLPath;
 
 		if ([urlPath isEqualToString:@"/watch"] == NO) {
@@ -142,13 +138,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"youtube.com",
-		  @"www.youtube.com",
-		  @"m.youtube.com",
-		  @"youtu.be"
-		];
+		domains = @[ @"youtube.com", @"www.youtube.com", @"m.youtube.com", @"youtu.be" ];
 	});
 
 	return domains;

@@ -46,8 +46,8 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface IRCChannelMemberListController ()
-@property (nonatomic, weak) IRCChannelMemberList *memberList;
-@property (nonatomic, weak) IBOutlet NSTableView *tableView;
+@property(nonatomic, weak) IRCChannelMemberList *memberList;
+@property(nonatomic, weak) IBOutlet NSTableView *tableView;
 @end
 
 @implementation IRCChannelMemberListController
@@ -63,13 +63,13 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Are we assigned? */
 	IRCChannelMemberList *oldList = self.memberList;
 
-	if ( oldList) {
+	if (oldList) {
 		[oldList assignController:nil];
 	}
 
 	IRCChannelMemberList *newList = channel.memberInfo;
 
-	if ( newList) {
+	if (newList) {
 		[newList assignController:self];
 	}
 

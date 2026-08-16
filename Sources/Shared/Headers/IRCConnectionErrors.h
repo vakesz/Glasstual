@@ -39,12 +39,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern NSErrorDomain const IRCConnectionErrorDomain NS_SWIFT_NAME(ConnectionErrorDomain);
 
-typedef NS_ENUM(NSUInteger, IRCConnectionErrorCode)
-{
-	IRCConnectionErrorCodeSocket			= 999,
-	IRCConnectionErrorCodeOther				= 1000,
-	IRCConnectionErrorCodeBadCertificate	= 1001,
-	IRCConnectionErrorCodeUnableToSecure	= 1002
+typedef NS_ENUM(NSUInteger, IRCConnectionErrorCode) {
+	IRCConnectionErrorCodeSocket = 999,
+	IRCConnectionErrorCodeOther = 1000,
+	IRCConnectionErrorCodeBadCertificate = 1001,
+	IRCConnectionErrorCodeUnableToSecure = 1002
 } NS_SWIFT_NAME(ConnectionErrorCode);
 
 NS_ASSUME_NONNULL_END

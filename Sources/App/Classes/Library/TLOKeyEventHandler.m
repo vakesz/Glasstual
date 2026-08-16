@@ -44,9 +44,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TLOKeyEventHandler ()
-@property (nonatomic, unsafe_unretained) id target;
-@property (nonatomic, strong) NSMutableDictionary *codeHandlerMap;
-@property (nonatomic, strong) NSMutableDictionary *characterHandlerMap;
+@property(nonatomic, unsafe_unretained) id target;
+@property(nonatomic, strong) NSMutableDictionary *codeHandlerMap;
+@property(nonatomic, strong) NSMutableDictionary *characterHandlerMap;
 @end
 
 @implementation TLOKeyEventHandler
@@ -157,7 +157,8 @@ NS_ASSUME_NONNULL_BEGIN
 		return NO;
 	}
 
-	NSUInteger modifiers = (e.modifierFlags & (NSEventModifierFlagShift | NSEventModifierFlagControl | NSEventModifierFlagOption | NSEventModifierFlagCommand));
+	NSUInteger modifiers = (e.modifierFlags & (NSEventModifierFlagShift | NSEventModifierFlagControl |
+											   NSEventModifierFlagOption | NSEventModifierFlagCommand));
 
 	NSNumber *modifierKeys = @(modifiers);
 

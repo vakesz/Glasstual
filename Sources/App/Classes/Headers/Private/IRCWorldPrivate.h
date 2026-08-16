@@ -41,12 +41,12 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCWorld ()
-@property (nonatomic, assign, readwrite) NSUInteger messagesSent;
-@property (nonatomic, assign, readwrite) NSUInteger messagesReceived;
-@property (nonatomic, assign, readwrite) uint64_t bandwidthIn;
-@property (nonatomic, assign, readwrite) uint64_t bandwidthOut;
-@property (nonatomic, assign) BOOL isImportingConfiguration;
-@property (nonatomic, copy, readwrite) NSArray<IRCClient *> *clientList;
+@property(nonatomic, assign, readwrite) NSUInteger messagesSent;
+@property(nonatomic, assign, readwrite) NSUInteger messagesReceived;
+@property(nonatomic, assign, readwrite) uint64_t bandwidthIn;
+@property(nonatomic, assign, readwrite) uint64_t bandwidthOut;
+@property(nonatomic, assign) BOOL isImportingConfiguration;
+@property(nonatomic, copy, readwrite) NSArray<IRCClient *> *clientList;
 
 - (void)setupConfiguration;
 
@@ -63,7 +63,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)noteReachabilityChanged:(BOOL)reachable;
 
 - (IRCClient *)createClientWithConfig:(IRCClientConfig *)config reload:(BOOL)reload;
-- (IRCChannel *)createChannelWithConfig:(IRCChannelConfig *)config onClient:(IRCClient *)client add:(BOOL)add adjust:(BOOL)adjust reload:(BOOL)reload;
+- (IRCChannel *)createChannelWithConfig:(IRCChannelConfig *)config
+							   onClient:(IRCClient *)client
+									add:(BOOL)add
+								 adjust:(BOOL)adjust
+								 reload:(BOOL)reload;
 
 - (IRCChannel *)createPrivateMessage:(NSString *)nickname onClient:(IRCClient *)client asType:(IRCChannelType)type;
 

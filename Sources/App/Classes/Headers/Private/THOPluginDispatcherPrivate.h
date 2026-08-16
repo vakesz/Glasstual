@@ -49,16 +49,35 @@ NS_ASSUME_NONNULL_BEGIN
 @interface THOPluginDispatcher : NSObject
 + (dispatch_queue_t)dispatchQueue;
 
-+ (BOOL)receivedCommand:(NSString *)command withText:(nullable NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt referenceMessage:(nullable IRCMessage *)referenceMessage;
-+ (BOOL)receivedText:(NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination asLineType:(TVCLogLineType)lineType onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt wasEncrypted:(BOOL)wasEncrypted;
++ (BOOL)receivedCommand:(NSString *)command
+			   withText:(nullable NSString *)text
+			 authoredBy:(IRCPrefix *)textAuthor
+			destinedFor:(nullable IRCChannel *)textDestination
+			   onClient:(IRCClient *)client
+			 receivedAt:(NSDate *)receivedAt
+	   referenceMessage:(nullable IRCMessage *)referenceMessage;
++ (BOOL)receivedText:(NSString *)text
+		  authoredBy:(IRCPrefix *)textAuthor
+		 destinedFor:(nullable IRCChannel *)textDestination
+		  asLineType:(TVCLogLineType)lineType
+			onClient:(IRCClient *)client
+		  receivedAt:(NSDate *)receivedAt
+		wasEncrypted:(BOOL)wasEncrypted;
 + (nullable IRCMessage *)interceptServerInput:(IRCMessage *)inputObject for:(IRCClient *)client;
 + (nullable id)interceptUserInput:(id)inputObject command:(IRCRemoteCommand)commandString;
-+ (NSString *)willRenderMessage:(NSString *)newMessage forViewController:(TVCLogController *)viewController lineType:(TVCLogLineType)lineType memberType:(TVCLogLineMemberType)memberType;
-+ (void)userInputCommandInvokedOnClient:(IRCClient *)client commandString:(NSString *)commandString messageString:(NSString *)messageString;
-+ (void)didReceiveJavaScriptPayload:(THOPluginWebViewJavaScriptPayloadConcreteObject *)payloadObject fromViewController:(TVCLogController *)viewController;
++ (NSString *)willRenderMessage:(NSString *)newMessage
+			  forViewController:(TVCLogController *)viewController
+					   lineType:(TVCLogLineType)lineType
+					 memberType:(TVCLogLineMemberType)memberType;
++ (void)userInputCommandInvokedOnClient:(IRCClient *)client
+						  commandString:(NSString *)commandString
+						  messageString:(NSString *)messageString;
++ (void)didReceiveJavaScriptPayload:(THOPluginWebViewJavaScriptPayloadConcreteObject *)payloadObject
+				 fromViewController:(TVCLogController *)viewController;
 + (void)didReceiveServerInput:(IRCMessage *)inputObject onClient:(IRCClient *)client;
 + (void)enqueueDidPostNewMessage:(THOPluginDidPostNewMessageConcreteObject *)messageObject;
-+ (void)dequeueDidPostNewMessageWithLineNumber:(NSString *)messageLineNumber forViewController:(TVCLogController *)viewController;
++ (void)dequeueDidPostNewMessageWithLineNumber:(NSString *)messageLineNumber
+							 forViewController:(TVCLogController *)viewController;
 @end
 
 NS_ASSUME_NONNULL_END

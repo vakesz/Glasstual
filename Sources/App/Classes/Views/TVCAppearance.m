@@ -40,21 +40,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, TVCListAppearanceColorType)
-{
+typedef NS_ENUM(NSUInteger, TVCListAppearanceColorType) {
 	TVCListAppearanceColorTypeCalibratedWhite = 1, // <white value> [alpha]
-	TVCListAppearanceColorTypeRGB = 2, // <r> <g> <b> [alpha]
-	TVCListAppearanceColorTypeSystem = 3, // selector
+	TVCListAppearanceColorTypeRGB = 2,			   // <r> <g> <b> [alpha]
+	TVCListAppearanceColorTypeSystem = 3,		   // selector
 };
 
-typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
-{
+typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 	TVCListAppearanceImageTypeAsset = 1,
 };
 
 @interface TVCAppearance ()
-@property (nonatomic, assign, readwrite) BOOL isHighResolutionAppearance;
-@property (nonatomic, copy, nullable, readwrite) NSDictionary<NSString *, id> *appearanceProperties;
+@property(nonatomic, assign, readwrite) BOOL isHighResolutionAppearance;
+@property(nonatomic, copy, nullable, readwrite) NSDictionary<NSString *, id> *appearanceProperties;
 @end
 
 @implementation TVCAppearance
@@ -66,13 +64,16 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 	return nil;
 }
 
-- (nullable instancetype)initWithAppearanceNamed:(NSString *)appearanceName atURL:(NSURL *)appearanceLocation forRetinaDisplay:(BOOL)forRetinaDisplay
+- (nullable instancetype)initWithAppearanceNamed:(NSString *)appearanceName
+										   atURL:(NSURL *)appearanceLocation
+								forRetinaDisplay:(BOOL)forRetinaDisplay
 {
 	NSParameterAssert(appearanceName != nil);
 	NSParameterAssert(appearanceLocation != nil);
 
 	if ((self = [super init])) {
-		if ([self _loadAppearanceNamed:appearanceName atURL:appearanceLocation forRetinaDisplay:forRetinaDisplay] == NO) {
+		if ([self _loadAppearanceNamed:appearanceName atURL:appearanceLocation
+					  forRetinaDisplay:forRetinaDisplay] == NO) {
 			return nil;
 		}
 
@@ -84,7 +85,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 	return nil;
 }
 
-- (BOOL)_loadAppearanceNamed:(NSString *)appearanceName atURL:(NSURL *)appearanceLocation forRetinaDisplay:(BOOL)forRetinaDisplay
+- (BOOL)_loadAppearanceNamed:(NSString *)appearanceName
+					   atURL:(NSURL *)appearanceLocation
+			forRetinaDisplay:(BOOL)forRetinaDisplay
 {
 	NSParameterAssert(appearanceName != nil);
 	NSParameterAssert(appearanceLocation != nil);
@@ -133,128 +136,123 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
  this logic. The first argument is the properties for the appearance
  that was specified in -init. The second argument is the contents of
  the file that appearance originated from. */
-+ (nullable NSDictionary *)_combineAppearance:(NSDictionary<NSString *, id> *)appearanceIn withOtherAppearances:(NSDictionary<NSString *, id> *)otherAppearances
- {
-	 NSParameterAssert(appearanceIn != nil);
-	 NSParameterAssert(otherAppearances != nil);
++ (nullable NSDictionary *)_combineAppearance:(NSDictionary<NSString *, id> *)appearanceIn
+						 withOtherAppearances:(NSDictionary<NSString *, id> *)otherAppearances
+{
+	NSParameterAssert(appearanceIn != nil);
+	NSParameterAssert(otherAppearances != nil);
 
-	 /* Object can be an array of strings or a string. */
-	 id inheritedName = [appearanceIn objectForKey:@"inheritFrom"];
+	/* Object can be an array of strings or a string. */
+	id inheritedName = [appearanceIn objectForKey:@"inheritFrom"];
 
-	 if (inheritedName == nil) {
-		 return appearanceIn;
-	 }
+	if (inheritedName == nil) {
+		return appearanceIn;
+	}
 
-	 /* The array of references is the dictionaries that will be combined. */
-	 __block NSMutableArray<NSDictionary<NSString *, id> *> *inheritedProperties = [NSMutableArray array];
+	/* The array of references is the dictionaries that will be combined. */
+	__block NSMutableArray<NSDictionary<NSString *, id> *> *inheritedProperties = [NSMutableArray array];
 
-	 typedef void (^inheritLogicType)(id);
-	 __weak __block inheritLogicType inheritLogicWeak = nil;
+	typedef void (^inheritLogicType)(id);
+	__weak __block inheritLogicType inheritLogicWeak = nil;
 
-	 inheritLogicType inheritLogic = ^(id inheritedName)
-	 {
-		 NSDictionary *lastInheritance = nil;
+	inheritLogicType inheritLogic = ^(id inheritedName) {
+		NSDictionary *lastInheritance = nil;
 
-		 /* Allow for multiple inheritance */
-		 if ([inheritedName isKindOfClass:[NSArray class]]) {
-			 for (id name in ((NSArray *)inheritedName).reverseObjectEnumerator) {
-				 inheritLogicWeak(name);
-			 }
+		/* Allow for multiple inheritance */
+		if ([inheritedName isKindOfClass:[NSArray class]]) {
+			for (id name in ((NSArray *)inheritedName).reverseObjectEnumerator) {
+				inheritLogicWeak(name);
+			}
 
-			 return;
-		 } else if ([inheritedName isKindOfClass:[NSString class]]) {
-			 lastInheritance = [otherAppearances dictionaryForKey:inheritedName];
-		 }
+			return;
+		} else if ([inheritedName isKindOfClass:[NSString class]]) {
+			lastInheritance = [otherAppearances dictionaryForKey:inheritedName];
+		}
 
-		 /* No inheritance */
-		 if (lastInheritance == nil) {
-			 return;
-		 }
+		/* No inheritance */
+		if (lastInheritance == nil) {
+			return;
+		}
 
-		 /* Add the properties to the beginning of the array
+		/* Add the properties to the beginning of the array
 		  so that we don't need to use a revers enumerator. */
-		 [inheritedProperties insertObject:lastInheritance atIndex:0];
+		[inheritedProperties insertObject:lastInheritance atIndex:0];
 
-		 /* Is there deeper inheritance? */
-		 id nextInheritance = [lastInheritance objectForKey:@"inheritFrom"];
+		/* Is there deeper inheritance? */
+		id nextInheritance = [lastInheritance objectForKey:@"inheritFrom"];
 
-		 if (nextInheritance == nil) {
-			 return;
-		 }
+		if (nextInheritance == nil) {
+			return;
+		}
 
-		 inheritLogicWeak(nextInheritance);
-	 };
+		inheritLogicWeak(nextInheritance);
+	};
 
-	 /* Inherit from the first appearance. */
-	 inheritLogicWeak = inheritLogic;
+	/* Inherit from the first appearance. */
+	inheritLogicWeak = inheritLogic;
 
-	 inheritLogic(inheritedName);
+	inheritLogic(inheritedName);
 
-	 /* If nothing was inherited, return original input. */
-	 if (inheritedProperties == nil) {
-		 return appearanceIn;
-	 }
+	/* If nothing was inherited, return original input. */
+	if (inheritedProperties == nil) {
+		return appearanceIn;
+	}
 
-	 /* Blocks used for combining properties */
-	 /* I may over engineered this */
-	 typedef void (^mergingLogicType)(NSMutableDictionary *, NSDictionary *);
-	 __weak __block mergingLogicType mergingLogicWeak = nil;
+	/* Blocks used for combining properties */
+	/* I may over engineered this */
+	typedef void (^mergingLogicType)(NSMutableDictionary *, NSDictionary *);
+	__weak __block mergingLogicType mergingLogicWeak = nil;
 
-	 NSDictionary *(^mergeImmutableDictionary)(NSDictionary *, NSDictionary *) =
-	 ^NSDictionary *(NSDictionary *firstDictionary, NSDictionary *secondDictionary)
-	 {
-		 NSMutableDictionary *mutableFirstDictionary = [firstDictionary mutableCopy];
+	NSDictionary * (^mergeImmutableDictionary)(NSDictionary *, NSDictionary *) =
+		^NSDictionary *(NSDictionary *firstDictionary, NSDictionary *secondDictionary) {
+			NSMutableDictionary *mutableFirstDictionary = [firstDictionary mutableCopy];
 
-		 mergingLogicWeak(mutableFirstDictionary, secondDictionary);
+			mergingLogicWeak(mutableFirstDictionary, secondDictionary);
 
-		 return [mutableFirstDictionary copy];
-	 }; // mergeImmutableDictionary
+			return [mutableFirstDictionary copy];
+		}; // mergeImmutableDictionary
 
-	 mergingLogicType mergingLogic =
-	 ^(NSMutableDictionary *localDictionary, NSDictionary *remoteDictionary)
-	 {
-		 [remoteDictionary enumerateKeysAndObjectsUsingBlock:^(id key, id remoteObject, BOOL *stop) {
-			 id localObject = localDictionary[key];
+	mergingLogicType mergingLogic = ^(NSMutableDictionary *localDictionary, NSDictionary *remoteDictionary) {
+		[remoteDictionary enumerateKeysAndObjectsUsingBlock:^(id key, id remoteObject, BOOL *stop) {
+			id localObject = localDictionary[key];
 
-			 if (localObject == nil) {
-				 [localDictionary setObject:remoteObject forKey:key];
+			if (localObject == nil) {
+				[localDictionary setObject:remoteObject forKey:key];
 
-				 return;
-			 }
+				return;
+			}
 
-			 /* I tried to be clever by checking checking if localObject
+			/* I tried to be clever by checking checking if localObject
 			  is kind of class NSMutableDictionary so we can call this
 			  block recursively on it instead of creating new mutable copy.
 			  Yeah, I will never make that mistake. Cluster classes take a
 			  crap on -isKindOfClass: */
-			 if ([remoteObject isKindOfClass:[NSDictionary class]] &&
-				 [localObject isKindOfClass:[NSDictionary class]])
-			 {
-				 localObject = mergeImmutableDictionary(localObject, remoteObject);
-			 } else {
-				 localObject = remoteObject;
-			 }
+			if ([remoteObject isKindOfClass:[NSDictionary class]] && [localObject isKindOfClass:[NSDictionary class]]) {
+				localObject = mergeImmutableDictionary(localObject, remoteObject);
+			} else {
+				localObject = remoteObject;
+			}
 
-			 [localDictionary setObject:localObject forKey:key];
-		 }];
-	 }; // mergingLogic
+			[localDictionary setObject:localObject forKey:key];
+		}];
+	}; // mergingLogic
 
-	 mergingLogicWeak = mergingLogic;
+	mergingLogicWeak = mergingLogic;
 
-	 /* Combine properties */
-	 NSMutableDictionary *appearanceOut = [NSMutableDictionary dictionary];
+	/* Combine properties */
+	NSMutableDictionary *appearanceOut = [NSMutableDictionary dictionary];
 
-	 for (NSDictionary *properties in inheritedProperties) {
-		 mergingLogic(appearanceOut, properties);
-	 }
+	for (NSDictionary *properties in inheritedProperties) {
+		mergingLogic(appearanceOut, properties);
+	}
 
-	 /* Add top most appearance as final combination. */
-	 mergingLogic(appearanceOut, appearanceIn);
+	/* Add top most appearance as final combination. */
+	mergingLogic(appearanceOut, appearanceIn);
 
-	 [appearanceOut removeObjectForKey:@"inheritFrom"];
+	[appearanceOut removeObjectForKey:@"inheritFrom"];
 
-	 return [appearanceOut copy];
- }
+	return [appearanceOut copy];
+}
 
 #pragma mark -
 #pragma mark Utilities
@@ -270,7 +268,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 	return [self _valueInGroup:group withKey:key expectedType:expectedType];
 }
 
-- (nullable id)_valueInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key expectedType:(Class)expectedType
+- (nullable id)_valueInGroup:(NSDictionary<NSString *, id> *)group
+					 withKey:(NSString *)key
+				expectedType:(Class)expectedType
 {
 	NSParameterAssert(group != nil);
 	NSParameterAssert(key != nil);
@@ -335,7 +335,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 	return [self colorInGroup:group withKey:key forActiveWindow:forActiveWindow];
 }
 
-- (nullable NSColor *)colorInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow
+- (nullable NSColor *)colorInGroup:(NSDictionary<NSString *, id> *)group
+						   withKey:(NSString *)key
+				   forActiveWindow:(BOOL)forActiveWindow
 {
 	NSParameterAssert(group != nil);
 	NSParameterAssert(key != nil);
@@ -370,56 +372,53 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 	TVCListAppearanceColorType colorType = [colorProperties unsignedIntegerForKey:@"type"];
 
 	switch (colorType) {
-		case TVCListAppearanceColorTypeCalibratedWhite:
-		{
-			NSArray *components = [colorValue componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+	case TVCListAppearanceColorTypeCalibratedWhite: {
+		NSArray *components = [colorValue componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
-			if (components.count == 0) {
-				return nil;
-			}
-
-			CGFloat white = [components doubleAtIndex:0];
-
-			CGFloat alpha = 1.0;
-
-			if (components.count == 2) {
-				alpha = [components doubleAtIndex:1];
-			}
-
-			return [NSColor colorWithCalibratedWhite:white alpha:alpha];
+		if (components.count == 0) {
+			return nil;
 		}
-		case TVCListAppearanceColorTypeRGB:
-		{
-			NSArray *components = [colorValue componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
-			if (components.count < 3) {
-				return nil;
-			}
+		CGFloat white = [components doubleAtIndex:0];
 
-			CGFloat red = [components doubleAtIndex:0];
-			CGFloat green = [components doubleAtIndex:1];
-			CGFloat blue = [components doubleAtIndex:2];
+		CGFloat alpha = 1.0;
 
-			CGFloat alpha = 1.0;
-
-			if (components.count == 4) {
-				alpha = [components doubleAtIndex:3];
-			}
-
-			return [NSColor calibratedColorWithRed:red green:green blue:blue alpha:alpha];
+		if (components.count == 2) {
+			alpha = [components doubleAtIndex:1];
 		}
-		case TVCListAppearanceColorTypeSystem:
-		{
-			SEL selector = NSSelectorFromString(colorValue);
 
-			if ([NSColor respondsToSelector:selector] == NO) {
-				LogToConsoleError("Missing color: %{public}@", colorValue);
+		return [NSColor colorWithCalibratedWhite:white alpha:alpha];
+	}
+	case TVCListAppearanceColorTypeRGB: {
+		NSArray *components = [colorValue componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
-				return nil;
-			}
-
-			return [NSColor performSelector:selector];
+		if (components.count < 3) {
+			return nil;
 		}
+
+		CGFloat red = [components doubleAtIndex:0];
+		CGFloat green = [components doubleAtIndex:1];
+		CGFloat blue = [components doubleAtIndex:2];
+
+		CGFloat alpha = 1.0;
+
+		if (components.count == 4) {
+			alpha = [components doubleAtIndex:3];
+		}
+
+		return [NSColor calibratedColorWithRed:red green:green blue:blue alpha:alpha];
+	}
+	case TVCListAppearanceColorTypeSystem: {
+		SEL selector = NSSelectorFromString(colorValue);
+
+		if ([NSColor respondsToSelector:selector] == NO) {
+			LogToConsoleError("Missing color: %{public}@", colorValue);
+
+			return nil;
+		}
+
+		return [NSColor performSelector:selector];
+	}
 	} // switch()
 
 	return nil;
@@ -468,7 +467,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 	return [self gradientInGroup:group withKey:key forActiveWindow:forActiveWindow];
 }
 
-- (nullable NSGradient *)gradientInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow
+- (nullable NSGradient *)gradientInGroup:(NSDictionary<NSString *, id> *)group
+								 withKey:(NSString *)key
+						 forActiveWindow:(BOOL)forActiveWindow
 {
 	NSParameterAssert(group != nil);
 	NSParameterAssert(key != nil);
@@ -560,7 +561,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 	return [self fontInGroup:group withKey:key forActiveWindow:forActiveWindow];
 }
 
-- (nullable NSFont *)fontInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow
+- (nullable NSFont *)fontInGroup:(NSDictionary<NSString *, id> *)group
+						 withKey:(NSString *)key
+				 forActiveWindow:(BOOL)forActiveWindow
 {
 	NSParameterAssert(group != nil);
 	NSParameterAssert(key != nil);
@@ -597,20 +600,13 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 
 	CGFloat weight = [fontProperties doubleForKey:@"weight"];
 
-	if ([name isEqualToString:@"System"])
-	{
+	if ([name isEqualToString:@"System"]) {
 		return [NSFont systemFontOfSize:size weight:weight];
-	}
-	else if ([name isEqualToString:@"SystemBold"])
-	{
+	} else if ([name isEqualToString:@"SystemBold"]) {
 		return [NSFont boldSystemFontOfSize:size];
-	}
-	else if ([name isEqualToString:@"SystemMonospace"])
-	{
+	} else if ([name isEqualToString:@"SystemMonospace"]) {
 		return [NSFont monospacedDigitSystemFontOfSize:size weight:weight];
-	}
-	else if ([name isEqualToString:@"SystemMonospaceBold"])
-	{
+	} else if ([name isEqualToString:@"SystemMonospaceBold"]) {
 		return [NSFont monospacedDigitSystemFontOfSize:size weight:NSFontWeightBold];
 	}
 
@@ -664,7 +660,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 	return [self imageInGroup:group withKey:key forActiveWindow:forActiveWindow];
 }
 
-- (nullable NSImage *)imageInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow
+- (nullable NSImage *)imageInGroup:(NSDictionary<NSString *, id> *)group
+						   withKey:(NSString *)key
+				   forActiveWindow:(BOOL)forActiveWindow
 {
 	NSParameterAssert(group != nil);
 	NSParameterAssert(key != nil);
@@ -699,10 +697,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 	TVCListAppearanceImageType imageType = [imageProperties unsignedIntegerForKey:@"type"];
 
 	switch (imageType) {
-		case TVCListAppearanceImageTypeAsset:
-		{
-			return [NSImage imageNamed:imageValue];
-		}
+	case TVCListAppearanceImageTypeAsset: {
+		return [NSImage imageNamed:imageValue];
+	}
 	}
 
 	return nil;
@@ -774,13 +771,15 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType)
 #pragma mark Application Appearance
 
 @interface TVCApplicationAppearance ()
-@property (nonatomic, strong) TXAppearancePropertyCollection *applicationProperties;
+@property(nonatomic, strong) TXAppearancePropertyCollection *applicationProperties;
 @end
 
 @implementation TVCApplicationAppearance
 
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN
-- (nullable instancetype)initWithAppearanceNamed:(NSString *)appearanceName atURL:(NSURL *)appearanceLocation forRetinaDisplay:(BOOL)forRetinaDisplay
+- (nullable instancetype)initWithAppearanceNamed:(NSString *)appearanceName
+										   atURL:(NSURL *)appearanceLocation
+								forRetinaDisplay:(BOOL)forRetinaDisplay
 {
 	NSAssert(NO, @"Use -initWithAppearanceAtURL:forRetinaDisplay: instead");
 
@@ -796,7 +795,9 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	NSString *appearanceName = applicationProperties.appearanceName;
 
-	if ((self = [super initWithAppearanceNamed:appearanceName atURL:appearanceLocation forRetinaDisplay:forRetinaDisplay])) {
+	if ((self = [super initWithAppearanceNamed:appearanceName
+										 atURL:appearanceLocation
+							  forRetinaDisplay:forRetinaDisplay])) {
 		self.applicationProperties = applicationProperties;
 
 		return self;

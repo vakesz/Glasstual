@@ -51,7 +51,6 @@
  *
  * @return Subsystem that plugin can use for logging.
  */
-#define THOPluginLoggingSubsystem()		\
-	_THOPluginLoggingSubsystemForBundle([NSBundle bundleForClass:[self class]])
+#define THOPluginLoggingSubsystem() _THOPluginLoggingSubsystemForBundle([NSBundle bundleForClass:[self class]])
 
 GLASSTUAL_EXTERN os_log_t _THOPluginLoggingSubsystemForBundle(NSBundle *bundle);

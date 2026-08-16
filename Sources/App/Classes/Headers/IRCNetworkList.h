@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCNetwork;
 
 @interface IRCNetworkList : NSObject
-@property (readonly, copy) NSArray<IRCNetwork *> *listOfNetworks;
+@property(readonly, copy) NSArray<IRCNetwork *> *listOfNetworks;
 
 - (nullable IRCNetwork *)networkNamed:(NSString *)networkName;
 
@@ -50,11 +50,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 
 @interface IRCNetwork : NSObject
-@property (readonly, copy) NSString *networkName;
-@property (readonly, copy) NSString *networkDescription NS_UNAVAILABLE; // unused
-@property (readonly, copy) NSString *serverAddress;
-@property (readonly) uint16_t serverPort;
-@property (readonly) BOOL prefersSecuredConnection;
+@property(readonly, copy) NSString *networkName;
+@property(readonly, copy) NSString *networkDescription NS_UNAVAILABLE; // unused
+@property(readonly, copy) NSString *serverAddress;
+@property(readonly) uint16_t serverPort;
+@property(readonly) BOOL prefersSecuredConnection;
 
 - (instancetype)init NS_UNAVAILABLE;
 @end

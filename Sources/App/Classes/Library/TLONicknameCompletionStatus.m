@@ -36,7 +36,6 @@
  *
  *********************************************************************** */
 
-
 #import "NSObjectHelperPrivate.h"
 #import "IRCClient.h"
 #import "IRCChannel.h"
@@ -55,25 +54,25 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TLONicknameCompletionStatus ()
-@property (nonatomic, weak) TVCMainWindow *window;
-@property (nonatomic, copy, nullable) NSString *completedValue;
-@property (nonatomic, copy, nullable) NSString *completedValueCompletionSuffix;
-@property (nonatomic, copy, nullable) NSString *currentTextViewStringValue;
-@property (nonatomic, copy, nullable) NSString *cachedSearchPattern;
-@property (nonatomic, copy, nullable) NSString *cachedSearchPatternPrefixCharacter;
-@property (nonatomic, copy, nullable) NSString *cachedCompletionSuffix;
-@property (nonatomic, assign) NSRange selectionRangeAfterLastCompletion;
-@property (nonatomic, assign) NSRange rangeOfTextSelection;
-@property (nonatomic, assign) NSRange rangeOfSearchPattern;
-@property (nonatomic, assign) NSRange rangeOfCompletionSuffix;
-@property (nonatomic, assign) NSInteger selectionIndexOfLastCompletion;
-@property (nonatomic, assign) BOOL completionIsMovingForward;
-@property (nonatomic, assign) BOOL isCompletingChannelName;
-@property (nonatomic, assign) BOOL isCompletingCommand;
-@property (nonatomic, assign) BOOL isCompletingNickname;
-@property (nonatomic, assign) BOOL searchPatternIsAtStart;
-@property (nonatomic, assign) BOOL searchPatternIsAtEnd;
-@property (nonatomic, assign) BOOL completionCacheIsConstructed;
+@property(nonatomic, weak) TVCMainWindow *window;
+@property(nonatomic, copy, nullable) NSString *completedValue;
+@property(nonatomic, copy, nullable) NSString *completedValueCompletionSuffix;
+@property(nonatomic, copy, nullable) NSString *currentTextViewStringValue;
+@property(nonatomic, copy, nullable) NSString *cachedSearchPattern;
+@property(nonatomic, copy, nullable) NSString *cachedSearchPatternPrefixCharacter;
+@property(nonatomic, copy, nullable) NSString *cachedCompletionSuffix;
+@property(nonatomic, assign) NSRange selectionRangeAfterLastCompletion;
+@property(nonatomic, assign) NSRange rangeOfTextSelection;
+@property(nonatomic, assign) NSRange rangeOfSearchPattern;
+@property(nonatomic, assign) NSRange rangeOfCompletionSuffix;
+@property(nonatomic, assign) NSInteger selectionIndexOfLastCompletion;
+@property(nonatomic, assign) BOOL completionIsMovingForward;
+@property(nonatomic, assign) BOOL isCompletingChannelName;
+@property(nonatomic, assign) BOOL isCompletingCommand;
+@property(nonatomic, assign) BOOL isCompletingNickname;
+@property(nonatomic, assign) BOOL searchPatternIsAtStart;
+@property(nonatomic, assign) BOOL searchPatternIsAtEnd;
+@property(nonatomic, assign) BOOL completionCacheIsConstructed;
 @end
 
 @implementation TLONicknameCompletionStatus
@@ -131,13 +130,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Perform various comparisons to determine whether the
 	 cache has to be rebuilt. */
-	if ( self.selectionIndexOfLastCompletion == NSNotFound ||
+	if (self.selectionIndexOfLastCompletion == NSNotFound ||
 		self.selectionRangeAfterLastCompletion.location == NSNotFound ||
-		(self.rangeOfTextSelection.location == NSNotFound &&
-		 self.rangeOfSearchPattern.location == 0 && self.rangeOfSearchPattern.length == 0) ||
+		(self.rangeOfTextSelection.location == NSNotFound && self.rangeOfSearchPattern.location == 0 &&
+		 self.rangeOfSearchPattern.length == 0) ||
 		selectedRange.location != self.selectionRangeAfterLastCompletion.location ||
-		selectedRange.length != self.selectionRangeAfterLastCompletion.length)
-	{
+		selectedRange.length != self.selectionRangeAfterLastCompletion.length) {
 		canContinuePreviousScan = NO;
 	}
 
@@ -187,8 +185,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableArray *choicesUppercase = [NSMutableArray array];
 	NSMutableArray *choicesLowercase = [NSMutableArray array];
 
-	if (self.isCompletingCommand)
-	{
+	if (self.isCompletingCommand) {
 		for (NSString *command in [IRCCommandIndex localCommandList]) {
 			[choicesUppercase addObject:command.lowercaseString];
 		}
@@ -198,9 +195,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		/* complete commands in alphabetical order */
 		[choicesUppercase sortUsingSelector:@selector(localizedCompare:)];
-	}
-	else if (self.isCompletingChannelName)
-	{
+	} else if (self.isCompletingChannelName) {
 		IRCClient *client = self.window.selectedClient;
 		IRCChannel *channel = self.window.selectedChannel;
 
@@ -215,9 +210,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 			[choicesUppercase addObject:cc.name];
 		}
-	}
-	else if (self.isCompletingNickname)
-	{
+	} else if (self.isCompletingNickname) {
 		/* Complete the entire user list. */
 		IRCClient *client = self.window.selectedClient;
 		IRCChannel *channel = self.window.selectedChannel;
@@ -243,26 +236,26 @@ NS_ASSUME_NONNULL_BEGIN
 
 			userWithGreatestWeight = memberList.firstObject;
 		} else {
-			memberList = [channel.memberList sortedArrayUsingComparator:^NSComparisonResult(IRCChannelUser *user1, IRCChannelUser *user2) {
-				if (userWithGreatestWeight == nil) {
-					userWithGreatestWeight = user1;
-				}
+			memberList = [channel.memberList
+				sortedArrayUsingComparator:^NSComparisonResult(IRCChannelUser *user1, IRCChannelUser *user2) {
+					if (userWithGreatestWeight == nil) {
+						userWithGreatestWeight = user1;
+					}
 
-				if (userWithGreatestWeight.totalWeight < user2.totalWeight) {
-					userWithGreatestWeight = user2;
+					if (userWithGreatestWeight.totalWeight < user2.totalWeight) {
+						userWithGreatestWeight = user2;
 
-					noUserHadGreaterWeightThanOriginal = NO;
-				}
+						noUserHadGreaterWeightThanOriginal = NO;
+					}
 
-				return [user1.user.nickname caseInsensitiveCompare:user2.user.nickname];
-			}];
+					return [user1.user.nickname caseInsensitiveCompare:user2.user.nickname];
+				}];
 		}
 
 		/* Add nicknames to list */
 		NSCharacterSet *nonAlphaCharacters = [NSCharacterSet characterSetWithCharactersInString:@"^[]-_`{}\\"];
 
-		void (^addNickname)(NSString *, BOOL) = ^(NSString *nickname, BOOL addTrimmedVariant)
-		{
+		void (^addNickname)(NSString *, BOOL) = ^(NSString *nickname, BOOL addTrimmedVariant) {
 			/* Add unmodified version of nickname */
 			[choicesUppercase addObject:nickname];
 
@@ -333,9 +326,7 @@ NS_ASSUME_NONNULL_BEGIN
 	if (searchPatternIsEmpty) {
 		choicesLowercaseMatched = choicesLowercase;
 		choicesUppercaseMatched = choicesUppercase;
-	}
-	else
-	{
+	} else {
 		choicesUppercaseMatched = [NSMutableArray array];
 		choicesLowercaseMatched = [NSMutableArray array];
 
@@ -388,7 +379,8 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if (self.cachedSearchPatternPrefixCharacter.length > 0) {
-		valueMatchedBySearchPattern = [self.cachedSearchPatternPrefixCharacter stringByAppendingString:valueMatchedBySearchPattern];
+		valueMatchedBySearchPattern =
+			[self.cachedSearchPatternPrefixCharacter stringByAppendingString:valueMatchedBySearchPattern];
 	}
 
 	self.completedValue = valueMatchedBySearchPattern;
@@ -432,8 +424,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	if (self.isCompletingNickname && self.searchPatternIsAtStart)
-	{
+	if (self.isCompletingNickname && self.searchPatternIsAtStart) {
 		NSString *userCompletionSuffix = [TPCPreferences tabCompletionSuffix];
 
 		NSInteger userCompletionSuffixLength = userCompletionSuffix.length;
@@ -459,9 +450,7 @@ NS_ASSUME_NONNULL_BEGIN
 				newCompletionSuffix = userCompletionSuffix;
 			}
 		}
-	}
-	else
-	{
+	} else {
 		if (whitespaceAlreadyInPosition == NO) {
 			newCompletionSuffix = @" ";
 		}
@@ -484,7 +473,7 @@ NS_ASSUME_NONNULL_BEGIN
 	if (self.completedValueCompletionSuffix) {
 		combinedCompletedValue = [self.completedValue stringByAppendingString:self.completedValueCompletionSuffix];
 	} else {
-		combinedCompletedValue =  self.completedValue;
+		combinedCompletedValue = self.completedValue;
 	}
 
 	/* Perform replacement of selection with the new value */
@@ -614,26 +603,19 @@ NS_ASSUME_NONNULL_BEGIN
 		searchPatternFirstCharacter = [self.cachedSearchPattern characterAtIndex:0];
 	}
 
-	if (self.searchPatternIsAtStart && searchPatternFirstCharacter == '\x02f')
-	{
+	if (self.searchPatternIsAtStart && searchPatternFirstCharacter == '\x02f') {
 		self.isCompletingCommand = YES;
 
 		self.cachedSearchPattern = [self.cachedSearchPattern substringFromIndex:1];
 		self.cachedSearchPatternPrefixCharacter = @"\x02f";
-	}
-	else if (searchPatternFirstCharacter == '\x040')
-	{
+	} else if (searchPatternFirstCharacter == '\x040') {
 		self.isCompletingNickname = YES;
 
 		self.cachedSearchPattern = [self.cachedSearchPattern substringFromIndex:1];
 		self.cachedSearchPatternPrefixCharacter = @"\x040";
-	}
-	else if (searchPatternFirstCharacter == '\x023')
-	{
+	} else if (searchPatternFirstCharacter == '\x023') {
 		self.isCompletingChannelName = YES;
-	}
-	else
-	{
+	} else {
 		self.isCompletingNickname = YES;
 	}
 
@@ -676,17 +658,21 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *userCompletionSuffix = [TPCPreferences tabCompletionSuffix];
 
 		if (userCompletionSuffix.length > 0) {
-			NSRange completionSearchRange = NSMakeRange(selectedRange.location,
-														(totalTextLength - selectedRange.location));
+			NSRange completionSearchRange =
+				NSMakeRange(selectedRange.location, (totalTextLength - selectedRange.location));
 
-			NSRange completionRangePosition = [self.currentTextViewStringValue rangeOfString:userCompletionSuffix options:0 range:completionSearchRange];
+			NSRange completionRangePosition = [self.currentTextViewStringValue rangeOfString:userCompletionSuffix
+																					 options:0
+																					   range:completionSearchRange];
 
 			if (NSRangeIsValid(completionRangePosition) && completionRangePosition.length < 30) {
-				NSRange whitespaceSearchRange = NSMakeRange(selectedRange.location,
-															completionRangePosition.location - selectedRange.location);
+				NSRange whitespaceSearchRange =
+					NSMakeRange(selectedRange.location, completionRangePosition.location - selectedRange.location);
 
 				NSRange whitespaceSearchResult =
-				[self.currentTextViewStringValue rangeOfCharacterFromSet:[NSCharacterSet whitespaceCharacterSet] options:0 range:whitespaceSearchRange];
+					[self.currentTextViewStringValue rangeOfCharacterFromSet:[NSCharacterSet whitespaceCharacterSet]
+																	 options:0
+																	   range:whitespaceSearchRange];
 
 				if (whitespaceSearchResult.location == NSNotFound) {
 					completionSuffixRange.length = (NSMaxRange(completionRangePosition) - selectedRangeStartPoint);
@@ -706,10 +692,7 @@ NS_ASSUME_NONNULL_BEGIN
 		for (NSInteger i = selectedRangeStartPoint; i <= maximumCompletionSuffixEndPoint; i++) {
 			UniChar cc = [self.currentTextViewStringValue characterAtIndex:i];
 
-			if ([[NSCharacterSet whitespaceCharacterSet] characterIsMember:cc]
-				|| cc == '\x03a'
-				|| cc == '\x02c')
-			{
+			if ([[NSCharacterSet whitespaceCharacterSet] characterIsMember:cc] || cc == '\x03a' || cc == '\x02c') {
 				completionSuffixRange.length = (i - selectedRangeStartPoint);
 
 				goto complete_operation;

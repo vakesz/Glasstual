@@ -47,25 +47,25 @@ GLASSTUAL_EXTERN NSNotificationName const THOPluginManagerFinishedLoadingPlugins
 - (void)loadPlugins;
 - (void)unloadPlugins;
 
-@property (readonly) BOOL pluginsLoaded;
+@property(readonly) BOOL pluginsLoaded;
 
-@property (readonly, copy, nullable) NSArray<THOPluginItem *> *loadedPlugins; // nil until load completes
+@property(readonly, copy, nullable) NSArray<THOPluginItem *> *loadedPlugins; // nil until load completes
 
-@property (readonly, copy) NSArray<NSString *> *supportedServerInputCommands;
-@property (readonly, copy) NSArray<NSString *> *supportedUserInputCommands;
+@property(readonly, copy) NSArray<NSString *> *supportedServerInputCommands;
+@property(readonly, copy) NSArray<NSString *> *supportedUserInputCommands;
 
-@property (readonly, copy) NSArray<NSString *> *supportedAppleScriptCommands;
-@property (readonly, copy) NSDictionary<NSString *, NSString *> *supportedAppleScriptCommandsAndPaths;
+@property(readonly, copy) NSArray<NSString *> *supportedAppleScriptCommands;
+@property(readonly, copy) NSDictionary<NSString *, NSString *> *supportedAppleScriptCommandsAndPaths;
 
-@property (readonly, copy) NSArray<THOPluginItem *> *pluginsWithPreferencePanes;
+@property(readonly, copy) NSArray<THOPluginItem *> *pluginsWithPreferencePanes;
 
-@property (readonly, copy) NSArray<THOPluginOutputSuppressionRule *> *pluginOutputSuppressionRules;
+@property(readonly, copy) NSArray<THOPluginOutputSuppressionRule *> *pluginOutputSuppressionRules;
 
 /* Returns YES if at least one loaded plugin supports the feature */
 - (BOOL)supportsFeature:(THOPluginItemSupportedFeature)feature;
 
 - (void)findHandlerForOutgoingCommand:(NSString *)command
-								 path:(NSString * _Nullable * _Nullable)path
+								 path:(NSString *_Nullable *_Nullable)path
 						   isReserved:(BOOL *)isReserved
 							 isScript:(BOOL *)isScript
 						  isExtension:(BOOL *)isExtension;

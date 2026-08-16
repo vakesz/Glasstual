@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient, IRCClientConfig, IRCChannel, IRCChannelConfig, IRCTreeItem;
 
-GLASSTUAL_EXTERN NSString * const IRCWorldClientListDefaultsKey;
+GLASSTUAL_EXTERN NSString *const IRCWorldClientListDefaultsKey;
 
 GLASSTUAL_EXTERN NSNotificationName const IRCWorldClientListWasModifiedNotification;
 
@@ -50,12 +50,12 @@ GLASSTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyClientNotification;
 GLASSTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyChannelNotification;
 
 @interface IRCWorld : NSObject
-@property (readonly) NSUInteger messagesSent;
-@property (readonly) NSUInteger messagesReceived;
-@property (readonly) uint64_t bandwidthIn;
-@property (readonly) uint64_t bandwidthOut;
-@property (readonly, copy) NSArray<IRCClient *> *clientList;
-@property (readonly) NSUInteger clientCount;
+@property(readonly) NSUInteger messagesSent;
+@property(readonly) NSUInteger messagesReceived;
+@property(readonly) uint64_t bandwidthIn;
+@property(readonly) uint64_t bandwidthOut;
+@property(readonly, copy) NSArray<IRCClient *> *clientList;
+@property(readonly) NSUInteger clientCount;
 
 - (void)save;
 - (void)savePeriodically;
@@ -76,7 +76,8 @@ GLASSTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyChannelNotification
 - (void)destroyClient:(IRCClient *)client;
 - (void)destroyChannel:(IRCChannel *)channel;
 
-- (void)evaluateFunctionOnAllViews:(NSString *)function arguments:(nullable NSArray *)arguments; // Defaults to onQueue YES
+- (void)evaluateFunctionOnAllViews:(NSString *)function
+						 arguments:(nullable NSArray *)arguments; // Defaults to onQueue YES
 - (void)evaluateFunctionOnAllViews:(NSString *)function arguments:(nullable NSArray *)arguments onQueue:(BOOL)onQueue;
 @end
 

@@ -41,13 +41,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCServer ()
 {
-@protected
+  @protected
 	BOOL _prefersSecuredConnection;
 	NSString *_serverAddress;
 	NSString *_serverPassword;
 	uint16_t _serverPort;
 
-@private
+  @private
 	NSString *_uniqueIdentifier;
 	NSDictionary *_defaults;
 }

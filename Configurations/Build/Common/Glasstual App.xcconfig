@@ -24,6 +24,10 @@ GCC_PREFIX_HEADER = ${PROJECT_DIR}/Classes/Headers/Private/GlasstualPrivate.h
 SWIFT_OBJC_BRIDGING_HEADER = ${PROJECT_DIR}/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
 SWIFT_STRICT_CONCURRENCY = complete
 
+// This Objective-C/Swift app does not declare App Intents. Avoid running the
+// metadata processor and emitting a warning for a framework we do not link.
+EXTRACT_APP_INTENTS_METADATA = NO
+
 ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES
 
 REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES = NO

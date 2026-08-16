@@ -38,10 +38,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface HLSHistoricLogViewContext : NSManagedObjectContext
-@property (nonatomic, copy) NSString *hls_viewId;
-@property (nonatomic, assign) NSUInteger hls_totalLineCount;
-@property (nonatomic, assign) NSUInteger hls_newestIdentifier;
-@property (nonatomic, strong, nullable) dispatch_source_t hls_resizeTimer;
+@property(nonatomic, copy) NSString *hls_viewId;
+@property(nonatomic, assign) NSUInteger hls_totalLineCount;
+@property(nonatomic, assign) NSUInteger hls_newestIdentifier;
+@property(nonatomic, strong, nullable) dispatch_source_t hls_resizeTimer;
 @end
 
 NS_ASSUME_NONNULL_END

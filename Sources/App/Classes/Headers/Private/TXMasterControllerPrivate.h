@@ -40,7 +40,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TXMasterController ()
-@property (nonatomic, assign) NSUInteger terminatingClientCount;
+@property(nonatomic, assign) NSUInteger terminatingClientCount;
 
 - (void)applicationWakeStepOne;
 - (void)applicationWakeStepTwo;

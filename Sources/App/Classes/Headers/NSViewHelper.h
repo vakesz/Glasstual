@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSWindow (TXWindowHelper)
 /* Reset size of window to accommodate -minSize */
-- (void)changeFrameToMin; // display = YES; animate = NO
+- (void)changeFrameToMin;						  // display = YES; animate = NO
 - (void)changeFrameToMinAndDisplay:(BOOL)display; // animate = NO
 - (void)changeFrameToMinAndDisplay:(BOOL)display animate:(BOOL)animate;
 

@@ -41,47 +41,54 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface THOPluginDidPostNewMessageConcreteObject ()
-@property (nonatomic, assign, readwrite) BOOL isProcessedInBulk;
-@property (nonatomic, copy, readwrite) NSString *messageContents;
-@property (nonatomic, copy, readwrite) NSString *lineNumber;
-@property (nonatomic, copy, readwrite, nullable) NSString *senderNickname;
-@property (nonatomic, assign, readwrite) TVCLogLineType lineType;
-@property (nonatomic, assign, readwrite) TVCLogLineMemberType memberType;
-@property (nonatomic, copy, readwrite) NSDate *receivedAt;
-@property (nonatomic, copy, readwrite) NSArray<AHHyperlinkScannerResult *> *listOfHyperlinks;
-@property (nonatomic, copy, readwrite) NSSet<IRCChannelUser *> *listOfUsers;
-@property (nonatomic, assign, readwrite) BOOL keywordMatchFound;
+@property(nonatomic, assign, readwrite) BOOL isProcessedInBulk;
+@property(nonatomic, copy, readwrite) NSString *messageContents;
+@property(nonatomic, copy, readwrite) NSString *lineNumber;
+@property(nonatomic, copy, readwrite, nullable) NSString *senderNickname;
+@property(nonatomic, assign, readwrite) TVCLogLineType lineType;
+@property(nonatomic, assign, readwrite) TVCLogLineMemberType memberType;
+@property(nonatomic, copy, readwrite) NSDate *receivedAt;
+@property(nonatomic, copy, readwrite) NSArray<AHHyperlinkScannerResult *> *listOfHyperlinks;
+@property(nonatomic, copy, readwrite) NSSet<IRCChannelUser *> *listOfUsers;
+@property(nonatomic, assign, readwrite) BOOL keywordMatchFound;
 @end
 
 #pragma mark -
 
 @interface THOPluginDidReceiveServerInputConcreteObject ()
-@property (nonatomic, assign, readwrite) BOOL senderIsServer;
-@property (nonatomic, copy, readwrite) NSString *senderNickname;
-@property (nonatomic, copy, readwrite, nullable) NSString *senderUsername;
-@property (nonatomic, copy, readwrite, nullable) NSString *senderAddress;
-@property (nonatomic, copy, readwrite) NSString *senderHostmask;
-@property (nonatomic, copy, readwrite) NSDate *receivedAt;
-@property (nonatomic, copy, readwrite) NSString *messageSequence;
-@property (nonatomic, copy, readwrite) NSArray<NSString *> *messageParameters;
-@property (nonatomic, copy, readwrite) NSArray<NSString *> *messageParamaters;
-@property (nonatomic, copy, readwrite) NSString *messageCommand;
-@property (nonatomic, assign, readwrite) NSUInteger messageCommandNumeric;
-@property (nonatomic, copy, readwrite, nullable) NSString *networkAddress;
-@property (nonatomic, copy, readwrite, nullable) NSString *networkName;
+@property(nonatomic, assign, readwrite) BOOL senderIsServer;
+@property(nonatomic, copy, readwrite) NSString *senderNickname;
+@property(nonatomic, copy, readwrite, nullable) NSString *senderUsername;
+@property(nonatomic, copy, readwrite, nullable) NSString *senderAddress;
+@property(nonatomic, copy, readwrite) NSString *senderHostmask;
+@property(nonatomic, copy, readwrite) NSDate *receivedAt;
+@property(nonatomic, copy, readwrite) NSString *messageSequence;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *messageParameters;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *messageParamaters;
+@property(nonatomic, copy, readwrite) NSString *messageCommand;
+@property(nonatomic, assign, readwrite) NSUInteger messageCommandNumeric;
+@property(nonatomic, copy, readwrite, nullable) NSString *networkAddress;
+@property(nonatomic, copy, readwrite, nullable) NSString *networkName;
 @end
 
 #pragma mark -
 
 @interface THOPluginWebViewJavaScriptPayloadConcreteObject ()
-@property (nonatomic, copy, readwrite) NSString *payloadLabel;
-@property (nonatomic, copy, readwrite, nullable) id payloadContents;
+@property(nonatomic, copy, readwrite) NSString *payloadLabel;
+@property(nonatomic, copy, readwrite, nullable) id payloadContents;
 @end
 
 #pragma mark -
 
-@interface NSObject (THOPluginProtocolExtension);
-- (BOOL)receivedCommand:(NSString *)command withText:(nullable NSString *)text authoredBy:(IRCPrefix *)textAuthor destinedFor:(nullable IRCChannel *)textDestination onClient:(IRCClient *)client receivedAt:(NSDate *)receivedAt referenceMessage:(nullable IRCMessage *)referenceMessage;
+@interface NSObject (THOPluginProtocolExtension)
+;
+- (BOOL)receivedCommand:(NSString *)command
+			   withText:(nullable NSString *)text
+			 authoredBy:(IRCPrefix *)textAuthor
+			destinedFor:(nullable IRCChannel *)textDestination
+			   onClient:(IRCClient *)client
+			 receivedAt:(NSDate *)receivedAt
+	   referenceMessage:(nullable IRCMessage *)referenceMessage;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -42,11 +42,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define TVCTextViewWithIRCFormatterWidthPadding		1.0
-#define TVCTextViewWithIRCFormatterHeightPadding	2.0
+#define TVCTextViewWithIRCFormatterWidthPadding 1.0
+#define TVCTextViewWithIRCFormatterHeightPadding 2.0
 
 @interface TVCTextViewWithIRCFormatter ()
-@property (nonatomic, strong) TLOKeyEventHandler *keyEventHandler;
+@property(nonatomic, strong) TLOKeyEventHandler *keyEventHandler;
 @end
 
 @implementation TVCTextViewWithIRCFormatter
@@ -73,8 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	self.textContainerInset =
-	 NSMakeSize(TVCTextViewWithIRCFormatterWidthPadding,
-				TVCTextViewWithIRCFormatterHeightPadding);
+		NSMakeSize(TVCTextViewWithIRCFormatterWidthPadding, TVCTextViewWithIRCFormatterHeightPadding);
 
 	self.keyEventHandler = [[TLOKeyEventHandler alloc] initWithTarget:self];
 
@@ -132,12 +131,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray<NSString *> *)readablePasteboardTypes
 {
-	return @[NSPasteboardTypeString, NSPasteboardTypeFileURL];
+	return @[ NSPasteboardTypeString, NSPasteboardTypeFileURL ];
 }
 
 - (NSArray<NSString *> *)acceptableDragTypes
 {
-	return @[NSPasteboardTypeString, NSPasteboardTypeFileURL];
+	return @[ NSPasteboardTypeString, NSPasteboardTypeFileURL ];
 }
 
 - (NSString *)stringValue
@@ -180,9 +179,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(stringValueWithIRCFormatting != nil);
 
 	NSAttributedString *formattedValue =
-	[stringValueWithIRCFormatting attributedStringWithIRCFormatting:self.preferredFont
-												 preferredFontColor:self.preferredFontColor
-										  honorFormattingPreference:NO];
+		[stringValueWithIRCFormatting attributedStringWithIRCFormatting:self.preferredFont
+													 preferredFontColor:self.preferredFontColor
+											  honorFormattingPreference:NO];
 
 	if (formattedValue) {
 		self.attributedStringValue = formattedValue;
@@ -209,20 +208,19 @@ NS_ASSUME_NONNULL_BEGIN
 	[self.textStorage enumerateAttribute:NSFontAttributeName
 								 inRange:self.range
 								 options:0
-							  usingBlock:^(id value, NSRange range, BOOL *stop)
-	{
-		if (fabs([value pointSize]) == fabs(newPointSize)) {
-			return;
-		}
+							  usingBlock:^(id value, NSRange range, BOOL *stop) {
+								  if (fabs([value pointSize]) == fabs(newPointSize)) {
+									  return;
+								  }
 
-		NSFont *font = [RZFontManager() convertFont:value toSize:newPointSize];
+								  NSFont *font = [RZFontManager() convertFont:value toSize:newPointSize];
 
-		if (font) {
-			[self.textStorage removeAttribute:NSFontAttributeName range:range];
+								  if (font) {
+									  [self.textStorage removeAttribute:NSFontAttributeName range:range];
 
-			[self.textStorage addAttribute:NSFontAttributeName value:font range:range];
-		}
-	}];
+									  [self.textStorage addAttribute:NSFontAttributeName value:font range:range];
+								  }
+							  }];
 
 	[self.textStorage endEditing];
 }
@@ -234,9 +232,7 @@ NS_ASSUME_NONNULL_BEGIN
 	if (self->_preferredFont != preferredFont) {
 		self->_preferredFont = [preferredFont copy];
 
-		[self modifyTypingAttributes:@{
-			NSFontAttributeName : self->_preferredFont
-		}];
+		[self modifyTypingAttributes:@{NSFontAttributeName : self->_preferredFont}];
 	}
 }
 
@@ -247,9 +243,7 @@ NS_ASSUME_NONNULL_BEGIN
 	if (self->_preferredFontColor != preferredFontColor) {
 		self->_preferredFontColor = [preferredFontColor copy];
 
-		[self modifyTypingAttributes:@{
-			NSForegroundColorAttributeName : self->_preferredFontColor
-		}];
+		[self modifyTypingAttributes:@{NSForegroundColorAttributeName : self->_preferredFontColor}];
 
 		self.insertionPointColor = self->_preferredFontColor;
 	}
@@ -257,10 +251,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)resetTypeSetterAttributes
 {
-	self.typingAttributes = @{
-		NSFontAttributeName : self.preferredFont,
-		NSForegroundColorAttributeName : self.preferredFontColor
-	};
+	self.typingAttributes =
+		@{NSFontAttributeName : self.preferredFont, NSForegroundColorAttributeName : self.preferredFontColor};
 }
 
 - (void)modifyTypingAttributes:(NSDictionary<NSString *, id> *)typingAttributes
@@ -274,18 +266,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)resetFontInRange:(NSRange)range
 {
-	NSDictionary *newAttributes = @{
-		NSFontAttributeName : self.preferredFont
-	};
+	NSDictionary *newAttributes = @{NSFontAttributeName : self.preferredFont};
 
 	[self.textStorage addAttributes:newAttributes range:range];
 }
 
 - (void)resetFontColorInRange:(NSRange)range
 {
-	NSDictionary *newAttributes = @{
-		NSForegroundColorAttributeName : self.preferredFontColor
-	};
+	NSDictionary *newAttributes = @{NSForegroundColorAttributeName : self.preferredFontColor};
 
 	[self.textStorage addAttributes:newAttributes range:range];
 }
@@ -366,8 +354,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 		NSRect rect = [layoutManager lineFragmentRectForGlyphAtIndex:i effectiveRange:&lineRange];
 
-		if ((totalLineHeight +  rect.size.height) <= maximumHeight) {
-			totalLineHeight  += rect.size.height;
+		if ((totalLineHeight + rect.size.height) <= maximumHeight) {
+			totalLineHeight += rect.size.height;
 		} else {
 			skipLastFragmentCheck = YES;
 
@@ -383,8 +371,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSRect lastFragmentRect = layoutManager.extraLineFragmentRect;
 
-	if ((totalLineHeight +  lastFragmentRect.size.height) <= maximumHeight) {
-		totalLineHeight  += lastFragmentRect.size.height;
+	if ((totalLineHeight + lastFragmentRect.size.height) <= maximumHeight) {
+		totalLineHeight += lastFragmentRect.size.height;
 	}
 
 	return totalLineHeight;

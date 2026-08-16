@@ -48,13 +48,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCChannelModifyTopicSheet ()
-@property (nonatomic, strong, readwrite) IRCClient *client;
-@property (nonatomic, strong, readwrite) IRCChannel *channel;
-@property (nonatomic, copy, readwrite) NSString *clientId;
-@property (nonatomic, copy, readwrite) NSString *channelId;
-@property (nonatomic, weak) IBOutlet NSTextField *headerTitleTextField;
-@property (nonatomic, strong) IBOutlet TVCTextViewWithIRCFormatter *topicValueTextField;
-@property (nonatomic, assign) BOOL topicLengthAlertDisplayed;
+@property(nonatomic, strong, readwrite) IRCClient *client;
+@property(nonatomic, strong, readwrite) IRCChannel *channel;
+@property(nonatomic, copy, readwrite) NSString *clientId;
+@property(nonatomic, copy, readwrite) NSString *channelId;
+@property(nonatomic, weak) IBOutlet NSTextField *headerTitleTextField;
+@property(nonatomic, strong) IBOutlet TVCTextViewWithIRCFormatter *topicValueTextField;
+@property(nonatomic, assign) BOOL topicLengthAlertDisplayed;
 @end
 
 @implementation TDCChannelModifyTopicSheet
@@ -128,15 +128,17 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[TDCAlert alertSheetWithWindow:self.sheet
-							  body:TXTLS(@"TDCChannelModifyTopicSheet[zm4-cr]")
-							 title:TXTLS(@"TDCChannelModifyTopicSheet[27l-qx]", self.client.networkNameAlt, maximumTopicLength)
-					 defaultButton:TXTLS(@"Prompts[c7s-dq]")
-				   alternateButton:nil
-					   otherButton:nil
-					suppressionKey:@"maximum_topic_length"
-				   suppressionText:nil
-				   completionBlock:nil];
+	[TDCAlert
+		alertSheetWithWindow:self.sheet
+						body:TXTLS(@"TDCChannelModifyTopicSheet[zm4-cr]")
+					   title:TXTLS(
+								 @"TDCChannelModifyTopicSheet[27l-qx]", self.client.networkNameAlt, maximumTopicLength)
+			   defaultButton:TXTLS(@"Prompts[c7s-dq]")
+			 alternateButton:nil
+				 otherButton:nil
+			  suppressionKey:@"maximum_topic_length"
+			 suppressionText:nil
+			 completionBlock:nil];
 }
 
 - (BOOL)textView:(NSTextView *)aTextView doCommandBySelector:(SEL)aSelector
@@ -145,7 +147,7 @@ NS_ASSUME_NONNULL_BEGIN
 		[self ok:nil];
 
 		return YES;
-	} else if (aSelector == @selector(insertNewlineIgnoringFieldEditor:) ) {
+	} else if (aSelector == @selector(insertNewlineIgnoringFieldEditor:)) {
 		/* Do not allow a new line to be inserted using Option + Enter */
 
 		return YES;
@@ -159,8 +161,7 @@ NS_ASSUME_NONNULL_BEGIN
 	if ([self.delegate respondsToSelector:@selector(channelModifyTopicSheet:onOk:)]) {
 		NSString *formattedTopic = self.topicValueTextField.stringValueWithIRCFormatting;
 
-		NSString *topicWithoutNewlines = [formattedTopic stringByReplacingOccurrencesOfString:@"\n"
-																				   withString:@" "];
+		NSString *topicWithoutNewlines = [formattedTopic stringByReplacingOccurrencesOfString:@"\n" withString:@" "];
 
 		[self.delegate channelModifyTopicSheet:self onOk:topicWithoutNewlines];
 	}

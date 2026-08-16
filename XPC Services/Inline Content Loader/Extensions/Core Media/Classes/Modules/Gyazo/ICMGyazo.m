@@ -41,7 +41,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ICMGyazo ()
-@property (nonatomic, copy) NSString *contentIdentifier;
+@property(nonatomic, copy) NSString *contentIdentifier;
 @end
 
 @implementation ICMGyazo
@@ -52,10 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSURLComponents *requestComponents = [NSURLComponents componentsWithString:@"https://api.gyazo.com/api/oembed"];
 
-	requestComponents.queryItems =
-	@[
-	  [NSURLQueryItem queryItemWithName:@"url" value:contentAddress]
-	];
+	requestComponents.queryItems = @[ [NSURLQueryItem queryItemWithName:@"url" value:contentAddress] ];
 
 	NSURL *requestURL = requestComponents.URL;
 
@@ -198,11 +195,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"gyazo.com",
-		  @"www.gyazo.com"
-		];
+		domains = @[ @"gyazo.com", @"www.gyazo.com" ];
 	});
 
 	return domains;

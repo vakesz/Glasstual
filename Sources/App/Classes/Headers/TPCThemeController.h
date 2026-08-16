@@ -40,11 +40,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString * const TPCThemeControllerCustomThemeNameBasicPrefix;
-GLASSTUAL_EXTERN NSString * const TPCThemeControllerCustomThemeNameCompletePrefix;
+GLASSTUAL_EXTERN NSString *const TPCThemeControllerCustomThemeNameBasicPrefix;
+GLASSTUAL_EXTERN NSString *const TPCThemeControllerCustomThemeNameCompletePrefix;
 
-GLASSTUAL_EXTERN NSString * const TPCThemeControllerBundledThemeNameBasicPrefix;
-GLASSTUAL_EXTERN NSString * const TPCThemeControllerBundledThemeNameCompletePrefix;
+GLASSTUAL_EXTERN NSString *const TPCThemeControllerBundledThemeNameBasicPrefix;
+GLASSTUAL_EXTERN NSString *const TPCThemeControllerBundledThemeNameCompletePrefix;
 
 GLASSTUAL_EXTERN NSNotificationName const TPCThemeControllerThemeListDidChangeNotification;
 
@@ -52,31 +52,35 @@ GLASSTUAL_EXTERN NSNotificationName const TPCThemeControllerThemeListDidChangeNo
  while you could in theory access this object before then,
  objects below that are marked non-nil will actually be nil. */
 @interface TPCThemeController : NSObject
-@property (readonly, strong) TPCTheme *theme;
+@property(readonly, strong) TPCTheme *theme;
 
-@property (readonly, strong) TPCThemeSettings *settings;
+@property(readonly, strong) TPCThemeSettings *settings;
 
-@property (readonly) TPCThemeStorageLocation storageLocation;
+@property(readonly) TPCThemeStorageLocation storageLocation;
 
-@property (readonly, copy) NSString *name;
+@property(readonly, copy) NSString *name;
 
-@property (readonly, copy) NSURL *originalURL; // Where original copy of theme is.
-@property (readonly, copy) NSURL *temporaryURL; // Where cached copy of theme is.
+@property(readonly, copy) NSURL *originalURL;  // Where original copy of theme is.
+@property(readonly, copy) NSURL *temporaryURL; // Where cached copy of theme is.
 
-@property (readonly, copy) NSString *originalPath;
-@property (readonly, copy) NSString *temporaryPath;
+@property(readonly, copy) NSString *originalPath;
+@property(readonly, copy) NSString *temporaryPath;
 
-@property (readonly, copy) NSString *cacheToken;
+@property(readonly, copy) NSString *cacheToken;
 
-@property (getter=isBundledTheme, readonly) BOOL bundledTheme;
+@property(getter=isBundledTheme, readonly) BOOL bundledTheme;
 
 /* Calls for all themes */
-- (void)enumerateAvailableThemesWithBlock:(void(NS_NOESCAPE ^)(NSString *fileName, TPCThemeStorageLocation storageLocation, BOOL multipleVariants, BOOL *stop))enumerationBlock;
+- (void)enumerateAvailableThemesWithBlock:(void(NS_NOESCAPE ^)(NSString *fileName,
+															   TPCThemeStorageLocation storageLocation,
+															   BOOL multipleVariants,
+															   BOOL *stop))enumerationBlock;
 
 - (BOOL)themeExists:(NSString *)themeName;
 
 + (nullable NSString *)pathOfThemeWithName:(NSString *)themeName;
-+ (nullable NSString *)pathOfThemeWithName:(NSString *)themeName storageLocation:(nullable TPCThemeStorageLocation *)storageLocation;
++ (nullable NSString *)pathOfThemeWithName:(NSString *)themeName
+						   storageLocation:(nullable TPCThemeStorageLocation *)storageLocation;
 
 + (nullable NSString *)buildFilename:(NSString *)name forStorageLocation:(TPCThemeStorageLocation)storageLocation;
 

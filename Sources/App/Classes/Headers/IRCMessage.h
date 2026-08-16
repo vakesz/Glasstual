@@ -44,32 +44,35 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Immutable Object
 
 @interface IRCMessage : XRPortablePropertyObject
-@property (readonly, copy) IRCPrefix *sender;
-@property (readonly, copy) NSString *command;
-@property (readonly) NSUInteger commandNumeric;
-@property (readonly, copy) NSArray<NSString *> *params;
-@property (readonly, copy) NSDate *receivedAt;
-@property (readonly) BOOL isHistoric; // Whether a custom @time= was supplied during parsing.
-@property (readonly) BOOL isEventOnlyMessage; /* The message should be parsed and special actions performed such as adding/removing user but the result is never passed to print: */
-@property (readonly) BOOL isPrintOnlyMessage; /* The message should be parsed and passed to print: but special actions such as adding/removing user from member list should be ignored. (currently unused) */
-@property (readonly, copy, nullable) NSString *batchToken;
-@property (readonly, copy, nullable) NSDictionary<NSString *, NSString *> *messageTags; /* IRCv3 message tags. See ircv3.net for more information regarding extensions in the IRC protocol. */
+@property(readonly, copy) IRCPrefix *sender;
+@property(readonly, copy) NSString *command;
+@property(readonly) NSUInteger commandNumeric;
+@property(readonly, copy) NSArray<NSString *> *params;
+@property(readonly, copy) NSDate *receivedAt;
+@property(readonly) BOOL isHistoric; // Whether a custom @time= was supplied during parsing.
+@property(readonly) BOOL
+	isEventOnlyMessage; /* The message should be parsed and special actions performed such as adding/removing user but the result is never passed to print: */
+@property(readonly) BOOL
+	isPrintOnlyMessage; /* The message should be parsed and passed to print: but special actions such as adding/removing user from member list should be ignored. (currently unused) */
+@property(readonly, copy, nullable) NSString *batchToken;
+@property(readonly, copy, nullable) NSDictionary<NSString *, NSString *>
+	*messageTags; /* IRCv3 message tags. See ircv3.net for more information regarding extensions in the IRC protocol. */
 
 - (nullable instancetype)initWithLine:(NSString *)line;
 - (nullable instancetype)initWithLine:(NSString *)line onClient:(nullable IRCClient *)client NS_DESIGNATED_INITIALIZER;
 
-@property (readonly, copy, nullable) NSString *senderNickname;
-@property (readonly, copy, nullable) NSString *senderUsername;
-@property (readonly, copy, nullable) NSString *senderAddress;
-@property (readonly, copy, nullable) NSString *senderHostmask;
+@property(readonly, copy, nullable) NSString *senderNickname;
+@property(readonly, copy, nullable) NSString *senderUsername;
+@property(readonly, copy, nullable) NSString *senderAddress;
+@property(readonly, copy, nullable) NSString *senderHostmask;
 
-@property (readonly) BOOL senderIsServer;
+@property(readonly) BOOL senderIsServer;
 
-@property (readonly) NSUInteger paramsCount;
+@property(readonly) NSUInteger paramsCount;
 
 - (NSString *)paramAt:(NSUInteger)index;
 
-@property (readonly, copy) NSString *sequence;
+@property(readonly, copy) NSString *sequence;
 - (NSString *)sequence:(NSUInteger)index;
 @end
 
@@ -77,16 +80,16 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Mutable Object
 
 @interface IRCMessageMutable : IRCMessage
-@property (nonatomic, copy, readwrite) IRCPrefix *sender;
-@property (nonatomic, copy, readwrite) NSString *command;
-@property (nonatomic, assign, readwrite) NSUInteger commandNumeric;
-@property (nonatomic, copy, readwrite) NSArray<NSString *> *params;
-@property (nonatomic, copy, readwrite) NSDate *receivedAt;
-@property (nonatomic, assign, readwrite) BOOL isHistoric;
-@property (nonatomic, assign, readwrite) BOOL isEventOnlyMessage;
-@property (nonatomic, assign, readwrite) BOOL isPrintOnlyMessage;
-@property (nonatomic, copy, readwrite, nullable) NSString *batchToken;
-@property (nonatomic, copy, readwrite, nullable) NSDictionary<NSString *, NSString *> *messageTags;
+@property(nonatomic, copy, readwrite) IRCPrefix *sender;
+@property(nonatomic, copy, readwrite) NSString *command;
+@property(nonatomic, assign, readwrite) NSUInteger commandNumeric;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *params;
+@property(nonatomic, copy, readwrite) NSDate *receivedAt;
+@property(nonatomic, assign, readwrite) BOOL isHistoric;
+@property(nonatomic, assign, readwrite) BOOL isEventOnlyMessage;
+@property(nonatomic, assign, readwrite) BOOL isPrintOnlyMessage;
+@property(nonatomic, copy, readwrite, nullable) NSString *batchToken;
+@property(nonatomic, copy, readwrite, nullable) NSDictionary<NSString *, NSString *> *messageTags;
 @end
 
 NS_ASSUME_NONNULL_END

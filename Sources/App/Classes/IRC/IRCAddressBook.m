@@ -51,8 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
 	self->_defaults = @{
 		@"entryType" : @(IRCAddressBookEntryTypeIgnore),
 		@"ignoreClientToClientProtocol" : @(NO),
-		@"ignoreFileTransferRequests"	: @(NO),
-		@"ignoreGeneralEventMessages"	: @(NO),
+		@"ignoreFileTransferRequests" : @(NO),
+		@"ignoreGeneralEventMessages" : @(NO),
 		@"ignoreInlineMedia" : @(NO),
 		@"ignoreNoticeMessages" : @(NO),
 		@"ignorePrivateMessageHighlights" : @(NO),
@@ -69,10 +69,9 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	SetVariableIfNil(self->_hostmask, @"")
-	SetVariableIfNil(self->_hostmaskRegularExpression, @"")
+	SetVariableIfNil(self->_hostmask, @"") SetVariableIfNil(self->_hostmaskRegularExpression, @"")
 
-	SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
+		SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
 }
 
 - (void)initializedClassHealthCheck
@@ -116,10 +115,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)newUserTrackingEntry
 {
-	NSDictionary *dic = @{
-		@"entryType" : @(IRCAddressBookEntryTypeUserTracking),
-		@"trackUserActivity" : @(YES)
-	};
+	NSDictionary *dic = @{@"entryType" : @(IRCAddressBookEntryTypeUserTracking), @"trackUserActivity" : @(YES)};
 
 	IRCAddressBookEntry *object = [[self alloc] initWithDictionary:dic];
 
@@ -138,9 +134,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	IRCAddressBookEntryType entryType = self->_entryType;
 
-	if (entryType == IRCAddressBookEntryTypeIgnore ||
-		entryType == IRCAddressBookEntryTypeMixed)
-	{
+	if (entryType == IRCAddressBookEntryTypeIgnore || entryType == IRCAddressBookEntryTypeMixed) {
 		/* Load the newest set of keys */
 		[dic assignBoolTo:&self->_ignoreClientToClientProtocol forKey:@"ignoreClientToClientProtocol"];
 		[dic assignBoolTo:&self->_ignoreFileTransferRequests forKey:@"ignoreFileTransferRequests"];
@@ -162,9 +156,7 @@ NS_ASSUME_NONNULL_BEGIN
 		[dic assignBoolTo:&self->_ignorePublicMessages forKey:@"ignorePublicMsg"];
 	}
 
-	if (entryType == IRCAddressBookEntryTypeUserTracking ||
-		entryType == IRCAddressBookEntryTypeMixed)
-	{
+	if (entryType == IRCAddressBookEntryTypeUserTracking || entryType == IRCAddressBookEntryTypeMixed) {
 		/* Load the newest set of keys */
 		[dic assignBoolTo:&self->_trackUserActivity forKey:@"trackUserActivity"];
 
@@ -187,8 +179,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSString *hostmask = self.hostmask;
 
-	if (self.entryType == IRCAddressBookEntryTypeIgnore)
-	{
+	if (self.entryType == IRCAddressBookEntryTypeIgnore) {
 		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
 		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"{" withString:@"\\{"];
 		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"}" withString:@"\\}"];
@@ -200,13 +191,9 @@ NS_ASSUME_NONNULL_BEGIN
 		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"|" withString:@"\\|"];
 		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"~" withString:@"\\~"];
 		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"*" withString:@"(.*?)"];
-	}
-	else if (self.entryType == IRCAddressBookEntryTypeUserTracking)
-	{
+	} else if (self.entryType == IRCAddressBookEntryTypeUserTracking) {
 		hostmask = [NSString stringWithFormat:@"^%@!(.*?)@(.*?)$", hostmask];
-	}
-	else
-	{
+	} else {
 		return;
 	}
 
@@ -242,9 +229,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	IRCAddressBookEntryType entryType = self.entryType;
 
-	if (entryType == IRCAddressBookEntryTypeIgnore ||
-		entryType == IRCAddressBookEntryTypeMixed)
-	{
+	if (entryType == IRCAddressBookEntryTypeIgnore || entryType == IRCAddressBookEntryTypeMixed) {
 		[dic setBool:self.ignoreClientToClientProtocol forKey:@"ignoreClientToClientProtocol"];
 		[dic setBool:self.ignoreFileTransferRequests forKey:@"ignoreFileTransferRequests"];
 		[dic setBool:self.ignoreGeneralEventMessages forKey:@"ignoreGeneralEventMessages"];
@@ -256,17 +241,13 @@ NS_ASSUME_NONNULL_BEGIN
 		[dic setBool:self.ignorePublicMessages forKey:@"ignorePublicMessages"];
 	}
 
-	if (entryType == IRCAddressBookEntryTypeUserTracking ||
-		entryType == IRCAddressBookEntryTypeMixed)
-	{
+	if (entryType == IRCAddressBookEntryTypeUserTracking || entryType == IRCAddressBookEntryTypeMixed) {
 		[dic setBool:self.trackUserActivity forKey:@"trackUserActivity"];
 	}
 
 	[dic setUnsignedInteger:entryType forKey:@"entryType"];
 
-	if (target == XRPortablePropertyDictTargetCopy ||
-		target == XRPortablePropertyDictTargetMutableCopy)
-	{
+	if (target == XRPortablePropertyDictTargetCopy || target == XRPortablePropertyDictTargetMutableCopy) {
 		return [dic copy];
 	}
 

@@ -35,10 +35,8 @@
 *
 *********************************************************************** */
 
-final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol, GCDAsyncSocketDelegate
-{
-	fileprivate enum Tag : Int
-	{
+final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol, GCDAsyncSocketDelegate {
+	fileprivate enum Tag: Int {
 		case none = 0
 
 		case socksProxyOpen = 10100
@@ -47,13 +45,13 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		case socksProxyAuthenticateUser = 10500
 	}
 
-	fileprivate enum Timeout : Double
-	{
+	fileprivate enum Timeout: Double {
 		case normal = 30.0
 		case none = -1.0
 	}
 
-	fileprivate let httpHeaderResponseStatusRegularExpression = "^HTTP\\/([1-2]{1})(\\.([0-2]{1}))?\\s([0-9]{3,4})\\s(.*)$"
+	fileprivate let httpHeaderResponseStatusRegularExpression =
+		"^HTTP\\/([1-2]{1})(\\.([0-2]{1}))?\\s([0-9]{3,4})\\s(.*)$"
 
 	fileprivate var socketDelegateQueue: DispatchQueue?
 	fileprivate var socketReadWriteQueue: DispatchQueue?
@@ -61,19 +59,17 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 	fileprivate var connection: GCDAsyncSocket?
 
-	fileprivate let readDelimiter = Data([0x0a]) // \n
+	fileprivate let readDelimiter = Data([0x0a])  // \n
 
 	// MARK: - Grand Central Dispatch
 
-	fileprivate func destroyDispatchQueues()
-	{
+	fileprivate func destroyDispatchQueues() {
 		socketDelegateQueue = nil
 
 		socketReadWriteQueue = nil
 	}
 
-	fileprivate func createDispatchQueues()
-	{
+	fileprivate func createDispatchQueues() {
 		let socketDelegateQueueName = "Glasstual.ConnectionSocket.socketDelegateQueue.\(uniqueIdentifier)"
 
 		socketDelegateQueue = DispatchQueue(label: socketDelegateQueueName)
@@ -85,37 +81,37 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 	// MARK: - Open/Close Socket
 
-	func open()
-	{
-		if (disconnected == false || disconnecting) {
+	func open() {
+		if disconnected == false || disconnecting {
 			return
 		}
 
 		createDispatchQueues()
 
-		let connection = GCDAsyncSocket(delegate: self,
-										delegateQueue: socketDelegateQueue,
-										socketQueue: socketReadWriteQueue)
+		let connection = GCDAsyncSocket(
+			delegate: self,
+			delegateQueue: socketDelegateQueue,
+			socketQueue: socketReadWriteQueue)
 
 		connection.useStrictTimers = true
 
 		switch config.addressType {
-			case .v4:
-				connection.isIPv6Enabled = false
-			case .v6:
-				connection.isIPv4Enabled = false
-			default:
-				connection.isIPv4PreferredOverIPv6 = false
+		case .v4:
+			connection.isIPv6Enabled = false
+		case .v6:
+			connection.isIPv4Enabled = false
+		default:
+			connection.isIPv4PreferredOverIPv6 = false
 		}
 
 		self.connection = connection
 
-		if (proxyConfigured) {
+		if proxyConfigured {
 			/* populateSystemSocksProxy() does not assign an error for non-fatal
 			 failures which means this value should be treated as optional. */
 			var proxyPopulateError: String?
 
-			if (populateSystemSocksProxy(failureReason: &proxyPopulateError) == false) {
+			if populateSystemSocksProxy(failureReason: &proxyPopulateError) == false {
 				if let error = proxyPopulateError {
 					Logging.defaultSubsystem?.error("\(error, privacy: .public)")
 				}
@@ -139,8 +135,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		connect(to: serverAddress, on: serverPort)
 	}
 
-	fileprivate func connect(to host: String, on port: UInt16)
-	{
+	fileprivate func connect(to host: String, on port: UInt16) {
 		connecting = true
 
 		do {
@@ -152,9 +147,8 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		}
 	}
 
-	func close()
-	{
-		if (disconnected || disconnecting) {
+	func close() {
+		if disconnected || disconnecting {
 			return
 		}
 
@@ -163,8 +157,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		connection?.disconnect()
 	}
 
-	override func resetState()
-	{
+	override func resetState() {
 		super.resetState()
 
 		connection = nil
@@ -174,14 +167,13 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 	// MARK: - Socket Read & Write
 
-	func write(_ data: Data)
-	{
-		if (connected == false || disconnecting) {
+	func write(_ data: Data) {
+		if connected == false || disconnecting {
 			return
 		}
 
 		/* We only allow one write a time */
-		if (sending) {
+		if sending {
 			return
 		}
 
@@ -192,21 +184,20 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		connection?.write(data, withTimeout: Timeout.none.rawValue, tag: Tag.none.rawValue)
 	}
 
-	func read()
-	{
-		if (connected == false || disconnecting) {
+	func read() {
+		if connected == false || disconnecting {
 			return
 		}
 
-		connection?.readData(to: readDelimiter,
-							 withTimeout: Timeout.none.rawValue,
-							 maxLength: UInt(maximumDataLength),
-							 tag: Tag.none.rawValue)
+		connection?.readData(
+			to: readDelimiter,
+			withTimeout: Timeout.none.rawValue,
+			maxLength: UInt(maximumDataLength),
+			tag: Tag.none.rawValue)
 	}
 
-	func readIn(_ data: Data)
-	{
-		if (disconnected || disconnecting) {
+	func readIn(_ data: Data) {
+		if disconnected || disconnecting {
 			return
 		}
 
@@ -221,37 +212,37 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 	// MARK: - Properties
 
-	final var connectedHost: String?
-	{
-		if (proxyInUse) {
+	final var connectedHost: String? {
+		if proxyInUse {
 			return nil
 		}
 
 		return connection?.connectedHost
 	}
 
-	fileprivate func beginTLSNegotiation()
-	{
-		if (config.connectionPrefersSecuredConnection == false) {
+	fileprivate func beginTLSNegotiation() {
+		if config.connectionPrefersSecuredConnection == false {
 			return
 		}
 
 		/* This makes me cry */
-		var settings:[String : NSObject] = [
-			GCDAsyncSocketManuallyEvaluateTrust : NSNumber(value: true),
-			GCDAsyncSocketSSLProtocolVersionMin : NSNumber(value: RCMSecureTransport.minimumDeprecatedProtocol.rawValue),
-			kCFStreamSSLIsServer as String : NSNumber(value: false),
-			kCFStreamSSLPeerName as String : config.serverAddress as NSString
+		var settings: [String: NSObject] = [
+			GCDAsyncSocketManuallyEvaluateTrust: NSNumber(value: true),
+			GCDAsyncSocketSSLProtocolVersionMin: NSNumber(value: RCMSecureTransport.minimumDeprecatedProtocol.rawValue),
+			kCFStreamSSLIsServer as String: NSNumber(value: false),
+			kCFStreamSSLPeerName as String: config.serverAddress as NSString,
 		]
 
-		if (config.cipherSuites != .none) {
+		if config.cipherSuites != .none {
 			settings[GCDAsyncSocketSSLCipherSuites] =
-				RCMSecureTransport.cipherSuites(in: config.cipherSuites, includeDeprecated:
-													(config.connectionPrefersModernCiphersOnly == false)) as NSArray
+				RCMSecureTransport.cipherSuites(
+					in: config.cipherSuites, includeDeprecated: (config.connectionPrefersModernCiphersOnly == false))
+				as NSArray
 		}
 
 		if let certificate = clientSideCertificate {
-			settings[kCFStreamSSLCertificates as String] = NSArray(objects: certificate.identity, certificate.certificate)
+			settings[kCFStreamSSLCertificates as String] = NSArray(
+				objects: certificate.identity, certificate.certificate)
 
 			connectedWithClientSideCertificate = true
 		}
@@ -259,8 +250,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		connection?.startTLS(settings)
 	}
 
-	fileprivate func onConnect()
-	{
+	fileprivate func onConnect() {
 		beginTLSNegotiation()
 
 		connecting = false
@@ -271,8 +261,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		delegate?.connection(self, didConnectTo: connectedHost)
 	}
 
-	fileprivate func onSecured()
-	{
+	fileprivate func onSecured() {
 		secured = true
 
 		let protocolType = tlsNegotiatedProtocol ?? tls_protocol_version_unknown
@@ -282,8 +271,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		delegate?.connection(self, securedWith: protocolType, cipherSuite: cipherSuite)
 	}
 
-	fileprivate func onDisconnect(with error: Error?)
-	{
+	fileprivate func onDisconnect(with error: Error?) {
 		defer {
 			resetState()
 		}
@@ -295,12 +283,12 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		} else if let err = error {
 			if let tlsError = ConnectionError(tlsError: err) {
 				errorPayload = tlsError
-			} else if (err.code != errSSLClosedGraceful) {
+			} else if err.code != errSSLClosedGraceful {
 				errorPayload = ConnectionError(socketError: err)
 			}
 		}
 
-		if (errorPayload == nil) {
+		if errorPayload == nil {
 			delegate?.connectionDisconnected(self)
 		} else {
 			delegate?.connection(self, disconnectedWith: errorPayload!)
@@ -309,16 +297,14 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 	// MARK: - GCDAsyncSocketDelegate
 
-	final func socket(_ sock: GCDAsyncSocket, didReceive trust: SecTrust, completionHandler: @escaping (Bool) -> Void)
-	{
+	final func socket(_ sock: GCDAsyncSocket, didReceive trust: SecTrust, completionHandler: @escaping (Bool) -> Void) {
 		tlsVerify(trust) { (underlyingResponse) in
 			completionHandler(underlyingResponse)
 		}
 	}
 
-	final func socket(_ sock: GCDAsyncSocket, didConnectToHost host: String, port: UInt16)
-	{
-		if (proxyInUse) {
+	final func socket(_ sock: GCDAsyncSocket, didConnectToHost host: String, port: UInt16) {
+		if proxyInUse {
 			do {
 				try openProxy()
 			} catch let error as ConnectionError {
@@ -333,25 +319,22 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		onConnect()
 	}
 
-	final func socketDidCloseReadStream(_ sock: GCDAsyncSocket)
-	{
+	final func socketDidCloseReadStream(_ sock: GCDAsyncSocket) {
 		EOFReceived = true
 
 		delegate?.connectionClosedReadStream(self)
 	}
 
-	final func socketDidDisconnect(_ sock: GCDAsyncSocket, withError err: Error?)
-	{
+	final func socketDidDisconnect(_ sock: GCDAsyncSocket, withError err: Error?) {
 		onDisconnect(with: err)
 	}
 
-	final func socket(_ sock: GCDAsyncSocket, didRead data: Data, withTag tag: Int)
-	{
-		if (proxyInUse) {
+	final func socket(_ sock: GCDAsyncSocket, didRead data: Data, withTag tag: Int) {
+		if proxyInUse {
 			do {
 				/* proxyRead() returns true if it swallows the data such as
 				 when it is talking directly to the proxy during negotiations. */
-				if (try proxyRead(data, with: Tag(rawValue: tag) ?? .none)) {
+				if try proxyRead(data, with: Tag(rawValue: tag) ?? .none) {
 					return
 				}
 			} catch let error as ConnectionError {
@@ -368,81 +351,65 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		read()
 	}
 
-	final func socket(_ sock: GCDAsyncSocket, didWriteDataWithTag tag: Int)
-	{
+	final func socket(_ sock: GCDAsyncSocket, didWriteDataWithTag tag: Int) {
 		sending = false
 
 		delegate?.connectionDidSend(self)
 	}
 
-	final func socketDidSecure(_ sock: GCDAsyncSocket)
-	{
+	final func socketDidSecure(_ sock: GCDAsyncSocket) {
 		onSecured()
 	}
 
 	// MARK: - Security
 
-	var tlsNegotiatedProtocol: tls_protocol_version_t?
-	{
+	var tlsNegotiatedProtocol: tls_protocol_version_t? {
 		return connection?.tlsNegotiatedProtocol
 	}
 
-	var tlsNegotiatedCipherSuite: tls_ciphersuite_t?
-	{
+	var tlsNegotiatedCipherSuite: tls_ciphersuite_t? {
 		return connection?.tlsNegotiatedCipherSuite
 	}
 
-	var tlsCertificateChainData: [Data]?
-	{
+	var tlsCertificateChainData: [Data]? {
 		return connection?.tlsCertificateChainData
 	}
 
-	var tlsPolicyName: String?
-	{
+	var tlsPolicyName: String? {
 		return connection?.tlsPolicyName
 	}
 
 	// MARK: - SOCKS Proxy Support
 
-	fileprivate var proxyConfigured: Bool
-	{
+	fileprivate var proxyConfigured: Bool {
 		let proxyType = config.proxyType
 
-		return (proxyType == .automatic		||
-				proxyType == .socks4		||
-				proxyType == .socks5		||
-				proxyType == .tor			||
-				proxyType == .HTTP)
+		return
+			(proxyType == .automatic || proxyType == .socks4 || proxyType == .socks5 || proxyType == .tor
+			|| proxyType == .HTTP)
 	}
 
-	fileprivate var proxyInUse: Bool
-	{
+	fileprivate var proxyInUse: Bool {
 		let proxyType = config.proxyType
 
-		return (proxyType == .socks4		||
-				proxyType == .socks5		||
-				proxyType == .HTTP)
+		return (proxyType == .socks4 || proxyType == .socks5 || proxyType == .HTTP)
 	}
 
-	fileprivate var proxyCanAuthenticate: Bool
-	{
-		return (config.proxyUsername?.isEmpty == false &&
-				config.proxyPassword?.isEmpty == false)
+	fileprivate var proxyCanAuthenticate: Bool {
+		return (config.proxyUsername?.isEmpty == false && config.proxyPassword?.isEmpty == false)
 	}
 
-	fileprivate func populateSystemSocksProxy(failureReason: inout String?) -> Bool
-	{
+	fileprivate func populateSystemSocksProxy(failureReason: inout String?) -> Bool {
 		let proxyType = config.proxyType
 
-		if (proxyType == .automatic)
-		{
+		if proxyType == .automatic {
 			/* Being unable to read proxy values is considered non-fatal
 			 error which why an failure reason is never assigned. */
-			guard let proxySettings = SCDynamicStoreCopyProxies(nil) as? [String : AnyObject] else {
+			guard let proxySettings = SCDynamicStoreCopyProxies(nil) as? [String: AnyObject] else {
 				return false
 			}
 
-			if (proxySettings.bool(for: "SOCKSEnable") == false) {
+			if proxySettings.bool(for: "SOCKSEnable") == false {
 				return false
 			}
 
@@ -450,13 +417,13 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 				return false
 			}
 
-			if (proxyHost.isEmpty) {
+			if proxyHost.isEmpty {
 				return false
 			}
 
 			let proxyPort = proxySettings.integer(for: "SOCKSPort")
 
-			if (proxyPort.isValidInternetPort == false) {
+			if proxyPort.isValidInternetPort == false {
 				return false
 			}
 
@@ -465,20 +432,21 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 			let proxyUsername = proxySettings.string(for: "SOCKSUser")
 
 			if proxyUsername?.isEmpty == false {
-				let queryParameters:[CFString : CFTypeRef] = [
-					kSecClass : kSecClassInternetPassword,
-					kSecAttrServer : proxyHost as CFString,
-					kSecAttrProtocol : kSecAttrProtocolSOCKS,
-					kSecReturnData : kCFBooleanTrue,
-					kSecMatchLimit : kSecMatchLimitOne
+				let queryParameters: [CFString: CFTypeRef] = [
+					kSecClass: kSecClassInternetPassword,
+					kSecAttrServer: proxyHost as CFString,
+					kSecAttrProtocol: kSecAttrProtocolSOCKS,
+					kSecReturnData: kCFBooleanTrue,
+					kSecMatchLimit: kSecMatchLimitOne,
 				]
 
 				var queryResultRef: CFTypeRef?
 
 				let queryStatus = SecItemCopyMatching(queryParameters as CFDictionary, &queryResultRef)
 
-				if (queryStatus != noErr) {
-					failureReason = "SOCKS Error: Glasstual encountered a problem trying to retrieve the SOCKS proxy password from System Settings"
+				if queryStatus != noErr {
+					failureReason =
+						"SOCKS Error: Glasstual encountered a problem trying to retrieve the SOCKS proxy password from System Settings"
 
 					return false
 				}
@@ -486,61 +454,57 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 				let proxyPasswordData = queryResultRef as! Data
 
 				proxyPassword = String(data: proxyPasswordData, encoding: .utf8)
-			} // proxyUsername
+			}  // proxyUsername
 
-			changeProxy(to: .socks5,
-						at: proxyHost,
-						on: UInt16(proxyPort),
-						username: proxyUsername,
-						password: proxyPassword)
-		}
-		else if (proxyType == .tor)
-		{
+			changeProxy(
+				to: .socks5,
+				at: proxyHost,
+				on: UInt16(proxyPort),
+				username: proxyUsername,
+				password: proxyPassword)
+		} else if proxyType == .tor {
 			changeProxyToTor()
 		}
 
 		return true
 	}
 
-	fileprivate func openProxy() throws
-	{
+	fileprivate func openProxy() throws {
 		let proxyType = config.proxyType
 
 		switch proxyType {
-			case .socks4:
-				try socks4ProxyOpen()
-			case .socks5:
-				socks5ProxyOpen()
-			case .HTTP:
-				httpProxyOpen()
-			default:
-				return
-		} // switch()
+		case .socks4:
+			try socks4ProxyOpen()
+		case .socks5:
+			socks5ProxyOpen()
+		case .HTTP:
+			httpProxyOpen()
+		default:
+			return
+		}  // switch()
 	}
 
 	/* Boolean return value indicates whether the data was successfully
 	 read as data related to the proxy. When false is returned, the data
 	 is passed upstream as normal data to read. */
-	fileprivate func proxyRead(_ data: Data, with tag: Tag = .none) throws -> Bool
-	{
+	fileprivate func proxyRead(_ data: Data, with tag: Tag = .none) throws -> Bool {
 		let proxyType = config.proxyType
 
 		switch proxyType {
-			case .socks4:
-				return try socks4ProxyRead(data, with: tag)
-			case .socks5:
-				return try socks5ProxyRead(data, with: tag)
-			case .HTTP:
-				return try httpProxyRead(data, with: tag)
-			default:
-				return false
-		} // switch()
+		case .socks4:
+			return try socks4ProxyRead(data, with: tag)
+		case .socks5:
+			return try socks5ProxyRead(data, with: tag)
+		case .HTTP:
+			return try httpProxyRead(data, with: tag)
+		default:
+			return false
+		}  // switch()
 	}
 
 	// MARK: - SOCKS4 and SOCKS5
 
-	fileprivate func socksProxyConnect() throws
-	{
+	fileprivate func socksProxyConnect() throws {
 		//
 		// Packet layout for SOCKS4 connect:
 		//
@@ -564,7 +528,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 		let socksVersion = config.proxyType
 
-		if (socksVersion == .socks4) {
+		if socksVersion == .socks4 {
 			guard let resolvedAddress = socks4ConnectAddress else {
 				throw ConnectionError(otherError: "SOCKS4 Error: Unable to resolve an IPv4 address to connect to")
 			}
@@ -581,7 +545,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		var packetData = Data()
 
 		/* SOCKS version to use */
-		if (socksVersion == .socks5) {
+		if socksVersion == .socks5 {
 			packetData.append([0x05], count: 1)
 		} else {
 			packetData.append([0x04], count: 1)
@@ -590,26 +554,20 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		/* Type of connection (the command) */
 		packetData.append([0x01], count: 1)
 
-		if (socksVersion == .socks5)
-		{
+		if socksVersion == .socks5 {
 			/* Reserved value that must be 0 for SOCKS5 */
 			packetData.append([0x00], count: 1)
 
 			/* The address */
-			if let IPv4Bytes = destination.IPv6AddressBytes
-			{
+			if let ipv6Bytes = destination.IPv6AddressBytes {
 				packetData.append([0x04], count: 1)
 
-				packetData.append(IPv4Bytes)
-			}
-			else if let IPv6Bytes = destination.IPv4AddressBytes
-			{
+				packetData.append(ipv6Bytes)
+			} else if let ipv4Bytes = destination.IPv4AddressBytes {
 				packetData.append([0x01], count: 1)
 
-				packetData.append(IPv6Bytes)
-			}
-			else
-			{
+				packetData.append(ipv4Bytes)
+			} else {
 				packetData.append([0x03], count: 1)
 
 				guard let addressBytes = destination.data(using: .ascii) else {
@@ -618,18 +576,18 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 				let addressBytesLength = addressBytes.count
 
-				if (addressBytesLength > UINT8_MAX) {
-					throw ConnectionError(otherError: "SOCKS5 Error: Connection address length cannot exceed \(UINT8_MAX) characters")
+				if addressBytesLength > UINT8_MAX {
+					throw ConnectionError(
+						otherError: "SOCKS5 Error: Connection address length cannot exceed \(UINT8_MAX) characters")
 				}
 
 				packetData.append([UInt8(addressBytesLength)], count: 1)
 
 				packetData.append(addressBytes)
-			} // Address
+			}  // Address
 
 			packetData.append(destinationPortBytes)
-		}
-		else // .socks5
+		} else  // .socks5
 		{
 			packetData.append(destinationPortBytes)
 
@@ -668,82 +626,77 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 	// MARK: - SOCKS5
 
-	fileprivate func socks5ProxyOpen()
-	{
+	fileprivate func socks5ProxyOpen() {
 		socks5ProxySendGreeting()
 	}
 
-	fileprivate func socks5ProxyRead(_ data: Data, with tag: Tag = .none) throws -> Bool
-	{
-		if (tag == .socksProxyOpen)
-		{
-			if (data.count != 2) {
+	fileprivate func socks5ProxyRead(_ data: Data, with tag: Tag = .none) throws -> Bool {
+		if tag == .socksProxyOpen {
+			if data.count != 2 {
 				throw ConnectionError(otherError: "SOCKS5 Error: Server responded with a malformed packet")
 			}
 
 			let version = data[0]
 			let method = data[1]
 
-			if (version != 5) {
-				throw ConnectionError(otherError: "SOCKS5 Error: Server greeting reply contained incorrect version number")
+			if version != 5 {
+				throw ConnectionError(
+					otherError: "SOCKS5 Error: Server greeting reply contained incorrect version number")
 			}
 
 			switch method {
-				case 0:
-					try socksProxyConnect()
-				case 2:
-					if (proxyCanAuthenticate) {
-						try socks5ProxyUserAuthentication()
-					} else {
-						throw ConnectionError(otherError: "SOCKS5 Error: Server requested that we authenticate but a username and/or password is not configured")
-					}
-				default:
-					throw ConnectionError(otherError: "SOCKS5 Error: Server requested authentication method that is not supported")
+			case 0:
+				try socksProxyConnect()
+			case 2:
+				if proxyCanAuthenticate {
+					try socks5ProxyUserAuthentication()
+				} else {
+					throw ConnectionError(
+						otherError:
+							"SOCKS5 Error: Server requested that we authenticate but a username and/or password is not configured"
+					)
+				}
+			default:
+				throw ConnectionError(
+					otherError: "SOCKS5 Error: Server requested authentication method that is not supported")
 			}
 
 			return true
-		}
-		else if (tag == .socksProxyConnectReplyOne)
-		{
-			if (data.count <= 8) { // first 4 bytes + 2 for port
+		} else if tag == .socksProxyConnectReplyOne {
+			if data.count <= 8 {  // first 4 bytes + 2 for port
 				throw ConnectionError(otherError: "SOCKS5 Error: Server responded with a malformed packet")
 			}
 
 			let version = data[0]
 			let reply = data[1]
 
-			if (version == 5 && reply == 0)
-			{
+			if version == 5 && reply == 0 {
 				onConnect()
-			}
-			else
-			{
+			} else {
 				switch reply {
-					case 1:
-						throw ConnectionError(otherError: "SOCKS5 Error: General SOCKS server failure")
-					case 2:
-						throw ConnectionError(otherError: "SOCKS5 Error: Connection not allowed by ruleset")
-					case 3:
-						throw ConnectionError(otherError: "SOCKS5 Error: Network unreachable")
-					case 4:
-						throw ConnectionError(otherError: "SOCKS5 Error: Host unreachable")
-					case 5:
-						throw ConnectionError(otherError: "SOCKS5 Error: Connection refused")
-					case 6:
-						throw ConnectionError(otherError: "SOCKS5 Error: Time to live (TTL) expired")
-					case 7:
-						throw ConnectionError(otherError: "SOCKS5 Error: Command not supported")
-					case 8:
-						throw ConnectionError(otherError: "SOCKS5 Error: Address type not supported")
-					default:
-						throw ConnectionError(otherError: "SOCKS5 Error: Unknown SOCKS error")
+				case 1:
+					throw ConnectionError(otherError: "SOCKS5 Error: General SOCKS server failure")
+				case 2:
+					throw ConnectionError(otherError: "SOCKS5 Error: Connection not allowed by ruleset")
+				case 3:
+					throw ConnectionError(otherError: "SOCKS5 Error: Network unreachable")
+				case 4:
+					throw ConnectionError(otherError: "SOCKS5 Error: Host unreachable")
+				case 5:
+					throw ConnectionError(otherError: "SOCKS5 Error: Connection refused")
+				case 6:
+					throw ConnectionError(otherError: "SOCKS5 Error: Time to live (TTL) expired")
+				case 7:
+					throw ConnectionError(otherError: "SOCKS5 Error: Command not supported")
+				case 8:
+					throw ConnectionError(otherError: "SOCKS5 Error: Address type not supported")
+				default:
+					throw ConnectionError(otherError: "SOCKS5 Error: Unknown SOCKS error")
 				}
 			}
 
 			return true
-		}
-		else if (tag == .socksProxyAuthenticateUser)
-		{
+		} else if tag == .socksProxyAuthenticateUser {
 			//
 			// Server response for username/password authentication:
 			//
@@ -753,13 +706,13 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 			// any other value = failure, connection must be closed
 			//
 
-			if (data.count != 2) {
+			if data.count != 2 {
 				throw ConnectionError(otherError: "SOCKS5 Error: Server responded with a malformed packet")
 			}
 
 			let status = data[1]
 
-			if (status == 0x00) {
+			if status == 0x00 {
 				try socksProxyConnect()
 			} else {
 				throw ConnectionError(otherError: "SOCKS5 Error: Authentication failed for unknown reason")
@@ -771,8 +724,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		return false /* Read not handled here */
 	}
 
-	fileprivate func socks5ProxySendGreeting()
-	{
+	fileprivate func socks5ProxySendGreeting() {
 		//
 		// Packet layout for SOCKS5 greeting:
 		//
@@ -786,7 +738,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		/* Assemble the packet of data that will be sent */
 		var packetData = Data()
 
-		if (proxyCanAuthenticate == false) {
+		if proxyCanAuthenticate == false {
 			/* Send instructions that we are asking for version 5 of the SOCKS protocol
 			 with one authentication method: anonymous access */
 
@@ -825,8 +777,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 	// field 5: password
 	//
 
-	fileprivate func socks5ProxyUserAuthentication() throws
-	{
+	fileprivate func socks5ProxyUserAuthentication() throws {
 		/* Assemble the packet of data that will be sent */
 		guard let usernameData = config.proxyUsername!.data(using: .utf8) else {
 			throw ConnectionError(otherError: "SOCKS5 Error: Unable to convert username into a UTF-8 fragment")
@@ -834,7 +785,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 		let usernameLength = usernameData.count
 
-		if (usernameLength > UINT8_MAX) {
+		if usernameLength > UINT8_MAX {
 			throw ConnectionError(otherError: "SOCKS5 Error: Username length cannot exceed \(UINT8_MAX) characters")
 		}
 
@@ -844,7 +795,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 		let passwordLength = passwordData.count
 
-		if (passwordLength > UINT8_MAX) {
+		if passwordLength > UINT8_MAX {
 			throw ConnectionError(otherError: "SOCKS5 Error: Password length cannot exceed \(UINT8_MAX) characters")
 		}
 
@@ -865,54 +816,58 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 	// MARK: - SOCKS4
 
-	fileprivate func socks4ProxyOpen() throws
-	{
+	fileprivate func socks4ProxyOpen() throws {
 		try socksProxyConnect()
 	}
 
-	fileprivate func socks4ProxyRead(_ data: Data, with tag: Tag = .none) throws -> Bool
-	{
-		if (tag != .socksProxyConnectReplyOne) {
+	fileprivate func socks4ProxyRead(_ data: Data, with tag: Tag = .none) throws -> Bool {
+		if tag != .socksProxyConnectReplyOne {
 			return false /* Read not handled here */
 		}
 
-		if (data.count != 8) {
+		if data.count != 8 {
 			throw ConnectionError(otherError: "SOCKS4 Error: Server responded with a malformed packet")
 		}
 
 		let reply = data[1]
 
 		switch reply {
-			case 0x5a:
-				onConnect()
-			case 0x5b:
-				throw ConnectionError(otherError: "SOCKS4 Error: Request rejected or failed")
-			case 0x5c:
-				throw ConnectionError(otherError: "SOCKS4 Error: Request failed because client is not running an identd (or not reachable from server)")
-			case 0x5d:
-				throw ConnectionError(otherError: "SOCKS4 Error: Request failed because client's identd could not confirm the user ID string in the request")
-			default:
-				throw ConnectionError(otherError: "SOCKS4 Error: Server replied with unknown status code")
+		case 0x5a:
+			onConnect()
+		case 0x5b:
+			throw ConnectionError(otherError: "SOCKS4 Error: Request rejected or failed")
+		case 0x5c:
+			throw ConnectionError(
+				otherError:
+					"SOCKS4 Error: Request failed because client is not running an identd (or not reachable from server)"
+			)
+		case 0x5d:
+			throw ConnectionError(
+				otherError:
+					"SOCKS4 Error: Request failed because client's identd could not confirm the user ID string in the request"
+			)
+		default:
+			throw ConnectionError(otherError: "SOCKS4 Error: Server replied with unknown status code")
 		}
 
 		return true
 	}
 
-	fileprivate var socks4ConnectAddress: String?
-	{
+	fileprivate var socks4ConnectAddress: String? {
 		/* SOCKS4 proxies do not support anything other than IPv4 addresses
 		 (unless you support SOCKS4a, which Glasstual does not) which means we
 		 perform manual DNS lookup for SOCKS4 and rely on end-point proxy to
 		 perform lookup when using other proxy types. */
 		let serverAddress = config.serverAddress
 
-		if (serverAddress.isIPv4Address) {
+		if serverAddress.isIPv4Address {
 			return serverAddress
-		} else if (serverAddress.isIPv6Address) {
+		} else if serverAddress.isIPv6Address {
 			return nil
 		}
 
-		guard let resolvedAddresses = try? GCDAsyncSocket.lookupHost(serverAddress, port: config.serverPort) as? [Data] else {
+		guard let resolvedAddresses = try? GCDAsyncSocket.lookupHost(serverAddress, port: config.serverPort) as? [Data]
+		else {
 			return nil
 		}
 
@@ -920,7 +875,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 			GCDAsyncSocket.isIPv4Address($0)
 		}
 
-		if (resolvedAddress4 == nil) {
+		if resolvedAddress4 == nil {
 			return nil
 		}
 
@@ -929,16 +884,15 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 	// MARK: - HTTP Proxy
 
-	fileprivate func httpProxyOpen()
-	{
+	fileprivate func httpProxyOpen() {
 		let connectionAddress = config.serverAddress
 
 		let connectionPort = config.serverPort
 
 		var connectionAddressCombined = ""
 
-		if (connectionAddress.isIPv6Address) {
-			connectionAddressCombined = "[\(connectionAddress)]:\(connectionPort)" // IPv6 requires brackets
+		if connectionAddress.isIPv6Address {
+			connectionAddressCombined = "[\(connectionAddress)]:\(connectionPort)"  // IPv6 requires brackets
 		} else {
 			connectionAddressCombined = "\(connectionAddress):\(connectionPort)"
 		}
@@ -953,12 +907,12 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		/* Read until the end of the HTTP header response */
 		let responseTerminatorData = "\r\n\r\n".data(using: .ascii)
 
-		connection?.readData(to: responseTerminatorData!, withTimeout: Timeout.normal.rawValue, tag: Tag.socksProxyOpen.rawValue)
+		connection?.readData(
+			to: responseTerminatorData!, withTimeout: Timeout.normal.rawValue, tag: Tag.socksProxyOpen.rawValue)
 	}
 
-	fileprivate func httpProxyRead(_ data: Data, with tag: Tag = .none) throws -> Bool
-	{
-		if (tag != .socksProxyOpen) {
+	fileprivate func httpProxyRead(_ data: Data, with tag: Tag = .none) throws -> Bool {
+		if tag != .socksProxyOpen {
 			return false /* Read not handled here */
 		}
 
@@ -969,7 +923,7 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 
 		let headerComponents = dataAsString.components(separatedBy: "\r\n")
 
-		if (headerComponents.count <= 2) {
+		if headerComponents.count <= 2 {
 			throw ConnectionError(otherError: "HTTP Error: Server responded with a malformed packet")
 		}
 
@@ -981,11 +935,13 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		// only getting the components, we are also validating its format.
 		let statusResponseRegexRange = NSMakeRange(0, statusResponse.count)
 
-		let statusResponseRegex = try! NSRegularExpression(pattern: httpHeaderResponseStatusRegularExpression, options: [])
+		let statusResponseRegex = try! NSRegularExpression(
+			pattern: httpHeaderResponseStatusRegularExpression, options: [])
 
-		let statusResponseRegexResult = statusResponseRegex.firstMatch(in: statusResponse, options: [], range: statusResponseRegexRange)
+		let statusResponseRegexResult = statusResponseRegex.firstMatch(
+			in: statusResponse, options: [], range: statusResponseRegexRange)
 
-		if (statusResponseRegexResult?.numberOfRanges != 6) {
+		if statusResponseRegexResult?.numberOfRanges != 6 {
 			throw ConnectionError(otherError: "HTTP Error: Server responded with a malformed packet")
 		}
 
@@ -1003,13 +959,16 @@ final class ConnectionSocketClassic: ConnectionSocket, ConnectionSocketProtocol,
 		let statusCodeRange = statusResponseRegexResult?.range(at: 4)
 		let statusCode = statusResponse.substring(with: statusCodeRange!)!
 
-		if (Int(statusCode) == 200) {
+		if Int(statusCode) == 200 {
 			onConnect()
 		} else {
 			let statusMessageRange = statusResponseRegexResult?.range(at: 5)
 			let statusMessage = statusResponse.substring(with: statusMessageRange!)!
 
-			throw ConnectionError(otherError: "HTTP Error: HTTP proxy server returned status code \(statusCode) with the message “\(statusMessage)”")
+			throw ConnectionError(
+				otherError:
+					"HTTP Error: HTTP proxy server returned status code \(statusCode) with the message “\(statusMessage)”"
+			)
 		}
 
 		return true

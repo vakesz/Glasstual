@@ -40,15 +40,15 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCTreeItem ()
-@property (nonatomic, assign, readwrite) NSUInteger dockUnreadCount;
-@property (nonatomic, assign, readwrite) NSUInteger nicknameHighlightCount;
-@property (nonatomic, assign, readwrite) NSUInteger treeUnreadCount;
-@property (nonatomic, weak, readwrite) IRCClient *associatedClient;
-@property (nonatomic, strong, readwrite) TVCLogController *viewController;
+@property(nonatomic, assign, readwrite) NSUInteger dockUnreadCount;
+@property(nonatomic, assign, readwrite) NSUInteger nicknameHighlightCount;
+@property(nonatomic, assign, readwrite) NSUInteger treeUnreadCount;
+@property(nonatomic, weak, readwrite) IRCClient *associatedClient;
+@property(nonatomic, strong, readwrite) TVCLogController *viewController;
 
 - (void)resetState;
 
-@property (readonly) NSUInteger numberOfChildren;
+@property(readonly) NSUInteger numberOfChildren;
 - (nullable IRCTreeItem *)childAtIndex:(NSUInteger)index;
 @end
 
