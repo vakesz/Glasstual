@@ -126,6 +126,9 @@ jobs:
           # needs the Developer ID identity instead, overridden here rather than
           # in the file so local builds keep working.
           #
+          # Developer ID is a distribution identity, so this archive must use
+          # manual signing. Automatic signing treats the target as a development
+          # build and rejects the Developer ID identity as a conflict.
           # -allowProvisioningUpdates lets Xcode fetch the Developer ID profile
           # this app needs for its App Group and sandbox entitlements.
           xcodebuild archive \
@@ -135,7 +138,7 @@ jobs:
             -archivePath "build/Glasstual.xcarchive" \
             -destination 'generic/platform=macOS' \
             CODE_SIGN_IDENTITY="Developer ID Application" \
-            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="${TEAM_ID}" \
             -allowProvisioningUpdates \
             -authenticationKeyPath "${ASC_KEY_PATH}" \
