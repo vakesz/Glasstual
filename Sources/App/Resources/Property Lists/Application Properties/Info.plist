@@ -17,7 +17,7 @@
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.0.1</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Glasstual is an independent fork of Textual, continuing it on macOS 26 and later. Copyright © 2010 - 2026 Codeux Software, LLC and respective contributors.</string>
 	<key>CFBundleExecutable</key>

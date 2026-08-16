@@ -1275,7 +1275,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	[self rebuildMutableServerEndpointListIfNeeded:sender];
+	[self rebuildMutableServerEndpointListIfNeeded];
 }
 
 - (void)updateIdentityPage
@@ -1315,7 +1315,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSControl *sender = notification.object;
 
 	if (sender == self.serverPasswordTextField) {
-		[self rebuildMutableServerEndpointListIfNeeded:sender];
+		[self rebuildMutableServerEndpointListIfNeeded];
 	}
 }
 
@@ -1324,9 +1324,9 @@ NS_ASSUME_NONNULL_BEGIN
 	if (sender == self.serverAddressComboBox) {
 		[self populateDefaultsForPreconfiguredNetwork];
 
-		[self rebuildMutableServerEndpointListIfNeeded:sender];
+		[self rebuildMutableServerEndpointListIfNeeded];
 	} else if (sender == self.serverPortTextField) {
-		[self rebuildMutableServerEndpointListIfNeeded:sender];
+		[self rebuildMutableServerEndpointListIfNeeded];
 	}
 }
 
@@ -1737,10 +1737,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	self.serverEndpointSheet = nil;
 }
 
-- (void)rebuildMutableServerEndpointList:(id)sender
+- (void)rebuildMutableServerEndpointList
 {
-	NSParameterAssert(sender != nil);
-
 	if (self.populatingPrimaryServer) {
 		return;
 	}
@@ -1782,10 +1780,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	}
 }
 
-- (void)rebuildMutableServerEndpointListIfNeeded:(nullable id)sender
+- (void)rebuildMutableServerEndpointListIfNeeded
 {
-	NSParameterAssert(sender != nil);
-
 	/* We only want to rebuild the IRCServer at index 0 when the
 	 user changes it. This method is invoked whenever something
 	 changes related to that server. If it was not changed while
@@ -1795,7 +1791,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 		return;
 	}
 
-	[self rebuildMutableServerEndpointList:sender];
+	[self rebuildMutableServerEndpointList];
 }
 
 #pragma mark -

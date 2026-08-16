@@ -1240,7 +1240,7 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 {
 	[self.themeSelectionButton removeAllItems];
 
-	NSMenuItem *nativeItem = [NSMenuItem menuItemWithTitle:@"Native" target:nil action:nil];
+	NSMenuItem *nativeItem = [[NSMenuItem alloc] initWithTitle:TXTLS(@"TDCPreferencesController[native-style]") action:nil keyEquivalent:@""];
 	nativeItem.tag = 100;
 	[self.themeSelectionButton.menu addItem:nativeItem];
 	[self.themeSelectionButton selectItemWithTag:100];

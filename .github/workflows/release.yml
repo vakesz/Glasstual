@@ -15,7 +15,7 @@ jobs:
     env:
       WORKSPACE: Glasstual.xcworkspace
       SCHEME: Glasstual (Standard Release)
-      CONFIGURATION: Standard Release
+      CONFIGURATION: Release
       TEAM_ID: H8W5DK3FN2
       ARCHIVE_PATH: build/Glasstual.xcarchive
 

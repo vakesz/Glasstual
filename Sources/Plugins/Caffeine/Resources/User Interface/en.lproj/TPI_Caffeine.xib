@@ -20,7 +20,7 @@
             </userGuides>
             <subviews>
                 <button translatesAutoresizingMaskIntoConstraints="NO" id="s7v-vd-1wt">
-                    <rect key="frame" x="148" y="67" width="270" height="18"/>
+                    <rect key="frame" x="148" y="67" width="300" height="18"/>
                     <buttonCell key="cell" type="check" title="Disable sleep while Glasstual is connected" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="nPX-Su-uQG">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>

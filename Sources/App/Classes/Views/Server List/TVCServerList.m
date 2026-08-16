@@ -99,12 +99,11 @@ NSString * const TVCServerListDragType = @"TVCServerListDragType";
 {
 	NSParameterAssert(object != nil);
 
-	NSInteger rowIndex = [self rowForItem:object];
-
-	NSAssert((rowIndex >= 0),
+	NSAssert(([self rowForItem:object] >= 0),
 		@"Object does not exist on outline view");
 
 	id parentItem = [self parentForItem:object];
+	NSUInteger rowIndex;
 
 	if (parentItem) {
 		NSArray *childrenItems = [self itemsFromParentGroup:parentItem];

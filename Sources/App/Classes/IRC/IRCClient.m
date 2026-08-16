@@ -2840,7 +2840,11 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 		lineType = TVCLogLineTypeNotice;
 	}
 
-	NSParameterAssert(lineType != TVCLogLineTypeUndefined);
+	if (commandToSend == nil || lineType == TVCLogLineTypeUndefined) {
+		NSParameterAssert(commandToSend != nil && lineType != TVCLogLineTypeUndefined);
+
+		return;
+	}
 
 	NSArray *lines = string.splitIntoLines;
 
@@ -5250,7 +5254,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	[self print:messageBody by:nickname inChannel:channel asType:lineType command:command receivedAt:receivedAt isEncrypted:isEncrypted escapeMessage:YES referenceMessage:referenceMessage completionBlock:completionBlock];
 }
 
-- (void)print:(NSString *)messageBody by:(nullable NSString *)nickname inChannel:(nullable IRCChannel *)channel asType:(TVCLogLineType)lineType command:(nullable NSString *)command receivedAt:(NSDate *)receivedAt isEncrypted:(BOOL)isEncrypted escapeMessage:(BOOL)escapeMessage referenceMessage:(nullable IRCMessage *)referenceMessage completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock
+- (void)print:(NSString *)messageBody by:(nullable NSString *)nickname inChannel:(nullable IRCChannel *)channel asType:(TVCLogLineType)lineType command:(nullable NSString *)command receivedAt:(NSDate *)receivedAt isEncrypted:(BOOL)isEncrypted escapeMessage:(BOOL)escapeMessage referenceMessage:(nullable IRCMessage *)referenceMessage completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)postPrintBlock
 {
 	NSParameterAssert(messageBody != nil);
 	NSParameterAssert(command != nil || referenceMessage != nil);
@@ -5377,7 +5381,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 
 	/* Print to server console if there is no channel */
 	if (channel == nil) {
-		[self printAndLog:logLine completionBlock:completionBlock];
+		[self printAndLog:logLine completionBlock:postPrintBlock];
 
 		return;
 	}
@@ -5396,7 +5400,7 @@ NSString * const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickn
 	}
 
 	/* Print to channel */
-	[channel print:logLine completionBlock:completionBlock];
+	[channel print:logLine completionBlock:postPrintBlock];
 }
 
 - (void)printReply:(IRCMessage *)message

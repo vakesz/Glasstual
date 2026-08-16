@@ -54,12 +54,18 @@ typedef NS_ENUM(NSUInteger, ICMTwitchLiveContentTypeContent)
 	NSParameterAssert(contentType == ICMTwitchLiveContentTypeChannel ||
 					  contentType == ICMTwitchLiveContentTypeVideo);
 
-	NSString *contentArgument = nil;
+	NSString *contentArgument;
 
-	if (contentType == ICMTwitchLiveContentTypeChannel) {
-		contentArgument = @"channel";
-	} else if (contentType == ICMTwitchLiveContentTypeVideo) {
-		contentArgument = @"video";
+	switch (contentType) {
+		case ICMTwitchLiveContentTypeChannel:
+			contentArgument = @"channel";
+			break;
+		case ICMTwitchLiveContentTypeVideo:
+			contentArgument = @"video";
+			break;
+		default:
+			NSAssert(NO, @"Unexpected Twitch content type: %lu", contentType);
+			return;
 	}
 
 	ICLPayloadMutable *payload = self.payload;

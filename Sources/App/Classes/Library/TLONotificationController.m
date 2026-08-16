@@ -530,6 +530,8 @@ NSString * const TXNotificationActionIdentifierPrivateMessageReply = @"TXNotific
 	NSDictionary *userInfo = response.notification.request.content.userInfo;
 
 	[self notificationResponseReceived:response context:userInfo withReplyMessage:message];
+
+	completionHandler();
 }
 
 - (void)dismissNotificationsForChannel:(nullable IRCChannel *)channel onClient:(IRCClient *)client

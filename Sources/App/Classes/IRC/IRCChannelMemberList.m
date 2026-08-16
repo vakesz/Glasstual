@@ -132,8 +132,11 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
+		dispatch_queue_attr_t attributes =
+		dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
+
 		workerQueue =
-		XRCreateDispatchQueueWithPriority("IRCChannel.modifyMemberListSerialQueue", DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT);
+		dispatch_queue_create("IRCChannel.modifyMemberListSerialQueue", attributes);
 	});
 
 	return workerQueue;

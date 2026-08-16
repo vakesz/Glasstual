@@ -310,6 +310,7 @@
 		};
 		4C95801E1FA41F6D00F18BC8 /* Release (App Store) */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4CE1439A20EBF551000E01C9 /* Glasstual Extensions.xcconfig */;
 			buildSettings = {
 			};
 			name = "Release (App Store)";

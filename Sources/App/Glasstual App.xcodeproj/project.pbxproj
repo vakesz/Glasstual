@@ -4878,6 +4878,7 @@
 /* Begin XCBuildConfiguration section */
 		4C13442320C75C4900343AB7 /* Release (Sandboxed) */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4C3154B720EB685700448776 /* Glasstual App.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = H8W5DK3FN2;
 			};

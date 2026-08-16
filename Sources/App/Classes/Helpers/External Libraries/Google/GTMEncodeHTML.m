@@ -401,6 +401,8 @@ static NSString *StringByEscapingHTMLUsingTable(NSString *src,
 		// If we can't get enough memory for the buffer copy, odds are finalString
 		// will also run out of memory, so just give up.
 		NSCAssert(NO, @"Unable to allocate buffer or data2");
+
+		return nil;
 	}
 
 	unichar *buffer2 = (unichar *)[data2 mutableBytes];

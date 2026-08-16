@@ -1194,7 +1194,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 	[self print:logLine completionBlock:NULL];
 }
 
-- (void)print:(TVCLogLine *)logLine completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock
+- (void)print:(TVCLogLine *)logLine completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)postPrintBlock
 {
 	NSParameterAssert(logLine != nil);
 
@@ -1290,7 +1290,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 				[listOfUsers.allObjects makeObjectsPerformSelector:@selector(conversation)];
 			}
 
-			if (completionBlock == nil) {
+			if (postPrintBlock == nil) {
 				return;
 			}
 
@@ -1303,7 +1303,7 @@ NSString * const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContr
 			contextObject.logLine = logLine;
 			contextObject.lineNumber = lineNumber;
 
-			completionBlock(contextObject);
+			postPrintBlock(contextObject);
 		});
 	};
 
