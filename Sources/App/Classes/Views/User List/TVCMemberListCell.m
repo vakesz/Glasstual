@@ -54,22 +54,22 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCMemberListCellDrawingContext;
 
 @interface TVCMemberListRowCell ()
-@property (nonatomic, weak) TVCMemberList *memberList;
-@property (nonatomic, weak) TVCMemberListCell *childCell;
+@property(nonatomic, weak) TVCMemberList *memberList;
+@property(nonatomic, weak) TVCMemberListCell *childCell;
 @end
 
 @interface TVCMemberListCell ()
-@property (nonatomic, weak) IBOutlet NSTextField *cellTextField;
-@property (readonly, copy) TVCMemberListCellDrawingContext *drawingContext;
-@property (readonly) TVCMemberList *memberList;
-@property (readonly) TVCMemberListRowCell *rowCell;
-@property (readonly) IRCChannelUser *cellItem;
-@property (readonly) NSInteger rowIndex;
+@property(nonatomic, weak) IBOutlet NSTextField *cellTextField;
+@property(readonly, copy) TVCMemberListCellDrawingContext *drawingContext;
+@property(readonly) TVCMemberList *memberList;
+@property(readonly) TVCMemberListRowCell *rowCell;
+@property(readonly) IRCChannelUser *cellItem;
+@property(readonly) NSInteger rowIndex;
 @end
 
 @interface TVCMemberListCellDrawingContext : NSObject
-@property (nonatomic, assign) BOOL isSelected;
-@property (nonatomic, assign) BOOL isWindowActive;
+@property(nonatomic, assign) BOOL isSelected;
+@property(nonatomic, assign) BOOL isWindowActive;
 @end
 
 @implementation TVCMemberListCell
@@ -167,7 +167,7 @@ NS_ASSUME_NONNULL_BEGIN
 /* Mode badge colours are user configurable; everything that is not
  configurable comes from the system so the badge tracks the user's accent
  colour and appearance without a private colour table. */
-static NSColor * _Nullable TVCMemberListCellUserModeColor(NSString *defaultsKey)
+static NSColor *_Nullable TVCMemberListCellUserModeColor(NSString *defaultsKey)
 {
 	NSColor *color = [RZUserDefaults() colorForKey:defaultsKey];
 
@@ -178,16 +178,23 @@ static NSColor * _Nullable TVCMemberListCellUserModeColor(NSString *defaultsKey)
 	return [color colorWithAlphaComponent:0.7];
 }
 
-static NSColor * _Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
+static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 {
 	switch (userRank) {
-		case IRCUserRankIRCopByMode:		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +y");
-		case IRCUserRankChannelOwner:		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +q");
-		case IRCUserRankSuperOperator:		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +a");
-		case IRCUserRankNormalOperator:		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +o");
-		case IRCUserRankHalfOperator:		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +h");
-		case IRCUserRankVoiced:				return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +v");
-		default:							return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> no mode");
+	case IRCUserRankIRCopByMode:
+		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +y");
+	case IRCUserRankChannelOwner:
+		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +q");
+	case IRCUserRankSuperOperator:
+		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +a");
+	case IRCUserRankNormalOperator:
+		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +o");
+	case IRCUserRankHalfOperator:
+		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +h");
+	case IRCUserRankVoiced:
+		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> +v");
+	default:
+		return TVCMemberListCellUserModeColor(@"User List Mode Badge Colors -> no mode");
 	}
 }
 
@@ -258,33 +265,35 @@ static NSColor * _Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 	NSFont *controlFont = [NSFont monospacedDigitSystemFontOfSize:11.0 weight:NSFontWeightMedium];
 
 	NSAttributedString *badgeText =
-	[NSAttributedString attributedStringWithString:stringToDraw
-										attributes:@{
-		NSForegroundColorAttributeName: textColor,
-		NSFontAttributeName: controlFont,
-		NSParagraphStyleAttributeName: paragraphStyle
-	}];
+		[NSAttributedString attributedStringWithString:stringToDraw
+											attributes:@{
+												NSForegroundColorAttributeName : textColor,
+												NSFontAttributeName : controlFont,
+												NSParagraphStyleAttributeName : paragraphStyle
+											}];
 
-	return [NSImage imageWithSize:badgeFrame.size flipped:NO drawingHandler:^BOOL(NSRect dstRect) {
-		[backgroundColor setFill];
+	return [NSImage imageWithSize:badgeFrame.size
+						  flipped:NO
+				   drawingHandler:^BOOL(NSRect dstRect) {
+					   [backgroundColor setFill];
 
-		[[NSBezierPath bezierPathWithRoundedRect:dstRect
-										 xRadius:(NSHeight(dstRect) / 2.0)
-										 yRadius:(NSHeight(dstRect) / 2.0)] fill];
+					   [[NSBezierPath bezierPathWithRoundedRect:dstRect
+														xRadius:(NSHeight(dstRect) / 2.0)
+														yRadius:(NSHeight(dstRect) / 2.0)] fill];
 
-		if (stringToDraw.length == 0) {
-			return YES;
-		}
+					   if (stringToDraw.length == 0) {
+						   return YES;
+					   }
 
-		/* Centre on the font's cap height rather than nudging per-glyph. */
-		NSRect textRect = dstRect;
-		textRect.origin.y = (NSMidY(dstRect) - (controlFont.capHeight / 2.0) + controlFont.descender);
-		textRect.size.height = (NSHeight(dstRect) - NSMinY(textRect));
+					   /* Centre on the font's cap height rather than nudging per-glyph. */
+					   NSRect textRect = dstRect;
+					   textRect.origin.y = (NSMidY(dstRect) - (controlFont.capHeight / 2.0) + controlFont.descender);
+					   textRect.size.height = (NSHeight(dstRect) - NSMinY(textRect));
 
-		[badgeText drawInRect:textRect];
+					   [badgeText drawInRect:textRect];
 
-		return YES;
-	}];
+					   return YES;
+				   }];
 }
 
 #pragma mark -
@@ -326,9 +335,9 @@ static NSColor * _Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 		userInfoPopover.addressField.stringValue = hostmaskAddress;
 	} else {
 		NSAttributedString *hostmaskAddressFormatted =
-		[hostmaskAddress attributedStringWithIRCFormatting:[NSFont systemFontOfSize:12.0]
-										preferredFontColor:nil
-								 honorFormattingPreference:NO];
+			[hostmaskAddress attributedStringWithIRCFormatting:[NSFont systemFontOfSize:12.0]
+											preferredFontColor:nil
+									 honorFormattingPreference:NO];
 
 		userInfoPopover.addressField.attributedStringValue = hostmaskAddressFormatted;
 	}
@@ -345,9 +354,9 @@ static NSColor * _Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 		userInfoPopover.realNameField.stringValue = realName;
 	} else {
 		NSAttributedString *realNameFormatted =
-		[realName attributedStringWithIRCFormatting:[NSFont systemFontOfSize:12.0]
-								 preferredFontColor:nil
-						  honorFormattingPreference:NO];
+			[realName attributedStringWithIRCFormatting:[NSFont systemFontOfSize:12.0]
+									 preferredFontColor:nil
+							  honorFormattingPreference:NO];
 
 		userInfoPopover.realNameField.attributedStringValue = realNameFormatted;
 	}
@@ -400,9 +409,7 @@ static NSColor * _Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 
 	NSResponder *activeFirstResponder = window.firstResponder;
 
-	[userInfoPopover showRelativeToRect:cellFrame
-								 ofView:memberList
-						  preferredEdge:NSMaxXEdge];
+	[userInfoPopover showRelativeToRect:cellFrame ofView:memberList preferredEdge:NSMaxXEdge];
 
 	[window makeFirstResponder:activeFirstResponder];
 }
@@ -485,7 +492,7 @@ static NSColor * _Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 #pragma mark -
 #pragma mark Cell Information
 
-- (TVCMemberListCell * _Nullable)childCell
+- (TVCMemberListCell *_Nullable)childCell
 {
 	if (self->_childCell == nil) {
 		if (self.numberOfColumns == 0) {

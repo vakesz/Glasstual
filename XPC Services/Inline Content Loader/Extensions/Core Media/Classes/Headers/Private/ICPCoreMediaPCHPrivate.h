@@ -37,5 +37,4 @@
 
 #import <CocoaExtensions/CocoaExtensions.h>
 
-#define NSBundleForClass() 	\
-	[NSBundle bundleForClass:self.class]
+#define NSBundleForClass() [NSBundle bundleForClass:self.class]

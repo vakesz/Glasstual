@@ -48,29 +48,35 @@ NS_ASSUME_NONNULL_BEGIN
 					argumentIndex:0
 						  ofReply:YES];
 
+	[exportedInterface
+		   setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
+		  forSelector:@selector(fetchEntriesForView:
+							   withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:)
+		argumentIndex:0
+			  ofReply:YES];
+
 	[exportedInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
-					  forSelector:@selector(fetchEntriesForView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:)
+					  forSelector:@selector(fetchEntriesForView:
+										 beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
 					argumentIndex:0
 						  ofReply:YES];
 
 	[exportedInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
-					  forSelector:@selector(fetchEntriesForView:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
+					  forSelector:@selector(fetchEntriesForView:
+										  afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
 					argumentIndex:0
 						  ofReply:YES];
 
 	[exportedInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
-					  forSelector:@selector(fetchEntriesForView:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
-					argumentIndex:0
-						  ofReply:YES];
-
-	[exportedInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
-					  forSelector:@selector(fetchEntriesForView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:)
+					  forSelector:@selector(fetchEntriesForView:
+										  afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:)
 					argumentIndex:0
 						  ofReply:YES];
 
 	newConnection.exportedInterface = exportedInterface;
 
-	NSXPCInterface *remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(HLSHistoricLogClientProtocol)];
+	NSXPCInterface *remoteObjectInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(HLSHistoricLogClientProtocol)];
 
 	newConnection.remoteObjectInterface = remoteObjectInterface;
 

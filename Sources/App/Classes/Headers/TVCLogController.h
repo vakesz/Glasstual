@@ -44,18 +44,18 @@ NS_ASSUME_NONNULL_BEGIN
 GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNotification;
 
 @interface TVCLogController : NSObject
-@property (readonly) TVCLogView *backingView;
-@property (readonly, getter=viewIsEncrypted) BOOL encrypted;
-@property (readonly, getter=viewIsLoaded) BOOL loaded;
-@property (readonly, getter=viewIsSelected) BOOL selected;
-@property (readonly, getter=viewIsVisible) BOOL visible;
-@property (readonly) NSUInteger numberOfLines;
-@property (readonly, weak) IRCClient *associatedClient;
-@property (readonly, weak) IRCChannel *associatedChannel;
-@property (readonly, weak) TVCMainWindow *attachedWindow;
-@property (readonly, copy, nullable) NSString *newestLineNumberFromPreviousSession;
-@property (readonly, copy, nullable) NSString *oldestLineNumber;
-@property (readonly, copy, nullable) NSString *newestLineNumber;
+@property(readonly) TVCLogView *backingView;
+@property(readonly, getter=viewIsEncrypted) BOOL encrypted;
+@property(readonly, getter=viewIsLoaded) BOOL loaded;
+@property(readonly, getter=viewIsSelected) BOOL selected;
+@property(readonly, getter=viewIsVisible) BOOL visible;
+@property(readonly) NSUInteger numberOfLines;
+@property(readonly, weak) IRCClient *associatedClient;
+@property(readonly, weak) IRCChannel *associatedChannel;
+@property(readonly, weak) TVCMainWindow *attachedWindow;
+@property(readonly, copy, nullable) NSString *newestLineNumberFromPreviousSession;
+@property(readonly, copy, nullable) NSString *oldestLineNumber;
+@property(readonly, copy, nullable) NSString *newestLineNumber;
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -64,7 +64,7 @@ GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNot
 
 - (BOOL)highlightAvailable:(BOOL)previous;
 
-@property (readonly, copy) NSString *uniqueIdentifier;
+@property(readonly, copy) NSString *uniqueIdentifier;
 
 - (void)moveToTop;
 - (void)moveToBottom;
@@ -73,11 +73,11 @@ GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNot
 - (void)jumpToPresent;
 
 - (void)jumpToLine:(NSString *)lineNumber;
-- (void)jumpToLine:(NSString *)lineNumber completionHandler:(void (^ _Nullable)(BOOL result))completionHandler;
+- (void)jumpToLine:(NSString *)lineNumber completionHandler:(void (^_Nullable)(BOOL result))completionHandler;
 
 - (void)setTopic:(nullable NSString *)topic;
 
-@property (readonly) BOOL inlineMediaEnabledForView;
+@property(readonly) BOOL inlineMediaEnabledForView;
 
 - (void)mark;
 - (void)unmark;
@@ -95,11 +95,11 @@ GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNot
 #pragma mark -
 
 @interface TVCLogControllerPrintOperationContext : NSObject
-@property (readonly, weak) IRCClient *client;
-@property (readonly, weak) IRCChannel *channel;
-@property (readonly, getter=isHighlight) BOOL highlight;
-@property (readonly, copy) TVCLogLine *logLine;
-@property (readonly, copy) NSString *lineNumber;
+@property(readonly, weak) IRCClient *client;
+@property(readonly, weak) IRCChannel *channel;
+@property(readonly, getter=isHighlight) BOOL highlight;
+@property(readonly, copy) TVCLogLine *logLine;
+@property(readonly, copy) NSString *lineNumber;
 @end
 
 typedef void (^TVCLogControllerPrintOperationCompletionBlock)(TVCLogControllerPrintOperationContext *context);

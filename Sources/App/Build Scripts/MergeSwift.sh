@@ -23,10 +23,10 @@ set -e
 cd "${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}"
 
 find . -type f -name "libswift*" \
- -not -path "./Frameworks/*" \
- -not -path "./Resources/*" \
- -not -path "*/Resources/libswiftRemoteMirror.dylib" \
- -exec cp '{}' ./Frameworks/ \; \
- -exec rm '{}' \;
+	-not -path "./Frameworks/*" \
+	-not -path "./Resources/*" \
+	-not -path "*/Resources/libswiftRemoteMirror.dylib" \
+	-exec cp '{}' ./Frameworks/ \; \
+	-exec rm '{}' \;
 
-exit 0;
+exit 0

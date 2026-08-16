@@ -42,12 +42,12 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TLOSpokenNotification ()
-@property (nonatomic, weak, null_unspecified, readwrite) IRCClient *client;
-@property (nonatomic, weak, null_unspecified, readwrite) IRCChannel *channel;
-@property (nonatomic, copy, null_unspecified, readwrite) NSString *nickname;
-@property (nonatomic, copy, null_unspecified, readwrite) NSString *text;
-@property (nonatomic, readwrite) TVCLogLineType lineType;
-@property (nonatomic, readwrite) TXNotificationType notificationType;
+@property(nonatomic, weak, null_unspecified, readwrite) IRCClient *client;
+@property(nonatomic, weak, null_unspecified, readwrite) IRCChannel *channel;
+@property(nonatomic, copy, null_unspecified, readwrite) NSString *nickname;
+@property(nonatomic, copy, null_unspecified, readwrite) NSString *text;
+@property(nonatomic, readwrite) TVCLogLineType lineType;
+@property(nonatomic, readwrite) TXNotificationType notificationType;
 @end
 
 @implementation TLOSpokenNotification

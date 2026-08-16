@@ -44,8 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)populateDefaultsPostflight
 {
-	SetVariableIfNil(self->_nickname, @"")
-	SetVariableIfNil(self->_hostmask, @"")
+	SetVariableIfNil(self->_nickname, @"") SetVariableIfNil(self->_hostmask, @"")
 }
 
 - (void)populateDuringCopy:(__kindof XRPortablePropertyObject *)newObject mutableCopy:(BOOL)mutableCopy
@@ -80,19 +79,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 	IRCPrefix *objectCast = (IRCPrefix *)object;
 
-	return (self.isServer == objectCast.isServer &&
+	return (
+		self.isServer == objectCast.isServer &&
 
-			((self.nickname == nil && objectCast.nickname == nil) ||
-			 [self.nickname isEqualToString:objectCast.nickname]) &&
+		((self.nickname == nil && objectCast.nickname == nil) || [self.nickname isEqualToString:objectCast.nickname]) &&
 
-			((self.username == nil && objectCast.username == nil) ||
-			 [self.username isEqualToString:objectCast.username]) &&
+		((self.username == nil && objectCast.username == nil) || [self.username isEqualToString:objectCast.username]) &&
 
-			((self.address == nil && objectCast.address == nil) ||
-			 [self.address isEqualToString:objectCast.address]) &&
+		((self.address == nil && objectCast.address == nil) || [self.address isEqualToString:objectCast.address]) &&
 
-			((self.hostmask == nil && objectCast.hostmask == nil) ||
-			 [self.hostmask isEqualToString:objectCast.hostmask]));
+		((self.hostmask == nil && objectCast.hostmask == nil) || [self.hostmask isEqualToString:objectCast.hostmask]));
 }
 
 @end

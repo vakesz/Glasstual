@@ -36,77 +36,76 @@
  *********************************************************************** */
 
 /* Defines for operating system detection. */
-#define TXLoadMacOSVersionSpecificFeatures		1
+#define TXLoadMacOSVersionSpecificFeatures 1
 
 /* Shortcut defines. */
-#define RZAnimationCurrentContext()				[NSAnimationContext	currentContext]
-#define RZAppearanceCurrentController()			[NSAppearance currentAppearance]
-#define RZAppleEventManager()					[NSAppleEventManager sharedAppleEventManager]
-#define RZCurrentCalendar()						[NSCalendar currentCalendar]
-#define RZCurrentRunLoop()						[NSRunLoop currentRunLoop]
-#define RZDistributedNotificationCenter()		[NSDistributedNotificationCenter defaultCenter]
-#define RZFileManager()							[NSFileManager defaultManager]
-#define RZFontManager()							[NSFontManager sharedFontManager]
-#define RZGraphicsCurrentContext()				[NSGraphicsContext currentContext]
-#define RZMainBundle()							[NSBundle mainBundle]
-#define RZMainOperationQueue()					[NSOperationQueue mainQueue]
-#define RZMainRunLoop()							[NSRunLoop mainRunLoop]
-#define RZMainScreen()							[NSScreen mainScreen]
-#define RZNotificationCenter()					[NSNotificationCenter defaultCenter]
-#define RZPasteboard()							[NSPasteboard generalPasteboard]
-#define RZProcessInfo()							[NSProcessInfo processInfo]
-#define RZRunningApplication()					[NSRunningApplication currentApplication]
-#define RZSharedApplication()					[NSApplication sharedApplication]
-#define RZSpellChecker()						[NSSpellChecker	sharedSpellChecker]
-#define RZUbiquitousKeyValueStore()				[NSUbiquitousKeyValueStore defaultStore]
-#define RZUserNotificationCenter()				[UNUserNotificationCenter currentNotificationCenter]
-#define RZWorkspace()							[NSWorkspace sharedWorkspace]
-#define RZWorkspaceNotificationCenter()			[[NSWorkspace sharedWorkspace] notificationCenter]
+#define RZAnimationCurrentContext() [NSAnimationContext currentContext]
+#define RZAppearanceCurrentController() [NSAppearance currentAppearance]
+#define RZAppleEventManager() [NSAppleEventManager sharedAppleEventManager]
+#define RZCurrentCalendar() [NSCalendar currentCalendar]
+#define RZCurrentRunLoop() [NSRunLoop currentRunLoop]
+#define RZDistributedNotificationCenter() [NSDistributedNotificationCenter defaultCenter]
+#define RZFileManager() [NSFileManager defaultManager]
+#define RZFontManager() [NSFontManager sharedFontManager]
+#define RZGraphicsCurrentContext() [NSGraphicsContext currentContext]
+#define RZMainBundle() [NSBundle mainBundle]
+#define RZMainOperationQueue() [NSOperationQueue mainQueue]
+#define RZMainRunLoop() [NSRunLoop mainRunLoop]
+#define RZMainScreen() [NSScreen mainScreen]
+#define RZNotificationCenter() [NSNotificationCenter defaultCenter]
+#define RZPasteboard() [NSPasteboard generalPasteboard]
+#define RZProcessInfo() [NSProcessInfo processInfo]
+#define RZRunningApplication() [NSRunningApplication currentApplication]
+#define RZSharedApplication() [NSApplication sharedApplication]
+#define RZSpellChecker() [NSSpellChecker sharedSpellChecker]
+#define RZUbiquitousKeyValueStore() [NSUbiquitousKeyValueStore defaultStore]
+#define RZUserNotificationCenter() [UNUserNotificationCenter currentNotificationCenter]
+#define RZWorkspace() [NSWorkspace sharedWorkspace]
+#define RZWorkspaceNotificationCenter() [[NSWorkspace sharedWorkspace] notificationCenter]
 
 /* Misc. */
-#define NSInvertedComparisonResult(c)			((c) * (-1))
+#define NSInvertedComparisonResult(c) ((c) * (-1))
 
-#define NSIsCurrentThreadMain()					[[NSThread isMainThread]]
+#define NSIsCurrentThreadMain() [[NSThread isMainThread]]
 
 /* Deprecation and symbol visibility. */
-#define GLASSTUAL_EXTERN							extern
+#define GLASSTUAL_EXTERN extern
 
-#define GLASSTUAL_SYMBOL_USED						__attribute__((used))
+#define GLASSTUAL_SYMBOL_USED __attribute__((used))
 
-#define GLASSTUAL_RUNNING_ON(version, name)		COCOA_EXTENSIONS_RUNNING_ON(version, name)
-#define GLASSTUAL_RUNNING_ON_BIGSUR 				GLASSTUAL_RUNNING_ON(11.0, BigSur)
-#define GLASSTUAL_RUNNING_ON_MOJAVE 				GLASSTUAL_RUNNING_ON(10.14, Mojave)
-#define GLASSTUAL_RUNNING_ON_HIGHSIERRA 			GLASSTUAL_RUNNING_ON(10.13, HighSierra)
-#define GLASSTUAL_RUNNING_ON_SIERRA 				GLASSTUAL_RUNNING_ON(10.12, Sierra)
-#define GLASSTUAL_RUNNING_ON_ELCAPITAN 			GLASSTUAL_RUNNING_ON(10.11, ElCapitan)
-#define GLASSTUAL_RUNNING_ON_YOSEMITE 			GLASSTUAL_RUNNING_ON(10.10, Yosemite)
-#define GLASSTUAL_RUNNING_ON_MAVERICKS 			GLASSTUAL_RUNNING_ON(10.9, Mavericks)
+#define GLASSTUAL_RUNNING_ON(version, name) COCOA_EXTENSIONS_RUNNING_ON(version, name)
+#define GLASSTUAL_RUNNING_ON_BIGSUR GLASSTUAL_RUNNING_ON(11.0, BigSur)
+#define GLASSTUAL_RUNNING_ON_MOJAVE GLASSTUAL_RUNNING_ON(10.14, Mojave)
+#define GLASSTUAL_RUNNING_ON_HIGHSIERRA GLASSTUAL_RUNNING_ON(10.13, HighSierra)
+#define GLASSTUAL_RUNNING_ON_SIERRA GLASSTUAL_RUNNING_ON(10.12, Sierra)
+#define GLASSTUAL_RUNNING_ON_ELCAPITAN GLASSTUAL_RUNNING_ON(10.11, ElCapitan)
+#define GLASSTUAL_RUNNING_ON_YOSEMITE GLASSTUAL_RUNNING_ON(10.10, Yosemite)
+#define GLASSTUAL_RUNNING_ON_MAVERICKS GLASSTUAL_RUNNING_ON(10.9, Mavericks)
 
-#define GLASSTUAL_DEPRECATED(reason)				COCOA_EXTENSIONS_DEPRECATED(reason)
+#define GLASSTUAL_DEPRECATED(reason) COCOA_EXTENSIONS_DEPRECATED(reason)
 
-#define GLASSTUAL_DEPRECATED_ASSERT				COCOA_EXTENSIONS_DEPRECATED_ASSERT
-#define GLASSTUAL_DEPRECATED_ASSERT_C				COCOA_EXTENSIONS_DEPRECATED_ASSERT_C
+#define GLASSTUAL_DEPRECATED_ASSERT COCOA_EXTENSIONS_DEPRECATED_ASSERT
+#define GLASSTUAL_DEPRECATED_ASSERT_C COCOA_EXTENSIONS_DEPRECATED_ASSERT_C
 
-#define GLASSTUAL_DEPRECATED_WARNING				COCOA_EXTENSIONS_DEPRECATED_WARNING
+#define GLASSTUAL_DEPRECATED_WARNING COCOA_EXTENSIONS_DEPRECATED_WARNING
 
-#define GLASSTUAL_IGNORE_DEPRECATION_BEGIN		COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
-#define GLASSTUAL_IGNORE_DEPRECATION_END			COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
+#define GLASSTUAL_IGNORE_DEPRECATION_BEGIN COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
+#define GLASSTUAL_IGNORE_DEPRECATION_END COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
-#define GLASSTUAL_IGNORE_AVAILABILITY_BEGIN		_Pragma("clang diagnostic push")									\
-												_Pragma("clang diagnostic ignored \"-Wpartial-availability\"")
+#define GLASSTUAL_IGNORE_AVAILABILITY_BEGIN                                                                            \
+	_Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wpartial-availability\"")
 
-#define GLASSTUAL_IGNORE_AVAILABILITY_END			_Pragma("clang diagnostic pop")
+#define GLASSTUAL_IGNORE_AVAILABILITY_END _Pragma("clang diagnostic pop")
 
 /* Helper function */
 #define StringFromBOOL(value) ((value) ? @"YES" : @"NO")
 
-#define SetVariableIfNil(variable, value)					\
-	if ((variable) == nil) {								\
-		(variable) = (value);								\
+#define SetVariableIfNil(variable, value)                                                                              \
+	if ((variable) == nil) {                                                                                           \
+		(variable) = (value);                                                                                          \
 	}
 
-#define SetVariableIfNilCopy(variable, value)				\
-	SetVariableIfNil((variable), [(value) copy])
+#define SetVariableIfNilCopy(variable, value) SetVariableIfNil((variable), [(value) copy])
 
 /* Define features */
 #import "FeatureFlags.h"

@@ -1,0 +1,33 @@
+BasedOnStyle: LLVM
+
+# Match the established Objective-C style while making wrapping deterministic.
+UseTab: Always
+TabWidth: 4
+IndentWidth: 4
+ContinuationIndentWidth: 4
+ColumnLimit: 120
+
+PointerAlignment: Right
+DerivePointerAlignment: false
+SortIncludes: Never
+IncludeBlocks: Preserve
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  AfterObjCDeclaration: true
+  AfterControlStatement: Never
+  BeforeElse: false
+
+ObjCBlockIndentWidth: 4
+ObjCBreakBeforeNestedBlockParam: true
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+MaxEmptyLinesToKeep: 1
+ReflowComments: false

@@ -41,18 +41,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TXApplicationAppearanceChangedNotification = @"TXApplicationAppearanceChangedNotification";
-NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChangedNotification";
+NSString *const TXApplicationAppearanceChangedNotification = @"TXApplicationAppearanceChangedNotification";
+NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChangedNotification";
 
 @interface TXAppearancePropertyCollection ()
-@property (nonatomic, copy, readwrite) NSString *appearanceName;
-@property (nonatomic, assign, readwrite) TXAppearanceType appearanceType;
-@property (nonatomic, assign, readwrite) BOOL isDarkAppearance;
-@property (nonatomic, assign, readwrite) TXAppKitAppearanceTarget appKitAppearanceTarget;
+@property(nonatomic, copy, readwrite) NSString *appearanceName;
+@property(nonatomic, assign, readwrite) TXAppearanceType appearanceType;
+@property(nonatomic, assign, readwrite) BOOL isDarkAppearance;
+@property(nonatomic, assign, readwrite) TXAppKitAppearanceTarget appKitAppearanceTarget;
 @end
 
 @interface TXAppearance ()
-@property (nonatomic, strong, readwrite) TXAppearancePropertyCollection *properties;
+@property(nonatomic, strong, readwrite) TXAppearancePropertyCollection *properties;
 @end
 
 @implementation TXAppearance
@@ -98,25 +98,25 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 + (nullable NSString *)appearanceNameForType:(TXAppearanceType)type
 {
 	switch (type) {
-		case TXAppearanceTypeLight:
-		{
-			return @"TahoeLight";
-		}
-		case TXAppearanceTypeDark:
-		{
-			return @"TahoeDark";
-		}
-		default:
-		{
-			return nil;
-		}
+	case TXAppearanceTypeLight: {
+		return @"TahoeLight";
+	}
+	case TXAppearanceTypeDark: {
+		return @"TahoeDark";
+	}
+	default: {
+		return nil;
+	}
 	}
 }
 
 #pragma mark -
 #pragma mark Notifications
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 {
 	if ([keyPath isEqualToString:@"effectiveAppearance"]) {
 		[self applicationAppearanceChanged];
@@ -161,24 +161,21 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 
 	/* Determine user's preference */
 	switch (preferredAppearance) {
-		case TXPreferredAppearanceInherited:
-		{
-			if ([TXAppearancePropertyCollection systemWideDarkModeEnabled]) {
-				appearanceType = TXAppearanceTypeDark;
-			}
-
-			break;
-		}
-		case TXPreferredAppearanceDark:
-		{
+	case TXPreferredAppearanceInherited: {
+		if ([TXAppearancePropertyCollection systemWideDarkModeEnabled]) {
 			appearanceType = TXAppearanceTypeDark;
+		}
 
-			break;
-		}
-		default:
-		{
-			break;
-		}
+		break;
+	}
+	case TXPreferredAppearanceDark: {
+		appearanceType = TXAppearanceTypeDark;
+
+		break;
+	}
+	default: {
+		break;
+	}
 	}
 
 	BOOL isAppearanceDark = (appearanceType == TXAppearanceTypeDark);
@@ -200,12 +197,10 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 	/* Test for changes */
 	TXAppearancePropertyCollection *oldProperties = self.properties;
 
-	BOOL changeAppearance = (oldProperties == nil ||
-							 (oldProperties.appearanceType != appearanceType) ||
+	BOOL changeAppearance = (oldProperties == nil || (oldProperties.appearanceType != appearanceType) ||
 							 (oldProperties.appKitAppearanceTarget != appKitAppearanceTarget));
 
-	if (changeAppearance == NO)
-	{
+	if (changeAppearance == NO) {
 		/* Even if the desired appearance hasn't changed, we still
 		 signal views to perform selection update so that vibrant
 		 views can draw correctly when the system changes. */
@@ -213,9 +208,7 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 		if (systemChanged == NO) {
 			return;
 		}
-	}
-	else
-	{
+	} else {
 		/* When appearance changes as a result of a system change, then we
 		 treat it as an application change as that's more specialized. */
 		systemChanged = NO;
@@ -229,7 +222,7 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 	newProperties.appearanceType = appearanceType;
 
 	newProperties.isDarkAppearance = isAppearanceDark;
-	
+
 	newProperties.appKitAppearanceTarget = appKitAppearanceTarget;
 
 	self.properties = newProperties;
@@ -291,7 +284,7 @@ NSString * const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceCha
 
 + (BOOL)systemWideDarkModeEnabled
 {
-	return ([[NSApp effectiveAppearance] bestMatchFromAppearancesWithNames:@[NSAppearanceNameDarkAqua]] != nil);
+	return ([[NSApp effectiveAppearance] bestMatchFromAppearancesWithNames:@[ NSAppearanceNameDarkAqua ]] != nil);
 }
 
 + (nullable NSAppearance *)appKitDarkAppearance

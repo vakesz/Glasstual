@@ -51,36 +51,36 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /* How frequent to display alert for no disk space */
-#define _noSpaceLeftOnDeviceAlertInterval		300 // 5 minutes
+#define _noSpaceLeftOnDeviceAlertInterval 300 // 5 minutes
 
 /* How long a file handle is allowed to be idle */
-#define _fileHandleIdleLimit		1200 // 20 minutes
+#define _fileHandleIdleLimit 1200 // 20 minutes
 
 /* The frequency by which idle is checked for */
-#define _idleTimerInterval			600 // 10 minutes
+#define _idleTimerInterval 600 // 10 minutes
 
-NSString * const TLOFileLoggerConsoleDirectoryName				= @"Console";
-NSString * const TLOFileLoggerChannelDirectoryName				= @"Channels";
-NSString * const TLOFileLoggerPrivateMessageDirectoryName		= @"Queries";
+NSString *const TLOFileLoggerConsoleDirectoryName = @"Console";
+NSString *const TLOFileLoggerChannelDirectoryName = @"Channels";
+NSString *const TLOFileLoggerPrivateMessageDirectoryName = @"Queries";
 
-NSString * const TLOFileLoggerUndefinedNicknameFormat	= @"<%@%n>";
-NSString * const TLOFileLoggerActionNicknameFormat		= @"\u2022 %n:";
-NSString * const TLOFileLoggerNoticeNicknameFormat		= @"-%n-";
+NSString *const TLOFileLoggerUndefinedNicknameFormat = @"<%@%n>";
+NSString *const TLOFileLoggerActionNicknameFormat = @"\u2022 %n:";
+NSString *const TLOFileLoggerNoticeNicknameFormat = @"-%n-";
 
-NSString * const TLOFileLoggerISOStandardClockFormat		= @"[%Y-%m-%dT%H:%M:%S%z]"; // 2008-07-09T16:13:30+12:00
+NSString *const TLOFileLoggerISOStandardClockFormat = @"[%Y-%m-%dT%H:%M:%S%z]"; // 2008-07-09T16:13:30+12:00
 
-NSString * const TLOFileLoggerIdleTimerNotification		= @"TLOFileLoggerIdleTimerNotification";
+NSString *const TLOFileLoggerIdleTimerNotification = @"TLOFileLoggerIdleTimerNotification";
 
 @interface TLOFileLogger ()
-@property (nonatomic, weak) IRCClient *client;
-@property (nonatomic, weak) IRCChannel *channel;
-@property (nonatomic, strong, nullable) NSFileHandle *fileHandle;
-@property (nonatomic, copy, readwrite, nullable) NSString *filePath;
-@property (readonly, copy, readonly, nullable) NSString *filePathComputed;
-@property (nonatomic, copy, nullable) NSDate *dateOpened;
-@property (nonatomic, assign) NSTimeInterval lastWriteTime;
-@property (readonly) BOOL fileHandleIdle;
-@property (readonly, class) TLOTimer *idleTimer;
+@property(nonatomic, weak) IRCClient *client;
+@property(nonatomic, weak) IRCChannel *channel;
+@property(nonatomic, strong, nullable) NSFileHandle *fileHandle;
+@property(nonatomic, copy, readwrite, nullable) NSString *filePath;
+@property(readonly, copy, readonly, nullable) NSString *filePathComputed;
+@property(nonatomic, copy, nullable) NSDate *dateOpened;
+@property(nonatomic, assign) NSTimeInterval lastWriteTime;
+@property(readonly) BOOL fileHandleIdle;
+@property(readonly, class) TLOTimer *idleTimer;
 @end
 
 static NSUInteger _numberOfOpenFileHandles = 0;
@@ -165,8 +165,7 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 			self.lastWriteTime = [NSDate timeIntervalSince1970];
 
 			[self.fileHandle writeData:dataToWrite];
-		}
-		@catch (NSException *exception) {
+		} @catch (NSException *exception) {
 			LogToConsoleError("Caught exception: %{public}@", exception.reason);
 			LogStackTrace();
 
@@ -231,8 +230,7 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 
 	@try {
 		[self.fileHandle synchronizeFile];
-	}
-	@catch (NSException *exception) {
+	} @catch (NSException *exception) {
 		LogToConsoleError("Caught exception: %{public}@", exception.reason);
 		LogStackTrace();
 	}
@@ -291,9 +289,11 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 	if ([RZFileManager() fileExistsAtPath:writePath] == NO) {
 		NSError *createDirectoryError = nil;
 
-		if ([RZFileManager() createDirectoryAtPath:writePath withIntermediateDirectories:YES attributes:nil error:&createDirectoryError] == NO) {
-			LogToConsoleError("Error Creating Folder: %{public}@",
-				 createDirectoryError.localizedDescription);
+		if ([RZFileManager() createDirectoryAtPath:writePath
+					   withIntermediateDirectories:YES
+										attributes:nil
+											 error:&createDirectoryError] == NO) {
+			LogToConsoleError("Error Creating Folder: %{public}@", createDirectoryError.localizedDescription);
 
 			return;
 		}
@@ -303,8 +303,7 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 		NSError *writeFileError = nil;
 
 		if ([@"" writeToFile:filePath atomically:NO encoding:NSUTF8StringEncoding error:&writeFileError] == NO) {
-			LogToConsoleError("Error Creating File: %{public}@",
-				  writeFileError.localizedDescription);
+			LogToConsoleError("Error Creating File: %{public}@", writeFileError.localizedDescription);
 
 			return;
 		}
@@ -352,9 +351,11 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		idleTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-			[self idleTimerFired];
-		} onQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)];
+		idleTimer = [TLOTimer
+			timerWithActionBlock:^(TLOTimer *sender) {
+				[self idleTimerFired];
+			}
+						 onQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)];
 	});
 
 	return idleTimer;
@@ -417,7 +418,10 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 {
 	_numberOfOpenFileHandles += 1;
 
-	[RZNotificationCenter() addObserver:self selector:@selector(idleTimerFired:) name:TLOFileLoggerIdleTimerNotification object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(idleTimerFired:)
+								   name:TLOFileLoggerIdleTimerNotification
+								 object:nil];
 
 	[self updateIdleTimer];
 }
@@ -467,23 +471,29 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 	if (channel && channel.isUtility) {
 		return nil;
 	}
-	
+
 	IRCClient *client = item.associatedClient;
 
 	NSString *clientIdentifier = [client.uniqueIdentifier substringToIndex:5];
-	
+
 	NSString *clientName = [NSString stringWithFormat:@"%@ (%@)", client.name, clientIdentifier];
 
 	NSString *basePath = nil;
-	
+
 	if (channel == nil) {
 		basePath = [NSString stringWithFormat:@"/%@/%@/", clientName.safeFilename, TLOFileLoggerConsoleDirectoryName];
 	} else if (channel.isChannel) {
-		basePath = [NSString stringWithFormat:@"/%@/%@/%@/", clientName.safeFilename, TLOFileLoggerChannelDirectoryName, channel.name.safeFilename];
+		basePath = [NSString stringWithFormat:@"/%@/%@/%@/",
+											  clientName.safeFilename,
+											  TLOFileLoggerChannelDirectoryName,
+											  channel.name.safeFilename];
 	} else if (channel.isPrivateMessage) {
-		basePath = [NSString stringWithFormat:@"/%@/%@/%@/", clientName.safeFilename, TLOFileLoggerPrivateMessageDirectoryName, channel.name.safeFilename];
+		basePath = [NSString stringWithFormat:@"/%@/%@/%@/",
+											  clientName.safeFilename,
+											  TLOFileLoggerPrivateMessageDirectoryName,
+											  channel.name.safeFilename];
 	}
-	
+
 	return [sourcePath stringByAppendingPathComponent:basePath];
 }
 

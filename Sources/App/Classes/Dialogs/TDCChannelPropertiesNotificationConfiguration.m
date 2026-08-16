@@ -42,8 +42,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCChannelPropertiesNotificationConfiguration ()
-@property (nonatomic, weak) TDCChannelPropertiesSheet *sheet;
-@property (readonly) IRCChannelConfigMutable *config;
+@property(nonatomic, weak) TDCChannelPropertiesSheet *sheet;
+@property(readonly) IRCChannelConfigMutable *config;
 @end
 
 @implementation TDCChannelPropertiesNotificationConfiguration

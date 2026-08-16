@@ -47,9 +47,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCChannelUser ()
-@property (atomic, strong, readwrite) IRCUser *user;
-@property (readonly) IRCClient *client;
-@property (readonly) NSString *highestRankedUserMode;
+@property(atomic, strong, readwrite) IRCUser *user;
+@property(readonly) IRCClient *client;
+@property(readonly) NSString *highestRankedUserMode;
 @end
 
 @implementation IRCChannelUser
@@ -147,7 +147,7 @@ NS_ASSUME_NONNULL_BEGIN
 	return [self.modes containsCharacters:@"qOao"];
 }
 
-- (BOOL)isHalfOp 
+- (BOOL)isHalfOp
 {
 	return [self.modes containsCharacters:@"qOaoh"];
 }
@@ -188,14 +188,9 @@ NS_ASSUME_NONNULL_BEGIN
 		return IRCUserRankNone;
 	}
 
-	if ([modeSymbol isEqualToString:@"y"] ||
-		[modeSymbol isEqualToString:@"Y"])
-	{
+	if ([modeSymbol isEqualToString:@"y"] || [modeSymbol isEqualToString:@"Y"]) {
 		return IRCUserRankIRCopByMode;
-	}
-	else if ([modeSymbol isEqualToString:@"q"] ||
-			 [modeSymbol isEqualToString:@"O"])
-	{
+	} else if ([modeSymbol isEqualToString:@"q"] || [modeSymbol isEqualToString:@"O"]) {
 		return IRCUserRankChannelOwner;
 	} else if ([modeSymbol isEqualToString:@"a"]) {
 		return IRCUserRankSuperOperator;
@@ -311,8 +306,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSComparator)nicknameLengthComparator
 {
 	return [^(IRCChannelUser *object1, IRCChannelUser *object2) {
-		return (object1.user.nickname.length <=
-				object2.user.nickname.length);
+		return (object1.user.nickname.length <= object2.user.nickname.length);
 	} copy];
 }
 
@@ -339,8 +333,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	return (self.user == objectCast.user &&
 
-			((self.modes == nil && objectCast.modes == nil) ||
-			 [self.modes isEqualToString:objectCast.modes]));
+			((self.modes == nil && objectCast.modes == nil) || [self.modes isEqualToString:objectCast.modes]));
 }
 
 - (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing

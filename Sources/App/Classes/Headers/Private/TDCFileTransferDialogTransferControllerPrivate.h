@@ -44,28 +44,28 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClient, TDCFileTransferDialogTableCell;
 
 @interface TDCFileTransferDialogTransferController : NSObject <TDCClientPrototype>
-@property (nonatomic, weak) TDCFileTransferDialogTableCell *transferTableCell;
+@property(nonatomic, weak) TDCFileTransferDialogTableCell *transferTableCell;
 
-@property (readonly) BOOL isResume;
-@property (readonly) BOOL isReversed;
-@property (readonly) BOOL isSender;
-@property (readonly) TDCFileTransferDialogTransferStatus transferStatus;
-@property (readonly) uint64_t totalFilesize;
-@property (readonly) uint64_t processedFilesize;
-@property (readonly) uint64_t currentRecord;
-@property (readonly, copy) NSArray<NSNumber *> *speedRecords;
-@property (readonly, copy, nullable) NSString *errorMessageDescription;
-@property (readonly, copy, nullable) NSString *path;
-@property (readonly, copy) NSString *filename;
-@property (readonly, copy, nullable) NSString *filePath;
-@property (readonly, copy, nullable) NSURL *fileURL;
-@property (readonly, copy) NSString *hostAddress;
-@property (readonly, copy) NSString *peerNickname;
-@property (readonly, copy, nullable) NSString *transferToken;
-@property (readonly, copy) NSString *uniqueIdentifier;
-@property (readonly) uint16_t hostPort;
-@property (getter=isActingAsClient, readonly) BOOL actingAsClient;
-@property (getter=isActingAsServer, readonly) BOOL actingAsServer;
+@property(readonly) BOOL isResume;
+@property(readonly) BOOL isReversed;
+@property(readonly) BOOL isSender;
+@property(readonly) TDCFileTransferDialogTransferStatus transferStatus;
+@property(readonly) uint64_t totalFilesize;
+@property(readonly) uint64_t processedFilesize;
+@property(readonly) uint64_t currentRecord;
+@property(readonly, copy) NSArray<NSNumber *> *speedRecords;
+@property(readonly, copy, nullable) NSString *errorMessageDescription;
+@property(readonly, copy, nullable) NSString *path;
+@property(readonly, copy) NSString *filename;
+@property(readonly, copy, nullable) NSString *filePath;
+@property(readonly, copy, nullable) NSURL *fileURL;
+@property(readonly, copy) NSString *hostAddress;
+@property(readonly, copy) NSString *peerNickname;
+@property(readonly, copy, nullable) NSString *transferToken;
+@property(readonly, copy) NSString *uniqueIdentifier;
+@property(readonly) uint16_t hostPort;
+@property(getter=isActingAsClient, readonly) BOOL actingAsClient;
+@property(getter=isActingAsServer, readonly) BOOL actingAsServer;
 
 + (nullable instancetype)receiverForClient:(IRCClient *)client
 								  nickname:(NSString *)nickname
@@ -75,9 +75,7 @@ NS_ASSUME_NONNULL_BEGIN
 								  filesize:(uint64_t)totalFilesize
 									 token:(nullable NSString *)transferToken;
 
-+ (nullable instancetype)senderForClient:(IRCClient *)client
-								nickname:(NSString *)nickname
-									path:(NSString *)path;
++ (nullable instancetype)senderForClient:(IRCClient *)client nickname:(NSString *)nickname path:(NSString *)path;
 
 - (instancetype)init NS_UNAVAILABLE;
 

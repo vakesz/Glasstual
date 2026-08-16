@@ -40,15 +40,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient, IRCChannel, IRCTreeItem, TVCLogLine;
 
-GLASSTUAL_EXTERN NSString * const TLOFileLoggerConsoleDirectoryName;
-GLASSTUAL_EXTERN NSString * const TLOFileLoggerChannelDirectoryName;
-GLASSTUAL_EXTERN NSString * const TLOFileLoggerPrivateMessageDirectoryName;
+GLASSTUAL_EXTERN NSString *const TLOFileLoggerConsoleDirectoryName;
+GLASSTUAL_EXTERN NSString *const TLOFileLoggerChannelDirectoryName;
+GLASSTUAL_EXTERN NSString *const TLOFileLoggerPrivateMessageDirectoryName;
 
-GLASSTUAL_EXTERN NSString * const TLOFileLoggerUndefinedNicknameFormat;
-GLASSTUAL_EXTERN NSString * const TLOFileLoggerActionNicknameFormat;
-GLASSTUAL_EXTERN NSString * const TLOFileLoggerNoticeNicknameFormat;
+GLASSTUAL_EXTERN NSString *const TLOFileLoggerUndefinedNicknameFormat;
+GLASSTUAL_EXTERN NSString *const TLOFileLoggerActionNicknameFormat;
+GLASSTUAL_EXTERN NSString *const TLOFileLoggerNoticeNicknameFormat;
 
-GLASSTUAL_EXTERN NSString * const TLOFileLoggerISOStandardClockFormat;
+GLASSTUAL_EXTERN NSString *const TLOFileLoggerISOStandardClockFormat;
 
 @interface TLOFileLogger : NSObject
 - (instancetype)init NS_UNAVAILABLE;
@@ -78,14 +78,14 @@ GLASSTUAL_EXTERN NSString * const TLOFileLoggerISOStandardClockFormat;
  this property after midnight and before another write occurs.
  Unless a specific reason is needed to access this property,
  it may be better to use -writePath instead. */
-@property (readonly, copy, nullable) NSString *filePath;
+@property(readonly, copy, nullable) NSString *filePath;
 
 /* The last path component (file name) of file path */
-@property (readonly, copy, nullable) NSString *fileName;
+@property(readonly, copy, nullable) NSString *fileName;
 
 /* Write path is the path to the folder in which log files
  for the channel or client are written to. */
-@property (readonly, copy, nullable) NSString *writePath;
+@property(readonly, copy, nullable) NSString *writePath;
 
 /* -writePathForItem: only returns nil when there is no
  log location configured in Preferences. */

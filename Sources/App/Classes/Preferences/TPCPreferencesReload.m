@@ -75,22 +75,19 @@ NS_ASSUME_NONNULL_BEGIN
 		[keys containsObject:@"DisplayEventInLogView -> Date Changes"] ||
 		[keys containsObject:@"DisplayEventInLogView -> Inline Media"] ||
 		[keys containsObject:@"DisplayEventInLogView -> Join, Part, Quit"] ||
-		[keys containsObject:@"Theme -> Nickname Format"] ||
-		[keys containsObject:@"Theme -> Timestamp Format"] ||
+		[keys containsObject:@"Theme -> Nickname Format"] || [keys containsObject:@"Theme -> Timestamp Format"] ||
 		[keys containsObject:@"Theme -> Channel Font Preference Enabled"] ||
 		[keys containsObject:@"Theme -> Nickname Format Preference Enabled"] ||
 		[keys containsObject:@"Theme -> Timestamp Format Preference Enabled"] ||
 		[keys containsObject:TPCPreferencesThemeFontNameDefaultsKey] ||
 		[keys containsObject:TPCPreferencesThemeFontSizeDefaultsKey] ||
-		[keys containsObject:TPCPreferencesThemeNameDefaultsKey])
-	{
+		[keys containsObject:TPCPreferencesThemeNameDefaultsKey]) {
 		reloadAction |= TPCPreferencesReloadActionStyle;
 	}
 
 	/* Highlight lists */
 	if ([keys containsObject:@"Highlight List -> Excluded Matches"] ||
-		[keys containsObject:@"Highlight List -> Primary Matches"])
-	{
+		[keys containsObject:@"Highlight List -> Primary Matches"]) {
 		reloadAction |= TPCPreferencesReloadActionHighlightKeywords;
 	}
 
@@ -120,9 +117,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Dock icon */
-	if ([keys containsObject:@"DisplayDockBadges"] ||
-		[keys containsObject:@"DisplayPublicMessageCountInDockBadge"])
-	{
+	if ([keys containsObject:@"DisplayDockBadges"] || [keys containsObject:@"DisplayPublicMessageCountInDockBadge"]) {
 		reloadAction |= TPCPreferencesReloadActionDockIconBadges;
 	}
 
@@ -144,8 +139,7 @@ NS_ASSUME_NONNULL_BEGIN
 		[keys containsObject:@"User List Mode Badge Colors -> +o"] ||
 		[keys containsObject:@"User List Mode Badge Colors -> +h"] ||
 		[keys containsObject:@"User List Mode Badge Colors -> +v"] ||
-		[keys containsObject:@"User List Mode Badge Colors -> no mode"])
-	{
+		[keys containsObject:@"User List Mode Badge Colors -> no mode"]) {
 		reloadAction |= TPCPreferencesReloadActionMemberList;
 		reloadAction |= TPCPreferencesReloadActionMemberListUserBadges;
 	}
@@ -185,8 +179,7 @@ NS_ASSUME_NONNULL_BEGIN
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	if ([keys containsObject:@"Off-the-Record Messaging -> Enable Encryption"] ||
 		[keys containsObject:@"Off-the-Record Messaging -> Automatically Enable Service"] ||
-		[keys containsObject:@"Off-the-Record Messaging -> Require Encryption"])
-	{
+		[keys containsObject:@"Off-the-Record Messaging -> Require Encryption"]) {
 		reloadAction |= TPCPreferencesReloadActionEncryptionPolicy;
 	}
 #endif
@@ -217,7 +210,8 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL didReloadUserInterface = NO;
 
 	/* Member list appearance */
-	if ((reloadAction & TPCPreferencesReloadActionMemberListUserBadges) == TPCPreferencesReloadActionMemberListUserBadges) {
+	if ((reloadAction & TPCPreferencesReloadActionMemberListUserBadges) ==
+		TPCPreferencesReloadActionMemberListUserBadges) {
 		/* We invalidate this early because a separate action may
 		 which is attached to our mask may reload the drawings for
 		 us so until we know if that happened, we wait. */
@@ -253,7 +247,8 @@ NS_ASSUME_NONNULL_BEGIN
 		if (didReloadUserInterface == NO) {
 			[mainWindowServerList() applicationAppearanceChanged];
 		}
-	} else if ((reloadAction & TPCPreferencesReloadActionServerListUnreadBadges) == TPCPreferencesReloadActionServerListUnreadBadges) {
+	} else if ((reloadAction & TPCPreferencesReloadActionServerListUnreadBadges) ==
+			   TPCPreferencesReloadActionServerListUnreadBadges) {
 		if (didReloadUserInterface == NO) {
 			/* The color used for unread badges also apply to the text color so
 			 we must reload all drawings instead of only the badges themselves. */
@@ -271,7 +266,8 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Member list sort order */
 	BOOL didReloadMemberListSortOrder = NO;
 
-	if ((reloadAction & TPCPreferencesReloadActionMemberListSortOrder) == TPCPreferencesReloadActionMemberListSortOrder) {
+	if ((reloadAction & TPCPreferencesReloadActionMemberListSortOrder) ==
+		TPCPreferencesReloadActionMemberListSortOrder) {
 		for (IRCClient *u in worldController().clientList) {
 			for (IRCChannel *c in u.channelList) {
 				[c sortMembers];
@@ -290,7 +286,8 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Main window alpha level */
-	if ((reloadAction & TPCPreferencesReloadActionMainWindowTransparencyLevel) == TPCPreferencesReloadActionMainWindowTransparencyLevel) {
+	if ((reloadAction & TPCPreferencesReloadActionMainWindowTransparencyLevel) ==
+		TPCPreferencesReloadActionMainWindowTransparencyLevel) {
 		[mainWindow() updateAlphaValueToReflectPreferences];
 	}
 
@@ -329,7 +326,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Sparkle framework update feed URL */
 #if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	if ((reloadAction & TPCPreferencesReloadActionSparkleFrameworkFeedURL) == TPCPreferencesReloadActionSparkleFrameworkFeedURL) {
+	if ((reloadAction & TPCPreferencesReloadActionSparkleFrameworkFeedURL) ==
+		TPCPreferencesReloadActionSparkleFrameworkFeedURL) {
 		[masterController() prepareThirdPartyServiceSparkleFramework];
 	}
 #endif
@@ -351,11 +349,13 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Scrollback limit */
-	if ((reloadAction & TPCPreferencesReloadActionScrollbackSaveLimit) == TPCPreferencesReloadActionScrollbackSaveLimit) {
+	if ((reloadAction & TPCPreferencesReloadActionScrollbackSaveLimit) ==
+		TPCPreferencesReloadActionScrollbackSaveLimit) {
 		[TVCLogControllerHistoricLogSharedInstance() resetMaximumLineCount];
 	}
 
-	if ((reloadAction & TPCPreferencesReloadActionScrollbackVisibleLimit) == TPCPreferencesReloadActionScrollbackSaveLimit) {
+	if ((reloadAction & TPCPreferencesReloadActionScrollbackVisibleLimit) ==
+		TPCPreferencesReloadActionScrollbackSaveLimit) {
 		for (IRCClient *u in worldController().clientList) {
 			[u.viewController changeScrollbackLimit];
 
@@ -366,7 +366,8 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Channel view arrangement */
-	if ((reloadAction & TPCPreferencesReloadActionChannelViewArrangement) == TPCPreferencesReloadActionChannelViewArrangement) {
+	if ((reloadAction & TPCPreferencesReloadActionChannelViewArrangement) ==
+		TPCPreferencesReloadActionChannelViewArrangement) {
 		[mainWindow() updateChannelViewArrangement];
 	}
 

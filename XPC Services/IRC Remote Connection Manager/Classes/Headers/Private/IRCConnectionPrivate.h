@@ -40,7 +40,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCConnection : NSObject
-- (instancetype)initWithConfig:(IRCConnectionConfig *)config onConnection:(NSXPCConnection *)connection NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithConfig:(IRCConnectionConfig *)config
+				  onConnection:(NSXPCConnection *)connection NS_DESIGNATED_INITIALIZER;
 
 - (void)open;
 - (void)close;
@@ -51,7 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clearSendQueue;
 
-- (BOOL)exportSecureConnectionInformation:(RCMSecureConnectionInformationCompletionBlock)completionBlock error:(NSError * _Nullable * _Nullable)error;
+- (BOOL)exportSecureConnectionInformation:(RCMSecureConnectionInformationCompletionBlock)completionBlock
+									error:(NSError *_Nullable *_Nullable)error;
 @end
 
 NS_ASSUME_NONNULL_END

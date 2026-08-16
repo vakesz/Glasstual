@@ -46,10 +46,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCServerChangeNicknameSheet ()
-@property (nonatomic, strong, readwrite) IRCClient *client;
-@property (nonatomic, copy, readwrite) NSString *clientId;
-@property (nonatomic, weak) IBOutlet TVCValidatedTextField *tnewNicknameTextField;
-@property (nonatomic, weak) IBOutlet NSTextField *toldNicknameTextField;
+@property(nonatomic, strong, readwrite) IRCClient *client;
+@property(nonatomic, copy, readwrite) NSString *clientId;
+@property(nonatomic, weak) IBOutlet TVCValidatedTextField *tnewNicknameTextField;
+@property(nonatomic, weak) IBOutlet NSTextField *toldNicknameTextField;
 @end
 
 @implementation TDCServerChangeNicknameSheet

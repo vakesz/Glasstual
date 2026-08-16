@@ -40,9 +40,9 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCChannelSelectionViewController;
 
 @interface TVCChannelSelectionOutlineCellView : NSTableCellView
-@property (nonatomic, weak) TVCChannelSelectionViewController *parentController;
+@property(nonatomic, weak) TVCChannelSelectionViewController *parentController;
 
-@property (nonatomic, weak) IBOutlet NSButton *selectedCheckbox;
+@property(nonatomic, weak) IBOutlet NSButton *selectedCheckbox;
 @end
 
 NS_ASSUME_NONNULL_END

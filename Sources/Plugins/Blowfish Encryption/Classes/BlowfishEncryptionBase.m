@@ -73,7 +73,10 @@ static const char blowfish_ecb_base64_chars[64] = "./0123456789abcdefghijklmnopq
 	return (ceil(blockLength / 3) * 4);
 }
 
-+ (NSString *)encrypt:(NSString *)rawInput key:(NSString *)secretKey mode:(EKBlowfishEncryptionModeOfOperation)mode encoding:(NSStringEncoding)dataEncoding
++ (NSString *)encrypt:(NSString *)rawInput
+				  key:(NSString *)secretKey
+				 mode:(EKBlowfishEncryptionModeOfOperation)mode
+			 encoding:(NSStringEncoding)dataEncoding
 {
 	if (mode == EKBlowfishEncryptionDefaultModeOfOperation || mode == EKBlowfishEncryptionECBModeOfOperation) {
 		return [self ecb_encrypt:rawInput key:secretKey encoding:dataEncoding];
@@ -82,7 +85,11 @@ static const char blowfish_ecb_base64_chars[64] = "./0123456789abcdefghijklmnopq
 	}
 }
 
-+ (NSString *)decrypt:(NSString *)rawInput key:(NSString *)secretKey mode:(EKBlowfishEncryptionModeOfOperation)mode encoding:(NSStringEncoding)dataEncoding lostBytes:(NSInteger *)lostBytes
++ (NSString *)decrypt:(NSString *)rawInput
+				  key:(NSString *)secretKey
+				 mode:(EKBlowfishEncryptionModeOfOperation)mode
+			 encoding:(NSStringEncoding)dataEncoding
+			lostBytes:(NSInteger *)lostBytes
 {
 	if (mode == EKBlowfishEncryptionDefaultModeOfOperation || mode == EKBlowfishEncryptionECBModeOfOperation) {
 		return [self ecb_decrypt:rawInput key:secretKey encoding:dataEncoding lostBytes:lostBytes];
@@ -95,8 +102,7 @@ NSData *_commonCryptoInitializationVector(void)
 {
 	uint8_t initializationVector[kCCBlockSizeBlowfish] = {0};
 
-	CCRNGStatus cryptoRandomBytesStatus =
-	CCRandomGenerateBytes(&initializationVector, 8);
+	CCRNGStatus cryptoRandomBytesStatus = CCRandomGenerateBytes(&initializationVector, 8);
 
 	if (cryptoRandomBytesStatus == kCCSuccess) {
 		return [NSData dataWithBytes:initializationVector length:kCCBlockSizeBlowfish];
@@ -120,73 +126,57 @@ NSData *_performCommonCryptoOperation(CCOperation ccInOperation,
 
 	/* Validate key length is within an expected range. */
 	switch (ccInOperationAlgorithm) {
-		case kCCAlgorithmAES128:
-		{
-			if ([ccInSecretKey length] != kCCKeySizeAES128 &&
-				[ccInSecretKey length] != kCCKeySizeAES192 &&
-				[ccInSecretKey length] != kCCKeySizeAES256)
-			{
-				return nil;
-			}
-
-			break;
+	case kCCAlgorithmAES128: {
+		if ([ccInSecretKey length] != kCCKeySizeAES128 && [ccInSecretKey length] != kCCKeySizeAES192 &&
+			[ccInSecretKey length] != kCCKeySizeAES256) {
+			return nil;
 		}
-		case kCCAlgorithmDES:
-		{
-			if ([ccInSecretKey length] != kCCKeySizeDES) {
-				return nil;
-			}
 
-			break;
+		break;
+	}
+	case kCCAlgorithmDES: {
+		if ([ccInSecretKey length] != kCCKeySizeDES) {
+			return nil;
 		}
-		case kCCAlgorithm3DES:
-		{
-			if ([ccInSecretKey length] != kCCKeySize3DES) {
-				return nil;
-			}
 
-			break;
+		break;
+	}
+	case kCCAlgorithm3DES: {
+		if ([ccInSecretKey length] != kCCKeySize3DES) {
+			return nil;
 		}
-		case kCCAlgorithmCAST:
-		{
-			if ([ccInSecretKey length] < kCCKeySizeMinCAST ||
-				[ccInSecretKey length] > kCCKeySizeMaxCAST)
-			{
-				return nil;
-			}
 
-			break;
+		break;
+	}
+	case kCCAlgorithmCAST: {
+		if ([ccInSecretKey length] < kCCKeySizeMinCAST || [ccInSecretKey length] > kCCKeySizeMaxCAST) {
+			return nil;
 		}
-		case kCCAlgorithmRC4:
-		{
-			if ([ccInSecretKey length] < kCCKeySizeMinRC4 ||
-				[ccInSecretKey length] > kCCKeySizeMaxRC4)
-			{
-				return nil;
-			}
 
-			break;
+		break;
+	}
+	case kCCAlgorithmRC4: {
+		if ([ccInSecretKey length] < kCCKeySizeMinRC4 || [ccInSecretKey length] > kCCKeySizeMaxRC4) {
+			return nil;
 		}
-		case kCCAlgorithmRC2:
-		{
-			if ([ccInSecretKey length] < kCCKeySizeMinRC2 ||
-				[ccInSecretKey length] > kCCKeySizeMaxRC2)
-			{
-				return nil;
-			}
 
-			break;
+		break;
+	}
+	case kCCAlgorithmRC2: {
+		if ([ccInSecretKey length] < kCCKeySizeMinRC2 || [ccInSecretKey length] > kCCKeySizeMaxRC2) {
+			return nil;
 		}
-		case kCCAlgorithmBlowfish:
-		{
-			if (/* [ccInSecretKey length] < kCCKeySizeMinBlowfish || */
-				[ccInSecretKey length] > kCCKeySizeMaxBlowfish)
-			{
-				return nil;
-			}
 
-			break;
+		break;
+	}
+	case kCCAlgorithmBlowfish: {
+		if (/* [ccInSecretKey length] < kCCKeySizeMinBlowfish || */
+			[ccInSecretKey length] > kCCKeySizeMaxBlowfish) {
+			return nil;
 		}
+
+		break;
+	}
 	}
 
 	/* Attempt to create a cryptor reference using input. */
@@ -200,19 +190,18 @@ NSData *_performCommonCryptoOperation(CCOperation ccInOperation,
 
 	CCCryptorRef cryptorRef;
 
-	CCCryptorStatus cryptorCreateStatus =
-	CCCryptorCreateWithMode(ccInOperation,
-							ccInOperationMode,
-							ccInOperationAlgorithm,
-							ccInPadding,
-							[ccInitializationVector bytes],
-							[ccInSecretKey bytes],
-							[ccInSecretKey length],
-							NULL,
-							0,
-							0,
-							0,
-							&cryptorRef);
+	CCCryptorStatus cryptorCreateStatus = CCCryptorCreateWithMode(ccInOperation,
+																  ccInOperationMode,
+																  ccInOperationAlgorithm,
+																  ccInPadding,
+																  [ccInitializationVector bytes],
+																  [ccInSecretKey bytes],
+																  [ccInSecretKey length],
+																  NULL,
+																  0,
+																  0,
+																  0,
+																  &cryptorRef);
 
 	if (cryptorCreateStatus != kCCSuccess) {
 		return nil;
@@ -223,18 +212,18 @@ NSData *_performCommonCryptoOperation(CCOperation ccInOperation,
 
 	size_t outputBufferSize = CCCryptorGetOutputLength(cryptorRef, [ccInRelatedData length], willCallCryptorFinal);
 
-	NSMutableData *outputBuffer = [NSMutableData dataWithLength:outputBufferSize];;
+	NSMutableData *outputBuffer = [NSMutableData dataWithLength:outputBufferSize];
+	;
 
 	/* Perform update operation on the cryptor. */
 	size_t cryptorUpdateDataOutMoved = 0;
 
-	CCCryptorStatus cryptorUpdateStatus =
-	CCCryptorUpdate(cryptorRef,
-					[ccInRelatedData bytes],
-					[ccInRelatedData length],
-					[outputBuffer mutableBytes],
-					[outputBuffer length],
-					&cryptorUpdateDataOutMoved);
+	CCCryptorStatus cryptorUpdateStatus = CCCryptorUpdate(cryptorRef,
+														  [ccInRelatedData bytes],
+														  [ccInRelatedData length],
+														  [outputBuffer mutableBytes],
+														  [outputBuffer length],
+														  &cryptorUpdateDataOutMoved);
 
 	if (cryptorUpdateStatus != kCCSuccess) {
 		goto cleanup_function;
@@ -249,10 +238,7 @@ NSData *_performCommonCryptoOperation(CCOperation ccInOperation,
 		size_t cryptorFinalDataOutSize = ([outputBuffer length] - cryptorUpdateDataOutMoved);
 
 		CCCryptorStatus cryptorFinalStatus =
-		CCCryptorFinal(cryptorRef,
-					   cryptorFinalDataOut,
-					   cryptorFinalDataOutSize,
-					   &cryptorUpdateDataOutMoved);
+			CCCryptorFinal(cryptorRef, cryptorFinalDataOut, cryptorFinalDataOutSize, &cryptorUpdateDataOutMoved);
 
 		if (cryptorFinalStatus != kCCSuccess) {
 			goto cleanup_function;
@@ -267,7 +253,7 @@ cleanup_function:
 	if (cryptorRef) {
 		CCCryptorRelease(cryptorRef);
 	}
-	
+
 	return outputBuffer;
 }
 
@@ -295,8 +281,8 @@ cleanup_function:
 	[objectToEncrypt appendData:initializationVectorData];
 	[objectToEncrypt appendData:rawInputData];
 
-	NSData *encryptedData =
-	_performCommonCryptoOperation(kCCEncrypt, kCCAlgorithmBlowfish, kCCModeCBC, NO, nil, secretKeyData, objectToEncrypt);
+	NSData *encryptedData = _performCommonCryptoOperation(
+		kCCEncrypt, kCCAlgorithmBlowfish, kCCModeCBC, NO, nil, secretKeyData, objectToEncrypt);
 
 	return [XRBase64Encoding encodeData:encryptedData];
 }
@@ -310,15 +296,15 @@ cleanup_function:
 
 	NSData *rawInputData = [XRBase64Encoding decodeData:rawInput];
 
-	NSData *decryptedData =
-	_performCommonCryptoOperation(kCCDecrypt, kCCAlgorithmBlowfish, kCCModeCBC, NO, nil, secretKeyData, rawInputData);
+	NSData *decryptedData = _performCommonCryptoOperation(
+		kCCDecrypt, kCCAlgorithmBlowfish, kCCModeCBC, NO, nil, secretKeyData, rawInputData);
 
 	/* If we contain at least two blocks, then remove the first block. 
 	 mIRC fish 10 has the IV in the first block then we want at least
 	 one block of user data. */
 	if ([decryptedData length] >= (kCCBlockSizeBlowfish * 2)) {
-		 decryptedData = [decryptedData subdataWithRange:NSMakeRange(kCCBlockSizeBlowfish,
-										   ([decryptedData length] - kCCBlockSizeBlowfish))];
+		decryptedData = [decryptedData
+			subdataWithRange:NSMakeRange(kCCBlockSizeBlowfish, ([decryptedData length] - kCCBlockSizeBlowfish))];
 	} else {
 		return nil;
 	}
@@ -338,15 +324,18 @@ cleanup_function:
 
 	NSData *rawInputData = [rawInput dataUsingEncoding:dataEncoding paddedByBytes:kCCBlockSizeBlowfish];
 
-	NSData *encryptedData =
-	_performCommonCryptoOperation(kCCEncrypt, kCCAlgorithmBlowfish, kCCModeECB, NO, nil, secretKeyData, rawInputData);
+	NSData *encryptedData = _performCommonCryptoOperation(
+		kCCEncrypt, kCCAlgorithmBlowfish, kCCModeECB, NO, nil, secretKeyData, rawInputData);
 
 	NSString *encryptedString = [EKBlowfishEncryptionBase ecb_encrypt_base64Encode:encryptedData];
 
 	return encryptedString;
 }
 
-+ (NSString *)ecb_decrypt:(NSString *)rawInput key:(NSString *)secretKey encoding:(NSStringEncoding)dataEncoding lostBytes:(NSInteger *)lostBytes
++ (NSString *)ecb_decrypt:(NSString *)rawInput
+					  key:(NSString *)secretKey
+				 encoding:(NSStringEncoding)dataEncoding
+				lostBytes:(NSInteger *)lostBytes
 {
 	NSData *secretKeyData = [secretKey dataUsingEncoding:dataEncoding];
 
@@ -354,8 +343,8 @@ cleanup_function:
 
 	NSData *rawInputData = [EKBlowfishEncryptionBase ecb_decrypt_base64Decode:encodedRawData];
 
-	NSData *decryptedData =
-	_performCommonCryptoOperation(kCCDecrypt, kCCAlgorithmBlowfish, kCCModeECB, NO, nil, secretKeyData, rawInputData);
+	NSData *decryptedData = _performCommonCryptoOperation(
+		kCCDecrypt, kCCAlgorithmBlowfish, kCCModeECB, NO, nil, secretKeyData, rawInputData);
 
 	NSMutableData *decryptedDataCleaned = [decryptedData mutableCopy];
 	[decryptedDataCleaned removeBadCharacters];
@@ -384,15 +373,15 @@ cleanup_function:
 		unsigned int left;
 		unsigned int right;
 
-		left  = (*s++ << 24);
+		left = (*s++ << 24);
 		left += (*s++ << 16);
 		left += (*s++ << 8);
-		left +=  *s++;
+		left += *s++;
 
-		right  = (*s++ << 24);
+		right = (*s++ << 24);
 		right += (*s++ << 16);
 		right += (*s++ << 8);
-		right +=  *s++;
+		right += *s++;
 
 		for (NSInteger k = 0; k < 6; k++) {
 			unsigned char partChar = blowfish_ecb_base64_chars[(right & 0x3f)];
@@ -470,12 +459,12 @@ cleanup_function:
 		bufferByte[0] = ((left >> 24) & 0xFF);
 		bufferByte[1] = ((left >> 16) & 0xFF);
 		bufferByte[2] = ((left >> 8) & 0xFF);
-		bufferByte[3] =  (left & 0xFF);
+		bufferByte[3] = (left & 0xFF);
 
 		bufferByte[4] = ((right >> 24) & 0xFF);
 		bufferByte[5] = ((right >> 16) & 0xFF);
 		bufferByte[6] = ((right >> 8) & 0xFF);
-		bufferByte[7] =  (right & 0xFF);
+		bufferByte[7] = (right & 0xFF);
 
 		[outputBuffer appendBytes:&bufferByte length:sizeof(bufferByte)];
 	}

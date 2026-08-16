@@ -45,14 +45,14 @@ GLASSTUAL_EXTERN TLONotificationAlertSound const TXDefaultAlertSoundPreferenceVa
 GLASSTUAL_EXTERN TLONotificationAlertSound const TXNoAlertSoundPreferenceValue;
 
 @interface TLONotificationConfiguration : NSObject
-@property (readonly) TXNotificationType eventType;
-@property (readonly, copy) NSString *displayName;
-@property (nonatomic, copy, nullable) TLONotificationAlertSound alertSound;
-@property (nonatomic, assign) NSUInteger speakEvent;
-@property (nonatomic, assign) NSUInteger pushNotification;
-@property (nonatomic, assign) NSUInteger disabledWhileAway;
-@property (nonatomic, assign) NSUInteger bounceDockIcon;
-@property (nonatomic, assign) NSUInteger bounceDockIconRepeatedly;
+@property(readonly) TXNotificationType eventType;
+@property(readonly, copy) NSString *displayName;
+@property(nonatomic, copy, nullable) TLONotificationAlertSound alertSound;
+@property(nonatomic, assign) NSUInteger speakEvent;
+@property(nonatomic, assign) NSUInteger pushNotification;
+@property(nonatomic, assign) NSUInteger disabledWhileAway;
+@property(nonatomic, assign) NSUInteger bounceDockIcon;
+@property(nonatomic, assign) NSUInteger bounceDockIconRepeatedly;
 
 + (NSString *)localizedAlertDefaultSoundTitle;
 + (NSString *)localizedAlertNoSoundTitle;

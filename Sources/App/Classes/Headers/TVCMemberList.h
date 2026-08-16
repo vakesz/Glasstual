@@ -39,10 +39,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCChannelUser;
 
-GLASSTUAL_EXTERN NSString * const TVCMemberListDragType;
+GLASSTUAL_EXTERN NSString *const TVCMemberListDragType;
 
 @interface TVCMemberList : NSTableView
-@property (nonatomic, assign) BOOL isHiddenByUser;
+@property(nonatomic, assign) BOOL isHiddenByUser;
 
 - (void)refreshDrawingForMember:(IRCChannelUser *)cellItem;
 - (void)refreshDrawingForRow:(NSInteger)rowIndex;

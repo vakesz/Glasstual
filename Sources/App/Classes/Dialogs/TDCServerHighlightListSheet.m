@@ -45,14 +45,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _renderedMessageTextFieldLeftRightPadding		2.0
+#define _renderedMessageTextFieldLeftRightPadding 2.0
 
 @interface TDCServerHighlightListSheet ()
-@property (nonatomic, strong, readwrite) IRCClient *client;
-@property (nonatomic, copy, readwrite) NSString *clientId;
-@property (nonatomic, weak) IBOutlet NSTextField *headerTitleTextField;
-@property (nonatomic, weak) IBOutlet TVCBasicTableView *highlightListTable;
-@property (nonatomic, strong) IBOutlet NSArrayController *highlightListController;
+@property(nonatomic, strong, readwrite) IRCClient *client;
+@property(nonatomic, copy, readwrite) NSString *clientId;
+@property(nonatomic, weak) IBOutlet NSTextField *headerTitleTextField;
+@property(nonatomic, weak) IBOutlet TVCBasicTableView *highlightListTable;
+@property(nonatomic, strong) IBOutlet NSArrayController *highlightListController;
 
 - (IBAction)onClearList:(nullable id)sender;
 @end
@@ -88,7 +88,8 @@ NS_ASSUME_NONNULL_BEGIN
 		[NSSortDescriptor sortDescriptorWithKey:@"channelName" ascending:NO selector:@selector(caseInsensitiveCompare:)]
 	];
 
-	NSString *headerTitle = [NSString stringWithFormat:self.headerTitleTextField.stringValue, self.client.networkNameAlt];
+	NSString *headerTitle =
+		[NSString stringWithFormat:self.headerTitleTextField.stringValue, self.client.networkNameAlt];
 
 	self.headerTitleTextField.stringValue = headerTitle;
 
@@ -108,14 +109,11 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(newEntry != nil);
 
-	if ([newEntry isKindOfClass:[NSArray class]])
-	{
+	if ([newEntry isKindOfClass:[NSArray class]]) {
 		for (id entry in newEntry) {
 			[self addEntry:entry];
 		}
-	}
-	else if ([newEntry isKindOfClass:[IRCHighlightLogEntry class]])
-	{
+	} else if ([newEntry isKindOfClass:[IRCHighlightLogEntry class]]) {
 		if ([newEntry isKindOfClass:[IRCHighlightLogEntryMutable class]]) {
 			newEntry = [newEntry copy];
 		}
@@ -149,13 +147,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 	TVCLogController *viewController = channel.viewController;
 
-	[viewController jumpToLine:entryItem.lineNumber completionHandler:^(BOOL result) {
-		if (result) {
-			[mainWindow() select:channel];
+	[viewController jumpToLine:entryItem.lineNumber
+			 completionHandler:^(BOOL result) {
+				 if (result) {
+					 [mainWindow() select:channel];
 
-			[self cancel:nil];
-		}
-	}];
+					 [self cancel:nil];
+				 }
+			 }];
 }
 
 - (void)copy:(nullable id)sender

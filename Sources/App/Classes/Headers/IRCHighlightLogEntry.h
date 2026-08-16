@@ -40,12 +40,12 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogLine;
 
 @interface IRCHighlightLogEntry : XRPortablePropertyObject
-@property (readonly, copy) TVCLogLine *lineLogged;
-@property (readonly, copy) NSDate *timeLogged;
-@property (readonly, copy) NSString *clientId;
-@property (readonly, copy) NSString *channelId;
-@property (readonly, copy) NSString *lineNumber;
-@property (readonly, copy) NSAttributedString *renderedMessage;
+@property(readonly, copy) TVCLogLine *lineLogged;
+@property(readonly, copy) NSDate *timeLogged;
+@property(readonly, copy) NSString *clientId;
+@property(readonly, copy) NSString *channelId;
+@property(readonly, copy) NSString *lineNumber;
+@property(readonly, copy) NSAttributedString *renderedMessage;
 @end
 
 NS_ASSUME_NONNULL_END

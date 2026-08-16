@@ -8,7 +8,8 @@
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		if ([[NSBundle bundleForClass:self.class] loadNibNamed:@"PreferencePane" owner:self topLevelObjects:nil] == NO) {
+		if ([[NSBundle bundleForClass:self.class] loadNibNamed:@"PreferencePane" owner:self
+											   topLevelObjects:nil] == NO) {
 			NSAssert(NO, @"TPI_PreferencePaneExample: Failed to load view");
 		}
 	});
@@ -23,8 +24,9 @@
 
 - (void)doSomethingWithPreferences
 {
-	BOOL isSomethingChecked = [[NSUserDefaults standardUserDefaults] boolForKey:@"TPI_PreferencesSomethingCheckboxIsChecked"];
-	
+	BOOL isSomethingChecked =
+		[[NSUserDefaults standardUserDefaults] boolForKey:@"TPI_PreferencesSomethingCheckboxIsChecked"];
+
 	if (isSomethingChecked) {
 		NSLog(@"Checkbox is checked");
 	} else {

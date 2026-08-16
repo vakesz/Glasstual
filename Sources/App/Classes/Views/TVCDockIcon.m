@@ -44,7 +44,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _badgeSeperationSpace		1.0
+#define _badgeSeperationSpace 1.0
 
 @implementation TVCDockIcon
 
@@ -85,7 +85,8 @@ static NSInteger _cachedMessageCount = (-1);
 
 	NSCalendar *sysCalendar = [NSCalendar currentCalendar];
 
-	NSDateComponents *breakdownInfo = [sysCalendar components:(NSCalendarUnitMonth | NSCalendarUnitDay) fromDate:[NSDate date]];
+	NSDateComponents *breakdownInfo = [sysCalendar components:(NSCalendarUnitMonth | NSCalendarUnitDay)
+													 fromDate:[NSDate date]];
 
 	/* The first public commit of Glasstual occurred on July, 23, 2010. This is the day
 	 that we consider the birthday of the application. */
@@ -145,8 +146,8 @@ static NSInteger _cachedMessageCount = (-1);
 	CGFloat badgeTextFrameCorrection = 2.0;
 
 	NSDictionary *badgeTextAttributes = @{
-		NSFontAttributeName				: [NSFont fontWithName:@"Helvetica" size:24.0],
-		NSForegroundColorAttributeName	: [NSColor whiteColor]
+		NSFontAttributeName : [NSFont fontWithName:@"Helvetica" size:24.0],
+		NSForegroundColorAttributeName : [NSColor whiteColor]
 	};
 
 	/* ////////////////////////////////////////////////////////// */
@@ -185,11 +186,11 @@ static NSInteger _cachedMessageCount = (-1);
 	/* Green Badge Size */
 	greenBadgeRightFrame.size.height = 53.0;
 	greenBadgeCenterFrame.size.height = 53.0;
-	greenBadgeLeftFrame.size.height	= 53.0;
+	greenBadgeLeftFrame.size.height = 53.0;
 
 	greenBadgeLeftFrame.size.width = 27.0;
 	greenBadgeCenterFrame.size.width = [self badgeCenterTileWidth:highlightCount];
-	greenBadgeRightFrame.size.width	= 26.0;
+	greenBadgeRightFrame.size.width = 26.0;
 
 	/* ////////////////////////////////////////////////////////// */
 
@@ -201,53 +202,43 @@ static NSInteger _cachedMessageCount = (-1);
 
 	/* Green Badge Drawing Position */
 	greenBadgeLeftFrame.origin =
-	NSMakePoint((appIcon.size.width - (greenBadgeRightFrame.size.width +
-									   greenBadgeCenterFrame.size.width +
-									   greenBadgeLeftFrame.size.width)), // End X Axis
-				(appIcon.size.height - greenBadgeRightFrame.size.height));
+		NSMakePoint((appIcon.size.width - (greenBadgeRightFrame.size.width + greenBadgeCenterFrame.size.width +
+										   greenBadgeLeftFrame.size.width)), // End X Axis
+					(appIcon.size.height - greenBadgeRightFrame.size.height));
 
-	greenBadgeCenterFrame.origin =
-	NSMakePoint((appIcon.size.width - (greenBadgeRightFrame.size.width +
-									   greenBadgeCenterFrame.size.width)), // End X Axis
-				(appIcon.size.height - greenBadgeRightFrame.size.height));
+	greenBadgeCenterFrame.origin = NSMakePoint(
+		(appIcon.size.width - (greenBadgeRightFrame.size.width + greenBadgeCenterFrame.size.width)), // End X Axis
+		(appIcon.size.height - greenBadgeRightFrame.size.height));
 
-	greenBadgeRightFrame.origin =
-	NSMakePoint((appIcon.size.width - greenBadgeRightFrame.size.width), // End X Axis
-				(appIcon.size.height - greenBadgeRightFrame.size.height));
+	greenBadgeRightFrame.origin = NSMakePoint((appIcon.size.width - greenBadgeRightFrame.size.width), // End X Axis
+											  (appIcon.size.height - greenBadgeRightFrame.size.height));
 
 	/* Update origin if red badge will be drawn */
 	if (showRedBadge) {
-		greenBadgeLeftFrame.origin.y =
-		(appIcon.size.height - (greenBadgeLeftFrame.size.height +
-								redBadgeLeftFrame.size.height +
-								_badgeSeperationSpace));
+		greenBadgeLeftFrame.origin.y = (appIcon.size.height - (greenBadgeLeftFrame.size.height +
+															   redBadgeLeftFrame.size.height + _badgeSeperationSpace));
 
 		greenBadgeCenterFrame.origin.y =
-		(appIcon.size.height - (greenBadgeCenterFrame.size.height +
-								redBadgeCenterFrame.size.height +
-								_badgeSeperationSpace));
+			(appIcon.size.height -
+			 (greenBadgeCenterFrame.size.height + redBadgeCenterFrame.size.height + _badgeSeperationSpace));
 
 		greenBadgeRightFrame.origin.y =
-		(appIcon.size.height - (greenBadgeRightFrame.size.height +
-								redBadgeRightFrame.size.height +
-								_badgeSeperationSpace));
+			(appIcon.size.height -
+			 (greenBadgeRightFrame.size.height + redBadgeRightFrame.size.height + _badgeSeperationSpace));
 	}
 
 	/* Red Badge Drawing Position */
 	redBadgeLeftFrame.origin =
-	NSMakePoint((appIcon.size.width - (redBadgeRightFrame.size.width +
-									   redBadgeCenterFrame.size.width +
-									   redBadgeLeftFrame.size.width)), // End X Axis
-				(appIcon.size.height - redBadgeRightFrame.size.height));
+		NSMakePoint((appIcon.size.width - (redBadgeRightFrame.size.width + redBadgeCenterFrame.size.width +
+										   redBadgeLeftFrame.size.width)), // End X Axis
+					(appIcon.size.height - redBadgeRightFrame.size.height));
 
-	redBadgeCenterFrame.origin =
-	NSMakePoint((appIcon.size.width - (redBadgeRightFrame.size.width +
-									   redBadgeCenterFrame.size.width)), // End X Axis
-				(appIcon.size.height - redBadgeRightFrame.size.height));
+	redBadgeCenterFrame.origin = NSMakePoint(
+		(appIcon.size.width - (redBadgeRightFrame.size.width + redBadgeCenterFrame.size.width)), // End X Axis
+		(appIcon.size.height - redBadgeRightFrame.size.height));
 
-	redBadgeRightFrame.origin =
-	NSMakePoint((appIcon.size.width - redBadgeRightFrame.size.width), // End X Axis
-				(appIcon.size.height - redBadgeRightFrame.size.height));
+	redBadgeRightFrame.origin = NSMakePoint((appIcon.size.width - redBadgeRightFrame.size.width), // End X Axis
+											(appIcon.size.height - redBadgeRightFrame.size.height));
 
 	/* ////////////////////////////////////////////////////////// */
 	/* Draw Badges */
@@ -255,54 +246,71 @@ static NSInteger _cachedMessageCount = (-1);
 
 	/* Red Badge */
 	if (showRedBadge) {
-		[redBadgeLeft drawInRect:redBadgeLeftFrame fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
-		[redBadgeCenter drawInRect:redBadgeCenterFrame fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
-		[redBadgeRight drawInRect:redBadgeRightFrame fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
+		[redBadgeLeft drawInRect:redBadgeLeftFrame
+						fromRect:NSZeroRect
+					   operation:NSCompositingOperationSourceOver
+						fraction:1.0];
+		[redBadgeCenter drawInRect:redBadgeCenterFrame
+						  fromRect:NSZeroRect
+						 operation:NSCompositingOperationSourceOver
+						  fraction:1.0];
+		[redBadgeRight drawInRect:redBadgeRightFrame
+						 fromRect:NSZeroRect
+						operation:NSCompositingOperationSourceOver
+						 fraction:1.0];
 
 		/* Red Badge Text */
 		badgeText = [badgeText initWithString:[NSString stringWithInteger:messageCount] attributes:badgeTextAttributes];
 
 		badgeTextSize = [badgeText size];
 
-		CGFloat redBadgeTotalWidth = (redBadgeLeftFrame.size.width +
-									  redBadgeCenterFrame.size.width +
-									  redBadgeRightFrame.size.width);
+		CGFloat redBadgeTotalWidth =
+			(redBadgeLeftFrame.size.width + redBadgeCenterFrame.size.width + redBadgeRightFrame.size.width);
 
 		CGFloat redBadgeTotalHeight = redBadgeCenterFrame.size.height;
 
-		CGFloat redBadgeWidthCenter  = ((redBadgeTotalWidth - badgeTextSize.width) / 2.0);
+		CGFloat redBadgeWidthCenter = ((redBadgeTotalWidth - badgeTextSize.width) / 2.0);
 		CGFloat redBadgeHeightCenter = ((redBadgeTotalHeight - badgeTextSize.height) / 2.0);
 
 		NSPoint badgeTextDrawPath =
-		NSMakePoint((appIcon.size.width - redBadgeTotalWidth + redBadgeWidthCenter),
-					(appIcon.size.height - redBadgeTotalHeight + redBadgeHeightCenter + badgeTextFrameCorrection));
+			NSMakePoint((appIcon.size.width - redBadgeTotalWidth + redBadgeWidthCenter),
+						(appIcon.size.height - redBadgeTotalHeight + redBadgeHeightCenter + badgeTextFrameCorrection));
 
 		[badgeText drawAtPoint:badgeTextDrawPath];
 	}
 
 	if (showGreenBadge) {
 		/* Green Badge */
-		[greenBadgeLeft	drawInRect:greenBadgeLeftFrame fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
-		[greenBadgeCenter drawInRect:greenBadgeCenterFrame fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
-		[greenBadgeRight drawInRect:greenBadgeRightFrame fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
+		[greenBadgeLeft drawInRect:greenBadgeLeftFrame
+						  fromRect:NSZeroRect
+						 operation:NSCompositingOperationSourceOver
+						  fraction:1.0];
+		[greenBadgeCenter drawInRect:greenBadgeCenterFrame
+							fromRect:NSZeroRect
+						   operation:NSCompositingOperationSourceOver
+							fraction:1.0];
+		[greenBadgeRight drawInRect:greenBadgeRightFrame
+						   fromRect:NSZeroRect
+						  operation:NSCompositingOperationSourceOver
+						   fraction:1.0];
 
 		/* Green Badge Text */
-		badgeText = [badgeText initWithString:[NSString stringWithInteger:highlightCount] attributes:badgeTextAttributes];
+		badgeText = [badgeText initWithString:[NSString stringWithInteger:highlightCount]
+								   attributes:badgeTextAttributes];
 
 		badgeTextSize = [badgeText size];
 
-		CGFloat greenBadgeTotalWidth = (greenBadgeLeftFrame.size.width +
-										greenBadgeCenterFrame.size.width +
-										greenBadgeRightFrame.size.width);
+		CGFloat greenBadgeTotalWidth =
+			(greenBadgeLeftFrame.size.width + greenBadgeCenterFrame.size.width + greenBadgeRightFrame.size.width);
 
 		CGFloat greenBadgeTotalHeight = greenBadgeCenterFrame.size.height;
 
-		CGFloat greenBadgeWidthCenter  = ((greenBadgeTotalWidth - badgeTextSize.width) / 2.0);
+		CGFloat greenBadgeWidthCenter = ((greenBadgeTotalWidth - badgeTextSize.width) / 2.0);
 		CGFloat greenBadgeHeightCenter = ((greenBadgeTotalHeight - badgeTextSize.height) / 2.0);
 
-		NSPoint badgeTextDrawPath =
-		NSMakePoint((appIcon.size.width - greenBadgeTotalWidth + greenBadgeWidthCenter),
-					(appIcon.size.height - greenBadgeTotalHeight + greenBadgeHeightCenter + badgeTextFrameCorrection));
+		NSPoint badgeTextDrawPath = NSMakePoint(
+			(appIcon.size.width - greenBadgeTotalWidth + greenBadgeWidthCenter),
+			(appIcon.size.height - greenBadgeTotalHeight + greenBadgeHeightCenter + badgeTextFrameCorrection));
 
 		if (showRedBadge) {
 			badgeTextDrawPath.y -= (redBadgeCenterFrame.size.height + _badgeSeperationSpace);
@@ -323,22 +331,18 @@ static NSInteger _cachedMessageCount = (-1);
 + (CGFloat)badgeCenterTileWidth:(NSUInteger)badgeCount
 {
 	switch (badgeCount) {
-		case 1 ... 9:
-		{
-			return 1.0;
-		}
-		case 10 ... 99:
-		{
-			return 1.0;
-		}
-		case 100 ... 999:
-		{
-			return 18.0;
-		}
-		case 1000 ... 9999:
-		{
-			return 28.0;
-		}
+	case 1 ... 9: {
+		return 1.0;
+	}
+	case 10 ... 99: {
+		return 1.0;
+	}
+	case 100 ... 999: {
+		return 18.0;
+	}
+	case 1000 ... 9999: {
+		return 28.0;
+	}
 	}
 
 	return 1.0;

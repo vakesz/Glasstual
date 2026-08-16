@@ -42,7 +42,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TXWindowController ()
-@property (nonatomic, strong) NSMutableDictionary *windowObjects;
+@property(nonatomic, strong) NSMutableDictionary *windowObjects;
 @end
 
 @implementation TXWindowController
@@ -69,7 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	@synchronized(self.windowObjects) {
 		[self.windowObjects removeAllObjects];
-		 self.windowObjects = nil;
+		self.windowObjects = nil;
 	}
 }
 
@@ -107,8 +107,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(window != nil);
 
-	NSAssert([window respondsToSelector:@selector(window)],
-		@"'window' does not respond to -window");
+	NSAssert([window respondsToSelector:@selector(window)], @"'window' does not respond to -window");
 
 	@synchronized(self.windowObjects) {
 		self.windowObjects[windowDescription] = window;

@@ -50,21 +50,21 @@ typedef NS_ENUM(NSUInteger, IRCChannelType) {
 #pragma mark Immutable Object
 
 @interface IRCChannelConfig : XRPortablePropertyDict
-@property (readonly) BOOL autoJoin;
-@property (readonly) BOOL ignoreGeneralEventMessages;
-@property (readonly) BOOL ignoreHighlights;
-@property (readonly) BOOL inlineMediaDisabled;
-@property (readonly) BOOL inlineMediaEnabled;
-@property (readonly) BOOL pushNotifications;
-@property (readonly) BOOL showTreeBadgeCount;
-@property (readonly) IRCChannelType type;
-@property (readonly, copy) NSString *channelName;
-@property (readonly, copy) NSString *uniqueIdentifier;
-@property (readonly, copy, nullable) NSString *label;
-@property (readonly, copy, nullable) NSString *defaultModes;
-@property (readonly, copy, nullable) NSString *defaultTopic;
-@property (readonly, copy, nullable) NSString *secretKey;
-@property (readonly, copy, nullable) NSString *secretKeyFromKeychain;
+@property(readonly) BOOL autoJoin;
+@property(readonly) BOOL ignoreGeneralEventMessages;
+@property(readonly) BOOL ignoreHighlights;
+@property(readonly) BOOL inlineMediaDisabled;
+@property(readonly) BOOL inlineMediaEnabled;
+@property(readonly) BOOL pushNotifications;
+@property(readonly) BOOL showTreeBadgeCount;
+@property(readonly) IRCChannelType type;
+@property(readonly, copy) NSString *channelName;
+@property(readonly, copy) NSString *uniqueIdentifier;
+@property(readonly, copy, nullable) NSString *label;
+@property(readonly, copy, nullable) NSString *defaultModes;
+@property(readonly, copy, nullable) NSString *defaultTopic;
+@property(readonly, copy, nullable) NSString *secretKey;
+@property(readonly, copy, nullable) NSString *secretKeyFromKeychain;
 
 + (IRCChannelConfig *)seedWithName:(NSString *)channelName;
 
@@ -73,7 +73,7 @@ typedef NS_ENUM(NSUInteger, IRCChannelType) {
 
 // These methods return an integer because there are more than
 // two possible values. When there is no channel defined value
-// for the given event, NSControlStateValueMixed is returned 
+// for the given event, NSControlStateValueMixed is returned
 // which indicates that the global value should be used.
 // NSControlStateValueOn and NSControlStateValueOff
 // are returned when a channel defined value is available.
@@ -88,19 +88,19 @@ typedef NS_ENUM(NSUInteger, IRCChannelType) {
 #pragma mark Mutable Object
 
 @interface IRCChannelConfigMutable : IRCChannelConfig
-@property (nonatomic, assign, readwrite) IRCChannelType type;
-@property (nonatomic, assign, readwrite) BOOL autoJoin;
-@property (nonatomic, assign, readwrite) BOOL ignoreGeneralEventMessages;
-@property (nonatomic, assign, readwrite) BOOL ignoreHighlights;
-@property (nonatomic, assign, readwrite) BOOL inlineMediaDisabled;
-@property (nonatomic, assign, readwrite) BOOL inlineMediaEnabled;
-@property (nonatomic, assign, readwrite) BOOL pushNotifications;
-@property (nonatomic, assign, readwrite) BOOL showTreeBadgeCount;
-@property (nonatomic, copy, readwrite) NSString *channelName;
-@property (nonatomic, copy, readwrite, nullable) NSString *label;
-@property (nonatomic, copy, readwrite, nullable) NSString *defaultModes;
-@property (nonatomic, copy, readwrite, nullable) NSString *defaultTopic;
-@property (nonatomic, copy, readwrite, nullable) NSString *secretKey;
+@property(nonatomic, assign, readwrite) IRCChannelType type;
+@property(nonatomic, assign, readwrite) BOOL autoJoin;
+@property(nonatomic, assign, readwrite) BOOL ignoreGeneralEventMessages;
+@property(nonatomic, assign, readwrite) BOOL ignoreHighlights;
+@property(nonatomic, assign, readwrite) BOOL inlineMediaDisabled;
+@property(nonatomic, assign, readwrite) BOOL inlineMediaEnabled;
+@property(nonatomic, assign, readwrite) BOOL pushNotifications;
+@property(nonatomic, assign, readwrite) BOOL showTreeBadgeCount;
+@property(nonatomic, copy, readwrite) NSString *channelName;
+@property(nonatomic, copy, readwrite, nullable) NSString *label;
+@property(nonatomic, copy, readwrite, nullable) NSString *defaultModes;
+@property(nonatomic, copy, readwrite, nullable) NSString *defaultTopic;
+@property(nonatomic, copy, readwrite, nullable) NSString *secretKey;
 
 - (void)setSound:(nullable NSString *)value forEvent:(TXNotificationType)event;
 

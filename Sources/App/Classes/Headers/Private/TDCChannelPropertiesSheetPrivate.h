@@ -54,7 +54,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithConfig:(nullable IRCChannelConfig *)config;
 - (instancetype)initWithConfig:(nullable IRCChannelConfig *)config onClientWithId:(nullable NSString *)clientId;
 
-- (instancetype)initWithConfig:(nullable IRCChannelConfig *)config onClient:(nullable IRCClient *)client NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithConfig:(nullable IRCChannelConfig *)config
+					  onClient:(nullable IRCClient *)client NS_DESIGNATED_INITIALIZER;
 
 - (void)start;
 @end

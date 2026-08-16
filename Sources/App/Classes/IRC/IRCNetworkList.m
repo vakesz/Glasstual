@@ -42,16 +42,17 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCNetworkList ()
-@property (nonatomic, copy, readwrite) NSArray<IRCNetwork *> *listOfNetworks;
+@property(nonatomic, copy, readwrite) NSArray<IRCNetwork *> *listOfNetworks;
 @end
 
 @interface IRCNetwork ()
-@property (nonatomic, copy, readwrite) NSString *networkName;
-@property (nonatomic, copy, readwrite) NSString *serverAddress;
-@property (nonatomic, assign, readwrite) uint16_t serverPort;
-@property (nonatomic, assign, readwrite) BOOL prefersSecuredConnection;
+@property(nonatomic, copy, readwrite) NSString *networkName;
+@property(nonatomic, copy, readwrite) NSString *serverAddress;
+@property(nonatomic, assign, readwrite) uint16_t serverPort;
+@property(nonatomic, assign, readwrite) BOOL prefersSecuredConnection;
 
-- (instancetype)initWithNetworkNamed:(NSString *)networkName networkConfiguration:(NSDictionary<NSString *, id> *)networkConfiguration;
+- (instancetype)initWithNetworkNamed:(NSString *)networkName
+				networkConfiguration:(NSDictionary<NSString *, id> *)networkConfiguration;
 @end
 
 @implementation IRCNetworkList
@@ -80,8 +81,8 @@ NS_ASSUME_NONNULL_BEGIN
 	for (NSString *networkName in networkNamesSorted) {
 		NSDictionary<NSString *, id> *networkConfiguration = networkList[networkName];
 
-		  IRCNetwork *networkObject =
-		[[IRCNetwork alloc] initWithNetworkNamed:networkName networkConfiguration:networkConfiguration];
+		IRCNetwork *networkObject = [[IRCNetwork alloc] initWithNetworkNamed:networkName
+														networkConfiguration:networkConfiguration];
 
 		[listOfNetworks addObject:networkObject];
 	}
@@ -94,9 +95,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(networkName != nil);
 
 	IRCNetwork *network =
-	[self.listOfNetworks objectPassingTest:^BOOL(IRCNetwork *network, NSUInteger index, BOOL *stop) {
-		return [network.networkName isEqualToStringIgnoringCase:networkName];
-	}];
+		[self.listOfNetworks objectPassingTest:^BOOL(IRCNetwork *network, NSUInteger index, BOOL *stop) {
+			return [network.networkName isEqualToStringIgnoringCase:networkName];
+		}];
 
 	return network;
 }
@@ -106,9 +107,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(serverAddress != nil);
 
 	IRCNetwork *network =
-	[self.listOfNetworks objectPassingTest:^BOOL(IRCNetwork *network, NSUInteger index, BOOL *stop) {
-		return [network.serverAddress isEqualToStringIgnoringCase:serverAddress];
-	}];
+		[self.listOfNetworks objectPassingTest:^BOOL(IRCNetwork *network, NSUInteger index, BOOL *stop) {
+			return [network.serverAddress isEqualToStringIgnoringCase:serverAddress];
+		}];
 
 	return network;
 }
@@ -126,7 +127,8 @@ NS_ASSUME_NONNULL_BEGIN
 	return nil;
 }
 
-- (instancetype)initWithNetworkNamed:(NSString *)networkName networkConfiguration:(NSDictionary<NSString *, id> *)networkConfiguration
+- (instancetype)initWithNetworkNamed:(NSString *)networkName
+				networkConfiguration:(NSDictionary<NSString *, id> *)networkConfiguration
 {
 	NSParameterAssert(networkName != nil);
 	NSParameterAssert(networkConfiguration != nil);

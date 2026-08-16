@@ -42,15 +42,15 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TDCClientPrototype <NSObject>
 @required
 
-@property (readonly, strong, nullable) IRCClient *client;
-@property (readonly, copy, nullable) NSString *clientId;
+@property(readonly, strong, nullable) IRCClient *client;
+@property(readonly, copy, nullable) NSString *clientId;
 @end
 
 @protocol TDCChannelPrototype <NSObject, TDCClientPrototype>
 @required
 
-@property (readonly, strong, nullable) IRCChannel *channel;
-@property (readonly, copy, nullable) NSString *channelId;
+@property(readonly, strong, nullable) IRCChannel *channel;
+@property(readonly, copy, nullable) NSString *channelId;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -44,14 +44,16 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Immutable Object
 
 @interface IRCModeInfo : XRPortablePropertyObject
-@property (readonly) BOOL modeIsSet;
-@property (readonly, copy) NSString *modeSymbol;
-@property (readonly, copy, nullable) NSString *modeParameter;
+@property(readonly) BOOL modeIsSet;
+@property(readonly, copy) NSString *modeSymbol;
+@property(readonly, copy, nullable) NSString *modeParameter;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithModeSymbol:(NSString *)modeSymbol;
 - (instancetype)initWithModeSymbol:(NSString *)modeSymbol modeIsSet:(BOOL)modeIsSet;
-- (instancetype)initWithModeSymbol:(NSString *)modeSymbol modeIsSet:(BOOL)modeIsSet modeParameter:(nullable NSString *)modeParameter NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithModeSymbol:(NSString *)modeSymbol
+						 modeIsSet:(BOOL)modeIsSet
+					 modeParameter:(nullable NSString *)modeParameter NS_DESIGNATED_INITIALIZER;
 
 - (BOOL)isModeForChangingMemberModeOn:(IRCClient *)client;
 @end
@@ -60,9 +62,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Mutable Object
 
 @interface IRCModeInfoMutable : IRCModeInfo
-@property (nonatomic, assign, readwrite) BOOL modeIsSet;
-@property (nonatomic, copy, readwrite) NSString *modeSymbol;
-@property (nonatomic, copy, readwrite, nullable) NSString *modeParameter;
+@property(nonatomic, assign, readwrite) BOOL modeIsSet;
+@property(nonatomic, copy, readwrite) NSString *modeSymbol;
+@property(nonatomic, copy, readwrite, nullable) NSString *modeParameter;
 @end
 
 NS_ASSUME_NONNULL_END

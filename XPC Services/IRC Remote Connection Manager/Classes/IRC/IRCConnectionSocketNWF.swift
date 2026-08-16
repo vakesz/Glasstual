@@ -37,8 +37,7 @@
 
 import Network
 
-final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
-{
+final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 	fileprivate var readInBuffer: Data?
 
 	fileprivate var connection: NWConnection?
@@ -49,13 +48,11 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 
 	// MARK: - Grand Central Dispatch
 
-	fileprivate func destroyDispatchQueues()
-	{
+	fileprivate func destroyDispatchQueues() {
 		socketDelegateQueue = nil
 	}
 
-	fileprivate func createDispatchQueues()
-	{
+	fileprivate func createDispatchQueues() {
 		let socketDelegateQueueName = "Glasstual.ConnectionSocket.socketDelegateQueue.\(uniqueIdentifier)"
 
 		socketDelegateQueue = DispatchQueue(label: socketDelegateQueueName)
@@ -63,11 +60,10 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 
 	// MARK: - Open/Close Socket
 
-	fileprivate var constructedParameters: NWParameters
-	{
+	fileprivate var constructedParameters: NWParameters {
 		var parameters: NWParameters
 
-		if (config.connectionPrefersSecuredConnection) {
+		if config.connectionPrefersSecuredConnection {
 			parameters = NWParameters(tls: constructedTLSOptions)
 		} else {
 			parameters = .tcp
@@ -77,20 +73,19 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 
 		if let internetProtocol = parameters.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options {
 			switch config.addressType {
-				case .v4:
-					internetProtocol.version = .v4
-				case .v6:
-					internetProtocol.version = .v6
-				default:
-					break
+			case .v4:
+				internetProtocol.version = .v4
+			case .v6:
+				internetProtocol.version = .v6
+			default:
+				break
 			}
 		}
 
 		return parameters
 	}
 
-	fileprivate var constructedTLSOptions: NWProtocolTLS.Options
-	{
+	fileprivate var constructedTLSOptions: NWProtocolTLS.Options {
 		let tlsOptions = NWProtocolTLS.Options()
 
 		let secOptions = tlsOptions.securityProtocolOptions
@@ -99,26 +94,28 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 			sec_protocol_options_set_local_identity(secOptions, localIdentity)
 		}
 
-		if (config.cipherSuites == .none) {
+		if config.cipherSuites == .none {
 			sec_protocol_options_append_tls_ciphersuite_group(secOptions, .default)
 		} else {
-			RCMSecureTransport.appendCipherSuites(in: config.cipherSuites,
-												  includeDeprecated: (config.connectionPrefersModernCiphersOnly == false),
-												  to: secOptions)
+			RCMSecureTransport.appendCipherSuites(
+				in: config.cipherSuites,
+				includeDeprecated: (config.connectionPrefersModernCiphersOnly == false),
+				to: secOptions)
 		}
 
 		sec_protocol_options_set_min_tls_protocol_version(secOptions, RCMSecureTransport.minimumProtocolType)
 
-		sec_protocol_options_set_verify_block(secOptions, { [weak self] (_, trust, completionBlock) in
-			self?.tlsVerifySecProtocol(trust, response: completionBlock)
-		}, socketDelegateQueue!)
+		sec_protocol_options_set_verify_block(
+			secOptions,
+			{ [weak self] (_, trust, completionBlock) in
+				self?.tlsVerifySecProtocol(trust, response: completionBlock)
+			}, socketDelegateQueue!)
 
 		return tlsOptions
 	}
 
-	func open()
-	{
-		if (disconnected == false || disconnecting) {
+	func open() {
+		if disconnected == false || disconnecting {
 			return
 		}
 
@@ -127,9 +124,10 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		let serverAddress = config.serverAddress
 		let serverPort = config.serverPort
 
-		let connection = NWConnection(host: NWEndpoint.Host(stringLiteral: serverAddress),
-									  port: NWEndpoint.Port(integerLiteral: serverPort),
-									  using: constructedParameters)
+		let connection = NWConnection(
+			host: NWEndpoint.Host(stringLiteral: serverAddress),
+			port: NWEndpoint.Port(integerLiteral: serverPort),
+			using: constructedParameters)
 
 		connection.stateUpdateHandler = statusUpdateHandler
 
@@ -140,16 +138,14 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		connect()
 	}
 
-	fileprivate func connect()
-	{
+	fileprivate func connect() {
 		connecting = true
 
 		connection?.start(queue: socketDelegateQueue!)
 	}
 
-	func close()
-	{
-		if (disconnected || disconnecting) {
+	func close() {
+		if disconnected || disconnecting {
 			return
 		}
 
@@ -158,13 +154,11 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		connection?.cancel()
 	}
 
-	fileprivate func close(with error: NWError)
-	{
+	fileprivate func close(with error: NWError) {
 		close(with: translateError(error))
 	}
 
-	override func resetState()
-	{
+	override func resetState() {
 		super.resetState()
 
 		connection = nil
@@ -174,20 +168,19 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 
 	// MARK: - Socket Read & Write
 
-	func read()
-	{
-		if (connected == false || disconnecting) {
+	func read() {
+		if connected == false || disconnecting {
 			return
 		}
 
-		connection?.receive(minimumIncompleteLength: 0,
-							maximumLength: maximumDataLength,
-							completion: readCompletionHandler)
+		connection?.receive(
+			minimumIncompleteLength: 0,
+			maximumLength: maximumDataLength,
+			completion: readCompletionHandler)
 	}
 
-	func readIn(_ data: Data)
-	{
-		if (disconnected || disconnecting) {
+	func readIn(_ data: Data) {
+		if disconnected || disconnecting {
 			return
 		}
 
@@ -239,14 +232,13 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		}
 	}
 
-	func write(_ data: Data)
-	{
-		if (connected == false || disconnecting) {
+	func write(_ data: Data) {
+		if connected == false || disconnecting {
 			return
 		}
 
 		/* We only allow one write a time */
-		if (sending) {
+		if sending {
 			return
 		}
 
@@ -259,30 +251,28 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 
 	// MARK: - Properties
 
-	fileprivate var connectedHost: String?
-	{
+	fileprivate var connectedHost: String? {
 		guard let endpoint = connection?.currentPath?.remoteEndpoint else {
 			return nil
 		}
 
-		if case let .hostPort(host, _) = endpoint {
+		if case .hostPort(let host, _) = endpoint {
 			switch host {
-				case .name(let address, _):
-					return address
-				case .ipv4(let address):
-					return address.rawValue.IPv4Address
-				case .ipv6(let address):
-					return address.rawValue.IPv6Address
-				@unknown default:
-					fatalError("Unexpected switch case")
+			case .name(let address, _):
+				return address
+			case .ipv4(let address):
+				return address.rawValue.IPv4Address
+			case .ipv6(let address):
+				return address.rawValue.IPv6Address
+			@unknown default:
+				fatalError("Unexpected switch case")
 			}
 		}
 
 		return nil
 	}
 
-	fileprivate func onConnect()
-	{
+	fileprivate func onConnect() {
 		connecting = false
 		connected = true
 
@@ -293,13 +283,12 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		onSecured()
 	}
 
-	fileprivate func onSecured()
-	{
+	fileprivate func onSecured() {
 		/* We call onSecured() regardless of other preconditions then
 		 only mark ourselves as secured if we have protocol information. */
-		guard  let protocolType = tlsNegotiatedProtocol,
-			   let cipherSuite 	= tlsNegotiatedCipherSuite else
-		{
+		guard let protocolType = tlsNegotiatedProtocol,
+			let cipherSuite = tlsNegotiatedCipherSuite
+		else {
 			return
 		}
 
@@ -308,8 +297,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		delegate?.connection(self, securedWith: protocolType, cipherSuite: cipherSuite)
 	}
 
-	fileprivate func onDisconnect(with error: Error?)
-	{
+	fileprivate func onDisconnect(with error: Error?) {
 		defer {
 			resetState()
 		}
@@ -322,7 +310,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 			errorPayload = translateError(nwError)
 		}
 
-		if (errorPayload == nil) {
+		if errorPayload == nil {
 			delegate?.connectionDisconnected(self)
 		} else {
 			delegate?.connection(self, disconnectedWith: errorPayload!)
@@ -331,9 +319,10 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 
 	// NWConnection Delegate
 
-	final func readCompletionHandler(_ content: Data?, _ contentContext: NWConnection.ContentContext?, _ isComplete: Bool, _ error: NWError?)
-	{
-		if (disconnecting) {
+	final func readCompletionHandler(
+		_ content: Data?, _ contentContext: NWConnection.ContentContext?, _ isComplete: Bool, _ error: NWError?
+	) {
+		if disconnecting {
 			return
 		}
 
@@ -343,7 +332,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 			return
 		}
 
-		if (contentContext?.isFinal == true && isComplete) {
+		if contentContext?.isFinal == true && isComplete {
 			EOFReceived = true
 
 			delegate?.connectionClosedReadStream(self)
@@ -351,7 +340,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 			return
 		}
 
-		if (content == nil) {
+		if content == nil {
 			close(with: "Unexpected condition: There is no data when there is no error")
 
 			return
@@ -362,9 +351,8 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		read()
 	}
 
-	final func writeCompletionHandler(_ error: NWError?)
-	{
-		if (disconnecting) {
+	final func writeCompletionHandler(_ error: NWError?) {
+		if disconnecting {
 			return
 		}
 
@@ -379,26 +367,24 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		delegate?.connectionDidSend(self)
 	}
 
-	final func statusUpdateHandler(_ status: NWConnection.State)
-	{
+	final func statusUpdateHandler(_ status: NWConnection.State) {
 		switch status {
-			case .waiting(let error):
-				close(with: error)
-			case .ready:
-				onConnect()
-			case .cancelled:
-				onDisconnect(with: nil)
-			case .failed(let error):
-				onDisconnect(with: error)
-			default:
-				break
+		case .waiting(let error):
+			close(with: error)
+		case .ready:
+			onConnect()
+		case .cancelled:
+			onDisconnect(with: nil)
+		case .failed(let error):
+			onDisconnect(with: error)
+		default:
+			break
 		}
 	}
 
 	// MARK: - Security
 
-	final func tlsVerifySecProtocol(_ trust: sec_trust_t, response: @escaping sec_protocol_verify_complete_t)
-	{
+	final func tlsVerifySecProtocol(_ trust: sec_trust_t, response: @escaping sec_protocol_verify_complete_t) {
 		let trustRef = sec_trust_copy_ref(trust).takeUnretainedValue()
 
 		self.trustRef = trustRef
@@ -408,8 +394,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		}
 	}
 
-	var tlsNegotiatedProtocol: tls_protocol_version_t?
-	{
+	var tlsNegotiatedProtocol: tls_protocol_version_t? {
 		var protocolType: tls_protocol_version_t?
 
 		accessTLSMetadata { (metadata) in
@@ -419,8 +404,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		return protocolType
 	}
 
-	var tlsNegotiatedCipherSuite: tls_ciphersuite_t?
-	{
+	var tlsNegotiatedCipherSuite: tls_ciphersuite_t? {
 		var cipherSuite: tls_ciphersuite_t?
 
 		accessTLSMetadata { (metadata) in
@@ -430,8 +414,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		return cipherSuite
 	}
 
-	var tlsCertificateChainData: [Data]?
-	{
+	var tlsCertificateChainData: [Data]? {
 		var certificateChain: [Data]?
 
 		accessTLSTrustRef { (trustRef) in
@@ -441,8 +424,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		return certificateChain
 	}
 
-	var tlsPolicyName: String?
-	{
+	var tlsPolicyName: String? {
 		var policyName: String?
 
 		accessTLSTrustRef { (trustRef) in
@@ -465,14 +447,13 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 				if serverAddress.isIPAddress {
 					policyName = serverAddress
 				}
-			} // policyName
+			}  // policyName
 		}
 
 		return policyName
 	}
 
-	fileprivate func accessTLSMetadata(with closure: (sec_protocol_metadata_t) -> Void)
-	{
+	fileprivate func accessTLSMetadata(with closure: (sec_protocol_metadata_t) -> Void) {
 		guard let genericMetadata = connection?.metadata(definition: NWProtocolTLS.definition) else {
 			return
 		}
@@ -484,129 +465,125 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol
 		closure(tlsMetadata.securityProtocolMetadata)
 	}
 
-	fileprivate func accessTLSTrustRef(with closure: (SecTrust) -> Void)
-	{
+	fileprivate func accessTLSTrustRef(with closure: (SecTrust) -> Void) {
 		if let trustRef = trustRef {
 			closure(trustRef)
 		}
 	}
 
-	var tlsLocalIdentity: sec_identity_t?
-	{
+	var tlsLocalIdentity: sec_identity_t? {
 		guard let clientCertificate = clientSideCertificate else {
 			return nil
 		}
 
 		/* And I thought I wrote verbose names... */
-		return sec_identity_create_with_certificates(clientCertificate.identity,
-													([clientCertificate.certificate] as CFArray))
+		return sec_identity_create_with_certificates(
+			clientCertificate.identity,
+			([clientCertificate.certificate] as CFArray))
 	}
 
 	// MARK: - Error Handling
 
-	fileprivate func translateError(_ error: NWError) -> ConnectionError
-	{
+	fileprivate func translateError(_ error: NWError) -> ConnectionError {
 		switch error {
-			case .dns(let errorCode):
-				return ConnectionError(nwDNSError: errorCode)
-			case .posix(let errorCode):
-				return ConnectionError(nwPOSIXError: errorCode.rawValue)
-			case .tls(let errorCode):
-				return ConnectionError(nwTLSError: errorCode)
-			case .wifiAware(_):
-				return ConnectionError(otherError: "Wi-Fi Aware error")
-			@unknown default:
-				fatalError("Unexpected switch case")
+		case .dns(let errorCode):
+			return ConnectionError(nwDNSError: errorCode)
+		case .posix(let errorCode):
+			return ConnectionError(nwPOSIXError: errorCode.rawValue)
+		case .tls(let errorCode):
+			return ConnectionError(nwTLSError: errorCode)
+		case .wifiAware(_):
+			return ConnectionError(otherError: "Wi-Fi Aware error")
+		@unknown default:
+			fatalError("Unexpected switch case")
 		}
 	}
 }
 
-fileprivate extension ConnectionError
-{
-	init (nwDNSError: DNSServiceErrorType)
-	{
+fileprivate extension ConnectionError {
+	init(nwDNSError: DNSServiceErrorType) {
 		let errorCode = Int(nwDNSError)
 
 		let errorReason: String
 
 		switch errorCode {
-			case kDNSServiceErr_NoError:
-				errorReason = "No error"
-			case kDNSServiceErr_NoSuchName:
-				errorReason = "No such name"
-			case kDNSServiceErr_NoMemory:
-				errorReason = "No memory"
-			case kDNSServiceErr_BadParam:
-				errorReason = "Bad parameter"
-			case kDNSServiceErr_BadReference:
-				errorReason = "Bad reference"
-			case kDNSServiceErr_BadState:
-				errorReason = "Bad state"
-			case kDNSServiceErr_BadFlags:
-				errorReason = "Bad flags"
-			case kDNSServiceErr_Unsupported:
-				errorReason = "Unsupported"
-			case kDNSServiceErr_NotInitialized:
-				errorReason = "Not initialized"
-			case kDNSServiceErr_AlreadyRegistered:
-				errorReason = "Already registered"
-			case kDNSServiceErr_NameConflict:
-				errorReason = "Name conflict"
-			case kDNSServiceErr_Invalid:
-				errorReason = "Invalid"
-			case kDNSServiceErr_Firewall:
-				errorReason = "Firewall"
-			case kDNSServiceErr_Incompatible: /* client library incompatible with daemon */
-				errorReason = "Incompatible"
-			case kDNSServiceErr_BadInterfaceIndex:
-				errorReason = "Bad interface index"
-			case kDNSServiceErr_Refused:
-				errorReason = "Refused"
-			case kDNSServiceErr_NoSuchRecord:
-				errorReason = "No such record"
-			case kDNSServiceErr_NoAuth:
-				errorReason = "No authentication"
-			case kDNSServiceErr_NoSuchKey:
-				errorReason = "No such key"
-			case kDNSServiceErr_NATTraversal:
-				errorReason = "NAT traversal"
-			case kDNSServiceErr_DoubleNAT:
-				errorReason = "Double NAT"
-			case kDNSServiceErr_BadTime: /* Codes up to here existed in Tiger */
-				errorReason = "Bad time"
-			case kDNSServiceErr_BadSig:
-				errorReason = "Bad signature"
-			case kDNSServiceErr_BadKey:
-				errorReason = "Bad key"
-			case kDNSServiceErr_Transient:
-				errorReason = "Transient"
-			case kDNSServiceErr_ServiceNotRunning: /* Background daemon not running */
-				errorReason = "Service not running"
-			case kDNSServiceErr_NATPortMappingUnsupported: /* NAT doesn't support PCP, NAT-PMP or UPnP */
-				errorReason = "NAT port mapping unsupported"
-			case kDNSServiceErr_NATPortMappingDisabled: /* NAT supports PCP, NAT-PMP or UPnP, but it's disabled by the administrator */
-				errorReason = "NAT port mapping disabled"
-			case kDNSServiceErr_NoRouter: /* No router currently configured (probably no network connectivity) */
-				errorReason = "No router"
-			case kDNSServiceErr_PollingMode:
-				errorReason = "Polling mode"
-			case kDNSServiceErr_Timeout:
-				errorReason = "Timeout"
-			default:
-				errorReason = "Unknown"
+		case kDNSServiceErr_NoError:
+			errorReason = "No error"
+		case kDNSServiceErr_NoSuchName:
+			errorReason = "No such name"
+		case kDNSServiceErr_NoMemory:
+			errorReason = "No memory"
+		case kDNSServiceErr_BadParam:
+			errorReason = "Bad parameter"
+		case kDNSServiceErr_BadReference:
+			errorReason = "Bad reference"
+		case kDNSServiceErr_BadState:
+			errorReason = "Bad state"
+		case kDNSServiceErr_BadFlags:
+			errorReason = "Bad flags"
+		case kDNSServiceErr_Unsupported:
+			errorReason = "Unsupported"
+		case kDNSServiceErr_NotInitialized:
+			errorReason = "Not initialized"
+		case kDNSServiceErr_AlreadyRegistered:
+			errorReason = "Already registered"
+		case kDNSServiceErr_NameConflict:
+			errorReason = "Name conflict"
+		case kDNSServiceErr_Invalid:
+			errorReason = "Invalid"
+		case kDNSServiceErr_Firewall:
+			errorReason = "Firewall"
+		case kDNSServiceErr_Incompatible: /* client library incompatible with daemon */
+			errorReason = "Incompatible"
+		case kDNSServiceErr_BadInterfaceIndex:
+			errorReason = "Bad interface index"
+		case kDNSServiceErr_Refused:
+			errorReason = "Refused"
+		case kDNSServiceErr_NoSuchRecord:
+			errorReason = "No such record"
+		case kDNSServiceErr_NoAuth:
+			errorReason = "No authentication"
+		case kDNSServiceErr_NoSuchKey:
+			errorReason = "No such key"
+		case kDNSServiceErr_NATTraversal:
+			errorReason = "NAT traversal"
+		case kDNSServiceErr_DoubleNAT:
+			errorReason = "Double NAT"
+		case kDNSServiceErr_BadTime: /* Codes up to here existed in Tiger */
+			errorReason = "Bad time"
+		case kDNSServiceErr_BadSig:
+			errorReason = "Bad signature"
+		case kDNSServiceErr_BadKey:
+			errorReason = "Bad key"
+		case kDNSServiceErr_Transient:
+			errorReason = "Transient"
+		case kDNSServiceErr_ServiceNotRunning: /* Background daemon not running */
+			errorReason = "Service not running"
+		case kDNSServiceErr_NATPortMappingUnsupported: /* NAT doesn't support PCP, NAT-PMP or UPnP */
+			errorReason = "NAT port mapping unsupported"
+		case kDNSServiceErr_NATPortMappingDisabled: /* NAT supports PCP, NAT-PMP or UPnP, but it's disabled by the administrator */
+			errorReason = "NAT port mapping disabled"
+		case kDNSServiceErr_NoRouter: /* No router currently configured (probably no network connectivity) */
+			errorReason = "No router"
+		case kDNSServiceErr_PollingMode:
+			errorReason = "Polling mode"
+		case kDNSServiceErr_Timeout:
+			errorReason = "Timeout"
+		default:
+			errorReason = "Unknown"
 		}
 
 		let errorMessage = LocalizedString("DNS Error: %@ (%ld)", errorReason, errorCode, table: "ConnectionErrors")
 
-		let nsError = NSError(domain: "NWErrorDomainDNS",
-							  code: errorCode,
-							  userInfo: [ NSLocalizedDescriptionKey : errorMessage ])
+		let nsError = NSError(
+			domain: "NWErrorDomainDNS",
+			code: errorCode,
+			userInfo: [NSLocalizedDescriptionKey: errorMessage])
 
 		self.init(socketError: nsError)
 	}
 
-	init (nwPOSIXError: Int32)
-	{
+	init(nwPOSIXError: Int32) {
 		let errorCode = Int(nwPOSIXError)
 
 		let errorReason: String
@@ -619,15 +596,15 @@ fileprivate extension ConnectionError
 
 		let errorMessage = LocalizedString("POSIX Error: %@ (%ld)", errorReason, errorCode, table: "ConnectionErrors")
 
-		let nsError = NSError(domain: "NWErrorDomainPOSIX",
-							  code: errorCode,
-							  userInfo: [ NSLocalizedDescriptionKey : errorMessage ])
+		let nsError = NSError(
+			domain: "NWErrorDomainPOSIX",
+			code: errorCode,
+			userInfo: [NSLocalizedDescriptionKey: errorMessage])
 
 		self.init(socketError: nsError)
 	}
 
-	init (nwTLSError: OSStatus)
-	{
+	init(nwTLSError: OSStatus) {
 		let errorCode = Int(nwTLSError)
 
 		self.init(tlsError: errorCode)

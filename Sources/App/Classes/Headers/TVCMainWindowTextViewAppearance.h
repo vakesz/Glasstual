@@ -44,18 +44,19 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Text View
 
-@property (readonly) NSSize textViewInset;
-@property (readonly, copy, nullable) NSColor *textViewTextColor;
-@property (readonly, copy, nullable) NSColor *textViewPlaceholderTextColor;
+@property(readonly) NSSize textViewInset;
+@property(readonly, copy, nullable) NSColor *textViewTextColor;
+@property(readonly, copy, nullable) NSColor *textViewPlaceholderTextColor;
 
 - (BOOL)preferredTextViewFontChanged;
-@property (readonly, copy, nullable) NSFont *textViewPreferredFont;
-@property (readonly) TVCMainWindowTextViewFontSize textViewPreferredFontSize; // not assigned until -preferredFont is called
+@property(readonly, copy, nullable) NSFont *textViewPreferredFont;
+@property(readonly)
+	TVCMainWindowTextViewFontSize textViewPreferredFontSize; // not assigned until -preferredFont is called
 
 #pragma mark -
 #pragma mark Background View
 
-@property (readonly) CGFloat backgroundViewContentBorderPadding;
+@property(readonly) CGFloat backgroundViewContentBorderPadding;
 @end
 
 NS_ASSUME_NONNULL_END

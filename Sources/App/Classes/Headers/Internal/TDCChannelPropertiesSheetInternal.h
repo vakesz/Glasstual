@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannelConfigMutable;
 
 @interface TDCChannelPropertiesSheet ()
-@property (nonatomic, strong) IRCChannelConfigMutable *config;
+@property(nonatomic, strong) IRCChannelConfigMutable *config;
 @end
 
 NS_ASSUME_NONNULL_END

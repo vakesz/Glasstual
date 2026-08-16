@@ -46,8 +46,8 @@ NS_ASSUME_NONNULL_BEGIN
  they had has changed in a way they may not want. When user changes the address
  type in Server Properties, we unset -connectionPrefersIPv4 so that the warning
  does not appear again, ever. */
-@property (readonly) BOOL showConnectionPrefersIPv4Warning;
-@property (readonly) BOOL connectionPrefersIPv4 GLASSTUAL_DEPRECATED("Use -addressType instead");
+@property(readonly) BOOL showConnectionPrefersIPv4Warning;
+@property(readonly) BOOL connectionPrefersIPv4 GLASSTUAL_DEPRECATED("Use -addressType instead");
 
 - (void)writeNicknamePasswordToKeychain;
 - (void)writeProxyPasswordToKeychain;
@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface IRCClientConfigMutable ()
-@property (nonatomic, assign, readwrite) BOOL connectionPrefersIPv4 GLASSTUAL_DEPRECATED("Use -addressType instead");
+@property(nonatomic, assign, readwrite) BOOL connectionPrefersIPv4 GLASSTUAL_DEPRECATED("Use -addressType instead");
 @end
 
 NS_ASSUME_NONNULL_END

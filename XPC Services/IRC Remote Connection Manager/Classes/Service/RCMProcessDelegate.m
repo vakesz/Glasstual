@@ -44,7 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)listener:(NSXPCListener *)listener shouldAcceptNewConnection:(NSXPCConnection *)newConnection
 {
-	NSXPCInterface *exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(RCMConnectionManagerServerProtocol)];
+	NSXPCInterface *exportedInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(RCMConnectionManagerServerProtocol)];
 
 	newConnection.exportedInterface = exportedInterface;
 
@@ -52,7 +53,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	newConnection.exportedObject = exportedObject;
 
-	NSXPCInterface *remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(RCMConnectionManagerClientProtocol)];
+	NSXPCInterface *remoteObjectInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(RCMConnectionManagerClientProtocol)];
 
 	newConnection.remoteObjectInterface = remoteObjectInterface;
 

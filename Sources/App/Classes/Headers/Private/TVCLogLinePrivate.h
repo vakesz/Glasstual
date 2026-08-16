@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogLineXPC, IRCTreeItem;
 
 @interface TVCLogLine ()
-@property (readonly) BOOL fromCurrentSession;
+@property(readonly) BOOL fromCurrentSession;
 
 - (NSString *)renderedBodyForTranscriptLog;
 - (NSString *)renderedBodyForTranscriptLogInChannel:(nullable IRCChannel *)channel;

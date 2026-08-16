@@ -51,23 +51,23 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /* Specific menu items are gathered and inserted at specific locations */
-#define _WebKit1MenuItemTagLookupInDictionary		WebMenuItemTagLookUpInDictionary
-#define _WebKit1MenuItemTagSearchWithGoogle			WebMenuItemTagSearchWeb
+#define _WebKit1MenuItemTagLookupInDictionary WebMenuItemTagLookUpInDictionary
+#define _WebKit1MenuItemTagSearchWithGoogle WebMenuItemTagSearchWeb
 
-#define _WebKit2MenuItemTagInspectElement			57
-#define _WebKit2MenuItemTagLookupInDictionary		22
-#define _WebKit2MenuItemTagSearchWithGoogle			21
+#define _WebKit2MenuItemTagInspectElement 57
+#define _WebKit2MenuItemTagLookupInDictionary 22
+#define _WebKit2MenuItemTagSearchWithGoogle 21
 
 @implementation TVCLogPolicy
 
-- (NSArray<NSMenuItem *> *)constructContextMenuItemsForWebView:(TVCLogView *)webView defaultMenuItems:(NSArray<NSMenuItem *> *)defaultMenuItems
+- (NSArray<NSMenuItem *> *)constructContextMenuItemsForWebView:(TVCLogView *)webView
+											  defaultMenuItems:(NSArray<NSMenuItem *> *)defaultMenuItems
 {
 	TVCLogController *viewController = webView.viewController;
 
 	NSMutableArray<NSMenuItem *> *menuItems = [NSMutableArray array];
 
-	if (self.anchorURL)
-	{
+	if (self.anchorURL) {
 		NSMenu *urlMenu = menuController().channelViewURLMenu;
 
 		for (NSMenuItem *item in urlMenu.itemArray) {
@@ -79,16 +79,11 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		self.anchorURL = nil;
-	}
-	else if (self.nickname)
-	{
-		if (viewController.associatedChannel == nil ||
-			viewController.associatedChannel.isUtility)
-		{
-			NSMenuItem *noActionMenuItem =
-			[[NSMenuItem alloc] initWithTitle:TXTLS(@"BasicLanguage[7kc-mo]")
-									   action:nil
-								keyEquivalent:@""];
+	} else if (self.nickname) {
+		if (viewController.associatedChannel == nil || viewController.associatedChannel.isUtility) {
+			NSMenuItem *noActionMenuItem = [[NSMenuItem alloc] initWithTitle:TXTLS(@"BasicLanguage[7kc-mo]")
+																	  action:nil
+															   keyEquivalent:@""];
 
 			[menuItems addObject:noActionMenuItem];
 		} else {
@@ -104,9 +99,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		self.nickname = nil;
-	}
-	else if (self.channelName)
-	{
+	} else if (self.channelName) {
 		NSMenu *chanMenu = menuController().channelViewChannelNameMenu;
 
 		for (NSMenuItem *item in chanMenu.itemArray) {
@@ -118,9 +111,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		self.channelName = nil;
-	}
-	else
-	{
+	} else {
 		NSMenu *menu = menuController().channelViewGeneralMenu;
 
 		NSMenuItem *inspectElementItem = nil;
@@ -160,23 +151,20 @@ NS_ASSUME_NONNULL_BEGIN
 		if ([TPCPreferences developerModeEnabled]) {
 			[menuItems addObject:[NSMenuItem separatorItem]];
 
-			[menuItems addObject:
-			 [NSMenuItem menuItemWithTitle:TXTLS(@"BasicLanguage[6cw-ni]")
-									target:menuController()
-									action:@selector(copyLogAsHtml:)]];
+			[menuItems addObject:[NSMenuItem menuItemWithTitle:TXTLS(@"BasicLanguage[6cw-ni]")
+														target:menuController()
+														action:@selector(copyLogAsHtml:)]];
 
-			[menuItems addObject:
-			 [NSMenuItem menuItemWithTitle:TXTLS(@"BasicLanguage[ngd-ms]")
-									target:menuController()
-									action:@selector(forceReloadTheme:)]];
+			[menuItems addObject:[NSMenuItem menuItemWithTitle:TXTLS(@"BasicLanguage[ngd-ms]")
+														target:menuController()
+														action:@selector(forceReloadTheme:)]];
 
 			if (inspectElementItem != nil) {
 				[menuItems addObject:inspectElementItem];
 			} else {
-				[menuItems addObject:
-				 [NSMenuItem menuItemWithTitle:TXTLS(@"BasicLanguage[tfj-m9]")
-										target:menuController()
-										action:@selector(openWebInspector:)]];
+				[menuItems addObject:[NSMenuItem menuItemWithTitle:TXTLS(@"BasicLanguage[tfj-m9]")
+															target:menuController()
+															action:@selector(openWebInspector:)]];
 			}
 		}
 	}
@@ -184,7 +172,8 @@ NS_ASSUME_NONNULL_BEGIN
 	return [menuItems copy];
 }
 
-- (NSMenu *)constructContextMenuForWebView:(TVCLogView *)webView withDefaultMenuItems:(NSArray<NSMenuItem *> *)defaultMenuItems
+- (NSMenu *)constructContextMenuForWebView:(TVCLogView *)webView
+					  withDefaultMenuItems:(NSArray<NSMenuItem *> *)defaultMenuItems
 {
 	NSMenu *contextMenu = [[NSMenu alloc] initWithTitle:TXLocalizationNotNeeded(@"Context Menu")];
 
@@ -208,7 +197,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSPoint mouseLocationGlobal = [NSEvent mouseLocation];
 
 	NSRect mouseLocationLocal =
-	[webViewWindow convertRectFromScreen:NSMakeRect(mouseLocationGlobal.x, mouseLocationGlobal.y, 0, 0)];
+		[webViewWindow convertRectFromScreen:NSMakeRect(mouseLocationGlobal.x, mouseLocationGlobal.y, 0, 0)];
 
 	NSEvent *event = [NSEvent mouseEventWithType:NSEventTypeRightMouseUp
 										location:mouseLocationLocal.origin
@@ -226,7 +215,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark WebKit2 Delegate
 
-- (void)webView2:(WKWebView *)webView logView:(TVCLogView *)logView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nonnull))completionHandler
+- (void)webView2:(WKWebView *)webView
+							  logView:(TVCLogView *)logView
+	didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
+					completionHandler:
+						(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential *_Nonnull))completionHandler
 {
 	NSString *authenticationMethod = challenge.protectionSpace.authenticationMethod;
 
@@ -237,7 +230,10 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)webView2:(WKWebView *)webView logView:(TVCLogView *)logView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
+- (void)webView2:(WKWebView *)webView
+							logView:(TVCLogView *)logView
+	decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+					decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
 	WKNavigationType action = navigationAction.navigationType;
 
@@ -293,10 +289,8 @@ NS_ASSUME_NONNULL_BEGIN
 		openInBackground = !openInBackground;
 	}
 
-	if ([webpageURL.scheme isEqualToString:@"http"] ||
-		[webpageURL.scheme isEqualToString:@"https"] ||
-		[webpageURL.scheme isEqualToString:@"glasstual"])
-	{
+	if ([webpageURL.scheme isEqualToString:@"http"] || [webpageURL.scheme isEqualToString:@"https"] ||
+		[webpageURL.scheme isEqualToString:@"glasstual"]) {
 		[TLOpenLink open:webpageURL inBackground:openInBackground];
 
 		return;
@@ -304,13 +298,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *applicationName = [RZWorkspace() nameOfApplicationToOpenURL:webpageURL];
 
-	BOOL openLink =
-	[TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[5oq-vv]", webpageURL.absoluteString)
-							  title:TXTLS(@"Prompts[2ul-cl]", applicationName)
-					  defaultButton:TXTLS(@"Prompts[mvh-ms]")
-					alternateButton:TXTLS(@"Prompts[99q-gg]")
-					 suppressionKey:@"open_non_http_url_warning"
-					suppressionText:nil];
+	BOOL openLink = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[5oq-vv]", webpageURL.absoluteString)
+											  title:TXTLS(@"Prompts[2ul-cl]", applicationName)
+									  defaultButton:TXTLS(@"Prompts[mvh-ms]")
+									alternateButton:TXTLS(@"Prompts[99q-gg]")
+									 suppressionKey:@"open_non_http_url_warning"
+									suppressionText:nil];
 
 	if (openLink == NO) {
 		return;

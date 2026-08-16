@@ -37,23 +37,23 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define TVCTextViewIRCFormattingMenuFormatterMenuTag			53037
+#define TVCTextViewIRCFormattingMenuFormatterMenuTag 53037
 
 @interface TVCTextViewIRCFormattingMenu : NSObject
-@property (readonly, weak) NSMenuItem *formatterMenu;
-@property (readonly, weak) NSMenu *foregroundColorMenu;
-@property (readonly, weak) NSMenu *backgroundColorMenu;
+@property(readonly, weak) NSMenuItem *formatterMenu;
+@property(readonly, weak) NSMenu *foregroundColorMenu;
+@property(readonly, weak) NSMenu *backgroundColorMenu;
 
-@property (readonly) BOOL firstResponderSupportsFormatting;
+@property(readonly) BOOL firstResponderSupportsFormatting;
 
-@property (readonly) BOOL textIsBold;
-@property (readonly) BOOL textIsItalicized;
-@property (readonly) BOOL textIsMonospace;
-@property (readonly) BOOL textIsStruckthrough;
-@property (readonly) BOOL textIsUnderlined;
-@property (readonly) BOOL textHasForegroundColor;
-@property (readonly) BOOL textHasBackgroundColor;
-@property (readonly) BOOL textHasSpoiler;
+@property(readonly) BOOL textIsBold;
+@property(readonly) BOOL textIsItalicized;
+@property(readonly) BOOL textIsMonospace;
+@property(readonly) BOOL textIsStruckthrough;
+@property(readonly) BOOL textIsUnderlined;
+@property(readonly) BOOL textHasForegroundColor;
+@property(readonly) BOOL textHasBackgroundColor;
+@property(readonly) BOOL textHasSpoiler;
 
 - (IBAction)insertBoldCharIntoTextBox:(nullable id)sender;
 - (IBAction)insertItalicCharIntoTextBox:(nullable id)sender;

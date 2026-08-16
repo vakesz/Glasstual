@@ -47,10 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Define Private Header
 
 @interface TVCLogControllerPrintingOperation : NSOperation
-@property (nonatomic, copy, nullable) TVCLogControllerPrintingBlock executionBlock;
-@property (nonatomic, weak) TVCLogController *viewController;
-@property (readonly, getter=isPending) BOOL pending;
-@property (nonatomic, assign, getter=isStandalone) BOOL standalone;
+@property(nonatomic, copy, nullable) TVCLogControllerPrintingBlock executionBlock;
+@property(nonatomic, weak) TVCLogController *viewController;
+@property(readonly, getter=isPending) BOOL pending;
+@property(nonatomic, assign, getter=isStandalone) BOOL standalone;
 @end
 
 @interface TVCLogControllerPrintingOperationQueue ()
@@ -63,7 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
  which we can query at any time to know whats happening. The queue
  then observes the isFinished property to know when to remove the
  operations from our internal cache. */
-@property (nonatomic, strong) NSMutableDictionary<NSString *, NSMutableArray *> *pendingOperations;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, NSMutableArray *> *pendingOperations;
 @end
 
 #pragma mark -
@@ -91,7 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
 	self.pendingOperations = [NSMutableDictionary dictionary];
 
 	self.qualityOfService = NSQualityOfServiceDefault;
- }
+}
 
 #pragma mark -
 #pragma mark Queue Additions
@@ -132,7 +132,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSArray<TVCLogControllerPrintingOperation *> *pendingOperations = nil;
 
-	@synchronized (self.pendingOperations) {
+	@synchronized(self.pendingOperations) {
 		pendingOperations = self.pendingOperations[pendingOperationsKey];
 	}
 
@@ -153,7 +153,7 @@ NS_ASSUME_NONNULL_BEGIN
 	 also pick out what will be its dependency. */
 	NSString *pendingOperationsKey = operation.viewController.description;
 
-	@synchronized (self.pendingOperations) {
+	@synchronized(self.pendingOperations) {
 		NSMutableArray *pendingOperations = self.pendingOperations[pendingOperationsKey];
 
 		if (pendingOperations == nil) {
@@ -194,7 +194,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Remove operation from list of pending operations */
 	NSString *pendingOperationsKey = operation.viewController.description;
 
-	@synchronized (self.pendingOperations) {
+	@synchronized(self.pendingOperations) {
 		NSMutableArray *pendingOperations = self.pendingOperations[pendingOperationsKey];
 
 		if (pendingOperations == nil) {
@@ -275,7 +275,10 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 {
 	if ([keyPath isEqualToString:@"isFinished"]) {
 		[self removePendingOperation:object];
@@ -313,7 +316,7 @@ NS_ASSUME_NONNULL_BEGIN
 	if (self.dependencies.count < 1 || self.isStandalone) {
 		return (super.isReady && self.viewController.viewIsLoaded);
 	} else {
-		return  super.isReady;
+		return super.isReady;
 	}
 }
 

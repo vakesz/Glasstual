@@ -42,13 +42,13 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogController, TVCLogPolicy;
 
 @interface TVCLogView ()
-@property (nonatomic, weak) TVCLogController *viewController;
+@property(nonatomic, weak) TVCLogController *viewController;
 
-@property (readonly) TVCLogPolicy *webViewPolicy;
+@property(readonly) TVCLogPolicy *webViewPolicy;
 
-@property (nonatomic, copy, readwrite, nullable) NSString *selection;
+@property(nonatomic, copy, readwrite, nullable) NSString *selection;
 
-@property (nonatomic, assign) BOOL viewingBottom;
+@property(nonatomic, assign) BOOL viewingBottom;
 
 - (instancetype)initWithViewController:(TVCLogController *)viewController NS_DESIGNATED_INITIALIZER;
 
@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)keyDown:(NSEvent *)e inView:(NSView *)view;
 
-- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender;
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender;
 
 - (void)copyContentString;
 

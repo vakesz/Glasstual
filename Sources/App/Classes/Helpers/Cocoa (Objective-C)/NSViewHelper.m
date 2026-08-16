@@ -112,38 +112,38 @@ NS_ASSUME_NONNULL_BEGIN
 	NSView *superview = self.superview;
 
 	NSArray *constraints = @[
-	 [NSLayoutConstraint constraintWithItem:self
-								  attribute:NSLayoutAttributeLeft
-								  relatedBy:NSLayoutRelationEqual
-									 toItem:superview
-								  attribute:NSLayoutAttributeLeft
-								 multiplier:1.0
-								   constant:0.0],
+		[NSLayoutConstraint constraintWithItem:self
+									 attribute:NSLayoutAttributeLeft
+									 relatedBy:NSLayoutRelationEqual
+										toItem:superview
+									 attribute:NSLayoutAttributeLeft
+									multiplier:1.0
+									  constant:0.0],
 
-	 [NSLayoutConstraint constraintWithItem:self
-								  attribute:NSLayoutAttributeRight
-								  relatedBy:NSLayoutRelationEqual
-									 toItem:superview
-								  attribute:NSLayoutAttributeRight
-								 multiplier:1.0
-								   constant:0.0],
+		[NSLayoutConstraint constraintWithItem:self
+									 attribute:NSLayoutAttributeRight
+									 relatedBy:NSLayoutRelationEqual
+										toItem:superview
+									 attribute:NSLayoutAttributeRight
+									multiplier:1.0
+									  constant:0.0],
 
-	 [NSLayoutConstraint constraintWithItem:self
-								  attribute:NSLayoutAttributeTop
-								  relatedBy:NSLayoutRelationEqual
-									 toItem:superview
-								  attribute:NSLayoutAttributeTop
-								 multiplier:1.0
-								   constant:0.0],
+		[NSLayoutConstraint constraintWithItem:self
+									 attribute:NSLayoutAttributeTop
+									 relatedBy:NSLayoutRelationEqual
+										toItem:superview
+									 attribute:NSLayoutAttributeTop
+									multiplier:1.0
+									  constant:0.0],
 
-	 [NSLayoutConstraint constraintWithItem:self
-								  attribute:NSLayoutAttributeBottom
-								  relatedBy:NSLayoutRelationEqual
-									 toItem:superview
-								  attribute:NSLayoutAttributeBottom
-								 multiplier:1.0
-								   constant:0.0]
-	 ];
+		[NSLayoutConstraint constraintWithItem:self
+									 attribute:NSLayoutAttributeBottom
+									 relatedBy:NSLayoutRelationEqual
+										toItem:superview
+									 attribute:NSLayoutAttributeBottom
+									multiplier:1.0
+									  constant:0.0]
+	];
 
 	[superview addConstraints:constraints];
 }
@@ -154,17 +154,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableArray *constraints = [NSMutableArray array];
 
-	[constraints addObjectsFromArray:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[self(0@550)]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(self)]];
+	[constraints
+		addObjectsFromArray:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[self(0@550)]-0-|"
+																	options:NSLayoutFormatDirectionLeadingToTrailing
+																	metrics:nil
+																	  views:NSDictionaryOfVariableBindings(self)]];
 
-	[constraints addObjectsFromArray:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[self(0@550)]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(self)]];
+	[constraints
+		addObjectsFromArray:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[self(0@550)]-0-|"
+																	options:NSLayoutFormatDirectionLeadingToTrailing
+																	metrics:nil
+																	  views:NSDictionaryOfVariableBindings(self)]];
 
 	[superview addConstraints:constraints];
 }

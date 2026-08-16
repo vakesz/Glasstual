@@ -51,13 +51,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCLogView ()
-@property (nonatomic, strong) id webViewBacking;
-@property (nonatomic, getter=isLayingOutView, readwrite) BOOL layingOutView;
+@property(nonatomic, strong) id webViewBacking;
+@property(nonatomic, getter=isLayingOutView, readwrite) BOOL layingOutView;
 @end
 
 @implementation TVCLogView
 
-NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
+NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 - (instancetype)init
 {
@@ -93,9 +93,10 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 - (void)copyContentString
 {
-	[self stringByEvaluatingFunction:@"Glasstual.documentHTML" completionHandler:^(NSString *result) {
-		RZPasteboard().stringContent = result;
-	}];
+	[self stringByEvaluatingFunction:@"Glasstual.documentHTML"
+				   completionHandler:^(NSString *result) {
+					   RZPasteboard().stringContent = result;
+				   }];
 }
 
 - (BOOL)hasSelection
@@ -137,7 +138,7 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	return NO;
 }
 
-- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
 {
 	NSParameterAssert(sender != nil);
 
@@ -246,8 +247,7 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 		return;
 	}
 
-	[webView loadFileURL:filePath
- allowingReadAccessToURL:themeController().temporaryURL];
+	[webView loadFileURL:filePath allowingReadAccessToURL:themeController().temporaryURL];
 }
 
 - (void)stopLoading
@@ -266,16 +266,16 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 - (void)enableOffScreenUpdates
 {
-//	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[(id)self.webView enableOffScreenUpdates];
-//	});
+	//	XRPerformBlockAsynchronouslyOnMainQueue(^{
+	[(id)self.webView enableOffScreenUpdates];
+	//	});
 }
 
 - (void)disableOffScreenUpdates
 {
-//	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[(id)self.webView disableOffScreenUpdates];
-//	});
+	//	XRPerformBlockAsynchronouslyOnMainQueue(^{
+	[(id)self.webView disableOffScreenUpdates];
+	//	});
 }
 
 - (void)redrawViewIfNeeded
@@ -322,9 +322,9 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 - (void)setAutomaticScrollingEnabled:(BOOL)automaticScrollingEnabled
 {
-//	XRPerformBlockAsynchronouslyOnMainQueue(^{
+	//	XRPerformBlockAsynchronouslyOnMainQueue(^{
 	[(id)self.webView setAutomaticScrollingEnabled:automaticScrollingEnabled];
-//	});
+	//	});
 }
 
 @end
@@ -338,7 +338,7 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	[self evaluateJavaScript:code completionHandler:nil];
 }
 
-- (void)evaluateJavaScript:(NSString *)code completionHandler:(void (^ _Nullable)(id _Nullable result))completionHandler
+- (void)evaluateJavaScript:(NSString *)code completionHandler:(void (^_Nullable)(id _Nullable result))completionHandler
 {
 	NSParameterAssert(code != nil);
 
@@ -351,17 +351,11 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 {
 	NSParameterAssert(scriptResult != nil);
 
-	if ([scriptResult isKindOfClass:[NSString class]])
-	{
+	if ([scriptResult isKindOfClass:[NSString class]]) {
 		return scriptResult;
-	}
-	else if ([scriptResult isKindOfClass:[NSArray class]] ||
-			 [scriptResult isKindOfClass:[NSDictionary class]])
-	{
+	} else if ([scriptResult isKindOfClass:[NSArray class]] || [scriptResult isKindOfClass:[NSDictionary class]]) {
 		return [scriptResult description];
-	}
-	else if ([scriptResult isKindOfClass:[NSNumber class]])
-	{
+	} else if ([scriptResult isKindOfClass:[NSNumber class]]) {
 		if ([scriptResult isBooleanValue]) {
 			if ([scriptResult boolValue]) {
 				return @"true";
@@ -371,13 +365,9 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 		} else {
 			return [scriptResult stringValue];
 		}
-	}
-	else if ([scriptResult isKindOfClass:[NSNull class]])
-	{
+	} else if ([scriptResult isKindOfClass:[NSNull class]]) {
 		return @"null";
-	}
-	else
-	{
+	} else {
 		return @"undefined";
 	}
 }
@@ -406,7 +396,9 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	[self evaluateFunction:function withArguments:arguments completionHandler:nil];
 }
 
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments completionHandler:(void (^ _Nullable)(id _Nullable result))completionHandler
+- (void)evaluateFunction:(NSString *)function
+		   withArguments:(nullable NSArray *)arguments
+	   completionHandler:(void (^_Nullable)(id _Nullable result))completionHandler
 {
 	NSParameterAssert(function != nil);
 
@@ -415,95 +407,117 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	[self evaluateJavaScript:compiledScript completionHandler:completionHandler];
 }
 
-- (void)booleanByEvaluatingFunction:(NSString *)function completionHandler:(void (^ _Nullable)(BOOL result))completionHandler
+- (void)booleanByEvaluatingFunction:(NSString *)function
+				  completionHandler:(void (^_Nullable)(BOOL result))completionHandler
 {
 	[self booleanByEvaluatingFunction:function withArguments:nil completionHandler:completionHandler];
 }
 
-- (void)booleanByEvaluatingFunction:(NSString *)function withArguments:(nullable NSArray *)arguments completionHandler:(void (^ _Nullable)(BOOL result))completionHandler
+- (void)booleanByEvaluatingFunction:(NSString *)function
+					  withArguments:(nullable NSArray *)arguments
+				  completionHandler:(void (^_Nullable)(BOOL result))completionHandler
 {
-	[self evaluateFunction:function withArguments:arguments completionHandler:^(id result) {
-		BOOL resultBool = NO;
+	[self evaluateFunction:function
+			 withArguments:arguments
+		 completionHandler:^(id result) {
+			 BOOL resultBool = NO;
 
-		if (result && [result isKindOfClass:[NSNumber class]]) {
-			resultBool = [result boolValue];
-		}
+			 if (result && [result isKindOfClass:[NSNumber class]]) {
+				 resultBool = [result boolValue];
+			 }
 
-		if (completionHandler) {
-			completionHandler(resultBool);
-		}
-	}];
+			 if (completionHandler) {
+				 completionHandler(resultBool);
+			 }
+		 }];
 }
 
-- (void)stringByEvaluatingFunction:(NSString *)function completionHandler:(void (^ _Nullable)(NSString * _Nullable result))completionHandler
+- (void)stringByEvaluatingFunction:(NSString *)function
+				 completionHandler:(void (^_Nullable)(NSString *_Nullable result))completionHandler
 {
 	[self stringByEvaluatingFunction:function withArguments:nil completionHandler:completionHandler];
 }
 
-- (void)stringByEvaluatingFunction:(NSString *)function withArguments:(nullable NSArray *)arguments completionHandler:(void (^ _Nullable)(NSString * _Nullable result))completionHandler
+- (void)stringByEvaluatingFunction:(NSString *)function
+					 withArguments:(nullable NSArray *)arguments
+				 completionHandler:(void (^_Nullable)(NSString *_Nullable result))completionHandler
 {
-	[self evaluateFunction:function withArguments:arguments completionHandler:^(id result) {
-		NSString *resultString = nil;
+	[self evaluateFunction:function
+			 withArguments:arguments
+		 completionHandler:^(id result) {
+			 NSString *resultString = nil;
 
-		if (result && [result isKindOfClass:[NSString class]]) {
-			resultString = result;
-		}
+			 if (result && [result isKindOfClass:[NSString class]]) {
+				 resultString = result;
+			 }
 
-		if (completionHandler) {
-			completionHandler(resultString);
-		}
-	}];
+			 if (completionHandler) {
+				 completionHandler(resultString);
+			 }
+		 }];
 }
 
-- (void)arrayByEvaluatingFunction:(NSString *)function completionHandler:(void (^ _Nullable)(NSArray * _Nullable result))completionHandler
+- (void)arrayByEvaluatingFunction:(NSString *)function
+				completionHandler:(void (^_Nullable)(NSArray *_Nullable result))completionHandler
 {
 	[self arrayByEvaluatingFunction:function withArguments:nil completionHandler:completionHandler];
 }
 
-- (void)arrayByEvaluatingFunction:(NSString *)function withArguments:(nullable NSArray *)arguments completionHandler:(void (^ _Nullable)(NSArray * _Nullable result))completionHandler
+- (void)arrayByEvaluatingFunction:(NSString *)function
+					withArguments:(nullable NSArray *)arguments
+				completionHandler:(void (^_Nullable)(NSArray *_Nullable result))completionHandler
 {
-	[self evaluateFunction:function withArguments:arguments completionHandler:^(id result) {
-		NSArray *resultArray = nil;
+	[self evaluateFunction:function
+			 withArguments:arguments
+		 completionHandler:^(id result) {
+			 NSArray *resultArray = nil;
 
-		if (result && [result isKindOfClass:[NSArray class]]) {
-			resultArray = result;
-		}
+			 if (result && [result isKindOfClass:[NSArray class]]) {
+				 resultArray = result;
+			 }
 
-		if (completionHandler) {
-			completionHandler(resultArray);
-		}
-	}];
+			 if (completionHandler) {
+				 completionHandler(resultArray);
+			 }
+		 }];
 }
 
-- (void)dictionaryByEvaluatingFunction:(NSString *)function completionHandler:(void (^ _Nullable)(NSDictionary<NSString *, id> * _Nullable result))completionHandler
+- (void)dictionaryByEvaluatingFunction:(NSString *)function
+					 completionHandler:
+						 (void (^_Nullable)(NSDictionary<NSString *, id> *_Nullable result))completionHandler
 {
 	[self dictionaryByEvaluatingFunction:function withArguments:nil completionHandler:completionHandler];
 }
 
-- (void)dictionaryByEvaluatingFunction:(NSString *)function withArguments:(nullable NSArray *)arguments completionHandler:(void (^ _Nullable)(NSDictionary<NSString *, id> * _Nullable result))completionHandler
+- (void)dictionaryByEvaluatingFunction:(NSString *)function
+						 withArguments:(nullable NSArray *)arguments
+					 completionHandler:
+						 (void (^_Nullable)(NSDictionary<NSString *, id> *_Nullable result))completionHandler
 {
-	[self evaluateFunction:function withArguments:arguments completionHandler:^(id result) {
-		NSDictionary *resultDictionary = nil;
+	[self evaluateFunction:function
+			 withArguments:arguments
+		 completionHandler:^(id result) {
+			 NSDictionary *resultDictionary = nil;
 
-		if (result && [result isKindOfClass:[NSDictionary class]]) {
-			resultDictionary = result;
-		}
+			 if (result && [result isKindOfClass:[NSDictionary class]]) {
+				 resultDictionary = result;
+			 }
 
-		if (completionHandler) {
-			completionHandler(resultDictionary);
-		}
-	}];
+			 if (completionHandler) {
+				 completionHandler(resultDictionary);
+			 }
+		 }];
 }
 
 - (void)logToJavaScriptConsole:(NSString *)message, ...
 {
 	NSParameterAssert(message != nil);
-	
+
 	va_list arguments;
 	va_start(arguments, message);
-	
+
 	[TVCLogScriptEventSink logToJavaScriptConsole:message inWebView:self withArguments:arguments];
-	
+
 	va_end(arguments);
 }
 
@@ -581,19 +595,15 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 {
 	NSParameterAssert(object != nil);
 
-	if ([object isKindOfClass:[NSURL class]])
-	{
+	if ([object isKindOfClass:[NSURL class]]) {
 		object = [object absoluteString];
 	}
 
-	if ([object isKindOfClass:[NSString class]])
-	{
+	if ([object isKindOfClass:[NSString class]]) {
 		NSString *objectEscaped = [self.class escapeJavaScriptString:object];
 
 		return [NSString stringWithFormat:@"\"%@\"", objectEscaped];
-	}
-	else if ([object isKindOfClass:[NSNumber class]])
-	{
+	} else if ([object isKindOfClass:[NSNumber class]]) {
 		if ([object isBooleanValue]) {
 			if ([object boolValue]) {
 				return @"true";
@@ -603,21 +613,13 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 		} else {
 			return [object stringValue];
 		}
-	}
-	else if ([object isKindOfClass:[NSArray class]])
-	{
+	} else if ([object isKindOfClass:[NSArray class]]) {
 		return [self compileJavaScriptArrayArgument:object];
-	}
-	else if ([object isKindOfClass:[NSDictionary class]])
-	{
+	} else if ([object isKindOfClass:[NSDictionary class]]) {
 		return [self compileJavaScriptDictionaryArgument:object];
-	}
-	else if ([object isKindOfClass:[NSNull class]])
-	{
+	} else if ([object isKindOfClass:[NSNull class]]) {
 		return @"null";
-	}
-	else
-	{
+	} else {
 		return @"undefined";
 	}
 }
@@ -630,7 +632,7 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 	[compiledScript appendFormat:@"%@(", function];
 
-	if ( arguments) {
+	if (arguments) {
 		NSUInteger argumentCount = arguments.count;
 
 		for (NSUInteger i = 0; i < argumentCount; i++) {
@@ -648,7 +650,6 @@ NSString * const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 	return [compiledScript copy];
 }
-
 
 @end
 

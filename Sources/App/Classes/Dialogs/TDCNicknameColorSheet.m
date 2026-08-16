@@ -42,8 +42,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCNicknameColorSheet ()
-@property (nonatomic, copy) NSString *nickname;
-@property (nonatomic, weak) IBOutlet NSColorWell *nicknameColorWell;
+@property(nonatomic, copy) NSString *nickname;
+@property(nonatomic, weak) IBOutlet NSColorWell *nicknameColorWell;
 
 - (IBAction)resetNicknameColor:(nullable id)sender;
 @end
@@ -69,8 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[RZMainBundle() loadNibNamed:@"TDCNicknameColorSheet" owner:self topLevelObjects:nil];
 
-	NSColor *nicknameColor =
-	[IRCUserNicknameColorStyleGenerator nicknameColorStyleOverrideForKey:self.nickname];
+	NSColor *nicknameColor = [IRCUserNicknameColorStyleGenerator nicknameColorStyleOverrideForKey:self.nickname];
 
 	if (nicknameColor == nil) {
 		nicknameColor = [NSColor whiteColor];
@@ -89,7 +88,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSColor *nicknameColor = self.nicknameColorWell.color;
 
 	if ([nicknameColor isEqual:[NSColor whiteColor]]) {
-		 nicknameColor = nil;
+		nicknameColor = nil;
 	}
 
 	[IRCUserNicknameColorStyleGenerator setNicknameColorStyleOverride:nicknameColor forKey:self.nickname];

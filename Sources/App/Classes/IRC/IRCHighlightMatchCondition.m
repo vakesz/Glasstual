@@ -71,7 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	SetVariableIfNil(self->_matchKeyword, @"")
 
-	SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
+		SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
 }
 
 - (NSDictionary<NSString *, id> *)dictionaryValueForTarget:(XRPortablePropertyDictTarget)target

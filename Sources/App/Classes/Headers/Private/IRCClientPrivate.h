@@ -44,22 +44,22 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCAddressBookUserTrackingContainer, IRCTimedCommand, IRCUserMutable;
 
 enum {
-	ClientIRCv3SupportedCapabilitySASLGeneric			= 1 << 22,
-	ClientIRCv3SupportedCapabilitySASLPlainText			= 1 << 23, // YES if SASL=plain CAP is supported
-	ClientIRCv3SupportedCapabilitySASLExternal			= 1 << 24, // YES if SASL=external CAP is supported
-	ClientIRCv3SupportedCapabilityZNCServerTime			= 1 << 25, // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCServerTimeISO		= 1 << 26, // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCPlaybackModule		= 1 << 27, // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityPlanioPlayback		= 1 << 28  // YES if the plan.io vendor specific CAP supported.
+	ClientIRCv3SupportedCapabilitySASLGeneric = 1 << 22,
+	ClientIRCv3SupportedCapabilitySASLPlainText = 1 << 23,	   // YES if SASL=plain CAP is supported
+	ClientIRCv3SupportedCapabilitySASLExternal = 1 << 24,	   // YES if SASL=external CAP is supported
+	ClientIRCv3SupportedCapabilityZNCServerTime = 1 << 25,	   // YES if the ZNC vendor specific CAP supported
+	ClientIRCv3SupportedCapabilityZNCServerTimeISO = 1 << 26,  // YES if the ZNC vendor specific CAP supported
+	ClientIRCv3SupportedCapabilityZNCPlaybackModule = 1 << 27, // YES if the ZNC vendor specific CAP supported
+	ClientIRCv3SupportedCapabilityPlanioPlayback = 1 << 28	   // YES if the plan.io vendor specific CAP supported.
 };
 
 @interface IRCClient ()
-@property (nonatomic, copy, nullable) dispatch_block_t disconnectCallback;
-@property (nonatomic, assign, readwrite) IRCClientConnectMode connectType;
-@property (nonatomic, assign, readwrite) IRCClientDisconnectMode disconnectType;
-@property (nonatomic, assign) BOOL sidebarItemIsExpanded;
-@property (nonatomic, copy, readwrite) NSArray<IRCChannel *> *channelList;
-@property (nonatomic, weak, readwrite) IRCChannel *lastSelectedChannel;
+@property(nonatomic, copy, nullable) dispatch_block_t disconnectCallback;
+@property(nonatomic, assign, readwrite) IRCClientConnectMode connectType;
+@property(nonatomic, assign, readwrite) IRCClientDisconnectMode disconnectType;
+@property(nonatomic, assign) BOOL sidebarItemIsExpanded;
+@property(nonatomic, copy, readwrite) NSArray<IRCChannel *> *channelList;
+@property(nonatomic, weak, readwrite) IRCChannel *lastSelectedChannel;
 
 - (instancetype)initWithConfig:(IRCClientConfig *)config NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithConfigDictionary:(NSDictionary<NSString *, id> *)dic;
@@ -72,7 +72,9 @@ enum {
 - (void)addChannel:(IRCChannel *)channel;
 - (void)addChannel:(IRCChannel *)channel atPosition:(NSUInteger)position;
 
-- (void)removeChannel:(IRCChannel *)channel; // This only removes the channel from channel array. Use world controller to properly destroy a channel.
+- (void)removeChannel:
+	(IRCChannel *)
+		channel; // This only removes the channel from channel array. Use world controller to properly destroy a channel.
 
 - (NSUInteger)indexOfChannel:(IRCChannel *)channel;
 
@@ -99,18 +101,35 @@ enum {
 - (void)postEventToViewController:(NSString *)eventToken;
 - (void)postEventToViewController:(NSString *)eventToken forChannel:(IRCChannel *)channel;
 
-- (void)sendFile:(NSString *)nickname port:(uint16_t)port filename:(NSString *)filename filesize:(uint64_t)totalFilesize token:(nullable NSString *)transferToken;
-- (void)sendFileResume:(NSString *)nickname port:(uint16_t)port filename:(NSString *)filename filesize:(uint64_t)totalFilesize token:(nullable NSString *)transferToken;
-- (void)sendFileResumeAccept:(NSString *)nickname port:(uint16_t)port filename:(NSString *)filename filesize:(uint64_t)totalFilesize token:(nullable NSString *)transferToken;
+- (void)sendFile:(NSString *)nickname
+			port:(uint16_t)port
+		filename:(NSString *)filename
+		filesize:(uint64_t)totalFilesize
+		   token:(nullable NSString *)transferToken;
+- (void)sendFileResume:(NSString *)nickname
+				  port:(uint16_t)port
+			  filename:(NSString *)filename
+			  filesize:(uint64_t)totalFilesize
+				 token:(nullable NSString *)transferToken;
+- (void)sendFileResumeAccept:(NSString *)nickname
+						port:(uint16_t)port
+					filename:(NSString *)filename
+					filesize:(uint64_t)totalFilesize
+					   token:(nullable NSString *)transferToken;
 
-- (void)notifyFileTransfer:(TXNotificationType)type nickname:(NSString *)nickname filename:(NSString *)filename filesize:(uint64_t)totalFilesize requestIdentifier:(NSString *)identifier;
+- (void)notifyFileTransfer:(TXNotificationType)type
+				  nickname:(NSString *)nickname
+				  filename:(NSString *)filename
+				  filesize:(uint64_t)totalFilesize
+		 requestIdentifier:(NSString *)identifier;
 
 - (IRCAddressBookUserTrackingContainer *)trackedUsers;
 
 - (IRCUserMutable *)mutableCopyOfUserWithNickname:(NSString *)nickname;
 
-- (void)modifyUser:(IRCUser *)user withBlock:(void (NS_NOESCAPE ^)(IRCUserMutable *userMutable))block;
-- (void)modifyUserUserWithNickname:(NSString *)nickname withBlock:(void (NS_NOESCAPE ^)(IRCUserMutable *userMutable))block;
+- (void)modifyUser:(IRCUser *)user withBlock:(void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))block;
+- (void)modifyUserUserWithNickname:(NSString *)nickname
+						 withBlock:(void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))block;
 
 - (void)reopenLogFileIfNeeded;
 - (void)closeLogFile;
@@ -121,7 +140,12 @@ enum {
 
 - (id)queuedBatchMessageWithToken:(NSString *)batchToken;
 
-- (void)print:(NSString *)messageBody by:(nullable NSString *)nickname inChannel:(nullable IRCChannel *)channel asType:(TVCLogLineType)lineType command:(NSString *)command escapeMessage:(BOOL)escapeMessage;
+- (void)print:(NSString *)messageBody
+			   by:(nullable NSString *)nickname
+		inChannel:(nullable IRCChannel *)channel
+		   asType:(TVCLogLineType)lineType
+		  command:(NSString *)command
+	escapeMessage:(BOOL)escapeMessage;
 
 - (void)onTimedCommand:(IRCTimedCommand *)timedCommand;
 

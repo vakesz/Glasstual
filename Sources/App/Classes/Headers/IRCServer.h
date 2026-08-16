@@ -41,22 +41,22 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Immutable Object
 
 @interface IRCServer : XRPortablePropertyDict
-@property (readonly, copy) NSString *uniqueIdentifier;
-@property (readonly, copy) NSString *serverAddress;
-@property (readonly, copy, nullable) NSString *serverPassword;
-@property (readonly, copy, nullable) NSString *serverPasswordFromKeychain;
-@property (readonly) uint16_t serverPort;
-@property (readonly) BOOL prefersSecuredConnection;
+@property(readonly, copy) NSString *uniqueIdentifier;
+@property(readonly, copy) NSString *serverAddress;
+@property(readonly, copy, nullable) NSString *serverPassword;
+@property(readonly, copy, nullable) NSString *serverPasswordFromKeychain;
+@property(readonly) uint16_t serverPort;
+@property(readonly) BOOL prefersSecuredConnection;
 @end
 
 #pragma mark -
 #pragma mark Mutable Object
 
 @interface IRCServerMutable : IRCServer
-@property (nonatomic, copy, readwrite) NSString *serverAddress;
-@property (nonatomic, copy, readwrite, nullable) NSString *serverPassword;
-@property (nonatomic, assign, readwrite) uint16_t serverPort;
-@property (nonatomic, assign, readwrite) BOOL prefersSecuredConnection;
+@property(nonatomic, copy, readwrite) NSString *serverAddress;
+@property(nonatomic, copy, readwrite, nullable) NSString *serverPassword;
+@property(nonatomic, assign, readwrite) uint16_t serverPort;
+@property(nonatomic, assign, readwrite) BOOL prefersSecuredConnection;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -74,6 +74,20 @@ Register that App ID and App Group on [developer.apple.com](https://developer.ap
 
 Build Glasstual using the "Standard Release" build scheme.
 
+### Code quality
+
+Install the development tools and run the repository-wide checks with:
+
+```sh
+brew bundle
+./Scripts/lint.sh
+```
+
+Run `./Scripts/format.sh` to format first-party Objective-C, Swift, and shell
+sources. Formatting and linting intentionally exclude Git submodules and
+vendored sources under `External Libraries`. Pull requests also build the
+Debug, standard Release, sandboxed Release, and plugin App Store configurations.
+
 ### Software Updates
 
 The Standard Release scheme builds with Sparkle enabled but **no `SUFeedURL`** — the

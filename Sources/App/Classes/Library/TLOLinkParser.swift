@@ -36,20 +36,18 @@
 *********************************************************************** */
 
 @objc(TLOLinkParser)
-public class LinkParser: NSObject
-{
+public class LinkParser: NSObject {
 	@objc(locateLinksInString:)
-	public static func locateLinks(in string: String) -> [AHHyperlinkScannerResult]
-	{
+	public static func locateLinks(in string: String) -> [AHHyperlinkScannerResult] {
 		return AHHyperlinkScanner.matches(in: string, strictMatching: false)
 	}
 
 	@objc
 	public static let bannedLineTypes =
-	[
-		TVCLogLine.string(for: .mode),
-		TVCLogLine.string(for: .join),
-		TVCLogLine.string(for: .nick),
-		TVCLogLine.string(for: .invite)
-	].compactMap { $0 }
+		[
+			TVCLogLine.string(for: .mode),
+			TVCLogLine.string(for: .join),
+			TVCLogLine.string(for: .nick),
+			TVCLogLine.string(for: .invite),
+		].compactMap { $0 }
 }

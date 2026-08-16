@@ -55,26 +55,26 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _autoConnectDelay				1
+#define _autoConnectDelay 1
 
-#define _reconnectAfterWakeupDelay		8
+#define _reconnectAfterWakeupDelay 8
 
-#define _savePeriodicallyThreshold		300
+#define _savePeriodicallyThreshold 300
 
-NSString * const IRCWorldClientListDefaultsKey = @"World Controller Client Configurations";
+NSString *const IRCWorldClientListDefaultsKey = @"World Controller Client Configurations";
 
-NSString * const IRCWorldClientListWasModifiedNotification = @"IRCWorldClientListWasModifiedNotification";
+NSString *const IRCWorldClientListWasModifiedNotification = @"IRCWorldClientListWasModifiedNotification";
 
-NSString * const IRCWorldDateHasChangedNotification = @"IRCWorldDateHasChangedNotification";
+NSString *const IRCWorldDateHasChangedNotification = @"IRCWorldDateHasChangedNotification";
 
-NSString * const IRCWorldWillDestroyClientNotification = @"IRCWorldWillDestroyClientNotification";
-NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyChannelNotification";
+NSString *const IRCWorldWillDestroyClientNotification = @"IRCWorldWillDestroyClientNotification";
+NSString *const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyChannelNotification";
 
 @interface IRCWorld ()
-@property (nonatomic, strong) NSMutableArray<IRCClient *> *clients;
-@property (nonatomic, assign) BOOL preferencesDidChangeTimerIsActive;
-@property (nonatomic, assign) CFAbsoluteTime savePeriodicallyLastSave;
-@property (nonatomic, copy) NSDate *lastDateHasChangedDate;
+@property(nonatomic, strong) NSMutableArray<IRCClient *> *clients;
+@property(nonatomic, assign) BOOL preferencesDidChangeTimerIsActive;
+@property(nonatomic, assign) CFAbsoluteTime savePeriodicallyLastSave;
+@property(nonatomic, copy) NSDate *lastDateHasChangedDate;
 @end
 
 @implementation IRCWorld
@@ -135,11 +135,20 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 {
 	[self setupMidnightTimer];
 
-	[RZNotificationCenter() addObserver:self selector:@selector(dateChanged:) name:NSSystemClockDidChangeNotification object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(dateChanged:)
+								   name:NSSystemClockDidChangeNotification
+								 object:nil];
 
-	[RZNotificationCenter() addObserver:self selector:@selector(userDefaultsDidChange:) name:TPCPreferencesUserDefaultsDidChangeNotification object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(userDefaultsDidChange:)
+								   name:TPCPreferencesUserDefaultsDidChangeNotification
+								 object:nil];
 
-	[RZNotificationCenter() addObserver:self selector:@selector(mainWindowAppearanceChanged:) name:TVCMainWindowAppearanceChangedNotification object:nil];
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(mainWindowAppearanceChanged:)
+								   name:TVCMainWindowAppearanceChangedNotification
+								 object:nil];
 }
 
 - (NSArray *)clientConfigurations
@@ -165,7 +174,7 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 	CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
 
 	if ((self.savePeriodicallyLastSave + _savePeriodicallyThreshold) < now) {
-		 self.savePeriodicallyLastSave = now;
+		self.savePeriodicallyLastSave = now;
 
 		[self save];
 	}
@@ -195,7 +204,9 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 	if (self.preferencesDidChangeTimerIsActive == NO) {
 		self.preferencesDidChangeTimerIsActive = YES;
 
-		[self performSelectorInCommonModes:@selector(informAllViewsUserDefaultsDidChange) withObject:nil afterDelay:1.0];
+		[self performSelectorInCommonModes:@selector(informAllViewsUserDefaultsDidChange)
+								withObject:nil
+								afterDelay:1.0];
 	}
 }
 
@@ -219,7 +230,9 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 {
 	TVCMainWindowAppearance *appearance = mainWindow().userInterfaceObjects;
 
-	[self evaluateFunctionOnAllViews:@"Glasstual.appearanceDidChange" arguments:@[appearance.shortAppearanceDescription] onQueue:YES];
+	[self evaluateFunctionOnAllViews:@"Glasstual.appearanceDidChange"
+						   arguments:@[ appearance.shortAppearanceDescription ]
+							 onQueue:YES];
 }
 
 #pragma mark -
@@ -270,8 +283,9 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 		delay += _reconnectAfterWakeupDelay;
 	}
 
-#define _isAutoConnecting		(afterWakeUp == NO && u.config.autoConnect)
-#define _isWakingFromSleep		(afterWakeUp	   && u.config.autoSleepModeDisconnect && u.disconnectType == IRCClientDisconnectModeComputerSleep)
+#define _isAutoConnecting (afterWakeUp == NO && u.config.autoConnect)
+#define _isWakingFromSleep                                                                                             \
+	(afterWakeUp && u.config.autoSleepModeDisconnect && u.disconnectType == IRCClientDisconnectModeComputerSleep)
 
 	for (IRCClient *u in self.clientList) {
 		if (_isWakingFromSleep == NO && _isAutoConnecting == NO) {
@@ -351,7 +365,9 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 {
 	/* Ask for the day, month, and year from the current calendar. */
 	/* We are not asking for time which means that it will default to zero. */
-	NSDateComponents *currentDayComponents = [RZCurrentCalendar() components:(NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay) fromDate:[NSDate date]];
+	NSDateComponents *currentDayComponents =
+		[RZCurrentCalendar() components:(NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay)
+							   fromDate:[NSDate date]];
 
 	NSDate *lastMidnight = [RZCurrentCalendar() dateFromComponents:currentDayComponents];
 
@@ -363,18 +379,19 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 
 	/* With the current date and future components, calculate
 	 the date on which our midnight timer will land. */
-	NSDate *nextMidnight = [RZCurrentCalendar() dateByAddingComponents:futureDayComponents toDate:lastMidnight options:0];
+	NSDate *nextMidnight = [RZCurrentCalendar() dateByAddingComponents:futureDayComponents
+																toDate:lastMidnight
+															   options:0];
 
 	/* Create timer for midnight in future. */
 	/* We set the tolerance for the timer to absolute zero so that
 	 we are confident that OS X will not reschedule it. */
-	NSTimer *midnightTimer = [[NSTimer alloc]
-				initWithFireDate:nextMidnight
-						interval:0.0
-						  target:self
-						selector:@selector(dateChanged:)
-						userInfo:nil
-						 repeats:NO];
+	NSTimer *midnightTimer = [[NSTimer alloc] initWithFireDate:nextMidnight
+													  interval:0.0
+														target:self
+													  selector:@selector(dateChanged:)
+													  userInfo:nil
+													   repeats:NO];
 
 	midnightTimer.tolerance = 0.0;
 
@@ -399,9 +416,11 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 		[RZNotificationCenter() postNotificationName:IRCWorldDateHasChangedNotification object:nil userInfo:nil];
 
 		[self evaluateFunctionOnAllViews:@"Glasstual.dateChanged"
-							   arguments:@[@(currentDayComponents.year),
-										   @(currentDayComponents.month),
-										   @(currentDayComponents.day)]
+							   arguments:@[
+								   @(currentDayComponents.year),
+								   @(currentDayComponents.month),
+								   @(currentDayComponents.day)
+							   ]
 								 onQueue:NO];
 	}
 }
@@ -538,8 +557,7 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 	NSMutableArray<IRCChannel *> *channelList = [NSMutableArray array];
 
 	for (IRCChannelConfig *channelConfig in client.config.channelList) {
-		IRCChannel *channel =
-		[self createChannelWithConfig:channelConfig onClient:client add:NO adjust:NO reload:NO];
+		IRCChannel *channel = [self createChannelWithConfig:channelConfig onClient:client add:NO adjust:NO reload:NO];
 
 		[channelList addObject:channel];
 	}
@@ -574,7 +592,11 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 	return [self createChannelWithConfig:config onClient:client add:YES adjust:YES reload:YES];
 }
 
-- (IRCChannel *)createChannelWithConfig:(IRCChannelConfig *)config onClient:(IRCClient *)client add:(BOOL)add adjust:(BOOL)adjust reload:(BOOL)reload
+- (IRCChannel *)createChannelWithConfig:(IRCChannelConfig *)config
+							   onClient:(IRCClient *)client
+									add:(BOOL)add
+								 adjust:(BOOL)adjust
+								 reload:(BOOL)reload
 {
 	NSParameterAssert(config != nil);
 	NSParameterAssert(client != nil);
@@ -613,8 +635,7 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 {
 	NSParameterAssert(nickname != nil);
 	NSParameterAssert(client != nil);
-	NSParameterAssert(type == IRCChannelTypePrivateMessage ||
-					  type == IRCChannelTypeUtility);
+	NSParameterAssert(type == IRCChannelTypePrivateMessage || type == IRCChannelTypeUtility);
 
 	IRCChannelConfigMutable *config = [IRCChannelConfigMutable new];
 
@@ -684,13 +705,14 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 
 	@try {
 		[mainWindowServerList() removeItemFromList:client];
-	}
-	@catch (NSException *exception) {
+	} @catch (NSException *exception) {
 		LogToConsoleError("Caught exception: %{public}@", exception.reason);
 		LogStackTrace();
 	}
 
-	@synchronized(self.clients) {
+	@
+	synchronized(self.clients)
+	{
 		[self.clients removeObjectIdenticalTo:client];
 	}
 
@@ -736,8 +758,7 @@ NSString * const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyC
 	if (reload) {
 		@try {
 			[mainWindowServerList() removeItemFromList:channel];
-		}
-		@catch (NSException *exception) {
+		} @catch (NSException *exception) {
 			LogToConsoleError("Caught exception: %{public}@", exception.reason);
 			LogStackTrace();
 		}

@@ -43,11 +43,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TPCResourceManagerBundleDocumentTypeExtension					= @".bundle";
-NSString * const TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod		= @"bundle";
+NSString *const TPCResourceManagerBundleDocumentTypeExtension = @".bundle";
+NSString *const TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod = @"bundle";
 
-NSString * const TPCResourceManagerScriptDocumentTypeExtension					= @".scpt";
-NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @"scpt";
+NSString *const TPCResourceManagerScriptDocumentTypeExtension = @".scpt";
+NSString *const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod = @"scpt";
 
 @implementation TPCResourceManager
 
@@ -56,11 +56,10 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 	/* Add a system link for the unsupervised scripts folder if it exists. */
 	NSString *sourcePath = [TPCPathInfo customScripts];
 
-	NSString *destinationPath = [[TPCPathInfo groupContainerApplicationSupport] stringByAppendingPathComponent:@"/Custom Scripts/"];
+	NSString *destinationPath =
+		[[TPCPathInfo groupContainerApplicationSupport] stringByAppendingPathComponent:@"/Custom Scripts/"];
 
-	if ([RZFileManager() fileExistsAtPath:sourcePath] &&
-		[RZFileManager() fileExistsAtPath:destinationPath] == NO)
-	{
+	if ([RZFileManager() fileExistsAtPath:sourcePath] && [RZFileManager() fileExistsAtPath:destinationPath] == NO) {
 		[RZFileManager() createSymbolicLinkAtPath:destinationPath withDestinationPath:sourcePath error:NULL];
 	}
 }
@@ -83,12 +82,15 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 	return [self dictionaryFromResources:name inDirectory:nil key:nil cacheValue:YES];
 }
 
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+													   inDirectory:(nullable NSString *)subpath
 {
 	return [self dictionaryFromResources:name inDirectory:subpath key:nil cacheValue:YES];
 }
 
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath cacheValue:(BOOL)cacheValue
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+													   inDirectory:(nullable NSString *)subpath
+														cacheValue:(BOOL)cacheValue
 {
 	return [self dictionaryFromResources:name inDirectory:subpath key:nil cacheValue:cacheValue];
 }
@@ -103,19 +105,30 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 	return [self dictionaryFromResources:name inDirectory:nil key:key cacheValue:YES];
 }
 
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name key:(nullable NSString *)key cacheValue:(BOOL)cacheValue
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+															   key:(nullable NSString *)key
+														cacheValue:(BOOL)cacheValue
 {
 	return [self dictionaryFromResources:name inDirectory:nil key:key cacheValue:cacheValue];
 }
 
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+													   inDirectory:(nullable NSString *)subpath
+															   key:(nullable NSString *)key
 {
 	return [self dictionaryFromResources:name inDirectory:subpath key:key cacheValue:YES];
 }
 
-+ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key cacheValue:(BOOL)cacheValue
++ (nullable NSDictionary<NSString *, id> *)dictionaryFromResources:(NSString *)name
+													   inDirectory:(nullable NSString *)subpath
+															   key:(nullable NSString *)key
+														cacheValue:(BOOL)cacheValue
 {
-	return [self objectFromResources:name inDirectory:subpath key:key kindOf:[NSDictionary class] cacheValue:cacheValue];
+	return [self objectFromResources:name
+						 inDirectory:subpath
+								 key:key
+							  kindOf:[NSDictionary class]
+						  cacheValue:cacheValue];
 }
 
 + (nullable NSArray *)arrayFromResources:(NSString *)name
@@ -128,7 +141,9 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 	return [self arrayFromResources:name inDirectory:subpath key:nil cacheValue:YES];
 }
 
-+ (nullable NSArray *)arrayFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath cacheValue:(BOOL)cacheValue
++ (nullable NSArray *)arrayFromResources:(NSString *)name
+							 inDirectory:(nullable NSString *)subpath
+							  cacheValue:(BOOL)cacheValue
 {
 	return [self arrayFromResources:name inDirectory:subpath key:nil cacheValue:cacheValue];
 }
@@ -148,17 +163,26 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 	return [self arrayFromResources:name inDirectory:nil key:key cacheValue:cacheValue];
 }
 
-+ (nullable NSArray *)arrayFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key
++ (nullable NSArray *)arrayFromResources:(NSString *)name
+							 inDirectory:(nullable NSString *)subpath
+									 key:(nullable NSString *)key
 {
 	return [self arrayFromResources:name inDirectory:subpath key:key cacheValue:YES];
 }
 
-+ (nullable NSArray *)arrayFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key cacheValue:(BOOL)cacheValue
++ (nullable NSArray *)arrayFromResources:(NSString *)name
+							 inDirectory:(nullable NSString *)subpath
+									 key:(nullable NSString *)key
+							  cacheValue:(BOOL)cacheValue
 {
 	return [self objectFromResources:name inDirectory:subpath key:key kindOf:[NSArray class] cacheValue:cacheValue];
 }
 
-+ (nullable id)objectFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key kindOf:(Class)class cacheValue:(BOOL)cacheValue
++ (nullable id)objectFromResources:(NSString *)name
+					   inDirectory:(nullable NSString *)subpath
+							   key:(nullable NSString *)key
+							kindOf:(Class)class
+						cacheValue:(BOOL)cacheValue
 {
 	NSParameterAssert(name != nil);
 
@@ -168,8 +192,8 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 	}
 
 	/* Cache hit? */
-	NSString *cacheKey = [NSString stringWithFormat:@"%@.plist / %@ / %@",
-		name, ((subpath) ?: @"Root Folder"), ((key) ?: @"Root Object")];
+	NSString *cacheKey = [NSString
+		stringWithFormat:@"%@.plist / %@ / %@", name, ((subpath) ?: @"Root Folder"), ((key) ?: @"Root Object")];
 
 	NSCache *cache = self.sharedResourcesCache;
 
@@ -189,14 +213,17 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 	return cachedValue;
 }
 
-+ (nullable id)_objectFromResources:(NSString *)name inDirectory:(nullable NSString *)subpath key:(nullable NSString *)key kindOf:(Class)class
++ (nullable id)_objectFromResources:(NSString *)name
+						inDirectory:(nullable NSString *)subpath
+								key:(nullable NSString *)key
+							 kindOf:(Class)class
 {
 	/* Locate resource */
 	NSURL *resourceURL = [RZMainBundle() URLForResource:name withExtension:@"plist" subdirectory:subpath];
 
 	if (resourceURL == nil) {
-		LogToConsoleError("Resource '%{public}@' in subpath '%{public}@' was not found.",
-			name, ((subpath) ?: @"<No subpath>"));
+		LogToConsoleError(
+			"Resource '%{public}@' in subpath '%{public}@' was not found.", name, ((subpath) ?: @"<No subpath>"));
 
 		return nil;
 	}
@@ -208,7 +235,8 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 
 	if (readError) {
 		LogToConsoleError("Resource '%{public}@' could not be read with error: %{public}@",
-			resourceURL.standardizedTildePath, readError.localizedDescription);
+						  resourceURL.standardizedTildePath,
+						  readError.localizedDescription);
 
 		return nil;
 	}
@@ -216,15 +244,15 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 	/* Process as a property list */
 	NSError *parseError = nil;
 
-	id propertyList =
-	[NSPropertyListSerialization propertyListWithData:fileContents
-											  options:NSPropertyListImmutable
-											   format:NULL
-												error:&parseError];
+	id propertyList = [NSPropertyListSerialization propertyListWithData:fileContents
+																options:NSPropertyListImmutable
+																 format:NULL
+																  error:&parseError];
 
 	if (parseError) {
 		LogToConsoleFault("Resource '%{public}@' could not be parsed as a property list with error: %{public}@",
-			resourceURL.standardizedTildePath, parseError.localizedDescription);
+						  resourceURL.standardizedTildePath,
+						  parseError.localizedDescription);
 
 		return nil;
 	}
@@ -250,7 +278,9 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 
 	if ([objectValue isKindOfClass:class] == NO) {
 		LogToConsoleError("Contents of key '%{public}@' in resource '%{public}@' is not kind of class: %{public}@",
-			((key) ?: @"<Root Object>"), resourceURL.standardizedTildePath, NSStringFromClass(class));
+						  ((key) ?: @"<Root Object>"),
+						  resourceURL.standardizedTildePath,
+						  NSStringFromClass(class));
 
 		return nil;
 	}
@@ -432,8 +462,7 @@ NSString * const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod		= @
 {
 	return [RZFileManager() replaceItemAtURL:destination
 							   withItemAtURL:url
-									 options:(CSFileManagerOptionsMoveToTrash |
-											  CSFileManagerOptionsRemoveIfExists)];
+									 options:(CSFileManagerOptionsMoveToTrash | CSFileManagerOptionsRemoveIfExists)];
 }
 
 @end

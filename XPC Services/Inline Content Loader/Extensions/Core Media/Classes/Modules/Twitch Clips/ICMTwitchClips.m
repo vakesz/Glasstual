@@ -48,11 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 	ICLPayloadMutable *payload = self.payload;
 
 	NSDictionary *templateAttributes =
-	@{
-	  @"uniqueIdentifier" : payload.uniqueIdentifier,
-	  @"videoIdentifier" : videoIdentifier
-	};
- 
+		@{@"uniqueIdentifier" : payload.uniqueIdentifier, @"videoIdentifier" : videoIdentifier};
+
 	NSError *templateRenderError = nil;
 
 	NSString *html = [self.template renderObject:templateAttributes error:&templateRenderError];
@@ -101,9 +98,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *videoIdentifier = urlPath;
 
-	if ([videoIdentifier onlyContainsCharactersFromCharacterSet:
-		 [NSCharacterSet Ato9UnderscoreDashForwardSlash]] == NO)
-	{
+	if ([videoIdentifier onlyContainsCharactersFromCharacterSet:[NSCharacterSet Ato9UnderscoreDashForwardSlash]] ==
+		NO) {
 		return nil;
 	}
 
@@ -117,10 +113,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"clips.twitch.tv"
-		];
+		domains = @[ @"clips.twitch.tv" ];
 	});
 
 	return domains;

@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCPrefix ()
 {
-@protected
+  @protected
 	BOOL _isServer;
 	NSString *_nickname;
 	NSString *_username;

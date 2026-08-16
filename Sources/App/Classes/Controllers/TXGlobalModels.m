@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Time
 
-NSString * _Nullable TXFormattedTimestamp(NSDate *date, NSString *format)
+NSString *_Nullable TXFormattedTimestamp(NSDate *date, NSString *format)
 {
 	NSCParameterAssert(date != nil);
 	NSCParameterAssert(format != nil);
@@ -63,16 +63,14 @@ NSString * _Nullable TXFormattedTimestamp(NSDate *date, NSString *format)
 	return @(outputBuffer);
 }
 
-NSString * _Nullable TXHumanReadableTimeInterval(NSTimeInterval dateInterval, BOOL shortValue, NSCalendarUnit orderMatrix)
+NSString *_Nullable TXHumanReadableTimeInterval(NSTimeInterval dateInterval,
+												BOOL shortValue,
+												NSCalendarUnit orderMatrix)
 {
 	/* Default what we will return */
 	if (orderMatrix == 0) {
-		orderMatrix = (NSCalendarUnitYear			|
-					   NSCalendarUnitMonth			|
-					   NSCalendarUnitDay			|
-					   NSCalendarUnitHour			|
-					   NSCalendarUnitMinute			|
-					   NSCalendarUnitSecond);
+		orderMatrix = (NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitHour |
+					   NSCalendarUnitMinute | NSCalendarUnitSecond);
 	}
 
 	/* Convert calendar units to a text rep */
@@ -162,12 +160,15 @@ NSString * _Nullable TXHumanReadableTimeInterval(NSTimeInterval dateInterval, BO
 	return [NSString stringWithFormat:@"0 %@", TXTLS(@"BasicLanguage[eoq-pr-128]")];
 }
 
-NSString * _Nullable TXFormatDateLongStyle(id dateObject, BOOL relativeOutput)
+NSString *_Nullable TXFormatDateLongStyle(id dateObject, BOOL relativeOutput)
 {
 	return TXFormatDate(dateObject, NSDateFormatterLongStyle, NSDateFormatterLongStyle, relativeOutput);
 }
 
-NSString * _Nullable TXFormatDate(id dateObject, NSDateFormatterStyle dateStyle, NSDateFormatterStyle timeStyle, BOOL relativeOutput)
+NSString *_Nullable TXFormatDate(id dateObject,
+								 NSDateFormatterStyle dateStyle,
+								 NSDateFormatterStyle timeStyle,
+								 BOOL relativeOutput)
 {
 	NSCParameterAssert(dateObject != nil);
 
@@ -223,8 +224,7 @@ NSString *TXFormattedNumber(NSInteger number)
 	return [NSNumberFormatter localizedStringFromNumber:@(number) numberStyle:NSNumberFormatterDecimalStyle];
 }
 
-NSComparator NSDefaultComparator = ^(id object1, id object2)
-{
+NSComparator NSDefaultComparator = ^(id object1, id object2) {
 	return [object1 compare:object2];
 };
 

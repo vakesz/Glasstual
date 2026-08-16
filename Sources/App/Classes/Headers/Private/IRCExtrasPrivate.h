@@ -41,8 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface IRCExtras : NSObject
 + (void)parseIRCProtocolURI:(NSString *)location;
 
-+ (void)parseIRCProtocolURI:(NSString *)location
-			 withDescriptor:(nullable NSAppleEventDescriptor *)event;
++ (void)parseIRCProtocolURI:(NSString *)location withDescriptor:(nullable NSAppleEventDescriptor *)event;
 
 + (void)createConnectionToServer:(NSString *)serverInfo
 					 channelList:(nullable NSString *)channelList

@@ -40,29 +40,29 @@ NS_ASSUME_NONNULL_BEGIN
 @class THOPluginOutputSuppressionRule;
 
 typedef NS_OPTIONS(NSUInteger, THOPluginItemSupportedFeature) {
-	THOPluginItemSupportedFeatureDidReceiveCommandEvent				= 1 << 1,
-	THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent	= 1 << 2,
-//	THOPluginItemSupportedFeatureInlineMediaManipulation			= 1 << 3,
-	THOPluginItemSupportedFeatureNewMessagePostedEvent				= 1 << 4,
-	THOPluginItemSupportedFeatureOutputSuppressionRules				= 1 << 5,
-	THOPluginItemSupportedFeaturePreferencePane						= 1 << 6,
-	THOPluginItemSupportedFeatureServerInputDataInterception		= 1 << 7,
-	THOPluginItemSupportedFeatureSubscribedServerInputCommands		= 1 << 8,
-	THOPluginItemSupportedFeatureSubscribedUserInputCommands		= 1 << 9,
-	THOPluginItemSupportedFeatureUserInputDataInterception			= 1 << 10,
-	THOPluginItemSupportedFeatureWebViewJavaScriptPayloads			= 1 << 11,
-	THOPluginItemSupportedFeatureWillRenderMessageEvent				= 1 << 12,
+	THOPluginItemSupportedFeatureDidReceiveCommandEvent = 1 << 1,
+	THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent = 1 << 2,
+	//	THOPluginItemSupportedFeatureInlineMediaManipulation			= 1 << 3,
+	THOPluginItemSupportedFeatureNewMessagePostedEvent = 1 << 4,
+	THOPluginItemSupportedFeatureOutputSuppressionRules = 1 << 5,
+	THOPluginItemSupportedFeaturePreferencePane = 1 << 6,
+	THOPluginItemSupportedFeatureServerInputDataInterception = 1 << 7,
+	THOPluginItemSupportedFeatureSubscribedServerInputCommands = 1 << 8,
+	THOPluginItemSupportedFeatureSubscribedUserInputCommands = 1 << 9,
+	THOPluginItemSupportedFeatureUserInputDataInterception = 1 << 10,
+	THOPluginItemSupportedFeatureWebViewJavaScriptPayloads = 1 << 11,
+	THOPluginItemSupportedFeatureWillRenderMessageEvent = 1 << 12,
 };
 
 @interface THOPluginItem : NSObject
-@property (readonly, nullable) NSBundle *bundle;
-@property (readonly, nullable) id primaryClass;
-@property (readonly, assign) THOPluginItemSupportedFeature supportedFeatures;
-@property (readonly, copy, nullable) NSArray<NSString *> *supportedServerInputCommands;
-@property (readonly, copy, nullable) NSArray<NSString *> *supportedUserInputCommands;
-@property (readonly, copy, nullable) NSArray<THOPluginOutputSuppressionRule *> *outputSuppressionRules;
-@property (readonly, copy, nullable) NSString *pluginPreferencesPaneMenuItemTitle;
-@property (readonly, nullable) NSView *pluginPreferencesPaneView;
+@property(readonly, nullable) NSBundle *bundle;
+@property(readonly, nullable) id primaryClass;
+@property(readonly, assign) THOPluginItemSupportedFeature supportedFeatures;
+@property(readonly, copy, nullable) NSArray<NSString *> *supportedServerInputCommands;
+@property(readonly, copy, nullable) NSArray<NSString *> *supportedUserInputCommands;
+@property(readonly, copy, nullable) NSArray<THOPluginOutputSuppressionRule *> *outputSuppressionRules;
+@property(readonly, copy, nullable) NSString *pluginPreferencesPaneMenuItemTitle;
+@property(readonly, nullable) NSView *pluginPreferencesPaneView;
 
 - (BOOL)loadBundle:(NSBundle *)bundle;
 - (void)unloadBundle;

@@ -40,24 +40,28 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCValidatedComboBox : NSComboBox
-@property (nonatomic, copy, nullable) TVCValidatedTextFieldValidationBlock validationBlock;
-@property (nonatomic, assign) BOOL stringValueUsesOnlyFirstToken; // Only use everything before first space (" ") as value.
-@property (nonatomic, assign) BOOL stringValueIsTrimmed; // -stringValueUsesOnlyFirstToken returns a trimmed value of newlines and spaces. However, if you want more than first token, then specify this.
-@property (nonatomic, assign) BOOL stringValueIsInvalidOnEmpty; // Is an empty string considered invalid?
-@property (nonatomic, assign) BOOL performValidationWhenEmpty;
-@property (nonatomic, weak) id textDidChangeCallback; // Calls method "-(void)validatedTextFieldTextDidChange:(id)sender" whereas "sender" is the text field.
-@property (nonatomic, assign) BOOL caseInsensitiveComplete; // Whether completions are case insensitive. Default NO.
-@property (nonatomic, copy, nullable) NSString *defaultValue; // A value to return from -value if the text field is empty. Only used if stringValueIsInvalidOnEmpty = NO
+@property(nonatomic, copy, nullable) TVCValidatedTextFieldValidationBlock validationBlock;
+@property(nonatomic, assign)
+	BOOL stringValueUsesOnlyFirstToken; // Only use everything before first space (" ") as value.
+@property(nonatomic, assign) BOOL
+	stringValueIsTrimmed; // -stringValueUsesOnlyFirstToken returns a trimmed value of newlines and spaces. However, if you want more than first token, then specify this.
+@property(nonatomic, assign) BOOL stringValueIsInvalidOnEmpty; // Is an empty string considered invalid?
+@property(nonatomic, assign) BOOL performValidationWhenEmpty;
+@property(nonatomic, weak) id
+	textDidChangeCallback; // Calls method "-(void)validatedTextFieldTextDidChange:(id)sender" whereas "sender" is the text field.
+@property(nonatomic, assign) BOOL caseInsensitiveComplete; // Whether completions are case insensitive. Default NO.
+@property(nonatomic, copy, nullable) NSString *
+	defaultValue; // A value to return from -value if the text field is empty. Only used if stringValueIsInvalidOnEmpty = NO
 
-@property (readonly, copy) NSString *value; /* The current value. */
-@property (readonly, copy) NSString *lowercaseValue;
-@property (readonly, copy) NSString *uppercaseValue;
+@property(readonly, copy) NSString *value; /* The current value. */
+@property(readonly, copy) NSString *lowercaseValue;
+@property(readonly, copy) NSString *uppercaseValue;
 
-@property (readonly) BOOL valueIsEmpty;
-@property (readonly) BOOL valueIsValid;
-@property (readonly) BOOL valueIsPredefined;
+@property(readonly) BOOL valueIsEmpty;
+@property(readonly) BOOL valueIsValid;
+@property(readonly) BOOL valueIsPredefined;
 
-@property (readonly, copy, nullable) NSString *lastValidationErrorDescription;
+@property(readonly, copy, nullable) NSString *lastValidationErrorDescription;
 
 - (BOOL)showValidationErrorPopover;
 - (void)closeValidationErrorPopover;

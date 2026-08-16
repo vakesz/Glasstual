@@ -52,40 +52,41 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TPCThemeControllerCustomThemeNameBasicPrefix			= @"user";
-NSString * const TPCThemeControllerCustomThemeNameCompletePrefix		= @"user:";
+NSString *const TPCThemeControllerCustomThemeNameBasicPrefix = @"user";
+NSString *const TPCThemeControllerCustomThemeNameCompletePrefix = @"user:";
 
-NSString * const TPCThemeControllerBundledThemeNameBasicPrefix			= @"resource";
-NSString * const TPCThemeControllerBundledThemeNameCompletePrefix		= @"resource:";
+NSString *const TPCThemeControllerBundledThemeNameBasicPrefix = @"resource";
+NSString *const TPCThemeControllerBundledThemeNameCompletePrefix = @"resource:";
 
-NSString * const TPCThemeControllerThemeListDidChangeNotification		= @"TPCThemeControllerThemeListDidChangeNotification";
+NSString *const TPCThemeControllerThemeListDidChangeNotification = @"TPCThemeControllerThemeListDidChangeNotification";
 
-typedef NSDictionary		<NSString *, TPCTheme *> 	*TPCThemeControllerThemeList;
-typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeListMutable;
+typedef NSDictionary<NSString *, TPCTheme *> *TPCThemeControllerThemeList;
+typedef NSMutableDictionary<NSString *, TPCTheme *> *TPCThemeControllerThemeListMutable;
 
 /* Copy operation class is responsible for copying the active theme to a 
  different location when a user requests a local copy of the theme. */
 @interface TPCThemeControllerCopyOperation : NSObject
-@property (nonatomic, weak) TPCThemeController *themeController;
-@property (nonatomic, copy) NSString *themeName; // Name without source prefix
-@property (nonatomic, copy) NSString *pathBeingCopiedTo;
-@property (nonatomic, copy) NSString *pathBeingCopiedFrom;
-@property (nonatomic, assign) TPCThemeStorageLocation destinationLocation;
-@property (nonatomic, assign) BOOL reloadThemeWhenCopied; // If YES, setThemeName: is called when copy completes. Otherwise, files are copied and nothing happens.
-@property (nonatomic, assign) BOOL openThemeWhenCopied;
-@property (nonatomic, strong) TDCProgressIndicatorSheet *progressIndicator;
+@property(nonatomic, weak) TPCThemeController *themeController;
+@property(nonatomic, copy) NSString *themeName; // Name without source prefix
+@property(nonatomic, copy) NSString *pathBeingCopiedTo;
+@property(nonatomic, copy) NSString *pathBeingCopiedFrom;
+@property(nonatomic, assign) TPCThemeStorageLocation destinationLocation;
+@property(nonatomic, assign) BOOL
+	reloadThemeWhenCopied; // If YES, setThemeName: is called when copy completes. Otherwise, files are copied and nothing happens.
+@property(nonatomic, assign) BOOL openThemeWhenCopied;
+@property(nonatomic, strong) TDCProgressIndicatorSheet *progressIndicator;
 
 - (void)beginOperation;
 @end
 
 @interface TPCThemeController ()
-@property (nonatomic, copy) NSString *cachedThemeName;
-@property (nonatomic, copy, readwrite) NSString *cacheToken;
-@property (nonatomic, strong, readwrite) TPCTheme *theme;
-@property (nonatomic, strong, nullable) TPCThemeControllerCopyOperation *currentCopyOperation;
-@property (nonatomic, strong) TPCThemeControllerThemeListMutable bundledThemes;
-@property (nonatomic, strong) TPCThemeControllerThemeListMutable customThemes;
-@property (nonatomic, strong) XRFileSystemMonitor *themeMonitor;
+@property(nonatomic, copy) NSString *cachedThemeName;
+@property(nonatomic, copy, readwrite) NSString *cacheToken;
+@property(nonatomic, strong, readwrite) TPCTheme *theme;
+@property(nonatomic, strong, nullable) TPCThemeControllerCopyOperation *currentCopyOperation;
+@property(nonatomic, strong) TPCThemeControllerThemeListMutable bundledThemes;
+@property(nonatomic, strong) TPCThemeControllerThemeListMutable customThemes;
+@property(nonatomic, strong) XRFileSystemMonitor *themeMonitor;
 @end
 
 #pragma mark -
@@ -196,7 +197,8 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	return self.theme.name;
 }
 
-- (void)metadata:(void (^ NS_NOESCAPE)(NSString *fileName, TPCThemeStorageLocation storageLocation))metadataBlock ofThemeNamed:(NSString *)themeName
+- (void)metadata:(void (^NS_NOESCAPE)(NSString *fileName, TPCThemeStorageLocation storageLocation))metadataBlock
+	ofThemeNamed:(NSString *)themeName
 {
 	NSParameterAssert(metadataBlock != nil);
 	NSParameterAssert(themeName != nil);
@@ -234,34 +236,40 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	__block TPCTheme *theme = nil;
 
-	[self metadata:^(NSString *fileName, TPCThemeStorageLocation storageLocation) {
-		TPCThemeControllerThemeListMutable list = [self mutableListForStorageLocation:storageLocation];
+	[self
+			metadata:^(NSString *fileName, TPCThemeStorageLocation storageLocation) {
+				TPCThemeControllerThemeListMutable list = [self mutableListForStorageLocation:storageLocation];
 
-		if (list == nil) {
-			return;
-		}
+				if (list == nil) {
+					return;
+				}
 
-		NSString *filePath = [self.class pathOfThemeWithFilename:fileName storageLocation:storageLocation];
+				NSString *filePath = [self.class pathOfThemeWithFilename:fileName storageLocation:storageLocation];
 
-		if (filePath == nil) {
-			return;
-		}
+				if (filePath == nil) {
+					return;
+				}
 
-		NSURL *fileURL = [NSURL fileURLWithPath:filePath isDirectory:YES];
+				NSURL *fileURL = [NSURL fileURLWithPath:filePath isDirectory:YES];
 
-		theme =
-		[self themeAtURL:fileURL
-			withFilename:fileName
-		 storageLocation:storageLocation
-				  inList:list
-	   createIfNecessary:createIfNecessary
-		  skipFileExists:NO];
-	} ofThemeNamed:themeName];
+				theme = [self themeAtURL:fileURL
+							withFilename:fileName
+						 storageLocation:storageLocation
+								  inList:list
+					   createIfNecessary:createIfNecessary
+						  skipFileExists:NO];
+			}
+		ofThemeNamed:themeName];
 
 	return theme;
 }
 
-- (nullable TPCTheme *)themeAtURL:(NSURL *)url withFilename:(NSString *)name storageLocation:(TPCThemeStorageLocation)storageLocation inList:(TPCThemeControllerThemeListMutable)list createIfNecessary:(BOOL)createIfNecessary skipFileExists:(BOOL)skipFileExists
+- (nullable TPCTheme *)themeAtURL:(NSURL *)url
+					 withFilename:(NSString *)name
+				  storageLocation:(TPCThemeStorageLocation)storageLocation
+						   inList:(TPCThemeControllerThemeListMutable)list
+				createIfNecessary:(BOOL)createIfNecessary
+				   skipFileExists:(BOOL)skipFileExists
 {
 	return [self themeAtURL:url
 			   withFilename:name
@@ -272,7 +280,13 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 			 skipFileExists:skipFileExists];
 }
 
-- (nullable TPCTheme *)themeAtURL:(NSURL *)url withFilename:(NSString *)name storageLocation:(TPCThemeStorageLocation)storageLocation inList:(TPCThemeControllerThemeListMutable)list createIfNecessary:(BOOL)createIfNecessary wasCreated:(nullable BOOL *)wasCreated skipFileExists:(BOOL)skipFileExists
+- (nullable TPCTheme *)themeAtURL:(NSURL *)url
+					 withFilename:(NSString *)name
+				  storageLocation:(TPCThemeStorageLocation)storageLocation
+						   inList:(TPCThemeControllerThemeListMutable)list
+				createIfNecessary:(BOOL)createIfNecessary
+					   wasCreated:(nullable BOOL *)wasCreated
+				   skipFileExists:(BOOL)skipFileExists
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(url.isFileURL);
@@ -282,7 +296,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	TPCTheme *theme = nil;
 
-	@synchronized (list) {
+	@synchronized(list) {
 		theme = list[name];
 	}
 
@@ -298,14 +312,16 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	[self addTheme:theme withFilename:name storageLocation:storageLocation];
 
-	if ( wasCreated) {
+	if (wasCreated) {
 		*wasCreated = YES;
 	}
 
 	return theme;
 }
 
-- (void)addTheme:(nullable TPCTheme *)theme withFilename:(NSString *)name storageLocation:(TPCThemeStorageLocation)storageLocation
+- (void)addTheme:(nullable TPCTheme *)theme
+	   withFilename:(NSString *)name
+	storageLocation:(TPCThemeStorageLocation)storageLocation
 {
 	[self add:YES theme:theme withFilename:name storageLocation:storageLocation];
 }
@@ -315,10 +331,12 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	[self add:NO theme:nil withFilename:name storageLocation:storageLocation];
 }
 
-- (void)add:(BOOL)addOrRemove theme:(nullable TPCTheme *)theme withFilename:(NSString *)name storageLocation:(TPCThemeStorageLocation)storageLocation
+- (void)add:(BOOL)addOrRemove
+			  theme:(nullable TPCTheme *)theme
+	   withFilename:(NSString *)name
+	storageLocation:(TPCThemeStorageLocation)storageLocation
 {
-	NSParameterAssert((addOrRemove && theme != nil) ||
-					   addOrRemove == NO);
+	NSParameterAssert((addOrRemove && theme != nil) || addOrRemove == NO);
 	NSParameterAssert(name != nil);
 	NSParameterAssert(name.length > 0);
 	NSParameterAssert(storageLocation != TPCThemeStorageLocationUnknown);
@@ -329,7 +347,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 		return;
 	}
 
-	@synchronized (list) {
+	@synchronized(list) {
 		if (addOrRemove) {
 			list[name] = theme;
 		} else {
@@ -343,13 +361,14 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	return [self pathOfThemeWithName:themeName storageLocation:NULL];
 }
 
-+ (nullable NSString *)pathOfThemeWithName:(NSString *)themeName storageLocation:(nullable TPCThemeStorageLocation *)storageLocationIn
++ (nullable NSString *)pathOfThemeWithName:(NSString *)themeName
+						   storageLocation:(nullable TPCThemeStorageLocation *)storageLocationIn
 {
 	NSParameterAssert(themeName != nil);
 
 	TPCThemeStorageLocation storageLocation = [self.class storageLocationOfThemeWithName:themeName];
 
-	if ( storageLocationIn) {
+	if (storageLocationIn) {
 		*storageLocationIn = storageLocation;
 	}
 
@@ -388,18 +407,15 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	NSParameterAssert(storageLocation != TPCThemeStorageLocationUnknown);
 
 	switch (storageLocation) {
-		case TPCThemeStorageLocationBundle:
-		{
-			return [TPCPathInfo bundledThemes];
-		}
-		case TPCThemeStorageLocationCustom:
-		{
-			return [TPCPathInfo customThemes];
-		}
-		default:
-		{
-			break;
-		}
+	case TPCThemeStorageLocationBundle: {
+		return [TPCPathInfo bundledThemes];
+	}
+	case TPCThemeStorageLocationCustom: {
+		return [TPCPathInfo customThemes];
+	}
+	default: {
+		break;
+	}
 	}
 
 	return nil;
@@ -410,18 +426,15 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	NSParameterAssert(storageLocation != TPCThemeStorageLocationUnknown);
 
 	switch (storageLocation) {
-		case TPCThemeStorageLocationBundle:
-		{
-			return self.bundledThemes;
-		}
-		case TPCThemeStorageLocationCustom:
-		{
-			return self.customThemes;
-		}
-		default:
-		{
-			break;
-		}
+	case TPCThemeStorageLocationBundle: {
+		return self.bundledThemes;
+	}
+	case TPCThemeStorageLocationCustom: {
+		return self.customThemes;
+	}
+	default: {
+		break;
+	}
 	}
 
 	return nil;
@@ -433,8 +446,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	NSMutableDictionary<NSURL *, NSNumber *> *context = [NSMutableDictionary dictionaryWithCapacity:2];
 
-	void (^_addStorageLocation)(TPCThemeStorageLocation) = ^(TPCThemeStorageLocation storageLocation)
-	{
+	void (^_addStorageLocation)(TPCThemeStorageLocation) = ^(TPCThemeStorageLocation storageLocation) {
 		NSString *path = [self.class pathOfStorageLocation:storageLocation];
 
 		if (path == nil) {
@@ -452,10 +464,12 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	__weak TPCThemeController *weakSelf = self;
 
-	  XRFileSystemMonitor *monitor =
-	[[XRFileSystemMonitor alloc] initWithFileURLs:urls context:context callbackBlock:^(NSArray<XRFileSystemEvent *> *events) {
-		[weakSelf reactToMonitoringEvents:events];
-	}];
+	XRFileSystemMonitor *monitor =
+		[[XRFileSystemMonitor alloc] initWithFileURLs:urls
+											  context:context
+										callbackBlock:^(NSArray<XRFileSystemEvent *> *events) {
+											[weakSelf reactToMonitoringEvents:events];
+										}];
 
 	[monitor startMonitoringWithLatency:1.0];
 
@@ -497,7 +511,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	FSEventStreamEventFlags flags = event.flags;
 
 	if ((flags & kFSEventStreamEventFlagItemIsDir) != kFSEventStreamEventFlagItemIsDir) {
-//		LogToConsoleDebug("Ignoring monitoring event for non-directory");
+		//		LogToConsoleDebug("Ignoring monitoring event for non-directory");
 
 		return;
 	}
@@ -514,7 +528,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	NSNumber *parentContext = [self.themeMonitor contextObjectForURL:parentURL];
 
 	if (parentContext == nil) {
-//		LogToConsoleDebug("Ignoring monitoring event for unrelated directory");
+		//		LogToConsoleDebug("Ignoring monitoring event for unrelated directory");
 
 		return;
 	}
@@ -524,7 +538,9 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	[self reactToMonitoringEventAtURL:url storageLocation:storageLocation flags:flags];
 }
 
-- (void)reactToMonitoringEventAtURL:(NSURL *)url storageLocation:(TPCThemeStorageLocation)storageLocation flags:(FSEventStreamEventFlags)flags
+- (void)reactToMonitoringEventAtURL:(NSURL *)url
+					storageLocation:(TPCThemeStorageLocation)storageLocation
+							  flags:(FSEventStreamEventFlags)flags
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(storageLocation != TPCThemeStorageLocationUnknown);
@@ -542,21 +558,21 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	BOOL themeCreated = NO;
 
-	TPCTheme *theme =
-	[self themeAtURL:url
-		withFilename:themeName
-	 storageLocation:storageLocation
-			  inList:themeList
-   createIfNecessary:YES
-		  wasCreated:&themeCreated
-	  skipFileExists:YES];
+	TPCTheme *theme = [self themeAtURL:url
+						  withFilename:themeName
+					   storageLocation:storageLocation
+								inList:themeList
+					 createIfNecessary:YES
+							wasCreated:&themeCreated
+						skipFileExists:YES];
 
 	/* Only post notification if the theme was created. */
 	if (themeCreated == NO) {
 		return;
 	}
 
-	LogToConsoleDebug("Theme '%{public}@' named '%{public}@' at '%{public}@' created", theme, themeName, url.standardizedTildePath);
+	LogToConsoleDebug(
+		"Theme '%{public}@' named '%{public}@' at '%{public}@' created", theme, themeName, url.standardizedTildePath);
 
 	[RZNotificationCenter() postNotificationName:TPCThemeControllerThemeListDidChangeNotification object:self];
 }
@@ -587,16 +603,14 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	NSError *preFileListError;
 
-	NSArray *preFileList =
-	[RZFileManager() contentsOfDirectoryAtURL:url
-				   includingPropertiesForKeys:@[NSURLNameKey, NSURLIsDirectoryKey]
-									  options:(NSDirectoryEnumerationSkipsHiddenFiles |
-											   NSDirectoryEnumerationSkipsPackageDescendants)
-										error:&preFileListError];
+	NSArray *preFileList = [RZFileManager() contentsOfDirectoryAtURL:url
+										  includingPropertiesForKeys:@[ NSURLNameKey, NSURLIsDirectoryKey ]
+															 options:(NSDirectoryEnumerationSkipsHiddenFiles |
+																	  NSDirectoryEnumerationSkipsPackageDescendants)
+															   error:&preFileListError];
 
 	if (preFileListError) {
-		LogToConsoleError("Failed to list contents of theme folder: %{public}@",
-			preFileListError.localizedDescription);
+		LogToConsoleError("Failed to list contents of theme folder: %{public}@", preFileListError.localizedDescription);
 	}
 
 	for (NSURL *fileURL in preFileList) {
@@ -630,16 +644,19 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	return [list copy];
 }
 
-- (void)enumerateAvailableThemesWithBlock:(void(NS_NOESCAPE ^)(NSString *fileName, TPCThemeStorageLocation storageLocation, BOOL multipleVariants, BOOL *stop))enumerationBlock
+- (void)enumerateAvailableThemesWithBlock:(void(NS_NOESCAPE ^)(NSString *fileName,
+															   TPCThemeStorageLocation storageLocation,
+															   BOOL multipleVariants,
+															   BOOL *stop))enumerationBlock
 {
 	NSParameterAssert(enumerationBlock != nil);
 
 	/* Create a dictionary of the theme name (file name) as the key,
 	 and an array of storage locations it appears within as the value. */
-	NSMutableDictionary<NSString *, NSMutableArray<NSNumber *> *> *themesMappedByName = [NSMutableDictionary dictionary];
+	NSMutableDictionary<NSString *, NSMutableArray<NSNumber *> *> *themesMappedByName =
+		[NSMutableDictionary dictionary];
 
-	void (^_mapByName)(TPCThemeStorageLocation) = ^(TPCThemeStorageLocation storageLocation)
-	{
+	void (^_mapByName)(TPCThemeStorageLocation) = ^(TPCThemeStorageLocation storageLocation) {
 		TPCThemeControllerThemeList themes = [self themesInStorageLocation:storageLocation];
 
 		[themes enumerateKeysAndObjectsUsingBlock:^(NSString *name, TPCTheme *theme, BOOL *stop) {
@@ -831,8 +848,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	NSError *removeItemError = nil;
 
 	if ([RZFileManager() removeItemAtURL:temporaryURL error:&removeItemError] == NO) {
-		LogToConsoleError("Failed to remove temporary directory: %{public}@",
-				removeItemError.localizedDescription);
+		LogToConsoleError("Failed to remove temporary directory: %{public}@", removeItemError.localizedDescription);
 	}
 }
 
@@ -855,8 +871,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	NSUInteger themeNameHash = self.cachedThemeName.hash;
 
-	NSString *suppressionKey = [NSString stringWithFormat:
-					@"incompatible_theme_dialog_%lu", themeNameHash];
+	NSString *suppressionKey = [NSString stringWithFormat:@"incompatible_theme_dialog_%lu", themeNameHash];
 
 	[TDCAlert alertWithMessage:TXTLS(@"Prompts[76t-pn]")
 						 title:TXTLS(@"Prompts[py0-cr]", self.name)
@@ -885,8 +900,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	NSUInteger themeNameHash = self.cachedThemeName.hash;
 
-	NSString *suppressionKey = [NSString stringWithFormat:
-								@"theme_appearance_dialog_%lu", themeNameHash];
+	NSString *suppressionKey = [NSString stringWithFormat:@"theme_appearance_dialog_%lu", themeNameHash];
 
 	[TDCAlert alertWithMessage:TXTLS(@"Prompts[193-6o]")
 						 title:TXTLS(@"Prompts[ezn-rm]", self.name)
@@ -960,7 +974,9 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	return YES;
 }
 
-- (BOOL)performValidationForTheme:(NSString *)validatedTheme suggestedFont:(NSString **)suggestedFontName suggestedTheme:(NSString **)suggestedThemeName
+- (BOOL)performValidationForTheme:(NSString *)validatedTheme
+					suggestedFont:(NSString **)suggestedFontName
+				   suggestedTheme:(NSString **)suggestedThemeName
 {
 	NSParameterAssert(validatedTheme != nil);
 	NSParameterAssert(suggestedFontName != NULL);
@@ -972,7 +988,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	NSString *fontName = [TPCPreferences themeChannelViewFontName];
 
 	if ([NSFont fontIsAvailable:fontName] == NO) {
-		if ( suggestedFontName) {
+		if (suggestedFontName) {
 			*suggestedFontName = [TPCPreferences themeChannelViewFontNameDefault];
 		}
 
@@ -984,20 +1000,20 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	NSString *themeSource = [self.class extractThemeSource:validatedTheme];
 
-	LogToConsoleInfo("Performing validation on theme named '%{public}@' with source type of '%{public}@'", themeName, themeSource);
+	LogToConsoleInfo(
+		"Performing validation on theme named '%{public}@' with source type of '%{public}@'", themeName, themeSource);
 
 	/* Note from October 2020 during refactoring:
 	 I know this is ugly as hell. Please don't shame me for it.
 	 I just don't have the time to improve it.
 	 If it works, it works. */
 
-	if (themeSource == nil || [themeSource isEqualToString:TPCThemeControllerBundledThemeNameBasicPrefix])
-	{
+	if (themeSource == nil || [themeSource isEqualToString:TPCThemeControllerBundledThemeNameBasicPrefix]) {
 		/* Remap name of bundled themes. */
 		NSString *bundledTheme = [self remappedThemeName:validatedTheme];
 
 		if (bundledTheme) {
-			if ( suggestedThemeName) {
+			if (suggestedThemeName) {
 				*suggestedThemeName = bundledTheme;
 
 				keyChanged = YES;
@@ -1011,7 +1027,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 		}
 
 		if ([self themeExists:bundledTheme] == NO) {
-			if ( suggestedThemeName) {
+			if (suggestedThemeName) {
 				*suggestedThemeName = [TPCPreferences themeNameDefault];
 
 				keyChanged = YES;
@@ -1019,21 +1035,21 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 		} // preferred theme exists
 	} // theme source bundled
 
-	else if ([themeSource isEqualToString:TPCThemeControllerCustomThemeNameBasicPrefix])
-	{
+	else if ([themeSource isEqualToString:TPCThemeControllerCustomThemeNameBasicPrefix]) {
 		if ([self themeExists:validatedTheme] == NO) {
-			NSString *bundledTheme = [self.class buildFilename:themeName forStorageLocation:TPCThemeStorageLocationBundle];
+			NSString *bundledTheme = [self.class buildFilename:themeName
+											forStorageLocation:TPCThemeStorageLocationBundle];
 
 			if ([self themeExists:bundledTheme]) {
 				/* Use a bundled theme with the same name if available. */
-				if ( suggestedThemeName) {
+				if (suggestedThemeName) {
 					*suggestedThemeName = bundledTheme;
 
 					keyChanged = YES;
 				}
 			} else {
 				/* Revert back to the default theme if no recovery is possible. */
-				if ( suggestedThemeName) {
+				if (suggestedThemeName) {
 					*suggestedThemeName = [TPCPreferences themeNameDefault];
 
 					keyChanged = YES;
@@ -1049,8 +1065,8 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 {
 	NSParameterAssert(themeName != nil);
 
-	NSDictionary *cachedValues =
-	[TPCResourceManager dictionaryFromResources:@"StaticStore" key:@"TPCThemeController Remapped Themes"];
+	NSDictionary *cachedValues = [TPCResourceManager dictionaryFromResources:@"StaticStore"
+																		 key:@"TPCThemeController Remapped Themes"];
 
 	return cachedValues[themeName];
 }
@@ -1067,18 +1083,15 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	NSParameterAssert(storageLocation != TPCThemeStorageLocationUnknown);
 
 	switch (storageLocation) {
-		case TPCThemeStorageLocationBundle:
-		{
-			return [TPCThemeControllerBundledThemeNameCompletePrefix stringByAppendingString:name];
-		}
-		case TPCThemeStorageLocationCustom:
-		{
-			return [TPCThemeControllerCustomThemeNameCompletePrefix stringByAppendingString:name];
-		}
-		default:
-		{
-			break;
-		}
+	case TPCThemeStorageLocationBundle: {
+		return [TPCThemeControllerBundledThemeNameCompletePrefix stringByAppendingString:name];
+	}
+	case TPCThemeStorageLocationCustom: {
+		return [TPCThemeControllerCustomThemeNameCompletePrefix stringByAppendingString:name];
+	}
+	default: {
+		break;
+	}
 	}
 
 	return nil;
@@ -1087,18 +1100,15 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 + (nullable NSString *)descriptionForStorageLocation:(TPCThemeStorageLocation)storageLocation
 {
 	switch (storageLocation) {
-		case TPCThemeStorageLocationBundle:
-		{
-			return TXTLS(@"BasicLanguage[7lm-bq]");
-		}
-		case TPCThemeStorageLocationCustom:
-		{
-			return TXTLS(@"BasicLanguage[bm2-4p]");
-		}
-		default:
-		{
-			break;
-		}
+	case TPCThemeStorageLocationBundle: {
+		return TXTLS(@"BasicLanguage[7lm-bq]");
+	}
+	case TPCThemeStorageLocationCustom: {
+		return TXTLS(@"BasicLanguage[bm2-4p]");
+	}
+	default: {
+		break;
+	}
 	}
 
 	return nil;
@@ -1109,8 +1119,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	NSParameterAssert(source != nil);
 
 	if ([source hasPrefix:TPCThemeControllerCustomThemeNameCompletePrefix] == NO &&
-		[source hasPrefix:TPCThemeControllerBundledThemeNameCompletePrefix] == NO)
-	{
+		[source hasPrefix:TPCThemeControllerBundledThemeNameCompletePrefix] == NO) {
 		return nil;
 	}
 
@@ -1124,8 +1133,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	NSParameterAssert(source != nil);
 
 	if ([source hasPrefix:TPCThemeControllerCustomThemeNameCompletePrefix] == NO &&
-		[source hasPrefix:TPCThemeControllerBundledThemeNameCompletePrefix] == NO)
-	{
+		[source hasPrefix:TPCThemeControllerBundledThemeNameCompletePrefix] == NO) {
 		return nil;
 	}
 
@@ -1153,10 +1161,12 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	return TPCThemeStorageLocationUnknown;
 }
 
-- (void)copyActiveThemeToDestinationLocation:(TPCThemeStorageLocation)destinationLocation reloadOnCopy:(BOOL)reloadOnCopy openOnCopy:(BOOL)openOnCopy
+- (void)copyActiveThemeToDestinationLocation:(TPCThemeStorageLocation)destinationLocation
+								reloadOnCopy:(BOOL)reloadOnCopy
+								  openOnCopy:(BOOL)openOnCopy
 {
 	NSAssert((self.currentCopyOperation == nil),
-		@"Tried to create a new copy operation with operation already in progress");
+			 @"Tried to create a new copy operation with operation already in progress");
 
 	if (self.storageLocation == destinationLocation) {
 		LogToConsoleError("Tried to copy active theme to same storage location that it already exists within");
@@ -1203,8 +1213,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 - (void)beginOperation
 {
 	/* Setup progress indicator. */
-	  TDCProgressIndicatorSheet *progressIndicator =
-	[[TDCProgressIndicatorSheet alloc] initWithWindow:[NSApp keyWindow]];
+	TDCProgressIndicatorSheet *progressIndicator = [[TDCProgressIndicatorSheet alloc] initWithWindow:[NSApp keyWindow]];
 
 	self.progressIndicator = progressIndicator;
 
@@ -1228,11 +1237,10 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	NSURL *destinationURL = [NSURL fileURLWithPath:self.pathBeingCopiedTo isDirectory:YES];
 
-	if ([RZFileManager() replaceItemAtURL:destinationURL
-							withItemAtURL:sourceURL
-								  options:(CSFileManagerOptionsMoveToTrash |
-										   CSFileManagerOptionsRemoveIfExists)] == NO)
-	{
+	if ([RZFileManager()
+			replaceItemAtURL:destinationURL
+			   withItemAtURL:sourceURL
+					 options:(CSFileManagerOptionsMoveToTrash | CSFileManagerOptionsRemoveIfExists)] == NO) {
 		[self cancelOperation];
 
 		return;
@@ -1249,7 +1257,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 	destinationPath = [destinationPath stringByAppendingPathComponent:self.themeName];
 
 	/* Cast as nonnull to make static analyzer happy */
-	self.pathBeingCopiedTo = (NSString * _Nonnull)destinationPath;
+	self.pathBeingCopiedTo = (NSString *_Nonnull)destinationPath;
 }
 
 - (void)cancelOperation
@@ -1286,7 +1294,8 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 
 	/* Maybe reload new theme */
 	if (self.reloadThemeWhenCopied) {
-		NSString *newThemeName = [TPCThemeController buildFilename:self.themeName forStorageLocation:self.destinationLocation];
+		NSString *newThemeName = [TPCThemeController buildFilename:self.themeName
+												forStorageLocation:self.destinationLocation];
 
 		[TPCPreferences setThemeName:newThemeName];
 
@@ -1300,7 +1309,7 @@ typedef NSMutableDictionary	<NSString *, TPCTheme *> 	*TPCThemeControllerThemeLi
 - (void)invalidateOperation
 {
 	[self.progressIndicator stop];
-	 self.progressIndicator = nil;
+	self.progressIndicator = nil;
 
 	[self.themeController copyActiveThemeOperationCompleted];
 }

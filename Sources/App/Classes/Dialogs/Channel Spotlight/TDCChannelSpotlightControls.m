@@ -41,7 +41,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TDCChannelSpotlightPanel
 
-- (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag
+- (instancetype)initWithContentRect:(NSRect)contentRect
+						  styleMask:(NSWindowStyleMask)style
+							backing:(NSBackingStoreType)bufferingType
+							  defer:(BOOL)flag
 {
 	if ((self = [super initWithContentRect:contentRect styleMask:style backing:bufferingType defer:flag])) {
 		[self prepareInitialState];

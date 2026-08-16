@@ -52,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
  If that is the case, the assessor was able to determine the type
  of media, but it was unable to perform extended validation.
  Treat as failure. */
-typedef void (^ICLMediaAssessorCompletionBlock)(ICLMediaAssessment * _Nullable assessment, NSError * _Nullable error);
+typedef void (^ICLMediaAssessorCompletionBlock)(ICLMediaAssessment *_Nullable assessment, NSError *_Nullable error);
 
 @interface ICLMediaAssessor : NSObject
 - (instancetype)init NS_UNAVAILABLE;
@@ -63,8 +63,12 @@ typedef void (^ICLMediaAssessorCompletionBlock)(ICLMediaAssessment * _Nullable a
 
 /* Use the following two methods to determine whether the URL is the type of media. */
 /* If you are expecting the URL to be a specific type of media, these methods are better. */
-+ (instancetype)assessorForURL:(NSURL *)url withType:(ICLMediaType)type completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
-+ (instancetype)assessorForAddress:(NSString *)address withType:(ICLMediaType)type completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
++ (instancetype)assessorForURL:(NSURL *)url
+					  withType:(ICLMediaType)type
+			   completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
++ (instancetype)assessorForAddress:(NSString *)address
+						  withType:(ICLMediaType)type
+				   completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
 
 /* Suspend assessment */
 - (void)suspend;
@@ -77,8 +81,7 @@ typedef void (^ICLMediaAssessorCompletionBlock)(ICLMediaAssessment * _Nullable a
 @end
 
 /* Error codes */
-typedef NS_ENUM(NSUInteger, ICLMediaAssessorErrorCode)
-{
+typedef NS_ENUM(NSUInteger, ICLMediaAssessorErrorCode) {
 	/* Catch all */
 	ICLMediaAssessorErrorCodeAssessmentFailed = 0,
 

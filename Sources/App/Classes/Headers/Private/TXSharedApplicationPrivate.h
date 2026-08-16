@@ -39,11 +39,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define windowController()				[TXSharedApplication sharedWindowController]
+#define windowController() [TXSharedApplication sharedWindowController]
 
-#define sharedNotificationController()	[TXSharedApplication sharedNotificationController]
+#define sharedNotificationController() [TXSharedApplication sharedNotificationController]
 
-#define sharedPluginManager()			[TXSharedApplication sharedPluginManager]
+#define sharedPluginManager() [TXSharedApplication sharedPluginManager]
 
 @class OELReachability;
 @class THOPluginManager;
@@ -77,7 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 GLASSTUAL_EXTERN os_log_t ApplicationTerminationLogSubsystem(void);
 
-#define LogToConsoleTerminationProgress(_message, ...)	\
-	LogToConsoleDebugWithSubsystem(ApplicationTerminationLogSubsystem(), _message, ##__VA_ARGS__)	\
+#define LogToConsoleTerminationProgress(_message, ...)                                                                 \
+	LogToConsoleDebugWithSubsystem(ApplicationTerminationLogSubsystem(), _message, ##__VA_ARGS__)
 
 NS_ASSUME_NONNULL_END

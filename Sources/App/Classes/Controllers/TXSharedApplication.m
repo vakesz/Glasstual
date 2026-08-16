@@ -54,41 +54,41 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TXErrorDomain = @"GlasstualErrorDomain";
+NSString *const TXErrorDomain = @"GlasstualErrorDomain";
 
-#define _defineSharedInstance(si_name, si_class, si_init_method)	\
-			+ (si_class *)si_name									\
-			{														\
-				static id sharedSelf = nil;							\
-																	\
-				static dispatch_once_t onceToken;					\
-																	\
-				dispatch_once(&onceToken, ^{						\
-					sharedSelf = [si_class si_init_method];			\
-				});													\
-																	\
-				return sharedSelf;									\
-			}
+#define _defineSharedInstance(si_name, si_class, si_init_method)                                                       \
+	+(si_class *)si_name                                                                                               \
+	{                                                                                                                  \
+		static id sharedSelf = nil;                                                                                    \
+                                                                                                                       \
+		static dispatch_once_t onceToken;                                                                              \
+                                                                                                                       \
+		dispatch_once(&onceToken, ^{                                                                                   \
+			sharedSelf = [si_class si_init_method];                                                                    \
+		});                                                                                                            \
+                                                                                                                       \
+		return sharedSelf;                                                                                             \
+	}
 
 @implementation TXSharedApplication
 
 _defineSharedInstance(sharedAppearance, TXAppearance, new)
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-_defineSharedInstance(sharedEncryptionManager, TLOEncryptionManager, new)
+	_defineSharedInstance(sharedEncryptionManager, TLOEncryptionManager, new)
 #endif
 
-_defineSharedInstance(sharedNetworkReachabilityNotifier, OELReachability, reachabilityForInternetConnection)
-_defineSharedInstance(sharedNotificationController, TLONotificationController, new)
-_defineSharedInstance(sharedPluginManager, THOPluginManager, new)
-_defineSharedInstance(sharedPrintingQueue, TVCLogControllerPrintingOperationQueue, new)
-_defineSharedInstance(sharedSpeechSynthesizer, TLOSpeechSynthesizer, new)
-_defineSharedInstance(sharedThemeController, TPCThemeController, new)
-_defineSharedInstance(sharedWindowController, TXWindowController, new)
+		_defineSharedInstance(sharedNetworkReachabilityNotifier, OELReachability, reachabilityForInternetConnection)
+			_defineSharedInstance(sharedNotificationController, TLONotificationController, new)
+				_defineSharedInstance(sharedPluginManager, THOPluginManager, new)
+					_defineSharedInstance(sharedPrintingQueue, TVCLogControllerPrintingOperationQueue, new)
+						_defineSharedInstance(sharedSpeechSynthesizer, TLOSpeechSynthesizer, new)
+							_defineSharedInstance(sharedThemeController, TPCThemeController, new)
+								_defineSharedInstance(sharedWindowController, TXWindowController, new)
 
-_defineSharedInstance(sharedFileTransferDialog, TDCFileTransferDialog, new)
+									_defineSharedInstance(sharedFileTransferDialog, TDCFileTransferDialog, new)
 
-os_log_t ApplicationTerminationLogSubsystem(void)
+										os_log_t ApplicationTerminationLogSubsystem(void)
 {
 	static os_log_t cachedValue = NULL;
 

@@ -52,10 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 	 bundle identifiers of upstream Textual, not of Glasstual. They are matched
 	 verbatim so that a running copy of the app this one was forked from is
 	 still detected, because it reads the same preferences. Do not rename them. */
-	NSMutableArray<NSString *> *identifiers =
-	[NSMutableArray arrayWithObjects:@"com.codeux.apps.textual",
-									 @"com.codeux.apps.textual-mas",
-									 @"com.codeux.irc.textual5", nil];
+	NSMutableArray<NSString *> *identifiers = [NSMutableArray
+		arrayWithObjects:@"com.codeux.apps.textual", @"com.codeux.apps.textual-mas", @"com.codeux.irc.textual5", nil];
 
 	NSString *ourIdentifier = RZMainBundle().bundleIdentifier;
 

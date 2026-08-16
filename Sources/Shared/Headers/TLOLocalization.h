@@ -45,8 +45,8 @@ GLASSTUAL_EXTERN NSString *TXLocalizedStringAlternative(NSBundle *bundle, NSStri
 /* This function exists so that static analyzer doesn't warn
  certain static strings aren't localized. Some strings wont
  be localized because it is inappropriate (e.g. a number) */
-__attribute__((annotate("returns_localized_nsstring")))
-static inline NSString *TXLocalizationNotNeeded(NSString *string)
+__attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
+TXLocalizationNotNeeded(NSString *string)
 {
 	return string;
 }

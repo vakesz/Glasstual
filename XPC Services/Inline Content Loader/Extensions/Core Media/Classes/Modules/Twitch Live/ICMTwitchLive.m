@@ -39,8 +39,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, ICMTwitchLiveContentTypeContent)
-{
+typedef NS_ENUM(NSUInteger, ICMTwitchLiveContentTypeContent) {
 	ICMTwitchLiveContentTypeUnknown = 0,
 	ICMTwitchLiveContentTypeChannel,
 	ICMTwitchLiveContentTypeVideo
@@ -51,30 +50,28 @@ typedef NS_ENUM(NSUInteger, ICMTwitchLiveContentTypeContent)
 - (void)_performActionForContent:(NSString *)contentIdentifier type:(ICMTwitchLiveContentTypeContent)contentType
 {
 	NSParameterAssert(contentIdentifier != nil);
-	NSParameterAssert(contentType == ICMTwitchLiveContentTypeChannel ||
-					  contentType == ICMTwitchLiveContentTypeVideo);
+	NSParameterAssert(contentType == ICMTwitchLiveContentTypeChannel || contentType == ICMTwitchLiveContentTypeVideo);
 
 	NSString *contentArgument;
 
 	switch (contentType) {
-		case ICMTwitchLiveContentTypeChannel:
-			contentArgument = @"channel";
-			break;
-		case ICMTwitchLiveContentTypeVideo:
-			contentArgument = @"video";
-			break;
-		default:
-			NSAssert(NO, @"Unexpected Twitch content type: %lu", contentType);
-			return;
+	case ICMTwitchLiveContentTypeChannel:
+		contentArgument = @"channel";
+		break;
+	case ICMTwitchLiveContentTypeVideo:
+		contentArgument = @"video";
+		break;
+	default:
+		NSAssert(NO, @"Unexpected Twitch content type: %lu", contentType);
+		return;
 	}
 
 	ICLPayloadMutable *payload = self.payload;
 
-	NSDictionary *templateAttributes =
-	@{
-	  @"uniqueIdentifier" : payload.uniqueIdentifier,
-	  @"contentIdentifier" : contentIdentifier,
-	  @"contentArgument" : contentArgument
+	NSDictionary *templateAttributes = @{
+		@"uniqueIdentifier" : payload.uniqueIdentifier,
+		@"contentIdentifier" : contentIdentifier,
+		@"contentArgument" : contentArgument
 	};
 
 	NSError *templateRenderError = nil;
@@ -119,11 +116,8 @@ typedef NS_ENUM(NSUInteger, ICMTwitchLiveContentTypeContent)
 	urlPath = [urlPath substringFromIndex:1]; // "/"
 
 	/* These exceptions cover all domains */
-	if ([urlPath isEqualToString:@"directory"] ||
-		[urlPath hasPrefix:@"directory/"] ||
-		[urlPath isEqualToString:@"store"] ||
-		[urlPath hasPrefix:@"store/"])
-	{
+	if ([urlPath isEqualToString:@"directory"] || [urlPath hasPrefix:@"directory/"] ||
+		[urlPath isEqualToString:@"store"] || [urlPath hasPrefix:@"store/"]) {
 		return nil;
 	}
 
@@ -146,9 +140,7 @@ typedef NS_ENUM(NSUInteger, ICMTwitchLiveContentTypeContent)
 	{
 		NSString *contentIdentifier = [urlPath trimCharacters:@"/"];
 
-		if (contentIdentifier.length < 4 ||
-			contentIdentifier.length > 25)
-		{
+		if (contentIdentifier.length < 4 || contentIdentifier.length > 25) {
 			return nil;
 		}
 
@@ -169,12 +161,7 @@ typedef NS_ENUM(NSUInteger, ICMTwitchLiveContentTypeContent)
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"twitch.tv",
-		  @"www.twitch.tv",
-		  @"go.twitch.tv"
-		];
+		domains = @[ @"twitch.tv", @"www.twitch.tv", @"go.twitch.tv" ];
 	});
 
 	return domains;

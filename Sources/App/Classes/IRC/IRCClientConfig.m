@@ -50,16 +50,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define IRCClientConfigDictionaryVersionLatest		710
+#define IRCClientConfigDictionaryVersionLatest 710
 
-#define IRCClientConfigFloodControlDefaultDelayIntervalLimited		2
-#define IRCClientConfigFloodControlDefaultMessageCountLimited		2 // freenode gets a special case 'cause they are strict about flood control
+#define IRCClientConfigFloodControlDefaultDelayIntervalLimited 2
+#define IRCClientConfigFloodControlDefaultMessageCountLimited                                                          \
+	2 // freenode gets a special case 'cause they are strict about flood control
 
 @interface IRCClientConfig ()
-@property (readonly) BOOL prefersSecuredConnection_;
-@property (readonly) uint16_t serverPort_;
-@property (readonly, copy, nullable) NSString *serverAddress_;
-@property (readonly) BOOL connectionPrefersModernCiphers_;
+@property(readonly) BOOL prefersSecuredConnection_;
+@property(readonly) uint16_t serverPort_;
+@property(readonly, copy, nullable) NSString *serverAddress_;
+@property(readonly) BOOL connectionPrefersModernCiphers_;
 @end
 
 @implementation IRCClientConfig
@@ -122,21 +123,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 	SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
 
-	SetVariableIfNil(self->_nickname, [TPCPreferences defaultNickname])
-	SetVariableIfNil(self->_awayNickname, [TPCPreferences defaultAwayNickname])
-	SetVariableIfNil(self->_username, [TPCPreferences defaultUsername])
-	SetVariableIfNil(self->_realName, [TPCPreferences defaultRealName])
+		SetVariableIfNil(self->_nickname, [TPCPreferences defaultNickname])
+			SetVariableIfNil(self->_awayNickname, [TPCPreferences defaultAwayNickname])
+				SetVariableIfNil(self->_username, [TPCPreferences defaultUsername])
+					SetVariableIfNil(self->_realName, [TPCPreferences defaultRealName])
 
-	SetVariableIfNil(self->_ignoreList, @[])
-	SetVariableIfNil(self->_channelList, @[])
-	SetVariableIfNil(self->_highlightList, @[])
-	SetVariableIfNil(self->_serverList, @[])
+						SetVariableIfNil(self->_ignoreList, @[]) SetVariableIfNil(self->_channelList, @[])
+							SetVariableIfNil(self->_highlightList, @[]) SetVariableIfNil(self->_serverList, @[])
 
-	SetVariableIfNil(self->_alternateNicknames, @[])
+								SetVariableIfNil(self->_alternateNicknames, @[])
 
-	SetVariableIfNil(self->_loginCommands, @[])
+									SetVariableIfNil(self->_loginCommands, @[])
 
-	[self modifyFloodControlDefaults];
+										[self modifyFloodControlDefaults];
 }
 
 - (void)populateDefaultsByAppendingDictionary:(NSDictionary<NSString *, id> *)defaultsToAppend
@@ -149,8 +148,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)modifyFloodControlDefaults
 {
 	if (self.floodControlDelayTimerInterval != IRCConnectionConfigFloodControlDefaultDelayInterval ||
-		self.floodControlMaximumMessages != IRCConnectionConfigFloodControlDefaultMessageCount)
-	{
+		self.floodControlMaximumMessages != IRCConnectionConfigFloodControlDefaultMessageCount) {
 		return;
 	}
 
@@ -266,7 +264,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	server.prefersSecuredConnection = network.prefersSecuredConnection;
 
-	configMutable.serverList = @[[server copy]];
+	configMutable.serverList = @[ [server copy] ];
 
 	if ([self isMutable]) {
 		return configMutable;
@@ -275,7 +273,10 @@ NS_ASSUME_NONNULL_BEGIN
 	return [configMutable copy];
 }
 
-- (void)populateDictionaryValue:(NSDictionary<NSString *, id> *)dic ignorePrivateMessages:(BOOL)ignorePrivateMessages applyDefaults:(BOOL)applyDefaults bypassIsCopyCheck:(BOOL)bypassIsCopyCheck
+- (void)populateDictionaryValue:(NSDictionary<NSString *, id> *)dic
+		  ignorePrivateMessages:(BOOL)ignorePrivateMessages
+				  applyDefaults:(BOOL)applyDefaults
+			  bypassIsCopyCheck:(BOOL)bypassIsCopyCheck
 {
 	NSParameterAssert(dic != nil);
 
@@ -302,11 +303,14 @@ NS_ASSUME_NONNULL_BEGIN
 	[defaultsMutable assignBoolTo:&self->_hideAutojoinDelayedWarnings forKey:@"hideAutojoinDelayedWarnings"];
 	[defaultsMutable assignBoolTo:&self->_hideNetworkUnavailabilityNotices forKey:@"hideNetworkUnavailabilityNotices"];
 	[defaultsMutable assignBoolTo:&self->_performDisconnectOnPongTimer forKey:@"performDisconnectOnPongTimer"];
-	[defaultsMutable assignBoolTo:&self->_performDisconnectOnReachabilityChange forKey:@"performDisconnectOnReachabilityChange"];
+	[defaultsMutable assignBoolTo:&self->_performDisconnectOnReachabilityChange
+						   forKey:@"performDisconnectOnReachabilityChange"];
 	[defaultsMutable assignBoolTo:&self->_performPongTimer forKey:@"performPongTimer"];
 	[defaultsMutable assignBoolTo:&self->_prefersSecuredConnection forKey:@"prefersSecuredConnection"];
-	[defaultsMutable assignBoolTo:&self->_saslAuthenticationDisableExternalMechanism forKey:@"saslAuthenticationDisableExternalMechanism"];
-	[defaultsMutable assignBoolTo:&self->_sendAuthenticationRequestsToUserServ forKey:@"sendAuthenticationRequestsToUserServ"];
+	[defaultsMutable assignBoolTo:&self->_saslAuthenticationDisableExternalMechanism
+						   forKey:@"saslAuthenticationDisableExternalMechanism"];
+	[defaultsMutable assignBoolTo:&self->_sendAuthenticationRequestsToUserServ
+						   forKey:@"sendAuthenticationRequestsToUserServ"];
 	[defaultsMutable assignBoolTo:&self->_sendWhoCommandRequestsToChannels forKey:@"sendWhoCommandRequestsToChannels"];
 	[defaultsMutable assignBoolTo:&self->_setInvisibleModeOnConnect forKey:@"setInvisibleModeOnConnect"];
 	[defaultsMutable assignBoolTo:&self->_sidebarItemExpanded forKey:@"sidebarItemExpanded"];
@@ -316,7 +320,8 @@ NS_ASSUME_NONNULL_BEGIN
 	[defaultsMutable assignBoolTo:&self->_zncIgnoreUserNotifications forKey:@"zncIgnoreUserNotifications"];
 	[defaultsMutable assignBoolTo:&self->_zncOnlyPlaybackLatest forKey:@"zncOnlyPlaybackLatest"];
 
-	[defaultsMutable assignDoubleTo:&self->_lastMessageServerTime forKey:@"cachedLastServerTimeCapabilityReceivedAtTimestamp"];
+	[defaultsMutable assignDoubleTo:&self->_lastMessageServerTime
+							 forKey:@"cachedLastServerTimeCapabilityReceivedAtTimestamp"];
 	[defaultsMutable assignObjectTo:&self->_identityClientSideCertificate forKey:@"identityClientSideCertificate"];
 	[defaultsMutable assignStringTo:&self->_awayNickname forKey:@"awayNickname"];
 	[defaultsMutable assignStringTo:&self->_connectionName forKey:@"connectionName"];
@@ -333,7 +338,8 @@ NS_ASSUME_NONNULL_BEGIN
 	[defaultsMutable assignUnsignedIntegerTo:&self->_addressType forKey:@"addressType"];
 	[defaultsMutable assignUnsignedIntegerTo:&self->_cipherSuites forKey:@"cipherSuites"];
 	[defaultsMutable assignUnsignedIntegerTo:&self->_fallbackEncoding forKey:@"fallbackEncoding"];
-	[defaultsMutable assignUnsignedIntegerTo:&self->_floodControlDelayTimerInterval forKey:@"floodControlDelayTimerInterval"];
+	[defaultsMutable assignUnsignedIntegerTo:&self->_floodControlDelayTimerInterval
+									  forKey:@"floodControlDelayTimerInterval"];
 	[defaultsMutable assignUnsignedIntegerTo:&self->_floodControlMaximumMessages forKey:@"floodControlMaximumMessages"];
 	[defaultsMutable assignUnsignedIntegerTo:&self->_primaryEncoding forKey:@"primaryEncoding"];
 	[defaultsMutable assignUnsignedIntegerTo:&self->_proxyType forKey:@"proxyType"];
@@ -442,9 +448,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(dic != nil);
 	NSParameterAssert(defaultsMutable != nil);
 
-GLASSTUAL_IGNORE_DEPRECATION_BEGIN
+	GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	if (self.connectionPrefersIPv4) {
-GLASSTUAL_IGNORE_DEPRECATION_END
+		GLASSTUAL_IGNORE_DEPRECATION_END
 
 		self->_addressType = IRCConnectionAddressTypeIPv4;
 	}
@@ -483,7 +489,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 	[defaultsMutable assignUnsignedShortTo:&self->_proxyPort forKey:@"proxyServerPort"];
 
-	[defaultsMutable assignDoubleTo:&self->_lastMessageServerTime forKey:@"cachedLastServerTimeCapacityReceivedAtTimestamp"];
+	[defaultsMutable assignDoubleTo:&self->_lastMessageServerTime
+							 forKey:@"cachedLastServerTimeCapacityReceivedAtTimestamp"];
 
 	/* Flood control */
 	/* This is here to migrate to the new properties. Saving these values
@@ -601,7 +608,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 	[server writeServerPasswordToKeychain];
 
-	self->_serverList = @[[server copy]];
+	self->_serverList = @[ [server copy] ];
 
 	self->_migratedServerPasswordPendingDestroy = YES;
 }
@@ -627,7 +634,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	NSDictionary *s2 = objectCast.dictionaryValue;
 
 	return ([s1 isEqualToDictionary:s2] &&
-			
+
 			((self->_nicknamePassword == nil && objectCast->_nicknamePassword == nil) ||
 			 [self->_nicknamePassword isEqualToString:objectCast->_nicknamePassword]) &&
 
@@ -668,8 +675,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 		config->_serverList = [serverList copy];
 
 		config->_uniqueIdentifier = [NSString stringWithUUID];
-	} 
-	else // uniquing
+	} else // uniquing
 	{
 		config->_channelList = self->_channelList;
 		config->_highlightList = self->_highlightList;
@@ -744,9 +750,9 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	/* Deprecated */
 	/* These values are inserted here for backwards compatibility 
 	 with earlier versions of Glasstual */
-GLASSTUAL_IGNORE_DEPRECATION_BEGIN
+	GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	[dic setBool:self.connectionPrefersIPv4 forKey:@"connectionPrefersIPv4"];
-GLASSTUAL_IGNORE_DEPRECATION_END
+	GLASSTUAL_IGNORE_DEPRECATION_END
 
 	[dic setBool:self.legacyConnectionPrefersModernCiphers forKey:@"connectionPrefersModernCiphers"];
 
@@ -759,9 +765,7 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 	/* During a copy operation, it is faster to copy these arrays as a whole.
 	 It also preserves -secretKey value in IRCChannelConfig since that will
 	 be lost when reconstructing from dictionary value. */
-	if (target == XRPortablePropertyDictTargetCopy ||
-		target == XRPortablePropertyDictTargetMutableCopy)
-	{
+	if (target == XRPortablePropertyDictTargetCopy || target == XRPortablePropertyDictTargetMutableCopy) {
 		return [dic copy];
 	}
 
@@ -855,7 +859,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 - (nullable NSString *)proxyPasswordFromKeychain
 {
-	NSString *proxyPasswordServiceName = [NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
+	NSString *proxyPasswordServiceName =
+		[NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
 
 	NSString *kcPassword = [XRKeychain getPasswordFromKeychainItem:@"Glasstual (Proxy Server Password)"
 													  withItemKind:@"application password"
@@ -888,7 +893,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 		return;
 	}
 
-	NSString *proxyPasswordServiceName = [NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
+	NSString *proxyPasswordServiceName =
+		[NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
 
 	[XRKeychain modifyOrAddKeychainItem:@"Glasstual (Proxy Server Password)"
 						   withItemKind:@"application password"
@@ -913,7 +919,8 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 - (void)destroyProxyPasswordKeychainItem
 {
-	NSString *proxyPasswordServiceName = [NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
+	NSString *proxyPasswordServiceName =
+		[NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
 
 	[XRKeychain deleteKeychainItem:@"Glasstual (Proxy Server Password)"
 					  withItemKind:@"application password"
@@ -982,9 +989,9 @@ GLASSTUAL_IGNORE_DEPRECATION_END
 
 - (BOOL)showConnectionPrefersIPv4Warning
 {
-GLASSTUAL_IGNORE_DEPRECATION_BEGIN
+	GLASSTUAL_IGNORE_DEPRECATION_BEGIN
 	return (self.addressType == IRCConnectionAddressTypeIPv4 && self.connectionPrefersIPv4);
-GLASSTUAL_IGNORE_DEPRECATION_END
+	GLASSTUAL_IGNORE_DEPRECATION_END
 }
 
 @end

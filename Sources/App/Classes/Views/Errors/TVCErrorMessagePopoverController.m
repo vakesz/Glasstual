@@ -42,7 +42,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCErrorMessagePopoverController ()
-@property (nonatomic, strong, nullable) TVCErrorMessagePopover *visiblePopover;
+@property(nonatomic, strong, nullable) TVCErrorMessagePopover *visiblePopover;
 @end
 
 @implementation TVCErrorMessagePopoverController
@@ -70,8 +70,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	TVCErrorMessagePopover *popover = self.visiblePopover;
 
-	BOOL popoverIsSame =
-	(popover && popover.view == view && [popover.message isEqualToString:message]);
+	BOOL popoverIsSame = (popover && popover.view == view && [popover.message isEqualToString:message]);
 
 	if (popoverIsSame == NO) {
 		/* Close message already on screen being tracked */

@@ -43,12 +43,12 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCMainWindowLoadingScreenView ()
-@property (nonatomic, weak) NSView *visibleView;
-@property (nonatomic, strong) IBOutlet NSView *welcomeAddServerView;
-@property (nonatomic, weak) IBOutlet NSButton *welcomeAddServerViewContinueButton;
-@property (nonatomic, strong) IBOutlet NSView *progressView;
-@property (nonatomic, weak) IBOutlet NSTextField *progressViewDescriptionTextField;
-@property (nonatomic, weak) IBOutlet NSProgressIndicator *progressViewIndicator;
+@property(nonatomic, weak) NSView *visibleView;
+@property(nonatomic, strong) IBOutlet NSView *welcomeAddServerView;
+@property(nonatomic, weak) IBOutlet NSButton *welcomeAddServerViewContinueButton;
+@property(nonatomic, strong) IBOutlet NSView *progressView;
+@property(nonatomic, weak) IBOutlet NSTextField *progressViewDescriptionTextField;
+@property(nonatomic, weak) IBOutlet NSProgressIndicator *progressViewIndicator;
 @end
 
 @implementation TVCMainWindowLoadingScreenView
@@ -151,41 +151,41 @@ NS_ASSUME_NONNULL_BEGIN
 	[self addSubview:view];
 
 	NSArray *constraints = @[
-	/* Center view on both axis. */
-	 [NSLayoutConstraint constraintWithItem:view
-								  attribute:NSLayoutAttributeCenterX
-								  relatedBy:NSLayoutRelationEqual
-									 toItem:self
-								  attribute:NSLayoutAttributeCenterX
-								 multiplier:1.0
-								   constant:0.0],
+		/* Center view on both axis. */
+		[NSLayoutConstraint constraintWithItem:view
+									 attribute:NSLayoutAttributeCenterX
+									 relatedBy:NSLayoutRelationEqual
+										toItem:self
+									 attribute:NSLayoutAttributeCenterX
+									multiplier:1.0
+									  constant:0.0],
 
-	 [NSLayoutConstraint constraintWithItem:view
-								  attribute:NSLayoutAttributeCenterY
-								  relatedBy:NSLayoutRelationEqual
-									 toItem:self
-								  attribute:NSLayoutAttributeCenterY
-								 multiplier:1.0
-								   constant:0.0],
+		[NSLayoutConstraint constraintWithItem:view
+									 attribute:NSLayoutAttributeCenterY
+									 relatedBy:NSLayoutRelationEqual
+										toItem:self
+									 attribute:NSLayoutAttributeCenterY
+									multiplier:1.0
+									  constant:0.0],
 
-	 /* Constrain edges but use >= so that window does not
+		/* Constrain edges but use >= so that window does not
 	  shrink to conform to it. */
-	 [NSLayoutConstraint constraintWithItem:view
-								  attribute:NSLayoutAttributeLeft
-								  relatedBy:NSLayoutRelationGreaterThanOrEqual
-									 toItem:self
-								  attribute:NSLayoutAttributeLeft
-								 multiplier:1.0
-								   constant:0.0],
+		[NSLayoutConstraint constraintWithItem:view
+									 attribute:NSLayoutAttributeLeft
+									 relatedBy:NSLayoutRelationGreaterThanOrEqual
+										toItem:self
+									 attribute:NSLayoutAttributeLeft
+									multiplier:1.0
+									  constant:0.0],
 
-	 [NSLayoutConstraint constraintWithItem:view
-								  attribute:NSLayoutAttributeTop
-								  relatedBy:NSLayoutRelationGreaterThanOrEqual
-									 toItem:self
-								  attribute:NSLayoutAttributeTop
-								 multiplier:1.0
-								   constant:0.0],
-	 ];
+		[NSLayoutConstraint constraintWithItem:view
+									 attribute:NSLayoutAttributeTop
+									 relatedBy:NSLayoutRelationGreaterThanOrEqual
+										toItem:self
+									 attribute:NSLayoutAttributeTop
+									multiplier:1.0
+									  constant:0.0],
+	];
 
 	[self addConstraints:constraints];
 
@@ -235,11 +235,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 	RZAnimationCurrentContext().duration = 1.0;
 
-	[NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
-		self.animator.alphaValue = 0.0;
-	} completionHandler:^{
-		phaseTwoBlock(view);
-	}];
+	[NSAnimationContext
+		runAnimationGroup:^(NSAnimationContext *context) {
+			self.animator.alphaValue = 0.0;
+		}
+		completionHandler:^{
+			phaseTwoBlock(view);
+		}];
 }
 
 #pragma mark -
@@ -262,7 +264,6 @@ NS_ASSUME_NONNULL_BEGIN
 	textField.editable = NO;
 
 	textField.selectable = NO;
-
 }
 
 - (void)enableBackgroundControlsStepOne
@@ -277,7 +278,6 @@ NS_ASSUME_NONNULL_BEGIN
 	textField.editable = YES;
 
 	textField.selectable = YES;
-
 }
 
 @end

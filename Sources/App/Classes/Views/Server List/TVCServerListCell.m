@@ -53,31 +53,31 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCServerListCellDrawingContext;
 
 @interface TVCServerListRowCell ()
-@property (nonatomic, weak) TVCServerList *serverList;
-@property (nonatomic, weak) __kindof TVCServerListCell *childCell;
-@property (readonly) BOOL isGroupItem;
+@property(nonatomic, weak) TVCServerList *serverList;
+@property(nonatomic, weak) __kindof TVCServerListCell *childCell;
+@property(readonly) BOOL isGroupItem;
 @end
 
 @interface TVCServerListCell ()
-@property (nonatomic, weak) IBOutlet NSTextField *cellTextField;
-@property (nonatomic, weak) IBOutlet NSImageView *messageCountBadgeImageView;
+@property(nonatomic, weak) IBOutlet NSTextField *cellTextField;
+@property(nonatomic, weak) IBOutlet NSImageView *messageCountBadgeImageView;
 // Deactivating the constraints will dereference them.
 // We need to maintain a strong reference.
-@property (nonatomic, strong) IBOutlet NSLayoutConstraint *messageCountBadgeLeadingConstraint;
-@property (nonatomic, strong) IBOutlet NSLayoutConstraint *messageCountBadgeTrailingConstraint;
-@property (readonly) BOOL isGroupItem;
-@property (readonly) TVCServerList *serverList;
-@property (readonly) __kindof TVCServerListRowCell *rowCell;
-@property (readonly) TVCServerListCellDrawingContext *drawingContext;
-@property (readonly) IRCTreeItem *cellItem;
+@property(nonatomic, strong) IBOutlet NSLayoutConstraint *messageCountBadgeLeadingConstraint;
+@property(nonatomic, strong) IBOutlet NSLayoutConstraint *messageCountBadgeTrailingConstraint;
+@property(readonly) BOOL isGroupItem;
+@property(readonly) TVCServerList *serverList;
+@property(readonly) __kindof TVCServerListRowCell *rowCell;
+@property(readonly) TVCServerListCellDrawingContext *drawingContext;
+@property(readonly) IRCTreeItem *cellItem;
 @end
 
 @interface TVCServerListCellDrawingContext : NSObject
-@property (nonatomic, assign) BOOL isActive;
-@property (nonatomic, assign) BOOL isGroupItem;
-@property (nonatomic, assign) BOOL isSelected;
-@property (nonatomic, assign) BOOL isSelectedFrontmost;
-@property (nonatomic, assign) BOOL isWindowActive;
+@property(nonatomic, assign) BOOL isActive;
+@property(nonatomic, assign) BOOL isGroupItem;
+@property(nonatomic, assign) BOOL isSelected;
+@property(nonatomic, assign) BOOL isSelectedFrontmost;
+@property(nonatomic, assign) BOOL isWindowActive;
 @end
 
 @implementation TVCServerListCell
@@ -87,7 +87,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)defineConstraints
 {
-
 }
 
 - (BOOL)wantsUpdateLayer
@@ -177,7 +176,8 @@ NS_ASSUME_NONNULL_BEGIN
 		NSImage *icon = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:channel.name];
 		icon.template = YES;
 
-		self.imageView.symbolConfiguration = [NSImageSymbolConfiguration configurationWithPointSize:12.0 weight:NSFontWeightMedium];
+		self.imageView.symbolConfiguration = [NSImageSymbolConfiguration configurationWithPointSize:12.0
+																							 weight:NSFontWeightMedium];
 		self.imageView.contentTintColor = isActive ? [NSColor secondaryLabelColor] : [NSColor tertiaryLabelColor];
 		self.imageView.image = icon;
 	}
@@ -243,7 +243,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if (controlColor) {
-		[mutableStringValue addAttribute:NSForegroundColorAttributeName value:controlColor	range:stringValueRange];
+		[mutableStringValue addAttribute:NSForegroundColorAttributeName value:controlColor range:stringValueRange];
 	}
 
 	/* Mark connections secured by TLS alongside the name they belong to, which
@@ -269,14 +269,13 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	NSImageSymbolConfiguration *symbolConfiguration =
-	[NSImageSymbolConfiguration configurationWithPointSize:9.0
-													weight:NSFontWeightSemibold
-													 scale:NSImageSymbolScaleSmall];
+		[NSImageSymbolConfiguration configurationWithPointSize:9.0
+														weight:NSFontWeightSemibold
+														 scale:NSImageSymbolScaleSmall];
 
-	NSImage *lockImage =
-	[[NSImage imageWithSystemSymbolName:@"lock.fill"
-			   accessibilityDescription:TXTLS(@"TVCMainWindow[tb-cs]")]
-	 imageWithSymbolConfiguration:symbolConfiguration];
+	NSImage *lockImage = [[NSImage imageWithSystemSymbolName:@"lock.fill"
+									accessibilityDescription:TXTLS(@"TVCMainWindow[tb-cs]")]
+		imageWithSymbolConfiguration:symbolConfiguration];
 
 	if (lockImage == nil) {
 		return nil;
@@ -301,9 +300,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Badge Drawing
 
 /* Badge metrics track the sidebar's text size rather than a fixed table. */
-static const CGFloat _unreadBadgeMinimumWidth	= 22.0;
-static const CGFloat _unreadBadgeHeight			= 16.0;
-static const CGFloat _unreadBadgeTextPadding	= 7.0;
+static const CGFloat _unreadBadgeMinimumWidth = 22.0;
+static const CGFloat _unreadBadgeHeight = 16.0;
+static const CGFloat _unreadBadgeTextPadding = 7.0;
 
 - (void)populateMessageCountBadge
 {
@@ -321,9 +320,8 @@ static const CGFloat _unreadBadgeTextPadding	= 7.0;
 
 	IRCChannel *associatedChannel = (id)self.cellItem;
 
-	BOOL drawMessageBadge = (isSelected == NO ||
-							(isSelectedFrontmost == NO && isSelected && multipleRowsSelected) ||
-							(isWindowActive == NO && isSelected));
+	BOOL drawMessageBadge = (isSelected == NO || (isSelectedFrontmost == NO && isSelected && multipleRowsSelected) ||
+							 (isWindowActive == NO && isSelected));
 
 	if (associatedChannel.config.showTreeBadgeCount == NO) {
 		drawMessageBadge = NO;
@@ -348,8 +346,9 @@ static const CGFloat _unreadBadgeTextPadding	= 7.0;
 		return;
 	}
 
-	self.messageCountBadgeImageView.image =
-	[self messageCountBadgeForCount:treeUnreadCount isHighlight:isHighlight isSelected:isSelected];
+	self.messageCountBadgeImageView.image = [self messageCountBadgeForCount:treeUnreadCount
+																isHighlight:isHighlight
+																 isSelected:isSelected];
 
 	self.messageCountBadgeLeadingConstraint.active = YES;
 	self.messageCountBadgeTrailingConstraint.active = YES;
@@ -366,7 +365,9 @@ static const CGFloat _unreadBadgeTextPadding	= 7.0;
 	return color;
 }
 
-- (NSImage *)messageCountBadgeForCount:(NSUInteger)messageCount isHighlight:(BOOL)isHighlight isSelected:(BOOL)isSelected
+- (NSImage *)messageCountBadgeForCount:(NSUInteger)messageCount
+						   isHighlight:(BOOL)isHighlight
+							isSelected:(BOOL)isSelected
 {
 	NSColor *backgroundColor = nil;
 	NSColor *textColor = nil;
@@ -392,33 +393,33 @@ static const CGFloat _unreadBadgeTextPadding	= 7.0;
 	paragraphStyle.alignment = NSTextAlignmentCenter;
 
 	NSAttributedString *stringToDraw =
-	[NSAttributedString attributedStringWithString:TXFormattedNumber(messageCount)
-										attributes:@{
-		NSForegroundColorAttributeName: textColor,
-		NSFontAttributeName: controlFont,
-		NSParagraphStyleAttributeName: paragraphStyle
-	}];
+		[NSAttributedString attributedStringWithString:TXFormattedNumber(messageCount)
+											attributes:@{
+												NSForegroundColorAttributeName : textColor,
+												NSFontAttributeName : controlFont,
+												NSParagraphStyleAttributeName : paragraphStyle
+											}];
 
 	CGFloat badgeWidth = MAX((stringToDraw.size.width + (_unreadBadgeTextPadding * 2.0)), _unreadBadgeMinimumWidth);
 
 	return [NSImage imageWithSize:NSMakeSize(badgeWidth, _unreadBadgeHeight)
 						  flipped:NO
 				   drawingHandler:^BOOL(NSRect dstRect) {
-		[backgroundColor setFill];
+					   [backgroundColor setFill];
 
-		[[NSBezierPath bezierPathWithRoundedRect:dstRect
-										 xRadius:(NSHeight(dstRect) / 2.0)
-										 yRadius:(NSHeight(dstRect) / 2.0)] fill];
+					   [[NSBezierPath bezierPathWithRoundedRect:dstRect
+														xRadius:(NSHeight(dstRect) / 2.0)
+														yRadius:(NSHeight(dstRect) / 2.0)] fill];
 
-		/* Centre on the font's cap height so the digits sit optically level. */
-		NSRect textRect = dstRect;
-		textRect.origin.y = (NSMidY(dstRect) - (controlFont.capHeight / 2.0) + controlFont.descender);
-		textRect.size.height = (NSHeight(dstRect) - NSMinY(textRect));
+					   /* Centre on the font's cap height so the digits sit optically level. */
+					   NSRect textRect = dstRect;
+					   textRect.origin.y = (NSMidY(dstRect) - (controlFont.capHeight / 2.0) + controlFont.descender);
+					   textRect.size.height = (NSHeight(dstRect) - NSMinY(textRect));
 
-		[stringToDraw drawInRect:textRect];
+					   [stringToDraw drawInRect:textRect];
 
-		return YES;
-	}];
+					   return YES;
+				   }];
 }
 
 #pragma mark -
@@ -565,7 +566,7 @@ static const CGFloat _unreadBadgeTextPadding	= 7.0;
 #pragma mark -
 #pragma mark Cell Information
 
-- (__kindof TVCServerListCell * _Nullable)childCell
+- (__kindof TVCServerListCell *_Nullable)childCell
 {
 	if (self->_childCell == nil) {
 		if (self.numberOfColumns == 0) {

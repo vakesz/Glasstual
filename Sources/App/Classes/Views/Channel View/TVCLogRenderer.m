@@ -59,45 +59,55 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCLogRenderer ()
-@property (nonatomic, copy, nullable) NSString *body;
-@property (nonatomic, copy, nullable) id finalResult;
-@property (nonatomic, strong, nullable) NSMutableAttributedString *bodyWithAttributes;
-@property (nonatomic, strong, nullable) NSMutableDictionary<NSString *, id> *renderedBodyOpenAttributes;
-@property (nonatomic, copy) NSDictionary<NSString *, id> *rendererAttributes;
-@property (nonatomic, strong) NSMutableDictionary<NSString *, id> *outputDictionary;
-@property (nonatomic, weak) TVCLogController *viewController;
-@property (nonatomic, assign) TVCLogLineType lineType;
-@property (nonatomic, assign) TVCLogLineMemberType memberType;
-@property (nonatomic, assign) BOOL escapeBody;
+@property(nonatomic, copy, nullable) NSString *body;
+@property(nonatomic, copy, nullable) id finalResult;
+@property(nonatomic, strong, nullable) NSMutableAttributedString *bodyWithAttributes;
+@property(nonatomic, strong, nullable) NSMutableDictionary<NSString *, id> *renderedBodyOpenAttributes;
+@property(nonatomic, copy) NSDictionary<NSString *, id> *rendererAttributes;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, id> *outputDictionary;
+@property(nonatomic, weak) TVCLogController *viewController;
+@property(nonatomic, assign) TVCLogLineType lineType;
+@property(nonatomic, assign) TVCLogLineMemberType memberType;
+@property(nonatomic, assign) BOOL escapeBody;
 @end
 
-NSString * const TVCLogRendererFormattingForegroundColorAttribute = @"TVCLogRendererFormattingForegroundColorAttribute";
-NSString * const TVCLogRendererFormattingBackgroundColorAttribute = @"TVCLogRendererFormattingBackgroundColorAttribute";
-NSString * const TVCLogRendererFormattingBoldTextAttribute = @"TVCLogRendererFormattingBoldTextAttribute";
-NSString * const TVCLogRendererFormattingItalicTextAttribute = @"TVCLogRendererFormattingItalicTextAttribute";
-NSString * const TVCLogRendererFormattingMonospaceTextAttribute = @"TVCLogRendererFormattingMonospaceTextAttribute";
-NSString * const TVCLogRendererFormattingStrikethroughTextAttribute = @"TVCLogRendererFormattingStrikethroughTextAttribute";
-NSString * const TVCLogRendererFormattingUnderlineTextAttribute = @"TVCLogRendererFormattingUnderlineTextAttribute";
-NSString * const TVCLogRendererFormattingChannelNameAttribute = @"TVCLogRendererFormattingChannelNameAttribute";
-NSString * const TVCLogRendererFormattingConversationTrackingAttribute = @"TVCLogRendererFormattingConversationTrackingAttribute";
-NSString * const TVCLogRendererFormattingKeywordHighlightAttribute = @"TVCLogRendererFormattingKeywordHighlightAttribute";
-NSString * const TVCLogRendererFormattingURLAttribute = @"TVCLogRendererFormattingURLAttribute";
+NSString *const TVCLogRendererFormattingForegroundColorAttribute = @"TVCLogRendererFormattingForegroundColorAttribute";
+NSString *const TVCLogRendererFormattingBackgroundColorAttribute = @"TVCLogRendererFormattingBackgroundColorAttribute";
+NSString *const TVCLogRendererFormattingBoldTextAttribute = @"TVCLogRendererFormattingBoldTextAttribute";
+NSString *const TVCLogRendererFormattingItalicTextAttribute = @"TVCLogRendererFormattingItalicTextAttribute";
+NSString *const TVCLogRendererFormattingMonospaceTextAttribute = @"TVCLogRendererFormattingMonospaceTextAttribute";
+NSString *const TVCLogRendererFormattingStrikethroughTextAttribute =
+	@"TVCLogRendererFormattingStrikethroughTextAttribute";
+NSString *const TVCLogRendererFormattingUnderlineTextAttribute = @"TVCLogRendererFormattingUnderlineTextAttribute";
+NSString *const TVCLogRendererFormattingChannelNameAttribute = @"TVCLogRendererFormattingChannelNameAttribute";
+NSString *const TVCLogRendererFormattingConversationTrackingAttribute =
+	@"TVCLogRendererFormattingConversationTrackingAttribute";
+NSString *const TVCLogRendererFormattingKeywordHighlightAttribute =
+	@"TVCLogRendererFormattingKeywordHighlightAttribute";
+NSString *const TVCLogRendererFormattingURLAttribute = @"TVCLogRendererFormattingURLAttribute";
 
-NSString * const TVCLogRendererConfigurationRenderLinksAttribute = @"TVCLogRendererConfigurationRenderLinksAttribute";
-NSString * const TVCLogRendererConfigurationLineTypeAttribute = @"TVCLogRendererConfigurationLineTypeAttribute";
-NSString * const TVCLogRendererConfigurationMemberTypeAttribute = @"TVCLogRendererConfigurationMemberTypeAttribute";
-NSString * const TVCLogRendererConfigurationHighlightKeywordsAttribute = @"TVCLogRendererConfigurationHighlightKeywordsAttribute";
-NSString * const TVCLogRendererConfigurationExcludedKeywordsAttribute = @"TVCLogRendererConfigurationExcludedKeywordsAttribute";
-NSString * const TVCLogRendererConfigurationDoNotEscapeBodyAttribute = @"TVCLogRendererConfigurationDoNotEscapeBodyAttribute";
+NSString *const TVCLogRendererConfigurationRenderLinksAttribute = @"TVCLogRendererConfigurationRenderLinksAttribute";
+NSString *const TVCLogRendererConfigurationLineTypeAttribute = @"TVCLogRendererConfigurationLineTypeAttribute";
+NSString *const TVCLogRendererConfigurationMemberTypeAttribute = @"TVCLogRendererConfigurationMemberTypeAttribute";
+NSString *const TVCLogRendererConfigurationHighlightKeywordsAttribute =
+	@"TVCLogRendererConfigurationHighlightKeywordsAttribute";
+NSString *const TVCLogRendererConfigurationExcludedKeywordsAttribute =
+	@"TVCLogRendererConfigurationExcludedKeywordsAttribute";
+NSString *const TVCLogRendererConfigurationDoNotEscapeBodyAttribute =
+	@"TVCLogRendererConfigurationDoNotEscapeBodyAttribute";
 
-NSString * const TVCLogRendererConfigurationAttributedStringPreferredFontAttribute = @"TVCLogRendererConfigurationAttributedStringPreferredFontAttribute";
-NSString * const TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute = @"TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute";
+NSString *const TVCLogRendererConfigurationAttributedStringPreferredFontAttribute =
+	@"TVCLogRendererConfigurationAttributedStringPreferredFontAttribute";
+NSString *const TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute =
+	@"TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute";
 
-NSString * const TVCLogRendererResultsListOfLinksInBodyAttribute = @"TVCLogRendererResultsListOfLinksInBodyAttribute";
-NSString * const TVCLogRendererResultsListOfLinksMappedInBodyAttribute = @"TVCLogRendererResultsListOfLinksMappedInBodyAttribute";
-NSString * const TVCLogRendererResultsKeywordMatchFoundAttribute = @"TVCLogRendererResultsKeywordMatchFoundAttribute";
-NSString * const TVCLogRendererResultsListOfUsersFoundAttribute = @"TVCLogRendererResultsListOfUsersFoundAttribute";
-NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute";
+NSString *const TVCLogRendererResultsListOfLinksInBodyAttribute = @"TVCLogRendererResultsListOfLinksInBodyAttribute";
+NSString *const TVCLogRendererResultsListOfLinksMappedInBodyAttribute =
+	@"TVCLogRendererResultsListOfLinksMappedInBodyAttribute";
+NSString *const TVCLogRendererResultsKeywordMatchFoundAttribute = @"TVCLogRendererResultsKeywordMatchFoundAttribute";
+NSString *const TVCLogRendererResultsListOfUsersFoundAttribute = @"TVCLogRendererResultsListOfUsersFoundAttribute";
+NSString *const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
+	@"TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute";
 
 @implementation TVCLogRenderer
 
@@ -120,7 +130,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 	[body getCharacters:charactersIn range:body.range];
 
-	NSMutableAttributedString *bodyWithAttributes = [[NSMutableAttributedString alloc] initWithString:body attributes:nil];
+	NSMutableAttributedString *bodyWithAttributes = [[NSMutableAttributedString alloc] initWithString:body
+																						   attributes:nil];
 
 	[bodyWithAttributes beginEditing];
 
@@ -133,122 +144,149 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 		if (character < 0x20) {
 			switch (character) {
-				case IRCTextFormatterEffectBoldCharacter:
-				{
-					if (characterPosition > 0 && [bodyWithAttributes isAttributeSet:TVCLogRendererFormattingBoldTextAttribute atIndex:characterPosition]) {
-						[bodyWithAttributes removeAttribute:TVCLogRendererFormattingBoldTextAttribute startingAt:characterPosition];
-					} else {
-						[bodyWithAttributes addAttribute:TVCLogRendererFormattingBoldTextAttribute value:@(YES) startingAt:characterPosition];
-					}
-
-					[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
-
-					characterOffset++;
-
-					continue;
+			case IRCTextFormatterEffectBoldCharacter: {
+				if (characterPosition > 0 &&
+					[bodyWithAttributes isAttributeSet:TVCLogRendererFormattingBoldTextAttribute
+											   atIndex:characterPosition]) {
+					[bodyWithAttributes removeAttribute:TVCLogRendererFormattingBoldTextAttribute
+											 startingAt:characterPosition];
+				} else {
+					[bodyWithAttributes addAttribute:TVCLogRendererFormattingBoldTextAttribute
+											   value:@(YES)
+										  startingAt:characterPosition];
 				}
-				case IRCTextFormatterEffectColorAsDigitCharacter:
-				case IRCTextFormatterEffectColorAsHexCharacter:
-				{
-					id foregroundColor = nil;
-					id backgroundColor = nil;
 
-					NSUInteger colorOffset = [bodyWithAttributes.string
-											  colorComponentsOfCharacter:character
-															  startingAt:characterPosition
-														 foregroundColor:&foregroundColor
-														 backgroundColor:&backgroundColor];
+				[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
 
-					if (foregroundColor != nil) {
-						[bodyWithAttributes addAttribute:TVCLogRendererFormattingForegroundColorAttribute value:foregroundColor startingAt:characterPosition];
-					} else if (characterPosition > 0 && [bodyWithAttributes isAttributeSet:TVCLogRendererFormattingForegroundColorAttribute atIndex:characterPosition]) {
-						[bodyWithAttributes removeAttribute:TVCLogRendererFormattingForegroundColorAttribute startingAt:characterPosition];
-					}
+				characterOffset++;
 
-					if (backgroundColor != nil) {
-						[bodyWithAttributes addAttribute:TVCLogRendererFormattingBackgroundColorAttribute value:backgroundColor startingAt:characterPosition];
-					} else if (characterPosition > 0 && [bodyWithAttributes isAttributeSet:TVCLogRendererFormattingBackgroundColorAttribute atIndex:characterPosition]) {
-						/* We only strip the background color if there is no longer a foreground color. A end character. */
-						if (foregroundColor == nil) {
-							[bodyWithAttributes removeAttribute:TVCLogRendererFormattingBackgroundColorAttribute startingAt:characterPosition];
-						}
-					}
+				continue;
+			}
+			case IRCTextFormatterEffectColorAsDigitCharacter:
+			case IRCTextFormatterEffectColorAsHexCharacter: {
+				id foregroundColor = nil;
+				id backgroundColor = nil;
 
-					i += (colorOffset - 1); // For loop will increase this by one so we minus by one
+				NSUInteger colorOffset = [bodyWithAttributes.string colorComponentsOfCharacter:character
+																					startingAt:characterPosition
+																			   foregroundColor:&foregroundColor
+																			   backgroundColor:&backgroundColor];
 
-					[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, colorOffset)];
-
-					characterOffset += colorOffset;
-
-					continue;
+				if (foregroundColor != nil) {
+					[bodyWithAttributes addAttribute:TVCLogRendererFormattingForegroundColorAttribute
+											   value:foregroundColor
+										  startingAt:characterPosition];
+				} else if (characterPosition > 0 &&
+						   [bodyWithAttributes isAttributeSet:TVCLogRendererFormattingForegroundColorAttribute
+													  atIndex:characterPosition]) {
+					[bodyWithAttributes removeAttribute:TVCLogRendererFormattingForegroundColorAttribute
+											 startingAt:characterPosition];
 				}
-				case IRCTextFormatterTerminatingCharacter:
-				{
-					[bodyWithAttributes resetAttributesStaringAt:characterPosition];
 
-					[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
-
-					characterOffset++;
-
-					continue;
-				}
-				case IRCTextFormatterEffectItalicCharacter:
-				case IRCTextFormatterEffectItalicCharacterOld:
-				{
-					if (characterPosition > 0 && [bodyWithAttributes isAttributeSet:TVCLogRendererFormattingItalicTextAttribute atIndex:characterPosition]) {
-						[bodyWithAttributes removeAttribute:TVCLogRendererFormattingItalicTextAttribute startingAt:characterPosition];
-					} else {
-						[bodyWithAttributes addAttribute:TVCLogRendererFormattingItalicTextAttribute value:@(YES) startingAt:characterPosition];
+				if (backgroundColor != nil) {
+					[bodyWithAttributes addAttribute:TVCLogRendererFormattingBackgroundColorAttribute
+											   value:backgroundColor
+										  startingAt:characterPosition];
+				} else if (characterPosition > 0 &&
+						   [bodyWithAttributes isAttributeSet:TVCLogRendererFormattingBackgroundColorAttribute
+													  atIndex:characterPosition]) {
+					/* We only strip the background color if there is no longer a foreground color. A end character. */
+					if (foregroundColor == nil) {
+						[bodyWithAttributes removeAttribute:TVCLogRendererFormattingBackgroundColorAttribute
+												 startingAt:characterPosition];
 					}
-
-					[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
-
-					characterOffset++;
-
-					continue;
 				}
-				case IRCTextFormatterEffectMonospaceCharacter:
-				{
-					if (characterPosition > 0 && [bodyWithAttributes isAttributeSet:TVCLogRendererFormattingMonospaceTextAttribute atIndex:characterPosition]) {
-						[bodyWithAttributes removeAttribute:TVCLogRendererFormattingMonospaceTextAttribute startingAt:characterPosition];
-					} else {
-						[bodyWithAttributes addAttribute:TVCLogRendererFormattingMonospaceTextAttribute value:@(YES) startingAt:characterPosition];
-					}
 
-					[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
+				i += (colorOffset - 1); // For loop will increase this by one so we minus by one
 
-					characterOffset++;
+				[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, colorOffset)];
 
-					continue;
+				characterOffset += colorOffset;
+
+				continue;
+			}
+			case IRCTextFormatterTerminatingCharacter: {
+				[bodyWithAttributes resetAttributesStaringAt:characterPosition];
+
+				[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
+
+				characterOffset++;
+
+				continue;
+			}
+			case IRCTextFormatterEffectItalicCharacter:
+			case IRCTextFormatterEffectItalicCharacterOld: {
+				if (characterPosition > 0 &&
+					[bodyWithAttributes isAttributeSet:TVCLogRendererFormattingItalicTextAttribute
+											   atIndex:characterPosition]) {
+					[bodyWithAttributes removeAttribute:TVCLogRendererFormattingItalicTextAttribute
+											 startingAt:characterPosition];
+				} else {
+					[bodyWithAttributes addAttribute:TVCLogRendererFormattingItalicTextAttribute
+											   value:@(YES)
+										  startingAt:characterPosition];
 				}
-				case IRCTextFormatterEffectStrikethroughCharacter:
-				{
-					if (characterPosition > 0 && [bodyWithAttributes isAttributeSet:TVCLogRendererFormattingStrikethroughTextAttribute atIndex:characterPosition]) {
-						[bodyWithAttributes removeAttribute:TVCLogRendererFormattingStrikethroughTextAttribute startingAt:characterPosition];
-					} else {
-						[bodyWithAttributes addAttribute:TVCLogRendererFormattingStrikethroughTextAttribute value:@(YES) startingAt:characterPosition];
-					}
 
-					[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
+				[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
 
-					characterOffset++;
+				characterOffset++;
 
-					continue;
+				continue;
+			}
+			case IRCTextFormatterEffectMonospaceCharacter: {
+				if (characterPosition > 0 &&
+					[bodyWithAttributes isAttributeSet:TVCLogRendererFormattingMonospaceTextAttribute
+											   atIndex:characterPosition]) {
+					[bodyWithAttributes removeAttribute:TVCLogRendererFormattingMonospaceTextAttribute
+											 startingAt:characterPosition];
+				} else {
+					[bodyWithAttributes addAttribute:TVCLogRendererFormattingMonospaceTextAttribute
+											   value:@(YES)
+										  startingAt:characterPosition];
 				}
-				case IRCTextFormatterEffectUnderlineCharacter:
-				{
-					if (characterPosition > 0 && [bodyWithAttributes isAttributeSet:TVCLogRendererFormattingUnderlineTextAttribute atIndex:characterPosition]) {
-						[bodyWithAttributes removeAttribute:TVCLogRendererFormattingUnderlineTextAttribute startingAt:characterPosition];
-					} else {
-						[bodyWithAttributes addAttribute:TVCLogRendererFormattingUnderlineTextAttribute value:@(YES) startingAt:characterPosition];
-					}
 
-					[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
+				[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
 
-					characterOffset++;
+				characterOffset++;
 
-					continue;
-				} // case
+				continue;
+			}
+			case IRCTextFormatterEffectStrikethroughCharacter: {
+				if (characterPosition > 0 &&
+					[bodyWithAttributes isAttributeSet:TVCLogRendererFormattingStrikethroughTextAttribute
+											   atIndex:characterPosition]) {
+					[bodyWithAttributes removeAttribute:TVCLogRendererFormattingStrikethroughTextAttribute
+											 startingAt:characterPosition];
+				} else {
+					[bodyWithAttributes addAttribute:TVCLogRendererFormattingStrikethroughTextAttribute
+											   value:@(YES)
+										  startingAt:characterPosition];
+				}
+
+				[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
+
+				characterOffset++;
+
+				continue;
+			}
+			case IRCTextFormatterEffectUnderlineCharacter: {
+				if (characterPosition > 0 &&
+					[bodyWithAttributes isAttributeSet:TVCLogRendererFormattingUnderlineTextAttribute
+											   atIndex:characterPosition]) {
+					[bodyWithAttributes removeAttribute:TVCLogRendererFormattingUnderlineTextAttribute
+											 startingAt:characterPosition];
+				} else {
+					[bodyWithAttributes addAttribute:TVCLogRendererFormattingUnderlineTextAttribute
+											   value:@(YES)
+										  startingAt:characterPosition];
+				}
+
+				[bodyWithAttributes deleteCharactersInRange:NSMakeRange(characterPosition, 1)];
+
+				characterOffset++;
+
+				continue;
+			} // case
 			} // switch
 		} // character < 0x20
 	} // for loop
@@ -271,7 +309,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 - (BOOL)isRenderingPRIVMSG_or_NOTICE
 {
-	return (self->_lineType == TVCLogLineTypePrivateMessage || self->_lineType == TVCLogLineTypeAction || self->_lineType == TVCLogLineTypeNotice);
+	return (self->_lineType == TVCLogLineTypePrivateMessage || self->_lineType == TVCLogLineTypeAction ||
+			self->_lineType == TVCLogLineTypeNotice);
 }
 
 - (BOOL)scanForKeywords
@@ -285,22 +324,16 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 		return;
 	}
 
-	if (self->_lineType != TVCLogLineTypeAction			&&
-		self->_lineType != TVCLogLineTypeCTCP			&&
-		self->_lineType != TVCLogLineTypeCTCPQuery		&&
-		self->_lineType != TVCLogLineTypeCTCPReply		&&
-		self->_lineType != TVCLogLineTypeDCCFileTransfer	&&
-		self->_lineType != TVCLogLineTypeNotice			&&
-		self->_lineType != TVCLogLineTypePrivateMessage	&&
-		self->_lineType != TVCLogLineTypeTopic)
-	{
+	if (self->_lineType != TVCLogLineTypeAction && self->_lineType != TVCLogLineTypeCTCP &&
+		self->_lineType != TVCLogLineTypeCTCPQuery && self->_lineType != TVCLogLineTypeCTCPReply &&
+		self->_lineType != TVCLogLineTypeDCCFileTransfer && self->_lineType != TVCLogLineTypeNotice &&
+		self->_lineType != TVCLogLineTypePrivateMessage && self->_lineType != TVCLogLineTypeTopic) {
 		return;
 	}
 
-	self->_body =
-	[XRRegularExpression string:self->_body
-				replacedByRegex:@"([\\p{InCombining_Diacritical_Marks}]{3,})"
-					 withString:CS_UnicodeReplacementCharacter];
+	self->_body = [XRRegularExpression string:self->_body
+							  replacedByRegex:@"([\\p{InCombining_Diacritical_Marks}]{3,})"
+								   withString:CS_UnicodeReplacementCharacter];
 }
 
 - (void)buildListOfLinksInBody
@@ -338,7 +371,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	}
 
 	id excludedKeywords = [self->_rendererAttributes arrayForKey:TVCLogRendererConfigurationExcludedKeywordsAttribute];
-	id highlightKeywords = [self->_rendererAttributes arrayForKey:TVCLogRendererConfigurationHighlightKeywordsAttribute];
+	id highlightKeywords =
+		[self->_rendererAttributes arrayForKey:TVCLogRendererConfigurationHighlightKeywordsAttribute];
 
 	if ([highlightKeywords count] == 0) {
 		self->_outputDictionary[TVCLogRendererResultsKeywordMatchFoundAttribute] = @(NO);
@@ -349,33 +383,34 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	NSMutableArray<NSValue *> *excludeRanges = [NSMutableArray array];
 
 	for (NSString *excludeKeyword in excludedKeywords) {
-		[self->_body enumerateMatchesOfString:excludeKeyword withBlock:^(NSRange range, BOOL *stop) {
-			[excludeRanges addObject:[NSValue valueWithRange:range]];
-		} options:NSCaseInsensitiveSearch];
+		[self->_body enumerateMatchesOfString:excludeKeyword
+									withBlock:^(NSRange range, BOOL *stop) {
+										[excludeRanges addObject:[NSValue valueWithRange:range]];
+									}
+									  options:NSCaseInsensitiveSearch];
 	}
 
 	BOOL foundKeyword = NO;
 
 	switch ([TPCPreferences highlightMatchingMethod]) {
-		case TXNicknameHighlightMatchTypeExact:
-		case TXNicknameHighlightMatchTypePartial:
-		{
-			foundKeyword = [self matchKeywordsUsingNormalMatching:highlightKeywords excludedRanges:excludeRanges];
+	case TXNicknameHighlightMatchTypeExact:
+	case TXNicknameHighlightMatchTypePartial: {
+		foundKeyword = [self matchKeywordsUsingNormalMatching:highlightKeywords excludedRanges:excludeRanges];
 
-			break;
-		}
-		case TXNicknameHighlightMatchTypeRegularExpression:
-		{
-			foundKeyword = [self matchKeywordsUsingRegularExpression:highlightKeywords excludedRanges:excludeRanges];
+		break;
+	}
+	case TXNicknameHighlightMatchTypeRegularExpression: {
+		foundKeyword = [self matchKeywordsUsingRegularExpression:highlightKeywords excludedRanges:excludeRanges];
 
-			break;
-		}
+		break;
+	}
 	}
 
 	self->_outputDictionary[TVCLogRendererResultsKeywordMatchFoundAttribute] = @(foundKeyword);
 }
 
-- (BOOL)matchKeywordsUsingNormalMatching:(NSArray<NSString *> *)keywords excludedRanges:(NSArray<NSValue *> *)excludedRanges
+- (BOOL)matchKeywordsUsingNormalMatching:(NSArray<NSString *> *)keywords
+						  excludedRanges:(NSArray<NSValue *> *)excludedRanges
 {
 	NSParameterAssert(keywords != nil);
 	NSParameterAssert(excludedRanges != nil);
@@ -385,27 +420,33 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	__block BOOL foundKeyword = NO;
 
 	for (NSString *keyword in keywords) {
-		[body enumerateMatchesOfString:keyword withBlock:^(NSRange range, BOOL *stop) {
-			for (NSValue *excludedRange in excludedRanges) {
-				if (NSIntersectionRange(range, excludedRange.rangeValue).length > 0) {
-					return;
-				}
-			}
+		[body enumerateMatchesOfString:keyword
+							 withBlock:^(NSRange range, BOOL *stop) {
+								 for (NSValue *excludedRange in excludedRanges) {
+									 if (NSIntersectionRange(range, excludedRange.rangeValue).length > 0) {
+										 return;
+									 }
+								 }
 
-			if ([TPCPreferences highlightMatchingMethod] == TXNicknameHighlightMatchTypeExact) {
-				if ([self sectionOfBodyIsSurroundedByNonAlphabeticals:range] == NO) {
-					return;
-				}
-			}
+								 if ([TPCPreferences highlightMatchingMethod] == TXNicknameHighlightMatchTypeExact) {
+									 if ([self sectionOfBodyIsSurroundedByNonAlphabeticals:range] == NO) {
+										 return;
+									 }
+								 }
 
-			if ([self->_bodyWithAttributes isAttributeSet:TVCLogRendererFormattingURLAttribute inRange:range] == NO) {
-				[self->_bodyWithAttributes addAttribute:TVCLogRendererFormattingKeywordHighlightAttribute value:@(YES) range:range];
+								 if ([self->_bodyWithAttributes isAttributeSet:TVCLogRendererFormattingURLAttribute
+																	   inRange:range] == NO) {
+									 [self->_bodyWithAttributes
+										 addAttribute:TVCLogRendererFormattingKeywordHighlightAttribute
+												value:@(YES)
+												range:range];
 
-				foundKeyword = YES;
+									 foundKeyword = YES;
 
-				*stop = YES;
-			}
-		} options:NSCaseInsensitiveSearch];
+									 *stop = YES;
+								 }
+							 }
+							   options:NSCaseInsensitiveSearch];
 
 		if (foundKeyword) {
 			break;
@@ -415,7 +456,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	return foundKeyword;
 }
 
-- (BOOL)matchKeywordsUsingRegularExpression:(NSArray<NSString *> *)keywords excludedRanges:(NSArray<NSValue *> *)excludedRanges
+- (BOOL)matchKeywordsUsingRegularExpression:(NSArray<NSString *> *)keywords
+							 excludedRanges:(NSArray<NSValue *> *)excludedRanges
 {
 	NSParameterAssert(keywords != nil);
 	NSParameterAssert(excludedRanges != nil);
@@ -446,7 +488,9 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 		}
 
 		if ([self->_bodyWithAttributes isAttributeSet:TVCLogRendererFormattingURLAttribute inRange:range] == NO) {
-			[self->_bodyWithAttributes addAttribute:TVCLogRendererFormattingKeywordHighlightAttribute value:@(YES) range:range];
+			[self->_bodyWithAttributes addAttribute:TVCLogRendererFormattingKeywordHighlightAttribute
+											  value:@(YES)
+											  range:range];
 
 			foundKeyword = YES;
 
@@ -465,15 +509,20 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 	NSString *body = self->_body;
 
-	[body enumerateMatchesOfString:@"#([a-zA-Z0-9\\#\\-]+)" withBlock:^(NSRange range, BOOL *stop) {
-		if ([self sectionOfBodyIsSurroundedByNonAlphabeticals:range] == NO) {
-			return;
-		}
+	[body enumerateMatchesOfString:@"#([a-zA-Z0-9\\#\\-]+)"
+						 withBlock:^(NSRange range, BOOL *stop) {
+							 if ([self sectionOfBodyIsSurroundedByNonAlphabeticals:range] == NO) {
+								 return;
+							 }
 
-		if ([self->_bodyWithAttributes isAttributeSet:TVCLogRendererFormattingURLAttribute inRange:range] == NO) {
-			[self->_bodyWithAttributes addAttribute:TVCLogRendererFormattingChannelNameAttribute value:@(YES) range:range];
-		}
-	} options:(NSCaseInsensitiveSearch | NSRegularExpressionSearch)];
+							 if ([self->_bodyWithAttributes isAttributeSet:TVCLogRendererFormattingURLAttribute
+																   inRange:range] == NO) {
+								 [self->_bodyWithAttributes addAttribute:TVCLogRendererFormattingChannelNameAttribute
+																   value:@(YES)
+																   range:range];
+							 }
+						 }
+						   options:(NSCaseInsensitiveSearch | NSRegularExpressionSearch)];
 }
 
 - (BOOL)sectionOfBodyIsSurroundedByNonAlphabeticals:(NSRange)range
@@ -539,24 +588,32 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	NSMutableSet<IRCChannelUser *> *userSet = [NSMutableSet set];
 
 	for (IRCChannelUser *user in users) {
-		[body enumerateMatchesOfString:user.user.nickname withBlock:^(NSRange range, BOOL *stop) {
-			if ([self sectionOfBodyIsSurroundedByNonAlphabeticals:range] == NO) {
-				return;
-			}
+		[body enumerateMatchesOfString:user.user.nickname
+							 withBlock:^(NSRange range, BOOL *stop) {
+								 if ([self sectionOfBodyIsSurroundedByNonAlphabeticals:range] == NO) {
+									 return;
+								 }
 
-			if ([self->_bodyWithAttributes isAttributeSet:TVCLogRendererFormattingURLAttribute inRange:range] == NO) {
-				[self->_bodyWithAttributes addAttribute:TVCLogRendererFormattingConversationTrackingAttribute value:@(YES) range:range];
+								 if ([self->_bodyWithAttributes isAttributeSet:TVCLogRendererFormattingURLAttribute
+																	   inRange:range] == NO) {
+									 [self->_bodyWithAttributes
+										 addAttribute:TVCLogRendererFormattingConversationTrackingAttribute
+												value:@(YES)
+												range:range];
 
-				if ([userSet containsObject:user] == NO) {
-					[userSet addObject:user];
-				}
+									 if ([userSet containsObject:user] == NO) {
+										 [userSet addObject:user];
+									 }
 
-				if ([self->_bodyWithAttributes isAttributeSet:TVCLogRendererFormattingKeywordHighlightAttribute inRange:range] == NO) {
-					totalNicknameCount += 1;
-					totalNicknameLength += range.length;
-				}
-			}
-		} options:NSCaseInsensitiveSearch];
+									 if ([self->_bodyWithAttributes
+											 isAttributeSet:TVCLogRendererFormattingKeywordHighlightAttribute
+													inRange:range] == NO) {
+										 totalNicknameCount += 1;
+										 totalNicknameLength += range.length;
+									 }
+								 }
+							 }
+							   options:NSCaseInsensitiveSearch];
 	}
 
 	/* Calculate how much of the message is just nicknames.
@@ -566,8 +623,7 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 		double nicknamePercent = (((double)totalNicknameLength / bodyLength) * 100.0);
 
 		if ((nicknamePercent > 75.0 && totalNicknameCount > 10) ||
-			(nicknamePercent > 50.0 && totalNicknameCount > 20))
-		{
+			(nicknamePercent > 50.0 && totalNicknameCount > 20)) {
 			self->_outputDictionary[TVCLogRendererResultsKeywordMatchFoundAttribute] = @(NO);
 		}
 	}
@@ -585,7 +641,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 	NSFont *defaultFont = self->_rendererAttributes[TVCLogRendererConfigurationAttributedStringPreferredFontAttribute];
 
-	NSColor *defaultFontColor = self->_rendererAttributes[TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute];
+	NSColor *defaultFontColor =
+		self->_rendererAttributes[TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute];
 
 	NSFont *boldItalicFont = defaultFont;
 
@@ -650,7 +707,11 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	return [attributesOut copy];
 }
 
-- (nullable NSString *)renderStringAsHTML:(NSString *)string withAttributes:(NSDictionary<NSString *, id> *)stringAttributes inRange:(NSRange)attributesRange isFirstFragment:(BOOL)isFirstFragment isLastFragment:(BOOL)isLastFragment
+- (nullable NSString *)renderStringAsHTML:(NSString *)string
+						   withAttributes:(NSDictionary<NSString *, id> *)stringAttributes
+								  inRange:(NSRange)attributesRange
+						  isFirstFragment:(BOOL)isFirstFragment
+						   isLastFragment:(BOOL)isLastFragment
 {
 	NSParameterAssert(string != nil);
 	NSParameterAssert(stringAttributes != nil);
@@ -661,8 +722,7 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 	NSMutableDictionary<NSString *, id> *templateTokens = [NSMutableDictionary dictionary];
 
-	if ([stringAttributes containsKey:TVCLogRendererFormattingURLAttribute])
-	{
+	if ([stringAttributes containsKey:TVCLogRendererFormattingURLAttribute]) {
 		AHHyperlinkScannerResult *link = stringAttributes[TVCLogRendererFormattingURLAttribute];
 
 		NSString *linkLocation = link.stringValue;
@@ -683,15 +743,11 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 		templateTokens[@"anchorTitle"] = [self.class escapeString:fragment];
 
 		html = [self.class renderTemplateNamed:@"renderedStandardAnchorLinkResource" attributes:templateTokens];
-	}
-	else if ([stringAttributes containsKey:TVCLogRendererFormattingChannelNameAttribute])
-	{
+	} else if ([stringAttributes containsKey:TVCLogRendererFormattingChannelNameAttribute]) {
 		templateTokens[@"channelName"] = [self.class escapeString:fragment];
 
 		html = [self.class renderTemplateNamed:@"renderedChannelNameLinkResource" attributes:templateTokens];
-	}
-	else if ([stringAttributes containsKey:TVCLogRendererFormattingConversationTrackingAttribute])
-	{
+	} else if ([stringAttributes containsKey:TVCLogRendererFormattingConversationTrackingAttribute]) {
 		if ([TPCPreferences disableNicknameColorHashing]) {
 			templateTokens[@"inlineNicknameMatchFound"] = @(NO);
 		} else {
@@ -718,7 +774,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 					}
 				}
 
-				NSString *nicknameColorStyle = [IRCUserNicknameColorStyleGenerator nicknameColorStyleForString:nickname];
+				NSString *nicknameColorStyle =
+					[IRCUserNicknameColorStyleGenerator nicknameColorStyleForString:nickname];
 
 				templateTokens[@"inlineNicknameMatchFound"] = @(YES);
 
@@ -749,34 +806,34 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 		self->_renderedBodyOpenAttributes = [NSMutableDictionary dictionary];
 	}
 
-	void (^processToggleEffectsAttribute)(NSString *, NSString *) = ^(NSString *effectAttribute, NSString *effectTokenName)
-	{
-		if ([stringAttributes containsKey:effectAttribute]) {
-			templateTokens[effectTokenName] = @(YES); // backwards compatibility
+	void (^processToggleEffectsAttribute)(NSString *, NSString *) =
+		^(NSString *effectAttribute, NSString *effectTokenName) {
+			if ([stringAttributes containsKey:effectAttribute]) {
+				templateTokens[effectTokenName] = @(YES); // backwards compatibility
 
-			if ([self->_renderedBodyOpenAttributes boolForKey:effectAttribute] == NO) {
-				[self->_renderedBodyOpenAttributes setBool:YES forKey:effectAttribute];
+				if ([self->_renderedBodyOpenAttributes boolForKey:effectAttribute] == NO) {
+					[self->_renderedBodyOpenAttributes setBool:YES forKey:effectAttribute];
 
-				NSString *openedTokenName = [NSString stringWithFormat:@"%@Opened", effectTokenName];
+					NSString *openedTokenName = [NSString stringWithFormat:@"%@Opened", effectTokenName];
 
-				templateTokens[openedTokenName] = @(YES);
+					templateTokens[openedTokenName] = @(YES);
+				}
+
+				if (isLastFragment) {
+					NSString *closedTokenName = [NSString stringWithFormat:@"%@ClosedAtEnd", effectTokenName];
+
+					templateTokens[closedTokenName] = @(YES);
+				}
+			} else {
+				if ([self->_renderedBodyOpenAttributes boolForKey:effectAttribute]) {
+					[self->_renderedBodyOpenAttributes removeObjectForKey:effectAttribute];
+
+					NSString *closedTokenName = [NSString stringWithFormat:@"%@ClosedAtStart", effectTokenName];
+
+					templateTokens[closedTokenName] = @(YES);
+				}
 			}
-
-			if (isLastFragment) {
-				NSString *closedTokenName = [NSString stringWithFormat:@"%@ClosedAtEnd", effectTokenName];
-
-				templateTokens[closedTokenName] = @(YES);
-			}
-		} else {
-			if ([self->_renderedBodyOpenAttributes boolForKey:effectAttribute]) {
-				[self->_renderedBodyOpenAttributes removeObjectForKey:effectAttribute];
-
-				NSString *closedTokenName = [NSString stringWithFormat:@"%@ClosedAtStart", effectTokenName];
-
-				templateTokens[closedTokenName] = @(YES);
-			}
-		}
-	};
+		};
 
 	processToggleEffectsAttribute(TVCLogRendererFormattingBoldTextAttribute, @"fragmentIsBold");
 	processToggleEffectsAttribute(TVCLogRendererFormattingItalicTextAttribute, @"fragmentIsItalicized");
@@ -797,12 +854,9 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 	BOOL setNewColors = YES;
 
-	if (foregroundColorOld || backgroundColorOld)
-	{
+	if (foregroundColorOld || backgroundColorOld) {
 		/* There is no need to open a new HTML segment if the color hasn't changed. */
-		if ([foregroundColorNew isEqual:foregroundColorOld] &&
-			 [backgroundColorNew isEqual:backgroundColorOld])
-		{
+		if ([foregroundColorNew isEqual:foregroundColorOld] && [backgroundColorNew isEqual:backgroundColorOld]) {
 			setNewColors = NO;
 		} else {
 			templateTokens[@"fragmentTextColorClosedAtStart"] = @(isFirstFragment == NO);
@@ -840,7 +894,7 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 		BOOL usesStyleTag = NO;
 
-		backgroundColor =  [self.class stringValueForColor:backgroundColorNew usesStyleTag:&usesStyleTag];
+		backgroundColor = [self.class stringValueForColor:backgroundColorNew usesStyleTag:&usesStyleTag];
 
 		templateTokens[@"fragmentTextColorOpened"] = @(YES);
 		templateTokens[@"fragmentBackgroundColor"] = backgroundColor;
@@ -862,13 +916,11 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	/* Escape spaces that are prefix and suffix characters */
 	if (escapeBody) {
 		if ([html hasPrefix:@" "]) {
-			html = [html stringByReplacingCharactersInRange:NSMakeRange(0, 1)
-												 withString:@"&nbsp;"];
+			html = [html stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:@"&nbsp;"];
 		}
 
 		if ([html hasSuffix:@" "]) {
-			html = [html stringByReplacingCharactersInRange:NSMakeRange((html.length - 1), 1)
-												 withString:@"&nbsp;"];
+			html = [html stringByReplacingCharactersInRange:NSMakeRange((html.length - 1), 1) withString:@"&nbsp;"];
 		}
 	}
 
@@ -890,22 +942,22 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	NSUInteger stringLength = string.length;
 
 	[self->_bodyWithAttributes
-	 enumerateAttributesInRange:NSMakeRange(0, stringLength)
-						options:0
-					 usingBlock:^(NSDictionary<NSString *, id> *attributes, NSRange range, BOOL *stop) {
-		 BOOL isFirstFragment = (range.location == 0);
-		 BOOL isLastFragment = ((range.location + range.length) == stringLength);
+		enumerateAttributesInRange:NSMakeRange(0, stringLength)
+						   options:0
+						usingBlock:^(NSDictionary<NSString *, id> *attributes, NSRange range, BOOL *stop) {
+							BOOL isFirstFragment = (range.location == 0);
+							BOOL isLastFragment = ((range.location + range.length) == stringLength);
 
-		 NSString *html = [self renderStringAsHTML:string
-									withAttributes:attributes
-										   inRange:range
-								   isFirstFragment:isFirstFragment
-									isLastFragment:isLastFragment];
+							NSString *html = [self renderStringAsHTML:string
+													   withAttributes:attributes
+															  inRange:range
+													  isFirstFragment:isFirstFragment
+													   isLastFragment:isLastFragment];
 
-		 if (html) {
-			 [finalResult appendString:html];
-		 }
-	 }];
+							if (html) {
+								[finalResult appendString:html];
+							}
+						}];
 
 	self.finalResult = finalResult;
 }
@@ -917,13 +969,13 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	NSString *string = self->_bodyWithAttributes.string;
 
 	[self->_bodyWithAttributes
-		 enumerateAttributesInRange:NSMakeRange(0, string.length)
-							options:0
-						 usingBlock:^(NSDictionary<NSString *, id> *attributes, NSRange range, BOOL *stop) {
-			 NSDictionary *attributesToAdd = [self appKitAttributesFromRendererAttributes:attributes];
+		enumerateAttributesInRange:NSMakeRange(0, string.length)
+						   options:0
+						usingBlock:^(NSDictionary<NSString *, id> *attributes, NSRange range, BOOL *stop) {
+							NSDictionary *attributesToAdd = [self appKitAttributesFromRendererAttributes:attributes];
 
-			 [finalResult addAttributes:attributesToAdd range:range];
-		 }];
+							[finalResult addAttributes:attributesToAdd range:range];
+						}];
 
 	self.finalResult = finalResult;
 }
@@ -938,7 +990,10 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	self->_viewController = nil;
 }
 
-+ (NSString *)renderBody:(NSString *)body forViewController:(TVCLogController *)viewController withAttributes:(NSDictionary<NSString *, id> *)inputDictionary resultInfo:(NSDictionary<NSString *, id> * _Nullable * _Nullable)outputDictionary
++ (NSString *)renderBody:(NSString *)body
+	   forViewController:(TVCLogController *)viewController
+		  withAttributes:(NSDictionary<NSString *, id> *)inputDictionary
+			  resultInfo:(NSDictionary<NSString *, id> *_Nullable *_Nullable)outputDictionary
 {
 	NSParameterAssert(body != nil);
 	NSParameterAssert(viewController != nil);
@@ -950,17 +1005,17 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 	TVCLogLineType lineType = [inputDictionary unsignedIntegerForKey:TVCLogRendererConfigurationLineTypeAttribute];
 
-	TVCLogLineMemberType memberType = [inputDictionary unsignedIntegerForKey:TVCLogRendererConfigurationMemberTypeAttribute];
+	TVCLogLineMemberType memberType =
+		[inputDictionary unsignedIntegerForKey:TVCLogRendererConfigurationMemberTypeAttribute];
 
 	BOOL escapeBody = ([inputDictionary boolForKey:TVCLogRendererConfigurationDoNotEscapeBodyAttribute] == NO);
 
 	TVCLogRenderer *renderer = [self new];
 
-	renderer.body =
-	[THOPluginDispatcher willRenderMessage:body
-						 forViewController:viewController
-								  lineType:lineType
-								memberType:memberType];
+	renderer.body = [THOPluginDispatcher willRenderMessage:body
+										 forViewController:viewController
+												  lineType:lineType
+												memberType:memberType];
 
 	renderer.lineType = lineType;
 
@@ -985,7 +1040,7 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 
 	[renderer scanBodyForChannelMembers];
 
-	if ( outputDictionary) {
+	if (outputDictionary) {
 		*outputDictionary = [renderer.outputDictionary copy];
 	}
 
@@ -996,7 +1051,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	return renderer.finalResult;
 }
 
-+ (NSAttributedString *)renderBodyAsAttributedString:(NSString *)body withAttributes:(NSDictionary<NSString *, id> *)inputDictionary
++ (NSAttributedString *)renderBodyAsAttributedString:(NSString *)body
+									  withAttributes:(NSDictionary<NSString *, id> *)inputDictionary
 {
 	NSParameterAssert(body != nil);
 	NSParameterAssert(inputDictionary != nil);
@@ -1008,7 +1064,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	/* Read inline rather than into a local, which would be unused once
 	 assertions are compiled out of a release build. */
 	NSAssert((inputDictionary[TVCLogRendererConfigurationAttributedStringPreferredFontAttribute] != nil),
-		@"FATAL ERROR: TVCLogRenderer cannot be supplied with a nil 'TVCLogRendererAttributedStringPreferredFontAttribute' attribute when rendering an attributed string");
+			 @"FATAL ERROR: TVCLogRenderer cannot be supplied with a nil "
+			 @"'TVCLogRendererAttributedStringPreferredFontAttribute' attribute when rendering an attributed string");
 
 	TVCLogRenderer *renderer = [self new];
 
@@ -1038,7 +1095,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	return [self renderTemplateNamed:templateName attributes:nil];
 }
 
-+ (nullable NSString *)renderTemplateNamed:(NSString *)templateName attributes:(nullable NSDictionary<NSString *, id> *)templateTokens
++ (nullable NSString *)renderTemplateNamed:(NSString *)templateName
+								attributes:(nullable NSDictionary<NSString *, id> *)templateTokens
 {
 	NSParameterAssert(templateName != nil);
 
@@ -1056,7 +1114,8 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 	return [self renderTemplate:template attributes:nil];
 }
 
-+ (nullable NSString *)renderTemplate:(GRMustacheTemplate *)template attributes:(nullable NSDictionary<NSString *, id> *)templateTokens
++ (nullable NSString *)renderTemplate:(GRMustacheTemplate *)template
+						   attributes:(nullable NSDictionary<NSString *, id> *)templateTokens
 {
 	NSParameterAssert(template != nil);
 
@@ -1105,14 +1164,11 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 {
 	NSParameterAssert(color != nil);
 
-	if ([color isKindOfClass:[NSColor class]])
-	{
+	if ([color isKindOfClass:[NSColor class]]) {
 		*usesStyleTag = YES;
 
 		return [color hexadecimalValue];
-	}
-	else if ([color isKindOfClass:[NSNumber class]])
-	{
+	} else if ([color isKindOfClass:[NSNumber class]]) {
 		return [color stringValue];
 	}
 
@@ -1123,12 +1179,9 @@ NSString * const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute = @"TV
 {
 	NSParameterAssert(color != nil);
 
-	if ([color isKindOfClass:[NSColor class]])
-	{
+	if ([color isKindOfClass:[NSColor class]]) {
 		return color;
-	}
-	else if ([color isKindOfClass:[NSNumber class]])
-	{
+	} else if ([color isKindOfClass:[NSNumber class]]) {
 		return [self mapColorCode:[color unsignedIntegerValue]];
 	}
 

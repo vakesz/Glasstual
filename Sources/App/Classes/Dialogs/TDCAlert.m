@@ -43,11 +43,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> ";
+NSString *const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> ";
 
 @interface TDCAlertContext : NSObject
-@property (nonatomic, copy, nullable) NSString *suppressionKey;
-@property (nonatomic, copy, nullable) TDCAlertCompletionBlock completionBlock;
+@property(nonatomic, copy, nullable) NSString *suppressionKey;
+@property(nonatomic, copy, nullable) TDCAlertCompletionBlock completionBlock;
 @end
 
 @implementation TDCAlert
@@ -60,15 +60,14 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 				defaultButton:(NSString *)buttonDefault
 			  alternateButton:(nullable NSString *)buttonAlternate
 {
-	return
-	[self modalAlertWithMessage:bodyText
-						  title:titleText
-				  defaultButton:buttonDefault
-				alternateButton:buttonAlternate
-				 suppressionKey:nil
-				suppressionText:nil
-				  accessoryView:nil
-			suppressionResponse:NULL];
+	return [self modalAlertWithMessage:bodyText
+								 title:titleText
+						 defaultButton:buttonDefault
+					   alternateButton:buttonAlternate
+						suppressionKey:nil
+					   suppressionText:nil
+						 accessoryView:nil
+				   suppressionResponse:NULL];
 }
 
 + (BOOL)modalAlertWithMessage:(NSString *)bodyText
@@ -78,34 +77,32 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 			   suppressionKey:(nullable NSString *)suppressKey
 			  suppressionText:(nullable NSString *)suppressText
 {
-	return
-	[self modalAlertWithMessage:bodyText
-						  title:titleText
-				  defaultButton:buttonDefault
-				alternateButton:buttonAlternate
-				 suppressionKey:suppressKey
-				suppressionText:suppressText
-				  accessoryView:nil
-			suppressionResponse:NULL];
+	return [self modalAlertWithMessage:bodyText
+								 title:titleText
+						 defaultButton:buttonDefault
+					   alternateButton:buttonAlternate
+						suppressionKey:suppressKey
+					   suppressionText:suppressText
+						 accessoryView:nil
+				   suppressionResponse:NULL];
 }
 
 + (BOOL)modalAlertWithMessage:(NSString *)bodyText
-						 title:(NSString *)titleText
-				 defaultButton:(NSString *)buttonDefault
-			   alternateButton:(nullable NSString *)buttonAlternate
-				suppressionKey:(nullable NSString *)suppressKey
-			   suppressionText:(nullable NSString *)suppressText
-				 accessoryView:(nullable NSView *)accessoryView
+						title:(NSString *)titleText
+				defaultButton:(NSString *)buttonDefault
+			  alternateButton:(nullable NSString *)buttonAlternate
+			   suppressionKey:(nullable NSString *)suppressKey
+			  suppressionText:(nullable NSString *)suppressText
+				accessoryView:(nullable NSView *)accessoryView
 {
-	return
-	[self modalAlertWithMessage:bodyText
-						  title:titleText
-				  defaultButton:buttonDefault
-				alternateButton:buttonAlternate
-				 suppressionKey:suppressKey
-				suppressionText:suppressText
-				  accessoryView:accessoryView
-			suppressionResponse:NULL];
+	return [self modalAlertWithMessage:bodyText
+								 title:titleText
+						 defaultButton:buttonDefault
+					   alternateButton:buttonAlternate
+						suppressionKey:suppressKey
+					   suppressionText:suppressText
+						 accessoryView:accessoryView
+				   suppressionResponse:NULL];
 }
 
 + (BOOL)modalAlertWithMessage:(NSString *)bodyText
@@ -116,15 +113,14 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 			  suppressionText:(nullable NSString *)suppressText
 		  suppressionResponse:(nullable BOOL *)suppressionResponse
 {
-	return
-	[self modalAlertWithMessage:bodyText
-						  title:titleText
-				  defaultButton:buttonDefault
-				alternateButton:buttonAlternate
-				 suppressionKey:suppressKey
-				suppressionText:suppressText
-				  accessoryView:nil
-			suppressionResponse:suppressionResponse];
+	return [self modalAlertWithMessage:bodyText
+								 title:titleText
+						 defaultButton:buttonDefault
+					   alternateButton:buttonAlternate
+						suppressionKey:suppressKey
+					   suppressionText:suppressText
+						 accessoryView:nil
+				   suppressionResponse:suppressionResponse];
 }
 
 + (BOOL)modalAlertWithMessage:(NSString *)bodyText
@@ -136,16 +132,15 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 				accessoryView:(nullable NSView *)accessoryView
 		  suppressionResponse:(nullable BOOL *)suppressionResponse
 {
-	TDCAlertResponse response =
-	[self modalAlertWithMessage:bodyText
-						  title:titleText
-				  defaultButton:buttonDefault
-				alternateButton:buttonAlternate
-					otherButton:nil
-				 suppressionKey:suppressKey
-				suppressionText:suppressText
-				  accessoryView:nil
-			suppressionResponse:nil];
+	TDCAlertResponse response = [self modalAlertWithMessage:bodyText
+													  title:titleText
+											  defaultButton:buttonDefault
+											alternateButton:buttonAlternate
+												otherButton:nil
+											 suppressionKey:suppressKey
+											suppressionText:suppressText
+											  accessoryView:nil
+										suppressionResponse:nil];
 
 	return (response == TDCAlertResponseDefault);
 }
@@ -156,16 +151,15 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 						  alternateButton:(nullable NSString *)buttonAlternate
 							  otherButton:(nullable NSString *)buttonOther
 {
-	return
-	[self modalAlertWithMessage:bodyText
-						  title:titleText
-				  defaultButton:buttonDefault
-				alternateButton:buttonAlternate
-					otherButton:buttonOther
-				 suppressionKey:nil
-				suppressionText:nil
-				  accessoryView:nil
-			suppressionResponse:nil];
+	return [self modalAlertWithMessage:bodyText
+								 title:titleText
+						 defaultButton:buttonDefault
+					   alternateButton:buttonAlternate
+						   otherButton:buttonOther
+						suppressionKey:nil
+					   suppressionText:nil
+						 accessoryView:nil
+				   suppressionResponse:nil];
 }
 
 + (TDCAlertResponse)modalAlertWithMessage:(NSString *)bodyText
@@ -187,16 +181,15 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		__block TDCAlertResponse result = TDCAlertResponseAlternate;
 
 		XRPerformBlockSynchronouslyOnQueue(dispatch_get_main_queue(), ^{
-			result =
-			[self modalAlertWithMessage:bodyText
-								  title:titleText
-						  defaultButton:buttonDefault
-						alternateButton:buttonAlternate
-							otherButton:buttonOther
-						 suppressionKey:suppressKey
-						suppressionText:suppressText
-						  accessoryView:accessoryView
-					suppressionResponse:suppressionResponse];
+			result = [self modalAlertWithMessage:bodyText
+										   title:titleText
+								   defaultButton:buttonDefault
+								 alternateButton:buttonAlternate
+									 otherButton:buttonOther
+								  suppressionKey:suppressKey
+								 suppressionText:suppressText
+								   accessoryView:accessoryView
+							 suppressionResponse:suppressionResponse];
 		});
 
 		return result;
@@ -248,10 +241,10 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 	TDCAlertResponse response = [self _convertResponseFromNSAlert:returnCode];
 
 	[self _finalizeAlert:alert
-			withResponse:response
-		 completionBlock:nil
-		  suppressionKey:suppressKey
-	 suppressionResponse:suppressionResponse];
+			   withResponse:response
+			completionBlock:nil
+			 suppressionKey:suppressKey
+		suppressionResponse:suppressionResponse];
 
 	return response;
 }
@@ -260,168 +253,160 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 #pragma mark Non-blocking Alerts (Panel)
 
 + (NSAlert *)alertWithMessage:(NSString *)bodyText
-						 title:(NSString *)titleText
-				 defaultButton:(NSString *)buttonDefault
-			   alternateButton:(nullable NSString *)buttonAlternate
+						title:(NSString *)titleText
+				defaultButton:(NSString *)buttonDefault
+			  alternateButton:(nullable NSString *)buttonAlternate
 {
 	/* Will never return nil because no suppression. */
-	return (NSAlert * _Nonnull)
-	[self alertWithMessage:bodyText
-					 title:titleText
-			 defaultButton:buttonDefault
-		   alternateButton:buttonAlternate
-			   otherButton:nil
-			suppressionKey:nil
-		   suppressionText:nil
-			 accessoryView:nil
-		   completionBlock:nil];
+	return (NSAlert *_Nonnull)[self alertWithMessage:bodyText
+											   title:titleText
+									   defaultButton:buttonDefault
+									 alternateButton:buttonAlternate
+										 otherButton:nil
+									  suppressionKey:nil
+									 suppressionText:nil
+									   accessoryView:nil
+									 completionBlock:nil];
 }
 
 + (NSAlert *)alertWithMessage:(NSString *)bodyText
-						 title:(NSString *)titleText
-				 defaultButton:(NSString *)buttonDefault
-			   alternateButton:(nullable NSString *)buttonAlternate
-				   otherButton:(nullable NSString *)buttonOther
+						title:(NSString *)titleText
+				defaultButton:(NSString *)buttonDefault
+			  alternateButton:(nullable NSString *)buttonAlternate
+				  otherButton:(nullable NSString *)buttonOther
 {
-	return (NSAlert * _Nonnull)
-	[self alertWithMessage:bodyText
-					 title:titleText
-			 defaultButton:buttonDefault
-		   alternateButton:buttonAlternate
-			   otherButton:buttonOther
-			suppressionKey:nil
-		   suppressionText:nil
-			 accessoryView:nil
-		   completionBlock:nil];
+	return (NSAlert *_Nonnull)[self alertWithMessage:bodyText
+											   title:titleText
+									   defaultButton:buttonDefault
+									 alternateButton:buttonAlternate
+										 otherButton:buttonOther
+									  suppressionKey:nil
+									 suppressionText:nil
+									   accessoryView:nil
+									 completionBlock:nil];
 }
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText
 {
-	return
-	[self alertWithMessage:bodyText
-					 title:titleText
-			 defaultButton:buttonDefault
-		   alternateButton:buttonAlternate
-			   otherButton:nil
-			suppressionKey:suppressKey
-		   suppressionText:suppressText
-			 accessoryView:nil
-		   completionBlock:nil];
+	return [self alertWithMessage:bodyText
+							title:titleText
+					defaultButton:buttonDefault
+				  alternateButton:buttonAlternate
+					  otherButton:nil
+				   suppressionKey:suppressKey
+				  suppressionText:suppressText
+					accessoryView:nil
+				  completionBlock:nil];
 }
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
 {
-	return
-	[self alertWithMessage:bodyText
-					 title:titleText
-			 defaultButton:buttonDefault
-		   alternateButton:buttonAlternate
-			   otherButton:nil
-			suppressionKey:nil
-		   suppressionText:nil
-			 accessoryView:nil
-		   completionBlock:completionBlock];
+	return [self alertWithMessage:bodyText
+							title:titleText
+					defaultButton:buttonDefault
+				  alternateButton:buttonAlternate
+					  otherButton:nil
+				   suppressionKey:nil
+				  suppressionText:nil
+					accessoryView:nil
+				  completionBlock:completionBlock];
 }
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-							otherButton:(nullable NSString *)buttonOther
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						   otherButton:(nullable NSString *)buttonOther
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
 {
-	return
-	[self alertWithMessage:bodyText
-					 title:titleText
-			 defaultButton:buttonDefault
-		   alternateButton:buttonAlternate
-			   otherButton:buttonOther
-			suppressionKey:nil
-		   suppressionText:nil
-			 accessoryView:nil
-		   completionBlock:completionBlock];
+	return [self alertWithMessage:bodyText
+							title:titleText
+					defaultButton:buttonDefault
+				  alternateButton:buttonAlternate
+					  otherButton:buttonOther
+				   suppressionKey:nil
+				  suppressionText:nil
+					accessoryView:nil
+				  completionBlock:completionBlock];
 }
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
 {
-	return
-	[self alertWithMessage:bodyText
-					 title:titleText
-			 defaultButton:buttonDefault
-		   alternateButton:buttonAlternate
-			   otherButton:nil
-			suppressionKey:suppressKey
-		   suppressionText:suppressText
-			 accessoryView:nil
-		   completionBlock:completionBlock];
+	return [self alertWithMessage:bodyText
+							title:titleText
+					defaultButton:buttonDefault
+				  alternateButton:buttonAlternate
+					  otherButton:nil
+				   suppressionKey:suppressKey
+				  suppressionText:suppressText
+					accessoryView:nil
+				  completionBlock:completionBlock];
 }
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-							otherButton:(nullable NSString *)buttonOther
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						   otherButton:(nullable NSString *)buttonOther
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
 {
-	return
-	[self alertWithMessage:bodyText
-					 title:titleText
-			 defaultButton:buttonDefault
-		   alternateButton:buttonAlternate
-			   otherButton:buttonOther
-			suppressionKey:suppressKey
-		   suppressionText:suppressText
-			 accessoryView:nil
-		   completionBlock:completionBlock];
+	return [self alertWithMessage:bodyText
+							title:titleText
+					defaultButton:buttonDefault
+				  alternateButton:buttonAlternate
+					  otherButton:buttonOther
+				   suppressionKey:suppressKey
+				  suppressionText:suppressText
+					accessoryView:nil
+				  completionBlock:completionBlock];
 }
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText
-						  accessoryView:(nullable NSView *)accessoryView
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText
+						 accessoryView:(nullable NSView *)accessoryView
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
 {
-	return
-	[self alertWithMessage:bodyText
-					 title:titleText
-			 defaultButton:buttonDefault
-		   alternateButton:buttonAlternate
-			   otherButton:nil
-			suppressionKey:suppressKey
-		   suppressionText:suppressText
-			 accessoryView:accessoryView
-		   completionBlock:completionBlock];
+	return [self alertWithMessage:bodyText
+							title:titleText
+					defaultButton:buttonDefault
+				  alternateButton:buttonAlternate
+					  otherButton:nil
+				   suppressionKey:suppressKey
+				  suppressionText:suppressText
+					accessoryView:accessoryView
+				  completionBlock:completionBlock];
 }
 
 + (nullable NSAlert *)alertWithMessage:(NSString *)bodyText
-								  title:(NSString *)titleText
-						  defaultButton:(NSString *)buttonDefault
-						alternateButton:(nullable NSString *)buttonAlternate
-							otherButton:(nullable NSString *)buttonOther
-						 suppressionKey:(nullable NSString *)suppressKey
-						suppressionText:(nullable NSString *)suppressText
-						  accessoryView:(nullable NSView *)accessoryView
-						completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
+								 title:(NSString *)titleText
+						 defaultButton:(NSString *)buttonDefault
+					   alternateButton:(nullable NSString *)buttonAlternate
+						   otherButton:(nullable NSString *)buttonOther
+						suppressionKey:(nullable NSString *)suppressKey
+					   suppressionText:(nullable NSString *)suppressText
+						 accessoryView:(nullable NSView *)accessoryView
+					   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
 {
 	NSParameterAssert(bodyText != nil);
 	NSParameterAssert(titleText != nil);
@@ -432,15 +417,14 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 		__block NSAlert *alert = nil;
 
 		XRPerformBlockSynchronouslyOnQueue(dispatch_get_main_queue(), ^{
-			alert =
-			[self alertWithMessage:bodyText
-							 title:titleText
-					 defaultButton:buttonDefault
-				   alternateButton:buttonAlternate
-					suppressionKey:suppressKey
-				   suppressionText:suppressText
-					 accessoryView:accessoryView
-				   completionBlock:completionBlock];
+			alert = [self alertWithMessage:bodyText
+									 title:titleText
+							 defaultButton:buttonDefault
+						   alternateButton:buttonAlternate
+							suppressionKey:suppressKey
+						   suppressionText:suppressText
+							 accessoryView:accessoryView
+						   completionBlock:completionBlock];
 		});
 
 		return alert;
@@ -505,9 +489,10 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 	NSWindow *hostWindow = mainWindow();
 
 	if (hostWindow.isVisible) {
-		[alert beginSheetModalForWindow:hostWindow completionHandler:^(NSModalResponse returnCode) {
-			[self _alertSheetResponseCallback:alert returnCode:returnCode contextInfo:context];
-		}];
+		[alert beginSheetModalForWindow:hostWindow
+					  completionHandler:^(NSModalResponse returnCode) {
+						  [self _alertSheetResponseCallback:alert returnCode:returnCode contextInfo:context];
+					  }];
 	} else {
 		/* Return to the caller before blocking so that this method stays
 		 non-blocking regardless of how the alert is presented. */
@@ -692,22 +677,25 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 	context.completionBlock = completionBlock;
 
 	/* Pop alert */
-	[alert beginSheetModalForWindow:window completionHandler:^(NSModalResponse returnCode) {
-		[self _alertSheetResponseCallback:alert returnCode:returnCode contextInfo:context];
-	}];
+	[alert beginSheetModalForWindow:window
+				  completionHandler:^(NSModalResponse returnCode) {
+					  [self _alertSheetResponseCallback:alert returnCode:returnCode contextInfo:context];
+				  }];
 }
 
-+ (void)_alertSheetResponseCallback:(NSAlert *)alert returnCode:(NSInteger)returnCode contextInfo:(TDCAlertContext *)context
++ (void)_alertSheetResponseCallback:(NSAlert *)alert
+						 returnCode:(NSInteger)returnCode
+						contextInfo:(TDCAlertContext *)context
 {
 	NSString *suppressionKey = context.suppressionKey;
 
 	TDCAlertCompletionBlock completionBlock = context.completionBlock;
 
 	[self _finalizeAlert:alert
-			withResponse:[self _convertResponseFromNSAlert:returnCode]
-		 completionBlock:completionBlock
-		  suppressionKey:suppressionKey
-	 suppressionResponse:NULL];
+			   withResponse:[self _convertResponseFromNSAlert:returnCode]
+			completionBlock:completionBlock
+			 suppressionKey:suppressionKey
+		suppressionResponse:NULL];
 }
 
 #pragma mark -
@@ -725,14 +713,14 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 }
 
 + (void)_finalizeAlert:(nullable id)underlyingAlert
-		  withResponse:(TDCAlertResponse)response
-	   completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
-		suppressionKey:(nullable NSString *)suppressionKey
-   suppressionResponse:(nullable BOOL *)suppressionResponse
+		   withResponse:(TDCAlertResponse)response
+		completionBlock:(nullable TDCAlertCompletionBlock)completionBlock
+		 suppressionKey:(nullable NSString *)suppressionKey
+	suppressionResponse:(nullable BOOL *)suppressionResponse
 {
 	BOOL suppressed = [self _recordSuppressionForButton:[underlyingAlert suppressionButton] withKey:suppressionKey];
 
-	if ( suppressionResponse) {
+	if (suppressionResponse) {
 		*suppressionResponse = suppressed;
 	}
 
@@ -763,18 +751,15 @@ NSString * const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> 
 + (TDCAlertResponse)_convertResponseFromNSAlert:(NSUInteger)response
 {
 	switch (response) {
-		case NSAlertSecondButtonReturn:
-		{
-			return TDCAlertResponseAlternate;
-		}
-		case NSAlertThirdButtonReturn:
-		{
-			return TDCAlertResponseOther;
-		}
-		default:
-		{
-			return TDCAlertResponseDefault;
-		}
+	case NSAlertSecondButtonReturn: {
+		return TDCAlertResponseAlternate;
+	}
+	case NSAlertThirdButtonReturn: {
+		return TDCAlertResponseOther;
+	}
+	default: {
+		return TDCAlertResponseDefault;
+	}
 	}
 }
 

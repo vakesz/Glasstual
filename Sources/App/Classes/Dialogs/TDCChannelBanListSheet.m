@@ -47,22 +47,22 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCChannelBanListSheetEntry : NSObject
-@property (nonatomic, copy) NSString *entryMask;
-@property (nonatomic, copy) NSString *entryAuthor;
-@property (readonly, copy) NSString *entryCreationDateString;
-@property (nonatomic, copy, nullable) NSDate *entryCreationDate;
+@property(nonatomic, copy) NSString *entryMask;
+@property(nonatomic, copy) NSString *entryAuthor;
+@property(readonly, copy) NSString *entryCreationDateString;
+@property(nonatomic, copy, nullable) NSDate *entryCreationDate;
 @end
 
 @interface TDCChannelBanListSheet ()
-@property (nonatomic, strong, readwrite) IRCClient *client;
-@property (nonatomic, strong, readwrite) IRCChannel *channel;
-@property (nonatomic, copy, readwrite) NSString *clientId;
-@property (nonatomic, copy, readwrite) NSString *channelId;
-@property (nonatomic, assign, readwrite) TDCChannelBanListSheetEntryType entryType;
-@property (nonatomic, copy, readwrite, nullable) NSArray<NSString *> *listOfChanges;
-@property (nonatomic, weak) IBOutlet NSTextField *headerTitleTextField;
-@property (nonatomic, weak) IBOutlet TVCBasicTableView *entryTable;
-@property (nonatomic, strong) IBOutlet NSArrayController *entryTableController;
+@property(nonatomic, strong, readwrite) IRCClient *client;
+@property(nonatomic, strong, readwrite) IRCChannel *channel;
+@property(nonatomic, copy, readwrite) NSString *clientId;
+@property(nonatomic, copy, readwrite) NSString *channelId;
+@property(nonatomic, assign, readwrite) TDCChannelBanListSheetEntryType entryType;
+@property(nonatomic, copy, readwrite, nullable) NSArray<NSString *> *listOfChanges;
+@property(nonatomic, weak) IBOutlet NSTextField *headerTitleTextField;
+@property(nonatomic, weak) IBOutlet TVCBasicTableView *entryTable;
+@property(nonatomic, strong) IBOutlet NSArrayController *entryTableController;
 
 - (IBAction)onUpdate:(nullable id)sender;
 - (IBAction)onRemoveEntry:(nullable id)sender;
@@ -99,9 +99,9 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[RZMainBundle() loadNibNamed:@"TDCChannelBanListSheet" owner:self topLevelObjects:nil];
 
-	self.entryTable.sortDescriptors = @[
-		[NSSortDescriptor sortDescriptorWithKey:@"entryCreationDate" ascending:NO selector:@selector(compare:)]
-	];
+	self.entryTable.sortDescriptors = @[ [NSSortDescriptor sortDescriptorWithKey:@"entryCreationDate"
+																	   ascending:NO
+																		selector:@selector(compare:)] ];
 
 	NSString *headerTitle = nil;
 
@@ -128,7 +128,9 @@ NS_ASSUME_NONNULL_BEGIN
 	self.entryTableController.content = nil;
 }
 
-- (void)addEntry:(NSString *)entryMask setBy:(nullable NSString *)entryAuthor creationDate:(nullable NSDate *)entryCreationDate
+- (void)addEntry:(NSString *)entryMask
+		   setBy:(nullable NSString *)entryAuthor
+	creationDate:(nullable NSDate *)entryCreationDate
 {
 	NSParameterAssert(entryMask != nil);
 
@@ -178,10 +180,9 @@ NS_ASSUME_NONNULL_BEGIN
 		[selectedEntries addObject:entryItem.entryMask];
 	}];
 
-	self.listOfChanges =
-	[self.client compileListOfModeChangesForModeSymbol:self.modeSymbol
-											 modeIsSet:NO
-										modeParameters:selectedEntries];
+	self.listOfChanges = [self.client compileListOfModeChangesForModeSymbol:self.modeSymbol
+																  modeIsSet:NO
+															 modeParameters:selectedEntries];
 
 	[super cancel:nil];
 }

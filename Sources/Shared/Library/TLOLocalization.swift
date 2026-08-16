@@ -59,39 +59,40 @@
 ///
 /// Performs localization with a special key
 ///
-public func LocalizedKey(_ key: String, _ arguments: CVarArg..., table: String = "BasicLanguage", bundle: Bundle = Bundle.main) -> String
-{
+// swift-format-ignore: AlwaysUseLowerCamelCase
+public func LocalizedKey(
+	_ key: String, _ arguments: CVarArg..., table: String = "BasicLanguage", bundle: Bundle = Bundle.main
+) -> String {
 	return localize(string: key, arguments: arguments, table: table, bundle: bundle, specialKey: true)
 }
 
 ///
 /// Performs localization with input string
 ///
-public func LocalizedString(_ string: String, _ arguments: CVarArg..., table: String = "BasicLanguage", bundle: Bundle = Bundle.main) -> String
-{
+// swift-format-ignore: AlwaysUseLowerCamelCase
+public func LocalizedString(
+	_ string: String, _ arguments: CVarArg..., table: String = "BasicLanguage", bundle: Bundle = Bundle.main
+) -> String {
 	return localize(string: string, arguments: arguments, table: table, bundle: bundle, specialKey: false)
 }
 
 @inline(__always)
-fileprivate func localize(string: String, arguments: [CVarArg], table: String, bundle: Bundle, specialKey: Bool) -> String
-{
+private func localize(string: String, arguments: [CVarArg], table: String, bundle: Bundle, specialKey: Bool) -> String {
 	let formatter = String(localized: string, table: table, bundle: bundle, specialKey: specialKey)
 
-	if (arguments.isEmpty) {
+	if arguments.isEmpty {
 		return formatter
 	}
 
 	return String(format: formatter, arguments: arguments)
 }
 
-fileprivate extension String
-{
-	init (localized string: String, table: String, bundle: Bundle, specialKey: Bool)
-	{
+fileprivate extension String {
+	init(localized string: String, table: String, bundle: Bundle, specialKey: Bool) {
 		guard specialKey,
 			let openBracket = string.firstIndex(of: "["),
-			let closeBracket = string.firstIndex(of: "]") else
-		{
+			let closeBracket = string.firstIndex(of: "]")
+		else {
 			self = bundle.localizedString(forKey: string, value: nil, table: table)
 
 			return
@@ -99,8 +100,8 @@ fileprivate extension String
 
 		/* Given keys in the format "<table>[<key>]",
 		extract the two values and lookup the result. */
-		let tableName = String(string[string.startIndex ..< openBracket])
-		let tableKey = String(string[(string.index(openBracket, offsetBy: 1)) ..< closeBracket])
+		let tableName = String(string[string.startIndex..<openBracket])
+		let tableKey = String(string[(string.index(openBracket, offsetBy: 1))..<closeBracket])
 
 		/* Backwards compatibility for plugins */
 		//
@@ -120,7 +121,7 @@ fileprivate extension String
 		//
 		// If a dash is present, then we use the original input string as key.
 		//
-		if (tableKey.contains("-")) {
+		if tableKey.contains("-") {
 			self = bundle.localizedString(forKey: tableKey, value: nil, table: tableName)
 		} else {
 			self = bundle.localizedString(forKey: string, value: nil, table: tableName)
@@ -134,11 +135,9 @@ fileprivate extension String
 // Those functions will perform argument formatting on their end
 // given the result because you can't pass arguments from C -> Swift.
 //
-extension NSString
-{
+extension NSString {
 	@objc(_swift_localizedKey:bundle:)
-	class func localize(key: String, bundle: Bundle) -> NSString
-	{
+	class func localize(key: String, bundle: Bundle) -> NSString {
 		return String(localized: key, table: "BasicLanguage", bundle: bundle, specialKey: true) as NSString
 	}
 }

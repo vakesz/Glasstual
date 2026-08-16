@@ -42,22 +42,22 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Immutable Object
 
 @interface IRCPrefix : XRPortablePropertyObject
-@property (readonly) BOOL isServer;
-@property (readonly, copy) NSString *hostmask; // Defaults to empty string
-@property (readonly, copy) NSString *nickname; // Defaults to empty string
-@property (readonly, copy, nullable) NSString *username;
-@property (readonly, copy, nullable) NSString *address;
+@property(readonly) BOOL isServer;
+@property(readonly, copy) NSString *hostmask; // Defaults to empty string
+@property(readonly, copy) NSString *nickname; // Defaults to empty string
+@property(readonly, copy, nullable) NSString *username;
+@property(readonly, copy, nullable) NSString *address;
 @end
 
 #pragma mark -
 #pragma mark Mutable Object
 
 @interface IRCPrefixMutable : IRCPrefix
-@property (nonatomic, assign, readwrite) BOOL isServer;
-@property (nonatomic, copy, readwrite) NSString *hostmask;
-@property (nonatomic, copy, readwrite) NSString *nickname;
-@property (nonatomic, copy, readwrite, nullable) NSString *username;
-@property (nonatomic, copy, readwrite, nullable) NSString *address;
+@property(nonatomic, assign, readwrite) BOOL isServer;
+@property(nonatomic, copy, readwrite) NSString *hostmask;
+@property(nonatomic, copy, readwrite) NSString *nickname;
+@property(nonatomic, copy, readwrite, nullable) NSString *username;
+@property(nonatomic, copy, readwrite, nullable) NSString *address;
 @end
 
 NS_ASSUME_NONNULL_END

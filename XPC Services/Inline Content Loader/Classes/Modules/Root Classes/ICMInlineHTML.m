@@ -47,8 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	ICLPayloadMutable *payload = self.payload;
 
-	NSDictionary *templateAttributes =
-	@{
+	NSDictionary *templateAttributes = @{
 		@"classAttribute" : payload.classAttribute,
 		@"unescapedHTML" : unescapedHTML,
 		@"uniqueIdentifier" : payload.uniqueIdentifier
@@ -96,10 +95,9 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		styleResources =
-		@[
-		  [RZMainBundle() URLForResource:@"ICMInlineHTML" withExtension:@"css" subdirectory:@"Components"]
-		];
+		styleResources = @[ [RZMainBundle() URLForResource:@"ICMInlineHTML"
+											 withExtension:@"css"
+											  subdirectory:@"Components"] ];
 	});
 
 	return styleResources;
@@ -112,10 +110,9 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		scriptResources =
-		@[
-		  [RZMainBundle() URLForResource:@"ICMInlineHTML" withExtension:@"js" subdirectory:@"Components"]
-		];
+		scriptResources = @[ [RZMainBundle() URLForResource:@"ICMInlineHTML"
+											  withExtension:@"js"
+											   subdirectory:@"Components"] ];
 	});
 
 	return scriptResources;

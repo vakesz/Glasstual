@@ -41,7 +41,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCProgressIndicatorSheet ()
-@property (nonatomic, weak) IBOutlet NSProgressIndicator *progressIndicator;
+@property(nonatomic, weak) IBOutlet NSProgressIndicator *progressIndicator;
 @end
 
 @implementation TDCProgressIndicatorSheet

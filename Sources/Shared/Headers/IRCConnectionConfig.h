@@ -37,12 +37,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define IRCConnectionConfigFloodControlDefaultDelayInterval					2
-#define IRCConnectionConfigFloodControlMinimumDelayInterval					1
-#define IRCConnectionConfigFloodControlMaximumDelayInterval					60
-#define IRCConnectionConfigFloodControlDefaultMessageCount					6
-#define IRCConnectionConfigFloodControlMinimumMessageCount					1
-#define IRCConnectionConfigFloodControlMaximumMessageCount					60
+#define IRCConnectionConfigFloodControlDefaultDelayInterval 2
+#define IRCConnectionConfigFloodControlMinimumDelayInterval 1
+#define IRCConnectionConfigFloodControlMaximumDelayInterval 60
+#define IRCConnectionConfigFloodControlDefaultMessageCount 6
+#define IRCConnectionConfigFloodControlMinimumMessageCount 1
+#define IRCConnectionConfigFloodControlMaximumMessageCount 60
 
 GLASSTUAL_EXTERN uint16_t const IRCConnectionDefaultServerPort;
 GLASSTUAL_EXTERN uint16_t const IRCConnectionDefaultProxyPort;
@@ -59,59 +59,56 @@ typedef NS_ENUM(NSUInteger, IRCConnectionProxyType) {
 
 /* Select specific protocol to use. This does not define preference.
  When a specific protocol is enabled, its counterpart is disabled. */
-typedef NS_ENUM(NSUInteger, IRCConnectionAddressType)
-{
+typedef NS_ENUM(NSUInteger, IRCConnectionAddressType) {
 	IRCConnectionAddressTypeDefault = 0, // enable both
-	IRCConnectionAddressTypeIPv4 NS_SWIFT_NAME(v4) = 1,
-	IRCConnectionAddressTypeIPv6 NS_SWIFT_NAME(v6) = 2
-};
+	IRCConnectionAddressTypeIPv4 NS_SWIFT_NAME(v4) = 1, IRCConnectionAddressTypeIPv6 NS_SWIFT_NAME(v6) = 2 };
 
 #pragma mark -
 #pragma mark Immutable Object
 
 @interface IRCConnectionConfig : XRPortablePropertyObject
-@property (readonly) BOOL connectionPrefersModernCiphersOnly;
-@property (readonly) BOOL connectionPrefersModernSockets;
-@property (readonly) BOOL connectionPrefersSecuredConnection;
-@property (readonly) BOOL connectionShouldValidateCertificateChain;
-@property (readonly) IRCConnectionAddressType addressType;
-@property (readonly) IRCConnectionProxyType proxyType;
-@property (readonly) NSUInteger floodControlDelayInterval;
-@property (readonly) NSUInteger floodControlMaximumMessages;
-@property (readonly) uint16_t proxyPort;
-@property (readonly) uint16_t serverPort;
-@property (readonly, copy) NSString *serverAddress;
-@property (readonly, copy, nullable) NSString *proxyAddress;
-@property (readonly, copy, nullable) NSString *proxyPassword;
-@property (readonly, copy, nullable) NSString *proxyUsername;
-@property (readonly, copy, nullable) NSData *identityClientSideCertificate;
-@property (readonly) NSStringEncoding primaryEncoding NS_UNAVAILABLE;
-@property (readonly) NSStringEncoding fallbackEncoding NS_UNAVAILABLE;
-@property (readonly) RCMCipherSuiteCollection cipherSuites;
+@property(readonly) BOOL connectionPrefersModernCiphersOnly;
+@property(readonly) BOOL connectionPrefersModernSockets;
+@property(readonly) BOOL connectionPrefersSecuredConnection;
+@property(readonly) BOOL connectionShouldValidateCertificateChain;
+@property(readonly) IRCConnectionAddressType addressType;
+@property(readonly) IRCConnectionProxyType proxyType;
+@property(readonly) NSUInteger floodControlDelayInterval;
+@property(readonly) NSUInteger floodControlMaximumMessages;
+@property(readonly) uint16_t proxyPort;
+@property(readonly) uint16_t serverPort;
+@property(readonly, copy) NSString *serverAddress;
+@property(readonly, copy, nullable) NSString *proxyAddress;
+@property(readonly, copy, nullable) NSString *proxyPassword;
+@property(readonly, copy, nullable) NSString *proxyUsername;
+@property(readonly, copy, nullable) NSData *identityClientSideCertificate;
+@property(readonly) NSStringEncoding primaryEncoding NS_UNAVAILABLE;
+@property(readonly) NSStringEncoding fallbackEncoding NS_UNAVAILABLE;
+@property(readonly) RCMCipherSuiteCollection cipherSuites;
 @end
 
 #pragma mark -
 #pragma mark Mutable Object
 
 @interface IRCConnectionConfigMutable : IRCConnectionConfig
-@property (nonatomic, assign, readwrite) BOOL connectionPrefersModernCiphersOnly;
-@property (nonatomic, assign, readwrite) BOOL connectionPrefersModernSockets;
-@property (nonatomic, assign, readwrite) BOOL connectionPrefersSecuredConnection;
-@property (nonatomic, assign, readwrite) BOOL connectionShouldValidateCertificateChain;
-@property (nonatomic, assign, readwrite) IRCConnectionAddressType addressType;
-@property (nonatomic, assign, readwrite) IRCConnectionProxyType proxyType;
-@property (nonatomic, assign, readwrite) NSUInteger floodControlDelayInterval;
-@property (nonatomic, assign, readwrite) NSUInteger floodControlMaximumMessages;
-@property (nonatomic, assign, readwrite) uint16_t proxyPort;
-@property (nonatomic, assign, readwrite) uint16_t serverPort;
-@property (nonatomic, copy, readwrite) NSString *serverAddress;
-@property (nonatomic, copy, readwrite, nullable) NSString *proxyAddress;
-@property (nonatomic, copy, readwrite, nullable) NSString *proxyPassword;
-@property (nonatomic, copy, readwrite, nullable) NSString *proxyUsername;
-@property (nonatomic, copy, readwrite, nullable) NSData *identityClientSideCertificate;
-@property (nonatomic, assign, readwrite) NSStringEncoding primaryEncoding NS_UNAVAILABLE;
-@property (nonatomic, assign, readwrite) NSStringEncoding fallbackEncoding NS_UNAVAILABLE;
-@property (nonatomic, assign, readwrite) RCMCipherSuiteCollection cipherSuites;
+@property(nonatomic, assign, readwrite) BOOL connectionPrefersModernCiphersOnly;
+@property(nonatomic, assign, readwrite) BOOL connectionPrefersModernSockets;
+@property(nonatomic, assign, readwrite) BOOL connectionPrefersSecuredConnection;
+@property(nonatomic, assign, readwrite) BOOL connectionShouldValidateCertificateChain;
+@property(nonatomic, assign, readwrite) IRCConnectionAddressType addressType;
+@property(nonatomic, assign, readwrite) IRCConnectionProxyType proxyType;
+@property(nonatomic, assign, readwrite) NSUInteger floodControlDelayInterval;
+@property(nonatomic, assign, readwrite) NSUInteger floodControlMaximumMessages;
+@property(nonatomic, assign, readwrite) uint16_t proxyPort;
+@property(nonatomic, assign, readwrite) uint16_t serverPort;
+@property(nonatomic, copy, readwrite) NSString *serverAddress;
+@property(nonatomic, copy, readwrite, nullable) NSString *proxyAddress;
+@property(nonatomic, copy, readwrite, nullable) NSString *proxyPassword;
+@property(nonatomic, copy, readwrite, nullable) NSString *proxyUsername;
+@property(nonatomic, copy, readwrite, nullable) NSData *identityClientSideCertificate;
+@property(nonatomic, assign, readwrite) NSStringEncoding primaryEncoding NS_UNAVAILABLE;
+@property(nonatomic, assign, readwrite) NSStringEncoding fallbackEncoding NS_UNAVAILABLE;
+@property(nonatomic, assign, readwrite) RCMCipherSuiteCollection cipherSuites;
 @end
 
 NS_ASSUME_NONNULL_END

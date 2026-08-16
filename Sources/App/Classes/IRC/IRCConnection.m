@@ -52,18 +52,18 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCConnection ()
-@property (nonatomic, weak, readwrite) IRCClient *client;
-@property (nonatomic, strong) NSXPCConnection *serviceConnection;
-@property (nonatomic, strong, nullable) SFCertificateTrustPanel *trustPanel;
-@property (nonatomic, assign) BOOL trustPanelDoNotInvokeCompletionBlock;
-@property (nonatomic, assign) BOOL connectionInvalidatedVoluntarily;
-@property (nonatomic, copy, readwrite) NSString *uniqueIdentifier;
+@property(nonatomic, weak, readwrite) IRCClient *client;
+@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, strong, nullable) SFCertificateTrustPanel *trustPanel;
+@property(nonatomic, assign) BOOL trustPanelDoNotInvokeCompletionBlock;
+@property(nonatomic, assign) BOOL connectionInvalidatedVoluntarily;
+@property(nonatomic, copy, readwrite) NSString *uniqueIdentifier;
 @end
 
 @implementation IRCConnection
 
 #pragma mark -
-#pragma mark Initialization 
+#pragma mark Initialization
 
 - (instancetype)init
 {
@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
 		self.client = client;
 
 		self.config = config;
-		
+
 		self.uniqueIdentifier = [NSString stringWithUUID];
 	}
 
@@ -130,13 +130,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)warmProcess
 {
-	NSXPCConnection *serviceConnection = [[NSXPCConnection alloc] initWithServiceName:@"com.vakesz.glasstual.IRCConnectionHost"];
+	NSXPCConnection *serviceConnection =
+		[[NSXPCConnection alloc] initWithServiceName:@"com.vakesz.glasstual.IRCConnectionHost"];
 
-	NSXPCInterface *remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(RCMConnectionManagerServerProtocol)];
+	NSXPCInterface *remoteObjectInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(RCMConnectionManagerServerProtocol)];
 
 	serviceConnection.remoteObjectInterface = remoteObjectInterface;
 
-	NSXPCInterface *exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(RCMConnectionManagerClientProtocol)];
+	NSXPCInterface *exportedInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(RCMConnectionManagerClientProtocol)];
 
 	serviceConnection.exportedInterface = exportedInterface;
 
@@ -171,14 +174,12 @@ NS_ASSUME_NONNULL_BEGIN
 	/* -ircConnectionDidDisconnectWithError: instructs the process to
 	 voluntarily invalidate, so if we reach here, then its pretty certain
 	 something big happened and we need to let the client know. */
-	if ((self.isConnecting || self.isConnected) &&
-		self.connectionInvalidatedVoluntarily == NO)
-	{
+	if ((self.isConnecting || self.isConnected) && self.connectionInvalidatedVoluntarily == NO) {
 		NSString *errorMessage = TXTLS(@"IRC[vdy-jk]");
 
 		NSError *error = [NSError errorWithDomain:IRCConnectionErrorDomain
 											 code:IRCConnectionErrorCodeOther
-										 userInfo:@{ NSLocalizedDescriptionKey : errorMessage }];
+										 userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
 
 		[self _ircConnectionDidDisconnectWithError:error];
 	}
@@ -186,16 +187,15 @@ NS_ASSUME_NONNULL_BEGIN
 	[self resetState];
 }
 
-- (id <RCMConnectionManagerServerProtocol>)remoteObjectProxy
+- (id<RCMConnectionManagerServerProtocol>)remoteObjectProxy
 {
 	return [self remoteObjectProxyWithErrorHandler:nil];
 }
 
-- (id <RCMConnectionManagerServerProtocol>)remoteObjectProxyWithErrorHandler:(void (^ _Nullable)(NSError *error))handler
+- (id<RCMConnectionManagerServerProtocol>)remoteObjectProxyWithErrorHandler:(void (^_Nullable)(NSError *error))handler
 {
 	return [self.serviceConnection remoteObjectProxyWithErrorHandler:^(NSError *error) {
-		LogToConsoleError("Error occurred while communicating with service: %{public}@",
-			  error.localizedDescription);
+		LogToConsoleError("Error occurred while communicating with service: %{public}@", error.localizedDescription);
 
 		if (handler) {
 			handler(error);
@@ -257,12 +257,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)openSecuredConnectionCertificateModal
 {
-	[[self remoteObjectProxy] exportSecureConnectionInformation:^(NSString * _Nullable policyName, tls_protocol_version_t protocolType, tls_ciphersuite_t cipherSuites, NSArray<NSData *> *certificateChain) {
+	[[self remoteObjectProxy] exportSecureConnectionInformation:^(NSString *_Nullable policyName,
+																  tls_protocol_version_t protocolType,
+																  tls_ciphersuite_t cipherSuites,
+																  NSArray<NSData *> *certificateChain) {
 		if (policyName == nil) {
 			return;
 		}
 
-		SecTrustRef trustRef = [RCMSecureTransport trustFromCertificateChain:certificateChain withPolicyName:policyName];
+		SecTrustRef trustRef = [RCMSecureTransport trustFromCertificateChain:certificateChain
+															  withPolicyName:policyName];
 
 		if (trustRef == NULL) {
 			return;
@@ -304,16 +308,15 @@ NS_ASSUME_NONNULL_BEGIN
 			window = [NSApp keyWindow];
 		});
 
-		(void)
-		[RCMTrustPanel presentTrustPanelInWindow:window
-											body:promptInformativeText
-										   title:promptTitleText
-								   defaultButton:defaultButtonTitle
-								 alternateButton:alternateButtonTitle
-										trustRef:trustRef
-								 completionBlock:^(SecTrustRef trustRef, BOOL trusted, id contextInfo) {
-									 CFRelease(trustRef);
-								 }];
+		(void)[RCMTrustPanel presentTrustPanelInWindow:window
+												  body:promptInformativeText
+												 title:promptTitleText
+										 defaultButton:defaultButtonTitle
+									   alternateButton:alternateButtonTitle
+											  trustRef:trustRef
+									   completionBlock:^(SecTrustRef trustRef, BOOL trusted, id contextInfo) {
+										   CFRelease(trustRef);
+									   }];
 	}];
 }
 
@@ -323,12 +326,16 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[[self remoteObjectProxy] exportSecureConnectionInformation:^(NSString * _Nullable policyName, tls_protocol_version_t protocolType, tls_ciphersuite_t cipherSuites, NSArray<NSData *> *certificateChain) {
+	[[self remoteObjectProxy] exportSecureConnectionInformation:^(NSString *_Nullable policyName,
+																  tls_protocol_version_t protocolType,
+																  tls_ciphersuite_t cipherSuites,
+																  NSArray<NSData *> *certificateChain) {
 		if (policyName == nil) {
 			return;
 		}
 
-		SecTrustRef trustRef = [RCMSecureTransport trustFromCertificateChain:certificateChain withPolicyName:policyName];
+		SecTrustRef trustRef = [RCMSecureTransport trustFromCertificateChain:certificateChain
+															  withPolicyName:policyName];
 
 		if (trustRef == NULL) {
 			return;
@@ -343,26 +350,26 @@ NS_ASSUME_NONNULL_BEGIN
 		__weak typeof(self) weakSelf = self;
 
 		self.trustPanel =
-		[RCMTrustPanel presentTrustPanelInWindow:nil
-											body:promptInformativeText
-										   title:promptTitleText
-								   defaultButton:defaultButtonTitle
-								 alternateButton:alternateButtonTitle
-										trustRef:trustRef
-								 completionBlock:^(SecTrustRef trustRef, BOOL trusted, id contextInfo) {
-									 CFRelease(trustRef);
+			[RCMTrustPanel presentTrustPanelInWindow:nil
+												body:promptInformativeText
+											   title:promptTitleText
+									   defaultButton:defaultButtonTitle
+									 alternateButton:alternateButtonTitle
+											trustRef:trustRef
+									 completionBlock:^(SecTrustRef trustRef, BOOL trusted, id contextInfo) {
+										 CFRelease(trustRef);
 
-									 weakSelf.trustPanel = nil;
+										 weakSelf.trustPanel = nil;
 
-									 if (weakSelf.trustPanelDoNotInvokeCompletionBlock) {
-										 weakSelf.trustPanelDoNotInvokeCompletionBlock = NO;
+										 if (weakSelf.trustPanelDoNotInvokeCompletionBlock) {
+											 weakSelf.trustPanelDoNotInvokeCompletionBlock = NO;
 
-										 return;
+											 return;
+										 }
+
+										 ((RCMTrustResponse)contextInfo)(trusted);
 									 }
-
-									 ((RCMTrustResponse)contextInfo)(trusted);
-								 }
-									 contextInfo:trustBlock];
+										 contextInfo:trustBlock];
 	}];
 }
 
@@ -461,7 +468,8 @@ NS_ASSUME_NONNULL_BEGIN
 	});
 }
 
-- (void)ircConnectionDidSecureConnectionWithProtocolType:(tls_protocol_version_t)protocolType cipherSuite:(tls_ciphersuite_t)cipherSuite
+- (void)ircConnectionDidSecureConnectionWithProtocolType:(tls_protocol_version_t)protocolType
+											 cipherSuite:(tls_ciphersuite_t)cipherSuite
 {
 	self.isSecured = YES;
 

@@ -111,7 +111,7 @@ enum {
 	/* RPL_CHANNELSMSG and RPL_WHOWASIP were added recently.
 	 Reference: https://github.com/inspircd/inspircd/commit/150258b1f110aad58c8882b76474a4ceb3b2ab97 */
 	RPL_CHANNELSMSG = 651, // (is on private/secret channels..., InspIRCd)
-	RPL_WHOWASIP = 652, // (was connected from..., InspIRCd)
+	RPL_WHOWASIP = 652,	   // (was connected from..., InspIRCd)
 	RPL_WHOISSECURE = 671,
 	RPL_WHOISREALIP = 672, // (is a CGI:IRC client from..., Rizon)
 	RPL_TARGUMODEG = 716,

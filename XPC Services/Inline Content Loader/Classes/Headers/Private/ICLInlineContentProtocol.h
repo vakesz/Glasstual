@@ -50,7 +50,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)warmServiceByLoadingPluginsAtLocations:(NSArray<NSURL *> *)pluginLocations;
 - (void)warmServiceByRegisteringDefaults:(NSDictionary<NSString *, id> *)defaults;
 
-- (void)processURL:(NSURL *)url withUniqueIdentifier:(NSString *)uniqueIdentifier atLineNumber:(NSString *)lineNumber index:(NSUInteger)index inView:(NSString *)viewIdentifier;
+- (void)processURL:(NSURL *)url
+	withUniqueIdentifier:(NSString *)uniqueIdentifier
+			atLineNumber:(NSString *)lineNumber
+				   index:(NSUInteger)index
+				  inView:(NSString *)viewIdentifier;
 
 - (void)processPayload:(ICLPayload *)payload;
 @end

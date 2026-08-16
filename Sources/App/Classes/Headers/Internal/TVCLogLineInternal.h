@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCLogLine ()
 {
-@protected
+  @protected
 	BOOL _isEncrypted;
 	BOOL _isFirstForDay;
 	BOOL _nicknameColorStyleOverride;
@@ -57,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 	TVCLogLineType _lineType;
 	NSUInteger _sessionIdentifier;
 
-@private
+  @private
 	NSString *_uniqueIdentifier;
 }
 

@@ -38,9 +38,15 @@
 + (void)load
 {
 	XRExchangeInstanceMethod(@"IRCClient", @"encryptionAllowedForTarget:", @"__tpi_encryptionAllowedForTarget:");
-	XRExchangeInstanceMethod(@"IRCClient", @"decryptMessage:from:target:decodingCallback:", @"__tpi_decryptMessage:from:target:decodingCallback:");
-	XRExchangeInstanceMethod(@"IRCClient", @"encryptMessage:directedAt:encodingCallback:injectionCallback:", @"__tpi_encryptMessage:directedAt:encodingCallback:injectionCallback:");
-	XRExchangeInstanceMethod(@"IRCClient", @"lengthOfEncryptedMessageDirectedAt:thatFitsWithinBounds:", @"__tpi_lengthOfEncryptedMessageDirectedAt:thatFitsWithinBounds:");
+	XRExchangeInstanceMethod(@"IRCClient",
+							 @"decryptMessage:from:target:decodingCallback:",
+							 @"__tpi_decryptMessage:from:target:decodingCallback:");
+	XRExchangeInstanceMethod(@"IRCClient",
+							 @"encryptMessage:directedAt:encodingCallback:injectionCallback:",
+							 @"__tpi_encryptMessage:directedAt:encodingCallback:injectionCallback:");
+	XRExchangeInstanceMethod(@"IRCClient",
+							 @"lengthOfEncryptedMessageDirectedAt:thatFitsWithinBounds:",
+							 @"__tpi_lengthOfEncryptedMessageDirectedAt:thatFitsWithinBounds:");
 }
 
 - (BOOL)__tpi_encryptionAllowedForTarget:(NSString *)target
@@ -52,7 +58,8 @@
 	return NO;
 }
 
-- (NSInteger)__tpi_lengthOfEncryptedMessageDirectedAt:(NSString *)messageTo thatFitsWithinBounds:(NSInteger)maximumLength
+- (NSInteger)__tpi_lengthOfEncryptedMessageDirectedAt:(NSString *)messageTo
+								 thatFitsWithinBounds:(NSInteger)maximumLength
 {
 	if ([TPIBlowfishEncryption isPluginEnabled] == NO) {
 		return [self __tpi_lengthOfEncryptedMessageDirectedAt:messageTo thatFitsWithinBounds:maximumLength];
@@ -85,18 +92,24 @@
 	return lastEstimatedSize;
 }
 
-- (void)__tpi_encryptMessage:(NSString *)messageBody directedAt:(NSString *)messageTo encodingCallback:(TLOEncryptionManagerEncodingDecodingCallbackBlock)encodingCallback injectionCallback:(TLOEncryptionManagerInjectCallbackBlock)injectionCallback
+- (void)__tpi_encryptMessage:(NSString *)messageBody
+				  directedAt:(NSString *)messageTo
+			encodingCallback:(TLOEncryptionManagerEncodingDecodingCallbackBlock)encodingCallback
+		   injectionCallback:(TLOEncryptionManagerInjectCallbackBlock)injectionCallback
 {
-#define _callback(_encodedString_, _wasEncrypted_) 	\
-	if (encodingCallback) { 	\
-		encodingCallback(messageBody, _wasEncrypted_); 	\
-	} 	\
-	if (injectionCallback) { 	\
-		injectionCallback(_encodedString_); 	\
-	} 	\
+#define _callback(_encodedString_, _wasEncrypted_)                                                                     \
+	if (encodingCallback) {                                                                                            \
+		encodingCallback(messageBody, _wasEncrypted_);                                                                 \
+	}                                                                                                                  \
+	if (injectionCallback) {                                                                                           \
+		injectionCallback(_encodedString_);                                                                            \
+	}
 
 	if ([TPIBlowfishEncryption isPluginEnabled] == NO) {
-		[self __tpi_encryptMessage:messageBody directedAt:messageTo encodingCallback:encodingCallback injectionCallback:injectionCallback];
+		[self __tpi_encryptMessage:messageBody
+						directedAt:messageTo
+				  encodingCallback:encodingCallback
+				 injectionCallback:injectionCallback];
 
 		return;
 	}
@@ -117,12 +130,19 @@
 		return;
 	}
 
-	EKBlowfishEncryptionModeOfOperation decodeMode = [TPIBlowfishEncryption encryptionModeOfOperationForChannel:targetChannel];
+	EKBlowfishEncryptionModeOfOperation decodeMode =
+		[TPIBlowfishEncryption encryptionModeOfOperationForChannel:targetChannel];
 
-	NSString *encodedString = [EKBlowfishEncryption encodeData:messageBody key:encryptionKey mode:decodeMode encoding:NSUTF8StringEncoding];
+	NSString *encodedString = [EKBlowfishEncryption encodeData:messageBody
+														   key:encryptionKey
+														  mode:decodeMode
+													  encoding:NSUTF8StringEncoding];
 
 	if ([encodedString length] < 5) {
-		[self printDebugInformation:TXLocalizedStringAlternative([NSBundle bundleForClass:[TPIBlowfishEncryption class]], @"BasicLanguage[1ve-yc]") inChannel:targetChannel];
+		[self
+			printDebugInformation:TXLocalizedStringAlternative([NSBundle bundleForClass:[TPIBlowfishEncryption class]],
+															   @"BasicLanguage[1ve-yc]")
+						inChannel:targetChannel];
 
 		return;
 	}
@@ -132,11 +152,14 @@
 #undef _callback
 }
 
-- (void)__tpi_decryptMessage:(NSString *)messageBody from:(NSString *)messageFrom target:(NSString *)target decodingCallback:(TLOEncryptionManagerEncodingDecodingCallbackBlock)decodingCallback
+- (void)__tpi_decryptMessage:(NSString *)messageBody
+						from:(NSString *)messageFrom
+					  target:(NSString *)target
+			decodingCallback:(TLOEncryptionManagerEncodingDecodingCallbackBlock)decodingCallback
 {
-#define _callback(_decodedString_, _wasEncrypted_) 	\
-	if (decodingCallback) { 	\
-		decodingCallback(_decodedString_, _wasEncrypted_); 	\
+#define _callback(_decodedString_, _wasEncrypted_)                                                                     \
+	if (decodingCallback) {                                                                                            \
+		decodingCallback(_decodedString_, _wasEncrypted_);                                                             \
 	}
 
 	if ([TPIBlowfishEncryption isPluginEnabled] == NO) {
@@ -145,9 +168,7 @@
 		return;
 	}
 
-	if ([messageBody hasPrefix:@"+OK "] == NO &&
-		[messageBody hasPrefix:@"mcps"] == NO)
-	{
+	if ([messageBody hasPrefix:@"+OK "] == NO && [messageBody hasPrefix:@"mcps"] == NO) {
 		_callback(messageBody, NO);
 
 		return;
@@ -177,18 +198,30 @@
 
 	NSInteger lostBytes = 0;
 
-	EKBlowfishEncryptionModeOfOperation decodeMode = [TPIBlowfishEncryption encryptionModeOfOperationForChannel:targetChannel];
+	EKBlowfishEncryptionModeOfOperation decodeMode =
+		[TPIBlowfishEncryption encryptionModeOfOperationForChannel:targetChannel];
 
-	NSString *decodedString = [EKBlowfishEncryption decodeData:messageBody key:encryptionKey mode:decodeMode encoding:NSUTF8StringEncoding lostBytes:&lostBytes];
+	NSString *decodedString = [EKBlowfishEncryption decodeData:messageBody
+														   key:encryptionKey
+														  mode:decodeMode
+													  encoding:NSUTF8StringEncoding
+													 lostBytes:&lostBytes];
 
 	if (decodedString == nil) {
-		[self printDebugInformation:TXLocalizedStringAlternative([NSBundle bundleForClass:[TPIBlowfishEncryption class]], @"BasicLanguage[np3-3g]") inChannel:targetChannel];
+		[self
+			printDebugInformation:TXLocalizedStringAlternative([NSBundle bundleForClass:[TPIBlowfishEncryption class]],
+															   @"BasicLanguage[np3-3g]")
+						inChannel:targetChannel];
 
 		return;
 	}
 
 	if (lostBytes > 0) {
-		[self printDebugInformation:TXLocalizedStringAlternative([NSBundle bundleForClass:[TPIBlowfishEncryption class]], @"BasicLanguage[4mm-6d]", lostBytes) inChannel:targetChannel];
+		[self
+			printDebugInformation:TXLocalizedStringAlternative([NSBundle bundleForClass:[TPIBlowfishEncryption class]],
+															   @"BasicLanguage[4mm-6d]",
+															   lostBytes)
+						inChannel:targetChannel];
 
 		/* Do not return for this. This is not a fatal error. */
 	}
@@ -206,7 +239,8 @@
 
 + (void)load
 {
-	XRExchangeInstanceMethod(@"IRCChannel", @"prepareForApplicationTermination", @"__tpi_prepareForApplicationTermination");
+	XRExchangeInstanceMethod(
+		@"IRCChannel", @"prepareForApplicationTermination", @"__tpi_prepareForApplicationTermination");
 	XRExchangeInstanceMethod(@"IRCChannel", @"prepareForPermanentDestruction", @"__tpi_prepareForPermanentDestruction");
 }
 
@@ -259,9 +293,15 @@
 
 			dispatch_once(&onceToken, ^{
 				[TDCAlert alertSheetWithWindow:[NSApp keyWindow]
-										  body:TXLocalizedStringAlternative([NSBundle bundleForClass:[TPIBlowfishEncryption class]], @"BasicLanguage[alk-c6]")
-										 title:TXLocalizedStringAlternative([NSBundle bundleForClass:[TPIBlowfishEncryption class]], @"BasicLanguage[d2x-dh]")
-								 defaultButton:TXLocalizedStringAlternative([NSBundle bundleForClass:[TPIBlowfishEncryption class]], @"BasicLanguage[tv1-4l]")
+										  body:TXLocalizedStringAlternative(
+												   [NSBundle bundleForClass:[TPIBlowfishEncryption class]],
+												   @"BasicLanguage[alk-c6]")
+										 title:TXLocalizedStringAlternative(
+												   [NSBundle bundleForClass:[TPIBlowfishEncryption class]],
+												   @"BasicLanguage[d2x-dh]")
+								 defaultButton:TXLocalizedStringAlternative(
+												   [NSBundle bundleForClass:[TPIBlowfishEncryption class]],
+												   @"BasicLanguage[tv1-4l]")
 							   alternateButton:nil
 								   otherButton:nil];
 			});

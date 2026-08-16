@@ -39,8 +39,7 @@
  One subclass uses GCDAsyncSocket which isn't designed for Swift.
  To accommodate some of its features, we must have our base class
  inherit from NSObject or all hell will break loose. */
-class ConnectionSocket: NSObject
-{
+class ConnectionSocket: NSObject {
 	weak var delegate: ConnectionSocketDelegate?
 
 	final private(set) var config: IRCConnectionConfig
@@ -51,12 +50,12 @@ class ConnectionSocket: NSObject
 	var connected = false
 	var connectedWithClientSideCertificate = false
 	var disconnecting = false
-	var disconnected: Bool
-	{
+	var disconnected: Bool {
 		return (connecting == false && connected == false)
 	}
 	var secured = false
 	var sending = false
+	// swift-format-ignore: AlwaysUseLowerCamelCase
 	var EOFReceived = false
 
 	var alternateDisconnectError: ConnectionError?
@@ -64,10 +63,9 @@ class ConnectionSocket: NSObject
 	final let torProxyTypeAddress = "127.0.0.1"
 	final let torProxyTypePort: UInt16 = 9150
 
-	final let maximumDataLength = (1000 * 1000 * 100) // 100 megabytes
+	final let maximumDataLength = (1000 * 1000 * 100)  // 100 megabytes
 
-	init (with config: IRCConnectionConfig)
-	{
+	init(with config: IRCConnectionConfig) {
 		self.config = config
 
 		uniqueIdentifier = UUID().uuidString
@@ -75,8 +73,7 @@ class ConnectionSocket: NSObject
 		super.init()
 	}
 
-	func resetState()
-	{
+	func resetState() {
 		connecting = false
 		connected = false
 		connectedWithClientSideCertificate = false
@@ -90,9 +87,8 @@ class ConnectionSocket: NSObject
 		alternateDisconnectError = nil
 	}
 
-	func tlsVerify(_ trust: SecTrust, response: @escaping RCMTrustResponse)
-	{
-		if (config.connectionShouldValidateCertificateChain == false) {
+	func tlsVerify(_ trust: SecTrust, response: @escaping RCMTrustResponse) {
+		if config.connectionShouldValidateCertificateChain == false {
 			response(true)
 
 			return
@@ -119,8 +115,7 @@ class ConnectionSocket: NSObject
 		response(false)
 	}
 
-	final var clientSideCertificate: (identity: SecIdentity, certificate: SecCertificate)?
-	{
+	final var clientSideCertificate: (identity: SecIdentity, certificate: SecCertificate)? {
 		guard let certificateDataIn = config.identityClientSideCertificate else {
 			return nil
 		}
@@ -129,11 +124,12 @@ class ConnectionSocket: NSObject
 
 		var certificateObject: CFTypeRef?
 
-		var status = SecItemCopyMatching([
-			kSecClass: kSecClassCertificate,
-			kSecValuePersistentRef: certificateDataIn,
-			kSecReturnRef: true
-		] as CFDictionary, &certificateObject)
+		var status = SecItemCopyMatching(
+			[
+				kSecClass: kSecClassCertificate,
+				kSecValuePersistentRef: certificateDataIn,
+				kSecReturnRef: true,
+			] as CFDictionary, &certificateObject)
 
 		if status != errSecSuccess {
 			Logging.defaultSubsystem?.error("Operation Failed (1): \(status, privacy: .public)")
@@ -142,7 +138,8 @@ class ConnectionSocket: NSObject
 		}
 
 		guard let certificateObject,
-			  CFGetTypeID(certificateObject) == SecCertificateGetTypeID() else {
+			CFGetTypeID(certificateObject) == SecCertificateGetTypeID()
+		else {
 			return nil
 		}
 
@@ -154,7 +151,7 @@ class ConnectionSocket: NSObject
 
 		status = SecIdentityCreateWithCertificate(nil, certificateRef, &identityRef)
 
-		if (status != noErr) {
+		if status != noErr {
 			Logging.defaultSubsystem?.error("Operation Failed (2): \(status, privacy: .public)")
 
 			return nil
@@ -165,8 +162,10 @@ class ConnectionSocket: NSObject
 		return (identity: identityRef!, certificate: certificateRef)
 	}
 
-	final func changeProxy(to type: IRCConnectionProxyType = .none, at host: String? = nil, on port: UInt16 = 0, username: String? = nil, password: String? = nil)
-	{
+	final func changeProxy(
+		to type: IRCConnectionProxyType = .none, at host: String? = nil, on port: UInt16 = 0, username: String? = nil,
+		password: String? = nil
+	) {
 		let mutableConfig: IRCConnectionConfigMutable = config.mutableCopy() as! IRCConnectionConfigMutable
 
 		mutableConfig.proxyAddress = host
@@ -180,32 +179,26 @@ class ConnectionSocket: NSObject
 		config = mutableConfig
 	}
 
-	final func changeProxyToTor()
-	{
+	final func changeProxyToTor() {
 		changeProxy(to: .socks5, at: torProxyTypeAddress, on: torProxyTypePort)
 	}
 
-	final func changeProxyToNone()
-	{
+	final func changeProxyToNone() {
 		changeProxy()
 	}
 }
 
-extension ConnectionError
-{
-	init (socketError: Error)
-	{
+extension ConnectionError {
+	init(socketError: Error) {
 		self = .socket(error: socketError)
 	}
 
-	init (otherError message: String)
-	{
+	init(otherError message: String) {
 		self = .other(message: message)
 	}
 
-	init? (tlsError error: Error)
-	{
-		if (RCMSecureTransport.isTLSError(error) == false) {
+	init?(tlsError error: Error) {
+		if RCMSecureTransport.isTLSError(error) == false {
 			return nil
 		}
 
@@ -213,8 +206,7 @@ extension ConnectionError
 	}
 
 	/// init(tlsError:) returns .unableToSecure("Unknown") for out of range error codes
-	init (tlsError errorCode: Int)
-	{
+	init(tlsError errorCode: Int) {
 		if let certError = RCMSecureTransport.description(forBadCertificateErrorCode: errorCode) {
 			self = .badCertificate(failureReason: certError)
 
@@ -227,12 +219,13 @@ extension ConnectionError
 	}
 }
 
-protocol ConnectionSocketDelegate: AnyObject
-{
+protocol ConnectionSocketDelegate: AnyObject {
 	func connection(_ connection: ConnectionSocket, willConnectToProxy address: String, on port: UInt16)
 	func connection(_ connection: ConnectionSocket, willConnectTo address: String, on port: UInt16)
-	func connection(_ connection: ConnectionSocket, didConnectTo address: String?) // address is nil when connecting to proxy
-	func connection(_ connection: ConnectionSocket, securedWith protocol: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
+	// The address is nil when connecting to a proxy.
+	func connection(_ connection: ConnectionSocket, didConnectTo address: String?)
+	func connection(
+		_ connection: ConnectionSocket, securedWith protocol: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
 	func connection(_ connection: ConnectionSocket, requiresTrust response: @escaping (Bool) -> Void)
 	func connectionClosedReadStream(_ connection: ConnectionSocket)
 	func connectionDisconnected(_ connection: ConnectionSocket)
@@ -242,8 +235,7 @@ protocol ConnectionSocketDelegate: AnyObject
 	func connectionDidSend(_ connection: ConnectionSocket)
 }
 
-protocol ConnectionSocketProtocol
-{
+protocol ConnectionSocketProtocol {
 	/// Logic for opening socket
 	func open()
 
@@ -273,18 +265,15 @@ protocol ConnectionSocketProtocol
 	var tlsPolicyName: String? { get }
 }
 
-extension ConnectionSocketProtocol where Self: ConnectionSocket
-{
-	func close(with error: String)
-	{
+extension ConnectionSocketProtocol where Self: ConnectionSocket {
+	func close(with error: String) {
 		let errorEnum = ConnectionError.other(message: error)
 
 		close(with: errorEnum)
 	}
 
-	func close(with error: ConnectionError)
-	{
-		if (disconnected || disconnecting) {
+	func close(with error: ConnectionError) {
+		if disconnected || disconnecting {
 			return
 		}
 
@@ -293,8 +282,7 @@ extension ConnectionSocketProtocol where Self: ConnectionSocket
 		close()
 	}
 
-	func exportSecureConnectionInformation(to receiver: RCMSecureConnectionInformationCompletionBlock) throws
-	{
+	func exportSecureConnectionInformation(to receiver: RCMSecureConnectionInformationCompletionBlock) throws {
 		let policyName = tlsPolicyName
 
 		let protocolType = tlsNegotiatedProtocol ?? tls_protocol_version_unknown

@@ -38,9 +38,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCNotificationConfigurationViewController : NSObject
-@property (nonatomic, copy) NSArray *notifications; // __kindof TVCNotificationConfiguration* or NSString*
+@property(nonatomic, copy) NSArray *notifications; // __kindof TVCNotificationConfiguration* or NSString*
 
-@property (nonatomic, assign) BOOL allowsMixedState; // Default: NO
+@property(nonatomic, assign) BOOL allowsMixedState; // Default: NO
 
 - (void)attachToView:(NSView *)view;
 

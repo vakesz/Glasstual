@@ -40,23 +40,23 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCContentNavigationOutlineViewItem;
 
 @interface TVCContentNavigationOutlineView : NSOutlineView
-@property (nonatomic, assign) NSUInteger contentViewPreferredWidth;
-@property (nonatomic, assign) NSUInteger contentViewPreferredHeight;
-@property (nonatomic, copy) NSArray<TVCContentNavigationOutlineViewItem *> *navigationTreeMatrix;
-@property (nonatomic, assign) BOOL expandParentOnDoubleClick;
+@property(nonatomic, assign) NSUInteger contentViewPreferredWidth;
+@property(nonatomic, assign) NSUInteger contentViewPreferredHeight;
+@property(nonatomic, copy) NSArray<TVCContentNavigationOutlineViewItem *> *navigationTreeMatrix;
+@property(nonatomic, assign) BOOL expandParentOnDoubleClick;
 
-@property (readonly, weak, nullable) TVCContentNavigationOutlineViewItem *selectedItem;
+@property(readonly, weak, nullable) TVCContentNavigationOutlineViewItem *selectedItem;
 
 - (void)navigateToItemWithIdentifier:(NSUInteger)identifier;
 @end
 
 @interface TVCContentNavigationOutlineViewItem : NSObject
-@property (readonly, copy) NSString *label;
-@property (readonly) NSUInteger identifier;
-@property (readonly, weak, nullable) NSView *view;
-@property (readonly, weak, nullable) NSControl *firstResponder;
-@property (readonly, copy, nullable) NSArray<TVCContentNavigationOutlineViewItem *> *children;
-@property (readonly) BOOL isGroupItem;
+@property(readonly, copy) NSString *label;
+@property(readonly) NSUInteger identifier;
+@property(readonly, weak, nullable) NSView *view;
+@property(readonly, weak, nullable) NSControl *firstResponder;
+@property(readonly, copy, nullable) NSArray<TVCContentNavigationOutlineViewItem *> *children;
+@property(readonly) BOOL isGroupItem;
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -70,7 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
 				   identifier:(NSUInteger)identifier
 						 view:(nullable NSView *)view
 			   firstResponder:(nullable NSControl *)firstResponder
-					 children:(nullable NSArray<TVCContentNavigationOutlineViewItem *> *)children NS_DESIGNATED_INITIALIZER;
+					 children:(nullable NSArray<TVCContentNavigationOutlineViewItem *> *)children
+	NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -40,8 +40,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCTextViewWithIRCFormatter ()
-@property (nonatomic, copy) NSFont *preferredFont;
-@property (nonatomic, copy) NSColor *preferredFontColor;
+@property(nonatomic, copy) NSFont *preferredFont;
+@property(nonatomic, copy) NSColor *preferredFontColor;
 
 - (void)keyDownToSuper:(NSEvent *)e;
 

@@ -38,7 +38,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define TXCalibratedRGBColor(r, g, b)		([NSColor calibratedColorWithRed:r green:g blue:b alpha:1.0])
+#define TXCalibratedRGBColor(r, g, b) ([NSColor calibratedColorWithRed:r green:g blue:b alpha:1.0])
 
 @implementation NSColor (TXColorHelper)
 
@@ -53,16 +53,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 	dispatch_once(&onceToken, ^{
 		colors = @[
-			/* 0 */  [NSColor formatterWhiteColor],
-			/* 1 */  [NSColor formatterBlackColor],
-			/* 2 */  [NSColor formatterNavyBlueColor],
-			/* 3 */  [NSColor formatterDarkGreenColor],
-			/* 4 */  [NSColor formatterRedColor],
-			/* 5 */  [NSColor formatterBrownColor],
-			/* 6 */  [NSColor formatterPurpleColor],
-			/* 7 */  [NSColor formatterOrangeColor],
-			/* 8 */  [NSColor formatterYellowColor],
-			/* 9 */  [NSColor formatterLimeGreenColor],
+			/* 0 */ [NSColor formatterWhiteColor],
+			/* 1 */ [NSColor formatterBlackColor],
+			/* 2 */ [NSColor formatterNavyBlueColor],
+			/* 3 */ [NSColor formatterDarkGreenColor],
+			/* 4 */ [NSColor formatterRedColor],
+			/* 5 */ [NSColor formatterBrownColor],
+			/* 6 */ [NSColor formatterPurpleColor],
+			/* 7 */ [NSColor formatterOrangeColor],
+			/* 8 */ [NSColor formatterYellowColor],
+			/* 9 */ [NSColor formatterLimeGreenColor],
 			/* 10 */ [NSColor formatterTealColor],
 			/* 11 */ [NSColor formatterAquaCyanColor],
 			/* 12 */ [NSColor formatterLightBlueColor],

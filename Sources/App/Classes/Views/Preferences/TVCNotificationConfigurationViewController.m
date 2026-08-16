@@ -42,22 +42,22 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _alertSoundsDefaultSoundIndex			0
-#define _alertSoundsNoSoundIndex				2
+#define _alertSoundsDefaultSoundIndex 0
+#define _alertSoundsNoSoundIndex 2
 
 @interface TVCNotificationConfigurationViewController ()
-@property (nonatomic, weak) NSView *attachedView;
-@property (nonatomic, strong) IBOutlet NSView *contentView;
-@property (nonatomic, weak) IBOutlet NSButton *alertBounceDockIconButton;
-@property (nonatomic, weak) IBOutlet NSButton *alertBounceDockIconRepeatedlyButton;
-@property (nonatomic, weak) IBOutlet NSButton *alertDisableWhileAwayButton;
-@property (nonatomic, weak) IBOutlet NSButton *alertPushNotificationButton;
-@property (nonatomic, weak) IBOutlet NSButton *alertSpeakEventButton;
-@property (nonatomic, weak) IBOutlet NSPopUpButton *alertSoundChoiceButton;
-@property (nonatomic, weak) IBOutlet NSPopUpButton *alertTypeChoiceButton;
-@property (nonatomic, strong) TLONotificationConfiguration *activeAlert;
-@property (nonatomic, assign) BOOL activeAlertPropertyChangedByUser;
-@property (nonatomic, copy) NSArray *alertSounds;
+@property(nonatomic, weak) NSView *attachedView;
+@property(nonatomic, strong) IBOutlet NSView *contentView;
+@property(nonatomic, weak) IBOutlet NSButton *alertBounceDockIconButton;
+@property(nonatomic, weak) IBOutlet NSButton *alertBounceDockIconRepeatedlyButton;
+@property(nonatomic, weak) IBOutlet NSButton *alertDisableWhileAwayButton;
+@property(nonatomic, weak) IBOutlet NSButton *alertPushNotificationButton;
+@property(nonatomic, weak) IBOutlet NSButton *alertSpeakEventButton;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *alertSoundChoiceButton;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *alertTypeChoiceButton;
+@property(nonatomic, strong) TLONotificationConfiguration *activeAlert;
+@property(nonatomic, assign) BOOL activeAlertPropertyChangedByUser;
+@property(nonatomic, copy) NSArray *alertSounds;
 
 - (IBAction)onChangedAlertBounceDockIcon:(nullable id)sender;
 - (IBAction)onChangedAlertBounceDockIconRepeatedly:(nullable id)sender;
@@ -107,17 +107,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[view addSubview:contentView];
 
-	[view addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[contentView]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(contentView)]];
+	[view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[contentView]-0-|"
+																 options:NSLayoutFormatDirectionLeadingToTrailing
+																 metrics:nil
+																   views:NSDictionaryOfVariableBindings(contentView)]];
 
-	[view addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[contentView]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(contentView)]];
+	[view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[contentView]-0-|"
+																 options:NSLayoutFormatDirectionLeadingToTrailing
+																 metrics:nil
+																   views:NSDictionaryOfVariableBindings(contentView)]];
 }
 
 - (void)setAllowsMixedState:(BOOL)allowsMixedState
@@ -326,7 +324,10 @@ NS_ASSUME_NONNULL_BEGIN
 	[activeAlert addObserver:self forKeyPath:@"pushNotification" options:NSKeyValueObservingOptionNew context:NULL];
 	[activeAlert addObserver:self forKeyPath:@"disableWhileAway" options:NSKeyValueObservingOptionNew context:NULL];
 	[activeAlert addObserver:self forKeyPath:@"bounceDockIcon" options:NSKeyValueObservingOptionNew context:NULL];
-	[activeAlert addObserver:self forKeyPath:@"bounceDockIconRepeatedly" options:NSKeyValueObservingOptionNew context:NULL];
+	[activeAlert addObserver:self
+				  forKeyPath:@"bounceDockIconRepeatedly"
+					 options:NSKeyValueObservingOptionNew
+					 context:NULL];
 }
 
 - (void)stopObservingActiveAlert
@@ -345,7 +346,10 @@ NS_ASSUME_NONNULL_BEGIN
 	[activeAlert removeObserver:self forKeyPath:@"bounceDockIconRepeatedly"];
 }
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 {
 	if (object == self.activeAlert) {
 		if (self.activeAlertPropertyChangedByUser) {

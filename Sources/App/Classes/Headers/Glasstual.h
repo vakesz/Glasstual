@@ -36,103 +36,103 @@
  *********************************************************************** */
 
 #ifdef __OBJC__
-	/* Cocoa Extensions imports Cocoa for us */
-	#import <CocoaExtensions/CocoaExtensions.h>
+/* Cocoa Extensions imports Cocoa for us */
+#import <CocoaExtensions/CocoaExtensions.h>
 
-	/* Static Definitions */
-	#import "StaticDefinitions.h"
+/* Static Definitions */
+#import "StaticDefinitions.h"
 
-	/* IRC Controllers — Core */
-	#import "IRC.h"
-	#import "IRCAddressBook.h"
-	#import "IRCAddressBookUserTracking.h"
-	#import "IRCChannel.h"
-	#import "IRCChannelConfig.h"
-	#import "IRCChannelMode.h"
-	#import "IRCChannelUser.h"
-	#import "IRCClient.h"
-	#import "IRCClientConfig.h"
-	#import "IRCColorFormat.h"
-	#import "IRCCommandIndex.h"
-	#import "IRCConnection.h"
-	#import "IRCConnectionConfig.h"
-	#import "IRCConnectionErrors.h"
-	#import "IRCHighlightLogEntry.h"
-	#import "IRCHighlightMatchCondition.h"
-	#import "IRCISupportInfo.h"
-	#import "IRCMessage.h"
-	#import "IRCModeInfo.h"
-	#import "IRCNetworkList.h"
-	#import "IRCPrefix.h"
-	#import "IRCSendingMessage.h"
-	#import "IRCServer.h"
-	#import "IRCTreeItem.h"
-	#import "IRCUser.h"
-	#import "IRCUserRelations.h"
-	#import "IRCWorld.h"
+/* IRC Controllers — Core */
+#import "IRC.h"
+#import "IRCAddressBook.h"
+#import "IRCAddressBookUserTracking.h"
+#import "IRCChannel.h"
+#import "IRCChannelConfig.h"
+#import "IRCChannelMode.h"
+#import "IRCChannelUser.h"
+#import "IRCClient.h"
+#import "IRCClientConfig.h"
+#import "IRCColorFormat.h"
+#import "IRCCommandIndex.h"
+#import "IRCConnection.h"
+#import "IRCConnectionConfig.h"
+#import "IRCConnectionErrors.h"
+#import "IRCHighlightLogEntry.h"
+#import "IRCHighlightMatchCondition.h"
+#import "IRCISupportInfo.h"
+#import "IRCMessage.h"
+#import "IRCModeInfo.h"
+#import "IRCNetworkList.h"
+#import "IRCPrefix.h"
+#import "IRCSendingMessage.h"
+#import "IRCServer.h"
+#import "IRCTreeItem.h"
+#import "IRCUser.h"
+#import "IRCUserRelations.h"
+#import "IRCWorld.h"
 
-	/* Framework Extensions (Helpers) */
-	#import "NSColorHelper.h"
-	#import "NSStringHelper.h"
-	#import "NSViewHelper.h"
+/* Framework Extensions (Helpers) */
+#import "NSColorHelper.h"
+#import "NSStringHelper.h"
+#import "NSViewHelper.h"
 
-	/* Dialogs */
-	#import "TDCAlert.h"
-	#import "TDCInputPrompt.h"
-	#import "TDCSheetBase.h"
-	#import "TDCWindowBase.h"
+/* Dialogs */
+#import "TDCAlert.h"
+#import "TDCInputPrompt.h"
+#import "TDCSheetBase.h"
+#import "TDCWindowBase.h"
 
-	/* Helpers */
-	#import "THOPluginProtocol.h"
-	#import "THOUnicodeHelper.h"
+/* Helpers */
+#import "THOPluginProtocol.h"
+#import "THOUnicodeHelper.h"
 
-	/* Library */
-	#import "TLOEncryptionManager.h"
-	#import "TLONotificationController.h"
-	#import "TLOInternetAddressLookup.h"
-	#import "TLOKeyEventHandler.h"
-	#import "TLOLinkParser.h"
-	#import "TLOLocalization.h"
-	#import "TLOSoundPlayer.h"
-	#import "TLOTimer.h"
-	#import "TLOpenLink.h"
+/* Library */
+#import "TLOEncryptionManager.h"
+#import "TLONotificationController.h"
+#import "TLOInternetAddressLookup.h"
+#import "TLOKeyEventHandler.h"
+#import "TLOLinkParser.h"
+#import "TLOLocalization.h"
+#import "TLOSoundPlayer.h"
+#import "TLOTimer.h"
+#import "TLOpenLink.h"
 
-	/* Preferences */
-	#import "TPCApplicationInfo.h"
-	#import "TPCPathInfo.h"
-	#import "TPCPreferencesImportExport.h"
-	#import "TPCPreferencesLocal.h"
-	#import "TPCPreferencesReload.h"
-	#import "TPCPreferencesUserDefaultsLocal.h"
-	#import "TPCResourceManager.h"
-	#import "TPCThemeController.h"
-	#import "TPCTheme.h"
+/* Preferences */
+#import "TPCApplicationInfo.h"
+#import "TPCPathInfo.h"
+#import "TPCPreferencesImportExport.h"
+#import "TPCPreferencesLocal.h"
+#import "TPCPreferencesReload.h"
+#import "TPCPreferencesUserDefaultsLocal.h"
+#import "TPCResourceManager.h"
+#import "TPCThemeController.h"
+#import "TPCTheme.h"
 
-	/* View Controllers */
-	#import "TVCAppearance.h"
-	#import "TVCAutoExpandingTextField.h"
-	#import "TVCAutoExpandingTokenField.h"
-	#import "TVCBasicTableView.h"
-	#import "TVCChannelSelectionViewController.h"
-	#import "TVCLogController.h"
-	#import "TVCLogLine.h"
-	#import "TVCLogRenderer.h"
-	#import "TVCLogView.h"
-	#import "TVCMainWindow.h"
-	#import "TVCMainWindowLoadingScreen.h"
-	#import "TVCMainWindowTextView.h"
-	#import "TVCMemberList.h"
-	#import "TVCServerList.h"
-	#import "TVCValidatedComboBox.h"
-	#import "TVCValidatedTextField.h"
-	#import "TVCTextViewWithIRCFormatter.h"
+/* View Controllers */
+#import "TVCAppearance.h"
+#import "TVCAutoExpandingTextField.h"
+#import "TVCAutoExpandingTokenField.h"
+#import "TVCBasicTableView.h"
+#import "TVCChannelSelectionViewController.h"
+#import "TVCLogController.h"
+#import "TVCLogLine.h"
+#import "TVCLogRenderer.h"
+#import "TVCLogView.h"
+#import "TVCMainWindow.h"
+#import "TVCMainWindowLoadingScreen.h"
+#import "TVCMainWindowTextView.h"
+#import "TVCMemberList.h"
+#import "TVCServerList.h"
+#import "TVCValidatedComboBox.h"
+#import "TVCValidatedTextField.h"
+#import "TVCTextViewWithIRCFormatter.h"
 
-	/* Master Controllers — Root */
-	#import "TXAppearance.h"
-	#import "TXGlobalModels.h"
-	#import "TXMasterController.h"
-	#import "TXMenuController.h"
-	#import "TXSharedApplication.h"
+/* Master Controllers — Root */
+#import "TXAppearance.h"
+#import "TXGlobalModels.h"
+#import "TXMasterController.h"
+#import "TXMenuController.h"
+#import "TXSharedApplication.h"
 #endif
 
 /* @end */

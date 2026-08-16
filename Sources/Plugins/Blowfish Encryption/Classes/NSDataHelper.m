@@ -41,23 +41,26 @@
 	[self replaceAllOccurrencesOfData:[NSData dataWithBytes:"\x00" length:1] withBytes:NULL length:0]; // NULL character
 }
 
-- (void)replaceAllOccurrencesOfData:(NSData *)needle withBytes:(const void *)replacementBytes length:(NSUInteger)replacementLength
+- (void)replaceAllOccurrencesOfData:(NSData *)needle
+						  withBytes:(const void *)replacementBytes
+							 length:(NSUInteger)replacementLength
 {
 	NSUInteger start = 0;
-	
+
 	while (1 == 1) {
 		if (start >= [self length]) {
 			break;
 		}
-		
+
 		NSRange r = [self rangeOfData:needle options:0 range:NSMakeRange(start, ([self length] - start))];
 
 		if (r.location == NSNotFound) {
 			break;
 		}
-		
-		[self replaceBytesInRange:r withBytes:replacementBytes length:replacementLength];;
-		
+
+		[self replaceBytesInRange:r withBytes:replacementBytes length:replacementLength];
+		;
+
 		start = (r.location + replacementLength + 1);
 	}
 }
@@ -66,7 +69,9 @@
 
 @implementation NSString (BlowfishEncryptionStringHelper)
 
-- (NSData *)dataUsingEncoding:(NSStringEncoding)encoding fitToPadding:(NSInteger)bytePadding trimmedCharacters:(NSInteger *)bytesRemoved
+- (NSData *)dataUsingEncoding:(NSStringEncoding)encoding
+				 fitToPadding:(NSInteger)bytePadding
+			trimmedCharacters:(NSInteger *)bytesRemoved
 {
 	if (bytePadding <= 0) {
 		return nil;
@@ -80,13 +85,13 @@
 	if (dataObjectLengthRemainder > 0) {
 		dataObjectLength -= dataObjectLengthRemainder;
 
-		if ( bytesRemoved) {
+		if (bytesRemoved) {
 			*bytesRemoved = dataObjectLengthRemainder;
 		}
 
 		return [NSData dataWithBytes:[dataObject bytes] length:dataObjectLength];
 	} else {
-		if ( bytesRemoved) {
+		if (bytesRemoved) {
 			*bytesRemoved = 0;
 		}
 

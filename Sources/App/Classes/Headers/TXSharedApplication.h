@@ -39,20 +39,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class TXAppearance, TXMasterController, TPCThemeController;
 
-#define masterController()			[self masterController]
-#define menuController()			[masterController() menuController]
-#define worldController()			[masterController() world]
+#define masterController() [self masterController]
+#define menuController() [masterController() menuController]
+#define worldController() [masterController() world]
 
-#define mainWindow()				[masterController() mainWindow]
+#define mainWindow() [masterController() mainWindow]
 
-#define mainWindowLoadingScreen()	[mainWindow() loadingScreen]
-#define mainWindowServerList()		[mainWindow() serverList]
-#define mainWindowMemberList()		[mainWindow() memberList]
-#define mainWindowTextField()		[mainWindow() inputTextField]
+#define mainWindowLoadingScreen() [mainWindow() loadingScreen]
+#define mainWindowServerList() [mainWindow() serverList]
+#define mainWindowMemberList() [mainWindow() memberList]
+#define mainWindowTextField() [mainWindow() inputTextField]
 
-#define themeController()			[TXSharedApplication sharedThemeController]
-#define theme()						[themeController() theme]
-#define themeSettings()				[themeController() settings]
+#define themeController() [TXSharedApplication sharedThemeController]
+#define theme() [themeController() theme]
+#define themeSettings() [themeController() settings]
 
 GLASSTUAL_EXTERN NSErrorDomain const TXErrorDomain;
 

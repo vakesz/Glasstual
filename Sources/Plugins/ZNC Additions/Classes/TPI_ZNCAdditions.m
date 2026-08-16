@@ -75,9 +75,7 @@ NS_ASSUME_NONNULL_BEGIN
 						  messageString:(NSString *)messageString
 {
 	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[self _userInputCommandInvokedOnClient:client
-								 commandString:commandString
-								 messageString:messageString];
+		[self _userInputCommandInvokedOnClient:client commandString:commandString messageString:messageString];
 	});
 }
 
@@ -94,8 +92,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Process commands */
-	if ([commandString isEqualToStringIgnoringCase:@"ZNCCERT"])
-	{
+	if ([commandString isEqualToStringIgnoringCase:@"ZNCCERT"]) {
 		/* Glasstual is designed not to import partial content. It will either
 		 return the complete certificate chain at this point, or nil. */
 		NSData *certificateData = client.zncBouncerCertificateChainData;
@@ -128,8 +125,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 		CFArrayRef certificateArray = NULL;
 
-		OSStatus operationStatus =
-		SecItemImport((__bridge CFDataRef)(certificateData), NULL, &externalFormat, &itemType, flags, &importParameters, NULL, &certificateArray);
+		OSStatus operationStatus = SecItemImport((__bridge CFDataRef)(certificateData),
+												 NULL,
+												 &externalFormat,
+												 &itemType,
+												 flags,
+												 &importParameters,
+												 NULL,
+												 &certificateArray);
 
 		/* Display an error or hand the certificate chain off 
 		 to Apple's own APIs to display them in a dialog. */
@@ -158,8 +161,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* ------ */
 
 	else if ([commandString isEqualToStringIgnoringCase:@"DETACH"] ||
-			 [commandString isEqualToStringIgnoringCase:@"ATTACH"])
-	{
+			 [commandString isEqualToStringIgnoringCase:@"ATTACH"]) {
 		messageString = messageString.trim;
 
 		IRCChannel *matchedChannel = nil;
@@ -183,19 +185,20 @@ NS_ASSUME_NONNULL_BEGIN
 		} else {
 			[client sendLine:[NSString stringWithFormat:@"%@ %@", commandString, matchedChannel.name]];
 
-			[client printDebugInformation:TPILocalizedString(@"BasicLanguage[0fr-kb]", matchedChannel.name) inChannel:matchedChannel];
+			[client printDebugInformation:TPILocalizedString(@"BasicLanguage[0fr-kb]", matchedChannel.name)
+								inChannel:matchedChannel];
 		}
 	}
 }
 
 - (NSArray *)subscribedUserInputCommands
 {
-	return @[@"detach", @"attach", @"znccert"];
+	return @[ @"detach", @"attach", @"znccert" ];
 }
 
 - (NSArray *)subscribedServerInputCommands
 {
-	return @[@"privmsg"];
+	return @[ @"privmsg" ];
 }
 
 - (nullable IRCMessage *)interceptBufferExtrasPlaybackModule:(IRCMessage *)input forClient:(IRCClient *)client
@@ -206,10 +209,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *stringIn = [input paramAt:1];
 
-	if ([stringIn hasPrefix:@"The playback buffer for ["]	&&
-		[stringIn contains:@"] channels matching ["]		&& // This is much cleaner than regular expression...
-		[stringIn hasSuffix:@"] has been cleared."])
-	{
+	if ([stringIn hasPrefix:@"The playback buffer for ["] &&
+		[stringIn contains:@"] channels matching ["] && // This is much cleaner than regular expression...
+		[stringIn hasSuffix:@"] has been cleared."]) {
 		return nil; // Ignore this event
 	}
 
@@ -261,19 +263,20 @@ NS_ASSUME_NONNULL_BEGIN
 	 ZNC 1.7 changed it so that the output of the module can be localized.
 	 We will ever only handle English here to reduce footprint. */
 	IRCMessageMutable *inputMutable = [input mutableCopy];
-	
+
 	NSArray<NSString *> *stringInComponents = nil;
 
-	if ([stringIn isEqualToString:@"joined"])
-	{
+	if ([stringIn isEqualToString:@"joined"]) {
 		/* Begin channel join */
 		inputMutable.command = @"JOIN";
-		
+
 		[paramsMutable removeObjectAtIndex:1];
 		/* End channel join */
-	}
-	else if ([XRRegularExpression matches:&stringInComponents inString:stringIn withRegex:@"^is now known as ([^\\s]+)$" withoutCase:NO substringGroups:YES] == 2)
-	{
+	} else if ([XRRegularExpression matches:&stringInComponents
+								   inString:stringIn
+								  withRegex:@"^is now known as ([^\\s]+)$"
+								withoutCase:NO
+							substringGroups:YES] == 2) {
 		/* Begin nickname change */
 		NSString *newNickname = stringInComponents[1];
 
@@ -283,52 +286,61 @@ NS_ASSUME_NONNULL_BEGIN
 
 		[paramsMutable addObject:newNickname];
 		/* End nickname change */
-	}
-	else if ([XRRegularExpression matches:&stringInComponents inString:stringIn withRegex:@"^(parted with message: \\[(.*)\\]|parted: (.*))$" withoutCase:NO substringGroups:YES] == 3)
-	{
+	} else if ([XRRegularExpression matches:&stringInComponents
+								   inString:stringIn
+								  withRegex:@"^(parted with message: \\[(.*)\\]|parted: (.*))$"
+								withoutCase:NO
+							substringGroups:YES] == 3) {
 		/* Begin part message */
 		NSString *partMessage = stringInComponents[2];
-	
+
 		inputMutable.command = @"PART";
-		
+
 		[paramsMutable removeObjectAtIndex:1];
-		
+
 		[paramsMutable addObject:partMessage];
 		/* End part message */
-	}
-	else if ([XRRegularExpression matches:&stringInComponents inString:stringIn withRegex:@"^(quit with message: \\[(.*)\\]|quit: (.*))$" withoutCase:NO substringGroups:YES] == 3)
-	{
+	} else if ([XRRegularExpression matches:&stringInComponents
+								   inString:stringIn
+								  withRegex:@"^(quit with message: \\[(.*)\\]|quit: (.*))$"
+								withoutCase:NO
+							substringGroups:YES] == 3) {
 		/* Begin quit message */
 		NSString *quitMessage = stringInComponents[2];
 
 		inputMutable.command = @"QUIT";
-		
+
 		[paramsMutable removeObjectAtIndex:1];
-		
+
 		[paramsMutable addObject:quitMessage];
 		/* End quit message */
-	}
-	else if ([XRRegularExpression matches:&stringInComponents inString:stringIn withRegex:@"^(kicked ([^\\s]+) with reason: (.*)|kicked ([^\\s]+) Reason: \\[(.*)\\])$" withoutCase:NO substringGroups:YES] == 4)
-	{
+	} else if ([XRRegularExpression
+						   matches:&stringInComponents
+						  inString:stringIn
+						 withRegex:@"^(kicked ([^\\s]+) with reason: (.*)|kicked ([^\\s]+) Reason: \\[(.*)\\])$"
+					   withoutCase:NO
+				   substringGroups:YES] == 4) {
 		/* Begin kick message */
 		NSString *kickedNickname = stringInComponents[2];
-		
+
 		NSString *kickReason = stringInComponents[3];
-		
+
 		inputMutable.command = @"KICK";
-		
+
 		[paramsMutable removeObjectAtIndex:1];
-		
+
 		[paramsMutable addObject:kickedNickname];
-		
+
 		[paramsMutable addObject:kickReason];
 		/* End kick message. */
-	}
-	else if ([XRRegularExpression matches:&stringInComponents inString:stringIn withRegex:@"^set mode: ([^\\s]+)( .*)?$" withoutCase:NO substringGroups:YES] >= 2)
-	{
+	} else if ([XRRegularExpression matches:&stringInComponents
+								   inString:stringIn
+								  withRegex:@"^set mode: ([^\\s]+)( .*)?$"
+								withoutCase:NO
+							substringGroups:YES] >= 2) {
 		/* Begin mode processing */
 		NSString *modeChanges = stringInComponents[1];
-		
+
 		if (stringInComponents.count == 3) {
 			modeChanges = [modeChanges stringByAppendingString:stringInComponents[2]];
 		}
@@ -339,9 +351,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		[paramsMutable addObject:modeChanges];
 		/* End mode processing */
-	}
-	else if ([stringIn hasPrefix:@"changed the topic to: "])
-	{
+	} else if ([stringIn hasPrefix:@"changed the topic to: "]) {
 		/* Begin topic change */
 		/* We get the latest topic on join so we tell Glasstual to ignore this line. */
 

@@ -45,11 +45,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCHighlightEntrySheet ()
-@property (nonatomic, strong) IRCHighlightMatchConditionMutable *config;
-@property (nonatomic, copy) NSArray<IRCChannelConfig *> *channelList;
-@property (nonatomic, weak) IBOutlet TVCValidatedTextField *matchKeywordTextField;
-@property (nonatomic, weak) IBOutlet NSPopUpButton *matchTypePopupButton;
-@property (nonatomic, weak) IBOutlet NSPopUpButton *matchChannelPopupButton;
+@property(nonatomic, strong) IRCHighlightMatchConditionMutable *config;
+@property(nonatomic, copy) NSArray<IRCChannelConfig *> *channelList;
+@property(nonatomic, weak) IBOutlet TVCValidatedTextField *matchKeywordTextField;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *matchTypePopupButton;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *matchChannelPopupButton;
 @end
 
 @implementation TDCHighlightEntrySheet

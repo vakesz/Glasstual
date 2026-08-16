@@ -49,9 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
 						  messageString:(NSString *)messageString
 {
 	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[self _userInputCommandInvokedOnClient:client 
-								 commandString:commandString
-								 messageString:messageString];
+		[self _userInputCommandInvokedOnClient:client commandString:commandString messageString:messageString];
 	});
 }
 
@@ -60,7 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 						   messageString:(NSString *)messageString
 {
 	IRCChannel *channel = mainWindow().selectedChannel;
-	
+
 	/* We can brag in private messages so add above if statement */
 	if ([commandString isEqualToString:@"BRAG"]) {
 		[self bragInChannel:channel onClient:client];
@@ -85,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray *)subscribedUserInputCommands
 {
-	return @[@"clones", @"namel", @"finduser", @"brag"];
+	return @[ @"clones", @"namel", @"finduser", @"brag" ];
 }
 
 - (void)buildListOfUsersInChannel:(IRCChannel *)channel onClient:(IRCClient *)client parameters:(NSString *)parameters
@@ -121,13 +119,13 @@ NS_ASSUME_NONNULL_BEGIN
 	if (sortByRank == NO) {
 		/* Sort user objects alphabetically by comparing nicknames */
 
-		memberList =
-		[memberList sortedArrayUsingComparator:^NSComparisonResult(IRCChannelUser *member1, IRCChannelUser *member2) {
-			NSString *nickname1 = member1.user.nickname;
-			NSString *nickname2 = member2.user.nickname;
+		memberList = [memberList
+			sortedArrayUsingComparator:^NSComparisonResult(IRCChannelUser *member1, IRCChannelUser *member2) {
+				NSString *nickname1 = member1.user.nickname;
+				NSString *nickname2 = member2.user.nickname;
 
-			return [nickname1 caseInsensitiveCompare:nickname2];
-		}];
+				return [nickname1 caseInsensitiveCompare:nickname2];
+			}];
 	}
 
 	/* Join user objects into string */
@@ -158,7 +156,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	if (memberList.count == 0) {
 		if (hasSearchCondition) {
-			[client printDebugInformation:TPILocalizedString(@"BasicLanguage[n1j-tp]", channel.name, matchString) inChannel:channel];
+			[client printDebugInformation:TPILocalizedString(@"BasicLanguage[n1j-tp]", channel.name, matchString)
+								inChannel:channel];
 		} else {
 			[client printDebugInformation:TPILocalizedString(@"BasicLanguage[1ab-27]", channel.name) inChannel:channel];
 		}
@@ -186,7 +185,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	if (membersMatched.count <= 0) {
 		if (hasSearchCondition) {
-			[client printDebugInformation:TPILocalizedString(@"BasicLanguage[n1j-tp]", channel.name, matchString) inChannel:channel];
+			[client printDebugInformation:TPILocalizedString(@"BasicLanguage[n1j-tp]", channel.name, matchString)
+								inChannel:channel];
 		} else {
 			[client printDebugInformation:TPILocalizedString(@"BasicLanguage[1ab-27]", channel.name) inChannel:channel];
 		}
@@ -195,9 +195,12 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if (hasSearchCondition) {
-		[client printDebugInformation:TPILocalizedString(@"BasicLanguage[oq7-mg]", membersMatched.count, channel.name, matchString) inChannel:channel];
+		[client printDebugInformation:TPILocalizedString(
+										  @"BasicLanguage[oq7-mg]", membersMatched.count, channel.name, matchString)
+							inChannel:channel];
 	} else {
-		[client printDebugInformation:TPILocalizedString(@"BasicLanguage[nn7-6s]", membersMatched.count, channel.name) inChannel:channel];
+		[client printDebugInformation:TPILocalizedString(@"BasicLanguage[nn7-6s]", membersMatched.count, channel.name)
+							inChannel:channel];
 	}
 
 	[membersMatched sortUsingComparator:^NSComparisonResult(IRCChannelUser *member1, IRCChannelUser *member2) {
@@ -238,7 +241,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 			members[address] = clones;
 		} else {
-			members[address] = @[nickname];
+			members[address] = @[ nickname ];
 		}
 	}
 
@@ -261,7 +264,8 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Build result string */
-	[client printDebugInformation:TPILocalizedString(@"BasicLanguage[iaa-5v]", members.count, channel.name) inChannel:channel];
+	[client printDebugInformation:TPILocalizedString(@"BasicLanguage[iaa-5v]", members.count, channel.name)
+						inChannel:channel];
 
 	for (NSString *memberHost in members) {
 		NSArray *clones = [members arrayForKey:memberHost];
@@ -365,7 +369,8 @@ NS_ASSUME_NONNULL_BEGIN
 					addUser = YES;
 				} else if (IHaveModeO && UserHasModeQ == NO && UserHasModeA == NO && UserHasModeO == NO) {
 					addUser = YES;
-				} else if (IHaveModeH && UserHasModeQ == NO && UserHasModeA == NO && UserHasModeO == NO && UserHasModeH == NO) {
+				} else if (IHaveModeH && UserHasModeQ == NO && UserHasModeA == NO && UserHasModeO == NO &&
+						   UserHasModeH == NO) {
 					addUser = YES;
 				}
 

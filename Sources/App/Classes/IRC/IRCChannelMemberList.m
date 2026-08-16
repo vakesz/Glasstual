@@ -53,10 +53,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCChannelMemberList ()
-@property (nonatomic, weak) IRCClient *client;
-@property (nonatomic, weak) IRCChannel *channel;
-@property (nonatomic, strong, nullable) IRCChannelMemberListController *controller;
-@property (nonatomic, strong) NSMutableArray<IRCChannelUser *> *memberContainer;
+@property(nonatomic, weak) IRCClient *client;
+@property(nonatomic, weak) IRCChannel *channel;
+@property(nonatomic, strong, nullable) IRCChannelMemberListController *controller;
+@property(nonatomic, strong) NSMutableArray<IRCChannelUser *> *memberContainer;
 @end
 
 @implementation IRCChannelMemberList
@@ -113,7 +113,7 @@ NS_ASSUME_NONNULL_BEGIN
 	XRPerformBlockSynchronouslyOnMainQueue(^{
 		__weak IRCChannelMemberListController *controller = self.controller;
 
-		if ( controller) {
+		if (controller) {
 			[controller assignToChannel:nil];
 		}
 	});
@@ -133,10 +133,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	dispatch_once(&onceToken, ^{
 		dispatch_queue_attr_t attributes =
-		dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
+			dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
 
-		workerQueue =
-		dispatch_queue_create("IRCChannel.modifyMemberListSerialQueue", attributes);
+		workerQueue = dispatch_queue_create("IRCChannel.modifyMemberListSerialQueue", attributes);
 	});
 
 	return workerQueue;
@@ -188,11 +187,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableArray *container = self.memberContainer;
 
-	NSUInteger index = [container
-							indexOfObject:member
-							inSortedRange:container.range
-								  options:NSBinarySearchingInsertionIndex
-						  usingComparator:[IRCChannelUser channelRankComparator]];
+	NSUInteger index = [container indexOfObject:member
+								  inSortedRange:container.range
+										options:NSBinarySearchingInsertionIndex
+								usingComparator:[IRCChannelUser channelRankComparator]];
 
 	return index;
 }
@@ -277,7 +275,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if ([member isKindOfClass:[IRCChannelUserMutable class]]) {
-		 member = [member copy];
+		member = [member copy];
 	}
 
 	[member associateWithChannel:channel];
@@ -301,7 +299,7 @@ NS_ASSUME_NONNULL_BEGIN
 	XRPerformBlockSynchronouslyOnMainQueue(^{
 		__weak IRCChannelMemberListController *controller = self.controller;
 
-		if ( controller != nil) {
+		if (controller != nil) {
 			[controller insertObject:member atArrangedObjectIndex:sortedIndex];
 		}
 
@@ -341,7 +339,7 @@ NS_ASSUME_NONNULL_BEGIN
 	XRPerformBlockSynchronouslyOnMainQueue(^{
 		__weak IRCChannelMemberListController *controller = self.controller;
 
-		if ( controller != nil) {
+		if (controller != nil) {
 			[controller removeObjectAtArrangedObjectIndex:sortedIndex];
 		}
 
@@ -354,7 +352,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(member != nil);
 
 	if ([member isKindOfClass:[IRCChannelUserMutable class]]) {
-		 member = [member copy];
+		member = [member copy];
 	}
 
 	[self replaceMember:member withMember:member resort:YES];
@@ -423,13 +421,16 @@ NS_ASSUME_NONNULL_BEGIN
 	[self replaceMember:member1 withMember:member2 resort:YES replaceInAllChannels:NO];
 }
 
-- (void)replaceMember:(IRCChannelUser *)member1 withMember:(IRCChannelUser *)member2 resort:(BOOL)resort replaceInAllChannels:(BOOL)replaceInAllChannels
+- (void)replaceMember:(IRCChannelUser *)member1
+			  withMember:(IRCChannelUser *)member2
+				  resort:(BOOL)resort
+	replaceInAllChannels:(BOOL)replaceInAllChannels
 {
 	NSParameterAssert(member1 != nil);
 	NSParameterAssert(member2 != nil);
 
 	if ([member2 isKindOfClass:[IRCChannelUserMutable class]]) {
-		 member2 = [member2 copy];
+		member2 = [member2 copy];
 	}
 
 	[self _replaceMember:member1 withMember:member2 resort:resort];
@@ -505,11 +506,11 @@ NS_ASSUME_NONNULL_BEGIN
 			NSUInteger rankOfNewMode = [clientSupportInfo rankForUserPrefixWithMode:mode];
 
 			NSUInteger lowerRankedMode =
-			[oldModeSymbols indexOfObjectPassingTest:^BOOL(NSString *oldModeSymbol, NSUInteger index, BOOL *stop) {
-				NSInteger rankOfOldMode = [clientSupportInfo rankForUserPrefixWithMode:oldModeSymbol];
+				[oldModeSymbols indexOfObjectPassingTest:^BOOL(NSString *oldModeSymbol, NSUInteger index, BOOL *stop) {
+					NSInteger rankOfOldMode = [clientSupportInfo rankForUserPrefixWithMode:oldModeSymbol];
 
-				return (rankOfOldMode < rankOfNewMode);
-			}];
+					return (rankOfOldMode < rankOfNewMode);
+				}];
 
 			if (lowerRankedMode != NSNotFound) {
 				[newModeSymbols insertObject:mode atIndex:lowerRankedMode];
@@ -530,9 +531,10 @@ NS_ASSUME_NONNULL_BEGIN
 		/* If the user wasn't already marked as an IRCop, then we
 		 mark them at this point. */
 
-		[client modifyUser:member.user withBlock:^(IRCUserMutable *userMutable) {
-			userMutable.isIRCop = YES;
-		}];
+		[client modifyUser:member.user
+				 withBlock:^(IRCUserMutable *userMutable) {
+					 userMutable.isIRCop = YES;
+				 }];
 
 		if ([TPCPreferences memberListSortFavorsServerStaff]) {
 			replaceInAllChannels = YES;
@@ -540,10 +542,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	// Remove the user from the member list and insert sorted
-	[self replaceMember:member
-			 withMember:memberMutable
-				 resort:YES
-   replaceInAllChannels:replaceInAllChannels];
+	[self replaceMember:member withMember:memberMutable resort:YES replaceInAllChannels:replaceInAllChannels];
 }
 
 #pragma mark -
@@ -630,17 +629,18 @@ NS_ASSUME_NONNULL_BEGIN
 		[nicknames addObject:member.user.nickname];
 	}
 
-	NSDictionary *pasteboardDictionary = @{
-	   @"channelId" : channelId,
-	   @"nicknames" : nicknames
-	};
+	NSDictionary *pasteboardDictionary = @{@"channelId" : channelId, @"nicknames" : nicknames};
 
-	NSData *pasteboardData = [NSKeyedArchiver archivedDataWithRootObject:pasteboardDictionary requiringSecureCoding:YES error:NULL];
+	NSData *pasteboardData = [NSKeyedArchiver archivedDataWithRootObject:pasteboardDictionary
+												   requiringSecureCoding:YES
+																   error:NULL];
 
 	return pasteboardData;
 }
 
-+ (BOOL)readNicknamesFromPasteboardData:(NSData *)pasteboardData withBlock:(void (NS_NOESCAPE ^)(IRCChannel *channel, NSArray<NSString *> *nicknames))callbackBlock
++ (BOOL)readNicknamesFromPasteboardData:(NSData *)pasteboardData
+							  withBlock:(void(NS_NOESCAPE ^)(IRCChannel *channel, NSArray<NSString *> *nicknames))
+											callbackBlock
 {
 	NSParameterAssert(pasteboardData != nil);
 	NSParameterAssert(callbackBlock != nil);
@@ -648,9 +648,10 @@ NS_ASSUME_NONNULL_BEGIN
 	/* This is a private method which means that we are very lazy about
 	 validating the input, but this is a TODO to myself: add strict type
 	 checks if you end up making this method public. */
-	NSDictionary *pasteboardDictionary = [NSKeyedUnarchiver unarchivedObjectOfClasses:[NSSet setWithObjects:[NSDictionary class], [NSString class], [NSArray class], nil]
-																			 fromData:pasteboardData
-																				error:NULL];
+	NSDictionary *pasteboardDictionary = [NSKeyedUnarchiver
+		unarchivedObjectOfClasses:[NSSet setWithObjects:[NSDictionary class], [NSString class], [NSArray class], nil]
+						 fromData:pasteboardData
+							error:NULL];
 
 	if ([pasteboardDictionary isKindOfClass:[NSDictionary class]] == NO) {
 		return NO;
@@ -671,27 +672,29 @@ NS_ASSUME_NONNULL_BEGIN
 	return YES;
 }
 
-+ (BOOL)readMembersFromPasteboardData:(NSData *)pasteboardData withBlock:(void (NS_NOESCAPE ^)(IRCChannel *channel, NSArray<IRCChannelUser *> *members))callbackBlock
++ (BOOL)readMembersFromPasteboardData:(NSData *)pasteboardData
+							withBlock:(void(NS_NOESCAPE ^)(IRCChannel *channel, NSArray<IRCChannelUser *> *members))
+										  callbackBlock
 {
 	NSParameterAssert(pasteboardData != nil);
 	NSParameterAssert(callbackBlock != nil);
 
-	return
-	[self readNicknamesFromPasteboardData:pasteboardData withBlock:^(IRCChannel *channel, NSArray<NSString *> *nicknames) {
-		NSMutableArray *members = [NSMutableArray arrayWithCapacity:nicknames.count];
+	return [self readNicknamesFromPasteboardData:pasteboardData
+									   withBlock:^(IRCChannel *channel, NSArray<NSString *> *nicknames) {
+										   NSMutableArray *members = [NSMutableArray arrayWithCapacity:nicknames.count];
 
-		for (NSString *nickname in nicknames) {
-			IRCChannelUser *member = [channel findMember:nickname];
+										   for (NSString *nickname in nicknames) {
+											   IRCChannelUser *member = [channel findMember:nickname];
 
-			if (member == nil) {
-				continue;
-			}
+											   if (member == nil) {
+												   continue;
+											   }
 
-			[members addObject:member];
-		}
+											   [members addObject:member];
+										   }
 
-		callbackBlock(channel, [members copy]);
-	}];
+										   callbackBlock(channel, [members copy]);
+									   }];
 }
 
 #pragma mark -

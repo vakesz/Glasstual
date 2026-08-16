@@ -41,11 +41,11 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCValidatedComboBox, TVCValidatedTextField;
 
 @interface TDCSheetBase : NSObject
-@property (nonatomic, weak) id delegate;
-@property (nonatomic, weak) NSWindow *window;
-@property (nonatomic, strong) IBOutlet NSWindow *sheet; // Window being attached
-@property (nonatomic, weak) IBOutlet NSButton *okButton;
-@property (nonatomic, weak) IBOutlet NSButton *cancelButton;
+@property(nonatomic, weak) id delegate;
+@property(nonatomic, weak) NSWindow *window;
+@property(nonatomic, strong) IBOutlet NSWindow *sheet; // Window being attached
+@property(nonatomic, weak) IBOutlet NSButton *okButton;
+@property(nonatomic, weak) IBOutlet NSButton *cancelButton;
 
 - (instancetype)init NS_UNAVAILABLE;
 

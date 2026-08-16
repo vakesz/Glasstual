@@ -53,7 +53,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCLogControllerInlineMediaService ()
-@property (nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, strong) NSXPCConnection *serviceConnection;
 @end
 
 @implementation TVCLogControllerInlineMediaService
@@ -98,9 +98,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)connectToService
 {
-	NSXPCConnection *serviceConnection = [[NSXPCConnection alloc] initWithServiceName:@"com.vakesz.glasstual.InlineContentLoader"];
+	NSXPCConnection *serviceConnection =
+		[[NSXPCConnection alloc] initWithServiceName:@"com.vakesz.glasstual.InlineContentLoader"];
 
-	NSXPCInterface *remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentServerProtocol)];
+	NSXPCInterface *remoteObjectInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentServerProtocol)];
 
 	[remoteObjectInterface setClasses:[NSSet setWithObjects:[NSArray class], [NSURL class], nil]
 						  forSelector:@selector(warmServiceByLoadingPluginsAtLocations:)
@@ -109,7 +111,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	serviceConnection.remoteObjectInterface = remoteObjectInterface;
 
-	NSXPCInterface *exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentClientProtocol)];
+	NSXPCInterface *exportedInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(ICLInlineContentClientProtocol)];
 
 	serviceConnection.exportedInterface = exportedInterface;
 
@@ -167,9 +170,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)registerPlugins
 {
-	NSArray *pluginLocations = @[
-		 [self _applicationSupportInlineMediaPluginsURL]
-	];
+	NSArray *pluginLocations = @[ [self _applicationSupportInlineMediaPluginsURL] ];
 
 	[[self remoteObjectProxy] warmServiceByLoadingPluginsAtLocations:pluginLocations];
 }
@@ -188,16 +189,15 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Private API
 
-- (id <ICLInlineContentServerProtocol>)remoteObjectProxy
+- (id<ICLInlineContentServerProtocol>)remoteObjectProxy
 {
 	return [self remoteObjectProxyWithErrorHandler:nil];
 }
 
-- (id <ICLInlineContentServerProtocol>)remoteObjectProxyWithErrorHandler:(void (^ _Nullable)(NSError *error))handler
+- (id<ICLInlineContentServerProtocol>)remoteObjectProxyWithErrorHandler:(void (^_Nullable)(NSError *error))handler
 {
 	return [self.serviceConnection remoteObjectProxyWithErrorHandler:^(NSError *error) {
-		LogToConsoleError("Error occurred while communicating with service: %{public}@",
-			error.localizedDescription);
+		LogToConsoleError("Error occurred while communicating with service: %{public}@", error.localizedDescription);
 
 		if (handler) {
 			handler(error);
@@ -208,7 +208,11 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Public API
 
-- (void)processAddress:(NSString *)address withUniqueIdentifier:(NSString *)uniqueIdentifier atLineNumber:(NSString *)lineNumber index:(NSUInteger)index forItem:(IRCTreeItem *)item
+- (void)processAddress:(NSString *)address
+	withUniqueIdentifier:(NSString *)uniqueIdentifier
+			atLineNumber:(NSString *)lineNumber
+				   index:(NSUInteger)index
+				 forItem:(IRCTreeItem *)item
 {
 	NSParameterAssert(address != nil);
 	NSParameterAssert(uniqueIdentifier != nil);
@@ -228,7 +232,11 @@ NS_ASSUME_NONNULL_BEGIN
 	[self processURL:url withUniqueIdentifier:uniqueIdentifier atLineNumber:lineNumber index:index forItem:item];
 }
 
-- (void)processURL:(NSURL *)url withUniqueIdentifier:(NSString *)uniqueIdentifier atLineNumber:(NSString *)lineNumber index:(NSUInteger)index forItem:(IRCTreeItem *)item
+- (void)processURL:(NSURL *)url
+	withUniqueIdentifier:(NSString *)uniqueIdentifier
+			atLineNumber:(NSString *)lineNumber
+				   index:(NSUInteger)index
+				 forItem:(IRCTreeItem *)item
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(uniqueIdentifier != nil);
@@ -237,7 +245,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self warmProcessIfNeeded];
 
-	[[self remoteObjectProxy] processURL:url withUniqueIdentifier:uniqueIdentifier atLineNumber:lineNumber index:index inView:item.uniqueIdentifier];
+	[[self remoteObjectProxy] processURL:url
+					withUniqueIdentifier:uniqueIdentifier
+							atLineNumber:lineNumber
+								   index:index
+								  inView:item.uniqueIdentifier];
 }
 
 - (void)reloadService
@@ -283,7 +295,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Helpers
 
-+ (void)askPermissionToEnableInlineMediaWithCompletionBlock:(void (NS_NOESCAPE ^)(BOOL granted))completionBlock
++ (void)askPermissionToEnableInlineMediaWithCompletionBlock:(void(NS_NOESCAPE ^)(BOOL granted))completionBlock
 {
 	BOOL presentDialog = NO;
 
@@ -326,7 +338,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	completionBlock(response == NSAlertFirstButtonReturn);
 }
-
 
 @end
 

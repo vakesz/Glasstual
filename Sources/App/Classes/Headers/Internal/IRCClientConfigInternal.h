@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCClientConfig ()
 {
-@protected
+  @protected
 	BOOL _autoConnect;
 	BOOL _autoReconnect;
 	BOOL _autoSleepModeDisconnect;
@@ -93,7 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
 	uint16_t _serverPort;
 	RCMCipherSuiteCollection _cipherSuites;
 
-@private
+  @private
 	BOOL _migratedServerPasswordPendingDestroy;
 	NSUInteger _dictionaryVersion;
 	NSString *_uniqueIdentifier;

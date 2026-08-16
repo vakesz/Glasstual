@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSUInteger, IRCAddressBookEntryType) {
 	IRCAddressBookEntryTypeIgnore = 0,
 	IRCAddressBookEntryTypeUserTracking,
-	
+
 	/* Entry type used when multiple instances of IRCAddressBookEntry
 	 are combined into a single object which represents all. */
 	IRCAddressBookEntryTypeMixed
@@ -60,26 +60,26 @@ typedef NS_ENUM(NSUInteger, IRCAddressBookUserTrackingStatus) {
 #pragma mark Immutable Object
 
 @interface IRCAddressBookEntry : XRPortablePropertyDict
-@property (readonly) IRCAddressBookEntryType entryType;
-@property (readonly, copy) NSString *uniqueIdentifier;
-@property (readonly, copy) NSString *hostmask;
-@property (readonly, copy) NSString *hostmaskRegularExpression;
-@property (readonly, copy, nullable) NSString *trackingNickname;
-@property (readonly) BOOL ignoreClientToClientProtocol;
-@property (readonly) BOOL ignoreGeneralEventMessages;
-@property (readonly) BOOL ignoreNoticeMessages;
-@property (readonly) BOOL ignorePrivateMessageHighlights;
-@property (readonly) BOOL ignorePrivateMessages;
-@property (readonly) BOOL ignorePublicMessageHighlights;
-@property (readonly) BOOL ignorePublicMessages;
-@property (readonly) BOOL ignoreFileTransferRequests;
-@property (readonly) BOOL ignoreInlineMedia;
-@property (readonly) BOOL ignoreMessagesContainingMatch;
-@property (readonly) BOOL trackUserActivity;
+@property(readonly) IRCAddressBookEntryType entryType;
+@property(readonly, copy) NSString *uniqueIdentifier;
+@property(readonly, copy) NSString *hostmask;
+@property(readonly, copy) NSString *hostmaskRegularExpression;
+@property(readonly, copy, nullable) NSString *trackingNickname;
+@property(readonly) BOOL ignoreClientToClientProtocol;
+@property(readonly) BOOL ignoreGeneralEventMessages;
+@property(readonly) BOOL ignoreNoticeMessages;
+@property(readonly) BOOL ignorePrivateMessageHighlights;
+@property(readonly) BOOL ignorePrivateMessages;
+@property(readonly) BOOL ignorePublicMessageHighlights;
+@property(readonly) BOOL ignorePublicMessages;
+@property(readonly) BOOL ignoreFileTransferRequests;
+@property(readonly) BOOL ignoreInlineMedia;
+@property(readonly) BOOL ignoreMessagesContainingMatch;
+@property(readonly) BOOL trackUserActivity;
 
 /* When IRCAddressBookEntryTypeMixed is mixed, this array holds
  a reference to each entry that is mixed into the current object. */
-@property (readonly, copy, nullable) NSArray<IRCAddressBookEntry *> *parentEntries;
+@property(readonly, copy, nullable) NSArray<IRCAddressBookEntry *> *parentEntries;
 
 + (instancetype)newIgnoreEntry;
 + (instancetype)newIgnoreEntryForHostmask:(nullable NSString *)hostmask;
@@ -93,19 +93,19 @@ typedef NS_ENUM(NSUInteger, IRCAddressBookUserTrackingStatus) {
 #pragma mark Mutable Object
 
 @interface IRCAddressBookEntryMutable : IRCAddressBookEntry
-@property (nonatomic, assign, readwrite) IRCAddressBookEntryType entryType;
-@property (nonatomic, copy, readwrite) NSString *hostmask;
-@property (nonatomic, assign, readwrite) BOOL ignoreClientToClientProtocol;
-@property (nonatomic, assign, readwrite) BOOL ignoreGeneralEventMessages;
-@property (nonatomic, assign, readwrite) BOOL ignoreNoticeMessages;
-@property (nonatomic, assign, readwrite) BOOL ignorePrivateMessageHighlights;
-@property (nonatomic, assign, readwrite) BOOL ignorePrivateMessages;
-@property (nonatomic, assign, readwrite) BOOL ignorePublicMessageHighlights;
-@property (nonatomic, assign, readwrite) BOOL ignorePublicMessages;
-@property (nonatomic, assign, readwrite) BOOL ignoreFileTransferRequests;
-@property (nonatomic, assign, readwrite) BOOL ignoreInlineMedia;
-@property (nonatomic, assign, readwrite) BOOL trackUserActivity;
-@property (nonatomic, copy, readwrite, nullable) NSArray<IRCAddressBookEntry *> *parentEntries;
+@property(nonatomic, assign, readwrite) IRCAddressBookEntryType entryType;
+@property(nonatomic, copy, readwrite) NSString *hostmask;
+@property(nonatomic, assign, readwrite) BOOL ignoreClientToClientProtocol;
+@property(nonatomic, assign, readwrite) BOOL ignoreGeneralEventMessages;
+@property(nonatomic, assign, readwrite) BOOL ignoreNoticeMessages;
+@property(nonatomic, assign, readwrite) BOOL ignorePrivateMessageHighlights;
+@property(nonatomic, assign, readwrite) BOOL ignorePrivateMessages;
+@property(nonatomic, assign, readwrite) BOOL ignorePublicMessageHighlights;
+@property(nonatomic, assign, readwrite) BOOL ignorePublicMessages;
+@property(nonatomic, assign, readwrite) BOOL ignoreFileTransferRequests;
+@property(nonatomic, assign, readwrite) BOOL ignoreInlineMedia;
+@property(nonatomic, assign, readwrite) BOOL trackUserActivity;
+@property(nonatomic, copy, readwrite, nullable) NSArray<IRCAddressBookEntry *> *parentEntries;
 @end
 
 NS_ASSUME_NONNULL_END

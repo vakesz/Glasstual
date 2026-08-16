@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)loadPluginsAtLocations:(NSArray<NSURL *> *)pluginLocations;
 
-@property (readonly, copy) NSArray<Class> *modules;
+@property(readonly, copy) NSArray<Class> *modules;
 @end
 
 NS_ASSUME_NONNULL_END

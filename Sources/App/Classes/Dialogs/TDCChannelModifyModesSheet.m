@@ -49,23 +49,23 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCChannelModifyModesSheet () <NSControlTextEditingDelegate>
-@property (nonatomic, strong, readwrite) IRCClient *client;
-@property (nonatomic, strong, readwrite) IRCChannel *channel;
-@property (nonatomic, copy, readwrite) NSString *clientId;
-@property (nonatomic, copy, readwrite) NSString *channelId;
-@property (nonatomic, strong) IRCChannelModeContainer *modes;
-@property (nonatomic, weak) IBOutlet NSButton *sCheck;
-@property (nonatomic, weak) IBOutlet NSButton *pCheck;
-@property (nonatomic, weak) IBOutlet NSButton *nCheck;
-@property (nonatomic, weak) IBOutlet NSButton *tCheck;
-@property (nonatomic, weak) IBOutlet NSButton *iCheck;
-@property (nonatomic, weak) IBOutlet NSButton *mCheck;
-@property (nonatomic, weak) IBOutlet NSButton *kCheck;
-@property (nonatomic, weak) IBOutlet NSButton *lCheck;
-@property (nonatomic, weak) IBOutlet NSTextField *kText;
-@property (nonatomic, weak) IBOutlet NSTextField *lText;
-@property (nonatomic, copy) NSString *channelUserLimitMode;
-@property (nonatomic, assign) BOOL secretKeyLengthAlertDisplayed;
+@property(nonatomic, strong, readwrite) IRCClient *client;
+@property(nonatomic, strong, readwrite) IRCChannel *channel;
+@property(nonatomic, copy, readwrite) NSString *clientId;
+@property(nonatomic, copy, readwrite) NSString *channelId;
+@property(nonatomic, strong) IRCChannelModeContainer *modes;
+@property(nonatomic, weak) IBOutlet NSButton *sCheck;
+@property(nonatomic, weak) IBOutlet NSButton *pCheck;
+@property(nonatomic, weak) IBOutlet NSButton *nCheck;
+@property(nonatomic, weak) IBOutlet NSButton *tCheck;
+@property(nonatomic, weak) IBOutlet NSButton *iCheck;
+@property(nonatomic, weak) IBOutlet NSButton *mCheck;
+@property(nonatomic, weak) IBOutlet NSButton *kCheck;
+@property(nonatomic, weak) IBOutlet NSButton *lCheck;
+@property(nonatomic, weak) IBOutlet NSTextField *kText;
+@property(nonatomic, weak) IBOutlet NSTextField *lText;
+@property(nonatomic, copy) NSString *channelUserLimitMode;
+@property(nonatomic, assign) BOOL secretKeyLengthAlertDisplayed;
 
 - (IBAction)onChangeCheck:(nullable id)sender;
 @end
@@ -159,9 +159,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[self updateTextFields];
 
-	if (self.sCheck.state == NSControlStateValueOn &&
-		self.pCheck.state == NSControlStateValueOn)
-	{
+	if (self.sCheck.state == NSControlStateValueOn && self.pCheck.state == NSControlStateValueOn) {
 		if (sender == self.sCheck) {
 			self.pCheck.state = NSControlStateValueOff;
 		} else {
@@ -197,36 +195,31 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[TDCAlert alertSheetWithWindow:self.sheet
-							  body:TXTLS(@"TDCChannelModifyModesSheet[lir-ra]")
-							 title:TXTLS(@"TDCChannelModifyModesSheet[7m9-39]", self.client.networkNameAlt, maximumKeyLength)
-					 defaultButton:TXTLS(@"Prompts[c7s-dq]")
-				   alternateButton:nil
-					   otherButton:nil
-					suppressionKey:@"maximum_secret_key_length"
-				   suppressionText:nil
-				   completionBlock:nil];
+	[TDCAlert
+		alertSheetWithWindow:self.sheet
+						body:TXTLS(@"TDCChannelModifyModesSheet[lir-ra]")
+					   title:TXTLS(@"TDCChannelModifyModesSheet[7m9-39]", self.client.networkNameAlt, maximumKeyLength)
+			   defaultButton:TXTLS(@"Prompts[c7s-dq]")
+			 alternateButton:nil
+				 otherButton:nil
+			  suppressionKey:@"maximum_secret_key_length"
+			 suppressionText:nil
+			 completionBlock:nil];
 }
 
 - (void)ok:(nullable id)sender
 {
-	[self.modes changeMode:@"i"
-				 modeIsSet:(self.iCheck.state == NSControlStateValueOn)];
+	[self.modes changeMode:@"i" modeIsSet:(self.iCheck.state == NSControlStateValueOn)];
 
-	[self.modes changeMode:@"m"
-				 modeIsSet:(self.mCheck.state == NSControlStateValueOn)];
+	[self.modes changeMode:@"m" modeIsSet:(self.mCheck.state == NSControlStateValueOn)];
 
-	[self.modes changeMode:@"n"
-				 modeIsSet:(self.nCheck.state == NSControlStateValueOn)];
+	[self.modes changeMode:@"n" modeIsSet:(self.nCheck.state == NSControlStateValueOn)];
 
-	[self.modes changeMode:@"p"
-				 modeIsSet:(self.pCheck.state == NSControlStateValueOn)];
+	[self.modes changeMode:@"p" modeIsSet:(self.pCheck.state == NSControlStateValueOn)];
 
-	[self.modes changeMode:@"s"
-				 modeIsSet:(self.sCheck.state == NSControlStateValueOn)];
+	[self.modes changeMode:@"s" modeIsSet:(self.sCheck.state == NSControlStateValueOn)];
 
-	[self.modes changeMode:@"t"
-				 modeIsSet:(self.tCheck.state == NSControlStateValueOn)];
+	[self.modes changeMode:@"t" modeIsSet:(self.tCheck.state == NSControlStateValueOn)];
 
 	[self.modes changeMode:@"k"
 				 modeIsSet:(self.kCheck.state == NSControlStateValueOn)

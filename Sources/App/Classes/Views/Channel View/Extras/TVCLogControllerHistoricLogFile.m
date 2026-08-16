@@ -53,14 +53,14 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCLogControllerHistoricLogFile ()
-@property (nonatomic, assign, readwrite) BOOL isSaving;
-@property (nonatomic, assign, readwrite) BOOL isTerminating;
-@property (nonatomic, assign, readwrite) BOOL processLoaded;
-@property (nonatomic, assign, readwrite) BOOL processLoading;
-@property (nonatomic, strong) NSXPCConnection *serviceConnection;
-@property (nonatomic, assign) BOOL connectionInvalidatedVoluntarily;
-@property (nonatomic, assign) BOOL connectionInvalidatedErrorDialogDisplayed;
-@property (nonatomic, copy, nullable) NSError *lastServiceConnectionError;
+@property(nonatomic, assign, readwrite) BOOL isSaving;
+@property(nonatomic, assign, readwrite) BOOL isTerminating;
+@property(nonatomic, assign, readwrite) BOOL processLoaded;
+@property(nonatomic, assign, readwrite) BOOL processLoading;
+@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, assign) BOOL connectionInvalidatedVoluntarily;
+@property(nonatomic, assign) BOOL connectionInvalidatedErrorDialogDisplayed;
+@property(nonatomic, copy, nullable) NSError *lastServiceConnectionError;
 @end
 
 @implementation TVCLogControllerHistoricLogFile
@@ -126,48 +126,58 @@ NS_ASSUME_NONNULL_BEGIN
 		self.processLoaded = NO;
 
 		LogToConsoleError("Failed to communicate with process to open database");
-	}] openDatabaseInDirectory:[self databaseSavePath] withCompletionBlock:^(BOOL success) {
-		if (success) {
-			LogToConsoleDebug("Successfully opened database");
-		} else {
-			LogToConsoleError("Failed to open database");
-		}
+	}] openDatabaseInDirectory:[self databaseSavePath]
+		   withCompletionBlock:^(BOOL success) {
+			   if (success) {
+				   LogToConsoleDebug("Successfully opened database");
+			   } else {
+				   LogToConsoleError("Failed to open database");
+			   }
 
-		self.processLoading = NO;
-		self.processLoaded = success;
-	}];
+			   self.processLoading = NO;
+			   self.processLoaded = success;
+		   }];
 }
 
 - (void)connectToService
 {
-	NSXPCConnection *serviceConnection = [[NSXPCConnection alloc] initWithServiceName:@"com.vakesz.glasstual.ScrollbackHistoryManager"];
+	NSXPCConnection *serviceConnection =
+		[[NSXPCConnection alloc] initWithServiceName:@"com.vakesz.glasstual.ScrollbackHistoryManager"];
 
-	NSXPCInterface *remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(HLSHistoricLogServerProtocol)];
+	NSXPCInterface *remoteObjectInterface =
+		[NSXPCInterface interfaceWithProtocol:@protocol(HLSHistoricLogServerProtocol)];
 
 	[remoteObjectInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
-						  forSelector:@selector(fetchEntriesForView:ascending:fetchLimit:limitToDate:withCompletionBlock:)
+						  forSelector:@selector(fetchEntriesForView:
+														  ascending:fetchLimit:limitToDate:withCompletionBlock:)
+						argumentIndex:0
+							  ofReply:YES];
+
+	[remoteObjectInterface
+		   setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
+		  forSelector:@selector(fetchEntriesForView:
+							   withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:)
+		argumentIndex:0
+			  ofReply:YES];
+
+	[remoteObjectInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
+						  forSelector:@selector(fetchEntriesForView:
+											 beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
 						argumentIndex:0
 							  ofReply:YES];
 
 	[remoteObjectInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
-						  forSelector:@selector(fetchEntriesForView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:)
+						  forSelector:@selector(fetchEntriesForView:
+											  afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
 						argumentIndex:0
 							  ofReply:YES];
 
-	[remoteObjectInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
-						  forSelector:@selector(fetchEntriesForView:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
-						argumentIndex:0
-							  ofReply:YES];
-
-	[remoteObjectInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
-						  forSelector:@selector(fetchEntriesForView:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:)
-						argumentIndex:0
-							  ofReply:YES];
-
-	[remoteObjectInterface setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
-						  forSelector:@selector(fetchEntriesForView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:)
-						argumentIndex:0
-							  ofReply:YES];
+	[remoteObjectInterface
+		   setClasses:[NSSet setWithObjects:[NSArray class], [TVCLogLineXPC class], nil]
+		  forSelector:@selector(fetchEntriesForView:
+							  afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:)
+		argumentIndex:0
+			  ofReply:YES];
 
 	serviceConnection.remoteObjectInterface = remoteObjectInterface;
 
@@ -257,18 +267,17 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Private API
 
-- (id <HLSHistoricLogServerProtocol>)remoteObjectProxy
+- (id<HLSHistoricLogServerProtocol>)remoteObjectProxy
 {
 	return [self remoteObjectProxyWithErrorHandler:nil];
 }
 
-- (id <HLSHistoricLogServerProtocol>)remoteObjectProxyWithErrorHandler:(void (^ _Nullable)(NSError *error))handler
+- (id<HLSHistoricLogServerProtocol>)remoteObjectProxyWithErrorHandler:(void (^_Nullable)(NSError *error))handler
 {
 	return [self.serviceConnection remoteObjectProxyWithErrorHandler:^(NSError *error) {
 		self.lastServiceConnectionError = error;
 
-		LogToConsoleError("Error occurred while communicating with service: %{public}@",
-			error.localizedDescription);
+		LogToConsoleError("Error occurred while communicating with service: %{public}@", error.localizedDescription);
 
 		if (handler) {
 			handler(error);
@@ -302,9 +311,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)fetchEntriesForItem:(IRCTreeItem *)item
 				  ascending:(BOOL)ascending
-				  fetchLimit:(NSUInteger)fetchLimit
-				 limitToDate:(nullable NSDate *)limitToDate
-		 withCompletionBlock:(void (^)(NSArray<TVCLogLine *> *entries))completionBlock
+				 fetchLimit:(NSUInteger)fetchLimit
+				limitToDate:(nullable NSDate *)limitToDate
+		withCompletionBlock:(void (^)(NSArray<TVCLogLine *> *entries))completionBlock
 {
 	[self warmProcessIfNeeded];
 
@@ -376,7 +385,7 @@ NS_ASSUME_NONNULL_BEGIN
 	__weak typeof(self) weakSelf = self;
 
 	[[self remoteObjectProxy] fetchEntriesForView:item.uniqueIdentifier
-						   afterUniqueIdentifier:uniqueId
+							afterUniqueIdentifier:uniqueId
 									   fetchLimit:fetchLimit
 									  limitToDate:limitToDate
 							  withCompletionBlock:^(NSArray<TVCLogLineXPC *> *entries) {
@@ -460,8 +469,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Private API (Client)
 
-- (void)willDeleteUniqueIdentifiers:(NSArray<NSString *> *)uniqueIdentifiers
-							 inView:(NSString *)viewId
+- (void)willDeleteUniqueIdentifiers:(NSArray<NSString *> *)uniqueIdentifiers inView:(NSString *)viewId
 {
 	IRCTreeItem *item = [worldController() findItemWithId:viewId];
 

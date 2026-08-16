@@ -62,7 +62,9 @@ NS_ASSUME_NONNULL_BEGIN
 	return [self initWithModeSymbol:modeSymbol modeIsSet:modeIsSet modeParameter:nil];
 }
 
-- (instancetype)initWithModeSymbol:(NSString *)modeSymbol modeIsSet:(BOOL)modeIsSet modeParameter:(nullable NSString *)modeParameter
+- (instancetype)initWithModeSymbol:(NSString *)modeSymbol
+						 modeIsSet:(BOOL)modeIsSet
+					 modeParameter:(nullable NSString *)modeParameter
 {
 	NSParameterAssert(modeSymbol.length == 1);
 
@@ -108,7 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 	IRCModeInfo *objectCast = (IRCModeInfo *)object;
 
 	return (self.modeIsSet == objectCast.modeIsSet &&
-			
+
 			((self.modeSymbol == nil && objectCast.modeSymbol == nil) ||
 			 [self.modeSymbol isEqualToString:objectCast.modeSymbol]) &&
 

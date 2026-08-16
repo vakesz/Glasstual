@@ -48,12 +48,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSURLComponents *requestComponents = [NSURLComponents componentsWithString:@"https://publish.twitter.com/oembed"];
 
-	requestComponents.queryItems =
-	@[
-	  [NSURLQueryItem queryItemWithName:@"dnt" value:@"true"], /* DO NOT TRACK */
-	  [NSURLQueryItem queryItemWithName:@"maxwidth" value:@"500"],
-	  [NSURLQueryItem queryItemWithName:@"omit_script" value:@"true"],
-	  [NSURLQueryItem queryItemWithName:@"url" value:tweetAddress]
+	requestComponents.queryItems = @[
+		[NSURLQueryItem queryItemWithName:@"dnt" value:@"true"], /* DO NOT TRACK */
+		[NSURLQueryItem queryItemWithName:@"maxwidth" value:@"500"],
+		[NSURLQueryItem queryItemWithName:@"omit_script" value:@"true"],
+		[NSURLQueryItem queryItemWithName:@"url" value:tweetAddress]
 	];
 
 	NSURL *requestURL = requestComponents.URL;
@@ -63,14 +62,14 @@ NS_ASSUME_NONNULL_BEGIN
 					  inHierarchy:nil
 						  fromURL:requestURL
 				  completionBlock:^(id object) {
-				if (object == nil) {
-					[self notifyUnableToPresentHTML];
+					  if (object == nil) {
+						  [self notifyUnableToPresentHTML];
 
-					return;
-				}
+						  return;
+					  }
 
-				[self performActionForHTML:object];
-			}];
+					  [self performActionForHTML:object];
+				  }];
 }
 
 #pragma mark -
@@ -121,12 +120,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"twitter.com",
-		  @"www.twitter.com",
-		  @"mobile.twitter.com"
-		];
+		domains = @[ @"twitter.com", @"www.twitter.com", @"mobile.twitter.com" ];
 	});
 
 	return domains;
@@ -137,11 +131,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSArray<NSURL *> *)scriptResources
 {
-	return
-	[[super scriptResources] arrayByAddingObjectsFromArray:
-	@[
-	  [NSURL URLWithString:@"https://platform.twitter.com/widgets.js"],
-	  [NSBundleForClass() URLForResource:@"ICMTweet" withExtension:@"js"]
+	return [[super scriptResources] arrayByAddingObjectsFromArray:@[
+		[NSURL URLWithString:@"https://platform.twitter.com/widgets.js"],
+		[NSBundleForClass() URLForResource:@"ICMTweet" withExtension:@"js"]
 	]];
 }
 

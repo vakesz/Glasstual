@@ -43,39 +43,39 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /* Hardcoded maximum width for images (and maybe other media) */
-#define _assessorMaximumImageWidth				7200
+#define _assessorMaximumImageWidth 7200
 
-NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
+NSString *const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 
 @interface ICLMediaAssessorConfiguration : NSObject
-@property (nonatomic, copy) ICLMediaAssessorCompletionBlock completionBlock;
-@property (nonatomic, assign) ICLMediaType expectedType;
-@property (nonatomic, copy) NSURL *url;
+@property(nonatomic, copy) ICLMediaAssessorCompletionBlock completionBlock;
+@property(nonatomic, assign) ICLMediaType expectedType;
+@property(nonatomic, copy) NSURL *url;
 @end
 
 @interface ICLMediaAssessorLimits : NSObject
-@property (nonatomic, assign) NSUInteger imageMaximumWidth;
-@property (nonatomic, assign) NSUInteger imageMaximumHeight;
-@property (nonatomic, assign) unsigned long long imageMaximumFilesize;
+@property(nonatomic, assign) NSUInteger imageMaximumWidth;
+@property(nonatomic, assign) NSUInteger imageMaximumHeight;
+@property(nonatomic, assign) unsigned long long imageMaximumFilesize;
 @end
 
 @interface ICLMediaAssessorRequest : NSObject
-@property (nonatomic, strong, nullable) NSURLSession *session;
-@property (nonatomic, strong, nullable) NSURLSessionTask *task;
-@property (nonatomic, copy, nullable) NSError *alternateError;
-@property (nonatomic, assign) BOOL doNotFinalize;
+@property(nonatomic, strong, nullable) NSURLSession *session;
+@property(nonatomic, strong, nullable) NSURLSessionTask *task;
+@property(nonatomic, copy, nullable) NSError *alternateError;
+@property(nonatomic, assign) BOOL doNotFinalize;
 @end
 
 @interface ICLMediaAssessorState : NSObject
-@property (nonatomic, copy, nullable) ICLMediaAssessment *assessment;
-@property (nonatomic, assign) BOOL performExtendedValidation;
+@property(nonatomic, copy, nullable) ICLMediaAssessment *assessment;
+@property(nonatomic, assign) BOOL performExtendedValidation;
 @end
 
 @interface ICLMediaAssessor ()
-@property (nonatomic, strong, nullable) ICLMediaAssessorConfiguration *config;
-@property (nonatomic, strong, nullable) ICLMediaAssessorLimits *limits;
-@property (nonatomic, strong, nullable) ICLMediaAssessorRequest *request;
-@property (nonatomic, strong, nullable) ICLMediaAssessorState *state;
+@property(nonatomic, strong, nullable) ICLMediaAssessorConfiguration *config;
+@property(nonatomic, strong, nullable) ICLMediaAssessorLimits *limits;
+@property(nonatomic, strong, nullable) ICLMediaAssessorRequest *request;
+@property(nonatomic, strong, nullable) ICLMediaAssessorState *state;
 @end
 
 @implementation ICLMediaAssessor
@@ -100,21 +100,27 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	return [self assessorForURL:url withType:ICLMediaTypeUnknown completionBlock:completionBlock];
 }
 
-+ (instancetype)assessorForAddress:(NSString *)address withType:(ICLMediaType)type completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
++ (instancetype)assessorForAddress:(NSString *)address
+						  withType:(ICLMediaType)type
+				   completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
 {
 	ICLMediaAssessor *object = [[self alloc] initWithAddress:address withType:type completionBlock:completionBlock];
 
 	return object;
 }
 
-+ (instancetype)assessorForURL:(NSURL *)url withType:(ICLMediaType)type completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
++ (instancetype)assessorForURL:(NSURL *)url
+					  withType:(ICLMediaType)type
+			   completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
 {
 	ICLMediaAssessor *object = [[self alloc] initWithURL:url withType:type completionBlock:completionBlock];
 
 	return object;
 }
 
-- (instancetype)initWithAddress:(NSString *)address withType:(ICLMediaType)type completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
+- (instancetype)initWithAddress:(NSString *)address
+					   withType:(ICLMediaType)type
+				completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
 {
 	NSParameterAssert(address != nil);
 	NSParameterAssert(completionBlock != nil);
@@ -124,7 +130,9 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	return [self initWithURL:url withType:type completionBlock:completionBlock];
 }
 
-- (instancetype)initWithURL:(NSURL *)url withType:(ICLMediaType)type completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
+- (instancetype)initWithURL:(NSURL *)url
+				   withType:(ICLMediaType)type
+			completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(url.isFileURL == NO);
@@ -139,7 +147,9 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	return nil;
 }
 
-- (void)prepareToAssessURL:(NSURL *)url withType:(ICLMediaType)type completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
+- (void)prepareToAssessURL:(NSURL *)url
+				  withType:(ICLMediaType)type
+		   completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(completionBlock != nil);
@@ -183,7 +193,9 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	/* Prepare request */
 	ICLMediaAssessorRequest *request = [ICLMediaAssessorRequest new];
 
-	NSURLSession *urlSession = [NSURLSession sessionWithConfiguration:[self.class _sharedSessionConfiguration] delegate:(id)self delegateQueue:nil];
+	NSURLSession *urlSession = [NSURLSession sessionWithConfiguration:[self.class _sharedSessionConfiguration]
+															 delegate:(id)self
+														delegateQueue:nil];
 
 	request.session = urlSession;
 
@@ -200,9 +212,7 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	/* Prepare limits */
 	ICLMediaType expectedType = self.config.expectedType;
 
-	if (expectedType == ICLMediaTypeUnknown ||
-		expectedType == ICLMediaTypeImage)
-	{
+	if (expectedType == ICLMediaTypeUnknown || expectedType == ICLMediaTypeImage) {
 		ICLMediaAssessorLimits *limits = [ICLMediaAssessorLimits new];
 
 		limits.imageMaximumWidth = _assessorMaximumImageWidth;
@@ -277,12 +287,9 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 {
 	NSParameterAssert(errorDescription != nil);
 
-	return
-	[NSError errorWithDomain:ICLMediaAssessorErrorDomain
-						code:errorCode
-					userInfo:@{
-		NSLocalizedDescriptionKey : errorDescription
-	}];
+	return [NSError errorWithDomain:ICLMediaAssessorErrorDomain
+							   code:errorCode
+						   userInfo:@{NSLocalizedDescriptionKey : errorDescription}];
 }
 
 #pragma mark -
@@ -310,7 +317,7 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	return config;
 }
 
-- (nullable ICLMediaAssessorState *)_readHeadersInWithError:(NSError * _Nullable __autoreleasing * _Nonnull)error
+- (nullable ICLMediaAssessorState *)_readHeadersInWithError:(NSError *_Nullable __autoreleasing *_Nonnull)error
 {
 	NSParameterAssert(error != NULL);
 
@@ -318,7 +325,8 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 
 	/* Read in status code */
 	if (response.statusCode != 200) {
-		*error = [self _errorWithDescription:@"Endpoint did not respond with OK (200)" code:ICLMediaAssessorErrorCodeUnexpectedStatusCode];
+		*error = [self _errorWithDescription:@"Endpoint did not respond with OK (200)"
+										code:ICLMediaAssessorErrorCodeUnexpectedStatusCode];
 
 		return nil;
 	}
@@ -327,7 +335,8 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	NSString *contentType = response.MIMEType;
 
 	if (contentType.length > 128) {
-		*error = [self _errorWithDescription:@"Content-Type header is improperly formatted" code:ICLMediaAssessorErrorCodeMalformedContentType];
+		*error = [self _errorWithDescription:@"Content-Type header is improperly formatted"
+										code:ICLMediaAssessorErrorCodeMalformedContentType];
 
 		return nil;
 	}
@@ -336,7 +345,8 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	long long contentLength = response.expectedContentLength;
 
 	if (contentLength <= 0) {
-		*error = [self _errorWithDescription:@"Content-Length header is improperly formatted" code:ICLMediaAssessorErrorCodeMalformedContentLength];
+		*error = [self _errorWithDescription:@"Content-Length header is improperly formatted"
+										code:ICLMediaAssessorErrorCodeMalformedContentLength];
 
 		return nil;
 	}
@@ -347,23 +357,19 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	BOOL performExtendedValidation = NO;
 
 	/* Content is an image */
-	if ([[self.class validImageContentTypes] containsObject:contentType])
-	{
+	if ([[self.class validImageContentTypes] containsObject:contentType]) {
 		mediaType = ICLMediaTypeImage;
 	}
 
 	/* Content is a video */
-	else if ([[self.class validVideoContentTypes] containsObject:contentType])
-	{
+	else if ([[self.class validVideoContentTypes] containsObject:contentType]) {
 		mediaType = ICLMediaTypeVideo;
 	}
 
 	/* Is this a type we are interested in? */
 	ICLMediaType expectedType = self.config.expectedType;
 
-	if (expectedType != ICLMediaTypeUnknown &&
-		expectedType != mediaType)
-	{
+	if (expectedType != ICLMediaTypeUnknown && expectedType != mediaType) {
 		*error = [self _errorWithDescription:@"Unexpected media type" code:ICLMediaAssessorErrorCodeUnexpectedType];
 
 		return nil;
@@ -371,35 +377,34 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 
 	/* Perform basic validation */
 	switch (mediaType) {
-		case ICLMediaTypeImage:
-		{
-			ICLMediaAssessorLimits *limits = self.limits;
+	case ICLMediaTypeImage: {
+		ICLMediaAssessorLimits *limits = self.limits;
 
-			/* Limit maximum filesize */
-			if (contentLength > limits.imageMaximumFilesize) {
-				*error = [self _errorWithDescription:@"Content-Length exceeds maximum allowed" code:ICLMediaAssessorErrorCodeContentLengthExceeded];
+		/* Limit maximum filesize */
+		if (contentLength > limits.imageMaximumFilesize) {
+			*error = [self _errorWithDescription:@"Content-Length exceeds maximum allowed"
+											code:ICLMediaAssessorErrorCodeContentLengthExceeded];
 
-				return nil;
-			}
+			return nil;
+		}
 
-			/* Limiting the height of an image requires us to download
+		/* Limiting the height of an image requires us to download
 			 the contents of the image first, which we do by setting
 			 the performExtendedValidation flag on the state. */
-			if (limits.imageMaximumHeight > 0) {
-				performExtendedValidation = YES;
-			}
+		if (limits.imageMaximumHeight > 0) {
+			performExtendedValidation = YES;
+		}
 
-			break;
-		}
-		default:
-		{
-			break;
-		}
+		break;
+	}
+	default: {
+		break;
+	}
 	}
 
 	/* Complete read in */
-	ICLMediaAssessmentMutable *assessment =
-	[[ICLMediaAssessmentMutable alloc] initWithURL:response.URL asType:mediaType];
+	ICLMediaAssessmentMutable *assessment = [[ICLMediaAssessmentMutable alloc] initWithURL:response.URL
+																					asType:mediaType];
 
 	assessment.contentType = contentType;
 	assessment.contentLength = contentLength;
@@ -416,13 +421,16 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 #pragma mark
 #pragma mark URL Session Delegate Cont.
 
-- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
+- (void)URLSession:(NSURLSession *)session
+			  dataTask:(NSURLSessionDataTask *)dataTask
+	didReceiveResponse:(NSURLResponse *)response
+	 completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
 {
 	/* Response might not be an HTTP response if we
 	 end up receiving a redirect to a data URL. */
 	if ([response isKindOfClass:[NSHTTPURLResponse class]] == NO) {
-		self.request.alternateError =
-		[self _errorWithDescription:@"Invalid response type (not HTTP)" code:ICLMediaAssessorErrorCodeUnexpectedResponse];
+		self.request.alternateError = [self _errorWithDescription:@"Invalid response type (not HTTP)"
+															 code:ICLMediaAssessorErrorCodeUnexpectedResponse];
 
 		completionHandler(NSURLSessionResponseCancel);
 
@@ -462,29 +470,38 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	completionHandler(NSURLSessionResponseBecomeDownload);
 }
 
-- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask willCacheResponse:(NSCachedURLResponse *)proposedResponse completionHandler:(void (^)(NSCachedURLResponse * _Nullable cachedResponse))completionHandler
+- (void)URLSession:(NSURLSession *)session
+			 dataTask:(NSURLSessionDataTask *)dataTask
+	willCacheResponse:(NSCachedURLResponse *)proposedResponse
+	completionHandler:(void (^)(NSCachedURLResponse *_Nullable cachedResponse))completionHandler
 {
 	/* Do not perform caching */
 
 	completionHandler(nil);
 }
 
-- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task willPerformHTTPRedirection:(NSHTTPURLResponse *)response newRequest:(NSURLRequest *)request completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler
+- (void)URLSession:(NSURLSession *)session
+						  task:(NSURLSessionTask *)task
+	willPerformHTTPRedirection:(NSHTTPURLResponse *)response
+					newRequest:(NSURLRequest *)request
+			 completionHandler:(void (^)(NSURLRequest *_Nullable))completionHandler
 {
 	/* Follow redirects */
 
 	completionHandler(request);
 }
 
-- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler
+- (void)URLSession:(NSURLSession *)session
+	didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+	  completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition,
+								  NSURLCredential *_Nullable credential))completionHandler
 {
 	/* Refuse challenge requests */
 
 	NSString *authenticationMethod = challenge.protectionSpace.authenticationMethod;
 
 	if ([authenticationMethod isEqualToString:NSURLAuthenticationMethodHTTPBasic] ||
-		[authenticationMethod isEqualToString:NSURLAuthenticationMethodHTTPDigest])
-	{
+		[authenticationMethod isEqualToString:NSURLAuthenticationMethodHTTPDigest]) {
 		completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
 
 		return;
@@ -493,12 +510,16 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 }
 
-- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didBecomeDownloadTask:(NSURLSessionDownloadTask *)downloadTask
+- (void)URLSession:(NSURLSession *)session
+				 dataTask:(NSURLSessionDataTask *)dataTask
+	didBecomeDownloadTask:(NSURLSessionDownloadTask *)downloadTask
 {
 	self.request.task = downloadTask;
 }
 
-- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location
+- (void)URLSession:(NSURLSession *)session
+				 downloadTask:(NSURLSessionDownloadTask *)downloadTask
+	didFinishDownloadingToURL:(NSURL *)location
 {
 	/* According to the documentation for NSURLSession,
 	 the file at the URL will be deleted once this delegate
@@ -516,7 +537,11 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	[session invalidateAndCancel];
 }
 
-- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite
+- (void)URLSession:(NSURLSession *)session
+				 downloadTask:(NSURLSessionDownloadTask *)downloadTask
+				 didWriteData:(int64_t)bytesWritten
+			totalBytesWritten:(int64_t)totalBytesWritten
+	totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite
 {
 	/* Don't allow our Content-Length to lie to us/ */
 
@@ -524,8 +549,8 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 		return; /* Success */
 	}
 
-	self.request.alternateError =
-	[self _errorWithDescription:@"Maximum response size exceeded" code:ICLMediaAssessorErrorCodeContentLengthExceeded];
+	self.request.alternateError = [self _errorWithDescription:@"Maximum response size exceeded"
+														 code:ICLMediaAssessorErrorCodeContentLengthExceeded];
 
 	[session invalidateAndCancel];
 }
@@ -554,12 +579,7 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 
 	dispatch_once(&onceToken, ^{
 		cachedValue =
-		@[@"image/gif",
-		  @"image/jpeg",
-		  @"image/png",
-		  @"image/svg+xml",
-		  @"image/tiff",
-		  @"image/x-ms-bmp"];
+			@[ @"image/gif", @"image/jpeg", @"image/png", @"image/svg+xml", @"image/tiff", @"image/x-ms-bmp" ];
 	});
 
 	return cachedValue;
@@ -572,12 +592,7 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		cachedValue =
-		@[@"video/3gpp",
-		  @"video/3gpp2",
-		  @"video/mp4",
-		  @"video/quicktime",
-		  @"video/x-m4v"];
+		cachedValue = @[ @"video/3gpp", @"video/3gpp2", @"video/mp4", @"video/quicktime", @"video/x-m4v" ];
 	});
 
 	return cachedValue;
@@ -591,16 +606,14 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	unsigned long long maximumFilesize = 0;
 
 	switch (self.state.assessment.type) {
-		case ICLMediaTypeImage:
-		{
-			maximumFilesize = self.limits.imageMaximumFilesize;
+	case ICLMediaTypeImage: {
+		maximumFilesize = self.limits.imageMaximumFilesize;
 
-			break;
-		}
-		default:
-		{
-			break;
-		}
+		break;
+	}
+	default: {
+		break;
+	}
 	}
 
 	if (maximumFilesize == 0) {
@@ -610,28 +623,27 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	return (downloadProgress > maximumFilesize);
 }
 
-- (BOOL)_performExtendedValidationAtURL:(NSURL *)url withError:(NSError * _Nullable __autoreleasing * _Nonnull)error
+- (BOOL)_performExtendedValidationAtURL:(NSURL *)url withError:(NSError *_Nullable __autoreleasing *_Nonnull)error
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(error != NULL);
 
 	switch (self.state.assessment.type) {
-		case ICLMediaTypeImage:
-		{
-			return [self _performExtendedValidationForImageAtURL:url withError:error];
+	case ICLMediaTypeImage: {
+		return [self _performExtendedValidationForImageAtURL:url withError:error];
 
-			break;
-		}
-		default:
-		{
-			break;
-		}
+		break;
+	}
+	default: {
+		break;
+	}
 	}
 
 	return YES; /* Success */
 }
 
-- (BOOL)_performExtendedValidationForImageAtURL:(NSURL *)url withError:(NSError * _Nullable __autoreleasing * _Nonnull)error
+- (BOOL)_performExtendedValidationForImageAtURL:(NSURL *)url
+									  withError:(NSError *_Nullable __autoreleasing *_Nonnull)error
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(error != NULL);
@@ -639,8 +651,8 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	CGImageSourceRef image = CGImageSourceCreateWithURL((__bridge CFURLRef)url, NULL);
 
 	if (image == NULL) {
-		*error =
-		[self _errorWithDescription:@"Image validation: CGImageSourceCreateWithURL() returned NULL" code:ICLMediaAssessorErrorCodeAssessmentFailed];
+		*error = [self _errorWithDescription:@"Image validation: CGImageSourceCreateWithURL() returned NULL"
+										code:ICLMediaAssessorErrorCodeAssessmentFailed];
 
 		return NO;
 	}
@@ -650,8 +662,8 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	if (imageProperties == NULL) {
 		CFRelease(image);
 
-		*error =
-		[self _errorWithDescription:@"Image validation: CGImageSourceCopyPropertiesAtIndex() returned NULL" code:ICLMediaAssessorErrorCodeAssessmentFailed];
+		*error = [self _errorWithDescription:@"Image validation: CGImageSourceCopyPropertiesAtIndex() returned NULL"
+										code:ICLMediaAssessorErrorCodeAssessmentFailed];
 
 		return NO;
 	}
@@ -664,15 +676,14 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 
 	ICLMediaAssessorLimits *limits = self.limits;
 
-	if (imageWidth.integerValue > limits.imageMaximumWidth)
-	{
-		*error = [self _errorWithDescription:@"Image validation: Maximum width exceeded" code:ICLMediaAssessorErrorCodeMaximumWidthExceeded];
+	if (imageWidth.integerValue > limits.imageMaximumWidth) {
+		*error = [self _errorWithDescription:@"Image validation: Maximum width exceeded"
+										code:ICLMediaAssessorErrorCodeMaximumWidthExceeded];
 
 		return NO;
-	}
-	else if (imageHeight.integerValue > limits.imageMaximumHeight)
-	{
-		*error = [self _errorWithDescription:@"Image validation: Maximum height exceeded" code:ICLMediaAssessorErrorCodeMaximumHeightExceeded];
+	} else if (imageHeight.integerValue > limits.imageMaximumHeight) {
+		*error = [self _errorWithDescription:@"Image validation: Maximum height exceeded"
+										code:ICLMediaAssessorErrorCodeMaximumHeightExceeded];
 
 		return NO;
 	}
@@ -694,27 +705,23 @@ NSString * const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	ICLMediaAssessorErrorCode errorCode = error.code;
 
 	switch (errorCode) {
-		case ICLMediaAssessorErrorCodeAssessmentFailed:
-		case ICLMediaAssessorErrorCodeUnexpectedStatusCode:
-		case ICLMediaAssessorErrorCodeMalformedContentType:
-		case ICLMediaAssessorErrorCodeMalformedContentLength:
-		case ICLMediaAssessorErrorCodeUnexpectedResponse:
-		{
-				LogToConsoleDebug("Assessor fatal error: %{public}@",
-					error.localizedDescription);
+	case ICLMediaAssessorErrorCodeAssessmentFailed:
+	case ICLMediaAssessorErrorCodeUnexpectedStatusCode:
+	case ICLMediaAssessorErrorCodeMalformedContentType:
+	case ICLMediaAssessorErrorCodeMalformedContentLength:
+	case ICLMediaAssessorErrorCodeUnexpectedResponse: {
+		LogToConsoleDebug("Assessor fatal error: %{public}@", error.localizedDescription);
 
-				break;
-			}
-		case ICLMediaAssessorErrorCodeUnexpectedType:
-		case ICLMediaAssessorErrorCodeContentLengthExceeded:
-		case ICLMediaAssessorErrorCodeMaximumWidthExceeded:
-		case ICLMediaAssessorErrorCodeMaximumHeightExceeded:
-		{
-				LogToConsoleDebug("Assessor validation error: %{public}@",
-					error.localizedDescription);
+		break;
+	}
+	case ICLMediaAssessorErrorCodeUnexpectedType:
+	case ICLMediaAssessorErrorCodeContentLengthExceeded:
+	case ICLMediaAssessorErrorCodeMaximumWidthExceeded:
+	case ICLMediaAssessorErrorCodeMaximumHeightExceeded: {
+		LogToConsoleDebug("Assessor validation error: %{public}@", error.localizedDescription);
 
-				break;
-			}
+		break;
+	}
 	} // switch()
 }
 

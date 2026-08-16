@@ -52,15 +52,15 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCMainWindowChannelViewSubviewOverlayView;
 
 @interface TVCMainWindowChannelViewSubview : NSView
-@property (nonatomic, assign) NSUInteger itemIndex;
-@property (nonatomic, assign) BOOL isSelected;
-@property (nonatomic, assign) BOOL overlayVisible;
-@property (nonatomic, assign) BOOL isObservingBackingView;
-@property (readonly) BOOL backingViewIsLoading;
-@property (nonatomic, copy) NSString *uniqueIdentifier;
-@property (nonatomic, strong, nullable) TVCLogView *backingView;
-@property (nonatomic, weak) TVCMainWindowChannelView *parentView;
-@property (nonatomic, strong, nullable) TVCMainWindowChannelViewSubviewOverlayView *overlayView;
+@property(nonatomic, assign) NSUInteger itemIndex;
+@property(nonatomic, assign) BOOL isSelected;
+@property(nonatomic, assign) BOOL overlayVisible;
+@property(nonatomic, assign) BOOL isObservingBackingView;
+@property(readonly) BOOL backingViewIsLoading;
+@property(nonatomic, copy) NSString *uniqueIdentifier;
+@property(nonatomic, strong, nullable) TVCLogView *backingView;
+@property(nonatomic, weak) TVCMainWindowChannelView *parentView;
+@property(nonatomic, strong, nullable) TVCMainWindowChannelViewSubviewOverlayView *overlayView;
 
 - (void)toggleOverlayView;
 @end
@@ -79,11 +79,11 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface TVCMainWindowChannelView ()
-@property (nonatomic, assign) BOOL isMovingDividers;
-@property (nonatomic, assign) NSUInteger itemIndexSelected;
+@property(nonatomic, assign) BOOL isMovingDividers;
+@property(nonatomic, assign) NSUInteger itemIndexSelected;
 
 /* -[NSSplitView delegate] is weak, so the delegate is owned here. */
-@property (nonatomic, strong) TVCMainWindowChannelViewDelegate *splitViewDelegate;
+@property(nonatomic, strong) TVCMainWindowChannelViewDelegate *splitViewDelegate;
 
 - (void)selectionChangeTo:(NSUInteger)itemIndex;
 @end
@@ -99,9 +99,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TVCMainWindowChannelView
 
-NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
-								TVCMainWindowChannelViewSubview *secondView,
-								void *context)
+NSComparisonResult
+sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelViewSubview *secondView, void *context)
 {
 	NSUInteger itemIndex1 = firstView.itemIndex;
 	NSUInteger itemIndex2 = secondView.itemIndex;
@@ -305,8 +304,8 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 	splitViewFrame.origin.x = 0.0;
 	splitViewFrame.origin.y = 0.0;
 
-	  TVCMainWindowChannelViewSubview *overlayView =
-	[[TVCMainWindowChannelViewSubview alloc] initWithFrame:splitViewFrame];
+	TVCMainWindowChannelViewSubview *overlayView =
+		[[TVCMainWindowChannelViewSubview alloc] initWithFrame:splitViewFrame];
 
 	overlayView.parentView = self;
 
@@ -483,7 +482,10 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 	]];
 }
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 {
 	if ([keyPath isEqualToString:@"layingOutView"]) {
 		[self toggleOverlayView];
@@ -492,8 +494,8 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 
 - (void)constructOverlayView
 {
-	  TVCMainWindowChannelViewSubviewOverlayView *overlayView =
-	[[TVCMainWindowChannelViewSubviewOverlayView alloc] initWithFrame:self.frame];
+	TVCMainWindowChannelViewSubviewOverlayView *overlayView =
+		[[TVCMainWindowChannelViewSubviewOverlayView alloc] initWithFrame:self.frame];
 
 	overlayView.translatesAutoresizingMaskIntoConstraints = NO;
 
@@ -516,17 +518,15 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 
 	[self addSubview:overlayView];
 
-	[self addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[overlayView]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(overlayView)]];
+	[self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-0-[overlayView]-0-|"
+																 options:NSLayoutFormatDirectionLeadingToTrailing
+																 metrics:nil
+																   views:NSDictionaryOfVariableBindings(overlayView)]];
 
-	[self addConstraints:
-	 [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[overlayView]-0-|"
-											 options:NSLayoutFormatDirectionLeadingToTrailing
-											 metrics:nil
-											   views:NSDictionaryOfVariableBindings(overlayView)]];
+	[self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-0-[overlayView]-0-|"
+																 options:NSLayoutFormatDirectionLeadingToTrailing
+																 metrics:nil
+																   views:NSDictionaryOfVariableBindings(overlayView)]];
 
 	self.overlayVisible = YES;
 }
@@ -536,7 +536,7 @@ NSComparisonResult sortSubviews(TVCMainWindowChannelViewSubview *firstView,
 	if (self.backingViewIsLoading || self.isSelected == NO) {
 		[self addOverlayView];
 	} else {
-		if ( self.overlayView) {
+		if (self.overlayView) {
 			[self.overlayView removeFromSuperview];
 
 			self.overlayVisible = NO;

@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ICLPayload ()
 {
-@protected
+  @protected
 	NSURL *_urlToInline;
 	unsigned long long _contentLength;
 	NSSize _contentSize;
@@ -49,10 +49,10 @@ NS_ASSUME_NONNULL_BEGIN
 	NSArray<NSURL *> *_scriptResources;
 	NSString *_html;
 	NSString *_entrypoint;
-	NSDictionary<NSString *, id <NSCopying>> *_entrypointPayload;
+	NSDictionary<NSString *, id<NSCopying>> *_entrypointPayload;
 	NSString *_classAttribute;
 
-@private
+  @private
 	NSURL *_url;
 	NSString *_lineNumber;
 	NSString *_uniqueIdentifier;

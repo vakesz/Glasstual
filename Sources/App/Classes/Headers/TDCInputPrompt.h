@@ -41,11 +41,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCInputPrompt : TDCAlert
 + (NSModalResponse)promptWithMessage:(NSString *)bodyText
-								title:(NSString *)titleText
-						defaultButton:(NSString *)buttonDefault
-					  alternateButton:(nullable NSString *)buttonAlternate
-						prefillString:(nullable NSString *)prefillString
-						 resultString:(NSString * _Nonnull * _Nonnull )resultString;
+							   title:(NSString *)titleText
+					   defaultButton:(NSString *)buttonDefault
+					 alternateButton:(nullable NSString *)buttonAlternate
+					   prefillString:(nullable NSString *)prefillString
+						resultString:(NSString *_Nonnull *_Nonnull)resultString;
 @end
 
 NS_ASSUME_NONNULL_END

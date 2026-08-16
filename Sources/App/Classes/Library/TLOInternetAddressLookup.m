@@ -41,13 +41,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _requestTimeoutInterval			30.0
+#define _requestTimeoutInterval 30.0
 
 @interface TLOInternetAddressLookup ()
-@property (nonatomic, weak) id requestDelegate;
-@property (nonatomic, strong, nullable) NSURLSession *session;
-@property (nonatomic, strong, nullable) NSURLSessionDataTask *connection;
-@property (nonatomic, copy, nullable) NSString *address;
+@property(nonatomic, weak) id requestDelegate;
+@property(nonatomic, strong, nullable) NSURLSession *session;
+@property(nonatomic, strong, nullable) NSURLSessionDataTask *connection;
+@property(nonatomic, copy, nullable) NSString *address;
 @end
 
 @implementation TLOInternetAddressLookup
@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 	return nil;
 }
 
-- (instancetype)initWithDelegate:(id <TLOInternetAddressLookupDelegate>)delegate
+- (instancetype)initWithDelegate:(id<TLOInternetAddressLookupDelegate>)delegate
 {
 	NSParameterAssert(delegate != nil);
 
@@ -90,8 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setupConnectionRequest
 {
-	NSAssert((self.connection == nil),
-		@"A lookup is already in progress");
+	NSAssert((self.connection == nil), @"A lookup is already in progress");
 
 	NSURL *requestURL = [NSURL URLWithString:[self addressSourceURL]];
 
@@ -104,11 +103,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 	__weak typeof(self) weakSelf = self;
 
-	self.connection = [self.session dataTaskWithURL:requestURL completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[weakSelf completeLookupWithData:data response:response error:error];
-		});
-	}];
+	self.connection = [self.session dataTaskWithURL:requestURL
+								  completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+									  dispatch_async(dispatch_get_main_queue(), ^{
+										  [weakSelf completeLookupWithData:data response:response error:error];
+									  });
+								  }];
 
 	[self.connection resume];
 }
@@ -136,17 +136,17 @@ NS_ASSUME_NONNULL_BEGIN
 	if ([TPCPreferences fileTransferIPAddressDetectionMethod] == TXFileTransferIPAddressMethodRouterAndThirdParty) {
 		return [self thirdPartySourceURL];
 	}
-	
+
 	return @"https://myip.codeux.com/";
 }
 
 - (NSString *)thirdPartySourceURL
 {
 	NSArray *services = @[
-	  @"https://wtfismyip.com/text",
-	  @"https://canhazip.com/",
-	  @"http://ifconfig.me/ip",
-	  @"http://v4.ipv6-test.com/api/myip.php",
+		@"https://wtfismyip.com/text",
+		@"https://canhazip.com/",
+		@"http://ifconfig.me/ip",
+		@"http://v4.ipv6-test.com/api/myip.php",
 	];
 
 	NSUInteger randomIndex = (arc4random() % services.count);
@@ -184,12 +184,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)completeLookupWithData:(NSData *)data response:(NSURLResponse *)response error:(NSError *)error
 {
-	if (error == nil && [response isKindOfClass:[NSHTTPURLResponse class]] && ((NSHTTPURLResponse *)response).statusCode == 200 && data.length > 0 && data.length <= 1024) {
-		NSString *address = [[NSString stringWithData:data encoding:NSUTF8StringEncoding] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	if (error == nil && [response isKindOfClass:[NSHTTPURLResponse class]] &&
+		((NSHTTPURLResponse *)response).statusCode == 200 && data.length > 0 && data.length <= 1024) {
+		NSString *address = [[NSString stringWithData:data encoding:NSUTF8StringEncoding]
+			stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 
-		if ((address.isIPv4Address && self.IPv4AddressIsValid) ||
-			(address.isIPv6Address && self.IPv6AddressIsValid))
-		{
+		if ((address.isIPv4Address && self.IPv4AddressIsValid) || (address.isIPv6Address && self.IPv6AddressIsValid)) {
 			self.address = address;
 		}
 	} else if (error) {

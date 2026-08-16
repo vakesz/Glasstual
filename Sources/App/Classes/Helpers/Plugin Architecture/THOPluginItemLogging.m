@@ -48,25 +48,24 @@ os_log_t _THOPluginLoggingSubsystemForBundle(NSBundle *bundle)
 		subsystems = [NSCache new];
 	});
 
-	@synchronized (subsystems) {
+	@synchronized(subsystems) {
 		NSString *identifier = bundle.bundleIdentifier;
-		
+
 		os_log_t subsystem = [subsystems objectForKey:identifier];
-		
+
 		if (subsystem == nil) {
 			NSString *category = [NSString stringWithFormat:@"Extension['%@']", bundle.displayName];
-			
+
 			/* There was some debate whether to make the bundle identifier
 			 the identifier of the logging system instead of having the
 			 name in the category. Chose not to do that because seeing as
 			 the plugins are loaded as part of Glasstual and are not running
 			 in a separate process, it just makes more sense to filter. */
 			subsystem = os_log_create(TXBundleBuildProductIdentifierCString, category.UTF8String);
-			
+
 			[subsystems setObject:subsystem forKey:identifier];
 		}
-		
+
 		return subsystem;
 	}
 }
-

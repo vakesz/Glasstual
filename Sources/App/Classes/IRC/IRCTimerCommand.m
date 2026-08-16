@@ -47,12 +47,12 @@ NS_ASSUME_NONNULL_BEGIN
 static NSUInteger IRCTimedCommandLastIdentifier = 0;
 
 @interface IRCTimedCommand ()
-@property (nonatomic, copy, readwrite) NSString *identifier;
-@property (nonatomic, copy, readwrite) NSString *clientId;
-@property (nonatomic, copy, nullable, readwrite) NSString *channelId;
-@property (nonatomic, copy, readwrite) NSString *command;
-@property (nonatomic, strong) TLOTimer *timer;
-@property (nonatomic, assign) BOOL startedBefore;
+@property(nonatomic, copy, readwrite) NSString *identifier;
+@property(nonatomic, copy, readwrite) NSString *clientId;
+@property(nonatomic, copy, nullable, readwrite) NSString *channelId;
+@property(nonatomic, copy, readwrite) NSString *command;
+@property(nonatomic, strong) TLOTimer *timer;
+@property(nonatomic, assign) BOOL startedBefore;
 @end
 
 @implementation IRCTimedCommand
@@ -72,7 +72,9 @@ static NSUInteger IRCTimedCommandLastIdentifier = 0;
 	return [self initWithCommand:command onClient:client inChannel:nil];
 }
 
-- (instancetype)initWithCommand:(NSString *)command onClient:(IRCClient *)client inChannel:(nullable IRCChannel *)channel
+- (instancetype)initWithCommand:(NSString *)command
+					   onClient:(IRCClient *)client
+					  inChannel:(nullable IRCChannel *)channel
 {
 	NSParameterAssert(command != nil);
 	NSParameterAssert(client != nil);
@@ -113,8 +115,7 @@ static NSUInteger IRCTimedCommandLastIdentifier = 0;
 
 	__weak typeof(self) weakSelf = self;
 
-	self.timer =
-	[TLOTimer timerWithActionBlock:^(TLOTimer * _Nonnull sender) {
+	self.timer = [TLOTimer timerWithActionBlock:^(TLOTimer *_Nonnull sender) {
 		[client onTimedCommand:weakSelf];
 	}];
 }

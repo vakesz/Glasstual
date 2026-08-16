@@ -60,9 +60,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSError *createDirectoryError = nil;
 
-	if ([RZFileManager() createDirectoryAtPath:directoryPath withIntermediateDirectories:YES attributes:nil error:&createDirectoryError] == NO) {
+	if ([RZFileManager() createDirectoryAtPath:directoryPath
+				   withIntermediateDirectories:YES
+									attributes:nil
+										 error:&createDirectoryError] == NO) {
 		LogToConsoleError("Failed to create directory at path: '%{public}@' - %{public}@",
-			directoryPath.standardizedTildePath, createDirectoryError.localizedDescription);
+						  directoryPath.standardizedTildePath,
+						  createDirectoryError.localizedDescription);
 	}
 }
 
@@ -76,9 +80,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSError *createDirectoryError = nil;
 
-	if ([RZFileManager() createDirectoryAtURL:directoryURL withIntermediateDirectories:YES attributes:nil error:&createDirectoryError] == NO) {
+	if ([RZFileManager() createDirectoryAtURL:directoryURL
+				  withIntermediateDirectories:YES
+								   attributes:nil
+										error:&createDirectoryError] == NO) {
 		LogToConsoleError("Failed to create directory at path: '%{public}@' - %{public}@",
-			directoryURL.standardizedTildePath, createDirectoryError.localizedDescription);
+						  directoryURL.standardizedTildePath,
+						  createDirectoryError.localizedDescription);
 	}
 }
 
@@ -146,7 +154,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSURL *)groupContainerURL
 {
-	NSURL *baseURL = [RZFileManager() containerURLForSecurityApplicationGroupIdentifier:TXBundleBuildGroupContainerIdentifier];
+	NSURL *baseURL =
+		[RZFileManager() containerURLForSecurityApplicationGroupIdentifier:TXBundleBuildGroupContainerIdentifier];
 
 	return baseURL;
 }
@@ -540,7 +549,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TPCPathInfo (TPCPathInfoTranscriptFolderExtension)
 
-static NSURL * _Nullable _transcriptFolderURL = nil;
+static NSURL *_Nullable _transcriptFolderURL = nil;
 
 + (nullable NSString *)transcriptFolder
 {
@@ -554,9 +563,9 @@ static NSURL * _Nullable _transcriptFolderURL = nil;
 
 + (void)setTranscriptFolderURL:(nullable NSData *)transcriptFolderURL
 {
-	if ( _transcriptFolderURL) {
+	if (_transcriptFolderURL) {
 		[_transcriptFolderURL stopAccessingSecurityScopedResource];
-		 _transcriptFolderURL = nil;
+		_transcriptFolderURL = nil;
 	}
 
 	[RZUserDefaults() setObject:transcriptFolderURL forKey:@"LogTranscriptDestinationSecurityBookmark_5"];
@@ -571,7 +580,7 @@ static NSURL * _Nullable _transcriptFolderURL = nil;
 	if ([TPCPreferences logToDisk] == NO) {
 		return;
 	}
-	
+
 	[TDCAlert alertWithMessage:TXTLS(@"Prompts[atn-1c]")
 						 title:TXTLS(@"Prompts[b7o-v4]")
 				 defaultButton:TXTLS(@"Prompts[c7s-dq]")
@@ -593,12 +602,11 @@ static NSURL * _Nullable _transcriptFolderURL = nil;
 
 	NSError *resolvedBookmarkError = nil;
 
-	NSURL *resolvedBookmark =
-	[NSURL URLByResolvingBookmarkData:bookmark
-							  options:NSURLBookmarkResolutionWithSecurityScope
-						relativeToURL:nil
-				  bookmarkDataIsStale:&resolvedBookmarkIsStale
-								error:&resolvedBookmarkError];
+	NSURL *resolvedBookmark = [NSURL URLByResolvingBookmarkData:bookmark
+														options:NSURLBookmarkResolutionWithSecurityScope
+												  relativeToURL:nil
+											bookmarkDataIsStale:&resolvedBookmarkIsStale
+														  error:&resolvedBookmarkError];
 
 	if (resolvedBookmarkIsStale) {
 		/* "On return, if YES, the bookmark data is stale. 
@@ -620,8 +628,7 @@ static NSURL * _Nullable _transcriptFolderURL = nil;
 	}
 
 	if (resolvedBookmark == nil) {
-		LogToConsoleError("Error creating bookmark for URL: %{public}@",
-			  resolvedBookmarkError.localizedDescription);
+		LogToConsoleError("Error creating bookmark for URL: %{public}@", resolvedBookmarkError.localizedDescription);
 
 		[self warnUserAboutStaleTranscriptFolderURL];
 

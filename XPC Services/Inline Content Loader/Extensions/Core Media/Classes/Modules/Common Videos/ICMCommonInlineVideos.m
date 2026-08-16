@@ -41,7 +41,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ICMCommonInlineVideos ()
-@property (readonly, copy, class) NSArray<NSString *> *validFileExtensions;
+@property(readonly, copy, class) NSArray<NSString *> *validFileExtensions;
 @end
 
 @implementation ICMCommonInlineVideos
@@ -73,8 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	if ([urlHost isDomain:@"video.nest.com"])
-	{
+	if ([urlHost isDomain:@"video.nest.com"]) {
 		if ([urlPath hasPrefix:@"/clip/"] == NO) {
 			return nil;
 		}
@@ -98,12 +97,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		cachedValue =
-		@[@"mp4",
-		  @"mov",
-		  @"m4v",
-		  @"3gp",
-		  @"3g2"];
+		cachedValue = @[ @"mp4", @"mov", @"m4v", @"3gp", @"3g2" ];
 	});
 
 	return cachedValue;

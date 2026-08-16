@@ -56,33 +56,33 @@ NS_ASSUME_NONNULL_BEGIN
  This URL may be different when compared to that passed
  to the assessor due to HTTP redirects.
  */
-@property (readonly, copy) NSURL *url;
+@property(readonly, copy) NSURL *url;
 
 /**
  The type of the media.
 
  The type is determined by the Content-Type header.
  */
-@property (readonly) ICLMediaType type;
+@property(readonly) ICLMediaType type;
 
 /**
  Value of the Content-Type header
  */
-@property (readonly, copy) NSString *contentType;
+@property(readonly, copy) NSString *contentType;
 
 /**
  Value of the Content-Length header
  */
-@property (readonly) unsigned long long contentLength;
+@property(readonly) unsigned long long contentLength;
 @end
 
 #pragma mark -
 #pragma mark Mutable Object
 
 @interface ICLMediaAssessmentMutable : ICLMediaAssessment
-@property (nonatomic, assign, readwrite) ICLMediaType type;
-@property (nonatomic, copy, readwrite) NSString *contentType; // Defaults to "application/binary"
-@property (nonatomic, assign, readwrite) unsigned long long contentLength;
+@property(nonatomic, assign, readwrite) ICLMediaType type;
+@property(nonatomic, copy, readwrite) NSString *contentType; // Defaults to "application/binary"
+@property(nonatomic, assign, readwrite) unsigned long long contentLength;
 @end
 
 NS_ASSUME_NONNULL_END

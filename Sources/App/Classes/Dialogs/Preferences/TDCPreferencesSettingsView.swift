@@ -44,9 +44,10 @@ final class PreferencesSettingsBridge: NSObject {
 
 		navigation.setAvailablePanes(panes.map(\.id))
 
-		let rootView = SettingsRootView(panes: panes,
-										paneProvider: SettingsPaneProvider(controller: controller),
-										navigation: navigation)
+		let rootView = SettingsRootView(
+			panes: panes,
+			paneProvider: SettingsPaneProvider(controller: controller),
+			navigation: navigation)
 
 		let hostingController = NSHostingController(rootView: rootView)
 
@@ -107,8 +108,9 @@ private final class SettingsNavigation {
 	 never name a row the sidebar is not showing, which removes the reason List
 	 would want to correct the binding on its own. */
 	var selection: Binding<String> {
-		Binding(get: { self.selectedID },
-				set: { self.select($0) })
+		Binding(
+			get: { self.selectedID },
+			set: { self.select($0) })
 	}
 }
 
@@ -171,7 +173,7 @@ private struct SettingsRootView: View {
 				 detail pane squeeze the sidebar, so it visibly shifts as you
 				 move between panes. The frame is what actually holds when the
 				 split view is hosted inside AppKit. */
-				.frame(width: settingsSidebarWidth)
+			.frame(width: settingsSidebarWidth)
 				.navigationSplitViewColumnWidth(settingsSidebarWidth)
 				.toolbar(removing: .sidebarToggle)
 		} detail: {
@@ -297,7 +299,9 @@ private struct AppKitPreferencePane: NSViewRepresentable {
 			return
 		}
 
-		container.subviews.forEach { $0.removeFromSuperview() }
+		for subview in container.subviews {
+			subview.removeFromSuperview()
+		}
 
 		view.removeFromSuperview()
 		view.translatesAutoresizingMaskIntoConstraints = false
@@ -315,7 +319,7 @@ private struct AppKitPreferencePane: NSViewRepresentable {
 			view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
 			view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
 			view.topAnchor.constraint(equalTo: container.topAnchor),
-			container.bottomAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor)
+			container.bottomAnchor.constraint(greaterThanOrEqualTo: view.bottomAnchor),
 		])
 	}
 
@@ -326,7 +330,8 @@ private struct AppKitPreferencePane: NSViewRepresentable {
 		 a fixed width in the XIB, so a narrower proposal clips controls rather
 		 than reflowing them. The window's own 860pt minimum keeps this from
 		 biting in practice. */
-		return CGSize(width: max(proposal.width ?? fitting.width, fitting.width),
-					  height: fitting.height)
+		return CGSize(
+			width: max(proposal.width ?? fitting.width, fitting.width),
+			height: fitting.height)
 	}
 }

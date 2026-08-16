@@ -53,9 +53,9 @@
 
 /* Private Interface. */
 @interface EKBlowfishEncryptionKeyExchangeBase ()
-@property (nonatomic, strong) NSData *secretValue;
-@property (nonatomic, unsafe_unretained) DH *DHStatus;
-@property (nonatomic, unsafe_unretained) BIGNUM *publicBigNum;
+@property(nonatomic, strong) NSData *secretValue;
+@property(nonatomic, unsafe_unretained) DH *DHStatus;
+@property(nonatomic, unsafe_unretained) BIGNUM *publicBigNum;
 @end
 
 /* Static Values. */
@@ -69,11 +69,19 @@
 
 	DH1080Base also matches the Base64 format for encoding and decoding. 
 */
-static NSString *fishPrimeB64 = @"++ECLiPSE+is+proud+to+present+latest+FiSH+release+featuring+even+more+security+for+you+++shouts+go+out+to+TMG+for+helping+to+generate+this+cool+sophie+germain+prime+number++++/C32L";
+static NSString *fishPrimeB64 =
+	@"++ECLiPSE+is+proud+to+present+latest+FiSH+release+featuring+even+more+security+for+you+++shouts+go+out+to+TMG+"
+	@"for+helping+to+generate+this+cool+sophie+germain+prime+number++++/C32L";
 
 /* Static Definitions. */
-#define DHAssertNO(c)		if (c == NO)	{ NSAssert(NO, @"DH1080 Key Exchange Failure."); }
-#define DHAssertYES(c)		if (c)			{ NSAssert(NO, @"DH1080 Key Exchange Failure."); }
+#define DHAssertNO(c)                                                                                                  \
+	if (c == NO) {                                                                                                     \
+		NSAssert(NO, @"DH1080 Key Exchange Failure.");                                                                 \
+	}
+#define DHAssertYES(c)                                                                                                 \
+	if (c) {                                                                                                           \
+		NSAssert(NO, @"DH1080 Key Exchange Failure.");                                                                 \
+	}
 
 /* Implementation. */
 @implementation EKBlowfishEncryptionKeyExchangeBase
@@ -82,7 +90,7 @@ static NSString *fishPrimeB64 = @"++ECLiPSE+is+proud+to+present+latest+FiSH+rele
 
 - (id)init
 {
-    if ((self = [super init])) {
+	if ((self = [super init])) {
 		self.DHStatus = 0;
 
 		self.publicBigNum = 0;
@@ -97,8 +105,8 @@ static NSString *fishPrimeB64 = @"++ECLiPSE+is+proud+to+present+latest+FiSH+rele
 
 - (void)dealloc
 {
-    [self resetStatus];
-    [self resetPublicInformation];
+	[self resetStatus];
+	[self resetPublicInformation];
 }
 
 - (void)resetPublicInformation
@@ -126,12 +134,12 @@ static NSString *fishPrimeB64 = @"++ECLiPSE+is+proud+to+present+latest+FiSH+rele
 	DHAssertNO(self.DHStatus == 0);
 
 	self.DHStatus = DH_new();
-	
+
 	DHAssertYES(self.DHStatus == 0);
 
 	DHAssertNO(DH_get0_g(self.DHStatus) == 0);
 	DHAssertNO(DH_get0_p(self.DHStatus) == 0);
-	
+
 	NSData *primeData = [self base64Decode:fishPrimeB64];
 
 	BIGNUM *g = BN_new();
@@ -168,7 +176,7 @@ static NSString *fishPrimeB64 = @"++ECLiPSE+is+proud+to+present+latest+FiSH+rele
 	DHAssertYES(self.DHStatus == 0);
 	DHAssertYES(DH_get0_g(self.DHStatus) == 0);
 	DHAssertYES(DH_get0_p(self.DHStatus) == 0);
-	
+
 	DHAssertYES(self.publicBigNum == 0);
 
 	NSInteger size = DH_size(self.DHStatus);
@@ -180,7 +188,7 @@ static NSString *fishPrimeB64 = @"++ECLiPSE+is+proud+to+present+latest+FiSH+rele
 	NSInteger num = DH_compute_key(key, self.publicBigNum, self.DHStatus);
 
 	DHAssertNO(num == size);
-	
+
 	NSData *secretValue = [[NSData alloc] initWithBytes:key length:sizeof(key)];
 
 	DHAssertNO([secretValue length] >= 1);
@@ -209,16 +217,16 @@ static NSString *fishPrimeB64 = @"++ECLiPSE+is+proud+to+present+latest+FiSH+rele
 	NSData *secretValue = [self secretValue];
 
 	DHAssertNO(secretValue.length >= 1);
-	
+
 	unsigned char sha_md[32];
-	
+
 	SHA256((unsigned char *)[secretValue bytes], (int)[secretValue length], sha_md);
 
 	NSData *secretHash = [[NSData alloc] initWithBytes:sha_md length:sizeof(sha_md)];
 
 	DHAssertNO([secretHash length] >= 1);
 
-    return [self base64Encode:secretHash];
+	return [self base64Encode:secretHash];
 }
 
 - (NSString *)publicKeyValue:(NSData *)publicInput
@@ -295,7 +303,7 @@ static NSString *fishPrimeB64 = @"++ECLiPSE+is+proud+to+present+latest+FiSH+rele
 	while ((([input length] % 4) == 0) == NO) {
 		input = [input stringByAppendingString:@"="];
 	}
-	
+
 	return [XRBase64Encoding decodeData:input];
 }
 

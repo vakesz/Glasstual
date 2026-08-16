@@ -42,7 +42,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCChannelSelectionOutlineCellView ()
-@property (readonly) IRCTreeItem *cellItem;
+@property(readonly) IRCTreeItem *cellItem;
 
 - (IBAction)selectionCheckboxClicked:(nullable id)sender;
 @end

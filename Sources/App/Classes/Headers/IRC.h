@@ -36,13 +36,12 @@
  *********************************************************************** */
 
 /* Hard limits */
-#define TXMaximumIRCBodyLength						510
-#define TXMaximumIRCNicknameLength					50
-#define TXMaximumIRCUsernameLength					40
+#define TXMaximumIRCBodyLength 510
+#define TXMaximumIRCNicknameLength 50
+#define TXMaximumIRCUsernameLength 40
 
-#define TXMaximumTCPPort							65535
+#define TXMaximumTCPPort 65535
 
-#define TXMaximumNodesPerModeCommand				4
+#define TXMaximumNodesPerModeCommand 4
 
-#define IRCProtocolDefaultNicknameMaximumLength			31
-
+#define IRCProtocolDefaultNicknameMaximumLength 31

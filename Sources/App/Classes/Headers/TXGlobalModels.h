@@ -38,12 +38,17 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /* Time */
-GLASSTUAL_EXTERN NSString * _Nullable TXFormattedTimestamp(NSDate *date, NSString *format);
+GLASSTUAL_EXTERN NSString *_Nullable TXFormattedTimestamp(NSDate *date, NSString *format);
 
-GLASSTUAL_EXTERN NSString * _Nullable TXHumanReadableTimeInterval(NSTimeInterval dateInterval, BOOL shortValue, NSCalendarUnit orderMatrix);
+GLASSTUAL_EXTERN NSString *_Nullable TXHumanReadableTimeInterval(NSTimeInterval dateInterval,
+																 BOOL shortValue,
+																 NSCalendarUnit orderMatrix);
 
-GLASSTUAL_EXTERN NSString * _Nullable TXFormatDate(id dateObject, NSDateFormatterStyle dateStyle, NSDateFormatterStyle timeStyle, BOOL relativeOutput);
-GLASSTUAL_EXTERN NSString * _Nullable TXFormatDateLongStyle(id dateObject, BOOL relativeOutput);
+GLASSTUAL_EXTERN NSString *_Nullable TXFormatDate(id dateObject,
+												  NSDateFormatterStyle dateStyle,
+												  NSDateFormatterStyle timeStyle,
+												  BOOL relativeOutput);
+GLASSTUAL_EXTERN NSString *_Nullable TXFormatDateLongStyle(id dateObject, BOOL relativeOutput);
 
 /* Everything else */
 GLASSTUAL_EXTERN NSString *TXFormattedNumber(NSInteger number);

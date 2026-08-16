@@ -49,22 +49,22 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCServerChannelListDialogEntry : NSObject
-@property (nonatomic, copy) NSString *channelName;
-@property (nonatomic, copy) NSNumber *channelMemberCount;
-@property (nonatomic, copy) NSString *channelTopicUnformatted;
-@property (nonatomic, copy) NSAttributedString *channelTopicFormatted;
+@property(nonatomic, copy) NSString *channelName;
+@property(nonatomic, copy) NSNumber *channelMemberCount;
+@property(nonatomic, copy) NSString *channelTopicUnformatted;
+@property(nonatomic, copy) NSAttributedString *channelTopicFormatted;
 @end
 
 @interface TDCServerChannelListDialog () <NSControlTextEditingDelegate>
-@property (nonatomic, strong, readwrite) IRCClient *client;
-@property (nonatomic, copy, readwrite) NSString *clientId;
-@property (nonatomic, assign) BOOL isWaitingForWrites;
-@property (nonatomic, strong) NSMutableArray<TDCServerChannelListDialogEntry *> *queuedWrites;
-@property (nonatomic, weak) IBOutlet NSButton *updateButton;
-@property (nonatomic, weak) IBOutlet NSSearchField *searchTextField;
-@property (nonatomic, weak) IBOutlet NSTextField *networkNameTextField;
-@property (nonatomic, weak) IBOutlet TVCBasicTableView *channelListTable;
-@property (nonatomic, strong) IBOutlet NSArrayController *channelListController;
+@property(nonatomic, strong, readwrite) IRCClient *client;
+@property(nonatomic, copy, readwrite) NSString *clientId;
+@property(nonatomic, assign) BOOL isWaitingForWrites;
+@property(nonatomic, strong) NSMutableArray<TDCServerChannelListDialogEntry *> *queuedWrites;
+@property(nonatomic, weak) IBOutlet NSButton *updateButton;
+@property(nonatomic, weak) IBOutlet NSSearchField *searchTextField;
+@property(nonatomic, weak) IBOutlet NSTextField *networkNameTextField;
+@property(nonatomic, weak) IBOutlet TVCBasicTableView *channelListTable;
+@property(nonatomic, strong) IBOutlet NSArrayController *channelListController;
 
 - (IBAction)onClose:(nullable id)sender;
 
@@ -105,9 +105,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.channelListTable.doubleAction = @selector(onJoin:);
 
-	self.channelListTable.sortDescriptors = @[
-		[NSSortDescriptor sortDescriptorWithKey:@"channelMemberCount" ascending:NO selector:@selector(compare:)]
-	];
+	self.channelListTable.sortDescriptors = @[ [NSSortDescriptor sortDescriptorWithKey:@"channelMemberCount"
+																			 ascending:NO
+																			  selector:@selector(compare:)] ];
 
 	self.networkNameTextField.stringValue = TXTLS(@"TDCServerChannelListDialog[7qf-r0]", self.client.networkNameAlt);
 }
@@ -143,8 +143,8 @@ NS_ASSUME_NONNULL_BEGIN
 		newEntry.channelTopicUnformatted = topic;
 
 		NSAttributedString *topicFormatted =
-		[topic attributedStringWithIRCFormatting:[NSTableView preferredGlobalTableViewFont]
-							  preferredFontColor:[NSColor controlTextColor]];
+			[topic attributedStringWithIRCFormatting:[NSTableView preferredGlobalTableViewFont]
+								  preferredFontColor:[NSColor controlTextColor]];
 
 		newEntry.channelTopicFormatted = topicFormatted;
 	}
@@ -264,11 +264,13 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark NSTableViewDelegate
 
-- (NSIndexSet *)tableView:(NSTableView *)tableView selectionIndexesForProposedSelection:(NSIndexSet *)proposedSelectionIndexes
+- (NSIndexSet *)tableView:(NSTableView *)tableView
+	selectionIndexesForProposedSelection:(NSIndexSet *)proposedSelectionIndexes
 {
-#define _maximumSelectedRows	8
+#define _maximumSelectedRows 8
 
-	return [tableView selectionIndexesForProposedSelection:proposedSelectionIndexes maximumNumberOfSelections:_maximumSelectedRows];
+	return [tableView selectionIndexesForProposedSelection:proposedSelectionIndexes
+								 maximumNumberOfSelections:_maximumSelectedRows];
 
 #undef _maximumSelectedRows
 }

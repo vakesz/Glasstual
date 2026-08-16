@@ -34,7 +34,7 @@
 #import "BlowfishEncryptionKeyExchangeBase.h"
 
 @interface EKBlowfishEncryptionKeyExchange ()
-@property (nonatomic, strong) EKBlowfishEncryptionKeyExchangeBase *keyExchanger;
+@property(nonatomic, strong) EKBlowfishEncryptionKeyExchangeBase *keyExchanger;
 @end
 
 @implementation EKBlowfishEncryptionKeyExchange
@@ -62,11 +62,11 @@
 - (NSString *)generatePublicKey
 {
 	NSData *publicKeyRaw = [[self keyExchanger] rawPublicKey];
-	
-    if ([publicKeyRaw length] >= 1) {
-        return [[self keyExchanger] publicKeyValue:publicKeyRaw];
-    }
-	
+
+	if ([publicKeyRaw length] >= 1) {
+		return [[self keyExchanger] publicKeyValue:publicKeyRaw];
+	}
+
 	return nil;
 }
 
@@ -75,11 +75,10 @@
 	NSData *publicKeyData = [[self keyExchanger] base64Decode:publicKey];
 
 	if ([publicKeyData length] < EKBlowfishEncryptionKeyExchangeRequiredKeyLength ||
-		[publicKeyData length] > EKBlowfishEncryptionKeyExchangeRequiredKeyLength)
-	{
+		[publicKeyData length] > EKBlowfishEncryptionKeyExchangeRequiredKeyLength) {
 		return nil;
 	}
-	
+
 	[[self keyExchanger] setKeyForComputation:publicKeyData];
 	[[self keyExchanger] computeKey];
 

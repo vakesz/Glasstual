@@ -48,14 +48,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
+NSString *const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 
 @interface ICLProcessMain ()
-@property (nonatomic, strong) NSXPCConnection *serviceConnection;
-@property (readonly, copy) NSArray<Class> *moduleClasses;
-@property (readonly, copy) NSArray<Class> *moduleClassesInCore;
-@property (readonly, copy) NSDictionary<NSString *, NSArray<Class> *> *modules;
-@property (readonly) NSCache *moduleReferences;
+@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(readonly, copy) NSArray<Class> *moduleClasses;
+@property(readonly, copy) NSArray<Class> *moduleClassesInCore;
+@property(readonly, copy) NSDictionary<NSString *, NSArray<Class> *> *modules;
+@property(readonly) NSCache *moduleReferences;
 @end
 
 @implementation ICLProcessMain
@@ -88,12 +88,11 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 /* List of module classes that are automatically mapped */
 - (NSArray<Class> *)moduleClassesInCore
 {
-	return
-	@[
+	return @[
 		/* This module should ALWAYS be the last
 		 in line because it matches any URL. */
 		[ICMAssessedMedia class]
-	 ];
+	];
 }
 
 - (NSArray<Class> *)moduleClasses
@@ -134,20 +133,21 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 			[mappedDomains addObject:moduleClass];
 		};
 
-		void (^mapModuleDomains)(Class, NSArray *) = ^(Class moduleClass, NSArray<NSString *> * _Nullable moduleDomains) {
-			/* If the module does not map to a specific domain,
+		void (^mapModuleDomains)(Class, NSArray *) =
+			^(Class moduleClass, NSArray<NSString *> *_Nullable moduleDomains) {
+				/* If the module does not map to a specific domain,
 			 then map it to a wildcard for all other classes. */
-			if (moduleDomains == nil || moduleDomains.count == 0) {
-				mapModuleDomain(moduleClass, @"*");
+				if (moduleDomains == nil || moduleDomains.count == 0) {
+					mapModuleDomain(moduleClass, @"*");
 
-				return;
-			}
+					return;
+				}
 
-			/* Map domains */
-			for (NSString *moduleDomain in moduleDomains) {
-				mapModuleDomain(moduleClass, moduleDomain);
-			}
-		};
+				/* Map domains */
+				for (NSString *moduleDomain in moduleDomains) {
+					mapModuleDomain(moduleClass, moduleDomain);
+				}
+			};
 
 		for (Class moduleClass in moduleClasses) {
 			NSArray *moduleDomains = [moduleClass domains];
@@ -164,7 +164,11 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 	return modules;
 }
 
-- (void)processURL:(NSURL *)url withUniqueIdentifier:(NSString *)uniqueIdentifier atLineNumber:(NSString *)lineNumber index:(NSUInteger)index inView:(NSString *)viewIdentifier
+- (void)processURL:(NSURL *)url
+	withUniqueIdentifier:(NSString *)uniqueIdentifier
+			atLineNumber:(NSString *)lineNumber
+				   index:(NSUInteger)index
+				  inView:(NSString *)viewIdentifier
 {
 	NSParameterAssert(url != nil);
 	NSParameterAssert(url.isFileURL == NO);
@@ -172,12 +176,11 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 	NSParameterAssert(lineNumber != nil);
 	NSParameterAssert(viewIdentifier != nil);
 
-	  ICLPayloadMutable *payload =
-	[[ICLPayloadMutable alloc] initWithURL:url
-					  withUniqueIdentifier:uniqueIdentifier
-							  atLineNumber:lineNumber
-									 index:index
-									inView:viewIdentifier];
+	ICLPayloadMutable *payload = [[ICLPayloadMutable alloc] initWithURL:url
+												   withUniqueIdentifier:uniqueIdentifier
+														   atLineNumber:lineNumber
+																  index:index
+																 inView:viewIdentifier];
 
 	[self processPayload:payload];
 }
@@ -188,9 +191,7 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 
 	NSString *urlScheme = payload.url.scheme;
 
-	if ([urlScheme isEqualToString:@"http"] == NO &&
-		[urlScheme isEqualToString:@"https"] == NO)
-	{
+	if ([urlScheme isEqualToString:@"http"] == NO && [urlScheme isEqualToString:@"https"] == NO) {
 		return;
 	}
 
@@ -202,7 +203,7 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 		payloadIn = (id)payload;
 	}
 
-	BOOL (^processModulesWithDomain)(NSString *) = ^BOOL (NSString *domain) {
+	BOOL (^processModulesWithDomain)(NSString *) = ^BOOL(NSString *domain) {
 		NSParameterAssert(domain != nil);
 
 		NSArray *modules = self.modules[domain];
@@ -235,7 +236,8 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 	/* Do not allow unsafe content */
 	if ([moduleClass contentImageOrVideo] == NO && [TPCPreferences inlineMediaLimitToBasics]) {
 		return NO;
-	} else if ([moduleClass contentIsFile] == NO && [TPCPreferences inlineMediaLimitToBasics] && [TPCPreferences inlineMediaLimitBasicsToFiles]) {
+	} else if ([moduleClass contentIsFile] == NO && [TPCPreferences inlineMediaLimitToBasics] &&
+			   [TPCPreferences inlineMediaLimitBasicsToFiles]) {
 		return NO;
 	} else if ([moduleClass contentNotSafeForWork] && [TPCPreferences inlineMediaLimitNaughtyContent]) {
 		return NO;
@@ -290,25 +292,20 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 	/* If you are wondering why so much care has been put into these errors
 	 when we control the code, it's because there are plans to support plugins
 	 for modules in the future so future proofing it is best. */
-	if (payload.html.length == 0 &&
-		payload.scriptResources.count == 0)
-	{
-		error =
-		[NSError errorWithDomain:ICLInlineContentErrorDomain
-							code:1001
-						userInfo:@{
-			NSLocalizedDescriptionKey : @"-[ICLPayload scriptResources] must contain at least one path if -[ICLPayload html] is empty"
-		}];
-	}
-	else if (payload.html.length == 0 &&
-			 payload.entrypoint.length == 0)
-	{
-		error =
-		[NSError errorWithDomain:ICLInlineContentErrorDomain
-							code:1002
-						userInfo:@{
-			NSLocalizedDescriptionKey : @"-[ICLPayload html] and -[ICLPayload entrypoint] cannot both be empty"
-		}];
+	if (payload.html.length == 0 && payload.scriptResources.count == 0) {
+		error = [NSError errorWithDomain:ICLInlineContentErrorDomain
+									code:1001
+								userInfo:@{
+									NSLocalizedDescriptionKey : @"-[ICLPayload scriptResources] must contain at least "
+																@"one path if -[ICLPayload html] is empty"
+								}];
+	} else if (payload.html.length == 0 && payload.entrypoint.length == 0) {
+		error = [NSError errorWithDomain:ICLInlineContentErrorDomain
+									code:1002
+								userInfo:@{
+									NSLocalizedDescriptionKey :
+										@"-[ICLPayload html] and -[ICLPayload entrypoint] cannot both be empty"
+								}];
 	}
 
 	if (error) {
@@ -328,47 +325,41 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 - (void)_deferModule:(ICLInlineContentModule *)module asType:(ICLMediaType)type performCheck:(BOOL)performCheck
 {
 	NSParameterAssert(module != nil);
-	NSParameterAssert(type == ICLMediaTypeImage ||
-					  type == ICLMediaTypeVideo ||
-					  type == ICLMediaTypeVideoGif);
+	NSParameterAssert(type == ICLMediaTypeImage || type == ICLMediaTypeVideo || type == ICLMediaTypeVideoGif);
 
 	switch (type) {
-		case ICLMediaTypeImage:
-		{
-			ICMInlineImage *imageModule = [[ICMInlineImage alloc] initWithDeferredModule:module];
+	case ICLMediaTypeImage: {
+		ICMInlineImage *imageModule = [[ICMInlineImage alloc] initWithDeferredModule:module];
 
-			[self _addReferenceForModule:imageModule];
+		[self _addReferenceForModule:imageModule];
 
-			[imageModule performActionWithImageCheck:performCheck];
+		[imageModule performActionWithImageCheck:performCheck];
 
-			break;
-		}
-		case ICLMediaTypeVideo:
-		{
-			ICMInlineVideo *videoModule = [[ICMInlineVideo alloc] initWithDeferredModule:module];
+		break;
+	}
+	case ICLMediaTypeVideo: {
+		ICMInlineVideo *videoModule = [[ICMInlineVideo alloc] initWithDeferredModule:module];
 
-			[self _addReferenceForModule:videoModule];
+		[self _addReferenceForModule:videoModule];
 
-			[videoModule performActionWithVideoCheck:performCheck];
+		[videoModule performActionWithVideoCheck:performCheck];
 
-			break;
-		}
-		case ICLMediaTypeVideoGif:
-		{
-			ICMInlineGifVideo *videoModule = [[ICMInlineGifVideo alloc] initWithDeferredModule:module];
+		break;
+	}
+	case ICLMediaTypeVideoGif: {
+		ICMInlineGifVideo *videoModule = [[ICMInlineGifVideo alloc] initWithDeferredModule:module];
 
-			[self _addReferenceForModule:videoModule];
+		[self _addReferenceForModule:videoModule];
 
-			[videoModule performActionWithVideoCheck:performCheck];
+		[videoModule performActionWithVideoCheck:performCheck];
 
-			break;
-		}
-		default:
-		{
-			LogToConsoleError("Unexpected media type: %{public}lu", type);
+		break;
+	}
+	default: {
+		LogToConsoleError("Unexpected media type: %{public}lu", type);
 
-			break;
-		} // case
+		break;
+	} // case
 	} // switch
 }
 
@@ -430,7 +421,7 @@ NSString * const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 #pragma mark -
 #pragma mark XPC Connection
 
-- (id <ICLInlineContentClientProtocol>)remoteObjectProxy
+- (id<ICLInlineContentClientProtocol>)remoteObjectProxy
 {
 	return self.serviceConnection.remoteObjectProxy;
 }

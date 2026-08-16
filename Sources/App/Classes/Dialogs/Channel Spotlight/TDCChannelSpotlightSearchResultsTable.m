@@ -48,23 +48,23 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCChannelSpotlightSearchResultRowView ()
-@property (nonatomic, weak) TDCChannelSpotlightController *controller;
-@property (nonatomic, weak) TDCChannelSpotlightSearchResultCellView *childCell;
-@property (readonly) TDCChannelSpotlightAppearance *userInterfaceObjects;
+@property(nonatomic, weak) TDCChannelSpotlightController *controller;
+@property(nonatomic, weak) TDCChannelSpotlightSearchResultCellView *childCell;
+@property(readonly) TDCChannelSpotlightAppearance *userInterfaceObjects;
 @end
 
 @interface TDCChannelSpotlightSearchResultCellView ()
-@property (readonly, copy) NSAttributedString *channelName;
-@property (readonly, copy) NSString *keyboardShortcut;
-@property (readonly, copy) NSString *unreadCountDescription;
-@property (nonatomic, weak) IBOutlet NSTextField *channelNameField;
-@property (nonatomic, weak) IBOutlet NSTextField *keyboardShortcutField;
-@property (nonatomic, weak) IBOutlet NSLayoutConstraint *keyboardShortcutFieldOffsetConstraint;
-@property (nonatomic, weak) IBOutlet NSTextField *unreadCountDescriptionField;
-@property (nonatomic, assign) BOOL staticLabelsPopulated;
-@property (readonly) TDCChannelSpotlightAppearance *userInterfaceObjects;
-@property (readonly) TDCChannelSpotlightController *controller;
-@property (readonly) TDCChannelSpotlightSearchResultRowView *rowCell;
+@property(readonly, copy) NSAttributedString *channelName;
+@property(readonly, copy) NSString *keyboardShortcut;
+@property(readonly, copy) NSString *unreadCountDescription;
+@property(nonatomic, weak) IBOutlet NSTextField *channelNameField;
+@property(nonatomic, weak) IBOutlet NSTextField *keyboardShortcutField;
+@property(nonatomic, weak) IBOutlet NSLayoutConstraint *keyboardShortcutFieldOffsetConstraint;
+@property(nonatomic, weak) IBOutlet NSTextField *unreadCountDescriptionField;
+@property(nonatomic, assign) BOOL staticLabelsPopulated;
+@property(readonly) TDCChannelSpotlightAppearance *userInterfaceObjects;
+@property(readonly) TDCChannelSpotlightController *controller;
+@property(readonly) TDCChannelSpotlightSearchResultRowView *rowCell;
 @end
 
 @implementation TDCChannelSpotlightSearchResultCellView
@@ -101,18 +101,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)updateTextFieldTextColorIsSelected:(BOOL)isSelected
 {
 	TDCChannelSpotlightAppearance *appearance = self.userInterfaceObjects;
-	
-	if (isSelected == NO)
-	{
+
+	if (isSelected == NO) {
 		self.channelNameField.textColor = appearance.searchResultChannelNameTextColor;
 
 		self.unreadCountDescriptionField.textColor = appearance.searchResultChannelDescriptionTextColor;
 
 		self.keyboardShortcutField.textColor = appearance.searchResultKeyboardShortcutTextColor;
 		self.keyboardShortcutFieldOffsetConstraint.constant = appearance.searchResultKeyboardShortcutDeselectedOffset;
-	}
-	else
-	{
+	} else {
 		NSColor *selectedTextColor = appearance.searchResultSelectedTextColor;
 
 		self.channelNameField.textColor = selectedTextColor;
@@ -144,25 +141,28 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSFont *channelNameFieldFont = self.channelNameField.font;
 
-	NSMutableAttributedString *resultString =
-	[NSMutableAttributedString
-	 mutableAttributedStringWithString:TXTLS(@"TDCChannelSpotlightController[jpw-cj]", channelName)
-							attributes:@{
-								NSFontAttributeName : channelNameFieldFont,
-								NSParagraphStyleAttributeName : paragraphStyle
-							}];
+	NSMutableAttributedString *resultString = [NSMutableAttributedString
+		mutableAttributedStringWithString:TXTLS(@"TDCChannelSpotlightController[jpw-cj]", channelName)
+							   attributes:@{
+								   NSFontAttributeName : channelNameFieldFont,
+								   NSParagraphStyleAttributeName : paragraphStyle
+							   }];
 
 	TDCChannelSpotlightController *controller = self.controller;
 
 	NSString *searchString = controller.searchString;
 
-	[resultString.string
-	 enumerateFirstOccurrenceOfCharactersInString:searchString
-										withBlock:^(NSRange range, BOOL *stop) {
-											NSFont *boldFont = [RZFontManager() convertFont:channelNameFieldFont toHaveTrait:NSBoldFontMask];
+	[resultString.string enumerateFirstOccurrenceOfCharactersInString:searchString
+															withBlock:^(NSRange range, BOOL *stop) {
+																NSFont *boldFont =
+																	[RZFontManager() convertFont:channelNameFieldFont
+																					 toHaveTrait:NSBoldFontMask];
 
-											[resultString addAttribute:NSFontAttributeName value:boldFont range:range];
-										} options:NSCaseInsensitiveSearch];
+																[resultString addAttribute:NSFontAttributeName
+																					 value:boldFont
+																					 range:range];
+															}
+															  options:NSCaseInsensitiveSearch];
 
 	NSString *networkName = searchResult.channel.associatedClient.networkNameAlt;
 
@@ -227,9 +227,11 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *nicknameHighlightCountDescription = nil;
 
 	if (nicknameHighlightCount == 1) {
-		nicknameHighlightCountDescription = TXTLS(@"TDCChannelSpotlightController[0lz-oh]",TXFormattedNumber(nicknameHighlightCount));
+		nicknameHighlightCountDescription =
+			TXTLS(@"TDCChannelSpotlightController[0lz-oh]", TXFormattedNumber(nicknameHighlightCount));
 	} else {
-		nicknameHighlightCountDescription = TXTLS(@"TDCChannelSpotlightController[c4u-21]", TXFormattedNumber(nicknameHighlightCount));
+		nicknameHighlightCountDescription =
+			TXTLS(@"TDCChannelSpotlightController[c4u-21]", TXFormattedNumber(nicknameHighlightCount));
 	}
 
 	NSUInteger unreadCount = searchResult.channel.treeUnreadCount;
@@ -274,25 +276,29 @@ NS_ASSUME_NONNULL_BEGIN
 
 	IRCChannel *channel = searchResult.channel;
 
-	if (self.window == nil)
-	{
+	if (self.window == nil) {
 		[channel removeObserver:self forKeyPath:@"nicknameHighlightCount"];
 		[channel removeObserver:self forKeyPath:@"treeUnreadCount"];
-	}
-	else
-	{
-		[channel addObserver:self forKeyPath:@"nicknameHighlightCount" options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew) context:nil];
-		[channel addObserver:self forKeyPath:@"treeUnreadCount" options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew) context:nil];
+	} else {
+		[channel addObserver:self
+				  forKeyPath:@"nicknameHighlightCount"
+					 options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew)
+					 context:nil];
+		[channel addObserver:self
+				  forKeyPath:@"treeUnreadCount"
+					 options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew)
+					 context:nil];
 
 		[self setInitialValues];
 	}
 }
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString *, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 {
-	if ([keyPath isEqualToString:@"nicknameHighlightCount"] ||
-		[keyPath isEqualToString:@"treeUnreadCount"])
-	{
+	if ([keyPath isEqualToString:@"nicknameHighlightCount"] || [keyPath isEqualToString:@"treeUnreadCount"]) {
 		[self unreadCountDescriptionChanged];
 	}
 }
@@ -367,8 +373,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSWindow *window = self.window;
 
-	return (appearance.searchResultRowEmphasized &&
-			(window == nil || window.isKeyWindow));
+	return (appearance.searchResultRowEmphasized && (window == nil || window.isKeyWindow));
 }
 
 - (nullable TDCChannelSpotlightSearchResultCellView *)childCell

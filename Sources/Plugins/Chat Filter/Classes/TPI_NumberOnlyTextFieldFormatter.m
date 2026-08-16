@@ -41,7 +41,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TPI_NumberOnlyTextFieldFormatter
 
-- (BOOL)isPartialStringValid:(NSString *)partialString newEditingString:(NSString **)newString errorDescription:(NSString **)error
+- (BOOL)isPartialStringValid:(NSString *)partialString
+			newEditingString:(NSString **)newString
+			errorDescription:(NSString **)error
 {
 	if (partialString.length == 0) {
 		return YES;

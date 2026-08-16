@@ -52,16 +52,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 @interface TLOEncryptionManager () <OTRKitDelegate, OTRKitFingerprintManagerDialogDelegate>
-@property (nonatomic, strong, nullable) OTRKitFingerprintManagerDialog *fingerprintManagerDialog;
+@property(nonatomic, strong, nullable) OTRKitFingerprintManagerDialog *fingerprintManagerDialog;
 @end
 
 @interface TLOEncryptionManagerEncodingDecodingObject : NSObject
 // Properties that should be manipulated to provide context information
-@property (nonatomic, copy, nullable) TLOEncryptionManagerEncodingDecodingCallbackBlock encodingCallback;
-@property (nonatomic, copy, nullable) TLOEncryptionManagerInjectCallbackBlock injectionCallback;
-@property (nonatomic, copy) NSString *messageFrom;
-@property (nonatomic, copy) NSString *messageTo;
-@property (nonatomic, copy) NSString *messageBody; // unencrypted value
+@property(nonatomic, copy, nullable) TLOEncryptionManagerEncodingDecodingCallbackBlock encodingCallback;
+@property(nonatomic, copy, nullable) TLOEncryptionManagerInjectCallbackBlock injectionCallback;
+@property(nonatomic, copy) NSString *messageFrom;
+@property(nonatomic, copy) NSString *messageTo;
+@property(nonatomic, copy) NSString *messageBody; // unencrypted value
 @end
 
 @implementation TLOEncryptionManager
@@ -120,11 +120,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 	if ([componentPathURL setResourceValue:@(YES) forKey:NSURLIsHiddenKey error:&attributesChangeError] == NO) {
 		LogToConsoleError("Failed to hide the folder at the path '%{private}@': %{private}@",
-			componentPathURL.standardizedTildePath, attributesChangeError.localizedDescription);
+						  componentPathURL.standardizedTildePath,
+						  attributesChangeError.localizedDescription);
 	}
 
-	[otrKit setMaximumProtocolSize:[self otrKitProtocolMaximumMessageSize]
-					   forProtocol:[self otrKitProtocol]];
+	[otrKit setMaximumProtocolSize:[self otrKitProtocolMaximumMessageSize] forProtocol:[self otrKitProtocol]];
 
 	[self updatePolicy];
 }
@@ -139,7 +139,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		if ([@"" writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:&writeError] == NO) {
 			LogToConsoleError("Failed to create base file for encryption component at path: %{private}@",
-				  writeError.localizedDescription);
+							  writeError.localizedDescription);
 		}
 	}
 
@@ -151,7 +151,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	if ([pathURL setResourceValue:@(YES) forKey:NSURLIsExcludedFromBackupKey error:&attributesChangeError] == NO) {
 		LogToConsoleError("Failed to exclude the files at the path '%{private}@' from backup: %{private}@",
-			pathURL.standardizedTildePath, attributesChangeError.localizedDescription);
+						  pathURL.standardizedTildePath,
+						  attributesChangeError.localizedDescription);
 	}
 }
 
@@ -184,7 +185,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(nickname != nil);
 	NSParameterAssert(client != nil);
 
-	return [NSString stringWithFormat:@"%@%@%@", nickname, [OTRKit sharedInstance].accountNameSeparator, client.uniqueIdentifier];
+	return [NSString
+		stringWithFormat:@"%@%@%@", nickname, [OTRKit sharedInstance].accountNameSeparator, client.uniqueIdentifier];
 }
 
 - (nullable NSString *)nicknameFromAccountName:(NSString *)accountName
@@ -284,7 +286,10 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Encryption & Decryption
 
-- (void)decryptMessage:(NSString *)messageBody from:(NSString *)messageFrom to:(NSString *)messageTo decodingCallback:(nullable TLOEncryptionManagerEncodingDecodingCallbackBlock)decodingCallback
+- (void)decryptMessage:(NSString *)messageBody
+				  from:(NSString *)messageFrom
+					to:(NSString *)messageTo
+	  decodingCallback:(nullable TLOEncryptionManagerEncodingDecodingCallbackBlock)decodingCallback
 {
 	NSParameterAssert(messageTo != nil);
 	NSParameterAssert(messageFrom != nil);
@@ -310,7 +315,11 @@ NS_ASSUME_NONNULL_BEGIN
 									   tag:messageObject];
 }
 
-- (void)encryptMessage:(NSString *)messageBody from:(NSString *)messageFrom to:(NSString *)messageTo encodingCallback:(nullable TLOEncryptionManagerEncodingDecodingCallbackBlock)encodingCallback injectionCallback:(nullable TLOEncryptionManagerInjectCallbackBlock)injectionCallback
+- (void)encryptMessage:(NSString *)messageBody
+				  from:(NSString *)messageFrom
+					to:(NSString *)messageTo
+	  encodingCallback:(nullable TLOEncryptionManagerEncodingDecodingCallbackBlock)encodingCallback
+	 injectionCallback:(nullable TLOEncryptionManagerInjectCallbackBlock)injectionCallback
 {
 	NSParameterAssert(messageTo != nil);
 	NSParameterAssert(messageFrom != nil);
@@ -344,15 +353,17 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(messageTo != nil);
 	NSParameterAssert(messageFrom != nil);
 
-	OTRKitMessageState currentState =
-		[[OTRKit sharedInstance] messageStateForUsername:messageTo
-											 accountName:messageFrom
-												protocol:[self otrKitProtocol]];
+	OTRKitMessageState currentState = [[OTRKit sharedInstance] messageStateForUsername:messageTo
+																		   accountName:messageFrom
+																			  protocol:[self otrKitProtocol]];
 
 	return currentState;
 }
 
-- (BOOL)safeToTransferFile:(NSString *)filename to:(NSString *)messageTo from:(NSString *)messageFrom isIncomingFileTransfer:(BOOL)isIncomingFileTransfer
+- (BOOL)safeToTransferFile:(NSString *)filename
+						to:(NSString *)messageTo
+					  from:(NSString *)messageFrom
+	isIncomingFileTransfer:(BOOL)isIncomingFileTransfer
 {
 	NSParameterAssert(messageTo != nil);
 	NSParameterAssert(messageFrom != nil);
@@ -369,9 +380,7 @@ NS_ASSUME_NONNULL_BEGIN
 											  alternateButton:TXTLS(@"OffTheRecord[ng0-5q]")];
 
 			return (continueop == NO);
-		}
-		else
-		{
+		} else {
 			NSString *nickname = [self nicknameFromAccountName:messageTo];
 
 			BOOL continueop = [TDCAlert modalAlertWithMessage:TXTLS(@"OffTheRecord[7he-76]")
@@ -386,12 +395,15 @@ NS_ASSUME_NONNULL_BEGIN
 	return YES;
 }
 
-- (void)performBlock:(void (^)(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel))block inRelationToAccountName:(NSString *)accountName
+- (void)performBlock:(void (^)(NSString *nickname, IRCClient *client, IRCChannel *_Nullable channel))block
+	inRelationToAccountName:(NSString *)accountName
 {
 	[self performBlock:block inRelationToAccountName:accountName createWindowIfMissing:NO];
 }
 
-- (void)performBlock:(void (^)(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel))block inRelationToAccountName:(NSString *)accountName createWindowIfMissing:(BOOL)createWindowIfMissing
+- (void)performBlock:(void (^)(NSString *nickname, IRCClient *client, IRCChannel *_Nullable channel))block
+	inRelationToAccountName:(NSString *)accountName
+	  createWindowIfMissing:(BOOL)createWindowIfMissing
 {
 	XRPerformBlockSynchronouslyOnMainQueue(^{
 		IRCClient *client = [self connectionFromAccountName:accountName];
@@ -418,26 +430,27 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSString *localeKey = nil;
 
-#define _dv(event, localInt)		case (event): { localeKey = (localInt); break; }
+#define _dv(event, localInt)                                                                                           \
+	case (event): {                                                                                                    \
+		localeKey = (localInt);                                                                                        \
+		break;                                                                                                         \
+	}
 
 	switch (event) {
-		_dv(OTRKitMessageEventEncryptionRequired,				@"jww-e0")
-		_dv(OTRKitMessageEventEncryptionError,					@"jvt-fi")
-		_dv(OTRKitMessageEventConnectionEnded,					@"c5o-2l")
-		_dv(OTRKitMessageEventSetupError,						@"uhy-85")
-		_dv(OTRKitMessageEventMessageReflected,					@"bl0-5i")
-		_dv(OTRKitMessageEventMessageResent,					@"c49-q0")
-		_dv(OTRKitMessageEventReceivedMessageNotInPrivate,		@"6v9-w3")
-		_dv(OTRKitMessageEventReceivedMessageUnreadable,		@"9if-xp")
-		_dv(OTRKitMessageEventReceivedMessageMalformed,			@"auo-n0")
-		_dv(OTRKitMessageEventLogHeartbeatReceived,				@"nl1-nf")
-		_dv(OTRKitMessageEventLogHeartbeatSent,					@"iwt-9f")
-		_dv(OTRKitMessageEventReceivedMessageGeneralError,		@"2zx-p6")
-		_dv(OTRKitMessageEventReceivedMessageUnencrypted,		@"1lf-f0")
-		_dv(OTRKitMessageEventReceivedMessageUnrecognized,		@"4by-8j")
-		_dv(OTRKitMessageEventReceivedMessageForOtherInstance,	@"c7t-vi")
+		_dv(OTRKitMessageEventEncryptionRequired, @"jww-e0") _dv(OTRKitMessageEventEncryptionError, @"jvt-fi")
+			_dv(OTRKitMessageEventConnectionEnded, @"c5o-2l") _dv(OTRKitMessageEventSetupError, @"uhy-85")
+				_dv(OTRKitMessageEventMessageReflected, @"bl0-5i") _dv(OTRKitMessageEventMessageResent, @"c49-q0")
+					_dv(OTRKitMessageEventReceivedMessageNotInPrivate, @"6v9-w3")
+						_dv(OTRKitMessageEventReceivedMessageUnreadable, @"9if-xp")
+							_dv(OTRKitMessageEventReceivedMessageMalformed, @"auo-n0")
+								_dv(OTRKitMessageEventLogHeartbeatReceived, @"nl1-nf")
+									_dv(OTRKitMessageEventLogHeartbeatSent, @"iwt-9f")
+										_dv(OTRKitMessageEventReceivedMessageGeneralError, @"2zx-p6")
+											_dv(OTRKitMessageEventReceivedMessageUnencrypted, @"1lf-f0")
+												_dv(OTRKitMessageEventReceivedMessageUnrecognized, @"4by-8j")
+													_dv(OTRKitMessageEventReceivedMessageForOtherInstance, @"c7t-vi")
 
-		default:
+														default:
 		{
 			break;
 		}
@@ -457,20 +470,18 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)eventIsErroneous:(OTRKitMessageEvent)event
 {
 	switch (event) {
-		case OTRKitMessageEventEncryptionError:
-		case OTRKitMessageEventReceivedMessageGeneralError:
-		case OTRKitMessageEventReceivedMessageMalformed:
-		case OTRKitMessageEventReceivedMessageNotInPrivate:
-		case OTRKitMessageEventReceivedMessageUnreadable:
-		case OTRKitMessageEventReceivedMessageUnrecognized:
-		case OTRKitMessageEventEncryptionRequired:
-		{
-			return YES;
-		}
-		default:
-		{
-			return NO;
-		}
+	case OTRKitMessageEventEncryptionError:
+	case OTRKitMessageEventReceivedMessageGeneralError:
+	case OTRKitMessageEventReceivedMessageMalformed:
+	case OTRKitMessageEventReceivedMessageNotInPrivate:
+	case OTRKitMessageEventReceivedMessageUnreadable:
+	case OTRKitMessageEventReceivedMessageUnrecognized:
+	case OTRKitMessageEventEncryptionRequired: {
+		return YES;
+	}
+	default: {
+		return NO;
+	}
 	}
 }
 
@@ -479,18 +490,21 @@ NS_ASSUME_NONNULL_BEGIN
 	[self printMessage:message inChannel:channel onClient:client escapeMessage:YES];
 }
 
-- (void)printMessage:(NSString *)message inChannel:(IRCChannel *)channel onClient:(IRCClient *)client escapeMessage:(BOOL)escapeMessage
+- (void)printMessage:(NSString *)message
+		   inChannel:(IRCChannel *)channel
+			onClient:(IRCClient *)client
+	   escapeMessage:(BOOL)escapeMessage
 {
 	NSParameterAssert(message != nil);
 	NSParameterAssert(channel != nil);
 	NSParameterAssert(client != nil);
 
 	[client print:message
-			   by:nil
-		inChannel:channel
-		   asType:TVCLogLineTypeOffTheRecordEncryptionStatus
-		  command:TVCLogLineDefaultCommandValue
-	escapeMessage:escapeMessage];
+				   by:nil
+			inChannel:channel
+			   asType:TVCLogLineTypeOffTheRecordEncryptionStatus
+			  command:TVCLogLineDefaultCommandValue
+		escapeMessage:escapeMessage];
 }
 
 - (void)presentMessage:(NSString *)message withAccountName:(NSString *)accountName
@@ -500,14 +514,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)presentMessage:(NSString *)message withAccountName:(NSString *)accountName escapeMessage:(BOOL)escapeMessage
 {
-	[self performBlock:^(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel) {
-		if (channel == nil) {
-			return;
-		}
+	[self
+				   performBlock:^(NSString *nickname, IRCClient *client, IRCChannel *_Nullable channel) {
+					   if (channel == nil) {
+						   return;
+					   }
 
-		[self printMessage:message inChannel:channel onClient:client escapeMessage:escapeMessage];
-	} inRelationToAccountName:accountName
-		createWindowIfMissing:YES];
+					   [self printMessage:message inChannel:channel onClient:client escapeMessage:escapeMessage];
+				   }
+		inRelationToAccountName:accountName
+		  createWindowIfMissing:YES];
 }
 
 - (void)presentErrorMessage:(NSString *)errorMessage withAccountName:(NSString *)accountName
@@ -515,26 +531,34 @@ NS_ASSUME_NONNULL_BEGIN
 	[self presentErrorMessage:errorMessage withAccountName:accountName escapeMessage:YES];
 }
 
-- (void)presentErrorMessage:(NSString *)errorMessage withAccountName:(NSString *)accountName escapeMessage:(BOOL)escapeMessage
+- (void)presentErrorMessage:(NSString *)errorMessage
+			withAccountName:(NSString *)accountName
+			  escapeMessage:(BOOL)escapeMessage
 {
 	[self presentMessage:errorMessage withAccountName:accountName escapeMessage:escapeMessage];
 }
 
 - (void)authenticationStatusChangedForAccountName:(NSString *)accountName isVerified:(BOOL)isVerified
 {
-	[self performBlock:^(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel) {
-		if (channel == nil) {
-			return;
-		}
+	[self
+				   performBlock:^(NSString *nickname, IRCClient *client, IRCChannel *_Nullable channel) {
+					   if (channel == nil) {
+						   return;
+					   }
 
-		if (isVerified) {
-			[self printMessage:TXTLS(@"OffTheRecord[rj0-ys]", nickname) inChannel:channel onClient:client];
-		} else {
-			[self printMessage:TXTLS(@"OffTheRecord[ufr-mh]", nickname) inChannel:channel onClient:client];
-		}
+					   if (isVerified) {
+						   [self printMessage:TXTLS(@"OffTheRecord[rj0-ys]", nickname)
+									inChannel:channel
+									 onClient:client];
+					   } else {
+						   [self printMessage:TXTLS(@"OffTheRecord[ufr-mh]", nickname)
+									inChannel:channel
+									 onClient:client];
+					   }
 
-		[channel noteEncryptionStateDidChange];
-	} inRelationToAccountName:accountName];
+					   [channel noteEncryptionStateDidChange];
+				   }
+		inRelationToAccountName:accountName];
 }
 
 #pragma mark -
@@ -572,12 +596,12 @@ NS_ASSUME_NONNULL_BEGIN
 	static NSRegularExpression *boundryRegex = nil;
 
 	if (boundryRegex == nil) {
-		NSString *boundryMatch = [NSString stringWithFormat:
-			@"\\?OTRv?([0-9]+)\\?\n<b>(.*)</b> has requested an "
-			@"<a href=\"https://otr.cypherpunks.ca/\">Off-the-Record "
-			@"private conversation</a>.  However, you do not have a plugin "
-			@"to support that.\nSee <a href=\"https://otr.cypherpunks.ca/\">"
-			@"https://otr.cypherpunks.ca/</a> for more information."];
+		NSString *boundryMatch =
+			[NSString stringWithFormat:@"\\?OTRv?([0-9]+)\\?\n<b>(.*)</b> has requested an "
+									   @"<a href=\"https://otr.cypherpunks.ca/\">Off-the-Record "
+									   @"private conversation</a>.  However, you do not have a plugin "
+									   @"to support that.\nSee <a href=\"https://otr.cypherpunks.ca/\">"
+									   @"https://otr.cypherpunks.ca/</a> for more information."];
 
 		boundryRegex = [NSRegularExpression regularExpressionWithPattern:boundryMatch options:0 error:NULL];
 	}
@@ -593,7 +617,12 @@ NS_ASSUME_NONNULL_BEGIN
 	return message;
 }
 
-- (void)otrKit:(OTRKit *)otrKit injectMessage:(NSString *)message username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol tag:(nullable id)tag
+- (void)otrKit:(OTRKit *)otrKit
+	injectMessage:(NSString *)message
+		 username:(NSString *)username
+	  accountName:(NSString *)accountName
+		 protocol:(NSString *)protocol
+			  tag:(nullable id)tag
 {
 	message = [self maybeInsertProperNegotiationMessage:message];
 
@@ -607,12 +636,21 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	[self performBlock:^(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel) {
-		[client send:@"PRIVMSG", nickname, message, nil];
-	} inRelationToAccountName:username];
+	[self
+				   performBlock:^(NSString *nickname, IRCClient *client, IRCChannel *_Nullable channel) {
+					   [client send:@"PRIVMSG", nickname, message, nil];
+				   }
+		inRelationToAccountName:username];
 }
 
-- (void)otrKit:(OTRKit *)otrKit encodedMessage:(nullable NSString *)encodedMessage wasEncrypted:(BOOL)wasEncrypted username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol tag:(nullable id)tag error:(nullable NSError *)error
+- (void)otrKit:(OTRKit *)otrKit
+	encodedMessage:(nullable NSString *)encodedMessage
+	  wasEncrypted:(BOOL)wasEncrypted
+		  username:(NSString *)username
+	   accountName:(NSString *)accountName
+		  protocol:(NSString *)protocol
+			   tag:(nullable id)tag
+			 error:(nullable NSError *)error
 {
 	if (tag == nil || [tag isKindOfClass:[TLOEncryptionManagerEncodingDecodingObject class]] == NO) {
 		return;
@@ -625,7 +663,14 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)otrKit:(OTRKit *)otrKit decodedMessage:(nullable NSString *)decodedMessage wasEncrypted:(BOOL)wasEncrypted tlvs:(NSArray<OTRTLV *> *)tlvs username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol tag:(nullable id)tag
+- (void)otrKit:(OTRKit *)otrKit
+	decodedMessage:(nullable NSString *)decodedMessage
+	  wasEncrypted:(BOOL)wasEncrypted
+			  tlvs:(NSArray<OTRTLV *> *)tlvs
+		  username:(NSString *)username
+	   accountName:(NSString *)accountName
+		  protocol:(NSString *)protocol
+			   tag:(nullable id)tag
 {
 	if (decodedMessage == nil) {
 		return;
@@ -642,20 +687,26 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)otrKit:(OTRKit *)otrKit updateMessageState:(OTRKitMessageState)messageState username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol
+- (void)otrKit:(OTRKit *)otrKit
+	updateMessageState:(OTRKitMessageState)messageState
+			  username:(NSString *)username
+		   accountName:(NSString *)accountName
+			  protocol:(NSString *)protocol
 {
 	/* We do not force create window if it does not exist when updating encryption
 	 status because status changes are only important if one is open. When a new
 	 window is created, it will populate the latest state regardless of delegate. */
-	[self performBlock:^(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel) {
-		if (channel == nil) {
-			return;
-		}
+	[self
+				   performBlock:^(NSString *nickname, IRCClient *client, IRCChannel *_Nullable channel) {
+					   if (channel == nil) {
+						   return;
+					   }
 
-		[channel noteEncryptionStateDidChange];
-	} inRelationToAccountName:username];
+					   [channel noteEncryptionStateDidChange];
+				   }
+		inRelationToAccountName:username];
 
-	if (messageState ==  OTRKitMessageStateEncrypted) {
+	if (messageState == OTRKitMessageStateEncrypted) {
 		BOOL isVerified = [[OTRKit sharedInstance] activeFingerprintIsVerifiedForUsername:username
 																			  accountName:accountName
 																				 protocol:[self otrKitProtocol]];
@@ -665,9 +716,7 @@ NS_ASSUME_NONNULL_BEGIN
 		} else {
 			[self presentMessage:TXTLS(@"OffTheRecord[l49-9y]") withAccountName:username escapeMessage:NO];
 		}
-	} else if (messageState == OTRKitMessageStateFinished ||
-			   messageState == OTRKitMessageStatePlaintext)
-	{
+	} else if (messageState == OTRKitMessageStateFinished || messageState == OTRKitMessageStatePlaintext) {
 		[self presentMessage:TXTLS(@"OffTheRecord[m1z-eb]") withAccountName:username];
 
 		/* When policy is changed to never, all open conversations are
@@ -675,53 +724,89 @@ NS_ASSUME_NONNULL_BEGIN
 		 dialogs without encryption enabled, then let's cancel any that
 		 are open for this condition. */
 		if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-			[OTRKitAuthenticationDialog cancelRequestForUsername:username
-													 accountName:accountName
-														protocol:protocol];
+			[OTRKitAuthenticationDialog cancelRequestForUsername:username accountName:accountName protocol:protocol];
 		}
 	}
 }
 
-- (BOOL)otrKit:(OTRKit *)otrKit isUsernameLoggedIn:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol
+- (BOOL)otrKit:(OTRKit *)otrKit
+	isUsernameLoggedIn:(NSString *)username
+		   accountName:(NSString *)accountName
+			  protocol:(NSString *)protocol
 {
 	__block BOOL userIsActive = NO;
 
-	[self performBlock:^(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel) {
-		if (channel == nil) {
-			return;
-		}
+	[self
+				   performBlock:^(NSString *nickname, IRCClient *client, IRCChannel *_Nullable channel) {
+					   if (channel == nil) {
+						   return;
+					   }
 
-		userIsActive = channel.isActive;
-	} inRelationToAccountName:username];
+					   userIsActive = channel.isActive;
+				   }
+		inRelationToAccountName:username];
 
 	return userIsActive;
 }
 
-- (void)otrKit:(OTRKit *)otrKit showFingerprintConfirmationForTheirHash:(NSString *)theirHash ourHash:(NSString *)ourHash username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol
+- (void)otrKit:(OTRKit *)otrKit
+	showFingerprintConfirmationForTheirHash:(NSString *)theirHash
+									ourHash:(NSString *)ourHash
+								   username:(NSString *)username
+								accountName:(NSString *)accountName
+								   protocol:(NSString *)protocol
 {
-	[self performBlock:^(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel) {
-		/* We print this message unescaped to include an anchor in the HTML
+	[self
+				   performBlock:^(NSString *nickname, IRCClient *client, IRCChannel *_Nullable channel) {
+					   /* We print this message unescaped to include an anchor in the HTML
 		 that the user can click to authenticate the user.
 		 We are passing outside input to it, which we do escape. */
-		[self printMessage:TXTLS(@"OffTheRecord[67n-6j]",
-								 [TVCLogRenderer escapeHTML:nickname],
-								 [TVCLogRenderer escapeHTML:theirHash])
-				 inChannel:channel
-				  onClient:client
-			 escapeMessage:NO];
-	}  inRelationToAccountName:username
-		 createWindowIfMissing:YES];
+					   [self printMessage:TXTLS(@"OffTheRecord[67n-6j]",
+												[TVCLogRenderer escapeHTML:nickname],
+												[TVCLogRenderer escapeHTML:theirHash])
+								inChannel:channel
+								 onClient:client
+							escapeMessage:NO];
+				   }
+		inRelationToAccountName:username
+		  createWindowIfMissing:YES];
 }
 
-- (void)otrKit:(OTRKit *)otrKit handleSMPEvent:(OTRKitSMPEvent)event progress:(double)progress question:(nullable NSString *)question username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol error:(nullable NSError *)error
+- (void)otrKit:(OTRKit *)otrKit
+	handleSMPEvent:(OTRKitSMPEvent)event
+		  progress:(double)progress
+		  question:(nullable NSString *)question
+		  username:(NSString *)username
+	   accountName:(NSString *)accountName
+		  protocol:(NSString *)protocol
+			 error:(nullable NSError *)error
 {
-	[OTRKitAuthenticationDialog handleAuthenticationRequest:event progress:progress question:question username:username accountName:accountName protocol:protocol];
+	[OTRKitAuthenticationDialog handleAuthenticationRequest:event
+												   progress:progress
+												   question:question
+												   username:username
+												accountName:accountName
+												   protocol:protocol];
 }
 
-- (void)otrKit:(OTRKit *)otrKit handleMessageEvent:(OTRKitMessageEvent)event message:(NSString *)message username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol tag:(nullable id)tag error:(nullable NSError *)error
+- (void)otrKit:(OTRKit *)otrKit
+	handleMessageEvent:(OTRKitMessageEvent)event
+			   message:(NSString *)message
+			  username:(NSString *)username
+		   accountName:(NSString *)accountName
+			  protocol:(NSString *)protocol
+				   tag:(nullable id)tag
+				 error:(nullable NSError *)error
 {
 	if (event == OTRKitMessageEventReceivedMessageUnencrypted) {
-		[self otrKit:otrKit decodedMessage:message wasEncrypted:NO tlvs:@[] username:username accountName:accountName protocol:protocol tag:tag];
+		[self otrKit:otrKit
+			decodedMessage:message
+			  wasEncrypted:NO
+					  tlvs:@[]
+				  username:username
+			   accountName:accountName
+				  protocol:protocol
+					   tag:tag];
 
 		return;
 	}
@@ -733,22 +818,34 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)otrKit:(OTRKit *)otrKit receivedSymmetricKey:(NSData *)symmetricKey forUse:(NSUInteger)use useData:(NSData *)useData username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol
+- (void)otrKit:(OTRKit *)otrKit
+	receivedSymmetricKey:(NSData *)symmetricKey
+				  forUse:(NSUInteger)use
+				 useData:(NSData *)useData
+				username:(NSString *)username
+			 accountName:(NSString *)accountName
+				protocol:(NSString *)protocol
 {
-
 }
 
-- (void)otrKit:(OTRKit *)otrKit willStartGeneratingPrivateKeyForAccountName:(NSString *)accountName protocol:(NSString *)protocol
+- (void)otrKit:(OTRKit *)otrKit
+	willStartGeneratingPrivateKeyForAccountName:(NSString *)accountName
+									   protocol:(NSString *)protocol
 {
-
 }
 
-- (void)otrKit:(OTRKit *)otrKit didFinishGeneratingPrivateKeyForAccountName:(NSString *)accountName protocol:(NSString *)protocol error:(nullable NSError *)error
+- (void)otrKit:(OTRKit *)otrKit
+	didFinishGeneratingPrivateKeyForAccountName:(NSString *)accountName
+									   protocol:(NSString *)protocol
+										  error:(nullable NSError *)error
 {
-
 }
 
-- (void)otrKit:(OTRKit *)otrKit fingerprintIsVerifiedStateChangedForUsername:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol verified:(BOOL)verified
+- (void)otrKit:(OTRKit *)otrKit
+	fingerprintIsVerifiedStateChangedForUsername:(NSString *)username
+									 accountName:(NSString *)accountName
+										protocol:(NSString *)protocol
+										verified:(BOOL)verified
 {
 	[self authenticationStatusChangedForAccountName:username isVerified:verified];
 }
@@ -758,19 +855,26 @@ NS_ASSUME_NONNULL_BEGIN
 	self.fingerprintManagerDialog = nil;
 }
 
-- (BOOL)otrKit:(OTRKit *)otrKit ignoreMessage:(NSString *)message messageType:(OTRKitMessageType)messageType username:(NSString *)username accountName:(NSString *)accountName protocol:(NSString *)protocol
+- (BOOL)otrKit:(OTRKit *)otrKit
+	ignoreMessage:(NSString *)message
+	  messageType:(OTRKitMessageType)messageType
+		 username:(NSString *)username
+	  accountName:(NSString *)accountName
+		 protocol:(NSString *)protocol
 {
 	__block BOOL ignoreMessage = NO;
 
-	[self performBlock:^(NSString *nickname, IRCClient *client, IRCChannel * _Nullable channel) {
-		if (messageType == OTRKitMessageTypeNotOTR) {
-			return;
-		}
+	[self
+				   performBlock:^(NSString *nickname, IRCClient *client, IRCChannel *_Nullable channel) {
+					   if (messageType == OTRKitMessageTypeNotOTR) {
+						   return;
+					   }
 
-		if ([client isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
-			ignoreMessage = [client nicknameIsMyself:nickname];
-		}
-	} inRelationToAccountName:username];
+					   if ([client isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
+						   ignoreMessage = [client nicknameIsMyself:nickname];
+					   }
+				   }
+		inRelationToAccountName:username];
 
 	return ignoreMessage;
 }
@@ -797,26 +901,22 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL messageStateEncrypted = (currentMessageState == OTRKitMessageStateEncrypted);
 
 	switch (menuItemTag) {
-		case MTOTRStatusButtonStartPrivateConversation:
-		{
-			menuItem.hidden = messageStateEncrypted;
+	case MTOTRStatusButtonStartPrivateConversation: {
+		menuItem.hidden = messageStateEncrypted;
 
-			return YES;
-		}
-		case MTOTRStatusButtonRefreshPrivateConversation:
-		{
-			menuItem.hidden = (messageStateEncrypted == NO);
+		return YES;
+	}
+	case MTOTRStatusButtonRefreshPrivateConversation: {
+		menuItem.hidden = (messageStateEncrypted == NO);
 
-			return YES;
-		}
-		case MTOTRStatusButtonEndPrivateConversation:
-		{
-			return messageStateEncrypted;
-		}
-		case MTOTRStatusButtonAuthenticateChatPartner:
-		{
-			return messageStateEncrypted;
-		}
+		return YES;
+	}
+	case MTOTRStatusButtonEndPrivateConversation: {
+		return messageStateEncrypted;
+	}
+	case MTOTRStatusButtonAuthenticateChatPartner: {
+		return messageStateEncrypted;
+	}
 	}
 
 	return NO;

@@ -41,8 +41,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCServerList ()
-@property (nonatomic, weak) id keyDelegate;
-
+@property(nonatomic, weak) id keyDelegate;
 
 - (BOOL)leftMouseIsDownInView;
 

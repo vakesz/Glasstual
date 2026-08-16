@@ -52,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)stringFormattedForChannel:(NSString *)channelName
 							   onClient:(IRCClient *)client
 						   withLineType:(TVCLogLineType)lineType
-						 effectiveRange:(NSRange * _Nullable)effectiveRange;
+						 effectiveRange:(NSRange *_Nullable)effectiveRange;
 @end
 
 @interface NSMutableAttributedString (IRCTextFormatterPrivate)

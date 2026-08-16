@@ -40,37 +40,36 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCModeInfo;
 
-typedef NS_ENUM(NSUInteger, IRCISupportInfoListType)
-{
+typedef NS_ENUM(NSUInteger, IRCISupportInfoListType) {
 	IRCISupportInfoListTypeBan,
 	IRCISupportInfoListTypeBanException,
 	IRCISupportInfoListTypeInviteException,
 	IRCISupportInfoListTypeQuiet
 };
 
-#define IRCISupportInfoHighestUserPrefixRank			100
+#define IRCISupportInfoHighestUserPrefixRank 100
 
-#define IRCISupportUserModeSymbolsSymbolsKey			@"modeSymbols"
-#define IRCISupportUserModeSymbolsCharactersKey			@"characters"
+#define IRCISupportUserModeSymbolsSymbolsKey @"modeSymbols"
+#define IRCISupportUserModeSymbolsCharactersKey @"characters"
 
 @interface IRCISupportInfo : NSObject
-@property (readonly) BOOL configurationReceived;
-@property (readonly) NSUInteger maximumAwayLength; // 0 = no limit
-@property (readonly) NSUInteger maximumChannelNameLength; // 0 = no limit - unused
-@property (readonly) NSUInteger maximumKeyLength; // 0 = no limit
-@property (readonly) NSUInteger maximumKickLength; // 0 = no limit
-@property (readonly) NSUInteger maximumNicknameLength;
-@property (readonly) NSUInteger maximumTopicLength; // 0 = no limit
-@property (readonly) NSUInteger maximumModeCount;
-@property (readonly, copy) NSArray<NSString *> *channelNamePrefixes;
-@property (readonly, copy) NSArray<NSString *> *statusMessageModeSymbols;
-@property (readonly, copy) NSDictionary<NSString *, NSNumber *> *channelModes;
-@property (readonly, copy) NSDictionary<NSString *, NSArray *> *userModeSymbols;
-@property (readonly, copy, nullable) NSString *banExceptionModeSymbol;
-@property (readonly, copy, nullable) NSString *inviteExceptionModeSymbol;
-@property (readonly, copy, nullable) NSString *serverAddress;
-@property (readonly, copy, nullable) NSString *networkName;
-@property (readonly, copy, nullable) NSString *networkNameFormatted;
+@property(readonly) BOOL configurationReceived;
+@property(readonly) NSUInteger maximumAwayLength;		 // 0 = no limit
+@property(readonly) NSUInteger maximumChannelNameLength; // 0 = no limit - unused
+@property(readonly) NSUInteger maximumKeyLength;		 // 0 = no limit
+@property(readonly) NSUInteger maximumKickLength;		 // 0 = no limit
+@property(readonly) NSUInteger maximumNicknameLength;
+@property(readonly) NSUInteger maximumTopicLength; // 0 = no limit
+@property(readonly) NSUInteger maximumModeCount;
+@property(readonly, copy) NSArray<NSString *> *channelNamePrefixes;
+@property(readonly, copy) NSArray<NSString *> *statusMessageModeSymbols;
+@property(readonly, copy) NSDictionary<NSString *, NSNumber *> *channelModes;
+@property(readonly, copy) NSDictionary<NSString *, NSArray *> *userModeSymbols;
+@property(readonly, copy, nullable) NSString *banExceptionModeSymbol;
+@property(readonly, copy, nullable) NSString *inviteExceptionModeSymbol;
+@property(readonly, copy, nullable) NSString *serverAddress;
+@property(readonly, copy, nullable) NSString *networkName;
+@property(readonly, copy, nullable) NSString *networkNameFormatted;
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -86,7 +85,9 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoListType)
 - (NSUInteger)rankForUserPrefixWithMode:(NSString *)modeSymbol; // Starts at 100; 100 = highest rank
 
 - (IRCModeInfo *)createModeWithSymbol:(NSString *)modeSymbol;
-- (IRCModeInfo *)createModeWithSymbol:(NSString *)modeSymbol modeIsSet:(BOOL)modeIsSet modeParameter:(nullable NSString *)modeParameter;
+- (IRCModeInfo *)createModeWithSymbol:(NSString *)modeSymbol
+							modeIsSet:(BOOL)modeIsSet
+						modeParameter:(nullable NSString *)modeParameter;
 
 - (BOOL)isListSupported:(IRCISupportInfoListType)listType;
 

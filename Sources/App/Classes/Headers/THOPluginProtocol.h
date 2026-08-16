@@ -53,12 +53,12 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Localization
 
-#define TPILocalizedString(k, ...)		TXLocalizedStringAlternative(TPIBundleFromClass(), k, ##__VA_ARGS__)
+#define TPILocalizedString(k, ...) TXLocalizedStringAlternative(TPIBundleFromClass(), k, ##__VA_ARGS__)
 
 /**
  * @brief Returns the NSBundle that owns the calling class.
  */
-#define TPIBundleFromClass()				[NSBundle bundleForClass:[self class]]
+#define TPIBundleFromClass() [NSBundle bundleForClass:[self class]]
 
 /**
  * A plugin must declare the minimum version of Glasstual that it is compatible with.
@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * @return "7.2.4" as of June 30, 2024
  */
-extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
+extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 
 /**
  * The `THOPluginProtocol` protocol defines methods and properties that the 
@@ -139,12 +139,12 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  * @return `YES` to display the contents of the message to the user, `NO` otherwise.
  */
 - (BOOL)receivedText:(NSString *)text
-	      authoredBy:(IRCPrefix *)textAuthor
-	     destinedFor:(nullable IRCChannel *)textDestination
-	      asLineType:(TVCLogLineType)lineType
-	        onClient:(IRCClient *)client
-	      receivedAt:(NSDate *)receivedAt
-	    wasEncrypted:(BOOL)wasEncrypted;
+		  authoredBy:(IRCPrefix *)textAuthor
+		 destinedFor:(nullable IRCChannel *)textDestination
+		  asLineType:(TVCLogLineType)lineType
+			onClient:(IRCClient *)client
+		  receivedAt:(NSDate *)receivedAt
+		wasEncrypted:(BOOL)wasEncrypted;
 
 /**
  * @brief Method used to modify and/or completely ignore incoming data from the server.
@@ -196,13 +196,13 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *
  * @return An instance of NSView with a width of at least 590.
  */
-@property (nonatomic, readonly, strong) NSView *pluginPreferencesPaneView;
+@property(nonatomic, readonly, strong) NSView *pluginPreferencesPaneView;
 
 /**
  * @brief Defines an `NSString` which is used by the Preferences window of
  *  Glasstual to create a new entry in its navigation list.
  */
-@property (nonatomic, readonly, copy) NSString *pluginPreferencesPaneMenuItemName;
+@property(nonatomic, readonly, copy) NSString *pluginPreferencesPaneMenuItemName;
 
 #pragma mark -
 #pragma mark Renderer Events
@@ -237,10 +237,10 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *
  * @return The original and/or modified copy of `newMessage`
  */
-- (NSString *)willRenderMessage:(NSString *)newMessage
-			  forViewController:(TVCLogController *)viewController
-					   lineType:(TVCLogLineType)lineType
-					 memberType:(TVCLogLineMemberType)memberType;
+- (nullable NSString *)willRenderMessage:(NSString *)newMessage
+					   forViewController:(TVCLogController *)viewController
+								lineType:(TVCLogLineType)lineType
+							  memberType:(TVCLogLineMemberType)memberType;
 
 #pragma mark -
 #pragma mark Subscribed Events
@@ -266,7 +266,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  * @return An `NSArray` containing a lowercase list of commands that the plugin
  *  will support as user input from the main text field.
  */
-@property (nonatomic, readonly, copy) NSArray<NSString *> *subscribedUserInputCommands;
+@property(nonatomic, readonly, copy) NSArray<NSString *> *subscribedUserInputCommands;
 
 /**
  * @brief Method invoked when a subscribed user input command requires processing.
@@ -275,7 +275,9 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  * @param commandString The name of the command
  * @param messageString Data that follows `commandString`
  */
-- (void)userInputCommandInvokedOnClient:(IRCClient *)client commandString:(NSString *)commandString messageString:(NSString *)messageString;
+- (void)userInputCommandInvokedOnClient:(IRCClient *)client
+						  commandString:(NSString *)commandString
+						  messageString:(NSString *)messageString;
 
 /**
  * @brief Defines a list of commands that the plugin will support as server input.
@@ -285,7 +287,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *
  * @discussion If a command is a number, then insert it into the array as an `NSString`
  */
-@property (nonatomic, readonly, copy) NSArray<NSString *> *subscribedServerInputCommands;
+@property(nonatomic, readonly, copy) NSArray<NSString *> *subscribedServerInputCommands;
 
 /**
  * @brief Method invoked when a subscribed server input command requires processing.
@@ -322,7 +324,8 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *
  * @see THOPluginDidPostNewMessageConcreteObject
  */
-- (void)didPostNewMessage:(THOPluginDidPostNewMessageConcreteObject *)messageObject forViewController:(TVCLogController *)viewController;
+- (void)didPostNewMessage:(THOPluginDidPostNewMessageConcreteObject *)messageObject
+		forViewController:(TVCLogController *)viewController;
 
 /**
  * @brief Method invoked when the JavaScript function `app.sendPluginPayload()` is executed.
@@ -342,7 +345,8 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *
  * @see THOPluginWebViewJavaScriptPayloadConcreteObject
  */
-- (void)didReceiveJavaScriptPayload:(THOPluginWebViewJavaScriptPayloadConcreteObject *)payloadObject fromViewController:(TVCLogController *)viewController;
+- (void)didReceiveJavaScriptPayload:(THOPluginWebViewJavaScriptPayloadConcreteObject *)payloadObject
+				 fromViewController:(TVCLogController *)viewController;
 
 #pragma mark -
 #pragma mark Reserved Calls
@@ -350,7 +354,7 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
 /* The behavior of this method call is undefined. It exists for internal
  purposes for the plugins packaged with Glasstual by default. It is not
  recommended to use it, or try to understand it. */
-@property (nonatomic, readonly, copy) NSArray<THOPluginOutputSuppressionRule *> *pluginOutputSuppressionRules;
+@property(nonatomic, readonly, copy) NSArray<THOPluginOutputSuppressionRule *> *pluginOutputSuppressionRules;
 @end
 
 #pragma mark -
@@ -363,17 +367,17 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
 /**
  * @brief Whether the message was posted as a result of a bulk operation
  */
-@property (readonly) BOOL isProcessedInBulk;
+@property(readonly) BOOL isProcessedInBulk;
 
 /**
  * @brief The contents of the message visible to the end user
  */
-@property (readonly, copy) NSString *messageContents;
+@property(readonly, copy) NSString *messageContents;
 
 /**
  * @brief The ID of the message that can be used to access it using `getElementByID()`
  */
-@property (readonly, copy) NSString *lineNumber;
+@property(readonly, copy) NSString *lineNumber;
 
 /**
  * @brief The nickname of the person and/or server responsible for producing the 
@@ -381,37 +385,37 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *
  * @discussion This value may be empty.
  */
-@property (readonly, copy, nullable) NSString *senderNickname;
+@property(readonly, copy, nullable) NSString *senderNickname;
 
 /**
  * @brief The line type of the message
  */
-@property (readonly) TVCLogLineType lineType;
+@property(readonly) TVCLogLineType lineType;
 
 /**
  * @brief The member type of the message
  */
-@property (readonly) TVCLogLineMemberType memberType;
+@property(readonly) TVCLogLineMemberType memberType;
 
 /**
  * @brief The date & time displayed left of the message in the WebView
  */
-@property (readonly, copy) NSDate *receivedAt;
+@property(readonly, copy) NSDate *receivedAt;
 
 /**
  * @brief Array of URLs found in the message body
  */
-@property (readonly, copy) NSArray<AHHyperlinkScannerResult *> *listOfHyperlinks;
+@property(readonly, copy) NSArray<AHHyperlinkScannerResult *> *listOfHyperlinks;
 
 /**
  * @brief List of users from the channel that appear in the message
  */
-@property (readonly, copy) NSSet<IRCChannelUser *> *listOfUsers;
+@property(readonly, copy) NSSet<IRCChannelUser *> *listOfUsers;
 
 /**
  * @brief Whether or not a highlight word was matched
  */
-@property (readonly) BOOL keywordMatchFound;
+@property(readonly) BOOL keywordMatchFound;
 @end
 
 #pragma mark -
@@ -424,29 +428,29 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
 /**
  * @brief Whether the input was from a regular user or from a server
  */
-@property (readonly) BOOL senderIsServer;
+@property(readonly) BOOL senderIsServer;
 
 /**
  * @brief The nickname section of the sender's hostmask
  *
  * @discussion The value of this property is the server address if senderIsServer is `YES`
  */
-@property (readonly, copy) NSString *senderNickname;
+@property(readonly, copy) NSString *senderNickname;
 
 /**
  * @brief The username (ident) section of the sender's hostmask
  */
-@property (readonly, copy, nullable) NSString *senderUsername;
+@property(readonly, copy, nullable) NSString *senderUsername;
 
 /**
  * @brief The address section of the sender's hostmask
  */
-@property (readonly, copy, nullable) NSString *senderAddress;
+@property(readonly, copy, nullable) NSString *senderAddress;
 
 /**
  * @brief The combined hostmask of the sender
  */
-@property (readonly, copy) NSString *senderHostmask;
+@property(readonly, copy) NSString *senderHostmask;
 
 /**
  * @brief The date & time during which the input was received
@@ -455,27 +459,27 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *  capability, then the value of this property will reflect the value defined by the
  *  server-time capability; not the exact date & time it was received on the socket.
  */
-@property (readonly, copy) NSDate *receivedAt;
+@property(readonly, copy) NSDate *receivedAt;
 
 /**
  * @brief The input itself
  */
-@property (readonly, copy) NSString *messageSequence;
+@property(readonly, copy) NSString *messageSequence;
 
 /**
  * @brief The input, split up into sections
  */
-@property (readonly, copy) NSArray<NSString *> *messageParameters;
+@property(readonly, copy) NSArray<NSString *> *messageParameters;
 
 /**
  * @brief The input's command
  */
-@property (readonly, copy) NSString *messageCommand;
+@property(readonly, copy) NSString *messageCommand;
 
 /**
  * @brief The value of -messageCommand as an integer
  */
-@property (readonly) NSUInteger messageCommandNumeric;
+@property(readonly) NSUInteger messageCommandNumeric;
 
 /**
  * @brief The server address of the IRC network
@@ -484,12 +488,12 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
  *  Glasstual is currently connected to and may differ from senderNickname even
  *  if senderIsServer is `YES`
  */
-@property (readonly, copy, nullable) NSString *networkAddress;
+@property(readonly, copy, nullable) NSString *networkAddress;
 
 /**
  * @brief The name of the IRC network
  */
-@property (readonly, copy, nullable) NSString *networkName;
+@property(readonly, copy, nullable) NSString *networkName;
 @end
 
 #pragma mark -
@@ -502,21 +506,21 @@ extern NSString * const THOPluginProtocolCompatibilityMinimumVersion;
 /**
  * @brief A description of the payload
  */
-@property (readonly, copy) NSString *payloadLabel;
+@property(readonly, copy) NSString *payloadLabel;
 
 /**
  * @brief The payload contents
  */
-@property (readonly, copy, nullable) id <NSCopying> payloadContents;
+@property(readonly, copy, nullable) id<NSCopying> payloadContents;
 @end
 
 #pragma mark -
 
 @interface THOPluginOutputSuppressionRule : NSObject
-@property (nonatomic, copy) NSString *match;
-@property (nonatomic, assign) BOOL restrictConsole;
-@property (nonatomic, assign) BOOL restrictChannel;
-@property (nonatomic, assign) BOOL restrictPrivateMessage;
+@property(nonatomic, copy) NSString *match;
+@property(nonatomic, assign) BOOL restrictConsole;
+@property(nonatomic, assign) BOOL restrictChannel;
+@property(nonatomic, assign) BOOL restrictPrivateMessage;
 @end
 
 NS_ASSUME_NONNULL_END

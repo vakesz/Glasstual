@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TPI_ChatFilter ()
 {
-@protected
+  @protected
 	BOOL _filterIgnoreContent;
 	BOOL _filterIgnoreOperators;
 	BOOL _filterLogMatch;
@@ -61,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_filterSenderMatch;
 	NSString *_filterTitle;
 
-@private
+  @private
 	NSString *_uniqueIdentifier;
 	NSDictionary *_defaults;
 	NSCache *_cachedIsCommandEnabledResponses;

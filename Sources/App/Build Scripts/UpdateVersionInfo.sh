@@ -23,15 +23,15 @@ fi
 
 # Write the version information to the Info.plist file.
 # The build version is the date of the last commit in git.
-gitBundle=`which git`
+gitBundle=$(command -v git || true)
 
 if [ -z "${gitBundle}" ]; then
 	bundleVersionNew="000000.00"
-else 
-	gitDateOfLastCommit=`"${gitBundle}" log -n1 --format="%at"`
+else
+	gitDateOfLastCommit=$("${gitBundle}" log -n1 --format="%at")
 
-	bundleVersionNew=`/bin/date -u -r "${gitDateOfLastCommit}" "+%y%m%d.%H"`
-fi;
+	bundleVersionNew=$(/bin/date -u -r "${gitDateOfLastCommit}" "+%y%m%d.%H")
+fi
 
 bundleVersionOld=$(/usr/libexec/PlistBuddy -c "Print \"CFBundleVersion\"" Info.plist)
 
@@ -67,7 +67,7 @@ echo "
 " > _BuildConfig.h
 
 if [ -z "$CODE_SIGN_IDENTITY" ]; then
-echo "#define TXBundleBuiltWithoutCodeSigning		1" >> _BuildConfig.h
+	echo "#define TXBundleBuiltWithoutCodeSigning		1" >> _BuildConfig.h
 fi
 
 if cmp -s "BuildConfig.h" "_BuildConfig.h"; then
@@ -89,4 +89,4 @@ exec "${PROJECT_DIR}/Build Scripts/UpdateFeatureFlags.sh" > "${GLASSTUAL_WORKSPA
 # ------ #
 
 # Exit with success
-exit 0;
+exit 0

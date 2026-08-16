@@ -41,7 +41,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TPISystemProfiler ()
-@property (nonatomic, strong) NSView *preferencePaneView;
+@property(nonatomic, strong) NSView *preferencePaneView;
 @end
 
 @implementation TPISystemProfiler
@@ -86,9 +86,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray *)subscribedUserInputCommands
 {
-	return @[@"sysinfo", @"memory", @"uptime", @"netstats", 
-	@"msgcount", @"diskspace", @"style", @"screens",
-	@"runcount", @"sysmem"];
+	return @[
+		@"sysinfo",
+		@"memory",
+		@"uptime",
+		@"netstats",
+		@"msgcount",
+		@"diskspace",
+		@"style",
+		@"screens",
+		@"runcount",
+		@"sysmem"
+	];
 }
 
 - (void)printDebugInformation:(NSString *)message onClient:(IRCClient *)client inChannel:(IRCChannel *)channel
@@ -114,9 +123,7 @@ NS_ASSUME_NONNULL_BEGIN
 						  messageString:(NSString *)messageString
 {
 	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[self _userInputCommandInvokedOnClient:client
-								 commandString:commandString
-								 messageString:messageString];
+		[self _userInputCommandInvokedOnClient:client commandString:commandString messageString:messageString];
 	});
 }
 

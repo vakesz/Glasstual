@@ -40,9 +40,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TPI_Caffeine ()
-@property (nonatomic, strong) NSMutableArray<IRCClient *> *observedClients;
-@property (nonatomic, strong) NSProgress *progressObject;
-@property (nonatomic, strong) IBOutlet NSView *preferencesPaneView;
+@property(nonatomic, strong) NSMutableArray<IRCClient *> *observedClients;
+@property(nonatomic, strong) NSProgress *progressObject;
+@property(nonatomic, strong) IBOutlet NSView *preferencesPaneView;
 @end
 
 @implementation TPI_Caffeine
@@ -57,7 +57,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)disableSleepMode
 {
-	self.progressObject = [RZProcessInfo() beginActivityWithOptions:NSActivityUserInitiated reason:@"Disable sleep mode"];
+	self.progressObject = [RZProcessInfo() beginActivityWithOptions:NSActivityUserInitiated
+															 reason:@"Disable sleep mode"];
 
 	LogToConsoleWithSubsystem(THOPluginLoggingSubsystem(), "Disabled sleep mode");
 }
@@ -124,7 +125,8 @@ NS_ASSUME_NONNULL_BEGIN
 				@try {
 					[client removeObserver:self forKeyPath:@"isLoggedIn"];
 				} @catch (NSException *exception) {
-					LogToConsoleFaultWithSubsystem(THOPluginLoggingSubsystem(), "Caught exception: %{public}@", [exception reason]);
+					LogToConsoleFaultWithSubsystem(
+						THOPluginLoggingSubsystem(), "Caught exception: %{public}@", [exception reason]);
 
 					LogStackTraceWithSubsystem(THOPluginLoggingSubsystem());
 				}
@@ -133,9 +135,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		if (observeClients == NO) {
 			self.observedClients = nil;
-		}
-		else
-		{
+		} else {
 			if (self.observedClients == nil) {
 				self.observedClients = [NSMutableArray array];
 			}
@@ -157,9 +157,15 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 #ifdef TXSystemIsOSXSierraOrLater
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSKeyValueChangeKey, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSKeyValueChangeKey, id> *)change
+					   context:(nullable void *)context
 #else
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath ofObject:(nullable id)object change:(nullable NSDictionary<NSString*, id> *)change context:(nullable void *)context
+- (void)observeValueForKeyPath:(nullable NSString *)keyPath
+					  ofObject:(nullable id)object
+						change:(nullable NSDictionary<NSString *, id> *)change
+					   context:(nullable void *)context
 #endif
 {
 	[self toggleSleepMode];

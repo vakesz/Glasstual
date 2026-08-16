@@ -51,19 +51,22 @@ typedef NS_ENUM(NSUInteger, TDCChannelBanListSheetEntryType) {
 };
 
 @interface TDCChannelBanListSheet : TDCSheetBase <TDCChannelPrototype>
-@property (readonly) TDCChannelBanListSheetEntryType entryType;
-@property (readonly, copy) NSString *modeSymbol;
-@property (readonly, copy, nullable) NSArray<NSString *> *listOfChanges;
-@property (nonatomic, assign) BOOL contentAlreadyReceived;
+@property(readonly) TDCChannelBanListSheetEntryType entryType;
+@property(readonly, copy) NSString *modeSymbol;
+@property(readonly, copy, nullable) NSArray<NSString *> *listOfChanges;
+@property(nonatomic, assign) BOOL contentAlreadyReceived;
 
 /* Returns nil if entry type is not supported by client */
-- (nullable instancetype)initWithEntryType:(TDCChannelBanListSheetEntryType)entryType inChannel:(IRCChannel *)channel NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithEntryType:(TDCChannelBanListSheetEntryType)entryType
+								 inChannel:(IRCChannel *)channel NS_DESIGNATED_INITIALIZER;
 
 - (void)start;
 
 - (void)clear;
 
-- (void)addEntry:(NSString *)entryMask setBy:(nullable NSString *)entryAuthor creationDate:(nullable NSDate *)entryCreationDate;
+- (void)addEntry:(NSString *)entryMask
+		   setBy:(nullable NSString *)entryAuthor
+	creationDate:(nullable NSDate *)entryCreationDate;
 @end
 
 @protocol TDCChannelBanListSheetDelegate <NSObject>

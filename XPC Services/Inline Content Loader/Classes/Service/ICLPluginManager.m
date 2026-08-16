@@ -43,9 +43,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ICLPluginManager ()
-@property (nonatomic, assign) BOOL pluginsLoaded;
-@property (nonatomic, copy) NSArray<NSBundle *> *loadedPlugins;
-@property (nonatomic, copy, nullable) NSArray<Class> *loadedModules;
+@property(nonatomic, assign) BOOL pluginsLoaded;
+@property(nonatomic, copy) NSArray<NSBundle *> *loadedPlugins;
+@property(nonatomic, copy, nullable) NSArray<Class> *loadedModules;
 @end
 
 @implementation ICLPluginManager
@@ -74,8 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSAssert((self.pluginsLoaded == NO), @"Plugins already loaded");
 
-	pluginLocations =
-	[pluginLocations arrayByAddingObject:[self _bundledPluginsURL]];
+	pluginLocations = [pluginLocations arrayByAddingObject:[self _bundledPluginsURL]];
 
 	NSMutableArray<NSBundle *> *loadedPlugins = [NSMutableArray array];
 
@@ -103,12 +102,11 @@ NS_ASSUME_NONNULL_BEGIN
 	NSMutableArray<NSBundle *> *loadedPlugins = [NSMutableArray array];
 
 	NSError *listedFilesError;
-	
+
 	NSArray *listedFiles = [RZFileManager() contentsOfDirectoryAtPath:pluginsPath error:&listedFilesError];
 
 	if (listedFiles == nil) {
-		LogToConsoleError("Failed to list plugins: %{public}@",
-			listedFilesError.localizedDescription);
+		LogToConsoleError("Failed to list plugins: %{public}@", listedFilesError.localizedDescription);
 
 		return nil;
 	}
@@ -147,14 +145,17 @@ NS_ASSUME_NONNULL_BEGIN
 	Class principalClass = bundle.principalClass;
 
 	if (principalClass == NULL) {
-		LogToConsoleError("Failed to load bundle '%{public}@' because of NULL principal class", bundle.bundleURL.standardizedTildePath);
+		LogToConsoleError("Failed to load bundle '%{public}@' because of NULL principal class",
+						  bundle.bundleURL.standardizedTildePath);
 
 		return nil;
 	}
 
 	/* Check for conformity */
 	if ([principalClass conformsToProtocol:@protocol(ICLPluginProtocol)] == NO) {
-		LogToConsoleError("Failed to load bundle '%{public}@' because it does not conform to the ICLPluginProtocol protocol", bundle.bundleURL.standardizedTildePath);
+		LogToConsoleError(
+			"Failed to load bundle '%{public}@' because it does not conform to the ICLPluginProtocol protocol",
+			bundle.bundleURL.standardizedTildePath);
 
 		return nil;
 	}
@@ -190,7 +191,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* We have already proven in -_loadPluginAtPath: that the plugin
 	 conforms to everything so we don't have to perform validation. */
-	Class <ICLPluginProtocol> principalClass = plugin.principalClass;
+	Class<ICLPluginProtocol> principalClass = plugin.principalClass;
 
 	return [principalClass performSelector:@selector(modules)];
 }

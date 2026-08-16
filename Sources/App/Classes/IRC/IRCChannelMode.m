@@ -46,15 +46,15 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCChannelMode ()
-@property (nonatomic, weak) IRCClient *client;
-@property (nonatomic, weak) IRCChannel *channel;
-@property (nonatomic, copy, readwrite) IRCChannelModeContainer *modes;
+@property(nonatomic, weak) IRCClient *client;
+@property(nonatomic, weak) IRCChannel *channel;
+@property(nonatomic, copy, readwrite) IRCChannelModeContainer *modes;
 @end
 
 @interface IRCChannelModeContainer ()
-@property (nonatomic, weak) IRCISupportInfo *supportInfo;
-@property (nonatomic, strong) NSMutableDictionary<NSString *, IRCModeInfo *> *modeObjects;
-@property (readonly, copy) NSArray<NSString *> *unwantedModes;
+@property(nonatomic, weak) IRCISupportInfo *supportInfo;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, IRCModeInfo *> *modeObjects;
+@property(readonly, copy) NSArray<NSString *> *unwantedModes;
 
 - (instancetype)initWithSupportInfo:(IRCISupportInfo *)supportInfo;
 @end
@@ -273,10 +273,12 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Using some random value in place of mode if there is none
 	 is easier than creating a mutable array with four if statements. */
 	return @[
-		 /* ban */			 	(([supportInfo modeSymbolForList:IRCISupportInfoListTypeBan]) ?: @"not supported: b"),
-		 /* ban exception */	(([supportInfo modeSymbolForList:IRCISupportInfoListTypeBanException]) ?: @"not supported: e"),
-		 /* invite exception */	(([supportInfo modeSymbolForList:IRCISupportInfoListTypeInviteException]) ?: @"not supported: I"),
-		 /* quiet */			(([supportInfo modeSymbolForList:IRCISupportInfoListTypeQuiet]) ?: @"not supported: q")
+		/* ban */ (([supportInfo modeSymbolForList:IRCISupportInfoListTypeBan]) ?: @"not supported: b"),
+		/* ban exception */
+		(([supportInfo modeSymbolForList:IRCISupportInfoListTypeBanException]) ?: @"not supported: e"),
+		/* invite exception */
+		(([supportInfo modeSymbolForList:IRCISupportInfoListTypeInviteException]) ?: @"not supported: I"),
+		/* quiet */ (([supportInfo modeSymbolForList:IRCISupportInfoListTypeQuiet]) ?: @"not supported: q")
 	];
 }
 
@@ -306,7 +308,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(modeSymbol != nil);
 
-	@synchronized (self.modeObjects) {
+	@synchronized(self.modeObjects) {
 		IRCModeInfo *mode = self.modeObjects[modeSymbol];
 
 		if (mode) {
@@ -330,9 +332,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(modes != nil);
 
 	for (IRCModeInfo *mode in modes) {
-		[self changeMode:mode.modeSymbol
-			   modeIsSet:mode.modeIsSet
-		   modeParameter:mode.modeParameter];
+		[self changeMode:mode.modeSymbol modeIsSet:mode.modeIsSet modeParameter:mode.modeParameter];
 	}
 }
 
@@ -357,15 +357,14 @@ NS_ASSUME_NONNULL_BEGIN
 	modeMutable.modeIsSet = modeIsSet;
 	modeMutable.modeParameter = modeParameter;
 
-	@synchronized (self.modeObjects) {
+	@synchronized(self.modeObjects) {
 		self.modeObjects[modeSymbol] = [modeMutable copy];
 	}
 }
 
 - (id)copyWithZone:(nullable NSZone *)zone
 {
-	IRCChannelModeContainer *object =
-	[[IRCChannelModeContainer alloc] initWithSupportInfo:self.supportInfo];
+	IRCChannelModeContainer *object = [[IRCChannelModeContainer alloc] initWithSupportInfo:self.supportInfo];
 
 	/* modeObjects contain immutable objects which means
 	 we don't have to copy the objects themselves. */

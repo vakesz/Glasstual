@@ -126,7 +126,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	if (template == nil) {
 		LogToConsoleError("Failed to load template '%{public}@': %{public}@",
-			templateURL.standardizedTildePath, templateLoadError.localizedDescription);
+						  templateURL.standardizedTildePath,
+						  templateLoadError.localizedDescription);
 	}
 
 	return template;
@@ -225,9 +226,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (BOOL)isTypeDeferrable:(ICLMediaType)type
 {
-	return (type == ICLMediaTypeImage ||
-			type == ICLMediaTypeVideo ||
-			type == ICLMediaTypeVideoGif);
+	return (type == ICLMediaTypeImage || type == ICLMediaTypeVideo || type == ICLMediaTypeVideoGif);
 }
 
 - (void)deferAsType:(ICLMediaType)type
@@ -255,7 +254,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)finalizePreflight
 {
-
 }
 
 @end

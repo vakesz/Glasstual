@@ -42,7 +42,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ICMCommonInlineImages ()
-@property (readonly, copy, class) NSArray<NSString *> *validFileExtensions;
+@property(readonly, copy, class) NSArray<NSString *> *validFileExtensions;
 @end
 
 @implementation ICMCommonInlineImages
@@ -89,28 +89,22 @@ NS_ASSUME_NONNULL_BEGIN
 		urlPathCombined = [urlPathCombined stringByAppendingFormat:@"?%@", urlQuery];
 	}
 
-	if ([urlHost isDomainOrSubdomain:@"dropbox.com"])
-	{
+	if ([urlHost isDomainOrSubdomain:@"dropbox.com"]) {
 		if ([urlPathCombined hasPrefix:@"/s/"] && hasFileExtension) {
 			return [@"https://dl.dropboxusercontent.com" stringByAppendingString:urlPathCombined];
 		}
-	}
-	else if ([urlHost isDomain:@"pbs.twimg.com"])
-	{
+	} else if ([urlHost isDomain:@"pbs.twimg.com"]) {
 		if (urlPath.length == 0) {
 			return nil;
 		}
 
-		urlPath = [urlPath
-				   stringByReplacingOccurrencesOfString:@"\\:(large|medium|orig|small|thumb)$"
-											 withString:@""
-												options:NSRegularExpressionSearch
-												  range:urlPath.range];
+		urlPath = [urlPath stringByReplacingOccurrencesOfString:@"\\:(large|medium|orig|small|thumb)$"
+													 withString:@""
+														options:NSRegularExpressionSearch
+														  range:urlPath.range];
 
 		return [NSString stringWithFormat:@"https://pbs.twimg.com%@:orig", urlPath];
-	}
-	else if ([urlHost isDomain:@"docs.google.com"])
-	{
+	} else if ([urlHost isDomain:@"docs.google.com"]) {
 		if ([urlPath hasPrefix:@"/file/d/"] == NO) {
 			return nil;
 		}
@@ -132,9 +126,7 @@ NS_ASSUME_NONNULL_BEGIN
 		if (photoId) {
 			return [@"https://docs.google.com/uc?id=" stringByAppendingString:photoId];
 		}
-	}
-	else if ([urlHost isDomainOrSubdomain:@"twitpic.com"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"twitpic.com"]) {
 		if (urlPath.length == 0) {
 			return nil;
 		}
@@ -148,10 +140,7 @@ NS_ASSUME_NONNULL_BEGIN
 		if (s.alphabeticNumericOnly) {
 			return [NSString stringWithFormat:@"http://twitpic.com/show/large/%@", s];
 		}
-	}
-	else if ([urlHost isDomainOrSubdomain:@"instagram.com"] ||
-			 [urlHost isDomainOrSubdomain:@"instagr.am"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"instagram.com"] || [urlHost isDomainOrSubdomain:@"instagr.am"]) {
 		if ([urlPath hasPrefix:@"/p/"] == NO) {
 			return nil;
 		}
@@ -161,9 +150,7 @@ NS_ASSUME_NONNULL_BEGIN
 		if ([s onlyContainsCharactersFromCharacterSet:[NSCharacterSet Ato9UnderscoreDash]]) {
 			return [NSString stringWithFormat:@"https://www.instagram.com/p/%@/media/?size=l", s];
 		}
-	}
-	else if ([urlHost isDomainOrSubdomain:@"i.4cdn.org"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"i.4cdn.org"]) {
 		if ([urlPath hasSuffix:@".webm"] == NO) {
 			return nil;
 		}
@@ -171,9 +158,7 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *filenameWithoutExtension = urlPath.stringByDeletingPathExtension;
 
 		return [NSString stringWithFormat:@"%@://%@%@s.jpg", urlScheme, urlHost, filenameWithoutExtension];
-	}
-	else if ([urlHost isDomainOrSubdomain:@"8ch.net"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"8ch.net"]) {
 		if ([urlPath hasSuffix:@".webm"] == NO) {
 			return nil;
 		}
@@ -183,9 +168,7 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *filenameWithoutExtension = filename.stringByDeletingPathExtension;
 
 		return [NSString stringWithFormat:@"%@://%@/webm/thumb/%@.jpg", urlScheme, urlHost, filenameWithoutExtension];
-	}
-	else if ([urlHost isDomainOrSubdomain:@"f.hatena.ne.jp"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"f.hatena.ne.jp"]) {
 		NSArray *components = [urlPath componentsSeparatedByString:@"/"];
 
 		if (components.count < 3) {
@@ -206,10 +189,12 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *userIdHead = [userId substringToIndex:1];
 		NSString *photoIdHead = [photoId substringToIndex:8];
 
-		return [NSString stringWithFormat:@"http://img.f.hatena.ne.jp/images/fotolife/%@/%@/%@/%@.jpg", userIdHead, userId, photoIdHead, photoId];
-	}
-	else if ([urlHost isDomain:@"puu.sh"])
-	{
+		return [NSString stringWithFormat:@"http://img.f.hatena.ne.jp/images/fotolife/%@/%@/%@/%@.jpg",
+										  userIdHead,
+										  userId,
+										  photoIdHead,
+										  photoId];
+	} else if ([urlHost isDomain:@"puu.sh"]) {
 		if (urlPath.length == 0) {
 			return nil;
 		}
@@ -219,9 +204,7 @@ NS_ASSUME_NONNULL_BEGIN
 		if (s.alphabeticNumericOnly) {
 			return [NSString stringWithFormat:@"http://puu.sh/%@.jpg", s];
 		}
-	}
-	else if ([urlHost isDomainOrSubdomain:@"d.pr"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"d.pr"]) {
 		if ([urlPath hasPrefix:@"/i/"] == NO) {
 			return nil;
 		}
@@ -231,10 +214,7 @@ NS_ASSUME_NONNULL_BEGIN
 		if (s.alphabeticNumericOnly) {
 			return [NSString stringWithFormat:@"http://d.pr/i/%@.png", s];
 		}
-	}
-	else if ([urlHost isDomainOrSubdomain:@"nicovideo.jp"] ||
-			 [urlHost isDomain:@"nico.ms"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"nicovideo.jp"] || [urlHost isDomain:@"nico.ms"]) {
 		if (urlPath.length == 0) {
 			return nil;
 		}
@@ -259,10 +239,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 		long long videoNumber = [videoId substringFromIndex:2].longLongValue;
 
-		return [NSString stringWithFormat:@"http://tn-skr%lli.smilevideo.jp/smile?i=%lli", ((videoNumber % 4) + 1), videoNumber];
-	}
-	else if ([urlHost isDomain:@"i.reddituploads.com"])
-	{
+		return [NSString
+			stringWithFormat:@"http://tn-skr%lli.smilevideo.jp/smile?i=%lli", ((videoNumber % 4) + 1), videoNumber];
+	} else if ([urlHost isDomain:@"i.reddituploads.com"]) {
 		if (urlPath.length == 0) {
 			return nil;
 		}
@@ -272,10 +251,7 @@ NS_ASSUME_NONNULL_BEGIN
 		if (s.alphabeticNumericOnly) {
 			return url.absoluteString;
 		}
-	}
-	else if ([urlHost isDomainOrSubdomain:@"youtube.com"] ||
-			 [urlHost isDomain:@"youtu.be"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"youtube.com"] || [urlHost isDomain:@"youtu.be"]) {
 		/* If we aren't allowed to embed YouTube,
 		 at least show show the thumbnail for the video. */
 		if ([TPCPreferences inlineMediaLimitBasicsToFiles] == NO) {
@@ -305,9 +281,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		return [NSString stringWithFormat:@"http://i.ytimg.com/vi/%@/mqdefault.jpg", videoId];
-	}
-	else if ([urlHost isDomainOrSubdomain:@"speedtest.net"])
-	{
+	} else if ([urlHost isDomainOrSubdomain:@"speedtest.net"]) {
 		NSArray *components = [urlPath componentsSeparatedByString:@"/"];
 
 		if (components.count < 3) {
@@ -325,9 +299,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		return [NSString stringWithFormat:@"http://www.speedtest.net/result/%@.png", resultId];
-	}
-	else if ([urlHost isDomain:@"fuelrats.cloud"])
-	{
+	} else if ([urlHost isDomain:@"fuelrats.cloud"]) {
 		if ([urlPath hasPrefix:@"/s/"] == NO) {
 			return nil;
 		}
@@ -349,15 +321,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		cachedValue =
-		@[@"jpg",
-		  @"jpeg",
-		  @"png",
-		  @"gif",
-		  @"tif",
-		  @"tiff",
-		  @"svg",
-		  @"bmp"];
+		cachedValue = @[ @"jpg", @"jpeg", @"png", @"gif", @"tif", @"tiff", @"svg", @"bmp" ];
 	});
 
 	return cachedValue;

@@ -50,18 +50,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[ICLHelpers requestJSONObject:@"url"
 						   ofType:[NSString class]
-					  inHierarchy:@[@"files", @"mp4"]
+					  inHierarchy:@[ @"files", @"mp4" ]
 					  fromAddress:addressToRequest
-				  completionBlock:^(id object)
-	{
-		if (object == nil) {
-			[self notifyUnsafeToLoadVideo];
+				  completionBlock:^(id object) {
+					  if (object == nil) {
+						  [self notifyUnsafeToLoadVideo];
 
-			return;
-		}
+						  return;
+					  }
 
-		[self performActionForAddress:object];
-	}];
+					  [self performActionForAddress:object];
+				  }];
 }
 
 #pragma mark -
@@ -108,11 +107,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains =
-		@[
-		  @"streamable.com",
-		  @"www.streamable.com"
-		];
+		domains = @[ @"streamable.com", @"www.streamable.com" ];
 	});
 
 	return domains;

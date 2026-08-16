@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCTreeItem, TVCLogLine;
 
-#define TVCLogControllerHistoricLogSharedInstance()				[TVCLogControllerHistoricLogFile sharedInstance]
+#define TVCLogControllerHistoricLogSharedInstance() [TVCLogControllerHistoricLogFile sharedInstance]
 
 @interface TVCLogControllerHistoricLogFile : NSObject
 + (TVCLogControllerHistoricLogFile *)sharedInstance;
@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)resetMaximumLineCount;
 
-@property (readonly) BOOL isSaving;
+@property(readonly) BOOL isSaving;
 
 - (void)forgetItem:(IRCTreeItem *)item;
 - (void)resetDataForItem:(IRCTreeItem *)item;

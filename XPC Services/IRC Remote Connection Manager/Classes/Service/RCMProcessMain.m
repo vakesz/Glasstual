@@ -38,8 +38,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface RCMProcessMain ()
-@property (nonatomic, strong) IRCConnection *connection;
-@property (nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, strong) IRCConnection *connection;
+@property(nonatomic, strong) NSXPCConnection *serviceConnection;
 @end
 
 @implementation RCMProcessMain
@@ -71,8 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)openWithConfig:(IRCConnectionConfig *)config
 {
-	NSAssert((self.connection == nil),
-		 @"Method invoked with connection already open");
+	NSAssert((self.connection == nil), @"Method invoked with connection already open");
 
 	IRCConnection *connection = [[IRCConnection alloc] initWithConfig:config onConnection:self.serviceConnection];
 
@@ -83,8 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)close
 {
-	NSAssert((self.connection != nil),
-		 @"Method invoked without performing setup first");
+	NSAssert((self.connection != nil), @"Method invoked without performing setup first");
 
 	[self.connection close];
 }
@@ -96,32 +94,28 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)sendData:(NSData *)data bypassQueue:(BOOL)bypassQueue
 {
-	NSAssert((self.connection != nil),
-		 @"Method invoked without performing setup first");
+	NSAssert((self.connection != nil), @"Method invoked without performing setup first");
 
 	[self.connection sendData:data bypassQueue:bypassQueue];
 }
 
 - (void)exportSecureConnectionInformation:(NS_NOESCAPE RCMSecureConnectionInformationCompletionBlock)completionBlock
 {
-	NSAssert((self.connection != nil),
-		 @"Method invoked without performing setup first");
+	NSAssert((self.connection != nil), @"Method invoked without performing setup first");
 
 	[self.connection exportSecureConnectionInformation:completionBlock error:NULL];
 }
 
 - (void)enforceFloodControl
 {
-	NSAssert((self.connection != nil),
-		 @"Method invoked without performing setup first");
+	NSAssert((self.connection != nil), @"Method invoked without performing setup first");
 
 	[self.connection enforceFloodControl];
 }
 
 - (void)clearSendQueue
 {
-	NSAssert((self.connection != nil),
-		 @"Method invoked without performing setup first");
+	NSAssert((self.connection != nil), @"Method invoked without performing setup first");
 
 	[self.connection clearSendQueue];
 }

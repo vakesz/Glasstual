@@ -39,24 +39,23 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
-{
+typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 	HLSHistoricLogReturnEntriesUniqueIdentifierTypeBefore,
 	HLSHistoricLogReturnEntriesUniqueIdentifierTypeAfter
 };
 
 @interface HLSHistoricLogProcessMain ()
-@property (nonatomic, strong) NSXPCConnection *serviceConnection;
-@property (nonatomic, assign) BOOL isPerformingSave;
-@property (nonatomic, strong) NSManagedObjectContext *managedObjectContext;
-@property (nonatomic, strong) NSManagedObjectModel *managedObjectModel;
-@property (nonatomic, strong) NSPersistentStoreCoordinator *persistentStoreCoordinator;
-@property (nonatomic, copy) NSString *databasePath; // Path to database file
-@property (nonatomic, copy) NSString *databaseDirectory; // Path to database directory
+@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, assign) BOOL isPerformingSave;
+@property(nonatomic, strong) NSManagedObjectContext *managedObjectContext;
+@property(nonatomic, strong) NSManagedObjectModel *managedObjectModel;
+@property(nonatomic, strong) NSPersistentStoreCoordinator *persistentStoreCoordinator;
+@property(nonatomic, copy) NSString *databasePath;		// Path to database file
+@property(nonatomic, copy) NSString *databaseDirectory; // Path to database directory
 /* contextObjects is mutable. It should only be accessed in a queue. Use the global context's queue. */
-@property (nonatomic, strong) NSMutableDictionary<NSString *, HLSHistoricLogViewContext *> *contextObjects;
-@property (nonatomic, assign) NSUInteger maximumLineCount;
-@property (nonatomic, strong) dispatch_source_t saveTimer;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, HLSHistoricLogViewContext *> *contextObjects;
+@property(nonatomic, assign) NSUInteger maximumLineCount;
+@property(nonatomic, strong) dispatch_source_t saveTimer;
 @end
 
 @implementation HLSHistoricLogProcessMain
@@ -134,7 +133,8 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	[self _setDatabasePath];
 }
 
-- (void)openDatabaseInDirectory:(NSString *)databaseDirectory withCompletionBlock:(void (NS_NOESCAPE ^ _Nullable)(BOOL))completionBlock
+- (void)openDatabaseInDirectory:(NSString *)databaseDirectory
+			withCompletionBlock:(void(NS_NOESCAPE ^ _Nullable)(BOOL))completionBlock
 {
 	NSParameterAssert(databaseDirectory != nil);
 
@@ -223,9 +223,8 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 		@"creation_date" : @([limitToDate timeIntervalSince1970])
 	};
 
-	NSFetchRequest *fetchRequest =
-	[self.managedObjectModel fetchRequestFromTemplateWithName:@"GenericConditional"
-										substitutionVariables:substitutionVariables];
+	NSFetchRequest *fetchRequest = [self.managedObjectModel fetchRequestFromTemplateWithName:@"GenericConditional"
+																	   substitutionVariables:substitutionVariables];
 
 	if (fetchLimit > 0) {
 		fetchRequest.fetchLimit = fetchLimit;
@@ -237,7 +236,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 	fetchRequest.resultType = resultType;
 
-	fetchRequest.sortDescriptors = @[[[NSSortDescriptor alloc] initWithKey:@"entryCreationDate" ascending:ascending]];
+	fetchRequest.sortDescriptors = @[ [[NSSortDescriptor alloc] initWithKey:@"entryCreationDate" ascending:ascending] ];
 
 	return fetchRequest;
 }
@@ -296,7 +295,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	 beforeUniqueIdentifier:(NSString *)uniqueId
 				 fetchLimit:(NSUInteger)fetchLimit
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	return [self fetchEntriesForView:viewId
 				withUniqueIdentifier:uniqueId
@@ -310,7 +309,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	  afterUniqueIdentifier:(NSString *)uniqueId
 				 fetchLimit:(NSUInteger)fetchLimit
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	return [self fetchEntriesForView:viewId
 				withUniqueIdentifier:uniqueId
@@ -326,7 +325,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 		   beforeFetchLimit:(NSUInteger)fetchLimitBefore
 			afterFetchLimit:(NSUInteger)fetchLimitAfter
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	NSParameterAssert(viewId != nil);
 	NSParameterAssert(uniqueId != nil);
@@ -363,17 +362,16 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 		NSError *fetchRequestError = nil;
 
-		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest error:&fetchRequestError];
+		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest
+																				error:&fetchRequestError];
 
 		if (fetchedObjects == nil) {
-			LogToConsoleError("Error occurred fetching objects: %{public}@",
-							  fetchRequestError.localizedDescription);
+			LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
 
 			return;
 		}
 
-		LogToConsoleDebug("%{public}lu results fetched for view %{public}@",
-						  fetchedObjects.count, viewId);
+		LogToConsoleDebug("%{public}lu results fetched for view %{public}@", fetchedObjects.count, viewId);
 
 		@autoreleasepool {
 			NSArray<TVCLogLineXPC *> *fetchedEntries = [self _logLineXPCObjectsFromManagedObjects:fetchedObjects];
@@ -388,7 +386,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	  afterUniqueIdentifier:(NSString *)uniqueIdAfter
 	 beforeUniqueIdentifier:(NSString *)uniqueIdBefore
 				 fetchLimit:(NSUInteger)fetchLimit
-		withCompletionBlock:(void (NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	NSParameterAssert(viewId != nil);
 	NSParameterAssert(uniqueIdAfter != nil);
@@ -411,9 +409,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 											  forUniqueIdentifier:uniqueIdBefore
 												   performOnQueue:NO];
 
-		if (firstEntryId == NSNotFound ||
-			secondEntryId == NSNotFound)
-		{
+		if (firstEntryId == NSNotFound || secondEntryId == NSNotFound) {
 			completionBlock(@[]);
 
 			return;
@@ -433,17 +429,16 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 		NSError *fetchRequestError = nil;
 
-		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest error:&fetchRequestError];
+		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest
+																				error:&fetchRequestError];
 
 		if (fetchedObjects == nil) {
-			LogToConsoleError("Error occurred fetching objects: %{public}@",
-							  fetchRequestError.localizedDescription);
+			LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
 
 			return;
 		}
 
-		LogToConsoleDebug("%{public}lu results fetched for view %{public}@",
-						  fetchedObjects.count, viewId);
+		LogToConsoleDebug("%{public}lu results fetched for view %{public}@", fetchedObjects.count, viewId);
 
 		@autoreleasepool {
 			NSArray<TVCLogLineXPC *> *fetchedEntries = [self _logLineXPCObjectsFromManagedObjects:fetchedObjects];
@@ -458,7 +453,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 				  fetchType:(HLSHistoricLogUniqueIdentifierFetchType)fetchType
 				 fetchLimit:(NSUInteger)fetchLimit
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	NSParameterAssert(viewId != nil);
 	NSParameterAssert(uniqueId != nil);
@@ -491,31 +486,28 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 		NSInteger highestEntryId = 0;
 
 		switch (fetchType) {
-			case HLSHistoricLogReturnEntriesUniqueIdentifierTypeBefore:
-			{
-				/* 1 is subtracted so we can still return fetchLimit
+		case HLSHistoricLogReturnEntriesUniqueIdentifierTypeBefore: {
+			/* 1 is subtracted so we can still return fetchLimit
 				 while accounting for the fact that firstEntryId is
 				 not a value we are interested in. */
-				lowestEntryId = (firstEntryId - fetchLimit);
+			lowestEntryId = (firstEntryId - fetchLimit);
 
-				highestEntryId = (firstEntryId - 1);
+			highestEntryId = (firstEntryId - 1);
 
-				break;
-			}
-			case HLSHistoricLogReturnEntriesUniqueIdentifierTypeAfter:
-			{
-				lowestEntryId = (firstEntryId + 1);
+			break;
+		}
+		case HLSHistoricLogReturnEntriesUniqueIdentifierTypeAfter: {
+			lowestEntryId = (firstEntryId + 1);
 
-				highestEntryId = (firstEntryId + fetchLimit);
+			highestEntryId = (firstEntryId + fetchLimit);
 
-				break;
-			}
-			default:
-			{
-				NSAssert(NO, @"Bad 'fetchType' value");
+			break;
+		}
+		default: {
+			NSAssert(NO, @"Bad 'fetchType' value");
 
-				break;
-			}
+			break;
+		}
 		}
 
 		NSFetchRequest *fetchRequest = [self _fetchRequestForView:viewContext.hls_viewId
@@ -528,17 +520,16 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 		NSError *fetchRequestError = nil;
 
-		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest error:&fetchRequestError];
+		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest
+																				error:&fetchRequestError];
 
 		if (fetchedObjects == nil) {
-			LogToConsoleError("Error occurred fetching objects: %{public}@",
-							  fetchRequestError.localizedDescription);
+			LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
 
 			return;
 		}
 
-		LogToConsoleDebug("%{public}lu results fetched for view %{public}@",
-						  fetchedObjects.count, viewId);
+		LogToConsoleDebug("%{public}lu results fetched for view %{public}@", fetchedObjects.count, viewId);
 
 		@autoreleasepool {
 			NSArray<TVCLogLineXPC *> *fetchedEntries = [self _logLineXPCObjectsFromManagedObjects:fetchedObjects];
@@ -552,7 +543,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 				  ascending:(BOOL)ascending
 				 fetchLimit:(NSUInteger)fetchLimit
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	NSParameterAssert(viewId != nil);
 	NSParameterAssert(completionBlock != nil);
@@ -574,17 +565,16 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 		NSError *fetchRequestError = nil;
 
-		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest error:&fetchRequestError];
+		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest
+																				error:&fetchRequestError];
 
 		if (fetchedObjects == nil) {
-			LogToConsoleError("Error occurred fetching objects: %{public}@",
-							  fetchRequestError.localizedDescription);
+			LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
 
 			return;
 		}
 
-		LogToConsoleDebug("%{public}lu results fetched for view %{public}@",
-						  fetchedObjects.count, viewId);
+		LogToConsoleDebug("%{public}lu results fetched for view %{public}@", fetchedObjects.count, viewId);
 
 		@autoreleasepool {
 			NSArray<TVCLogLineXPC *> *fetchedEntries = [self _logLineXPCObjectsFromManagedObjects:fetchedObjects];
@@ -616,9 +606,11 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	HLSHistoricLogViewContext *viewContext = [self contextForView:logLine.viewIdentifier];
 
 	[viewContext performBlockAndWait:^{
-		NSEntityDescription *entity = [NSEntityDescription entityForName:@"LogLine2" inManagedObjectContext:viewContext];
+		NSEntityDescription *entity = [NSEntityDescription entityForName:@"LogLine2"
+												  inManagedObjectContext:viewContext];
 
-		NSManagedObject *newEntry = [[NSManagedObject alloc] initWithEntity:entity insertIntoManagedObjectContext:viewContext];
+		NSManagedObject *newEntry = [[NSManagedObject alloc] initWithEntity:entity
+											 insertIntoManagedObjectContext:viewContext];
 
 		NSUInteger newestIdentifier = [self _incrementNewestIdentifierInViewContext:viewContext];
 
@@ -649,12 +641,10 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 	NSManagedObjectModel *managedObjectModel = [[NSManagedObjectModel alloc] initWithContentsOfURL:modelPath];
 
-	NSPersistentStoreCoordinator *persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:managedObjectModel];
+	NSPersistentStoreCoordinator *persistentStoreCoordinator =
+		[[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:managedObjectModel];
 
-	NSDictionary *pragmaOptions = @{
-		@"synchronous" : @"NORMAL",
-		@"journal_mode" : @"WAL"
-	};
+	NSDictionary *pragmaOptions = @{@"synchronous" : @"NORMAL", @"journal_mode" : @"WAL"};
 
 	NSDictionary *persistentStoreOptions = @{
 		NSMigratePersistentStoresAutomaticallyOption : @(YES),
@@ -667,16 +657,14 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	NSError *addPersistentStoreError = nil;
 
 	NSPersistentStore *persistentStore =
-	[persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType
-											 configuration:nil
-													   URL:persistentStorePath
-												   options:persistentStoreOptions
-													 error:&addPersistentStoreError];
+		[persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType
+												 configuration:nil
+														   URL:persistentStorePath
+													   options:persistentStoreOptions
+														 error:&addPersistentStoreError];
 
-	if (persistentStore == nil)
-	{
-		LogToConsoleError("Error Creating Persistent Store: %{public}@",
-						  addPersistentStoreError.localizedDescription);
+	if (persistentStore == nil) {
+		LogToConsoleError("Error Creating Persistent Store: %{public}@", addPersistentStoreError.localizedDescription);
 
 		if (recursionDepth == 0) {
 			LogToConsoleInfo("Attempting to create a new persistent store");
@@ -689,10 +677,9 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 		}
 
 		return NO;
-	}
-	else
-	{
-		NSManagedObjectContext *managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+	} else {
+		NSManagedObjectContext *managedObjectContext =
+			[[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
 
 		managedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
 
@@ -717,10 +704,13 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 	static NSTimeInterval saveTimerInterval = (60 * 2); // 2 minutes
 
-	dispatch_source_t saveTimer =
-	XRScheduleBlockOnQueue(dispatch_get_main_queue(), ^{
-		[self saveDataWithCompletionBlock:nil];
-	}, saveTimerInterval, YES);
+	dispatch_source_t saveTimer = XRScheduleBlockOnQueue(
+		dispatch_get_main_queue(),
+		^{
+			[self saveDataWithCompletionBlock:nil];
+		},
+		saveTimerInterval,
+		YES);
 
 	XRResumeScheduledBlock(saveTimer);
 
@@ -738,14 +728,13 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	NSError *saveError = nil;
 
 	if ([context save:&saveError] == NO) {
-		LogToConsoleError("Failed to perform save: %{public}@",
-						  saveError.localizedDescription);
+		LogToConsoleError("Failed to perform save: %{public}@", saveError.localizedDescription);
 	}
 
 	[context reset];
 }
 
-- (void)saveDataWithCompletionBlock:(void (NS_NOESCAPE ^ _Nullable)(void))completionBlock
+- (void)saveDataWithCompletionBlock:(void(NS_NOESCAPE ^ _Nullable)(void))completionBlock
 {
 	if (self.isPerformingSave == NO) {
 		self.isPerformingSave = YES;
@@ -760,11 +749,12 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 		[self _rescheduleSave];
 
-		[self.contextObjects enumerateKeysAndObjectsUsingBlock:^(NSString *viewId, HLSHistoricLogViewContext *viewContext, BOOL *stop) {
-			[context performBlockAndWait:^{
-				[self _quickSaveContext:viewContext];
+		[self.contextObjects
+			enumerateKeysAndObjectsUsingBlock:^(NSString *viewId, HLSHistoricLogViewContext *viewContext, BOOL *stop) {
+				[context performBlockAndWait:^{
+					[self _quickSaveContext:viewContext];
+				}];
 			}];
-		}];
 
 		[self _quickSaveContext:context];
 
@@ -808,17 +798,19 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 	NSTimeInterval resizeTimerInterval = (NSTimeInterval)arc4random_uniform(60 * 30); // Somewhere in 30 minutes
 
-	dispatch_source_t resizeTimer =
-	XRScheduleBlockOnQueue(dispatch_get_main_queue(), ^{
-		[self resizeView:viewId];
-	}, resizeTimerInterval, NO);
+	dispatch_source_t resizeTimer = XRScheduleBlockOnQueue(
+		dispatch_get_main_queue(),
+		^{
+			[self resizeView:viewId];
+		},
+		resizeTimerInterval,
+		NO);
 
 	XRResumeScheduledBlock(resizeTimer);
 
 	viewContext.hls_resizeTimer = resizeTimer;
 
-	LogToConsoleDebug("Scheduled to resize %{public}@ in %{public}f seconds",
-					  viewId, resizeTimerInterval);
+	LogToConsoleDebug("Scheduled to resize %{public}@ in %{public}f seconds", viewId, resizeTimerInterval);
 }
 
 - (void)resizeView:(NSString *)viewId
@@ -844,21 +836,18 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 	NSInteger lowestIdentifier = (viewContext.hls_newestIdentifier - self.maximumLineCount);
 
-	NSDictionary *substitutionVariables = @{
-		@"view_id" : viewId,
-		@"entry_id_lowest" : @(lowestIdentifier)
-	};
+	NSDictionary *substitutionVariables = @{@"view_id" : viewId, @"entry_id_lowest" : @(lowestIdentifier)};
 
-	NSFetchRequest *fetchRequest =
-	[self.managedObjectModel fetchRequestFromTemplateWithName:@"Truncate"
-										substitutionVariables:substitutionVariables];
+	NSFetchRequest *fetchRequest = [self.managedObjectModel fetchRequestFromTemplateWithName:@"Truncate"
+																	   substitutionVariables:substitutionVariables];
 
 	fetchRequest.includesPendingChanges = YES;
 	fetchRequest.includesPropertyValues = YES;
 	fetchRequest.returnsObjectsAsFaults = NO;
 
-	NSUInteger rowsDeleted =
-	[self _deleteDataInViewContext:viewContext withFetchRequest:fetchRequest performOnQueue:NO];
+	NSUInteger rowsDeleted = [self _deleteDataInViewContext:viewContext
+										   withFetchRequest:fetchRequest
+											 performOnQueue:NO];
 
 	viewContext.hls_totalLineCount -= rowsDeleted;
 }
@@ -866,7 +855,9 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 #pragma mark -
 #pragma mark Batch Delete Logic
 
-- (NSUInteger)_deleteDataInViewContext:(HLSHistoricLogViewContext *)viewContext withFetchRequest:(NSFetchRequest *)fetchRequest performOnQueue:(BOOL)performOnQueue
+- (NSUInteger)_deleteDataInViewContext:(HLSHistoricLogViewContext *)viewContext
+					  withFetchRequest:(NSFetchRequest *)fetchRequest
+						performOnQueue:(BOOL)performOnQueue
 {
 	NSParameterAssert(viewContext != nil);
 	NSParameterAssert(fetchRequest != nil);
@@ -877,11 +868,11 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 		/* Batch delete is not used at the time of this commit because we want the value
 		 of a specific property from each managed object before deleting, which old school
 		 delete allows us to obtain at the same time we perform delete. */
-//		if (XRRunningOnOSXElCapitanOrLater()) {
-//			rowsDeleted = [self __deleteDataForFetchRequestUsingBatch:fetchRequest inViewContext:viewContext];
-//		} else {
-			rowsDeleted = [self __deleteDataForFetchRequestUsingEnumeration:fetchRequest inViewContext:viewContext];
-//		}
+		//		if (XRRunningOnOSXElCapitanOrLater()) {
+		//			rowsDeleted = [self __deleteDataForFetchRequestUsingBatch:fetchRequest inViewContext:viewContext];
+		//		} else {
+		rowsDeleted = [self __deleteDataForFetchRequestUsingEnumeration:fetchRequest inViewContext:viewContext];
+		//		}
 	};
 
 	if (performOnQueue) {
@@ -931,7 +922,8 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 }
 */
 
-- (NSUInteger)__deleteDataForFetchRequestUsingEnumeration:(NSFetchRequest *)fetchRequest inViewContext:(HLSHistoricLogViewContext *)viewContext
+- (NSUInteger)__deleteDataForFetchRequestUsingEnumeration:(NSFetchRequest *)fetchRequest
+											inViewContext:(HLSHistoricLogViewContext *)viewContext
 {
 	NSParameterAssert(fetchRequest != nil);
 	NSParameterAssert(viewContext != nil);
@@ -941,8 +933,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	NSArray *fetchedObjects = [viewContext executeFetchRequest:fetchRequest error:&fetchRequestError];
 
 	if (fetchedObjects == nil) {
-		LogToConsoleError("Error occurred fetching objects: %{public}@",
-						  fetchRequestError.localizedDescription);
+		LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
 
 		return 0;
 	}
@@ -967,8 +958,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 	[self _quickSaveContext:viewContext];
 
-	[self __notifyClientOfDeletedUniqueIdentifiers:[uniqueIdentifiers copy]
-									 inViewContext:viewContext];
+	[self __notifyClientOfDeletedUniqueIdentifiers:[uniqueIdentifiers copy] inViewContext:viewContext];
 
 	return fetchedObjects.count;
 }
@@ -976,13 +966,13 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 /* Notify XPC client of intent to delete these unique identifiers. */
 /* Deletes can happen based on a timer, without the client asking for it,
  which means we need a way to inform it of the delete. */
-- (void)__notifyClientOfDeletedUniqueIdentifiers:(NSArray<NSString *> *)uniqueIdentifiers inViewContext:(HLSHistoricLogViewContext *)viewContext
+- (void)__notifyClientOfDeletedUniqueIdentifiers:(NSArray<NSString *> *)uniqueIdentifiers
+								   inViewContext:(HLSHistoricLogViewContext *)viewContext
 {
 	NSParameterAssert(uniqueIdentifiers != nil);
 	NSParameterAssert(viewContext != nil);
 
-	[[self remoteObjectProxy] willDeleteUniqueIdentifiers:uniqueIdentifiers
-												   inView:viewContext.hls_viewId];
+	[[self remoteObjectProxy] willDeleteUniqueIdentifiers:uniqueIdentifiers inView:viewContext.hls_viewId];
 }
 
 #pragma mark -
@@ -1027,7 +1017,8 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 		viewContext.hls_totalLineCount = [self _lineCountInViewContextFromDatabase:viewContext performOnQueue:YES];
 
-		viewContext.hls_newestIdentifier = [self _newestIdentifierInViewContextFromDatabase:viewContext performOnQueue:YES];
+		viewContext.hls_newestIdentifier = [self _newestIdentifierInViewContextFromDatabase:viewContext
+																			 performOnQueue:YES];
 
 		/* Log information for debugging */
 		LogToConsoleDebug("Context created for %{public}@ - Line count: %{public}lu, Newest identifier: %{public}lu",
@@ -1062,7 +1053,8 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	return viewContext.hls_newestIdentifier;
 }
 
-- (NSUInteger)_newestIdentifierInViewContextFromDatabase:(HLSHistoricLogViewContext *)viewContext performOnQueue:(BOOL)performOnQueue
+- (NSUInteger)_newestIdentifierInViewContextFromDatabase:(HLSHistoricLogViewContext *)viewContext
+										  performOnQueue:(BOOL)performOnQueue
 {
 	NSParameterAssert(viewContext != nil);
 
@@ -1077,11 +1069,11 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 		NSError *fetchRequestError = nil;
 
-		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest error:&fetchRequestError];
+		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest
+																				error:&fetchRequestError];
 
 		if (fetchedObjects == nil) {
-			NSAssert1(NO, @"Error occurred fetching objects: %@",
-					  fetchRequestError.localizedDescription);
+			NSAssert1(NO, @"Error occurred fetching objects: %@", fetchRequestError.localizedDescription);
 		}
 
 		NSManagedObject *fetchedObject = fetchedObjects.firstObject;
@@ -1104,7 +1096,8 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	return newestIdentifier;
 }
 
-- (NSUInteger)_lineCountInViewContextFromDatabase:(HLSHistoricLogViewContext *)viewContext performOnQueue:(BOOL)performOnQueue
+- (NSUInteger)_lineCountInViewContextFromDatabase:(HLSHistoricLogViewContext *)viewContext
+								   performOnQueue:(BOOL)performOnQueue
 {
 	NSParameterAssert(viewContext != nil);
 
@@ -1121,8 +1114,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 		lineCount = [viewContext countForFetchRequest:fetchRequest error:&fetchRequestError];
 
 		if (lineCount == NSNotFound) {
-			NSAssert1(NO, @"Error occurred fetching objects: %@",
-					  fetchRequestError.localizedDescription);
+			NSAssert1(NO, @"Error occurred fetching objects: %@", fetchRequestError.localizedDescription);
 		}
 	};
 
@@ -1136,7 +1128,9 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 }
 
 /* Given a logLineUniqueIdentifier, figure out which entryIdentifier is associated with it. */
-- (NSUInteger)_identifierInViewContext:(HLSHistoricLogViewContext *)viewContext forUniqueIdentifier:(NSString *)uniqueIdentifier performOnQueue:(BOOL)performOnQueue
+- (NSUInteger)_identifierInViewContext:(HLSHistoricLogViewContext *)viewContext
+				   forUniqueIdentifier:(NSString *)uniqueIdentifier
+						performOnQueue:(BOOL)performOnQueue
 {
 	NSUInteger identifier = [self _identifierInViewContextFromDatabase:viewContext
 												   forUniqueIdentifier:uniqueIdentifier
@@ -1145,7 +1139,9 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	return identifier;
 }
 
-- (NSUInteger)_identifierInViewContextFromDatabase:(HLSHistoricLogViewContext *)viewContext forUniqueIdentifier:(NSString *)uniqueIdentifier performOnQueue:(BOOL)performOnQueue
+- (NSUInteger)_identifierInViewContextFromDatabase:(HLSHistoricLogViewContext *)viewContext
+							   forUniqueIdentifier:(NSString *)uniqueIdentifier
+									performOnQueue:(BOOL)performOnQueue
 {
 	NSParameterAssert(viewContext != nil);
 	NSParameterAssert(uniqueIdentifier != nil);
@@ -1155,14 +1151,10 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 	dispatch_block_t blockToPerform = ^{
 		NSString *viewId = viewContext.hls_viewId;
 
-		NSDictionary *substitutionVariables = @{
-			@"view_id" : viewId,
-			@"unique_id" : uniqueIdentifier
-		};
+		NSDictionary *substitutionVariables = @{@"view_id" : viewId, @"unique_id" : uniqueIdentifier};
 
-		NSFetchRequest *fetchRequest =
-		[self.managedObjectModel fetchRequestFromTemplateWithName:@"UniqueIdToEntryId"
-											substitutionVariables:substitutionVariables];
+		NSFetchRequest *fetchRequest = [self.managedObjectModel fetchRequestFromTemplateWithName:@"UniqueIdToEntryId"
+																		   substitutionVariables:substitutionVariables];
 
 		fetchRequest.includesPendingChanges = YES;
 		fetchRequest.includesPropertyValues = YES;
@@ -1170,11 +1162,11 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 
 		NSError *fetchRequestError = nil;
 
-		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest error:&fetchRequestError];
+		NSArray<NSManagedObject *> *fetchedObjects = [viewContext executeFetchRequest:fetchRequest
+																				error:&fetchRequestError];
 
 		if (fetchedObjects == nil) {
-			NSAssert1(NO, @"Error occurred fetching objects: %@",
-					  fetchRequestError.localizedDescription);
+			NSAssert1(NO, @"Error occurred fetching objects: %@", fetchRequestError.localizedDescription);
 		}
 
 		NSManagedObject *fetchedObject = fetchedObjects.firstObject;
@@ -1200,7 +1192,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType)
 #pragma mark -
 #pragma mark XPC Connection
 
-- (id <HLSHistoricLogClientProtocol>)remoteObjectProxy
+- (id<HLSHistoricLogClientProtocol>)remoteObjectProxy
 {
 	return self.serviceConnection.remoteObjectProxy;
 }

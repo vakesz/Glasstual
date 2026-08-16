@@ -44,14 +44,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const IRCTextFormatterBoldAttributeName = @"IRCTextFormatterBoldAttributeName";
-NSString * const IRCTextFormatterItalicAttributeName = @"IRCTextFormatterItalicAttributeName";
-NSString * const IRCTextFormatterMonospaceAttributeName = @"IRCTextFormatterMonospaceAttributeName";
-NSString * const IRCTextFormatterStrikethroughAttributeName = @"IRCTextFormatterStrikethroughAttributeName";
-NSString * const IRCTextFormatterUnderlineAttributeName = @"IRCTextFormatterUnderlineAttributeName";
-NSString * const IRCTextFormatterForegroundColorAttributeName = @"IRCTextFormatterForegroundColorAttributeName";
-NSString * const IRCTextFormatterBackgroundColorAttributeName = @"IRCTextFormatterBackgroundColorAttributeName";
-NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoilerAttributeName";
+NSString *const IRCTextFormatterBoldAttributeName = @"IRCTextFormatterBoldAttributeName";
+NSString *const IRCTextFormatterItalicAttributeName = @"IRCTextFormatterItalicAttributeName";
+NSString *const IRCTextFormatterMonospaceAttributeName = @"IRCTextFormatterMonospaceAttributeName";
+NSString *const IRCTextFormatterStrikethroughAttributeName = @"IRCTextFormatterStrikethroughAttributeName";
+NSString *const IRCTextFormatterUnderlineAttributeName = @"IRCTextFormatterUnderlineAttributeName";
+NSString *const IRCTextFormatterForegroundColorAttributeName = @"IRCTextFormatterForegroundColorAttributeName";
+NSString *const IRCTextFormatterBackgroundColorAttributeName = @"IRCTextFormatterBackgroundColorAttributeName";
+NSString *const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoilerAttributeName";
 
 #pragma mark -
 #pragma mark Private Headers
@@ -64,15 +64,15 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 #pragma mark Effects Container
 
 @interface IRCTextFormatterEffect ()
-@property (nonatomic, assign, readwrite) IRCTextFormatterEffectType type;
-@property (nonatomic, copy, nullable, readwrite) NSString *value;
-@property (nonatomic, assign, readwrite) UniChar controlCharacter;
-@property (nonatomic, assign, readwrite) NSUInteger length;
+@property(nonatomic, assign, readwrite) IRCTextFormatterEffectType type;
+@property(nonatomic, copy, nullable, readwrite) NSString *value;
+@property(nonatomic, assign, readwrite) UniChar controlCharacter;
+@property(nonatomic, assign, readwrite) NSUInteger length;
 @end
 
 @interface IRCTextFormatterEffects ()
-@property (nonatomic, copy, readwrite) NSArray<IRCTextFormatterEffect *> *effects;
-@property (nonatomic, assign, readwrite) NSUInteger maximumLength;
+@property(nonatomic, copy, readwrite) NSArray<IRCTextFormatterEffect *> *effects;
+@property(nonatomic, assign, readwrite) NSUInteger maximumLength;
 @end
 
 @implementation IRCTextFormatterEffect
@@ -115,85 +115,74 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 	NSString *valueOut = nil;
 
 	switch (type) {
-		case IRCTextFormatterEffectNone:
-		{
-			break;
+	case IRCTextFormatterEffectNone: {
+		break;
+	}
+	case IRCTextFormatterEffectBold: {
+		controlCharacter = IRCTextFormatterEffectBoldCharacter;
+
+		valueLength = 2; // opening and closing
+
+		break;
+	}
+	case IRCTextFormatterEffectItalic: {
+		controlCharacter = IRCTextFormatterEffectItalicCharacter;
+
+		valueLength = 2; // opening and closing
+
+		break;
+	}
+	case IRCTextFormatterEffectMonospace: {
+		controlCharacter = IRCTextFormatterEffectMonospaceCharacter;
+
+		valueLength = 2; // opening and closing
+
+		break;
+	}
+	case IRCTextFormatterEffectStrikethrough: {
+		controlCharacter = IRCTextFormatterEffectStrikethroughCharacter;
+
+		valueLength = 2; // opening and closing
+
+		break;
+	}
+	case IRCTextFormatterEffectUnderline: {
+		controlCharacter = IRCTextFormatterEffectUnderlineCharacter;
+
+		valueLength = 2; // opening and closing
+
+		break;
+	}
+	case IRCTextFormatterEffectForegroundColor:
+	case IRCTextFormatterEffectBackgroundColor: {
+		if ([value isKindOfClass:[NSColor class]]) {
+			controlCharacter = IRCTextFormatterEffectColorAsHexCharacter;
+
+			valueOut = [[value hexadecimalValue] substringFromIndex:1]; // Remove leading #
+		} else if ([value isKindOfClass:[NSNumber class]]) {
+			controlCharacter = IRCTextFormatterEffectColorAsDigitCharacter;
+
+			valueOut = [value integerStringValueWithLeadingZero];
 		}
-		case IRCTextFormatterEffectBold:
-		{
-			controlCharacter = IRCTextFormatterEffectBoldCharacter;
 
-			valueLength = 2; // opening and closing
-
-			break;
-		}
-		case IRCTextFormatterEffectItalic:
-		{
-			controlCharacter = IRCTextFormatterEffectItalicCharacter;
-
-			valueLength = 2; // opening and closing
-
-			break;
-		}
-		case IRCTextFormatterEffectMonospace:
-		{
-			controlCharacter = IRCTextFormatterEffectMonospaceCharacter;
-
-			valueLength = 2; // opening and closing
-
-			break;
-		}
-		case IRCTextFormatterEffectStrikethrough:
-		{
-			controlCharacter = IRCTextFormatterEffectStrikethroughCharacter;
-
-			valueLength = 2; // opening and closing
-
-			break;
-		}
-		case IRCTextFormatterEffectUnderline:
-		{
-			controlCharacter = IRCTextFormatterEffectUnderlineCharacter;
-
-			valueLength = 2; // opening and closing
-
-			break;
-		}
-		case IRCTextFormatterEffectForegroundColor:
-		case IRCTextFormatterEffectBackgroundColor:
-		{
-			if ([value isKindOfClass:[NSColor class]])
-			{
-				controlCharacter = IRCTextFormatterEffectColorAsHexCharacter;
-
-				valueOut = [[value hexadecimalValue] substringFromIndex:1]; // Remove leading #
-			}
-			else if ([value isKindOfClass:[NSNumber class]])
-			{
-				controlCharacter = IRCTextFormatterEffectColorAsDigitCharacter;
-
-				valueOut = [value integerStringValueWithLeadingZero];
-			}
-
-			if (valueOut == nil) {
-				return nil;
-			}
-
-			if (type == IRCTextFormatterEffectForegroundColor) {
-				valueLength = (valueOut.length + 2); // opening and closing
-			} else {
-				valueLength = (valueOut.length + 1); // leading comma
-			}
-
-			break;
-		}
-		default:
-		{
-			/* We return nil because all other formatters are just aliases.
-			 For example, spoiler is an alias for foreground and background. */
-
+		if (valueOut == nil) {
 			return nil;
 		}
+
+		if (type == IRCTextFormatterEffectForegroundColor) {
+			valueLength = (valueOut.length + 2); // opening and closing
+		} else {
+			valueLength = (valueOut.length + 1); // leading comma
+		}
+
+		break;
+	}
+	default: {
+		/* We return nil because all other formatters are just aliases.
+			 For example, spoiler is an alias for foreground and background. */
+
+		return nil;
+	}
 	}
 
 	self.type = type;
@@ -272,8 +261,12 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 
 	NSMutableArray *effects = [NSMutableArray arrayWithCapacity:7];
 
-	IRCTextFormatterEffect *foregroundColor = [IRCTextFormatterEffect effectWithType:IRCTextFormatterEffectForegroundColor withValue:attributes[IRCTextFormatterForegroundColorAttributeName]];
-	IRCTextFormatterEffect *backgroundColor = [IRCTextFormatterEffect effectWithType:IRCTextFormatterEffectBackgroundColor withValue:attributes[IRCTextFormatterBackgroundColorAttributeName]];
+	IRCTextFormatterEffect *foregroundColor =
+		[IRCTextFormatterEffect effectWithType:IRCTextFormatterEffectForegroundColor
+									 withValue:attributes[IRCTextFormatterForegroundColorAttributeName]];
+	IRCTextFormatterEffect *backgroundColor =
+		[IRCTextFormatterEffect effectWithType:IRCTextFormatterEffectBackgroundColor
+									 withValue:attributes[IRCTextFormatterBackgroundColorAttributeName]];
 
 	if (foregroundColor) {
 		[effects addObject:foregroundColor];
@@ -283,9 +276,7 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 		/* It's important that the background color ALWAYS follows the foreground
 		 color because the array will be enumerated in order to append the effects. */
 		/* Type of values must be the same. Can't mix and match integer color with hex. */
-		if (foregroundColor.controlCharacter ==
-			backgroundColor.controlCharacter)
-		{
+		if (foregroundColor.controlCharacter == backgroundColor.controlCharacter) {
 			[effects addObject:backgroundColor];
 
 			maximumLength += backgroundColor.length;
@@ -372,7 +363,10 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 
 @implementation NSAttributedString (IRCTextFormatterPrivate)
 
-- (NSString *)stringFormattedForChannel:(NSString *)channelName onClient:(IRCClient *)client withLineType:(TVCLogLineType)lineType effectiveRange:(NSRange * _Nullable)effectiveRange
+- (NSString *)stringFormattedForChannel:(NSString *)channelName
+							   onClient:(IRCClient *)client
+						   withLineType:(TVCLogLineType)lineType
+						 effectiveRange:(NSRange *_Nullable)effectiveRange
 {
 	NSParameterAssert(channelName != nil);
 	NSParameterAssert(client != nil);
@@ -392,15 +386,15 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 	 */
 	/* ///////////////////////////////////////////////////// */
 
-#define	_textTruncationPRIVMSGCommandConstant			9  // "PRIVMSG" + surrounding spaces
-#define	_textTruncationACTIONCommandConstant			17 // "PRIVMSG" + surrounding spaces + 0x01 + "ACTION" + 0x01
-#define _textTruncationNOTICECommandConstant			8  // "NOTICE" + surrounding spaces
+#define _textTruncationPRIVMSGCommandConstant 9 // "PRIVMSG" + surrounding spaces
+#define _textTruncationACTIONCommandConstant 17 // "PRIVMSG" + surrounding spaces + 0x01 + "ACTION" + 0x01
+#define _textTruncationNOTICECommandConstant 8	// "NOTICE" + surrounding spaces
 
-#define _textTruncationHostmaskConstant					60 // Used if local hostmask is unknown
+#define _textTruncationHostmaskConstant 60 // Used if local hostmask is unknown
 
 	/* Maximum distance from end of string that we will
 	 locate a character to perform wrapping on. */
-#define	_textTruncationWrapMaxDistance			25
+#define _textTruncationWrapMaxDistance 25
 
 	/* Add length of colon (":") */
 	NSUInteger minimumLength = 1;
@@ -438,7 +432,8 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 	NSUInteger maximumLength = TXMaximumIRCBodyLength;
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	NSUInteger encryptionEstimate = [client lengthOfEncryptedMessageDirectedAt:channelName thatFitsWithinBounds:(maximumLength - minimumLength)];
+	NSUInteger encryptionEstimate = [client lengthOfEncryptedMessageDirectedAt:channelName
+														  thatFitsWithinBounds:(maximumLength - minimumLength)];
 
 	if (encryptionEstimate > 0) {
 		maximumLength = encryptionEstimate;
@@ -456,7 +451,7 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 	__block NSUInteger resultLength = minimumLength;
 
 	// Length of result without formatters
-	__block NSUInteger deletionLength  = 0;
+	__block NSUInteger deletionLength = 0;
 
 	// Range of attribute segment being worked on
 	NSRange segmentRange;
@@ -499,14 +494,13 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 		 at maximum X entries at location 0, we can do our append until the
 		 next, middle, or end segment. */
 
-		if (segmentRange.location > 0) {   // Length calculations for the middle of our string.
-										   // Sally sold seashells down by the seashore.
-										   //        |----------------------| <--- section we have to find
+		if (segmentRange.location > 0) { // Length calculations for the middle of our string.
+										 // Sally sold seashells down by the seashore.
+										 //        |----------------------| <--- section we have to find
 
-			NSUInteger
-			newLength = (resultLength			+ // Length of what we have already formatted.
-						 formattersLength		+ // The formatter bytes for this segment.
-						 2);					  // The sad little two. A single unicode character.
+			NSUInteger newLength = (resultLength +	   // Length of what we have already formatted.
+									formattersLength + // The formatter bytes for this segment.
+									2);				   // The sad little two. A single unicode character.
 
 			/* Will this new segment exceed the maximum size? */
 			if (newLength > maximumLength) {
@@ -546,7 +540,8 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 			/* Would this character go over the max length? */
 			if (resultLength > maximumLength) {
 				/* Look for best character to wrap on */
-				NSUInteger indexDifference = [result wrapIRCTextFormatterResultWith:segmentRange.location maxDistance:_textTruncationWrapMaxDistance];
+				NSUInteger indexDifference = [result wrapIRCTextFormatterResultWith:segmentRange.location
+																		maxDistance:_textTruncationWrapMaxDistance];
 
 				if (indexDifference != NSNotFound) {
 					deletionLength -= indexDifference;
@@ -591,13 +586,15 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 	} // attribute enumeration
 
 	/* Return length that can be deleted to occupy the result */
-	if ( effectiveRange) {
+	if (effectiveRange) {
 		*effectiveRange = NSMakeRange(0, deletionLength);
 	}
 
 	/* Debug information */
 	LogToConsoleDebug("Minimum length: %{public}ld; Final length: %{public}ld; Difference: %{public}ld;",
-		 minimumLength, resultLength, (maximumLength - resultLength));
+					  minimumLength,
+					  resultLength,
+					  (maximumLength - resultLength));
 
 #undef _textTruncationPRIVMSGCommandConstant
 #undef _textTruncationACTIONCommandConstant
@@ -616,14 +613,19 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 
 @implementation NSMutableAttributedString (IRCTextFormatterPrivate)
 
-- (NSString *)stringFormattedForChannel:(NSString *)channelName onClient:(IRCClient *)client withLineType:(TVCLogLineType)lineType
+- (NSString *)stringFormattedForChannel:(NSString *)channelName
+							   onClient:(IRCClient *)client
+						   withLineType:(TVCLogLineType)lineType
 {
 	NSParameterAssert(channelName != nil);
 	NSParameterAssert(client != nil);
 
 	NSRange effectiveRange;
 
-	NSString *result = [self stringFormattedForChannel:channelName onClient:client withLineType:lineType effectiveRange:&effectiveRange];
+	NSString *result = [self stringFormattedForChannel:channelName
+											  onClient:client
+										  withLineType:lineType
+										effectiveRange:&effectiveRange];
 
 	[self deleteCharactersInRange:effectiveRange];
 
@@ -647,164 +649,147 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 
 	[self enumerateAttributesInRange:self.range
 							 options:0
-						  usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop)
-	 {
-		 IRCTextFormatterEffects *formatters = [IRCTextFormatterEffects effectsInAttributes:attributes];
+						  usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop) {
+							  IRCTextFormatterEffects *formatters =
+								  [IRCTextFormatterEffects effectsInAttributes:attributes];
 
-		 [formatters appendToStartOf:result];
+							  [formatters appendToStartOf:result];
 
-		 NSString *segment = [string substringWithRange:effectiveRange];
+							  NSString *segment = [string substringWithRange:effectiveRange];
 
-		 [result appendString:segment];
+							  [result appendString:segment];
 
-		 [formatters appendToEndOf:result];
-	 }];
+							  [formatters appendToEndOf:result];
+						  }];
 
 	return result;
 }
 
-- (BOOL)IRCFormatterAttributeSetInRange:(IRCTextFormatterEffectType)effect
-								  range:(NSRange)limitRange
+- (BOOL)IRCFormatterAttributeSetInRange:(IRCTextFormatterEffectType)effect range:(NSRange)limitRange
 {
 	__block BOOL returnValue = NO;
 
 	[self enumerateAttributesInRange:limitRange
 							 options:0
-						  usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop)
-	 {
-		 switch (effect) {
-			 case IRCTextFormatterEffectNone:
-			 {
-					break;
-			 }
-			 case IRCTextFormatterEffectBold:
-			 {
-				 if ([attributes boolForKey:IRCTextFormatterBoldAttributeName] == NO) {
-					 return;
-				 }
+						  usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop) {
+							  switch (effect) {
+							  case IRCTextFormatterEffectNone: {
+								  break;
+							  }
+							  case IRCTextFormatterEffectBold: {
+								  if ([attributes boolForKey:IRCTextFormatterBoldAttributeName] == NO) {
+									  return;
+								  }
 
-				 returnValue = YES;
+								  returnValue = YES;
 
-				 *stop = YES;
+								  *stop = YES;
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectItalic:
-			 {
-				 if ([attributes boolForKey:IRCTextFormatterItalicAttributeName] == NO) {
-					 return;
-				 }
+								  break;
+							  }
+							  case IRCTextFormatterEffectItalic: {
+								  if ([attributes boolForKey:IRCTextFormatterItalicAttributeName] == NO) {
+									  return;
+								  }
 
-				 returnValue = YES;
+								  returnValue = YES;
 
-				 *stop = YES;
+								  *stop = YES;
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectMonospace:
-			 {
-				 if ([attributes boolForKey:IRCTextFormatterMonospaceAttributeName] == NO) {
-					 return;
-				 }
+								  break;
+							  }
+							  case IRCTextFormatterEffectMonospace: {
+								  if ([attributes boolForKey:IRCTextFormatterMonospaceAttributeName] == NO) {
+									  return;
+								  }
 
-				 returnValue = YES;
+								  returnValue = YES;
 
-				 *stop = YES;
+								  *stop = YES;
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectUnderline:
-			 {
-				 if ([attributes boolForKey:IRCTextFormatterUnderlineAttributeName] == NO) {
-					 return;
-				 }
+								  break;
+							  }
+							  case IRCTextFormatterEffectUnderline: {
+								  if ([attributes boolForKey:IRCTextFormatterUnderlineAttributeName] == NO) {
+									  return;
+								  }
 
-				 returnValue = YES;
+								  returnValue = YES;
 
-				 *stop = YES;
+								  *stop = YES;
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectStrikethrough:
-			 {
-				 if ([attributes boolForKey:IRCTextFormatterStrikethroughAttributeName] == NO) {
-					 return;
-				 }
+								  break;
+							  }
+							  case IRCTextFormatterEffectStrikethrough: {
+								  if ([attributes boolForKey:IRCTextFormatterStrikethroughAttributeName] == NO) {
+									  return;
+								  }
 
-				 returnValue = YES;
+								  returnValue = YES;
 
-				 *stop = YES;
+								  *stop = YES;
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectForegroundColor:
-			 {
-				 id foregroundColor = attributes[IRCTextFormatterForegroundColorAttributeName];
+								  break;
+							  }
+							  case IRCTextFormatterEffectForegroundColor: {
+								  id foregroundColor = attributes[IRCTextFormatterForegroundColorAttributeName];
 
-				 if (foregroundColor == nil) {
-					 return;
-				 }
+								  if (foregroundColor == nil) {
+									  return;
+								  }
 
-				 if ([foregroundColor isKindOfClass:[NSNumber class]])
-				 {
-					 NSInteger colorCode = [foregroundColor integerValue];
+								  if ([foregroundColor isKindOfClass:[NSNumber class]]) {
+									  NSInteger colorCode = [foregroundColor integerValue];
 
-					 if (colorCode < 0 || colorCode > IRCTextFormatterEffectColorHighestDigit) {
-						 return;
-					 }
-				 }
-				 else if ([foregroundColor isKindOfClass:[NSColor class]] == NO)
-				 {
-					 return;
-				 }
+									  if (colorCode < 0 || colorCode > IRCTextFormatterEffectColorHighestDigit) {
+										  return;
+									  }
+								  } else if ([foregroundColor isKindOfClass:[NSColor class]] == NO) {
+									  return;
+								  }
 
-				 returnValue = YES;
+								  returnValue = YES;
 
-				 *stop = YES;
+								  *stop = YES;
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectBackgroundColor:
-			 {
-				 id backgroundColor = attributes[IRCTextFormatterBackgroundColorAttributeName];
+								  break;
+							  }
+							  case IRCTextFormatterEffectBackgroundColor: {
+								  id backgroundColor = attributes[IRCTextFormatterBackgroundColorAttributeName];
 
-				 if (backgroundColor == nil) {
-					 return;
-				 }
+								  if (backgroundColor == nil) {
+									  return;
+								  }
 
-				 if ([backgroundColor isKindOfClass:[NSNumber class]])
-				 {
-					 NSInteger colorCode = [backgroundColor integerValue];
+								  if ([backgroundColor isKindOfClass:[NSNumber class]]) {
+									  NSInteger colorCode = [backgroundColor integerValue];
 
-					 if (colorCode < 0 || colorCode > IRCTextFormatterEffectColorHighestDigit) {
-						 return;
-					 }
-				 }
-				 else if ([backgroundColor isKindOfClass:[NSColor class]] == NO)
-				 {
-					 return;
-				 }
+									  if (colorCode < 0 || colorCode > IRCTextFormatterEffectColorHighestDigit) {
+										  return;
+									  }
+								  } else if ([backgroundColor isKindOfClass:[NSColor class]] == NO) {
+									  return;
+								  }
 
-				 returnValue = YES;
+								  returnValue = YES;
 
-				 *stop = YES;
+								  *stop = YES;
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectSpoiler:
-			 {
-				 if ([attributes boolForKey:IRCTextFormatterSpoilerAttributeName] == NO) {
-					 return;
-				 }
+								  break;
+							  }
+							  case IRCTextFormatterEffectSpoiler: {
+								  if ([attributes boolForKey:IRCTextFormatterSpoilerAttributeName] == NO) {
+									  return;
+								  }
 
-				 returnValue = YES;
+								  returnValue = YES;
 
-				 *stop = YES;
+								  *stop = YES;
 
-				 break;
-			 }
-		 }
-	 }];
+								  break;
+							  }
+							  }
+						  }];
 
 	return returnValue;
 }
@@ -816,229 +801,232 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 
 @implementation NSMutableAttributedString (IRCTextFormatter)
 
-- (void)setIRCFormatterAttribute:(IRCTextFormatterEffectType)effect
-						   value:(id)value
-						   range:(NSRange)limitRange
+- (void)setIRCFormatterAttribute:(IRCTextFormatterEffectType)effect value:(id)value range:(NSRange)limitRange
 {
-	[self enumerateAttributesInRange:limitRange
-							 options:NSAttributedStringEnumerationReverse
-						  usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop)
-	 {
-		 NSFont *baseFont = attributes[NSFontAttributeName];
+	[self
+		enumerateAttributesInRange:limitRange
+						   options:NSAttributedStringEnumerationReverse
+						usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop) {
+							NSFont *baseFont = attributes[NSFontAttributeName];
 
-		 switch (effect) {
-			 case IRCTextFormatterEffectNone:
-			 {
-					break;
-			 }
-			 case IRCTextFormatterEffectBold:
-			 {
-				 if ([baseFont fontTraitSet:NSBoldFontMask] == NO) {
-					 baseFont = [RZFontManager() convertFont:baseFont toHaveTrait:NSBoldFontMask];
-				 }
+							switch (effect) {
+							case IRCTextFormatterEffectNone: {
+								break;
+							}
+							case IRCTextFormatterEffectBold: {
+								if ([baseFont fontTraitSet:NSBoldFontMask] == NO) {
+									baseFont = [RZFontManager() convertFont:baseFont toHaveTrait:NSBoldFontMask];
+								}
 
-				 if (baseFont) {
-					 [self addAttribute:IRCTextFormatterBoldAttributeName value:@(YES) range:effectiveRange];
+								if (baseFont) {
+									[self addAttribute:IRCTextFormatterBoldAttributeName
+												 value:@(YES)
+												 range:effectiveRange];
 
-					 [self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
-				 }
+									[self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
+								}
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectItalic:
-			 {
-				 if ([baseFont fontTraitSet:NSItalicFontMask] == NO) {
-					 baseFont = [RZFontManager() convertFont:baseFont toHaveTrait:NSItalicFontMask];
-				 }
+								break;
+							}
+							case IRCTextFormatterEffectItalic: {
+								if ([baseFont fontTraitSet:NSItalicFontMask] == NO) {
+									baseFont = [RZFontManager() convertFont:baseFont toHaveTrait:NSItalicFontMask];
+								}
 
-				 if (baseFont) {
-					 [self addAttribute:IRCTextFormatterItalicAttributeName value:@(YES) range:effectiveRange];
+								if (baseFont) {
+									[self addAttribute:IRCTextFormatterItalicAttributeName
+												 value:@(YES)
+												 range:effectiveRange];
 
-					 [self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
-				 }
+									[self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
+								}
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectMonospace:
-			 {
-				 baseFont = [RZFontManager() convertFont:baseFont toFamily:@"Menlo"];
+								break;
+							}
+							case IRCTextFormatterEffectMonospace: {
+								baseFont = [RZFontManager() convertFont:baseFont toFamily:@"Menlo"];
 
-				 [self addAttribute:IRCTextFormatterMonospaceAttributeName value:@(YES) range:effectiveRange];
+								[self addAttribute:IRCTextFormatterMonospaceAttributeName
+											 value:@(YES)
+											 range:effectiveRange];
 
-				 [self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
+								[self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectUnderline:
-			 {
-				 [self addAttribute:IRCTextFormatterUnderlineAttributeName value:@(YES) range:effectiveRange];
+								break;
+							}
+							case IRCTextFormatterEffectUnderline: {
+								[self addAttribute:IRCTextFormatterUnderlineAttributeName
+											 value:@(YES)
+											 range:effectiveRange];
 
-				 [self addAttribute:NSUnderlineStyleAttributeName value:@(NSUnderlineStyleSingle) range:effectiveRange];
+								[self addAttribute:NSUnderlineStyleAttributeName
+											 value:@(NSUnderlineStyleSingle)
+											 range:effectiveRange];
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectStrikethrough:
-			 {
-				 [self addAttribute:IRCTextFormatterStrikethroughAttributeName value:@(YES) range:effectiveRange];
+								break;
+							}
+							case IRCTextFormatterEffectStrikethrough: {
+								[self addAttribute:IRCTextFormatterStrikethroughAttributeName
+											 value:@(YES)
+											 range:effectiveRange];
 
-				 [self addAttribute:NSStrikethroughStyleAttributeName value:@(NSUnderlineStyleSingle) range:effectiveRange];
+								[self addAttribute:NSStrikethroughStyleAttributeName
+											 value:@(NSUnderlineStyleSingle)
+											 range:effectiveRange];
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectForegroundColor:
-			 {
-				 if (value == nil) {
-					 break;
-				 }
+								break;
+							}
+							case IRCTextFormatterEffectForegroundColor: {
+								if (value == nil) {
+									break;
+								}
 
-				 if ([value isKindOfClass:[NSNumber class]])
-				 {
-					 NSInteger colorCode = [value integerValue];
+								if ([value isKindOfClass:[NSNumber class]]) {
+									NSInteger colorCode = [value integerValue];
 
-					 if (colorCode >= 0 && colorCode <= IRCTextFormatterEffectColorHighestDigit) {
-						 [self addAttribute:IRCTextFormatterForegroundColorAttributeName value:@(colorCode) range:effectiveRange];
+									if (colorCode >= 0 && colorCode <= IRCTextFormatterEffectColorHighestDigit) {
+										[self addAttribute:IRCTextFormatterForegroundColorAttributeName
+													 value:@(colorCode)
+													 range:effectiveRange];
 
-						 [self addAttribute:NSForegroundColorAttributeName value:[TVCLogRenderer mapColorCode:colorCode] range:effectiveRange];
-					 }
-				 }
-				 else if ([value isKindOfClass:[NSColor class]])
-				 {
-					 [self addAttribute:IRCTextFormatterForegroundColorAttributeName value:value range:effectiveRange];
+										[self addAttribute:NSForegroundColorAttributeName
+													 value:[TVCLogRenderer mapColorCode:colorCode]
+													 range:effectiveRange];
+									}
+								} else if ([value isKindOfClass:[NSColor class]]) {
+									[self addAttribute:IRCTextFormatterForegroundColorAttributeName
+												 value:value
+												 range:effectiveRange];
 
-					 [self addAttribute:NSForegroundColorAttributeName value:value range:effectiveRange];
-				 }
+									[self addAttribute:NSForegroundColorAttributeName value:value range:effectiveRange];
+								}
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectBackgroundColor:
-			 {
-				 if (value == nil) {
-					 break;
-				 }
+								break;
+							}
+							case IRCTextFormatterEffectBackgroundColor: {
+								if (value == nil) {
+									break;
+								}
 
-				 if ([value isKindOfClass:[NSNumber class]])
-				 {
-					 NSInteger colorCode = [value integerValue];
+								if ([value isKindOfClass:[NSNumber class]]) {
+									NSInteger colorCode = [value integerValue];
 
-					 if (colorCode >= 0 && colorCode <= IRCTextFormatterEffectColorHighestDigit) {
-						 [self addAttribute:IRCTextFormatterBackgroundColorAttributeName value:@(colorCode) range:effectiveRange];
+									if (colorCode >= 0 && colorCode <= IRCTextFormatterEffectColorHighestDigit) {
+										[self addAttribute:IRCTextFormatterBackgroundColorAttributeName
+													 value:@(colorCode)
+													 range:effectiveRange];
 
-						 [self addAttribute:NSBackgroundColorAttributeName value:[TVCLogRenderer mapColorCode:colorCode] range:effectiveRange];
-					 }
-				 }
-				 else if ([value isKindOfClass:[NSColor class]])
-				 {
-					 [self addAttribute:IRCTextFormatterBackgroundColorAttributeName value:value range:effectiveRange];
+										[self addAttribute:NSBackgroundColorAttributeName
+													 value:[TVCLogRenderer mapColorCode:colorCode]
+													 range:effectiveRange];
+									}
+								} else if ([value isKindOfClass:[NSColor class]]) {
+									[self addAttribute:IRCTextFormatterBackgroundColorAttributeName
+												 value:value
+												 range:effectiveRange];
 
-					 [self addAttribute:NSBackgroundColorAttributeName value:value range:effectiveRange];
-				 }
+									[self addAttribute:NSBackgroundColorAttributeName value:value range:effectiveRange];
+								}
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectSpoiler:
-			 {
-				 [self addAttribute:IRCTextFormatterSpoilerAttributeName value:value range:effectiveRange];
+								break;
+							}
+							case IRCTextFormatterEffectSpoiler: {
+								[self addAttribute:IRCTextFormatterSpoilerAttributeName
+											 value:value
+											 range:effectiveRange];
 
-				 break;
-			 }
-		 }
-	 }];
+								break;
+							}
+							}
+						}];
 }
 
-- (void)removeIRCFormatterAttribute:(IRCTextFormatterEffectType)effect
-							  range:(NSRange)limitRange
+- (void)removeIRCFormatterAttribute:(IRCTextFormatterEffectType)effect range:(NSRange)limitRange
 {
 	[self enumerateAttributesInRange:limitRange
 							 options:NSAttributedStringEnumerationReverse
-						  usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop)
-	 {
-		 NSFont *baseFont = attributes[NSFontAttributeName];
+						  usingBlock:^(NSDictionary *attributes, NSRange effectiveRange, BOOL *stop) {
+							  NSFont *baseFont = attributes[NSFontAttributeName];
 
-		 if (baseFont == nil) {
-			 return;
-		 }
+							  if (baseFont == nil) {
+								  return;
+							  }
 
-		 switch (effect) {
-			 case IRCTextFormatterEffectNone:
-			 {
-				 break;
-			 }
-			 case IRCTextFormatterEffectBold:
-			 {
-				 if ([baseFont fontTraitSet:NSBoldFontMask]) {
-					 baseFont = [RZFontManager() convertFont:baseFont toNotHaveTrait:NSBoldFontMask];
+							  switch (effect) {
+							  case IRCTextFormatterEffectNone: {
+								  break;
+							  }
+							  case IRCTextFormatterEffectBold: {
+								  if ([baseFont fontTraitSet:NSBoldFontMask]) {
+									  baseFont = [RZFontManager() convertFont:baseFont toNotHaveTrait:NSBoldFontMask];
 
-					 if (baseFont) {
-						 [self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
-					 }
+									  if (baseFont) {
+										  [self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
+									  }
 
-					 [self removeAttribute:IRCTextFormatterBoldAttributeName range:effectiveRange];
-				 }
+									  [self removeAttribute:IRCTextFormatterBoldAttributeName range:effectiveRange];
+								  }
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectItalic:
-			 {
-				 if ([baseFont fontTraitSet:NSItalicFontMask]) {
-					 baseFont = [RZFontManager() convertFont:baseFont toNotHaveTrait:NSItalicFontMask];
+								  break;
+							  }
+							  case IRCTextFormatterEffectItalic: {
+								  if ([baseFont fontTraitSet:NSItalicFontMask]) {
+									  baseFont = [RZFontManager() convertFont:baseFont toNotHaveTrait:NSItalicFontMask];
 
-					 if (baseFont) {
-						 [self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
-					 }
+									  if (baseFont) {
+										  [self addAttribute:NSFontAttributeName value:baseFont range:effectiveRange];
+									  }
 
-					 [self removeAttribute:IRCTextFormatterItalicAttributeName range:effectiveRange];
-				 }
+									  [self removeAttribute:IRCTextFormatterItalicAttributeName range:effectiveRange];
+								  }
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectMonospace:
-			 {
-				 [self removeAttribute:NSFontAttributeName range:effectiveRange];
+								  break;
+							  }
+							  case IRCTextFormatterEffectMonospace: {
+								  [self removeAttribute:NSFontAttributeName range:effectiveRange];
 
-				 [self removeAttribute:IRCTextFormatterMonospaceAttributeName range:effectiveRange];
+								  [self removeAttribute:IRCTextFormatterMonospaceAttributeName range:effectiveRange];
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectUnderline:
-			 {
-				 [self removeAttribute:NSUnderlineStyleAttributeName range:effectiveRange];
+								  break;
+							  }
+							  case IRCTextFormatterEffectUnderline: {
+								  [self removeAttribute:NSUnderlineStyleAttributeName range:effectiveRange];
 
-				 [self removeAttribute:IRCTextFormatterUnderlineAttributeName range:effectiveRange];
+								  [self removeAttribute:IRCTextFormatterUnderlineAttributeName range:effectiveRange];
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectStrikethrough:
-			 {
-				 [self removeAttribute:NSStrikethroughStyleAttributeName range:effectiveRange];
+								  break;
+							  }
+							  case IRCTextFormatterEffectStrikethrough: {
+								  [self removeAttribute:NSStrikethroughStyleAttributeName range:effectiveRange];
 
-				 [self removeAttribute:IRCTextFormatterStrikethroughAttributeName range:effectiveRange];
+								  [self removeAttribute:IRCTextFormatterStrikethroughAttributeName
+												  range:effectiveRange];
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectForegroundColor:
-			 {
-				 [self removeAttribute:NSBackgroundColorAttributeName range:effectiveRange];
+								  break;
+							  }
+							  case IRCTextFormatterEffectForegroundColor: {
+								  [self removeAttribute:NSBackgroundColorAttributeName range:effectiveRange];
 
-				 [self removeAttribute:IRCTextFormatterForegroundColorAttributeName range:effectiveRange];
+								  [self removeAttribute:IRCTextFormatterForegroundColorAttributeName
+												  range:effectiveRange];
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectBackgroundColor:
-			 {
-				 [self removeAttribute:NSBackgroundColorAttributeName range:effectiveRange];
+								  break;
+							  }
+							  case IRCTextFormatterEffectBackgroundColor: {
+								  [self removeAttribute:NSBackgroundColorAttributeName range:effectiveRange];
 
-				 [self removeAttribute:IRCTextFormatterBackgroundColorAttributeName range:effectiveRange];
+								  [self removeAttribute:IRCTextFormatterBackgroundColorAttributeName
+												  range:effectiveRange];
 
-				 break;
-			 }
-			 case IRCTextFormatterEffectSpoiler:
-			 {
-				 [self removeAttribute:IRCTextFormatterSpoilerAttributeName range:effectiveRange];
+								  break;
+							  }
+							  case IRCTextFormatterEffectSpoiler: {
+								  [self removeAttribute:IRCTextFormatterSpoilerAttributeName range:effectiveRange];
 
-				 break;
-			 }
-		 }
-	 }];
+								  break;
+							  }
+							  }
+						  }];
 }
 
 @end
@@ -1073,9 +1061,7 @@ NSString * const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoile
 											   options:NSBackwardsSearch
 												 range:searchRange];
 
-	if (spaceRange.location == NSNotFound ||
-		spaceRange.location < minimumIndex)
-	{
+	if (spaceRange.location == NSNotFound || spaceRange.location < minimumIndex) {
 		return NSNotFound;
 	}
 

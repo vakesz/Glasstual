@@ -49,14 +49,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString * const TPCPreferencesThemeNameDefaultsKey	= @"Theme -> Name";
+NSString *const TPCPreferencesThemeNameDefaultsKey = @"Theme -> Name";
 
-NSString * const TPCPreferencesThemeFontNameDefaultsKey	= @"Theme -> Font Name";
-NSString * const TPCPreferencesThemeFontSizeDefaultsKey	= @"Theme -> Font Size";
+NSString *const TPCPreferencesThemeFontNameDefaultsKey = @"Theme -> Font Name";
+NSString *const TPCPreferencesThemeFontSizeDefaultsKey = @"Theme -> Font Size";
 
-NSString * const TPCPreferencesThemeNameMissingLocallyDefaultsKey = @"Theme -> Name -> Did Not Exist During Last Sync";
+NSString *const TPCPreferencesThemeNameMissingLocallyDefaultsKey = @"Theme -> Name -> Did Not Exist During Last Sync";
 
-NSString * const TPCPreferencesThemeFontNameMissingLocallyDefaultsKey = @"Theme -> Font Name -> Did Not Exist During Last Sync";
+NSString *const TPCPreferencesThemeFontNameMissingLocallyDefaultsKey =
+	@"Theme -> Font Name -> Did Not Exist During Last Sync";
 
 NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
@@ -181,7 +182,8 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 + (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
 {
-	[RZUserDefaults() setBool:textEncryptionIsOpportunistic forKey:@"Off-the-Record Messaging -> Automatically Enable Service"];
+	[RZUserDefaults() setBool:textEncryptionIsOpportunistic
+					   forKey:@"Off-the-Record Messaging -> Automatically Enable Service"];
 }
 
 + (BOOL)textEncryptionIsOpportunistic
@@ -212,8 +214,8 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
 + (BOOL)enableEchoMessageCapability
 {
-//	return [RZUserDefaults() boolForKey:@"IRC -> Enable echo-message Capability"];
-	
+	//	return [RZUserDefaults() boolForKey:@"IRC -> Enable echo-message Capability"];
+
 	return NO;
 }
 
@@ -369,8 +371,7 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
 + (BOOL)logToDiskIsEnabled
 {
-	return ([RZUserDefaults() boolForKey:@"LogTranscript"] &&
-			[TPCPathInfo transcriptFolderURL] != nil);
+	return ([RZUserDefaults() boolForKey:@"LogTranscript"] && [TPCPathInfo transcriptFolderURL] != nil);
 }
 
 + (BOOL)openBrowserInBackground
@@ -475,7 +476,8 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
 + (TVCMainWindowTextViewFontSize)mainTextViewFontSize
 {
-	return (TVCMainWindowTextViewFontSize)[RZUserDefaults() unsignedIntegerForKey:@"Main Input Text Field -> Font Size"];
+	return (
+		TVCMainWindowTextViewFontSize)[RZUserDefaults() unsignedIntegerForKey:@"Main Input Text Field -> Font Size"];
 }
 
 + (BOOL)focusMainTextViewOnSelectionChange
@@ -499,7 +501,7 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 }
 
 #pragma mark -
-#pragma mark App Nap 
+#pragma mark App Nap
 
 + (BOOL)appNapEnabled
 {
@@ -624,8 +626,7 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
 + (nullable NSFont *)themeChannelViewFont
 {
-	return [NSFont fontWithName:[self themeChannelViewFontName]
-						   size:[self themeChannelViewFontSize]];
+	return [NSFont fontWithName:[self themeChannelViewFontName] size:[self themeChannelViewFontSize]];
 }
 
 + (BOOL)themeChannelViewFontPreferenceUserConfigurable
@@ -635,7 +636,8 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
 + (void)setThemeChannelViewFontPreferenceUserConfigurable:(BOOL)themeChannelViewFontPreferenceUserConfigurable
 {
-	[RZUserDefaults() registerDefault:@(themeChannelViewFontPreferenceUserConfigurable) forKey:@"Theme -> Channel Font Preference Enabled"];
+	[RZUserDefaults() registerDefault:@(themeChannelViewFontPreferenceUserConfigurable)
+							   forKey:@"Theme -> Channel Font Preference Enabled"];
 }
 
 + (NSString *)themeNicknameFormatDefault
@@ -655,7 +657,8 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
 + (void)setThemeNicknameFormatPreferenceUserConfigurable:(BOOL)themeNicknameFormatPreferenceUserConfigurable
 {
-	[RZUserDefaults() registerDefault:@(themeNicknameFormatPreferenceUserConfigurable) forKey:@"Theme -> Nickname Format Preference Enabled"];
+	[RZUserDefaults() registerDefault:@(themeNicknameFormatPreferenceUserConfigurable)
+							   forKey:@"Theme -> Nickname Format Preference Enabled"];
 }
 
 + (NSString *)themeTimestampFormatDefault
@@ -675,7 +678,8 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
 + (void)setThemeTimestampFormatPreferenceUserConfigurable:(BOOL)themeTimestampFormatPreferenceUserConfigurable
 {
-	[RZUserDefaults() registerDefault:@(themeTimestampFormatPreferenceUserConfigurable) forKey:@"Theme -> Timestamp Format Preference Enabled"];
+	[RZUserDefaults() registerDefault:@(themeTimestampFormatPreferenceUserConfigurable)
+							   forKey:@"Theme -> Timestamp Format Preference Enabled"];
 }
 
 + (nullable NSString *)themeUserStyleSheetRules
@@ -839,27 +843,39 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 	NSString *returnValue = nil;
 
 	switch (event) {
-#define _dv(key, value)		case (key): { returnValue = (value); break; }
+#define _dv(key, value)                                                                                                \
+	case (key): {                                                                                                      \
+		returnValue = (value);                                                                                         \
+		break;                                                                                                         \
+	}
 
 		_dv(TXNotificationTypeAddressBookMatch, @"NotificationType -> Address Book Match -> ")
-		_dv(TXNotificationTypeChannelMessage, @"NotificationType -> Public Message -> ")
-		_dv(TXNotificationTypeChannelNotice, @"NotificationType -> Public Notice -> ")
-		_dv(TXNotificationTypeConnect, @"NotificationType -> Connected -> ")
-		_dv(TXNotificationTypeDisconnect, @"NotificationType -> Disconnected -> ")
-		_dv(TXNotificationTypeHighlight, @"NotificationType -> Highlight -> ")
-		_dv(TXNotificationTypeInvite, @"NotificationType -> Channel Invitation -> ")
-		_dv(TXNotificationTypeKick, @"NotificationType -> Kicked from Channel -> ")
-		_dv(TXNotificationTypeNewPrivateMessage, @"NotificationType -> Private Message (New) -> ")
-		_dv(TXNotificationTypePrivateMessage, @"NotificationType -> Private Message -> ")
-		_dv(TXNotificationTypePrivateNotice, @"NotificationType -> Private Notice -> ")
-		_dv(TXNotificationTypeFileTransferSendSuccessful, @"NotificationType -> Successful File Transfer (Sending) -> ")
-		_dv(TXNotificationTypeFileTransferReceiveSuccessful, @"NotificationType -> Successful File Transfer (Receiving) -> ")
-		_dv(TXNotificationTypeFileTransferSendFailed, @"NotificationType -> Failed File Transfer (Sending) -> ")
-		_dv(TXNotificationTypeFileTransferReceiveFailed, @"NotificationType -> Failed File Transfer (Receiving) -> ")
-		_dv(TXNotificationTypeFileTransferReceiveRequested, @"NotificationType -> File Transfer Request -> ")
-		_dv(TXNotificationTypeUserJoined, @"NotificationType -> User Joined -> ")
-		_dv(TXNotificationTypeUserParted, @"NotificationType -> User Parted -> ")
-		_dv(TXNotificationTypeUserDisconnected, @"NotificationType -> User Disconnected -> ")
+			_dv(TXNotificationTypeChannelMessage, @"NotificationType -> Public Message -> ")
+				_dv(TXNotificationTypeChannelNotice, @"NotificationType -> Public Notice -> ")
+					_dv(TXNotificationTypeConnect, @"NotificationType -> Connected -> ") _dv(
+						TXNotificationTypeDisconnect, @"NotificationType -> Disconnected -> ")
+						_dv(TXNotificationTypeHighlight, @"NotificationType -> Highlight -> ") _dv(
+							TXNotificationTypeInvite, @"NotificationType -> Channel Invitation -> ")
+							_dv(TXNotificationTypeKick, @"NotificationType -> Kicked from Channel -> ") _dv(
+								TXNotificationTypeNewPrivateMessage, @"NotificationType -> Private Message (New) -> ")
+								_dv(TXNotificationTypePrivateMessage, @"NotificationType -> Private Message -> ")
+									_dv(TXNotificationTypePrivateNotice, @"NotificationType -> Private Notice -> ")
+										_dv(TXNotificationTypeFileTransferSendSuccessful,
+											@"NotificationType -> Successful File Transfer (Sending) -> ")
+											_dv(TXNotificationTypeFileTransferReceiveSuccessful,
+												@"NotificationType -> Successful File Transfer (Receiving) -> ")
+												_dv(TXNotificationTypeFileTransferSendFailed,
+													@"NotificationType -> Failed File Transfer (Sending) -> ")
+													_dv(TXNotificationTypeFileTransferReceiveFailed,
+														@"NotificationType -> Failed File Transfer (Receiving) -> ")
+														_dv(TXNotificationTypeFileTransferReceiveRequested,
+															@"NotificationType -> File Transfer Request -> ")
+															_dv(TXNotificationTypeUserJoined,
+																@"NotificationType -> User Joined -> ")
+																_dv(TXNotificationTypeUserParted,
+																	@"NotificationType -> User Parted -> ")
+																	_dv(TXNotificationTypeUserDisconnected,
+																		@"NotificationType -> User Disconnected -> ")
 
 #undef _dv
 	}
@@ -1203,7 +1219,6 @@ static NSArray<NSString *> *_matchKeywords = nil;
 	[RZUserDefaults() setBool:YES forKey:_defaultsKey];
 
 #undef _defaultsKey
-
 }
 #endif
 
@@ -1211,7 +1226,7 @@ static NSArray<NSString *> *_matchKeywords = nil;
 {
 	/* Migrate from database that used NSArchiver to one that uses NSKeyedArchiver. */
 
-#define _defaultsKey	@"TPCPreferences -> Migration -> Nickname Color Style Overrides"
+#define _defaultsKey @"TPCPreferences -> Migration -> Nickname Color Style Overrides"
 
 	BOOL overridesMigrated = [RZUserDefaults() boolForKey:_defaultsKey];
 
@@ -1224,7 +1239,6 @@ static NSArray<NSString *> *_matchKeywords = nil;
 	[RZUserDefaults() setBool:YES forKey:_defaultsKey];
 
 #undef _defaultsKey
-
 }
 
 + (void)_migrateAppearanceToVersion7011 /* 7.0.11 turned into 7.1.0 */
@@ -1247,11 +1261,10 @@ static NSArray<NSString *> *_matchKeywords = nil;
 	[RZUserDefaults() setBool:YES forKey:_defaultsKey];
 
 #undef _defaultsKey
-
 }
 
 #pragma mark -
-#pragma mark Dynamic Defaults 
+#pragma mark Dynamic Defaults
 
 + (void)registerWebKit2DynamicDefaults
 {
@@ -1261,7 +1274,8 @@ static NSArray<NSString *> *_matchKeywords = nil;
 	 window. To prevent the user breaking Glasstual by attaching it, we force
 	 reset the default here, every run. */
 
-	[[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"__WebInspectorPageGroupLevel1__.WebKit2InspectorStartsAttached"];
+	[[NSUserDefaults standardUserDefaults] setBool:NO
+											forKey:@"__WebInspectorPageGroupLevel1__.WebKit2InspectorStartsAttached"];
 }
 
 + (void)registerPreferencesDictionaryVersion
@@ -1308,15 +1322,15 @@ static NSArray<NSString *> *_matchKeywords = nil;
 
 	NSMutableDictionary *dynamicDefaults = [NSMutableDictionary dictionary];
 
-	[dynamicDefaults setBool:[TPCApplicationInfo sandboxEnabled]						forKey:@"Security -> Sandbox Enabled"];
+	[dynamicDefaults setBool:[TPCApplicationInfo sandboxEnabled] forKey:@"Security -> Sandbox Enabled"];
 
-	[dynamicDefaults setBool:YES									forKey:@"System -> Running Mac OS Mountain Lion Or Newer"];
-	[dynamicDefaults setBool:YES									forKey:@"System -> Running Mac OS Mavericks Or Newer"];
-	[dynamicDefaults setBool:YES									forKey:@"System -> Running Mac OS Yosemite Or Newer"];
-	[dynamicDefaults setBool:YES									forKey:@"System -> Running Mac OS El Capitan Or Newer"];
-	[dynamicDefaults setBool:YES									forKey:@"System -> Running Mac OS Sierra Or Newer"];
-	[dynamicDefaults setBool:YES									forKey:@"System -> Running Mac OS High Sierra Or Newer"];
-	[dynamicDefaults setBool:YES									forKey:@"System -> Running Mac OS Mojave Or Newer"];
+	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Mountain Lion Or Newer"];
+	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Mavericks Or Newer"];
+	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Yosemite Or Newer"];
+	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS El Capitan Or Newer"];
+	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Sierra Or Newer"];
+	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS High Sierra Or Newer"];
+	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Mojave Or Newer"];
 
 #if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
 	[dynamicDefaults setBool:YES forKey:@"System -> 3rd-party Services -> Built with Sparkle Framework"];
@@ -1337,13 +1351,15 @@ static NSArray<NSString *> *_matchKeywords = nil;
 
 + (void)registerDefaults
 {
-	NSDictionary *localDefaults =
-	[TPCResourceManager dictionaryFromResources:@"RegisteredUserDefaults" inDirectory:@"Preferences" cacheValue:NO];
+	NSDictionary *localDefaults = [TPCResourceManager dictionaryFromResources:@"RegisteredUserDefaults"
+																  inDirectory:@"Preferences"
+																   cacheValue:NO];
 
 	[[NSUserDefaults standardUserDefaults] registerDefaults:localDefaults];
 
-	NSDictionary *containerDefaults =
-	[TPCResourceManager dictionaryFromResources:@"RegisteredUserDefaultsInContainer" inDirectory:@"Preferences" cacheValue:NO];
+	NSDictionary *containerDefaults = [TPCResourceManager dictionaryFromResources:@"RegisteredUserDefaultsInContainer"
+																	  inDirectory:@"Preferences"
+																	   cacheValue:NO];
 
 	[RZUserDefaults() registerDefaults:containerDefaults];
 
@@ -1370,8 +1386,14 @@ static NSArray<NSString *> *_matchKeywords = nil;
 
 	[TPCPathInfo startUsingTranscriptFolderURL];
 
-	[RZUserDefaults() addObserver:(id)self forKeyPath:@"Highlight List -> Excluded Matches" options:NSKeyValueObservingOptionNew context:NULL];
-	[RZUserDefaults() addObserver:(id)self forKeyPath:@"Highlight List -> Primary Matches" options:NSKeyValueObservingOptionNew context:NULL];
+	[RZUserDefaults() addObserver:(id)self
+					   forKeyPath:@"Highlight List -> Excluded Matches"
+						  options:NSKeyValueObservingOptionNew
+						  context:NULL];
+	[RZUserDefaults() addObserver:(id)self
+					   forKeyPath:@"Highlight List -> Primary Matches"
+						  options:NSKeyValueObservingOptionNew
+						  context:NULL];
 
 	[self _loadExcludeKeywords];
 	[self _loadMatchKeywords];

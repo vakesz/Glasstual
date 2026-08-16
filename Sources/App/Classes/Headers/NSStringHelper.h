@@ -44,41 +44,45 @@ GLASSTUAL_EXTERN NSStringEncoding const TXDefaultPrimaryStringEncoding;
 GLASSTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
 
 @interface NSString (TXStringHelper)
-@property (readonly, copy) NSString *stringByAppendingIRCFormattingStop;
+@property(readonly, copy) NSString *stringByAppendingIRCFormattingStop;
 
-@property (readonly, copy, nullable) NSString *channelNameWithoutBang; // "#channel" -> "channel", "##channel" -> "#channel"
+@property(readonly, copy, nullable)
+	NSString *channelNameWithoutBang; // "#channel" -> "channel", "##channel" -> "#channel"
 - (nullable NSString *)channelNameWithoutBangOn:(IRCClient *)client;
 
-@property (readonly, copy, nullable) NSString *nicknameFromHostmask;
-@property (readonly, copy, nullable) NSString *usernameFromHostmask;
-@property (readonly, copy, nullable) NSString *addressFromHostmask;
+@property(readonly, copy, nullable) NSString *nicknameFromHostmask;
+@property(readonly, copy, nullable) NSString *usernameFromHostmask;
+@property(readonly, copy, nullable) NSString *addressFromHostmask;
 
-- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont preferredFontColor:(nullable NSColor *)preferredFontColor;
-- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont preferredFontColor:(nullable NSColor *)preferredFontColor honorFormattingPreference:(BOOL)formattingPreference;
+- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont
+												preferredFontColor:(nullable NSColor *)preferredFontColor;
+- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont
+												preferredFontColor:(nullable NSColor *)preferredFontColor
+										 honorFormattingPreference:(BOOL)formattingPreference;
 
-@property (readonly, copy) NSString *stripIRCEffects;
+@property(readonly, copy) NSString *stripIRCEffects;
 
-@property (getter=isValidInternetAddress, readonly) BOOL validInternetAddress;
-@property (getter=isValidInternetPort, readonly) BOOL validInternetPort;
+@property(getter=isValidInternetAddress, readonly) BOOL validInternetAddress;
+@property(getter=isValidInternetPort, readonly) BOOL validInternetPort;
 
-@property (getter=isHostmask, readonly) BOOL hostmask;
+@property(getter=isHostmask, readonly) BOOL hostmask;
 
-@property (getter=isIPv4Address, readonly) BOOL IPv4Address;
-@property (getter=isIPv6Address, readonly) BOOL IPv6Address;
-@property (getter=isIPAddress, readonly) BOOL IPAddress;
+@property(getter=isIPv4Address, readonly) BOOL IPv4Address;
+@property(getter=isIPv6Address, readonly) BOOL IPv6Address;
+@property(getter=isIPAddress, readonly) BOOL IPAddress;
 
-- (BOOL)hostmaskComponents:(NSString * _Nullable * _Nullable)nickname
-				  username:(NSString * _Nullable * _Nullable)username
-				   address:(NSString * _Nullable * _Nullable)address;
+- (BOOL)hostmaskComponents:(NSString *_Nullable *_Nullable)nickname
+				  username:(NSString *_Nullable *_Nullable)username
+				   address:(NSString *_Nullable *_Nullable)address;
 
-- (BOOL)hostmaskComponents:(NSString * _Nullable * _Nullable)nickname
-				  username:(NSString * _Nullable * _Nullable)username
-				   address:(NSString * _Nullable * _Nullable)address
+- (BOOL)hostmaskComponents:(NSString *_Nullable *_Nullable)nickname
+				  username:(NSString *_Nullable *_Nullable)username
+				   address:(NSString *_Nullable *_Nullable)address
 				  onClient:(nullable IRCClient *)client;
 
-@property (getter=isHostmaskNickname, readonly) BOOL hostmaskNickname;
-@property (getter=isHostmaskAddress, readonly) BOOL hostmaskAddress;
-@property (getter=isHostmaskUsername, readonly) BOOL hostmaskUsername;
+@property(getter=isHostmaskNickname, readonly) BOOL hostmaskNickname;
+@property(getter=isHostmaskAddress, readonly) BOOL hostmaskAddress;
+@property(getter=isHostmaskUsername, readonly) BOOL hostmaskUsername;
 
 /* By handing a client to -isHostmask[*]On:, greater validity
  is promised as configuration options from ISUPPORT (005) and
@@ -87,24 +91,24 @@ GLASSTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
 - (BOOL)isHostmaskUsernameOn:(nullable IRCClient *)client;
 - (BOOL)isHostmaskAddressOn:(nullable IRCClient *)client;
 
-@property (getter=isChannelName, readonly) BOOL channelName;
+@property(getter=isChannelName, readonly) BOOL channelName;
 - (BOOL)isChannelNameOn:(IRCClient *)client; // Client to parse CHANTYPES from
 
-@property (readonly, copy, nullable) NSString *stringWithValidURIScheme;
+@property(readonly, copy, nullable) NSString *stringWithValidURIScheme;
 
 - (NSArray<NSString *> *)base64EncodingWithLineLength:(NSUInteger)lineLength;
 
 - (NSUInteger)colorComponentsOfCharacter:(UniChar)character
 							  startingAt:(NSUInteger)rangeStart
-						 foregroundColor:(id _Nullable * _Nullable)foregroundColor
-						 backgroundColor:(id _Nullable * _Nullable)backgroundColor;
+						 foregroundColor:(id _Nullable *_Nullable)foregroundColor
+						 backgroundColor:(id _Nullable *_Nullable)backgroundColor;
 
 - (nullable NSString *)padNicknameWithCharacter:(UniChar)padCharacter maximumLength:(NSUInteger)maximumLength;
 
-@property (readonly, copy) NSString *encodedMessageTagString;
-@property (readonly, copy) NSString *decodedMessageTagString;
+@property(readonly, copy) NSString *encodedMessageTagString;
+@property(readonly, copy) NSString *decodedMessageTagString;
 
-@property (getter=isModeSymbol, readonly) BOOL modeSymbol;
+@property(getter=isModeSymbol, readonly) BOOL modeSymbol;
 @end
 
 NS_ASSUME_NONNULL_END

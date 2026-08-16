@@ -41,13 +41,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TLOTimer ()
-@property (nonatomic, copy, readwrite) TLOTimerActionBlock actionBlock;
-@property (nonatomic, assign, readwrite) NSTimeInterval startTime;
-@property (nonatomic, assign, readwrite) NSTimeInterval interval;
-@property (nonatomic, assign, readwrite) BOOL repeatTimer;
-@property (nonatomic, assign, readwrite) NSUInteger iterations;
-@property (nonatomic, assign, readwrite) NSUInteger currentIteration;
-@property (nonatomic, strong, nullable) dispatch_source_t timerSource;
+@property(nonatomic, copy, readwrite) TLOTimerActionBlock actionBlock;
+@property(nonatomic, assign, readwrite) NSTimeInterval startTime;
+@property(nonatomic, assign, readwrite) NSTimeInterval interval;
+@property(nonatomic, assign, readwrite) BOOL repeatTimer;
+@property(nonatomic, assign, readwrite) NSUInteger iterations;
+@property(nonatomic, assign, readwrite) NSUInteger currentIteration;
+@property(nonatomic, strong, nullable) dispatch_source_t timerSource;
 @end
 
 @implementation TLOTimer
@@ -131,9 +131,13 @@ NS_ASSUME_NONNULL_BEGIN
 		sourceQueue = dispatch_get_main_queue();
 	}
 
-	dispatch_source_t timerSource = XRScheduleBlockOnQueue(sourceQueue, ^{
-		[self fireTimer];
-	}, timerInterval, repeatTimer);
+	dispatch_source_t timerSource = XRScheduleBlockOnQueue(
+		sourceQueue,
+		^{
+			[self fireTimer];
+		},
+		timerInterval,
+		repeatTimer);
 
 	self.interval = timerInterval;
 	self.repeatTimer = repeatTimer;
@@ -162,9 +166,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)stopIfNeeded
 {
-	if (self.iterations > 0 &&
-		self.iterations == self.currentIteration)
-	{
+	if (self.iterations > 0 && self.iterations == self.currentIteration) {
 		[self stop];
 	}
 }

@@ -40,55 +40,55 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, TPI_ChatFilterLimitToValue) {
-	TPI_ChatFilterLimitToValueNoLimit				= 0,
-	TPI_ChatFilterLimitToValueChannels				= 1,
-	TPI_ChatFilterLimitToValuePrivateMessages		= 2,
-	TPI_ChatFilterLimitToValueSpecificItems			= 3
+	TPI_ChatFilterLimitToValueNoLimit = 0,
+	TPI_ChatFilterLimitToValueChannels = 1,
+	TPI_ChatFilterLimitToValuePrivateMessages = 2,
+	TPI_ChatFilterLimitToValueSpecificItems = 3
 };
 
 typedef NS_ENUM(NSUInteger, TPI_ChatFilterAgeComparator) {
-	TPI_ChatFilterAgeComparatorNone				= 0,
-	TPI_ChatFilterAgeComparatorLessThan			= 1, // Filter only executes if age of user is < limit
-	TPI_ChatFilterAgeComparatorGreaterThan		= 2 // Filter only executes if age of user is >= limit
+	TPI_ChatFilterAgeComparatorNone = 0,
+	TPI_ChatFilterAgeComparatorLessThan = 1,   // Filter only executes if age of user is < limit
+	TPI_ChatFilterAgeComparatorGreaterThan = 2 // Filter only executes if age of user is >= limit
 };
 
 typedef NS_OPTIONS(NSUInteger, TPI_ChatFilterEventType) {
-	TPI_ChatFilterEventTypeNumeric					= 1 << 0,
-	TPI_ChatFilterEventTypePlainTextMessage			= 1 << 1,
-	TPI_ChatFilterEventTypeActionMessage			= 1 << 2,
-	TPI_ChatFilterEventTypeNoticeMessage			= 1 << 3,
-	TPI_ChatFilterEventTypeUserJoinedChannel		= 1 << 4,
-	TPI_ChatFilterEventTypeUserLeftChannel			= 1 << 5,
-	TPI_ChatFilterEventTypeUserKickedFromChannel	= 1 << 6,
-	TPI_ChatFilterEventTypeUserDisconnected			= 1 << 7,
-	TPI_ChatFilterEventTypeUserChangedNickname		= 1 << 8,
-	TPI_ChatFilterEventTypeChannelTopicReceived		= 1 << 9,
-	TPI_ChatFilterEventTypeChannelTopicChanged		= 1 << 10,
-	TPI_ChatFilterEventTypeChannelModeReceived		= 1 << 11,
-	TPI_ChatFilterEventTypeChannelModeChanged		= 1 << 12
+	TPI_ChatFilterEventTypeNumeric = 1 << 0,
+	TPI_ChatFilterEventTypePlainTextMessage = 1 << 1,
+	TPI_ChatFilterEventTypeActionMessage = 1 << 2,
+	TPI_ChatFilterEventTypeNoticeMessage = 1 << 3,
+	TPI_ChatFilterEventTypeUserJoinedChannel = 1 << 4,
+	TPI_ChatFilterEventTypeUserLeftChannel = 1 << 5,
+	TPI_ChatFilterEventTypeUserKickedFromChannel = 1 << 6,
+	TPI_ChatFilterEventTypeUserDisconnected = 1 << 7,
+	TPI_ChatFilterEventTypeUserChangedNickname = 1 << 8,
+	TPI_ChatFilterEventTypeChannelTopicReceived = 1 << 9,
+	TPI_ChatFilterEventTypeChannelTopicChanged = 1 << 10,
+	TPI_ChatFilterEventTypeChannelModeReceived = 1 << 11,
+	TPI_ChatFilterEventTypeChannelModeChanged = 1 << 12
 };
 
 @interface TPI_ChatFilter : XRPortablePropertyDict
-@property (readonly) BOOL filterIgnoreContent;
-@property (readonly) BOOL filterIgnoreOperators;
-@property (readonly) BOOL filterLogMatch;
-@property (readonly) BOOL filterLimitedToMyself;
-@property (readonly) TPI_ChatFilterEventType filterEvents;
-@property (readonly) TPI_ChatFilterLimitToValue filterLimitedToValue;
-@property (readonly) TPI_ChatFilterAgeComparator filterAgeComparator;
-@property (readonly) NSUInteger filterAgeLimit;
-@property (readonly) NSUInteger filterActionFloodControlInterval;
-@property (readonly, copy) NSArray<NSString *> *filterLimitedToChannelsIDs;
-@property (readonly, copy) NSArray<NSString *> *filterLimitedToClientsIDs;
-@property (readonly, copy) NSArray<NSString *> *filterEventsNumerics;
-@property (readonly, copy) NSString *filterAction;
-@property (readonly, copy) NSString *filterDescription;
-@property (readonly, copy) NSString *filterForwardToDestination;
-@property (readonly, copy) NSString *filterMatch;
-@property (readonly, copy) NSString *filterNotes;
-@property (readonly, copy) NSString *filterSenderMatch;
-@property (readonly, copy) NSString *filterTitle;
-@property (readonly, copy) NSString *uniqueIdentifier;
+@property(readonly) BOOL filterIgnoreContent;
+@property(readonly) BOOL filterIgnoreOperators;
+@property(readonly) BOOL filterLogMatch;
+@property(readonly) BOOL filterLimitedToMyself;
+@property(readonly) TPI_ChatFilterEventType filterEvents;
+@property(readonly) TPI_ChatFilterLimitToValue filterLimitedToValue;
+@property(readonly) TPI_ChatFilterAgeComparator filterAgeComparator;
+@property(readonly) NSUInteger filterAgeLimit;
+@property(readonly) NSUInteger filterActionFloodControlInterval;
+@property(readonly, copy) NSArray<NSString *> *filterLimitedToChannelsIDs;
+@property(readonly, copy) NSArray<NSString *> *filterLimitedToClientsIDs;
+@property(readonly, copy) NSArray<NSString *> *filterEventsNumerics;
+@property(readonly, copy) NSString *filterAction;
+@property(readonly, copy) NSString *filterDescription;
+@property(readonly, copy) NSString *filterForwardToDestination;
+@property(readonly, copy) NSString *filterMatch;
+@property(readonly, copy) NSString *filterNotes;
+@property(readonly, copy) NSString *filterSenderMatch;
+@property(readonly, copy) NSString *filterTitle;
+@property(readonly, copy) NSString *uniqueIdentifier;
 
 - (BOOL)isEventTypeEnabled:(TPI_ChatFilterEventType)eventType;
 - (BOOL)isCommandEnabled:(NSString *)command;
@@ -103,24 +103,24 @@ typedef NS_OPTIONS(NSUInteger, TPI_ChatFilterEventType) {
 #pragma mark -
 
 @interface TPI_ChatFilterMutable : TPI_ChatFilter
-@property (nonatomic, assign, readwrite) BOOL filterIgnoreContent;
-@property (nonatomic, assign, readwrite) BOOL filterIgnoreOperators;
-@property (nonatomic, assign, readwrite) BOOL filterLogMatch;
-@property (nonatomic, assign, readwrite) BOOL filterLimitedToMyself;
-@property (nonatomic, assign, readwrite) TPI_ChatFilterEventType filterEvents;
-@property (nonatomic, assign, readwrite) TPI_ChatFilterLimitToValue filterLimitedToValue;
-@property (nonatomic, assign, readwrite) TPI_ChatFilterAgeComparator filterAgeComparator;
-@property (nonatomic, assign, readwrite) NSUInteger filterAgeLimit;
-@property (nonatomic, assign, readwrite) NSUInteger filterActionFloodControlInterval;
-@property (nonatomic, copy, readwrite) NSArray<NSString *> *filterLimitedToChannelsIDs;
-@property (nonatomic, copy, readwrite) NSArray<NSString *> *filterLimitedToClientsIDs;
-@property (nonatomic, copy, readwrite) NSArray<NSString *> *filterEventsNumerics;
-@property (nonatomic, copy, readwrite) NSString *filterAction;
-@property (nonatomic, copy, readwrite) NSString *filterForwardToDestination;
-@property (nonatomic, copy, readwrite) NSString *filterMatch;
-@property (nonatomic, copy, readwrite) NSString *filterNotes;
-@property (nonatomic, copy, readwrite) NSString *filterSenderMatch;
-@property (nonatomic, copy, readwrite) NSString *filterTitle;
+@property(nonatomic, assign, readwrite) BOOL filterIgnoreContent;
+@property(nonatomic, assign, readwrite) BOOL filterIgnoreOperators;
+@property(nonatomic, assign, readwrite) BOOL filterLogMatch;
+@property(nonatomic, assign, readwrite) BOOL filterLimitedToMyself;
+@property(nonatomic, assign, readwrite) TPI_ChatFilterEventType filterEvents;
+@property(nonatomic, assign, readwrite) TPI_ChatFilterLimitToValue filterLimitedToValue;
+@property(nonatomic, assign, readwrite) TPI_ChatFilterAgeComparator filterAgeComparator;
+@property(nonatomic, assign, readwrite) NSUInteger filterAgeLimit;
+@property(nonatomic, assign, readwrite) NSUInteger filterActionFloodControlInterval;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *filterLimitedToChannelsIDs;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *filterLimitedToClientsIDs;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *filterEventsNumerics;
+@property(nonatomic, copy, readwrite) NSString *filterAction;
+@property(nonatomic, copy, readwrite) NSString *filterForwardToDestination;
+@property(nonatomic, copy, readwrite) NSString *filterMatch;
+@property(nonatomic, copy, readwrite) NSString *filterNotes;
+@property(nonatomic, copy, readwrite) NSString *filterSenderMatch;
+@property(nonatomic, copy, readwrite) NSString *filterTitle;
 @end
 
 NS_ASSUME_NONNULL_END

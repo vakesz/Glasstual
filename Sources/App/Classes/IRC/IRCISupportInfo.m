@@ -46,26 +46,26 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _channelUserModeValue		100
+#define _channelUserModeValue 100
 
 @interface IRCISupportInfo ()
-@property (nonatomic, weak) IRCClient *client;
-@property (nonatomic, copy) NSArray<NSDictionary *> *cachedConfiguration;
-@property (nonatomic, assign, readwrite) NSUInteger maximumAwayLength;
-@property (nonatomic, assign, readwrite) NSUInteger maximumChannelNameLength;
-@property (nonatomic, assign, readwrite) NSUInteger maximumKeyLength;
-@property (nonatomic, assign, readwrite) NSUInteger maximumKickLength;
-@property (nonatomic, assign, readwrite) NSUInteger maximumNicknameLength;
-@property (nonatomic, assign, readwrite) NSUInteger maximumTopicLength;
-@property (nonatomic, assign, readwrite) NSUInteger maximumModeCount;
-@property (nonatomic, copy, readwrite) NSArray<NSString *> *channelNamePrefixes;
-@property (nonatomic, copy, readwrite) NSArray<NSString *> *statusMessageModeSymbols;
-@property (nonatomic, copy, readwrite) NSDictionary<NSString *, NSNumber *> *channelModes;
-@property (nonatomic, copy, readwrite) NSDictionary<NSString *, NSArray *> *userModeSymbols;
-@property (nonatomic, copy, readwrite, nullable) NSString *banExceptionModeSymbol;
-@property (nonatomic, copy, readwrite, nullable) NSString *inviteExceptionModeSymbol;
-@property (nonatomic, copy, readwrite, nullable) NSString *networkName;
-@property (nonatomic, copy, readwrite, nullable) NSString *networkNameFormatted;
+@property(nonatomic, weak) IRCClient *client;
+@property(nonatomic, copy) NSArray<NSDictionary *> *cachedConfiguration;
+@property(nonatomic, assign, readwrite) NSUInteger maximumAwayLength;
+@property(nonatomic, assign, readwrite) NSUInteger maximumChannelNameLength;
+@property(nonatomic, assign, readwrite) NSUInteger maximumKeyLength;
+@property(nonatomic, assign, readwrite) NSUInteger maximumKickLength;
+@property(nonatomic, assign, readwrite) NSUInteger maximumNicknameLength;
+@property(nonatomic, assign, readwrite) NSUInteger maximumTopicLength;
+@property(nonatomic, assign, readwrite) NSUInteger maximumModeCount;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *channelNamePrefixes;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *statusMessageModeSymbols;
+@property(nonatomic, copy, readwrite) NSDictionary<NSString *, NSNumber *> *channelModes;
+@property(nonatomic, copy, readwrite) NSDictionary<NSString *, NSArray *> *userModeSymbols;
+@property(nonatomic, copy, readwrite, nullable) NSString *banExceptionModeSymbol;
+@property(nonatomic, copy, readwrite, nullable) NSString *inviteExceptionModeSymbol;
+@property(nonatomic, copy, readwrite, nullable) NSString *networkName;
+@property(nonatomic, copy, readwrite, nullable) NSString *networkNameFormatted;
 @end
 
 @implementation IRCISupportInfo
@@ -106,20 +106,14 @@ NS_ASSUME_NONNULL_BEGIN
 	self.networkName = nil;
 	self.networkNameFormatted = nil;
 
-	self.channelNamePrefixes = @[@"#"];
+	self.channelNamePrefixes = @[ @"#" ];
 
 	self.maximumModeCount = TXMaximumNodesPerModeCommand;
 	self.maximumNicknameLength = IRCProtocolDefaultNicknameMaximumLength;
 
-	self.userModeSymbols = @{
-		@"modeSymbols" : @[@"o", @"v"],
-		@"characters" : @[@"@", @"+"]
-	};
+	self.userModeSymbols = @{@"modeSymbols" : @[ @"o", @"v" ], @"characters" : @[ @"@", @"+" ]};
 
-	self.channelModes = @{
-		@"o" : @(_channelUserModeValue),
-		@"v" : @(_channelUserModeValue)
-	};
+	self.channelModes = @{@"o" : @(_channelUserModeValue), @"v" : @(_channelUserModeValue)};
 
 	self.statusMessageModeSymbols = @[];
 }
@@ -138,7 +132,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableDictionary *configuration = [NSMutableDictionary dictionary];
 
-	NSArray *segments = [configurationData componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+	NSArray *segments =
+		[configurationData componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
 	for (NSString *segment in segments) {
 		if (segment.length == 0) { // Blank
@@ -353,8 +348,8 @@ NS_ASSUME_NONNULL_BEGIN
 			} else {
 				NSString *modeSymbol = [NSString stringWithUniChar:nextCharacter];
 
-				IRCModeInfoMutable *mode =
-				[[IRCModeInfoMutable alloc] initWithModeSymbol:modeSymbol modeIsSet:modeIsSet];
+				IRCModeInfoMutable *mode = [[IRCModeInfoMutable alloc] initWithModeSymbol:modeSymbol
+																				modeIsSet:modeIsSet];
 
 				if ([self modeHasParameter:modeSymbol whenModeIsSet:modeIsSet]) {
 					mode.modeParameter = modeStringMutable.token;
@@ -378,9 +373,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSInteger openingParenthesesPosition = [modeString stringPosition:@"("];
 	NSInteger closingParenthesesPosition = [modeString stringPosition:@")"];
 
-	if (openingParenthesesPosition != 0 &&
-		openingParenthesesPosition >= closingParenthesesPosition)
-	{
+	if (openingParenthesesPosition != 0 && openingParenthesesPosition >= closingParenthesesPosition) {
 		return;
 	}
 
@@ -400,10 +393,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSArray *modeSymbolsArray = modeSymbols.characterStringBuffer;
 	NSArray *charactersArray = characters.characterStringBuffer;
 
-	self.userModeSymbols = @{
-		 @"modeSymbols" : modeSymbolsArray,
-		 @"characters" : charactersArray
-	};
+	self.userModeSymbols = @{@"modeSymbols" : modeSymbolsArray, @"characters" : charactersArray};
 
 	/* Update channel modes array so that we know these mode symbols are for user */
 	NSMutableDictionary *channelModes = [self.channelModes mutableCopy];
@@ -568,7 +558,9 @@ NS_ASSUME_NONNULL_BEGIN
 	return [[IRCModeInfo alloc] initWithModeSymbol:modeSymbol];
 }
 
-- (IRCModeInfo *)createModeWithSymbol:(NSString *)modeSymbol modeIsSet:(BOOL)modeIsSet modeParameter:(nullable NSString *)modeParameter
+- (IRCModeInfo *)createModeWithSymbol:(NSString *)modeSymbol
+							modeIsSet:(BOOL)modeIsSet
+						modeParameter:(nullable NSString *)modeParameter
 {
 	NSParameterAssert(modeSymbol != nil);
 
@@ -588,32 +580,27 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString *)modeSymbolForList:(IRCISupportInfoListType)listType
 {
 	switch (listType) {
-		case IRCISupportInfoListTypeBan:
-		{
-			return @"b";
-		}
-		case IRCISupportInfoListTypeBanException:
-		{
-			return self.banExceptionModeSymbol;
-		}
-		case IRCISupportInfoListTypeInviteException:
-		{
-			return self.inviteExceptionModeSymbol;
-		}
-		case IRCISupportInfoListTypeQuiet:
-		{
-			/* +q is used by some servers as the user mode for channel owner.
+	case IRCISupportInfoListTypeBan: {
+		return @"b";
+	}
+	case IRCISupportInfoListTypeBanException: {
+		return self.banExceptionModeSymbol;
+	}
+	case IRCISupportInfoListTypeInviteException: {
+		return self.inviteExceptionModeSymbol;
+	}
+	case IRCISupportInfoListTypeQuiet: {
+		/* +q is used by some servers as the user mode for channel owner.
 			 If this mode is a user mode, then hide the menu item. */
-			if ([self modeSymbolIsUserPrefix:@"q"]) {
-				return nil;
-			}
-
-			return @"q";
-		}
-		default:
-		{
+		if ([self modeSymbolIsUserPrefix:@"q"]) {
 			return nil;
 		}
+
+		return @"q";
+	}
+	default: {
+		return nil;
+	}
 	} // switch
 }
 

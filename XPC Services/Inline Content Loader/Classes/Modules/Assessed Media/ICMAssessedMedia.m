@@ -42,7 +42,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ICMAssessedMedia ()
-@property (nonatomic, strong, nullable) ICLMediaAssessor *mediaAssessor;
+@property(nonatomic, strong, nullable) ICLMediaAssessor *mediaAssessor;
 @end
 
 @implementation ICMAssessedMedia
@@ -51,21 +51,21 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSURL *url = self.payload.url;
 
-	ICLMediaAssessor *mediaAssessor =
-	[ICLMediaAssessor assessorForURL:url
-					 completionBlock:^(ICLMediaAssessment *assessment, NSError *error) {
-						 ICLMediaType type = ((assessment) ? assessment.type : ICLMediaTypeUnknown);
-						 
-						 BOOL safeToLoad = (assessment != nil && error == nil && [ICLInlineContentModule isTypeDeferrable:type]);
+	ICLMediaAssessor *mediaAssessor = [ICLMediaAssessor
+		 assessorForURL:url
+		completionBlock:^(ICLMediaAssessment *assessment, NSError *error) {
+			ICLMediaType type = ((assessment) ? assessment.type : ICLMediaTypeUnknown);
 
-						 if (safeToLoad) {
-							 [self _safeToLoadMediaOfType:type atURL:assessment.url];
-						 } else {
-							 [self _unsafeToLoadMedia];
-						 }
+			BOOL safeToLoad = (assessment != nil && error == nil && [ICLInlineContentModule isTypeDeferrable:type]);
 
-						 self.mediaAssessor = nil;
-					 }];
+			if (safeToLoad) {
+				[self _safeToLoadMediaOfType:type atURL:assessment.url];
+			} else {
+				[self _unsafeToLoadMedia];
+			}
+
+			self.mediaAssessor = nil;
+		}];
 
 	self.mediaAssessor = mediaAssessor;
 

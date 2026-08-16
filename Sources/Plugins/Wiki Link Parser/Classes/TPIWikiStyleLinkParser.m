@@ -41,22 +41,22 @@
  There are better ways to store them other than an array with specific
  index values, but because this plugin is optional and rarely needs any
  maintaining, its not a priority to make it any better. */
-#define _indexChannelId				0
-#define _indexLinkPrefix			1
+#define _indexChannelId 0
+#define _indexLinkPrefix 1
 
-#define _linkMatchRegex             @"\\[\\[([^\\]]+)\\]\\]"
+#define _linkMatchRegex @"\\[\\[([^\\]]+)\\]\\]"
 
 @interface TPIWikiStyleLinkParser ()
-@property (nonatomic, copy) NSArray *linkPrefixes;
-@property (nonatomic, strong) IBOutlet NSView *preferencePane;
-@property (nonatomic, strong) IBOutlet NSWindow *rnewConditionWindow;
-@property (nonatomic, weak) IBOutlet TVCValidatedTextField *rnewConditionLinkPrefixField;
-@property (nonatomic, weak) IBOutlet NSPopUpButton *rnewConditionChannelPopup;
-@property (nonatomic, weak) IBOutlet NSButton *rnewConditionSaveButton;
-@property (nonatomic, weak) IBOutlet NSButton *rnewConditionCancelButton;
-@property (nonatomic, weak) IBOutlet NSButton *addConditionButton;
-@property (nonatomic, weak) IBOutlet NSButton *removeConditionButton;
-@property (nonatomic, weak) IBOutlet NSTableView *linkPrefixesTable;
+@property(nonatomic, copy) NSArray *linkPrefixes;
+@property(nonatomic, strong) IBOutlet NSView *preferencePane;
+@property(nonatomic, strong) IBOutlet NSWindow *rnewConditionWindow;
+@property(nonatomic, weak) IBOutlet TVCValidatedTextField *rnewConditionLinkPrefixField;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *rnewConditionChannelPopup;
+@property(nonatomic, weak) IBOutlet NSButton *rnewConditionSaveButton;
+@property(nonatomic, weak) IBOutlet NSButton *rnewConditionCancelButton;
+@property(nonatomic, weak) IBOutlet NSButton *addConditionButton;
+@property(nonatomic, weak) IBOutlet NSButton *removeConditionButton;
+@property(nonatomic, weak) IBOutlet NSTableView *linkPrefixesTable;
 
 - (void)addCondition:(id)sender;
 - (void)removeCondition:(id)sender;
@@ -74,7 +74,7 @@
 
 - (void)pluginLoadedIntoMemory
 {
-	[self performBlockOnMainThread:^{
+	XRPerformBlockSynchronouslyOnMainQueue(^{
 		[self linkPrefixesStorageRead];
 
 		[TPIBundleFromClass() loadNibNamed:@"TPIWikiStyleLinkParser" owner:self topLevelObjects:nil];
@@ -94,24 +94,25 @@
 		}];
 
 		[self updateRemoveConditionButton];
-	}];
+	});
 }
 
 #pragma mark -
 #pragma mark Server Input.
 
-- (NSString *)willRenderMessage:(NSString *)newMessage forViewController:(TVCLogController *)logController lineType:(TVCLogLineType)lineType memberType:(TVCLogLineMemberType)memberType
+- (nullable NSString *)willRenderMessage:(NSString *)newMessage
+					   forViewController:(TVCLogController *)logController
+								lineType:(TVCLogLineType)lineType
+							  memberType:(TVCLogLineMemberType)memberType
 {
 	if ([self processWikiStyleLinks] == NO) {
 		return nil;
 	}
-	
+
 	/* Only work on plain text messages */
-	if (lineType == TVCLogLineTypePrivateMessage ||
-		lineType == TVCLogLineTypeAction)
-	{
+	if (lineType == TVCLogLineTypePrivateMessage || lineType == TVCLogLineTypeAction) {
 		IRCChannel *channel = [logController associatedChannel];
-		
+
 		NSString *linkPrefix = [self linkPrefixFromId:[channel uniqueIdentifier]];
 
 		if (linkPrefix == nil) {
@@ -119,7 +120,7 @@
 		}
 
 		NSMutableString *muteString = [newMessage mutableCopy];
-		
+
 		while (1 == 1) {
 			NSRange linkRange = [XRRegularExpression string:muteString rangeOfRegex:_linkMatchRegex];
 
@@ -128,13 +129,12 @@
 			} else if (linkRange.length < 5) {
 				continue;
 			}
-			
+
 			/* Get inside of brackets */
-			NSRange cutRange = NSMakeRange((linkRange.location + 2),
-										   (linkRange.length - 4));
-			
+			NSRange cutRange = NSMakeRange((linkRange.location + 2), (linkRange.length - 4));
+
 			NSString *linkInside = [muteString substringWithRange:cutRange];
-			
+
 			/* Get the left side */
 			NSInteger insideBarPosition = [linkInside stringPosition:@"|"];
 
@@ -147,13 +147,13 @@
 			linkInside = [linkInside percentEncodedString];
 
 			linkInside = [linkPrefix stringByAppendingString:linkInside];
-			
+
 			[muteString replaceCharactersInRange:linkRange withString:linkInside];
 		}
-		
+
 		return muteString;
 	}
-	
+
 	return nil;
 }
 
@@ -162,12 +162,12 @@
 
 - (NSString *)pluginPreferencesPaneMenuItemName
 {
-    return TPILocalizedString(@"BasicLanguage[0vq-yu]");
+	return TPILocalizedString(@"BasicLanguage[0vq-yu]");
 }
 
 - (NSView *)pluginPreferencesPaneView
 {
-    return self.preferencePane;
+	return self.preferencePane;
 }
 
 #pragma mark -
@@ -284,7 +284,7 @@
 			}
 
 			NSString *channelId = [c uniqueIdentifier];
-			
+
 			/* Do we already track it? */
 			BOOL channelTracked = [listOfTrackedIds containsObject:channelId];
 
@@ -317,18 +317,12 @@
 	listOfTrackedIds = nil;
 
 	/* Present window */
-	[NSApp beginSheet:self.rnewConditionWindow
-	   modalForWindow:[NSApp keyWindow]
-		modalDelegate:self
-	   didEndSelector:@selector(sheetDidEnd:returnCode:contextInfo:)
-		  contextInfo:nil];
+	[[NSApp keyWindow] beginSheet:self.rnewConditionWindow
+				completionHandler:^(NSModalResponse returnCode) {
+					[self.rnewConditionWindow close];
+				}];
 
 	[self.rnewConditionWindow makeFirstResponder:self.rnewConditionLinkPrefixField];
-}
-
-- (void)sheetDidEnd:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(void *)contextInfo
-{
-	[sheet close];
 }
 
 - (void)saveNewCondition:(id)sender
@@ -344,7 +338,7 @@
 	NSMenuItem *channelMenuItem = [self.rnewConditionChannelPopup selectedItem];
 	NSString *channelId = [channelMenuItem userInfo];
 
-	[linkPrefixes addObjectWithoutDuplication:@[channelId, linkPrefix]];
+	[linkPrefixes addObjectWithoutDuplication:@[ channelId, linkPrefix ]];
 
 	self.linkPrefixes = linkPrefixes;
 
@@ -390,7 +384,7 @@
 
 - (BOOL)processWikiStyleLinks
 {
-    return [RZUserDefaults() boolForKey:@"Wiki-style Link Parser Extension -> Service Enabled"];
+	return [RZUserDefaults() boolForKey:@"Wiki-style Link Parser Extension -> Service Enabled"];
 }
 
 - (void)linkPrefixesStorageRead

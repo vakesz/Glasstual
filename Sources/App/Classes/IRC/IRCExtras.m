@@ -58,7 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)performSpecialActionForGlasstualScheme:(NSString *)action source:(NSString *)sourceLocation
 {
-/*
+	/*
 	Syntax: glasstual://<token>
 
 	Reserved tokens:
@@ -77,46 +77,28 @@ NS_ASSUME_NONNULL_BEGIN
 	unsupervised-scripts-folder			— Open the custom scripts storage location folder
 */
 
-	if ([action isEqualToString:@"acknowledgements"])
-	{
+	if ([action isEqualToString:@"acknowledgements"]) {
 		[menuController() openAcknowledgements:nil];
-	}
-	else if ([action isEqualToString:@"application-support-folder"])
-	{
+	} else if ([action isEqualToString:@"application-support-folder"]) {
 		[RZWorkspace() openURL:[TPCPathInfo groupContainerApplicationSupportURL]];
-	}
-	else if ([action isEqualToString:@"contributors"])
-	{
+	} else if ([action isEqualToString:@"contributors"]) {
 		[menuController() openAcknowledgements:nil];
-	}
-	else if ([action isEqualToString:@"custom-scripts-folder"] ||
-			 [action isEqualToString:@"unsupervised-script-folder"] ||
-			 [action isEqualToString:@"unsupervised-scripts-folder"])
-	{
+	} else if ([action isEqualToString:@"custom-scripts-folder"] ||
+			   [action isEqualToString:@"unsupervised-script-folder"] ||
+			   [action isEqualToString:@"unsupervised-scripts-folder"]) {
 		[RZWorkspace() openURL:[TPCPathInfo customScriptsURL]];
-	}
-	else if ([action isEqualToString:@"custom-style-folder"] ||
-			 [action isEqualToString:@"custom-styles-folder"])
-	{
+	} else if ([action isEqualToString:@"custom-style-folder"] || [action isEqualToString:@"custom-styles-folder"]) {
 		[RZWorkspace() openURL:[TPCPathInfo customThemesURL]];
-	}
-	else if ([action isEqualToString:@"diagnostic-reports-folder"])
-	{
+	} else if ([action isEqualToString:@"diagnostic-reports-folder"]) {
 		[RZWorkspace() openURL:[TPCPathInfo userDiagnosticReportsURL]];
 		[RZWorkspace() openURL:[TPCPathInfo systemDiagnosticReportsURL]];
-	}
-	else if ([action isEqualToString:@"goto"])
-	{
+	} else if ([action isEqualToString:@"goto"]) {
 		NSURL *url = [NSURL URLWithString:sourceLocation];
 
 		[menuController() navigateToTreeItemAtURL:url];
-	}
-	else if ([action isEqualToString:@"support-channel"])
-	{
+	} else if ([action isEqualToString:@"support-channel"]) {
 		[menuController() connectToGlasstualHelpChannel:nil];
-	}
-	else if ([action isEqualToString:@"testing-channel"])
-	{
+	} else if ([action isEqualToString:@"testing-channel"]) {
 		[menuController() connectToGlasstualTestingChannel:nil];
 	}
 }
@@ -253,12 +235,22 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* A URL is consider untrusted and will not auto connect */
-	[self createConnectionToServer:resultValue channelList:channelList connectWhenCreated:NO mergeConnectionIfPossible:YES selectFirstChannelAdded:NO];
+	[self createConnectionToServer:resultValue
+					   channelList:channelList
+				connectWhenCreated:NO
+		 mergeConnectionIfPossible:YES
+		   selectFirstChannelAdded:NO];
 }
 
-+ (void)createConnectionToServer:(NSString *)serverInfo channelList:(nullable NSString *)channelList connectWhenCreated:(BOOL)connectWhenCreated
++ (void)createConnectionToServer:(NSString *)serverInfo
+					 channelList:(nullable NSString *)channelList
+			  connectWhenCreated:(BOOL)connectWhenCreated
 {
-	[self createConnectionToServer:serverInfo channelList:channelList connectWhenCreated:connectWhenCreated mergeConnectionIfPossible:NO selectFirstChannelAdded:NO];
+	[self createConnectionToServer:serverInfo
+					   channelList:channelList
+				connectWhenCreated:connectWhenCreated
+		 mergeConnectionIfPossible:NO
+		   selectFirstChannelAdded:NO];
 }
 
 + (void)createConnectionToServer:(NSString *)serverInfo
@@ -289,9 +281,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *tempStore = serverInfoMutable.token;
 
 	/* Secure Socket Layer? */
-	if ([tempStore isEqualToStringIgnoringCase:@"-SSL"] ||
-		[tempStore isEqualToStringIgnoringCase:@"-TLS"])
-	{
+	if ([tempStore isEqualToStringIgnoringCase:@"-SSL"] || [tempStore isEqualToStringIgnoringCase:@"-TLS"]) {
 		connectSecurely = YES;
 
 		/* If the SSL define was our first token, we
@@ -301,18 +291,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Server Address */
 	NSInteger openingBracketPosition = ([tempStore stringPosition:@"["] + 1);
-	NSInteger closingBracketPosition =  [tempStore stringPosition:@"]"];
+	NSInteger closingBracketPosition = [tempStore stringPosition:@"]"];
 
 	BOOL hasOpeningBracket = (openingBracketPosition == 1 && openingBracketPosition < closingBracketPosition);
 	BOOL hasClosingBracket = (closingBracketPosition > 0 && openingBracketPosition < closingBracketPosition);
 
 	if (hasOpeningBracket && hasClosingBracket) {
-		NSRange serverAddressRange = NSMakeRange(openingBracketPosition, (closingBracketPosition - openingBracketPosition));
+		NSRange serverAddressRange =
+			NSMakeRange(openingBracketPosition, (closingBracketPosition - openingBracketPosition));
 
 		NSString *tempServerAddress = [tempStore substringWithRange:serverAddressRange];
 
 		if (tempServerAddress.IPv6Address == NO) {
-			LogToConsoleError("Server address was surrounded by square brackets but the enclosed value was not an IPv6 address");
+			LogToConsoleError(
+				"Server address was surrounded by square brackets but the enclosed value was not an IPv6 address");
 
 			return;
 		}
@@ -451,15 +443,17 @@ NS_ASSUME_NONNULL_BEGIN
 		if (channelListCount > 1) {
 			NSString *channelListFormatted = [channelList componentsJoinedByString:@", "];
 
-			mergeConnection = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[a9z-9f]", existingClient.name)
-														title:TXTLS(@"Prompts[pnc-ew]", serverAddress, channelListFormatted)
-												defaultButton:TXTLS(@"Prompts[0hh-sl]")
-											  alternateButton:TXTLS(@"Prompts[sv9-8s]")];
+			mergeConnection =
+				[TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[a9z-9f]", existingClient.name)
+										  title:TXTLS(@"Prompts[pnc-ew]", serverAddress, channelListFormatted)
+								  defaultButton:TXTLS(@"Prompts[0hh-sl]")
+								alternateButton:TXTLS(@"Prompts[sv9-8s]")];
 		} else {
-			mergeConnection = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[mx1-qz]", existingClient.name)
-														title:TXTLS(@"Prompts[3l6-3z]", serverAddress, channelList.firstObject)
-												defaultButton:TXTLS(@"Prompts[sl5-rf]")
-											  alternateButton:TXTLS(@"Prompts[xca-5h]")];
+			mergeConnection =
+				[TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[mx1-qz]", existingClient.name)
+										  title:TXTLS(@"Prompts[3l6-3z]", serverAddress, channelList.firstObject)
+								  defaultButton:TXTLS(@"Prompts[sl5-rf]")
+								alternateButton:TXTLS(@"Prompts[xca-5h]")];
 		}
 
 		// YES = default button (create new connection)
@@ -469,8 +463,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Create new connection or merge into existing */
-	if (existingClient)
-	{
+	if (existingClient) {
 		IRCChannel *firstChannelAdded = nil;
 
 		for (NSString *channelName in channelList) {
@@ -490,8 +483,7 @@ NS_ASSUME_NONNULL_BEGIN
 		if (selectFirstChannelAdded && firstChannelAdded) {
 			[mainWindow() select:firstChannelAdded];
 		}
-	}
-	else // existingClient
+	} else // existingClient
 	{
 		IRCClientConfigMutable *baseConfig = [IRCClientConfigMutable new];
 
@@ -508,7 +500,7 @@ NS_ASSUME_NONNULL_BEGIN
 			server.serverPassword = serverPassword;
 		}
 
-		baseConfig.serverList = @[[server copy]];
+		baseConfig.serverList = @[ [server copy] ];
 
 		NSMutableArray<IRCChannelConfig *> *channelListConfigs = [NSMutableArray arrayWithCapacity:channelListCount];
 

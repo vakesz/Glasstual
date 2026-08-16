@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ICLMediaAssessment ()
 {
-@protected
+  @protected
 	NSURL *_url;
 	ICLMediaType _type;
 	NSString *_contentType;

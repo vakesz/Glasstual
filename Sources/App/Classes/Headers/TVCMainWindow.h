@@ -47,15 +47,15 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogController;
 
 typedef NS_ENUM(NSUInteger, TVCServerListNavigationMovementType) {
-	TVCServerListNavigationMovementTypeAll = 0,	// Move to next item
-	TVCServerListNavigationMovementTypeActive,  // Move to next active item
-	TVCServerListNavigationMovementTypeUnread,  // Move to next unread item
+	TVCServerListNavigationMovementTypeAll = 0, // Move to next item
+	TVCServerListNavigationMovementTypeActive,	// Move to next active item
+	TVCServerListNavigationMovementTypeUnread,	// Move to next unread item
 };
 
 typedef NS_ENUM(NSUInteger, TVCServerListNavigationSelectionType) {
-	TVCServerListNavigationSelectionTypeAny = 0,	// Move to next item
-	TVCServerListNavigationSelectionTypeChannel,	// Move to next channel item
-	TVCServerListNavigationSelectionTypeServer,		// Move to next server item
+	TVCServerListNavigationSelectionTypeAny = 0, // Move to next item
+	TVCServerListNavigationSelectionTypeChannel, // Move to next channel item
+	TVCServerListNavigationSelectionTypeServer,	 // Move to next server item
 };
 
 GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowAppearanceChangedNotification;
@@ -66,27 +66,27 @@ GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowDidReloadThemeNotificatio
 
 GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowSelectionChangedNotification;
 
-GLASSTUAL_EXTERN NSString * const TVCServerListDragType;
+GLASSTUAL_EXTERN NSString *const TVCServerListDragType;
 
 @interface TVCMainWindow : NSWindow
-@property (readonly, getter=isDisabled) BOOL disabled;
+@property(readonly, getter=isDisabled) BOOL disabled;
 
-@property (readonly) TVCMainWindowAppearance *userInterfaceObjects;
+@property(readonly) TVCMainWindowAppearance *userInterfaceObjects;
 
-@property (readonly, weak) TVCMainWindowLoadingScreenView *loadingScreen;
-@property (readonly) NSSplitViewController *contentSplitViewController;
-@property (readonly, unsafe_unretained) TVCMainWindowTextView *inputTextField;
-@property (readonly, weak) TVCMemberList *memberList;
-@property (readonly, weak) TVCServerList *serverList;
+@property(readonly, weak) TVCMainWindowLoadingScreenView *loadingScreen;
+@property(readonly) NSSplitViewController *contentSplitViewController;
+@property(readonly, unsafe_unretained) TVCMainWindowTextView *inputTextField;
+@property(readonly, weak) TVCMemberList *memberList;
+@property(readonly, weak) TVCServerList *serverList;
 
-@property (readonly) BOOL multipleItemsSelected;
-@property (readonly, nullable) IRCTreeItem *selectedItem;
-@property (readonly, copy) NSArray<IRCTreeItem *> *selectedItems;
-@property (readonly, nullable) IRCClient *selectedClient;
-@property (readonly, nullable) IRCChannel *selectedChannel;
-@property (readonly, nullable) TVCLogController *selectedViewController;
+@property(readonly) BOOL multipleItemsSelected;
+@property(readonly, nullable) IRCTreeItem *selectedItem;
+@property(readonly, copy) NSArray<IRCTreeItem *> *selectedItems;
+@property(readonly, nullable) IRCClient *selectedClient;
+@property(readonly, nullable) IRCChannel *selectedChannel;
+@property(readonly, nullable) TVCLogController *selectedViewController;
 
-@property (readonly, nullable) IRCTreeItem *previouslySelectedItem;
+@property(readonly, nullable) IRCTreeItem *previouslySelectedItem;
 
 - (void)select:(nullable IRCTreeItem *)item;
 - (void)selectPreviousItem;
@@ -102,7 +102,8 @@ GLASSTUAL_EXTERN NSString * const TVCServerListDragType;
 - (nullable IRCChannel *)selectedChannelOn:(IRCClient *)client;
 
 - (void)navigateServerEntries:(BOOL)isMovingDown withNavigationType:(TVCServerListNavigationMovementType)navigationType;
-- (void)navigateChannelEntries:(BOOL)isMovingDown withNavigationType:(TVCServerListNavigationMovementType)navigationType;
+- (void)navigateChannelEntries:(BOOL)isMovingDown
+			withNavigationType:(TVCServerListNavigationMovementType)navigationType;
 - (void)navigateToNextEntry:(BOOL)isMovingDown;
 
 - (void)selectNextServer:(NSEvent *)e;
@@ -119,9 +120,9 @@ GLASSTUAL_EXTERN NSString * const TVCServerListDragType;
 - (void)selectPreviousUnreadChannel:(NSEvent *)e;
 - (void)selectPreviousActiveChannel:(NSEvent *)e;
 
-@property (getter=isUsingDarkAppearance, readonly) BOOL usingDarkAppearance;
+@property(getter=isUsingDarkAppearance, readonly) BOOL usingDarkAppearance;
 
-@property (readonly) double textSizeMultiplier;
+@property(readonly) double textSizeMultiplier;
 
 - (void)changeTextSize:(BOOL)bigger;
 
@@ -137,8 +138,8 @@ GLASSTUAL_EXTERN NSString * const TVCServerListDragType;
 
 - (void)textEntered;
 
-@property (getter=isMemberListVisible, readonly) BOOL memberListVisible;
-@property (getter=isServerListVisible, readonly) BOOL serverListVisible;
+@property(getter=isMemberListVisible, readonly) BOOL memberListVisible;
+@property(getter=isServerListVisible, readonly) BOOL serverListVisible;
 
 - (void)expandServerList;
 - (void)collapseServerList;

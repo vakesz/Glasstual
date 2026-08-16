@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCChannelUser ()
 {
-@protected
+  @protected
 	NSString *_modes;
 	double _incomingWeight;
 	double _outgoingWeight;

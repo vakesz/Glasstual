@@ -39,24 +39,24 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NSColor (TXColorHelper)
-@property (class, readonly, copy) NSArray<NSColor *> *formatterColors;
+@property(class, readonly, copy) NSArray<NSColor *> *formatterColors;
 
-@property (class, readonly) NSColor *formatterWhiteColor;
-@property (class, readonly) NSColor *formatterBlackColor;
-@property (class, readonly) NSColor *formatterNavyBlueColor;
-@property (class, readonly) NSColor *formatterDarkGreenColor;
-@property (class, readonly) NSColor *formatterRedColor;
-@property (class, readonly) NSColor *formatterBrownColor;
-@property (class, readonly) NSColor *formatterPurpleColor;
-@property (class, readonly) NSColor *formatterOrangeColor;
-@property (class, readonly) NSColor *formatterYellowColor;
-@property (class, readonly) NSColor *formatterLimeGreenColor;
-@property (class, readonly) NSColor *formatterTealColor;
-@property (class, readonly) NSColor *formatterAquaCyanColor;
-@property (class, readonly) NSColor *formatterLightBlueColor;
-@property (class, readonly) NSColor *formatterFuchsiaPinkColor;
-@property (class, readonly) NSColor *formatterNormalGrayColor;
-@property (class, readonly) NSColor *formatterLightGrayColor;
+@property(class, readonly) NSColor *formatterWhiteColor;
+@property(class, readonly) NSColor *formatterBlackColor;
+@property(class, readonly) NSColor *formatterNavyBlueColor;
+@property(class, readonly) NSColor *formatterDarkGreenColor;
+@property(class, readonly) NSColor *formatterRedColor;
+@property(class, readonly) NSColor *formatterBrownColor;
+@property(class, readonly) NSColor *formatterPurpleColor;
+@property(class, readonly) NSColor *formatterOrangeColor;
+@property(class, readonly) NSColor *formatterYellowColor;
+@property(class, readonly) NSColor *formatterLimeGreenColor;
+@property(class, readonly) NSColor *formatterTealColor;
+@property(class, readonly) NSColor *formatterAquaCyanColor;
+@property(class, readonly) NSColor *formatterLightBlueColor;
+@property(class, readonly) NSColor *formatterFuchsiaPinkColor;
+@property(class, readonly) NSColor *formatterNormalGrayColor;
+@property(class, readonly) NSColor *formatterLightGrayColor;
 @end
 
 NS_ASSUME_NONNULL_END

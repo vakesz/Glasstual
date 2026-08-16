@@ -117,45 +117,45 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-#define _scrollbackSaveLinesMin		100
-#define _scrollbackSaveLinesMax		50000
-#define _scrollbackVisibleLinesMin	100
-#define _scrollbackVisibleLinesMax	15000
-#define _inlineMediaWidthMax		2000
-#define _inlineMediaWidthMin		40
-#define _inlineMediaHeightMax		6000
-#define _inlineMediaHeightMin		0
+#define _scrollbackSaveLinesMin 100
+#define _scrollbackSaveLinesMax 50000
+#define _scrollbackVisibleLinesMin 100
+#define _scrollbackVisibleLinesMax 15000
+#define _inlineMediaWidthMax 2000
+#define _inlineMediaWidthMin 40
+#define _inlineMediaHeightMax 6000
+#define _inlineMediaHeightMin 0
 
-#define _fileTransferPortRangeMin			1024
-#define _fileTransferPortRangeMax			TXMaximumTCPPort
+#define _fileTransferPortRangeMin 1024
+#define _fileTransferPortRangeMax TXMaximumTCPPort
 
-#define _toolbarItemIndexGeneral					101
-#define _toolbarItemIndexHighlights					104
-#define _toolbarItemIndexNotifications				103
-#define _toolbarItemIndexBehavior					102
-#define _toolbarItemIndexControls					107
-#define _toolbarItemIndexInterface					105
-#define _toolbarItemIndexStyle						106
-#define _toolbarItemIndexAddons						109
-#define _toolbarItemIndexAdvanced					108
+#define _toolbarItemIndexGeneral 101
+#define _toolbarItemIndexHighlights 104
+#define _toolbarItemIndexNotifications 103
+#define _toolbarItemIndexBehavior 102
+#define _toolbarItemIndexControls 107
+#define _toolbarItemIndexInterface 105
+#define _toolbarItemIndexStyle 106
+#define _toolbarItemIndexAddons 109
+#define _toolbarItemIndexAdvanced 108
 
-#define _toolbarItemIndexChannelManagement			108000
-#define _toolbarItemIndexCommandScope				108001
-#define _toolbarItemIndexFloodControl				108002
-#define _toolbarItemIndexIncomingData				108003
-#define _toolbarItemIndexCompatibility				108004
-#define _toolbarItemIndexFileTransfers				108005
-#define _toolbarItemIndexInlineMedia				108006
-#define _toolbarItemIndexLogLocation				108007
-#define _toolbarItemIndexDefaultIdentity			108008
-#define _toolbarItemIndexDefaultIRCopMessages		108009
-#define _toolbarItemIndexOffRecordMessaging			108010
-#define _toolbarItemIndexHiddenPreferences			108011
+#define _toolbarItemIndexChannelManagement 108000
+#define _toolbarItemIndexCommandScope 108001
+#define _toolbarItemIndexFloodControl 108002
+#define _toolbarItemIndexIncomingData 108003
+#define _toolbarItemIndexCompatibility 108004
+#define _toolbarItemIndexFileTransfers 108005
+#define _toolbarItemIndexInlineMedia 108006
+#define _toolbarItemIndexLogLocation 108007
+#define _toolbarItemIndexDefaultIdentity 108008
+#define _toolbarItemIndexDefaultIRCopMessages 108009
+#define _toolbarItemIndexOffRecordMessaging 108010
+#define _toolbarItemIndexHiddenPreferences 108011
 
-#define _addonsToolbarInstalledAddonsMenuItemIndex		109000
-#define _addonsToolbarItemMultiplier					995
+#define _addonsToolbarInstalledAddonsMenuItemIndex 109000
+#define _addonsToolbarItemMultiplier 995
 
-#define _unsignedIntegerString(_value_)			[NSString stringWithUnsignedInteger:_value_]
+#define _unsignedIntegerString(_value_) [NSString stringWithUnsignedInteger:_value_]
 
 /* Declared by hand rather than imported from the generated Swift header: the
  Swift side references TDCPreferencesController, so importing it here would be
@@ -166,61 +166,61 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface TDCPreferencesController ()
-@property (nonatomic, strong) IBOutlet NSArrayController *excludeKeywordsArrayController;
-@property (nonatomic, strong) IBOutlet NSArrayController *highlightKeywordsArrayController;
-@property (nonatomic, strong) IBOutlet NSArrayController *installedScriptsController;
-@property (nonatomic, weak) IBOutlet NSButton *addExcludeKeywordButton;
-@property (nonatomic, weak) IBOutlet NSButton *highlightNicknameButton;
-@property (nonatomic, weak) IBOutlet NSPopUpButton *themeSelectionButton;
-@property (nonatomic, weak) IBOutlet NSPopUpButton *transcriptFolderButton;
-@property (nonatomic, weak) IBOutlet NSPopUpButton *fileTransferDownloadDestinationButton;
-@property (nonatomic, weak) IBOutlet NSTableView *excludeKeywordsTable;
-@property (nonatomic, weak) IBOutlet NSTableView *installedScriptsTable;
-@property (nonatomic, weak) IBOutlet NSTableView *highlightKeywordsTable;
-@property (nonatomic, weak) IBOutlet NSTextField *fileTransferManuallyEnteredIPAddressTextField;
-@property (nonatomic, strong) IBOutlet NSView *contentViewGeneral;
-@property (nonatomic, strong) IBOutlet NSView *contentViewHighlights;
-@property (nonatomic, strong) IBOutlet NSView *contentViewNotifications;
-@property (nonatomic, strong) IBOutlet NSView *contentViewBehavior;
-@property (nonatomic, strong) IBOutlet NSView *contentViewControls;
-@property (nonatomic, strong) IBOutlet NSView *contentViewInterface;
-@property (nonatomic, strong) IBOutlet NSView *contentViewStyle;
-@property (nonatomic, strong) IBOutlet NSView *contentViewInstalledAddons;
-@property (nonatomic, strong) IBOutlet NSView *contentViewChannelManagement;
-@property (nonatomic, strong) IBOutlet NSView *contentViewCommandScope;
-@property (nonatomic, strong) IBOutlet NSView *contentViewCompatibility;
-@property (nonatomic, strong) IBOutlet NSView *contentViewFloodControl;
-@property (nonatomic, strong) IBOutlet NSView *contentViewIncomingData;
-@property (nonatomic, strong) IBOutlet NSView *contentViewFileTransfers;
-@property (nonatomic, strong) IBOutlet NSView *contentViewInlineMedia;
-@property (nonatomic, strong) IBOutlet NSView *contentViewLogLocation;
-@property (nonatomic, strong) IBOutlet NSView *contentViewDefaultIdentity;
-@property (nonatomic, strong) IBOutlet NSView *contentViewDefaultIRCopMessages;
+@property(nonatomic, strong) IBOutlet NSArrayController *excludeKeywordsArrayController;
+@property(nonatomic, strong) IBOutlet NSArrayController *highlightKeywordsArrayController;
+@property(nonatomic, strong) IBOutlet NSArrayController *installedScriptsController;
+@property(nonatomic, weak) IBOutlet NSButton *addExcludeKeywordButton;
+@property(nonatomic, weak) IBOutlet NSButton *highlightNicknameButton;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *themeSelectionButton;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *transcriptFolderButton;
+@property(nonatomic, weak) IBOutlet NSPopUpButton *fileTransferDownloadDestinationButton;
+@property(nonatomic, weak) IBOutlet NSTableView *excludeKeywordsTable;
+@property(nonatomic, weak) IBOutlet NSTableView *installedScriptsTable;
+@property(nonatomic, weak) IBOutlet NSTableView *highlightKeywordsTable;
+@property(nonatomic, weak) IBOutlet NSTextField *fileTransferManuallyEnteredIPAddressTextField;
+@property(nonatomic, strong) IBOutlet NSView *contentViewGeneral;
+@property(nonatomic, strong) IBOutlet NSView *contentViewHighlights;
+@property(nonatomic, strong) IBOutlet NSView *contentViewNotifications;
+@property(nonatomic, strong) IBOutlet NSView *contentViewBehavior;
+@property(nonatomic, strong) IBOutlet NSView *contentViewControls;
+@property(nonatomic, strong) IBOutlet NSView *contentViewInterface;
+@property(nonatomic, strong) IBOutlet NSView *contentViewStyle;
+@property(nonatomic, strong) IBOutlet NSView *contentViewInstalledAddons;
+@property(nonatomic, strong) IBOutlet NSView *contentViewChannelManagement;
+@property(nonatomic, strong) IBOutlet NSView *contentViewCommandScope;
+@property(nonatomic, strong) IBOutlet NSView *contentViewCompatibility;
+@property(nonatomic, strong) IBOutlet NSView *contentViewFloodControl;
+@property(nonatomic, strong) IBOutlet NSView *contentViewIncomingData;
+@property(nonatomic, strong) IBOutlet NSView *contentViewFileTransfers;
+@property(nonatomic, strong) IBOutlet NSView *contentViewInlineMedia;
+@property(nonatomic, strong) IBOutlet NSView *contentViewLogLocation;
+@property(nonatomic, strong) IBOutlet NSView *contentViewDefaultIdentity;
+@property(nonatomic, strong) IBOutlet NSView *contentViewDefaultIRCopMessages;
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-@property (nonatomic, strong) IBOutlet NSView *contentViewOffRecordMessaging;
+@property(nonatomic, strong) IBOutlet NSView *contentViewOffRecordMessaging;
 #endif
 
-@property (nonatomic, strong) IBOutlet NSView *contentViewHiddenPreferences;
-@property (nonatomic, weak) IBOutlet NSButton *checkForUpdatesDontCheck;
-@property (nonatomic, weak) IBOutlet NSButton *checkForUpdatesAutomaticallyCheck;
-@property (nonatomic, weak) IBOutlet NSButton *checkForUpdatesAutomaticallyDownload;
-@property (nonatomic, weak) IBOutlet NSButton *forwardNoticeToServerConsoleButton;
-@property (nonatomic, weak) IBOutlet NSButton *forwardNoticeToSelectedChannelButton;
-@property (nonatomic, weak) IBOutlet NSButton *forwardNoticeToQueryButton;
-@property (nonatomic, weak) IBOutlet NSButton *inlineMediaEnabledButton;
-@property (nonatomic, weak) IBOutlet NSStackView *contentViewGeneralStackView;
-@property (nonatomic, weak) IBOutlet NSView *contentViewGeneralCheckForUpdatesView;
-@property (nonatomic, weak) IBOutlet NSView *contentViewGeneralShareDataView;
-@property (nonatomic, strong) IBOutlet NSToolbar *navigationToolbar;
-@property (nonatomic, strong) IBOutlet NSMenu *installedAddonsMenu;
-@property (nonatomic, strong) NSViewController *settingsHostingController;
-@property (nonatomic, strong) TDCPreferencesSettingsBridge *settingsBridge;
-@property (nonatomic, assign) BOOL reloadingTheme;
-@property (nonatomic, assign) BOOL reloadingThemeBySelection;
-@property (nonatomic, weak) IBOutlet NSView *notificationControllerHostView;
-@property (nonatomic, strong) IBOutlet TVCNotificationConfigurationViewController *notificationController;
-@property (nonatomic, strong) TDCPreferencesUserStyleSheet *userStyleSheet;
+@property(nonatomic, strong) IBOutlet NSView *contentViewHiddenPreferences;
+@property(nonatomic, weak) IBOutlet NSButton *checkForUpdatesDontCheck;
+@property(nonatomic, weak) IBOutlet NSButton *checkForUpdatesAutomaticallyCheck;
+@property(nonatomic, weak) IBOutlet NSButton *checkForUpdatesAutomaticallyDownload;
+@property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToServerConsoleButton;
+@property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToSelectedChannelButton;
+@property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToQueryButton;
+@property(nonatomic, weak) IBOutlet NSButton *inlineMediaEnabledButton;
+@property(nonatomic, weak) IBOutlet NSStackView *contentViewGeneralStackView;
+@property(nonatomic, weak) IBOutlet NSView *contentViewGeneralCheckForUpdatesView;
+@property(nonatomic, weak) IBOutlet NSView *contentViewGeneralShareDataView;
+@property(nonatomic, strong) IBOutlet NSToolbar *navigationToolbar;
+@property(nonatomic, strong) IBOutlet NSMenu *installedAddonsMenu;
+@property(nonatomic, strong) NSViewController *settingsHostingController;
+@property(nonatomic, strong) TDCPreferencesSettingsBridge *settingsBridge;
+@property(nonatomic, assign) BOOL reloadingTheme;
+@property(nonatomic, assign) BOOL reloadingThemeBySelection;
+@property(nonatomic, weak) IBOutlet NSView *notificationControllerHostView;
+@property(nonatomic, strong) IBOutlet TVCNotificationConfigurationViewController *notificationController;
+@property(nonatomic, strong) TDCPreferencesUserStyleSheet *userStyleSheet;
 
 - (IBAction)onAddExcludeKeyword:(nullable id)sender;
 - (IBAction)onAddHighlightKeyword:(nullable id)sender; // changed
@@ -239,7 +239,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (IBAction)onChangedScrollbackVisibleLimit:(nullable id)sender;
 - (IBAction)onChangedServerListUnreadBadgeColor:(nullable id)sender;
 - (IBAction)onChangedTheme:(nullable id)sender;
-- (IBAction)onChangedThemeSelection:(nullable id)sender;  // changed
+- (IBAction)onChangedThemeSelection:(nullable id)sender; // changed
 - (IBAction)onChangedTranscriptFolder:(nullable id)sender;
 - (IBAction)onChangedTransparency:(nullable id)sender;
 - (IBAction)onChangedUserListModeColor:(nullable id)sender;
@@ -284,34 +284,49 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableArray *notifications = [NSMutableArray array];
 
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeAddressBookMatch]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeAddressBookMatch]];
 	[notifications addObject:@" "];
 	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeConnect]];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeDisconnect]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeDisconnect]];
 	[notifications addObject:@" "];
 	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeHighlight]];
 	[notifications addObject:@" "];
 	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeInvite]];
 	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeKick]];
 	[notifications addObject:@" "];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeChannelMessage]];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeChannelNotice]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeChannelMessage]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeChannelNotice]];
 	[notifications addObject:@" "];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeNewPrivateMessage]];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypePrivateMessage]];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypePrivateNotice]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeNewPrivateMessage]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypePrivateMessage]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypePrivateNotice]];
 	[notifications addObject:@" "];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeUserJoined]];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeUserParted]];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeUserDisconnected]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeUserJoined]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeUserParted]];
+	[notifications
+		addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeUserDisconnected]];
 	[notifications addObject:@" "];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeFileTransferReceiveRequested]];
+	[notifications addObject:[TDCPreferencesNotificationConfiguration
+								 objectWithEventType:TXNotificationTypeFileTransferReceiveRequested]];
 	[notifications addObject:@" "];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeFileTransferSendSuccessful]];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeFileTransferReceiveSuccessful]];
+	[notifications addObject:[TDCPreferencesNotificationConfiguration
+								 objectWithEventType:TXNotificationTypeFileTransferSendSuccessful]];
+	[notifications addObject:[TDCPreferencesNotificationConfiguration
+								 objectWithEventType:TXNotificationTypeFileTransferReceiveSuccessful]];
 	[notifications addObject:@" "];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeFileTransferSendFailed]];
-	[notifications addObject:[TDCPreferencesNotificationConfiguration objectWithEventType:TXNotificationTypeFileTransferReceiveFailed]];
+	[notifications addObject:[TDCPreferencesNotificationConfiguration
+								 objectWithEventType:TXNotificationTypeFileTransferSendFailed]];
+	[notifications addObject:[TDCPreferencesNotificationConfiguration
+								 objectWithEventType:TXNotificationTypeFileTransferReceiveFailed]];
 
 	self.notificationController.notifications = notifications;
 
@@ -330,9 +345,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self onFileTransferIPAddressDetectionMethodChanged:nil];
 
-	self.installedScriptsTable.sortDescriptors = @[
-		[NSSortDescriptor sortDescriptorWithKey:@"string" ascending:YES selector:@selector(caseInsensitiveCompare:)]
-	];
+	self.installedScriptsTable.sortDescriptors =
+		@[ [NSSortDescriptor sortDescriptorWithKey:@"string"
+										 ascending:YES
+										  selector:@selector(caseInsensitiveCompare:)] ];
 
 	[RZNotificationCenter() addObserver:self
 							   selector:@selector(onThemeListDidChange:)
@@ -375,25 +391,21 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *identifier = @"general";
 
 	switch (selection) {
-		case TDCPreferencesControllerSelectionNotifications:
-		{
-			identifier = @"notifications";
-			break;
-		}
-		case TDCPreferencesControllerSelectionStyle:
-		{
-			identifier = @"style";
-			break;
-		}
-		case TDCPreferencesControllerSelectionHiddenPreferences:
-		{
-			identifier = @"hidden";
-			break;
-		}
-		default:
-		{
-			break;
-		}
+	case TDCPreferencesControllerSelectionNotifications: {
+		identifier = @"notifications";
+		break;
+	}
+	case TDCPreferencesControllerSelectionStyle: {
+		identifier = @"style";
+		break;
+	}
+	case TDCPreferencesControllerSelectionHiddenPreferences: {
+		identifier = @"hidden";
+		break;
+	}
+	default: {
+		break;
+	}
 	}
 
 	[self.settingsBridge selectPane:identifier];
@@ -404,7 +416,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark NSToolbar Delegates
 
- - (void)setUpToolbarItemsAndMenus
+- (void)setUpToolbarItemsAndMenus
 {
 	NSArray *plugins = sharedPluginManager().pluginsWithPreferencePanes;
 
@@ -437,9 +449,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* Group identifiers are a contract with TDCPreferencesSettingsView.swift,
  which uses them to build the sidebar's sections. */
-#define _settingsGroupMain			@"main"
-#define _settingsGroupAddons		@"addons"
-#define _settingsGroupAdvanced		@"advanced"
+#define _settingsGroupMain @"main"
+#define _settingsGroupAddons @"addons"
+#define _settingsGroupAdvanced @"advanced"
 
 /* One table drives the sidebar, the toolbar/menu tag lookup, and the pane
  lookup. Keeping them in a single place is deliberate: when they were three
@@ -454,30 +466,62 @@ typedef struct {
 } TDCPreferencesSettingsPane;
 
 static const TDCPreferencesSettingsPane _settingsPanes[] = {
-	{_toolbarItemIndexGeneral,				@"general",					@"gearshape",				@"contentViewGeneral",					_settingsGroupMain},
-	{_toolbarItemIndexBehavior,				@"behavior",				@"slider.horizontal.3",		@"contentViewBehavior",					_settingsGroupMain},
-	{_toolbarItemIndexNotifications,		@"notifications",			@"bell",					@"contentViewNotifications",			_settingsGroupMain},
-	{_toolbarItemIndexHighlights,			@"highlights",				@"text.magnifyingglass",	@"contentViewHighlights",				_settingsGroupMain},
-	{_toolbarItemIndexInterface,			@"interface",				@"macwindow",				@"contentViewInterface",				_settingsGroupMain},
-	{_toolbarItemIndexStyle,				@"style",					@"paintbrush",				@"contentViewStyle",					_settingsGroupMain},
-	{_toolbarItemIndexControls,				@"controls",				@"keyboard",				@"contentViewControls",					_settingsGroupMain},
+	{_toolbarItemIndexGeneral, @"general", @"gearshape", @"contentViewGeneral", _settingsGroupMain},
+	{_toolbarItemIndexBehavior, @"behavior", @"slider.horizontal.3", @"contentViewBehavior", _settingsGroupMain},
+	{_toolbarItemIndexNotifications, @"notifications", @"bell", @"contentViewNotifications", _settingsGroupMain},
+	{_toolbarItemIndexHighlights, @"highlights", @"text.magnifyingglass", @"contentViewHighlights", _settingsGroupMain},
+	{_toolbarItemIndexInterface, @"interface", @"macwindow", @"contentViewInterface", _settingsGroupMain},
+	{_toolbarItemIndexStyle, @"style", @"paintbrush", @"contentViewStyle", _settingsGroupMain},
+	{_toolbarItemIndexControls, @"controls", @"keyboard", @"contentViewControls", _settingsGroupMain},
 
-	{_toolbarItemIndexAddons,				@"addons",					@"puzzlepiece.extension",	@"contentViewInstalledAddons",			_settingsGroupAddons},
+	{_toolbarItemIndexAddons, @"addons", @"puzzlepiece.extension", @"contentViewInstalledAddons", _settingsGroupAddons},
 
-	{_toolbarItemIndexChannelManagement,	@"channelManagement",		@"person.2",				@"contentViewChannelManagement",		_settingsGroupAdvanced},
-	{_toolbarItemIndexCommandScope,			@"commandScope",			@"terminal",				@"contentViewCommandScope",				_settingsGroupAdvanced},
-	{_toolbarItemIndexCompatibility,		@"compatibility",			@"wrench.and.screwdriver",	@"contentViewCompatibility",			_settingsGroupAdvanced},
-	{_toolbarItemIndexFloodControl,			@"floodControl",			@"timer",					@"contentViewFloodControl",				_settingsGroupAdvanced},
-	{_toolbarItemIndexIncomingData,			@"incomingData",			@"arrow.down.circle",		@"contentViewIncomingData",				_settingsGroupAdvanced},
-	{_toolbarItemIndexFileTransfers,		@"fileTransfers",			@"arrow.down.app",			@"contentViewFileTransfers",			_settingsGroupAdvanced},
-	{_toolbarItemIndexInlineMedia,			@"inlineMedia",				@"photo",					@"contentViewInlineMedia",				_settingsGroupAdvanced},
-	{_toolbarItemIndexLogLocation,			@"logLocation",				@"folder",					@"contentViewLogLocation",				_settingsGroupAdvanced},
-	{_toolbarItemIndexDefaultIdentity,		@"defaultIdentity",			@"person.crop.circle",		@"contentViewDefaultIdentity",			_settingsGroupAdvanced},
-	{_toolbarItemIndexDefaultIRCopMessages,	@"defaultIRCopMessages",	@"shield",					@"contentViewDefaultIRCopMessages",		_settingsGroupAdvanced},
+	{_toolbarItemIndexChannelManagement,
+	 @"channelManagement",
+	 @"person.2",
+	 @"contentViewChannelManagement",
+	 _settingsGroupAdvanced},
+	{_toolbarItemIndexCommandScope, @"commandScope", @"terminal", @"contentViewCommandScope", _settingsGroupAdvanced},
+	{_toolbarItemIndexCompatibility,
+	 @"compatibility",
+	 @"wrench.and.screwdriver",
+	 @"contentViewCompatibility",
+	 _settingsGroupAdvanced},
+	{_toolbarItemIndexFloodControl, @"floodControl", @"timer", @"contentViewFloodControl", _settingsGroupAdvanced},
+	{_toolbarItemIndexIncomingData,
+	 @"incomingData",
+	 @"arrow.down.circle",
+	 @"contentViewIncomingData",
+	 _settingsGroupAdvanced},
+	{_toolbarItemIndexFileTransfers,
+	 @"fileTransfers",
+	 @"arrow.down.app",
+	 @"contentViewFileTransfers",
+	 _settingsGroupAdvanced},
+	{_toolbarItemIndexInlineMedia, @"inlineMedia", @"photo", @"contentViewInlineMedia", _settingsGroupAdvanced},
+	{_toolbarItemIndexLogLocation, @"logLocation", @"folder", @"contentViewLogLocation", _settingsGroupAdvanced},
+	{_toolbarItemIndexDefaultIdentity,
+	 @"defaultIdentity",
+	 @"person.crop.circle",
+	 @"contentViewDefaultIdentity",
+	 _settingsGroupAdvanced},
+	{_toolbarItemIndexDefaultIRCopMessages,
+	 @"defaultIRCopMessages",
+	 @"shield",
+	 @"contentViewDefaultIRCopMessages",
+	 _settingsGroupAdvanced},
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	{_toolbarItemIndexOffRecordMessaging,	@"offRecordMessaging",		@"lock.fill",				@"contentViewOffRecordMessaging",		_settingsGroupAdvanced},
+	{_toolbarItemIndexOffRecordMessaging,
+	 @"offRecordMessaging",
+	 @"lock.fill",
+	 @"contentViewOffRecordMessaging",
+	 _settingsGroupAdvanced},
 #endif
-	{_toolbarItemIndexHiddenPreferences,	@"hidden",					@"eye.slash",				@"contentViewHiddenPreferences",		_settingsGroupAdvanced},
+	{_toolbarItemIndexHiddenPreferences,
+	 @"hidden",
+	 @"eye.slash",
+	 @"contentViewHiddenPreferences",
+	 _settingsGroupAdvanced},
 };
 
 static const NSUInteger _settingsPaneCount = (sizeof(_settingsPanes) / sizeof(TDCPreferencesSettingsPane));
@@ -517,25 +561,26 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 	return nil;
 }
 
-- (NSDictionary<NSString *, NSString *> *)settingsCatalogItemWithID:(NSString *)identifier title:(NSString *)title symbol:(NSString *)symbol group:(NSString *)group
+- (NSDictionary<NSString *, NSString *> *)settingsCatalogItemWithID:(NSString *)identifier
+															  title:(NSString *)title
+															 symbol:(NSString *)symbol
+															  group:(NSString *)group
 {
-	return @{
-		@"id": identifier,
-		@"title": title,
-		@"symbol": symbol,
-		@"group": group
-	};
+	return @{@"id" : identifier, @"title" : title, @"symbol" : symbol, @"group" : group};
 }
 
 - (NSArray<NSDictionary<NSString *, NSString *> *> *)settingsSidebarCatalog
 {
-	NSMutableArray<NSDictionary<NSString *, NSString *> *> *items = [NSMutableArray arrayWithCapacity:_settingsPaneCount];
+	NSMutableArray<NSDictionary<NSString *, NSString *> *> *items =
+		[NSMutableArray arrayWithCapacity:_settingsPaneCount];
 
 	for (NSUInteger i = 0; i < _settingsPaneCount; i++) {
 		const TDCPreferencesSettingsPane *pane = &_settingsPanes[i];
 
 		[items addObject:[self settingsCatalogItemWithID:pane->identifier
-												   title:TXTLS(([NSString stringWithFormat:@"TDCPreferencesController[sb-%@]", pane->identifier]))
+												   title:TXTLS(([NSString
+															 stringWithFormat:@"TDCPreferencesController[sb-%@]",
+																			  pane->identifier]))
 												  symbol:pane->symbolName
 												   group:pane->group]];
 
@@ -544,18 +589,19 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 			continue;
 		}
 
-		[sharedPluginManager().pluginsWithPreferencePanes enumerateObjectsUsingBlock:^(THOPluginItem *plugin, NSUInteger index, BOOL *stop) {
-			NSString *title = plugin.pluginPreferencesPaneMenuItemTitle;
+		[sharedPluginManager().pluginsWithPreferencePanes
+			enumerateObjectsUsingBlock:^(THOPluginItem *plugin, NSUInteger index, BOOL *stop) {
+				NSString *title = plugin.pluginPreferencesPaneMenuItemTitle;
 
-			if (title.length == 0) {
-				title = TXTLS(@"TDCPreferencesController[sb-plugin]");
-			}
+				if (title.length == 0) {
+					title = TXTLS(@"TDCPreferencesController[sb-plugin]");
+				}
 
-			[items addObject:[self settingsCatalogItemWithID:TDCPreferencesSettingsPluginIdentifier(index)
-													   title:title
-													  symbol:@"puzzlepiece.extension"
-													   group:_settingsGroupAddons]];
-		}];
+				[items addObject:[self settingsCatalogItemWithID:TDCPreferencesSettingsPluginIdentifier(index)
+														   title:title
+														  symbol:@"puzzlepiece.extension"
+														   group:_settingsGroupAddons]];
+			}];
 	}
 
 	return [items copy];
@@ -592,11 +638,8 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 	window.toolbarStyle = NSWindowToolbarStyleUnified;
 	window.titlebarAppearsTransparent = NO;
 	window.titlebarSeparatorStyle = NSTitlebarSeparatorStyleAutomatic;
-	window.styleMask = (NSWindowStyleMaskTitled |
-						NSWindowStyleMaskClosable |
-						NSWindowStyleMaskMiniaturizable |
-						NSWindowStyleMaskResizable |
-						NSWindowStyleMaskFullSizeContentView);
+	window.styleMask = (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable |
+						NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView);
 	window.minSize = NSMakeSize(860.0, 560.0);
 	window.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
 	window.contentMinSize = NSMakeSize(640.0, 480.0);
@@ -615,11 +658,8 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 {
 	NSWindow *window = self.window;
 
-	window.styleMask = (NSWindowStyleMaskTitled |
-						NSWindowStyleMaskClosable |
-						NSWindowStyleMaskMiniaturizable |
-						NSWindowStyleMaskResizable |
-						NSWindowStyleMaskFullSizeContentView);
+	window.styleMask = (NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable |
+						NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView);
 	window.minSize = NSMakeSize(860.0, 560.0);
 	window.maxSize = NSMakeSize(CGFLOAT_MAX, CGFLOAT_MAX);
 	window.contentMinSize = NSMakeSize(640.0, 480.0);
@@ -636,7 +676,6 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 		[window center];
 	}
 }
-
 
 - (void)saveWindowFrame
 {
@@ -773,8 +812,7 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 - (BOOL)textEncryptionIsOpportunisticPreferenceEnabled
 {
-	return ([TPCPreferences textEncryptionIsEnabled] &&
-			[TPCPreferences textEncryptionIsRequired] == NO);
+	return ([TPCPreferences textEncryptionIsEnabled] && [TPCPreferences textEncryptionIsRequired] == NO);
 }
 
 - (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired
@@ -821,42 +859,34 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 #else
 - (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
 {
-
 }
 
 - (BOOL)textEncryptionIsOpportunistic
 {
-
 }
 
 - (BOOL)textEncryptionIsOpportunisticPreferenceEnabled
 {
-
 }
 
 - (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired
 {
-
 }
 
 - (BOOL)textEncryptionIsRequired
 {
-
 }
 
 - (BOOL)textEncryptionIsRequiredPreferenceEnabled
 {
-
 }
 
 - (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled
 {
-
 }
 
 - (BOOL)textEncryptionIsEnabled
 {
-
 }
 #endif
 
@@ -940,8 +970,7 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 		newValue = nil;
 	}
 
-	[RZUserDefaults() setColor:newValue
-						forKey:@"Server List Unread Message Count Badge Colors -> Highlight"];
+	[RZUserDefaults() setColor:newValue forKey:@"Server List Unread Message Count Badge Colors -> Highlight"];
 }
 
 - (NSColor *)userListNoModeColor
@@ -963,8 +992,7 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 		newValue = nil;
 	}
 
-	[RZUserDefaults() setColor:newValue
-						forKey:@"User List Mode Badge Colors -> no mode"];
+	[RZUserDefaults() setColor:newValue forKey:@"User List Mode Badge Colors -> no mode"];
 }
 
 - (BOOL)logTranscript
@@ -1117,34 +1145,34 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 		d.prompt = TXTLS(@"Prompts[xne-79]");
 
-		[d beginSheetModalForWindow:self.window completionHandler:^(NSInteger returnCode) {
-			[self.fileTransferDownloadDestinationButton selectItemAtIndex:0];
+		[d beginSheetModalForWindow:self.window
+				  completionHandler:^(NSInteger returnCode) {
+					  [self.fileTransferDownloadDestinationButton selectItemAtIndex:0];
 
-			if (returnCode != NSModalResponseOK) {
-				return;
-			}
+					  if (returnCode != NSModalResponseOK) {
+						  return;
+					  }
 
-			NSURL *path = d.URLs[0];
+					  NSURL *path = d.URLs[0];
 
-			NSError *bookmarkError = nil;
+					  NSError *bookmarkError = nil;
 
-			NSData *bookmark = [path bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
-							  includingResourceValuesForKeys:nil
-											   relativeToURL:nil
-													   error:&bookmarkError];
+					  NSData *bookmark = [path bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
+										includingResourceValuesForKeys:nil
+														 relativeToURL:nil
+																 error:&bookmarkError];
 
-			if (bookmark == nil) {
-				LogToConsoleError("Error creating bookmark for URL ('%{public}@'): %{public}@",
-					path.standardizedTildePath, bookmarkError.localizedDescription);
-			}
+					  if (bookmark == nil) {
+						  LogToConsoleError("Error creating bookmark for URL ('%{public}@'): %{public}@",
+											path.standardizedTildePath,
+											bookmarkError.localizedDescription);
+					  }
 
-			[transferController setDownloadDestinationURL:bookmark];
+					  [transferController setDownloadDestinationURL:bookmark];
 
-			[self updateFileTransferDownloadDestinationFolder];
-		}];
-	}
-	else if (self.fileTransferDownloadDestinationButton.selectedTag == 3)
-	{
+					  [self updateFileTransferDownloadDestinationFolder];
+				  }];
+	} else if (self.fileTransferDownloadDestinationButton.selectedTag == 3) {
 		[self.fileTransferDownloadDestinationButton selectItemAtIndex:0];
 
 		[transferController setDownloadDestinationURL:nil];
@@ -1190,34 +1218,34 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 		d.prompt = TXTLS(@"Prompts[xne-79]");
 
-		[d beginSheetModalForWindow:self.window completionHandler:^(NSInteger returnCode) {
-			[self.transcriptFolderButton selectItemAtIndex:0];
+		[d beginSheetModalForWindow:self.window
+				  completionHandler:^(NSInteger returnCode) {
+					  [self.transcriptFolderButton selectItemAtIndex:0];
 
-			if (returnCode != NSModalResponseOK) {
-				return;
-			}
+					  if (returnCode != NSModalResponseOK) {
+						  return;
+					  }
 
-			NSURL *path = d.URLs[0];
+					  NSURL *path = d.URLs[0];
 
-			NSError *bookmarkError = nil;
+					  NSError *bookmarkError = nil;
 
-			NSData *bookmark = [path bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
-							  includingResourceValuesForKeys:nil
-											   relativeToURL:nil
-													   error:&bookmarkError];
+					  NSData *bookmark = [path bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
+										includingResourceValuesForKeys:nil
+														 relativeToURL:nil
+																 error:&bookmarkError];
 
-			if (bookmark == nil) {
-				LogToConsoleError("Error creating bookmark for URL ('%{public}@'): %{public}@",
-					path.standardizedTildePath, bookmarkError.localizedDescription);
+					  if (bookmark == nil) {
+						  LogToConsoleError("Error creating bookmark for URL ('%{public}@'): %{public}@",
+											path.standardizedTildePath,
+											bookmarkError.localizedDescription);
 
-				return;
-			}
+						  return;
+					  }
 
-			[self setTranscriptFolderURL:bookmark];
-		}];
-	}
-	else if (self.transcriptFolderButton.selectedTag == 3)
-	{
+					  [self setTranscriptFolderURL:bookmark];
+				  }];
+	} else if (self.transcriptFolderButton.selectedTag == 3) {
 		[self.transcriptFolderButton selectItemAtIndex:0];
 
 		[self setTranscriptFolderURL:nil];
@@ -1240,7 +1268,9 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 {
 	[self.themeSelectionButton removeAllItems];
 
-	NSMenuItem *nativeItem = [[NSMenuItem alloc] initWithTitle:TXTLS(@"TDCPreferencesController[native-style]") action:nil keyEquivalent:@""];
+	NSMenuItem *nativeItem = [[NSMenuItem alloc] initWithTitle:TXTLS(@"TDCPreferencesController[native-style]")
+														action:nil
+												 keyEquivalent:@""];
 	nativeItem.tag = 100;
 	[self.themeSelectionButton.menu addItem:nativeItem];
 	[self.themeSelectionButton selectItemWithTag:100];
@@ -1400,8 +1430,8 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 	self.checkForUpdatesAutomaticallyDownload.state = updater.automaticallyDownloadsUpdates;
 	self.checkForUpdatesAutomaticallyCheck.state = updater.automaticallyChecksForUpdates;
-	self.checkForUpdatesDontCheck.state = (updater.automaticallyDownloadsUpdates == NO &&
-										   updater.automaticallyChecksForUpdates == NO);
+	self.checkForUpdatesDontCheck.state =
+		(updater.automaticallyDownloadsUpdates == NO && updater.automaticallyChecksForUpdates == NO);
 #endif
 }
 
@@ -1487,9 +1517,9 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 + (void)openProxySettingsInSystemPreferences
 {
-	AEDesc aeDesc = { typeNull, NULL };
+	AEDesc aeDesc = {typeNull, NULL};
 
-	OSStatus aeDescStatus = AECreateDesc('ptru', "Proxies", 7,  &aeDesc);
+	OSStatus aeDescStatus = AECreateDesc('ptru', "Proxies", 7, &aeDesc);
 
 	if (aeDescStatus != noErr) {
 		LogToConsoleError("aeDescStatus returned value other than noErr: %{public}i", aeDescStatus);
@@ -1499,11 +1529,11 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 	NSURL *prefPaneURL = [NSURL fileURLWithPath:@"/System/Library/PreferencePanes/Network.prefPane"];
 
-	LSLaunchURLSpec launchSpec = { 0 };
+	LSLaunchURLSpec launchSpec = {0};
 
 	launchSpec.appURL = NULL;
 	launchSpec.asyncRefCon = NULL;
-	launchSpec.itemURLs = (__bridge CFArrayRef)@[prefPaneURL];
+	launchSpec.itemURLs = (__bridge CFArrayRef) @[ prefPaneURL ];
 	launchSpec.launchFlags = (kLSLaunchAsync | kLSLaunchDontAddToRecents);
 	launchSpec.passThruParams = &aeDesc;
 
@@ -1608,13 +1638,13 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 	dispatch_once(&onceToken, ^{
 		preferenceMap = @{
-			@(10) 	: @"User List Mode Badge Colors -> +y",
-			@(9) 	: @"User List Mode Badge Colors -> +q",
-			@(8) 	: @"User List Mode Badge Colors -> +a",
-			@(7) 	: @"User List Mode Badge Colors -> +o",
-			@(6) 	: @"User List Mode Badge Colors -> +h",
-			@(5) 	: @"User List Mode Badge Colors -> +v",
-			@(4) 	: @"User List Mode Badge Colors -> no mode"
+			@(10) : @"User List Mode Badge Colors -> +y",
+			@(9) : @"User List Mode Badge Colors -> +q",
+			@(8) : @"User List Mode Badge Colors -> +a",
+			@(7) : @"User List Mode Badge Colors -> +o",
+			@(6) : @"User List Mode Badge Colors -> +h",
+			@(5) : @"User List Mode Badge Colors -> +v",
+			@(4) : @"User List Mode Badge Colors -> no mode"
 		};
 	});
 
@@ -1622,7 +1652,8 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 	/* -onResetUserListModeColorsToDefaults: passes nil sender */
 	if (preferenceKey == nil) {
-		[TPCPreferences performReloadAction:(TPCPreferencesReloadActionMemberListUserBadges | TPCPreferencesReloadActionMemberList)];
+		[TPCPreferences performReloadAction:(TPCPreferencesReloadActionMemberListUserBadges |
+											 TPCPreferencesReloadActionMemberList)];
 	} else {
 		[TPCPreferences performReloadAction:TPCPreferencesReloadActionMemberListUserBadges forKey:preferenceKey];
 	}
@@ -1637,7 +1668,8 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 {
 	TXFileTransferIPAddressMethodDetection detectionMethod = [TPCPreferences fileTransferIPAddressDetectionMethod];
 
-	self.fileTransferManuallyEnteredIPAddressTextField.enabled = (detectionMethod == TXFileTransferIPAddressMethodManual);
+	self.fileTransferManuallyEnteredIPAddressTextField.enabled =
+		(detectionMethod == TXFileTransferIPAddressMethodManual);
 }
 
 - (void)onChangedHighlightLogging:(nullable id)sender
@@ -1685,7 +1717,9 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 	if (returnCode == TDCAlertResponseOther) {
 		[originalAlert.window orderOut:nil];
 
-		[themeController() copyActiveThemeToDestinationLocation:TPCThemeStorageLocationCustom reloadOnCopy:YES openOnCopy:YES];
+		[themeController() copyActiveThemeToDestinationLocation:TPCThemeStorageLocationCustom
+												   reloadOnCopy:YES
+													 openOnCopy:YES];
 	}
 }
 
