@@ -3,16 +3,6 @@ name: Signed Release
 # Manual Developer ID distribution outside the Mac App Store.
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version used to name the ZIP. Defaults to the app version.'
-        required: false
-        type: string
-      notarize:
-        description: 'Notarize and staple the app so Gatekeeper accepts downloads'
-        required: false
-        default: true
-        type: boolean
 
 permissions:
   contents: read
@@ -75,24 +65,15 @@ jobs:
             | grep -q 'Developer ID Application'
 
       - name: Install Developer ID provisioning profiles
-        env:
-          PROFILE_BUNDLE_1: ${{ secrets.DEVELOPER_ID_PROFILES_BUNDLE_1 }}
-          PROFILE_BUNDLE_2: ${{ secrets.DEVELOPER_ID_PROFILES_BUNDLE_2 }}
         run: |
           set -euo pipefail
-          if [ -z "${PROFILE_BUNDLE_1}" ] || [ -z "${PROFILE_BUNDLE_2}" ]; then
-            echo "::error::Developer ID profile bundle secrets are not set."
-            exit 1
-          fi
-
           PROFILE_SOURCE_DIR="${RUNNER_TEMP}/glasstual-profiles"
           PROFILE_DIR="${HOME}/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "${PROFILE_SOURCE_DIR}" "${PROFILE_DIR}"
           echo "PROFILE_DIR=${PROFILE_DIR}" >> "${GITHUB_ENV}"
 
-          printf '%s%s' "${PROFILE_BUNDLE_1}" "${PROFILE_BUNDLE_2}" \
-            | base64 --decode \
-            | tar -xzf - -C "${PROFILE_SOURCE_DIR}"
+          tar -xzf .github/signing/DeveloperIDProfiles.tar.gz \
+            -C "${PROFILE_SOURCE_DIR}"
 
           install_profile() {
             local filename="$1"
@@ -148,9 +129,7 @@ jobs:
           PLIST_VERSION="$(/usr/libexec/PlistBuddy \
             -c 'Print :CFBundleShortVersionString' \
             "${APP}/Contents/Info.plist")"
-          VERSION="${{ inputs.version }}"
-          if [ -z "${VERSION}" ]; then VERSION="${PLIST_VERSION}"; fi
-          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "version=${PLIST_VERSION}" >> "${GITHUB_OUTPUT}"
 
       - name: Verify Developer ID signature
         run: |
@@ -161,7 +140,6 @@ jobs:
             | grep -E 'Authority|TeamIdentifier|Identifier'
 
       - name: Notarize and staple
-        if: ${{ inputs.notarize }}
         env:
           NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
         run: |
