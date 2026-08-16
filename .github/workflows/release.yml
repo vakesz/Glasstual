@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   release:
@@ -179,13 +179,18 @@ jobs:
           echo "name=Glasstual-${VERSION}.zip" >> "${GITHUB_OUTPUT}"
           shasum -a 256 "${OUT}"
 
-      - name: Upload release ZIP
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.package.outputs.name }}
-          path: ${{ steps.package.outputs.path }}
-          if-no-files-found: error
-          retention-days: 14
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "v${VERSION}" \
+            "${{ steps.package.outputs.path }}#${{ steps.package.outputs.name }}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "Glasstual ${VERSION}" \
+            --notes "Signed and notarized macOS release."
 
       - name: Clean up signing material
         if: ${{ always() }}
