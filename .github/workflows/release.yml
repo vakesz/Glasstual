@@ -114,6 +114,47 @@ jobs:
           chmod 600 "${KEY_PATH}"
           echo "ASC_KEY_PATH=${KEY_PATH}" >> "${GITHUB_ENV}"
 
+      - name: Install Developer ID provisioning profiles
+        env:
+          PROFILE_MAIN: ${{ secrets.DEVELOPER_ID_PROFILE_MAIN }}
+          PROFILE_IRC: ${{ secrets.DEVELOPER_ID_PROFILE_IRC_CONNECTION_HOST }}
+          PROFILE_SCROLLBACK: ${{ secrets.DEVELOPER_ID_PROFILE_SCROLLBACK_HISTORY_MANAGER }}
+          PROFILE_INLINE_CONTENT: ${{ secrets.DEVELOPER_ID_PROFILE_INLINE_CONTENT_LOADER }}
+          PROFILE_CORE_MEDIA: ${{ secrets.DEVELOPER_ID_PROFILE_INLINE_CONTENT_LOADER_CORE_MEDIA }}
+        run: |
+          set -euo pipefail
+
+          PROFILE_DIR="${HOME}/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          mkdir -p "${PROFILE_DIR}"
+          echo "PROFILE_DIR=${PROFILE_DIR}" >> "${GITHUB_ENV}"
+
+          install_profile() {
+            local encoded="$1"
+            local uuid="$2"
+            local secret_name="$3"
+            if [ -z "${encoded}" ]; then
+              echo "::error::${secret_name} is not set. See CI-SETUP.md."
+              exit 1
+            fi
+            echo -n "${encoded}" | base64 --decode > "${PROFILE_DIR}/${uuid}.mobileprovision"
+          }
+
+          install_profile "${PROFILE_MAIN}" \
+            "1e065476-c63a-4093-b027-e12cdbc03a56" \
+            "DEVELOPER_ID_PROFILE_MAIN"
+          install_profile "${PROFILE_IRC}" \
+            "efad779e-5dc8-46fb-8466-d4c5a78b5591" \
+            "DEVELOPER_ID_PROFILE_IRC_CONNECTION_HOST"
+          install_profile "${PROFILE_SCROLLBACK}" \
+            "b3add7fc-e480-44e8-bf4c-0d8eba1b3f30" \
+            "DEVELOPER_ID_PROFILE_SCROLLBACK_HISTORY_MANAGER"
+          install_profile "${PROFILE_INLINE_CONTENT}" \
+            "2d6ca9d2-5daa-4892-ac28-762509236350" \
+            "DEVELOPER_ID_PROFILE_INLINE_CONTENT_LOADER"
+          install_profile "${PROFILE_CORE_MEDIA}" \
+            "5293a089-8dff-44f7-9f23-9d1ad75fe7fd" \
+            "DEVELOPER_ID_PROFILE_INLINE_CONTENT_LOADER_CORE_MEDIA"
+
       - name: Archive
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -140,6 +181,11 @@ jobs:
             CODE_SIGN_IDENTITY="Developer ID Application" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="${TEAM_ID}" \
+            GLASSTUAL_MAIN_PROVISIONING_PROFILE="Glasstual Developer ID" \
+            GLASSTUAL_IRC_PROVISIONING_PROFILE="Glasstual IRC Connection Host Developer ID" \
+            GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE="Glasstual Scrollback History Manager Developer ID" \
+            GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE="Glasstual Inline Content Loader Developer ID" \
+            GLASSTUAL_CORE_MEDIA_PROVISIONING_PROFILE="Glasstual Inline Content Loader Core Media Develop" \
             -allowProvisioningUpdates \
             -authenticationKeyPath "${ASC_KEY_PATH}" \
             -authenticationKeyID "${{ secrets.NOTARY_KEY_ID }}" \
@@ -260,3 +306,12 @@ jobs:
         run: |
           security delete-keychain "${KEYCHAIN_PATH}" 2>/dev/null || true
           rm -rf "${RUNNER_TEMP}/private_keys" 2>/dev/null || true
+          if [ -n "${PROFILE_DIR:-}" ]; then
+            rm -f \
+              "${PROFILE_DIR}/1e065476-c63a-4093-b027-e12cdbc03a56.mobileprovision" \
+              "${PROFILE_DIR}/efad779e-5dc8-46fb-8466-d4c5a78b5591.mobileprovision" \
+              "${PROFILE_DIR}/b3add7fc-e480-44e8-bf4c-0d8eba1b3f30.mobileprovision" \
+              "${PROFILE_DIR}/2d6ca9d2-5daa-4892-ac28-762509236350.mobileprovision" \
+              "${PROFILE_DIR}/5293a089-8dff-44f7-9f23-9d1ad75fe7fd.mobileprovision" \
+              2>/dev/null || true
+          fi

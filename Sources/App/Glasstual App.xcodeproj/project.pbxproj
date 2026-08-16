@@ -4892,6 +4892,7 @@
 		4C13442620C75C4900343AB7 /* Release (Sandboxed) */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				PROVISIONING_PROFILE_SPECIFIER = "$(GLASSTUAL_MAIN_PROVISIONING_PROFILE)";
 			};
 			name = "Release (Sandboxed)";
 		};
@@ -4927,6 +4928,7 @@
 		4C1DC5721580420500A47BC9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				PROVISIONING_PROFILE_SPECIFIER = "$(GLASSTUAL_MAIN_PROVISIONING_PROFILE)";
 			};
 			name = Release;
 		};

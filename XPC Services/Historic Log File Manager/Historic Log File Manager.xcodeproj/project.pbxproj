@@ -422,6 +422,7 @@
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.glasstual.ScrollbackHistoryManager";
 				PRODUCT_NAME = "Scrollback History Manager";
+				PROVISIONING_PROFILE_SPECIFIER = "$(GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE)";
 			};
 			name = Release;
 		};
