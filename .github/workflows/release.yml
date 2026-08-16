@@ -124,7 +124,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          PROFILE_DIR="${HOME}/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          PROFILE_DIR="${HOME}/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "${PROFILE_DIR}"
           echo "PROFILE_DIR=${PROFILE_DIR}" >> "${GITHUB_ENV}"
 
