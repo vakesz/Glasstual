@@ -136,7 +136,7 @@ jobs:
               echo "::error::${secret_name} is not set. See CI-SETUP.md."
               exit 1
             fi
-            echo -n "${encoded}" | base64 --decode > "${PROFILE_DIR}/${uuid}.provisionprofile"
+            echo -n "${encoded}" | base64 --decode > "${PROFILE_DIR}/${uuid}.mobileprovision"
           }
 
           install_profile "${PROFILE_MAIN}" \
@@ -308,10 +308,10 @@ jobs:
           rm -rf "${RUNNER_TEMP}/private_keys" 2>/dev/null || true
           if [ -n "${PROFILE_DIR:-}" ]; then
             rm -f \
-              "${PROFILE_DIR}/1e065476-c63a-4093-b027-e12cdbc03a56.provisionprofile" \
-              "${PROFILE_DIR}/efad779e-5dc8-46fb-8466-d4c5a78b5591.provisionprofile" \
-              "${PROFILE_DIR}/b3add7fc-e480-44e8-bf4c-0d8eba1b3f30.provisionprofile" \
-              "${PROFILE_DIR}/2d6ca9d2-5daa-4892-ac28-762509236350.provisionprofile" \
-              "${PROFILE_DIR}/5293a089-8dff-44f7-9f23-9d1ad75fe7fd.provisionprofile" \
+              "${PROFILE_DIR}/1e065476-c63a-4093-b027-e12cdbc03a56.mobileprovision" \
+              "${PROFILE_DIR}/efad779e-5dc8-46fb-8466-d4c5a78b5591.mobileprovision" \
+              "${PROFILE_DIR}/b3add7fc-e480-44e8-bf4c-0d8eba1b3f30.mobileprovision" \
+              "${PROFILE_DIR}/2d6ca9d2-5daa-4892-ac28-762509236350.mobileprovision" \
+              "${PROFILE_DIR}/5293a089-8dff-44f7-9f23-9d1ad75fe7fd.mobileprovision" \
               2>/dev/null || true
           fi
