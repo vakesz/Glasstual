@@ -4,7 +4,7 @@ set -e
 export BUILD_PATH="/private/tmp/Glasstual-${RANDOM}"
 
 export BUILD_PATH_SCRIPTS_STANDALONE="${BUILD_PATH}/Library/Application Scripts/com.vakesz.glasstual"
-export BUILD_PATH_EXTENSIONS_STANDALONE="${BUILD_PATH}/Library/Group Containers/H8W5DK3FN2.com.vakesz.glasstual/Library/Application Support/Glasstual/Extensions"
+export BUILD_PATH_EXTENSIONS_STANDALONE="${BUILD_PATH}/Library/Group Containers/group.H8W5DK3FN2.com.vakesz.glasstual/Library/Application Support/Glasstual/Extensions"
 
 export CURRENT_DIRECTORY=$(cd `dirname $0` && pwd)
 

@@ -6,7 +6,7 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>H8W5DK3FN2.com.vakesz.glasstual</string>
+		<string>group.H8W5DK3FN2.com.vakesz.glasstual</string>
 	</array>
 </dict>
 </plist>

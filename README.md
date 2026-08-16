@@ -68,7 +68,7 @@ Set your Apple Developer **Team ID** there, and set `GLASSTUAL_BUNDLE_IDENTIFIER
 
 - Bundle ID: `com.vakesz.glasstual`
 - Team ID: `H8W5DK3FN2`
-- App Group: `H8W5DK3FN2.com.vakesz.glasstual`
+- App Group: `group.H8W5DK3FN2.com.vakesz.glasstual`
 
 Register that App ID and App Group on [developer.apple.com](https://developer.apple.com/account/resources/identifiers/list), then enable **Automatic signing**.
 
