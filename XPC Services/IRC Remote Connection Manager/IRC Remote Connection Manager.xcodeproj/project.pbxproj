@@ -546,6 +546,7 @@
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.glasstual.IRCConnectionHost";
 				PRODUCT_NAME = "IRC Connection Host";
+				PROVISIONING_PROFILE_SPECIFIER = "$(GLASSTUAL_IRC_PROVISIONING_PROFILE)";
 			};
 			name = Release;
 		};

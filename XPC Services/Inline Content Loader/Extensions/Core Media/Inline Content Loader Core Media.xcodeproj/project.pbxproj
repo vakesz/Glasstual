@@ -596,6 +596,7 @@
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.glasstual.InlineContentLoader.CoreMedia";
 				PRODUCT_NAME = "Core Media";
+				PROVISIONING_PROFILE_SPECIFIER = "$(GLASSTUAL_CORE_MEDIA_PROVISIONING_PROFILE)";
 				WRAPPER_EXTENSION = mediaPlugin;
 			};
 			name = Release;

@@ -677,6 +677,7 @@
 				INFOPLIST_FILE = "Resources/Property Lists/Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.vakesz.glasstual.InlineContentLoader";
 				PRODUCT_NAME = "Inline Content Loader";
+				PROVISIONING_PROFILE_SPECIFIER = "$(GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE)";
 			};
 			name = Release;
 		};
