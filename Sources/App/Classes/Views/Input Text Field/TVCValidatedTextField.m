@@ -49,12 +49,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable, readwrite) NSString *lastValidationErrorDescription;
 @end
 
-@interface TVCValidatedTextFieldCell ()
-@property(readonly) NSColor *erroneousValueBackgroundColor;
-@property(readonly) BOOL parentValueIsValid;
-@property(readonly) TVCValidatedTextField *parentField;
-@end
-
 @implementation TVCValidatedTextField
 
 #pragma mark -
@@ -67,14 +61,29 @@ NS_ASSUME_NONNULL_BEGIN
 	self.cachedValidValue = NO;
 }
 
+- (void)setCachedValidValue:(BOOL)cachedValidValue
+{
+	self->_cachedValidValue = cachedValidValue;
+
+	[self _updateBackgroundForValidity];
+}
+
+/* An invalid value is signalled by a faint red tint behind the text
+ in addition to the error popover. */
+- (void)_updateBackgroundForValidity
+{
+	if (self.cachedValidValue || self.validationPerformed == NO) {
+		self.drawsBackground = NO;
+		self.backgroundColor = [NSColor textBackgroundColor];
+	} else {
+		self.drawsBackground = YES;
+		self.backgroundColor = [[NSColor systemRedColor] colorWithAlphaComponent:0.08];
+	}
+}
+
 - (void)dealloc
 {
 	[self closeValidationErrorPopover];
-}
-
-- (BOOL)drawsBackground
-{
-	return NO;
 }
 
 - (NSString *)value
@@ -184,11 +193,11 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	self.cachedValidValue = (errorDescription == nil);
+	self.validationPerformed = YES;
 
 	self.lastValidationErrorDescription = errorDescription;
 
-	self.validationPerformed = YES;
+	self.cachedValidValue = (errorDescription == nil);
 }
 
 - (BOOL)showValidationErrorPopover
@@ -234,45 +243,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Text Field Cell
 
 @implementation TVCValidatedTextFieldCell
-
-- (NSColor *)erroneousValueBackgroundColor
-{
-	return [NSColor colorWithCalibratedRed:1.0 green:0.0 blue:0.0 alpha:0.05];
-}
-
-- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
-{
-	if (self.parentValueIsValid == NO) {
-		NSRect backgroundFrame = cellFrame;
-
-		backgroundFrame.origin.x += 1.0;
-		backgroundFrame.origin.y += 1.0;
-
-		backgroundFrame.size.width -= 2.0;
-		backgroundFrame.size.height -= 2.0;
-
-		NSColor *backgroundColor = self.erroneousValueBackgroundColor;
-
-		NSBezierPath *backgroundFill = [NSBezierPath bezierPathWithRect:backgroundFrame];
-
-		[backgroundColor set];
-
-		[backgroundFill fill];
-	}
-
-	[super drawInteriorWithFrame:cellFrame inView:controlView];
-}
-
-- (TVCValidatedTextField *)parentField
-{
-	return (TVCValidatedTextField *)self.controlView;
-}
-
-- (BOOL)parentValueIsValid
-{
-	return self.parentField.valueIsValid;
-}
-
+/* The erroneous value tint is applied by the control itself through
+ -backgroundColor. The cell subclass remains so nibs that name it keep
+ loading without a fallback warning. */
 @end
 
 NS_ASSUME_NONNULL_END

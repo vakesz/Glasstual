@@ -129,8 +129,7 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 
 /* TVCListAppearance allows for one appearance to inherit properties
  from another group recursively. */
-/* For example: 	AppearanceDarkRetina ->
-					AppearanceDarkBase ->
+/* For example: 	AppearanceVariant ->
 					AppearanceBase */
 /* -_combineAppearance:withOtherAppearances: is the staging ground for
  this logic. The first argument is the properties for the appearance
@@ -275,21 +274,37 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 	NSParameterAssert(group != nil);
 	NSParameterAssert(key != nil);
 
-	id referenceObject = nil;
-
-	if (self.isHighResolutionAppearance == NO) {
-		referenceObject = group[key];
-	} else {
-		NSString *retinaKey = [key stringByAppendingString:@"@2x"];
-
-		referenceObject = ((group[retinaKey]) ?: group[key]);
-	}
+	id referenceObject = group[key];
 
 	if (referenceObject == nil || [referenceObject isKindOfClass:expectedType] == NO) {
 		return nil;
 	}
 
 	return referenceObject;
+}
+
+/* Stateful properties may either define "activeWindow" and
+ "inactiveWindow" entries, or be a plain value which is then used
+ for both states. Semantic system colors make the latter the norm. */
+- (nullable id)_statefulValue:(NSDictionary<NSString *, id> *)referenceObject
+			  forActiveWindow:(BOOL)forActiveWindow
+				 expectedType:(Class)expectedType
+{
+	NSParameterAssert(referenceObject != nil);
+
+	NSString *stateKey = ((forActiveWindow) ? @"activeWindow" : @"inactiveWindow");
+
+	id stateValue = referenceObject[stateKey];
+
+	if (stateValue == nil && referenceObject[@"activeWindow"] == nil && referenceObject[@"inactiveWindow"] == nil) {
+		stateValue = referenceObject;
+	}
+
+	if (stateValue == nil || [stateValue isKindOfClass:expectedType] == NO) {
+		return nil;
+	}
+
+	return stateValue;
 }
 
 #pragma mark -
@@ -348,9 +363,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 		return nil;
 	}
 
-	NSString *colorKey = ((forActiveWindow) ? @"activeWindow" : @"inactiveWindow");
-
-	NSDictionary *colorProperties = [referenceObject dictionaryForKey:colorKey];
+	NSDictionary *colorProperties = [self _statefulValue:referenceObject
+										 forActiveWindow:forActiveWindow
+											expectedType:[NSDictionary class]];
 
 	if (colorProperties == nil) {
 		return nil;
@@ -480,9 +495,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 		return nil;
 	}
 
-	NSString *gradientKey = ((forActiveWindow) ? @"activeWindow" : @"inactiveWindow");
-
-	NSArray *gradientColors = [referenceObject arrayForKey:gradientKey];
+	NSArray *gradientColors = [self _statefulValue:referenceObject
+								   forActiveWindow:forActiveWindow
+									  expectedType:[NSArray class]];
 
 	if (gradientColors == nil) {
 		return nil;
@@ -574,9 +589,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 		return nil;
 	}
 
-	NSString *fontKey = ((forActiveWindow) ? @"activeWindow" : @"inactiveWindow");
-
-	NSDictionary *fontProperties = [referenceObject dictionaryForKey:fontKey];
+	NSDictionary *fontProperties = [self _statefulValue:referenceObject
+										forActiveWindow:forActiveWindow
+										   expectedType:[NSDictionary class]];
 
 	if (fontProperties == nil) {
 		return nil;
@@ -673,9 +688,9 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 		return nil;
 	}
 
-	NSString *imageKey = ((forActiveWindow) ? @"activeWindow" : @"inactiveWindow");
-
-	NSDictionary *imageProperties = [referenceObject dictionaryForKey:imageKey];
+	NSDictionary *imageProperties = [self _statefulValue:referenceObject
+										 forActiveWindow:forActiveWindow
+											expectedType:[NSDictionary class]];
 
 	if (imageProperties == nil) {
 		return nil;

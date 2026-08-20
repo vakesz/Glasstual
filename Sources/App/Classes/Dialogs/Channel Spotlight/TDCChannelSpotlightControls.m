@@ -103,6 +103,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TDCChannelSpotlightImageView
 
+- (void)awakeFromNib
+{
+	[super awakeFromNib];
+
+	NSImage *symbol = [NSImage imageWithSystemSymbolName:@"magnifyingglass" accessibilityDescription:nil];
+
+	NSImageSymbolConfiguration *configuration =
+		[NSImageSymbolConfiguration configurationWithPointSize:20.0 weight:NSFontWeightMedium];
+
+	configuration = [configuration
+		configurationByApplyingConfiguration:[NSImageSymbolConfiguration
+												 configurationWithHierarchicalColor:[NSColor secondaryLabelColor]]];
+
+	self.image = [symbol imageWithSymbolConfiguration:configuration];
+
+	self.contentTintColor = [NSColor secondaryLabelColor];
+}
+
 - (BOOL)mouseDownCanMoveWindow
 {
 	return YES;

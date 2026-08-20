@@ -687,11 +687,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 	[RZUserDefaults() setObject:themeUserStyleSheetRules forKey:@"Theme -> User Style Sheet Rules"];
 }
 
-+ (CGFloat)mainWindowTransparency
-{
-	return [RZUserDefaults() doubleForKey:@"MainWindowTransparencyLevel"];
-}
-
 + (BOOL)automaticallyReloadCustomThemesWhenTheyChange
 {
 	return [RZUserDefaults() boolForKey:@"AutomaticallyReloadCustomThemesWhenTheyChange"];
@@ -1281,7 +1276,7 @@ static NSArray<NSString *> *_matchKeywords = nil;
 	 to do this from the beginning. */
 	NSNumber *dictionaryVersion = [RZUserDefaults() objectForKey:@"TPCPreferencesDictionaryVersion"];
 
-	if (dictionaryVersion.integerValue >= TPCPreferencesDictionaryVersion) {
+	if (dictionaryVersion.unsignedIntegerValue >= TPCPreferencesDictionaryVersion) {
 		return;
 	}
 

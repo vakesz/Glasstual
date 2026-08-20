@@ -55,6 +55,7 @@
 #import "TVCServerListPrivate.h"
 #import "TVCServerListCellPrivate.h"
 #import "TVCMemberListPrivate.h"
+#import "NSColorHelper.h"
 #import "TVCTextFormatterMenuPrivate.h"
 #import "TVCTextViewWithIRCFormatterPrivate.h"
 #import "TPCApplicationInfo.h"
@@ -118,9 +119,12 @@ NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelec
 @interface TVCMainWindow (TahoeToolbar) <NSToolbarDelegate>
 @end
 
-#define _treeDragItemType TVCServerListDragType
+/* Pasteboard type used when reordering items in the server list. */
+static NSPasteboardType const TVCMainWindowTreeItemPasteboardType = @"com.vakesz.glasstual.tree-item";
 
-#define _treeDragItemTypes [NSArray arrayWithObject:_treeDragItemType]
+#define _treeDragItemType TVCMainWindowTreeItemPasteboardType
+
+#define _treeDragItemTypes @[ _treeDragItemType ]
 
 @implementation TVCMainWindow
 
@@ -174,9 +178,13 @@ NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelec
 
 	self.allowsConcurrentViewDrawing = NO;
 
-	self.alphaValue = [TPCPreferences mainWindowTransparency];
+	/* Frame and fullscreen state are handled by AppKit: the frame through
+	 the autosave name set in the nib and fullscreen through state restoration. */
+	self.restorationClass = self.class;
 
 	[self installWindowChrome];
+
+	[self installFormattingMenuDecorations];
 
 	[self updateAppearance];
 
@@ -591,26 +599,6 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 								 object:nil];
 }
 
-- (void)maybeToggleFullscreenAfterLaunch
-{
-	BOOL isFullscreen = [RZUserDefaults() boolForKey:@"Window -> Main Window Is Fullscreen'd"];
-
-	if (isFullscreen == NO) {
-		return;
-	}
-
-	[self performSelectorInCommonModes:@selector(toggleFullscreenAfterLaunch) withObject:nil afterDelay:1.0];
-}
-
-- (void)toggleFullscreenAfterLaunch
-{
-	if (self.inFullscreenMode) {
-		return;
-	}
-
-	[self toggleFullScreen:nil];
-}
-
 - (void)themeVarietyChanged:(NSNotification *)notification
 {
 	[self reloadTheme];
@@ -662,39 +650,13 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 	[RZNotificationCenter() postNotificationName:TVCMainWindowAppearanceChangedNotification object:self];
 }
 
-- (void)updateAlphaValueToReflectPreferences
-{
-	[self updateAlphaValueToReflectPreferencesAnimated:NO];
-}
-
-- (void)updateAlphaValueToReflectPreferencesAnimated:(BOOL)animate
-{
-	if (self.inFullscreenMode) {
-		return;
-	}
-
-	double alphaValue = [TPCPreferences mainWindowTransparency];
-
-	if (animate) {
-		[self animator].alphaValue = alphaValue;
-	} else {
-		self.alphaValue = alphaValue;
-	}
-}
-
 - (void)loadWindowState
 {
-	[self restoreWindowStateUsingKeyword:@"Main Window"];
-
 	[self restoreSavedContentSplitViewState];
 }
 
 - (void)saveWindowState
 {
-	[RZUserDefaults() setBool:self.isInFullscreenMode forKey:@"Window -> Main Window Is Fullscreen'd"];
-
-	[self saveWindowStateUsingKeyword:@"Main Window"];
-
 	[self saveContentSplitViewState];
 
 	[self saveSelection];
@@ -722,12 +684,60 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 	self.delegate = nil;
 
-	self.selectedItems = nil;
+	self.selectedItems = @[];
 	self.selectedItem = nil;
 
 	LogToConsoleTerminationProgress("Closing main window");
 
 	[self close];
+}
+
+#pragma mark -
+#pragma mark State Restoration
+
+#define _restorableSelectionKey @"TVCMainWindowSelectedItems"
+
++ (void)restoreWindowWithIdentifier:(NSUserInterfaceItemIdentifier)identifier
+							  state:(NSCoder *)state
+				  completionHandler:(void (^)(NSWindow *_Nullable, NSError *_Nullable))completionHandler
+{
+	/* There is one main window and it is created from the nib at
+	 launch. Hand it back so AppKit can apply the saved state to it. */
+	completionHandler(mainWindow(), nil);
+}
+
+- (void)encodeRestorableStateWithCoder:(NSCoder *)coder
+{
+	[super encodeRestorableStateWithCoder:coder];
+
+	NSMutableArray<NSString *> *selectedIdentifiers = [NSMutableArray array];
+
+	for (IRCTreeItem *item in self.selectedItems) {
+		[selectedIdentifiers addObject:item.uniqueIdentifier];
+	}
+
+	[coder encodeObject:[selectedIdentifiers copy] forKey:_restorableSelectionKey];
+}
+
+- (void)restoreStateWithCoder:(NSCoder *)coder
+{
+	[super restoreStateWithCoder:coder];
+
+	NSSet *classes = [NSSet setWithObjects:[NSArray class], [NSString class], nil];
+
+	NSArray<NSString *> *selectedIdentifiers = [coder decodeObjectOfClasses:classes forKey:_restorableSelectionKey];
+
+	if (selectedIdentifiers == nil || selectedIdentifiers.count == 0) {
+		return;
+	}
+
+	NSArray *selection = [worldController() findItemsWithIds:selectedIdentifiers];
+
+	if (selection.count == 0) {
+		return;
+	}
+
+	[self adjustSelectionWithItems:selection selectedItem:nil];
 }
 
 #pragma mark -
@@ -869,16 +879,6 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 	return proposedOptions;
 }
 
-- (void)windowDidExitFullScreen:(NSNotification *)notification
-{
-	[self updateAlphaValueToReflectPreferencesAnimated:YES];
-}
-
-- (void)windowWillEnterFullScreen:(NSNotification *)notification
-{
-	[self animator].alphaValue = 1.0;
-}
-
 - (id)windowWillReturnFieldEditor:(NSWindow *)sender toObject:(id)client
 {
 	static dispatch_once_t onceToken;
@@ -900,6 +900,88 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 	});
 
 	return self.inputTextField;
+}
+
+#pragma mark -
+#pragma mark Formatting Menu
+
+#define _formattingColorRainbowTag 299
+
+/* Colour swatches used to ship as one PNG per colour. They are drawn
+ here from the same table the renderer uses, so the menu always agrees
+ with what ends up in the channel view. */
+- (void)installFormattingMenuDecorations
+{
+	TVCTextViewIRCFormattingMenu *formattingMenu = self.formattingMenu;
+
+	for (NSMenu *menu in @[ formattingMenu.foregroundColorMenu, formattingMenu.backgroundColorMenu ]) {
+		for (NSMenuItem *item in menu.itemArray) {
+			if (item.isSeparatorItem || item.action == NULL) {
+				continue;
+			}
+
+			item.image = [self.class formattingMenuImageForColorTag:item.tag];
+		}
+	}
+
+	NSMenu *formatterMenu = formattingMenu.formatterMenu.submenu;
+
+	NSMenuItem *monospaceItem = [formatterMenu itemWithTag:102];
+
+	if (monospaceItem) {
+		NSFont *font = [NSFont monospacedSystemFontOfSize:[NSFont systemFontSize] weight:NSFontWeightRegular];
+
+		monospaceItem.attributedTitle = [[NSAttributedString alloc] initWithString:monospaceItem.title
+																		attributes:@{NSFontAttributeName : font}];
+	}
+
+	NSMenuItem *spoilerItem = [formatterMenu itemWithTag:103];
+
+	if (spoilerItem) {
+		spoilerItem.attributedTitle =
+			[[NSAttributedString alloc] initWithString:spoilerItem.title
+											attributes:@{
+												NSFontAttributeName : [NSFont menuFontOfSize:0.0],
+												NSForegroundColorAttributeName : [NSColor windowBackgroundColor],
+												NSBackgroundColorAttributeName : [NSColor labelColor]
+											}];
+	}
+}
+
++ (nullable NSImage *)formattingMenuImageForColorTag:(NSInteger)tag
+{
+	if (tag == _formattingColorRainbowTag) {
+		return [NSImage imageWithSystemSymbolName:@"rainbow" accessibilityDescription:nil];
+	}
+
+	NSArray<NSColor *> *colors = [NSColor formatterColors];
+
+	if (tag < 0 || (NSUInteger)tag >= colors.count) {
+		return nil;
+	}
+
+	NSColor *color = colors[tag];
+
+	NSImage *image = [NSImage imageWithSize:NSMakeSize(16.0, 16.0)
+									flipped:NO
+							 drawingHandler:^BOOL(NSRect dstRect) {
+								 NSRect circleRect = NSInsetRect(dstRect, 1.5, 1.5);
+
+								 NSBezierPath *circle = [NSBezierPath bezierPathWithOvalInRect:circleRect];
+
+								 [color setFill];
+								 [circle fill];
+
+								 [[NSColor.separatorColor colorWithAlphaComponent:0.6] setStroke];
+								 circle.lineWidth = 1.0;
+								 [circle stroke];
+
+								 return YES;
+							 }];
+
+	image.template = NO;
+
+	return image;
 }
 
 #pragma mark -
@@ -1655,9 +1737,7 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 {
 	CGFloat x = event.deltaX;
 
-	BOOL invertedScrollingDirection = [RZUserDefaults() boolForKey:@"com.apple.swipescrolldirection"];
-
-	if (invertedScrollingDirection) {
+	if (event.isDirectionInvertedFromDevice) {
 		x = (x * (-1));
 	}
 
@@ -1736,9 +1816,7 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 	CGFloat x = delta.x;
 
-	BOOL invertedScrollingDirection = [RZUserDefaults() boolForKey:@"com.apple.swipescrolldirection"];
-
-	if (invertedScrollingDirection) {
+	if (event.isDirectionInvertedFromDevice) {
 		x = (x * (-1));
 	}
 
@@ -2016,6 +2094,8 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 - (void)selectionDidChangePostflight
 {
+	[self invalidateRestorableState];
+
 	/* If the selection hasn't changed, then do nothing. */
 	IRCTreeItem *itemChangedTo = self.selectedItem;
 
@@ -3157,18 +3237,15 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 	}
 }
 
-- (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray *)items toPasteboard:(NSPasteboard *)pasteboard
+- (nullable id<NSPasteboardWriting>)outlineView:(NSOutlineView *)outlineView pasteboardWriterForItem:(id)item
 {
-	/* TODO (March 27, 2016): Support dragging multiple items */
-	if (items.count == 1) {
-		NSString *itemToken = [worldController() pasteboardStringForItem:items[0]];
+	NSString *itemToken = [worldController() pasteboardStringForItem:item];
 
-		[pasteboard declareTypes:_treeDragItemTypes owner:self];
+	NSPasteboardItem *pasteboardItem = [NSPasteboardItem new];
 
-		[pasteboard setString:itemToken forType:_treeDragItemType];
-	}
+	[pasteboardItem setString:itemToken forType:_treeDragItemType];
 
-	return YES;
+	return pasteboardItem;
 }
 
 - (NSDragOperation)outlineView:(NSOutlineView *)outlineView
@@ -3221,7 +3298,7 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 		IRCChannel *nextItem = nil;
 
-		if (index < channelList.count) {
+		if ((NSUInteger)index < channelList.count) {
 			nextItem = channelList[index];
 		}
 

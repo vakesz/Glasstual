@@ -104,7 +104,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 	errorIcon.editable = NO;
 
-	errorIcon.image = [NSImage imageNamed:@"ErroneousTextFieldValueIndicator"];
+	NSImage *errorImage = [NSImage imageWithSystemSymbolName:@"exclamationmark.circle.fill"
+									accessibilityDescription:nil];
+
+	NSImageSymbolConfiguration *errorImageConfiguration =
+		[[NSImageSymbolConfiguration configurationWithPointSize:16.0
+														 weight:NSFontWeightRegular
+														  scale:NSImageSymbolScaleLarge]
+			configurationByApplyingConfiguration:[NSImageSymbolConfiguration configurationWithPaletteColors:@[
+				[NSColor whiteColor],
+				[NSColor systemRedColor]
+			]]];
+
+	errorIcon.image = [errorImage imageWithSymbolConfiguration:errorImageConfiguration];
 
 	[errorIcon addConstraints:@[
 		[NSLayoutConstraint constraintWithItem:errorIcon

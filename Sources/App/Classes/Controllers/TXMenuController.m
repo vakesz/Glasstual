@@ -162,50 +162,48 @@ NS_ASSUME_NONNULL_BEGIN
 	[self.fileTransferController startUsingDownloadDestinationURL];
 }
 
-- (nullable NSMenuItem *)menuItemWithTag:(NSInteger)tag inMenu:(NSMenu *)menu
+/* Symbols are assigned in the nib. This pass gives every one of them
+ the same configuration so menus line up regardless of the symbol's
+ natural size. */
+- (void)applyMenuSymbols
+{
+	NSArray<NSMenu *> *menus = @[
+		[NSApp mainMenu],
+		self.channelViewChannelNameMenu,
+		self.channelViewGeneralMenu,
+		self.channelViewURLMenu,
+		self.dockMenu,
+		self.encryptionManagerStatusMenu,
+		self.mainWindowSegmentedControllerCellMenu,
+		self.serverListNoSelectionMenu,
+		self.userControlMenu
+	];
+
+	NSImageSymbolConfiguration *configuration =
+		[NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
+														weight:NSFontWeightRegular
+														 scale:NSImageSymbolScaleMedium];
+
+	for (NSMenu *menu in menus) {
+		[self _applySymbolConfiguration:configuration toMenu:menu];
+	}
+}
+
+- (void)_applySymbolConfiguration:(NSImageSymbolConfiguration *)configuration toMenu:(nullable NSMenu *)menu
 {
 	for (NSMenuItem *item in menu.itemArray) {
-		if (item.tag == tag) {
-			return item;
+		NSImage *image = item.image;
+
+		/* Only symbol images carry a configuration; other images
+		 (such as the formatting colour swatches) are left alone. */
+		if (image.symbolConfiguration != nil) {
+			item.image = [image imageWithSymbolConfiguration:configuration];
 		}
 
 		if (item.hasSubmenu) {
-			NSMenuItem *nestedItem = [self menuItemWithTag:tag inMenu:item.submenu];
-
-			if (nestedItem) {
-				return nestedItem;
-			}
+			[self _applySymbolConfiguration:configuration toMenu:item.submenu];
 		}
 	}
-
-	return nil;
-}
-
-- (void)applyMenuSymbols
-{
-	NSDictionary<NSNumber *, NSString *> *symbols = @{
-		@(MTMMAppPreferences) : @"gearshape",
-		@(MTMMAppAboutApp) : @"info.circle",
-		@(MTMMFilePrint) : @"printer",
-		@(MTMMViewToggleFullscreen) : @"arrow.up.left.and.arrow.down.right",
-		@(MTMMServerConnect) : @"bolt.horizontal.circle",
-		@(MTMMWindowFileTransfers) : @"arrow.down.app",
-		@(MTMMNavigationSearchChannels) : @"magnifyingglass",
-	};
-
-	NSMenu *mainMenu = [NSApp mainMenu];
-
-	[symbols enumerateKeysAndObjectsUsingBlock:^(NSNumber *tag, NSString *symbolName, BOOL *stop) {
-		NSMenuItem *item = [self menuItemWithTag:tag.integerValue inMenu:mainMenu];
-
-		if (item == nil) {
-			return;
-		}
-
-		NSImage *image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:item.title];
-		image.size = NSMakeSize(16.0, 16.0);
-		item.image = image;
-	}];
 }
 
 - (void)prepareForApplicationTermination
@@ -1268,18 +1266,16 @@ NS_ASSUME_NONNULL_BEGIN
 		[webView findString:resultString movingForward:YES];
 	};
 
-	NSString *resultString = nil;
-
-	NSModalResponse response = [TDCInputPrompt promptWithMessage:TXTLS(@"Prompts[d2w-4o]")
-														   title:TXTLS(@"Prompts[akr-eh]")
-												   defaultButton:TXTLS(@"Prompts[q5h-xx]")
-												 alternateButton:TXTLS(@"Prompts[qso-2g]")
-												   prefillString:self.currentSearchPhrase
-													resultString:&resultString];
-
-	if (response == NSAlertFirstButtonReturn) {
-		promptCompletionBlock(resultString);
-	}
+	[TDCInputPrompt promptWithMessage:TXTLS(@"Prompts[d2w-4o]")
+								title:TXTLS(@"Prompts[akr-eh]")
+						defaultButton:TXTLS(@"Prompts[q5h-xx]")
+					  alternateButton:TXTLS(@"Prompts[qso-2g]")
+						prefillString:self.currentSearchPhrase
+					  completionBlock:^(NSModalResponse response, NSString *resultString) {
+						  if (response == NSAlertFirstButtonReturn) {
+							  promptCompletionBlock(resultString);
+						  }
+					  }];
 }
 
 - (void)showFindPrompt:(nullable id)sender
@@ -2268,18 +2264,16 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	};
 
-	NSString *vhost = nil;
-
-	NSModalResponse response = [TDCInputPrompt promptWithMessage:TXTLS(@"Prompts[2mx-jf]")
-														   title:TXTLS(@"Prompts[7gr-e4]")
-												   defaultButton:TXTLS(@"Prompts[c7s-dq]")
-												 alternateButton:TXTLS(@"Prompts[qso-2g]")
-												   prefillString:nil
-													resultString:&vhost];
-
-	if (response == NSAlertFirstButtonReturn) {
-		promptCompletionBlock(vhost);
-	}
+	[TDCInputPrompt promptWithMessage:TXTLS(@"Prompts[2mx-jf]")
+								title:TXTLS(@"Prompts[7gr-e4]")
+						defaultButton:TXTLS(@"Prompts[c7s-dq]")
+					  alternateButton:TXTLS(@"Prompts[qso-2g]")
+						prefillString:nil
+					  completionBlock:^(NSModalResponse response, NSString *vhost) {
+						  if (response == NSAlertFirstButtonReturn) {
+							  promptCompletionBlock(vhost);
+						  }
+					  }];
 }
 
 - (void)showSetVhostPrompt:(nullable id)sender

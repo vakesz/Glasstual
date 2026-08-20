@@ -34,7 +34,7 @@
                             <rect key="frame" x="1" y="1" width="648" height="238"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" alternatingRowBackgroundColors="YES" columnReordering="NO" columnResizing="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="16" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" headerView="OL3-le-5Xg" viewBased="YES" translatesAutoresizingMaskIntoConstraints="NO" id="255" customClass="TVCBasicTableView">
+                                <tableView tableStyle="fullWidth" verticalHuggingPriority="750" allowsExpansionToolTips="YES" alternatingRowBackgroundColors="YES" columnReordering="NO" columnResizing="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="16" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" headerView="OL3-le-5Xg" viewBased="YES" translatesAutoresizingMaskIntoConstraints="NO" id="255" customClass="TVCBasicTableView">
                                     <rect key="frame" x="0.0" y="0.0" width="648" height="210"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <size key="intercellSpacing" width="3" height="2"/>
@@ -44,7 +44,7 @@
                                         <tableColumn identifier="channelName" editable="NO" width="97" minWidth="40" maxWidth="1000" id="257">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Channel Name">
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
+                                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </tableHeaderCell>
                                             <textFieldCell key="dataCell" lineBreakMode="truncatingTail" alignment="left" title="Text Cell" id="262">
                                                 <font key="font" metaFont="system"/>

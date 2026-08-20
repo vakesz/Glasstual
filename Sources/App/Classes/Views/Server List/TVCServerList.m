@@ -45,10 +45,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString *const TVCServerListDragType = @"TVCServerListDragType";
-
 @interface TVCServerList ()
-@property(nonatomic, assign, readwrite) BOOL leftMouseIsDownInView;
 @end
 
 @implementation TVCServerList
@@ -329,18 +326,19 @@ NSString *const TVCServerListDragType = @"TVCServerListDragType";
 	return self.menu;
 }
 
-- (void)mouseDown:(NSEvent *)theEvent
+- (BOOL)leftMouseIsDownInView
 {
-	self.leftMouseIsDownInView = YES;
+	/* Used by the selection delegate to tell a click driven selection
+	 change apart from a programmatic one. Derived from the current
+	 mouse state instead of tracking -mouseDown:/-mouseUp: which
+	 could get out of sync when the up event landed elsewhere. */
+	if ((NSEvent.pressedMouseButtons & 0x1) == 0) {
+		return NO;
+	}
 
-	[super mouseDown:theEvent];
-}
+	NSPoint mouseLocation = [self convertPoint:self.window.mouseLocationOutsideOfEventStream fromView:nil];
 
-- (void)mouseUp:(NSEvent *)theEvent
-{
-	self.leftMouseIsDownInView = NO;
-
-	[super mouseUp:theEvent];
+	return NSMouseInRect(mouseLocation, self.bounds, self.isFlipped);
 }
 
 - (void)keyDown:(NSEvent *)e

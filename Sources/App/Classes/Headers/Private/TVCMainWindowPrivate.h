@@ -87,10 +87,6 @@ typedef NS_OPTIONS(NSUInteger, TVCMainWindowMouseLocation) {
 
 - (void)adjustSelection;
 
-- (void)maybeToggleFullscreenAfterLaunch;
-
-- (void)updateAlphaValueToReflectPreferences;
-
 - (void)updateChannelViewBoxContentViewSelection;
 - (void)updateChannelViewArrangement;
 

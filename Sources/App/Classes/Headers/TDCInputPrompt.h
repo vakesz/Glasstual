@@ -50,14 +50,6 @@ typedef void (^TDCInputPromptCompletionBlock)(NSModalResponse response, NSString
 		  alternateButton:(nullable NSString *)buttonAlternate
 			prefillString:(nullable NSString *)prefillString
 		  completionBlock:(TDCInputPromptCompletionBlock)completionBlock;
-
-/* Application modal. Prefer the sheet variant above. */
-+ (NSModalResponse)promptWithMessage:(NSString *)bodyText
-							   title:(NSString *)titleText
-					   defaultButton:(NSString *)buttonDefault
-					 alternateButton:(nullable NSString *)buttonAlternate
-					   prefillString:(nullable NSString *)prefillString
-						resultString:(NSString *_Nonnull *_Nonnull)resultString;
 @end
 
 NS_ASSUME_NONNULL_END

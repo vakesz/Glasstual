@@ -261,24 +261,36 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	/* The place holder string is not drawn for right to left users */
-	if (self.stringLength > 0 || self.baseWritingDirection != NSWritingDirectionLeftToRight) {
-		[super drawRect:dirtyRect];
+	[super drawRect:dirtyRect];
 
+	if (self.stringLength > 0) {
 		return;
 	}
 
-	// TODO: Don't used fix positions
-	NSRect selectedRect = self.selectedRect;
+	/* The placeholder is laid out exactly where the first line of text
+	 would be: the layout manager's extra line fragment already accounts
+	 for the container inset, the line fragment padding and the font. */
+	NSLayoutManager *layoutManager = self.layoutManager;
+	NSTextContainer *textContainer = self.textContainer;
 
-	TVCMainWindowTextViewFontSize preferredFontSize = self.userInterfaceObjects.textViewPreferredFontSize;
+	[layoutManager ensureLayoutForTextContainer:textContainer];
 
-	if (preferredFontSize == TVCMainWindowTextViewFontSizeNormal ||
-		preferredFontSize == TVCMainWindowTextViewFontSizeLarge) {
-		selectedRect.origin.y -= 1;
+	NSRect lineRect = layoutManager.extraLineFragmentRect;
+
+	if (NSIsEmptyRect(lineRect)) {
+		lineRect = NSMakeRect(0.0, 0.0, textContainer.size.width, self.defaultLineHeight);
 	}
 
-	[self.placeholderAttributedString drawAtPoint:selectedRect.origin];
+	CGFloat padding = textContainer.lineFragmentPadding;
+
+	NSPoint origin = self.textContainerOrigin;
+
+	NSRect placeholderRect = NSMakeRect((origin.x + lineRect.origin.x + padding),
+										(origin.y + lineRect.origin.y),
+										(lineRect.size.width - (padding * 2.0)),
+										lineRect.size.height);
+
+	[self.placeholderAttributedString drawInRect:placeholderRect];
 }
 
 - (void)updateTextBoxCachedPreferredFontSize
@@ -297,8 +309,19 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Update the placeholder string */
 	NSColor *placeholderTextColor = appearance.textViewPlaceholderTextColor;
 
-	NSDictionary *placeholderStringAttributes =
-		@{NSFontAttributeName : preferredFont, NSForegroundColorAttributeName : placeholderTextColor};
+	/* The paragraph style follows the view's writing direction so
+	 the placeholder sits on the correct side for right to left users. */
+	NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
+
+	paragraphStyle.baseWritingDirection = self.baseWritingDirection;
+	paragraphStyle.alignment = NSTextAlignmentNatural;
+	paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
+
+	NSDictionary *placeholderStringAttributes = @{
+		NSFontAttributeName : preferredFont,
+		NSForegroundColorAttributeName : placeholderTextColor,
+		NSParagraphStyleAttributeName : paragraphStyle
+	};
 
 	self.placeholderAttributedString = [NSAttributedString attributedStringWithString:TXTLS(@"TVCMainWindow[8r3-ih]")
 																		   attributes:placeholderStringAttributes];
