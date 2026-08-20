@@ -1,4 +1,0 @@
-
-#include "../Common/Foundation.xcconfig"
-#include "Glasstual.xcconfig"
-#include "../Common/Glasstual Extensions.xcconfig"

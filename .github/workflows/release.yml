@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 90
 
     env:
-      WORKSPACE: Glasstual.xcworkspace
-      SCHEME: Glasstual (Standard Release)
+      PROJECT: Glasstual.xcodeproj
+      SCHEME: Glasstual
       CONFIGURATION: Release
       TEAM_ID: H8W5DK3FN2
       ARCHIVE_PATH: build/Glasstual.xcarchive
@@ -23,12 +23,18 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Select Xcode 26
+      - name: Select Xcode 27
         run: |
           set -euo pipefail
           sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
-          xcodebuild -version | head -n 1 | grep -q '^Xcode 26'
+          xcodebuild -version | head -n 1 | grep -q '^Xcode 27'
+
+      - name: Resolve build version from git
+        run: |
+          set -euo pipefail
+          ./Scripts/UpdateVersion.sh
+          cat Configurations/Version.generated.xcconfig
 
       - name: Import Developer ID certificate
         env:
@@ -105,11 +111,11 @@ jobs:
           set -euo pipefail
           mkdir -p build
           xcodebuild archive \
-            -workspace "${WORKSPACE}" \
+            -project "${PROJECT}" \
             -scheme "${SCHEME}" \
             -configuration "${CONFIGURATION}" \
             -archivePath "${ARCHIVE_PATH}" \
-            -destination 'generic/platform=macOS' \
+            -destination 'platform=macOS,arch=arm64' \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="${TEAM_ID}" \
