@@ -80,6 +80,14 @@
 /* Toolbar & input bar accessibility */
 "tb-cs" = "Connection Security";
 "ib-ad" = "Add Server or Channel";
+"ib-sf" = "Search Channels";
+"ib-st" = "Settings…";
+"ib-mo" = "More";
+"ib-m1" = "Mark All As Read";
+"ib-m2" = "Disable All Notifications";
+"ib-m3" = "Address Book…";
+"ib-m4" = "File Transfers…";
+"ib-m5" = "Hide Member List";
 "ib-mg" = "Manage Selection";
 "ib-ab" = "Address Book";
 
