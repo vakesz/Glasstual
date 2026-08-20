@@ -176,11 +176,26 @@ static NSCharacterSet *s_startCharacterSet = nil;
 
 	long scannerLength = AHget_leng(scanner);
 
+	size_t scanStringLength = strlen(CScanString);
+
 	if ( scanLocationIn) {
-		*scanLocationIn += scannerLength;
+		/* scannerLength is a count of UTF-8 bytes whereas the index
+		 is into an NSString (UTF-16 code units). Convert before
+		 advancing so multibyte characters do not skew the index. */
+		if (scannerLength >= scanStringLength) {
+			*scanLocationIn += scanString.length;
+		} else if (scannerLength > 0) {
+			NSString *matchedPrefix = [[NSString alloc] initWithBytes:CScanString length:(NSUInteger)scannerLength encoding:NSUTF8StringEncoding];
+
+			if (matchedPrefix) {
+				*scanLocationIn += matchedPrefix.length;
+			} else {
+				*scanLocationIn += (NSUInteger)scannerLength; // Split multibyte sequence; best effort
+			}
+		}
 	}
 
-	if (validStatus != AHParserURLInvalid && scannerLength != strlen(CScanString))
+	if (validStatus != AHParserURLInvalid && scannerLength != scanStringLength)
 	{
 		validStatus = AHParserURLInvalid;
 	}

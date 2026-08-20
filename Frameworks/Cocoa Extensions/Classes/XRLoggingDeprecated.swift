@@ -49,14 +49,15 @@ public class LoggingDeprecated : NSObject
 	/// 2. defaultSubsystem value (default = nil)
 	/// 3. OSLog.default (on macOS 10.12 and later)
 	///
+	/// Set once during process start-up and read-only afterwards.
 	@objc
-	public static var defaultSubsystem: OSLog?
+	nonisolated(unsafe) public static var defaultSubsystem: OSLog?
 
 	///
 	/// Flag to enable debug log type
 	///
 	@objc
-	public static var debugLogging = false
+	nonisolated(unsafe) public static var debugLogging = false
 
 	@objc
 	public enum `Type` : Int

@@ -93,8 +93,8 @@ NS_ASSUME_NONNULL_BEGIN
 		return panel;
 	}
 
-	/* Retain the trust so that it is not released from underneath us. */
-	CFRetain(trustRef);
+	/* The panel takes ownership of the caller's +1 reference (see header)
+	 and releases it once the completion block has run. */
 
 	/* Crate context for callback selector */
 	RCMTrustPanelContext *promptObject = [RCMTrustPanelContext new];
@@ -138,6 +138,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	contextInfo.completionBlock(trustRef, trusted, contextInfo.contextInfo);
 
+	/* The panel consumes the caller's +1 reference. See header. */
 	CFRelease(trustRef);
 }
 

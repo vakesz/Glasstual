@@ -59,9 +59,8 @@
 		}
 
 		[self replaceBytesInRange:r withBytes:replacementBytes length:replacementLength];
-		;
 
-		start = (r.location + replacementLength + 1);
+		start = (r.location + replacementLength);
 	}
 }
 

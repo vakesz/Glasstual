@@ -30,17 +30,14 @@
  *
  *********************************************************************** */
 
+#import <AppKit/AppKit.h>
 #import <IOKit/IOKitLib.h>
-#import <IOKit/pwr_mgt/IOPM.h>
 
 #include <sys/sysctl.h>
 
-#include <dlfcn.h>
+#include <stdatomic.h>
 
-/* Private IOKit function */
-typedef uint32_t IOPMCapabilityBits;
-
-static NSUInteger _highestRecognizedMajorOSVersion = 26; // macOS Tahoe
+static atomic_bool _systemIsSleeping = false;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -66,7 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Mach port used to initiate communication with IOKit. */
 	mach_port_t masterPort;
 
-	kern_return_t machPortResult = IOMasterPort(MACH_PORT_NULL, &masterPort);
+	kern_return_t machPortResult = IOMainPort(MACH_PORT_NULL, &masterPort);
 
 	if (machPortResult != KERN_SUCCESS) {
 		return nil;
@@ -131,15 +128,37 @@ NS_ASSUME_NONNULL_BEGIN
 	return nil;
 }
 
++ (void)observeSleepNotifications
+{
+	/* Track sleep state from workspace notifications. Observers are
+	 registered lazily (this framework is also linked by XPC services
+	 that never ask) and live for the lifetime of the process. */
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		NSNotificationCenter *center = [NSWorkspace sharedWorkspace].notificationCenter;
+
+		[center addObserverForName:NSWorkspaceWillSleepNotification
+							object:nil
+							 queue:nil
+						usingBlock:^(NSNotification *note) {
+							atomic_store(&_systemIsSleeping, true);
+						}];
+
+		[center addObserverForName:NSWorkspaceDidWakeNotification
+							object:nil
+							 queue:nil
+						usingBlock:^(NSNotification *note) {
+							atomic_store(&_systemIsSleeping, false);
+						}];
+	});
+}
+
 + (BOOL)systemIsSleeping
 {
-	IOPMCapabilityBits bits = [self systemPowerCapabilities];
+	[self observeSleepNotifications];
 
-	if (bits == INT_MAX) {
-		return NO;
-	}
-
-	return ((bits & kIOPMSystemCapabilityCPU) == 0);
+	return atomic_load(&_systemIsSleeping);
 }
 
 + (nullable NSString *)systemBuildVersion
@@ -156,36 +175,35 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString *)systemStandardVersion
 {
 	static id cachedValue = nil;
-	
+
 	if (cachedValue == nil) {
-		cachedValue = [self retrieveSystemInformationKey:@"ProductVersion"];
+		NSOperatingSystemVersion version = [NSProcessInfo processInfo].operatingSystemVersion;
+
+		if (version.patchVersion == 0) {
+			cachedValue = [NSString stringWithFormat:@"%ld.%ld",
+						   (long)version.majorVersion, (long)version.minorVersion];
+		} else {
+			cachedValue = [NSString stringWithFormat:@"%ld.%ld.%ld",
+						   (long)version.majorVersion, (long)version.minorVersion, (long)version.patchVersion];
+		}
 	}
-	
+
 	return cachedValue;
 }
 
 + (nullable NSString *)systemOperatingSystemName
 {
-	/* I know that this can be optimized but it is only ran once. */
 	static id cachedValue = nil;
 
 	if (cachedValue == nil) {
 		NSBundle *bundle = [NSBundle bundleForClass:[self class]];
 
-		if (XRRunningOnUnrecognizedOSVersion()) {
-			cachedValue = NSLocalizedStringFromTableInBundle(@"macOS", @"XRSystemInformation", bundle, nil);
-		} else if (XRRunningOnOSXTahoeOrLater()) {
+		NSInteger majorVersion = [NSProcessInfo processInfo].operatingSystemVersion.majorVersion;
+
+		if (majorVersion == 26) {
 			cachedValue = NSLocalizedStringFromTableInBundle(@"macOS Tahoe", @"XRSystemInformation", bundle, nil);
-		} else if (XRRunningOnOSXSequoiaOrLater()) {
-			cachedValue = NSLocalizedStringFromTableInBundle(@"macOS Sequoia", @"XRSystemInformation", bundle, nil);
-		} else if (XRRunningOnOSXSonomaOrLater()) {
-			cachedValue = NSLocalizedStringFromTableInBundle(@"macOS Sonoma", @"XRSystemInformation", bundle, nil);
- 		} else if (XRRunningOnOSXVenturaOrLater()) {
-			cachedValue = NSLocalizedStringFromTableInBundle(@"macOS Ventura", @"XRSystemInformation", bundle, nil);
-		} else if (XRRunningOnOSXMontereyOrLater()) {
-			cachedValue = NSLocalizedStringFromTableInBundle(@"macOS Monterey", @"XRSystemInformation", bundle, nil);
-		} else if (XRRunningOnOSXBigSurOrLater()) {
-			cachedValue = NSLocalizedStringFromTableInBundle(@"macOS Big Sur", @"XRSystemInformation", bundle, nil);
+		} else {
+			cachedValue = NSLocalizedStringFromTableInBundle(@"macOS", @"XRSystemInformation", bundle, nil);
 		}
 	}
 
@@ -194,25 +212,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark -
 #pragma mark Private
-
-+ (IOPMCapabilityBits)systemPowerCapabilities
-{
-	static IOPMCapabilityBits (*_functionAddress) (void) = NULL;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		NSString *managedName = [@"IOPM" stringByAppendingString:@"ConnectionGetSystemCapabilities"];
-
-		_functionAddress = dlsym(RTLD_DEFAULT, [managedName cStringUsingEncoding:NSASCIIStringEncoding]);
-	});
-
-	if (_functionAddress) {
-		return _functionAddress();
-	}
-
-	return INT_MAX;
-}
 
 + (nullable NSString *)systemModelToken
 {
@@ -321,169 +320,5 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 @end
-
-BOOL XRRunningOnOSXLionOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXMountainLionOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXMavericksOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXYosemiteOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXElCapitanOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXSierraOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXHighSierraOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXMojaveOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXCatalinaOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXBigSurOrLater(void)
-{
-	return YES; // SDK targets greater OS version
-}
-
-BOOL XRRunningOnOSXMontereyOrLater(void)
-{
-	static BOOL cachedValue = NO;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		NSOperatingSystemVersion compareVersion;
-
-		compareVersion.majorVersion = 12;
-		compareVersion.minorVersion = 0;
-		compareVersion.patchVersion = 0;
-
-		cachedValue = [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:compareVersion];
-	});
-
-	return cachedValue;
-}
-
-BOOL XRRunningOnOSXVenturaOrLater(void)
-{
-	static BOOL cachedValue = NO;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		NSOperatingSystemVersion compareVersion;
-
-		compareVersion.majorVersion = 13;
-		compareVersion.minorVersion = 0;
-		compareVersion.patchVersion = 0;
-
-		cachedValue = [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:compareVersion];
-	});
-
-	return cachedValue;
-}
-
-BOOL XRRunningOnOSXSonomaOrLater(void)
-{
-	static BOOL cachedValue = NO;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		NSOperatingSystemVersion compareVersion;
-
-		compareVersion.majorVersion = 14;
-		compareVersion.minorVersion = 0;
-		compareVersion.patchVersion = 0;
-
-		cachedValue = [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:compareVersion];
-	});
-
-	return cachedValue;
-}
-
-BOOL XRRunningOnOSXSequoiaOrLater(void)
-{
-	static BOOL cachedValue = NO;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		NSOperatingSystemVersion compareVersion;
-
-		compareVersion.majorVersion = 15;
-		compareVersion.minorVersion = 0;
-		compareVersion.patchVersion = 0;
-
-		cachedValue = [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:compareVersion];
-	});
-
-	return cachedValue;
-}
-
-BOOL XRRunningOnOSXTahoeOrLater(void)
-{
-	static BOOL cachedValue = NO;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		NSOperatingSystemVersion compareVersion;
-
-		compareVersion.majorVersion = 26;
-		compareVersion.minorVersion = 0;
-		compareVersion.patchVersion = 0;
-
-		cachedValue = [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:compareVersion];
-	});
-
-	return cachedValue;
-}
-
-BOOL XRRunningOnUnrecognizedOSVersion(void)
-{
-	static BOOL cachedValue = YES;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		NSOperatingSystemVersion compareVersion;
-
-		compareVersion.majorVersion = (_highestRecognizedMajorOSVersion + 1);
-		compareVersion.minorVersion = 0;
-		compareVersion.patchVersion = 0;
-
-		cachedValue = [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:compareVersion];
-	});
-
-	return cachedValue;
-}
 
 NS_ASSUME_NONNULL_END

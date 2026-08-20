@@ -123,7 +123,11 @@ public extension Data
 		var remainingLine: Data?
 
 		if (last != newlineChar) {
-			remainingLine = lines.last
+			/* Slices of Data keep the parent's indices. Copy so the
+			 remainder starts at index zero for the caller. */
+			if let lastLine = lines.last {
+				remainingLine = Data(lastLine)
+			}
 
 			lines.removeLast()
 		}
@@ -136,7 +140,7 @@ public extension Data
 		}
 
 		let linesTrimmed = lines.map { (line) in
-			line.withoutNewlinesAtEnd
+			Data(line.withoutNewlinesAtEnd)
 		}
 
 		return (lines: linesTrimmed, remainder: remainingLine)

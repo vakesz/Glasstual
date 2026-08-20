@@ -46,6 +46,12 @@ NS_ASSUME_NONNULL_BEGIN
     CGDirectDisplayID screenId = [screenDescription[@"NSScreenNumber"] unsignedIntValue];
     
     CGDisplayModeRef screenMode = CGDisplayCopyDisplayMode(screenId);
+
+    if (screenMode == NULL) {
+        NSRect frame = self.frame;
+
+        return [NSString stringWithFormat:@"%zu x %zu", (size_t)NSWidth(frame), (size_t)NSHeight(frame)];
+    }
     
     size_t screenWidth = CGDisplayModeGetPixelWidth(screenMode);
     size_t screenHeight = CGDisplayModeGetPixelHeight(screenMode);
@@ -57,27 +63,23 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (CGFloat)screenRefreshRate
 {
+	CGFloat refreshRate = (CGFloat)self.maximumFramesPerSecond;
+
+	if (refreshRate > 0) {
+		return refreshRate;
+	}
+
     NSDictionary *screenDescription = self.deviceDescription;
 
     CGDirectDisplayID screenId = [screenDescription[@"NSScreenNumber"] unsignedIntValue];
 
     CGDisplayModeRef screenMode = CGDisplayCopyDisplayMode(screenId);
 
-	CGFloat refreshRate = CGDisplayModeGetRefreshRate(screenMode);
-
-    if (refreshRate == 0) {
-		CVDisplayLinkRef link;
-
-		CVDisplayLinkCreateWithCGDisplay(screenId, &link);
-
-		CVTime time = CVDisplayLinkGetNominalOutputVideoRefreshPeriod(link);
-
-		if ((time.flags & kCVTimeIsIndefinite) == NO) {
-			refreshRate = (time.timeScale / time.timeValue);
-		}
-
-		CVDisplayLinkRelease(link);
+    if (screenMode == NULL) {
+        return 0;
     }
+
+	refreshRate = CGDisplayModeGetRefreshRate(screenMode);
 
     CGDisplayModeRelease(screenMode);
 

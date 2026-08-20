@@ -47,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 													  requiringSecureCoding:YES
 																	  error:&error];
 		
-		NSAssert((error != nil), @"Failed to write contents of '%@': %@",
+		NSAssert((error == nil), @"Failed to write contents of '%@': %@",
 				 defaultName, error.description);
 		
 		[self setObject:archivedValue forKey:defaultName];

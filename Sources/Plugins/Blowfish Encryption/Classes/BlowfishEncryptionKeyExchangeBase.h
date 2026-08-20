@@ -47,8 +47,8 @@
 #define EKBlowfishEncryptionKeyExchangeRequiredKeyLength 135
 
 @interface EKBlowfishEncryptionKeyExchangeBase : NSObject
-- (void)computeKey;
-- (void)setKeyForComputation:(NSData *)publicKey;
+- (BOOL)computeKey;
+- (BOOL)setKeyForComputation:(NSData *)publicKey;
 
 - (void)resetStatus;
 - (void)resetPublicInformation;
