@@ -86,7 +86,7 @@ NSString *const TVCMainWindowDidReloadThemeNotification = @"TVCMainWindowDidRelo
 
 NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelectionChangedNotification";
 
-@interface TVCMainWindow ()
+@interface TVCMainWindow () <NSWindowRestoration>
 @property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowChannelView *channelView;
 @property(nonatomic, strong, readwrite) IBOutlet TXMenuControllerMainWindowProxy *mainMenuProxy;
 @property(nonatomic, strong, readwrite) IBOutlet TVCTextViewIRCFormattingMenu *formattingMenu;
