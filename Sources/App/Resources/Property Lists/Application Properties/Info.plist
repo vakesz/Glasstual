@@ -4,8 +4,6 @@
 <dict>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
-	<key>LSRequiresNativeExecution</key>
-	<false/>
 	<key>CFBundleDisplayName</key>
 	<string>Glasstual</string>
 	<key>CFBundleIdentifier</key>
@@ -36,17 +34,19 @@
 	<string>${PRODUCT_NAME} accesses contacts to automatically populate certain forms with your name and/or e-mail address. Access to this information is not required.</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>${PRODUCT_NAME} runs user scripts that can control other applications.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
 	</dict>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
-			<key>CFBundleTypeExtensions</key>
+			<key>LSItemContentTypes</key>
 			<array>
-				<string>scpt</string>
+				<string>com.apple.applescript.script</string>
 			</array>
 			<key>CFBundleTypeName</key>
 			<string>Glasstual IRC Client Script</string>
@@ -54,24 +54,20 @@
 			<string>Viewer</string>
 			<key>LSHandlerRank</key>
 			<string>Alternate</string>
-			<key>LSTypeIsPackage</key>
-			<integer>0</integer>
 			<key>NSDocumentClass</key>
 			<string>TPCResourceManagerDocumentTypeImporter</string>
 		</dict>
 		<dict>
-			<key>CFBundleTypeExtensions</key>
+			<key>LSItemContentTypes</key>
 			<array>
-				<string>bundle</string>
+				<string>com.apple.bundle</string>
 			</array>
 			<key>CFBundleTypeName</key>
 			<string>Glasstual IRC Client Extension</string>
 			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
+			<string>Viewer</string>
 			<key>LSHandlerRank</key>
 			<string>Alternate</string>
-			<key>LSTypeIsPackage</key>
-			<integer>1</integer>
 			<key>NSDocumentClass</key>
 			<string>TPCResourceManagerDocumentTypeImporter</string>
 		</dict>
