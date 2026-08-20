@@ -6,6 +6,8 @@ pushd "${LIBRARY_WORKING_DIRECTORY_LOCATION}"
 
 curl -LO "https://www.gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-${LIBRARY_GPG_ERROR_VERSION}.tar.bz2" --retry 5
 
+verifyChecksum "./libgpg-error-${LIBRARY_GPG_ERROR_VERSION}.tar.bz2" "${LIBRARY_GPG_ERROR_SHA256}"
+
 tar -xvf "./libgpg-error-${LIBRARY_GPG_ERROR_VERSION}.tar.bz2"
 
 mv "./libgpg-error-${LIBRARY_GPG_ERROR_VERSION}" "./libgpg-error-source"
@@ -18,6 +20,10 @@ case $ARCH in
 	;;
 	arm64)
 	HOST="aarch64-apple-darwin"
+	;;
+	*)
+	echo "Unsupported architecture: $ARCH"
+	exit 1
 	;;
 esac
 
@@ -33,8 +39,10 @@ applyPatchesToLibrary "libgpg-error"
 ./configure \
 --host=$HOST \
 --enable-static \
+--disable-shared \
 --disable-dependency-tracking \
 --disable-silent-rules \
+--disable-doc \
 --prefix="${PREFIX_DIRECTORY_ARCH}"
 
 make -j${BUILDJOBS}

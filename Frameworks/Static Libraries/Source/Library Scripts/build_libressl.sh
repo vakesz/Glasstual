@@ -4,7 +4,9 @@ set -e
 
 pushd "${LIBRARY_WORKING_DIRECTORY_LOCATION}"
 
-curl -LO "http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-${LIBRARY_LIBRESSL_VERSION}.tar.gz" --retry 5
+curl -LO "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-${LIBRARY_LIBRESSL_VERSION}.tar.gz" --retry 5
+
+verifyChecksum "./libressl-${LIBRARY_LIBRESSL_VERSION}.tar.gz" "${LIBRARY_LIBRESSL_SHA256}"
 
 tar -xvf "./libressl-${LIBRARY_LIBRESSL_VERSION}.tar.gz"
 
@@ -19,6 +21,10 @@ case $ARCH in
 	arm64)
 	HOST="aarch64-apple-darwin"
 	;;
+	*)
+	echo "Unsupported architecture: $ARCH"
+	exit 1
+	;;
 esac
 
 
@@ -30,10 +36,7 @@ export CXXFLAGS="${CPPFLAGS}"
 
 applyPatchesToLibrary "libressl"
 
-# ac_cv_func_strtonum - disable use of strtonum which is only available on macOS 11 but is misdetected
 ./configure \
-ac_cv_func_strtonum=no \
-ac_cv_func_timingsafe_bcmp=no \
 --host=$HOST \
 --enable-static \
 --disable-dependency-tracking \

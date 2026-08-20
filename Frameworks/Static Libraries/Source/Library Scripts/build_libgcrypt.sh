@@ -6,6 +6,8 @@ pushd "${LIBRARY_WORKING_DIRECTORY_LOCATION}"
 
 curl -LO "https://www.gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${LIBRARY_GCRYPT_VERSION}.tar.bz2"  --retry 5
 
+verifyChecksum "./libgcrypt-${LIBRARY_GCRYPT_VERSION}.tar.bz2" "${LIBRARY_GCRYPT_SHA256}"
+
 tar -xvf "./libgcrypt-${LIBRARY_GCRYPT_VERSION}.tar.bz2"
 
 mv "./libgcrypt-${LIBRARY_GCRYPT_VERSION}" "./libgcrypt-source"
@@ -18,6 +20,10 @@ case $ARCH in
 	;;
 	arm64)
 	HOST="aarch64-apple-darwin"
+	;;
+	*)
+	echo "Unsupported architecture: $ARCH"
+	exit 1
 	;;
 esac
 
@@ -33,7 +39,9 @@ applyPatchesToLibrary "libgcrypt"
 ./configure \
 --host=$HOST \
 --enable-static \
+--disable-shared \
 --disable-asm \
+--disable-doc \
 --disable-dependency-tracking \
 --disable-silent-rules \
 --prefix="${PREFIX_DIRECTORY_ARCH}" \
