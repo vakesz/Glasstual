@@ -198,6 +198,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @property(nonatomic, assign, readwrite) BOOL userIsIRCop;
 @property(nonatomic, assign, readwrite) BOOL userIsIdentifiedWithNickServ;
 @property(nonatomic, assign, readwrite) BOOL isWaitingForNickServ;
+@property(nonatomic, assign) BOOL isPerformingConnectCommands;
 @property(nonatomic, assign, readwrite) BOOL serverHasNickServ;
 @property(nonatomic, assign, readwrite) NSTimeInterval lastMessageReceived;
 @property(nonatomic, assign, readwrite) NSTimeInterval lastMessageServerTime;
@@ -2707,6 +2708,97 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 #pragma mark -
 #pragma mark Send Raw Data
 
+#pragma mark -
+#pragma mark Credential Redaction
+
+/* Messages to services that carry a password are shown with the
+ arguments masked. The wire message is untouched; only what the user
+ sees in their own client changes. */
++ (NSString *)redactedServiceMessage:(NSString *)message sentTo:(nullable NSString *)target
+{
+	NSParameterAssert(message != nil);
+
+	if ([self targetLooksLikeService:target] == NO) {
+		return message;
+	}
+
+	static NSSet<NSString *> *sensitiveVerbs = nil;
+
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		sensitiveVerbs = [NSSet setWithArray:@[
+			@"IDENTIFY",
+			@"SIDENTIFY",
+			@"LOGIN",
+			@"AUTH",
+			@"REGISTER",
+			@"GHOST",
+			@"RECOVER",
+			@"RELEASE",
+			@"REGAIN",
+			@"SET",
+			@"PASSWD",
+			@"PASSWORD",
+			@"SENDPASS",
+			@"RESETPASS",
+			@"SETPASS",
+			@"GROUP",
+			@"CONFIRM"
+		]];
+	});
+
+	NSArray<NSString *> *tokens = [message componentsSeparatedByString:@" "];
+
+	if (tokens.count < 2 || [sensitiveVerbs containsObject:tokens[0].uppercaseString] == NO) {
+		return message;
+	}
+
+	/* "SET PASSWORD <value>" keeps two leading words, everything else one. */
+	NSUInteger keep = 1;
+
+	if ([tokens[0] isEqualToStringIgnoringCase:@"SET"]) {
+		if (tokens.count < 3 || [tokens[1] isEqualToStringIgnoringCase:@"PASSWORD"] == NO) {
+			return message;
+		}
+
+		keep = 2;
+	}
+
+	NSMutableArray<NSString *> *redacted = [[tokens subarrayWithRange:NSMakeRange(0, keep)] mutableCopy];
+
+	for (NSUInteger i = keep; i < tokens.count; i++) {
+		[redacted addObject:((tokens[i].length == 0) ? @"" : @"\u2022\u2022\u2022\u2022\u2022\u2022")];
+	}
+
+	return [redacted componentsJoinedByString:@" "];
+}
+
++ (BOOL)targetLooksLikeService:(nullable NSString *)target
+{
+	if (target.length == 0) {
+		return NO;
+	}
+
+	NSString *nickname = target;
+
+	/* NickServ@services.example.net */
+	NSRange atRange = [nickname rangeOfString:@"@"];
+
+	if (atRange.location != NSNotFound) {
+		nickname = [nickname substringToIndex:atRange.location];
+	}
+
+	NSString *lowercased = nickname.lowercaseString;
+
+	if ([lowercased hasSuffix:@"serv"] || [lowercased isEqualToString:@"q"] || [lowercased isEqualToString:@"l"] ||
+		[lowercased isEqualToString:@"x"] || [lowercased isEqualToString:@"authserv"]) {
+		return YES;
+	}
+
+	return NO;
+}
+
 - (void)sendLine:(NSString *)string
 {
 	NSParameterAssert(string != nil);
@@ -2912,7 +3004,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 						return;
 					}
 
-					[self print:originalString
+					[self print:[IRCClient redactedServiceMessage:originalString sentTo:channel.name]
 								 by:self.userNickname
 						  inChannel:channel
 							 asType:lineType
@@ -4763,6 +4855,11 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		TVCLogLineType lineType = TVCLogLineTypeUndefined;
 
+		/* Connect commands run silently by default: nothing is echoed and no
+		 query is opened, so a password in "/msg NickServ IDENTIFY" never lands
+		 in a chat view. A redacted note goes to the server console instead. */
+		BOOL isSilentConnectCommand = (self.isPerformingConnectCommands && self.config.runConnectCommandsSilently);
+
 		if (commandNumeric == IRCLocalCommandMsg || commandNumeric == IRCLocalCommandOmsg ||
 			commandNumeric == IRCLocalCommandSmsg || commandNumeric == IRCLocalCommandUmsg) {
 			commandToSend = @"PRIVMSG";
@@ -4770,8 +4867,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 			lineType = TVCLogLineTypePrivateMessage;
 
 			isOperatorMessage = (commandNumeric == IRCLocalCommandOmsg);
-			isSecretMessage = (commandNumeric == IRCLocalCommandSmsg);
-			isUnencryptedMessage = (commandNumeric == IRCLocalCommandUmsg);
+			isSecretMessage = (commandNumeric == IRCLocalCommandSmsg || isSilentConnectCommand);
+			isUnencryptedMessage = (commandNumeric == IRCLocalCommandUmsg || isSilentConnectCommand);
 		} else if (commandNumeric == IRCLocalCommandMe || commandNumeric == IRCLocalCommandSme ||
 				   commandNumeric == IRCLocalCommandUme) {
 			commandToSend = @"PRIVMSG";
@@ -4904,6 +5001,15 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 				TLOEncryptionManagerEncodingDecodingCallbackBlock encryptionBlock = ^(NSString *originalString,
 																					  BOOL wasEncrypted) {
+					if (isSilentConnectCommand) {
+						[self printDebugInformationToConsole:TXTLS(@"IRC[ccs-1a]",
+																   destinationName,
+																   [IRCClient redactedServiceMessage:originalString
+																							  sentTo:destinationName])];
+
+						return;
+					}
+
 					if (destination == nil) {
 						return;
 					}
@@ -4912,7 +5018,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 						return;
 					}
 
-					[self print:originalString
+					[self print:[IRCClient redactedServiceMessage:originalString sentTo:destinationName]
 								 by:self.userNickname
 						  inChannel:destination
 							 asType:lineType
@@ -8893,6 +8999,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	[self notifyEvent:TXNotificationTypeConnect lineType:TVCLogLineTypeDebug];
 
 	/* Perform login commands */
+	self.isPerformingConnectCommands = YES;
+
 	for (__strong NSString *command in self.config.loginCommands) {
 		if ([command hasPrefix:@"/"]) {
 			command = [command substringFromIndex:1];
@@ -8900,6 +9008,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		[self sendCommand:command completeTarget:NO target:nil];
 	}
+
+	self.isPerformingConnectCommands = NO;
 
 	/* Request certificate information */
 	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityZNCCertInfoModule]) {

@@ -122,6 +122,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 @property(nonatomic, weak) IBOutlet NSButton *pongTimerCheck;
 @property(nonatomic, weak) IBOutlet NSButton *prefersSecuredConnectionCheck;
 @property(nonatomic, weak) IBOutlet NSButton *setInvisibleModeOnConnectCheck;
+@property(nonatomic, weak) IBOutlet NSButton *runConnectCommandsSilentlyCheck;
 @property(nonatomic, weak) IBOutlet NSButton *validateServerCertificateChainCheck;
 @property(nonatomic, weak) IBOutlet NSButton *viewListOfPreferredCipherSuitesButton;
 @property(nonatomic, weak) IBOutlet NSButton *zncIgnoreConfiguredAutojoinCheck;
@@ -965,6 +966,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	self.connectCommandsField.string = loginCommandsString;
 
 	self.setInvisibleModeOnConnectCheck.state = self.config.setInvisibleModeOnConnect;
+	self.runConnectCommandsSilentlyCheck.state = self.config.runConnectCommandsSilently;
 
 	/* Flood Control */
 	self.floodControlDelayTimerSliderTempValue = self.config.floodControlDelayTimerInterval;
@@ -1114,6 +1116,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	self.config.loginCommands = [connectCommands arrayByRemovingEmptyValues:YES trimming:YES uniquing:NO];
 
 	self.config.setInvisibleModeOnConnect = (self.setInvisibleModeOnConnectCheck.state == NSControlStateValueOn);
+	self.config.runConnectCommandsSilently = (self.runConnectCommandsSilentlyCheck.state == NSControlStateValueOn);
 
 	/* Flood Control */
 	self.config.floodControlMaximumMessages = self.floodControlMessageCountSlider.integerValue;

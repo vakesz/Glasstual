@@ -60,6 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) BOOL sendAuthenticationRequestsToUserServ;
 @property(readonly) BOOL sendWhoCommandRequestsToChannels;
 @property(readonly) BOOL setInvisibleModeOnConnect;
+@property(readonly) BOOL runConnectCommandsSilently;
 @property(readonly) BOOL sidebarItemExpanded;
 @property(readonly) BOOL validateServerCertificateChain;
 @property(readonly) BOOL zncIgnoreConfiguredAutojoin;
@@ -122,6 +123,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) BOOL sendAuthenticationRequestsToUserServ;
 @property(nonatomic, assign, readwrite) BOOL sendWhoCommandRequestsToChannels;
 @property(nonatomic, assign, readwrite) BOOL setInvisibleModeOnConnect;
+@property(nonatomic, assign, readwrite) BOOL runConnectCommandsSilently;
 @property(nonatomic, assign, readwrite) BOOL sidebarItemExpanded;
 @property(nonatomic, assign, readwrite) BOOL validateServerCertificateChain;
 @property(nonatomic, assign, readwrite) BOOL zncIgnoreConfiguredAutojoin;
