@@ -39,11 +39,7 @@
 
 #import <Security/Security.h>
 
-#import <SystemConfiguration/SystemConfiguration.h>
-
 #import "StaticDefinitions.h"
-#import "GCDAsyncSocket.h"
-#import "GCDAsyncSocketExtensions.h"
 #import "NSObjectHelperPrivate.h"
 #import "TLOLocalization.h"
 #import "TLOTimer.h"

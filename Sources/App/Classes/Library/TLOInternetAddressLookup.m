@@ -145,8 +145,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSArray *services = @[
 		@"https://wtfismyip.com/text",
 		@"https://canhazip.com/",
-		@"http://ifconfig.me/ip",
-		@"http://v4.ipv6-test.com/api/myip.php",
+		@"https://ifconfig.me/ip",
 	];
 
 	NSUInteger randomIndex = (arc4random() % services.count);

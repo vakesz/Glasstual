@@ -264,6 +264,7 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 #pragma mark -
 
 - (nullable IRCChannel *)findChannel:(NSString *)withName;
+- (nullable IRCChannel *)channelAtIndex:(NSUInteger)index; // nil if out of bounds
 - (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName;
 - (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName isPrivateMessage:(BOOL)isPrivateMessage;
 
@@ -280,6 +281,9 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 - (nullable NSString *)nicknameAsZNCUser:(NSString *)nickname; // Returns nil if not connected to ZNC
 
 - (BOOL)nicknameIsMyself:(NSString *)nickname;
+
+/* Casefold nickname according to the CASEMAPPING advertised by the server. */
+- (NSString *)casefoldNickname:(NSString *)nickname;
 
 - (BOOL)stringIsNickname:(NSString *)string;
 - (BOOL)stringIsChannelName:(NSString *)string;

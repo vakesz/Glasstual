@@ -495,11 +495,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 	return [RZUserDefaults() boolForKey:@"PreferModernCiphers"];
 }
 
-+ (BOOL)preferModernSockets
-{
-	return [RZUserDefaults() boolForKey:@"PreferModernSockets"];
-}
-
 #pragma mark -
 #pragma mark App Nap
 

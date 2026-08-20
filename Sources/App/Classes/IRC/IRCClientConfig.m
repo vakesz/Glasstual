@@ -61,6 +61,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) uint16_t serverPort_;
 @property(readonly, copy, nullable) NSString *serverAddress_;
 @property(readonly) BOOL connectionPrefersModernCiphers_;
+
+- (void)invalidateNicknamePasswordKeychainCache;
 @end
 
 @implementation IRCClientConfig
@@ -833,7 +835,25 @@ NS_ASSUME_NONNULL_BEGIN
 		return self->_nicknamePassword;
 	}
 
-	return self.nicknamePasswordFromKeychain;
+	/* Keychain reads are synchronous and comparatively slow.
+	 The result is cached until the password is modified or
+	 destroyed through this object. */
+	if (self->_nicknamePasswordKeychainCacheIsValid) {
+		return self->_nicknamePasswordKeychainCache;
+	}
+
+	NSString *kcPassword = self.nicknamePasswordFromKeychain;
+
+	self->_nicknamePasswordKeychainCache = [kcPassword copy];
+	self->_nicknamePasswordKeychainCacheIsValid = YES;
+
+	return kcPassword;
+}
+
+- (void)invalidateNicknamePasswordKeychainCache
+{
+	self->_nicknamePasswordKeychainCache = nil;
+	self->_nicknamePasswordKeychainCacheIsValid = NO;
 }
 
 - (nullable NSString *)nicknamePasswordFromKeychain
@@ -885,6 +905,8 @@ NS_ASSUME_NONNULL_BEGIN
 							serviceName:nicknamePasswordServiceName];
 
 	self->_nicknamePassword = nil;
+
+	[self invalidateNicknamePasswordKeychainCache];
 }
 
 - (void)writeProxyPasswordToKeychain
@@ -915,6 +937,8 @@ NS_ASSUME_NONNULL_BEGIN
 					   serviceName:nicknamePasswordServiceName];
 
 	self->_nicknamePassword = nil;
+
+	[self invalidateNicknamePasswordKeychainCache];
 }
 
 - (void)destroyProxyPasswordKeychainItem
@@ -1304,6 +1328,8 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self->_nicknamePassword != nicknamePassword) {
 		self->_nicknamePassword = [nicknamePassword copy];
+
+		[self invalidateNicknamePasswordKeychainCache];
 	}
 }
 

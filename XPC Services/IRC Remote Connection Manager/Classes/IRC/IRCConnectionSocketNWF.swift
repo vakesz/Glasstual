@@ -37,31 +37,22 @@
 
 import Network
 
-final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
-	fileprivate var readInBuffer: Data?
+/* ConnectionSocketNWF is the Network.framework transport.
+ See ConnectionSocket for the queue confinement rules; every method
+ here runs on `queue`, including the NWConnection callbacks. */
+final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @unchecked Sendable {
+	fileprivate var readInBuffer = Data()
 
 	fileprivate var connection: NWConnection?
 
-	fileprivate var socketDelegateQueue: DispatchQueue?
+	fileprivate var connectTimeoutWorkItem: DispatchWorkItem?
 
 	fileprivate var trustRef: SecTrust?
 
-	// MARK: - Grand Central Dispatch
-
-	fileprivate func destroyDispatchQueues() {
-		socketDelegateQueue = nil
-	}
-
-	fileprivate func createDispatchQueues() {
-		let socketDelegateQueueName = "Glasstual.ConnectionSocket.socketDelegateQueue.\(uniqueIdentifier)"
-
-		socketDelegateQueue = DispatchQueue(label: socketDelegateQueueName)
-	}
-
 	// MARK: - Open/Close Socket
 
-	fileprivate var constructedParameters: NWParameters {
-		var parameters: NWParameters
+	fileprivate func constructedParameters() throws -> NWParameters {
+		let parameters: NWParameters
 
 		if config.connectionPrefersSecuredConnection {
 			parameters = NWParameters(tls: constructedTLSOptions)
@@ -69,7 +60,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 			parameters = .tcp
 		}
 
-		parameters.preferNoProxies = (config.proxyType == .none)
+		try applyProxy(to: parameters)
 
 		if let internetProtocol = parameters.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options {
 			switch config.addressType {
@@ -109,7 +100,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 			secOptions,
 			{ [weak self] (_, trust, completionBlock) in
 				self?.tlsVerifySecProtocol(trust, response: completionBlock)
-			}, socketDelegateQueue!)
+			}, queue)
 
 		return tlsOptions
 	}
@@ -119,21 +110,39 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 			return
 		}
 
-		createDispatchQueues()
-
 		let serverAddress = config.serverAddress
 		let serverPort = config.serverPort
 
-		let connection = NWConnection(
-			host: NWEndpoint.Host(stringLiteral: serverAddress),
-			port: NWEndpoint.Port(integerLiteral: serverPort),
-			using: constructedParameters)
+		let parameters: NWParameters
 
-		connection.stateUpdateHandler = statusUpdateHandler
+		do {
+			parameters = try constructedParameters()
+		} catch let error as ConnectionError {
+			delegate?.connection(self, disconnectedWith: error)
+
+			return
+		} catch {
+			delegate?.connection(self, disconnectedWith: ConnectionError(socketError: error))
+
+			return
+		}
+
+		let connection = NWConnection(
+			host: NWEndpoint.Host(serverAddress),
+			port: NWEndpoint.Port(integerLiteral: serverPort),
+			using: parameters)
+
+		connection.stateUpdateHandler = { [weak self] (state) in
+			self?.statusUpdateHandler(state)
+		}
 
 		self.connection = connection
 
-		delegate?.connection(self, willConnectTo: serverAddress, on: serverPort)
+		if let proxyEndpoint = proxyEndpoint {
+			delegate?.connection(self, willConnectToProxy: proxyEndpoint.host, on: proxyEndpoint.port)
+		} else {
+			delegate?.connection(self, willConnectTo: serverAddress, on: serverPort)
+		}
 
 		connect()
 	}
@@ -141,7 +150,9 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 	fileprivate func connect() {
 		connecting = true
 
-		connection?.start(queue: socketDelegateQueue!)
+		scheduleConnectTimeout()
+
+		connection?.start(queue: queue)
 	}
 
 	func close() {
@@ -150,6 +161,8 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 		}
 
 		disconnecting = true
+
+		cancelConnectTimeout()
 
 		connection?.cancel()
 	}
@@ -161,9 +174,119 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 	override func resetState() {
 		super.resetState()
 
+		cancelConnectTimeout()
+
 		connection = nil
 
-		destroyDispatchQueues()
+		readInBuffer.removeAll()
+
+		trustRef = nil
+	}
+
+	// MARK: - Connect Timeout
+
+	fileprivate func scheduleConnectTimeout() {
+		cancelConnectTimeout()
+
+		let workItem = DispatchWorkItem { [weak self] in
+			self?.onConnectTimeout()
+		}
+
+		connectTimeoutWorkItem = workItem
+
+		queue.asyncAfter(deadline: .now() + connectTimeout, execute: workItem)
+	}
+
+	fileprivate func cancelConnectTimeout() {
+		connectTimeoutWorkItem?.cancel()
+
+		connectTimeoutWorkItem = nil
+	}
+
+	fileprivate func onConnectTimeout() {
+		connectTimeoutWorkItem = nil
+
+		if connecting == false || connected {
+			return
+		}
+
+		RCMLog.connection.error(
+			"Connection \(self.uniqueIdentifier, privacy: .public) timed out after \(self.connectTimeout, privacy: .public) seconds"
+		)
+
+		let errorMessage = LocalizedString("Connection timed out", table: "ConnectionErrors")
+
+		close(with: errorMessage)
+	}
+
+	// MARK: - Proxy
+
+	/// The proxy the transport will connect through, after resolving
+	/// the Tor shortcut. nil when no explicit proxy is configured.
+	fileprivate var proxyEndpoint: (host: String, port: UInt16)? {
+		switch config.proxyType {
+		case .socks5, .HTTP:
+			guard let host = config.proxyAddress, host.isEmpty == false else {
+				return nil
+			}
+
+			return (host: host, port: config.proxyPort)
+		case .tor:
+			return (host: torProxyTypeAddress, port: torProxyTypePort)
+		case .none, .automatic:
+			return nil
+		@unknown default:
+			return nil
+		}
+	}
+
+	fileprivate func applyProxy(to parameters: NWParameters) throws {
+		switch config.proxyType {
+		case .none:
+			parameters.preferNoProxies = true
+		case .automatic:
+			/* The default privacy context consults the system proxy
+			 settings (including PAC) so there is nothing to configure. */
+			parameters.preferNoProxies = false
+		case .socks5, .HTTP, .tor:
+			guard let endpoint = proxyEndpoint else {
+				throw ConnectionError.other(
+					message: LocalizedString("Proxy address is missing", table: "ConnectionErrors"))
+			}
+
+			let nwEndpoint = NWEndpoint.hostPort(
+				host: NWEndpoint.Host(endpoint.host),
+				port: NWEndpoint.Port(integerLiteral: endpoint.port))
+
+			var proxyConfiguration: ProxyConfiguration
+
+			if config.proxyType == .HTTP {
+				proxyConfiguration = ProxyConfiguration(httpCONNECTProxy: nwEndpoint)
+			} else {
+				proxyConfiguration = ProxyConfiguration(socksv5Proxy: nwEndpoint)
+			}
+
+			/* A proxy the user asked for must be used; never fall back to a direct connection. */
+			proxyConfiguration.allowFailover = false
+
+			if config.proxyType != .tor,
+				let username = config.proxyUsername, username.isEmpty == false,
+				let password = config.proxyPassword, password.isEmpty == false
+			{
+				proxyConfiguration.applyCredential(username: username, password: password)
+			}
+
+			let privacyContext = NWParameters.PrivacyContext(description: "Glasstual.IRCConnection.\(uniqueIdentifier)")
+
+			privacyContext.proxyConfigurations = [proxyConfiguration]
+
+			parameters.setPrivacyContext(privacyContext)
+
+			parameters.preferNoProxies = false
+		@unknown default:
+			throw ConnectionError.other(
+				message: LocalizedString("Unsupported proxy type", table: "ConnectionErrors"))
+		}
 	}
 
 	// MARK: - Socket Read & Write
@@ -176,7 +299,9 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 		connection?.receive(
 			minimumIncompleteLength: 0,
 			maximumLength: maximumDataLength,
-			completion: readCompletionHandler)
+			completion: { [weak self] (content, contentContext, isComplete, error) in
+				self?.readCompletionHandler(content, contentContext, isComplete, error)
+			})
 	}
 
 	func readIn(_ data: Data) {
@@ -184,36 +309,9 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 			return
 		}
 
-		/* First combine the existing read buffer with the
-		 new data so we can process it in mass. */
-		/* Note: June 29, 2018 on Swift 4.2 on Xcode 10 beta 2
-		 When I first wrote this code, I wrote the logic in the
-		 form "newBuffer = (oldBuffer + data)" When writing it
-		 using this syntax, Foundation would throw at random
-		 an out of range exception similar to the following:
+		readInBuffer.append(data)
 
-		 *** Terminating app due to uncaught exception 'NSRangeException', reason: '*** -[NSConcreteMutableData subdataWithRange:]: range {12945, 87} exceeds data length 7282'
-
-		 TODO: Maybe this should be revisited at a later time. */
-		var newBuffer: Data
-
-		if let oldBuffer = readInBuffer {
-			newBuffer = oldBuffer
-		} else {
-			newBuffer = Data()
-		}
-
-		newBuffer.append(data)
-
-		/* Regardless of the result, we need to update the
-		 saved buffer with the updated buffer, but we prefer
-		 to wait until then end to do that. */
-		defer {
-			readInBuffer = newBuffer
-		}
-
-		/* Split the data */
-		guard let (lines, remainingData) = newBuffer.splitNetworkLines() else {
+		guard let (lines, remainingData) = readInBuffer.splitNetworkLines() else {
 			return
 		}
 
@@ -222,13 +320,22 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 		}
 
 		if let remainder = remainingData {
-			newBuffer = remainder
+			/* The remainder is a slice of the old buffer. Copying it into
+			 a fresh Data rebases indices to zero and releases the storage
+			 holding the lines already delivered. */
+			readInBuffer = Data(remainder)
 		} else {
-			/* "Pass true to request that the collection avoid releasing its
-			 storage. Retaining the collection’s storage can be a useful
-			 optimization when you’re planning to grow the collection again." */
+			readInBuffer.removeAll(keepingCapacity: true)
+		}
 
-			newBuffer.removeAll(keepingCapacity: true)
+		if readInBuffer.count > maximumBufferedLineLength {
+			RCMLog.connection.error(
+				"Connection \(self.uniqueIdentifier, privacy: .public) buffered \(self.readInBuffer.count, privacy: .public) bytes without a newline"
+			)
+
+			let errorMessage = LocalizedString("Peer sent a line that is too long", table: "ConnectionErrors")
+
+			close(with: errorMessage)
 		}
 	}
 
@@ -246,7 +353,11 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 
 		delegate?.connection(self, willSend: data)
 
-		connection?.send(content: data, completion: .contentProcessed(writeCompletionHandler))
+		connection?.send(
+			content: data,
+			completion: .contentProcessed({ [weak self] (error) in
+				self?.writeCompletionHandler(error)
+			}))
 	}
 
 	// MARK: - Properties
@@ -265,7 +376,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 			case .ipv6(let address):
 				return address.rawValue.IPv6Address
 			@unknown default:
-				fatalError("Unexpected switch case")
+				return nil
 			}
 		}
 
@@ -273,12 +384,18 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 	}
 
 	fileprivate func onConnect() {
+		cancelConnectTimeout()
+
 		connecting = false
 		connected = true
 
 		read()
 
-		delegate?.connection(self, didConnectTo: connectedHost)
+		/* When a proxy is in use the remote endpoint is the proxy,
+		 not the server, so report nil as the delegate contract asks. */
+		let host = (proxyEndpoint == nil) ? connectedHost : nil
+
+		delegate?.connection(self, didConnectTo: host)
 
 		onSecured()
 	}
@@ -308,12 +425,14 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 			errorPayload = alternateError
 		} else if let nwError = error as? NWError {
 			errorPayload = translateError(nwError)
+		} else if let error {
+			errorPayload = ConnectionError(socketError: error)
 		}
 
-		if errorPayload == nil {
-			delegate?.connectionDisconnected(self)
+		if let errorPayload {
+			delegate?.connection(self, disconnectedWith: errorPayload)
 		} else {
-			delegate?.connection(self, disconnectedWith: errorPayload!)
+			delegate?.connectionDisconnected(self)
 		}
 	}
 
@@ -340,13 +459,13 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 			return
 		}
 
-		if content == nil {
+		guard let content else {
 			close(with: "Unexpected condition: There is no data when there is no error")
 
 			return
 		}
 
-		readIn(content!)
+		readIn(content)
 
 		read()
 	}
@@ -369,15 +488,22 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 
 	final func statusUpdateHandler(_ status: NWConnection.State) {
 		switch status {
+		case .setup, .preparing:
+			break
 		case .waiting(let error):
-			close(with: error)
+			/* Waiting is not fatal. The path may become viable (network
+			 comes back, proxy starts answering); the connect timeout
+			 bounds how long we are willing to wait. */
+			RCMLog.connection.notice(
+				"Connection \(self.uniqueIdentifier, privacy: .public) waiting: \(error.localizedDescription, privacy: .public)"
+			)
 		case .ready:
 			onConnect()
 		case .cancelled:
 			onDisconnect(with: nil)
 		case .failed(let error):
 			onDisconnect(with: error)
-		default:
+		@unknown default:
 			break
 		}
 	}
@@ -385,7 +511,8 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 	// MARK: - Security
 
 	final func tlsVerifySecProtocol(_ trust: sec_trust_t, response: @escaping sec_protocol_verify_complete_t) {
-		let trustRef = sec_trust_copy_ref(trust).takeUnretainedValue()
+		/* sec_trust_copy_ref() follows the Create Rule; the result is +1. */
+		let trustRef = sec_trust_copy_ref(trust).takeRetainedValue()
 
 		self.trustRef = trustRef
 
@@ -495,7 +622,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol {
 		case .wifiAware(_):
 			return ConnectionError(otherError: "Wi-Fi Aware error")
 		@unknown default:
-			fatalError("Unexpected switch case")
+			return ConnectionError(otherError: error.localizedDescription)
 		}
 	}
 }

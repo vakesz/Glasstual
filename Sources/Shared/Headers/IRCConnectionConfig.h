@@ -47,14 +47,14 @@ NS_ASSUME_NONNULL_BEGIN
 GLASSTUAL_EXTERN uint16_t const IRCConnectionDefaultServerPort;
 GLASSTUAL_EXTERN uint16_t const IRCConnectionDefaultProxyPort;
 
+/* Raw values are persisted. Values 4 (SOCKS4) and 7 (HTTPS) are retired
+ and must not be reused; stored configurations carrying them decode as None. */
 typedef NS_ENUM(NSUInteger, IRCConnectionProxyType) {
 	IRCConnectionProxyTypeNone = 0,
-	IRCConnectionProxyTypeAutomatic = 1,
-	IRCConnectionProxyTypeSocks4 = 4,
+	IRCConnectionProxyTypeAutomatic = 1, // System proxy settings
 	IRCConnectionProxyTypeSocks5 = 5,
-	IRCConnectionProxyTypeHTTP = 6,
-	IRCConnectionProxyTypeHTTPS = 7,
-	IRCConnectionProxyTypeTor = 8
+	IRCConnectionProxyTypeHTTP = 6, // HTTP CONNECT
+	IRCConnectionProxyTypeTor = 8	// SOCKS5 to the Tor Browser bundle on 127.0.0.1:9150
 };
 
 /* Select specific protocol to use. This does not define preference.
@@ -68,7 +68,6 @@ typedef NS_ENUM(NSUInteger, IRCConnectionAddressType) {
 
 @interface IRCConnectionConfig : XRPortablePropertyObject
 @property(readonly) BOOL connectionPrefersModernCiphersOnly;
-@property(readonly) BOOL connectionPrefersModernSockets;
 @property(readonly) BOOL connectionPrefersSecuredConnection;
 @property(readonly) BOOL connectionShouldValidateCertificateChain;
 @property(readonly) IRCConnectionAddressType addressType;
@@ -92,7 +91,6 @@ typedef NS_ENUM(NSUInteger, IRCConnectionAddressType) {
 
 @interface IRCConnectionConfigMutable : IRCConnectionConfig
 @property(nonatomic, assign, readwrite) BOOL connectionPrefersModernCiphersOnly;
-@property(nonatomic, assign, readwrite) BOOL connectionPrefersModernSockets;
 @property(nonatomic, assign, readwrite) BOOL connectionPrefersSecuredConnection;
 @property(nonatomic, assign, readwrite) BOOL connectionShouldValidateCertificateChain;
 @property(nonatomic, assign, readwrite) IRCConnectionAddressType addressType;

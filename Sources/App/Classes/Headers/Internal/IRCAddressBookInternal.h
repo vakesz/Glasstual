@@ -55,6 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 	IRCAddressBookEntryType _entryType;
 	NSString *_hostmask;
 	NSString *_hostmaskRegularExpression;
+	NSRegularExpression *_compiledHostmaskRegularExpression;
 	NSString *_trackingNickname;
 	NSArray<IRCAddressBookEntry *> *_parentEntries;
 

@@ -35,6 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) nw_path_monitor_t monitor;
 @property (nonatomic, strong) dispatch_queue_t monitorQueue;
 @property (nonatomic, assign) BOOL currentlyReachable;
+@property (nonatomic, assign) BOOL receivedInitialPath;
 @end
 
 @implementation OELReachability
@@ -97,6 +98,14 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL wasReachable = self.currentlyReachable;
 
 	self.currentlyReachable = reachable;
+
+	/* The first path update describes the state at launch rather
+	 than a change. Seed our state from it without notifying. */
+	if (self.receivedInitialPath == NO) {
+		self.receivedInitialPath = YES;
+
+		return;
+	}
 
 	if (reachable == wasReachable) {
 		return;

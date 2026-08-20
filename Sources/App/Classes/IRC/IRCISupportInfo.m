@@ -66,6 +66,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, readwrite, nullable) NSString *inviteExceptionModeSymbol;
 @property(nonatomic, copy, readwrite, nullable) NSString *networkName;
 @property(nonatomic, copy, readwrite, nullable) NSString *networkNameFormatted;
+@property(nonatomic, assign, readwrite) IRCISupportInfoCaseMapping caseMapping;
 @end
 
 @implementation IRCISupportInfo
@@ -105,6 +106,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.networkName = nil;
 	self.networkNameFormatted = nil;
+
+	self.caseMapping = IRCISupportInfoCaseMappingRFC1459;
 
 	self.channelNamePrefixes = @[ @"#" ];
 
@@ -167,6 +170,8 @@ NS_ASSUME_NONNULL_BEGIN
 				if (awayLength > 0) {
 					self.maximumAwayLength = awayLength;
 				}
+			} else if ([segmentKey isEqualToStringIgnoringCase:@"CASEMAPPING"]) {
+				[self parseCaseMapping:segmentValue];
 			} else if ([segmentKey isEqualToStringIgnoringCase:@"CHANMODES"]) {
 				[self parseChannelModes:segmentValue];
 			} else if ([segmentKey isEqualToStringIgnoringCase:@"CHANNELLEN"]) {
@@ -363,6 +368,80 @@ NS_ASSUME_NONNULL_BEGIN
 	return [modes copy];
 }
 
+- (void)parseCaseMapping:(NSString *)caseMapping
+{
+	NSParameterAssert(caseMapping != nil);
+
+	if ([caseMapping isEqualToStringIgnoringCase:@"ascii"]) {
+		self.caseMapping = IRCISupportInfoCaseMappingASCII;
+	} else if ([caseMapping isEqualToStringIgnoringCase:@"strict-rfc1459"]) {
+		self.caseMapping = IRCISupportInfoCaseMappingStrictRFC1459;
+	} else {
+		/* rfc1459 is the default and also what we fall back
+		 to for unknown values (e.g. rfc7613) because it is the
+		 most lenient of the three. */
+		self.caseMapping = IRCISupportInfoCaseMappingRFC1459;
+	}
+}
+
+- (NSString *)casefoldString:(NSString *)string
+{
+	NSParameterAssert(string != nil);
+
+	IRCISupportInfoCaseMapping caseMapping = self.caseMapping;
+
+	NSString *lowercaseString = string.lowercaseString;
+
+	if (caseMapping == IRCISupportInfoCaseMappingASCII) {
+		return lowercaseString;
+	}
+
+	NSUInteger length = lowercaseString.length;
+
+	if (length == 0) {
+		return lowercaseString;
+	}
+
+	/* Fast path: most nicknames contain none of the special characters. */
+	NSCharacterSet *specialCharacters = [NSCharacterSet characterSetWithCharactersInString:@"[]\\~"];
+
+	if ([lowercaseString rangeOfCharacterFromSet:specialCharacters].location == NSNotFound) {
+		return lowercaseString;
+	}
+
+	unichar *buffer = malloc(length * sizeof(unichar));
+
+	[lowercaseString getCharacters:buffer range:NSMakeRange(0, length)];
+
+	for (NSUInteger i = 0; i < length; i++) {
+		switch (buffer[i]) {
+		case '[':
+			buffer[i] = '{';
+			break;
+		case ']':
+			buffer[i] = '}';
+			break;
+		case '\\':
+			buffer[i] = '|';
+			break;
+		case '~':
+			if (caseMapping == IRCISupportInfoCaseMappingRFC1459) {
+				buffer[i] = '^';
+			}
+
+			break;
+		default:
+			break;
+		}
+	}
+
+	NSString *result = [NSString stringWithCharacters:buffer length:length];
+
+	free(buffer);
+
+	return result;
+}
+
 - (void)parseUserModeSymbols:(NSString *)modeString
 {
 	NSParameterAssert(modeString != nil);
@@ -373,7 +452,10 @@ NS_ASSUME_NONNULL_BEGIN
 	NSInteger openingParenthesesPosition = [modeString stringPosition:@"("];
 	NSInteger closingParenthesesPosition = [modeString stringPosition:@")"];
 
-	if (openingParenthesesPosition != 0 && openingParenthesesPosition >= closingParenthesesPosition) {
+	/* Opening parenthesis must be the first character and the closing
+	 parenthesis must exist with at least one symbol between them.
+	 -stringPosition: returns -1 when the needle is not found. */
+	if (openingParenthesesPosition != 0 || closingParenthesesPosition <= 1) {
 		return;
 	}
 

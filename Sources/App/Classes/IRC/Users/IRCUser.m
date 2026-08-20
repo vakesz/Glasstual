@@ -290,8 +290,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	removeUserTimer = XRScheduleBlockOnGlobalQueue(blockToFire, _removeUserTimerInterval);
 
-	XRResumeScheduledBlock(removeUserTimer);
-
 	if (removeUserTimer == NULL) {
 		LogToConsoleFault("Failed to create timer to remove user");
 
@@ -301,6 +299,8 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	self.persistentStore.removeUserTimer = removeUserTimer;
+
+	XRResumeScheduledBlock(removeUserTimer);
 }
 
 - (void)cancelRemoveUserTimer

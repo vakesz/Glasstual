@@ -59,6 +59,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong) NSMutableArray<IRCChannelUser *> *memberContainer;
 @end
 
+/* Queue-specific key used to detect whether the caller is already
+ executing on the member list serial queue. The address is what matters. */
+static char IRCChannelMemberListQueueKey;
+
 @implementation IRCChannelMemberList
 
 - (instancetype)init
@@ -136,6 +140,8 @@ NS_ASSUME_NONNULL_BEGIN
 			dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
 
 		workerQueue = dispatch_queue_create("IRCChannel.modifyMemberListSerialQueue", attributes);
+
+		dispatch_queue_set_specific(workerQueue, &IRCChannelMemberListQueueKey, (void *)1, NULL);
 	});
 
 	return workerQueue;
@@ -157,15 +163,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	dispatch_queue_t workerQueue = [self modifyMemberListSerialQueue];
 
-	static void *IsOnWorkerQueueKey = NULL;
-
-	if (IsOnWorkerQueueKey == NULL) {
-		IsOnWorkerQueueKey = &IsOnWorkerQueueKey;
-
-		dispatch_queue_set_specific(workerQueue, IsOnWorkerQueueKey, (void *)1, NULL);
-	}
-
-	if (dispatch_get_specific(IsOnWorkerQueueKey)) {
+	if (dispatch_get_specific(&IRCChannelMemberListQueueKey)) {
 		block();
 
 		return;

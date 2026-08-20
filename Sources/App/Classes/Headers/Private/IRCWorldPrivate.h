@@ -41,10 +41,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCWorld ()
-@property(nonatomic, assign, readwrite) NSUInteger messagesSent;
-@property(nonatomic, assign, readwrite) NSUInteger messagesReceived;
-@property(nonatomic, assign, readwrite) uint64_t bandwidthIn;
-@property(nonatomic, assign, readwrite) uint64_t bandwidthOut;
+/* Traffic counters are incremented from the socket's queue and
+ read from the main thread; use the note* methods to mutate them. */
+- (void)noteMessageSentWithLength:(NSUInteger)length;
+- (void)noteMessageReceivedWithLength:(NSUInteger)length;
 @property(nonatomic, assign) BOOL isImportingConfiguration;
 @property(nonatomic, copy, readwrite) NSArray<IRCClient *> *clientList;
 

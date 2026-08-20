@@ -180,24 +180,40 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *hostmask = self.hostmask;
 
 	if (self.entryType == IRCAddressBookEntryTypeIgnore) {
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"{" withString:@"\\{"];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"}" withString:@"\\}"];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@")" withString:@"\\)"];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"(" withString:@"\\("];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"]" withString:@"\\]"];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"[" withString:@"\\["];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"^" withString:@"\\^"];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"|" withString:@"\\|"];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"~" withString:@"\\~"];
-		hostmask = [hostmask stringByReplacingOccurrencesOfString:@"*" withString:@"(.*?)"];
+		/* Escape every regular expression metacharacter, then translate
+		 the IRC wildcards: '*' matches any sequence, '?' matches one
+		 character. The pattern is anchored so it matches the whole hostmask. */
+		NSString *escapedHostmask = [NSRegularExpression escapedPatternForString:hostmask];
+
+		escapedHostmask = [escapedHostmask stringByReplacingOccurrencesOfString:@"\\*" withString:@".*?"];
+		escapedHostmask = [escapedHostmask stringByReplacingOccurrencesOfString:@"\\?" withString:@"."];
+
+		hostmask = [NSString stringWithFormat:@"^%@$", escapedHostmask];
 	} else if (self.entryType == IRCAddressBookEntryTypeUserTracking) {
-		hostmask = [NSString stringWithFormat:@"^%@!(.*?)@(.*?)$", hostmask];
+		NSString *escapedHostmask = [NSRegularExpression escapedPatternForString:hostmask];
+
+		hostmask = [NSString stringWithFormat:@"^%@!(.*?)@(.*?)$", escapedHostmask];
 	} else {
+		self->_hostmaskRegularExpression = @"";
+		self->_compiledHostmaskRegularExpression = nil;
+
 		return;
 	}
 
 	self->_hostmaskRegularExpression = [hostmask copy];
+
+	NSError *regularExpressionError = nil;
+
+	self->_compiledHostmaskRegularExpression =
+		[NSRegularExpression regularExpressionWithPattern:hostmask
+												  options:NSRegularExpressionCaseInsensitive
+													error:&regularExpressionError];
+
+	if (self->_compiledHostmaskRegularExpression == nil) {
+		LogToConsoleError("Failed to compile hostmask regular expression '%{public}@': %{public}@",
+						  hostmask,
+						  regularExpressionError.localizedDescription);
+	}
 }
 
 - (void)rebuildTrackingNickname
@@ -217,7 +233,17 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(hostmask != nil);
 
-	return [XRRegularExpression string:hostmask isMatchedByRegex:self.hostmaskRegularExpression withoutCase:YES];
+	NSRegularExpression *regularExpression = self->_compiledHostmaskRegularExpression;
+
+	if (regularExpression == nil) {
+		return NO;
+	}
+
+	NSRange matchRange = [regularExpression rangeOfFirstMatchInString:hostmask
+															  options:0
+																range:NSMakeRange(0, hostmask.length)];
+
+	return (matchRange.location != NSNotFound);
 }
 
 - (NSDictionary<NSString *, id> *)dictionaryValueForTarget:(XRPortablePropertyDictTarget)target
@@ -261,6 +287,7 @@ NS_ASSUME_NONNULL_BEGIN
 	config->_defaults = self->_defaults;
 
 	config->_hostmaskRegularExpression = self->_hostmaskRegularExpression;
+	config->_compiledHostmaskRegularExpression = self->_compiledHostmaskRegularExpression;
 	config->_trackingNickname = self->_trackingNickname;
 
 	config->_parentEntries = self->_parentEntries;
