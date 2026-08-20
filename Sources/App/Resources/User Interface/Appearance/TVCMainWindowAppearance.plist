@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>Common</key>
+	<key>Tahoe</key>
 	<dict>
 		<key>titlebarAccessoryViewLeftMargin</key>
 		<integer>3</integer>
@@ -10,20 +10,10 @@
 		<integer>5</integer>
 		<key>channelViewOverlayDefaultBackgroundColor</key>
 		<dict>
-			<key>activeWindow</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>0.0 0.3</string>
-			</dict>
-			<key>inactiveWindow</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>0.0 0.3</string>
-			</dict>
+			<key>type</key>
+			<integer>3</integer>
+			<key>value</key>
+			<string>windowBackgroundColor</string>
 		</dict>
 		<key>defaultWindowSize</key>
 		<dict>
@@ -35,30 +25,17 @@
 		<key>splitViewDividerColor</key>
 		<dict>
 			<key>type</key>
-			<integer>1</integer>
+			<integer>3</integer>
 			<key>value</key>
-			<string>0.65</string>
+			<string>separatorColor</string>
 		</dict>
-	</dict>
-	<key>CommonModern</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>Common</string>
 		<key>titlebarAccessoryViewBackgroundColor</key>
 		<dict>
-			<key>activeWindow</key>
-			<dict>
-				<key>type</key>
-				<integer>2</integer>
-				<key>value</key>
-				<string>0.462 0.462 0.462</string>
-			</dict>
+			<key>type</key>
+			<integer>3</integer>
+			<key>value</key>
+			<string>secondaryLabelColor</string>
 		</dict>
-	</dict>
-	<key>CommonModernDark</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModern</string>
 		<key>loadingScreenBackgroundColor</key>
 		<dict>
 			<key>type</key>
@@ -66,28 +43,6 @@
 			<key>value</key>
 			<string>windowBackgroundColor</string>
 		</dict>
-	</dict>
-	<key>CommonModernLight</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModern</string>
-		<key>loadingScreenBackgroundColor</key>
-		<dict>
-			<key>type</key>
-			<integer>1</integer>
-			<key>value</key>
-			<string>1.0</string>
-		</dict>
-	</dict>
-	<key>TahoeDark</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModernDark</string>
-	</dict>
-	<key>TahoeLight</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModernLight</string>
 	</dict>
 </dict>
 </plist>

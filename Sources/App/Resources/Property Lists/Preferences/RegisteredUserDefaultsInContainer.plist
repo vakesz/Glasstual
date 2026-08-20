@@ -134,8 +134,6 @@
 	<integer>1</integer>
 	<key>Main Input Text Field -&gt; Focus When Changing Views</key>
 	<true/>
-	<key>MainWindowTransparencyLevel</key>
-	<real>1</real>
 	<key>NicknameHighlightMatchingType</key>
 	<integer>1</integer>
 	<key>NotificationType -&gt; Address Book Match -&gt; Enabled</key>
@@ -188,8 +186,6 @@
 	<true/>
 	<key>PreferModernCiphers</key>
 	<false/>
-	<key>PreferModernSockets</key>
-	<true/>
 	<key>Off-the-Record Messaging -&gt; Automatically Enable Service</key>
 	<false/>
 	<key>Off-the-Record Messaging -&gt; Enable Encryption</key>

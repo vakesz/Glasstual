@@ -77,10 +77,13 @@
 		return 0;
 	}
 
+	EKBlowfishEncryptionModeOfOperation encodeMode =
+		[TPIBlowfishEncryption encryptionModeOfOperationForChannel:targetChannel];
+
 	NSInteger lastEstimatedSize = 0;
 
 	for (NSInteger i = maximumLength; i >= 0; i--) {
-		NSInteger sizeForLength = [EKBlowfishEncryption estimatedLengthOfEncodedDataOfLength:i];
+		NSInteger sizeForLength = [EKBlowfishEncryption estimatedLengthOfEncodedDataOfLength:i mode:encodeMode];
 
 		if (sizeForLength < maximumLength) {
 			break;

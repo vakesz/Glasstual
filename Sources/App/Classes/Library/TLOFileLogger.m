@@ -161,25 +161,43 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 	NSData *dataToWrite = [stringToWrite dataUsingEncoding:NSUTF8StringEncoding allowLossyConversion:YES];
 
 	if (dataToWrite) {
-		@try {
-			self.lastWriteTime = [NSDate timeIntervalSince1970];
+		self.lastWriteTime = [NSDate timeIntervalSince1970];
 
-			[self.fileHandle writeData:dataToWrite];
-		} @catch (NSException *exception) {
-			LogToConsoleError("Caught exception: %{public}@", exception.reason);
-			LogStackTrace();
+		NSError *writeError = nil;
 
-			if ([exception.reason contains:@"No space left on device"]) {
+		if ([self.fileHandle writeData:dataToWrite error:&writeError] == NO) {
+			LogToConsoleError("Failed to write to log file: %{public}@", writeError.localizedDescription);
+
+			if ([self errorIsNoSpaceLeftOnDevice:writeError]) {
 				[self failWithNoSpaceLeftOnDevice];
 			}
 
 			[self close];
-		} // @catch
+		}
 	}
 }
 
 #pragma mark -
 #pragma mark File Handle Management
+
+- (BOOL)errorIsNoSpaceLeftOnDevice:(nullable NSError *)error
+{
+	/* NSFileHandle wraps the POSIX error in a Cocoa error so
+	 walk the underlying error chain to find it. */
+	while (error) {
+		if ([error.domain isEqualToString:NSPOSIXErrorDomain] && error.code == ENOSPC) {
+			return YES;
+		}
+
+		if ([error.domain isEqualToString:NSCocoaErrorDomain] && error.code == NSFileWriteOutOfSpaceError) {
+			return YES;
+		}
+
+		error = error.userInfo[NSUnderlyingErrorKey];
+	}
+
+	return NO;
+}
 
 - (void)failWithNoSpaceLeftOnDevice
 {
@@ -219,7 +237,11 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 		return;
 	}
 
-	[self.fileHandle truncateFileAtOffset:0];
+	NSError *truncateError = nil;
+
+	if ([self.fileHandle truncateAtOffset:0 error:&truncateError] == NO) {
+		LogToConsoleError("Failed to truncate log file: %{public}@", truncateError.localizedDescription);
+	}
 }
 
 - (void)close
@@ -228,14 +250,17 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 		return;
 	}
 
-	@try {
-		[self.fileHandle synchronizeFile];
-	} @catch (NSException *exception) {
-		LogToConsoleError("Caught exception: %{public}@", exception.reason);
-		LogStackTrace();
+	NSError *synchronizeError = nil;
+
+	if ([self.fileHandle synchronizeAndReturnError:&synchronizeError] == NO) {
+		LogToConsoleError("Failed to synchronize log file: %{public}@", synchronizeError.localizedDescription);
 	}
 
-	[self.fileHandle closeFile];
+	NSError *closeError = nil;
+
+	if ([self.fileHandle closeAndReturnError:&closeError] == NO) {
+		LogToConsoleError("Failed to close log file: %{public}@", closeError.localizedDescription);
+	}
 
 	self.fileHandle = nil;
 
@@ -317,7 +342,15 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 		return;
 	}
 
-	[fileHandle seekToEndOfFile];
+	NSError *seekError = nil;
+
+	if ([fileHandle seekToEndReturningOffset:NULL error:&seekError] == NO) {
+		LogToConsoleError("Failed to seek to end of log file: %{public}@", seekError.localizedDescription);
+
+		[fileHandle closeAndReturnError:NULL];
+
+		return;
+	}
 
 	self.fileHandle = fileHandle;
 
@@ -351,11 +384,14 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
+		/* The idle timer fires on the main queue so that closing
+		 file handles never races with writes performed by callers,
+		 which are always on the main queue. */
 		idleTimer = [TLOTimer
 			timerWithActionBlock:^(TLOTimer *sender) {
 				[self idleTimerFired];
 			}
-						 onQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)];
+						 onQueue:dispatch_get_main_queue()];
 	});
 
 	return idleTimer;
@@ -492,6 +528,10 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 											  clientName.safeFilename,
 											  TLOFileLoggerPrivateMessageDirectoryName,
 											  channel.name.safeFilename];
+	}
+
+	if (basePath == nil) {
+		return nil;
 	}
 
 	return [sourcePath stringByAppendingPathComponent:basePath];

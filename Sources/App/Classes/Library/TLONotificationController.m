@@ -718,7 +718,7 @@ NSString *const TXNotificationActionIdentifierPrivateMessageReply =
 - (BOOL)speakEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel
 {
 	if (channel) {
-		NSUInteger channelValue = [channel.config speakEvent:event];
+		NSControlStateValue channelValue = [channel.config speakEvent:event];
 
 		if (channelValue != NSControlStateValueMixed) {
 			return (channelValue == NSControlStateValueOn);
@@ -731,7 +731,7 @@ NSString *const TXNotificationActionIdentifierPrivateMessageReply =
 - (BOOL)notificationEnabledForEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel
 {
 	if (channel) {
-		NSUInteger channelValue = [channel.config notificationEnabledForEvent:event];
+		NSControlStateValue channelValue = [channel.config notificationEnabledForEvent:event];
 
 		if (channelValue != NSControlStateValueMixed) {
 			return (channelValue == NSControlStateValueOn);
@@ -744,7 +744,7 @@ NSString *const TXNotificationActionIdentifierPrivateMessageReply =
 - (BOOL)disabledWhileAwayForEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel
 {
 	if (channel) {
-		NSUInteger channelValue = [channel.config disabledWhileAwayForEvent:event];
+		NSControlStateValue channelValue = [channel.config disabledWhileAwayForEvent:event];
 
 		if (channelValue != NSControlStateValueMixed) {
 			return (channelValue == NSControlStateValueOn);
@@ -757,7 +757,7 @@ NSString *const TXNotificationActionIdentifierPrivateMessageReply =
 - (BOOL)bounceDockIconForEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel
 {
 	if (channel) {
-		NSUInteger channelValue = [channel.config bounceDockIconForEvent:event];
+		NSControlStateValue channelValue = [channel.config bounceDockIconForEvent:event];
 
 		if (channelValue != NSControlStateValueMixed) {
 			return (channelValue == NSControlStateValueOn);
@@ -770,7 +770,7 @@ NSString *const TXNotificationActionIdentifierPrivateMessageReply =
 - (BOOL)bounceDockIconRepeatedlyForEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel
 {
 	if (channel) {
-		NSUInteger channelValue = [channel.config bounceDockIconRepeatedlyForEvent:event];
+		NSControlStateValue channelValue = [channel.config bounceDockIconRepeatedlyForEvent:event];
 
 		if (channelValue != NSControlStateValueMixed) {
 			return (channelValue == NSControlStateValueOn);

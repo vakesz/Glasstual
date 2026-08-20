@@ -40,6 +40,11 @@
 	return [EKBlowfishEncryptionBase estimatedLengthOfEncodedDataOfLength:dataLength];
 }
 
++ (NSUInteger)estimatedLengthOfEncodedDataOfLength:(NSUInteger)dataLength mode:(EKBlowfishEncryptionModeOfOperation)mode
+{
+	return [EKBlowfishEncryptionBase estimatedLengthOfEncodedDataOfLength:dataLength mode:mode];
+}
+
 + (NSString *)encodeData:(NSString *)input
 					 key:(NSString *)phrase
 					mode:(EKBlowfishEncryptionModeOfOperation)mode

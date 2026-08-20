@@ -52,24 +52,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation IRCMessageBatchMessageContainer
 
+- (instancetype)init
+{
+	if ((self = [super init])) {
+		self.internalBatchEntries = [NSMutableDictionary dictionary];
+	}
+
+	return self;
+}
+
 - (NSDictionary *)queuedEntries
 {
-	@synchronized(self.internalBatchEntries) {
-		if (self.internalBatchEntries == nil) {
-			return @{};
-		}
-
+	@synchronized(self) {
 		return [self.internalBatchEntries copy];
 	}
 }
 
 - (void)dequeueEntries
 {
-	@synchronized(self.internalBatchEntries) {
-		if (self.internalBatchEntries == nil) {
-			return;
-		}
-
+	@synchronized(self) {
 		[self.internalBatchEntries removeAllObjects];
 	}
 }
@@ -78,11 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(entry != nil);
 
-	@synchronized(self.internalBatchEntries) {
-		if (self.internalBatchEntries == nil) {
-			return;
-		}
-
+	@synchronized(self) {
 		NSString *batchToken = nil;
 
 		if ([entry isKindOfClass:[IRCMessageBatchMessage class]]) {
@@ -113,11 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *batchToken = [entry batchToken];
 
-	@synchronized(self.internalBatchEntries) {
-		if (self.internalBatchEntries == nil) {
-			self.internalBatchEntries = [NSMutableDictionary dictionary];
-		}
-
+	@synchronized(self) {
 		self.internalBatchEntries[batchToken] = entry;
 	}
 }
@@ -126,11 +119,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(batchToken != nil);
 
-	@synchronized(self.internalBatchEntries) {
-		if (self.internalBatchEntries == nil) {
-			return nil;
-		}
-
+	@synchronized(self) {
 		return self.internalBatchEntries[batchToken];
 	}
 }
@@ -141,24 +130,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation IRCMessageBatchMessage
 
+- (instancetype)init
+{
+	if ((self = [super init])) {
+		self.internalBatchEntries = [NSMutableArray array];
+	}
+
+	return self;
+}
+
 - (NSArray *)queuedEntries
 {
-	@synchronized(self.internalBatchEntries) {
-		if (self.internalBatchEntries == nil) {
-			return @[];
-		}
-
+	@synchronized(self) {
 		return [self.internalBatchEntries copy];
 	}
 }
 
 - (void)dequeueEntries
 {
-	@synchronized(self.internalBatchEntries) {
-		if (self.internalBatchEntries == nil) {
-			return;
-		}
-
+	@synchronized(self) {
 		[self.internalBatchEntries removeAllObjects];
 	}
 }
@@ -171,11 +161,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	@synchronized(self.internalBatchEntries) {
-		if (self.internalBatchEntries == nil) {
-			self.internalBatchEntries = [NSMutableArray array];
-		}
-
+	@synchronized(self) {
 		[self.internalBatchEntries addObject:entry];
 	}
 }
@@ -188,11 +174,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	@synchronized(self.internalBatchEntries) {
-		if (self.internalBatchEntries == nil) {
-			return;
-		}
-
+	@synchronized(self) {
 		[self.internalBatchEntries removeObject:entry];
 	}
 }

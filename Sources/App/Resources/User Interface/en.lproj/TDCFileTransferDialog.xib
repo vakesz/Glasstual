@@ -16,7 +16,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <window title="File Transfers" allowsToolTipsWhenApplicationIsInactive="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" toolbarStyle="unified" id="5" userLabel="Window">
+        <window title="File Transfers" allowsToolTipsWhenApplicationIsInactive="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" toolbarStyle="unified" id="5" userLabel="Window" customClass="TDCFileTransferDialogWindow">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <rect key="contentRect" x="560" y="234" width="550" height="297"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1055"/>
@@ -211,12 +211,18 @@ Gw
                 </defaultToolbarItems>
             </toolbar>
             <contentBorderThickness minY="33"/>
+            <connections>
+                <outlet property="delegate" destination="-2" id="wdl-Fq-7Tx"/>
+            </connections>
             <point key="canvasLocation" x="236" y="289.5"/>
         </window>
         <arrayController objectClassName="TDCFileTransferDialogTransferController" editable="NO" selectsInsertedObjects="NO" avoidsEmptySelection="NO" clearsFilterPredicateOnInsertion="NO" id="5qZ-cx-fmP">
             <classReference key="objectClass" className="TDCFileTransferDialogTransferController"/>
         </arrayController>
         <menu title="Menu" id="34" userLabel="TableMenu">
+            <connections>
+                <outlet property="delegate" destination="-2" id="mdl-Qk-3Vb"/>
+            </connections>
             <items>
                 <menuItem title="Start Transfer" tag="3001" id="35">
                     <connections>
@@ -231,9 +237,9 @@ Gw
                 <menuItem isSeparatorItem="YES" id="41">
                     <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                 </menuItem>
-                <menuItem title="Reveal in Finder" tag="3006" id="84">
+                <menuItem title="Quick Look" tag="3007" id="qkl-Ok-1a2">
                     <connections>
-                        <action selector="revealReceivedFileInFinder:" target="-2" id="uJy-RJ-Ljo"/>
+                        <action selector="quickLookFile:" target="-2" id="qkl-Ac-1a2"/>
                     </connections>
                 </menuItem>
                 <menuItem title="Open File" tag="3005" id="72">
@@ -241,6 +247,12 @@ Gw
                         <action selector="openReceivedFile:" target="-2" id="P4t-qZ-hhL"/>
                     </connections>
                 </menuItem>
+                <menuItem title="Show in Finder" tag="3006" id="84">
+                    <connections>
+                        <action selector="revealReceivedFileInFinder:" target="-2" id="uJy-RJ-Ljo"/>
+                    </connections>
+                </menuItem>
+                <menuItem title="Share…" tag="3008" id="shr-Pl-1a2"/>
                 <menuItem isSeparatorItem="YES" id="73">
                     <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                 </menuItem>

@@ -45,10 +45,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString *const TVCServerListDragType = @"TVCServerListDragType";
-
 @interface TVCServerList ()
-@property(nonatomic, assign, readwrite) BOOL leftMouseIsDownInView;
 @end
 
 @implementation TVCServerList
@@ -57,11 +54,14 @@ NSString *const TVCServerListDragType = @"TVCServerListDragType";
 {
 	[super viewDidMoveToWindow];
 
+	/* -viewDidMoveToWindow is not guaranteed to alternate between a window
+	 and nil. Remove any previous registration first so that moving within
+	 the same window does not leave duplicate observers behind. */
+	[RZNotificationCenter() removeObserver:self];
+
 	TVCMainWindow *mainWindow = self.mainWindow;
 
 	if (mainWindow == nil) {
-		[RZNotificationCenter() removeObserver:self];
-
 		return;
 	}
 
@@ -147,7 +147,7 @@ NSString *const TVCServerListDragType = @"TVCServerListDragType";
 
 - (void)refreshAllDrawings:(BOOL)skipOcclusionCheck
 {
-	for (NSUInteger i = 0; i < self.numberOfRows; i++) {
+	for (NSInteger i = 0; i < self.numberOfRows; i++) {
 		[self refreshDrawingForRow:i skipOcclusionCheck:skipOcclusionCheck];
 	}
 }
@@ -221,7 +221,7 @@ NSString *const TVCServerListDragType = @"TVCServerListDragType";
 
 - (void)refreshAllUnreadMessageCountBadges:(BOOL)skipOcclusionCheck
 {
-	for (NSUInteger i = 0; i < self.numberOfRows; i++) {
+	for (NSInteger i = 0; i < self.numberOfRows; i++) {
 		[self refreshMessageCountForRow:i skipOcclusionCheck:skipOcclusionCheck];
 	}
 }
@@ -326,18 +326,19 @@ NSString *const TVCServerListDragType = @"TVCServerListDragType";
 	return self.menu;
 }
 
-- (void)mouseDown:(NSEvent *)theEvent
+- (BOOL)leftMouseIsDownInView
 {
-	self.leftMouseIsDownInView = YES;
+	/* Used by the selection delegate to tell a click driven selection
+	 change apart from a programmatic one. Derived from the current
+	 mouse state instead of tracking -mouseDown:/-mouseUp: which
+	 could get out of sync when the up event landed elsewhere. */
+	if ((NSEvent.pressedMouseButtons & 0x1) == 0) {
+		return NO;
+	}
 
-	[super mouseDown:theEvent];
-}
+	NSPoint mouseLocation = [self convertPoint:self.window.mouseLocationOutsideOfEventStream fromView:nil];
 
-- (void)mouseUp:(NSEvent *)theEvent
-{
-	self.leftMouseIsDownInView = NO;
-
-	[super mouseUp:theEvent];
+	return NSMouseInRect(mouseLocation, self.bounds, self.isFlipped);
 }
 
 - (void)keyDown:(NSEvent *)e

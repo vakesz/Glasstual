@@ -195,14 +195,25 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Delegate Callback
 
+/* AVSpeechSynthesizer delivers delegate callbacks on an arbitrary
+ queue. -speakNextItem calls into IRCClient to format the message
+ which expects the main thread, so hop over to it first. */
 - (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didFinishSpeechUtterance:(AVSpeechUtterance *)utterance
 {
-	[self speakNextItem];
+	__weak typeof(self) weakSelf = self;
+
+	XRPerformBlockAsynchronouslyOnMainQueue(^{
+		[weakSelf speakNextItem];
+	});
 }
 
 - (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer didCancelSpeechUtterance:(AVSpeechUtterance *)utterance
 {
-	[self speakNextItem];
+	__weak typeof(self) weakSelf = self;
+
+	XRPerformBlockAsynchronouslyOnMainQueue(^{
+		[weakSelf speakNextItem];
+	});
 }
 
 @end

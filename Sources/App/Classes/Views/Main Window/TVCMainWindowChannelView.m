@@ -49,6 +49,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+static void *TVCMainWindowChannelViewSubviewKVOContext = &TVCMainWindowChannelViewSubviewKVOContext;
+
 @class TVCMainWindowChannelViewSubviewOverlayView;
 
 @interface TVCMainWindowChannelViewSubview : NSView
@@ -125,9 +127,14 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 
 - (void)viewDidMoveToWindow
 {
-	if (self.window == nil) {
-		[RZNotificationCenter() removeObserver:self];
+	[super viewDidMoveToWindow];
 
+	/* -viewDidMoveToWindow is not guaranteed to alternate between a window
+	 and nil. Remove any previous registration first so that moving within
+	 the same window does not leave duplicate observers behind. */
+	[RZNotificationCenter() removeObserver:self name:TPCThemeAppearanceChangedNotification object:nil];
+
+	if (self.window == nil) {
 		return;
 	}
 
@@ -421,13 +428,25 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 
 - (void)teardownBackingView
 {
-	if (self.isObservingBackingView == NO) {
+	TVCLogView *backingView = self.backingView;
+
+	if (backingView == nil) {
 		return;
 	}
 
-	[self.backingView removeObserver:self forKeyPath:@"layingOutView"];
+	if (self.isObservingBackingView) {
+		[backingView removeObserver:self forKeyPath:@"layingOutView" context:TVCMainWindowChannelViewSubviewKVOContext];
 
-	self.isObservingBackingView = NO;
+		self.isObservingBackingView = NO;
+	}
+
+	/* Removing the web view from its superview also removes the
+	 constraints that -setupWebView activated between it and us. */
+	NSView *webView = backingView.webView;
+
+	if (webView.superview == self) {
+		[webView removeFromSuperview];
+	}
 }
 
 - (void)setupWebView
@@ -441,7 +460,10 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 	if (self.backingViewIsLoading) {
 		self.isObservingBackingView = YES;
 
-		[backingView addObserver:self forKeyPath:@"layingOutView" options:NSKeyValueObservingOptionNew context:NULL];
+		[backingView addObserver:self
+					  forKeyPath:@"layingOutView"
+						 options:NSKeyValueObservingOptionNew
+						 context:TVCMainWindowChannelViewSubviewKVOContext];
 	}
 
 	NSView *webView = backingView.webView;
@@ -487,6 +509,12 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 						change:(nullable NSDictionary<NSString *, id> *)change
 					   context:(nullable void *)context
 {
+	if (context != TVCMainWindowChannelViewSubviewKVOContext) {
+		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+
+		return;
+	}
+
 	if ([keyPath isEqualToString:@"layingOutView"]) {
 		[self toggleOverlayView];
 	}
@@ -499,7 +527,29 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 
 	overlayView.translatesAutoresizingMaskIntoConstraints = NO;
 
+	/* Any button pressed on the overlay selects the pane beneath it.
+	 A gesture recognizer replaces the -mouseDown: family of overrides.
+	 Primary button events are not delayed so that the click is not
+	 held back from the view while the recognizer decides. */
+	NSClickGestureRecognizer *clickRecognizer =
+		[[NSClickGestureRecognizer alloc] initWithTarget:self action:@selector(overlayViewClicked:)];
+
+	clickRecognizer.buttonMask = (0x1 | 0x2 | 0x4); // left, right, other
+	clickRecognizer.numberOfClicksRequired = 1;
+	clickRecognizer.delaysPrimaryMouseButtonEvents = NO;
+
+	[overlayView addGestureRecognizer:clickRecognizer];
+
 	self.overlayView = overlayView;
+}
+
+- (void)overlayViewClicked:(NSClickGestureRecognizer *)sender
+{
+	if (self.overlayVisible == NO) {
+		return;
+	}
+
+	[self mouseDownSelectionChange];
 }
 
 - (void)addOverlayView
@@ -553,45 +603,15 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 	[self.parentView selectionChangeTo:self.itemIndex];
 }
 
-- (void)mouseDown:(NSEvent *)theEvent
-{
-	if (self.overlayVisible) {
-		[self mouseDownSelectionChange];
-
-		return;
-	}
-
-	[super mouseDown:theEvent];
-}
-
-- (void)rightMouseDown:(NSEvent *)theEvent
-{
-	if (self.overlayVisible) {
-		[self mouseDownSelectionChange];
-
-		return;
-	}
-
-	[super rightMouseDown:theEvent];
-}
-
-- (void)otherMouseDown:(NSEvent *)theEvent
-{
-	if (self.overlayVisible) {
-		[self mouseDownSelectionChange];
-
-		return;
-	}
-
-	[super otherMouseDown:theEvent];
-}
-
 - (nullable NSView *)hitTest:(NSPoint)aPoint
 {
 	if (NSPointInRect(aPoint, self.frame) == NO) {
 		return nil;
 	}
 
+	/* While the overlay is shown it swallows every event so that an
+	 unselected web view cannot be interacted with. This is a hit
+	 testing concern, not an event override, and is kept as such. */
 	if (self.overlayVisible) {
 		return self.overlayView;
 	}
@@ -604,21 +624,6 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 #pragma mark -
 
 @implementation TVCMainWindowChannelViewSubviewOverlayView
-
-- (void)mouseDown:(NSEvent *)theEvent
-{
-	[self.superview mouseDown:theEvent];
-}
-
-- (void)rightMouseDown:(NSEvent *)theEvent
-{
-	[self.superview rightMouseDown:theEvent];
-}
-
-- (void)otherMouseDown:(NSEvent *)theEvent
-{
-	[self.superview otherMouseDown:theEvent];
-}
 
 - (void)drawRect:(NSRect)dirtyRect
 {

@@ -42,7 +42,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCPreferencesUserStyleSheet ()
-@property(nonatomic, unsafe_unretained) IBOutlet NSTextView *rulesTextView;
+@property(nonatomic, weak) IBOutlet NSTextView *rulesTextView;
 @property(nonatomic, assign) BOOL rulesChanged;
 @property(nonatomic, copy, readonly) NSString *defaultRules;
 @end
@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[RZMainBundle() loadNibNamed:@"TDCPreferencesUserStyleSheet" owner:self topLevelObjects:nil];
 
-	self.rulesTextView.font = [NSFont systemFontOfSize:13.0];
+	self.rulesTextView.font = [NSFont monospacedSystemFontOfSize:13.0 weight:NSFontWeightRegular];
 
 	self.rulesTextView.textContainerInset = NSMakeSize(1, 3);
 

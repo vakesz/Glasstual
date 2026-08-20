@@ -54,9 +54,13 @@ NSString *_Nullable TXFormattedTimestamp(NSDate *date, NSString *format)
 
 	char outputBuffer[257];
 
-	struct tm *localTime = localtime(&global);
+	struct tm localTime;
 
-	if (strftime(outputBuffer, sizeof(outputBuffer), format.UTF8String, localTime) == 0) {
+	if (localtime_r(&global, &localTime) == NULL) {
+		return nil;
+	}
+
+	if (strftime(outputBuffer, sizeof(outputBuffer), format.UTF8String, &localTime) == 0) {
 		return nil;
 	}
 
@@ -196,7 +200,9 @@ NSDateFormatter *TXSharedISOStandardDateFormatter(void)
 {
 	static NSDateFormatter *_isoStandardDateFormatter = nil;
 
-	if (_isoStandardDateFormatter == nil) {
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
 		NSDateFormatter *dateFormatter = [NSDateFormatter new];
 
 		dateFormatter.locale = [NSLocale localeWithLocaleIdentifier:@"en_US_POSIX"];
@@ -206,7 +212,7 @@ NSDateFormatter *TXSharedISOStandardDateFormatter(void)
 		dateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"; //2011-10-19T16:40:51.620Z
 
 		_isoStandardDateFormatter = dateFormatter;
-	}
+	});
 
 	return _isoStandardDateFormatter;
 }

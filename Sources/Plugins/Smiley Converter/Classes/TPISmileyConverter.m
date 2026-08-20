@@ -40,8 +40,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TPISmileyConverter ()
-@property(nonatomic, copy) NSDictionary<NSString *, NSString *> *conversionTable;
-@property(nonatomic, copy) NSArray<NSString *> *sortedSmileyList;
+@property(nonatomic, copy, nullable) NSDictionary<NSString *, NSString *> *conversionTable;
+@property(nonatomic, copy, nullable) NSArray<NSString *> *sortedSmileyList;
 @property(nonatomic, strong) IBOutlet NSView *preferencesPane;
 
 - (IBAction)preferenceChanged:(nullable id)sender;
@@ -176,7 +176,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		NSInteger leftLocation = (range.location - 1);
 
-		if (leftLocation >= 0 && leftLocation < inString.length) {
+		if (leftLocation >= 0 && (NSUInteger)leftLocation < inString.length) {
 			UniChar c = [inString characterAtIndex:leftLocation];
 
 			if (c != ' ') {
@@ -186,7 +186,7 @@ NS_ASSUME_NONNULL_BEGIN
 			}
 		}
 
-		NSInteger rightLocation = NSMaxRange(range);
+		NSUInteger rightLocation = NSMaxRange(range);
 
 		if (rightLocation < inString.length) {
 			UniChar c = [inString characterAtIndex:rightLocation];

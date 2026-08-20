@@ -67,6 +67,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 	newConnection.remoteObjectInterface = remoteObjectInterface;
 
+	/* The connection retains the exported object and the exported object
+	 retains the connection. Once the connection is invalidated, drop the
+	 references so both can deallocate. */
+	__weak NSXPCConnection *weakConnection = newConnection;
+
+	newConnection.invalidationHandler = ^{
+		[exportedObject connectionInvalidated];
+
+		NSXPCConnection *strongConnection = weakConnection;
+
+		strongConnection.exportedObject = nil;
+		strongConnection.invalidationHandler = nil;
+	};
+
 	[newConnection resume];
 
 	return YES;

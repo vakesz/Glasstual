@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>Common</key>
+	<key>Tahoe</key>
 	<dict>
 		<key>Search Field</key>
 		<dict>
@@ -12,8 +12,13 @@
 				<integer>3</integer>
 				<key>value</key>
 				<string>controlTextColor</string>
-			</dict>
-		</dict>
+			</dict>			<key>noResultsTextColor</key>
+			<dict>
+				<key>type</key>
+				<integer>3</integer>
+				<key>value</key>
+				<string>secondaryLabelColor</string>
+			</dict>		</dict>
 		<key>Search Result</key>
 		<dict>
 			<key>rowEmphasized</key>
@@ -22,106 +27,31 @@
 			<integer>0</integer>
 			<key>keyboardShortcutSelectedOffset</key>
 			<integer>3</integer>
-		</dict>
-	</dict>
-	<key>CommonModern</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>Common</string>
-		<key>Search Field</key>
-		<dict>
-			<key>noResultsTextColor</key>
+			<key>channelNameTextColor</key>
+			<dict>
+				<key>type</key>
+				<integer>3</integer>
+				<key>value</key>
+				<string>labelColor</string>
+			</dict>			<key>channelDescriptionTextColor</key>
 			<dict>
 				<key>type</key>
 				<integer>3</integer>
 				<key>value</key>
 				<string>secondaryLabelColor</string>
-			</dict>
-		</dict>
-	</dict>
-	<key>CommonModernDark</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModern</string>
-		<key>Search Result</key>
-		<dict>
-			<key>rowEmphasized</key>
-			<false/>
-			<key>channelNameTextColor</key>
+			</dict>			<key>keyboardShortcutTextColor</key>
 			<dict>
 				<key>type</key>
-				<integer>1</integer>
+				<integer>3</integer>
 				<key>value</key>
-				<string>0.9</string>
-			</dict>
-			<key>channelDescriptionTextColor</key>
+				<string>labelColor</string>
+			</dict>			<key>selectedTextColor</key>
 			<dict>
 				<key>type</key>
-				<integer>1</integer>
+				<integer>3</integer>
 				<key>value</key>
-				<string>0.7</string>
-			</dict>
-			<key>keyboardShortcutTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>0.9</string>
-			</dict>
-			<key>selectedTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>1.0</string>
-			</dict>
-		</dict>
-	</dict>
-	<key>CommonModernLight</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModern</string>
-		<key>Search Result</key>
-		<dict>
-			<key>channelNameTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>0.25</string>
-			</dict>
-			<key>channelDescriptionTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>0.35</string>
-			</dict>
-			<key>keyboardShortcutTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>0.25</string>
-			</dict>
-			<key>selectedTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>1.0</string>
-			</dict>
-		</dict>
-	</dict>
-	<key>TahoeDark</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModernDark</string>
-	</dict>
-	<key>TahoeLight</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModernLight</string>
+				<string>alternateSelectedControlTextColor</string>
+			</dict>		</dict>
 	</dict>
 </dict>
 </plist>

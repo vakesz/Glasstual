@@ -1,6 +1,0 @@
-
-#include "../Common/Foundation.xcconfig"
-#include "Glasstual.xcconfig"
-#include "../Common/Glasstual App.xcconfig"
-
-CODE_SIGN_ENTITLEMENTS = ${PROJECT_DIR}/Configurations/Sandbox/Standard Release.entitlements

@@ -51,11 +51,13 @@ NS_ASSUME_NONNULL_BEGIN
 NSString *const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 
 @interface ICLProcessMain ()
-@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, strong, nullable) NSXPCConnection *serviceConnection;
 @property(readonly, copy) NSArray<Class> *moduleClasses;
 @property(readonly, copy) NSArray<Class> *moduleClassesInCore;
 @property(readonly, copy) NSDictionary<NSString *, NSArray<Class> *> *modules;
-@property(readonly) NSCache *moduleReferences;
+/* Modules that are in flight. Only access while holding moduleReferencesLock. */
+@property(nonatomic, strong) NSMutableSet<ICLInlineContentModule *> *moduleReferences;
+@property(nonatomic, strong) NSLock *moduleReferencesLock;
 @end
 
 @implementation ICLProcessMain
@@ -73,6 +75,9 @@ NSString *const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 
 	if ((self = [super init])) {
 		self.serviceConnection = connection;
+
+		self.moduleReferences = [NSMutableSet set];
+		self.moduleReferencesLock = [NSLock new];
 
 		LogToConsoleSetDefaultSubsystemToMainBundle(@"General");
 
@@ -197,7 +202,7 @@ NSString *const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 
 	ICLPayloadMutable *payloadIn = nil;
 
-	if ([payloadIn isKindOfClass:[ICLPayloadMutable class]] == NO) {
+	if ([payload isKindOfClass:[ICLPayloadMutable class]] == NO) {
 		payloadIn = [payload mutableCopy];
 	} else {
 		payloadIn = (id)payload;
@@ -366,31 +371,53 @@ NSString *const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 #pragma mark -
 #pragma mark Memory
 
-- (NSCache *)moduleReferences
-{
-	static NSCache *modules = nil;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		modules = [NSCache new];
-	});
-
-	return modules;
-}
-
+/* Modules are retained here while they are in flight. An NSCache was
+ used previously which is free to evict entries under memory pressure,
+ which would have deallocated a module mid-request. */
 - (void)_addReferenceForModule:(ICLInlineContentModule *)module
 {
 	NSParameterAssert(module != nil);
 
-	[self.moduleReferences setObject:module forKey:module.description];
+	[self.moduleReferencesLock lock];
+
+	[self.moduleReferences addObject:module];
+
+	[self.moduleReferencesLock unlock];
 }
 
 - (void)_removeReferenceForModule:(ICLInlineContentModule *)module
 {
 	NSParameterAssert(module != nil);
 
-	[self.moduleReferences removeObjectForKey:module.description];
+	[self.moduleReferencesLock lock];
+
+	[self.moduleReferences removeObject:module];
+
+	[self.moduleReferencesLock unlock];
+}
+
+- (void)_removeAllModuleReferences
+{
+	[self.moduleReferencesLock lock];
+
+	[self.moduleReferences removeAllObjects];
+
+	[self.moduleReferencesLock unlock];
+}
+
+#pragma mark -
+#pragma mark Connection Lifetime
+
+/* Called when the connection that owns this object is invalidated.
+ Drops in-flight modules and the reference to the connection so
+ that the connection and this object can deallocate. */
+- (void)connectionInvalidated
+{
+	LogToConsoleDebug("Connection invalidated");
+
+	[self _removeAllModuleReferences];
+
+	self.serviceConnection = nil;
 }
 
 #pragma mark -
@@ -421,7 +448,7 @@ NSString *const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 #pragma mark -
 #pragma mark XPC Connection
 
-- (id<ICLInlineContentClientProtocol>)remoteObjectProxy
+- (nullable id<ICLInlineContentClientProtocol>)remoteObjectProxy
 {
 	return self.serviceConnection.remoteObjectProxy;
 }

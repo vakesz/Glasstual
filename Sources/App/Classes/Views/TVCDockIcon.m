@@ -36,6 +36,8 @@
  *********************************************************************** */
 
 #import "TXMasterController.h"
+#import "TXGlobalModels.h"
+#import "TLOLocalization.h"
 #import "TPCPreferencesLocal.h"
 #import "IRCClient.h"
 #import "IRCChannel.h"
@@ -44,7 +46,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _badgeSeperationSpace 1.0
+/* The dock tile shows up to two badges: a red one for unread messages
+ and a green one for highlights. NSDockTile.badgeLabel only offers the
+ red one, so when a distinction is needed the tile content is drawn by
+ this view on top of the application icon. */
+@interface TVCDockIconBadgeView : NSView
+@property(nonatomic, assign) NSUInteger highlightCount;
+@property(nonatomic, assign) NSUInteger messageCount;
+@end
+
+@interface TVCDockIcon ()
++ (NSString *)badgeStringForCount:(NSUInteger)count;
+@end
 
 @implementation TVCDockIcon
 
@@ -77,26 +90,6 @@ static NSInteger _cachedMessageCount = (-1);
 	}
 }
 
-+ (NSImage *)applicationIcon
-{
-	/* THIS IS A SECRET!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-	 Birthday icon designed by Alex Sørlie Glomsaas. */
-
-	NSCalendar *sysCalendar = [NSCalendar currentCalendar];
-
-	NSDateComponents *breakdownInfo = [sysCalendar components:(NSCalendarUnitMonth | NSCalendarUnitDay)
-													 fromDate:[NSDate date]];
-
-	/* The first public commit of Glasstual occurred on July, 23, 2010. This is the day
-	 that we consider the birthday of the application. */
-	if (breakdownInfo.month == 7 && breakdownInfo.day == 23) {
-		return [NSImage imageNamed:@"applicationIconBirthday"];
-	} else {
-		return [NSImage imageNamed:@"NSApplicationIcon"];
-	}
-}
-
 + (void)resetCachedCount
 {
 	_cachedMessageCount = (-1);
@@ -112,240 +105,141 @@ static NSInteger _cachedMessageCount = (-1);
 	_cachedMessageCount = 0;
 	_cachedHighlightCount = 0;
 
-	[NSApp setApplicationIconImage:[self applicationIcon]];
+	NSDockTile *dockTile = NSApp.dockTile;
+
+	dockTile.badgeLabel = nil;
+	dockTile.contentView = nil;
+
+	[dockTile display];
 }
 
 + (void)drawWithHighlightCount:(NSUInteger)highlightCount messageCount:(NSUInteger)messageCount
 {
-	if (_cachedHighlightCount == highlightCount && _cachedMessageCount == messageCount) {
+	if (_cachedHighlightCount == (NSInteger)highlightCount && _cachedMessageCount == (NSInteger)messageCount) {
 		return;
 	}
 
 	_cachedHighlightCount = highlightCount;
 	_cachedMessageCount = messageCount;
 
-	if (messageCount > 9999) {
-		messageCount = 9999;
+	NSDockTile *dockTile = NSApp.dockTile;
+
+	/* Messages only: the system badge is exactly right. */
+	if (highlightCount == 0) {
+		dockTile.contentView = nil;
+		dockTile.badgeLabel = [self badgeStringForCount:messageCount];
+
+		[dockTile display];
+
+		return;
 	}
 
-	if (highlightCount > 9999) {
-		highlightCount = 9999;
+	dockTile.badgeLabel = nil;
+
+	TVCDockIconBadgeView *badgeView = (TVCDockIconBadgeView *)dockTile.contentView;
+
+	if ([badgeView isKindOfClass:[TVCDockIconBadgeView class]] == NO) {
+		badgeView = [[TVCDockIconBadgeView alloc]
+			initWithFrame:NSMakeRect(0.0, 0.0, dockTile.size.width, dockTile.size.height)];
+
+		dockTile.contentView = badgeView;
 	}
 
-	BOOL showRedBadge = (messageCount >= 1);
-	BOOL showGreenBadge = (highlightCount >= 1);
+	badgeView.highlightCount = highlightCount;
+	badgeView.messageCount = messageCount;
 
-	/* ////////////////////////////////////////////////////////// */
-	/* Define Text Drawing Globals */
-	/* ////////////////////////////////////////////////////////// */
+	[badgeView setNeedsDisplay:YES];
 
-	NSSize badgeTextSize = NSZeroSize;
+	[dockTile display];
+}
 
-	NSMutableAttributedString *badgeText = [NSMutableAttributedString alloc];
++ (NSString *)badgeStringForCount:(NSUInteger)count
+{
+	if (count > 9999) {
+		return TXTLS(@"TVCMainWindow[dki-bg]", TXFormattedNumber(9999));
+	}
 
-	CGFloat badgeTextFrameCorrection = 2.0;
+	return TXFormattedNumber(count);
+}
 
-	NSDictionary *badgeTextAttributes = @{
-		NSFontAttributeName : [NSFont fontWithName:@"Helvetica" size:24.0],
+@end
+
+#pragma mark -
+
+@implementation TVCDockIconBadgeView
+
+- (BOOL)isFlipped
+{
+	return NO;
+}
+
+- (void)drawRect:(NSRect)dirtyRect
+{
+	NSRect bounds = self.bounds;
+
+	[NSApp.applicationIconImage drawInRect:bounds
+								  fromRect:NSZeroRect
+								 operation:NSCompositingOperationSourceOver
+								  fraction:1.0];
+
+	/* Badge metrics are proportional to the tile so the result
+	 looks the same regardless of the dock magnification. */
+	CGFloat badgeHeight = floor(bounds.size.height * 0.26);
+	CGFloat separator = 1.0;
+
+	NSRect badgeFrame = NSMakeRect(0.0, (NSMaxY(bounds) - badgeHeight), 0.0, badgeHeight);
+
+	if (self.messageCount > 0) {
+		badgeFrame = [self drawBadgeWithCount:self.messageCount
+										color:[NSColor systemRedColor]
+									 topRight:NSMakePoint(NSMaxX(bounds), NSMaxY(badgeFrame))
+									   height:badgeHeight];
+	}
+
+	if (self.highlightCount > 0) {
+		CGFloat top = NSMaxY(bounds);
+
+		if (self.messageCount > 0) {
+			top = (NSMinY(badgeFrame) - separator);
+		}
+
+		[self drawBadgeWithCount:self.highlightCount
+						   color:[NSColor systemGreenColor]
+						topRight:NSMakePoint(NSMaxX(bounds), top)
+						  height:badgeHeight];
+	}
+}
+
+- (NSRect)drawBadgeWithCount:(NSUInteger)count color:(NSColor *)color topRight:(NSPoint)topRight height:(CGFloat)height
+{
+	NSString *string = [TVCDockIcon badgeStringForCount:count];
+
+	NSDictionary *attributes = @{
+		NSFontAttributeName : [NSFont boldSystemFontOfSize:(height * 0.62)],
 		NSForegroundColorAttributeName : [NSColor whiteColor]
 	};
 
-	/* ////////////////////////////////////////////////////////// */
-	/* Load Drawing Images */
-	/* ////////////////////////////////////////////////////////// */
+	NSSize textSize = [string sizeWithAttributes:attributes];
 
-	NSImage *appIcon = [[self applicationIcon] copy];
+	CGFloat width = MAX(height, ceil(textSize.width + (height * 0.6)));
 
-	NSImage *redBadgeLeft = [NSImage imageNamed:@"DIRedBadgeLeft.png"];
-	NSImage *redBadgeCenter = [NSImage imageNamed:@"DIRedBadgeCenter.png"];
-	NSImage *redBadgeRight = [NSImage imageNamed:@"DIRedBadgeRight.png"];
+	NSRect frame = NSMakeRect((topRight.x - width), (topRight.y - height), width, height);
 
-	NSImage *greenBadgeLeft = [NSImage imageNamed:@"DIGreenBadgeLeft.png"];
-	NSImage *greenBadgeCenter = [NSImage imageNamed:@"DIGreenBadgeCenter.png"];
-	NSImage *greenBadgeRight = [NSImage imageNamed:@"DIGreenBadgeRight.png"];
+	NSBezierPath *pill = [NSBezierPath bezierPathWithRoundedRect:frame xRadius:(height / 2.0) yRadius:(height / 2.0)];
 
-	/* ////////////////////////////////////////////////////////// */
-	/* Build Scaling Frames */
-	/* ////////////////////////////////////////////////////////// */
+	[color setFill];
+	[pill fill];
 
-	NSRect redBadgeLeftFrame, greenBadgeLeftFrame;
-	NSRect redBadgeRightFrame, greenBadgeRightFrame;
-	NSRect redBadgeCenterFrame, greenBadgeCenterFrame;
+	[[NSColor.whiteColor colorWithAlphaComponent:0.9] setStroke];
+	pill.lineWidth = MAX(1.0, (height * 0.06));
+	[pill stroke];
 
-	[appIcon lockFocus];
+	NSPoint textOrigin =
+		NSMakePoint((NSMidX(frame) - (textSize.width / 2.0)), (NSMidY(frame) - (textSize.height / 2.0)));
 
-	/* Red Badge Size */
-	redBadgeRightFrame.size.height = 53.0;
-	redBadgeCenterFrame.size.height = 53.0;
-	redBadgeLeftFrame.size.height = 53.0;
+	[string drawAtPoint:textOrigin withAttributes:attributes];
 
-	redBadgeLeftFrame.size.width = 27.0;
-	redBadgeCenterFrame.size.width = [self badgeCenterTileWidth:messageCount];
-	redBadgeRightFrame.size.width = 26.0;
-
-	/* Green Badge Size */
-	greenBadgeRightFrame.size.height = 53.0;
-	greenBadgeCenterFrame.size.height = 53.0;
-	greenBadgeLeftFrame.size.height = 53.0;
-
-	greenBadgeLeftFrame.size.width = 27.0;
-	greenBadgeCenterFrame.size.width = [self badgeCenterTileWidth:highlightCount];
-	greenBadgeRightFrame.size.width = 26.0;
-
-	/* ////////////////////////////////////////////////////////// */
-
-	/* If there is no red badge, then the green one is drawn in the same
-	 position of the red at the top right of the icon. The following is the
-	 math required to position it correctly relative to the icon. If the
-	 red icon does exist in this drawing, then we will update these points
-	 of origin later on in the drawing. For now, assume it is at the top. */
-
-	/* Green Badge Drawing Position */
-	greenBadgeLeftFrame.origin =
-		NSMakePoint((appIcon.size.width - (greenBadgeRightFrame.size.width + greenBadgeCenterFrame.size.width +
-										   greenBadgeLeftFrame.size.width)), // End X Axis
-					(appIcon.size.height - greenBadgeRightFrame.size.height));
-
-	greenBadgeCenterFrame.origin = NSMakePoint(
-		(appIcon.size.width - (greenBadgeRightFrame.size.width + greenBadgeCenterFrame.size.width)), // End X Axis
-		(appIcon.size.height - greenBadgeRightFrame.size.height));
-
-	greenBadgeRightFrame.origin = NSMakePoint((appIcon.size.width - greenBadgeRightFrame.size.width), // End X Axis
-											  (appIcon.size.height - greenBadgeRightFrame.size.height));
-
-	/* Update origin if red badge will be drawn */
-	if (showRedBadge) {
-		greenBadgeLeftFrame.origin.y = (appIcon.size.height - (greenBadgeLeftFrame.size.height +
-															   redBadgeLeftFrame.size.height + _badgeSeperationSpace));
-
-		greenBadgeCenterFrame.origin.y =
-			(appIcon.size.height -
-			 (greenBadgeCenterFrame.size.height + redBadgeCenterFrame.size.height + _badgeSeperationSpace));
-
-		greenBadgeRightFrame.origin.y =
-			(appIcon.size.height -
-			 (greenBadgeRightFrame.size.height + redBadgeRightFrame.size.height + _badgeSeperationSpace));
-	}
-
-	/* Red Badge Drawing Position */
-	redBadgeLeftFrame.origin =
-		NSMakePoint((appIcon.size.width - (redBadgeRightFrame.size.width + redBadgeCenterFrame.size.width +
-										   redBadgeLeftFrame.size.width)), // End X Axis
-					(appIcon.size.height - redBadgeRightFrame.size.height));
-
-	redBadgeCenterFrame.origin = NSMakePoint(
-		(appIcon.size.width - (redBadgeRightFrame.size.width + redBadgeCenterFrame.size.width)), // End X Axis
-		(appIcon.size.height - redBadgeRightFrame.size.height));
-
-	redBadgeRightFrame.origin = NSMakePoint((appIcon.size.width - redBadgeRightFrame.size.width), // End X Axis
-											(appIcon.size.height - redBadgeRightFrame.size.height));
-
-	/* ////////////////////////////////////////////////////////// */
-	/* Draw Badges */
-	/* ////////////////////////////////////////////////////////// */
-
-	/* Red Badge */
-	if (showRedBadge) {
-		[redBadgeLeft drawInRect:redBadgeLeftFrame
-						fromRect:NSZeroRect
-					   operation:NSCompositingOperationSourceOver
-						fraction:1.0];
-		[redBadgeCenter drawInRect:redBadgeCenterFrame
-						  fromRect:NSZeroRect
-						 operation:NSCompositingOperationSourceOver
-						  fraction:1.0];
-		[redBadgeRight drawInRect:redBadgeRightFrame
-						 fromRect:NSZeroRect
-						operation:NSCompositingOperationSourceOver
-						 fraction:1.0];
-
-		/* Red Badge Text */
-		badgeText = [badgeText initWithString:[NSString stringWithInteger:messageCount] attributes:badgeTextAttributes];
-
-		badgeTextSize = [badgeText size];
-
-		CGFloat redBadgeTotalWidth =
-			(redBadgeLeftFrame.size.width + redBadgeCenterFrame.size.width + redBadgeRightFrame.size.width);
-
-		CGFloat redBadgeTotalHeight = redBadgeCenterFrame.size.height;
-
-		CGFloat redBadgeWidthCenter = ((redBadgeTotalWidth - badgeTextSize.width) / 2.0);
-		CGFloat redBadgeHeightCenter = ((redBadgeTotalHeight - badgeTextSize.height) / 2.0);
-
-		NSPoint badgeTextDrawPath =
-			NSMakePoint((appIcon.size.width - redBadgeTotalWidth + redBadgeWidthCenter),
-						(appIcon.size.height - redBadgeTotalHeight + redBadgeHeightCenter + badgeTextFrameCorrection));
-
-		[badgeText drawAtPoint:badgeTextDrawPath];
-	}
-
-	if (showGreenBadge) {
-		/* Green Badge */
-		[greenBadgeLeft drawInRect:greenBadgeLeftFrame
-						  fromRect:NSZeroRect
-						 operation:NSCompositingOperationSourceOver
-						  fraction:1.0];
-		[greenBadgeCenter drawInRect:greenBadgeCenterFrame
-							fromRect:NSZeroRect
-						   operation:NSCompositingOperationSourceOver
-							fraction:1.0];
-		[greenBadgeRight drawInRect:greenBadgeRightFrame
-						   fromRect:NSZeroRect
-						  operation:NSCompositingOperationSourceOver
-						   fraction:1.0];
-
-		/* Green Badge Text */
-		badgeText = [badgeText initWithString:[NSString stringWithInteger:highlightCount]
-								   attributes:badgeTextAttributes];
-
-		badgeTextSize = [badgeText size];
-
-		CGFloat greenBadgeTotalWidth =
-			(greenBadgeLeftFrame.size.width + greenBadgeCenterFrame.size.width + greenBadgeRightFrame.size.width);
-
-		CGFloat greenBadgeTotalHeight = greenBadgeCenterFrame.size.height;
-
-		CGFloat greenBadgeWidthCenter = ((greenBadgeTotalWidth - badgeTextSize.width) / 2.0);
-		CGFloat greenBadgeHeightCenter = ((greenBadgeTotalHeight - badgeTextSize.height) / 2.0);
-
-		NSPoint badgeTextDrawPath = NSMakePoint(
-			(appIcon.size.width - greenBadgeTotalWidth + greenBadgeWidthCenter),
-			(appIcon.size.height - greenBadgeTotalHeight + greenBadgeHeightCenter + badgeTextFrameCorrection));
-
-		if (showRedBadge) {
-			badgeTextDrawPath.y -= (redBadgeCenterFrame.size.height + _badgeSeperationSpace);
-		}
-
-		[badgeText drawAtPoint:badgeTextDrawPath];
-	}
-
-	/* ////////////////////////////////////////////////////////// */
-	/* Finish Icon */
-	/* ////////////////////////////////////////////////////////// */
-
-	[appIcon unlockFocus];
-
-	[NSApp setApplicationIconImage:appIcon];
-}
-
-+ (CGFloat)badgeCenterTileWidth:(NSUInteger)badgeCount
-{
-	switch (badgeCount) {
-	case 1 ... 9: {
-		return 1.0;
-	}
-	case 10 ... 99: {
-		return 1.0;
-	}
-	case 100 ... 999: {
-		return 18.0;
-	}
-	case 1000 ... 9999: {
-		return 28.0;
-	}
-	}
-
-	return 1.0;
+	return frame;
 }
 
 @end

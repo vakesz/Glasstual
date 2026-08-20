@@ -42,7 +42,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TXWindowController ()
-@property(nonatomic, strong) NSMutableDictionary *windowObjects;
+@property(nonatomic, strong, nullable) NSMutableDictionary *windowObjects;
 @end
 
 @implementation TXWindowController

@@ -47,6 +47,12 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoListType) {
 	IRCISupportInfoListTypeQuiet
 };
 
+typedef NS_ENUM(NSUInteger, IRCISupportInfoCaseMapping) {
+	IRCISupportInfoCaseMappingRFC1459 = 0,	 // [ ] \ ~ fold to { } | ^ (default)
+	IRCISupportInfoCaseMappingStrictRFC1459, // [ ] \ fold to { } |
+	IRCISupportInfoCaseMappingASCII
+};
+
 #define IRCISupportInfoHighestUserPrefixRank 100
 
 #define IRCISupportUserModeSymbolsSymbolsKey @"modeSymbols"
@@ -70,8 +76,14 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoListType) {
 @property(readonly, copy, nullable) NSString *serverAddress;
 @property(readonly, copy, nullable) NSString *networkName;
 @property(readonly, copy, nullable) NSString *networkNameFormatted;
+@property(readonly) IRCISupportInfoCaseMapping caseMapping;
 
 - (instancetype)init NS_UNAVAILABLE;
+
+/* Returns a casefolded copy of string according to the CASEMAPPING
+ advertised by the server. Two nicknames (or channel names) are equal
+ on the server if and only if their casefolded forms are equal. */
+- (NSString *)casefoldString:(NSString *)string;
 
 - (nullable NSString *)modeSymbolForUserPrefix:(NSString *)character;
 - (nullable NSString *)userPrefixForModeSymbol:(NSString *)modeSymbol;

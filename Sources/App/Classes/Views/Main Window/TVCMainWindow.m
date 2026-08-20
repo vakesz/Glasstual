@@ -55,6 +55,7 @@
 #import "TVCServerListPrivate.h"
 #import "TVCServerListCellPrivate.h"
 #import "TVCMemberListPrivate.h"
+#import "NSColorHelper.h"
 #import "TVCTextFormatterMenuPrivate.h"
 #import "TVCTextViewWithIRCFormatterPrivate.h"
 #import "TPCApplicationInfo.h"
@@ -85,11 +86,11 @@ NSString *const TVCMainWindowDidReloadThemeNotification = @"TVCMainWindowDidRelo
 
 NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelectionChangedNotification";
 
-@interface TVCMainWindow ()
+@interface TVCMainWindow () <NSWindowRestoration>
 @property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowChannelView *channelView;
 @property(nonatomic, strong, readwrite) IBOutlet TXMenuControllerMainWindowProxy *mainMenuProxy;
 @property(nonatomic, strong, readwrite) IBOutlet TVCTextViewIRCFormattingMenu *formattingMenu;
-@property(nonatomic, unsafe_unretained, readwrite) IBOutlet TVCMainWindowTextView *inputTextField;
+@property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowTextView *inputTextField;
 @property(nonatomic, weak) IBOutlet NSSplitView *nibContentSplitView;
 @property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowLoadingScreenView *loadingScreen;
 @property(nonatomic, weak, readwrite) IBOutlet TVCMemberList *memberList;
@@ -118,9 +119,12 @@ NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelec
 @interface TVCMainWindow (TahoeToolbar) <NSToolbarDelegate>
 @end
 
-#define _treeDragItemType TVCServerListDragType
+/* Pasteboard type used when reordering items in the server list. */
+static NSPasteboardType const TVCMainWindowTreeItemPasteboardType = @"com.vakesz.glasstual.tree-item";
 
-#define _treeDragItemTypes [NSArray arrayWithObject:_treeDragItemType]
+#define _treeDragItemType TVCMainWindowTreeItemPasteboardType
+
+#define _treeDragItemTypes @[ _treeDragItemType ]
 
 @implementation TVCMainWindow
 
@@ -174,9 +178,13 @@ NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelec
 
 	self.allowsConcurrentViewDrawing = NO;
 
-	self.alphaValue = [TPCPreferences mainWindowTransparency];
+	/* Frame and fullscreen state are handled by AppKit: the frame through
+	 the autosave name set in the nib and fullscreen through state restoration. */
+	self.restorationClass = self.class;
 
 	[self installWindowChrome];
+
+	[self installFormattingMenuDecorations];
 
 	[self updateAppearance];
 
@@ -213,20 +221,15 @@ static NSToolbarItemIdentifier const TVCMainWindowToolbarLockItemIdentifier = @"
 
 static const CGFloat _sidebarFooterHeight = 32.0;
 
-static NSToolbarItem *TVCMainWindowMakeToolbarItem(
-	NSToolbarItemIdentifier identifier, NSString *symbolName, NSString *label, id target, SEL action, BOOL navigational)
+static void
+TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSString *label, BOOL navigational)
 {
-	NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:identifier];
 	item.image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:label];
 	item.label = label;
 	item.paletteLabel = label;
 	item.toolTip = label;
-	item.target = target;
-	item.action = action;
 	item.bordered = YES;
 	item.navigational = navigational;
-
-	return item;
 }
 
 - (void)installWindowChrome
@@ -293,8 +296,31 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 		action = @selector(presentCertificateTrustInformation:);
 	}
 
-	NSToolbarItem *item =
-		TVCMainWindowMakeToolbarItem(itemIdentifier, @"lock.fill", TXTLS(@"TVCMainWindow[tb-cs]"), self, action, NO);
+	NSToolbarItem *item = nil;
+
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+	/* An image-only NSToolbarItem has no view to position a menu against, so
+	 the encryption status menu is attached through NSMenuToolbarItem which
+	 presents it from the item itself on click. */
+	if (action == @selector(titlebarAccessoryViewLockButtonClicked:)) {
+		NSMenuToolbarItem *menuItem = [[NSMenuToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+		menuItem.menu = menuController().encryptionManagerStatusMenu;
+		menuItem.showsIndicator = NO;
+
+		item = menuItem;
+	}
+#endif
+
+	if (item == nil) {
+		item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+		item.target = self;
+		item.action = action;
+	}
+
+	NSString *label = TXTLS(@"TVCMainWindow[tb-cs]");
+
+	TVCMainWindowConfigureToolbarItem(item, @"lock.fill", label, NO);
+
 	/* Assign the style once, here, rather than each time the item is updated.
 	 AppKit only reconsiders which group an item belongs to when the item is
 	 inserted, so a style applied later tints whichever group it landed in. */
@@ -436,17 +462,37 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 	addButton.bordered = NO;
 	addButton.toolTip = TXTLS(@"TVCMainWindow[ib-ad]");
 
+	/* Trailing edge: search (Channel Spotlight) and Settings, the two things
+	 people reach for most from the sidebar that are otherwise only on the
+	 menu bar or a keyboard shortcut. */
+	NSButton *searchButton = [self sidebarFooterButtonWithSymbolName:@"magnifyingglass"
+															   title:TXTLS(@"TVCMainWindow[ib-sf]")
+															  action:@selector(showChannelSpotlightWindow:)];
+
+	NSButton *settingsButton = [self sidebarFooterButtonWithSymbolName:@"ellipsis.circle"
+																 title:TXTLS(@"TVCMainWindow[ib-mo]")
+																action:@selector(presentSidebarMoreMenu:)];
+
+	settingsButton.target = self;
+
 	NSView *footerHost = [[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, 180.0, _sidebarFooterHeight)];
 	footerHost.translatesAutoresizingMaskIntoConstraints = NO;
 
 	[footerHost addSubview:addButton];
+	[footerHost addSubview:searchButton];
+	[footerHost addSubview:settingsButton];
 
 	NSLayoutConstraint *footerHeight = [footerHost.heightAnchor constraintEqualToConstant:_sidebarFooterHeight];
 
 	[NSLayoutConstraint activateConstraints:@[
 		footerHeight,
 		[addButton.leadingAnchor constraintEqualToAnchor:footerHost.leadingAnchor constant:10.0],
-		[addButton.centerYAnchor constraintEqualToAnchor:footerHost.centerYAnchor]
+		[addButton.centerYAnchor constraintEqualToAnchor:footerHost.centerYAnchor],
+		[settingsButton.trailingAnchor constraintEqualToAnchor:footerHost.trailingAnchor constant:-10.0],
+		[settingsButton.centerYAnchor constraintEqualToAnchor:footerHost.centerYAnchor],
+		[searchButton.trailingAnchor constraintEqualToAnchor:settingsButton.leadingAnchor constant:-6.0],
+		[searchButton.centerYAnchor constraintEqualToAnchor:footerHost.centerYAnchor],
+		[searchButton.leadingAnchor constraintGreaterThanOrEqualToAnchor:addButton.trailingAnchor constant:8.0]
 	]];
 
 	NSSplitViewItemAccessoryViewController *footerAccessory = [[NSSplitViewItemAccessoryViewController alloc] init];
@@ -533,6 +579,21 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 
 /* Anchored to the button's top leading corner so the menu grows up and over the
  list, which is where the equivalent menus in Mail and Notes appear. */
+- (NSButton *)sidebarFooterButtonWithSymbolName:(NSString *)symbolName title:(NSString *)title action:(SEL)action
+{
+	NSButton *button = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:symbolName
+														   accessibilityDescription:title]
+										  target:menuController()
+										  action:action];
+
+	button.translatesAutoresizingMaskIntoConstraints = NO;
+	button.bezelStyle = NSBezelStyleAccessoryBarAction;
+	button.bordered = NO;
+	button.toolTip = title;
+
+	return button;
+}
+
 - (void)presentSidebarAddMenu:(id)sender
 {
 	if ([sender isKindOfClass:[NSView class]] == NO) {
@@ -544,6 +605,43 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 	if (menu == nil) {
 		return;
 	}
+
+	NSView *anchor = sender;
+
+	[menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(0.0, NSHeight(anchor.bounds)) inView:anchor];
+}
+
+- (void)presentSidebarMoreMenu:(id)sender
+{
+	if ([sender isKindOfClass:[NSView class]] == NO) {
+		return;
+	}
+
+	/* Items reuse the menu bar's tags so TXMenuController's validation
+	 keeps their titles and states (Hide/Show Member List, Disable All
+	 Notifications) in step with the menu bar. */
+	NSMenu *menu = [[NSMenu alloc] initWithTitle:@""];
+
+	NSMenuItem * (^item)(NSString *, NSString *, SEL, NSInteger) =
+		^NSMenuItem *(NSString *title, NSString *symbolName, SEL action, NSInteger tag) {
+			NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:title action:action keyEquivalent:@""];
+
+			menuItem.target = menuController();
+			menuItem.tag = tag;
+			menuItem.image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:title];
+
+			return menuItem;
+		};
+
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m1]"), @"checkmark.circle", @selector(markAllAsRead:), 402)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m2]"), @"bell.slash", @selector(toggleMuteOnNotifications:), 0)];
+	[menu addItem:[NSMenuItem separatorItem]];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m3]"), @"person.crop.circle", @selector(showAddressBook:), 813)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m4]"), @"arrow.down.circle", @selector(showFileTransfersWindow:), 817)];
+	[menu addItem:[NSMenuItem separatorItem]];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m5]"), @"sidebar.right", @selector(toggleMemberListVisibility:), 802)];
+	[menu addItem:[NSMenuItem separatorItem]];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-st]"), @"gear", @selector(showPreferencesWindow:), 101)];
 
 	NSView *anchor = sender;
 
@@ -571,26 +669,6 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 							   selector:@selector(themeVarietyChanged:)
 								   name:TPCThemeVarietyChangedNotification
 								 object:nil];
-}
-
-- (void)maybeToggleFullscreenAfterLaunch
-{
-	BOOL isFullscreen = [RZUserDefaults() boolForKey:@"Window -> Main Window Is Fullscreen'd"];
-
-	if (isFullscreen == NO) {
-		return;
-	}
-
-	[self performSelectorInCommonModes:@selector(toggleFullscreenAfterLaunch) withObject:nil afterDelay:1.0];
-}
-
-- (void)toggleFullscreenAfterLaunch
-{
-	if (self.inFullscreenMode) {
-		return;
-	}
-
-	[self toggleFullScreen:nil];
 }
 
 - (void)themeVarietyChanged:(NSNotification *)notification
@@ -644,39 +722,42 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 	[RZNotificationCenter() postNotificationName:TVCMainWindowAppearanceChangedNotification object:self];
 }
 
-- (void)updateAlphaValueToReflectPreferences
-{
-	[self updateAlphaValueToReflectPreferencesAnimated:NO];
-}
-
-- (void)updateAlphaValueToReflectPreferencesAnimated:(BOOL)animate
-{
-	if (self.inFullscreenMode) {
-		return;
-	}
-
-	double alphaValue = [TPCPreferences mainWindowTransparency];
-
-	if (animate) {
-		[self animator].alphaValue = alphaValue;
-	} else {
-		self.alphaValue = alphaValue;
-	}
-}
-
 - (void)loadWindowState
 {
-	[self restoreWindowStateUsingKeyword:@"Main Window"];
+	[self migrateLegacyWindowFrame];
 
 	[self restoreSavedContentSplitViewState];
 }
 
+- (void)migrateLegacyWindowFrame
+{
+	/* Frames used to be saved by hand under a private key. Move a saved
+	 frame to the autosave name once so the window keeps its place on the
+	 first launch after the change. */
+	static NSString *const legacyKey = @"NSWindow Frame -> Internal (v3) -> Main Window";
+
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+
+	NSString *legacyFrame = [defaults stringForKey:legacyKey];
+
+	if (legacyFrame == nil) {
+		return;
+	}
+
+	NSString *autosaveName = self.frameAutosaveName;
+
+	if (autosaveName.length > 0 &&
+		[defaults stringForKey:[@"NSWindow Frame " stringByAppendingString:autosaveName]] == nil) {
+		[self setFrameFromString:legacyFrame];
+
+		[self saveFrameUsingName:autosaveName];
+	}
+
+	[defaults removeObjectForKey:legacyKey];
+}
+
 - (void)saveWindowState
 {
-	[RZUserDefaults() setBool:self.isInFullscreenMode forKey:@"Window -> Main Window Is Fullscreen'd"];
-
-	[self saveWindowStateUsingKeyword:@"Main Window"];
-
 	[self saveContentSplitViewState];
 
 	[self saveSelection];
@@ -702,14 +783,62 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 
 	[self.memberList assignToChannel:nil];
 
-	self.delegate = (id)self;
+	self.delegate = nil;
 
-	self.selectedItems = nil;
+	self.selectedItems = @[];
 	self.selectedItem = nil;
 
 	LogToConsoleTerminationProgress("Closing main window");
 
 	[self close];
+}
+
+#pragma mark -
+#pragma mark State Restoration
+
+#define _restorableSelectionKey @"TVCMainWindowSelectedItems"
+
++ (void)restoreWindowWithIdentifier:(NSUserInterfaceItemIdentifier)identifier
+							  state:(NSCoder *)state
+				  completionHandler:(void (^)(NSWindow *_Nullable, NSError *_Nullable))completionHandler
+{
+	/* There is one main window and it is created from the nib at
+	 launch. Hand it back so AppKit can apply the saved state to it. */
+	completionHandler(mainWindow(), nil);
+}
+
+- (void)encodeRestorableStateWithCoder:(NSCoder *)coder
+{
+	[super encodeRestorableStateWithCoder:coder];
+
+	NSMutableArray<NSString *> *selectedIdentifiers = [NSMutableArray array];
+
+	for (IRCTreeItem *item in self.selectedItems) {
+		[selectedIdentifiers addObject:item.uniqueIdentifier];
+	}
+
+	[coder encodeObject:[selectedIdentifiers copy] forKey:_restorableSelectionKey];
+}
+
+- (void)restoreStateWithCoder:(NSCoder *)coder
+{
+	[super restoreStateWithCoder:coder];
+
+	NSSet *classes = [NSSet setWithObjects:[NSArray class], [NSString class], nil];
+
+	NSArray<NSString *> *selectedIdentifiers = [coder decodeObjectOfClasses:classes forKey:_restorableSelectionKey];
+
+	if (selectedIdentifiers == nil || selectedIdentifiers.count == 0) {
+		return;
+	}
+
+	NSArray *selection = [worldController() findItemsWithIds:selectedIdentifiers];
+
+	if (selection.count == 0) {
+		return;
+	}
+
+	[self adjustSelectionWithItems:selection selectedItem:nil];
 }
 
 #pragma mark -
@@ -851,16 +980,6 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 	return proposedOptions;
 }
 
-- (void)windowDidExitFullScreen:(NSNotification *)notification
-{
-	[self updateAlphaValueToReflectPreferencesAnimated:YES];
-}
-
-- (void)windowWillEnterFullScreen:(NSNotification *)notification
-{
-	[self animator].alphaValue = 1.0;
-}
-
 - (id)windowWillReturnFieldEditor:(NSWindow *)sender toObject:(id)client
 {
 	static dispatch_once_t onceToken;
@@ -882,6 +1001,88 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 	});
 
 	return self.inputTextField;
+}
+
+#pragma mark -
+#pragma mark Formatting Menu
+
+#define _formattingColorRainbowTag 299
+
+/* Colour swatches used to ship as one PNG per colour. They are drawn
+ here from the same table the renderer uses, so the menu always agrees
+ with what ends up in the channel view. */
+- (void)installFormattingMenuDecorations
+{
+	TVCTextViewIRCFormattingMenu *formattingMenu = self.formattingMenu;
+
+	for (NSMenu *menu in @[ formattingMenu.foregroundColorMenu, formattingMenu.backgroundColorMenu ]) {
+		for (NSMenuItem *item in menu.itemArray) {
+			if (item.isSeparatorItem || item.action == NULL) {
+				continue;
+			}
+
+			item.image = [self.class formattingMenuImageForColorTag:item.tag];
+		}
+	}
+
+	NSMenu *formatterMenu = formattingMenu.formatterMenu.submenu;
+
+	NSMenuItem *monospaceItem = [formatterMenu itemWithTag:102];
+
+	if (monospaceItem) {
+		NSFont *font = [NSFont monospacedSystemFontOfSize:[NSFont systemFontSize] weight:NSFontWeightRegular];
+
+		monospaceItem.attributedTitle = [[NSAttributedString alloc] initWithString:monospaceItem.title
+																		attributes:@{NSFontAttributeName : font}];
+	}
+
+	NSMenuItem *spoilerItem = [formatterMenu itemWithTag:103];
+
+	if (spoilerItem) {
+		spoilerItem.attributedTitle =
+			[[NSAttributedString alloc] initWithString:spoilerItem.title
+											attributes:@{
+												NSFontAttributeName : [NSFont menuFontOfSize:0.0],
+												NSForegroundColorAttributeName : [NSColor windowBackgroundColor],
+												NSBackgroundColorAttributeName : [NSColor labelColor]
+											}];
+	}
+}
+
++ (nullable NSImage *)formattingMenuImageForColorTag:(NSInteger)tag
+{
+	if (tag == _formattingColorRainbowTag) {
+		return [NSImage imageWithSystemSymbolName:@"rainbow" accessibilityDescription:nil];
+	}
+
+	NSArray<NSColor *> *colors = [NSColor formatterColors];
+
+	if (tag < 0 || (NSUInteger)tag >= colors.count) {
+		return nil;
+	}
+
+	NSColor *color = colors[tag];
+
+	NSImage *image = [NSImage imageWithSize:NSMakeSize(16.0, 16.0)
+									flipped:NO
+							 drawingHandler:^BOOL(NSRect dstRect) {
+								 NSRect circleRect = NSInsetRect(dstRect, 1.5, 1.5);
+
+								 NSBezierPath *circle = [NSBezierPath bezierPathWithOvalInRect:circleRect];
+
+								 [color setFill];
+								 [circle fill];
+
+								 [[NSColor.separatorColor colorWithAlphaComponent:0.6] setStroke];
+								 circle.lineWidth = 1.0;
+								 [circle stroke];
+
+								 return YES;
+							 }];
+
+	image.template = NO;
+
+	return image;
 }
 
 #pragma mark -
@@ -1637,9 +1838,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 {
 	CGFloat x = event.deltaX;
 
-	BOOL invertedScrollingDirection = [RZUserDefaults() boolForKey:@"com.apple.swipescrolldirection"];
-
-	if (invertedScrollingDirection) {
+	if (event.isDirectionInvertedFromDevice) {
 		x = (x * (-1));
 	}
 
@@ -1718,9 +1917,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 
 	CGFloat x = delta.x;
 
-	BOOL invertedScrollingDirection = [RZUserDefaults() boolForKey:@"com.apple.swipescrolldirection"];
-
-	if (invertedScrollingDirection) {
+	if (event.isDirectionInvertedFromDevice) {
 		x = (x * (-1));
 	}
 
@@ -1998,6 +2195,8 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 
 - (void)selectionDidChangePostflight
 {
+	[self invalidateRestorableState];
+
 	/* If the selection hasn't changed, then do nothing. */
 	IRCTreeItem *itemChangedTo = self.selectedItem;
 
@@ -2212,6 +2411,10 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 }
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+/* The lock item is built as an NSMenuToolbarItem which presents the
+ encryption status menu itself. This action is only used as the marker
+ the toolbar delegate keys off of, and as a fallback should the item
+ ever be invoked without its menu attached. */
 - (void)titlebarAccessoryViewLockButtonClicked:(id)sender
 {
 	NSMenu *statusMenu = menuController().encryptionManagerStatusMenu;
@@ -2228,13 +2431,24 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 		positioningView = self.lockToolbarItem.view;
 	}
 
-	NSPoint location = NSZeroPoint;
-
 	if (positioningView) {
-		location = NSMakePoint(0.0, NSHeight(positioningView.bounds));
+		[statusMenu popUpMenuPositioningItem:nil
+								  atLocation:NSMakePoint(0.0, NSHeight(positioningView.bounds))
+									  inView:positioningView];
+
+		return;
 	}
 
-	[statusMenu popUpMenuPositioningItem:nil atLocation:location inView:positioningView];
+	/* No view to anchor against; fall back to the current event location. */
+	NSEvent *event = NSApp.currentEvent;
+
+	NSView *contentView = self.contentView;
+
+	if (event && contentView) {
+		NSPoint location = [contentView convertPoint:event.locationInWindow fromView:nil];
+
+		[statusMenu popUpMenuPositioningItem:nil atLocation:location inView:contentView];
+	}
 }
 #endif
 
@@ -3124,18 +3338,15 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 	}
 }
 
-- (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray *)items toPasteboard:(NSPasteboard *)pasteboard
+- (nullable id<NSPasteboardWriting>)outlineView:(NSOutlineView *)outlineView pasteboardWriterForItem:(id)item
 {
-	/* TODO (March 27, 2016): Support dragging multiple items */
-	if (items.count == 1) {
-		NSString *itemToken = [worldController() pasteboardStringForItem:items[0]];
+	NSString *itemToken = [worldController() pasteboardStringForItem:item];
 
-		[pasteboard declareTypes:_treeDragItemTypes owner:self];
+	NSPasteboardItem *pasteboardItem = [NSPasteboardItem new];
 
-		[pasteboard setString:itemToken forType:_treeDragItemType];
-	}
+	[pasteboardItem setString:itemToken forType:_treeDragItemType];
 
-	return YES;
+	return pasteboardItem;
 }
 
 - (NSDragOperation)outlineView:(NSOutlineView *)outlineView
@@ -3188,7 +3399,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 
 		IRCChannel *nextItem = nil;
 
-		if (index < channelList.count) {
+		if ((NSUInteger)index < channelList.count) {
 			nextItem = channelList[index];
 		}
 

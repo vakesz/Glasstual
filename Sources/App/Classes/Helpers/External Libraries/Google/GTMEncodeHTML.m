@@ -392,6 +392,8 @@ static NSString *StringByEscapingHTMLUsingTable(NSString *src,
 			// will also run out of memory, so just give up.
 			NSCAssert(NO, @"couldn't alloc buffer");
 			// COV_NF_END
+
+			return nil;
 		}
 		[src getCharacters:[data mutableBytes]];
 		buffer = [data bytes];

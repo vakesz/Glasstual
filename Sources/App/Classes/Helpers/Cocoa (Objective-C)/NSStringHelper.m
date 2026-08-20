@@ -41,6 +41,7 @@
 #import "IRCISupportInfo.h"
 #import "IRCColorFormat.h"
 #import "TPCPreferencesLocal.h"
+#import "TLOLinkParser.h"
 #import "TVCLogRenderer.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -311,7 +312,7 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 
 - (nullable NSString *)stringWithValidURIScheme
 {
-	return [AHHyperlinkScanner URLWithProperScheme:self];
+	return [TLOLinkParser URLWithProperScheme:self];
 }
 
 - (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont
@@ -357,8 +358,12 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 
 	NSUInteger bufferLength = (stringLength * sizeof(UniChar));
 
-	UniChar *inputBuffer = alloca(bufferLength);
-	UniChar *outputBuffer = alloca(bufferLength);
+	/* Heap allocated; the string length is unbounded. */
+	NSMutableData *inputData = [NSMutableData dataWithLength:bufferLength];
+	NSMutableData *outputData = [NSMutableData dataWithLength:bufferLength];
+
+	UniChar *inputBuffer = inputData.mutableBytes;
+	UniChar *outputBuffer = outputData.mutableBytes;
 
 	[self getCharacters:inputBuffer range:self.range];
 
@@ -689,19 +694,73 @@ return_method:
 		return self;
 	}
 
-	NSMutableString *bob = [self mutableCopy];
+	/* IRCv3 message tag escaping must be decoded in a single pass.
+	 Sequential replacement turns "\\s" (an escaped backslash followed
+	 by a literal 's') into a space. See the message-tags specification. */
+	NSUInteger length = self.length;
 
-	if ([bob hasSuffix:@"\\"]) {
-		[bob deleteCharactersInRange:NSMakeRange((bob.length - 1), 1)];
+	NSMutableData *inputData = [NSMutableData dataWithLength:(length * sizeof(UniChar))];
+	NSMutableData *outputData = [NSMutableData dataWithLength:(length * sizeof(UniChar))];
+
+	UniChar *inputBuffer = inputData.mutableBytes;
+	UniChar *outputBuffer = outputData.mutableBytes;
+
+	[self getCharacters:inputBuffer range:NSMakeRange(0, length)];
+
+	NSUInteger outputLength = 0;
+
+	for (NSUInteger i = 0; i < length; i++) {
+		UniChar character = inputBuffer[i];
+
+		if (character != '\\') {
+			outputBuffer[outputLength++] = character;
+
+			continue;
+		}
+
+		/* A trailing lone backslash is dropped */
+		if ((i + 1) >= length) {
+			break;
+		}
+
+		UniChar next = inputBuffer[++i];
+
+		switch (next) {
+		case ':': {
+			outputBuffer[outputLength++] = ';';
+
+			break;
+		}
+		case 's': {
+			outputBuffer[outputLength++] = ' ';
+
+			break;
+		}
+		case '\\': {
+			outputBuffer[outputLength++] = '\\';
+
+			break;
+		}
+		case 'r': {
+			outputBuffer[outputLength++] = '\r';
+
+			break;
+		}
+		case 'n': {
+			outputBuffer[outputLength++] = '\n';
+
+			break;
+		}
+		default: {
+			/* Unknown escape: the backslash is dropped and the character kept */
+			outputBuffer[outputLength++] = next;
+
+			break;
+		}
+		}
 	}
 
-	[bob replaceOccurrencesOfString:@"\\:" withString:@";" options:0 range:bob.range];
-	[bob replaceOccurrencesOfString:@"\\\\" withString:@"\\" options:0 range:bob.range];
-	[bob replaceOccurrencesOfString:@"\\s" withString:@" " options:0 range:bob.range];
-	[bob replaceOccurrencesOfString:@"\\r" withString:@"\r" options:0 range:bob.range];
-	[bob replaceOccurrencesOfString:@"\\n" withString:@"\n" options:0 range:bob.range];
-
-	return [bob copy];
+	return [NSString stringWithCharacters:outputBuffer length:outputLength];
 }
 
 - (BOOL)isModeSymbol

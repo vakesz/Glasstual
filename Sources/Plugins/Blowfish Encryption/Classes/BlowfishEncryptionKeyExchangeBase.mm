@@ -51,6 +51,8 @@
 #include <openssl/dh.h>
 #include <openssl/bn.h>
 
+#include <string.h>
+
 /* Private Interface. */
 @interface EKBlowfishEncryptionKeyExchangeBase ()
 @property(nonatomic, strong) NSData *secretValue;
@@ -73,16 +75,6 @@ static NSString *fishPrimeB64 =
 	@"++ECLiPSE+is+proud+to+present+latest+FiSH+release+featuring+even+more+security+for+you+++shouts+go+out+to+TMG+"
 	@"for+helping+to+generate+this+cool+sophie+germain+prime+number++++/C32L";
 
-/* Static Definitions. */
-#define DHAssertNO(c)                                                                                                  \
-	if (c == NO) {                                                                                                     \
-		NSAssert(NO, @"DH1080 Key Exchange Failure.");                                                                 \
-	}
-#define DHAssertYES(c)                                                                                                 \
-	if (c) {                                                                                                           \
-		NSAssert(NO, @"DH1080 Key Exchange Failure.");                                                                 \
-	}
-
 /* Implementation. */
 @implementation EKBlowfishEncryptionKeyExchangeBase
 
@@ -95,7 +87,11 @@ static NSString *fishPrimeB64 =
 
 		self.publicBigNum = 0;
 
-		[self initializeKeyExchange];
+		if ([self initializeKeyExchange] == NO) {
+			[self resetStatus];
+
+			return nil;
+		}
 
 		return self;
 	}
@@ -112,7 +108,7 @@ static NSString *fishPrimeB64 =
 - (void)resetPublicInformation
 {
 	if (self.publicBigNum != 0) {
-		BN_free(self.publicBigNum);
+		BN_clear_free(self.publicBigNum);
 
 		self.publicBigNum = 0;
 	}
@@ -129,85 +125,131 @@ static NSString *fishPrimeB64 =
 
 #pragma mark -
 
-- (void)initializeKeyExchange
+- (BOOL)initializeKeyExchange
 {
-	DHAssertNO(self.DHStatus == 0);
-
-	self.DHStatus = DH_new();
-
-	DHAssertYES(self.DHStatus == 0);
-
-	DHAssertNO(DH_get0_g(self.DHStatus) == 0);
-	DHAssertNO(DH_get0_p(self.DHStatus) == 0);
+	if (self.DHStatus != 0) {
+		return NO;
+	}
 
 	NSData *primeData = [self base64Decode:fishPrimeB64];
+
+	if ([primeData length] < 1) {
+		return NO;
+	}
+
+	DH *dh = DH_new();
+
+	if (dh == 0) {
+		return NO;
+	}
 
 	BIGNUM *g = BN_new();
 	BIGNUM *p = BN_new();
 
-	DH_set0_pqg(self.DHStatus, p, NULL, g);
+	if (g == 0 || p == 0 || BN_dec2bn(&g, "2") == 0 ||
+		BN_bin2bn((unsigned char *)[primeData bytes], (int)[primeData length], p) == 0) {
+		BN_free(g);
+		BN_free(p);
+		DH_free(dh);
 
-	BN_dec2bn(&g, "2");
+		return NO;
+	}
 
-	DHAssertNO([primeData length] >= 1);
+	/* DH_set0_pqg() takes ownership of p and g on success. */
+	if (DH_set0_pqg(dh, p, NULL, g) != 1) {
+		BN_free(g);
+		BN_free(p);
+		DH_free(dh);
 
-	BIGNUM *ret = BN_bin2bn((unsigned char *)[primeData bytes], (int)[primeData length], p);
+		return NO;
+	}
 
-	DHAssertYES(ret == 0);
-	DHAssertYES(DH_get0_g(self.DHStatus) == 0);
-	DHAssertYES(DH_get0_p(self.DHStatus) == 0);
+	int codes = 0;
 
-	int check, codes;
+	if (DH_check(dh, &codes) != 1 || codes != 0) {
+		DH_free(dh);
 
-	check = DH_check(self.DHStatus, &codes);
+		return NO;
+	}
 
-	DHAssertNO(check == 1);
-	DHAssertNO(codes == 0);
+	if (DH_generate_key(dh) != 1 || DH_size(dh) != EKBlowfishEncryptionKeyExchangeRequiredKeyLength) {
+		DH_free(dh);
 
-	int genr = DH_generate_key(self.DHStatus);
+		return NO;
+	}
 
-	DHAssertNO(genr == 1);
+	self.DHStatus = dh;
+
+	return YES;
 }
 
 #pragma mark -
 
-- (void)computeKey
+- (BOOL)computeKey
 {
-	DHAssertYES(self.DHStatus == 0);
-	DHAssertYES(DH_get0_g(self.DHStatus) == 0);
-	DHAssertYES(DH_get0_p(self.DHStatus) == 0);
+	self.secretValue = nil;
 
-	DHAssertYES(self.publicBigNum == 0);
+	if (self.DHStatus == 0 || self.publicBigNum == 0) {
+		return NO;
+	}
 
-	NSInteger size = DH_size(self.DHStatus);
+	int size = DH_size(self.DHStatus);
 
-	DHAssertNO(size == EKBlowfishEncryptionKeyExchangeRequiredKeyLength);
+	if (size != EKBlowfishEncryptionKeyExchangeRequiredKeyLength) {
+		return NO;
+	}
 
 	unsigned char key[EKBlowfishEncryptionKeyExchangeRequiredKeyLength];
 
-	NSInteger num = DH_compute_key(key, self.publicBigNum, self.DHStatus);
+	int num = DH_compute_key(key, self.publicBigNum, self.DHStatus);
 
-	DHAssertNO(num == size);
+	if (num <= 0 || num > size) {
+		memset_s(key, sizeof(key), 0, sizeof(key));
 
-	NSData *secretValue = [[NSData alloc] initWithBytes:key length:sizeof(key)];
-
-	DHAssertNO([secretValue length] >= 1);
-
-	self.secretValue = secretValue;
-}
-
-- (void)setKeyForComputation:(NSData *)publicKey
-{
-	if (self.publicBigNum == 0) {
-		self.publicBigNum = BN_new();
+		return NO;
 	}
 
-	DHAssertYES(self.publicBigNum == 0);
+	/* DH_compute_key() strips leading zero bytes. Use the returned
+	 length so the shared secret matches what the peer computes. */
+	NSData *secretValue = [[NSData alloc] initWithBytes:key length:(NSUInteger)num];
 
-	BIGNUM *ret = BN_bin2bn((unsigned char *)[publicKey bytes], (int)[publicKey length], self.publicBigNum);
+	memset_s(key, sizeof(key), 0, sizeof(key));
 
-	DHAssertYES(ret == 0);
-	DHAssertYES(self.publicBigNum == 0);
+	if ([secretValue length] < 1) {
+		return NO;
+	}
+
+	self.secretValue = secretValue;
+
+	return YES;
+}
+
+- (BOOL)setKeyForComputation:(NSData *)publicKey
+{
+	[self resetPublicInformation];
+
+	if (self.DHStatus == 0 || [publicKey length] < 1) {
+		return NO;
+	}
+
+	BIGNUM *peerKey = BN_bin2bn((unsigned char *)[publicKey bytes], (int)[publicKey length], NULL);
+
+	if (peerKey == 0) {
+		return NO;
+	}
+
+	/* DH_check_pub_key() rejects y <= 1 and y >= (p - 1). */
+	int codes = 0;
+
+	if (DH_check_pub_key(self.DHStatus, peerKey, &codes) != 1 || codes != 0) {
+		BN_clear_free(peerKey);
+
+		return NO;
+	}
+
+	self.publicBigNum = peerKey;
+
+	return YES;
 }
 
 #pragma mark -
@@ -216,45 +258,58 @@ static NSString *fishPrimeB64 =
 {
 	NSData *secretValue = [self secretValue];
 
-	DHAssertNO(secretValue.length >= 1);
+	if ([secretValue length] < 1) {
+		return nil;
+	}
 
-	unsigned char sha_md[32];
+	unsigned char sha_md[SHA256_DIGEST_LENGTH];
 
-	SHA256((unsigned char *)[secretValue bytes], (int)[secretValue length], sha_md);
+	SHA256((unsigned char *)[secretValue bytes], [secretValue length], sha_md);
 
 	NSData *secretHash = [[NSData alloc] initWithBytes:sha_md length:sizeof(sha_md)];
 
-	DHAssertNO([secretHash length] >= 1);
+	memset_s(sha_md, sizeof(sha_md), 0, sizeof(sha_md));
 
 	return [self base64Encode:secretHash];
 }
 
 - (NSString *)publicKeyValue:(NSData *)publicInput
 {
-	DHAssertNO([publicInput length] >= 1);
+	if ([publicInput length] < 1) {
+		return nil;
+	}
 
 	return [self base64Encode:publicInput];
 }
 
 - (NSData *)rawPublicKey
 {
-	DHAssertYES(self.DHStatus == 0);
-	DHAssertYES(DH_get0_g(self.DHStatus) == 0);
-	DHAssertYES(DH_get0_p(self.DHStatus) == 0);
+	if (self.DHStatus == 0) {
+		return nil;
+	}
 
-	NSInteger size = DH_size(self.DHStatus);
-
-	DHAssertNO(size == EKBlowfishEncryptionKeyExchangeRequiredKeyLength);
-
-	unsigned char key[EKBlowfishEncryptionKeyExchangeRequiredKeyLength];
+	if (DH_size(self.DHStatus) != EKBlowfishEncryptionKeyExchangeRequiredKeyLength) {
+		return nil;
+	}
 
 	const BIGNUM *publicKey = DH_get0_pub_key(self.DHStatus);
 
-	BN_bn2bin(publicKey, key);
+	if (publicKey == 0) {
+		return nil;
+	}
+
+	unsigned char key[EKBlowfishEncryptionKeyExchangeRequiredKeyLength];
+
+	/* Left pad with zeros so the wire format is always 135 bytes. */
+	if (BN_bn2binpad(publicKey, key, sizeof(key)) != (int)sizeof(key)) {
+		memset_s(key, sizeof(key), 0, sizeof(key));
+
+		return nil;
+	}
 
 	NSData *publicInput = [[NSData alloc] initWithBytes:key length:sizeof(key)];
 
-	DHAssertNO([publicInput length] >= 1);
+	memset_s(key, sizeof(key), 0, sizeof(key));
 
 	return publicInput;
 }
@@ -265,7 +320,9 @@ static NSString *fishPrimeB64 =
 {
 	NSString *output = [XRBase64Encoding encodeData:input];
 
-	DHAssertNO([output length] >= 1);
+	if ([output length] < 1) {
+		return nil;
+	}
 
 	BOOL equalFound = NO;
 
@@ -292,7 +349,9 @@ static NSString *fishPrimeB64 =
 {
 	NSInteger inputLength = [input length];
 
-	DHAssertNO([input length] >= 1);
+	if (inputLength < 1) {
+		return nil;
+	}
 
 	NSString *ecv = [input substringFromIndex:(inputLength - 1)];
 

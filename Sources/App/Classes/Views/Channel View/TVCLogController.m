@@ -108,6 +108,13 @@ NS_ASSUME_NONNULL_BEGIN
 NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogControllerViewFinishedLoadingNotification";
 
 @implementation TVCLogController
+{
+	/* The property is nonnull for the lifetime of the controller;
+	 the backing storage is only cleared during teardown. */
+	TVCLogView *_Nullable _backingView;
+}
+
+@synthesize backingView = _backingView;
 
 #pragma mark -
 #pragma mark Initialization
@@ -178,7 +185,8 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	self.loaded = NO;
 
 	[self.backingView stopLoading]; // allow view to teardown
-	self.backingView = nil;
+	/* The property is nonnull; teardown is the one exception. */
+	self->_backingView = nil;
 
 	[self.printingQueue cancelOperationsForViewController:self];
 
@@ -340,12 +348,12 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 #pragma mark -
 #pragma mark Document Append & JavaScript Controller
 
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments
+- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments
 {
 	[self evaluateFunction:function withArguments:arguments onQueue:YES];
 }
 
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments onQueue:(BOOL)onQueue
+- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments onQueue:(BOOL)onQueue
 {
 	NSParameterAssert(function != nil);
 
@@ -364,7 +372,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	}
 }
 
-- (void)_evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments
+- (void)_evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments
 {
 	NSParameterAssert(function != nil);
 
@@ -858,7 +866,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 					  error.localizedDescription);
 }
 
-- (void)processInlineMedia:(NSArray<AHHyperlinkScannerResult *> *)mediaLinks atLineNumber:(NSString *)lineNumber
+- (void)processInlineMedia:(NSArray<TLOLinkParserResult *> *)mediaLinks atLineNumber:(NSString *)lineNumber
 {
 	NSParameterAssert(mediaLinks != nil);
 	NSParameterAssert(lineNumber != nil);
@@ -870,9 +878,9 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	/* Unique list */
 	NSMutableArray<NSString *> *linksMatched = [NSMutableArray array];
 
-	NSMutableArray<AHHyperlinkScannerResult *> *linksToProcess = [NSMutableArray array];
+	NSMutableArray<TLOLinkParserResult *> *linksToProcess = [NSMutableArray array];
 
-	for (AHHyperlinkScannerResult *link in mediaLinks) {
+	for (TLOLinkParserResult *link in mediaLinks) {
 		if ([linksMatched containsObject:link.stringValue]) {
 			continue;
 		}
@@ -880,7 +888,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		[linksToProcess addObject:link];
 	}
 
-	[linksToProcess enumerateObjectsUsingBlock:^(AHHyperlinkScannerResult *link, NSUInteger index, BOOL *stop) {
+	[linksToProcess enumerateObjectsUsingBlock:^(TLOLinkParserResult *link, NSUInteger index, BOOL *stop) {
 		[self processInlineMediaAtAddress:link.stringValue
 					 withUniqueIdentifier:link.uniqueIdentifier
 							 atLineNumber:lineNumber
@@ -1281,7 +1289,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 			/* We go through the inline media list here and pass to the loader now so
 			 that we know the links have hit the WebView before we even try loading them. */
 			if (processInlineMedia) {
-				NSArray<AHHyperlinkScannerResult *> *listOfLinks =
+				NSArray<TLOLinkParserResult *> *listOfLinks =
 					resultInfo[TVCLogRendererResultsListOfLinksInBodyAttribute];
 
 				[self processInlineMedia:listOfLinks atLineNumber:lineNumber];
@@ -1502,7 +1510,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		resultInfoTemp[@"processInlineMedia"] = @(inlineMedia);
 
 		if ([sharedPluginManager() supportsFeature:THOPluginItemSupportedFeatureNewMessagePostedEvent]) {
-			NSArray<AHHyperlinkScannerResult *> *listOfLinks =
+			NSArray<TLOLinkParserResult *> *listOfLinks =
 				rendererResults[TVCLogRendererResultsListOfLinksInBodyAttribute];
 
 			THOPluginDidPostNewMessageConcreteObject *pluginConcreteObject =

@@ -38,8 +38,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface RCMProcessMain ()
-@property(nonatomic, strong) IRCConnection *connection;
-@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, strong, nullable) IRCConnection *connection;
+@property(nonatomic, strong, nullable) NSXPCConnection *serviceConnection;
 @end
 
 @implementation RCMProcessMain
@@ -69,11 +69,30 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark XPC Interface
 
+- (void)clientConnectionEnded
+{
+	IRCConnection *connection = self.connection;
+
+	self.connection = nil;
+
+	[connection close];
+
+	self.serviceConnection = nil;
+}
+
 - (void)openWithConfig:(IRCConnectionConfig *)config
 {
 	NSAssert((self.connection == nil), @"Method invoked with connection already open");
 
-	IRCConnection *connection = [[IRCConnection alloc] initWithConfig:config onConnection:self.serviceConnection];
+	NSXPCConnection *serviceConnection = self.serviceConnection;
+
+	if (serviceConnection == nil) {
+		LogToConsoleError("Cannot open a connection after the client connection ended");
+
+		return;
+	}
+
+	IRCConnection *connection = [[IRCConnection alloc] initWithConfig:config onConnection:serviceConnection];
 
 	[connection open];
 

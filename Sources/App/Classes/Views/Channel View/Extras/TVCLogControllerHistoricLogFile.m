@@ -57,10 +57,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) BOOL isTerminating;
 @property(nonatomic, assign, readwrite) BOOL processLoaded;
 @property(nonatomic, assign, readwrite) BOOL processLoading;
-@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, strong, nullable) NSXPCConnection *serviceConnection;
 @property(nonatomic, assign) BOOL connectionInvalidatedVoluntarily;
 @property(nonatomic, assign) BOOL connectionInvalidatedErrorDialogDisplayed;
 @property(nonatomic, copy, nullable) NSError *lastServiceConnectionError;
+@property(nonatomic, copy, nullable) void (^terminationCompletionBlock)(void);
 @end
 
 @implementation TVCLogControllerHistoricLogFile
@@ -187,14 +188,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 	serviceConnection.exportedObject = self;
 
+	__weak TVCLogControllerHistoricLogFile *weakSelf = self;
+
 	serviceConnection.interruptionHandler = ^{
-		[self interruptionHandler];
+		[weakSelf interruptionHandler];
 
 		LogToConsole("Interruption handler called");
 	};
 
 	serviceConnection.invalidationHandler = ^{
-		[self invalidationHandler];
+		[weakSelf invalidationHandler];
 
 		LogToConsole("Invalidation handler called");
 	};
@@ -214,6 +217,11 @@ NS_ASSUME_NONNULL_BEGIN
 	self.serviceConnection = nil;
 
 	[self resetContext];
+
+	/* Nothing further can be saved once the connection is gone. */
+	if (self.isTerminating) {
+		[self invokeTerminationCompletionBlock];
+	}
 
 	if (self.connectionInvalidatedVoluntarily) {
 		self.connectionInvalidatedVoluntarily = NO;
@@ -259,9 +267,34 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)prepareForApplicationTermination
 {
+	[self prepareForApplicationTerminationWithCompletionBlock:nil];
+}
+
+- (void)prepareForApplicationTerminationWithCompletionBlock:(void (^_Nullable)(void))completionBlock
+{
 	self.isTerminating = YES;
 
-	[self saveData];
+	self.terminationCompletionBlock = completionBlock;
+
+	/* -saveData returns NO when there is nothing to save (the service was
+	 never warmed) in which case the completion block is called right away.
+	 Otherwise it is called once the save that is in flight completes. */
+	if ([self saveData] == NO) {
+		[self invokeTerminationCompletionBlock];
+	}
+}
+
+- (void)invokeTerminationCompletionBlock
+{
+	void (^completionBlock)(void) = self.terminationCompletionBlock;
+
+	if (completionBlock == nil) {
+		return;
+	}
+
+	self.terminationCompletionBlock = nil;
+
+	XRPerformBlockAsynchronouslyOnMainQueue(completionBlock);
 }
 
 #pragma mark -
@@ -416,11 +449,11 @@ NS_ASSUME_NONNULL_BEGIN
 							  }];
 }
 
-- (void)saveData
+- (BOOL)saveData
 {
 	if (self.isTerminating) {
 		if (self.processLoaded == NO && self.processLoading == NO) {
-			return;
+			return NO;
 		}
 	}
 
@@ -429,18 +462,37 @@ NS_ASSUME_NONNULL_BEGIN
 	} else {
 		LogToConsoleDebug("Cancelled save because a save is already saving");
 
-		return;
+		return YES;
 	}
 
 	[self warmProcessIfNeeded];
 
-	[[self remoteObjectProxy] saveDataWithCompletionBlock:^{
-		self.isSaving = NO;
+	__weak TVCLogControllerHistoricLogFile *weakSelf = self;
 
-		if (self.isTerminating) {
-			[self invalidateProcess];
+	void (^saveCompleted)(void) = ^{
+		TVCLogControllerHistoricLogFile *strongSelf = weakSelf;
+
+		if (strongSelf == nil) {
+			return;
 		}
-	}];
+
+		strongSelf.isSaving = NO;
+
+		if (strongSelf.isTerminating) {
+			[strongSelf invalidateProcess];
+
+			[strongSelf invokeTerminationCompletionBlock];
+		}
+	};
+
+	/* If the service fails while saving, the error handler is the only
+	 callback we get. Treat that as the save having ended so that
+	 termination is not held up waiting on a reply that never comes. */
+	[[self remoteObjectProxyWithErrorHandler:^(NSError *error) {
+		saveCompleted();
+	}] saveDataWithCompletionBlock:saveCompleted];
+
+	return YES;
 }
 
 - (void)forgetItem:(IRCTreeItem *)item

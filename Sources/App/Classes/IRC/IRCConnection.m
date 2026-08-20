@@ -38,10 +38,7 @@
 
 #import "RCMConnectionManagerProtocol.h"
 
-#import <objc/message.h>
-
 #import "NSObjectHelperPrivate.h"
-#import "GCDAsyncSocketExtensions.h"
 #import "TLOLocalization.h"
 #import "TPCPreferencesLocal.h"
 #import "IRCClient.h"
@@ -52,12 +49,12 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCConnection ()
-@property(nonatomic, weak, readwrite) IRCClient *client;
-@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(weak, readwrite) IRCClient *client;
+@property(nonatomic, strong, nullable) NSXPCConnection *serviceConnection;
 @property(nonatomic, strong, nullable) SFCertificateTrustPanel *trustPanel;
 @property(nonatomic, assign) BOOL trustPanelDoNotInvokeCompletionBlock;
 @property(nonatomic, assign) BOOL connectionInvalidatedVoluntarily;
-@property(nonatomic, copy, readwrite) NSString *uniqueIdentifier;
+@property(copy, readwrite) NSString *uniqueIdentifier;
 @end
 
 @implementation IRCConnection
@@ -145,14 +142,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 	serviceConnection.exportedObject = self;
 
+	/* NSXPCConnection retains its handlers for its entire lifetime and we
+	 retain the connection, so capturing self strongly here is a cycle. */
+	__weak typeof(self) weakSelf = self;
+
 	serviceConnection.interruptionHandler = ^{
-		[self interruptionHandler];
+		[weakSelf interruptionHandler];
 
 		LogToConsole("Interruption handler called");
 	};
 
 	serviceConnection.invalidationHandler = ^{
-		[self invalidationHandler];
+		[weakSelf invalidationHandler];
 
 		LogToConsole("Invalidation handler called");
 	};
@@ -169,22 +170,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)invalidationHandler
 {
-	self.serviceConnection = nil;
+	XRPerformBlockSynchronouslyOnMainQueue(^{
+		self.serviceConnection = nil;
 
-	/* -ircConnectionDidDisconnectWithError: instructs the process to
-	 voluntarily invalidate, so if we reach here, then its pretty certain
-	 something big happened and we need to let the client know. */
-	if ((self.isConnecting || self.isConnected) && self.connectionInvalidatedVoluntarily == NO) {
-		NSString *errorMessage = TXTLS(@"IRC[vdy-jk]");
+		/* -ircConnectionDidDisconnectWithError: instructs the process to
+		 voluntarily invalidate, so if we reach here, then its pretty certain
+		 something big happened and we need to let the client know. */
+		if ((self.isConnecting || self.isConnected) && self.connectionInvalidatedVoluntarily == NO) {
+			NSString *errorMessage = TXTLS(@"IRC[vdy-jk]");
 
-		NSError *error = [NSError errorWithDomain:IRCConnectionErrorDomain
-											 code:IRCConnectionErrorCodeOther
-										 userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
+			NSError *error = [NSError errorWithDomain:IRCConnectionErrorDomain
+												 code:IRCConnectionErrorCodeOther
+											 userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
 
-		[self _ircConnectionDidDisconnectWithError:error];
-	}
+			[self _ircConnectionDidDisconnectWithError:error];
+		}
 
-	[self resetState];
+		[self resetState];
+	});
 }
 
 - (id<RCMConnectionManagerServerProtocol>)remoteObjectProxy
@@ -314,8 +317,10 @@ NS_ASSUME_NONNULL_BEGIN
 										 defaultButton:defaultButtonTitle
 									   alternateButton:alternateButtonTitle
 											  trustRef:trustRef
-									   completionBlock:^(SecTrustRef trustRef, BOOL trusted, id contextInfo) {
-										   CFRelease(trustRef);
+									   completionBlock:^(SecTrustRef trustRef, BOOL trusted, id contextInfo){
+										   /* RCMTrustPanel consumes the +1 reference returned by
+											+trustFromCertificateChain:withPolicyName: and releases
+											it after this block returns. Do not release it here. */
 									   }];
 	}];
 }
@@ -357,7 +362,8 @@ NS_ASSUME_NONNULL_BEGIN
 									 alternateButton:alternateButtonTitle
 											trustRef:trustRef
 									 completionBlock:^(SecTrustRef trustRef, BOOL trusted, id contextInfo) {
-										 CFRelease(trustRef);
+										 /* RCMTrustPanel consumes the +1 trustRef and releases it after
+										  this block returns. Do not release it here. */
 
 										 weakSelf.trustPanel = nil;
 
@@ -379,23 +385,34 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	SEL dismissSelector = NSSelectorFromString(@"_dismissWithCode:");
+	SFCertificateTrustPanel *trustPanel = self.trustPanel;
 
-	if ([self.trustPanel respondsToSelector:dismissSelector]) {
-		self.trustPanelDoNotInvokeCompletionBlock = YES;
+	/* Ending the sheet (or modal session) causes the panel to invoke the
+	 did-end selector RCMTrustPanel registered, which in turn invokes our
+	 completion block. The flag tells that block to swallow the response. */
+	self.trustPanelDoNotInvokeCompletionBlock = YES;
 
-		NSMethodSignature *signature = [self.trustPanel methodSignatureForSelector:dismissSelector];
+	NSWindow *sheetParent = trustPanel.sheetParent;
 
-		NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
+	if (sheetParent) {
+		[sheetParent endSheet:trustPanel returnCode:NSModalResponseCancel];
 
-		[invocation setTarget:self.trustPanel];
-		[invocation setSelector:dismissSelector];
-
-		NSModalResponse cancel = NSModalResponseCancel;
-		[invocation setArgument:&cancel atIndex:2];
-
-		[invocation invoke];
+		return;
 	}
+
+	if ([NSApp modalWindow] == trustPanel) {
+		[NSApp stopModalWithCode:NSModalResponseCancel];
+
+		return;
+	}
+
+	/* The panel is neither a sheet nor modal so there is no did-end
+	 callback to wait for. Hide it and drop our state by hand. */
+	[trustPanel orderOut:nil];
+
+	self.trustPanelDoNotInvokeCompletionBlock = NO;
+
+	self.trustPanel = nil;
 }
 
 #pragma mark -
@@ -417,6 +434,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)sendLine:(NSString *)line
 {
 	NSParameterAssert(line != nil);
+
+	/* IRC is line oriented. Any CR or LF inside the line would be read by
+	 the server as the start of a second, unintended command. */
+	line = [line stringByReplacingOccurrencesOfString:@"\x0d" withString:@""];
+	line = [line stringByReplacingOccurrencesOfString:@"\x0a" withString:@""];
 
 	line = [line stringByAppendingString:@"\x0d\x0a"];
 
@@ -456,14 +478,18 @@ NS_ASSUME_NONNULL_BEGIN
 	});
 }
 
+/* Delegate methods below arrive on the XPC connection's queue. State is
+ mutated inside the main queue hop so that IRCClient, which reads these
+ properties from the main thread, never observes a half-updated object. */
+
 - (void)ircConnectionDidConnectToHost:(nullable NSString *)host
 {
-	self.connectedAddress = host;
-
-	self.isConnecting = NO;
-	self.isConnected = YES;
-
 	XRPerformBlockSynchronouslyOnMainQueue(^{
+		self.connectedAddress = host;
+
+		self.isConnecting = NO;
+		self.isConnected = YES;
+
 		[self.client ircConnectionDidConnect:self];
 	});
 }
@@ -471,33 +497,35 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)ircConnectionDidSecureConnectionWithProtocolType:(tls_protocol_version_t)protocolType
 											 cipherSuite:(tls_ciphersuite_t)cipherSuite
 {
-	self.isSecured = YES;
-
-	if (self.config.identityClientSideCertificate != nil) {
-		self.isConnectedWithClientSideCertificate = YES;
-	}
-
 	XRPerformBlockSynchronouslyOnMainQueue(^{
+		self.isSecured = YES;
+
+		if (self.config.identityClientSideCertificate != nil) {
+			self.isConnectedWithClientSideCertificate = YES;
+		}
+
 		[self.client ircConnectionDidSecureConnection:self withProtocolType:protocolType cipherSuite:cipherSuite];
 	});
 }
 
 - (void)ircConnectionDidCloseReadStream
 {
-	self.EOFReceived = YES;
-
 	XRPerformBlockSynchronouslyOnMainQueue(^{
+		self.EOFReceived = YES;
+
 		[self.client ircConnectionDidCloseReadStream:self];
 	});
 }
 
 - (void)ircConnectionDidDisconnectWithError:(nullable NSError *)disconnectError
 {
-	self.connectionInvalidatedVoluntarily = YES;
+	XRPerformBlockSynchronouslyOnMainQueue(^{
+		self.connectionInvalidatedVoluntarily = YES;
 
-	[self invalidateProcess];
+		[self invalidateProcess];
 
-	[self _ircConnectionDidDisconnectWithError:disconnectError];
+		[self _ircConnectionDidDisconnectWithError:disconnectError];
+	});
 }
 
 - (void)_ircConnectionDidDisconnectWithError:(nullable NSError *)disconnectError
@@ -543,7 +571,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)ircConnectionDidSendData
 {
-	self.isSending = NO;
+	XRPerformBlockSynchronouslyOnMainQueue(^{
+		self.isSending = NO;
+	});
 }
 
 @end

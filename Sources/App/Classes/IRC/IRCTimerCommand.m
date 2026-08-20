@@ -98,8 +98,6 @@ static NSUInteger IRCTimedCommandLastIdentifier = 0;
 - (void)dealloc
 {
 	[self.timer stop];
-
-	self.timer = nil;
 }
 
 - (void)assignIdentifier
@@ -114,9 +112,17 @@ static NSUInteger IRCTimedCommandLastIdentifier = 0;
 	NSParameterAssert(client != nil);
 
 	__weak typeof(self) weakSelf = self;
+	__weak IRCClient *weakClient = client;
 
 	self.timer = [TLOTimer timerWithActionBlock:^(TLOTimer *_Nonnull sender) {
-		[client onTimedCommand:weakSelf];
+		__strong typeof(weakSelf) strongSelf = weakSelf;
+		__strong IRCClient *strongClient = weakClient;
+
+		if (strongSelf == nil || strongClient == nil) {
+			return;
+		}
+
+		[strongClient onTimedCommand:strongSelf];
 	}];
 }
 

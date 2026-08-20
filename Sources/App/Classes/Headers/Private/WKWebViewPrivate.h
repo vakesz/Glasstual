@@ -23,10 +23,6 @@ void WKInspectorShow(WKInspectorRef inspectorRef);
 - (WKPageRef)_pageForTesting;
 @end
 
-@interface WKView : NSView
-- (WKPageRef)pageRef;
-@end
-
 @interface _WKProcessPoolConfiguration : NSObject <NSCopying>
 @property(nonatomic) NSUInteger maximumProcessCount;
 @end
@@ -35,9 +31,6 @@ void WKInspectorShow(WKInspectorRef inspectorRef);
 - (instancetype)_initWithConfiguration:(_WKProcessPoolConfiguration *)configuration;
 
 - (_WKProcessPoolConfiguration *)_configuration;
-@end
-
-@interface NSView (WKViewSwizzle)
 @end
 
 @interface WKPreferences ()

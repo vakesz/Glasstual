@@ -62,8 +62,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)timerWithActionBlock:(TLOTimerActionBlock)actionBlock onQueue:(nullable dispatch_queue_t)queue
 {
 	NSParameterAssert(actionBlock != NULL);
-	NSParameterAssert(queue != NULL);
 
+	/* A nil queue means the main queue. See -start:onRepeat:iterations: */
 	return [[self alloc] initWithActionBlock:actionBlock onQueue:queue];
 }
 
@@ -131,10 +131,15 @@ NS_ASSUME_NONNULL_BEGIN
 		sourceQueue = dispatch_get_main_queue();
 	}
 
+	/* The timer source retains its handler block for as long as it is
+	 scheduled. Capture self weakly so that a running timer does not keep
+	 its owner alive; -dealloc cancels the source when the owner goes away. */
+	__weak typeof(self) weakSelf = self;
+
 	dispatch_source_t timerSource = XRScheduleBlockOnQueue(
 		sourceQueue,
 		^{
-			[self fireTimer];
+			[weakSelf fireTimer];
 		},
 		timerInterval,
 		repeatTimer);

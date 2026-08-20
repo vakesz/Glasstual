@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak) IBOutlet NSTextField *searchField;
 @property(nonatomic, weak) IBOutlet NSTableView *searchResultsTable;
 @property(nonatomic, strong) IBOutlet NSArrayController *searchResultsController;
-@property(nonatomic, strong) id mouseEventMonitor;
+@property(nonatomic, strong, nullable) id mouseEventMonitor;
 @end
 
 @implementation TDCChannelSpotlightController
@@ -121,19 +121,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.searchField.controlSize = NSControlSizeLarge;
 
-	if (self.visualEffectView) {
-		NSView *parentView = self.visualEffectView.superview;
-		NSView *innerView = self.visualEffectView.subviews.firstObject;
-
-		if (parentView && innerView) {
-			NSGlassEffectView *glassView = [[NSGlassEffectView alloc] initWithFrame:self.visualEffectView.frame];
-			glassView.autoresizingMask = self.visualEffectView.autoresizingMask;
-			glassView.cornerRadius = 22.0;
-			[innerView removeFromSuperview];
-			glassView.contentView = innerView;
-			[parentView replaceSubview:self.visualEffectView with:glassView];
-		}
-	}
+	[self replaceVisualEffectViewWithGlassEffectView];
 
 	[self applicationAppearanceChanged];
 
@@ -142,6 +130,88 @@ NS_ASSUME_NONNULL_BEGIN
 	[self.searchResultsViewHeightConstraint archiveConstant];
 
 	[self updatePredicate];
+}
+
+#pragma mark -
+#pragma mark Glass Effect
+
+- (void)replaceVisualEffectViewWithGlassEffectView
+{
+	NSVisualEffectView *visualEffectView = self.visualEffectView;
+
+	if (visualEffectView == nil) {
+		return;
+	}
+
+	NSView *parentView = visualEffectView.superview;
+
+	if (parentView == nil) {
+		return;
+	}
+
+	/* The visual effect view is declared in the xib. Interface Builder
+	 does not yet offer NSGlassEffectView, so swap it in at runtime.
+	 Every subview and every constraint that the effect view owned is
+	 moved onto a plain container which becomes the glass view's
+	 content. Constraints that referenced the effect view itself are
+	 rebuilt against the container. */
+	NSArray<NSView *> *subviews = [visualEffectView.subviews copy];
+	NSArray<NSLayoutConstraint *> *constraints = [visualEffectView.constraints copy];
+
+	NSView *containerView = [[NSView alloc] initWithFrame:visualEffectView.bounds];
+	containerView.translatesAutoresizingMaskIntoConstraints = NO;
+
+	for (NSView *subview in subviews) {
+		[subview removeFromSuperview];
+		[containerView addSubview:subview];
+	}
+
+	NSMutableArray<NSLayoutConstraint *> *rebuiltConstraints = [NSMutableArray arrayWithCapacity:constraints.count];
+
+	for (NSLayoutConstraint *constraint in constraints) {
+		id firstItem = constraint.firstItem;
+		id secondItem = constraint.secondItem;
+
+		if (firstItem == visualEffectView) {
+			firstItem = containerView;
+		}
+
+		if (secondItem == visualEffectView) {
+			secondItem = containerView;
+		}
+
+		NSLayoutConstraint *rebuiltConstraint = [NSLayoutConstraint constraintWithItem:firstItem
+																			 attribute:constraint.firstAttribute
+																			 relatedBy:constraint.relation
+																				toItem:secondItem
+																			 attribute:constraint.secondAttribute
+																			multiplier:constraint.multiplier
+																			  constant:constraint.constant];
+
+		rebuiltConstraint.priority = constraint.priority;
+		rebuiltConstraint.identifier = constraint.identifier;
+
+		[rebuiltConstraints addObject:rebuiltConstraint];
+	}
+
+	[containerView addConstraints:rebuiltConstraints];
+
+	NSGlassEffectView *glassView = [[NSGlassEffectView alloc] initWithFrame:visualEffectView.frame];
+	glassView.translatesAutoresizingMaskIntoConstraints = NO;
+	glassView.cornerRadius = 22.0;
+	glassView.contentView = containerView;
+
+	/* Removing the effect view also removes the edge constraints that
+	 pinned it to the window content view. Pin the glass view the same
+	 way: leading, trailing, top, and bottom. */
+	[parentView replaceSubview:visualEffectView with:glassView];
+
+	[NSLayoutConstraint activateConstraints:@[
+		[glassView.leadingAnchor constraintEqualToAnchor:parentView.leadingAnchor],
+		[glassView.trailingAnchor constraintEqualToAnchor:parentView.trailingAnchor],
+		[glassView.topAnchor constraintEqualToAnchor:parentView.topAnchor],
+		[glassView.bottomAnchor constraintEqualToAnchor:parentView.bottomAnchor]
+	]];
 }
 
 #pragma mark -
@@ -300,7 +370,7 @@ NS_ASSUME_NONNULL_BEGIN
 			return nil;
 		}
 	} else if (event.keyCode == 125 || event.keyCode == 121) { // down
-		if (selectedRow == (searchResultsCount - 1)) {
+		if (selectedRow == (NSInteger)(searchResultsCount - 1)) {
 			[self.searchResultsTable selectItemAtIndex:0];
 
 			return nil;
@@ -349,7 +419,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSArray<TDCChannelSpotlightSearchResult *> *searchResults = self.searchResultsFiltered;
 
-	if (searchResultIndex < 0 || searchResultIndex >= searchResults.count) {
+	if (searchResultIndex < 0 || (NSUInteger)searchResultIndex >= searchResults.count) {
 		return;
 	}
 

@@ -3,6 +3,11 @@ name: Signed Release
 # Manual Developer ID distribution outside the Mac App Store.
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Marketing version to release (defaults to MARKETING_VERSION in Configurations/Base.xcconfig)"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -13,24 +18,53 @@ jobs:
     timeout-minutes: 90
 
     env:
-      WORKSPACE: Glasstual.xcworkspace
-      SCHEME: Glasstual (Standard Release)
+      PROJECT: Glasstual.xcodeproj
+      SCHEME: Glasstual
       CONFIGURATION: Release
       TEAM_ID: H8W5DK3FN2
       ARCHIVE_PATH: build/Glasstual.xcarchive
 
     steps:
-      - name: Check out source and submodules
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Select Xcode 26
+      - name: Select Xcode
         run: |
           set -euo pipefail
-          sudo xcode-select -s /Applications/Xcode.app
+          # Newest installed Xcode with the macOS 26 SDK (Xcode 26 or later).
+          XCODE_APP="$(find /Applications -maxdepth 1 -name 'Xcode_*.app' | sort -V | tail -n 1)"
+          sudo xcode-select -s "${XCODE_APP:-/Applications/Xcode.app}"
           xcodebuild -version
-          xcodebuild -version | head -n 1 | grep -q '^Xcode 26'
+          XCODE_MAJOR="$(xcodebuild -version | head -n 1 | sed -E 's/^Xcode ([0-9]+).*/\1/')"
+          [ "${XCODE_MAJOR}" -ge 26 ]
+
+      - name: Resolve release version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_VERSION}" ]; then
+            VERSION="${INPUT_VERSION}"
+          else
+            VERSION="$(sed -nE 's/^MARKETING_VERSION *= *([^ ]+).*/\1/p' Configurations/Base.xcconfig)"
+          fi
+          if [ -z "${VERSION}" ]; then
+            echo "::error::Could not determine a release version."
+            exit 1
+          fi
+          if gh release view "v${VERSION}" --repo "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
+            echo "::error::Release v${VERSION} already exists. Bump MARKETING_VERSION or pass a version input."
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Resolve build version from git
+        run: |
+          set -euo pipefail
+          ./Scripts/UpdateVersion.sh
+          cat Configurations/Version.generated.xcconfig
 
       - name: Import Developer ID certificate
         env:
@@ -68,9 +102,12 @@ jobs:
         run: |
           set -euo pipefail
           PROFILE_SOURCE_DIR="${RUNNER_TEMP}/glasstual-profiles"
-          PROFILE_DIR="${HOME}/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "${PROFILE_SOURCE_DIR}" "${PROFILE_DIR}"
+          # Xcode 16 and later read profiles from UserData; older tooling from MobileDevice.
+          PROFILE_DIR="${HOME}/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          LEGACY_PROFILE_DIR="${HOME}/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "${PROFILE_SOURCE_DIR}" "${PROFILE_DIR}" "${LEGACY_PROFILE_DIR}"
           echo "PROFILE_DIR=${PROFILE_DIR}" >> "${GITHUB_ENV}"
+          echo "LEGACY_PROFILE_DIR=${LEGACY_PROFILE_DIR}" >> "${GITHUB_ENV}"
 
           tar -xzf .github/signing/DeveloperIDProfiles.tar.gz \
             -C "${PROFILE_SOURCE_DIR}"
@@ -89,6 +126,7 @@ jobs:
               exit 1
             fi
             cp "${source}" "${destination}"
+            cp "${source}" "${LEGACY_PROFILE_DIR}/${uuid}.mobileprovision"
           }
 
           install_profile Glasstual_Developer_ID.provisionprofile \
@@ -107,11 +145,12 @@ jobs:
           set -euo pipefail
           mkdir -p build
           xcodebuild archive \
-            -workspace "${WORKSPACE}" \
+            -project "${PROJECT}" \
             -scheme "${SCHEME}" \
             -configuration "${CONFIGURATION}" \
             -archivePath "${ARCHIVE_PATH}" \
-            -destination 'generic/platform=macOS' \
+            -destination 'platform=macOS,arch=arm64' \
+            MARKETING_VERSION="${{ steps.version.outputs.version }}" \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="${TEAM_ID}" \
@@ -121,15 +160,18 @@ jobs:
             GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE="Glasstual Inline Content Loader Developer ID" \
             GLASSTUAL_CORE_MEDIA_PROVISIONING_PROFILE="Glasstual Inline Content Loader Core Media Develop"
 
-      - name: Resolve version
-        id: version
+      - name: Verify archived version
         run: |
           set -euo pipefail
           APP="${ARCHIVE_PATH}/Products/Applications/Glasstual.app"
           PLIST_VERSION="$(/usr/libexec/PlistBuddy \
             -c 'Print :CFBundleShortVersionString' \
             "${APP}/Contents/Info.plist")"
-          echo "version=${PLIST_VERSION}" >> "${GITHUB_OUTPUT}"
+          BUILD_VERSION="$(/usr/libexec/PlistBuddy \
+            -c 'Print :CFBundleVersion' \
+            "${APP}/Contents/Info.plist")"
+          echo "Archived ${PLIST_VERSION} (${BUILD_VERSION})"
+          [ "${PLIST_VERSION}" = "${{ steps.version.outputs.version }}" ]
 
       - name: Verify Developer ID signature
         run: |
@@ -200,12 +242,13 @@ jobs:
             "${RUNNER_TEMP}/private_keys" \
             "${RUNNER_TEMP}/glasstual-profiles" \
             2>/dev/null || true
-          if [ -n "${PROFILE_DIR:-}" ]; then
+          for dir in "${PROFILE_DIR:-}" "${LEGACY_PROFILE_DIR:-}"; do
+            [ -n "${dir}" ] || continue
             rm -f \
-              "${PROFILE_DIR}/1e065476-c63a-4093-b027-e12cdbc03a56.mobileprovision" \
-              "${PROFILE_DIR}/efad779e-5dc8-46fb-8466-d4c5a78b5591.mobileprovision" \
-              "${PROFILE_DIR}/b3add7fc-e480-44e8-bf4c-0d8eba1b3f30.mobileprovision" \
-              "${PROFILE_DIR}/2d6ca9d2-5daa-4892-ac28-762509236350.mobileprovision" \
-              "${PROFILE_DIR}/5293a089-8dff-44f7-9f23-9d1ad75fe7fd.mobileprovision" \
+              "${dir}/1e065476-c63a-4093-b027-e12cdbc03a56.mobileprovision" \
+              "${dir}/efad779e-5dc8-46fb-8466-d4c5a78b5591.mobileprovision" \
+              "${dir}/b3add7fc-e480-44e8-bf4c-0d8eba1b3f30.mobileprovision" \
+              "${dir}/2d6ca9d2-5daa-4892-ac28-762509236350.mobileprovision" \
+              "${dir}/5293a089-8dff-44f7-9f23-9d1ad75fe7fd.mobileprovision" \
               2>/dev/null || true
-          fi
+          done

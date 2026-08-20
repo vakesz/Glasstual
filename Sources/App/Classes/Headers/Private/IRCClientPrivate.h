@@ -54,6 +54,8 @@ enum {
 };
 
 @interface IRCClient ()
++ (NSString *)redactedServiceMessage:(NSString *)message sentTo:(nullable NSString *)target;
++ (BOOL)targetLooksLikeService:(nullable NSString *)target;
 @property(nonatomic, copy, nullable) dispatch_block_t disconnectCallback;
 @property(nonatomic, assign, readwrite) IRCClientConnectMode connectType;
 @property(nonatomic, assign, readwrite) IRCClientDisconnectMode disconnectType;

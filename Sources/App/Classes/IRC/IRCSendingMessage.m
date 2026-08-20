@@ -55,9 +55,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableString *builtString = [NSMutableString stringWithString:commandUppercase];
 
-	NSInteger colonIndexBase = [IRCCommandIndex colonPositionForRemoteCommand:command];
+	NSUInteger colonIndexBase = [IRCCommandIndex colonPositionForRemoteCommand:command];
 
-	NSInteger colonIndexCount = 0;
+	NSUInteger colonIndexCount = 0;
 
 	for (NSString *argument in arguments) {
 		if (argument.length == 0) {

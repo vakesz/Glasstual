@@ -41,8 +41,6 @@
 
 #import <CocoaExtensions/CocoaExtensions.h>
 
-#import <AutoHyperlinks/AutoHyperlinks.h>
-
 #import <GRMustache/GRMustache.h>
 
 #import "StaticDefinitions.h"

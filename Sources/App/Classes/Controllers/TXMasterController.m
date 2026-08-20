@@ -71,6 +71,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+static void *TXMasterControllerKVOContext = &TXMasterControllerKVOContext;
+
+/* Upper bound on how long termination waits for the historic log to save. */
+static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
+
 @interface TXMasterController ()
 @property(nonatomic, strong, readwrite) IRCWorld *world;
 @property(nonatomic, assign, readwrite) BOOL debugModeIsOn;
@@ -79,8 +84,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) BOOL applicationIsLaunched;
 @property(nonatomic, assign, readwrite) BOOL applicationIsTerminating;
 @property(nonatomic, assign, readwrite) BOOL applicationIsChangingActiveState;
-@property(readonly) BOOL isSafeToPerformApplicationTermination;
-@property(nonatomic, assign, readwrite) BOOL terminateHistoricLogSaveFinished;
+@property(nonatomic, assign) BOOL terminateHistoricLogSaveStarted;
 @property(nonatomic, strong, readwrite) IBOutlet TVCMainWindow *mainWindow;
 @property(nonatomic, weak, readwrite) IBOutlet TXMenuController *menuController;
 @property(nonatomic, assign) NSUInteger applicationLaunchRemainder;
@@ -217,7 +221,10 @@ NS_ASSUME_NONNULL_BEGIN
 	 then the app is considered launched. */
 	/* 1 is default value because we want plugins to be loaded
 	 before we are finished launching. */
-	[self addObserver:self forKeyPath:@"applicationLaunchRemainder" options:NSKeyValueObservingOptionNew context:NULL];
+	[self addObserver:self
+		   forKeyPath:@"applicationLaunchRemainder"
+			  options:NSKeyValueObservingOptionNew
+			  context:TXMasterControllerKVOContext];
 
 	self.applicationLaunchRemainder = 1;
 
@@ -233,6 +240,12 @@ NS_ASSUME_NONNULL_BEGIN
 						change:(nullable NSDictionary<NSString *, id> *)change
 					   context:(nullable void *)context
 {
+	if (context != TXMasterControllerKVOContext) {
+		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+
+		return;
+	}
+
 	if ([keyPath isEqualToString:@"applicationLaunchRemainder"]) {
 		if (self.applicationLaunchRemainder == 0) {
 			[self applicationDidFinishLaunching];
@@ -260,11 +273,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	SPUUpdater *updater = controller.updater;
 
-	if ([updater respondsToSelector:@selector(clearFeedURLFromUserDefaults)]) {
-		[updater performSelector:@selector(clearFeedURLFromUserDefaults)];
-	} else {
-		[RZUserDefaults() removeObjectForKey:@"SUFeedURL"];
-	}
+	(void)[updater clearFeedURLFromUserDefaults];
 
 	NSError *error;
 
@@ -309,15 +318,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)applicationDidFinishLaunching
 {
-	[self removeObserver:self forKeyPath:@"applicationLaunchRemainder"];
+	[self removeObserver:self forKeyPath:@"applicationLaunchRemainder" context:TXMasterControllerKVOContext];
 
 	self.applicationIsLaunched = YES;
 
 	if ([self.mainWindow reloadLoadingScreen]) {
 		[self.world autoConnectAfterWakeup:NO];
 	}
-
-	[self.mainWindow maybeToggleFullscreenAfterLaunch];
 }
 
 - (void)applicationWillResignActive:(NSNotification *)notification
@@ -366,7 +373,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)sender
 {
-	/* This will have no effect on our app. Implement to suppress warning in console. */
+	/* The main window encodes its selection with secure coding. */
 	return YES;
 }
 
@@ -378,16 +385,19 @@ NS_ASSUME_NONNULL_BEGIN
 	return self.menuController.dockMenu;
 }
 
-- (BOOL)queryTerminate
+/* Returns YES when termination may begin immediately, NO when it is
+ refused outright. When a confirmation is needed the answer is deferred:
+ the sheet's completion reports to NSApp and begins termination itself. */
+- (NSApplicationTerminateReply)queryTerminate
 {
 	if (self.applicationIsTerminating) {
 		LogToConsoleTerminationProgress("Termination is already in progress");
 
-		return YES;
+		return NSTerminateNow;
 	}
 
 	if ([TPCPreferences confirmQuit] == NO) {
-		return YES;
+		return NSTerminateNow;
 	}
 
 	BOOL stillConnected = NO;
@@ -398,24 +408,41 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	if (stillConnected) {
-		BOOL result = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[77u-vp]")
-												title:TXTLS(@"Prompts[6vj-2p]")
-										defaultButton:TXTLS(@"Prompts[1bf-k0]")
-									  alternateButton:TXTLS(@"Prompts[qso-2g]")];
-
-		LogToConsoleTerminationProgress("Perform termination: %{BOOL}d", result);
-
-		return result;
+	if (stillConnected == NO) {
+		return NSTerminateNow;
 	}
 
-	return YES;
+	__weak TXMasterController *weakSelf = self;
+
+	[TDCAlert alertSheetWithWindow:self.mainWindow
+							  body:TXTLS(@"Prompts[77u-vp]")
+							 title:TXTLS(@"Prompts[6vj-2p]")
+					 defaultButton:TXTLS(@"Prompts[1bf-k0]")
+				   alternateButton:TXTLS(@"Prompts[qso-2g]")
+					   otherButton:nil
+				   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id _Nullable underlyingAlert) {
+					   BOOL result = (buttonClicked == TDCAlertResponseDefault);
+
+					   LogToConsoleTerminationProgress("Perform termination: %{BOOL}d", result);
+
+					   if (result == NO) {
+						   [NSApp replyToApplicationShouldTerminate:NO];
+
+						   return;
+					   }
+
+					   [weakSelf performApplicationTerminationStepOne];
+				   }];
+
+	return NSTerminateLater;
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-	if ([self queryTerminate] == NO) {
-		return NSTerminateCancel;
+	NSApplicationTerminateReply reply = [self queryTerminate];
+
+	if (reply != NSTerminateNow) {
+		return reply;
 	}
 
 	XRPerformBlockAsynchronouslyOnMainQueue(^{
@@ -425,18 +452,60 @@ NS_ASSUME_NONNULL_BEGIN
 	return NSTerminateLater;
 }
 
-- (BOOL)isSafeToPerformApplicationTermination
+/* Clients decrement this as they finish disconnecting (see
+ -[IRCClient prepareForApplicationTerminationPostflight]). Once the
+ last one is done, the historic log is given its chance to save and
+ termination proceeds from its completion. */
+- (void)setTerminatingClientCount:(NSUInteger)terminatingClientCount
 {
-	/* Clients are still disconnecting */
-	BOOL condition1 = (self.terminatingClientCount == 0);
+	self->_terminatingClientCount = terminatingClientCount;
 
-	/* Core Data is saving */
-	BOOL condition2 =
-		(TVCLogControllerHistoricLogSharedInstance().isSaving == NO && self.terminateHistoricLogSaveFinished);
+	if (terminatingClientCount != 0 || self.applicationIsTerminating == NO) {
+		return;
+	}
 
-	LogToConsoleTerminationProgress("Conditions: %{BOOL}d %{BOOL}d", condition1, condition2);
+	XRPerformBlockAsynchronouslyOnMainQueue(^{
+		[self terminatingClientsDidFinish];
+	});
+}
 
-	return (condition1 && condition2);
+- (void)terminatingClientsDidFinish
+{
+	if (self.applicationIsTerminating == NO || self.terminateHistoricLogSaveStarted) {
+		return;
+	}
+
+	self.terminateHistoricLogSaveStarted = YES;
+
+	LogToConsoleTerminationProgress("All clients finished; saving historic log");
+
+	__weak TXMasterController *weakSelf = self;
+
+	__block BOOL stepThreePerformed = NO;
+
+	void (^performStepThree)(void) = ^{
+		if (stepThreePerformed) {
+			return;
+		}
+
+		stepThreePerformed = YES;
+
+		[weakSelf performApplicationTerminationStepThree];
+	};
+
+	[TVCLogControllerHistoricLogSharedInstance() prepareForApplicationTerminationWithCompletionBlock:performStepThree];
+
+	/* Safety net: should the historic log service never answer, do not
+	 leave the application hanging in NSTerminateLater forever. */
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(_terminationHistoricLogSaveTimeout * NSEC_PER_SEC)),
+				   dispatch_get_main_queue(),
+				   ^{
+					   if (stepThreePerformed == NO) {
+						   LogToConsoleTerminationProgress("Historic log save timed out; terminating anyway");
+					   }
+
+					   performStepThree();
+				   });
 }
 
 - (void)performApplicationTerminationStepOne
@@ -492,40 +561,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 	LogToConsoleTerminationProgress("Step two entry");
 
+	/* We want certain things to 100% happen before the app completely closes.
+	 Notable actions: gracefully leaving IRC, saving historic logs, etc.
+	 Each client decrements -terminatingClientCount once it has finished and
+	 the setter continues with step three once the count reaches zero and the
+	 historic log has been saved. With no clients, assigning zero here
+	 continues immediately. */
 	self.terminatingClientCount = worldController().clientCount;
 
 	[self.world prepareForApplicationTermination];
-
-	if (self.isSafeToPerformApplicationTermination) {
-		[self performApplicationTerminationStepThree];
-
-		return;
-	}
-
-	/* We want certain things to 100% happen before the app completely closes.
-	 This block that is performed below loops until all these actions are completed.
-	 Notable actions: gracefully leaving IRC, saving historic logs, etc. */
-	XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(
-		^{
-			do {
-				/* We wait until this value reaches zero so that
-			 view controllers had the chance to perform any
-			 changes they want to historic log. */
-				if (self.terminatingClientCount == 0) {
-					[TVCLogControllerHistoricLogSharedInstance() prepareForApplicationTermination];
-
-					self.terminateHistoricLogSaveFinished = YES;
-				}
-
-				/* Sleep a little bit so we aren't looping a lot. */
-				[NSThread sleepForTimeInterval:0.5];
-			} while (self.isSafeToPerformApplicationTermination == NO);
-
-			XRPerformBlockAsynchronouslyOnMainQueue(^{
-				[self performApplicationTerminationStepThree];
-			});
-		},
-		DISPATCH_QUEUE_PRIORITY_HIGH);
 }
 
 - (void)performApplicationTerminationStepThree

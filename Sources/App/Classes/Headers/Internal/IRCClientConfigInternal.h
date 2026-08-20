@@ -57,6 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL _sendAuthenticationRequestsToUserServ;
 	BOOL _sendWhoCommandRequestsToChannels;
 	BOOL _setInvisibleModeOnConnect;
+	BOOL _runConnectCommandsSilently;
 	BOOL _sidebarItemExpanded;
 	BOOL _validateServerCertificateChain;
 	BOOL _zncIgnoreConfiguredAutojoin;
@@ -76,6 +77,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *_connectionName;
 	NSString *_nickname;
 	NSString *_nicknamePassword;
+	NSString *_nicknamePasswordKeychainCache;
+	BOOL _nicknamePasswordKeychainCacheIsValid;
 	NSString *_normalLeavingComment;
 	NSString *_proxyAddress;
 	NSString *_proxyPassword;

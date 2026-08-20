@@ -45,8 +45,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 };
 
 @interface HLSHistoricLogProcessMain ()
-@property(nonatomic, strong) NSXPCConnection *serviceConnection;
-@property(nonatomic, assign) BOOL isPerformingSave;
+@property(nonatomic, strong, nullable) NSXPCConnection *serviceConnection;
 @property(nonatomic, strong) NSManagedObjectContext *managedObjectContext;
 @property(nonatomic, strong) NSManagedObjectModel *managedObjectModel;
 @property(nonatomic, strong) NSPersistentStoreCoordinator *persistentStoreCoordinator;
@@ -55,7 +54,13 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 /* contextObjects is mutable. It should only be accessed in a queue. Use the global context's queue. */
 @property(nonatomic, strong) NSMutableDictionary<NSString *, HLSHistoricLogViewContext *> *contextObjects;
 @property(nonatomic, assign) NSUInteger maximumLineCount;
-@property(nonatomic, strong) dispatch_source_t saveTimer;
+/* Saves are performed on saveQueue. saveTimer is only read and written on that queue.
+ A save waits on each view context's queue and then on the global context's queue.
+ It must never be performed while holding either of those queues because a view
+ context save waits on the global context's queue in turn. */
+@property(nonatomic, strong) dispatch_queue_t saveQueue;
+@property(nonatomic, strong, nullable) dispatch_source_t saveTimer;
+@property(nonatomic, assign) BOOL connectionIsInvalidated; // Only read and written on saveQueue
 @end
 
 @implementation HLSHistoricLogProcessMain
@@ -82,6 +87,8 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 	self.contextObjects = [NSMutableDictionary dictionary];
 
 	self.maximumLineCount = 100;
+
+	self.saveQueue = dispatch_queue_create("HLSHistoricLogProcessMain.saveQueue", DISPATCH_QUEUE_SERIAL);
 }
 
 /* Returns the filename it stored so that the caller does not have to read the
@@ -160,7 +167,13 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 		return;
 	}
 
-	[self _rescheduleSave];
+	dispatch_async(self.saveQueue, ^{
+		if (self.connectionIsInvalidated) {
+			return;
+		}
+
+		[self _rescheduleSave];
+	});
 }
 
 - (void)setMaximumLineCount:(NSUInteger)maximumLineCount
@@ -349,8 +362,10 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 			return;
 		}
 
-		NSInteger lowestEntryId = (firstEntryId - fetchLimitBefore);
-		NSInteger highestEntryId = (firstEntryId + fetchLimitAfter);
+		/* Identifiers are unsigned. Subtracting below zero wraps around to a
+		 value larger than any entry identifier, which matches nothing. */
+		NSUInteger lowestEntryId = ((firstEntryId > fetchLimitBefore) ? (firstEntryId - fetchLimitBefore) : 0);
+		NSUInteger highestEntryId = (firstEntryId + fetchLimitAfter);
 
 		NSFetchRequest *fetchRequest = [self _fetchRequestForView:viewContext.hls_viewId
 														ascending:YES
@@ -367,6 +382,10 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 
 		if (fetchedObjects == nil) {
 			LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
+
+			/* The reply block must always be invoked so the client's
+			 pending request is released. An empty result is the answer. */
+			completionBlock(@[]);
 
 			return;
 		}
@@ -416,8 +435,8 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 		}
 
 		/* We are getting the lines in-between these two lines which means we subtract self. */
-		NSInteger lowestEntryId = (firstEntryId + 1);
-		NSInteger highestEntryId = (secondEntryId - 1);
+		NSUInteger lowestEntryId = (firstEntryId + 1);
+		NSUInteger highestEntryId = ((secondEntryId > 0) ? (secondEntryId - 1) : 0);
 
 		NSFetchRequest *fetchRequest = [self _fetchRequestForView:viewContext.hls_viewId
 														ascending:YES
@@ -434,6 +453,10 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 
 		if (fetchedObjects == nil) {
 			LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
+
+			/* The reply block must always be invoked so the client's
+			 pending request is released. An empty result is the answer. */
+			completionBlock(@[]);
 
 			return;
 		}
@@ -482,17 +505,18 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 			return;
 		}
 
-		NSInteger lowestEntryId = 0;
-		NSInteger highestEntryId = 0;
+		NSUInteger lowestEntryId = 0;
+		NSUInteger highestEntryId = 0;
 
 		switch (fetchType) {
 		case HLSHistoricLogReturnEntriesUniqueIdentifierTypeBefore: {
 			/* 1 is subtracted so we can still return fetchLimit
 				 while accounting for the fact that firstEntryId is
 				 not a value we are interested in. */
-			lowestEntryId = (firstEntryId - fetchLimit);
+			/* Identifiers are unsigned. Clamp at zero instead of wrapping. */
+			lowestEntryId = ((firstEntryId > fetchLimit) ? (firstEntryId - fetchLimit) : 0);
 
-			highestEntryId = (firstEntryId - 1);
+			highestEntryId = ((firstEntryId > 0) ? (firstEntryId - 1) : 0);
 
 			break;
 		}
@@ -525,6 +549,10 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 
 		if (fetchedObjects == nil) {
 			LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
+
+			/* The reply block must always be invoked so the client's
+			 pending request is released. An empty result is the answer. */
+			completionBlock(@[]);
 
 			return;
 		}
@@ -570,6 +598,10 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 
 		if (fetchedObjects == nil) {
 			LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
+
+			/* The reply block must always be invoked so the client's
+			 pending request is released. An empty result is the answer. */
+			completionBlock(@[]);
 
 			return;
 		}
@@ -696,11 +728,24 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 	}
 }
 
+/* Only call on saveQueue. */
+- (void)_cancelScheduledSave
+{
+	dispatch_source_t saveTimer = self.saveTimer;
+
+	if (saveTimer == nil) {
+		return;
+	}
+
+	XRCancelScheduledBlock(saveTimer);
+
+	self.saveTimer = nil;
+}
+
+/* Only call on saveQueue. */
 - (void)_rescheduleSave
 {
-	if (self.saveTimer) {
-		XRCancelScheduledBlock(self.saveTimer);
-	}
+	[self _cancelScheduledSave];
 
 	static NSTimeInterval saveTimerInterval = (60 * 2); // 2 minutes
 
@@ -734,36 +779,81 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 	[context reset];
 }
 
-- (void)saveDataWithCompletionBlock:(void(NS_NOESCAPE ^ _Nullable)(void))completionBlock
+/* Only call on saveQueue.
+ Each view context is a child of the global context and owns a private
+ queue of its own, so each one is saved on that queue which pushes its
+ changes into the global context. The global context is then saved to
+ the store. Saves are serialized by saveQueue; there is no need for a
+ flag to guard against overlapping saves. */
+- (void)_saveAllContextsCancellingResize:(BOOL)cancelResize
 {
-	if (self.isPerformingSave == NO) {
-		self.isPerformingSave = YES;
-	} else {
+	NSManagedObjectContext *context = self.managedObjectContext;
+
+	if (context == nil) {
 		return;
 	}
 
-	NSManagedObjectContext *context = self.managedObjectContext;
+	LogToConsoleDebug("Performing save");
 
-	[context performBlock:^{
-		LogToConsoleDebug("Performing save");
+	/* contextObjects is mutated on the global context's queue. */
+	__block NSArray<HLSHistoricLogViewContext *> *viewContexts = nil;
 
-		[self _rescheduleSave];
+	[context performBlockAndWait:^{
+		viewContexts = self.contextObjects.allValues;
+	}];
 
-		[self.contextObjects
-			enumerateKeysAndObjectsUsingBlock:^(NSString *viewId, HLSHistoricLogViewContext *viewContext, BOOL *stop) {
-				[context performBlockAndWait:^{
-					[self _quickSaveContext:viewContext];
-				}];
-			}];
+	for (HLSHistoricLogViewContext *viewContext in viewContexts) {
+		[viewContext performBlockAndWait:^{
+			if (cancelResize) {
+				[self cancelResizeInViewContext:viewContext];
+			}
 
+			[self _quickSaveContext:viewContext];
+		}];
+	}
+
+	[context performBlockAndWait:^{
 		[self _quickSaveContext:context];
+	}];
+}
 
-		self.isPerformingSave = NO;
+- (void)saveDataWithCompletionBlock:(void (^_Nullable)(void))completionBlock
+{
+	dispatch_async(self.saveQueue, ^{
+		/* A timer that fired just before the connection was invalidated
+		 must not schedule another one. The repeating timer retains this
+		 object, so that would keep it alive for the life of the process. */
+		if (self.connectionIsInvalidated == NO) {
+			[self _rescheduleSave];
+		}
+
+		[self _saveAllContextsCancellingResize:NO];
 
 		if (completionBlock) {
 			completionBlock();
 		}
-	}];
+	});
+}
+
+#pragma mark -
+#pragma mark Connection Lifetime
+
+/* Called when the connection that owns this object is invalidated.
+ Performs a final save, stops timers, and drops the reference to the
+ connection so that the connection and this object can deallocate. */
+- (void)connectionInvalidated
+{
+	LogToConsoleDebug("Connection invalidated");
+
+	dispatch_sync(self.saveQueue, ^{
+		self.connectionIsInvalidated = YES;
+
+		[self _cancelScheduledSave];
+
+		[self _saveAllContextsCancellingResize:YES];
+	});
+
+	self.serviceConnection = nil;
 }
 
 #pragma mark -
@@ -834,7 +924,10 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 
 	NSString *viewId = viewContext.hls_viewId;
 
-	NSInteger lowestIdentifier = (viewContext.hls_newestIdentifier - self.maximumLineCount);
+	NSUInteger newestIdentifier = viewContext.hls_newestIdentifier;
+	NSUInteger maximumLineCount = self.maximumLineCount;
+
+	NSUInteger lowestIdentifier = ((newestIdentifier > maximumLineCount) ? (newestIdentifier - maximumLineCount) : 0);
 
 	NSDictionary *substitutionVariables = @{@"view_id" : viewId, @"entry_id_lowest" : @(lowestIdentifier)};
 
@@ -865,14 +958,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 	__block NSUInteger rowsDeleted = 0;
 
 	dispatch_block_t blockToPerform = ^{
-		/* Batch delete is not used at the time of this commit because we want the value
-		 of a specific property from each managed object before deleting, which old school
-		 delete allows us to obtain at the same time we perform delete. */
-		//		if (XRRunningOnOSXElCapitanOrLater()) {
-		//			rowsDeleted = [self __deleteDataForFetchRequestUsingBatch:fetchRequest inViewContext:viewContext];
-		//		} else {
-		rowsDeleted = [self __deleteDataForFetchRequestUsingEnumeration:fetchRequest inViewContext:viewContext];
-		//		}
+		rowsDeleted = [self __deleteDataForFetchRequestUsingBatch:fetchRequest inViewContext:viewContext];
 	};
 
 	if (performOnQueue) {
@@ -886,24 +972,87 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 	return rowsDeleted;
 }
 
-/*
-- (NSUInteger)__deleteDataForFetchRequestUsingBatch:(NSFetchRequest *)fetchRequest inViewContext:(HLSHistoricLogViewContext *)viewContext
+/* Only call on the view context's queue.
+
+ A batch delete runs against the store directly. It does not see rows that
+ are still pending in memory, and the contexts do not see what it removed.
+ Both are handled here: pending rows are pushed down to the store before
+ the delete, the unique identifiers of the rows that are about to go are
+ collected so the client can be told, and the deleted object identifiers
+ are merged back into the view context and its parent afterwards. */
+- (NSUInteger)__deleteDataForFetchRequestUsingBatch:(NSFetchRequest *)fetchRequest
+									  inViewContext:(HLSHistoricLogViewContext *)viewContext
 {
 	NSParameterAssert(fetchRequest != nil);
 	NSParameterAssert(viewContext != nil);
 
-	NSBatchDeleteRequest *batchDeleteRequest = [[NSBatchDeleteRequest alloc] initWithFetchRequest:fetchRequest];
+	NSManagedObjectContext *parentContext = viewContext.parentContext;
+
+	if (parentContext == nil) {
+		return 0;
+	}
+
+	/* Flush pending changes so the store holds everything the delete should cover. */
+	[self _quickSaveContext:viewContext];
+
+	[parentContext performBlockAndWait:^{
+		[self _quickSaveContext:parentContext];
+	}];
+
+	/* Collect the unique identifiers of the rows that are about to be deleted. */
+	NSFetchRequest *identifierRequest = [fetchRequest copy];
+
+	identifierRequest.resultType = NSDictionaryResultType;
+	identifierRequest.propertiesToFetch = @[ @"logLineUniqueIdentifier" ];
+	identifierRequest.includesPendingChanges = NO;
+	identifierRequest.returnsObjectsAsFaults = NO;
+	identifierRequest.sortDescriptors = nil;
+
+	NSError *identifierRequestError = nil;
+
+	NSArray<NSDictionary<NSString *, id> *> *identifierRows = [viewContext executeFetchRequest:identifierRequest
+																						 error:&identifierRequestError];
+
+	if (identifierRows == nil) {
+		LogToConsoleError("Error occurred fetching objects: %{public}@", identifierRequestError.localizedDescription);
+
+		return 0;
+	}
+
+	if (identifierRows.count == 0) {
+		return 0;
+	}
+
+	NSMutableArray<NSString *> *uniqueIdentifiers = [NSMutableArray arrayWithCapacity:identifierRows.count];
+
+	for (NSDictionary<NSString *, id> *row in identifierRows) {
+		NSString *uniqueIdentifier = row[@"logLineUniqueIdentifier"];
+
+		if (uniqueIdentifier) {
+			[uniqueIdentifiers addObject:uniqueIdentifier];
+		}
+	}
+
+	/* Perform the delete against the store. */
+	NSFetchRequest *deleteRequest = [fetchRequest copy];
+
+	deleteRequest.resultType = NSManagedObjectResultType;
+	deleteRequest.includesPendingChanges = NO;
+	deleteRequest.sortDescriptors = nil;
+
+	NSBatchDeleteRequest *batchDeleteRequest = [[NSBatchDeleteRequest alloc] initWithFetchRequest:deleteRequest];
 
 	batchDeleteRequest.resultType = NSBatchDeleteResultTypeObjectIDs;
 
-	NSError *batchDeleteError = nil;
+	__block NSBatchDeleteResult *batchDeleteResult = nil;
+	__block NSError *batchDeleteError = nil;
 
-	NSBatchDeleteResult *batchDeleteResult =
-	[viewContext executeRequest:batchDeleteRequest error:&batchDeleteError];
+	[parentContext performBlockAndWait:^{
+		batchDeleteResult = [parentContext executeRequest:batchDeleteRequest error:&batchDeleteError];
+	}];
 
 	if (batchDeleteResult == nil) {
-		LogToConsoleError("Failed to perform batch delete: %{public}@",
-						  batchDeleteError.localizedDescription);
+		LogToConsoleError("Failed to perform batch delete: %{public}@", batchDeleteError.localizedDescription);
 
 		return 0;
 	}
@@ -912,55 +1061,17 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 
 	NSUInteger rowsDeletedCount = rowsDeleted.count;
 
-	if (rowsDeletedCount > 0) {
-		[NSManagedObjectContext mergeChangesFromRemoteContextSave:@{NSDeletedObjectsKey : rowsDeleted} intoContexts:@[viewContext]];
-
-		[self _quickSaveContext:viewContext];
-	}
-
-	return rowsDeletedCount;
-}
-*/
-
-- (NSUInteger)__deleteDataForFetchRequestUsingEnumeration:(NSFetchRequest *)fetchRequest
-											inViewContext:(HLSHistoricLogViewContext *)viewContext
-{
-	NSParameterAssert(fetchRequest != nil);
-	NSParameterAssert(viewContext != nil);
-
-	NSError *fetchRequestError = nil;
-
-	NSArray *fetchedObjects = [viewContext executeFetchRequest:fetchRequest error:&fetchRequestError];
-
-	if (fetchedObjects == nil) {
-		LogToConsoleError("Error occurred fetching objects: %{public}@", fetchRequestError.localizedDescription);
-
+	if (rowsDeletedCount == 0) {
 		return 0;
 	}
 
-	if (fetchedObjects.count == 0) {
-		return 0;
-	}
-
-	NSMutableArray<NSString *> *uniqueIdentifiers = [NSMutableArray arrayWithCapacity:fetchedObjects.count];
-
-	for (NSManagedObject *object in fetchedObjects) {
-		/* Record unique identifier */
-		NSString *uniqueIdentifier = [object valueForKey:@"logLineUniqueIdentifier"];
-
-		if (uniqueIdentifier) {
-			[uniqueIdentifiers addObject:uniqueIdentifier];
-		}
-
-		/* Delete object */
-		[viewContext deleteObject:object];
-	}
-
-	[self _quickSaveContext:viewContext];
+	/* Bring the contexts in line with the store. */
+	[NSManagedObjectContext mergeChangesFromRemoteContextSave:@{NSDeletedObjectsKey : rowsDeleted}
+												 intoContexts:@[ parentContext, viewContext ]];
 
 	[self __notifyClientOfDeletedUniqueIdentifiers:[uniqueIdentifiers copy] inViewContext:viewContext];
 
-	return fetchedObjects.count;
+	return rowsDeletedCount;
 }
 
 /* Notify XPC client of intent to delete these unique identifiers. */
@@ -1192,7 +1303,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 #pragma mark -
 #pragma mark XPC Connection
 
-- (id<HLSHistoricLogClientProtocol>)remoteObjectProxy
+- (nullable id<HLSHistoricLogClientProtocol>)remoteObjectProxy
 {
 	return self.serviceConnection.remoteObjectProxy;
 }

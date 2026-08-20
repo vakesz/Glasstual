@@ -40,7 +40,6 @@
 
 /* Shortcut defines. */
 #define RZAnimationCurrentContext() [NSAnimationContext currentContext]
-#define RZAppearanceCurrentController() [NSAppearance currentAppearance]
 #define RZAppleEventManager() [NSAppleEventManager sharedAppleEventManager]
 #define RZCurrentCalendar() [NSCalendar currentCalendar]
 #define RZCurrentRunLoop() [NSRunLoop currentRunLoop]
@@ -72,15 +71,6 @@
 #define GLASSTUAL_EXTERN extern
 
 #define GLASSTUAL_SYMBOL_USED __attribute__((used))
-
-#define GLASSTUAL_RUNNING_ON(version, name) COCOA_EXTENSIONS_RUNNING_ON(version, name)
-#define GLASSTUAL_RUNNING_ON_BIGSUR GLASSTUAL_RUNNING_ON(11.0, BigSur)
-#define GLASSTUAL_RUNNING_ON_MOJAVE GLASSTUAL_RUNNING_ON(10.14, Mojave)
-#define GLASSTUAL_RUNNING_ON_HIGHSIERRA GLASSTUAL_RUNNING_ON(10.13, HighSierra)
-#define GLASSTUAL_RUNNING_ON_SIERRA GLASSTUAL_RUNNING_ON(10.12, Sierra)
-#define GLASSTUAL_RUNNING_ON_ELCAPITAN GLASSTUAL_RUNNING_ON(10.11, ElCapitan)
-#define GLASSTUAL_RUNNING_ON_YOSEMITE GLASSTUAL_RUNNING_ON(10.10, Yosemite)
-#define GLASSTUAL_RUNNING_ON_MAVERICKS GLASSTUAL_RUNNING_ON(10.9, Mavericks)
 
 #define GLASSTUAL_DEPRECATED(reason) COCOA_EXTENSIONS_DEPRECATED(reason)
 

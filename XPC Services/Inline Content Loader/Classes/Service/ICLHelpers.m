@@ -158,6 +158,34 @@ NS_ASSUME_NONNULL_BEGIN
 				   completionBlock:completionBlock];
 }
 
+/* Same shape as the session used by ICLMediaAssessor: no persistent
+ storage, no local cache, and no cookies sent or stored. The shared
+ session would have carried the process-wide cookie jar and cache
+ into these requests. */
++ (NSURLSession *)_sharedJSONSession
+{
+	static NSURLSession *session = nil;
+
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		NSURLSessionConfiguration *config = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+
+		/* Ignore local caches */
+		config.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
+
+		/* Do not send cookies from local store */
+		config.HTTPShouldSetCookies = NO;
+
+		/* Do not allow cookies to be set */
+		config.HTTPCookieAcceptPolicy = NSHTTPCookieAcceptPolicyNever;
+
+		session = [NSURLSession sessionWithConfiguration:config];
+	});
+
+	return session;
+}
+
 + (NSURLSessionDataTask *)requestJSONDataFromURL:(NSURL *)url
 								 completionBlock:(void (^)(BOOL success,
 														   NSDictionary<NSString *, id> *_Nullable data))completionBlock
@@ -165,7 +193,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(url != nil);
 	NSParameterAssert(completionBlock != nil);
 
-	NSURLSession *session = [NSURLSession sharedSession];
+	NSURLSession *session = [self _sharedJSONSession];
 
 	NSURLSessionDataTask *sessionTask = [session
 		  dataTaskWithURL:url

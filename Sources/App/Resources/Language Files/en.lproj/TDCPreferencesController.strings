@@ -83,3 +83,12 @@ Click “Edit Style” to add your own style sheet rules. This feature can also 
 "sb-plugin" = "Add-on";
 
 "sb-vers" = "Version %1$@ (%2$@)";
+
+/* Settings window toolbar */
+"tb-back" = "Back";
+"tb-forward" = "Forward";
+
+/* Settings window accessibility */
+"ax-theme" = "Style";
+"ax-transcript-folder" = "Transcript Folder";
+"ax-download-folder" = "Download Destination";

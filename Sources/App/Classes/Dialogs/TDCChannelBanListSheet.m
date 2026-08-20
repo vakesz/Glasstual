@@ -115,6 +115,10 @@ NS_ASSUME_NONNULL_BEGIN
 		headerTitle = TXTLS(@"TDCChannelBanListSheet[g4r-t6]", self.channel.name);
 	}
 
+	if (headerTitle == nil) {
+		return;
+	}
+
 	self.headerTitleTextField.stringValue = headerTitle;
 }
 

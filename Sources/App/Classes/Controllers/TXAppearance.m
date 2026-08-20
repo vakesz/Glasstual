@@ -44,6 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 NSString *const TXApplicationAppearanceChangedNotification = @"TXApplicationAppearanceChangedNotification";
 NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChangedNotification";
 
+static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
+
 @interface TXAppearancePropertyCollection ()
 @property(nonatomic, copy, readwrite) NSString *appearanceName;
 @property(nonatomic, assign, readwrite) TXAppearanceType appearanceType;
@@ -53,6 +55,7 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 
 @interface TXAppearance ()
 @property(nonatomic, strong, readwrite) TXAppearancePropertyCollection *properties;
+@property(nonatomic, assign) BOOL isApplyingAppearance;
 @end
 
 @implementation TXAppearance
@@ -80,16 +83,19 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 											name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
 										  object:nil];
 
-	[NSApp addObserver:self forKeyPath:@"effectiveAppearance" options:NSKeyValueObservingOptionNew context:NULL];
+	[NSApp addObserver:self
+			forKeyPath:@"effectiveAppearance"
+			   options:NSKeyValueObservingOptionNew
+			   context:TXAppearanceKVOContext];
 }
 
 - (void)prepareForApplicationTermination
 {
 	LogToConsoleTerminationProgress("Removing appearance change observers");
 
-	[RZNotificationCenter() removeObserver:self];
+	[RZWorkspaceNotificationCenter() removeObserver:self];
 
-	[NSApp removeObserver:self forKeyPath:@"effectiveAppearance"];
+	[NSApp removeObserver:self forKeyPath:@"effectiveAppearance" context:TXAppearanceKVOContext];
 }
 
 #pragma mark -
@@ -97,17 +103,9 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 
 + (nullable NSString *)appearanceNameForType:(TXAppearanceType)type
 {
-	switch (type) {
-	case TXAppearanceTypeLight: {
-		return @"TahoeLight";
-	}
-	case TXAppearanceTypeDark: {
-		return @"TahoeDark";
-	}
-	default: {
-		return nil;
-	}
-	}
+	/* A single appearance is defined. Light and dark are expressed
+	 through semantic colors so they do not need separate entries. */
+	return @"Tahoe";
 }
 
 #pragma mark -
@@ -118,6 +116,18 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 						change:(nullable NSDictionary<NSString *, id> *)change
 					   context:(nullable void *)context
 {
+	if (context != TXAppearanceKVOContext) {
+		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+
+		return;
+	}
+
+	/* Assigning NSApp.appearance below re-enters this observer; ignore
+	 the notifications we cause ourselves or the update loops forever. */
+	if (self.isApplyingAppearance) {
+		return;
+	}
+
 	if ([keyPath isEqualToString:@"effectiveAppearance"]) {
 		[self applicationAppearanceChanged];
 	}
@@ -131,11 +141,6 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 	XRPerformBlockAsynchronouslyOnMainQueue(^{
 		[self updateAppearanceBySystemChange];
 	});
-}
-
-- (void)systemColorsDidChange:(NSNotification *)aNote
-{
-	[self updateAppearanceBySystemChange];
 }
 
 - (void)accessibilityDisplayOptionsDidChange:(NSNotification *)aNote
@@ -162,6 +167,11 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 	/* Determine user's preference */
 	switch (preferredAppearance) {
 	case TXPreferredAppearanceInherited: {
+		/* -systemWideDarkModeEnabled reads NSApp.effectiveAppearance which
+		 reflects any appearance previously forced on NSApp. Reset it first
+		 so that we observe the system's appearance. */
+		[self applyAppKitAppearance:nil];
+
 		if ([TXAppearancePropertyCollection systemWideDarkModeEnabled]) {
 			appearanceType = TXAppearanceTypeDark;
 		}
@@ -228,11 +238,11 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 	self.properties = newProperties;
 
 	if (preferredAppearance == TXPreferredAppearanceInherited) {
-		NSApp.appearance = nil;
+		[self applyAppKitAppearance:nil];
 	} else if (isAppearanceDark) {
-		NSApp.appearance = [TXAppearancePropertyCollection appKitDarkAppearance];
+		[self applyAppKitAppearance:[TXAppearancePropertyCollection appKitDarkAppearance]];
 	} else {
-		NSApp.appearance = [TXAppearancePropertyCollection appKitLightAppearance];
+		[self applyAppKitAppearance:[TXAppearancePropertyCollection appKitLightAppearance]];
 	}
 
 	/* Notify observers */
@@ -241,6 +251,22 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 	} else {
 		[self notifySystemAppearanceChanged];
 	}
+}
+
+- (void)applyAppKitAppearance:(nullable NSAppearance *)appearance
+{
+	NSAppearance *current = NSApp.appearance;
+
+	if (current == appearance ||
+		(current != nil && appearance != nil && [current.name isEqualToString:appearance.name])) {
+		return;
+	}
+
+	self.isApplyingAppearance = YES;
+
+	NSApp.appearance = appearance;
+
+	self.isApplyingAppearance = NO;
 }
 
 - (void)notifyApplicationAppearanceChanged

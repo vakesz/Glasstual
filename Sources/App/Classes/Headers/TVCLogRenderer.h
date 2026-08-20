@@ -67,7 +67,7 @@ GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
 /* Properties that are returned in the outputDictionary of a render */
 /* The output dictionary is not guaranteed to contain any key. */
 GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-	TVCLogRendererResultsListOfLinksInBodyAttribute; // NSArray<AHHyperlinkScannerResult *>
+	TVCLogRendererResultsListOfLinksInBodyAttribute; // NSArray<TLOLinkParserResult *>
 GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
 	TVCLogRendererResultsListOfLinksMappedInBodyAttribute; // NSDictionary<NSString *, NSString *>
 GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsKeywordMatchFoundAttribute; // BOOL

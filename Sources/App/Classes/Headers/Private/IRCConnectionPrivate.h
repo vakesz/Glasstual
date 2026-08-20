@@ -40,16 +40,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/* The public interface declares these properties atomic. The readwrite
+ redeclarations must match. They are written on the main queue only
+ (see the socket delegate section of IRCConnection.m) and read from
+ the main thread by IRCClient. */
 @interface IRCConnection ()
-@property(nonatomic, copy, readwrite) IRCConnectionConfig *config;
-@property(nonatomic, assign, readwrite) BOOL isConnected;
-@property(nonatomic, assign, readwrite) BOOL isConnecting;
-@property(nonatomic, assign, readwrite) BOOL isDisconnecting;
-@property(nonatomic, assign, readwrite) BOOL isSending;
-@property(nonatomic, assign, readwrite) BOOL isSecured;
-@property(nonatomic, assign, readwrite) BOOL isConnectedWithClientSideCertificate;
-@property(nonatomic, assign, readwrite) BOOL EOFReceived;
-@property(nonatomic, copy, readwrite, nullable) NSString *connectedAddress;
+@property(copy, readwrite) IRCConnectionConfig *config;
+@property(assign, readwrite) BOOL isConnected;
+@property(assign, readwrite) BOOL isConnecting;
+@property(assign, readwrite) BOOL isDisconnecting;
+@property(assign, readwrite) BOOL isSending;
+@property(assign, readwrite) BOOL isSecured;
+@property(assign, readwrite) BOOL isConnectedWithClientSideCertificate;
+@property(assign, readwrite) BOOL EOFReceived;
+@property(copy, readwrite, nullable) NSString *connectedAddress;
 
 - (void)enforceFloodControl;
 
