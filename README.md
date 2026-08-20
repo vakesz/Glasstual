@@ -36,14 +36,12 @@ A number of identifiers keep the Textual spelling on purpose, because they name 
 <!-- TODO: add dark appearance screenshots alongside these. -->
 <!-- Conversation shown is from a local demo network, not a real one. -->
 
-## Note Regarding Downloading Source Code
+## Note Regarding Third-Party Frameworks
 
-Glasstual depends on several other projects to build. This repository is linked against them using submodules — clicking "Download ZIP" will not download a copy of those projects. Clone the source instead:
+The Codeux frameworks Glasstual builds on (Cocoa Extensions, Auto Hyperlinks, Encryption Kit) and the prebuilt static libraries live in `Frameworks/` as vendored sources, not submodules. `Frameworks/PROVENANCE.md` records the upstream commit each one was taken from. A plain clone is enough:
 
 ```
 git clone https://github.com/vakesz/Glasstual.git
-cd Glasstual
-git submodule update --init --recursive
 ```
 
 ## Note Regarding Code Signing
@@ -84,9 +82,8 @@ brew bundle
 ```
 
 Run `./Scripts/format.sh` to format first-party Objective-C, Swift, and shell
-sources. Formatting and linting intentionally exclude Git submodules and
-vendored sources under `External Libraries`. Pull requests also build the
-Debug, standard Release, sandboxed Release, and plugin App Store configurations.
+sources. Formatting and linting intentionally exclude the vendored frameworks under
+`Frameworks/` and `External Libraries`.
 
 ### Software Updates
 

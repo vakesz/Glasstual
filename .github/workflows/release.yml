@@ -20,10 +20,8 @@ jobs:
       ARCHIVE_PATH: build/Glasstual.xcarchive
 
     steps:
-      - name: Check out source and submodules
+      - name: Check out source
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Select Xcode 26
         run: |
