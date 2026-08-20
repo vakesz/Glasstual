@@ -27,6 +27,10 @@ require_command shellcheck
 shell_files=()
 
 while IFS= read -r -d '' file; do
+	case "${file}" in
+		Frameworks/*) continue ;; # vendored upstream sources
+	esac
+
 	shell_files+=("${file}")
 done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh')
 
