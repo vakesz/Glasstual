@@ -55,6 +55,7 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 
 @interface TXAppearance ()
 @property(nonatomic, strong, readwrite) TXAppearancePropertyCollection *properties;
+@property(nonatomic, assign) BOOL isApplyingAppearance;
 @end
 
 @implementation TXAppearance
@@ -121,6 +122,12 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 		return;
 	}
 
+	/* Assigning NSApp.appearance below re-enters this observer; ignore
+	 the notifications we cause ourselves or the update loops forever. */
+	if (self.isApplyingAppearance) {
+		return;
+	}
+
 	if ([keyPath isEqualToString:@"effectiveAppearance"]) {
 		[self applicationAppearanceChanged];
 	}
@@ -163,7 +170,7 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 		/* -systemWideDarkModeEnabled reads NSApp.effectiveAppearance which
 		 reflects any appearance previously forced on NSApp. Reset it first
 		 so that we observe the system's appearance. */
-		NSApp.appearance = nil;
+		[self applyAppKitAppearance:nil];
 
 		if ([TXAppearancePropertyCollection systemWideDarkModeEnabled]) {
 			appearanceType = TXAppearanceTypeDark;
@@ -231,11 +238,11 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 	self.properties = newProperties;
 
 	if (preferredAppearance == TXPreferredAppearanceInherited) {
-		NSApp.appearance = nil;
+		[self applyAppKitAppearance:nil];
 	} else if (isAppearanceDark) {
-		NSApp.appearance = [TXAppearancePropertyCollection appKitDarkAppearance];
+		[self applyAppKitAppearance:[TXAppearancePropertyCollection appKitDarkAppearance]];
 	} else {
-		NSApp.appearance = [TXAppearancePropertyCollection appKitLightAppearance];
+		[self applyAppKitAppearance:[TXAppearancePropertyCollection appKitLightAppearance]];
 	}
 
 	/* Notify observers */
@@ -244,6 +251,21 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 	} else {
 		[self notifySystemAppearanceChanged];
 	}
+}
+
+- (void)applyAppKitAppearance:(nullable NSAppearance *)appearance
+{
+	NSAppearance *current = NSApp.appearance;
+
+	if (current == appearance || [current.name isEqualToString:appearance.name]) {
+		return;
+	}
+
+	self.isApplyingAppearance = YES;
+
+	NSApp.appearance = appearance;
+
+	self.isApplyingAppearance = NO;
 }
 
 - (void)notifyApplicationAppearanceChanged
