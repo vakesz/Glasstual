@@ -1,4 +1,4 @@
-/* $OpenBSD: ui.h,v 1.14 2022/07/12 18:43:56 jsing Exp $ */
+/* $OpenBSD: ui.h,v 1.20 2025/03/09 15:25:53 tb Exp $ */
 /* Written by Richard Levitte (richard@levitte.org) for the OpenSSL
  * project 2001.
  */
@@ -61,9 +61,7 @@
 
 #include <openssl/opensslconf.h>
 
-#ifndef OPENSSL_NO_DEPRECATED
 #include <openssl/crypto.h>
-#endif
 #include <openssl/safestack.h>
 #include <openssl/ossl_typ.h>
 
@@ -255,8 +253,9 @@ const UI_METHOD *UI_get_method(UI *ui);
 const UI_METHOD *UI_set_method(UI *ui, const UI_METHOD *meth);
 
 /* The method with all the built-in thingies */
-UI_METHOD *UI_OpenSSL(void);
+const UI_METHOD *UI_OpenSSL(void);
 
+const UI_METHOD *UI_null(void);
 
 /*
  * ---------- For method writers ----------
@@ -273,7 +272,7 @@ UI_METHOD *UI_OpenSSL(void);
  *			display a dialog box after it has been built.
  *	a reader	This function is called to read a given prompt,
  *			maybe from the tty, maybe from a field in a
- *			window.  Note that it's called wth all string
+ *			window.  Note that it's called with all string
  *			structures, not only the prompt ones, so it must
  *			check such things itself.
  *	a closer	This function closes the session, maybe by closing
@@ -364,12 +363,6 @@ int UI_get_result_minsize(UI_STRING *uis);
 int UI_get_result_maxsize(UI_STRING *uis);
 /* Set the result of a UI_STRING. */
 int UI_set_result(UI *ui, UI_STRING *uis, const char *result);
-
-/* A couple of popular utility functions */
-int UI_UTIL_read_pw_string(char *buf, int length, const char *prompt,
-    int verify);
-int UI_UTIL_read_pw(char *buf, char *buff, int size, const char *prompt,
-    int verify);
 
 void ERR_load_UI_strings(void);
 

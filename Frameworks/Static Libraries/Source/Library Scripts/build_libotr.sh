@@ -6,6 +6,8 @@ pushd "${LIBRARY_WORKING_DIRECTORY_LOCATION}"
 
 curl -LO "https://otr.cypherpunks.ca/libotr-${LIBRARY_OTR_VERSION}.tar.gz" --retry 5
 
+verifyChecksum "./libotr-${LIBRARY_OTR_VERSION}.tar.gz" "${LIBRARY_OTR_SHA256}"
+
 tar -xvf "./libotr-${LIBRARY_OTR_VERSION}.tar.gz"
 
 mv "./libotr-${LIBRARY_OTR_VERSION}" "./libotr-source"
@@ -18,6 +20,10 @@ case $ARCH in
 	;;
 	arm64)
 	HOST="aarch64-apple-darwin"
+	;;
+	*)
+	echo "Unsupported architecture: $ARCH"
+	exit 1
 	;;
 esac
 

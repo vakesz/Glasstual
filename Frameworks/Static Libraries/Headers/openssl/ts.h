@@ -1,4 +1,4 @@
-/* $OpenBSD: ts.h,v 1.19 2022/09/11 17:31:19 tb Exp $ */
+/* $OpenBSD: ts.h,v 1.24 2024/03/26 00:39:22 beck Exp $ */
 /* Written by Zoltan Glozik (zglozik@opentsa.org) for the OpenSSL
  * project 2002, 2003, 2004.
  */
@@ -389,8 +389,8 @@ int TS_RESP_CTX_set_accuracy(TS_RESP_CTX *ctx,
    '0' means sec, '3' msec, '6' usec, and so on. Default is 0. */
 int TS_RESP_CTX_set_clock_precision_digits(TS_RESP_CTX *ctx,
     unsigned clock_precision_digits);
-/* At most we accept usec precision. */
-#define TS_MAX_CLOCK_PRECISION_DIGITS	6
+/* At most we accept sec precision. */
+#define TS_MAX_CLOCK_PRECISION_DIGITS 0
 
 /* No flags are set by default. */
 void TS_RESP_CTX_add_flags(TS_RESP_CTX *ctx, int flags);
@@ -487,7 +487,6 @@ int TS_RESP_verify_token(TS_VERIFY_CTX *ctx, PKCS7 *token);
 
 /* Set all fields to zero. */
 TS_VERIFY_CTX *TS_VERIFY_CTX_new(void);
-void TS_VERIFY_CTX_init(TS_VERIFY_CTX *ctx);
 void TS_VERIFY_CTX_free(TS_VERIFY_CTX *ctx);
 void TS_VERIFY_CTX_cleanup(TS_VERIFY_CTX *ctx);
 
@@ -543,9 +542,6 @@ EVP_PKEY *TS_CONF_load_key(const char *file, const char *pass);
 const char *TS_CONF_get_tsa_section(CONF *conf, const char *section);
 int TS_CONF_set_serial(CONF *conf, const char *section, TS_serial_cb cb,
     TS_RESP_CTX *ctx);
-int TS_CONF_set_crypto_device(CONF *conf, const char *section,
-    const char *device);
-int TS_CONF_set_default_engine(const char *name);
 int TS_CONF_set_signer_cert(CONF *conf, const char *section,
     const char *cert, TS_RESP_CTX *ctx);
 int TS_CONF_set_certs(CONF *conf, const char *section, const char *certs,

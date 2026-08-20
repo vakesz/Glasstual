@@ -1,5 +1,5 @@
 /* gpg-error.h or gpgrt.h - Common code for GnuPG and others.    -*- c -*-
- * Copyright (C) 2001-2020 g10 Code GmbH
+ * Copyright (C) 2001-2026 g10 Code GmbH
  *
  * This file is part of libgpg-error (aka libgpgrt).
  *
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this program; if not, see <https://www.gnu.org/licenses/>.
- * SPDX-License-Identifier: LGPL-2.1+
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * Do not edit.  Generated from gpg-error.h.in for:
                  aarch64-apple-darwin
@@ -66,12 +66,12 @@
 #include <stdarg.h>
 
 /* The version string of this header. */
-#define GPG_ERROR_VERSION "1.42"
-#define GPGRT_VERSION     "1.42"
+#define GPG_ERROR_VERSION "1.61"
+#define GPGRT_VERSION     "1.61"
 
 /* The version number of this header. */
-#define GPG_ERROR_VERSION_NUMBER 0x012a00
-#define GPGRT_VERSION_NUMBER     0x012a00
+#define GPG_ERROR_VERSION_NUMBER 0x013d00
+#define GPGRT_VERSION_NUMBER     0x013d00
 
 
 #ifdef __GNUC__
@@ -124,6 +124,7 @@ typedef enum
     GPG_ERR_SOURCE_ASSUAN = 15,
     GPG_ERR_SOURCE_TPM2D = 16,
     GPG_ERR_SOURCE_TLS = 17,
+    GPG_ERR_SOURCE_TKD = 18,
     GPG_ERR_SOURCE_ANY = 31,
     GPG_ERR_SOURCE_USER_1 = 32,
     GPG_ERR_SOURCE_USER_2 = 33,
@@ -355,6 +356,9 @@ typedef enum
     GPG_ERR_SEXP_BAD_HEX_CHAR = 211,
     GPG_ERR_SEXP_ODD_HEX_NUMBERS = 212,
     GPG_ERR_SEXP_BAD_OCT_CHAR = 213,
+    GPG_ERR_PUBKEY_NON_COMPLIANT = 214,
+    GPG_ERR_CIPHER_NON_COMPLIANT = 215,
+    GPG_ERR_UNEXPECTED_PACKET = 216,
     GPG_ERR_SUBKEYS_EXP_OR_REV = 217,
     GPG_ERR_DB_CORRUPTED = 218,
     GPG_ERR_SERVER_FAILED = 219,
@@ -439,6 +443,10 @@ typedef enum
     GPG_ERR_KEYBOXD = 317,
     GPG_ERR_NO_SERVICE = 318,
     GPG_ERR_SERVICE = 319,
+    GPG_ERR_BAD_PUK = 320,
+    GPG_ERR_NO_RESET_CODE = 321,
+    GPG_ERR_BAD_RESET_CODE = 322,
+    GPG_ERR_DIGEST_NON_COMPLIANT = 323,
     GPG_ERR_SYSTEM_BUG = 666,
     GPG_ERR_DNS_UNKNOWN = 711,
     GPG_ERR_DNS_SECTION = 712,
@@ -850,6 +858,12 @@ typedef unsigned int gpg_error_t;
 # define GPGRT_ATTR_MALLOC
 #endif
 
+#if _GPG_ERR_GCC_VERSION >= 80000
+# define GPGRT_ATTR_NONSTRING __attribute__((__nonstring__))
+#else
+# define GPGRT_ATTR_NONSTRING
+#endif
+
 /* A macro defined if a GCC style __FUNCTION__ macro is available.  */
 #undef GPGRT_HAVE_MACRO_FUNCTION
 #if _GPG_ERR_GCC_VERSION >= 20500
@@ -1036,7 +1050,6 @@ const char *gpg_error_check_version (const char *req_version);
 
 /* System specific type definitions.  */
 #include <sys/types.h>
-
 typedef ssize_t gpgrt_ssize_t;
 
 typedef long gpgrt_off_t;
@@ -1078,6 +1091,7 @@ void *gpgrt_calloc (size_t n, size_t m);
 char *gpgrt_strdup (const char *string);
 char *gpgrt_strconcat (const char *s1, ...) GPGRT_ATTR_SENTINEL(0);
 void gpgrt_free (void *a);
+void gpgrt_wipememory (void *ptr, size_t len);
 
 
 /*
@@ -1587,10 +1601,165 @@ gpg_err_code_t   gpgrt_b64enc_write (gpgrt_b64state_t state,
 gpg_err_code_t   gpgrt_b64enc_finish (gpgrt_b64state_t state);
 
 gpgrt_b64state_t gpgrt_b64dec_start (const char *title);
-gpg_error_t      gpgrt_b64dec_proc (gpgrt_b64state_t state,
+gpg_err_code_t   gpgrt_b64dec_proc (gpgrt_b64state_t state,
                                     void *buffer, size_t length,
                                     size_t *r_nbytes);
-gpg_error_t      gpgrt_b64dec_finish (gpgrt_b64state_t state);
+gpg_err_code_t   gpgrt_b64dec_finish (gpgrt_b64state_t state);
+
+
+
+/*
+ * Simple string list
+ */
+struct _gpgrt_strlist_s
+{
+  struct _gpgrt_strlist_s *next;
+  unsigned int flags;
+  unsigned char _private_flags;  /* Not of your business.  */
+  char d[1];
+};
+typedef struct _gpgrt_strlist_s *gpgrt_strlist_t;
+
+
+#define GPGRT_STRLIST_APPEND  1  /* Append and not prepend to the list. */
+#define GPGRT_STRLIST_WIPE    2  /* Wipe the string on free.  */
+
+
+/* Free the string list SL.  */
+void gpgrt_strlist_free (gpgrt_strlist_t sl);
+
+/* Add STRING to the LIST.  This function returns NULL and sets ERRNO
+ * on memory shortage.  If STRING is NULL an empty string is stored
+ * instead.  FLAGS */
+gpgrt_strlist_t gpgrt_strlist_add (gpgrt_strlist_t *list, const char *string,
+                                   unsigned int flags);
+
+/* Tokenize STRING using the delimiters from DELIM and append each
+ * token to the string list LIST.  On success a pointer into LIST with
+ * the first new token is returned.  Returns NULL on error and sets
+ * ERRNO.  Take care, an error with ENOENT set mean that no tokens
+ * were found in STRING.  */
+gpgrt_strlist_t gpgrt_strlist_tokenize (gpgrt_strlist_t *list,
+                                        const char *string,
+                                        const char *delim, unsigned int flags);
+
+/* Return a copy of LIST.  On error ERRNO is set and NULL
+ * returned.  */
+gpgrt_strlist_t gpgrt_strlist_copy (gpgrt_strlist_t list);
+
+/* Reverse the list *LIST in place.  Will not fail. */
+gpgrt_strlist_t gpgrt_strlist_rev (gpgrt_strlist_t *list);
+
+/* In the list starting with HEAD return the item previous to NODE.
+ * Returns NULL if no previous item exists.  */
+gpgrt_strlist_t gpgrt_strlist_prev (gpgrt_strlist_t head, gpgrt_strlist_t node);
+
+/* Return the last item in the list starting at NODE.  */
+gpgrt_strlist_t gpgrt_strlist_last (gpgrt_strlist_t node);
+
+/* Remove the first item from LIST and return its content in an
+ * allocated buffer.  This function returns NULl and sets ERRNO on
+ * error.  */
+char *gpgrt_strlist_pop (gpgrt_strlist_t *list);
+
+/* Return the first item of the string list HAYSTACK whose value
+ * matches NEEDLE.  If no items match, return NULL.  */
+gpgrt_strlist_t gpgrt_strlist_find (gpgrt_strlist_t haystack,
+                                    const char *needle);
+
+/* Return the number of items in LIST.  */
+static GPG_ERR_INLINE unsigned int
+gpgrt_strlist_count (gpgrt_strlist_t list)
+{
+  unsigned int i = 0;
+
+  for (i = 0; list; list = list->next)
+    i++;
+
+  return i;
+}
+
+
+/*
+ * Name-value parser and writer
+ */
+
+struct _gpgrt_name_value_container;
+typedef struct _gpgrt_name_value_container *gpgrt_nvc_t;
+
+struct _gpgrt_name_value_entry;
+typedef struct _gpgrt_name_value_entry *gpgrt_nve_t;
+
+#define GPGRT_NVC_WIPE       2  /* Wipe the values on free.  */
+#define GPGRT_NVC_PRIVKEY    4  /* Enable private key mode.  */
+#define GPGRT_NVC_SECTION    8  /* Enable section mode.      */
+#define GPGRT_NVC_MODIFIED 256  /* Return the modified flag. */
+
+/* Return a name-value container according to the given flags.
+ * Returns NULL and sets ERRNO on error.  */
+gpgrt_nvc_t gpgrt_nvc_new (unsigned int flags);
+
+/* Release a name-value container.  */
+void gpgrt_nvc_release (gpgrt_nvc_t cont);
+
+/* Return the specified container FLAG. For the GPGRT_NVC_MODIFIED
+ * flag the CLEAR arg resets the flag after retrieval.  */
+int gpgrt_nvc_get_flag (gpgrt_nvc_t cont, unsigned int flag, int clear);
+
+/* Add (NAME, VALUE) to CONT.  If an entry with NAME already exists, a
+ * new entry with that name is appended.  */
+gpg_err_code_t gpgrt_nvc_add (gpgrt_nvc_t cont,
+                              const char *name, const char *value);
+
+/* Add (NAME, VALUE) to CONT.  If an entry with NAME already exists,
+ * it is updated by VALUE.  If multiple entries with NAME exist, only
+ * the first entry is updated.  */
+gpg_err_code_t gpgrt_nvc_set (gpgrt_nvc_t cont,
+                              const char *name, const char *value);
+
+/* Update entry E to VALUE.  CONT is required to update the internal
+ * modified flag and to pass container flags to the entry.  */
+gpg_err_code_t gpgrt_nve_set (gpgrt_nvc_t cont, gpgrt_nve_t e,
+                              const char *value);
+
+/* Delete entries from the container CONT.  Either ENTRY or NAME must
+ * be given.  If ENTRY is given only this entry is deleted; if NAME is
+ * given all entries with this name are deleted.  */
+void gpgrt_nvc_delete (gpgrt_nvc_t cont, gpgrt_nve_t entry, const char *name);
+
+/* Get the first entry with the given name.  Return NULL if it does
+ * not exist.  If NAME is NULL the first non-comment entry is
+ * returned.  */
+gpgrt_nve_t gpgrt_nvc_lookup (gpgrt_nvc_t cont, const char *name);
+
+/* Parse STREAM and return a newly allocated container structure at
+ * RESULT.  If ERRLINEP is given, the line number the parser was last
+ * considering is stored there.  FLAGS are used to allocate the
+ * container.  */
+gpg_err_code_t gpgrt_nvc_parse (gpgrt_nvc_t *result, int *errlinep,
+                                gpgrt_stream_t stream, unsigned int flags);
+
+/* Write a representation of the container CONT to STREAM.  */
+gpg_err_code_t gpgrt_nvc_write (gpgrt_nvc_t cont, gpgrt_stream_t stream);
+
+/* Return the next non-comment entry after ENTRY.  If NAME is given
+ * the next entry with that name is returned.  */
+gpgrt_nve_t gpgrt_nve_next (gpgrt_nve_t entry, const char *name);
+
+/* Return the name of the entry.  */
+const char *gpgrt_nve_name (gpgrt_nve_t entry);
+
+/* Return the value of the entry.  */
+const char *gpgrt_nve_value (gpgrt_nve_t entry);
+
+/* Convenience function to return the string for the first entry of
+ * CONT with NAME.  If no such entry is found or its value is the
+ * empty string NULL is returned.  */
+const char *gpgrt_nvc_get_string (gpgrt_nvc_t cont, const char *name);
+
+/* Convenience function to return true if NAME exists and its value is
+ * true; that is either "yes", "true", or a decimal value != 0.  */
+int gpgrt_nvc_get_bool (gpgrt_nvc_t nvc, const char *name);
 
 
 
@@ -1619,11 +1788,12 @@ enum gpgrt_log_levels
   };
 
 
-/* The next 4 functions are not thread-safe - call them early.  */
+/* The next 5 functions are not thread-safe - call them early.  */
 void gpgrt_log_set_sink (const char *name, gpgrt_stream_t stream, int fd);
 void gpgrt_log_set_socket_dir_cb (const char *(*fnc)(void));
 void gpgrt_log_set_pid_suffix_cb (int (*cb)(unsigned long *r_value));
 void gpgrt_log_set_prefix (const char *text, unsigned int flags);
+void gpgrt_add_post_log_func (void (*f)(int));
 
 int  gpgrt_get_errorcount (int clear);
 void gpgrt_inc_errorcount (void);
@@ -1633,9 +1803,13 @@ int  gpgrt_log_get_fd (void);
 gpgrt_stream_t gpgrt_log_get_stream (void);
 
 void gpgrt_log (int level, const char *fmt, ...) GPGRT_ATTR_PRINTF(2,3);
-void gpgrt_logv (int level, const char *fmt, va_list arg_ptr);
-void gpgrt_logv_prefix (int level, const char *prefix,
-                              const char *fmt, va_list arg_ptr);
+void gpgrt_logv (int level, const char *fmt,
+                 va_list arg_ptr) GPGRT_ATTR_PRINTF(2,0);
+void gpgrt_logv_prefix (int level, const char *prefix, const char *fmt,
+                        va_list arg_ptr) GPGRT_ATTR_PRINTF(3,0);
+void gpgrt_logv_domain (const char *domain, int level, const char *prefix,
+                        const void *buffer, size_t length, const char *fmt,
+                        va_list arg_ptr) GPGRT_ATTR_PRINTF(6,0);
 void gpgrt_log_string (int level, const char *string);
 void gpgrt_log_bug (const char *fmt, ...)    GPGRT_ATTR_NR_PRINTF(1,2);
 void gpgrt_log_fatal (const char *fmt, ...)  GPGRT_ATTR_NR_PRINTF(1,2);
@@ -1707,14 +1881,70 @@ void _gpgrt_log_assert (const char *expr, const char *file, int line,
 
 
 /*
- * Spawn functions  (Not yet available)
+ * Spawn functions
  */
-#define GPGRT_SPAWN_NONBLOCK   16 /* Set the streams to non-blocking.      */
-#define GPGRT_SPAWN_RUN_ASFW   64 /* Use AllowSetForegroundWindow on W32.  */
-#define GPGRT_SPAWN_DETACHED  128 /* Start the process in the background.  */
+/* Child process is detached to parent process.  */
+#define GPGRT_PROCESS_DETACHED            (1 << 1)
+
+/* Child process has no console (Windows only).  */
+#define GPGRT_PROCESS_NO_CONSOLE          (1 << 2)
+
+/* Allow a detached process with uid != euid (Posix only).  */
+#define GPGRT_PROCESS_NO_EUID_CHECK       (1 << 3)
+
+/* Allow the child process to set the foreground window (Windows only).  */
+#define GPGRT_PROCESS_ALLOW_SET_FG        (1 << 4)
+
+/* Child process uses "NUL" device for its stdin/stdout/stderr
+ * (Windows only).  */
+#define GPGRT_PROCESS_STDIO_NUL           (1 << 5)
+
+/* Specify how to keep/connect standard fds.  */
+#define GPGRT_PROCESS_STDIN_PIPE          (1 << 8)
+#define GPGRT_PROCESS_STDOUT_PIPE         (1 << 9)
+#define GPGRT_PROCESS_STDERR_PIPE         (1 << 10)
+#define GPGRT_PROCESS_STDINOUT_SOCKETPAIR (1 << 11)
+#define GPGRT_PROCESS_STDIN_KEEP          (1 << 12)
+#define GPGRT_PROCESS_STDOUT_KEEP         (1 << 13)
+#define GPGRT_PROCESS_STDERR_KEEP         (1 << 14)
+#define GPGRT_PROCESS_STDFDS_SETTING  ( GPGRT_PROCESS_STDIN_PIPE  \
+  | GPGRT_PROCESS_STDOUT_PIPE         | GPGRT_PROCESS_STDERR_PIPE \
+  | GPGRT_PROCESS_STDINOUT_SOCKETPAIR | GPGRT_PROCESS_STDIN_KEEP  \
+  | GPGRT_PROCESS_STDOUT_KEEP         | GPGRT_PROCESS_STDERR_KEEP)
+
+#define GPGRT_PROCESS_STREAM_NONBLOCK     (1 << 16)
+
+typedef struct gpgrt_process *gpgrt_process_t;
+typedef struct gpgrt_spawn_actions *gpgrt_spawn_actions_t;
+gpg_err_code_t gpgrt_spawn_actions_new (gpgrt_spawn_actions_t *r_act);
+void gpgrt_spawn_actions_release (gpgrt_spawn_actions_t act);
+void gpgrt_spawn_actions_set_env_rev (gpgrt_spawn_actions_t,
+                                      const char *const*);
+void gpgrt_spawn_actions_set_environ (gpgrt_spawn_actions_t, char **);
+void gpgrt_spawn_actions_set_redirect (gpgrt_spawn_actions_t, int, int, int);
+void gpgrt_spawn_actions_set_inherit_fds (gpgrt_spawn_actions_t, const int *);
+void gpgrt_spawn_actions_set_atfork (gpgrt_spawn_actions_t, void (*)(void *), void *);
+
+enum gpgrt_process_requests
+  {
+    /* Portable requests */
+    GPGRT_PROCESS_NOP           = 0,
+    GPGRT_PROCESS_GET_PROC_ID   = 1,
+    GPGRT_PROCESS_GET_EXIT_ID   = 2,
+
+    /* POSIX only */
+    GPGRT_PROCESS_GET_PID       = 16,
+    GPGRT_PROCESS_GET_WSTATUS   = 17,
+    GPGRT_PROCESS_KILL          = 18,
+
+    /* Windows only */
+    GPGRT_PROCESS_GET_P_HANDLE  = 32,
+    GPGRT_PROCESS_GET_HANDLES   = 33,
+    GPGRT_PROCESS_GET_EXIT_CODE = 34,
+    GPGRT_PROCESS_KILL_WITH_EC  = 35
+  };
 
 #if 0
-
 /* Function and convenience macros to create pipes.  */
 gpg_err_code_t gpgrt_make_pipe (int filedes[2], gpgrt_stream_t *r_fp,
                                 int direction, int nonblock);
@@ -1722,43 +1952,34 @@ gpg_err_code_t gpgrt_make_pipe (int filedes[2], gpgrt_stream_t *r_fp,
 #define gpgrt_create_inbound_pipe(a,b,c)  gpgrt_make_pipe ((a), (b), -1,(c));
 #define gpgrt_create_outbound_pipe(a,b,c) gpgrt_make_pipe ((a), (b),  1,(c));
 
-
-/* Fork and exec PGMNAME.  */
-gpg_err_code_t gpgrt_spawn_process (const char *pgmname, const char *argv[],
-                                    int *execpt, void (*preexec)(void),
-                                    unsigned int flags,
-                                    gpgrt_stream_t *r_infp,
-                                    gpgrt_stream_t *r_outfp,
-                                    gpgrt_stream_t *r_errfp,
-                                    pid_t *pid);
-
-/* Fork and exec PGNNAME and connect the process to the given FDs.  */
-gpg_err_code_t gpgrt_spawn_process_fd (const char *pgmname, const char *argv[],
-                                       int infd, int outfd, int errfd,
-                                       pid_t *pid);
-
-/* Fork and exec PGMNAME as a detached process.  */
-gpg_err_code_t gpgrt_spawn_process_detached (const char *pgmname,
-                                             const char *argv[],
-                                             const char *envp[] );
-
-/* Wait for a single process.  */
-gpg_err_code_t gpgrt_wait_process (const char *pgmname, pid_t pid, int hang,
-                                int *r_exitcode);
-
-/* Wait for a multiple processes.  */
-gpg_err_code_t gpgrt_wait_processes (const char **pgmnames, pid_t *pids,
-                                     size_t count, int hang, int *r_exitcodes);
-
-/* Kill the process identified by PID.  */
-void gpgrt_kill_process (pid_t pid);
-
-/* Release process resources identified by PID.  */
-void gpgrt_release_process (pid_t pid);
-
+/* Close all file resources (descriptors), except KEEP_FDS. */
+void gpgrt_close_all_fds (int from, int *keep_fds);
 #endif /*0*/
 
+gpg_err_code_t gpgrt_process_spawn (const char *pgmname, const char *argv1[],
+                                    unsigned int flags,
+                                    gpgrt_spawn_actions_t act,
+                                    gpgrt_process_t *r_process);
 
+gpg_err_code_t gpgrt_process_terminate (gpgrt_process_t process);
+
+gpg_err_code_t gpgrt_process_get_fds (gpgrt_process_t process,
+                                      unsigned int flags,
+                                      int *r_fd_in, int *r_fd_out,
+                                      int *r_fd_err);
+
+gpg_err_code_t gpgrt_process_get_streams (gpgrt_process_t process,
+                                          unsigned int flags,
+                                          gpgrt_stream_t *r_fp_in,
+                                          gpgrt_stream_t *r_fp_out,
+                                          gpgrt_stream_t *r_fp_err);
+
+gpg_err_code_t gpgrt_process_ctl (gpgrt_process_t process,
+                                  unsigned int request, ...);
+
+gpg_err_code_t gpgrt_process_wait (gpgrt_process_t process, int hang);
+
+void gpgrt_process_release (gpgrt_process_t process);
 
 /*
  * Option parsing.
@@ -1815,7 +2036,10 @@ typedef struct
 #define ARGPARSE_FLAG_USER     2048  /* Use user config file.                */
 #define ARGPARSE_FLAG_VERBOSE  4096  /* Print additional argparser info.     */
 #define ARGPARSE_FLAG_USERVERS 8192  /* Try version-ed user config files.    */
-#define ARGPARSE_FLAG_WITHATTR 16384 /* Return attribute bits.               */
+#define ARGPARSE_FLAG_WITHATTR 16384 /* Return attribute bits.  (Make sure   */
+                                     /* to act upon ARGPARSE_OPT_IGNORE.)    */
+#define ARGPARSE_FLAG_COMMAND  32768 /* Allow commands w/o leading dashes.   */
+
 
 /* Constants for (gpgrt_argparse_t).err.  */
 #define ARGPARSE_PRINT_WARNING  1    /* Print a diagnostic.                  */
@@ -1994,6 +2218,14 @@ int gpgrt_cmp_version (const char *a, const char *b, int level);
  * returned.  The second function returns an absolute filename.  */
 char *gpgrt_fnameconcat (const char *first, ...) GPGRT_ATTR_SENTINEL(0);
 char *gpgrt_absfnameconcat (const char *first, ...) GPGRT_ATTR_SENTINEL(0);
+
+/* Same as gpgrt_fnameconcat but using flags for extensibility.  */
+#define GPGRT_FCONCAT_ABS     1  /* Expand to an absolute name.  */
+#define GPGRT_FCONCAT_TILDE   2  /* Enable tilde expansion.      */
+#define GPGRT_FCONCAT_SYSCONF 4  /* Prepend the sysconfdir.      */
+char *gpgrt_fconcat (unsigned int flags, const char *first,
+                     ...) GPGRT_ATTR_SENTINEL(0);
+
 
 
 #ifdef __cplusplus
