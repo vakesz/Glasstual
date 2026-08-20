@@ -112,7 +112,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* If the user has already selected the maximum, then return the current index set.
 	 This prevents the user clicking one item up and having the entire selection shift
 	 because the following logic works from highest to lowest. */
-	if (self.numberOfSelectedRows == maximumNumberOfSelections) {
+	if ((NSUInteger)self.numberOfSelectedRows == maximumNumberOfSelections) {
 		return self.selectedRowIndexes;
 	}
 
@@ -184,7 +184,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSMutableArray *groups = [NSMutableArray array];
 	
-	for (NSUInteger i = 0; i < self.numberOfRows; i++) {
+	for (NSInteger i = 0; i < self.numberOfRows; i++) {
 		if ([self levelForRow:i] == 0) {
 			id curRow = [self itemAtRow:i];
 
@@ -216,7 +216,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableArray *allRows = [NSMutableArray array];
 	
-	for (NSUInteger i = 0; i < self.numberOfRows; i++) {
+	for (NSInteger i = 0; i < self.numberOfRows; i++) {
 		id itemAtRow = [self itemAtRow:i];
 
 		id parentItem = [self parentForItem:itemAtRow];

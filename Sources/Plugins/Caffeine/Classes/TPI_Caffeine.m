@@ -40,8 +40,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TPI_Caffeine ()
-@property(nonatomic, strong) NSMutableArray<IRCClient *> *observedClients;
-@property(nonatomic, strong) NSProgress *progressObject;
+@property(nonatomic, strong, nullable) NSMutableArray<IRCClient *> *observedClients;
+@property(nonatomic, strong, nullable) NSProgress *progressObject;
 @property(nonatomic, strong) IBOutlet NSView *preferencesPaneView;
 @end
 

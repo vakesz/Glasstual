@@ -384,28 +384,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	[self.retryTimer stop];
 	[self.whoTimer stop];
 
-	self.autojoinTimer = nil;
-	self.autojoinNextJoinTimer = nil;
-	self.autojoinDelayedWarningTimer = nil;
-	self.isonTimer = nil;
-	self.pongTimer = nil;
-	self.reconnectTimer = nil;
-	self.retryTimer = nil;
-	self.whoTimer = nil;
-
-	self.addressBookMatchCache = nil;
-	self.batchMessages = nil;
-	self.cachedHighlights = nil;
-	self.channelListPrivate = nil;
-	self.channelsToAutojoin = nil;
-	self.logFile = nil;
-	self.socket = nil;
-	self.supportInfo = nil;
-	self.timedCommands = nil;
-	self.trackedUsers = nil;
-	self.requestedCommands = nil;
-	self.userListPrivate = nil;
-
 	[self cancelPerformRequests];
 }
 
@@ -3790,7 +3768,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 			numberOfChannelsToJoin = 1;
 		}
 
-		for (NSUInteger i = 0; i < numberOfChannelsToJoin; i++) {
+		for (NSInteger i = 0; i < numberOfChannelsToJoin; i++) {
 			NSString *channelName = [NSString stringWithFormat:@"#debug-channel-%lu", TXRandomNumber(9999999)];
 
 			[self send:@"JOIN", channelName, nil];
@@ -5228,7 +5206,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		}
 
 		if (outputValue) {
-			if (paddingWidth < 0 && ABS(paddingWidth) > outputValue.length) {
+			if (paddingWidth < 0 && (NSUInteger)ABS(paddingWidth) > outputValue.length) {
 				NSString *paddedString = [@"" stringByPaddingToLength:(ABS(paddingWidth) - outputValue.length)
 														   withString:@" "
 													  startingAtIndex:0];
@@ -5238,7 +5216,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 			[buffer appendString:outputValue];
 
-			if (paddingWidth > 0 && paddingWidth > outputValue.length) {
+			if (paddingWidth > 0 && (NSUInteger)paddingWidth > outputValue.length) {
 				NSString *paddedString = [@"" stringByPaddingToLength:(paddingWidth - outputValue.length)
 														   withString:@" "
 													  startingAtIndex:0];
@@ -5767,7 +5745,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	self.server = nil;
 
 	self.userHostmask = nil;
-	self.userNickname = nil;
+	self->_userNickname = nil; // Getter falls back to config nickname when unset
 
 	self.tryingNicknameNumber = 0;
 	self.tryingNicknameSentNickname = nil;
@@ -9688,7 +9666,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 			 Therefore, we cut after the first space to get the real, real name value. */
 		NSInteger realNameFirstSpace = [realName stringPosition:@" "];
 
-		if (realNameFirstSpace > 0 && realNameFirstSpace < realName.length) {
+		if (realNameFirstSpace > 0 && (NSUInteger)realNameFirstSpace < realName.length) {
 			realName = [realName substringAfterIndex:realNameFirstSpace];
 		}
 

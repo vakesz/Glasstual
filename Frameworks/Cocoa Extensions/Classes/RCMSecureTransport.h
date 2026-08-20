@@ -72,10 +72,10 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
  */
 + (tls_protocol_version_t)protocolTypeFromDeprecated:(SSLProtocol)deprecatedProtocol;
 + (nullable NSString *)descriptionForDeprecatedProtocol:(SSLProtocol)protocolVersion;
-@property (class, readonly) SSLProtocol minimumDeprecatedProtocol; // TLS 1.0
+@property (class, readonly) SSLProtocol minimumDeprecatedProtocol; // TLS 1.2
 COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
-@property (class, readonly) tls_protocol_version_t minimumProtocolType; // TLS 1.0
+@property (class, readonly) tls_protocol_version_t minimumProtocolType; // TLS 1.2
 
 + (nullable NSString *)descriptionForProtocolType:(tls_protocol_version_t)protocolType;
 

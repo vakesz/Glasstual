@@ -297,7 +297,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 - (void)navigateToSelection:(TDCChannelPropertiesSheetSelection)selection
 {
-	if (self.contentViewTabView.indexOfSelectedItem == selection) {
+	if (self.contentViewTabView.indexOfSelectedItem == (NSInteger)selection) {
 		return;
 	}
 

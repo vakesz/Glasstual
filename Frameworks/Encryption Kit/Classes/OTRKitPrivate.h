@@ -82,8 +82,8 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 @property (nonatomic, strong) dispatch_queue_t internalQueue;
-@property (nonatomic, strong) NSTimer *pollTimer;
-@property (nonatomic) OtrlUserState userState;
+@property (nonatomic, strong, nullable) NSTimer *pollTimer;
+@property (nonatomic, nullable) OtrlUserState userState;
 @property (nonatomic, strong) NSDictionary *protocolMaxSize;
 @property (nonatomic, copy, readwrite) NSString *dataPath;
 @end
