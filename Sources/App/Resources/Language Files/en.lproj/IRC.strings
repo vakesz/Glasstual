@@ -45,6 +45,7 @@
 "0r1-5l" = "Glasstual has prevented you from banning yourself on %@";
 
 "6rj-2r" = "Failed to send data to server. Not connected.";
+"ccs-1a" = "Connect command sent to %1$@: %2$@";
 
 /* Default G:Line reason */
 "56r-wn" = "35d Your behavior is not conducive to the desired environment";

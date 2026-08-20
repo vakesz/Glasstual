@@ -106,6 +106,7 @@ NS_ASSUME_NONNULL_BEGIN
 	defaults[@"sendWhoCommandRequestsToChannels"] = @(YES);
 	defaults[@"serverPort"] = @(IRCConnectionDefaultServerPort);
 	defaults[@"setInvisibleModeOnConnect"] = @(NO);
+	defaults[@"runConnectCommandsSilently"] = @(YES);
 	defaults[@"sidebarItemExpanded"] = @(YES);
 	defaults[@"sleepModeLeavingComment"] = TXTLS(@"BasicLanguage[qi7-5y]");
 	defaults[@"validateServerCertificateChain"] = @(YES);
@@ -315,6 +316,7 @@ NS_ASSUME_NONNULL_BEGIN
 						   forKey:@"sendAuthenticationRequestsToUserServ"];
 	[defaultsMutable assignBoolTo:&self->_sendWhoCommandRequestsToChannels forKey:@"sendWhoCommandRequestsToChannels"];
 	[defaultsMutable assignBoolTo:&self->_setInvisibleModeOnConnect forKey:@"setInvisibleModeOnConnect"];
+	[defaultsMutable assignBoolTo:&self->_runConnectCommandsSilently forKey:@"runConnectCommandsSilently"];
 	[defaultsMutable assignBoolTo:&self->_sidebarItemExpanded forKey:@"sidebarItemExpanded"];
 	[defaultsMutable assignBoolTo:&self->_validateServerCertificateChain forKey:@"validateServerCertificateChain"];
 	[defaultsMutable assignBoolTo:&self->_zncIgnoreConfiguredAutojoin forKey:@"zncIgnoreConfiguredAutojoin"];
@@ -725,6 +727,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[dic setBool:self.sendAuthenticationRequestsToUserServ forKey:@"sendAuthenticationRequestsToUserServ"];
 	[dic setBool:self.sendWhoCommandRequestsToChannels forKey:@"sendWhoCommandRequestsToChannels"];
 	[dic setBool:self.setInvisibleModeOnConnect forKey:@"setInvisibleModeOnConnect"];
+	[dic setBool:self.runConnectCommandsSilently forKey:@"runConnectCommandsSilently"];
 	[dic setBool:self.validateServerCertificateChain forKey:@"validateServerCertificateChain"];
 	[dic setBool:self.zncIgnoreConfiguredAutojoin forKey:@"zncIgnoreConfiguredAutojoin"];
 	[dic setBool:self.zncIgnorePlaybackNotifications forKey:@"zncIgnorePlaybackNotifications"];
@@ -1063,6 +1066,7 @@ NS_ASSUME_NONNULL_BEGIN
 @dynamic sendWhoCommandRequestsToChannels;
 @dynamic serverList;
 @dynamic setInvisibleModeOnConnect;
+@dynamic runConnectCommandsSilently;
 @dynamic sidebarItemExpanded;
 @dynamic sleepModeLeavingComment;
 @dynamic username;
@@ -1179,6 +1183,13 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self->_setInvisibleModeOnConnect != setInvisibleModeOnConnect) {
 		self->_setInvisibleModeOnConnect = setInvisibleModeOnConnect;
+	}
+}
+
+- (void)setRunConnectCommandsSilently:(BOOL)runConnectCommandsSilently
+{
+	if (self->_runConnectCommandsSilently != runConnectCommandsSilently) {
+		self->_runConnectCommandsSilently = runConnectCommandsSilently;
 	}
 }
 
