@@ -47,10 +47,15 @@ fileGroups:
   - README.md
   - Brewfile
 
-packages:
-  Sparkle:
-    url: https://github.com/sparkle-project/Sparkle
-    from: 2.9.6
+# Software updates: Sparkle is not linked. To enable it, set
+# GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED = 1 in Configurations/Base.xcconfig,
+# add the package back here
+#   packages:
+#     Sparkle: { url: https://github.com/sparkle-project/Sparkle, from: 2.9.6 }
+# and `- package: Sparkle` / `product: Sparkle` to the app's dependencies. The
+# release workflow must then re-sign Sparkle's nested tools (Autoupdate,
+# Updater.app, Installer.xpc, Downloader.xpc) with Developer ID, hardened
+# runtime and a secure timestamp before notarization.
 
 # ---------------------------------------------------------------------------
 # Reusable fragments
@@ -633,8 +638,6 @@ targets:
       - framework: Frameworks/Static Libraries/Libraries/GRMustache.framework
         embed: true
         codeSign: true
-      - package: Sparkle
-        product: Sparkle
       - target: HistoricLogFileManager
         embed: true
         codeSign: true
