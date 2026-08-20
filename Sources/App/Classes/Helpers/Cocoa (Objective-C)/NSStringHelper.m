@@ -41,6 +41,7 @@
 #import "IRCISupportInfo.h"
 #import "IRCColorFormat.h"
 #import "TPCPreferencesLocal.h"
+#import "TLOLinkParser.h"
 #import "TVCLogRenderer.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -311,7 +312,7 @@ NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncodi
 
 - (nullable NSString *)stringWithValidURIScheme
 {
-	return [AHHyperlinkScanner URLWithProperScheme:self];
+	return [TLOLinkParser URLWithProperScheme:self];
 }
 
 - (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont

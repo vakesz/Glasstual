@@ -206,43 +206,6 @@ targets:
       - sdk: WebKit.framework
       - sdk: Contacts.framework
 
-  AutoHyperlinks:
-    templates: [GlasstualFramework]
-    productName: AutoHyperlinks
-    settings:
-      base:
-        PRODUCT_NAME: AutoHyperlinks
-        PRODUCT_BUNDLE_IDENTIFIER: com.adiumX.AutoHyperlinks
-        INFOPLIST_FILE: Frameworks/Auto Hyperlinks/Resources/Info.plist
-        GCC_PREFIX_HEADER: Frameworks/Auto Hyperlinks/Classes/AutoHyperlinks.framework_Prefix.pch
-        # The flex generated scanner is third-party code with its own style.
-        WARNING_CFLAGS: $(inherited) -Wno-unused-function -Wno-sign-compare -Wno-unneeded-internal-declaration
-    sources:
-      - path: Frameworks/Auto Hyperlinks/Classes
-        excludes:
-          - AutoHyperlinks.framework_Prefix.pch
-          - AHHyperlinkScannerResultPrivate.h
-          - AHLinkLexer.h
-          - AHLinkLexer.l
-        headerVisibility: public
-      - path: Frameworks/Auto Hyperlinks/Classes/AHHyperlinkScannerResultPrivate.h
-        headerVisibility: project
-      - path: Frameworks/Auto Hyperlinks/Classes/AHLinkLexer.h
-        headerVisibility: project
-      # Compiled by Xcode's built-in Lex build rule (flex) into AHLinkLexer.yy.c.
-      - path: Frameworks/Auto Hyperlinks/Classes/AHLinkLexer.l
-        buildPhase: sources
-      - path: Frameworks/Auto Hyperlinks/Classes/AutoHyperlinks.framework_Prefix.pch
-        buildPhase: none
-      - path: Frameworks/Auto Hyperlinks/Resources/Info.plist
-        buildPhase: none
-      - path: Frameworks/Auto Hyperlinks/LICENSE.txt
-        buildPhase: resources
-      - path: Frameworks/Auto Hyperlinks/COPYRIGHT.txt
-        buildPhase: resources
-    dependencies:
-      - sdk: Foundation.framework
-
   EncryptionKit:
     templates: [GlasstualFramework]
     productName: EncryptionKit
@@ -662,9 +625,6 @@ targets:
       - sdk: UserNotifications.framework
       - sdk: WebKit.framework
       - target: CocoaExtensions
-        embed: true
-        codeSign: true
-      - target: AutoHyperlinks
         embed: true
         codeSign: true
       - target: EncryptionKit
