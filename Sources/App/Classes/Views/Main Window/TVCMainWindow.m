@@ -652,7 +652,35 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 - (void)loadWindowState
 {
+	[self migrateLegacyWindowFrame];
+
 	[self restoreSavedContentSplitViewState];
+}
+
+- (void)migrateLegacyWindowFrame
+{
+	/* Frames used to be saved by hand under a private key. Move a saved
+	 frame to the autosave name once so the window keeps its place on the
+	 first launch after the change. */
+	static NSString *const legacyKey = @"NSWindow Frame -> Internal (v3) -> Main Window";
+
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+
+	NSString *legacyFrame = [defaults stringForKey:legacyKey];
+
+	if (legacyFrame == nil) {
+		return;
+	}
+
+	NSString *autosaveName = self.frameAutosaveName;
+
+	if (autosaveName.length > 0 && [defaults stringForKey:[@"NSWindow Frame " stringByAppendingString:autosaveName]] == nil) {
+		[self setFrameFromString:legacyFrame];
+
+		[self saveFrameUsingName:autosaveName];
+	}
+
+	[defaults removeObjectForKey:legacyKey];
 }
 
 - (void)saveWindowState
