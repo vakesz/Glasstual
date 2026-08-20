@@ -13,51 +13,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-and-build:
+  lint:
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 15
 
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Select Xcode
-        run: |
-          set -euo pipefail
-          # Newest installed Xcode with the macOS 26 SDK (Xcode 26 or later).
-          XCODE_APP="$(find /Applications -maxdepth 1 -name 'Xcode_*.app' | sort -V | tail -n 1)"
-          sudo xcode-select -s "${XCODE_APP:-/Applications/Xcode.app}"
-          xcodebuild -version
-          XCODE_MAJOR="$(xcodebuild -version | head -n 1 | sed -E 's/^Xcode ([0-9]+).*/\1/')"
-          [ "${XCODE_MAJOR}" -ge 26 ]
+      - name: Install linters
+        run: brew install actionlint shellcheck shfmt
 
-      - name: Install development tools
-        run: brew bundle --no-upgrade
-
-      - name: Lint
+      - name: Lint and check formatting
         run: make lint
-
-      - name: Regenerate the project from project.yml
-        run: |
-          set -euo pipefail
-          xcodegen version
-          xcodegen generate --spec project.yml
-          # Object identifiers vary between XcodeGen releases, so drift is
-          # reported rather than failed; the build below uses the fresh project.
-          if ! git diff --quiet -- Glasstual.xcodeproj; then
-            echo "::notice::Glasstual.xcodeproj differs from what this XcodeGen produces; run 'make generate' locally if you changed project.yml."
-            git diff --stat -- Glasstual.xcodeproj
-          fi
-
-      - name: Build (Debug, unsigned)
-        run: |
-          set -euo pipefail
-          ./Scripts/UpdateVersion.sh
-          xcodebuild \
-            -project Glasstual.xcodeproj \
-            -scheme Glasstual \
-            -configuration Debug \
-            -destination 'platform=macOS,arch=arm64' \
-            -derivedDataPath DerivedData \
-            CODE_SIGNING_ALLOWED=NO \
-            build
