@@ -283,9 +283,7 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 	return referenceObject;
 }
 
-/* Stateful properties may either define "activeWindow" and
- "inactiveWindow" entries, or be a plain value which is then used
- for both states. Semantic system colors make the latter the norm. */
+/* Stateful properties define "activeWindow" and "inactiveWindow" entries. */
 - (nullable id)_statefulValue:(NSDictionary<NSString *, id> *)referenceObject
 			  forActiveWindow:(BOOL)forActiveWindow
 				 expectedType:(Class)expectedType
@@ -296,15 +294,26 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 
 	id stateValue = referenceObject[stateKey];
 
-	if (stateValue == nil && referenceObject[@"activeWindow"] == nil && referenceObject[@"inactiveWindow"] == nil) {
-		stateValue = referenceObject;
-	}
-
 	if (stateValue == nil || [stateValue isKindOfClass:expectedType] == NO) {
 		return nil;
 	}
 
 	return stateValue;
+}
+
+/* Stateful dictionary properties may either define "activeWindow" and
+ "inactiveWindow" entries, or be a plain dictionary which is then used
+ for both states. Semantic system colors make the latter the norm. */
+- (nullable NSDictionary<NSString *, id> *)_statefulDictionary:(NSDictionary<NSString *, id> *)referenceObject
+											   forActiveWindow:(BOOL)forActiveWindow
+{
+	NSParameterAssert(referenceObject != nil);
+
+	if (referenceObject[@"activeWindow"] == nil && referenceObject[@"inactiveWindow"] == nil) {
+		return referenceObject;
+	}
+
+	return [self _statefulValue:referenceObject forActiveWindow:forActiveWindow expectedType:[NSDictionary class]];
 }
 
 #pragma mark -
@@ -363,9 +372,7 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 		return nil;
 	}
 
-	NSDictionary *colorProperties = [self _statefulValue:referenceObject
-										 forActiveWindow:forActiveWindow
-											expectedType:[NSDictionary class]];
+	NSDictionary *colorProperties = [self _statefulDictionary:referenceObject forActiveWindow:forActiveWindow];
 
 	if (colorProperties == nil) {
 		return nil;
@@ -589,9 +596,7 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 		return nil;
 	}
 
-	NSDictionary *fontProperties = [self _statefulValue:referenceObject
-										forActiveWindow:forActiveWindow
-										   expectedType:[NSDictionary class]];
+	NSDictionary *fontProperties = [self _statefulDictionary:referenceObject forActiveWindow:forActiveWindow];
 
 	if (fontProperties == nil) {
 		return nil;
@@ -688,9 +693,7 @@ typedef NS_ENUM(NSUInteger, TVCListAppearanceImageType) {
 		return nil;
 	}
 
-	NSDictionary *imageProperties = [self _statefulValue:referenceObject
-										 forActiveWindow:forActiveWindow
-											expectedType:[NSDictionary class]];
+	NSDictionary *imageProperties = [self _statefulDictionary:referenceObject forActiveWindow:forActiveWindow];
 
 	if (imageProperties == nil) {
 		return nil;

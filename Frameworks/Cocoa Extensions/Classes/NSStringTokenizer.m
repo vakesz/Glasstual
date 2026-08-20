@@ -403,7 +403,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	id objectId = (id <CSStringTokenizerString>)self.trim;
 
-	[NSString _getTokenFromWhitespaceGroup:objectId withBlock:^(id token, NSRange tokenRange, NSRange deletionRange) {
+	[NSString _getTokenFromWhitespaceGroup:objectId withBlock:^(id _Nullable token, NSRange tokenRange, NSRange deletionRange) {
 		tokenOut = token;
 	}];
 
@@ -427,7 +427,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	__block NSRange deletionRangeOut;
 
-	[self getTokenFromQuoteGroupWithBlock:^(NSString *token, NSRange tokenRange, NSRange deletionRange) {
+	[self getTokenFromQuoteGroupWithBlock:^(NSString * _Nullable token, NSRange tokenRange, NSRange deletionRange) {
 		tokenOut = token;
 
 		deletionRangeOut = deletionRange;
@@ -450,7 +450,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	__block NSRange deletionRangeOut;
 
-	[self getTokenFromWhitespaceGroupWithBlock:^(NSString *token, NSRange tokenRange, NSRange deletionRange) {
+	[self getTokenFromWhitespaceGroupWithBlock:^(NSString * _Nullable token, NSRange tokenRange, NSRange deletionRange) {
 		tokenOut = token;
 
 		deletionRangeOut = deletionRange;
@@ -524,7 +524,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	__block NSRange deletionRangeOut;
 
-	[self getTokenFromQuoteGroupWithBlock:^(NSAttributedString *token, NSRange tokenRange, NSRange deletionRange) {
+	[self getTokenFromQuoteGroupWithBlock:^(NSAttributedString * _Nullable token, NSRange tokenRange, NSRange deletionRange) {
 		tokenOut = token;
 
 		deletionRangeOut = deletionRange;
@@ -560,7 +560,7 @@ NS_ASSUME_NONNULL_BEGIN
 	__block NSRange tokenRangeOut;
 	__block NSRange deletionRangeOut;
 
-	[self getTokenFromWhitespaceGroupWithBlock:^(NSString *token, NSRange tokenRange, NSRange deletionRange) {
+	[self getTokenFromWhitespaceGroupWithBlock:^(NSString * _Nullable token, NSRange tokenRange, NSRange deletionRange) {
 		tokenOut = token;
 
 		tokenRangeOut = tokenRange;

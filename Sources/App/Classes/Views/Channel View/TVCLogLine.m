@@ -79,19 +79,16 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 /* The archive already holds a fully formed line, so the receiver that +alloc
- produced is replaced by it. Assigning to self lets ARC release the receiver. */
+ produced is discarded in favor of it. Returning a different object from an
+ initializer is permitted under ARC, which releases the original receiver. */
+DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN
 - (nullable instancetype)initWithData:(NSData *)data
 {
 	NSParameterAssert(data != nil);
 
-	if ((self = [super init]) == nil) {
-		return nil;
-	}
-
-	self = [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:data error:NULL];
-
-	return self;
+	return [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:data error:NULL];
 }
+DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 + (nullable instancetype)logLineWithData:(NSData *)data
 {

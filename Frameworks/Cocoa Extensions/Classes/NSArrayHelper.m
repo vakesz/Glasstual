@@ -600,11 +600,13 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 		NSArray *oldArray = [self copy];
 
 		[oldArray enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop) {
+#ifndef NS_BLOCK_ASSERTIONS
 			NSMethodSignature *methodSignature = [object methodSignatureForSelector:performSelector];
 
 			NSAssert1((*(methodSignature.methodReturnType) == '@'),
 				@"Selector '%@' does not return an object value",
 				NSStringFromSelector(performSelector));
+#endif
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warc-performSelector-leaks"

@@ -77,7 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSNumber *customPositioning = objc_getAssociatedObject(self, @selector(invalidatingBackgroundForSelection));
 
-	if (customPositioning) {
+	if (customPositioning != nil) {
 		return customPositioning.boolValue;
 	}
 

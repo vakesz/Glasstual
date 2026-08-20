@@ -110,7 +110,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Assigned object is an NSNumber which means we have to translate to BOOL */
 	NSNumber *customPositioning = objc_getAssociatedObject(self, @selector(usesCustomTitlebarTitlePositioning));
 
-	if (customPositioning) {
+	if (customPositioning != nil) {
 		return customPositioning.boolValue;
 	}
 

@@ -530,6 +530,10 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 											  channel.name.safeFilename];
 	}
 
+	if (basePath == nil) {
+		return nil;
+	}
+
 	return [sourcePath stringByAppendingPathComponent:basePath];
 }
 

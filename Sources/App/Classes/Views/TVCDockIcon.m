@@ -36,6 +36,8 @@
  *********************************************************************** */
 
 #import "TXMasterController.h"
+#import "TXGlobalModels.h"
+#import "TLOLocalization.h"
 #import "TPCPreferencesLocal.h"
 #import "IRCClient.h"
 #import "IRCChannel.h"
@@ -154,10 +156,10 @@ static NSInteger _cachedMessageCount = (-1);
 + (NSString *)badgeStringForCount:(NSUInteger)count
 {
 	if (count > 9999) {
-		return @"9999+";
+		return TXTLS(@"TVCMainWindow[dki-bg]", TXFormattedNumber(9999));
 	}
 
-	return [NSString stringWithInteger:count];
+	return TXFormattedNumber(count);
 }
 
 @end
