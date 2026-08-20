@@ -62,6 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak) IBOutlet NSLayoutConstraint *keyboardShortcutFieldOffsetConstraint;
 @property(nonatomic, weak) IBOutlet NSTextField *unreadCountDescriptionField;
 @property(nonatomic, assign) BOOL staticLabelsPopulated;
+@property(nonatomic, strong, nullable) IRCChannel *observedChannel;
 @property(readonly) TDCChannelSpotlightAppearance *userInterfaceObjects;
 @property(readonly) TDCChannelSpotlightController *controller;
 @property(readonly) TDCChannelSpotlightSearchResultRowView *rowCell;
@@ -272,25 +273,77 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[super viewDidMoveToWindow];
 
-	TDCChannelSpotlightSearchResult *searchResult = self.objectValue;
+	[self updateObservedChannel];
+}
 
-	IRCChannel *channel = searchResult.channel;
+- (void)setObjectValue:(nullable id)objectValue
+{
+	[super setObjectValue:objectValue];
 
-	if (self.window == nil) {
-		[channel removeObserver:self forKeyPath:@"nicknameHighlightCount"];
-		[channel removeObserver:self forKeyPath:@"treeUnreadCount"];
-	} else {
-		[channel addObserver:self
-				  forKeyPath:@"nicknameHighlightCount"
-					 options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew)
-					 context:nil];
-		[channel addObserver:self
-				  forKeyPath:@"treeUnreadCount"
-					 options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew)
-					 context:nil];
+	/* Cells are reused. The channel this cell represents can change
+	 after the cell has already been placed in a window, so the
+	 observation must follow the object value, not the window. */
+	[self updateObservedChannel];
+}
 
-		[self setInitialValues];
+- (void)prepareForReuse
+{
+	[super prepareForReuse];
+
+	[self stopObservingChannel];
+}
+
+- (void)dealloc
+{
+	[self stopObservingChannel];
+}
+
+- (void)updateObservedChannel
+{
+	IRCChannel *channel = nil;
+
+	if (self.window != nil) {
+		TDCChannelSpotlightSearchResult *searchResult = self.objectValue;
+
+		channel = searchResult.channel;
 	}
+
+	if (channel == self.observedChannel) {
+		return;
+	}
+
+	[self stopObservingChannel];
+
+	if (channel == nil) {
+		return;
+	}
+
+	self.observedChannel = channel;
+
+	[channel addObserver:self
+			  forKeyPath:@"nicknameHighlightCount"
+				 options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew)
+				 context:nil];
+	[channel addObserver:self
+			  forKeyPath:@"treeUnreadCount"
+				 options:(NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew)
+				 context:nil];
+
+	[self setInitialValues];
+}
+
+- (void)stopObservingChannel
+{
+	IRCChannel *channel = self.observedChannel;
+
+	if (channel == nil) {
+		return;
+	}
+
+	[channel removeObserver:self forKeyPath:@"nicknameHighlightCount"];
+	[channel removeObserver:self forKeyPath:@"treeUnreadCount"];
+
+	self.observedChannel = nil;
 }
 
 - (void)observeValueForKeyPath:(nullable NSString *)keyPath

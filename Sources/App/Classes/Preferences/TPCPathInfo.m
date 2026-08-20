@@ -608,29 +608,37 @@ static NSURL *_Nullable _transcriptFolderURL = nil;
 											bookmarkDataIsStale:&resolvedBookmarkIsStale
 														  error:&resolvedBookmarkError];
 
+	if (resolvedBookmark == nil) {
+		LogToConsoleError("Error resolving bookmark for URL: %{public}@", resolvedBookmarkError.localizedDescription);
+
+		[self warnUserAboutStaleTranscriptFolderURL];
+
+		return;
+	}
+
 	if (resolvedBookmarkIsStale) {
 		/* "On return, if YES, the bookmark data is stale. 
 		 Your app should create a new bookmark using the 
 		 returned URL and use it in place of any stored 
 		 copies of the existing bookmark." */
-		NSData *newBookmark = [resolvedBookmark bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
-										 includingResourceValuesForKeys:nil
-														  relativeToURL:nil
-																  error:NULL];
+		/* Creating a security scoped bookmark requires that the
+		 resource is being accessed, so access it for the duration. */
+		NSData *newBookmark = nil;
+
+		if ([resolvedBookmark startAccessingSecurityScopedResource]) {
+			newBookmark = [resolvedBookmark bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
+									 includingResourceValuesForKeys:nil
+													  relativeToURL:nil
+															  error:NULL];
+
+			[resolvedBookmark stopAccessingSecurityScopedResource];
+		}
 
 		if (newBookmark) {
 			[self setTranscriptFolderURL:newBookmark];
 		} else {
 			[self warnUserAboutStaleTranscriptFolderURL];
 		}
-
-		return;
-	}
-
-	if (resolvedBookmark == nil) {
-		LogToConsoleError("Error creating bookmark for URL: %{public}@", resolvedBookmarkError.localizedDescription);
-
-		[self warnUserAboutStaleTranscriptFolderURL];
 
 		return;
 	}

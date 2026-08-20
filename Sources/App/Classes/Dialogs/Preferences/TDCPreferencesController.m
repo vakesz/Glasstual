@@ -178,6 +178,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak) IBOutlet NSTableView *installedScriptsTable;
 @property(nonatomic, weak) IBOutlet NSTableView *highlightKeywordsTable;
 @property(nonatomic, weak) IBOutlet NSTextField *fileTransferManuallyEnteredIPAddressTextField;
+@property(nonatomic, assign) BOOL fontPanelIsOwned;
+@property(nonatomic, assign, nullable) SEL previousFontManagerAction;
 @property(nonatomic, strong) IBOutlet NSView *contentViewGeneral;
 @property(nonatomic, strong) IBOutlet NSView *contentViewHighlights;
 @property(nonatomic, strong) IBOutlet NSView *contentViewNotifications;
@@ -1135,43 +1137,12 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 	TDCFileTransferDialog *transferController = [TXSharedApplication sharedFileTransferDialog];
 
 	if (self.fileTransferDownloadDestinationButton.selectedTag == 2) {
-		NSOpenPanel *d = [NSOpenPanel openPanel];
+		[self chooseFolderWithButton:self.fileTransferDownloadDestinationButton
+					 completionBlock:^(NSData *bookmark) {
+						 [transferController setDownloadDestinationURL:bookmark];
 
-		d.allowsMultipleSelection = NO;
-		d.canChooseDirectories = YES;
-		d.canChooseFiles = NO;
-		d.canCreateDirectories = YES;
-		d.resolvesAliases = YES;
-
-		d.prompt = TXTLS(@"Prompts[xne-79]");
-
-		[d beginSheetModalForWindow:self.window
-				  completionHandler:^(NSInteger returnCode) {
-					  [self.fileTransferDownloadDestinationButton selectItemAtIndex:0];
-
-					  if (returnCode != NSModalResponseOK) {
-						  return;
-					  }
-
-					  NSURL *path = d.URLs[0];
-
-					  NSError *bookmarkError = nil;
-
-					  NSData *bookmark = [path bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
-										includingResourceValuesForKeys:nil
-														 relativeToURL:nil
-																 error:&bookmarkError];
-
-					  if (bookmark == nil) {
-						  LogToConsoleError("Error creating bookmark for URL ('%{public}@'): %{public}@",
-											path.standardizedTildePath,
-											bookmarkError.localizedDescription);
-					  }
-
-					  [transferController setDownloadDestinationURL:bookmark];
-
-					  [self updateFileTransferDownloadDestinationFolder];
-				  }];
+						 [self updateFileTransferDownloadDestinationFolder];
+					 }];
 	} else if (self.fileTransferDownloadDestinationButton.selectedTag == 3) {
 		[self.fileTransferDownloadDestinationButton selectItemAtIndex:0];
 
@@ -1179,6 +1150,57 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 		[self updateFileTransferDownloadDestinationFolder];
 	}
+}
+
+#pragma mark -
+#pragma mark Folder Selection
+
+/* Presents a folder chooser as a sheet. The popup button is reset to
+ its first item once the panel closes. The completion block is only
+ invoked when the user picked a folder and a security scoped bookmark
+ could be created for it. */
+- (void)chooseFolderWithButton:(NSPopUpButton *)popupButton completionBlock:(void (^)(NSData *bookmark))completionBlock
+{
+	NSParameterAssert(popupButton != nil);
+	NSParameterAssert(completionBlock != nil);
+
+	NSOpenPanel *d = [NSOpenPanel openPanel];
+
+	d.allowsMultipleSelection = NO;
+	d.canChooseDirectories = YES;
+	d.canChooseFiles = NO;
+	d.canCreateDirectories = YES;
+	d.resolvesAliases = YES;
+
+	d.prompt = TXTLS(@"Prompts[xne-79]");
+
+	[d beginSheetModalForWindow:self.window
+			  completionHandler:^(NSInteger returnCode) {
+				  [popupButton selectItemAtIndex:0];
+
+				  if (returnCode != NSModalResponseOK) {
+					  return;
+				  }
+
+				  NSURL *path = d.URLs[0];
+
+				  NSError *bookmarkError = nil;
+
+				  NSData *bookmark = [path bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
+									includingResourceValuesForKeys:nil
+													 relativeToURL:nil
+															 error:&bookmarkError];
+
+				  if (bookmark == nil) {
+					  LogToConsoleError("Error creating bookmark for URL ('%{public}@'): %{public}@",
+										path.standardizedTildePath,
+										bookmarkError.localizedDescription);
+
+					  return;
+				  }
+
+				  completionBlock(bookmark);
+			  }];
 }
 
 #pragma mark -
@@ -1208,43 +1230,10 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 - (void)onChangedTranscriptFolder:(nullable id)sender
 {
 	if (self.transcriptFolderButton.selectedTag == 2) {
-		NSOpenPanel *d = [NSOpenPanel openPanel];
-
-		d.allowsMultipleSelection = NO;
-		d.canChooseDirectories = YES;
-		d.canChooseFiles = NO;
-		d.canCreateDirectories = YES;
-		d.resolvesAliases = YES;
-
-		d.prompt = TXTLS(@"Prompts[xne-79]");
-
-		[d beginSheetModalForWindow:self.window
-				  completionHandler:^(NSInteger returnCode) {
-					  [self.transcriptFolderButton selectItemAtIndex:0];
-
-					  if (returnCode != NSModalResponseOK) {
-						  return;
-					  }
-
-					  NSURL *path = d.URLs[0];
-
-					  NSError *bookmarkError = nil;
-
-					  NSData *bookmark = [path bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
-										includingResourceValuesForKeys:nil
-														 relativeToURL:nil
-																 error:&bookmarkError];
-
-					  if (bookmark == nil) {
-						  LogToConsoleError("Error creating bookmark for URL ('%{public}@'): %{public}@",
-											path.standardizedTildePath,
-											bookmarkError.localizedDescription);
-
-						  return;
-					  }
-
-					  [self setTranscriptFolderURL:bookmark];
-				  }];
+		[self chooseFolderWithButton:self.transcriptFolderButton
+					 completionBlock:^(NSData *bookmark) {
+						 [self setTranscriptFolderURL:bookmark];
+					 }];
 	} else if (self.transcriptFolderButton.selectedTag == 3) {
 		[self.transcriptFolderButton selectItemAtIndex:0];
 
@@ -1353,7 +1342,32 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 
 	[RZFontManager() orderFrontFontPanel:self];
 
+	/* The font manager is shared. Remember its previous action so it
+	 can be restored when this window closes. */
+	if (self.fontPanelIsOwned == NO) {
+		self.previousFontManagerAction = RZFontManager().action;
+
+		self.fontPanelIsOwned = YES;
+	}
+
 	RZFontManager().action = @selector(onChangedChannelViewFont:);
+}
+
+- (void)releaseFontPanel
+{
+	if (self.fontPanelIsOwned == NO) {
+		return;
+	}
+
+	self.fontPanelIsOwned = NO;
+
+	RZFontManager().action = self.previousFontManagerAction;
+
+	self.previousFontManagerAction = NULL;
+
+	if ([NSFontPanel sharedFontPanelExists]) {
+		[[NSFontPanel sharedFontPanel] orderOut:self];
+	}
 }
 
 - (void)onChangedChannelViewFont:(NSFontManager *)sender
@@ -1760,6 +1774,8 @@ static const TDCPreferencesSettingsPane *TDCPreferencesSettingsPaneForIdentifier
 - (void)windowWillClose:(NSNotification *)note
 {
 	[RZNotificationCenter() removeObserver:self];
+
+	[self releaseFontPanel];
 
 	[self saveWindowFrame];
 

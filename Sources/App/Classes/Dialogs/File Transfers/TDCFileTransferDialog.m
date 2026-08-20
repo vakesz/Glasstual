@@ -561,9 +561,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateMaintenanceTimer
 {
-	XRPerformBlockSynchronouslyOnMainQueue(^{
+	/* Called from transfer controllers on their socket dispatch queue.
+	 The main thread may be waiting on that queue, so never block here. */
+	if ([NSThread isMainThread]) {
 		[self updateMaintenanceTimerOnMainThread];
-	});
+	} else {
+		XRPerformBlockAsynchronouslyOnMainQueue(^{
+			[self updateMaintenanceTimerOnMainThread];
+		});
+	}
 }
 
 - (void)onMaintenanceTimer
@@ -885,16 +891,48 @@ NS_ASSUME_NONNULL_BEGIN
 														  error:&resolvedBookmarkError];
 
 	if (resolvedBookmark == nil) {
-		LogToConsoleError("Error creating bookmark for URL: %{public}@", resolvedBookmarkError.localizedDescription);
+		LogToConsoleError("Error resolving bookmark for URL: %{public}@", resolvedBookmarkError.localizedDescription);
+
+		return;
+	}
+
+	if (resolvedBookmarkIsStale) {
+		/* The bookmark must be recreated from the resolved URL and the
+		 stored copy replaced. Creating a security scoped bookmark
+		 requires that the resource is being accessed. */
+		NSData *newBookmark = nil;
+
+		if ([resolvedBookmark startAccessingSecurityScopedResource]) {
+			newBookmark = [resolvedBookmark bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
+									 includingResourceValuesForKeys:nil
+													  relativeToURL:nil
+															  error:NULL];
+
+			[resolvedBookmark stopAccessingSecurityScopedResource];
+		}
+
+		if (newBookmark == nil) {
+			LogToConsoleError("Failed to refresh stale bookmark");
+
+			return;
+		}
+
+		/* -setDownloadDestinationURL: stores the new bookmark and
+		 calls back into this method, which then takes the path below. */
+		[self setDownloadDestinationURL:newBookmark];
+
+		return;
+	}
+
+	/* Only retain the URL when access was granted so that the
+	 -stopAccessingSecurityScopedResource calls remain balanced. */
+	if ([resolvedBookmark startAccessingSecurityScopedResource] == NO) {
+		LogToConsoleError("Failed to access bookmark");
 
 		return;
 	}
 
 	self.downloadDestinationURLPrivate = resolvedBookmark;
-
-	if ([self.downloadDestinationURLPrivate startAccessingSecurityScopedResource] == NO) {
-		LogToConsoleError("Failed to access bookmark");
-	}
 }
 
 - (void)setDownloadDestinationURL:(nullable NSData *)downloadDestinationURL

@@ -42,7 +42,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCPreferencesUserStyleSheet ()
-@property(nonatomic, unsafe_unretained) IBOutlet NSTextView *rulesTextView;
+@property(nonatomic, weak) IBOutlet NSTextView *rulesTextView;
 @property(nonatomic, assign) BOOL rulesChanged;
 @property(nonatomic, copy, readonly) NSString *defaultRules;
 @end

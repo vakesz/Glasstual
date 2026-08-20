@@ -73,13 +73,19 @@ NS_ASSUME_NONNULL_BEGIN
 		completionHandler:^(NSModalResponse returnCode) {
 			[self sheetDidEndWithReturnCode:returnCode];
 		}];
-
-	self.sheet.contentView.prefersCompactControlSizeMetrics = YES;
 }
 
 - (void)endSheet
 {
-	[self.window endSheet:self.sheet];
+	/* End the sheet on whichever window it was begun on, which is not
+	 necessarily self.window when -startSheetWithWindow: was used. */
+	NSWindow *parentWindow = self.sheet.sheetParent;
+
+	if (parentWindow == nil) {
+		parentWindow = self.window;
+	}
+
+	[parentWindow endSheet:self.sheet];
 }
 
 - (void)sheetDidEndWithReturnCode:(NSInteger)returnCode

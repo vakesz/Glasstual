@@ -35,6 +35,8 @@
  *
  *********************************************************************** */
 
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
 #import "TDCAlert.h"
 #import "TPCApplicationInfo.h"
 #import "TPCPathInfo.h"
@@ -300,19 +302,49 @@ NSString *const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod = @"s
 	return YES;
 }
 
+/* These match CFBundleTypeName of the document types declared in Info.plist */
+#define _scriptDocumentTypeName @"Glasstual IRC Client Script"
+#define _pluginDocumentTypeName @"Glasstual IRC Client Extension"
+
 - (BOOL)readFromURL:(NSURL *)url ofType:(NSString *)typeName error:(NSError **)outError
 {
-	NSString *filePath = url.filePathURL.absoluteString;
-
-	if ([filePath hasSuffix:TPCResourceManagerScriptDocumentTypeExtension]) {
+	/* The document type name handed to us by NSDocumentController is
+	 authoritative. The uniform type of the file is consulted as a
+	 fallback so that the file's actual type, not its path, decides. */
+	if ([typeName isEqualToString:_scriptDocumentTypeName]) {
 		[self performImportOfScriptFile:url];
 
 		return YES;
 	}
 
-	NSString *pluginSuffix = [TPCResourceManagerBundleDocumentTypeExtension stringByAppendingString:@"/"];
+	if ([typeName isEqualToString:_pluginDocumentTypeName]) {
+		[self performImportOfPluginFile:url];
 
-	if ([filePath hasSuffix:pluginSuffix]) {
+		return YES;
+	}
+
+	UTType *contentType = nil;
+
+	[url getResourceValue:&contentType forKey:NSURLContentTypeKey error:NULL];
+
+	if (contentType == nil) {
+		contentType = [UTType typeWithFilenameExtension:url.pathExtension];
+	}
+
+	if (contentType == nil) {
+		return NO;
+	}
+
+	UTType *scriptType = [UTType typeWithFilenameExtension:TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod];
+
+	if (scriptType && [contentType conformsToType:scriptType]) {
+		[self performImportOfScriptFile:url];
+
+		return YES;
+	}
+
+	if ([contentType conformsToType:UTTypeBundle] &&
+		[url.pathExtension isEqualToString:TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod]) {
 		[self performImportOfPluginFile:url];
 
 		return YES;
@@ -320,6 +352,9 @@ NSString *const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod = @"s
 
 	return NO;
 }
+
+#undef _scriptDocumentTypeName
+#undef _pluginDocumentTypeName
 
 #pragma mark -
 #pragma mark Custom Plugin Files
