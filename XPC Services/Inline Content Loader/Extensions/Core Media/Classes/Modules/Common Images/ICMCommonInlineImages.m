@@ -138,7 +138,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		if (s.alphabeticNumericOnly) {
-			return [NSString stringWithFormat:@"http://twitpic.com/show/large/%@", s];
+			return [NSString stringWithFormat:@"https://twitpic.com/show/large/%@", s];
 		}
 	} else if ([urlHost isDomainOrSubdomain:@"instagram.com"] || [urlHost isDomainOrSubdomain:@"instagr.am"]) {
 		if ([urlPath hasPrefix:@"/p/"] == NO) {
@@ -189,7 +189,7 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *userIdHead = [userId substringToIndex:1];
 		NSString *photoIdHead = [photoId substringToIndex:8];
 
-		return [NSString stringWithFormat:@"http://img.f.hatena.ne.jp/images/fotolife/%@/%@/%@/%@.jpg",
+		return [NSString stringWithFormat:@"https://img.f.hatena.ne.jp/images/fotolife/%@/%@/%@/%@.jpg",
 										  userIdHead,
 										  userId,
 										  photoIdHead,
@@ -202,7 +202,7 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *s = [urlPath substringFromIndex:1];
 
 		if (s.alphabeticNumericOnly) {
-			return [NSString stringWithFormat:@"http://puu.sh/%@.jpg", s];
+			return [NSString stringWithFormat:@"https://puu.sh/%@.jpg", s];
 		}
 	} else if ([urlHost isDomainOrSubdomain:@"d.pr"]) {
 		if ([urlPath hasPrefix:@"/i/"] == NO) {
@@ -212,7 +212,7 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *s = [urlPath substringFromIndex:3];
 
 		if (s.alphabeticNumericOnly) {
-			return [NSString stringWithFormat:@"http://d.pr/i/%@.png", s];
+			return [NSString stringWithFormat:@"https://d.pr/i/%@.png", s];
 		}
 	} else if ([urlHost isDomainOrSubdomain:@"nicovideo.jp"] || [urlHost isDomain:@"nico.ms"]) {
 		if (urlPath.length == 0) {
@@ -240,7 +240,7 @@ NS_ASSUME_NONNULL_BEGIN
 		long long videoNumber = [videoId substringFromIndex:2].longLongValue;
 
 		return [NSString
-			stringWithFormat:@"http://tn-skr%lli.smilevideo.jp/smile?i=%lli", ((videoNumber % 4) + 1), videoNumber];
+			stringWithFormat:@"https://tn-skr%lli.smilevideo.jp/smile?i=%lli", ((videoNumber % 4) + 1), videoNumber];
 	} else if ([urlHost isDomain:@"i.reddituploads.com"]) {
 		if (urlPath.length == 0) {
 			return nil;
@@ -280,7 +280,7 @@ NS_ASSUME_NONNULL_BEGIN
 			videoId = [videoId substringToIndex:11];
 		}
 
-		return [NSString stringWithFormat:@"http://i.ytimg.com/vi/%@/mqdefault.jpg", videoId];
+		return [NSString stringWithFormat:@"https://i.ytimg.com/vi/%@/mqdefault.jpg", videoId];
 	} else if ([urlHost isDomainOrSubdomain:@"speedtest.net"]) {
 		NSArray *components = [urlPath componentsSeparatedByString:@"/"];
 
@@ -298,7 +298,7 @@ NS_ASSUME_NONNULL_BEGIN
 			return nil;
 		}
 
-		return [NSString stringWithFormat:@"http://www.speedtest.net/result/%@.png", resultId];
+		return [NSString stringWithFormat:@"https://www.speedtest.net/result/%@.png", resultId];
 	} else if ([urlHost isDomain:@"fuelrats.cloud"]) {
 		if ([urlPath hasPrefix:@"/s/"] == NO) {
 			return nil;

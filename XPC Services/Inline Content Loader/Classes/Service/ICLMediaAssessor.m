@@ -561,11 +561,26 @@ NSString *const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	 cleanup the request but do not finalize. */
 	if (self.request.doNotFinalize) {
 		[self _flushRequestState];
-
-		return;
+	} else {
+		[self _finalizeAssessmentWithError:error];
 	}
 
-	[self _finalizeAssessmentWithError:error];
+	/* The session holds a strong reference to its delegate (this object)
+	 until it is invalidated. Only the failure paths invalidate it up front,
+	 so do it here for every exit path. Invalidating a session that is
+	 already invalid is harmless. Each assessment owns its own session, so
+	 there are no other tasks left to finish. */
+	[session finishTasksAndInvalidate];
+}
+
+- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error
+{
+	/* Drop the reference in case the request is still around. */
+	ICLMediaAssessorRequest *request = self.request;
+
+	if (request.session == session) {
+		request.session = nil;
+	}
 }
 
 #pragma mark -

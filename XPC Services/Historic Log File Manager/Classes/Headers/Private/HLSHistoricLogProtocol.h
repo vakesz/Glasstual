@@ -50,7 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)writeLogLine:(TVCLogLineXPC *)logLine;
 
-- (void)saveDataWithCompletionBlock:(void(NS_NOESCAPE ^ _Nullable)(void))completionBlock;
+/* The completion block is invoked asynchronously once the save has finished. */
+- (void)saveDataWithCompletionBlock:(void (^_Nullable)(void))completionBlock;
 
 - (void)forgetView:(NSString *)viewId;
 - (void)resetDataForView:(NSString *)viewId;
