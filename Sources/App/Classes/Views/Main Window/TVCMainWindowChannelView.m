@@ -49,6 +49,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+static void *TVCMainWindowChannelViewSubviewKVOContext = &TVCMainWindowChannelViewSubviewKVOContext;
+
 @class TVCMainWindowChannelViewSubviewOverlayView;
 
 @interface TVCMainWindowChannelViewSubview : NSView
@@ -125,9 +127,14 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 
 - (void)viewDidMoveToWindow
 {
-	if (self.window == nil) {
-		[RZNotificationCenter() removeObserver:self];
+	[super viewDidMoveToWindow];
 
+	/* -viewDidMoveToWindow is not guaranteed to alternate between a window
+	 and nil. Remove any previous registration first so that moving within
+	 the same window does not leave duplicate observers behind. */
+	[RZNotificationCenter() removeObserver:self name:TPCThemeAppearanceChangedNotification object:nil];
+
+	if (self.window == nil) {
 		return;
 	}
 
@@ -421,13 +428,25 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 
 - (void)teardownBackingView
 {
-	if (self.isObservingBackingView == NO) {
+	TVCLogView *backingView = self.backingView;
+
+	if (backingView == nil) {
 		return;
 	}
 
-	[self.backingView removeObserver:self forKeyPath:@"layingOutView"];
+	if (self.isObservingBackingView) {
+		[backingView removeObserver:self forKeyPath:@"layingOutView" context:TVCMainWindowChannelViewSubviewKVOContext];
 
-	self.isObservingBackingView = NO;
+		self.isObservingBackingView = NO;
+	}
+
+	/* Removing the web view from its superview also removes the
+	 constraints that -setupWebView activated between it and us. */
+	NSView *webView = backingView.webView;
+
+	if (webView.superview == self) {
+		[webView removeFromSuperview];
+	}
 }
 
 - (void)setupWebView
@@ -441,7 +460,10 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 	if (self.backingViewIsLoading) {
 		self.isObservingBackingView = YES;
 
-		[backingView addObserver:self forKeyPath:@"layingOutView" options:NSKeyValueObservingOptionNew context:NULL];
+		[backingView addObserver:self
+					  forKeyPath:@"layingOutView"
+						 options:NSKeyValueObservingOptionNew
+						 context:TVCMainWindowChannelViewSubviewKVOContext];
 	}
 
 	NSView *webView = backingView.webView;
@@ -487,6 +509,12 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 						change:(nullable NSDictionary<NSString *, id> *)change
 					   context:(nullable void *)context
 {
+	if (context != TVCMainWindowChannelViewSubviewKVOContext) {
+		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+
+		return;
+	}
+
 	if ([keyPath isEqualToString:@"layingOutView"]) {
 		[self toggleOverlayView];
 	}

@@ -46,7 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)writeNewEntryWithLogLine:(TVCLogLine *)logLine forItem:(IRCTreeItem *)item;
 
-- (void)saveData; // asynchronous operation
+- (BOOL)saveData; // asynchronous operation; returns NO when there is nothing to save
+
+- (void)prepareForApplicationTermination;
+- (void)prepareForApplicationTerminationWithCompletionBlock:(void (^_Nullable)(void))completionBlock;
 
 - (void)resetMaximumLineCount;
 

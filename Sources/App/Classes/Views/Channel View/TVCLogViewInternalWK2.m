@@ -200,6 +200,8 @@ static NSUInteger _numberOfViews = 0;
 {
 	_numberOfViews -= 1;
 
+	[self stopObservingLoadingProperty];
+
 	self.navigationDelegate = nil;
 
 	self.UIDelegate = nil;
@@ -575,36 +577,6 @@ static NSUInteger _numberOfViews = 0;
 	NSParameterAssert(webView == self);
 
 	return [_sharedWebPolicy webView2:webView logView:self.t_parentView contextMenuWithDefaultMenu:menu];
-}
-
-@end
-
-#pragma mark -
-#pragma mark WKView Swizzle
-
-/* I am not proud of this, but you have to admit, WebKit2 API is very limited... */
-@implementation NSView (WKiewSwizzle)
-
-+ (void)load
-{
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		XRExchangeInstanceMethod(@"WKView", @"performDragOperation:", @"__t_priv_performDragOperation:");
-	});
-}
-
-- (BOOL)__t_priv_performDragOperation:(id<NSDraggingInfo>)sender
-{
-	/* Override drag and drop to allow files to be sent to a user instead
-	 of WebKit thinking that it should load the file as a resource. */
-	NSView *superview = self.superview;
-
-	if ([superview respondsToSelector:@selector(performDragOperation:)]) {
-		return [superview performDragOperation:sender];
-	}
-
-	return [self __t_priv_performDragOperation:sender];
 }
 
 @end

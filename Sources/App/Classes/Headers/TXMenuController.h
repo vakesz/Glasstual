@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
  that they can be referenced programatically. */
 /* For submenu tags, we take the tag of the parent,
  add four zeros to the end, then start from there. */
-enum {
+typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	/* Main menu */
 	MTMainMenuApp = 1,
 	MTMainMenuFile = 2,

@@ -340,12 +340,12 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 #pragma mark -
 #pragma mark Document Append & JavaScript Controller
 
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments
+- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments
 {
 	[self evaluateFunction:function withArguments:arguments onQueue:YES];
 }
 
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments onQueue:(BOOL)onQueue
+- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments onQueue:(BOOL)onQueue
 {
 	NSParameterAssert(function != nil);
 
@@ -364,7 +364,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	}
 }
 
-- (void)_evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments
+- (void)_evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments
 {
 	NSParameterAssert(function != nil);
 

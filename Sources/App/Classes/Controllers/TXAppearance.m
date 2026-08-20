@@ -44,6 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 NSString *const TXApplicationAppearanceChangedNotification = @"TXApplicationAppearanceChangedNotification";
 NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChangedNotification";
 
+static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
+
 @interface TXAppearancePropertyCollection ()
 @property(nonatomic, copy, readwrite) NSString *appearanceName;
 @property(nonatomic, assign, readwrite) TXAppearanceType appearanceType;
@@ -80,16 +82,19 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 											name:NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification
 										  object:nil];
 
-	[NSApp addObserver:self forKeyPath:@"effectiveAppearance" options:NSKeyValueObservingOptionNew context:NULL];
+	[NSApp addObserver:self
+			forKeyPath:@"effectiveAppearance"
+			   options:NSKeyValueObservingOptionNew
+			   context:TXAppearanceKVOContext];
 }
 
 - (void)prepareForApplicationTermination
 {
 	LogToConsoleTerminationProgress("Removing appearance change observers");
 
-	[RZNotificationCenter() removeObserver:self];
+	[RZWorkspaceNotificationCenter() removeObserver:self];
 
-	[NSApp removeObserver:self forKeyPath:@"effectiveAppearance"];
+	[NSApp removeObserver:self forKeyPath:@"effectiveAppearance" context:TXAppearanceKVOContext];
 }
 
 #pragma mark -
@@ -118,6 +123,12 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 						change:(nullable NSDictionary<NSString *, id> *)change
 					   context:(nullable void *)context
 {
+	if (context != TXAppearanceKVOContext) {
+		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+
+		return;
+	}
+
 	if ([keyPath isEqualToString:@"effectiveAppearance"]) {
 		[self applicationAppearanceChanged];
 	}
@@ -131,11 +142,6 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 	XRPerformBlockAsynchronouslyOnMainQueue(^{
 		[self updateAppearanceBySystemChange];
 	});
-}
-
-- (void)systemColorsDidChange:(NSNotification *)aNote
-{
-	[self updateAppearanceBySystemChange];
 }
 
 - (void)accessibilityDisplayOptionsDidChange:(NSNotification *)aNote
@@ -162,6 +168,11 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 	/* Determine user's preference */
 	switch (preferredAppearance) {
 	case TXPreferredAppearanceInherited: {
+		/* -systemWideDarkModeEnabled reads NSApp.effectiveAppearance which
+		 reflects any appearance previously forced on NSApp. Reset it first
+		 so that we observe the system's appearance. */
+		NSApp.appearance = nil;
+
 		if ([TXAppearancePropertyCollection systemWideDarkModeEnabled]) {
 			appearanceType = TXAppearanceTypeDark;
 		}

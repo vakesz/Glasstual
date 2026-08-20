@@ -89,7 +89,7 @@ NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelec
 @property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowChannelView *channelView;
 @property(nonatomic, strong, readwrite) IBOutlet TXMenuControllerMainWindowProxy *mainMenuProxy;
 @property(nonatomic, strong, readwrite) IBOutlet TVCTextViewIRCFormattingMenu *formattingMenu;
-@property(nonatomic, unsafe_unretained, readwrite) IBOutlet TVCMainWindowTextView *inputTextField;
+@property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowTextView *inputTextField;
 @property(nonatomic, weak) IBOutlet NSSplitView *nibContentSplitView;
 @property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowLoadingScreenView *loadingScreen;
 @property(nonatomic, weak, readwrite) IBOutlet TVCMemberList *memberList;
@@ -213,20 +213,15 @@ static NSToolbarItemIdentifier const TVCMainWindowToolbarLockItemIdentifier = @"
 
 static const CGFloat _sidebarFooterHeight = 32.0;
 
-static NSToolbarItem *TVCMainWindowMakeToolbarItem(
-	NSToolbarItemIdentifier identifier, NSString *symbolName, NSString *label, id target, SEL action, BOOL navigational)
+static void
+TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSString *label, BOOL navigational)
 {
-	NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:identifier];
 	item.image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:label];
 	item.label = label;
 	item.paletteLabel = label;
 	item.toolTip = label;
-	item.target = target;
-	item.action = action;
 	item.bordered = YES;
 	item.navigational = navigational;
-
-	return item;
 }
 
 - (void)installWindowChrome
@@ -293,8 +288,31 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 		action = @selector(presentCertificateTrustInformation:);
 	}
 
-	NSToolbarItem *item =
-		TVCMainWindowMakeToolbarItem(itemIdentifier, @"lock.fill", TXTLS(@"TVCMainWindow[tb-cs]"), self, action, NO);
+	NSToolbarItem *item = nil;
+
+#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+	/* An image-only NSToolbarItem has no view to position a menu against, so
+	 the encryption status menu is attached through NSMenuToolbarItem which
+	 presents it from the item itself on click. */
+	if (action == @selector(titlebarAccessoryViewLockButtonClicked:)) {
+		NSMenuToolbarItem *menuItem = [[NSMenuToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+		menuItem.menu = menuController().encryptionManagerStatusMenu;
+		menuItem.showsIndicator = NO;
+
+		item = menuItem;
+	}
+#endif
+
+	if (item == nil) {
+		item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+		item.target = self;
+		item.action = action;
+	}
+
+	NSString *label = TXTLS(@"TVCMainWindow[tb-cs]");
+
+	TVCMainWindowConfigureToolbarItem(item, @"lock.fill", label, NO);
+
 	/* Assign the style once, here, rather than each time the item is updated.
 	 AppKit only reconsiders which group an item belongs to when the item is
 	 inserted, so a style applied later tints whichever group it landed in. */
@@ -702,7 +720,7 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 
 	[self.memberList assignToChannel:nil];
 
-	self.delegate = (id)self;
+	self.delegate = nil;
 
 	self.selectedItems = nil;
 	self.selectedItem = nil;
@@ -2212,6 +2230,10 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 }
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
+/* The lock item is built as an NSMenuToolbarItem which presents the
+ encryption status menu itself. This action is only used as the marker
+ the toolbar delegate keys off of, and as a fallback should the item
+ ever be invoked without its menu attached. */
 - (void)titlebarAccessoryViewLockButtonClicked:(id)sender
 {
 	NSMenu *statusMenu = menuController().encryptionManagerStatusMenu;
@@ -2228,13 +2250,24 @@ static NSToolbarItem *TVCMainWindowMakeToolbarItem(
 		positioningView = self.lockToolbarItem.view;
 	}
 
-	NSPoint location = NSZeroPoint;
-
 	if (positioningView) {
-		location = NSMakePoint(0.0, NSHeight(positioningView.bounds));
+		[statusMenu popUpMenuPositioningItem:nil
+								  atLocation:NSMakePoint(0.0, NSHeight(positioningView.bounds))
+									  inView:positioningView];
+
+		return;
 	}
 
-	[statusMenu popUpMenuPositioningItem:nil atLocation:location inView:positioningView];
+	/* No view to anchor against; fall back to the current event location. */
+	NSEvent *event = NSApp.currentEvent;
+
+	NSView *contentView = self.contentView;
+
+	if (event && contentView) {
+		NSPoint location = [contentView convertPoint:event.locationInWindow fromView:nil];
+
+		[statusMenu popUpMenuPositioningItem:nil atLocation:location inView:contentView];
+	}
 }
 #endif
 

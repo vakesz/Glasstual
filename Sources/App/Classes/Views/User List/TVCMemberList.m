@@ -52,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 
 @interface TVCMemberList ()
-@property(nonatomic, strong) id userPopoverTrackingArea;
+@property(nonatomic, strong, nullable) NSTrackingArea *userPopoverTrackingArea;
 @property(nonatomic, assign) BOOL userPopoverMouseIsInView;
 @property(nonatomic, assign) BOOL userPopoverTimerIsActive;
 @property(nonatomic, assign) NSPoint userPopoverLastKnownLocalPoint;
@@ -76,11 +76,14 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 {
 	[super viewDidMoveToWindow];
 
+	/* -viewDidMoveToWindow is not guaranteed to alternate between a window
+	 and nil. Remove any previous registration first so that moving within
+	 the same window does not leave duplicate observers behind. */
+	[RZNotificationCenter() removeObserver:self];
+
 	TVCMainWindow *mainWindow = self.mainWindow;
 
 	if (mainWindow == nil) {
-		[RZNotificationCenter() removeObserver:self];
-
 		return;
 	}
 
@@ -154,11 +157,12 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 		[self removeTrackingArea:self.userPopoverTrackingArea];
 	}
 
-	self.userPopoverTrackingArea = [[NSTrackingArea alloc]
-		initWithRect:self.frame
-			 options:(NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInActiveApp)
-			   owner:self
-			userInfo:nil];
+	self.userPopoverTrackingArea =
+		[[NSTrackingArea alloc] initWithRect:self.bounds
+									 options:(NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved |
+											  NSTrackingActiveInActiveApp | NSTrackingInVisibleRect)
+									   owner:self
+									userInfo:nil];
 
 	[self addTrackingArea:self.userPopoverTrackingArea];
 }

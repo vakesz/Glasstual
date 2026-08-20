@@ -72,23 +72,25 @@ NSString *const TXErrorDomain = @"GlasstualErrorDomain";
 
 @implementation TXSharedApplication
 
+// clang-format off
 _defineSharedInstance(sharedAppearance, TXAppearance, new)
 
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	_defineSharedInstance(sharedEncryptionManager, TLOEncryptionManager, new)
+_defineSharedInstance(sharedEncryptionManager, TLOEncryptionManager, new)
 #endif
 
-		_defineSharedInstance(sharedNetworkReachabilityNotifier, OELReachability, reachabilityForInternetConnection)
-			_defineSharedInstance(sharedNotificationController, TLONotificationController, new)
-				_defineSharedInstance(sharedPluginManager, THOPluginManager, new)
-					_defineSharedInstance(sharedPrintingQueue, TVCLogControllerPrintingOperationQueue, new)
-						_defineSharedInstance(sharedSpeechSynthesizer, TLOSpeechSynthesizer, new)
-							_defineSharedInstance(sharedThemeController, TPCThemeController, new)
-								_defineSharedInstance(sharedWindowController, TXWindowController, new)
+_defineSharedInstance(sharedNetworkReachabilityNotifier, OELReachability, reachabilityForInternetConnection)
+_defineSharedInstance(sharedNotificationController, TLONotificationController, new)
+_defineSharedInstance(sharedPluginManager, THOPluginManager, new)
+_defineSharedInstance(sharedPrintingQueue, TVCLogControllerPrintingOperationQueue, new)
+_defineSharedInstance(sharedSpeechSynthesizer, TLOSpeechSynthesizer, new)
+_defineSharedInstance(sharedThemeController, TPCThemeController, new)
+_defineSharedInstance(sharedWindowController, TXWindowController, new)
 
-									_defineSharedInstance(sharedFileTransferDialog, TDCFileTransferDialog, new)
+_defineSharedInstance(sharedFileTransferDialog, TDCFileTransferDialog, new)
+	// clang-format on
 
-										os_log_t ApplicationTerminationLogSubsystem(void)
+	os_log_t ApplicationTerminationLogSubsystem(void)
 {
 	static os_log_t cachedValue = NULL;
 

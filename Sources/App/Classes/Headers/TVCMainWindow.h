@@ -75,7 +75,7 @@ GLASSTUAL_EXTERN NSString *const TVCServerListDragType;
 
 @property(readonly, weak) TVCMainWindowLoadingScreenView *loadingScreen;
 @property(readonly) NSSplitViewController *contentSplitViewController;
-@property(readonly, unsafe_unretained) TVCMainWindowTextView *inputTextField;
+@property(readonly, weak) TVCMainWindowTextView *inputTextField;
 @property(readonly, weak) TVCMemberList *memberList;
 @property(readonly, weak) TVCServerList *serverList;
 
