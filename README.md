@@ -56,7 +56,7 @@ git clone https://github.com/vakesz/Glasstual.git
 
 ## Building Glasstual
 
-Glasstual requires Xcode 27 on macOS 26 (Tahoe) or later, an Apple Silicon Mac (builds are arm64 only), and a valid code signing certificate (it does not need to be issued by Apple).
+Glasstual requires Xcode 26 or later on macOS 26 (Tahoe) or later, an Apple Silicon Mac (builds are arm64 only), and a valid code signing certificate (it does not need to be issued by Apple).
 
 This tree has **no paid-license or trial checks**. Precompiled store builds of Textual from codeux.com are a separate product.
 

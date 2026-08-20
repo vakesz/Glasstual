@@ -26,15 +26,17 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Select Xcode 27
+      - name: Select Xcode
         run: |
           set -euo pipefail
-          XCODE_APP="$(find /Applications -maxdepth 1 -name 'Xcode_27*.app' | sort -V | tail -n 1)"
+          # Newest installed Xcode with the macOS 26 SDK (Xcode 26 or later).
+          XCODE_APP="$(find /Applications -maxdepth 1 -name 'Xcode_*.app' | sort -V | tail -n 1)"
           sudo xcode-select -s "${XCODE_APP:-/Applications/Xcode.app}"
           xcodebuild -version
-          xcodebuild -version | head -n 1 | grep -q '^Xcode 27'
+          XCODE_MAJOR="$(xcodebuild -version | head -n 1 | sed -E 's/^Xcode ([0-9]+).*/\1/')"
+          [ "${XCODE_MAJOR}" -ge 26 ]
 
       - name: Resolve release version
         id: version
