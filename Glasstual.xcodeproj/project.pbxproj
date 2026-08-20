@@ -441,7 +441,6 @@
 		BF78F9C0252A93C0AF6AB50B /* OTRKitAuthenticationDialogWindowManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 378D1C0C21CA93AC01E94AE6 /* OTRKitAuthenticationDialogWindowManager.h */; };
 		BFCC27BC5C3C5FE1AE5FA15E /* OffTheRecord.strings in Resources */ = {isa = PBXBuildFile; fileRef = 5F2EDE958DFBD4E342BFB99F /* OffTheRecord.strings */; };
 		C01056EA7C217684DD86BE52 /* IRCCommandIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 07D2C3BC64BF1D883B34A67E /* IRCCommandIndex.m */; };
-		C0BE98410AA2B048E4BEC884 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 91D7FD5BB7B12D213C6DD631 /* Sparkle */; };
 		C0D55688AF5B9B995373FAF3 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1F8C4221B5DA3BF067DACA0 /* Contacts.framework */; };
 		C33AEFE92D0F6EB25A2A4614 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F5204793997A9EBB2F96F6BF /* Foundation.framework */; };
 		C3508B85880FC14C0A745893 /* NSFontHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 588BACF2DED953C188725B92 /* NSFontHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -840,6 +839,18 @@
 		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
+			dstSubfolderSpec = 16;
+			files = (
+				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
+				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
+				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
 			dstPath = Preferences;
 			dstSubfolderSpec = 7;
 			files = (
@@ -852,19 +863,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
+		4E0F6318CBF2B26795332F6B /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
-			dstSubfolderSpec = 16;
+			dstPath = Documentation/libotr;
+			dstSubfolderSpec = 7;
 			files = (
-				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
-				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
-				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
+				789861524D45081052A159D0 /* COPYING in CopyFiles */,
+				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4E0F6318CBF2B26795332F6B /* CopyFiles */ = {
+		5615D8709C84614D39458489 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "Documentation/libgpg-error";
@@ -874,20 +885,6 @@
 				74B561FFEEE6BD2247489C1B /* COPYING in CopyFiles */,
 				5D95626E0D46B572B41C62CE /* COPYING.LIB in CopyFiles */,
 				9B1A343213FFFB4972E852BF /* THANKS in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		5615D8709C84614D39458489 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = Documentation/libgcrypt;
-			dstSubfolderSpec = 7;
-			files = (
-				4147CD7363D7BFFF248ED6CC /* AUTHORS in CopyFiles */,
-				F3C593CACCEA86C04A101334 /* COPYING in CopyFiles */,
-				8855A7F0CCD51DC25A33BB4C /* COPYING.LIB in CopyFiles */,
-				3E70A09D1559F877672ABEC0 /* LICENSES in CopyFiles */,
-				9AA4B9BFDA2F296B62C2E787 /* THANKS in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -953,12 +950,14 @@
 		C6D85C709B6F0C1C2D08C8C3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation/libotr;
+			dstPath = Documentation/libgcrypt;
 			dstSubfolderSpec = 7;
 			files = (
-				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
-				789861524D45081052A159D0 /* COPYING in CopyFiles */,
-				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
+				4147CD7363D7BFFF248ED6CC /* AUTHORS in CopyFiles */,
+				F3C593CACCEA86C04A101334 /* COPYING in CopyFiles */,
+				8855A7F0CCD51DC25A33BB4C /* COPYING.LIB in CopyFiles */,
+				3E70A09D1559F877672ABEC0 /* LICENSES in CopyFiles */,
+				9AA4B9BFDA2F296B62C2E787 /* THANKS in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1894,7 +1893,6 @@
 				E7A999E52156F5F303D4D381 /* CocoaExtensions.framework in Frameworks */,
 				1A8A567C11D4C5193E1FD5CA /* EncryptionKit.framework in Frameworks */,
 				B7E45CBE2488608068A545A0 /* GRMustache.framework in Frameworks */,
-				C0BE98410AA2B048E4BEC884 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4450,7 +4448,6 @@
 			);
 			name = Glasstual;
 			packageProductDependencies = (
-				91D7FD5BB7B12D213C6DD631 /* Sparkle */,
 			);
 			productName = Glasstual;
 			productReference = DEEB38B2632F8E9DC3BEF336 /* Glasstual.app */;
@@ -4769,9 +4766,6 @@
 			);
 			mainGroup = 5C7BB5D6BD0895CAF6669248;
 			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-				A15273B32A89D29041AE1DDB /* XCRemoteSwiftPackageReference "Sparkle" */,
-			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 641C2624C166E2F95EC1969E /* Products */;
 			projectDirPath = "";
@@ -7021,25 +7015,6 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		A15273B32A89D29041AE1DDB /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.9.6;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		91D7FD5BB7B12D213C6DD631 /* Sparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A15273B32A89D29041AE1DDB /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
-		};
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		5DB4D477A1D50E0119C65CBF /* HistoricLogFileStorageModel.xcdatamodeld */ = {

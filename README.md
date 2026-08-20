@@ -97,13 +97,14 @@ is run manually to archive, notarize and publish.
 
 ### Software Updates
 
-Sparkle is linked from Swift Package Manager but compiled out in both configurations
-(`GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED = 0` in
-_[Configurations ➜ Base.xcconfig](Configurations/Base.xcconfig)_): the upstream Textual
-appcast was removed so that this fork can never offer Codeux's builds as an update to
-itself. To enable updating, set the flag to `1`, add `SUPublicEDKey` and an `SUFeedURL` pointing at your
-own appcast to
-_[Sources ➜ App ➜ Resources ➜ Property Lists ➜ Application Properties ➜ Info.plist](Sources/App/Resources/Property%20Lists/Application%20Properties/Info.plist)_.
+Sparkle is not linked in this tree and `GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED`
+is `0` in _[Configurations ➜ Base.xcconfig](Configurations/Base.xcconfig)_: the
+upstream Textual appcast was removed so that this fork can never offer Codeux's
+builds as an update to itself. To enable updating, set the flag to `1`, add the
+Sparkle package back to `project.yml` (see the comment there), add `SUFeedURL`
+and `SUPublicEDKey` to
+_[Sources ➜ App ➜ Resources ➜ Property Lists ➜ Application Properties ➜ Info.plist](Sources/App/Resources/Property%20Lists/Application%20Properties/Info.plist)_,
+and re-sign Sparkle's nested tools in the release workflow before notarization.
 
 ## Licenses
 
