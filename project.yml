@@ -441,9 +441,8 @@ targets:
     sources:
       - path: XPC Services/IRC Remote Connection Manager/Classes
         excludes:
-          # The Network.framework socket replaced the GCDAsyncSocket one.
+          # The Network.framework socket replaced the classic one.
           - "**/IRCConnectionSocketClassic.swift"
-          - "**/GCDAsyncSocket*"
       - path: XPC Services/IRC Remote Connection Manager/Resources/Language Files
       - path: XPC Services/IRC Remote Connection Manager/Resources/Property Lists/Info.plist
         buildPhase: none
@@ -588,8 +587,6 @@ targets:
         PRODUCT_MODULE_NAME: Glasstual
         INFOPLIST_FILE: Sources/App/Resources/Property Lists/Application Properties/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        # Keep individual PNGs (matches the previous bundle layout).
-        COMBINE_HIDPI_IMAGES: NO
         GCC_PREFIX_HEADER: Sources/App/Classes/Headers/Private/GlasstualPrivate.h
         SWIFT_OBJC_BRIDGING_HEADER: Sources/App/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
         HEADER_SEARCH_PATHS:
@@ -612,8 +609,6 @@ targets:
       - path: Sources/App/Classes
       - path: Sources/App/Configurations
       - path: Sources/Shared
-        excludes:
-          - "Library/External Libraries/Sockets/*.txt"
       # Resources -----------------------------------------------------------
       - path: Sources/App/Resources/Images
         excludes:
@@ -622,7 +617,6 @@ targets:
           - Application/applicationIcon.iconset
           - Application/applicationIcon.psd
           - DMG Canvas
-          - Dock Icon Badges/Photoshop
       - path: Sources/App/Resources/Images/Application/AppIcon.icon
         type: file
         buildPhase: resources

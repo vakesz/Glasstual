@@ -61,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong) IBOutlet NSArrayController *fileTransfersController;
 @property(nonatomic, strong, nullable) TLOInternetAddressLookup *IPAddressRequest;
 @property(readonly) TDCFileTransferDialogSelection navigationSelection;
-@property(nonatomic, strong) TLOTimer *maintenanceTimer;
+@property(nonatomic, strong, nullable) TLOTimer *maintenanceTimer;
 @property(nonatomic, copy, nullable) NSURL *downloadDestinationURLPrivate;
 
 - (IBAction)hideWindow:(nullable id)sender;
