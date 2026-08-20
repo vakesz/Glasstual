@@ -197,11 +197,22 @@ jobs:
           chmod 600 "${KEY_PATH}"
 
           ditto -c -k --keepParent "${APP}" "${SUBMIT_ZIP}"
-          xcrun notarytool submit "${SUBMIT_ZIP}" \
+          SUBMISSION_JSON="$(xcrun notarytool submit "${SUBMIT_ZIP}" \
             --key "${KEY_PATH}" \
             --key-id "${{ secrets.NOTARY_KEY_ID }}" \
             --issuer "${{ secrets.NOTARY_ISSUER_ID }}" \
-            --wait --timeout 45m
+            --wait --timeout 45m --output-format json)"
+          echo "${SUBMISSION_JSON}"
+          SUBMISSION_ID="$(plutil -extract id raw -o - - <<< "${SUBMISSION_JSON}")"
+          SUBMISSION_STATUS="$(plutil -extract status raw -o - - <<< "${SUBMISSION_JSON}")"
+          if [ "${SUBMISSION_STATUS}" != "Accepted" ]; then
+            echo "::error::Notarization ${SUBMISSION_STATUS} (submission ${SUBMISSION_ID}). Notary log follows."
+            xcrun notarytool log "${SUBMISSION_ID}" \
+              --key "${KEY_PATH}" \
+              --key-id "${{ secrets.NOTARY_KEY_ID }}" \
+              --issuer "${{ secrets.NOTARY_ISSUER_ID }}"
+            exit 1
+          fi
           xcrun stapler staple "${APP}"
           xcrun stapler validate "${APP}"
           spctl --assess --type execute --verbose=4 "${APP}"
