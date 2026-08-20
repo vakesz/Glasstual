@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[RZMainBundle() loadNibNamed:@"TDCPreferencesUserStyleSheet" owner:self topLevelObjects:nil];
 
-	self.rulesTextView.font = [NSFont systemFontOfSize:13.0];
+	self.rulesTextView.font = [NSFont monospacedSystemFontOfSize:13.0 weight:NSFontWeightRegular];
 
 	self.rulesTextView.textContainerInset = NSMakeSize(1, 3);
 
