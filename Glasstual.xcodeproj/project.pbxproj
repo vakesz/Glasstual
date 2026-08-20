@@ -76,6 +76,7 @@
 		1762BCB7C67426B51011B749 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F297ED16858A04F8F5F4D9A /* SystemConfiguration.framework */; };
 		179919ED23D794339FFEFD63 /* TVCChannelSelectionView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2C4F7BE8708185D2CA3EA9DE /* TVCChannelSelectionView.xib */; };
 		17A98FFD407F40029B8948DA /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E237B43AA9F0A9E4561FE5C /* IOKit.framework */; };
+		189E36C81EE38EAC62E1C804 /* TDCPreferencesGroupBox.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C823ED72A056BFA6BDC7F05 /* TDCPreferencesGroupBox.m */; };
 		19714D2FEEFB8ABC88D4C137 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D87202A4B450420150DA8C1 /* ImageIO.framework */; };
 		1A8A567C11D4C5193E1FD5CA /* EncryptionKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02F9F50A9687FC8277323B99 /* EncryptionKit.framework */; };
 		1AD5E4708C308D2522417867 /* IRCExtras.m in Sources */ = {isa = PBXBuildFile; fileRef = 58AF6CE489F938D7F66F7CC3 /* IRCExtras.m */; };
@@ -174,6 +175,7 @@
 		449991E930802F0627750E4F /* TPI_Caffeine.xib in Resources */ = {isa = PBXBuildFile; fileRef = A34747CB9464C967DCB71C68 /* TPI_Caffeine.xib */; };
 		44B4D538FD899D53486924F5 /* Prompts.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6EC62CEF3593C25A31EFCDF8 /* Prompts.strings */; };
 		46342B04758EBA2BED2C5359 /* OTRKitAuthenticationDialogPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BAD67FC5211A3FCB1E02F95 /* OTRKitAuthenticationDialogPrivate.h */; };
+		482F3000E472C2BE86379B65 /* QuickLookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 072A8B2252E5A95A485B5E78 /* QuickLookUI.framework */; };
 		49C4ECC8F710DEEE30F088AC /* OTRKitAuthenticationDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = 2D8D1D9EA8D8AD4751A43C99 /* OTRKitAuthenticationDialog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		49DAE4DBFF8EC876B813B9F7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 87B5B98EBAFA3501EC222861 /* main.m */; };
 		49FC2AC5591E1D6EF9A710A7 /* THOPluginManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8CF15BC7E668EFA56FBA0150 /* THOPluginManager.m */; };
@@ -346,6 +348,7 @@
 		93CC9AA74C1C1DD47D7EAEF9 /* TDCPreferencesController.strings in Resources */ = {isa = PBXBuildFile; fileRef = 496D760CD6679EE7D27C8385 /* TDCPreferencesController.strings */; };
 		9417024914A7676C23DCA26C /* TPCPreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = F3F19789C6438EF1B3EA6F82 /* TPCPreferences.m */; };
 		94346D6BC16AD102D2E2752A /* TVCMainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = FC865400ECEDFC67F45205D7 /* TVCMainWindow.xib */; };
+		94914AF7597E6F330DC83175 /* TXMenuController.strings in Resources */ = {isa = PBXBuildFile; fileRef = 5B0CE81E1D9D65A73E2CD054 /* TXMenuController.strings */; };
 		951074B94529B26CB2F8E968 /* ICMCommonInlineImages.m in Sources */ = {isa = PBXBuildFile; fileRef = EAC5F320F9EEFF001D8034AC /* ICMCommonInlineImages.m */; };
 		9544857EB8A5AE724E7D34C3 /* IRCPrefix.m in Sources */ = {isa = PBXBuildFile; fileRef = 9823DDE8F775245E0E5F1B84 /* IRCPrefix.m */; };
 		957DFBCC09362A4F7D512849 /* OTRKitAuthenticationDialogWindowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F73C587540DED9E8D17F0C19 /* OTRKitAuthenticationDialogWindowManager.m */; };
@@ -827,18 +830,6 @@
 		070DCA40BB8576D920BC2970 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
-			dstSubfolderSpec = 16;
-			files = (
-				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
-				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
-				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = Preferences;
 			dstSubfolderSpec = 7;
 			files = (
@@ -848,6 +839,18 @@
 				12E7B04A8D1C89F3E824563D /* PreferenceKeyMasterList.plist in CopyFiles */,
 				EB3C2F7F50214F6CC6EC1F6A /* RegisteredUserDefaults.plist in CopyFiles */,
 				EC95BE126D4DA67BD4016649 /* RegisteredUserDefaultsInContainer.plist in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
+			dstSubfolderSpec = 16;
+			files = (
+				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
+				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
+				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -864,6 +867,18 @@
 		4E0F6318CBF2B26795332F6B /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
+			dstPath = Documentation/libotr;
+			dstSubfolderSpec = 7;
+			files = (
+				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
+				789861524D45081052A159D0 /* COPYING in CopyFiles */,
+				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5615D8709C84614D39458489 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
 			dstPath = "Documentation/libgpg-error";
 			dstSubfolderSpec = 7;
 			files = (
@@ -871,18 +886,6 @@
 				74B561FFEEE6BD2247489C1B /* COPYING in CopyFiles */,
 				5D95626E0D46B572B41C62CE /* COPYING.LIB in CopyFiles */,
 				9B1A343213FFFB4972E852BF /* THANKS in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		5615D8709C84614D39458489 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = Documentation;
-			dstSubfolderSpec = 7;
-			files = (
-				8A2316D4B852F7647761AC38 /* LICENSE-GPLv2-1.txt in CopyFiles */,
-				EAA16BF275FD48123B5227A0 /* LICENSE-MPLv2-0.txt in CopyFiles */,
-				C6EC020D581671E7DC34004B /* LICENSE-OTRKit.txt in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -948,18 +951,6 @@
 		C6D85C709B6F0C1C2D08C8C3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation/libotr;
-			dstSubfolderSpec = 7;
-			files = (
-				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
-				789861524D45081052A159D0 /* COPYING in CopyFiles */,
-				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DDCD514A34BF37DC91E049D4 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = Documentation/libgcrypt;
 			dstSubfolderSpec = 7;
 			files = (
@@ -968,6 +959,18 @@
 				8855A7F0CCD51DC25A33BB4C /* COPYING.LIB in CopyFiles */,
 				3E70A09D1559F877672ABEC0 /* LICENSES in CopyFiles */,
 				9AA4B9BFDA2F296B62C2E787 /* THANKS in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DDCD514A34BF37DC91E049D4 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Documentation;
+			dstSubfolderSpec = 7;
+			files = (
+				8A2316D4B852F7647761AC38 /* LICENSE-GPLv2-1.txt in CopyFiles */,
+				EAA16BF275FD48123B5227A0 /* LICENSE-MPLv2-0.txt in CopyFiles */,
+				C6EC020D581671E7DC34004B /* LICENSE-OTRKit.txt in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1001,6 +1004,7 @@
 		06EE88B60A800CEE693A7241 /* OTRKit.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OTRKit.m; sourceTree = "<group>"; };
 		06F0AF36A9509B2ACEEE8EC1 /* TLOLinkParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TLOLinkParser.h; sourceTree = "<group>"; };
 		0700277BACECB021D9F59E7D /* SWArrayHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWArrayHelper.swift; sourceTree = "<group>"; };
+		072A8B2252E5A95A485B5E78 /* QuickLookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLookUI.framework; path = System/Library/Frameworks/QuickLookUI.framework; sourceTree = SDKROOT; };
 		077D5139E36E3AD258489A5E /* TDCChannelSpotlightAppearance.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = TDCChannelSpotlightAppearance.plist; sourceTree = "<group>"; };
 		07C9E4B891ECCF2105F848E8 /* TVCChannelSelectionViewControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCChannelSelectionViewControllerPrivate.h; sourceTree = "<group>"; };
 		07D2C3BC64BF1D883B34A67E /* IRCCommandIndex.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCCommandIndex.m; sourceTree = "<group>"; };
@@ -1499,6 +1503,7 @@
 		9B5A256F13C157EE752EDE5E /* TVCMainWindowTextViewAppearance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCMainWindowTextViewAppearance.h; sourceTree = "<group>"; };
 		9B5DA454B13296EE0CCE62F9 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		9BB3958E9AB7851386E1A43B /* Glasstual-Extras.pkg */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.installer-pkg"; path = "Glasstual-Extras.pkg"; sourceTree = "<group>"; };
+		9C823ED72A056BFA6BDC7F05 /* TDCPreferencesGroupBox.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCPreferencesGroupBox.m; sourceTree = "<group>"; };
 		9C83732FB95BC0FBE134D26A /* libgcrypt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgcrypt.a; path = "Frameworks/Static Libraries/Libraries/libgcrypt.a"; sourceTree = "<group>"; };
 		9C9A51731DFA6C431FD8B7FD /* IRCModeInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCModeInfo.h; sourceTree = "<group>"; };
 		9D3CC8CB61C6F9DE91157AE6 /* TLOEncryptionManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TLOEncryptionManager.h; sourceTree = "<group>"; };
@@ -1603,6 +1608,7 @@
 		B6D6BDFD6FF1B32EC1ABDD46 /* XRSystemInformation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XRSystemInformation.m; sourceTree = "<group>"; };
 		B76529042EB26D806261D31F /* IRCConnectionSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCConnectionSocket.swift; sourceTree = "<group>"; };
 		B779D79E3729CA72657415FE /* TLOTimer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TLOTimer.h; sourceTree = "<group>"; };
+		B82F317B6DC6FE2F6E3F403D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/TXMenuController.strings; sourceTree = "<group>"; };
 		B834D8EE4EE12407EE0F0B3C /* ICMInlineHTML.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ICMInlineHTML.js; sourceTree = "<group>"; };
 		B91C576FCB261D6B1FF60BF8 /* NSMethodSignatureHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSMethodSignatureHelper.h; sourceTree = "<group>"; };
 		B9259DB57DD36E2C379921BA /* ACKNOWLEDGEMENT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ACKNOWLEDGEMENT.txt; sourceTree = "<group>"; };
@@ -1719,6 +1725,7 @@
 		E22B36A1A55EAA6762D6BAA3 /* TLOFileLoggerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TLOFileLoggerPrivate.h; sourceTree = "<group>"; };
 		E2563B5CB96C7DCC1B7C3F89 /* NSObjectHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSObjectHelper.h; sourceTree = "<group>"; };
 		E269487BEF2395E22C772100 /* NSAnimationContextHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSAnimationContextHelper.h; sourceTree = "<group>"; };
+		E294CA3575AAEC60AACDC2C1 /* TDCPreferencesGroupBox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCPreferencesGroupBox.h; sourceTree = "<group>"; };
 		E2A177F5E973968EE530650F /* RCMSecureTransport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCMSecureTransport.h; sourceTree = "<group>"; };
 		E2BC037215BBFD2514B54908 /* EncryptionKit_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EncryptionKit_Prefix.pch; sourceTree = "<group>"; };
 		E36AC67B3ED3A4EAEB5856E0 /* NSCharacterSetHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSCharacterSetHelper.h; sourceTree = "<group>"; };
@@ -1879,6 +1886,7 @@
 				4CE5CD063B1EB9ED873DA550 /* CoreServices.framework in Frameworks */,
 				293E92C3C78F13C38F5EAC99 /* IOKit.framework in Frameworks */,
 				DB278784D3CEA202F9A2418E /* QuartzCore.framework in Frameworks */,
+				482F3000E472C2BE86379B65 /* QuickLookUI.framework in Frameworks */,
 				CD2A11FAADF69751785EC88A /* Security.framework in Frameworks */,
 				72F54ABDCF198DF3573FFA09 /* SystemConfiguration.framework in Frameworks */,
 				858D5A8D2676ED0CB6D3F7E6 /* UserNotifications.framework in Frameworks */,
@@ -2210,6 +2218,7 @@
 				5224F0A202AE7A0E409674B2 /* libotr.a */,
 				201224AC35765D2C338EB797 /* Metal.framework */,
 				CE3CB48865CA4E3A162E8229 /* QuartzCore.framework */,
+				072A8B2252E5A95A485B5E78 /* QuickLookUI.framework */,
 				B586F0E6CAB57502BAF81EE3 /* Security.framework */,
 				09337EC215A29A9E3EF5FF5E /* SecurityInterface.framework */,
 				0F297ED16858A04F8F5F4D9A /* SystemConfiguration.framework */,
@@ -3030,6 +3039,7 @@
 			isa = PBXGroup;
 			children = (
 				EAE7C73CE05EA281E1F4C5C6 /* TDCPreferencesController.m */,
+				9C823ED72A056BFA6BDC7F05 /* TDCPreferencesGroupBox.m */,
 				F6A9858174374FD46FB30F4B /* TDCPreferencesNotificationConfiguration.m */,
 				A4B3E957868E9F345FDE1620 /* TDCPreferencesUserStyleSheet.m */,
 			);
@@ -3471,6 +3481,7 @@
 				E13383CBD999790B3B3BEF6D /* TDCServerPropertiesSheet.strings */,
 				14C6A24B45202FAF4071B16D /* TVCMainWindow.strings */,
 				15F85807FC385A7E4904ACFC /* TVCNotificationConfigurationView.strings */,
+				5B0CE81E1D9D65A73E2CD054 /* TXMenuController.strings */,
 			);
 			path = "Language Files";
 			sourceTree = "<group>";
@@ -4116,6 +4127,7 @@
 				0E07E7F9C031B5D47254979D /* TDCHighlightEntrySheetPrivate.h */,
 				E082C7EA7B982B1A92966500 /* TDCNicknameColorSheetPrivate.h */,
 				D86B08EE447A90DE77321977 /* TDCPreferencesControllerPrivate.h */,
+				E294CA3575AAEC60AACDC2C1 /* TDCPreferencesGroupBox.h */,
 				CC5C516E0D588D2CF66552B3 /* TDCPreferencesNotificationConfigurationPrivate.h */,
 				DE804F631B0A1B1717BB9B41 /* TDCPreferencesUserStyleSheetPrivate.h */,
 				6864653C595C46B01A0E2FF4 /* TDCProgressIndicatorSheetPrivate.h */,
@@ -4929,6 +4941,7 @@
 				B88C564828EB8D7F9C0EC5BE /* TVCNotificationConfigurationView.strings in Resources */,
 				3709BC388299AD2B49192109 /* TVCNotificationConfigurationView.xib in Resources */,
 				8A0D3B3C24AB3F1AD1468B34 /* TXCMainMenu.xib in Resources */,
+				94914AF7597E6F330DC83175 /* TXMenuController.strings in Resources */,
 				CCB80CBB6DF5BE6746393A65 /* TemplateLineTypes.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5285,6 +5298,7 @@
 				A4485AE67A20D5685CB73507 /* TDCInputPrompt.m in Sources */,
 				9B95A7AA423DF829AD320264 /* TDCNicknameColorSheet.m in Sources */,
 				91150A2077EF0D56901BFFE1 /* TDCPreferencesController.m in Sources */,
+				189E36C81EE38EAC62E1C804 /* TDCPreferencesGroupBox.m in Sources */,
 				12A50ACF4D084D7DFBE392A2 /* TDCPreferencesNotificationConfiguration.m in Sources */,
 				935147F2BD6A60B40B9BD83A /* TDCPreferencesUserStyleSheet.m in Sources */,
 				F6089BF4C5B4A3D13C261AAC /* TDCProgressIndicatorSheet.m in Sources */,
@@ -5742,6 +5756,14 @@
 				356702481E378E8BEACECBDB /* en */,
 			);
 			name = TPISystemProfiler.xib;
+			sourceTree = "<group>";
+		};
+		5B0CE81E1D9D65A73E2CD054 /* TXMenuController.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B82F317B6DC6FE2F6E3F403D /* en */,
+			);
+			name = TXMenuController.strings;
 			sourceTree = "<group>";
 		};
 		5C58649F0E388082B92F6601 /* OTRKitFingerprintManagerDialog.xib */ = {
