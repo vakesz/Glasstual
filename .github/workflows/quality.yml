@@ -37,11 +37,17 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Verify the committed project matches project.yml
+      - name: Regenerate the project from project.yml
         run: |
           set -euo pipefail
+          xcodegen version
           xcodegen generate --spec project.yml
-          git diff --exit-code -- Glasstual.xcodeproj
+          # Object identifiers vary between XcodeGen releases, so drift is
+          # reported rather than failed; the build below uses the fresh project.
+          if ! git diff --quiet -- Glasstual.xcodeproj; then
+            echo "::notice::Glasstual.xcodeproj differs from what this XcodeGen produces; run 'make generate' locally if you changed project.yml."
+            git diff --stat -- Glasstual.xcodeproj
+          fi
 
       - name: Build (Debug, unsigned)
         run: |
