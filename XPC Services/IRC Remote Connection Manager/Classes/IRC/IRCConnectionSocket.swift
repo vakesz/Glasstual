@@ -35,16 +35,37 @@
 *
 *********************************************************************** */
 
-/* ConnectionSocket is subclassed to implement the connection logic.
- One subclass uses GCDAsyncSocket which isn't designed for Swift.
- To accommodate some of its features, we must have our base class
- inherit from NSObject or all hell will break loose. */
-class ConnectionSocket: NSObject {
+import Network
+import os
+
+/* Logging for the connection classes. `Logger` is Sendable which keeps
+ these usable from queue-confined code under strict concurrency. */
+enum RCMLog {
+	static let connection = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "com.vakesz.glasstual.IRCConnectionHost", category: "Connection")
+}
+
+/* ConnectionSocket holds the state and helpers shared by the transport
+ layer. ConnectionSocketNWF is the only transport; it subclasses this to
+ talk to Network.framework.
+
+ Concurrency model:
+ Every stored property below, and in the subclass, is confined to `queue`.
+ The owner (Connection) creates the queue, hands it in, and hops onto it
+ before calling any method. Network.framework delivers all callbacks on
+ that same queue because it is the queue passed to NWConnection.start(queue:).
+ Because of this confinement the class is `@unchecked Sendable`; the
+ compiler cannot verify queue confinement but the invariant is simple:
+ do not touch state off `queue`. */
+class ConnectionSocket: @unchecked Sendable {
 	weak var delegate: ConnectionSocketDelegate?
 
 	final private(set) var config: IRCConnectionConfig
 
 	final let uniqueIdentifier: String
+
+	/// The serial queue all state is confined to.
+	final let queue: DispatchQueue
 
 	var connecting = false
 	var connected = false
@@ -63,14 +84,22 @@ class ConnectionSocket: NSObject {
 	final let torProxyTypeAddress = "127.0.0.1"
 	final let torProxyTypePort: UInt16 = 9150
 
+	/// Maximum bytes requested from the transport in a single read.
 	final let maximumDataLength = (1000 * 1000 * 100)  // 100 megabytes
 
-	init(with config: IRCConnectionConfig) {
+	/// Maximum bytes buffered while waiting for a newline. A peer that
+	/// never sends one is disconnected instead of growing memory forever.
+	final let maximumBufferedLineLength = (1024 * 1024)  // 1 MiB
+
+	/// Seconds allowed for the transport to reach the ready state.
+	final let connectTimeout: TimeInterval = 30
+
+	init(with config: IRCConnectionConfig, on queue: DispatchQueue) {
 		self.config = config
 
-		uniqueIdentifier = UUID().uuidString
+		self.queue = queue
 
-		super.init()
+		uniqueIdentifier = UUID().uuidString
 	}
 
 	func resetState() {
@@ -115,7 +144,13 @@ class ConnectionSocket: NSObject {
 		response(false)
 	}
 
-	final var clientSideCertificate: (identity: SecIdentity, certificate: SecCertificate)? {
+	/// The client side identity, if one is configured.
+	/// The keychain is consulted once; the result is cached for the
+	/// life of the socket because a handshake asks for it more than once.
+	final private(set) lazy var clientSideCertificate: (identity: SecIdentity, certificate: SecCertificate)? =
+		loadClientSideCertificate()
+
+	private func loadClientSideCertificate() -> (identity: SecIdentity, certificate: SecCertificate)? {
 		guard let certificateDataIn = config.identityClientSideCertificate else {
 			return nil
 		}
@@ -132,7 +167,7 @@ class ConnectionSocket: NSObject {
 			] as CFDictionary, &certificateObject)
 
 		if status != errSecSuccess {
-			Logging.defaultSubsystem?.error("Operation Failed (1): \(status, privacy: .public)")
+			RCMLog.connection.error("Client certificate lookup failed: \(status, privacy: .public)")
 
 			return nil
 		}
@@ -143,6 +178,7 @@ class ConnectionSocket: NSObject {
 			return nil
 		}
 
+		/* The CFGetTypeID check above guarantees this forced cast succeeds. */
 		let certificateRef = certificateObject as! SecCertificate
 
 		/* ====================================== */
@@ -151,22 +187,26 @@ class ConnectionSocket: NSObject {
 
 		status = SecIdentityCreateWithCertificate(nil, certificateRef, &identityRef)
 
-		if status != noErr {
-			Logging.defaultSubsystem?.error("Operation Failed (2): \(status, privacy: .public)")
+		guard status == noErr, let identityRef else {
+			RCMLog.connection.error("Client identity lookup failed: \(status, privacy: .public)")
 
 			return nil
 		}
 
 		/* ====================================== */
 
-		return (identity: identityRef!, certificate: certificateRef)
+		return (identity: identityRef, certificate: certificateRef)
 	}
 
 	final func changeProxy(
 		to type: IRCConnectionProxyType = .none, at host: String? = nil, on port: UInt16 = 0, username: String? = nil,
 		password: String? = nil
 	) {
-		let mutableConfig: IRCConnectionConfigMutable = config.mutableCopy() as! IRCConnectionConfigMutable
+		guard let mutableConfig = config.mutableCopy() as? IRCConnectionConfigMutable else {
+			RCMLog.connection.error("Unable to create mutable copy of connection configuration")
+
+			return
+		}
 
 		mutableConfig.proxyAddress = host
 		mutableConfig.proxyPort = port
@@ -202,7 +242,7 @@ extension ConnectionError {
 			return nil
 		}
 
-		self.init(tlsError: error.code)
+		self.init(tlsError: (error as NSError).code)
 	}
 
 	/// init(tlsError:) returns .unableToSecure("Unknown") for out of range error codes
@@ -219,6 +259,7 @@ extension ConnectionError {
 	}
 }
 
+/* All delegate methods are invoked on the socket's queue. */
 protocol ConnectionSocketDelegate: AnyObject {
 	func connection(_ connection: ConnectionSocket, willConnectToProxy address: String, on port: UInt16)
 	func connection(_ connection: ConnectionSocket, willConnectTo address: String, on port: UInt16)

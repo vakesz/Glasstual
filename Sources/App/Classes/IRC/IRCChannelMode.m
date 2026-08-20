@@ -36,6 +36,8 @@
  *
  *********************************************************************** */
 
+#import <os/lock.h>
+
 #import "NSObjectHelperPrivate.h"
 #import "IRCClient.h"
 #import "IRCChannel.h"
@@ -231,6 +233,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 
 @implementation IRCChannelModeContainer
+{
+	os_unfair_lock _modeObjectsLock;
+}
 
 - (instancetype)initWithSupportInfo:(IRCISupportInfo *)supportInfo
 {
@@ -249,21 +254,29 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)prepareInitialState
 {
+	self->_modeObjectsLock = OS_UNFAIR_LOCK_INIT;
+
 	self.modeObjects = [NSMutableDictionary dictionary];
 }
 
 - (void)clear
 {
-	@synchronized(self.modeObjects) {
-		[self.modeObjects removeAllObjects];
-	}
+	os_unfair_lock_lock(&self->_modeObjectsLock);
+
+	[self.modeObjects removeAllObjects];
+
+	os_unfair_lock_unlock(&self->_modeObjectsLock);
 }
 
 - (NSDictionary<NSString *, IRCModeInfo *> *)modes
 {
-	@synchronized(self.modeObjects) {
-		return [self.modeObjects copy];
-	}
+	os_unfair_lock_lock(&self->_modeObjectsLock);
+
+	NSDictionary *modes = [self.modeObjects copy];
+
+	os_unfair_lock_unlock(&self->_modeObjectsLock);
+
+	return modes;
 }
 
 - (NSArray<NSString *> *)unwantedModes
@@ -308,23 +321,19 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(modeSymbol != nil);
 
-	@synchronized(self.modeObjects) {
-		IRCModeInfo *mode = self.modeObjects[modeSymbol];
+	os_unfair_lock_lock(&self->_modeObjectsLock);
 
-		if (mode) {
-			return mode;
-		}
+	IRCModeInfo *mode = self.modeObjects[modeSymbol];
 
-		if ([self modeIsPermitted:modeSymbol] == NO) {
-			return nil;
-		}
-
+	if (mode == nil && [self modeIsPermitted:modeSymbol]) {
 		mode = [[IRCModeInfo alloc] initWithModeSymbol:modeSymbol];
 
 		self.modeObjects[modeSymbol] = mode;
-
-		return mode;
 	}
+
+	os_unfair_lock_unlock(&self->_modeObjectsLock);
+
+	return mode;
 }
 
 - (void)applyModes:(NSArray<IRCModeInfo *> *)modes
@@ -357,9 +366,13 @@ NS_ASSUME_NONNULL_BEGIN
 	modeMutable.modeIsSet = modeIsSet;
 	modeMutable.modeParameter = modeParameter;
 
-	@synchronized(self.modeObjects) {
-		self.modeObjects[modeSymbol] = [modeMutable copy];
-	}
+	IRCModeInfo *modeUpdated = [modeMutable copy];
+
+	os_unfair_lock_lock(&self->_modeObjectsLock);
+
+	self.modeObjects[modeSymbol] = modeUpdated;
+
+	os_unfair_lock_unlock(&self->_modeObjectsLock);
 }
 
 - (id)copyWithZone:(nullable NSZone *)zone
@@ -371,7 +384,7 @@ NS_ASSUME_NONNULL_BEGIN
 	/* If we ever modify IRCModeInfo internal logic to ever
 	 modify the contents of the object after initialization,
 	 then we should perform a deep copy here. */
-	object.modeObjects = [self.modeObjects mutableCopy];
+	object.modeObjects = [self.modes mutableCopy];
 
 	return object;
 }

@@ -95,7 +95,9 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(aDecoder != nil);
 
 	if ((self = [super init])) {
-		[self decodeWithCoder:aDecoder];
+		if ([self decodeWithCoder:aDecoder] == NO) {
+			return nil;
+		}
 
 		return self;
 	}
@@ -103,15 +105,28 @@ NS_ASSUME_NONNULL_BEGIN
 	return nil;
 }
 
-- (void)decodeWithCoder:(NSCoder *)aDecoder
+- (BOOL)decodeWithCoder:(NSCoder *)aDecoder
 {
 	NSParameterAssert(aDecoder != nil);
 
-	self->_data = [aDecoder decodeDataForKey:@"data"];
-	self->_uniqueIdentifier = [aDecoder decodeStringForKey:@"uniqueIdentifier"];
-	self->_viewIdentifier = [aDecoder decodeStringForKey:@"viewIdentifier"];
+	NSData *data = [aDecoder decodeDataForKey:@"data"];
+	NSString *uniqueIdentifier = [aDecoder decodeStringForKey:@"uniqueIdentifier"];
+	NSString *viewIdentifier = [aDecoder decodeStringForKey:@"viewIdentifier"];
+
+	/* These properties are declared nonnull. An archive produced by
+	 a different version of the app, or a corrupt one, may omit them.
+	 Refuse to decode instead of handing out nil where nonnull is promised. */
+	if (data == nil || uniqueIdentifier == nil || viewIdentifier == nil) {
+		return NO;
+	}
+
+	self->_data = data;
+	self->_uniqueIdentifier = uniqueIdentifier;
+	self->_viewIdentifier = viewIdentifier;
 	self->_sessionIdentifier = [aDecoder decodeIntegerForKey:@"sessionIdentifier"];
 	self->_creationDate = [aDecoder decodeDoubleForKey:@"entryCreationDate"];
+
+	return YES;
 }
 
 - (void)encodeWithCoder:(NSCoder *)aCoder

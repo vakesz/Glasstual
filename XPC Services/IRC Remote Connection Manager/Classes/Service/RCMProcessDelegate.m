@@ -58,6 +58,30 @@ NS_ASSUME_NONNULL_BEGIN
 
 	newConnection.remoteObjectInterface = remoteObjectInterface;
 
+	/* When the client goes away (crash, quit, or a deliberate invalidate),
+	 tear down the IRC connection it owned so the socket does not linger
+	 and the exported object can be released. The handlers must not hold
+	 newConnection strongly or the NSXPCConnection would never deallocate. */
+	__weak NSXPCConnection *weakConnection = newConnection;
+
+	newConnection.interruptionHandler = ^{
+		LogToConsoleDebug("Client connection interrupted");
+
+		[exportedObject clientConnectionEnded];
+	};
+
+	newConnection.invalidationHandler = ^{
+		LogToConsoleDebug("Client connection invalidated");
+
+		[exportedObject clientConnectionEnded];
+
+		NSXPCConnection *strongConnection = weakConnection;
+
+		strongConnection.exportedObject = nil;
+		strongConnection.interruptionHandler = nil;
+		strongConnection.invalidationHandler = nil;
+	};
+
 	[newConnection resume];
 
 	return YES;

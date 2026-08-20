@@ -188,7 +188,6 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (BOOL)disconnectOnSleep;
 
 + (BOOL)preferModernCiphers;
-+ (BOOL)preferModernSockets;
 
 + (BOOL)autoAddScrollbackMark;
 + (BOOL)showDateChanges;

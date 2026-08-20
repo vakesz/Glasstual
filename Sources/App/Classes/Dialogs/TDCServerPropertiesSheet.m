@@ -158,7 +158,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *serverPortTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *sleepModeQuitMessageTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *usernameTextField;
-@property(nonatomic, unsafe_unretained) IBOutlet NSTextView *connectCommandsField;
+@property(nonatomic, weak) IBOutlet NSTextView *connectCommandsField;
 @property(nonatomic, assign) NSUInteger floodControlDelayTimerSliderTempValue;
 @property(nonatomic, assign) NSUInteger floodControlMessageCountSliderTempValue;
 @property(nonatomic, weak) NSPanel *clientCertificateSelectCertificatePanel;
@@ -433,8 +433,7 @@ NS_ASSUME_NONNULL_BEGIN
 	self.proxyAddressTextField.validationBlock = ^NSString *(NSString *currentValue) {
 		NSInteger proxyType = self.proxyTypeButton.selectedTag;
 
-		if (proxyType == IRCConnectionProxyTypeSocks4 || proxyType == IRCConnectionProxyTypeSocks5 ||
-			proxyType == IRCConnectionProxyTypeHTTP || proxyType == IRCConnectionProxyTypeHTTPS) {
+		if (proxyType == IRCConnectionProxyTypeSocks5 || proxyType == IRCConnectionProxyTypeHTTP) {
 			if (currentValue.isValidInternetAddress == NO) {
 				return TXTLS(@"TDCServerPropertiesSheet[tlo-b6]");
 			}
@@ -457,8 +456,7 @@ NS_ASSUME_NONNULL_BEGIN
 	self.proxyPortTextField.validationBlock = ^NSString *(NSString *currentValue) {
 		NSInteger proxyType = self.proxyTypeButton.selectedTag;
 
-		if (proxyType == IRCConnectionProxyTypeSocks4 || proxyType == IRCConnectionProxyTypeSocks5 ||
-			proxyType == IRCConnectionProxyTypeHTTP || proxyType == IRCConnectionProxyTypeHTTPS) {
+		if (proxyType == IRCConnectionProxyTypeSocks5 || proxyType == IRCConnectionProxyTypeHTTP) {
 			if (currentValue.isValidInternetPort == NO) {
 				return TXTLS(@"CommonErrors[l0c-nb]");
 			}
@@ -488,11 +486,6 @@ NS_ASSUME_NONNULL_BEGIN
 	[self populateEncodings];
 
 	[self populateTabViewList];
-}
-
-- (void)dealloc
-{
-	self.connectCommandsField = nil;
 }
 
 - (void)populateTabViewList
@@ -679,7 +672,8 @@ NS_ASSUME_NONNULL_BEGIN
 	} else if (self.serverEndpointSheet) {
 		[self.serverEndpointSheet close];
 	} else if (self.clientCertificateSelectCertificatePanel) {
-		[NSApp stopModalWithCode:NSModalResponseCancel];
+		[self.clientCertificateSelectCertificatePanel.sheetParent endSheet:self.clientCertificateSelectCertificatePanel
+																returnCode:NSModalResponseCancel];
 	}
 }
 
@@ -847,7 +841,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeConfigurationDidChangeObserver
 {
-	[RZNotificationCenter() removeObserver:self];
+	[RZNotificationCenter() removeObserver:self name:IRCClientConfigurationWasUpdatedNotification object:nil];
 }
 
 - (void)underlyingConfigurationChanged:(NSNotification *)notification
@@ -1384,8 +1378,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	BOOL supportsAuthentication = (proxyType == IRCConnectionProxyTypeSocks5);
 
-	BOOL httpsEnabled = (proxyType == IRCConnectionProxyTypeHTTP || proxyType == IRCConnectionProxyTypeHTTPS);
-	BOOL socksEnabled = (proxyType == IRCConnectionProxyTypeSocks4 || proxyType == IRCConnectionProxyTypeSocks5);
+	BOOL httpsEnabled = (proxyType == IRCConnectionProxyTypeHTTP);
+	BOOL socksEnabled = (proxyType == IRCConnectionProxyTypeSocks5);
 
 	BOOL enabled = (httpsEnabled || socksEnabled);
 
@@ -1690,17 +1684,32 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[panel setAlternateButtonTitle:TXTLS(@"Prompts[qso-2g]")];
 
-	NSInteger panelResponse = [panel runModalForIdentities:(__bridge NSArray *)(identities)
-												   message:TXTLS(@"TDCServerPropertiesSheet[6wq-i4]")];
+	/* Presented as a sheet on top of our own sheet instead of running
+	 an application modal over it. The identities array is released
+	 when the sheet ends. */
+	[panel beginSheetForWindow:self.sheet
+				 modalDelegate:self
+				didEndSelector:@selector(chooseIdentityPanelDidEnd:returnCode:contextInfo:)
+				   contextInfo:(void *)identities
+					identities:(__bridge NSArray *)(identities)message:TXTLS(@"TDCServerPropertiesSheet[6wq-i4]")];
+}
 
-	CFRelease(identities);
+- (void)chooseIdentityPanelDidEnd:(SFChooseIdentityPanel *)panel
+					   returnCode:(NSInteger)returnCode
+					  contextInfo:(void *)contextInfo
+{
+	CFArrayRef identities = (CFArrayRef)contextInfo;
 
-	if (panelResponse == NSModalResponseOK) {
+	if (returnCode == NSModalResponseOK) {
 		SecIdentityRef identity = [panel identity];
 
 		[self saveClientCertificateWithIdentity:identity];
 
 		[self updateClientCertificatePage];
+	}
+
+	if (identities) {
+		CFRelease(identities);
 	}
 
 	self.clientCertificateSelectCertificatePanel = nil;
@@ -2253,6 +2262,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)windowWillClose:(NSNotification *)note
 {
+	[self removeConfigurationDidChangeObserver];
+
 	self.addressBookTable.delegate = nil;
 	self.channelListTable.delegate = nil;
 	self.highlightsTable.delegate = nil;

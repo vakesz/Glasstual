@@ -72,7 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		NSString *resourcePath = resourceURL.relativePath;
 
-		NSString *filename = [NSString stringWithFormat:@"%@.%@", resourcePath.md5, resourcePath.pathExtension];
+		NSString *filename = [NSString stringWithFormat:@"%@.%@", resourcePath.sha256, resourcePath.pathExtension];
 
 		NSString *destinationPath = [basePath stringByAppendingPathComponent:filename];
 

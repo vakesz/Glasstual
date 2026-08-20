@@ -79,6 +79,7 @@
 */
 
 #import <objc/message.h>
+#import <os/lock.h>
 
 #import "NSObjectHelperPrivate.h"
 #import "NSStringHelper.h"
@@ -260,6 +261,9 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @end
 
 @implementation IRCClient
+{
+	os_unfair_lock _userListLock;
+}
 
 #pragma mark -
 #pragma mark Initialization
@@ -314,6 +318,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	self.timedCommands = [NSMutableDictionary dictionary];
 
+	self->_userListLock = OS_UNFAIR_LOCK_INIT;
+
 	self.userListPrivate = [NSMutableDictionary dictionary];
 
 	self.addressBookMatchCache = [[IRCAddressBookMatchCache alloc] initWithClient:self];
@@ -326,36 +332,38 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	self.lastServerSelected = NSNotFound;
 
+	__weak typeof(self) weakSelf = self;
+
 	self.autojoinTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[self onAutojoinTimer];
+		[weakSelf onAutojoinTimer];
 	}];
 
 	self.autojoinNextJoinTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[self onAutojoinNextJoinTimer];
+		[weakSelf onAutojoinNextJoinTimer];
 	}];
 
 	self.autojoinDelayedWarningTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[self onAutojoinDelayedWarningTimer];
+		[weakSelf onAutojoinDelayedWarningTimer];
 	}];
 
 	self.isonTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[self onISONTimer];
+		[weakSelf onISONTimer];
 	}];
 
 	self.reconnectTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[self onReconnectTimer];
+		[weakSelf onReconnectTimer];
 	}];
 
 	self.retryTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[self onRetryTimer];
+		[weakSelf onRetryTimer];
 	}];
 
 	self.pongTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[self onPongTimer];
+		[weakSelf onPongTimer];
 	}];
 
 	self.whoTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[self onWhoTimer];
+		[weakSelf onWhoTimer];
 	}];
 
 	[RZNotificationCenter() addObserver:self
@@ -715,6 +723,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	//	[self disconnect];	// Disconnect is called by IRCWorld for us
 
+	[self stopAllTimers];
+
 	[self closeDialogs];
 
 	[self closeLogFile];
@@ -988,7 +998,26 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 {
 	NSParameterAssert(nickname != nil);
 
-	return [self.userNickname isEqualToStringIgnoringCase:nickname];
+	NSString *myNickname = self.userNickname;
+
+	if (myNickname == nil) {
+		return NO;
+	}
+
+	return [[self casefoldNickname:myNickname] isEqualToString:[self casefoldNickname:nickname]];
+}
+
+- (NSString *)casefoldNickname:(NSString *)nickname
+{
+	NSParameterAssert(nickname != nil);
+
+	IRCISupportInfo *supportInfo = self.supportInfo;
+
+	if (supportInfo == nil) {
+		return nickname.lowercaseString;
+	}
+
+	return [supportInfo casefoldString:nickname];
 }
 
 - (BOOL)stringIsNickname:(NSString *)string
@@ -1286,6 +1315,17 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	}
 }
 
+- (nullable IRCChannel *)channelAtIndex:(NSUInteger)index
+{
+	@synchronized(self.channelListPrivate) {
+		if (index >= self.channelListPrivate.count) {
+			return nil;
+		}
+
+		return self.channelListPrivate[index];
+	}
+}
+
 - (void)setChannelList:(NSArray<IRCChannel *> *)channelList
 {
 	NSParameterAssert(channelList != nil);
@@ -1329,7 +1369,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 - (nullable id)childAtIndex:(NSUInteger)index
 {
-	return self.channelList[index];
+	return [self channelAtIndex:index];
 }
 
 - (NSString *)label
@@ -1371,8 +1411,11 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	if (string == nil) {
 		string = [NSString stringWithBytes:data.bytes length:data.length encoding:self.config.fallbackEncoding];
 
+		/* ISO Latin 1 maps every byte to a character which means
+		 decoding can never fail at this point; ASCII would reject
+		 any byte above 0x7F and leave the line undecoded. */
 		if (string == nil) {
-			string = [NSString stringWithBytes:data.bytes length:data.length encoding:NSASCIIStringEncoding];
+			string = [NSString stringWithBytes:data.bytes length:data.length encoding:NSISOLatin1StringEncoding];
 		}
 	}
 
@@ -2472,11 +2515,15 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 {
 	NSParameterAssert(nickname != nil);
 
-	nickname = nickname.lowercaseString;
+	nickname = [self casefoldNickname:nickname];
 
-	@synchronized(self.userListPrivate) {
-		return self.userListPrivate[nickname];
-	}
+	os_unfair_lock_lock(&self->_userListLock);
+
+	IRCUser *user = self.userListPrivate[nickname];
+
+	os_unfair_lock_unlock(&self->_userListLock);
+
+	return user;
 }
 
 - (IRCUserMutable *)mutableCopyOfUserWithNickname:(NSString *)nickname
@@ -2494,16 +2541,24 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 - (NSUInteger)numberOfUsers
 {
-	@synchronized(self.userListPrivate) {
-		return self.userListPrivate.count;
-	}
+	os_unfair_lock_lock(&self->_userListLock);
+
+	NSUInteger numberOfUsers = self.userListPrivate.count;
+
+	os_unfair_lock_unlock(&self->_userListLock);
+
+	return numberOfUsers;
 }
 
 - (NSArray<IRCUser *> *)userList
 {
-	@synchronized(self.userListPrivate) {
-		return self.userListPrivate.allValues;
-	}
+	os_unfair_lock_lock(&self->_userListLock);
+
+	NSArray *userList = self.userListPrivate.allValues;
+
+	os_unfair_lock_unlock(&self->_userListLock);
+
+	return userList;
 }
 
 - (void)addUser:(IRCUser *)user
@@ -2519,11 +2574,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		user = [user copy];
 	}
 
-	NSString *nickname = user.lowercaseNickname;
+	NSString *nickname = [self casefoldNickname:user.nickname];
 
-	@synchronized(self.userListPrivate) {
-		self.userListPrivate[nickname] = user;
-	}
+	os_unfair_lock_lock(&self->_userListLock);
+
+	self.userListPrivate[nickname] = user;
+
+	os_unfair_lock_unlock(&self->_userListLock);
 
 	[user becamePrimaryUser];
 
@@ -2564,11 +2621,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 {
 	NSParameterAssert(nickname != nil);
 
-	nickname = nickname.lowercaseString;
+	nickname = [self casefoldNickname:nickname];
 
-	@synchronized(self.userListPrivate) {
-		[self.userListPrivate removeObjectForKey:nickname];
-	}
+	os_unfair_lock_lock(&self->_userListLock);
+
+	[self.userListPrivate removeObjectForKey:nickname];
+
+	os_unfair_lock_unlock(&self->_userListLock);
 }
 
 - (void)renameUser:(IRCUser *)user to:(NSString *)toNickname
@@ -2677,9 +2736,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	[self.socket sendLine:string];
 
-	worldController().bandwidthOut += string.length;
-
-	worldController().messagesSent += 1;
+	[worldController() noteMessageSentWithLength:string.length];
 }
 
 - (void)send:(NSString *)string arguments:(NSArray<NSString *> *)arguments
@@ -5727,9 +5784,11 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		[self.capabilitiesPending removeAllObjects];
 	}
 
-	@synchronized(self.userListPrivate) {
-		[self.userListPrivate removeAllObjects];
-	}
+	os_unfair_lock_lock(&self->_userListLock);
+
+	[self.userListPrivate removeAllObjects];
+
+	os_unfair_lock_unlock(&self->_userListLock);
 }
 
 - (void)changeStateOff
@@ -5859,9 +5918,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	IRCConnectionProxyType proxyType = self.socket.config.proxyType;
 
-	if (proxyType == IRCConnectionProxyTypeSocks4) {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[p7h-un]", proxyHost, proxyPort)];
-	} else if (proxyType == IRCConnectionProxyTypeSocks5) {
+	if (proxyType == IRCConnectionProxyTypeSocks5 || proxyType == IRCConnectionProxyTypeTor) {
 		[self printDebugInformationToConsole:TXTLS(@"IRC[ni5-cy]", proxyHost, proxyPort)];
 	} else if (proxyType == IRCConnectionProxyTypeHTTP) {
 		[self printDebugInformationToConsole:TXTLS(@"IRC[oby-av]", proxyHost, proxyPort)];
@@ -6010,9 +6067,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	self.lastMessageReceived = [NSDate timeIntervalSince1970];
 
-	worldController().bandwidthIn += data.length;
-
-	worldController().messagesReceived += 1;
+	[worldController() noteMessageReceivedWithLength:data.length];
 
 	[self rawDataLogIncomingTraffic:data];
 
@@ -7141,7 +7196,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	NSString *ratingString = nil;
 
-	if (delta < 10) { // Yeah, okay…
+	if (delta <= 10) { // Yeah, okay…
 		ratingString = TXTLS(@"IRC[58g-m9]");
 	} else if (delta > 10 && delta <= 25) { // Are you plugged into the server?
 		ratingString = TXTLS(@"IRC[0jp-93]");
@@ -10685,34 +10740,38 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		return;
 	}
 
-	@synchronized(self.channelsToAutojoin) {
-		NSUInteger numberOfChannelsRemaining = self.channelsToAutojoin.count;
+	/* The autojoin list is only ever touched on the main thread
+	 (timer callbacks and message processing) so no lock is required.
+	 The previous @synchronized on the property itself was ineffective
+	 because the property is nil or replaced between calls. */
+	NSMutableArray<IRCChannel *> *channelsToAutojoin = self.channelsToAutojoin;
 
-		NSUInteger maximumNumberOfJoins = [TPCPreferences autojoinMaximumChannelJoins];
+	NSUInteger numberOfChannelsRemaining = channelsToAutojoin.count;
 
-		NSRange arrayRange;
+	NSUInteger maximumNumberOfJoins = [TPCPreferences autojoinMaximumChannelJoins];
 
-		BOOL endOfArray = (numberOfChannelsRemaining <= maximumNumberOfJoins);
+	NSRange arrayRange;
 
-		if (endOfArray == NO) {
-			arrayRange = NSMakeRange(0, maximumNumberOfJoins);
-		} else {
-			arrayRange = NSMakeRange(0, numberOfChannelsRemaining);
-		}
+	BOOL endOfArray = (numberOfChannelsRemaining <= maximumNumberOfJoins);
 
-		NSArray *channelsToJoin = [self.channelsToAutojoin subarrayWithRange:arrayRange];
+	if (endOfArray == NO) {
+		arrayRange = NSMakeRange(0, maximumNumberOfJoins);
+	} else {
+		arrayRange = NSMakeRange(0, numberOfChannelsRemaining);
+	}
 
-		[self autojoinChannels:channelsToJoin];
+	NSArray *channelsToJoin = [channelsToAutojoin subarrayWithRange:arrayRange];
 
-		if (endOfArray == NO) {
-			[self.channelsToAutojoin removeObjectsInRange:arrayRange];
-		} else {
-			self.isAutojoining = NO;
+	[self autojoinChannels:channelsToJoin];
 
-			self.isAutojoined = YES;
+	if (endOfArray == NO) {
+		[channelsToAutojoin removeObjectsInRange:arrayRange];
+	} else {
+		self.isAutojoining = NO;
 
-			[self stopAutojoinNextJoinTimer];
-		}
+		self.isAutojoined = YES;
+
+		[self stopAutojoinNextJoinTimer];
 	}
 }
 
@@ -10777,11 +10836,9 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	self.isAutojoining = YES;
 
-	@synchronized(self.channelsToAutojoin) {
-		[channelsToAutojoin shuffle];
+	[channelsToAutojoin shuffle];
 
-		self.channelsToAutojoin = channelsToAutojoin;
-	}
+	self.channelsToAutojoin = channelsToAutojoin;
 
 	[self startAutojoinTimer];
 }
@@ -10825,6 +10882,18 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 #pragma mark -
 #pragma mark Timers
+
+- (void)stopAllTimers
+{
+	[self stopAutojoinTimer];
+	[self stopAutojoinDelayedWarningTimer];
+	[self stopAutojoinNextJoinTimer];
+	[self stopISONTimer];
+	[self stopReconnectTimer];
+	[self stopRetryTimer];
+	[self stopPongTimer];
+	[self stopWhoTimer];
+}
 
 - (void)startPongTimer
 {
@@ -11394,12 +11463,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	IRCConnectionProxyType proxyType = self.config.proxyType;
 
-	/* Network.framework cannot use a custom proxy so we can only either use none
-	 or allow it to automatically configure the connection using the system proxy. */
-	socketConfig.connectionPrefersModernSockets =
-		([TPCPreferences preferModernSockets] &&
-		 (proxyType == IRCConnectionProxyTypeNone || proxyType == IRCConnectionProxyTypeAutomatic));
-
 	socketConfig.cipherSuites = self.config.cipherSuites;
 
 	socketConfig.connectionPrefersSecuredConnection = connectionPrefersSecuredConnection;
@@ -11410,10 +11473,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	if (bypassProxy == NO) {
 		socketConfig.proxyType = proxyType;
 
-		if (socketConfig.proxyType == IRCConnectionProxyTypeSocks4 ||
-			socketConfig.proxyType == IRCConnectionProxyTypeSocks5 ||
-			socketConfig.proxyType == IRCConnectionProxyTypeHTTP ||
-			socketConfig.proxyType == IRCConnectionProxyTypeHTTPS) {
+		if (socketConfig.proxyType == IRCConnectionProxyTypeSocks5 ||
+			socketConfig.proxyType == IRCConnectionProxyTypeHTTP) {
 			socketConfig.proxyPort = self.config.proxyPort;
 			socketConfig.proxyAddress = self.config.proxyAddress;
 			socketConfig.proxyPassword = self.config.proxyPassword;

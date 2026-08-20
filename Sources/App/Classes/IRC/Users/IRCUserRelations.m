@@ -35,70 +35,84 @@
  *
  *********************************************************************** */
 
+#import <os/lock.h>
+
 #import "IRCChannel.h"
 #import "IRCUserRelationsPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCUserRelations ()
-@property(nonatomic, strong, nullable) NSMutableDictionary<IRCChannel *, IRCChannelUser *> *relationsPrivate;
+@property(nonatomic, strong) NSMutableDictionary<IRCChannel *, IRCChannelUser *> *relationsPrivate;
 @end
 
 @implementation IRCUserRelations
+{
+	os_unfair_lock _relationsLock;
+}
+
+- (instancetype)init
+{
+	if ((self = [super init])) {
+		self->_relationsLock = OS_UNFAIR_LOCK_INIT;
+
+		self.relationsPrivate = [NSMutableDictionary dictionary];
+	}
+
+	return self;
+}
 
 - (NSDictionary<IRCChannel *, IRCChannelUser *> *)relations
 {
-	@synchronized(self.relationsPrivate) {
-		if (self.relationsPrivate == nil) {
-			return @{};
-		}
+	os_unfair_lock_lock(&self->_relationsLock);
 
-		return [self.relationsPrivate copy];
-	}
+	NSDictionary *relations = [self.relationsPrivate copy];
+
+	os_unfair_lock_unlock(&self->_relationsLock);
+
+	return relations;
 }
 
 - (NSArray<IRCChannel *> *)relatedChannels
 {
-	@synchronized(self.relationsPrivate) {
-		if (self.relationsPrivate == nil) {
-			return @[];
-		}
+	os_unfair_lock_lock(&self->_relationsLock);
 
-		return self.relationsPrivate.allKeys;
-	}
+	NSArray *relatedChannels = self.relationsPrivate.allKeys;
+
+	os_unfair_lock_unlock(&self->_relationsLock);
+
+	return relatedChannels;
 }
 
 - (NSArray<IRCChannelUser *> *)relatedUsers
 {
-	@synchronized(self.relationsPrivate) {
-		if (self.relationsPrivate == nil) {
-			return @[];
-		}
+	os_unfair_lock_lock(&self->_relationsLock);
 
-		return self.relationsPrivate.allValues;
-	}
+	NSArray *relatedUsers = self.relationsPrivate.allValues;
+
+	os_unfair_lock_unlock(&self->_relationsLock);
+
+	return relatedUsers;
 }
 
 - (void)enumerateRelations:(void(NS_NOESCAPE ^)(IRCChannel *channel, IRCChannelUser *member, BOOL *stop))block
 {
-	@synchronized(self.relationsPrivate) {
-		if (self.relationsPrivate == nil) {
-			return;
-		}
+	/* Enumerate a snapshot so that the caller's block is free to
+	 call back into this object without deadlocking. */
+	NSDictionary *relations = self.relations;
 
-		[self.relationsPrivate enumerateKeysAndObjectsUsingBlock:block];
-	}
+	[relations enumerateKeysAndObjectsUsingBlock:block];
 }
 
 - (NSUInteger)numberOfRelations
 {
-	@synchronized(self.relationsPrivate) {
-		if (self.relationsPrivate == nil) {
-			return 0;
-		}
+	os_unfair_lock_lock(&self->_relationsLock);
 
-		return self.relationsPrivate.count;
-	}
+	NSUInteger numberOfRelations = self.relationsPrivate.count;
+
+	os_unfair_lock_unlock(&self->_relationsLock);
+
+	return numberOfRelations;
 }
 
 - (void)associateUser:(IRCChannelUser *)user withChannel:(IRCChannel *)channel
@@ -110,16 +124,14 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	@synchronized(self.relationsPrivate) {
-		if (self.relationsPrivate == nil) {
-			self.relationsPrivate = [NSMutableDictionary dictionary];
-		}
+	os_unfair_lock_lock(&self->_relationsLock);
 
-		/* IRCChannel does not really support copying. It returns self.
-		 The protocol is declared here in a cast, instead of in the
-		 header for IRCChannel, so plugin author's don't make a mistake. */
-		self.relationsPrivate[(IRCChannel<NSCopying> *)channel] = user;
-	}
+	/* IRCChannel does not really support copying. It returns self.
+	 The protocol is declared here in a cast, instead of in the
+	 header for IRCChannel, so plugin author's don't make a mistake. */
+	self.relationsPrivate[(IRCChannel<NSCopying> *)channel] = user;
+
+	os_unfair_lock_unlock(&self->_relationsLock);
 }
 
 - (void)disassociateUserWithChannel:(IRCChannel *)channel
@@ -130,17 +142,11 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	@synchronized(self.relationsPrivate) {
-		if (self.relationsPrivate == nil) {
-			return;
-		}
+	os_unfair_lock_lock(&self->_relationsLock);
 
-		[self.relationsPrivate removeObjectForKey:channel];
+	[self.relationsPrivate removeObjectForKey:channel];
 
-		if (self.relationsPrivate.count == 0) {
-			self.relationsPrivate = nil;
-		}
-	}
+	os_unfair_lock_unlock(&self->_relationsLock);
 }
 
 - (nullable IRCChannelUser *)userAssociatedWithChannel:(IRCChannel *)channel
@@ -151,13 +157,13 @@ NS_ASSUME_NONNULL_BEGIN
 		return nil;
 	}
 
-	@synchronized(self.relationsPrivate) {
-		if (self.relationsPrivate == nil) {
-			return nil;
-		}
+	os_unfair_lock_lock(&self->_relationsLock);
 
-		return self.relationsPrivate[channel];
-	}
+	IRCChannelUser *user = self.relationsPrivate[channel];
+
+	os_unfair_lock_unlock(&self->_relationsLock);
+
+	return user;
 }
 
 @end

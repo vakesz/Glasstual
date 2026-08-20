@@ -78,11 +78,30 @@ uint16_t const IRCConnectionDefaultProxyPort = 1080;
 	}
 }
 
++ (IRCConnectionProxyType)sanitizedProxyType:(NSUInteger)rawValue
+{
+	switch (rawValue) {
+	case IRCConnectionProxyTypeNone:
+	case IRCConnectionProxyTypeAutomatic:
+	case IRCConnectionProxyTypeSocks5:
+	case IRCConnectionProxyTypeHTTP:
+	case IRCConnectionProxyTypeTor:
+		return (IRCConnectionProxyType)rawValue;
+	default:
+		break;
+	}
+
+	/* SOCKS4 (4) and HTTPS (7) were removed alongside the classic socket.
+	 Persisted configurations that still carry them fall back to no proxy. */
+	LogToConsoleError("Unsupported proxy type %{public}lu in stored configuration; using no proxy", rawValue);
+
+	return IRCConnectionProxyTypeNone;
+}
+
 - (BOOL)populateWithDecoder:(NSCoder *)aDecoder
 {
 	self->_addressType = [aDecoder decodeUnsignedIntegerForKey:@"addressType"];
 	self->_connectionPrefersModernCiphersOnly = [aDecoder decodeBoolForKey:@"connectionPrefersModernCiphersOnly"];
-	self->_connectionPrefersModernSockets = [aDecoder decodeBoolForKey:@"connectionPrefersModernSockets"];
 	self->_connectionPrefersSecuredConnection = [aDecoder decodeBoolForKey:@"connectionPrefersSecuredConnection"];
 	self->_connectionShouldValidateCertificateChain =
 		[aDecoder decodeBoolForKey:@"connectionShouldValidateCertificateChain"];
@@ -92,7 +111,7 @@ uint16_t const IRCConnectionDefaultProxyPort = 1080;
 	self->_proxyAddress = [aDecoder decodeStringForKey:@"proxyAddress"];
 	self->_proxyPassword = [aDecoder decodeStringForKey:@"proxyPassword"];
 	self->_proxyPort = [aDecoder decodeUnsignedShortForKey:@"proxyPort"];
-	self->_proxyType = [aDecoder decodeUnsignedIntegerForKey:@"proxyType"];
+	self->_proxyType = [self.class sanitizedProxyType:[aDecoder decodeUnsignedIntegerForKey:@"proxyType"]];
 	self->_proxyUsername = [aDecoder decodeStringForKey:@"proxyUsername"];
 	self->_serverAddress = [aDecoder decodeStringForKey:@"serverAddress"];
 	self->_serverPort = [aDecoder decodeUnsignedShortForKey:@"serverPort"];
@@ -109,7 +128,6 @@ uint16_t const IRCConnectionDefaultProxyPort = 1080;
 
 	[aCoder encodeUnsignedInteger:self->_addressType forKey:@"addressType"];
 	[aCoder encodeBool:self->_connectionPrefersModernCiphersOnly forKey:@"connectionPrefersModernCiphersOnly"];
-	[aCoder encodeBool:self->_connectionPrefersModernSockets forKey:@"connectionPrefersModernSockets"];
 	[aCoder encodeBool:self->_connectionPrefersSecuredConnection forKey:@"connectionPrefersSecuredConnection"];
 	[aCoder encodeBool:self->_connectionShouldValidateCertificateChain
 				forKey:@"connectionShouldValidateCertificateChain"];
@@ -139,7 +157,6 @@ uint16_t const IRCConnectionDefaultProxyPort = 1080;
 
 	object->_addressType = self->_addressType;
 	object->_connectionPrefersModernCiphersOnly = self->_connectionPrefersModernCiphersOnly;
-	object->_connectionPrefersModernSockets = self->_connectionPrefersModernSockets;
 	object->_connectionPrefersSecuredConnection = self->_connectionPrefersSecuredConnection;
 	object->_connectionShouldValidateCertificateChain = self->_connectionShouldValidateCertificateChain;
 	object->_floodControlDelayInterval = self->_floodControlDelayInterval;
@@ -172,7 +189,6 @@ uint16_t const IRCConnectionDefaultProxyPort = 1080;
 
 @dynamic addressType;
 @dynamic connectionPrefersModernCiphersOnly;
-@dynamic connectionPrefersModernSockets;
 @dynamic connectionPrefersSecuredConnection;
 @dynamic connectionShouldValidateCertificateChain;
 @dynamic floodControlDelayInterval;
@@ -203,13 +219,6 @@ uint16_t const IRCConnectionDefaultProxyPort = 1080;
 {
 	if (self->_connectionPrefersModernCiphersOnly != connectionPrefersModernCiphersOnly) {
 		self->_connectionPrefersModernCiphersOnly = connectionPrefersModernCiphersOnly;
-	}
-}
-
-- (void)setConnectionPrefersModernSockets:(BOOL)connectionPrefersModernSockets
-{
-	if (self->_connectionPrefersModernSockets != connectionPrefersModernSockets) {
-		self->_connectionPrefersModernSockets = connectionPrefersModernSockets;
 	}
 }
 

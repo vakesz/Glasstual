@@ -43,7 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 {
   @protected
 	BOOL _connectionPrefersModernCiphersOnly;
-	BOOL _connectionPrefersModernSockets;
 	BOOL _connectionPrefersSecuredConnection;
 	BOOL _connectionShouldValidateCertificateChain;
 	IRCConnectionAddressType _addressType;
