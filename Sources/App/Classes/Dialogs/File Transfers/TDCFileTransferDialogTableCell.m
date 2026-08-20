@@ -110,6 +110,24 @@ NS_ASSUME_NONNULL_BEGIN
 	[self reloadStatusInformation];
 }
 
+- (nullable NSImage *)fileIcon
+{
+	return self.fileIconView.image;
+}
+
+- (NSRect)fileIconFrameOnScreen
+{
+	NSImageView *iconView = self.fileIconView;
+
+	if (iconView == nil || iconView.window == nil) {
+		return NSZeroRect;
+	}
+
+	NSRect frameInWindow = [iconView convertRect:iconView.bounds toView:nil];
+
+	return [iconView.window convertRectToScreen:frameInWindow];
+}
+
 - (void)reloadStatusInformation
 {
 	/* Called from the transfer controller's socket dispatch queue.
