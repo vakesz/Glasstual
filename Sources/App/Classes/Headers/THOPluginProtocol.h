@@ -41,7 +41,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class AHHyperlinkScannerResult;
+@class TLOLinkParserResult;
 @class IRCClient, IRCChannel, IRCChannelUser, IRCPrefix, IRCMessage;
 @class TVCLogController;
 
@@ -405,7 +405,7 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 /**
  * @brief Array of URLs found in the message body
  */
-@property(readonly, copy) NSArray<AHHyperlinkScannerResult *> *listOfHyperlinks;
+@property(readonly, copy) NSArray<TLOLinkParserResult *> *listOfHyperlinks;
 
 /**
  * @brief List of users from the channel that appear in the message

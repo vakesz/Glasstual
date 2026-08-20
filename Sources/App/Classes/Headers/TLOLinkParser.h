@@ -38,10 +38,47 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class AHHyperlinkScannerResult;
+/**
+ * A hyperlink located inside a string by TLOLinkParser
+ */
+@interface TLOLinkParserResult : NSObject
+/**
+ * Random identifier that is unique to this result
+ */
+@property(readonly, copy) NSString *uniqueIdentifier;
+
+/**
+ * The address of the link including its scheme.
+ *
+ * Scheme-less matches (such as "example.com") are prefixed with "http://"
+ */
+@property(readonly, copy) NSString *stringValue;
+
+/**
+ * The range of the match in the string that was scanned
+ */
+@property(readonly) NSRange range;
+
+/**
+ * YES when the match carried an explicit scheme.
+ * NO for matches that were inferred from a bare domain name.
+ */
+@property(readonly) BOOL strictMatch;
+@end
 
 @interface TLOLinkParser : NSObject
-+ (NSArray<AHHyperlinkScannerResult *> *)locateLinksInString:(NSString *)string;
+/**
+ * Locates hyperlinks in a string.
+ *
+ * Results are sorted by location and never overlap.
+ */
++ (NSArray<TLOLinkParserResult *> *)locateLinksInString:(NSString *)string;
+
+/**
+ * Returns the string with a scheme prepended when it is a URL in
+ * its entirety, or nil when the string is not a URL.
+ */
++ (nullable NSString *)URLWithProperScheme:(NSString *)string;
 
 @property(readonly, class, copy) NSArray<NSString *> *bannedLineTypes;
 @end
