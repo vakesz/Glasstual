@@ -382,7 +382,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 - (void)removeConfigurationDidChangeObserver
 {
-	[RZNotificationCenter() removeObserver:self];
+	[RZNotificationCenter() removeObserver:self name:IRCChannelConfigurationWasUpdatedNotification object:nil];
 }
 
 - (void)underlyingConfigurationChanged:(NSNotification *)notification
@@ -503,6 +503,8 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 - (void)windowWillClose:(NSNotification *)note
 {
+	[self removeConfigurationDidChangeObserver];
+
 	[self.sheet makeFirstResponder:nil];
 
 	if ([self.delegate respondsToSelector:@selector(channelPropertiesSheetWillClose:)]) {

@@ -421,6 +421,7 @@ NSString *const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> "
 									 title:titleText
 							 defaultButton:buttonDefault
 						   alternateButton:buttonAlternate
+							   otherButton:buttonOther
 							suppressionKey:suppressKey
 						   suppressionText:suppressText
 							 accessoryView:accessoryView

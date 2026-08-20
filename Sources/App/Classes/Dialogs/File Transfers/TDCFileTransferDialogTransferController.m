@@ -245,7 +245,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)failWithNoSpaceLeftOnDevice
 {
-	[self closeWithLocalizedError:TXTLS(@"TDCFileTransferDialog[79f-s0]")];
+	[self closeWithLocalizedError:@"TDCFileTransferDialog[79f-s0]"];
 }
 
 - (void)closeWithLocalizedError:(NSString *)errorLocalization
@@ -602,13 +602,22 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[RZNotificationCenter() removeObserver:self name:XRPortMapperDidChangedNotification object:self.portMapping];
+	XRPortMapper *portMapping = self.portMapping;
 
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[self.portMapping close];
+	[RZNotificationCenter() removeObserver:self name:XRPortMapperDidChangedNotification object:portMapping];
 
-		self.portMapping = nil;
-	});
+	self.portMapping = nil;
+
+	/* This can be reached from the socket dispatch queue (through -close).
+	 The main thread may at that moment be blocked waiting on the socket
+	 queue, so hop asynchronously to avoid a lock inversion. */
+	if ([NSThread isMainThread]) {
+		[portMapping close];
+	} else {
+		XRPerformBlockAsynchronouslyOnMainQueue(^{
+			[portMapping close];
+		});
+	}
 }
 
 - (void)noteIPAddressLookupSucceeded
@@ -913,7 +922,17 @@ NS_ASSUME_NONNULL_BEGIN
 	NSAssertReturn(self.transferStatus == TDCFileTransferDialogTransferStatusReceiving ||
 				   self.transferStatus == TDCFileTransferDialogTransferStatusSending);
 
-	XRPerformBlockSynchronouslyOnQueue(self.serverDispatchQueue, ^{
+	/* The queue is destroyed when the transfer closes. Capture it so a
+	 close racing with this timer cannot hand dispatch a nil queue. The
+	 hop is asynchronous: the socket queue may itself be waiting on the
+	 main thread and a synchronous dispatch here would deadlock. */
+	dispatch_queue_t serverDispatchQueue = self.serverDispatchQueue;
+
+	if (serverDispatchQueue == nil) {
+		return;
+	}
+
+	XRPerformBlockAsynchronouslyOnQueue(serverDispatchQueue, ^{
 		@synchronized(self.speedRecords) {
 			[self.speedRecordsPrivate addObject:@(self.currentRecord)];
 
@@ -983,7 +1002,17 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if (self.isResume) {
-		[fileHandle seekToFileOffset:self.processedFilesize];
+		NSError *seekError = nil;
+
+		if ([fileHandle seekToOffset:self.processedFilesize error:&seekError] == NO) {
+			LogToConsoleError("Failed to seek file handle: %{public}@", seekError.localizedDescription);
+
+			[fileHandle closeAndReturnError:NULL];
+
+			[self closeWithLocalizedError:@"TDCFileTransferDialog[nab-dx]"];
+
+			return NO;
+		}
 	}
 
 	self.fileHandle = fileHandle;
@@ -997,7 +1026,11 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[self.fileHandle closeFile];
+	NSError *closeError = nil;
+
+	if ([self.fileHandle closeAndReturnError:&closeError] == NO) {
+		LogToConsoleError("Failed to close file handle: %{public}@", closeError.localizedDescription);
+	}
 
 	self.fileHandle = nil;
 }
@@ -1090,22 +1123,21 @@ NS_ASSUME_NONNULL_BEGIN
 	self.processedFilesize += data.length;
 
 	if (data.length > 0) {
-		@try {
-			[self.fileHandle writeData:data];
-		} @catch (NSException *exception) {
-			LogToConsoleError("Caught exception: %{public}@", exception.reason);
-			LogStackTrace();
+		NSError *writeError = nil;
 
-			if ([exception.reason contains:@"No space left on device"]) {
+		if ([self.fileHandle writeData:data error:&writeError] == NO) {
+			LogToConsoleError("Failed to write data: %{public}@", writeError.localizedDescription);
+
+			if ([writeError.domain isEqualToString:NSPOSIXErrorDomain] && writeError.code == ENOSPC) {
 				[self failWithNoSpaceLeftOnDevice];
 
 				return;
 			}
 
-			[self closeWithLocalizedError:TXTLS(@"TDCFileTransferDialog[05g-c8]")];
+			[self closeWithLocalizedError:@"TDCFileTransferDialog[05g-c8]"];
 
 			return;
-		} // @catch
+		}
 	}
 
 	/* Send acknowledgement back to server */
