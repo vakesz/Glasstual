@@ -63,7 +63,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _tableDragToken @"TDCServerPropertiesSheetTableDragToken"
+static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server-properties.table-row";
 
 @interface TDCServerPropertiesSheet () <NSControlTextEditingDelegate>
 @property(nonatomic, strong, readwrite, nullable) IRCClient *client;
@@ -255,7 +255,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Connect commands text box better font */
-	self.connectCommandsField.font = [NSFont systemFontOfSize:13.0];
+	self.connectCommandsField.font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
 
 	self.connectCommandsField.textContainerInset = NSMakeSize(1, 3);
 
@@ -472,16 +472,19 @@ NS_ASSUME_NONNULL_BEGIN
 	self.addressBookTable.target = self;
 
 	[self.addressBookTable registerForDraggedTypes:@[ _tableDragToken ]];
+	self.addressBookTable.draggingDestinationFeedbackStyle = NSTableViewDraggingDestinationFeedbackStyleGap;
 
 	self.channelListTable.doubleAction = @selector(tableViewDoubleClicked:);
 	self.channelListTable.target = self;
 
 	[self.channelListTable registerForDraggedTypes:@[ _tableDragToken ]];
+	self.channelListTable.draggingDestinationFeedbackStyle = NSTableViewDraggingDestinationFeedbackStyleGap;
 
 	self.highlightsTable.doubleAction = @selector(tableViewDoubleClicked:);
 	self.highlightsTable.target = self;
 
 	[self.highlightsTable registerForDraggedTypes:@[ _tableDragToken ]];
+	self.highlightsTable.draggingDestinationFeedbackStyle = NSTableViewDraggingDestinationFeedbackStyleGap;
 
 	[self populateEncodings];
 
@@ -2228,7 +2231,11 @@ NS_ASSUME_NONNULL_BEGIN
 				 proposedRow:(NSInteger)row
 	   proposedDropOperation:(NSTableViewDropOperation)dropOperation
 {
-	return NSDragOperationGeneric;
+	/* Rows are reordered, never nested. Gap feedback requires the
+	 drop to be expressed as above a row. */
+	[tableView setDropRow:row dropOperation:NSTableViewDropAbove];
+
+	return NSDragOperationMove;
 }
 
 - (BOOL)tableView:(NSTableView *)tableView

@@ -52,11 +52,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)reloadService;
 
-/* This will present a modal alert asking user for permission
- to enable inline media so that they are aware of the risk of
- IP address leaks. Completion block returns YES on permission
- granted. NO in all other cases. */
-+ (void)askPermissionToEnableInlineMediaWithCompletionBlock:(void(NS_NOESCAPE ^)(BOOL granted))completionBlock;
+/* This will present an alert, as a sheet on the key window, asking
+ user for permission to enable inline media so that they are aware
+ of the risk of IP address leaks. Completion block is invoked
+ asynchronously with YES on permission granted. NO in all other cases.
+ When no proxy is configured the block is invoked immediately. */
++ (void)askPermissionToEnableInlineMediaWithCompletionBlock:(void (^)(BOOL granted))completionBlock;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -102,17 +102,9 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 
 + (nullable NSString *)appearanceNameForType:(TXAppearanceType)type
 {
-	switch (type) {
-	case TXAppearanceTypeLight: {
-		return @"TahoeLight";
-	}
-	case TXAppearanceTypeDark: {
-		return @"TahoeDark";
-	}
-	default: {
-		return nil;
-	}
-	}
+	/* A single appearance is defined. Light and dark are expressed
+	 through semantic colors so they do not need separate entries. */
+	return @"Tahoe";
 }
 
 #pragma mark -

@@ -325,8 +325,6 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 	if ([self.mainWindow reloadLoadingScreen]) {
 		[self.world autoConnectAfterWakeup:NO];
 	}
-
-	[self.mainWindow maybeToggleFullscreenAfterLaunch];
 }
 
 - (void)applicationWillResignActive:(NSNotification *)notification
@@ -375,7 +373,7 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)sender
 {
-	/* This will have no effect on our app. Implement to suppress warning in console. */
+	/* The main window encodes its selection with secure coding. */
 	return YES;
 }
 
@@ -387,16 +385,19 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 	return self.menuController.dockMenu;
 }
 
-- (BOOL)queryTerminate
+/* Returns YES when termination may begin immediately, NO when it is
+ refused outright. When a confirmation is needed the answer is deferred:
+ the sheet's completion reports to NSApp and begins termination itself. */
+- (NSApplicationTerminateReply)queryTerminate
 {
 	if (self.applicationIsTerminating) {
 		LogToConsoleTerminationProgress("Termination is already in progress");
 
-		return YES;
+		return NSTerminateNow;
 	}
 
 	if ([TPCPreferences confirmQuit] == NO) {
-		return YES;
+		return NSTerminateNow;
 	}
 
 	BOOL stillConnected = NO;
@@ -407,24 +408,41 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 		}
 	}
 
-	if (stillConnected) {
-		BOOL result = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[77u-vp]")
-												title:TXTLS(@"Prompts[6vj-2p]")
-										defaultButton:TXTLS(@"Prompts[1bf-k0]")
-									  alternateButton:TXTLS(@"Prompts[qso-2g]")];
-
-		LogToConsoleTerminationProgress("Perform termination: %{BOOL}d", result);
-
-		return result;
+	if (stillConnected == NO) {
+		return NSTerminateNow;
 	}
 
-	return YES;
+	__weak TXMasterController *weakSelf = self;
+
+	[TDCAlert alertSheetWithWindow:self.mainWindow
+							  body:TXTLS(@"Prompts[77u-vp]")
+							 title:TXTLS(@"Prompts[6vj-2p]")
+					 defaultButton:TXTLS(@"Prompts[1bf-k0]")
+				   alternateButton:TXTLS(@"Prompts[qso-2g]")
+					   otherButton:nil
+				   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id _Nullable underlyingAlert) {
+					   BOOL result = (buttonClicked == TDCAlertResponseDefault);
+
+					   LogToConsoleTerminationProgress("Perform termination: %{BOOL}d", result);
+
+					   if (result == NO) {
+						   [NSApp replyToApplicationShouldTerminate:NO];
+
+						   return;
+					   }
+
+					   [weakSelf performApplicationTerminationStepOne];
+				   }];
+
+	return NSTerminateLater;
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-	if ([self queryTerminate] == NO) {
-		return NSTerminateCancel;
+	NSApplicationTerminateReply reply = [self queryTerminate];
+
+	if (reply != NSTerminateNow) {
+		return reply;
 	}
 
 	XRPerformBlockAsynchronouslyOnMainQueue(^{

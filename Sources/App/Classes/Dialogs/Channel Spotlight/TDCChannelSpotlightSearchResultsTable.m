@@ -103,22 +103,28 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	TDCChannelSpotlightAppearance *appearance = self.userInterfaceObjects;
 
-	if (isSelected == NO) {
-		self.channelNameField.textColor = appearance.searchResultChannelNameTextColor;
+	TDCChannelSpotlightSearchResultRowView *rowCell = self.rowCell;
 
-		self.unreadCountDescriptionField.textColor = appearance.searchResultChannelDescriptionTextColor;
-
-		self.keyboardShortcutField.textColor = appearance.searchResultKeyboardShortcutTextColor;
-		self.keyboardShortcutFieldOffsetConstraint.constant = appearance.searchResultKeyboardShortcutDeselectedOffset;
-	} else {
-		NSColor *selectedTextColor = appearance.searchResultSelectedTextColor;
+	/* Selection is drawn by AppKit. Only the text colours follow it:
+	 an emphasized (key window) selection is drawn with the accent
+	 colour and needs the alternate text colour, every other state
+	 uses the vibrant label colours. */
+	if (isSelected && rowCell.isEmphasized) {
+		NSColor *selectedTextColor = [NSColor alternateSelectedControlTextColor];
 
 		self.channelNameField.textColor = selectedTextColor;
-
 		self.unreadCountDescriptionField.textColor = selectedTextColor;
-
 		self.keyboardShortcutField.textColor = selectedTextColor;
+	} else {
+		self.channelNameField.textColor = [NSColor labelColor];
+		self.unreadCountDescriptionField.textColor = [NSColor secondaryLabelColor];
+		self.keyboardShortcutField.textColor = (isSelected) ? [NSColor labelColor] : [NSColor secondaryLabelColor];
+	}
+
+	if (isSelected) {
 		self.keyboardShortcutFieldOffsetConstraint.constant = appearance.searchResultKeyboardShortcutSelectedOffset;
+	} else {
+		self.keyboardShortcutFieldOffsetConstraint.constant = appearance.searchResultKeyboardShortcutDeselectedOffset;
 	}
 }
 
@@ -252,6 +258,28 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[self willChangeValueForKey:@"unreadCountDescription"];
 	[self didChangeValueForKey:@"unreadCountDescription"];
+
+	[self updateAccessibilityLabel];
+}
+
+- (void)updateAccessibilityLabel
+{
+	TDCChannelSpotlightSearchResult *searchResult = self.objectValue;
+
+	if (searchResult == nil) {
+		self.accessibilityLabel = nil;
+
+		return;
+	}
+
+	NSString *channelName = searchResult.channel.name;
+
+	NSString *networkName = searchResult.channel.associatedClient.networkNameAlt;
+
+	NSString *label = [TXTLS(@"TDCChannelSpotlightController[jpw-cj]", channelName)
+		stringByAppendingString:TXTLS(@"TDCChannelSpotlightController[z68-5q]", networkName)];
+
+	self.accessibilityLabel = TXTLS(@"TDCChannelSpotlightController[et7-c5]", label, self.unreadCountDescription);
 }
 
 - (TDCChannelSpotlightSearchResultRowView *)rowCell
@@ -391,42 +419,11 @@ NS_ASSUME_NONNULL_BEGIN
 	self.childCell.needsDisplay = YES;
 }
 
-- (void)drawSelectionInRect:(NSRect)dirtyRect
+- (void)setEmphasized:(BOOL)emphasized
 {
-	if ([self needsToDrawRect:dirtyRect] == NO) {
-		return;
-	}
+	super.emphasized = emphasized;
 
-	BOOL isWindowActive = self.window.isActiveForDrawing;
-
-	TDCChannelSpotlightAppearance *appearance = self.userInterfaceObjects;
-
-	NSColor *selectionColor = nil;
-
-	if (isWindowActive) {
-		selectionColor = appearance.searchResultRowSelectionColorActiveWindow;
-	} else {
-		selectionColor = appearance.searchResultRowSelectionColorInactiveWindow;
-	} // isWindowActive
-
-	if (selectionColor) {
-		[selectionColor set];
-
-		NSRect selectionRect = self.bounds;
-
-		NSRectFill(selectionRect);
-	} else {
-		[super drawSelectionInRect:dirtyRect];
-	} // selectionColor
-}
-
-- (BOOL)isEmphasized
-{
-	TDCChannelSpotlightAppearance *appearance = self.userInterfaceObjects;
-
-	NSWindow *window = self.window;
-
-	return (appearance.searchResultRowEmphasized && (window == nil || window.isKeyWindow));
+	[self setNeedsDisplayOnChild];
 }
 
 - (nullable TDCChannelSpotlightSearchResultCellView *)childCell

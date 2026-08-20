@@ -149,32 +149,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-+ (NSModalResponse)promptWithMessage:(NSString *)bodyText
-							   title:(NSString *)titleText
-					   defaultButton:(NSString *)buttonDefault
-					 alternateButton:(nullable NSString *)buttonAlternate
-					   prefillString:(nullable NSString *)prefillString
-						resultString:(NSString *_Nonnull *_Nonnull)resultString
-{
-	NSTextField *textField = nil;
-
-	NSAlert *alert = [self alertWithMessage:bodyText
-									  title:titleText
-							  defaultButton:buttonDefault
-							alternateButton:buttonAlternate
-							  prefillString:prefillString
-								  textField:&textField];
-
-	/* Run modal */
-	NSModalResponse response = [alert runModal];
-
-	/* Assign result */
-	*resultString = textField.stringValue;
-
-	/* Return response */
-	return response;
-}
-
 @end
 
 NS_ASSUME_NONNULL_END

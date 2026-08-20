@@ -301,7 +301,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Helpers
 
-+ (void)askPermissionToEnableInlineMediaWithCompletionBlock:(void(NS_NOESCAPE ^)(BOOL granted))completionBlock
++ (void)askPermissionToEnableInlineMediaWithCompletionBlock:(void (^)(BOOL granted))completionBlock
 {
 	BOOL presentDialog = NO;
 
@@ -319,6 +319,20 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
+	/* The alert is attached to whichever window the user is acting in
+	 (a properties sheet or the preferences window). */
+	NSWindow *window = [NSApp keyWindow];
+
+	if (window == nil) {
+		window = mainWindow();
+	}
+
+	[self _presentInlineMediaPermissionAlertForWindow:window completionBlock:completionBlock];
+}
+
++ (void)_presentInlineMediaPermissionAlertForWindow:(NSWindow *)window
+									completionBlock:(void (^)(BOOL granted))completionBlock
+{
 	NSAlert *alert = [NSAlert new];
 
 	alert.alertStyle = NSAlertStyleWarning;
@@ -330,19 +344,23 @@ NS_ASSUME_NONNULL_BEGIN
 	[alert addButtonWithTitle:TXTLS(@"Prompts[qso-2g]")];
 	[alert addButtonWithTitle:TXTLS(@"Prompts[x3e-ur]")];
 
-	NSModalResponse response = NSAlertThirdButtonReturn;
+	[alert beginSheetModalForWindow:window
+				  completionHandler:^(NSModalResponse response) {
+					  /* Opening proxy settings does not answer the question
+					   the alert asks, so present it again once the sheet has
+					   been dismissed and the user returns. */
+					  if (response == NSAlertThirdButtonReturn) {
+						  [TDCPreferencesController openProxySettingsInSystemPreferences];
 
-	/* Opening proxy settings does not answer the question the alert asks,
-	 so present it again once the user returns. */
-	while (response == NSAlertThirdButtonReturn) {
-		response = [alert runModal];
+						  dispatch_async(dispatch_get_main_queue(), ^{
+							  [self _presentInlineMediaPermissionAlertForWindow:window completionBlock:completionBlock];
+						  });
 
-		if (response == NSAlertThirdButtonReturn) {
-			[TDCPreferencesController openProxySettingsInSystemPreferences];
-		}
-	}
+						  return;
+					  }
 
-	completionBlock(response == NSAlertFirstButtonReturn);
+					  completionBlock(response == NSAlertFirstButtonReturn);
+				  }];
 }
 
 @end

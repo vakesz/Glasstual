@@ -41,7 +41,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _endpointEntryTableDragToken @"TDCServerEndpointListSheetEntryTableDragToken"
+static NSPasteboardType const _endpointEntryTableDragToken = @"com.codeux.apps.textual.server-endpoint-list.table-row";
 
 @interface TDCServerEndpointListSheet ()
 @property(nonatomic, strong) IBOutlet NSArrayController *entryTableController;
@@ -69,6 +69,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[RZMainBundle() loadNibNamed:@"TDCServerEndpointListSheet" owner:self topLevelObjects:nil];
 
 	[self.entryTable registerForDraggedTypes:@[ _endpointEntryTableDragToken ]];
+	self.entryTable.draggingDestinationFeedbackStyle = NSTableViewDraggingDestinationFeedbackStyleGap;
 
 	[self.entryTableController addObserver:self
 								forKeyPath:@"canRemove"
@@ -182,7 +183,11 @@ NS_ASSUME_NONNULL_BEGIN
 				 proposedRow:(NSInteger)row
 	   proposedDropOperation:(NSTableViewDropOperation)dropOperation
 {
-	return NSDragOperationGeneric;
+	/* Rows are reordered, never nested. Gap feedback requires the
+	 drop to be expressed as above a row. */
+	[tableView setDropRow:row dropOperation:NSTableViewDropAbove];
+
+	return NSDragOperationMove;
 }
 
 - (BOOL)tableView:(NSTableView *)tableView

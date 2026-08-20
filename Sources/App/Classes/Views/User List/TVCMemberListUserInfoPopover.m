@@ -51,8 +51,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TVCMemberListUserInfoPopover
 
+- (void)awakeFromNib
+{
+	[super awakeFromNib];
+
+	/* The popover is a hover card. Clicking anywhere outside of it
+	 should dismiss it, which is what the transient behavior does. */
+	self.behavior = NSPopoverBehaviorTransient;
+}
+
 - (void)mouseDown:(NSEvent *)event
 {
+	/* Transient behavior only covers clicks outside of the popover.
+	 A click inside a hover card is a request to dismiss it too. */
 	[self close];
 }
 

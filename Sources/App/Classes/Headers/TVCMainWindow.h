@@ -66,8 +66,6 @@ GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowDidReloadThemeNotificatio
 
 GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowSelectionChangedNotification;
 
-GLASSTUAL_EXTERN NSString *const TVCServerListDragType;
-
 @interface TVCMainWindow : NSWindow
 @property(readonly, getter=isDisabled) BOOL disabled;
 

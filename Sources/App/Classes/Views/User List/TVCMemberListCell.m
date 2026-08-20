@@ -116,16 +116,54 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *stringValueOld = textField.stringValue;
 
-	if ([stringValueOld isEqualTo:stringValueNew]) {
-		return;
+	if ([stringValueOld isEqualToString:stringValueNew] == NO) {
+		textField.stringValue = stringValueNew;
 	}
 
-	textField.stringValue = stringValueNew;
+	/* The accessibility description carries mode and away state as
+	 well as the nickname, so it is rebuilt on every pass. */
+	NSString *accessibilityDescription = TXTLS(@"Accessibility[alq-6s]", stringValueNew);
 
-	/* Update accessibility */
+	accessibilityDescription =
+		[accessibilityDescription stringByAppendingFormat:@", %@", [self.class privilegesDescriptionForUser:cellItem]];
+
+	if (cellItem.user.isAway) {
+		accessibilityDescription =
+			[accessibilityDescription stringByAppendingFormat:@", %@", TXTLS(@"TVCMainWindow[jkr-ed]")];
+	}
+
 	NSTextFieldCell *textFieldCell = textField.cell;
 
-	[textFieldCell setAccessibilityValueDescription:TXTLS(@"Accessibility[alq-6s]", stringValueNew)];
+	textFieldCell.accessibilityValueDescription = accessibilityDescription;
+
+	self.accessibilityLabel = accessibilityDescription;
+}
+
++ (NSString *)privilegesDescriptionForUser:(IRCChannelUser *)cellItem
+{
+	NSParameterAssert(cellItem != nil);
+
+	IRCUserRank userRank = cellItem.rank;
+
+	if (cellItem.user.isIRCop) {
+		userRank = IRCUserRankIRCopByMode;
+	}
+
+	if (userRank == IRCUserRankIRCopByMode) {
+		return TXTLS(@"TVCMainWindow[i8t-vb]");
+	} else if (userRank == IRCUserRankChannelOwner) {
+		return TXTLS(@"TVCMainWindow[p1z-sc]");
+	} else if (userRank == IRCUserRankSuperOperator) {
+		return TXTLS(@"TVCMainWindow[som-zo]");
+	} else if (userRank == IRCUserRankNormalOperator) {
+		return TXTLS(@"TVCMainWindow[0kn-s5]");
+	} else if (userRank == IRCUserRankHalfOperator) {
+		return TXTLS(@"TVCMainWindow[0nn-te]");
+	} else if (userRank == IRCUserRankVoiced) {
+		return TXTLS(@"TVCMainWindow[ya1-sk]");
+	}
+
+	return TXTLS(@"TVCMainWindow[tjj-z2]");
 }
 
 - (void)updateDrawingInContext:(TVCMemberListCellDrawingContext *)drawingContext
@@ -335,7 +373,7 @@ static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 		userInfoPopover.addressField.stringValue = hostmaskAddress;
 	} else {
 		NSAttributedString *hostmaskAddressFormatted =
-			[hostmaskAddress attributedStringWithIRCFormatting:[NSFont systemFontOfSize:12.0]
+			[hostmaskAddress attributedStringWithIRCFormatting:userInfoPopover.addressField.font
 											preferredFontColor:nil
 									 honorFormattingPreference:NO];
 
@@ -354,7 +392,7 @@ static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 		userInfoPopover.realNameField.stringValue = realName;
 	} else {
 		NSAttributedString *realNameFormatted =
-			[realName attributedStringWithIRCFormatting:[NSFont systemFontOfSize:12.0]
+			[realName attributedStringWithIRCFormatting:userInfoPopover.realNameField.font
 									 preferredFontColor:nil
 							  honorFormattingPreference:NO];
 
@@ -371,31 +409,7 @@ static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 
 	/* =============================================== */
 
-	IRCUserRank userRank = cellItem.rank;
-
-	if (cellItem.user.isIRCop) {
-		userRank = IRCUserRankIRCopByMode;
-	}
-
-	NSString *userPrivileges = nil;
-
-	if (userRank == IRCUserRankIRCopByMode) {
-		userPrivileges = TXTLS(@"TVCMainWindow[i8t-vb]");
-	} else if (userRank == IRCUserRankChannelOwner) {
-		userPrivileges = TXTLS(@"TVCMainWindow[p1z-sc]");
-	} else if (userRank == IRCUserRankSuperOperator) {
-		userPrivileges = TXTLS(@"TVCMainWindow[som-zo]");
-	} else if (userRank == IRCUserRankNormalOperator) {
-		userPrivileges = TXTLS(@"TVCMainWindow[0kn-s5]");
-	} else if (userRank == IRCUserRankHalfOperator) {
-		userPrivileges = TXTLS(@"TVCMainWindow[0nn-te]");
-	} else if (userRank == IRCUserRankVoiced) {
-		userPrivileges = TXTLS(@"TVCMainWindow[ya1-sk]");
-	} else {
-		userPrivileges = TXTLS(@"TVCMainWindow[tjj-z2]");
-	}
-
-	userInfoPopover.privilegesField.stringValue = userPrivileges;
+	userInfoPopover.privilegesField.stringValue = [self.class privilegesDescriptionForUser:cellItem];
 
 	/* =============================================== */
 

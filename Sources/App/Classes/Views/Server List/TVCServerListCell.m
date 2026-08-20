@@ -138,25 +138,82 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSTextFieldCell *textFieldCell = textField.cell;
 
+	NSString *accessibilityDescription = nil;
+
 	if (isGroupItem) {
 		if (isActive) {
-			[textFieldCell setAccessibilityValueDescription:TXTLS(@"Accessibility[bmy-d2]", stringValueNew)];
+			accessibilityDescription = TXTLS(@"Accessibility[bmy-d2]", stringValueNew);
 		} else {
-			[textFieldCell setAccessibilityValueDescription:TXTLS(@"Accessibility[tu4-8u]", stringValueNew)];
+			accessibilityDescription = TXTLS(@"Accessibility[tu4-8u]", stringValueNew);
 		} // isActive
 	} else {
-		if (((IRCChannel *)cellItem).isChannel == NO) {
-			[textFieldCell setAccessibilityValueDescription:TXTLS(@"Accessibility[9sn-xp]", stringValueNew)];
+		IRCChannel *channel = (IRCChannel *)cellItem;
+
+		if (channel.isChannel == NO) {
+			accessibilityDescription = TXTLS(@"Accessibility[9sn-xp]", stringValueNew);
 		} else {
 			if (isActive) {
-				[textFieldCell setAccessibilityValueDescription:TXTLS(@"Accessibility[75f-og]", stringValueNew)];
+				accessibilityDescription = TXTLS(@"Accessibility[75f-og]", stringValueNew);
 			} else {
-				[textFieldCell setAccessibilityValueDescription:TXTLS(@"Accessibility[edc-7o]", stringValueNew)];
+				accessibilityDescription = TXTLS(@"Accessibility[edc-7o]", stringValueNew);
 			} // isActive
 		} // isChannel
 
-		[self.imageView.cell setAccessibilityLabel:nil];
+		/* Unread and highlight counts are part of what the row
+		 communicates visually (the badge), so they are spoken too. */
+		NSString *unreadDescription = [self accessibilityUnreadDescriptionForChannel:channel];
+
+		if (unreadDescription) {
+			accessibilityDescription =
+				TXTLS(@"TDCChannelSpotlightController[et7-c5]", accessibilityDescription, unreadDescription);
+		}
+
+		/* The symbol in front of the name repeats what the text
+		 already says. Hide it from VoiceOver instead of giving it
+		 an empty label which is read as "image". */
+		self.imageView.cell.accessibilityElement = NO;
 	} // isGroupItem
+
+	textFieldCell.accessibilityValueDescription = accessibilityDescription;
+
+	self.accessibilityLabel = accessibilityDescription;
+}
+
+- (nullable NSString *)accessibilityUnreadDescriptionForChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	NSUInteger unreadCount = channel.treeUnreadCount;
+
+	if (unreadCount == 0) {
+		return nil;
+	}
+
+	NSString *unreadCountDescription = nil;
+
+	if (unreadCount == 1) {
+		unreadCountDescription = TXTLS(@"TDCChannelSpotlightController[43s-x4]", TXFormattedNumber(unreadCount));
+	} else {
+		unreadCountDescription = TXTLS(@"TDCChannelSpotlightController[vzj-30]", TXFormattedNumber(unreadCount));
+	}
+
+	NSUInteger nicknameHighlightCount = channel.nicknameHighlightCount;
+
+	if (nicknameHighlightCount == 0 || channel.config.ignoreHighlights) {
+		return unreadCountDescription;
+	}
+
+	NSString *nicknameHighlightCountDescription = nil;
+
+	if (nicknameHighlightCount == 1) {
+		nicknameHighlightCountDescription =
+			TXTLS(@"TDCChannelSpotlightController[0lz-oh]", TXFormattedNumber(nicknameHighlightCount));
+	} else {
+		nicknameHighlightCountDescription =
+			TXTLS(@"TDCChannelSpotlightController[c4u-21]", TXFormattedNumber(nicknameHighlightCount));
+	}
+
+	return TXTLS(@"TDCChannelSpotlightController[et7-c5]", unreadCountDescription, nicknameHighlightCountDescription);
 }
 
 - (void)updateDrawingInContext:(TVCServerListCellDrawingContext *)drawingContext
@@ -337,6 +394,7 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 
 	if (treeUnreadCount == 0 || drawMessageBadge == NO) {
 		self.messageCountBadgeImageView.image = nil;
+		self.messageCountBadgeImageView.cell.accessibilityElement = NO;
 
 		/* Disable constraints when badge is not visible to
 		 allow text field to hug the right of the table view. */
@@ -349,6 +407,10 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 	self.messageCountBadgeImageView.image = [self messageCountBadgeForCount:treeUnreadCount
 																isHighlight:isHighlight
 																 isSelected:isSelected];
+
+	/* The count is already spoken as part of the row label; the badge
+	 itself is decorative for VoiceOver. */
+	self.messageCountBadgeImageView.cell.accessibilityElement = NO;
 
 	self.messageCountBadgeLeadingConstraint.active = YES;
 	self.messageCountBadgeTrailingConstraint.active = YES;
@@ -549,11 +611,6 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 	self.childCell.needsDisplay = YES;
 }
 
-- (void)drawSelectionInRect:(NSRect)dirtyRect
-{
-	[super drawSelectionInRect:dirtyRect];
-}
-
 - (void)didAddSubview:(NSView *)subview
 {
 	TVCServerListCellGroupItem *childCell = self.childCell;
@@ -582,6 +639,20 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 - (BOOL)isGroupItem
 {
 	return [self isKindOfClass:[TVCServerListGroupRowCell class]];
+}
+
+#pragma mark -
+#pragma mark Accessibility
+
+- (nullable NSString *)accessibilityLabel
+{
+	NSString *label = self.childCell.accessibilityLabel;
+
+	if (label.length > 0) {
+		return label;
+	}
+
+	return [super accessibilityLabel];
 }
 
 @end
