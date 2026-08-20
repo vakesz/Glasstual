@@ -83,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *filenameWithoutExtension = filename.stringByDeletingPathExtension;
 
 		if (filenameWithoutExtension.alphabeticNumericOnly) {
-			return [NSString stringWithFormat:@"http://clips.dropcam.com/%@", filename];
+			return [NSString stringWithFormat:@"https://clips.dropcam.com/%@", filename];
 		}
 	}
 

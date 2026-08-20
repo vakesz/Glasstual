@@ -39,6 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface HLSHistoricLogProcessMain : NSObject <HLSHistoricLogServerProtocol>
 - (instancetype)initWithConnection:(NSXPCConnection *)connection;
+
+/* Performs a final save and releases the connection. */
+- (void)connectionInvalidated;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -49,6 +49,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)_finalizeModule:(ICLInlineContentModule *)module withError:(nullable NSError *)error;
 - (void)_cancelModule:(ICLInlineContentModule *)module;
 - (void)_deferModule:(ICLInlineContentModule *)module asType:(ICLMediaType)type performCheck:(BOOL)performCheck;
+
+/* Drops in-flight modules and releases the connection. */
+- (void)connectionInvalidated;
 @end
 
 NS_ASSUME_NONNULL_END
