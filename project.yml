@@ -375,9 +375,8 @@ targets:
         LD_RUNPATH_SEARCH_PATHS:
           - $(inherited)
           - "@loader_path/../../../../../../../Frameworks"
-      configs:
-        Release:
-          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_CORE_MEDIA_PROVISIONING_PROFILE)
+        # A loadable bundle cannot carry a provisioning profile.
+        PROVISIONING_PROFILE_SPECIFIER: ""
     sources:
       - path: XPC Services/Inline Content Loader/Extensions/Core Media/Classes
       - path: XPC Services/Inline Content Loader/Extensions/Core Media/Resources/Modules

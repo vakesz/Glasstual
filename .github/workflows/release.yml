@@ -137,8 +137,6 @@ jobs:
             b3add7fc-e480-44e8-bf4c-0d8eba1b3f30
           install_profile Glasstual_Inline_Content_Loader_Developer_ID.provisionprofile \
             2d6ca9d2-5daa-4892-ac28-762509236350
-          install_profile Glasstual_Inline_Content_Loader_Core_Media_Develop.provisionprofile \
-            5293a089-8dff-44f7-9f23-9d1ad75fe7fd
 
       - name: Build signed archive
         run: |
@@ -157,8 +155,7 @@ jobs:
             GLASSTUAL_MAIN_PROVISIONING_PROFILE="Glasstual Developer ID" \
             GLASSTUAL_IRC_PROVISIONING_PROFILE="Glasstual IRC Connection Host Developer ID" \
             GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE="Glasstual Scrollback History Manager Developer ID" \
-            GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE="Glasstual Inline Content Loader Developer ID" \
-            GLASSTUAL_CORE_MEDIA_PROVISIONING_PROFILE="Glasstual Inline Content Loader Core Media Develop"
+            GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE="Glasstual Inline Content Loader Developer ID"
 
       - name: Verify archived version
         run: |
@@ -249,6 +246,5 @@ jobs:
               "${dir}/efad779e-5dc8-46fb-8466-d4c5a78b5591.mobileprovision" \
               "${dir}/b3add7fc-e480-44e8-bf4c-0d8eba1b3f30.mobileprovision" \
               "${dir}/2d6ca9d2-5daa-4892-ac28-762509236350.mobileprovision" \
-              "${dir}/5293a089-8dff-44f7-9f23-9d1ad75fe7fd.mobileprovision" \
               2>/dev/null || true
           done
