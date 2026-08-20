@@ -489,6 +489,13 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 
 - (IBAction)copyUrl:(nullable id)sender;
 
+/* Returns a "Share…" menu item whose submenu is populated by
+ NSSharingServicePicker for the given items (URLs, files, strings).
+ When items is empty, a disabled item is returned so that the menu
+ keeps its shape. Build a fresh item each time a menu is presented
+ so that the shared items reflect what the user clicked. */
+- (NSMenuItem *)shareMenuItemForItems:(NSArray *)items;
+
 - (IBAction)lookUpInDictionary:(nullable id)sender;
 - (IBAction)searchGoogle:(nullable id)sender;
 - (IBAction)copyLogAsHtml:(nullable id)sender;

@@ -746,7 +746,8 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 	NSString *autosaveName = self.frameAutosaveName;
 
-	if (autosaveName.length > 0 && [defaults stringForKey:[@"NSWindow Frame " stringByAppendingString:autosaveName]] == nil) {
+	if (autosaveName.length > 0 &&
+		[defaults stringForKey:[@"NSWindow Frame " stringByAppendingString:autosaveName]] == nil) {
 		[self setFrameFromString:legacyFrame];
 
 		[self saveFrameUsingName:autosaveName];

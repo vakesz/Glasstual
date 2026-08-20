@@ -1720,6 +1720,42 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Other Actions
 
+- (NSMenuItem *)shareMenuItemForItems:(NSArray *)items
+{
+	NSParameterAssert(items != nil);
+
+	NSString *title = TXTLS(@"TXMenuController[shr-m1]");
+
+	NSMenuItem *menuItem = nil;
+
+	if (items.count > 0) {
+		NSSharingServicePicker *picker = [[NSSharingServicePicker alloc] initWithItems:items];
+
+		menuItem = picker.standardShareMenuItem;
+
+		menuItem.title = title;
+
+		/* The item's submenu is populated by the picker, so the
+		 picker must live as long as the item does. */
+		menuItem.representedObject = picker;
+	} else {
+		menuItem = [[NSMenuItem alloc] initWithTitle:title action:nil keyEquivalent:@""];
+
+		menuItem.enabled = NO;
+	}
+
+	NSImage *image = [NSImage imageWithSystemSymbolName:@"square.and.arrow.up" accessibilityDescription:title];
+
+	NSImageSymbolConfiguration *configuration =
+		[NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
+														weight:NSFontWeightRegular
+														 scale:NSImageSymbolScaleMedium];
+
+	menuItem.image = [image imageWithSymbolConfiguration:configuration];
+
+	return menuItem;
+}
+
 - (void)copyUrl:(nullable id)sender
 {
 	NSString *pointedUrl = ((NSMenuItem *)sender).userInfo;

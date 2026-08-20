@@ -78,6 +78,17 @@ NS_ASSUME_NONNULL_BEGIN
 			[menuItems addObject:newItem];
 		}
 
+		/* The share submenu is built for each presentation so that it
+		 always reflects the link that was clicked. A string that does
+		 not form a URL produces a disabled item. */
+		NSURL *shareURL = [NSURL URLWithString:self.anchorURL];
+
+		NSArray *shareItems = ((shareURL != nil) ? @[ shareURL ] : @[]);
+
+		[menuItems addObject:[NSMenuItem separatorItem]];
+
+		[menuItems addObject:[menuController() shareMenuItemForItems:shareItems]];
+
 		self.anchorURL = nil;
 	} else if (self.nickname) {
 		if (viewController.associatedChannel == nil || viewController.associatedChannel.isUtility) {
