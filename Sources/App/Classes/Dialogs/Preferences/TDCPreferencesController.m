@@ -137,8 +137,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define _paneContentInset 20.0
 
-#define _windowMinimumWidth 860.0
-#define _windowMinimumHeight 560.0
+#define _windowMinimumWidth 980.0
+#define _windowMinimumHeight 600.0
 
 #define _selectedPaneDefaultsKey @"TDCPreferencesController -> Selected Pane"
 
@@ -789,7 +789,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 		initWithFrame:NSMakeRect(0.0, 0.0, (_windowMinimumWidth - _sidebarPreferredWidth), _windowMinimumHeight)];
 	scrollView.documentView = containerView;
 	scrollView.hasVerticalScroller = YES;
-	scrollView.hasHorizontalScroller = YES;
+	scrollView.hasHorizontalScroller = NO;
 	scrollView.autohidesScrollers = YES;
 	scrollView.drawsBackground = NO;
 	scrollView.automaticallyAdjustsContentInsets = YES;
@@ -843,19 +843,34 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 
 	[containerView addSubview:paneView];
 
+	/* Panes are laid out at a fixed width in the nib. Centre them in the
+	 available space, like System Settings does, and let the container grow
+	 vertically so tall panes scroll. */
 	[NSLayoutConstraint activateConstraints:@[
 		[paneView.topAnchor constraintEqualToAnchor:containerView.topAnchor constant:_paneContentInset],
-		[paneView.leadingAnchor constraintEqualToAnchor:containerView.leadingAnchor constant:_paneContentInset],
-		[containerView.trailingAnchor constraintGreaterThanOrEqualToAnchor:paneView.trailingAnchor
-																  constant:_paneContentInset],
+		[paneView.centerXAnchor constraintEqualToAnchor:containerView.centerXAnchor],
+		[paneView.leadingAnchor constraintGreaterThanOrEqualToAnchor:containerView.leadingAnchor
+															constant:_paneContentInset],
 		[containerView.bottomAnchor constraintGreaterThanOrEqualToAnchor:paneView.bottomAnchor
 																constant:_paneContentInset],
 	]];
 
 	[containerView layoutSubtreeIfNeeded];
 
-	[self.paneScrollView.contentView scrollToPoint:NSZeroPoint];
-	[self.paneScrollView reflectScrolledClipView:self.paneScrollView.contentView];
+	[self scrollPresentedPaneToTop];
+}
+
+- (void)scrollPresentedPaneToTop
+{
+	NSScrollView *scrollView = self.paneScrollView;
+	NSClipView *clipView = scrollView.contentView;
+
+	/* The content sits under the title bar (full size content view), so
+	 the top of the document is at -inset, not at zero. */
+	NSPoint topPoint = NSMakePoint(0.0, -clipView.contentInsets.top);
+
+	[clipView scrollToPoint:[clipView constrainBoundsRect:(NSRect){topPoint, clipView.bounds.size}].origin];
+	[scrollView reflectScrolledClipView:clipView];
 }
 
 #pragma mark -
@@ -1201,7 +1216,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 	NSSize frameSize = window.frame.size;
 
 	if (frameSize.width < _windowMinimumWidth || frameSize.height < _windowMinimumHeight) {
-		[window setContentSize:NSMakeSize(960.0, 640.0)];
+		[window setContentSize:NSMakeSize(1020.0, 700.0)];
 		[window center];
 	}
 }
