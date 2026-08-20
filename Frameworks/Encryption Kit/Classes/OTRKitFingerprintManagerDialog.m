@@ -231,9 +231,9 @@ NS_ASSUME_NONNULL_BEGIN
 		BOOL isTrusted = rowEntryData.fingerprintIsTrusted;
 
 		if (isTrusted) {
-			madeView.viewCheckbox.state = NSOnState;
+			madeView.viewCheckbox.state = NSControlStateValueOn;
 		} else {
-			madeView.viewCheckbox.state = NSOffState;
+			madeView.viewCheckbox.state = NSControlStateValueOff;
 		}
 
 		madeView.viewCheckbox.tag = row;
@@ -311,7 +311,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	OTRKitConcreteObject *dataObject = self.cachedListOfFingerprints[[sender tag]];
 
-	BOOL isVerified = ([sender state] == NSOnState);
+	BOOL isVerified = ([sender state] == NSControlStateValueOn);
 
 	[[OTRKit sharedInstance] setFingerprintVerificationForConcreteObject:dataObject
 																verified:isVerified];

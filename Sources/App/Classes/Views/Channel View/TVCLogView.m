@@ -81,11 +81,6 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	return nil;
 }
 
-- (void)dealloc
-{
-	self.webViewBacking = nil;
-}
-
 - (void)constructWebView
 {
 	self.webViewBacking = [[TVCLogViewInternalWK2 alloc] initWithHostView:self];
@@ -574,12 +569,10 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 	[compiledScript appendString:@"["];
 
-	NSInteger lastIndex = (objects.count - 1);
-
 	[objects enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop) {
 		NSString *objectString = [self compileJavaScriptGenericArgument:object];
 
-		if (index == lastIndex) {
+		if ((index + 1) == objects.count) {
 			[compiledScript appendString:objectString];
 		} else {
 			[compiledScript appendFormat:@"%@,", objectString];

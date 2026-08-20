@@ -57,8 +57,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong, readwrite) IBOutlet NSArrayController *filterArrayController;
 @property(nonatomic, assign) BOOL atleastOneFilterExists;
 @property(nonatomic, assign) NSInteger activeChatFilterIndex;
-@property(nonatomic, strong) TPI_ChatFilterEditFilterSheet *activeChatFilterEditSheet;
-@property(nonatomic, strong) TPI_ChatFilterLogic *filterLogicController;
+@property(nonatomic, strong, nullable) TPI_ChatFilterEditFilterSheet *activeChatFilterEditSheet;
+@property(nonatomic, strong, nullable) TPI_ChatFilterLogic *filterLogicController;
 @property(nonatomic, assign) BOOL savingFilters;
 
 - (IBAction)filterTableDoubleClicked:(nullable id)sender;

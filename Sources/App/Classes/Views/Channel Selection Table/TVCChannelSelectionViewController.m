@@ -52,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong) NSMutableArray<NSString *> *cachedSelectedClientIds;
 @property(nonatomic, strong) NSMutableArray<NSString *> *cachedSelectedChannelIds;
 @property(nonatomic, copy) NSDictionary<IRCClient *, NSArray<IRCChannel *> *> *cachedChannelList;
-@property(nonatomic, strong) dispatch_source_t expandOutlineViewTimer;
+@property(nonatomic, strong, nullable) dispatch_source_t expandOutlineViewTimer;
 @end
 
 @implementation TVCChannelSelectionViewController

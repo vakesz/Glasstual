@@ -144,15 +144,15 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 		CGFloat alphaValue = self.alphaComponent;
 
 		return [NSString stringWithFormat:@"#%02X%02X%02X%02X",
-				(NSInteger)(redValue * 0xff),
-				(NSInteger)(greenValue * 0xff),
-				(NSInteger)(blueValue * 0xff),
-				(NSInteger)(alphaValue * 0xff)];
+				(unsigned int)(redValue * 0xff),
+				(unsigned int)(greenValue * 0xff),
+				(unsigned int)(blueValue * 0xff),
+				(unsigned int)(alphaValue * 0xff)];
 	} else {
 		return [NSString stringWithFormat:@"#%02X%02X%02X",
-				(NSInteger)(redValue * 0xff),
-				(NSInteger)(greenValue * 0xff),
-				(NSInteger)(blueValue * 0xff)];
+				(unsigned int)(redValue * 0xff),
+				(unsigned int)(greenValue * 0xff),
+				(unsigned int)(blueValue * 0xff)];
 	}
 }
 

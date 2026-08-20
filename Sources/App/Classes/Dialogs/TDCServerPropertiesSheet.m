@@ -1876,7 +1876,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	NSUInteger listCount = self.highlightList.count;
 
 	if (listCount > 0) {
-		if (listCount <= selectedRow) {
+		if (listCount <= (NSUInteger)selectedRow) {
 			[self.highlightsTable selectItemAtIndex:(listCount - 1)];
 		} else {
 			[self.highlightsTable selectItemAtIndex:selectedRow];
@@ -1962,7 +1962,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	NSUInteger listCount = self.channelList.count;
 
 	if (listCount > 0) {
-		if (listCount <= selectedRow) {
+		if (listCount <= (NSUInteger)selectedRow) {
 			[self.channelListTable selectItemAtIndex:(listCount - 1)];
 		} else {
 			[self.channelListTable selectItemAtIndex:selectedRow];
@@ -2096,7 +2096,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	NSUInteger listCount = self.addressBookList.count;
 
 	if (listCount > 0) {
-		if (listCount <= selectedRow) {
+		if (listCount <= (NSUInteger)selectedRow) {
 			[self.addressBookTable selectItemAtIndex:(listCount - 1)];
 		} else {
 			[self.addressBookTable selectItemAtIndex:selectedRow];

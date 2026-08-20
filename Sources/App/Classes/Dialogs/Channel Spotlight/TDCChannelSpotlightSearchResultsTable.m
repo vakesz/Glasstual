@@ -198,7 +198,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSUInteger searchResultIndex = [searchResults indexOfObjectIdenticalTo:searchResult];
 
-	if (searchResultIndex == controller.selectedSearchResult) {
+	if (searchResultIndex != NSNotFound && (NSInteger)searchResultIndex == controller.selectedSearchResult) {
 		return @"↩︎";
 	}
 

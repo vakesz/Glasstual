@@ -44,7 +44,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TLOKeyEventHandler ()
-@property(nonatomic, unsafe_unretained) id target;
+@property(nonatomic, unsafe_unretained, nullable) id target;
 @property(nonatomic, strong) NSMutableDictionary *codeHandlerMap;
 @property(nonatomic, strong) NSMutableDictionary *characterHandlerMap;
 @end
@@ -142,7 +142,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSUInteger to = NSMaxRange(characterRange);
 
-	for (NSInteger i = from; i < to; ++i) {
+	for (NSUInteger i = from; i < to; ++i) {
 		map[@(i)] = NSStringFromSelector(selector);
 	}
 }

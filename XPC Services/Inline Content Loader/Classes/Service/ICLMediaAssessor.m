@@ -381,7 +381,7 @@ NSString *const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 		ICLMediaAssessorLimits *limits = self.limits;
 
 		/* Limit maximum filesize */
-		if (contentLength > limits.imageMaximumFilesize) {
+		if ((unsigned long long)contentLength > limits.imageMaximumFilesize) {
 			*error = [self _errorWithDescription:@"Content-Length exceeds maximum allowed"
 											code:ICLMediaAssessorErrorCodeContentLengthExceeded];
 
@@ -691,12 +691,12 @@ NSString *const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 
 	ICLMediaAssessorLimits *limits = self.limits;
 
-	if (imageWidth.integerValue > limits.imageMaximumWidth) {
+	if (imageWidth.unsignedIntegerValue > limits.imageMaximumWidth) {
 		*error = [self _errorWithDescription:@"Image validation: Maximum width exceeded"
 										code:ICLMediaAssessorErrorCodeMaximumWidthExceeded];
 
 		return NO;
-	} else if (imageHeight.integerValue > limits.imageMaximumHeight) {
+	} else if (imageHeight.unsignedIntegerValue > limits.imageMaximumHeight) {
 		*error = [self _errorWithDescription:@"Image validation: Maximum height exceeded"
 										code:ICLMediaAssessorErrorCodeMaximumHeightExceeded];
 

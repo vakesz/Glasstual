@@ -147,7 +147,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)refreshAllDrawings:(BOOL)skipOcclusionCheck
 {
-	for (NSUInteger i = 0; i < self.numberOfRows; i++) {
+	for (NSInteger i = 0; i < self.numberOfRows; i++) {
 		[self refreshDrawingForRow:i skipOcclusionCheck:skipOcclusionCheck];
 	}
 }
@@ -221,7 +221,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)refreshAllUnreadMessageCountBadges:(BOOL)skipOcclusionCheck
 {
-	for (NSUInteger i = 0; i < self.numberOfRows; i++) {
+	for (NSInteger i = 0; i < self.numberOfRows; i++) {
 		[self refreshMessageCountForRow:i skipOcclusionCheck:skipOcclusionCheck];
 	}
 }

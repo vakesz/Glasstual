@@ -48,12 +48,13 @@
 #import "TPCPreferencesUserDefaults.h"
 #import "TDCPreferencesControllerPrivate.h"
 #import "TVCLogControllerPrivate.h"
+#import "TVCMainWindow.h"
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCLogControllerInlineMediaService ()
-@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, strong, nullable) NSXPCConnection *serviceConnection;
 @end
 
 @implementation TVCLogControllerInlineMediaService

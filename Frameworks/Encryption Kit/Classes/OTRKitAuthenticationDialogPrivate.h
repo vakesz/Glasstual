@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Headers
 
-@interface OTRKitAuthenticationDialog ()
+@interface OTRKitAuthenticationDialog () <NSTextFieldDelegate>
 @property (nonatomic, copy) NSString *cachedUsername;
 @property (nonatomic, copy) NSString *cachedAccountName;
 @property (nonatomic, copy) NSString *cachedProtocol;

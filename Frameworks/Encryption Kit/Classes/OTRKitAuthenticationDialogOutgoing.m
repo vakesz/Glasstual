@@ -75,7 +75,7 @@ static NSMutableArray *_listOfOpenFingerprintConfirmationAlerts = nil;
     /* Start a negotiation depending on which method was selected. */
     if (self.authenticationMethod == OTRKitSMPEventNone)
     {
-        BOOL isVerified = (self.fingerprintIsVerifiedUserCheck.state == NSOnState);
+        BOOL isVerified = (self.fingerprintIsVerifiedUserCheck.state == NSControlStateValueOn);
 
         [self _markUserVerified:isVerified];
 

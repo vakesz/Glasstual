@@ -122,7 +122,7 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 
 	NSArray *rows = self.contentController.arrangedObjects;
 
-	if (row >= rows.count) {
+	if ((NSUInteger)row >= rows.count) {
 		return nil;
 	}
 
@@ -363,7 +363,7 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 
 - (void)refreshAllDrawings:(BOOL)skipOcclusionCheck
 {
-	for (NSUInteger i = 0; i < self.numberOfRows; i++) {
+	for (NSInteger i = 0; i < self.numberOfRows; i++) {
 		[self refreshDrawingForRow:i skipOcclusionCheck:skipOcclusionCheck];
 	}
 }

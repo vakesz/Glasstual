@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak) IBOutlet NSTextField *searchField;
 @property(nonatomic, weak) IBOutlet NSTableView *searchResultsTable;
 @property(nonatomic, strong) IBOutlet NSArrayController *searchResultsController;
-@property(nonatomic, strong) id mouseEventMonitor;
+@property(nonatomic, strong, nullable) id mouseEventMonitor;
 @end
 
 @implementation TDCChannelSpotlightController
@@ -370,7 +370,7 @@ NS_ASSUME_NONNULL_BEGIN
 			return nil;
 		}
 	} else if (event.keyCode == 125 || event.keyCode == 121) { // down
-		if (selectedRow == (searchResultsCount - 1)) {
+		if (selectedRow == (NSInteger)(searchResultsCount - 1)) {
 			[self.searchResultsTable selectItemAtIndex:0];
 
 			return nil;
@@ -419,7 +419,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSArray<TDCChannelSpotlightSearchResult *> *searchResults = self.searchResultsFiltered;
 
-	if (searchResultIndex < 0 || searchResultIndex >= searchResults.count) {
+	if (searchResultIndex < 0 || (NSUInteger)searchResultIndex >= searchResults.count) {
 		return;
 	}
 

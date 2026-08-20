@@ -201,10 +201,10 @@ NSString * const CS_UnicodeReplacementCharacter = @"�";
 	}
 
 	NSAssert((substringLocation >= 0 &&
-			  substringLocation <= stringLength), @"Location is out of range");
+			  (NSUInteger)substringLocation <= stringLength), @"Location is out of range");
 	
 	NSAssert((substringLength >= 0 &&
-			  substringLength <= stringLength), @"Length is out of range");
+			  (NSUInteger)substringLength <= stringLength), @"Length is out of range");
 	
 	return [self substringWithRange:NSMakeRange(substringLocation, substringLength)];
 }

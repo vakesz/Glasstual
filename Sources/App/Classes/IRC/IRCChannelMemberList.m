@@ -505,7 +505,7 @@ static char IRCChannelMemberListQueueKey;
 
 			NSUInteger lowerRankedMode =
 				[oldModeSymbols indexOfObjectPassingTest:^BOOL(NSString *oldModeSymbol, NSUInteger index, BOOL *stop) {
-					NSInteger rankOfOldMode = [clientSupportInfo rankForUserPrefixWithMode:oldModeSymbol];
+					NSUInteger rankOfOldMode = [clientSupportInfo rankForUserPrefixWithMode:oldModeSymbol];
 
 					return (rankOfOldMode < rankOfNewMode);
 				}];

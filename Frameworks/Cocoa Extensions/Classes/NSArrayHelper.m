@@ -425,7 +425,9 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	}
 
 	if (subarray.count > 0) {
-		block([subarray copy], NULL);
+		BOOL stop = NO;
+
+		block([subarray copy], &stop);
 	}
 }
 

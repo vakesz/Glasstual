@@ -318,12 +318,12 @@ const tls_ciphersuite_t tls_ciphersuite_unknown = 0;
 COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
 + (tls_protocol_version_t)minimumProtocolType
 {
-	return tls_protocol_version_TLSv10;
+	return tls_protocol_version_TLSv12;
 }
 
 + (SSLProtocol)minimumDeprecatedProtocol
 {
-	return kTLSProtocol1;
+	return kTLSProtocol12;
 }
 
 + (tls_protocol_version_t)protocolTypeFromDeprecated:(SSLProtocol)deprecatedProtocol
@@ -360,11 +360,8 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 + (nullable NSString *)descriptionForProtocolType:(tls_protocol_version_t)protocolType
 {
 	switch (protocolType) {
-		case tls_protocol_version_TLSv10: { return @"Transport Layer Security (TLS), version 1.0"; }
-		case tls_protocol_version_TLSv11: { return @"Transport Layer Security (TLS), version 1.1"; }
 		case tls_protocol_version_TLSv12: { return @"Transport Layer Security (TLS), version 1.2"; }
 		case tls_protocol_version_TLSv13: { return @"Transport Layer Security (TLS), version 1.3"; }
-		case tls_protocol_version_DTLSv10: { return @"Datagram Transport Layer Security (DTLS), version 1.0"; }
 		case tls_protocol_version_DTLSv12: { return @"Datagram Transport Layer Security (DTLS), version 1.2"; }
 		default: { return @"Unknown"; }
 	}

@@ -57,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) BOOL isTerminating;
 @property(nonatomic, assign, readwrite) BOOL processLoaded;
 @property(nonatomic, assign, readwrite) BOOL processLoading;
-@property(nonatomic, strong) NSXPCConnection *serviceConnection;
+@property(nonatomic, strong, nullable) NSXPCConnection *serviceConnection;
 @property(nonatomic, assign) BOOL connectionInvalidatedVoluntarily;
 @property(nonatomic, assign) BOOL connectionInvalidatedErrorDialogDisplayed;
 @property(nonatomic, copy, nullable) NSError *lastServiceConnectionError;

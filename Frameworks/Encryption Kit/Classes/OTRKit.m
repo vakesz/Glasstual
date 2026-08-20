@@ -2142,7 +2142,7 @@ static OtrlMessageAppOps ui_ops = {
 }
 
 #pragma mark -
-#pragma Account Name Separator
+#pragma mark Account Name Separator
 
 - (nullable NSString *)rightPortionOfAccountName:(NSString *)accountName
 {
@@ -2156,7 +2156,7 @@ static OtrlMessageAppOps ui_ops = {
 		return nil;
 	}
 
-	NSInteger sliceRange = (sequenceRange.location + accountNameSeparator.length);
+	NSUInteger sliceRange = (sequenceRange.location + accountNameSeparator.length);
 
 	if (sliceRange >= accountName.length) {
 		return nil;
