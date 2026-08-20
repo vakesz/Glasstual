@@ -88,8 +88,9 @@ GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNot
 
 - (void)changeTextSize:(BOOL)bigger;
 
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments; // Defaults to onQueue YES
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments onQueue:(BOOL)onQueue;
+- (void)evaluateFunction:(NSString *)function
+		   withArguments:(nullable NSArray<id> *)arguments; // Defaults to onQueue YES
+- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments onQueue:(BOOL)onQueue;
 @end
 
 #pragma mark -

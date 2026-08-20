@@ -175,7 +175,7 @@ NS_ASSUME_NONNULL_BEGIN
 	return [^(ICLInlineContentModule *module) {
 		__weak ICMInlineImage *moduleTyped = (id)module;
 
-		[moduleTyped performActionForAddress:address bypassImageCheck:NO];
+		[moduleTyped performActionForAddress:address bypassImageCheck:bypassImageCheck];
 	} copy];
 }
 

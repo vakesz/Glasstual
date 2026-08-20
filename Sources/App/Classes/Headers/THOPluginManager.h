@@ -37,6 +37,8 @@
 
 #import <os/log.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  * Subsystem that plugin can use for logging using `os_log` and related systems.
  *
@@ -54,3 +56,5 @@
 #define THOPluginLoggingSubsystem() _THOPluginLoggingSubsystemForBundle([NSBundle bundleForClass:[self class]])
 
 GLASSTUAL_EXTERN os_log_t _THOPluginLoggingSubsystemForBundle(NSBundle *bundle);
+
+NS_ASSUME_NONNULL_END

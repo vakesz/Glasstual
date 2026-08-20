@@ -36,6 +36,8 @@
  *
  *********************************************************************** */
 
+#include <stdatomic.h>
+
 #import "NSObjectHelperPrivate.h"
 #import "TXMasterController.h"
 #import "TXMenuControllerPrivate.h"
@@ -75,9 +77,16 @@ NSString *const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyCh
 @property(nonatomic, assign) BOOL preferencesDidChangeTimerIsActive;
 @property(nonatomic, assign) CFAbsoluteTime savePeriodicallyLastSave;
 @property(nonatomic, copy) NSDate *lastDateHasChangedDate;
+@property(nonatomic, strong, nullable) NSTimer *midnightTimer;
 @end
 
 @implementation IRCWorld
+{
+	_Atomic(NSUInteger) _messagesSent;
+	_Atomic(NSUInteger) _messagesReceived;
+	_Atomic(uint64_t) _bandwidthIn;
+	_Atomic(uint64_t) _bandwidthOut;
+}
 
 #pragma mark -
 #pragma mark Initialization
@@ -383,6 +392,10 @@ NSString *const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyCh
 																toDate:lastMidnight
 															   options:0];
 
+	/* Invalidate any previously scheduled timer so they do not
+	 accumulate when the system date changes repeatedly. */
+	[self.midnightTimer invalidate];
+
 	/* Create timer for midnight in future. */
 	/* We set the tolerance for the timer to absolute zero so that
 	 we are confident that OS X will not reschedule it. */
@@ -397,6 +410,8 @@ NSString *const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyCh
 
 	/* Schedule the timer on the run loop which will retain reference. */
 	[RZMainRunLoop() addTimer:midnightTimer forMode:NSDefaultRunLoopMode];
+
+	self.midnightTimer = midnightTimer;
 
 	/* Do not fire notification if day hasn't changed. 
 	 This check is down here, instead of at top, because we still want to
@@ -431,6 +446,41 @@ NSString *const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyCh
 	 ask for the current day components two times. */
 
 	[self setupMidnightTimerWithNotification:YES];
+}
+
+#pragma mark -
+#pragma mark Traffic Counters
+
+- (void)noteMessageSentWithLength:(NSUInteger)length
+{
+	atomic_fetch_add_explicit(&_messagesSent, 1, memory_order_relaxed);
+	atomic_fetch_add_explicit(&_bandwidthOut, length, memory_order_relaxed);
+}
+
+- (void)noteMessageReceivedWithLength:(NSUInteger)length
+{
+	atomic_fetch_add_explicit(&_messagesReceived, 1, memory_order_relaxed);
+	atomic_fetch_add_explicit(&_bandwidthIn, length, memory_order_relaxed);
+}
+
+- (NSUInteger)messagesSent
+{
+	return atomic_load_explicit(&_messagesSent, memory_order_relaxed);
+}
+
+- (NSUInteger)messagesReceived
+{
+	return atomic_load_explicit(&_messagesReceived, memory_order_relaxed);
+}
+
+- (uint64_t)bandwidthIn
+{
+	return atomic_load_explicit(&_bandwidthIn, memory_order_relaxed);
+}
+
+- (uint64_t)bandwidthOut
+{
+	return atomic_load_explicit(&_bandwidthOut, memory_order_relaxed);
 }
 
 #pragma mark -

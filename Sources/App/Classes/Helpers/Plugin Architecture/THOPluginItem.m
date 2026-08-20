@@ -71,8 +71,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 	id<THOPluginProtocol> primaryClass = [[principalClass alloc] init];
 
+	/* -loadBundle: is invoked on the plugin dispatch queue. Plugins
+	 expect lifecycle and view related calls on the main thread. */
 	if ([primaryClass respondsToSelector:@selector(pluginLoadedIntoMemory)]) {
-		[primaryClass pluginLoadedIntoMemory];
+		XRPerformBlockSynchronouslyOnMainQueue(^{
+			[primaryClass pluginLoadedIntoMemory];
+		});
 	}
 
 	/* Build list of supported features */
@@ -103,7 +107,12 @@ NS_ASSUME_NONNULL_BEGIN
 	if ([primaryClass respondsToSelector:@selector(pluginPreferencesPaneMenuItemName)] &&
 		[primaryClass respondsToSelector:@selector(pluginPreferencesPaneView)]) {
 		id itemTitle = primaryClass.pluginPreferencesPaneMenuItemName;
-		id itemView = primaryClass.pluginPreferencesPaneView;
+
+		__block id itemView = nil;
+
+		XRPerformBlockSynchronouslyOnMainQueue(^{
+			itemView = primaryClass.pluginPreferencesPaneView;
+		});
 
 		if (_isNotEmptyString(itemTitle) && _isClass(itemView, NSView)) {
 			self.pluginPreferencesPaneMenuItemTitle = itemTitle;
@@ -209,7 +218,11 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if ([self.primaryClass respondsToSelector:@selector(pluginWillBeUnloadedFromMemory)]) {
-		[self.primaryClass pluginWillBeUnloadedFromMemory];
+		id<THOPluginProtocol> primaryClass = self.primaryClass;
+
+		XRPerformBlockSynchronouslyOnMainQueue(^{
+			[primaryClass pluginWillBeUnloadedFromMemory];
+		});
 	}
 
 	self.primaryClass = nil;

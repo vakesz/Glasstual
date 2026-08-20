@@ -82,13 +82,6 @@ NS_ASSUME_NONNULL_BEGIN
 	self.preferredFontColor = [NSColor textColor];
 }
 
-- (void)mouseDown:(NSEvent *)theEvent
-{
-	[self.window makeFirstResponder:self];
-
-	[super mouseDown:theEvent];
-}
-
 #pragma mark -
 #pragma mark Keyboard Shortcuts
 

@@ -61,7 +61,7 @@
                                     <constraint firstAttribute="height" constant="25" id="5AB-sj-ZrA"/>
                                     <constraint firstAttribute="width" constant="25" id="r7j-gN-RHB"/>
                                 </constraints>
-                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="MainWindowSpotlightIconTemplate" id="p4S-0R-m2Y"/>
+                                <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" id="p4S-0R-m2Y"/>
                             </imageView>
                             <customView translatesAutoresizingMaskIntoConstraints="NO" id="bUM-jd-4A3">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="138"/>
@@ -223,6 +223,5 @@
         </window>
     </objects>
     <resources>
-        <image name="MainWindowSpotlightIconTemplate" width="1180" height="1178"/>
     </resources>
 </document>

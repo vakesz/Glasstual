@@ -86,7 +86,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.headerTitleTextField.stringValue = headerTitle;
 
-	self.topicValueTextField.preferredFont = [NSFont systemFontOfSize:13.0];
+	self.topicValueTextField.preferredFont = [NSFont systemFontOfSize:[NSFont systemFontSize]];
 	self.topicValueTextField.preferredFontColor = [NSColor textColor];
 
 	NSString *topic = self.channel.topic;

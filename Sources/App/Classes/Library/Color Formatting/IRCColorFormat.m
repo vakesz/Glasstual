@@ -75,6 +75,24 @@ NSString *const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoiler
 @property(nonatomic, assign, readwrite) NSUInteger maximumLength;
 @end
 
+/* The monospace effect keeps the bold and italic traits of the font it
+ replaces so combined formatting survives the family change. */
+static NSFont *_monospaceFontMatching(NSFont *baseFont)
+{
+	NSFont *monospaceFont = [NSFont monospacedSystemFontOfSize:baseFont.pointSize weight:NSFontWeightRegular];
+
+	NSFontDescriptorSymbolicTraits traits =
+		(baseFont.fontDescriptor.symbolicTraits & (NSFontDescriptorTraitBold | NSFontDescriptorTraitItalic));
+
+	if (traits == 0) {
+		return monospaceFont;
+	}
+
+	NSFontDescriptor *descriptor = [monospaceFont.fontDescriptor fontDescriptorWithSymbolicTraits:traits];
+
+	return ([NSFont fontWithDescriptor:descriptor size:baseFont.pointSize] ?: monospaceFont);
+}
+
 @implementation IRCTextFormatterEffect
 
 + (nullable instancetype)effectWithType:(IRCTextFormatterEffectType)type
@@ -844,7 +862,7 @@ NSString *const IRCTextFormatterSpoilerAttributeName = @"IRCTextFormatterSpoiler
 								break;
 							}
 							case IRCTextFormatterEffectMonospace: {
-								baseFont = [RZFontManager() convertFont:baseFont toFamily:@"Menlo"];
+								baseFont = _monospaceFontMatching(baseFont);
 
 								[self addAttribute:IRCTextFormatterMonospaceAttributeName
 											 value:@(YES)

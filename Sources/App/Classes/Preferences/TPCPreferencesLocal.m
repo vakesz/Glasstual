@@ -495,11 +495,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 	return [RZUserDefaults() boolForKey:@"PreferModernCiphers"];
 }
 
-+ (BOOL)preferModernSockets
-{
-	return [RZUserDefaults() boolForKey:@"PreferModernSockets"];
-}
-
 #pragma mark -
 #pragma mark App Nap
 
@@ -690,11 +685,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 + (void)setThemeUserStyleSheetRules:(nullable NSString *)themeUserStyleSheetRules
 {
 	[RZUserDefaults() setObject:themeUserStyleSheetRules forKey:@"Theme -> User Style Sheet Rules"];
-}
-
-+ (CGFloat)mainWindowTransparency
-{
-	return [RZUserDefaults() doubleForKey:@"MainWindowTransparencyLevel"];
 }
 
 + (BOOL)automaticallyReloadCustomThemesWhenTheyChange
@@ -1286,7 +1276,7 @@ static NSArray<NSString *> *_matchKeywords = nil;
 	 to do this from the beginning. */
 	NSNumber *dictionaryVersion = [RZUserDefaults() objectForKey:@"TPCPreferencesDictionaryVersion"];
 
-	if (dictionaryVersion.integerValue >= TPCPreferencesDictionaryVersion) {
+	if (dictionaryVersion.unsignedIntegerValue >= TPCPreferencesDictionaryVersion) {
 		return;
 	}
 

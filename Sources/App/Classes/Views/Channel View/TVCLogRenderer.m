@@ -126,9 +126,14 @@ NSString *const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
 
 	NSUInteger bodyLength = body.length;
 
-	UniChar charactersIn[bodyLength];
+	/* Heap allocated; the body length is unbounded. */
+	NSMutableData *charactersInData = [NSMutableData dataWithLength:(bodyLength * sizeof(UniChar))];
 
-	[body getCharacters:charactersIn range:body.range];
+	UniChar *charactersIn = charactersInData.mutableBytes;
+
+	if (bodyLength > 0) {
+		[body getCharacters:charactersIn range:body.range];
+	}
 
 	NSMutableAttributedString *bodyWithAttributes = [[NSMutableAttributedString alloc] initWithString:body
 																						   attributes:nil];
@@ -348,7 +353,7 @@ NSString *const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
 
 	NSArray *links = [TLOLinkParser locateLinksInString:self->_body];
 
-	for (AHHyperlinkScannerResult *link in links) {
+	for (TLOLinkParserResult *link in links) {
 		NSRange linkRange = link.range;
 
 		NSString *linkString = link.stringValue;
@@ -534,10 +539,8 @@ NSString *const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
 	UniChar aa = [body characterAtIndex:range.location];
 
 	if (CS_StringIsBase10Numeric(aa) || [THOUnicodeHelper isAlphabeticalCodePoint:aa]) {
-		NSInteger leftLocation = (range.location - 1);
-
-		if (leftLocation >= 0 && leftLocation < bodyLength) {
-			UniChar bb = [body characterAtIndex:leftLocation];
+		if (range.location > 0 && range.location <= bodyLength) {
+			UniChar bb = [body characterAtIndex:(range.location - 1)];
 
 			if (CS_StringIsBase10Numeric(bb) || [THOUnicodeHelper isAlphabeticalCodePoint:bb]) {
 				return NO;
@@ -548,7 +551,7 @@ NSString *const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
 	UniChar cc = [body characterAtIndex:(NSMaxRange(range) - 1)];
 
 	if (CS_StringIsBase10Numeric(cc) || [THOUnicodeHelper isAlphabeticalCodePoint:cc]) {
-		NSInteger rightLocation = NSMaxRange(range);
+		NSUInteger rightLocation = NSMaxRange(range);
 
 		if (rightLocation < bodyLength) {
 			UniChar dd = [body characterAtIndex:rightLocation];
@@ -723,7 +726,7 @@ NSString *const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
 	NSMutableDictionary<NSString *, id> *templateTokens = [NSMutableDictionary dictionary];
 
 	if ([stringAttributes containsKey:TVCLogRendererFormattingURLAttribute]) {
-		AHHyperlinkScannerResult *link = stringAttributes[TVCLogRendererFormattingURLAttribute];
+		TLOLinkParserResult *link = stringAttributes[TVCLogRendererFormattingURLAttribute];
 
 		NSString *linkLocation = link.stringValue;
 
@@ -906,7 +909,8 @@ NSString *const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
 	}
 
 	if ([self isRenderingPRIVMSG_or_NOTICE]) {
-		templateTokens[@"fragmentIsSpoiler"] = @(setNewColors && [foregroundColor isEqualToString:backgroundColor]);
+		templateTokens[@"fragmentIsSpoiler"] = @(setNewColors && foregroundColor != nil && backgroundColor != nil &&
+												 [foregroundColor isEqualToString:backgroundColor]);
 	} else {
 		templateTokens[@"fragmentIsSpoiler"] = @(NO);
 	}

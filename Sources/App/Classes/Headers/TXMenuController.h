@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
  that they can be referenced programatically. */
 /* For submenu tags, we take the tag of the parent,
  add four zeros to the end, then start from there. */
-enum {
+typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	/* Main menu */
 	MTMainMenuApp = 1,
 	MTMainMenuFile = 2,
@@ -488,6 +488,13 @@ enum {
 - (IBAction)copyUniqueIdentifier:(nullable id)sender;
 
 - (IBAction)copyUrl:(nullable id)sender;
+
+/* Returns a "Share…" menu item whose submenu is populated by
+ NSSharingServicePicker for the given items (URLs, files, strings).
+ When items is empty, a disabled item is returned so that the menu
+ keeps its shape. Build a fresh item each time a menu is presented
+ so that the shared items reflect what the user clicked. */
+- (NSMenuItem *)shareMenuItemForItems:(NSArray *)items;
 
 - (IBAction)lookUpInDictionary:(nullable id)sender;
 - (IBAction)searchGoogle:(nullable id)sender;

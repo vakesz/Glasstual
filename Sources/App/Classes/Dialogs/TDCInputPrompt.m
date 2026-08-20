@@ -41,12 +41,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TDCInputPrompt
 
-+ (NSModalResponse)promptWithMessage:(NSString *)bodyText
-							   title:(NSString *)titleText
-					   defaultButton:(NSString *)buttonDefault
-					 alternateButton:(nullable NSString *)buttonAlternate
-					   prefillString:(nullable NSString *)prefillString
-						resultString:(NSString *_Nonnull *_Nonnull)resultString
++ (NSAlert *)alertWithMessage:(NSString *)bodyText
+						title:(NSString *)titleText
+				defaultButton:(NSString *)buttonDefault
+			  alternateButton:(nullable NSString *)buttonAlternate
+				prefillString:(nullable NSString *)prefillString
+					textField:(NSTextField *_Nonnull *_Nonnull)textFieldOut
 {
 	NSParameterAssert(bodyText != nil);
 	NSParameterAssert(titleText != nil);
@@ -97,20 +97,56 @@ NS_ASSUME_NONNULL_BEGIN
 	alert.informativeText = bodyText;
 
 	[alert addButtonWithTitle:buttonDefault];
-	[alert addButtonWithTitle:buttonAlternate];
+
+	if (buttonAlternate) {
+		[alert addButtonWithTitle:buttonAlternate];
+	}
 
 	alert.accessoryView = textField;
 
 	alert.window.initialFirstResponder = textField;
 
-	/* Run modal */
-	NSModalResponse response = [alert runModal];
+	*textFieldOut = textField;
 
-	/* Assign result */
-	*resultString = textField.stringValue;
+	return alert;
+}
 
-	/* Return response */
-	return response;
++ (void)promptWithMessage:(NSString *)bodyText
+					title:(NSString *)titleText
+			defaultButton:(NSString *)buttonDefault
+		  alternateButton:(nullable NSString *)buttonAlternate
+			prefillString:(nullable NSString *)prefillString
+		  completionBlock:(TDCInputPromptCompletionBlock)completionBlock
+{
+	NSParameterAssert(completionBlock != nil);
+
+	NSTextField *textField = nil;
+
+	NSAlert *alert = [self alertWithMessage:bodyText
+									  title:titleText
+							  defaultButton:buttonDefault
+							alternateButton:buttonAlternate
+							  prefillString:prefillString
+								  textField:&textField];
+
+	NSWindow *window = [NSApp keyWindow];
+
+	if (window == nil) {
+		window = [NSApp mainWindow];
+	}
+
+	/* Present as a sheet when a window is available to host it.
+	 Without one (for example during launch) fall back to a modal. */
+	if (window) {
+		[alert beginSheetModalForWindow:window
+					  completionHandler:^(NSModalResponse response) {
+						  completionBlock(response, textField.stringValue);
+					  }];
+	} else {
+		NSModalResponse response = [alert runModal];
+
+		completionBlock(response, textField.stringValue);
+	}
 }
 
 @end

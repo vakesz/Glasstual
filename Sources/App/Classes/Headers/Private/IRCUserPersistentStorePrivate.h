@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface IRCUserPersistentStore : NSObject
 @property(nonatomic, strong) IRCUserRelations *relations;
 @property(nonatomic, assign) CFAbsoluteTime presentAwayMessageFor301LastEvent;
-@property(nonatomic, strong) dispatch_source_t removeUserTimer;
+@property(nonatomic, strong, nullable) dispatch_source_t removeUserTimer;
 @end
 
 NS_ASSUME_NONNULL_END

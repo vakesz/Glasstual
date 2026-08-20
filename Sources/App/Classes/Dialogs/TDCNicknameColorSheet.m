@@ -44,8 +44,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TDCNicknameColorSheet ()
 @property(nonatomic, copy) NSString *nickname;
 @property(nonatomic, weak) IBOutlet NSColorWell *nicknameColorWell;
+@property(nonatomic, assign) BOOL nicknameColorIsReset;
 
 - (IBAction)resetNicknameColor:(nullable id)sender;
+- (IBAction)nicknameColorChanged:(nullable id)sender;
 @end
 
 @implementation TDCNicknameColorSheet
@@ -71,11 +73,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSColor *nicknameColor = [IRCUserNicknameColorStyleGenerator nicknameColorStyleOverrideForKey:self.nickname];
 
+	/* Whether an override exists is tracked explicitly instead of
+	 comparing the well against a sentinel color. White is a valid
+	 color to choose, so it cannot double as "no override". */
+	self.nicknameColorIsReset = (nicknameColor == nil);
+
 	if (nicknameColor == nil) {
 		nicknameColor = [NSColor whiteColor];
 	}
 
 	self.nicknameColorWell.color = nicknameColor;
+
+	self.nicknameColorWell.target = self;
+	self.nicknameColorWell.action = @selector(nicknameColorChanged:);
 }
 
 - (void)start
@@ -87,7 +97,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSColor *nicknameColor = self.nicknameColorWell.color;
 
-	if ([nicknameColor isEqual:[NSColor whiteColor]]) {
+	if (self.nicknameColorIsReset) {
 		nicknameColor = nil;
 	}
 
@@ -107,6 +117,13 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	self.nicknameColorWell.color = [NSColor whiteColor];
+
+	self.nicknameColorIsReset = YES;
+}
+
+- (void)nicknameColorChanged:(nullable id)sender
+{
+	self.nicknameColorIsReset = NO;
 }
 
 #pragma mark -

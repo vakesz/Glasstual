@@ -1,0 +1,711 @@
+# Glasstual project specification for XcodeGen.
+#
+# Regenerate Glasstual.xcodeproj after editing with:
+#
+#   xcodegen generate
+#
+# Build settings live in Configurations/*.xcconfig. Signing is configured in
+# Configurations/Signing.xcconfig. Do not edit the generated project by hand.
+
+name: Glasstual
+
+options:
+  bundleIdPrefix: com.vakesz
+  deploymentTarget:
+    macOS: "26.0"
+  xcodeVersion: "26.0"
+  minimumXcodeGenVersion: "2.46.0"
+  generateEmptyDirectories: false
+  createIntermediateGroups: true
+  groupSortPosition: top
+  defaultConfig: Debug
+  transitivelyLinkDependencies: false
+  groupOrdering:
+    - order: [Sources, XPC Services, Frameworks, Configurations, Scripts]
+
+configs:
+  Debug: debug
+  Release: release
+
+configFiles:
+  Debug: Configurations/Debug.xcconfig
+  Release: Configurations/Release.xcconfig
+
+settings:
+  # Everything else lives in the xcconfigs. XcodeGen's presets pin
+  # SWIFT_VERSION at the project level, which outranks xcconfig, so the
+  # language mode is restated here.
+  base:
+    SWIFT_VERSION: "6.0"
+
+fileGroups:
+  - Configurations/Base.xcconfig
+  - Configurations/Signing.xcconfig
+  - Configurations/README.md
+  - Configurations/Sandbox
+  - Scripts
+  - README.md
+  - Brewfile
+
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.9.6
+
+# ---------------------------------------------------------------------------
+# Reusable fragments
+# ---------------------------------------------------------------------------
+
+targetTemplates:
+  # Common xcconfig wiring. Base.xcconfig is reached through the project-level
+  # configFiles; targets add only what differs.
+  GlasstualTarget:
+    platform: macOS
+    dependencies:
+      - target: BuildConfig
+        link: false
+        embed: false
+
+  # Loadable bundles that resolve symbols from their host process at runtime.
+  # BUNDLE_LOADER would introduce a dependency cycle (host embeds bundle,
+  # bundle links against host), so undefined symbols are looked up dynamically.
+  LoadableBundle:
+    templates: [GlasstualTarget]
+    type: bundle
+    settings:
+      base:
+        OTHER_LDFLAGS: -undefined dynamic_lookup
+        GCC_PREFIX_HEADER: ""
+        FRAMEWORK_SEARCH_PATHS:
+          - $(inherited)
+          - '"$(SRCROOT)/Frameworks/Static Libraries/Libraries"'
+
+  # Plugins bundled in Glasstual.app/Contents/Resources/Bundled Extensions.
+  GlasstualExtension:
+    templates: [LoadableBundle]
+    settings:
+      base:
+        CODE_SIGN_ENTITLEMENTS: Configurations/Sandbox/Inherited.entitlements
+        HEADER_SEARCH_PATHS:
+          - $(inherited)
+          - "$(SRCROOT)/Sources/App/Classes/Headers/**"
+          - "$(SRCROOT)/Sources/Shared/Headers/**"
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - "@loader_path/../../../Frameworks"
+
+  # Services in Glasstual.app/Contents/XPCServices.
+  GlasstualXPCService:
+    templates: [GlasstualTarget]
+    type: xpc-service
+    settings:
+      base:
+        GCC_PREPROCESSOR_DEFINITIONS:
+          - $(inherited)
+          - GLASSTUAL_BUILDING_XPC_SERVICE=1
+        HEADER_SEARCH_PATHS:
+          - $(inherited)
+          - "$(SRCROOT)/Sources/Shared/Headers/**"
+        FRAMEWORK_SEARCH_PATHS:
+          - $(inherited)
+          - '"$(SRCROOT)/Frameworks/Static Libraries/Libraries"'
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - "@loader_path/../../../../Frameworks"
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+
+  # Vendored Codeux frameworks.
+  GlasstualFramework:
+    templates: [GlasstualTarget]
+    type: framework
+    settings:
+      base:
+        FRAMEWORK_VERSION: A
+        INSTALL_PATH: "@rpath"
+        SKIP_INSTALL: YES
+        DYLIB_INSTALL_NAME_BASE: "@rpath"
+        LD_RUNPATH_SEARCH_PATHS: "@loader_path/../Frameworks"
+        GCC_PRECOMPILE_PREFIX_HEADER: YES
+        GCC_SYMBOLS_PRIVATE_EXTERN: NO
+        CLANG_WARN_STRICT_PROTOTYPES: NO
+
+# ---------------------------------------------------------------------------
+# Targets
+# ---------------------------------------------------------------------------
+
+aggregateTargets:
+  # Generates BuildConfig.h and FeatureFlags.h from build settings into
+  # $(GLASSTUAL_BUILD_HEADERS_DIR). Everything else depends on this target.
+  BuildConfig:
+    settings:
+      base:
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+    buildScripts:
+      - name: Generate BuildConfig.h and FeatureFlags.h
+        path: Scripts/GenerateBuildConfig.sh
+        shell: /bin/bash
+        basedOnDependencyAnalysis: false
+        inputFiles:
+          - $(SRCROOT)/Scripts/GenerateBuildConfig.sh
+          - $(SRCROOT)/Configurations/Base.xcconfig
+          - $(SRCROOT)/Configurations/Debug.xcconfig
+          - $(SRCROOT)/Configurations/Release.xcconfig
+        outputFiles:
+          - $(GLASSTUAL_BUILD_HEADERS_DIR)/BuildConfig.h
+          - $(GLASSTUAL_BUILD_HEADERS_DIR)/FeatureFlags.h
+
+
+targets:
+
+  # ---- Frameworks ---------------------------------------------------------
+
+  CocoaExtensions:
+    templates: [GlasstualFramework]
+    productName: CocoaExtensions
+    settings:
+      base:
+        PRODUCT_NAME: CocoaExtensions
+        PRODUCT_BUNDLE_IDENTIFIER: com.codeux.frameworks.CocoaExtensions
+        INFOPLIST_FILE: Frameworks/Cocoa Extensions/Resources/Info.plist
+        GCC_PREFIX_HEADER: Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
+        MODULEMAP_PRIVATE_FILE: Frameworks/Cocoa Extensions/Classes/module.private.modulemap
+    sources:
+      - path: Frameworks/Cocoa Extensions/Classes
+        excludes:
+          - CocoaExtensionsPrivate.h
+          - XRLoggingPrivate.h
+          - XRLoggingDeprecatedPrivate.h
+          - CocoaExtensions_Prefix.pch
+          - module.private.modulemap
+        headerVisibility: public
+      - path: Frameworks/Cocoa Extensions/Classes/CocoaExtensionsPrivate.h
+        headerVisibility: private
+      - path: Frameworks/Cocoa Extensions/Classes/XRLoggingPrivate.h
+        headerVisibility: private
+      - path: Frameworks/Cocoa Extensions/Classes/XRLoggingDeprecatedPrivate.h
+        headerVisibility: project
+      - path: Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
+        buildPhase: none
+      - path: Frameworks/Cocoa Extensions/Classes/module.private.modulemap
+        buildPhase: none
+      - path: Frameworks/Cocoa Extensions/Resources/Language Files
+      - path: Frameworks/Cocoa Extensions/Resources/Info.plist
+        buildPhase: none
+      - path: Frameworks/Cocoa Extensions/LICENSE.txt
+        buildPhase: resources
+      - path: Frameworks/Cocoa Extensions/ACKNOWLEDGEMENT.txt
+        buildPhase: resources
+    dependencies:
+      - sdk: Foundation.framework
+      - sdk: Cocoa.framework
+      - sdk: IOKit.framework
+      - sdk: Security.framework
+      - sdk: WebKit.framework
+      - sdk: Contacts.framework
+
+  EncryptionKit:
+    templates: [GlasstualFramework]
+    productName: EncryptionKit
+    settings:
+      base:
+        PRODUCT_NAME: EncryptionKit
+        PRODUCT_BUNDLE_IDENTIFIER: com.codeux.frameworks.encryptionKit
+        INFOPLIST_FILE: Frameworks/Encryption Kit/Resources/Info.plist
+        GCC_PREFIX_HEADER: Frameworks/Encryption Kit/Classes/EncryptionKit_Prefix.pch
+        HEADER_SEARCH_PATHS:
+          - $(inherited)
+          - '"$(SRCROOT)/Frameworks/Static Libraries/Headers/**"'
+        LIBRARY_SEARCH_PATHS:
+          - $(inherited)
+          - '"$(SRCROOT)/Frameworks/Static Libraries/Libraries"'
+    sources:
+      - path: Frameworks/Encryption Kit/Classes
+        excludes:
+          - EncryptionKit_Prefix.pch
+          - "*Private.h"
+          - OTRKitAuthenticationDialogWindowManager.h
+          - OTRKitAutoExpandingTextField.h
+          - OTRKitFrameworkHelpers.h
+        headerVisibility: public
+      - path: Frameworks/Encryption Kit/Classes/OTRKitPrivate.h
+        headerVisibility: project
+      - path: Frameworks/Encryption Kit/Classes/OTRKitAuthenticationDialogPrivate.h
+        headerVisibility: project
+      - path: Frameworks/Encryption Kit/Classes/OTRKitConcreteObjectPrivate.h
+        headerVisibility: project
+      - path: Frameworks/Encryption Kit/Classes/OTRKitFingerprintManagerDialogPrivate.h
+        headerVisibility: project
+      - path: Frameworks/Encryption Kit/Classes/OTRKitAuthenticationDialogWindowManager.h
+        headerVisibility: project
+      - path: Frameworks/Encryption Kit/Classes/OTRKitAutoExpandingTextField.h
+        headerVisibility: project
+      - path: Frameworks/Encryption Kit/Classes/OTRKitFrameworkHelpers.h
+        headerVisibility: project
+      - path: Frameworks/Encryption Kit/Classes/EncryptionKit_Prefix.pch
+        buildPhase: none
+      - path: Frameworks/Encryption Kit/Resources/Language Files
+      - path: Frameworks/Encryption Kit/Resources/User Interface
+      - path: Frameworks/Encryption Kit/Resources/Info.plist
+        buildPhase: none
+      - path: Frameworks/Encryption Kit/LICENSE.txt
+        buildPhase: resources
+      - path: Frameworks/Encryption Kit/ACKNOWLEDGEMENT.txt
+        buildPhase: resources
+      - path: Frameworks/Encryption Kit/Documentation
+        excludes: ["libgcrypt", "libgpg-error", "libotr"]
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: Documentation
+      - path: Frameworks/Encryption Kit/Documentation/libgcrypt
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: Documentation/libgcrypt
+      - path: Frameworks/Encryption Kit/Documentation/libgpg-error
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: Documentation/libgpg-error
+      - path: Frameworks/Encryption Kit/Documentation/libotr
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: Documentation/libotr
+    dependencies:
+      - sdk: AppKit.framework
+      - sdk: Foundation.framework
+      - framework: Frameworks/Static Libraries/Libraries/libotr.a
+        embed: false
+      - framework: Frameworks/Static Libraries/Libraries/libgcrypt.a
+        embed: false
+      - framework: Frameworks/Static Libraries/Libraries/libgpg-error.a
+        embed: false
+
+  # ---- XPC services -------------------------------------------------------
+
+  HistoricLogFileManager:
+    templates: [GlasstualXPCService]
+    productName: Scrollback History Manager
+    settings:
+      base:
+        PRODUCT_NAME: Scrollback History Manager
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.ScrollbackHistoryManager
+        INFOPLIST_FILE: XPC Services/Historic Log File Manager/Resources/Property Lists/Info.plist
+        CODE_SIGN_ENTITLEMENTS: XPC Services/Historic Log File Manager/Configurations/Sandbox/Release.entitlements
+        GCC_PREFIX_HEADER: XPC Services/Historic Log File Manager/Classes/Headers/Private/HSLHistoricLogPCHPrivate.h
+      configs:
+        Release:
+          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE)
+    sources:
+      - path: XPC Services/Historic Log File Manager/Classes
+      - path: XPC Services/Historic Log File Manager/Resources
+        excludes: ["Property Lists/Info.plist"]
+      - path: XPC Services/Historic Log File Manager/Resources/Property Lists/Info.plist
+        buildPhase: none
+      - path: XPC Services/Historic Log File Manager/Configurations
+      - path: Sources/Shared/Headers
+      - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.m
+      - path: Sources/Shared/Views/Channel View/TVCLogLineXPC.m
+    dependencies:
+      - sdk: CoreData.framework
+
+  InlineContentLoader:
+    templates: [GlasstualXPCService]
+    productName: Inline Content Loader
+    settings:
+      base:
+        PRODUCT_NAME: Inline Content Loader
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader
+        INFOPLIST_FILE: XPC Services/Inline Content Loader/Resources/Property Lists/Info.plist
+        CODE_SIGN_ENTITLEMENTS: XPC Services/Inline Content Loader/Configurations/Sandbox/Release.entitlements
+        GCC_PREFIX_HEADER: XPC Services/Inline Content Loader/Classes/Headers/Private/ICLProcessPCHPrivate.h
+        # The Core Media plugin resolves symbols from this binary at runtime.
+        DEAD_CODE_STRIPPING: NO
+        GCC_SYMBOLS_PRIVATE_EXTERN: NO
+        STRIP_STYLE: non-global
+      configs:
+        Release:
+          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE)
+    sources:
+      - path: XPC Services/Inline Content Loader/Classes
+      - path: XPC Services/Inline Content Loader/Resources/Modules
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: Components
+      - path: XPC Services/Inline Content Loader/Resources/Modules/InlineImageLiveResize.js
+        buildPhase: resources
+      - path: XPC Services/Inline Content Loader/Resources/Property Lists/Info.plist
+        buildPhase: none
+      - path: XPC Services/Inline Content Loader/Configurations
+      - path: Sources/Shared/Headers
+      - path: Sources/Shared/Preferences/TPCPreferences.m
+      - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.m
+    dependencies:
+      - sdk: ImageIO.framework
+      - framework: Frameworks/Static Libraries/Libraries/GRMustache.framework
+        embed: false
+      - target: InlineContentLoaderCoreMedia
+        embed: true
+        codeSign: true
+        copy:
+          destination: resources
+          subpath: Extensions
+
+  InlineContentLoaderCoreMedia:
+    templates: [LoadableBundle]
+    productName: Core Media
+    settings:
+      base:
+        PRODUCT_NAME: Core Media
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader.CoreMedia
+        WRAPPER_EXTENSION: mediaPlugin
+        INFOPLIST_FILE: XPC Services/Inline Content Loader/Extensions/Core Media/Resources/Property Lists/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Configurations/Sandbox/Inherited.entitlements
+        GCC_PREFIX_HEADER: XPC Services/Inline Content Loader/Extensions/Core Media/Classes/Headers/Private/ICPCoreMediaPCHPrivate.h
+        HEADER_SEARCH_PATHS:
+          - $(inherited)
+          - '"$(SRCROOT)/XPC Services/Inline Content Loader/Classes/Headers/**"'
+          - '"$(SRCROOT)/XPC Services/Inline Content Loader/Classes/Modules/**"'
+          - "$(SRCROOT)/Sources/Shared/Headers/**"
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - "@loader_path/../../../../../../../Frameworks"
+      configs:
+        Release:
+          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_CORE_MEDIA_PROVISIONING_PROFILE)
+    sources:
+      - path: XPC Services/Inline Content Loader/Extensions/Core Media/Classes
+      - path: XPC Services/Inline Content Loader/Extensions/Core Media/Resources/Modules
+      - path: XPC Services/Inline Content Loader/Extensions/Core Media/Resources/Property Lists/Info.plist
+        buildPhase: none
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+
+  IRCRemoteConnectionManager:
+    templates: [GlasstualXPCService]
+    productName: IRC Connection Host
+    settings:
+      base:
+        PRODUCT_NAME: IRC Connection Host
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.IRCConnectionHost
+        INFOPLIST_FILE: XPC Services/IRC Remote Connection Manager/Resources/Property Lists/Info.plist
+        CODE_SIGN_ENTITLEMENTS: XPC Services/IRC Remote Connection Manager/Configurations/Sandbox/Release.entitlements
+        GCC_PREFIX_HEADER: XPC Services/IRC Remote Connection Manager/Classes/Headers/Private/RCMProcessPCHPrivate.h
+        SWIFT_OBJC_BRIDGING_HEADER: XPC Services/IRC Remote Connection Manager/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
+      configs:
+        Release:
+          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_IRC_PROVISIONING_PROFILE)
+    sources:
+      - path: XPC Services/IRC Remote Connection Manager/Classes
+        excludes:
+          # The Network.framework socket replaced the classic one.
+          - "**/IRCConnectionSocketClassic.swift"
+      - path: XPC Services/IRC Remote Connection Manager/Resources/Language Files
+      - path: XPC Services/IRC Remote Connection Manager/Resources/Property Lists/Info.plist
+        buildPhase: none
+      - path: XPC Services/IRC Remote Connection Manager/Configurations
+      - path: Sources/Shared/Headers
+      - path: Sources/Shared/Helpers/Cocoa (Objective-C)/NSObjectHelper.m
+      - path: Sources/Shared/IRC/IRCConnectionConfig.m
+      - path: Sources/Shared/IRC/IRCConnectionErrors.m
+      - path: Sources/Shared/Library/TLOLocalization.m
+      - path: Sources/Shared/Library/TLOLocalization.swift
+      - path: Sources/Shared/Library/TLOTimer.m
+    dependencies:
+      - sdk: Security.framework
+      - sdk: SecurityInterface.framework
+      - sdk: SystemConfiguration.framework
+
+  # ---- Bundled extensions -------------------------------------------------
+
+  Caffeine:
+    templates: [GlasstualExtension]
+    productName: Caffeine
+    settings:
+      base:
+        PRODUCT_NAME: Caffeine
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.caffeine
+        INFOPLIST_FILE: Sources/Plugins/Caffeine/Resources/Property Lists/Info.plist
+    sources:
+      - path: Sources/Plugins/Caffeine/Classes
+      - path: Sources/Plugins/Caffeine/Resources
+        excludes: ["Property Lists/Info.plist"]
+      - path: Sources/Plugins/Caffeine/Resources/Property Lists/Info.plist
+        buildPhase: none
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+
+  ChatFilter:
+    templates: [GlasstualExtension]
+    productName: Chat Filters
+    settings:
+      base:
+        PRODUCT_NAME: Chat Filters
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.chat-filter
+        INFOPLIST_FILE: Sources/Plugins/Chat Filter/Resources/Property Lists/Info.plist
+    sources:
+      - path: Sources/Plugins/Chat Filter/Classes
+      - path: Sources/Plugins/Chat Filter/Resources
+        excludes: ["Property Lists/Info.plist"]
+      - path: Sources/Plugins/Chat Filter/Resources/Property Lists/Info.plist
+        buildPhase: none
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+
+  SmileyConverter:
+    templates: [GlasstualExtension]
+    productName: Smiley Converter
+    settings:
+      base:
+        PRODUCT_NAME: Smiley Converter
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.smiley-converter
+        INFOPLIST_FILE: Sources/Plugins/Smiley Converter/Resources/Property Lists/Info.plist
+    sources:
+      - path: Sources/Plugins/Smiley Converter/Classes
+      - path: Sources/Plugins/Smiley Converter/Resources
+        excludes: ["Property Lists/Info.plist"]
+      - path: Sources/Plugins/Smiley Converter/Resources/Property Lists/Info.plist
+        buildPhase: none
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+
+  SystemProfiler:
+    templates: [GlasstualExtension]
+    productName: System Info
+    settings:
+      base:
+        PRODUCT_NAME: System Info
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.system-profiler
+        INFOPLIST_FILE: Sources/Plugins/System Profiler/Resources/Property Lists/Info.plist
+    sources:
+      - path: Sources/Plugins/System Profiler/Classes
+      - path: Sources/Plugins/System Profiler/Resources
+        excludes: ["Property Lists/Info.plist"]
+      - path: Sources/Plugins/System Profiler/Resources/Property Lists/Info.plist
+        buildPhase: none
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+      - sdk: IOKit.framework
+      - sdk: Metal.framework
+
+  UserInsights:
+    templates: [GlasstualExtension]
+    productName: User Insights
+    settings:
+      base:
+        PRODUCT_NAME: User Insights
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.user-insights
+        INFOPLIST_FILE: Sources/Plugins/User Insights/Resources/Property Lists/Info.plist
+    sources:
+      - path: Sources/Plugins/User Insights/Classes
+      - path: Sources/Plugins/User Insights/Resources
+        excludes: ["Property Lists/Info.plist"]
+      - path: Sources/Plugins/User Insights/Resources/Property Lists/Info.plist
+        buildPhase: none
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+      - sdk: CoreFoundation.framework
+
+  ZNCAdditions:
+    templates: [GlasstualExtension]
+    productName: ZNC Additions
+    settings:
+      base:
+        PRODUCT_NAME: ZNC Additions
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.znc-additions
+        INFOPLIST_FILE: Sources/Plugins/ZNC Additions/Resources/Property Lists/Info.plist
+    sources:
+      - path: Sources/Plugins/ZNC Additions/Classes
+      - path: Sources/Plugins/ZNC Additions/Resources
+        excludes: ["Property Lists/Info.plist"]
+      - path: Sources/Plugins/ZNC Additions/Resources/Property Lists/Info.plist
+        buildPhase: none
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+      - sdk: Security.framework
+      - sdk: SecurityInterface.framework
+
+  # ---- Application --------------------------------------------------------
+
+  Glasstual:
+    templates: [GlasstualTarget]
+    type: application
+    productName: Glasstual
+    settings:
+      base:
+        PRODUCT_NAME: Glasstual
+        PRODUCT_BUNDLE_IDENTIFIER: $(GLASSTUAL_BUNDLE_IDENTIFIER)
+        PRODUCT_MODULE_NAME: Glasstual
+        INFOPLIST_FILE: Sources/App/Resources/Property Lists/Application Properties/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GCC_PREFIX_HEADER: Sources/App/Classes/Headers/Private/GlasstualPrivate.h
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/App/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
+        HEADER_SEARCH_PATHS:
+          - $(inherited)
+          - "$(SRCROOT)/Sources/Shared/Headers/**"
+        FRAMEWORK_SEARCH_PATHS:
+          - $(inherited)
+          - '"$(SRCROOT)/Frameworks/Static Libraries/Libraries"'
+        # Bundled extensions resolve symbols from this binary at runtime.
+        DEAD_CODE_STRIPPING: NO
+        GCC_SYMBOLS_PRIVATE_EXTERN: NO
+        STRIP_STYLE: non-global
+      configs:
+        Debug:
+          CODE_SIGN_ENTITLEMENTS: Sources/App/Configurations/Sandbox/Debug.entitlements
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Sources/App/Configurations/Sandbox/Standard Release.entitlements
+          PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_MAIN_PROVISIONING_PROFILE)
+    sources:
+      - path: Sources/App/Classes
+      - path: Sources/App/Configurations
+      - path: Sources/Shared
+      # Resources -----------------------------------------------------------
+      - path: Sources/App/Resources/Images
+        excludes:
+          - Application/AppIcon.icon
+          - Application/applicationIcon.icns
+          - Application/applicationIcon.iconset
+          - Application/applicationIcon.psd
+          - DMG Canvas
+      - path: Sources/App/Resources/Images/Application/AppIcon.icon
+        type: file
+        buildPhase: resources
+      - path: Sources/App/Resources/Language Files
+        excludes: [_randomToken]
+      - path: Sources/App/Resources/Property Lists
+        excludes:
+          - Application Properties
+          - Preferences
+      - path: Sources/App/Resources/Property Lists/Application Properties/Info.plist
+        buildPhase: none
+      - path: Sources/App/Resources/Property Lists/Preferences
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: Preferences
+      - path: Sources/App/Resources/Scripting/Script Files/Bundled Scripts
+        type: folder
+      - path: Sources/App/Resources/Scripting/Script Files/Glasstual Extras Installer/Packages/Glasstual-Extras.pkg
+        buildPhase: resources
+      - path: Sources/App/Resources/Styling/Bundled Styles
+        type: folder
+      - path: Sources/App/Resources/Styling/JavaScript
+        type: folder
+      - path: Sources/App/Resources/Styling/Style Default Templates
+        type: folder
+      - path: Sources/App/Resources/User Interface
+        excludes:
+          - "Appearance/*Template.plist"
+      - path: Acknowledgements.pdf
+        buildPhase:
+          copyFiles:
+            destination: resources
+            subpath: Documentation
+    dependencies:
+      - sdk: AudioToolbox.framework
+      - sdk: Cocoa.framework
+      - sdk: CoreServices.framework
+      - sdk: IOKit.framework
+      - sdk: QuartzCore.framework
+      - sdk: QuickLookUI.framework
+      - sdk: Security.framework
+      - sdk: SystemConfiguration.framework
+      - sdk: UserNotifications.framework
+      - sdk: WebKit.framework
+      - target: CocoaExtensions
+        embed: true
+        codeSign: true
+      - target: EncryptionKit
+        embed: true
+        codeSign: true
+      - framework: Frameworks/Static Libraries/Libraries/GRMustache.framework
+        embed: true
+        codeSign: true
+      - package: Sparkle
+        product: Sparkle
+      - target: HistoricLogFileManager
+        embed: true
+        codeSign: true
+      - target: InlineContentLoader
+        embed: true
+        codeSign: true
+      - target: IRCRemoteConnectionManager
+        embed: true
+        codeSign: true
+      - target: Caffeine
+        embed: true
+        codeSign: true
+        copy:
+          destination: resources
+          subpath: Bundled Extensions
+      - target: ChatFilter
+        embed: true
+        codeSign: true
+        copy:
+          destination: resources
+          subpath: Bundled Extensions
+      - target: SmileyConverter
+        embed: true
+        codeSign: true
+        copy:
+          destination: resources
+          subpath: Bundled Extensions
+      - target: SystemProfiler
+        embed: true
+        codeSign: true
+        copy:
+          destination: resources
+          subpath: Bundled Extensions
+      - target: UserInsights
+        embed: true
+        codeSign: true
+        copy:
+          destination: resources
+          subpath: Bundled Extensions
+      - target: ZNCAdditions
+        embed: true
+        codeSign: true
+        copy:
+          destination: resources
+          subpath: Bundled Extensions
+
+# ---------------------------------------------------------------------------
+# Schemes
+# ---------------------------------------------------------------------------
+
+schemes:
+  Glasstual:
+    build:
+      parallelizeBuild: true
+      buildImplicitDependencies: true
+      targets:
+        Glasstual: all
+      preActions:
+        - name: Update version from git
+          settingsTarget: Glasstual
+          script: |
+            "${SRCROOT}/Scripts/UpdateVersion.sh"
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Debug
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+      revealArchiveInOrganizer: true

@@ -60,8 +60,14 @@ static const char blowfish_ecb_base64_chars[64] = "./0123456789abcdefghijklmnopq
 
 + (NSUInteger)estimatedLengthOfEncodedDataOfLength:(NSUInteger)dataLength
 {
-	/* The returned estimation is the result of base64 encoded,
-	 properly padded encryption block up to input length. */
+	/* Without a mode, assume the larger (CBC) output. */
+	return [self estimatedLengthOfEncodedDataOfLength:dataLength mode:EKBlowfishEncryptionCBCModeOfOperation];
+}
+
++ (NSUInteger)estimatedLengthOfEncodedDataOfLength:(NSUInteger)dataLength mode:(EKBlowfishEncryptionModeOfOperation)mode
+{
+	/* The returned estimation is the length of the encoded message
+	 including the "+OK " (ECB) or "+OK *" (CBC) prefix. */
 	NSUInteger blockLength = dataLength;
 
 	NSUInteger blockLengthRemainder = (blockLength % kCCBlockSizeBlowfish);
@@ -70,7 +76,15 @@ static const char blowfish_ecb_base64_chars[64] = "./0123456789abcdefghijklmnopq
 		blockLength += (kCCBlockSizeBlowfish - blockLengthRemainder);
 	}
 
-	return (ceil(blockLength / 3) * 4);
+	if (mode == EKBlowfishEncryptionDefaultModeOfOperation || mode == EKBlowfishEncryptionECBModeOfOperation) {
+		/* ECB: each 8 byte block is encoded as 12 characters. */
+		return (4 + ((blockLength / kCCBlockSizeBlowfish) * 12));
+	}
+
+	/* CBC: the 8 byte IV is prepended then the whole is base64 encoded. */
+	blockLength += kCCBlockSizeBlowfish;
+
+	return (5 + ((NSUInteger)ceil(blockLength / 3.0) * 4));
 }
 
 + (NSString *)encrypt:(NSString *)rawInput
@@ -213,7 +227,6 @@ NSData *_performCommonCryptoOperation(CCOperation ccInOperation,
 	size_t outputBufferSize = CCCryptorGetOutputLength(cryptorRef, [ccInRelatedData length], willCallCryptorFinal);
 
 	NSMutableData *outputBuffer = [NSMutableData dataWithLength:outputBufferSize];
-	;
 
 	/* Perform update operation on the cryptor. */
 	size_t cryptorUpdateDataOutMoved = 0;
@@ -226,6 +239,8 @@ NSData *_performCommonCryptoOperation(CCOperation ccInOperation,
 														  &cryptorUpdateDataOutMoved);
 
 	if (cryptorUpdateStatus != kCCSuccess) {
+		outputBuffer = nil;
+
 		goto cleanup_function;
 	}
 
@@ -241,6 +256,8 @@ NSData *_performCommonCryptoOperation(CCOperation ccInOperation,
 			CCCryptorFinal(cryptorRef, cryptorFinalDataOut, cryptorFinalDataOutSize, &cryptorUpdateDataOutMoved);
 
 		if (cryptorFinalStatus != kCCSuccess) {
+			outputBuffer = nil;
+
 			goto cleanup_function;
 		}
 
@@ -405,15 +422,13 @@ cleanup_function:
 
 + (int)ecb_decrypt_base64DecodeCharacterIndex:(char)c
 {
-	int i = (-1);
-
-	for (i = 0; i < 64; i++) {
+	for (int i = 0; i < 64; i++) {
 		if (blowfish_ecb_base64_chars[i] == c) {
 			return i;
 		}
 	}
 
-	return i;
+	return (-1);
 }
 
 + (NSData *)ecb_decrypt_base64Decode:(NSData *)dataToDecrypt

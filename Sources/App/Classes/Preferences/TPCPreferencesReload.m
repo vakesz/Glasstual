@@ -111,11 +111,6 @@ NS_ASSUME_NONNULL_BEGIN
 		reloadAction |= TPCPreferencesReloadActionInputHistoryScope;
 	}
 
-	/* Main window alpha level */
-	if ([keys containsObject:@"MainWindowTransparencyLevel"]) {
-		reloadAction |= TPCPreferencesReloadActionMainWindowTransparencyLevel;
-	}
-
 	/* Dock icon */
 	if ([keys containsObject:@"DisplayDockBadges"] || [keys containsObject:@"DisplayPublicMessageCountInDockBadge"]) {
 		reloadAction |= TPCPreferencesReloadActionDockIconBadges;
@@ -283,12 +278,6 @@ NS_ASSUME_NONNULL_BEGIN
 		if (didReloadMemberListSortOrder == NO) {
 			[mainWindowMemberList() refreshAllDrawings];
 		}
-	}
-
-	/* Main window alpha level */
-	if ((reloadAction & TPCPreferencesReloadActionMainWindowTransparencyLevel) ==
-		TPCPreferencesReloadActionMainWindowTransparencyLevel) {
-		[mainWindow() updateAlphaValueToReflectPreferences];
 	}
 
 	/* Highlight keywords */

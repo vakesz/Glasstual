@@ -35,6 +35,8 @@
  *
  *********************************************************************** */
 
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
 #import "IRCClientConfig.h"
 #import "IRCClientPrivate.h"
 #import "IRCWorldPrivate.h"
@@ -68,11 +70,11 @@ NS_ASSUME_NONNULL_BEGIN
 				   alternateButton:TXTLS(@"Prompts[qso-2g]")
 					   otherButton:nil
 				   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
-					   [self importPreflight:buttonClicked];
+					   [self importPreflight:buttonClicked inWindow:window];
 				   }];
 }
 
-+ (void)importPreflight:(TDCAlertResponse)buttonPressed
++ (void)importPreflight:(TDCAlertResponse)buttonPressed inWindow:(NSWindow *)window
 {
 	if (buttonPressed != TDCAlertResponseDefault) {
 		return;
@@ -86,13 +88,16 @@ NS_ASSUME_NONNULL_BEGIN
 	d.resolvesAliases = YES;
 	d.allowsMultipleSelection = NO;
 
-	[d beginWithCompletionHandler:^(NSInteger returnCode) {
-		if (returnCode == NSModalResponseOK) {
-			NSURL *pathURL = d.URLs[0];
+	d.allowedContentTypes = @[ UTTypePropertyList ];
 
-			[self importPostflight:pathURL];
-		}
-	}];
+	[d beginSheetModalForWindow:window
+			  completionHandler:^(NSInteger returnCode) {
+				  if (returnCode == NSModalResponseOK) {
+					  NSURL *pathURL = d.URLs[0];
+
+					  [self importPostflight:pathURL];
+				  }
+			  }];
 }
 
 + (BOOL)importPostflightBackupPreferences
@@ -298,11 +303,11 @@ NS_ASSUME_NONNULL_BEGIN
 				   alternateButton:TXTLS(@"Prompts[qso-2g]")
 					   otherButton:nil
 				   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
-					   [self exportPreflight:buttonClicked];
+					   [self exportPreflight:buttonClicked inWindow:window];
 				   }];
 }
 
-+ (void)exportPreflight:(TDCAlertResponse)buttonPressed
++ (void)exportPreflight:(TDCAlertResponse)buttonPressed inWindow:(NSWindow *)window
 {
 	if (buttonPressed != TDCAlertResponseDefault) {
 		return;
@@ -312,15 +317,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 	d.canCreateDirectories = YES;
 
+	d.allowedContentTypes = @[ UTTypePropertyList ];
+
 	d.nameFieldStringValue = TXLocalizationNotNeeded(@"GlasstualPreferences.plist");
 
-	[d beginWithCompletionHandler:^(NSInteger returnCode) {
-		if (returnCode == NSModalResponseOK) {
-			NSURL *pathURL = d.URL;
+	[d beginSheetModalForWindow:window
+			  completionHandler:^(NSInteger returnCode) {
+				  if (returnCode == NSModalResponseOK) {
+					  NSURL *pathURL = d.URL;
 
-			[self exportPostflightForURL:pathURL filterJunk:YES];
-		}
-	}];
+					  [self exportPostflightForURL:pathURL filterJunk:YES];
+				  }
+			  }];
 }
 
 + (BOOL)exportPostflightForPath:(NSString *)path

@@ -158,8 +158,6 @@
 	<integer>0</integer>
 	<key>Main Input Text Field -&gt; Focus When Changing Views</key>
 	<integer>0</integer>
-	<key>MainWindowTransparencyLevel</key>
-	<integer>0</integer>
 	<key>NicknameHighlightMatchingType</key>
 	<integer>0</integer>
 	<key>Nickname Color Style Overrides (v2)</key>
@@ -175,8 +173,6 @@
 	<key>PostNotificationsWhileInFocus</key>
 	<integer>0</integer>
 	<key>PreferModernCiphers</key>
-	<integer>0</integer>
-	<key>PreferModernSockets</key>
 	<integer>0</integer>
 	<key>Private Extension Store -&gt; Caffeine Extension -&gt; Prevent Sleep</key>
 	<integer>0</integer>
@@ -369,8 +365,6 @@
 	<key>Wiki-style Link Parser Extension -&gt; Service Enabled</key>
 	<integer>0</integer>
 	<key>Wiki-style Link Parser Extension -&gt; Link Prefixes</key>
-	<integer>0</integer>
-	<key>Window -&gt; Main Window Is Fullscreen&apos;d</key>
 	<integer>0</integer>
 	<key>Window -&gt; Main Window -&gt; Member List is Visible</key>
 	<integer>0</integer>

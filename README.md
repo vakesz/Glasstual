@@ -36,21 +36,19 @@ A number of identifiers keep the Textual spelling on purpose, because they name 
 <!-- TODO: add dark appearance screenshots alongside these. -->
 <!-- Conversation shown is from a local demo network, not a real one. -->
 
-## Note Regarding Downloading Source Code
+## Note Regarding Third-Party Frameworks
 
-Glasstual depends on several other projects to build. This repository is linked against them using submodules — clicking "Download ZIP" will not download a copy of those projects. Clone the source instead:
+The Codeux frameworks Glasstual builds on (Cocoa Extensions, Auto Hyperlinks, Encryption Kit) and the prebuilt static libraries live in `Frameworks/` as vendored sources, not submodules. `Frameworks/PROVENANCE.md` records the upstream commit each one was taken from. A plain clone is enough:
 
 ```
 git clone https://github.com/vakesz/Glasstual.git
-cd Glasstual
-git submodule update --init --recursive
 ```
 
 ## Note Regarding Code Signing
 
-**DO NOT change the Code Signing Identity setting through Xcode.** Glasstual uses a configuration file to specify the code signing identity. This allows it to be used across all projects associated with Glasstual without having to modify each.
+**DO NOT change the Code Signing settings through Xcode.** `Glasstual.xcodeproj` is generated from `project.yml` and any change made in the target editor is lost on the next `xcodegen generate`.
 
-**DO** edit the file located at _[Configurations ➜ Build ➜ Code Signing Identity.xcconfig](Configurations/Build/Code%20Signing%20Identity.xcconfig)_
+**DO** edit the file located at _[Configurations ➜ Signing.xcconfig](Configurations/Signing.xcconfig)_
 
 **It is HIGHLY DISCOURAGED to turn off code signing.** Certain features rely on the fact that Glasstual is properly signed and is within a sandboxed environment.
 
@@ -58,45 +56,54 @@ git submodule update --init --recursive
 
 ## Building Glasstual
 
-The latest version of Glasstual requires a valid code signing certificate (it does not need to be issued by Apple) and Xcode 26 on macOS Tahoe 26.
+Glasstual requires Xcode 26 or later on macOS 26 (Tahoe) or later, an Apple Silicon Mac (builds are arm64 only), and a valid code signing certificate (it does not need to be issued by Apple).
 
 This tree has **no paid-license or trial checks**. Precompiled store builds of Textual from codeux.com are a separate product.
 
-**DO NOT change the Code Signing Identity setting through Xcode.** Modify the file located at _[Configurations ➜ Build ➜ Code Signing Identity.xcconfig](Configurations/Build/Code%20Signing%20Identity.xcconfig)_ instead.
+1. Install the development tools: `brew bundle` (this includes XcodeGen).
+2. Set your Apple Developer **Team ID** in _[Configurations ➜ Signing.xcconfig](Configurations/Signing.xcconfig)_ and, if you are not building the official fork, `GLASSTUAL_BUNDLE_IDENTIFIER` in _[Configurations ➜ Base.xcconfig](Configurations/Base.xcconfig)_. The defaults are:
+   - Bundle ID: `com.vakesz.glasstual`
+   - Team ID: `H8W5DK3FN2`
+   - App Group: `group.<Team ID>.<Bundle ID>`
 
-Set your Apple Developer **Team ID** there, and set `GLASSTUAL_BUNDLE_IDENTIFIER` in `Configurations/Build/Standard Release/Glasstual.xcconfig` (and the Debug copy) to an identifier you own. This fork defaults to:
+   Register that App ID and App Group on [developer.apple.com](https://developer.apple.com/account/resources/identifiers/list).
+3. Regenerate the project if you changed `project.yml` or added files: `make generate`. The generated `Glasstual.xcodeproj` is committed, so a plain checkout builds without XcodeGen.
+4. Open `Glasstual.xcodeproj` and build the `Glasstual` scheme, or from the command line:
 
-- Bundle ID: `com.vakesz.glasstual`
-- Team ID: `H8W5DK3FN2`
-- App Group: `group.H8W5DK3FN2.com.vakesz.glasstual`
+   ```sh
+   make build            # Debug
+   make release          # Release
+   make run              # build and launch
+   ```
 
-Register that App ID and App Group on [developer.apple.com](https://developer.apple.com/account/resources/identifiers/list), then enable **Automatic signing**.
+   `make help` lists every target; they are thin wrappers around `xcodebuild` and the scripts in `Scripts/`.
 
-Build Glasstual using the "Standard Release" build scheme.
+   Run and Profile use the `Debug` configuration; Archive uses `Release`. The scheme's pre-action writes the build number from the last git commit date (see [Configurations/README.md](Configurations/README.md)).
 
 ### Code quality
 
 Install the development tools and run the repository-wide checks with:
 
 ```sh
-brew bundle
-./Scripts/lint.sh
+make setup    # brew bundle
+make lint     # shellcheck, actionlint, plist/xib validation, format check
+make format   # clang-format, swift-format, shfmt
 ```
 
-Run `./Scripts/format.sh` to format first-party Objective-C, Swift, and shell
-sources. Formatting and linting intentionally exclude Git submodules and
-vendored sources under `External Libraries`. Pull requests also build the
-Debug, standard Release, sandboxed Release, and plugin App Store configurations.
+Formatting and linting intentionally exclude the vendored frameworks under
+`Frameworks/` and `External Libraries`. The `Quality` workflow runs `make lint` (shellcheck, actionlint,
+plist/xib validation and format checks) on every pull request; `Signed Release`
+is run manually to archive, notarize and publish.
 
 ### Software Updates
 
-The Standard Release scheme builds with Sparkle enabled but **no `SUFeedURL`** — the
-upstream Textual appcast was removed so that this fork can never offer Codeux's builds
-as an update to itself. Set `SUFeedURL` in
-_[Sources ➜ App ➜ Resources ➜ Property Lists ➜ Application Properties ➜ Info.plist](Sources/App/Resources/Property%20Lists/Application%20Properties/Info.plist)_
-to your own appcast, or drop `GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED` from
-_Configurations ➜ Build ➜ Standard Release ➜ Enabled Features.xcconfig_ to compile
-updating out entirely.
+Sparkle is linked from Swift Package Manager but compiled out in both configurations
+(`GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED = 0` in
+_[Configurations ➜ Base.xcconfig](Configurations/Base.xcconfig)_): the upstream Textual
+appcast was removed so that this fork can never offer Codeux's builds as an update to
+itself. To enable updating, set the flag to `1`, add `SUPublicEDKey` and an `SUFeedURL` pointing at your
+own appcast to
+_[Sources ➜ App ➜ Resources ➜ Property Lists ➜ Application Properties ➜ Info.plist](Sources/App/Resources/Property%20Lists/Application%20Properties/Info.plist)_.
 
 ## Licenses
 

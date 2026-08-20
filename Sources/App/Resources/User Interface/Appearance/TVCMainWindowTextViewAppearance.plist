@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>Common</key>
+	<key>Tahoe</key>
 	<dict>
 		<key>Text View</key>
 		<dict>
@@ -13,305 +13,42 @@
 				<key>height</key>
 				<integer>2</integer>
 			</dict>
-		</dict>
+			<key>normalTextColor</key>
+			<dict>
+				<key>type</key>
+				<integer>3</integer>
+				<key>value</key>
+				<string>labelColor</string>
+			</dict>			<key>placeholderTextColor</key>
+			<dict>
+				<key>type</key>
+				<integer>3</integer>
+				<key>value</key>
+				<string>placeholderTextColor</string>
+			</dict>			<key>backgroundColor</key>
+			<dict>
+				<key>type</key>
+				<integer>3</integer>
+				<key>value</key>
+				<string>textBackgroundColor</string>
+			</dict>		</dict>
 		<key>Background View</key>
 		<dict>
 			<key>contentBorderPadding</key>
 			<integer>23</integer>
-		</dict>
-	</dict>
-	<key>CommonModern</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>Common</string>
-		<key>Text View</key>
-		<dict>
-			<key>font</key>
-			<dict>
-				<key>name</key>
-				<string>System</string>
-				<key>size</key>
-				<integer>12</integer>
-			</dict>
-			<key>fontLarge</key>
-			<dict>
-				<key>name</key>
-				<string>System</string>
-				<key>size</key>
-				<integer>14</integer>
-			</dict>
-			<key>fontExtraLarge</key>
-			<dict>
-				<key>name</key>
-				<string>System</string>
-				<key>size</key>
-				<integer>16</integer>
-			</dict>
-			<key>fontHumongous</key>
-			<dict>
-				<key>name</key>
-				<string>System</string>
-				<key>size</key>
-				<integer>24</integer>
-			</dict>
-		</dict>
-	</dict>
-	<key>CommonModernDark</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModern</string>
-		<key>Background View</key>
-		<dict>
 			<key>backgroundColor</key>
 			<dict>
 				<key>type</key>
-				<integer>2</integer>
+				<integer>3</integer>
 				<key>value</key>
-				<string>0.248 0.248 0.248</string>
-			</dict>
-			<key>dividerColor</key>
+				<string>windowBackgroundColor</string>
+			</dict>			<key>dividerColor</key>
 			<dict>
 				<key>type</key>
-				<integer>2</integer>
+				<integer>3</integer>
 				<key>value</key>
-				<string>0.150 0.150 0.150</string>
-			</dict>
-		</dict>
-		<key>Text View</key>
-		<dict>
-			<key>normalTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>1.0</string>
-			</dict>
-			<key>placeholderTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>2</integer>
-				<key>value</key>
-				<string>0.660 0.660 0.660</string>
-			</dict>
-			<key>backgroundColor</key>
-			<dict>
-				<key>activeWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>2</integer>
-					<key>value</key>
-					<string>0.386 0.386 0.386</string>
-				</dict>
-				<key>inactiveWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>2</integer>
-					<key>value</key>
-					<string>0.386 0.386 0.386</string>
-				</dict>
-			</dict>
-			<key>outsidePrimaryShadowColor</key>
-			<dict>
-				<key>activeWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.10</string>
-				</dict>
-				<key>inactiveWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.10</string>
-				</dict>
-			</dict>
-			<key>outsidePrimaryShadowColor@2x</key>
-			<dict>
-				<key>activeWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.15</string>
-				</dict>
-				<key>inactiveWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.15</string>
-				</dict>
-			</dict>
-		</dict>
-	</dict>
-	<key>CommonModernLight</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModern</string>
-		<key>Background View</key>
-		<dict>
-			<key>backgroundColor</key>
-			<dict>
-				<key>type</key>
-				<integer>2</integer>
-				<key>value</key>
-				<string>0.957 0.957 0.957</string>
-			</dict>
-			<key>dividerColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>0.65</string>
-			</dict>
-		</dict>
-		<key>Text View</key>
-		<dict>
-			<key>normalTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>0.15</string>
-			</dict>
-			<key>placeholderTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>1</integer>
-				<key>value</key>
-				<string>0.50</string>
-			</dict>
-			<key>backgroundColor</key>
-			<dict>
-				<key>activeWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>2</integer>
-					<key>value</key>
-					<string>0.0 0.0 0.0</string>
-				</dict>
-				<key>inactiveWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>2</integer>
-					<key>value</key>
-					<string>0.0 0.0 0.0</string>
-				</dict>
-			</dict>
-			<key>insideShadowColor</key>
-			<dict>
-				<key>activeWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>1.0</string>
-				</dict>
-				<key>inactiveWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>1.0</string>
-				</dict>
-			</dict>
-			<key>insideGradient</key>
-			<dict>
-				<key>activeWindow</key>
-				<array>
-					<dict>
-						<key>type</key>
-						<integer>2</integer>
-						<key>value</key>
-						<string>0.992 0.992 0.992</string>
-					</dict>
-					<dict>
-						<key>type</key>
-						<integer>2</integer>
-						<key>value</key>
-						<string>0.988 0.988 0.988</string>
-					</dict>
-				</array>
-				<key>inactiveWindow</key>
-				<array>
-					<dict>
-						<key>type</key>
-						<integer>2</integer>
-						<key>value</key>
-						<string>0.992 0.992 0.992</string>
-					</dict>
-					<dict>
-						<key>type</key>
-						<integer>2</integer>
-						<key>value</key>
-						<string>0.988 0.988 0.988</string>
-					</dict>
-				</array>
-			</dict>
-			<key>outsidePrimaryShadowColor</key>
-			<dict>
-				<key>activeWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.15</string>
-				</dict>
-				<key>inactiveWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.15</string>
-				</dict>
-			</dict>
-			<key>outsideSecondaryShadowColor</key>
-			<dict>
-				<key>activeWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.10</string>
-				</dict>
-				<key>inactiveWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.10</string>
-				</dict>
-			</dict>
-			<key>outsideSecondaryShadowColor@2x</key>
-			<dict>
-				<key>activeWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.06</string>
-				</dict>
-				<key>inactiveWindow</key>
-				<dict>
-					<key>type</key>
-					<integer>1</integer>
-					<key>value</key>
-					<string>0.0 0.06</string>
-				</dict>
-			</dict>
-		</dict>
-	</dict>
-	<key>TahoeDark</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModernDark</string>
-	</dict>
-	<key>TahoeLight</key>
-	<dict>
-		<key>inheritFrom</key>
-		<string>CommonModernLight</string>
+				<string>separatorColor</string>
+			</dict>		</dict>
 	</dict>
 </dict>
 </plist>

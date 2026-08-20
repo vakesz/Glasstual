@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+#import <Metal/Metal.h>
 #import <WebKit/WebKit.h>
 
 #import "TPI_SP_SysInfo.h"
@@ -61,7 +62,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString *)processor;
 + (NSUInteger)processorPhysicalCoreCount;
 + (NSUInteger)processorVirtualCoreCount;
-+ (nullable NSString *)processorClockSpeed;
 
 + (NSTimeInterval)systemUptime;
 + (NSTimeInterval)applicationUptime;
@@ -75,7 +75,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString *)formattedLocalVolumeDiskUsage;
 + (NSString *)formattedTotalMemorySize;
 + (NSString *)formattedDiskSize:(uint64_t)diskSize;
-+ (NSString *)formattedCPUFrequency:(double)frequency;
 
 + (NSString *)descriptionForSidebarAppearance;
 + (NSString *)descriptionForThemeAppearance;
@@ -222,7 +221,8 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSMutableString *resultString = [NSMutableString string];
 
-	NSArray *volumeAttributes = @[ NSURLVolumeNameKey, NSURLVolumeTotalCapacityKey, NSURLVolumeAvailableCapacityKey ];
+	NSArray *volumeAttributes =
+		@[ NSURLVolumeNameKey, NSURLVolumeTotalCapacityKey, NSURLVolumeAvailableCapacityForImportantUsageKey ];
 
 	NSArray *volumes =
 		[RZFileManager() mountedVolumeURLsIncludingResourceValuesForKeys:volumeAttributes
@@ -232,7 +232,8 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *volumeName = [volume resourceValueForKey:NSURLVolumeNameKey];
 
 		uint64_t totalSpace = [[volume resourceValueForKey:NSURLVolumeTotalCapacityKey] longLongValue];
-		uint64_t freeSpace = [[volume resourceValueForKey:NSURLVolumeAvailableCapacityKey] longLongValue];
+		uint64_t freeSpace =
+			[[volume resourceValueForKey:NSURLVolumeAvailableCapacityForImportantUsageKey] longLongValue];
 
 		if (index == 0) {
 			[resultString appendString:TPILocalizedString(@"BasicLanguage[bvr-wz]",
@@ -297,12 +298,8 @@ NS_ASSUME_NONNULL_BEGIN
 	BOOL showCPUModel =
 		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> CPU Model"] == NO);
 
-#if TARGET_CPU_ARM64
-	BOOL showGPUModel = NO;
-#elif TARGET_CPU_X86_64
 	BOOL showGPUModel =
 		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> GPU Model"] == NO);
-#endif
 
 	BOOL showDiskInfo =
 		([RZUserDefaults() boolForKey:@"System Profiler Extension -> Feature Disabled -> Disk Information"] == NO);
@@ -350,32 +347,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 		NSUInteger _cpu_count_p = [TPI_SP_SysInfo processorPhysicalCoreCount];
 
-#if TARGET_CPU_ARM64
-
 		if (_cpu_model.length > 0) {
 			[resultString appendString:TPILocalizedString(@"BasicLanguage[ifk-s5]", _cpu_model, _cpu_count_p)];
 		}
-
-#elif TARGET_CPU_X86_64
-
-		NSString *_cpu_speed = [TPI_SP_SysInfo processorClockSpeed];
-
-		NSUInteger _cpu_count_v = [TPI_SP_SysInfo processorVirtualCoreCount];
-
-		_cpu_model = [XRRegularExpression string:_cpu_model
-								 replacedByRegex:@"(\\s*@.*)|CPU|\\(R\\)|\\(TM\\)"
-									  withString:@" "];
-		_cpu_model = [XRRegularExpression string:_cpu_model replacedByRegex:@"\\s+" withString:@" "];
-
-		_cpu_model = _cpu_model.trim;
-
-		if (_cpu_model.length > 0 && _cpu_speed.length > 0) {
-			[resultString
-				appendString:TPILocalizedString(
-								 @"BasicLanguage[mnc-vx]", _cpu_model, _cpu_count_v, _cpu_count_p, _cpu_speed)];
-		}
-
-#endif
 	}
 
 	if (showMemory) {
@@ -549,15 +523,6 @@ NS_ASSUME_NONNULL_BEGIN
 	return [NSByteCountFormatter stringFromByteCountWithPaddedDigits:diskSize];
 }
 
-+ (NSString *)formattedCPUFrequency:(double)frequency
-{
-	if ((frequency / 1000000) >= 990) {
-		return TPILocalizedString(@"BasicLanguage[3iu-k8]", ((frequency / 100000000.0) / 10.0));
-	} else {
-		return TPILocalizedString(@"BasicLanguage[jw7-sg]", frequency);
-	}
-}
-
 + (NSString *)formattedTotalMemorySize
 {
 	return [self formattedDiskSize:[self totalMemorySize]];
@@ -565,25 +530,47 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSString *)formattedLocalVolumeDiskUsage
 {
-	NSDictionary *diskInfo = [RZFileManager() attributesOfFileSystemForPath:@"/" error:nil];
+	NSURL *rootURL = [NSURL fileURLWithPath:@"/" isDirectory:YES];
 
-	if (diskInfo == nil) {
+	NSDictionary<NSURLResourceKey, id> *diskInfo = [rootURL resourceValuesForKeys:@[ NSURLVolumeTotalCapacityKey ]
+																			error:NULL];
+
+	NSNumber *totalSpace = diskInfo[NSURLVolumeTotalCapacityKey];
+
+	if (totalSpace == nil) {
 		return nil;
 	}
 
-	uint64_t totalSpace = [diskInfo longLongForKey:NSFileSystemSize];
-
-	return [self formattedDiskSize:totalSpace];
+	return [self formattedDiskSize:totalSpace.unsignedLongLongValue];
 }
 
-+ (nullable NSString *)formattedGraphicsCardInformation
++ (NSArray<NSString *> *)graphicsCardModelsUsingMetal
+{
+	NSMutableArray<NSString *> *gpuModels = [NSMutableArray new];
+
+	NSArray<id<MTLDevice>> *devices = MTLCopyAllDevices();
+
+	for (id<MTLDevice> device in devices) {
+		NSString *modelString = device.name;
+
+		if (modelString.length == 0 || [gpuModels containsObject:modelString]) {
+			continue;
+		}
+
+		[gpuModels addObject:modelString];
+	}
+
+	return [gpuModels copy];
+}
+
++ (NSArray<NSString *> *)graphicsCardModelsUsingIOKit
 {
 	CFMutableDictionaryRef pciDevices = IOServiceMatching("IOPCIDevice");
 
 	io_iterator_t entryIterator;
 
 	if (IOServiceGetMatchingServices(kIOMainPortDefault, pciDevices, &entryIterator) != kIOReturnSuccess) {
-		return nil;
+		return @[];
 	}
 
 	NSMutableArray<NSString *> *gpuModels = [NSMutableArray new];
@@ -596,9 +583,9 @@ NS_ASSUME_NONNULL_BEGIN
 		kern_return_t status =
 			IORegistryEntryCreateCFProperties(serviceObject, &serviceDictionary, kCFAllocatorDefault, kNilOptions);
 
-		if (status != kIOReturnSuccess) {
-			IOObjectRelease(serviceObject);
+		IOObjectRelease(serviceObject);
 
+		if (status != kIOReturnSuccess) {
 			continue;
 		}
 
@@ -608,13 +595,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 		if (classCode == NULL) {
 			cleanResult = NO;
-		}
-		if (CFGetTypeID(classCode) != CFDataGetTypeID()) {
+		} else if (CFGetTypeID(classCode) != CFDataGetTypeID()) {
 			cleanResult = NO;
-		} else if (CFDataGetLength(classCode) == 0) {
+		} else if (CFDataGetLength(classCode) < (CFIndex)sizeof(UInt32)) {
 			cleanResult = NO;
-		} else if (*(UInt32 *)CFDataGetBytePtr(classCode) != 0x30000) {
-			cleanResult = NO;
+		} else {
+			UInt32 classCodeValue = 0;
+
+			memcpy(&classCodeValue, CFDataGetBytePtr(classCode), sizeof(classCodeValue));
+
+			if (classCodeValue != 0x30000) {
+				cleanResult = NO;
+			}
 		}
 
 		const void *model = CFDictionaryGetValue(serviceDictionary, @"model");
@@ -633,10 +625,29 @@ NS_ASSUME_NONNULL_BEGIN
 
 			modelString = [modelString stringByReplacingOccurrencesOfString:@"\0" withString:@""];
 
-			[gpuModels addObject:modelString];
+			if (modelString.length > 0 && [gpuModels containsObject:modelString] == NO) {
+				[gpuModels addObject:modelString];
+			}
 		}
 
 		CFRelease(serviceDictionary);
+	}
+
+	IOObjectRelease(entryIterator);
+
+	return [gpuModels copy];
+}
+
++ (nullable NSString *)formattedGraphicsCardInformation
+{
+	NSArray<NSString *> *gpuModels = [self graphicsCardModelsUsingMetal];
+
+	if (gpuModels.count == 0) {
+		gpuModels = [self graphicsCardModelsUsingIOKit];
+	}
+
+	if (gpuModels.count == 0) {
+		return nil;
 	}
 
 	// ---- //
@@ -766,35 +777,46 @@ NS_ASSUME_NONNULL_BEGIN
 	return coreCount;
 }
 
-+ (nullable NSString *)processorClockSpeed
-{
-	u_int64_t clockSpeed = 0L;
-
-	size_t clockSpeedSize = sizeof(clockSpeed);
-
-	if (sysctlbyname("hw.cpufrequency", &clockSpeed, &clockSpeedSize, NULL, 0) != 0) {
-		return nil;
-	}
-
-	return [self formattedCPUFrequency:clockSpeed];
-}
-
 + (uint64_t)freeMemorySize
 {
+	/* Mirror Activity Monitor: "used" is app memory (internal pages minus
+	 purgeable), wired, and compressed. Everything else is free. */
+	uint64_t totalMemory = 0L;
+
+	size_t totalMemorySize = sizeof(totalMemory);
+
+	if (sysctlbyname("hw.memsize", &totalMemory, &totalMemorySize, NULL, 0) != 0) {
+		return 0;
+	}
+
 	vm_size_t page_size;
 
 	host_page_size(mach_host_self(), &page_size);
 
-	vm_statistics_data_t host_info_out;
+	vm_statistics64_data_t host_info_out;
 
-	mach_msg_type_number_t host_info_outCnt = (sizeof(vm_statistics_data_t) / sizeof(natural_t));
+	mach_msg_type_number_t host_info_outCnt = HOST_VM_INFO64_COUNT;
 
-	if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&host_info_out, &host_info_outCnt) !=
+	if (host_statistics64(mach_host_self(), HOST_VM_INFO64, (host_info_t)&host_info_out, &host_info_outCnt) !=
 		KERN_SUCCESS) {
 		return 0;
 	}
 
-	return ((host_info_out.inactive_count + host_info_out.free_count) * page_size);
+	uint64_t appMemory = 0;
+
+	if (host_info_out.internal_page_count > host_info_out.purgeable_count) {
+		appMemory = (host_info_out.internal_page_count - host_info_out.purgeable_count);
+	}
+
+	uint64_t usedPages = (appMemory + host_info_out.wire_count + host_info_out.compressor_page_count);
+
+	uint64_t usedMemory = (usedPages * page_size);
+
+	if (usedMemory >= totalMemory) {
+		return 0;
+	}
+
+	return ((totalMemory - usedMemory) / _systemMemoryDivisor);
 }
 
 + (uint64_t)totalMemorySize

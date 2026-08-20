@@ -37,13 +37,13 @@
  *********************************************************************** */
 
 #import "NSObjectHelperPrivate.h"
-#import "GCDAsyncSocket.h"
 #import "TXGlobalModels.h"
 #import "IRCClientPrivate.h"
 #import "TPCPathInfo.h"
 #import "TPCPreferencesLocal.h"
 #import "TLOEncryptionManagerPrivate.h"
 #import "TLOLocalization.h"
+#import "TDCFileTransferDialogSocketPrivate.h"
 #import "TDCFileTransferDialogTableCellPrivate.h"
 #import "TDCFileTransferDialogTransferControllerPrivate.h"
 #import "TDCFileTransferDialogInternal.h"
@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 #define _sendDataTimeout 30.0
 #define _resumeAcceptTimeout 10.0
 
-@interface TDCFileTransferDialogTransferController ()
+@interface TDCFileTransferDialogTransferController () <TDCFileTransferDialogSocketDelegate>
 @property(nonatomic, strong, readwrite) IRCClient *client;
 @property(nonatomic, copy, readwrite) NSString *clientId;
 @property(nonatomic, assign, readwrite) BOOL isResume;
@@ -82,15 +82,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong, nullable) XRPortMapper *portMapping;
 @property(nonatomic, assign) NSUInteger sendQueueSize;
 @property(nonatomic, strong, nullable) dispatch_queue_t serverDispatchQueue;
-@property(nonatomic, strong, nullable) dispatch_queue_t serverSocketQueue;
-@property(nonatomic, strong, nullable) GCDAsyncSocket *listeningServer;
-@property(nonatomic, strong, nullable) GCDAsyncSocket *listeningServerConnectedClient;
-@property(nonatomic, strong, nullable) GCDAsyncSocket *connectionToRemoteServer;
+@property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *listeningServer;
+@property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *listeningServerConnectedClient;
+@property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *connectionToRemoteServer;
 @property(nonatomic, strong, nullable) id transferProgressHandler; // Used to prevent system sleep
 @property(readonly) uint64_t currentFilesize;
 @property(readonly) TDCFileTransferDialog *transferDialog;
-@property(readonly, nullable) GCDAsyncSocket *readSocket;
-@property(readonly, nullable) GCDAsyncSocket *writeSocket;
+@property(readonly, nullable) TDCFileTransferDialogSocket *readSocket;
+@property(readonly, nullable) TDCFileTransferDialogSocket *writeSocket;
 @end
 
 @implementation TDCFileTransferDialogTransferController
@@ -245,7 +244,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)failWithNoSpaceLeftOnDevice
 {
-	[self closeWithLocalizedError:TXTLS(@"TDCFileTransferDialog[79f-s0]")];
+	[self closeWithLocalizedError:@"TDCFileTransferDialog[79f-s0]"];
 }
 
 - (void)closeWithLocalizedError:(NSString *)errorLocalization
@@ -298,18 +297,11 @@ NS_ASSUME_NONNULL_BEGIN
 		stringWithFormat:@"Glasstual.TDCFileTransferDialogTransferController.DCC-SocketDispatchQueue-%@", uniqueId];
 
 	self.serverDispatchQueue = dispatch_queue_create(dispatchQueueName.UTF8String, attributes);
-
-	NSString *socketQueueName = [NSString
-		stringWithFormat:@"Glasstual.TDCFileTransferDialogTransferController.DCC-SocketReadWriteQueue-%@", uniqueId];
-
-	self.serverSocketQueue = dispatch_queue_create(socketQueueName.UTF8String, attributes);
 }
 
 - (void)destroyDispatchQueues
 {
 	self.serverDispatchQueue = nil;
-
-	self.serverSocketQueue = nil;
 }
 
 #pragma mark -
@@ -417,42 +409,27 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.transferStatus = TDCFileTransferDialogTransferStatusConnecting;
 
-	GCDAsyncSocket *connectionToRemoteServer = [[GCDAsyncSocket alloc] initWithDelegate:(id)self
-																		  delegateQueue:self.serverDispatchQueue
-																			socketQueue:self.serverSocketQueue];
-
-	NSError *connectionError = nil;
-
-	BOOL isConnected = NO;
-
-	/* Use the interface of the configured IP address instead of the default. */
-	/* Default interface is used if IP address is not found locally. */
-	NSString *networkInterface = [self networkInterfaceMatchingAddress];
-
-	if (networkInterface) {
-		isConnected = [connectionToRemoteServer connectToHost:self.hostAddress
-													   onPort:self.hostPort
-												 viaInterface:networkInterface
-												  withTimeout:_connectTimeout
-														error:&connectionError];
-	} else {
-		isConnected = [connectionToRemoteServer connectToHost:self.hostAddress
-													   onPort:self.hostPort
-												  withTimeout:_connectTimeout
-														error:&connectionError];
-	}
-
-	if (isConnected == NO) {
-		if (connectionError) {
-			LogToConsoleError("DCC Connect Error: %{public}@", connectionError.localizedDescription);
-		}
+	if (self.hostAddress.length == 0 || self.hostPort == 0) {
+		LogToConsoleError("DCC Connect Error: Invalid host address or port");
 
 		[self closeWithLocalizedError:@"TDCFileTransferDialog[fn8-sx]"];
 
 		return;
 	}
 
+	TDCFileTransferDialogSocket *connectionToRemoteServer =
+		[[TDCFileTransferDialogSocket alloc] initWithDelegate:self delegateQueue:self.serverDispatchQueue];
+
 	self.connectionToRemoteServer = connectionToRemoteServer;
+
+	/* Use the interface of the configured IP address instead of the default. */
+	/* Default interface is used if IP address is not found locally. */
+	NSString *networkInterface = [self networkInterfaceMatchingAddress];
+
+	[connectionToRemoteServer connectToHost:self.hostAddress
+									   port:self.hostPort
+							   viaInterface:networkInterface
+									timeout:_connectTimeout];
 
 	[self disableSystemSleep];
 }
@@ -467,34 +444,32 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.transferStatus = TDCFileTransferDialogTransferStatusInitializing;
 
-	self.hostPort = [TPCPreferences fileTransferPortRangeStart];
+	uint16_t portRangeStart = [TPCPreferences fileTransferPortRangeStart];
+	uint16_t portRangeEnd = [TPCPreferences fileTransferPortRangeEnd];
 
-	while ([self tryToOpenConnectionAsServer] == NO) {
-		self.hostPort += 1;
+	if (portRangeStart == 0 || portRangeStart > portRangeEnd) {
+		[self closeWithLocalizedError:@"TDCFileTransferDialog[vxc-sd]"];
 
-		if (self.hostPort > [TPCPreferences fileTransferPortRangeEnd]) {
-			[self closeWithLocalizedError:@"TDCFileTransferDialog[vxc-sd]"];
-
-			return;
-		}
+		return;
 	}
+
+	TDCFileTransferDialogSocket *listeningServer =
+		[[TDCFileTransferDialogSocket alloc] initWithDelegate:self delegateQueue:self.serverDispatchQueue];
+
+	self.listeningServer = listeningServer;
+
+	/* The result is delivered to -socket:didStartListeningOnPort:
+	 or -socket:didFailToListenWithError: */
+	[listeningServer listenOnPortRangeFrom:portRangeStart to:portRangeEnd];
 
 	[self disableSystemSleep];
 }
 
-- (BOOL)tryToOpenConnectionAsServer
+- (void)listeningServerDidStartOnPort:(uint16_t)port
 {
-	GCDAsyncSocket *listeningServer = [[GCDAsyncSocket alloc] initWithDelegate:(id)self
-																 delegateQueue:self.serverDispatchQueue
-																   socketQueue:self.serverSocketQueue];
+	NSAssertReturn(self.transferStatus == TDCFileTransferDialogTransferStatusInitializing);
 
-	BOOL isActive = [listeningServer acceptOnPort:self.hostPort error:NULL];
-
-	if (isActive == NO) {
-		return NO;
-	}
-
-	self.listeningServer = listeningServer;
+	self.hostPort = port;
 
 	/* Try to map the port */
 	XRPortMapper *portMapping = [[XRPortMapper alloc] initWithPort:self.hostPort];
@@ -516,8 +491,6 @@ NS_ASSUME_NONNULL_BEGIN
 	if ([self.portMapping open] == NO) {
 		[self portMapperDidFinishWork:nil];
 	}
-
-	return YES;
 }
 
 - (nullable NSString *)networkInterfaceMatchingAddress
@@ -602,13 +575,22 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[RZNotificationCenter() removeObserver:self name:XRPortMapperDidChangedNotification object:self.portMapping];
+	XRPortMapper *portMapping = self.portMapping;
 
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[self.portMapping close];
+	[RZNotificationCenter() removeObserver:self name:XRPortMapperDidChangedNotification object:portMapping];
 
-		self.portMapping = nil;
-	});
+	self.portMapping = nil;
+
+	/* This can be reached from the socket dispatch queue (through -close).
+	 The main thread may at that moment be blocked waiting on the socket
+	 queue, so hop asynchronously to avoid a lock inversion. */
+	if ([NSThread isMainThread]) {
+		[portMapping close];
+	} else {
+		XRPerformBlockAsynchronouslyOnMainQueue(^{
+			[portMapping close];
+		});
+	}
 }
 
 - (void)noteIPAddressLookupSucceeded
@@ -913,7 +895,17 @@ NS_ASSUME_NONNULL_BEGIN
 	NSAssertReturn(self.transferStatus == TDCFileTransferDialogTransferStatusReceiving ||
 				   self.transferStatus == TDCFileTransferDialogTransferStatusSending);
 
-	XRPerformBlockSynchronouslyOnQueue(self.serverDispatchQueue, ^{
+	/* The queue is destroyed when the transfer closes. Capture it so a
+	 close racing with this timer cannot hand dispatch a nil queue. The
+	 hop is asynchronous: the socket queue may itself be waiting on the
+	 main thread and a synchronous dispatch here would deadlock. */
+	dispatch_queue_t serverDispatchQueue = self.serverDispatchQueue;
+
+	if (serverDispatchQueue == nil) {
+		return;
+	}
+
+	XRPerformBlockAsynchronouslyOnQueue(serverDispatchQueue, ^{
 		@synchronized(self.speedRecords) {
 			[self.speedRecordsPrivate addObject:@(self.currentRecord)];
 
@@ -925,9 +917,9 @@ NS_ASSUME_NONNULL_BEGIN
 		self.currentRecord = 0;
 
 		[self reloadStatusInformation];
-	});
 
-	[self send];
+		[self send];
+	});
 }
 
 #pragma mark -
@@ -983,7 +975,17 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if (self.isResume) {
-		[fileHandle seekToFileOffset:self.processedFilesize];
+		NSError *seekError = nil;
+
+		if ([fileHandle seekToOffset:self.processedFilesize error:&seekError] == NO) {
+			LogToConsoleError("Failed to seek file handle: %{public}@", seekError.localizedDescription);
+
+			[fileHandle closeAndReturnError:NULL];
+
+			[self closeWithLocalizedError:@"TDCFileTransferDialog[nab-dx]"];
+
+			return NO;
+		}
 	}
 
 	self.fileHandle = fileHandle;
@@ -997,7 +999,11 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[self.fileHandle closeFile];
+	NSError *closeError = nil;
+
+	if ([self.fileHandle closeAndReturnError:&closeError] == NO) {
+		LogToConsoleError("Failed to close file handle: %{public}@", closeError.localizedDescription);
+	}
 
 	self.fileHandle = nil;
 }
@@ -1005,16 +1011,38 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Socket Delegate
 
-- (void)socket:(GCDAsyncSocket *)sock didAcceptNewSocket:(GCDAsyncSocket *)newSocket
+- (void)socket:(TDCFileTransferDialogSocket *)socket didStartListeningOnPort:(uint16_t)port
 {
-	if (self.isActingAsServer == NO) {
+	if (socket != self.listeningServer) {
+		return;
+	}
+
+	[self listeningServerDidStartOnPort:port];
+}
+
+- (void)socket:(TDCFileTransferDialogSocket *)socket didFailToListenWithError:(NSError *)error
+{
+	if (socket != self.listeningServer) {
+		return;
+	}
+
+	LogToConsoleError("DCC Listen Error: %{public}@", error.localizedDescription);
+
+	[self closeWithLocalizedError:@"TDCFileTransferDialog[vxc-sd]"];
+}
+
+- (void)socket:(TDCFileTransferDialogSocket *)socket didAcceptConnection:(TDCFileTransferDialogSocket *)connection
+{
+	if (socket != self.listeningServer || self.isActingAsServer == NO) {
+		[connection disconnect];
+
 		return;
 	}
 
 	if (self.listeningServerConnectedClient == nil) {
-		self.listeningServerConnectedClient = newSocket;
+		self.listeningServerConnectedClient = connection;
 	} else {
-		[newSocket disconnect];
+		[connection disconnect];
 
 		return;
 	}
@@ -1032,15 +1060,15 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if (self.isReversed) {
-		[self.readSocket readDataWithTimeout:(-1) tag:0];
+		[self.readSocket readData];
 	} else {
 		[self send];
 	}
 }
 
-- (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port
+- (void)socketDidConnect:(TDCFileTransferDialogSocket *)socket
 {
-	if (self.isActingAsClient == NO) {
+	if (socket != self.connectionToRemoteServer || self.isActingAsClient == NO) {
 		return;
 	}
 
@@ -1057,14 +1085,19 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	if (self.isReversed == NO) {
-		[self.readSocket readDataWithTimeout:(-1) tag:0];
+		[self.readSocket readData];
 	} else {
 		[self send];
 	}
 }
 
-- (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)error
+- (void)socket:(TDCFileTransferDialogSocket *)socket didDisconnectWithError:(nullable NSError *)error
 {
+	if (socket != self.listeningServer && socket != self.listeningServerConnectedClient &&
+		socket != self.connectionToRemoteServer) {
+		return;
+	}
+
 	if (self.transferStatus == TDCFileTransferDialogTransferStatusComplete ||
 		self.transferStatus == TDCFileTransferDialogTransferStatusFatalError ||
 		self.transferStatus == TDCFileTransferDialogTransferStatusRecoverableError) {
@@ -1078,9 +1111,9 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag
+- (void)socket:(TDCFileTransferDialogSocket *)socket didReadData:(NSData *)data
 {
-	if (self.isSender != NO) {
+	if (socket != self.readSocket || self.isSender != NO) {
 		return;
 	}
 
@@ -1090,22 +1123,21 @@ NS_ASSUME_NONNULL_BEGIN
 	self.processedFilesize += data.length;
 
 	if (data.length > 0) {
-		@try {
-			[self.fileHandle writeData:data];
-		} @catch (NSException *exception) {
-			LogToConsoleError("Caught exception: %{public}@", exception.reason);
-			LogStackTrace();
+		NSError *writeError = nil;
 
-			if ([exception.reason contains:@"No space left on device"]) {
+		if ([self.fileHandle writeData:data error:&writeError] == NO) {
+			LogToConsoleError("Failed to write data: %{public}@", writeError.localizedDescription);
+
+			if ([writeError.domain isEqualToString:NSPOSIXErrorDomain] && writeError.code == ENOSPC) {
 				[self failWithNoSpaceLeftOnDevice];
 
 				return;
 			}
 
-			[self closeWithLocalizedError:TXTLS(@"TDCFileTransferDialog[05g-c8]")];
+			[self closeWithLocalizedError:@"TDCFileTransferDialog[05g-c8]"];
 
 			return;
-		} // @catch
+		}
 	}
 
 	/* Send acknowledgement back to server */
@@ -1120,11 +1152,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSData *ackPacketData = [NSData dataWithBytes:ackPacket length:4];
 
-	[self.readSocket writeData:ackPacketData withTimeout:(-1)tag:0];
+	[self.readSocket writeData:ackPacketData timeout:(-1)];
 
 	/* Continue requesting data if the transfer is not complete */
 	if (self.processedFilesize < self.totalFilesize) {
-		[self.readSocket readDataWithTimeout:(-1) tag:0];
+		[self.readSocket readData];
 
 		return;
 	}
@@ -1138,9 +1170,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Socket Write
 
-- (void)socket:(GCDAsyncSocket *)sock didWriteDataWithTag:(long)tag
+- (void)socketDidWriteData:(TDCFileTransferDialogSocket *)socket
 {
-	if (self.isSender == NO) {
+	if (socket != self.writeSocket || self.isSender == NO) {
 		return;
 	}
 
@@ -1190,7 +1222,19 @@ NS_ASSUME_NONNULL_BEGIN
 			return;
 		}
 
-		NSData *dataToWrite = [self.fileHandle readDataOfLength:BUFFER_SIZE];
+		NSError *readError = nil;
+
+		NSData *dataToWrite = [self.fileHandle readDataUpToLength:BUFFER_SIZE error:&readError];
+
+		if (dataToWrite == nil || dataToWrite.length == 0) {
+			if (readError) {
+				LogToConsoleError("Failed to read data: %{public}@", readError.localizedDescription);
+			}
+
+			[self closeWithLocalizedError:@"TDCFileTransferDialog[nab-dx]"];
+
+			return;
+		}
 
 		self.currentRecord += dataToWrite.length;
 
@@ -1198,7 +1242,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		self.sendQueueSize += 1;
 
-		[self.writeSocket writeData:dataToWrite withTimeout:_sendDataTimeout tag:0];
+		[self.writeSocket writeData:dataToWrite timeout:_sendDataTimeout];
 	} while (1);
 }
 
@@ -1224,7 +1268,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Properties
 
-- (nullable GCDAsyncSocket *)writeSocket
+- (nullable TDCFileTransferDialogSocket *)writeSocket
 {
 	if (self.isReversed) {
 		return self.connectionToRemoteServer;
@@ -1233,7 +1277,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (nullable GCDAsyncSocket *)readSocket
+- (nullable TDCFileTransferDialogSocket *)readSocket
 {
 	if (self.isReversed) {
 		return self.listeningServerConnectedClient;

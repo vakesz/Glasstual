@@ -142,10 +142,6 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	if ([self.class isSelectorExcludedFromWebScript:handlerSelector]) {
-		return;
-	}
-
 	NSMethodSignature *signature = [self methodSignatureForSelector:handlerSelector];
 
 	NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];

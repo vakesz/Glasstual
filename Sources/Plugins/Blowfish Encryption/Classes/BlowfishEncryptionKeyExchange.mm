@@ -79,8 +79,13 @@
 		return nil;
 	}
 
-	[[self keyExchanger] setKeyForComputation:publicKeyData];
-	[[self keyExchanger] computeKey];
+	if ([[self keyExchanger] setKeyForComputation:publicKeyData] == NO) {
+		return nil;
+	}
+
+	if ([[self keyExchanger] computeKey] == NO) {
+		return nil;
+	}
 
 	NSString *secretString = [[self keyExchanger] secretStringValue];
 

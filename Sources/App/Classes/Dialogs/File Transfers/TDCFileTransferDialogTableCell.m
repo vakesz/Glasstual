@@ -110,11 +110,36 @@ NS_ASSUME_NONNULL_BEGIN
 	[self reloadStatusInformation];
 }
 
+- (nullable NSImage *)fileIcon
+{
+	return self.fileIconView.image;
+}
+
+- (NSRect)fileIconFrameOnScreen
+{
+	NSImageView *iconView = self.fileIconView;
+
+	if (iconView == nil || iconView.window == nil) {
+		return NSZeroRect;
+	}
+
+	NSRect frameInWindow = [iconView convertRect:iconView.bounds toView:nil];
+
+	return [iconView.window convertRectToScreen:frameInWindow];
+}
+
 - (void)reloadStatusInformation
 {
-	XRPerformBlockSynchronouslyOnMainQueue(^{
+	/* Called from the transfer controller's socket dispatch queue.
+	 The hop to the main queue is asynchronous so that the socket
+	 queue never blocks on the main thread. */
+	if ([NSThread isMainThread]) {
 		[self _reloadStatusInformation];
-	});
+	} else {
+		XRPerformBlockAsynchronouslyOnMainQueue(^{
+			[self _reloadStatusInformation];
+		});
+	}
 }
 
 - (void)_reloadStatusInformation

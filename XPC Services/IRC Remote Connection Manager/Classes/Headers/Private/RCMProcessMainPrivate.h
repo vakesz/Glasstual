@@ -40,6 +40,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface RCMProcessMain : NSObject <RCMConnectionManagerServerProtocol>
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithXPCConnection:(NSXPCConnection *)connection NS_DESIGNATED_INITIALIZER;
+
+/* Invoked by the listener delegate when the client side of the XPC
+ connection is interrupted or invalidated. Closes any live IRC connection
+ and drops references so the service can exit. */
+- (void)clientConnectionEnded;
 @end
 
 NS_ASSUME_NONNULL_END

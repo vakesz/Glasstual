@@ -36,8 +36,12 @@
  *
  *********************************************************************** */
 
+#import <QuickLookUI/QuickLookUI.h>
+
 #import "NSObjectHelperPrivate.h"
 #import "TPCPathInfo.h"
+#import "TXMasterController.h"
+#import "TXMenuController.h"
 #import "TPCPreferencesLocal.h"
 #import "TPCPreferencesUserDefaults.h"
 #import "TLOInternetAddressLookup.h"
@@ -54,15 +58,24 @@ NS_ASSUME_NONNULL_BEGIN
 /* Refuse to have more than X number of items incoming at any given time. */
 #define _addReceiverHardLimit 120
 
-@interface TDCFileTransferDialog () <NSMenuItemValidation>
+/* Tags of the items in the table's context menu (see the xib). */
+#define _menuItemTagQuickLook 3007
+#define _menuItemTagShare 3008
+
+@interface TDCFileTransferDialog () <NSMenuItemValidation,
+									 NSMenuDelegate,
+									 QLPreviewPanelDataSource,
+									 QLPreviewPanelDelegate>
 @property(nonatomic, weak) IBOutlet NSButton *clearButton;
 @property(nonatomic, weak) IBOutlet NSSegmentedCell *navigationControllerCell;
 @property(nonatomic, weak, readwrite) IBOutlet TVCBasicTableView *fileTransferTable;
 @property(nonatomic, strong) IBOutlet NSArrayController *fileTransfersController;
 @property(nonatomic, strong, nullable) TLOInternetAddressLookup *IPAddressRequest;
 @property(readonly) TDCFileTransferDialogSelection navigationSelection;
-@property(nonatomic, strong) TLOTimer *maintenanceTimer;
+@property(nonatomic, strong, nullable) TLOTimer *maintenanceTimer;
 @property(nonatomic, copy, nullable) NSURL *downloadDestinationURLPrivate;
+@property(nonatomic, strong, nullable) id keyDownEventMonitor;
+@property(nonatomic, copy) NSArray<NSURL *> *previewItems;
 
 - (IBAction)hideWindow:(nullable id)sender;
 
@@ -73,15 +86,63 @@ NS_ASSUME_NONNULL_BEGIN
 - (IBAction)removeTransferFromList:(nullable id)sender;
 - (IBAction)openReceivedFile:(nullable id)sender;
 - (IBAction)revealReceivedFileInFinder:(nullable id)sender;
+- (IBAction)quickLookFile:(nullable id)sender;
 
 - (IBAction)navigationSelectionDidChange:(nullable id)sender;
 @end
+
+#pragma mark -
+#pragma mark Window
+
+/* QLPreviewPanel looks for its controller in the responder chain.
+ The dialog is the window's delegate rather than a responder, so the
+ window hands the request over. */
+@interface TDCFileTransferDialogWindow : NSWindow
+@end
+
+@implementation TDCFileTransferDialogWindow
+
+- (BOOL)acceptsPreviewPanelControl:(QLPreviewPanel *)panel
+{
+	id delegate = self.delegate;
+
+	if ([delegate respondsToSelector:@selector(acceptsPreviewPanelControl:)]) {
+		return [delegate acceptsPreviewPanelControl:panel];
+	}
+
+	return NO;
+}
+
+- (void)beginPreviewPanelControl:(QLPreviewPanel *)panel
+{
+	id delegate = self.delegate;
+
+	if ([delegate respondsToSelector:@selector(beginPreviewPanelControl:)]) {
+		[delegate beginPreviewPanelControl:panel];
+	}
+}
+
+- (void)endPreviewPanelControl:(QLPreviewPanel *)panel
+{
+	id delegate = self.delegate;
+
+	if ([delegate respondsToSelector:@selector(endPreviewPanelControl:)]) {
+		[delegate endPreviewPanelControl:panel];
+	}
+}
+
+@end
+
+#pragma mark -
+#pragma mark Dialog
 
 @implementation TDCFileTransferDialog
 
 - (instancetype)init
 {
 	if ((self = [super init])) {
+		self.previewItems = @[];
+
 		[self prepareInitialState];
 	}
 
@@ -93,6 +154,10 @@ NS_ASSUME_NONNULL_BEGIN
 	[RZMainBundle() loadNibNamed:@"TDCFileTransferDialog" owner:self topLevelObjects:nil];
 
 	self.fileTransferTable.style = NSTableViewStyleInset;
+
+	[self prepareTableMenu];
+
+	[self installKeyDownEventMonitor];
 
 	self.maintenanceTimer = [TLOTimer
 		timerWithActionBlock:^(TLOTimer *sender) {
@@ -112,6 +177,87 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self.maintenanceTimer stop];
 	self.maintenanceTimer = nil;
+
+	[self removeKeyDownEventMonitor];
+}
+
+- (void)prepareTableMenu
+{
+	NSMenu *menu = self.fileTransferTable.menu;
+
+	[[menu itemWithTag:_menuItemTagQuickLook] setImage:[self menuItemImageForSymbolNamed:@"eye"]];
+	[[menu itemWithTag:3006] setImage:[self menuItemImageForSymbolNamed:@"folder"]];
+}
+
+- (NSImage *)menuItemImageForSymbolNamed:(NSString *)symbolName
+{
+	NSImage *image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:nil];
+
+	NSImageSymbolConfiguration *configuration =
+		[NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
+														weight:NSFontWeightRegular
+														 scale:NSImageSymbolScaleMedium];
+
+	return [image imageWithSymbolConfiguration:configuration];
+}
+
+- (void)installKeyDownEventMonitor
+{
+	/* The table view does not forward unhandled keys anywhere the
+	 dialog can see them, so Space is picked up here before the
+	 table gets it. Only events aimed at the table are consumed. */
+	__weak TDCFileTransferDialog *weakSelf = self;
+
+	self.keyDownEventMonitor =
+		[NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
+											  handler:^NSEvent *_Nullable(NSEvent *event) {
+												  TDCFileTransferDialog *strongSelf = weakSelf;
+
+												  if (strongSelf == nil) {
+													  return event;
+												  }
+
+												  if ([strongSelf keyDownEventTogglesQuickLook:event]) {
+													  [strongSelf toggleQuickLookPanel];
+
+													  return nil;
+												  }
+
+												  return event;
+											  }];
+}
+
+- (void)removeKeyDownEventMonitor
+{
+	if (self.keyDownEventMonitor == nil) {
+		return;
+	}
+
+	[NSEvent removeMonitor:self.keyDownEventMonitor];
+	self.keyDownEventMonitor = nil;
+}
+
+- (BOOL)keyDownEventTogglesQuickLook:(NSEvent *)event
+{
+	if (event.window != self.window) {
+		return NO;
+	}
+
+	if (self.window.firstResponder != self.fileTransferTable) {
+		return NO;
+	}
+
+	NSEventModifierFlags modifierFlags = (event.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask);
+
+	if (modifierFlags != 0) {
+		return NO;
+	}
+
+	if ([event.charactersIgnoringModifiers isEqualToString:@" "] == NO) {
+		return NO;
+	}
+
+	return ([self selectedFileTransfersWithLocalFiles].count > 0);
 }
 
 - (void)show
@@ -388,40 +534,119 @@ NS_ASSUME_NONNULL_BEGIN
 		return YES;
 	}
 	case 3005: // Open File
+	case 3006: // Show in Finder
 	{
 		for (TDCFileTransferDialogTransferController *fileTransfer in selectedFileTransfers) {
-			TDCFileTransferDialogTransferStatus transferStatus = fileTransfer.transferStatus;
-
-			if (fileTransfer.isSender != NO) {
-				continue;
-			}
-
-			if (transferStatus == TDCFileTransferDialogTransferStatusComplete) {
+			if ([self fileTransferHasLocalFile:fileTransfer]) {
 				return YES;
 			}
 		}
 
 		return NO;
 	}
-	case 3006: // Reveal In Finder
-	{
+	case _menuItemTagQuickLook:
+	case _menuItemTagShare: {
+		/* Every selected row must have a file on disk. */
 		for (TDCFileTransferDialogTransferController *fileTransfer in selectedFileTransfers) {
-			TDCFileTransferDialogTransferStatus transferStatus = fileTransfer.transferStatus;
-
-			if (fileTransfer.isSender != NO) {
-				continue;
-			}
-
-			if (transferStatus == TDCFileTransferDialogTransferStatusComplete) {
-				return YES;
+			if ([self fileTransferHasLocalFile:fileTransfer] == NO) {
+				return NO;
 			}
 		}
 
-		return NO;
+		return YES;
 	}
 	}
 
 	return NO; // Default validation to NO.
+}
+
+- (BOOL)fileTransferHasLocalFile:(TDCFileTransferDialogTransferController *)fileTransfer
+{
+	/* A received file is only usable once the transfer is complete.
+	 A sent file exists for as long as the user keeps it around. */
+	if (fileTransfer.isSender == NO && fileTransfer.transferStatus != TDCFileTransferDialogTransferStatusComplete) {
+		return NO;
+	}
+
+	NSString *filePath = fileTransfer.filePath;
+
+	if (filePath == nil) {
+		return NO;
+	}
+
+	return [RZFileManager() fileExistsAtPath:filePath];
+}
+
+- (NSArray<TDCFileTransferDialogTransferController *> *)selectedFileTransfersWithLocalFiles
+{
+	NSMutableArray<TDCFileTransferDialogTransferController *> *fileTransfers = [NSMutableArray array];
+
+	[self enumerateSelectedFileTransfers:^(
+			  TDCFileTransferDialogTransferController *fileTransfer, NSUInteger index, BOOL *stop) {
+		if ([self fileTransferHasLocalFile:fileTransfer] == NO) {
+			return;
+		}
+
+		[fileTransfers addObject:fileTransfer];
+	}];
+
+	return [fileTransfers copy];
+}
+
+- (NSArray<NSURL *> *)selectedFileURLs
+{
+	/* Received files live beneath the download destination whose
+	 security scope the dialog keeps open for the life of the app
+	 (or beneath a folder chosen in an open panel), and sent files
+	 came from an open panel or a drag. Both remain readable, so
+	 the URL is built from the path as-is. */
+	NSMutableArray<NSURL *> *fileURLs = [NSMutableArray array];
+
+	for (TDCFileTransferDialogTransferController *fileTransfer in [self selectedFileTransfersWithLocalFiles]) {
+		NSURL *fileURL = fileTransfer.fileURL;
+
+		if (fileURL == nil) {
+			continue;
+		}
+
+		[fileURLs addObject:fileURL];
+	}
+
+	return [fileURLs copy];
+}
+
+#pragma mark -
+#pragma mark Menu Delegate
+
+- (void)menuNeedsUpdate:(NSMenu *)menu
+{
+	if (menu != self.fileTransferTable.menu) {
+		return;
+	}
+
+	/* The share item is rebuilt for each presentation so that its
+	 submenu reflects the files which are selected. */
+	NSInteger shareItemIndex = [menu indexOfItemWithTag:_menuItemTagShare];
+
+	if (shareItemIndex < 0) {
+		return;
+	}
+
+	[menu removeItemAtIndex:shareItemIndex];
+
+	/* Share is offered only when every selected row has a file;
+	 an empty list produces a disabled item. */
+	NSArray<NSURL *> *shareItems = [self selectedFileURLs];
+
+	if (shareItems.count != self.fileTransferTable.selectedRowIndexes.count) {
+		shareItems = @[];
+	}
+
+	NSMenuItem *shareItem = [menuController() shareMenuItemForItems:shareItems];
+
+	shareItem.tag = _menuItemTagShare;
+
+	[menu insertItem:shareItem atIndex:shareItemIndex];
 }
 
 - (void)clear:(nullable id)sender
@@ -519,26 +744,179 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)openReceivedFile:(nullable id)sender
 {
-	[self enumerateSelectedFileTransfers:^(
-			  TDCFileTransferDialogTransferController *fileTransfer, NSUInteger index, BOOL *stop) {
-		if (fileTransfer.isSender != NO) {
-			return;
-		}
-
-		[RZWorkspace() openURL:fileTransfer.fileURL];
-	}];
+	for (NSURL *fileURL in [self selectedFileURLs]) {
+		[RZWorkspace() openURL:fileURL];
+	}
 }
 
 - (void)revealReceivedFileInFinder:(nullable id)sender
 {
+	NSArray<NSURL *> *fileURLs = [self selectedFileURLs];
+
+	if (fileURLs.count == 0) {
+		return;
+	}
+
+	[RZWorkspace() activateFileViewerSelectingURLs:fileURLs];
+}
+
+- (void)quickLookFile:(nullable id)sender
+{
+	[self toggleQuickLookPanel];
+}
+
+#pragma mark -
+#pragma mark Quick Look
+
+- (void)toggleQuickLookPanel
+{
+	QLPreviewPanel *panel = [QLPreviewPanel sharedPreviewPanel];
+
+	if ([QLPreviewPanel sharedPreviewPanelExists] && panel.isVisible && panel.currentController == self) {
+		[panel orderOut:nil];
+
+		return;
+	}
+
+	[self.window makeFirstResponder:self.fileTransferTable];
+
+	[panel makeKeyAndOrderFront:nil];
+}
+
+- (void)reloadQuickLookPanel
+{
+	if ([QLPreviewPanel sharedPreviewPanelExists] == NO) {
+		return;
+	}
+
+	QLPreviewPanel *panel = [QLPreviewPanel sharedPreviewPanel];
+
+	if (panel.currentController != self) {
+		return;
+	}
+
+	self.previewItems = [self selectedFileURLs];
+
+	[panel reloadData];
+}
+
+- (BOOL)acceptsPreviewPanelControl:(QLPreviewPanel *)panel
+{
+	return YES;
+}
+
+- (void)beginPreviewPanelControl:(QLPreviewPanel *)panel
+{
+	self.previewItems = [self selectedFileURLs];
+
+	panel.dataSource = self;
+	panel.delegate = self;
+}
+
+- (void)endPreviewPanelControl:(QLPreviewPanel *)panel
+{
+	panel.dataSource = nil;
+	panel.delegate = nil;
+
+	self.previewItems = @[];
+}
+
+- (NSInteger)numberOfPreviewItemsInPreviewPanel:(QLPreviewPanel *)panel
+{
+	return self.previewItems.count;
+}
+
+- (nullable id<QLPreviewItem>)previewPanel:(QLPreviewPanel *)panel previewItemAtIndex:(NSInteger)index
+{
+	NSArray<NSURL *> *previewItems = self.previewItems;
+
+	if (index < 0 || (NSUInteger)index >= previewItems.count) {
+		return nil;
+	}
+
+	return previewItems[index];
+}
+
+- (BOOL)previewPanel:(QLPreviewPanel *)panel handleEvent:(NSEvent *)event
+{
+	/* Arrow keys move the table's selection while the panel is up,
+	 which in turn reloads the panel with the new selection. */
+	if (event.type != NSEventTypeKeyDown && event.type != NSEventTypeKeyUp) {
+		return NO;
+	}
+
+	NSString *characters = event.charactersIgnoringModifiers;
+
+	if (characters.length != 1) {
+		return NO;
+	}
+
+	unichar character = [characters characterAtIndex:0];
+
+	if (character != NSUpArrowFunctionKey && character != NSDownArrowFunctionKey) {
+		return NO;
+	}
+
+	if (event.type == NSEventTypeKeyDown) {
+		[self.fileTransferTable keyDown:event];
+	} else {
+		[self.fileTransferTable keyUp:event];
+	}
+
+	return YES;
+}
+
+- (nullable TDCFileTransferDialogTableCell *)tableCellForPreviewItem:(id<QLPreviewItem>)item
+{
+	NSURL *itemURL = item.previewItemURL;
+
+	if (itemURL == nil) {
+		return nil;
+	}
+
+	__block TDCFileTransferDialogTableCell *tableCell = nil;
+
 	[self enumerateSelectedFileTransfers:^(
 			  TDCFileTransferDialogTransferController *fileTransfer, NSUInteger index, BOOL *stop) {
-		if (fileTransfer.isSender != NO) {
+		if ([fileTransfer.fileURL isEqual:itemURL] == NO) {
 			return;
 		}
 
-		[RZWorkspace() selectFile:fileTransfer.filePath inFileViewerRootedAtPath:@""];
+		tableCell = [self.fileTransferTable viewAtColumn:0 row:index makeIfNecessary:NO];
+
+		*stop = YES;
 	}];
+
+	return tableCell;
+}
+
+- (NSRect)previewPanel:(QLPreviewPanel *)panel sourceFrameOnScreenForPreviewItem:(id<QLPreviewItem>)item
+{
+	TDCFileTransferDialogTableCell *tableCell = [self tableCellForPreviewItem:item];
+
+	if (tableCell == nil) {
+		return NSZeroRect;
+	}
+
+	NSRect iconFrame = tableCell.fileIconFrameOnScreen;
+
+	/* Only zoom from the icon when it is actually visible. */
+	NSRect visibleRect = [self.fileTransferTable convertRect:self.fileTransferTable.visibleRect toView:nil];
+
+	NSRect visibleRectOnScreen = [self.window convertRectToScreen:visibleRect];
+
+	if (NSIntersectsRect(iconFrame, visibleRectOnScreen) == NO) {
+		return NSZeroRect;
+	}
+
+	return iconFrame;
+}
+
+- (nullable id)previewPanel:(QLPreviewPanel *)panel
+	transitionImageForPreviewItem:(id<QLPreviewItem>)item
+					  contentRect:(NSRect *)contentRect
+{
+	return [self tableCellForPreviewItem:item].fileIcon;
 }
 
 #pragma mark -
@@ -561,9 +939,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)updateMaintenanceTimer
 {
-	XRPerformBlockSynchronouslyOnMainQueue(^{
+	/* Called from transfer controllers on their socket dispatch queue.
+	 The main thread may be waiting on that queue, so never block here. */
+	if ([NSThread isMainThread]) {
 		[self updateMaintenanceTimerOnMainThread];
-	});
+	} else {
+		XRPerformBlockAsynchronouslyOnMainQueue(^{
+			[self updateMaintenanceTimerOnMainThread];
+		});
+	}
 }
 
 - (void)onMaintenanceTimer
@@ -597,6 +981,11 @@ NS_ASSUME_NONNULL_BEGIN
 	TDCFileTransferDialogTableCell *tableCell = [tableView viewAtColumn:0 row:row makeIfNecessary:NO];
 
 	[tableCell prepareInitialState];
+}
+
+- (void)tableViewSelectionDidChange:(NSNotification *)notification
+{
+	[self reloadQuickLookPanel];
 }
 
 #pragma mark -
@@ -847,6 +1236,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)windowWillClose:(NSNotification *)note
 {
 	[self.window saveWindowStateForClass:self.class];
+
+	/* The panel is ours only while the window is in front. */
+	if ([QLPreviewPanel sharedPreviewPanelExists]) {
+		QLPreviewPanel *panel = [QLPreviewPanel sharedPreviewPanel];
+
+		if (panel.isVisible && panel.currentController == self) {
+			[panel orderOut:nil];
+		}
+	}
 }
 
 - (void)hideWindow:(nullable id)sender
@@ -885,16 +1283,48 @@ NS_ASSUME_NONNULL_BEGIN
 														  error:&resolvedBookmarkError];
 
 	if (resolvedBookmark == nil) {
-		LogToConsoleError("Error creating bookmark for URL: %{public}@", resolvedBookmarkError.localizedDescription);
+		LogToConsoleError("Error resolving bookmark for URL: %{public}@", resolvedBookmarkError.localizedDescription);
+
+		return;
+	}
+
+	if (resolvedBookmarkIsStale) {
+		/* The bookmark must be recreated from the resolved URL and the
+		 stored copy replaced. Creating a security scoped bookmark
+		 requires that the resource is being accessed. */
+		NSData *newBookmark = nil;
+
+		if ([resolvedBookmark startAccessingSecurityScopedResource]) {
+			newBookmark = [resolvedBookmark bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
+									 includingResourceValuesForKeys:nil
+													  relativeToURL:nil
+															  error:NULL];
+
+			[resolvedBookmark stopAccessingSecurityScopedResource];
+		}
+
+		if (newBookmark == nil) {
+			LogToConsoleError("Failed to refresh stale bookmark");
+
+			return;
+		}
+
+		/* -setDownloadDestinationURL: stores the new bookmark and
+		 calls back into this method, which then takes the path below. */
+		[self setDownloadDestinationURL:newBookmark];
+
+		return;
+	}
+
+	/* Only retain the URL when access was granted so that the
+	 -stopAccessingSecurityScopedResource calls remain balanced. */
+	if ([resolvedBookmark startAccessingSecurityScopedResource] == NO) {
+		LogToConsoleError("Failed to access bookmark");
 
 		return;
 	}
 
 	self.downloadDestinationURLPrivate = resolvedBookmark;
-
-	if ([self.downloadDestinationURLPrivate startAccessingSecurityScopedResource] == NO) {
-		LogToConsoleError("Failed to access bookmark");
-	}
 }
 
 - (void)setDownloadDestinationURL:(nullable NSData *)downloadDestinationURL

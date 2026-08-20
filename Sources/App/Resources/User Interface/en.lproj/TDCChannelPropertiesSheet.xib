@@ -79,7 +79,7 @@ DQ
                     </box>
                     <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="185">
                         <rect key="frame" x="52" y="457" width="222" height="20"/>
-                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="roundRect" trackingMode="selectOne" id="186">
+                        <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="186">
                             <font key="font" metaFont="system"/>
                             <segments>
                                 <segment label="General" selected="YES"/>

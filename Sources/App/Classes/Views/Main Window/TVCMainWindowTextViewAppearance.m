@@ -116,24 +116,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.textViewPreferredFontSize = preferredFontSize;
 
-	CGFloat pointSize = 0.0;
-
+	/* Sizes track the system text styles so they follow the
+	 user's text size preferences rather than fixed point values. */
 	switch (preferredFontSize) {
 	case TVCMainWindowTextViewFontSizeLarge:
-		pointSize = 14.0;
-		break;
+		return [NSFont preferredFontForTextStyle:NSFontTextStyleTitle3 options:@{}];
 	case TVCMainWindowTextViewFontSizeExtraLarge:
-		pointSize = 16.0;
-		break;
+		return [NSFont preferredFontForTextStyle:NSFontTextStyleTitle2 options:@{}];
 	case TVCMainWindowTextViewFontSizeHumongous:
-		pointSize = 24.0;
-		break;
+		return [NSFont preferredFontForTextStyle:NSFontTextStyleTitle1 options:@{}];
 	default:
-		pointSize = [NSFont systemFontSize];
-		break;
+		return [NSFont preferredFontForTextStyle:NSFontTextStyleBody options:@{}];
 	}
-
-	return [NSFont systemFontOfSize:pointSize];
 }
 
 @end

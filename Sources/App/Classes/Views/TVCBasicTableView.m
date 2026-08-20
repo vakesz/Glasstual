@@ -69,16 +69,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSMenu *)menuForEvent:(NSEvent *)event
 {
-	if (self.selectedRow < 0 && self.presentMenuForEmptySelection == NO) {
-		return nil;
-	}
-
-	return self.menu;
-}
-
-- (void)rightMouseDown:(NSEvent *)e
-{
-	NSInteger rowBeneathMouse = self.rowBeneathMouse;
+	/* A secondary click on a row that is not part of the selection
+	 selects that row before the menu is presented so that the menu
+	 acts on what the user clicked. AppKit asks for the menu before
+	 it is shown, which is the place to do this without overriding
+	 -rightMouseDown: */
+	NSInteger rowBeneathMouse = [self rowAtPoint:[self convertPoint:event.locationInWindow fromView:nil]];
 
 	if (rowBeneathMouse >= 0) {
 		if ([self.selectedRowIndexes containsIndex:rowBeneathMouse] == NO) {
@@ -86,7 +82,11 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	[super rightMouseDown:e];
+	if (self.selectedRow < 0 && self.presentMenuForEmptySelection == NO) {
+		return nil;
+	}
+
+	return self.menu;
 }
 
 #pragma clang diagnostic push

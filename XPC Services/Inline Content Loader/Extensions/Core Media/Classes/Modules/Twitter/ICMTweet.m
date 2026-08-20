@@ -120,7 +120,10 @@ NS_ASSUME_NONNULL_BEGIN
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		domains = @[ @"twitter.com", @"www.twitter.com", @"mobile.twitter.com" ];
+		/* Twitter and X share the same status URL layout and the
+		 publish.twitter.com oEmbed endpoint accepts both hosts. */
+		domains =
+			@[ @"twitter.com", @"www.twitter.com", @"mobile.twitter.com", @"x.com", @"www.x.com", @"mobile.x.com" ];
 	});
 
 	return domains;

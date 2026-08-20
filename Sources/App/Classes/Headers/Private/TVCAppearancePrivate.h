@@ -40,9 +40,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCAppearance ()
-/* TVCListAppearance will take care of all the hard work such as
- inheritance and retina. You only need to specify "BigSurDark"
- for example, not "BigSurDarkRetina" */
+/* TVCListAppearance takes care of inheritance between appearance
+ dictionaries. Colors are expected to be semantic (type 3) so one
+ appearance serves light and dark, retina and non-retina alike. */
 - (nullable instancetype)initWithAppearanceNamed:(NSString *)appearanceName
 										   atURL:(NSURL *)appearanceLocation
 								forRetinaDisplay:(BOOL)forRetinaDisplay NS_DESIGNATED_INITIALIZER;

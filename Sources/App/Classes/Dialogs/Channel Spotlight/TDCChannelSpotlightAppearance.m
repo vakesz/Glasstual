@@ -52,15 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Search Result
 
-@property(nonatomic, copy, nullable, readwrite) NSColor *searchResultRowSelectionColorActiveWindow;
-@property(nonatomic, copy, nullable, readwrite) NSColor *searchResultRowSelectionColorInactiveWindow;
-@property(nonatomic, assign, readwrite) BOOL searchResultRowEmphasized;
-@property(nonatomic, copy, nullable, readwrite) NSColor *searchResultChannelNameTextColor;
-@property(nonatomic, copy, nullable, readwrite) NSColor *searchResultChannelDescriptionTextColor;
-@property(nonatomic, copy, nullable, readwrite) NSColor *searchResultKeyboardShortcutTextColor;
 @property(nonatomic, assign, readwrite) CGFloat searchResultKeyboardShortcutDeselectedOffset;
 @property(nonatomic, assign, readwrite) CGFloat searchResultKeyboardShortcutSelectedOffset;
-@property(nonatomic, copy, nullable, readwrite) NSColor *searchResultSelectedTextColor;
 @end
 
 @implementation TDCChannelSpotlightAppearance
@@ -101,22 +94,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSDictionary *searchResult = properties[@"Search Result"];
 
-	self.searchResultRowSelectionColorActiveWindow = [self colorInGroup:searchResult
-																withKey:@"selectionColor"
-														forActiveWindow:YES];
-	self.searchResultRowSelectionColorInactiveWindow = [self colorInGroup:searchResult
-																  withKey:@"selectionColor"
-														  forActiveWindow:NO];
-	self.searchResultRowEmphasized = [searchResult boolForKey:@"rowEmphasized"];
-	self.searchResultChannelNameTextColor = [self colorInGroup:searchResult withKey:@"channelNameTextColor"];
-	self.searchResultChannelDescriptionTextColor = [self colorInGroup:searchResult
-															  withKey:@"channelDescriptionTextColor"];
-	self.searchResultKeyboardShortcutTextColor = [self colorInGroup:searchResult withKey:@"keyboardShortcutTextColor"];
 	self.searchResultKeyboardShortcutDeselectedOffset = [self measurementInGroup:searchResult
 																		 withKey:@"keyboardShortcutDeselectedOffset"];
 	self.searchResultKeyboardShortcutSelectedOffset = [self measurementInGroup:searchResult
 																	   withKey:@"keyboardShortcutSelectedOffset"];
-	self.searchResultSelectedTextColor = [self colorInGroup:searchResult withKey:@"selectedTextColor"];
 
 	[self flushAppearanceProperties];
 }

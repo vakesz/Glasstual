@@ -35,9 +35,23 @@
 *
 *********************************************************************** */
 
+/* Connection is the object RCMProcessMain drives over XPC. It owns the
+ send queue, flood control, and the transport socket.
+
+ Concurrency model:
+ A single serial `queue` is created per Connection and shared with the
+ socket. Every XPC entry point hops onto it asynchronously (or, for the
+ one synchronous reply, with queue.sync) and every socket callback is
+ already delivered on it. That makes sendQueue, the flood control
+ counters, and the socket's flags mutually exclusive by construction;
+ no locks are needed. The class is `@unchecked Sendable` because the
+ compiler cannot prove that confinement, so the rule is: never read or
+ write a stored property of this class or its socket off `queue`. */
 @objc(IRCConnection)
-final class Connection: NSObject, ConnectionSocketDelegate {
+final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable {
 	fileprivate let config: IRCConnectionConfig
+
+	fileprivate let queue: DispatchQueue
 
 	fileprivate let socket: ConnectionSocket & ConnectionSocketProtocol
 
@@ -50,19 +64,15 @@ final class Connection: NSObject, ConnectionSocketDelegate {
 			return TLOTimer(
 				actionBlock: { [weak self] _ in
 					self?.onFloodControlTimer()
-				}, on: DispatchQueue.global(qos: .default))
+				}, on: queue)
 		}()
 
 	fileprivate var floodControlCurrentMessageCount = 0
 	fileprivate var floodControlEnforced = false
 
-	fileprivate var workerQueue: DispatchQueue?
-
-	fileprivate var disconnectingManually = false
-
 	enum ConnectionError: Error {
 		/// socketError are errors returned by the connection library.
-		/// For example: GCDAsyncSocket, Network.framework, etc.
+		/// For example: Network.framework
 		case socket(error: Error)
 
 		// otherError are errors returned by ConnectionSocket instances.
@@ -83,125 +93,82 @@ final class Connection: NSObject, ConnectionSocketDelegate {
 	init(with config: IRCConnectionConfig, on connection: NSXPCConnection) {
 		self.config = config
 
-		socket = ConnectionSocket.socket(with: config)
-
 		serviceConnection = connection
+
+		let uniqueIdentifier = UUID().uuidString
+
+		queue = DispatchQueue(label: "Glasstual.IRCConnection.queue.\(uniqueIdentifier)")
+
+		socket = ConnectionSocketNWF(with: config, on: queue)
 
 		super.init()
 
 		socket.delegate = self
 	}
 
-	// MARK: - Grand Central Dispatch
-
-	fileprivate func destroyWorkerDispatchQueue() {
-		workerQueue = nil
-	}
-
-	fileprivate func createWorkerDispatchQueue() {
-		let workerQueueName = "Glasstual.IRCConnection.workerQueue.\(socket.uniqueIdentifier)"
-
-		workerQueue = DispatchQueue(label: workerQueueName)
-	}
-
 	// MARK: - Open/Close
 
 	@objc
 	final func open() {
-		Logging.defaultSubsystem?.debug("Opening connection \(self.socket.uniqueIdentifier, privacy: .public)...")
+		queue.async {
+			self.openOnQueue()
+		}
+	}
+
+	fileprivate func openOnQueue() {
+		RCMLog.connection.debug("Opening connection \(self.socket.uniqueIdentifier, privacy: .public)...")
 
 		if socket.disconnected == false {
-			Logging.defaultSubsystem?.error("Already connected")
+			RCMLog.connection.error("Already connected")
 
 			return
 		}
 
-		createWorkerDispatchQueue()
-
 		startFloodControlTimer()
-
-		disconnectingManually = true
 
 		socket.open()
 	}
 
 	@objc
 	final func close() {
-		Logging.defaultSubsystem?.debug("Closing connection \(self.socket.uniqueIdentifier, privacy: .public)...")
+		queue.async {
+			self.closeOnQueue()
+		}
+	}
+
+	fileprivate func closeOnQueue() {
+		RCMLog.connection.debug("Closing connection \(self.socket.uniqueIdentifier, privacy: .public)...")
 
 		if socket.disconnected {
-			Logging.defaultSubsystem?.error("Not connected")
+			RCMLog.connection.debug("Not connected")
 
 			return
 		}
 
-		floodControlEnforced = false
-
-		clearSendQueue()
-
-		stopFloodControlTimer()
-
-		disconnectingManually = true
+		resetState()
 
 		socket.close()
 	}
 
-	final func resetState() {
-		/* Method invoked when a disconnect occurs. */
-		/* disconnectingManually prevents us doing redundant work. */
-		if disconnectingManually {
-			disconnectingManually = false
-		} else {
-			floodControlEnforced = false
+	/// Invoked when closing and again when the socket reports it
+	/// disconnected. Both paths are idempotent so doing the work
+	/// twice is harmless and keeps the state machine simple.
+	fileprivate func resetState() {
+		floodControlEnforced = false
 
-			clearSendQueue()
+		floodControlCurrentMessageCount = 0
 
-			stopFloodControlTimer()
-		}
+		sendQueue.removeAll()
 
-		destroyWorkerDispatchQueue()
+		stopFloodControlTimer()
 	}
 
 	// MARK: - Send Queue
 
-	fileprivate var sendQueueCount: Int {
-		var sendQueueCount = 0
-
-		workerQueue?.sync {
-			sendQueueCount = sendQueue.count
-		}
-
-		return sendQueueCount
-	}
-
-	fileprivate func nextEntryInSendQueue() -> Data? {
-		var nextEntry: Data?
-
-		workerQueue?.sync {
-			nextEntry = sendQueue.first
-		}
-
-		return nextEntry
-	}
-
-	fileprivate func sendQueue(add data: Data) {
-		workerQueue?.sync {
-			sendQueue.append(data)
-		}
-	}
-
-	fileprivate func sendQueue(remove data: Data) {
-		workerQueue?.sync {
-			if let index = sendQueue.firstIndex(of: data) {
-				sendQueue.remove(at: index)
-			}
-		}
-	}
-
 	@objc
 	final func clearSendQueue() {
-		workerQueue?.sync {
-			sendQueue.removeAll()
+		queue.async {
+			self.sendQueue.removeAll()
 		}
 	}
 
@@ -211,7 +178,7 @@ final class Connection: NSObject, ConnectionSocketDelegate {
 			return false
 		}
 
-		if sendQueueCount == 0 {
+		if sendQueue.isEmpty {
 			return false
 		}
 
@@ -223,51 +190,52 @@ final class Connection: NSObject, ConnectionSocketDelegate {
 
 		floodControlCurrentMessageCount += 1
 
-		sendNextLine()
+		let line = sendQueue.removeFirst()
+
+		socket.write(line)
 
 		return true
 	}
 
-	fileprivate func sendNextLine() {
-		guard let line = nextEntryInSendQueue() else {
-			return
-		}
-
-		send(line, removeFromQueue: true)
-	}
-
 	@objc(sendData:bypassQueue:)
 	final func send(_ data: Data, bypassQueue: Bool = false) {
+		queue.async {
+			self.sendOnQueue(data, bypassQueue: bypassQueue)
+		}
+	}
+
+	fileprivate func sendOnQueue(_ data: Data, bypassQueue: Bool) {
 		if socket.disconnected {
-			Logging.defaultSubsystem?.error("Cannot send data while disconnected")
+			RCMLog.connection.error("Cannot send data while disconnected")
 
 			return
 		}
 
 		if bypassQueue {
-			send(data, removeFromQueue: false)
+			/* A bypass write that collides with an in-flight write would
+			 be dropped by the socket. Put it at the front of the queue so
+			 it is the very next thing sent instead. */
+			if socket.sending {
+				sendQueue.insert(data, at: 0)
+			} else {
+				socket.write(data)
+			}
 
 			return
 		}
 
-		sendQueue(add: data)
+		sendQueue.append(data)
 
 		tryToSend()
-	}
-
-	fileprivate func send(_ data: Data, removeFromQueue: Bool = false) {
-		if removeFromQueue {
-			sendQueue(remove: data)
-		}
-
-		socket.write(data)
 	}
 
 	// MARK: - Flood Control
 
 	@objc
 	final func enforceFloodControl() {
-		floodControlEnforced = true
+		queue.async {
+			self.floodControlEnforced = true
+		}
 	}
 
 	fileprivate func startFloodControlTimer() {
@@ -300,17 +268,33 @@ final class Connection: NSObject, ConnectionSocketDelegate {
 
 	@objc(exportSecureConnectionInformation:error:)
 	final func exportSecureConnectionInformation(to receiver: RCMSecureConnectionInformationCompletionBlock) throws {
-		try socket.exportSecureConnectionInformation(to: receiver)
+		/* The receiver block does not escape (NS_NOESCAPE) so the
+		 XPC reply must be produced before this method returns. */
+		try queue.sync {
+			try socket.exportSecureConnectionInformation(to: receiver)
+		}
 	}
 
 	// MARK: - Socket Delegate
 
-	final var remoteObjectProxy: RCMConnectionManagerClientProtocol {
-		return serviceConnection.remoteObjectProxy as! RCMConnectionManagerClientProtocol
+	/// A proxy whose failures are logged. Messages sent through it
+	/// are one way; nothing here waits on the client.
+	fileprivate var remoteObjectProxy: RCMConnectionManagerClientProtocol? {
+		let proxy = serviceConnection.remoteObjectProxyWithErrorHandler { (error) in
+			RCMLog.connection.error("Error communicating with client: \(error.localizedDescription, privacy: .public)")
+		}
+
+		guard let proxy = proxy as? RCMConnectionManagerClientProtocol else {
+			RCMLog.connection.error("Remote object proxy does not conform to client protocol")
+
+			return nil
+		}
+
+		return proxy
 	}
 
 	final func connection(_ connection: ConnectionSocket, willConnectToProxy address: String, on port: UInt16) {
-		remoteObjectProxy.ircConnectionWillConnect(toProxy: address, port: port)
+		remoteObjectProxy?.ircConnectionWillConnect(toProxy: address, port: port)
 	}
 
 	final func connection(_ connection: ConnectionSocket, willConnectTo address: String, on port: UInt16) {
@@ -318,45 +302,59 @@ final class Connection: NSObject, ConnectionSocketDelegate {
 	}
 
 	final func connection(_ connection: ConnectionSocket, didConnectTo address: String?) {
-		remoteObjectProxy.ircConnectionDidConnect(toHost: address)
+		remoteObjectProxy?.ircConnectionDidConnect(toHost: address)
 	}
 
 	final func connection(
 		_ connection: ConnectionSocket, securedWith protocol: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t
 	) {
-		remoteObjectProxy.ircConnectionDidSecureConnection(withProtocolType: `protocol`, cipherSuite: cipherSuite)
+		remoteObjectProxy?.ircConnectionDidSecureConnection(withProtocolType: `protocol`, cipherSuite: cipherSuite)
 	}
 
 	final func connection(_ connection: ConnectionSocket, requiresTrust response: @escaping (Bool) -> Void) {
-		remoteObjectProxy.ircConnectionRequestInsecureCertificateTrust(response)
+		/* If the client cannot be reached, answer "not trusted" so the
+		 handshake completes (with failure) instead of hanging forever. */
+		let proxy = serviceConnection.remoteObjectProxyWithErrorHandler { (error) in
+			RCMLog.connection.error("Trust request failed: \(error.localizedDescription, privacy: .public)")
+
+			response(false)
+		}
+
+		guard let proxy = proxy as? RCMConnectionManagerClientProtocol else {
+			response(false)
+
+			return
+		}
+
+		proxy.ircConnectionRequestInsecureCertificateTrust(response)
 	}
 
 	final func connectionClosedReadStream(_ connection: ConnectionSocket) {
-		remoteObjectProxy.ircConnectionDidCloseReadStream()
+		remoteObjectProxy?.ircConnectionDidCloseReadStream()
 	}
 
 	final func connectionDisconnected(_ connection: ConnectionSocket) {
 		resetState()
 
-		remoteObjectProxy.ircConnectionDidDisconnectWithError(nil)
+		remoteObjectProxy?.ircConnectionDidDisconnectWithError(nil)
 	}
 
 	final func connection(_ connection: ConnectionSocket, disconnectedWith error: ConnectionError) {
 		resetState()
 
-		remoteObjectProxy.ircConnectionDidDisconnectWithError(error as NSError)
+		remoteObjectProxy?.ircConnectionDidDisconnectWithError(error as NSError)
 	}
 
 	final func connection(_ connection: ConnectionSocket, received data: Data) {
-		remoteObjectProxy.ircConnectionDidReceive(data)
+		remoteObjectProxy?.ircConnectionDidReceive(data)
 	}
 
 	final func connection(_ connection: ConnectionSocket, willSend data: Data) {
-		remoteObjectProxy.ircConnectionWillSend(data)
+		remoteObjectProxy?.ircConnectionWillSend(data)
 	}
 
 	final func connectionDidSend(_ connection: ConnectionSocket) {
-		remoteObjectProxy.ircConnectionDidSendData()
+		remoteObjectProxy?.ircConnectionDidSendData()
 
 		tryToSend()
 	}
@@ -395,10 +393,17 @@ extension ConnectionError: CustomNSError {
 		}
 
 		// While we don't make use of it right now, pass the original
-		// error object inside the user info dictionary because at
-		// a later time, we may be interested in its contents.
+		// error inside the user info dictionary because at a later
+		// time, we may be interested in its contents. Only the
+		// domain, code, and description are kept so that the error
+		// is guaranteed to survive secure coding across XPC.
 		if case .socket(let error) = self {
-			userInfo["UnderlyingSocketError"] = error
+			let nsError = error as NSError
+
+			userInfo["UnderlyingSocketError"] = NSError(
+				domain: nsError.domain,
+				code: nsError.code,
+				userInfo: [NSLocalizedDescriptionKey: nsError.localizedDescription])
 		}
 
 		return userInfo
@@ -417,17 +422,5 @@ extension ConnectionError: LocalizedError {
 			.unableToSecure(let message):
 			return message
 		}
-	}
-}
-
-fileprivate extension ConnectionSocket {
-	static func socket(with config: IRCConnectionConfig) -> ConnectionSocket & ConnectionSocketProtocol {
-		/* Network.framework cannot honour a custom proxy, so the classic
-		 Secure Transport socket is still reachable for those connections. */
-		if config.connectionPrefersModernSockets {
-			return ConnectionSocketNWF(with: config)
-		}
-
-		return ConnectionSocketClassic(with: config)
 	}
 }

@@ -61,6 +61,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) uint16_t serverPort_;
 @property(readonly, copy, nullable) NSString *serverAddress_;
 @property(readonly) BOOL connectionPrefersModernCiphers_;
+
+- (void)invalidateNicknamePasswordKeychainCache;
 @end
 
 @implementation IRCClientConfig
@@ -104,6 +106,7 @@ NS_ASSUME_NONNULL_BEGIN
 	defaults[@"sendWhoCommandRequestsToChannels"] = @(YES);
 	defaults[@"serverPort"] = @(IRCConnectionDefaultServerPort);
 	defaults[@"setInvisibleModeOnConnect"] = @(NO);
+	defaults[@"runConnectCommandsSilently"] = @(YES);
 	defaults[@"sidebarItemExpanded"] = @(YES);
 	defaults[@"sleepModeLeavingComment"] = TXTLS(@"BasicLanguage[qi7-5y]");
 	defaults[@"validateServerCertificateChain"] = @(YES);
@@ -313,6 +316,7 @@ NS_ASSUME_NONNULL_BEGIN
 						   forKey:@"sendAuthenticationRequestsToUserServ"];
 	[defaultsMutable assignBoolTo:&self->_sendWhoCommandRequestsToChannels forKey:@"sendWhoCommandRequestsToChannels"];
 	[defaultsMutable assignBoolTo:&self->_setInvisibleModeOnConnect forKey:@"setInvisibleModeOnConnect"];
+	[defaultsMutable assignBoolTo:&self->_runConnectCommandsSilently forKey:@"runConnectCommandsSilently"];
 	[defaultsMutable assignBoolTo:&self->_sidebarItemExpanded forKey:@"sidebarItemExpanded"];
 	[defaultsMutable assignBoolTo:&self->_validateServerCertificateChain forKey:@"validateServerCertificateChain"];
 	[defaultsMutable assignBoolTo:&self->_zncIgnoreConfiguredAutojoin forKey:@"zncIgnoreConfiguredAutojoin"];
@@ -723,6 +727,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[dic setBool:self.sendAuthenticationRequestsToUserServ forKey:@"sendAuthenticationRequestsToUserServ"];
 	[dic setBool:self.sendWhoCommandRequestsToChannels forKey:@"sendWhoCommandRequestsToChannels"];
 	[dic setBool:self.setInvisibleModeOnConnect forKey:@"setInvisibleModeOnConnect"];
+	[dic setBool:self.runConnectCommandsSilently forKey:@"runConnectCommandsSilently"];
 	[dic setBool:self.validateServerCertificateChain forKey:@"validateServerCertificateChain"];
 	[dic setBool:self.zncIgnoreConfiguredAutojoin forKey:@"zncIgnoreConfiguredAutojoin"];
 	[dic setBool:self.zncIgnorePlaybackNotifications forKey:@"zncIgnorePlaybackNotifications"];
@@ -833,7 +838,25 @@ NS_ASSUME_NONNULL_BEGIN
 		return self->_nicknamePassword;
 	}
 
-	return self.nicknamePasswordFromKeychain;
+	/* Keychain reads are synchronous and comparatively slow.
+	 The result is cached until the password is modified or
+	 destroyed through this object. */
+	if (self->_nicknamePasswordKeychainCacheIsValid) {
+		return self->_nicknamePasswordKeychainCache;
+	}
+
+	NSString *kcPassword = self.nicknamePasswordFromKeychain;
+
+	self->_nicknamePasswordKeychainCache = [kcPassword copy];
+	self->_nicknamePasswordKeychainCacheIsValid = YES;
+
+	return kcPassword;
+}
+
+- (void)invalidateNicknamePasswordKeychainCache
+{
+	self->_nicknamePasswordKeychainCache = nil;
+	self->_nicknamePasswordKeychainCacheIsValid = NO;
 }
 
 - (nullable NSString *)nicknamePasswordFromKeychain
@@ -885,6 +908,8 @@ NS_ASSUME_NONNULL_BEGIN
 							serviceName:nicknamePasswordServiceName];
 
 	self->_nicknamePassword = nil;
+
+	[self invalidateNicknamePasswordKeychainCache];
 }
 
 - (void)writeProxyPasswordToKeychain
@@ -915,6 +940,8 @@ NS_ASSUME_NONNULL_BEGIN
 					   serviceName:nicknamePasswordServiceName];
 
 	self->_nicknamePassword = nil;
+
+	[self invalidateNicknamePasswordKeychainCache];
 }
 
 - (void)destroyProxyPasswordKeychainItem
@@ -1039,6 +1066,7 @@ NS_ASSUME_NONNULL_BEGIN
 @dynamic sendWhoCommandRequestsToChannels;
 @dynamic serverList;
 @dynamic setInvisibleModeOnConnect;
+@dynamic runConnectCommandsSilently;
 @dynamic sidebarItemExpanded;
 @dynamic sleepModeLeavingComment;
 @dynamic username;
@@ -1155,6 +1183,13 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self->_setInvisibleModeOnConnect != setInvisibleModeOnConnect) {
 		self->_setInvisibleModeOnConnect = setInvisibleModeOnConnect;
+	}
+}
+
+- (void)setRunConnectCommandsSilently:(BOOL)runConnectCommandsSilently
+{
+	if (self->_runConnectCommandsSilently != runConnectCommandsSilently) {
+		self->_runConnectCommandsSilently = runConnectCommandsSilently;
 	}
 }
 
@@ -1304,6 +1339,8 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self->_nicknamePassword != nicknamePassword) {
 		self->_nicknamePassword = [nicknamePassword copy];
+
+		[self invalidateNicknamePasswordKeychainCache];
 	}
 }
 

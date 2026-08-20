@@ -1,8 +1,0 @@
-
-// This is the code signing identity used by all projects.
-
-CODE_SIGN_IDENTITY = Apple Development
-CODE_SIGN_STYLE = Automatic
-
-DEVELOPMENT_TEAM = H8W5DK3FN2
-PROVISIONING_PROFILE_SPECIFIER =

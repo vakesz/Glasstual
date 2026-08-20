@@ -48,7 +48,6 @@ typedef NS_OPTIONS(NSUInteger, TPCPreferencesReloadAction) {
 	TPCPreferencesReloadActionIRCCommandCache = 1 << 5,
 	TPCPreferencesReloadActionInputHistoryScope = 1 << 6,
 	TPCPreferencesReloadActionLogTranscripts = 1 << 7,
-	TPCPreferencesReloadActionMainWindowTransparencyLevel = 1 << 8,
 	TPCPreferencesReloadActionMemberList = 1 << 9,
 	TPCPreferencesReloadActionMemberListSortOrder = 1 << 10,
 	TPCPreferencesReloadActionMemberListUserBadges = 1 << 11,

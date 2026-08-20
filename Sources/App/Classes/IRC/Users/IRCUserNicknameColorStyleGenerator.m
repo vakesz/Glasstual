@@ -184,40 +184,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (void)migrateNicknameColorStyleOverrides
 {
-	/* Migrate from database that used NSArchiver to one that uses NSKeyedArchiver. */
-	/* This migration is non-destructive to the legacy database. The data that is
-	 translated to NSKeyedUnarchiver is saved into a new defaults key. */
-
-	NSDictionary *legacyOverrides = [RZUserDefaults() dictionaryForKey:@"Nickname Color Style Overrides"];
-
-	NSMutableDictionary<NSString *, NSData *> *newOverrides =
-		[NSMutableDictionary dictionaryWithCapacity:legacyOverrides.count];
-
-	[legacyOverrides enumerateKeysAndObjectsUsingBlock:^(NSString *key, id obj, BOOL *stop) {
-		GLASSTUAL_IGNORE_DEPRECATION_BEGIN
-		id override = [NSUnarchiver unarchiveObjectWithData:obj];
-		GLASSTUAL_IGNORE_DEPRECATION_END
-
-		if (override == nil || [override isKindOfClass:[NSColor class]] == NO) {
-			LogToConsoleError("Failed to decode contents of '%{private}@'", key);
-
-			return;
-		}
-
-		NSError *error;
-
-		override = [NSKeyedArchiver archivedDataWithRootObject:override requiringSecureCoding:YES error:&error];
-
-		if (error) {
-			LogToConsoleError("Failed to decode contents for '%{private}@': %{public}@", key, error.description);
-
-			return;
-		}
-
-		[newOverrides setObject:override forKey:key];
-	}];
-
-	[RZUserDefaults() setObject:[newOverrides copy] forKey:_overridesDefaultsKey];
+	/* Overrides were once stored using NSArchiver and migrated to
+	 NSKeyedArchiver in 7.2.2. NSUnarchiver is no longer available on
+	 the platforms we target so the legacy database is simply discarded.
+	 The keyed database (_overridesDefaultsKey) is left untouched. */
+	[RZUserDefaults() removeObjectForKey:@"Nickname Color Style Overrides"];
 }
 
 + (nullable NSColor *)nicknameColorStyleOverrideForKey:(NSString *)styleKey

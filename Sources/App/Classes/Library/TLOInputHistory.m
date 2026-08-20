@@ -329,7 +329,7 @@ NSString *const _inputHistoryGlobalObjectKey = @"TLOInputHistoryDefaultObject";
 
 		if (self.historyBufferPosition < 0) {
 			self.historyBufferPosition = 0;
-		} else if (self.historyBufferPosition < self.historyBuffer.count) {
+		} else if ((NSUInteger)self.historyBufferPosition < self.historyBuffer.count) {
 			return self.historyBuffer[self.historyBufferPosition];
 		}
 
@@ -370,7 +370,7 @@ NSString *const _inputHistoryGlobalObjectKey = @"TLOInputHistoryDefaultObject";
 
 - (BOOL)bufferPositionIsInRange
 {
-	return (self.historyBufferPosition >= 0 && self.historyBufferPosition < self.historyBuffer.count);
+	return (self.historyBufferPosition >= 0 && (NSUInteger)self.historyBufferPosition < self.historyBuffer.count);
 }
 
 - (nullable NSAttributedString *)entryAtBufferPosition

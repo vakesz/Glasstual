@@ -39,6 +39,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCFileTransferDialogTableCell : NSTableCellView
+/* The icon shown for the file and its frame in screen coordinates.
+ Used by Quick Look to zoom the preview out of the row. */
+@property(readonly, nullable) NSImage *fileIcon;
+@property(readonly) NSRect fileIconFrameOnScreen;
+
 - (void)onMaintenanceTimer;
 
 - (void)reloadStatusInformation;

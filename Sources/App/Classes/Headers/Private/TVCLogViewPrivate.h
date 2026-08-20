@@ -90,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface TVCLogView (TVCLogViewJavaScriptHandlerPrivate)
-- (NSString *)compiledFunctionCall:(NSString *)function withArguments:(nullable NSArray *)arguments;
+- (NSString *)compiledFunctionCall:(NSString *)function withArguments:(nullable NSArray<id> *)arguments;
 
 @end
 

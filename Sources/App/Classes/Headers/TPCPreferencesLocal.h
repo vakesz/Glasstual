@@ -188,7 +188,6 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (BOOL)disconnectOnSleep;
 
 + (BOOL)preferModernCiphers;
-+ (BOOL)preferModernSockets;
 
 + (BOOL)autoAddScrollbackMark;
 + (BOOL)showDateChanges;
@@ -250,8 +249,6 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (NSString *)themeTimestampFormatDefault;
 
 + (nullable NSString *)themeUserStyleSheetRules;
-
-+ (CGFloat)mainWindowTransparency;
 
 + (nullable NSFont *)themeChannelViewFont;
 + (NSString *)themeChannelViewFontName;
