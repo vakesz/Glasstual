@@ -83,7 +83,6 @@
 
 #import "NSObjectHelperPrivate.h"
 #import "NSStringHelper.h"
-#import "GCDAsyncSocketExtensions.h"
 #import "TPCApplicationInfo.h"
 #import "TPCPathInfo.h"
 #import "TPCPreferencesLocalPrivate.h"

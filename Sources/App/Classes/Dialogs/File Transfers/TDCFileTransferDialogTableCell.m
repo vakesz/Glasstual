@@ -112,9 +112,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)reloadStatusInformation
 {
-	XRPerformBlockSynchronouslyOnMainQueue(^{
+	/* Called from the transfer controller's socket dispatch queue.
+	 The hop to the main queue is asynchronous so that the socket
+	 queue never blocks on the main thread. */
+	if ([NSThread isMainThread]) {
 		[self _reloadStatusInformation];
-	});
+	} else {
+		XRPerformBlockAsynchronouslyOnMainQueue(^{
+			[self _reloadStatusInformation];
+		});
+	}
 }
 
 - (void)_reloadStatusInformation
