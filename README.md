@@ -91,9 +91,9 @@ make format   # clang-format, swift-format, shfmt
 ```
 
 Formatting and linting intentionally exclude the vendored frameworks under
-`Frameworks/` and `External Libraries`. The `Quality` workflow runs `make lint`,
-verifies the committed project matches `project.yml`, and builds Debug on every
-pull request; `Signed Release` is run manually to archive, notarize and publish.
+`Frameworks/` and `External Libraries`. The `Quality` workflow runs `make lint` (shellcheck, actionlint,
+plist/xib validation and format checks) on every pull request; `Signed Release`
+is run manually to archive, notarize and publish.
 
 ### Software Updates
 
