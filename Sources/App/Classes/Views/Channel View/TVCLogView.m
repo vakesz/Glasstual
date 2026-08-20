@@ -391,13 +391,13 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	[self evaluateFunction:function withArguments:nil completionHandler:nil];
 }
 
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray *)arguments
+- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments
 {
 	[self evaluateFunction:function withArguments:arguments completionHandler:nil];
 }
 
 - (void)evaluateFunction:(NSString *)function
-		   withArguments:(nullable NSArray *)arguments
+		   withArguments:(nullable NSArray<id> *)arguments
 	   completionHandler:(void (^_Nullable)(id _Nullable result))completionHandler
 {
 	NSParameterAssert(function != nil);
@@ -414,7 +414,7 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 }
 
 - (void)booleanByEvaluatingFunction:(NSString *)function
-					  withArguments:(nullable NSArray *)arguments
+					  withArguments:(nullable NSArray<id> *)arguments
 				  completionHandler:(void (^_Nullable)(BOOL result))completionHandler
 {
 	[self evaluateFunction:function
@@ -439,7 +439,7 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 }
 
 - (void)stringByEvaluatingFunction:(NSString *)function
-					 withArguments:(nullable NSArray *)arguments
+					 withArguments:(nullable NSArray<id> *)arguments
 				 completionHandler:(void (^_Nullable)(NSString *_Nullable result))completionHandler
 {
 	[self evaluateFunction:function
@@ -464,7 +464,7 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 }
 
 - (void)arrayByEvaluatingFunction:(NSString *)function
-					withArguments:(nullable NSArray *)arguments
+					withArguments:(nullable NSArray<id> *)arguments
 				completionHandler:(void (^_Nullable)(NSArray *_Nullable result))completionHandler
 {
 	[self evaluateFunction:function
@@ -490,7 +490,7 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 }
 
 - (void)dictionaryByEvaluatingFunction:(NSString *)function
-						 withArguments:(nullable NSArray *)arguments
+						 withArguments:(nullable NSArray<id> *)arguments
 					 completionHandler:
 						 (void (^_Nullable)(NSDictionary<NSString *, id> *_Nullable result))completionHandler
 {
@@ -624,7 +624,7 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	}
 }
 
-- (NSString *)compiledFunctionCall:(NSString *)function withArguments:(nullable NSArray *)arguments
+- (NSString *)compiledFunctionCall:(NSString *)function withArguments:(nullable NSArray<id> *)arguments
 {
 	NSParameterAssert(function != nil);
 

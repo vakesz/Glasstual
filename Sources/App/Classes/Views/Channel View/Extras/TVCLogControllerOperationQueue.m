@@ -43,12 +43,22 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+static void *TVCLogControllerPrintingOperationQueueKVOContext = &TVCLogControllerPrintingOperationQueueKVOContext;
+
+static NSString *TVCLogControllerPrintingOperationKeyForViewController(TVCLogController *viewController)
+{
+	return [NSString stringWithFormat:@"%p", viewController];
+}
+
 #pragma mark -
 #pragma mark Define Private Header
 
 @interface TVCLogControllerPrintingOperation : NSOperation
 @property(nonatomic, copy, nullable) TVCLogControllerPrintingBlock executionBlock;
 @property(nonatomic, weak) TVCLogController *viewController;
+/* Captured at enqueue so that the operation can still be indexed after
+ the view controller it belongs to has been deallocated. */
+@property(nonatomic, copy) NSString *pendingOperationsKey;
 @property(readonly, getter=isPending) BOOL pending;
 @property(nonatomic, assign, getter=isStandalone) BOOL standalone;
 @end
@@ -118,6 +128,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	operation.viewController = viewController;
 
+	operation.pendingOperationsKey = TVCLogControllerPrintingOperationKeyForViewController(viewController);
+
 	[self addPendingOperation:operation];
 }
 
@@ -128,7 +140,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(viewController != nil);
 
-	NSString *pendingOperationsKey = viewController.description;
+	NSString *pendingOperationsKey = TVCLogControllerPrintingOperationKeyForViewController(viewController);
 
 	NSArray<TVCLogControllerPrintingOperation *> *pendingOperations = nil;
 
@@ -151,7 +163,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* Add operation to list of pending operations and while we have those,
 	 also pick out what will be its dependency. */
-	NSString *pendingOperationsKey = operation.viewController.description;
+	NSString *pendingOperationsKey = operation.pendingOperationsKey;
 
 	@synchronized(self.pendingOperations) {
 		NSMutableArray *pendingOperations = self.pendingOperations[pendingOperationsKey];
@@ -181,7 +193,10 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* Begin observing when the status of the operation changes */
-	[operation addObserver:self forKeyPath:@"isFinished" options:NSKeyValueObservingOptionNew context:nil];
+	[operation addObserver:self
+				forKeyPath:@"isFinished"
+				   options:NSKeyValueObservingOptionNew
+				   context:TVCLogControllerPrintingOperationQueueKVOContext];
 
 	/* Add operation to the queue */
 	[super addOperation:operation];
@@ -192,7 +207,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(operation != nil);
 
 	/* Remove operation from list of pending operations */
-	NSString *pendingOperationsKey = operation.viewController.description;
+	NSString *pendingOperationsKey = operation.pendingOperationsKey;
 
 	@synchronized(self.pendingOperations) {
 		NSMutableArray *pendingOperations = self.pendingOperations[pendingOperationsKey];
@@ -204,6 +219,10 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		[pendingOperations removeObjectIdenticalTo:operation];
+
+		if (pendingOperations.count == 0) {
+			[self.pendingOperations removeObjectForKey:pendingOperationsKey];
+		}
 	}
 
 	/* Remove dependency to operation */
@@ -227,7 +246,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	/* End observing when the status of the operation changes */
-	[operation removeObserver:self forKeyPath:@"isFinished"];
+	[operation removeObserver:self forKeyPath:@"isFinished" context:TVCLogControllerPrintingOperationQueueKVOContext];
 }
 
 #pragma mark -
@@ -280,6 +299,12 @@ NS_ASSUME_NONNULL_BEGIN
 						change:(nullable NSDictionary<NSString *, id> *)change
 					   context:(nullable void *)context
 {
+	if (context != TVCLogControllerPrintingOperationQueueKVOContext) {
+		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+
+		return;
+	}
+
 	if ([keyPath isEqualToString:@"isFinished"]) {
 		[self removePendingOperation:object];
 	}
@@ -304,7 +329,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)executeBlock
 {
-	if (self.isCancelled) {
+	/* A deallocated view controller is treated as cancelled so
+	 that the queue drains instead of holding its dependents. */
+	if (self.isCancelled || self.viewController == nil) {
 		return;
 	}
 
@@ -314,7 +341,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)isReady
 {
 	if (self.dependencies.count < 1 || self.isStandalone) {
-		return (super.isReady && self.viewController.viewIsLoaded);
+		TVCLogController *viewController = self.viewController;
+
+		return (super.isReady && (viewController == nil || viewController.viewIsLoaded));
 	} else {
 		return super.isReady;
 	}

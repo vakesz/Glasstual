@@ -102,6 +102,7 @@ typedef NS_ENUM(NSUInteger, TVCLogLineMemberType) {
 @property(readonly) NSUInteger sessionIdentifier;
 
 - (nullable instancetype)initWithData:(NSData *)data NS_DESIGNATED_INITIALIZER;
++ (nullable instancetype)logLineWithData:(NSData *)data;
 
 @property(readonly, copy) NSString *formattedTimestamp;
 

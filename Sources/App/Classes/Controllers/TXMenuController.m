@@ -2459,6 +2459,12 @@ NS_ASSUME_NONNULL_BEGIN
 											   withExtension:@"pdf"
 												subdirectory:@"Documentation"];
 
+	if (Acknowledgements == nil) {
+		LogToConsoleError("Acknowledgements.pdf is missing from the application bundle");
+
+		return;
+	}
+
 	[RZWorkspace() openURL:Acknowledgements];
 }
 

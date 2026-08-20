@@ -118,14 +118,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 	serviceConnection.exportedObject = self;
 
+	__weak TVCLogControllerInlineMediaService *weakSelf = self;
+
 	serviceConnection.interruptionHandler = ^{
-		[self interruptionHandler];
+		[weakSelf interruptionHandler];
 
 		LogToConsole("Interruption handler called");
 	};
 
 	serviceConnection.invalidationHandler = ^{
-		[self invalidationHandler];
+		[weakSelf invalidationHandler];
 
 		LogToConsole("Invalidation handler called");
 	};
@@ -219,9 +221,13 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(lineNumber != nil);
 	NSParameterAssert(item != nil);
 
-	/* WebKit is able to translate an address to punycode
-	 for us by giving it a pasteboard with the URL. */
-	NSURL *url = address.URLUsingWebKitPasteboard;
+	/* Foundation's RFC 3986 parser percent-encodes invalid characters and
+	 IDNA-encodes unicode hosts for us, replacing the WebKitLegacy route. */
+	NSURL *url = [NSURL URLWithString:address encodingInvalidCharacters:YES];
+
+	if (url == nil) {
+		url = [NSURLComponents componentsWithString:address encodingInvalidCharacters:YES].URL;
+	}
 
 	if (url == nil) {
 		LogToConsoleError("Address could not be normalized");

@@ -126,7 +126,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *stringValueOld = textField.stringValue;
 
-	if ([stringValueOld isEqualTo:stringValueNew] == NO) {
+	if ([stringValueOld isEqualToString:stringValueNew] == NO) {
 		textField.stringValue = stringValueNew;
 	}
 

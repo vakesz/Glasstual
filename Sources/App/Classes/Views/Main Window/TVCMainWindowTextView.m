@@ -72,7 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface TVCMainWindowTextViewContentView ()
-@property(nonatomic, unsafe_unretained) IBOutlet TVCMainWindowTextView *textView;
+@property(nonatomic, weak) IBOutlet TVCMainWindowTextView *textView;
 @end
 
 @implementation TVCMainWindowTextView

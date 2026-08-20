@@ -126,9 +126,14 @@ NSString *const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
 
 	NSUInteger bodyLength = body.length;
 
-	UniChar charactersIn[bodyLength];
+	/* Heap allocated; the body length is unbounded. */
+	NSMutableData *charactersInData = [NSMutableData dataWithLength:(bodyLength * sizeof(UniChar))];
 
-	[body getCharacters:charactersIn range:body.range];
+	UniChar *charactersIn = charactersInData.mutableBytes;
+
+	if (bodyLength > 0) {
+		[body getCharacters:charactersIn range:body.range];
+	}
 
 	NSMutableAttributedString *bodyWithAttributes = [[NSMutableAttributedString alloc] initWithString:body
 																						   attributes:nil];

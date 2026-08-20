@@ -79,21 +79,26 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 /* The archive already holds a fully formed line, so the receiver that +alloc
- produced is discarded in favour of it. Nothing is assigned to self because
- nothing reads it afterwards; -[super init] still runs so the receiver is in a
- valid state when it is released. */
+ produced is replaced by it. Assigning to self lets ARC release the receiver. */
 - (nullable instancetype)initWithData:(NSData *)data
 {
 	NSParameterAssert(data != nil);
 
-	if ([super init] == nil) {
+	if ((self = [super init]) == nil) {
 		return nil;
 	}
 
-	return [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:data error:NULL];
+	self = [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:data error:NULL];
+
+	return self;
 }
 
-+ (TVCLogLine *)logLineFromXPCObject:(TVCLogLineXPC *)xpcObject
++ (nullable instancetype)logLineWithData:(NSData *)data
+{
+	return [[self alloc] initWithData:data];
+}
+
++ (nullable TVCLogLine *)logLineFromXPCObject:(TVCLogLineXPC *)xpcObject
 {
 	NSParameterAssert(xpcObject != nil);
 
@@ -104,9 +109,17 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	 attaches the unique identifier to the XPC object. We can then write it out here. */
 	/* We check if the object's unique identifier is nil before setting the database's
 	 value because the value may have already been unarchived if it is present. */
-	TVCLogLine *object = [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class]
-														   fromData:xpcObject.data
-															  error:NULL];
+	NSData *data = xpcObject.data;
+
+	if (data == nil) {
+		return nil;
+	}
+
+	TVCLogLine *object = [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:data error:NULL];
+
+	if (object == nil) {
+		return nil;
+	}
 
 	if (object->_uniqueIdentifier == nil) {
 		object->_uniqueIdentifier = [xpcObject.uniqueIdentifier copy];
