@@ -38,6 +38,10 @@ typedef void (^RCMTrustResponse)(BOOL trusted);
 
 typedef void (^RCMTrustPanelCompletionBlock)(SecTrustRef trustRef, BOOL trusted, id _Nullable contextInfo);
 
+/* The panel takes ownership of (consumes) the +1 reference to trustRef.
+ It is released after the completion block returns. Callers must NOT
+ release trustRef themselves and must not use it after the completion
+ block has been invoked. */
 @interface RCMTrustPanel : NSObject
 + (SFCertificateTrustPanel *)presentTrustPanelInWindow:(nullable NSWindow *)window
 												  body:(NSString *)bodyText

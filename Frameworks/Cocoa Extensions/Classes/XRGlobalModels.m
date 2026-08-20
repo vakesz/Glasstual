@@ -52,6 +52,14 @@ void XRExchangeInstanceMethod(NSString *className, NSString *originalMethod, NSS
 	Method originalMethodDcl = class_getInstanceMethod(class, originalSelector);
 	Method swizzledMethodDcl = class_getInstanceMethod(class, swizzledSelector);
 
+	if (originalMethodDcl == NULL || swizzledMethodDcl == NULL) {
+		LogToConsoleErrorWithSubsystem(_CSFrameworkInternalLogSubsystem(),
+			"Cannot swizzle -[%{public}@ %{public}@] with %{public}@: method not found",
+			className, originalMethod, replacementMethod);
+
+		return;
+	}
+
 	BOOL methodAdded =
 	class_addMethod(class,
 					originalSelector,
@@ -83,6 +91,14 @@ void XRExchangeClassMethod(NSString *className, NSString *originalMethod, NSStri
 
 	Method originalMethodDcl = class_getClassMethod(class, originalSelector);
 	Method swizzledMethodDcl = class_getClassMethod(class, swizzledSelector);
+
+	if (originalMethodDcl == NULL || swizzledMethodDcl == NULL) {
+		LogToConsoleErrorWithSubsystem(_CSFrameworkInternalLogSubsystem(),
+			"Cannot swizzle -[%{public}@ %{public}@] with %{public}@: method not found",
+			className, originalMethod, replacementMethod);
+
+		return;
+	}
 
 	BOOL methodAdded =
 	class_addMethod(class,

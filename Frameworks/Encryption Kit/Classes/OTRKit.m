@@ -68,6 +68,10 @@
 
 #import "OTRKitPrivate.h"
 
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+
 NS_ASSUME_NONNULL_BEGIN
 
 static NSString * const kOTRKitPrivateKeyFileName		= @"OTR-PrivateKey";
@@ -108,14 +112,39 @@ static void create_privkey_cb(void *opdata, const char *accountname, const char 
 
 	gcry_error_t generateError = otrl_privkey_generate_start(otrKit.userState, accountname, protocol, &otrKey);
 
-	NSString *path = otrKit.privateKeyPath;
-
-	FILE *filePointer = fopen(path.UTF8String, "w+b");
-
 	if (generateError == gcry_error(GPG_ERR_NO_ERROR)) {
+		/* The private key file is created owner read/write only. */
+		NSString *path = otrKit.privateKeyPath;
+
+		FILE *filePointer = NULL;
+
+		int fileDescriptor = open(path.UTF8String, (O_CREAT | O_WRONLY | O_TRUNC | O_CLOEXEC), 0600);
+
+		if (fileDescriptor >= 0) {
+			filePointer = fdopen(fileDescriptor, "wb");
+
+			if (filePointer == NULL) {
+				close(fileDescriptor);
+			}
+		}
+
+		if (filePointer == NULL) {
+			otrl_privkey_generate_cancelled(otrKit.userState, otrKey);
+
+			NSError *error = [NSError errorWithDomain:NSPOSIXErrorDomain code:errno userInfo:nil];
+
+			[otrKit _performAsyncOperationOnDelegateQueue:^{
+				[otrKit.delegate otrKit:otrKit didFinishGeneratingPrivateKeyForAccountName:accountNameString protocol:protocolString error:error];
+			}];
+
+			return;
+		}
+
 		otrl_privkey_generate_calculate(otrKey);
 
 		otrl_privkey_generate_finish_FILEp(otrKit.userState, otrKey, filePointer);
+
+		fclose(filePointer);
 
 		[otrKit _performAsyncOperationOnDelegateQueue:^{
 			[otrKit.delegate otrKit:otrKit didFinishGeneratingPrivateKeyForAccountName:accountNameString protocol:protocolString error:nil];
@@ -127,8 +156,6 @@ static void create_privkey_cb(void *opdata, const char *accountname, const char 
 			[otrKit.delegate otrKit:otrKit didFinishGeneratingPrivateKeyForAccountName:accountNameString protocol:protocolString error:error];
 		}];
 	}
-
-	fclose(filePointer);
 }
 
 static int is_logged_in_cb(void *opdata, const char *accountname, const char *protocol, const char *recipient)
@@ -535,6 +562,10 @@ static void create_instag_cb(void *opdata, const char *accountname, const char *
 	NSString *path = otrKit.instanceTagsPath;
 
 	FILE *filePointer = fopen(path.UTF8String, "w+b");
+
+	if (filePointer == NULL) {
+		return;
+	}
 
 	otrl_instag_generate_FILEp(otrKit.userState, filePointer, accountname, protocol);
 
@@ -1922,6 +1953,10 @@ static OtrlMessageAppOps ui_ops = {
 
 		uint8_t *symmetricKeyBytes = malloc(OTRL_EXTRAKEY_BYTES * sizeof(uint8_t));
 
+		if (symmetricKeyBytes == NULL) {
+			return;
+		}
+
 		gcry_error_t otrError = otrl_message_symkey(self.userState, &ui_ops, NULL, otrContext, (unsigned int)use, useData.bytes, useData.length, symmetricKeyBytes);
 
 		NSData *symmetricKey = nil;
@@ -1933,6 +1968,10 @@ static OtrlMessageAppOps ui_ops = {
 		} else {
 			errorString = [self _errorForGPGError:otrError];
 		}
+
+		memset_s(symmetricKeyBytes, OTRL_EXTRAKEY_BYTES, 0, OTRL_EXTRAKEY_BYTES);
+
+		free(symmetricKeyBytes);
 
 		[self _performAsyncOperationOnDelegateQueue:^{
 			completion(symmetricKey, errorString);

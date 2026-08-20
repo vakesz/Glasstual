@@ -136,7 +136,13 @@ NS_ASSUME_NONNULL_BEGIN
 												   kFSEventStreamCreateFlagNoDefer |
 												   kFSEventStreamCreateFlagUseCFTypes));
 
-	FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+	if (stream == NULL) {
+		return;
+	}
+
+	/* Callbacks are delivered on the main queue which matches the
+	 previous behavior of scheduling on the main thread's run loop. */
+	FSEventStreamSetDispatchQueue(stream, dispatch_get_main_queue());
 
 	FSEventStreamStart(stream);
 

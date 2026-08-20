@@ -43,7 +43,8 @@ public class Logging
 	/// very early on during initialization so while it is possible
 	/// for it to be nil, it is very unlikely. Assume it's not.
 	///
-	public static var defaultSubsystem: Logger?
+	/// Set once during process start-up and read-only afterwards.
+	nonisolated(unsafe) public static var defaultSubsystem: Logger?
 
 	///
 	/// Set default subsystem to identifier of main bundle
@@ -67,7 +68,7 @@ public class Logging
 	///
 	/// Subsystem used by Cocoa Extensions
 	///
-	internal static var frameworkSubsystem: Logger? =
+	nonisolated(unsafe) internal static var frameworkSubsystem: Logger? =
 	{
 		let subsystem = _CSFrameworkInternalLogSubsystem()
 

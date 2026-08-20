@@ -733,12 +733,16 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 {
 	NSParameterAssert(trustRef != NULL);
 
-	CFIndex trustCertificateCount = SecTrustGetCertificateCount(trustRef);
+	NSArray *certificates = (__bridge_transfer NSArray *)SecTrustCopyCertificateChain(trustRef);
 
-	NSMutableArray<NSData *> *results = [NSMutableArray arrayWithCapacity:trustCertificateCount];
+	if (certificates == nil) {
+		return nil;
+	}
 
-	for (CFIndex trustCertificateIndex = 0; trustCertificateIndex < trustCertificateCount; trustCertificateIndex++) {
-		SecCertificateRef certificateRef = SecTrustGetCertificateAtIndex(trustRef, trustCertificateIndex);
+	NSMutableArray<NSData *> *results = [NSMutableArray arrayWithCapacity:certificates.count];
+
+	[certificates enumerateObjectsUsingBlock:^(id certificate, NSUInteger trustCertificateIndex, BOOL *stop) {
+		SecCertificateRef certificateRef = (__bridge SecCertificateRef)certificate;
 
 		NSData *certificateData = (__bridge_transfer NSData *)SecCertificateCopyData(certificateRef);
 
@@ -746,11 +750,11 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 			LogToConsoleErrorWithSubsystem(_CSFrameworkInternalLogSubsystem(),
 				"Bad certificate data at index: %{public}lu", trustCertificateIndex);
 
-			continue;
+			return;
 		}
 
 		[results addObject:certificateData];
-	}
+	}];
 
 	return [results copy];
 }

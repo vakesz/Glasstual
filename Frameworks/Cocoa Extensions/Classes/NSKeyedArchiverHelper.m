@@ -39,24 +39,11 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(cls != NULL);
 	NSParameterAssert(data != nil);
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-	id object = [NSUnarchiver unarchiveObjectWithData:data];
-
-	if (object != nil) {
-		if ([object isKindOfClass:cls] == NO) {
-			return nil;
-		} else {
-			return object;
-		}
-	}
-#pragma GCC diagnostic pop
-
 	NSError *error;
 
-	object =
-	[NSKeyedUnarchiver unarchivedObjectOfClass:[NSColor class]
-									  fromData:object
+	id object =
+	[NSKeyedUnarchiver unarchivedObjectOfClass:cls
+									  fromData:data
 										 error:&error];
 
 	if (error) {
