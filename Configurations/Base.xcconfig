@@ -14,7 +14,7 @@ GLASSTUAL_GROUP_CONTAINER_IDENTIFIER = group.$(DEVELOPMENT_TEAM).$(GLASSTUAL_BUN
 // Fallback version. Scripts/UpdateVersion.sh (run as a scheme pre-action)
 // writes Version.generated.xcconfig with CURRENT_PROJECT_VERSION derived
 // from the date of the last git commit; that file is included at the bottom.
-MARKETING_VERSION = 1.0.1
+MARKETING_VERSION = 1.0.2
 CURRENT_PROJECT_VERSION = 0
 
 // ---- Feature flags --------------------------------------------------------
