@@ -257,7 +257,8 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 {
 	NSAppearance *current = NSApp.appearance;
 
-	if (current == appearance || [current.name isEqualToString:appearance.name]) {
+	if (current == appearance ||
+		(current != nil && appearance != nil && [current.name isEqualToString:appearance.name])) {
 		return;
 	}
 
