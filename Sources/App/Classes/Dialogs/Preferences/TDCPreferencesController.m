@@ -625,6 +625,11 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 	NSSplitViewController *splitViewController = [NSSplitViewController new];
 	splitViewController.splitView.dividerStyle = NSSplitViewDividerStyleThin;
 
+	/* Build the detail pane first: the sidebar's outline view posts a
+	 selection change while it is being populated, and presenting a pane
+	 needs the container view to exist. */
+	NSViewController *detailViewController = [self makeDetailViewController];
+
 	NSSplitViewItem *sidebarItem = [NSSplitViewItem sidebarWithViewController:[self makeSidebarViewController]];
 	sidebarItem.canCollapse = NO;
 	sidebarItem.minimumThickness = _sidebarMinimumWidth;
@@ -632,7 +637,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 	sidebarItem.preferredThicknessFraction = (_sidebarPreferredWidth / _windowMinimumWidth);
 	[splitViewController addSplitViewItem:sidebarItem];
 
-	NSSplitViewItem *detailItem = [NSSplitViewItem splitViewItemWithViewController:[self makeDetailViewController]];
+	NSSplitViewItem *detailItem = [NSSplitViewItem splitViewItemWithViewController:detailViewController];
 	detailItem.minimumThickness = (_windowMinimumWidth - _sidebarMaximumWidth);
 	[splitViewController addSplitViewItem:detailItem];
 
@@ -827,6 +832,12 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 	self.presentedPaneView = paneView;
 
 	TDCPreferencesPaneContainerView *containerView = self.paneContainerView;
+
+	if (containerView == nil) {
+		self.presentedPaneView = nil;
+
+		return;
+	}
 
 	paneView.translatesAutoresizingMaskIntoConstraints = NO;
 
