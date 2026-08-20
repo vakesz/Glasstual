@@ -462,17 +462,37 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 	addButton.bordered = NO;
 	addButton.toolTip = TXTLS(@"TVCMainWindow[ib-ad]");
 
+	/* Trailing edge: search (Channel Spotlight) and Settings, the two things
+	 people reach for most from the sidebar that are otherwise only on the
+	 menu bar or a keyboard shortcut. */
+	NSButton *searchButton = [self sidebarFooterButtonWithSymbolName:@"magnifyingglass"
+															   title:TXTLS(@"TVCMainWindow[ib-sf]")
+															  action:@selector(showChannelSpotlightWindow:)];
+
+	NSButton *settingsButton = [self sidebarFooterButtonWithSymbolName:@"ellipsis.circle"
+																 title:TXTLS(@"TVCMainWindow[ib-mo]")
+																action:@selector(presentSidebarMoreMenu:)];
+
+	settingsButton.target = self;
+
 	NSView *footerHost = [[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, 180.0, _sidebarFooterHeight)];
 	footerHost.translatesAutoresizingMaskIntoConstraints = NO;
 
 	[footerHost addSubview:addButton];
+	[footerHost addSubview:searchButton];
+	[footerHost addSubview:settingsButton];
 
 	NSLayoutConstraint *footerHeight = [footerHost.heightAnchor constraintEqualToConstant:_sidebarFooterHeight];
 
 	[NSLayoutConstraint activateConstraints:@[
 		footerHeight,
 		[addButton.leadingAnchor constraintEqualToAnchor:footerHost.leadingAnchor constant:10.0],
-		[addButton.centerYAnchor constraintEqualToAnchor:footerHost.centerYAnchor]
+		[addButton.centerYAnchor constraintEqualToAnchor:footerHost.centerYAnchor],
+		[settingsButton.trailingAnchor constraintEqualToAnchor:footerHost.trailingAnchor constant:-10.0],
+		[settingsButton.centerYAnchor constraintEqualToAnchor:footerHost.centerYAnchor],
+		[searchButton.trailingAnchor constraintEqualToAnchor:settingsButton.leadingAnchor constant:-6.0],
+		[searchButton.centerYAnchor constraintEqualToAnchor:footerHost.centerYAnchor],
+		[searchButton.leadingAnchor constraintGreaterThanOrEqualToAnchor:addButton.trailingAnchor constant:8.0]
 	]];
 
 	NSSplitViewItemAccessoryViewController *footerAccessory = [[NSSplitViewItemAccessoryViewController alloc] init];
@@ -559,6 +579,21 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 /* Anchored to the button's top leading corner so the menu grows up and over the
  list, which is where the equivalent menus in Mail and Notes appear. */
+- (NSButton *)sidebarFooterButtonWithSymbolName:(NSString *)symbolName title:(NSString *)title action:(SEL)action
+{
+	NSButton *button = [NSButton buttonWithImage:[NSImage imageWithSystemSymbolName:symbolName
+														   accessibilityDescription:title]
+										  target:menuController()
+										  action:action];
+
+	button.translatesAutoresizingMaskIntoConstraints = NO;
+	button.bezelStyle = NSBezelStyleAccessoryBarAction;
+	button.bordered = NO;
+	button.toolTip = title;
+
+	return button;
+}
+
 - (void)presentSidebarAddMenu:(id)sender
 {
 	if ([sender isKindOfClass:[NSView class]] == NO) {
@@ -570,6 +605,43 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 	if (menu == nil) {
 		return;
 	}
+
+	NSView *anchor = sender;
+
+	[menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(0.0, NSHeight(anchor.bounds)) inView:anchor];
+}
+
+- (void)presentSidebarMoreMenu:(id)sender
+{
+	if ([sender isKindOfClass:[NSView class]] == NO) {
+		return;
+	}
+
+	/* Items reuse the menu bar's tags so TXMenuController's validation
+	 keeps their titles and states (Hide/Show Member List, Disable All
+	 Notifications) in step with the menu bar. */
+	NSMenu *menu = [[NSMenu alloc] initWithTitle:@""];
+
+	NSMenuItem * (^item)(NSString *, NSString *, SEL, NSInteger) =
+		^NSMenuItem *(NSString *title, NSString *symbolName, SEL action, NSInteger tag) {
+			NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:title action:action keyEquivalent:@""];
+
+			menuItem.target = menuController();
+			menuItem.tag = tag;
+			menuItem.image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:title];
+
+			return menuItem;
+		};
+
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m1]"), @"checkmark.circle", @selector(markAllAsRead:), 402)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m2]"), @"bell.slash", @selector(toggleMuteOnNotifications:), 0)];
+	[menu addItem:[NSMenuItem separatorItem]];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m3]"), @"person.crop.circle", @selector(showAddressBook:), 813)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m4]"), @"arrow.down.circle", @selector(showFileTransfersWindow:), 817)];
+	[menu addItem:[NSMenuItem separatorItem]];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m5]"), @"sidebar.right", @selector(toggleMemberListVisibility:), 802)];
+	[menu addItem:[NSMenuItem separatorItem]];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-st]"), @"gear", @selector(showPreferencesWindow:), 101)];
 
 	NSView *anchor = sender;
 
