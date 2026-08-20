@@ -909,7 +909,8 @@ NSString *const TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
 	}
 
 	if ([self isRenderingPRIVMSG_or_NOTICE]) {
-		templateTokens[@"fragmentIsSpoiler"] = @(setNewColors && [foregroundColor isEqualToString:backgroundColor]);
+		templateTokens[@"fragmentIsSpoiler"] = @(setNewColors && foregroundColor != nil && backgroundColor != nil &&
+												 [foregroundColor isEqualToString:backgroundColor]);
 	} else {
 		templateTokens[@"fragmentIsSpoiler"] = @(NO);
 	}

@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSNumber *active = [self _archivedConstant];
 	
-	if (active) {
+	if (active != nil) {
 		return active.doubleValue;
 	}
 
@@ -73,7 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSNumber *constant = [self _archivedConstant];
 	
-	if (constant) {
+	if (constant != nil) {
 		self.constant = constant.doubleValue;
 	}
 }

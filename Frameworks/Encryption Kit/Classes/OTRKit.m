@@ -266,7 +266,7 @@ static int max_message_size_cb(void *opdata, ConnContext *context)
 
 	NSNumber *maxMessageSize = otrKit.protocolMaxSize[protocolString];
 
-	if (maxMessageSize) {
+	if (maxMessageSize != nil) {
 		return maxMessageSize.intValue;
 	}
 
@@ -727,9 +727,10 @@ static OtrlMessageAppOps ui_ops = {
 
 		BOOL createDirectoryResult = [[NSFileManager defaultManager] createDirectoryAtPath:self.dataPath withIntermediateDirectories:YES attributes:nil error:&createDirectoryError];
 
-		NSAssert1(createDirectoryResult,
-		  @"Tried to create data path but failed doing so: '%@'",
-		  createDirectoryError.localizedDescription);
+		if (createDirectoryResult == NO) {
+			LogToConsole(@"Tried to create data path '%@' but failed doing so: '%@'",
+				self.dataPath, createDirectoryError.localizedDescription);
+		}
 	}
 }
 
@@ -826,7 +827,7 @@ static OtrlMessageAppOps ui_ops = {
 
 		NSString *decodedMessage = nil;
 
-		NSArray *tlvs = nil;
+		NSArray *tlvs = @[];
 
 		if (otr_tlvs) {
 			tlvs = [self _tlvArrayForTLVChain:otr_tlvs];

@@ -90,3 +90,6 @@
 "mnu-hml" = "Hide Member List";
 "mnu-efs" = "Enter Full Screen";
 "mnu-xfs" = "Exit Full Screen";
+
+/* Dock icon badge shown when the count exceeds what fits in the badge. */
+"dki-bg" = "%@+";

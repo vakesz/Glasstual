@@ -53,11 +53,11 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSNumber *active = [self _archivedKeyEquivalentModifierMask];
 
-	if (active) {
-		return active.doubleValue;
+	if (active != nil) {
+		return active.unsignedIntegerValue;
 	}
 
-	return 0.0;
+	return 0;
 }
 
 - (nullable NSNumber *)_archivedKeyEquivalentModifierMask

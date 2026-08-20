@@ -607,7 +607,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 			continue;
 		}
 
-		if ([encodingPrefix isEqualToString:encodingPrefixPrevious] == NO) {
+		if (encodingPrefixPrevious == nil || [encodingPrefix isEqualToString:encodingPrefixPrevious] == NO) {
 			encodingPrefixPrevious = encodingPrefix;
 
 			[self.primaryEncodingButton.menu addItem:[NSMenuItem separatorItem]];

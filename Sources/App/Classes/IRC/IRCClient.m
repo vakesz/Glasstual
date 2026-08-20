@@ -262,7 +262,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @implementation IRCClient
 {
 	os_unfair_lock _userListLock;
+
+	/* The property is nonnull because the getter falls back to the
+	 configured nickname, but the backing storage is cleared on disconnect. */
+	NSString *_Nullable _userNickname;
 }
+
+@synthesize userNickname = _userNickname;
 
 #pragma mark -
 #pragma mark Initialization

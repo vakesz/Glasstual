@@ -108,6 +108,13 @@ NS_ASSUME_NONNULL_BEGIN
 NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogControllerViewFinishedLoadingNotification";
 
 @implementation TVCLogController
+{
+	/* The property is nonnull for the lifetime of the controller;
+	 the backing storage is only cleared during teardown. */
+	TVCLogView *_Nullable _backingView;
+}
+
+@synthesize backingView = _backingView;
 
 #pragma mark -
 #pragma mark Initialization
