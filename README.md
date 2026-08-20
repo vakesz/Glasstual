@@ -67,12 +67,16 @@ This tree has **no paid-license or trial checks**. Precompiled store builds of T
    - App Group: `group.<Team ID>.<Bundle ID>`
 
    Register that App ID and App Group on [developer.apple.com](https://developer.apple.com/account/resources/identifiers/list).
-3. Regenerate the project if you changed `project.yml` or added files: `xcodegen generate`. The generated `Glasstual.xcodeproj` is committed, so a plain checkout builds without XcodeGen.
+3. Regenerate the project if you changed `project.yml` or added files: `make generate`. The generated `Glasstual.xcodeproj` is committed, so a plain checkout builds without XcodeGen.
 4. Open `Glasstual.xcodeproj` and build the `Glasstual` scheme, or from the command line:
 
    ```sh
-   xcodebuild -project Glasstual.xcodeproj -scheme Glasstual -configuration Debug -destination 'platform=macOS,arch=arm64' build
+   make build            # Debug
+   make release          # Release
+   make run              # build and launch
    ```
+
+   `make help` lists every target; they are thin wrappers around `xcodebuild` and the scripts in `Scripts/`.
 
    Run and Profile use the `Debug` configuration; Archive uses `Release`. The scheme's pre-action writes the build number from the last git commit date (see [Configurations/README.md](Configurations/README.md)).
 
@@ -81,13 +85,15 @@ This tree has **no paid-license or trial checks**. Precompiled store builds of T
 Install the development tools and run the repository-wide checks with:
 
 ```sh
-brew bundle
-./Scripts/lint.sh
+make setup    # brew bundle
+make lint     # shellcheck, actionlint, plist/xib validation, format check
+make format   # clang-format, swift-format, shfmt
 ```
 
-Run `./Scripts/format.sh` to format first-party Objective-C, Swift, and shell
-sources. Formatting and linting intentionally exclude the vendored frameworks under
-`Frameworks/` and `External Libraries`.
+Formatting and linting intentionally exclude the vendored frameworks under
+`Frameworks/` and `External Libraries`. The `Quality` workflow runs `make lint`,
+verifies the committed project matches `project.yml`, and builds Debug on every
+pull request; `Signed Release` is run manually to archive, notarize and publish.
 
 ### Software Updates
 
@@ -95,7 +101,7 @@ Sparkle is linked from Swift Package Manager but compiled out in both configurat
 (`GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED = 0` in
 _[Configurations ➜ Base.xcconfig](Configurations/Base.xcconfig)_): the upstream Textual
 appcast was removed so that this fork can never offer Codeux's builds as an update to
-itself. To enable updating, set the flag to `1` and add an `SUFeedURL` pointing at your
+itself. To enable updating, set the flag to `1`, add `SUPublicEDKey` and an `SUFeedURL` pointing at your
 own appcast to
 _[Sources ➜ App ➜ Resources ➜ Property Lists ➜ Application Properties ➜ Info.plist](Sources/App/Resources/Property%20Lists/Application%20Properties/Info.plist)_.
 
