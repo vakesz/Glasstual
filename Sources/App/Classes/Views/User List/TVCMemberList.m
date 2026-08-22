@@ -98,6 +98,16 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 								 object:mainWindow];
 
 	[RZNotificationCenter() addObserver:self
+							   selector:@selector(windowMainStateChanged:)
+								   name:NSWindowDidBecomeMainNotification
+								 object:mainWindow];
+
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(windowMainStateChanged:)
+								   name:NSWindowDidResignMainNotification
+								 object:mainWindow];
+
+	[RZNotificationCenter() addObserver:self
 							   selector:@selector(mainWindowRequiresRedraw:)
 								   name:TVCMainWindowRedrawSubviewsNotification
 								 object:mainWindow];
@@ -490,6 +500,19 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 
 - (void)windowKeyStateChanged:(NSNotification *)notification
 {
+	[self respondToRequiresRedraw];
+}
+
+- (void)windowMainStateChanged:(NSNotification *)notification
+{
+	/* Row emphasis follows main-window status (see TVCMemberListRowCell),
+	 which AppKit does not re-evaluate on its own. */
+	[self enumerateAvailableRowViewsUsingBlock:^(__kindof NSTableRowView *rowView, NSInteger row) {
+		if ([rowView isKindOfClass:[TVCMemberListRowCell class]]) {
+			[rowView refreshEmphasis];
+		}
+	}];
+
 	[self respondToRequiresRedraw];
 }
 

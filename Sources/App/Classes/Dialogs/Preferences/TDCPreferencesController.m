@@ -235,7 +235,6 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 @property(nonatomic, weak) IBOutlet NSButton *inlineMediaEnabledButton;
 @property(nonatomic, weak) IBOutlet NSStackView *contentViewGeneralStackView;
 @property(nonatomic, weak) IBOutlet NSView *contentViewGeneralCheckForUpdatesView;
-@property(nonatomic, weak) IBOutlet NSView *contentViewGeneralShareDataView;
 @property(nonatomic, strong) NSSplitViewController *splitViewController;
 @property(nonatomic, strong) NSOutlineView *sidebarOutlineView;
 @property(nonatomic, strong) NSScrollView *paneScrollView;
@@ -741,10 +740,9 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 	[versionLabel setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow
 										   forOrientation:NSLayoutConstraintOrientationHorizontal];
 
-	NSVisualEffectView *sidebarView =
-		[[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0.0, 0.0, _sidebarPreferredWidth, _windowMinimumHeight)];
-	sidebarView.material = NSVisualEffectMaterialSidebar;
-	sidebarView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+	/* The sidebar NSSplitViewItem supplies its own vibrancy. */
+	NSView *sidebarView =
+		[[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, _sidebarPreferredWidth, _windowMinimumHeight)];
 
 	[sidebarView addSubview:scrollView];
 	[sidebarView addSubview:versionLabel];
@@ -1724,7 +1722,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 					  return;
 				  }
 
-				  NSURL *path = d.URLs[0];
+				  NSURL *path = d.URL;
 
 				  NSError *bookmarkError = nil;
 
@@ -1865,7 +1863,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 
 	NSString *themeName = [TPCThemeController extractThemeName:currentTheme];
 
-	[TDCAlert alertSheetWithWindow:[NSApp keyWindow]
+	[TDCAlert alertSheetWithWindow:self.window
 							  body:TXTLS(@"TDCPreferencesController[q4o-2f]", themeName, forcedValues)
 							 title:TXTLS(@"TDCPreferencesController[uc0-z7]")
 					 defaultButton:TXTLS(@"Prompts[c7s-dq]")
@@ -2068,27 +2066,9 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 
 + (void)openProxySettingsInSystemPreferences
 {
-	AEDesc aeDesc = {typeNull, NULL};
+	NSURL *url = [NSURL URLWithString:@"x-apple.systempreferences:com.apple.Network-Settings.extension?Proxies"];
 
-	OSStatus aeDescStatus = AECreateDesc('ptru', "Proxies", 7, &aeDesc);
-
-	if (aeDescStatus != noErr) {
-		LogToConsoleError("aeDescStatus returned value other than noErr: %{public}i", aeDescStatus);
-
-		return;
-	}
-
-	NSURL *prefPaneURL = [NSURL fileURLWithPath:@"/System/Library/PreferencePanes/Network.prefPane"];
-
-	LSLaunchURLSpec launchSpec = {0};
-
-	launchSpec.appURL = NULL;
-	launchSpec.asyncRefCon = NULL;
-	launchSpec.itemURLs = (__bridge CFArrayRef) @[ prefPaneURL ];
-	launchSpec.launchFlags = (kLSLaunchAsync | kLSLaunchDontAddToRecents);
-	launchSpec.passThruParams = &aeDesc;
-
-	(void)LSOpenFromURLSpec(&launchSpec, NULL);
+	[NSWorkspace.sharedWorkspace openURL:url];
 }
 
 - (void)updateInlineMediaEnabled
@@ -2277,7 +2257,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 - (void)onOpenPathToTheme:(nullable id)sender
 {
 	if (themeController().bundledTheme) {
-		[TDCAlert alertSheetWithWindow:NSApp.keyWindow
+		[TDCAlert alertSheetWithWindow:self.window
 								  body:TXTLS(@"TDCPreferencesController[ojj-ap]")
 								 title:TXTLS(@"TDCPreferencesController[5jv-aw]")
 						 defaultButton:TXTLS(@"TDCPreferencesController[6ws-av]")

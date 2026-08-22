@@ -67,7 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 									 QLPreviewPanelDataSource,
 									 QLPreviewPanelDelegate>
 @property(nonatomic, weak) IBOutlet NSButton *clearButton;
-@property(nonatomic, weak) IBOutlet NSSegmentedCell *navigationControllerCell;
+@property(nonatomic, weak) IBOutlet NSSegmentedControl *navigationControl;
 @property(nonatomic, weak, readwrite) IBOutlet TVCBasicTableView *fileTransferTable;
 @property(nonatomic, strong) IBOutlet NSArrayController *fileTransfersController;
 @property(nonatomic, strong, nullable) TLOInternetAddressLookup *IPAddressRequest;
@@ -163,7 +163,7 @@ NS_ASSUME_NONNULL_BEGIN
 		timerWithActionBlock:^(TLOTimer *sender) {
 			[self onMaintenanceTimer];
 		}
-					 onQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)];
+					 onQueue:dispatch_get_main_queue()];
 
 	[RZNotificationCenter() addObserver:self
 							   selector:@selector(clientWillBeDestroyed:)
@@ -1060,7 +1060,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (TDCFileTransferDialogSelection)navigationSelection
 {
-	return self.navigationControllerCell.selectedSegment;
+	return self.navigationControl.selectedSegment;
 }
 
 - (void)navigationSelectionDidChange:(nullable id)sender

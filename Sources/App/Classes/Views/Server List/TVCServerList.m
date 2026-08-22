@@ -76,6 +76,16 @@ NS_ASSUME_NONNULL_BEGIN
 								 object:mainWindow];
 
 	[RZNotificationCenter() addObserver:self
+							   selector:@selector(windowMainStateChanged:)
+								   name:NSWindowDidBecomeMainNotification
+								 object:mainWindow];
+
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(windowMainStateChanged:)
+								   name:NSWindowDidResignMainNotification
+								 object:mainWindow];
+
+	[RZNotificationCenter() addObserver:self
 							   selector:@selector(mainWindowRequiresRedraw:)
 								   name:TVCMainWindowRedrawSubviewsNotification
 								 object:mainWindow];
@@ -99,7 +109,11 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(object != nil);
 
-	NSAssert(([self rowForItem:object] >= 0), @"Object does not exist on outline view");
+	if ([self rowForItem:object] < 0) {
+		LogToConsoleError("Object does not exist on outline view");
+
+		return;
+	}
 
 	id parentItem = [self parentForItem:object];
 	NSUInteger rowIndex;
@@ -112,6 +126,12 @@ NS_ASSUME_NONNULL_BEGIN
 		NSArray *groupItems = self.groupItems;
 
 		rowIndex = [groupItems indexOfObject:object];
+	}
+
+	if (rowIndex == NSNotFound) {
+		LogToConsoleError("Object is not a child of its parent item");
+
+		return;
 	}
 
 	NSIndexSet *indexSet = [NSIndexSet indexSetWithIndex:rowIndex];
@@ -295,6 +315,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)windowKeyStateChanged:(NSNotification *)notification
 {
+	[self respondToRequiresRedraw];
+}
+
+- (void)windowMainStateChanged:(NSNotification *)notification
+{
+	/* Row emphasis follows main-window status (see TVCServerListRowCell),
+	 which AppKit does not re-evaluate on its own. */
+	[self enumerateAvailableRowViewsUsingBlock:^(__kindof NSTableRowView *rowView, NSInteger row) {
+		if ([rowView isKindOfClass:[TVCServerListRowCell class]]) {
+			[rowView refreshEmphasis];
+		}
+	}];
+
 	[self respondToRequiresRedraw];
 }
 

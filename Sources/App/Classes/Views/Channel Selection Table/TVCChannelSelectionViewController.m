@@ -51,6 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak) NSView *attachedView;
 @property(nonatomic, strong) NSMutableArray<NSString *> *cachedSelectedClientIds;
 @property(nonatomic, strong) NSMutableArray<NSString *> *cachedSelectedChannelIds;
+@property(nonatomic, copy) NSArray<IRCClient *> *cachedClientList;
 @property(nonatomic, copy) NSDictionary<IRCClient *, NSArray<IRCChannel *> *> *cachedChannelList;
 @property(nonatomic, strong, nullable) dispatch_source_t expandOutlineViewTimer;
 @end
@@ -170,21 +171,48 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
+- (void)applySelectedStateToCellView:(TVCChannelSelectionOutlineCellView *)cellView forItem:(IRCTreeItem *)item
+{
+	if (cellView == nil) {
+		return;
+	}
+
+	if (item.isClient) {
+		if ([self.cachedSelectedClientIds containsObject:item.uniqueIdentifier]) {
+			cellView.selectedCheckbox.state = NSControlStateValueOn;
+
+			return;
+		}
+
+		for (IRCChannel *channel in self.cachedChannelList[(id)item]) {
+			if ([self.cachedSelectedChannelIds containsObject:channel.uniqueIdentifier]) {
+				cellView.selectedCheckbox.state = NSControlStateValueMixed;
+
+				return;
+			}
+		}
+
+		cellView.selectedCheckbox.state = NSControlStateValueOff;
+
+		return;
+	}
+
+	BOOL parentItemInFilter = [self.cachedSelectedClientIds containsObject:item.associatedClient.uniqueIdentifier];
+
+	if (parentItemInFilter || [self.cachedSelectedChannelIds containsObject:item.uniqueIdentifier]) {
+		cellView.selectedCheckbox.state = NSControlStateValueOn;
+	} else {
+		cellView.selectedCheckbox.state = NSControlStateValueOff;
+	}
+
+	cellView.selectedCheckbox.enabled = (parentItemInFilter == NO);
+}
+
 - (void)updateSelectedStateForItem:(IRCTreeItem *)item
 {
 	NSOutlineView *outlineView = self.outlineView;
 
 	IRCTreeItem *parentItem = ((item.isClient) ? item : item.associatedClient);
-
-	NSInteger parentItemRow = [outlineView rowForItem:parentItem];
-
-	TVCChannelSelectionOutlineCellView *parentItemView = [outlineView viewAtColumn:0
-																			   row:parentItemRow
-																   makeIfNecessary:NO];
-
-	BOOL parentItemInFilter = [self.cachedSelectedClientIds containsObject:parentItem.uniqueIdentifier];
-
-	BOOL atleastOneChildChecked = NO;
 
 	NSArray *childrenItems = [outlineView itemsInGroup:parentItem];
 
@@ -195,31 +223,16 @@ NS_ASSUME_NONNULL_BEGIN
 																				  row:childItemRow
 																	  makeIfNecessary:NO];
 
-		BOOL childItemInFilter = [self.cachedSelectedChannelIds containsObject:childItem.uniqueIdentifier];
-
-		if (parentItemInFilter) {
-			childItemView.selectedCheckbox.state = NSControlStateValueOn;
-		} else if (childItemInFilter) {
-			if (atleastOneChildChecked == NO) {
-				atleastOneChildChecked = YES;
-			}
-
-			childItemView.selectedCheckbox.state = NSControlStateValueOn;
-		} else {
-			childItemView.selectedCheckbox.state = NSControlStateValueOff;
-		}
-
-		childItemView.selectedCheckbox.enabled = (parentItemInFilter == NO);
+		[self applySelectedStateToCellView:childItemView forItem:childItem];
 	}
 
-	/* Process parent item */
-	if (parentItemInFilter) {
-		parentItemView.selectedCheckbox.state = NSControlStateValueOn;
-	} else if (atleastOneChildChecked) {
-		parentItemView.selectedCheckbox.state = NSControlStateValueMixed;
-	} else {
-		parentItemView.selectedCheckbox.state = NSControlStateValueOff;
-	}
+	NSInteger parentItemRow = [outlineView rowForItem:parentItem];
+
+	TVCChannelSelectionOutlineCellView *parentItemView = [outlineView viewAtColumn:0
+																			   row:parentItemRow
+																   makeIfNecessary:NO];
+
+	[self applySelectedStateToCellView:parentItemView forItem:parentItem];
 }
 
 #pragma mark -
@@ -330,6 +343,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)rebuildCachedChannelList
 {
+	/* The client list keeps the order of the server list so that the
+	 outline view shows servers in the same order as the main window. */
 	NSArray *clientList = worldController().clientList;
 
 	NSMutableDictionary<IRCClient *, NSArray<IRCChannel *> *> *cachedChannelList = [NSMutableDictionary dictionary];
@@ -348,6 +363,7 @@ NS_ASSUME_NONNULL_BEGIN
 		cachedChannelList[(id)u] = [uChannelList copy];
 	}
 
+	self.cachedClientList = clientList;
 	self.cachedChannelList = cachedChannelList;
 }
 
@@ -360,7 +376,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return self.cachedChannelList[item].count;
 	}
 
-	return self.cachedChannelList.count;
+	return self.cachedClientList.count;
 }
 
 - (id)outlineView:(NSOutlineView *)outlineView child:(NSInteger)index ofItem:(nullable id)item
@@ -369,7 +385,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return self.cachedChannelList[item][index];
 	}
 
-	return self.cachedChannelList.allKeys[index];
+	return self.cachedClientList[index];
 }
 
 - (nullable id)outlineView:(NSOutlineView *)outlineView
@@ -393,23 +409,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 	newView.parentController = self;
 
+	/* The object value is assigned here so the cell can be configured
+	 before it is handed back, rather than on the next runloop pass. */
+	newView.objectValue = item;
+
+	[newView prepareInitialState];
+
+	[self applySelectedStateToCellView:newView forItem:item];
+
 	return newView;
 }
 
 - (void)outlineView:(NSOutlineView *)outlineView didAddRowView:(NSTableRowView *)rowView forRow:(NSInteger)row
 {
-	/* Perform work on next pass of the main thread to avoid exception:
-	 "insertRowsAtIndexes:withRowAnimation: can not happen while updating visible rows!" */
-	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		NSView *cellView = [rowView viewAtColumn:0];
-
-		[cellView prepareInitialState];
-
-		id item = [outlineView itemAtRow:row];
-
-		[self updateSelectedStateForItem:item];
-	});
-
 	[self expandOutlineViewItemsCreateTimer];
 }
 

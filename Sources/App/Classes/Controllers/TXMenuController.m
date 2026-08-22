@@ -115,7 +115,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *mainMenuChannelMenuItem;
 @property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *mainMenuQueryMenuItem;
 @property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *mainMenuServerMenuItem;
-@property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *mainMenuWindowMenuItem;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *mainWindowSegmentedControllerCellMenu;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *serverListNoSelectionMenu;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *userControlMenu;
@@ -167,17 +166,25 @@ NS_ASSUME_NONNULL_BEGIN
  natural size. */
 - (void)applyMenuSymbols
 {
-	NSArray<NSMenu *> *menus = @[
-		[NSApp mainMenu],
-		self.channelViewChannelNameMenu,
-		self.channelViewGeneralMenu,
-		self.channelViewURLMenu,
-		self.dockMenu,
-		self.encryptionManagerStatusMenu,
-		self.mainWindowSegmentedControllerCellMenu,
-		self.serverListNoSelectionMenu,
-		self.userControlMenu
-	];
+	/* Built with -addObject: guarded against nil because an outlet that
+	 failed to connect would otherwise crash the array literal at launch. */
+	NSMutableArray<NSMenu *> *menus = [NSMutableArray array];
+
+	void (^addMenu)(NSMenu *_Nullable) = ^(NSMenu *_Nullable menu) {
+		if (menu) {
+			[menus addObject:menu];
+		}
+	};
+
+	addMenu([NSApp mainMenu]);
+	addMenu(self.channelViewChannelNameMenu);
+	addMenu(self.channelViewGeneralMenu);
+	addMenu(self.channelViewURLMenu);
+	addMenu(self.dockMenu);
+	addMenu(self.encryptionManagerStatusMenu);
+	addMenu(self.mainWindowSegmentedControllerCellMenu);
+	addMenu(self.serverListNoSelectionMenu);
+	addMenu(self.userControlMenu);
 
 	NSImageSymbolConfiguration *configuration =
 		[NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
@@ -224,40 +231,12 @@ NS_ASSUME_NONNULL_BEGIN
 		[self resetSelectedItems];
 	}
 
-	/* When the selection changes, menus that may be dynamic are force
+	/* When the selection changes, menus that may be dynamic are
 	 revalidated so that Command I (or other shortcuts) work with channel
 	 selected, but not for the server console. */
-	NSMenuItem *channelMenu = self.mainMenuChannelMenuItem;
+	[self.mainMenuChannelMenuItem.submenu update];
 
-	[self _forceMenuItemValidation:channelMenu];
-
-	NSMenuItem *queryMenu = self.mainMenuQueryMenuItem;
-
-	[self _forceMenuItemValidation:queryMenu];
-}
-
-- (void)_forceMenuValidation:(NSMenu *)menu
-{
-	NSParameterAssert(menu != nil);
-
-	for (NSMenuItem *menuItem in menu.itemArray) {
-		[self _forceMenuItemValidation:menuItem];
-	}
-}
-
-- (void)_forceMenuItemValidation:(NSMenuItem *)menuItem
-{
-	NSParameterAssert(menuItem != nil);
-
-	id target = menuItem.target;
-
-	if (target == nil) {
-		return;
-	}
-
-	if ([target respondsToSelector:@selector(validateMenuItem:)]) {
-		[target performSelector:@selector(validateMenuItem:) withObject:menuItem];
-	}
+	[self.mainMenuQueryMenuItem.submenu update];
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem
@@ -323,10 +302,10 @@ NS_ASSUME_NONNULL_BEGIN
 	if (validationResult == NO && defaultToNoForSheet) {
 		switch (tag) {
 		case MTMMAppAboutApp:						  // "About Glasstual"
-		case MTMMAppPreferences:					  // "Preferences…"
+		case MTMMAppPreferences:					  // "Settings…"
 		case MTMMAppCheckForUpdates:				  // "Check for updates…"
 		case MTMMHelpAdvancedMenuEnableDeveloperMode: // "Enable Developer Mode"
-		case MTMMHelpAdvancedMenuHiddenPreferences:	  // "Hidden Preferences…"
+		case MTMMHelpAdvancedMenuHiddenPreferences:	  // "Hidden Settings…"
 		case MTMMFileDisableAllNotifications:		  // "Disable All Notifications"
 		case MTMMFileDisableAllNotificationSounds:	  // "Disable All Notification Sounds"
 		case MTDockMenuDisableAllNotifications:		  // "Disable All Notifications"
@@ -351,7 +330,6 @@ NS_ASSUME_NONNULL_BEGIN
 		case MTMMFilePrint:							// "Print"
 		case MTMMFileCloseWindow:					// "Close Window"
 		case MTMMEditPaste:							// "Paste"
-		case MTMMViewToggleFullscreen:				// "Toggle Fullscreen"
 		case MTMMWindowMainWindow:					// "Main Window"
 		case MTMMHelpAcknowledgements:				// "Acknowledgements"
 		case MTMMHelpAdvancedMenu:					// "Advanced"
@@ -509,21 +487,6 @@ NS_ASSUME_NONNULL_BEGIN
 	{
 		return (self.selectedViewController != nil);
 	}
-	case MTMMViewToggleFullscreen: {
-		NSWindow *keyWindow = [NSApp keyWindow];
-
-		BOOL inFullscreen = ((keyWindow.styleMask & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen);
-
-		menuItem.title = (inFullscreen ? TXTLS(@"TVCMainWindow[mnu-xfs]") : TXTLS(@"TVCMainWindow[mnu-efs]"));
-
-		NSWindowCollectionBehavior collectionBehavior = keyWindow.collectionBehavior;
-
-		return ((collectionBehavior & NSWindowCollectionBehaviorFullScreenAuxiliary) ==
-					NSWindowCollectionBehaviorFullScreenAuxiliary ||
-				(collectionBehavior & NSWindowCollectionBehaviorFullScreenPrimary) ==
-					NSWindowCollectionBehaviorFullScreenPrimary);
-	}
-
 	case MTMMServerConnect: // "Connect"
 	{
 		if (u == nil) {
@@ -1609,18 +1572,23 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	BOOL result = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[etl-ss]")
-											title:TXTLS(@"Prompts[0kz-wd]")
-									defaultButton:TXTLS(@"Prompts[mvh-ms]")
-								  alternateButton:TXTLS(@"Prompts[99q-gg]")];
+	[TDCAlert alertWithMessage:TXTLS(@"Prompts[etl-ss]")
+						 title:TXTLS(@"Prompts[0kz-wd]")
+				 defaultButton:TXTLS(@"Prompts[mvh-ms]")
+			   alternateButton:TXTLS(@"Prompts[99q-gg]")
+			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
+				   if (buttonClicked != TDCAlertResponseDefault) {
+					   return;
+				   }
 
-	if (result == NO) {
-		return;
-	}
+				   if (u.isConnecting || u.isConnected) {
+					   return;
+				   }
 
-	[worldController() destroyClient:u];
+				   [worldController() destroyClient:u];
 
-	[worldController() save];
+				   [worldController() save];
+			   }];
 }
 
 #pragma mark -
@@ -1688,22 +1656,29 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	if (c.isChannel) {
-		BOOL result = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[516-ms]")
-												title:TXTLS(@"Prompts[i8o-7z]")
-										defaultButton:TXTLS(@"Prompts[mvh-ms]")
-									  alternateButton:TXTLS(@"Prompts[99q-gg]")
-									   suppressionKey:@"delete_channel"
-									  suppressionText:nil];
+	if (c.isChannel == NO) {
+		[worldController() destroyChannel:c];
 
-		if (result == NO) {
-			return;
-		}
+		[worldController() save];
+
+		return;
 	}
 
-	[worldController() destroyChannel:c];
+	[TDCAlert alertWithMessage:TXTLS(@"Prompts[516-ms]")
+						 title:TXTLS(@"Prompts[i8o-7z]")
+				 defaultButton:TXTLS(@"Prompts[mvh-ms]")
+			   alternateButton:TXTLS(@"Prompts[99q-gg]")
+				suppressionKey:@"delete_channel"
+			   suppressionText:nil
+			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
+				   if (buttonClicked != TDCAlertResponseDefault) {
+					   return;
+				   }
 
-	[worldController() save];
+				   [worldController() destroyChannel:c];
+
+				   [worldController() save];
+			   }];
 }
 
 - (void)copyUniqueIdentifier:(nullable id)sender
@@ -2447,10 +2422,10 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[f05-hu]")
-							  title:TXTLS(@"Prompts[k55-19]")
-					  defaultButton:TXTLS(@"Prompts[c7s-dq]")
-					alternateButton:nil];
+	[TDCAlert alertWithMessage:TXTLS(@"Prompts[f05-hu]")
+						 title:TXTLS(@"Prompts[k55-19]")
+				 defaultButton:TXTLS(@"Prompts[c7s-dq]")
+			   alternateButton:nil];
 }
 
 - (void)openChannelLogs:(nullable id)sender
@@ -2474,10 +2449,10 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[f05-hu]")
-							  title:TXTLS(@"Prompts[k55-19]")
-					  defaultButton:TXTLS(@"Prompts[c7s-dq]")
-					alternateButton:nil];
+	[TDCAlert alertWithMessage:TXTLS(@"Prompts[f05-hu]")
+						 title:TXTLS(@"Prompts[k55-19]")
+				 defaultButton:TXTLS(@"Prompts[c7s-dq]")
+			   alternateButton:nil];
 }
 
 #pragma mark -
@@ -2698,11 +2673,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)centerMainWindow:(nullable id)sender
 {
 	[mainWindow() exactlyCenterWindow];
-}
-
-- (void)toggleFullscreen:(nullable id)sender
-{
-	[[NSApp keyWindow] toggleFullScreen:sender];
 }
 
 - (void)resetMainWindowFrame:(nullable id)sender

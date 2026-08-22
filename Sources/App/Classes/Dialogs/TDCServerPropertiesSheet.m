@@ -973,6 +973,15 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	self.floodControlMessageCountSliderTempValue = self.config.floodControlMaximumMessages;
 
 	/* Mutable Stores */
+	/* -loadConfig is also used to reload after the configuration changed
+	 elsewhere, so the stores are emptied before they are filled. */
+	[self clearChannelListPredicate];
+
+	[self.addressBookArrayController removeAllArrangedObjects];
+	[self.channelListArrayController removeAllArrangedObjects];
+	[self.highlightListArrayController removeAllArrangedObjects];
+	[self.serverListArrayController removeAllArrangedObjects];
+
 	[self.addressBookArrayController addObjects:self.config.ignoreList];
 	[self.channelListArrayController addObjects:self.config.channelList];
 	[self.highlightListArrayController addObjects:self.config.highlightList];
@@ -1240,6 +1249,68 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 - (void)setChannelListPredicate
 {
 	self.channelListArrayController.filterPredicate = [NSPredicate predicateWithFormat:@"type == 0"]; // Is channel type
+}
+
+/* The channel list array controller is filtered while the table is
+ shown, so row indexes from the table cannot be used against the
+ unfiltered store. Entries are therefore located by unique identifier. */
+- (NSUInteger)unfilteredIndexOfChannelWithIdentifier:(NSString *)uniqueIdentifier
+{
+	return [self.channelListArrayController.arrangedObjects
+		indexOfObjectPassingTest:^BOOL(IRCChannelConfig *object, NSUInteger index, BOOL *stop) {
+			return [object.uniqueIdentifier isEqualToString:uniqueIdentifier];
+		}];
+}
+
+- (void)storeChannelConfig:(IRCChannelConfig *)config
+{
+	[self clearChannelListPredicate];
+
+	NSUInteger entryIndex = [self unfilteredIndexOfChannelWithIdentifier:config.uniqueIdentifier];
+
+	if (entryIndex == NSNotFound) {
+		[self.channelListArrayController addObject:config];
+	} else {
+		[self.channelListArrayController replaceObjectAtArrangedObjectIndex:entryIndex withObject:config];
+	}
+
+	[self setChannelListPredicate];
+}
+
+- (void)removeChannelConfig:(IRCChannelConfig *)config
+{
+	[self clearChannelListPredicate];
+
+	NSUInteger entryIndex = [self unfilteredIndexOfChannelWithIdentifier:config.uniqueIdentifier];
+
+	if (entryIndex != NSNotFound) {
+		[self.channelListArrayController removeObjectAtArrangedObjectIndex:entryIndex];
+	}
+
+	[self setChannelListPredicate];
+}
+
+- (void)moveChannelConfig:(IRCChannelConfig *)config aboveChannelConfig:(nullable IRCChannelConfig *)targetConfig
+{
+	[self clearChannelListPredicate];
+
+	NSUInteger fromIndex = [self unfilteredIndexOfChannelWithIdentifier:config.uniqueIdentifier];
+
+	NSUInteger toIndex = NSNotFound;
+
+	if (targetConfig) {
+		toIndex = [self unfilteredIndexOfChannelWithIdentifier:targetConfig.uniqueIdentifier];
+	}
+
+	if (toIndex == NSNotFound) {
+		toIndex = [self.channelListArrayController.arrangedObjects count];
+	}
+
+	if (fromIndex != NSNotFound && fromIndex != toIndex) {
+		[self.channelListArrayController moveObjectAtArrangedObjectIndex:fromIndex toIndex:toIndex];
+	}
+
+	[self setChannelListPredicate];
 }
 
 - (void)updateAddressBookPage
@@ -1924,23 +1995,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 
 - (void)channelPropertiesSheet:(TDCChannelPropertiesSheet *)sender onOk:(IRCChannelConfig *)config
 {
-	NSUInteger entryIndex = [self.channelList indexOfObjectPassingTest:^BOOL(id object, NSUInteger index, BOOL *stop) {
-		if ([[object uniqueIdentifier] isEqualToString:config.uniqueIdentifier]) {
-			return YES;
-		} else {
-			return NO;
-		}
-	}];
-
-	[self clearChannelListPredicate];
-
-	if (entryIndex == NSNotFound) {
-		[self.channelListArrayController addObject:config];
-	} else {
-		[self.channelListArrayController replaceObjectAtArrangedObjectIndex:entryIndex withObject:config];
-	}
-
-	[self setChannelListPredicate];
+	[self storeChannelConfig:config];
 }
 
 - (void)channelPropertiesSheetWillClose:(TDCChannelPropertiesSheet *)sender
@@ -1956,11 +2011,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 		return;
 	}
 
-	[self clearChannelListPredicate];
-
-	[self.channelListArrayController removeObjectAtArrangedObjectIndex:selectedRow];
-
-	[self setChannelListPredicate];
+	[self removeChannelConfig:self.channelList[selectedRow]];
 
 	NSUInteger listCount = self.channelList.count;
 
@@ -2110,12 +2161,33 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 #pragma mark -
 #pragma mark NSTableView Delegate
 
-- (nullable id)tableView:(NSTableView *)tableView
-	objectValueForTableColumn:(nullable NSTableColumn *)tableColumn
-						  row:(NSInteger)row
+- (nullable NSView *)tableView:(NSTableView *)tableView
+			viewForTableColumn:(nullable NSTableColumn *)tableColumn
+						   row:(NSInteger)row
 {
 	NSString *columnId = tableColumn.identifier;
 
+	NSTableCellView *cellView = [tableView makeViewWithIdentifier:columnId owner:self];
+
+	if (tableView == self.channelListTable && [columnId isEqualToString:@"join"]) {
+		IRCChannelConfig *config = self.channelList[row];
+
+		NSButton *checkbox = cellView.subviews.firstObject;
+
+		checkbox.state = (config.autoJoin) ? NSControlStateValueOn : NSControlStateValueOff;
+		checkbox.target = self;
+		checkbox.action = @selector(channelAutoJoinToggled:);
+
+		return cellView;
+	}
+
+	cellView.textField.stringValue = ([self stringValueForTableView:tableView column:columnId row:row] ?: @"");
+
+	return cellView;
+}
+
+- (nullable NSString *)stringValueForTableView:(NSTableView *)tableView column:(NSString *)columnId row:(NSInteger)row
+{
 	if (tableView == self.channelListTable) {
 		IRCChannelConfig *config = self.channelList[row];
 
@@ -2129,8 +2201,6 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 			}
 
 			return @"";
-		} else if ([columnId isEqualToString:@"join"]) {
-			return @(config.autoJoin);
 		}
 	} else if (tableView == self.highlightsTable) {
 		IRCHighlightMatchCondition *config = self.highlightList[row];
@@ -2180,22 +2250,19 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	return YES;
 }
 
-- (void)tableView:(NSTableView *)tableView
-	setObjectValue:(nullable id)object
-	forTableColumn:(nullable NSTableColumn *)tableColumn
-			   row:(NSInteger)row
+- (void)channelAutoJoinToggled:(NSButton *)sender
 {
-	NSString *columnId = tableColumn.identifier;
+	NSInteger row = [self.channelListTable rowForView:sender];
 
-	if (tableView == self.channelListTable) {
-		IRCChannelConfigMutable *config = [self.channelList[row] mutableCopy];
-
-		if ([columnId isEqualToString:@"join"]) {
-			config.autoJoin = [object boolValue];
-		}
-
-		[self.channelListArrayController replaceObjectAtArrangedObjectIndex:row withObject:[config copy]];
+	if (row < 0 || (NSUInteger)row >= self.channelList.count) {
+		return;
 	}
+
+	IRCChannelConfigMutable *config = [self.channelList[row] mutableCopy];
+
+	config.autoJoin = (sender.state == NSControlStateValueOn);
+
+	[self storeChannelConfig:[config copy]];
 }
 
 - (void)tableViewSelectionDidChange:(NSNotification *)aNote
@@ -2252,12 +2319,21 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 
 	NSUInteger draggedRowIndex = draggedRowString.integerValue;
 
+	if (draggedRowIndex >= (NSUInteger)tableView.numberOfRows) {
+		return NO;
+	}
+
 	if (tableView == self.channelListTable) {
-		[self clearChannelListPredicate];
+		/* Rows are indexes into the filtered list. */
+		IRCChannelConfig *draggedConfig = self.channelList[draggedRowIndex];
 
-		[self.channelListArrayController moveObjectAtArrangedObjectIndex:draggedRowIndex toIndex:row];
+		IRCChannelConfig *targetConfig = nil;
 
-		[self setChannelListPredicate];
+		if (row >= 0 && (NSUInteger)row < self.channelList.count) {
+			targetConfig = self.channelList[row];
+		}
+
+		[self moveChannelConfig:draggedConfig aboveChannelConfig:targetConfig];
 	} else if (tableView == self.highlightsTable) {
 		[self.highlightListArrayController moveObjectAtArrangedObjectIndex:draggedRowIndex toIndex:row];
 	} else if (tableView == self.addressBookTable) {
