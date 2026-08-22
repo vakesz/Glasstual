@@ -100,14 +100,10 @@ _Glasstual.viewBodyDidLoad = function() /* PRIVATE */
 	 the background color of the style. We then request an animation frame that calls
 	 app.finishedLayingOutView, instructing Glasstual that it can destroy the overlay view. */
 
-	if (app.isWebKit2()) {
-		_Glasstual._viewBodyDidLoadAnimationFrame =
-		window.requestAnimationFrame(function() {
-			_Glasstual._viewBodyDidLoad();
-		});
-	} else {
+	_Glasstual._viewBodyDidLoadAnimationFrame =
+	window.requestAnimationFrame(function() {
 		_Glasstual._viewBodyDidLoad();
-	}
+	});
 };
 
 _Glasstual._viewBodyDidLoad = function() /* PRIVATE */

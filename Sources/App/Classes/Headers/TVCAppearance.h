@@ -46,21 +46,9 @@ NS_ASSUME_NONNULL_BEGIN
 /* Nonnull until -flushAppearanceProperties is called. */
 @property(readonly, copy, nullable) NSDictionary<NSString *, id> *appearanceProperties;
 
-/* Properties */
-@property(readonly) BOOL isHighResolutionAppearance;
-
 /* Stateless Accessors */
 - (nullable NSColor *)colorForKey:(NSString *)key;
 - (nullable NSColor *)colorInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key;
-
-- (nullable NSGradient *)gradientForKey:(NSString *)key;
-- (nullable NSGradient *)gradientInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key;
-
-- (nullable NSFont *)fontForKey:(NSString *)key;
-- (nullable NSFont *)fontInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key;
-
-- (nullable NSImage *)imageForKey:(NSString *)key;
-- (nullable NSImage *)imageInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key;
 
 - (NSSize)sizeForKey:(NSString *)key;
 - (NSSize)sizeInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key;
@@ -69,9 +57,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (CGFloat)measurementInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key;
 
 /* Stateful Accessors */
-/* Stateful appearance properties require the properties to have a
- "activeWindow" and "inactiveWindow" dictionary value which contains
- the value of the property itself. */
+/* Stateful appearance properties may have an "activeWindow" and an
+ "inactiveWindow" dictionary value which contains the value of the
+ property itself. A plain value is used for both states. */
 /*
  Example:
 
@@ -95,21 +83,6 @@ NS_ASSUME_NONNULL_BEGIN
 */
 - (nullable NSColor *)colorForKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
 - (nullable NSColor *)colorInGroup:(NSDictionary<NSString *, id> *)group
-						   withKey:(NSString *)key
-				   forActiveWindow:(BOOL)forActiveWindow;
-
-- (nullable NSGradient *)gradientForKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
-- (nullable NSGradient *)gradientInGroup:(NSDictionary<NSString *, id> *)group
-								 withKey:(NSString *)key
-						 forActiveWindow:(BOOL)forActiveWindow;
-
-- (nullable NSFont *)fontForKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
-- (nullable NSFont *)fontInGroup:(NSDictionary<NSString *, id> *)group
-						 withKey:(NSString *)key
-				 forActiveWindow:(BOOL)forActiveWindow;
-
-- (nullable NSImage *)imageForKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
-- (nullable NSImage *)imageInGroup:(NSDictionary<NSString *, id> *)group
 						   withKey:(NSString *)key
 				   forActiveWindow:(BOOL)forActiveWindow;
 @end

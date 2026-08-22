@@ -274,16 +274,102 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Line Counting
 
+/* Everything below goes through NSTextLayoutManager (TextKit 2). Touching
+ -layoutManager on the view would make AppKit fall back to TextKit 1 for
+ good, so nothing in the input field may reference it. */
+
+- (NSTextRange *)textRangeForCharacterRange:(NSRange)characterRange
+{
+	NSTextContentManager *contentManager = self.textLayoutManager.textContentManager;
+
+	id<NSTextLocation> documentStart = contentManager.documentRange.location;
+
+	id<NSTextLocation> start = [contentManager locationFromLocation:documentStart withOffset:characterRange.location];
+	id<NSTextLocation> end = [contentManager locationFromLocation:start withOffset:characterRange.length];
+
+	if (start == nil || end == nil) {
+		return contentManager.documentRange;
+	}
+
+	return [[NSTextRange alloc] initWithLocation:start endLocation:end];
+}
+
+/* Lays out the whole document, then visits every line in order. The
+ character range handed to the block is relative to the document.
+ Return NO from the block to stop. */
+- (void)enumerateLineFragmentsUsingBlock:(BOOL (^)(NSTextLineFragment *lineFragment, NSRange characterRange))block
+{
+	NSTextLayoutManager *layoutManager = self.textLayoutManager;
+	NSTextContentManager *contentManager = layoutManager.textContentManager;
+
+	id<NSTextLocation> documentStart = contentManager.documentRange.location;
+
+	[layoutManager ensureLayoutForRange:layoutManager.documentRange];
+
+	[layoutManager
+		enumerateTextLayoutFragmentsFromLocation:documentStart
+										 options:NSTextLayoutFragmentEnumerationOptionsEnsuresLayout
+									  usingBlock:^BOOL(NSTextLayoutFragment *layoutFragment) {
+										  NSInteger fragmentStart = [contentManager
+											  offsetFromLocation:documentStart
+													  toLocation:layoutFragment.rangeInElement.location];
+
+										  for (NSTextLineFragment *lineFragment in layoutFragment.textLineFragments) {
+											  NSRange characterRange = lineFragment.characterRange;
+
+											  characterRange.location += fragmentStart;
+
+											  if (block(lineFragment, characterRange) == NO) {
+												  return NO;
+											  }
+										  }
+
+										  return YES;
+									  }];
+}
+
+- (NSArray<NSValue *> *)lineCharacterRanges
+{
+	NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
+
+	[self enumerateLineFragmentsUsingBlock:^BOOL(NSTextLineFragment *lineFragment, NSRange characterRange) {
+		[ranges addObject:[NSValue valueWithRange:characterRange]];
+
+		return YES;
+	}];
+
+	return [ranges copy];
+}
+
 - (NSRect)selectedRect
 {
-	NSLayoutManager *layoutManager = self.layoutManager;
+	NSTextLayoutManager *layoutManager = self.textLayoutManager;
 
-	NSRange glyphRange = [layoutManager glyphRangeForCharacterRange:self.selectedRange actualCharacterRange:NULL];
-	NSRect boundingRect = [layoutManager boundingRectForGlyphRange:glyphRange inTextContainer:self.textContainer];
+	NSTextRange *textRange = [self textRangeForCharacterRange:self.selectedRange];
 
-	NSPoint containerOrigin = [self textContainerOrigin];
+	[layoutManager ensureLayoutForRange:textRange];
 
-	return NSInsetRect(boundingRect, containerOrigin.x, containerOrigin.y);
+	__block NSRect boundingRect = NSZeroRect;
+
+	[layoutManager enumerateTextSegmentsInRange:textRange
+										   type:NSTextLayoutManagerSegmentTypeSelection
+										options:NSTextLayoutManagerSegmentOptionsRangeNotRequired
+									 usingBlock:^BOOL(NSTextRange *segmentRange,
+													  CGRect segmentFrame,
+													  CGFloat baselinePosition,
+													  NSTextContainer *textContainer) {
+										 if (NSIsEmptyRect(boundingRect)) {
+											 boundingRect = segmentFrame;
+										 } else {
+											 boundingRect = NSUnionRect(boundingRect, segmentFrame);
+										 }
+
+										 return YES;
+									 }];
+
+	NSPoint containerOrigin = self.textContainerOrigin;
+
+	return NSOffsetRect(boundingRect, containerOrigin.x, containerOrigin.y);
 }
 
 - (TVCTextViewCaretLocation)caretLocation
@@ -294,33 +380,24 @@ NS_ASSUME_NONNULL_BEGIN
 		return TVCTextViewCaretLocationOnlyLine;
 	}
 
+	NSArray<NSValue *> *lines = self.lineCharacterRanges;
+
+	if (lines.count < 2) {
+		return TVCTextViewCaretLocationOnlyLine;
+	}
+
 	NSRange selectedRange = self.selectedRange;
 
-	NSLayoutManager *layoutManager = self.layoutManager;
+	NSRange firstLineRange = lines.firstObject.rangeValue;
+	NSRange lastLineRange = lines.lastObject.rangeValue;
 
-	/* Check first line */
-	BOOL inFirstLine = (selectedRange.location == 0);
+	/* A caret sitting at the end of a line that wraps or ends with a
+	 newline is drawn at the start of the line below, so the end of the
+	 first line is excluded. */
+	BOOL inFirstLine = (selectedRange.location < NSMaxRange(firstLineRange));
 
-	if (inFirstLine == NO) {
-		NSRange firstLineRange;
+	BOOL inLastLine = (NSMaxRange(selectedRange) == stringLength || selectedRange.location >= lastLineRange.location);
 
-		[layoutManager lineFragmentRectForGlyphAtIndex:0 effectiveRange:&firstLineRange];
-
-		inFirstLine = (selectedRange.location <= NSMaxRange(firstLineRange));
-	}
-
-	/* Check last line */
-	BOOL inLastLine = (NSMaxRange(selectedRange) == stringLength);
-
-	if (inLastLine == NO) {
-		NSRange lastLineRange;
-
-		[layoutManager lineFragmentRectForGlyphAtIndex:(stringLength - 1) effectiveRange:&lastLineRange];
-
-		inLastLine = (selectedRange.location >= lastLineRange.location);
-	}
-
-	/* Process results */
 	if (inFirstLine && inLastLine) {
 		return TVCTextViewCaretLocationOnlyLine;
 	} else if (inFirstLine) {
@@ -334,39 +411,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (CGFloat)highestHeightBelowHeight:(CGFloat)maximumHeight withPadding:(CGFloat)valuePadding
 {
-	NSLayoutManager *layoutManager = self.layoutManager;
+	__block CGFloat totalLineHeight = valuePadding;
 
-	BOOL skipLastFragmentCheck = NO;
+	[self enumerateLineFragmentsUsingBlock:^BOOL(NSTextLineFragment *lineFragment, NSRange characterRange) {
+		CGFloat lineHeight = NSHeight(lineFragment.typographicBounds);
 
-	NSUInteger numberOfGlyphs = layoutManager.numberOfGlyphs;
-
-	NSUInteger totalLineHeight = valuePadding;
-
-	for (NSUInteger i = 0; i < numberOfGlyphs; i++) {
-		NSRange lineRange;
-
-		NSRect rect = [layoutManager lineFragmentRectForGlyphAtIndex:i effectiveRange:&lineRange];
-
-		if ((totalLineHeight + rect.size.height) <= maximumHeight) {
-			totalLineHeight += rect.size.height;
-		} else {
-			skipLastFragmentCheck = YES;
-
-			break;
+		if ((totalLineHeight + lineHeight) > maximumHeight) {
+			return NO;
 		}
 
-		i = NSMaxRange(lineRange);
-	}
+		totalLineHeight += lineHeight;
 
-	if (skipLastFragmentCheck) {
-		return totalLineHeight;
-	}
-
-	NSRect lastFragmentRect = layoutManager.extraLineFragmentRect;
-
-	if ((totalLineHeight + lastFragmentRect.size.height) <= maximumHeight) {
-		totalLineHeight += lastFragmentRect.size.height;
-	}
+		return YES;
+	}];
 
 	return totalLineHeight;
 }
