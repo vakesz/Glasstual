@@ -82,7 +82,14 @@ typedef NS_OPTIONS(NSUInteger, ClientIRCv3SupportedCapability) {
 	ClientIRCv3SupportedCapabilityChangeHost = 1 << 15,		   // YES if the CHGHOST CAP supported
 	ClientIRCv3SupportedCapabilityMessageTags = 1 << 16,	   // YES if message-tags CAP supported
 	ClientIRCv3SupportedCapabilityCapNotify = 1 << 17,		   // YES if cap-notify CAP supported
-	ClientIRCv3SupportedCapabilityStandardReplies = 1 << 18	   // YES if standard-replies CAP supported
+	ClientIRCv3SupportedCapabilityStandardReplies = 1 << 18,   // YES if standard-replies CAP supported
+	ClientIRCv3SupportedCapabilityAccountNotify = 1UL << 28,   // YES if account-notify CAP supported
+	ClientIRCv3SupportedCapabilityExtendedJoin = 1UL << 29,	   // YES if extended-join CAP supported
+	ClientIRCv3SupportedCapabilityAccountTag = 1UL << 30,	   // YES if account-tag CAP supported
+	ClientIRCv3SupportedCapabilitySetName = 1UL << 31,		   // YES if setname CAP supported
+	ClientIRCv3SupportedCapabilityInviteNotify = 1UL << 32,	   // YES if invite-notify CAP supported
+	ClientIRCv3SupportedCapabilityExtendedMonitor = 1UL << 33, // YES if extended-monitor CAP supported
+	ClientIRCv3SupportedCapabilityPreAway = 1UL << 34		   // YES if pre-away CAP supported
 };
 
 GLASSTUAL_EXTERN NSNotificationName const IRCClientConfigurationWasUpdatedNotification;

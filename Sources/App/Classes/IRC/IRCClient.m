@@ -168,6 +168,9 @@ NS_ASSUME_NONNULL_BEGIN
 #define _timeoutInterval 360
 #define _whoCheckInterval 120
 
+/* Token sent with WHOX requests so replies can be matched to them. */
+static NSString *const IRCClientWhoxToken = @"152";
+
 NSString *const IRCClientConfigurationWasUpdatedNotification = @"IRCClientConfigurationWasUpdatedNotification";
 
 NSString *const IRCClientChannelListWasModifiedNotification = @"IRCClientChannelListWasModifiedNotification";
@@ -238,6 +241,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @property(nonatomic, strong) NSMutableArray<NSString *> *pendingCapabilityRequestsMutable;
 @property(nonatomic, strong) NSMutableOrderedSet<NSString *> *enabledCapabilityNames;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSArray<NSString *> *> *offeredCapabilities;
+@property(nonatomic, copy, nullable) NSString *lastAwayMessage; // Away message in effect before a reconnect (pre-away)
 @property(nonatomic, copy, nullable) NSString *saslMechanism;
 @property(nonatomic, assign) NSUInteger connectDelay;
 @property(nonatomic, assign) NSUInteger lastServerSelected;
@@ -4395,6 +4399,26 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		break;
 	}
+	case IRCLocalCommandSetname: // Command: SETNAME
+	{
+		NSAssertReturnLoopBreak(self.isLoggedIn);
+
+		if (stringIn.length == 0) {
+			[self printInvalidSyntaxMessageForCommand:command];
+
+			break;
+		}
+
+		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilitySetName] == NO) {
+			[self printDebugInformation:TXTLS(@"IRC[set-nm]")];
+
+			break;
+		}
+
+		[self send:@"SETNAME", stringIn.string, nil];
+
+		break;
+	}
 	case IRCLocalCommandSetqueryname: // Command: SETQUERYNAME
 	{
 		if (targetChannel == nil || targetChannel.isPrivateMessage == NO) {
@@ -6488,6 +6512,18 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 			break;
 		}
+		case IRCRemoteCommandAccount: // ACCOUNT (account-notify CAP)
+		{
+			[self receiveAccountNotify:message];
+
+			break;
+		}
+		case IRCRemoteCommandSetname: // SETNAME (setname CAP)
+		{
+			[self receiveSetName:message];
+
+			break;
+		}
 		case IRCRemoteCommandTagmsg: // TAGMSG (message-tags CAP)
 		{
 			[self receiveTagMessage:message];
@@ -6643,6 +6679,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	NSParameterAssert(m != nil);
 
 	NSAssertReturn([m paramsCount] > 1);
+
+	[self updateUserIdentityFromMessageTags:m];
 
 	NSString *text = [m paramAt:1];
 
@@ -7569,6 +7607,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		userMutable.username = m.senderUsername;
 		userMutable.address = m.senderAddress;
 
+		/* extended-join: JOIN <channel> <account|*> :<real name> */
+		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityExtendedJoin] && [m paramsCount] >= 3) {
+			userMutable.account = [self.class accountFromWireValue:[m paramAt:1]];
+			userMutable.realName = [m paramAt:2];
+		}
+
 		IRCUser *userAdded = [self addUserAndReturn:userMutable];
 
 		IRCChannelUser *member = [[IRCChannelUser alloc] initWithUser:userAdded];
@@ -8266,7 +8310,28 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	NSString *sender = m.senderNickname;
 
+	NSString *invitee = [m paramAt:0];
+
 	NSString *channelName = [m paramAt:1];
+
+	/* invite-notify: an invite for somebody else is informational. It is
+	 shown in the channel it concerns and never triggers the invite prompt. */
+	if ([self nicknameIsMyself:invitee] == NO) {
+		IRCChannel *channel = [self findChannel:channelName];
+
+		if (channel == nil || [self postReceivedMessage:m withText:channelName destinedFor:channel] == NO) {
+			return;
+		}
+
+		[self print:TXTLS(@"IRC[inv-nt]", sender, invitee, channelName)
+					by:nil
+			 inChannel:channel
+				asType:TVCLogLineTypeInvite
+			   command:m.command
+			receivedAt:m.receivedAt];
+
+		return;
+	}
 
 	NSString *message = TXTLS(@"IRC[qw4-t3]", sender, m.senderUsername, m.senderAddress, channelName);
 
@@ -8482,6 +8547,80 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 }
 
 #pragma mark -
+#pragma mark Account and Real Name
+
+/* "*" on the wire (ACCOUNT, extended-join) and "0" (WHOX) both mean
+ the user is not logged in. */
++ (nullable NSString *)accountFromWireValue:(nullable NSString *)value
+{
+	if (value.length == 0 || [value isEqualToString:@"*"] || [value isEqualToString:@"0"]) {
+		return nil;
+	}
+
+	return value;
+}
+
+- (void)receiveAccountNotify:(IRCMessage *)m
+{
+	NSParameterAssert(m != nil);
+
+	NSAssertReturn([m paramsCount] > 0);
+
+	/* The user may not share a channel with us (extended-monitor);
+	 -modifyUserUserWithNickname: ignores nicknames we do not track. */
+	NSString *account = [self.class accountFromWireValue:[m paramAt:0]];
+
+	[self modifyUserUserWithNickname:m.senderNickname
+						   withBlock:^(IRCUserMutable *userMutable) {
+							   userMutable.account = account;
+						   }];
+}
+
+- (void)receiveSetName:(IRCMessage *)m
+{
+	NSParameterAssert(m != nil);
+
+	NSAssertReturn([m paramsCount] > 0);
+
+	NSString *realName = [m paramAt:0];
+
+	[self modifyUserUserWithNickname:m.senderNickname
+						   withBlock:^(IRCUserMutable *userMutable) {
+							   userMutable.realName = realName;
+						   }];
+}
+
+/* account-tag and the bot tag ride on PRIVMSG, NOTICE and TAGMSG.
+ The sender is only updated when the server sent the tag. */
+- (void)updateUserIdentityFromMessageTags:(IRCMessage *)m
+{
+	NSParameterAssert(m != nil);
+
+	if (m.senderIsServer || m.senderNickname.length == 0) {
+		return;
+	}
+
+	NSString *account = m.senderAccount;
+
+	BOOL isBot = (m.messageTags[@"bot"] != nil);
+
+	if (account == nil && isBot == NO) {
+		return;
+	}
+
+	[self modifyUserUserWithNickname:m.senderNickname
+						   withBlock:^(IRCUserMutable *userMutable) {
+							   if (account) {
+								   userMutable.account = [self.class accountFromWireValue:account];
+							   }
+
+							   if (isBot) {
+								   userMutable.isBot = YES;
+							   }
+						   }];
+}
+
+#pragma mark -
 #pragma mark Message Tags
 
 /* TAGMSG carries nothing but tags. Client-only tags ("+typing",
@@ -8493,6 +8632,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	NSParameterAssert(m != nil);
 
 	NSAssertReturn([m paramsCount] > 0);
+
+	[self updateUserIdentityFromMessageTags:m];
 
 	NSString *target = [m paramAt:0];
 
@@ -8786,6 +8927,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		/* CAP END only belongs to registration. After that, CAP NEW/ACK
 		 exchanges must not end with it. */
 		if (self.isLoggedIn == NO) {
+			[self sendPreAwayIfNeeded];
+
 			[self sendCapability:@"END" data:nil];
 		}
 
@@ -8793,6 +8936,34 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	}
 
 	[self sendCapability:@"REQ" data:capability];
+}
+
+/* pre-away: AWAY may be sent before registration completes so the
+ client never appears present in between. There is no "away on
+ connect" setting, so the only message restored is the one that was
+ in effect when a connection dropped and is now being re-established. */
+- (nullable NSString *)awayMessageForRegistration
+{
+	if (self.connectType != IRCClientConnectModeReconnect && self.connectType != IRCClientConnectModeRetry) {
+		return nil;
+	}
+
+	return self.lastAwayMessage;
+}
+
+- (void)sendPreAwayIfNeeded
+{
+	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPreAway] == NO) {
+		return;
+	}
+
+	NSString *awayMessage = [self awayMessageForRegistration];
+
+	if (awayMessage == nil) {
+		return;
+	}
+
+	[self send:@"AWAY", awayMessage, nil];
 }
 
 - (void)pauseCapabilityNegotiation
@@ -9014,6 +9185,135 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	[self sendPong:token];
 
 	[self postReceivedMessage:m];
+}
+
+/* Shared by RPL_WHOREPLY and RPL_WHOSPCRPL. Only WHOX carries an
+ account, so the account is left alone unless updateAccount is set. */
+- (void)receiveWhoReplyInChannel:(IRCChannel *)channel
+						nickname:(NSString *)nickname
+						username:(NSString *)username
+						 address:(NSString *)address
+						   flags:(NSString *)flags
+						realName:(NSString *)realName
+						 account:(nullable NSString *)account
+				   updateAccount:(BOOL)updateAccount
+{
+	NSParameterAssert(channel != nil);
+	NSParameterAssert(nickname != nil);
+	NSParameterAssert(flags != nil);
+
+	BOOL isAway = NO;
+	BOOL isIRCop = NO;
+	BOOL isBot = NO;
+
+	/* Servers that advertise a BOT user mode flag bots with "B" in WHO. */
+	BOOL botFlagSupported = (self.supportInfo.botModeSymbol != nil);
+
+	// Field Syntax: <H|G>[*][B][@|+]
+	// Strip G or H (away status).
+	NSMutableString *userModes = [NSMutableString string];
+
+	for (NSUInteger i = 0; i < flags.length; i++) {
+		NSString *character = [flags stringCharacterAtIndex:i];
+
+		if ([character isEqualToString:@"G"]) {
+			isAway = self.monitorAwayStatus;
+
+			continue;
+		} else if ([character isEqualToString:@"*"]) {
+			isIRCop = YES;
+
+			continue;
+		} else if (botFlagSupported && [character isEqualToString:@"B"]) {
+			isBot = YES;
+
+			continue;
+		}
+
+		NSString *modeSymbol = [self.supportInfo modeSymbolForUserPrefix:character];
+
+		if (modeSymbol == nil) {
+			continue;
+		}
+
+		[userModes appendString:modeSymbol];
+	}
+
+	/* Find global user and create mutable copy */
+	IRCUser *user = [self findUser:nickname];
+
+	IRCUserMutable *userMutable = nil;
+
+	if (user == nil) {
+		userMutable = [[IRCUserMutable alloc] initWithNickname:nickname onClient:self];
+	} else {
+		userMutable = [user mutableCopy];
+	}
+
+	userMutable.nickname = nickname;
+	userMutable.username = username;
+	userMutable.address = address;
+
+	userMutable.isAway = isAway;
+	userMutable.isIRCop = isIRCop;
+
+	if (botFlagSupported) {
+		userMutable.isBot = isBot;
+	}
+
+	userMutable.realName = realName;
+
+	if (updateAccount) {
+		userMutable.account = account;
+	}
+
+	/* Insert the user into the client and return the final copy that was */
+	BOOL userChanged = (user != nil && [user isEqual:userMutable] == NO);
+
+	IRCUser *userAdded = nil;
+
+	if (user == nil || userChanged) {
+		userAdded = [self addUserAndReturn:userMutable];
+	} else {
+		userAdded = user;
+	}
+
+	/* Find the user associated with this channel  */
+	IRCChannelUser *member = [user userAssociatedWithChannel:channel];
+
+	if (member == nil) {
+		IRCChannelUserMutable *memberMutable = [[IRCChannelUserMutable alloc] initWithUser:userAdded];
+
+		memberMutable.modes = userModes;
+
+		[channel addMember:memberMutable];
+	} else if (userChanged) {
+		/* Determine whether the users were modified in such a way that
+			 they require their cell in the user list be resorted. */
+		/* We do not want to resort unless absolutely necessary because
+			 sorting a channel with a few hundred users has overhead. */
+		BOOL IRCopStatusChanged = (user.isIRCop != userAdded.isIRCop);
+
+		BOOL resortMember = IRCopStatusChanged;
+
+		BOOL replaceInAllChannels = (IRCopStatusChanged && [TPCPreferences memberListSortFavorsServerStaff]);
+
+		if (resortMember) {
+			[channel replaceMember:member
+						  withMember:member
+							  resort:resortMember
+				replaceInAllChannels:replaceInAllChannels];
+		} else if (user.isAway != userAdded.isAway) {
+			[mainWindow() updateDrawingForUserInUserList:userAdded];
+		}
+	}
+
+	/* Update local cache of our hostmask */
+	if ([self nicknameIsMyself:nickname]) {
+		NSString *hostmask = [NSString stringWithFormat:@"%@!%@@%@", nickname, username, address];
+
+		self.userHostmask = hostmask;
+	}
 }
 
 - (void)receiveAwayNotifyCapability:(IRCMessage *)m
@@ -9885,48 +10185,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 				#freenode ~D unaffiliated/solprefixer kornbluth.freenode.net solprefixer H 0 solprefixer
 			*/
 
-		NSString *nickname = [m paramAt:5];
-		NSString *username = [m paramAt:2];
-		NSString *address = [m paramAt:3];
-		NSString *flags = [m paramAt:6];
 		NSString *realName = [m paramAt:7];
-
-		BOOL isAway = NO;
-		BOOL isIRCop = NO;
-		BOOL isBot = NO;
-
-		/* Servers that advertise a BOT user mode flag bots with "B" in WHO. */
-		BOOL botFlagSupported = (self.supportInfo.botModeSymbol != nil);
-
-		// Field Syntax: <H|G>[*][B][@|+]
-		// Strip G or H (away status).
-		NSMutableString *userModes = [NSMutableString string];
-
-		for (NSUInteger i = 0; i < flags.length; i++) {
-			NSString *character = [flags stringCharacterAtIndex:i];
-
-			if ([character isEqualToString:@"G"]) {
-				isAway = self.monitorAwayStatus;
-
-				continue;
-			} else if ([character isEqualToString:@"*"]) {
-				isIRCop = YES;
-
-				continue;
-			} else if (botFlagSupported && [character isEqualToString:@"B"]) {
-				isBot = YES;
-
-				continue;
-			}
-
-			NSString *modeSymbol = [self.supportInfo modeSymbolForUserPrefix:character];
-
-			if (modeSymbol == nil) {
-				continue;
-			}
-
-			[userModes appendString:modeSymbol];
-		}
 
 		/* Parameter 7 includes the hop count and real name because it begins with a :
 			 Therefore, we cut after the first space to get the real, real name value. */
@@ -9936,77 +10195,53 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 			realName = [realName substringAfterIndex:realNameFirstSpace];
 		}
 
-		/* Find global user and create mutable copy */
-		IRCUser *user = [self findUser:nickname];
+		[self receiveWhoReplyInChannel:channel
+							  nickname:[m paramAt:5]
+							  username:[m paramAt:2]
+							   address:[m paramAt:3]
+								 flags:[m paramAt:6]
+							  realName:realName
+							   account:nil
+						 updateAccount:NO];
 
-		IRCUserMutable *userMutable = nil;
+		break;
+	}
+	case RPL_WHOSPCRPL: {
+		/* WHOX reply to the fields requested by -sendWhoToChannelNamed:
+				<token> <channel> <user> <host> <nick> <flags> <account> :<real name>
+		   Replies to other tokens were not asked for by us. */
+		NSAssertReturn([m paramsCount] >= 9);
 
-		if (user == nil) {
-			userMutable = [[IRCUserMutable alloc] initWithNickname:nickname onClient:self];
-		} else {
-			userMutable = [user mutableCopy];
-		}
-
-		userMutable.nickname = nickname;
-		userMutable.username = username;
-		userMutable.address = address;
-
-		userMutable.isAway = isAway;
-		userMutable.isIRCop = isIRCop;
-
-		if (botFlagSupported) {
-			userMutable.isBot = isBot;
-		}
-
-		userMutable.realName = realName;
-
-		/* Insert the user into the client and return the final copy that was */
-		BOOL userChanged = (user != nil && [user isEqual:userMutable] == NO);
-
-		IRCUser *userAdded = nil;
-
-		if (user == nil || userChanged) {
-			userAdded = [self addUserAndReturn:userMutable];
-		} else {
-			userAdded = user;
-		}
-
-		/* Find the user associated with this channel  */
-		IRCChannelUser *member = [user userAssociatedWithChannel:channel];
-
-		if (member == nil) {
-			IRCChannelUserMutable *memberMutable = [[IRCChannelUserMutable alloc] initWithUser:userAdded];
-
-			memberMutable.modes = userModes;
-
-			[channel addMember:memberMutable];
-		} else if (userChanged) {
-			/* Determine whether the users were modified in such a way that
-				 they require their cell in the user list be resorted. */
-			/* We do not want to resort unless absolutely necessary because
-				 sorting a channel with a few hundred users has overhead. */
-			BOOL IRCopStatusChanged = (user.isIRCop != userAdded.isIRCop);
-
-			BOOL resortMember = IRCopStatusChanged;
-
-			BOOL replaceInAllChannels = (IRCopStatusChanged && [TPCPreferences memberListSortFavorsServerStaff]);
-
-			if (resortMember) {
-				[channel replaceMember:member
-							  withMember:member
-								  resort:resortMember
-					replaceInAllChannels:replaceInAllChannels];
-			} else if (user.isAway != userAdded.isAway) {
-				[mainWindow() updateDrawingForUserInUserList:userAdded];
+		if ([[m paramAt:1] isEqualToString:IRCClientWhoxToken] == NO) {
+			if (printMessage) {
+				[self printReplyToHiddenCommandResponsesQuery:m];
 			}
+
+			break;
 		}
 
-		/* Update local cache of our hostmask */
-		if ([self nicknameIsMyself:nickname]) {
-			NSString *hostmask = [NSString stringWithFormat:@"%@!%@@%@", nickname, username, address];
+		if (self.requestedCommands.visibleWhoRequest) {
+			if (printMessage) {
+				[self printReplyToHiddenCommandResponsesQuery:m];
+			}
 
-			self.userHostmask = hostmask;
+			break;
 		}
+
+		IRCChannel *channel = [self findChannel:[m paramAt:2]];
+
+		if (channel == nil) {
+			break;
+		}
+
+		[self receiveWhoReplyInChannel:channel
+							  nickname:[m paramAt:5]
+							  username:[m paramAt:3]
+							   address:[m paramAt:4]
+								 flags:[m paramAt:6]
+							  realName:[m paramAt:8]
+							   account:[self.class accountFromWireValue:[m paramAt:7]]
+						 updateAccount:YES];
 
 		break;
 	}
@@ -12362,6 +12597,16 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		[self.requestedCommands recordWhoRequestOpened];
 	}
 
+	/* WHOX adds the account to each reply. The token lets
+	 RPL_WHOSPCRPL tell our requests apart from the user's own. */
+	if (self.supportInfo.whoxSupported) {
+		NSString *fields = [NSString stringWithFormat:@"%%tcuhnfar,%@", IRCClientWhoxToken];
+
+		[self send:@"WHO", channel, fields, nil];
+
+		return;
+	}
+
 	[self send:@"WHO", channel, nil];
 }
 
@@ -12435,6 +12680,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	} else {
 		[self send:@"AWAY", nil];
 	}
+
+	self.lastAwayMessage = (setAway ? comment : nil);
 
 	NSString *newNickname = nil;
 

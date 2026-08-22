@@ -137,6 +137,11 @@ NS_ASSUME_NONNULL_BEGIN
 			[accessibilityDescription stringByAppendingFormat:@", %@", TXTLS(@"TVCMainWindow[b0t-ac]")];
 	}
 
+	if (cellItem.user.account.length > 0) {
+		accessibilityDescription = [accessibilityDescription
+			stringByAppendingFormat:@", %@", TXTLS(@"TVCMainWindow[acc-in]", cellItem.user.account)];
+	}
+
 	NSTextFieldCell *textFieldCell = textField.cell;
 
 	textFieldCell.accessibilityValueDescription = accessibilityDescription;
@@ -414,6 +419,16 @@ static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 
 	/* =============================================== */
 
+	NSString *account = cellItem.user.account;
+
+	if (account.length == 0) {
+		userInfoPopover.accountField.stringValue = TXTLS(@"TVCMainWindow[acc-nl]");
+	} else {
+		userInfoPopover.accountField.stringValue = account;
+	}
+
+	/* =============================================== */
+
 	if (cellItem.user.isAway) {
 		userInfoPopover.awayStatusField.stringValue = TXTLS(@"TVCMainWindow[jkr-ed]");
 	} else {
@@ -422,7 +437,13 @@ static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 
 	/* =============================================== */
 
-	userInfoPopover.privilegesField.stringValue = [self.class privilegesDescriptionForUser:cellItem];
+	NSString *privileges = [self.class privilegesDescriptionForUser:cellItem];
+
+	if (cellItem.user.isBot) {
+		privileges = [NSString stringWithFormat:@"%@ (%@)", privileges, TXTLS(@"TVCMainWindow[b0t-lb]")];
+	}
+
+	userInfoPopover.privilegesField.stringValue = privileges;
 
 	/* =============================================== */
 

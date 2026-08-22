@@ -88,6 +88,11 @@ NS_ASSUME_NONNULL_BEGIN
 	return client;
 }
 
+- (void)markAsLoggedIn
+{
+	[self setValue:@YES forKey:@"isLoggedIn"];
+}
+
 - (void)sendCapability:(NSString *)subcommand data:(nullable NSString *)data
 {
 	if (data) {

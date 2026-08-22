@@ -133,6 +133,8 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Order here is the order of CAP REQ. Dependencies are listed
 	 before the capabilities that depend on them. */
 	return @[
+		[IRCCapability capabilityNamed:@"account-notify" identifier:ClientIRCv3SupportedCapabilityAccountNotify],
+		[IRCCapability capabilityNamed:@"account-tag" identifier:ClientIRCv3SupportedCapabilityAccountTag],
 		[IRCCapability capabilityNamed:@"cap-notify" identifier:ClientIRCv3SupportedCapabilityCapNotify],
 		[IRCCapability capabilityNamed:@"message-tags" identifier:ClientIRCv3SupportedCapabilityMessageTags],
 		[IRCCapability capabilityNamed:@"away-notify" identifier:ClientIRCv3SupportedCapabilityAwayNotify],
@@ -144,7 +146,11 @@ NS_ASSUME_NONNULL_BEGIN
 							 preferenceGate:echoMessageGate
 							   dependencies:nil
 							negotiationHook:nil],
+		[IRCCapability capabilityNamed:@"extended-join" identifier:ClientIRCv3SupportedCapabilityExtendedJoin],
+		[IRCCapability capabilityNamed:@"extended-monitor" identifier:ClientIRCv3SupportedCapabilityExtendedMonitor],
+		[IRCCapability capabilityNamed:@"invite-notify" identifier:ClientIRCv3SupportedCapabilityInviteNotify],
 		[IRCCapability capabilityNamed:@"multi-prefix" identifier:ClientIRCv3SupportedCapabilityMultiPrefix],
+		[IRCCapability capabilityNamed:@"pre-away" identifier:ClientIRCv3SupportedCapabilityPreAway],
 		[[IRCCapability alloc] initWithName:@"sasl"
 								 identifier:ClientIRCv3SupportedCapabilitySASLGeneric
 						 requestedByDefault:YES
@@ -152,6 +158,7 @@ NS_ASSUME_NONNULL_BEGIN
 							   dependencies:nil
 							negotiationHook:saslHook],
 		[IRCCapability capabilityNamed:@"server-time" identifier:ClientIRCv3SupportedCapabilityServerTime],
+		[IRCCapability capabilityNamed:@"setname" identifier:ClientIRCv3SupportedCapabilitySetName],
 		[IRCCapability capabilityNamed:@"standard-replies" identifier:ClientIRCv3SupportedCapabilityStandardReplies],
 		[IRCCapability capabilityNamed:@"userhost-in-names" identifier:ClientIRCv3SupportedCapabilityUserhostInNames],
 		[IRCCapability

@@ -659,6 +659,15 @@
 		<key>arguments</key>
 		<string>&lt;nickname&gt;</string>
 	</dict>
+	<key>setname</key>
+	<dict>
+		<key>developerModeOnly</key>
+		<false/>
+		<key>indexValue</key>
+		<integer>5130</integer>
+		<key>arguments</key>
+		<string>&lt;real name&gt;</string>
+	</dict>
 	<key>setqueryname</key>
 	<dict>
 		<key>developerModeOnly</key>

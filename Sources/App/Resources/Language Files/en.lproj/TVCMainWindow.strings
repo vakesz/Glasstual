@@ -46,6 +46,8 @@
 "b0t-ac" = "User is a bot";
 "b0t-lb" = "bot"; // Member list caption shown after a bot's nickname
 "gi6-wf" = "User is not away";
+"acc-nl" = "Not logged in";
+"acc-in" = "Logged in as %@";
 
 "d85-9n" = "Information Not Available";
 
