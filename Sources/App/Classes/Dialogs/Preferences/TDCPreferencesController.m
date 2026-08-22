@@ -268,6 +268,7 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 - (IBAction)onFileTransferIPAddressDetectionMethodChanged:(nullable id)sender;
 - (IBAction)onModifyUserStyleSheetRules:(nullable id)sender;
 - (IBAction)onOpenPathToScripts:(nullable id)sender;
+- (IBAction)onResetPluginApprovals:(nullable id)sender;
 - (IBAction)onOpenPathToTheme:(nullable id)sender; // changed
 - (IBAction)onResetServerListUnreadBadgeColorsToDefault:(nullable id)sender;
 - (IBAction)onResetUserListModeColorsToDefaults:(nullable id)sender;
@@ -2202,6 +2203,18 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 - (void)onOpenPathToScripts:(nullable id)sender
 {
 	[RZWorkspace() openURL:[TPCPathInfo groupContainerApplicationSupportURL]];
+}
+
+- (void)onResetPluginApprovals:(nullable id)sender
+{
+	[THOPluginManager resetApprovals];
+
+	[TDCAlert alertSheetWithWindow:self.window
+							  body:TXTLS(@"Prompts[h7m-2q]")
+							 title:TXTLS(@"Prompts[zp3-7r]")
+					 defaultButton:TXTLS(@"Prompts[u5k-9n]")
+				   alternateButton:nil
+					   otherButton:nil];
 }
 
 - (void)openPathToThemesCallback:(TDCAlertResponse)returnCode withOriginalAlert:(NSAlert *)originalAlert

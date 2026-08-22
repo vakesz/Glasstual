@@ -89,6 +89,26 @@ If you are the developer of one of these addons: In the Info.plist file of your 
 "324-5d" = "Remind Me Next Launch";
 "0ik-o9" = "View Files";
 
+"pq7-2k" = "Load the plugin “%@”?";
+"b4n-8z" = "The plugin “%1$@” has not been loaded before.
+
+Bundle identifier: %2$@
+Team ID: %3$@
+Location: %4$@
+
+Plugins run with the same access as Glasstual itself. Only load plugins from developers you trust. This choice is remembered until the plugin is signed by a different Team ID or the approvals are reset in Settings > Addons.";
+"w2d-5h" = "Load";
+"r9x-3m" = "Don’t Load";
+
+"j6c-1v" = "Glasstual refused to load these addons: %@";
+"t8y-4p" = "Plugins installed outside of Glasstual must be signed with a valid Developer ID or Apple-issued certificate. The listed addons are unsigned, ad-hoc signed, or their signature is damaged, so they were not loaded.
+
+Contact the developer of each addon for a signed copy.";
+"u5k-9n" = "OK";
+
+"zp3-7r" = "Plugin approvals have been reset";
+"h7m-2q" = "Glasstual will ask again before loading each plugin the next time it launches.";
+
 "2ul-cl" = "You have clicked on a link that will open the application “%@”";
 "5oq-vv" = "Are you sure you want to open “%@” with this application?";
 
@@ -157,6 +177,10 @@ Create this folder if it does not exist.";
 "iun-45" = "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@“
 
 Information encrypted using: %2$@";
+
+"k3t-vq" = "
+
+The certificate was not trusted by the system: %@";
 
 "2jq-t5" = "%1$@ with the cipher suite: %2$@";
 "8ou-pu" = "%1$@ with the cipher suite: %2$@ (deprecated)";

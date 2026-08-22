@@ -78,6 +78,10 @@ class ConnectionSocket: @unchecked Sendable {
 
 	var alternateDisconnectError: ConnectionError?
 
+	/// Why the system did not trust the server's certificate chain.
+	/// nil when the chain was trusted or has not been evaluated yet.
+	var tlsTrustFailureDescription: String?
+
 	final let torProxyTypeAddress = "127.0.0.1"
 	final let torProxyTypePort: UInt16 = 9150
 
@@ -111,19 +115,36 @@ class ConnectionSocket: @unchecked Sendable {
 	}
 
 	func tlsVerify(_ trust: SecTrust, response: @escaping RCMTrustResponse) {
-		if config.connectionShouldValidateCertificateChain == false {
-			response(true)
-
-			return
-		}
-
 		var error: CFError?
 
+		/* The evaluation always runs, even when the connection is configured
+		 to ignore certificate errors, so that the failure reason can be
+		 logged and reported to the client. */
 		if SecTrustEvaluateWithError(trust, &error) {
+			tlsTrustFailureDescription = nil
+
 			response(true)
 
 			return
 		}
+
+		let failureDescription = (error as Error?)?.localizedDescription ?? "Unknown error"
+
+		tlsTrustFailureDescription = failureDescription
+
+		if config.connectionShouldValidateCertificateChain == false {
+			RCMLog.connection.error(
+				"Certificate chain for '\(self.config.serverAddress, privacy: .public)' failed validation but the connection is configured to ignore that: \(failureDescription, privacy: .public)"
+			)
+
+			response(true)
+
+			return
+		}
+
+		RCMLog.connection.error(
+			"Certificate chain for '\(self.config.serverAddress, privacy: .public)' failed validation: \(failureDescription, privacy: .public)"
+		)
 
 		var evaluationResult: SecTrustResultType = .invalid
 
@@ -297,6 +318,6 @@ extension ConnectionSocketProtocol where Self: ConnectionSocket {
 
 		let certificateChain = tlsCertificateChainData ?? []
 
-		receiver(policyName, protocolType, cipherSuite, certificateChain)
+		receiver(policyName, protocolType, cipherSuite, certificateChain, tlsTrustFailureDescription)
 	}
 }

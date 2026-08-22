@@ -284,5 +284,7 @@
 	<false/>
 	<key>WebViewProcessPoolSizeIsLimited</key>
 	<true/>
+	<key>Plugin Approvals</key>
+	<dict/>
 </dict>
 </plist>
