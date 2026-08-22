@@ -7,7 +7,7 @@ DESTINATION  := platform=macOS,arch=arm64
 DERIVED_DATA ?= DerivedData
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA)
 
-.PHONY: help setup generate build release archive run test lint format format-check clean
+.PHONY: help setup generate build release archive run test lint format format-check compile-commands clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -32,6 +32,10 @@ archive: generate ## Create a Release archive in build/
 run: build ## Build and launch the Debug app
 	open "$(DERIVED_DATA)/Build/Products/$(CONFIG)/Glasstual.app"
 
+test: generate ## Run the unit tests (GlasstualTests) inside the Debug app
+	./Scripts/UpdateVersion.sh
+	$(XCODEBUILD) -configuration Debug test
+
 lint: ## Run shellcheck, actionlint, plist/xib validation and format checks
 	./Scripts/lint.sh
 
@@ -41,5 +45,9 @@ format: ## Format Objective-C, Swift and shell sources in place
 format-check: ## Verify formatting without changing files
 	./Scripts/format.sh --check
 
+compile-commands: generate ## Write compile_commands.json for clangd
+	./Scripts/UpdateVersion.sh
+	DERIVED_DATA=$(DERIVED_DATA) ./Scripts/compile-commands.sh
+
 clean: ## Remove build products and generated files
-	rm -rf $(DERIVED_DATA) build "Build Results" .tmp Configurations/Version.generated.xcconfig
+	rm -rf $(DERIVED_DATA) build "Build Results" .tmp Configurations/Version.generated.xcconfig compile_commands.json

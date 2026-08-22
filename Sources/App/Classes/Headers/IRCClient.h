@@ -62,23 +62,27 @@ typedef NS_ENUM(NSUInteger, IRCClientDisconnectMode) {
 	IRCClientDisconnectModeServerRedirect
 };
 
+/* Identifiers for capabilities. Each value is an opaque bit that the
+ capability registry (IRCCapability.h) maps to one or more wire names.
+ Use -isCapabilityEnabled: to query them. */
 typedef NS_OPTIONS(NSUInteger, ClientIRCv3SupportedCapability) {
 	ClientIRCv3SupportedCapabilityAwayNotify = 1 << 0,			 // YES if away-notify CAP supported
 	ClientIRCv3SupportedCapabilityBatch = 1 << 1,				 // YES if batch CAP supported
 	ClientIRCv3SupportedCapabilityEchoMessage = 1 << 2,			 // YES if echo-message CAP supported
-	ClientIRCv3SupportedCapabilityIdentifyCTCP = 1 << 3,		 // YES if identify-ctcp CAP supported
-	ClientIRCv3SupportedCapabilityIdentifyMsg = 1 << 4,			 // YES if identify-msg CAP supported
 	ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL = 1 << 5, // YES if SASL authentication was successful
 	ClientIRCv3SupportedCapabilityIsInSASLNegotiation = 1 << 6,	 // YES if in SASL CAP authentication request
 	ClientIRCv3SupportedCapabilityMonitorCommand = 1 << 7,		 // YES if the MONITOR command is supported
 	ClientIRCv3SupportedCapabilityMultiPrefix = 1 << 8,			 // YES if multi-prefix CAP supported
-	ClientIRCv3SupportedCapabilityPlayback = 1 << 9,			 // Special CAP which is subject to change
-	ClientIRCv3SupportedCapabilityServerTime = 1 << 10,			 // YES if server-time CAP supported
-	ClientIRCv3SupportedCapabilityUserhostInNames = 1 << 11,	 // YES if userhost-in-names CAP supported
-	ClientIRCv3SupportedCapabilityWatchCommand = 1 << 12,		 // YES if the WATCH command is supported
-	ClientIRCv3SupportedCapabilityZNCCertInfoModule = 1 << 13,	 // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCSelfMessage = 1 << 14,		 // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityChangeHost = 1 << 15			 // YES if the CHGHOST CAP supported
+	ClientIRCv3SupportedCapabilityPlayback = 1 << 9,			 // YES if a playback CAP (znc.in/playback) is supported
+	ClientIRCv3SupportedCapabilityServerTime = 1 << 10,		   // YES if server-time CAP (or a vendor variant) supported
+	ClientIRCv3SupportedCapabilityUserhostInNames = 1 << 11,   // YES if userhost-in-names CAP supported
+	ClientIRCv3SupportedCapabilityWatchCommand = 1 << 12,	   // YES if the WATCH command is supported
+	ClientIRCv3SupportedCapabilityZNCCertInfoModule = 1 << 13, // YES if the ZNC vendor specific CAP supported
+	ClientIRCv3SupportedCapabilityZNCSelfMessage = 1 << 14,	   // YES if the ZNC vendor specific CAP supported
+	ClientIRCv3SupportedCapabilityChangeHost = 1 << 15,		   // YES if the CHGHOST CAP supported
+	ClientIRCv3SupportedCapabilityMessageTags = 1 << 16,	   // YES if message-tags CAP supported
+	ClientIRCv3SupportedCapabilityCapNotify = 1 << 17,		   // YES if cap-notify CAP supported
+	ClientIRCv3SupportedCapabilityStandardReplies = 1 << 18	   // YES if standard-replies CAP supported
 };
 
 GLASSTUAL_EXTERN NSNotificationName const IRCClientConfigurationWasUpdatedNotification;
@@ -147,8 +151,8 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 
 - (void)cancelReconnect;
 
-@property(readonly) ClientIRCv3SupportedCapability capacities;
-@property(readonly, copy) NSString *enabledCapacitiesStringValue;
+@property(readonly) ClientIRCv3SupportedCapability capabilities;
+@property(readonly, copy) NSString *enabledCapabilitiesStringValue;
 
 - (BOOL)isCapabilitySupported:(NSString *)capabilityString;
 
@@ -212,6 +216,17 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 - (void)sendTopicTo:(nullable NSString *)topic inChannelNamed:(NSString *)channel;
 
 - (void)sendCapability:(NSString *)subcommand data:(nullable NSString *)data;
+
+/* Sends a command with IRCv3 message tags. Tags are dropped when the
+ server did not negotiate message-tags. */
+- (void)sendCommand:(NSString *)command
+		  arguments:(NSArray<NSString *> *)arguments
+			   tags:(nullable NSDictionary<NSString *, NSString *> *)tags;
+
+/* Sends TAGMSG to target carrying only tags (for example
+ @{ @"+typing" : @"active" }). Returns NO, and sends nothing, when
+ message-tags is not enabled or there is nothing to send. */
+- (BOOL)sendTagMessage:(NSDictionary<NSString *, NSString *> *)tags toTarget:(NSString *)target;
 
 - (void)sendIsonForNicknames:(NSArray<NSString *> *)nicknames;
 

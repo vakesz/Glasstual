@@ -142,6 +142,25 @@ Glasstual.appearanceDidChange					= function(changedTo) {};
     added to the settings.plist file in order to enable use of this callback. */
 Glasstual.handleEvent                            = function(eventToken) {};
 
+/*
+    tagMessageReceived() is called when a TAGMSG carrying client-only
+    tags (IRCv3 message-tags) arrives for the view. The argument is an
+    object with the following keys:
+
+    sender     - Nickname that sent the message
+    target     - Channel or nickname the message was sent to
+    tags       - Object of client-only tags without their "+" prefix,
+                 for example { "typing" : "active" } or
+                 { "draft/reply" : "<msgid>", "draft/react" : "👍" }
+    timestamp  - Unix timestamp of the message
+    msgid      - Message identifier (only present when the server sent one)
+    account    - Account name of the sender (only present when the server sent one)
+
+    Glasstual does not display these messages itself. This callback is
+    always invoked; no settings.plist entry is required.
+*/
+Glasstual.tagMessageReceived                     = function(event) {};
+
 /* *********************************************************************** */
 /*						Application Object								   */
 /* *********************************************************************** */

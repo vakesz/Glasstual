@@ -21,7 +21,7 @@ options:
   defaultConfig: Debug
   transitivelyLinkDependencies: false
   groupOrdering:
-    - order: [Sources, XPC Services, Frameworks, Configurations, Scripts]
+    - order: [Sources, Tests, XPC Services, Frameworks, Configurations, Scripts]
 
 configs:
   Debug: debug
@@ -588,7 +588,7 @@ targets:
       - path: Sources/App/Resources/User Interface
         excludes:
           - "Appearance/*Template.plist"
-      - path: Acknowledgements.pdf
+      - path: Documentation/Acknowledgements.pdf
         buildPhase:
           copyFiles:
             destination: resources
@@ -659,6 +659,37 @@ targets:
           destination: resources
           subpath: Bundled Extensions
 
+  # ---- Tests --------------------------------------------------------------
+
+  # Unit tests run inside Glasstual.app so that they can use the app's
+  # classes directly. Tests never touch the network.
+  GlasstualTests:
+    templates: [GlasstualTarget]
+    type: bundle.unit-test
+    productName: GlasstualTests
+    settings:
+      base:
+        PRODUCT_NAME: GlasstualTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.tests
+        GENERATE_INFOPLIST_FILE: YES
+        GCC_PREFIX_HEADER: Sources/App/Classes/Headers/Private/GlasstualPrivate.h
+        HEADER_SEARCH_PATHS:
+          - $(inherited)
+          - "$(SRCROOT)/Sources/App/Classes/Headers/**"
+          - "$(SRCROOT)/Sources/Shared/Headers/**"
+        FRAMEWORK_SEARCH_PATHS:
+          - $(inherited)
+          - '"$(SRCROOT)/Frameworks/Static Libraries/Libraries"'
+        # Sandboxed hosts require the injected bundle to share the host's
+        # entitlements.
+        CODE_SIGN_ENTITLEMENTS: Configurations/Sandbox/Inherited.entitlements
+    sources:
+      - path: Tests/GlasstualTests
+    dependencies:
+      - target: Glasstual
+      - target: CocoaExtensions
+        embed: false
+
 # ---------------------------------------------------------------------------
 # Schemes
 # ---------------------------------------------------------------------------
@@ -679,6 +710,8 @@ schemes:
       config: Debug
     test:
       config: Debug
+      targets:
+        - GlasstualTests
     profile:
       config: Debug
     analyze:

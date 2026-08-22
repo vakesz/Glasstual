@@ -57,6 +57,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, copy, nullable) NSString *batchToken;
 @property(readonly, copy, nullable) NSDictionary<NSString *, NSString *>
 	*messageTags; /* IRCv3 message tags. See ircv3.net for more information regarding extensions in the IRC protocol. */
+@property(readonly, copy, nullable) NSString *messageIdentifier; /* The msgid= tag, when the server sent one. */
+@property(readonly, copy, nullable)
+	NSString *senderAccount; /* The account= tag: the services account of the sender, when the server sent one. */
 
 - (nullable instancetype)initWithLine:(NSString *)line;
 - (nullable instancetype)initWithLine:(NSString *)line onClient:(nullable IRCClient *)client NS_DESIGNATED_INITIALIZER;
@@ -90,6 +93,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) BOOL isPrintOnlyMessage;
 @property(nonatomic, copy, readwrite, nullable) NSString *batchToken;
 @property(nonatomic, copy, readwrite, nullable) NSDictionary<NSString *, NSString *> *messageTags;
+@property(nonatomic, copy, readwrite, nullable) NSString *messageIdentifier;
+@property(nonatomic, copy, readwrite, nullable) NSString *senderAccount;
 @end
 
 NS_ASSUME_NONNULL_END

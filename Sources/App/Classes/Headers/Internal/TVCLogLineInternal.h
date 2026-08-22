@@ -51,6 +51,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSDate *_receivedAt;
 	NSString *_command;
 	NSString *_messageBody;
+	NSString *_messageIdentifier;
 	NSString *_nickname;
 	NSString *_nicknameColorStyle;
 	TVCLogLineMemberType _memberType;

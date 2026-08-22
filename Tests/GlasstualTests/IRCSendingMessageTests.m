@@ -5,6 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
@@ -35,34 +36,71 @@
  *
  *********************************************************************** */
 
-#import "IRCMessagePrivate.h"
+#import <XCTest/XCTest.h>
+
+#import "IRCMessage.h"
+#import "IRCSendingMessage.h"
+#import "NSStringHelper.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCMessage ()
-{
-  @protected
-	BOOL _isHistoric;
-	BOOL _isEventOnlyMessage;
-	BOOL _isPrintOnlyMessage;
-	IRCPrefix *_sender;
-	NSArray<NSString *> *_params;
-	NSDate *_receivedAt;
-	NSDictionary<NSString *, NSString *> *_messageTags;
-	NSString *_batchToken;
-	NSString *_command;
-	NSString *_messageIdentifier;
-	NSString *_senderAccount;
-	NSUInteger _commandNumeric;
-	IRCMessageBatchMessage *_parentBatchMessage;
-}
-
+@interface IRCSendingMessageTests : XCTestCase
 @end
 
-@interface IRCMessage (IRCMessageLineParser)
-- (BOOL)parseLine:(NSString *)line forClient:(nullable IRCClient *)client;
-- (void)parseExtensions:(NSString *)extensionInfo forClient:(nullable IRCClient *)client;
-- (void)parseSender:(NSString *)senderInfo forClient:(nullable IRCClient *)client;
+@implementation IRCSendingMessageTests
+
+- (void)testCommandWithoutTagsIsUnchanged
+{
+	NSString *line = [IRCSendingMessage stringWithCommand:@"privmsg" arguments:@[ @"#c", @"hello world" ] tags:nil];
+
+	XCTAssertEqualObjects(line, @"PRIVMSG #c :hello world");
+
+	NSString *lineWithEmptyTags = [IRCSendingMessage stringWithCommand:@"PRIVMSG" arguments:@[ @"#c", @"hi" ] tags:@{}];
+
+	XCTAssertEqualObjects(lineWithEmptyTags, @"PRIVMSG #c :hi");
+}
+
+- (void)testTagsAreSerializedSortedAndEscaped
+{
+	NSDictionary *tags = @{@"+typing" : @"active", @"+draft/reply" : @"a b;c\\d\r\n", @"flag" : @""};
+
+	XCTAssertEqualObjects([IRCSendingMessage stringWithMessageTags:tags],
+						  @"+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag");
+
+	NSString *line = [IRCSendingMessage stringWithCommand:@"TAGMSG" arguments:@[ @"#c" ] tags:tags];
+
+	XCTAssertEqualObjects(line, @"@+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag TAGMSG #c");
+}
+
+- (void)testTagEscapingRoundTrips
+{
+	NSDictionary *tags = @{
+		@"a" : @"plain",
+		@"b" : @"semi;colon",
+		@"c" : @"with space",
+		@"d" : @"back\\slash",
+		@"e" : @"line\r\nbreak",
+		@"f" : @"trailing\\",
+		@"g" : @"unicode ✓",
+		@"h" : @"",
+	};
+
+	NSString *line = [IRCSendingMessage stringWithCommand:@"TAGMSG" arguments:@[ @"#c" ] tags:tags];
+
+	IRCMessage *message = [[IRCMessage alloc] initWithLine:line];
+
+	XCTAssertNotNil(message);
+	XCTAssertEqualObjects(message.command, @"TAGMSG");
+	XCTAssertEqualObjects(message.messageTags, tags);
+}
+
+- (void)testEncodeDecodeHelpersRoundTripEveryEscape
+{
+	NSString *value = @"a;b \r\n\\s\\:end\\";
+
+	XCTAssertEqualObjects(value.encodedMessageTagString.decodedMessageTagString, value);
+}
+
 @end
 
 NS_ASSUME_NONNULL_END

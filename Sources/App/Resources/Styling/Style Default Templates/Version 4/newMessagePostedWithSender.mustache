@@ -16,6 +16,10 @@
 	data-highlight="{{highlightAttribute}}"
 	data-line-type="{{lineType}}"
 
+{{^ isEmpty(messageIdentifier) }}
+	data-msgid="{{messageIdentifier}}"
+{{/ isEmpty(messageIdentifier) }}
+
 {{^isRemoteMessage}}
 	data-member-type="{{nicknameType}}"
 {{/isRemoteMessage}}

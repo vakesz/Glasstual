@@ -1380,6 +1380,12 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	templateAttributes[@"command"] = logLine.command;
 	templateAttributes[@"rawCommand"] = logLine.command; // Legacy key
 
+	NSString *messageIdentifier = logLine.messageIdentifier;
+
+	if (messageIdentifier.length > 0) {
+		templateAttributes[@"messageIdentifier"] = messageIdentifier;
+	}
+
 	// ---- //
 
 	NSString *classAttribute = nil;

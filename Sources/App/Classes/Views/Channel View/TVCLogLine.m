@@ -144,6 +144,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	self->_command = [aDecoder decodeStringForKey:@"command"];
 	self->_messageBody = [aDecoder decodeStringForKey:@"messageBody"];
+	self->_messageIdentifier = [aDecoder decodeStringForKey:@"messageIdentifier"];
 	self->_nickname = [aDecoder decodeStringForKey:@"nickname"];
 
 	self->_lineType = [aDecoder decodeIntegerForKey:@"lineType"];
@@ -206,6 +207,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	[aCoder maybeEncodeObject:self.excludeKeywords forKey:@"excludeKeywords"];
 	[aCoder maybeEncodeObject:self.highlightKeywords forKey:@"highlightKeywords"];
 	[aCoder maybeEncodeObject:self.rendererAttributes forKey:@"rendererAttributes"];
+	[aCoder maybeEncodeObject:self.messageIdentifier forKey:@"messageIdentifier"];
 	[aCoder maybeEncodeObject:self.nickname forKey:@"nickname"];
 
 	[aCoder encodeBool:self.isEncrypted forKey:@"isEncrypted"];
@@ -431,6 +433,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	object->_command = self->_command;
 	object->_messageBody = self->_messageBody;
+	object->_messageIdentifier = self->_messageIdentifier;
 	object->_nickname = self->_nickname;
 	object->_nicknameColorStyle = self->_nicknameColorStyle;
 
@@ -462,6 +465,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 @dynamic lineType;
 @dynamic memberType;
 @dynamic messageBody;
+@dynamic messageIdentifier;
 @dynamic nickname;
 @dynamic receivedAt;
 
@@ -525,6 +529,13 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	if (self->_command != command) {
 		self->_command = [command copy];
+	}
+}
+
+- (void)setMessageIdentifier:(nullable NSString *)messageIdentifier
+{
+	if (self->_messageIdentifier != messageIdentifier) {
+		self->_messageIdentifier = [messageIdentifier copy];
 	}
 }
 

@@ -5,6 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
@@ -35,34 +36,67 @@
  *
  *********************************************************************** */
 
-#import "IRCMessagePrivate.h"
+#import <XCTest/XCTest.h>
+
+#import "GLTTestClient.h"
+#import "IRCChannelModePrivate.h"
+#import "IRCChannelPrivate.h"
+#import "IRCISupportInfoPrivate.h"
+#import "IRCTreeItemPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCMessage ()
-{
-  @protected
-	BOOL _isHistoric;
-	BOOL _isEventOnlyMessage;
-	BOOL _isPrintOnlyMessage;
-	IRCPrefix *_sender;
-	NSArray<NSString *> *_params;
-	NSDate *_receivedAt;
-	NSDictionary<NSString *, NSString *> *_messageTags;
-	NSString *_batchToken;
-	NSString *_command;
-	NSString *_messageIdentifier;
-	NSString *_senderAccount;
-	NSUInteger _commandNumeric;
-	IRCMessageBatchMessage *_parentBatchMessage;
-}
-
+@interface IRCChannelModeTests : XCTestCase
 @end
 
-@interface IRCMessage (IRCMessageLineParser)
-- (BOOL)parseLine:(NSString *)line forClient:(nullable IRCClient *)client;
-- (void)parseExtensions:(NSString *)extensionInfo forClient:(nullable IRCClient *)client;
-- (void)parseSender:(NSString *)senderInfo forClient:(nullable IRCClient *)client;
+@implementation IRCChannelModeTests
+
+- (IRCChannelMode *)channelModeWithCurrentModes:(NSString *)modeString
+{
+	GLTTestClient *client = [GLTTestClient testClient];
+
+	[client.supportInfo processConfigurationData:@"CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+"];
+
+	IRCChannel *channel = [[IRCChannel alloc] initWithConfigDictionary:@{@"channelName" : @"#chat"}];
+
+	channel.associatedClient = client;
+
+	IRCChannelMode *channelMode = [[IRCChannelMode alloc] initWithChannel:channel];
+
+	[channelMode updateModes:modeString];
+
+	return channelMode;
+}
+
+- (void)testRemovedModeParametersPrecedeAddedOnes
+{
+	IRCChannelMode *channelMode = [self channelModeWithCurrentModes:@"+nk secret"];
+
+	IRCChannelModeContainer *modes = [channelMode.modes copy];
+
+	[modes changeMode:@"k" modeIsSet:NO modeParameter:@"secret"];
+	[modes changeMode:@"l" modeIsSet:YES modeParameter:@"10"];
+
+	/* "-k+l secret 10": the server consumes parameters in the order
+	 the letters appear. */
+	XCTAssertEqualObjects([channelMode getChangeCommand:modes], @"-k+l secret 10");
+}
+
+- (void)testUnchangedModesProduceNoCommand
+{
+	IRCChannelMode *channelMode = [self channelModeWithCurrentModes:@"+nt"];
+
+	XCTAssertEqualObjects([channelMode getChangeCommand:[channelMode.modes copy]], @"");
+}
+
+- (void)testModeStringListsParametersAfterLetters
+{
+	IRCChannelMode *channelMode = [self channelModeWithCurrentModes:@"+ntk secret +l 5"];
+
+	XCTAssertEqualObjects(channelMode.string, @"+klnt secret 5");
+	XCTAssertEqualObjects(channelMode.stringWithMaskedPassword, @"+klnt ****** 5");
+}
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -5,6 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
@@ -35,34 +36,56 @@
  *
  *********************************************************************** */
 
-#import "IRCMessagePrivate.h"
+#import <XCTest/XCTest.h>
+
+#import "TVCLogLine.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCMessage ()
-{
-  @protected
-	BOOL _isHistoric;
-	BOOL _isEventOnlyMessage;
-	BOOL _isPrintOnlyMessage;
-	IRCPrefix *_sender;
-	NSArray<NSString *> *_params;
-	NSDate *_receivedAt;
-	NSDictionary<NSString *, NSString *> *_messageTags;
-	NSString *_batchToken;
-	NSString *_command;
-	NSString *_messageIdentifier;
-	NSString *_senderAccount;
-	NSUInteger _commandNumeric;
-	IRCMessageBatchMessage *_parentBatchMessage;
-}
-
+@interface TVCLogLineTests : XCTestCase
 @end
 
-@interface IRCMessage (IRCMessageLineParser)
-- (BOOL)parseLine:(NSString *)line forClient:(nullable IRCClient *)client;
-- (void)parseExtensions:(NSString *)extensionInfo forClient:(nullable IRCClient *)client;
-- (void)parseSender:(NSString *)senderInfo forClient:(nullable IRCClient *)client;
+@implementation TVCLogLineTests
+
+- (void)testMessageIdentifierSurvivesArchivingAndCopying
+{
+	TVCLogLineMutable *line = [TVCLogLineMutable new];
+
+	line.command = @"privmsg";
+	line.lineType = TVCLogLineTypePrivateMessage;
+	line.nickname = @"alice";
+	line.messageBody = @"hello";
+	line.messageIdentifier = @"63E1033A0";
+
+	TVCLogLine *copy = [line copy];
+
+	XCTAssertEqualObjects(copy.messageIdentifier, @"63E1033A0");
+
+	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:copy requiringSecureCoding:YES error:NULL];
+
+	XCTAssertNotNil(data);
+
+	TVCLogLine *decoded = [TVCLogLine logLineWithData:data];
+
+	XCTAssertEqualObjects(decoded.messageIdentifier, @"63E1033A0");
+	XCTAssertEqualObjects(decoded.uniqueIdentifier, copy.uniqueIdentifier);
+	XCTAssertEqualObjects(decoded.messageBody, @"hello");
+}
+
+- (void)testMessageIdentifierIsOptional
+{
+	TVCLogLineMutable *line = [TVCLogLineMutable new];
+
+	line.messageBody = @"hello";
+
+	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:[line copy] requiringSecureCoding:YES error:NULL];
+
+	TVCLogLine *decoded = [TVCLogLine logLineWithData:data];
+
+	XCTAssertNotNil(decoded);
+	XCTAssertNil(decoded.messageIdentifier);
+}
+
 @end
 
 NS_ASSUME_NONNULL_END

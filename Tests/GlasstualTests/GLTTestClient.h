@@ -5,6 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
@@ -35,34 +36,38 @@
  *
  *********************************************************************** */
 
-#import "IRCMessagePrivate.h"
+#import "IRCClientConfigPrivate.h"
+#import "IRCClientPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCMessage ()
-{
-  @protected
-	BOOL _isHistoric;
-	BOOL _isEventOnlyMessage;
-	BOOL _isPrintOnlyMessage;
-	IRCPrefix *_sender;
-	NSArray<NSString *> *_params;
-	NSDate *_receivedAt;
-	NSDictionary<NSString *, NSString *> *_messageTags;
-	NSString *_batchToken;
-	NSString *_command;
-	NSString *_messageIdentifier;
-	NSString *_senderAccount;
-	NSUInteger _commandNumeric;
-	IRCMessageBatchMessage *_parentBatchMessage;
-}
-
+/* A configuration that keeps the NickServ password in memory instead
+ of the keychain. */
+@interface GLTTestClientConfig : IRCClientConfig
+@property(nonatomic, copy, nullable) NSString *testNicknamePassword;
 @end
 
-@interface IRCMessage (IRCMessageLineParser)
-- (BOOL)parseLine:(NSString *)line forClient:(nullable IRCClient *)client;
-- (void)parseExtensions:(NSString *)extensionInfo forClient:(nullable IRCClient *)client;
-- (void)parseSender:(NSString *)senderInfo forClient:(nullable IRCClient *)client;
+/* An IRCClient that never touches a socket. Everything that would have
+ gone to the server or to a view is recorded so tests can inspect it. */
+@interface GLTTestClient : IRCClient
+@property(readonly, strong) NSMutableArray<NSString *> *sentCapabilityCommands; // "REQ sasl", "END"
+@property(readonly, strong) NSMutableArray<NSString *> *sentLines;
+@property(readonly, strong) NSMutableArray<IRCMessage *> *processedMessages;
+@property(readonly, strong) NSMutableArray<NSDictionary<NSString *, id> *> *printedLines;
+
++ (instancetype)testClient;
++ (instancetype)testClientWithConfigDictionary:(NSDictionary<NSString *, id> *)dictionary;
++ (instancetype)testClientWithConfigDictionary:(NSDictionary<NSString *, id> *)dictionary
+							  nicknamePassword:(nullable NSString *)nicknamePassword;
+@end
+
+/* Handlers exercised directly by the tests. */
+@interface IRCClient (GLTTestAccess)
+- (void)processIncomingMessage:(IRCMessage *)message;
+- (void)receiveBatch:(IRCMessage *)m;
+- (BOOL)filterBatchCommandIncomingData:(IRCMessage *)m;
+- (void)receiveStandardReply:(IRCMessage *)m;
+- (void)receiveTagMessage:(IRCMessage *)m;
 @end
 
 NS_ASSUME_NONNULL_END

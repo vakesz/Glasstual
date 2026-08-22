@@ -94,6 +94,8 @@ typedef NS_ENUM(NSUInteger, TVCLogLineMemberType) {
 @property(readonly, copy)
 	NSString *command; // Can be the actual command (PRIVMSG, NOTICE, etc.) or the raw numeric (001, 002, etc.)
 @property(readonly, copy) NSString *uniqueIdentifier;
+@property(readonly, copy, nullable)
+	NSString *messageIdentifier; // The IRCv3 msgid= of the message, when the server sent one
 @property(readonly) TVCLogLineType lineType;
 @property(readonly) TVCLogLineMemberType memberType;
 @property(readonly, copy, nullable) NSArray<NSString *> *highlightKeywords;
@@ -126,6 +128,7 @@ typedef NS_ENUM(NSUInteger, TVCLogLineMemberType) {
 @property(nonatomic, copy, readwrite, nullable) NSString *nickname;
 @property(nonatomic, copy, readwrite) NSString *messageBody;
 @property(nonatomic, copy, readwrite) NSString *command;
+@property(nonatomic, copy, readwrite, nullable) NSString *messageIdentifier;
 @property(nonatomic, assign, readwrite) TVCLogLineType lineType;
 @property(nonatomic, assign, readwrite) TVCLogLineMemberType memberType;
 @property(nonatomic, copy, readwrite, nullable) NSArray<NSString *> *highlightKeywords;
