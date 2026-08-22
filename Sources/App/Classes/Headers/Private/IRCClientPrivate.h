@@ -107,6 +107,23 @@ enum {
 
 - (void)noteReachabilityChanged:(BOOL)reachable;
 
+/* Chat history (chathistory CAP). -noteChannelActivated: is called by
+ IRCChannel when a channel is joined or a query becomes active; it
+ fetches the lines the local scrollback is missing and asks for the
+ read marker. -requestChatHistoryBeforeDate:inChannel: is called by the
+ view when scrolling up runs out of local history. */
+- (void)noteChannelActivated:(IRCChannel *)channel;
+- (void)requestChatHistoryForChannel:(IRCChannel *)channel;
+- (void)requestChatHistoryBeforeDate:(NSDate *)date inChannel:(IRCChannel *)channel;
+- (NSUInteger)chatHistoryRequestLimit;
+- (NSString *)chatHistoryLatestCommandForTarget:(NSString *)target since:(nullable NSDate *)date;
+
+/* Read markers (read-marker CAP). -markChannelAsRead: is called by the
+ main window when the user views a channel; the MARKREAD is debounced. */
+- (void)markChannelAsRead:(IRCChannel *)channel;
+- (void)sendReadMarkerForChannel:(IRCChannel *)channel;
+- (void)requestReadMarkerForChannel:(IRCChannel *)channel;
+
 - (void)autoConnectWithDelay:(NSUInteger)delay afterWakeUp:(BOOL)afterWakeUp;
 
 - (void)postEventToViewController:(NSString *)eventToken;

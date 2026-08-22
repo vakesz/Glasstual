@@ -61,6 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) NSUInteger maximumLineLength;
 @property(nonatomic, assign, readwrite) NSUInteger maximumTargets;
 @property(nonatomic, assign, readwrite) NSUInteger maximumSilenceEntries;
+@property(nonatomic, assign, readwrite) NSUInteger chatHistoryMaximumLines;
 @property(nonatomic, assign, readwrite) BOOL silenceSupported;
 @property(nonatomic, assign, readwrite) BOOL safeListSupported;
 @property(nonatomic, assign, readwrite) BOOL whoxSupported;
@@ -134,10 +135,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 	dispatch_once(&onceToken, ^{
 		settings = @[
-			@"AWAYLEN",		  @"BOT",	  @"CALLERID",	@"CASEMAPPING", @"CHANLIMIT", @"CHANNELLEN", @"CHANTYPES",
-			@"CLIENTTAGDENY", @"DEAF",	  @"ELIST",		@"EXCEPTS",		@"EXTBAN",	  @"INVEX",		 @"KEYLEN",
-			@"KICKLEN",		  @"LINELEN", @"MAXLIST",	@"MAXTARGETS",	@"MODES",	  @"NETWORK",	 @"NICKLEN",
-			@"SAFELIST",	  @"SILENCE", @"STATUSMSG", @"TARGMAX",		@"TOPICLEN",  @"UTF8ONLY",	 @"WHOX"
+			@"AWAYLEN",	   @"BOT",		   @"CALLERID",		 @"CASEMAPPING", @"CHANLIMIT", @"CHANNELLEN",
+			@"CHANTYPES",  @"CHATHISTORY", @"CLIENTTAGDENY", @"DEAF",		 @"ELIST",	   @"EXCEPTS",
+			@"EXTBAN",	   @"INVEX",	   @"KEYLEN",		 @"KICKLEN",	 @"LINELEN",   @"MAXLIST",
+			@"MAXTARGETS", @"MODES",	   @"NETWORK",		 @"NICKLEN",	 @"SAFELIST",  @"SILENCE",
+			@"STATUSMSG",  @"TARGMAX",	   @"TOPICLEN",		 @"UTF8ONLY",	 @"WHOX"
 		];
 	});
 
@@ -166,6 +168,8 @@ NS_ASSUME_NONNULL_BEGIN
 		self.maximumChannelNameLength = 0;
 	} else if ([key isEqualToString:@"CHANTYPES"]) {
 		self.channelNamePrefixes = @[ @"#" ];
+	} else if ([key isEqualToString:@"CHATHISTORY"] || [key isEqualToString:@"DRAFT/CHATHISTORY"]) {
+		self.chatHistoryMaximumLines = 0;
 	} else if ([key isEqualToString:@"CLIENTTAGDENY"]) {
 		self.clientTagDenyList = @[];
 	} else if ([key isEqualToString:@"DEAF"]) {
@@ -317,6 +321,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 				if (channelNamePrefixes.count > 0) {
 					self.channelNamePrefixes = channelNamePrefixes;
+				}
+			} else if ([segmentKey isEqualToStringIgnoringCase:@"CHATHISTORY"] ||
+					   [segmentKey isEqualToStringIgnoringCase:@"draft/CHATHISTORY"]) {
+				NSInteger chatHistoryMaximumLines = segmentValue.integerValue;
+
+				if (chatHistoryMaximumLines > 0) {
+					self.chatHistoryMaximumLines = chatHistoryMaximumLines;
 				}
 			} else if ([segmentKey isEqualToStringIgnoringCase:@"CLIENTTAGDENY"]) {
 				self.clientTagDenyList = [segmentValue split:@","];
