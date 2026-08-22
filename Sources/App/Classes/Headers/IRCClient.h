@@ -82,7 +82,9 @@ typedef NS_OPTIONS(NSUInteger, ClientIRCv3SupportedCapability) {
 	ClientIRCv3SupportedCapabilityChangeHost = 1 << 15,		   // YES if the CHGHOST CAP supported
 	ClientIRCv3SupportedCapabilityMessageTags = 1 << 16,	   // YES if message-tags CAP supported
 	ClientIRCv3SupportedCapabilityCapNotify = 1 << 17,		   // YES if cap-notify CAP supported
-	ClientIRCv3SupportedCapabilityStandardReplies = 1 << 18	   // YES if standard-replies CAP supported
+	ClientIRCv3SupportedCapabilityStandardReplies = 1 << 18,   // YES if standard-replies CAP supported
+	ClientIRCv3SupportedCapabilityChatHistory = 1 << 19, // YES if chathistory (or draft/chathistory) CAP supported
+	ClientIRCv3SupportedCapabilityReadMarker = 1 << 20	 // YES if read-marker (or draft/read-marker) CAP supported
 };
 
 GLASSTUAL_EXTERN NSNotificationName const IRCClientConfigurationWasUpdatedNotification;

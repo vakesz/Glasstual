@@ -58,6 +58,25 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)forgetItem:(IRCTreeItem *)item;
 - (void)resetDataForItem:(IRCTreeItem *)item;
 
+/* An in-memory index of the lines the store knows about for an item:
+ every line written this session and every line fetched from the store.
+ Chat history replayed by the server is checked against it so that a
+ line already in the scrollback is not shown twice. Lines that never
+ reach the store (history inserted above the scrollback) are added
+ with -indexLogLine:forItem:. */
+- (void)indexLogLine:(TVCLogLine *)logLine forItem:(IRCTreeItem *)item;
+
+- (BOOL)containsMessageIdentifier:(NSString *)messageIdentifier forItem:(IRCTreeItem *)item;
+
+/* For lines without a msgid: the same server time, sender and text. */
+- (BOOL)containsLineReceivedAt:(NSDate *)receivedAt
+					  nickname:(nullable NSString *)nickname
+				   messageBody:(NSString *)messageBody
+					   forItem:(IRCTreeItem *)item;
+
+- (nullable NSDate *)newestLineDateForItem:(IRCTreeItem *)item;
+- (nullable NSDate *)oldestLineDateForItem:(IRCTreeItem *)item;
+
 - (void)fetchEntriesForItem:(IRCTreeItem *)item
 				  ascending:(BOOL)ascending
 				 fetchLimit:(NSUInteger)fetchLimit

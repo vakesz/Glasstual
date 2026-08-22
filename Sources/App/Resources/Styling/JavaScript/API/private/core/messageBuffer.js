@@ -162,6 +162,17 @@ _MessageBuffer.bufferElementInsert = function(placement, html, lineNumbers) /* P
 /*               Buffer Size Management               */
 /* ************************************************** */
 
+/* Lines inserted above the buffer by the app from server side history.
+The top of the buffer can be asked for more once they are in place. */
+MessageBuffer.noteRemoteHistoryPrepended = function(numberAdded)
+{
+	_MessageBuffer._bufferCurrentSize += numberAdded;
+
+	_MessageBuffer._bufferTopIsComplete = false;
+
+	_MessageBuffer.enforceHardLimit(false);
+};
+
 MessageBuffer.noteMessageRemovedFromBuffer = function()
 {
 	_MessageBuffer._adjustCurrentBufferSize(-1);

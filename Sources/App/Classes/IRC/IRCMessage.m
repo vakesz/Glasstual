@@ -137,6 +137,11 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	self->_isHistoric = NO;
 }
 
+- (void)markAsHistoric
+{
+	self->_isHistoric = YES;
+}
+
 - (nullable NSString *)senderNickname
 {
 	return self.sender.nickname;

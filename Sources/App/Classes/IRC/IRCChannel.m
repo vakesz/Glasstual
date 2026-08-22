@@ -468,6 +468,10 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 	}
 
 	self.channelJoinTime = [NSDate timeIntervalSince1970];
+
+	if (self.isChannel || self.isPrivateMessage) {
+		[client noteChannelActivated:self];
+	}
 }
 
 - (void)deactivate

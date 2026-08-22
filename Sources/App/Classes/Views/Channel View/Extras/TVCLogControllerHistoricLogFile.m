@@ -52,7 +52,37 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/* What the client knows about the lines of one view, kept in memory so
+ that chat history replayed by the server can be checked against the
+ local scrollback without a round trip to the XPC service. The index is
+ filled from every line written and every line fetched. */
+@interface TVCLogControllerHistoricLogViewIndex : NSObject
+@property(nonatomic, strong) NSMutableSet<NSString *> *messageIdentifiers;
+@property(nonatomic, strong) NSMutableSet<NSString *> *fallbackKeys;
+@property(nonatomic, copy, nullable) NSDate *newestDate;
+@property(nonatomic, copy, nullable) NSDate *oldestDate;
+@end
+
+@implementation TVCLogControllerHistoricLogViewIndex
+
+- (instancetype)init
+{
+	if ((self = [super init])) {
+		self.messageIdentifiers = [NSMutableSet set];
+		self.fallbackKeys = [NSMutableSet set];
+
+		return self;
+	}
+
+	return nil;
+}
+
+@end
+
+#pragma mark -
+
 @interface TVCLogControllerHistoricLogFile ()
+@property(nonatomic, strong) NSMutableDictionary<NSString *, TVCLogControllerHistoricLogViewIndex *> *viewIndexes;
 @property(nonatomic, assign, readwrite) BOOL isSaving;
 @property(nonatomic, assign, readwrite) BOOL isTerminating;
 @property(nonatomic, assign, readwrite) BOOL processLoaded;
@@ -77,6 +107,17 @@ NS_ASSUME_NONNULL_BEGIN
 	});
 
 	return sharedSelf;
+}
+
+- (instancetype)init
+{
+	if ((self = [super init])) {
+		self.viewIndexes = [NSMutableDictionary dictionary];
+
+		return self;
+	}
+
+	return nil;
 }
 
 #pragma mark -
@@ -327,7 +368,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Public API
 
-- (NSArray<TVCLogLine *> *)_logLinesFromXPCObjects:(NSArray<TVCLogLineXPC *> *)xpcObjects
+- (NSArray<TVCLogLine *> *)_logLinesFromXPCObjects:(NSArray<TVCLogLineXPC *> *)xpcObjects forItem:(IRCTreeItem *)item
 {
 	NSParameterAssert(xpcObjects != nil);
 
@@ -342,10 +383,164 @@ NS_ASSUME_NONNULL_BEGIN
 			continue;
 		}
 
+		[self indexLogLine:logLine forItem:item];
+
 		[logLines addObject:logLine];
 	}
 
 	return [logLines copy];
+}
+
+#pragma mark -
+#pragma mark Line Index
+
+- (TVCLogControllerHistoricLogViewIndex *)_viewIndexForItem:(IRCTreeItem *)item create:(BOOL)create
+{
+	NSString *viewId = item.uniqueIdentifier;
+
+	if (viewId == nil) {
+		return nil;
+	}
+
+	@synchronized(self.viewIndexes) {
+		TVCLogControllerHistoricLogViewIndex *index = self.viewIndexes[viewId];
+
+		if (index == nil && create) {
+			index = [TVCLogControllerHistoricLogViewIndex new];
+
+			self.viewIndexes[viewId] = index;
+		}
+
+		return index;
+	}
+}
+
++ (nullable NSString *)_fallbackKeyForDate:(NSDate *)date
+								  nickname:(nullable NSString *)nickname
+							   messageBody:(nullable NSString *)messageBody
+{
+	if (date == nil || messageBody == nil) {
+		return nil;
+	}
+
+	/* Server timestamps carry millisecond precision. Rounding to the
+	 millisecond keeps a value parsed twice from the same string equal. */
+	long long milliseconds = (long long)llround(date.timeIntervalSince1970 * 1000.0);
+
+	return [NSString stringWithFormat:@"%lld\x1f%@\x1f%@", milliseconds, (nickname ?: @""), messageBody];
+}
+
+- (void)indexLogLine:(TVCLogLine *)logLine forItem:(IRCTreeItem *)item
+{
+	NSParameterAssert(logLine != nil);
+	NSParameterAssert(item != nil);
+
+	TVCLogControllerHistoricLogViewIndex *index = [self _viewIndexForItem:item create:YES];
+
+	if (index == nil) {
+		return;
+	}
+
+	NSString *messageIdentifier = logLine.messageIdentifier;
+
+	NSString *fallbackKey = [self.class _fallbackKeyForDate:logLine.receivedAt
+												   nickname:logLine.nickname
+												messageBody:logLine.messageBody];
+
+	NSDate *receivedAt = logLine.receivedAt;
+
+	@synchronized(index) {
+		if (messageIdentifier.length > 0) {
+			[index.messageIdentifiers addObject:messageIdentifier];
+		}
+
+		if (fallbackKey) {
+			[index.fallbackKeys addObject:fallbackKey];
+		}
+
+		if (receivedAt) {
+			if (index.newestDate == nil || [receivedAt compare:index.newestDate] == NSOrderedDescending) {
+				index.newestDate = receivedAt;
+			}
+
+			if (index.oldestDate == nil || [receivedAt compare:index.oldestDate] == NSOrderedAscending) {
+				index.oldestDate = receivedAt;
+			}
+		}
+	}
+}
+
+- (BOOL)containsMessageIdentifier:(NSString *)messageIdentifier forItem:(IRCTreeItem *)item
+{
+	NSParameterAssert(messageIdentifier != nil);
+	NSParameterAssert(item != nil);
+
+	TVCLogControllerHistoricLogViewIndex *index = [self _viewIndexForItem:item create:NO];
+
+	if (index == nil) {
+		return NO;
+	}
+
+	@synchronized(index) {
+		return [index.messageIdentifiers containsObject:messageIdentifier];
+	}
+}
+
+- (BOOL)containsLineReceivedAt:(NSDate *)receivedAt
+					  nickname:(nullable NSString *)nickname
+				   messageBody:(NSString *)messageBody
+					   forItem:(IRCTreeItem *)item
+{
+	NSParameterAssert(receivedAt != nil);
+	NSParameterAssert(messageBody != nil);
+	NSParameterAssert(item != nil);
+
+	TVCLogControllerHistoricLogViewIndex *index = [self _viewIndexForItem:item create:NO];
+
+	if (index == nil) {
+		return NO;
+	}
+
+	NSString *fallbackKey = [self.class _fallbackKeyForDate:receivedAt nickname:nickname messageBody:messageBody];
+
+	@synchronized(index) {
+		return [index.fallbackKeys containsObject:fallbackKey];
+	}
+}
+
+- (nullable NSDate *)newestLineDateForItem:(IRCTreeItem *)item
+{
+	NSParameterAssert(item != nil);
+
+	TVCLogControllerHistoricLogViewIndex *index = [self _viewIndexForItem:item create:NO];
+
+	@synchronized(index) {
+		return index.newestDate;
+	}
+}
+
+- (nullable NSDate *)oldestLineDateForItem:(IRCTreeItem *)item
+{
+	NSParameterAssert(item != nil);
+
+	TVCLogControllerHistoricLogViewIndex *index = [self _viewIndexForItem:item create:NO];
+
+	@synchronized(index) {
+		return index.oldestDate;
+	}
+}
+
+- (void)_forgetIndexForItem:(IRCTreeItem *)item
+{
+	NSString *viewId = item.uniqueIdentifier;
+
+	if (viewId == nil) {
+		return;
+	}
+
+	@synchronized(self.viewIndexes) {
+		[self.viewIndexes removeObjectForKey:viewId];
+	}
 }
 
 - (void)fetchEntriesForItem:(IRCTreeItem *)item
@@ -363,7 +558,7 @@ NS_ASSUME_NONNULL_BEGIN
 									   fetchLimit:fetchLimit
 									  limitToDate:limitToDate
 							  withCompletionBlock:^(NSArray<TVCLogLineXPC *> *entries) {
-								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries];
+								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries forItem:item];
 
 								  completionBlock(logLines);
 							  }];
@@ -386,7 +581,7 @@ NS_ASSUME_NONNULL_BEGIN
 								  afterFetchLimit:fetchLimitAfter
 									  limitToDate:limitToDate
 							  withCompletionBlock:^(NSArray<TVCLogLineXPC *> *entries) {
-								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries];
+								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries forItem:item];
 
 								  completionBlock(logLines);
 							  }];
@@ -407,7 +602,7 @@ NS_ASSUME_NONNULL_BEGIN
 									   fetchLimit:fetchLimit
 									  limitToDate:limitToDate
 							  withCompletionBlock:^(NSArray<TVCLogLineXPC *> *entries) {
-								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries];
+								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries forItem:item];
 
 								  completionBlock(logLines);
 							  }];
@@ -428,7 +623,7 @@ NS_ASSUME_NONNULL_BEGIN
 									   fetchLimit:fetchLimit
 									  limitToDate:limitToDate
 							  withCompletionBlock:^(NSArray<TVCLogLineXPC *> *entries) {
-								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries];
+								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries forItem:item];
 
 								  completionBlock(logLines);
 							  }];
@@ -449,7 +644,7 @@ NS_ASSUME_NONNULL_BEGIN
 						   beforeUniqueIdentifier:uniqueIdBefore
 									   fetchLimit:fetchLimit
 							  withCompletionBlock:^(NSArray<TVCLogLineXPC *> *entries) {
-								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries];
+								  NSArray *logLines = [weakSelf _logLinesFromXPCObjects:entries forItem:item];
 
 								  completionBlock(logLines);
 							  }];
@@ -503,6 +698,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)forgetItem:(IRCTreeItem *)item
 {
+	[self _forgetIndexForItem:item];
+
 	[self warmProcessIfNeeded];
 
 	[[self remoteObjectProxy] forgetView:item.uniqueIdentifier];
@@ -510,6 +707,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)resetDataForItem:(IRCTreeItem *)item
 {
+	[self _forgetIndexForItem:item];
+
 	[self warmProcessIfNeeded];
 
 	[[self remoteObjectProxy] resetDataForView:item.uniqueIdentifier];
@@ -517,6 +716,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)writeNewEntryWithLogLine:(TVCLogLine *)logLine forItem:(IRCTreeItem *)item
 {
+	[self indexLogLine:logLine forItem:item];
+
 	[self warmProcessIfNeeded];
 
 	TVCLogLineXPC *newEntry = [logLine xpcObjectForTreeItem:item];

@@ -55,6 +55,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, strong) NSMutableArray<IRCMessage *> *processedMessages;
 @property(readonly, strong) NSMutableArray<NSDictionary<NSString *, id> *> *printedLines;
 
+/* NO (the default) records messages without handling them. YES hands
+ them to the real handlers as well, for tests that need state changes. */
+@property(nonatomic, assign) BOOL forwardsProcessedMessages;
+
 + (instancetype)testClient;
 + (instancetype)testClientWithConfigDictionary:(NSDictionary<NSString *, id> *)dictionary;
 + (instancetype)testClientWithConfigDictionary:(NSDictionary<NSString *, id> *)dictionary
@@ -68,6 +72,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)filterBatchCommandIncomingData:(IRCMessage *)m;
 - (void)receiveStandardReply:(IRCMessage *)m;
 - (void)receiveTagMessage:(IRCMessage *)m;
+- (void)receiveReadMarker:(IRCMessage *)m;
+- (void)setIsLoggedIn:(BOOL)isLoggedIn;
+- (BOOL)chatHistoryMessageIsDuplicate:(IRCMessage *)message;
+- (void)scheduleReadMarkerForChannel:(IRCChannel *)channel date:(NSDate *)date;
+- (void)onReadMarkerTimer;
+- (void)requestPlayback;
 @end
 
 NS_ASSUME_NONNULL_END
