@@ -20,6 +20,10 @@
 	data-msgid="{{messageIdentifier}}"
 {{/ isEmpty(messageIdentifier) }}
 
+{{^ isEmpty(deliveryState) }}
+	data-delivery-state="{{deliveryState}}"
+{{/ isEmpty(deliveryState) }}
+
 {{^isRemoteMessage}}
 	data-member-type="{{nicknameType}}"
 {{/isRemoteMessage}}

@@ -112,11 +112,13 @@ IRCv3 capabilities Glasstual negotiates when the server offers them:
 - `cap-notify`
 - `chghost`
 - `echo-message` (can be switched off in Preferences)
+- `labeled-response` (with `echo-message`, each outgoing `PRIVMSG`/`NOTICE` is labelled and its line shown as pending until the echo, an `ACK`/`BATCH` or a `FAIL` resolves it; styles react through `Glasstual.lineDeliveryStateChanged` and the `data-delivery-state` attribute)
 - `message-tags` (incoming and outgoing tags, `TAGMSG`; `msgid` is stored with each line and exposed to styles as `data-msgid`)
 - `multi-prefix`
-- `sasl` (PLAIN and EXTERNAL)
+- `sasl` (`SCRAM-SHA-256`, `PLAIN` and `EXTERNAL`; `SCRAM-SHA-256` is preferred, and `RPL_SASLMECHS` retries with the next mechanism)
 - `server-time`
 - `standard-replies` (`FAIL`, `WARN`, `NOTE`)
+- `sts` (Strict Transport Security: a per-host policy is stored, forces TLS on the policy port on later connects, and a plaintext connection is upgraded immediately; policies never downgrade and are excluded from preference export)
 - `userhost-in-names`
 - ZNC: `znc.in/playback`, `znc.in/self-message`, `znc.in/server-time`, `znc.in/server-time-iso`, `znc.in/tlsinfo`
 

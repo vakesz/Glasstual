@@ -161,6 +161,23 @@ Glasstual.handleEvent                            = function(eventToken) {};
 */
 Glasstual.tagMessageReceived                     = function(event) {};
 
+/*
+    lineDeliveryStateChanged() is called after Glasstual has updated a
+    line the local user sent. With labeled-response and echo-message the
+    line is added with data-delivery-state="pending" and moves to
+    "delivered" once the server echoes it back, or to "failed" when the
+    server rejects it or does not answer in time. The data-delivery-state
+    attribute (and data-msgid, when the echo carried one) are updated
+    before this is called. For a failure, a <span class="deliveryFailure">
+    holding the reason is appended to the line's .innerMessage.
+
+    lineNumber  - The line's identifier (the id is "line-" + lineNumber)
+    state       - "pending", "delivered" or "failed"
+    msgid       - Message identifier from the echo, or null
+    reason      - Failure description, or null
+*/
+Glasstual.lineDeliveryStateChanged               = function(lineNumber, state, msgid, reason) {};
+
 /* *********************************************************************** */
 /*						Application Object								   */
 /* *********************************************************************** */

@@ -144,6 +144,12 @@ NS_ASSUME_NONNULL_BEGIN
 							 preferenceGate:echoMessageGate
 							   dependencies:nil
 							negotiationHook:nil],
+		[[IRCCapability alloc] initWithName:@"labeled-response"
+								 identifier:ClientIRCv3SupportedCapabilityLabeledResponse
+						 requestedByDefault:YES
+							 preferenceGate:nil
+							   dependencies:@[ @"message-tags" ]
+							negotiationHook:nil],
 		[IRCCapability capabilityNamed:@"multi-prefix" identifier:ClientIRCv3SupportedCapabilityMultiPrefix],
 		[[IRCCapability alloc] initWithName:@"sasl"
 								 identifier:ClientIRCv3SupportedCapabilitySASLGeneric
