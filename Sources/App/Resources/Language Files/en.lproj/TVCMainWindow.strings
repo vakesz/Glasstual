@@ -43,6 +43,8 @@
 "p1z-sc" = "Channel Owner";
 "i8t-vb" = "Server Staff Member (IRC Operator)";
 "jkr-ed" = "User is away";
+"b0t-ac" = "User is a bot";
+"b0t-lb" = "bot"; // Member list caption shown after a bot's nickname
 "gi6-wf" = "User is not away";
 
 "d85-9n" = "Information Not Available";

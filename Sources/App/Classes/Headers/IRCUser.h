@@ -60,6 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, copy, nullable) NSString *realName;
 @property(readonly) BOOL isAway;
 @property(readonly) BOOL isIRCop;
+@property(readonly) BOOL isBot; // Set from the BOT user mode (ISUPPORT BOT), WHO flags, or RPL_WHOISBOT
 
 @property(readonly, copy) NSString *banMask;
 
@@ -89,6 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, readwrite, nullable) NSString *realName;
 @property(nonatomic, assign, readwrite) BOOL isAway;
 @property(nonatomic, assign, readwrite) BOOL isIRCop;
+@property(nonatomic, assign, readwrite) BOOL isBot;
 
 - (instancetype)initWithClient:(IRCClient *)client;
 @end

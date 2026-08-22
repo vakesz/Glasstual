@@ -21,6 +21,7 @@
         <arrayController objectClassName="TDCChannelBanListSheet" selectsInsertedObjects="NO" avoidsEmptySelection="NO" automaticallyRearrangesObjects="YES" id="hp8-ig-5aL">
             <declaredKeys>
                 <string>entryMask</string>
+                <string>entryMaskDescription</string>
                 <string>entryAuthor</string>
                 <string>entryCreationDate</string>
                 <string>entryCreationDateString</string>
@@ -75,6 +76,7 @@
                                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                             </textFieldCell>
                                                             <connections>
+                                                                <binding destination="8at-zo-TEe" name="toolTip" keyPath="objectValue.entryMaskDescription" id="x7b-eX-tb1"/>
                                                                 <binding destination="8at-zo-TEe" name="value" keyPath="objectValue.entryMask" id="dup-ry-c3C"/>
                                                             </connections>
                                                         </textField>
@@ -256,11 +258,7 @@ Gw
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                         <connections>
-                            <binding destination="-2" name="displayPatternValue1" keyPath="self.entryCount" id="KPz-a9-t0f">
-                                <dictionary key="options">
-                                    <string key="NSDisplayPattern">%{value1}@ entries</string>
-                                </dictionary>
-                            </binding>
+                            <binding destination="-2" name="value" keyPath="self.entryCountDescription" id="KPz-a9-t0f"/>
                         </connections>
                     </textField>
                 </subviews>
