@@ -1497,7 +1497,7 @@ static OtrlMessageAppOps ui_ops = {
 {
 	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 
-	NSString *cachedPath = [paths[0] stringByAppendingPathComponent:@"/com.codeux.frameworks.encryptionKit/OTRKit/"];
+	NSString *cachedPath = [paths[0] stringByAppendingPathComponent:@"/com.vakesz.glasstual.frameworks.EncryptionKit/OTRKit/"];
 
 	return cachedPath;
 }

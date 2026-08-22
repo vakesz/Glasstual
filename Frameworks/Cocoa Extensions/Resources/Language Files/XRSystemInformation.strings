@@ -32,11 +32,6 @@
 
 "macOS" = "macOS";
 "macOS Tahoe" = "macOS Tahoe";
-"macOS Sequoia" = "macOS Sequoia";
-"macOS Sonoma" = "macOS Sonoma";
-"macOS Ventura" = "macOS Ventura";
-"macOS Monterey" = "macOS Monterey";
-"macOS Big Sur" = "macOS Big Sur";
 
 "MacBook Pro" = "MacBook Pro";
 "MacBook Air" = "MacBook Air";

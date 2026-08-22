@@ -34,17 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation NSIndexSet (CSIndexSetHelper)
 
-- (NSArray<NSNumber *> *)arrayFromIndexSet
-{
-	NSMutableArray *array = [NSMutableArray array];
-
-	[self enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
-		[array addObject:@(index)];
-	}];
-
-	return array;
-}
-
 - (NSIndexSet *)subsetWithMaximumIndexes:(NSUInteger)maximumNumberOfIndexes
 {
 	NSParameterAssert(maximumNumberOfIndexes > 0);

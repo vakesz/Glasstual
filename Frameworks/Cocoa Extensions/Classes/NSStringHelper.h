@@ -34,11 +34,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define CS_StringIsAlphabetic(c)					('a' <= (c) && (c) <= 'z' || 'A' <= (c) && (c) <= 'Z')
 #define CS_StringIsBase10Numeric(c)					('0' <= (c) && (c) <= '9')
-#define CS_StringIsAlphabeticNumeric(c)				(CS_StringIsAlphabetic(c) || CS_StringIsBase10Numeric(c))
-#define CS_StringIsWordLetter(c)					(CS_StringIsAlphabeticNumeric(c) || (c) == '_')
-
+#define CS_StringIsAlphabetic(c)					('a' <= (c) && (c) <= 'z' || 'A' <= (c) && (c) <= 'Z')
 COCOA_EXTENSIONS_EXTERN NSString * const NSStringEmptyPlaceholder;
 COCOA_EXTENSIONS_EXTERN NSString * const NSStringNewlinePlaceholder;
 COCOA_EXTENSIONS_EXTERN NSString * const NSStringWhitespacePlaceholder;
@@ -69,21 +66,15 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 @property (readonly, copy, nullable) NSString *sha1;
 @property (readonly, copy, nullable) NSString *sha256;
 @property (readonly, copy, nullable) NSString *sha512;
-@property (readonly, copy, nullable) NSString *md5;
 
 @property (readonly) NSRange range;
 
 + (NSString *)stringWithUUID;
 
 + (nullable NSString *)charsetRepFromStringEncoding:(NSStringEncoding)encoding;
-
-+ (NSArray<NSNumber *> *)supportedStringEncodings:(BOOL)favorUTF8; // favorUTF8 = place UTF-8 at index 0  of array
-
 + (NSDictionary<NSString *, NSNumber *> *)supportedStringEncodingsWithTitle:(BOOL)favorUTF8;
 
 - (NSString *)substringAfterIndex:(NSUInteger)anIndex;
-- (NSString *)substringBeforeIndex:(NSUInteger)anIndex;
-
 /* -substringAtIndex:toLength: uses individual arguments as signed
  integers to allow negative values when creating substring. */
 /* A negative atIndex value will create a substring starting at
@@ -104,16 +95,9 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 
 - (NSString *)stringCharacterAtIndex:(NSUInteger)anIndex;
 
-- (NSString *)stringByDeletingPrefix:(NSString *)prefix;
-
-- (NSString *)stringByReplacingOccurrencesOfCharacterSet:(NSCharacterSet *)characterSet withString:(NSString *)replacement;
-
 - (CGFloat)compareWithWord:(NSString *)stringB lengthPenaltyWeight:(CGFloat)weight;
 
 - (BOOL)hasPrefixIgnoringCase:(NSString *)aString; // Performs literal comparison
-- (BOOL)hasSuffixIgnoringCase:(NSString *)aString; // Performs literal comparison
-
-- (BOOL)hasPrefixWithCharacterSet:(NSCharacterSet *)characterSet;
 - (BOOL)hasSuffixWithCharacterSet:(NSCharacterSet *)characterSet;
 
 - (BOOL)isEqualToStringIgnoringCase:(NSString *)other;
@@ -125,14 +109,9 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 - (BOOL)onlyContainsCharactersFromCharacterSet:(NSCharacterSet *)characterSet;
 
 - (BOOL)containsCharacters:(NSString *)characters;
-- (BOOL)onlyContainsCharacters:(NSString *)characters;
-
 - (NSUInteger)occurrencesOfCharacter:(UniChar)character;
 
 - (NSInteger)stringPosition:(NSString *)needle; // Performs literal comparison
-- (NSInteger)stringPositionIgnoringCase:(NSString *)needle; // Performs literal comparison
-- (NSInteger)stringPosition:(NSString *)needle options:(NSStringCompareOptions)options;
-
 - (void)enumerateMatchesOfString:(NSString *)string withBlock:(void (NS_NOESCAPE ^)(NSRange range, BOOL *stop))enumerationBlock;
 - (void)enumerateMatchesOfString:(NSString *)string withBlock:(void (NS_NOESCAPE ^)(NSRange range, BOOL *stop))enumerationBlock options:(NSStringCompareOptions)options;
 
@@ -143,16 +122,11 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 - (void)enumerateFirstOccurrenceOfCharactersInString:(NSString *)string withBlock:(void (NS_NOESCAPE ^)(NSRange range, BOOL *stop))enumerationBlock options:(NSStringCompareOptions)options;
 
 - (NSArray<NSString *> *)split:(NSString *)delimiter;
-- (NSArray<NSString *> *)splitWithCharacters:(NSString *)characters;
-- (NSArray<NSString *> *)splitWithCharacterSet:(NSCharacterSet *)characterSet;
 - (NSArray<NSString *> *)splitWithMaximumLength:(NSUInteger)maximumLength;
 
-- (void)enumerateSplit:(NSString *)delimiter withBlock:(void (NS_NOESCAPE ^)(NSString *sequence, BOOL *stop))enumerationBlock;
-- (void)enumerateSplitWithCharacterSet:(NSCharacterSet *)characterSet withBlock:(void (NS_NOESCAPE ^)(NSString *sequence, BOOL *stop))enumerationBlock;
 - (void)enumerateSplitOnNewLinesWithBlock:(void (NS_NOESCAPE ^)(NSString *sequence, BOOL *stop))enumerationBlock;
 
 @property (readonly, copy) NSString *trim;
-@property (readonly, copy) NSString *trimNewlines;
 - (NSString *)trimCharacters:(NSString *)characters;
 
 @property (readonly, copy) NSString *removeAllNewlines;
@@ -161,8 +135,6 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 @property (getter=isNumericOnly, readonly) BOOL numericOnly; // 0-9
 
 @property (readonly) BOOL isPositiveWholeNumber;
-@property (readonly) BOOL isPositiveDecimalNumber;
-@property (readonly) BOOL isAnyPositiveNumber;
 
 /* When matching a number, if option to match positive
  or negative number is not specified, then positive is matched. */
@@ -172,18 +144,12 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 
 @property (readonly, copy) NSString *normalizeSpaces;
 
-- (NSRange)rangeOfNextSegmentMatchingRegularExpression:(NSString *)regex startingAt:(NSUInteger)start;
-
 @property (readonly, copy, nullable) NSData *IPv4AddressBytes;
 @property (readonly, copy, nullable) NSData *IPv6AddressBytes;
 
 @property (getter=isIPv4Address, readonly) BOOL IPv4Address;
 @property (getter=isIPv6Address, readonly) BOOL IPv6Address;
 @property (getter=isIPAddress, readonly) BOOL IPAddress;
-
-@property (readonly, copy) NSString *scannerString;
-
-@property (readonly, copy, nullable) NSURL *URLUsingWebKitPasteboard;
 
 @property (readonly, copy) NSDictionary<NSString *, NSString *> *URLQueryItems;
 
@@ -195,8 +161,6 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 
 /* Returns array of composed characters */
 @property (readonly, copy) NSArray<NSString *> *characterStringBuffer;
-
-@property (readonly, copy, nullable) NSString *callStackSymbolMethodName;
 
 /* First standardize path. See documentation for -stringByStandardizingPath
  for information on behavior. Then replaces home folder with tilde.
@@ -212,31 +176,16 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 @property (readonly, copy, nullable) NSString *percentEncodedString;
 @property (readonly, copy, nullable) NSString *percentDecodedString;
 
-@property (readonly, copy, nullable) NSString *percentEncodedURLUser;
-@property (readonly, copy, nullable) NSString *percentEncodedURLPassword;
-@property (readonly, copy, nullable) NSString *percentEncodedURLHost;
 @property (readonly, copy, nullable) NSString *percentEncodedURLPath;
 @property (readonly, copy, nullable) NSString *percentEncodedURLQuery;
-@property (readonly, copy, nullable) NSString *percentEncodedURLFragment;
 @end
 
 #pragma mark
 #pragma mark String Number Formatter Helper
 
 @interface NSString (CSStringNumberHelper)
-+ (NSString *)stringWithChar:(char)value;
 + (NSString *)stringWithUniChar:(UniChar)value;
-+ (NSString *)stringWithUnsignedChar:(unsigned char)value;
-+ (NSString *)stringWithShort:(short)value;
 + (NSString *)stringWithUnsignedShort:(unsigned short)value;
-+ (NSString *)stringWithInt:(int)value;
-+ (NSString *)stringWithUnsignedInt:(unsigned int)value;
-+ (NSString *)stringWithLong:(long)value;
-+ (NSString *)stringWithUnsignedLong:(unsigned long)value;
-+ (NSString *)stringWithLongLong:(long long)value;
-+ (NSString *)stringWithUnsignedLongLong:(unsigned long long)value;
-+ (NSString *)stringWithFloat:(float)value;
-+ (NSString *)stringWithDouble:(double)value;
 + (NSString *)stringWithInteger:(NSInteger)value;
 + (NSString *)stringWithUnsignedInteger:(NSUInteger)value;
 @end
@@ -254,11 +203,7 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 + (NSAttributedString *)attributedStringWithString:(NSString *)string attributes:(NSDictionary<NSString *, id> *)stringAttributes;
 
 - (NSAttributedString *)attributedSubstringFromIndex:(NSUInteger)from;
-- (NSAttributedString *)attributedSubstringToIndex:(NSUInteger)to;
-
 @property (readonly, copy) NSArray<NSAttributedString *> *splitIntoLines;
-
-@property (readonly, copy) NSString *scannerString;
 
 - (BOOL)isAttributeSet:(NSString *)attribute atIndex:(NSUInteger)index;
 - (BOOL)isAttributeSet:(NSString *)attribute atIndex:(NSUInteger)index attributeValue:(id _Nonnull * _Nullable)attributeValue;
@@ -271,7 +216,6 @@ typedef NS_OPTIONS(NSUInteger, CSStringType)
 #pragma mark Mutable Attributed String Helpers
 
 @interface NSMutableAttributedString (CSMutableAttributedStringHelper)
-+ (NSMutableAttributedString *)mutableAttributedString;
 + (NSMutableAttributedString *)mutableAttributedStringWithString:(NSString *)string;
 + (NSMutableAttributedString *)mutableAttributedStringWithString:(NSString *)string attributes:(NSDictionary<NSString *, id> *)stringAttributes;
 

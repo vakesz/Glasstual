@@ -103,7 +103,6 @@ static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-pr
 @property(nonatomic, weak) IBOutlet NSButton *autojoinWaitsForNickServCheck;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateChangeCertificateButton;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateResetCertificateButton;
-@property(nonatomic, weak) IBOutlet NSButton *clientCertificateMD5FingerprintCopyButton;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateSHA1FingerprintCopyButton;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateSHA2FingerprintCopyButton;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateSHA512FingerprintCopyButton;
@@ -135,7 +134,6 @@ static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-pr
 @property(nonatomic, weak) IBOutlet NSSlider *floodControlDelayTimerSlider;
 @property(nonatomic, weak) IBOutlet NSSlider *floodControlMessageCountSlider;
 @property(nonatomic, weak) IBOutlet NSTextField *clientCertificateCommonNameField;
-@property(nonatomic, weak) IBOutlet NSTextField *clientCertificateMD5FingerprintField;
 @property(nonatomic, weak) IBOutlet NSTextField *clientCertificateSHA1FingerprintField;
 @property(nonatomic, weak) IBOutlet NSTextField *clientCertificateSHA2FingerprintField;
 @property(nonatomic, weak) IBOutlet NSTextField *clientCertificateSHA512FingerprintField;
@@ -207,7 +205,6 @@ static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-pr
 - (IBAction)onClientCertificateFingerprintSHA512CopyRequested:(nullable id)sender;
 - (IBAction)onClientCertificateFingerprintSHA2CopyRequested:(nullable id)sender;
 - (IBAction)onClientCertificateFingerprintSHA1CopyRequested:(nullable id)sender;
-- (IBAction)onClientCertificateFingerprintMD5CopyRequested:(nullable id)sender;
 
 - (IBAction)preferredCipherSuitesChanged:(nullable id)sender;
 - (IBAction)preferredCipherSuitesViewList:(nullable id)sender;
@@ -1500,20 +1497,10 @@ static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-pr
 	RZPasteboard().stringContent = command;
 }
 
-- (void)onClientCertificateFingerprintMD5CopyRequested:(nullable id)sender
-{
-	NSString *fingerprint = self.clientCertificateMD5FingerprintField.stringValue;
-
-	NSString *command = [NSString stringWithFormat:@"/msg NickServ cert add %@", fingerprint];
-
-	RZPasteboard().stringContent = command;
-}
-
 - (void)readClientCertificateCommonName:(NSString **)commonNameOut
 					  sha512Fingerprint:(NSString **)sha512FingerprintOut
 						sha2Fingerprint:(NSString **)sha2FingerprintOut
 						sha1Fingerprint:(NSString **)sha1FingerprintOut
-						 md5Fingerprint:(NSString **)md5FingerprintOut
 {
 	NSData *certificateDataIn = self.config.identityClientSideCertificate;
 
@@ -1562,7 +1549,6 @@ static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-pr
 		*sha512FingerprintOut = certificateData.sha512;
 		*sha2FingerprintOut = certificateData.sha256;
 		*sha1FingerprintOut = certificateData.sha1;
-		*md5FingerprintOut = certificateData.md5;
 
 		CFRelease(certificateDataRef);
 	}
@@ -1632,13 +1618,11 @@ static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-pr
 	NSString *sha512Fingerprint = nil;
 	NSString *sha2Fingerprint = nil;
 	NSString *sha1Fingerprint = nil;
-	NSString *md5Fingerprint = nil;
 
 	[self readClientCertificateCommonName:&commonName
 						sha512Fingerprint:&sha512Fingerprint
 						  sha2Fingerprint:&sha2Fingerprint
-						  sha1Fingerprint:&sha1Fingerprint
-						   md5Fingerprint:&md5Fingerprint];
+						  sha1Fingerprint:&sha1Fingerprint];
 
 	BOOL hasNoCertificate = (commonName.length == 0);
 
@@ -1648,14 +1632,12 @@ static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-pr
 		self.clientCertificateSHA512FingerprintField.stringValue = TXTLS(@"TDCServerPropertiesSheet[6xz-ec]");
 		self.clientCertificateSHA2FingerprintField.stringValue = TXTLS(@"TDCServerPropertiesSheet[6xz-ec]");
 		self.clientCertificateSHA1FingerprintField.stringValue = TXTLS(@"TDCServerPropertiesSheet[6xz-ec]");
-		self.clientCertificateMD5FingerprintField.stringValue = TXTLS(@"TDCServerPropertiesSheet[6xz-ec]");
 	} else {
 		self.clientCertificateCommonNameField.stringValue = commonName;
 
 		self.clientCertificateSHA512FingerprintField.stringValue = sha512Fingerprint.uppercaseString;
 		self.clientCertificateSHA2FingerprintField.stringValue = sha2Fingerprint.uppercaseString;
 		self.clientCertificateSHA1FingerprintField.stringValue = sha1Fingerprint.uppercaseString;
-		self.clientCertificateMD5FingerprintField.stringValue = md5Fingerprint.uppercaseString;
 	}
 
 	self.clientCertificateResetCertificateButton.enabled = (hasNoCertificate == NO);
@@ -1663,7 +1645,6 @@ static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-pr
 	self.clientCertificateSHA512FingerprintCopyButton.enabled = (hasNoCertificate == NO);
 	self.clientCertificateSHA2FingerprintCopyButton.enabled = (hasNoCertificate == NO);
 	self.clientCertificateSHA1FingerprintCopyButton.enabled = (hasNoCertificate == NO);
-	self.clientCertificateMD5FingerprintCopyButton.enabled = (hasNoCertificate == NO);
 }
 
 - (void)onClientCertificateResetRequested:(nullable id)sender
