@@ -17,13 +17,5 @@
 		<string>webcal</string>
 		<string>x-man-page</string>
 	</array>
-	<key>NSWindowAutosaveFrameMovesToActiveDisplay</key>
-	<false/>
-	<key>WebKitDeveloperExtras</key>
-	<true/>
-	<key>__uniquePageGroupID-1.WebKit2ScrollAnimatorEnabled</key>
-	<false/>
-	<key>__uniquePageGroupID-1.WebKit2ShouldRespectImageOrientation</key>
-	<true/>
 </dict>
 </plist>

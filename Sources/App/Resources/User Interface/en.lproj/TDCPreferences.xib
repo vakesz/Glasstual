@@ -8,9 +8,6 @@
         <customObject id="-2" userLabel="File's Owner" customClass="TDCPreferencesController">
             <connections>
                 <outlet property="addExcludeKeywordButton" destination="KgU-fm-1CL" id="Yh1-uA-Lzy"/>
-                <outlet property="checkForUpdatesAutomaticallyCheck" destination="KM0-Vm-IZi" id="R4h-yt-2DP"/>
-                <outlet property="checkForUpdatesAutomaticallyDownload" destination="rkY-hK-RL3" id="5QO-sY-KiJ"/>
-                <outlet property="checkForUpdatesDontCheck" destination="eyl-gj-5fj" id="K7p-w3-6hU"/>
                 <outlet property="contentViewBehavior" destination="Yrc-pc-3Zr" id="tdC-pL-8hL"/>
                 <outlet property="contentViewChannelManagement" destination="kTM-XW-Yb5" id="yM5-Ac-xep"/>
                 <outlet property="contentViewCommandScope" destination="1YF-k7-FrW" id="cvJ-I0-CaK"/>
@@ -21,8 +18,6 @@
                 <outlet property="contentViewFileTransfers" destination="4pD-W0-ghZ" id="KMr-19-ETt"/>
                 <outlet property="contentViewFloodControl" destination="n4A-Pk-quE" id="s0E-dS-fnf"/>
                 <outlet property="contentViewGeneral" destination="Eyz-5p-IkU" id="lw2-bS-xCr"/>
-                <outlet property="contentViewGeneralCheckForUpdatesView" destination="gbx-00-013" id="wbU-Bl-g2b"/>
-                <outlet property="contentViewGeneralStackView" destination="gbx-00-023" id="Eut-0s-Y13"/>
                 <outlet property="contentViewHiddenPreferences" destination="dAH-Sl-d77" id="h2q-qj-Xb5"/>
                 <outlet property="contentViewHighlights" destination="Jdv-gk-kj9" id="P9m-wf-sUb"/>
                 <outlet property="contentViewIncomingData" destination="KpN-mD-prv" id="hWG-Eo-pZT"/>
@@ -106,118 +101,14 @@
                                 <constraint firstAttribute="bottom" secondItem="gbx-00-004" secondAttribute="bottom" id="gbx-00-012"/>
                             </constraints>
                         </customView>
-                        <customView customClass="TDCPreferencesGroupBox" translatesAutoresizingMaskIntoConstraints="NO" id="gbx-00-013">
-                            <rect key="frame" x="0.0" y="0.0" width="100" height="20"/>
-                            <subviews>
-                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="gbx-00-014">
-                                    <rect key="frame" x="0.0" y="0.0" width="100" height="20"/>
-                                    <subviews>
-                                        <customView translatesAutoresizingMaskIntoConstraints="NO" id="Arz-w3-aT6">
-                                            <rect key="frame" x="0.0" y="0.0" width="670" height="86"/>
-                                            <subviews>
-                                                <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="L50-Ud-iP2">
-                                                    <rect key="frame" x="40" y="70" width="59" height="16"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Updates:" id="MC0-wK-dAF">
-                                                        <font key="font" metaFont="system"/>
-                                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
-                                                <button translatesAutoresizingMaskIntoConstraints="NO" id="jfn-Sc-y1D">
-                                                    <rect key="frame" x="103" y="-1" width="150" height="18"/>
-                                                    <buttonCell key="cell" type="check" title="Enable beta updates" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="ZpK-O2-jD1">
-                                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                                        <font key="font" metaFont="system"/>
-                                                    </buttonCell>
-                                                    <connections>
-                                                        <action selector="onChangedCheckForBetaUpdates:" target="-2" id="L8N-cP-zdY"/>
-                                                        <binding destination="G2Q-fc-ddg" name="value" keyPath="values.ReceiveBetaUpdates" id="kg8-1s-fSU"/>
-                                                    </connections>
-                                                </button>
-                                                <stackView distribution="equalSpacing" orientation="vertical" alignment="leading" spacing="4" verticalStackHuggingPriority="750" verticalHuggingPriority="750" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rs1-p6-eOx">
-                                                    <rect key="frame" x="105" y="30" width="286" height="56"/>
-                                                    <subviews>
-                                                        <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="rkY-hK-RL3">
-                                                            <rect key="frame" x="-2" y="39" width="288" height="18"/>
-                                                            <buttonCell key="cell" type="radio" title="Automatically download and install updates" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="yeE-vC-LNb">
-                                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                                                <font key="font" metaFont="system"/>
-                                                            </buttonCell>
-                                                            <connections>
-                                                                <action selector="onChangedCheckForUpdates:" target="-2" id="Hhq-9W-xaa"/>
-                                                            </connections>
-                                                        </button>
-                                                        <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="KM0-Vm-IZi">
-                                                            <rect key="frame" x="-2" y="19" width="212" height="18"/>
-                                                            <buttonCell key="cell" type="radio" title="Just notify if there are updates" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="Iuw-ng-k0Q">
-                                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                                                <font key="font" metaFont="system"/>
-                                                            </buttonCell>
-                                                            <connections>
-                                                                <action selector="onChangedCheckForUpdates:" target="-2" id="CfD-E5-khM"/>
-                                                            </connections>
-                                                        </button>
-                                                        <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="eyl-gj-5fj">
-                                                            <rect key="frame" x="-2" y="-1" width="172" height="18"/>
-                                                            <buttonCell key="cell" type="radio" title="Don't check for updates" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="SlQ-Ey-5fd">
-                                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                                                <font key="font" metaFont="system"/>
-                                                            </buttonCell>
-                                                            <connections>
-                                                                <action selector="onChangedCheckForUpdates:" target="-2" id="2qR-a2-GtW"/>
-                                                            </connections>
-                                                        </button>
-                                                    </subviews>
-                                                    <visibilityPriorities>
-                                                        <integer value="1000"/>
-                                                        <integer value="1000"/>
-                                                        <integer value="1000"/>
-                                                    </visibilityPriorities>
-                                                    <customSpacing>
-                                                        <real value="3.4028234663852886e+38"/>
-                                                        <real value="3.4028234663852886e+38"/>
-                                                        <real value="3.4028234663852886e+38"/>
-                                                    </customSpacing>
-                                                </stackView>
-                                            </subviews>
-                                            <constraints>
-                                                <constraint firstItem="L50-Ud-iP2" firstAttribute="leading" secondItem="Arz-w3-aT6" secondAttribute="leading" constant="42" id="2ci-88-Tqp"/>
-                                                <constraint firstItem="rs1-p6-eOx" firstAttribute="leading" secondItem="L50-Ud-iP2" secondAttribute="trailing" constant="8" symbolic="YES" id="ILV-3z-JJV"/>
-                                                <constraint firstItem="jfn-Sc-y1D" firstAttribute="leading" secondItem="rs1-p6-eOx" secondAttribute="leading" id="TJ6-iz-bg5"/>
-                                                <constraint firstItem="jfn-Sc-y1D" firstAttribute="top" secondItem="rs1-p6-eOx" secondAttribute="bottom" constant="14" id="VDa-qC-Sx1"/>
-                                                <constraint firstItem="rs1-p6-eOx" firstAttribute="top" secondItem="Arz-w3-aT6" secondAttribute="top" id="cow-PV-Rx2"/>
-                                                <constraint firstItem="L50-Ud-iP2" firstAttribute="firstBaseline" secondItem="rkY-hK-RL3" secondAttribute="firstBaseline" id="mNv-78-rHy"/>
-                                                <constraint firstAttribute="bottom" secondItem="jfn-Sc-y1D" secondAttribute="bottom" id="sJr-Sh-fkA"/>
-                                                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="jfn-Sc-y1D" secondAttribute="trailing" constant="20" id="xQS-HA-Q0r"/>
-                                            </constraints>
-                                        </customView>
-                                    </subviews>
-                                    <constraints>
-                                        <constraint firstItem="Arz-w3-aT6" firstAttribute="top" secondItem="gbx-00-014" secondAttribute="top" constant="12" id="gbx-00-015"/>
-                                        <constraint firstAttribute="bottom" secondItem="Arz-w3-aT6" secondAttribute="bottom" constant="12" id="gbx-00-016"/>
-                                        <constraint firstItem="Arz-w3-aT6" firstAttribute="leading" secondItem="gbx-00-014" secondAttribute="leading" constant="16" id="gbx-00-017"/>
-                                        <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="Arz-w3-aT6" secondAttribute="trailing" constant="16" id="gbx-00-018"/>
-                                    </constraints>
-                                </customView>
-                            </subviews>
-                            <constraints>
-                                <constraint firstItem="gbx-00-014" firstAttribute="top" secondItem="gbx-00-013" secondAttribute="top" id="gbx-00-019"/>
-                                <constraint firstItem="gbx-00-014" firstAttribute="leading" secondItem="gbx-00-013" secondAttribute="leading" id="gbx-00-020"/>
-                                <constraint firstAttribute="trailing" secondItem="gbx-00-014" secondAttribute="trailing" id="gbx-00-021"/>
-                                <constraint firstAttribute="bottom" secondItem="gbx-00-014" secondAttribute="bottom" id="gbx-00-022"/>
-                            </constraints>
-                        </customView>
                     </subviews>
                     <constraints>
                         <constraint firstItem="gbx-00-003" firstAttribute="width" secondItem="gbx-00-023" secondAttribute="width" id="gbx-00-024"/>
-                        <constraint firstItem="gbx-00-013" firstAttribute="width" secondItem="gbx-00-023" secondAttribute="width" id="gbx-00-025"/>
                     </constraints>
                     <visibilityPriorities>
                         <integer value="1000"/>
-                        <integer value="1000"/>
                     </visibilityPriorities>
                     <customSpacing>
-                        <real value="20"/>
                         <real value="20"/>
                     </customSpacing>
                 </stackView>
@@ -4937,7 +4828,7 @@ A lower value is always better especially when in a large number of channels.</s
                                                             <menu key="menu" title="OtherViews" id="faJ-I4-ysS">
                                                                 <items>
                                                                     <menuItem title="Ask router with no fallback" state="on" tag="3" id="PpR-MQ-ujy"/>
-                                                                    <menuItem title="Ask router with myip.codeux.com as fallback" tag="1" id="C0d-vg-gP1"/>
+                                                                    <menuItem title="Ask router with api.ipify.org as fallback" tag="1" id="C0d-vg-gP1"/>
                                                                     <menuItem title="Ask router with 3rd-party website as fallback" tag="4" id="x7k-y5-Qhz"/>
                                                                     <menuItem title="Manually Enter Address" tag="2" id="Pp5-Ci-F1D"/>
                                                                 </items>

@@ -48,7 +48,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSColor *)nicknameColorStyleOverrideForKey:(NSString *)styleKey;
 + (void)setNicknameColorStyleOverride:(nullable NSColor *)styleValue forKey:(NSString *)styleKey;
 
-+ (void)migrateNicknameColorStyleOverrides;
 @end
 
 NS_ASSUME_NONNULL_END

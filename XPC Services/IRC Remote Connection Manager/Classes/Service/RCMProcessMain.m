@@ -35,6 +35,8 @@
  *
  *********************************************************************** */
 
+#import "IRC_Connection_Host-Swift.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface RCMProcessMain ()

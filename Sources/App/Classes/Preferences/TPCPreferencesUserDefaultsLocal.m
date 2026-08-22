@@ -103,30 +103,6 @@ typedef NS_ENUM(NSUInteger, TPCPreferencesComparator) {
 	return ([self keyAppearsInMasterList:defaultName] == NO);
 }
 
-+ (BOOL)keyIsExcludedFromMigration:(NSString *)defaultName
-{
-	NSParameterAssert(defaultName != nil);
-
-	NSDictionary<NSString *, NSNumber *> *cachedValues =
-		[TPCResourceManager dictionaryFromResources:@"KeysExcludedFromMigrate" inDirectory:@"Preferences"];
-
-	__block BOOL returnValue = NO;
-
-	[cachedValues enumerateKeysAndObjectsUsingBlock:^(NSString *cachedKey, NSNumber *cachedObject, BOOL *stop) {
-		if ([self key:defaultName matchesKey:cachedKey usingComparator:cachedObject.unsignedIntegerValue]) {
-			*stop = YES;
-
-			returnValue = YES;
-		}
-	}];
-
-	if (returnValue) {
-		return YES;
-	}
-
-	return ([self keyAppearsInMasterList:defaultName] == NO);
-}
-
 + (BOOL)keyAppearsInMasterList:(NSString *)defaultName
 {
 	NSDictionary<NSString *, NSNumber *> *cachedValues =

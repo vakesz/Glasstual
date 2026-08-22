@@ -126,10 +126,6 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 
 + (nullable NSString *)masqueradeCTCPVersion;
 
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-+ (BOOL)receiveBetaUpdates;
-#endif
-
 + (BOOL)channelNavigationIsServerSpecific;
 
 + (BOOL)automaticallyDetectHighlightSpam;

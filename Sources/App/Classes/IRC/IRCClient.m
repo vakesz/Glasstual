@@ -3624,12 +3624,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		break;
 	}
-	case IRCLocalCommandGetscripts: // Command: GETSCRIPTS
-	{
-		[sharedPluginManager() extrasInstallerLaunchInstaller];
-
-		break;
-	}
 	case IRCLocalCommandGline:	  // Command: GLINE
 	case IRCLocalCommandGzline:	  // Command: GZLINE
 	case IRCLocalCommandShun:	  // Command: SHUN
@@ -4119,22 +4113,9 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		NSString *applicationName = [TPCApplicationInfo applicationNameWithoutVersion];
 		NSString *versionLong = [TPCApplicationInfo applicationVersion];
 		NSString *versionShort = [TPCApplicationInfo applicationVersionShort];
-		//			NSString *buildScheme = [TPCApplicationInfo applicationBuildScheme];
 
 		NSString *downloadSource = @""; // Assume standalone by default
-		NSString *buildType = @"";		// Assume universal binary by default
-
-#if GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY == 0
-		NSString *hostType = nil;
-
-#if TARGET_CPU_ARM64
-		hostType = TXTLS(@"IRC[g1u-os]");
-#elif TARGET_CPU_X86_64
-		hostType = TXTLS(@"IRC[swz-uj]");
-#endif
-
-		buildType = TXTLS(@"IRC[b8p-44]", hostType);
-#endif // Universal
+		NSString *buildType = TXTLS(@"IRC[b8p-44]", TXTLS(@"IRC[g1u-os]"));
 
 		NSString *message =
 			TXTLS(@"IRC[ccb-ur]", applicationName, versionShort, versionLong, downloadSource, buildType);
@@ -5087,17 +5068,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		BOOL pluginFound = NO;
 		BOOL scriptFound = NO;
 
-		BOOL commandIsReserved = NO;
-
 		[sharedPluginManager() findHandlerForOutgoingCommand:lowercaseCommand
 														path:&addonPath
-												  isReserved:&commandIsReserved
 													isScript:&scriptFound
 												 isExtension:&pluginFound];
-
-		if (commandIsReserved) {
-			[sharedPluginManager() extrasInstallerAskUserIfTheyWantToInstallCommand:lowercaseCommand];
-		}
 
 		/* Perform script or plugin. */
 		if (pluginFound && scriptFound) {

@@ -63,7 +63,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server-properties.table-row";
+static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-properties.table-row";
 
 @interface TDCServerPropertiesSheet () <NSControlTextEditingDelegate>
 @property(nonatomic, strong, readwrite, nullable) IRCClient *client;

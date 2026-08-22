@@ -67,10 +67,6 @@
 
 "8hr-8l" = "Requesting an off-the-record private conversation. However, you do not have a plugin to support that. See http://otr.cypherpunks.ca/ for more information.";
 
-"anu-ky" = "Not Encrypted";
-"w34-mg" = "Encrypted & Unverified";
-"l9n-p9" = "Encrypted & Verified";
-
 "67n-6j" = "Off-the-Record Messaging: The fingerprint for %1$@ is “%2$@” — <a href='#' onclick='appPrivate.encryptionAuthenticateUser(); return false;'>Perform authentication</a>";
 
 "mnw-qt" = "Are you sure you want to transfer the file named “%@“?";

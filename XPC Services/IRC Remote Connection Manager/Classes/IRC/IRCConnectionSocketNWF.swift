@@ -458,8 +458,6 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 				readIn(content)
 			}
 
-			EOFReceived = true
-
 			delegate?.connectionClosedReadStream(self)
 
 			return

@@ -374,13 +374,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return nil;
 	}
 
-	NSString *basePath = pathArray.firstObject;
-
-#if GLASSTUAL_BUILT_INSIDE_SANDBOX == 0
-	[self _createDirectoryAtPath:basePath];
-#endif
-
-	return basePath;
+	return pathArray.firstObject;
 }
 
 + (nullable NSURL *)customScriptsURL

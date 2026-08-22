@@ -62,10 +62,6 @@
 #import "TDCPreferencesUserStyleSheetPrivate.h"
 #import "TDCPreferencesControllerPrivate.h"
 
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-#import <Sparkle/Sparkle.h>
-#endif
-
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TXColorUnarchiveFromDataTransformer : NSSecureUnarchiveFromDataTransformer
@@ -226,15 +222,10 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 #endif
 
 @property(nonatomic, strong) IBOutlet NSView *contentViewHiddenPreferences;
-@property(nonatomic, weak) IBOutlet NSButton *checkForUpdatesDontCheck;
-@property(nonatomic, weak) IBOutlet NSButton *checkForUpdatesAutomaticallyCheck;
-@property(nonatomic, weak) IBOutlet NSButton *checkForUpdatesAutomaticallyDownload;
 @property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToServerConsoleButton;
 @property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToSelectedChannelButton;
 @property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToQueryButton;
 @property(nonatomic, weak) IBOutlet NSButton *inlineMediaEnabledButton;
-@property(nonatomic, weak) IBOutlet NSStackView *contentViewGeneralStackView;
-@property(nonatomic, weak) IBOutlet NSView *contentViewGeneralCheckForUpdatesView;
 @property(nonatomic, weak) IBOutlet NSView *contentViewGeneralShareDataView;
 @property(nonatomic, strong) NSSplitViewController *splitViewController;
 @property(nonatomic, strong) NSOutlineView *sidebarOutlineView;
@@ -257,8 +248,6 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 - (IBAction)onAddExcludeKeyword:(nullable id)sender;
 - (IBAction)onAddHighlightKeyword:(nullable id)sender; // changed
 - (IBAction)onChangedAppearance:(nullable id)sender;
-- (IBAction)onChangedCheckForUpdates:(nullable id)sender;
-- (IBAction)onChangedCheckForBetaUpdates:(nullable id)sender;
 - (IBAction)onChangedChannelViewArrangement:(nullable id)sender;
 - (IBAction)onChangedDisableNicknameColorHashing:(nullable id)sender;
 - (IBAction)onChangedForwardNoticeTo:(nullable id)sender;
@@ -362,7 +351,6 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 
 	[self.notificationController attachToView:self.notificationControllerHostView];
 
-	[self updateCheckForUpdatesMatrix];
 	[self updateFileTransferDownloadDestinationFolder];
 	[self updateForwardNoticeToMatrix];
 	[self updateInlineMediaEnabled];
@@ -392,12 +380,6 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 							   selector:@selector(onThemeReloadComplete:)
 								   name:TVCMainWindowDidReloadThemeNotification
 								 object:nil];
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
-	/* Hide preferences for updates when support is not enabled. */
-	[self.contentViewGeneralStackView setVisibilityPriority:NSStackViewVisibilityPriorityNotVisible
-													forView:self.contentViewGeneralCheckForUpdatesView];
-#endif
 
 	[self.contentViewGeneral layoutSubtreeIfNeeded];
 
@@ -1974,42 +1956,6 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 - (void)onChangedForwardNoticeTo:(nullable id)sender
 {
 	[TPCPreferences setLocationToSendNotices:[sender tag]];
-}
-
-#pragma mark -
-#pragma mark Updates
-
-- (void)updateCheckForUpdatesMatrix
-{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	SPUUpdater *updater = masterController().updateController.updater;
-
-	self.checkForUpdatesAutomaticallyDownload.state = updater.automaticallyDownloadsUpdates;
-	self.checkForUpdatesAutomaticallyCheck.state = updater.automaticallyChecksForUpdates;
-	self.checkForUpdatesDontCheck.state =
-		(updater.automaticallyDownloadsUpdates == NO && updater.automaticallyChecksForUpdates == NO);
-#endif
-}
-
-- (void)onChangedCheckForUpdates:(nullable id)sender
-{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	SPUUpdater *updater = masterController().updateController.updater;
-
-	updater.automaticallyChecksForUpdates = (self.checkForUpdatesAutomaticallyCheck.state == NSControlStateValueOn);
-	updater.automaticallyDownloadsUpdates = (self.checkForUpdatesAutomaticallyDownload.state == NSControlStateValueOn);
-#endif
-}
-
-- (void)onChangedCheckForBetaUpdates:(nullable id)sender
-{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	[TPCPreferences performReloadAction:TPCPreferencesReloadActionSparkleFrameworkFeedURL];
-
-	if ([TPCPreferences receiveBetaUpdates]) {
-		[menuController() checkForUpdates:nil];
-	}
-#endif
 }
 
 #pragma mark -

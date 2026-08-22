@@ -47,16 +47,6 @@ fileGroups:
   - README.md
   - Brewfile
 
-# Software updates: Sparkle is not linked. To enable it, set
-# GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED = 1 in Configurations/Base.xcconfig,
-# add the package back here
-#   packages:
-#     Sparkle: { url: https://github.com/sparkle-project/Sparkle, from: 2.9.6 }
-# and `- package: Sparkle` / `product: Sparkle` to the app's dependencies. The
-# release workflow must then re-sign Sparkle's nested tools (Autoupdate,
-# Updater.app, Installer.xpc, Downloader.xpc) with Developer ID, hardened
-# runtime and a secure timestamp before notarization.
-
 # ---------------------------------------------------------------------------
 # Reusable fragments
 # ---------------------------------------------------------------------------
@@ -105,9 +95,6 @@ targetTemplates:
     type: xpc-service
     settings:
       base:
-        GCC_PREPROCESSOR_DEFINITIONS:
-          - $(inherited)
-          - GLASSTUAL_BUILDING_XPC_SERVICE=1
         HEADER_SEARCH_PATHS:
           - $(inherited)
           - "$(SRCROOT)/Sources/Shared/Headers/**"
@@ -141,7 +128,7 @@ targetTemplates:
 # ---------------------------------------------------------------------------
 
 aggregateTargets:
-  # Generates BuildConfig.h and FeatureFlags.h from build settings into
+  # Generates BuildConfig.h from build settings into
   # $(GLASSTUAL_BUILD_HEADERS_DIR). Everything else depends on this target.
   BuildConfig:
     settings:
@@ -149,7 +136,7 @@ aggregateTargets:
         CODE_SIGNING_ALLOWED: NO
         CODE_SIGNING_REQUIRED: NO
     buildScripts:
-      - name: Generate BuildConfig.h and FeatureFlags.h
+      - name: Generate BuildConfig.h
         path: Scripts/GenerateBuildConfig.sh
         shell: /bin/bash
         basedOnDependencyAnalysis: false
@@ -160,7 +147,6 @@ aggregateTargets:
           - $(SRCROOT)/Configurations/Release.xcconfig
         outputFiles:
           - $(GLASSTUAL_BUILD_HEADERS_DIR)/BuildConfig.h
-          - $(GLASSTUAL_BUILD_HEADERS_DIR)/FeatureFlags.h
 
 
 targets:
@@ -338,6 +324,9 @@ targets:
     sources:
       - path: XPC Services/Inline Content Loader/Classes
       - path: XPC Services/Inline Content Loader/Resources/Modules
+        excludes:
+          # Loaded from the bundle root, not from Components (see ICMInlineImage.m).
+          - InlineImageLiveResize.js
         buildPhase:
           copyFiles:
             destination: resources
@@ -407,9 +396,6 @@ targets:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_IRC_PROVISIONING_PROFILE)
     sources:
       - path: XPC Services/IRC Remote Connection Manager/Classes
-        excludes:
-          # The Network.framework socket replaced the classic one.
-          - "**/IRCConnectionSocketClassic.swift"
       - path: XPC Services/IRC Remote Connection Manager/Resources/Language Files
       - path: XPC Services/IRC Remote Connection Manager/Resources/Property Lists/Info.plist
         buildPhase: none
@@ -580,15 +566,11 @@ targets:
       - path: Sources/App/Resources/Images
         excludes:
           - Application/AppIcon.icon
-          - Application/applicationIcon.icns
-          - Application/applicationIcon.iconset
-          - Application/applicationIcon.psd
           - DMG Canvas
       - path: Sources/App/Resources/Images/Application/AppIcon.icon
         type: file
         buildPhase: resources
       - path: Sources/App/Resources/Language Files
-        excludes: [_randomToken]
       - path: Sources/App/Resources/Property Lists
         excludes:
           - Application Properties
@@ -602,8 +584,6 @@ targets:
             subpath: Preferences
       - path: Sources/App/Resources/Scripting/Script Files/Bundled Scripts
         type: folder
-      - path: Sources/App/Resources/Scripting/Script Files/Glasstual Extras Installer/Packages/Glasstual-Extras.pkg
-        buildPhase: resources
       - path: Sources/App/Resources/Styling/Bundled Styles
         type: folder
       - path: Sources/App/Resources/Styling/JavaScript

@@ -80,10 +80,6 @@
 #import "TXWindowControllerPrivate.h"
 #import "TXMenuControllerPrivate.h"
 
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-#import <Sparkle/Sparkle.h>
-#endif
-
 NS_ASSUME_NONNULL_BEGIN
 
 #define _popWindowViewIfExists(c)                                                                                      \
@@ -399,7 +395,6 @@ NS_ASSUME_NONNULL_BEGIN
 		switch (tag) {
 		case MTMMAppAboutApp:						  // "About Glasstual"
 		case MTMMAppPreferences:					  // "Preferences…"
-		case MTMMAppCheckForUpdates:				  // "Check for updates…"
 		case MTMMHelpAdvancedMenuEnableDeveloperMode: // "Enable Developer Mode"
 		case MTMMHelpAdvancedMenuHiddenPreferences:	  // "Hidden Preferences…"
 		case MTMMFileDisableAllNotifications:		  // "Disable All Notifications"
@@ -480,15 +475,6 @@ NS_ASSUME_NONNULL_BEGIN
 		} else {
 			menuItem.submenu = nil;
 		}
-
-		return YES;
-	}
-
-	case MTMMAppCheckForUpdates: // "Check for Updates"
-	{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
-		menuItem.hidden = YES;
-#endif
 
 		return YES;
 	}
@@ -2570,7 +2556,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)contactSupport:(nullable id)sender
 {
-	[TLOpenLink openWithString:@"https://contact.codeux.com/" inBackground:NO];
+	[TLOpenLink openWithString:@"https://github.com/vakesz/Glasstual/issues" inBackground:NO];
 }
 
 - (void)connectToGlasstualHelpChannel:(nullable id)sender
@@ -3022,18 +3008,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 		[RZUserDefaults() setBool:NO forKey:key];
 	}
-}
-
-#pragma mark -
-#pragma mark Sparkle Framework
-
-- (void)checkForUpdates:(nullable id)sender
-{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	SPUStandardUpdaterController *controller = masterController().updateController;
-
-	[controller checkForUpdates:sender];
-#endif
 }
 
 #pragma mark -

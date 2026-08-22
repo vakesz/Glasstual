@@ -32,8 +32,6 @@
 	<integer>0</integer>
 	<key>AutomaticallyReloadCustomThemesWhenTheyChange</key>
 	<integer>0</integer>
-	<key>Blowfish Encryption Extension -&gt; Enable Service</key>
-	<integer>0</integer>
 	<key>ChannelNavigationIsServerSpecific</key>
 	<integer>0</integer>
 	<key>ChannelOperatorDefaultLocalization -&gt; Kick Reason</key>
@@ -90,7 +88,9 @@
 	<integer>0</integer>
 	<key>File Transfers -&gt; File Transfer IP Address Detection Method</key>
 	<integer>0</integer>
-	<key>File Transfers -&gt; File Transfer IP Address Detection Prefers 3rd-party Sources</key>
+	<key>File Transfers -&gt; File Transfer IP Address Interface Name</key>
+	<integer>0</integer>
+	<key>File Transfers -&gt; File Transfer Manually Entered IP Address</key>
 	<integer>0</integer>
 	<key>File Transfers -&gt; File Transfer Port Range End</key>
 	<integer>0</integer>
@@ -134,8 +134,6 @@
 	<integer>0</integer>
 	<key>Internal Theme Settings Key-value Store -&gt; </key>
 	<integer>1</integer>
-	<key>InvertSidebarColors</key>
-	<integer>0</integer>
 	<key>IRC -&gt; Enable echo-message Capability</key>
 	<integer>0</integer>
 	<key>Keyboard -&gt; Command+W Key Action</key>
@@ -176,8 +174,6 @@
 	<integer>0</integer>
 	<key>Private Extension Store -&gt; Caffeine Extension -&gt; Prevent Sleep</key>
 	<integer>0</integer>
-	<key>Private Extension Store -&gt; Blowfish Encryption Extension -&gt; Encryption Mode of Operation -&gt; </key>
-	<integer>1</integer>
 	<key>Off-the-Record Messaging -&gt; Automatically Enable Service</key>
 	<integer>0</integer>
 	<key>Off-the-Record Messaging -&gt; Enable Encryption</key>
@@ -189,8 +185,6 @@
 	<key>OpenClickedLinksInBackgroundBrowser</key>
 	<integer>0</integer>
 	<key>Optimizations -&gt; Load History Lazily</key>
-	<integer>0</integer>
-	<key>ReceiveBetaUpdates</key>
 	<integer>0</integer>
 	<key>RejoinChannelOnLocalKick</key>
 	<integer>0</integer>
@@ -229,18 +223,6 @@
 	<key>Smiley Converter Extension -&gt; Enable Service</key>
 	<integer>0</integer>
 	<key>Smiley Converter Extension -&gt; Enable Extra Emoticons</key>
-	<integer>0</integer>
-	<key>SUEnableAutomaticChecks</key>
-	<integer>0</integer>
-	<key>SUHasLaunchedBefore</key>
-	<integer>0</integer>
-	<key>SULastCheckTime</key>
-	<integer>0</integer>
-	<key>SUScheduledCheckInterval</key>
-	<integer>0</integer>
-	<key>SUSendProfileInfo</key>
-	<integer>0</integer>
-	<key>SUUpdateGroupIdentifier</key>
 	<integer>0</integer>
 	<key>System Profiler Extension -&gt; Feature Disabled -&gt; CPU Model</key>
 	<integer>0</integer>
@@ -311,28 +293,6 @@
 	<key>TrackUserAwayStatusMaximumChannelSize</key>
 	<integer>0</integer>
 	<key>TPCPreferencesDictionaryVersion</key>
-	<integer>0</integer>
-	<key>TPCPreferences -&gt; Migration -&gt; Appearance (7011)</key>
-	<integer>0</integer>
-	<key>TPCPreferences -&gt; Migration -&gt; Sparkle (601)</key>
-	<integer>0</integer>
-	<key>TPCPreferences -&gt; Migration -&gt; Nickname Color Style Overrides</key>
-	<integer>0</integer>
-	<key>TPCPreferences -&gt; Migration -&gt; World Controller Migrated (600)</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; Migrated Resources</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; Installation Migrated</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; User Acknowledged</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; User Prefers Pruning Files</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; All Extensions Pruned</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; Imported Keys</key>
-	<integer>0</integer>
-	<key>THOPluginManager -&gt; Extras Installer Last Check for Update Payload</key>
 	<integer>0</integer>
 	<key>TVCLogControllerHistoricLogFileSavePath_v3</key>
 	<integer>0</integer>

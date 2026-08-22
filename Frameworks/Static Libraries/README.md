@@ -1,28 +1,21 @@
-# Static libraries for Textual
+# Static libraries for Glasstual
 
 ### How this works
 
-`Source/buildLibraries.sh` automates the building of libressl, libgpg-error, libgcrypt, and libotr for the Textual IRC Client.
+`Source/buildLibraries.sh` automates the building of libgpg-error, libgcrypt, and libotr for Glasstual.
 By default, the build is done in `/tmp/static-library-build-results` (override with the `BUILDROOT_DIRECTORY` environment variable).
 
 Current versions (all built for `arm64` only, `MACOSX_DEPLOYMENT_TARGET=26.0`, static only):
 
 | Library | Version | Source | Used by |
 | --- | --- | --- | --- |
-| [LibreSSL](https://www.libressl.org) | 4.3.2 | https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/ | `libcrypto.a`: Blowfish Encryption plugin (DH/BN/SHA). `libssl.a`/`libtls.a` are built but not committed. |
 | [libgpg-error](https://www.gnupg.org/software/libgpg-error/) | 1.61 | https://www.gnupg.org/ftp/gcrypt/libgpg-error/ | Encryption Kit (via libgcrypt/libotr) |
 | [libgcrypt](https://www.gnupg.org/software/libgcrypt/) | 1.11.3 | https://www.gnupg.org/ftp/gcrypt/libgcrypt/ | Encryption Kit (via libotr) |
 | [libotr](https://otr.cypherpunks.ca) | 4.1.1 | https://otr.cypherpunks.ca/ | Encryption Kit |
 
-The build script pins the SHA256 of every release tarball (`LIBRARY_*_SHA256` in `buildLibraries.sh`) and refuses to extract an archive that does not match. When bumping a version, take the new checksum from the mirror (`SHA256` file for LibreSSL, the gnupg.org integrity page or the GPG `.sig` for the GnuPG libraries) and verify the GPG signature of the tarball before updating the pinned value.
+The build script pins the SHA256 of every release tarball (`LIBRARY_*_SHA256` in `buildLibraries.sh`) and refuses to extract an archive that does not match. When bumping a version, take the new checksum from the mirror (the gnupg.org integrity page or the GPG `.sig` for the GnuPG libraries, the `.asc` signature for libotr) and verify the GPG signature of the tarball before updating the pinned value.
 
-Other libraries and frameworks are obtained prebuilt or built manually.
-
-Prebuilt:
-- [Sparkle.framework 2.6.4](https://github.com/sparkle-project/Sparkle/)
-
-Built manually:
-- [asn1c 0.9.28](https://github.com/vlm/asn1c) (used by Apple Receipt Loader, built using `Libraries/Source/Apple Receipt ASN1c/asn1c.xcodeproj`)
+Other libraries are built manually:
 - [GRMustache af9d138f6fc1d985a2c4089ad19b791a02827908](https://github.com/groue/GRMustache) (templating engine, built using `Libraries/Source/GRMustache/GRMustache.xcodeproj`)
 
 ## Main Libraries
@@ -37,16 +30,13 @@ The build only needs Xcode's command line tools (clang, make, lipo). No Homebrew
 1. `cd Source`
 2. `./buildLibraries.sh`
 3. Ensure that `/tmp/static-library-build-results/lib-static/arm64` contains the following files:
-   - libcrypto.a
    - libgcrypt.a
    - libgpg-error.a
    - libotr.a
-   - libssl.a
-   - libtls.a
-4. Copy `libcrypto.a`, `libgcrypt.a`, `libgpg-error.a`, and `libotr.a` into the `Libraries` directory in this repository, overwriting the existing libraries. Do not commit `libssl.a` or `libtls.a`; nothing links them.
+4. Copy `libgcrypt.a`, `libgpg-error.a`, and `libotr.a` into the `Libraries` directory in this repository, overwriting the existing libraries.
 5. Verify the products:
-   - `lipo -archs Libraries/libcrypto.a` prints `arm64`
-   - `otool -l Libraries/libcrypto.a | grep -A3 LC_BUILD_VERSION` shows `platform 1` and `minos 26.0` for every object
+   - `lipo -archs Libraries/libotr.a` prints `arm64`
+   - `otool -l Libraries/libotr.a | grep -A3 LC_BUILD_VERSION` shows `platform 1` and `minos 26.0` for every object
 
 
 ## How to update library versions
@@ -58,42 +48,25 @@ After building the libraries, the following additional steps must be taken:
    `diff -Nruw /tmp/static-library-build-results/includes/x86_64 /tmp/static-library-build-results/includes/arm64`
    
    A slight difference in the comment header in `gpgrt.h` is expected.
-2. Delete the `Headers/libotr` and the `Headers/openssl` directories in this repository.
+2. Delete the `Headers/libotr` directory in this repository.
 3. Copy everything inside `/tmp/static-library-build-results/includes/arm64/` into `Headers` in this repository.
 4. When completed, `Headers` should contain the following files:
    - gcrypt.h
    - gpg-error.h
    - gpgrt.h
-   - tls.h
 
    And the following directories:
    - libmustache
    - libotr
-   - openssl
 5. Delete the following directories within `Documentation` in this repository:
    - libgcrypt
    - libgpg-error
    - libotr
-   - libssl
 6. Copy everything inside `/tmp/static-library-build-results/licenses/arm64/` to `Documentation`.
 7. Build the app (`xcodebuild -scheme Glasstual`) so that Encryption Kit is compiled and linked against the new headers and libraries, and make corrections for any API changes.
-8. The Blowfish Encryption plugin is not part of the Xcode project, so compile-check it by hand against the new `openssl` headers, for example:
-
-   `xcrun clang++ -fsyntax-only -fobjc-arc -std=gnu++20 -I "Frameworks/Static Libraries/Headers" -I "Sources/Plugins/Blowfish Encryption/Classes" -I <dir containing a CocoaExtensions -> "Frameworks/Cocoa Extensions/Classes" symlink> "Sources/Plugins/Blowfish Encryption/Classes/BlowfishEncryptionKeyExchangeBase.mm"`
 
 
 ## Other Libraries
-
-For the prebuilt libraries, just download the latest releases and copy the frameworks into `Libraries`.
-
-For the libraries built manually, instructions follow.
-
-### libasn1: 
-
-1. Build `Source/Apple Receipt ASN1c/asn1c.xcodeproj`.
-2. Copy the `libasn1c.a`  build product into `Libraries`.
-
-Updating this library is somewhat complicated -- files need to be copied from the source package and the Xcode project needs to be modified appropriately.
 
 ### GRMustache:
 

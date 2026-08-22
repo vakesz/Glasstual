@@ -196,12 +196,6 @@
                                     <action selector="showPreferencesWindow:" target="267" id="nJn-8N-O42"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Check for Updates…" tag="105" id="SKm-yR-9hI" image="arrow.down.circle">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="checkForUpdates:" target="267" id="Khl-F9-d2t"/>
-                                </connections>
-                            </menuItem>
                             <menuItem isSeparatorItem="YES" tag="106" id="143">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
