@@ -39,21 +39,34 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@implementation TVCAutoExpandingTextField
-
-- (NSSize)intrinsicContentSize
+BOOL TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(NSTextField *field)
 {
-	if (self.cell.wraps == NO) {
-		return super.intrinsicContentSize;
+	NSCParameterAssert(field != nil);
+
+	if (field.cell.wraps == NO) {
+		return NO;
 	}
 
-	NSRect originalFrame = self.frame;
+	CGFloat width = NSWidth(field.bounds);
 
-	originalFrame.size.height = CGFLOAT_MAX;
+	if (width <= 0.0 || field.preferredMaxLayoutWidth == width) {
+		return NO;
+	}
 
-	NSSize newFrameSize = [self.cell cellSizeForBounds:originalFrame];
+	field.preferredMaxLayoutWidth = width;
 
-	return newFrameSize;
+	[field invalidateIntrinsicContentSize];
+
+	return YES;
+}
+
+@implementation TVCAutoExpandingTextField
+
+- (void)layout
+{
+	[super layout];
+
+	TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(self);
 }
 
 - (void)textDidChange:(NSNotification *)notification

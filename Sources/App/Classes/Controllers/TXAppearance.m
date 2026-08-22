@@ -46,6 +46,10 @@ NSString *const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChan
 
 static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 
+/* The one appearance group defined in the appearance plists. Light and
+ dark are expressed through semantic colors within it. */
+static NSString *const TXAppearanceDefaultName = @"Tahoe";
+
 @interface TXAppearancePropertyCollection ()
 @property(nonatomic, copy, readwrite) NSString *appearanceName;
 @property(nonatomic, assign, readwrite) TXAppearanceType appearanceType;
@@ -56,6 +60,7 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 @interface TXAppearance ()
 @property(nonatomic, strong, readwrite) TXAppearancePropertyCollection *properties;
 @property(nonatomic, assign) BOOL isApplyingAppearance;
+@property(nonatomic, assign) BOOL isObservingAppearance;
 @end
 
 @implementation TXAppearance
@@ -87,25 +92,37 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 			forKeyPath:@"effectiveAppearance"
 			   options:NSKeyValueObservingOptionNew
 			   context:TXAppearanceKVOContext];
+
+	self.isObservingAppearance = YES;
 }
 
 - (void)prepareForApplicationTermination
 {
 	LogToConsoleTerminationProgress("Removing appearance change observers");
 
+	[self removeObservers];
+}
+
+- (void)dealloc
+{
+	[self removeObservers];
+}
+
+/* The object is owned by TXSharedApplication for the life of the
+ process, so -prepareForApplicationTermination is the usual exit.
+ Removing twice is safe: the flag guards the KVO removal, which
+ raises when the observer is not registered. */
+- (void)removeObservers
+{
+	if (self.isObservingAppearance == NO) {
+		return;
+	}
+
+	self.isObservingAppearance = NO;
+
 	[RZWorkspaceNotificationCenter() removeObserver:self];
 
 	[NSApp removeObserver:self forKeyPath:@"effectiveAppearance" context:TXAppearanceKVOContext];
-}
-
-#pragma mark -
-#pragma mark Properties
-
-+ (nullable NSString *)appearanceNameForType:(TXAppearanceType)type
-{
-	/* A single appearance is defined. Light and dark are expressed
-	 through semantic colors so they do not need separate entries. */
-	return @"Tahoe";
 }
 
 #pragma mark -
@@ -190,14 +207,10 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 
 	BOOL isAppearanceDark = (appearanceType == TXAppearanceTypeDark);
 
-	/* Determine best appearance inheritance approach */
-	/* Before Mojave, appearance needs to be applied to every view.
-	 After Mojave, views properly inherit the appearance of the parent
-	 window or the system. If the user selects a specific appearance,
-	 then we apply that to the parent window on Mojave and later to
-	 allow views to inherit that. If the user selects the system
-	 appearance, then we apply nothing and allow it to be inherited
-	 from the system. */
+	/* Views inherit the appearance of their window. When the user picks
+	 a specific appearance it is applied to the application so every
+	 window inherits it; when the user follows the system nothing is
+	 applied and the system appearance flows through. */
 	TXAppKitAppearanceTarget appKitAppearanceTarget = TXAppKitAppearanceTargetNone;
 
 	if (preferredAppearance != TXPreferredAppearanceInherited) {
@@ -227,7 +240,7 @@ static void *TXAppearanceKVOContext = &TXAppearanceKVOContext;
 	/* Assign new properties */
 	TXAppearancePropertyCollection *newProperties = [TXAppearancePropertyCollection new];
 
-	newProperties.appearanceName = [self.class appearanceNameForType:appearanceType];
+	newProperties.appearanceName = TXAppearanceDefaultName;
 
 	newProperties.appearanceType = appearanceType;
 
