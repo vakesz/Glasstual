@@ -153,10 +153,48 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	GLTTestClient *client = [GLTTestClient testClientWithConfigDictionary:@{} nicknamePassword:@"secret"];
 
-	[client receiveCapabilityOrAuthenticationRequest:[self message:@":irc.example.net CAP * LS :sasl=SCRAM-SHA-256"
-														  onClient:client]];
+	/* SCRAM-SHA-512 and GSSAPI are not implemented by this client. */
+	[client
+		receiveCapabilityOrAuthenticationRequest:[self message:@":irc.example.net CAP * LS :sasl=SCRAM-SHA-512,GSSAPI"
+													  onClient:client]];
 
 	XCTAssertEqualObjects(client.sentCapabilityCommands, @[ @"END" ]);
+}
+
+- (void)testSCRAMIsPreferredOverPlain
+{
+	GLTTestClient *client = [GLTTestClient testClientWithConfigDictionary:@{@"nickname" : @"me"}
+														 nicknamePassword:@"secret"];
+
+	XCTAssertTrue(([client selectSASLMechanismFromOffered:@[ @"PLAIN", @"SCRAM-SHA-256" ]]));
+	XCTAssertEqualObjects(client.saslMechanism, @"SCRAM-SHA-256");
+}
+
+- (void)testPlainIsChosenWhenSCRAMIsNotOffered
+{
+	GLTTestClient *client = [GLTTestClient testClientWithConfigDictionary:@{@"nickname" : @"me"}
+														 nicknamePassword:@"secret"];
+
+	XCTAssertTrue([client selectSASLMechanismFromOffered:@[ @"PLAIN" ]]);
+	XCTAssertEqualObjects(client.saslMechanism, @"PLAIN");
+}
+
+- (void)testSASLMechsRetryMovesToNextMechanism
+{
+	GLTTestClient *client = [GLTTestClient testClientWithConfigDictionary:@{@"nickname" : @"me"}
+														 nicknamePassword:@"secret"];
+
+	[client selectSASLMechanismFromOffered:@[ @"PLAIN", @"SCRAM-SHA-256" ]];
+
+	XCTAssertEqualObjects(client.saslMechanism, @"SCRAM-SHA-256");
+
+	/* 908 refused SCRAM and named PLAIN. */
+	XCTAssertTrue([client retrySASLNegotiationWithMechanisms:@[ @"PLAIN" ]]);
+	XCTAssertEqualObjects(client.saslMechanism, @"PLAIN");
+	XCTAssertTrue([client.saslTriedMechanisms containsObject:@"SCRAM-SHA-256"]);
+
+	/* Nothing left to try. */
+	XCTAssertFalse([client retrySASLNegotiationWithMechanisms:@[ @"PLAIN" ]]);
 }
 
 #pragma mark -

@@ -88,6 +88,19 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)scheduleReadMarkerForChannel:(IRCChannel *)channel date:(NSDate *)date;
 - (void)onReadMarkerTimer;
 - (void)requestPlayback;
+
+/* SASL mechanism selection. */
+- (BOOL)selectSASLMechanismFromOffered:(NSArray<NSString *> *)mechanisms;
+@property(nonatomic, copy, nullable) NSString *saslMechanism;
+@property(nonatomic, strong) NSMutableArray<NSString *> *saslTriedMechanisms;
+- (BOOL)retrySASLNegotiationWithMechanisms:(NSArray<NSString *> *)mechanisms;
+
+/* labeled-response delivery tracking. */
+- (BOOL)labeledResponseTrackingEnabled;
+- (nullable NSString *)registerPendingDeliveryForChannel:(nullable IRCChannel *)channel;
+- (BOOL)resolveLabeledResponseForMessage:(IRCMessage *)m;
+- (void)timeoutDeliveryWithLabel:(NSString *)label;
+- (TVCLogLineDeliveryState)deliveryStateForLabel:(NSString *)label;
 @end
 
 NS_ASSUME_NONNULL_END

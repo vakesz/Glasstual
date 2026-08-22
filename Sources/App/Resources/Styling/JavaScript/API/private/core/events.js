@@ -177,6 +177,46 @@ _Glasstual.messageAddedToView = function(lineNumber, fromBuffer) /* PRIVATE */
 	appPrivate.notifyLinesAddedToView(lineNumber);
 };
 
+/* Delivery state of a line the local user sent (labeled-response +
+   echo-message). The line element is updated in place, then the style
+   is told through Glasstual.lineDeliveryStateChanged(). */
+_Glasstual.lineDeliveryStateChanged = function(lineNumber, state, msgid, reason) /* PRIVATE */
+{
+	var line = document.getElementById("line-" + lineNumber);
+
+	if (line) {
+		line.setAttribute("data-delivery-state", state);
+
+		if (msgid) {
+			line.setAttribute("data-msgid", msgid);
+		}
+
+		var failure = line.querySelector(".deliveryFailure");
+
+		if (state === "failed") {
+			if (failure === null) {
+				failure = document.createElement("span");
+
+				failure.className = "deliveryFailure";
+
+				var message = line.querySelector(".innerMessage");
+
+				if (message) {
+					message.appendChild(failure);
+				} else {
+					line.appendChild(failure);
+				}
+			}
+
+			failure.textContent = (reason || "");
+		} else if (failure) {
+			failure.parentNode.removeChild(failure);
+		}
+	}
+
+	Glasstual.lineDeliveryStateChanged(lineNumber, state, msgid, reason);
+};
+
 _Glasstual.messageRemovedFromView = function(lineNumber) /* PRIVATE */
 {
 	/* Allow lineNumber to be an array of line numbers or a single line number. */

@@ -388,3 +388,16 @@ The identifier for a timer can be found using “/timer list”";
 "m2v-sc" = "End of silence list";   // RPL_ENDOFSILELIST
 "m2v-sd" = "This server does not advertise support for the SILENCE command.";
 "m2v-se" = "%@ is a bot"; // RPL_WHOISBOT fallback
+
+/* SASL SCRAM */
+"sts-sc1" = "SASL SCRAM authentication failed: the server sent a malformed message.";
+"sts-sc2" = "SASL SCRAM authentication failed: %@";
+
+/* Strict Transport Security (STS) */
+"sts-p1" = "A Strict Transport Security policy is in effect for this host. Using TLS on port %hu.";
+"sts-p2" = "The server offers Strict Transport Security. Reconnecting with TLS on port %hu.";
+"sts-p3" = "Stored a Strict Transport Security policy for this host: TLS on port %hu.";
+"sts-p4" = "The server withdrew its Strict Transport Security policy for this host.";
+
+/* Labeled response */
+"lbl-to" = "The server did not acknowledge this message.";

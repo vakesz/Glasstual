@@ -4,6 +4,8 @@
 <dict>
 	<key>Plugin Approvals</key>
 	<integer>0</integer>
+	<key>IRC -&gt; STS Policies</key>
+	<integer>0</integer>
 	<key>TXRunCount</key>
 	<integer>0</integer>
 	<key>TXRunTime</key>

@@ -78,6 +78,16 @@ typedef NS_ENUM(NSUInteger, TVCLogLineMemberType) {
 	TVCLogLineMemberTypeLocalUser,
 };
 
+/* Whether a line the local user sent has been confirmed by the server.
+ Only lines sent with labeled-response and echo-message are tracked;
+ every other line is TVCLogLineDeliveryStateNone. */
+typedef NS_ENUM(NSUInteger, TVCLogLineDeliveryState) {
+	TVCLogLineDeliveryStateNone = 0,
+	TVCLogLineDeliveryStatePending,
+	TVCLogLineDeliveryStateDelivered,
+	TVCLogLineDeliveryStateFailed,
+};
+
 #define IRCCommandFromLineType(t) [TVCLogLine stringForLineType:t]
 
 #pragma mark -
@@ -98,6 +108,7 @@ typedef NS_ENUM(NSUInteger, TVCLogLineMemberType) {
 	NSString *messageIdentifier; // The IRCv3 msgid= of the message, when the server sent one
 @property(readonly) TVCLogLineType lineType;
 @property(readonly) TVCLogLineMemberType memberType;
+@property(readonly) TVCLogLineDeliveryState deliveryState;
 @property(readonly, copy, nullable) NSArray<NSString *> *highlightKeywords;
 @property(readonly, copy, nullable) NSArray<NSString *> *excludeKeywords;
 @property(readonly, copy, nullable) NSDictionary<NSString *, id> *rendererAttributes;
@@ -113,9 +124,11 @@ typedef NS_ENUM(NSUInteger, TVCLogLineMemberType) {
 
 @property(readonly, copy, nullable) NSString *lineTypeString;
 @property(readonly, copy) NSString *memberTypeString;
+@property(readonly, copy, nullable) NSString *deliveryStateString; // nil for TVCLogLineDeliveryStateNone
 
 + (nullable NSString *)stringForLineType:(TVCLogLineType)type;
 + (NSString *)stringForMemberType:(TVCLogLineMemberType)type;
++ (nullable NSString *)stringForDeliveryState:(TVCLogLineDeliveryState)state;
 @end
 
 #pragma mark -
@@ -131,6 +144,7 @@ typedef NS_ENUM(NSUInteger, TVCLogLineMemberType) {
 @property(nonatomic, copy, readwrite, nullable) NSString *messageIdentifier;
 @property(nonatomic, assign, readwrite) TVCLogLineType lineType;
 @property(nonatomic, assign, readwrite) TVCLogLineMemberType memberType;
+@property(nonatomic, assign, readwrite) TVCLogLineDeliveryState deliveryState;
 @property(nonatomic, copy, readwrite, nullable) NSArray<NSString *> *highlightKeywords;
 @property(nonatomic, copy, readwrite, nullable) NSArray<NSString *> *excludeKeywords;
 @property(nonatomic, copy, readwrite, nullable) NSDictionary<NSString *, id> *rendererAttributes;

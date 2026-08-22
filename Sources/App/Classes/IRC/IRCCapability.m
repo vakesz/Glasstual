@@ -165,6 +165,12 @@ NS_ASSUME_NONNULL_BEGIN
 		[IRCCapability capabilityNamed:@"extended-join" identifier:ClientIRCv3SupportedCapabilityExtendedJoin],
 		[IRCCapability capabilityNamed:@"extended-monitor" identifier:ClientIRCv3SupportedCapabilityExtendedMonitor],
 		[IRCCapability capabilityNamed:@"invite-notify" identifier:ClientIRCv3SupportedCapabilityInviteNotify],
+		[[IRCCapability alloc] initWithName:@"labeled-response"
+								 identifier:ClientIRCv3SupportedCapabilityLabeledResponse
+						 requestedByDefault:YES
+							 preferenceGate:nil
+							   dependencies:@[ @"message-tags" ]
+							negotiationHook:nil],
 		[IRCCapability capabilityNamed:@"multi-prefix" identifier:ClientIRCv3SupportedCapabilityMultiPrefix],
 		[IRCCapability capabilityNamed:@"pre-away" identifier:ClientIRCv3SupportedCapabilityPreAway],
 		[[IRCCapability alloc] initWithName:@"sasl"

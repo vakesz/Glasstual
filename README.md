@@ -116,14 +116,16 @@ IRCv3 capabilities Glasstual negotiates when the server offers them:
 - `echo-message` (can be switched off in Preferences)
 - `extended-monitor` (away and account changes for monitored nicknames)
 - `invite-notify` (invites for other users are shown in the channel)
+- `labeled-response` (with `echo-message`, each outgoing `PRIVMSG`/`NOTICE` is labelled and its line shown as pending until the echo, an `ACK`/`BATCH` or a `FAIL` resolves it; styles react through `Glasstual.lineDeliveryStateChanged` and the `data-delivery-state` attribute)
 - `message-tags` (incoming and outgoing tags, `TAGMSG`; `msgid` is stored with each line and exposed to styles as `data-msgid`; the `bot` tag marks the sender as a bot)
 - `multi-prefix`
 - `pre-away` (an away message in effect when a connection dropped is restored before registration completes on reconnect)
 - `read-marker` (and `draft/read-marker`): `MARKREAD` from other clients clears unread counts and moves the scrollback mark; viewing a channel tells the bouncer it is read
-- `sasl` (PLAIN and EXTERNAL)
+- `sasl` (`SCRAM-SHA-256`, `PLAIN` and `EXTERNAL`; `SCRAM-SHA-256` is preferred, and `RPL_SASLMECHS` retries with the next mechanism)
 - `server-time`
 - `setname` (incoming `SETNAME` and the `/setname` command)
 - `standard-replies` (`FAIL`, `WARN`, `NOTE`)
+- `sts` (Strict Transport Security: a per-host policy is stored, forces TLS on the policy port on later connects, and a plaintext connection is upgraded immediately; policies never downgrade and are excluded from preference export)
 - `userhost-in-names`
 - ZNC: `znc.in/playback`, `znc.in/self-message`, `znc.in/server-time`, `znc.in/server-time-iso`, `znc.in/tlsinfo`
 

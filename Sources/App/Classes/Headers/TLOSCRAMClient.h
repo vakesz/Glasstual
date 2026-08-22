@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+ *    Copyright (c) 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,34 +35,55 @@
  *
  *********************************************************************** */
 
-#import "TVCLogLinePrivate.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TVCLogLine ()
-{
-  @protected
-	BOOL _isEncrypted;
-	BOOL _isFirstForDay;
-	BOOL _nicknameColorStyleOverride;
-	NSArray<NSString *> *_excludeKeywords;
-	NSArray<NSString *> *_highlightKeywords;
-	NSDictionary<NSString *, id> *_rendererAttributes;
-	NSDate *_receivedAt;
-	NSString *_command;
-	NSString *_messageBody;
-	NSString *_messageIdentifier;
-	NSString *_nickname;
-	NSString *_nicknameColorStyle;
-	TVCLogLineMemberType _memberType;
-	TVCLogLineDeliveryState _deliveryState;
-	TVCLogLineType _lineType;
-	NSUInteger _sessionIdentifier;
+/* Implemented in TLOSCRAMClient.swift */
 
-  @private
-	NSString *_uniqueIdentifier;
-}
+typedef NS_ENUM(NSInteger, TLOSCRAMClientErrorCode) {
+	TLOSCRAMClientErrorCodeInvalidState = 1,
+	TLOSCRAMClientErrorCodeMalformedServerMessage,
+	TLOSCRAMClientErrorCodeNonceMismatch,
+	TLOSCRAMClientErrorCodeIterationCountTooLow,
+	TLOSCRAMClientErrorCodeServerRejected,
+	TLOSCRAMClientErrorCodeServerSignatureMismatch,
+	TLOSCRAMClientErrorCodeKeyDerivationFailed,
+};
 
+typedef NS_ENUM(NSInteger, TLOSCRAMClientState) {
+	TLOSCRAMClientStateInitial = 0,
+	TLOSCRAMClientStateSentClientFirst,
+	TLOSCRAMClientStateSentClientFinal,
+	TLOSCRAMClientStateAuthenticated,
+	TLOSCRAMClientStateFailed,
+};
+
+/**
+ * Client side of SASL SCRAM-SHA-256 (RFC 5802, RFC 7677).
+ *
+ * Send -clientFirstMessage, hand the server's reply to
+ * -clientFinalMessageForServerFirstMessage:error: and send the result,
+ * then check the server's last message with -verifyServerFinalMessage:error:.
+ * An object runs one exchange. Errors are in the domain named by
+ * +errorDomain with a TLOSCRAMClientErrorCode.
+ */
+@interface TLOSCRAMClient : NSObject
+@property(class, readonly, copy) NSString *errorDomain;
+@property(class, readonly, copy) NSString *mechanismName; // "SCRAM-SHA-256"
+
+@property(readonly) TLOSCRAMClientState state;
+
+- (instancetype)initWithUsername:(NSString *)username password:(NSString *)password;
+- (instancetype)initWithUsername:(NSString *)username
+						password:(NSString *)password
+					 clientNonce:(NSString *)clientNonce NS_DESIGNATED_INITIALIZER;
+
+- (instancetype)init NS_UNAVAILABLE;
+
+@property(readonly, copy) NSString *clientFirstMessage;
+
+- (nullable NSString *)clientFinalMessageForServerFirstMessage:(NSString *)serverFirstMessage error:(NSError **)error;
+
+- (BOOL)verifyServerFinalMessage:(NSString *)serverFinalMessage error:(NSError **)error;
 @end
 
 NS_ASSUME_NONNULL_END
