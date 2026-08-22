@@ -371,6 +371,7 @@
 		A10B31B0089BBDB46664EE67 /* ICMGyazo.m in Sources */ = {isa = PBXBuildFile; fileRef = 42B663D0E8092D47627866A1 /* ICMGyazo.m */; };
 		A16CF9C8E39889C85DDDE61A /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1A8C63666782C0ACA8A26A61 /* AppIcon.icon */; };
 		A185E7EC75F64B13C933B765 /* TVCAutoExpandingTokenField.m in Sources */ = {isa = PBXBuildFile; fileRef = 80412FF7B1C7845387CBA569 /* TVCAutoExpandingTokenField.m */; };
+		A1C37BA5E60A0E5BDECB45ED /* IRCClientHistoryTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DB94A132ADD33F177032C91 /* IRCClientHistoryTests.m */; };
 		A1FFC1F64C4E3747B1883F78 /* OELReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D07BD6BF2D373B311283FA4 /* OELReachability.m */; };
 		A21CB2973A95BF5D8E97B8D2 /* NSFontHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A947FE0100C84ED783CBD8C1 /* NSFontHelper.m */; };
 		A251A87C9E73EB672D83F0DF /* TDCChannelModifyTopicSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 341AF331E10198FD57B69811 /* TDCChannelModifyTopicSheet.xib */; };
@@ -867,12 +868,13 @@
 		4E0F6318CBF2B26795332F6B /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation/libotr;
+			dstPath = "Documentation/libgpg-error";
 			dstSubfolderSpec = 7;
 			files = (
-				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
-				789861524D45081052A159D0 /* COPYING in CopyFiles */,
-				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
+				CB507EF316C292844A5A616D /* AUTHORS in CopyFiles */,
+				74B561FFEEE6BD2247489C1B /* COPYING in CopyFiles */,
+				5D95626E0D46B572B41C62CE /* COPYING.LIB in CopyFiles */,
+				9B1A343213FFFB4972E852BF /* THANKS in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -949,13 +951,12 @@
 		C6D85C709B6F0C1C2D08C8C3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "Documentation/libgpg-error";
+			dstPath = Documentation/libotr;
 			dstSubfolderSpec = 7;
 			files = (
-				CB507EF316C292844A5A616D /* AUTHORS in CopyFiles */,
-				74B561FFEEE6BD2247489C1B /* COPYING in CopyFiles */,
-				5D95626E0D46B572B41C62CE /* COPYING.LIB in CopyFiles */,
-				9B1A343213FFFB4972E852BF /* THANKS in CopyFiles */,
+				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
+				789861524D45081052A159D0 /* COPYING in CopyFiles */,
+				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1400,6 +1401,7 @@
 		7D3A88186FA06CB6260EC36E /* ICLPayloadLocalPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICLPayloadLocalPrivate.h; sourceTree = "<group>"; };
 		7D695278FBC506BFEE1CEBCF /* ICMInlineVideo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICMInlineVideo.h; sourceTree = "<group>"; };
 		7D86D0B29D6870A4A171F8A1 /* RCMProcessDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCMProcessDelegate.m; sourceTree = "<group>"; };
+		7DB94A132ADD33F177032C91 /* IRCClientHistoryTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCClientHistoryTests.m; sourceTree = "<group>"; };
 		7DC4F0294F79C5F66A1DB074 /* StaticDefinitions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StaticDefinitions.h; sourceTree = "<group>"; };
 		7E6BAAC9DA4053F1E99EF422 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/BasicLanguage.strings; sourceTree = "<group>"; };
 		7EF448173C4A070EDE0EE300 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/TDCChannelPropertiesSheet.strings; sourceTree = "<group>"; };
@@ -3450,6 +3452,7 @@
 				5905B6DA672451DF8AEE8A29 /* GLTTestClient.m */,
 				359D31DF6C54C42A96218AAA /* IRCCapabilityRegistryTests.m */,
 				FAF2BF53B2F717DFAE2234DC /* IRCChannelModeTests.m */,
+				7DB94A132ADD33F177032C91 /* IRCClientHistoryTests.m */,
 				D44F8D102A7E365A8C6A9262 /* IRCClientNegotiationTests.m */,
 				190FAF6E55D16E0067BB3EF7 /* IRCClientUserIdentityTests.m */,
 				0B64F726549C0B2AE16F8A80 /* IRCISupportInfoTests.m */,
@@ -5026,6 +5029,7 @@
 				C6436BA0E6C47E389EB65974 /* GLTTestClient.m in Sources */,
 				C8FBF0B70606458EDB38203F /* IRCCapabilityRegistryTests.m in Sources */,
 				8CCAB64CEA6D5876DC05B0A2 /* IRCChannelModeTests.m in Sources */,
+				A1C37BA5E60A0E5BDECB45ED /* IRCClientHistoryTests.m in Sources */,
 				B969D5805A0AE1F85CD58804 /* IRCClientNegotiationTests.m in Sources */,
 				E072393F817940C1691B0B85 /* IRCClientUserIdentityTests.m in Sources */,
 				A7C726B7E84F6043FB7AEB87 /* IRCISupportInfoTests.m in Sources */,

@@ -154,6 +154,13 @@
 		<key>outgoingColonIndex</key>
 		<integer>0</integer>
 	</dict>
+	<key>markread</key>
+	<dict>
+		<key>indexValue</key>
+		<integer>1062</integer>
+		<key>outgoingColonIndex</key>
+		<integer>999</integer>
+	</dict>
 	<key>mode</key>
 	<dict>
 		<key>indexValue</key>

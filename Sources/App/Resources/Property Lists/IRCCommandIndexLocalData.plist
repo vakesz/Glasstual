@@ -98,6 +98,15 @@
 		<key>indexValue</key>
 		<integer>5007</integer>
 	</dict>
+	<key>chathistory</key>
+	<dict>
+		<key>developerModeOnly</key>
+		<false/>
+		<key>indexValue</key>
+		<integer>5120</integer>
+		<key>arguments</key>
+		<string>&lt;subcommand&gt; &lt;target&gt; [arguments]</string>
+	</dict>
 	<key>chatops</key>
 	<dict>
 		<key>developerModeOnly</key>

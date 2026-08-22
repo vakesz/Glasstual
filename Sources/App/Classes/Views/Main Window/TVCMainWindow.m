@@ -886,9 +886,28 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 	if (selectedItem) {
 		[selectedItem resetState];
+
+		[self noteItemWasViewed:selectedItem];
 	}
 
 	[TVCDockIcon updateDockIcon];
+}
+
+/* The user is looking at the item in the active window, so other
+ clients on a bouncer can be told it is read. */
+- (void)noteItemWasViewed:(IRCTreeItem *)item
+{
+	if (self.keyWindow == NO) {
+		return;
+	}
+
+	IRCChannel *channel = item.associatedChannel;
+
+	if (channel == nil) {
+		return;
+	}
+
+	[channel.associatedClient markChannelAsRead:channel];
 }
 
 - (void)reloadSubviewDrawings
@@ -2231,6 +2250,8 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 		}
 
 		[itemChangedTo resetState];
+
+		[self noteItemWasViewed:itemChangedTo];
 	}
 
 	/* Notify WebKit its selection status has changed */
