@@ -523,7 +523,7 @@ static NSUInteger _numberOfOpenFileHandles = 0;
 											  clientName.safeFilename,
 											  TLOFileLoggerChannelDirectoryName,
 											  channel.name.safeFilename];
-	} else if (channel.isPrivateMessage) {
+	} else if (channel.isPrivateMessage || channel.isDirectChat) {
 		basePath = [NSString stringWithFormat:@"/%@/%@/%@/",
 											  clientName.safeFilename,
 											  TLOFileLoggerPrivateMessageDirectoryName,

@@ -396,7 +396,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 	case MTMainMenuQuery: // "Query"
 	{
-		BOOL isQuery = (c.isPrivateMessage || c.isUtility);
+		BOOL isQuery = (c.isPrivateMessage || c.isUtility || c.isDirectChat);
 
 		menuItem.hidden = (isQuery == NO);
 
@@ -448,7 +448,7 @@ NS_ASSUME_NONNULL_BEGIN
 				}
 			} else if (c.isPrivateMessage) {
 				menuItem.title = TXTLS(@"BasicLanguage[hri-l0]");
-			} else if (c.isUtility) {
+			} else if (c.isUtility || c.isDirectChat) {
 				menuItem.title = TXTLS(@"BasicLanguage[hri-l0]");
 			}
 
