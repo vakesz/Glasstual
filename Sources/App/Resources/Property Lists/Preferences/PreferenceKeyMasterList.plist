@@ -172,6 +172,8 @@
 	<integer>0</integer>
 	<key>PreferModernCiphers</key>
 	<integer>0</integer>
+	<key>Plugin Approvals</key>
+	<integer>0</integer>
 	<key>Private Extension Store -&gt; Caffeine Extension -&gt; Prevent Sleep</key>
 	<integer>0</integer>
 	<key>Off-the-Record Messaging -&gt; Automatically Enable Service</key>

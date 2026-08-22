@@ -263,7 +263,8 @@ NS_ASSUME_NONNULL_BEGIN
 	[[self remoteObjectProxy] exportSecureConnectionInformation:^(NSString *_Nullable policyName,
 																  tls_protocol_version_t protocolType,
 																  tls_ciphersuite_t cipherSuites,
-																  NSArray<NSData *> *certificateChain) {
+																  NSArray<NSData *> *certificateChain,
+																  NSString *_Nullable trustFailureDescription) {
 		if (policyName == nil) {
 			return;
 		}
@@ -305,6 +306,11 @@ NS_ASSUME_NONNULL_BEGIN
 			promptInformativeText = TXTLS(@"Prompts[iun-45]", policyName, protocolSummary);
 		}
 
+		if (trustFailureDescription != nil) {
+			promptInformativeText =
+				[promptInformativeText stringByAppendingString:TXTLS(@"Prompts[k3t-vq]", trustFailureDescription)];
+		}
+
 		__block NSWindow *window = nil;
 
 		XRPerformBlockSynchronouslyOnMainQueue(^{
@@ -334,7 +340,8 @@ NS_ASSUME_NONNULL_BEGIN
 	[[self remoteObjectProxy] exportSecureConnectionInformation:^(NSString *_Nullable policyName,
 																  tls_protocol_version_t protocolType,
 																  tls_ciphersuite_t cipherSuites,
-																  NSArray<NSData *> *certificateChain) {
+																  NSArray<NSData *> *certificateChain,
+																  NSString *_Nullable trustFailureDescription) {
 		if (policyName == nil) {
 			return;
 		}

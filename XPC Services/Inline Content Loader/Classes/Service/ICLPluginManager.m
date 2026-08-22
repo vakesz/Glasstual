@@ -35,8 +35,6 @@
  *
  *********************************************************************** */
 
-/* TODO: Entitlements do not allow access to plugins outside app in Standard Release */
-
 #import "ICLPluginProtocol.h"
 #import "ICLPluginManagerPrivate.h"
 
@@ -68,27 +66,17 @@ NS_ASSUME_NONNULL_BEGIN
 	return [RZMainBundle() URLForResource:@"Extensions" withExtension:nil];
 }
 
-- (void)loadPluginsAtLocations:(NSArray<NSURL *> *)pluginLocations
+- (void)loadBundledPlugins
 {
-	NSParameterAssert(pluginLocations != nil);
-
 	NSAssert((self.pluginsLoaded == NO), @"Plugins already loaded");
 
-	pluginLocations = [pluginLocations arrayByAddingObject:[self _bundledPluginsURL]];
+	/* Only modules shipped inside this service are loaded. The service
+	 cannot ask the user whether a module found in the user-writable group
+	 container should be trusted, so it never looks there. The main
+	 application performs that check for its own plugins. */
+	NSArray<NSBundle *> *loadedPlugins = [self _loadPluginsAtPath:self._bundledPluginsURL.path];
 
-	NSMutableArray<NSBundle *> *loadedPlugins = [NSMutableArray array];
-
-	for (NSURL *pluginLocation in pluginLocations) {
-		NSString *pluginPath = pluginLocation.path;
-
-		NSArray *plugins = [self _loadPluginsAtPath:pluginPath];
-
-		if (plugins) {
-			[loadedPlugins addObjectsFromArray:plugins];
-		}
-	}
-
-	self.loadedPlugins = loadedPlugins;
+	self.loadedPlugins = (loadedPlugins ?: @[]);
 
 	self.pluginsLoaded = YES;
 

@@ -32,43 +32,29 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/* Items are stored in the data protection keychain
+ (kSecUseDataProtectionKeychain) with the accessibility
+ kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly. Items written by
+ earlier versions into the legacy file-based keychain are migrated on
+ first read: the legacy item is copied into the data protection
+ keychain and then deleted. */
 @interface XRKeychain : NSObject
-+ (BOOL)deleteKeychainItem:(NSString *)keychainItemName 
-			  withItemKind:(NSString *)keychainItemKind 
-			   forUsername:(nullable NSString *)username
-			   serviceName:(NSString *)service;
-
 + (BOOL)deleteKeychainItem:(NSString *)keychainItemName
 			  withItemKind:(NSString *)keychainItemKind
 			   forUsername:(nullable NSString *)username
-			   serviceName:(NSString *)service
-				 fromCloud:(BOOL)deleteFromCloud;
-
-+ (BOOL)modifyOrAddKeychainItem:(NSString *)keychainItemName 
-				   withItemKind:(NSString *)keychainItemKind 
-					forUsername:(nullable NSString *)username
-				withNewPassword:(nullable NSString *)newPassword
-					serviceName:(NSString *)service;
+			   serviceName:(NSString *)service;
 
 + (BOOL)modifyOrAddKeychainItem:(NSString *)keychainItemName
 				   withItemKind:(NSString *)keychainItemKind
 					forUsername:(nullable NSString *)username
 				withNewPassword:(nullable NSString *)newPassword
-					serviceName:(NSString *)service
-					   forCloud:(BOOL)modifyForCloud;
-
-+ (BOOL)addKeychainItem:(NSString *)keychainItemName 
-		   withItemKind:(NSString *)keychainItemKind 
-			forUsername:(nullable NSString *)username 
-		   withPassword:(NSString *)password
-			serviceName:(NSString *)service;
+					serviceName:(NSString *)service;
 
 + (BOOL)addKeychainItem:(NSString *)keychainItemName
 		   withItemKind:(NSString *)keychainItemKind
 			forUsername:(nullable NSString *)username
 		   withPassword:(NSString *)password
-			serviceName:(NSString *)service
-			  ontoCloud:(BOOL)addToCloud;
+			serviceName:(NSString *)service;
 
 + (nullable NSString *)getPasswordFromKeychainItem:(NSString *)keychainItemName
 									  withItemKind:(NSString *)keychainItemKind
@@ -79,7 +65,6 @@ NS_ASSUME_NONNULL_BEGIN
 									  withItemKind:(NSString *)keychainItemKind
 									   forUsername:(nullable NSString *)username
 									   serviceName:(NSString *)service
-										 fromCloud:(BOOL)searchForOnCloud
 								returnedStatusCode:(OSStatus * _Nullable)statusCode;
 @end
 

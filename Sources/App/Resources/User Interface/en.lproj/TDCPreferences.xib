@@ -3442,12 +3442,25 @@ Messages are not saved between app launches unless “Restore scrollback from pr
                                                         <action selector="onOpenPathToScripts:" target="-2" id="0gm-KQ-Hgc"/>
                                                     </connections>
                                                 </button>
+                                                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="pLa-rs-Ap1">
+                                                    <rect key="frame" x="280" y="-1" width="150" height="19"/>
+                                                    <buttonCell key="cell" type="roundRect" title="Reset Plugin Approvals" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="pLa-rs-Ap2">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <font key="font" metaFont="cellTitle"/>
+                                                    </buttonCell>
+                                                    <accessibility description="Reset Plugin Approvals"/>
+                                                    <connections>
+                                                        <action selector="onResetPluginApprovals:" target="-2" id="pLa-rs-Ap3"/>
+                                                    </connections>
+                                                </button>
                                             </subviews>
                                             <visibilityPriorities>
                                                 <integer value="1000"/>
                                                 <integer value="1000"/>
+                                                <integer value="1000"/>
                                             </visibilityPriorities>
                                             <customSpacing>
+                                                <real value="3.4028234663852886e+38"/>
                                                 <real value="3.4028234663852886e+38"/>
                                                 <real value="3.4028234663852886e+38"/>
                                             </customSpacing>
