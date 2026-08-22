@@ -11,7 +11,7 @@
 			isa = PBXAggregateTarget;
 			buildConfigurationList = D7E00ECEFB0F53BA5EE9805D /* Build configuration list for PBXAggregateTarget "BuildConfig" */;
 			buildPhases = (
-				CCEBC26890415652DBCCC8C7 /* Generate BuildConfig.h and FeatureFlags.h */,
+				9DC31B9B52E7EF21E3A4223E /* Generate BuildConfig.h */,
 			);
 			dependencies = (
 			);
@@ -146,7 +146,6 @@
 		3A776EA93F55670A8A21B80D /* TVCTextViewWithIRCFormatter.m in Sources */ = {isa = PBXBuildFile; fileRef = C8CD2C317251D099E2D02385 /* TVCTextViewWithIRCFormatter.m */; };
 		3AC22D55A3FC3D72B4F3B546 /* OTRKitFrameworkHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 9D5623564968592C29DF63C7 /* OTRKitFrameworkHelpers.m */; };
 		3AD51A5F17AD763E6F78D3E7 /* NSTabViewHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 1180905A597FD7C5885474A5 /* NSTabViewHelper.m */; };
-		3AE98D25A912725C40816BCB /* ICMTwitchLive.mustache in Resources */ = {isa = PBXBuildFile; fileRef = 828FAEBC38DC0C3DD20480C4 /* ICMTwitchLive.mustache */; };
 		3B39169B4F19F0CE0FD9553C /* TVCMemberList.m in Sources */ = {isa = PBXBuildFile; fileRef = F09EDFC011C45C0536EF0F36 /* TVCMemberList.m */; };
 		3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 215C3A04759171741632CD9C /* IRC Connection Host.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3B6A5B5108548777B8F670B2 /* IRCUserPersistentStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D188727E4C8BD2D41A7E347 /* IRCUserPersistentStore.m */; };
@@ -209,7 +208,6 @@
 		5708A0F3B145BC5EB0782403 /* TDCChannelSpotlightAppearance.plist in Resources */ = {isa = PBXBuildFile; fileRef = 077D5139E36E3AD258489A5E /* TDCChannelSpotlightAppearance.plist */; };
 		5848419145663E83911BB21A /* ICLHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6AD859CA671993B565E187 /* ICLHelpers.m */; };
 		585EF6A4AD7A4EB18F7C482A /* TDCWindowBase.m in Sources */ = {isa = PBXBuildFile; fileRef = B62230E0B65BF0FAC970E7F7 /* TDCWindowBase.m */; };
-		586D68B7673032A3167C3AF6 /* TPCSandboxMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = 5A225C7A9929D2F850BD36F7 /* TPCSandboxMigration.m */; };
 		59FAC350E42D474190E88CFF /* SWDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA470D482C58B49977F76432 /* SWDataHelper.swift */; };
 		5B12BC9B8CDACC71AA2F447A /* TDCFileTransferDialog.strings in Resources */ = {isa = PBXBuildFile; fileRef = FF3F7905102C69A54D420F68 /* TDCFileTransferDialog.strings */; };
 		5B248495881FF01CD2CE3DB7 /* OTRTLV.m in Sources */ = {isa = PBXBuildFile; fileRef = BBA8049DFB069CF296A40963 /* OTRTLV.m */; };
@@ -249,7 +247,6 @@
 		6A60AE5FCA0D3F0911CA98D7 /* OTRKit.m in Sources */ = {isa = PBXBuildFile; fileRef = 06EE88B60A800CEE693A7241 /* OTRKit.m */; };
 		6A873D6225AA0DB442959896 /* libgpg-error.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FCFE336AB5B3BB026FE6FF94 /* libgpg-error.a */; };
 		6B8601C2DD03A0DC148660D9 /* IRCConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3FAD7671BF0A525FCDE82DC /* IRCConnection.swift */; };
-		6BF6024730A3E60F0DA975C1 /* HistoricLogFileStorageModel.xcmappingmodel in Sources */ = {isa = PBXBuildFile; fileRef = 30F87B768C1FEB7044D138DE /* HistoricLogFileStorageModel.xcmappingmodel */; };
 		6CC3A44B03BC8ED9B7A166DD /* HLSHistoricLogProcessMain.m in Sources */ = {isa = PBXBuildFile; fileRef = A6B0200E95D7402224A9E860 /* HLSHistoricLogProcessMain.m */; };
 		6CD0017E576BAC401083387C /* TPISystemProfiler.xib in Resources */ = {isa = PBXBuildFile; fileRef = 5808EBD57D2B09A4233161E8 /* TPISystemProfiler.xib */; };
 		6DA9C6EB577578C1E6DAC128 /* NSIndexSetHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = FC553E099950D0FECA61C316 /* NSIndexSetHelper.m */; };
@@ -285,7 +282,6 @@
 		7B15534CD12DE357336F735E /* IRCClientConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 578891DF4D00C898BD1022D4 /* IRCClientConfig.m */; };
 		7C094A5F8E6539D584B93773 /* IRCWorld.m in Sources */ = {isa = PBXBuildFile; fileRef = 02826DB08F1C371479868ECF /* IRCWorld.m */; };
 		7C3499A5DF9DF5B99E3E0980 /* OTRKitAutoExpandingTextField.h in Headers */ = {isa = PBXBuildFile; fileRef = 9F5B773A788BEE4F22A470C3 /* OTRKitAutoExpandingTextField.h */; };
-		7C9466CD235ADB37CFDE9AD0 /* InlineImageLiveResize.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3AB006EB2A9D0A97B18245A1 /* InlineImageLiveResize.js */; };
 		7D1FBB8D40CEC77377428BBE /* TDCChannelBanListSheet.m in Sources */ = {isa = PBXBuildFile; fileRef = DABB59BD005B3BA677AF6002 /* TDCChannelBanListSheet.m */; };
 		7EAA5D8FEC9F57629F5E0F83 /* IRCAddressBook.m in Sources */ = {isa = PBXBuildFile; fileRef = 11AFA6AC7C1B5605075E5173 /* IRCAddressBook.m */; };
 		7ECEFE9DFD6D49FB6145B85A /* SecurityInterface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09337EC215A29A9E3EF5FF5E /* SecurityInterface.framework */; };
@@ -388,7 +384,6 @@
 		A251A87C9E73EB672D83F0DF /* TDCChannelModifyTopicSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 341AF331E10198FD57B69811 /* TDCChannelModifyTopicSheet.xib */; };
 		A2F54C299BCD0351C1064DBF /* NSSplitViewHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 99CE5F995E6992A32A99436F /* NSSplitViewHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A3426C7648714583FDA10F19 /* NSStringHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 821E2DE7BC3A9EB097E4B054 /* NSStringHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A35AC22364FDB311A78E4989 /* HLSHistoricLogLineEntityMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = 60676E0D7054EEFFFFBF343C /* HLSHistoricLogLineEntityMigration.m */; };
 		A398CDE9CD9165FA64FDA1D1 /* TDCServerChangeNicknameSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 86AA0321BC189F4ADC75332C /* TDCServerChangeNicknameSheet.xib */; };
 		A40F1ADFC4162FCAEFB5173B /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
 		A4485AE67A20D5685CB73507 /* TDCInputPrompt.m in Sources */ = {isa = PBXBuildFile; fileRef = 319AC2165CC177F6743C6721 /* TDCInputPrompt.m */; };
@@ -416,7 +411,6 @@
 		B2737FF219B8B73F0155E2E4 /* NSObjectHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = EAF37627D80A4193C7208580 /* NSObjectHelper.m */; };
 		B2C57BFD26B804179E949692 /* TPI_Caffeine.m in Sources */ = {isa = PBXBuildFile; fileRef = A69359FBA86EAD144BBCA35F /* TPI_Caffeine.m */; };
 		B41B3527804C66FCD323ADAB /* OTRTLV.h in Headers */ = {isa = PBXBuildFile; fileRef = AC816931E05C1432D94EAC50 /* OTRTLV.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B44C6E6C698261F178BE1A25 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 541F120DCC147A99B1AC3A9A /* Assets.xcassets */; };
 		B54D23FFC7303D69B9A9AC7A /* TDCWelcomeSheet.m in Sources */ = {isa = PBXBuildFile; fileRef = FB5CEFC17F3DF1F6E6A836D9 /* TDCWelcomeSheet.m */; };
 		B68DC936DC13CD375B2B3176 /* TVCDockIcon.m in Sources */ = {isa = PBXBuildFile; fileRef = 1154AF48C63EBDCB48518881 /* TVCDockIcon.m */; };
 		B7E45CBE2488608068A545A0 /* GRMustache.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2387424F53D52D925E36D60A /* GRMustache.framework */; };
@@ -505,7 +499,6 @@
 		E0A3E0D6CF11AC47F2366056 /* NSObjectHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 6942325F5DC5AC671F15A0C7 /* NSObjectHelper.m */; };
 		E1038A346CC0D8E01F9F968B /* TDCFileTransferDialog.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F7F52AF3B4E86235F31E323 /* TDCFileTransferDialog.m */; };
 		E1058B53725E1797C5EEF9DB /* NSStringHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 5AACC24E29D3C203D100D8F2 /* NSStringHelper.m */; };
-		E175765F98A8E231B86DBC28 /* ICMTwitchLive.m in Sources */ = {isa = PBXBuildFile; fileRef = D7B01F007D0B7ADD61B8841D /* ICMTwitchLive.m */; };
 		E17B028E87B1B05290E128CA /* NSFileManagerHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 39FB8E869ED588323C783445 /* NSFileManagerHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E289F0804F1208A3F7592B7F /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2A004E970E8E1560F2E05FE4 /* LICENSE.txt */; };
 		E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7D0C2BC1EDFFEB2CFFD81570 /* Scrollback History Manager.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -519,11 +512,9 @@
 		E62A165D2759362C23247FA4 /* KeysExcludedFromExport.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6C46F91C7A1603CECCD80BFF /* KeysExcludedFromExport.plist */; };
 		E65C7C4529E84CA2C1AC00DE /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
 		E68587B3A2992719D32E0B2C /* GRMustache.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2387424F53D52D925E36D60A /* GRMustache.framework */; };
-		E6A564119582FF1D715CED77 /* Glasstual-Extras.pkg in Resources */ = {isa = PBXBuildFile; fileRef = 9BB3958E9AB7851386E1A43B /* Glasstual-Extras.pkg */; };
 		E7216F2AC090CA2CF51C619E /* TPCTheme.m in Sources */ = {isa = PBXBuildFile; fileRef = 6579927065D290638C4E0951 /* TPCTheme.m */; };
 		E72465E8D8285AED780F2B2D /* IRCConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B2EC90CC835E3F535F52CD1 /* IRCConnection.m */; };
 		E7A999E52156F5F303D4D381 /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
-		E8742245180378431EB9E058 /* ICMTwitchClips.mustache in Resources */ = {isa = PBXBuildFile; fileRef = 6CA62BF622280D39A4C54114 /* ICMTwitchClips.mustache */; };
 		E8EDA8048BCD7EA7C15DAFF0 /* IRCHighlightMatchCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = 689BBEE85528DD819CF3C6AA /* IRCHighlightMatchCondition.m */; };
 		EA9D40DF524250BA0456BEC3 /* GTMEncodeHTML.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E10616D489E6568174E7E73 /* GTMEncodeHTML.m */; };
 		EAA16BF275FD48123B5227A0 /* LICENSE-MPLv2-0.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = E87F2F2E8D0B66B29E541931 /* LICENSE-MPLv2-0.txt */; };
@@ -554,7 +545,6 @@
 		F408F735266C37BA8E78AEEA /* TDCAboutDialog.m in Sources */ = {isa = PBXBuildFile; fileRef = 008906B451D63F390CCAA2AC /* TDCAboutDialog.m */; };
 		F4330C2F7FBF9A5F22E9B852 /* OTRKitAuthenticationDialogIncoming.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D101F7B8289844AB9F6E4BD /* OTRKitAuthenticationDialogIncoming.m */; };
 		F4499E6B7EA7430827A12D7F /* ICMVimeo.m in Sources */ = {isa = PBXBuildFile; fileRef = 66E41EC0BA995E167AFFDE00 /* ICMVimeo.m */; };
-		F44C55DD7A4BF5330A69980E /* KeysExcludedFromMigrate.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = CB7A66252BD4F8066CB586D3 /* KeysExcludedFromMigrate.plist */; };
 		F4A45A459643A8D4B8C8998D /* TPI_ChatFilterEditFilterSheet.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2CA329C038F13255237A962F /* TPI_ChatFilterEditFilterSheet.strings */; };
 		F4F8D87DA16626D27902DB73 /* EncryptionKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 28B360BB8032D6F33DF296AA /* EncryptionKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F6089BF4C5B4A3D13C261AAC /* TDCProgressIndicatorSheet.m in Sources */ = {isa = PBXBuildFile; fileRef = EDA943E062C02534E9EDC2E2 /* TDCProgressIndicatorSheet.m */; };
@@ -572,7 +562,6 @@
 		FE78BC433420D51FF72B06A9 /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
 		FE9EBAD000E5716001CB4A5F /* TLOLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = F18DE591344E18C11A6B09A3 /* TLOLocalization.swift */; };
 		FEAD87EB5BF866BCF8240B0F /* ICMInlineVideo.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 825EB7CB63552B72CA61CAC3 /* ICMInlineVideo.js */; };
-		FF4ED8EFF2F4464580D6D051 /* ICMTwitchClips.m in Sources */ = {isa = PBXBuildFile; fileRef = 7979AD09F7642C879EB8E24E /* ICMTwitchClips.m */; };
 		FF8F4486BAC2CD0DFC244D8E /* ICMInlineHTML.m in Sources */ = {isa = PBXBuildFile; fileRef = A25A0FE68EDB66A645336726 /* ICMInlineHTML.m */; };
 		FFEADE2AC87CD4934C9C5951 /* XRPortablePropertyObject.m in Sources */ = {isa = PBXBuildFile; fileRef = B0BA06DA587F35A7A1FC306F /* XRPortablePropertyObject.m */; };
 /* End PBXBuildFile section */
@@ -829,22 +818,22 @@
 		070DCA40BB8576D920BC2970 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation;
-			dstSubfolderSpec = 7;
-			files = (
-				67005A64D2A2209169D31815 /* Acknowledgements.pdf in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
 			dstSubfolderSpec = 16;
 			files = (
 				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
 				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
 				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Documentation;
+			dstSubfolderSpec = 7;
+			files = (
+				67005A64D2A2209169D31815 /* Acknowledgements.pdf in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -856,7 +845,6 @@
 			files = (
 				FA71C3278375D1BD0925B4A6 /* KeysExcludedFromContainer.plist in CopyFiles */,
 				E62A165D2759362C23247FA4 /* KeysExcludedFromExport.plist in CopyFiles */,
-				F44C55DD7A4BF5330A69980E /* KeysExcludedFromMigrate.plist in CopyFiles */,
 				12E7B04A8D1C89F3E824563D /* PreferenceKeyMasterList.plist in CopyFiles */,
 				EB3C2F7F50214F6CC6EC1F6A /* RegisteredUserDefaults.plist in CopyFiles */,
 				EC95BE126D4DA67BD4016649 /* RegisteredUserDefaultsInContainer.plist in CopyFiles */,
@@ -943,11 +931,22 @@
 				97659B1D199B6E35E787A3EE /* ICMInlineVideo.css in CopyFiles */,
 				FEAD87EB5BF866BCF8240B0F /* ICMInlineVideo.js in CopyFiles */,
 				63BCC29388BD434E3AFE9624 /* ICMInlineVideo.mustache in CopyFiles */,
-				7C9466CD235ADB37CFDE9AD0 /* InlineImageLiveResize.js in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		C6D85C709B6F0C1C2D08C8C3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Documentation;
+			dstSubfolderSpec = 7;
+			files = (
+				8A2316D4B852F7647761AC38 /* LICENSE-GPLv2-1.txt in CopyFiles */,
+				EAA16BF275FD48123B5227A0 /* LICENSE-MPLv2-0.txt in CopyFiles */,
+				C6EC020D581671E7DC34004B /* LICENSE-OTRKit.txt in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DDCD514A34BF37DC91E049D4 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = Documentation/libgcrypt;
@@ -958,18 +957,6 @@
 				8855A7F0CCD51DC25A33BB4C /* COPYING.LIB in CopyFiles */,
 				3E70A09D1559F877672ABEC0 /* LICENSES in CopyFiles */,
 				9AA4B9BFDA2F296B62C2E787 /* THANKS in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DDCD514A34BF37DC91E049D4 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = Documentation;
-			dstSubfolderSpec = 7;
-			files = (
-				8A2316D4B852F7647761AC38 /* LICENSE-GPLv2-1.txt in CopyFiles */,
-				EAA16BF275FD48123B5227A0 /* LICENSE-MPLv2-0.txt in CopyFiles */,
-				C6EC020D581671E7DC34004B /* LICENSE-OTRKit.txt in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1053,7 +1040,6 @@
 		15DB67AFBAB8F07F38590360 /* AUTHORS */ = {isa = PBXFileReference; path = AUTHORS; sourceTree = "<group>"; };
 		15E772456F1D79F873810F11 /* TVCAppearance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCAppearance.h; sourceTree = "<group>"; };
 		164BA2712635943D54D9D5EE /* IRCUserPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCUserPrivate.h; sourceTree = "<group>"; };
-		164D1951D076C1D6B30DBD52 /* LogControllerStorageModel (model 2).xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "LogControllerStorageModel (model 2).xcdatamodel"; sourceTree = "<group>"; };
 		16A45425D13CC9EA49DD73B3 /* TDCServerEndpointListSheetTablePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCServerEndpointListSheetTablePrivate.h; sourceTree = "<group>"; };
 		17115392AF58F9BBBFE7E8CD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/OTRKitFingerprintManagerDialog.xib; sourceTree = "<group>"; };
 		17152CDAC5C09AA8E1DF8B74 /* TDCServerHighlightListSheet.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCServerHighlightListSheet.m; sourceTree = "<group>"; };
@@ -1065,7 +1051,6 @@
 		1920CEC76088E5F4B823E2B5 /* TDCChannelSpotlightControlsPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCChannelSpotlightControlsPrivate.h; sourceTree = "<group>"; };
 		192D7EB3781DD5171D713B94 /* ICLMediaAssessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICLMediaAssessor.h; sourceTree = "<group>"; };
 		1969A3CB2FC6ED8060A85305 /* conversionTable2.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = conversionTable2.plist; sourceTree = "<group>"; };
-		197289D5571DB8F48C5D26E3 /* ICMTwitchLive.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICMTwitchLive.h; sourceTree = "<group>"; };
 		197AA16232A5482D666BC58D /* TVCLogControllerHistoricLogFile.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCLogControllerHistoricLogFile.m; sourceTree = "<group>"; };
 		1A3AE6FFFE29705EBCA20DDB /* IRCHighlightLogEntryInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCHighlightLogEntryInternal.h; sourceTree = "<group>"; };
 		1A8C63666782C0ACA8A26A61 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
@@ -1141,7 +1126,6 @@
 		2F3E8BB2C1D4A329A58F2BBE /* NSErrorHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSErrorHelper.m; sourceTree = "<group>"; };
 		2FF67BCCD861C7B0DBA44DCB /* NSOutlineViewHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSOutlineViewHelper.m; sourceTree = "<group>"; };
 		30B5205C6E8DA2C7C9E58223 /* TVCMemberListUserInfoPopoverPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCMemberListUserInfoPopoverPrivate.h; sourceTree = "<group>"; };
-		30F87B768C1FEB7044D138DE /* HistoricLogFileStorageModel.xcmappingmodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcmappingmodel; path = HistoricLogFileStorageModel.xcmappingmodel; sourceTree = "<group>"; };
 		313ACE7207F4AB25DE5B3132 /* IRCPrefixInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCPrefixInternal.h; sourceTree = "<group>"; };
 		31751C9C98BAD79D402FB1AE /* ICLPluginManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ICLPluginManager.m; sourceTree = "<group>"; };
 		319AC2165CC177F6743C6721 /* TDCInputPrompt.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCInputPrompt.m; sourceTree = "<group>"; };
@@ -1262,7 +1246,6 @@
 		530C3878C2EDE7F7AF4C6E45 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		533C0F864EA352B2DD904004 /* TDCFileTransferDialogTransferController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCFileTransferDialogTransferController.m; sourceTree = "<group>"; };
 		53F1A8DB509975C70C8FFF47 /* LICENSES */ = {isa = PBXFileReference; path = LICENSES; sourceTree = "<group>"; };
-		541F120DCC147A99B1AC3A9A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		543CD43EB579A50A58DD34E5 /* ICMCommonInlineImages.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICMCommonInlineImages.h; sourceTree = "<group>"; };
 		5462DCF997EA889A69271783 /* TVCLogControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCLogControllerPrivate.h; sourceTree = "<group>"; };
 		546EE430E9EEEA22D0CB5B41 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/OTRKitFingerprintManagerDialog.strings; sourceTree = "<group>"; };
@@ -1292,7 +1275,6 @@
 		596DA1330C63A41D1DC6511A /* TDCChannelSpotlightController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCChannelSpotlightController.m; sourceTree = "<group>"; };
 		59DA13B052ACE201FE66A327 /* TLOInternetAddressLookup.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TLOInternetAddressLookup.h; sourceTree = "<group>"; };
 		59DCBFFB1C1E43ADE56BE2BA /* HLSHistoricLogProcessMainPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HLSHistoricLogProcessMainPrivate.h; sourceTree = "<group>"; };
-		5A225C7A9929D2F850BD36F7 /* TPCSandboxMigration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TPCSandboxMigration.m; sourceTree = "<group>"; };
 		5A7EB32C957C48BD439E2B67 /* TVCErrorMessagePopover.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCErrorMessagePopover.m; sourceTree = "<group>"; };
 		5AACC24E29D3C203D100D8F2 /* NSStringHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSStringHelper.m; sourceTree = "<group>"; };
 		5B3CFC7AD663AEC13613BAEF /* XRPortMapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XRPortMapper.h; sourceTree = "<group>"; };
@@ -1309,7 +1291,6 @@
 		5FEFE43A14F2423EA8BB6AF6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6001A73A9FC41EFCAD22C9C7 /* IRCChannelConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCChannelConfig.m; sourceTree = "<group>"; };
 		603FD1962D131157EDC233C1 /* NSObjectHelperPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSObjectHelperPrivate.h; sourceTree = "<group>"; };
-		60676E0D7054EEFFFFBF343C /* HLSHistoricLogLineEntityMigration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HLSHistoricLogLineEntityMigration.m; sourceTree = "<group>"; };
 		61007C54B3B72295EFDB82FF /* Inline Content Loader.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = "Inline Content Loader.xpc"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6105954DE8B6B37396E34C29 /* ICLPluginManagerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICLPluginManagerPrivate.h; sourceTree = "<group>"; };
 		614E2CB22F315C5E1F71D9D8 /* ICLHelpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICLHelpers.h; sourceTree = "<group>"; };
@@ -1346,7 +1327,6 @@
 		6BB0503FD1BE9D048FF3E305 /* TPCResourceManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TPCResourceManager.m; sourceTree = "<group>"; };
 		6C46F91C7A1603CECCD80BFF /* KeysExcludedFromExport.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = KeysExcludedFromExport.plist; sourceTree = "<group>"; };
 		6C81460EFF1AA65C42B590A8 /* IRCChannelMemberList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCChannelMemberList.h; sourceTree = "<group>"; };
-		6CA62BF622280D39A4C54114 /* ICMTwitchClips.mustache */ = {isa = PBXFileReference; path = ICMTwitchClips.mustache; sourceTree = "<group>"; };
 		6D3F65C7F1AE9A455CE4369E /* TVCMainWindowLoadingScreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCMainWindowLoadingScreen.h; sourceTree = "<group>"; };
 		6DB73CF7DBC7FAA95DC84492 /* ICMInlineHTML.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = ICMInlineHTML.css; sourceTree = "<group>"; };
 		6DDEA24193A2807364BF9155 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/TDCAboutDialog.strings; sourceTree = "<group>"; };
@@ -1387,7 +1367,6 @@
 		7873771D11222885395DAF5A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		7947F3824B3A6A447D5C9D3B /* NSStringHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSStringHelper.h; sourceTree = "<group>"; };
 		796F24B544FF592A0817B2C8 /* IRCMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCMessage.h; sourceTree = "<group>"; };
-		7979AD09F7642C879EB8E24E /* ICMTwitchClips.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ICMTwitchClips.m; sourceTree = "<group>"; };
 		79A3538EDAD31D781B3CB771 /* TDCChannelModifyTopicSheetPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCChannelModifyTopicSheetPrivate.h; sourceTree = "<group>"; };
 		79C35FD92029B393532851DD /* TVCValidatedTextField.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCValidatedTextField.h; sourceTree = "<group>"; };
 		79E15E44C35C5663B2362BC9 /* ICMAssessedMedia.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ICMAssessedMedia.m; sourceTree = "<group>"; };
@@ -1421,7 +1400,6 @@
 		8259882DF909B39977054EC5 /* IRCNetworks.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = IRCNetworks.plist; sourceTree = "<group>"; };
 		825EB7CB63552B72CA61CAC3 /* ICMInlineVideo.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ICMInlineVideo.js; sourceTree = "<group>"; };
 		827CA18919F0F02D456DA60D /* ICLPayloadLocal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ICLPayloadLocal.m; sourceTree = "<group>"; };
-		828FAEBC38DC0C3DD20480C4 /* ICMTwitchLive.mustache */ = {isa = PBXFileReference; path = ICMTwitchLive.mustache; sourceTree = "<group>"; };
 		8322C2C04BE78198B5605C3B /* COPYING.LIB */ = {isa = PBXFileReference; path = COPYING.LIB; sourceTree = "<group>"; };
 		835A069A50FCB5A12679614D /* IRCModeInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCModeInfo.m; sourceTree = "<group>"; };
 		840AE5B041E966A549BF5274 /* IRCConnectionErrors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCConnectionErrors.h; sourceTree = "<group>"; };
@@ -1480,7 +1458,6 @@
 		94EE5D15C0DBFFB2B213B37F /* XRPortablePropertyObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XRPortablePropertyObject.h; sourceTree = "<group>"; };
 		95248459692950A89A814C02 /* TVCNotificationConfigurationViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCNotificationConfigurationViewController.m; sourceTree = "<group>"; };
 		953457F920BC94CD903CD6EB /* ICMXkcd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICMXkcd.h; sourceTree = "<group>"; };
-		95573475464840A33502290E /* ICMTwitchClips.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICMTwitchClips.h; sourceTree = "<group>"; };
 		9565EA9D274788EEF179E0A2 /* NSUserDefaultsHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSUserDefaultsHelper.h; sourceTree = "<group>"; };
 		95A9D6366D6983829A95A146 /* NSURLHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSURLHelper.m; sourceTree = "<group>"; };
 		95EECA4BE3C0398F28F748E5 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -1501,7 +1478,6 @@
 		9A3BDD1C52DB8DC892007517 /* IRCHighlightLogEntry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCHighlightLogEntry.h; sourceTree = "<group>"; };
 		9B5A256F13C157EE752EDE5E /* TVCMainWindowTextViewAppearance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCMainWindowTextViewAppearance.h; sourceTree = "<group>"; };
 		9B5DA454B13296EE0CCE62F9 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		9BB3958E9AB7851386E1A43B /* Glasstual-Extras.pkg */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.installer-pkg"; path = "Glasstual-Extras.pkg"; sourceTree = "<group>"; };
 		9C823ED72A056BFA6BDC7F05 /* TDCPreferencesGroupBox.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCPreferencesGroupBox.m; sourceTree = "<group>"; };
 		9C83732FB95BC0FBE134D26A /* libgcrypt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgcrypt.a; path = "Frameworks/Static Libraries/Libraries/libgcrypt.a"; sourceTree = "<group>"; };
 		9C9A51731DFA6C431FD8B7FD /* IRCModeInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCModeInfo.h; sourceTree = "<group>"; };
@@ -1613,7 +1589,6 @@
 		B9259DB57DD36E2C379921BA /* ACKNOWLEDGEMENT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ACKNOWLEDGEMENT.txt; sourceTree = "<group>"; };
 		B939DE5290DEEDC5C0D984C1 /* NSBundleHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSBundleHelper.m; sourceTree = "<group>"; };
 		B9480CDB2C5825AB9FB68617 /* TPI_Caffeine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TPI_Caffeine.h; sourceTree = "<group>"; };
-		B9B2CC575A9EBA1899D342F0 /* IRCConnectionPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCConnectionPrivate.h; sourceTree = "<group>"; };
 		BA18566503E452913329D3A1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCServerChannelListDialog.xib; sourceTree = "<group>"; };
 		BA8F40B2C5F5679CC808B603 /* OTRKitAutoExpandingTextField.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OTRKitAutoExpandingTextField.m; sourceTree = "<group>"; };
 		BBA8049DFB069CF296A40963 /* OTRTLV.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OTRTLV.m; sourceTree = "<group>"; };
@@ -1653,7 +1628,6 @@
 		CA5CEA5AB7A602AB4AD7766C /* NSMenuHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSMenuHelper.h; sourceTree = "<group>"; };
 		CA79BB931E55022F51123432 /* NSArrayControllerHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSArrayControllerHelper.h; sourceTree = "<group>"; };
 		CAE03D3208FA1D096DF99052 /* CoreModulesImportsPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CoreModulesImportsPrivate.h; sourceTree = "<group>"; };
-		CB7A66252BD4F8066CB586D3 /* KeysExcludedFromMigrate.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = KeysExcludedFromMigrate.plist; sourceTree = "<group>"; };
 		CC3C08C17BF911B51FFAE3CD /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		CC5C516E0D588D2CF66552B3 /* TDCPreferencesNotificationConfigurationPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCPreferencesNotificationConfigurationPrivate.h; sourceTree = "<group>"; };
 		CCC525E23DF85A5F4D87CA96 /* NSThemeFrameHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSThemeFrameHelper.h; sourceTree = "<group>"; };
@@ -1688,8 +1662,6 @@
 		D65A2567ACAE80886989420A /* TVCLogControllerHistoricLogFilePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCLogControllerHistoricLogFilePrivate.h; sourceTree = "<group>"; };
 		D6E7D4A9AE7962339717AF56 /* ICMPornhub.mustache */ = {isa = PBXFileReference; path = ICMPornhub.mustache; sourceTree = "<group>"; };
 		D742BE0ECC0D28547A9C8BC1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/BasicLanguage.strings; sourceTree = "<group>"; };
-		D7B01F007D0B7ADD61B8841D /* ICMTwitchLive.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ICMTwitchLive.m; sourceTree = "<group>"; };
-		D7B70673D2E20A18179BAC42 /* TPCSandboxMigrationPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TPCSandboxMigrationPrivate.h; sourceTree = "<group>"; };
 		D86B08EE447A90DE77321977 /* TDCPreferencesControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCPreferencesControllerPrivate.h; sourceTree = "<group>"; };
 		D87382EF55DFBEC07B1C1042 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TVCChannelSelectionView.xib; sourceTree = "<group>"; };
 		D8A22287D4C8CDCAB250F7B3 /* NSSplitViewHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSSplitViewHelper.m; sourceTree = "<group>"; };
@@ -1805,7 +1777,6 @@
 		F70DA62AFC6A58DDBCC41711 /* IRCConnectionErrors.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCConnectionErrors.m; sourceTree = "<group>"; };
 		F73C587540DED9E8D17F0C19 /* OTRKitAuthenticationDialogWindowManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OTRKitAuthenticationDialogWindowManager.m; sourceTree = "<group>"; };
 		F75A136E6C1206E2C3EF7AF6 /* XRAccessibility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XRAccessibility.h; sourceTree = "<group>"; };
-		F7B9CA96073E39A39A79531D /* HLSHistoricLogLineEntityMigrationPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HLSHistoricLogLineEntityMigrationPrivate.h; sourceTree = "<group>"; };
 		F8078172EF072FE8B7BF21AB /* SwiftBridgingHeaderPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftBridgingHeaderPrivate.h; sourceTree = "<group>"; };
 		F8BDC9D24D319E2D20DDABEA /* IRCWorldPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCWorldPrivate.h; sourceTree = "<group>"; };
 		F94CF5CF6DDC940CF348818B /* XRPortablePropertyDict.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XRPortablePropertyDict.m; sourceTree = "<group>"; };
@@ -1998,7 +1969,6 @@
 			isa = PBXGroup;
 			children = (
 				1A8C63666782C0ACA8A26A61 /* AppIcon.icon */,
-				541F120DCC147A99B1AC3A9A /* Assets.xcassets */,
 			);
 			path = Application;
 			sourceTree = "<group>";
@@ -2040,7 +2010,6 @@
 			isa = PBXGroup;
 			children = (
 				5DB4D477A1D50E0119C65CBF /* HistoricLogFileStorageModel.xcdatamodeld */,
-				30F87B768C1FEB7044D138DE /* HistoricLogFileStorageModel.xcmappingmodel */,
 			);
 			path = "Data Models";
 			sourceTree = "<group>";
@@ -2052,14 +2021,6 @@
 				49D7908933C8D8FB3EF5BD5A /* Resources */,
 			);
 			path = "ZNC Additions";
-			sourceTree = "<group>";
-		};
-		105C4735096FF6BA137112E1 /* Twitch Clips */ = {
-			isa = PBXGroup;
-			children = (
-				6CA62BF622280D39A4C54114 /* ICMTwitchClips.mustache */,
-			);
-			path = "Twitch Clips";
 			sourceTree = "<group>";
 		};
 		126ACE51524F324B8EB01B4A /* Documentation */ = {
@@ -2145,8 +2106,6 @@
 			children = (
 				43852363E52BB0031A84B3E0 /* Dailymotion */,
 				5A92E382894774B004D75907 /* Pornhub */,
-				105C4735096FF6BA137112E1 /* Twitch Clips */,
-				D18EFFF399B4F7B875EAA249 /* Twitch Live */,
 				D35CBBF18A55857DA43FE6A7 /* Twitter */,
 				54D62B8615D49CD355C2D558 /* Vimeo */,
 				2DB5A6CE20227DFE2D48D37F /* YouTube */,
@@ -2309,14 +2268,6 @@
 			path = "Server List";
 			sourceTree = "<group>";
 		};
-		2D78EAF3EC0632E1F6B2AACC /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				9BB3958E9AB7851386E1A43B /* Glasstual-Extras.pkg */,
-			);
-			path = Packages;
-			sourceTree = "<group>";
-		};
 		2DB5A6CE20227DFE2D48D37F /* YouTube */ = {
 			isa = PBXGroup;
 			children = (
@@ -2332,15 +2283,6 @@
 				4643853E5F93D942B3270D4F /* TVCChannelSelectionViewController.m */,
 			);
 			path = "Channel Selection Table";
-			sourceTree = "<group>";
-		};
-		2FF536EB5C55633A5E209D64 /* Twitch Clips */ = {
-			isa = PBXGroup;
-			children = (
-				95573475464840A33502290E /* ICMTwitchClips.h */,
-				7979AD09F7642C879EB8E24E /* ICMTwitchClips.m */,
-			);
-			path = "Twitch Clips";
 			sourceTree = "<group>";
 		};
 		333BF59D2533734FC91558E0 /* Property Lists */ = {
@@ -2497,7 +2439,6 @@
 		43F36ED9CE077707B27A9CD6 /* Script Files */ = {
 			isa = PBXGroup;
 			children = (
-				5BDA4063149C99C42A1D7AB2 /* Glasstual Extras Installer */,
 				9023E8DB4051AEED1327BF73 /* Bundled Scripts */,
 			);
 			path = "Script Files";
@@ -2676,14 +2617,6 @@
 			path = Pornhub;
 			sourceTree = "<group>";
 		};
-		5BDA4063149C99C42A1D7AB2 /* Glasstual Extras Installer */ = {
-			isa = PBXGroup;
-			children = (
-				2D78EAF3EC0632E1F6B2AACC /* Packages */,
-			);
-			path = "Glasstual Extras Installer";
-			sourceTree = "<group>";
-		};
 		5C5C2E93E0A8536AB8E0681A /* External Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -2718,8 +2651,6 @@
 				37B4522A48D87A905B7BA328 /* Imgur .gifv */,
 				096EFAF66B0AFDAA9AEE6581 /* Pornhub */,
 				66E07B316D80442FE428F3A2 /* Streamable */,
-				2FF536EB5C55633A5E209D64 /* Twitch Clips */,
-				777C8323D09978036586ADC9 /* Twitch Live */,
 				82AC493360AF5D01ED320747 /* Twitter */,
 				A040DDF1A07EF7A3AD8FAC5D /* Vimeo */,
 				34F47D233BC4851E2BDBB0F1 /* xkcd */,
@@ -3044,15 +2975,6 @@
 			path = Preferences;
 			sourceTree = "<group>";
 		};
-		777C8323D09978036586ADC9 /* Twitch Live */ = {
-			isa = PBXGroup;
-			children = (
-				197289D5571DB8F48C5D26E3 /* ICMTwitchLive.h */,
-				D7B01F007D0B7ADD61B8841D /* ICMTwitchLive.m */,
-			);
-			path = "Twitch Live";
-			sourceTree = "<group>";
-		};
 		7BA6AE4295C232EA7B6C012B /* Cocoa Extensions */ = {
 			isa = PBXGroup;
 			children = (
@@ -3080,7 +3002,6 @@
 			children = (
 				E45D7326A65C7E8A35CB0F08 /* KeysExcludedFromContainer.plist */,
 				6C46F91C7A1603CECCD80BFF /* KeysExcludedFromExport.plist */,
-				CB7A66252BD4F8066CB586D3 /* KeysExcludedFromMigrate.plist */,
 				087E8CE8AF5CBD993D9BFDB9 /* PreferenceKeyMasterList.plist */,
 				470CBD9A89A40C06011410D4 /* RegisteredUserDefaults.plist */,
 				805FB8E7A8A4A8541B3EF068 /* RegisteredUserDefaultsInContainer.plist */,
@@ -3196,7 +3117,6 @@
 			isa = PBXGroup;
 			children = (
 				4EBC2D2013DD76AFD3ABCDE9 /* Headers */,
-				60676E0D7054EEFFFFBF343C /* HLSHistoricLogLineEntityMigration.m */,
 				A6B0200E95D7402224A9E860 /* HLSHistoricLogProcessMain.m */,
 				FCC180A14B22D7F6C4CADA86 /* HLSHistoricLogViewContext.m */,
 				4861675198141B46C1440A06 /* HSLHistoricLogProcessDelegate.m */,
@@ -3721,7 +3641,6 @@
 		BF31F4BD67F81CDA74CBB016 /* Private */ = {
 			isa = PBXGroup;
 			children = (
-				B9B2CC575A9EBA1899D342F0 /* IRCConnectionPrivate.h */,
 				6A7E1C57269B94D18E8356E5 /* RCMConnectionManagerProtocol.h */,
 				274B6DE265735F3725BBAA93 /* RCMProcessDelegatePrivate.h */,
 				3757304799191B197249EEEA /* RCMProcessMainPrivate.h */,
@@ -3903,14 +3822,6 @@
 			path = "libgpg-error";
 			sourceTree = "<group>";
 		};
-		D18EFFF399B4F7B875EAA249 /* Twitch Live */ = {
-			isa = PBXGroup;
-			children = (
-				828FAEBC38DC0C3DD20480C4 /* ICMTwitchLive.mustache */,
-			);
-			path = "Twitch Live";
-			sourceTree = "<group>";
-		};
 		D26D87CB2E86638CA3FE312B /* Preferences */ = {
 			isa = PBXGroup;
 			children = (
@@ -3922,7 +3833,6 @@
 				A6CAA1FFE7C4F7919086DABD /* TPCPreferencesReload.m */,
 				46E334D389F61675E87FBF08 /* TPCPreferencesUserDefaultsLocal.m */,
 				6BB0503FD1BE9D048FF3E305 /* TPCResourceManager.m */,
-				5A225C7A9929D2F850BD36F7 /* TPCSandboxMigration.m */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -4154,7 +4064,6 @@
 				C6AC32544705C92AEEF3CC48 /* TPCPreferencesImportExportPrivate.h */,
 				7CDA03D31CB79CCA6F15C1AF /* TPCPreferencesLocalPrivate.h */,
 				0D1DC1F1C8E6764922C5FEB4 /* TPCResourceManagerPrivate.h */,
-				D7B70673D2E20A18179BAC42 /* TPCSandboxMigrationPrivate.h */,
 				592D2695E9AA9C9E6ED21125 /* TPCThemeControllerPrivate.h */,
 				4FEAE4E79740AB8598DB0D28 /* TPCThemePrivate.h */,
 				510CC832A1EC2E8EA6856476 /* TVCAppearancePrivate.h */,
@@ -4253,7 +4162,6 @@
 		F9C067A4D25D374D3BCECA57 /* Private */ = {
 			isa = PBXGroup;
 			children = (
-				F7B9CA96073E39A39A79531D /* HLSHistoricLogLineEntityMigrationPrivate.h */,
 				59DCBFFB1C1E43ADE56BE2BA /* HLSHistoricLogProcessMainPrivate.h */,
 				1091629B995F83FED643C03E /* HLSHistoricLogProtocol.h */,
 				4BB548CAFB6EF00E80982420 /* HLSHistoricLogViewContextPrivate.h */,
@@ -4874,13 +4782,11 @@
 			files = (
 				F3487484AB69B99E8F2D6389 /* Accessibility.strings in Resources */,
 				A16CF9C8E39889C85DDDE61A /* AppIcon.icon in Resources */,
-				B44C6E6C698261F178BE1A25 /* Assets.xcassets in Resources */,
 				69A21F6177A7C1AD6C46AC7A /* BasicLanguage.strings in Resources */,
 				53CE66B7BB3DEB439C7B14B7 /* Bundled Scripts in Resources */,
 				087AD99D6107AB5972FA632D /* Bundled Styles in Resources */,
 				5BF8F62D90EBB79EA0CBA359 /* CommonErrors.strings in Resources */,
 				0CE4C72B55F90915BF6CF334 /* Copyright Information for Images.txt in Resources */,
-				E6A564119582FF1D715CED77 /* Glasstual-Extras.pkg in Resources */,
 				F18887B99508BD897E6FC338 /* IRC.strings in Resources */,
 				D3D8B7FE33477E93ABC3A94C /* IRCCommandIndexLocalData.plist in Resources */,
 				AC5C2DC005B4B10A5BB8E109 /* IRCCommandIndexRemoteData.plist in Resources */,
@@ -4947,8 +4853,6 @@
 				0FAD04FF13EB407551696F91 /* ICMDailymotion.mustache in Resources */,
 				84364DF873AB189C2C0CA807 /* ICMPornhub.mustache in Resources */,
 				A4DFC10D8BF6F5C4FC3DB7A8 /* ICMTweet.js in Resources */,
-				E8742245180378431EB9E058 /* ICMTwitchClips.mustache in Resources */,
-				3AE98D25A912725C40816BCB /* ICMTwitchLive.mustache in Resources */,
 				87C91EA89C4C7ACA932D705E /* ICMVimeo.mustache in Resources */,
 				7342A7EF519C2A252EEBD0C1 /* ICMYouTube.mustache in Resources */,
 			);
@@ -4979,7 +4883,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		CCEBC26890415652DBCCC8C7 /* Generate BuildConfig.h and FeatureFlags.h */ = {
+		9DC31B9B52E7EF21E3A4223E /* Generate BuildConfig.h */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -4993,16 +4897,15 @@
 				"$(SRCROOT)/Configurations/Debug.xcconfig",
 				"$(SRCROOT)/Configurations/Release.xcconfig",
 			);
-			name = "Generate BuildConfig.h and FeatureFlags.h";
+			name = "Generate BuildConfig.h";
 			outputFileListPaths = (
 			);
 			outputPaths = (
 				"$(GLASSTUAL_BUILD_HEADERS_DIR)/BuildConfig.h",
-				"$(GLASSTUAL_BUILD_HEADERS_DIR)/FeatureFlags.h",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "#!/bin/bash\n\n# Writes BuildConfig.h and FeatureFlags.h from build settings.\n#\n# Runs as the only build phase of the \"BuildConfig\" aggregate target in\n# Glasstual.xcodeproj. Every target that includes either header depends on\n# that target and has GLASSTUAL_BUILD_HEADERS_DIR on its header search path.\n# Files are only rewritten when their content changes so dependents are not\n# rebuilt needlessly.\n\nset -euo pipefail\n\n: \"${GLASSTUAL_BUILD_HEADERS_DIR:?must be set by Xcode (see Configurations/Base.xcconfig)}\"\n\nmkdir -p \"${GLASSTUAL_BUILD_HEADERS_DIR}\"\n\n# Scratch files go to the per-target temp dir: the user-script sandbox only\n# allows writes to declared outputs and to TEMP_DIR.\nscratch_dir=\"${TEMP_DIR:-${TMPDIR:-/tmp}}\"\n\nreplace_if_changed() {\n\tlocal candidate=\"$1\"\n\tlocal destination=\"$2\"\n\n\tif cmp -s \"${candidate}\" \"${destination}\"; then\n\t\trm -f \"${candidate}\"\n\telse\n\t\tmv -f \"${candidate}\" \"${destination}\"\n\t\techo \"Wrote ${destination}\"\n\tfi\n}\n\nheader_banner=\"/* Generated by Scripts/GenerateBuildConfig.sh. Do not edit; changes are not saved or committed. */\"\n\n# ---- BuildConfig.h --------------------------------------------------------\n\nbuild_config=\"${GLASSTUAL_BUILD_HEADERS_DIR}/BuildConfig.h\"\nbuild_config_tmp=\"${scratch_dir}/BuildConfig.h.tmp\"\n\n{\n\techo \"${header_banner}\"\n\techo\n\techo \"#define TXBundleBuildProductName                  @\\\"${GLASSTUAL_PRODUCT_NAME}\\\"\"\n\techo \"#define TXBundleBuildProductIdentifier            @\\\"${GLASSTUAL_BUNDLE_IDENTIFIER}\\\"\"\n\techo \"#define TXBundleBuildProductIdentifierCString      \\\"${GLASSTUAL_BUNDLE_IDENTIFIER}\\\"\"\n\techo \"#define TXBundleBuildGroupContainerIdentifier     @\\\"${GLASSTUAL_GROUP_CONTAINER_IDENTIFIER}\\\"\"\n\techo \"#define TXBundleBuildVersion                      @\\\"${CURRENT_PROJECT_VERSION}\\\"\"\n\techo \"#define TXBundleBuildVersionShort                 @\\\"${MARKETING_VERSION}\\\"\"\n\techo \"#define TXBundleBuildScheme                       @\\\"${GLASSTUAL_BUILD_SCHEME_TOKEN}\\\"\"\n\n\tif [ -z \"${CODE_SIGN_IDENTITY:-}\" ] || [ \"${CODE_SIGNING_ALLOWED:-YES}\" = \"NO\" ]; then\n\t\techo \"#define TXBundleBuiltWithoutCodeSigning           1\"\n\tfi\n} > \"${build_config_tmp}\"\n\nreplace_if_changed \"${build_config_tmp}\" \"${build_config}\"\n\n# ---- FeatureFlags.h -------------------------------------------------------\n#\n# The same flags are passed on the compiler command line through\n# GCC_PREPROCESSOR_DEFINITIONS. The header only provides defaults for\n# translation units that are compiled without them.\n\nfeature_flags=\"${GLASSTUAL_BUILD_HEADERS_DIR}/FeatureFlags.h\"\nfeature_flags_tmp=\"${scratch_dir}/FeatureFlags.h.tmp\"\n\nfeature_names=(\n\tGLASSTUAL_BUILT_INSIDE_SANDBOX\n\tGLASSTUAL_BUILT_WITH_SPARKLE_ENABLED\n\tGLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION\n\tGLASSTUAL_BUILT_AS_UNIVERSAL_BINARY\n)\n\n{\n\techo \"${header_banner}\"\n\techo\n\n\tfor feature in \"${feature_names[@]}\"; do\n\t\tvalue=\"${!feature:-0}\"\n\n\t\techo \"#ifndef ${feature}\"\n\t\techo \"#define ${feature} ${value}\"\n\t\techo \"#endif\"\n\t\techo\n\tdone\n} > \"${feature_flags_tmp}\"\n\nreplace_if_changed \"${feature_flags_tmp}\" \"${feature_flags}\"\n";
+			shellScript = "#!/bin/bash\n\n# Writes BuildConfig.h from build settings.\n#\n# Runs as the only build phase of the \"BuildConfig\" aggregate target in\n# Glasstual.xcodeproj. Every target that includes the header depends on\n# that target and has GLASSTUAL_BUILD_HEADERS_DIR on its header search path.\n# The file is only rewritten when its content changes so dependents are not\n# rebuilt needlessly. Feature flags are not written here; they reach the\n# compilers through GCC_PREPROCESSOR_DEFINITIONS and\n# SWIFT_ACTIVE_COMPILATION_CONDITIONS (see Configurations/Base.xcconfig).\n\nset -euo pipefail\n\n: \"${GLASSTUAL_BUILD_HEADERS_DIR:?must be set by Xcode (see Configurations/Base.xcconfig)}\"\n\nmkdir -p \"${GLASSTUAL_BUILD_HEADERS_DIR}\"\n\n# Scratch files go to the per-target temp dir: the user-script sandbox only\n# allows writes to declared outputs and to TEMP_DIR.\nscratch_dir=\"${TEMP_DIR:-${TMPDIR:-/tmp}}\"\n\nreplace_if_changed() {\n\tlocal candidate=\"$1\"\n\tlocal destination=\"$2\"\n\n\tif cmp -s \"${candidate}\" \"${destination}\"; then\n\t\trm -f \"${candidate}\"\n\telse\n\t\tmv -f \"${candidate}\" \"${destination}\"\n\t\techo \"Wrote ${destination}\"\n\tfi\n}\n\nheader_banner=\"/* Generated by Scripts/GenerateBuildConfig.sh. Do not edit; changes are not saved or committed. */\"\n\n# ---- BuildConfig.h --------------------------------------------------------\n\nbuild_config=\"${GLASSTUAL_BUILD_HEADERS_DIR}/BuildConfig.h\"\nbuild_config_tmp=\"${scratch_dir}/BuildConfig.h.tmp\"\n\n{\n\techo \"${header_banner}\"\n\techo\n\techo \"#define TXBundleBuildProductName                  @\\\"${GLASSTUAL_PRODUCT_NAME}\\\"\"\n\techo \"#define TXBundleBuildProductIdentifier            @\\\"${GLASSTUAL_BUNDLE_IDENTIFIER}\\\"\"\n\techo \"#define TXBundleBuildProductIdentifierCString      \\\"${GLASSTUAL_BUNDLE_IDENTIFIER}\\\"\"\n\techo \"#define TXBundleBuildGroupContainerIdentifier     @\\\"${GLASSTUAL_GROUP_CONTAINER_IDENTIFIER}\\\"\"\n\techo \"#define TXBundleBuildVersion                      @\\\"${CURRENT_PROJECT_VERSION}\\\"\"\n\techo \"#define TXBundleBuildVersionShort                 @\\\"${MARKETING_VERSION}\\\"\"\n} > \"${build_config_tmp}\"\n\nreplace_if_changed \"${build_config_tmp}\" \"${build_config}\"\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -5011,12 +4914,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A35AC22364FDB311A78E4989 /* HLSHistoricLogLineEntityMigration.m in Sources */,
 				6CC3A44B03BC8ED9B7A166DD /* HLSHistoricLogProcessMain.m in Sources */,
 				3494E9B3DD019889400D894A /* HLSHistoricLogViewContext.m in Sources */,
 				5C8797A285F5F687B89E9C1F /* HSLHistoricLogProcessDelegate.m in Sources */,
 				35AF1B53EDAD1E315CEE4686 /* HistoricLogFileStorageModel.xcdatamodeld in Sources */,
-				6BF6024730A3E60F0DA975C1 /* HistoricLogFileStorageModel.xcmappingmodel in Sources */,
 				EB5C8878026D4FD171C77537 /* TPCPreferencesUserDefaults.m in Sources */,
 				06E2554868B47C0068B3E960 /* TVCLogLineXPC.m in Sources */,
 				49DAE4DBFF8EC876B813B9F7 /* main.m in Sources */,
@@ -5110,8 +5011,6 @@
 				D6EBE522F502C50B37A120EC /* ICMPornhub.m in Sources */,
 				2D6E2C6AC3EC67234AA01F19 /* ICMStreamable.m in Sources */,
 				154826A2092BDD129583CA15 /* ICMTweet.m in Sources */,
-				FF4ED8EFF2F4464580D6D051 /* ICMTwitchClips.m in Sources */,
-				E175765F98A8E231B86DBC28 /* ICMTwitchLive.m in Sources */,
 				F4499E6B7EA7430827A12D7F /* ICMVimeo.m in Sources */,
 				2FE954B86370460F149EA0D3 /* ICMXkcd.m in Sources */,
 				652CD65536858E5CEB0CE215 /* ICMYouTube.m in Sources */,
@@ -5335,7 +5234,6 @@
 				3A3E46DC6D64DEAB4F53E086 /* TPCPreferencesUserDefaults.m in Sources */,
 				87F2D0B6A6522323DC253C8B /* TPCPreferencesUserDefaultsLocal.m in Sources */,
 				0F32DCF058523248EE5F085F /* TPCResourceManager.m in Sources */,
-				586D68B7673032A3167C3AF6 /* TPCSandboxMigration.m in Sources */,
 				E7216F2AC090CA2CF51C619E /* TPCTheme.m in Sources */,
 				D8F0FFA88DC45E3C21F8496F /* TPCThemeController.m in Sources */,
 				370BC812B8CF645807BF735B /* TVCAppearance.m in Sources */,
@@ -6266,10 +6164,6 @@
 					"\"Frameworks/Static Libraries/Libraries\"",
 				);
 				GCC_PREFIX_HEADER = "XPC Services/Inline Content Loader/Classes/Headers/Private/ICLProcessPCHPrivate.h";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"GLASSTUAL_BUILDING_XPC_SERVICE=1",
-				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -6322,10 +6216,6 @@
 					"\"Frameworks/Static Libraries/Libraries\"",
 				);
 				GCC_PREFIX_HEADER = "XPC Services/Inline Content Loader/Classes/Headers/Private/ICLProcessPCHPrivate.h";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"GLASSTUAL_BUILDING_XPC_SERVICE=1",
-				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -6501,10 +6391,6 @@
 					"\"$(SRCROOT)/Frameworks/Static Libraries/Libraries\"",
 				);
 				GCC_PREFIX_HEADER = "XPC Services/Historic Log File Manager/Classes/Headers/Private/HSLHistoricLogPCHPrivate.h";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"GLASSTUAL_BUILDING_XPC_SERVICE=1",
-				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/Sources/Shared/Headers/**",
@@ -6675,10 +6561,6 @@
 					"\"$(SRCROOT)/Frameworks/Static Libraries/Libraries\"",
 				);
 				GCC_PREFIX_HEADER = "XPC Services/IRC Remote Connection Manager/Classes/Headers/Private/RCMProcessPCHPrivate.h";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"GLASSTUAL_BUILDING_XPC_SERVICE=1",
-				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/Sources/Shared/Headers/**",
@@ -6730,10 +6612,6 @@
 					"\"$(SRCROOT)/Frameworks/Static Libraries/Libraries\"",
 				);
 				GCC_PREFIX_HEADER = "XPC Services/Historic Log File Manager/Classes/Headers/Private/HSLHistoricLogPCHPrivate.h";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"GLASSTUAL_BUILDING_XPC_SERVICE=1",
-				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/Sources/Shared/Headers/**",
@@ -6775,10 +6653,6 @@
 					"\"$(SRCROOT)/Frameworks/Static Libraries/Libraries\"",
 				);
 				GCC_PREFIX_HEADER = "XPC Services/IRC Remote Connection Manager/Classes/Headers/Private/RCMProcessPCHPrivate.h";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"GLASSTUAL_BUILDING_XPC_SERVICE=1",
-				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)/Sources/Shared/Headers/**",
@@ -7020,7 +6894,6 @@
 		5DB4D477A1D50E0119C65CBF /* HistoricLogFileStorageModel.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
-				164D1951D076C1D6B30DBD52 /* LogControllerStorageModel (model 2).xcdatamodel */,
 				92038B8DC72A719D2CBF7B25 /* LogControllerStorageModel (model 3).xcdatamodel */,
 			);
 			currentVersion = 92038B8DC72A719D2CBF7B25 /* LogControllerStorageModel (model 3).xcdatamodel */;

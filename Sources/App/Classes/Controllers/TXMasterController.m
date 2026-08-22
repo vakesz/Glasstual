@@ -58,20 +58,13 @@
 #import "TPCPreferencesLocalPrivate.h"
 #import "TPCPreferencesUserDefaults.h"
 #import "TPCResourceManagerPrivate.h"
-#import "TPCSandboxMigrationPrivate.h"
 #import "TPCThemeControllerPrivate.h"
 #import "TXMenuControllerPrivate.h"
 #import "TXWindowControllerPrivate.h"
 #import "TXMasterControllerPrivate.h"
 #import "IRCClient.h"
 
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-#import <Sparkle/Sparkle.h>
-#endif
-
 NS_ASSUME_NONNULL_BEGIN
-
-static void *TXMasterControllerKVOContext = &TXMasterControllerKVOContext;
 
 /* Upper bound on how long termination waits for the historic log to save. */
 static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
@@ -87,11 +80,6 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 @property(nonatomic, assign) BOOL terminateHistoricLogSaveStarted;
 @property(nonatomic, strong, readwrite) IBOutlet TVCMainWindow *mainWindow;
 @property(nonatomic, weak, readwrite) IBOutlet TXMenuController *menuController;
-@property(nonatomic, assign) NSUInteger applicationLaunchRemainder;
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-@property(nonatomic, strong, readwrite) SPUStandardUpdaterController *updateController;
-#endif
 @end
 
 @implementation TXMasterController
@@ -148,9 +136,6 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 
 - (void)_awakeFromNib
 {
-	/* Migrate files and preferences */
-	[TPCSandboxMigration migrateResources];
-
 	/* Initialize preferences */
 	[TPCPreferences initPreferences];
 
@@ -215,80 +200,18 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 		},
 		DISPATCH_QUEUE_PRIORITY_BACKGROUND);
 
-	/* We want to guarantee some specific things happen before the
-	 app is considered "launched" and ready to use. This property
-	 counts down once each task completes and once it reaches 0,
-	 then the app is considered launched. */
-	/* 1 is default value because we want plugins to be loaded
-	 before we are finished launching. */
-	[self addObserver:self
-		   forKeyPath:@"applicationLaunchRemainder"
-			  options:NSKeyValueObservingOptionNew
-			  context:TXMasterControllerKVOContext];
-
-	self.applicationLaunchRemainder = 1;
-
-	[self prepareThirdPartyServices];
-
 	/* Load plugins last so that -applicationDidFinishLaunching is posted
 	 only once they have loaded and everything else has been setup. */
 	[sharedPluginManager() loadPlugins];
 }
 
-- (void)observeValueForKeyPath:(nullable NSString *)keyPath
-					  ofObject:(nullable id)object
-						change:(nullable NSDictionary<NSString *, id> *)change
-					   context:(nullable void *)context
-{
-	if (context != TXMasterControllerKVOContext) {
-		[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-
-		return;
-	}
-
-	if ([keyPath isEqualToString:@"applicationLaunchRemainder"]) {
-		if (self.applicationLaunchRemainder == 0) {
-			[self applicationDidFinishLaunching];
-		}
-	}
-}
-
 - (void)pluginsFinishedLoading:(NSNotification *)notification
 {
-	self.applicationLaunchRemainder -= 1;
+	[self applicationDidFinishLaunching];
 }
 
 #pragma mark -
 #pragma mark Services
-
-- (void)prepareThirdPartyServiceSparkleFramework
-{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	SPUStandardUpdaterController *controller =
-		[[SPUStandardUpdaterController alloc] initWithStartingUpdater:NO
-													  updaterDelegate:(id<SPUUpdaterDelegate>)self
-												   userDriverDelegate:nil];
-
-	self.updateController = controller;
-
-	SPUUpdater *updater = controller.updater;
-
-	(void)[updater clearFeedURLFromUserDefaults];
-
-	NSError *error;
-
-	(void)[updater startUpdater:&error];
-
-	if (error) {
-		LogToConsoleError("Sparkle failed to start updater: %{public}@", error.description);
-	}
-#endif
-}
-
-- (void)prepareThirdPartyServices
-{
-	[self prepareThirdPartyServiceSparkleFramework];
-}
 
 - (void)prepareNetworkReachabilityNotifier
 {
@@ -318,8 +241,6 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 
 - (void)applicationDidFinishLaunching
 {
-	[self removeObserver:self forKeyPath:@"applicationLaunchRemainder" context:TXMasterControllerKVOContext];
-
 	self.applicationIsLaunched = YES;
 
 	if ([self.mainWindow reloadLoadingScreen]) {
@@ -667,27 +588,6 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 {
 	[self terminateGracefully];
 }
-
-#pragma mark -
-#pragma mark Sparkle Delegate
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-- (void)updaterWillRelaunchApplication:(SPUUpdater *)updater
-{
-	self.applicationIsTerminating = YES;
-}
-
-- (NSSet<NSString *> *)allowedChannelsForUpdater:(SPUUpdater *)updater
-{
-	BOOL receiveBetaUpdates = [TPCPreferences receiveBetaUpdates];
-
-	if (receiveBetaUpdates) {
-		return [NSSet setWithObject:@"beta"];
-	}
-
-	return [NSSet set];
-}
-#endif
 
 @end
 

@@ -66,12 +66,8 @@ GLASSTUAL_EXTERN NSNotificationName const THOPluginManagerFinishedLoadingPlugins
 
 - (void)findHandlerForOutgoingCommand:(NSString *)command
 								 path:(NSString *_Nullable *_Nullable)path
-						   isReserved:(BOOL *)isReserved
 							 isScript:(BOOL *)isScript
 						  isExtension:(BOOL *)isExtension;
-
-- (void)extrasInstallerAskUserIfTheyWantToInstallCommand:(NSString *)command;
-- (void)extrasInstallerLaunchInstaller;
 @end
 
 NS_ASSUME_NONNULL_END

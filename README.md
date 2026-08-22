@@ -20,8 +20,6 @@ This fork exists to carry that work forward on **macOS 26 (Tahoe) and later**. I
 
 Copyright and license notices from Textual and LimeChat are left intact throughout the source tree, including the BSD non-endorsement clause naming Textual. Those notices cover code this project did not write and are deliberately unchanged. See [Licenses](#licenses) below and [Acknowledgements.pdf](Acknowledgements.pdf).
 
-A number of identifiers keep the Textual spelling on purpose, because they name upstream Textual rather than this app — the sandbox-migration sources in `TPCSandboxMigration.m` and the running-app check in `TXApplication.m`. Renaming those breaks importing data from an existing Textual install.
-
 ## Screenshots
 
 ![The Glasstual main window, showing the channel list, a conversation and the member list](Documentation/Screenshots/main-window-light.png)
@@ -38,7 +36,7 @@ A number of identifiers keep the Textual spelling on purpose, because they name 
 
 ## Note Regarding Third-Party Frameworks
 
-The Codeux frameworks Glasstual builds on (Cocoa Extensions, Auto Hyperlinks, Encryption Kit) and the prebuilt static libraries live in `Frameworks/` as vendored sources, not submodules. `Frameworks/PROVENANCE.md` records the upstream commit each one was taken from. A plain clone is enough:
+The Codeux frameworks Glasstual builds on (Cocoa Extensions, Encryption Kit) and the prebuilt static libraries live in `Frameworks/` as vendored sources, not submodules. `Frameworks/PROVENANCE.md` records the upstream commit each one was taken from. A plain clone is enough:
 
 ```
 git clone https://github.com/vakesz/Glasstual.git
@@ -97,14 +95,10 @@ is run manually to archive, notarize and publish.
 
 ### Software Updates
 
-Sparkle is not linked in this tree and `GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED`
-is `0` in _[Configurations ➜ Base.xcconfig](Configurations/Base.xcconfig)_: the
-upstream Textual appcast was removed so that this fork can never offer Codeux's
-builds as an update to itself. To enable updating, set the flag to `1`, add the
-Sparkle package back to `project.yml` (see the comment there), add `SUFeedURL`
-and `SUPublicEDKey` to
-_[Sources ➜ App ➜ Resources ➜ Property Lists ➜ Application Properties ➜ Info.plist](Sources/App/Resources/Property%20Lists/Application%20Properties/Info.plist)_,
-and re-sign Sparkle's nested tools in the release workflow before notarization.
+Glasstual has no in-app updater. The Sparkle integration inherited from
+Textual was removed together with the upstream appcast so that this fork can
+never offer Codeux's builds as an update to itself. New releases are published
+on the GitHub releases page.
 
 ## Licenses
 

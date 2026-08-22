@@ -50,8 +50,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _extrasInstallerExtensionUpdateCheckInterval 345600
-
 NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 	@"THOPluginManagerFinishedLoadingPluginsNotification";
 
@@ -91,8 +89,6 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 
 - (void)_loadPlugins
 {
-	NSArray *forbiddenPlugins = self.listOfForbiddenBundles;
-
 	NSMutableArray<THOPluginItem *> *loadedPlugins = [NSMutableArray array];
 	NSMutableArray<NSString *> *bundlesToLoad = [NSMutableArray array];
 	NSMutableArray<NSString *> *loadedBundles = [NSMutableArray array];
@@ -129,16 +125,6 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 		NSString *bundleIdentifier = bundle.bundleIdentifier;
 
 		if (bundleIdentifier == nil || [loadedBundles containsObject:bundleIdentifier]) {
-			continue;
-		}
-
-		/* The list of forbidden bundles logic was added because a plugin previously
-		 bundled separately was not bundled with the app. This is a simple check to
-		 prevent the old plugin from loading and conflicting with built-in plugin.
-		 This is not designed as a security measure. */
-		if ([forbiddenPlugins containsObject:bundleIdentifier]) {
-			LogToConsoleFault("Forbidden loading of plugin '%{public}@'", bundleIdentifier);
-
 			continue;
 		}
 
@@ -214,7 +200,7 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 	self.pluginsLoaded = YES;
 
 	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[self checkForObsoleteBundlesOrUpdatesAvailable];
+		[self checkForObsoleteBundles];
 
 		[RZNotificationCenter() postNotificationName:THOPluginManagerFinishedLoadingPluginsNotification object:self];
 	});
@@ -305,37 +291,8 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 	return [TPCResourceManager arrayFromResources:@"StaticStore" key:@"THOPluginManager List of Forbidden Commands"];
 }
 
-- (NSArray<NSString *> *)listOfForbiddenBundles
-{
-	/* List of bundle identifiers that are not allowed to load. */
-	return [TPCResourceManager arrayFromResources:@"StaticStore" key:@"THOPluginManager List of Forbidden Extensions"];
-}
-
 #pragma mark -
-#pragma mark Extras Installer
-
-- (void)checkForObsoleteBundlesOrUpdatesAvailable
-{
-	/* This method will perform three actions:
-	 1. It will notify user if they have any 3rd-party obsolete addons.
-		This will prompt them to contact the developer.
-	 2. It will notify user if they have any obsolete extras installer
-		addons that cannot be loaded. This will prompt to open installer.
-	 3. It will notify the user if they have any extras installer addons
-		that have an update available.
-
-	 #3 allows the user to suppress the prompt until a later time.
-	 #2 and #1 are aggressive. The prompt will show each launch until the
-	 addon is updated or deleted.
-
-	 It is possible that multiple prompts will appear on the screen at
-	 once. This will be considered an acceptable behavior for now.
-	 Just make sure non-blocking alerts are used for this purpose. */
-
-	[self checkForObsoleteBundles];
-
-	[self extrasInstallerCheckForUpdates];
-}
+#pragma mark Obsolete Bundles
 
 - (void)checkForObsoleteBundles
 {
@@ -345,30 +302,7 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 		return;
 	}
 
-	NSMutableArray<NSBundle *> *obsoleteExtras = [NSMutableArray array];
-	NSMutableArray<NSBundle *> *obsoleteThirdParty = [NSMutableArray array];
-
-	NSArray *extrasBundleIdentifiers = self.extrasInstallerBundleIdentifiers;
-
-	for (NSBundle *bundle in self.obsoleteBundles) {
-		NSString *bundleIdentifier = bundle.bundleIdentifier;
-
-		if ([extrasBundleIdentifiers containsObject:bundleIdentifier]) {
-			[obsoleteExtras addObject:bundle];
-		} else {
-			[obsoleteThirdParty addObject:bundle];
-		}
-	}
-
-	if (obsoleteExtras.count > 0) {
-		[self _extrasInstallerInformUserAboutUpdateForBundles:[obsoleteExtras copy] updateOptional:NO];
-	}
-
-	if (obsoleteThirdParty.count == 0) {
-		return;
-	}
-
-	[self _presentObsoleteBundlesAlertForBundles:[obsoleteThirdParty copy]];
+	[self _presentObsoleteBundlesAlertForBundles:obsoleteBundles];
 }
 
 - (void)_presentObsoleteBundlesAlertForBundles:(NSArray *)thirdPartyBundles
@@ -395,134 +329,8 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 			   }];
 }
 
-- (void)extrasInstallerCheckForUpdates
-{
-	/* Do not check for updates too often */
-#define _defaultsKey @"THOPluginManager -> Extras Installer Last Check for Update Payload"
-
-	NSTimeInterval currentTime = [[NSDate date] timeIntervalSince1970];
-
-	NSString *applicationVersion = [TPCApplicationInfo applicationVersion];
-
-	NSDictionary<NSString *, id> *lastUpdatePayload = [RZUserDefaults() dictionaryForKey:_defaultsKey];
-
-	if (lastUpdatePayload) {
-		NSTimeInterval lastCheckTime = [lastUpdatePayload doubleForKey:@"lastCheck"];
-
-		NSString *lastVersion = [lastUpdatePayload stringForKey:@"lastVersion"];
-
-		if ((currentTime - lastCheckTime) < _extrasInstallerExtensionUpdateCheckInterval &&
-			[lastVersion isEqualToString:applicationVersion]) {
-			return;
-		}
-	}
-
-	/* Record the last time updates were checked for */
-	[RZUserDefaults() setObject:@{@"lastCheck" : @(currentTime), @"lastVersion" : applicationVersion}
-						 forKey:_defaultsKey];
-
-	/* Check for updates */
-	[self _extrasInstallerCheckForUpdates];
-
-#undef _defaultsKey
-}
-
-- (void)_extrasInstallerCheckForUpdates
-{
-	/* Perform update check */
-	NSDictionary *latestVersions = self.extrasInstallerLatestBundleVersions;
-
-	NSMutableArray<NSBundle *> *outdatedBundles = [NSMutableArray array];
-
-	for (THOPluginItem *plugin in self.loadedPlugins) {
-		NSBundle *bundle = plugin.bundle;
-
-		NSString *bundleIdentifier = bundle.bundleIdentifier;
-
-		NSString *latestVersion = latestVersions[bundleIdentifier];
-
-		if (latestVersion == nil) {
-			continue;
-		}
-
-		NSDictionary *infoDictionary = bundle.infoDictionary;
-
-		NSString *currentVersion = infoDictionary[@"CFBundleVersion"];
-
-		NSComparisonResult comparisonResult = [currentVersion compare:latestVersion options:NSNumericSearch];
-
-		if (comparisonResult == NSOrderedAscending) {
-			[outdatedBundles addObject:bundle];
-		}
-	}
-
-	if (outdatedBundles.count == 0) {
-		return;
-	}
-
-	[self _extrasInstallerInformUserAboutUpdateForBundles:[outdatedBundles copy] updateOptional:YES];
-}
-
-- (void)_extrasInstallerInformUserAboutUpdateForBundles:(NSArray<NSBundle *> *)bundles
-										 updateOptional:(BOOL)updateOptional
-{
-	NSParameterAssert(bundles != nil);
-
-	/* Append the current version to the suppression key so that updates 
-	 aren't refused forever. Only until the next version of Glasstual is out. */
-	NSString *suppressionKey = nil;
-
-	if (updateOptional) {
-		suppressionKey = [@"plugin_manager_extension_update_dialog_"
-			stringByAppendingString:[TPCApplicationInfo applicationVersionShort]];
-	}
-
-	NSString *bundlesName = [NSBundle formattedDisplayNamesForBundles:bundles];
-
-	NSString *promptTitle = ((updateOptional) ? @"Prompts[9mb-o5]" : @"Prompts[ins-op]");
-	NSString *promptMessage = ((updateOptional) ? @"Prompts[x4w-is]" : @"Prompts[34o-pk]");
-	NSString *promptDefaultButton = ((updateOptional) ? @"Prompts[ece-dd]" : @"Prompts[hd0-bf]");
-	NSString *promptAlternateButton = ((updateOptional) ? @"Prompts[ioq-nf]" : @"Prompts[467-5l]");
-	NSString *promptOtherButton = ((updateOptional) ? nil : TXTLS(@"Prompts[h78-9e]"));
-
-	[TDCAlert alertWithMessage:TXTLS(promptMessage)
-						 title:TXTLS(promptTitle, bundlesName)
-				 defaultButton:TXTLS(promptDefaultButton)
-			   alternateButton:TXTLS(promptAlternateButton)
-				   otherButton:promptOtherButton
-				suppressionKey:suppressionKey
-			   suppressionText:nil
-			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id _Nullable underlyingAlert) {
-				   if (buttonClicked == TDCAlertResponseAlternate) {
-					   [self extrasInstallerLaunchInstaller];
-				   } else if (buttonClicked == TDCAlertResponseOther) {
-					   [NSBundle openInstallationLocationsForBundles:bundles];
-				   }
-			   }];
-}
-
-- (NSArray<NSString *> *)extrasInstallerBundleIdentifiers
-{
-	return self.extrasInstallerLatestBundleVersions.allKeys;
-}
-
-- (NSDictionary<NSString *, NSString *> *)extrasInstallerLatestBundleVersions
-{
-	/* List of extra bundles and their latest version number. */
-	return [TPCResourceManager dictionaryFromResources:@"StaticStore"
-												   key:@"THOPluginManager Extras Installer Latest Extension Versions"];
-}
-
-- (NSArray<NSString *> *)extrasInstallerReservedCommands
-{
-	/* List of scripts that are available as downloadable
-	 content from the www.codeux.com website. */
-	return [TPCResourceManager arrayFromResources:@"StaticStore" key:@"THOPluginManager List of Reserved Commands"];
-}
-
 - (void)findHandlerForOutgoingCommand:(NSString *)command
 								 path:(NSString *_Nullable *)path
-						   isReserved:(BOOL *)isReserved
 							 isScript:(BOOL *)isScript
 						  isExtension:(BOOL *)isExtension
 {
@@ -531,10 +339,6 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 	/* Reset context pointers */
 	if (path) {
 		*path = nil;
-	}
-
-	if (isReserved) {
-		*isReserved = NO;
 	}
 
 	if (isScript) {
@@ -571,45 +375,7 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 		if (isExtension) {
 			*isExtension = YES;
 		}
-
-		return;
 	}
-
-	/* Find a reserved command */
-	NSArray *reservedCommands = self.extrasInstallerReservedCommands;
-
-	if (isReserved) {
-		*isReserved = [reservedCommands containsObject:command];
-	}
-}
-
-- (void)extrasInstallerAskUserIfTheyWantToInstallCommand:(NSString *)command
-{
-	NSParameterAssert(command != nil);
-
-	BOOL download = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[bpb-vv]")
-											  title:TXTLS(@"Prompts[o9p-4n]", command)
-									  defaultButton:TXTLS(@"Prompts[6lr-02]")
-									alternateButton:TXTLS(@"Prompts[qso-2g]")
-									 suppressionKey:@"plugin_manager_reserved_command_dialog"
-									suppressionText:nil];
-
-	if (download) {
-		[self extrasInstallerLaunchInstaller];
-	}
-}
-
-- (void)extrasInstallerLaunchInstaller
-{
-	NSURL *extrasURL = [RZMainBundle() URLForResource:@"Glasstual-Extras" withExtension:@"pkg"];
-
-	NSURL *installerURL = [RZWorkspace() URLForApplicationWithBundleIdentifier:@"com.apple.installer"];
-
-	[RZWorkspace() openURLs:@[ extrasURL ]
-		withApplicationAtURL:installerURL
-			   configuration:[NSWorkspaceOpenConfiguration new]
-		   completionHandler:nil];
-	;
 }
 
 #pragma mark -

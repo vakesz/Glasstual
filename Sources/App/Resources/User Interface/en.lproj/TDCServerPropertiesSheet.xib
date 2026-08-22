@@ -509,7 +509,7 @@ Gw
                                 <constraints>
                                     <constraint firstAttribute="height" constant="22" id="zpG-Ug-YZW"/>
                                 </constraints>
-                                <textFieldCell key="cell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Guest[away]" usesSingleLineMode="YES" id="2342" customClass="TVCValidatedTextFieldCell">
+                                <textFieldCell key="cell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Guest_away" usesSingleLineMode="YES" id="2342" customClass="TVCValidatedTextFieldCell">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

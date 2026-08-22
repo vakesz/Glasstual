@@ -44,8 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)applicationWakeStepOne;
 - (void)applicationWakeStepTwo;
-
-- (void)prepareThirdPartyServiceSparkleFramework;
 @end
 
 NS_ASSUME_NONNULL_END

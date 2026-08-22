@@ -64,10 +64,6 @@ typedef NS_OPTIONS(NSUInteger, TPCPreferencesReloadAction) {
 #if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
 	TPCPreferencesReloadActionEncryptionPolicy = 1 << 22,
 #endif
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	TPCPreferencesReloadActionSparkleFrameworkFeedURL = 1 << 23,
-#endif
 };
 
 @interface TPCPreferences (TPCPreferencesReload)

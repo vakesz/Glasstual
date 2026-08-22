@@ -38,7 +38,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TPCApplicationInfo : NSObject
-+ (BOOL)sandboxEnabled;
 
 + (nullable NSDate *)applicationLaunchDate;
 
@@ -54,8 +53,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSString *)applicationVersionShort;
 
 + (NSString *)applicationBundleIdentifier;
-
-+ (NSString *)applicationBuildScheme;
 
 + (int)applicationProcessID;
 

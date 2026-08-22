@@ -48,10 +48,6 @@
 "ccs-1a" = "Connect command sent to %1$@: %2$@";
 
 /* Default G:Line reason */
-"56r-wn" = "35d Your behavior is not conducive to the desired environment";
-"2aw-rf" = "Your behavior is not conducive to the desired environment";
-"yy6-fx" = "Your behavior is not conducive to the desired environment";
-"80c-i8" = "1d Shunned";
 
 /* Network not available messages */
 "3s6-e6" = "Delaying auto connect for %lu seconds";
@@ -62,7 +58,7 @@
 "y3w-la" = "Glasstual has received a DCC request from %@ that could not be processed.";
 
 /* Version info */
-"vzu-u7" = "%1$@ IRC Client: www.glasstualapp.com — v%2$@";
+"vzu-u7" = "%1$@ IRC Client: https://github.com/vakesz/Glasstual — v%2$@";
 
 /* Specific IRC related, app-specific errors */
 "iaa-0u" = "There are no servers configured to connect to.";
@@ -167,7 +163,6 @@ Surround \002<token>\002 with double quotes (\") if it contains a space.";
 "ccb-ur" = "%1$@ %2$@ (Build %3$@)%4$@%5$@";
 "b8p-44" = " as classic binary on an %@ Mac.";
 "g1u-os" = "Apple Silicon";
-"swz-uj" = "Intel";
 
 /* /timer/ command */
 "jj9-94" = "Invalid Syntax. Type “/timer help” for more information.";
@@ -175,14 +170,12 @@ Surround \002<token>\002 with double quotes (\") if it contains a space.";
 "eud-kc" = "Timer repeat count must be a whole number that is grater than or equal to zero (0). Type “/timer help” for more information.";
 "p6l-o4" = "Timer identifier is not properly formatted. Type “/timer list“ for a list of timers.";
 "vzu-xh" = "Timer with identifier “%@“ does not exist. Type “/timer list“ for a list of timers.";
-"uiz-32" = "Timer with identifier “%@“ can't be stopped";
 "ax6-n9" = "Timer with identifier “%@“ is already stopped";
 "hs0-up" = "Timer with identifier “%@“ stopped";
 "dgp-d4" = "Timer with identifier “%@“ can't be restarted. Add a new timer.";
 "qb7-mi" = "Timer with identifier “%@“ restarted";
 "p7s-is" = "Timer with identifier “%@“ removed";
 "808-bs" = "All timers removed";
-"jef-tp" = "Timer with identifier “%@“ added"; // unused
 "pqk-5k" = "There are no timers";
 "q1m-1e" = "There are %ld timers:";
 "6ts-oi" = "There is %ld timer:";
@@ -269,7 +262,6 @@ The identifier for a timer can be found using “/timer list”";
 /* Common command errors */
 "atq-93" = "Invalid syntax: “%@“";
 "pxa-ox" = "Cannot find channel named “%@“";
-"1fc-vl" = "Cannot find query named “%@“";
 "zef-q9" = "One or more arguments are not properly formatted for this command.";
 "g01-qn" = "This command can only be used with a channel.";
 "m6o-z1" = "This command can only be used with a query.";

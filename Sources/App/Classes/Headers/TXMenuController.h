@@ -59,18 +59,17 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	MTMainMenuHelp = 10,
 
 	/* Main menu - App menu */
-	MTMMAppAboutApp = 100,				   // "About Glasstual"
-	MTMMAppAboutAppSeparator = 101,		   // "-"
-	MTMMAppPreferences = 102,			   // "Preferences…"
-	MTMMAppCheckForUpdates = 105,		   // "Check for updates…"
-	MTMMAppCheckForUpdatesSeparator = 106, // "-"
-	MTMMAppServices = 107,				   // "Services"
-	MTMMAppServicesSeparator = 108,		   // "-"
-	MTMMAppHideApp = 109,				   // "Hide Glasstual"
-	MTMMAppHideOthers = 110,			   // "Hide Others"
-	MTMMAppShowAll = 111,				   // "Show All"
-	MTMMAppShowAllSeparator = 112,		   // "-"
-	MTMMAppQuitApp = 113,				   // "Quit Glasstual & IRC"
+	MTMMAppAboutApp = 100,			   // "About Glasstual"
+	MTMMAppAboutAppSeparator = 101,	   // "-"
+	MTMMAppPreferences = 102,		   // "Preferences…"
+	MTMMAppPreferencesSeparator = 106, // "-"
+	MTMMAppServices = 107,			   // "Services"
+	MTMMAppServicesSeparator = 108,	   // "-"
+	MTMMAppHideApp = 109,			   // "Hide Glasstual"
+	MTMMAppHideOthers = 110,		   // "Hide Others"
+	MTMMAppShowAll = 111,			   // "Show All"
+	MTMMAppShowAllSeparator = 112,	   // "-"
+	MTMMAppQuitApp = 113,			   // "Quit Glasstual & IRC"
 
 	/* Main menu - File menu */
 	MTMMFileDisableAllNotifications = 200,				 // "Disable All Notifications"
@@ -506,8 +505,6 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 - (IBAction)copyLogAsHtml:(nullable id)sender;
 - (IBAction)forceReloadTheme:(nullable id)sender;
 - (IBAction)openWebInspector:(nullable id)sender;
-
-- (IBAction)checkForUpdates:(nullable id)sender;
 
 - (IBAction)resetDoNotAskMePopupWarnings:(nullable id)sender;
 @end

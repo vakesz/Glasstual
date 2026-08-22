@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# Writes BuildConfig.h and FeatureFlags.h from build settings.
+# Writes BuildConfig.h from build settings.
 #
 # Runs as the only build phase of the "BuildConfig" aggregate target in
-# Glasstual.xcodeproj. Every target that includes either header depends on
+# Glasstual.xcodeproj. Every target that includes the header depends on
 # that target and has GLASSTUAL_BUILD_HEADERS_DIR on its header search path.
-# Files are only rewritten when their content changes so dependents are not
-# rebuilt needlessly.
+# The file is only rewritten when its content changes so dependents are not
+# rebuilt needlessly. Feature flags are not written here; they reach the
+# compilers through GCC_PREPROCESSOR_DEFINITIONS and
+# SWIFT_ACTIVE_COMPILATION_CONDITIONS (see Configurations/Base.xcconfig).
 
 set -euo pipefail
 
@@ -46,43 +48,6 @@ build_config_tmp="${scratch_dir}/BuildConfig.h.tmp"
 	echo "#define TXBundleBuildGroupContainerIdentifier     @\"${GLASSTUAL_GROUP_CONTAINER_IDENTIFIER}\""
 	echo "#define TXBundleBuildVersion                      @\"${CURRENT_PROJECT_VERSION}\""
 	echo "#define TXBundleBuildVersionShort                 @\"${MARKETING_VERSION}\""
-	echo "#define TXBundleBuildScheme                       @\"${GLASSTUAL_BUILD_SCHEME_TOKEN}\""
-
-	if [ -z "${CODE_SIGN_IDENTITY:-}" ] || [ "${CODE_SIGNING_ALLOWED:-YES}" = "NO" ]; then
-		echo "#define TXBundleBuiltWithoutCodeSigning           1"
-	fi
 } > "${build_config_tmp}"
 
 replace_if_changed "${build_config_tmp}" "${build_config}"
-
-# ---- FeatureFlags.h -------------------------------------------------------
-#
-# The same flags are passed on the compiler command line through
-# GCC_PREPROCESSOR_DEFINITIONS. The header only provides defaults for
-# translation units that are compiled without them.
-
-feature_flags="${GLASSTUAL_BUILD_HEADERS_DIR}/FeatureFlags.h"
-feature_flags_tmp="${scratch_dir}/FeatureFlags.h.tmp"
-
-feature_names=(
-	GLASSTUAL_BUILT_INSIDE_SANDBOX
-	GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED
-	GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION
-	GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY
-)
-
-{
-	echo "${header_banner}"
-	echo
-
-	for feature in "${feature_names[@]}"; do
-		value="${!feature:-0}"
-
-		echo "#ifndef ${feature}"
-		echo "#define ${feature} ${value}"
-		echo "#endif"
-		echo
-	done
-} > "${feature_flags_tmp}"
-
-replace_if_changed "${feature_flags_tmp}" "${feature_flags}"

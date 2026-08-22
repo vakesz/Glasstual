@@ -8,11 +8,8 @@ export MACOSX_DEPLOYMENT_TARGET="26.0"
 export PLATFORM_BUILD_SDK_ROOT_LOCATION=$(xcrun -sdk macosx --show-sdk-path)
 
 # Versions and the SHA256 of the release tarballs. The checksums were taken from
-# the official mirrors (LibreSSL: ftp.openbsd.org SHA256 file; GnuPG: release
-# .sig files / gnupg.org integrity page; libotr: .asc signature) and are
-# verified before the archives are extracted.
-export LIBRARY_LIBRESSL_VERSION="4.3.2"
-export LIBRARY_LIBRESSL_SHA256="edf01aee24c65d69e6a9efcb9d44bcda682ff9d4f3bbbd95e794e1dfa90847b5"
+# the official mirrors (GnuPG: release .sig files / gnupg.org integrity page;
+# libotr: .asc signature) and are verified before the archives are extracted.
 export LIBRARY_GPG_ERROR_VERSION="1.61"
 export LIBRARY_GPG_ERROR_SHA256="7a85413f2bc354f4f8aa832b718af122e48965e9e0eb9012ee659c13c6385c93"
 export LIBRARY_GCRYPT_VERSION="1.11.3"
@@ -20,7 +17,7 @@ export LIBRARY_GCRYPT_SHA256="2c6d562e894b2b06eefbc427d12d51ee9d3e50e90012ad6596
 export LIBRARY_OTR_VERSION="4.1.1"
 export LIBRARY_OTR_SHA256="8b3b182424251067a952fb4e6c7b95a21e644fbb27fbd5f8af2b2ed87ca419f5"
 
-export LIBRARIES_TO_BUILD=(libgpg-error libgcrypt libotr libressl)
+export LIBRARIES_TO_BUILD=(libgpg-error libgcrypt libotr)
 
 export CURRENT_DIRECTORY=$(cd `dirname $0` && pwd)
 
@@ -96,12 +93,7 @@ for ARCH in ${ARCHES[@]}; do
 
 	for LIBRARY_TO_BUILD in ${LIBRARIES_TO_BUILD[@]}
 	do
-		if [ ${LIBRARY_TO_BUILD} = "libressl" ]; then
-			if [ ! -f "${STATICLIB_OUTPUT_DIR_ARCH}/libcrypto.a" ] || [ ! -f "${STATICLIB_OUTPUT_DIR_ARCH}/libssl.a" ] || [ ! -f "${STATICLIB_OUTPUT_DIR_ARCH}/libtls.a" ]; then
-			LIBRARIES_THAT_DONT_EXIST+=("${LIBRARY_TO_BUILD}")
-		fi
-
-		elif [ ! -f "${STATICLIB_OUTPUT_DIR_ARCH}/${LIBRARY_TO_BUILD}.a" ]; then
+		if [ ! -f "${STATICLIB_OUTPUT_DIR_ARCH}/${LIBRARY_TO_BUILD}.a" ]; then
 			LIBRARIES_THAT_DONT_EXIST+=("${LIBRARY_TO_BUILD}")
 		fi
 	done
@@ -148,7 +140,7 @@ else
 	mkdir -p "${STATICLIB_OUTPUT_DIR_UNIVERSAL}"
 fi
 
-LIBFILE_NAMES=("${LIBRARIES_TO_BUILD[@]//libressl/libcrypto libssl libtls}")
+LIBFILE_NAMES=("${LIBRARIES_TO_BUILD[@]}")
 
 for LIBRARY_TO_BUILD in ${LIBFILE_NAMES[@]}
 do

@@ -49,18 +49,7 @@
 
 "8r3-ih" = "Send message…";
 
-"jqk-ha" = " — ";
-"cyg-g9" = " (%@)";
-"v6i-zb" = " (%@ users)";
-"19v-bc" = "%1$@%2$@ on %3$@";
-"q42-an" = "Disconnected — ";
-"xqd-h9" = "Disconnecting… — ";
-"8eu-c7" = "Connecting… — ";
-"wcb-y8" = "Logging on… — ";
-"s23-zd" = "Reconnecting… — ";
-"3yn-wd" = "Waiting to reconnect… — ";
 "nxz-l9" = " (away)";
-"6wz-pd" = "%1$@ (%2$@)";
 
 "st-dc" = "Disconnected";
 "st-wr" = "Waiting to reconnect";
@@ -88,8 +77,6 @@
 "ib-m3" = "Address Book…";
 "ib-m4" = "File Transfers…";
 "ib-m5" = "Hide Member List";
-"ib-mg" = "Manage Selection";
-"ib-ab" = "Address Book";
 
 /* Dynamic View/Window menu titles */
 "mnu-ssl" = "Show Server List";

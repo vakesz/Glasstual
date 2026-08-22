@@ -187,36 +187,6 @@ NS_ASSUME_NONNULL_BEGIN
 	} copy];
 }
 
-#pragma mark -
-#pragma mark Utilities
-
-+ (NSArray<NSString *> *)validImageContentTypes
-{
-	static NSArray<NSString *> *cachedValue = nil;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		cachedValue =
-			@[ @"image/gif", @"image/jpeg", @"image/png", @"image/svg+xml", @"image/tiff", @"image/x-ms-bmp" ];
-	});
-
-	return cachedValue;
-}
-
-+ (NSArray<NSString *> *)validVideoContentTypes
-{
-	static NSArray<NSString *> *cachedValue = nil;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		cachedValue = @[ @"video/3gpp", @"video/3gpp2", @"video/mp4", @"video/quicktime", @"video/x-m4v" ];
-	});
-
-	return cachedValue;
-}
-
 @end
 
 #pragma mark -

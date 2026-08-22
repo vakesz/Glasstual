@@ -41,7 +41,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-static NSPasteboardType const _endpointEntryTableDragToken = @"com.codeux.apps.textual.server-endpoint-list.table-row";
+static NSPasteboardType const _endpointEntryTableDragToken = @"com.vakesz.glasstual.server-endpoint-list.table-row";
 
 @interface TDCServerEndpointListSheet ()
 @property(nonatomic, strong) IBOutlet NSArrayController *entryTableController;

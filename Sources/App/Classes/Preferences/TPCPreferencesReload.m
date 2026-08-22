@@ -144,13 +144,6 @@ NS_ASSUME_NONNULL_BEGIN
 		reloadAction |= TPCPreferencesReloadActionServerListUnreadBadges;
 	}
 
-	/* Sparkle framework update feed URL */
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	if ([keys containsObject:@"ReceiveBetaUpdates"]) {
-		reloadAction |= TPCPreferencesReloadActionSparkleFrameworkFeedURL;
-	}
-#endif
-
 	/* Developer mode */
 	if ([keys containsObject:@"GlasstualDeveloperEnvironment"]) {
 		reloadAction |= TPCPreferencesReloadActionIRCCommandCache;
@@ -312,14 +305,6 @@ NS_ASSUME_NONNULL_BEGIN
 	if ((reloadAction & TPCPreferencesReloadActionInputHistoryScope) == TPCPreferencesReloadActionInputHistoryScope) {
 		[mainWindow().inputHistoryManager noteInputHistoryObjectScopeDidChange];
 	}
-
-	/* Sparkle framework update feed URL */
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	if ((reloadAction & TPCPreferencesReloadActionSparkleFrameworkFeedURL) ==
-		TPCPreferencesReloadActionSparkleFrameworkFeedURL) {
-		[masterController() prepareThirdPartyServiceSparkleFramework];
-	}
-#endif
 
 	/* Command index cache */
 	if ((reloadAction & TPCPreferencesReloadActionIRCCommandCache) == TPCPreferencesReloadActionIRCCommandCache) {

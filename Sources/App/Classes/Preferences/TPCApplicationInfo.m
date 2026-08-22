@@ -82,23 +82,9 @@ NS_ASSUME_NONNULL_BEGIN
 	return TXBundleBuildProductIdentifier;
 }
 
-+ (NSString *)applicationBuildScheme
-{
-	return TXBundleBuildScheme;
-}
-
 + (NSDictionary<NSString *, id> *)applicationInfoPlist
 {
 	return RZMainBundle().infoDictionary;
-}
-
-+ (BOOL)sandboxEnabled
-{
-#if GLASSTUAL_BUILT_INSIDE_SANDBOX == 1
-	return YES;
-#else
-	return NO;
-#endif
 }
 
 + (nullable NSDate *)applicationLaunchDate

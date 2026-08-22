@@ -60,7 +60,7 @@ enum RCMLog {
 class ConnectionSocket: @unchecked Sendable {
 	weak var delegate: ConnectionSocketDelegate?
 
-	final private(set) var config: IRCConnectionConfig
+	final let config: IRCConnectionConfig
 
 	final let uniqueIdentifier: String
 
@@ -69,15 +69,12 @@ class ConnectionSocket: @unchecked Sendable {
 
 	var connecting = false
 	var connected = false
-	var connectedWithClientSideCertificate = false
 	var disconnecting = false
 	var disconnected: Bool {
 		return (connecting == false && connected == false)
 	}
 	var secured = false
 	var sending = false
-	// swift-format-ignore: AlwaysUseLowerCamelCase
-	var EOFReceived = false
 
 	var alternateDisconnectError: ConnectionError?
 
@@ -105,13 +102,10 @@ class ConnectionSocket: @unchecked Sendable {
 	func resetState() {
 		connecting = false
 		connected = false
-		connectedWithClientSideCertificate = false
 		disconnecting = false
 		secured = false
 
 		sending = false
-
-		EOFReceived = false
 
 		alternateDisconnectError = nil
 	}
@@ -196,35 +190,6 @@ class ConnectionSocket: @unchecked Sendable {
 		/* ====================================== */
 
 		return (identity: identityRef, certificate: certificateRef)
-	}
-
-	final func changeProxy(
-		to type: IRCConnectionProxyType = .none, at host: String? = nil, on port: UInt16 = 0, username: String? = nil,
-		password: String? = nil
-	) {
-		guard let mutableConfig = config.mutableCopy() as? IRCConnectionConfigMutable else {
-			RCMLog.connection.error("Unable to create mutable copy of connection configuration")
-
-			return
-		}
-
-		mutableConfig.proxyAddress = host
-		mutableConfig.proxyPort = port
-
-		mutableConfig.proxyType = type
-
-		mutableConfig.proxyUsername = username
-		mutableConfig.proxyPassword = password
-
-		config = mutableConfig
-	}
-
-	final func changeProxyToTor() {
-		changeProxy(to: .socks5, at: torProxyTypeAddress, on: torProxyTypePort)
-	}
-
-	final func changeProxyToNone() {
-		changeProxy()
 	}
 }
 

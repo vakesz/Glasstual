@@ -1269,10 +1269,6 @@ typedef NSMutableDictionary<NSString *, TPCTheme *> *TPCThemeControllerThemeList
 
 - (void)completeOperation
 {
-	/* The copy process is usually instantaneous so add a slight 
-	 delay because I like to mess with people */
-	[NSThread sleepForTimeInterval:3.0];
-
 	XRPerformBlockAsynchronouslyOnMainQueue(^{
 		[self _completeOperation];
 	});
