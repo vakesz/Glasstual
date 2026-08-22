@@ -41,10 +41,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TVCLogLine;
+@class TVCLogLine, IRCDirectChatConnection;
 
 @interface IRCChannel () <IRCChannelMemberListPrivatePrototype>
 @property(nonatomic, assign, readwrite) IRCChannelStatus status;
+/* The socket behind a direct chat. Owned by the channel so that
+ destroying the channel tears the connection down with it. */
+@property(nonatomic, strong, nullable) IRCDirectChatConnection *directChatConnection;
 @property(nonatomic, assign) BOOL sentInitialWhoRequest;
 @property(nonatomic, assign) BOOL channelModesReceived;
 @property(nonatomic, assign) BOOL channelNamesReceived;
@@ -75,6 +78,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)reopenLogFileIfNeeded;
 - (void)closeLogFile;
+
+/* Closes and releases -directChatConnection without a delegate callback. */
+- (void)closeDirectChatConnection;
 @end
 
 NS_ASSUME_NONNULL_END

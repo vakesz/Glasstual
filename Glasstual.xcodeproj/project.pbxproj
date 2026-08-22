@@ -174,6 +174,7 @@
 		4469782F44C3F4D20FD5D83A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B586F0E6CAB57502BAF81EE3 /* Security.framework */; };
 		449991E930802F0627750E4F /* TPI_Caffeine.xib in Resources */ = {isa = PBXBuildFile; fileRef = A34747CB9464C967DCB71C68 /* TPI_Caffeine.xib */; };
 		44B4D538FD899D53486924F5 /* Prompts.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6EC62CEF3593C25A31EFCDF8 /* Prompts.strings */; };
+		45412D13C56864C4349369CB /* IRCDirectChatConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = BA4BA12CC8D634CC9E53ABC8 /* IRCDirectChatConnection.m */; };
 		46342B04758EBA2BED2C5359 /* OTRKitAuthenticationDialogPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BAD67FC5211A3FCB1E02F95 /* OTRKitAuthenticationDialogPrivate.h */; };
 		482F3000E472C2BE86379B65 /* QuickLookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 072A8B2252E5A95A485B5E78 /* QuickLookUI.framework */; };
 		49C4ECC8F710DEEE30F088AC /* OTRKitAuthenticationDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = 2D8D1D9EA8D8AD4751A43C99 /* OTRKitAuthenticationDialog.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -829,22 +830,22 @@
 		070DCA40BB8576D920BC2970 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation;
-			dstSubfolderSpec = 7;
-			files = (
-				67005A64D2A2209169D31815 /* Acknowledgements.pdf in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
 			dstSubfolderSpec = 16;
 			files = (
 				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
 				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
 				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Documentation;
+			dstSubfolderSpec = 7;
+			files = (
+				67005A64D2A2209169D31815 /* Acknowledgements.pdf in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -866,12 +867,12 @@
 		4E0F6318CBF2B26795332F6B /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation/libotr;
+			dstPath = Documentation;
 			dstSubfolderSpec = 7;
 			files = (
-				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
-				789861524D45081052A159D0 /* COPYING in CopyFiles */,
-				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
+				8A2316D4B852F7647761AC38 /* LICENSE-GPLv2-1.txt in CopyFiles */,
+				EAA16BF275FD48123B5227A0 /* LICENSE-MPLv2-0.txt in CopyFiles */,
+				C6EC020D581671E7DC34004B /* LICENSE-OTRKit.txt in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -964,12 +965,12 @@
 		DDCD514A34BF37DC91E049D4 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation;
+			dstPath = Documentation/libotr;
 			dstSubfolderSpec = 7;
 			files = (
-				8A2316D4B852F7647761AC38 /* LICENSE-GPLv2-1.txt in CopyFiles */,
-				EAA16BF275FD48123B5227A0 /* LICENSE-MPLv2-0.txt in CopyFiles */,
-				C6EC020D581671E7DC34004B /* LICENSE-OTRKit.txt in CopyFiles */,
+				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
+				789861524D45081052A159D0 /* COPYING in CopyFiles */,
+				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1012,6 +1013,7 @@
 		0863B2062D9C298BF3A0432D /* TXGlobalModelsPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TXGlobalModelsPrivate.h; sourceTree = "<group>"; };
 		08643B157506F2D632B8F504 /* THOPluginProtocolPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = THOPluginProtocolPrivate.h; sourceTree = "<group>"; };
 		087E8CE8AF5CBD993D9BFDB9 /* PreferenceKeyMasterList.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = PreferenceKeyMasterList.plist; sourceTree = "<group>"; };
+		0891D565E5B5D8C8297E19A3 /* IRCDirectChatConnectionPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCDirectChatConnectionPrivate.h; sourceTree = "<group>"; };
 		0894FB72DF40C6852C3AECC9 /* ICMCommonInlineVideos.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICMCommonInlineVideos.h; sourceTree = "<group>"; };
 		09030C9C3F97B728E03CE38D /* TDCChannelSpotlightSearchResult.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCChannelSpotlightSearchResult.m; sourceTree = "<group>"; };
 		09337EC215A29A9E3EF5FF5E /* SecurityInterface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SecurityInterface.framework; path = System/Library/Frameworks/SecurityInterface.framework; sourceTree = SDKROOT; };
@@ -1615,6 +1617,7 @@
 		B9480CDB2C5825AB9FB68617 /* TPI_Caffeine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TPI_Caffeine.h; sourceTree = "<group>"; };
 		B9B2CC575A9EBA1899D342F0 /* IRCConnectionPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCConnectionPrivate.h; sourceTree = "<group>"; };
 		BA18566503E452913329D3A1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCServerChannelListDialog.xib; sourceTree = "<group>"; };
+		BA4BA12CC8D634CC9E53ABC8 /* IRCDirectChatConnection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCDirectChatConnection.m; sourceTree = "<group>"; };
 		BA8F40B2C5F5679CC808B603 /* OTRKitAutoExpandingTextField.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OTRKitAutoExpandingTextField.m; sourceTree = "<group>"; };
 		BBA8049DFB069CF296A40963 /* OTRTLV.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OTRTLV.m; sourceTree = "<group>"; };
 		BBB31F2AFC2913BB10BE83D3 /* TLONotificationConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TLONotificationConfiguration.m; sourceTree = "<group>"; };
@@ -2243,6 +2246,7 @@
 				D930EC7E47D0EF6436D9D0D5 /* IRCClientRequestedCommands.m */,
 				07D2C3BC64BF1D883B34A67E /* IRCCommandIndex.m */,
 				0B2EC90CC835E3F535F52CD1 /* IRCConnection.m */,
+				BA4BA12CC8D634CC9E53ABC8 /* IRCDirectChatConnection.m */,
 				58AF6CE489F938D7F66F7CC3 /* IRCExtras.m */,
 				77502AAF4E1EBEB522A75D7E /* IRCHighlightLogEntry.m */,
 				689BBEE85528DD819CF3C6AA /* IRCHighlightMatchCondition.m */,
@@ -4089,6 +4093,7 @@
 				D347C3060EDE235CDF00BC91 /* IRCColorFormatPrivate.h */,
 				4B21E4FBBF97DF0B2D43C641 /* IRCCommandIndexPrivate.h */,
 				2D7913BDE8D4412BDF802BCF /* IRCConnectionPrivate.h */,
+				0891D565E5B5D8C8297E19A3 /* IRCDirectChatConnectionPrivate.h */,
 				446E86C1D47F9E2DBE67F37D /* IRCExtrasPrivate.h */,
 				A11010D8DE089D2A71183698 /* IRCHighlightLogEntryPrivate.h */,
 				A5700068A39A2AF7776EFFB2 /* IRCISupportInfoPrivate.h */,
@@ -5246,6 +5251,7 @@
 				E72465E8D8285AED780F2B2D /* IRCConnection.m in Sources */,
 				CF57098EAC498D8080C09CDF /* IRCConnectionConfig.m in Sources */,
 				43983872BCB4737124077DE5 /* IRCConnectionErrors.m in Sources */,
+				45412D13C56864C4349369CB /* IRCDirectChatConnection.m in Sources */,
 				1AD5E4708C308D2522417867 /* IRCExtras.m in Sources */,
 				9820912C03043642357A1E26 /* IRCHighlightLogEntry.m in Sources */,
 				E8EDA8048BCD7EA7C15DAFF0 /* IRCHighlightMatchCondition.m in Sources */,

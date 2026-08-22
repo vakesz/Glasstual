@@ -685,7 +685,8 @@ NSString *const IRCWorldWillDestroyChannelNotification = @"IRCWorldWillDestroyCh
 {
 	NSParameterAssert(nickname != nil);
 	NSParameterAssert(client != nil);
-	NSParameterAssert(type == IRCChannelTypePrivateMessage || type == IRCChannelTypeUtility);
+	NSParameterAssert(type == IRCChannelTypePrivateMessage || type == IRCChannelTypeUtility ||
+					  type == IRCChannelTypeDirectChat);
 
 	IRCChannelConfigMutable *config = [IRCChannelConfigMutable new];
 

@@ -63,6 +63,7 @@
 #import "IRCUserRelationsPrivate.h"
 #import "IRCWorldPrivate.h"
 #import "IRCChannelPrivate.h"
+#import "IRCDirectChatConnectionPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -208,6 +209,11 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 	return (self.config.type == IRCChannelTypeUtility);
 }
 
+- (BOOL)isDirectChat
+{
+	return (self.config.type == IRCChannelTypeDirectChat);
+}
+
 - (BOOL)isPrivateMessageForZNCUser
 {
 	if (self.isPrivateMessage == NO) {
@@ -235,6 +241,9 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 	}
 	case IRCChannelTypeUtility: {
 		return @"utility";
+	}
+	case IRCChannelTypeDirectChat: {
+		return @"direct-chat";
 	}
 	}
 }
@@ -437,8 +446,14 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 		self.modeInfo = [[IRCChannelMode alloc] initWithChannel:self];
 	}
 
-	if (self.isPrivateMessage) {
-		IRCUser *user1 = [self.associatedClient findUserOrCreate:self.name];
+	if (self.isPrivateMessage || self.isDirectChat) {
+		NSString *peerNickname = self.name;
+
+		if (self.isDirectChat) {
+			peerNickname = (self.directChatConnection.peerNickname ?: [self.name substringFromIndex:1]);
+		}
+
+		IRCUser *user1 = [self.associatedClient findUserOrCreate:peerNickname];
 
 		[self addUser:user1];
 
@@ -472,6 +487,8 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 	self.statusChangedByAction = YES;
 
 	[self resetStatus:IRCChannelStatusTerminated];
+
+	[self closeDirectChatConnection];
 
 	[self closeLogFile];
 
@@ -507,6 +524,8 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 
 	LogToConsoleTerminationProgress("[%{public}@] Closing log file", self.uniqueIdentifier);
 
+	[self closeDirectChatConnection];
+
 	[self closeLogFile];
 
 	if (self.isPrivateMessage) {
@@ -521,6 +540,22 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 									self.viewController.uniqueIdentifier);
 
 	[self.viewController prepareForApplicationTermination];
+}
+
+#pragma mark -
+#pragma mark Direct Chat
+
+- (void)closeDirectChatConnection
+{
+	IRCDirectChatConnection *connection = self.directChatConnection;
+
+	if (connection == nil) {
+		return;
+	}
+
+	self.directChatConnection = nil;
+
+	[connection close];
 }
 
 #pragma mark -

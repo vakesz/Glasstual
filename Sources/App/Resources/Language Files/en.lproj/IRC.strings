@@ -61,6 +61,19 @@
 "snf-45" = "Received file transfer request from %1$@, %2$@ (%3$qi bytes)";
 "y3w-la" = "Glasstual has received a DCC request from %@ that could not be processed.";
 
+/* Direct chat (DCC CHAT) messages */
+"dcc-s1" = "The file at %@ could not be offered for transfer.";
+"dcc-c1" = "%@ wants to start a direct chat";
+"dcc-c6" = "Declined direct chat request from %@";
+"dcc-c7" = "Connecting to %1$@ for a direct chat (%2$@ port %3$hu)…";
+"dcc-c8" = "Offering a direct chat to %@…";
+"dcc-c9" = "The direct chat is not connected.";
+"dcc-ca" = "Could not determine an address to offer %@ for the direct chat.";
+"dcc-cb" = "Waiting for %1$@ to connect on port %2$hu…";
+"dcc-cc" = "Direct chat with %@ established";
+"dcc-cd" = "Direct chat with %1$@ closed: %2$@";
+"dcc-ce" = "Direct chat with %@ closed";
+
 /* Version info */
 "vzu-u7" = "%1$@ IRC Client: www.glasstualapp.com — v%2$@";
 
