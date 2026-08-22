@@ -226,7 +226,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		((self.realName == nil && objectCast.realName == nil) || [self.realName isEqualToString:objectCast.realName]) &&
 
-		self.isAway == objectCast.isAway && self.isIRCop == objectCast.isIRCop);
+		self.isAway == objectCast.isAway && self.isIRCop == objectCast.isIRCop && self.isBot == objectCast.isBot);
 }
 
 - (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing
@@ -245,6 +245,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	object->_isAway = self->_isAway;
 	object->_isIRCop = self->_isIRCop;
+	object->_isBot = self->_isBot;
 
 	return [object initOnCopy];
 }
@@ -397,6 +398,7 @@ NS_ASSUME_NONNULL_BEGIN
 @dynamic realName;
 @dynamic isAway;
 @dynamic isIRCop;
+@dynamic isBot;
 
 - (instancetype)initWithClient:(IRCClient *)client
 {
@@ -454,6 +456,13 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self->_isIRCop != isIRCop) {
 		self->_isIRCop = isIRCop;
+	}
+}
+
+- (void)setIsBot:(BOOL)isBot
+{
+	if (self->_isBot != isBot) {
+		self->_isBot = isBot;
 	}
 }
 

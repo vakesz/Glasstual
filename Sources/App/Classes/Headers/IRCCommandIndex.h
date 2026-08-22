@@ -118,6 +118,7 @@ typedef NS_ENUM(NSUInteger, IRCLocalCommand) {
 	IRCLocalCommandSetcolor = 5103,
 	IRCLocalCommandSetqueryname = 5117,
 	IRCLocalCommandShun = 5063,
+	IRCLocalCommandSilence = 5119,
 	IRCLocalCommandSme = 5064,
 	IRCLocalCommandSmsg = 5065,
 	IRCLocalCommandSslcontext = 5066,

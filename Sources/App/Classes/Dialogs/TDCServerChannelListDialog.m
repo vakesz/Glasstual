@@ -43,6 +43,7 @@
 #import "NSTableViewHelperPrivate.h"
 #import "TLOLocalization.h"
 #import "IRCClient.h"
+#import "IRCISupportInfo.h"
 #import "TVCBasicTableView.h"
 #import "TDCServerChannelListDialogPrivate.h"
 
@@ -65,6 +66,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak) IBOutlet NSTextField *networkNameTextField;
 @property(nonatomic, weak) IBOutlet TVCBasicTableView *channelListTable;
 @property(nonatomic, strong) IBOutlet NSArrayController *channelListController;
+@property(nonatomic, strong) NSTextField *minimumUserCountLabel;
+@property(nonatomic, strong) NSTextField *minimumUserCountTextField;
 
 - (IBAction)onClose:(nullable id)sender;
 
@@ -110,6 +113,106 @@ NS_ASSUME_NONNULL_BEGIN
 																			  selector:@selector(compare:)] ];
 
 	self.networkNameTextField.stringValue = TXTLS(@"TDCServerChannelListDialog[7qf-r0]", self.client.networkNameAlt);
+
+	[self prepareMinimumUserCountControls];
+}
+
+/* ELIST "U": a minimum member count that the server filters on. The
+ controls live next to the search field and are only shown when the
+ server advertises the token. */
+- (void)prepareMinimumUserCountControls
+{
+	if ([self.client.supportInfo extendedListSupportsToken:@"U"] == NO) {
+		return;
+	}
+
+	NSView *contentView = self.window.contentView;
+
+	NSSearchField *searchField = self.searchTextField;
+
+	NSTextField *label = [NSTextField labelWithString:TXTLS(@"TDCServerChannelListDialog[u7e-1s]")];
+
+	label.translatesAutoresizingMaskIntoConstraints = NO;
+
+	NSNumberFormatter *formatter = [NSNumberFormatter new];
+
+	formatter.numberStyle = NSNumberFormatterNoStyle;
+	formatter.minimum = @(0);
+	formatter.maximum = @(999999);
+	formatter.allowsFloats = NO;
+
+	NSTextField *textField = [NSTextField textFieldWithString:@""];
+
+	textField.translatesAutoresizingMaskIntoConstraints = NO;
+	textField.formatter = formatter;
+	textField.placeholderString = @"0";
+	textField.alignment = NSTextAlignmentRight;
+	textField.toolTip = TXTLS(@"TDCServerChannelListDialog[u7e-2s]");
+
+	[textField setAccessibilityLabel:TXTLS(@"TDCServerChannelListDialog[u7e-1s]")];
+
+	[contentView addSubview:label];
+	[contentView addSubview:textField];
+
+	[NSLayoutConstraint activateConstraints:@[
+		[textField.widthAnchor constraintEqualToConstant:60.0],
+		[textField.trailingAnchor constraintEqualToAnchor:searchField.leadingAnchor constant:-12.0],
+		[textField.centerYAnchor constraintEqualToAnchor:searchField.centerYAnchor],
+		[label.trailingAnchor constraintEqualToAnchor:textField.leadingAnchor constant:-6.0],
+		[label.firstBaselineAnchor constraintEqualToAnchor:textField.firstBaselineAnchor],
+		[label.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.networkNameTextField.trailingAnchor
+														 constant:20.0],
+	]];
+
+	self.minimumUserCountLabel = label;
+	self.minimumUserCountTextField = textField;
+}
+
+- (nullable NSString *)serverSideListArguments
+{
+	NSUInteger minimumUserCount = 0;
+
+	if (self.minimumUserCountTextField) {
+		minimumUserCount = self.minimumUserCountTextField.integerValue;
+	}
+
+	return [self.class listArgumentsForMinimumUserCount:minimumUserCount
+												pattern:self.searchTextField.stringValue
+										supportedTokens:self.client.supportInfo.extendedListTokens];
+}
+
++ (nullable NSString *)listArgumentsForMinimumUserCount:(NSUInteger)minimumUserCount
+												pattern:(nullable NSString *)pattern
+										supportedTokens:(NSArray<NSString *> *)tokens
+{
+	NSParameterAssert(tokens != nil);
+
+	NSMutableArray<NSString *> *conditions = [NSMutableArray array];
+
+	if (minimumUserCount > 0 && [tokens containsObject:@"U"]) {
+		/* ">N" lists channels with more than N members. */
+		[conditions addObject:[NSString stringWithFormat:@">%lu", (minimumUserCount - 1)]];
+	}
+
+	NSString *trimmedPattern = pattern.trim;
+
+	if (trimmedPattern.length > 0 && [tokens containsObject:@"M"]) {
+		/* Commas and spaces would be read as further conditions. */
+		if ([trimmedPattern rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@", "]]
+				.location == NSNotFound) {
+			if ([trimmedPattern containsString:@"*"] == NO && [trimmedPattern containsString:@"?"] == NO) {
+				trimmedPattern = [NSString stringWithFormat:@"*%@*", trimmedPattern];
+			}
+
+			[conditions addObject:trimmedPattern];
+		}
+	}
+
+	if (conditions.count == 0) {
+		return nil;
+	}
+
+	return [conditions componentsJoinedByString:@","];
 }
 
 - (void)show

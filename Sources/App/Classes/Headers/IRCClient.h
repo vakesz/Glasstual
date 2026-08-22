@@ -125,10 +125,12 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 	*lastLine; // Last line in the server console. There is no guarantee it's visible to the user when accessed.
 @property(readonly, copy) NSArray<IRCChannel *> *channelList;
 @property(readonly, copy) NSArray<IRCHighlightLogEntry *> *cachedHighlights;
-@property(readonly, copy, nullable) NSString *userHostmask;	 // The hostmask of the local user
-@property(readonly, copy) NSString *userNickname;			 // The nickname of the local user
-@property(readonly, copy, nullable) NSString *serverAddress; // The address of the server connected to or nil
-@property(readonly, copy, nullable) NSString *networkName;	 // The name of the network connected to or nil
+@property(readonly, copy, nullable) NSString *userHostmask;		// The hostmask of the local user
+@property(readonly) NSStringEncoding effectivePrimaryEncoding;	// Configured encoding, or UTF-8 on UTF8ONLY servers
+@property(readonly) NSStringEncoding effectiveFallbackEncoding; // Configured fallback, or UTF-8 on UTF8ONLY servers
+@property(readonly, copy) NSString *userNickname;				// The nickname of the local user
+@property(readonly, copy, nullable) NSString *serverAddress;	// The address of the server connected to or nil
+@property(readonly, copy, nullable) NSString *networkName;		// The name of the network connected to or nil
 @property(readonly, copy)
 	NSString *networkNameAlt; // The name of the network connected to or the configured Connection Name
 @property(readonly, copy, nullable) NSString *preAwayUserNickname; // Nickname before away was set or nil
@@ -218,6 +220,7 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 - (void)modifyWatchListBy:(BOOL)adding nicknames:(NSArray<NSString *> *)nicknames;
 
 - (void)requestChannelList;
+- (void)requestChannelListWithArguments:(nullable NSString *)arguments; // e.g. ELIST conditions ">10,*linux*"
 
 - (NSArray<NSString *> *)compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
 													 modeIsSet:(BOOL)modeIsSet
@@ -309,6 +312,14 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 		 asCommand:(IRCRemoteCommand)command
 		 toChannel:(IRCChannel *)channel
 	withEncryption:(BOOL)encryptText;
+
+/* Sends string to every channel in channels. When the server advertises a
+ TARGMAX / MAXTARGETS limit for the command, joined channels are grouped into
+ comma separated target lists no longer than that limit; otherwise one line
+ is sent per channel exactly as -sendText:asCommand:toChannel: would. */
+- (void)sendText:(NSAttributedString *)string
+	   asCommand:(IRCRemoteCommand)command
+	  toChannels:(NSArray<IRCChannel *> *)channels;
 
 - (void)sendLine:(NSString *)string;
 - (void)send:(NSString *)string, ...;

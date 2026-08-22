@@ -54,6 +54,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)clear;
 
 - (void)addChannel:(NSString *)channel count:(NSUInteger)count topic:(nullable NSString *)topic;
+
+/* LIST arguments built from the dialog's filters and the ELIST tokens the
+ server advertises. nil when nothing can be filtered server-side. */
+@property(readonly, copy, nullable) NSString *serverSideListArguments;
+
+/* Pure helper behind -serverSideListArguments. tokens are the ELIST letters
+ the server supports (uppercase). pattern is matched against channel names
+ and wrapped in wildcards when it has none. */
++ (nullable NSString *)listArgumentsForMinimumUserCount:(NSUInteger)minimumUserCount
+												pattern:(nullable NSString *)pattern
+										supportedTokens:(NSArray<NSString *> *)tokens;
 @end
 
 @protocol TDCServerChannelListDialogDelegate <NSObject>

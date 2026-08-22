@@ -132,6 +132,11 @@ NS_ASSUME_NONNULL_BEGIN
 			[accessibilityDescription stringByAppendingFormat:@", %@", TXTLS(@"TVCMainWindow[jkr-ed]")];
 	}
 
+	if (cellItem.user.isBot) {
+		accessibilityDescription =
+			[accessibilityDescription stringByAppendingFormat:@", %@", TXTLS(@"TVCMainWindow[b0t-ac]")];
+	}
+
 	NSTextFieldCell *textFieldCell = textField.cell;
 
 	textFieldCell.accessibilityValueDescription = accessibilityDescription;
@@ -177,24 +182,30 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	IRCChannelUser *cellItem = self.cellItem;
 
-	NSTextField *textField = self.cellTextField;
-
-	NSAttributedString *stringValue = textField.attributedStringValue;
-
-	NSMutableAttributedString *mutableStringValue = [stringValue mutableCopy];
-
-	[mutableStringValue beginEditing];
-
 	NSFont *controlFont = [NSFont systemFontOfSize:NSFont.systemFontSize];
 
 	NSColor *controlColor = (cellItem.user.isAway ? [NSColor secondaryLabelColor] : [NSColor labelColor]);
 
-	NSRange stringValueRange = stringValue.range;
+	NSMutableAttributedString *mutableStringValue = [[NSMutableAttributedString alloc]
+		initWithString:cellItem.user.nickname
+			attributes:@{NSFontAttributeName : controlFont, NSForegroundColorAttributeName : controlColor}];
 
-	[mutableStringValue addAttribute:NSFontAttributeName value:controlFont range:stringValueRange];
-	[mutableStringValue addAttribute:NSForegroundColorAttributeName value:controlColor range:stringValueRange];
+	/* Bots (ISUPPORT BOT user mode, WHO flag, or RPL_WHOISBOT) get a
+	 small caption after the nickname instead of a coloured badge. */
+	if (cellItem.user.isBot) {
+		NSFont *captionFont = [NSFont systemFontOfSize:NSFont.smallSystemFontSize weight:NSFontWeightMedium];
 
-	[mutableStringValue endEditing];
+		NSString *caption = [NSString stringWithFormat:@"  %@", TXTLS(@"TVCMainWindow[b0t-lb]")];
+
+		NSAttributedString *captionValue =
+			[[NSAttributedString alloc] initWithString:caption
+											attributes:@{
+												NSFontAttributeName : captionFont,
+												NSForegroundColorAttributeName : [NSColor secondaryLabelColor]
+											}];
+
+		[mutableStringValue appendAttributedString:captionValue];
+	}
 
 	return mutableStringValue;
 }

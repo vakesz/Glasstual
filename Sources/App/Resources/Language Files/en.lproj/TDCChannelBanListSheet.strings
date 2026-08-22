@@ -39,3 +39,6 @@
 "gbi-wn" = "Ban Exceptions in %@";
 "ylc-6e" = "Invite Exceptions in %@";
 "g4r-t6" = "Quiets in %@";
+
+"n0f-cn" = "%@ entries";
+"n0f-mx" = "%1$@ of %2$@ entries"; // MAXLIST
