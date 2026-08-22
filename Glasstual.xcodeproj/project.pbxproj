@@ -356,6 +356,7 @@
 		A81C1198BB3270E4FBD00B36 /* IRCClientRequestedCommands.m in Sources */ = {isa = PBXBuildFile; fileRef = D930EC7E47D0EF6436D9D0D5 /* IRCClientRequestedCommands.m */; };
 		A8CF3705A55AB60BAAC2DD4A /* TDCChannelBanListSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 056C7DBBFC7D5DDA06BD85EE /* TDCChannelBanListSheet.xib */; };
 		AA65CCDAD898FDAF2EA5B38C /* ZNC Additions.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 6B2D5D2ED9CEEC799534B7D1 /* ZNC Additions.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		AB1F0C7270BCC02BB4A6104B /* TVCMemberListSectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 37C49D686BBA1E682957DB11 /* TVCMemberListSectionTests.m */; };
 		AB461F6D69360FCAF5CFF8DC /* SWArrayHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0700277BACECB021D9F59E7D /* SWArrayHelper.swift */; };
 		ABDD19278E4F1A7444E5E746 /* IRCAddressBookUserTracking.m in Sources */ = {isa = PBXBuildFile; fileRef = A599250CB9EE48F381B09D91 /* IRCAddressBookUserTracking.m */; };
 		AC5C2DC005B4B10A5BB8E109 /* IRCCommandIndexRemoteData.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5841087CAA8C7AF01918B5DF /* IRCCommandIndexRemoteData.plist */; };
@@ -773,12 +774,14 @@
 		070DCA40BB8576D920BC2970 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
-			dstSubfolderSpec = 16;
+			dstPath = Preferences;
+			dstSubfolderSpec = 7;
 			files = (
-				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
-				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
-				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+				FA71C3278375D1BD0925B4A6 /* KeysExcludedFromContainer.plist in CopyFiles */,
+				E62A165D2759362C23247FA4 /* KeysExcludedFromExport.plist in CopyFiles */,
+				12E7B04A8D1C89F3E824563D /* PreferenceKeyMasterList.plist in CopyFiles */,
+				EB3C2F7F50214F6CC6EC1F6A /* RegisteredUserDefaults.plist in CopyFiles */,
+				EC95BE126D4DA67BD4016649 /* RegisteredUserDefaultsInContainer.plist in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -795,14 +798,12 @@
 		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Preferences;
-			dstSubfolderSpec = 7;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
+			dstSubfolderSpec = 16;
 			files = (
-				FA71C3278375D1BD0925B4A6 /* KeysExcludedFromContainer.plist in CopyFiles */,
-				E62A165D2759362C23247FA4 /* KeysExcludedFromExport.plist in CopyFiles */,
-				12E7B04A8D1C89F3E824563D /* PreferenceKeyMasterList.plist in CopyFiles */,
-				EB3C2F7F50214F6CC6EC1F6A /* RegisteredUserDefaults.plist in CopyFiles */,
-				EC95BE126D4DA67BD4016649 /* RegisteredUserDefaultsInContainer.plist in CopyFiles */,
+				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
+				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
+				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1047,6 +1048,7 @@
 		3744EDB063D0C054ECFF2853 /* TXMenuControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TXMenuControllerPrivate.h; sourceTree = "<group>"; };
 		3757304799191B197249EEEA /* RCMProcessMainPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCMProcessMainPrivate.h; sourceTree = "<group>"; };
 		3758F36E35E3168CD39A9330 /* ICMAssessedMedia.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICMAssessedMedia.h; sourceTree = "<group>"; };
+		37C49D686BBA1E682957DB11 /* TVCMemberListSectionTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMemberListSectionTests.m; sourceTree = "<group>"; };
 		37D01A1F607F295526E476D9 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TXCMainMenu.xib; sourceTree = "<group>"; };
 		37FC418DC227A46C3E7AD91D /* NSMenuHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSMenuHelper.m; sourceTree = "<group>"; };
 		39217B0FD177F2D62F3F7AF1 /* TDCChannelSpotlightAppearancePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCChannelSpotlightAppearancePrivate.h; sourceTree = "<group>"; };
@@ -3218,6 +3220,7 @@
 				A366B39CE3C3B07566BF5F57 /* IRCSTSPolicyTests.m */,
 				A806D74CA87A49163E69D9BE /* TLOSCRAMClientTests.m */,
 				2058D2F235E391EB00AF9B33 /* TVCLogLineTests.m */,
+				37C49D686BBA1E682957DB11 /* TVCMemberListSectionTests.m */,
 			);
 			path = GlasstualTests;
 			sourceTree = "<group>";
@@ -4677,6 +4680,7 @@
 				7223D2A12D60BFFEBC4B5C74 /* IRCSendingMessageTests.m in Sources */,
 				E9C6B79C48D1194EF7C6EF86 /* TLOSCRAMClientTests.m in Sources */,
 				B3FFB32CFBE55059D31F62F0 /* TVCLogLineTests.m in Sources */,
+				AB1F0C7270BCC02BB4A6104B /* TVCMemberListSectionTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

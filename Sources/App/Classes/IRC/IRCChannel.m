@@ -43,7 +43,6 @@
 #import "TXWindowControllerPrivate.h"
 #import "TVCMainWindowPrivate.h"
 #import "TVCMemberListPrivate.h"
-#import "TVCMemberListCellPrivate.h"
 #import "TVCLogControllerPrivate.h"
 #import "TDCSharedProtocolDefinitionsPrivate.h"
 #import "TDCSheetBase.h"
@@ -696,30 +695,6 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 - (void)sortMembers
 {
 	[self.memberInfo sortMembers];
-}
-
-#pragma mark -
-#pragma mark Table View Delegate
-
-- (nullable NSView *)tableView:(NSTableView *)tableView
-			viewForTableColumn:(nullable NSTableColumn *)tableColumn
-						   row:(NSInteger)row
-{
-	NSView *newView = [tableView makeViewWithIdentifier:@"GroupView" owner:self];
-
-	return newView;
-}
-
-- (nullable NSTableRowView *)tableView:(NSTableView *)tableView rowViewForRow:(NSInteger)row
-{
-	TVCMemberListRowCell *rowView = [[TVCMemberListRowCell alloc] initWithMemberList:(id)tableView];
-
-	return rowView;
-}
-
-- (void)tableView:(NSTableView *)tableView didAddRowView:(NSTableRowView *)rowView forRow:(NSInteger)row
-{
-	[mainWindowMemberList() refreshDrawingForRow:row];
 }
 
 #pragma mark -

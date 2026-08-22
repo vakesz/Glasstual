@@ -38,6 +38,7 @@
 #import "IRCChannelPrivate.h"
 #import "IRCChannelMemberList.h"
 #import "IRCChannelMemberListControllerPrivate.h"
+#import "TVCMemberListPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -47,19 +48,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCChannelMemberListController ()
 @property(nonatomic, weak) IRCChannelMemberList *memberList;
-@property(nonatomic, weak) IBOutlet NSTableView *tableView;
+@property(nonatomic, weak, readwrite) IBOutlet TVCMemberList *tableView;
 @end
 
 @implementation IRCChannelMemberListController
 
 - (void)assignToChannel:(nullable IRCChannel *)channel
 {
-	/* Modify table sources */
-	NSTableView *tableView = self.tableView;
-
-	tableView.dataSource = (id)channel;
-	tableView.delegate = (id)channel;
-
 	/* Are we assigned? */
 	IRCChannelMemberList *oldList = self.memberList;
 
@@ -79,7 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
 	self.memberList = newList;
 
 	if (channel == nil || newList == nil) {
-		self.content = @[];
+		[self replaceContents:@[]];
 	}
 }
 
@@ -88,6 +83,24 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(contents != nil);
 
 	self.content = [contents mutableCopy];
+
+	[self.tableView membersReplaced];
+}
+
+/* The table is not bound to -arrangedObjects. It is told about each
+ change instead so that it can translate member indexes into rows. */
+- (void)insertObject:(id)object atArrangedObjectIndex:(NSUInteger)index
+{
+	[super insertObject:object atArrangedObjectIndex:index];
+
+	[self.tableView memberInsertedAtIndex:index];
+}
+
+- (void)removeObjectAtArrangedObjectIndex:(NSUInteger)index
+{
+	[super removeObjectAtArrangedObjectIndex:index];
+
+	[self.tableView memberRemovedAtIndex:index];
 }
 
 @end
