@@ -272,7 +272,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 
 	if (
 		/* 1 */ [TPCPreferences reloadScrollbackOnLaunch] == NO ||
-		/* 2 */ channel.isUtility ||
+		/* 2 */ channel.isUtility || channel.isDirectChat ||
 		/* 3 */ (channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO) ||
 		/* 4 */ self.encrypted) {
 		[self historicLogResetChannel];
@@ -557,7 +557,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	if (
 		/* 1 */ self.encrypted ||
 		/* 2 */ (firstTimeLoadingHistory && [TPCPreferences reloadScrollbackOnLaunch] == NO) ||
-		/* 3 */ channel.isUtility ||
+		/* 3 */ channel.isUtility || channel.isDirectChat ||
 		/* 4 */
 		(firstTimeLoadingHistory && channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO)) {
 		self.historyLoadedForFirstTime = YES;

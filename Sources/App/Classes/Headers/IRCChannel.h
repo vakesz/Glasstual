@@ -63,8 +63,9 @@ GLASSTUAL_EXTERN NSNotificationName const IRCChannelConfigurationWasUpdatedNotif
 @property(getter=isChannel, readonly) BOOL channel;
 @property(getter=isPrivateMessage, readonly) BOOL privateMessage;
 @property(getter=isPrivateMessageForZNCUser, readonly)
-	BOOL privateMessageForZNCUser;					// For example: *status, *nickserv, etc.
-@property(getter=isUtility, readonly) BOOL utility; // See IRCChannelTypeUtility in IRCChannelConfig.h
+	BOOL privateMessageForZNCUser;						  // For example: *status, *nickserv, etc.
+@property(getter=isUtility, readonly) BOOL utility;		  // See IRCChannelTypeUtility in IRCChannelConfig.h
+@property(getter=isDirectChat, readonly) BOOL directChat; // DCC CHAT session with a single user
 @property(readonly) IRCChannelStatus status;
 @property(readonly) BOOL errorOnLastJoinAttempt;
 @property(readonly) NSTimeInterval channelJoinTime;

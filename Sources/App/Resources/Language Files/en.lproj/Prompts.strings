@@ -164,6 +164,12 @@ Create this folder if it does not exist.";
 "nlz-um" = "Last known error message: %@";
 
 "d22-76" = "A query named “%@“ already exists. Do you want to delete this query?";
+
+/* Direct chat (DCC CHAT) request */
+"dcc-c2" = "%@ wants to start a direct chat with you. A direct chat is a connection between the two of you that does not go through the IRC server, so the other person will learn your IP address.";
+"dcc-c3" = "Direct chat request from %@";
+"dcc-c4" = "Accept";
+"dcc-c5" = "Decline";
 "61s-jc" = "There is no undo and all data related to this query, except for logs, will be erased.";
 
 "bi7-ah" = "Logging has been disabled because there is not enough space on your Mac";

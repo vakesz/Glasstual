@@ -265,8 +265,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 		uint64_t currentSpeed = self.currentSpeed;
 
-		if (currentSpeed > 0 && self.totalFilesize > processedFilesize) {
-			timeRemaining = ((self.totalFilesize - processedFilesize) / currentSpeed);
+		uint64_t totalFilesize = self.totalFilesize;
+
+		/* The peer may send more than it announced. Never let the
+		 unsigned subtraction wrap into a multi-century estimate. */
+		if (currentSpeed > 0 && processedFilesize < totalFilesize) {
+			timeRemaining = ((totalFilesize - processedFilesize) / currentSpeed);
 
 			if (timeRemaining > 0) {
 				timeRemainingString = TXHumanReadableTimeInterval(

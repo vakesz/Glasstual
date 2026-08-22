@@ -57,6 +57,11 @@ NSErrorDomain const TDCFileTransferDialogSocketErrorDomain = @"TDCFileTransferDi
 @property(nonatomic, strong, nullable) nw_listener_t listener;
 @property(nonatomic, strong, nullable) nw_connection_t connection;
 @property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *parentListener; // Accepted connections only
+/* Accepted connections which have not become ready yet. Nothing else
+ holds a strong reference to them (the nw_connection handlers capture
+ weak self) so the listener keeps them alive until they are handed to
+ the delegate or fail. Socket queue only. */
+@property(nonatomic, strong) NSMutableSet<TDCFileTransferDialogSocket *> *pendingAcceptedConnections;
 @property(nonatomic, assign, readwrite) BOOL isListener;
 @property(nonatomic, assign) BOOL isOutboundConnection;
 @property(nonatomic, assign) uint16_t nextListenPort;
@@ -89,6 +94,8 @@ NSErrorDomain const TDCFileTransferDialogSocketErrorDomain = @"TDCFileTransferDi
 			[NSString stringWithFormat:@"Glasstual.TDCFileTransferDialogSocket-%@", [NSString stringWithUUID]];
 
 		self.socketQueue = dispatch_queue_create(queueName.UTF8String, attributes);
+
+		self.pendingAcceptedConnections = [NSMutableSet set];
 
 		return self;
 	}
@@ -197,6 +204,14 @@ NSErrorDomain const TDCFileTransferDialogSocketErrorDomain = @"TDCFileTransferDi
 	self.isConnected = NO;
 
 	self.parentListener = nil;
+
+	NSSet *pendingAcceptedConnections = [self.pendingAcceptedConnections copy];
+
+	[self.pendingAcceptedConnections removeAllObjects];
+
+	for (TDCFileTransferDialogSocket *connection in pendingAcceptedConnections) {
+		[connection disconnect];
+	}
 }
 
 /* Must be called on the socket queue */
@@ -212,11 +227,16 @@ NSErrorDomain const TDCFileTransferDialogSocketErrorDomain = @"TDCFileTransferDi
 
 	BOOL isOutbound = self.isOutboundConnection;
 
+	TDCFileTransferDialogSocket *parentListener = self.parentListener;
+
 	[self tearDownNetworkObjects];
 
 	/* An accepted connection which never became ready was never
-	 handed to the delegate so there is nobody to tell about it. */
+	 handed to the delegate so there is nobody to tell about it
+	 except the listener which is still holding on to it. */
 	if (wasConnected == NO && isOutbound == NO) {
+		[parentListener acceptedConnectionDidFail:self];
+
 		return;
 	}
 
@@ -411,7 +431,18 @@ NSErrorDomain const TDCFileTransferDialogSocketErrorDomain = @"TDCFileTransferDi
 	TDCFileTransferDialogSocket *accepted = [[TDCFileTransferDialogSocket alloc] initWithDelegate:delegate
 																					delegateQueue:self.delegateQueue];
 
+	[self.pendingAcceptedConnections addObject:accepted];
+
 	[accepted adoptConnection:connection acceptedByListener:self];
+}
+
+/* Called on the accepted connection's socket queue when that
+ connection failed before it ever became ready. */
+- (void)acceptedConnectionDidFail:(TDCFileTransferDialogSocket *)connection
+{
+	dispatch_async(self.socketQueue, ^{
+		[self.pendingAcceptedConnections removeObject:connection];
+	});
 }
 
 /* Called on the listener's socket queue by an accepted connection once
@@ -419,12 +450,16 @@ NSErrorDomain const TDCFileTransferDialogSocketErrorDomain = @"TDCFileTransferDi
 - (void)acceptedConnectionIsReady:(TDCFileTransferDialogSocket *)connection
 {
 	dispatch_async(self.socketQueue, ^{
+		[self.pendingAcceptedConnections removeObject:connection];
+
 		if (self.closed || self.invalidated) {
 			[connection disconnect];
 
 			return;
 		}
 
+		/* The delegate block retains the connection until delivery.
+		 From then on the delegate is responsible for keeping it. */
 		[self deliverToDelegate:^(id<TDCFileTransferDialogSocketDelegate> delegate) {
 			if ([delegate respondsToSelector:@selector(socket:didAcceptConnection:)]) {
 				[delegate socket:self didAcceptConnection:connection];
@@ -519,6 +554,13 @@ NSErrorDomain const TDCFileTransferDialogSocketErrorDomain = @"TDCFileTransferDi
 
 		nw_endpoint_t endpoint = nw_endpoint_create_host(host.UTF8String, portString);
 
+		if (endpoint == NULL) {
+			[self failWithError:[self.class errorWithCode:TDCFileTransferDialogSocketErrorBadParameter
+											  description:@"Invalid host address or port"]];
+
+			return;
+		}
+
 		nw_parameters_t parameters =
 			nw_parameters_create_secure_tcp(NW_PARAMETERS_DISABLE_PROTOCOL, NW_PARAMETERS_DEFAULT_CONFIGURATION);
 
@@ -535,9 +577,13 @@ NSErrorDomain const TDCFileTransferDialogSocketErrorDomain = @"TDCFileTransferDi
 		if (interfaceName.length > 0) {
 			NSString *localAddress = [self addressOfInterfaceNamed:interfaceName];
 
-			if (localAddress) {
-				nw_endpoint_t localEndpoint = nw_endpoint_create_host(localAddress.UTF8String, "0");
+			nw_endpoint_t localEndpoint = NULL;
 
+			if (localAddress) {
+				localEndpoint = nw_endpoint_create_host(localAddress.UTF8String, "0");
+			}
+
+			if (localEndpoint) {
 				nw_parameters_set_local_endpoint(parameters, localEndpoint);
 			} else {
 				LogToConsoleError("Interface '%{public}@' has no usable address. Using the default interface.",
