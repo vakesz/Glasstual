@@ -45,6 +45,15 @@
 "jkr-ed" = "User is away";
 "b0t-ac" = "User is a bot";
 "b0t-lb" = "bot"; // Member list caption shown after a bot's nickname
+
+/* Member list section headers */
+"mls-sf" = "Server Staff";
+"mls-ow" = "Owners";
+"mls-ad" = "Admins";
+"mls-op" = "Operators";
+"mls-ho" = "Half-Operators";
+"mls-vo" = "Voiced";
+"mls-me" = "Members";
 "gi6-wf" = "User is not away";
 "acc-nl" = "Not logged in";
 "acc-in" = "Logged in as %@";

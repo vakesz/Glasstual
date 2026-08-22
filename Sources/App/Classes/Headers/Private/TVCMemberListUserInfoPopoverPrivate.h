@@ -38,6 +38,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCMemberListUserInfoPopover : NSPopover
+@property(readonly, weak) NSImageView *avatarImageView;
 @property(readonly, weak) NSTextField *nicknameField;
 @property(readonly, weak) NSTextField *usernameField;
 @property(readonly, weak) NSTextField *addressField;

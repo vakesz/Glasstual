@@ -41,6 +41,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCMemberListUserInfoPopover ()
+@property(nonatomic, weak, readwrite) IBOutlet NSImageView *avatarImageView;
 @property(nonatomic, weak, readwrite) IBOutlet NSTextField *nicknameField;
 @property(nonatomic, weak, readwrite) IBOutlet NSTextField *usernameField;
 @property(nonatomic, weak, readwrite) IBOutlet NSTextField *addressField;

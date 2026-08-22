@@ -41,6 +41,7 @@
 #import "NSViewHelperPrivate.h"
 #import "TXMasterController.h"
 #import "TXMenuControllerPrivate.h"
+#import "TLOLocalization.h"
 #import "TVCMainWindow.h"
 #import "TPCPreferencesLocal.h"
 #import "TVCMemberListCellPrivate.h"
@@ -49,9 +50,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
+/* Source list rows in Messages and Contacts are 28 points; headers take
+ the height AppKit uses for its own section headers. */
+static const CGFloat TVCMemberListMemberRowHeight = 28.0;
+static const CGFloat TVCMemberListHeaderRowHeight = 22.0;
 
-@interface TVCMemberList ()
+static NSString *const TVCMemberListMemberViewIdentifier = @"MemberView";
+static NSString *const TVCMemberListHeaderViewIdentifier = @"HeaderView";
+
+@interface TVCMemberListSection ()
+@property(nonatomic, assign, readwrite) IRCUserRank rank;
+@property(nonatomic, copy, readwrite) NSString *title;
+@property(nonatomic, assign, readwrite) NSRange memberRange;
+@end
+
+@interface TVCMemberList () <NSTableViewDataSource, NSTableViewDelegate>
 @property(nonatomic, strong, nullable) NSTrackingArea *userPopoverTrackingArea;
 @property(nonatomic, assign) BOOL userPopoverMouseIsInView;
 @property(nonatomic, assign) BOOL userPopoverTimerIsActive;
@@ -59,6 +72,16 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 @property(nonatomic, assign) NSInteger lastRowShownUserInfoPopover;
 @property(nonatomic, strong, readwrite) IBOutlet TVCMemberListUserInfoPopover *memberListUserInfoPopover;
 @property(nonatomic, strong, readwrite) IBOutlet IRCChannelMemberListController *contentController;
+@property(nonatomic, strong) NSMutableArray<TVCMemberListSection *> *sections;
+@end
+
+@implementation TVCMemberListSection
+
+- (NSString *)description
+{
+	return [NSString stringWithFormat:@"<TVCMemberListSection %@ %@>", self.title, NSStringFromRange(self.memberRange)];
+}
+
 @end
 
 @implementation TVCMemberList
@@ -66,6 +89,9 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 - (void)awakeFromNib
 {
 	[super awakeFromNib];
+
+	self.dataSource = self;
+	self.delegate = self;
 
 	[self updateTrackingAreas];
 
@@ -133,17 +159,37 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 	[self.contentController assignToChannel:channel];
 }
 
+- (NSArray<IRCChannelUser *> *)members
+{
+	return self.contentController.arrangedObjects;
+}
+
+- (NSMutableArray<TVCMemberListSection *> *)sections
+{
+	if (self->_sections == nil) {
+		self->_sections = [NSMutableArray array];
+	}
+
+	return self->_sections;
+}
+
 - (nullable id)itemAtRow:(NSInteger)row
 {
 	NSParameterAssert(row >= 0);
 
-	NSArray *rows = self.contentController.arrangedObjects;
+	NSInteger memberIndex = [self memberIndexForRow:row];
 
-	if ((NSUInteger)row >= rows.count) {
+	if (memberIndex < 0) {
 		return nil;
 	}
 
-	return rows[row];
+	NSArray *members = self.members;
+
+	if ((NSUInteger)memberIndex >= members.count) {
+		return nil;
+	}
+
+	return members[memberIndex];
 }
 
 - (NSInteger)rowForItem:(nullable id)item
@@ -152,15 +198,428 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 		return (-1);
 	}
 
-	NSArray *rows = self.contentController.arrangedObjects;
-
-	NSInteger index = [rows indexOfObjectIdenticalTo:item];
+	NSInteger index = [self.members indexOfObjectIdenticalTo:item];
 
 	if (index == NSNotFound) {
 		return (-1);
 	}
 
-	return index;
+	return [self rowForMemberAtIndex:index];
+}
+
+#pragma mark -
+#pragma mark Sections
+
+/* The sort order groups server staff first when the preference asks for
+ it, then by channel rank. Sections follow the same key so that each one
+ is a contiguous run of the sorted list. */
++ (IRCUserRank)sectionRankForMember:(IRCChannelUser *)member
+{
+	if (member.user.isIRCop && [TPCPreferences memberListSortFavorsServerStaff]) {
+		return IRCUserRankIRCopByMode;
+	}
+
+	return member.rank;
+}
+
++ (NSString *)titleForSectionRank:(IRCUserRank)rank
+{
+	switch (rank) {
+	case IRCUserRankIRCopByMode:
+		return TXTLS(@"TVCMainWindow[mls-sf]");
+	case IRCUserRankChannelOwner:
+		return TXTLS(@"TVCMainWindow[mls-ow]");
+	case IRCUserRankSuperOperator:
+		return TXTLS(@"TVCMainWindow[mls-ad]");
+	case IRCUserRankNormalOperator:
+		return TXTLS(@"TVCMainWindow[mls-op]");
+	case IRCUserRankHalfOperator:
+		return TXTLS(@"TVCMainWindow[mls-ho]");
+	case IRCUserRankVoiced:
+		return TXTLS(@"TVCMainWindow[mls-vo]");
+	default:
+		return TXTLS(@"TVCMainWindow[mls-me]");
+	}
+}
+
++ (TVCMemberListSection *)sectionWithRank:(IRCUserRank)rank memberRange:(NSRange)memberRange
+{
+	TVCMemberListSection *section = [TVCMemberListSection new];
+
+	section.rank = rank;
+	section.title = [self titleForSectionRank:rank];
+	section.memberRange = memberRange;
+
+	return section;
+}
+
+- (BOOL)isGrouped
+{
+	return (self.sections.count > 1);
+}
+
+- (void)rebuildSections
+{
+	NSMutableArray<TVCMemberListSection *> *sections = [NSMutableArray array];
+
+	TVCMemberListSection *current = nil;
+
+	NSArray<IRCChannelUser *> *members = self.members;
+
+	for (NSUInteger index = 0; index < members.count; index++) {
+		IRCUserRank rank = [self.class sectionRankForMember:members[index]];
+
+		if (current && current.rank == rank) {
+			current.memberRange = NSMakeRange(current.memberRange.location, (current.memberRange.length + 1));
+
+			continue;
+		}
+
+		current = [self.class sectionWithRank:rank memberRange:NSMakeRange(index, 1)];
+
+		[sections addObject:current];
+	}
+
+	self.sections = sections;
+}
+
+- (void)shiftSectionsAfter:(NSInteger)sectionIndex by:(NSInteger)delta
+{
+	NSArray<TVCMemberListSection *> *sections = self.sections;
+
+	for (NSInteger index = (sectionIndex + 1); index < (NSInteger)sections.count; index++) {
+		TVCMemberListSection *section = sections[index];
+
+		section.memberRange = NSMakeRange((section.memberRange.location + delta), section.memberRange.length);
+	}
+}
+
+- (NSInteger)sectionIndexContainingMemberIndex:(NSUInteger)memberIndex
+{
+	NSArray<TVCMemberListSection *> *sections = self.sections;
+
+	for (NSUInteger index = 0; index < sections.count; index++) {
+		if (NSLocationInRange(memberIndex, sections[index].memberRange)) {
+			return index;
+		}
+	}
+
+	return (-1);
+}
+
+#pragma mark -
+#pragma mark Row Geometry
+
+- (BOOL)isGroupRow:(NSInteger)row
+{
+	return ([self sectionIndexForHeaderRow:row] >= 0);
+}
+
+- (NSInteger)headerRowForSectionAtIndex:(NSUInteger)sectionIndex
+{
+	if (self.isGrouped == NO) {
+		return (-1);
+	}
+
+	return (self.sections[sectionIndex].memberRange.location + sectionIndex);
+}
+
+- (NSInteger)sectionIndexForHeaderRow:(NSInteger)row
+{
+	if (self.isGrouped == NO || row < 0) {
+		return (-1);
+	}
+
+	NSArray<TVCMemberListSection *> *sections = self.sections;
+
+	for (NSUInteger index = 0; index < sections.count; index++) {
+		NSInteger headerRow = (sections[index].memberRange.location + index);
+
+		if (headerRow == row) {
+			return index;
+		}
+
+		if (headerRow > row) {
+			break;
+		}
+	}
+
+	return (-1);
+}
+
+- (NSInteger)rowForMemberAtIndex:(NSInteger)memberIndex
+{
+	if (memberIndex < 0) {
+		return (-1);
+	}
+
+	if (self.isGrouped == NO) {
+		return memberIndex;
+	}
+
+	/* One header precedes every section that starts at or before
+	 the member, including the member's own. */
+	NSInteger headers = 0;
+
+	for (TVCMemberListSection *section in self.sections) {
+		if ((NSInteger)section.memberRange.location > memberIndex) {
+			break;
+		}
+
+		headers++;
+	}
+
+	return (memberIndex + headers);
+}
+
+- (NSInteger)memberIndexForRow:(NSInteger)row
+{
+	if (row < 0) {
+		return (-1);
+	}
+
+	if (self.isGrouped == NO) {
+		return row;
+	}
+
+	NSArray<TVCMemberListSection *> *sections = self.sections;
+
+	for (NSUInteger index = 0; index < sections.count; index++) {
+		NSRange memberRange = sections[index].memberRange;
+
+		NSInteger headerRow = (memberRange.location + index);
+
+		if (row == headerRow) {
+			return (-1);
+		}
+
+		if (row <= (headerRow + (NSInteger)memberRange.length)) {
+			return (row - index - 1);
+		}
+	}
+
+	return (-1);
+}
+
+#pragma mark -
+#pragma mark Content Changes
+
+- (void)membersReplaced
+{
+	[self rebuildSections];
+
+	[self reloadData];
+}
+
+- (void)memberInsertedAtIndex:(NSUInteger)memberIndex
+{
+	NSArray<IRCChannelUser *> *members = self.members;
+
+	if (memberIndex >= members.count) {
+		[self membersReplaced];
+
+		return;
+	}
+
+	IRCUserRank rank = [self.class sectionRankForMember:members[memberIndex]];
+
+	NSMutableArray<TVCMemberListSection *> *sections = self.sections;
+
+	BOOL wasGrouped = self.isGrouped;
+
+	/* Find a section that can absorb the member: the one whose
+	 range the index falls in, or the one that ends right before it. */
+	NSInteger sectionIndex = (-1);
+	NSInteger insertionIndex = sections.count;
+
+	for (NSUInteger index = 0; index < sections.count; index++) {
+		NSRange memberRange = sections[index].memberRange;
+
+		if (memberIndex < memberRange.location) {
+			insertionIndex = index;
+
+			break;
+		}
+
+		if (memberIndex <= NSMaxRange(memberRange)) {
+			if (sections[index].rank == rank) {
+				sectionIndex = index;
+
+				break;
+			}
+
+			if (memberIndex < NSMaxRange(memberRange)) {
+				/* A differently ranked member landed inside a section.
+				 The sort key and the section key disagree; start over. */
+				[self membersReplaced];
+
+				return;
+			}
+
+			insertionIndex = (index + 1);
+		}
+	}
+
+	if (sectionIndex >= 0) {
+		TVCMemberListSection *section = sections[sectionIndex];
+
+		section.memberRange = NSMakeRange(section.memberRange.location, (section.memberRange.length + 1));
+
+		[self shiftSectionsAfter:sectionIndex by:1];
+
+		[self insertRowsAtIndexes:[NSIndexSet indexSetWithIndex:[self rowForMemberAtIndex:memberIndex]]
+					withAnimation:NSTableViewAnimationEffectNone];
+
+		return;
+	}
+
+	TVCMemberListSection *section = [self.class sectionWithRank:rank memberRange:NSMakeRange(memberIndex, 1)];
+
+	[sections insertObject:section atIndex:insertionIndex];
+
+	[self shiftSectionsAfter:insertionIndex by:1];
+
+	NSMutableIndexSet *rows = [NSMutableIndexSet indexSet];
+
+	[rows addIndex:[self rowForMemberAtIndex:memberIndex]];
+
+	if (self.isGrouped) {
+		if (wasGrouped) {
+			[rows addIndex:[self headerRowForSectionAtIndex:insertionIndex]];
+		} else {
+			/* The list just went from flat to grouped: every section
+			 gains a header, not only the new one. */
+			for (NSUInteger index = 0; index < sections.count; index++) {
+				[rows addIndex:[self headerRowForSectionAtIndex:index]];
+			}
+		}
+	}
+
+	[self insertRowsAtIndexes:rows withAnimation:NSTableViewAnimationEffectNone];
+}
+
+- (void)memberRemovedAtIndex:(NSUInteger)memberIndex
+{
+	NSInteger sectionIndex = [self sectionIndexContainingMemberIndex:memberIndex];
+
+	if (sectionIndex < 0) {
+		[self membersReplaced];
+
+		return;
+	}
+
+	NSMutableArray<TVCMemberListSection *> *sections = self.sections;
+
+	TVCMemberListSection *section = sections[sectionIndex];
+
+	/* Rows are removed by their index before the change. */
+	NSMutableIndexSet *rows = [NSMutableIndexSet indexSet];
+
+	[rows addIndex:[self rowForMemberAtIndex:memberIndex]];
+
+	BOOL sectionIsEmptied = (section.memberRange.length == 1);
+
+	if (sectionIsEmptied) {
+		[rows addIndex:[self headerRowForSectionAtIndex:sectionIndex]];
+
+		if (sections.count == 2) {
+			/* Back to a flat list; the surviving section loses its header. */
+			[rows addIndex:[self headerRowForSectionAtIndex:((sectionIndex == 0) ? 1 : 0)]];
+		}
+
+		[sections removeObjectAtIndex:sectionIndex];
+
+		[self shiftSectionsAfter:(sectionIndex - 1) by:(-1)];
+	} else {
+		section.memberRange = NSMakeRange(section.memberRange.location, (section.memberRange.length - 1));
+
+		[self shiftSectionsAfter:sectionIndex by:(-1)];
+	}
+
+	[self removeRowsAtIndexes:rows withAnimation:NSTableViewAnimationEffectNone];
+}
+
+#pragma mark -
+#pragma mark Table View Data Source
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
+{
+	NSInteger rows = self.members.count;
+
+	if (self.isGrouped) {
+		rows += self.sections.count;
+	}
+
+	return rows;
+}
+
+- (nullable id)tableView:(NSTableView *)tableView
+	objectValueForTableColumn:(nullable NSTableColumn *)tableColumn
+						  row:(NSInteger)row
+{
+	NSInteger sectionIndex = [self sectionIndexForHeaderRow:row];
+
+	if (sectionIndex >= 0) {
+		return self.sections[sectionIndex];
+	}
+
+	return [self itemAtRow:row];
+}
+
+#pragma mark -
+#pragma mark Table View Delegate
+
+- (BOOL)tableView:(NSTableView *)tableView isGroupRow:(NSInteger)row
+{
+	return [self isGroupRow:row];
+}
+
+- (BOOL)tableView:(NSTableView *)tableView shouldSelectRow:(NSInteger)row
+{
+	return ([self isGroupRow:row] == NO);
+}
+
+- (CGFloat)tableView:(NSTableView *)tableView heightOfRow:(NSInteger)row
+{
+	if ([self isGroupRow:row]) {
+		return TVCMemberListHeaderRowHeight;
+	}
+
+	return TVCMemberListMemberRowHeight;
+}
+
+- (nullable NSString *)tableView:(NSTableView *)tableView
+	typeSelectStringForTableColumn:(nullable NSTableColumn *)tableColumn
+							   row:(NSInteger)row
+{
+	IRCChannelUser *member = [self itemAtRow:row];
+
+	return member.user.nickname;
+}
+
+- (nullable NSView *)tableView:(NSTableView *)tableView
+			viewForTableColumn:(nullable NSTableColumn *)tableColumn
+						   row:(NSInteger)row
+{
+	if ([self isGroupRow:row]) {
+		return [self makeViewWithIdentifier:TVCMemberListHeaderViewIdentifier owner:self];
+	}
+
+	return [self makeViewWithIdentifier:TVCMemberListMemberViewIdentifier owner:self];
+}
+
+- (nullable NSTableRowView *)tableView:(NSTableView *)tableView rowViewForRow:(NSInteger)row
+{
+	if ([self isGroupRow:row]) {
+		return nil; // AppKit's source list header row
+	}
+
+	return [[TVCMemberListRowCell alloc] initWithMemberList:self];
+}
+
+- (void)tableView:(NSTableView *)tableView didAddRowView:(NSTableRowView *)rowView forRow:(NSInteger)row
+{
+	[self refreshDrawingForRow:row];
 }
 
 #pragma mark -
@@ -246,7 +705,7 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 
 	NSInteger row = [self rowAtPoint:localPoint];
 
-	if (row < 0) {
+	if (row < 0 || [self isGroupRow:row]) {
 		return;
 	}
 
@@ -306,11 +765,18 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 #pragma mark -
 #pragma mark Drag and Drop
 
+/* Files can only be dropped on a member, not on a section header. */
 - (NSInteger)draggedRow:(id<NSDraggingInfo>)sender
 {
 	NSPoint p = [self convertPoint:[sender draggingLocation] fromView:nil];
 
-	return [self rowAtPoint:p];
+	NSInteger row = [self rowAtPoint:p];
+
+	if (row < 0 || [self isGroupRow:row]) {
+		return (-1);
+	}
+
+	return row;
 }
 
 - (NSArray *)draggedFiles:(id<NSDraggingInfo>)sender
@@ -384,19 +850,6 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 		[self refreshDrawingForRow:i skipOcclusionCheck:skipOcclusionCheck];
 	}
 }
-- (void)refreshDrawingForRows:(NSIndexSet *)rowIndexes
-{
-	[self refreshDrawingForRows:rowIndexes skipOcclusionCheck:NO];
-}
-
-- (void)refreshDrawingForRows:(NSIndexSet *)rowIndexes skipOcclusionCheck:(BOOL)skipOcclusionCheck
-{
-	NSParameterAssert(rowIndexes != nil);
-
-	[rowIndexes enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
-		[self refreshDrawingForRow:index skipOcclusionCheck:skipOcclusionCheck];
-	}];
-}
 
 - (void)refreshDrawingForRow:(NSInteger)rowIndex
 {
@@ -413,9 +866,9 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 		return;
 	}
 
-	TVCMemberListCell *rowView = [self viewAtColumn:0 row:rowIndex makeIfNecessary:NO];
+	NSView *cellView = [self viewAtColumn:0 row:rowIndex makeIfNecessary:NO];
 
-	rowView.needsDisplay = YES;
+	cellView.needsDisplay = YES;
 
 	/* The row view draws the selection, whose emphasis follows the
 	 window's key state. */
@@ -462,14 +915,12 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 
 - (void)refreshDrawingForMembersWithRank:(IRCUserRank)rank isIRCop:(BOOL)isIRCop
 {
-	NSArray *rows = self.contentController.arrangedObjects;
-
-	[rows enumerateObjectsUsingBlock:^(IRCChannelUser *member, NSUInteger index, BOOL *stop) {
+	[self.members enumerateObjectsUsingBlock:^(IRCChannelUser *member, NSUInteger index, BOOL *stop) {
 		if ((member.ranks & rank) == 0 && (isIRCop && isIRCop != member.user.isIRCop)) {
 			return;
 		}
 
-		[self refreshDrawingForRow:index];
+		[self refreshDrawingForRow:[self rowForMemberAtIndex:index]];
 	}];
 }
 
@@ -544,15 +995,15 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 {
 	NSInteger rowBeneathMouse = self.rowBeneathMouse;
 
-	if (rowBeneathMouse >= 0) {
-		if ([self.selectedRowIndexes containsIndex:rowBeneathMouse] == NO) {
-			[self selectItemAtIndex:rowBeneathMouse];
-		}
-
-		return menuController().userControlMenu;
+	if (rowBeneathMouse < 0 || [self isGroupRow:rowBeneathMouse]) {
+		return nil;
 	}
 
-	return nil;
+	if ([self.selectedRowIndexes containsIndex:rowBeneathMouse] == NO) {
+		[self selectItemAtIndex:rowBeneathMouse];
+	}
+
+	return menuController().userControlMenu;
 }
 
 - (void)keyDown:(NSEvent *)e
