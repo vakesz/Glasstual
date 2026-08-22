@@ -109,6 +109,7 @@
 #import "TXWindowControllerPrivate.h"
 #import "TVCDockIconPrivate.h"
 #import "TVCLogControllerPrivate.h"
+#import "TVCLogControllerHistoricLogFilePrivate.h"
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 #import "TVCLogControllerOperationQueuePrivate.h"
 #import "TVCLogRenderer.h"
@@ -235,6 +236,23 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @property(nonatomic, assign) BOOL timeoutWarningShownToUser;
 @property(nonatomic, assign) BOOL zncBouncerIsSendingCertificateInfo;
 @property(nonatomic, assign) BOOL zncBouncerIsPlayingBackHistory;
+/* chathistory: targets the server refused this session, targets with a
+ BEFORE request outstanding, and the lines of a BEFORE reply being
+ collected for insertion above the scrollback. */
+@property(nonatomic, strong) NSMutableSet<NSString *> *chatHistoryFailedTargets;
+@property(nonatomic, strong) NSMutableSet<NSString *> *chatHistoryPendingBeforeTargets;
+@property(nonatomic, strong, nullable) IRCChannel *chatHistoryPrependChannel;
+@property(nonatomic, strong, nullable) NSMutableArray<TVCLogLine *> *chatHistoryPrependedLines;
+/* read-marker: the newest timestamp sent per channel and the channels
+ waiting for the debounce timer. */
+@property(nonatomic, strong) NSMutableDictionary<NSString *, NSDate *> *readMarkerSentDates;
+@property(nonatomic, strong) NSMutableSet<IRCChannel *> *readMarkerPendingChannels;
+@property(nonatomic, strong) TLOTimer *readMarkerTimer;
+/* netsplit/netjoin: the batch being collapsed and, per channel
+ identifier, the nicknames it touched. */
+@property(nonatomic, strong, nullable) IRCMessageBatchMessage *collapsedNetsplitBatch;
+@property(nonatomic, strong, nullable)
+	NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *collapsedNetsplitNicknames;
 @property(nonatomic, strong) NSMutableArray<NSString *> *pendingCapabilityRequestsMutable;
 @property(nonatomic, strong) NSMutableOrderedSet<NSString *> *enabledCapabilityNames;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSArray<NSString *> *> *offeredCapabilities;
@@ -379,6 +397,16 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		[weakSelf onWhoTimer];
 	}];
 
+	self.chatHistoryFailedTargets = [NSMutableSet set];
+	self.chatHistoryPendingBeforeTargets = [NSMutableSet set];
+
+	self.readMarkerSentDates = [NSMutableDictionary dictionary];
+	self.readMarkerPendingChannels = [NSMutableSet set];
+
+	self.readMarkerTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+		[weakSelf onReadMarkerTimer];
+	}];
+
 	[RZNotificationCenter() addObserver:self
 							   selector:@selector(willDestroyChannel:)
 								   name:IRCWorldWillDestroyChannelNotification
@@ -397,6 +425,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	[self.reconnectTimer stop];
 	[self.retryTimer stop];
 	[self.whoTimer stop];
+	[self.readMarkerTimer stop];
 
 	[self cancelPerformRequests];
 }
@@ -1997,6 +2026,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		return NO;
 	}
 
+	/* One netsplit is one event, not one per user. */
+	if (self.collapsedNetsplitBatch != nil &&
+		(eventType == TXNotificationTypeUserJoined || eventType == TXNotificationTypeUserDisconnected)) {
+		return NO;
+	}
+
 	BOOL isTextEvent = (eventType == TXNotificationTypeHighlight || eventType == TXNotificationTypeNewPrivateMessage ||
 						eventType == TXNotificationTypeChannelMessage || eventType == TXNotificationTypeChannelNotice ||
 						eventType == TXNotificationTypePrivateMessage || eventType == TXNotificationTypePrivateNotice);
@@ -2256,6 +2291,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		return;
 	}
 
+	/* chathistory is requested per target as channels are joined and
+	 only fetches what the local scrollback lacks. It wins over a
+	 bouncer replaying everything. */
+	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityChatHistory]) {
+		return;
+	}
+
 	/* For our first connect, only playback using timestamp if logging was enabled. */
 	/* For all other connects, then playback timestamp regardless of logging. */
 	NSString *command = nil;
@@ -2323,6 +2365,11 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 - (BOOL)isSafeToPostNotificationForMessage:(IRCMessage *)message inChannel:(nullable IRCChannel *)channel
 {
 	NSParameterAssert(message != nil);
+
+	/* History the server replayed on request is never news. */
+	if ([self batchMessageOfType:@"chathistory" containingMessage:message] != nil) {
+		return NO;
+	}
 
 	if (self.isConnectedToZNC == NO) {
 		return YES;
@@ -4458,6 +4505,27 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		break;
 	}
+	case IRCLocalCommandChathistory: // Command: CHATHISTORY
+	{
+		NSAssertReturnLoopBreak(self.isLoggedIn);
+
+		if (stringIn.length == 0) {
+			[self printInvalidSyntaxMessageForCommand:command];
+
+			break;
+		}
+
+		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityChatHistory] == NO) {
+			[self printDebugInformation:TXTLS(@"IRC[hc1-ah]")];
+
+			break;
+		}
+
+		/* Passed through as typed: "/chathistory BEFORE #chan timestamp=... 50" */
+		[self sendLine:[@"CHATHISTORY " stringByAppendingString:stringIn.string]];
+
+		break;
+	}
 	case IRCLocalCommandTage: // Command: TAGE
 	{
 		NSTimeInterval timePassed = [NSDate timeIntervalSinceNow:[TPCApplicationInfo applicationBirthday]];
@@ -5748,6 +5816,14 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		return;
 	}
 
+	/* History from before the scrollback is collected and inserted
+	 above it once the batch is complete. See -flushChatHistoryPrependedLines. */
+	if (self.chatHistoryPrependChannel == channel) {
+		[self.chatHistoryPrependedLines addObject:[logLine copy]];
+
+		return;
+	}
+
 	/* Add scrollback marker to channel if conditions are met */
 	if ([TPCPreferences autoAddScrollbackMark]) {
 		if ([mainWindow() isItemVisible:channel] == NO || mainWindow().mainWindow == NO) {
@@ -5760,6 +5836,11 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	/* Print to channel */
 	[channel print:logLine completionBlock:postPrintBlock];
+
+	/* A line arriving in the channel the user is looking at is read. */
+	if (mainWindow().keyWindow && [mainWindow() isItemVisible:channel]) {
+		[self scheduleReadMarkerForChannel:channel date:receivedAt];
+	}
 }
 
 - (void)printReply:(IRCMessage *)message
@@ -5989,6 +6070,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	self.zncBouncerIsSendingCertificateInfo = NO;
 	self.zncBouncerCertificateChainDataMutable = nil;
 	self.zncBouncerIsPlayingBackHistory = NO;
+
+	[self resetChatHistoryState];
 
 	self.reconnectEnabled = NO;
 
@@ -6351,7 +6434,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	/* If the playback module is in use, then all messages are
 	 set as historic, so we set any lines above our current 
 	 reference date as not historic to avoid collisions. */
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPlayback]) {
+	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPlayback] && [self batchMessageOfType:@"chathistory"
+																					containingMessage:message] == nil) {
 		[message markAsNotHistoric];
 	}
 }
@@ -6498,6 +6582,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		case IRCRemoteCommandWarn:
 		case IRCRemoteCommandNote: {
 			[self receiveStandardReply:message];
+
+			break;
+		}
+		case IRCRemoteCommandMarkread: // MARKREAD (read-marker CAP)
+		{
+			[self receiveReadMarker:message];
 
 			break;
 		}
@@ -8404,7 +8494,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		/* Process queued entries for this batch message. */
 		/* The method used for processing queued entries will 
 		 also remove it from queue once completed. */
-		[self recursivelyProcessBatchMessage:thisBatchMessage];
+		if ([self batchTypeIsChatHistory:batchType]) {
+			[self replayChatHistoryBatch:thisBatchMessage];
+		} else if ([self batchTypeIsNetsplit:batchType]) {
+			[self replayNetsplitBatch:thisBatchMessage];
+		} else {
+			[self recursivelyProcessBatchMessage:thisBatchMessage];
+		}
 
 		/* Set vendor specific flags based on BATCH command values */
 		if ([batchType isEqualToString:@"znc.in/playback"]) {
@@ -8430,6 +8526,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		newBatchMessage.batchToken = batchToken;
 		newBatchMessage.batchType = batchType;
+
+		/* Parameters after the type: the target of a chathistory
+		 batch, the two servers of a netsplit or netjoin. */
+		if ([m paramsCount] > 2) {
+			newBatchMessage.batchParameters = [m.params subarrayWithRange:NSMakeRange(2, ([m paramsCount] - 2))];
+		}
 
 		newBatchMessage.parentBatchMessage = parentBatchMessage;
 
@@ -8563,6 +8665,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	NSString *code = [m paramAt:1];
 	NSString *description = m.params.lastObject;
 
+	if ([m.command isEqualToString:@"FAIL"] && [command isEqualToStringIgnoringCase:@"CHATHISTORY"]) {
+		if ([self noteChatHistoryFailure:m] == NO) {
+			return; // Already reported for this target
+		}
+	}
+
 	IRCChannel *channel = nil;
 
 	if ([m paramsCount] > 3) {
@@ -8667,6 +8775,666 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	[self.batchMessages dequeueEntry:batchMessage];
 }
+
+#pragma mark -
+#pragma mark Batch Helpers
+
+- (BOOL)batchTypeIsChatHistory:(nullable NSString *)batchType
+{
+	return ([batchType isEqualToString:@"chathistory"] || [batchType isEqualToString:@"draft/chathistory"]);
+}
+
+- (BOOL)batchTypeIsNetsplit:(nullable NSString *)batchType
+{
+	return ([batchType isEqualToString:@"netsplit"] || [batchType isEqualToString:@"netjoin"]);
+}
+
+/* The nearest batch of the type given that the message is part of,
+ walking from the message's own batch up through its parents. */
+- (nullable IRCMessageBatchMessage *)batchMessageOfType:(NSString *)batchType containingMessage:(IRCMessage *)message
+{
+	NSParameterAssert(batchType != nil);
+	NSParameterAssert(message != nil);
+
+	IRCMessageBatchMessage *batchMessage = message.parentBatchMessage;
+
+	NSUInteger depth = 0;
+
+	while (batchMessage && depth < 16) {
+		NSString *type = batchMessage.batchType;
+
+		if ([type isEqualToString:batchType] || [type isEqualToString:[@"draft/" stringByAppendingString:batchType]]) {
+			return batchMessage;
+		}
+
+		batchMessage = batchMessage.parentBatchMessage;
+
+		depth += 1;
+	}
+
+	return nil;
+}
+
+/* The channel or query the message is addressed to, for messages that
+ carry a target as their first parameter. A message addressed to us is
+ a query with the sender. */
+- (nullable IRCChannel *)channelForTargetedMessage:(IRCMessage *)message
+{
+	if ([message paramsCount] == 0) {
+		return nil;
+	}
+
+	NSString *target = [message paramAt:0];
+
+	if ([self stringIsChannelName:target] == NO && [self nicknameIsMyself:target]) {
+		target = message.senderNickname;
+	}
+
+	if (target.length == 0) {
+		return nil;
+	}
+
+	return [self findChannel:target];
+}
+
+#pragma mark -
+#pragma mark Chat History
+
+#define _chatHistoryDefaultLimit 100
+
+- (void)resetChatHistoryState
+{
+	[self.chatHistoryFailedTargets removeAllObjects];
+	[self.chatHistoryPendingBeforeTargets removeAllObjects];
+
+	self.chatHistoryPrependChannel = nil;
+	self.chatHistoryPrependedLines = nil;
+
+	[self.readMarkerSentDates removeAllObjects];
+	[self.readMarkerPendingChannels removeAllObjects];
+
+	[self.readMarkerTimer stop];
+}
+
+- (NSUInteger)chatHistoryRequestLimit
+{
+	NSUInteger serverLimit = self.supportInfo.chatHistoryMaximumLines;
+
+	if (serverLimit == 0 || serverLimit > _chatHistoryDefaultLimit) {
+		return _chatHistoryDefaultLimit;
+	}
+
+	return serverLimit;
+}
+
+- (BOOL)chatHistoryIsAvailableForChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	if (self.isLoggedIn == NO) {
+		return NO;
+	}
+
+	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityChatHistory] == NO) {
+		return NO;
+	}
+
+	if (channel.isUtility || channel.isDirectChat) {
+		return NO;
+	}
+
+	if (channel.isPrivateMessage && channel.isPrivateMessageForZNCUser) {
+		return NO;
+	}
+
+	if ([self.chatHistoryFailedTargets containsObject:[self casefoldedTarget:channel.name]]) {
+		return NO;
+	}
+
+	return YES;
+}
+
+- (NSString *)casefoldedTarget:(NSString *)target
+{
+	return [self.supportInfo casefoldString:target];
+}
+
+- (NSString *)chatHistoryTimestampForDate:(NSDate *)date
+{
+	return [NSString stringWithFormat:@"timestamp=%@", [TXSharedISOStandardDateFormatter() stringFromDate:date]];
+}
+
+- (NSString *)chatHistoryLatestCommandForTarget:(NSString *)target since:(nullable NSDate *)date
+{
+	NSParameterAssert(target != nil);
+
+	NSString *selector = ((date) ? [self chatHistoryTimestampForDate:date] : @"*");
+
+	return [NSString stringWithFormat:@"CHATHISTORY LATEST %@ %@ %lu",
+									  target,
+									  selector,
+									  (unsigned long)self.chatHistoryRequestLimit];
+}
+
+- (NSString *)chatHistoryBeforeCommandForTarget:(NSString *)target date:(NSDate *)date
+{
+	NSParameterAssert(target != nil);
+	NSParameterAssert(date != nil);
+
+	return [NSString stringWithFormat:@"CHATHISTORY BEFORE %@ %@ %lu",
+									  target,
+									  [self chatHistoryTimestampForDate:date],
+									  (unsigned long)self.chatHistoryRequestLimit];
+}
+
+/* The server time of the newest line in the local scrollback, or nil
+ when the scrollback is empty. The view is consulted first; the store
+ index covers a view that has not loaded its history yet. */
+- (nullable NSDate *)newestKnownLineDateForChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	NSDate *viewDate = channel.lastLine.receivedAt;
+
+	NSDate *storeDate = [TVCLogControllerHistoricLogSharedInstance() newestLineDateForItem:channel];
+
+	if (viewDate == nil) {
+		return storeDate;
+	}
+
+	if (storeDate && [storeDate compare:viewDate] == NSOrderedDescending) {
+		return storeDate;
+	}
+
+	return viewDate;
+}
+
+/* Called when a channel is joined or a query becomes active. Fetches
+ what the local scrollback is missing and asks for the read marker. */
+- (void)noteChannelActivated:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	if (self.isTerminating) {
+		return;
+	}
+
+	[self requestChatHistoryForChannel:channel];
+
+	[self requestReadMarkerForChannel:channel];
+}
+
+- (void)requestChatHistoryForChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	if ([self chatHistoryIsAvailableForChannel:channel] == NO) {
+		return;
+	}
+
+	NSDate *since = [self newestKnownLineDateForChannel:channel];
+
+	[self sendLine:[self chatHistoryLatestCommandForTarget:channel.name since:since]];
+}
+
+/* The view ran out of local history while scrolling up. */
+- (void)requestChatHistoryBeforeDate:(NSDate *)date inChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(date != nil);
+	NSParameterAssert(channel != nil);
+
+	if ([self chatHistoryIsAvailableForChannel:channel] == NO) {
+		return;
+	}
+
+	NSString *target = [self casefoldedTarget:channel.name];
+
+	/* One request at a time per target: the reply decides whether
+	 there is anything older to ask for. */
+	if ([self.chatHistoryPendingBeforeTargets containsObject:target]) {
+		return;
+	}
+
+	[self.chatHistoryPendingBeforeTargets addObject:target];
+
+	[self sendLine:[self chatHistoryBeforeCommandForTarget:channel.name date:date]];
+}
+
+/* YES when the line the server replayed is already in the scrollback. */
+- (BOOL)chatHistoryMessageIsDuplicate:(IRCMessage *)message
+{
+	NSParameterAssert(message != nil);
+
+	IRCChannel *channel = [self channelForTargetedMessage:message];
+
+	if (channel == nil) {
+		return NO;
+	}
+
+	TVCLogControllerHistoricLogFile *historicLog = TVCLogControllerHistoricLogSharedInstance();
+
+	NSString *messageIdentifier = message.messageIdentifier;
+
+	if (messageIdentifier.length > 0) {
+		return [historicLog containsMessageIdentifier:messageIdentifier forItem:channel];
+	}
+
+	/* Without a msgid, the same server time from the same sender
+	 with the same text is the same line. */
+	NSString *text = message.params.lastObject;
+
+	if (message.isHistoric == NO || text == nil) {
+		return NO;
+	}
+
+	return [historicLog containsLineReceivedAt:message.receivedAt
+									  nickname:message.senderNickname
+								   messageBody:text
+									   forItem:channel];
+}
+
+/* A closed chathistory batch. Lines are replayed in order as history
+ with duplicates of the local scrollback dropped. A reply to a BEFORE
+ request is inserted above the scrollback instead of below it. */
+- (void)replayChatHistoryBatch:(IRCMessageBatchMessage *)batchMessage
+{
+	NSParameterAssert(batchMessage != nil);
+
+	NSString *target = batchMessage.batchParameters.firstObject;
+
+	IRCChannel *channel = ((target) ? [self findChannel:target] : nil);
+
+	NSString *casefoldedTarget = ((target) ? [self casefoldedTarget:target] : nil);
+
+	BOOL prepend = (channel != nil && [self.chatHistoryPendingBeforeTargets containsObject:casefoldedTarget]);
+
+	if (prepend) {
+		[self.chatHistoryPendingBeforeTargets removeObject:casefoldedTarget];
+
+		self.chatHistoryPrependChannel = channel;
+		self.chatHistoryPrependedLines = [NSMutableArray array];
+	}
+
+	for (id queuedEntry in batchMessage.queuedEntries) {
+		if ([queuedEntry isKindOfClass:[IRCMessage class]] == NO) {
+			continue;
+		}
+
+		IRCMessage *message = queuedEntry;
+
+		if ([self chatHistoryMessageIsDuplicate:message]) {
+			continue;
+		}
+
+		[message markAsHistoric];
+
+		[self processIncomingMessage:message];
+	}
+
+	[self.batchMessages dequeueEntry:batchMessage];
+
+	if (prepend) {
+		[self flushChatHistoryPrependedLines];
+	}
+}
+
+- (void)flushChatHistoryPrependedLines
+{
+	IRCChannel *channel = self.chatHistoryPrependChannel;
+
+	NSArray<TVCLogLine *> *lines = [self.chatHistoryPrependedLines copy];
+
+	self.chatHistoryPrependChannel = nil;
+	self.chatHistoryPrependedLines = nil;
+
+	if (channel == nil || lines.count == 0) {
+		return;
+	}
+
+	[channel.viewController prependHistoricLogLines:lines];
+}
+
+/* FAIL CHATHISTORY <code> <subcommand> [<target>] :<description>
+ Returns YES the first time a target fails so the reply is printed;
+ later failures for the same target are silent and no further
+ requests are made for it this session. */
+- (BOOL)noteChatHistoryFailure:(IRCMessage *)m
+{
+	NSParameterAssert(m != nil);
+
+	NSString *target = nil;
+
+	/* The target is wherever the server put it among the context
+	 parameters; the subcommand and the trailing description are not it. */
+	NSUInteger count = [m paramsCount];
+
+	for (NSUInteger i = 2; (i + 1) < count; i++) {
+		NSString *parameter = [m paramAt:i];
+
+		if ([self findChannel:parameter] != nil) {
+			target = [self casefoldedTarget:parameter];
+
+			break;
+		}
+	}
+
+	if (target == nil) {
+		return YES;
+	}
+
+	[self.chatHistoryPendingBeforeTargets removeObject:target];
+
+	if ([self.chatHistoryFailedTargets containsObject:target]) {
+		return NO;
+	}
+
+	[self.chatHistoryFailedTargets addObject:target];
+
+	return YES;
+}
+
+#undef _chatHistoryDefaultLimit
+
+#pragma mark -
+#pragma mark Read Marker
+
+#define _readMarkerDebounceInterval 1.0
+
+- (BOOL)readMarkerIsAvailableForChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	if (self.isLoggedIn == NO) {
+		return NO;
+	}
+
+	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityReadMarker] == NO) {
+		return NO;
+	}
+
+	if (channel.isUtility || channel.isDirectChat) {
+		return NO;
+	}
+
+	if (channel.isPrivateMessage && channel.isPrivateMessageForZNCUser) {
+		return NO;
+	}
+
+	return YES;
+}
+
+/* MARKREAD <target> without a timestamp asks the server for the marker. */
+- (void)requestReadMarkerForChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	if ([self readMarkerIsAvailableForChannel:channel] == NO) {
+		return;
+	}
+
+	[self send:@"MARKREAD", channel.name, nil];
+}
+
+/* The user is looking at the channel: everything in it is read. */
+- (void)markChannelAsRead:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	NSDate *newestLineDate = [self newestKnownLineDateForChannel:channel];
+
+	if (newestLineDate == nil) {
+		return;
+	}
+
+	[self scheduleReadMarkerForChannel:channel date:newestLineDate];
+}
+
+/* Sends are debounced so that a burst of lines in the selected channel
+ produces one MARKREAD with the newest timestamp. */
+- (void)scheduleReadMarkerForChannel:(IRCChannel *)channel date:(NSDate *)date
+{
+	NSParameterAssert(channel != nil);
+	NSParameterAssert(date != nil);
+
+	if ([self readMarkerIsAvailableForChannel:channel] == NO) {
+		return;
+	}
+
+	NSDate *sentDate = self.readMarkerSentDates[channel.uniqueIdentifier];
+
+	if (sentDate && [date compare:sentDate] != NSOrderedDescending) {
+		return;
+	}
+
+	[self.readMarkerPendingChannels addObject:channel];
+
+	if (self.readMarkerTimer.timerIsActive == NO) {
+		[self.readMarkerTimer start:_readMarkerDebounceInterval];
+	}
+}
+
+- (void)onReadMarkerTimer
+{
+	NSSet<IRCChannel *> *channels = [self.readMarkerPendingChannels copy];
+
+	[self.readMarkerPendingChannels removeAllObjects];
+
+	for (IRCChannel *channel in channels) {
+		[self sendReadMarkerForChannel:channel];
+	}
+}
+
+- (void)sendReadMarkerForChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	if ([self readMarkerIsAvailableForChannel:channel] == NO) {
+		return;
+	}
+
+	NSDate *newestLineDate = [self newestKnownLineDateForChannel:channel];
+
+	if (newestLineDate == nil) {
+		return;
+	}
+
+	NSDate *sentDate = self.readMarkerSentDates[channel.uniqueIdentifier];
+
+	if (sentDate && [newestLineDate compare:sentDate] != NSOrderedDescending) {
+		return;
+	}
+
+	self.readMarkerSentDates[channel.uniqueIdentifier] = newestLineDate;
+
+	[self send:@"MARKREAD", channel.name, [self chatHistoryTimestampForDate:newestLineDate], nil];
+}
+
+/* MARKREAD <target> timestamp=<time>   -- the marker, from the server or
+ set by another client
+ MARKREAD <target> *                  -- no marker yet */
+- (void)receiveReadMarker:(IRCMessage *)m
+{
+	NSParameterAssert(m != nil);
+
+	NSAssertReturn([m paramsCount] >= 2);
+
+	IRCChannel *channel = [self findChannel:[m paramAt:0]];
+
+	if (channel == nil) {
+		return;
+	}
+
+	NSString *marker = [m paramAt:1];
+
+	if ([marker hasPrefix:@"timestamp="] == NO) {
+		return;
+	}
+
+	NSDate *date = [TXSharedISOStandardDateFormatter() dateFromString:[marker substringFromIndex:10]];
+
+	if (date == nil) {
+		return;
+	}
+
+	/* Anything we send from here on must be newer than what the
+	 server already has. */
+	NSDate *sentDate = self.readMarkerSentDates[channel.uniqueIdentifier];
+
+	if (sentDate == nil || [date compare:sentDate] == NSOrderedDescending) {
+		self.readMarkerSentDates[channel.uniqueIdentifier] = date;
+	}
+
+	[self applyReadMarkerDate:date toChannel:channel];
+}
+
+- (void)applyReadMarkerDate:(NSDate *)date toChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(date != nil);
+	NSParameterAssert(channel != nil);
+
+	NSDate *newestLineDate = [self newestKnownLineDateForChannel:channel];
+
+	/* Read up to and including the newest line: nothing is unread. */
+	if (newestLineDate == nil || [newestLineDate compare:date] != NSOrderedDescending) {
+		if (channel.isUnread || channel.nicknameHighlightCount > 0) {
+			[channel resetState];
+
+			[mainWindowServerList() refreshMessageCountForItem:channel];
+
+			[TVCDockIcon updateDockIcon];
+		}
+
+		return;
+	}
+
+	/* Newer lines exist: the mark goes where the other client stopped. */
+	if ([mainWindow() isItemVisible:channel] == NO || mainWindow().keyWindow == NO) {
+		[channel.viewController markAtDate:date];
+	}
+}
+
+#undef _readMarkerDebounceInterval
+
+#pragma mark -
+#pragma mark Netsplit Summaries
+
+#define _netsplitSummaryNicknameLimit 10
+
+/* A closed netsplit or netjoin batch. The member list changes are
+ applied through the usual handlers; -collapseNetsplitMessage:inChannel:
+ swallows their lines and records the nicknames for one summary line
+ per channel. */
+- (void)replayNetsplitBatch:(IRCMessageBatchMessage *)batchMessage
+{
+	NSParameterAssert(batchMessage != nil);
+
+	self.collapsedNetsplitBatch = batchMessage;
+	self.collapsedNetsplitNicknames = [NSMutableDictionary dictionary];
+
+	[self recursivelyProcessBatchMessage:batchMessage];
+
+	NSDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *nicknames = self.collapsedNetsplitNicknames;
+
+	self.collapsedNetsplitBatch = nil;
+	self.collapsedNetsplitNicknames = nil;
+
+	BOOL isNetsplit = [batchMessage.batchType isEqualToString:@"netsplit"];
+
+	NSArray<NSString *> *servers = batchMessage.batchParameters;
+
+	NSString *server1 = ((servers.count > 0) ? servers[0] : @"?");
+	NSString *server2 = ((servers.count > 1) ? servers[1] : @"?");
+
+	for (IRCChannel *channel in self.channelList) {
+		NSOrderedSet<NSString *> *channelNicknames = nicknames[channel.uniqueIdentifier];
+
+		if (channelNicknames.count == 0) {
+			continue;
+		}
+
+		if ([TPCPreferences showJoinLeave] == NO || channel.config.ignoreGeneralEventMessages) {
+			continue;
+		}
+
+		NSString *nicknameList = [self.class netsplitNicknameListForNicknames:channelNicknames];
+
+		NSString *message = nil;
+
+		if (isNetsplit) {
+			message = TXTLS(@"IRC[ns1-sp]", server1, server2, (unsigned long)channelNicknames.count, nicknameList);
+		} else {
+			message = TXTLS(@"IRC[ns2-jn]", server1, server2, (unsigned long)channelNicknames.count, nicknameList);
+		}
+
+		[self print:message
+				   by:nil
+			inChannel:channel
+			   asType:((isNetsplit) ? TVCLogLineTypeQuit : TVCLogLineTypeJoin)command
+					 :((isNetsplit) ? @"QUIT" : @"JOIN")];
+	}
+}
+
++ (NSString *)netsplitNicknameListForNicknames:(NSOrderedSet<NSString *> *)nicknames
+{
+	NSParameterAssert(nicknames != nil);
+
+	NSUInteger count = nicknames.count;
+
+	if (count <= _netsplitSummaryNicknameLimit) {
+		return [nicknames.array componentsJoinedByString:@", "];
+	}
+
+	NSArray<NSString *> *shown = [nicknames.array subarrayWithRange:NSMakeRange(0, _netsplitSummaryNicknameLimit)];
+
+	return TXTLS(
+		@"IRC[ns3-mr]", [shown componentsJoinedByString:@", "], (unsigned long)(count - _netsplitSummaryNicknameLimit));
+}
+
+/* YES when the message is a JOIN or QUIT of the batch being collapsed.
+ The nickname is recorded for the channel's summary line. */
+- (BOOL)collapseNetsplitMessage:(IRCMessage *)message inChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(message != nil);
+	NSParameterAssert(channel != nil);
+
+	IRCMessageBatchMessage *collapsedBatch = self.collapsedNetsplitBatch;
+
+	if (collapsedBatch == nil) {
+		return NO;
+	}
+
+	NSString *command = message.command;
+
+	if ([command isEqualToStringIgnoringCase:@"QUIT"] == NO && [command isEqualToStringIgnoringCase:@"JOIN"] == NO) {
+		return NO;
+	}
+
+	if ([self batchMessageOfType:collapsedBatch.batchType containingMessage:message] == nil) {
+		return NO;
+	}
+
+	NSString *nickname = message.senderNickname;
+
+	if (nickname.length == 0) {
+		return NO;
+	}
+
+	NSString *channelId = channel.uniqueIdentifier;
+
+	NSMutableOrderedSet<NSString *> *nicknames = self.collapsedNetsplitNicknames[channelId];
+
+	if (nicknames == nil) {
+		nicknames = [NSMutableOrderedSet orderedSet];
+
+		self.collapsedNetsplitNicknames[channelId] = nicknames;
+	}
+
+	[nicknames addObject:nickname];
+
+	return YES;
+}
+
+#undef _netsplitSummaryNicknameLimit
 
 #pragma mark -
 #pragma mark Server Capability
@@ -11574,13 +12342,21 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	NSParameterAssert(command != nil);
 	NSParameterAssert(referenceMessage != nil);
 
-	return [THOPluginDispatcher receivedCommand:command
-									   withText:text
-									 authoredBy:referenceMessage.sender
-									destinedFor:textDestination
-									   onClient:self
-									 receivedAt:referenceMessage.receivedAt
-							   referenceMessage:referenceMessage];
+	BOOL printMessage = [THOPluginDispatcher receivedCommand:command
+													withText:text
+												  authoredBy:referenceMessage.sender
+												 destinedFor:textDestination
+													onClient:self
+												  receivedAt:referenceMessage.receivedAt
+											referenceMessage:referenceMessage];
+
+	/* The JOIN and QUIT of a netsplit or netjoin are folded into one
+	 line per channel. The handlers still update the member lists. */
+	if (printMessage && textDestination && [self collapseNetsplitMessage:referenceMessage inChannel:textDestination]) {
+		return NO;
+	}
+
+	return printMessage;
 }
 
 #pragma mark -

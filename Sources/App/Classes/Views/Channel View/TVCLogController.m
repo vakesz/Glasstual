@@ -93,6 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable, readwrite) NSString *oldestLineNumber;
 @property(nonatomic, copy, nullable, readwrite) NSString *newestLineNumber;
 @property(nonatomic, strong, nullable) TVCLogLine *lastLine;
+@property(nonatomic, strong, nullable) TVCLogLine *oldestLine;
 @property(nonatomic, strong) NSMutableArray<NSString *> *highlightedLineNumbers;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, void (^)(BOOL)> *jumpToLineCallbacks;
 @property(nonatomic, strong, readwrite) TVCLogView *backingView;
@@ -447,6 +448,22 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	_enqueueBlock(operationBlock);
 }
 
+/* Places the mark after the last line received at or before `date`.
+ Used for read markers shared by other clients. */
+- (void)markAtDate:(NSDate *)date
+{
+	NSParameterAssert(date != nil);
+
+	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+		NSString *markTemplate = [TVCLogRenderer renderTemplateNamed:@"historyIndicator"];
+
+		[self _evaluateFunction:@"_Glasstual.historyIndicatorAddAfterTimestamp"
+				  withArguments:@[ markTemplate, @(date.timeIntervalSince1970) ]];
+	};
+
+	_enqueueBlock(operationBlock);
+}
+
 - (void)unmark
 {
 	[self _evaluateFunction:@"_Glasstual.historyIndicatorRemove" withArguments:nil];
@@ -586,6 +603,8 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		if (self.lastLine == nil) {
 			self.lastLine = lastLine;
 		}
+
+		[self noteOldestLineCandidate:objects.firstObject];
 
 		if (firstTimeLoadingHistory) {
 			NSString *newestLineNumber = lastLine.uniqueIdentifier;
@@ -968,6 +987,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	self.newestLineNumber = nil;
 
 	self.lastLine = nil;
+	self.oldestLine = nil;
 
 	self.loaded = NO;
 
@@ -1029,11 +1049,26 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		};
 
 		if (after == NO) {
+			void (^beforeCompletionBlock)(NSArray *) = ^(NSArray<TVCLogLine *> *entries) {
+				if ([operation isCancelled]) {
+					return;
+				}
+
+				[self noteOldestLineCandidate:entries.firstObject];
+
+				/* The local store has nothing older. The server might. */
+				if (entries.count == 0) {
+					[self _noteLocalScrollbackExhausted];
+				}
+
+				historicLogCompletionBlock(entries);
+			};
+
 			[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
 													  beforeUniqueIdentifier:lineNumber
 																  fetchLimit:maximumNumberOfLines
 																 limitToDate:nil
-														 withCompletionBlock:historicLogCompletionBlock];
+														 withCompletionBlock:beforeCompletionBlock];
 		} else {
 			[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
 													   afterUniqueIdentifier:lineNumber
@@ -1158,6 +1193,92 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 }
 
 #pragma mark -
+#pragma mark Remote History
+
+- (void)noteOldestLineCandidate:(nullable TVCLogLine *)logLine
+{
+	if (logLine == nil) {
+		return;
+	}
+
+	TVCLogLine *oldestLine = self.oldestLine;
+
+	if (oldestLine == nil || [logLine.receivedAt compare:oldestLine.receivedAt] == NSOrderedAscending) {
+		self.oldestLine = logLine;
+	}
+}
+
+- (void)_noteLocalScrollbackExhausted
+{
+	IRCChannel *channel = self.associatedChannel;
+
+	if (channel == nil) {
+		return;
+	}
+
+	TVCLogLine *oldestLine = self.oldestLine;
+
+	if (oldestLine == nil) {
+		return;
+	}
+
+	XRPerformBlockAsynchronouslyOnMainQueue(^{
+		[self.associatedClient requestChatHistoryBeforeDate:oldestLine.receivedAt inChannel:channel];
+	});
+}
+
+/* Lines the server replayed from before the oldest line in the view.
+ They are rendered above the scrollback and are not written to the
+ store, which is append only; the server is their store. */
+- (void)prependHistoricLogLines:(NSArray<TVCLogLine *> *)logLines
+{
+	NSParameterAssert(logLines != nil);
+
+	if (self.terminating || logLines.count == 0) {
+		return;
+	}
+
+	IRCTreeItem *item = self.associatedItem;
+
+	for (TVCLogLine *logLine in logLines) {
+		[TVCLogControllerHistoricLogSharedInstance() indexLogLine:logLine forItem:item];
+	}
+
+	[self noteOldestLineCandidate:logLines.firstObject];
+
+	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+		NSMutableArray<NSString *> *lineNumbers = [NSMutableArray arrayWithCapacity:logLines.count];
+
+		NSMutableString *html = [NSMutableString string];
+
+		for (TVCLogLine *logLine in logLines) {
+			NSDictionary<NSString *, id> *resultInfo = nil;
+
+			NSString *lineHTML = [self renderLogLine:logLine resultInfo:&resultInfo];
+
+			if (lineHTML == nil) {
+				LogToConsoleError("Failed to render log line %{public}@", logLine.description);
+
+				continue;
+			}
+
+			[html appendString:lineHTML];
+
+			[lineNumbers addObject:logLine.uniqueIdentifier];
+		}
+
+		if (lineNumbers.count == 0) {
+			return;
+		}
+
+		[self _evaluateFunction:@"_Glasstual.documentBodyPrependRemoteHistory"
+				  withArguments:@[ [html copy], [lineNumbers copy] ]];
+	};
+
+	_enqueueBlock(operationBlock);
+}
+
+#pragma mark -
 #pragma mark Print
 
 - (void)print:(TVCLogLine *)logLine
@@ -1179,6 +1300,8 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	}
 
 	self.lastLine = logLine;
+
+	[self noteOldestLineCandidate:logLine];
 
 	TVCLogControllerPrintingBlock printBlock = ^(id operation) {
 		NSDictionary<NSString *, id> *resultInfo = nil;

@@ -105,6 +105,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)processIncomingMessage:(IRCMessage *)message
 {
 	[self.processedMessages addObject:message];
+
+	if (self.forwardsProcessedMessages) {
+		[super processIncomingMessage:message];
+	}
 }
 
 - (void)print:(NSString *)messageBody

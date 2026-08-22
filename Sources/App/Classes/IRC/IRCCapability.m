@@ -138,6 +138,22 @@ NS_ASSUME_NONNULL_BEGIN
 		[IRCCapability capabilityNamed:@"away-notify" identifier:ClientIRCv3SupportedCapabilityAwayNotify],
 		[IRCCapability capabilityNamed:@"batch" identifier:ClientIRCv3SupportedCapabilityBatch],
 		[IRCCapability capabilityNamed:@"chghost" identifier:ClientIRCv3SupportedCapabilityChangeHost],
+		/* chathistory is still a draft on most servers. Both names map
+		 to the same bit; a server that offers both gets both requested. */
+		[[IRCCapability alloc] initWithName:@"draft/chathistory"
+								 identifier:ClientIRCv3SupportedCapabilityChatHistory
+						 requestedByDefault:YES
+							 preferenceGate:nil
+							   dependencies:@[ @"batch", @"server-time", @"message-tags" ]
+							negotiationHook:nil],
+		[[IRCCapability alloc] initWithName:@"chathistory"
+								 identifier:ClientIRCv3SupportedCapabilityChatHistory
+						 requestedByDefault:YES
+							 preferenceGate:nil
+							   dependencies:@[ @"batch", @"server-time", @"message-tags" ]
+							negotiationHook:nil],
+		[IRCCapability capabilityNamed:@"draft/read-marker" identifier:ClientIRCv3SupportedCapabilityReadMarker],
+		[IRCCapability capabilityNamed:@"read-marker" identifier:ClientIRCv3SupportedCapabilityReadMarker],
 		[[IRCCapability alloc] initWithName:@"echo-message"
 								 identifier:ClientIRCv3SupportedCapabilityEchoMessage
 						 requestedByDefault:YES

@@ -110,17 +110,19 @@ IRCv3 capabilities Glasstual negotiates when the server offers them:
 - `away-notify`
 - `batch` (including nested batches)
 - `cap-notify`
+- `chathistory` (and `draft/chathistory`): `LATEST` on join fetches what the local scrollback is missing, `BEFORE` fills in above the scrollback when scrolling up runs out of local history; replayed lines are de-duplicated by `msgid`; `/chathistory <subcommand> ...` passes a request through
 - `chghost`
 - `echo-message` (can be switched off in Preferences)
 - `message-tags` (incoming and outgoing tags, `TAGMSG`; `msgid` is stored with each line and exposed to styles as `data-msgid`)
 - `multi-prefix`
+- `read-marker` (and `draft/read-marker`): `MARKREAD` from other clients clears unread counts and moves the scrollback mark; viewing a channel tells the bouncer it is read
 - `sasl` (PLAIN and EXTERNAL)
 - `server-time`
 - `standard-replies` (`FAIL`, `WARN`, `NOTE`)
 - `userhost-in-names`
 - ZNC: `znc.in/playback`, `znc.in/self-message`, `znc.in/server-time`, `znc.in/server-time-iso`, `znc.in/tlsinfo`
 
-The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Classes/IRC/IRCCapability.m`.
+`netsplit` and `netjoin` batches are collapsed into one summary line per channel instead of a QUIT or JOIN per user (hidden along with joins and quits when those are switched off). The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Classes/IRC/IRCCapability.m`.
 
 ## Licenses
 

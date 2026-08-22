@@ -98,6 +98,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)logViewWebViewReceivedDropWithFile:(NSString *)filename;
 
 - (nullable TVCLogLine *)lastLine;
+
+/* The line with the earliest server time the view knows about. */
+- (nullable TVCLogLine *)oldestLine;
+
+/* Inserts lines above everything in the view (chathistory BEFORE). */
+- (void)prependHistoricLogLines:(NSArray<TVCLogLine *> *)logLines;
+
+/* Moves the scrollback mark to sit after the last line at or before the date. */
+- (void)markAtDate:(NSDate *)date;
 @end
 
 NS_ASSUME_NONNULL_END

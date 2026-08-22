@@ -79,20 +79,21 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoCaseMapping) {
 @property(readonly) IRCISupportInfoCaseMapping caseMapping;
 
 /* Tokens below are 0, nil, NO or empty when the server has not advertised them. */
-@property(readonly) NSUInteger maximumLineLength;				   // LINELEN (bytes, includes CRLF). 0 = assume 512
-@property(readonly) NSUInteger maximumTargets;					   // MAXTARGETS. 0 = no limit advertised
-@property(readonly) NSUInteger maximumSilenceEntries;			   // SILENCE=<n>. 0 = no limit advertised
-@property(readonly) BOOL silenceSupported;						   // SILENCE
-@property(readonly) BOOL safeListSupported;						   // SAFELIST
-@property(readonly) BOOL whoxSupported;							   // WHOX
-@property(readonly) BOOL utf8Only;								   // UTF8ONLY
-@property(readonly, copy, nullable) NSString *botModeSymbol;	   // BOT=<mode>
-@property(readonly, copy, nullable) NSString *callerIDModeSymbol;  // CALLERID[=<mode>]
-@property(readonly, copy, nullable) NSString *deafModeSymbol;	   // DEAF[=<mode>]
-@property(readonly, copy, nullable) NSString *extendedBanPrefix;   // EXTBAN=<prefix>,<types>
-@property(readonly, copy) NSArray<NSString *> *extendedBanTypes;   // EXTBAN=<prefix>,<types>
-@property(readonly, copy) NSArray<NSString *> *extendedListTokens; // ELIST=<tokens> (uppercase)
-@property(readonly, copy) NSArray<NSString *> *clientTagDenyList;  // CLIENTTAGDENY=<entries>
+@property(readonly) NSUInteger maximumLineLength;		// LINELEN (bytes, includes CRLF). 0 = assume 512
+@property(readonly) NSUInteger maximumTargets;			// MAXTARGETS. 0 = no limit advertised
+@property(readonly) NSUInteger maximumSilenceEntries;	// SILENCE=<n>. 0 = no limit advertised
+@property(readonly) NSUInteger chatHistoryMaximumLines; // CHATHISTORY=<n> (or draft/CHATHISTORY). 0 = not advertised
+@property(readonly) BOOL silenceSupported;				// SILENCE
+@property(readonly) BOOL safeListSupported;				// SAFELIST
+@property(readonly) BOOL whoxSupported;					// WHOX
+@property(readonly) BOOL utf8Only;						// UTF8ONLY
+@property(readonly, copy, nullable) NSString *botModeSymbol;							 // BOT=<mode>
+@property(readonly, copy, nullable) NSString *callerIDModeSymbol;						 // CALLERID[=<mode>]
+@property(readonly, copy, nullable) NSString *deafModeSymbol;							 // DEAF[=<mode>]
+@property(readonly, copy, nullable) NSString *extendedBanPrefix;						 // EXTBAN=<prefix>,<types>
+@property(readonly, copy) NSArray<NSString *> *extendedBanTypes;						 // EXTBAN=<prefix>,<types>
+@property(readonly, copy) NSArray<NSString *> *extendedListTokens;						 // ELIST=<tokens> (uppercase)
+@property(readonly, copy) NSArray<NSString *> *clientTagDenyList;						 // CLIENTTAGDENY=<entries>
 @property(readonly, copy) NSDictionary<NSString *, NSNumber *> *channelLimits;			 // CHANLIMIT: prefix -> limit
 @property(readonly, copy) NSDictionary<NSString *, NSNumber *> *maximumListEntries;		 // MAXLIST: mode -> limit
 @property(readonly, copy) NSDictionary<NSString *, NSNumber *> *maximumTargetsByCommand; // TARGMAX

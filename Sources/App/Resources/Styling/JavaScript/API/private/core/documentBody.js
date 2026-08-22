@@ -158,6 +158,40 @@ _Glasstual.historyIndicatorRemove = function() /* PRIVATE */
 	}
 };
 
+/* Places the mark after the last line whose timestamp is at or before
+the one given (a read marker another client set). Falls back to the
+end of the buffer when every line is older. */
+_Glasstual.historyIndicatorAddAfterTimestamp = function(templateHTML, timestamp) /* PRIVATE */
+{
+	_Glasstual.historyIndicatorRemove();
+
+	var buffer = MessageBuffer.bufferElement();
+
+	var lines = buffer.querySelectorAll("div.line");
+
+	var insertBefore = null;
+
+	for (var i = 0; i < lines.length; i++) {
+		var line = lines[i];
+
+		var lineTimestamp = parseFloat(line.dataset.timestamp);
+
+		if (isNaN(lineTimestamp) === false && lineTimestamp > timestamp) {
+			insertBefore = line;
+
+			break;
+		}
+	}
+
+	if (insertBefore === null) {
+		MessageBuffer.bufferElementAppend(templateHTML);
+	} else {
+		insertBefore.insertAdjacentHTML('beforebegin', templateHTML);
+	}
+
+	Glasstual.historyIndicatorAddedToView();
+};
+
 /* Document body */
 Glasstual._documentBodyElementReference = null; /* PRIVATE */
 
@@ -190,6 +224,42 @@ _Glasstual.documentBodyAppendHistoric = function(templateHTML, lineNumbers, isRe
 		GlasstualScroller.saveRestorationSecondDataPoint();
 
 		GlasstualScroller.restoreScrollPosition();
+	}
+};
+
+/* History fetched from the server (chathistory BEFORE). The lines go
+above everything in the buffer and the top is marked incomplete again
+so that scrolling up asks for more. */
+_Glasstual.documentBodyPrependRemoteHistory = function(templateHTML, lineNumbers) /* PRIVATE */
+{
+	var buffer = MessageBuffer.bufferElement();
+
+	var firstLine = MessageBuffer.firstLineInBuffer(buffer);
+
+	var atBottom = GlasstualScroller.isScrolledToBottom();
+
+	if (atBottom === false) {
+		GlasstualScroller.saveRestorationFirstDataPoint();
+	}
+
+	buffer.prepareForMutation();
+
+	buffer.insertAdjacentHTML("afterbegin", templateHTML);
+
+	MessageBuffer.noteRemoteHistoryPrepended(lineNumbers.length);
+
+	try {
+		_Glasstual.messageAddedToView(lineNumbers, true);
+	} catch (error) {
+		console.error(error);
+	}
+
+	if (atBottom === false) {
+		GlasstualScroller.saveRestorationSecondDataPoint();
+
+		GlasstualScroller.restoreScrollPosition();
+	} else if (firstLine) {
+		firstLine.scrollIntoViewAlignTop();
 	}
 };
 

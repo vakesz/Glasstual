@@ -81,6 +81,14 @@
 "y7t-zk" = "WARN %1$@/%2$@: %3$@";
 "k2e-cb" = "NOTE %1$@/%2$@: %3$@";
 
+/* Chat history (chathistory CAP) */
+"hc1-ah" = "This server does not support chat history.";
+
+/* Netsplit and netjoin summaries. %3$lu = number of users, %4$@ = nickname list */
+"ns1-sp" = "Netsplit between \002%1$@\002 and \002%2$@\002: %3$lu users left (%4$@)";
+"ns2-jn" = "Netjoin between \002%1$@\002 and \002%2$@\002: %3$lu users rejoined (%4$@)";
+"ns3-mr" = "%1$@, … and %2$lu more";
+
 /* Raw mode messages */
 "ik6-dl" = "⍅ Server traffic will be output to this window until it is closed by control clicking (right clicking) it. ⍆";
 
