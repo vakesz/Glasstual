@@ -58,7 +58,6 @@ NS_ASSUME_NONNULL_BEGIN
 /* Semantic colors make the display's scale irrelevant; the flag is
  ignored. Kept so existing callers keep compiling. Call
  -initWithAppearanceAtURL: instead. */
-- (nullable instancetype)initWithAppearanceAtURL:(NSURL *)appearanceLocation forRetinaDisplay:(BOOL)forRetinaDisplay;
 @end
 
 NS_ASSUME_NONNULL_END

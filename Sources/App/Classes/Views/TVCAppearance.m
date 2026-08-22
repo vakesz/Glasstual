@@ -395,11 +395,6 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	return nil;
 }
 
-- (nullable instancetype)initWithAppearanceAtURL:(NSURL *)appearanceLocation forRetinaDisplay:(BOOL)forRetinaDisplay
-{
-	return [self initWithAppearanceAtURL:appearanceLocation];
-}
-
 - (NSString *)appearanceName
 {
 	return self.applicationProperties.appearanceName;

@@ -289,13 +289,6 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	[self.webViewBacking findString:searchString movingForward:movingForward];
 }
 
-- (void)redrawViewIfNeeded
-{
-	/* WKWebView draws itself out of process; there is nothing to redraw
-	 from here. This remains only because -[TVCMainWindow
-	 reloadViewControllerDrawings] calls it. Remove both together. */
-}
-
 @end
 
 #pragma mark -
