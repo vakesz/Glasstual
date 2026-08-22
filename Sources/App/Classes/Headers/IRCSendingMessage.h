@@ -40,6 +40,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCSendingMessage : NSObject
 + (NSString *)stringWithCommand:(NSString *)command arguments:(nullable NSArray<NSString *> *)arguments;
+
+/* Same as above with an IRCv3 message tag prefix ("@key=value;key2 ")
+ when tags is not empty. Values are escaped as the message-tags
+ specification requires. The caller is responsible for only passing
+ tags when the server negotiated message-tags. */
++ (NSString *)stringWithCommand:(NSString *)command
+					  arguments:(nullable NSArray<NSString *> *)arguments
+						   tags:(nullable NSDictionary<NSString *, NSString *> *)tags;
+
+/* "key=value;key2" for the tags given, keys in sorted order, without
+ the leading "@". An empty value is written as the bare key. */
++ (NSString *)stringWithMessageTags:(NSDictionary<NSString *, NSString *> *)tags;
 @end
 
 NS_ASSUME_NONNULL_END

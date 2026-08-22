@@ -44,13 +44,10 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCAddressBookUserTrackingContainer, IRCTimedCommand, IRCUserMutable;
 
 enum {
-	ClientIRCv3SupportedCapabilitySASLGeneric = 1 << 22,
-	ClientIRCv3SupportedCapabilitySASLPlainText = 1 << 23,	   // YES if SASL=plain CAP is supported
-	ClientIRCv3SupportedCapabilitySASLExternal = 1 << 24,	   // YES if SASL=external CAP is supported
-	ClientIRCv3SupportedCapabilityZNCServerTime = 1 << 25,	   // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCServerTimeISO = 1 << 26,  // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCPlaybackModule = 1 << 27, // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityPlanioPlayback = 1 << 28	   // YES if the plan.io vendor specific CAP supported.
+	ClientIRCv3SupportedCapabilitySASLGeneric = 1 << 22,	  // YES if the sasl CAP was acknowledged
+	ClientIRCv3SupportedCapabilityZNCServerTime = 1 << 25,	  // YES if the ZNC vendor specific CAP supported
+	ClientIRCv3SupportedCapabilityZNCServerTimeISO = 1 << 26, // YES if the ZNC vendor specific CAP supported
+	ClientIRCv3SupportedCapabilityZNCPlaybackModule = 1 << 27 // YES if the ZNC vendor specific CAP supported
 };
 
 @interface IRCClient ()
@@ -95,6 +92,18 @@ enum {
 
 - (void)enableCapability:(ClientIRCv3SupportedCapability)capability;
 - (void)disableCapability:(ClientIRCv3SupportedCapability)capability;
+
+/* Capability negotiation. Capabilities offered by the server in CAP LS
+ and CAP NEW are collected here and requested in registry order.
+ -pendingCapabilityRequests are the wire names still to be requested. */
+@property(readonly, copy) NSArray<NSString *> *pendingCapabilityRequests;
+
+- (void)receiveCapabilityOrAuthenticationRequest:(IRCMessage *)m;
+
+/* Picks the SASL mechanism for the mechanisms the server offered
+ (an empty list means the server did not say). Returns NO when none
+ of them can be used with the client's configuration. */
+- (BOOL)selectSASLMechanismFromOffered:(NSArray<NSString *> *)mechanisms;
 
 - (void)noteReachabilityChanged:(BOOL)reachable;
 

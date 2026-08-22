@@ -63,6 +63,11 @@
 /* Specific IRC related, app-specific errors */
 "iaa-0u" = "There are no servers configured to connect to.";
 
+/* Standard replies (FAIL, WARN, NOTE) */
+"p4r-6n" = "FAIL %1$@/%2$@: %3$@";
+"y7t-zk" = "WARN %1$@/%2$@: %3$@";
+"k2e-cb" = "NOTE %1$@/%2$@: %3$@";
+
 /* Raw mode messages */
 "ik6-dl" = "⍅ Server traffic will be output to this window until it is closed by control clicking (right clicking) it. ⍆";
 

@@ -18,7 +18,7 @@ Glasstual can be customized with styles written in CSS, HTML, and JavaScript; pl
 
 This fork exists to carry that work forward on **macOS 26 (Tahoe) and later**. It is an independent project: it is not published, endorsed, or supported by Codeux Software, LLC, and it does not offer, replace, or update Codeux's builds of Textual.
 
-Copyright and license notices from Textual and LimeChat are left intact throughout the source tree, including the BSD non-endorsement clause naming Textual. Those notices cover code this project did not write and are deliberately unchanged. See [Licenses](#licenses) below and [Acknowledgements.pdf](Acknowledgements.pdf).
+Copyright and license notices from Textual and LimeChat are left intact throughout the source tree, including the BSD non-endorsement clause naming Textual. Those notices cover code this project did not write and are deliberately unchanged. See [Licenses](#licenses) below and [Acknowledgements.pdf](Documentation/Acknowledgements.pdf).
 
 ## Screenshots
 
@@ -84,9 +84,12 @@ Install the development tools and run the repository-wide checks with:
 
 ```sh
 make setup    # brew bundle
+make test     # unit tests (GlasstualTests, run inside the Debug app)
 make lint     # shellcheck, actionlint, plist/xib validation, format check
 make format   # clang-format, swift-format, shfmt
 ```
+
+The unit tests live in `Tests/GlasstualTests` and do not use the network.
 
 Formatting and linting intentionally exclude the vendored frameworks under
 `Frameworks/` and `External Libraries`. The `Quality` workflow runs `make lint` (shellcheck, actionlint,
@@ -99,6 +102,25 @@ Glasstual has no in-app updater. The Sparkle integration inherited from
 Textual was removed together with the upstream appcast so that this fork can
 never offer Codeux's builds as an update to itself. New releases are published
 on the GitHub releases page.
+
+## Supported IRC features
+
+IRCv3 capabilities Glasstual negotiates when the server offers them:
+
+- `away-notify`
+- `batch` (including nested batches)
+- `cap-notify`
+- `chghost`
+- `echo-message` (can be switched off in Preferences)
+- `message-tags` (incoming and outgoing tags, `TAGMSG`; `msgid` is stored with each line and exposed to styles as `data-msgid`)
+- `multi-prefix`
+- `sasl` (PLAIN and EXTERNAL)
+- `server-time`
+- `standard-replies` (`FAIL`, `WARN`, `NOTE`)
+- `userhost-in-names`
+- ZNC: `znc.in/playback`, `znc.in/self-message`, `znc.in/server-time`, `znc.in/server-time-iso`, `znc.in/tlsinfo`
+
+The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Classes/IRC/IRCCapability.m`.
 
 ## Licenses
 
@@ -138,7 +160,7 @@ SUCH DAMAGE.
 
 ### License for content originating from Textual
 
-Unless stated otherwise by the [Acknowledgements.pdf](Acknowledgements.pdf) document, the license presented below shall govern the distribution of and modifications to; the work hosted by this repository.
+Unless stated otherwise by the [Acknowledgements.pdf](Documentation/Acknowledgements.pdf) document, the license presented below shall govern the distribution of and modifications to; the work hosted by this repository.
 
 <pre>
 Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.

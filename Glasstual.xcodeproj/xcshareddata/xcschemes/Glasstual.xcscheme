@@ -57,6 +57,17 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "5D3341573F9BA56E475111A0"
+               BuildableName = "GlasstualTests.xctest"
+               BlueprintName = "GlasstualTests"
+               ReferencedContainer = "container:Glasstual.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

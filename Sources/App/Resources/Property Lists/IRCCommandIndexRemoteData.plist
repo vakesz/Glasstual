@@ -5,7 +5,7 @@
 	<key>Reserved Information</key>
 	<dict>
 		<key>Next Index Value</key>
-		<real>1058</real>
+		<real>1062</real>
 	</dict>
 	<key>adchat</key>
 	<dict>
@@ -69,6 +69,13 @@
 		<integer>1016</integer>
 		<key>outgoingColonIndex</key>
 		<integer>0</integer>
+	</dict>
+	<key>fail</key>
+	<dict>
+		<key>indexValue</key>
+		<integer>1059</integer>
+		<key>outgoingColonIndex</key>
+		<integer>2</integer>
 	</dict>
 	<key>gline</key>
 	<dict>
@@ -175,6 +182,13 @@
 		<key>outgoingColonIndex</key>
 		<integer>999</integer>
 	</dict>
+	<key>note</key>
+	<dict>
+		<key>indexValue</key>
+		<integer>1061</integer>
+		<key>outgoingColonIndex</key>
+		<integer>2</integer>
+	</dict>
 	<key>notice</key>
 	<dict>
 		<key>indexValue</key>
@@ -231,6 +245,13 @@
 		<key>outgoingColonIndex</key>
 		<integer>2</integer>
 	</dict>
+	<key>tagmsg</key>
+	<dict>
+		<key>indexValue</key>
+		<integer>1058</integer>
+		<key>outgoingColonIndex</key>
+		<integer>999</integer>
+	</dict>
 	<key>tempshun</key>
 	<dict>
 		<key>indexValue</key>
@@ -258,6 +279,13 @@
 		<integer>1038</integer>
 		<key>outgoingColonIndex</key>
 		<integer>0</integer>
+	</dict>
+	<key>warn</key>
+	<dict>
+		<key>indexValue</key>
+		<integer>1060</integer>
+		<key>outgoingColonIndex</key>
+		<integer>2</integer>
 	</dict>
 	<key>watch</key>
 	<dict>

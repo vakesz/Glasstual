@@ -48,6 +48,7 @@
 #import "IRCAddressBookUserTracking.h"
 #import "IRCChannel.h"
 #import "IRCChannelConfig.h"
+#import "IRCCapability.h"
 #import "IRCChannelMode.h"
 #import "IRCChannelUser.h"
 #import "IRCClient.h"
