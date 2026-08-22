@@ -329,6 +329,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[defaultsMutable assignObjectTo:&self->_identityClientSideCertificate forKey:@"identityClientSideCertificate"];
 	[defaultsMutable assignStringTo:&self->_awayNickname forKey:@"awayNickname"];
 	[defaultsMutable assignStringTo:&self->_connectionName forKey:@"connectionName"];
+	[defaultsMutable assignStringTo:&self->_ctcpVersionReply forKey:@"ctcpVersionReply"];
 	[defaultsMutable assignStringTo:&self->_nickname forKey:@"nickname"];
 	[defaultsMutable assignStringTo:&self->_normalLeavingComment forKey:@"normalLeavingComment"];
 	[defaultsMutable assignStringTo:&self->_proxyAddress forKey:@"proxyAddress"];
@@ -704,6 +705,7 @@ NS_ASSUME_NONNULL_BEGIN
 	[dic maybeSetObject:self.alternateNicknames forKey:@"alternateNicknames"];
 	[dic maybeSetObject:self.awayNickname forKey:@"awayNickname"];
 	[dic maybeSetObject:self.connectionName forKey:@"connectionName"];
+	[dic maybeSetObject:self.ctcpVersionReply forKey:@"ctcpVersionReply"];
 	[dic maybeSetObject:self.loginCommands forKey:@"onConnectCommands"];
 	[dic maybeSetObject:self.nickname forKey:@"nickname"];
 	[dic maybeSetObject:self.normalLeavingComment forKey:@"normalLeavingComment"];
@@ -1037,6 +1039,7 @@ NS_ASSUME_NONNULL_BEGIN
 @dynamic channelList;
 @dynamic cipherSuites;
 @dynamic connectionName;
+@dynamic ctcpVersionReply;
 @dynamic connectionPrefersIPv4;
 @dynamic fallbackEncoding;
 @dynamic floodControlDelayTimerInterval;
@@ -1314,6 +1317,13 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self->_awayNickname != awayNickname) {
 		self->_awayNickname = [awayNickname copy];
+	}
+}
+
+- (void)setCtcpVersionReply:(nullable NSString *)ctcpVersionReply
+{
+	if (self->_ctcpVersionReply != ctcpVersionReply) {
+		self->_ctcpVersionReply = [ctcpVersionReply copy];
 	}
 }
 

@@ -258,7 +258,11 @@ static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 		userRankToDraw = cellItem.rank;
 	}
 
-	self.imageView.image = [self markBadgeForRank:userRankToDraw symbol:modeSymbol isSelected:isSelected];
+	/* The inverted palette only matches the accent fill that is drawn
+	 while the window is active; an inactive selection is grey. */
+	self.imageView.image = [self markBadgeForRank:userRankToDraw
+										   symbol:modeSymbol
+									   isSelected:(isSelected && drawingContext.isWindowActive)];
 }
 
 /* Returns nil when the image view has not been laid out yet. The caller assigns
@@ -297,18 +301,11 @@ static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 		textColor = [NSColor labelColor];
 	}
 
-	NSMutableParagraphStyle *paragraphStyle = [NSMutableParagraphStyle new];
-	paragraphStyle.alignment = NSTextAlignmentCenter;
-
 	NSFont *controlFont = [NSFont monospacedDigitSystemFontOfSize:11.0 weight:NSFontWeightMedium];
 
-	NSAttributedString *badgeText =
-		[NSAttributedString attributedStringWithString:stringToDraw
-											attributes:@{
-												NSForegroundColorAttributeName : textColor,
-												NSFontAttributeName : controlFont,
-												NSParagraphStyleAttributeName : paragraphStyle
-											}];
+	NSAttributedString *badgeText = [NSAttributedString
+		attributedStringWithString:stringToDraw
+						attributes:@{NSForegroundColorAttributeName : textColor, NSFontAttributeName : controlFont}];
 
 	return [NSImage imageWithSize:badgeFrame.size
 						  flipped:NO
@@ -323,12 +320,17 @@ static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 						   return YES;
 					   }
 
-					   /* Centre on the font's cap height rather than nudging per-glyph. */
-					   NSRect textRect = dstRect;
-					   textRect.origin.y = (NSMidY(dstRect) - (controlFont.capHeight / 2.0) + controlFont.descender);
-					   textRect.size.height = (NSHeight(dstRect) - NSMinY(textRect));
+					   /* Centre the glyph on the font's cap height. -drawAtPoint: places
+						the bottom of the line box at the point, and the baseline sits
+						|descender| above that, so the point is the wanted baseline plus
+						the (negative) descender. */
+					   NSSize textSize = badgeText.size;
 
-					   [badgeText drawInRect:textRect];
+					   NSPoint textOrigin =
+						   NSMakePoint((NSMidX(dstRect) - (textSize.width / 2.0)),
+									   (NSMidY(dstRect) - (controlFont.capHeight / 2.0) + controlFont.descender));
+
+					   [badgeText drawAtPoint:textOrigin];
 
 					   return YES;
 				   }];
@@ -498,9 +500,10 @@ static NSColor *_Nullable TVCMemberListCellColorForRank(IRCUserRank userRank)
 	self.childCell.needsDisplay = YES;
 }
 
-- (void)drawSelectionInRect:(NSRect)dirtyRect
+/* See the note on the server list row cell. */
+- (BOOL)isEmphasized
 {
-	[super drawSelectionInRect:dirtyRect];
+	return self.window.isKeyWindow;
 }
 
 #pragma mark -

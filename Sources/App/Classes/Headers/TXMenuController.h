@@ -316,6 +316,11 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 };
 
 @interface TXMenuController : NSObject
+/* Gives every symbol in the menu the shared menu configuration and pads
+ items without a symbol so that titles line up. Menus built at runtime
+ should be passed through this before they are shown. */
+- (void)applySymbolsToMenu:(nullable NSMenu *)menu;
+
 @property(readonly, strong) NSMenu *channelViewChannelNameMenu;
 @property(readonly, strong) NSMenu *channelViewGeneralMenu;
 @property(readonly, strong) NSMenu *channelViewURLMenu;

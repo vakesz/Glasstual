@@ -67,7 +67,7 @@ Gw
                             <constraint firstAttribute="width" constant="69" id="3sw-im-CB0"/>
                             <constraint firstAttribute="width" secondItem="zqh-Vb-fjj" secondAttribute="height" multiplier="1:1" id="udu-Tc-oQa"/>
                         </constraints>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="applicationIcon" id="0YK-op-vRE"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="NSApplicationIcon" id="0YK-op-vRE"/>
                         <accessibility description="Glasstual Logo"/>
                     </imageView>
                     <button translatesAutoresizingMaskIntoConstraints="NO" id="151">
@@ -304,6 +304,6 @@ Gw
     <resources>
         <image name="NSAddTemplate" width="18" height="17"/>
         <image name="NSRemoveTemplate" width="18" height="5"/>
-        <image name="applicationIcon" width="512" height="512"/>
+        <image name="NSApplicationIcon" width="32" height="32"/>
     </resources>
 </document>

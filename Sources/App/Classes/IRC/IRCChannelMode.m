@@ -114,7 +114,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSMutableString *modeAddString = [NSMutableString string];
 	NSMutableString *modeRemoveString = [NSMutableString string];
-	NSMutableString *modeParamString = [NSMutableString string];
+	NSMutableString *modeRemoveParamString = [NSMutableString string];
+	NSMutableString *modeAddParamString = [NSMutableString string];
 
 	/* Look over the set of modes that are currently set. If a mode is present
 	 in that set, but not in the new set, then mark that mode for removal. */
@@ -159,10 +160,18 @@ NS_ASSUME_NONNULL_BEGIN
 			return;
 		}
 
-		[modeParamString appendFormat:@" %@", modeParameter];
+		/* Parameters are consumed by the server in the order the mode
+		 letters appear. Removed modes are emitted first, so their
+		 parameters must come first as well. */
+		if (mode.modeIsSet) {
+			[modeAddParamString appendFormat:@" %@", modeParameter];
+		} else {
+			[modeRemoveParamString appendFormat:@" %@", modeParameter];
+		}
 	}];
 
-	return [NSString stringWithFormat:@"%@%@%@", modeRemoveString, modeAddString, modeParamString];
+	return [NSString
+		stringWithFormat:@"%@%@%@%@", modeRemoveString, modeAddString, modeRemoveParamString, modeAddParamString];
 }
 
 - (void)clear

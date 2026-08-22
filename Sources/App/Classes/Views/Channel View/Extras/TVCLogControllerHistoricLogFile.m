@@ -190,14 +190,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 	__weak TVCLogControllerHistoricLogFile *weakSelf = self;
 
+	/* Both handlers run on the connection's queue. The state they
+	 touch is read by main-thread callers, so hop there first. */
 	serviceConnection.interruptionHandler = ^{
-		[weakSelf interruptionHandler];
+		XRPerformBlockSynchronouslyOnMainQueue(^{
+			[weakSelf interruptionHandler];
+		});
 
 		LogToConsole("Interruption handler called");
 	};
 
 	serviceConnection.invalidationHandler = ^{
-		[weakSelf invalidationHandler];
+		XRPerformBlockSynchronouslyOnMainQueue(^{
+			[weakSelf invalidationHandler];
+		});
 
 		LogToConsole("Invalidation handler called");
 	};

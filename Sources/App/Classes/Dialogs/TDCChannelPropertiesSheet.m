@@ -177,7 +177,9 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 - (instancetype)initWithConfig:(nullable IRCChannelConfig *)config onClientWithId:(nullable NSString *)clientId
 {
-	if ((self = [self initWithWindow:nil])) {
+	/* -initWithWindow: already loads the nib and the config; going through
+	 it here would do that twice. */
+	if ((self = [super initWithWindow:nil])) {
 		self.clientId = clientId;
 
 		if (config) {

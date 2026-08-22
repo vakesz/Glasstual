@@ -293,7 +293,7 @@ NSString *const _inputHistoryGlobalObjectKey = @"TLOInputHistoryDefaultObject";
 	@synchronized(self.historyBuffer) {
 		NSAttributedString *lastEntry = self.historyBuffer.lastObject;
 
-		if (lastEntry != nil || [lastEntry.string isEqualToString:string.string] == NO) {
+		if (lastEntry == nil || [lastEntry.string isEqualToString:string.string] == NO) {
 			[self addToBuffer:string];
 		}
 

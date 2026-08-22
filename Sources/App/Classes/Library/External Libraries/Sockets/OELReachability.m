@@ -49,7 +49,6 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if ((self = [super init])) {
 		self.monitorQueue = dispatch_queue_create("com.vakesz.glasstual.reachability", DISPATCH_QUEUE_SERIAL);
-		self.monitor = nw_path_monitor_create();
 	}
 
 	return self;
@@ -65,6 +64,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)startNotifier
 {
+	/* A path monitor is single use: once cancelled it never delivers
+	 another update. Create a fresh one for every start. */
+	if (self.monitor) {
+		nw_path_monitor_cancel(self.monitor);
+	}
+
+	self.monitor = nw_path_monitor_create();
+
+	/* The first update of the new monitor describes current state. */
+	self.receivedInitialPath = NO;
+
 	__weak typeof(self) weakSelf = self;
 
 	nw_path_monitor_set_queue(self.monitor, self.monitorQueue);
@@ -85,6 +95,8 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self.monitor) {
 		nw_path_monitor_cancel(self.monitor);
+
+		self.monitor = nil;
 	}
 }
 

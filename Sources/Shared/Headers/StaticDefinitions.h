@@ -65,8 +65,6 @@
 /* Misc. */
 #define NSInvertedComparisonResult(c) ((c) * (-1))
 
-#define NSIsCurrentThreadMain() [[NSThread isMainThread]]
-
 /* Deprecation and symbol visibility. */
 #define GLASSTUAL_EXTERN extern
 

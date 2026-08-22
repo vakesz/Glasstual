@@ -302,6 +302,13 @@ NS_ASSUME_NONNULL_BEGIN
 		};
 	}
 
+	/* Handlers call the block unconditionally. A call made without a
+	 promise (plain postMessage) must not crash the app. */
+	if (completionBlock == nil) {
+		completionBlock = ^(id _Nullable returnValue) {
+		};
+	}
+
 	context.completionBlock = completionBlock;
 
 	NSMethodSignature *signature = [self methodSignatureForSelector:selector];
@@ -532,7 +539,7 @@ NS_ASSUME_NONNULL_BEGIN
 				   forCaller:@"app.notifyJumpToLineCallback()"
 				   inWebView:webView
 				withSelector:@selector(_notifyJumpToLineCallback:)
-		minimumArgumentCount:2
+		minimumArgumentCount:3
 			  withValidation:^BOOL(NSUInteger argumentIndex, id argument) {
 				  if (argumentIndex == 0) {
 					  return [argument isKindOfClass:[NSString class]];
@@ -682,7 +689,7 @@ NS_ASSUME_NONNULL_BEGIN
 				   forCaller:@"app.renderTemplate()"
 				   inWebView:webView
 				withSelector:@selector(_renderTemplate:)
-		minimumArgumentCount:1
+		minimumArgumentCount:2
 			  withValidation:^BOOL(NSUInteger argumentIndex, id argument) {
 				  if (argumentIndex == 0) {
 					  return [argument isKindOfClass:[NSString class]];
@@ -904,6 +911,8 @@ NS_ASSUME_NONNULL_BEGIN
 			RZPasteboard().stringContent = selection;
 
 			context.completionBlock(@(YES));
+
+			return;
 		}
 	}
 
@@ -1079,6 +1088,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 	if ([lineNumbersUncut isKindOfClass:[NSString class]]) {
 		lineNumbersUncut = @[ lineNumbersUncut ];
+	}
+
+	if ([lineNumbersUncut isKindOfClass:[NSArray class]] == NO) {
+		[self.class throwJavaScriptException:@"Line numbers must be a string or an array of strings"
+								   forCaller:context.caller
+								   inWebView:context.webView];
+
+		return;
+	}
+
+	for (id lineNumber in lineNumbersUncut) {
+		if ([lineNumber isKindOfClass:[NSString class]] == NO) {
+			[self.class throwJavaScriptException:@"Line numbers must be a string or an array of strings"
+									   forCaller:context.caller
+									   inWebView:context.webView];
+
+			return;
+		}
 	}
 
 	NSArray *lineNumbers = [self.class standardizeLineNumbers:lineNumbersUncut];
@@ -1288,15 +1315,31 @@ NS_ASSUME_NONNULL_BEGIN
 	if (methodSignature == nil) {
 		[self.class throwJavaScriptException:@"Unknown method named: '%@'"
 								   forCaller:context.caller
-								   inWebView:context.webView];
+								   inWebView:context.webView, methodName];
 
 		context.completionBlock(nil);
 
 		return;
-	} else if (strcmp(methodSignature.methodReturnType, @encode(void)) == 0) {
+	}
+
+	/* Only zero-argument class methods can be invoked from a style;
+	 there is nothing sensible to pass for arguments. */
+	if (methodSignature.numberOfArguments != 2) {
+		[self.class throwJavaScriptException:@"Method named '%@' takes arguments"
+								   forCaller:context.caller
+								   inWebView:context.webView, methodName];
+
+		context.completionBlock(nil);
+
+		return;
+	}
+
+	const char *returnType = methodSignature.methodReturnType;
+
+	if (strcmp(returnType, @encode(void)) == 0) {
 		[self.class throwJavaScriptException:@"Method named '%@' does not return a value"
 								   forCaller:context.caller
-								   inWebView:context.webView];
+								   inWebView:context.webView, methodName];
 
 		context.completionBlock(nil);
 
@@ -1311,11 +1354,148 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[invocation invoke];
 
-	void *returnValue;
+	/* Read the return value into a buffer of the correct size and
+	 convert by type. Casting the bits of a double to a pointer, as
+	 the previous implementation did, dereferenced garbage. */
+	id result = nil;
 
-	[invocation getReturnValue:&returnValue];
+	switch (returnType[0]) {
+	case _C_ID: {
+		__unsafe_unretained id object = nil;
 
-	context.completionBlock([NSValue valueWithPrimitive:returnValue withType:methodSignature.methodReturnType]);
+		[invocation getReturnValue:&object];
+
+		result = object;
+
+		break;
+	}
+	case _C_BOOL: {
+		BOOL value = NO;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_CHR: {
+		char value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_UCHR: {
+		unsigned char value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_SHT: {
+		short value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_USHT: {
+		unsigned short value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_INT: {
+		int value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_UINT: {
+		unsigned int value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_LNG: {
+		long value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_ULNG: {
+		unsigned long value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_LNG_LNG: {
+		long long value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_ULNG_LNG: {
+		unsigned long long value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_FLT: {
+		float value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_DBL: {
+		double value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	default: {
+		[self.class throwJavaScriptException:@"Method named '%@' returns an unsupported type"
+								   forCaller:context.caller
+								   inWebView:context.webView, methodName];
+
+		break;
+	}
+	}
+
+	context.completionBlock(result);
 }
 
 - (void)_sendPluginPayload:(TVCLogScriptEventSinkContext *)context

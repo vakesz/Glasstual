@@ -150,6 +150,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 @property(nonatomic, weak) IBOutlet TVCContentNavigationOutlineView *navigationOutlineView;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *alternateNicknamesTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *awayNicknameTextField;
+@property(nonatomic, weak) IBOutlet TVCValidatedTextField *ctcpVersionReplyTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *connectionNameTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *nicknameTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *normalLeavingCommentTextField;
@@ -324,6 +325,13 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 		return nil;
 	};
 
+	/* CTCP VERSION reply */
+	self.ctcpVersionReplyTextField.textDidChangeCallback = self;
+
+	self.ctcpVersionReplyTextField.stringValueIsInvalidOnEmpty = NO;
+	self.ctcpVersionReplyTextField.stringValueIsTrimmed = YES;
+	self.ctcpVersionReplyTextField.stringValueUsesOnlyFirstToken = NO;
+
 	/* Real name */
 	self.realNameTextField.textDidChangeCallback = self;
 
@@ -431,8 +439,10 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 
 	self.proxyAddressTextField.performValidationWhenEmpty = YES;
 
+	__weak typeof(self) weakSelf = self;
+
 	self.proxyAddressTextField.validationBlock = ^NSString *(NSString *currentValue) {
-		NSInteger proxyType = self.proxyTypeButton.selectedTag;
+		NSInteger proxyType = weakSelf.proxyTypeButton.selectedTag;
 
 		if (proxyType == IRCConnectionProxyTypeSocks5 || proxyType == IRCConnectionProxyTypeHTTP) {
 			if (currentValue.isValidInternetAddress == NO) {
@@ -455,7 +465,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	self.proxyPortTextField.defaultValue = [NSString stringWithUnsignedInteger:IRCConnectionDefaultProxyPort];
 
 	self.proxyPortTextField.validationBlock = ^NSString *(NSString *currentValue) {
-		NSInteger proxyType = self.proxyTypeButton.selectedTag;
+		NSInteger proxyType = weakSelf.proxyTypeButton.selectedTag;
 
 		if (proxyType == IRCConnectionProxyTypeSocks5 || proxyType == IRCConnectionProxyTypeHTTP) {
 			if (currentValue.isValidInternetPort == NO) {
@@ -926,6 +936,8 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 		self.usernameTextField.stringValue = [TPCPreferences defaultUsername];
 	}
 
+	self.ctcpVersionReplyTextField.stringValue = (self.config.ctcpVersionReply ?: @"");
+
 	if (self.config.realName.length > 0) {
 		self.realNameTextField.stringValue = self.config.realName;
 	} else {
@@ -1069,6 +1081,10 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	self.config.nickname = self.nicknameTextField.value;
 	self.config.username = self.usernameTextField.value;
 	self.config.realName = self.realNameTextField.value;
+
+	NSString *ctcpVersionReply = self.ctcpVersionReplyTextField.value;
+
+	self.config.ctcpVersionReply = ((ctcpVersionReply.length > 0) ? ctcpVersionReply : nil);
 
 	self.config.awayNickname = self.awayNicknameTextField.value;
 

@@ -174,35 +174,110 @@ NS_ASSUME_NONNULL_BEGIN
 		self.channelViewURLMenu,
 		self.dockMenu,
 		self.encryptionManagerStatusMenu,
+		/* The channel and query menus are attached to the menu bar on
+		 demand, so they are not reachable from the main menu here. */
+		self.mainMenuChannelMenu,
+		self.mainMenuQueryMenu,
+		self.mainMenuNavigationChannelListMenu,
 		self.mainWindowSegmentedControllerCellMenu,
 		self.serverListNoSelectionMenu,
 		self.userControlMenu
 	];
 
-	NSImageSymbolConfiguration *configuration =
-		[NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
-														weight:NSFontWeightRegular
-														 scale:NSImageSymbolScaleMedium];
-
 	for (NSMenu *menu in menus) {
-		[self _applySymbolConfiguration:configuration toMenu:menu];
+		[self applySymbolsToMenu:menu];
 	}
+}
+
++ (NSImageSymbolConfiguration *)menuSymbolConfiguration
+{
+	return [NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
+														   weight:NSFontWeightRegular
+															scale:NSImageSymbolScaleMedium];
+}
+
+/* One instance so that a menu passed through more than once (copied
+ items end up in the web view's context menu, for example) can tell
+ the spacer apart from a real symbol. */
++ (NSImage *)menuSymbolSpacer
+{
+	static NSImage *spacer = nil;
+
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		NSImageSymbolConfiguration *configuration = [[self menuSymbolConfiguration]
+			configurationByApplyingConfiguration:[NSImageSymbolConfiguration
+													 configurationWithPaletteColors:@[ [NSColor clearColor] ]]];
+
+		spacer = [[NSImage imageWithSystemSymbolName:@"circle"
+							accessibilityDescription:nil] imageWithSymbolConfiguration:configuration];
+
+		spacer.template = NO;
+	});
+
+	return spacer;
+}
+
+- (void)applySymbolsToMenu:(nullable NSMenu *)menu
+{
+	[self _applySymbolConfiguration:[self.class menuSymbolConfiguration] toMenu:menu];
 }
 
 - (void)_applySymbolConfiguration:(NSImageSymbolConfiguration *)configuration toMenu:(nullable NSMenu *)menu
 {
+	BOOL hasSymbol = NO;
+
 	for (NSMenuItem *item in menu.itemArray) {
 		NSImage *image = item.image;
 
-		/* Only symbol images carry a configuration; other images
-		 (such as the formatting colour swatches) are left alone. */
-		if (image.symbolConfiguration != nil) {
-			item.image = [image imageWithSymbolConfiguration:configuration];
+		/* Symbols assigned in the nib are named after the system symbol;
+		 other images (such as the formatting colour swatches) are
+		 unnamed and left alone. The image is recreated from the name
+		 because a nib-loaded symbol does not reliably accept a new
+		 configuration. */
+		NSString *symbolName = image.name;
+
+		NSImage *symbol = nil;
+
+		if (image == [self.class menuSymbolSpacer]) {
+			/* Already padded on an earlier pass; the spacer is a named
+			 symbol too and must not be turned into a visible circle. */
+			hasSymbol = YES;
+		} else if (symbolName.length > 0) {
+			symbol = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:item.title];
+		}
+
+		if (symbol != nil) {
+			image = [symbol imageWithSymbolConfiguration:configuration];
+
+			item.image = image;
+
+			hasSymbol = YES;
 		}
 
 		if (item.hasSubmenu) {
 			[self _applySymbolConfiguration:configuration toMenu:item.submenu];
 		}
+	}
+
+	if (hasSymbol == NO) {
+		return;
+	}
+
+	/* AppKit only indents the title of items that have an image, so a menu
+	 that mixes items with and without symbols ends up with ragged titles.
+	 Items without a symbol get an invisible symbol with the same configuration,
+	 which keeps every title in the same column. A blank bitmap is not enough:
+	 macOS 26 treats an image that draws nothing as no image at all. */
+	NSImage *spacer = [self.class menuSymbolSpacer];
+
+	for (NSMenuItem *item in menu.itemArray) {
+		if (item.isSeparatorItem || item.image != nil) {
+			continue;
+		}
+
+		item.image = spacer;
 	}
 }
 
@@ -1746,12 +1821,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSImage *image = [NSImage imageWithSystemSymbolName:@"square.and.arrow.up" accessibilityDescription:title];
 
-	NSImageSymbolConfiguration *configuration =
-		[NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
-														weight:NSFontWeightRegular
-														 scale:NSImageSymbolScaleMedium];
-
-	menuItem.image = [image imageWithSymbolConfiguration:configuration];
+	menuItem.image = [image imageWithSymbolConfiguration:[self.class menuSymbolConfiguration]];
 
 	return menuItem;
 }

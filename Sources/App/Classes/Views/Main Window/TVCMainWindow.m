@@ -606,6 +606,8 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 		return;
 	}
 
+	[menuController() applySymbolsToMenu:menu];
+
 	NSView *anchor = sender;
 
 	[menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(0.0, NSHeight(anchor.bounds)) inView:anchor];
@@ -633,15 +635,32 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 			return menuItem;
 		};
 
-	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m1]"), @"checkmark.circle", @selector(markAllAsRead:), 402)];
-	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m2]"), @"bell.slash", @selector(toggleMuteOnNotifications:), 0)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m1]"),
+					   @"checkmark.circle",
+					   @selector(markAllAsRead:),
+					   MTMMViewMarkAllAsRead)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m2]"),
+					   @"bell.slash",
+					   @selector(toggleMuteOnNotifications:),
+					   MTMMFileDisableAllNotifications)];
 	[menu addItem:[NSMenuItem separatorItem]];
-	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m3]"), @"person.crop.circle", @selector(showAddressBook:), 813)];
-	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m4]"), @"arrow.down.circle", @selector(showFileTransfersWindow:), 817)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m3]"),
+					   @"person.crop.circle",
+					   @selector(showAddressBook:),
+					   MTMMWindowAddressBook)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m4]"),
+					   @"arrow.down.circle",
+					   @selector(showFileTransfersWindow:),
+					   MTMMWindowFileTransfers)];
 	[menu addItem:[NSMenuItem separatorItem]];
-	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m5]"), @"sidebar.right", @selector(toggleMemberListVisibility:), 802)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-m5]"),
+					   @"sidebar.right",
+					   @selector(toggleMemberListVisibility:),
+					   MTMMWindowToggleVisibilityOfMemberList)];
 	[menu addItem:[NSMenuItem separatorItem]];
-	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-st]"), @"gear", @selector(showPreferencesWindow:), 101)];
+	[menu addItem:item(TXTLS(@"TVCMainWindow[ib-st]"), @"gear", @selector(showPreferencesWindow:), MTMMAppPreferences)];
+
+	[menuController() applySymbolsToMenu:menu];
 
 	NSView *anchor = sender;
 
@@ -1211,8 +1230,11 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 				   navigationType:(TVCServerListNavigationMovementType)navigationType
 					selectionType:(TVCServerListNavigationSelectionType)selectionType
 {
-	NSParameterAssert(entryCount > 0);
-	NSParameterAssert(startingPoint >= 0);
+	/* Assertions are disabled in Release. With no rows the loop below
+	 never terminates; with NSNotFound as a starting point it overflows. */
+	if (entryCount <= 0 || startingPoint < 0 || startingPoint >= entryCount) {
+		return;
+	}
 
 	NSInteger currentPosition = startingPoint;
 
@@ -1305,10 +1327,16 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 - (void)navigateChannelEntriesWithinServerScope:(BOOL)isMovingDown
 							 withNavigationType:(TVCServerListNavigationMovementType)navigationType
 {
+	IRCClient *selectedClient = self.selectedClient;
+
+	if (selectedClient == nil) {
+		return;
+	}
+
 	NSArray *scannedRows = [self.serverList itemsFromParentGroup:self.selectedItem];
 
 	/* We add selected server so navigation falls within its scope if its the selected item */
-	scannedRows = [scannedRows arrayByAddingObject:self.selectedClient];
+	scannedRows = [scannedRows arrayByAddingObject:selectedClient];
 
 	[self navigateServerListEntries:scannedRows
 						 entryCount:scannedRows.count

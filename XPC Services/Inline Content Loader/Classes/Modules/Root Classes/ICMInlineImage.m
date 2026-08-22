@@ -89,6 +89,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSURL *url = [ICLHelpers URLWithString:address];
 
+	/* NSParameterAssert is compiled out in Release; an address that
+	 does not parse must not reach the loader. */
+	if (url == nil) {
+		[self cancel];
+
+		return;
+	}
+
 	[self performActionForURL:url bypassImageCheck:bypassImageCheck];
 }
 

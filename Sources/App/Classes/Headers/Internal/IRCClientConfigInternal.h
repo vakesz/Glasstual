@@ -74,6 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSArray<IRCServer *> *_serverList;
 	NSData *_identityClientSideCertificate;
 	NSString *_awayNickname;
+	NSString *_ctcpVersionReply;
 	NSString *_connectionName;
 	NSString *_nickname;
 	NSString *_nicknamePassword;

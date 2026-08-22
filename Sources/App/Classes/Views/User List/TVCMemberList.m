@@ -78,8 +78,15 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 
 	/* -viewDidMoveToWindow is not guaranteed to alternate between a window
 	 and nil. Remove any previous registration first so that moving within
-	 the same window does not leave duplicate observers behind. */
-	[RZNotificationCenter() removeObserver:self];
+	 the same window does not leave duplicate observers behind. Only our
+	 own names are removed; a blanket -removeObserver: would also drop
+	 the registrations AppKit keeps for the table itself. */
+	[RZNotificationCenter() removeObserver:self name:NSWindowDidBecomeKeyNotification object:nil];
+	[RZNotificationCenter() removeObserver:self name:NSWindowDidResignKeyNotification object:nil];
+	[RZNotificationCenter() removeObserver:self name:TVCMainWindowRedrawSubviewsNotification object:nil];
+	[RZNotificationCenter() removeObserver:self
+									  name:NSViewBoundsDidChangeNotification
+									object:[self scrollViewContentView]];
 
 	TVCMainWindow *mainWindow = self.mainWindow;
 
@@ -399,6 +406,10 @@ NSString *const TVCMemberListDragType = @"TVCMemberListDragType";
 	TVCMemberListCell *rowView = [self viewAtColumn:0 row:rowIndex makeIfNecessary:NO];
 
 	rowView.needsDisplay = YES;
+
+	/* The row view draws the selection, whose emphasis follows the
+	 window's key state. */
+	[self rowViewAtRow:rowIndex makeIfNecessary:NO].needsDisplay = YES;
 }
 
 - (void)refreshDrawingForMember:(IRCChannelUser *)cellItem
