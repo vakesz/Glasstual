@@ -264,7 +264,7 @@
                                                             <rect key="frame" x="1" y="1" width="248" height="158"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
-                                                                <tableView style="inset" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" id="nIO-jH-FEm">
+                                                                <tableView style="inset" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" viewBased="YES" id="nIO-jH-FEm">
                                                                     <rect key="frame" x="0.0" y="0.0" width="248" height="158"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                                     <size key="intercellSpacing" width="3" height="2"/>
@@ -283,9 +283,34 @@
                                                                                 <accessibility description="Highlight Keyword"/>
                                                                             </textFieldCell>
                                                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
-                                                                            <connections>
-                                                                                <binding destination="4310" name="value" keyPath="arrangedObjects.string" id="t3h-DG-Lfa"/>
-                                                                            </connections>
+                                                                            <prototypeCellViews>
+                                                                                <tableCellView id="tcv-01-001">
+                                                                                    <rect key="frame" x="1" y="1" width="206" height="17"/>
+                                                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                                                    <subviews>
+                                                                                        <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tfv-02-002">
+                                                                                            <rect key="frame" x="2" y="0.0" width="202" height="17"/>
+                                                                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" title="Table View Cell" id="tfc-03-003">
+                                                                                                <font key="font" metaFont="system"/>
+                                                                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                                                                <accessibility description="Highlight Keyword"/>
+                                                                                            </textFieldCell>
+                                                                                            <connections>
+                                                                                                <binding destination="tcv-01-001" name="value" keyPath="objectValue.string" id="bnd-04-004"/>
+                                                                                            </connections>
+                                                                                        </textField>
+                                                                                    </subviews>
+                                                                                    <constraints>
+                                                                                        <constraint firstItem="tfv-02-002" firstAttribute="centerY" secondItem="tcv-01-001" secondAttribute="centerY" id="cst-06-006"/>
+                                                                                        <constraint firstItem="tfv-02-002" firstAttribute="leading" secondItem="tcv-01-001" secondAttribute="leading" constant="2" id="cst-07-007"/>
+                                                                                        <constraint firstAttribute="trailing" secondItem="tfv-02-002" secondAttribute="trailing" constant="2" id="cst-08-008"/>
+                                                                                    </constraints>
+                                                                                    <connections>
+                                                                                        <outlet property="textField" destination="tfv-02-002" id="out-05-005"/>
+                                                                                    </connections>
+                                                                                </tableCellView>
+                                                                            </prototypeCellViews>
                                                                         </tableColumn>
                                                                     </tableColumns>
                                                                     <connections>
@@ -322,7 +347,7 @@
                                                             <rect key="frame" x="1" y="1" width="248" height="158"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
-                                                                <tableView style="inset" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" id="Vqz-0J-ajG">
+                                                                <tableView style="inset" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" viewBased="YES" id="Vqz-0J-ajG">
                                                                     <rect key="frame" x="0.0" y="0.0" width="248" height="158"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                                     <size key="intercellSpacing" width="3" height="2"/>
@@ -341,9 +366,34 @@
                                                                                 <accessibility description="Excluded Keyword"/>
                                                                             </textFieldCell>
                                                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
-                                                                            <connections>
-                                                                                <binding destination="4313" name="value" keyPath="arrangedObjects.string" id="d7y-Ha-dG2"/>
-                                                                            </connections>
+                                                                            <prototypeCellViews>
+                                                                                <tableCellView id="tcv-09-009">
+                                                                                    <rect key="frame" x="1" y="1" width="205" height="17"/>
+                                                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                                                    <subviews>
+                                                                                        <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tfv-10-010">
+                                                                                            <rect key="frame" x="2" y="0.0" width="201" height="17"/>
+                                                                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" title="Table View Cell" id="tfc-11-011">
+                                                                                                <font key="font" metaFont="system"/>
+                                                                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                                                                <accessibility description="Excluded Keyword"/>
+                                                                                            </textFieldCell>
+                                                                                            <connections>
+                                                                                                <binding destination="tcv-09-009" name="value" keyPath="objectValue.string" id="bnd-12-012"/>
+                                                                                            </connections>
+                                                                                        </textField>
+                                                                                    </subviews>
+                                                                                    <constraints>
+                                                                                        <constraint firstItem="tfv-10-010" firstAttribute="centerY" secondItem="tcv-09-009" secondAttribute="centerY" id="cst-14-014"/>
+                                                                                        <constraint firstItem="tfv-10-010" firstAttribute="leading" secondItem="tcv-09-009" secondAttribute="leading" constant="2" id="cst-15-015"/>
+                                                                                        <constraint firstAttribute="trailing" secondItem="tfv-10-010" secondAttribute="trailing" constant="2" id="cst-16-016"/>
+                                                                                    </constraints>
+                                                                                    <connections>
+                                                                                        <outlet property="textField" destination="tfv-10-010" id="out-13-013"/>
+                                                                                    </connections>
+                                                                                </tableCellView>
+                                                                            </prototypeCellViews>
                                                                         </tableColumn>
                                                                     </tableColumns>
                                                                     <connections>
@@ -4578,7 +4628,7 @@ A lower value is always better especially when in a large number of channels.</s
                                                                     </fragment>
                                                                     <fragment content="colors">
                                                                         <attributes>
-                                                                            <color key="NSColor" red="0.0095936315713639475" green="0.59505010166779315" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                                            <color key="NSColor" name="linkColor" catalog="System" colorSpace="catalog"/>
                                                                             <font key="NSFont" metaFont="cellTitle"/>
                                                                             <paragraphStyle key="NSParagraphStyle" alignment="left" lineBreakMode="wordWrapping" baseWritingDirection="natural" tighteningFactorForTruncation="0.0" allowsDefaultTighteningForTruncation="NO"/>
                                                                         </attributes>

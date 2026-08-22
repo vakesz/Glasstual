@@ -61,7 +61,7 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	/* Main menu - App menu */
 	MTMMAppAboutApp = 100,			   // "About Glasstual"
 	MTMMAppAboutAppSeparator = 101,	   // "-"
-	MTMMAppPreferences = 102,		   // "Preferences…"
+	MTMMAppPreferences = 102,		   // "Settings…"
 	MTMMAppPreferencesSeparator = 106, // "-"
 	MTMMAppServices = 107,			   // "Services"
 	MTMMAppServicesSeparator = 108,	   // "-"
@@ -220,7 +220,7 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	MTMMHelpAdvancedMenu = 910,									// "Advanced"
 	MTMMHelpAdvancedMenuEnableDeveloperMode = 9100000,			// "Enable Developer Mode"
 	MTMMHelpAdvancedMenuEnableDeveloperModeSeparator = 9100001, // "-"
-	MTMMHelpAdvancedMenuHiddenPreferences = 9100002,			// "Hidden Preferences…"
+	MTMMHelpAdvancedMenuHiddenPreferences = 9100002,			// "Hidden Settings…"
 	MTMMHelpAdvancedMenuHiddenPreferencesSeparator = 9100003,	// "-"
 	MTMMHelpAdvancedMenuExportPreferences = 9100004,			// "Export Preferences"
 	MTMMHelpAdvancedMenuImportPreferences = 9100005,			// "Import Preferences"
@@ -467,8 +467,6 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 
 - (IBAction)toggleChannelInviteMode:(nullable id)sender;
 - (IBAction)toggleChannelModerationMode:(nullable id)sender;
-
-- (IBAction)toggleFullscreen:(nullable id)sender;
 
 - (IBAction)toggleMainWindowAppearance:(nullable id)sender;
 - (IBAction)resetMainWindowAppearance:(nullable id)sender;

@@ -1028,7 +1028,7 @@ Gw
                         <rect key="frame" x="1" y="1" width="410" height="218"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <tableView tableStyle="fullWidth" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="Lh4-PC-UuF" id="1805" customClass="TVCBasicTableView">
+                            <tableView tableStyle="fullWidth" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="Lh4-PC-UuF" viewBased="YES" id="1805" customClass="TVCBasicTableView">
                                 <rect key="frame" x="0.0" y="0.0" width="410" height="190"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <size key="intercellSpacing" width="3" height="2"/>
@@ -1047,6 +1047,31 @@ Gw
                                             <accessibility description="Channel Name"/>
                                         </textFieldCell>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <prototypeCellViews>
+                                            <tableCellView identifier="name" id="tcv-01-001">
+                                                <rect key="frame" x="1" y="1" width="219" height="17"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tfv-02-002">
+                                                        <rect key="frame" x="2" y="0.0" width="215" height="17"/>
+                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="tfc-03-003">
+                                                            <font key="font" metaFont="system"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                            <accessibility description="Channel Name"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                </subviews>
+                                                <constraints>
+                                                    <constraint firstItem="tfv-02-002" firstAttribute="centerY" secondItem="tcv-01-001" secondAttribute="centerY" id="cst-05-005"/>
+                                                    <constraint firstItem="tfv-02-002" firstAttribute="leading" secondItem="tcv-01-001" secondAttribute="leading" constant="2" id="cst-06-006"/>
+                                                    <constraint firstAttribute="trailing" secondItem="tfv-02-002" secondAttribute="trailing" constant="2" id="cst-07-007"/>
+                                                </constraints>
+                                                <connections>
+                                                    <outlet property="textField" destination="tfv-02-002" id="out-04-004"/>
+                                                </connections>
+                                            </tableCellView>
+                                        </prototypeCellViews>
                                     </tableColumn>
                                     <tableColumn identifier="pass" editable="NO" width="108" minWidth="10" maxWidth="1000" id="1807">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Password">
@@ -1060,6 +1085,31 @@ Gw
                                             <accessibility description="Channel Password"/>
                                         </textFieldCell>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <prototypeCellViews>
+                                            <tableCellView identifier="pass" id="tcv-08-008">
+                                                <rect key="frame" x="1" y="1" width="108" height="17"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tfv-09-009">
+                                                        <rect key="frame" x="2" y="0.0" width="104" height="17"/>
+                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="tfc-10-010">
+                                                            <font key="font" metaFont="system"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                            <accessibility description="Channel Password"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                </subviews>
+                                                <constraints>
+                                                    <constraint firstItem="tfv-09-009" firstAttribute="centerY" secondItem="tcv-08-008" secondAttribute="centerY" id="cst-12-012"/>
+                                                    <constraint firstItem="tfv-09-009" firstAttribute="leading" secondItem="tcv-08-008" secondAttribute="leading" constant="2" id="cst-13-013"/>
+                                                    <constraint firstAttribute="trailing" secondItem="tfv-09-009" secondAttribute="trailing" constant="2" id="cst-14-014"/>
+                                                </constraints>
+                                                <connections>
+                                                    <outlet property="textField" destination="tfv-09-009" id="out-11-011"/>
+                                                </connections>
+                                            </tableCellView>
+                                        </prototypeCellViews>
                                     </tableColumn>
                                     <tableColumn identifier="join" editable="NO" width="36" minWidth="10" maxWidth="1000" id="1806">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Join">
@@ -1072,6 +1122,26 @@ Gw
                                             <accessibility description="Join Channel on Connect"/>
                                         </buttonCell>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <prototypeCellViews>
+                                            <tableCellView identifier="join" id="tcv-15-015">
+                                                <rect key="frame" x="1" y="1" width="36" height="17"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="btn-16-016">
+                                                        <rect key="frame" x="10" y="0.0" width="18" height="18"/>
+                                                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="only" alignment="center" inset="2" id="bcl-17-017">
+                                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                            <font key="font" metaFont="system"/>
+                                                            <accessibility description="Join Channel on Connect"/>
+                                                        </buttonCell>
+                                                    </button>
+                                                </subviews>
+                                                <constraints>
+                                                    <constraint firstItem="btn-16-016" firstAttribute="centerY" secondItem="tcv-15-015" secondAttribute="centerY" id="cst-18-018"/>
+                                                    <constraint firstItem="btn-16-016" firstAttribute="centerX" secondItem="tcv-15-015" secondAttribute="centerX" id="cst-19-019"/>
+                                                </constraints>
+                                            </tableCellView>
+                                        </prototypeCellViews>
                                     </tableColumn>
                                 </tableColumns>
                                 <connections>
@@ -1176,7 +1246,7 @@ Gw
                         <rect key="frame" x="1" y="1" width="410" height="218"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <tableView tableStyle="fullWidth" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="Gzo-0n-LCU" id="2454" customClass="TVCBasicTableView">
+                            <tableView tableStyle="fullWidth" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="Gzo-0n-LCU" viewBased="YES" id="2454" customClass="TVCBasicTableView">
                                 <rect key="frame" x="0.0" y="0.0" width="410" height="190"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <size key="intercellSpacing" width="3" height="2"/>
@@ -1195,6 +1265,31 @@ Gw
                                             <accessibility description="Highlight Keyword"/>
                                         </textFieldCell>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <prototypeCellViews>
+                                            <tableCellView identifier="keyword" id="tcv-20-020">
+                                                <rect key="frame" x="1" y="1" width="151" height="17"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tfv-21-021">
+                                                        <rect key="frame" x="2" y="0.0" width="147" height="17"/>
+                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="tfc-22-022">
+                                                            <font key="font" metaFont="system"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                            <accessibility description="Highlight Keyword"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                </subviews>
+                                                <constraints>
+                                                    <constraint firstItem="tfv-21-021" firstAttribute="centerY" secondItem="tcv-20-020" secondAttribute="centerY" id="cst-24-024"/>
+                                                    <constraint firstItem="tfv-21-021" firstAttribute="leading" secondItem="tcv-20-020" secondAttribute="leading" constant="2" id="cst-25-025"/>
+                                                    <constraint firstAttribute="trailing" secondItem="tfv-21-021" secondAttribute="trailing" constant="2" id="cst-26-026"/>
+                                                </constraints>
+                                                <connections>
+                                                    <outlet property="textField" destination="tfv-21-021" id="out-23-023"/>
+                                                </connections>
+                                            </tableCellView>
+                                        </prototypeCellViews>
                                     </tableColumn>
                                     <tableColumn identifier="type" editable="NO" width="80" minWidth="10" maxWidth="1000" id="2457" userLabel="Table Column - Entry Type">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Entry Type">
@@ -1208,6 +1303,31 @@ Gw
                                             <accessibility description="Highlight Match Type"/>
                                         </textFieldCell>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <prototypeCellViews>
+                                            <tableCellView identifier="type" id="tcv-27-027">
+                                                <rect key="frame" x="1" y="1" width="80" height="17"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tfv-28-028">
+                                                        <rect key="frame" x="2" y="0.0" width="76" height="17"/>
+                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="tfc-29-029">
+                                                            <font key="font" metaFont="system"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                            <accessibility description="Highlight Entry Type"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                </subviews>
+                                                <constraints>
+                                                    <constraint firstItem="tfv-28-028" firstAttribute="centerY" secondItem="tcv-27-027" secondAttribute="centerY" id="cst-31-031"/>
+                                                    <constraint firstItem="tfv-28-028" firstAttribute="leading" secondItem="tcv-27-027" secondAttribute="leading" constant="2" id="cst-32-032"/>
+                                                    <constraint firstAttribute="trailing" secondItem="tfv-28-028" secondAttribute="trailing" constant="2" id="cst-33-033"/>
+                                                </constraints>
+                                                <connections>
+                                                    <outlet property="textField" destination="tfv-28-028" id="out-30-030"/>
+                                                </connections>
+                                            </tableCellView>
+                                        </prototypeCellViews>
                                     </tableColumn>
                                     <tableColumn identifier="channel" editable="NO" width="132" minWidth="10" maxWidth="1000" id="2455">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Channel">
@@ -1221,6 +1341,31 @@ Gw
                                             <accessibility description="Channel Highlight Match is Restricted To"/>
                                         </textFieldCell>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <prototypeCellViews>
+                                            <tableCellView identifier="channel" id="tcv-34-034">
+                                                <rect key="frame" x="1" y="1" width="132" height="17"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tfv-35-035">
+                                                        <rect key="frame" x="2" y="0.0" width="128" height="17"/>
+                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="tfc-36-036">
+                                                            <font key="font" metaFont="system"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                            <accessibility description="Highlight Channel"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                </subviews>
+                                                <constraints>
+                                                    <constraint firstItem="tfv-35-035" firstAttribute="centerY" secondItem="tcv-34-034" secondAttribute="centerY" id="cst-38-038"/>
+                                                    <constraint firstItem="tfv-35-035" firstAttribute="leading" secondItem="tcv-34-034" secondAttribute="leading" constant="2" id="cst-39-039"/>
+                                                    <constraint firstAttribute="trailing" secondItem="tfv-35-035" secondAttribute="trailing" constant="2" id="cst-40-040"/>
+                                                </constraints>
+                                                <connections>
+                                                    <outlet property="textField" destination="tfv-35-035" id="out-37-037"/>
+                                                </connections>
+                                            </tableCellView>
+                                        </prototypeCellViews>
                                     </tableColumn>
                                 </tableColumns>
                                 <connections>
@@ -1319,7 +1464,7 @@ Gw
                         <rect key="frame" x="1" y="1" width="410" height="195"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView tableStyle="fullWidth" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" headerView="NHj-wb-YWi" id="1851" customClass="TVCBasicTableView">
+                            <tableView tableStyle="fullWidth" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" headerView="NHj-wb-YWi" viewBased="YES" id="1851" customClass="TVCBasicTableView">
                                 <rect key="frame" x="0.0" y="0.0" width="410" height="167"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <size key="intercellSpacing" width="3" height="2"/>
@@ -1338,6 +1483,31 @@ Gw
                                             <accessibility description="Address Book Entry"/>
                                         </textFieldCell>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <prototypeCellViews>
+                                            <tableCellView identifier="hostmask" id="tcv-41-041">
+                                                <rect key="frame" x="1" y="1" width="299" height="17"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tfv-42-042">
+                                                        <rect key="frame" x="2" y="0.0" width="295" height="17"/>
+                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="tfc-43-043">
+                                                            <font key="font" metaFont="system"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                            <accessibility description="Hostmask"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                </subviews>
+                                                <constraints>
+                                                    <constraint firstItem="tfv-42-042" firstAttribute="centerY" secondItem="tcv-41-041" secondAttribute="centerY" id="cst-45-045"/>
+                                                    <constraint firstItem="tfv-42-042" firstAttribute="leading" secondItem="tcv-41-041" secondAttribute="leading" constant="2" id="cst-46-046"/>
+                                                    <constraint firstAttribute="trailing" secondItem="tfv-42-042" secondAttribute="trailing" constant="2" id="cst-47-047"/>
+                                                </constraints>
+                                                <connections>
+                                                    <outlet property="textField" destination="tfv-42-042" id="out-44-044"/>
+                                                </connections>
+                                            </tableCellView>
+                                        </prototypeCellViews>
                                     </tableColumn>
                                     <tableColumn identifier="type" width="67" minWidth="10" maxWidth="3.4028234663852886e+38" id="1982">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Entry Type">
@@ -1351,6 +1521,31 @@ Gw
                                             <accessibility description="Address Book Entry Type"/>
                                         </textFieldCell>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <prototypeCellViews>
+                                            <tableCellView identifier="type" id="tcv-48-048">
+                                                <rect key="frame" x="1" y="1" width="67" height="17"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="tfv-49-049">
+                                                        <rect key="frame" x="2" y="0.0" width="63" height="17"/>
+                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="tfc-50-050">
+                                                            <font key="font" metaFont="system"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                            <accessibility description="Address Book Entry Type"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                </subviews>
+                                                <constraints>
+                                                    <constraint firstItem="tfv-49-049" firstAttribute="centerY" secondItem="tcv-48-048" secondAttribute="centerY" id="cst-52-052"/>
+                                                    <constraint firstItem="tfv-49-049" firstAttribute="leading" secondItem="tcv-48-048" secondAttribute="leading" constant="2" id="cst-53-053"/>
+                                                    <constraint firstAttribute="trailing" secondItem="tfv-49-049" secondAttribute="trailing" constant="2" id="cst-54-054"/>
+                                                </constraints>
+                                                <connections>
+                                                    <outlet property="textField" destination="tfv-49-049" id="out-51-051"/>
+                                                </connections>
+                                            </tableCellView>
+                                        </prototypeCellViews>
                                     </tableColumn>
                                 </tableColumns>
                                 <connections>

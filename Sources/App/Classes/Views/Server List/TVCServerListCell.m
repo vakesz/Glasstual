@@ -600,16 +600,6 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 	; // Do nothing for this...
 }
 
-/* AppKit only emphasizes a selection while the table is first responder.
- Focus in this window lives in the input text field almost all of the time,
- which would leave the selected item grey. Mail and Messages keep their
- sidebar selection in the accent colour while the window is key, and so
- does this one. */
-- (BOOL)isEmphasized
-{
-	return self.window.isKeyWindow;
-}
-
 - (void)setSelected:(BOOL)selected
 {
 	super.selected = selected;
@@ -624,6 +614,48 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 - (void)setNeedsDisplayOnChild
 {
 	self.childCell.needsDisplay = YES;
+}
+
+#pragma mark -
+#pragma mark Emphasis
+
+/* AppKit emphasizes a selection only while the window is key. Mail and
+ Finder keep the accent fill while a sheet or panel is key, so emphasis
+ follows main-window status instead. Both the getter and the background
+ style are overridden so that drawing and text colours agree regardless
+ of whether AppKit consults the accessor or the stored value. */
+- (BOOL)isEmphasized
+{
+	NSWindow *window = self.window;
+
+	if (window == nil) {
+		return super.isEmphasized;
+	}
+
+	return window.isMainWindow;
+}
+
+- (void)setEmphasized:(BOOL)emphasized
+{
+	NSWindow *window = self.window;
+
+	super.emphasized = ((window) ? window.isMainWindow : emphasized);
+
+	[self setNeedsDisplayOnChild];
+}
+
+- (void)refreshEmphasis
+{
+	self.emphasized = self.isEmphasized;
+}
+
+- (NSBackgroundStyle)interiorBackgroundStyle
+{
+	if (self.isSelected && self.isEmphasized) {
+		return NSBackgroundStyleEmphasized;
+	}
+
+	return super.interiorBackgroundStyle;
 }
 
 - (void)didAddSubview:(NSView *)subview

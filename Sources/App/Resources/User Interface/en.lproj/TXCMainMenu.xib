@@ -30,7 +30,6 @@
                 <outlet property="mainMenuQueryMenu" destination="6uP-Kf-gUN" id="QXL-LN-bey"/>
                 <outlet property="mainMenuQueryMenuItem" destination="d6g-it-Teq" id="BCp-Fd-2hl"/>
                 <outlet property="mainMenuServerMenuItem" destination="286" id="OSj-f8-vqi"/>
-                <outlet property="mainMenuWindowMenuItem" destination="19" id="w4D-Ns-fa4"/>
                 <outlet property="mainWindowSegmentedControllerCellMenu" destination="2953" id="oCb-R7-qbx"/>
                 <outlet property="muteNotificationsDockMenuItem" destination="dnc-ku-aQ3" id="Af9-tD-wlC"/>
                 <outlet property="muteNotificationsFileMenuItem" destination="QNy-Fk-SRO" id="nHn-Ki-RJX"/>
@@ -543,7 +542,7 @@
                             <menuItem title="Enter Full Screen" tag="409" keyEquivalent="f" id="1790" image="arrow.up.left.and.arrow.down.right">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                 <connections>
-                                    <action selector="toggleFullscreen:" target="267" id="v4x-I2-JVb"/>
+                                    <action selector="toggleFullScreen:" target="-1" id="v4x-I2-JVb"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -619,8 +618,8 @@ CA
                             <menuItem isSeparatorItem="YES" tag="511" id="303">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Add Channel…" tag="512" keyEquivalent="+" id="320" image="plus.circle">
-                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                            <menuItem title="Add Channel…" tag="512" id="320" image="plus.circle">
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="addChannel:" target="267" id="2619"/>
                                 </connections>
@@ -1158,13 +1157,13 @@ CA
                         <action selector="showChannelQuietList:" target="267" id="1cz-cj-aO6"/>
                     </connections>
                 </menuItem>
-                <menuItem isSeparatorItem="YES" tag="614" id="ELz-5M-mXc"/>
-                <menuItem title="Channel Properties…" tag="615" keyEquivalent="i" id="rP5-rz-Tdf" image="gearshape">
+                <menuItem isSeparatorItem="YES" tag="615" id="ELz-5M-mXc"/>
+                <menuItem title="Channel Properties…" tag="616" keyEquivalent="i" id="rP5-rz-Tdf" image="gearshape">
                     <connections>
                         <action selector="showChannelPropertiesSheet:" target="267" id="uB4-c9-8pW"/>
                     </connections>
                 </menuItem>
-                <menuItem isSeparatorItem="YES" tag="616" id="G83-kQ-M4p">
+                <menuItem isSeparatorItem="YES" tag="617" id="G83-kQ-M4p">
                     <connections>
                         <binding destination="TlT-Ik-3QP" name="hidden" keyPath="values.GlasstualDeveloperEnvironment" id="Oq2-DH-zfe">
                             <dictionary key="options">
@@ -1173,7 +1172,7 @@ CA
                         </binding>
                     </connections>
                 </menuItem>
-                <menuItem title="Copy Unique Identifier" tag="617" id="DuZ-FR-y17">
+                <menuItem title="Copy Unique Identifier" tag="618" id="DuZ-FR-y17">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="copyUniqueIdentifier:" target="267" id="AP7-Yd-CKd"/>

@@ -46,3 +46,5 @@
 "9sn-xp" = "Query with User %@";
 
 "k79-1a" = "Main Window"; // Main window title description
+
+"c4e-rr" = "Error"; // Error icon in validation popover

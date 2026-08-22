@@ -10,7 +10,7 @@
                 <outlet property="clearButton" destination="117" id="KoN-Uc-Nhi"/>
                 <outlet property="fileTransferTable" destination="xso-Ti-Pvf" id="qiD-QC-Rrt"/>
                 <outlet property="fileTransfersController" destination="5qZ-cx-fmP" id="muB-vK-w9U"/>
-                <outlet property="navigationControllerCell" destination="nY8-F3-7sa" id="LNN-nZ-NGY"/>
+                <outlet property="navigationControl" destination="fj7-Wr-P1f" id="LNN-nZ-NGY"/>
                 <outlet property="window" destination="5" id="oY6-kl-EqU"/>
             </connections>
         </customObject>
@@ -57,6 +57,7 @@
                                                     <subviews>
                                                         <progressIndicator wantsLayer="YES" maxValue="100" indeterminate="YES" controlSize="small" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="fkg-tB-oW2">
                                                             <rect key="frame" x="72" y="25" width="455" height="12"/>
+                                                            <accessibility description="Transfer progress"/>
                                                         </progressIndicator>
                                                         <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="749" translatesAutoresizingMaskIntoConstraints="NO" id="tvE-ly-KOo">
                                                             <rect key="frame" x="70" y="44" width="94" height="16"/>
@@ -80,6 +81,7 @@
                                                                 <constraint firstAttribute="width" secondItem="NYx-LB-DAM" secondAttribute="height" multiplier="1:1" id="W1B-VM-yBq"/>
                                                                 <constraint firstAttribute="height" constant="64" id="WBp-LA-De2"/>
                                                             </constraints>
+                                                            <accessibility description="File icon"/>
                                                             <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="yRx-w7-oXd"/>
                                                         </imageView>
                                                         <textField focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="qsO-pI-cPd">
@@ -190,6 +192,7 @@ Gw
                         <segmentedControl key="view" verticalHuggingPriority="750" id="fj7-Wr-P1f">
                             <rect key="frame" x="0.0" y="14" width="192" height="25"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <accessibility description="Filter transfers" title="Show"/>
                             <segmentedCell key="cell" borderStyle="border" alignment="left" style="texturedSquare" trackingMode="selectOne" id="nY8-F3-7sa">
                                 <font key="font" metaFont="system"/>
                                 <segments>

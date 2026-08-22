@@ -134,7 +134,10 @@ static NSInteger _cachedMessageCount = (-1);
 		return;
 	}
 
-	dockTile.badgeLabel = nil;
+	/* The system badge stays set to the combined count so that the Dock
+	 exposes it to assistive technology; the custom tile only adds the
+	 highlight badge underneath it. */
+	dockTile.badgeLabel = [self badgeStringForCount:(messageCount + highlightCount)];
 
 	TVCDockIconBadgeView *badgeView = (TVCDockIconBadgeView *)dockTile.contentView;
 
@@ -183,25 +186,15 @@ static NSInteger _cachedMessageCount = (-1);
 								  fraction:1.0];
 
 	/* Badge metrics are proportional to the tile so the result
-	 looks the same regardless of the dock magnification. */
+	 looks the same regardless of the dock magnification. The top
+	 right slot is left to the system badge (the combined count, see
+	 +drawWithHighlightCount:messageCount:); the highlight badge is
+	 drawn directly beneath it. */
 	CGFloat badgeHeight = floor(bounds.size.height * 0.26);
 	CGFloat separator = 1.0;
 
-	NSRect badgeFrame = NSMakeRect(0.0, (NSMaxY(bounds) - badgeHeight), 0.0, badgeHeight);
-
-	if (self.messageCount > 0) {
-		badgeFrame = [self drawBadgeWithCount:self.messageCount
-										color:[NSColor systemRedColor]
-									 topRight:NSMakePoint(NSMaxX(bounds), NSMaxY(badgeFrame))
-									   height:badgeHeight];
-	}
-
 	if (self.highlightCount > 0) {
-		CGFloat top = NSMaxY(bounds);
-
-		if (self.messageCount > 0) {
-			top = (NSMinY(badgeFrame) - separator);
-		}
+		CGFloat top = (NSMaxY(bounds) - badgeHeight - separator);
 
 		[self drawBadgeWithCount:self.highlightCount
 						   color:[NSColor systemGreenColor]

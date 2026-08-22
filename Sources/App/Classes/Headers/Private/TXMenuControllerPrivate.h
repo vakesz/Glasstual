@@ -74,7 +74,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)navigateToTreeItemWithIdentifier:(NSString *)identifier;
 - (void)navigateToTreeItem:(IRCTreeItem *)item;
 
-- (IBAction)emptyAction:(nullable id)sender GLASSTUAL_DEPRECATED("Do not target this method");
+/* No-op action. Menu items that only own a submenu target this so that
+ they take part in validation; nothing should call it directly. */
+- (IBAction)emptyAction:(nullable id)sender;
 @end
 
 @interface TXMenuControllerMainWindowProxy : NSObject

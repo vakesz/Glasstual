@@ -265,7 +265,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 		uint64_t currentSpeed = self.currentSpeed;
 
-		if (currentSpeed > 0) {
+		if (currentSpeed > 0 && self.totalFilesize > processedFilesize) {
 			timeRemaining = ((self.totalFilesize - processedFilesize) / currentSpeed);
 
 			if (timeRemaining > 0) {
