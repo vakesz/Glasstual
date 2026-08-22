@@ -896,23 +896,11 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 	[RZNotificationCenter() postNotificationName:TVCMainWindowRedrawSubviewsNotification object:self];
 }
 
-- (void)reloadViewControllerDrawings
-{
-	if (masterController().applicationIsTerminating) {
-		return;
-	}
-
-	for (IRCTreeItem *item in self.selectedItems) {
-		[item.viewController.backingView redrawViewIfNeeded];
-	}
-}
-
 #pragma mark -
 #pragma mark NSWindow Delegate
 
 - (void)windowDidDeminiaturize:(NSNotification *)notification
 {
-	//	[self reloadViewControllerDrawings];
 }
 
 - (void)windowDidChangeScreen:(NSNotification *)notification
@@ -954,8 +942,6 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 	}
 
 	[self reloadSubviewDrawings];
-
-	//	[self reloadViewControllerDrawings];
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification

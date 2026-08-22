@@ -84,7 +84,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)findString:(NSString *)searchString movingForward:(BOOL)movingForward;
 
 /* No-op. See implementation. */
-- (void)redrawViewIfNeeded;
 @end
 
 @interface TVCLogView (TVCLogViewJavaScriptHandlerPrivate)
