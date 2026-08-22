@@ -52,8 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *formatterMenu;
 @property(nonatomic, weak, readwrite) IBOutlet NSMenu *foregroundColorMenu;
 @property(nonatomic, weak, readwrite) IBOutlet NSMenu *backgroundColorMenu;
-@property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *foregroundColorSetMenuItem;
-@property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *backgroundColorSetMenuItem;
+@property(nonatomic, assign) BOOL observingColorPanel;
 
 - (IBAction)emptyAction:(nullable id)sender;
 @end
@@ -393,15 +392,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 		return;
 	} else if ([sender tag] == _formattingMenuHexColorMenuItemTag) {
-		NSColorPanel *colorPanel = [NSColorPanel sharedColorPanel];
-
-		[colorPanel setTarget:self];
-		[colorPanel setAction:@selector(foregroundColorPanelColorChanged:)];
-		colorPanel.showsAlpha = NO;
-		[colorPanel setMode:NSColorPanelModeColorList];
-		[colorPanel setColor:[NSColor formatterWhiteColor]];
-
-		[colorPanel orderFront:nil];
+		[self presentColorPanelWithAction:@selector(foregroundColorPanelColorChanged:)
+							 initialColor:[NSColor formatterWhiteColor]];
 
 		return;
 	}
@@ -420,15 +412,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 		return;
 	} else if ([sender tag] == _formattingMenuHexColorMenuItemTag) {
-		NSColorPanel *colorPanel = [NSColorPanel sharedColorPanel];
-
-		[colorPanel setTarget:self];
-		[colorPanel setAction:@selector(backgroundColorPanelColorChanged:)];
-		colorPanel.showsAlpha = NO;
-		[colorPanel setMode:NSColorPanelModeColorList];
-		[colorPanel setColor:[NSColor formatterBlackColor]];
-
-		[colorPanel orderFront:nil];
+		[self presentColorPanelWithAction:@selector(backgroundColorPanelColorChanged:)
+							 initialColor:[NSColor formatterBlackColor]];
 
 		return;
 	}
@@ -483,6 +468,46 @@ NS_ASSUME_NONNULL_BEGIN
 	[mutableStringCopy endEditing];
 
 	[self applyAttributedStringToTextBox:mutableStringCopy inRange:selectedTextRange];
+}
+
+/* The color panel is shared with every other user of it in the app.
+ While it is open on our behalf it sends its action to us; once it
+ closes the target and action are cleared so a later, unrelated
+ presentation does not keep formatting the input field. */
+- (void)presentColorPanelWithAction:(SEL)action initialColor:(NSColor *)initialColor
+{
+	NSColorPanel *colorPanel = [NSColorPanel sharedColorPanel];
+
+	colorPanel.target = self;
+	colorPanel.action = action;
+	colorPanel.showsAlpha = NO;
+	colorPanel.mode = NSColorPanelModeColorList;
+	colorPanel.color = initialColor;
+
+	if (self.observingColorPanel == NO) {
+		self.observingColorPanel = YES;
+
+		[RZNotificationCenter() addObserver:self
+								   selector:@selector(colorPanelWillClose:)
+									   name:NSWindowWillCloseNotification
+									 object:colorPanel];
+	}
+
+	[colorPanel orderFront:nil];
+}
+
+- (void)colorPanelWillClose:(NSNotification *)notification
+{
+	NSColorPanel *colorPanel = notification.object;
+
+	self.observingColorPanel = NO;
+
+	[RZNotificationCenter() removeObserver:self name:NSWindowWillCloseNotification object:colorPanel];
+
+	/* NSColorPanel has no target getter, so this cannot check whether
+	 another caller took the panel over in the meantime. */
+	[colorPanel setTarget:nil];
+	[colorPanel setAction:NULL];
 }
 
 - (void)foregroundColorPanelColorChanged:(NSColorPanel *)sender

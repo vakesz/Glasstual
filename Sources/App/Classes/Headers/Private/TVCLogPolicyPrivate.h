@@ -40,15 +40,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class TVCLogView;
 
-@interface TVCLogPolicy : NSObject
+/* The element the style last pointed at before asking for a context
+ menu or reporting a double click: a link, a nickname or a channel name.
+ The style sends these in a separate message ahead of the action, so
+ they are held per view (see -[TVCLogView contextMenuTarget]) and taken
+ by the policy at the moment the menu is built. Holding them on the
+ shared policy let two views interleave their messages. */
+@interface TVCLogPolicyTarget : NSObject
 @property(nonatomic, copy, nullable) NSString *anchorURL;
 @property(nonatomic, copy, nullable) NSString *channelName;
 @property(nonatomic, copy, nullable) NSString *nickname;
+@end
 
+/* One instance is shared by every web view. It holds no per-view state. */
+@interface TVCLogPolicy : NSObject
 - (void)displayContextMenuInWebView:(TVCLogView *)webView;
 
-- (void)channelNameDoubleClicked;
-- (void)nicknameDoubleClicked;
+- (void)channelNameDoubleClickedInWebView:(TVCLogView *)webView;
+- (void)nicknameDoubleClickedInWebView:(TVCLogView *)webView;
 - (void)topicBarDoubleClicked;
 
 - (void)webView2:(WKWebView *)webView

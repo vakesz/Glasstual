@@ -12,46 +12,22 @@
 				<integer>3</integer>
 				<key>value</key>
 				<string>controlTextColor</string>
-			</dict>			<key>noResultsTextColor</key>
+			</dict>
+			<key>noResultsTextColor</key>
 			<dict>
 				<key>type</key>
 				<integer>3</integer>
 				<key>value</key>
 				<string>secondaryLabelColor</string>
-			</dict>		</dict>
+			</dict>
+		</dict>
 		<key>Search Result</key>
 		<dict>
-			<key>rowEmphasized</key>
-			<true/>
 			<key>keyboardShortcutDeselectedOffset</key>
 			<integer>0</integer>
 			<key>keyboardShortcutSelectedOffset</key>
 			<integer>3</integer>
-			<key>channelNameTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>3</integer>
-				<key>value</key>
-				<string>labelColor</string>
-			</dict>			<key>channelDescriptionTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>3</integer>
-				<key>value</key>
-				<string>secondaryLabelColor</string>
-			</dict>			<key>keyboardShortcutTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>3</integer>
-				<key>value</key>
-				<string>labelColor</string>
-			</dict>			<key>selectedTextColor</key>
-			<dict>
-				<key>type</key>
-				<integer>3</integer>
-				<key>value</key>
-				<string>alternateSelectedControlTextColor</string>
-			</dict>		</dict>
+		</dict>
 	</dict>
 </dict>
 </plist>

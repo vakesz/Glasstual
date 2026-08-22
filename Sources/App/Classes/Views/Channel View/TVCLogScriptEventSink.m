@@ -741,18 +741,6 @@ NS_ASSUME_NONNULL_BEGIN
 			  withSelector:@selector(_serverIsConnected:)];
 }
 
-- (void)setAutomaticScrollingEnabled:(id)inputData inWebView:(id)webView
-{
-	[self processInputData:inputData
-				   forCaller:@"app.setAutomaticScrollingEnabled()"
-				   inWebView:webView
-				withSelector:@selector(_setAutomaticScrollingEnabled:)
-		minimumArgumentCount:1
-			  withValidation:^BOOL(NSUInteger argumentIndex, id argument) {
-				  return ([argument isKindOfClass:[NSNumber class]]);
-			  }];
-}
-
 - (void)setChannelName:(id)inputData inWebView:(id)webView
 {
 	[self processInputData:inputData
@@ -894,7 +882,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)_channelNameDoubleClicked:(TVCLogScriptEventSinkContext *)context
 {
-	[context.webViewPolicy channelNameDoubleClicked];
+	[context.webViewPolicy channelNameDoubleClickedInWebView:context.webView];
 }
 
 - (void)_displayContextMenu:(TVCLogScriptEventSinkContext *)context
@@ -1040,7 +1028,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)_nicknameDoubleClicked:(TVCLogScriptEventSinkContext *)context
 {
-	[context.webViewPolicy nicknameDoubleClicked];
+	[context.webViewPolicy nicknameDoubleClickedInWebView:context.webView];
 }
 
 - (void)_notifyJumpToLineCallback:(TVCLogScriptEventSinkContext *)context
@@ -1546,22 +1534,13 @@ NS_ASSUME_NONNULL_BEGIN
 	context.completionBlock(@(context.associatedClient.isLoggedIn));
 }
 
-- (void)_setAutomaticScrollingEnabled:(TVCLogScriptEventSinkContext *)context
-{
-	NSArray *arguments = context.arguments;
-
-	BOOL enabled = [[self.class objectValueToCommon:arguments[0]] boolValue];
-
-	[context.webView setAutomaticScrollingEnabled:enabled];
-}
-
 - (void)_setChannelName:(TVCLogScriptEventSinkContext *)context
 {
 	NSArray *arguments = context.arguments;
 
 	NSString *value = [self.class objectValueToCommon:arguments[0]];
 
-	context.webViewPolicy.channelName = value;
+	context.webView.contextMenuTarget.channelName = value;
 }
 
 - (void)_setNickname:(TVCLogScriptEventSinkContext *)context
@@ -1570,7 +1549,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *value = [self.class objectValueToCommon:arguments[0]];
 
-	context.webViewPolicy.nickname = value;
+	context.webView.contextMenuTarget.nickname = value;
 }
 
 - (void)_setSelection:(TVCLogScriptEventSinkContext *)context
@@ -1592,7 +1571,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *value = [self.class objectValueToCommon:arguments[0]];
 
-	context.webViewPolicy.anchorURL = value;
+	context.webView.contextMenuTarget.anchorURL = value;
 }
 
 - (void)_sidebarInversionIsEnabled:(TVCLogScriptEventSinkContext *)context

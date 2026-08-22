@@ -53,8 +53,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)changeScrollbackLimit;
 
-- (void)clearBackingView;
-
 - (void)reloadTheme;
 
 - (void)print:(TVCLogLine *)logLine;

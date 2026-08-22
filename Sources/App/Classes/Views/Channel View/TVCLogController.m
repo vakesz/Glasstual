@@ -94,7 +94,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable, readwrite) NSString *newestLineNumber;
 @property(nonatomic, strong, nullable) TVCLogLine *lastLine;
 @property(nonatomic, strong) NSMutableArray<NSString *> *highlightedLineNumbers;
-@property(nonatomic, strong) NSCache *jumpToLineCallbacks;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, void (^)(BOOL)> *jumpToLineCallbacks;
 @property(nonatomic, strong, readwrite) TVCLogView *backingView;
 @property(weak, readonly) IRCTreeItem *associatedItem;
 @property(nonatomic, weak, readwrite) IRCClient *associatedClient;
@@ -175,7 +175,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 
 	self.highlightedLineNumbers = [NSMutableArray new];
 
-	self.jumpToLineCallbacks = [NSCache new];
+	self.jumpToLineCallbacks = [NSMutableDictionary dictionary];
 }
 
 - (void)prepareForTermination:(BOOL)isTerminatingApplication
@@ -227,15 +227,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 - (void)buildBackingView
 {
 	self.backingView = [[TVCLogView alloc] initWithViewController:self];
-}
-
-- (void)rebuildBackingView
-{
-	[self buildBackingView];
-
-	if (self.visible) {
-		[self.attachedWindow updateChannelViewBoxContentViewSelection];
-	}
 }
 
 - (void)loadInitialDocument
@@ -424,8 +415,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 												  resultInfo:NULL];
 
 		[self _evaluateFunction:@"Glasstual.setTopicBarValue" withArguments:@[ topicString, topicTemplate ]];
-
-		[self.backingView redrawView];
 	};
 
 	_enqueueBlockStandalone(operationBlock)
@@ -612,8 +601,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		self.historyLoadedForFirstTime = YES;
 
 		[self notifyViewFinishedLoadingHistory];
-
-		[self.backingView redrawViewIfNeeded];
 	};
 
 	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
@@ -731,12 +718,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	[self _evaluateFunction:@"_Glasstual.notifyDidBecomeVisible" withArguments:nil];
 
 	[self maybeReloadHistory];
-
-	[self.backingView restoreScrollerPosition];
-
-	[self.backingView enableOffScreenUpdates];
-
-	[self.backingView redrawViewIfNeeded];
 }
 
 - (void)notifySelectionChanged
@@ -747,10 +728,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 - (void)notifyDidBecomeHidden
 {
 	[self _evaluateFunction:@"_Glasstual.notifyDidBecomeHidden" withArguments:nil];
-
-	[self.backingView saveScrollerPosition];
-
-	[self.backingView disableOffScreenUpdates];
 }
 
 - (void)notifyViewFinishedLoadingHistory
@@ -781,18 +758,9 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 {
 	NSParameterAssert(lineNumber != nil);
 
-	/* The Objective-C based automatic scroller relies on notifications of
-	 bounds and frame changes to know when a WebView scrolls. If the WebView
-	 is offscreen, then we have no way to know when a jump occurs because
-	 these notifications are not received. To workaround this, the JavaScript
-	 passes the scrolledToBottom argument. The Objective-C automatic scroller
-	 can then be passed this argument to know whether to perform automatic
-	 scrolling when the view becomes visible. */
-	if (successful) {
-		[self.backingView resetScrollerPositionTo:scrolledToBottom];
-	}
-
-	void (^callbackHandler)(BOOL) = [self.jumpToLineCallbacks objectForKey:lineNumber];
+	/* scrolledToBottom was consumed by the WebKit1 automatic scroller.
+	 The WebKit2 scroller lives in JavaScript and tracks this itself. */
+	void (^callbackHandler)(BOOL) = self.jumpToLineCallbacks[lineNumber];
 
 	if (callbackHandler == nil) {
 		return;
@@ -875,20 +843,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		return;
 	}
 
-	/* Unique list */
-	NSMutableArray<NSString *> *linksMatched = [NSMutableArray array];
-
-	NSMutableArray<TLOLinkParserResult *> *linksToProcess = [NSMutableArray array];
-
-	for (TLOLinkParserResult *link in mediaLinks) {
-		if ([linksMatched containsObject:link.stringValue]) {
-			continue;
-		}
-
-		[linksToProcess addObject:link];
-	}
-
-	[linksToProcess enumerateObjectsUsingBlock:^(TLOLinkParserResult *link, NSUInteger index, BOOL *stop) {
+	[mediaLinks enumerateObjectsUsingBlock:^(TLOLinkParserResult *link, NSUInteger index, BOOL *stop) {
 		[self processInlineMediaAtAddress:link.stringValue
 					 withUniqueIdentifier:link.uniqueIdentifier
 							 atLineNumber:lineNumber
@@ -1024,15 +979,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 }
 
 - (void)clear
-{
-	if (self.terminating) {
-		return;
-	}
-
-	[self clearWithReset:YES];
-}
-
-- (void)clearBackingView
 {
 	if (self.terminating) {
 		return;
@@ -1306,9 +1252,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 				[TVCLogControllerHistoricLogSharedInstance() writeNewEntryWithLogLine:logLine
 																			  forItem:self.associatedItem];
 			}
-
-			/* Redraw view if needed */
-			[self.backingView redrawViewIfNeeded];
 
 			/* Using information provided by conversation tracking we can update 
 			 our internal array of favored nicknames for nick completion. */
@@ -1733,7 +1676,13 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 
 - (void)logViewWebViewClosedUnexpectedly
 {
-	[self clearBackingView];
+	/* The web content process died. Reload the document without
+	 resetting the historic log so the history is replayed into it. */
+	if (self.terminating) {
+		return;
+	}
+
+	[self clearWithReset:NO];
 }
 
 - (void)logViewWebViewKeyDown:(NSEvent *)e
