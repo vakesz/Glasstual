@@ -150,6 +150,16 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	self->_lineType = [aDecoder decodeIntegerForKey:@"lineType"];
 	self->_memberType = [aDecoder decodeIntegerForKey:@"memberType"];
 
+	/* A line that was still pending when it was archived can no longer
+	 be resolved: the connection that sent it is gone. */
+	TVCLogLineDeliveryState deliveryState = [aDecoder decodeIntegerForKey:@"deliveryState"];
+
+	if (deliveryState == TVCLogLineDeliveryStatePending) {
+		deliveryState = TVCLogLineDeliveryStateNone;
+	}
+
+	self->_deliveryState = deliveryState;
+
 	self->_uniqueIdentifier = [aDecoder decodeStringForKey:@"uniqueIdentifier"];
 
 	self->_sessionIdentifier = [aDecoder decodeIntegerForKey:@"sessionIdentifier"];
@@ -217,6 +227,10 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	[aCoder encodeInteger:self.lineType forKey:@"lineType"];
 	[aCoder encodeInteger:self.memberType forKey:@"memberType"];
+
+	if (self.deliveryState != TVCLogLineDeliveryStateNone) {
+		[aCoder encodeInteger:self.deliveryState forKey:@"deliveryState"];
+	}
 
 	[aCoder encodeObject:self.uniqueIdentifier forKey:@"uniqueIdentifier"];
 
@@ -315,6 +329,27 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 - (NSString *)memberTypeString
 {
 	return [self.class stringForMemberType:self.memberType];
+}
+
++ (nullable NSString *)stringForDeliveryState:(TVCLogLineDeliveryState)state
+{
+	switch (state) {
+	case TVCLogLineDeliveryStatePending:
+		return @"pending";
+	case TVCLogLineDeliveryStateDelivered:
+		return @"delivered";
+	case TVCLogLineDeliveryStateFailed:
+		return @"failed";
+	case TVCLogLineDeliveryStateNone:
+		return nil;
+	}
+
+	return nil;
+}
+
+- (nullable NSString *)deliveryStateString
+{
+	return [self.class stringForDeliveryState:self.deliveryState];
 }
 
 - (NSString *)formattedTimestamp
@@ -441,6 +476,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	object->_lineType = self->_lineType;
 	object->_memberType = self->_memberType;
+	object->_deliveryState = self->_deliveryState;
 
 	object->_sessionIdentifier = self->_sessionIdentifier;
 }
@@ -464,6 +500,7 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 @dynamic isFirstForDay;
 @dynamic lineType;
 @dynamic memberType;
+@dynamic deliveryState;
 @dynamic messageBody;
 @dynamic messageIdentifier;
 @dynamic nickname;
@@ -554,6 +591,13 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 		self->_nickname = [nickname copy];
 
 		[self computeNicknameColorStyle];
+	}
+}
+
+- (void)setDeliveryState:(TVCLogLineDeliveryState)deliveryState
+{
+	if (self->_deliveryState != deliveryState) {
+		self->_deliveryState = deliveryState;
 	}
 }
 
