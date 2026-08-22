@@ -76,46 +76,6 @@ void XRExchangeInstanceMethod(NSString *className, NSString *originalMethod, NSS
 	}
 }
 
-void XRExchangeClassMethod(NSString *className, NSString *originalMethod, NSString *replacementMethod)
-{
-	NSCParameterAssert(className != nil);
-	NSCParameterAssert(originalMethod != nil);
-	NSCParameterAssert(replacementMethod != nil);
-
-	Class classClass = NSClassFromString(className);
-
-	Class class = object_getClass(classClass);
-
-	SEL originalSelector = NSSelectorFromString(originalMethod);
-	SEL swizzledSelector = NSSelectorFromString(replacementMethod);
-
-	Method originalMethodDcl = class_getClassMethod(class, originalSelector);
-	Method swizzledMethodDcl = class_getClassMethod(class, swizzledSelector);
-
-	if (originalMethodDcl == NULL || swizzledMethodDcl == NULL) {
-		LogToConsoleErrorWithSubsystem(_CSFrameworkInternalLogSubsystem(),
-			"Cannot swizzle -[%{public}@ %{public}@] with %{public}@: method not found",
-			className, originalMethod, replacementMethod);
-
-		return;
-	}
-
-	BOOL methodAdded =
-	class_addMethod(class,
-					originalSelector,
-					method_getImplementation(swizzledMethodDcl),
-					method_getTypeEncoding(swizzledMethodDcl));
-
-	if (methodAdded) {
-		class_replaceMethod(class,
-							swizzledSelector,
-							method_getImplementation(originalMethodDcl),
-							method_getTypeEncoding(originalMethodDcl));
-	} else {
-		method_exchangeImplementations(originalMethodDcl, swizzledMethodDcl);
-	}
-}
-
 #pragma mark -
 #pragma mark Validity
 
@@ -134,51 +94,8 @@ BOOL NSObjectIsEmpty(id _Nullable obj)
 	return NO;
 }
 
-BOOL NSObjectIsNotEmpty(id _Nullable obj)
-{
-	return (NSObjectIsEmpty(obj) == NO);
-}
-
 #pragma mark -
 #pragma mark Grand Central Dispatch
-
-dispatch_queue_t XRCreateDispatchQueueWithPriority(const char *label, dispatch_queue_attr_t attributes, dispatch_qos_class_t priority)
-{
-	dispatch_queue_attr_t queueAttributes = dispatch_queue_attr_make_with_qos_class(attributes, priority, 0);
-
-	return dispatch_queue_create(label, queueAttributes);
-}
-
-dispatch_queue_t XRCreateDispatchQueue(const char *label, dispatch_queue_attr_t attributes)
-{
-	return XRCreateDispatchQueueWithPriority(label, attributes, QOS_CLASS_UNSPECIFIED);
-}
-
-void XRPerformDelayedBlockOnGlobalQueue(dispatch_block_t block, NSTimeInterval delay)
-{
-	XRPerformDelayedBlockOnGlobalQueueWithPriority(block, delay, DISPATCH_QUEUE_PRIORITY_DEFAULT);
-}
-
-void XRPerformDelayedBlockOnGlobalQueueWithPriority(dispatch_block_t block, NSTimeInterval delay, dispatch_queue_priority_t priority)
-{
-	dispatch_queue_t workerQueue = dispatch_get_global_queue(priority, 0);
-
-	XRPerformDelayedBlockOnQueue(workerQueue, block, delay);
-}
-
-void XRPerformDelayedBlockOnMainQueue(dispatch_block_t block, NSTimeInterval delay)
-{
-	XRPerformDelayedBlockOnQueue(dispatch_get_main_queue(), block, delay);
-}
-
-void XRPerformDelayedBlockOnQueue(dispatch_queue_t queue, dispatch_block_t block, NSTimeInterval delay)
-{
-	NSCParameterAssert(delay >= 0);
-
-	dispatch_time_t timer = dispatch_time(DISPATCH_TIME_NOW, (delay * NSEC_PER_SEC));
-
-	dispatch_after(timer, queue, block);
-}
 
 dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueue(dispatch_block_t block, NSTimeInterval delay)
 {

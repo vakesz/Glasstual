@@ -18,3 +18,10 @@ because nothing links them.
 commit 10c16555305ea775cd4600f0f21594d868b26d6e) was also vendored here but has
 since been removed. Link detection now lives in
 `Sources/App/Classes/Library/TLOLinkParser.swift` on top of `NSDataDetector`.
+
+The framework bundle identifiers were renamed on 2026-08-22 from
+`com.codeux.frameworks.CocoaExtensions` / `com.codeux.frameworks.encryptionKit`
+to `com.vakesz.glasstual.frameworks.CocoaExtensions` /
+`com.vakesz.glasstual.frameworks.EncryptionKit` (project.yml, the os_log
+subsystem in XRLogging.m and the OTRKit cache path). Copyright notices and
+licence text are unchanged.

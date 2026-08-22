@@ -139,21 +139,6 @@ NS_ASSUME_NONNULL_BEGIN
 	return characterSet;
 }
 
-+ (NSCharacterSet *)ZeroToNineCharacterSet
-{
-	static NSCharacterSet *characterSet = nil;
-	
-	static dispatch_once_t onceToken;
-	
-	dispatch_once(&onceToken, ^{
-		characterSet =
-		[NSCharacterSet characterSetWithCharactersInString:
-		 @"0123456789"];
-	});
-	
-	return characterSet;
-}
-
 + (NSCharacterSet *)ZeroToNineDecimalCharacterSet
 {
 	static NSCharacterSet *characterSet = nil;

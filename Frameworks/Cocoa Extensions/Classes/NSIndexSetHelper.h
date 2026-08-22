@@ -33,8 +33,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NSIndexSet (CSIndexSetHelper)
-- (NSArray<NSNumber *> *)arrayFromIndexSet;
-
 - (NSIndexSet *)subsetWithMaximumIndexes:(NSUInteger)maximumNumberOfIndexes;
 @end
 

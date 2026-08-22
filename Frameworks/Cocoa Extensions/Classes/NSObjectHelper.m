@@ -58,46 +58,6 @@ NS_ASSUME_NONNULL_BEGIN
 	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:aSelector object:anArgument];
 }
 
-+ (void)performBlockOnMainThread:(DISPATCH_NOESCAPE dispatch_block_t)block
-{
-	XRPerformBlockSynchronouslyOnMainQueue(block);
-}
-
-- (void)performBlockOnMainThread:(DISPATCH_NOESCAPE dispatch_block_t)block
-{
-	XRPerformBlockSynchronouslyOnMainQueue(block);
-}
-
-+ (void)performBlockOnGlobalQueue:(dispatch_block_t)block
-{
-	XRPerformBlockAsynchronouslyOnGlobalQueue(block);
-}
-
-- (void)performBlockOnGlobalQueue:(dispatch_block_t)block
-{
-	XRPerformBlockAsynchronouslyOnGlobalQueue(block);
-}
-
-- (void)performBlockOnMainThread:(dispatch_block_t)block afterDelay:(NSTimeInterval)delay
-{
-	XRPerformDelayedBlockOnMainQueue(block, delay);
-}
-
-- (void)performBlockOnGlobalQueue:(dispatch_block_t)block afterDelay:(NSTimeInterval)delay
-{
-	XRPerformDelayedBlockOnGlobalQueue(block, delay);
-}
-
-+ (void)performBlockOnMainThread:(dispatch_block_t)block afterDelay:(NSTimeInterval)delay
-{
-	XRPerformDelayedBlockOnMainQueue(block, delay);
-}
-
-+ (void)performBlockOnGlobalQueue:(dispatch_block_t)block afterDelay:(NSTimeInterval)delay
-{
-	XRPerformDelayedBlockOnGlobalQueue(block, delay);
-}
-
 - (void)performSelectorInCommonModes:(SEL)aSelector afterDelay:(NSTimeInterval)delay
 {
 	[self performSelector:aSelector withObject:nil afterDelay:delay inModes:@[NSRunLoopCommonModes]];

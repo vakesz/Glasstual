@@ -115,11 +115,6 @@ NS_ASSUME_NONNULL_BEGIN
 	return [self doubleForKey:key orUseDefault:0];
 }
 
-- (float)floatForKey:(id)key
-{
-	return [self floatForKey:key orUseDefault:0];
-}
-
 - (nullable NSString *)stringForKey:(id)key
 {
 	return [self stringForKey:key orUseDefault:nil];
@@ -133,21 +128,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSArray *)arrayForKey:(id)key
 {
 	return [self arrayForKey:key orUseDefault:nil];
-}
-
-- (nullable void *)pointerForKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	@synchronized(self) {
-		id object = self[key];
-
-		if ([object isKindOfClass:[NSValue class]]) {
-			return [object pointerValue];
-		}
-
-		return nil;
-	}
 }
 
 - (nullable id)objectForKey:(id)key orUseDefault:(nullable id)defaultValue
@@ -360,21 +340,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (float)floatForKey:(id)key orUseDefault:(float)defaultValue
-{
-	NSParameterAssert(key != nil);
-
-	@synchronized(self) {
-		id object = self[key];
-
-		if ([object respondsToSelector:@selector(floatValue)]) {
-			return [object floatValue];
-		}
-
-		return defaultValue;
-	}
-}
-
 - (void)assignObjectTo:(__strong id *)pointer forKey:(id)key
 {
 	[self assignObjectTo:pointer forKey:key performCopy:YES];
@@ -432,30 +397,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)assignDictionaryTo:(__strong NSDictionary **)pointer forKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	NSDictionary *object = [self dictionaryForKey:key];
-
-	if (object) {
-		*pointer = [object copy];
-	}
-}
-
-- (void)assignIntegerTo:(NSInteger *)pointer forKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	@synchronized (self) {
-		id object = self[key];
-
-		if ([object isKindOfClass:[NSNumber class]]) {
-			*pointer = [object integerValue];
-		}
-	}
-}
-
 - (void)assignUnsignedIntegerTo:(NSUInteger *)pointer forKey:(id)key
 {
 	NSParameterAssert(key != nil);
@@ -465,19 +406,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 		if ([object isKindOfClass:[NSNumber class]]) {
 			*pointer = [object unsignedIntegerValue];
-		}
-	}
-}
-
-- (void)assignShortTo:(short *)pointer forKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	@synchronized (self) {
-		id object = self[key];
-
-		if ([object isKindOfClass:[NSNumber class]]) {
-			*pointer = [object shortValue];
 		}
 	}
 }
@@ -495,58 +423,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)assignLongTo:(long *)pointer forKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	@synchronized (self) {
-		id object = self[key];
-
-		if ([object isKindOfClass:[NSNumber class]]) {
-			*pointer = [object longValue];
-		}
-	}
-}
-
-- (void)assignUnsignedLongTo:(unsigned long *)pointer forKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	@synchronized (self) {
-		id object = self[key];
-
-		if ([object isKindOfClass:[NSNumber class]]) {
-			*pointer = [object unsignedLongValue];
-		}
-	}
-}
-
-- (void)assignLongLongTo:(long long *)pointer forKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	@synchronized (self) {
-		id object = self[key];
-
-		if ([object isKindOfClass:[NSNumber class]]) {
-			*pointer = [object longLongValue];
-		}
-	}
-}
-
-- (void)assignUnsignedLongLongTo:(unsigned long long *)pointer forKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	@synchronized (self) {
-		id object = self[key];
-
-		if ([object isKindOfClass:[NSNumber class]]) {
-			*pointer = [object unsignedLongLongValue];
-		}
-	}
-}
-
 - (void)assignDoubleTo:(double *)pointer forKey:(id)key
 {
 	NSParameterAssert(key != nil);
@@ -560,19 +436,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)assignFloatTo:(float *)pointer forKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	@synchronized (self) {
-		id object = self[key];
-
-		if ([object isKindOfClass:[NSNumber class]]) {
-			*pointer = [object floatValue];
-		}
-	}
-}
-
 - (BOOL)containsKey:(id)key
 {
 	NSParameterAssert(key != nil);
@@ -582,13 +445,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 	
-- (BOOL)containsKeyIgnoringCase:(id)key
-{
-	id caselessKey = [self keyIgnoringCase:key];
-	
-	return (caselessKey != nil);
-}
-
 - (nullable id)firstKeyForObject:(id)anObject
 {
 	NSParameterAssert(anObject != nil);
@@ -876,13 +732,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	NSParameterAssert(key != nil);
 
 	self[key] = @(value);
-}
-
-- (void)setPointer:(void *)value forKey:(id)key
-{
-	NSParameterAssert(key != nil);
-
-	self[key] = [NSValue valueWithPointer:value];
 }
 
 - (void)performSelectorOnObjectValueAndReplace:(SEL)performSelector

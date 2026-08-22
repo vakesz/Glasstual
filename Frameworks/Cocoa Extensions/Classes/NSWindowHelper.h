@@ -41,8 +41,6 @@ COCOA_EXTENSIONS_EXTERN NSString * const NSWindowAutosaveFrameMovesToActiveDispl
 
 - (void)exactlyCenterWindow;
 
-+ (nullable NSWindow *)windowBeneathMouse;
-
 @property (readonly) BOOL isBeneathMouse;
 
 @property (readonly) BOOL runningInHighResolutionMode;
@@ -53,9 +51,6 @@ COCOA_EXTENSIONS_EXTERN NSString * const NSWindowAutosaveFrameMovesToActiveDispl
 
 @property (readonly) NSRect titlebarFrame;
 
-- (void)saveWindowStateUsingKeyword:(NSString *)keyword;
-- (void)restoreWindowStateUsingKeyword:(NSString *)keyword;
-
 - (void)saveWindowStateForClass:(Class)owner;
 - (void)restoreWindowStateForClass:(Class)owner;
 
@@ -63,12 +58,7 @@ COCOA_EXTENSIONS_EXTERN NSString * const NSWindowAutosaveFrameMovesToActiveDispl
 - (void)saveSizeAsDefault;
 @property (nonatomic, assign) NSSize defaultSize;
 
-/* Returns the current frame, adjusted to the default size */
-/* Returns NSZeroRect if no default size is saved */
-@property (readonly) NSRect defaultFrame;
-
 /* Does nothing if no default size is saved */
-- (void)restoreDefaultSize; // display = YES
 - (void)restoreDefaultSizeAndDisplay:(BOOL)display;
 @end
 

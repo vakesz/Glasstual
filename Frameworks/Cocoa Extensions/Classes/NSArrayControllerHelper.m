@@ -44,17 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 	[self removeObjectsAtArrangedObjectIndexes:arrangedObjectsIndexSet];
 }
 
-- (void)replaceArrangedObject:(id)oldObject withObject:(id)newObject
-{
-	NSUInteger oldObjectIndex = [self.arrangedObjects indexOfObjectIdenticalTo:oldObject];
-
-	if (oldObjectIndex == NSNotFound) {
-		return;
-	}
-
-	[self replaceObjectAtArrangedObjectIndex:oldObjectIndex withObject:newObject];
-}
-
 - (void)replaceObjectAtArrangedObjectIndex:(NSUInteger)oldObjectIndex withObject:(id)newObject
 {
 	[self insertObject:newObject atArrangedObjectIndex:(oldObjectIndex + 1)];

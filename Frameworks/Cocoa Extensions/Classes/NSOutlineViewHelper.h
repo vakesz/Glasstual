@@ -33,7 +33,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NSOutlineView ()
-@property (nonatomic, assign) BOOL enableCustomReloadItemLogic;
 @end
 
 @interface NSOutlineView (CSOutlineViewHelper)
@@ -47,13 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable NSIndexSet *)indexesOfItemsInGroup:(id)groupItem;
 
-- (nullable id)parentForItemAtRow:(NSUInteger)row;
 @end
 
 @interface NSTableView (CSTableViewHelper)
 @property (readonly) NSInteger rowBeneathMouse;
-
-- (void)enumerateSelectedRowViewsUsingBlock:(void (NS_NOESCAPE ^)(__kindof NSTableRowView *rowView, NSInteger row, BOOL * _Nullable stop))handler;
 
 - (void)invalidateBackgroundForSelection; // See -[NSTableRowView invalidateSelectionBackground]
 @property (readonly) BOOL invalidatingBackgroundForSelection;
@@ -69,7 +65,6 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface NSTableRowView (CSTableRowViewHelper)
-@property (readonly, nullable) __kindof NSTableView *parentTableView;
 
 @property (readonly) BOOL invalidatingBackgroundForSelection;
 @end

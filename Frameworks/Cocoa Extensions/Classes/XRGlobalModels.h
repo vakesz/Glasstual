@@ -33,8 +33,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 COCOA_EXTENSIONS_EXTERN BOOL NSObjectIsEmpty(id _Nullable obj) COCOA_EXTENSIONS_DEPRECATED("Use -length or -count");
-COCOA_EXTENSIONS_EXTERN BOOL NSObjectIsNotEmpty(id _Nullable obj) COCOA_EXTENSIONS_DEPRECATED("Use -length or -count");
-
 COCOA_EXTENSIONS_INLINE
 BOOL NSObjectsAreEqual(id _Nullable obj1, id _Nullable obj2)
 {
@@ -84,18 +82,6 @@ void XRPerformBlockAsynchronouslyOnMainQueue(dispatch_block_t block)
 }
 
 COCOA_EXTENSIONS_INLINE
-void XRPerformBlockSynchronouslyOnGlobalQueueWithPriority(DISPATCH_NOESCAPE dispatch_block_t block, dispatch_queue_priority_t priority)
-{
-	XRPerformBlockSynchronouslyOnQueue(dispatch_get_global_queue(priority, 0), block);
-}
-
-COCOA_EXTENSIONS_INLINE
-void XRPerformBlockSynchronouslyOnGlobalQueue(DISPATCH_NOESCAPE dispatch_block_t block)
-{
-	XRPerformBlockSynchronouslyOnGlobalQueueWithPriority(block, DISPATCH_QUEUE_PRIORITY_DEFAULT);
-}
-
-COCOA_EXTENSIONS_INLINE
 void XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(dispatch_block_t block, dispatch_queue_priority_t priority)
 {
 	XRPerformBlockAsynchronouslyOnQueue(dispatch_get_global_queue(priority, 0), block);
@@ -107,9 +93,6 @@ void XRPerformBlockAsynchronouslyOnGlobalQueue(dispatch_block_t block)
 	XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(block, DISPATCH_QUEUE_PRIORITY_DEFAULT);
 }
 
-COCOA_EXTENSIONS_EXTERN dispatch_queue_t XRCreateDispatchQueue(const char *label, dispatch_queue_attr_t attributes);
-COCOA_EXTENSIONS_EXTERN dispatch_queue_t XRCreateDispatchQueueWithPriority(const char *label, dispatch_queue_attr_t attributes, dispatch_qos_class_t priority);
-
 COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueue(dispatch_block_t block, NSTimeInterval delay);
 COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueueWithPriority(dispatch_block_t block, NSTimeInterval delay, dispatch_queue_priority_t priority);
 COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnMainQueue(dispatch_block_t block, NSTimeInterval delay);
@@ -118,16 +101,8 @@ COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnQueue(dispa
 COCOA_EXTENSIONS_EXTERN void XRResumeScheduledBlock(dispatch_source_t blockSource);
 COCOA_EXTENSIONS_EXTERN void XRCancelScheduledBlock(dispatch_source_t blockSource);
 
-COCOA_EXTENSIONS_EXTERN void XRPerformDelayedBlockOnGlobalQueue(dispatch_block_t block, NSTimeInterval delay);
-COCOA_EXTENSIONS_EXTERN void XRPerformDelayedBlockOnGlobalQueueWithPriority(dispatch_block_t block, NSTimeInterval delay, dispatch_queue_priority_t priority);
-COCOA_EXTENSIONS_EXTERN void XRPerformDelayedBlockOnMainQueue(dispatch_block_t block, NSTimeInterval delay);
-
-COCOA_EXTENSIONS_EXTERN void XRPerformDelayedBlockOnQueue(dispatch_queue_t queue, dispatch_block_t block, NSTimeInterval delay);
-
 #pragma mark -
 #pragma mark Swizzling
 
 COCOA_EXTENSIONS_EXTERN void XRExchangeInstanceMethod(NSString *className, NSString *originalMethod, NSString *replacementMethod);
-COCOA_EXTENSIONS_EXTERN void XRExchangeClassMethod(NSString *className, NSString *originalMethod, NSString *replacementMethod);
-
 NS_ASSUME_NONNULL_END

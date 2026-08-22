@@ -43,17 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 	[self scrollRowToVisible:index];
 }
 
-- (void)enumerateSelectedRowViewsUsingBlock:(void (NS_NOESCAPE ^)(__kindof NSTableRowView *rowView, NSInteger row, BOOL * _Nullable stop))handler
-{
-	NSIndexSet *selectedRows = self.selectedRowIndexes;
-
-	[selectedRows enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
-		NSTableRowView *rowView = [self rowViewAtRow:index makeIfNecessary:NO];
-
-		handler(rowView, index, stop);
-	}];
-}
-
 - (void)invalidateBackgroundForSelection
 {
 	[self setInvalidatingBackgroundForSelection:YES];
@@ -249,13 +238,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 	return [NSIndexSet indexSetWithIndexesInRange:
 			NSMakeRange(itemFirstIndex, (itemLastIndex - itemFirstIndex + 1))];
-}
-
-- (nullable id)parentForItemAtRow:(NSUInteger)row
-{
-	id itemAtRow = [self itemAtRow:row];
-
-	return [self parentForItem:itemAtRow];
 }
 
 @end

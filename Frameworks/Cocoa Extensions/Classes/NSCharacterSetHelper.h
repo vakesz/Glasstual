@@ -73,7 +73,6 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  0123456789
  */
-@property (readonly, class, copy) NSCharacterSet *ZeroToNineCharacterSet;
 
 /**
  0123456789.

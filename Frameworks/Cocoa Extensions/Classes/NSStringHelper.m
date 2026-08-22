@@ -63,8 +63,6 @@
 
 #import <CommonCrypto/CommonDigest.h>
 
-#import <WebKit/WebKit.h>
-
 #include <arpa/inet.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -170,11 +168,6 @@ NSString * const CS_UnicodeReplacementCharacter = @"�";
 - (NSString *)substringAfterIndex:(NSUInteger)anIndex
 {
 	return [self substringFromIndex:(anIndex + 1)];
-}
-
-- (NSString *)substringBeforeIndex:(NSUInteger)anIndex
-{
-	return [self substringFromIndex:(anIndex - 1)];
 }
 
 - (NSString *)substringAtIndex:(NSInteger)atIndex toLength:(NSInteger)toLength
@@ -323,44 +316,11 @@ NSString * const CS_UnicodeReplacementCharacter = @"�";
     return output;
 }
 
-- (nullable NSString *)md5
-{
-    NSData *data = [self dataUsingEncoding:NSUTF8StringEncoding];
-
-	NSParameterAssert(data != nil);
-
-    uint8_t digest[CC_MD5_DIGEST_LENGTH];
-
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
-    CC_MD5(data.bytes, (CC_LONG)data.length, digest);
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
-
-    NSMutableString *output = [NSMutableString stringWithCapacity:(CC_MD5_DIGEST_LENGTH * 2)];
-
-    for (int i = 0; i < CC_MD5_DIGEST_LENGTH ; i++) {
-        [output appendFormat:@"%02x", digest[i]];
-    }
-
-    return output;
-}
-
 - (NSArray<NSString *> *)split:(NSString *)delimiter
 {
 	NSParameterAssert(delimiter != nil);
 
 	return [self componentsSeparatedByString:delimiter];
-}
-
-- (void)enumerateSplit:(NSString *)delimiter withBlock:(void (NS_NOESCAPE ^)(NSString *sequence, BOOL *stop))enumerationBlock
-{
-	NSParameterAssert(delimiter != nil);
-	NSParameterAssert(enumerationBlock != nil);
-
-	NSArray *sequences = [self componentsSeparatedByString:delimiter];
-
-	[sequences enumerateObjectsUsingBlock:^(NSString *sequence, NSUInteger idx, BOOL *stop) {
-		enumerationBlock(sequence, stop);
-	}];
 }
 
 - (void)enumerateSplitWithCharacterSet:(NSCharacterSet *)characterSet withBlock:(void (NS_NOESCAPE ^)(NSString *sequence, BOOL *stop))enumerationBlock
@@ -380,18 +340,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	NSParameterAssert(enumerationBlock != nil);
 
 	[self enumerateSplitWithCharacterSet:[NSCharacterSet newlineCharacterSet] withBlock:enumerationBlock];
-}
-
-- (NSArray<NSString *> *)splitWithCharacters:(NSString *)characters
-{
-	NSCharacterSet *characterSet = [NSCharacterSet characterSetWithCharactersInString:characters];
-
-	return [self splitWithCharacterSet:characterSet];
-}
-
-- (NSArray<NSString *> *)splitWithCharacterSet:(NSCharacterSet *)characterSet
-{
-	return [self componentsSeparatedByCharactersInSet:characterSet];
 }
 
 - (NSArray<NSString *> *)splitWithMaximumLength:(NSUInteger)maximumLength
@@ -430,11 +378,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 - (NSString *)trim
 {
 	return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-}
-
-- (NSString *)trimNewlines
-{
-	return [self stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]];
 }
 
 - (NSString *)trimCharacters:(NSString *)characters
@@ -501,20 +444,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 {
 	NSRange prefixRange = [self rangeOfString:aString options:(NSAnchoredSearch | NSLiteralSearch | NSCaseInsensitiveSearch)];
 	
-	return (prefixRange.location == 0 && prefixRange.length > 0);
-}
-
-- (BOOL)hasSuffixIgnoringCase:(NSString *)aString
-{
-	NSRange suffixRange = [self rangeOfString:aString options:(NSAnchoredSearch | NSLiteralSearch | NSCaseInsensitiveSearch | NSBackwardsSearch)];
-
-	return ((suffixRange.length + suffixRange.location) == self.length);
-}
-
-- (BOOL)hasPrefixWithCharacterSet:(NSCharacterSet *)characterSet
-{
-	NSRange prefixRange = [self rangeOfCharacterFromSet:characterSet options:NSAnchoredSearch];
-
 	return (prefixRange.location == 0 && prefixRange.length > 0);
 }
 
@@ -723,19 +652,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	}
 }
 
-- (NSString *)stringByDeletingPrefix:(NSString *)prefix
-{
-	if (self.length == 0) {
-		return self;
-	}
-
-	if ([self hasPrefix:prefix]) {
-		return [self substringFromIndex:prefix.length];
-	}
-	
-	return self;
-}
-
 - (BOOL)isIPAddress
 {
 	return (self.IPv4Address || self.IPv6Address);
@@ -834,16 +750,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 - (BOOL)isPositiveWholeNumber
 {
 	return [self contentsIsOfType:(CSStringTypeWholeNumber | CSStringTypePositiveNumber)];
-}
-
-- (BOOL)isPositiveDecimalNumber
-{
-	return [self contentsIsOfType:(CSStringTypeDecimalNumber | CSStringTypePositiveNumber)];
-}
-
-- (BOOL)isAnyPositiveNumber
-{
-	return [self contentsIsOfType:(CSStringTypeWholeNumber | CSStringTypeDecimalNumber | CSStringTypePositiveNumber)];
 }
 
 - (BOOL)isNumericOnly
@@ -969,62 +875,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	return [self containsCharactersFromCharacterSet:characterSet];
 }
 
-- (BOOL)onlyContainsCharacters:(NSString *)characters
-{
-	NSCharacterSet *characterSet = [NSCharacterSet characterSetWithCharactersInString:characters];
-
-	return [self onlyContainsCharactersFromCharacterSet:characterSet];
-}
-
-- (NSRange)rangeOfNextSegmentMatchingRegularExpression:(NSString *)regex startingAt:(NSUInteger)start
-{
-	NSParameterAssert(regex != nil);
-
-	NSRange emptyRange = NSEmptyRange();
-
-	NSUInteger stringLength = self.length;
-
-	if (stringLength == 0 || stringLength <= start) {
-		return emptyRange;
-	}
-	
-	NSString *searchString = [self substringFromIndex:start];
-	
-	NSRange searchRange = [XRRegularExpression string:searchString rangeOfRegex:regex];
-
-	if (searchRange.location == NSNotFound) {
-		return emptyRange;
-	}
-
-	emptyRange.location = (start + searchRange.location);
-	emptyRange.length = searchRange.length;
-
-	return emptyRange;
-}
-
-- (nullable NSURL *)URLUsingWebKitPasteboard
-{
-	if (self.length == 0) {
-		return nil;
-	}
-
-	NSPasteboard *pasteboard = [NSPasteboard pasteboardWithUniqueName];
-
-	pasteboard.stringContent = self;
-
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
-	NSURL *u = [WebView URLFromPasteboard:pasteboard];
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
-
-	if (u == nil) {
-		u = [NSURL URLWithString:self];
-	}
-
-	[pasteboard releaseGlobally];
-
-	return u;
-}
-
 - (NSDictionary<NSString *, NSString *> *)formDataUsingSeparator:(NSString *)separator
 {
 	return [self formDataUsingSeparator:separator decodingBlock:^NSString *(NSString *value) {
@@ -1071,38 +921,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	return [self formDataUsingSeparator:@"&" decodingBlock:^NSString *(NSString *value) {
 		return value.percentDecodedString;
 	}];
-}
-
-- (nullable NSString *)callStackSymbolMethodName
-{
-	if (self.length == 0) {
-		return nil;
-	}
-	
-	NSMutableArray *components = [[self splitWithCharacters:@" "] mutableCopy];
-
-	// Remove excessive blank lines between app name and memory address
-	[components removeObject:@""];
-
-	// 6 = symbol index, app name, memory address, method name, offset symbol (+), offset
-	if (components.count < 6) {
-		return nil;
-	}
-
-	/* To reconstruct the method name or function name, we
-	 start after the memory address and work our way up until
-	 the offset which is the last two indexes. */
-	NSMutableString *methodName = [NSMutableString string];
-
-	for (NSUInteger i = 3; i < (components.count - 2); i++) {
-		if (i != 3) {
-			[methodName appendString:@" "];
-		}
-
-		[methodName appendString:components[i]];
-	}
-
-	return [methodName copy];
 }
 
 - (NSString *)normalizeSpaces
@@ -1196,24 +1014,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 			[NSCharacterSet percentEncodedCharacterSet]];
 }
 
-- (nullable NSString *)percentEncodedURLUser
-{
-	return [self stringByAddingPercentEncodingWithAllowedCharacters:
-			[NSCharacterSet URLUserAllowedCharacterSet]];
-}
-
-- (nullable NSString *)percentEncodedURLPassword
-{
-	return [self stringByAddingPercentEncodingWithAllowedCharacters:
-			[NSCharacterSet URLPasswordAllowedCharacterSet]];
-}
-
-- (nullable NSString *)percentEncodedURLHost
-{
-	return [self stringByAddingPercentEncodingWithAllowedCharacters:
-			[NSCharacterSet URLHostAllowedCharacterSet]];
-}
-
 - (nullable NSString *)percentEncodedURLPath
 {
 	return [self stringByAddingPercentEncodingWithAllowedCharacters:
@@ -1226,12 +1026,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 			[NSCharacterSet URLQueryAllowedCharacterSet]];
 }
 
-- (nullable NSString *)percentEncodedURLFragment
-{
-	return [self stringByAddingPercentEncodingWithAllowedCharacters:
-			[NSCharacterSet URLFragmentAllowedCharacterSet]];
-}
-
 @end
 
 #pragma mark -
@@ -1239,24 +1033,9 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
 @implementation NSString (CSStringNumberHelper)
 
-+ (NSString *)stringWithChar:(char)value
-{
- return [NSString stringWithFormat:@"%c", value];
-}
-
 + (NSString *)stringWithUniChar:(UniChar)value
 {
 	return [NSString stringWithFormat:@"%C", value];
-}
-
-+ (NSString *)stringWithUnsignedChar:(unsigned char)value
-{
-	return [NSString stringWithFormat:@"%c", value];
-}
-
-+ (NSString *)stringWithShort:(short)value
-{
-	return [NSString stringWithFormat:@"%hi", value];
 }
 
 + (NSString *)stringWithUnsignedShort:(unsigned short)value
@@ -1264,54 +1043,14 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	return [NSString stringWithFormat:@"%hu", value];
 }
 
-+ (NSString *)stringWithInt:(int)value
-{
-	return [NSString stringWithFormat:@"%i", value];
-}
-
 + (NSString *)stringWithInteger:(NSInteger)value
 {
 	return [NSString stringWithFormat:@"%ld", value];
 }
 
-+ (NSString *)stringWithUnsignedInt:(unsigned int)value
-{
-	return [NSString stringWithFormat:@"%u", value];
-}
-
 + (NSString *)stringWithUnsignedInteger:(NSUInteger)value
 {
 	return [NSString stringWithFormat:@"%lu", value];
-}
-
-+ (NSString *)stringWithLong:(long)value
-{
-	return [NSString stringWithFormat:@"%ld", value];
-}
-
-+ (NSString *)stringWithUnsignedLong:(unsigned long)value
-{
-	return [NSString stringWithFormat:@"%lu", value];
-}
-
-+ (NSString *)stringWithLongLong:(long long)value
-{
-	return [NSString stringWithFormat:@"%qi", value];
-}
-
-+ (NSString *)stringWithUnsignedLongLong:(unsigned long long)value
-{
-	return [NSString stringWithFormat:@"%qu", value];
-}
-
-+ (NSString *)stringWithFloat:(float)value
-{
-	return [NSString stringWithFormat:@"%f", value];
-}
-
-+ (NSString *)stringWithDouble:(double)value
-{
-	return [NSString stringWithFormat:@"%f", value];
 }
 
 @end
@@ -1344,13 +1083,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 - (NSAttributedString *)attributedSubstringFromIndex:(NSUInteger)from
 {
 	NSRange range = NSMakeRange(from, (self.length - from));
-
-	return [self attributedSubstringFromRange:range];
-}
-
-- (NSAttributedString *)attributedSubstringToIndex:(NSUInteger)to
-{
-	NSRange range = NSMakeRange(0, (self.length - to));
 
 	return [self attributedSubstringFromRange:range];
 }
@@ -1455,11 +1187,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 #pragma mark Mutable Attributed String Helper
 
 @implementation NSMutableAttributedString (NSMutableAttributedStringHelper)
-
-+ (NSMutableAttributedString *)mutableAttributedString
-{
-	return [NSMutableAttributedString mutableAttributedStringWithString:@""];
-}
 
 + (NSMutableAttributedString *)mutableAttributedStringWithString:(NSString *)string
 {

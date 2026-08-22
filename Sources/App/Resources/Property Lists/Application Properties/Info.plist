@@ -30,8 +30,6 @@
 	<string>26.0</string>
 	<key>NSPrincipalClass</key>
 	<string>TXApplication</string>
-	<key>NSContactsUsageDescription</key>
-	<string>${PRODUCT_NAME} accesses contacts to automatically populate certain forms with your name and/or e-mail address. Access to this information is not required.</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>

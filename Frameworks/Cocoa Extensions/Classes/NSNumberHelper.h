@@ -32,11 +32,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define NSNumberWithBOOL(b)					[NSNumber numberWithBool:b]
-#define NSNumberWithLong(l)					[NSNumber numberWithLong:l]
-#define NSNumberWithInteger(i)				[NSNumber numberWithInteger:i]
-#define NSNumberWithLongLong(l)				[NSNumber numberWithLongLong:l]
-#define NSNumberWithDouble(d)				[NSNumber numberWithDouble:d]
 #define NSNumberInRange(n,s,e)				(n >= s && n <= e)
 
 COCOA_EXTENSIONS_INLINE BOOL CGFloatAreEqual(CGFloat firstValue, CGFloat secondValue)

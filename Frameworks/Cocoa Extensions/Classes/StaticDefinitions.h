@@ -32,23 +32,7 @@
 
 #define NSAssertReturn(c)								if ((c) == NO) { return; }
 #define NSAssertReturnR(c, r)							if ((c) == NO) { return (r); }
-#define NSAssertReturnLoopContinue(c)					if ((c) == NO) { continue; }
 #define NSAssertReturnLoopBreak(c)						if ((c) == NO) { break; }
-
-#define NSObjectIsEmptyAssert(o)						if (NSObjectIsEmpty(o)) { return; }
-#define NSObjectIsEmptyAssertReturn(o, r)				if (NSObjectIsEmpty(o)) { return (r); }
-#define NSObjectIsEmptyAssertLoopContinue(o)			if (NSObjectIsEmpty(o)) { continue; }
-#define NSObjectIsEmptyAssertLoopBreak(o)				if (NSObjectIsEmpty(o)) { break; }
-
-#define NSObjectIsNotEmptyAssert(o)						if (NSObjectIsNotEmpty(o)) { return; }
-#define NSObjectIsNotEmptyAssertReturn(o, r)			if (NSObjectIsNotEmpty(o)) { return (r); }
-#define NSObjectIsNotEmptyAssertLoopContinue(o)			if (NSObjectIsNotEmpty(o)) { continue; }
-#define NSObjectIsNotEmptyAssertLoopBreak(o)			if (NSObjectIsNotEmpty(o)) { break; }
-
-#define NSObjectIsKindOfClassAssert(o,c)				if ([(o) isKindOfClass:[c class]] == NO) { return; }
-#define NSObjectIsKindOfClassAssertReturn(o, c, r)		if ([(o) isKindOfClass:[c class]] == NO) { return (r); }
-#define NSObjectIsKindOfClassAssertContinue(o, c)		if ([(o) isKindOfClass:[c class]] == NO) { continue; }
-#define NSObjectIsKindOfClassAssertBreak(o,c)			if ([(o) isKindOfClass:[c class]] == NO) { break; }
 
 #define COCOA_EXTENSIONS_EXTERN							extern
 
@@ -73,19 +57,3 @@
 
 #define DESIGNATED_INITIALIZER_EXCEPTION_BODY_END	\
 	_Pragma("clang diagnostic pop")
-
-#ifndef DISPATCH_NOESCAPE
-	#if __has_attribute(noescape)
-		#define DISPATCH_NOESCAPE __attribute__((__noescape__))
-	#else
-		#define DISPATCH_NOESCAPE
-	#endif
-#endif
-
-#ifndef NS_NOESCAPE
-	#if __has_attribute(noescape)
-		#define NS_NOESCAPE __attribute__((noescape))
-	#else
-		#define NS_NOESCAPE
-	#endif
-#endif

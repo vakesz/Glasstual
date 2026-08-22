@@ -37,8 +37,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly, copy, nullable) NSFont *convertToItalics;
 
-- (BOOL)fontMatchesName:(NSString *)fontName;
-
 - (BOOL)fontTraitSet:(NSFontTraitMask)trait;
 @end
 
