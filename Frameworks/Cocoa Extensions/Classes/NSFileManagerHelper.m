@@ -83,24 +83,6 @@ typedef NS_ENUM(NSUInteger, CSFileManagerRemoveItemResult) {
 	return (existsResult && isDirectory);
 }
 
-- (BOOL)lockItemAtPath:(NSString *)path error:(NSError **)error
-{
-	NSParameterAssert(path != nil);
-
-	NSDictionary *newattrs = @{NSFileImmutable : @(YES)};
-
-	return [self setAttributes:newattrs	ofItemAtPath:path error:error];
-}
-
-- (BOOL)unlockItemAtPath:(NSString *)path error:(NSError **)error
-{
-	NSParameterAssert(path != nil);
-
-	NSDictionary *newattrs = @{NSFileImmutable : @(NO)};
-
-	return [self setAttributes:newattrs	ofItemAtPath:path error:error];
-}
-
 - (NSArray<NSString *> *)buildPathArrayWithPaths:(NSArray<NSString *> *)paths
 {
 	NSParameterAssert(paths != nil);
@@ -150,27 +132,6 @@ typedef NS_ENUM(NSUInteger, CSFileManagerRemoveItemResult) {
 	va_end(args);
 
 	return [self buildPathArrayWithPaths:pathObjects];
-}
-
-- (BOOL)replaceItemAtPath:(NSString *)destinationPath withItemAtPath:(NSString *)sourcePath
-{
-	return [self replaceItemAtPath:destinationPath
-					withItemAtPath:sourcePath
-						   options:(CSFileManagerOptionsMoveToTrash |
-									CSFileManagerOptionsRemoveIfExists)];
-}
-
-- (BOOL)replaceItemAtPath:(NSString *)destinationPath
-		   withItemAtPath:(NSString *)sourcePath
-				  options:(CSFileManagerOptions)options
-{
-	if (sourcePath == nil || destinationPath == nil) {
-		return NO;
-	}
-
-	return [self replaceItemAtURL:[NSURL fileURLWithPath:destinationPath]
-					withItemAtURL:[NSURL fileURLWithPath:sourcePath]
-						  options:options];
 }
 
 - (BOOL)replaceItemAtURL:(NSURL *)destinationURL withItemAtURL:(NSURL *)sourceURL

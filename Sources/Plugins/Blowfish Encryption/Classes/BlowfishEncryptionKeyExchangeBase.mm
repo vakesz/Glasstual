@@ -44,8 +44,6 @@
 
 #import "BlowfishEncryptionKeyExchangeBase.h"
 
-#import <CocoaExtensions/XRBase64Encoding.h>
-
 /* OpenSSL Header Files. */
 #include <openssl/sha.h>
 #include <openssl/dh.h>
@@ -318,7 +316,7 @@ static NSString *fishPrimeB64 =
 
 - (NSString *)base64Encode:(NSData *)input
 {
-	NSString *output = [XRBase64Encoding encodeData:input];
+	NSString *output = [input base64EncodedStringWithOptions:0];
 
 	if ([output length] < 1) {
 		return nil;
@@ -363,7 +361,7 @@ static NSString *fishPrimeB64 =
 		input = [input stringByAppendingString:@"="];
 	}
 
-	return [XRBase64Encoding decodeData:input];
+	return [[NSData alloc] initWithBase64EncodedString:input options:NSDataBase64DecodingIgnoreUnknownCharacters];
 }
 
 @end

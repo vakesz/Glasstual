@@ -77,11 +77,6 @@ typedef NS_OPTIONS(NSUInteger, CSFileManagerOptions) {
 - (BOOL)fileExistsAtURL:(NSURL *)url;
 
 - (BOOL)directoryExistsAtURL:(NSURL *)url;
-- (BOOL)directoryExistsAtPath:(NSString *)path;
-
-- (BOOL)lockItemAtPath:(NSString *)path error:(NSError **)error;
-- (BOOL)unlockItemAtPath:(NSString *)path error:(NSError **)error;
-
 - (NSArray<NSString *> *)buildPathArray:(NSString *)path, ...;
 
 /* Trash the individual items inside a directory instead of the directory itself. */
@@ -93,15 +88,8 @@ typedef NS_OPTIONS(NSUInteger, CSFileManagerOptions) {
 - (BOOL)mergeDirectoryAtURL:(NSURL *)sourceURL withDirectoryAtURL:(NSURL *)destinationURL options:(CSFileManagerOptions)options;
 
 // The following methods default to moving destination to trash + copying source
-- (BOOL)replaceItemAtPath:(NSString *)destinationPath
-		   withItemAtPath:(NSString *)sourcePath;
-
 - (BOOL)replaceItemAtURL:(NSURL *)destinationURL
 		   withItemAtURL:(NSURL *)sourceURL;
-
-- (BOOL)replaceItemAtPath:(NSString *)destinationPath
-		   withItemAtPath:(NSString *)sourcePath
-				  options:(CSFileManagerOptions)options;
 
 - (BOOL)replaceItemAtURL:(NSURL *)destinationURL
 		   withItemAtURL:(NSURL *)sourceURL

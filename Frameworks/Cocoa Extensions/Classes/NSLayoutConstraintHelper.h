@@ -38,7 +38,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) CGFloat archivedConstant;
 
 - (void)archiveConstant;
-- (void)archiveConstantAndZeroOut;
 - (void)restoreArchivedConstant;
 @end
 

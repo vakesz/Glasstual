@@ -47,34 +47,6 @@ COCOA_EXTENSIONS_EXTERN const tls_protocol_version_t tls_protocol_version_unknow
 COCOA_EXTENSIONS_EXTERN const tls_ciphersuite_t tls_ciphersuite_unknown;
 
 @interface RCMSecureTransport : NSObject
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
-/* Mapping is performed as follows:
-
-	kSSLProtocolUnknown = tls_protocol_version_unknown
-	kTLSProtocol1 = tls_protocol_version_TLSv10
-	kTLSProtocol11 = tls_protocol_version_TLSv11
-	kTLSProtocol12 = tls_protocol_version_TLSv12
-	kTLSProtocol13 = tls_protocol_version_TLSv13
-	kDTLSProtocol1 = tls_protocol_version_DTLSv10
-	kDTLSProtocol12 = tls_protocol_version_DTLSv12
-	kTLSProtocolMaxSupported = sec_protocol_options_get_default_max_tls_protocol_version()
-
- These protocols do not have an equivalent in tls_protocol_version_t.
- The const value tls_protocol_version_unknown will be returned for these.
- Please note tls_protocol_version_unknown is a custom value and will not
- be accepted by any Security.framework functions.
-
-	kSSLProtocol2
-	kSSLProtocol3
-	kSSLProtocol3Only
-	kTLSProtocol1Only
-	kSSLProtocolAll
- */
-+ (tls_protocol_version_t)protocolTypeFromDeprecated:(SSLProtocol)deprecatedProtocol;
-+ (nullable NSString *)descriptionForDeprecatedProtocol:(SSLProtocol)protocolVersion;
-@property (class, readonly) SSLProtocol minimumDeprecatedProtocol; // TLS 1.2
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
-
 @property (class, readonly) tls_protocol_version_t minimumProtocolType; // TLS 1.2
 
 + (nullable NSString *)descriptionForProtocolType:(tls_protocol_version_t)protocolType;
@@ -89,24 +61,16 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 + (NSArray<NSString *> *)descriptionsForCipherListCollection:(RCMCipherSuiteCollection)collection;
 + (NSArray<NSString *> *)descriptionsForCipherListCollection:(RCMCipherSuiteCollection)collection withProtocol:(BOOL)appendProtocol;
 
-+ (NSArray<NSString *> *)descriptionsForCipherSuites:(NSArray<NSNumber *> *)cipherSuites; // unsigned shorts
-+ (NSArray<NSString *> *)descriptionsForCipherSuites:(NSArray<NSNumber *> *)cipherSuites withProtocol:(BOOL)appendProtocol;
-
 + (NSArray<NSNumber *> *)cipherSuitesInCollection:(RCMCipherSuiteCollection)collection;
-+ (NSArray<NSNumber *> *)cipherSuitesInCollection:(RCMCipherSuiteCollection)collection
-								includeDeprecated:(BOOL)includeDeprecated;
 
 + (void)appendCipherSuitesInCollection:(RCMCipherSuiteCollection)collection
 					 includeDeprecated:(BOOL)includeDeprecated
 							 toOptions:(sec_protocol_options_t)protocolOptions;
 
 + (BOOL)isTLSError:(NSError *)error;
-+ (nullable NSString *)descriptionForError:(NSError *)error;
 /* -descriptionForErrorCode: returns "Unknown" for out of range error codes */
 + (NSString *)descriptionForErrorCode:(NSInteger)errorCode;
-+ (nullable NSString *)descriptionForBadCertificateError:(NSError *)error;
 + (nullable NSString *)descriptionForBadCertificateErrorCode:(NSInteger)errorCode;
-+ (BOOL)isBadCertificateError:(NSError *)error;
 + (BOOL)isBadCertificateErrorCode:(NSInteger)errorCode;
 
 + (nullable SecTrustRef)trustFromCertificateChain:(NSArray<NSData *> *)certificateChain withPolicyName:(NSString *)policyName CF_RETURNS_RETAINED;

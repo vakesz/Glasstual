@@ -36,71 +36,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation NSArray (CSArrayHelper)
 
-- (BOOL)boolAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object respondsToSelector:@selector(boolValue)]) {
-			return [object boolValue];
-		}
-
-		return NO;
-	}
-}
-
-- (nullable NSArray *)arrayAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object isKindOfClass:[NSArray class]]) {
-			return object;
-		}
-
-		return nil;
-	}
-}
-
-- (nullable NSString *)stringAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object isKindOfClass:[NSString class]]) {
-			return object;
-		}
-
-		return nil;
-	}
-}
-
-- (nullable NSDictionary *)dictionaryAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object isKindOfClass:[NSDictionary class]]) {
-			return object;
-		}
-
-		return nil;
-	}
-}
-
-- (NSInteger)integerAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object respondsToSelector:@selector(integerValue)]) {
-			return [object integerValue];
-		}
-
-		return 0;
-	}
-}
-
 - (NSUInteger)unsignedIntegerAtIndex:(NSUInteger)n
 {
 	@synchronized(self) {
@@ -108,84 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 		if ([object respondsToSelector:@selector(unsignedIntegerValue)]) {
 			return [object unsignedIntegerValue];
-		}
-
-		return 0;
-	}
-}
-
-- (short)shortAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object respondsToSelector:@selector(doubleValue)]) {
-			return [object shortValue];
-		}
-
-		return 0;
-	}
-}
-
-- (unsigned short)unsignedShortAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object respondsToSelector:@selector(doubleValue)]) {
-			return [object unsignedShortValue];
-		}
-
-		return 0;
-	}
-}
-
-- (long)longAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object respondsToSelector:@selector(doubleValue)]) {
-			return [object longValue];
-		}
-
-		return 0;
-	}
-}
-
-- (unsigned long)unsignedLongAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object respondsToSelector:@selector(doubleValue)]) {
-			return [object unsignedLongValue];
-		}
-
-		return 0;
-	}
-}
-
-- (long long)longLongAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object respondsToSelector:@selector(longLongValue)]) {
-			return [object longLongValue];
-		}
-
-		return 0;
-	}
-}
-
-- (unsigned long long)unsignedLongLongAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object respondsToSelector:@selector(doubleValue)]) {
-			return [object unsignedLongLongValue];
 		}
 
 		return 0;
@@ -202,32 +59,6 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		return 0;
-	}
-}
-
-- (float)floatAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object respondsToSelector:@selector(doubleValue)]) {
-			return [object floatValue];
-		}
-
-		return 0;
-	}
-}
-
-- (nullable void *)pointerAtIndex:(NSUInteger)n
-{
-	@synchronized(self) {
-		id object = self[n];
-
-		if ([object isKindOfClass:[NSValue class]]) {
-			return [object pointerValue];
-		}
-
-		return NULL;
 	}
 }
 
@@ -260,34 +91,6 @@ NS_ASSUME_NONNULL_BEGIN
 	return NSMakeRange(0, self.count);
 }
 
-- (NSArray *)arrayByRemovingObjectAtIndex:(NSUInteger)index
-{
-	if (self.count == 0) {
-		return self;
-	}
-
-	@synchronized(self) {
-		NSMutableArray *array = [self mutableCopy];
-
-		[array removeObjectAtIndex:index];
-
-		return [array copy];
-	}
-}
-
-- (NSMutableArray *)mutableSubarrayWithRange:(NSRange)range
-{
-	if (self.count == 0) {
-		return [NSMutableArray array];
-	}
-
-	@synchronized(self) {
-		NSArray *subarray = [self subarrayWithRange:range];
-
-		return [subarray mutableCopy];
-	}
-}
-
 - (NSArray *)stringArrayControllerObjects
 {
 	if (self.count == 0) {
@@ -312,11 +115,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSArray *)arrayByRemovingEmptyValues
 {
 	return [self arrayByRemovingEmptyValues:YES trimming:NO uniquing:NO];
-}
-
-- (NSArray *)arrayByUniquing
-{
-	return [self arrayByRemovingEmptyValues:NO trimming:NO uniquing:YES];
 }
 
 - (NSArray *)arrayByRemovingEmptyValuesAndUniquing
@@ -374,26 +172,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	}
 
 	return self[objectIndex];
-}
-
-- (NSArray *)objectsPassingTest:(BOOL (NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))predicate
-{
-	return [self objectsPassingTest:predicate withOptions:0];
-}
-
-- (NSArray *)objectsPassingTest:(BOOL (NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))predicate withOptions:(NSEnumerationOptions)options
-{
-	if (self.count == 0) {
-		return @[];
-	}
-
-	NSIndexSet *objectIndexes = [self indexesOfObjectsWithOptions:options passingTest:predicate];
-
-	if (objectIndexes.count == 0) {
-		return @[];
-	}
-
-	return [self objectsAtIndexes:objectIndexes];
 }
 
 - (void)enumerateSubarraysOfSize:(NSUInteger)subarraySize usingBlock:(void (NS_NOESCAPE ^)(NSArray *objects, BOOL *stop))block
@@ -468,126 +246,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	}
 }
 
-- (void)insertBool:(BOOL)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertInteger:(NSInteger)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertUnsignedInteger:(NSUInteger)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertShort:(short)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertUnsignedShort:(unsigned short)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertLong:(long)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertUnsignedLong:(unsigned long)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertLongLong:(long long)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertUnsignedLongLong:(unsigned long long)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertDouble:(double)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertFloat:(float)value atIndex:(NSUInteger)index
-{
-	[self insertObject:@(value) atIndex:index];
-}
-
-- (void)insertPointer:(void *)value atIndex:(NSUInteger)index
-{
-	[self insertObject:[NSValue valueWithPointer:value] atIndex:index];
-}
-
-- (void)addBool:(BOOL)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addInteger:(NSInteger)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addUnsignedInteger:(NSUInteger)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addShort:(short)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addUnsignedShort:(unsigned short)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addLong:(long)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addUnsignedLong:(unsigned long)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addLongLong:(long long)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addUnsignedLongLong:(unsigned long long)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addDouble:(double)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addFloat:(float)value
-{
-	[self addObject:@(value)];
-}
-
-- (void)addPointer:(void *)value
-{
-	[self addObject:[NSValue valueWithPointer:value]];
-}
-
 - (void)performSelectorOnObjectValueAndReplace:(SEL)performSelector
 {
 	NSParameterAssert(performSelector != NULL);
@@ -636,23 +294,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
 			[self exchangeObjectAtIndex:i withObjectAtIndex:n];
 		}
-	}
-}
-
-- (NSUInteger)insertSortedObject:(id)object usingComparator:(NSComparator)comparator
-{
-	NSParameterAssert(object != nil);
-	NSParameterAssert(comparator != NULL);
-
-	@synchronized(self) {
-		NSUInteger index = [self indexOfObject:object
-								 inSortedRange:self.range
-									   options:NSBinarySearchingInsertionIndex
-							   usingComparator:comparator];
-
-		[self insertObject:object atIndex:index];
-
-		return index;
 	}
 }
 

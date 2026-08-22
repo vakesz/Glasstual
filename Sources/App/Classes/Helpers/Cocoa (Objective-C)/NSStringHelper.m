@@ -631,7 +631,7 @@ return_method:
 
 	NSData *selfData = [self dataUsingEncoding:NSUTF8StringEncoding];
 
-	NSString *encodedString = [XRBase64Encoding encodeData:selfData];
+	NSString *encodedString = [selfData base64EncodedStringWithOptions:0];
 
 	return [encodedString splitWithMaximumLength:lineLength];
 }

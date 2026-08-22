@@ -46,8 +46,6 @@
 
 #import "NSDataHelper.h"
 
-#import <CocoaExtensions/XRBase64Encoding.h>
-
 #import <CommonCrypto/CommonCrypto.h>
 #import <CommonCrypto/CommonRandom.h>
 
@@ -301,7 +299,7 @@ cleanup_function:
 	NSData *encryptedData = _performCommonCryptoOperation(
 		kCCEncrypt, kCCAlgorithmBlowfish, kCCModeCBC, NO, nil, secretKeyData, objectToEncrypt);
 
-	return [XRBase64Encoding encodeData:encryptedData];
+	return [encryptedData base64EncodedStringWithOptions:0];
 }
 
 #pragma mark -
@@ -311,7 +309,8 @@ cleanup_function:
 {
 	NSData *secretKeyData = [secretKey dataUsingEncoding:dataEncoding];
 
-	NSData *rawInputData = [XRBase64Encoding decodeData:rawInput];
+	NSData *rawInputData = [[NSData alloc] initWithBase64EncodedString:rawInput
+															   options:NSDataBase64DecodingIgnoreUnknownCharacters];
 
 	NSData *decryptedData = _performCommonCryptoOperation(
 		kCCDecrypt, kCCAlgorithmBlowfish, kCCModeCBC, NO, nil, secretKeyData, rawInputData);

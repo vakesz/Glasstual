@@ -33,16 +33,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface XRRegularExpression : NSObject
-+ (NSArray *)matchesInString:(NSString *)haystack withRegex:(NSString *)needle; // caseless = NO, substring = NO
-+ (NSArray *)matchesInString:(NSString *)haystack withRegex:(NSString *)needle withoutCase:(BOOL)caseless; // substring = NO
 + (NSArray *)matchesInString:(NSString *)haystack withRegex:(NSString *)needle withoutCase:(BOOL)caseless substringGroups:(BOOL)substringGroups;
 
 + (NSUInteger)matches:(NSArray * _Nullable * _Nonnull)matches inString:(NSString *)haystack withRegex:(NSString *)needle; // caseless = NO, substring = NO
 + (NSUInteger)matches:(NSArray * _Nullable * _Nonnull)matches inString:(NSString *)haystack withRegex:(NSString *)needle withoutCase:(BOOL)caseless; // substring = NO
 + (NSUInteger)matches:(NSArray * _Nullable * _Nonnull)matches inString:(NSString *)haystack withRegex:(NSString *)needle withoutCase:(BOOL)caseless substringGroups:(BOOL)substringGroups;
-
-+ (NSUInteger)totalNumberOfMatchesInString:(NSString *)haystack withRegex:(NSString *)needle; // caseless = NO
-+ (NSUInteger)totalNumberOfMatchesInString:(NSString *)haystack withRegex:(NSString *)needle withoutCase:(BOOL)caseless;
 
 + (BOOL)string:(NSString *)haystack isMatchedByRegex:(NSString *)needle; // caseless = NO
 + (BOOL)string:(NSString *)haystack isMatchedByRegex:(NSString *)needle withoutCase:(BOOL)caseless;
