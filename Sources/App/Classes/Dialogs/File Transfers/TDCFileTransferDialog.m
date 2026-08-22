@@ -76,6 +76,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable) NSURL *downloadDestinationURLPrivate;
 @property(nonatomic, strong, nullable) id keyDownEventMonitor;
 @property(nonatomic, copy) NSArray<NSURL *> *previewItems;
+@property(nonatomic, strong) NSMutableArray<TDCFileTransferDialogIPAddressBlock> *IPAddressCompletionBlocks;
 
 - (IBAction)hideWindow:(nullable id)sender;
 
@@ -143,6 +144,8 @@ NS_ASSUME_NONNULL_BEGIN
 	if ((self = [super init])) {
 		self.previewItems = @[];
 
+		self.IPAddressCompletionBlocks = [NSMutableArray array];
+
 		[self prepareInitialState];
 	}
 
@@ -159,6 +162,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self installKeyDownEventMonitor];
 
+	/* Transfer controllers own their state on the main queue and the
+	 array controller is only ever enumerated there, so the timer lives
+	 on the main queue as well. */
 	self.maintenanceTimer = [TLOTimer
 		timerWithActionBlock:^(TLOTimer *sender) {
 			[self onMaintenanceTimer];
@@ -922,8 +928,10 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Timer
 
-- (void)updateMaintenanceTimerOnMainThread
+- (void)updateMaintenanceTimer
 {
+	dispatch_assert_queue(dispatch_get_main_queue());
+
 	NSArray *activeFileTransfers = [self activeFileTransfers];
 
 	if (self.maintenanceTimer.timerIsActive) {
@@ -937,21 +945,10 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 }
 
-- (void)updateMaintenanceTimer
-{
-	/* Called from transfer controllers on their socket dispatch queue.
-	 The main thread may be waiting on that queue, so never block here. */
-	if ([NSThread isMainThread]) {
-		[self updateMaintenanceTimerOnMainThread];
-	} else {
-		XRPerformBlockAsynchronouslyOnMainQueue(^{
-			[self updateMaintenanceTimerOnMainThread];
-		});
-	}
-}
-
 - (void)onMaintenanceTimer
 {
+	dispatch_assert_queue(dispatch_get_main_queue());
+
 	NSArray *activeFileTransfers = [self activeFileTransfers];
 
 	for (TDCFileTransferDialogTransferController *fileTransfer in activeFileTransfers) {
@@ -1012,6 +1009,47 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[self.IPAddressRequest cancelLookup];
 	self.IPAddressRequest = nil;
+
+	[self flushIPAddressCompletionBlocks:nil];
+}
+
+- (void)requestIPAddress:(TDCFileTransferDialogIPAddressBlock)completionBlock
+{
+	NSParameterAssert(completionBlock != nil);
+
+	dispatch_assert_queue(dispatch_get_main_queue());
+
+	NSString *address = self.IPAddress;
+
+	if (address) {
+		completionBlock(address);
+
+		return;
+	}
+
+	TXFileTransferIPAddressMethodDetection detectionMethod = [TPCPreferences fileTransferIPAddressDetectionMethod];
+
+	if (detectionMethod == TXFileTransferIPAddressMethodManual ||
+		detectionMethod == TXFileTransferIPAddressMethodRouterOnly) {
+		completionBlock(nil);
+
+		return;
+	}
+
+	[self.IPAddressCompletionBlocks addObject:completionBlock];
+
+	[self requestIPAddress];
+}
+
+- (void)flushIPAddressCompletionBlocks:(nullable NSString *)address
+{
+	NSArray *completionBlocks = [self.IPAddressCompletionBlocks copy];
+
+	[self.IPAddressCompletionBlocks removeAllObjects];
+
+	for (TDCFileTransferDialogIPAddressBlock completionBlock in completionBlocks) {
+		completionBlock(address);
+	}
 }
 
 - (void)requestIPAddress
@@ -1040,6 +1078,8 @@ NS_ASSUME_NONNULL_BEGIN
 	}];
 
 	self.IPAddressRequest = nil;
+
+	[self flushIPAddressCompletionBlocks:address];
 }
 
 - (void)internetAddressLookupFailed
@@ -1053,6 +1093,8 @@ NS_ASSUME_NONNULL_BEGIN
 	}];
 
 	self.IPAddressRequest = nil;
+
+	[self flushIPAddressCompletionBlocks:nil];
 }
 
 #pragma mark -
@@ -1214,6 +1256,10 @@ NS_ASSUME_NONNULL_BEGIN
 			limitScopeToSenders:(BOOL)limitScopeToSenders
 {
 	NSParameterAssert(enumerationBlock != nil);
+
+	/* NSArrayController is not thread safe and the controllers it holds
+	 are main queue objects. */
+	dispatch_assert_queue(dispatch_get_main_queue());
 
 	for (TDCFileTransferDialogTransferController *fileTransfer in self.fileTransfersController.arrangedObjects) {
 		if (limitScope && limitScopeToSenders != fileTransfer.isSender) {

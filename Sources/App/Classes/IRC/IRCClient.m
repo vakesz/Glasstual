@@ -119,6 +119,7 @@
 #import "TDCAlert.h"
 #import "TDCChannelBanListSheetPrivate.h"
 #import "TDCFileTransferDialogPrivate.h"
+#import "IRCDirectChatConnectionPrivate.h"
 #import "TDCFileTransferDialogTransferControllerPrivate.h"
 #import "TDCServerChannelListDialogPrivate.h"
 #import "TDCServerHighlightListSheetPrivate.h"
@@ -614,7 +615,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	NSMutableArray<IRCChannelConfig *> *channelList = [NSMutableArray array];
 
 	for (IRCChannel *channel in self.channelList) {
-		if (channel.isUtility) {
+		if (channel.isUtility || channel.isDirectChat) {
 			continue;
 		}
 
@@ -3044,6 +3045,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		return;
 	}
 
+	if (channel.isDirectChat) {
+		[self sendDirectChatText:string asCommand:command toChannel:channel];
+
+		return;
+	}
+
 	NSString *commandToSend = nil;
 
 	TVCLogLineType lineType = TVCLogLineTypeUndefined;
@@ -3512,6 +3519,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		[self partChannel:targetChannel];
 
 		[self forceJoinChannel:targetChannel.name password:targetChannel.secretKey];
+
+		break;
+	}
+	case IRCLocalCommandDcc: // Command: DCC
+	{
+		[self handleDCCCommand:stringIn command:command targetChannel:targetChannel];
 
 		break;
 	}
@@ -4996,6 +5009,17 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		if (isSecretMessage == NO && lineType == TVCLogLineTypeAction && targetChannel) {
 			if (targetChannel.isUtility) {
 				[self printDebugInformation:TXTLS(@"sxf-qx")];
+
+				break;
+			}
+
+			/* Direct chats never touch the IRC server. */
+			if (targetChannel.isDirectChat) {
+				if (stringIn.length == 0) {
+					[stringIn replaceCharactersInRange:NSMakeRange(0, 0) withString:@" "];
+				}
+
+				[self sendDirectChatText:stringIn asCommand:IRCRemoteCommandPrivmsgAction toChannel:targetChannel];
 
 				break;
 			}
@@ -12817,6 +12841,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	NSString *subcommand = textMutable.uppercaseGetToken;
 
+	if ([subcommand isEqualToString:@"CHAT"]) {
+		[self receivedDCCChatQuery:sender text:textMutable];
+
+		return;
+	}
+
 	BOOL isSendRequest = ([subcommand isEqualToString:@"SEND"]);
 	BOOL isResumeRequest = ([subcommand isEqualToString:@"RESUME"]);
 	BOOL isAcceptRequest = ([subcommand isEqualToString:@"ACCEPT"]);
@@ -12877,21 +12907,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		transferToken = section5;
 
 		/* Translate host address */
-		if (section2.numericOnly) {
-			long long a = section2.longLongValue;
-
-			NSInteger w = (a & 0xff);
-			a >>= 8;
-			NSInteger x = (a & 0xff);
-			a >>= 8;
-			NSInteger y = (a & 0xff);
-			a >>= 8;
-			NSInteger z = (a & 0xff);
-
-			hostAddress = [NSString stringWithFormat:@"%ld.%ld.%ld.%ld", (long)z, (long)y, (long)x, (long)w];
-		} else {
-			hostAddress = section2;
-		}
+		hostAddress = [self DCCAddressFromString:section2];
 	} else if (isResumeRequest || isAcceptRequest) {
 		filename = section1.safeFilename;
 
@@ -13177,6 +13193,15 @@ present_error:
 		return nil;
 	}
 
+	return [self DCCFormattedAddress:address];
+}
+
+/* DCC carries IPv4 addresses as a single unsigned integer and IPv6
+ addresses in their textual form. */
+- (nullable NSString *)DCCFormattedAddress:(NSString *)address
+{
+	NSParameterAssert(address != nil);
+
 	if (address.IPv6Address) {
 		return address;
 	}
@@ -13205,6 +13230,452 @@ present_error:
 	a |= z;
 
 	return [NSString stringWithFormat:@"%llu", a];
+}
+
+/* Inverse of -DCCFormattedAddress: — an integer becomes dotted IPv4,
+ anything else (IPv6, or a client that sent dotted IPv4) is kept. */
+- (NSString *)DCCAddressFromString:(NSString *)string
+{
+	NSParameterAssert(string != nil);
+
+	if (string.numericOnly == NO) {
+		return string;
+	}
+
+	unsigned long long a = strtoull(string.UTF8String, NULL, 10);
+
+	unsigned long w = (a & 0xff);
+	a >>= 8;
+	unsigned long x = (a & 0xff);
+	a >>= 8;
+	unsigned long y = (a & 0xff);
+	a >>= 8;
+	unsigned long z = (a & 0xff);
+
+	return [NSString stringWithFormat:@"%lu.%lu.%lu.%lu", z, y, x, w];
+}
+
+#pragma mark -
+#pragma mark DCC CHAT
+
+/* The server list entry for a direct chat is named after the peer with
+ a leading "=" (the mIRC convention) so it never collides with a query. */
+- (NSString *)directChatChannelNameForNickname:(NSString *)nickname
+{
+	NSParameterAssert(nickname != nil);
+
+	return [@"=" stringByAppendingString:nickname];
+}
+
+- (nullable IRCChannel *)directChatChannelForConnection:(IRCDirectChatConnection *)connection
+{
+	NSParameterAssert(connection != nil);
+
+	for (IRCChannel *channel in self.channelList) {
+		if (channel.isDirectChat && channel.directChatConnection == connection) {
+			return channel;
+		}
+	}
+
+	return nil;
+}
+
+- (nullable IRCChannel *)directChatChannelForNickname:(NSString *)nickname
+{
+	NSParameterAssert(nickname != nil);
+
+	IRCChannel *channel = [self findChannel:[self directChatChannelNameForNickname:nickname]];
+
+	if (channel.isDirectChat) {
+		return channel;
+	}
+
+	return nil;
+}
+
+- (void)handleDCCCommand:(NSMutableAttributedString *)stringIn
+				 command:(NSString *)command
+		   targetChannel:(nullable IRCChannel *)targetChannel
+{
+	NSParameterAssert(stringIn != nil);
+	NSParameterAssert(command != nil);
+
+	NSString *subcommand = stringIn.uppercaseGetToken;
+
+	if ([subcommand isEqualToString:@"CHAT"]) {
+		if (self.isLoggedIn == NO) {
+			[self printDebugInformationToConsole:TXTLS(@"IRC[6rj-2r]")];
+
+			return;
+		}
+
+		NSString *nickname = stringIn.tokenAsString;
+
+		/* "/dcc chat" inside a query or a direct chat targets that user. */
+		if (nickname.length == 0) {
+			if (targetChannel.isPrivateMessage) {
+				nickname = targetChannel.name;
+			} else if (targetChannel.isDirectChat) {
+				nickname = targetChannel.directChatConnection.peerNickname ?: [targetChannel.name substringFromIndex:1];
+			}
+		}
+
+		if (nickname.length == 0 || [self stringIsNickname:nickname] == NO) {
+			[self printInvalidSyntaxMessageForCommand:command];
+
+			return;
+		}
+
+		[self startDirectChatWithNickname:nickname];
+
+		return;
+	}
+
+	if ([subcommand isEqualToString:@"SEND"]) {
+		NSString *nickname = stringIn.tokenAsString;
+
+		NSString *path = stringIn.string.trim.stringByExpandingTildeInPath;
+
+		if (nickname.length == 0 || [self stringIsNickname:nickname] == NO || path.length == 0) {
+			[self printInvalidSyntaxMessageForCommand:command];
+
+			return;
+		}
+
+		if ([[self fileTransferController] addSenderForClient:self nickname:nickname path:path autoOpen:YES] == nil) {
+			[self printDebugInformation:TXTLS(@"IRC[dcc-s1]", path)];
+		}
+
+		return;
+	}
+
+	[self printInvalidSyntaxMessageForCommand:command];
+}
+
+/* DCC CHAT chat <address> <port> [token]
+ A port of 0 with a token is a passive (reverse) request: the peer
+ cannot listen so we do, and tell them where through the same CTCP. */
+- (void)receivedDCCChatQuery:(NSString *)sender text:(NSMutableString *)text
+{
+	NSParameterAssert(sender != nil);
+	NSParameterAssert(text != nil);
+
+	NSString *protocol = text.uppercaseGetToken;
+
+	NSString *addressString = text.token;
+	NSString *portString = text.token;
+	NSString *transferToken = text.token;
+
+	if ([transferToken hasPrefix:@"T"]) {
+		transferToken = [transferToken substringFromIndex:1];
+	}
+
+	if (transferToken.length == 0) {
+		transferToken = nil;
+	}
+
+	NSInteger port = portString.integerValue;
+
+	if ([protocol isEqualToString:@"CHAT"] == NO || addressString.length == 0 || portString.numericOnly == NO ||
+		port < 0 || port > TXMaximumTCPPort || (port == 0 && transferToken == nil) ||
+		(transferToken && transferToken.numericOnly == NO)) {
+		[self print:TXTLS(@"IRC[y3w-la]", sender)
+				   by:nil
+			inChannel:nil
+			   asType:TVCLogLineTypeDCCFileTransfer
+			  command:TVCLogLineDefaultCommandValue];
+
+		return;
+	}
+
+	NSString *address = [self DCCAddressFromString:addressString];
+
+	if (port > 0 && address.isIPAddress == NO) {
+		[self print:TXTLS(@"IRC[y3w-la]", sender)
+				   by:nil
+			inChannel:nil
+			   asType:TVCLogLineTypeDCCFileTransfer
+			  command:TVCLogLineDefaultCommandValue];
+
+		return;
+	}
+
+	/* A token with a real port is the reply to a passive request.
+	 Glasstual never makes those, so there is nothing to match it to. */
+	if (port > 0 && transferToken) {
+		IRCChannel *existing = [self directChatChannelForNickname:sender];
+
+		if (existing.directChatConnection.state != IRCDirectChatConnectionStateListening) {
+			LogToConsoleError("Received passive DCC CHAT reply from '%{public}@' without a matching request", sender);
+
+			return;
+		}
+	}
+
+	[self print:TXTLS(@"IRC[dcc-c1]", sender)
+			   by:nil
+		inChannel:nil
+		   asType:TVCLogLineTypeDCCFileTransfer
+		  command:TVCLogLineDefaultCommandValue];
+
+	[TDCAlert alertSheetWithWindow:mainWindow()
+							  body:TXTLS(@"Prompts[dcc-c2]", sender)
+							 title:TXTLS(@"Prompts[dcc-c3]", sender)
+					 defaultButton:TXTLS(@"Prompts[dcc-c4]")
+				   alternateButton:TXTLS(@"Prompts[dcc-c5]")
+					   otherButton:nil
+				   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
+					   if (buttonClicked != TDCAlertResponseDefault) {
+						   [self print:TXTLS(@"IRC[dcc-c6]", sender)
+									  by:nil
+							   inChannel:nil
+								  asType:TVCLogLineTypeDCCFileTransfer
+								 command:TVCLogLineDefaultCommandValue];
+
+						   return;
+					   }
+
+					   if (self.isLoggedIn == NO) {
+						   return;
+					   }
+
+					   if (port == 0) {
+						   [self openDirectChatWithNickname:sender listeningWithToken:transferToken];
+					   } else {
+						   [self openDirectChatWithNickname:sender address:address port:(uint16_t)port];
+					   }
+				   }];
+}
+
+- (void)startDirectChatWithNickname:(NSString *)nickname
+{
+	NSParameterAssert(nickname != nil);
+
+	if ([self nicknameIsMyself:nickname]) {
+		return;
+	}
+
+	[self openDirectChatWithNickname:nickname listeningWithToken:nil];
+}
+
+- (IRCChannel *)prepareDirectChatChannelForNickname:(NSString *)nickname
+{
+	IRCChannel *channel = [self findChannelOrCreate:[self directChatChannelNameForNickname:nickname]
+											 asType:IRCChannelTypeDirectChat];
+
+	/* A second chat with the same user replaces the first. */
+	[channel closeDirectChatConnection];
+
+	if (channel.isActive) {
+		[channel deactivate];
+	}
+
+	return channel;
+}
+
+- (void)openDirectChatWithNickname:(NSString *)nickname address:(NSString *)address port:(uint16_t)port
+{
+	IRCChannel *channel = [self prepareDirectChatChannelForNickname:nickname];
+
+	IRCDirectChatConnection *connection =
+		[IRCDirectChatConnection connectionToPeer:nickname
+										  address:address
+											 port:port
+										 onClient:self
+										 delegate:(id<IRCDirectChatConnectionDelegate>)self];
+
+	channel.directChatConnection = connection;
+
+	[self printDebugInformation:TXTLS(@"IRC[dcc-c7]", nickname, address, port) inChannel:channel];
+
+	[mainWindow() select:channel];
+
+	[connection open];
+}
+
+- (void)openDirectChatWithNickname:(NSString *)nickname listeningWithToken:(nullable NSString *)transferToken
+{
+	IRCChannel *channel = [self prepareDirectChatChannelForNickname:nickname];
+
+	IRCDirectChatConnection *connection =
+		[IRCDirectChatConnection listeningConnectionForPeer:nickname
+													  token:transferToken
+												   onClient:self
+												   delegate:(id<IRCDirectChatConnectionDelegate>)self];
+
+	channel.directChatConnection = connection;
+
+	[self printDebugInformation:TXTLS(@"IRC[dcc-c8]", nickname) inChannel:channel];
+
+	[mainWindow() select:channel];
+
+	[connection open];
+}
+
+- (void)sendDirectChatText:(NSAttributedString *)string
+				 asCommand:(IRCRemoteCommand)command
+				 toChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(string != nil);
+	NSParameterAssert(channel != nil);
+
+	IRCDirectChatConnection *connection = channel.directChatConnection;
+
+	if (connection.isConnected == NO) {
+		[self printDebugInformation:TXTLS(@"IRC[dcc-c9]") inChannel:channel];
+
+		return;
+	}
+
+	BOOL isAction = (command == IRCRemoteCommandPrivmsgAction);
+
+	TVCLogLineType lineType = (isAction ? TVCLogLineTypeAction : TVCLogLineTypePrivateMessage);
+
+	NSArray *lines = string.splitIntoLines;
+
+	for (NSAttributedString *line in lines) {
+		NSMutableAttributedString *lineMutable = [line mutableCopy];
+
+		while (lineMutable.length > 0) {
+			NSString *message = [lineMutable stringFormattedForChannel:channel.name
+															  onClient:self
+														  withLineType:lineType];
+
+			if (isAction) {
+				[connection sendAction:message];
+			} else {
+				[connection sendMessage:message];
+			}
+
+			[self print:message
+						 by:self.userNickname
+				  inChannel:channel
+					 asType:lineType
+					command:@"PRIVMSG"
+				 receivedAt:[NSDate date]
+				isEncrypted:NO];
+		}
+	}
+}
+
+#pragma mark -
+#pragma mark DCC CHAT Connection Delegate
+
+- (void)directChatConnection:(IRCDirectChatConnection *)connection didStartListeningOnPort:(uint16_t)port
+{
+	IRCChannel *channel = [self directChatChannelForConnection:connection];
+
+	if (channel == nil) {
+		[connection close];
+
+		return;
+	}
+
+	NSString *nickname = connection.peerNickname;
+
+	NSString *transferToken = connection.transferToken;
+
+	[[self fileTransferController] requestIPAddress:^(NSString *_Nullable address) {
+		if (channel.directChatConnection != connection || connection.state != IRCDirectChatConnectionStateListening) {
+			return;
+		}
+
+		NSString *formattedAddress = nil;
+
+		if (address) {
+			formattedAddress = [self DCCFormattedAddress:address];
+		}
+
+		if (formattedAddress == nil || self.isLoggedIn == NO) {
+			[self printDebugInformation:TXTLS(@"IRC[dcc-ca]", nickname) inChannel:channel];
+
+			[channel closeDirectChatConnection];
+
+			return;
+		}
+
+		NSString *stringToSend = nil;
+
+		if (transferToken) {
+			stringToSend = [NSString stringWithFormat:@"chat %@ %hu %@", formattedAddress, port, transferToken];
+		} else {
+			stringToSend = [NSString stringWithFormat:@"chat %@ %hu", formattedAddress, port];
+		}
+
+		[self sendCTCPQuery:nickname command:@"DCC CHAT" text:stringToSend];
+
+		[self printDebugInformation:TXTLS(@"IRC[dcc-cb]", nickname, port) inChannel:channel];
+	}];
+}
+
+- (void)directChatConnectionDidConnect:(IRCDirectChatConnection *)connection
+{
+	IRCChannel *channel = [self directChatChannelForConnection:connection];
+
+	if (channel == nil) {
+		[connection close];
+
+		return;
+	}
+
+	[channel activate];
+
+	[mainWindow() reloadTreeItem:channel];
+
+	[mainWindow() updateTitleFor:channel];
+
+	[self printDebugInformation:TXTLS(@"IRC[dcc-cc]", connection.peerNickname) inChannel:channel];
+}
+
+- (void)directChatConnection:(IRCDirectChatConnection *)connection
+		   didReceiveMessage:(NSString *)message
+					isAction:(BOOL)isAction
+{
+	IRCChannel *channel = [self directChatChannelForConnection:connection];
+
+	if (channel == nil) {
+		return;
+	}
+
+	NSString *nickname = connection.peerNickname;
+
+	TVCLogLineType lineType = (isAction ? TVCLogLineTypeAction : TVCLogLineTypePrivateMessage);
+
+	[self print:message
+				 by:nickname
+		  inChannel:channel
+			 asType:lineType
+			command:@"PRIVMSG"
+		 receivedAt:[NSDate date]
+		isEncrypted:NO];
+
+	[self notifyText:TXNotificationTypePrivateMessage lineType:lineType target:channel nickname:nickname text:message];
+}
+
+- (void)directChatConnection:(IRCDirectChatConnection *)connection didCloseWithError:(nullable NSError *)error
+{
+	IRCChannel *channel = [self directChatChannelForConnection:connection];
+
+	if (channel == nil) {
+		return;
+	}
+
+	channel.directChatConnection = nil;
+
+	if (error) {
+		[self printDebugInformation:TXTLS(@"IRC[dcc-cd]", connection.peerNickname, error.localizedDescription)
+						  inChannel:channel];
+	} else {
+		[self printDebugInformation:TXTLS(@"IRC[dcc-ce]", connection.peerNickname) inChannel:channel];
+	}
+
+	if (channel.isActive) {
+		[channel deactivate];
+	}
+
+	[mainWindow() reloadTreeItem:channel];
+
+	[mainWindow() updateTitleFor:channel];
 }
 
 #pragma mark -

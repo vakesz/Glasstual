@@ -67,6 +67,8 @@ typedef NS_ENUM(NSUInteger, TDCFileTransferDialogSelection) {
 
 @class TDCFileTransferDialogTransferController;
 
+typedef void (^TDCFileTransferDialogIPAddressBlock)(NSString *_Nullable address);
+
 @interface TDCFileTransferDialog : TDCWindowBase
 @property(readonly, weak) TVCBasicTableView *fileTransferTable;
 @property(readonly, copy, nullable) NSString *IPAddress;
@@ -76,6 +78,12 @@ typedef NS_ENUM(NSUInteger, TDCFileTransferDialogSelection) {
 
 - (void)requestIPAddress; // from external source
 - (void)clearIPAddress;
+
+/* Resolves the address DCC offers should advertise: the manually entered
+ address, the cached lookup result, or a fresh lookup when the detection
+ method allows one. The block is always called on the main queue, with
+ nil when no address could be determined. */
+- (void)requestIPAddress:(TDCFileTransferDialogIPAddressBlock)completionBlock;
 
 /* The next two method return a unique identifier specific to each
  added request. This identifier is different from a request token

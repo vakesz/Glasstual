@@ -59,6 +59,16 @@ NS_ASSUME_NONNULL_BEGIN
 #define _sendDataTimeout 30.0
 #define _resumeAcceptTimeout 10.0
 
+/* Ownership: every piece of mutable state in this controller belongs to
+ the main queue. The sockets run their own queues internally but deliver
+ all delegate callbacks on the main queue, the maintenance timer fires on
+ the main queue, the resume timeout is scheduled on the main run loop and
+ IRCClient and the dialog call in from the main thread. The table cell
+ reads the progress properties from the main thread as well. Because of
+ this there is no locking: a status transition and the work that follows
+ it are a single uninterrupted unit on one queue. */
+#define _assertMainQueue() dispatch_assert_queue(dispatch_get_main_queue())
+
 @interface TDCFileTransferDialogTransferController () <TDCFileTransferDialogSocketDelegate>
 @property(nonatomic, strong, readwrite) IRCClient *client;
 @property(nonatomic, copy, readwrite) NSString *clientId;
@@ -69,7 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) uint64_t totalFilesize;
 @property(nonatomic, assign, readwrite) uint64_t processedFilesize;
 @property(nonatomic, assign, readwrite) uint64_t currentRecord;
-@property(nonatomic, strong) NSMutableArray<NSNumber *> *speedRecordsPrivate;
+@property(nonatomic, strong) NSMutableArray<NSNumber *> *speedRecordsPrivate; // Main queue only
 @property(nonatomic, copy, readwrite, nullable) NSString *errorMessageDescription;
 @property(nonatomic, copy, readwrite, nullable) NSString *path;
 @property(nonatomic, copy, readwrite) NSString *filename;
@@ -81,7 +91,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong, nullable) NSFileHandle *fileHandle;
 @property(nonatomic, strong, nullable) XRPortMapper *portMapping;
 @property(nonatomic, assign) NSUInteger sendQueueSize;
-@property(nonatomic, strong, nullable) dispatch_queue_t serverDispatchQueue;
 @property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *listeningServer;
 @property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *listeningServerConnectedClient;
 @property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *connectionToRemoteServer;
@@ -214,6 +223,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)prepareInitialState
 {
+	_assertMainQueue();
+
 	self.speedRecordsPrivate = [NSMutableArray array];
 
 	self.transferStatus = TDCFileTransferDialogTransferStatusStopped;
@@ -232,6 +243,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)prepareForPermanentDestruction
 {
+	_assertMainQueue();
+
 	self.transferTableCell = nil;
 
 	[self closeAndPostNotification:NO];
@@ -281,27 +294,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	[self close];
-}
-
-#pragma mark -
-#pragma mark Dispatch Queue Management
-
-- (void)createDispatchQueues
-{
-	NSString *uniqueId = [NSString stringWithUUID];
-
-	dispatch_queue_attr_t attributes =
-		dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
-
-	NSString *dispatchQueueName = [NSString
-		stringWithFormat:@"Glasstual.TDCFileTransferDialogTransferController.DCC-SocketDispatchQueue-%@", uniqueId];
-
-	self.serverDispatchQueue = dispatch_queue_create(dispatchQueueName.UTF8String, attributes);
-}
-
-- (void)destroyDispatchQueues
-{
-	self.serverDispatchQueue = nil;
 }
 
 #pragma mark -
@@ -361,6 +353,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)openWithPath:(nullable NSString *)path
 {
+	_assertMainQueue();
+
 	if (self.path == nil) {
 		self.path = path;
 	}
@@ -401,11 +395,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)openConnectionToHost
 {
+	_assertMainQueue();
+
 	[self closeAndPostNotification:NO];
 
 	[self resetProperties];
-
-	[self createDispatchQueues];
 
 	self.transferStatus = TDCFileTransferDialogTransferStatusConnecting;
 
@@ -418,7 +412,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	TDCFileTransferDialogSocket *connectionToRemoteServer =
-		[[TDCFileTransferDialogSocket alloc] initWithDelegate:self delegateQueue:self.serverDispatchQueue];
+		[[TDCFileTransferDialogSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
 
 	self.connectionToRemoteServer = connectionToRemoteServer;
 
@@ -436,11 +430,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)openConnectionAsServer
 {
+	_assertMainQueue();
+
 	[self closeAndPostNotification:NO];
 
 	[self resetProperties];
-
-	[self createDispatchQueues];
 
 	self.transferStatus = TDCFileTransferDialogTransferStatusInitializing;
 
@@ -454,7 +448,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	TDCFileTransferDialogSocket *listeningServer =
-		[[TDCFileTransferDialogSocket alloc] initWithDelegate:self delegateQueue:self.serverDispatchQueue];
+		[[TDCFileTransferDialogSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
 
 	self.listeningServer = listeningServer;
 
@@ -581,16 +575,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.portMapping = nil;
 
-	/* This can be reached from the socket dispatch queue (through -close).
-	 The main thread may at that moment be blocked waiting on the socket
-	 queue, so hop asynchronously to avoid a lock inversion. */
-	if ([NSThread isMainThread]) {
-		[portMapping close];
-	} else {
-		XRPerformBlockAsynchronouslyOnMainQueue(^{
-			[portMapping close];
-		});
-	}
+	[portMapping close];
 }
 
 - (void)noteIPAddressLookupSucceeded
@@ -621,6 +606,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)didReceiveResumeRequest:(uint64_t)proposedPosition
 {
+	_assertMainQueue();
+
 	uint64_t currentFilesize = self.currentFilesize;
 
 	if (proposedPosition == 0 || currentFilesize < proposedPosition) {
@@ -636,6 +623,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)didReceiveResumeAccept:(uint64_t)proposedPosition
 {
+	_assertMainQueue();
+
 	[self cancelPerformRequestsWithSelector:@selector(transferResumeRequestTimeout) object:nil];
 
 	uint64_t currentFilesize = self.currentFilesize;
@@ -656,6 +645,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)didReceiveSendRequest:(NSString *)hostAddress hostPort:(uint16_t)hostPort
 {
 	NSParameterAssert(hostAddress != nil);
+
+	_assertMainQueue();
 
 	self.hostAddress = hostAddress;
 
@@ -718,6 +709,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)sendTransferResumeRequestToClient
 {
+	_assertMainQueue();
+
 	uint64_t currentFilesize = self.currentFilesize;
 
 	if (currentFilesize == 0 || currentFilesize > self.totalFilesize) {
@@ -726,6 +719,8 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
+	/* Scheduled on the main run loop. -closeAndPostNotification: cancels
+	 it from the main queue as well, so the cancel always finds it. */
 	[self performSelectorInCommonModes:@selector(transferResumeRequestTimeout)
 							withObject:nil
 							afterDelay:_resumeAcceptTimeout];
@@ -784,6 +779,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clientDisconnected:(NSNotification *)notification
 {
+	/* IRCClient posts this from the main thread. */
 	[self closeWithClientDisconnectedError];
 }
 
@@ -820,6 +816,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)closeAndPostNotification:(BOOL)postNotification
 {
+	_assertMainQueue();
+
 	[self cancelPerformRequests];
 
 	if (self.listeningServer) {
@@ -836,8 +834,6 @@ NS_ASSUME_NONNULL_BEGIN
 		[self.connectionToRemoteServer disconnect];
 		self.connectionToRemoteServer = nil;
 	}
-
-	[self destroyDispatchQueues];
 
 	[self closePortMapping];
 
@@ -892,34 +888,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)onMaintenanceTimer
 {
+	_assertMainQueue();
+
 	NSAssertReturn(self.transferStatus == TDCFileTransferDialogTransferStatusReceiving ||
 				   self.transferStatus == TDCFileTransferDialogTransferStatusSending);
 
-	/* The queue is destroyed when the transfer closes. Capture it so a
-	 close racing with this timer cannot hand dispatch a nil queue. The
-	 hop is asynchronous: the socket queue may itself be waiting on the
-	 main thread and a synchronous dispatch here would deadlock. */
-	dispatch_queue_t serverDispatchQueue = self.serverDispatchQueue;
+	[self.speedRecordsPrivate addObject:@(self.currentRecord)];
 
-	if (serverDispatchQueue == nil) {
-		return;
+	if (self.speedRecordsPrivate.count > RECORDS_LENGTH) {
+		[self.speedRecordsPrivate removeObjectAtIndex:0];
 	}
 
-	XRPerformBlockAsynchronouslyOnQueue(serverDispatchQueue, ^{
-		@synchronized(self.speedRecords) {
-			[self.speedRecordsPrivate addObject:@(self.currentRecord)];
+	self.currentRecord = 0;
 
-			if (self.speedRecordsPrivate.count > RECORDS_LENGTH) {
-				[self.speedRecordsPrivate removeObjectAtIndex:0];
-			}
-		}
+	[self reloadStatusInformation];
 
-		self.currentRecord = 0;
-
-		[self reloadStatusInformation];
-
-		[self send];
-	});
+	[self send];
 }
 
 #pragma mark -
@@ -1013,6 +997,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)socket:(TDCFileTransferDialogSocket *)socket didStartListeningOnPort:(uint16_t)port
 {
+	_assertMainQueue();
+
 	if (socket != self.listeningServer) {
 		return;
 	}
@@ -1022,6 +1008,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)socket:(TDCFileTransferDialogSocket *)socket didFailToListenWithError:(NSError *)error
 {
+	_assertMainQueue();
+
 	if (socket != self.listeningServer) {
 		return;
 	}
@@ -1033,6 +1021,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)socket:(TDCFileTransferDialogSocket *)socket didAcceptConnection:(TDCFileTransferDialogSocket *)connection
 {
+	_assertMainQueue();
+
 	if (socket != self.listeningServer || self.isActingAsServer == NO) {
 		[connection disconnect];
 
@@ -1068,6 +1058,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)socketDidConnect:(TDCFileTransferDialogSocket *)socket
 {
+	_assertMainQueue();
+
 	if (socket != self.connectionToRemoteServer || self.isActingAsClient == NO) {
 		return;
 	}
@@ -1093,6 +1085,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)socket:(TDCFileTransferDialogSocket *)socket didDisconnectWithError:(nullable NSError *)error
 {
+	_assertMainQueue();
+
 	if (socket != self.listeningServer && socket != self.listeningServerConnectedClient &&
 		socket != self.connectionToRemoteServer) {
 		return;
@@ -1113,6 +1107,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)socket:(TDCFileTransferDialogSocket *)socket didReadData:(NSData *)data
 {
+	_assertMainQueue();
+
 	if (socket != self.readSocket || self.isSender != NO) {
 		return;
 	}
@@ -1172,6 +1168,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)socketDidWriteData:(TDCFileTransferDialogSocket *)socket
 {
+	_assertMainQueue();
+
 	if (socket != self.writeSocket || self.isSender == NO) {
 		return;
 	}
@@ -1303,9 +1301,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray<NSNumber *> *)speedRecords
 {
-	@synchronized(self.speedRecordsPrivate) {
-		return [self.speedRecordsPrivate copy];
-	}
+	_assertMainQueue();
+
+	return [self.speedRecordsPrivate copy];
 }
 
 - (nullable NSString *)filePath
@@ -1351,6 +1349,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setTransferStatus:(TDCFileTransferDialogTransferStatus)transferStatus
 {
+	_assertMainQueue();
+
 	if (self->_transferStatus != transferStatus) {
 		self->_transferStatus = transferStatus;
 
@@ -1370,9 +1370,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.sendQueueSize = 0;
 
-	@synchronized(self.speedRecordsPrivate) {
-		[self.speedRecordsPrivate removeAllObjects];
-	}
+	[self.speedRecordsPrivate removeAllObjects];
 }
 
 @end

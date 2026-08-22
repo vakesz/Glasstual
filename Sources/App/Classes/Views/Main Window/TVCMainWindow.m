@@ -1256,7 +1256,7 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 		/* Skip entries depending on navigation type */
 		if (selectionType == TVCServerListNavigationSelectionTypeChannel) {
-			if ([item isChannel] == NO && [item isPrivateMessage] == NO) {
+			if ([item isChannel] == NO && [item isPrivateMessage] == NO && [item isDirectChat] == NO) {
 				continue;
 			}
 		} else if (selectionType == TVCServerListNavigationSelectionTypeServer) {
@@ -2590,6 +2590,11 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 			break;
 		}
 		case IRCChannelTypeUtility: {
+			break;
+		}
+		case IRCChannelTypeDirectChat: {
+			[subtitleParts addObject:TXTLS(@"TVCMainWindow[dcc-ch]")];
+
 			break;
 		}
 		}

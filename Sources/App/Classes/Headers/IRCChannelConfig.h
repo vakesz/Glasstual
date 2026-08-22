@@ -44,6 +44,7 @@ typedef NS_ENUM(NSUInteger, IRCChannelType) {
 	IRCChannelTypeChannel = 0,
 	IRCChannelTypePrivateMessage,
 	IRCChannelTypeUtility,
+	IRCChannelTypeDirectChat, // DCC CHAT. Never persisted.
 };
 
 #pragma mark -

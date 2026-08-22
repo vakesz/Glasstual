@@ -168,6 +168,8 @@
 		<false/>
 		<key>indexValue</key>
 		<integer>5017</integer>
+		<key>arguments</key>
+		<string>chat &lt;nickname&gt; | send &lt;nickname&gt; &lt;path&gt;</string>
 	</dict>
 	<key>debug</key>
 	<dict>

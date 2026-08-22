@@ -82,6 +82,8 @@ typedef NS_ERROR_ENUM(TDCFileTransferDialogSocketErrorDomain, TDCFileTransferDia
 - (instancetype)initWithDelegate:(id<TDCFileTransferDialogSocketDelegate>)delegate
 				   delegateQueue:(dispatch_queue_t)delegateQueue NS_DESIGNATED_INITIALIZER;
 
++ (NSError *)errorWithCode:(TDCFileTransferDialogSocketError)code description:(NSString *)description;
+
 /* Tries each port in [startPort, endPort] in turn until one can be bound.
  Reports the result through -socket:didStartListeningOnPort: or
  -socket:didFailToListenWithError: */

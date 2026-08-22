@@ -228,7 +228,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 		IRCChannel *channel = (IRCChannel *)cellItem;
 
-		NSString *symbolName = channel.isChannel ? @"number" : @"person.fill";
+		NSString *symbolName = @"person.fill";
+
+		if (channel.isChannel) {
+			symbolName = @"number";
+		} else if (channel.isDirectChat) {
+			symbolName = @"bubble.left.and.bubble.right.fill";
+		}
 
 		NSImage *icon = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:channel.name];
 		icon.template = YES;
