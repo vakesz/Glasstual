@@ -134,7 +134,6 @@ targetTemplates:
         LD_RUNPATH_SEARCH_PATHS: "@loader_path/../Frameworks"
         GCC_PRECOMPILE_PREFIX_HEADER: YES
         GCC_SYMBOLS_PRIVATE_EXTERN: NO
-        CLANG_WARN_STRICT_PROTOTYPES: NO
 
 # ---------------------------------------------------------------------------
 # Targets
@@ -173,7 +172,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: CocoaExtensions
-        PRODUCT_BUNDLE_IDENTIFIER: com.codeux.frameworks.CocoaExtensions
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.CocoaExtensions
         INFOPLIST_FILE: Frameworks/Cocoa Extensions/Resources/Info.plist
         GCC_PREFIX_HEADER: Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
         MODULEMAP_PRIVATE_FILE: Frameworks/Cocoa Extensions/Classes/module.private.modulemap
@@ -182,7 +181,6 @@ targets:
         excludes:
           - CocoaExtensionsPrivate.h
           - XRLoggingPrivate.h
-          - XRLoggingDeprecatedPrivate.h
           - CocoaExtensions_Prefix.pch
           - module.private.modulemap
         headerVisibility: public
@@ -190,8 +188,6 @@ targets:
         headerVisibility: private
       - path: Frameworks/Cocoa Extensions/Classes/XRLoggingPrivate.h
         headerVisibility: private
-      - path: Frameworks/Cocoa Extensions/Classes/XRLoggingDeprecatedPrivate.h
-        headerVisibility: project
       - path: Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
         buildPhase: none
       - path: Frameworks/Cocoa Extensions/Classes/module.private.modulemap
@@ -206,10 +202,7 @@ targets:
     dependencies:
       - sdk: Foundation.framework
       - sdk: Cocoa.framework
-      - sdk: IOKit.framework
       - sdk: Security.framework
-      - sdk: WebKit.framework
-      - sdk: Contacts.framework
 
   EncryptionKit:
     templates: [GlasstualFramework]
@@ -217,9 +210,11 @@ targets:
     settings:
       base:
         PRODUCT_NAME: EncryptionKit
-        PRODUCT_BUNDLE_IDENTIFIER: com.codeux.frameworks.encryptionKit
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.EncryptionKit
         INFOPLIST_FILE: Frameworks/Encryption Kit/Resources/Info.plist
         GCC_PREFIX_HEADER: Frameworks/Encryption Kit/Classes/EncryptionKit_Prefix.pch
+        # libotr's vendored headers declare functions without prototypes.
+        CLANG_WARN_STRICT_PROTOTYPES: NO
         HEADER_SEARCH_PATHS:
           - $(inherited)
           - '"$(SRCROOT)/Frameworks/Static Libraries/Headers/**"'

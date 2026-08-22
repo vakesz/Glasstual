@@ -153,11 +153,6 @@ NSString * const NSWindowAutosaveFrameMovesToActiveDisplay = @"NSWindowAutosaveF
 	NSString *savedFrame = [[NSUserDefaults standardUserDefaults] stringForKey:keyword];
 
 	if (savedFrame) {
-		/* Apple introduced a private defaults key in OS X Mavericks named 
-		 NSWindowAutosaveFrameMovesToActiveDisplay which -setFrameFromString: and no other
-		 method accesses. The private key is used to determine whether the window should
-		 favor the active display when restoring the frame. */
-
 		[self setFrameFromString:savedFrame];
 	}
 }
@@ -229,11 +224,6 @@ NSString * const NSWindowAutosaveFrameMovesToActiveDisplay = @"NSWindowAutosaveF
 	windowFrame.origin.y += heightDifference;
 
 	return windowFrame;
-}
-
-- (void)restoreDefaultSize
-{
-	[self restoreDefaultSizeAndDisplay:YES];
 }
 
 - (void)restoreDefaultSizeAndDisplay:(BOOL)display

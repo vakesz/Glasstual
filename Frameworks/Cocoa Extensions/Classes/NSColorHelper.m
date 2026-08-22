@@ -79,58 +79,16 @@ NS_ASSUME_NONNULL_BEGIN
 	return [NSColor colorWithDeviceRed:red green:green blue:blue alpha:alpha];
 }
 
-- (NSColor *)invertedColor
-{
-	NSColor *obj = [self colorUsingColorSpace:[NSColorSpace deviceRGBColorSpace]];
-
-	return [NSColor colorWithCalibratedRed:(1.0 - obj.redComponent)
-									 green:(1.0 - obj.greenComponent)
-									  blue:(1.0 - obj.blueComponent)
-									 alpha:obj.alphaComponent];
-}
-
-- (BOOL)isInRGBColorSpace
-{
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
-	NSString *colorSpaceName = self.colorSpaceName;
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
-
-	return ([colorSpaceName isEqualToString:@"NSDeviceRGBColorSpace"] ||
-			[colorSpaceName isEqualToString:@"NSCalibratedRGBColorSpace"]);
-}
-
-- (BOOL)isInGrayColorSpace
-{
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
-	NSString *colorSpaceName = self.colorSpaceName;
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
-
-	return ([colorSpaceName isEqualToString:@"NSDeviceWhiteColorSpace"] ||
-			[colorSpaceName isEqualToString:@"NSDeviceBlackColorSpace"] ||
-			[colorSpaceName isEqualToString:@"NSCalibratedWhiteColorSpace"] ||
-			[colorSpaceName isEqualToString:@"NSCalibratedBlackColorSpace"]);
-}
-
 #pragma mark -
 #pragma mark Hexadecimal Conversion
 
 - (NSString *)hexadecimalValue
 {
-	return [self hexadecimalValueWithAlpha:NO];
-}
-
-- (NSString *)hexadecimalValueWithAlpha
-{
-	return [self hexadecimalValueWithAlpha:YES];
-}
-
-- (NSString *)hexadecimalValueWithAlpha:(BOOL)withAlpha
-{
 	CGFloat redValue = 0.0;
 	CGFloat greenValue = 0.0;
 	CGFloat blueValue = 0.0;
 
-	if ([self isInGrayColorSpace]) {
+	if (self.colorSpace.colorSpaceModel == NSColorSpaceModelGray) {
 		redValue = self.whiteComponent;
 		greenValue = self.whiteComponent;
 		blueValue = self.whiteComponent;
@@ -140,20 +98,10 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 		blueValue = self.blueComponent;
 	}
 
-	if (withAlpha) {
-		CGFloat alphaValue = self.alphaComponent;
-
-		return [NSString stringWithFormat:@"#%02X%02X%02X%02X",
-				(unsigned int)(redValue * 0xff),
-				(unsigned int)(greenValue * 0xff),
-				(unsigned int)(blueValue * 0xff),
-				(unsigned int)(alphaValue * 0xff)];
-	} else {
-		return [NSString stringWithFormat:@"#%02X%02X%02X",
-				(unsigned int)(redValue * 0xff),
-				(unsigned int)(greenValue * 0xff),
-				(unsigned int)(blueValue * 0xff)];
-	}
+	return [NSString stringWithFormat:@"#%02X%02X%02X",
+			(unsigned int)(redValue * 0xff),
+			(unsigned int)(greenValue * 0xff),
+			(unsigned int)(blueValue * 0xff)];
 }
 
 + (nullable NSColor *)colorWithHexadecimalValue:(NSString *)string
@@ -183,37 +131,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	NSInteger a =  (colorTotal & 0x000000ff);
 
 	return [NSColor calibratedDeviceColorWithRed:r green:g blue:b alpha:a];
-}
-
-- (BOOL)isShadeOfGray
-{
-	if ([self isInRGBColorSpace]) {
-		CGFloat redValue = self.redComponent;
-		CGFloat greenValue = self.greenComponent;
-		CGFloat blueValue = self.blueComponent;
-
-		if (CGFloatAreEqual(redValue, greenValue) &&
-			CGFloatAreEqual(greenValue, blueValue) &&
-			CGFloatAreEqual(redValue, blueValue))
-		{
-			return YES;
-		}
-	} else if ([self isInGrayColorSpace]) {
-		return YES;
-	}
-
-	return NO;
-}
-
-@end
-
-#pragma mark -
-
-@implementation NSGradient (CSGradientHelper)
-
-+ (nullable NSGradient *)gradientWithStartingColor:(NSColor *)startingColor endingColor:(NSColor *)endingColor
-{
-	return [[self alloc] initWithStartingColor:startingColor endingColor:endingColor];
 }
 
 @end

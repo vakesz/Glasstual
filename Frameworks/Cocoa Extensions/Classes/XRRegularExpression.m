@@ -99,41 +99,6 @@ NS_ASSUME_NONNULL_BEGIN
 	return newString;
 }
 
-+ (NSUInteger)totalNumberOfMatchesInString:(NSString *)haystack withRegex:(NSString *)needle
-{
-	return [self totalNumberOfMatchesInString:haystack withRegex:needle withoutCase:NO];
-}
-
-+ (NSUInteger)totalNumberOfMatchesInString:(NSString *)haystack withRegex:(NSString *)needle withoutCase:(BOOL)caseless
-{
-	NSParameterAssert(haystack != nil);
-	NSParameterAssert(needle != nil);
-
-    NSRange strRange = NSMakeRange(0, haystack.length);
-	
-	NSRegularExpression *regex;
-	
-	if (caseless) {
-		regex = [NSRegularExpression regularExpressionWithPattern:needle options:NSRegularExpressionCaseInsensitive error:NULL];
-	} else {
-		regex = [NSRegularExpression regularExpressionWithPattern:needle options:0 error:NULL];
-	}
-	
-	NSArray *matches = [regex matchesInString:haystack options:0 range:strRange];
-
-	return matches.count;
-}
-
-+ (NSArray *)matchesInString:(NSString *)haystack withRegex:(NSString *)needle
-{
-	return [self matchesInString:haystack withRegex:needle withoutCase:NO substringGroups:NO];
-}
-
-+ (NSArray *)matchesInString:(NSString *)haystack withRegex:(NSString *)needle withoutCase:(BOOL)caseless
-{
-	return [self matchesInString:haystack withRegex:needle withoutCase:caseless substringGroups:NO];
-}
-
 + (NSArray *)matchesInString:(NSString *)haystack withRegex:(NSString *)needle withoutCase:(BOOL)caseless substringGroups:(BOOL)substringGroups
 {
 	NSParameterAssert(haystack != nil);

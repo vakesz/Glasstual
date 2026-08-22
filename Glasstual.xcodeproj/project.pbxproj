@@ -47,7 +47,6 @@
 		097CD1BB61EE1DA0729C6C15 /* TDCServerChangeNicknameSheet.m in Sources */ = {isa = PBXBuildFile; fileRef = C513360D096FA7F1F27317F7 /* TDCServerChangeNicknameSheet.m */; };
 		0991340F64343AEA12140281 /* TDCServerChannelListDialog.xib in Resources */ = {isa = PBXBuildFile; fileRef = A61933FB3C3F6F52B810EFAE /* TDCServerChannelListDialog.xib */; };
 		0A2FBA5D16A0F051EC621F0D /* TPI_ZNCAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A879534EE05B42131FE98D2 /* TPI_ZNCAdditions.m */; };
-		0A7DCC1D3EB295C7D3753DF4 /* NSImageHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = B1F90C832DA9F7A595FCAB8B /* NSImageHelper.m */; };
 		0AB63B8EA5C2D0B5B11F03C3 /* OTRKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B398C50CBF3FB6FB2A5BF35 /* OTRKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0B8543E26D268281C735D2D6 /* NSColorHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 037B689E5E35FBA0D9303277 /* NSColorHelper.m */; };
 		0B8E8E683E07ADFDBF24F78D /* NSUserDefaultsHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = ECAA0316C5677BE152961938 /* NSUserDefaultsHelper.m */; };
@@ -75,7 +74,6 @@
 		16DDAD2A56FA143343E8F556 /* XRSystemInformation.m in Sources */ = {isa = PBXBuildFile; fileRef = B6D6BDFD6FF1B32EC1ABDD46 /* XRSystemInformation.m */; };
 		1762BCB7C67426B51011B749 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F297ED16858A04F8F5F4D9A /* SystemConfiguration.framework */; };
 		179919ED23D794339FFEFD63 /* TVCChannelSelectionView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2C4F7BE8708185D2CA3EA9DE /* TVCChannelSelectionView.xib */; };
-		17A98FFD407F40029B8948DA /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E237B43AA9F0A9E4561FE5C /* IOKit.framework */; };
 		189E36C81EE38EAC62E1C804 /* TDCPreferencesGroupBox.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C823ED72A056BFA6BDC7F05 /* TDCPreferencesGroupBox.m */; };
 		19714D2FEEFB8ABC88D4C137 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D87202A4B450420150DA8C1 /* ImageIO.framework */; };
 		1A8A567C11D4C5193E1FD5CA /* EncryptionKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02F9F50A9687FC8277323B99 /* EncryptionKit.framework */; };
@@ -111,7 +109,6 @@
 		285280357B9FF771AFBB40D5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EECA4BE3C0398F28F748E5 /* main.m */; };
 		2896D05773FC0DEC74C0CA06 /* ICLInlineContentModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 709F3DC77494302315843363 /* ICLInlineContentModule.m */; };
 		293E92C3C78F13C38F5EAC99 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E237B43AA9F0A9E4561FE5C /* IOKit.framework */; };
-		29512289C948DFB1FC09A6E4 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275224561A1DA40A1DE82E8F /* WebKit.framework */; };
 		2A655CE70EE887A481E94E5D /* EncryptionKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 02F9F50A9687FC8277323B99 /* EncryptionKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2AAEF5E33836C64D3482E61F /* NSLayoutConstraintHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A0527B04DCE5F1BC0A138CDC /* NSLayoutConstraintHelper.m */; };
 		2C2A55A3FB90266E4320C0F9 /* OTRKitFingerprintManagerDialog.m in Sources */ = {isa = PBXBuildFile; fileRef = DB039666CDF20DE30F8255FB /* OTRKitFingerprintManagerDialog.m */; };
@@ -161,7 +158,6 @@
 		3EB7AA553FB9C72FF2FC8EE5 /* TDCAddressBookSheet.strings in Resources */ = {isa = PBXBuildFile; fileRef = ABC526202158C2969392DB36 /* TDCAddressBookSheet.strings */; };
 		3F0F4206F1C7306FBE9512AE /* TLONicknameCompletionStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 02AEACE7F5AC4A05D6C788AC /* TLONicknameCompletionStatus.m */; };
 		3F66AE05A08CB8590E238536 /* ICLPayloadLocal.m in Sources */ = {isa = PBXBuildFile; fileRef = 46AE4A142E76B2C7B021BEEF /* ICLPayloadLocal.m */; };
-		3F922D5C1E8DC05E4E9B20C5 /* XRAddressBook.h in Headers */ = {isa = PBXBuildFile; fileRef = F19D36290533CD2E8CBAA9BD /* XRAddressBook.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3FCDA0140903ED6A6077CE0E /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
 		4131DC40EA3313178CA9DCA3 /* CocoaExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = EF602475E622C3AFE590DCAA /* CocoaExtensions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4147CD7363D7BFFF248ED6CC /* AUTHORS in CopyFiles */ = {isa = PBXBuildFile; fileRef = 06AB6BB78BB6B2E5E71BF8E3 /* AUTHORS */; };
@@ -183,7 +179,6 @@
 		4BBF5D9EEF1C9CEF62903E67 /* IRCChannelMemberListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 856625C53FC429BBC20F9CBB /* IRCChannelMemberListController.m */; };
 		4BF8BB4B86D792B3881C0559 /* ICMAssessedMedia.m in Sources */ = {isa = PBXBuildFile; fileRef = 79E15E44C35C5663B2362BC9 /* ICMAssessedMedia.m */; };
 		4C525D3B52A566AF410EBE8A /* TVCServerListCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 2250921A743C20C45F751710 /* TVCServerListCell.m */; };
-		4CA33C07B8FE475BE2F51744 /* XRBase64Encoding.m in Sources */ = {isa = PBXBuildFile; fileRef = C889992A19830F849B7E5FDF /* XRBase64Encoding.m */; };
 		4CE5CD063B1EB9ED873DA550 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7873771D11222885395DAF5A /* CoreServices.framework */; };
 		4D2D56AD1C8D86338F063F43 /* IRCClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 54773006180206982DE51B48 /* IRCClient.m */; };
 		4DE085B66CD3322C78DB8B31 /* XRGlobalModels.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FC05390D0DD652DB187D9C2 /* XRGlobalModels.m */; };
@@ -202,7 +197,6 @@
 		5510187092F65FA806CA8E99 /* IRCTimerCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = C5CB11F8870963C1495B6EFF /* IRCTimerCommand.m */; };
 		55C6280B08B4D78128C80104 /* ACKNOWLEDGEMENT.txt in Resources */ = {isa = PBXBuildFile; fileRef = CD72B44E6241F7752088F72D /* ACKNOWLEDGEMENT.txt */; };
 		55DDDD1832B2CC2E57910C7F /* RCMTrustPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 24B5415345A8BCEB726CADB4 /* RCMTrustPanel.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		564EB0EC866154CCAF0DC082 /* NSAnimationContextHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = E269487BEF2395E22C772100 /* NSAnimationContextHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		565B126AE21F3E1CCAC1E421 /* NSErrorHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F3E8BB2C1D4A329A58F2BBE /* NSErrorHelper.m */; };
 		56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 61007C54B3B72295EFDB82FF /* Inline Content Loader.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		56FA4B7C2582336FEFCF09E5 /* TPI_ChatFilterExtension.strings in Resources */ = {isa = PBXBuildFile; fileRef = 908177CE8D5097BC765E0519 /* TPI_ChatFilterExtension.strings */; };
@@ -262,11 +256,9 @@
 		70EAD04DCC255F302570C48E /* XRPortablePropertyDict.h in Headers */ = {isa = PBXBuildFile; fileRef = 76AA2966E5288E465645FEC0 /* XRPortablePropertyDict.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		71602AA63953701CCD421F33 /* OTRKitAuthenticationDialogOutgoing.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9F9AF76D177E52614D24DE6D /* OTRKitAuthenticationDialogOutgoing.xib */; };
 		72BE44AFB6BB1CD536544F49 /* OTRKitAuthenticationDialog.m in Sources */ = {isa = PBXBuildFile; fileRef = 892972DA5DAEDB807838DC9C /* OTRKitAuthenticationDialog.m */; };
-		72D54803EC658B09ACD4429E /* NSMethodSignatureHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 200AAC59FD58774C4B7171A4 /* NSMethodSignatureHelper.m */; };
 		72F54ABDCF198DF3573FFA09 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F297ED16858A04F8F5F4D9A /* SystemConfiguration.framework */; };
 		72FAB1244B61716BB3D5A160 /* NSURLHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 3AEF2BF14155AECEDC085F4A /* NSURLHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7342A7EF519C2A252EEBD0C1 /* ICMYouTube.mustache in Resources */ = {isa = PBXBuildFile; fileRef = B2E0AF486656B0FA13BEF59A /* ICMYouTube.mustache */; };
-		736108E0467EC582832863FB /* XRLoggingDeprecatedPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 52BCD53BF17DD795A9BD7122 /* XRLoggingDeprecatedPrivate.h */; };
 		7387A908775A4911E19F5DF9 /* TPI_ChatFilterExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = 44B817BD245B7813D7682B89 /* TPI_ChatFilterExtension.m */; };
 		73EBF59FE72BA76CDEC38F06 /* OTRKitConcreteObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 398CA6B93ACDD7CF988E2BF3 /* OTRKitConcreteObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7467E4FBB4FFF60DBF34E267 /* TDCChannelModifyModesSheet.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9E7CBDD67522D9C92FBE344C /* TDCChannelModifyModesSheet.strings */; };
@@ -274,7 +266,6 @@
 		74A542DFD44BCB51CFB6BA4A /* SecurityInterface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09337EC215A29A9E3EF5FF5E /* SecurityInterface.framework */; };
 		74B561FFEEE6BD2247489C1B /* COPYING in CopyFiles */ = {isa = PBXBuildFile; fileRef = 12308BF93410FCD00114D57B /* COPYING */; };
 		7522194871704C76B43B31F5 /* ICLProcessDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 65206E48E0681BFA8BD0EDDD /* ICLProcessDelegate.m */; };
-		75DE394E1A0359CA246B7F5A /* NSMethodSignatureHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = B91C576FCB261D6B1FF60BF8 /* NSMethodSignatureHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		775392C831C432609E54594B /* SWDictionaryHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9412922721B2E84569FCF88A /* SWDictionaryHelper.swift */; };
 		7759340213CAB093D4DF9CBE /* TLOFileLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 06443DEC28A04A93FB2D554E /* TLOFileLogger.m */; };
 		789861524D45081052A159D0 /* COPYING in CopyFiles */ = {isa = PBXBuildFile; fileRef = 06288AC9E4644674223C2D92 /* COPYING */; };
@@ -296,7 +287,6 @@
 		816B555B874DE2F5BF8F479F /* TDCChannelInviteSheet.m in Sources */ = {isa = PBXBuildFile; fileRef = E07CAF23FBD68B1E2BA0E0C4 /* TDCChannelInviteSheet.m */; };
 		81A3DF112361C56D460A58D9 /* NSStringTokenizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 415B1AB2111659A59942E658 /* NSStringTokenizer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		81B9B4950A17540C5798ACEA /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E237B43AA9F0A9E4561FE5C /* IOKit.framework */; };
-		8250BC827C1B2F7E6AB555D0 /* ApplePrivateMac.h in Headers */ = {isa = PBXBuildFile; fileRef = D5D43A80C68FFAF77BB858EC /* ApplePrivateMac.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		82775E2FA40F56DCB3D21830 /* TLOpenLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D7B65947EE46E6A91AA908 /* TLOpenLink.swift */; };
 		834147277B067BD7C07351D6 /* NSWorkspaceHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 51ECEAFC470D5674FBBBAF5E /* NSWorkspaceHelper.m */; };
 		83864BF792A7A28D5ADD3644 /* RCMProcessDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D86D0B29D6870A4A171F8A1 /* RCMProcessDelegate.m */; };
@@ -341,7 +331,6 @@
 		8FB929EA99E997F73FB47C4A /* TDCChannelSpotlightSearchResultsTable.m in Sources */ = {isa = PBXBuildFile; fileRef = BDEAEB4EBD189C016A47D1EC /* TDCChannelSpotlightSearchResultsTable.m */; };
 		90CC602D21A08412DA5F70BD /* TVCLogPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 4ADA86C373E31F2DCAF781AD /* TVCLogPolicy.m */; };
 		91150A2077EF0D56901BFFE1 /* TDCPreferencesController.m in Sources */ = {isa = PBXBuildFile; fileRef = EAE7C73CE05EA281E1F4C5C6 /* TDCPreferencesController.m */; };
-		92159C2ECFDCEB3C55CEF993 /* NSThemeFrameHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A51F8EA6291CE0FCCC888A55 /* NSThemeFrameHelper.m */; };
 		927D9CA99D226D2A48E6ACFC /* JavaScript in Resources */ = {isa = PBXBuildFile; fileRef = 995B1A338B6677DA10F366DA /* JavaScript */; };
 		9291D5753BCEB747ABDF7C1F /* NSMenuHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = CA5CEA5AB7A602AB4AD7766C /* NSMenuHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		935147F2BD6A60B40B9BD83A /* TDCPreferencesUserStyleSheet.m in Sources */ = {isa = PBXBuildFile; fileRef = A4B3E957868E9F345FDE1620 /* TDCPreferencesUserStyleSheet.m */; };
@@ -386,7 +375,6 @@
 		A1FFC1F64C4E3747B1883F78 /* OELReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D07BD6BF2D373B311283FA4 /* OELReachability.m */; };
 		A21CB2973A95BF5D8E97B8D2 /* NSFontHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = A947FE0100C84ED783CBD8C1 /* NSFontHelper.m */; };
 		A251A87C9E73EB672D83F0DF /* TDCChannelModifyTopicSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 341AF331E10198FD57B69811 /* TDCChannelModifyTopicSheet.xib */; };
-		A2F54C299BCD0351C1064DBF /* NSSplitViewHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 99CE5F995E6992A32A99436F /* NSSplitViewHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A3426C7648714583FDA10F19 /* NSStringHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 821E2DE7BC3A9EB097E4B054 /* NSStringHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A35AC22364FDB311A78E4989 /* HLSHistoricLogLineEntityMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = 60676E0D7054EEFFFFBF343C /* HLSHistoricLogLineEntityMigration.m */; };
 		A398CDE9CD9165FA64FDA1D1 /* TDCServerChangeNicknameSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = 86AA0321BC189F4ADC75332C /* TDCServerChangeNicknameSheet.xib */; };
@@ -441,7 +429,6 @@
 		BF78F9C0252A93C0AF6AB50B /* OTRKitAuthenticationDialogWindowManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 378D1C0C21CA93AC01E94AE6 /* OTRKitAuthenticationDialogWindowManager.h */; };
 		BFCC27BC5C3C5FE1AE5FA15E /* OffTheRecord.strings in Resources */ = {isa = PBXBuildFile; fileRef = 5F2EDE958DFBD4E342BFB99F /* OffTheRecord.strings */; };
 		C01056EA7C217684DD86BE52 /* IRCCommandIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 07D2C3BC64BF1D883B34A67E /* IRCCommandIndex.m */; };
-		C0D55688AF5B9B995373FAF3 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C1F8C4221B5DA3BF067DACA0 /* Contacts.framework */; };
 		C33AEFE92D0F6EB25A2A4614 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F5204793997A9EBB2F96F6BF /* Foundation.framework */; };
 		C3508B85880FC14C0A745893 /* NSFontHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 588BACF2DED953C188725B92 /* NSFontHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C36B99740E2E36FE8DE858AF /* TVCLogController.m in Sources */ = {isa = PBXBuildFile; fileRef = AB6426800CB9C9788D4FAED8 /* TVCLogController.m */; };
@@ -451,20 +438,16 @@
 		C54079AF8F86833145431062 /* TPI_SP_SysInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 56088485C3BFF5608317ACFE /* TPI_SP_SysInfo.m */; };
 		C6B65118815F97FF08946672 /* NSRectHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E7CFF6DD547BA90B7B4322A /* NSRectHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C6EC020D581671E7DC34004B /* LICENSE-OTRKit.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = A34DE95F55A1D2B7EAB85C01 /* LICENSE-OTRKit.txt */; };
-		C76ACDB52AEEBAB472BFF280 /* NSAnimationContextHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 72927DD7B723DE31BFE2FD97 /* NSAnimationContextHelper.m */; };
 		C8A35C1E2B15DFC2DA20C811 /* TXMenuController.m in Sources */ = {isa = PBXBuildFile; fileRef = 03F775B5D97954DCC501B7F0 /* TXMenuController.m */; };
-		C8BD61160C5FEFC368896C5B /* NSImageHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = BFB38D55F52F7EA651D3B709 /* NSImageHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C99B4BC1AC414AA2210E190F /* ICLProcessMain.m in Sources */ = {isa = PBXBuildFile; fileRef = F999FCBDA9594608F5E5150E /* ICLProcessMain.m */; };
 		CA30B0F3407FEB8CC5FD4CBF /* TVCLogControllerOperationQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 24ACD196D35EA3D45F729978 /* TVCLogControllerOperationQueue.m */; };
 		CB507EF316C292844A5A616D /* AUTHORS in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4BBB048CBF7AF5052B45E6F1 /* AUTHORS */; };
-		CC3A6FB95CC41951921558B2 /* XRBase64Encoding.h in Headers */ = {isa = PBXBuildFile; fileRef = 24824F9C2BC16B25712A112C /* XRBase64Encoding.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CC95EE7E72EB7F44C3B7C1B5 /* NSDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 06C9DEDBEC51DE5F2E6016BC /* NSDataHelper.m */; };
 		CCB80CBB6DF5BE6746393A65 /* TemplateLineTypes.plist in Resources */ = {isa = PBXBuildFile; fileRef = 210563EB1057D39C53BBF20A /* TemplateLineTypes.plist */; };
 		CCF129BCCA8957E0B5EA3E9A /* IRCChannelUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 918A8826BCFF3A70EF9B4534 /* IRCChannelUser.m */; };
 		CCF555BD830DA35C91FED634 /* IRCConnectionConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 05553D50FEAD342C4F42FE60 /* IRCConnectionConfig.m */; };
 		CD2A11FAADF69751785EC88A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B586F0E6CAB57502BAF81EE3 /* Security.framework */; };
 		CD511DD091488656C05361AA /* TPCPreferencesImportExport.m in Sources */ = {isa = PBXBuildFile; fileRef = 4B5816C819E8CE84C30D5B69 /* TPCPreferencesImportExport.m */; };
-		CD98C6B76800E21025E8CC33 /* XRAddressBook.m in Sources */ = {isa = PBXBuildFile; fileRef = E14360F9459EFDB95C7FE8EA /* XRAddressBook.m */; };
 		CDA083511ED8B8F6A3C5D77C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E54876E58FD02CA70788D1A0 /* AudioToolbox.framework */; };
 		CDADE6650C11F12D422B8BE3 /* TDCSheetBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 0553B4AFA7C25B1E3182A8B1 /* TDCSheetBase.m */; };
 		CE90E11EA0338143D12F1AF0 /* NSDictionaryHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 10724E36B1CFBF952966BF1E /* NSDictionaryHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -481,7 +464,6 @@
 		D458691BA9D872B9F41012DE /* IRCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BA2D5313F4FA56E19041020 /* IRCUser.m */; };
 		D475E53AD5C320B235F74155 /* NSWindowHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = BE018FEB97BB0047641FBBBA /* NSWindowHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D51E6912F0940F726FF566C9 /* conversionTable.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1849394415473F78E3FC9080 /* conversionTable.plist */; };
-		D5AE82F9B19355850C048805 /* NSThemeFrameHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = CCC525E23DF85A5F4D87CA96 /* NSThemeFrameHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D670F58F8CA787ECADCDB9D0 /* ICMInlineHTML.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = B834D8EE4EE12407EE0F0B3C /* ICMInlineHTML.js */; };
 		D6EBE522F502C50B37A120EC /* ICMPornhub.m in Sources */ = {isa = PBXBuildFile; fileRef = C52E8A8AAF444E45B03981C1 /* ICMPornhub.m */; };
 		D75EBB57DFEFBCACA628A1CA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8C5D8A7EF4EA75277F8B2399 /* Cocoa.framework */; };
@@ -495,7 +477,6 @@
 		DBE1FF7E53447D8A7F57AEF9 /* TVCLogLine.m in Sources */ = {isa = PBXBuildFile; fileRef = EC9F44D897471DA95B036AA8 /* TVCLogLine.m */; };
 		DC878001FB3D8F40F3741F3C /* NSCoderHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D35C9C82E92ADEEAFD1F2BD3 /* NSCoderHelper.m */; };
 		DCEE56B9250ABF266917DF6B /* TDCServerPropertiesSheet.m in Sources */ = {isa = PBXBuildFile; fileRef = 75529470924D355E61556811 /* TDCServerPropertiesSheet.m */; };
-		DDB8A5E1D8957E69881E681D /* NSSplitViewHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = D8A22287D4C8CDCAB250F7B3 /* NSSplitViewHelper.m */; };
 		DE1192F23FAF60A5C6EFCB60 /* NSColorHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 36228270225A33B8DF326B6A /* NSColorHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DE48488A6E9C9F6B8F547984 /* TPCPreferencesLocal.m in Sources */ = {isa = PBXBuildFile; fileRef = 75D287B81D5D24E82F7EC034 /* TPCPreferencesLocal.m */; };
 		DEBCDBAA6C4F6C4F5649418B /* OTRKitAuthenticationDialog.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1BB83C2ACC0560E08B2E84E0 /* OTRKitAuthenticationDialog.strings */; };
@@ -541,7 +522,6 @@
 		EE475C0768A85A75B5FF3076 /* IRCConnectionSocketNWF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72D9972608B760B153DB1711 /* IRCConnectionSocketNWF.swift */; };
 		EEF10F29DC4F7F0423450B60 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B586F0E6CAB57502BAF81EE3 /* Security.framework */; };
 		EF506E20DF4AB913F1657C1B /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
-		F007C9E2749EF12741988E53 /* XRLoggingDeprecated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01CC0BCE1DFE1584AE49C4F2 /* XRLoggingDeprecated.swift */; };
 		F0184EB56DC333453E91F864 /* RCMTrustPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3CC59432EC5F682041D03034 /* RCMTrustPanel.m */; };
 		F06D8F2007285F67BDD23EBC /* NSTextFieldHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A98BCB8D325C63AFB0F3B93 /* NSTextFieldHelper.m */; };
 		F137D92FDCF8E5152635A453 /* TVCMainWindowLoadingScreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 47B93E7D5817426323BB5B03 /* TVCMainWindowLoadingScreen.m */; };
@@ -829,28 +809,6 @@
 		070DCA40BB8576D920BC2970 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation;
-			dstSubfolderSpec = 7;
-			files = (
-				67005A64D2A2209169D31815 /* Acknowledgements.pdf in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
-			dstSubfolderSpec = 16;
-			files = (
-				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
-				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
-				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = Preferences;
 			dstSubfolderSpec = 7;
 			files = (
@@ -863,19 +821,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4E0F6318CBF2B26795332F6B /* CopyFiles */ = {
+		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation/libotr;
+			dstPath = Documentation;
 			dstSubfolderSpec = 7;
 			files = (
-				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
-				789861524D45081052A159D0 /* COPYING in CopyFiles */,
-				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
+				67005A64D2A2209169D31815 /* Acknowledgements.pdf in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5615D8709C84614D39458489 /* CopyFiles */ = {
+		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
+			dstSubfolderSpec = 16;
+			files = (
+				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
+				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
+				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4E0F6318CBF2B26795332F6B /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "Documentation/libgpg-error";
@@ -885,6 +853,18 @@
 				74B561FFEEE6BD2247489C1B /* COPYING in CopyFiles */,
 				5D95626E0D46B572B41C62CE /* COPYING.LIB in CopyFiles */,
 				9B1A343213FFFB4972E852BF /* THANKS in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5615D8709C84614D39458489 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Documentation;
+			dstSubfolderSpec = 7;
+			files = (
+				8A2316D4B852F7647761AC38 /* LICENSE-GPLv2-1.txt in CopyFiles */,
+				EAA16BF275FD48123B5227A0 /* LICENSE-MPLv2-0.txt in CopyFiles */,
+				C6EC020D581671E7DC34004B /* LICENSE-OTRKit.txt in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -964,12 +944,12 @@
 		DDCD514A34BF37DC91E049D4 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation;
+			dstPath = Documentation/libotr;
 			dstSubfolderSpec = 7;
 			files = (
-				8A2316D4B852F7647761AC38 /* LICENSE-GPLv2-1.txt in CopyFiles */,
-				EAA16BF275FD48123B5227A0 /* LICENSE-MPLv2-0.txt in CopyFiles */,
-				C6EC020D581671E7DC34004B /* LICENSE-OTRKit.txt in CopyFiles */,
+				83B89BDFADAD13FBC3BB8424 /* AUTHORS in CopyFiles */,
+				789861524D45081052A159D0 /* COPYING in CopyFiles */,
+				4404FE76CFFA11A29C26B63B /* COPYING.LIB in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -979,7 +959,6 @@
 		0001CA74F07AAD0D95E12E46 /* System Info.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "System Info.bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
 		008906B451D63F390CCAA2AC /* TDCAboutDialog.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCAboutDialog.m; sourceTree = "<group>"; };
 		016ED8AF7860C7B0186B0F63 /* TVCMainWindowChannelView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindowChannelView.m; sourceTree = "<group>"; };
-		01CC0BCE1DFE1584AE49C4F2 /* XRLoggingDeprecated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XRLoggingDeprecated.swift; sourceTree = "<group>"; };
 		02826DB08F1C371479868ECF /* IRCWorld.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCWorld.m; sourceTree = "<group>"; };
 		02AEACE7F5AC4A05D6C788AC /* TLONicknameCompletionStatus.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TLONicknameCompletionStatus.m; sourceTree = "<group>"; };
 		02F9F50A9687FC8277323B99 /* EncryptionKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EncryptionKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1080,7 +1059,6 @@
 		1F156ECFD8B77DE3B9B16AF2 /* TVCTextViewWithIRCFormatterPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCTextViewWithIRCFormatterPrivate.h; sourceTree = "<group>"; };
 		1F37B6DB0929318F211CE130 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1F78EBB191A691CD8602CA15 /* ICLPayloadInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICLPayloadInternal.h; sourceTree = "<group>"; };
-		200AAC59FD58774C4B7171A4 /* NSMethodSignatureHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSMethodSignatureHelper.m; sourceTree = "<group>"; };
 		200F2426B56BF1D746237D48 /* Caffeine.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Caffeine.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		201224AC35765D2C338EB797 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		202CA26E14933EEC37F228F7 /* OELReachability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OELReachability.h; sourceTree = "<group>"; };
@@ -1096,7 +1074,6 @@
 		236652F926464E5A4DC69333 /* TXMasterControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TXMasterControllerPrivate.h; sourceTree = "<group>"; };
 		2387424F53D52D925E36D60A /* GRMustache.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GRMustache.framework; path = "Frameworks/Static Libraries/Libraries/GRMustache.framework"; sourceTree = "<group>"; };
 		23A82EE593086744E0BB44A6 /* IRCTimerCommandPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCTimerCommandPrivate.h; sourceTree = "<group>"; };
-		24824F9C2BC16B25712A112C /* XRBase64Encoding.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XRBase64Encoding.h; sourceTree = "<group>"; };
 		24ACD196D35EA3D45F729978 /* TVCLogControllerOperationQueue.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCLogControllerOperationQueue.m; sourceTree = "<group>"; };
 		24B5415345A8BCEB726CADB4 /* RCMTrustPanel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCMTrustPanel.h; sourceTree = "<group>"; };
 		25D7B65947EE46E6A91AA908 /* TLOpenLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLOpenLink.swift; sourceTree = "<group>"; };
@@ -1258,7 +1235,6 @@
 		5224F0A202AE7A0E409674B2 /* libotr.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libotr.a; path = "Frameworks/Static Libraries/Libraries/libotr.a"; sourceTree = "<group>"; };
 		525F4B91BB26E598C4D98400 /* TPCPreferencesUserDefaults.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TPCPreferencesUserDefaults.h; sourceTree = "<group>"; };
 		52A5441A1F443147D7939239 /* TLONotificationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TLONotificationController.m; sourceTree = "<group>"; };
-		52BCD53BF17DD795A9BD7122 /* XRLoggingDeprecatedPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XRLoggingDeprecatedPrivate.h; sourceTree = "<group>"; };
 		530C3878C2EDE7F7AF4C6E45 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		533C0F864EA352B2DD904004 /* TDCFileTransferDialogTransferController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCFileTransferDialogTransferController.m; sourceTree = "<group>"; };
 		53F1A8DB509975C70C8FFF47 /* LICENSES */ = {isa = PBXFileReference; path = LICENSES; sourceTree = "<group>"; };
@@ -1363,7 +1339,6 @@
 		70706520D00EF783011F25BF /* TDCChannelSpotlightAppearanceInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCChannelSpotlightAppearanceInternal.h; sourceTree = "<group>"; };
 		709F3DC77494302315843363 /* ICLInlineContentModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ICLInlineContentModule.m; sourceTree = "<group>"; };
 		71F0B10DA9F75537FD0EB6AD /* IRCAddressBook.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCAddressBook.h; sourceTree = "<group>"; };
-		72927DD7B723DE31BFE2FD97 /* NSAnimationContextHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSAnimationContextHelper.m; sourceTree = "<group>"; };
 		72D9972608B760B153DB1711 /* IRCConnectionSocketNWF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCConnectionSocketNWF.swift; sourceTree = "<group>"; };
 		731E7DC62970A057589428C1 /* TPCThemeController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TPCThemeController.m; sourceTree = "<group>"; };
 		7377D15160F61015BBC1FCC5 /* Release.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Release.entitlements; sourceTree = "<group>"; };
@@ -1496,7 +1471,6 @@
 		995B1A338B6677DA10F366DA /* JavaScript */ = {isa = PBXFileReference; lastKnownFileType = folder; name = JavaScript; path = Sources/App/Resources/Styling/JavaScript; sourceTree = SOURCE_ROOT; };
 		997B4A27556BB756301F31A1 /* TPCTheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TPCTheme.h; sourceTree = "<group>"; };
 		9984B1E57B002D2DEF767718 /* ICMInlineHTML.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICMInlineHTML.h; sourceTree = "<group>"; };
-		99CE5F995E6992A32A99436F /* NSSplitViewHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSSplitViewHelper.h; sourceTree = "<group>"; };
 		9A333AA56F29535A3B92696B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/TDCChannelSpotlightController.strings; sourceTree = "<group>"; };
 		9A3BDD1C52DB8DC892007517 /* IRCHighlightLogEntry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCHighlightLogEntry.h; sourceTree = "<group>"; };
 		9B5A256F13C157EE752EDE5E /* TVCMainWindowTextViewAppearance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCMainWindowTextViewAppearance.h; sourceTree = "<group>"; };
@@ -1534,7 +1508,6 @@
 		A355CD6AD981389B3DDD8118 /* ICLProcessDelegatePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICLProcessDelegatePrivate.h; sourceTree = "<group>"; };
 		A4300628FF9EB6F01FFBBA3C /* IRCHighlightMatchCondition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCHighlightMatchCondition.h; sourceTree = "<group>"; };
 		A4B3E957868E9F345FDE1620 /* TDCPreferencesUserStyleSheet.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCPreferencesUserStyleSheet.m; sourceTree = "<group>"; };
-		A51F8EA6291CE0FCCC888A55 /* NSThemeFrameHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSThemeFrameHelper.m; sourceTree = "<group>"; };
 		A55F107B1B1CBFAA56C5E81E /* TVCLogScriptEventSinkPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCLogScriptEventSinkPrivate.h; sourceTree = "<group>"; };
 		A56EE0514919479E90D0FF2F /* TVCLogLinePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCLogLinePrivate.h; sourceTree = "<group>"; };
 		A5700068A39A2AF7776EFFB2 /* IRCISupportInfoPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCISupportInfoPrivate.h; sourceTree = "<group>"; };
@@ -1586,7 +1559,6 @@
 		B0F2F78C3CAE156B26F5C14B /* TVCMemberListCellPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCMemberListCellPrivate.h; sourceTree = "<group>"; };
 		B1A987D3B28D289DBF54B4BE /* COPYING.LIB */ = {isa = PBXFileReference; path = COPYING.LIB; sourceTree = "<group>"; };
 		B1C09A5077ED4078F3707B60 /* IRCServerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCServerPrivate.h; sourceTree = "<group>"; };
-		B1F90C832DA9F7A595FCAB8B /* NSImageHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSImageHelper.m; sourceTree = "<group>"; };
 		B2E0AF486656B0FA13BEF59A /* ICMYouTube.mustache */ = {isa = PBXFileReference; path = ICMYouTube.mustache; sourceTree = "<group>"; };
 		B378BA686DA43B1D4AD1EC7B /* NSDateHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSDateHelper.h; sourceTree = "<group>"; };
 		B379ACFBDDC255D0A6E46930 /* TVCMainWindow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindow.m; sourceTree = "<group>"; };
@@ -1609,7 +1581,6 @@
 		B779D79E3729CA72657415FE /* TLOTimer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TLOTimer.h; sourceTree = "<group>"; };
 		B82F317B6DC6FE2F6E3F403D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/TXMenuController.strings; sourceTree = "<group>"; };
 		B834D8EE4EE12407EE0F0B3C /* ICMInlineHTML.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ICMInlineHTML.js; sourceTree = "<group>"; };
-		B91C576FCB261D6B1FF60BF8 /* NSMethodSignatureHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSMethodSignatureHelper.h; sourceTree = "<group>"; };
 		B9259DB57DD36E2C379921BA /* ACKNOWLEDGEMENT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ACKNOWLEDGEMENT.txt; sourceTree = "<group>"; };
 		B939DE5290DEEDC5C0D984C1 /* NSBundleHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSBundleHelper.m; sourceTree = "<group>"; };
 		B9480CDB2C5825AB9FB68617 /* TPI_Caffeine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TPI_Caffeine.h; sourceTree = "<group>"; };
@@ -1622,12 +1593,10 @@
 		BCE53CC6355CE3799CF3D27F /* TDCFileTransferDialogTableCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCFileTransferDialogTableCell.m; sourceTree = "<group>"; };
 		BDEAEB4EBD189C016A47D1EC /* TDCChannelSpotlightSearchResultsTable.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCChannelSpotlightSearchResultsTable.m; sourceTree = "<group>"; };
 		BE018FEB97BB0047641FBBBA /* NSWindowHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSWindowHelper.h; sourceTree = "<group>"; };
-		BFB38D55F52F7EA651D3B709 /* NSImageHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSImageHelper.h; sourceTree = "<group>"; };
 		C00B94A74D2F0007311E3B02 /* IRCChannelUser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCChannelUser.h; sourceTree = "<group>"; };
 		C06A5C83894B8C274C8B6889 /* TPISystemProfiler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TPISystemProfiler.m; sourceTree = "<group>"; };
 		C149991A1C2B7F4EAB86A4D1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/TDCChannelInviteSheet.strings; sourceTree = "<group>"; };
 		C1D7E19180863FC2529425E4 /* THANKS */ = {isa = PBXFileReference; path = THANKS; sourceTree = "<group>"; };
-		C1F8C4221B5DA3BF067DACA0 /* Contacts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Contacts.framework; path = System/Library/Frameworks/Contacts.framework; sourceTree = SDKROOT; };
 		C3F6111F700682E9808CACC4 /* TVCTextViewWithIRCFormatter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCTextViewWithIRCFormatter.h; sourceTree = "<group>"; };
 		C40E6123C12E47027304A3DB /* NSCoderHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSCoderHelper.h; sourceTree = "<group>"; };
 		C418906DA2C60018598F0A85 /* IRCColorFormat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCColorFormat.h; sourceTree = "<group>"; };
@@ -1646,7 +1615,6 @@
 		C75B09F62724F820A9742F93 /* format.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = format.sh; sourceTree = "<group>"; };
 		C7CC84EC21C931A3D0487B04 /* HLSHistoricLogProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HLSHistoricLogProtocol.h; sourceTree = "<group>"; };
 		C81C98D072169349225DA6A6 /* TDCFileTransferDialogPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCFileTransferDialogPrivate.h; sourceTree = "<group>"; };
-		C889992A19830F849B7E5FDF /* XRBase64Encoding.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XRBase64Encoding.m; sourceTree = "<group>"; };
 		C8CD2C317251D099E2D02385 /* TVCTextViewWithIRCFormatter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCTextViewWithIRCFormatter.m; sourceTree = "<group>"; };
 		C94C9C4CC645514DE0EF4C98 /* ICLPluginProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ICLPluginProtocol.h; sourceTree = "<group>"; };
 		CA37BF7138646F0FCF9CCEFF /* IRCClientConfigInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCClientConfigInternal.h; sourceTree = "<group>"; };
@@ -1656,7 +1624,6 @@
 		CB7A66252BD4F8066CB586D3 /* KeysExcludedFromMigrate.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = KeysExcludedFromMigrate.plist; sourceTree = "<group>"; };
 		CC3C08C17BF911B51FFAE3CD /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		CC5C516E0D588D2CF66552B3 /* TDCPreferencesNotificationConfigurationPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCPreferencesNotificationConfigurationPrivate.h; sourceTree = "<group>"; };
-		CCC525E23DF85A5F4D87CA96 /* NSThemeFrameHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSThemeFrameHelper.h; sourceTree = "<group>"; };
 		CD72B44E6241F7752088F72D /* ACKNOWLEDGEMENT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ACKNOWLEDGEMENT.txt; sourceTree = "<group>"; };
 		CD7FA05458E77C3A13C126B9 /* SecureTransportErrorCodes.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = SecureTransportErrorCodes.strings; sourceTree = "<group>"; };
 		CDDC099EA79131DCEB81E6D5 /* TLONotificationConfigurationPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TLONotificationConfigurationPrivate.h; sourceTree = "<group>"; };
@@ -1683,7 +1650,6 @@
 		D47EDEAFEA45197B10928625 /* THANKS */ = {isa = PBXFileReference; path = THANKS; sourceTree = "<group>"; };
 		D4ECCAFD1CFB8AD22B198DB8 /* IRCAddressBookMatchCache.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCAddressBookMatchCache.m; sourceTree = "<group>"; };
 		D55C7A3F975255A656F9D181 /* NSScreenHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSScreenHelper.m; sourceTree = "<group>"; };
-		D5D43A80C68FFAF77BB858EC /* ApplePrivateMac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ApplePrivateMac.h; sourceTree = "<group>"; };
 		D60F7CBAA89E371A2E3EEBD5 /* NSTabViewHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSTabViewHelper.h; sourceTree = "<group>"; };
 		D65A2567ACAE80886989420A /* TVCLogControllerHistoricLogFilePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCLogControllerHistoricLogFilePrivate.h; sourceTree = "<group>"; };
 		D6E7D4A9AE7962339717AF56 /* ICMPornhub.mustache */ = {isa = PBXFileReference; path = ICMPornhub.mustache; sourceTree = "<group>"; };
@@ -1692,7 +1658,6 @@
 		D7B70673D2E20A18179BAC42 /* TPCSandboxMigrationPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TPCSandboxMigrationPrivate.h; sourceTree = "<group>"; };
 		D86B08EE447A90DE77321977 /* TDCPreferencesControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCPreferencesControllerPrivate.h; sourceTree = "<group>"; };
 		D87382EF55DFBEC07B1C1042 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TVCChannelSelectionView.xib; sourceTree = "<group>"; };
-		D8A22287D4C8CDCAB250F7B3 /* NSSplitViewHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSSplitViewHelper.m; sourceTree = "<group>"; };
 		D8ACC913408C883C6B045274 /* TVCLogLineXPC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCLogLineXPC.m; sourceTree = "<group>"; };
 		D925C459F1A7B597A3D3FC5C /* TXMasterController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TXMasterController.m; sourceTree = "<group>"; };
 		D92C8BAC4E54D3E4DEFDCE6A /* NSErrorHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSErrorHelper.h; sourceTree = "<group>"; };
@@ -1719,11 +1684,9 @@
 		E0164169B36C9C0E5AC3469F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCPreferencesUserStyleSheet.xib; sourceTree = "<group>"; };
 		E07CAF23FBD68B1E2BA0E0C4 /* TDCChannelInviteSheet.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCChannelInviteSheet.m; sourceTree = "<group>"; };
 		E082C7EA7B982B1A92966500 /* TDCNicknameColorSheetPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCNicknameColorSheetPrivate.h; sourceTree = "<group>"; };
-		E14360F9459EFDB95C7FE8EA /* XRAddressBook.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XRAddressBook.m; sourceTree = "<group>"; };
 		E21967D709B7428B43F16862 /* THOUnicodeHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = THOUnicodeHelper.h; sourceTree = "<group>"; };
 		E22B36A1A55EAA6762D6BAA3 /* TLOFileLoggerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TLOFileLoggerPrivate.h; sourceTree = "<group>"; };
 		E2563B5CB96C7DCC1B7C3F89 /* NSObjectHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSObjectHelper.h; sourceTree = "<group>"; };
-		E269487BEF2395E22C772100 /* NSAnimationContextHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSAnimationContextHelper.h; sourceTree = "<group>"; };
 		E294CA3575AAEC60AACDC2C1 /* TDCPreferencesGroupBox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCPreferencesGroupBox.h; sourceTree = "<group>"; };
 		E2A177F5E973968EE530650F /* RCMSecureTransport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCMSecureTransport.h; sourceTree = "<group>"; };
 		E2BC037215BBFD2514B54908 /* EncryptionKit_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EncryptionKit_Prefix.pch; sourceTree = "<group>"; };
@@ -1781,7 +1744,6 @@
 		F18343C12C0B895C9218E5E1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		F18DE591344E18C11A6B09A3 /* TLOLocalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLOLocalization.swift; sourceTree = "<group>"; };
 		F197676851E6DF2DD7E7FCF2 /* IRCMessageBatch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCMessageBatch.m; sourceTree = "<group>"; };
-		F19D36290533CD2E8CBAA9BD /* XRAddressBook.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XRAddressBook.h; sourceTree = "<group>"; };
 		F201E1DB23966508F34936B0 /* module.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.private.modulemap; sourceTree = "<group>"; };
 		F2523592892E17D8597F8659 /* ICLPayload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ICLPayload.m; sourceTree = "<group>"; };
 		F2E3B68941FDF579ABA21746 /* NSRangeHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NSRangeHelper.m; sourceTree = "<group>"; };
@@ -1928,10 +1890,7 @@
 			files = (
 				C33AEFE92D0F6EB25A2A4614 /* Foundation.framework in Frameworks */,
 				D75EBB57DFEFBCACA628A1CA /* Cocoa.framework in Frameworks */,
-				17A98FFD407F40029B8948DA /* IOKit.framework in Frameworks */,
 				EEF10F29DC4F7F0423450B60 /* Security.framework in Frameworks */,
-				29512289C948DFB1FC09A6E4 /* WebKit.framework in Frameworks */,
-				C0D55688AF5B9B995373FAF3 /* Contacts.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2203,7 +2162,6 @@
 				43E568DA45AE1F406A55CC21 /* AppKit.framework */,
 				E54876E58FD02CA70788D1A0 /* AudioToolbox.framework */,
 				8C5D8A7EF4EA75277F8B2399 /* Cocoa.framework */,
-				C1F8C4221B5DA3BF067DACA0 /* Contacts.framework */,
 				50D3DE17890BA605065C4BE4 /* CoreData.framework */,
 				530C3878C2EDE7F7AF4C6E45 /* CoreFoundation.framework */,
 				7873771D11222885395DAF5A /* CoreServices.framework */,
@@ -3267,13 +3225,10 @@
 		9C91016009746D53734A7E28 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				D5D43A80C68FFAF77BB858EC /* ApplePrivateMac.h */,
 				3377CAF4C562CB9CFFA1248B /* CocoaExtensions_Prefix.pch */,
 				EF602475E622C3AFE590DCAA /* CocoaExtensions.h */,
 				1898EC0FB73944BEFA199521 /* CocoaExtensionsPrivate.h */,
 				F201E1DB23966508F34936B0 /* module.private.modulemap */,
-				E269487BEF2395E22C772100 /* NSAnimationContextHelper.h */,
-				72927DD7B723DE31BFE2FD97 /* NSAnimationContextHelper.m */,
 				CA79BB931E55022F51123432 /* NSArrayControllerHelper.h */,
 				4B33ACA26EAF383211F6762F /* NSArrayControllerHelper.m */,
 				43482C05D205DB746D432C01 /* NSArrayHelper.h */,
@@ -3300,8 +3255,6 @@
 				0B0C92595F924BBF8D69A356 /* NSFileManagerHelper.m */,
 				588BACF2DED953C188725B92 /* NSFontHelper.h */,
 				A947FE0100C84ED783CBD8C1 /* NSFontHelper.m */,
-				BFB38D55F52F7EA651D3B709 /* NSImageHelper.h */,
-				B1F90C832DA9F7A595FCAB8B /* NSImageHelper.m */,
 				6F3B38822A51C6AC9374C93C /* NSIndexSetHelper.h */,
 				FC553E099950D0FECA61C316 /* NSIndexSetHelper.m */,
 				F0C0742281812DC30CE549E5 /* NSKeyedArchiverHelper.h */,
@@ -3310,8 +3263,6 @@
 				A0527B04DCE5F1BC0A138CDC /* NSLayoutConstraintHelper.m */,
 				CA5CEA5AB7A602AB4AD7766C /* NSMenuHelper.h */,
 				37FC418DC227A46C3E7AD91D /* NSMenuHelper.m */,
-				B91C576FCB261D6B1FF60BF8 /* NSMethodSignatureHelper.h */,
-				200AAC59FD58774C4B7171A4 /* NSMethodSignatureHelper.m */,
 				AE610DC27B05A63DB55B4E7C /* NSNumberHelper.h */,
 				F64389F88C9DCE1A8804B3F6 /* NSNumberHelper.m */,
 				E2563B5CB96C7DCC1B7C3F89 /* NSObjectHelper.h */,
@@ -3325,8 +3276,6 @@
 				6E7CFF6DD547BA90B7B4322A /* NSRectHelper.h */,
 				F9CCB9E40CC7DDF966497F71 /* NSScreenHelper.h */,
 				D55C7A3F975255A656F9D181 /* NSScreenHelper.m */,
-				99CE5F995E6992A32A99436F /* NSSplitViewHelper.h */,
-				D8A22287D4C8CDCAB250F7B3 /* NSSplitViewHelper.m */,
 				821E2DE7BC3A9EB097E4B054 /* NSStringHelper.h */,
 				D19F357710D61C29EA189D2A /* NSStringHelper.m */,
 				415B1AB2111659A59942E658 /* NSStringTokenizer.h */,
@@ -3335,8 +3284,6 @@
 				1180905A597FD7C5885474A5 /* NSTabViewHelper.m */,
 				FAEA223AED7D1F33DEE5AD85 /* NSTextFieldHelper.h */,
 				3A98BCB8D325C63AFB0F3B93 /* NSTextFieldHelper.m */,
-				CCC525E23DF85A5F4D87CA96 /* NSThemeFrameHelper.h */,
-				A51F8EA6291CE0FCCC888A55 /* NSThemeFrameHelper.m */,
 				3AEF2BF14155AECEDC085F4A /* NSURLHelper.h */,
 				95A9D6366D6983829A95A146 /* NSURLHelper.m */,
 				9565EA9D274788EEF179E0A2 /* NSUserDefaultsHelper.h */,
@@ -3360,10 +3307,6 @@
 				0B5F0F550C24A0719EB52BE9 /* SWStringHelper.swift */,
 				F75A136E6C1206E2C3EF7AF6 /* XRAccessibility.h */,
 				228C915C005476892AD65BE1 /* XRAccessibility.m */,
-				F19D36290533CD2E8CBAA9BD /* XRAddressBook.h */,
-				E14360F9459EFDB95C7FE8EA /* XRAddressBook.m */,
-				24824F9C2BC16B25712A112C /* XRBase64Encoding.h */,
-				C889992A19830F849B7E5FDF /* XRBase64Encoding.m */,
 				56EBB058CF12DEFA6EA8C631 /* XRFileSystemMonitor.h */,
 				4E3C3A23466BAD68D9D3B14E /* XRFileSystemMonitor.m */,
 				EEB7E1E396EFAA4AB3AEB25F /* XRGlobalModels.h */,
@@ -3373,8 +3316,6 @@
 				3658549D8F94D20F89287E98 /* XRLogging.h */,
 				1B2FDF63B6F369F02C4E7E9B /* XRLogging.m */,
 				0824E4F17951B02D44628EF9 /* XRLogging.swift */,
-				01CC0BCE1DFE1584AE49C4F2 /* XRLoggingDeprecated.swift */,
-				52BCD53BF17DD795A9BD7122 /* XRLoggingDeprecatedPrivate.h */,
 				492BB772F54DA9F0C8264EB8 /* XRLoggingPrivate.h */,
 				76AA2966E5288E465645FEC0 /* XRPortablePropertyDict.h */,
 				F94CF5CF6DDC940CF348818B /* XRPortablePropertyDict.m */,
@@ -4312,10 +4253,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8250BC827C1B2F7E6AB555D0 /* ApplePrivateMac.h in Headers */,
 				4131DC40EA3313178CA9DCA3 /* CocoaExtensions.h in Headers */,
 				355668ED2D9B816D0A6C07F6 /* CocoaExtensionsPrivate.h in Headers */,
-				564EB0EC866154CCAF0DC082 /* NSAnimationContextHelper.h in Headers */,
 				EC60103D6DFDAC3CEC1CF7E3 /* NSArrayControllerHelper.h in Headers */,
 				30ADAE65265206E6825F4B44 /* NSArrayHelper.h in Headers */,
 				08A591AE4B6894823296E91A /* NSBundleHelper.h in Headers */,
@@ -4329,12 +4268,10 @@
 				0582C4F5146F8C0929120F85 /* NSErrorHelper.h in Headers */,
 				E17B028E87B1B05290E128CA /* NSFileManagerHelper.h in Headers */,
 				C3508B85880FC14C0A745893 /* NSFontHelper.h in Headers */,
-				C8BD61160C5FEFC368896C5B /* NSImageHelper.h in Headers */,
 				9B5CD9AC3C181BE918F42408 /* NSIndexSetHelper.h in Headers */,
 				A71C6225790CE544E21845B8 /* NSKeyedArchiverHelper.h in Headers */,
 				79561ADDF058CA93FC4606D2 /* NSLayoutConstraintHelper.h in Headers */,
 				9291D5753BCEB747ABDF7C1F /* NSMenuHelper.h in Headers */,
-				75DE394E1A0359CA246B7F5A /* NSMethodSignatureHelper.h in Headers */,
 				06EE52EABA144B6D1FE8F702 /* NSNumberHelper.h in Headers */,
 				04ECD220E8FEBA4415621C83 /* NSObjectHelper.h in Headers */,
 				53F3602E543D2C96EB604399 /* NSOutlineViewHelper.h in Headers */,
@@ -4342,12 +4279,10 @@
 				30FA47228F847F3D7DAA75C1 /* NSRangeHelper.h in Headers */,
 				C6B65118815F97FF08946672 /* NSRectHelper.h in Headers */,
 				5CE799CA958931A6298B915E /* NSScreenHelper.h in Headers */,
-				A2F54C299BCD0351C1064DBF /* NSSplitViewHelper.h in Headers */,
 				A3426C7648714583FDA10F19 /* NSStringHelper.h in Headers */,
 				81A3DF112361C56D460A58D9 /* NSStringTokenizer.h in Headers */,
 				6091F67404D1BC4C92E74E2E /* NSTabViewHelper.h in Headers */,
 				A7EE4F562FED494B39184ECD /* NSTextFieldHelper.h in Headers */,
-				D5AE82F9B19355850C048805 /* NSThemeFrameHelper.h in Headers */,
 				72FAB1244B61716BB3D5A160 /* NSURLHelper.h in Headers */,
 				B84DC6376F600C4BA71577FA /* NSUserDefaultsHelper.h in Headers */,
 				B03AFDFC755AC4CC840B9EFC /* NSValueHelper.h in Headers */,
@@ -4357,13 +4292,10 @@
 				55DDDD1832B2CC2E57910C7F /* RCMTrustPanel.h in Headers */,
 				3A35995DEFA206D37647B3F9 /* StaticDefinitions.h in Headers */,
 				54A491F4D5FDECDB223894EA /* XRAccessibility.h in Headers */,
-				3F922D5C1E8DC05E4E9B20C5 /* XRAddressBook.h in Headers */,
-				CC3A6FB95CC41951921558B2 /* XRBase64Encoding.h in Headers */,
 				AD4261B3E561E15E344640B6 /* XRFileSystemMonitor.h in Headers */,
 				88AC3013BA0F8D0F013FE70B /* XRGlobalModels.h in Headers */,
 				35372B9D70112B070376FBD9 /* XRKeychain.h in Headers */,
 				8D65E28AE164241E18980AD9 /* XRLogging.h in Headers */,
-				736108E0467EC582832863FB /* XRLoggingDeprecatedPrivate.h in Headers */,
 				D410D39668FB1D6638E74BB7 /* XRLoggingPrivate.h in Headers */,
 				227FBDF97D34BD869A83DC68 /* XRPortMapper.h in Headers */,
 				70EAD04DCC255F302570C48E /* XRPortablePropertyDict.h in Headers */,
@@ -5139,7 +5071,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C76ACDB52AEEBAB472BFF280 /* NSAnimationContextHelper.m in Sources */,
 				1BDFA500FAE23DCFBC4A058F /* NSArrayControllerHelper.m in Sources */,
 				D3B28AA3E252412C85DF3C60 /* NSArrayHelper.m in Sources */,
 				251155302F5A33BDCF5C382B /* NSBundleHelper.m in Sources */,
@@ -5153,24 +5084,20 @@
 				565B126AE21F3E1CCAC1E421 /* NSErrorHelper.m in Sources */,
 				242297F81D7054F3DF176C8E /* NSFileManagerHelper.m in Sources */,
 				A21CB2973A95BF5D8E97B8D2 /* NSFontHelper.m in Sources */,
-				0A7DCC1D3EB295C7D3753DF4 /* NSImageHelper.m in Sources */,
 				6DA9C6EB577578C1E6DAC128 /* NSIndexSetHelper.m in Sources */,
 				C4FECBCA9BC00F8C698CA8EC /* NSKeyedArchiverHelper.m in Sources */,
 				2AAEF5E33836C64D3482E61F /* NSLayoutConstraintHelper.m in Sources */,
 				5E56CACDFCB9A1F3453F4DEE /* NSMenuHelper.m in Sources */,
-				72D54803EC658B09ACD4429E /* NSMethodSignatureHelper.m in Sources */,
 				3526031E2A5FDA874F8EF0BD /* NSNumberHelper.m in Sources */,
 				B2737FF219B8B73F0155E2E4 /* NSObjectHelper.m in Sources */,
 				8B4EA1435A28C688E6FA1822 /* NSOutlineViewHelper.m in Sources */,
 				6DB227D5DFAFDD11FAE7299E /* NSPasteboardHelper.m in Sources */,
 				FA552F8D08D033FD72918581 /* NSRangeHelper.m in Sources */,
 				99F4BE1F6B5CB703E809B39C /* NSScreenHelper.m in Sources */,
-				DDB8A5E1D8957E69881E681D /* NSSplitViewHelper.m in Sources */,
 				08D5AD66A9CDDBDF212780B8 /* NSStringHelper.m in Sources */,
 				3C925A0F03606A02B5C15D68 /* NSStringTokenizer.m in Sources */,
 				3AD51A5F17AD763E6F78D3E7 /* NSTabViewHelper.m in Sources */,
 				F06D8F2007285F67BDD23EBC /* NSTextFieldHelper.m in Sources */,
-				92159C2ECFDCEB3C55CEF993 /* NSThemeFrameHelper.m in Sources */,
 				017DB603349130E5CC807A1E /* NSURLHelper.m in Sources */,
 				0B8E8E683E07ADFDBF24F78D /* NSUserDefaultsHelper.m in Sources */,
 				B0062E519A8BF4EEA32ACFB9 /* NSValueHelper.m in Sources */,
@@ -5185,14 +5112,11 @@
 				1CED56C69D7A5654EF1DDCE1 /* SWNumericHelper.swift in Sources */,
 				1E63668264321B5F2AF043EF /* SWStringHelper.swift in Sources */,
 				0059B7E465DB8AF4AB067B79 /* XRAccessibility.m in Sources */,
-				CD98C6B76800E21025E8CC33 /* XRAddressBook.m in Sources */,
-				4CA33C07B8FE475BE2F51744 /* XRBase64Encoding.m in Sources */,
 				BAFB7873C9D179454462F00E /* XRFileSystemMonitor.m in Sources */,
 				4DE085B66CD3322C78DB8B31 /* XRGlobalModels.m in Sources */,
 				667880AD0E99186CD7AF93D6 /* XRKeychain.m in Sources */,
 				99228CC6A2FF88D9FDA167D2 /* XRLogging.m in Sources */,
 				6E25D551995504FE3F960670 /* XRLogging.swift in Sources */,
-				F007C9E2749EF12741988E53 /* XRLoggingDeprecated.swift in Sources */,
 				FB340DF21736C362D71E9DE9 /* XRPortMapper.m in Sources */,
 				52BDE80D618CF3F3DC5B6718 /* XRPortablePropertyDict.m in Sources */,
 				FFEADE2AC87CD4934C9C5951 /* XRPortablePropertyObject.m in Sources */,
@@ -6290,7 +6214,6 @@
 		53B174273AFB2490CD0273DC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_WARN_STRICT_PROTOTYPES = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -6303,7 +6226,7 @@
 				INSTALL_PATH = "@rpath";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				MODULEMAP_PRIVATE_FILE = "Frameworks/Cocoa Extensions/Classes/module.private.modulemap";
-				PRODUCT_BUNDLE_IDENTIFIER = com.codeux.frameworks.CocoaExtensions;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vakesz.glasstual.frameworks.CocoaExtensions;
 				PRODUCT_NAME = CocoaExtensions;
 				SKIP_INSTALL = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -6546,7 +6469,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks/Static Libraries/Libraries\"",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.codeux.frameworks.encryptionKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vakesz.glasstual.frameworks.EncryptionKit;
 				PRODUCT_NAME = EncryptionKit;
 				SKIP_INSTALL = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -6556,7 +6479,6 @@
 		903D99EE1B024F90E6A580F1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_WARN_STRICT_PROTOTYPES = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -6569,7 +6491,7 @@
 				INSTALL_PATH = "@rpath";
 				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks";
 				MODULEMAP_PRIVATE_FILE = "Frameworks/Cocoa Extensions/Classes/module.private.modulemap";
-				PRODUCT_BUNDLE_IDENTIFIER = com.codeux.frameworks.CocoaExtensions;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vakesz.glasstual.frameworks.CocoaExtensions;
 				PRODUCT_NAME = CocoaExtensions;
 				SKIP_INSTALL = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -6658,7 +6580,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/Frameworks/Static Libraries/Libraries\"",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.codeux.frameworks.encryptionKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vakesz.glasstual.frameworks.EncryptionKit;
 				PRODUCT_NAME = EncryptionKit;
 				SKIP_INSTALL = YES;
 				VERSIONING_SYSTEM = "apple-generic";

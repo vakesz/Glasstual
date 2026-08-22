@@ -25,8 +25,6 @@
                 <outlet property="channelListTable" destination="1805" id="ex0-5N-btj"/>
                 <outlet property="clientCertificateChangeCertificateButton" destination="l36-PJ-JBU" id="vUq-tL-9aS"/>
                 <outlet property="clientCertificateCommonNameField" destination="nly-3d-FIq" id="OGc-7I-cMH"/>
-                <outlet property="clientCertificateMD5FingerprintCopyButton" destination="KJ9-QR-tAv" id="xCY-zF-PWK"/>
-                <outlet property="clientCertificateMD5FingerprintField" destination="Grr-p8-MOF" id="E7G-dk-8gX"/>
                 <outlet property="clientCertificateResetCertificateButton" destination="sab-tw-7nn" id="dNc-7S-cf1"/>
                 <outlet property="clientCertificateSHA1FingerprintCopyButton" destination="f9F-WF-ubf" id="e62-bc-Pb2"/>
                 <outlet property="clientCertificateSHA1FingerprintField" destination="nFm-83-7HQ" id="8QY-ha-rQf"/>
@@ -2223,7 +2221,6 @@ Gw
                         <gridRow id="LVM-ri-oUP"/>
                         <gridRow id="mRF-0R-krg"/>
                         <gridRow id="1CG-bD-ulB"/>
-                        <gridRow id="DDA-TD-JgL"/>
                     </rows>
                     <columns>
                         <gridColumn xPlacement="fill" width="137" id="mzu-pc-PbB"/>
@@ -2357,45 +2354,9 @@ Gw
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
-                                <accessibility description="Copy MD5 Fingerprint"/>
+                                <accessibility description="Copy SHA-1 Fingerprint"/>
                                 <connections>
                                     <action selector="onClientCertificateFingerprintSHA1CopyRequested:" target="-2" id="BkR-Tr-pMV"/>
-                                </connections>
-                            </button>
-                        </gridCell>
-                        <gridCell row="DDA-TD-JgL" column="mzu-pc-PbB" id="Is8-DS-Eu3">
-                            <textField key="contentView" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="Fm4-76-q5h">
-                                <rect key="frame" x="-2" y="3" width="141" height="16"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="MD5 Fingerprint:" usesSingleLineMode="YES" id="Mmj-Ja-V8x">
-                                    <font key="font" metaFont="system"/>
-                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
-                        </gridCell>
-                        <gridCell row="DDA-TD-JgL" column="bSr-v0-1FE" id="abJ-zN-WA0">
-                            <textField key="contentView" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="Grr-p8-MOF">
-                                <rect key="frame" x="143" y="3" width="279" height="16"/>
-                                <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" alignment="left" title="Label" usesSingleLineMode="YES" id="MCd-Ig-Szi">
-                                    <font key="font" metaFont="system"/>
-                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                                <connections>
-                                    <accessibilityConnection property="title" destination="Fm4-76-q5h" id="uCM-i6-5Tk"/>
-                                </connections>
-                            </textField>
-                        </gridCell>
-                        <gridCell row="DDA-TD-JgL" column="70M-PD-rGb" id="l73-89-Bna">
-                            <button key="contentView" horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="KJ9-QR-tAv">
-                                <rect key="frame" x="421" y="-7" width="66" height="32"/>
-                                <buttonCell key="cell" type="push" title="Copy" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="ElY-gw-ZZB">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <accessibility description="Copy MD5 Fingerprint"/>
-                                <connections>
-                                    <action selector="onClientCertificateFingerprintMD5CopyRequested:" target="-2" id="fQM-JR-IE9"/>
                                 </connections>
                             </button>
                         </gridCell>
