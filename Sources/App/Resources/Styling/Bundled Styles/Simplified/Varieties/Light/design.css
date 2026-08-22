@@ -325,6 +325,34 @@ div.line[data-line-type="wallops"] .sender {
 	font-weight: 600;
 }
 
+/* Delivery state (labeled-response + echo-message)
+
+ A line the local user sent is dimmed until the server echoes it back.
+ A rejected line keeps a red rail and shows the server's reason below. */
+
+div.line[data-delivery-state="pending"] {
+	opacity: 0.55;
+	transition: opacity 0.3s;
+}
+
+div.line[data-delivery-state="failed"] {
+	box-shadow: inset 3px 0 0 0 var(--danger);
+}
+
+body[dir="rtl"] div.line[data-delivery-state="failed"] {
+	box-shadow: inset -3px 0 0 0 var(--danger);
+}
+
+div.line .deliveryFailure {
+	display: block;
+	font-size: 0.85em;
+	color: var(--danger);
+}
+
+div.line .deliveryFailure:empty {
+	display: none;
+}
+
 /* Selected User Messages */
 
 .sender {

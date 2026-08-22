@@ -286,5 +286,7 @@
 	<true/>
 	<key>Plugin Approvals</key>
 	<dict/>
+	<key>IRC -&gt; STS Policies</key>
+	<dict/>
 </dict>
 </plist>

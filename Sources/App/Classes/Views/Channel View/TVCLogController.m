@@ -1386,6 +1386,12 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		templateAttributes[@"messageIdentifier"] = messageIdentifier;
 	}
 
+	NSString *deliveryState = logLine.deliveryStateString;
+
+	if (deliveryState) {
+		templateAttributes[@"deliveryState"] = deliveryState;
+	}
+
 	// ---- //
 
 	NSString *classAttribute = nil;

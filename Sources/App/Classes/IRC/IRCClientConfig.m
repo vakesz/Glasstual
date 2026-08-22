@@ -328,6 +328,7 @@ NS_ASSUME_NONNULL_BEGIN
 							 forKey:@"cachedLastServerTimeCapabilityReceivedAtTimestamp"];
 	[defaultsMutable assignObjectTo:&self->_identityClientSideCertificate forKey:@"identityClientSideCertificate"];
 	[defaultsMutable assignStringTo:&self->_awayNickname forKey:@"awayNickname"];
+	[defaultsMutable assignStringTo:&self->_saslMechanismPreference forKey:@"saslMechanismPreference"];
 	[defaultsMutable assignStringTo:&self->_connectionName forKey:@"connectionName"];
 	[defaultsMutable assignStringTo:&self->_ctcpVersionReply forKey:@"ctcpVersionReply"];
 	[defaultsMutable assignStringTo:&self->_nickname forKey:@"nickname"];
@@ -704,6 +705,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[dic maybeSetObject:self.alternateNicknames forKey:@"alternateNicknames"];
 	[dic maybeSetObject:self.awayNickname forKey:@"awayNickname"];
+	[dic maybeSetObject:self.saslMechanismPreference forKey:@"saslMechanismPreference"];
 	[dic maybeSetObject:self.connectionName forKey:@"connectionName"];
 	[dic maybeSetObject:self.ctcpVersionReply forKey:@"ctcpVersionReply"];
 	[dic maybeSetObject:self.loginCommands forKey:@"onConnectCommands"];
@@ -1036,6 +1038,7 @@ NS_ASSUME_NONNULL_BEGIN
 @dynamic autoSleepModeDisconnect;
 @dynamic autojoinWaitsForNickServ;
 @dynamic awayNickname;
+@dynamic saslMechanismPreference;
 @dynamic channelList;
 @dynamic cipherSuites;
 @dynamic connectionName;
@@ -1310,6 +1313,13 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self->_identityClientSideCertificate != identityClientSideCertificate) {
 		self->_identityClientSideCertificate = [identityClientSideCertificate copy];
+	}
+}
+
+- (void)setSaslMechanismPreference:(nullable NSString *)saslMechanismPreference
+{
+	if (self->_saslMechanismPreference != saslMechanismPreference) {
+		self->_saslMechanismPreference = [saslMechanismPreference copy];
 	}
 }
 

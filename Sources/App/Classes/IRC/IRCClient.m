@@ -98,6 +98,7 @@
 #import "TLOInputHistoryPrivate.h"
 #import "TLOLocalization.h"
 #import "TLONotificationControllerPrivate.h"
+#import "TLOSCRAMClient.h"
 #import "TLOpenLink.h"
 #import "TLOSoundPlayer.h"
 #import "TLOSpeechSynthesizerPrivate.h"
@@ -128,6 +129,7 @@
 #import "IRCAddressBookMatchCachePrivate.h"
 #import "IRCAddressBookUserTrackingPrivate.h"
 #import "IRCCapability.h"
+#import "IRCSTSPolicy.h"
 #import "IRCChannelConfig.h"
 #import "IRCChannelModePrivate.h"
 #import "IRCChannelUserPrivate.h"
@@ -180,6 +182,20 @@ NSString *const IRCClientWillDisconnectNotification = @"IRCClientWillDisconnectN
 NSString *const IRCClientDidDisconnectNotification = @"IRCClientDidDisconnectNotification";
 
 NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNicknameChangedNotification";
+
+/* One outgoing PRIVMSG/NOTICE/TAGMSG awaiting its labeled response.
+ The line is printed immediately in the pending state; the label ties
+ the echo (or an ACK/FAIL) back to it. */
+@interface IRCLabeledDelivery : NSObject
+@property(nonatomic, copy) NSString *label;
+@property(nonatomic, weak, nullable) IRCChannel *channel;
+@property(nonatomic, copy, nullable) NSString *lineNumber; // Set once the line is printed
+@property(nonatomic, assign) BOOL resolved;
+@property(nonatomic, assign) TVCLogLineDeliveryState state;
+@end
+
+@implementation IRCLabeledDelivery
+@end
 
 @interface IRCClient ()
 // Properties that are public in IRCClient.h
@@ -239,6 +255,14 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @property(nonatomic, strong) NSMutableOrderedSet<NSString *> *enabledCapabilityNames;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSArray<NSString *> *> *offeredCapabilities;
 @property(nonatomic, copy, nullable) NSString *saslMechanism;
+@property(nonatomic, copy, nullable) NSArray<NSString *> *saslOfferedMechanisms;
+@property(nonatomic, strong) NSMutableArray<NSString *> *saslTriedMechanisms;
+@property(nonatomic, strong, nullable) TLOSCRAMClient *saslScramClient;
+@property(nonatomic, strong, nullable) NSMutableString *saslIncomingPayload;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, IRCLabeledDelivery *> *pendingDeliveries;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, NSString *> *labelForBatchToken;
+@property(nonatomic, assign) NSUInteger labelCounter;
+@property(nonatomic, assign) TVCLogLineDeliveryState nextLineDeliveryState; // Consumed by the next -print:
 @property(nonatomic, assign) NSUInteger connectDelay;
 @property(nonatomic, assign) NSUInteger lastServerSelected;
 @property(nonatomic, assign) NSUInteger lastWhoRequestChannelListIndex;
@@ -256,6 +280,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @property(nonatomic, strong, nullable) NSMutableString *zncBouncerCertificateChainDataMutable;
 @property(nonatomic, copy, nullable) NSString *temporaryServerAddressOverride;
 @property(nonatomic, assign) uint16_t temporaryServerPortOverride;
+@property(nonatomic, assign) BOOL performedSTSUpgrade;				   // Guards against an STS upgrade loop
+@property(nonatomic, assign) BOOL forceSecuredConnectionOnNextConnect; // One-shot TLS for an STS upgrade
 @property(readonly) BOOL isBrokenIRCd_aka_Twitch;
 @property(readonly) BOOL monitorAwayStatus;
 @property(readonly) BOOL supportsAdvancedTracking;
@@ -326,6 +352,9 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	self.pendingCapabilityRequestsMutable = [NSMutableArray array];
 	self.enabledCapabilityNames = [NSMutableOrderedSet orderedSet];
 	self.offeredCapabilities = [NSMutableDictionary dictionary];
+	self.saslTriedMechanisms = [NSMutableArray array];
+	self.pendingDeliveries = [NSMutableDictionary dictionary];
+	self.labelForBatchToken = [NSMutableDictionary dictionary];
 
 	self.channelListPrivate = [NSMutableArray array];
 
@@ -3085,9 +3114,34 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 																		 onClient:self
 																	 withLineType:lineType];
 
+			__block NSString *deliveryLabel = nil;
+
 			TLOEncryptionManagerEncodingDecodingCallbackBlock encryptionBlock =
 				^(NSString *originalString, BOOL wasEncrypted) {
 					if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage] && wasEncrypted == NO) {
+						/* With labeled-response the local line is printed now
+						 in a pending state and updated when the echo returns;
+						 without it, echo-message suppresses the local print. */
+						if ([self labeledResponseTrackingEnabled] == NO) {
+							return;
+						}
+
+						deliveryLabel = [self registerPendingDeliveryForChannel:channel];
+
+						self.nextLineDeliveryState = TVCLogLineDeliveryStatePending;
+
+						[self print:[IRCClient redactedServiceMessage:originalString sentTo:channel.name]
+										  by:self.userNickname
+								   inChannel:channel
+									  asType:lineType
+									 command:commandToSend
+								  receivedAt:[NSDate date]
+								 isEncrypted:wasEncrypted
+							referenceMessage:nil
+							 completionBlock:^(TVCLogControllerPrintOperationContext *context) {
+								 [self attachLineNumber:context.lineNumber toDeliveryWithLabel:deliveryLabel];
+							 }];
+
 						return;
 					}
 
@@ -3107,7 +3161,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 					sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
 				}
 
-				[self send:commandToSend, channel.name, sendMessage, nil];
+				if (deliveryLabel) {
+					[self sendCommand:commandToSend
+							arguments:@[ channel.name, sendMessage ]
+								 tags:@{@"label" : deliveryLabel}];
+				} else {
+					[self send:commandToSend, channel.name, sendMessage, nil];
+				}
 			};
 
 			if (encryptText == NO) {
@@ -5146,6 +5206,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 																			 onClient:self
 																		 withLineType:lineType];
 
+				__block NSString *deliveryLabel = nil;
+
 				TLOEncryptionManagerEncodingDecodingCallbackBlock encryptionBlock = ^(NSString *originalString,
 																					  BOOL wasEncrypted) {
 					if (isSilentConnectCommand) {
@@ -5162,6 +5224,26 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 					}
 
 					if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage] && wasEncrypted == NO) {
+						if ([self labeledResponseTrackingEnabled] == NO) {
+							return;
+						}
+
+						deliveryLabel = [self registerPendingDeliveryForChannel:destination];
+
+						self.nextLineDeliveryState = TVCLogLineDeliveryStatePending;
+
+						[self print:[IRCClient redactedServiceMessage:originalString sentTo:destinationName]
+										  by:self.userNickname
+								   inChannel:destination
+									  asType:lineType
+									 command:command
+								  receivedAt:[NSDate date]
+								 isEncrypted:wasEncrypted
+							referenceMessage:nil
+							 completionBlock:^(TVCLogControllerPrintOperationContext *context) {
+								 [self attachLineNumber:context.lineNumber toDeliveryWithLabel:deliveryLabel];
+							 }];
+
 						return;
 					}
 
@@ -5181,7 +5263,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 						sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
 					}
 
-					[self send:commandToSend, destinationName, sendMessage, nil];
+					if (deliveryLabel) {
+						[self sendCommand:commandToSend
+								arguments:@[ destinationName, sendMessage ]
+									 tags:@{@"label" : deliveryLabel}];
+					} else {
+						[self send:commandToSend, destinationName, sendMessage, nil];
+					}
 				};
 
 				if (destination == nil || isUnencryptedMessage) {
@@ -5716,6 +5804,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	logLine.messageIdentifier = referenceMessage.messageIdentifier;
 
+	/* Set by the labeled-response send path for an outgoing pending line;
+	 consumed once so no other line inherits it. */
+	logLine.deliveryState = self.nextLineDeliveryState;
+
+	self.nextLineDeliveryState = TVCLogLineDeliveryStateNone;
+
 	logLine.lineType = lineType;
 	logLine.memberType = memberType;
 
@@ -6156,6 +6250,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 {
 	NSParameterAssert(sender == self.socket);
 
+	/* A secure connection was reached; a later plaintext bounce may
+	 upgrade again. */
+	self.performedSTSUpgrade = NO;
+
 	NSString *protocolDescription = [RCMSecureTransport descriptionForProtocolType:protocolType];
 
 	NSString *cipherDescription = [RCMSecureTransport descriptionForCipherSuite:cipherSuite];
@@ -6370,6 +6468,14 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	NSParameterAssert(message != nil);
 
 	[self processIncomingMessageAttributes:message];
+
+	/* An echo, ACK or FAIL for one of our own labeled messages resolves
+	 the pending line and is not processed as a fresh message. */
+	if ([self resolveLabeledResponseForMessage:message]) {
+		[self processBundlesServerMessage:message];
+
+		return;
+	}
 
 	if (message.commandNumeric > 0) {
 		[self receiveNumericReply:message];
@@ -8547,6 +8653,205 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 }
 
 #pragma mark -
+#pragma mark Labeled Response
+
+/* Delivery tracking runs only when the client both labels its outgoing
+ messages (labeled-response) and hears them back (echo-message). Without
+ both, today's behaviour stands: echo-message suppresses the local print,
+ or a plain local print is made. */
+- (BOOL)labeledResponseTrackingEnabled
+{
+	return ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityLabeledResponse] &&
+			[self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]);
+}
+
+- (NSString *)nextMessageLabel
+{
+	self.labelCounter += 1;
+
+	return [NSString stringWithFormat:@"g%lu", (unsigned long)self.labelCounter];
+}
+
+/* Registers a delivery and returns the tags to attach to the outgoing
+ message, or nil when tracking is off. */
+- (nullable NSString *)registerPendingDeliveryForChannel:(nullable IRCChannel *)channel
+{
+	if ([self labeledResponseTrackingEnabled] == NO) {
+		return nil;
+	}
+
+	NSString *label = [self nextMessageLabel];
+
+	IRCLabeledDelivery *delivery = [IRCLabeledDelivery new];
+
+	delivery.label = label;
+	delivery.channel = channel;
+	delivery.state = TVCLogLineDeliveryStatePending;
+
+	self.pendingDeliveries[label] = delivery;
+
+	/* A response that never arrives leaves the line pending forever
+	 without this. */
+	[self performSelector:@selector(timeoutDeliveryWithLabel:) withObject:label afterDelay:30.0];
+
+	return label;
+}
+
+- (void)attachLineNumber:(NSString *)lineNumber toDeliveryWithLabel:(NSString *)label
+{
+	IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
+
+	if (delivery == nil) {
+		return;
+	}
+
+	delivery.lineNumber = lineNumber;
+}
+
+- (void)timeoutDeliveryWithLabel:(NSString *)label
+{
+	IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
+
+	if (delivery == nil || delivery.resolved) {
+		return;
+	}
+
+	[self resolveDeliveryWithLabel:label
+							 state:TVCLogLineDeliveryStateFailed
+				 messageIdentifier:nil
+							reason:TXTLS(@"IRC[lbl-to]")];
+}
+
+- (void)resolveDeliveryWithLabel:(NSString *)label
+						   state:(TVCLogLineDeliveryState)state
+			   messageIdentifier:(nullable NSString *)messageIdentifier
+						  reason:(nullable NSString *)reason
+{
+	IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
+
+	if (delivery == nil || delivery.resolved) {
+		return;
+	}
+
+	delivery.resolved = YES;
+	delivery.state = state;
+
+	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(timeoutDeliveryWithLabel:) object:label];
+
+	NSString *lineNumber = delivery.lineNumber;
+
+	if (lineNumber == nil) {
+		return;
+	}
+
+	IRCChannel *channel = delivery.channel;
+
+	NSString *stateString = [TVCLogLine stringForDeliveryState:state] ?: @"";
+
+	NSMutableArray<id> *arguments = [NSMutableArray arrayWithObject:lineNumber];
+
+	[arguments addObject:stateString];
+	[arguments addObject:(messageIdentifier ?: [NSNull null])];
+	[arguments addObject:(reason ?: [NSNull null])];
+
+	[channel.viewController evaluateFunction:@"_Glasstual.lineDeliveryStateChanged" withArguments:arguments];
+}
+
+/* Resolves the delivery a labeled message refers to. Returns YES when
+ the message was consumed (the echo, an ACK or a FAIL for one of our
+ own messages) and must not be processed further. */
+- (BOOL)resolveLabeledResponseForMessage:(IRCMessage *)m
+{
+	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityLabeledResponse] == NO) {
+		return NO;
+	}
+
+	NSString *command = m.command;
+
+	/* A labeled-response batch carries the label on the BATCH command;
+	 the messages inside it carry only the batch token. Remember the
+	 mapping so a batched echo can still be tied to its delivery. */
+	if ([command isEqualToStringIgnoringCase:@"BATCH"]) {
+		NSString *reference = [m paramAt:0];
+
+		if ([reference hasPrefix:@"+"]) {
+			NSString *label = m.messageTags[@"label"];
+
+			if (label.length > 0) {
+				self.labelForBatchToken[[reference substringFromIndex:1]] = label;
+			}
+		} else if ([reference hasPrefix:@"-"]) {
+			NSString *token = [reference substringFromIndex:1];
+
+			NSString *label = self.labelForBatchToken[token];
+
+			if (label) {
+				[self.labelForBatchToken removeObjectForKey:token];
+
+				/* A batch that produced no echo is an acknowledgement. */
+				[self resolveDeliveryWithLabel:label
+										 state:TVCLogLineDeliveryStateDelivered
+							 messageIdentifier:nil
+										reason:nil];
+			}
+		}
+
+		return NO;
+	}
+
+	NSString *label = m.messageTags[@"label"];
+
+	if (label.length == 0 && m.batchToken.length > 0) {
+		label = self.labelForBatchToken[m.batchToken];
+	}
+
+	if (label.length == 0 || self.pendingDeliveries[label] == nil) {
+		return NO;
+	}
+
+	if ([command isEqualToStringIgnoringCase:@"FAIL"]) {
+		NSString *reason = [m paramAt:([m paramsCount] - 1)];
+
+		[self resolveDeliveryWithLabel:label state:TVCLogLineDeliveryStateFailed messageIdentifier:nil reason:reason];
+
+		return YES;
+	}
+
+	if ([command isEqualToStringIgnoringCase:@"ACK"]) {
+		[self resolveDeliveryWithLabel:label state:TVCLogLineDeliveryStateDelivered messageIdentifier:nil reason:nil];
+
+		return YES;
+	}
+
+	NSUInteger commandNumeric = [IRCCommandIndex indexOfRemoteCommand:command];
+
+	if (commandNumeric == IRCRemoteCommandPrivmsg || commandNumeric == IRCRemoteCommandNotice ||
+		commandNumeric == IRCRemoteCommandTagmsg) {
+		/* The echo of our own message: mark delivered and adopt the msgid
+		 the server assigned so reply/react can reference the line. */
+		[self resolveDeliveryWithLabel:label
+								 state:TVCLogLineDeliveryStateDelivered
+					 messageIdentifier:m.messageIdentifier
+								reason:nil];
+
+		return YES;
+	}
+
+	return NO;
+}
+
+- (TVCLogLineDeliveryState)deliveryStateForLabel:(NSString *)label
+{
+	IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
+
+	if (delivery) {
+		return delivery.state;
+	}
+
+	return TVCLogLineDeliveryStateNone;
+}
+
+#pragma mark -
 #pragma mark Standard Replies
 
 /* FAIL, WARN and NOTE: "<command> <code> [<context>...] :<description>".
@@ -8728,6 +9033,15 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	self.capabilityNegotiationIsPaused = NO;
 
 	self.saslMechanism = nil;
+	self.saslOfferedMechanisms = nil;
+	self.saslScramClient = nil;
+	self.saslIncomingPayload = nil;
+
+	[self.saslTriedMechanisms removeAllObjects];
+
+	/* Any outstanding timeout finds its entry gone and does nothing. */
+	[self.pendingDeliveries removeAllObjects];
+	[self.labelForBatchToken removeAllObjects];
 
 	[self.enabledCapabilityNames removeAllObjects];
 	[self.offeredCapabilities removeAllObjects];
@@ -8744,6 +9058,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 - (void)queueCapabilityRequestsFromOffered:(NSDictionary<NSString *, NSArray<NSString *> *> *)offered
 {
 	NSParameterAssert(offered != nil);
+
+	[self handleSTSCapabilityFromOffered:offered];
 
 	NSArray<IRCCapability *> *requestable = [self.capabilityRegistry capabilitiesToRequestFromOffered:offered];
 
@@ -8763,6 +9079,87 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 			[self.pendingCapabilityRequestsMutable addObjectWithoutDuplication:name];
 		}
+	}
+}
+
+/* IRCv3 Strict Transport Security. The "sts" capability is never
+ requested; its values drive a per host policy and, on a plaintext
+ connection, an immediate secure reconnect. */
+- (void)handleSTSCapabilityFromOffered:(NSDictionary<NSString *, NSArray<NSString *> *> *)offered
+{
+	NSArray<NSString *> *values = offered[@"sts"];
+
+	if (values == nil) {
+		return;
+	}
+
+	IRCSTSCapabilityValues *parsed = [IRCSTSCapabilityValues valuesFromCapabilityValues:values];
+
+	if (parsed == nil) {
+		return;
+	}
+
+	NSString *host = self.socket.config.serverAddress;
+
+	if (host.length == 0) {
+		host = self.serverAddress;
+	}
+
+	if (host.length == 0) {
+		return;
+	}
+
+	uint16_t connectedPort = self.socket.config.serverPort;
+
+	uint16_t upgradePort = 0;
+
+	IRCSTSPolicyAction action = [[IRCSTSPolicyStore sharedStore] applyCapabilityValues:parsed
+																			   forHost:host
+																		 connectedPort:connectedPort
+																			   secured:self.isSecured
+																		   upgradePort:&upgradePort];
+
+	switch (action) {
+	case IRCSTSPolicyActionUpgrade: {
+		/* Never upgrade more than once per connection to avoid a loop. */
+		if (self.performedSTSUpgrade || upgradePort == 0) {
+			break;
+		}
+
+		self.performedSTSUpgrade = YES;
+
+		[self printDebugInformationToConsole:TXTLS(@"IRC[sts-p2]", upgradePort)];
+
+		__weak IRCClient *weakSelf = self;
+
+		self.disconnectCallback = ^{
+			IRCClient *strongSelf = weakSelf;
+
+			strongSelf.temporaryServerAddressOverride = host;
+			strongSelf.temporaryServerPortOverride = upgradePort;
+			strongSelf.forceSecuredConnectionOnNextConnect = YES;
+
+			[strongSelf connect];
+		};
+
+		[self disconnect];
+
+		break;
+	}
+	case IRCSTSPolicyActionStored: {
+		IRCSTSPolicy *policy = [[IRCSTSPolicyStore sharedStore] policyForHost:host];
+
+		[self printDebugInformationToConsole:TXTLS(@"IRC[sts-p3]", policy ? policy.port : connectedPort)];
+
+		break;
+	}
+	case IRCSTSPolicyActionCleared: {
+		[self printDebugInformationToConsole:TXTLS(@"IRC[sts-p4]")];
+
+		break;
+	}
+	case IRCSTSPolicyActionNone:
+		break;
 	}
 }
 
@@ -8904,9 +9301,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		[self sendNextCapability];
 	} else if ([command isEqualToStringIgnoringCase:@"AUTHENTICATE"]) {
-		if ([modifier isEqualToString:@"+"]) {
-			[self sendSASLIdentificationInformation];
-		}
+		[self receiveSASLAuthenticatePayload:modifier];
 	}
 
 	[self postReceivedMessage:m];
@@ -8915,37 +9310,109 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 #pragma mark -
 #pragma mark SASL Negotiation
 
+/* The mechanisms this client can run, most preferred first. EXTERNAL
+ comes first when a client certificate is present because it needs no
+ password. SCRAM-SHA-256 is preferred over PLAIN because it never puts
+ the password on the wire. */
+- (NSArray<NSString *> *)saslSupportedMechanismsInPreferenceOrder
+{
+	NSMutableArray<NSString *> *mechanisms = [NSMutableArray array];
+
+	if (self.socket.isConnectedWithClientSideCertificate &&
+		self.config.saslAuthenticationDisableExternalMechanism == NO) {
+		[mechanisms addObject:@"EXTERNAL"];
+	}
+
+	if (self.config.nicknamePassword.length > 0) {
+		[mechanisms addObject:TLOSCRAMClient.mechanismName];
+		[mechanisms addObject:@"PLAIN"];
+	}
+
+	/* A configured preference is promoted to the front when it is usable. */
+	NSString *preference = self.config.saslMechanismPreference;
+
+	if (preference.length > 0) {
+		for (NSString *mechanism in mechanisms) {
+			if ([mechanism isEqualToStringIgnoringCase:preference]) {
+				[mechanisms removeObject:mechanism];
+				[mechanisms insertObject:mechanism atIndex:0];
+
+				break;
+			}
+		}
+	}
+
+	return mechanisms;
+}
+
+/* Picks the first mechanism the client supports that the server offered
+ (or any supported one when the server did not list them) and has not
+ already been tried this negotiation. */
+- (nullable NSString *)saslNextMechanismFromOffered:(NSArray<NSString *> *)offered
+{
+	for (NSString *mechanism in [self saslSupportedMechanismsInPreferenceOrder]) {
+		if ([self.saslTriedMechanisms containsObjectIgnoringCase:mechanism]) {
+			continue;
+		}
+
+		if (offered.count == 0 || [offered containsObjectIgnoringCase:mechanism]) {
+			return mechanism;
+		}
+	}
+
+	return nil;
+}
+
 - (BOOL)selectSASLMechanismFromOffered:(NSArray<NSString *> *)mechanisms
 {
 	NSParameterAssert(mechanisms != nil);
 
-	NSString *mechanism = nil;
+	self.saslOfferedMechanisms = mechanisms;
 
-	if (self.socket.isConnectedWithClientSideCertificate &&
-		self.config.saslAuthenticationDisableExternalMechanism == NO) {
-		if (mechanisms.count == 0 || [mechanisms containsObjectIgnoringCase:@"EXTERNAL"]) {
-			mechanism = @"EXTERNAL";
-		}
-	}
-
-	if (mechanism == nil && self.config.nicknamePassword.length > 0) {
-		if (mechanisms.count == 0 || [mechanisms containsObjectIgnoringCase:@"PLAIN"]) {
-			mechanism = @"PLAIN";
-		}
-	}
+	NSString *mechanism = [self saslNextMechanismFromOffered:mechanisms];
 
 	self.saslMechanism = mechanism;
 
 	return (mechanism != nil);
 }
 
-- (void)sendSASLIdentificationInformation
+/* Reassembles an incoming AUTHENTICATE payload, which the server may
+ split into 400 character chunks that end with a shorter chunk or "+". */
+- (void)receiveSASLAuthenticatePayload:(NSString *)payload
 {
 	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsInSASLNegotiation] == NO) {
 		return;
 	}
 
-	if ([self.saslMechanism isEqualToString:@"PLAIN"]) {
+	NSString *chunk = payload;
+
+	if ([chunk isEqualToString:@"+"]) {
+		chunk = @"";
+	}
+
+	if (self.saslIncomingPayload == nil) {
+		self.saslIncomingPayload = [NSMutableString string];
+	}
+
+	[self.saslIncomingPayload appendString:chunk];
+
+	if (chunk.length == 400) {
+		/* A full length chunk means more is coming. */
+		return;
+	}
+
+	NSString *assembled = [self.saslIncomingPayload copy];
+
+	self.saslIncomingPayload = nil;
+
+	[self sendSASLIdentificationInformationForServerData:assembled];
+}
+
+- (void)sendSASLIdentificationInformationForServerData:(NSString *)serverData
+{
+	NSString *mechanism = self.saslMechanism;
+
+	if ([mechanism isEqualToString:@"PLAIN"]) {
 		/* Same fallback as the USER command: an empty username means
 		 the nickname is the account name. */
 		NSString *username = self.config.username;
@@ -8957,18 +9424,126 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		NSString *authString =
 			[NSString stringWithFormat:@"%@%C%@%C%@", username, 0x00, username, 0x00, self.config.nicknamePassword];
 
-		NSArray *authStrings = [authString base64EncodingWithLineLength:400];
+		[self sendSASLPayloadInChunks:authString];
+	} else if ([mechanism isEqualToString:@"EXTERNAL"]) {
+		[self sendCapabilityAuthenticate:@"+"];
+	} else if ([mechanism isEqualToString:TLOSCRAMClient.mechanismName]) {
+		[self sendSASLScramInformationForServerData:serverData];
+	}
+}
 
-		for (NSString *string in authStrings) {
-			[self sendCapabilityAuthenticate:string];
+- (void)sendSASLScramInformationForServerData:(NSString *)serverData
+{
+	NSString *username = self.config.username;
+
+	if (username.length == 0) {
+		username = self.config.nickname;
+	}
+
+	/* First AUTHENTICATE + from the server: reply with client-first. */
+	if (self.saslScramClient == nil) {
+		self.saslScramClient = [[TLOSCRAMClient alloc] initWithUsername:username password:self.config.nicknamePassword];
+
+		NSString *clientFirst = self.saslScramClient.clientFirstMessage;
+
+		[self sendSASLPayloadInChunks:clientFirst];
+
+		return;
+	}
+
+	NSData *decoded = [[NSData alloc] initWithBase64EncodedString:serverData options:0];
+
+	NSString *message = nil;
+
+	if (decoded) {
+		message = [[NSString alloc] initWithData:decoded encoding:NSUTF8StringEncoding];
+	}
+
+	if (message == nil) {
+		[self abortSASLNegotiationWithReason:TXTLS(@"IRC[sts-sc1]")];
+
+		return;
+	}
+
+	NSError *error = nil;
+
+	if (self.saslScramClient.state == TLOSCRAMClientStateSentClientFinal) {
+		/* Server final message: verify the signature and finish. */
+		if ([self.saslScramClient verifyServerFinalMessage:message error:&error] == NO) {
+			[self abortSASLNegotiationWithReason:TXTLS(@"IRC[sts-sc2]", error.localizedDescription)];
+
+			return;
 		}
 
-		if (authStrings.count == 0 || ((NSString *)authStrings.lastObject).length == 400) {
-			[self sendCapabilityAuthenticate:@"+"];
-		}
-	} else if ([self.saslMechanism isEqualToString:@"EXTERNAL"]) {
+		[self sendCapabilityAuthenticate:@"+"];
+
+		return;
+	}
+
+	/* Server first message: compute and send client-final. */
+	NSString *clientFinal = [self.saslScramClient clientFinalMessageForServerFirstMessage:message error:&error];
+
+	if (clientFinal == nil) {
+		[self abortSASLNegotiationWithReason:TXTLS(@"IRC[sts-sc2]", error.localizedDescription)];
+
+		return;
+	}
+
+	[self sendSASLPayloadInChunks:clientFinal];
+}
+
+/* Base64 encodes a SASL message and sends it as AUTHENTICATE chunks of
+ at most 400 characters. An empty payload, or one whose last chunk is
+ exactly 400 characters, is terminated with "+". */
+- (void)sendSASLPayloadInChunks:(NSString *)payload
+{
+	NSArray<NSString *> *chunks = [payload base64EncodingWithLineLength:400];
+
+	for (NSString *chunk in chunks) {
+		[self sendCapabilityAuthenticate:chunk];
+	}
+
+	if (chunks.count == 0 || ((NSString *)chunks.lastObject).length == 400) {
 		[self sendCapabilityAuthenticate:@"+"];
 	}
+}
+
+- (void)abortSASLNegotiationWithReason:(NSString *)reason
+{
+	[self printDebugInformationToConsole:reason];
+
+	[self sendCapabilityAuthenticate:@"*"];
+
+	self.saslScramClient = nil;
+	self.saslIncomingPayload = nil;
+}
+
+/* Called on RPL_SASLMECHS (908): the mechanism was refused and the
+ server listed what it does support. Retry with the next one. Returns
+ YES when a retry was started. */
+- (BOOL)retrySASLNegotiationWithMechanisms:(NSArray<NSString *> *)mechanisms
+{
+	if (self.saslMechanism) {
+		[self.saslTriedMechanisms addObjectWithoutDuplication:self.saslMechanism];
+	}
+
+	self.saslScramClient = nil;
+	self.saslIncomingPayload = nil;
+
+	NSArray<NSString *> *offered = (mechanisms.count > 0 ? mechanisms : self.saslOfferedMechanisms) ?: @[];
+
+	NSString *mechanism = [self saslNextMechanismFromOffered:offered];
+
+	if (mechanism == nil) {
+		return NO;
+	}
+
+	self.saslMechanism = mechanism;
+	self.saslOfferedMechanisms = offered;
+
+	[self sendCapabilityAuthenticate:mechanism];
+
+	return YES;
 }
 
 - (BOOL)sendSASLIdentificationRequest
@@ -8998,6 +9573,9 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 {
 	[self disableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
 	[self disableCapability:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL];
+
+	self.saslScramClient = nil;
+	self.saslIncomingPayload = nil;
 }
 
 #pragma mark -
@@ -10624,14 +11202,41 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		break;
 	}
+	case RPL_SASLMECHS: /* 908: mechanism refused, server lists what it has */
+	{
+		if (printMessage) {
+			[self printErrorReply:m];
+		}
+
+		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsInSASLNegotiation] == NO) {
+			break;
+		}
+
+		/* "<nick> <mechanisms> :are available SASL mechanisms" */
+		NSArray<NSString *> *mechanisms = @[];
+
+		if ([m paramsCount] >= 2) {
+			NSCharacterSet *separators = [NSCharacterSet characterSetWithCharactersInString:@", "];
+
+			mechanisms = [[[m paramAt:1] componentsSeparatedByCharactersInSet:separators] arrayByRemovingEmptyValues];
+		}
+
+		if ([self retrySASLNegotiationWithMechanisms:mechanisms]) {
+			break; // Negotiation continues with the next mechanism.
+		}
+
+		[self disableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
+
+		[self resumeCapabilityNegotiation];
+
+		break;
+	}
 	case RPL_SASLSUCCESS:
 	case ERR_NICKLOCKED:
 	case ERR_SASLFAIL:
 	case ERR_SASLTOOLONG:
 	case ERR_SASLABORTED:
-	case ERR_SASLALREADY:
-	case RPL_SASLMECHS: /* Treated as error */
-	{
+	case ERR_SASLALREADY: {
 		if (printMessage) {
 			if (numeric == RPL_SASLSUCCESS) { // success
 				[self printReply:m];
@@ -10642,6 +11247,9 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsInSASLNegotiation]) {
 			[self disableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
+
+			self.saslScramClient = nil;
+			self.saslIncomingPayload = nil;
 
 			[self resumeCapabilityNegotiation];
 		}
@@ -11668,6 +12276,30 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	 store. Once its defined, its to be nil'd out no matter what. */
 	self.temporaryServerAddressOverride = nil;
 	self.temporaryServerPortOverride = 0;
+
+	/* Strict Transport Security: an unexpired policy for this host forces
+	 TLS on the policy port whatever the configuration says. Never a
+	 downgrade — a configuration that already prefers TLS is left alone. */
+	uint16_t stsPort = serverPort;
+	BOOL stsSecured = connectionPrefersSecuredConnection;
+
+	if ([[IRCSTSPolicyStore sharedStore] applyPolicyForHost:serverAddress toPort:&stsPort secured:&stsSecured]) {
+		if (stsPort != serverPort || stsSecured != connectionPrefersSecuredConnection) {
+			[self printDebugInformationToConsole:TXTLS(@"IRC[sts-p1]", stsPort)];
+		}
+
+		serverPort = stsPort;
+
+		connectionPrefersSecuredConnection = stsSecured;
+	}
+
+	/* A pending STS upgrade (see -handleSTSCapabilityFromOffered:) forces
+	 TLS for this one reconnect even without a stored policy. */
+	if (self.forceSecuredConnectionOnNextConnect) {
+		self.forceSecuredConnectionOnNextConnect = NO;
+
+		connectionPrefersSecuredConnection = YES;
+	}
 
 	/* Reset status */
 	self.connectType = connectMode;
