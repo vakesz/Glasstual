@@ -5,7 +5,7 @@
 	<key>Reserved Information</key>
 	<dict>
 		<key>Next Index Value</key>
-		<real>5119</real>
+		<real>5120</real>
 	</dict>
 	<key>adchat</key>
 	<dict>
@@ -672,6 +672,15 @@
 		<real>5117</real>
 		<key>arguments</key>
 		<string>&lt;nickname&gt;</string>
+	</dict>
+	<key>silence</key>
+	<dict>
+		<key>developerModeOnly</key>
+		<false/>
+		<key>indexValue</key>
+		<integer>5119</integer>
+		<key>arguments</key>
+		<string>[&lt;+ | -&gt;&lt;hostmask | nickname&gt;]</string>
 	</dict>
 	<key>shun</key>
 	<dict>

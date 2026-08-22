@@ -48,6 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TDCChannelBanListSheetEntry : NSObject
 @property(nonatomic, copy) NSString *entryMask;
+@property(nonatomic, copy, nullable) NSString *entryMaskDescription; // EXTBAN explanation shown as a tooltip
 @property(nonatomic, copy) NSString *entryAuthor;
 @property(readonly, copy) NSString *entryCreationDateString;
 @property(nonatomic, copy, nullable) NSDate *entryCreationDate;
@@ -129,7 +130,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clear
 {
+	[self willChangeValueForKey:@"entryCount"];
+	[self willChangeValueForKey:@"entryCountDescription"];
+
 	self.entryTableController.content = nil;
+
+	[self didChangeValueForKey:@"entryCountDescription"];
+	[self didChangeValueForKey:@"entryCount"];
 }
 
 - (void)addEntry:(NSString *)entryMask
@@ -145,19 +152,37 @@ NS_ASSUME_NONNULL_BEGIN
 	TDCChannelBanListSheetEntry *newEntry = [TDCChannelBanListSheetEntry new];
 
 	newEntry.entryMask = entryMask;
+	newEntry.entryMaskDescription = [self.client.supportInfo descriptionForExtendedBanMask:entryMask];
 	newEntry.entryAuthor = entryAuthor;
 	newEntry.entryCreationDate = entryCreationDate;
 
 	[self willChangeValueForKey:@"entryCount"];
+	[self willChangeValueForKey:@"entryCountDescription"];
 
 	[self.entryTableController addObject:newEntry];
 
+	[self didChangeValueForKey:@"entryCountDescription"];
 	[self didChangeValueForKey:@"entryCount"];
 }
 
 - (NSNumber *)entryCount
 {
 	return @([self.entryTableController.arrangedObjects count]);
+}
+
+/* "N entries", or "N of MAX entries" when the server advertises MAXLIST. */
+- (NSString *)entryCountDescription
+{
+	NSUInteger entryCount = [self.entryTableController.arrangedObjects count];
+
+	NSUInteger maximumEntries = [self.client.supportInfo maximumListEntriesForModeSymbol:self.modeSymbol];
+
+	if (maximumEntries > 0) {
+		return TXTLS(
+			@"TDCChannelBanListSheet[n0f-mx]", TXFormattedNumber(entryCount), TXFormattedNumber(maximumEntries));
+	}
+
+	return TXTLS(@"TDCChannelBanListSheet[n0f-cn]", TXFormattedNumber(entryCount));
 }
 
 #pragma mark -
