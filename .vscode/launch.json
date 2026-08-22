@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Glasstual",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/DerivedData/Build/Products/Debug/Glasstual.app",
+      "preLaunchTask": "Build (Debug)",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
