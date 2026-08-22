@@ -1407,10 +1407,12 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 
 - (BOOL)textEncryptionIsOpportunistic
 {
+	return NO;
 }
 
 - (BOOL)textEncryptionIsOpportunisticPreferenceEnabled
 {
+	return NO;
 }
 
 - (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired
@@ -1419,10 +1421,12 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 
 - (BOOL)textEncryptionIsRequired
 {
+	return NO;
 }
 
 - (BOOL)textEncryptionIsRequiredPreferenceEnabled
 {
+	return NO;
 }
 
 - (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled
@@ -1431,6 +1435,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 
 - (BOOL)textEncryptionIsEnabled
 {
+	return NO;
 }
 #endif
 

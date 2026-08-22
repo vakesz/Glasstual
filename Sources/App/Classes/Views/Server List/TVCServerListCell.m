@@ -252,6 +252,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	BOOL isActive = drawingContext.isActive;
 	BOOL isGroupItem = drawingContext.isGroupItem;
+	BOOL isSelected = drawingContext.isSelected;
 	BOOL isHighlight = NO;
 	BOOL isErroneous = NO;
 
@@ -282,9 +283,11 @@ NS_ASSUME_NONNULL_BEGIN
 	} else {
 		controlFont = [NSFont systemFontOfSize:NSFont.systemFontSize];
 
-		if (isErroneous) {
+		/* On a selected row the label colours are swapped by AppKit to suit
+		 the selection fill; a fixed red or blue would not be. */
+		if (isErroneous && isSelected == NO) {
 			controlColor = [NSColor systemRedColor];
-		} else if (isActive && isHighlight) {
+		} else if (isActive && isHighlight && isSelected == NO) {
 			controlColor = [NSColor systemBlueColor];
 		} else if (isActive == NO) {
 			controlColor = [NSColor tertiaryLabelColor];
@@ -404,9 +407,11 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 		return;
 	}
 
+	/* The inverted palette only matches the accent fill that is drawn
+	 while the window is active; an inactive selection is grey. */
 	self.messageCountBadgeImageView.image = [self messageCountBadgeForCount:treeUnreadCount
 																isHighlight:isHighlight
-																 isSelected:isSelected];
+																 isSelected:(isSelected && isWindowActive)];
 
 	/* The count is already spoken as part of the row label; the badge
 	 itself is decorative for VoiceOver. */
@@ -593,6 +598,16 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 - (void)drawDraggingDestinationFeedbackInRect:(NSRect)dirtyRect
 {
 	; // Do nothing for this...
+}
+
+/* AppKit only emphasizes a selection while the table is first responder.
+ Focus in this window lives in the input text field almost all of the time,
+ which would leave the selected item grey. Mail and Messages keep their
+ sidebar selection in the accent colour while the window is key, and so
+ does this one. */
+- (BOOL)isEmphasized
+{
+	return self.window.isKeyWindow;
 }
 
 - (void)setSelected:(BOOL)selected

@@ -186,7 +186,7 @@ NS_ASSUME_NONNULL_BEGIN
 			errorDescription = self.validationBlock(stringToValidate);
 		}
 	} else {
-		if (self.performValidationWhenEmpty) {
+		if (self.performValidationWhenEmpty && self.validationBlock) {
 			errorDescription = self.validationBlock(stringToValidate);
 		} else if (self.stringValueIsInvalidOnEmpty) {
 			errorDescription = TXTLS(@"BasicLanguage[fo8-1h]");

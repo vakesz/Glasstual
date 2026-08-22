@@ -397,11 +397,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 		[colorPanel setTarget:self];
 		[colorPanel setAction:@selector(foregroundColorPanelColorChanged:)];
-		[colorPanel setAlphaValue:1.0];
+		colorPanel.showsAlpha = NO;
 		[colorPanel setMode:NSColorPanelModeColorList];
 		[colorPanel setColor:[NSColor formatterWhiteColor]];
 
 		[colorPanel orderFront:nil];
+
+		return;
 	}
 
 	NSRange selectedTextRange = self.textField.selectedRange;
@@ -422,11 +424,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 		[colorPanel setTarget:self];
 		[colorPanel setAction:@selector(backgroundColorPanelColorChanged:)];
-		[colorPanel setAlphaValue:1.0];
+		colorPanel.showsAlpha = NO;
 		[colorPanel setMode:NSColorPanelModeColorList];
 		[colorPanel setColor:[NSColor formatterBlackColor]];
 
 		[colorPanel orderFront:nil];
+
+		return;
 	}
 
 	NSRange selectedTextRange = self.textField.selectedRange;

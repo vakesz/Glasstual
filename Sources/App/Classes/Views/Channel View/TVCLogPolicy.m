@@ -194,6 +194,9 @@ NS_ASSUME_NONNULL_BEGIN
 		[contextMenu addItem:menuItem];
 	}
 
+	/* WebKit's own items and the developer items carry no symbol. */
+	[menuController() applySymbolsToMenu:contextMenu];
+
 	return contextMenu;
 }
 

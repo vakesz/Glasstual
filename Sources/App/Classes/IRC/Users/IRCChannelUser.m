@@ -303,13 +303,6 @@ NS_ASSUME_NONNULL_BEGIN
 	} copy];
 }
 
-+ (NSComparator)nicknameLengthComparator
-{
-	return [^(IRCChannelUser *object1, IRCChannelUser *object2) {
-		return (object1.user.nickname.length <= object2.user.nickname.length);
-	} copy];
-}
-
 - (NSString *)description
 {
 	return [NSString stringWithFormat:@"<IRCChannelUser %@%@>", self.mark, self.user.nickname];

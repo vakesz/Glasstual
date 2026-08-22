@@ -777,7 +777,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	[self zncPlaybackClearChannel:channel];
 
 	if (self.hiddenCommandResponsesQuery == channel) {
-		self.hiddenCommandResponsesQuery = channel;
+		self.hiddenCommandResponsesQuery = nil;
 	}
 
 	if (self.rawDataLogQuery == channel) {
@@ -2410,12 +2410,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	NSParameterAssert(withName != nil);
 	NSParameterAssert(channelList != nil);
 
+	/* Channel names follow the server casemapping, like nicknames. */
+	NSString *withNameFolded = [self casefoldNickname:withName];
+
 	NSUInteger channelIndex =
 		[channelList indexOfObjectWithOptions:NSEnumerationConcurrent
 								  passingTest:^BOOL(IRCChannel *channel, NSUInteger index, BOOL *stop) {
-									  NSString *channelName = channel.name;
-
-									  return [withName isEqualToStringIgnoringCase:channelName];
+									  return [withNameFolded isEqualToString:[self casefoldNickname:channel.name]];
 								  }];
 
 	if (channelIndex != NSNotFound) {
@@ -2508,6 +2509,21 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	os_unfair_lock_unlock(&self->_userListLock);
 
 	return user;
+}
+
+- (void)rekeyUserList
+{
+	os_unfair_lock_lock(&self->_userListLock);
+
+	NSArray<IRCUser *> *users = self.userListPrivate.allValues;
+
+	[self.userListPrivate removeAllObjects];
+
+	for (IRCUser *user in users) {
+		self.userListPrivate[[self casefoldNickname:user.nickname]] = user;
+	}
+
+	os_unfair_lock_unlock(&self->_userListLock);
 }
 
 - (IRCUserMutable *)mutableCopyOfUserWithNickname:(NSString *)nickname
@@ -3109,6 +3125,11 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	} else {
 		stringToSend = [NSString stringWithFormat:@"%@ %@", command, text];
 	}
+
+	/* A reply is a single line; configured text must not be able to
+	 inject a second command. */
+	stringToSend = [stringToSend stringByReplacingOccurrencesOfString:@"\r" withString:@" "];
+	stringToSend = [stringToSend stringByReplacingOccurrencesOfString:@"\n" withString:@" "];
 
 	NSString *message = [NSString stringWithFormat:@"%c%@%c", 0x01, stringToSend, 0x01];
 
@@ -5926,7 +5947,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		IRCClientDisconnectMode disconnectType = self.disconnectType;
 
 		if (disconnectError) {
-			// TODO: Don't hardcode the error domain and code
 			if (disconnectError.code == IRCConnectionErrorCodeBadCertificate &&
 				[disconnectError.domain isEqualToString:IRCConnectionErrorDomain]) {
 				disconnectType = IRCClientDisconnectModeBadCertificate;
@@ -6139,18 +6159,27 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	[self printDebugInformationToConsole:TXTLS(@"IRC[5h5-sl]")];
 }
 
-/* This delegate call is not invoked on the main thread
- which means if it is modified to interact with UI,
- then it must invoke on the main thread eventually. */
+/* This delegate call is not invoked on the main thread. Everything
+ it touches (lastMessageReceived, the raw data log query, the batch
+ queue, the client state the handlers mutate) is owned by the main
+ thread, so the work is performed there. The XPC queue is serial and
+ the hop is synchronous, which preserves line ordering. */
 - (void)ircConnection:(IRCConnection *)sender didReceiveData:(NSString *)data
 {
 	NSParameterAssert(sender == self.socket);
 
-	if (self.isConnected == NO || self.isTerminating) {
+	if (data.length == 0) {
 		return;
 	}
 
-	if (data.length == 0) {
+	XRPerformBlockSynchronouslyOnMainQueue(^{
+		[self _ircConnectionDidReceiveData:data];
+	});
+}
+
+- (void)_ircConnectionDidReceiveData:(NSString *)data
+{
+	if (self.isConnected == NO || self.isTerminating) {
 		return;
 	}
 
@@ -6455,6 +6484,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 - (void)receiveWallops:(IRCMessage *)m
 {
 	NSParameterAssert(m != nil);
+
+	NSAssertReturn([m paramsCount] > 0);
 
 	/* WALLOPS are rewritten so that they can be parsed as regular notices */
 	NSMutableArray *paramsMutable = [m.params mutableCopy];
@@ -6988,7 +7019,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		return;
 	}
 
-	*text = [textIn substringFromIndex:(textHead.length + 2)]; // Remove the [#channelname] from the text
+	*text = [textIn substringFromIndex:(spacePosition + 1)]; // Remove the "[#channelname] " from the text
 
 	*target = channel;
 }
@@ -7239,7 +7270,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	/* VERSION command */
 	else if ([command isEqualToString:@"VERSION"]) {
-		NSString *fakeVersion = [TPCPreferences masqueradeCTCPVersion];
+		/* A reply set on the connection wins over the global masquerade
+		 because networks that gate on the client string do so per network. */
+		NSString *fakeVersion = self.config.ctcpVersionReply;
+
+		if (fakeVersion.length == 0) {
+			fakeVersion = [TPCPreferences masqueradeCTCPVersion];
+		}
 
 		if (fakeVersion.length > 0) {
 			[self sendCTCPReply:sender command:command text:fakeVersion];
@@ -7816,7 +7853,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 {
 	NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] == 1);
+	/* Print-only NICK messages (ZNC playback) carry the channel as an extra parameter. */
+	NSAssertReturn([m paramsCount] >= 1);
 
 	/* Print only messages target specific channels which means
 	 the index of incoming data will be different */
@@ -8274,6 +8312,11 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		[self.batchMessages queueEntry:newBatchMessage];
 
+		/* A nested batch is replayed in order as part of its parent. */
+		if (parentBatchMessage) {
+			[parentBatchMessage queueEntry:newBatchMessage];
+		}
+
 		/* Set vendor specific flags based on BATCH command values */
 		if ([batchType isEqualToString:@"znc.in/playback"]) {
 			self.zncBouncerIsPlayingBackHistory = self.isConnectedToZNC;
@@ -8332,6 +8375,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 {
 	NSParameterAssert(m != nil);
 
+	/* BATCH commands themselves are never queued. A nested batch opens
+	 and closes with the parent's token in its batch= tag and has to be
+	 registered immediately so that its own messages can be queued. */
+	if ([m.command isEqualToStringIgnoringCase:@"BATCH"]) {
+		return NO;
+	}
+
 	NSString *batchToken = m.batchToken;
 
 	if (batchToken) {
@@ -8370,9 +8420,9 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		}
 	}
 
-	if (recursionDepth == 0) {
-		[self.batchMessages dequeueEntry:batchMessage];
-	}
+	/* Nested batches are registered in the container as well so that
+	 their messages can be queued by token; remove them here too. */
+	[self.batchMessages dequeueEntry:batchMessage];
 }
 
 #pragma mark -
@@ -8647,7 +8697,11 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 			}];
 
 		if (nextCapabilityIndex == NSNotFound) {
-			[self sendCapability:@"END" data:nil];
+			/* CAP END only belongs to registration. After that, CAP NEW/ACK
+			 exchanges must not end with it. */
+			if (self.isLoggedIn == NO) {
+				[self sendCapability:@"END" data:nil];
+			}
 
 			return;
 		}
@@ -8802,10 +8856,23 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	if ([command isEqualToStringIgnoringCase:@"CAP"]) {
 		if ([subcommand isEqualToStringIgnoringCase:@"LS"]) {
+			/* CAP LS 302 may span multiple lines. Every line except the last
+			 carries a "*" before the capability list. Do not request anything
+			 until the full list has arrived. */
+			BOOL moreToCome = [[m paramAt:2] isEqualToString:@"*"];
+
+			if (moreToCome) {
+				actions = [m sequence:3];
+			}
+
 			NSArray *caps = [actions componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
 			for (NSString *cap in caps) {
 				[self processPendingCapability:cap];
+			}
+
+			if (moreToCome) {
+				return;
 			}
 		} else if ([subcommand isEqualToStringIgnoringCase:@"ACK"]) {
 			NSArray *caps = [actions componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
@@ -8879,12 +8946,16 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	}
 
 	if ([self isPendingCapabilityEnabled:ClientIRCv3SupportedCapabilitySASLPlainText]) {
-		NSString *authString = [NSString stringWithFormat:@"%@%C%@%C%@",
-														  self.config.username,
-														  0x00,
-														  self.config.username,
-														  0x00,
-														  self.config.nicknamePassword];
+		/* Same fallback as the USER command: an empty username means
+		 the nickname is the account name. */
+		NSString *username = self.config.username;
+
+		if (username.length == 0) {
+			username = self.config.nickname;
+		}
+
+		NSString *authString =
+			[NSString stringWithFormat:@"%@%C%@%C%@", username, 0x00, username, 0x00, self.config.nicknamePassword];
 
 		NSArray *authStrings = [authString base64EncodingWithLineLength:400];
 
@@ -9108,7 +9179,15 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		NSString *configuration = [params componentsJoinedByString:@" "];
 
+		IRCISupportInfoCaseMapping caseMappingBefore = self.supportInfo.caseMapping;
+
 		[self.supportInfo processConfigurationData:configuration];
+
+		/* Users created before CASEMAPPING arrived (ourselves, private
+		 message peers) are keyed under the default rfc1459 folding. */
+		if (self.supportInfo.caseMapping != caseMappingBefore) {
+			[self rekeyUserList];
+		}
 
 		if (printMessage) {
 			NSString *configurationFormatted = self.supportInfo.stringValueForLastUpdate;
@@ -9647,8 +9726,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		NSArray *onlineNicknames =
 			[onlineNicknamesString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 
-		/* Start going over the list of tracked nicknames */
-		NSDictionary *trackedUsers = self.trackedUsers.trackedUsers;
+		/* Start going over the list of tracked nicknames. When the server
+		 supports MONITOR or WATCH, tracked nicknames are not part of the
+		 ISON request so their absence from the reply means nothing. */
+		NSDictionary *trackedUsers = (self.supportsAdvancedTracking ? @{} : self.trackedUsers.trackedUsers);
 
 		[trackedUsers
 			enumerateKeysAndObjectsUsingBlock:^(NSString *trackedUser, NSNumber *trackingStatusInt, BOOL *stop) {
@@ -9713,7 +9794,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		break;
 	}
 	case RPL_WHOREPLY: {
-		NSAssertReturn([m paramsCount] > 6);
+		NSAssertReturn([m paramsCount] >= 8);
 
 		/* Present reply to the user if we have destination */
 		if (self.requestedCommands.visibleWhoRequest) {
@@ -9957,10 +10038,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 				memberMutable = [member mutableCopy];
 			} else {
 				/* If a user with this name already exists in the channel,
-					 then we do not continue unless its us. We are added to the
+					 then we skip it unless its us. We are added to the
 					 channel when the JOIN is received, but we still need modes. */
 
-				return;
+				continue;
 			}
 
 			/* Create channel user */
@@ -10691,6 +10772,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	if (alternateNicknames.count > tryingNicknameNumber) {
 		NSString *nickname = alternateNicknames[tryingNicknameNumber];
 
+		self.tryingNicknameSentNickname = nickname;
+
 		[self changeNickname:nickname];
 	} else {
 		[self tryAnotherNickname];
@@ -10922,7 +11005,9 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	}
 
 	if (channelsToAutojoin.count == 0) {
-		self.isAutojoining = YES;
+		self.isAutojoining = NO;
+
+		self.isAutojoined = YES;
 
 		return;
 	}
@@ -11129,7 +11214,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		return;
 	}
 
-	if (self.rawDataLogQuery != nil) {
+	if (self.hiddenCommandResponsesQuery != nil) {
 		return;
 	}
 
@@ -11896,11 +11981,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		channel.status = IRCChannelStatusJoining;
 
-		NSString *password = nil;
-
-		if (password == nil) {
-			password = channel.secretKey;
-		}
+		NSString *password = channel.secretKey;
 
 		if (password.length == 0) {
 			if (joinStringWithoutKey == nil) {
@@ -13219,11 +13300,11 @@ present_error:
 
 	NSUInteger startingPosition = self.lastWhoRequestChannelListIndex;
 
-	NSUInteger endingPosition = (startingPosition + _maximumChannelCountPerWhoBatchRequest);
-
 	if (startingPosition >= channelCount) {
 		startingPosition = 0;
 	}
+
+	NSUInteger endingPosition = (startingPosition + _maximumChannelCountPerWhoBatchRequest);
 
 	if (endingPosition >= channelCount) {
 		endingPosition = (channelCount - 1);

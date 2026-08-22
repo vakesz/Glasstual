@@ -259,11 +259,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSInteger channelListCount = self.channelList.count;
 
-	if (selectedRow > channelListCount) {
+	if (selectedRow >= channelListCount) {
 		selectedRow = (channelListCount - 1);
 	}
 
-	if (channelListCount >= 0) {
+	if (selectedRow >= 0) {
 		[self.channelTable selectItemAtIndex:selectedRow];
 	}
 

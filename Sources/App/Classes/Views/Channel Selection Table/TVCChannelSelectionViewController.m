@@ -291,6 +291,8 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self.expandOutlineViewTimer != nil) {
 		XRCancelScheduledBlock(self.expandOutlineViewTimer);
+
+		self.expandOutlineViewTimer = nil;
 	}
 }
 

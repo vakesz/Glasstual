@@ -56,8 +56,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* -viewDidMoveToWindow is not guaranteed to alternate between a window
 	 and nil. Remove any previous registration first so that moving within
-	 the same window does not leave duplicate observers behind. */
-	[RZNotificationCenter() removeObserver:self];
+	 the same window does not leave duplicate observers behind. Only our
+	 own names are removed; a blanket -removeObserver: would also drop
+	 the registrations AppKit keeps for the table itself. */
+	[RZNotificationCenter() removeObserver:self name:NSWindowDidBecomeKeyNotification object:nil];
+	[RZNotificationCenter() removeObserver:self name:NSWindowDidResignKeyNotification object:nil];
+	[RZNotificationCenter() removeObserver:self name:TVCMainWindowRedrawSubviewsNotification object:nil];
 
 	TVCMainWindow *mainWindow = self.mainWindow;
 
@@ -184,6 +188,10 @@ NS_ASSUME_NONNULL_BEGIN
 	__kindof TVCServerListCell *rowView = [self viewAtColumn:0 row:rowIndex makeIfNecessary:NO];
 
 	rowView.needsDisplay = YES;
+
+	/* The row view draws the selection, whose emphasis follows the
+	 window's key state. */
+	[self rowViewAtRow:rowIndex makeIfNecessary:NO].needsDisplay = YES;
 }
 
 - (void)refreshDrawingForItem:(IRCTreeItem *)cellItem
@@ -350,6 +358,12 @@ NS_ASSUME_NONNULL_BEGIN
 	switch (e.keyCode) {
 	case 125: // down arrow
 	case 126: // up arrow
+	{
+		/* Let the outline view move the selection, as the member list does. */
+		[super keyDown:e];
+
+		break;
+	}
 	case 123: // left arrow
 	case 124: // right arrow
 	case 116: // page up

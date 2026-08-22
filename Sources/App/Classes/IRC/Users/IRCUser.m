@@ -174,7 +174,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return [NSString stringWithFormat:@"*!%@@%@", username, address];
 	}
 	case TXHostmaskBanFormatWHANNI: {
-		return [NSString stringWithFormat:@"%@!*%@", nickname, address];
+		return [NSString stringWithFormat:@"%@!*@%@", nickname, address];
 	}
 	case TXHostmaskBanFormatExact: {
 		return [NSString stringWithFormat:@"%@!%@@%@", nickname, username, address];
@@ -288,7 +288,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	dispatch_block_t blockToFire = [self removeUserTimerBlockToFire];
 
-	removeUserTimer = XRScheduleBlockOnGlobalQueue(blockToFire, _removeUserTimerInterval);
+	/* The user list is mutated from the main thread everywhere else;
+	 keep eviction there as well. */
+	removeUserTimer = XRScheduleBlockOnMainQueue(blockToFire, _removeUserTimerInterval);
 
 	if (removeUserTimer == NULL) {
 		LogToConsoleFault("Failed to create timer to remove user");
@@ -326,7 +328,13 @@ NS_ASSUME_NONNULL_BEGIN
 	__weak IRCUser *user = self;
 
 	return [^{
-		[client removeUser:user];
+		IRCUser *strongUser = user;
+
+		if (strongUser == nil) {
+			return;
+		}
+
+		[client removeUser:strongUser];
 	} copy];
 }
 

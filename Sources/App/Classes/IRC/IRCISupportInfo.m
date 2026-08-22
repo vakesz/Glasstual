@@ -390,15 +390,32 @@ NS_ASSUME_NONNULL_BEGIN
 
 	IRCISupportInfoCaseMapping caseMapping = self.caseMapping;
 
-	NSString *lowercaseString = string.lowercaseString;
-
-	if (caseMapping == IRCISupportInfoCaseMappingASCII) {
-		return lowercaseString;
-	}
-
-	NSUInteger length = lowercaseString.length;
+	NSUInteger length = string.length;
 
 	if (length == 0) {
+		return string;
+	}
+
+	/* Servers only fold A-Z (plus the rfc1459 brackets); non-ASCII
+	 characters are compared verbatim. Using -lowercaseString would
+	 merge nicknames that the server considers distinct. */
+	unichar *buffer = malloc(length * sizeof(unichar));
+
+	[string getCharacters:buffer range:NSMakeRange(0, length)];
+
+	for (NSUInteger i = 0; i < length; i++) {
+		unichar c = buffer[i];
+
+		if (c >= 'A' && c <= 'Z') {
+			buffer[i] = (unichar)(c + ('a' - 'A'));
+		}
+	}
+
+	NSString *lowercaseString = [NSString stringWithCharacters:buffer length:length];
+
+	free(buffer);
+
+	if (caseMapping == IRCISupportInfoCaseMappingASCII) {
 		return lowercaseString;
 	}
 
@@ -409,7 +426,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return lowercaseString;
 	}
 
-	unichar *buffer = malloc(length * sizeof(unichar));
+	buffer = malloc(length * sizeof(unichar));
 
 	[lowercaseString getCharacters:buffer range:NSMakeRange(0, length)];
 
@@ -546,7 +563,7 @@ NS_ASSUME_NONNULL_BEGIN
 	NSUInteger modeSymbolIndex = [modeSymbols indexOfObject:modeSymbol];
 
 	if (modeSymbolIndex == NSNotFound) {
-		return 0;
+		return nil;
 	}
 
 	NSArray *characters = self.userModeSymbols[@"characters"];

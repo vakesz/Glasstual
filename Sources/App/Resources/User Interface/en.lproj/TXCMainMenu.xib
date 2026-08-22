@@ -258,7 +258,7 @@
                                     <action selector="toggleMuteOnNotifications:" target="267" id="BG4-hs-ZvW"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Disable All Notification Sounds" tag="202" keyEquivalent="M" id="3092" image="speaker.slash">
+                            <menuItem title="Disable All Notification Sounds" tag="201" keyEquivalent="M" id="3092" image="speaker.slash">
                                 <connections>
                                     <action selector="toggleMuteOnNotificationSounds:" target="267" id="Ox8-g0-Y9n"/>
                                 </connections>
@@ -1114,21 +1114,21 @@ CA
                                     <action selector="toggleChannelModerationMode:" target="267" id="495-2e-0Jp"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" tag="6090002" id="M8P-bM-0w4"/>
-                            <menuItem title="Invite Only (+i)" tag="6090003" keyEquivalent="I" id="L1b-7x-bd4">
+                            <menuItem isSeparatorItem="YES" id="M8P-bM-0w4"/>
+                            <menuItem title="Invite Only (+i)" tag="6090002" keyEquivalent="I" id="L1b-7x-bd4">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                 <connections>
                                     <action selector="toggleChannelInviteMode:" target="267" id="z7P-9I-MUZ"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Anyone Can Join (-i)" tag="6090004" keyEquivalent="i" id="cO1-TC-8Ks">
+                            <menuItem title="Anyone Can Join (-i)" tag="6090003" keyEquivalent="i" id="cO1-TC-8Ks">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                 <connections>
                                     <action selector="toggleChannelInviteMode:" target="267" id="9Go-RV-b9b"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" tag="6090005" id="Azs-Ib-6y7"/>
-                            <menuItem title="Manage All Modes" tag="6090006" keyEquivalent="o" id="2Em-53-ZkH">
+                            <menuItem isSeparatorItem="YES" id="Azs-Ib-6y7"/>
+                            <menuItem title="Manage All Modes" tag="6090004" keyEquivalent="o" id="2Em-53-ZkH">
                                 <connections>
                                     <action selector="showChannelModifyModesSheet:" target="267" id="4Cq-dH-L56"/>
                                 </connections>

@@ -273,7 +273,7 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 		
 		if (cachedValue == nil) {
-			cachedValue = NSLocalizedStringFromTable(@"Mac", @"XRSystemInformation", nil);
+			cachedValue = NSLocalizedStringFromTableInBundle(@"Mac", @"XRSystemInformation", bundle, nil);
 		}
 	}
 	

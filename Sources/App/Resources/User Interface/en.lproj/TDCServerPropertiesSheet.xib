@@ -20,6 +20,7 @@
                 <outlet property="autoReconnectCheck" destination="1532" id="1936"/>
                 <outlet property="autojoinWaitsForNickServCheck" destination="B1u-e0-30u" id="44s-dS-Pu5"/>
                 <outlet property="awayNicknameTextField" destination="2335" id="eE8-0s-KKE"/>
+                <outlet property="ctcpVersionReplyTextField" destination="cV1-rs-N0f" id="cV1-rs-N0j"/>
                 <outlet property="cancelButton" destination="1456" id="1463"/>
                 <outlet property="channelListArrayController" destination="XlX-J4-ZJt" id="EMw-nK-7vi"/>
                 <outlet property="channelListTable" destination="1805" id="ex0-5N-btj"/>
@@ -607,6 +608,7 @@ Gw
                     <rows>
                         <gridRow id="hv7-1e-ySA"/>
                         <gridRow id="DVI-Kz-YNY"/>
+                        <gridRow id="cV1-rs-N0a"/>
                     </rows>
                     <columns>
                         <gridColumn xPlacement="fill" id="s8y-m2-ky8"/>
@@ -662,6 +664,32 @@ Gw
                                 </textFieldCell>
                                 <connections>
                                     <accessibilityConnection property="title" destination="1600" id="Y9Q-hW-UWv"/>
+                                </connections>
+                            </textField>
+                        </gridCell>
+                        <gridCell row="cV1-rs-N0a" column="s8y-m2-ky8" id="cV1-rs-N0b">
+                            <textField key="contentView" focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="cV1-rs-N0c">
+                                <rect key="frame" x="-2" y="4" width="144" height="16"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="CTCP VERSION Reply:" id="cV1-rs-N0d">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </gridCell>
+                        <gridCell row="cV1-rs-N0a" column="UoC-5W-n5F" id="cV1-rs-N0e">
+                            <textField key="contentView" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="cV1-rs-N0f" customClass="TVCValidatedTextField">
+                                <rect key="frame" x="148" y="0.0" width="212" height="22"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="22" id="cV1-rs-N0g"/>
+                                </constraints>
+                                <textFieldCell key="cell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Default" usesSingleLineMode="YES" id="cV1-rs-N0h" customClass="TVCValidatedTextFieldCell">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                                <connections>
+                                    <accessibilityConnection property="title" destination="cV1-rs-N0c" id="cV1-rs-N0i"/>
                                 </connections>
                             </textField>
                         </gridCell>

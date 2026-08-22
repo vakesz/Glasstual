@@ -401,6 +401,11 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 
 	self.status = toStatus;
 
+	/* -setStatus: only consumes the flag when the status actually
+	 changes. Clear it here so a no-op transition does not leave it
+	 set for the next real one. */
+	self.statusChangedByAction = NO;
+
 	self.topic = nil;
 
 	/* Clearing members, instead of just declaring memberInfo nil,
