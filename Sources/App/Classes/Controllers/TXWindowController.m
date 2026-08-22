@@ -67,7 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	LogToConsoleTerminationProgress("Preparing window controller");
 
-	@synchronized(self.windowObjects) {
+	@synchronized(self) {
 		[self.windowObjects removeAllObjects];
 		self.windowObjects = nil;
 	}
@@ -109,7 +109,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSAssert([window respondsToSelector:@selector(window)], @"'window' does not respond to -window");
 
-	@synchronized(self.windowObjects) {
+	@synchronized(self) {
 		self.windowObjects[windowDescription] = window;
 	}
 }
@@ -147,7 +147,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return; // Cannot continue...
 	}
 
-	@synchronized(self.windowObjects) {
+	@synchronized(self) {
 		if (self.windowObjects[windowDescription] == nil && windowWasString == NO) {
 			windowDescription = [self.windowObjects firstKeyForObject:window];
 		}
@@ -162,7 +162,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(windowDescription != nil);
 
-	@synchronized(self.windowObjects) {
+	@synchronized(self) {
 		return self.windowObjects[windowDescription];
 	}
 }
@@ -171,7 +171,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(windowDescriptions != nil);
 
-	@synchronized(self.windowObjects) {
+	@synchronized(self) {
 		NSMutableArray *returnedValues = [NSMutableArray array];
 
 		for (id windowDescription in windowDescriptions) {

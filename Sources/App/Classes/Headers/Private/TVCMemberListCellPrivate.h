@@ -41,6 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCMemberListRowCell : NSTableRowView
 - (instancetype)initWithMemberList:(TVCMemberList *)memberList;
+
+- (void)refreshEmphasis;
 @end
 
 @interface TVCMemberListCell : NSTableCellView

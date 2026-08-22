@@ -44,9 +44,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TDCNicknameColorSheet ()
 @property(nonatomic, copy) NSString *nickname;
 @property(nonatomic, weak) IBOutlet NSColorWell *nicknameColorWell;
+@property(nonatomic, weak) IBOutlet NSButton *useDefaultColorCheck;
 @property(nonatomic, assign) BOOL nicknameColorIsReset;
 
-- (IBAction)resetNicknameColor:(nullable id)sender;
+- (IBAction)useDefaultColorToggled:(nullable id)sender;
 - (IBAction)nicknameColorChanged:(nullable id)sender;
 @end
 
@@ -73,19 +74,26 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSColor *nicknameColor = [IRCUserNicknameColorStyleGenerator nicknameColorStyleOverrideForKey:self.nickname];
 
-	/* Whether an override exists is tracked explicitly instead of
-	 comparing the well against a sentinel color. White is a valid
-	 color to choose, so it cannot double as "no override". */
+	/* Whether an override exists is tracked by the "Use default color"
+	 checkbox rather than by a sentinel color in the well, since any
+	 color (white included) is a valid choice. */
 	self.nicknameColorIsReset = (nicknameColor == nil);
 
-	if (nicknameColor == nil) {
-		nicknameColor = [NSColor whiteColor];
+	if (nicknameColor) {
+		self.nicknameColorWell.color = nicknameColor;
 	}
-
-	self.nicknameColorWell.color = nicknameColor;
 
 	self.nicknameColorWell.target = self;
 	self.nicknameColorWell.action = @selector(nicknameColorChanged:);
+
+	[self updateControls];
+}
+
+- (void)updateControls
+{
+	self.useDefaultColorCheck.state = (self.nicknameColorIsReset) ? NSControlStateValueOn : NSControlStateValueOff;
+
+	self.nicknameColorWell.enabled = (self.nicknameColorIsReset == NO);
 }
 
 - (void)start
@@ -110,20 +118,22 @@ NS_ASSUME_NONNULL_BEGIN
 	[super ok:nil];
 }
 
-- (void)resetNicknameColor:(nullable id)sender
+- (void)useDefaultColorToggled:(nullable id)sender
 {
-	if ([NSColorPanel sharedColorPanelExists]) {
+	self.nicknameColorIsReset = (self.useDefaultColorCheck.state == NSControlStateValueOn);
+
+	if (self.nicknameColorIsReset && [NSColorPanel sharedColorPanelExists]) {
 		[[NSColorPanel sharedColorPanel] close];
 	}
 
-	self.nicknameColorWell.color = [NSColor whiteColor];
-
-	self.nicknameColorIsReset = YES;
+	[self updateControls];
 }
 
 - (void)nicknameColorChanged:(nullable id)sender
 {
 	self.nicknameColorIsReset = NO;
+
+	[self updateControls];
 }
 
 #pragma mark -

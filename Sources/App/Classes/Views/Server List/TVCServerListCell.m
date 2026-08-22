@@ -611,6 +611,48 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 	self.childCell.needsDisplay = YES;
 }
 
+#pragma mark -
+#pragma mark Emphasis
+
+/* AppKit emphasizes a selection only while the window is key. Mail and
+ Finder keep the accent fill while a sheet or panel is key, so emphasis
+ follows main-window status instead. Both the getter and the background
+ style are overridden so that drawing and text colours agree regardless
+ of whether AppKit consults the accessor or the stored value. */
+- (BOOL)isEmphasized
+{
+	NSWindow *window = self.window;
+
+	if (window == nil) {
+		return super.isEmphasized;
+	}
+
+	return window.isMainWindow;
+}
+
+- (void)setEmphasized:(BOOL)emphasized
+{
+	NSWindow *window = self.window;
+
+	super.emphasized = ((window) ? window.isMainWindow : emphasized);
+
+	[self setNeedsDisplayOnChild];
+}
+
+- (void)refreshEmphasis
+{
+	self.emphasized = self.isEmphasized;
+}
+
+- (NSBackgroundStyle)interiorBackgroundStyle
+{
+	if (self.isSelected && self.isEmphasized) {
+		return NSBackgroundStyleEmphasized;
+	}
+
+	return super.interiorBackgroundStyle;
+}
+
 - (void)didAddSubview:(NSView *)subview
 {
 	TVCServerListCellGroupItem *childCell = self.childCell;
