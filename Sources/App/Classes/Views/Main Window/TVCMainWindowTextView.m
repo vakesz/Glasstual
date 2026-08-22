@@ -62,7 +62,9 @@ NS_ASSUME_NONNULL_BEGIN
 	]
 
 @interface TVCMainWindowTextView ()
-@property(nonatomic, copy) NSAttributedString *placeholderAttributedString;
+/* Not named placeholderAttributedString: NSTextView has a private
+ accessor by that name which AppKit would start calling. */
+@property(nonatomic, copy, nullable) NSAttributedString *inputPlaceholderAttributedString;
 @property(nonatomic, weak) IBOutlet NSLayoutConstraint *textViewHeightConstraint;
 @property(nonatomic, weak) IBOutlet NSLayoutConstraint *windowContentViewMinimumHeight;
 @property(nonatomic, weak) IBOutlet TVCMainWindowTextViewContentView *contentView;
@@ -83,6 +85,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)awakeFromNib
 {
 	[super awakeFromNib];
+
+	/* The height and caret logic is written against TextKit 2. AppKit
+	 silently falls back to TextKit 1 when anything reads -layoutManager,
+	 after which -textLayoutManager returns nil and the input field would
+	 stop growing. Surface that instead of sizing by guesswork. */
+	if (self.textLayoutManager == nil) {
+		LogToConsoleError("Input text view is not using TextKit 2");
+	}
 
 	self.backgroundColor = [NSColor clearColor];
 
@@ -267,30 +277,25 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	/* The placeholder is laid out exactly where the first line of text
-	 would be: the layout manager's extra line fragment already accounts
-	 for the container inset, the line fragment padding and the font. */
-	NSLayoutManager *layoutManager = self.layoutManager;
-	NSTextContainer *textContainer = self.textContainer;
+	NSAttributedString *placeholder = self.inputPlaceholderAttributedString;
 
-	[layoutManager ensureLayoutForTextContainer:textContainer];
-
-	NSRect lineRect = layoutManager.extraLineFragmentRect;
-
-	if (NSIsEmptyRect(lineRect)) {
-		lineRect = NSMakeRect(0.0, 0.0, textContainer.size.width, self.defaultLineHeight);
+	if (placeholder == nil) {
+		return;
 	}
+
+	/* The placeholder sits where the first line of text would: inside the
+	 container inset and the line fragment padding, as tall as one line
+	 of the preferred font. */
+	NSTextContainer *textContainer = self.textContainer;
 
 	CGFloat padding = textContainer.lineFragmentPadding;
 
 	NSPoint origin = self.textContainerOrigin;
 
-	NSRect placeholderRect = NSMakeRect((origin.x + lineRect.origin.x + padding),
-										(origin.y + lineRect.origin.y),
-										(lineRect.size.width - (padding * 2.0)),
-										lineRect.size.height);
+	NSRect placeholderRect = NSMakeRect(
+		(origin.x + padding), origin.y, (textContainer.size.width - (padding * 2.0)), self.defaultLineHeight);
 
-	[self.placeholderAttributedString drawInRect:placeholderRect];
+	[placeholder drawInRect:placeholderRect];
 }
 
 - (void)updateTextBoxCachedPreferredFontSize
@@ -323,8 +328,9 @@ NS_ASSUME_NONNULL_BEGIN
 		NSParagraphStyleAttributeName : paragraphStyle
 	};
 
-	self.placeholderAttributedString = [NSAttributedString attributedStringWithString:TXTLS(@"TVCMainWindow[8r3-ih]")
-																		   attributes:placeholderStringAttributes];
+	self.inputPlaceholderAttributedString =
+		[NSAttributedString attributedStringWithString:TXTLS(@"TVCMainWindow[8r3-ih]")
+											attributes:placeholderStringAttributes];
 
 	self.needsDisplay = YES;
 }
@@ -346,7 +352,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (CGFloat)defaultLineHeight
 {
-	return [self.layoutManager defaultLineHeightForFont:self.preferredFont];
+	/* The height TextKit 2 gives one line of the preferred font. An empty
+	 document has no line fragments to measure and its usage bounds do
+	 not follow the typing attributes, so a sample is laid out with a
+	 scratch layout manager. Measuring with TextKit 2 itself keeps the
+	 empty and the one line states the same height. */
+	NSTextContentStorage *contentStorage = [NSTextContentStorage new];
+	NSTextLayoutManager *layoutManager = [NSTextLayoutManager new];
+
+	[contentStorage addTextLayoutManager:layoutManager];
+
+	layoutManager.textContainer = [[NSTextContainer alloc] initWithSize:NSMakeSize(10000.0, 10000.0)];
+
+	contentStorage.attributedString =
+		[[NSAttributedString alloc] initWithString:@"X" attributes:@{NSFontAttributeName : self.preferredFont}];
+
+	[layoutManager ensureLayoutForRange:layoutManager.documentRange];
+
+	return NSHeight([layoutManager usageBoundsForTextContainer]);
 }
 
 - (void)recalculateTextViewSize

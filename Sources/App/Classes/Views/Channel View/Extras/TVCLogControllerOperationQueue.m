@@ -47,7 +47,7 @@ static void *TVCLogControllerPrintingOperationQueueKVOContext = &TVCLogControlle
 
 static NSString *TVCLogControllerPrintingOperationKeyForViewController(TVCLogController *viewController)
 {
-	return [NSString stringWithFormat:@"%p", viewController];
+	return viewController.uniqueIdentifier;
 }
 
 #pragma mark -

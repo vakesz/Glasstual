@@ -56,13 +56,7 @@ Glasstual.initializeCore = function(resourcesPath)
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/messageBuffer.js");
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/scrollTo.js");
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/state.js");
-
-	/* Only load auto scroller if we believe this is WebKit2 */
-	if (window.webkit && typeof window.webkit.messageHandlers === "undefined") {
-		Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/automaticEmpty.js");
-	} else {
-		Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/automatic.js");
-	}
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/automatic.js");
 
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/conversationTracking.js");
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scriptSink.js");
