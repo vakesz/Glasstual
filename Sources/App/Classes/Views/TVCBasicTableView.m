@@ -36,8 +36,6 @@
  *
  *********************************************************************** */
 
-#import <objc/runtime.h>
-
 #import "TVCBasicTableView.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -49,14 +47,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)respondsToSelector:(SEL)aSelector
 {
-	/* AppKit will stop on a response that has copy: but if we have
-	 no delegate for this method, then it's best to lie about having
-	 it in our class. */
+	/* The responder chain stops at the first responder that answers
+	 -copy:. Only claim it when there is a delegate to forward it to so
+	 that Edit > Copy stays disabled for tables without one. */
 	if (aSelector == @selector(copy:)) {
 		return [self.pasteboardDelegate respondsToSelector:@selector(copy:)];
 	}
 
-	return class_respondsToSelector(self.class, aSelector);
+	return [super respondsToSelector:aSelector];
 }
 
 - (void)copy:(nullable id)sender
@@ -82,26 +80,12 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	if (self.selectedRow < 0 && self.presentMenuForEmptySelection == NO) {
+	if (self.selectedRow < 0) {
 		return nil;
 	}
 
 	return self.menu;
 }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (void)textDidEndEditing:(NSNotification *)note
-{
-	if ([self.textEditingDelegate respondsToSelector:@selector(textDidEndEditing:)]) {
-		[self.textEditingDelegate textDidEndEditing:note];
-
-		return;
-	}
-
-	[super textDidEndEditing:note];
-}
-#pragma clang diagnostic pop
 
 @end
 

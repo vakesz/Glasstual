@@ -485,18 +485,32 @@ NSString *const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> "
 	context.completionBlock = completionBlock;
 
 	/* Pop alert. A sheet on the main window is preferred so that the alert is
-	 attached to what it is about. During launch and migration the window may
-	 not exist yet, in which case fall back to an application modal alert. */
+	 attached to what it is about. When the main window is hidden, any other
+	 visible window hosts the sheet instead. */
 	NSWindow *hostWindow = mainWindow();
 
-	if (hostWindow.isVisible) {
+	if (hostWindow.isVisible == NO) {
+		hostWindow = nil;
+
+		for (NSWindow *window in NSApp.orderedWindows) {
+			if (window.isVisible && window.attachedSheet == nil && [window isKindOfClass:[NSPanel class]] == NO) {
+				hostWindow = window;
+
+				break;
+			}
+		}
+	}
+
+	if (hostWindow) {
 		[alert beginSheetModalForWindow:hostWindow
 					  completionHandler:^(NSModalResponse returnCode) {
 						  [self _alertSheetResponseCallback:alert returnCode:returnCode contextInfo:context];
 					  }];
 	} else {
-		/* Return to the caller before blocking so that this method stays
-		 non-blocking regardless of how the alert is presented. */
+		/* Last resort: during launch and migration no window exists yet
+		 that could host a sheet, so the alert has to run application
+		 modal. Return to the caller before blocking so that this method
+		 stays non-blocking regardless of how the alert is presented. */
 		XRPerformBlockAsynchronouslyOnMainQueue(^{
 			[self _alertSheetResponseCallback:alert returnCode:[alert runModal] contextInfo:context];
 		});

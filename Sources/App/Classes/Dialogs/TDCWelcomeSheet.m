@@ -126,8 +126,6 @@ NS_ASSUME_NONNULL_BEGIN
 	/* Setup others */
 	self.channelList = [NSMutableArray new];
 
-	self.channelTable.textEditingDelegate = self;
-
 	[self updateDeleteChannelButton];
 
 	self.nicknameTextField.stringValue = [TPCPreferences defaultNickname];
@@ -278,21 +276,15 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark NSTableView Delegate
 
-- (void)textDidEndEditing:(NSNotification *)note
+- (void)channelCellEdited:(NSTextField *)sender
 {
-	NSInteger editedRow = self.channelTable.editedRow;
+	NSInteger editedRow = [self.channelTable rowForView:sender];
 
-	if (editedRow < 0) {
+	if (editedRow < 0 || (NSUInteger)editedRow >= self.channelList.count) {
 		return;
 	}
 
-	NSString *editedString = [note.object textStorage].string;
-
-	self.channelList[editedRow] = [editedString copy];
-
-	[self.channelTable reloadData];
-
-	[self.channelTable selectItemAtIndex:editedRow];
+	self.channelList[editedRow] = [sender.stringValue copy];
 
 	[self updateDeleteChannelButton];
 }
@@ -302,9 +294,17 @@ NS_ASSUME_NONNULL_BEGIN
 	return self.channelList.count;
 }
 
-- (id)tableView:(NSTableView *)sender objectValueForTableColumn:(NSTableColumn *)column row:(NSInteger)row
+- (nullable NSView *)tableView:(NSTableView *)tableView
+			viewForTableColumn:(nullable NSTableColumn *)tableColumn
+						   row:(NSInteger)row
 {
-	return self.channelList[row];
+	NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"ChannelCell" owner:self];
+
+	cellView.textField.stringValue = self.channelList[row];
+	cellView.textField.target = self;
+	cellView.textField.action = @selector(channelCellEdited:);
+
+	return cellView;
 }
 
 - (void)tableViewSelectionIsChanging:(NSNotification *)note

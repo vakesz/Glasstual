@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 #import "NSObjectHelperPrivate.h"
+#import "TLOLocalization.h"
 #import "TVCErrorMessagePopoverPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -105,7 +106,7 @@ NS_ASSUME_NONNULL_BEGIN
 	errorIcon.editable = NO;
 
 	NSImage *errorImage = [NSImage imageWithSystemSymbolName:@"exclamationmark.circle.fill"
-									accessibilityDescription:nil];
+									accessibilityDescription:TXTLS(@"Accessibility[c4e-rr]")];
 
 	NSImageSymbolConfiguration *errorImageConfiguration =
 		[[NSImageSymbolConfiguration configurationWithPointSize:16.0
@@ -217,6 +218,13 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	[self.popover showRelativeToRect:rect ofView:self.view preferredEdge:preferredEdge];
+
+	/* The popover is transient and may never receive focus, so the
+	 message is announced as well as displayed. */
+	NSAccessibilityPostNotificationWithUserInfo(
+		self.view,
+		NSAccessibilityAnnouncementRequestedNotification,
+		@{NSAccessibilityAnnouncementKey : self.message, NSAccessibilityPriorityKey : @(NSAccessibilityPriorityHigh)});
 }
 
 - (void)close
