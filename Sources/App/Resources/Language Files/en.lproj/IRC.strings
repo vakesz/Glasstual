@@ -337,3 +337,31 @@ The identifier for a timer can be found using “/timer list”";
 "3oa-mv" = "%1$@ is connected from %2$@ (%3$@)";
 "x69-rz" = "%1$@ was connected from %2$@ (%3$@)";
 "js3-9v" = "Cannot use nickname “%@“ — Trying another…";
+
+/* ISUPPORT driven messages */
+"6kq-xb" = "Everyone except: %@"; // Negated extended ban
+"2nb-ka" = "Users logged in to account “%@”";
+"2nb-kc" = "Users in channel %@";
+"2nb-kj" = "Users banned from channel %@";
+"2nb-km" = "Muted: %@";
+"2nb-kn" = "Nick changes blocked for %@";
+"2nb-ko" = "Operators matching %@";
+"2nb-ko2" = "Operators of class %@";
+"2nb-kq" = "Quieted: %@";
+"2nb-kr" = "Users whose real name matches “%@”";
+"2nb-kr2" = "Registered users matching %@";
+"2nb-ks" = "Users connected to server %@";
+"2nb-ks2" = "Users in security group %@";
+"2nb-kt" = "Expires after %@";
+"2nb-kt2" = "Text matching “%@”";
+"2nb-ku" = "Unregistered users matching %@";
+"2nb-kx" = "Users matching hostmask and real name “%@”";
+"2nb-kz" = "Users with certificate fingerprint %@";
+"2nb-kk" = "Extended ban of type “%1$@”: %2$@";
+"2nb-kl" = "Extended ban of type “%@”";
+"w7c-lm" = "Joining %1$@ would exceed the limit of %2$lu channels with the prefix “%3$@” on this server. The server may refuse the join.";
+"y3h-ud" = "This server only accepts UTF-8. The configured encoding is ignored for this connection.";
+"m2v-sb" = "Silence list entry: %@"; // RPL_SILELIST
+"m2v-sc" = "End of silence list";   // RPL_ENDOFSILELIST
+"m2v-sd" = "This server does not advertise support for the SILENCE command.";
+"m2v-se" = "%@ is a bot"; // RPL_WHOISBOT fallback

@@ -1370,14 +1370,34 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 #pragma mark -
 #pragma mark Encoding
 
+/* UTF8ONLY (ISUPPORT) servers reject anything that is not UTF-8, so the
+ configured encodings are ignored for the lifetime of such a connection. */
+- (NSStringEncoding)effectivePrimaryEncoding
+{
+	if (self.supportInfo.utf8Only) {
+		return NSUTF8StringEncoding;
+	}
+
+	return self.config.primaryEncoding;
+}
+
+- (NSStringEncoding)effectiveFallbackEncoding
+{
+	if (self.supportInfo.utf8Only) {
+		return NSUTF8StringEncoding;
+	}
+
+	return self.config.fallbackEncoding;
+}
+
 - (nullable NSData *)convertToCommonEncoding:(NSString *)string
 {
 	NSParameterAssert(string != nil);
 
-	NSData *data = [string dataUsingEncoding:self.config.primaryEncoding allowLossyConversion:NO];
+	NSData *data = [string dataUsingEncoding:self.effectivePrimaryEncoding allowLossyConversion:NO];
 
 	if (data == nil) {
-		data = [string dataUsingEncoding:self.config.fallbackEncoding allowLossyConversion:NO];
+		data = [string dataUsingEncoding:self.effectiveFallbackEncoding allowLossyConversion:NO];
 
 		if (data == nil) {
 			data = [string dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES];
@@ -1396,10 +1416,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 {
 	NSParameterAssert(data != nil);
 
-	NSString *string = [NSString stringWithBytes:data.bytes length:data.length encoding:self.config.primaryEncoding];
+	NSString *string = [NSString stringWithBytes:data.bytes length:data.length encoding:self.effectivePrimaryEncoding];
 
 	if (string == nil) {
-		string = [NSString stringWithBytes:data.bytes length:data.length encoding:self.config.fallbackEncoding];
+		string = [NSString stringWithBytes:data.bytes length:data.length encoding:self.effectiveFallbackEncoding];
 
 		/* ISO Latin 1 maps every byte to a character which means
 		 decoding can never fail at this point; ASCII would reject
@@ -3266,13 +3286,18 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 				continue;
 			}
 
+			NSMutableArray<IRCChannel *> *channels = [NSMutableArray array];
+
 			for (IRCChannel *channel in client.channelList) {
 				if (channel.isActive == NO || channel.isChannel == NO) {
 					continue;
 				}
 
-				[client sendText:stringIn asCommand:sendAsCommand toChannel:channel];
+				[channels addObject:channel];
 			}
+
+			/* Grouped by TARGMAX when the server advertises one. */
+			[client sendText:stringIn asCommand:sendAsCommand toChannels:channels];
 		}
 
 		break;
@@ -4793,6 +4818,21 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		break;
 	}
+	case IRCLocalCommandSilence: // Command: SILENCE
+	{
+		NSAssertReturnLoopBreak(self.isLoggedIn);
+
+		if (self.supportInfo.silenceSupported == NO) {
+			[self printDebugInformation:TXTLS(@"IRC[m2v-sd]")];
+
+			break;
+		}
+
+		/* Without arguments the server lists the current entries (271/272). */
+		[self sendCommand:uppercaseCommand withData:stringIn.string];
+
+		break;
+	}
 	case IRCLocalCommandWho: // Command: WHO
 	{
 		NSAssertReturnLoopBreak(self.isLoggedIn);
@@ -4994,6 +5034,43 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		NSArray *destinations = [targetChannelName componentsSeparatedByString:@","];
 
 		IRCChannel *destinationToSelect = nil;
+
+		/* TARGMAX: joined channels addressed without a status prefix are sent
+		 as comma separated target groups. Nicknames keep the per-target path
+		 below because those messages may be encrypted. */
+		if (isSecretMessage == NO && isSilentConnectCommand == NO && channelNamePrefix == nil &&
+			[self.supportInfo maximumTargetsForCommand:commandToSend] > 1) {
+			NSMutableArray<IRCChannel *> *groupedChannels = [NSMutableArray array];
+			NSMutableArray<NSString *> *remainingDestinations = [NSMutableArray array];
+
+			for (NSString *destinationName in destinations) {
+				IRCChannel *destination = [self findChannel:destinationName];
+
+				if (destination.isChannel && destination.isActive) {
+					[groupedChannels addObject:destination];
+				} else {
+					[remainingDestinations addObject:destinationName];
+				}
+			}
+
+			if (groupedChannels.count > 1) {
+				IRCRemoteCommand groupedCommand = IRCRemoteCommandPrivmsg;
+
+				if (lineType == TVCLogLineTypeAction) {
+					groupedCommand = IRCRemoteCommandPrivmsgAction;
+				} else if (lineType == TVCLogLineTypeNotice) {
+					groupedCommand = IRCRemoteCommandNotice;
+				}
+
+				[self sendText:stringIn asCommand:groupedCommand toChannels:groupedChannels];
+
+				if ([TPCPreferences giveFocusOnMessageCommand]) {
+					destinationToSelect = groupedChannels.firstObject;
+				}
+
+				destinations = remainingDestinations;
+			}
+		}
 
 		for (__strong NSString *destinationName in destinations) {
 			/* If the user prefixed the target with a mode (e.g. +#channel)
@@ -9074,6 +9151,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		IRCISupportInfoCaseMapping caseMappingBefore = self.supportInfo.caseMapping;
 
+		BOOL wasUTF8Only = self.supportInfo.utf8Only;
+
 		[self.supportInfo processConfigurationData:configuration];
 
 		/* Users created before CASEMAPPING arrived (ourselves, private
@@ -9087,6 +9166,11 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 			[self printDebugInformationToConsole:TXTLS(@"IRC[u51-nn]", configurationFormatted, message)
 									   asCommand:m.command];
+		}
+
+		/* UTF8ONLY: the configured encodings are overridden for this connection. */
+		if (wasUTF8Only == NO && self.supportInfo.utf8Only) {
+			[self printDebugInformationToConsole:TXTLS(@"IRC[y3h-ud]") asCommand:m.command];
 		}
 
 		break;
@@ -9233,6 +9317,41 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		break;
 	}
+	case RPL_SILELIST: {
+		/* Shapes seen in the wild: "<me> <mask>", "<me> <me> <mask>" and
+		 "<me> <me> <mask> <flags>" (InspIRCd). The mask is the last
+		 parameter that is not our own nickname, flags follow it. */
+		NSAssertReturn([m paramsCount] > 1);
+
+		NSMutableArray<NSString *> *entry = [NSMutableArray array];
+
+		for (NSUInteger i = 1; i < [m paramsCount]; i++) {
+			NSString *param = [m paramAt:i];
+
+			if (entry.count == 0 && [self nicknameIsMyself:param]) {
+				continue;
+			}
+
+			[entry addObject:param];
+		}
+
+		if (printMessage && entry.count > 0) {
+			[self printDebugInformation:TXTLS(@"IRC[m2v-sb]", [entry componentsJoinedByString:@" "])
+							  inChannel:[mainWindow() selectedChannelOn:self]
+							  asCommand:m.command];
+		}
+
+		break;
+	}
+	case RPL_ENDOFSILELIST: {
+		if (printMessage) {
+			[self printDebugInformation:TXTLS(@"IRC[m2v-sc]")
+							  inChannel:[mainWindow() selectedChannelOn:self]
+							  asCommand:m.command];
+		}
+
+		break;
+	}
 	case RPL_UNAWAY:
 	case RPL_NOWAWAY: {
 		BOOL away = (numeric == RPL_NOWAWAY);
@@ -9257,8 +9376,32 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		break;
 	}
+	case RPL_WHOISBOT: {
+		NSAssertReturn([m paramsCount] > 1);
+
+		NSString *nickname = [m paramAt:1];
+
+		[self modifyUserUserWithNickname:nickname
+							   withBlock:^(IRCUserMutable *userMutable) {
+								   userMutable.isBot = YES;
+							   }];
+
+		if (printMessage) {
+			if ([m paramsCount] > 2) {
+				[self printReply:m inChannel:[mainWindow() selectedChannelOn:self]];
+			} else {
+				[self print:TXTLS(@"IRC[m2v-se]", nickname)
+							by:nil
+					 inChannel:[mainWindow() selectedChannelOn:self]
+						asType:TVCLogLineTypeDebug
+					   command:m.command
+					receivedAt:m.receivedAt];
+			}
+		}
+
+		break;
+	}
 	case RPL_CHANNELSMSG:
-	case RPL_WHOISBOT:
 	case RPL_WHOISHELPOP:
 	case RPL_WHOISHOST:
 	case RPL_WHOISMODES:
@@ -9380,7 +9523,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		break;
 	}
 	case RPL_WHOISIDLE: {
-		NSAssertReturn([m paramsCount] == 5);
+		/* RFC 1459 servers omit the sign-on time: <nick> <idle> :seconds idle */
+		NSAssertReturn([m paramsCount] >= 4);
 
 		NSAssertReturn(printMessage);
 
@@ -9725,8 +9869,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		BOOL isAway = NO;
 		BOOL isIRCop = NO;
+		BOOL isBot = NO;
 
-		// Field Syntax: <H|G>[*][@|+]
+		/* Servers that advertise a BOT user mode flag bots with "B" in WHO. */
+		BOOL botFlagSupported = (self.supportInfo.botModeSymbol != nil);
+
+		// Field Syntax: <H|G>[*][B][@|+]
 		// Strip G or H (away status).
 		NSMutableString *userModes = [NSMutableString string];
 
@@ -9739,6 +9887,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 				continue;
 			} else if ([character isEqualToString:@"*"]) {
 				isIRCop = YES;
+
+				continue;
+			} else if (botFlagSupported && [character isEqualToString:@"B"]) {
+				isBot = YES;
 
 				continue;
 			}
@@ -9777,6 +9929,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		userMutable.isAway = isAway;
 		userMutable.isIRCop = isIRCop;
+
+		if (botFlagSupported) {
+			userMutable.isBot = isBot;
+		}
 
 		userMutable.realName = realName;
 
@@ -10094,7 +10250,9 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		NSString *message = nil;
 
 		if (extendedLine) {
-			message = TXTLS(localization, channelName, entryMask, entryAuthor, entryCreationDate);
+			NSString *entryCreationDateFormatted = TXFormatDateLongStyle(entryCreationDate, YES);
+
+			message = TXTLS(localization, channelName, entryMask, entryAuthor, entryCreationDateFormatted);
 		} else {
 			message = TXTLS(localization, channelName, entryMask);
 		}
@@ -11789,7 +11947,71 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		return;
 	}
 
+	[self warnIfJoiningChannelsExceedsLimit:@[ channel ]];
+
 	[self send:@"JOIN", channel, password, nil];
+}
+
+/* CHANLIMIT (ISUPPORT): warn in the server console, before the JOIN is
+ sent, when the channels requested would push the number of joined
+ channels sharing a prefix past the advertised limit. The join is still
+ attempted because the server is the authority (and the limit can be
+ raised for operators). */
+- (void)warnIfJoiningChannelsExceedsLimit:(NSArray<NSString *> *)channels
+{
+	NSParameterAssert(channels != nil);
+
+	IRCISupportInfo *supportInfo = self.supportInfo;
+
+	if (supportInfo.channelLimits.count == 0) {
+		return;
+	}
+
+	NSMutableDictionary<NSString *, NSNumber *> *joinedCountByPrefix = [NSMutableDictionary dictionary];
+
+	for (IRCChannel *channel in self.channelList) {
+		if (channel.isChannel == NO || channel.isActive == NO) {
+			continue;
+		}
+
+		NSString *prefix = [channel.name stringCharacterAtIndex:0];
+
+		joinedCountByPrefix[prefix] = @([joinedCountByPrefix[prefix] unsignedIntegerValue] + 1);
+	}
+
+	NSMutableSet<NSString *> *warnedPrefixes = [NSMutableSet set];
+
+	for (NSString *channelName in channels) {
+		if ([self stringIsChannelName:channelName] == NO) {
+			continue;
+		}
+
+		IRCChannel *channel = [self findChannel:channelName];
+
+		if (channel.isActive) {
+			continue;
+		}
+
+		NSString *prefix = [channelName stringCharacterAtIndex:0];
+
+		NSUInteger limit = [supportInfo channelLimitForChannelNamed:channelName];
+
+		if (limit == 0) {
+			continue;
+		}
+
+		NSUInteger joinedCount = [joinedCountByPrefix[prefix] unsignedIntegerValue] + 1;
+
+		joinedCountByPrefix[prefix] = @(joinedCount);
+
+		if (joinedCount <= limit || [warnedPrefixes containsObject:prefix]) {
+			continue;
+		}
+
+		[warnedPrefixes addObject:prefix];
+
+		[self printDebugInformationToConsole:TXTLS(@"IRC[w7c-lm]", channelName, limit, prefix)];
+	}
 }
 
 - (void)joinUnlistedChannelsWithStringAndSelectBestMatch:(NSString *)channels
@@ -11842,6 +12064,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	}
 
 	if (performJoin) {
+		[self warnIfJoiningChannelsExceedsLimit:channels];
+
 		[self send:@"JOIN", [channels componentsJoinedByString:@","], passwords, nil];
 	}
 
@@ -11866,6 +12090,18 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	NSMutableString *joinStringWithKey = nil;
 
 	NSMutableString *keyString = nil;
+
+	NSMutableArray<NSString *> *channelNames = [NSMutableArray arrayWithCapacity:channels.count];
+
+	for (IRCChannel *channel in channels) {
+		if (channel.isChannel == NO || channel.isActive) {
+			continue;
+		}
+
+		[channelNames addObject:channel.name];
+	}
+
+	[self warnIfJoiningChannelsExceedsLimit:channelNames];
 
 	for (IRCChannel *channel in channels) {
 		if (channel.isChannel == NO || channel.isActive) {
@@ -11905,6 +12141,117 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		[self send:@"JOIN", joinStringWithKey, keyString, nil];
 	}
 }
+
+#pragma mark -
+#pragma mark Multi-target Messages
+
+- (void)sendText:(NSAttributedString *)string
+	   asCommand:(IRCRemoteCommand)command
+	  toChannels:(NSArray<IRCChannel *> *)channels
+{
+	NSParameterAssert(string != nil);
+	NSParameterAssert(channels != nil);
+
+	if (string.length == 0 || channels.count == 0) {
+		return;
+	}
+
+	NSString *commandToSend = nil;
+
+	TVCLogLineType lineType = TVCLogLineTypeUndefined;
+
+	if (command == IRCRemoteCommandPrivmsg) {
+		commandToSend = @"PRIVMSG";
+
+		lineType = TVCLogLineTypePrivateMessage;
+	} else if (command == IRCRemoteCommandPrivmsgAction) {
+		commandToSend = @"PRIVMSG";
+
+		lineType = TVCLogLineTypeAction;
+	} else if (command == IRCRemoteCommandNotice) {
+		commandToSend = @"NOTICE";
+
+		lineType = TVCLogLineTypeNotice;
+	}
+
+	if (commandToSend == nil) {
+		NSParameterAssert(commandToSend != nil);
+
+		return;
+	}
+
+	/* Without an advertised TARGMAX / MAXTARGETS every target gets its own
+	 line which is what every server accepts. Queries and utility windows
+	 always take that path because their messages may be encrypted. */
+	NSUInteger targetLimit = [self.supportInfo maximumTargetsForCommand:commandToSend];
+
+	NSMutableArray<IRCChannel *> *groupedChannels = [NSMutableArray arrayWithCapacity:channels.count];
+
+	for (IRCChannel *channel in channels) {
+		if (targetLimit > 1 && channel.isChannel) {
+			[groupedChannels addObject:channel];
+		} else {
+			[self sendText:string asCommand:command toChannel:channel];
+		}
+	}
+
+	if (groupedChannels.count == 0) {
+		return;
+	}
+
+	NSArray<NSString *> *targetNames = [groupedChannels valueForKey:@"name"];
+
+	NSArray<NSArray<NSString *> *> *targetGroups = [IRCISupportInfo chunkTargets:targetNames limit:targetLimit];
+
+	BOOL echoMessageEnabled = [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage];
+
+	NSUInteger groupOffset = 0;
+
+	for (NSArray<NSString *> *targetGroup in targetGroups) {
+		NSArray<IRCChannel *> *groupChannels =
+			[groupedChannels subarrayWithRange:NSMakeRange(groupOffset, targetGroup.count)];
+
+		groupOffset += targetGroup.count;
+
+		NSString *targetList = [targetGroup componentsJoinedByString:@","];
+
+		for (NSAttributedString *line in string.splitIntoLines) {
+			NSMutableAttributedString *lineMutable = [line mutableCopy];
+
+			while (lineMutable.length > 0) {
+				/* The whole target list is passed so the line budget accounts for it. */
+				NSString *message = [lineMutable stringFormattedForChannel:targetList
+																  onClient:self
+															  withLineType:lineType];
+
+				if (echoMessageEnabled == NO) {
+					for (IRCChannel *channel in groupChannels) {
+						[self print:[IRCClient redactedServiceMessage:message sentTo:channel.name]
+									 by:self.userNickname
+							  inChannel:channel
+								 asType:lineType
+								command:commandToSend
+							 receivedAt:[NSDate date]
+							isEncrypted:NO];
+					}
+				}
+
+				NSString *sendMessage = message;
+
+				if (lineType == TVCLogLineTypeAction) {
+					sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
+				}
+
+				[self send:commandToSend, targetList, sendMessage, nil];
+			}
+		}
+	}
+
+	[self processBundlesUserMessage:string.string command:commandToSend];
+}
+
+#pragma mark -
+#pragma mark Commands
 
 - (void)partUnlistedChannel:(NSString *)channel
 {
@@ -12303,11 +12650,22 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 - (void)requestChannelList
 {
+	[self requestChannelListWithArguments:nil];
+}
+
+- (void)requestChannelListWithArguments:(nullable NSString *)arguments
+{
 	if (self.isLoggedIn == NO) {
 		return;
 	}
 
-	[self send:@"LIST", nil];
+	if (arguments.length == 0) {
+		[self send:@"LIST", nil];
+
+		return;
+	}
+
+	[self send:@"LIST", arguments, nil];
 }
 
 - (void)sendPassword:(NSString *)password
@@ -13440,7 +13798,8 @@ present_error:
 
 - (void)serverChannelListDialogOnUpdate:(TDCServerChannelListDialog *)sender
 {
-	[self requestChannelList];
+	/* ELIST filters are sent server-side when the server supports them. */
+	[self requestChannelListWithArguments:sender.serverSideListArguments];
 }
 
 - (void)serverChannelListDialog:(TDCServerChannelListDialog *)sender joinChannels:(NSArray<NSString *> *)channels
