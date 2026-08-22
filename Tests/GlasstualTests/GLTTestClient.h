@@ -59,6 +59,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)testClientWithConfigDictionary:(NSDictionary<NSString *, id> *)dictionary;
 + (instancetype)testClientWithConfigDictionary:(NSDictionary<NSString *, id> *)dictionary
 							  nicknamePassword:(nullable NSString *)nicknamePassword;
+
+/* Pretend registration completed so commands that need it are sent. */
+- (void)markAsLoggedIn;
 @end
 
 /* Handlers exercised directly by the tests. */
@@ -68,6 +71,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)filterBatchCommandIncomingData:(IRCMessage *)m;
 - (void)receiveStandardReply:(IRCMessage *)m;
 - (void)receiveTagMessage:(IRCMessage *)m;
+- (void)receiveJoin:(IRCMessage *)m;
+- (void)receiveInvite:(IRCMessage *)m;
+- (void)receiveAccountNotify:(IRCMessage *)m;
+- (void)receiveSetName:(IRCMessage *)m;
+- (void)receivePrivmsgAndNotice:(IRCMessage *)m;
+- (void)receiveNumericReply:(IRCMessage *)m;
+- (void)sendNextCapability;
 @end
 
 NS_ASSUME_NONNULL_END

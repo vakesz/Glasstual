@@ -107,20 +107,25 @@ on the GitHub releases page.
 
 IRCv3 capabilities Glasstual negotiates when the server offers them:
 
+- `account-notify`, `account-tag` and `extended-join` (the services account of each user is tracked and shown in the member list info popover)
 - `away-notify`
 - `batch` (including nested batches)
 - `cap-notify`
 - `chghost`
 - `echo-message` (can be switched off in Preferences)
-- `message-tags` (incoming and outgoing tags, `TAGMSG`; `msgid` is stored with each line and exposed to styles as `data-msgid`)
+- `extended-monitor` (away and account changes for monitored nicknames)
+- `invite-notify` (invites for other users are shown in the channel)
+- `message-tags` (incoming and outgoing tags, `TAGMSG`; `msgid` is stored with each line and exposed to styles as `data-msgid`; the `bot` tag marks the sender as a bot)
 - `multi-prefix`
+- `pre-away` (an away message in effect when a connection dropped is restored before registration completes on reconnect)
 - `sasl` (PLAIN and EXTERNAL)
 - `server-time`
+- `setname` (incoming `SETNAME` and the `/setname` command)
 - `standard-replies` (`FAIL`, `WARN`, `NOTE`)
 - `userhost-in-names`
 - ZNC: `znc.in/playback`, `znc.in/self-message`, `znc.in/server-time`, `znc.in/server-time-iso`, `znc.in/tlsinfo`
 
-The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Classes/IRC/IRCCapability.m`.
+When the server advertises `WHOX`, channel `WHO` requests use `WHO <channel> %tcuhnfar,152` so the initial member list carries accounts, real names and bot flags. The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Classes/IRC/IRCCapability.m`.
 
 ## Licenses
 
