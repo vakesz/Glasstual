@@ -63,7 +63,6 @@
 "vxc-sd" = "Transfer with %@ failed. There is no open port";
 "nab-dx" = "Transfer with %@ failed. Could not read source file";
 "47s-1s" = "Transfer with %@ failed. Unknown source IP address";
-"coa-ii" = "Transfer with %@ failed. Connection was disconnected";
 "0ov-tr" = "Transfer with %@ failed. Proposed resume position is bad";
 "12p-0v" = "Transfer with %@ failed. You are not connected to IRC";
 "79f-s0" = "Transfer with %@ failed. No space left on device";

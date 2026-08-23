@@ -4,16 +4,12 @@
 <dict>
 	<key>Tahoe</key>
 	<dict>
-		<key>titlebarAccessoryViewLeftMargin</key>
-		<integer>3</integer>
-		<key>titlebarAccessoryViewRightMargin</key>
-		<integer>5</integer>
 		<key>channelViewOverlayDefaultBackgroundColor</key>
 		<dict>
 			<key>type</key>
 			<integer>3</integer>
 			<key>value</key>
-			<string>windowBackgroundColor</string>
+			<string>textBackgroundColor</string>
 		</dict>
 		<key>defaultWindowSize</key>
 		<dict>
@@ -21,27 +17,6 @@
 			<real>800</real>
 			<key>height</key>
 			<real>474</real>
-		</dict>
-		<key>splitViewDividerColor</key>
-		<dict>
-			<key>type</key>
-			<integer>3</integer>
-			<key>value</key>
-			<string>separatorColor</string>
-		</dict>
-		<key>titlebarAccessoryViewBackgroundColor</key>
-		<dict>
-			<key>type</key>
-			<integer>3</integer>
-			<key>value</key>
-			<string>secondaryLabelColor</string>
-		</dict>
-		<key>loadingScreenBackgroundColor</key>
-		<dict>
-			<key>type</key>
-			<integer>3</integer>
-			<key>value</key>
-			<string>windowBackgroundColor</string>
 		</dict>
 	</dict>
 </dict>

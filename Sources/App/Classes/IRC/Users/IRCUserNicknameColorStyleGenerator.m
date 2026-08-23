@@ -182,15 +182,6 @@ NS_ASSUME_NONNULL_BEGIN
  *    1. Easier to work with when modifying. No need to perform messy string conversion.
  *    2. Easier to change output format in another update (if that decision is made)
  */
-+ (void)migrateNicknameColorStyleOverrides
-{
-	/* Overrides were once stored using NSArchiver and migrated to
-	 NSKeyedArchiver in 7.2.2. NSUnarchiver is no longer available on
-	 the platforms we target so the legacy database is simply discarded.
-	 The keyed database (_overridesDefaultsKey) is left untouched. */
-	[RZUserDefaults() removeObjectForKey:@"Nickname Color Style Overrides"];
-}
-
 + (nullable NSColor *)nicknameColorStyleOverrideForKey:(NSString *)styleKey
 {
 	NSParameterAssert(styleKey != nil);

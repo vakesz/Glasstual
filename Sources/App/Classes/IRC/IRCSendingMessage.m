@@ -36,12 +36,47 @@
  *
  *********************************************************************** */
 
+#import "NSStringHelper.h"
 #import "IRCCommandIndex.h"
 #import "IRCSendingMessage.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @implementation IRCSendingMessage
+
++ (NSString *)stringWithCommand:(NSString *)command
+					  arguments:(nullable NSArray<NSString *> *)arguments
+						   tags:(nullable NSDictionary<NSString *, NSString *> *)tags
+{
+	NSString *line = [self stringWithCommand:command arguments:arguments];
+
+	if (tags.count == 0) {
+		return line;
+	}
+
+	return [NSString stringWithFormat:@"@%@ %@", [self stringWithMessageTags:tags], line];
+}
+
++ (NSString *)stringWithMessageTags:(NSDictionary<NSString *, NSString *> *)tags
+{
+	NSParameterAssert(tags != nil);
+
+	NSArray<NSString *> *keys = [tags.allKeys sortedArrayUsingSelector:@selector(compare:)];
+
+	NSMutableArray<NSString *> *components = [NSMutableArray arrayWithCapacity:keys.count];
+
+	for (NSString *key in keys) {
+		NSString *value = tags[key];
+
+		if (value.length == 0) {
+			[components addObject:key];
+		} else {
+			[components addObject:[NSString stringWithFormat:@"%@=%@", key, value.encodedMessageTagString]];
+		}
+	}
+
+	return [components componentsJoinedByString:@";"];
+}
 
 + (NSString *)stringWithCommand:(NSString *)command arguments:(nullable NSArray<NSString *> *)arguments
 {

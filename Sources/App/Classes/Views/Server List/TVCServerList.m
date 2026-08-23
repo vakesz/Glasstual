@@ -56,8 +56,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 	/* -viewDidMoveToWindow is not guaranteed to alternate between a window
 	 and nil. Remove any previous registration first so that moving within
-	 the same window does not leave duplicate observers behind. */
-	[RZNotificationCenter() removeObserver:self];
+	 the same window does not leave duplicate observers behind. Only our
+	 own names are removed; a blanket -removeObserver: would also drop
+	 the registrations AppKit keeps for the table itself. */
+	[RZNotificationCenter() removeObserver:self name:NSWindowDidBecomeKeyNotification object:nil];
+	[RZNotificationCenter() removeObserver:self name:NSWindowDidResignKeyNotification object:nil];
+	[RZNotificationCenter() removeObserver:self name:TVCMainWindowRedrawSubviewsNotification object:nil];
 
 	TVCMainWindow *mainWindow = self.mainWindow;
 
@@ -73,6 +77,16 @@ NS_ASSUME_NONNULL_BEGIN
 	[RZNotificationCenter() addObserver:self
 							   selector:@selector(windowDidResignKey:)
 								   name:NSWindowDidResignKeyNotification
+								 object:mainWindow];
+
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(windowMainStateChanged:)
+								   name:NSWindowDidBecomeMainNotification
+								 object:mainWindow];
+
+	[RZNotificationCenter() addObserver:self
+							   selector:@selector(windowMainStateChanged:)
+								   name:NSWindowDidResignMainNotification
 								 object:mainWindow];
 
 	[RZNotificationCenter() addObserver:self
@@ -99,7 +113,11 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSParameterAssert(object != nil);
 
-	NSAssert(([self rowForItem:object] >= 0), @"Object does not exist on outline view");
+	if ([self rowForItem:object] < 0) {
+		LogToConsoleError("Object does not exist on outline view");
+
+		return;
+	}
 
 	id parentItem = [self parentForItem:object];
 	NSUInteger rowIndex;
@@ -112,6 +130,12 @@ NS_ASSUME_NONNULL_BEGIN
 		NSArray *groupItems = self.groupItems;
 
 		rowIndex = [groupItems indexOfObject:object];
+	}
+
+	if (rowIndex == NSNotFound) {
+		LogToConsoleError("Object is not a child of its parent item");
+
+		return;
 	}
 
 	NSIndexSet *indexSet = [NSIndexSet indexSetWithIndex:rowIndex];
@@ -184,6 +208,10 @@ NS_ASSUME_NONNULL_BEGIN
 	__kindof TVCServerListCell *rowView = [self viewAtColumn:0 row:rowIndex makeIfNecessary:NO];
 
 	rowView.needsDisplay = YES;
+
+	/* The row view draws the selection, whose emphasis follows the
+	 window's key state. */
+	[self rowViewAtRow:rowIndex makeIfNecessary:NO].needsDisplay = YES;
 }
 
 - (void)refreshDrawingForItem:(IRCTreeItem *)cellItem
@@ -298,6 +326,19 @@ NS_ASSUME_NONNULL_BEGIN
 	[self respondToRequiresRedraw];
 }
 
+- (void)windowMainStateChanged:(NSNotification *)notification
+{
+	/* Row emphasis follows main-window status (see TVCServerListRowCell),
+	 which AppKit does not re-evaluate on its own. */
+	[self enumerateAvailableRowViewsUsingBlock:^(__kindof NSTableRowView *rowView, NSInteger row) {
+		if ([rowView isKindOfClass:[TVCServerListRowCell class]]) {
+			[rowView refreshEmphasis];
+		}
+	}];
+
+	[self respondToRequiresRedraw];
+}
+
 - (void)mainWindowRequiresRedraw:(NSNotification *)notification
 {
 	[self respondToRequiresRedraw];
@@ -350,6 +391,12 @@ NS_ASSUME_NONNULL_BEGIN
 	switch (e.keyCode) {
 	case 125: // down arrow
 	case 126: // up arrow
+	{
+		/* Let the outline view move the selection, as the member list does. */
+		[super keyDown:e];
+
+		break;
+	}
 	case 123: // left arrow
 	case 124: // right arrow
 	case 116: // page up

@@ -1,0 +1,3 @@
+Lines is the bundled line-per-message style of Glasstual. It descends
+from the "Simplified" theme developed by "Cowboy" Ben Alman
+(http://benalman.com/). Copyright © 2010, 2011, 2012.

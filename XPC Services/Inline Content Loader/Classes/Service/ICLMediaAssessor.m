@@ -344,7 +344,11 @@ NSString *const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 	/* Read in content length */
 	long long contentLength = response.expectedContentLength;
 
-	if (contentLength <= 0) {
+	/* Chunked responses carry no Content-Length. That is fine: the
+	 download delegate enforces the size limit as bytes arrive. */
+	if (contentLength == NSURLResponseUnknownLength) {
+		contentLength = 0;
+	} else if (contentLength < 0) {
 		*error = [self _errorWithDescription:@"Content-Length header is improperly formatted"
 										code:ICLMediaAssessorErrorCodeMalformedContentLength];
 
@@ -486,7 +490,21 @@ NSString *const ICLMediaAssessorErrorDomain = @"ICLMediaAssessorErrorDomain";
 					newRequest:(NSURLRequest *)request
 			 completionHandler:(void (^)(NSURLRequest *_Nullable))completionHandler
 {
-	/* Follow redirects */
+	/* Follow redirects, but only to the schemes that are accepted
+	 on ingress. The service has network access; a redirect must not
+	 be able to turn an https link into a request for file:, ftp:,
+	 or a plaintext downgrade. */
+	NSString *scheme = request.URL.scheme.lowercaseString;
+
+	BOOL schemeAllowed =
+		[scheme isEqualToString:@"https"] ||
+		([scheme isEqualToString:@"http"] && [task.originalRequest.URL.scheme.lowercaseString isEqualToString:@"http"]);
+
+	if (schemeAllowed == NO) {
+		completionHandler(nil);
+
+		return;
+	}
 
 	completionHandler(request);
 }

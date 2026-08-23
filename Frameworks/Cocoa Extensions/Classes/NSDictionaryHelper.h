@@ -33,8 +33,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 #define NSDictionaryNilValue(s)							(((s) == nil) ? [NSNull null] : (s))
-#define NSDictionaryNilValueSubstitute(s, r)			(((s) == nil) ? (r) : (s))
-
 @interface NSDictionary (CSDictionaryHelper)
 - (NSDictionary *)dictionaryByAddingEntries:(NSDictionary *)entries;
 
@@ -51,9 +49,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (long long)longLongForKey:(id)key;
 - (unsigned long long)unsignedLongLongForKey:(id)key;
 - (double)doubleForKey:(id)key;
-- (float)floatForKey:(id)key;
-- (nullable void *)pointerForKey:(id)key NS_RETURNS_INNER_POINTER;
-
 - (nullable id)objectForKey:(id)key orUseDefault:(nullable id)defaultValue;
 - (BOOL)boolForKey:(id)key orUseDefault:(BOOL)defaultValue;
 - (nullable NSArray *)arrayForKey:(id)key orUseDefault:(nullable NSArray *)defaultValue;
@@ -68,31 +63,18 @@ NS_ASSUME_NONNULL_BEGIN
 - (long long)longLongForKey:(id)key orUseDefault:(long long)defaultValue;
 - (unsigned long long)unsignedLongLongForKey:(id)key orUseDefault:(unsigned long long)defaultValue;
 - (double)doubleForKey:(id)key orUseDefault:(double)defaultValue;
-- (float)floatForKey:(id)key orUseDefault:(float)defaultValue;
-
 /* Objects are copied to the pointer using -copy */
 - (void)assignObjectTo:(__strong _Nonnull id * _Nonnull)pointer forKey:(id)key;
 - (void)assignObjectTo:(__strong _Nonnull id * _Nonnull)pointer forKey:(id)key performCopy:(BOOL)copyValue;
 - (void)assignBoolTo:(BOOL *)pointer forKey:(id)key;
 - (void)assignArrayTo:(__strong NSArray * _Nonnull * _Nonnull)pointer forKey:(id)key;
-- (void)assignDictionaryTo:(__strong NSDictionary * _Nonnull * _Nonnull)pointer forKey:(id)key;
 - (void)assignStringTo:(__strong NSString * _Nonnull * _Nonnull)pointer forKey:(id)key;
-- (void)assignIntegerTo:(NSInteger *)pointer forKey:(id)key;
 - (void)assignUnsignedIntegerTo:(NSUInteger *)pointer forKey:(id)key;
-- (void)assignShortTo:(short *)pointer forKey:(id)key;
 - (void)assignUnsignedShortTo:(unsigned short *)pointer forKey:(id)key;
-- (void)assignLongTo:(long *)pointer forKey:(id)key;
-- (void)assignUnsignedLongTo:(unsigned long *)pointer forKey:(id)key;
-- (void)assignLongLongTo:(long long *)pointer forKey:(id)key;
-- (void)assignUnsignedLongLongTo:(unsigned long long *)pointer forKey:(id)key;
 - (void)assignDoubleTo:(double *)pointer forKey:(id)key;
-- (void)assignFloatTo:(float *)pointer forKey:(id)key;
-
 - (nullable id)firstKeyForObject:(id)anObject;
 
 - (BOOL)containsKey:(id)key;
-- (BOOL)containsKeyIgnoringCase:(id)key;
-
 - (nullable id)keyIgnoringCase:(id)key;
 
 @property (readonly, copy) NSArray *sortedDictionaryKeys;
@@ -131,8 +113,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setUnsignedLongLong:(unsigned long long)value forKey:(id)key;
 - (void)setDouble:(double)value forKey:(id)key;
 - (void)setFloat:(float)value forKey:(id)key;
-- (void)setPointer:(void *)value forKey:(id)key;
-
 - (void)performSelectorOnObjectValueAndReplace:(SEL)performSelector;
 @end
 

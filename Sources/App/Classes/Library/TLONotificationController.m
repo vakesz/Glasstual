@@ -93,17 +93,21 @@ NSString *const TXNotificationActionIdentifierPrivateMessageReply =
 								   name:TVCMainWindowSelectionChangedNotification
 								 object:nil];
 
-	[RZUserNotificationCenter()
-		requestAuthorizationWithOptions:(UNAuthorizationOptionAlert |
-										 UNAuthorizationOptionProvidesAppNotificationSettings)
-					  completionHandler:^(BOOL granted, NSError *_Nullable error) {
-						  if (error) {
-							  LogToConsoleError("Notifications failed to authorize: %{public}@",
-												error.localizedDescription);
-						  }
+	/* On a first launch the onboarding window explains the permission
+	 before asking for it, so the request is left to that flow. */
+	if ([TPCPreferences onboardingCompleted]) {
+		[RZUserNotificationCenter()
+			requestAuthorizationWithOptions:(UNAuthorizationOptionAlert |
+											 UNAuthorizationOptionProvidesAppNotificationSettings)
+						  completionHandler:^(BOOL granted, NSError *_Nullable error) {
+							  if (error) {
+								  LogToConsoleError("Notifications failed to authorize: %{public}@",
+													error.localizedDescription);
+							  }
 
-						  LogToConsoleInfo("Notification permission: %{public}@", StringFromBOOL(granted));
-					  }];
+							  LogToConsoleInfo("Notification permission: %{public}@", StringFromBOOL(granted));
+						  }];
+	}
 
 	[self registerCategories];
 }

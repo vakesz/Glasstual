@@ -43,12 +43,10 @@
 #import "TXWindowControllerPrivate.h"
 #import "TVCMainWindowPrivate.h"
 #import "TVCMemberListPrivate.h"
-#import "TVCMemberListCellPrivate.h"
 #import "TVCLogControllerPrivate.h"
 #import "TDCSharedProtocolDefinitionsPrivate.h"
 #import "TDCSheetBase.h"
 #import "TPCPreferencesLocal.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOFileLoggerPrivate.h"
 #import "TLOInputHistoryPrivate.h"
 #import "TLOLocalization.h"
@@ -63,6 +61,7 @@
 #import "IRCUserRelationsPrivate.h"
 #import "IRCWorldPrivate.h"
 #import "IRCChannelPrivate.h"
+#import "IRCDirectChatConnectionPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -208,6 +207,11 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 	return (self.config.type == IRCChannelTypeUtility);
 }
 
+- (BOOL)isDirectChat
+{
+	return (self.config.type == IRCChannelTypeDirectChat);
+}
+
 - (BOOL)isPrivateMessageForZNCUser
 {
 	if (self.isPrivateMessage == NO) {
@@ -235,6 +239,9 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 	}
 	case IRCChannelTypeUtility: {
 		return @"utility";
+	}
+	case IRCChannelTypeDirectChat: {
+		return @"direct-chat";
 	}
 	}
 }
@@ -315,48 +322,6 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 	}
 }
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (OTRKitMessageState)encryptionState
-{
-	if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-		return OTRKitMessageStatePlaintext;
-	}
-
-	if (self.isPrivateMessage == NO) {
-		return OTRKitMessageStatePlaintext;
-	}
-
-	IRCClient *client = self.associatedClient;
-
-	return [sharedEncryptionManager() messageStateFor:[client encryptionAccountNameForUser:self.name]
-												 from:[client encryptionAccountNameForLocalUser]];
-}
-
-- (BOOL)encryptionStateIsEncrypted
-{
-	return ([self encryptionState] == OTRKitMessageStateEncrypted);
-}
-
-- (void)noteEncryptionStateDidChange
-{
-	self.viewController.encrypted = self.encryptionStateIsEncrypted;
-
-	[mainWindow() updateTitleFor:self];
-}
-
-- (void)closeOpenEncryptionSessions
-{
-	if (self.encryptionStateIsEncrypted == NO) {
-		return;
-	}
-
-	IRCClient *client = self.associatedClient;
-
-	[sharedEncryptionManager() endConversationWith:[client encryptionAccountNameForUser:self.name]
-											  from:[client encryptionAccountNameForLocalUser]];
-}
-#endif
-
 #pragma mark -
 #pragma mark Channel Status
 
@@ -401,6 +366,11 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 
 	self.status = toStatus;
 
+	/* -setStatus: only consumes the flag when the status actually
+	 changes. Clear it here so a no-op transition does not leave it
+	 set for the next real one. */
+	self.statusChangedByAction = NO;
+
 	self.topic = nil;
 
 	/* Clearing members, instead of just declaring memberInfo nil,
@@ -437,8 +407,14 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 		self.modeInfo = [[IRCChannelMode alloc] initWithChannel:self];
 	}
 
-	if (self.isPrivateMessage) {
-		IRCUser *user1 = [self.associatedClient findUserOrCreate:self.name];
+	if (self.isPrivateMessage || self.isDirectChat) {
+		NSString *peerNickname = self.name;
+
+		if (self.isDirectChat) {
+			peerNickname = (self.directChatConnection.peerNickname ?: [self.name substringFromIndex:1]);
+		}
+
+		IRCUser *user1 = [self.associatedClient findUserOrCreate:peerNickname];
 
 		[self addUser:user1];
 
@@ -448,16 +424,14 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 	}
 
 	self.channelJoinTime = [NSDate timeIntervalSince1970];
+
+	if (self.isChannel || self.isPrivateMessage) {
+		[client noteChannelActivated:self];
+	}
 }
 
 - (void)deactivate
 {
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	if (self.isPrivateMessage) {
-		[self closeOpenEncryptionSessions];
-	}
-#endif
-
 	self.statusChangedByAction = YES;
 
 	[self resetStatus:IRCChannelStatusParted];
@@ -472,6 +446,8 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 	self.statusChangedByAction = YES;
 
 	[self resetStatus:IRCChannelStatusTerminated];
+
+	[self closeDirectChatConnection];
 
 	[self closeLogFile];
 
@@ -507,6 +483,8 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 
 	LogToConsoleTerminationProgress("[%{public}@] Closing log file", self.uniqueIdentifier);
 
+	[self closeDirectChatConnection];
+
 	[self closeLogFile];
 
 	if (self.isPrivateMessage) {
@@ -521,6 +499,22 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 									self.viewController.uniqueIdentifier);
 
 	[self.viewController prepareForApplicationTermination];
+}
+
+#pragma mark -
+#pragma mark Direct Chat
+
+- (void)closeDirectChatConnection
+{
+	IRCDirectChatConnection *connection = self.directChatConnection;
+
+	if (connection == nil) {
+		return;
+	}
+
+	self.directChatConnection = nil;
+
+	[connection close];
 }
 
 #pragma mark -
@@ -701,30 +695,6 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 - (void)sortMembers
 {
 	[self.memberInfo sortMembers];
-}
-
-#pragma mark -
-#pragma mark Table View Delegate
-
-- (nullable NSView *)tableView:(NSTableView *)tableView
-			viewForTableColumn:(nullable NSTableColumn *)tableColumn
-						   row:(NSInteger)row
-{
-	NSView *newView = [tableView makeViewWithIdentifier:@"GroupView" owner:self];
-
-	return newView;
-}
-
-- (nullable NSTableRowView *)tableView:(NSTableView *)tableView rowViewForRow:(NSInteger)row
-{
-	TVCMemberListRowCell *rowView = [[TVCMemberListRowCell alloc] initWithMemberList:(id)tableView];
-
-	return rowView;
-}
-
-- (void)tableView:(NSTableView *)tableView didAddRowView:(NSTableRowView *)rowView forRow:(NSInteger)row
-{
-	[mainWindowMemberList() refreshDrawingForRow:row];
 }
 
 #pragma mark -

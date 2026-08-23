@@ -144,12 +144,34 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)isOp
 {
-	return [self.modes containsCharacters:@"qOao"];
+	return [self hasRankOfModeSymbol:@"o" orHigher:nil];
 }
 
 - (BOOL)isHalfOp
 {
-	return [self.modes containsCharacters:@"qOaoh"];
+	return [self hasRankOfModeSymbol:@"h" orHigher:@"o"];
+}
+
+/* YES when the highest user mode held ranks at least as high as modeSymbol
+ in the PREFIX advertised by the server. When modeSymbol is not a prefix
+ mode on this server, fallbackModeSymbol is used instead. */
+- (BOOL)hasRankOfModeSymbol:(NSString *)modeSymbol orHigher:(nullable NSString *)fallbackModeSymbol
+{
+	NSParameterAssert(modeSymbol != nil);
+
+	IRCISupportInfo *supportInfo = self.client.supportInfo;
+
+	NSUInteger threshold = [supportInfo rankForUserPrefixWithMode:modeSymbol];
+
+	if (threshold == 0 && fallbackModeSymbol) {
+		threshold = [supportInfo rankForUserPrefixWithMode:fallbackModeSymbol];
+	}
+
+	if (threshold == 0) {
+		return NO;
+	}
+
+	return (self.channelRank >= threshold);
 }
 
 - (IRCUserRank)rank
@@ -290,7 +312,16 @@ NS_ASSUME_NONNULL_BEGIN
 	NSComparisonResult invertedRank = NSInvertedComparisonResult(normalRank);
 
 	if (invertedRank == NSOrderedSame) {
-		return [self.user.nickname caseInsensitiveCompare:other.user.nickname];
+		IRCISupportInfo *supportInfo = self.client.supportInfo;
+
+		if (supportInfo == nil) {
+			return [self.user.nickname caseInsensitiveCompare:other.user.nickname];
+		}
+
+		NSString *localNickname = [supportInfo casefoldString:self.user.nickname];
+		NSString *remoteNickname = [supportInfo casefoldString:other.user.nickname];
+
+		return [localNickname compare:remoteNickname];
 	}
 
 	return invertedRank;
@@ -300,13 +331,6 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	return [^(IRCChannelUser *object1, IRCChannelUser *object2) {
 		return [object1 compareUsingRank:object2];
-	} copy];
-}
-
-+ (NSComparator)nicknameLengthComparator
-{
-	return [^(IRCChannelUser *object1, IRCChannelUser *object2) {
-		return (object1.user.nickname.length <= object2.user.nickname.length);
 	} copy];
 }
 

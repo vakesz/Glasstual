@@ -657,7 +657,7 @@ sortSubviews(TVCMainWindowChannelViewSubview *firstView, TVCMainWindowChannelVie
 	TVCMainWindowAppearance *appearance = mainWindow.userInterfaceObjects;
 
 	if (appearance == nil) {
-		return [NSColor blackColor];
+		return [NSColor textBackgroundColor];
 	}
 
 	if (mainWindow.isActiveForDrawing) {

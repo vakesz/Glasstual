@@ -38,6 +38,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class IRCChannel;
+@class IRCChannelUser;
+@class TVCMemberList;
 
 /* The member list controller is the controller bound to the view in the
  main window. IRCChannelMemberList, when assigned to it, will maintain a
@@ -46,6 +48,10 @@ NS_ASSUME_NONNULL_BEGIN
  do the work for you to maintain the integrity of the internal list and
  the content of the controller. */
 @interface IRCChannelMemberListController : NSArrayController
+/* The table that presents the content. The controller tells it about
+ every change so it can keep its header rows in step. */
+@property(nonatomic, weak, readonly) TVCMemberList *tableView;
+
 /* A controller can be assigned to only one channel or none. */
 /* TVCMainWindow is responsible for assignment using TVCMemberList
  as a proxy. */

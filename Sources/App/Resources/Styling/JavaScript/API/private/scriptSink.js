@@ -98,83 +98,56 @@ appInternal.isValidCallbackFunction = function(callbackFunction)
 
 appPrivate.finishedLayingOutView = function()
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.finishedLayingOutView.postMessage(null);
-	} else {
-		GlasstualScriptSink.finishedLayingOutView();
-	}
+	window.webkit.messageHandlers.finishedLayingOutView.postMessage(null);
 };
 
 appPrivate.setAutomaticScrollingEnabled = function(enabled)
 {
-	if (app.isWebKit2()) {
-		GlasstualScroller.setAutomaticScrollingEnabled(enabled);
-	} else {
-		GlasstualScriptSink.setAutomaticScrollingEnabled(enabled);
-	}
+	GlasstualScroller.setAutomaticScrollingEnabled(enabled);
 };
 
 appPrivate.setURLAddress = function(object)
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.setURLAddress.postMessage(object);
-	} else {
-		GlasstualScriptSink.setURLAddress(object);
-	}
+	window.webkit.messageHandlers.setURLAddress.postMessage(object);
 };
 
 appPrivate.setSelection = function(object)
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.setSelection.postMessage(object);
-	} else {
-		GlasstualScriptSink.setSelection(object);
-	}
+	window.webkit.messageHandlers.setSelection.postMessage(object);
 };
 
 appPrivate.setChannelName = function(object)
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.setChannelName.postMessage(object);
-	} else {
-		GlasstualScriptSink.setChannelName(object);
-	}
+	window.webkit.messageHandlers.setChannelName.postMessage(object);
 };
 
 appPrivate.setNickname = function(object)
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.setNickname.postMessage(object);
+	window.webkit.messageHandlers.setNickname.postMessage(object);
+};
+
+appPrivate.setLineContext = function(object)
+{
+	if (object === null) {
+		window.webkit.messageHandlers.setLineContext.postMessage(null);
 	} else {
-		GlasstualScriptSink.setNickname(object);
+		window.webkit.messageHandlers.setLineContext.postMessage({"values" : [object]});
 	}
 };
 
 appPrivate.channelNameDoubleClicked = function()
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.channelNameDoubleClicked.postMessage(null);
-	} else {
-		GlasstualScriptSink.channelNameDoubleClicked();
-	}
+	window.webkit.messageHandlers.channelNameDoubleClicked.postMessage(null);
 };
 
 appPrivate.nicknameDoubleClicked = function()
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.nicknameDoubleClicked.postMessage(null);
-	} else {
-		GlasstualScriptSink.nicknameDoubleClicked();
-	}
+	window.webkit.messageHandlers.nicknameDoubleClicked.postMessage(null);
 };
 
 appPrivate.topicBarDoubleClicked = function()
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.topicBarDoubleClicked.postMessage(null);
-	} else {
-		GlasstualScriptSink.topicBarDoubleClicked();
-	}
+	window.webkit.messageHandlers.topicBarDoubleClicked.postMessage(null);
 };
 
 appPrivate.copySelectionWhenPermitted = function(callbackFunction)
@@ -183,11 +156,7 @@ appPrivate.copySelectionWhenPermitted = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.copySelectionWhenPermitted.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.copySelectionWhenPermitted(dataValue);
-	}
+	window.webkit.messageHandlers.copySelectionWhenPermitted.postMessage(dataValue);
 };
 
 appPrivate.displayContextMenu = function()
@@ -201,11 +170,7 @@ appPrivate.renderMessagesBefore = function(lineNumber, maximumNumberOfLines, cal
 
 	var dataValue = {"promiseIndex" : promiseIndex, "values" : [lineNumber, maximumNumberOfLines]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.renderMessagesBefore.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.renderMessagesBefore(dataValue);
-	}
+	window.webkit.messageHandlers.renderMessagesBefore.postMessage(dataValue);
 };
 
 appPrivate.renderMessagesAfter = function(lineNumber, maximumNumberOfLines, callbackFunction)
@@ -214,11 +179,7 @@ appPrivate.renderMessagesAfter = function(lineNumber, maximumNumberOfLines, call
 
 	var dataValue = {"promiseIndex" : promiseIndex, "values" : [lineNumber, maximumNumberOfLines]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.renderMessagesAfter.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.renderMessagesAfter(dataValue);
-	}
+	window.webkit.messageHandlers.renderMessagesAfter.postMessage(dataValue);
 };
 
 appPrivate.renderMessagesInRange = function(lineNumberAfter, lineNumberBefore, maximumNumberOfLines, callbackFunction)
@@ -227,11 +188,7 @@ appPrivate.renderMessagesInRange = function(lineNumberAfter, lineNumberBefore, m
 
 	var dataValue = {"promiseIndex" : promiseIndex, "values" : [lineNumberAfter, lineNumberBefore, maximumNumberOfLines]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.renderMessagesInRange.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.renderMessagesInRange(dataValue);
-	}
+	window.webkit.messageHandlers.renderMessagesInRange.postMessage(dataValue);
 };
 
 appPrivate.renderMessageWithSiblings = function(lineNumber, numberOfLinesBefore, numberOfLinesAfter, callbackFunction)
@@ -240,11 +197,7 @@ appPrivate.renderMessageWithSiblings = function(lineNumber, numberOfLinesBefore,
 
 	var dataValue = {"promiseIndex" : promiseIndex, "values" : [lineNumber, numberOfLinesBefore, numberOfLinesAfter]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.renderMessageWithSiblings.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.renderMessageWithSiblings(dataValue);
-	}
+	window.webkit.messageHandlers.renderMessageWithSiblings.postMessage(dataValue);
 };
 
 appPrivate.renderTemplate = function(templateName, templateAttributes, callbackFunction)
@@ -253,74 +206,36 @@ appPrivate.renderTemplate = function(templateName, templateAttributes, callbackF
 
 	var dataValue = {"promiseIndex" : promiseIndex, "values" : [templateName, templateAttributes]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.renderTemplate.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.renderTemplate(dataValue);
-	}
+	window.webkit.messageHandlers.renderTemplate.postMessage(dataValue);
 };
 
 appPrivate.notifyJumpToLineCallback = function(lineNumber, successful, scrolledToBottom)
 {
 	var dataValue = {"values" : [lineNumber, successful, scrolledToBottom]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.notifyJumpToLineCallback.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.notifyJumpToLineCallback(dataValue);
-	}
+	window.webkit.messageHandlers.notifyJumpToLineCallback.postMessage(dataValue);
 };
 
 appPrivate.notifyLinesAddedToView = function(lineNumbers)
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.notifyLinesAddedToView.postMessage(lineNumbers);
-	} else {
-		GlasstualScriptSink.notifyLinesAddedToView(lineNumbers);
-	}
+	window.webkit.messageHandlers.notifyLinesAddedToView.postMessage(lineNumbers);
 };
 
 appPrivate.notifyLinesRemovedFromView = function(lineNumbers)
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.notifyLinesRemovedFromView.postMessage(lineNumbers);
-	} else {
-		GlasstualScriptSink.notifyLinesRemovedFromView(lineNumbers);
-	}
+	window.webkit.messageHandlers.notifyLinesRemovedFromView.postMessage(lineNumbers);
 };
 
 appPrivate.loadInlineMedia = function(address, uniqueIdentifier, lineNumber, index)
 {
 	var dataValue = {"values" : [address, uniqueIdentifier, lineNumber, index]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.loadInlineMedia.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.loadInlineMedia(dataValue);
-	}
-};
-
-appPrivate.encryptionAuthenticateUser = function()
-{
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.encryptionAuthenticateUser.postMessage(null);
-	} else {
-		GlasstualScriptSink.encryptionAuthenticateUser();
-	}
+	window.webkit.messageHandlers.loadInlineMedia.postMessage(dataValue);
 };
 
 /* ************************************************** */
 /*                   Public                           */
 /* ************************************************** */
-
-app.isWebKit2 = function()
-{
-	if (window.webkit && typeof window.webkit.messageHandlers !== "undefined") {
-		return true;
-	} else {
-		return false;
-	}
-};
 
 app.channelMemberCount = function(callbackFunction)
 {
@@ -328,11 +243,7 @@ app.channelMemberCount = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.channelMemberCount.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.channelMemberCount(dataValue);
-	}
+	window.webkit.messageHandlers.channelMemberCount.postMessage(dataValue);
 };
 
 app.serverChannelCount = function(callbackFunction)
@@ -341,11 +252,7 @@ app.serverChannelCount = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.serverChannelCount.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.serverChannelCount(dataValue);
-	}
+	window.webkit.messageHandlers.serverChannelCount.postMessage(dataValue);
 };
 
 app.serverIsConnected = function(callbackFunction)
@@ -354,11 +261,7 @@ app.serverIsConnected = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.serverIsConnected.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.serverIsConnected(dataValue);
-	}
+	window.webkit.messageHandlers.serverIsConnected.postMessage(dataValue);
 };
 
 app.channelIsActive = function(callbackFunction)
@@ -367,11 +270,7 @@ app.channelIsActive = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.channelIsActive.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.channelIsActive(dataValue);
-	}
+	window.webkit.messageHandlers.channelIsActive.postMessage(dataValue);
 };
 
 app.channelIsJoined = function(callbackFunction)
@@ -387,11 +286,7 @@ app.channelName = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.channelName.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.channelName(dataValue);
-	}
+	window.webkit.messageHandlers.channelName.postMessage(dataValue);
 };
 
 app.serverAddress = function(callbackFunction)
@@ -400,11 +295,7 @@ app.serverAddress = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.serverAddress.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.serverAddress(dataValue);
-	}
+	window.webkit.messageHandlers.serverAddress.postMessage(dataValue);
 };
 
 app.networkName = function(callbackFunction)
@@ -413,11 +304,7 @@ app.networkName = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.networkName.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.networkName(dataValue);
-	}
+	window.webkit.messageHandlers.networkName.postMessage(dataValue);
 };
 
 app.localUserNickname = function(callbackFunction)
@@ -426,11 +313,7 @@ app.localUserNickname = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.localUserNickname.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.localUserNickname(dataValue);
-	}
+	window.webkit.messageHandlers.localUserNickname.postMessage(dataValue);
 };
 
 app.localUserHostmask = function(callbackFunction)
@@ -439,38 +322,22 @@ app.localUserHostmask = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.localUserHostmask.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.localUserHostmask(dataValue);
-	}
+	window.webkit.messageHandlers.localUserHostmask.postMessage(dataValue);
 };
 
 app.logToConsole = function(message)
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.logToConsole.postMessage(message);
-	} else {
-		GlasstualScriptSink.logToConsole(message);
-	}
+	window.webkit.messageHandlers.logToConsole.postMessage(message);
 };
 
 app.printDebugInformationToConsole = function(message)
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.printDebugInformationToConsole.postMessage(message);
-	} else {
-		GlasstualScriptSink.printDebugInformationToConsole(message);
-	}
+	window.webkit.messageHandlers.printDebugInformationToConsole.postMessage(message);
 };
 
 app.printDebugInformation = function(message)
 {
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.printDebugInformation.postMessage(message);
-	} else {
-		GlasstualScriptSink.printDebugInformation(message);
-	}
+	window.webkit.messageHandlers.printDebugInformation.postMessage(message);
 };
 
 app.inlineMediaEnabledForView = function(callbackFunction)
@@ -479,11 +346,7 @@ app.inlineMediaEnabledForView = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.inlineMediaEnabledForView.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.inlineMediaEnabledForView(dataValue);
-	}
+	window.webkit.messageHandlers.inlineMediaEnabledForView.postMessage(dataValue);
 };
 
 app.sidebarInversionIsEnabled = function(callbackFunction)
@@ -494,11 +357,7 @@ app.sidebarInversionIsEnabled = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.sidebarInversionIsEnabled.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.sidebarInversionIsEnabled(dataValue);
-	}
+	window.webkit.messageHandlers.sidebarInversionIsEnabled.postMessage(dataValue);
 };
 
 app.appearance = function(callbackFunction)
@@ -507,11 +366,7 @@ app.appearance = function(callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.appearance.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.appearance(dataValue);
-	}
+	window.webkit.messageHandlers.appearance.postMessage(dataValue);
 };
 
 app.nicknameColorStyleHash = function(nickname, nicknameColorStyle, callbackFunction)
@@ -520,22 +375,14 @@ app.nicknameColorStyleHash = function(nickname, nicknameColorStyle, callbackFunc
 
 	var dataValue = {"promiseIndex" : promiseIndex, "values" : [nickname, nicknameColorStyle]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.nicknameColorStyleHash.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.nicknameColorStyleHash(dataValue);
-	}
+	window.webkit.messageHandlers.nicknameColorStyleHash.postMessage(dataValue);
 };
 
 app.sendPluginPayload = function(payloadLabel, payloadContent)
 {
 	var dataValue = {"values" : [payloadLabel, payloadContent]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.sendPluginPayload.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.sendPluginPayload(dataValue);
-	}
+	window.webkit.messageHandlers.sendPluginPayload.postMessage(dataValue);
 };
 
 app.styleSettingsRetrieveValue = function(key, callbackFunction)
@@ -544,11 +391,7 @@ app.styleSettingsRetrieveValue = function(key, callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex, "values" : [key]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.styleSettingsRetrieveValue.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.styleSettingsRetrieveValue(dataValue);
-	}
+	window.webkit.messageHandlers.styleSettingsRetrieveValue.postMessage(dataValue);
 };
 
 app.styleSettingsSetValue = function(key, value, callbackFunction)
@@ -557,11 +400,7 @@ app.styleSettingsSetValue = function(key, value, callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex, "values" : [key, value]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.styleSettingsSetValue.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.styleSettingsSetValue(dataValue);
-	}
+	window.webkit.messageHandlers.styleSettingsSetValue.postMessage(dataValue);
 };
 
 app.retrievePreferencesWithMethodName = function(name, callbackFunction)
@@ -570,9 +409,5 @@ app.retrievePreferencesWithMethodName = function(name, callbackFunction)
 
 	var dataValue = {"promiseIndex" : promiseIndex, "values" : [name]};
 
-	if (app.isWebKit2()) {
-		window.webkit.messageHandlers.retrievePreferencesWithMethodName.postMessage(dataValue);
-	} else {
-		GlasstualScriptSink.retrievePreferencesWithMethodName(dataValue);
-	}
+	window.webkit.messageHandlers.retrievePreferencesWithMethodName.postMessage(dataValue);
 };

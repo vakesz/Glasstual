@@ -47,18 +47,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _maximumViewInstances 50
-
 @interface TVCLogViewInternalWK2 ()
 @property(nonatomic, assign) BOOL t_observingLoadingProperty;
-@end
-
-/* WebKit private API. It is reached through -respondsToSelector: and an
- NSInvocation below, never called directly, so this declaration exists only to
- name the selector. Without it the selector is undeclared and the search bar
- silently does nothing on a WebKit that drops it. */
-@interface WKWebView (TVCLogViewInternalWK2PrivateFind)
-- (void)_findString:(NSString *)string options:(NSUInteger)options maxCount:(NSUInteger)maxCount;
 @end
 
 @implementation TVCLogViewInternalWK2
@@ -67,8 +57,6 @@ static WKUserContentController *_sharedUserContentController = nil;
 static WKWebViewConfiguration *_sharedWebViewConfiguration = nil;
 static TVCLogPolicy *_sharedWebPolicy = nil;
 static TVCLogScriptEventSink *_sharedWebViewScriptSink = nil;
-static BOOL _safeToUseWebKit2 = YES;
-static NSUInteger _numberOfViews = 0;
 
 #pragma mark -
 #pragma mark Factory
@@ -80,12 +68,17 @@ static NSUInteger _numberOfViews = 0;
 	dispatch_once(&onceToken, ^{
 		_sharedWebViewConfiguration = [WKWebViewConfiguration new];
 
+		/* WebKit private API, declared in WKWebViewPrivate.h.
+		 The style is loaded from a file URL and references other files
+		 (scripts, images, the theme's own resources) by file URL. WebKit
+		 treats every file URL as its own origin, so without these two
+		 flags those references are blocked. There is no public API for
+		 this; the only alternative is a custom URL scheme handler. The
+		 remaining private call is -_webView:contextMenu:forElement: in
+		 the delegate section of this file. */
 		_sharedWebViewConfiguration._allowUniversalAccessFromFileURLs = YES;
 
-		WKPreferences *preferences = _sharedWebViewConfiguration.preferences;
-
-		preferences._allowFileAccessFromFileURLs = YES;
-		preferences._developerExtrasEnabled = YES;
+		_sharedWebViewConfiguration.preferences._allowFileAccessFromFileURLs = YES;
 
 		_sharedWebViewScriptSink = [[TVCLogScriptEventSink alloc] initWithWebView:nil];
 
@@ -139,6 +132,7 @@ static NSUInteger _numberOfViews = 0;
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"serverIsConnected"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setChannelName"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setNickname"];
+		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setLineContext"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setSelection"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setURLAddress"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink
@@ -165,9 +159,6 @@ static NSUInteger _numberOfViews = 0;
 	if ((self = [self initWithFrame:NSZeroRect configuration:_sharedWebViewConfiguration])) {
 		[self constructWebViewWithHostView:hostView];
 
-		// It's not critical that this is thread safe
-		_numberOfViews += 1;
-
 		return self;
 	}
 
@@ -191,6 +182,10 @@ static NSUInteger _numberOfViews = 0;
 
 	self.customUserAgent = TVCLogViewCommonUserAgentString;
 
+	/* Makes the view show up in Safari's Develop menu and enables the
+	 "Inspect Element" context menu item. */
+	self.inspectable = YES;
+
 	self.navigationDelegate = (id)self;
 
 	self.UIDelegate = (id)self;
@@ -198,8 +193,6 @@ static NSUInteger _numberOfViews = 0;
 
 - (void)dealloc
 {
-	_numberOfViews -= 1;
-
 	[self stopObservingLoadingProperty];
 
 	self.navigationDelegate = nil;
@@ -210,20 +203,6 @@ static NSUInteger _numberOfViews = 0;
 - (TVCLogPolicy *)webViewPolicy
 {
 	return _sharedWebPolicy;
-}
-
-+ (BOOL)t_safeToUse
-{
-	/* June 2024: WebKit2 was enabled by default for beta update users.
-	 One user who is in 200+ channels managed to enter WK2 into an endless
-	 termination loop. Probably resource exhaustion. I am still investigating
-	 the underlying cause of that. But given the extremes of the situation,
-	 this temporary fix may just end up being a permanent one. */
-	if (_numberOfViews > _maximumViewInstances) {
-		return NO;
-	}
-
-	return _safeToUseWebKit2;
 }
 
 #pragma mark -
@@ -291,31 +270,19 @@ static NSUInteger _numberOfViews = 0;
 {
 	NSParameterAssert(searchString != nil);
 
-	_WKFindOptions findOptions = (_WKFindOptionsCaseInsensitive | _WKFindOptionsShowOverlay |
-								  _WKFindOptionsShowFindIndicator | _WKFindOptionsWrapAround);
+	WKFindConfiguration *configuration = [WKFindConfiguration new];
 
-	if (movingForward == NO) {
-		findOptions |= _WKFindOptionsBackwards;
-	}
+	configuration.backwards = (movingForward == NO);
+	configuration.caseSensitive = NO;
+	configuration.wraps = YES;
 
-	SEL selector = @selector(_findString:options:maxCount:);
-
-	if ([self respondsToSelector:selector]) {
-		NSMethodSignature *signature = [self methodSignatureForSelector:selector];
-
-		NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
-
-		[invocation setTarget:self];
-		[invocation setSelector:selector];
-
-		[invocation setArgument:&searchString atIndex:2];
-		[invocation setArgument:&findOptions atIndex:3];
-
-		NSUInteger one = 1;
-		[invocation setArgument:&one atIndex:4];
-
-		[invocation invoke];
-	}
+	[self findString:searchString
+		withConfiguration:configuration
+		completionHandler:^(WKFindResult *result) {
+			if (result.matchFound == NO) {
+				NSBeep();
+			}
+		}];
 }
 
 - (void)startObservingLoadingProperty
@@ -423,98 +390,24 @@ static NSUInteger _numberOfViews = 0;
 }
 
 #pragma mark -
-#pragma mark Scroll View
-
-- (void)enableOffScreenUpdates
-{
-}
-
-- (void)disableOffScreenUpdates
-{
-}
-
-- (void)redrawViewIfNeeded
-{
-}
-
-- (void)redrawView
-{
-}
-
-- (void)resetScrollerPosition
-{
-}
-
-- (void)resetScrollerPositionTo:(BOOL)scrolledToBottom
-{
-}
-
-- (void)saveScrollerPosition
-{
-}
-
-- (void)restoreScrollerPosition
-{
-}
-
-- (void)setAutomaticScrollingEnabled:(BOOL)automaticScrollingEnabled
-{
-}
-
-#pragma mark -
 #pragma mark Web View Delegate
-
-- (void)_webView:(WKWebView *)webView webContentProcessDidTerminateWithReason:(_WKProcessTerminationReason)reason
-{
-	NSParameterAssert(webView == self);
-
-	switch (reason) {
-	case _WKProcessTerminationReasonExceededMemoryLimit:
-		LogToConsoleError("WebView [%{public}@] terminated due to memory limit", self.description);
-
-		break;
-	case _WKProcessTerminationReasonExceededCPULimit:
-		LogToConsoleError("WebView [%{public}@] terminated due to CPU limit", self.description);
-
-		break;
-	case _WKProcessTerminationReasonRequestedByClient:
-		LogToConsoleDebug("WebView [%{public}@] terminated by client", self.description);
-
-		break;
-	case _WKProcessTerminationReasonCrash:
-		LogToConsoleError("WebView [%{public}@] terminated due to crash", self.description);
-
-		break;
-	default:
-		LogToConsoleError("WebView [%{public}@] terminated by other means: %{public}ld", self.description, reason);
-
-		break;
-	}
-
-	if (reason == _WKProcessTerminationReasonRequestedByClient) {
-		return;
-	}
-
-	LogToConsoleError("A WebKit process terminated for a reason not understood. Disabling WebKit2 until relaunch.");
-	LogStackTrace();
-
-	_safeToUseWebKit2 = NO;
-
-	[self webViewClosedUnexpectedly];
-}
-
-- (void)_webViewWebProcessDidBecomeUnresponsive:(WKWebView *)webView
-{
-	NSParameterAssert(webView == self);
-
-	LogToConsoleError("WebView [%{public}@] terminated due to unresponsive", self.description);
-}
 
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView
 {
 	NSParameterAssert(webView == self);
 
-	LogToConsoleDebug("WebView [%{public}@] terminated", self.description);
+	/* The content process is gone (crash, memory pressure, jetsam).
+	 The view is blank until something is loaded into it again, so
+	 hand off to the controller which reloads the document and replays
+	 the history. */
+	LogToConsoleError("WebView [%{public}@] content process terminated. Reloading view.", self.description);
+
+	self.t_viewIsLoading = NO;
+	self.t_viewIsNavigating = NO;
+
+	[self stopObservingLoadingProperty];
+
+	[self webViewClosedUnexpectedly];
 }
 
 - (void)observeValueForKeyPath:(nullable NSString *)keyPath
@@ -572,6 +465,11 @@ static NSUInteger _numberOfViews = 0;
 	[self maybeInformDelegateWebViewFinishedLoading];
 }
 
+/* WebKit private API (WKUIDelegatePrivate). WKWebView offers no public
+ hook for replacing the context menu while keeping WebKit's own items
+ (Inspect Element, Look Up, Search With Google), so this is the one
+ remaining private delegate call. Should WebKit stop calling it, the
+ view falls back to WebKit's default menu. */
 - (NSMenu *)_webView:(WKWebView *)webView contextMenu:(NSMenu *)menu forElement:(id)element
 {
 	NSParameterAssert(webView == self);

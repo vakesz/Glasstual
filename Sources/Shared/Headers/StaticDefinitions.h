@@ -35,20 +35,14 @@
  *
  *********************************************************************** */
 
-/* Defines for operating system detection. */
-#define TXLoadMacOSVersionSpecificFeatures 1
-
 /* Shortcut defines. */
 #define RZAnimationCurrentContext() [NSAnimationContext currentContext]
 #define RZAppleEventManager() [NSAppleEventManager sharedAppleEventManager]
 #define RZCurrentCalendar() [NSCalendar currentCalendar]
-#define RZCurrentRunLoop() [NSRunLoop currentRunLoop]
 #define RZDistributedNotificationCenter() [NSDistributedNotificationCenter defaultCenter]
 #define RZFileManager() [NSFileManager defaultManager]
 #define RZFontManager() [NSFontManager sharedFontManager]
-#define RZGraphicsCurrentContext() [NSGraphicsContext currentContext]
 #define RZMainBundle() [NSBundle mainBundle]
-#define RZMainOperationQueue() [NSOperationQueue mainQueue]
 #define RZMainRunLoop() [NSRunLoop mainRunLoop]
 #define RZMainScreen() [NSScreen mainScreen]
 #define RZNotificationCenter() [NSNotificationCenter defaultCenter]
@@ -57,15 +51,12 @@
 #define RZRunningApplication() [NSRunningApplication currentApplication]
 #define RZSharedApplication() [NSApplication sharedApplication]
 #define RZSpellChecker() [NSSpellChecker sharedSpellChecker]
-#define RZUbiquitousKeyValueStore() [NSUbiquitousKeyValueStore defaultStore]
 #define RZUserNotificationCenter() [UNUserNotificationCenter currentNotificationCenter]
 #define RZWorkspace() [NSWorkspace sharedWorkspace]
 #define RZWorkspaceNotificationCenter() [[NSWorkspace sharedWorkspace] notificationCenter]
 
 /* Misc. */
 #define NSInvertedComparisonResult(c) ((c) * (-1))
-
-#define NSIsCurrentThreadMain() [[NSThread isMainThread]]
 
 /* Deprecation and symbol visibility. */
 #define GLASSTUAL_EXTERN extern
@@ -82,11 +73,6 @@
 #define GLASSTUAL_IGNORE_DEPRECATION_BEGIN COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
 #define GLASSTUAL_IGNORE_DEPRECATION_END COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
-#define GLASSTUAL_IGNORE_AVAILABILITY_BEGIN                                                                            \
-	_Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wpartial-availability\"")
-
-#define GLASSTUAL_IGNORE_AVAILABILITY_END _Pragma("clang diagnostic pop")
-
 /* Helper function */
 #define StringFromBOOL(value) ((value) ? @"YES" : @"NO")
 
@@ -94,10 +80,5 @@
 	if ((variable) == nil) {                                                                                           \
 		(variable) = (value);                                                                                          \
 	}
-
-#define SetVariableIfNilCopy(variable, value) SetVariableIfNil((variable), [(value) copy])
-
-/* Define features */
-#import "FeatureFlags.h"
 
 /* @end */

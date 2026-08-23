@@ -48,6 +48,8 @@
 #import "IRCAddressBookUserTracking.h"
 #import "IRCChannel.h"
 #import "IRCChannelConfig.h"
+#import "IRCCapability.h"
+#import "IRCSTSPolicy.h"
 #import "IRCChannelMode.h"
 #import "IRCChannelUser.h"
 #import "IRCClient.h"
@@ -87,12 +89,12 @@
 #import "THOUnicodeHelper.h"
 
 /* Library */
-#import "TLOEncryptionManager.h"
 #import "TLONotificationController.h"
 #import "TLOInternetAddressLookup.h"
 #import "TLOKeyEventHandler.h"
 #import "TLOLinkParser.h"
 #import "TLOLocalization.h"
+#import "TLOSCRAMClient.h"
 #import "TLOSoundPlayer.h"
 #import "TLOTimer.h"
 #import "TLOpenLink.h"

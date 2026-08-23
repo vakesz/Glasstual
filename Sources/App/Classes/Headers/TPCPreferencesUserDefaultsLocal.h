@@ -41,7 +41,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TPCPreferencesUserDefaults (TPCPreferencesUserDefaultsLocal)
 + (BOOL)keyIsExcludedFromExportImport:(NSString *)defaultName;
-+ (BOOL)keyIsExcludedFromMigration:(NSString *)defaultName;
 @end
 
 NS_ASSUME_NONNULL_END

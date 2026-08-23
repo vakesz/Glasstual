@@ -124,11 +124,10 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 
 + (BOOL)developerModeEnabled;
 
-+ (nullable NSString *)masqueradeCTCPVersion;
+/* YES once the first-launch onboarding window has been completed or skipped. */
++ (BOOL)onboardingCompleted;
 
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-+ (BOOL)receiveBetaUpdates;
-#endif
++ (nullable NSString *)masqueradeCTCPVersion;
 
 + (BOOL)channelNavigationIsServerSpecific;
 
@@ -157,12 +156,6 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (NSString *)IRCopDefaultKillMessage;
 + (NSString *)IRCopDefaultGlineMessage;
 + (NSString *)IRCopDefaultShunMessage;
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-+ (BOOL)textEncryptionIsOpportunistic;
-+ (BOOL)textEncryptionIsRequired;
-+ (BOOL)textEncryptionIsEnabled;
-#endif
 
 + (BOOL)enableEchoMessageCapability;
 
@@ -222,6 +215,7 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (BOOL)controlEnterSendsMessage;
 
 + (BOOL)openBrowserInBackground;
++ (BOOL)sendTypingNotifications; // IRCv3 +typing client tag
 
 + (BOOL)connectOnDoubleclick;
 + (BOOL)disconnectOnDoubleclick;

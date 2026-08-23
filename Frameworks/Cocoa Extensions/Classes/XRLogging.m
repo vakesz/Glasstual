@@ -30,8 +30,6 @@
  *
  *********************************************************************** */
 
-#import "XRLoggingDeprecatedPrivate.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
 static os_log_t XRLogToConsoleDefaultSubsystem = nil;
@@ -43,7 +41,7 @@ os_log_t _Nullable _CSFrameworkInternalLogSubsystem(void)
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		subsystem = os_log_create("com.codeux.frameworks.CocoaExtensions", "Framework");
+		subsystem = os_log_create("com.vakesz.glasstual.frameworks.CocoaExtensions", "Framework");
 	});
 
 	return subsystem;
@@ -80,34 +78,5 @@ NSString * _LogToConsoleFormattedStackTrace(NSArray<NSString *> *trace)
 
 	return [trace componentsJoinedByString:@"\n"];
 }
-
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
-void _LogToConsoleBridged_v1(XRLoggingType type, os_log_t _Nullable subsystem, const char *file, unsigned long line, unsigned long column, const char *function, const char *message, ...)
-{
-	NSCParameterAssert(file != NULL);
-	NSCParameterAssert(function != NULL);
-	NSCParameterAssert(message != NULL);
-
-	COCOA_EXTENSIONS_DEPRECATED_WARNING;
-
-	va_list arguments;
-	va_start(arguments, message);
-
-	NSString *formattedMessage = [[NSString alloc] initWithFormat:@(message) arguments:arguments];
-
-	va_end(arguments);
-
-	[XRLoggingDeprecated logMessage:formattedMessage asType:type inSubsystem:subsystem file:@(file) line:line column:column function:@(function)];
-}
-
-void _LogStackTraceBridged_v1(XRLoggingType type, os_log_t _Nullable subsystem, NSArray<NSString *> *trace)
-{
-	NSCParameterAssert(trace != nil);
-
-	COCOA_EXTENSIONS_DEPRECATED_WARNING;
-
-	[XRLoggingDeprecated logStackTraceSymbols:trace asType:type inSubsystem:subsystem];
-}
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
 NS_ASSUME_NONNULL_END

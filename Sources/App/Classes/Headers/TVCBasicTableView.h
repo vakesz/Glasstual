@@ -39,10 +39,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCBasicTableView : NSTableView
+/* When set, Edit > Copy is forwarded to this object. */
 @property(nonatomic, weak) id pasteboardDelegate;
-@property(nonatomic, weak) id textEditingDelegate;
-
-@property(readonly, assign) BOOL presentMenuForEmptySelection;
 @end
 
 NS_ASSUME_NONNULL_END

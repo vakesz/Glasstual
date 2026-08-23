@@ -105,13 +105,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSUInteger channelCount = 0;
 
-	for (IRCChannelConfig *channel in self.channelList) {
-		NSString *channelName = channel.channelName;
+	NSMenu *channelMenu = self.matchChannelPopupButton.menu;
 
-		[self.matchChannelPopupButton addItemWithTitle:channelName];
+	for (IRCChannelConfig *channel in self.channelList) {
+		/* Items are added to the menu directly so that two channels
+		 with the same name do not collapse into one popup item. */
+		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:channel.channelName action:NULL keyEquivalent:@""];
+
+		item.representedObject = channel.uniqueIdentifier;
+
+		[channelMenu addItem:item];
 
 		if ([channel.uniqueIdentifier isEqualToString:matchChannelId]) {
-			[self.matchChannelPopupButton selectItemWithTitle:channelName];
+			[self.matchChannelPopupButton selectItem:item];
 		}
 
 		channelCount += 1;
@@ -136,18 +142,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.config.matchKeyword = self.matchKeywordTextField.value;
 
-	NSInteger selectedChannelIndex = self.matchChannelPopupButton.indexOfSelectedItem;
+	id selectedChannelId = self.matchChannelPopupButton.selectedItem.representedObject;
 
-	if (selectedChannelIndex > 0) {
-		NSString *selectedChannelName = self.matchChannelPopupButton.titleOfSelectedItem;
-
-		for (IRCChannelConfig *c in self.channelList) {
-			if ([c.channelName isEqualToString:selectedChannelName]) {
-				self.config.matchChannelId = c.uniqueIdentifier;
-
-				break;
-			}
-		}
+	if ([selectedChannelId isKindOfClass:[NSString class]]) {
+		self.config.matchChannelId = selectedChannelId;
+	} else {
+		self.config.matchChannelId = nil;
 	}
 
 	[self.delegate highlightEntrySheet:self onOk:[self.config copy]];

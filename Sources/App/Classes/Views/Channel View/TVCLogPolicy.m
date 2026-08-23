@@ -50,30 +50,42 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/* Specific menu items are gathered and inserted at specific locations */
-#define _WebKit1MenuItemTagLookupInDictionary WebMenuItemTagLookUpInDictionary
-#define _WebKit1MenuItemTagSearchWithGoogle WebMenuItemTagSearchWeb
-
+/* Tags of WebKit's own context menu items which are kept and inserted
+ at specific locations of the menu. */
 #define _WebKit2MenuItemTagInspectElement 57
 #define _WebKit2MenuItemTagLookupInDictionary 22
 #define _WebKit2MenuItemTagSearchWithGoogle 21
 
+@implementation TVCLogPolicyTarget
+@end
+
+#pragma mark -
+
 @implementation TVCLogPolicy
 
+/* The target is taken from the view before the menu is built. Every
+ value the menu needs is copied into the items' represented objects
+ (-setUserInfo:recursively:) so the menu is self contained once built. */
 - (NSArray<NSMenuItem *> *)constructContextMenuItemsForWebView:(TVCLogView *)webView
 											  defaultMenuItems:(NSArray<NSMenuItem *> *)defaultMenuItems
 {
 	TVCLogController *viewController = webView.viewController;
 
+	TVCLogPolicyTarget *target = [webView takeContextMenuTarget];
+
+	NSString *anchorURL = target.anchorURL;
+	NSString *nickname = target.nickname;
+	NSString *channelName = target.channelName;
+
 	NSMutableArray<NSMenuItem *> *menuItems = [NSMutableArray array];
 
-	if (self.anchorURL) {
+	if (anchorURL) {
 		NSMenu *urlMenu = menuController().channelViewURLMenu;
 
 		for (NSMenuItem *item in urlMenu.itemArray) {
 			NSMenuItem *newItem = [item copy];
 
-			[newItem setUserInfo:self.anchorURL recursively:YES];
+			[newItem setUserInfo:anchorURL recursively:YES];
 
 			[menuItems addObject:newItem];
 		}
@@ -81,16 +93,14 @@ NS_ASSUME_NONNULL_BEGIN
 		/* The share submenu is built for each presentation so that it
 		 always reflects the link that was clicked. A string that does
 		 not form a URL produces a disabled item. */
-		NSURL *shareURL = [NSURL URLWithString:self.anchorURL];
+		NSURL *shareURL = [NSURL URLWithString:anchorURL];
 
 		NSArray *shareItems = ((shareURL != nil) ? @[ shareURL ] : @[]);
 
 		[menuItems addObject:[NSMenuItem separatorItem]];
 
 		[menuItems addObject:[menuController() shareMenuItemForItems:shareItems]];
-
-		self.anchorURL = nil;
-	} else if (self.nickname) {
+	} else if (nickname) {
 		if (viewController.associatedChannel == nil || viewController.associatedChannel.isUtility) {
 			NSMenuItem *noActionMenuItem = [[NSMenuItem alloc] initWithTitle:TXTLS(@"BasicLanguage[7kc-mo]")
 																	  action:nil
@@ -103,25 +113,23 @@ NS_ASSUME_NONNULL_BEGIN
 			for (NSMenuItem *item in memberMenu.itemArray) {
 				NSMenuItem *newItem = [item copy];
 
-				[newItem setUserInfo:self.nickname recursively:YES];
+				[newItem setUserInfo:nickname recursively:YES];
 
 				[menuItems addObject:newItem];
 			}
-		}
 
-		self.nickname = nil;
-	} else if (self.channelName) {
+			[menuItems addObjectsFromArray:[self messageMenuItemsForTarget:target inWebView:webView]];
+		}
+	} else if (channelName) {
 		NSMenu *chanMenu = menuController().channelViewChannelNameMenu;
 
 		for (NSMenuItem *item in chanMenu.itemArray) {
 			NSMenuItem *newItem = [item copy];
 
-			[newItem setUserInfo:self.channelName recursively:YES];
+			[newItem setUserInfo:channelName recursively:YES];
 
 			[menuItems addObject:newItem];
 		}
-
-		self.channelName = nil;
 	} else {
 		NSMenu *menu = menuController().channelViewGeneralMenu;
 
@@ -159,6 +167,8 @@ NS_ASSUME_NONNULL_BEGIN
 			[menuItems addObject:newItem];
 		}
 
+		[menuItems addObjectsFromArray:[self messageMenuItemsForTarget:target inWebView:webView]];
+
 		if ([TPCPreferences developerModeEnabled]) {
 			[menuItems addObject:[NSMenuItem separatorItem]];
 
@@ -183,6 +193,34 @@ NS_ASSUME_NONNULL_BEGIN
 	return [menuItems copy];
 }
 
+/* Reply and React for the message line under the pointer. Only lines
+ with a message identifier and of a type that can be answered. */
+- (NSArray<NSMenuItem *> *)messageMenuItemsForTarget:(TVCLogPolicyTarget *)target inWebView:(TVCLogView *)webView
+{
+	NSString *messageIdentifier = target.lineMessageIdentifier;
+
+	if (messageIdentifier.length == 0) {
+		return @[];
+	}
+
+	NSString *lineType = target.lineType;
+
+	if ([lineType isEqualToString:@"privmsg"] == NO && [lineType isEqualToString:@"action"] == NO &&
+		[lineType isEqualToString:@"notice"] == NO) {
+		return @[];
+	}
+
+	IRCChannel *channel = webView.viewController.associatedChannel;
+
+	if (channel == nil || channel.isUtility) {
+		return @[];
+	}
+
+	return [menuController() messageReplyMenuItemsForMessageIdentifier:messageIdentifier
+															  nickname:target.lineNickname
+															   excerpt:target.lineExcerpt];
+}
+
 - (NSMenu *)constructContextMenuForWebView:(TVCLogView *)webView
 					  withDefaultMenuItems:(NSArray<NSMenuItem *> *)defaultMenuItems
 {
@@ -193,6 +231,9 @@ NS_ASSUME_NONNULL_BEGIN
 	for (NSMenuItem *menuItem in menuItems) {
 		[contextMenu addItem:menuItem];
 	}
+
+	/* WebKit's own items and the developer items carry no symbol. */
+	[menuController() applySymbolsToMenu:contextMenu];
 
 	return contextMenu;
 }
@@ -253,6 +294,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 		decisionHandler(WKNavigationActionPolicyCancel);
 
+		if (actionURL == nil) {
+			LogToConsoleError("Link activated without a URL");
+
+			return;
+		}
+
 		[self openWebpage:actionURL];
 	} else {
 		decisionHandler(WKNavigationActionPolicyAllow);
@@ -267,20 +314,28 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Shared
 
-- (void)channelNameDoubleClicked
+- (void)channelNameDoubleClickedInWebView:(TVCLogView *)webView
 {
-	[menuController() joinChannelClicked:self.channelName];
+	NSString *channelName = [webView takeContextMenuTarget].channelName;
 
-	self.channelName = nil;
+	if (channelName == nil) {
+		return;
+	}
+
+	[menuController() joinChannelClicked:channelName];
 }
 
-- (void)nicknameDoubleClicked
+- (void)nicknameDoubleClickedInWebView:(TVCLogView *)webView
 {
-	menuController().pointedNickname = self.nickname;
+	NSString *nickname = [webView takeContextMenuTarget].nickname;
+
+	if (nickname == nil) {
+		return;
+	}
+
+	menuController().pointedNickname = nickname;
 
 	[menuController() memberInChannelViewDoubleClicked:nil];
-
-	self.nickname = nil;
 }
 
 - (void)topicBarDoubleClicked

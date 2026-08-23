@@ -126,20 +126,6 @@ NS_ASSUME_NONNULL_BEGIN
 		if (photoId) {
 			return [@"https://docs.google.com/uc?id=" stringByAppendingString:photoId];
 		}
-	} else if ([urlHost isDomainOrSubdomain:@"twitpic.com"]) {
-		if (urlPath.length == 0) {
-			return nil;
-		}
-
-		NSString *s = [urlPath substringFromIndex:1];
-
-		if ([s hasSuffix:@"/full"]) {
-			s = [s substringToIndex:(s.length - 5)];
-		}
-
-		if (s.alphabeticNumericOnly) {
-			return [NSString stringWithFormat:@"https://twitpic.com/show/large/%@", s];
-		}
 	} else if ([urlHost isDomainOrSubdomain:@"instagram.com"] || [urlHost isDomainOrSubdomain:@"instagr.am"]) {
 		if ([urlPath hasPrefix:@"/p/"] == NO) {
 			return nil;
@@ -158,16 +144,6 @@ NS_ASSUME_NONNULL_BEGIN
 		NSString *filenameWithoutExtension = urlPath.stringByDeletingPathExtension;
 
 		return [NSString stringWithFormat:@"%@://%@%@s.jpg", urlScheme, urlHost, filenameWithoutExtension];
-	} else if ([urlHost isDomainOrSubdomain:@"8ch.net"]) {
-		if ([urlPath hasSuffix:@".webm"] == NO) {
-			return nil;
-		}
-
-		NSString *filename = urlPath.lastPathComponent;
-
-		NSString *filenameWithoutExtension = filename.stringByDeletingPathExtension;
-
-		return [NSString stringWithFormat:@"%@://%@/webm/thumb/%@.jpg", urlScheme, urlHost, filenameWithoutExtension];
 	} else if ([urlHost isDomainOrSubdomain:@"f.hatena.ne.jp"]) {
 		NSArray *components = [urlPath componentsSeparatedByString:@"/"];
 
@@ -194,16 +170,6 @@ NS_ASSUME_NONNULL_BEGIN
 										  userId,
 										  photoIdHead,
 										  photoId];
-	} else if ([urlHost isDomain:@"puu.sh"]) {
-		if (urlPath.length == 0) {
-			return nil;
-		}
-
-		NSString *s = [urlPath substringFromIndex:1];
-
-		if (s.alphabeticNumericOnly) {
-			return [NSString stringWithFormat:@"https://puu.sh/%@.jpg", s];
-		}
 	} else if ([urlHost isDomainOrSubdomain:@"d.pr"]) {
 		if ([urlPath hasPrefix:@"/i/"] == NO) {
 			return nil;
@@ -241,16 +207,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 		return [NSString
 			stringWithFormat:@"https://tn-skr%lli.smilevideo.jp/smile?i=%lli", ((videoNumber % 4) + 1), videoNumber];
-	} else if ([urlHost isDomain:@"i.reddituploads.com"]) {
-		if (urlPath.length == 0) {
-			return nil;
-		}
-
-		NSString *s = [urlPath substringFromIndex:1];
-
-		if (s.alphabeticNumericOnly) {
-			return url.absoluteString;
-		}
 	} else if ([urlHost isDomainOrSubdomain:@"youtube.com"] || [urlHost isDomain:@"youtu.be"]) {
 		/* If we aren't allowed to embed YouTube,
 		 at least show show the thumbnail for the video. */

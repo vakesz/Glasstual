@@ -174,7 +174,7 @@ NS_ASSUME_NONNULL_BEGIN
 		return [NSString stringWithFormat:@"*!%@@%@", username, address];
 	}
 	case TXHostmaskBanFormatWHANNI: {
-		return [NSString stringWithFormat:@"%@!*%@", nickname, address];
+		return [NSString stringWithFormat:@"%@!*@%@", nickname, address];
 	}
 	case TXHostmaskBanFormatExact: {
 		return [NSString stringWithFormat:@"%@!%@@%@", nickname, username, address];
@@ -226,7 +226,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 		((self.realName == nil && objectCast.realName == nil) || [self.realName isEqualToString:objectCast.realName]) &&
 
-		self.isAway == objectCast.isAway && self.isIRCop == objectCast.isIRCop);
+		((self.account == nil && objectCast.account == nil) || [self.account isEqualToString:objectCast.account]) &&
+
+		self.isAway == objectCast.isAway && self.isIRCop == objectCast.isIRCop && self.isBot == objectCast.isBot);
 }
 
 - (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing
@@ -242,9 +244,11 @@ NS_ASSUME_NONNULL_BEGIN
 	object->_address = self->_address;
 
 	object->_realName = self->_realName;
+	object->_account = self->_account;
 
 	object->_isAway = self->_isAway;
 	object->_isIRCop = self->_isIRCop;
+	object->_isBot = self->_isBot;
 
 	return [object initOnCopy];
 }
@@ -288,7 +292,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 	dispatch_block_t blockToFire = [self removeUserTimerBlockToFire];
 
-	removeUserTimer = XRScheduleBlockOnGlobalQueue(blockToFire, _removeUserTimerInterval);
+	/* The user list is mutated from the main thread everywhere else;
+	 keep eviction there as well. */
+	removeUserTimer = XRScheduleBlockOnMainQueue(blockToFire, _removeUserTimerInterval);
 
 	if (removeUserTimer == NULL) {
 		LogToConsoleFault("Failed to create timer to remove user");
@@ -326,7 +332,13 @@ NS_ASSUME_NONNULL_BEGIN
 	__weak IRCUser *user = self;
 
 	return [^{
-		[client removeUser:user];
+		IRCUser *strongUser = user;
+
+		if (strongUser == nil) {
+			return;
+		}
+
+		[client removeUser:strongUser];
 	} copy];
 }
 
@@ -395,8 +407,10 @@ NS_ASSUME_NONNULL_BEGIN
 @dynamic username;
 @dynamic address;
 @dynamic realName;
+@dynamic account;
 @dynamic isAway;
 @dynamic isIRCop;
+@dynamic isBot;
 
 - (instancetype)initWithClient:(IRCClient *)client
 {
@@ -419,6 +433,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 	if (self->_nickname != nickname) {
 		self->_nickname = [nickname copy];
+	}
+}
+
+- (void)setAccount:(nullable NSString *)account
+{
+	if (self->_account != account) {
+		self->_account = [account copy];
 	}
 }
 
@@ -454,6 +475,13 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (self->_isIRCop != isIRCop) {
 		self->_isIRCop = isIRCop;
+	}
+}
+
+- (void)setIsBot:(BOOL)isBot
+{
+	if (self->_isBot != isBot) {
+		self->_isBot = isBot;
 	}
 }
 

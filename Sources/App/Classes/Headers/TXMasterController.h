@@ -59,12 +59,4 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign) BOOL skipTerminateSave;
 @end
 
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-@class SPUStandardUpdaterController;
-
-@interface TXMasterController (Sparkle)
-@property(readonly) SPUStandardUpdaterController *updateController;
-@end
-#endif
-
 NS_ASSUME_NONNULL_END

@@ -429,15 +429,6 @@ NSString *const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod = @"s
 		return; // Do not install.
 	}
 
-#if GLASSTUAL_BUILT_INSIDE_SANDBOX == 0
-	NSURL *newPath = [[TPCPathInfo customScriptsURL] URLByAppendingPathComponent:filename];
-
-	BOOL didImport = [self import:url into:newPath];
-
-	if (didImport) {
-		[self performImportOfScriptFilePostflight:filename];
-	}
-#else
 	NSURL *folderRep = [TPCPathInfo customScriptsURL];
 
 	if ([RZFileManager() fileExistsAtURL:folderRep] == NO) {
@@ -475,7 +466,6 @@ NSString *const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod = @"s
 			});
 		}
 	}];
-#endif
 }
 
 - (void)performImportOfScriptFilePostflight:(NSString *)filename

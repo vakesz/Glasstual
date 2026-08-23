@@ -50,7 +50,6 @@
 #import "IRCClient.h"
 #import "IRCConnectionConfig.h"
 #import "IRCWorld.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TLOpenLink.h"
 #import "TVCMainWindowPrivate.h"
@@ -61,10 +60,6 @@
 #import "TDCPreferencesNotificationConfigurationPrivate.h"
 #import "TDCPreferencesUserStyleSheetPrivate.h"
 #import "TDCPreferencesControllerPrivate.h"
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-#import <Sparkle/Sparkle.h>
-#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -221,21 +216,11 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 @property(nonatomic, strong) IBOutlet NSView *contentViewDefaultIdentity;
 @property(nonatomic, strong) IBOutlet NSView *contentViewDefaultIRCopMessages;
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-@property(nonatomic, strong) IBOutlet NSView *contentViewOffRecordMessaging;
-#endif
-
 @property(nonatomic, strong) IBOutlet NSView *contentViewHiddenPreferences;
-@property(nonatomic, weak) IBOutlet NSButton *checkForUpdatesDontCheck;
-@property(nonatomic, weak) IBOutlet NSButton *checkForUpdatesAutomaticallyCheck;
-@property(nonatomic, weak) IBOutlet NSButton *checkForUpdatesAutomaticallyDownload;
 @property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToServerConsoleButton;
 @property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToSelectedChannelButton;
 @property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToQueryButton;
 @property(nonatomic, weak) IBOutlet NSButton *inlineMediaEnabledButton;
-@property(nonatomic, weak) IBOutlet NSStackView *contentViewGeneralStackView;
-@property(nonatomic, weak) IBOutlet NSView *contentViewGeneralCheckForUpdatesView;
-@property(nonatomic, weak) IBOutlet NSView *contentViewGeneralShareDataView;
 @property(nonatomic, strong) NSSplitViewController *splitViewController;
 @property(nonatomic, strong) NSOutlineView *sidebarOutlineView;
 @property(nonatomic, strong) NSScrollView *paneScrollView;
@@ -257,8 +242,6 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 - (IBAction)onAddExcludeKeyword:(nullable id)sender;
 - (IBAction)onAddHighlightKeyword:(nullable id)sender; // changed
 - (IBAction)onChangedAppearance:(nullable id)sender;
-- (IBAction)onChangedCheckForUpdates:(nullable id)sender;
-- (IBAction)onChangedCheckForBetaUpdates:(nullable id)sender;
 - (IBAction)onChangedChannelViewArrangement:(nullable id)sender;
 - (IBAction)onChangedDisableNicknameColorHashing:(nullable id)sender;
 - (IBAction)onChangedForwardNoticeTo:(nullable id)sender;
@@ -279,15 +262,12 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 - (IBAction)onFileTransferIPAddressDetectionMethodChanged:(nullable id)sender;
 - (IBAction)onModifyUserStyleSheetRules:(nullable id)sender;
 - (IBAction)onOpenPathToScripts:(nullable id)sender;
+- (IBAction)onResetPluginApprovals:(nullable id)sender;
 - (IBAction)onOpenPathToTheme:(nullable id)sender; // changed
 - (IBAction)onResetServerListUnreadBadgeColorsToDefault:(nullable id)sender;
 - (IBAction)onResetUserListModeColorsToDefaults:(nullable id)sender;
 - (IBAction)onSelectNewFont:(nullable id)sender;
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (IBAction)offRecordMessagingPolicyChanged:(nullable id)sender;
-- (IBAction)offRecordMessagingOpenOfficialWebsite:(nullable id)sender;
-#endif
 @end
 
 @implementation TDCPreferencesController
@@ -362,7 +342,6 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 
 	[self.notificationController attachToView:self.notificationControllerHostView];
 
-	[self updateCheckForUpdatesMatrix];
 	[self updateFileTransferDownloadDestinationFolder];
 	[self updateForwardNoticeToMatrix];
 	[self updateInlineMediaEnabled];
@@ -392,12 +371,6 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 							   selector:@selector(onThemeReloadComplete:)
 								   name:TVCMainWindowDidReloadThemeNotification
 								 object:nil];
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
-	/* Hide preferences for updates when support is not enabled. */
-	[self.contentViewGeneralStackView setVisibilityPriority:NSStackViewVisibilityPriorityNotVisible
-													forView:self.contentViewGeneralCheckForUpdatesView];
-#endif
 
 	[self.contentViewGeneral layoutSubtreeIfNeeded];
 
@@ -492,9 +465,6 @@ static const TDCPreferencesSettingsPane _settingsPanes[] = {
 	{@"logLocation", @"folder", @"contentViewLogLocation", _settingsGroupAdvanced},
 	{@"defaultIdentity", @"person.crop.circle", @"contentViewDefaultIdentity", _settingsGroupAdvanced},
 	{@"defaultIRCopMessages", @"shield", @"contentViewDefaultIRCopMessages", _settingsGroupAdvanced},
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	{@"offRecordMessaging", @"lock.fill", @"contentViewOffRecordMessaging", _settingsGroupAdvanced},
-#endif
 	{@"hidden", @"eye.slash", @"contentViewHiddenPreferences", _settingsGroupAdvanced},
 };
 
@@ -741,10 +711,9 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 	[versionLabel setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow
 										   forOrientation:NSLayoutConstraintOrientationHorizontal];
 
-	NSVisualEffectView *sidebarView =
-		[[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0.0, 0.0, _sidebarPreferredWidth, _windowMinimumHeight)];
-	sidebarView.material = NSVisualEffectMaterialSidebar;
-	sidebarView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+	/* The sidebar NSSplitViewItem supplies its own vibrancy. */
+	NSView *sidebarView =
+		[[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, _sidebarPreferredWidth, _windowMinimumHeight)];
 
 	[sidebarView addSubview:scrollView];
 	[sidebarView addSubview:versionLabel];
@@ -1335,105 +1304,6 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 	[TPCPreferences setFileTransferPortRangeEnd:value.integerValue];
 }
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
-{
-	[TPCPreferences setTextEncryptionIsOpportunistic:textEncryptionIsOpportunistic];
-}
-
-- (BOOL)textEncryptionIsOpportunistic
-{
-	if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-		return NO;
-	}
-
-	if ([TPCPreferences textEncryptionIsRequired]) {
-		return YES;
-	}
-
-	return [TPCPreferences textEncryptionIsOpportunistic];
-}
-
-- (BOOL)textEncryptionIsOpportunisticPreferenceEnabled
-{
-	return ([TPCPreferences textEncryptionIsEnabled] && [TPCPreferences textEncryptionIsRequired] == NO);
-}
-
-- (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired
-{
-	[TPCPreferences setTextEncryptionIsRequired:textEncryptionIsRequired];
-
-	[self willChangeValueForKey:@"textEncryptionIsOpportunistic"];
-	[self didChangeValueForKey:@"textEncryptionIsOpportunistic"];
-}
-
-- (BOOL)textEncryptionIsRequired
-{
-	if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-		return NO;
-	}
-
-	return [TPCPreferences textEncryptionIsRequired];
-}
-
-- (BOOL)textEncryptionIsRequiredPreferenceEnabled
-{
-	return [TPCPreferences textEncryptionIsEnabled];
-}
-
-- (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled
-{
-	[TPCPreferences setTextEncryptionIsEnabled:textEncryptionIsEnabled];
-
-	[self willChangeValueForKey:@"textEncryptionIsOpportunistic"];
-	[self willChangeValueForKey:@"textEncryptionIsOpportunisticPreferenceEnabled"];
-	[self willChangeValueForKey:@"textEncryptionIsRequired"];
-	[self willChangeValueForKey:@"textEncryptionIsRequiredPreferenceEnabled"];
-
-	[self didChangeValueForKey:@"textEncryptionIsOpportunistic"];
-	[self didChangeValueForKey:@"textEncryptionIsOpportunisticPreferenceEnabled"];
-	[self didChangeValueForKey:@"textEncryptionIsRequired"];
-	[self didChangeValueForKey:@"textEncryptionIsRequiredPreferenceEnabled"];
-}
-
-- (BOOL)textEncryptionIsEnabled
-{
-	return [TPCPreferences textEncryptionIsEnabled];
-}
-#else
-- (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
-{
-}
-
-- (BOOL)textEncryptionIsOpportunistic
-{
-}
-
-- (BOOL)textEncryptionIsOpportunisticPreferenceEnabled
-{
-}
-
-- (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired
-{
-}
-
-- (BOOL)textEncryptionIsRequired
-{
-}
-
-- (BOOL)textEncryptionIsRequiredPreferenceEnabled
-{
-}
-
-- (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled
-{
-}
-
-- (BOOL)textEncryptionIsEnabled
-{
-}
-#endif
-
 - (BOOL)highlightCurrentNickname
 {
 	if ([TPCPreferences highlightMatchingMethod] == TXNicknameHighlightMatchTypeRegularExpression) {
@@ -1724,7 +1594,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 					  return;
 				  }
 
-				  NSURL *path = d.URLs[0];
+				  NSURL *path = d.URL;
 
 				  NSError *bookmarkError = nil;
 
@@ -1799,13 +1669,66 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 {
 	[self.themeSelectionButton removeAllItems];
 
-	NSMenuItem *nativeItem = [[NSMenuItem alloc] initWithTitle:TXTLS(@"TDCPreferencesController[native-style]")
-														action:nil
-												 keyEquivalent:@""];
-	nativeItem.tag = 100;
-	[self.themeSelectionButton.menu addItem:nativeItem];
+	NSString *currentThemeName = themeController().name;
+
+	TPCThemeStorageLocation currentStorageLocation = themeController().storageLocation;
+
+	/* Bundled styles are listed first, then the user's own, with a
+	 separator between the two groups. */
+	NSMutableArray<NSMenuItem *> *bundledItems = [NSMutableArray array];
+	NSMutableArray<NSMenuItem *> *customItems = [NSMutableArray array];
+
+	[themeController()
+		enumerateAvailableThemesWithBlock:^(
+			NSString *themeName, TPCThemeStorageLocation storageLocation, BOOL multipleVariants, BOOL *stop) {
+			NSString *displayName = themeName;
+
+			if (multipleVariants) {
+				displayName =
+					[NSString stringWithFormat:@"%@ (%@)",
+											   themeName,
+											   [TPCThemeController descriptionForStorageLocation:storageLocation]];
+			}
+
+			NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:displayName action:nil keyEquivalent:@""];
+
+			item.representedObject = @{@"themeName" : themeName, @"storageLocation" : @(storageLocation)};
+
+			if ([currentThemeName isEqualToString:themeName] && currentStorageLocation == storageLocation) {
+				item.tag = 100; // Tag for item to select
+			}
+
+			if (storageLocation == TPCThemeStorageLocationBundle) {
+				[bundledItems addObject:item];
+			} else {
+				[customItems addObject:item];
+			}
+		}];
+
+	NSComparator byTitle = ^NSComparisonResult(NSMenuItem *item1, NSMenuItem *item2) {
+		return [item1.title localizedStandardCompare:item2.title];
+	};
+
+	[bundledItems sortUsingComparator:byTitle];
+	[customItems sortUsingComparator:byTitle];
+
+	NSMenu *menu = self.themeSelectionButton.menu;
+
+	for (NSMenuItem *item in bundledItems) {
+		[menu addItem:item];
+	}
+
+	if (bundledItems.count > 0 && customItems.count > 0) {
+		[menu addItem:[NSMenuItem separatorItem]];
+	}
+
+	for (NSMenuItem *item in customItems) {
+		[menu addItem:item];
+	}
+
 	[self.themeSelectionButton selectItemWithTag:100];
-	self.themeSelectionButton.enabled = NO;
+
+	self.themeSelectionButton.enabled = (menu.numberOfItems > 0);
 }
 
 - (void)onChangedThemeSelection:(nullable id)sender
@@ -1865,7 +1788,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 
 	NSString *themeName = [TPCThemeController extractThemeName:currentTheme];
 
-	[TDCAlert alertSheetWithWindow:[NSApp keyWindow]
+	[TDCAlert alertSheetWithWindow:self.window
 							  body:TXTLS(@"TDCPreferencesController[q4o-2f]", themeName, forcedValues)
 							 title:TXTLS(@"TDCPreferencesController[uc0-z7]")
 					 defaultButton:TXTLS(@"Prompts[c7s-dq]")
@@ -1972,60 +1895,12 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 }
 
 #pragma mark -
-#pragma mark Updates
-
-- (void)updateCheckForUpdatesMatrix
-{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	SPUUpdater *updater = masterController().updateController.updater;
-
-	self.checkForUpdatesAutomaticallyDownload.state = updater.automaticallyDownloadsUpdates;
-	self.checkForUpdatesAutomaticallyCheck.state = updater.automaticallyChecksForUpdates;
-	self.checkForUpdatesDontCheck.state =
-		(updater.automaticallyDownloadsUpdates == NO && updater.automaticallyChecksForUpdates == NO);
-#endif
-}
-
-- (void)onChangedCheckForUpdates:(nullable id)sender
-{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	SPUUpdater *updater = masterController().updateController.updater;
-
-	updater.automaticallyChecksForUpdates = (self.checkForUpdatesAutomaticallyCheck.state == NSControlStateValueOn);
-	updater.automaticallyDownloadsUpdates = (self.checkForUpdatesAutomaticallyDownload.state == NSControlStateValueOn);
-#endif
-}
-
-- (void)onChangedCheckForBetaUpdates:(nullable id)sender
-{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	[TPCPreferences performReloadAction:TPCPreferencesReloadActionSparkleFrameworkFeedURL];
-
-	if ([TPCPreferences receiveBetaUpdates]) {
-		[menuController() checkForUpdates:nil];
-	}
-#endif
-}
-
-#pragma mark -
 #pragma mark Actions
 
 - (void)onChangedDisableNicknameColorHashing:(nullable id)sender
 {
 	[self onChangedTheme:nil];
 }
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (void)offRecordMessagingPolicyChanged:(nullable id)sender
-{
-	[TPCPreferences performReloadAction:TPCPreferencesReloadActionEncryptionPolicy];
-}
-
-- (void)offRecordMessagingOpenOfficialWebsite:(nullable id)sender
-{
-	[TLOpenLink openWithString:@"https://otr.cypherpunks.ca/"];
-}
-#endif
 
 - (void)onChangedHighlightType:(nullable id)sender
 {
@@ -2068,27 +1943,9 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 
 + (void)openProxySettingsInSystemPreferences
 {
-	AEDesc aeDesc = {typeNull, NULL};
+	NSURL *url = [NSURL URLWithString:@"x-apple.systempreferences:com.apple.Network-Settings.extension?Proxies"];
 
-	OSStatus aeDescStatus = AECreateDesc('ptru', "Proxies", 7, &aeDesc);
-
-	if (aeDescStatus != noErr) {
-		LogToConsoleError("aeDescStatus returned value other than noErr: %{public}i", aeDescStatus);
-
-		return;
-	}
-
-	NSURL *prefPaneURL = [NSURL fileURLWithPath:@"/System/Library/PreferencePanes/Network.prefPane"];
-
-	LSLaunchURLSpec launchSpec = {0};
-
-	launchSpec.appURL = NULL;
-	launchSpec.asyncRefCon = NULL;
-	launchSpec.itemURLs = (__bridge CFArrayRef) @[ prefPaneURL ];
-	launchSpec.launchFlags = (kLSLaunchAsync | kLSLaunchDontAddToRecents);
-	launchSpec.passThruParams = &aeDesc;
-
-	(void)LSOpenFromURLSpec(&launchSpec, NULL);
+	[NSWorkspace.sharedWorkspace openURL:url];
 }
 
 - (void)updateInlineMediaEnabled
@@ -2253,6 +2110,18 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 	[RZWorkspace() openURL:[TPCPathInfo groupContainerApplicationSupportURL]];
 }
 
+- (void)onResetPluginApprovals:(nullable id)sender
+{
+	[THOPluginManager resetApprovals];
+
+	[TDCAlert alertSheetWithWindow:self.window
+							  body:TXTLS(@"Prompts[h7m-2q]")
+							 title:TXTLS(@"Prompts[zp3-7r]")
+					 defaultButton:TXTLS(@"Prompts[u5k-9n]")
+				   alternateButton:nil
+					   otherButton:nil];
+}
+
 - (void)openPathToThemesCallback:(TDCAlertResponse)returnCode withOriginalAlert:(NSAlert *)originalAlert
 {
 	NSParameterAssert(originalAlert != nil);
@@ -2277,7 +2146,7 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 - (void)onOpenPathToTheme:(nullable id)sender
 {
 	if (themeController().bundledTheme) {
-		[TDCAlert alertSheetWithWindow:NSApp.keyWindow
+		[TDCAlert alertSheetWithWindow:self.window
 								  body:TXTLS(@"TDCPreferencesController[ojj-ap]")
 								 title:TXTLS(@"TDCPreferencesController[5jv-aw]")
 						 defaultButton:TXTLS(@"TDCPreferencesController[6ws-av]")

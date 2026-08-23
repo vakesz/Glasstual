@@ -63,7 +63,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server-properties.table-row";
+static NSPasteboardType const _tableDragToken = @"com.vakesz.glasstual.server-properties.table-row";
 
 @interface TDCServerPropertiesSheet () <NSControlTextEditingDelegate>
 @property(nonatomic, strong, readwrite, nullable) IRCClient *client;
@@ -103,7 +103,6 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 @property(nonatomic, weak) IBOutlet NSButton *autojoinWaitsForNickServCheck;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateChangeCertificateButton;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateResetCertificateButton;
-@property(nonatomic, weak) IBOutlet NSButton *clientCertificateMD5FingerprintCopyButton;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateSHA1FingerprintCopyButton;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateSHA2FingerprintCopyButton;
 @property(nonatomic, weak) IBOutlet NSButton *clientCertificateSHA512FingerprintCopyButton;
@@ -135,7 +134,6 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 @property(nonatomic, weak) IBOutlet NSSlider *floodControlDelayTimerSlider;
 @property(nonatomic, weak) IBOutlet NSSlider *floodControlMessageCountSlider;
 @property(nonatomic, weak) IBOutlet NSTextField *clientCertificateCommonNameField;
-@property(nonatomic, weak) IBOutlet NSTextField *clientCertificateMD5FingerprintField;
 @property(nonatomic, weak) IBOutlet NSTextField *clientCertificateSHA1FingerprintField;
 @property(nonatomic, weak) IBOutlet NSTextField *clientCertificateSHA2FingerprintField;
 @property(nonatomic, weak) IBOutlet NSTextField *clientCertificateSHA512FingerprintField;
@@ -150,6 +148,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 @property(nonatomic, weak) IBOutlet TVCContentNavigationOutlineView *navigationOutlineView;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *alternateNicknamesTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *awayNicknameTextField;
+@property(nonatomic, weak) IBOutlet TVCValidatedTextField *ctcpVersionReplyTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *connectionNameTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *nicknameTextField;
 @property(nonatomic, weak) IBOutlet TVCValidatedTextField *normalLeavingCommentTextField;
@@ -206,7 +205,6 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 - (IBAction)onClientCertificateFingerprintSHA512CopyRequested:(nullable id)sender;
 - (IBAction)onClientCertificateFingerprintSHA2CopyRequested:(nullable id)sender;
 - (IBAction)onClientCertificateFingerprintSHA1CopyRequested:(nullable id)sender;
-- (IBAction)onClientCertificateFingerprintMD5CopyRequested:(nullable id)sender;
 
 - (IBAction)preferredCipherSuitesChanged:(nullable id)sender;
 - (IBAction)preferredCipherSuitesViewList:(nullable id)sender;
@@ -324,6 +322,13 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 		return nil;
 	};
 
+	/* CTCP VERSION reply */
+	self.ctcpVersionReplyTextField.textDidChangeCallback = self;
+
+	self.ctcpVersionReplyTextField.stringValueIsInvalidOnEmpty = NO;
+	self.ctcpVersionReplyTextField.stringValueIsTrimmed = YES;
+	self.ctcpVersionReplyTextField.stringValueUsesOnlyFirstToken = NO;
+
 	/* Real name */
 	self.realNameTextField.textDidChangeCallback = self;
 
@@ -431,8 +436,10 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 
 	self.proxyAddressTextField.performValidationWhenEmpty = YES;
 
+	__weak typeof(self) weakSelf = self;
+
 	self.proxyAddressTextField.validationBlock = ^NSString *(NSString *currentValue) {
-		NSInteger proxyType = self.proxyTypeButton.selectedTag;
+		NSInteger proxyType = weakSelf.proxyTypeButton.selectedTag;
 
 		if (proxyType == IRCConnectionProxyTypeSocks5 || proxyType == IRCConnectionProxyTypeHTTP) {
 			if (currentValue.isValidInternetAddress == NO) {
@@ -455,7 +462,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	self.proxyPortTextField.defaultValue = [NSString stringWithUnsignedInteger:IRCConnectionDefaultProxyPort];
 
 	self.proxyPortTextField.validationBlock = ^NSString *(NSString *currentValue) {
-		NSInteger proxyType = self.proxyTypeButton.selectedTag;
+		NSInteger proxyType = weakSelf.proxyTypeButton.selectedTag;
 
 		if (proxyType == IRCConnectionProxyTypeSocks5 || proxyType == IRCConnectionProxyTypeHTTP) {
 			if (currentValue.isValidInternetPort == NO) {
@@ -926,6 +933,8 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 		self.usernameTextField.stringValue = [TPCPreferences defaultUsername];
 	}
 
+	self.ctcpVersionReplyTextField.stringValue = (self.config.ctcpVersionReply ?: @"");
+
 	if (self.config.realName.length > 0) {
 		self.realNameTextField.stringValue = self.config.realName;
 	} else {
@@ -973,6 +982,15 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	self.floodControlMessageCountSliderTempValue = self.config.floodControlMaximumMessages;
 
 	/* Mutable Stores */
+	/* -loadConfig is also used to reload after the configuration changed
+	 elsewhere, so the stores are emptied before they are filled. */
+	[self clearChannelListPredicate];
+
+	[self.addressBookArrayController removeAllArrangedObjects];
+	[self.channelListArrayController removeAllArrangedObjects];
+	[self.highlightListArrayController removeAllArrangedObjects];
+	[self.serverListArrayController removeAllArrangedObjects];
+
 	[self.addressBookArrayController addObjects:self.config.ignoreList];
 	[self.channelListArrayController addObjects:self.config.channelList];
 	[self.highlightListArrayController addObjects:self.config.highlightList];
@@ -1069,6 +1087,10 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	self.config.nickname = self.nicknameTextField.value;
 	self.config.username = self.usernameTextField.value;
 	self.config.realName = self.realNameTextField.value;
+
+	NSString *ctcpVersionReply = self.ctcpVersionReplyTextField.value;
+
+	self.config.ctcpVersionReply = ((ctcpVersionReply.length > 0) ? ctcpVersionReply : nil);
 
 	self.config.awayNickname = self.awayNicknameTextField.value;
 
@@ -1240,6 +1262,68 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 - (void)setChannelListPredicate
 {
 	self.channelListArrayController.filterPredicate = [NSPredicate predicateWithFormat:@"type == 0"]; // Is channel type
+}
+
+/* The channel list array controller is filtered while the table is
+ shown, so row indexes from the table cannot be used against the
+ unfiltered store. Entries are therefore located by unique identifier. */
+- (NSUInteger)unfilteredIndexOfChannelWithIdentifier:(NSString *)uniqueIdentifier
+{
+	return [self.channelListArrayController.arrangedObjects
+		indexOfObjectPassingTest:^BOOL(IRCChannelConfig *object, NSUInteger index, BOOL *stop) {
+			return [object.uniqueIdentifier isEqualToString:uniqueIdentifier];
+		}];
+}
+
+- (void)storeChannelConfig:(IRCChannelConfig *)config
+{
+	[self clearChannelListPredicate];
+
+	NSUInteger entryIndex = [self unfilteredIndexOfChannelWithIdentifier:config.uniqueIdentifier];
+
+	if (entryIndex == NSNotFound) {
+		[self.channelListArrayController addObject:config];
+	} else {
+		[self.channelListArrayController replaceObjectAtArrangedObjectIndex:entryIndex withObject:config];
+	}
+
+	[self setChannelListPredicate];
+}
+
+- (void)removeChannelConfig:(IRCChannelConfig *)config
+{
+	[self clearChannelListPredicate];
+
+	NSUInteger entryIndex = [self unfilteredIndexOfChannelWithIdentifier:config.uniqueIdentifier];
+
+	if (entryIndex != NSNotFound) {
+		[self.channelListArrayController removeObjectAtArrangedObjectIndex:entryIndex];
+	}
+
+	[self setChannelListPredicate];
+}
+
+- (void)moveChannelConfig:(IRCChannelConfig *)config aboveChannelConfig:(nullable IRCChannelConfig *)targetConfig
+{
+	[self clearChannelListPredicate];
+
+	NSUInteger fromIndex = [self unfilteredIndexOfChannelWithIdentifier:config.uniqueIdentifier];
+
+	NSUInteger toIndex = NSNotFound;
+
+	if (targetConfig) {
+		toIndex = [self unfilteredIndexOfChannelWithIdentifier:targetConfig.uniqueIdentifier];
+	}
+
+	if (toIndex == NSNotFound) {
+		toIndex = [self.channelListArrayController.arrangedObjects count];
+	}
+
+	if (fromIndex != NSNotFound && fromIndex != toIndex) {
+		[self.channelListArrayController moveObjectAtArrangedObjectIndex:fromIndex toIndex:toIndex];
+	}
+
+	[self setChannelListPredicate];
 }
 
 - (void)updateAddressBookPage
@@ -1484,20 +1568,10 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	RZPasteboard().stringContent = command;
 }
 
-- (void)onClientCertificateFingerprintMD5CopyRequested:(nullable id)sender
-{
-	NSString *fingerprint = self.clientCertificateMD5FingerprintField.stringValue;
-
-	NSString *command = [NSString stringWithFormat:@"/msg NickServ cert add %@", fingerprint];
-
-	RZPasteboard().stringContent = command;
-}
-
 - (void)readClientCertificateCommonName:(NSString **)commonNameOut
 					  sha512Fingerprint:(NSString **)sha512FingerprintOut
 						sha2Fingerprint:(NSString **)sha2FingerprintOut
 						sha1Fingerprint:(NSString **)sha1FingerprintOut
-						 md5Fingerprint:(NSString **)md5FingerprintOut
 {
 	NSData *certificateDataIn = self.config.identityClientSideCertificate;
 
@@ -1546,7 +1620,6 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 		*sha512FingerprintOut = certificateData.sha512;
 		*sha2FingerprintOut = certificateData.sha256;
 		*sha1FingerprintOut = certificateData.sha1;
-		*md5FingerprintOut = certificateData.md5;
 
 		CFRelease(certificateDataRef);
 	}
@@ -1616,13 +1689,11 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	NSString *sha512Fingerprint = nil;
 	NSString *sha2Fingerprint = nil;
 	NSString *sha1Fingerprint = nil;
-	NSString *md5Fingerprint = nil;
 
 	[self readClientCertificateCommonName:&commonName
 						sha512Fingerprint:&sha512Fingerprint
 						  sha2Fingerprint:&sha2Fingerprint
-						  sha1Fingerprint:&sha1Fingerprint
-						   md5Fingerprint:&md5Fingerprint];
+						  sha1Fingerprint:&sha1Fingerprint];
 
 	BOOL hasNoCertificate = (commonName.length == 0);
 
@@ -1632,14 +1703,12 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 		self.clientCertificateSHA512FingerprintField.stringValue = TXTLS(@"TDCServerPropertiesSheet[6xz-ec]");
 		self.clientCertificateSHA2FingerprintField.stringValue = TXTLS(@"TDCServerPropertiesSheet[6xz-ec]");
 		self.clientCertificateSHA1FingerprintField.stringValue = TXTLS(@"TDCServerPropertiesSheet[6xz-ec]");
-		self.clientCertificateMD5FingerprintField.stringValue = TXTLS(@"TDCServerPropertiesSheet[6xz-ec]");
 	} else {
 		self.clientCertificateCommonNameField.stringValue = commonName;
 
 		self.clientCertificateSHA512FingerprintField.stringValue = sha512Fingerprint.uppercaseString;
 		self.clientCertificateSHA2FingerprintField.stringValue = sha2Fingerprint.uppercaseString;
 		self.clientCertificateSHA1FingerprintField.stringValue = sha1Fingerprint.uppercaseString;
-		self.clientCertificateMD5FingerprintField.stringValue = md5Fingerprint.uppercaseString;
 	}
 
 	self.clientCertificateResetCertificateButton.enabled = (hasNoCertificate == NO);
@@ -1647,7 +1716,6 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	self.clientCertificateSHA512FingerprintCopyButton.enabled = (hasNoCertificate == NO);
 	self.clientCertificateSHA2FingerprintCopyButton.enabled = (hasNoCertificate == NO);
 	self.clientCertificateSHA1FingerprintCopyButton.enabled = (hasNoCertificate == NO);
-	self.clientCertificateMD5FingerprintCopyButton.enabled = (hasNoCertificate == NO);
 }
 
 - (void)onClientCertificateResetRequested:(nullable id)sender
@@ -1924,23 +1992,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 
 - (void)channelPropertiesSheet:(TDCChannelPropertiesSheet *)sender onOk:(IRCChannelConfig *)config
 {
-	NSUInteger entryIndex = [self.channelList indexOfObjectPassingTest:^BOOL(id object, NSUInteger index, BOOL *stop) {
-		if ([[object uniqueIdentifier] isEqualToString:config.uniqueIdentifier]) {
-			return YES;
-		} else {
-			return NO;
-		}
-	}];
-
-	[self clearChannelListPredicate];
-
-	if (entryIndex == NSNotFound) {
-		[self.channelListArrayController addObject:config];
-	} else {
-		[self.channelListArrayController replaceObjectAtArrangedObjectIndex:entryIndex withObject:config];
-	}
-
-	[self setChannelListPredicate];
+	[self storeChannelConfig:config];
 }
 
 - (void)channelPropertiesSheetWillClose:(TDCChannelPropertiesSheet *)sender
@@ -1956,11 +2008,7 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 		return;
 	}
 
-	[self clearChannelListPredicate];
-
-	[self.channelListArrayController removeObjectAtArrangedObjectIndex:selectedRow];
-
-	[self setChannelListPredicate];
+	[self removeChannelConfig:self.channelList[selectedRow]];
 
 	NSUInteger listCount = self.channelList.count;
 
@@ -2110,12 +2158,33 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 #pragma mark -
 #pragma mark NSTableView Delegate
 
-- (nullable id)tableView:(NSTableView *)tableView
-	objectValueForTableColumn:(nullable NSTableColumn *)tableColumn
-						  row:(NSInteger)row
+- (nullable NSView *)tableView:(NSTableView *)tableView
+			viewForTableColumn:(nullable NSTableColumn *)tableColumn
+						   row:(NSInteger)row
 {
 	NSString *columnId = tableColumn.identifier;
 
+	NSTableCellView *cellView = [tableView makeViewWithIdentifier:columnId owner:self];
+
+	if (tableView == self.channelListTable && [columnId isEqualToString:@"join"]) {
+		IRCChannelConfig *config = self.channelList[row];
+
+		NSButton *checkbox = cellView.subviews.firstObject;
+
+		checkbox.state = (config.autoJoin) ? NSControlStateValueOn : NSControlStateValueOff;
+		checkbox.target = self;
+		checkbox.action = @selector(channelAutoJoinToggled:);
+
+		return cellView;
+	}
+
+	cellView.textField.stringValue = ([self stringValueForTableView:tableView column:columnId row:row] ?: @"");
+
+	return cellView;
+}
+
+- (nullable NSString *)stringValueForTableView:(NSTableView *)tableView column:(NSString *)columnId row:(NSInteger)row
+{
 	if (tableView == self.channelListTable) {
 		IRCChannelConfig *config = self.channelList[row];
 
@@ -2129,8 +2198,6 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 			}
 
 			return @"";
-		} else if ([columnId isEqualToString:@"join"]) {
-			return @(config.autoJoin);
 		}
 	} else if (tableView == self.highlightsTable) {
 		IRCHighlightMatchCondition *config = self.highlightList[row];
@@ -2180,22 +2247,19 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 	return YES;
 }
 
-- (void)tableView:(NSTableView *)tableView
-	setObjectValue:(nullable id)object
-	forTableColumn:(nullable NSTableColumn *)tableColumn
-			   row:(NSInteger)row
+- (void)channelAutoJoinToggled:(NSButton *)sender
 {
-	NSString *columnId = tableColumn.identifier;
+	NSInteger row = [self.channelListTable rowForView:sender];
 
-	if (tableView == self.channelListTable) {
-		IRCChannelConfigMutable *config = [self.channelList[row] mutableCopy];
-
-		if ([columnId isEqualToString:@"join"]) {
-			config.autoJoin = [object boolValue];
-		}
-
-		[self.channelListArrayController replaceObjectAtArrangedObjectIndex:row withObject:[config copy]];
+	if (row < 0 || (NSUInteger)row >= self.channelList.count) {
+		return;
 	}
+
+	IRCChannelConfigMutable *config = [self.channelList[row] mutableCopy];
+
+	config.autoJoin = (sender.state == NSControlStateValueOn);
+
+	[self storeChannelConfig:[config copy]];
 }
 
 - (void)tableViewSelectionDidChange:(NSNotification *)aNote
@@ -2252,12 +2316,21 @@ static NSPasteboardType const _tableDragToken = @"com.codeux.apps.textual.server
 
 	NSUInteger draggedRowIndex = draggedRowString.integerValue;
 
+	if (draggedRowIndex >= (NSUInteger)tableView.numberOfRows) {
+		return NO;
+	}
+
 	if (tableView == self.channelListTable) {
-		[self clearChannelListPredicate];
+		/* Rows are indexes into the filtered list. */
+		IRCChannelConfig *draggedConfig = self.channelList[draggedRowIndex];
 
-		[self.channelListArrayController moveObjectAtArrangedObjectIndex:draggedRowIndex toIndex:row];
+		IRCChannelConfig *targetConfig = nil;
 
-		[self setChannelListPredicate];
+		if (row >= 0 && (NSUInteger)row < self.channelList.count) {
+			targetConfig = self.channelList[row];
+		}
+
+		[self moveChannelConfig:draggedConfig aboveChannelConfig:targetConfig];
 	} else if (tableView == self.highlightsTable) {
 		[self.highlightListArrayController moveObjectAtArrangedObjectIndex:draggedRowIndex toIndex:row];
 	} else if (tableView == self.addressBookTable) {

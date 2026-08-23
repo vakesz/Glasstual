@@ -1,0 +1,74 @@
+{
+  // Indentation comes from .editorconfig; formatters follow Scripts/format.sh.
+  "editor.formatOnSave": true,
+  "editor.rulers": [120],
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.associations": {
+    "*.h": "objective-c",
+    "*.m": "objective-c",
+    "*.mm": "objective-cpp",
+    "*.pch": "objective-c",
+    "*.xcconfig": "ini",
+    "*.strings": "ini",
+    "*.plist": "xml",
+    "*.xib": "xml",
+    "*.entitlements": "xml",
+    "Brewfile": "ruby"
+  },
+  "files.exclude": {
+    "**/DerivedData": true,
+    "**/build": true,
+    "**/.tmp": true,
+    "**/*.xcodeproj": true,
+    "**/*.xcworkspace": true
+  },
+  "search.exclude": {
+    "**/DerivedData": true,
+    "**/build": true,
+    "**/Frameworks/Static Libraries/Libraries": true
+  },
+  "[objective-c]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "[objective-cpp]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "[c]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "[swift]": {
+    "editor.defaultFormatter": "swiftlang.swift-vscode"
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[markdown]": {
+    "editor.formatOnSave": false
+  },
+  "clang-format.executable": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-format",
+  "clang-format.style": "file",
+  "clang-format.fallbackStyle": "LLVM",
+  "clangd.arguments": [
+    "--compile-commands-dir=${workspaceFolder}",
+    "--header-insertion=never",
+    "--background-index"
+  ],
+  "swift.autoGenerateLaunchConfigurations": false,
+  "swift.disableAutoResolve": true,
+  "shellformat.flag": "-i 0 -ci -sr",
+  "shellcheck.useWorkspaceRootAsCwd": true,
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+  },
+  "git.ignoreLimitWarning": true
+}

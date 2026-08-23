@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>Plugin Approvals</key>
+	<integer>0</integer>
+	<key>IRC -&gt; STS Policies</key>
+	<integer>0</integer>
 	<key>TXRunCount</key>
 	<integer>0</integer>
 	<key>TXRunTime</key>
@@ -10,26 +14,10 @@
 	<integer>1</integer>
 	<key>Window -&gt; Main Window </key>
 	<integer>1</integer>
-	<key>THOPluginManager -&gt; Extras Installer Last Check for Update Payload</key>
-	<integer>0</integer>
 	<key>Text Input Prompt Suppression -&gt; </key>
-	<integer>1</integer>
-	<key>TPCPreferences -&gt; Migration -&gt; </key>
 	<integer>1</integer>
 	<key>NSWindow Frame -&gt; Internal (v3) -&gt; </key>
 	<integer>1</integer>
-	<key>SUEnableAutomaticChecks</key>
-	<integer>0</integer>
-	<key>SUHasLaunchedBefore</key>
-	<integer>0</integer>
-	<key>SULastCheckTime</key>
-	<integer>0</integer>
-	<key>SUScheduledCheckInterval</key>
-	<integer>0</integer>
-	<key>SUSendProfileInfo</key>
-	<integer>0</integer>
-	<key>SUUpdateGroupIdentifier</key>
-	<integer>0</integer>
 	<key>Internal Theme Settings Key-value Store -&gt; </key>
 	<integer>0</integer>
 	<key>Theme -&gt; Font Name -&gt; Did Not Exist During Last Sync</key>
@@ -47,18 +35,6 @@
 	<key>LogTranscriptDestinationSecurityBookmark_5</key>
 	<integer>0</integer>
 	<key>TVCLogControllerHistoricLogFileSavePath_v3</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; Migrated Resources</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; Installation Migrated</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; User Acknowledged</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; User Prefers Pruning Files</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; All Extensions Pruned</key>
-	<integer>0</integer>
-	<key>Sandbox Migration -&gt; Imported Keys</key>
 	<integer>0</integer>
 </dict>
 </plist>

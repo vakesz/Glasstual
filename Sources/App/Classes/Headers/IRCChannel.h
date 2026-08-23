@@ -63,8 +63,9 @@ GLASSTUAL_EXTERN NSNotificationName const IRCChannelConfigurationWasUpdatedNotif
 @property(getter=isChannel, readonly) BOOL channel;
 @property(getter=isPrivateMessage, readonly) BOOL privateMessage;
 @property(getter=isPrivateMessageForZNCUser, readonly)
-	BOOL privateMessageForZNCUser;					// For example: *status, *nickserv, etc.
-@property(getter=isUtility, readonly) BOOL utility; // See IRCChannelTypeUtility in IRCChannelConfig.h
+	BOOL privateMessageForZNCUser;						  // For example: *status, *nickserv, etc.
+@property(getter=isUtility, readonly) BOOL utility;		  // See IRCChannelTypeUtility in IRCChannelConfig.h
+@property(getter=isDirectChat, readonly) BOOL directChat; // DCC CHAT session with a single user
 @property(readonly) IRCChannelStatus status;
 @property(readonly) BOOL errorOnLastJoinAttempt;
 @property(readonly) NSTimeInterval channelJoinTime;
@@ -77,10 +78,6 @@ GLASSTUAL_EXTERN NSNotificationName const IRCChannelConfigurationWasUpdatedNotif
 	NSUInteger logFileSessionCount; // Number of lines sent to channel log file for session (from connect to disconnect)
 @property(readonly, weak)
 	TVCLogLine *lastLine; // Last line in the channel. There is no guarantee it's visible to the user when accessed.
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-@property(readonly) BOOL encryptionStateIsEncrypted;
-#endif
 
 - (instancetype)init NS_UNAVAILABLE;
 

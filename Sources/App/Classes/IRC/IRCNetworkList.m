@@ -43,16 +43,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCNetworkList ()
 @property(nonatomic, copy, readwrite) NSArray<IRCNetwork *> *listOfNetworks;
+@property(nonatomic, copy, readwrite) NSArray<IRCNetwork *> *popularNetworks;
 @end
 
 @interface IRCNetwork ()
 @property(nonatomic, copy, readwrite) NSString *networkName;
+@property(nonatomic, copy, readwrite) NSString *networkDescription;
 @property(nonatomic, copy, readwrite) NSString *serverAddress;
 @property(nonatomic, assign, readwrite) uint16_t serverPort;
 @property(nonatomic, assign, readwrite) BOOL prefersSecuredConnection;
-
-- (instancetype)initWithNetworkNamed:(NSString *)networkName
-				networkConfiguration:(NSDictionary<NSString *, id> *)networkConfiguration;
+@property(nonatomic, copy, readwrite, nullable) NSString *website;
+@property(nonatomic, assign, readwrite) BOOL saslSupported;
+@property(nonatomic, assign, readwrite) IRCNetworkRegistration registration;
+@property(nonatomic, copy, readwrite, nullable) NSString *registrationNote;
+@property(nonatomic, copy, readwrite) NSArray<NSString *> *suggestedChannels;
 @end
 
 @implementation IRCNetworkList
@@ -72,22 +76,74 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSMutableArray<IRCNetwork *> *listOfNetworks = [NSMutableArray array];
 
-	NSDictionary *networkList = [TPCResourceManager dictionaryFromResources:@"IRCNetworks" cacheValue:NO];
+	NSArray *resource = [TPCResourceManager arrayFromResources:@"IRCNetworks" cacheValue:NO];
 
-	NSArray *networkNamesUnsorted = networkList.allKeys;
+	if (resource) {
+		for (id entry in resource) {
+			if ([entry isKindOfClass:[NSDictionary class]] == NO) {
+				continue;
+			}
 
-	NSArray *networkNamesSorted = [networkNamesUnsorted sortedArrayUsingSelector:@selector(caseInsensitiveCompare:)];
+			IRCNetwork *network = [[IRCNetwork alloc] initWithDictionary:entry];
 
-	for (NSString *networkName in networkNamesSorted) {
-		NSDictionary<NSString *, id> *networkConfiguration = networkList[networkName];
+			if (network) {
+				[listOfNetworks addObject:network];
+			}
+		}
+	} else {
+		/* The list was a dictionary keyed by network name before it carried
+		 descriptions. Accept that shape so that an old copy keeps working. */
+		NSDictionary *legacyList = [TPCResourceManager dictionaryFromResources:@"IRCNetworks" cacheValue:NO];
 
-		IRCNetwork *networkObject = [[IRCNetwork alloc] initWithNetworkNamed:networkName
-														networkConfiguration:networkConfiguration];
+		[legacyList enumerateKeysAndObjectsUsingBlock:^(NSString *name, id configuration, BOOL *stop) {
+			if ([configuration isKindOfClass:[NSDictionary class]] == NO) {
+				return;
+			}
 
-		[listOfNetworks addObject:networkObject];
+			NSMutableDictionary *entry = [configuration mutableCopy];
+
+			entry[@"name"] = name;
+
+			IRCNetwork *network = [[IRCNetwork alloc] initWithDictionary:entry];
+
+			if (network) {
+				[listOfNetworks addObject:network];
+			}
+		}];
 	}
 
+	[listOfNetworks sortUsingComparator:^NSComparisonResult(IRCNetwork *network1, IRCNetwork *network2) {
+		return [network1.networkName caseInsensitiveCompare:network2.networkName];
+	}];
+
 	self.listOfNetworks = listOfNetworks;
+
+	/* Order matters: this is the order the onboarding flow shows them in. */
+	NSArray<NSString *> *popularNames = @[
+		@"Libera.Chat",
+		@"OFTC",
+		@"EFnet",
+		@"IRCnet",
+		@"Undernet",
+		@"QuakeNet",
+		@"Rizon",
+		@"DALnet",
+		@"hackint",
+		@"Snoonet",
+		@"Tilde.Chat"
+	];
+
+	NSMutableArray<IRCNetwork *> *popularNetworks = [NSMutableArray array];
+
+	for (NSString *name in popularNames) {
+		IRCNetwork *network = [self networkNamed:name];
+
+		if (network) {
+			[popularNetworks addObject:network];
+		}
+	}
+
+	self.popularNetworks = popularNetworks;
 }
 
 - (nullable IRCNetwork *)networkNamed:(NSString *)networkName
@@ -114,29 +170,65 @@ NS_ASSUME_NONNULL_BEGIN
 	return network;
 }
 
++ (BOOL)accountFieldsApplyToRegistration:(IRCNetworkRegistration)registration saslSupported:(BOOL)saslSupported
+{
+	if (saslSupported) {
+		return YES;
+	}
+
+	return (registration != IRCNetworkRegistrationNone);
+}
+
++ (IRCNetworkRegistration)registrationFromString:(nullable NSString *)string
+{
+	if ([string isEqualToStringIgnoringCase:@"required"]) {
+		return IRCNetworkRegistrationRequired;
+	}
+
+	if ([string isEqualToStringIgnoringCase:@"optional"]) {
+		return IRCNetworkRegistrationOptional;
+	}
+
+	return IRCNetworkRegistrationNone;
+}
+
 @end
 
 #pragma mark -
 
 @implementation IRCNetwork
 
-- (instancetype)init
+- (nullable instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dictionary
 {
-	[self doesNotRecognizeSelector:_cmd];
-
-	return nil;
-}
-
-- (instancetype)initWithNetworkNamed:(NSString *)networkName
-				networkConfiguration:(NSDictionary<NSString *, id> *)networkConfiguration
-{
-	NSParameterAssert(networkName != nil);
-	NSParameterAssert(networkConfiguration != nil);
+	NSParameterAssert(dictionary != nil);
 
 	if ((self = [super init])) {
-		self.networkName = networkName;
+		NSString *name = [dictionary stringForKey:@"name"];
+		NSString *serverAddress = [dictionary stringForKey:@"serverAddress"];
 
-		[self populateNetworkConfiguration:networkConfiguration];
+		if (name.length == 0 || serverAddress.length == 0) {
+			return nil;
+		}
+
+		self.networkName = name;
+		self.serverAddress = serverAddress;
+		self.networkDescription = [dictionary stringForKey:@"description" orUseDefault:@""];
+		self.serverPort = [dictionary unsignedShortForKey:@"serverPort"];
+		self.prefersSecuredConnection = [dictionary boolForKey:@"prefersSecuredConnection"];
+		self.website = [dictionary stringForKey:@"website"];
+		self.saslSupported = [dictionary boolForKey:@"saslSupported"];
+		self.registration = [IRCNetworkList registrationFromString:[dictionary stringForKey:@"registration"]];
+		self.suggestedChannels = [dictionary arrayForKey:@"suggestedChannels" orUseDefault:@[]];
+
+		NSString *registrationNote = [dictionary stringForKey:@"registrationNote"];
+
+		if (registrationNote.length > 0) {
+			self.registrationNote = registrationNote;
+		}
+
+		if (self.serverPort == 0) {
+			self.serverPort = (self.prefersSecuredConnection ? 6697 : 6667);
+		}
 
 		return self;
 	}
@@ -144,15 +236,15 @@ NS_ASSUME_NONNULL_BEGIN
 	return nil;
 }
 
-- (void)populateNetworkConfiguration:(NSDictionary<NSString *, id> *)networkConfiguration
+- (BOOL)accountFieldsApply
 {
-	NSParameterAssert(networkConfiguration != nil);
+	return [IRCNetworkList accountFieldsApplyToRegistration:self.registration saslSupported:self.saslSupported];
+}
 
-	self.serverAddress = networkConfiguration[@"serverAddress"];
-
-	self.serverPort = [networkConfiguration unsignedShortForKey:@"serverPort"];
-
-	self.prefersSecuredConnection = [networkConfiguration boolForKey:@"prefersSecuredConnection"];
+- (NSString *)description
+{
+	return [NSString
+		stringWithFormat:@"<%@ %@ %@:%hu>", self.className, self.networkName, self.serverAddress, self.serverPort];
 }
 
 @end

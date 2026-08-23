@@ -41,10 +41,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCMemberListRowCell : NSTableRowView
 - (instancetype)initWithMemberList:(TVCMemberList *)memberList;
+
+- (void)refreshEmphasis;
 @end
 
 @interface TVCMemberListCell : NSTableCellView
 - (void)drawWithExpansionFrame;
+
+/* Circular initials avatar tinted with the nickname's colour. Images
+ are cached per nickname, colour and size so that scrolling a large
+ channel does not redraw them. */
++ (NSImage *)avatarImageForNickname:(NSString *)nickname size:(CGFloat)size;
+@end
+
+@interface TVCMemberListHeaderCell : NSTableCellView
 @end
 
 NS_ASSUME_NONNULL_END

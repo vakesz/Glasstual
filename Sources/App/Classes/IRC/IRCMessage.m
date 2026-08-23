@@ -137,6 +137,11 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	self->_isHistoric = NO;
 }
 
+- (void)markAsHistoric
+{
+	self->_isHistoric = YES;
+}
+
 - (nullable NSString *)senderNickname
 {
 	return self.sender.nickname;
@@ -173,6 +178,8 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	object->_isEventOnlyMessage = self->_isEventOnlyMessage;
 	object->_isPrintOnlyMessage = self->_isPrintOnlyMessage;
 	object->_messageTags = self->_messageTags;
+	object->_messageIdentifier = self->_messageIdentifier;
+	object->_senderAccount = self->_senderAccount;
 	object->_params = self->_params;
 	object->_receivedAt = self->_receivedAt;
 	object->_sender = self->_sender;
@@ -299,6 +306,21 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 	self->_messageTags = [extensions copy];
 
+	/* msgid= and account= do not depend on a negotiated capability:
+	 a server only sends them when the client asked for message-tags
+	 or account-tag, and a value is harmless otherwise. */
+	NSString *messageIdentifier = extensions[@"msgid"];
+
+	if (messageIdentifier.length > 0) {
+		self->_messageIdentifier = [messageIdentifier copy];
+	}
+
+	NSString *senderAccount = extensions[@"account"];
+
+	if (senderAccount.length > 0) {
+		self->_senderAccount = [senderAccount copy];
+	}
+
 	/* If there is no client, then further processing is not possible */
 	if (client == nil) {
 		return;
@@ -386,7 +408,9 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 @dynamic isEventOnlyMessage;
 @dynamic isPrintOnlyMessage;
 @dynamic messageTags;
+@dynamic messageIdentifier;
 @dynamic params;
+@dynamic senderAccount;
 @dynamic receivedAt;
 @dynamic sender;
 
@@ -448,6 +472,20 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 {
 	if (self->_messageTags != messageTags) {
 		self->_messageTags = [messageTags copy];
+	}
+}
+
+- (void)setMessageIdentifier:(nullable NSString *)messageIdentifier
+{
+	if (self->_messageIdentifier != messageIdentifier) {
+		self->_messageIdentifier = [messageIdentifier copy];
+	}
+}
+
+- (void)setSenderAccount:(nullable NSString *)senderAccount
+{
+	if (self->_senderAccount != senderAccount) {
+		self->_senderAccount = [senderAccount copy];
 	}
 }
 

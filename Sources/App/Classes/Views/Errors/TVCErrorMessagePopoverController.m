@@ -106,7 +106,9 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	TVCErrorMessagePopover *popover = self.visiblePopover;
 
-	if (popover == nil || (view && view != popover.view)) {
+	/* popover.view is weak. When the anchoring field is being deallocated
+	 the reference is already nil; the popover must still be closed. */
+	if (popover == nil || (view && popover.view && view != popover.view)) {
 		return;
 	}
 

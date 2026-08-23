@@ -47,11 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)setDeveloperModeEnabled:(BOOL)developerModeEnabled;
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-+ (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic;
-+ (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired;
-+ (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled;
-#endif
++ (void)setOnboardingCompleted:(BOOL)onboardingCompleted;
 
 + (void)setLogToDisk:(BOOL)logToDisk;
 

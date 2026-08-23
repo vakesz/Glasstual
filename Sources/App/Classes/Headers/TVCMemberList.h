@@ -39,8 +39,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCChannelUser;
 
-GLASSTUAL_EXTERN NSString *const TVCMemberListDragType;
-
 @interface TVCMemberList : NSTableView
 @property(nonatomic, assign) BOOL isHiddenByUser;
 

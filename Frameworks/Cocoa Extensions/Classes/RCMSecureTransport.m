@@ -315,47 +315,10 @@ const tls_ciphersuite_t tls_ciphersuite_unknown = 0;
 
 @implementation RCMSecureTransport
 
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
 + (tls_protocol_version_t)minimumProtocolType
 {
 	return tls_protocol_version_TLSv12;
 }
-
-+ (SSLProtocol)minimumDeprecatedProtocol
-{
-	return kTLSProtocol12;
-}
-
-+ (tls_protocol_version_t)protocolTypeFromDeprecated:(SSLProtocol)deprecatedProtocol
-{
-	switch (deprecatedProtocol) {
-		case kSSLProtocolUnknown: { return tls_protocol_version_unknown; }
-		case kTLSProtocol1: { return tls_protocol_version_TLSv10; }
-		case kTLSProtocol11: { return tls_protocol_version_TLSv11; }
-		case kTLSProtocol12: { return tls_protocol_version_TLSv12; }
-		case kTLSProtocol13: { return tls_protocol_version_TLSv13; }
-		case kDTLSProtocol1: { return tls_protocol_version_DTLSv10; }
-		case kDTLSProtocol12: { return tls_protocol_version_DTLSv12; }
-		case kTLSProtocolMaxSupported: { return sec_protocol_options_get_default_max_tls_protocol_version(); }
-		default: { return tls_protocol_version_unknown; }
-	}
-}
-
-+ (nullable NSString *)descriptionForDeprecatedProtocol:(SSLProtocol)protocolVersion
-{
-	switch (protocolVersion) {
-		case kSSLProtocol2: { return @"Secure Sockets Layer (SSL), version 2.0"; }
-		case kSSLProtocol3: { return @"Secure Sockets Layer (SSL), version 3.0"; }
-		case kTLSProtocol1: { return @"Transport Layer Security (TLS), version 1.0"; }
-		case kTLSProtocol11: { return @"Transport Layer Security (TLS), version 1.1"; }
-		case kTLSProtocol12: { return @"Transport Layer Security (TLS), version 1.2"; }
-		case kTLSProtocol13: { return @"Transport Layer Security (TLS), version 1.3"; }
-		case kDTLSProtocol1: { return @"Datagram Transport Layer Security (DTLS), version 1.0"; }
-		case kDTLSProtocol12: { return @"Datagram Transport Layer Security (DTLS), version 1.2"; }
-		default: { return @"Unknown"; }
-	}
-}
-COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
 + (nullable NSString *)descriptionForProtocolType:(tls_protocol_version_t)protocolType
 {
@@ -375,18 +338,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 + (NSArray<NSString *> *)descriptionsForCipherListCollection:(RCMCipherSuiteCollection)collection withProtocol:(BOOL)appendProtocol
 {
 	NSArray *cipherSuites = [self cipherSuitesInCollection:collection];
-
-	return [self descriptionsForCipherSuites:cipherSuites withProtocol:appendProtocol];
-}
-
-+ (NSArray<NSString *> *)descriptionsForCipherSuites:(NSArray<NSNumber *> *)cipherSuites
-{
-	return [self descriptionsForCipherSuites:cipherSuites withProtocol:NO];
-}
-
-+ (NSArray<NSString *> *)descriptionsForCipherSuites:(NSArray<NSNumber *> *)cipherSuites withProtocol:(BOOL)appendProtocol
-{
-	NSParameterAssert(cipherSuites != nil);
 
 	NSMutableArray<NSString *> *descriptions = [NSMutableArray arrayWithCapacity:cipherSuites.count];
 
@@ -447,16 +398,13 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
 + (NSArray<NSNumber *> *)cipherSuitesInCollection:(RCMCipherSuiteCollection)collection includeDeprecated:(BOOL)includeDeprecated
 {
-	if (includeDeprecated == NO) {
-		return [self cipherSuitesInCollection:collection];
-	}
+	/* The static RSA key exchange suites in -cipherListDeprecated offer no
+	 forward secrecy and are no longer offered to servers, regardless of
+	 whether the connection prefers modern ciphers only. The parameter is
+	 kept so that the Swift call site does not need to change. */
+	(void)includeDeprecated;
 
-	NSMutableArray<NSNumber *> *_cipherList = [NSMutableArray array];
-
-	[_cipherList addObjectsFromArray:[self cipherSuitesInCollection:collection]];
-	[_cipherList addObjectsFromArray:[self cipherListDeprecated]];
-
-	return [_cipherList copy];
+	return [self cipherSuitesInCollection:collection];
 }
 
 + (NSArray<NSNumber *> *)cipherSuitesInCollection:(RCMCipherSuiteCollection)collection
@@ -529,9 +477,9 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
 + (NSArray<NSNumber *> *)cipherListDeprecated
 {
-	// These were originally going to be excluded but certain large
-	// IRC networks including OFTC (~10,000 users) still use older
-	// configurations. We should phase these out soon...
+	// Static RSA key exchange (no forward secrecy). These are never
+	// offered to a server; the list only exists so that a suite a
+	// server picked on its own can be labelled as deprecated in the UI.
 
 	return @[
 		 @(TLS_RSA_WITH_AES_128_GCM_SHA256),				// AES128-GCM-SHA256
@@ -579,17 +527,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	return [error.domain isEqualToString:@"kCFStreamErrorDomainSSL"];
 }
 
-+ (nullable NSString *)descriptionForError:(NSError *)error
-{
-	NSParameterAssert(error != nil);
-
-	if ([self isTLSError:error] == NO) {
-		return nil;
-	}
-
-	return [self descriptionForErrorCode:error.code];
-}
-
 + (NSString *)descriptionForErrorCode:(NSInteger)errorCode
 {
 	if (errorCode > (-9800) ||
@@ -615,17 +552,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	return [NSString stringWithFormat:headingFormat, localizedError, errorCode];
 }
 
-+ (nullable NSString *)descriptionForBadCertificateError:(NSError *)error
-{
-	NSParameterAssert(error != nil);
-
-	if ([self isTLSError:error] == NO) {
-		return nil;
-	}
-
-	return [self descriptionForErrorCode:error.code];
-}
-
 + (nullable NSString *)descriptionForBadCertificateErrorCode:(NSInteger)errorCode
 {
 	if ([self isBadCertificateErrorCode:errorCode] == NO) {
@@ -633,33 +559,6 @@ COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 	}
 
 	return [self descriptionForErrorCode:errorCode];
-}
-
-+ (BOOL)isBadCertificateError:(NSError *)error
-{
-	NSParameterAssert(error != nil);
-
-	if ([self isTLSError:error] == NO) {
-		return NO;
-	}
-
-	return [self isBadCertificateErrorCode:error.code];
-}
-
-+ (BOOL)isNonFatalErrorCode:(NSInteger)errorCode
-{
-	switch (errorCode) {
-		case errSSLPeerAuthCompleted:
-		case errSSLClientCertRequested:
-		case errSSLClientHelloReceived:
-		{
-			return YES;
-		}
-		default:
-		{
-			return NO;
-		}
-	}
 }
 
 + (BOOL)isBadCertificateErrorCode:(NSInteger)errorCode

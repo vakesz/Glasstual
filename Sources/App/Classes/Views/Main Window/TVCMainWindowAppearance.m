@@ -60,9 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSURL *appearanceLocation = [self.class appearanceLocation];
 
-	BOOL forRetinaDisplay = mainWindow.runningInHighResolutionMode;
-
-	if ((self = [super initWithAppearanceAtURL:appearanceLocation forRetinaDisplay:forRetinaDisplay])) {
+	if ((self = [super initWithAppearanceAtURL:appearanceLocation])) {
 		[self prepareInitialStateWithWindow:mainWindow];
 
 		return self;

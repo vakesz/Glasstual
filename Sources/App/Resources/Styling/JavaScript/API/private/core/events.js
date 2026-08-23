@@ -100,14 +100,10 @@ _Glasstual.viewBodyDidLoad = function() /* PRIVATE */
 	 the background color of the style. We then request an animation frame that calls
 	 app.finishedLayingOutView, instructing Glasstual that it can destroy the overlay view. */
 
-	if (app.isWebKit2()) {
-		_Glasstual._viewBodyDidLoadAnimationFrame =
-		window.requestAnimationFrame(function() {
-			_Glasstual._viewBodyDidLoad();
-		});
-	} else {
+	_Glasstual._viewBodyDidLoadAnimationFrame =
+	window.requestAnimationFrame(function() {
 		_Glasstual._viewBodyDidLoad();
-	}
+	});
 };
 
 _Glasstual._viewBodyDidLoad = function() /* PRIVATE */
@@ -172,13 +168,57 @@ _Glasstual.messageAddedToView = function(lineNumber, fromBuffer) /* PRIVATE */
 	/* Allow lineNumber to be an array of line numbers or a single line number. */
 	if (Array.isArray(lineNumber)) {
 		for (var i = 0; i < lineNumber.length; i++) {
+			_MessageTags.lineAdded(lineNumber[i]);
+
 			Glasstual.messageAddedToView(lineNumber[i], fromBuffer);
 		}
 	} else {
+		_MessageTags.lineAdded(lineNumber);
+
 		Glasstual.messageAddedToView(lineNumber, fromBuffer);
 	}
 
 	appPrivate.notifyLinesAddedToView(lineNumber);
+};
+
+/* Delivery state of a line the local user sent (labeled-response +
+   echo-message). The line element is updated in place, then the style
+   is told through Glasstual.lineDeliveryStateChanged(). */
+_Glasstual.lineDeliveryStateChanged = function(lineNumber, state, msgid, reason) /* PRIVATE */
+{
+	var line = document.getElementById("line-" + lineNumber);
+
+	if (line) {
+		line.setAttribute("data-delivery-state", state);
+
+		if (msgid) {
+			line.setAttribute("data-msgid", msgid);
+		}
+
+		var failure = line.querySelector(".deliveryFailure");
+
+		if (state === "failed") {
+			if (failure === null) {
+				failure = document.createElement("span");
+
+				failure.className = "deliveryFailure";
+
+				var message = line.querySelector(".innerMessage");
+
+				if (message) {
+					message.appendChild(failure);
+				} else {
+					line.appendChild(failure);
+				}
+			}
+
+			failure.textContent = (reason || "");
+		} else if (failure) {
+			failure.parentNode.removeChild(failure);
+		}
+	}
+
+	Glasstual.lineDeliveryStateChanged(lineNumber, state, msgid, reason);
 };
 
 _Glasstual.messageRemovedFromView = function(lineNumber) /* PRIVATE */

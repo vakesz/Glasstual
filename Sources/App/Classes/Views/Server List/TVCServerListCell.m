@@ -228,7 +228,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 		IRCChannel *channel = (IRCChannel *)cellItem;
 
-		NSString *symbolName = channel.isChannel ? @"number" : @"person.fill";
+		NSString *symbolName = @"person.fill";
+
+		if (channel.isChannel) {
+			symbolName = @"number";
+		} else if (channel.isDirectChat) {
+			symbolName = @"bubble.left.and.bubble.right.fill";
+		}
 
 		NSImage *icon = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:channel.name];
 		icon.template = YES;
@@ -252,6 +258,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	BOOL isActive = drawingContext.isActive;
 	BOOL isGroupItem = drawingContext.isGroupItem;
+	BOOL isSelected = drawingContext.isSelected;
 	BOOL isHighlight = NO;
 	BOOL isErroneous = NO;
 
@@ -282,9 +289,11 @@ NS_ASSUME_NONNULL_BEGIN
 	} else {
 		controlFont = [NSFont systemFontOfSize:NSFont.systemFontSize];
 
-		if (isErroneous) {
+		/* On a selected row the label colours are swapped by AppKit to suit
+		 the selection fill; a fixed red or blue would not be. */
+		if (isErroneous && isSelected == NO) {
 			controlColor = [NSColor systemRedColor];
-		} else if (isActive && isHighlight) {
+		} else if (isActive && isHighlight && isSelected == NO) {
 			controlColor = [NSColor systemBlueColor];
 		} else if (isActive == NO) {
 			controlColor = [NSColor tertiaryLabelColor];
@@ -404,9 +413,11 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 		return;
 	}
 
+	/* The inverted palette only matches the accent fill that is drawn
+	 while the window is active; an inactive selection is grey. */
 	self.messageCountBadgeImageView.image = [self messageCountBadgeForCount:treeUnreadCount
 																isHighlight:isHighlight
-																 isSelected:isSelected];
+																 isSelected:(isSelected && isWindowActive)];
 
 	/* The count is already spoken as part of the row label; the badge
 	 itself is decorative for VoiceOver. */
@@ -609,6 +620,48 @@ static const CGFloat _unreadBadgeTextPadding = 7.0;
 - (void)setNeedsDisplayOnChild
 {
 	self.childCell.needsDisplay = YES;
+}
+
+#pragma mark -
+#pragma mark Emphasis
+
+/* AppKit emphasizes a selection only while the window is key. Mail and
+ Finder keep the accent fill while a sheet or panel is key, so emphasis
+ follows main-window status instead. Both the getter and the background
+ style are overridden so that drawing and text colours agree regardless
+ of whether AppKit consults the accessor or the stored value. */
+- (BOOL)isEmphasized
+{
+	NSWindow *window = self.window;
+
+	if (window == nil) {
+		return super.isEmphasized;
+	}
+
+	return window.isMainWindow;
+}
+
+- (void)setEmphasized:(BOOL)emphasized
+{
+	NSWindow *window = self.window;
+
+	super.emphasized = ((window) ? window.isMainWindow : emphasized);
+
+	[self setNeedsDisplayOnChild];
+}
+
+- (void)refreshEmphasis
+{
+	self.emphasized = self.isEmphasized;
+}
+
+- (NSBackgroundStyle)interiorBackgroundStyle
+{
+	if (self.isSelected && self.isEmphasized) {
+		return NSBackgroundStyleEmphasized;
+	}
+
+	return super.interiorBackgroundStyle;
 }
 
 - (void)didAddSubview:(NSView *)subview

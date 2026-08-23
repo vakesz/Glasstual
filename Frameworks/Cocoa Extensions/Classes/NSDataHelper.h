@@ -35,21 +35,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSData (CSDataHelper)
 @property (readonly) NSRange range;
 
-@property (getter=isValidUTF8, readonly) BOOL validUTF8;
-
 @property (readonly, copy) NSString *sha1;
 @property (readonly, copy) NSString *sha256;
 @property (readonly, copy) NSString *sha512;
-@property (readonly, copy) NSString *md5;
 
-+ (NSData *)lineFeed;
-+ (NSData *)carriageReturn;
-+ (NSData *)carriageReturnPlusLineFeed;
-
-+ (NSData *)emptyObject;
-
-- (void)enumerateMatchesOfData:(NSData *)data withBlock:(void (NS_NOESCAPE ^)(NSRange range, BOOL *stop))enumerationBlock;
-- (void)enumerateMatchesOfData:(NSData *)data withBlock:(void (NS_NOESCAPE ^)(NSRange range, BOOL *stop))enumerationBlock options:(NSDataSearchOptions)options;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -37,3 +37,5 @@
 
 "7qf-r0" = "Channel List for “%@”";
 "ct4-wh" = "Channel List — %@ Public Channels"; // %@ = channel count.
+"u7e-1s" = "Minimum users:";
+"u7e-2s" = "Only list channels with at least this many members. The server applies this filter (ELIST).";

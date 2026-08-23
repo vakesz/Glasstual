@@ -110,22 +110,6 @@ NS_ASSUME_NONNULL_BEGIN
 	return (strcmp(left, right) == 0);
 }
 
-- (BOOL)isEqualByResourceIdentifier:(NSURL *)url
-{
-	NSParameterAssert(url != nil);
-	NSParameterAssert(url.isFileURL);
-
-	id left = [self resourceValueForKey:NSURLFileResourceIdentifierKey];
-	id right = [self resourceValueForKey:NSURLFileResourceIdentifierKey];
-
-	return NSObjectsAreEqual(left, right);
-}
-
-- (NSTimeInterval)intervalSinceCreated
-{
-	return [self intervalSinceCreatedWithError:nil];
-}
-
 - (NSTimeInterval)intervalSinceCreatedWithError:(NSError * _Nullable * _Nullable)error
 {
 	NSDate *modificationDate = [self resourceValueForKey:NSURLCreationDateKey error:error];
@@ -135,11 +119,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	return -([modificationDate timeIntervalSinceNow]);
-}
-
-- (NSTimeInterval)intervalSinceLastModification
-{
-	return [self intervalSinceLastModificationWithError:nil];
 }
 
 - (NSTimeInterval)intervalSinceLastModificationWithError:(NSError * _Nullable * _Nullable)error

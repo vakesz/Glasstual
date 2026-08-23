@@ -57,6 +57,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign) BOOL batchIsOpen;
 @property(nonatomic, copy) NSString *batchToken;
 @property(nonatomic, copy, nullable) NSString *batchType;
+@property(nonatomic, copy, nullable)
+	NSArray<NSString *> *batchParameters; // Parameters after the type ("BATCH +id netsplit s1 s2")
 @property(readonly, copy) NSArray *queuedEntries;
 @property(nonatomic, weak) IRCMessageBatchMessage *parentBatchMessage;
 

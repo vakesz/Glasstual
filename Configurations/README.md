@@ -19,8 +19,8 @@ never edit it directly: the next `xcodegen generate` overwrites it.
 - `Base.xcconfig` holds every setting shared by all targets: product
   identity, feature flags, language modes, warnings, and build behaviour.
 - `Debug.xcconfig` and `Release.xcconfig` include `Base.xcconfig` and change
-  optimisation, assertions, hardened runtime, and the build scheme token.
-  These are the only two build configurations.
+  optimisation, assertions, and hardened runtime. These are the only two
+  build configurations.
 - `Version.generated.xcconfig` is written by `Scripts/UpdateVersion.sh` (a
   pre-action of the `Glasstual` scheme) and is ignored by git. It sets
   `CURRENT_PROJECT_VERSION` to the date of the last commit (`yymmdd.HH`),
@@ -31,27 +31,18 @@ never edit it directly: the next `xcodegen generate` overwrites it.
   Core Media plugin. The app and each XPC service keep their own entitlements
   next to their sources.
 
-## Feature flags
+## Build configuration header
 
-Feature flags are plain build settings in `Base.xcconfig`
-(`GLASSTUAL_BUILT_INSIDE_SANDBOX`, `GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION`,
-`GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED`, `GLASSTUAL_BUILT_AS_UNIVERSAL_BINARY`).
-They are passed to the compilers through `GCC_PREPROCESSOR_DEFINITIONS` and
-`SWIFT_ACTIVE_COMPILATION_CONDITIONS`, and the `BuildConfig` aggregate target
-(`Scripts/GenerateBuildConfig.sh`) also writes them into `FeatureFlags.h`
-together with `BuildConfig.h` (bundle identifier, group container, version)
-for the code that includes those headers. Set a flag to `1` or `0`; there is
-no per-flag xcconfig any more.
+There are no feature flags. The `BuildConfig` aggregate target
+(`Scripts/GenerateBuildConfig.sh`) writes `BuildConfig.h` (bundle identifier,
+group container, version) for the code that includes that header.
 
-Sparkle is linked from Swift Package Manager but compiled out
-(`GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED = 0`) because this fork has no update
-feed. The Release entitlements already carry the `-spks`/`-spki` mach-lookup
-exceptions Sparkle 2 needs inside the sandbox, so enabling it again only
-requires flipping the flag and setting `SUFeedURL`.
+The app is always built sandboxed and for `arm64` only; there are no flags
+for either.
 
 ## Targets
 
-The app, the three frameworks, the three XPC services, the Core Media plugin,
+The app, the two frameworks, the three XPC services, the Core Media plugin,
 and the six bundled extensions are all targets of the single project with
 real dependencies and embed phases. The app's product name and bundle
 identifier come from `GLASSTUAL_PRODUCT_NAME` and

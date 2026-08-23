@@ -68,6 +68,14 @@ NSString *const TPCPreferencesUserDefaultsDidChangeNotification = @"TPCPreferenc
 
 - (instancetype)_initGroupContainer
 {
+#if DEBUG
+	NSString *reviewSuite = NSProcessInfo.processInfo.environment[@"GLASSTUAL_UI_REVIEW_SUITE"];
+
+	if (reviewSuite.length > 0) {
+		return [super initWithSuiteName:reviewSuite];
+	}
+#endif
+
 	TPCPreferencesUserDefaults *defaults = [super initWithSuiteName:TXBundleBuildGroupContainerIdentifier];
 
 	return defaults;

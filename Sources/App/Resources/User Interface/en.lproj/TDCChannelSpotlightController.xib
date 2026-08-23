@@ -9,6 +9,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="TDCChannelSpotlightController">
             <connections>
                 <outlet property="noResultsLabel" destination="Gag-Uy-6zA" id="hU8-te-kTl"/>
+                <outlet property="noResultsLabelLeadingConstraint" destination="mSk-dR-BZk" id="hU8-te-kTm"/>
                 <outlet property="searchField" destination="1E4-kg-4iF" id="bZT-CB-oym"/>
                 <outlet property="searchResultsController" destination="fxa-x1-fZ7" id="xfS-1h-r9R"/>
                 <outlet property="searchResultsTable" destination="tt4-3F-bvy" id="x3U-fE-QVn"/>

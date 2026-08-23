@@ -39,12 +39,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TVCLogController, TVCLogPolicy;
+@class TVCLogController, TVCLogPolicy, TVCLogPolicyTarget;
 
 @interface TVCLogView ()
 @property(nonatomic, weak) TVCLogController *viewController;
 
 @property(readonly) TVCLogPolicy *webViewPolicy;
+
+/* The link, nickname or channel name the style last reported for this
+ view. Never nil; the script event sink fills it in and the policy
+ takes it with -takeContextMenuTarget when a menu or double click
+ action consumes it. */
+@property(nonatomic, strong) TVCLogPolicyTarget *contextMenuTarget;
+
+- (TVCLogPolicyTarget *)takeContextMenuTarget;
 
 @property(nonatomic, copy, readwrite, nullable) NSString *selection;
 
@@ -75,18 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)findString:(NSString *)searchString movingForward:(BOOL)movingForward;
 
-- (void)redrawViewIfNeeded;
-- (void)redrawView;
-
-- (void)resetScrollerPosition;
-- (void)resetScrollerPositionTo:(BOOL)scrolledToBottom;
-- (void)saveScrollerPosition;
-- (void)restoreScrollerPosition;
-
-- (void)enableOffScreenUpdates;
-- (void)disableOffScreenUpdates;
-
-- (void)setAutomaticScrollingEnabled:(BOOL)automaticScrollingEnabled;
+/* No-op. See implementation. */
 @end
 
 @interface TVCLogView (TVCLogViewJavaScriptHandlerPrivate)

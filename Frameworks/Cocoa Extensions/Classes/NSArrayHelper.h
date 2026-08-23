@@ -35,43 +35,21 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSArray (CSArrayHelper)
 @property (readonly) NSRange range;
 
-- (BOOL)boolAtIndex:(NSUInteger)n;
-- (nullable NSArray *)arrayAtIndex:(NSUInteger)n;
-- (nullable NSString *)stringAtIndex:(NSUInteger)n;
-- (nullable NSDictionary *)dictionaryAtIndex:(NSUInteger)n;
-- (NSInteger)integerAtIndex:(NSUInteger)n;
 - (NSUInteger)unsignedIntegerAtIndex:(NSUInteger)n;
-- (short)shortAtIndex:(NSUInteger)n;
-- (unsigned short)unsignedShortAtIndex:(NSUInteger)n;
-- (long)longAtIndex:(NSUInteger)n;
-- (unsigned long)unsignedLongAtIndex:(NSUInteger)n;
-- (long long)longLongAtIndex:(NSUInteger)n;
-- (unsigned long long)unsignedLongLongAtIndex:(NSUInteger)n;
 - (double)doubleAtIndex:(NSUInteger)n;
-- (float)floatAtIndex:(NSUInteger)n;
-- (nullable void *)pointerAtIndex:(NSUInteger)n NS_RETURNS_INNER_POINTER;
-
 - (BOOL)containsObjectIgnoringCase:(id)anObject; // Performs comparison using -isEqualIgnoringCase: - ignores objects that don't respond to this.
-
-- (NSArray *)arrayByRemovingObjectAtIndex:(NSUInteger)index;
-
-- (NSMutableArray *)mutableSubarrayWithRange:(NSRange)range;
 
 /* -stringArrayControllerObjects returns an NSArray of NSDictionary with single key,
  named "string" which contains any NSString values in original array. */
 @property (copy, readonly) NSArray<NSDictionary *> *stringArrayControllerObjects;
 
 - (NSArray *)arrayByRemovingEmptyValues;
-- (NSArray *)arrayByUniquing;
 - (NSArray *)arrayByRemovingEmptyValuesAndUniquing;
 
 - (NSArray *)arrayByRemovingEmptyValues:(BOOL)removeEmptyValues trimming:(BOOL)trimValues uniquing:(BOOL)uniqueValues;
 
 - (nullable id)objectPassingTest:(BOOL (NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))predicate;
 - (nullable id)objectPassingTest:(BOOL (NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))predicate withOptions:(NSEnumerationOptions)options;
-
-- (NSArray *)objectsPassingTest:(BOOL (NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))predicate;
-- (NSArray *)objectsPassingTest:(BOOL (NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))predicate withOptions:(NSEnumerationOptions)options;
 
 - (void)enumerateSubarraysOfSize:(NSUInteger)subarraySize usingBlock:(void (NS_NOESCAPE ^)(NSArray *objects, BOOL *stop))block;
 - (void)enumerateSubarraysOfSize:(NSUInteger)subarraySize usingBlock:(void (NS_NOESCAPE ^)(NSArray *objects, BOOL *stop))block withOptions:(NSEnumerationOptions)options;
@@ -83,35 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSMutableArray (CSMutableArrayHelper)
 - (void)addObjectWithoutDuplication:(id)anObject;
 
-- (void)addBool:(BOOL)value;
-- (void)addInteger:(NSInteger)value;
-- (void)addUnsignedInteger:(NSUInteger)value;
-- (void)addShort:(short)value;
-- (void)addUnsignedShort:(unsigned short)value;
-- (void)addLong:(long)value;
-- (void)addUnsignedLong:(unsigned long)value;
-- (void)addLongLong:(long long)value;
-- (void)addUnsignedLongLong:(unsigned long long)value;
-- (void)addDouble:(double)value;
-- (void)addFloat:(float)value;
-- (void)addPointer:(void *)value;
-
-- (void)insertBool:(BOOL)value atIndex:(NSUInteger)index;
-- (void)insertInteger:(NSInteger)value atIndex:(NSUInteger)index;
-- (void)insertUnsignedInteger:(NSUInteger)value atIndex:(NSUInteger)index;
-- (void)insertShort:(short)value atIndex:(NSUInteger)index;
-- (void)insertUnsignedShort:(unsigned short)value atIndex:(NSUInteger)index;
-- (void)insertLong:(long)value atIndex:(NSUInteger)index;
-- (void)insertUnsignedLong:(unsigned long)value atIndex:(NSUInteger)index;
-- (void)insertLongLong:(long long)value atIndex:(NSUInteger)index;
-- (void)insertUnsignedLongLong:(unsigned long long)value atIndex:(NSUInteger)index;
-- (void)insertDouble:(double)value atIndex:(NSUInteger)index;
-- (void)insertFloat:(float)value atIndex:(NSUInteger)index;
-- (void)insertPointer:(void *)value atIndex:(NSUInteger)index;
-
 - (void)performSelectorOnObjectValueAndReplace:(SEL)performSelector;
-
-- (NSUInteger)insertSortedObject:(id)object usingComparator:(NSComparator)comparator;
 
 - (void)moveObjectAtIndex:(NSUInteger)fromIndex toIndex:(NSUInteger)toIndex;
 

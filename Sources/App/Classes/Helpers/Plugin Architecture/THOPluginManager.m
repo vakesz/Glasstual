@@ -36,7 +36,10 @@
  *
  *********************************************************************** */
 
+#import <Security/Security.h>
+
 #import "TXGlobalModels.h"
+#import "TXMasterController.h"
 #import "TDCAlert.h"
 #import "TLOLocalization.h"
 #import "TPCApplicationInfo.h"
@@ -47,18 +50,42 @@
 #import "THOPluginItemPrivate.h"
 #import "THOPluginProtocol.h"
 #import "THOPluginManagerPrivate.h"
+#import "TVCMainWindow.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _extrasInstallerExtensionUpdateCheckInterval 345600
-
 NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 	@"THOPluginManagerFinishedLoadingPluginsNotification";
+
+/* User defaults key. Maps bundle identifier to a dictionary with the
+ keys below. Registered in RegisteredUserDefaultsInContainer.plist and
+ excluded from export. */
+static NSString *const THOPluginManagerApprovalsDefaultsKey = @"Plugin Approvals";
+static NSString *const THOPluginManagerApprovalTeamIdentifierKey = @"teamIdentifier";
+static NSString *const THOPluginManagerApprovalDateKey = @"approvedDate";
+static NSString *const THOPluginManagerApprovalApprovedKey = @"approved";
+
+typedef NS_ENUM(NSUInteger, THOPluginApprovalState) {
+	THOPluginApprovalStateUnknown = 0,
+	THOPluginApprovalStateApproved,
+	THOPluginApprovalStateDeclined
+};
+
+/* A bundle that passed signature validation but has not yet been
+ approved or declined by the user for its current Team ID. */
+@interface THOPluginPendingApproval : NSObject
+@property(nonatomic, strong) NSBundle *bundle;
+@property(nonatomic, copy) NSString *teamIdentifier;
+@end
+
+@implementation THOPluginPendingApproval
+@end
 
 @interface THOPluginManager ()
 @property(nonatomic, assign, readwrite) BOOL pluginsLoaded;
 @property(nonatomic, copy, readwrite, nullable) NSArray<THOPluginItem *> *loadedPlugins;
 @property(nonatomic, copy, nullable) NSArray<NSBundle *> *obsoleteBundles;
+@property(nonatomic, copy, nullable) NSArray<NSBundle *> *rejectedBundles;
 @property(nonatomic, assign) THOPluginItemSupportedFeature supportedFeatures;
 @end
 
@@ -91,15 +118,17 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 
 - (void)_loadPlugins
 {
-	NSArray *forbiddenPlugins = self.listOfForbiddenBundles;
-
 	NSMutableArray<THOPluginItem *> *loadedPlugins = [NSMutableArray array];
 	NSMutableArray<NSString *> *bundlesToLoad = [NSMutableArray array];
-	NSMutableArray<NSString *> *loadedBundles = [NSMutableArray array];
+	NSMutableArray<NSString *> *seenBundles = [NSMutableArray array];
 	NSMutableArray<NSBundle *> *obsoleteBundles = [NSMutableArray array];
+	NSMutableArray<NSBundle *> *rejectedBundles = [NSMutableArray array];
+	NSMutableArray<THOPluginPendingApproval *> *pendingApprovals = [NSMutableArray array];
 
+	/* Bundled extensions are listed first so that a copy of a bundled
+	 extension placed in the group container loses to the bundled one. */
 	NSArray *pathsToLoad =
-		[RZFileManager() buildPathArray:[TPCPathInfo customExtensions], [TPCPathInfo bundledExtensions], nil];
+		[RZFileManager() buildPathArray:[TPCPathInfo bundledExtensions], [TPCPathInfo customExtensions], nil];
 
 	for (NSString *path in pathsToLoad) {
 		NSArray *pathFiles = [RZFileManager() contentsOfDirectoryAtPath:path error:NULL];
@@ -128,19 +157,20 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 
 		NSString *bundleIdentifier = bundle.bundleIdentifier;
 
-		if (bundleIdentifier == nil || [loadedBundles containsObject:bundleIdentifier]) {
+		if (bundleIdentifier == nil) {
 			continue;
 		}
 
-		/* The list of forbidden bundles logic was added because a plugin previously
-		 bundled separately was not bundled with the app. This is a simple check to
-		 prevent the old plugin from loading and conflicting with built-in plugin.
-		 This is not designed as a security measure. */
-		if ([forbiddenPlugins containsObject:bundleIdentifier]) {
-			LogToConsoleFault("Forbidden loading of plugin '%{public}@'", bundleIdentifier);
+		if ([seenBundles containsObject:bundleIdentifier]) {
+			LogToConsoleInfo("Skipping the bundle at “%{public}@“ because a bundle with the identifier “%{public}@“ "
+							 "was already found at an earlier location",
+							 bundle.bundlePath,
+							 bundleIdentifier);
 
 			continue;
 		}
+
+		[seenBundles addObject:bundleIdentifier];
 
 		/* Begin version comparison */
 		NSDictionary *infoDictionary = bundle.infoDictionary;
@@ -191,33 +221,450 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 			continue;
 		}
 
+		/* Bundles outside the application must be signed and approved.
+		 Nothing below this point touches the bundle's code until the
+		 bundle is actually loaded. */
+		if ([self _isBundledExtension:bundle] == NO) {
+			NSString *teamIdentifier = nil;
+
+			NSError *validationError = nil;
+
+			if ([self _validateSignatureOfBundle:bundle teamIdentifier:&teamIdentifier error:&validationError] == NO) {
+				LogToConsoleError("Refusing to load the bundle at “%{public}@“ because its signature is missing or "
+								  "invalid: %{public}@",
+								  bundle.bundlePath,
+								  validationError.localizedDescription);
+
+				[rejectedBundles addObject:bundle];
+
+				continue;
+			}
+
+			THOPluginApprovalState approvalState = [self _approvalStateForBundleIdentifier:bundleIdentifier
+																			teamIdentifier:teamIdentifier];
+
+			if (approvalState == THOPluginApprovalStateDeclined) {
+				LogToConsoleInfo("Not loading the bundle at “%{public}@“ because the user declined it",
+								 bundle.bundlePath);
+
+				continue;
+			}
+
+			if (approvalState == THOPluginApprovalStateUnknown) {
+				THOPluginPendingApproval *pending = [THOPluginPendingApproval new];
+
+				pending.bundle = bundle;
+				pending.teamIdentifier = teamIdentifier;
+
+				[pendingApprovals addObject:pending];
+
+				continue;
+			}
+		}
+
 		/* Load bundle as a plugin */
-		THOPluginItem *plugin = [THOPluginItem new];
+		THOPluginItem *plugin = [self _loadBundleAsPlugin:bundle];
 
-		BOOL pluginLoaded = [plugin loadBundle:bundle];
-
-		if (pluginLoaded == NO) {
+		if (plugin == nil) {
 			continue;
 		}
 
 		[loadedPlugins addObject:plugin];
-
-		[loadedBundles addObject:bundleIdentifier];
-
-		[self updateSupportedFeaturesPropertyWithPlugin:plugin];
 	}
 
-	self.loadedPlugins = loadedPlugins;
-
 	self.obsoleteBundles = obsoleteBundles;
+
+	self.rejectedBundles = rejectedBundles;
+
+	if (pendingApprovals.count == 0) {
+		[self _finishLoadingWithPlugins:loadedPlugins];
+
+		return;
+	}
+
+	/* Loading finishes once the user has answered for every pending
+	 bundle. The prompts are presented one after another on the main
+	 queue; approved bundles are loaded on the plugin dispatch queue. */
+	XRPerformBlockAsynchronouslyOnMainQueue(^{
+		[self _promptForPendingApprovals:pendingApprovals atIndex:0 loadedPlugins:loadedPlugins];
+	});
+}
+
+- (nullable THOPluginItem *)_loadBundleAsPlugin:(NSBundle *)bundle
+{
+	NSParameterAssert(bundle != nil);
+
+	THOPluginItem *plugin = [THOPluginItem new];
+
+	BOOL pluginLoaded = [plugin loadBundle:bundle];
+
+	if (pluginLoaded == NO) {
+		return nil;
+	}
+
+	[self updateSupportedFeaturesPropertyWithPlugin:plugin];
+
+	return plugin;
+}
+
+- (void)_finishLoadingWithPlugins:(NSArray<THOPluginItem *> *)loadedPlugins
+{
+	self.loadedPlugins = loadedPlugins;
 
 	self.pluginsLoaded = YES;
 
 	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[self checkForObsoleteBundlesOrUpdatesAvailable];
+		[self checkForRejectedBundles];
+
+		[self checkForObsoleteBundles];
 
 		[RZNotificationCenter() postNotificationName:THOPluginManagerFinishedLoadingPluginsNotification object:self];
 	});
+}
+
+#pragma mark -
+#pragma mark Signature Validation
+
+/* Anything inside the application bundle is shipped by us and is
+ covered by the application's own signature. */
+- (BOOL)_isBundledExtension:(NSBundle *)bundle
+{
+	NSParameterAssert(bundle != nil);
+
+	NSString *applicationPath = RZMainBundle().bundlePath.stringByStandardizingPath;
+
+	NSString *bundlePath = bundle.bundlePath.stringByStandardizingPath;
+
+	return [bundlePath hasPrefix:[applicationPath stringByAppendingString:@"/"]];
+}
+
+/* Team ID the running application is signed with, or nil when the
+ application is unsigned or ad-hoc signed. */
++ (nullable NSString *)_applicationTeamIdentifier
+{
+	static NSString *cachedValue = nil;
+
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		SecCodeRef code = NULL;
+
+		if (SecCodeCopySelf(kSecCSDefaultFlags, &code) != errSecSuccess || code == NULL) {
+			return;
+		}
+
+		CFDictionaryRef signingInformation = NULL;
+
+		OSStatus status =
+			SecCodeCopySigningInformation((SecStaticCodeRef)code, kSecCSSigningInformation, &signingInformation);
+
+		CFRelease(code);
+
+		if (status != errSecSuccess || signingInformation == NULL) {
+			return;
+		}
+
+		NSDictionary *information = (__bridge_transfer NSDictionary *)signingInformation;
+
+		NSString *team = information[(__bridge NSString *)kSecCodeInfoTeamIdentifier];
+
+		if (team.length > 0) {
+			cachedValue = [team copy];
+		}
+	});
+
+	return cachedValue;
+}
+
++ (NSError *)_errorWithStatus:(OSStatus)status
+{
+	NSString *message = (__bridge_transfer NSString *)SecCopyErrorMessageString(status, NULL);
+
+	return [NSError errorWithDomain:NSOSStatusErrorDomain
+							   code:status
+						   userInfo:@{NSLocalizedDescriptionKey : (message ?: @"Unknown error")}];
+}
+
+/* Verifies that a bundle is signed by the same Team ID as the running
+ application. Library validation (hardened runtime, required on the Mac
+ App Store) refuses anything else at load time; this check exists so the
+ failure is reported up front with a usable error. Unsigned and ad-hoc
+ signed bundles fail because they carry no Team ID at all. On success,
+ the Team ID of the signer is returned. */
+- (BOOL)_validateSignatureOfBundle:(NSBundle *)bundle
+					teamIdentifier:(NSString *_Nullable *_Nonnull)teamIdentifier
+							 error:(NSError *_Nullable *_Nonnull)error
+{
+	NSParameterAssert(bundle != nil);
+
+	*teamIdentifier = nil;
+	*error = nil;
+
+	SecStaticCodeRef staticCode = NULL;
+
+	OSStatus status = SecStaticCodeCreateWithPath((__bridge CFURLRef)bundle.bundleURL, kSecCSDefaultFlags, &staticCode);
+
+	if (status != errSecSuccess || staticCode == NULL) {
+		*error = [self.class _errorWithStatus:status];
+
+		return NO;
+	}
+
+	SecCSFlags validationFlags = (kSecCSCheckAllArchitectures | kSecCSStrictValidate);
+
+	/* Step one: the signature must be intact regardless of who made it. */
+	CFErrorRef validityError = NULL;
+
+	status = SecStaticCodeCheckValidityWithErrors(staticCode, validationFlags, NULL, &validityError);
+
+	if (status != errSecSuccess) {
+		CFRelease(staticCode);
+
+		if (validityError) {
+			*error = (__bridge_transfer NSError *)validityError;
+		} else {
+			*error = [self.class _errorWithStatus:status];
+		}
+
+		return NO;
+	}
+
+	/* Step two: the signer must carry a Team ID. Ad-hoc signatures
+	 have none, and neither do unsigned bundles. */
+	CFDictionaryRef signingInformation = NULL;
+
+	status = SecCodeCopySigningInformation(staticCode, kSecCSSigningInformation, &signingInformation);
+
+	if (status != errSecSuccess || signingInformation == NULL) {
+		CFRelease(staticCode);
+
+		*error = [self.class _errorWithStatus:status];
+
+		return NO;
+	}
+
+	NSDictionary *information = (__bridge_transfer NSDictionary *)signingInformation;
+
+	NSString *team = information[(__bridge NSString *)kSecCodeInfoTeamIdentifier];
+
+	if (team.length == 0) {
+		CFRelease(staticCode);
+
+		*error = [self.class _errorWithStatus:errSecCSSignatureUntrusted];
+
+		return NO;
+	}
+
+	/* Step three: the signer must be the same team that signed the
+	 running application. This mirrors what library validation enforces
+	 when the bundle is loaded. */
+	NSString *applicationTeam = [self.class _applicationTeamIdentifier];
+
+	BOOL sameTeam = (applicationTeam != nil && [team isEqualToString:applicationTeam]);
+
+	if (sameTeam == NO) {
+		CFRelease(staticCode);
+
+		*error = [self.class _errorWithStatus:errSecCSSignatureUntrusted];
+
+		return NO;
+	}
+
+	NSString *requirementString =
+		[NSString stringWithFormat:@"anchor apple generic and certificate leaf[subject.OU] = \"%@\"", applicationTeam];
+
+	SecRequirementRef requirement = NULL;
+
+	status = SecRequirementCreateWithString((__bridge CFStringRef)requirementString, kSecCSDefaultFlags, &requirement);
+
+	if (status != errSecSuccess || requirement == NULL) {
+		CFRelease(staticCode);
+
+		*error = [self.class _errorWithStatus:status];
+
+		return NO;
+	}
+
+	validityError = NULL;
+
+	status = SecStaticCodeCheckValidityWithErrors(staticCode, validationFlags, requirement, &validityError);
+
+	CFRelease(requirement);
+	CFRelease(staticCode);
+
+	if (status != errSecSuccess) {
+		if (validityError) {
+			*error = (__bridge_transfer NSError *)validityError;
+		} else {
+			*error = [self.class _errorWithStatus:status];
+		}
+
+		return NO;
+	}
+
+	if (validityError) {
+		CFRelease(validityError);
+	}
+
+	*teamIdentifier = team;
+
+	return YES;
+}
+
+#pragma mark -
+#pragma mark Approvals
+
++ (NSDictionary<NSString *, NSDictionary *> *)_approvals
+{
+	NSDictionary *approvals = [RZUserDefaults() dictionaryForKey:THOPluginManagerApprovalsDefaultsKey];
+
+	return (approvals ?: @{});
+}
+
+- (THOPluginApprovalState)_approvalStateForBundleIdentifier:(NSString *)bundleIdentifier
+											 teamIdentifier:(NSString *)teamIdentifier
+{
+	NSParameterAssert(bundleIdentifier != nil);
+	NSParameterAssert(teamIdentifier != nil);
+
+	NSDictionary *record = [self.class _approvals][bundleIdentifier];
+
+	if (record == nil) {
+		return THOPluginApprovalStateUnknown;
+	}
+
+	/* A different Team ID means a different signer. Ask again. */
+	if ([record[THOPluginManagerApprovalTeamIdentifierKey] isEqualToString:teamIdentifier] == NO) {
+		return THOPluginApprovalStateUnknown;
+	}
+
+	if ([record boolForKey:THOPluginManagerApprovalApprovedKey]) {
+		return THOPluginApprovalStateApproved;
+	}
+
+	return THOPluginApprovalStateDeclined;
+}
+
+- (void)_recordApproval:(BOOL)approved
+	forBundleIdentifier:(NSString *)bundleIdentifier
+		 teamIdentifier:(NSString *)teamIdentifier
+{
+	NSParameterAssert(bundleIdentifier != nil);
+	NSParameterAssert(teamIdentifier != nil);
+
+	NSMutableDictionary *approvals = [[self.class _approvals] mutableCopy];
+
+	approvals[bundleIdentifier] = @{
+		THOPluginManagerApprovalTeamIdentifierKey : teamIdentifier,
+		THOPluginManagerApprovalDateKey : [NSDate date],
+		THOPluginManagerApprovalApprovedKey : @(approved)
+	};
+
+	[RZUserDefaults() setObject:[approvals copy] forKey:THOPluginManagerApprovalsDefaultsKey];
+}
+
++ (void)resetApprovals
+{
+	[RZUserDefaults() removeObjectForKey:THOPluginManagerApprovalsDefaultsKey];
+}
+
+- (void)_promptForPendingApprovals:(NSArray<THOPluginPendingApproval *> *)pendingApprovals
+						   atIndex:(NSUInteger)index
+					 loadedPlugins:(NSMutableArray<THOPluginItem *> *)loadedPlugins
+{
+	NSParameterAssert(pendingApprovals != nil);
+	NSParameterAssert(loadedPlugins != nil);
+
+	if (index >= pendingApprovals.count) {
+		XRPerformBlockAsynchronouslyOnQueue([THOPluginDispatcher dispatchQueue], ^{
+			[self _finishLoadingWithPlugins:loadedPlugins];
+		});
+
+		return;
+	}
+
+	THOPluginPendingApproval *pending = pendingApprovals[index];
+
+	NSBundle *bundle = pending.bundle;
+
+	NSString *bundleIdentifier = bundle.bundleIdentifier;
+	NSString *teamIdentifier = pending.teamIdentifier;
+
+	NSString *displayName = bundle.displayName;
+
+	if (displayName.length == 0) {
+		displayName = bundle.bundlePath.lastPathComponent;
+	}
+
+	[TDCAlert alertSheetWithWindow:mainWindow()
+							  body:TXTLS(@"Prompts[b4n-8z]",
+										 displayName,
+										 bundleIdentifier,
+										 teamIdentifier,
+										 bundle.bundleURL.standardizedTildePath)
+							 title:TXTLS(@"Prompts[pq7-2k]", displayName)
+					 defaultButton:TXTLS(@"Prompts[r9x-3m]")
+				   alternateButton:TXTLS(@"Prompts[w2d-5h]")
+					   otherButton:nil
+				   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id _Nullable underlyingAlert) {
+					   /* "Don't Load" is the default button. Anything other than an
+						explicit click on "Load" (including the sheet being closed
+						by other code) is treated as a decline. */
+					   BOOL approved = (buttonClicked == TDCAlertResponseAlternate);
+
+					   [self _recordApproval:approved
+						   forBundleIdentifier:bundleIdentifier
+								teamIdentifier:teamIdentifier];
+
+					   XRPerformBlockAsynchronouslyOnQueue([THOPluginDispatcher dispatchQueue], ^{
+						   if (approved) {
+							   THOPluginItem *plugin = [self _loadBundleAsPlugin:bundle];
+
+							   if (plugin) {
+								   [loadedPlugins addObject:plugin];
+							   }
+						   } else {
+							   LogToConsoleInfo("Not loading the bundle at “%{public}@“ because the user declined it",
+												bundle.bundlePath);
+						   }
+
+						   XRPerformBlockAsynchronouslyOnMainQueue(^{
+							   [self _promptForPendingApprovals:pendingApprovals
+														atIndex:(index + 1)
+												  loadedPlugins:loadedPlugins];
+						   });
+					   });
+				   }];
+}
+
+#pragma mark -
+#pragma mark Rejected Bundles
+
+- (void)checkForRejectedBundles
+{
+	NSArray *rejectedBundles = self.rejectedBundles;
+
+	if (rejectedBundles.count == 0) {
+		return;
+	}
+
+	/* File names are listed instead of display names because two
+	 rejected bundles may share a display name. */
+	NSMutableArray<NSString *> *bundleNames = [NSMutableArray array];
+
+	for (NSBundle *bundle in rejectedBundles) {
+		[bundleNames addObjectWithoutDuplication:bundle.bundlePath.lastPathComponent];
+	}
+
+	NSString *bundlesName = [bundleNames componentsJoinedByString:@", "];
+
+	/* Present once per launch */
+	self.rejectedBundles = nil;
+
+	[TDCAlert alertWithMessage:TXTLS(@"Prompts[t8y-4p]")
+						 title:TXTLS(@"Prompts[j6c-1v]", bundlesName)
+				 defaultButton:TXTLS(@"Prompts[u5k-9n]")
+			   alternateButton:nil];
 }
 
 - (void)_unloadPlugins
@@ -305,37 +752,8 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 	return [TPCResourceManager arrayFromResources:@"StaticStore" key:@"THOPluginManager List of Forbidden Commands"];
 }
 
-- (NSArray<NSString *> *)listOfForbiddenBundles
-{
-	/* List of bundle identifiers that are not allowed to load. */
-	return [TPCResourceManager arrayFromResources:@"StaticStore" key:@"THOPluginManager List of Forbidden Extensions"];
-}
-
 #pragma mark -
-#pragma mark Extras Installer
-
-- (void)checkForObsoleteBundlesOrUpdatesAvailable
-{
-	/* This method will perform three actions:
-	 1. It will notify user if they have any 3rd-party obsolete addons.
-		This will prompt them to contact the developer.
-	 2. It will notify user if they have any obsolete extras installer
-		addons that cannot be loaded. This will prompt to open installer.
-	 3. It will notify the user if they have any extras installer addons
-		that have an update available.
-
-	 #3 allows the user to suppress the prompt until a later time.
-	 #2 and #1 are aggressive. The prompt will show each launch until the
-	 addon is updated or deleted.
-
-	 It is possible that multiple prompts will appear on the screen at
-	 once. This will be considered an acceptable behavior for now.
-	 Just make sure non-blocking alerts are used for this purpose. */
-
-	[self checkForObsoleteBundles];
-
-	[self extrasInstallerCheckForUpdates];
-}
+#pragma mark Obsolete Bundles
 
 - (void)checkForObsoleteBundles
 {
@@ -345,30 +763,7 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 		return;
 	}
 
-	NSMutableArray<NSBundle *> *obsoleteExtras = [NSMutableArray array];
-	NSMutableArray<NSBundle *> *obsoleteThirdParty = [NSMutableArray array];
-
-	NSArray *extrasBundleIdentifiers = self.extrasInstallerBundleIdentifiers;
-
-	for (NSBundle *bundle in self.obsoleteBundles) {
-		NSString *bundleIdentifier = bundle.bundleIdentifier;
-
-		if ([extrasBundleIdentifiers containsObject:bundleIdentifier]) {
-			[obsoleteExtras addObject:bundle];
-		} else {
-			[obsoleteThirdParty addObject:bundle];
-		}
-	}
-
-	if (obsoleteExtras.count > 0) {
-		[self _extrasInstallerInformUserAboutUpdateForBundles:[obsoleteExtras copy] updateOptional:NO];
-	}
-
-	if (obsoleteThirdParty.count == 0) {
-		return;
-	}
-
-	[self _presentObsoleteBundlesAlertForBundles:[obsoleteThirdParty copy]];
+	[self _presentObsoleteBundlesAlertForBundles:obsoleteBundles];
 }
 
 - (void)_presentObsoleteBundlesAlertForBundles:(NSArray *)thirdPartyBundles
@@ -395,134 +790,8 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 			   }];
 }
 
-- (void)extrasInstallerCheckForUpdates
-{
-	/* Do not check for updates too often */
-#define _defaultsKey @"THOPluginManager -> Extras Installer Last Check for Update Payload"
-
-	NSTimeInterval currentTime = [[NSDate date] timeIntervalSince1970];
-
-	NSString *applicationVersion = [TPCApplicationInfo applicationVersion];
-
-	NSDictionary<NSString *, id> *lastUpdatePayload = [RZUserDefaults() dictionaryForKey:_defaultsKey];
-
-	if (lastUpdatePayload) {
-		NSTimeInterval lastCheckTime = [lastUpdatePayload doubleForKey:@"lastCheck"];
-
-		NSString *lastVersion = [lastUpdatePayload stringForKey:@"lastVersion"];
-
-		if ((currentTime - lastCheckTime) < _extrasInstallerExtensionUpdateCheckInterval &&
-			[lastVersion isEqualToString:applicationVersion]) {
-			return;
-		}
-	}
-
-	/* Record the last time updates were checked for */
-	[RZUserDefaults() setObject:@{@"lastCheck" : @(currentTime), @"lastVersion" : applicationVersion}
-						 forKey:_defaultsKey];
-
-	/* Check for updates */
-	[self _extrasInstallerCheckForUpdates];
-
-#undef _defaultsKey
-}
-
-- (void)_extrasInstallerCheckForUpdates
-{
-	/* Perform update check */
-	NSDictionary *latestVersions = self.extrasInstallerLatestBundleVersions;
-
-	NSMutableArray<NSBundle *> *outdatedBundles = [NSMutableArray array];
-
-	for (THOPluginItem *plugin in self.loadedPlugins) {
-		NSBundle *bundle = plugin.bundle;
-
-		NSString *bundleIdentifier = bundle.bundleIdentifier;
-
-		NSString *latestVersion = latestVersions[bundleIdentifier];
-
-		if (latestVersion == nil) {
-			continue;
-		}
-
-		NSDictionary *infoDictionary = bundle.infoDictionary;
-
-		NSString *currentVersion = infoDictionary[@"CFBundleVersion"];
-
-		NSComparisonResult comparisonResult = [currentVersion compare:latestVersion options:NSNumericSearch];
-
-		if (comparisonResult == NSOrderedAscending) {
-			[outdatedBundles addObject:bundle];
-		}
-	}
-
-	if (outdatedBundles.count == 0) {
-		return;
-	}
-
-	[self _extrasInstallerInformUserAboutUpdateForBundles:[outdatedBundles copy] updateOptional:YES];
-}
-
-- (void)_extrasInstallerInformUserAboutUpdateForBundles:(NSArray<NSBundle *> *)bundles
-										 updateOptional:(BOOL)updateOptional
-{
-	NSParameterAssert(bundles != nil);
-
-	/* Append the current version to the suppression key so that updates 
-	 aren't refused forever. Only until the next version of Glasstual is out. */
-	NSString *suppressionKey = nil;
-
-	if (updateOptional) {
-		suppressionKey = [@"plugin_manager_extension_update_dialog_"
-			stringByAppendingString:[TPCApplicationInfo applicationVersionShort]];
-	}
-
-	NSString *bundlesName = [NSBundle formattedDisplayNamesForBundles:bundles];
-
-	NSString *promptTitle = ((updateOptional) ? @"Prompts[9mb-o5]" : @"Prompts[ins-op]");
-	NSString *promptMessage = ((updateOptional) ? @"Prompts[x4w-is]" : @"Prompts[34o-pk]");
-	NSString *promptDefaultButton = ((updateOptional) ? @"Prompts[ece-dd]" : @"Prompts[hd0-bf]");
-	NSString *promptAlternateButton = ((updateOptional) ? @"Prompts[ioq-nf]" : @"Prompts[467-5l]");
-	NSString *promptOtherButton = ((updateOptional) ? nil : TXTLS(@"Prompts[h78-9e]"));
-
-	[TDCAlert alertWithMessage:TXTLS(promptMessage)
-						 title:TXTLS(promptTitle, bundlesName)
-				 defaultButton:TXTLS(promptDefaultButton)
-			   alternateButton:TXTLS(promptAlternateButton)
-				   otherButton:promptOtherButton
-				suppressionKey:suppressionKey
-			   suppressionText:nil
-			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id _Nullable underlyingAlert) {
-				   if (buttonClicked == TDCAlertResponseAlternate) {
-					   [self extrasInstallerLaunchInstaller];
-				   } else if (buttonClicked == TDCAlertResponseOther) {
-					   [NSBundle openInstallationLocationsForBundles:bundles];
-				   }
-			   }];
-}
-
-- (NSArray<NSString *> *)extrasInstallerBundleIdentifiers
-{
-	return self.extrasInstallerLatestBundleVersions.allKeys;
-}
-
-- (NSDictionary<NSString *, NSString *> *)extrasInstallerLatestBundleVersions
-{
-	/* List of extra bundles and their latest version number. */
-	return [TPCResourceManager dictionaryFromResources:@"StaticStore"
-												   key:@"THOPluginManager Extras Installer Latest Extension Versions"];
-}
-
-- (NSArray<NSString *> *)extrasInstallerReservedCommands
-{
-	/* List of scripts that are available as downloadable
-	 content from the www.codeux.com website. */
-	return [TPCResourceManager arrayFromResources:@"StaticStore" key:@"THOPluginManager List of Reserved Commands"];
-}
-
 - (void)findHandlerForOutgoingCommand:(NSString *)command
 								 path:(NSString *_Nullable *)path
-						   isReserved:(BOOL *)isReserved
 							 isScript:(BOOL *)isScript
 						  isExtension:(BOOL *)isExtension
 {
@@ -531,10 +800,6 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 	/* Reset context pointers */
 	if (path) {
 		*path = nil;
-	}
-
-	if (isReserved) {
-		*isReserved = NO;
 	}
 
 	if (isScript) {
@@ -571,45 +836,7 @@ NSString *const THOPluginManagerFinishedLoadingPluginsNotification =
 		if (isExtension) {
 			*isExtension = YES;
 		}
-
-		return;
 	}
-
-	/* Find a reserved command */
-	NSArray *reservedCommands = self.extrasInstallerReservedCommands;
-
-	if (isReserved) {
-		*isReserved = [reservedCommands containsObject:command];
-	}
-}
-
-- (void)extrasInstallerAskUserIfTheyWantToInstallCommand:(NSString *)command
-{
-	NSParameterAssert(command != nil);
-
-	BOOL download = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[bpb-vv]")
-											  title:TXTLS(@"Prompts[o9p-4n]", command)
-									  defaultButton:TXTLS(@"Prompts[6lr-02]")
-									alternateButton:TXTLS(@"Prompts[qso-2g]")
-									 suppressionKey:@"plugin_manager_reserved_command_dialog"
-									suppressionText:nil];
-
-	if (download) {
-		[self extrasInstallerLaunchInstaller];
-	}
-}
-
-- (void)extrasInstallerLaunchInstaller
-{
-	NSURL *extrasURL = [RZMainBundle() URLForResource:@"Glasstual-Extras" withExtension:@"pkg"];
-
-	NSURL *installerURL = [RZWorkspace() URLForApplicationWithBundleIdentifier:@"com.apple.installer"];
-
-	[RZWorkspace() openURLs:@[ extrasURL ]
-		withApplicationAtURL:installerURL
-			   configuration:[NSWorkspaceOpenConfiguration new]
-		   completionHandler:nil];
-	;
 }
 
 #pragma mark -

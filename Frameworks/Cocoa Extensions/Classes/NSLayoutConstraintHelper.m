@@ -62,13 +62,6 @@ NS_ASSUME_NONNULL_BEGIN
 	self.archivedConstant = self.constant;
 }
 
-- (void)archiveConstantAndZeroOut
-{
-	[self archiveConstant];
-	
-	[self zeroOutConstant];
-}
-
 - (void)restoreArchivedConstant
 {
 	NSNumber *constant = [self _archivedConstant];

@@ -1,321 +1,818 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>AccessIRC</key>
+<array>
 	<dict>
+		<key>name</key>
+		<string>2600net</string>
+		<key>serverAddress</key>
+		<string>irc.2600.net</string>
+		<key>serverPort</key>
+		<integer>6667</integer>
+		<key>prefersSecuredConnection</key>
+		<false/>
+		<key>description</key>
+		<string>Network of the 2600 hacker community.</string>
+		<key>website</key>
+		<string>https://www.2600.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#2600</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>AccessIRC</string>
 		<key>serverAddress</key>
 		<string>irc.accessirc.net</string>
 		<key>serverPort</key>
-		<real>6697</real>
+		<integer>6667</integer>
 		<key>prefersSecuredConnection</key>
-		<true/>
+		<false/>
+		<key>description</key>
+		<string>Small general-purpose community network.</string>
+		<key>website</key>
+		<string>https://www.accessirc.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
 	</dict>
-	<key>AlphaChat</key>
 	<dict>
+		<key>name</key>
+		<string>AlphaChat</string>
 		<key>serverAddress</key>
 		<string>irc.alphachat.net</string>
 		<key>serverPort</key>
 		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
 		<true/>
+		<key>description</key>
+		<string>Community network with services and SASL.</string>
+		<key>website</key>
+		<string>https://www.alphachat.net/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#alphachat</string>
+		</array>
 	</dict>
-	<key>Azzurra</key>
 	<dict>
+		<key>name</key>
+		<string>AnonOps</string>
+		<key>serverAddress</key>
+		<string>irc.anonops.com</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Activist network; TLS-only connections.</string>
+		<key>website</key>
+		<string>https://anonops.com/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#anonops</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Azzurra</string>
 		<key>serverAddress</key>
 		<string>irc.azzurra.chat</string>
 		<key>serverPort</key>
 		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
 		<true/>
+		<key>description</key>
+		<string>Italian general chat network.</string>
+		<key>website</key>
+		<string>https://www.azzurra.chat/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#azzurra</string>
+		</array>
 	</dict>
-	<key>DALnet</key>
 	<dict>
+		<key>name</key>
+		<string>ChatLounge</string>
 		<key>serverAddress</key>
-		<string>irc.dal.net</string>
+		<string>irc.chatlounge.net</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>General chat and tech community.</string>
+		<key>website</key>
+		<string>https://chatlounge.net/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#chatlounge</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Chatspike</string>
+		<key>serverAddress</key>
+		<string>irc.chatspike.net</string>
 		<key>serverPort</key>
 		<integer>6667</integer>
 		<key>prefersSecuredConnection</key>
 		<false/>
+		<key>description</key>
+		<string>Home of the InspIRCd project and general chat.</string>
+		<key>website</key>
+		<string>https://www.chatspike.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#chatspike</string>
+		</array>
 	</dict>
-	<key>EFnet</key>
 	<dict>
+		<key>name</key>
+		<string>DALnet</string>
 		<key>serverAddress</key>
-		<string>irc.efnet.info</string>
+		<string>irc.dal.net</string>
 		<key>serverPort</key>
-		<real>6667</real>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>One of the oldest IRC networks, with NickServ and ChanServ.</string>
+		<key>website</key>
+		<string>https://www.dal.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#dalnethelp</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>darkscience</string>
+		<key>serverAddress</key>
+		<string>irc.darkscience.net</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Science and technology community; TLS-only.</string>
+		<key>website</key>
+		<string>https://www.darkscience.net/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#darkscience</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>EFnet</string>
+		<key>serverAddress</key>
+		<string>irc.efnet.org</string>
+		<key>serverPort</key>
+		<integer>6667</integer>
 		<key>prefersSecuredConnection</key>
 		<false/>
+		<key>description</key>
+		<string>The original IRC network. No services; nicknames are not registered.</string>
+		<key>website</key>
+		<string>https://www.efnet.org/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>none</string>
+		<key>registrationNote</key>
+		<string></string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#efnet</string>
+		</array>
 	</dict>
-	<key>EsperNet</key>
 	<dict>
+		<key>name</key>
+		<string>Ergo testnet</string>
+		<key>serverAddress</key>
+		<string>testnet.ergo.chat</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Public test server for the Ergo IRCv3 server. Good for testing modern IRC features.</string>
+		<key>website</key>
+		<string>https://ergo.chat/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#chat</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>EsperNet</string>
 		<key>serverAddress</key>
 		<string>irc.esper.net</string>
 		<key>serverPort</key>
 		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
 		<true/>
-	</dict>
-	<key>Ewnix</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.ewnix.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
+		<key>description</key>
+		<string>Network for gaming and open-source communities.</string>
+		<key>website</key>
+		<string>https://www.esper.net/</string>
+		<key>saslSupported</key>
 		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#esper</string>
+		</array>
 	</dict>
-	<key>Fuel Rats</key>
 	<dict>
+		<key>name</key>
+		<string>Fuel Rats</string>
 		<key>serverAddress</key>
 		<string>irc.fuelrats.com</string>
 		<key>serverPort</key>
 		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
 		<true/>
+		<key>description</key>
+		<string>Home of the Fuel Rats, the Elite Dangerous rescue group.</string>
+		<key>website</key>
+		<string>https://fuelrats.com/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#fuelrats</string>
+		</array>
 	</dict>
-	<key>GameSurge</key>
 	<dict>
+		<key>name</key>
+		<string>GameSurge</string>
 		<key>serverAddress</key>
 		<string>irc.gamesurge.net</string>
 		<key>serverPort</key>
 		<integer>6667</integer>
 		<key>prefersSecuredConnection</key>
 		<false/>
+		<key>description</key>
+		<string>Gaming network using AuthServ for accounts.</string>
+		<key>website</key>
+		<string>https://gamesurge.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Create an account at https://gamesurge.net/createaccount/ then sign in with /msg AuthServ AUTH &lt;account&gt; &lt;password&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#gamesurge</string>
+		</array>
 	</dict>
-	<key>GeeksIRC</key>
 	<dict>
-		<key>serverAddress</key>
-		<string>irc.geeksirc.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>GeekShed</key>
-	<dict>
+		<key>name</key>
+		<string>GeekShed</string>
 		<key>serverAddress</key>
 		<string>irc.geekshed.net</string>
 		<key>serverPort</key>
-		<real>6697</real>
+		<integer>6667</integer>
 		<key>prefersSecuredConnection</key>
-		<true/>
+		<false/>
+		<key>description</key>
+		<string>Tech community network.</string>
+		<key>website</key>
+		<string>https://www.geekshed.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#geekshed</string>
+		</array>
 	</dict>
-	<key>German-Elite</key>
 	<dict>
+		<key>name</key>
+		<string>German-Elite</string>
 		<key>serverAddress</key>
 		<string>irc.german-elite.net</string>
 		<key>serverPort</key>
 		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
 		<true/>
+		<key>description</key>
+		<string>German-language general chat network.</string>
+		<key>website</key>
+		<string>https://www.german-elite.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#german-elite</string>
+		</array>
 	</dict>
-	<key>Global Gamers</key>
 	<dict>
+		<key>name</key>
+		<string>Global Gamers</string>
 		<key>serverAddress</key>
 		<string>irc.globalgamers.net</string>
 		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>IRCHighWay</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.irchighway.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>Interlinked</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.interlinked.me</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>IdleChat</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.idlechat.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>Libera Chat</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.libera.chat</string>
-		<key>serverPort</key>
-		<real>6697</real>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>LizardIRC</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.lizardirc.org</string>
-		<key>serverPort</key>
-		<real>6697</real>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>Mibbit</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.mibbit.com</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>MindForge</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.mindforge.org</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>Mozor</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.mozor.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>NixtrixIRC</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.nixtrixirc.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>OFTC</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.oftc.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>PonyChat</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.ponychat.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>QuakeNet</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.quakenet.org</string>
-		<key>serverPort</key>
 		<integer>6667</integer>
 		<key>prefersSecuredConnection</key>
 		<false/>
-	</dict>
-	<key>Rizon</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.rizon.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>Snoonet</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.snoonet.org</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>Snyde</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.snyde.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>StormBit</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.stormbit.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>TWiT</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.twit.tv</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>Thinkstack</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.thinstack.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>TinyCrab</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.tinycrab.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>Undernet</key>
-	<dict>
-		<key>serverAddress</key>
-		<string>irc.undernet.org</string>
-		<key>serverPort</key>
-		<integer>6667</integer>
-		<key>prefersSecuredConnection</key>
+		<key>description</key>
+		<string>Gaming community network.</string>
+		<key>website</key>
+		<string>https://www.globalgamers.net/</string>
+		<key>saslSupported</key>
 		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#globalgamers</string>
+		</array>
 	</dict>
-	<key>freenode</key>
 	<dict>
-		<key>serverAddress</key>
-		<string>chat.freenode.net</string>
-		<key>serverPort</key>
-		<integer>6697</integer>
-		<key>prefersSecuredConnection</key>
-		<true/>
-	</dict>
-	<key>hackint</key>
-	<dict>
+		<key>name</key>
+		<string>hackint</string>
 		<key>serverAddress</key>
 		<string>irc.hackint.org</string>
 		<key>serverPort</key>
 		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
 		<true/>
+		<key>description</key>
+		<string>Network of the hacker and Chaos Computer Club community.</string>
+		<key>website</key>
+		<string>https://hackint.org/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#hackint</string>
+		</array>
 	</dict>
-</dict>
+	<dict>
+		<key>name</key>
+		<string>Interlinked</string>
+		<key>serverAddress</key>
+		<string>irc.interlinked.me</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Small network for technology and open-source projects.</string>
+		<key>website</key>
+		<string>https://interlinked.me/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#interlinked</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>IRCHighWay</string>
+		<key>serverAddress</key>
+		<string>irc.irchighway.net</string>
+		<key>serverPort</key>
+		<integer>6667</integer>
+		<key>prefersSecuredConnection</key>
+		<false/>
+		<key>description</key>
+		<string>Anime and general chat network.</string>
+		<key>website</key>
+		<string>https://www.irchighway.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#irchighway</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>IRCnet</string>
+		<key>serverAddress</key>
+		<string>irc.ircnet.com</string>
+		<key>serverPort</key>
+		<integer>6667</integer>
+		<key>prefersSecuredConnection</key>
+		<false/>
+		<key>description</key>
+		<string>Large European network. No services; nicknames are not registered.</string>
+		<key>website</key>
+		<string>https://www.ircnet.com/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>none</string>
+		<key>registrationNote</key>
+		<string></string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#ircnet</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Libera.Chat</string>
+		<key>serverAddress</key>
+		<string>irc.libera.chat</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Home of many free and open-source software projects.</string>
+		<key>website</key>
+		<string>https://libera.chat/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;. See https://libera.chat/guides/registration</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#libera</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>LizardIRC</string>
+		<key>serverAddress</key>
+		<string>irc.lizardirc.org</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Small general-purpose network.</string>
+		<key>website</key>
+		<string>https://www.lizardirc.org/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#lizardirc</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>MindForge</string>
+		<key>serverAddress</key>
+		<string>irc.mindforge.org</string>
+		<key>serverPort</key>
+		<integer>6667</integer>
+		<key>prefersSecuredConnection</key>
+		<false/>
+		<key>description</key>
+		<string>General chat network.</string>
+		<key>website</key>
+		<string>https://www.mindforge.org/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#mindforge</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>OFTC</string>
+		<key>serverAddress</key>
+		<string>irc.oftc.net</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Open and Free Technology Community; hosts Debian and other projects.</string>
+		<key>website</key>
+		<string>https://www.oftc.net/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;. See https://www.oftc.net/Services/</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#oftc</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>QuakeNet</string>
+		<key>serverAddress</key>
+		<string>irc.quakenet.org</string>
+		<key>serverPort</key>
+		<integer>6667</integer>
+		<key>prefersSecuredConnection</key>
+		<false/>
+		<key>description</key>
+		<string>Large gaming network using Q for accounts. No TLS.</string>
+		<key>website</key>
+		<string>https://www.quakenet.org/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Create an account at https://www.quakenet.org/help/q/how-to-register-an-account-with-q then sign in with /msg Q@CServe.quakenet.org AUTH &lt;account&gt; &lt;password&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#help</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Rizon</string>
+		<key>serverAddress</key>
+		<string>irc.rizon.net</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Large general chat and anime network.</string>
+		<key>website</key>
+		<string>https://rizon.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#rizon</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Slashnet</string>
+		<key>serverAddress</key>
+		<string>irc.slashnet.org</string>
+		<key>serverPort</key>
+		<integer>6667</integer>
+		<key>prefersSecuredConnection</key>
+		<false/>
+		<key>description</key>
+		<string>General chat network.</string>
+		<key>website</key>
+		<string>https://www.slashnet.org/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#slashnet</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Snoonet</string>
+		<key>serverAddress</key>
+		<string>irc.snoonet.org</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Network for Reddit communities.</string>
+		<key>website</key>
+		<string>https://snoonet.org/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#snoonet</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>SpotChat</string>
+		<key>serverAddress</key>
+		<string>irc.spotchat.org</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Linux and open-source community network.</string>
+		<key>website</key>
+		<string>https://spotchat.org/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#spotchat</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>SwiftIRC</string>
+		<key>serverAddress</key>
+		<string>irc.swiftirc.net</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>General chat network popular with gaming communities.</string>
+		<key>website</key>
+		<string>https://www.swiftirc.net/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#swiftirc</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Tilde.Chat</string>
+		<key>serverAddress</key>
+		<string>irc.tilde.chat</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Network of the tildeverse public-access Unix communities; TLS-only.</string>
+		<key>website</key>
+		<string>https://tilde.chat/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#meta</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>TWiT</string>
+		<key>serverAddress</key>
+		<string>irc.twit.tv</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Chat for the TWiT podcast network.</string>
+		<key>website</key>
+		<string>https://twit.tv/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>none</string>
+		<key>registrationNote</key>
+		<string></string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#twitlive</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>Undernet</string>
+		<key>serverAddress</key>
+		<string>irc.undernet.org</string>
+		<key>serverPort</key>
+		<integer>6667</integer>
+		<key>prefersSecuredConnection</key>
+		<false/>
+		<key>description</key>
+		<string>Large long-running network using X for accounts.</string>
+		<key>website</key>
+		<string>https://www.undernet.org/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Create an account at https://www.undernet.org/cservice then sign in with /msg X@channels.undernet.org LOGIN &lt;account&gt; &lt;password&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#undernet</string>
+		</array>
+	</dict>
+</array>
 </plist>

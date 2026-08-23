@@ -177,18 +177,8 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
 - (instancetype)initWithConfig:(nullable IRCChannelConfig *)config onClientWithId:(nullable NSString *)clientId
 {
-	if ((self = [self initWithWindow:nil])) {
+	if ((self = [self initWithConfig:config onClient:nil])) {
 		self.clientId = clientId;
-
-		if (config) {
-			self.config = [config mutableCopy];
-		} else {
-			self.config = [IRCChannelConfigMutable new];
-		}
-
-		[self prepareInitialState];
-
-		[self loadConfig];
 
 		return self;
 	}

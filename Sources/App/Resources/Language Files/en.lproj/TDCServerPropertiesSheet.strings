@@ -86,7 +86,6 @@ For example: “Guest1 Guest2 Guest3“";
 Certificates must meet the following criteria:
 	• Certificate is configured as type: “SSL Client”
 	• Certificate has matching private key";
-"3ju-lo" = "Learn to Create a Certificate";
 
 /* Cipher suites */
 "yko-5g" = "The “%@” includes the following cipher suites:";

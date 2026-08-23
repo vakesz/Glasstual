@@ -51,7 +51,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSComparisonResult)compareUsingWeights:(IRCChannelUser *)other;
 
 + (NSComparator)channelRankComparator;
-+ (NSComparator)nicknameLengthComparator;
 @end
 
 NS_ASSUME_NONNULL_END

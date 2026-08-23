@@ -430,7 +430,15 @@ NSString *const ICLInlineContentErrorDomain = @"ICLInlineContentErrorDomain";
 	static dispatch_once_t onceToken;
 
 	dispatch_once(&onceToken, ^{
-		[[ICLPluginManager sharedPluginManager] loadPluginsAtLocations:pluginLocations];
+		/* External module locations are intentionally ignored. Modules are
+		 only loaded from inside the service bundle because the service has
+		 no way to verify or ask about code found outside of it. */
+		if (pluginLocations.count > 0) {
+			LogToConsoleInfo("Ignoring %{public}lu external module location(s); only bundled modules are loaded",
+							 (unsigned long)pluginLocations.count);
+		}
+
+		[[ICLPluginManager sharedPluginManager] loadBundledPlugins];
 	});
 }
 

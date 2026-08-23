@@ -79,8 +79,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 	self.tnewNicknameTextField.textDidChangeCallback = self;
 
+	__weak typeof(self) weakSelf = self;
+
 	self.tnewNicknameTextField.validationBlock = ^NSString *(NSString *currentValue) {
-		if ([currentValue isHostmaskNicknameOn:self.client] == NO) {
+		if ([currentValue isHostmaskNicknameOn:weakSelf.client] == NO) {
 			return TXTLS(@"CommonErrors[och-j5]");
 		}
 

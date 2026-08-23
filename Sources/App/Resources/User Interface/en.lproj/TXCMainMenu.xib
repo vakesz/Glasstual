@@ -23,14 +23,12 @@
                 <outlet property="channelViewGeneralMenu" destination="374" id="jud-oP-p2n"/>
                 <outlet property="channelViewURLMenu" destination="426" id="abE-mI-Ckx"/>
                 <outlet property="dockMenu" destination="Q9Y-E0-gAT" id="930-9r-xqt"/>
-                <outlet property="encryptionManagerStatusMenu" destination="edI-1l-81o" id="fSt-o4-bUU"/>
                 <outlet property="mainMenuChannelMenu" destination="1s1-yL-ZHT" id="yR9-do-srs"/>
                 <outlet property="mainMenuChannelMenuItem" destination="276" id="ZFA-Nr-7nd"/>
                 <outlet property="mainMenuNavigationChannelListMenu" destination="89a-J1-2zg" id="8Ju-VI-XQI"/>
                 <outlet property="mainMenuQueryMenu" destination="6uP-Kf-gUN" id="QXL-LN-bey"/>
                 <outlet property="mainMenuQueryMenuItem" destination="d6g-it-Teq" id="BCp-Fd-2hl"/>
                 <outlet property="mainMenuServerMenuItem" destination="286" id="OSj-f8-vqi"/>
-                <outlet property="mainMenuWindowMenuItem" destination="19" id="w4D-Ns-fa4"/>
                 <outlet property="mainWindowSegmentedControllerCellMenu" destination="2953" id="oCb-R7-qbx"/>
                 <outlet property="muteNotificationsDockMenuItem" destination="dnc-ku-aQ3" id="Af9-tD-wlC"/>
                 <outlet property="muteNotificationsFileMenuItem" destination="QNy-Fk-SRO" id="nHn-Ki-RJX"/>
@@ -125,46 +123,6 @@
             </connections>
             <point key="canvasLocation" x="95" y="-617"/>
         </menu>
-        <menu id="edI-1l-81o" userLabel="Encryption Manager Status Menu">
-            <items>
-                <menuItem title="Start Private Conversation" tag="1502" id="wTZ-NT-MgD" image="lock">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="encryptionStartPrivateConversation:" target="267" id="uqX-jS-WxC"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Refresh Private Conversation" tag="1503" id="SJp-pz-WvU" image="arrow.clockwise">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="encryptionRefreshPrivateConversation:" target="267" id="lS1-ZG-dAN"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="End Private Conversation" tag="1504" id="bJT-Nc-UwZ" image="lock.open">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="encryptionEndPrivateConversation:" target="267" id="bPL-Ih-3je"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" tag="1505" id="vgt-gi-rFQ"/>
-                <menuItem title="Authenticate Chat Partner" tag="1506" id="9eO-kw-9HG" image="checkmark.shield">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="encryptionAuthenticateChatPartner:" target="267" id="F1j-kX-1Dw"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" tag="1507" id="seh-5B-FFy"/>
-                <menuItem title="View List of Fingerprints" tag="1508" id="aii-WP-szA" image="key">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="encryptionListFingerprints:" target="267" id="8Ai-8r-XNy"/>
-                    </connections>
-                </menuItem>
-            </items>
-            <connections>
-                <outlet property="delegate" destination="267" id="WYt-sp-mVt"/>
-            </connections>
-            <point key="canvasLocation" x="-452" y="-306"/>
-        </menu>
         <menu id="963" userLabel="Join Channel Menu">
             <items>
                 <menuItem title="Join Channel" tag="1000" id="964" image="arrow.right.square">
@@ -194,12 +152,6 @@
                             <menuItem title="Settings…" tag="102" keyEquivalent="," id="129" image="gear">
                                 <connections>
                                     <action selector="showPreferencesWindow:" target="267" id="nJn-8N-O42"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Check for Updates…" tag="105" id="SKm-yR-9hI" image="arrow.down.circle">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="checkForUpdates:" target="267" id="Khl-F9-d2t"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" tag="106" id="143">
@@ -258,7 +210,7 @@
                                     <action selector="toggleMuteOnNotifications:" target="267" id="BG4-hs-ZvW"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Disable All Notification Sounds" tag="202" keyEquivalent="M" id="3092" image="speaker.slash">
+                            <menuItem title="Disable All Notification Sounds" tag="201" keyEquivalent="M" id="3092" image="speaker.slash">
                                 <connections>
                                     <action selector="toggleMuteOnNotificationSounds:" target="267" id="Ox8-g0-Y9n"/>
                                 </connections>
@@ -549,7 +501,7 @@
                             <menuItem title="Enter Full Screen" tag="409" keyEquivalent="f" id="1790" image="arrow.up.left.and.arrow.down.right">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                 <connections>
-                                    <action selector="toggleFullscreen:" target="267" id="v4x-I2-JVb"/>
+                                    <action selector="toggleFullScreen:" target="-1" id="v4x-I2-JVb"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -625,8 +577,8 @@ CA
                             <menuItem isSeparatorItem="YES" tag="511" id="303">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Add Channel…" tag="512" keyEquivalent="+" id="320" image="plus.circle">
-                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
+                            <menuItem title="Add Channel…" tag="512" id="320" image="plus.circle">
+                                <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="addChannel:" target="267" id="2619"/>
                                 </connections>
@@ -1037,6 +989,13 @@ CQ
                                     <action selector="emptyAction:" target="267" id="c1K-oo-2Iu"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" tag="911" id="obw-sp-001"/>
+                            <menuItem title="Welcome to Glasstual…" tag="912" id="obw-mi-001" image="hand.wave">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showOnboardingWindow:" target="267" id="obw-ac-001"/>
+                                </connections>
+                            </menuItem>
                         </items>
                         <connections>
                             <outlet property="delegate" destination="267" id="xBH-z6-KOr"/>
@@ -1114,21 +1073,21 @@ CA
                                     <action selector="toggleChannelModerationMode:" target="267" id="495-2e-0Jp"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" tag="6090002" id="M8P-bM-0w4"/>
-                            <menuItem title="Invite Only (+i)" tag="6090003" keyEquivalent="I" id="L1b-7x-bd4">
+                            <menuItem isSeparatorItem="YES" id="M8P-bM-0w4"/>
+                            <menuItem title="Invite Only (+i)" tag="6090002" keyEquivalent="I" id="L1b-7x-bd4">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                 <connections>
                                     <action selector="toggleChannelInviteMode:" target="267" id="z7P-9I-MUZ"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Anyone Can Join (-i)" tag="6090004" keyEquivalent="i" id="cO1-TC-8Ks">
+                            <menuItem title="Anyone Can Join (-i)" tag="6090003" keyEquivalent="i" id="cO1-TC-8Ks">
                                 <modifierMask key="keyEquivalentModifierMask" control="YES" command="YES"/>
                                 <connections>
                                     <action selector="toggleChannelInviteMode:" target="267" id="9Go-RV-b9b"/>
                                 </connections>
                             </menuItem>
-                            <menuItem isSeparatorItem="YES" tag="6090005" id="Azs-Ib-6y7"/>
-                            <menuItem title="Manage All Modes" tag="6090006" keyEquivalent="o" id="2Em-53-ZkH">
+                            <menuItem isSeparatorItem="YES" id="Azs-Ib-6y7"/>
+                            <menuItem title="Manage All Modes" tag="6090004" keyEquivalent="o" id="2Em-53-ZkH">
                                 <connections>
                                     <action selector="showChannelModifyModesSheet:" target="267" id="4Cq-dH-L56"/>
                                 </connections>
@@ -1164,13 +1123,13 @@ CA
                         <action selector="showChannelQuietList:" target="267" id="1cz-cj-aO6"/>
                     </connections>
                 </menuItem>
-                <menuItem isSeparatorItem="YES" tag="614" id="ELz-5M-mXc"/>
-                <menuItem title="Channel Properties…" tag="615" keyEquivalent="i" id="rP5-rz-Tdf" image="gearshape">
+                <menuItem isSeparatorItem="YES" tag="615" id="ELz-5M-mXc"/>
+                <menuItem title="Channel Properties…" tag="616" keyEquivalent="i" id="rP5-rz-Tdf" image="gearshape">
                     <connections>
                         <action selector="showChannelPropertiesSheet:" target="267" id="uB4-c9-8pW"/>
                     </connections>
                 </menuItem>
-                <menuItem isSeparatorItem="YES" tag="616" id="G83-kQ-M4p">
+                <menuItem isSeparatorItem="YES" tag="617" id="G83-kQ-M4p">
                     <connections>
                         <binding destination="TlT-Ik-3QP" name="hidden" keyPath="values.GlasstualDeveloperEnvironment" id="Oq2-DH-zfe">
                             <dictionary key="options">
@@ -1179,7 +1138,7 @@ CA
                         </binding>
                     </connections>
                 </menuItem>
-                <menuItem title="Copy Unique Identifier" tag="617" id="DuZ-FR-y17">
+                <menuItem title="Copy Unique Identifier" tag="618" id="DuZ-FR-y17">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="copyUniqueIdentifier:" target="267" id="AP7-Yd-CKd"/>
@@ -1462,7 +1421,6 @@ CA
         </menu>
     </objects>
     <resources>
-        <image name="arrow.clockwise" catalog="system" width="16" height="16"/>
         <image name="arrow.down.circle" catalog="system" width="16" height="16"/>
         <image name="arrow.down.to.line" catalog="system" width="16" height="16"/>
         <image name="arrow.left.arrow.right" catalog="system" width="16" height="16"/>
@@ -1479,7 +1437,6 @@ CA
         <image name="book" catalog="system" width="16" height="16"/>
         <image name="bookmark" catalog="system" width="16" height="16"/>
         <image name="bubble.left" catalog="system" width="16" height="16"/>
-        <image name="checkmark.shield" catalog="system" width="16" height="16"/>
         <image name="doc.on.clipboard" catalog="system" width="16" height="16"/>
         <image name="doc.on.doc" catalog="system" width="16" height="16"/>
         <image name="doc.text" catalog="system" width="16" height="16"/>
@@ -1492,12 +1449,10 @@ CA
         <image name="gearshape" catalog="system" width="16" height="16"/>
         <image name="hand.raised" catalog="system" width="16" height="16"/>
         <image name="hand.raised.slash" catalog="system" width="16" height="16"/>
+        <image name="hand.wave" catalog="system" width="16" height="16"/>
         <image name="info.circle" catalog="system" width="16" height="16"/>
-        <image name="key" catalog="system" width="16" height="16"/>
         <image name="link" catalog="system" width="16" height="16"/>
         <image name="list.bullet" catalog="system" width="16" height="16"/>
-        <image name="lock" catalog="system" width="16" height="16"/>
-        <image name="lock.open" catalog="system" width="16" height="16"/>
         <image name="macwindow" catalog="system" width="16" height="16"/>
         <image name="magnifyingglass" catalog="system" width="16" height="16"/>
         <image name="minus" catalog="system" width="16" height="16"/>

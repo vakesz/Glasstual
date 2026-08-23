@@ -51,6 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
 	NSDictionary<NSString *, NSString *> *_messageTags;
 	NSString *_batchToken;
 	NSString *_command;
+	NSString *_messageIdentifier;
+	NSString *_senderAccount;
 	NSUInteger _commandNumeric;
 	IRCMessageBatchMessage *_parentBatchMessage;
 }
