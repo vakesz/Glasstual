@@ -783,16 +783,6 @@
 		070DCA40BB8576D920BC2970 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation;
-			dstSubfolderSpec = 7;
-			files = (
-				4888B2AB78F64980FAE8E62C /* Acknowledgements.pdf in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = Preferences;
 			dstSubfolderSpec = 7;
 			files = (
@@ -801,6 +791,16 @@
 				12E7B04A8D1C89F3E824563D /* PreferenceKeyMasterList.plist in CopyFiles */,
 				EB3C2F7F50214F6CC6EC1F6A /* RegisteredUserDefaults.plist in CopyFiles */,
 				EC95BE126D4DA67BD4016649 /* RegisteredUserDefaultsInContainer.plist in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Documentation;
+			dstSubfolderSpec = 7;
+			files = (
+				4888B2AB78F64980FAE8E62C /* Acknowledgements.pdf in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1577,6 +1577,7 @@
 		DF8FD26E9EA36448ECFA9C19 /* IRCTreeItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCTreeItem.h; sourceTree = "<group>"; };
 		DFA9C076BA3EB60A61422EA4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCServerEndpointListSheet.xib; sourceTree = "<group>"; };
 		E0164169B36C9C0E5AC3469F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCPreferencesUserStyleSheet.xib; sourceTree = "<group>"; };
+		E0599A88618C178059DA4B8B /* demo-irc-server.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = "demo-irc-server.py"; sourceTree = "<group>"; };
 		E07CAF23FBD68B1E2BA0E0C4 /* TDCChannelInviteSheet.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCChannelInviteSheet.m; sourceTree = "<group>"; };
 		E082C7EA7B982B1A92966500 /* TDCNicknameColorSheetPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCNicknameColorSheetPrivate.h; sourceTree = "<group>"; };
 		E209045A918FDDC504C46E2D /* TDCReactionPopoverControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCReactionPopoverControllerPrivate.h; sourceTree = "<group>"; };
@@ -2974,6 +2975,7 @@
 			isa = PBXGroup;
 			children = (
 				88E0544D4726FC9E21C424D5 /* compile-commands.sh */,
+				E0599A88618C178059DA4B8B /* demo-irc-server.py */,
 				C75B09F62724F820A9742F93 /* format.sh */,
 				9F96D75144B6325228D4A96B /* GenerateBuildConfig.sh */,
 				182AD56195862A9F3B17BB8F /* lint.sh */,

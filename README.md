@@ -28,17 +28,22 @@ Copyright and license notices from Textual and LimeChat are left intact througho
 
 ## Screenshots
 
-![The Glasstual main window, showing the channel list, a conversation and the member list](Documentation/Screenshots/main-window-light.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="Documentation/Screenshots/main-window-dark.png">
+  <img src="Documentation/Screenshots/main-window-light.png" alt="The Glasstual main window connected to the local Harbor IRC demo network, showing channels, a conversation and the member list">
+</picture>
 
 <details>
 <summary>First launch</summary>
 
-![The Glasstual welcome screen](Documentation/Screenshots/welcome-light.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="Documentation/Screenshots/welcome-dark.png">
+  <img src="Documentation/Screenshots/welcome-light.png" alt="The Glasstual first-launch welcome screen">
+</picture>
 
 </details>
 
-<!-- TODO: add dark appearance screenshots alongside these. -->
-<!-- Conversation shown is from a local demo network, not a real one. -->
+The conversation shown above was generated on a loopback-only demo network. It does not contain real accounts or messages.
 
 ## Note Regarding Third-Party Frameworks
 

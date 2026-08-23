@@ -85,6 +85,11 @@ NSString *const TVCMainWindowDidReloadThemeNotification = @"TVCMainWindowDidRelo
 
 NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelectionChangedNotification";
 
+static NSToolbarItemIdentifier const TVCMainWindowToggleServerListToolbarItemIdentifier =
+	@"TVCMainWindowToggleServerList";
+static NSToolbarItemIdentifier const TVCMainWindowToggleMemberListToolbarItemIdentifier =
+	@"TVCMainWindowToggleMemberList";
+
 @interface TVCMainWindow () <NSWindowRestoration>
 @property(nonatomic, weak, readwrite) IBOutlet TVCMainWindowChannelView *channelView;
 @property(nonatomic, strong, readwrite) IBOutlet TXMenuControllerMainWindowProxy *mainMenuProxy;
@@ -238,29 +243,65 @@ static const CGFloat _sidebarFooterHeight = 32.0;
 	self.toolbar = toolbar;
 }
 
-/* AppKit supplies the sidebar and inspector tracking separators, along with
- their toggle items, for any NSSplitViewController that vends a sidebar and an
- inspector. We contribute nothing of our own. */
+/* The split view controller is hosted below the loading view instead of being
+ the window's root content view controller. AppKit therefore cannot discover it
+ when constructing its automatic sidebar and inspector toggle items. Explicit
+ toolbar items keep both panes reachable while retaining the native toolbar
+ appearance and the existing menu actions. */
 - (NSArray<NSToolbarItemIdentifier> *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
 	return @[
-		NSToolbarToggleSidebarItemIdentifier,
+		TVCMainWindowToggleServerListToolbarItemIdentifier,
 		NSToolbarSidebarTrackingSeparatorItemIdentifier,
 		NSToolbarFlexibleSpaceItemIdentifier,
 		NSToolbarSpaceItemIdentifier,
-		NSToolbarToggleInspectorItemIdentifier
+		TVCMainWindowToggleMemberListToolbarItemIdentifier
 	];
 }
 
 - (NSArray<NSToolbarItemIdentifier> *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
 	return @[
-		NSToolbarToggleSidebarItemIdentifier,
+		TVCMainWindowToggleServerListToolbarItemIdentifier,
 		NSToolbarSidebarTrackingSeparatorItemIdentifier,
 		NSToolbarFlexibleSpaceItemIdentifier,
-		NSToolbarSpaceItemIdentifier,
-		NSToolbarToggleInspectorItemIdentifier
+		TVCMainWindowToggleMemberListToolbarItemIdentifier
 	];
+}
+
+- (nullable NSToolbarItem *)toolbar:(NSToolbar *)toolbar
+			  itemForItemIdentifier:(NSToolbarItemIdentifier)itemIdentifier
+		  willBeInsertedIntoToolbar:(BOOL)flag
+{
+	NSString *symbolName = nil;
+	NSString *label = nil;
+	SEL action = NULL;
+	BOOL navigational = NO;
+
+	if ([itemIdentifier isEqualToString:TVCMainWindowToggleServerListToolbarItemIdentifier]) {
+		symbolName = @"sidebar.left";
+		label = TXTLS(@"TVCMainWindow[tb-sl]");
+		action = @selector(toggleServerListVisibility);
+		navigational = YES;
+	} else if ([itemIdentifier isEqualToString:TVCMainWindowToggleMemberListToolbarItemIdentifier]) {
+		symbolName = @"sidebar.right";
+		label = TXTLS(@"TVCMainWindow[tb-ml]");
+		action = @selector(toggleMemberListVisibility);
+	} else {
+		return nil;
+	}
+
+	NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+	item.image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:label];
+	item.label = label;
+	item.paletteLabel = label;
+	item.toolTip = label;
+	item.bordered = YES;
+	item.navigational = navigational;
+	item.target = self;
+	item.action = action;
+
+	return item;
 }
 
 - (void)installContentSplitViewController
