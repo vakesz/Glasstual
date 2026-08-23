@@ -1,0 +1,822 @@
+/* Bubbles — a Messages-like layout.
+
+ Shared by the Light and Dark varieties; each variety's design.css
+ declares the palette and imports this file.
+
+ The default templates are used unchanged. A line is laid out as a
+ column: the sender (shown once above a group of messages from the same
+ person), then the bubble (.innerMessage), with the timestamp held at
+ the side and revealed on hover. scripts.js adds the classes that drive
+ grouping: .groupStart, .groupMiddle, .groupEnd and .solo, and it
+ inserts .timeSeparator rows between messages far apart in time. */
+
+/* Basic Body Structure */
+
+* {
+	margin: 0;
+	padding: 0;
+	font-size: 100%;
+	word-wrap: break-word;
+	word-break: break-word;
+}
+
+body {
+	color: var(--label);
+	height: 100%;
+	z-index: 100;
+	font-size: 13px;
+	overflow: hidden;
+	background-color: transparent;
+	font-family: -apple-system, BlinkMacSystemFont, system-ui, "SF Pro Text", sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+::selection {
+	background-color: var(--selection);
+}
+
+#body {
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+	max-height: 100%;
+	overflow-x: hidden;
+	overflow-y: auto;
+	z-index: 100;
+	position: absolute;
+	opacity: 0; /* Set by JavaScript */
+	-webkit-transition: opacity 0.8s linear;
+}
+
+body[data-selected="true"][data-view-type="channel"] #body {
+	max-height: calc(100% - 2.0em); /* height minus topic */
+}
+
+#messageBuffer {
+	padding: 10px 0 6px 0;
+}
+
+/* Scrolling */
+
+body[data-custom-scroller="true"]::-webkit-scrollbar {
+	width: 13px;
+}
+
+body[data-custom-scroller="true"]::-webkit-scrollbar:horizontal {
+	height: 0;
+}
+
+body[data-custom-scroller="true"]::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+body[data-custom-scroller="true"]::-webkit-scrollbar-thumb {
+	background-color: var(--scroll-thumb);
+	border: 3px solid transparent;
+	border-radius: 10px;
+	background-clip: content-box;
+}
+
+body[data-custom-scroller="true"]::-webkit-scrollbar-thumb:hover {
+	background-color: var(--scroll-thumb-active);
+}
+
+/* Loading Screen */
+
+#loadingScreen {
+	position: absolute;
+	top: 45%;
+	left: calc(50% - (320px / 2));
+	width: 300px;
+	font-size: 15px;
+	text-align: center;
+	color: var(--secondary-label);
+	background: var(--surface-raised);
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	border: 1px solid var(--rule);
+	border-radius: 12px;
+	padding: 10px 14px;
+	opacity: 1; /* Set by JavaScript */
+	-webkit-transition: opacity 0.8s linear;
+}
+
+/* Links */
+
+a {
+	color: var(--link);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+/* Topic Bar */
+
+#topicBar {
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 400;
+	opacity: 0; /* Set by JavaScript */
+	color: var(--secondary-label);
+	position: fixed;
+	padding: 3px 14px;
+	background: var(--surface-raised);
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	border-bottom: 1px solid var(--rule);
+	-webkit-transition: opacity 0.8s linear;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+#topicBar:hover {
+	overflow: visible;
+	white-space: normal;
+}
+
+#topicBar a,
+#topicBar span.channel {
+	color: var(--link);
+}
+
+/* Scrollback mark */
+
+#mark {
+	clear: both;
+	position: relative;
+	z-index: 295;
+	display: flex;
+	align-items: center;
+	margin: 8px 16px;
+	-webkit-transition: opacity 0.2s linear;
+	transition: opacity 0.2s linear;
+}
+
+#mark::before,
+#mark::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: var(--accent);
+	opacity: 0.7;
+}
+
+#mark .markCaption {
+	flex: none;
+	margin: 0 10px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--accent);
+}
+
+/* Loading animation */
+
+.message_buffer_loading_indicator {
+	text-align: center;
+	height: 42px;
+}
+
+.message_buffer_loading_indicator span {
+	font-size: 30px;
+	font-weight: 600;
+	letter-spacing: 4px;
+	line-height: 43px;
+	color: var(--tertiary-label);
+	-webkit-animation: ellipsis-period 1.5s infinite;
+	animation: ellipsis-period 1.5s infinite;
+}
+
+.message_buffer_loading_indicator span:nth-child(1) { animation-delay: 0.0s; }
+.message_buffer_loading_indicator span:nth-child(2) { animation-delay: 0.1s; }
+.message_buffer_loading_indicator span:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes ellipsis-period {
+	0% { opacity: 0.2; }
+	20% { opacity: 1.0; }
+	100% { opacity: 0.2; }
+}
+
+/* Date, session and time separators: small centered captions. */
+
+.date_indicator,
+.session_indicator,
+.timeSeparator {
+	display: flex;
+	justify-content: center;
+	padding: 10px 16px 4px 16px;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.date_indicator > hr,
+.session_indicator > hr {
+	display: none;
+}
+
+.date_indicator > span,
+.session_indicator > span,
+.timeSeparator > span {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--secondary-label);
+}
+
+.date_indicator + #mark,
+.session_indicator + #mark {
+	display: none;
+}
+
+/* Lines
+
+ Every line is a column. The time sits at the side, hidden until the
+ line is hovered. */
+
+div.line {
+	clear: both;
+	position: relative;
+	padding: 1px 16px;
+}
+
+div.line > p {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	position: relative;
+}
+
+div.line .message {
+	display: contents;
+}
+
+div.line .time {
+	order: 3;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	right: 100%;
+	margin-right: 8px;
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+	color: var(--tertiary-label);
+	white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-transition: opacity 0.15s ease-out;
+	transition: opacity 0.15s ease-out;
+}
+
+div.line:hover .time {
+	opacity: 1;
+}
+
+/* Chat: PRIVMSG and ACTION */
+
+div.line.text {
+	margin-top: 1px;
+}
+
+div.line.text.groupStart,
+div.line.text.solo {
+	margin-top: 8px;
+}
+
+div.line.text .senderContainer {
+	order: 1;
+	display: block;
+	margin: 0 0 2px 12px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--secondary-label);
+}
+
+/* The sender is shown once, above the first bubble of a group. Never
+ for the local user. */
+div.line.text.groupMiddle .senderContainer,
+div.line.text.groupEnd .senderContainer,
+div.line.text[data-member-type="myself"] .senderContainer {
+	display: none;
+}
+
+div.line.text .sender {
+	cursor: pointer;
+}
+
+div.line.text .innerMessage {
+	order: 2;
+	display: block;
+	position: relative;
+	max-width: 70%;
+	padding: 6px 12px;
+	border-radius: 18px;
+	line-height: 1.35;
+	background: var(--bubble);
+	color: var(--label);
+	-webkit-transition: background-color 0.15s ease-out;
+	transition: background-color 0.15s ease-out;
+}
+
+div.line.text:hover .innerMessage {
+	background: var(--bubble-hover);
+}
+
+/* Corners between bubbles of one group are squared off a little. */
+div.line.text.groupStart .innerMessage {
+	border-bottom-left-radius: 6px;
+}
+
+div.line.text.groupMiddle .innerMessage {
+	border-top-left-radius: 6px;
+	border-bottom-left-radius: 6px;
+}
+
+div.line.text.groupEnd .innerMessage {
+	border-top-left-radius: 6px;
+}
+
+/* Tail on the last bubble of a group. */
+div.line.text.groupEnd .innerMessage::before,
+div.line.text.solo .innerMessage::before {
+	content: "";
+	position: absolute;
+	bottom: 0;
+	left: -5px;
+	width: 12px;
+	height: 12px;
+	background: var(--bubble);
+	-webkit-mask: radial-gradient(circle at 0 0, transparent 9px, #000 9.5px);
+	mask: radial-gradient(circle at 0 0, transparent 9px, #000 9.5px);
+	border-bottom-left-radius: 12px;
+	-webkit-transition: background-color 0.15s ease-out;
+	transition: background-color 0.15s ease-out;
+}
+
+div.line.text.groupEnd:hover .innerMessage::before,
+div.line.text.solo:hover .innerMessage::before {
+	background: var(--bubble-hover);
+}
+
+/* The local user: right aligned, accent coloured. */
+
+div.line.text[data-member-type="myself"] > p {
+	align-items: flex-end;
+}
+
+div.line.text[data-member-type="myself"] .innerMessage {
+	background: var(--accent);
+	color: var(--on-accent);
+}
+
+div.line.text[data-member-type="myself"]:hover .innerMessage {
+	background: var(--accent);
+	filter: brightness(0.94);
+}
+
+div.line.text[data-member-type="myself"] .innerMessage a {
+	color: inherit;
+	text-decoration: underline;
+}
+
+div.line.text[data-member-type="myself"].groupStart .innerMessage {
+	border-radius: 18px 18px 6px 18px;
+}
+
+div.line.text[data-member-type="myself"].groupMiddle .innerMessage {
+	border-radius: 18px 6px 6px 18px;
+}
+
+div.line.text[data-member-type="myself"].groupEnd .innerMessage {
+	border-radius: 18px 6px 18px 18px;
+}
+
+div.line.text[data-member-type="myself"].groupEnd .innerMessage::before,
+div.line.text[data-member-type="myself"].solo .innerMessage::before {
+	left: auto;
+	right: -5px;
+	background: var(--accent);
+	-webkit-mask: radial-gradient(circle at 100% 0, transparent 9px, #000 9.5px);
+	mask: radial-gradient(circle at 100% 0, transparent 9px, #000 9.5px);
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 12px;
+}
+
+div.line.text[data-member-type="myself"] .time {
+	right: auto;
+	left: 100%;
+	margin-right: 0;
+	margin-left: 8px;
+}
+
+/* Nickname colours tint the sender name only. */
+div.line.text .innerMessage .inlineSender {
+	color: inherit !important;
+	font-weight: 600;
+}
+
+/* ACTION: italic inside the bubble, with the sender's name leading. */
+
+div.line[data-line-type="action"] .innerMessage {
+	font-style: italic;
+}
+
+div.line[data-line-type="action"] .innerMessage::before {
+	content: attr(data-action-sender) " ";
+	font-weight: 600;
+}
+
+/* Highlights: an accent ring. */
+
+div.line.text[data-highlight="true"] .innerMessage {
+	box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* Conversation tracking: the user you clicked on. */
+
+div.line.text.selectedUser .senderContainer {
+	color: var(--accent);
+}
+
+div.line.text.selectedUser .innerMessage {
+	box-shadow: 0 0 0 1.5px var(--accent);
+}
+
+/* Delivery state */
+
+div.line[data-delivery-state="pending"] .innerMessage {
+	opacity: 0.6;
+	transition: opacity 0.3s;
+}
+
+div.line[data-delivery-state="failed"] .innerMessage {
+	box-shadow: 0 0 0 2px var(--danger);
+}
+
+div.line .deliveryFailure {
+	display: block;
+	margin-top: 2px;
+	font-size: 11px;
+	font-style: normal;
+	color: var(--danger);
+}
+
+div.line[data-member-type="myself"] .deliveryFailure {
+	color: var(--on-accent);
+	opacity: 0.85;
+}
+
+div.line .deliveryFailure:empty {
+	display: none;
+}
+
+/* Encryption lock */
+
+.encryptionLock {
+	order: 0;
+}
+
+.encryptionLock img {
+	height: 11px;
+	opacity: 0.6;
+	margin: 0 0 2px 12px;
+}
+
+/* Replies: a quoted excerpt at the top of the bubble. */
+
+.replyQuote {
+	display: block;
+	margin: 0 0 4px 0;
+	padding: 2px 8px;
+	font-size: 11px;
+	font-style: normal;
+	color: var(--secondary-label);
+	border-left: 2px solid var(--secondary-label);
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
+
+div.line[data-member-type="myself"] .replyQuote {
+	color: var(--on-accent);
+	border-left-color: var(--on-accent);
+	opacity: 0.8;
+}
+
+.replyQuote .replySender {
+	font-weight: 600;
+	margin-right: 0.4em;
+}
+
+/* Reactions: a pill row hanging off the bottom of the bubble. */
+
+.reactions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 3px;
+	position: absolute;
+	bottom: -11px;
+	left: 10px;
+	font-style: normal;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+div.line[data-member-type="myself"] .reactions {
+	left: auto;
+	right: 10px;
+	justify-content: flex-end;
+}
+
+div.line:has(.reactions) {
+	margin-bottom: 13px;
+}
+
+.reaction {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 1px 6px;
+	border-radius: 10px;
+	font-size: 11px;
+	line-height: 16px;
+	color: var(--secondary-label);
+	background: var(--surface-raised);
+	border: 1px solid var(--rule);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.reaction[data-mine="true"] {
+	color: var(--on-accent);
+	background: var(--accent);
+	border-color: transparent;
+}
+
+.reaction .count {
+	font-variant-numeric: tabular-nums;
+}
+
+/* A line flashes when a reply quote scrolled to it. */
+
+@keyframes bubble-flash {
+	0% { box-shadow: 0 0 0 3px var(--accent); }
+	100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+div.line.flash .innerMessage {
+	animation: bubble-flash 1.2s ease-out;
+}
+
+/* Inline media inside the bubble. */
+
+.inlineMediaContainer {
+	display: block;
+}
+
+.inlineImage .content,
+.inlineVideo .content,
+.inlineVideoService .content,
+.inlineHTML .content {
+	display: block;
+	margin: 6px 0 2px 0;
+	max-width: 100%;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.inlineImage img,
+.inlineVideo video {
+	max-width: 100%;
+	display: block;
+}
+
+.inlineImage .closeButton,
+.inlineVideo .closeButton,
+.inlineVideoService .closeButton,
+.inlineHTML .closeButton {
+	cursor: pointer;
+	border-radius: 9px;
+	border: 0;
+	color: var(--secondary-label);
+	background: var(--fill-quiet);
+	display: inline-block;
+	line-height: 18px;
+	font-size: 13px;
+	text-align: center;
+	width: 18px;
+	height: 18px;
+	margin-top: 6px;
+}
+
+/* Event lines: joins, parts, quits, modes, topics and the like are
+ centered captions. */
+
+div.line.event,
+div.line.text.service {
+	padding: 2px 16px;
+}
+
+div.line.event > p,
+div.line.text.service > p {
+	align-items: center;
+	text-align: center;
+}
+
+div.line.event .message,
+div.line.text.service .message {
+	display: block;
+	font-size: 11px;
+	color: var(--secondary-label);
+	max-width: 80%;
+}
+
+div.line.text.service .senderContainer {
+	display: inline;
+	margin: 0;
+	font-size: inherit;
+}
+
+div.line.text.service .innerMessage {
+	display: inline;
+	max-width: none;
+	padding: 0;
+	background: none;
+	color: inherit;
+	box-shadow: none;
+}
+
+div.line.text.service .innerMessage::before,
+div.line.text.service .innerMessage::after {
+	display: none;
+}
+
+div.line.text.service .time,
+div.line.event .time {
+	right: 100%;
+}
+
+div.line.event .sender,
+div.line.event .inlineSender {
+	font-weight: 600;
+	color: inherit !important;
+}
+
+/* Notices from people stay bubbles, marked as notices. */
+
+div.line[data-line-type="notice"]:not(.service) .innerMessage {
+	background: var(--fill-quiet);
+	border: 1px solid var(--rule);
+}
+
+div.line[data-line-type="notice"]:not(.service) .senderContainer::after {
+	content: " · notice";
+	font-weight: 400;
+}
+
+/* Errors and encryption status. */
+
+div.line[data-line-type="off-the-record-encryption-status"] .message,
+div.line[data-line-type="dcc-file-transfer"] .message {
+	color: var(--danger);
+}
+
+/* Server console
+
+ The console is not a conversation: status lines and numerics are
+ printed as plain rows in the secondary colour. */
+
+body[data-view-type="server"] div.line > p {
+	display: block;
+}
+
+body[data-view-type="server"] div.line .message {
+	display: inline;
+	font-size: 12px;
+	max-width: none;
+	color: var(--secondary-label);
+	text-align: left;
+}
+
+body[data-view-type="server"] div.line .time {
+	position: static;
+	transform: none;
+	opacity: 1;
+	margin-right: 6px;
+	pointer-events: auto;
+	font-size: 12px;
+}
+
+body[data-view-type="server"] div.line.text .innerMessage {
+	display: inline;
+	max-width: none;
+	padding: 0;
+	background: none;
+	color: var(--label);
+	box-shadow: none;
+}
+
+body[data-view-type="server"] div.line.text .innerMessage::before,
+body[data-view-type="server"] div.line.text .innerMessage::after {
+	display: none;
+}
+
+body[data-view-type="server"] div.line.text .senderContainer {
+	display: inline;
+	margin: 0 0.4em 0 0;
+	font-size: inherit;
+}
+
+body[data-view-type="server"] div.line > p {
+	text-align: left;
+}
+
+/* MOTD */
+
+body[data-view-type="server"] div.line[data-command="372"] .message,
+body[data-view-type="server"] div.line[data-command="375"] .message,
+body[data-view-type="server"] div.line[data-command="376"] .message,
+body[data-view-type="server"] div.line[data-command="720"] .message,
+body[data-view-type="server"] div.line[data-command="721"] .message,
+body[data-view-type="server"] div.line[data-command="722"] .message {
+	font-family: ui-monospace, "SF Mono", Menlo, monospace;
+	font-size: 11.5px;
+	white-space: pre-wrap;
+}
+
+/* Right-to-left */
+
+body[dir="rtl"] div.line > p {
+	align-items: flex-end;
+}
+
+body[dir="rtl"] div.line.text[data-member-type="myself"] > p {
+	align-items: flex-start;
+}
+
+body[dir="rtl"] div.line .time {
+	right: auto;
+	left: 100%;
+	margin-right: 0;
+	margin-left: 8px;
+}
+
+body[dir="rtl"] div.line.text[data-member-type="myself"] .time {
+	left: auto;
+	right: 100%;
+	margin-left: 0;
+	margin-right: 8px;
+}
+
+body[dir="rtl"] div.line.text .senderContainer {
+	margin: 0 12px 2px 0;
+}
+
+body[dir="rtl"] .replyQuote {
+	border-left: 0;
+	border-right: 2px solid var(--secondary-label);
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+	#body,
+	#topicBar,
+	#loadingScreen,
+	#mark,
+	div.line .time,
+	div.line .innerMessage,
+	div.line.flash .innerMessage {
+		-webkit-transition: none;
+		transition: none;
+		animation: none;
+	}
+
+	.message_buffer_loading_indicator span {
+		animation: none;
+		opacity: 1;
+	}
+}
+
+@media (prefers-contrast: more) {
+	div.line.event .message,
+	div.line.text .senderContainer,
+	.date_indicator > span,
+	.session_indicator > span,
+	.timeSeparator > span {
+		color: var(--label);
+	}
+
+	div.line .time {
+		color: var(--secondary-label);
+	}
+
+	a {
+		text-decoration: underline;
+	}
+}

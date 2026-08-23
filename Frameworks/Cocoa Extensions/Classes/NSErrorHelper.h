@@ -33,9 +33,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NSError (CSErrorHelper)
-- (BOOL)isErrorInDomain:(NSString *)domain;
-- (BOOL)isErrorInDomain:(NSString *)domain code:(NSInteger)code;
-
 @property (readonly) BOOL isURLSessionCancelError;
 @end
 

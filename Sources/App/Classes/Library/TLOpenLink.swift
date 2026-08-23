@@ -39,6 +39,12 @@
 public class OpenLink: NSObject {
 	@objc(open:inBackground:)
 	public static func open(url: URL, inBackground: Bool = TPCPreferences.openBrowserInBackground()) {
+		/* Links come from other people. Opening a file: URL would launch
+		 whatever is at that path with the user's privileges. */
+		if url.isFileURL {
+			return
+		}
+
 		if inBackground {
 			/* User should not be clicking links frequently enough that
 			 we need to worry about making the configuration static. */

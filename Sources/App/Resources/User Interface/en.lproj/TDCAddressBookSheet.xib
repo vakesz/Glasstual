@@ -14,6 +14,7 @@
                 <outlet property="ignoreEntryView" destination="5" id="nse-Nb-KaW"/>
                 <outlet property="ignoreFileTransferRequestsCheck" destination="FDs-Jz-PlJ" id="xHx-kw-Fld"/>
                 <outlet property="ignoreGeneralEventMessagesCheck" destination="ywn-9P-Z6q" id="D3U-RV-9bp"/>
+                <outlet property="ignoreInlineMediaCheck" destination="iMd-ia-Chk" id="iMd-ia-Out"/>
                 <outlet property="ignoreNoticeMessagesCheck" destination="w5b-xP-tx9" id="5tq-MJ-NU6"/>
                 <outlet property="ignorePrivateMessageHighlightsCheck" destination="sz9-Gj-RT4" id="gzf-1U-oMj"/>
                 <outlet property="ignorePrivateMessagesCheck" destination="3jI-d3-bSu" id="dbw-ny-qVf"/>
@@ -289,6 +290,7 @@ DQ
                             <gridRow id="GPA-DF-G0l"/>
                             <gridRow id="5wc-DR-pnU"/>
                             <gridRow id="uuG-cG-S4B"/>
+                            <gridRow id="iMd-ia-Row"/>
                         </rows>
                         <columns>
                             <gridColumn id="RE2-kr-VyN"/>
@@ -362,6 +364,15 @@ DQ
                                 <button key="contentView" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="FDs-Jz-PlJ">
                                     <rect key="frame" x="180" y="-1" width="161" height="18"/>
                                     <buttonCell key="cell" type="check" title="File Transfer Requests" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="9mI-qk-w7S">
+                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                </button>
+                            </gridCell>
+                            <gridCell row="iMd-ia-Row" column="RE2-kr-VyN" id="iMd-ia-Cel">
+                                <button key="contentView" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="iMd-ia-Chk">
+                                    <rect key="frame" x="-2" y="-31" width="110" height="18"/>
+                                    <buttonCell key="cell" type="check" title="Inline Media" bezelStyle="regularSquare" imagePosition="left" inset="2" id="iMd-ia-BCl">
                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                         <font key="font" metaFont="system"/>
                                     </buttonCell>

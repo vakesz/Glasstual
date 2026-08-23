@@ -42,7 +42,6 @@ NS_ASSUME_NONNULL_BEGIN
 @class ICLPayload;
 
 @interface TVCLogController ()
-@property(nonatomic, assign, readwrite, getter=viewIsEncrypted) BOOL encrypted;
 
 - (instancetype)initWithClient:(IRCClient *)client inWindow:(TVCMainWindow *)window NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithChannel:(IRCChannel *)channel inWindow:(TVCMainWindow *)window NS_DESIGNATED_INITIALIZER;
@@ -52,8 +51,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)notifySelectionChanged;
 
 - (void)changeScrollbackLimit;
-
-- (void)clearBackingView;
 
 - (void)reloadTheme;
 
@@ -100,6 +97,23 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)logViewWebViewReceivedDropWithFile:(NSString *)filename;
 
 - (nullable TVCLogLine *)lastLine;
+
+/* The line with the earliest server time the view knows about. */
+- (nullable TVCLogLine *)oldestLine;
+
+/* Inserts lines above everything in the view (chathistory BEFORE). */
+- (void)prependHistoricLogLines:(NSArray<TVCLogLine *> *)logLines;
+
+/* Moves the scrollback mark to sit after the last line at or before the date. */
+- (void)markAtDate:(NSDate *)date;
+
+/* Reactions (+draft/react) received for lines of this view. They are
+ kept for the session and rendered with the line. */
+- (void)noteReaction:(NSString *)emoji
+		   fromNickname:(NSString *)nickname
+	toMessageIdentifier:(NSString *)messageIdentifier;
+- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactionsForMessageIdentifier:
+	(NSString *)messageIdentifier;
 @end
 
 NS_ASSUME_NONNULL_END

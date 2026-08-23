@@ -60,6 +60,9 @@ NS_ASSUME_NONNULL_BEGIN
 	self.textField.stringValue = cellItem.name;
 
 	self.selectedCheckbox.allowsMixedState = isGroupItem;
+
+	/* The checkbox has no visible title; the row's name is its label. */
+	self.selectedCheckbox.accessibilityTitle = cellItem.name;
 }
 
 - (void)selectionCheckboxClicked:(nullable id)sender

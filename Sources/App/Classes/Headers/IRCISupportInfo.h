@@ -78,7 +78,55 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoCaseMapping) {
 @property(readonly, copy, nullable) NSString *networkNameFormatted;
 @property(readonly) IRCISupportInfoCaseMapping caseMapping;
 
-- (instancetype)init NS_UNAVAILABLE;
+/* Tokens below are 0, nil, NO or empty when the server has not advertised them. */
+@property(readonly) NSUInteger maximumLineLength;		// LINELEN (bytes, includes CRLF). 0 = assume 512
+@property(readonly) NSUInteger maximumTargets;			// MAXTARGETS. 0 = no limit advertised
+@property(readonly) NSUInteger maximumSilenceEntries;	// SILENCE=<n>. 0 = no limit advertised
+@property(readonly) NSUInteger chatHistoryMaximumLines; // CHATHISTORY=<n> (or draft/CHATHISTORY). 0 = not advertised
+@property(readonly) BOOL silenceSupported;				// SILENCE
+@property(readonly) BOOL safeListSupported;				// SAFELIST
+@property(readonly) BOOL whoxSupported;					// WHOX
+@property(readonly) BOOL utf8Only;						// UTF8ONLY
+@property(readonly, copy, nullable) NSString *botModeSymbol;							 // BOT=<mode>
+@property(readonly, copy, nullable) NSString *callerIDModeSymbol;						 // CALLERID[=<mode>]
+@property(readonly, copy, nullable) NSString *deafModeSymbol;							 // DEAF[=<mode>]
+@property(readonly, copy, nullable) NSString *extendedBanPrefix;						 // EXTBAN=<prefix>,<types>
+@property(readonly, copy) NSArray<NSString *> *extendedBanTypes;						 // EXTBAN=<prefix>,<types>
+@property(readonly, copy) NSArray<NSString *> *extendedListTokens;						 // ELIST=<tokens> (uppercase)
+@property(readonly, copy) NSArray<NSString *> *clientTagDenyList;						 // CLIENTTAGDENY=<entries>
+@property(readonly, copy) NSDictionary<NSString *, NSNumber *> *channelLimits;			 // CHANLIMIT: prefix -> limit
+@property(readonly, copy) NSDictionary<NSString *, NSNumber *> *maximumListEntries;		 // MAXLIST: mode -> limit
+@property(readonly, copy) NSDictionary<NSString *, NSNumber *> *maximumTargetsByCommand; // TARGMAX
+
+/* Creates an instance that is not attached to a client.
+ Tokens that trigger client side effects (NAMESX, UHNAMES, ...)
+ are parsed but produce no side effects. */
+- (instancetype)init;
+
+/* CHANLIMIT: maximum number of channels with the prefix of channel that
+ the user may join at once. 0 = no limit known. */
+- (NSUInteger)channelLimitForChannelNamed:(NSString *)channel;
+
+/* TARGMAX / MAXTARGETS: maximum number of targets that command (e.g. "PRIVMSG")
+ accepts at once. 0 = no limit known. */
+- (NSUInteger)maximumTargetsForCommand:(NSString *)command;
+
+/* MAXLIST: maximum number of entries the list mode (e.g. "b") can hold. 0 = unknown. */
+- (NSUInteger)maximumListEntriesForModeSymbol:(NSString *)modeSymbol;
+
+/* ELIST: whether the server accepts the given search token (e.g. "U", "M"). */
+- (BOOL)extendedListSupportsToken:(NSString *)token;
+
+/* EXTBAN: localized description of an extended ban mask, or nil when
+ mask is not an extended ban on this server. */
+- (nullable NSString *)descriptionForExtendedBanMask:(NSString *)mask;
+
+/* CLIENTTAGDENY: whether the server will drop the given client-only tag. */
+- (BOOL)isClientTagDenied:(NSString *)tagName;
+
+/* Splits targets into groups no larger than limit. A limit of 0
+ returns every target in its own group (the conservative default). */
++ (NSArray<NSArray<NSString *> *> *)chunkTargets:(NSArray<NSString *> *)targets limit:(NSUInteger)limit;
 
 /* Returns a casefolded copy of string according to the CASEMAPPING
  advertised by the server. Two nicknames (or channel names) are equal

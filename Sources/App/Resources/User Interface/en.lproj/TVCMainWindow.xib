@@ -44,6 +44,8 @@
                                                     <accessibility description="Main Text Field"/>
                                                     <connections>
                                                         <outlet property="contentView" destination="phB-0r-qij" id="q5a-XP-rcM"/>
+                                                        <outlet property="inputBarContainerView" destination="nbK-l5-9k5" id="acc-00-001"/>
+                                                        <outlet property="inputBarTopConstraint" destination="awN-Bn-Ddd" id="acc-00-002"/>
                                                         <outlet property="textViewHeightConstraint" destination="4wi-57-9OA" id="WKH-Kh-F86"/>
                                                         <outlet property="windowContentViewMinimumHeight" destination="XJm-Dd-FjI" id="yUG-1i-yuZ"/>
                                                     </connections>
@@ -236,44 +238,74 @@
                                                             </textFieldCell>
                                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                             <prototypeCellViews>
-                                                                <tableCellView identifier="GroupView" translatesAutoresizingMaskIntoConstraints="NO" id="nyR-GE-ZXL" customClass="TVCMemberListCell">
-                                                                    <rect key="frame" x="0.0" y="0.0" width="150" height="20"/>
+                                                                <tableCellView identifier="MemberView" translatesAutoresizingMaskIntoConstraints="NO" id="nyR-GE-ZXL" customClass="TVCMemberListCell">
+                                                                    <rect key="frame" x="0.0" y="0.0" width="150" height="28"/>
                                                                     <subviews>
-                                                                        <imageView wantsLayer="YES" horizontalHuggingPriority="750" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Lq2-t9-aDp">
-                                                                            <rect key="frame" x="0.0" y="2" width="16" height="16"/>
+                                                                        <imageView horizontalHuggingPriority="750" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="Lq2-t9-aDp" userLabel="Avatar">
+                                                                            <rect key="frame" x="2" y="2" width="24" height="24"/>
                                                                             <constraints>
-                                                                                <constraint firstAttribute="width" secondItem="Lq2-t9-aDp" secondAttribute="height" multiplier="1:1" id="zNU-oK-R37"/>
+                                                                                <constraint firstAttribute="width" constant="24" id="zNU-oK-R37"/>
+                                                                                <constraint firstAttribute="height" constant="24" id="mla-Hg-t24"/>
                                                                             </constraints>
-                                                                            <imageCell key="cell" refusesFirstResponder="YES" alignment="left" id="G8T-wi-HCu"/>
+                                                                            <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="G8T-wi-HCu"/>
                                                                         </imageView>
                                                                         <textField focusRingType="none" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="jld-0X-vn0">
-                                                                            <rect key="frame" x="20" y="2" width="132" height="16"/>
+                                                                            <rect key="frame" x="34" y="6" width="92" height="16"/>
                                                                             <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Label" id="Mby-SL-PEz">
                                                                                 <font key="font" metaFont="cellTitle"/>
                                                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                                             </textFieldCell>
                                                                         </textField>
+                                                                        <imageView horizontalHuggingPriority="750" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mls-St-img" userLabel="Status">
+                                                                            <rect key="frame" x="130" y="6" width="16" height="16"/>
+                                                                            <constraints>
+                                                                                <constraint firstAttribute="width" constant="16" id="mls-St-w16"/>
+                                                                                <constraint firstAttribute="height" constant="16" id="mls-St-h16"/>
+                                                                            </constraints>
+                                                                            <imageCell key="cell" refusesFirstResponder="YES" alignment="center" imageScaling="proportionallyDown" id="mls-St-cel"/>
+                                                                        </imageView>
                                                                     </subviews>
                                                                     <constraints>
-                                                                        <constraint firstItem="jld-0X-vn0" firstAttribute="top" secondItem="nyR-GE-ZXL" secondAttribute="top" constant="2" id="P2i-Rd-QtT"/>
-                                                                        <constraint firstItem="jld-0X-vn0" firstAttribute="leading" secondItem="Lq2-t9-aDp" secondAttribute="trailing" constant="6" id="cd6-99-HOk"/>
-                                                                        <constraint firstItem="Lq2-t9-aDp" firstAttribute="top" secondItem="nyR-GE-ZXL" secondAttribute="top" constant="2" id="fAn-nx-R4H"/>
-                                                                        <constraint firstItem="Lq2-t9-aDp" firstAttribute="leading" secondItem="nyR-GE-ZXL" secondAttribute="leading" id="fBT-mI-gYa"/>
-                                                                        <constraint firstItem="jld-0X-vn0" firstAttribute="centerY" secondItem="nyR-GE-ZXL" secondAttribute="centerY" id="pEP-xB-8EX"/>
+                                                                        <constraint firstItem="Lq2-t9-aDp" firstAttribute="leading" secondItem="nyR-GE-ZXL" secondAttribute="leading" constant="2" id="fBT-mI-gYa"/>
                                                                         <constraint firstItem="Lq2-t9-aDp" firstAttribute="centerY" secondItem="nyR-GE-ZXL" secondAttribute="centerY" id="qS9-DP-CLq"/>
-                                                                        <constraint firstAttribute="trailing" secondItem="jld-0X-vn0" secondAttribute="trailing" id="xer-US-fgj"/>
+                                                                        <constraint firstItem="jld-0X-vn0" firstAttribute="leading" secondItem="Lq2-t9-aDp" secondAttribute="trailing" constant="8" id="cd6-99-HOk"/>
+                                                                        <constraint firstItem="jld-0X-vn0" firstAttribute="centerY" secondItem="nyR-GE-ZXL" secondAttribute="centerY" id="pEP-xB-8EX"/>
+                                                                        <constraint firstItem="mls-St-img" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="jld-0X-vn0" secondAttribute="trailing" constant="4" id="mls-St-gap"/>
+                                                                        <constraint firstAttribute="trailing" secondItem="mls-St-img" secondAttribute="trailing" constant="4" id="mls-St-trl"/>
+                                                                        <constraint firstItem="mls-St-img" firstAttribute="centerY" secondItem="nyR-GE-ZXL" secondAttribute="centerY" id="mls-St-ctY"/>
                                                                     </constraints>
                                                                     <connections>
                                                                         <outlet property="cellTextField" destination="jld-0X-vn0" id="L5s-IO-xaA"/>
                                                                         <outlet property="imageView" destination="Lq2-t9-aDp" id="3RI-Vl-ylD"/>
+                                                                        <outlet property="statusImageView" destination="mls-St-img" id="mls-St-out"/>
+                                                                    </connections>
+                                                                </tableCellView>
+                                                                <tableCellView identifier="HeaderView" translatesAutoresizingMaskIntoConstraints="NO" id="mls-Hd-vw" customClass="TVCMemberListHeaderCell">
+                                                                    <rect key="frame" x="0.0" y="28" width="150" height="22"/>
+                                                                    <subviews>
+                                                                        <textField focusRingType="none" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="mls-Hd-tf">
+                                                                            <rect key="frame" x="2" y="4" width="146" height="14"/>
+                                                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Header" id="mls-Hd-tc">
+                                                                                <font key="font" metaFont="systemBold" size="11"/>
+                                                                                <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                                            </textFieldCell>
+                                                                        </textField>
+                                                                    </subviews>
+                                                                    <constraints>
+                                                                        <constraint firstItem="mls-Hd-tf" firstAttribute="leading" secondItem="mls-Hd-vw" secondAttribute="leading" constant="2" id="mls-Hd-ld"/>
+                                                                        <constraint firstAttribute="trailing" secondItem="mls-Hd-tf" secondAttribute="trailing" constant="2" id="mls-Hd-tr"/>
+                                                                        <constraint firstItem="mls-Hd-tf" firstAttribute="centerY" secondItem="mls-Hd-vw" secondAttribute="centerY" id="mls-Hd-cy"/>
+                                                                    </constraints>
+                                                                    <connections>
+                                                                        <outlet property="textField" destination="mls-Hd-tf" id="mls-Hd-ol"/>
                                                                     </connections>
                                                                 </tableCellView>
                                                             </prototypeCellViews>
                                                         </tableColumn>
                                                     </tableColumns>
                                                     <connections>
-                                                        <binding destination="hdH-wA-Q1P" name="content" keyPath="arrangedObjects" id="kGZ-Mq-rJ7"/>
                                                         <outlet property="contentController" destination="hdH-wA-Q1P" id="ADE-cR-3al"/>
                                                         <outlet property="memberListUserInfoPopover" destination="iYh-l7-KsB" id="vr3-QJ-1MS"/>
                                                     </connections>
@@ -350,15 +382,24 @@
         </window>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customView translatesAutoresizingMaskIntoConstraints="NO" id="Oh2-zJ-yiT" userLabel="User Info Popover View">
-            <rect key="frame" x="0.0" y="0.0" width="358" height="125"/>
+            <rect key="frame" x="0.0" y="0.0" width="358" height="143"/>
             <subviews>
+                <imageView horizontalHuggingPriority="750" verticalHuggingPriority="750" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="mls-Pv-img" userLabel="Avatar">
+                    <rect key="frame" x="15" y="93" width="40" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="40" id="mls-Pv-w40"/>
+                        <constraint firstAttribute="height" constant="40" id="mls-Pv-h40"/>
+                    </constraints>
+                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="mls-Pv-cel"/>
+                </imageView>
                 <gridView xPlacement="fill" yPlacement="fill" rowAlignment="firstBaseline" rowSpacing="3" columnSpacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="ICd-wA-BP1">
-                    <rect key="frame" x="15" y="10" width="328" height="105"/>
+                    <rect key="frame" x="65" y="10" width="278" height="123"/>
                     <rows>
                         <gridRow id="krD-PF-8kY"/>
                         <gridRow id="WIU-yG-MVI"/>
                         <gridRow id="Q7S-fA-zK4"/>
                         <gridRow id="yEF-a5-wiQ"/>
+                        <gridRow id="acc-Rw-001"/>
                         <gridRow id="EmQ-MG-Vbq"/>
                         <gridRow id="V1J-y2-JcM"/>
                     </rows>
@@ -459,6 +500,29 @@
                                 </connections>
                             </textField>
                         </gridCell>
+                        <gridCell row="acc-Rw-001" column="2YH-Ed-b3H" id="acc-Lb-001">
+                            <textField key="contentView" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="acc-Lb-002">
+                                <rect key="frame" x="-2" y="18" width="82" height="15"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Account:" id="acc-Lb-003">
+                                    <font key="font" metaFont="systemBold" size="12"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </gridCell>
+                        <gridCell row="acc-Rw-001" column="rpa-b6-KdN" id="acc-Vl-001">
+                            <textField key="contentView" focusRingType="none" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="acc-Vl-002">
+                                <rect key="frame" x="80" y="18" width="246" height="15"/>
+                                <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="################################" id="acc-Vl-003">
+                                    <font key="font" metaFont="cellTitle"/>
+                                    <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                                <connections>
+                                    <accessibilityConnection property="title" destination="acc-Lb-002" id="acc-Vl-004"/>
+                                </connections>
+                            </textField>
+                        </gridCell>
                         <gridCell row="EmQ-MG-Vbq" column="2YH-Ed-b3H" id="3hx-wt-dlx">
                             <textField key="contentView" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Gg2-7k-P4H">
                                 <rect key="frame" x="-2" y="18" width="82" height="15"/>
@@ -510,7 +574,9 @@
             </subviews>
             <constraints>
                 <constraint firstAttribute="trailing" secondItem="ICd-wA-BP1" secondAttribute="trailing" constant="15" id="9Av-pM-CUr"/>
-                <constraint firstItem="ICd-wA-BP1" firstAttribute="leading" secondItem="Oh2-zJ-yiT" secondAttribute="leading" constant="15" id="ZEs-b0-afv"/>
+                <constraint firstItem="mls-Pv-img" firstAttribute="leading" secondItem="Oh2-zJ-yiT" secondAttribute="leading" constant="15" id="mls-Pv-ld"/>
+                <constraint firstItem="mls-Pv-img" firstAttribute="top" secondItem="Oh2-zJ-yiT" secondAttribute="top" constant="10" id="mls-Pv-top"/>
+                <constraint firstItem="ICd-wA-BP1" firstAttribute="leading" secondItem="mls-Pv-img" secondAttribute="trailing" constant="10" id="ZEs-b0-afv"/>
                 <constraint firstItem="ICd-wA-BP1" firstAttribute="top" secondItem="Oh2-zJ-yiT" secondAttribute="top" constant="10" id="ptT-xX-rbc"/>
                 <constraint firstAttribute="bottom" secondItem="ICd-wA-BP1" secondAttribute="bottom" constant="10" id="yMQ-OZ-wLN"/>
             </constraints>
@@ -519,7 +585,9 @@
         </customView>
         <popover id="iYh-l7-KsB" userLabel="User Info Popover" customClass="TVCMemberListUserInfoPopover">
             <connections>
+                <outlet property="accountField" destination="acc-Vl-002" id="acc-Ou-001"/>
                 <outlet property="addressField" destination="gx5-KC-Pkt" id="sjn-pL-XM1"/>
+                <outlet property="avatarImageView" destination="mls-Pv-img" id="mls-Pv-out"/>
                 <outlet property="awayStatusField" destination="6vR-3K-Yh7" id="1j1-Im-HsZ"/>
                 <outlet property="contentViewController" destination="hJd-My-gQw" id="6X4-yG-whE"/>
                 <outlet property="nicknameField" destination="Blz-Bt-ZsS" id="GjS-bq-zuA"/>
@@ -1796,7 +1864,7 @@
                     </buttonCell>
                     <accessibility description="Begin Setup"/>
                     <connections>
-                        <action selector="showWelcomeSheet:" target="U6M-jc-NbT" id="t5s-aH-Fdt"/>
+                        <action selector="showOnboardingWindow:" target="U6M-jc-NbT" id="t5s-aH-Fdt"/>
                     </connections>
                 </button>
             </subviews>

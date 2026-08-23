@@ -19,36 +19,20 @@
 				<integer>3</integer>
 				<key>value</key>
 				<string>labelColor</string>
-			</dict>			<key>placeholderTextColor</key>
+			</dict>
+			<key>placeholderTextColor</key>
 			<dict>
 				<key>type</key>
 				<integer>3</integer>
 				<key>value</key>
 				<string>placeholderTextColor</string>
-			</dict>			<key>backgroundColor</key>
-			<dict>
-				<key>type</key>
-				<integer>3</integer>
-				<key>value</key>
-				<string>textBackgroundColor</string>
-			</dict>		</dict>
+			</dict>
+		</dict>
 		<key>Background View</key>
 		<dict>
 			<key>contentBorderPadding</key>
 			<integer>23</integer>
-			<key>backgroundColor</key>
-			<dict>
-				<key>type</key>
-				<integer>3</integer>
-				<key>value</key>
-				<string>windowBackgroundColor</string>
-			</dict>			<key>dividerColor</key>
-			<dict>
-				<key>type</key>
-				<integer>3</integer>
-				<key>value</key>
-				<string>separatorColor</string>
-			</dict>		</dict>
+		</dict>
 	</dict>
 </dict>
 </plist>

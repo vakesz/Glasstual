@@ -28,7 +28,7 @@
                             <constraint firstAttribute="width" constant="98" id="3Sc-S8-gQx"/>
                             <constraint firstAttribute="width" secondItem="3" secondAttribute="height" multiplier="1:1" id="kTe-n6-mhN"/>
                         </constraints>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="applicationIcon" id="4"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="NSApplicationIcon" id="4"/>
                         <accessibility description="Logo Image"/>
                     </imageView>
                     <textField focusRingType="none" verticalHuggingPriority="750" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5">
@@ -111,6 +111,6 @@ Gw
         </window>
     </objects>
     <resources>
-        <image name="applicationIcon" width="512" height="512"/>
+        <image name="NSApplicationIcon" width="32" height="32"/>
     </resources>
 </document>

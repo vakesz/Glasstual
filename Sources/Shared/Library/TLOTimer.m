@@ -171,6 +171,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)stopIfNeeded
 {
+	/* A one-shot source is never cancelled by GCD itself. Stop it so
+	 -timerIsActive reports the truth once it has fired. */
+	if (self.repeatTimer == NO) {
+		[self stop];
+
+		return;
+	}
+
 	if (self.iterations > 0 && self.iterations == self.currentIteration) {
 		[self stop];
 	}

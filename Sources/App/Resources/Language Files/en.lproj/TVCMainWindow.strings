@@ -43,24 +43,28 @@
 "p1z-sc" = "Channel Owner";
 "i8t-vb" = "Server Staff Member (IRC Operator)";
 "jkr-ed" = "User is away";
+"b0t-ac" = "User is a bot";
+"b0t-lb" = "bot"; // Member list caption shown after a bot's nickname
+
+/* Member list section headers */
+"mls-sf" = "Server Staff";
+"mls-ow" = "Owners";
+"mls-ad" = "Admins";
+"mls-op" = "Operators";
+"mls-ho" = "Half-Operators";
+"mls-vo" = "Voiced";
+"mls-me" = "Members";
 "gi6-wf" = "User is not away";
+"acc-nl" = "Not logged in";
+"acc-in" = "Logged in as %@";
 
 "d85-9n" = "Information Not Available";
 
+"dcc-ch" = "Direct chat";
+
 "8r3-ih" = "Send message…";
 
-"jqk-ha" = " — ";
-"cyg-g9" = " (%@)";
-"v6i-zb" = " (%@ users)";
-"19v-bc" = "%1$@%2$@ on %3$@";
-"q42-an" = "Disconnected — ";
-"xqd-h9" = "Disconnecting… — ";
-"8eu-c7" = "Connecting… — ";
-"wcb-y8" = "Logging on… — ";
-"s23-zd" = "Reconnecting… — ";
-"3yn-wd" = "Waiting to reconnect… — ";
 "nxz-l9" = " (away)";
-"6wz-pd" = "%1$@ (%2$@)";
 
 "st-dc" = "Disconnected";
 "st-wr" = "Waiting to reconnect";
@@ -79,6 +83,8 @@
 
 /* Toolbar & input bar accessibility */
 "tb-cs" = "Connection Security";
+"tb-sl" = "Toggle Server List";
+"tb-ml" = "Toggle Member List";
 "ib-ad" = "Add Server or Channel";
 "ib-sf" = "Search Channels";
 "ib-st" = "Settings…";
@@ -88,16 +94,23 @@
 "ib-m3" = "Address Book…";
 "ib-m4" = "File Transfers…";
 "ib-m5" = "Hide Member List";
-"ib-mg" = "Manage Selection";
-"ib-ab" = "Address Book";
 
 /* Dynamic View/Window menu titles */
 "mnu-ssl" = "Show Server List";
 "mnu-hsl" = "Hide Server List";
 "mnu-sml" = "Show Member List";
 "mnu-hml" = "Hide Member List";
-"mnu-efs" = "Enter Full Screen";
-"mnu-xfs" = "Exit Full Screen";
 
 /* Dock icon badge shown when the count exceeds what fits in the badge. */
 "dki-bg" = "%@+";
+
+/* Caption of the scrollback mark. Styles may show it next to the mark. */
+"hin-um" = "Unread messages";
+
+/* Input bar: reply banner and typing row. */
+"rpl-to" = "Replying to %@";
+"rpl-an" = "a message";
+"rpl-cl" = "Cancel Reply";
+"typ-1" = "%@ is typing…";
+"typ-2" = "%@ and %@ are typing…";
+"typ-n" = "%@ people are typing…";

@@ -45,6 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, strong, nullable) IRCMessageBatchMessage *parentBatchMessage;
 
 - (void)markAsNotHistoric;
+- (void)markAsHistoric; // Lines replayed by chathistory are history even without @time
 @end
 
 NS_ASSUME_NONNULL_END

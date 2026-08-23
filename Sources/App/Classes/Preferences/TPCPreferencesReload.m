@@ -44,7 +44,6 @@
 #import "IRCChannelPrivate.h"
 #import "IRCCommandIndexPrivate.h"
 #import "IRCWorld.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOInputHistoryPrivate.h"
 #import "TVCDockIconPrivate.h"
 #import "TVCLogControllerPrivate.h"
@@ -144,13 +143,6 @@ NS_ASSUME_NONNULL_BEGIN
 		reloadAction |= TPCPreferencesReloadActionServerListUnreadBadges;
 	}
 
-	/* Sparkle framework update feed URL */
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	if ([keys containsObject:@"ReceiveBetaUpdates"]) {
-		reloadAction |= TPCPreferencesReloadActionSparkleFrameworkFeedURL;
-	}
-#endif
-
 	/* Developer mode */
 	if ([keys containsObject:@"GlasstualDeveloperEnvironment"]) {
 		reloadAction |= TPCPreferencesReloadActionIRCCommandCache;
@@ -169,15 +161,6 @@ NS_ASSUME_NONNULL_BEGIN
 	if ([keys containsObject:@"ChannelViewArrangement"]) {
 		reloadAction |= TPCPreferencesReloadActionChannelViewArrangement;
 	}
-
-	/* Encryption policy */
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	if ([keys containsObject:@"Off-the-Record Messaging -> Enable Encryption"] ||
-		[keys containsObject:@"Off-the-Record Messaging -> Automatically Enable Service"] ||
-		[keys containsObject:@"Off-the-Record Messaging -> Require Encryption"]) {
-		reloadAction |= TPCPreferencesReloadActionEncryptionPolicy;
-	}
-#endif
 
 	/* After this is all complete; we call -preferencesChanged just to take 
 	 care of everything else that does not need specific reloads. */
@@ -313,14 +296,6 @@ NS_ASSUME_NONNULL_BEGIN
 		[mainWindow().inputHistoryManager noteInputHistoryObjectScopeDidChange];
 	}
 
-	/* Sparkle framework update feed URL */
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	if ((reloadAction & TPCPreferencesReloadActionSparkleFrameworkFeedURL) ==
-		TPCPreferencesReloadActionSparkleFrameworkFeedURL) {
-		[masterController() prepareThirdPartyServiceSparkleFramework];
-	}
-#endif
-
 	/* Command index cache */
 	if ((reloadAction & TPCPreferencesReloadActionIRCCommandCache) == TPCPreferencesReloadActionIRCCommandCache) {
 		[IRCCommandIndex invalidateCaches];
@@ -359,16 +334,6 @@ NS_ASSUME_NONNULL_BEGIN
 		TPCPreferencesReloadActionChannelViewArrangement) {
 		[mainWindow() updateChannelViewArrangement];
 	}
-
-	/* Encryption policy */
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	if ((reloadAction & TPCPreferencesReloadActionEncryptionPolicy) == TPCPreferencesReloadActionEncryptionPolicy) {
-		[sharedEncryptionManager() updatePolicy];
-
-		/* Maybe remove title bar accessory view if encryption is disabled. */
-		[mainWindow() updateTitle];
-	}
-#endif
 
 	/* World controller preferences changed call */
 	if ((reloadAction & TPCPreferencesReloadActionPreferencesChanged) == TPCPreferencesReloadActionPreferencesChanged) {

@@ -53,7 +53,6 @@
 #import "TVCMemberList.h"
 #import "TVCMainWindowPrivate.h"
 #import "TVCMainWindowTextView.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TLOpenLink.h"
 #import "TDCAboutDialogPrivate.h"
@@ -70,7 +69,7 @@
 #import "TDCServerChangeNicknameSheetPrivate.h"
 #import "TDCServerHighlightListSheetPrivate.h"
 #import "TDCServerPropertiesSheetPrivate.h"
-#import "TDCWelcomeSheetPrivate.h"
+#import "TDCOnboardingWindowController.h"
 #import "TPCPathInfoPrivate.h"
 #import "TPCPreferencesImportExport.h"
 #import "TPCPreferencesLocalPrivate.h"
@@ -79,10 +78,8 @@
 #import "TXMasterControllerPrivate.h"
 #import "TXWindowControllerPrivate.h"
 #import "TXMenuControllerPrivate.h"
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-#import <Sparkle/Sparkle.h>
-#endif
+#import "TDCReactionPopoverControllerPrivate.h"
+#import "TVCMainWindowTextViewPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -102,12 +99,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) TDCFileTransferDialog *fileTransferController;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *channelViewChannelNameMenu;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *channelViewGeneralMenu;
+@property(nonatomic, strong, nullable) TDCReactionPopoverController *reactionPopover;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *channelViewURLMenu;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *dockMenu;
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-@property(nonatomic, strong, readwrite) IBOutlet NSMenu *encryptionManagerStatusMenu;
-#endif
 
 @property(nonatomic, weak, readwrite) IBOutlet NSMenu *mainMenuNavigationChannelListMenu;
 @property(nonatomic, weak, readwrite) IBOutlet NSMenu *mainMenuChannelMenu;
@@ -115,7 +109,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *mainMenuChannelMenuItem;
 @property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *mainMenuQueryMenuItem;
 @property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *mainMenuServerMenuItem;
-@property(nonatomic, weak, readwrite) IBOutlet NSMenuItem *mainMenuWindowMenuItem;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *mainWindowSegmentedControllerCellMenu;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *serverListNoSelectionMenu;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *userControlMenu;
@@ -167,42 +160,124 @@ NS_ASSUME_NONNULL_BEGIN
  natural size. */
 - (void)applyMenuSymbols
 {
-	NSArray<NSMenu *> *menus = @[
-		[NSApp mainMenu],
-		self.channelViewChannelNameMenu,
-		self.channelViewGeneralMenu,
-		self.channelViewURLMenu,
-		self.dockMenu,
-		self.encryptionManagerStatusMenu,
-		self.mainWindowSegmentedControllerCellMenu,
-		self.serverListNoSelectionMenu,
-		self.userControlMenu
-	];
+	/* Built with -addObject: guarded against nil because an outlet that
+	 failed to connect would otherwise crash the array literal at launch. */
+	NSMutableArray<NSMenu *> *menus = [NSMutableArray array];
 
-	NSImageSymbolConfiguration *configuration =
-		[NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
-														weight:NSFontWeightRegular
-														 scale:NSImageSymbolScaleMedium];
+	void (^addMenu)(NSMenu *_Nullable) = ^(NSMenu *_Nullable menu) {
+		if (menu) {
+			[menus addObject:menu];
+		}
+	};
+
+	addMenu([NSApp mainMenu]);
+	addMenu(self.channelViewChannelNameMenu);
+	addMenu(self.channelViewGeneralMenu);
+	addMenu(self.channelViewURLMenu);
+	addMenu(self.dockMenu);
+	/* The channel and query menus are attached to the menu bar on
+	 demand, so they are not reachable from the main menu here. */
+	addMenu(self.mainMenuChannelMenu);
+	addMenu(self.mainMenuQueryMenu);
+	addMenu(self.mainMenuNavigationChannelListMenu);
+	addMenu(self.mainWindowSegmentedControllerCellMenu);
+	addMenu(self.serverListNoSelectionMenu);
+	addMenu(self.userControlMenu);
 
 	for (NSMenu *menu in menus) {
-		[self _applySymbolConfiguration:configuration toMenu:menu];
+		[self applySymbolsToMenu:menu];
 	}
+}
+
++ (NSImageSymbolConfiguration *)menuSymbolConfiguration
+{
+	return [NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
+														   weight:NSFontWeightRegular
+															scale:NSImageSymbolScaleMedium];
+}
+
+/* One instance so that a menu passed through more than once (copied
+ items end up in the web view's context menu, for example) can tell
+ the spacer apart from a real symbol. */
++ (NSImage *)menuSymbolSpacer
+{
+	static NSImage *spacer = nil;
+
+	static dispatch_once_t onceToken;
+
+	dispatch_once(&onceToken, ^{
+		NSImageSymbolConfiguration *configuration = [[self menuSymbolConfiguration]
+			configurationByApplyingConfiguration:[NSImageSymbolConfiguration
+													 configurationWithPaletteColors:@[ [NSColor clearColor] ]]];
+
+		spacer = [[NSImage imageWithSystemSymbolName:@"circle"
+							accessibilityDescription:nil] imageWithSymbolConfiguration:configuration];
+
+		spacer.template = NO;
+	});
+
+	return spacer;
+}
+
+- (void)applySymbolsToMenu:(nullable NSMenu *)menu
+{
+	[self _applySymbolConfiguration:[self.class menuSymbolConfiguration] toMenu:menu];
 }
 
 - (void)_applySymbolConfiguration:(NSImageSymbolConfiguration *)configuration toMenu:(nullable NSMenu *)menu
 {
+	BOOL hasSymbol = NO;
+
 	for (NSMenuItem *item in menu.itemArray) {
 		NSImage *image = item.image;
 
-		/* Only symbol images carry a configuration; other images
-		 (such as the formatting colour swatches) are left alone. */
-		if (image.symbolConfiguration != nil) {
-			item.image = [image imageWithSymbolConfiguration:configuration];
+		/* Symbols assigned in the nib are named after the system symbol;
+		 other images (such as the formatting colour swatches) are
+		 unnamed and left alone. The image is recreated from the name
+		 because a nib-loaded symbol does not reliably accept a new
+		 configuration. */
+		NSString *symbolName = image.name;
+
+		NSImage *symbol = nil;
+
+		if (image == [self.class menuSymbolSpacer]) {
+			/* Already padded on an earlier pass; the spacer is a named
+			 symbol too and must not be turned into a visible circle. */
+			hasSymbol = YES;
+		} else if (symbolName.length > 0) {
+			symbol = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:item.title];
+		}
+
+		if (symbol != nil) {
+			image = [symbol imageWithSymbolConfiguration:configuration];
+
+			item.image = image;
+
+			hasSymbol = YES;
 		}
 
 		if (item.hasSubmenu) {
 			[self _applySymbolConfiguration:configuration toMenu:item.submenu];
 		}
+	}
+
+	if (hasSymbol == NO) {
+		return;
+	}
+
+	/* AppKit only indents the title of items that have an image, so a menu
+	 that mixes items with and without symbols ends up with ragged titles.
+	 Items without a symbol get an invisible symbol with the same configuration,
+	 which keeps every title in the same column. A blank bitmap is not enough:
+	 macOS 26 treats an image that draws nothing as no image at all. */
+	NSImage *spacer = [self.class menuSymbolSpacer];
+
+	for (NSMenuItem *item in menu.itemArray) {
+		if (item.isSeparatorItem || item.image != nil) {
+			continue;
+		}
+
+		item.image = spacer;
 	}
 }
 
@@ -224,40 +299,12 @@ NS_ASSUME_NONNULL_BEGIN
 		[self resetSelectedItems];
 	}
 
-	/* When the selection changes, menus that may be dynamic are force
+	/* When the selection changes, menus that may be dynamic are
 	 revalidated so that Command I (or other shortcuts) work with channel
 	 selected, but not for the server console. */
-	NSMenuItem *channelMenu = self.mainMenuChannelMenuItem;
+	[self.mainMenuChannelMenuItem.submenu update];
 
-	[self _forceMenuItemValidation:channelMenu];
-
-	NSMenuItem *queryMenu = self.mainMenuQueryMenuItem;
-
-	[self _forceMenuItemValidation:queryMenu];
-}
-
-- (void)_forceMenuValidation:(NSMenu *)menu
-{
-	NSParameterAssert(menu != nil);
-
-	for (NSMenuItem *menuItem in menu.itemArray) {
-		[self _forceMenuItemValidation:menuItem];
-	}
-}
-
-- (void)_forceMenuItemValidation:(NSMenuItem *)menuItem
-{
-	NSParameterAssert(menuItem != nil);
-
-	id target = menuItem.target;
-
-	if (target == nil) {
-		return;
-	}
-
-	if ([target respondsToSelector:@selector(validateMenuItem:)]) {
-		[target performSelector:@selector(validateMenuItem:) withObject:menuItem];
-	}
+	[self.mainMenuQueryMenuItem.submenu update];
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)menuItem
@@ -323,10 +370,9 @@ NS_ASSUME_NONNULL_BEGIN
 	if (validationResult == NO && defaultToNoForSheet) {
 		switch (tag) {
 		case MTMMAppAboutApp:						  // "About Glasstual"
-		case MTMMAppPreferences:					  // "Preferences…"
-		case MTMMAppCheckForUpdates:				  // "Check for updates…"
+		case MTMMAppPreferences:					  // "Settings…"
 		case MTMMHelpAdvancedMenuEnableDeveloperMode: // "Enable Developer Mode"
-		case MTMMHelpAdvancedMenuHiddenPreferences:	  // "Hidden Preferences…"
+		case MTMMHelpAdvancedMenuHiddenPreferences:	  // "Hidden Settings…"
 		case MTMMFileDisableAllNotifications:		  // "Disable All Notifications"
 		case MTMMFileDisableAllNotificationSounds:	  // "Disable All Notification Sounds"
 		case MTDockMenuDisableAllNotifications:		  // "Disable All Notifications"
@@ -351,11 +397,11 @@ NS_ASSUME_NONNULL_BEGIN
 		case MTMMFilePrint:							// "Print"
 		case MTMMFileCloseWindow:					// "Close Window"
 		case MTMMEditPaste:							// "Paste"
-		case MTMMViewToggleFullscreen:				// "Toggle Fullscreen"
 		case MTMMWindowMainWindow:					// "Main Window"
 		case MTMMHelpAcknowledgements:				// "Acknowledgements"
 		case MTMMHelpAdvancedMenu:					// "Advanced"
 		case MTMMHelpAdvancedMenuExportPreferences: // "Export Preferences"
+		case MTMMHelpWelcomeWindow:					// "Welcome to Glasstual…"
 		{
 			validationResult = YES;
 
@@ -396,7 +442,7 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 	case MTMainMenuQuery: // "Query"
 	{
-		BOOL isQuery = (c.isPrivateMessage || c.isUtility);
+		BOOL isQuery = (c.isPrivateMessage || c.isUtility || c.isDirectChat);
 
 		menuItem.hidden = (isQuery == NO);
 
@@ -405,15 +451,6 @@ NS_ASSUME_NONNULL_BEGIN
 		} else {
 			menuItem.submenu = nil;
 		}
-
-		return YES;
-	}
-
-	case MTMMAppCheckForUpdates: // "Check for Updates"
-	{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 0
-		menuItem.hidden = YES;
-#endif
 
 		return YES;
 	}
@@ -448,7 +485,7 @@ NS_ASSUME_NONNULL_BEGIN
 				}
 			} else if (c.isPrivateMessage) {
 				menuItem.title = TXTLS(@"BasicLanguage[hri-l0]");
-			} else if (c.isUtility) {
+			} else if (c.isUtility || c.isDirectChat) {
 				menuItem.title = TXTLS(@"BasicLanguage[hri-l0]");
 			}
 
@@ -509,21 +546,6 @@ NS_ASSUME_NONNULL_BEGIN
 	{
 		return (self.selectedViewController != nil);
 	}
-	case MTMMViewToggleFullscreen: {
-		NSWindow *keyWindow = [NSApp keyWindow];
-
-		BOOL inFullscreen = ((keyWindow.styleMask & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen);
-
-		menuItem.title = (inFullscreen ? TXTLS(@"TVCMainWindow[mnu-xfs]") : TXTLS(@"TVCMainWindow[mnu-efs]"));
-
-		NSWindowCollectionBehavior collectionBehavior = keyWindow.collectionBehavior;
-
-		return ((collectionBehavior & NSWindowCollectionBehaviorFullScreenAuxiliary) ==
-					NSWindowCollectionBehaviorFullScreenAuxiliary ||
-				(collectionBehavior & NSWindowCollectionBehaviorFullScreenPrimary) ==
-					NSWindowCollectionBehaviorFullScreenPrimary);
-	}
-
 	case MTMMServerConnect: // "Connect"
 	{
 		if (u == nil) {
@@ -937,31 +959,6 @@ NS_ASSUME_NONNULL_BEGIN
 		return (u.isLoggedIn && c.isUtility == NO);
 	}
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	case MTOTRStatusButtonStartPrivateConversation:
-	case MTOTRStatusButtonRefreshPrivateConversation:
-	case MTOTRStatusButtonEndPrivateConversation:
-	case MTOTRStatusButtonAuthenticateChatPartner:
-	case MTOTRStatusButtonViewListOfFingerprints: {
-		/* Even if we are not logged in, we still ask the encryption manager
-			 to validate the menu item first so that it can hide specific menu items.
-			 After it has done that, then we can disable if not logged in. */
-		if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-			return NO;
-		}
-
-		if (u.isLoggedIn == NO) {
-			return NO;
-		}
-
-		BOOL valid = [sharedEncryptionManager() validateMenuItem:menuItem
-													 withStateOf:[u encryptionAccountNameForUser:c.name]
-															from:[u encryptionAccountNameForLocalUser]];
-
-		return valid;
-	}
-#endif
-
 	case MTWKGeneralSearchWithGoogle: // "Search With Google"
 	{
 		TVCLogView *webView = self.selectedViewControllerBackingView;
@@ -1049,6 +1046,13 @@ NS_ASSUME_NONNULL_BEGIN
 	case MTMainWindowSegmentedControllerAddChannel: // "Add Channel…"
 	{
 		return (u != nil);
+	}
+
+	case MTWKGeneralReply: // "Reply"
+	case MTWKGeneralReact: // "React"
+	{
+		return (u != nil && c != nil && c.isUtility == NO &&
+				[u isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags]);
 	}
 
 	default: {
@@ -1352,6 +1356,159 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 #pragma mark -
+#pragma mark Replies and Reactions
+
+static NSString *_Nonnull const _reactionEmoji[] = {@"👍", @"❤️", @"😂", @"😮", @"😢", @"👎"};
+
+- (NSArray<NSMenuItem *> *)messageReplyMenuItemsForMessageIdentifier:(NSString *)messageIdentifier
+															nickname:(nullable NSString *)nickname
+															 excerpt:(nullable NSString *)excerpt
+{
+	NSParameterAssert(messageIdentifier != nil);
+
+	NSMutableDictionary<NSString *, NSString *> *context = [NSMutableDictionary dictionary];
+
+	context[@"messageIdentifier"] = messageIdentifier;
+
+	if (nickname) {
+		context[@"nickname"] = nickname;
+	}
+
+	if (excerpt) {
+		context[@"excerpt"] = excerpt;
+	}
+
+	NSMenuItem *separator = [NSMenuItem separatorItem];
+
+	separator.tag = MTWKGeneralReplySeparator;
+
+	NSMenuItem *reply = [NSMenuItem menuItemWithTitle:TXTLS(@"TXMenuController[rpl-to]")
+											   target:self
+											   action:@selector(replyToMessage:)];
+
+	reply.tag = MTWKGeneralReply;
+	reply.representedObject = [context copy];
+	reply.image = [NSImage imageWithSystemSymbolName:@"arrowshape.turn.up.left" accessibilityDescription:reply.title];
+
+	NSMenuItem *react = [[NSMenuItem alloc] initWithTitle:TXTLS(@"TXMenuController[rct-to]")
+												   action:nil
+											keyEquivalent:@""];
+
+	react.tag = MTWKGeneralReact;
+	react.image = [NSImage imageWithSystemSymbolName:@"face.smiling" accessibilityDescription:react.title];
+
+	NSMenu *reactMenu = [[NSMenu alloc] initWithTitle:react.title];
+
+	for (NSUInteger i = 0; i < (sizeof(_reactionEmoji) / sizeof(_reactionEmoji[0])); i++) {
+		NSString *emoji = _reactionEmoji[i];
+
+		NSMenuItem *item = [NSMenuItem menuItemWithTitle:emoji target:self action:@selector(reactToMessage:)];
+
+		NSMutableDictionary *itemContext = [context mutableCopy];
+
+		itemContext[@"emoji"] = emoji;
+
+		item.tag = MTWKGeneralReact;
+		item.representedObject = [itemContext copy];
+
+		[reactMenu addItem:item];
+	}
+
+	[reactMenu addItem:[NSMenuItem separatorItem]];
+
+	NSMenuItem *other = [NSMenuItem menuItemWithTitle:TXTLS(@"TXMenuController[rct-ot]")
+											   target:self
+											   action:@selector(reactToMessageWithOtherEmoji:)];
+
+	other.tag = MTWKGeneralReact;
+	other.representedObject = [context copy];
+
+	[reactMenu addItem:other];
+
+	react.submenu = reactMenu;
+
+	return @[ separator, reply, react ];
+}
+
+- (void)replyToMessage:(nullable id)sender
+{
+	NSDictionary *context = ((NSMenuItem *)sender).representedObject;
+
+	NSString *messageIdentifier = context[@"messageIdentifier"];
+
+	if (messageIdentifier.length == 0) {
+		return;
+	}
+
+	[mainWindow().inputTextField beginReplyToMessageIdentifier:messageIdentifier
+													  nickname:context[@"nickname"]
+													   excerpt:context[@"excerpt"]];
+}
+
+- (void)reactToMessage:(nullable id)sender
+{
+	NSDictionary *context = ((NSMenuItem *)sender).representedObject;
+
+	[self sendReaction:context[@"emoji"] toMessageIdentifier:context[@"messageIdentifier"]];
+}
+
+- (void)sendReaction:(nullable NSString *)emoji toMessageIdentifier:(nullable NSString *)messageIdentifier
+{
+	if (emoji.length == 0 || messageIdentifier.length == 0) {
+		return;
+	}
+
+	IRCClient *u = mainWindow().selectedClient;
+	IRCChannel *c = mainWindow().selectedChannel;
+
+	if (u == nil || c == nil) {
+		return;
+	}
+
+	[u sendReaction:emoji toMessageIdentifier:messageIdentifier inChannel:c];
+}
+
+/* "Other…" presents a small popover with one field for the emoji. The
+ field is focused so the Character Palette goes straight into it. */
+- (void)reactToMessageWithOtherEmoji:(nullable id)sender
+{
+	NSDictionary *context = ((NSMenuItem *)sender).representedObject;
+
+	NSString *messageIdentifier = context[@"messageIdentifier"];
+
+	if (messageIdentifier.length == 0) {
+		return;
+	}
+
+	TVCLogView *webView = self.selectedViewControllerBackingView;
+
+	NSView *anchorView = webView.webView;
+
+	if (anchorView == nil) {
+		return;
+	}
+
+	TDCReactionPopoverController *popover =
+		[[TDCReactionPopoverController alloc] initWithMessageIdentifier:messageIdentifier];
+
+	__weak TXMenuController *weakSelf = self;
+
+	popover.completionBlock = ^(NSString *emoji, NSString *identifier) {
+		[weakSelf sendReaction:emoji toMessageIdentifier:identifier];
+	};
+
+	NSPoint mouseLocation = [anchorView.window convertPointFromScreen:[NSEvent mouseLocation]];
+
+	NSPoint viewLocation = [anchorView convertPoint:mouseLocation fromView:nil];
+
+	NSRect anchorRect = NSMakeRect(viewLocation.x, viewLocation.y, 1.0, 1.0);
+
+	[popover presentRelativeToRect:anchorRect ofView:anchorView];
+
+	self.reactionPopover = popover;
+}
+
+#pragma mark -
 #pragma mark Backing View
 
 - (void)copyLogAsHtml:(nullable id)sender
@@ -1609,18 +1766,23 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	BOOL result = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[etl-ss]")
-											title:TXTLS(@"Prompts[0kz-wd]")
-									defaultButton:TXTLS(@"Prompts[mvh-ms]")
-								  alternateButton:TXTLS(@"Prompts[99q-gg]")];
+	[TDCAlert alertWithMessage:TXTLS(@"Prompts[etl-ss]")
+						 title:TXTLS(@"Prompts[0kz-wd]")
+				 defaultButton:TXTLS(@"Prompts[mvh-ms]")
+			   alternateButton:TXTLS(@"Prompts[99q-gg]")
+			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
+				   if (buttonClicked != TDCAlertResponseDefault) {
+					   return;
+				   }
 
-	if (result == NO) {
-		return;
-	}
+				   if (u.isConnecting || u.isConnected) {
+					   return;
+				   }
 
-	[worldController() destroyClient:u];
+				   [worldController() destroyClient:u];
 
-	[worldController() save];
+				   [worldController() save];
+			   }];
 }
 
 #pragma mark -
@@ -1688,22 +1850,29 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	if (c.isChannel) {
-		BOOL result = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[516-ms]")
-												title:TXTLS(@"Prompts[i8o-7z]")
-										defaultButton:TXTLS(@"Prompts[mvh-ms]")
-									  alternateButton:TXTLS(@"Prompts[99q-gg]")
-									   suppressionKey:@"delete_channel"
-									  suppressionText:nil];
+	if (c.isChannel == NO) {
+		[worldController() destroyChannel:c];
 
-		if (result == NO) {
-			return;
-		}
+		[worldController() save];
+
+		return;
 	}
 
-	[worldController() destroyChannel:c];
+	[TDCAlert alertWithMessage:TXTLS(@"Prompts[516-ms]")
+						 title:TXTLS(@"Prompts[i8o-7z]")
+				 defaultButton:TXTLS(@"Prompts[mvh-ms]")
+			   alternateButton:TXTLS(@"Prompts[99q-gg]")
+				suppressionKey:@"delete_channel"
+			   suppressionText:nil
+			   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
+				   if (buttonClicked != TDCAlertResponseDefault) {
+					   return;
+				   }
 
-	[worldController() save];
+				   [worldController() destroyChannel:c];
+
+				   [worldController() save];
+			   }];
 }
 
 - (void)copyUniqueIdentifier:(nullable id)sender
@@ -1746,12 +1915,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSImage *image = [NSImage imageWithSystemSymbolName:@"square.and.arrow.up" accessibilityDescription:title];
 
-	NSImageSymbolConfiguration *configuration =
-		[NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
-														weight:NSFontWeightRegular
-														 scale:NSImageSymbolScaleMedium];
-
-	menuItem.image = [image imageWithSymbolConfiguration:configuration];
+	menuItem.image = [image imageWithSymbolConfiguration:[self.class menuSymbolConfiguration]];
 
 	return menuItem;
 }
@@ -2447,10 +2611,10 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[f05-hu]")
-							  title:TXTLS(@"Prompts[k55-19]")
-					  defaultButton:TXTLS(@"Prompts[c7s-dq]")
-					alternateButton:nil];
+	[TDCAlert alertWithMessage:TXTLS(@"Prompts[f05-hu]")
+						 title:TXTLS(@"Prompts[k55-19]")
+				 defaultButton:TXTLS(@"Prompts[c7s-dq]")
+			   alternateButton:nil];
 }
 
 - (void)openChannelLogs:(nullable id)sender
@@ -2474,10 +2638,10 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	[TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[f05-hu]")
-							  title:TXTLS(@"Prompts[k55-19]")
-					  defaultButton:TXTLS(@"Prompts[c7s-dq]")
-					alternateButton:nil];
+	[TDCAlert alertWithMessage:TXTLS(@"Prompts[f05-hu]")
+						 title:TXTLS(@"Prompts[k55-19]")
+				 defaultButton:TXTLS(@"Prompts[c7s-dq]")
+			   alternateButton:nil];
 }
 
 #pragma mark -
@@ -2500,7 +2664,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)contactSupport:(nullable id)sender
 {
-	[TLOpenLink openWithString:@"https://contact.codeux.com/" inBackground:NO];
+	[TLOpenLink openWithString:@"https://github.com/vakesz/Glasstual/issues" inBackground:NO];
 }
 
 - (void)connectToGlasstualHelpChannel:(nullable id)sender
@@ -2700,11 +2864,6 @@ NS_ASSUME_NONNULL_BEGIN
 	[mainWindow() exactlyCenterWindow];
 }
 
-- (void)toggleFullscreen:(nullable id)sender
-{
-	[[NSApp keyWindow] toggleFullScreen:sender];
-}
-
 - (void)resetMainWindowFrame:(nullable id)sender
 {
 	if (mainWindow().inFullscreenMode) {
@@ -2761,72 +2920,6 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[TPCPreferencesImportExport exportInWindow:mainWindow()];
 }
-
-#pragma mark -
-#pragma mark Off-the-Record Messaging
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-#define _encryptionNotEnabled ([TPCPreferences textEncryptionIsEnabled] == NO)
-
-- (void)encryptionStartPrivateConversation:(nullable id)sender
-{
-	IRCClient *u = self.selectedClient;
-	IRCChannel *c = self.selectedChannel;
-
-	if (_encryptionNotEnabled || u == nil || c == nil || u.isLoggedIn == NO || c.isPrivateMessage == NO) {
-		return;
-	}
-
-	[sharedEncryptionManager() beginConversationWith:[u encryptionAccountNameForUser:c.name]
-												from:[u encryptionAccountNameForLocalUser]];
-}
-
-- (void)encryptionRefreshPrivateConversation:(nullable id)sender
-{
-	IRCClient *u = self.selectedClient;
-	IRCChannel *c = self.selectedChannel;
-
-	if (_encryptionNotEnabled || u == nil || c == nil || u.isLoggedIn == NO || c.isPrivateMessage == NO) {
-		return;
-	}
-
-	[sharedEncryptionManager() refreshConversationWith:[u encryptionAccountNameForUser:c.name]
-												  from:[u encryptionAccountNameForLocalUser]];
-}
-
-- (void)encryptionEndPrivateConversation:(nullable id)sender
-{
-	IRCClient *u = self.selectedClient;
-	IRCChannel *c = self.selectedChannel;
-
-	if (_encryptionNotEnabled || u == nil || c == nil || u.isLoggedIn == NO || c.isPrivateMessage == NO) {
-		return;
-	}
-
-	[sharedEncryptionManager() endConversationWith:[u encryptionAccountNameForUser:c.name]
-											  from:[u encryptionAccountNameForLocalUser]];
-}
-
-- (void)encryptionAuthenticateChatPartner:(nullable id)sender
-{
-	IRCClient *u = self.selectedClient;
-	IRCChannel *c = self.selectedChannel;
-
-	if (_encryptionNotEnabled || u == nil || c == nil || u.isLoggedIn == NO || c.isPrivateMessage == NO) {
-		return;
-	}
-
-	[sharedEncryptionManager() authenticateUser:[u encryptionAccountNameForUser:c.name]
-										   from:[u encryptionAccountNameForLocalUser]];
-}
-
-- (void)encryptionListFingerprints:(nullable id)sender
-{
-	[sharedEncryptionManager() presentListOfFingerprints];
-}
-
-#undef _encryptionNotEnabled
-#endif
 
 #pragma mark -
 #pragma mark Notifications
@@ -2952,18 +3045,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 		[RZUserDefaults() setBool:NO forKey:key];
 	}
-}
-
-#pragma mark -
-#pragma mark Sparkle Framework
-
-- (void)checkForUpdates:(nullable id)sender
-{
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	SPUStandardUpdaterController *controller = masterController().updateController;
-
-	[controller checkForUpdates:sender];
-#endif
 }
 
 #pragma mark -
@@ -3333,35 +3414,24 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 #pragma mark -
-#pragma mark Welcome Sheet
+#pragma mark Onboarding Window
 
-- (void)showWelcomeSheet:(nullable id)sender
+- (void)showOnboardingWindow:(nullable id)sender
 {
+	_popWindowViewIfExists(@"TDCOnboardingWindowController");
+
 	[windowController() popMainWindowSheetIfExists];
 
-	TDCWelcomeSheet *sheet = [[TDCWelcomeSheet alloc] initWithWindow:mainWindow()];
+	TDCOnboardingWindowController *onboarding = [TDCOnboardingWindowController new];
 
-	sheet.delegate = (id)self;
+	onboarding.delegate = (id)self;
 
-	[sheet start];
+	[onboarding show];
 
-	[windowController() addWindowToWindowList:sheet];
+	[windowController() addWindowToWindowList:onboarding];
 }
 
-- (void)welcomeSheet:(TDCWelcomeSheet *)sender onOk:(IRCClientConfig *)config
-{
-	IRCClient *u = [worldController() createClientWithConfig:config reload:YES];
-
-	[mainWindow() expandClient:u];
-
-	[worldController() save];
-
-	[u connect];
-
-	[u selectFirstChannelInChannelList];
-}
-
-- (void)welcomeSheetWillClose:(TDCWelcomeSheet *)sender
+- (void)onboardingWindowControllerWillClose:(TDCOnboardingWindowController *)sender
 {
 	[windowController() removeWindowFromWindowList:sender];
 }
@@ -3730,9 +3800,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TXMenuControllerMainWindowProxy
 
-- (void)showWelcomeSheet:(nullable id)sender
+- (void)showOnboardingWindow:(nullable id)sender
 {
-	[menuController() showWelcomeSheet:sender];
+	[menuController() showOnboardingWindow:sender];
 }
 
 @end

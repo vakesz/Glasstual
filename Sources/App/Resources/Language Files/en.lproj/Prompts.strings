@@ -41,14 +41,8 @@
 "qso-2g" = "Cancel";
 "c7s-dq" = "OK";
 "xne-79" = "Select";
-"ce6-o1" = "Choose";
 "aqw-q1" = "Close";
 "qpv-go" = "Accept";
-"0sy-uc" = "Deny";
-"u09-hg" = "Trust";
-"tlp-8e" = "Delete";
-"71s-kb" = "Open";
-"ece-dd" = "Remind Me Later";
 
 "68u-z9" = "Do not show this message again";
 
@@ -88,18 +82,6 @@ Do you want to add these channels to that connection or would you rather create 
 "xkj-nw" = "Turn On";
 "x3e-ur" = "Open System Settings";
 
-"9mb-o5" = "An update is available for these addons: %@";
-"x4w-is" = "Would you like to open the “Glasstual Extras” installer to perform an update?";
-"ioq-nf" = "Open Installer";
-
-"ins-op" = "An update is required for these addons: %@";
-"34o-pk" = "These addons will not be available for use until they are updated.
-
-Would you like to open the “Glasstual Extras” installer to perform an update?";
-"hd0-bf" = "Remind Me Next Launch";
-"467-5l" = "Open Installer";
-"h78-9e" = "View Files";
-
 "af6-45" = "The version of Glasstual that you are using is no longer compatible with these addons: %@";
 "45a-df" = "Please contact the developer of each addon to receive information on updating.
 
@@ -107,9 +89,25 @@ If you are the developer of one of these addons: In the Info.plist file of your 
 "324-5d" = "Remind Me Next Launch";
 "0ik-o9" = "View Files";
 
-"o9p-4n" = "The “Glasstual Extras” package must be installed to perform the command “%@”";
-"bpb-vv" = "Would you like to open the installer?";
-"6lr-02" = "Open Installer";
+"pq7-2k" = "Load the plugin “%@”?";
+"b4n-8z" = "The plugin “%1$@” has not been loaded before.
+
+Bundle identifier: %2$@
+Team ID: %3$@
+Location: %4$@
+
+Plugins run with the same access as Glasstual itself. Only load plugins from developers you trust. This choice is remembered until the plugin is signed by a different Team ID or the approvals are reset in Settings > Addons.";
+"w2d-5h" = "Load";
+"r9x-3m" = "Don’t Load";
+
+"j6c-1v" = "Glasstual refused to load these addons: %@";
+"t8y-4p" = "Plugins installed outside of Glasstual must be signed with a valid Developer ID or Apple-issued certificate. The listed addons are unsigned, ad-hoc signed, or their signature is damaged, so they were not loaded.
+
+Contact the developer of each addon for a signed copy.";
+"u5k-9n" = "OK";
+
+"zp3-7r" = "Plugin approvals have been reset";
+"h7m-2q" = "Glasstual will ask again before loading each plugin the next time it launches.";
 
 "2ul-cl" = "You have clicked on a link that will open the application “%@”";
 "5oq-vv" = "Are you sure you want to open “%@” with this application?";
@@ -162,10 +160,16 @@ Create this folder if it does not exist.";
 "b7o-v4" = "Glasstual is unable to access the folder that's configured for your log location because the resource is 'stale'";
 "atn-1c" = "Navigate to Preferences \U279C Advanced \U279C Log Location to repair this preference";
 
-"h99-3q" = "The process responsible for managing scrollback is not working correctly. Please report this problem to support@codeux.com";
+"h99-3q" = "The process responsible for managing scrollback is not working correctly. Please report this problem at https://github.com/vakesz/Glasstual/issues";
 "nlz-um" = "Last known error message: %@";
 
 "d22-76" = "A query named “%@“ already exists. Do you want to delete this query?";
+
+/* Direct chat (DCC CHAT) request */
+"dcc-c2" = "%@ wants to start a direct chat with you. A direct chat is a connection between the two of you that does not go through the IRC server, so the other person will learn your IP address.";
+"dcc-c3" = "Direct chat request from %@";
+"dcc-c4" = "Accept";
+"dcc-c5" = "Decline";
 "61s-jc" = "There is no undo and all data related to this query, except for logs, will be erased.";
 
 "bi7-ah" = "Logging has been disabled because there is not enough space on your Mac";
@@ -180,6 +184,10 @@ Create this folder if it does not exist.";
 
 Information encrypted using: %2$@";
 
+"k3t-vq" = "
+
+The certificate was not trusted by the system: %@";
+
 "2jq-t5" = "%1$@ with the cipher suite: %2$@";
 "8ou-pu" = "%1$@ with the cipher suite: %2$@ (deprecated)";
 
@@ -187,8 +195,7 @@ Information encrypted using: %2$@";
 "kig-m1" = "Disable WebKit2 or upgrade to a newer version of macOS.";
 
 "ios-na" = "Glasstual has copied the following content to a new location your Mac:";
-"qy4-5o" = "Caches, custom addons, custom styles, encryption keys, preferences, and scrollback history.
+"qy4-5o" = "Caches, custom addons, custom styles, preferences, and scrollback history.
 
 Would you like to clear up disk space by removing this content from the old location?";
 "q3t-45" = "I would like to remove the old content";
-"d90-au" = "Learn More";

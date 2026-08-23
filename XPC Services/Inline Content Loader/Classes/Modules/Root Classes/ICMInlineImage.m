@@ -89,6 +89,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSURL *url = [ICLHelpers URLWithString:address];
 
+	/* NSParameterAssert is compiled out in Release; an address that
+	 does not parse must not reach the loader. */
+	if (url == nil) {
+		[self cancel];
+
+		return;
+	}
+
 	[self performActionForURL:url bypassImageCheck:bypassImageCheck];
 }
 
@@ -177,36 +185,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 		[moduleTyped performActionForAddress:address bypassImageCheck:bypassImageCheck];
 	} copy];
-}
-
-#pragma mark -
-#pragma mark Utilities
-
-+ (NSArray<NSString *> *)validImageContentTypes
-{
-	static NSArray<NSString *> *cachedValue = nil;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		cachedValue =
-			@[ @"image/gif", @"image/jpeg", @"image/png", @"image/svg+xml", @"image/tiff", @"image/x-ms-bmp" ];
-	});
-
-	return cachedValue;
-}
-
-+ (NSArray<NSString *> *)validVideoContentTypes
-{
-	static NSArray<NSString *> *cachedValue = nil;
-
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		cachedValue = @[ @"video/3gpp", @"video/3gpp2", @"video/mp4", @"video/quicktime", @"video/x-m4v" ];
-	});
-
-	return cachedValue;
 }
 
 @end

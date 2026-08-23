@@ -46,7 +46,7 @@
 #import "IRCUserPrivate.h"
 #import "IRCWorld.h"
 #import "TPCPreferencesLocal.h"
-#import "TVCMemberList.h"
+#import "TVCMemberListPrivate.h"
 #import "TVCMainWindow.h"
 #import "TXMasterController.h"
 
@@ -402,7 +402,7 @@ static char IRCChannelMemberListQueueKey;
 
 			[controller insertObject:member2 atArrangedObjectIndex:newIndex];
 		} else {
-			[mainWindowMemberList() refreshDrawingForRow:newIndex];
+			[mainWindowMemberList() refreshDrawingForRow:[mainWindowMemberList() rowForMemberAtIndex:newIndex]];
 		}
 
 		[mainWindowMemberList() endUpdates];
@@ -416,7 +416,7 @@ static char IRCChannelMemberListQueueKey;
 
 - (void)replaceMember:(IRCChannelUser *)member1 withMember:(IRCChannelUser *)member2 resort:(BOOL)resort
 {
-	[self replaceMember:member1 withMember:member2 resort:YES replaceInAllChannels:NO];
+	[self replaceMember:member1 withMember:member2 resort:resort replaceInAllChannels:NO];
 }
 
 - (void)replaceMember:(IRCChannelUser *)member1

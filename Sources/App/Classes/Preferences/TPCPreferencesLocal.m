@@ -179,39 +179,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 	return [RZUserDefaults() boolForKey:@"ApplyCommandToAllConnections -> clearall"];
 }
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-+ (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
-{
-	[RZUserDefaults() setBool:textEncryptionIsOpportunistic
-					   forKey:@"Off-the-Record Messaging -> Automatically Enable Service"];
-}
-
-+ (BOOL)textEncryptionIsOpportunistic
-{
-	return [RZUserDefaults() boolForKey:@"Off-the-Record Messaging -> Automatically Enable Service"];
-}
-
-+ (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired
-{
-	[RZUserDefaults() setBool:textEncryptionIsRequired forKey:@"Off-the-Record Messaging -> Require Encryption"];
-}
-
-+ (BOOL)textEncryptionIsRequired
-{
-	return [RZUserDefaults() boolForKey:@"Off-the-Record Messaging -> Require Encryption"];
-}
-
-+ (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled
-{
-	[RZUserDefaults() setBool:textEncryptionIsEnabled forKey:@"Off-the-Record Messaging -> Enable Encryption"];
-}
-
-+ (BOOL)textEncryptionIsEnabled
-{
-	return [RZUserDefaults() boolForKey:@"Off-the-Record Messaging -> Enable Encryption"];
-}
-#endif
-
 + (BOOL)enableEchoMessageCapability
 {
 	//	return [RZUserDefaults() boolForKey:@"IRC -> Enable echo-message Capability"];
@@ -379,6 +346,11 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 	return [RZUserDefaults() boolForKey:@"OpenClickedLinksInBackgroundBrowser"];
 }
 
++ (BOOL)sendTypingNotifications
+{
+	return [RZUserDefaults() boolForKey:@"SendTypingNotifications"];
+}
+
 + (BOOL)showDateChanges
 {
 	return [RZUserDefaults() boolForKey:@"DisplayEventInLogView -> Date Changes"];
@@ -509,16 +481,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 }
 
 #pragma mark -
-#pragma mark Updates
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-+ (BOOL)receiveBetaUpdates
-{
-	return [RZUserDefaults() boolForKey:@"ReceiveBetaUpdates"];
-}
-#endif
-
-#pragma mark -
 #pragma mark Developer Mode
 
 + (void)setDeveloperModeEnabled:(BOOL)developerModeEnabled
@@ -532,6 +494,19 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 }
 
 #pragma mark -
+#pragma mark Onboarding
+
++ (void)setOnboardingCompleted:(BOOL)onboardingCompleted
+{
+	[RZUserDefaults() setBool:onboardingCompleted forKey:@"Onboarding -> Completed"];
+}
+
++ (BOOL)onboardingCompleted
+{
+	return [RZUserDefaults() boolForKey:@"Onboarding -> Completed"];
+}
+
+#pragma mark -
 #pragma mark Theme
 
 + (void)setAppearance:(TXPreferredAppearance)appearance
@@ -542,11 +517,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 + (TXPreferredAppearance)appearance
 {
 	return (TXPreferredAppearance)[RZUserDefaults() unsignedIntegerForKey:@"Appearance"];
-}
-
-+ (BOOL)invertSidebarColors
-{
-	return [RZUserDefaults() boolForKey:@"InvertSidebarColors"];
 }
 
 + (NSString *)themeNameDefault
@@ -1151,109 +1121,6 @@ static NSArray<NSString *> *_matchKeywords = nil;
 }
 
 #pragma mark -
-#pragma mark Migration
-
-+ (void)_migrateWorldControllerToVersion600
-{
-#define _defaultsKey @"TPCPreferences -> Migration -> World Controller Migrated (600)"
-
-	if ([RZUserDefaults() boolForKey:@"World Controller Migrated (600)"]) {
-		[RZUserDefaults() removeObjectForKey:@"World Controller Migrated (600)"];
-
-		[RZUserDefaults() setBool:YES forKey:_defaultsKey];
-	}
-
-	if ([RZUserDefaults() boolForKey:_defaultsKey]) {
-		return;
-	}
-
-	BOOL clientListMigrated = [RZUserDefaults() boolForKey:_defaultsKey];
-
-	if (clientListMigrated) {
-		return;
-	}
-
-	NSDictionary *worldController = [RZUserDefaults() dictionaryForKey:@"World Controller"];
-
-	NSArray<NSDictionary *> *clientList = [worldController arrayForKey:@"clients"];
-
-	if (clientList.count > 0) {
-		[self setClientList:clientList];
-	}
-
-	BOOL soundIsMuted = [worldController boolForKey:@"soundIsMuted"];
-
-	if (soundIsMuted) {
-		[self setSoundIsMuted:soundIsMuted];
-	}
-
-	[RZUserDefaults() setBool:YES forKey:_defaultsKey];
-
-#undef _defaultsKey
-}
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-+ (void)_migrateSparkleConfigurationToVersion601
-{
-
-#define _defaultsKey @"TPCPreferences -> Migration -> Sparkle (601)"
-
-	BOOL sparkleMigrated = [RZUserDefaults() boolForKey:_defaultsKey];
-
-	if (sparkleMigrated) {
-		return;
-	}
-
-	[[NSUserDefaults standardUserDefaults] removeObjectForKey:@"SUEnableAutomaticChecks"];
-
-	[RZUserDefaults() setBool:YES forKey:_defaultsKey];
-
-#undef _defaultsKey
-}
-#endif
-
-+ (void)_migrateNicknameColorOverridesToVersion722
-{
-	/* Migrate from database that used NSArchiver to one that uses NSKeyedArchiver. */
-
-#define _defaultsKey @"TPCPreferences -> Migration -> Nickname Color Style Overrides"
-
-	BOOL overridesMigrated = [RZUserDefaults() boolForKey:_defaultsKey];
-
-	if (overridesMigrated) {
-		return;
-	}
-
-	[IRCUserNicknameColorStyleGenerator migrateNicknameColorStyleOverrides];
-
-	[RZUserDefaults() setBool:YES forKey:_defaultsKey];
-
-#undef _defaultsKey
-}
-
-+ (void)_migrateAppearanceToVersion7011 /* 7.0.11 turned into 7.1.0 */
-{
-
-#define _defaultsKey @"TPCPreferences -> Migration -> Appearance (7011)"
-
-	BOOL appearanceMigrated = [RZUserDefaults() boolForKey:_defaultsKey];
-
-	if (appearanceMigrated) {
-		return;
-	}
-
-	BOOL invertSidebarColors = [self invertSidebarColors];
-
-	if (invertSidebarColors) {
-		[self setAppearance:TXPreferredAppearanceDark];
-	}
-
-	[RZUserDefaults() setBool:YES forKey:_defaultsKey];
-
-#undef _defaultsKey
-}
-
-#pragma mark -
 #pragma mark Dynamic Defaults
 
 + (void)registerWebKit2DynamicDefaults
@@ -1310,32 +1177,6 @@ static NSArray<NSString *> *_matchKeywords = nil;
 
 	[self registerWebKit2DynamicDefaults];
 
-	NSMutableDictionary *dynamicDefaults = [NSMutableDictionary dictionary];
-
-	[dynamicDefaults setBool:[TPCApplicationInfo sandboxEnabled] forKey:@"Security -> Sandbox Enabled"];
-
-	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Mountain Lion Or Newer"];
-	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Mavericks Or Newer"];
-	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Yosemite Or Newer"];
-	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS El Capitan Or Newer"];
-	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Sierra Or Newer"];
-	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS High Sierra Or Newer"];
-	[dynamicDefaults setBool:YES forKey:@"System -> Running Mac OS Mojave Or Newer"];
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	[dynamicDefaults setBool:YES forKey:@"System -> 3rd-party Services -> Built with Sparkle Framework"];
-#else
-	[dynamicDefaults setBool:NO forKey:@"System -> 3rd-party Services -> Built with Sparkle Framework"];
-#endif
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	[dynamicDefaults setBool:YES forKey:@"System -> Built with Off-the-Record Messaging Support"];
-#else
-	[dynamicDefaults setBool:NO forKey:@"System -> Built with Off-the-Record Messaging Support"];
-#endif
-
-	[RZUserDefaults() registerDefaults:dynamicDefaults];
-
 	[self registerPreferencesDictionaryVersion];
 }
 
@@ -1364,18 +1205,12 @@ static NSArray<NSString *> *_matchKeywords = nil;
 
 	[self registerDefaults];
 
-	[self _migrateWorldControllerToVersion600];
-
-#if GLASSTUAL_BUILT_WITH_SPARKLE_ENABLED == 1
-	[self _migrateSparkleConfigurationToVersion601];
-#endif
-
-	[self _migrateAppearanceToVersion7011];
-
-	[self _migrateNicknameColorOverridesToVersion722];
-
 	[TPCPathInfo startUsingTranscriptFolderURL];
 
+	/* The observers below are never removed on purpose. The observer is the
+	 class object and the observed object is the shared user defaults; both
+	 live for the whole process, so there is no point at which either could be
+	 deallocated with the registration still in place. */
 	[RZUserDefaults() addObserver:(id)self
 					   forKeyPath:@"Highlight List -> Excluded Matches"
 						  options:NSKeyValueObservingOptionNew

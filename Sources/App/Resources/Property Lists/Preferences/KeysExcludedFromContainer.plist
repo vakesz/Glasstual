@@ -10,17 +10,5 @@
 	<integer>0</integer>
 	<key>NSWindow Frame -&gt; Internal (v3) -&gt; </key>
 	<integer>1</integer>
-	<key>SUEnableAutomaticChecks</key>
-	<integer>0</integer>
-	<key>SUHasLaunchedBefore</key>
-	<integer>0</integer>
-	<key>SULastCheckTime</key>
-	<integer>0</integer>
-	<key>SUScheduledCheckInterval</key>
-	<integer>0</integer>
-	<key>SUSendProfileInfo</key>
-	<integer>0</integer>
-	<key>SUUpdateGroupIdentifier</key>
-	<integer>0</integer>
 </dict>
 </plist>

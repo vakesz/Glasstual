@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22690"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="TDCOnboardingWindowController">
+            <connections>
+                <outlet property="backButton" destination="bak-bt-001" id="ob1-bk-001"/>
+                <outlet property="contentContainerView" destination="cnt-vw-001" id="ob1-cv-001"/>
+                <outlet property="continueButton" destination="cnt-bt-001" id="ob1-cb-001"/>
+                <outlet property="iconImageView" destination="icn-iv-001" id="ob1-iv-001"/>
+                <outlet property="pageIndicatorView" destination="pgi-vw-001" id="ob1-pg-001"/>
+                <outlet property="skipButton" destination="skp-bt-001" id="ob1-sk-001"/>
+                <outlet property="subtitleTextField" destination="sub-tf-001" id="ob1-st-001"/>
+                <outlet property="titleTextField" destination="ttl-tf-001" id="ob1-tt-001"/>
+                <outlet property="window" destination="win-001" id="ob1-wn-001"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <window title="Welcome to Glasstual" allowsToolTipsWhenApplicationIsInactive="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" tabbingMode="disallowed" id="win-001">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
+            <rect key="contentRect" x="400" y="300" width="680" height="690"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1055"/>
+            <view key="contentView" id="cnv-001">
+                <rect key="frame" x="0.0" y="0.0" width="680" height="690"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <imageView translatesAutoresizingMaskIntoConstraints="NO" id="icn-iv-001">
+                        <rect key="frame" x="300" y="492" width="80" height="80"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="80" id="icn-cs-w01"/>
+                            <constraint firstAttribute="height" constant="80" id="icn-cs-h01"/>
+                        </constraints>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyDown" image="NSApplicationIcon" id="icn-ic-001"/>
+                        <accessibility description="Application Icon"/>
+                    </imageView>
+                    <textField focusRingType="none" verticalHuggingPriority="750" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ttl-tf-001">
+                        <rect key="frame" x="40" y="452" width="600" height="32"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Welcome to Glasstual" id="ttl-tc-001">
+                            <font key="font" metaFont="systemBold" size="26"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Step Title"/>
+                    </textField>
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sub-tf-001">
+                        <rect key="frame" x="60" y="420" width="560" height="28"/>
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="center" title="Subtitle" id="sub-tc-001">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <accessibility description="Step Description"/>
+                    </textField>
+                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="cnt-vw-001">
+                        <rect key="frame" x="40" y="72" width="600" height="332"/>
+                        <accessibility description="Step Content"/>
+                    </customView>
+                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="pgi-vw-001">
+                        <rect key="frame" x="300" y="30" width="80" height="10"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="10" id="pgi-cs-h01"/>
+                            <constraint firstAttribute="width" constant="80" id="pgi-cs-w01"/>
+                        </constraints>
+                        <accessibility description="Page Indicator"/>
+                    </customView>
+                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="skp-bt-001">
+                        <rect key="frame" x="20" y="20" width="60" height="32"/>
+                        <buttonCell key="cell" type="push" title="Skip" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="skp-bc-001">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <accessibility description="Skip Setup"/>
+                        <connections>
+                            <action selector="skip:" target="-2" id="skp-ac-001"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="bak-bt-001">
+                        <rect key="frame" x="480" y="20" width="80" height="32"/>
+                        <constraints>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="80" id="bak-cs-w01"/>
+                        </constraints>
+                        <buttonCell key="cell" type="push" title="Back" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="bak-bc-001">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <accessibility description="Back"/>
+                        <connections>
+                            <action selector="back:" target="-2" id="bak-ac-001"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="cnt-bt-001">
+                        <rect key="frame" x="568" y="20" width="92" height="32"/>
+                        <constraints>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="92" id="cnt-cs-w01"/>
+                        </constraints>
+                        <buttonCell key="cell" type="push" title="Continue" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="cnt-bc-001">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                        </buttonCell>
+                        <accessibility description="Continue"/>
+                        <connections>
+                            <action selector="continueToNextStep:" target="-2" id="cnt-ac-001"/>
+                        </connections>
+                    </button>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="icn-iv-001" firstAttribute="top" secondItem="cnv-001" secondAttribute="top" constant="28" id="lay-cs-001"/>
+                    <constraint firstItem="icn-iv-001" firstAttribute="centerX" secondItem="cnv-001" secondAttribute="centerX" id="lay-cs-002"/>
+                    <constraint firstItem="ttl-tf-001" firstAttribute="top" secondItem="icn-iv-001" secondAttribute="bottom" constant="8" id="lay-cs-003"/>
+                    <constraint firstItem="ttl-tf-001" firstAttribute="leading" secondItem="cnv-001" secondAttribute="leading" constant="40" id="lay-cs-004"/>
+                    <constraint firstAttribute="trailing" secondItem="ttl-tf-001" secondAttribute="trailing" constant="40" id="lay-cs-005"/>
+                    <constraint firstItem="sub-tf-001" firstAttribute="top" secondItem="ttl-tf-001" secondAttribute="bottom" constant="4" id="lay-cs-006"/>
+                    <constraint firstItem="sub-tf-001" firstAttribute="leading" secondItem="cnv-001" secondAttribute="leading" constant="60" id="lay-cs-007"/>
+                    <constraint firstAttribute="trailing" secondItem="sub-tf-001" secondAttribute="trailing" constant="60" id="lay-cs-008"/>
+                    <constraint firstItem="cnt-vw-001" firstAttribute="top" secondItem="sub-tf-001" secondAttribute="bottom" constant="16" id="lay-cs-009"/>
+                    <constraint firstItem="cnt-vw-001" firstAttribute="leading" secondItem="cnv-001" secondAttribute="leading" constant="40" id="lay-cs-010"/>
+                    <constraint firstAttribute="trailing" secondItem="cnt-vw-001" secondAttribute="trailing" constant="40" id="lay-cs-011"/>
+                    <constraint firstItem="skp-bt-001" firstAttribute="top" secondItem="cnt-vw-001" secondAttribute="bottom" constant="20" id="lay-cs-012"/>
+                    <constraint firstItem="skp-bt-001" firstAttribute="leading" secondItem="cnv-001" secondAttribute="leading" constant="20" id="lay-cs-013"/>
+                    <constraint firstAttribute="bottom" secondItem="skp-bt-001" secondAttribute="bottom" constant="20" id="lay-cs-014"/>
+                    <constraint firstItem="pgi-vw-001" firstAttribute="centerX" secondItem="cnv-001" secondAttribute="centerX" id="lay-cs-015"/>
+                    <constraint firstItem="pgi-vw-001" firstAttribute="centerY" secondItem="skp-bt-001" secondAttribute="centerY" id="lay-cs-016"/>
+                    <constraint firstAttribute="trailing" secondItem="cnt-bt-001" secondAttribute="trailing" constant="20" id="lay-cs-017"/>
+                    <constraint firstItem="cnt-bt-001" firstAttribute="centerY" secondItem="skp-bt-001" secondAttribute="centerY" id="lay-cs-018"/>
+                    <constraint firstItem="cnt-bt-001" firstAttribute="leading" secondItem="bak-bt-001" secondAttribute="trailing" constant="8" id="lay-cs-019"/>
+                    <constraint firstItem="bak-bt-001" firstAttribute="centerY" secondItem="skp-bt-001" secondAttribute="centerY" id="lay-cs-020"/>
+                </constraints>
+            </view>
+            <connections>
+                <outlet property="delegate" destination="-2" id="win-dl-001"/>
+            </connections>
+            <point key="canvasLocation" x="139" y="154"/>
+        </window>
+    </objects>
+    <resources>
+        <image name="NSApplicationIcon" width="32" height="32"/>
+    </resources>
+</document>

@@ -144,6 +144,12 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
+	if ([propertyList isKindOfClass:[NSDictionary class]] == NO) {
+		LogToConsoleError("Import failed: root object is not a dictionary");
+
+		return;
+	}
+
 	/* The loading screen is a generic way to show something during import */
 	[mainWindowLoadingScreen() showProgressViewWithReason:TXTLS(@"TVCMainWindow[5g1-i9]")];
 
@@ -171,6 +177,12 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(aDict != nil);
 
 	[aDict enumerateKeysAndObjectsUsingBlock:^(NSString *key, id object, BOOL *stop) {
+		/* Apply the same exclusions as export so a hand-edited file
+		 cannot plant keys that were never meant to be portable. */
+		if ([key isKindOfClass:[NSString class]] == NO || [self isKeyNameSupposedToBeIgnored:key]) {
+			return;
+		}
+
 		[self import:object withKey:key];
 	}];
 
@@ -201,6 +213,10 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 
 		[object enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop) {
+			if ([object isKindOfClass:[NSDictionary class]] == NO) {
+				return;
+			}
+
 			[self importClientConfiguration:object];
 		}];
 	} else {

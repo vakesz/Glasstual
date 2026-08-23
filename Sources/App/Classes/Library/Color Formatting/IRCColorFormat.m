@@ -40,6 +40,7 @@
 #import "IRC.h"
 #import "IRCClientConfig.h"
 #import "IRCClient.h"
+#import "IRCISupportInfo.h"
 #import "IRCColorFormatPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -447,21 +448,19 @@ static NSFont *_monospaceFontMatching(NSFont *baseFont)
 	minimumLength += 2;
 
 	/* Calculate maximum length */
+	/* LINELEN (ISUPPORT) counts the trailing CRLF, as does TXMaximumIRCBodyLength + 2. */
 	NSUInteger maximumLength = TXMaximumIRCBodyLength;
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	NSUInteger encryptionEstimate = [client lengthOfEncryptedMessageDirectedAt:channelName
-														  thatFitsWithinBounds:(maximumLength - minimumLength)];
+	NSUInteger serverLineLength = client.supportInfo.maximumLineLength;
 
-	if (encryptionEstimate > 0) {
-		maximumLength = encryptionEstimate;
+	if (serverLineLength > (minimumLength + 2)) {
+		maximumLength = (serverLineLength - 2);
 	}
-#endif
 
 	/* Perform truncation */
 	NSString *string = self.string;
 
-	NSStringEncoding encoding = client.config.primaryEncoding;
+	NSStringEncoding encoding = client.effectivePrimaryEncoding;
 
 	NSMutableString *result = [NSMutableString string];
 

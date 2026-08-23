@@ -452,7 +452,11 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		}
 
 		if contentContext?.isFinal == true && isComplete {
-			EOFReceived = true
+			/* The final bytes (typically an ERROR line with the reason
+			 for the disconnect) can arrive together with the EOF. */
+			if let content, content.isEmpty == false {
+				readIn(content)
+			}
 
 			delegate?.connectionClosedReadStream(self)
 

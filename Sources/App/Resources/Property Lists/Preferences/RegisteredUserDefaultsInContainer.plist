@@ -78,8 +78,6 @@
 	<true/>
 	<key>File Transfers -&gt; File Transfer IP Address Detection Method</key>
 	<integer>1</integer>
-	<key>File Transfers -&gt; File Transfer IP Address Detection Prefers 3rd-party Sources</key>
-	<false/>
 	<key>File Transfers -&gt; File Transfer Port Range End</key>
 	<integer>1130</integer>
 	<key>File Transfers -&gt; File Transfer Port Range Start</key>
@@ -186,22 +184,16 @@
 	<true/>
 	<key>PreferModernCiphers</key>
 	<false/>
-	<key>Off-the-Record Messaging -&gt; Automatically Enable Service</key>
-	<false/>
-	<key>Off-the-Record Messaging -&gt; Enable Encryption</key>
-	<true/>
-	<key>Off-the-Record Messaging -&gt; Require Encryption</key>
-	<false/>
 	<key>OnlySpeakNotificationsForSelection</key>
 	<true/>
 	<key>OpenClickedLinksInBackgroundBrowser</key>
 	<false/>
 	<key>Optimizations -&gt; Load History Lazily</key>
 	<true/>
-	<key>ReceiveBetaUpdates</key>
-	<false/>
 	<key>RejoinChannelOnLocalKick</key>
 	<false/>
+	<key>SendTypingNotifications</key>
+	<true/>
 	<key>ReloadScrollbackOnLaunch</key>
 	<true/>
 	<key>RightToLeftTextFormatting</key>
@@ -254,12 +246,14 @@
 	<true/>
 	<key>GlasstualDeveloperEnvironment</key>
 	<false/>
+	<key>Onboarding -&gt; Completed</key>
+	<false/>
 	<key>Theme -&gt; Font Name</key>
 	<string>.AppleSystemUIFont</string>
 	<key>Theme -&gt; Font Size</key>
 	<real>13</real>
 	<key>Theme -&gt; Name</key>
-	<string>resource:Simplified</string>
+	<string>resource:Lines</string>
 	<key>Theme -&gt; Nickname Format</key>
 	<string>&lt;%@%n&gt;</string>
 	<key>Theme -&gt; Timestamp Format</key>
@@ -269,17 +263,17 @@
 	<key>TrackUserAwayStatusMaximumChannelSize</key>
 	<integer>300</integer>
 	<key>User List Mode Badge Colors -&gt; +a</key>
-	<data>BAtzdHJlYW10eXBlZIHoA4QBQISEhAdOU0NvbG9yAISECE5TT2JqZWN0AIWEAWMBhARmZmZmg5HtHD8Ag/ypsT4Bhg==</data>
+	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAcMC42MTI5OTk5NzU3IDAgMC4zNDcwMDAwMDI5ABABgALSFBUWF1okY2xhc3NuYW1lWCRjbGFzc2VzV05TQ29sb3KiFhhYTlNPYmplY3QIERokKTI3SUxRU1ddZGp3fp2foaaxusLFAAAAAAAAAQEAAAAAAAAAGQAAAAAAAAAAAAAAAAAAAM4=</data>
 	<key>User List Mode Badge Colors -&gt; +h</key>
-	<data>BAtzdHJlYW10eXBlZIHoA4QBQISEhAdOU0NvbG9yAISECE5TT2JqZWN0AIWEAWMBhARmZmZmgwIrhz2DI9v5PoNQjZc9AYY=</data>
+	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxApMC4wNjU5OTk5OTk2NCAwLjQ4ODAwMDAwNTUgMC4wNzQwMDAwMDA5NQAQAYAC0hQVFhdaJGNsYXNzbmFtZVgkY2xhc3Nlc1dOU0NvbG9yohYYWE5TT2JqZWN0CBEaJCkyN0lMUVNXXWRqd36qrK6zvsfP0gAAAAAAAAEBAAAAAAAAABkAAAAAAAAAAAAAAAAAAADb</data>
 	<key>User List Mode Badge Colors -&gt; +o</key>
-	<data>BAtzdHJlYW10eXBlZIHoA4QBQISEhAdOU0NvbG9yAISECE5TT2JqZWN0AIWEAWMBhARmZmZmg0a2sz6DqMZLPoNt5xs/AYY=</data>
+	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAlMC4zNTEwMDAwMTEgMC4xOTkwMDAwMDEgMC42MDkwMDAwMjcyABABgALSFBUWF1okY2xhc3NuYW1lWCRjbGFzc2VzV05TQ29sb3KiFhhYTlNPYmplY3QIERokKTI3SUxRU1ddZGp3fqaoqq+6w8vOAAAAAAAAAQEAAAAAAAAAGQAAAAAAAAAAAAAAAAAAANc=</data>
 	<key>User List Mode Badge Colors -&gt; +q</key>
-	<data>BAtzdHJlYW10eXBlZIHoA4QBQISEhAdOU0NvbG9yAISECE5TT2JqZWN0AIWEAWMBhARmZmZmgyPbOT8AAAGG</data>
+	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAQMC43MjYwMDAwMTEgMCAwABABgALSFBUWF1okY2xhc3NuYW1lWCRjbGFzc2VzV05TQ29sb3KiFhhYTlNPYmplY3QIERokKTI3SUxRU1ddZGp3fpGTlZqlrra5AAAAAAAAAQEAAAAAAAAAGQAAAAAAAAAAAAAAAAAAAMI=</data>
 	<key>User List Mode Badge Colors -&gt; +v</key>
-	<data>BAtzdHJlYW10eXBlZIHoA4QBQISEhAdOU0NvbG9yAISECE5TT2JqZWN0AIWEAWMBhARmZmZmg6jGSz6Dj8L1PoNt5xs/AYY=</data>
+	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAmMC4xOTkwMDAwMDEgMC40Nzk5OTk5ODkzIDAuNjA5MDAwMDI3MgAQAYAC0hQVFhdaJGNsYXNzbmFtZVgkY2xhc3Nlc1dOU0NvbG9yohYYWE5TT2JqZWN0CBEaJCkyN0lMUVNXXWRqd36nqauwu8TMzwAAAAAAAAEBAAAAAAAAABkAAAAAAAAAAAAAAAAAAADY</data>
 	<key>User List Mode Badge Colors -&gt; +y</key>
-	<data>BAtzdHJlYW10eXBlZIHoA4QBQISEhAdOU0NvbG9yAISECE5TT2JqZWN0AIWEAWMBhARmZmZmg8HKIT+DH4WrPoOLbGc+AYY=</data>
+	<data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGjCwwTVSRudWxs0w0ODxARElVOU1JHQlxOU0NvbG9yU3BhY2VWJGNsYXNzTxAnMC42MzIwMDAwMjkxIDAuMzM1MDAwMDA4MyAwLjIyNTk5OTk5NjEAEAGAAtIUFRYXWiRjbGFzc25hbWVYJGNsYXNzZXNXTlNDb2xvcqIWGFhOU09iamVjdAgRGiQpMjdJTFFTV11kand+qKqssbzFzdAAAAAAAAABAQAAAAAAAAAZAAAAAAAAAAAAAAAAAAAA2Q==</data>
 	<key>UserListDoubleClickAction</key>
 	<integer>200</integer>
 	<key>WebViewDoNotUsesCustomScrollers</key>
@@ -288,5 +282,9 @@
 	<false/>
 	<key>WebViewProcessPoolSizeIsLimited</key>
 	<true/>
+	<key>Plugin Approvals</key>
+	<dict/>
+	<key>IRC -&gt; STS Policies</key>
+	<dict/>
 </dict>
 </plist>

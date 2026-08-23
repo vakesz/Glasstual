@@ -90,6 +90,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, copy) NSString *username;
 @property(readonly, copy, nullable) NSData *identityClientSideCertificate;
 @property(readonly, copy, nullable) NSString *awayNickname;
+@property(readonly, copy, nullable)
+	NSString *saslMechanismPreference; // A SASL mechanism name to use over the automatic choice, or nil
+/* Text sent in reply to a CTCP VERSION request on this connection.
+ nil uses the application default (or the global masquerade). */
+@property(readonly, copy, nullable) NSString *ctcpVersionReply;
 @property(readonly, copy, nullable) NSString *nicknamePassword;
 @property(readonly, copy, nullable) NSString *nicknamePasswordFromKeychain;
 @property(readonly, copy, nullable) NSString *proxyAddress;
@@ -152,6 +157,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, readwrite) NSString *username;
 @property(nonatomic, copy, readwrite, nullable) NSData *identityClientSideCertificate;
 @property(nonatomic, copy, readwrite, nullable) NSString *awayNickname;
+@property(nonatomic, copy, readwrite, nullable) NSString *saslMechanismPreference;
+@property(nonatomic, copy, readwrite, nullable) NSString *ctcpVersionReply;
 @property(nonatomic, copy, readwrite, nullable) NSString *nicknamePassword;
 @property(nonatomic, copy, readwrite, nullable) NSString *proxyAddress;
 @property(nonatomic, copy, readwrite, nullable) NSString *proxyPassword;

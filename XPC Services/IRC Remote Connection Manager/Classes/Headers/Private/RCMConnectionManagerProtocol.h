@@ -41,10 +41,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCConnectionConfig;
 
+/* trustFailureDescription is nil when the system trusted the certificate
+ chain. Otherwise it describes why the chain was not trusted, whether the
+ connection then ignored that or the user chose to trust the chain. */
 typedef void (^RCMSecureConnectionInformationCompletionBlock)(NSString *_Nullable policyName,
 															  tls_protocol_version_t ptocoolType,
 															  tls_ciphersuite_t cipherSuites,
-															  NSArray<NSData *> *certificateChain);
+															  NSArray<NSData *> *certificateChain,
+															  NSString *_Nullable trustFailureDescription);
 
 #pragma mark -
 #pragma mark Server Protocol

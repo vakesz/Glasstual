@@ -36,6 +36,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation XRKeychain
 
+#pragma mark -
+#pragma mark Queries
+
 + (NSMutableDictionary *)searchDictionary:(NSString *)itemName
 							 withItemKind:(NSString *)itemKind
 							  forUsername:(nullable NSString *)username
@@ -61,78 +64,148 @@ NS_ASSUME_NONNULL_BEGIN
 	return searchDictionary;
 }
 
-#pragma mark -
+/* Query matching items in the legacy, file-based keychain only.
 
-+ (BOOL)deleteKeychainItem:(NSString *)itemName
-			  withItemKind:(NSString *)itemKind
-			   forUsername:(nullable NSString *)username
-			   serviceName:(NSString *)service
+ Without kSecUseDataProtectionKeychain a query on macOS also matches items
+ in the data protection keychain that belong to this app, so deleting a
+ legacy item after migrating it would delete the migrated copy as well.
+ Restricting the search to the default file-based keychain avoids that. */
++ (nullable NSMutableDictionary *)legacySearchDictionary:(NSString *)itemName
+											withItemKind:(NSString *)itemKind
+											 forUsername:(nullable NSString *)username
+											 serviceName:(NSString *)service
 {
-	return [self deleteKeychainItem:itemName
-					   withItemKind:itemKind
-						forUsername:username
-						serviceName:service
-						  fromCloud:NO];
+	SecKeychainRef legacyKeychain = NULL;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+	/* The file-based keychain API is deprecated. It is only used here to
+	 scope the query so that items written by earlier versions can be
+	 migrated out of it. */
+	OSStatus status = SecKeychainCopyDefault(&legacyKeychain);
+#pragma clang diagnostic pop
+
+	if (status != errSecSuccess || legacyKeychain == NULL) {
+		[self logStatus:status ofOperation:"legacy keychain lookup" forItem:itemName];
+
+		return nil;
+	}
+
+	NSMutableDictionary *searchDictionary = [self searchDictionary:itemName
+													  withItemKind:itemKind
+													   forUsername:username
+													   serviceName:service];
+
+	searchDictionary[(id)kSecMatchSearchList] = @[ (__bridge_transfer id)legacyKeychain ];
+
+	return searchDictionary;
 }
 
+/* Query matching items in the data protection keychain. */
++ (NSMutableDictionary *)protectedSearchDictionary:(NSString *)itemName
+									  withItemKind:(NSString *)itemKind
+									   forUsername:(nullable NSString *)username
+									   serviceName:(NSString *)service
+{
+	NSMutableDictionary *searchDictionary = [self searchDictionary:itemName
+													  withItemKind:itemKind
+													   forUsername:username
+													   serviceName:service];
+
+	searchDictionary[(id)kSecUseDataProtectionKeychain] = (id)kCFBooleanTrue;
+
+	return searchDictionary;
+}
+
+#pragma mark -
+#pragma mark Logging
+
++ (void)logStatus:(OSStatus)status ofOperation:(const char *)operation forItem:(NSString *)itemName
+{
+	if (status == errSecSuccess) {
+		return;
+	}
+
+	NSString *message = (__bridge_transfer NSString *)SecCopyErrorMessageString(status, NULL);
+
+	if (status == errSecItemNotFound) {
+		LogToConsoleDebugWithSubsystem(_CSFrameworkInternalLogSubsystem(),
+			"Keychain %{public}s for “%{public}@” returned %{public}d: %{public}@",
+			operation, itemName, (int)status, message);
+	} else {
+		LogToConsoleErrorWithSubsystem(_CSFrameworkInternalLogSubsystem(),
+			"Keychain %{public}s for “%{public}@” failed with %{public}d: %{public}@",
+			operation, itemName, (int)status, message);
+	}
+}
+
+#pragma mark -
+#pragma mark Delete
+
 + (BOOL)deleteKeychainItem:(NSString *)itemName
 			  withItemKind:(NSString *)itemKind
 			   forUsername:(nullable NSString *)username
 			   serviceName:(NSString *)service
-				 fromCloud:(BOOL)deleteFromCloud
 {
 	NSParameterAssert(itemName != nil);
 	NSParameterAssert(itemKind != nil);
 	NSParameterAssert(service != nil);
 
-	NSMutableDictionary *dictionary = [self searchDictionary:itemName
-												withItemKind:itemKind
-												 forUsername:username
-												 serviceName:service];
-	
-	if (deleteFromCloud) {
-		dictionary[(id)kSecAttrSynchronizable] = (id)kCFBooleanTrue;
-	}
-	
+	NSDictionary *dictionary = [self protectedSearchDictionary:itemName
+												  withItemKind:itemKind
+												   forUsername:username
+												   serviceName:service];
+
 	OSStatus status = SecItemDelete((__bridge CFDictionaryRef)dictionary);
+
+	[self logStatus:status ofOperation:"delete" forItem:itemName];
+
+	/* Delete any copy that may still exist in the legacy keychain
+	 so that it is not resurrected by a later read-through. */
+	[self deleteLegacyKeychainItem:itemName withItemKind:itemKind forUsername:username serviceName:service];
 
 	return (status == errSecSuccess);
 }
 
-+ (BOOL)modifyOrAddKeychainItem:(NSString *)itemName
-				   withItemKind:(NSString *)itemKind
-					forUsername:(nullable NSString *)username
-				withNewPassword:(nullable NSString *)newPassword
-					serviceName:(NSString *)service
++ (BOOL)deleteLegacyKeychainItem:(NSString *)itemName
+					withItemKind:(NSString *)itemKind
+					 forUsername:(nullable NSString *)username
+					 serviceName:(NSString *)service
 {
-	return [self modifyOrAddKeychainItem:itemName
-							withItemKind:itemKind
-							 forUsername:username
-						 withNewPassword:newPassword
-							 serviceName:service
-								forCloud:NO];
+	NSDictionary *dictionary = [self legacySearchDictionary:itemName
+											   withItemKind:itemKind
+												forUsername:username
+												serviceName:service];
+
+	if (dictionary == nil) {
+		return NO;
+	}
+
+	OSStatus status = SecItemDelete((__bridge CFDictionaryRef)dictionary);
+
+	[self logStatus:status ofOperation:"legacy delete" forItem:itemName];
+
+	return (status == errSecSuccess);
 }
+
+#pragma mark -
+#pragma mark Modify
 
 + (BOOL)modifyOrAddKeychainItem:(NSString *)itemName
 				   withItemKind:(NSString *)itemKind
 					forUsername:(nullable NSString *)username
 				withNewPassword:(nullable NSString *)newPassword
 					serviceName:(NSString *)service
-					   forCloud:(BOOL)modifyForCloud
 {
 	NSParameterAssert(itemName != nil);
 	NSParameterAssert(itemKind != nil);
 	NSParameterAssert(service != nil);
 
-	NSMutableDictionary *oldDictionary = [self searchDictionary:itemName
-												   withItemKind:itemKind
-												    forUsername:username
-													serviceName:service];
+	NSDictionary *oldDictionary = [self protectedSearchDictionary:itemName
+													 withItemKind:itemKind
+													  forUsername:username
+													  serviceName:service];
 
-	if (modifyForCloud) {
-		oldDictionary[(id)kSecAttrSynchronizable] = (id)kCFBooleanTrue;
-	}
-	
 	NSMutableDictionary *newDictionary = [NSMutableDictionary dictionary];
 
 	if (newPassword) {
@@ -141,12 +214,12 @@ NS_ASSUME_NONNULL_BEGIN
 		newDictionary[(id)kSecValueData] = encodedPassword;
 	}
 
-	if (modifyForCloud) {
-		newDictionary[(id)kSecAttrSynchronizable] = (id)kCFBooleanTrue;
-	}
+	newDictionary[(id)kSecAttrAccessible] = (id)kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly;
 
 	OSStatus status = SecItemUpdate((__bridge CFDictionaryRef)oldDictionary,
 									(__bridge CFDictionaryRef)newDictionary);
+
+	[self logStatus:status ofOperation:"update" forItem:itemName];
 
 	if (status == errSecItemNotFound) {
 		if (newPassword && newPassword.length > 0) {
@@ -161,49 +234,45 @@ NS_ASSUME_NONNULL_BEGIN
 	return (status == errSecSuccess);
 }
 
-+ (BOOL)addKeychainItem:(NSString *)itemName
-		   withItemKind:(NSString *)itemKind
-			forUsername:(nullable NSString *)username
-		   withPassword:(NSString *)password
-			serviceName:(NSString *)service
-{
-	return [self addKeychainItem:itemName
-					withItemKind:itemKind
-					 forUsername:username
-					withPassword:password
-					 serviceName:service
-					   ontoCloud:NO];
-}
+#pragma mark -
+#pragma mark Add
 
 + (BOOL)addKeychainItem:(NSString *)itemName
 		   withItemKind:(NSString *)itemKind
 			forUsername:(nullable NSString *)username
 		   withPassword:(NSString *)password
 			serviceName:(NSString *)service
-			  ontoCloud:(BOOL)addToCloud
 {
 	NSParameterAssert(itemName != nil);
 	NSParameterAssert(itemKind != nil);
 	NSParameterAssert(password != nil);
 	NSParameterAssert(service != nil);
 
-	NSMutableDictionary *dictionary = [self searchDictionary:itemName
-												withItemKind:itemKind
-												 forUsername:username
-												 serviceName:service];
+	NSMutableDictionary *dictionary = [self protectedSearchDictionary:itemName
+														 withItemKind:itemKind
+														  forUsername:username
+														  serviceName:service];
 
-	if (addToCloud) {
-		dictionary[(id)kSecAttrSynchronizable] = (id)kCFBooleanTrue;
-	}
-	
+	dictionary[(id)kSecAttrAccessible] = (id)kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly;
+
 	NSData *encodedPassword = [password dataUsingEncoding:NSUTF8StringEncoding];
 
 	dictionary[(id)kSecValueData] = encodedPassword;
 
 	OSStatus status = SecItemAdd((__bridge CFDictionaryRef)dictionary, NULL);
 
+	[self logStatus:status ofOperation:"add" forItem:itemName];
+
+	/* The legacy copy (if any) is superseded by the item just written. */
+	if (status == errSecSuccess) {
+		[self deleteLegacyKeychainItem:itemName withItemKind:itemKind forUsername:username serviceName:service];
+	}
+
 	return (status == errSecSuccess);
 }
+
+#pragma mark -
+#pragma mark Read
 
 + (nullable NSString *)getPasswordFromKeychainItem:(NSString *)itemName
 									  withItemKind:(NSString *)itemKind
@@ -214,7 +283,6 @@ NS_ASSUME_NONNULL_BEGIN
 								withItemKind:itemKind
 								 forUsername:username
 								 serviceName:service
-								   fromCloud:NO
 						  returnedStatusCode:NULL];
 }
 
@@ -222,40 +290,100 @@ NS_ASSUME_NONNULL_BEGIN
 									  withItemKind:(NSString *)itemKind
 									   forUsername:(nullable NSString *)username
 									   serviceName:(NSString *)service
-										 fromCloud:(BOOL)searchForOnCloud
 								returnedStatusCode:(OSStatus * _Nullable)statusCode
 {
 	NSParameterAssert(itemName != nil);
 	NSParameterAssert(itemKind != nil);
 	NSParameterAssert(service != nil);
 
-	NSMutableDictionary *dictionary = [self searchDictionary:itemName
-												withItemKind:itemKind
-												 forUsername:username
-												 serviceName:service];
+	NSMutableDictionary *dictionary = [self protectedSearchDictionary:itemName
+														 withItemKind:itemKind
+														  forUsername:username
+														  serviceName:service];
 
-	dictionary[(id)kSecMatchLimit] = (id)kSecMatchLimitOne;
-	dictionary[(id)kSecReturnData] = (id)kCFBooleanTrue;
+	OSStatus status = errSecSuccess;
 
-	if (searchForOnCloud) {
-		dictionary[(id)kSecAttrSynchronizable] = (id)kCFBooleanTrue;
+	NSString *password = [self _passwordMatchingQuery:dictionary status:&status];
+
+	[self logStatus:status ofOperation:"read" forItem:itemName];
+
+	if (status == errSecItemNotFound) {
+		password = [self _migrateLegacyKeychainItem:itemName
+									   withItemKind:itemKind
+										forUsername:username
+										serviceName:service
+											 status:&status];
 	}
-	
-	CFDataRef result = nil;
-	
-	OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)dictionary, (CFTypeRef *)&result);
-	
+
 	if ( statusCode) {
 		*statusCode = status;
 	}
-	
+
+	return password;
+}
+
++ (nullable NSString *)_passwordMatchingQuery:(NSMutableDictionary *)dictionary status:(OSStatus *)statusCode
+{
+	dictionary[(id)kSecMatchLimit] = (id)kSecMatchLimitOne;
+	dictionary[(id)kSecReturnData] = (id)kCFBooleanTrue;
+
+	CFDataRef result = NULL;
+
+	OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)dictionary, (CFTypeRef *)&result);
+
+	*statusCode = status;
+
 	NSData *passwordData = (__bridge_transfer NSData *)result;
 
 	if (passwordData == nil) {
 		return nil;
-	} else {
-		return [NSString stringWithData:passwordData encoding:NSUTF8StringEncoding];
 	}
+
+	return [NSString stringWithData:passwordData encoding:NSUTF8StringEncoding];
+}
+
+/* Read-through migration: look the item up in the legacy keychain and,
+ when found, copy it into the data protection keychain and delete the
+ legacy item. The legacy password is returned regardless of whether
+ the copy succeeded so that the caller is not left without a value. */
++ (nullable NSString *)_migrateLegacyKeychainItem:(NSString *)itemName
+									 withItemKind:(NSString *)itemKind
+									  forUsername:(nullable NSString *)username
+									  serviceName:(NSString *)service
+										   status:(OSStatus *)statusCode
+{
+	NSMutableDictionary *dictionary = [self legacySearchDictionary:itemName
+													  withItemKind:itemKind
+													   forUsername:username
+													   serviceName:service];
+
+	if (dictionary == nil) {
+		return nil;
+	}
+
+	OSStatus status = errSecSuccess;
+
+	NSString *password = [self _passwordMatchingQuery:dictionary status:&status];
+
+	[self logStatus:status ofOperation:"legacy read" forItem:itemName];
+
+	*statusCode = status;
+
+	if (password == nil) {
+		return nil;
+	}
+
+	LogToConsoleWithSubsystem(_CSFrameworkInternalLogSubsystem(),
+		"Migrating keychain item “%{public}@” to the data protection keychain", itemName);
+
+	/* -addKeychainItem: deletes the legacy item on success. */
+	[self addKeychainItem:itemName
+			 withItemKind:itemKind
+			  forUsername:username
+			 withPassword:password
+			  serviceName:service];
+
+	return password;
 }
 
 @end

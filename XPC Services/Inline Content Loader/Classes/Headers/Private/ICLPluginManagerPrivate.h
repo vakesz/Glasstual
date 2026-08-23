@@ -40,7 +40,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ICLPluginManager : NSObject
 + (ICLPluginManager *)sharedPluginManager;
 
-- (void)loadPluginsAtLocations:(NSArray<NSURL *> *)pluginLocations;
+/* Loads the inline media modules bundled with the service.
+ Modules outside the service bundle are never loaded. */
+- (void)loadBundledPlugins;
 
 @property(readonly, copy) NSArray<Class> *modules;
 @end

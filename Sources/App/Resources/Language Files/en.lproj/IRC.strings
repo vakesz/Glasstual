@@ -48,10 +48,6 @@
 "ccs-1a" = "Connect command sent to %1$@: %2$@";
 
 /* Default G:Line reason */
-"56r-wn" = "35d Your behavior is not conducive to the desired environment";
-"2aw-rf" = "Your behavior is not conducive to the desired environment";
-"yy6-fx" = "Your behavior is not conducive to the desired environment";
-"80c-i8" = "1d Shunned";
 
 /* Network not available messages */
 "3s6-e6" = "Delaying auto connect for %lu seconds";
@@ -61,11 +57,37 @@
 "snf-45" = "Received file transfer request from %1$@, %2$@ (%3$qi bytes)";
 "y3w-la" = "Glasstual has received a DCC request from %@ that could not be processed.";
 
+/* Direct chat (DCC CHAT) messages */
+"dcc-s1" = "The file at %@ could not be offered for transfer.";
+"dcc-c1" = "%@ wants to start a direct chat";
+"dcc-c6" = "Declined direct chat request from %@";
+"dcc-c7" = "Connecting to %1$@ for a direct chat (%2$@ port %3$hu)…";
+"dcc-c8" = "Offering a direct chat to %@…";
+"dcc-c9" = "The direct chat is not connected.";
+"dcc-ca" = "Could not determine an address to offer %@ for the direct chat.";
+"dcc-cb" = "Waiting for %1$@ to connect on port %2$hu…";
+"dcc-cc" = "Direct chat with %@ established";
+"dcc-cd" = "Direct chat with %1$@ closed: %2$@";
+"dcc-ce" = "Direct chat with %@ closed";
+
 /* Version info */
-"vzu-u7" = "%1$@ IRC Client: www.glasstualapp.com — v%2$@";
+"vzu-u7" = "%1$@ IRC Client: https://github.com/vakesz/Glasstual — v%2$@";
 
 /* Specific IRC related, app-specific errors */
 "iaa-0u" = "There are no servers configured to connect to.";
+
+/* Standard replies (FAIL, WARN, NOTE) */
+"p4r-6n" = "FAIL %1$@/%2$@: %3$@";
+"y7t-zk" = "WARN %1$@/%2$@: %3$@";
+"k2e-cb" = "NOTE %1$@/%2$@: %3$@";
+
+/* Chat history (chathistory CAP) */
+"hc1-ah" = "This server does not support chat history.";
+
+/* Netsplit and netjoin summaries. %3$lu = number of users, %4$@ = nickname list */
+"ns1-sp" = "Netsplit between \002%1$@\002 and \002%2$@\002: %3$lu users left (%4$@)";
+"ns2-jn" = "Netjoin between \002%1$@\002 and \002%2$@\002: %3$lu users rejoined (%4$@)";
+"ns3-mr" = "%1$@, … and %2$lu more";
 
 /* Raw mode messages */
 "ik6-dl" = "⍅ Server traffic will be output to this window until it is closed by control clicking (right clicking) it. ⍆";
@@ -167,7 +189,6 @@ Surround \002<token>\002 with double quotes (\") if it contains a space.";
 "ccb-ur" = "%1$@ %2$@ (Build %3$@)%4$@%5$@";
 "b8p-44" = " as classic binary on an %@ Mac.";
 "g1u-os" = "Apple Silicon";
-"swz-uj" = "Intel";
 
 /* /timer/ command */
 "jj9-94" = "Invalid Syntax. Type “/timer help” for more information.";
@@ -175,14 +196,12 @@ Surround \002<token>\002 with double quotes (\") if it contains a space.";
 "eud-kc" = "Timer repeat count must be a whole number that is grater than or equal to zero (0). Type “/timer help” for more information.";
 "p6l-o4" = "Timer identifier is not properly formatted. Type “/timer list“ for a list of timers.";
 "vzu-xh" = "Timer with identifier “%@“ does not exist. Type “/timer list“ for a list of timers.";
-"uiz-32" = "Timer with identifier “%@“ can't be stopped";
 "ax6-n9" = "Timer with identifier “%@“ is already stopped";
 "hs0-up" = "Timer with identifier “%@“ stopped";
 "dgp-d4" = "Timer with identifier “%@“ can't be restarted. Add a new timer.";
 "qb7-mi" = "Timer with identifier “%@“ restarted";
 "p7s-is" = "Timer with identifier “%@“ removed";
 "808-bs" = "All timers removed";
-"jef-tp" = "Timer with identifier “%@“ added"; // unused
 "pqk-5k" = "There are no timers";
 "q1m-1e" = "There are %ld timers:";
 "6ts-oi" = "There is %ld timer:";
@@ -269,7 +288,6 @@ The identifier for a timer can be found using “/timer list”";
 /* Common command errors */
 "atq-93" = "Invalid syntax: “%@“";
 "pxa-ox" = "Cannot find channel named “%@“";
-"1fc-vl" = "Cannot find query named “%@“";
 "zef-q9" = "One or more arguments are not properly formatted for this command.";
 "g01-qn" = "This command can only be used with a channel.";
 "m6o-z1" = "This command can only be used with a query.";
@@ -283,6 +301,7 @@ The identifier for a timer can be found using “/timer list”";
 "jer-ju" = "CLIENTINFO DCC FINGER PING TIME USERINFO VERSION";
 "en6-mw" = "Stop fingering me pervert!";
 "5wa-lb" = "There are no capabilities that are enabled";
+"set-nm" = "This server does not support changing the real name (setname)";
 "7p9-rs" = "The following capabilities are currently enabled: %@";
 "obp-ww" = "Mode is \002%@\002";
 "7nm-7v" = "Topic is \002%@\002";
@@ -320,6 +339,7 @@ The identifier for a timer can be found using “/timer list”";
 "ipj-34" = "%@, your user modes are \002%@\002";
 "wk4-rv" = "Inviting %1$@ to join %2$@";
 "qw4-t3" = "%1$@!%2$@@%3$@ invited you to join %4$@";
+"inv-nt" = "\002%1$@\002 invited \002%2$@\002 to join %3$@";
 "c1h-fq" = "%1$@ is away (%2$@)";
 "6bh-br" = "You are now an IRC Operator on %@";
 "ziu-p9" = "\002%1$@\002 (%2$@@%3$@) joined the channel";
@@ -340,3 +360,44 @@ The identifier for a timer can be found using “/timer list”";
 "3oa-mv" = "%1$@ is connected from %2$@ (%3$@)";
 "x69-rz" = "%1$@ was connected from %2$@ (%3$@)";
 "js3-9v" = "Cannot use nickname “%@“ — Trying another…";
+
+/* ISUPPORT driven messages */
+"6kq-xb" = "Everyone except: %@"; // Negated extended ban
+"2nb-ka" = "Users logged in to account “%@”";
+"2nb-kc" = "Users in channel %@";
+"2nb-kj" = "Users banned from channel %@";
+"2nb-km" = "Muted: %@";
+"2nb-kn" = "Nick changes blocked for %@";
+"2nb-ko" = "Operators matching %@";
+"2nb-ko2" = "Operators of class %@";
+"2nb-kq" = "Quieted: %@";
+"2nb-kr" = "Users whose real name matches “%@”";
+"2nb-kr2" = "Registered users matching %@";
+"2nb-ks" = "Users connected to server %@";
+"2nb-ks2" = "Users in security group %@";
+"2nb-kt" = "Expires after %@";
+"2nb-kt2" = "Text matching “%@”";
+"2nb-ku" = "Unregistered users matching %@";
+"2nb-kx" = "Users matching hostmask and real name “%@”";
+"2nb-kz" = "Users with certificate fingerprint %@";
+"2nb-kk" = "Extended ban of type “%1$@”: %2$@";
+"2nb-kl" = "Extended ban of type “%@”";
+"w7c-lm" = "Joining %1$@ would exceed the limit of %2$lu channels with the prefix “%3$@” on this server. The server may refuse the join.";
+"y3h-ud" = "This server only accepts UTF-8. The configured encoding is ignored for this connection.";
+"m2v-sb" = "Silence list entry: %@"; // RPL_SILELIST
+"m2v-sc" = "End of silence list";   // RPL_ENDOFSILELIST
+"m2v-sd" = "This server does not advertise support for the SILENCE command.";
+"m2v-se" = "%@ is a bot"; // RPL_WHOISBOT fallback
+
+/* SASL SCRAM */
+"sts-sc1" = "SASL SCRAM authentication failed: the server sent a malformed message.";
+"sts-sc2" = "SASL SCRAM authentication failed: %@";
+
+/* Strict Transport Security (STS) */
+"sts-p1" = "A Strict Transport Security policy is in effect for this host. Using TLS on port %hu.";
+"sts-p2" = "The server offers Strict Transport Security. Reconnecting with TLS on port %hu.";
+"sts-p3" = "Stored a Strict Transport Security policy for this host: TLS on port %hu.";
+"sts-p4" = "The server withdrew its Strict Transport Security policy for this host.";
+
+/* Labeled response */
+"lbl-to" = "The server did not acknowledge this message.";

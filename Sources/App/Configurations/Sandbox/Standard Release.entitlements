@@ -6,28 +6,30 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.H8W5DK3FN2.com.vakesz.glasstual</string>
+		<string>$(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)</string>
 	</array>
 	<key>com.apple.security.automation.apple-events</key>
 	<true/>
-	<key>com.apple.security.cs.disable-library-validation</key>
-	<true/>
+	<!-- Library validation stays on (Mac App Store requirement): only
+	     bundles signed by Apple or by our own Team ID can be loaded.
+	     THOPluginManager checks the same requirement up front so a
+	     foreign plugin is reported instead of failing inside dlopen. -->
 	<key>com.apple.security.files.bookmarks.app-scope</key>
 	<true/>
 	<key>com.apple.security.files.downloads.read-write</key>
 	<true/>
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
+	<!-- Required for kSecUseDataProtectionKeychain under the sandbox. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	</array>
 	<key>com.apple.security.network.client</key>
 	<true/>
 	<key>com.apple.security.network.server</key>
 	<true/>
 	<key>com.apple.security.print</key>
 	<true/>
-	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
-	<array>
-		<string>$(PRODUCT_BUNDLE_IDENTIFIER)-spks</string>
-		<string>$(PRODUCT_BUNDLE_IDENTIFIER)-spki</string>
-	</array>
 </dict>
 </plist>

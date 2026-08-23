@@ -28,10 +28,10 @@
 	<string>TXCMainMenu</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>26.0</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSPrincipalClass</key>
 	<string>TXApplication</string>
-	<key>NSContactsUsageDescription</key>
-	<string>${PRODUCT_NAME} accesses contacts to automatically populate certain forms with your name and/or e-mail address. Access to this information is not required.</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
@@ -87,17 +87,5 @@
 			</array>
 		</dict>
 	</array>
-	<key>SUAllowsAutomaticUpdates</key>
-	<true/>
-	<key>SUBundleName</key>
-	<string>${PRODUCT_NAME}</string>
-	<key>SUEnableDownloaderService</key>
-	<false/>
-	<key>SUEnableInstallerLauncherService</key>
-	<true/>
-	<key>SUEnableSystemProfiling</key>
-	<false/>
-	<key>SUScheduledCheckInterval</key>
-	<string>345600</string>
 </dict>
 </plist>

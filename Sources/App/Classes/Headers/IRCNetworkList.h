@@ -39,24 +39,55 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCNetwork;
 
+typedef NS_ENUM(NSUInteger, IRCNetworkRegistration) {
+	IRCNetworkRegistrationNone = 0, // The network has no account services
+	IRCNetworkRegistrationOptional, // Accounts exist but are not required to chat
+	IRCNetworkRegistrationRequired	// An account is required to connect or chat
+};
+
+/* The bundled list of well known networks (IRCNetworks.plist). Entries are
+ sorted alphabetically by name. A separate "popular" subset is exposed for
+ the onboarding flow. */
 @interface IRCNetworkList : NSObject
 @property(readonly, copy) NSArray<IRCNetwork *> *listOfNetworks;
 
-- (nullable IRCNetwork *)networkNamed:(NSString *)networkName;
+/* Networks most people are looking for, in the order they should be shown.
+ Every member is also present in -listOfNetworks. */
+@property(readonly, copy) NSArray<IRCNetwork *> *popularNetworks;
 
+- (nullable IRCNetwork *)networkNamed:(NSString *)networkName;
 - (nullable IRCNetwork *)networkWithServerAddress:(NSString *)serverAddress;
+
+/* Whether the account group (account name, password, SASL) applies to a
+ network with the given registration policy and SASL support. Kept as a
+ pure function so that it can be tested without a network object. */
++ (BOOL)accountFieldsApplyToRegistration:(IRCNetworkRegistration)registration saslSupported:(BOOL)saslSupported;
+
++ (IRCNetworkRegistration)registrationFromString:(nullable NSString *)string;
 @end
 
 #pragma mark -
 
 @interface IRCNetwork : NSObject
 @property(readonly, copy) NSString *networkName;
-@property(readonly, copy) NSString *networkDescription NS_UNAVAILABLE; // unused
+@property(readonly, copy) NSString *networkDescription;
 @property(readonly, copy) NSString *serverAddress;
 @property(readonly) uint16_t serverPort;
 @property(readonly) BOOL prefersSecuredConnection;
+@property(readonly, copy, nullable) NSString *website;
+@property(readonly) BOOL saslSupported;
+@property(readonly) IRCNetworkRegistration registration;
+@property(readonly, copy, nullable) NSString *registrationNote;
+@property(readonly, copy) NSArray<NSString *> *suggestedChannels;
+
+/* YES when the picker should show the account group for this network. */
+@property(readonly) BOOL accountFieldsApply;
 
 - (instancetype)init NS_UNAVAILABLE;
+
+/* Designated initializer. Returns nil when the name or address is missing.
+ Used by the bundled list and by tests. */
+- (nullable instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dictionary NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -43,6 +43,7 @@
 #import "TPCPathInfo.h"
 #import "TPCPreferencesLocal.h"
 #import "TVCLogControllerPrivate.h"
+#import "TVCLogPolicyPrivate.h"
 #import "TVCLogScriptEventSinkPrivate.h"
 #import "TVCLogViewPrivate.h"
 #import "TVCLogViewInternalWK2.h"
@@ -72,6 +73,8 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 	if ((self = [super init])) {
 		self.viewController = viewController;
+
+		self.contextMenuTarget = [TVCLogPolicyTarget new];
 
 		[self constructWebView];
 
@@ -108,9 +111,26 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 - (void)print
 {
-	// Printing is probably broken: <http://www.openradar.me/20217859>
+	WKWebView *webView = self.webViewBacking;
 
-	[self.webView print:nil];
+	NSWindow *window = webView.window;
+
+	if (window == nil) {
+		return;
+	}
+
+	NSPrintInfo *printInfo = [NSPrintInfo sharedPrintInfo];
+
+	NSPrintOperation *printOperation = [webView printOperationWithPrintInfo:printInfo];
+
+	/* WebKit lays the page out for the size of the view it is printing
+	 from. A zero-sized view prints nothing, so give it the paper size. */
+	printOperation.view.frame = NSMakeRect(0.0, 0.0, printInfo.paperSize.width, printInfo.paperSize.height);
+
+	printOperation.showsPrintPanel = YES;
+	printOperation.showsProgressPanel = YES;
+
+	[printOperation runOperationModalForWindow:window delegate:nil didRunSelector:NULL contextInfo:NULL];
 }
 
 - (BOOL)keyDown:(NSEvent *)e inView:(NSView *)view
@@ -139,13 +159,14 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 	NSURL *fileURL = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
 
-	if (fileURL) {
-		NSString *filename = fileURL.path;
-
-		[self.viewController logViewWebViewReceivedDropWithFile:filename];
+	if (fileURL == nil || fileURL.isFileURL == NO) {
+		/* Not a file. The caller lets the web view handle the drop. */
+		return NO;
 	}
 
-	return NO;
+	[self.viewController logViewWebViewReceivedDropWithFile:fileURL.path];
+
+	return YES;
 }
 
 - (void)informDelegateWebViewFinishedLoading
@@ -159,9 +180,14 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	 it does not, -isLayingOutView never returns to NO and the overlay stays
 	 on top of the view forever, hiding everything printed into it.
 
-	 Loading has genuinely finished by the time we are called, so lift the
-	 overlay ourselves. This is idempotent: the style calling through to
-	 -setViewFinishedLayout afterwards is harmless. */
+	Loading has genuinely finished by the time we are called, so lift the
+	overlay ourselves. This is idempotent: the style calling through to
+	-setViewFinishedLayout afterwards is harmless. */
+	[self evaluateJavaScript:@"if (_Glasstual._viewBodyDidLoadAnimationFrame) { "
+							  "window.cancelAnimationFrame(_Glasstual._viewBodyDidLoadAnimationFrame); "
+							  "_Glasstual._viewBodyDidLoad(); "
+							  "}"];
+
 	[self setViewFinishedLayout];
 
 	[self.viewController logViewWebViewFinishedLoading];
@@ -180,6 +206,15 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 - (TVCLogPolicy *)webViewPolicy
 {
 	return [self.webViewBacking webViewPolicy];
+}
+
+- (TVCLogPolicyTarget *)takeContextMenuTarget
+{
+	TVCLogPolicyTarget *target = self.contextMenuTarget;
+
+	self.contextMenuTarget = [TVCLogPolicyTarget new];
+
+	return target;
 }
 
 - (NSView *)webView
@@ -257,69 +292,6 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	NSParameterAssert(searchString != nil);
 
 	[self.webViewBacking findString:searchString movingForward:movingForward];
-}
-
-- (void)enableOffScreenUpdates
-{
-	//	XRPerformBlockAsynchronouslyOnMainQueue(^{
-	[(id)self.webView enableOffScreenUpdates];
-	//	});
-}
-
-- (void)disableOffScreenUpdates
-{
-	//	XRPerformBlockAsynchronouslyOnMainQueue(^{
-	[(id)self.webView disableOffScreenUpdates];
-	//	});
-}
-
-- (void)redrawViewIfNeeded
-{
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[(id)self.webView redrawViewIfNeeded];
-	});
-}
-
-- (void)redrawView
-{
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[(id)self.webView redrawView];
-	});
-}
-
-- (void)resetScrollerPosition
-{
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[(id)self.webView resetScrollerPosition];
-	});
-}
-
-- (void)resetScrollerPositionTo:(BOOL)scrolledToBottom
-{
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[(id)self.webView resetScrollerPositionTo:scrolledToBottom];
-	});
-}
-
-- (void)saveScrollerPosition
-{
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[(id)self.webView saveScrollerPosition];
-	});
-}
-
-- (void)restoreScrollerPosition
-{
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[(id)self.webView restoreScrollerPosition];
-	});
-}
-
-- (void)setAutomaticScrollingEnabled:(BOOL)automaticScrollingEnabled
-{
-	//	XRPerformBlockAsynchronouslyOnMainQueue(^{
-	[(id)self.webView setAutomaticScrollingEnabled:automaticScrollingEnabled];
-	//	});
 }
 
 @end

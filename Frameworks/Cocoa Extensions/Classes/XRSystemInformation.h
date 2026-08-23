@@ -33,7 +33,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface XRSystemInformation : NSObject
-@property (nonatomic, class, copy, nullable, readonly) NSString *formattedEthernetMacAddress;
 
 @property (nonatomic, class, readonly) BOOL systemIsSleeping;
 
@@ -43,10 +42,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, class, copy, nullable, readonly) NSString *systemOperatingSystemName;
 
 @property (nonatomic, class, copy, nullable, readonly) NSString *systemModelName COCOA_EXTENSIONS_DEPRECATED("Return value is not reliable on new Macs. No alternative available."); // "iMac," "MacBook," "MacBook Pro," etc.
-
-+ (nullable NSString *)retrieveSystemInformationKey:(NSString *)key;
-
-@property (nonatomic, class, readonly) BOOL systemIsAppleSilicon;
 @end
 
 NS_ASSUME_NONNULL_END

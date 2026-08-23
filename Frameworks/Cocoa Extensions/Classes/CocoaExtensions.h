@@ -35,13 +35,10 @@
 
 #import <CocoaExtensions/StaticDefinitions.h>
 
-#import <CocoaExtensions/ApplePrivateMac.h>
 
 #import <CocoaExtensions/XRLogging.h>
 
 #import <CocoaExtensions/XRAccessibility.h>
-#import <CocoaExtensions/XRAddressBook.h>
-#import <CocoaExtensions/XRBase64Encoding.h>
 #import <CocoaExtensions/XRFileSystemMonitor.h>
 #import <CocoaExtensions/XRGlobalModels.h>
 #import <CocoaExtensions/XRKeychain.h>
@@ -54,7 +51,6 @@
 #import <CocoaExtensions/RCMSecureTransport.h>
 #import <CocoaExtensions/RCMTrustPanel.h>
 
-#import <CocoaExtensions/NSAnimationContextHelper.h>
 #import <CocoaExtensions/NSArrayControllerHelper.h>
 #import <CocoaExtensions/NSArrayHelper.h>
 #import <CocoaExtensions/NSBundleHelper.h>
@@ -68,12 +64,10 @@
 #import <CocoaExtensions/NSErrorHelper.h>
 #import <CocoaExtensions/NSFileManagerHelper.h>
 #import <CocoaExtensions/NSFontHelper.h>
-#import <CocoaExtensions/NSImageHelper.h>
 #import <CocoaExtensions/NSIndexSetHelper.h>
 #import <CocoaExtensions/NSKeyedArchiverHelper.h>
 #import <CocoaExtensions/NSLayoutConstraintHelper.h>
 #import <CocoaExtensions/NSMenuHelper.h>
-#import <CocoaExtensions/NSMethodSignatureHelper.h>
 #import <CocoaExtensions/NSNumberHelper.h>
 #import <CocoaExtensions/NSObjectHelper.h>
 #import <CocoaExtensions/NSOutlineViewHelper.h>
@@ -81,12 +75,10 @@
 #import <CocoaExtensions/NSRangeHelper.h>
 #import <CocoaExtensions/NSRectHelper.h>
 #import <CocoaExtensions/NSScreenHelper.h>
-#import <CocoaExtensions/NSSplitViewHelper.h>
 #import <CocoaExtensions/NSStringHelper.h>
 #import <CocoaExtensions/NSStringTokenizer.h>
 #import <CocoaExtensions/NSTabViewHelper.h>
 #import <CocoaExtensions/NSTextFieldHelper.h>
-#import <CocoaExtensions/NSThemeFrameHelper.h>
 #import <CocoaExtensions/NSURLHelper.h>
 #import <CocoaExtensions/NSUserDefaultsHelper.h>
 #import <CocoaExtensions/NSValueHelper.h>

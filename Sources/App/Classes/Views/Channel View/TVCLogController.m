@@ -81,6 +81,11 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface TVCLogController ()
+/* Reactions received this session: msgid -> emoji -> nicknames. The
+ archived line cannot be rewritten, so these live with the view. */
+@property(nonatomic, strong)
+	NSMutableDictionary<NSString *, NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *>
+		*reactionsByMessageIdentifier;
 @property(nonatomic, assign, readwrite, getter=viewIsLoaded) BOOL loaded;
 @property(nonatomic, assign) BOOL terminating;
 @property(nonatomic, assign) BOOL historyLoadedForFirstTime;
@@ -93,8 +98,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable, readwrite) NSString *oldestLineNumber;
 @property(nonatomic, copy, nullable, readwrite) NSString *newestLineNumber;
 @property(nonatomic, strong, nullable) TVCLogLine *lastLine;
+@property(nonatomic, strong, nullable) TVCLogLine *oldestLine;
 @property(nonatomic, strong) NSMutableArray<NSString *> *highlightedLineNumbers;
-@property(nonatomic, strong) NSCache *jumpToLineCallbacks;
+@property(nonatomic, strong) NSMutableDictionary<NSString *, void (^)(BOOL)> *jumpToLineCallbacks;
 @property(nonatomic, strong, readwrite) TVCLogView *backingView;
 @property(weak, readonly) IRCTreeItem *associatedItem;
 @property(nonatomic, weak, readwrite) IRCClient *associatedClient;
@@ -169,13 +175,11 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 
 - (void)prepareInitialState
 {
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	self.encrypted = self.associatedChannel.encryptionStateIsEncrypted;
-#endif
+	self.reactionsByMessageIdentifier = [NSMutableDictionary dictionary];
 
 	self.highlightedLineNumbers = [NSMutableArray new];
 
-	self.jumpToLineCallbacks = [NSCache new];
+	self.jumpToLineCallbacks = [NSMutableDictionary dictionary];
 }
 
 - (void)prepareForTermination:(BOOL)isTerminatingApplication
@@ -229,15 +233,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	self.backingView = [[TVCLogView alloc] initWithViewController:self];
 }
 
-- (void)rebuildBackingView
-{
-	[self buildBackingView];
-
-	if (self.visible) {
-		[self.attachedWindow updateChannelViewBoxContentViewSelection];
-	}
-}
-
 - (void)loadInitialDocument
 {
 	[self loadAlternateHTML:[self initialDocument]];
@@ -281,9 +276,8 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 
 	if (
 		/* 1 */ [TPCPreferences reloadScrollbackOnLaunch] == NO ||
-		/* 2 */ channel.isUtility ||
-		/* 3 */ (channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO) ||
-		/* 4 */ self.encrypted) {
+		/* 2 */ channel.isUtility || channel.isDirectChat ||
+		/* 3 */ (channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO)) {
 		[self historicLogResetChannel];
 	}
 }
@@ -424,8 +418,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 												  resultInfo:NULL];
 
 		[self _evaluateFunction:@"Glasstual.setTopicBarValue" withArguments:@[ topicString, topicTemplate ]];
-
-		[self.backingView redrawView];
 	};
 
 	_enqueueBlockStandalone(operationBlock)
@@ -450,9 +442,29 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 - (void)mark
 {
 	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		NSString *markTemplate = [TVCLogRenderer renderTemplateNamed:@"historyIndicator"];
+		NSString *markTemplate =
+			[TVCLogRenderer renderTemplateNamed:@"historyIndicator"
+									 attributes:@{@"historyIndicatorMessage" : TXTLS(@"TVCMainWindow[hin-um]")}];
 
 		[self _evaluateFunction:@"_Glasstual.historyIndicatorAdd" withArguments:@[ markTemplate ]];
+	};
+
+	_enqueueBlock(operationBlock);
+}
+
+/* Places the mark after the last line received at or before `date`.
+ Used for read markers shared by other clients. */
+- (void)markAtDate:(NSDate *)date
+{
+	NSParameterAssert(date != nil);
+
+	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+		NSString *markTemplate =
+			[TVCLogRenderer renderTemplateNamed:@"historyIndicator"
+									 attributes:@{@"historyIndicatorMessage" : TXTLS(@"TVCMainWindow[hin-um]")}];
+
+		[self _evaluateFunction:@"_Glasstual.historyIndicatorAddAfterTimestamp"
+				  withArguments:@[ markTemplate, @(date.timeIntervalSince1970) ]];
 	};
 
 	_enqueueBlock(operationBlock);
@@ -566,10 +578,9 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	IRCChannel *channel = self.associatedChannel;
 
 	if (
-		/* 1 */ self.encrypted ||
-		/* 2 */ (firstTimeLoadingHistory && [TPCPreferences reloadScrollbackOnLaunch] == NO) ||
-		/* 3 */ channel.isUtility ||
-		/* 4 */
+		/* 1 */ (firstTimeLoadingHistory && [TPCPreferences reloadScrollbackOnLaunch] == NO) ||
+		/* 2 */ channel.isUtility || channel.isDirectChat ||
+		/* 3 */
 		(firstTimeLoadingHistory && channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO)) {
 		self.historyLoadedForFirstTime = YES;
 
@@ -598,6 +609,8 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 			self.lastLine = lastLine;
 		}
 
+		[self noteOldestLineCandidate:objects.firstObject];
+
 		if (firstTimeLoadingHistory) {
 			NSString *newestLineNumber = lastLine.uniqueIdentifier;
 
@@ -612,8 +625,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		self.historyLoadedForFirstTime = YES;
 
 		[self notifyViewFinishedLoadingHistory];
-
-		[self.backingView redrawViewIfNeeded];
 	};
 
 	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
@@ -731,12 +742,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	[self _evaluateFunction:@"_Glasstual.notifyDidBecomeVisible" withArguments:nil];
 
 	[self maybeReloadHistory];
-
-	[self.backingView restoreScrollerPosition];
-
-	[self.backingView enableOffScreenUpdates];
-
-	[self.backingView redrawViewIfNeeded];
 }
 
 - (void)notifySelectionChanged
@@ -747,10 +752,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 - (void)notifyDidBecomeHidden
 {
 	[self _evaluateFunction:@"_Glasstual.notifyDidBecomeHidden" withArguments:nil];
-
-	[self.backingView saveScrollerPosition];
-
-	[self.backingView disableOffScreenUpdates];
 }
 
 - (void)notifyViewFinishedLoadingHistory
@@ -781,18 +782,9 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 {
 	NSParameterAssert(lineNumber != nil);
 
-	/* The Objective-C based automatic scroller relies on notifications of
-	 bounds and frame changes to know when a WebView scrolls. If the WebView
-	 is offscreen, then we have no way to know when a jump occurs because
-	 these notifications are not received. To workaround this, the JavaScript
-	 passes the scrolledToBottom argument. The Objective-C automatic scroller
-	 can then be passed this argument to know whether to perform automatic
-	 scrolling when the view becomes visible. */
-	if (successful) {
-		[self.backingView resetScrollerPositionTo:scrolledToBottom];
-	}
-
-	void (^callbackHandler)(BOOL) = [self.jumpToLineCallbacks objectForKey:lineNumber];
+	/* scrolledToBottom was consumed by the WebKit1 automatic scroller.
+	 The WebKit2 scroller lives in JavaScript and tracks this itself. */
+	void (^callbackHandler)(BOOL) = self.jumpToLineCallbacks[lineNumber];
 
 	if (callbackHandler == nil) {
 		return;
@@ -875,20 +867,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		return;
 	}
 
-	/* Unique list */
-	NSMutableArray<NSString *> *linksMatched = [NSMutableArray array];
-
-	NSMutableArray<TLOLinkParserResult *> *linksToProcess = [NSMutableArray array];
-
-	for (TLOLinkParserResult *link in mediaLinks) {
-		if ([linksMatched containsObject:link.stringValue]) {
-			continue;
-		}
-
-		[linksToProcess addObject:link];
-	}
-
-	[linksToProcess enumerateObjectsUsingBlock:^(TLOLinkParserResult *link, NSUInteger index, BOOL *stop) {
+	[mediaLinks enumerateObjectsUsingBlock:^(TLOLinkParserResult *link, NSUInteger index, BOOL *stop) {
 		[self processInlineMediaAtAddress:link.stringValue
 					 withUniqueIdentifier:link.uniqueIdentifier
 							 atLineNumber:lineNumber
@@ -1013,6 +992,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	self.newestLineNumber = nil;
 
 	self.lastLine = nil;
+	self.oldestLine = nil;
 
 	self.loaded = NO;
 
@@ -1024,15 +1004,6 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 }
 
 - (void)clear
-{
-	if (self.terminating) {
-		return;
-	}
-
-	[self clearWithReset:YES];
-}
-
-- (void)clearBackingView
 {
 	if (self.terminating) {
 		return;
@@ -1083,11 +1054,26 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 		};
 
 		if (after == NO) {
+			void (^beforeCompletionBlock)(NSArray *) = ^(NSArray<TVCLogLine *> *entries) {
+				if ([operation isCancelled]) {
+					return;
+				}
+
+				[self noteOldestLineCandidate:entries.firstObject];
+
+				/* The local store has nothing older. The server might. */
+				if (entries.count == 0) {
+					[self _noteLocalScrollbackExhausted];
+				}
+
+				historicLogCompletionBlock(entries);
+			};
+
 			[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
 													  beforeUniqueIdentifier:lineNumber
 																  fetchLimit:maximumNumberOfLines
 																 limitToDate:nil
-														 withCompletionBlock:historicLogCompletionBlock];
+														 withCompletionBlock:beforeCompletionBlock];
 		} else {
 			[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
 													   afterUniqueIdentifier:lineNumber
@@ -1212,6 +1198,92 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 }
 
 #pragma mark -
+#pragma mark Remote History
+
+- (void)noteOldestLineCandidate:(nullable TVCLogLine *)logLine
+{
+	if (logLine == nil) {
+		return;
+	}
+
+	TVCLogLine *oldestLine = self.oldestLine;
+
+	if (oldestLine == nil || [logLine.receivedAt compare:oldestLine.receivedAt] == NSOrderedAscending) {
+		self.oldestLine = logLine;
+	}
+}
+
+- (void)_noteLocalScrollbackExhausted
+{
+	IRCChannel *channel = self.associatedChannel;
+
+	if (channel == nil) {
+		return;
+	}
+
+	TVCLogLine *oldestLine = self.oldestLine;
+
+	if (oldestLine == nil) {
+		return;
+	}
+
+	XRPerformBlockAsynchronouslyOnMainQueue(^{
+		[self.associatedClient requestChatHistoryBeforeDate:oldestLine.receivedAt inChannel:channel];
+	});
+}
+
+/* Lines the server replayed from before the oldest line in the view.
+ They are rendered above the scrollback and are not written to the
+ store, which is append only; the server is their store. */
+- (void)prependHistoricLogLines:(NSArray<TVCLogLine *> *)logLines
+{
+	NSParameterAssert(logLines != nil);
+
+	if (self.terminating || logLines.count == 0) {
+		return;
+	}
+
+	IRCTreeItem *item = self.associatedItem;
+
+	for (TVCLogLine *logLine in logLines) {
+		[TVCLogControllerHistoricLogSharedInstance() indexLogLine:logLine forItem:item];
+	}
+
+	[self noteOldestLineCandidate:logLines.firstObject];
+
+	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+		NSMutableArray<NSString *> *lineNumbers = [NSMutableArray arrayWithCapacity:logLines.count];
+
+		NSMutableString *html = [NSMutableString string];
+
+		for (TVCLogLine *logLine in logLines) {
+			NSDictionary<NSString *, id> *resultInfo = nil;
+
+			NSString *lineHTML = [self renderLogLine:logLine resultInfo:&resultInfo];
+
+			if (lineHTML == nil) {
+				LogToConsoleError("Failed to render log line %{public}@", logLine.description);
+
+				continue;
+			}
+
+			[html appendString:lineHTML];
+
+			[lineNumbers addObject:logLine.uniqueIdentifier];
+		}
+
+		if (lineNumbers.count == 0) {
+			return;
+		}
+
+		[self _evaluateFunction:@"_Glasstual.documentBodyPrependRemoteHistory"
+				  withArguments:@[ [html copy], [lineNumbers copy] ]];
+	};
+
+	_enqueueBlock(operationBlock);
+}
+
+#pragma mark -
 #pragma mark Print
 
 - (void)print:(TVCLogLine *)logLine
@@ -1233,6 +1305,8 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	}
 
 	self.lastLine = logLine;
+
+	[self noteOldestLineCandidate:logLine];
 
 	TVCLogControllerPrintingBlock printBlock = ^(id operation) {
 		NSDictionary<NSString *, id> *resultInfo = nil;
@@ -1296,19 +1370,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 			}
 
 			/* Log this log line */
-			/* If the channel is encrypted, then we refuse to write to
-			 the actual historic log so there is no trace of the chatter
-			 on the disk in the form of an unencrypted cache file. */
-			/* Doing it this way does break the ability to reload chatter
-			 in the view as well as playback on restart, but the added
-			 security can be seen as a bonus. */
-			if (self.encrypted == NO) {
-				[TVCLogControllerHistoricLogSharedInstance() writeNewEntryWithLogLine:logLine
-																			  forItem:self.associatedItem];
-			}
-
-			/* Redraw view if needed */
-			[self.backingView redrawViewIfNeeded];
+			[TVCLogControllerHistoricLogSharedInstance() writeNewEntryWithLogLine:logLine forItem:self.associatedItem];
 
 			/* Using information provided by conversation tracking we can update 
 			 our internal array of favored nicknames for nick completion. */
@@ -1335,6 +1397,101 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	};
 
 	_enqueueBlock(printBlock)
+}
+
+#pragma mark -
+#pragma mark Reactions
+
+- (void)noteReaction:(NSString *)emoji
+		   fromNickname:(NSString *)nickname
+	toMessageIdentifier:(NSString *)messageIdentifier
+{
+	NSParameterAssert(emoji != nil);
+	NSParameterAssert(nickname != nil);
+	NSParameterAssert(messageIdentifier != nil);
+
+	if (emoji.length == 0 || nickname.length == 0 || messageIdentifier.length == 0) {
+		return;
+	}
+
+	@synchronized(self.reactionsByMessageIdentifier) {
+		NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *reactions =
+			self.reactionsByMessageIdentifier[messageIdentifier];
+
+		if (reactions == nil) {
+			reactions = [NSMutableDictionary dictionary];
+
+			self.reactionsByMessageIdentifier[messageIdentifier] = reactions;
+		}
+
+		NSMutableOrderedSet<NSString *> *nicknames = reactions[emoji];
+
+		if (nicknames == nil) {
+			nicknames = [NSMutableOrderedSet orderedSet];
+
+			reactions[emoji] = nicknames;
+		}
+
+		[nicknames addObject:nickname];
+	}
+}
+
+- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactionsForMessageIdentifier:
+	(NSString *)messageIdentifier
+{
+	NSParameterAssert(messageIdentifier != nil);
+
+	@synchronized(self.reactionsByMessageIdentifier) {
+		NSDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *reactions =
+			self.reactionsByMessageIdentifier[messageIdentifier];
+
+		if (reactions.count == 0) {
+			return nil;
+		}
+
+		NSMutableDictionary<NSString *, NSArray<NSString *> *> *result = [NSMutableDictionary dictionary];
+
+		[reactions enumerateKeysAndObjectsUsingBlock:^(
+					   NSString *emoji, NSMutableOrderedSet<NSString *> *nicknames, BOOL *stop) {
+			result[emoji] = nicknames.array;
+		}];
+
+		return [result copy];
+	}
+}
+
+/* What the line was archived with, merged with what arrived since. */
+- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactionsForLogLine:(TVCLogLine *)logLine
+{
+	NSString *messageIdentifier = logLine.messageIdentifier;
+
+	NSDictionary<NSString *, NSArray<NSString *> *> *archived = logLine.reactions;
+
+	NSDictionary<NSString *, NSArray<NSString *> *> *session = nil;
+
+	if (messageIdentifier.length > 0) {
+		session = [self reactionsForMessageIdentifier:messageIdentifier];
+	}
+
+	if (session.count == 0) {
+		return archived;
+	}
+
+	if (archived.count == 0) {
+		return session;
+	}
+
+	NSMutableDictionary<NSString *, NSArray<NSString *> *> *merged = [archived mutableCopy];
+
+	[session enumerateKeysAndObjectsUsingBlock:^(NSString *emoji, NSArray<NSString *> *nicknames, BOOL *stop) {
+		NSMutableOrderedSet<NSString *> *set = [NSMutableOrderedSet orderedSetWithArray:(merged[emoji] ?: @[])];
+
+		[set addObjectsFromArray:nicknames];
+
+		merged[emoji] = set.array;
+	}];
+
+	return [merged copy];
 }
 
 - (nullable NSString *)renderLogLine:(TVCLogLine *)logLine
@@ -1436,6 +1593,35 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 
 	templateAttributes[@"command"] = logLine.command;
 	templateAttributes[@"rawCommand"] = logLine.command; // Legacy key
+
+	NSString *messageIdentifier = logLine.messageIdentifier;
+
+	if (messageIdentifier.length > 0) {
+		templateAttributes[@"messageIdentifier"] = messageIdentifier;
+	}
+
+	NSString *deliveryState = logLine.deliveryStateString;
+
+	if (deliveryState) {
+		templateAttributes[@"deliveryState"] = deliveryState;
+	}
+
+	NSString *replyToMessageIdentifier = logLine.replyToMessageIdentifier;
+
+	if (replyToMessageIdentifier.length > 0) {
+		templateAttributes[@"replyToMessageIdentifier"] = replyToMessageIdentifier;
+	}
+
+	NSDictionary *reactions = [self reactionsForLogLine:logLine];
+
+	if (reactions.count > 0) {
+		NSData *reactionsData = [NSJSONSerialization dataWithJSONObject:reactions options:0 error:NULL];
+
+		if (reactionsData) {
+			templateAttributes[@"reactionsJSON"] = [[NSString alloc] initWithData:reactionsData
+																		 encoding:NSUTF8StringEncoding];
+		}
+	}
 
 	// ---- //
 
@@ -1733,7 +1919,13 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 
 - (void)logViewWebViewClosedUnexpectedly
 {
-	[self clearBackingView];
+	/* The web content process died. Reload the document without
+	 resetting the historic log so the history is replayed into it. */
+	if (self.terminating) {
+		return;
+	}
+
+	[self clearWithReset:NO];
 }
 
 - (void)logViewWebViewKeyDown:(NSEvent *)e

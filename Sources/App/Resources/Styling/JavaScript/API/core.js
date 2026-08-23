@@ -142,6 +142,69 @@ Glasstual.appearanceDidChange					= function(changedTo) {};
     added to the settings.plist file in order to enable use of this callback. */
 Glasstual.handleEvent                            = function(eventToken) {};
 
+/*
+    tagMessageReceived() is called when a TAGMSG carrying client-only
+    tags (IRCv3 message-tags) arrives for the view. The argument is an
+    object with the following keys:
+
+    sender     - Nickname that sent the message
+    target     - Channel or nickname the message was sent to
+    tags       - Object of client-only tags without their "+" prefix,
+                 for example { "typing" : "active" } or
+                 { "draft/reply" : "<msgid>", "draft/react" : "👍" }
+    timestamp  - Unix timestamp of the message
+    msgid      - Message identifier (only present when the server sent one)
+    account    - Account name of the sender (only present when the server sent one)
+    fromLocalUser     - true when the local user sent it (their own reaction)
+    localUserNickname - Nickname of the local user
+
+    Before this is called, Glasstual updates the line the event refers
+    to: a "draft/react" adds a pill to the line's .reactions element
+    (one .reaction per emoji, with .emoji and .count; data-mine="true"
+    when the local user reacted) and adds two keys to the event:
+
+    lineNumber - The line reacted to, when it is in the view
+    reactions  - Its reactions: { "👍" : ["mara", "jonas"], … }
+
+    Typing ("typing") is shown by the app in the input bar, not the view.
+
+    This callback is always invoked; no settings.plist entry is required.
+*/
+Glasstual.tagMessageReceived                     = function(event) {};
+
+/*
+    lineDeliveryStateChanged() is called after Glasstual has updated a
+    line the local user sent. With labeled-response and echo-message the
+    line is added with data-delivery-state="pending" and moves to
+    "delivered" once the server echoes it back, or to "failed" when the
+    server rejects it or does not answer in time. The data-delivery-state
+    attribute (and data-msgid, when the echo carried one) are updated
+    before this is called. For a failure, a <span class="deliveryFailure">
+    holding the reason is appended to the line's .innerMessage.
+
+    lineNumber  - The line's identifier (the id is "line-" + lineNumber)
+    state       - "pending", "delivered" or "failed"
+    msgid       - Message identifier from the echo, or null
+    reason      - Failure description, or null
+*/
+Glasstual.lineDeliveryStateChanged               = function(lineNumber, state, msgid, reason) {};
+
+/*
+    Replies (+draft/reply) and reactions (+draft/react) on lines:
+
+    A line that answers another carries data-reply-to="<msgid>". When
+    it is added to the view Glasstual inserts a .replyQuote (holding a
+    .replySender and a .replyExcerpt) at the start of its .innerMessage;
+    clicking the quote scrolls to the referenced line and gives it the
+    "flash" class for a moment. A line rendered with reactions carries
+    data-reactions with the JSON described above and gets its .reactions
+    element before messageAddedToView() is called. Styles lay these
+    elements out; they do not have to create them.
+
+    MessageTags.excerptOfLine(line) and MessageTags.senderOfLine(line)
+    are available to styles that want the same excerpt the app uses.
+*/
+
 /* *********************************************************************** */
 /*						Application Object								   */
 /* *********************************************************************** */

@@ -34,13 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation NSError (CSErrorHelper)
 
-- (BOOL)isErrorInDomain:(NSString *)domain
-{
-	NSParameterAssert(domain != nil);
-
-	return [self.domain isEqualToString:domain];
-}
-
 - (BOOL)isErrorInDomain:(NSString *)domain code:(NSInteger)code
 {
 	NSParameterAssert(domain != nil);

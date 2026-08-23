@@ -45,6 +45,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#if DEBUG
+static NSString *_Nullable TPCPathInfoUIReviewDirectoryName(void)
+{
+	NSString *reviewDirectory = NSProcessInfo.processInfo.environment[@"GLASSTUAL_UI_REVIEW_DIRECTORY"];
+
+	if (reviewDirectory.length == 0) {
+		return nil;
+	}
+
+	return reviewDirectory.lastPathComponent;
+}
+#endif
+
 @implementation TPCPathInfo
 
 #pragma mark -
@@ -125,6 +138,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *basePath = [pathArray.firstObject stringByAppendingPathComponent:endPath];
 
+#if DEBUG
+	NSString *reviewDirectory = TPCPathInfoUIReviewDirectoryName();
+
+	if (reviewDirectory) {
+		basePath = [basePath stringByAppendingPathComponent:@"UI Reviews"];
+		basePath = [basePath stringByAppendingPathComponent:reviewDirectory];
+	}
+#endif
+
 	[self _createDirectoryAtPath:basePath];
 
 	return basePath;
@@ -156,6 +178,17 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	NSURL *baseURL =
 		[RZFileManager() containerURLForSecurityApplicationGroupIdentifier:TXBundleBuildGroupContainerIdentifier];
+
+#if DEBUG
+	NSString *reviewDirectory = TPCPathInfoUIReviewDirectoryName();
+
+	if (reviewDirectory) {
+		baseURL = [baseURL URLByAppendingPathComponent:@"UI Reviews" isDirectory:YES];
+		baseURL = [baseURL URLByAppendingPathComponent:reviewDirectory isDirectory:YES];
+
+		[self _createDirectoryAtURL:baseURL];
+	}
+#endif
 
 	return baseURL;
 }
@@ -195,6 +228,15 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	NSString *basePath = [pathArray.firstObject stringByAppendingPathComponent:@"/Glasstual/"];
+
+#if DEBUG
+	NSString *reviewDirectory = TPCPathInfoUIReviewDirectoryName();
+
+	if (reviewDirectory) {
+		basePath = [basePath stringByAppendingPathComponent:@"UI Reviews"];
+		basePath = [basePath stringByAppendingPathComponent:reviewDirectory];
+	}
+#endif
 
 	[self _createDirectoryAtPath:basePath];
 
@@ -249,6 +291,15 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *endPath = [NSString stringWithFormat:@"/Logs/%@/", TXBundleBuildProductIdentifier];
 
 	NSString *basePath = [pathArray.firstObject stringByAppendingPathComponent:endPath];
+
+#if DEBUG
+	NSString *reviewDirectory = TPCPathInfoUIReviewDirectoryName();
+
+	if (reviewDirectory) {
+		basePath = [basePath stringByAppendingPathComponent:@"UI Reviews"];
+		basePath = [basePath stringByAppendingPathComponent:reviewDirectory];
+	}
+#endif
 
 	[self _createDirectoryAtPath:basePath];
 
@@ -368,19 +419,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSString *)customScripts
 {
+#if DEBUG
+	if (NSProcessInfo.processInfo.environment[@"GLASSTUAL_UI_REVIEW_DIRECTORY"] != nil) {
+		NSURL *baseURL = [self.groupContainerApplicationSupportURL URLByAppendingPathComponent:@"Scripts"
+																				   isDirectory:YES];
+
+		[self _createDirectoryAtURL:baseURL];
+
+		return baseURL.path;
+	}
+#endif
+
 	NSArray *pathArray = NSSearchPathForDirectoriesInDomains(NSApplicationScriptsDirectory, NSUserDomainMask, YES);
 
 	if (pathArray.count == 0) {
 		return nil;
 	}
 
-	NSString *basePath = pathArray.firstObject;
-
-#if GLASSTUAL_BUILT_INSIDE_SANDBOX == 0
-	[self _createDirectoryAtPath:basePath];
-#endif
-
-	return basePath;
+	return pathArray.firstObject;
 }
 
 + (nullable NSURL *)customScriptsURL

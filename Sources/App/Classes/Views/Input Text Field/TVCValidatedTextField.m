@@ -69,15 +69,20 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 /* An invalid value is signalled by a faint red tint behind the text
- in addition to the error popover. */
+ in addition to the error popover. The same message is exposed to
+ assistive technology through the field's help text. */
 - (void)_updateBackgroundForValidity
 {
 	if (self.cachedValidValue || self.validationPerformed == NO) {
 		self.drawsBackground = NO;
 		self.backgroundColor = [NSColor textBackgroundColor];
+
+		self.accessibilityHelp = nil;
 	} else {
 		self.drawsBackground = YES;
 		self.backgroundColor = [[NSColor systemRedColor] colorWithAlphaComponent:0.08];
+
+		self.accessibilityHelp = self.lastValidationErrorDescription;
 	}
 }
 
@@ -186,7 +191,7 @@ NS_ASSUME_NONNULL_BEGIN
 			errorDescription = self.validationBlock(stringToValidate);
 		}
 	} else {
-		if (self.performValidationWhenEmpty) {
+		if (self.performValidationWhenEmpty && self.validationBlock) {
 			errorDescription = self.validationBlock(stringToValidate);
 		} else if (self.stringValueIsInvalidOnEmpty) {
 			errorDescription = TXTLS(@"BasicLanguage[fo8-1h]");

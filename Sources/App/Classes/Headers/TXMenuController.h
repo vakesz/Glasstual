@@ -59,18 +59,17 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	MTMainMenuHelp = 10,
 
 	/* Main menu - App menu */
-	MTMMAppAboutApp = 100,				   // "About Glasstual"
-	MTMMAppAboutAppSeparator = 101,		   // "-"
-	MTMMAppPreferences = 102,			   // "Preferences…"
-	MTMMAppCheckForUpdates = 105,		   // "Check for updates…"
-	MTMMAppCheckForUpdatesSeparator = 106, // "-"
-	MTMMAppServices = 107,				   // "Services"
-	MTMMAppServicesSeparator = 108,		   // "-"
-	MTMMAppHideApp = 109,				   // "Hide Glasstual"
-	MTMMAppHideOthers = 110,			   // "Hide Others"
-	MTMMAppShowAll = 111,				   // "Show All"
-	MTMMAppShowAllSeparator = 112,		   // "-"
-	MTMMAppQuitApp = 113,				   // "Quit Glasstual & IRC"
+	MTMMAppAboutApp = 100,			   // "About Glasstual"
+	MTMMAppAboutAppSeparator = 101,	   // "-"
+	MTMMAppPreferences = 102,		   // "Settings…"
+	MTMMAppPreferencesSeparator = 106, // "-"
+	MTMMAppServices = 107,			   // "Services"
+	MTMMAppServicesSeparator = 108,	   // "-"
+	MTMMAppHideApp = 109,			   // "Hide Glasstual"
+	MTMMAppHideOthers = 110,		   // "Hide Others"
+	MTMMAppShowAll = 111,			   // "Show All"
+	MTMMAppShowAllSeparator = 112,	   // "-"
+	MTMMAppQuitApp = 113,			   // "Quit Glasstual & IRC"
 
 	/* Main menu - File menu */
 	MTMMFileDisableAllNotifications = 200,				 // "Disable All Notifications"
@@ -219,9 +218,11 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	MTMMHelpConnectToTestingChannel = 908,						// "Connect to Testing Channel"
 	MTMMHelpConnectToTestingChannelSeparator = 909,				// "-"
 	MTMMHelpAdvancedMenu = 910,									// "Advanced"
+	MTMMHelpAdvancedMenuSeparator = 911,						// "-"
+	MTMMHelpWelcomeWindow = 912,								// "Welcome to Glasstual…"
 	MTMMHelpAdvancedMenuEnableDeveloperMode = 9100000,			// "Enable Developer Mode"
 	MTMMHelpAdvancedMenuEnableDeveloperModeSeparator = 9100001, // "-"
-	MTMMHelpAdvancedMenuHiddenPreferences = 9100002,			// "Hidden Preferences…"
+	MTMMHelpAdvancedMenuHiddenPreferences = 9100002,			// "Hidden Settings…"
 	MTMMHelpAdvancedMenuHiddenPreferencesSeparator = 9100003,	// "-"
 	MTMMHelpAdvancedMenuExportPreferences = 9100004,			// "Export Preferences"
 	MTMMHelpAdvancedMenuImportPreferences = 9100005,			// "Import Preferences"
@@ -245,6 +246,9 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	MTWKGeneralPasteSeparator = 1207,			   // "-"
 	MTWKGeneralQueryLogs = 1208,				   // "Query Logs"
 	MTWKGeneralChannelMenu = 1209,				   // "Channel"
+	MTWKGeneralReplySeparator = 1210,			   // "-"
+	MTWKGeneralReply = 1211,					   // "Reply"
+	MTWKGeneralReact = 1212,					   // "React"
 
 	/* Main window segmented controller */
 	MTMainWindowSegmentedControllerAddServer = 1300,		  // "Add Server…"
@@ -253,17 +257,6 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 
 	/* Empty server list menu */
 	MTMainWindowServerListAddServer = 1400, // "Add Server…"
-
-	/* Off-the-Record Messaging status button */
-	/* 1500 and 1501 belonged to a "What is this?" item, and the separator
-	 beneath it, which linked to documentation this fork does not host. */
-	MTOTRStatusButtonStartPrivateConversation = 1502,		  // "Start Private Conversation"
-	MTOTRStatusButtonRefreshPrivateConversation = 1503,		  // "Refresh Private Conversation"
-	MTOTRStatusButtonEndPrivateConversation = 1504,			  // "End Private Conversation"
-	MTOTRStatusButtonEndPrivateConversationSeparator = 1505,  // "-"
-	MTOTRStatusButtonAuthenticateChatPartner = 1506,		  // "Authenticate Chat Partner"
-	MTOTRStatusButtonAuthenticateChatPartnerSeparator = 1507, // "-"
-	MTOTRStatusButtonViewListOfFingerprints = 1508,			  // "View List of Fingerprints"
 
 	/* User context menu */
 	MTUserControlsLowestTag = 1600,
@@ -316,15 +309,16 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 };
 
 @interface TXMenuController : NSObject
+/* Gives every symbol in the menu the shared menu configuration and pads
+ items without a symbol so that titles line up. Menus built at runtime
+ should be passed through this before they are shown. */
+- (void)applySymbolsToMenu:(nullable NSMenu *)menu;
+
 @property(readonly, strong) NSMenu *channelViewChannelNameMenu;
 @property(readonly, strong) NSMenu *channelViewGeneralMenu;
 @property(readonly, strong) NSMenu *channelViewURLMenu;
 
 @property(readonly, strong) NSMenu *dockMenu;
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-@property(readonly, strong) NSMenu *encryptionManagerStatusMenu;
-#endif
 
 @property(readonly, weak) NSMenu *mainMenuNavigationChannelListMenu;
 @property(readonly, weak) NSMenu *mainMenuChannelMenu;
@@ -457,14 +451,12 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 - (IBAction)showServerPropertiesSheet:(nullable id)sender;
 - (IBAction)showSetVhostPrompt:(nullable id)sender;
 - (IBAction)showStylePreferences:(nullable id)sender;
-- (IBAction)showWelcomeSheet:(nullable id)sender;
+- (IBAction)showOnboardingWindow:(nullable id)sender;
 
 - (IBAction)sortChannelListNames:(nullable id)sender;
 
 - (IBAction)toggleChannelInviteMode:(nullable id)sender;
 - (IBAction)toggleChannelModerationMode:(nullable id)sender;
-
-- (IBAction)toggleFullscreen:(nullable id)sender;
 
 - (IBAction)toggleMainWindowAppearance:(nullable id)sender;
 - (IBAction)resetMainWindowAppearance:(nullable id)sender;
@@ -476,14 +468,6 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 
 - (IBAction)toggleMuteOnNotifications:(nullable id)sender;
 - (IBAction)toggleMuteOnNotificationSounds:(nullable id)sender;
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (IBAction)encryptionStartPrivateConversation:(nullable id)sender;
-- (IBAction)encryptionRefreshPrivateConversation:(nullable id)sender;
-- (IBAction)encryptionEndPrivateConversation:(nullable id)sender;
-- (IBAction)encryptionAuthenticateChatPartner:(nullable id)sender;
-- (IBAction)encryptionListFingerprints:(nullable id)sender;
-#endif
 
 - (IBAction)copyUniqueIdentifier:(nullable id)sender;
 
@@ -498,11 +482,19 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 
 - (IBAction)lookUpInDictionary:(nullable id)sender;
 - (IBAction)searchGoogle:(nullable id)sender;
+/* Replies and reactions to a message line (IRCv3 +draft/reply,
+ +draft/react). The sender's represented object is a dictionary with
+ "messageIdentifier", "nickname" and "excerpt"; a reaction adds "emoji". */
+- (NSArray<NSMenuItem *> *)messageReplyMenuItemsForMessageIdentifier:(NSString *)messageIdentifier
+															nickname:(nullable NSString *)nickname
+															 excerpt:(nullable NSString *)excerpt;
+- (IBAction)replyToMessage:(nullable id)sender;
+- (IBAction)reactToMessage:(nullable id)sender;
+- (IBAction)reactToMessageWithOtherEmoji:(nullable id)sender;
+
 - (IBAction)copyLogAsHtml:(nullable id)sender;
 - (IBAction)forceReloadTheme:(nullable id)sender;
 - (IBAction)openWebInspector:(nullable id)sender;
-
-- (IBAction)checkForUpdates:(nullable id)sender;
 
 - (IBAction)resetDoNotAskMePopupWarnings:(nullable id)sender;
 @end

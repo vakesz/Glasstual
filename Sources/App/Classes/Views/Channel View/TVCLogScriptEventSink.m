@@ -302,6 +302,13 @@ NS_ASSUME_NONNULL_BEGIN
 		};
 	}
 
+	/* Handlers call the block unconditionally. A call made without a
+	 promise (plain postMessage) must not crash the app. */
+	if (completionBlock == nil) {
+		completionBlock = ^(id _Nullable returnValue) {
+		};
+	}
+
 	context.completionBlock = completionBlock;
 
 	NSMethodSignature *signature = [self methodSignatureForSelector:selector];
@@ -438,14 +445,6 @@ NS_ASSUME_NONNULL_BEGIN
 			  withSelector:@selector(_copySelectionWhenPermitted:)];
 }
 
-- (void)encryptionAuthenticateUser:(id)inputData inWebView:(id)webView
-{
-	[self processInputData:inputData
-				 forCaller:@"app.encryptionAuthenticateUser()"
-				 inWebView:webView
-			  withSelector:@selector(_encryptionAuthenticateUser:)];
-}
-
 - (void)inlineMediaEnabledForView:(id)inputData inWebView:(id)webView
 {
 	[self processInputData:inputData
@@ -532,7 +531,7 @@ NS_ASSUME_NONNULL_BEGIN
 				   forCaller:@"app.notifyJumpToLineCallback()"
 				   inWebView:webView
 				withSelector:@selector(_notifyJumpToLineCallback:)
-		minimumArgumentCount:2
+		minimumArgumentCount:3
 			  withValidation:^BOOL(NSUInteger argumentIndex, id argument) {
 				  if (argumentIndex == 0) {
 					  return [argument isKindOfClass:[NSString class]];
@@ -682,7 +681,7 @@ NS_ASSUME_NONNULL_BEGIN
 				   forCaller:@"app.renderTemplate()"
 				   inWebView:webView
 				withSelector:@selector(_renderTemplate:)
-		minimumArgumentCount:1
+		minimumArgumentCount:2
 			  withValidation:^BOOL(NSUInteger argumentIndex, id argument) {
 				  if (argumentIndex == 0) {
 					  return [argument isKindOfClass:[NSString class]];
@@ -734,18 +733,6 @@ NS_ASSUME_NONNULL_BEGIN
 			  withSelector:@selector(_serverIsConnected:)];
 }
 
-- (void)setAutomaticScrollingEnabled:(id)inputData inWebView:(id)webView
-{
-	[self processInputData:inputData
-				   forCaller:@"app.setAutomaticScrollingEnabled()"
-				   inWebView:webView
-				withSelector:@selector(_setAutomaticScrollingEnabled:)
-		minimumArgumentCount:1
-			  withValidation:^BOOL(NSUInteger argumentIndex, id argument) {
-				  return ([argument isKindOfClass:[NSNumber class]]);
-			  }];
-}
-
 - (void)setChannelName:(id)inputData inWebView:(id)webView
 {
 	[self processInputData:inputData
@@ -767,6 +754,18 @@ NS_ASSUME_NONNULL_BEGIN
 		minimumArgumentCount:1
 			  withValidation:^BOOL(NSUInteger argumentIndex, id argument) {
 				  return ([argument isKindOfClass:[NSNull class]] || [argument isKindOfClass:[NSString class]]);
+			  }];
+}
+
+- (void)setLineContext:(id)inputData inWebView:(id)webView
+{
+	[self processInputData:inputData
+				   forCaller:@"app.setLineContext()"
+				   inWebView:webView
+				withSelector:@selector(_setLineContext:)
+		minimumArgumentCount:1
+			  withValidation:^BOOL(NSUInteger argumentIndex, id argument) {
+				  return ([argument isKindOfClass:[NSNull class]] || [argument isKindOfClass:[NSDictionary class]]);
 			  }];
 }
 
@@ -887,7 +886,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)_channelNameDoubleClicked:(TVCLogScriptEventSinkContext *)context
 {
-	[context.webViewPolicy channelNameDoubleClicked];
+	[context.webViewPolicy channelNameDoubleClickedInWebView:context.webView];
 }
 
 - (void)_displayContextMenu:(TVCLogScriptEventSinkContext *)context
@@ -904,33 +903,12 @@ NS_ASSUME_NONNULL_BEGIN
 			RZPasteboard().stringContent = selection;
 
 			context.completionBlock(@(YES));
+
+			return;
 		}
 	}
 
 	context.completionBlock(@(NO));
-}
-
-- (void)_encryptionAuthenticateUser:(TVCLogScriptEventSinkContext *)context
-{
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	IRCClient *client = context.associatedClient;
-
-	if (client.isLoggedIn == NO) {
-		return;
-	}
-
-	IRCChannel *channel = context.associatedChannel;
-
-	if (channel == nil || channel.isPrivateMessage == NO) {
-		[self.class throwJavaScriptException:@"View is not a private message"
-								   forCaller:context.caller
-								   inWebView:context.webView];
-
-		return;
-	}
-
-	[client encryptionAuthenticateUser:channel.name];
-#endif
 }
 
 - (void)_inlineMediaEnabledForView:(TVCLogScriptEventSinkContext *)context
@@ -1031,7 +1009,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)_nicknameDoubleClicked:(TVCLogScriptEventSinkContext *)context
 {
-	[context.webViewPolicy nicknameDoubleClicked];
+	[context.webViewPolicy nicknameDoubleClickedInWebView:context.webView];
 }
 
 - (void)_notifyJumpToLineCallback:(TVCLogScriptEventSinkContext *)context
@@ -1079,6 +1057,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 	if ([lineNumbersUncut isKindOfClass:[NSString class]]) {
 		lineNumbersUncut = @[ lineNumbersUncut ];
+	}
+
+	if ([lineNumbersUncut isKindOfClass:[NSArray class]] == NO) {
+		[self.class throwJavaScriptException:@"Line numbers must be a string or an array of strings"
+								   forCaller:context.caller
+								   inWebView:context.webView];
+
+		return;
+	}
+
+	for (id lineNumber in lineNumbersUncut) {
+		if ([lineNumber isKindOfClass:[NSString class]] == NO) {
+			[self.class throwJavaScriptException:@"Line numbers must be a string or an array of strings"
+									   forCaller:context.caller
+									   inWebView:context.webView];
+
+			return;
+		}
 	}
 
 	NSArray *lineNumbers = [self.class standardizeLineNumbers:lineNumbersUncut];
@@ -1288,15 +1284,31 @@ NS_ASSUME_NONNULL_BEGIN
 	if (methodSignature == nil) {
 		[self.class throwJavaScriptException:@"Unknown method named: '%@'"
 								   forCaller:context.caller
-								   inWebView:context.webView];
+								   inWebView:context.webView, methodName];
 
 		context.completionBlock(nil);
 
 		return;
-	} else if (strcmp(methodSignature.methodReturnType, @encode(void)) == 0) {
+	}
+
+	/* Only zero-argument class methods can be invoked from a style;
+	 there is nothing sensible to pass for arguments. */
+	if (methodSignature.numberOfArguments != 2) {
+		[self.class throwJavaScriptException:@"Method named '%@' takes arguments"
+								   forCaller:context.caller
+								   inWebView:context.webView, methodName];
+
+		context.completionBlock(nil);
+
+		return;
+	}
+
+	const char *returnType = methodSignature.methodReturnType;
+
+	if (strcmp(returnType, @encode(void)) == 0) {
 		[self.class throwJavaScriptException:@"Method named '%@' does not return a value"
 								   forCaller:context.caller
-								   inWebView:context.webView];
+								   inWebView:context.webView, methodName];
 
 		context.completionBlock(nil);
 
@@ -1311,11 +1323,148 @@ NS_ASSUME_NONNULL_BEGIN
 
 	[invocation invoke];
 
-	void *returnValue;
+	/* Read the return value into a buffer of the correct size and
+	 convert by type. Casting the bits of a double to a pointer, as
+	 the previous implementation did, dereferenced garbage. */
+	id result = nil;
 
-	[invocation getReturnValue:&returnValue];
+	switch (returnType[0]) {
+	case _C_ID: {
+		__unsafe_unretained id object = nil;
 
-	context.completionBlock([NSValue valueWithPrimitive:returnValue withType:methodSignature.methodReturnType]);
+		[invocation getReturnValue:&object];
+
+		result = object;
+
+		break;
+	}
+	case _C_BOOL: {
+		BOOL value = NO;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_CHR: {
+		char value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_UCHR: {
+		unsigned char value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_SHT: {
+		short value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_USHT: {
+		unsigned short value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_INT: {
+		int value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_UINT: {
+		unsigned int value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_LNG: {
+		long value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_ULNG: {
+		unsigned long value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_LNG_LNG: {
+		long long value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_ULNG_LNG: {
+		unsigned long long value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_FLT: {
+		float value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	case _C_DBL: {
+		double value = 0;
+
+		[invocation getReturnValue:&value];
+
+		result = @(value);
+
+		break;
+	}
+	default: {
+		[self.class throwJavaScriptException:@"Method named '%@' returns an unsupported type"
+								   forCaller:context.caller
+								   inWebView:context.webView, methodName];
+
+		break;
+	}
+	}
+
+	context.completionBlock(result);
 }
 
 - (void)_sendPluginPayload:(TVCLogScriptEventSinkContext *)context
@@ -1366,22 +1515,13 @@ NS_ASSUME_NONNULL_BEGIN
 	context.completionBlock(@(context.associatedClient.isLoggedIn));
 }
 
-- (void)_setAutomaticScrollingEnabled:(TVCLogScriptEventSinkContext *)context
-{
-	NSArray *arguments = context.arguments;
-
-	BOOL enabled = [[self.class objectValueToCommon:arguments[0]] boolValue];
-
-	[context.webView setAutomaticScrollingEnabled:enabled];
-}
-
 - (void)_setChannelName:(TVCLogScriptEventSinkContext *)context
 {
 	NSArray *arguments = context.arguments;
 
 	NSString *value = [self.class objectValueToCommon:arguments[0]];
 
-	context.webViewPolicy.channelName = value;
+	context.webView.contextMenuTarget.channelName = value;
 }
 
 - (void)_setNickname:(TVCLogScriptEventSinkContext *)context
@@ -1390,7 +1530,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *value = [self.class objectValueToCommon:arguments[0]];
 
-	context.webViewPolicy.nickname = value;
+	context.webView.contextMenuTarget.nickname = value;
+}
+
+- (void)_setLineContext:(TVCLogScriptEventSinkContext *)context
+{
+	NSArray *arguments = context.arguments;
+
+	NSDictionary *value = [self.class objectValueToCommon:arguments[0]];
+
+	TVCLogPolicyTarget *target = context.webView.contextMenuTarget;
+
+	target.lineNumber = [value stringForKey:@"lineNumber"];
+	target.lineMessageIdentifier = [value stringForKey:@"msgid"];
+	target.lineType = [value stringForKey:@"lineType"];
+	target.lineNickname = [value stringForKey:@"nickname"];
+	target.lineExcerpt = [value stringForKey:@"excerpt"];
 }
 
 - (void)_setSelection:(TVCLogScriptEventSinkContext *)context
@@ -1412,7 +1567,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSString *value = [self.class objectValueToCommon:arguments[0]];
 
-	context.webViewPolicy.anchorURL = value;
+	context.webView.contextMenuTarget.anchorURL = value;
 }
 
 - (void)_sidebarInversionIsEnabled:(TVCLogScriptEventSinkContext *)context

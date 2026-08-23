@@ -35,25 +35,18 @@
  *
  *********************************************************************** */
 
+#import "TVCAutoExpandingTextField.h"
 #import "TVCAutoExpandingTokenField.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @implementation TVCAutoExpandingTokenField
 
-- (NSSize)intrinsicContentSize
+- (void)layout
 {
-	if (self.cell.wraps == NO) {
-		return super.intrinsicContentSize;
-	}
+	[super layout];
 
-	NSRect originalFrame = self.frame;
-
-	originalFrame.size.height = CGFLOAT_MAX;
-
-	NSSize newFrameSize = [self.cell cellSizeForBounds:originalFrame];
-
-	return newFrameSize;
+	TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(self);
 }
 
 - (void)textDidChange:(NSNotification *)notification

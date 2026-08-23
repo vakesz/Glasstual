@@ -37,6 +37,7 @@
 
 #import "TLONotificationController.h"
 #import "IRCClient.h"
+#import "IRCTypingTrackerPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -44,13 +45,10 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCAddressBookUserTrackingContainer, IRCTimedCommand, IRCUserMutable;
 
 enum {
-	ClientIRCv3SupportedCapabilitySASLGeneric = 1 << 22,
-	ClientIRCv3SupportedCapabilitySASLPlainText = 1 << 23,	   // YES if SASL=plain CAP is supported
-	ClientIRCv3SupportedCapabilitySASLExternal = 1 << 24,	   // YES if SASL=external CAP is supported
-	ClientIRCv3SupportedCapabilityZNCServerTime = 1 << 25,	   // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCServerTimeISO = 1 << 26,  // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCPlaybackModule = 1 << 27, // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityPlanioPlayback = 1 << 28	   // YES if the plan.io vendor specific CAP supported.
+	ClientIRCv3SupportedCapabilitySASLGeneric = 1 << 22,	  // YES if the sasl CAP was acknowledged
+	ClientIRCv3SupportedCapabilityZNCServerTime = 1 << 25,	  // YES if the ZNC vendor specific CAP supported
+	ClientIRCv3SupportedCapabilityZNCServerTimeISO = 1 << 26, // YES if the ZNC vendor specific CAP supported
+	ClientIRCv3SupportedCapabilityZNCPlaybackModule = 1 << 27 // YES if the ZNC vendor specific CAP supported
 };
 
 @interface IRCClient ()
@@ -96,7 +94,56 @@ enum {
 - (void)enableCapability:(ClientIRCv3SupportedCapability)capability;
 - (void)disableCapability:(ClientIRCv3SupportedCapability)capability;
 
+/* Typing notifications (IRCv3 "+typing"). The input bar reports what
+ is being written; "active" is sent at most every three seconds,
+ "paused" after five seconds without a change, "done" when the text is
+ sent or cleared. */
+@property(nonatomic, strong) IRCTypingTracker *typingTracker; // Who is typing where
+- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel;
+- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel atDate:(NSDate *)date;
+- (void)typingPauseTimerFired:(IRCChannel *)channel;
+- (void)localUserSentMessageInChannel:(nullable IRCChannel *)channel;
+- (void)localUserClearedTextInChannel:(nullable IRCChannel *)channel;
+
+/* Replies (+draft/reply). The next text sent with -sendText:… carries
+ this identifier on its first line, then it is cleared. */
+@property(nonatomic, copy, nullable) NSString *nextMessageReplyIdentifier;
+
+/* Reactions (+draft/react). Sends TAGMSG and shows the reaction. */
+- (BOOL)sendReaction:(NSString *)emoji
+	toMessageIdentifier:(NSString *)messageIdentifier
+			  inChannel:(IRCChannel *)channel;
+
+/* Capability negotiation. Capabilities offered by the server in CAP LS
+ and CAP NEW are collected here and requested in registry order.
+ -pendingCapabilityRequests are the wire names still to be requested. */
+@property(readonly, copy) NSArray<NSString *> *pendingCapabilityRequests;
+
+- (void)receiveCapabilityOrAuthenticationRequest:(IRCMessage *)m;
+
+/* Picks the SASL mechanism for the mechanisms the server offered
+ (an empty list means the server did not say). Returns NO when none
+ of them can be used with the client's configuration. */
+- (BOOL)selectSASLMechanismFromOffered:(NSArray<NSString *> *)mechanisms;
+
 - (void)noteReachabilityChanged:(BOOL)reachable;
+
+/* Chat history (chathistory CAP). -noteChannelActivated: is called by
+ IRCChannel when a channel is joined or a query becomes active; it
+ fetches the lines the local scrollback is missing and asks for the
+ read marker. -requestChatHistoryBeforeDate:inChannel: is called by the
+ view when scrolling up runs out of local history. */
+- (void)noteChannelActivated:(IRCChannel *)channel;
+- (void)requestChatHistoryForChannel:(IRCChannel *)channel;
+- (void)requestChatHistoryBeforeDate:(NSDate *)date inChannel:(IRCChannel *)channel;
+- (NSUInteger)chatHistoryRequestLimit;
+- (NSString *)chatHistoryLatestCommandForTarget:(NSString *)target since:(nullable NSDate *)date;
+
+/* Read markers (read-marker CAP). -markChannelAsRead: is called by the
+ main window when the user views a channel; the MARKREAD is debounced. */
+- (void)markChannelAsRead:(IRCChannel *)channel;
+- (void)sendReadMarkerForChannel:(IRCChannel *)channel;
+- (void)requestReadMarkerForChannel:(IRCChannel *)channel;
 
 - (void)autoConnectWithDelay:(NSUInteger)delay afterWakeUp:(BOOL)afterWakeUp;
 

@@ -31,7 +31,6 @@
  *********************************************************************** */
 
 #import <AppKit/AppKit.h>
-#import <IOKit/IOKitLib.h>
 
 #include <sys/sysctl.h>
 
@@ -45,88 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark -
 #pragma mark Public
-
-+ (BOOL)systemIsAppleSilicon
-{
-	/* I haven't tested this. Is it really this easy? */
-#if TARGET_CPU_ARM64
-	return YES;
-#endif
-
-	return NO;
-}
-
-+ (nullable NSString *)formattedEthernetMacAddress
-{
-	CFDataRef macAddressRef = nil;
-
-	/* Mach port used to initiate communication with IOKit. */
-	mach_port_t masterPort;
-
-	kern_return_t machPortResult = IOMainPort(MACH_PORT_NULL, &masterPort);
-
-	if (machPortResult != KERN_SUCCESS) {
-		return nil;
-	}
-
-	/* Create a matching dictionary */
-	CFMutableDictionaryRef matchingDict = IOBSDNameMatching(masterPort, 0, "en0");
-
-	if (matchingDict == NULL) {
-		return nil;
-	}
-
-	/* Look up registered objects that match a matching dictionary. */
-	io_iterator_t iterator;
-
-	kern_return_t getMatchResult = IOServiceGetMatchingServices(masterPort, matchingDict, &iterator);
-
-	if (getMatchResult != KERN_SUCCESS) {
-		return nil;
-	}
-
-	/* Iterate over services */
-	io_object_t service;
-
-	while ((service = IOIteratorNext(iterator)) > 0) {
-		io_object_t parentService;
-
-		kern_return_t kernResult = IORegistryEntryGetParentEntry(service, kIOServicePlane, &parentService);
-
-		if (kernResult == KERN_SUCCESS) {
-			if (macAddressRef) {
-				CFRelease(macAddressRef);
-			}
-
-			macAddressRef = (CFDataRef)IORegistryEntryCreateCFProperty(parentService, CFSTR("IOMACAddress"), kCFAllocatorDefault, 0);
-
-			IOObjectRelease(parentService);
-		}
-
-		IOObjectRelease(service);
-	}
-
-	IOObjectRelease(iterator);
-
-	/* If we have a MAC address, convert it into a formatted string. */
-	if (macAddressRef) {
-		unsigned char macAddressBytes[6];
-
-		CFDataGetBytes(macAddressRef, CFRangeMake(0, 6), macAddressBytes);
-
-		CFRelease(macAddressRef);
-
-		NSString *formattedMacAddress =
-		[NSString stringWithFormat:
-			 @"%02x:%02x:%02x:%02x:%02x:%02x",
-			 macAddressBytes[0], macAddressBytes[1], macAddressBytes[2],
-			 macAddressBytes[3], macAddressBytes[4], macAddressBytes[5]];
-
-		return formattedMacAddress;
-	}
-
-	return nil;
-}
 
 + (void)observeSleepNotifications
 {
@@ -166,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
 	static id cachedValue = nil;
 	
 	if (cachedValue == nil) {
-		cachedValue = [self retrieveSystemInformationKey:@"ProductBuildVersion"];
+		cachedValue = [NSDictionary dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"][@"ProductBuildVersion"];
 	}
 	
 	return cachedValue;
@@ -273,50 +190,11 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 		
 		if (cachedValue == nil) {
-			cachedValue = NSLocalizedStringFromTable(@"Mac", @"XRSystemInformation", nil);
+			cachedValue = NSLocalizedStringFromTableInBundle(@"Mac", @"XRSystemInformation", bundle, nil);
 		}
 	}
 	
 	return cachedValue;
-}
-
-+ (nullable NSString *)retrieveSystemInformationKey:(NSString *)key
-{
-	NSParameterAssert(key != nil);
-
-	NSDictionary *sysinfo = [self systemInformationDictionary];
-
-	NSString *infos = sysinfo[key];
-
-	if (infos.length <= 0) {
-		return nil;
-	}
-
-	return infos;
-}
-
-+ (nullable NSDictionary<NSString *, id> *)createDictionaryFromFileAtPath:(NSString *)path
-{
-	NSParameterAssert(path != nil);
-
-	NSFileManager *fileManger = [NSFileManager defaultManager];
-
-	if ([fileManger fileExistsAtPath:path]) {
-		return [NSDictionary dictionaryWithContentsOfFile:path];
-	}
-
-	return nil;
-}
-
-+ (nullable NSDictionary *)systemInformationDictionary
-{
-	NSDictionary *systemInfo = [self createDictionaryFromFileAtPath:@"/System/Library/CoreServices/SystemVersion.plist"];
-
-	if (systemInfo == nil) {
-		systemInfo = [self createDictionaryFromFileAtPath:@"/System/Library/CoreServices/ServerVersion.plist"];
-	}
-
-	return systemInfo;
 }
 
 @end

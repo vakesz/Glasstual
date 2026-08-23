@@ -35,6 +35,8 @@
  *
  *********************************************************************** */
 
+#import <QuartzCore/QuartzCore.h>
+
 #import "NSViewHelperPrivate.h"
 #import "IRCColorFormat.h"
 #import "TLOLocalization.h"
@@ -42,9 +44,15 @@
 #import "TPCPreferencesLocalPrivate.h"
 #import "TPCPreferencesUserDefaults.h"
 #import "TVCMainWindow.h"
+#import "TXMasterController.h"
+#import "TXSharedApplication.h"
 #import "TVCTextViewWithIRCFormatterPrivate.h"
 #import "TVCMainWindowTextViewAppearancePrivate.h"
 #import "TVCMainWindowTextViewPrivate.h"
+#import "TVCMainWindowInputAccessoryViewPrivate.h"
+#import "IRCClientPrivate.h"
+#import "IRCChannel.h"
+#import "IRCTypingTrackerPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -62,10 +70,22 @@ NS_ASSUME_NONNULL_BEGIN
 	]
 
 @interface TVCMainWindowTextView ()
-@property(nonatomic, copy) NSAttributedString *placeholderAttributedString;
+/* Not named placeholderAttributedString: NSTextView has a private
+ accessor by that name which AppKit would start calling. */
+@property(nonatomic, copy, nullable) NSAttributedString *inputPlaceholderAttributedString;
 @property(nonatomic, weak) IBOutlet NSLayoutConstraint *textViewHeightConstraint;
 @property(nonatomic, weak) IBOutlet NSLayoutConstraint *windowContentViewMinimumHeight;
 @property(nonatomic, weak) IBOutlet TVCMainWindowTextViewContentView *contentView;
+@property(nonatomic, weak) IBOutlet NSView *inputBarContainerView;
+@property(nonatomic, weak) IBOutlet NSLayoutConstraint *inputBarTopConstraint;
+@property(nonatomic, strong) TVCMainWindowInputAccessoryView *accessoryView;
+@property(nonatomic, strong) NSLayoutConstraint *accessoryHeightConstraint;
+@property(nonatomic, strong) NSLayoutConstraint *accessoryTopConstraint;
+@property(nonatomic, assign) CGFloat accessoryHeight;
+@property(nonatomic, assign) BOOL observingTyping;
+/* The channel the last typing notification went to, so that it can be
+ told "done" when the selection moves elsewhere. */
+@property(nonatomic, weak, nullable) IRCChannel *typingChannel;
 @property(nonatomic, strong) TVCMainWindowTextViewAppearance *userInterfaceObjects;
 @property(nonatomic, assign) BOOL observingUserDefaults;
 @property(readonly) NSArray<NSString *> *defaultSpellingIgnores;
@@ -84,6 +104,14 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[super awakeFromNib];
 
+	/* The height and caret logic is written against TextKit 2. AppKit
+	 silently falls back to TextKit 1 when anything reads -layoutManager,
+	 after which -textLayoutManager returns nil and the input field would
+	 stop growing. Surface that instead of sizing by guesswork. */
+	if (self.textLayoutManager == nil) {
+		LogToConsoleError("Input text view is not using TextKit 2");
+	}
+
 	self.backgroundColor = [NSColor clearColor];
 
 	/* The nib leaves the scroll view drawing its background, which paints
@@ -92,6 +120,222 @@ NS_ASSUME_NONNULL_BEGIN
 	self.enclosingScrollView.drawsBackground = NO;
 
 	[self updateTextDirection];
+
+	[self installAccessoryView];
+}
+
+#pragma mark -
+#pragma mark Accessory Strip
+
+/* The strip sits above the input bar container inside the content
+ view. The nib pins the container to the top of the content view; that
+ constraint is swapped for one that hangs the container off the strip.
+ The strip's height is animated so the field slides rather than jumps. */
+- (void)installAccessoryView
+{
+	TVCMainWindowTextViewContentView *contentView = self.contentView;
+
+	NSView *container = self.inputBarContainerView;
+
+	if (contentView == nil || container == nil || self.accessoryView != nil) {
+		return;
+	}
+
+	TVCMainWindowInputAccessoryView *accessoryView = [[TVCMainWindowInputAccessoryView alloc] initWithFrame:NSZeroRect];
+
+	[contentView addSubview:accessoryView];
+
+	CGFloat topInset = self.inputBarTopConstraint.constant;
+
+	self.inputBarTopConstraint.active = NO;
+
+	NSLayoutConstraint *heightConstraint = [accessoryView.heightAnchor constraintEqualToConstant:0.0];
+
+	NSLayoutConstraint *topConstraint = [container.topAnchor constraintEqualToAnchor:accessoryView.bottomAnchor];
+
+	[NSLayoutConstraint activateConstraints:@[
+		[accessoryView.topAnchor constraintEqualToAnchor:contentView.topAnchor constant:topInset],
+		[accessoryView.leadingAnchor constraintEqualToAnchor:container.leadingAnchor],
+		[accessoryView.trailingAnchor constraintEqualToAnchor:container.trailingAnchor],
+		heightConstraint,
+		topConstraint,
+	]];
+
+	accessoryView.clipsToBounds = YES;
+
+	self.accessoryView = accessoryView;
+	self.accessoryHeightConstraint = heightConstraint;
+	self.accessoryTopConstraint = topConstraint;
+
+	__weak TVCMainWindowTextView *weakSelf = self;
+
+	accessoryView.contentDidChangeBlock = ^{
+		[weakSelf accessoryContentDidChange];
+	};
+
+	accessoryView.cancelReplyBlock = ^{
+		[weakSelf focus];
+	};
+}
+
+- (void)accessoryContentDidChange
+{
+	CGFloat height = self.accessoryView.preferredHeight;
+
+	if (height == self.accessoryHeight) {
+		return;
+	}
+
+	self.accessoryHeight = height;
+
+	BOOL reduceMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+
+	if (reduceMotion || self.window == nil) {
+		self.accessoryHeightConstraint.constant = height;
+
+		[self recalculateTextViewSizeForced:YES];
+
+		return;
+	}
+
+	[NSAnimationContext
+		runAnimationGroup:^(NSAnimationContext *context) {
+			context.duration = 0.18;
+			context.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];
+			context.allowsImplicitAnimation = YES;
+
+			self.accessoryHeightConstraint.animator.constant = height;
+
+			[self recalculateTextViewSizeForced:YES animated:YES];
+		}
+		completionHandler:nil];
+}
+
+#pragma mark -
+#pragma mark Replies
+
+- (nullable NSString *)replyMessageIdentifier
+{
+	return self.accessoryView.replyMessageIdentifier;
+}
+
+- (void)beginReplyToMessageIdentifier:(NSString *)messageIdentifier
+							 nickname:(nullable NSString *)nickname
+							  excerpt:(nullable NSString *)excerpt
+{
+	NSParameterAssert(messageIdentifier != nil);
+
+	[self.accessoryView showReplyToMessageIdentifier:messageIdentifier nickname:nickname excerpt:excerpt];
+
+	[self focus];
+}
+
+- (void)cancelReply
+{
+	[self.accessoryView hideReply];
+}
+
+- (void)consumeReplyIntoClient:(nullable IRCClient *)client
+{
+	NSString *messageIdentifier = self.replyMessageIdentifier;
+
+	if (messageIdentifier == nil) {
+		return;
+	}
+
+	client.nextMessageReplyIdentifier = messageIdentifier;
+
+	[self cancelReply];
+}
+
+#pragma mark -
+#pragma mark Typing
+
+- (void)setTypingObserved:(BOOL)observed
+{
+	if (self->_observingTyping == observed) {
+		return;
+	}
+
+	self->_observingTyping = observed;
+
+	if (observed) {
+		[RZNotificationCenter() addObserver:self
+								   selector:@selector(typingStateDidChange:)
+									   name:IRCTypingTrackerDidChangeNotification
+									 object:nil];
+
+		[RZNotificationCenter() addObserver:self
+								   selector:@selector(selectionDidChange:)
+									   name:TVCMainWindowSelectionChangedNotification
+									 object:nil];
+	} else {
+		[RZNotificationCenter() removeObserver:self name:IRCTypingTrackerDidChangeNotification object:nil];
+		[RZNotificationCenter() removeObserver:self name:TVCMainWindowSelectionChangedNotification object:nil];
+	}
+}
+
+- (void)typingStateDidChange:(NSNotification *)notification
+{
+	IRCChannel *channel = notification.userInfo[IRCTypingTrackerChannelKey];
+
+	if (channel == nil || channel != mainWindow().selectedChannel) {
+		return;
+	}
+
+	[self updateTypingRow];
+}
+
+- (void)selectionDidChange:(NSNotification *)notification
+{
+	IRCChannel *selectedChannel = mainWindow().selectedChannel;
+
+	IRCChannel *previousChannel = self.typingChannel;
+
+	if (previousChannel && previousChannel != selectedChannel) {
+		[previousChannel.associatedClient localUserClearedTextInChannel:previousChannel];
+
+		self.typingChannel = nil;
+	}
+
+	/* A reply belongs to the view it was started in. */
+	[self cancelReply];
+
+	[self updateTypingRow];
+}
+
+- (void)updateTypingRow
+{
+	IRCChannel *channel = mainWindow().selectedChannel;
+
+	NSArray<NSString *> *nicknames = @[];
+
+	if (channel && channel.isUtility == NO) {
+		nicknames = [channel.associatedClient.typingTracker typingNicknamesInChannel:channel];
+	}
+
+	[self.accessoryView setTypingNicknames:nicknames];
+}
+
+- (void)noteTextChangedForTyping
+{
+	IRCChannel *channel = mainWindow().selectedChannel;
+
+	IRCClient *client = channel.associatedClient;
+
+	if (channel == nil || client == nil) {
+		return;
+	}
+
+	NSString *text = self.stringValue;
+
+	[client noteLocalUserTyping:text inChannel:channel];
+
+	if (text.length == 0 || [text hasPrefix:@"/"]) {
+		self.typingChannel = nil;
+	} else {
+		self.typingChannel = channel;
+	}
 }
 
 /* -viewDidMoveToWindow is not guaranteed to alternate between a window and nil.
@@ -105,6 +349,8 @@ NS_ASSUME_NONNULL_BEGIN
 	[super viewDidMoveToWindow];
 
 	[self setUserDefaultsObserved:(self.window != nil)];
+
+	[self setTypingObserved:(self.window != nil)];
 }
 
 - (void)setUserDefaultsObserved:(BOOL)observed
@@ -232,6 +478,8 @@ NS_ASSUME_NONNULL_BEGIN
 	[super textDidChange:aNotification];
 
 	[self recalculateTextViewSize];
+
+	[self noteTextChangedForTyping];
 }
 
 - (void)paste:(nullable id)sender
@@ -245,6 +493,13 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	if (aSelector == @selector(insertNewline:)) {
 		[self.mainWindow textEntered];
+
+		return YES;
+	}
+
+	/* Escape leaves a reply. */
+	if (aSelector == @selector(cancelOperation:) && self.replyMessageIdentifier != nil) {
+		[self cancelReply];
 
 		return YES;
 	}
@@ -267,30 +522,25 @@ NS_ASSUME_NONNULL_BEGIN
 		return;
 	}
 
-	/* The placeholder is laid out exactly where the first line of text
-	 would be: the layout manager's extra line fragment already accounts
-	 for the container inset, the line fragment padding and the font. */
-	NSLayoutManager *layoutManager = self.layoutManager;
-	NSTextContainer *textContainer = self.textContainer;
+	NSAttributedString *placeholder = self.inputPlaceholderAttributedString;
 
-	[layoutManager ensureLayoutForTextContainer:textContainer];
-
-	NSRect lineRect = layoutManager.extraLineFragmentRect;
-
-	if (NSIsEmptyRect(lineRect)) {
-		lineRect = NSMakeRect(0.0, 0.0, textContainer.size.width, self.defaultLineHeight);
+	if (placeholder == nil) {
+		return;
 	}
+
+	/* The placeholder sits where the first line of text would: inside the
+	 container inset and the line fragment padding, as tall as one line
+	 of the preferred font. */
+	NSTextContainer *textContainer = self.textContainer;
 
 	CGFloat padding = textContainer.lineFragmentPadding;
 
 	NSPoint origin = self.textContainerOrigin;
 
-	NSRect placeholderRect = NSMakeRect((origin.x + lineRect.origin.x + padding),
-										(origin.y + lineRect.origin.y),
-										(lineRect.size.width - (padding * 2.0)),
-										lineRect.size.height);
+	NSRect placeholderRect = NSMakeRect(
+		(origin.x + padding), origin.y, (textContainer.size.width - (padding * 2.0)), self.defaultLineHeight);
 
-	[self.placeholderAttributedString drawInRect:placeholderRect];
+	[placeholder drawInRect:placeholderRect];
 }
 
 - (void)updateTextBoxCachedPreferredFontSize
@@ -323,8 +573,9 @@ NS_ASSUME_NONNULL_BEGIN
 		NSParagraphStyleAttributeName : paragraphStyle
 	};
 
-	self.placeholderAttributedString = [NSAttributedString attributedStringWithString:TXTLS(@"TVCMainWindow[8r3-ih]")
-																		   attributes:placeholderStringAttributes];
+	self.inputPlaceholderAttributedString =
+		[NSAttributedString attributedStringWithString:TXTLS(@"TVCMainWindow[8r3-ih]")
+											attributes:placeholderStringAttributes];
 
 	self.needsDisplay = YES;
 }
@@ -346,7 +597,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (CGFloat)defaultLineHeight
 {
-	return [self.layoutManager defaultLineHeightForFont:self.preferredFont];
+	/* The height TextKit 2 gives one line of the preferred font. An empty
+	 document has no line fragments to measure and its usage bounds do
+	 not follow the typing attributes, so a sample is laid out with a
+	 scratch layout manager. Measuring with TextKit 2 itself keeps the
+	 empty and the one line states the same height. */
+	NSTextContentStorage *contentStorage = [NSTextContentStorage new];
+	NSTextLayoutManager *layoutManager = [NSTextLayoutManager new];
+
+	[contentStorage addTextLayoutManager:layoutManager];
+
+	layoutManager.textContainer = [[NSTextContainer alloc] initWithSize:NSMakeSize(10000.0, 10000.0)];
+
+	contentStorage.attributedString =
+		[[NSAttributedString alloc] initWithString:@"X" attributes:@{NSFontAttributeName : self.preferredFont}];
+
+	[layoutManager ensureLayoutForRange:layoutManager.documentRange];
+
+	return NSHeight([layoutManager usageBoundsForTextContainer]);
 }
 
 - (void)recalculateTextViewSize
@@ -360,6 +628,11 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void)recalculateTextViewSizeForced:(BOOL)forceRecalculate
+{
+	[self recalculateTextViewSizeForced:forceRecalculate animated:NO];
+}
+
+- (void)recalculateTextViewSizeForced:(BOOL)forceRecalculate animated:(BOOL)animated
 {
 	TVCMainWindowTextViewAppearance *appearance = self.userInterfaceObjects;
 
@@ -396,7 +669,14 @@ NS_ASSUME_NONNULL_BEGIN
 		}
 	}
 
-	self.textViewHeightConstraint.constant = backgroundHeight;
+	/* The strip above the field adds its own height. */
+	backgroundHeight += self.accessoryHeight;
+
+	if (animated) {
+		self.textViewHeightConstraint.animator.constant = backgroundHeight;
+	} else {
+		self.textViewHeightConstraint.constant = backgroundHeight;
+	}
 
 	id scrollViewContentView = self.enclosingScrollView.contentView;
 

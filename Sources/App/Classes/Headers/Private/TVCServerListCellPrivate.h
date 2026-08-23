@@ -41,6 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCServerListRowCell : NSTableRowView
 - (instancetype)initWithServerList:(TVCServerList *)serverList;
+
+- (void)refreshEmphasis;
 @end
 
 @interface TVCServerListGroupRowCell : TVCServerListRowCell

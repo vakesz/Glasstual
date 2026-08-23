@@ -37,7 +37,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/* A wrapping text field whose intrinsic height follows its contents.
+ NSTextField already reports the wrapped height in -intrinsicContentSize
+ once -preferredMaxLayoutWidth is set, so the work is keeping that width
+ in step with the field's actual width. TVCAutoExpandingTokenField does
+ the same for NSTokenField through the shared function. */
 @interface TVCAutoExpandingTextField : NSTextField
 @end
+
+/* Call from -layout after super. Returns YES when the width changed and
+ the intrinsic content size was invalidated. */
+GLASSTUAL_EXTERN BOOL TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(NSTextField *field);
 
 NS_ASSUME_NONNULL_END

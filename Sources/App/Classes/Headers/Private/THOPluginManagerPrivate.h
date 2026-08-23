@@ -47,6 +47,10 @@ GLASSTUAL_EXTERN NSNotificationName const THOPluginManagerFinishedLoadingPlugins
 - (void)loadPlugins;
 - (void)unloadPlugins;
 
+/* Forget every remembered Load / Don't Load answer so that the user
+ is asked again for each plugin outside the application on next launch. */
++ (void)resetApprovals;
+
 @property(readonly) BOOL pluginsLoaded;
 
 @property(readonly, copy, nullable) NSArray<THOPluginItem *> *loadedPlugins; // nil until load completes
@@ -66,12 +70,8 @@ GLASSTUAL_EXTERN NSNotificationName const THOPluginManagerFinishedLoadingPlugins
 
 - (void)findHandlerForOutgoingCommand:(NSString *)command
 								 path:(NSString *_Nullable *_Nullable)path
-						   isReserved:(BOOL *)isReserved
 							 isScript:(BOOL *)isScript
 						  isExtension:(BOOL *)isExtension;
-
-- (void)extrasInstallerAskUserIfTheyWantToInstallCommand:(NSString *)command;
-- (void)extrasInstallerLaunchInstaller;
 @end
 
 NS_ASSUME_NONNULL_END

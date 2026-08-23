@@ -48,23 +48,17 @@ NS_ASSUME_NONNULL_BEGIN
 	pid_t ourProcessIdentifier = [[NSProcessInfo processInfo] processIdentifier];
 
 	/* Our own identifier is read from the bundle rather than written out so
-	 that every configuration of the app matches itself. The rest are the
-	 bundle identifiers of upstream Textual, not of Glasstual. They are matched
-	 verbatim so that a running copy of the app this one was forked from is
-	 still detected, because it reads the same preferences. Do not rename them. */
-	NSMutableArray<NSString *> *identifiers = [NSMutableArray
-		arrayWithObjects:@"com.codeux.apps.textual", @"com.codeux.apps.textual-mas", @"com.codeux.irc.textual5", nil];
-
+	 that every configuration of the app matches itself. */
 	NSString *ourIdentifier = RZMainBundle().bundleIdentifier;
 
-	if (ourIdentifier && [identifiers containsObject:ourIdentifier] == NO) {
-		[identifiers addObject:ourIdentifier];
+	if (ourIdentifier == nil) {
+		return YES;
 	}
 
 	for (NSRunningApplication *application in RZWorkspace().runningApplications) {
 		NSString *bundleIdentifier = application.bundleIdentifier;
 
-		if (bundleIdentifier && [identifiers containsObject:bundleIdentifier]) {
+		if ([bundleIdentifier isEqualToString:ourIdentifier]) {
 			if (application.processIdentifier == ourProcessIdentifier) {
 				continue;
 			}

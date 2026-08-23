@@ -40,7 +40,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TVCMainWindowTextViewContentView;
+@class TVCMainWindowTextViewContentView, IRCClient;
 
 @interface TVCMainWindowTextView ()
 - (TVCMainWindowTextViewContentView *)contentView;
@@ -53,6 +53,16 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)recalculateTextViewSizeForced;
 
 - (void)resetSpellingIgnores;
+
+/* Reply mode (IRCv3 +draft/reply). A banner above the field names the
+ message being answered; the identifier is handed to the client when
+ the text is sent. Escape or the banner's close button leaves it. */
+@property(readonly, copy, nullable) NSString *replyMessageIdentifier;
+- (void)beginReplyToMessageIdentifier:(NSString *)messageIdentifier
+							 nickname:(nullable NSString *)nickname
+							  excerpt:(nullable NSString *)excerpt;
+- (void)cancelReply;
+- (void)consumeReplyIntoClient:(nullable IRCClient *)client;
 @end
 
 @interface TVCMainWindowTextViewContentView : NSView

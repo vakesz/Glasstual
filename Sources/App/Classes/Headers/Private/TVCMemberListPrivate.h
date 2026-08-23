@@ -35,7 +35,7 @@
  *
  *********************************************************************** */
 
-#import "TVCMainWindowAppearance.h"
+#import "IRCChannelUser.h"
 #import "TVCMemberList.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -43,6 +43,15 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCMemberListUserInfoPopover;
 @class IRCChannel;
 @class IRCChannelMemberListController;
+
+/* A contiguous run of members that share a rank. The list shows one
+ header row per section, but only while more than one section exists;
+ a channel where everyone has the same rank is a flat list. */
+@interface TVCMemberListSection : NSObject
+@property(readonly) IRCUserRank rank;
+@property(readonly, copy) NSString *title;
+@property(readonly) NSRange memberRange; // Indexes into the controller's arranged objects
+@end
 
 @interface TVCMemberList ()
 @property(nonatomic, weak) id keyDelegate;
@@ -55,6 +64,16 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)refreshDrawingForChangesToPreference:(NSString *)preferenceKey;
 
 - (void)assignToChannel:(nullable IRCChannel *)channel;
+
+/* Row geometry. Header rows are interleaved with member rows, so a
+ table row and an index into the arranged objects are not the same. */
+- (BOOL)isGroupRow:(NSInteger)row;
+- (NSInteger)rowForMemberAtIndex:(NSInteger)memberIndex;
+
+/* Sent by IRCChannelMemberListController after it changed its content. */
+- (void)memberInsertedAtIndex:(NSUInteger)memberIndex;
+- (void)memberRemovedAtIndex:(NSUInteger)memberIndex;
+- (void)membersReplaced;
 @end
 
 @protocol TVCMemberListDelegate <NSObject>
