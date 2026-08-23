@@ -14,8 +14,8 @@
 
 - (void)testCompatibilityCipherListIncludesDeprecatedSuites
 {
-	NSArray<NSNumber *> *cipherSuites =
-		[RCMSecureTransport cipherSuitesInCollection:RCMCipherSuiteCollectionDefault includeDeprecated:YES];
+	NSArray<NSNumber *> *cipherSuites = [RCMSecureTransport cipherSuitesInCollection:RCMCipherSuiteCollectionDefault
+																   includeDeprecated:YES];
 
 	NSUInteger dheIndex = [cipherSuites indexOfObject:@(TLS_DHE_RSA_WITH_AES_256_GCM_SHA384)];
 	NSUInteger rsaIndex = [cipherSuites indexOfObject:@(TLS_RSA_WITH_AES_256_GCM_SHA384)];
@@ -27,8 +27,8 @@
 
 - (void)testModernCipherListExcludesDeprecatedSuites
 {
-	NSArray<NSNumber *> *cipherSuites =
-		[RCMSecureTransport cipherSuitesInCollection:RCMCipherSuiteCollectionDefault includeDeprecated:NO];
+	NSArray<NSNumber *> *cipherSuites = [RCMSecureTransport cipherSuitesInCollection:RCMCipherSuiteCollectionDefault
+																   includeDeprecated:NO];
 
 	XCTAssertFalse([cipherSuites containsObject:@(TLS_RSA_WITH_AES_256_GCM_SHA384)]);
 }
