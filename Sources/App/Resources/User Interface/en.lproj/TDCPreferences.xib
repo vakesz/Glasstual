@@ -5755,7 +5755,7 @@ You should therefore not rely solely on this preference.</string>
                                                 </button>
                                                 <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="750" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Zk5-W6-ihe" preferredMaxLayoutWidth="520">
                                                     <rect key="frame" x="131" y="55" width="305" height="30"/>
-                                                    <textFieldCell key="cell" controlSize="mini" selectable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" title="Safe sources are services that don't inject HTML nor load external JavaScript resoures to appear inline." id="Ygv-nr-zSp">
+                                                    <textFieldCell key="cell" controlSize="mini" selectable="YES" refusesFirstResponder="YES" sendsActionOnEndEditing="YES" title="Safe sources are services that don't inject HTML nor load external JavaScript resources to appear inline." id="Ygv-nr-zSp">
                                                         <font key="font" metaFont="cellTitle"/>
                                                         <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

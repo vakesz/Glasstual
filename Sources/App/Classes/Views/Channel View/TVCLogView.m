@@ -180,9 +180,14 @@ NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 	 it does not, -isLayingOutView never returns to NO and the overlay stays
 	 on top of the view forever, hiding everything printed into it.
 
-	 Loading has genuinely finished by the time we are called, so lift the
-	 overlay ourselves. This is idempotent: the style calling through to
-	 -setViewFinishedLayout afterwards is harmless. */
+	Loading has genuinely finished by the time we are called, so lift the
+	overlay ourselves. This is idempotent: the style calling through to
+	-setViewFinishedLayout afterwards is harmless. */
+	[self evaluateJavaScript:@"if (_Glasstual._viewBodyDidLoadAnimationFrame) { "
+							  "window.cancelAnimationFrame(_Glasstual._viewBodyDidLoadAnimationFrame); "
+							  "_Glasstual._viewBodyDidLoad(); "
+							  "}"];
+
 	[self setViewFinishedLayout];
 
 	[self.viewController logViewWebViewFinishedLoading];
