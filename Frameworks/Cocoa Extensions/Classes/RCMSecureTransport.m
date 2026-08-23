@@ -398,13 +398,24 @@ const tls_ciphersuite_t tls_ciphersuite_unknown = 0;
 
 + (NSArray<NSNumber *> *)cipherSuitesInCollection:(RCMCipherSuiteCollection)collection includeDeprecated:(BOOL)includeDeprecated
 {
-	/* The static RSA key exchange suites in -cipherListDeprecated offer no
-	 forward secrecy and are no longer offered to servers, regardless of
-	 whether the connection prefers modern ciphers only. The parameter is
-	 kept so that the Swift call site does not need to change. */
-	(void)includeDeprecated;
+	if (includeDeprecated == NO) {
+		return [self cipherSuitesInCollection:collection];
+	}
 
-	return [self cipherSuitesInCollection:collection];
+	NSMutableArray<NSNumber *> *cipherSuites =
+		[[self cipherSuitesInCollection:collection] mutableCopy];
+
+	/* Compatibility mode still prefers forward secrecy. Some older IRC
+	 servers support finite-field DHE but not ECDHE. Offer the AEAD DHE-RSA
+	 suites before falling back to static RSA key exchange. */
+	[cipherSuites addObjectsFromArray:@[
+		@(TLS_DHE_RSA_WITH_AES_256_GCM_SHA384),
+		@(TLS_DHE_RSA_WITH_AES_128_GCM_SHA256)
+	]];
+
+	[cipherSuites addObjectsFromArray:[self cipherListDeprecated]];
+
+	return [cipherSuites copy];
 }
 
 + (NSArray<NSNumber *> *)cipherSuitesInCollection:(RCMCipherSuiteCollection)collection
@@ -477,9 +488,8 @@ const tls_ciphersuite_t tls_ciphersuite_unknown = 0;
 
 + (NSArray<NSNumber *> *)cipherListDeprecated
 {
-	// Static RSA key exchange (no forward secrecy). These are never
-	// offered to a server; the list only exists so that a suite a
-	// server picked on its own can be labelled as deprecated in the UI.
+	// Static RSA key exchange has no forward secrecy. These suites are
+	// offered only when the user disables the modern-ciphers preference.
 
 	return @[
 		 @(TLS_RSA_WITH_AES_128_GCM_SHA256),				// AES128-GCM-SHA256

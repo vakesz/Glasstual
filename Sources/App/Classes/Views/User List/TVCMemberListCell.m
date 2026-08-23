@@ -57,6 +57,7 @@ static const CGFloat TVCMemberListAvatarMaximumBrightness = 0.72;
 static const CGFloat TVCMemberListAvatarMinimumSaturation = 0.45;
 
 static const CGFloat TVCMemberListAvatarAwayAlpha = 0.5;
+static const CGFloat TVCMemberListStatusImageWidth = 16.0;
 
 @class TVCMemberListCellDrawingContext;
 
@@ -68,6 +69,7 @@ static const CGFloat TVCMemberListAvatarAwayAlpha = 0.5;
 @interface TVCMemberListCell ()
 @property(nonatomic, weak) IBOutlet NSTextField *cellTextField;
 @property(nonatomic, weak) IBOutlet NSImageView *statusImageView;
+@property(nonatomic, weak) IBOutlet NSLayoutConstraint *statusImageWidthConstraint;
 @property(readonly, copy) TVCMemberListCellDrawingContext *drawingContext;
 @property(readonly) TVCMemberList *memberList;
 @property(readonly) TVCMemberListRowCell *rowCell;
@@ -190,6 +192,15 @@ static NSImage *TVCMemberListAvatarImage(NSString *initial, NSColor *color, CGFl
 }
 
 @implementation TVCMemberListCell
+
+- (void)awakeFromNib
+{
+	[super awakeFromNib];
+
+	self.cellTextField.usesSingleLineMode = YES;
+	self.cellTextField.maximumNumberOfLines = 1;
+	self.cellTextField.lineBreakMode = NSLineBreakByTruncatingTail;
+}
 
 + (NSImage *)avatarImageForNickname:(NSString *)nickname size:(CGFloat)size
 {
@@ -454,7 +465,8 @@ static NSString *_Nullable TVCMemberListCellSymbolNameForRank(IRCUserRank userRa
 
 	if (symbolName == nil) {
 		statusImageView.image = nil;
-		statusImageView.hidden = YES;
+
+		[self setStatusImageVisible:NO];
 
 		return;
 	}
@@ -466,7 +478,8 @@ static NSString *_Nullable TVCMemberListCellSymbolNameForRank(IRCUserRank userRa
 																					 weight:NSFontWeightMedium]];
 
 	statusImageView.image = symbol;
-	statusImageView.hidden = NO;
+
+	[self setStatusImageVisible:YES];
 
 	/* The accent fill is only drawn while the window is active; an
 	 inactive selection is grey and keeps the rank colour legible. */
@@ -480,6 +493,12 @@ static NSString *_Nullable TVCMemberListCellSymbolNameForRank(IRCUserRank userRa
 
 	/* The rank is already part of the label's description. */
 	statusImageView.cell.accessibilityElement = NO;
+}
+
+- (void)setStatusImageVisible:(BOOL)visible
+{
+	self.statusImageView.hidden = (visible == NO);
+	self.statusImageWidthConstraint.constant = (visible ? TVCMemberListStatusImageWidth : 0.0);
 }
 
 #pragma mark -

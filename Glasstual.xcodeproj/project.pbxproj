@@ -140,6 +140,7 @@
 		3B39169B4F19F0CE0FD9553C /* TVCMemberList.m in Sources */ = {isa = PBXBuildFile; fileRef = F09EDFC011C45C0536EF0F36 /* TVCMemberList.m */; };
 		3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 215C3A04759171741632CD9C /* IRC Connection Host.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3B6A5B5108548777B8F670B2 /* IRCUserPersistentStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D188727E4C8BD2D41A7E347 /* IRCUserPersistentStore.m */; };
+		3B950891C104100F58B581B1 /* RCMSecureTransportTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 567C377E1A77C9D6BBD1F406 /* RCMSecureTransportTests.m */; };
 		3B9D10B4F7DA1C983947F187 /* TPISmileyConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = F0C64502805E2094129D7A1D /* TPISmileyConverter.m */; };
 		3BEB819185CABD1560DD5032 /* Chat Filters.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 36917695947EA4E753801EF5 /* Chat Filters.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3C60D78BB3431BBD30682632 /* ICMInlineImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 0623B893D53D44774EDCD52F /* ICMInlineImage.m */; };
@@ -797,22 +798,22 @@
 		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation;
-			dstSubfolderSpec = 7;
-			files = (
-				4888B2AB78F64980FAE8E62C /* Acknowledgements.pdf in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
 			dstSubfolderSpec = 16;
 			files = (
 				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
 				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
 				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Documentation;
+			dstSubfolderSpec = 7;
+			files = (
+				4888B2AB78F64980FAE8E62C /* Acknowledgements.pdf in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1163,6 +1164,7 @@
 		562EC2F8F45BBE309B46F3C6 /* TVCServerListCellPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCServerListCellPrivate.h; sourceTree = "<group>"; };
 		5652BD10AEBEF71B0E7BED04 /* TDCChannelPropertiesNotificationConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCChannelPropertiesNotificationConfiguration.m; sourceTree = "<group>"; };
 		56615E641BF49767F5941B29 /* Release.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Release.entitlements; sourceTree = "<group>"; };
+		567C377E1A77C9D6BBD1F406 /* RCMSecureTransportTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCMSecureTransportTests.m; sourceTree = "<group>"; };
 		568F2A1AD7D8ADCCA9ABB21A /* XRSystemInformation.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = XRSystemInformation.strings; sourceTree = "<group>"; };
 		569A56B3669F11A73D232047 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/TPI_ChatFilterLogic.strings; sourceTree = "<group>"; };
 		56EBB058CF12DEFA6EA8C631 /* XRFileSystemMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XRFileSystemMonitor.h; sourceTree = "<group>"; };
@@ -1577,7 +1579,6 @@
 		DF8FD26E9EA36448ECFA9C19 /* IRCTreeItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCTreeItem.h; sourceTree = "<group>"; };
 		DFA9C076BA3EB60A61422EA4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCServerEndpointListSheet.xib; sourceTree = "<group>"; };
 		E0164169B36C9C0E5AC3469F /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCPreferencesUserStyleSheet.xib; sourceTree = "<group>"; };
-		E0599A88618C178059DA4B8B /* demo-irc-server.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = "demo-irc-server.py"; sourceTree = "<group>"; };
 		E07CAF23FBD68B1E2BA0E0C4 /* TDCChannelInviteSheet.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCChannelInviteSheet.m; sourceTree = "<group>"; };
 		E082C7EA7B982B1A92966500 /* TDCNicknameColorSheetPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCNicknameColorSheetPrivate.h; sourceTree = "<group>"; };
 		E209045A918FDDC504C46E2D /* TDCReactionPopoverControllerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCReactionPopoverControllerPrivate.h; sourceTree = "<group>"; };
@@ -2975,7 +2976,6 @@
 			isa = PBXGroup;
 			children = (
 				88E0544D4726FC9E21C424D5 /* compile-commands.sh */,
-				E0599A88618C178059DA4B8B /* demo-irc-server.py */,
 				C75B09F62724F820A9742F93 /* format.sh */,
 				9F96D75144B6325228D4A96B /* GenerateBuildConfig.sh */,
 				182AD56195862A9F3B17BB8F /* lint.sh */,
@@ -3262,6 +3262,7 @@
 				38A98DAB3B0EF4739C243C79 /* IRCNetworkListTests.m */,
 				2E6DEE69C7D75E91AFE86B58 /* IRCSendingMessageTests.m */,
 				A366B39CE3C3B07566BF5F57 /* IRCSTSPolicyTests.m */,
+				567C377E1A77C9D6BBD1F406 /* RCMSecureTransportTests.m */,
 				A806D74CA87A49163E69D9BE /* TLOSCRAMClientTests.m */,
 				2058D2F235E391EB00AF9B33 /* TVCLogLineTests.m */,
 				37C49D686BBA1E682957DB11 /* TVCMemberListSectionTests.m */,
@@ -4723,6 +4724,7 @@
 				74285D25F9A36FCE2E949FCC /* IRCNetworkListTests.m in Sources */,
 				F151668615C8531544B720EA /* IRCSTSPolicyTests.m in Sources */,
 				7223D2A12D60BFFEBC4B5C74 /* IRCSendingMessageTests.m in Sources */,
+				3B950891C104100F58B581B1 /* RCMSecureTransportTests.m in Sources */,
 				E9C6B79C48D1194EF7C6EF86 /* TLOSCRAMClientTests.m in Sources */,
 				B3FFB32CFBE55059D31F62F0 /* TVCLogLineTests.m in Sources */,
 				AB1F0C7270BCC02BB4A6104B /* TVCMemberListSectionTests.m in Sources */,
@@ -5762,6 +5764,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "$(GLASSTUAL_BUNDLE_IDENTIFIER)";
 				PRODUCT_MODULE_NAME = Glasstual;
 				PRODUCT_NAME = Glasstual;
+				REGISTER_APP_GROUPS = YES;
 				STRIP_STYLE = "non-global";
 				SWIFT_OBJC_BRIDGING_HEADER = Sources/App/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h;
 			};
@@ -5912,6 +5915,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.vakesz.glasstual.InlineContentLoader;
 				PRODUCT_NAME = "Inline Content Loader";
 				PROVISIONING_PROFILE_SPECIFIER = "$(GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE)";
+				REGISTER_APP_GROUPS = YES;
 				STRIP_STYLE = "non-global";
 			};
 			name = Release;
@@ -5919,6 +5923,7 @@
 		53B174273AFB2490CD0273DC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -5962,6 +5967,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.vakesz.glasstual.InlineContentLoader;
 				PRODUCT_NAME = "Inline Content Loader";
+				REGISTER_APP_GROUPS = YES;
 				STRIP_STYLE = "non-global";
 			};
 			name = Debug;
@@ -6038,6 +6044,7 @@
 				PRODUCT_MODULE_NAME = Glasstual;
 				PRODUCT_NAME = Glasstual;
 				PROVISIONING_PROFILE_SPECIFIER = "$(GLASSTUAL_MAIN_PROVISIONING_PROFILE)";
+				REGISTER_APP_GROUPS = YES;
 				STRIP_STYLE = "non-global";
 				SWIFT_OBJC_BRIDGING_HEADER = Sources/App/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h;
 			};
@@ -6159,12 +6166,14 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.vakesz.glasstual.ScrollbackHistoryManager;
 				PRODUCT_NAME = "Scrollback History Manager";
+				REGISTER_APP_GROUPS = YES;
 			};
 			name = Debug;
 		};
 		903D99EE1B024F90E6A580F1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -6335,6 +6344,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.vakesz.glasstual.ScrollbackHistoryManager;
 				PRODUCT_NAME = "Scrollback History Manager";
 				PROVISIONING_PROFILE_SPECIFIER = "$(GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE)";
+				REGISTER_APP_GROUPS = YES;
 			};
 			name = Release;
 		};
