@@ -47,6 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)setDeveloperModeEnabled:(BOOL)developerModeEnabled;
 
++ (void)setOnboardingCompleted:(BOOL)onboardingCompleted;
+
 + (void)setLogToDisk:(BOOL)logToDisk;
 
 + (void)setOnlySpeakEventsForSelection:(BOOL)onlySpeakEventsForSelection;

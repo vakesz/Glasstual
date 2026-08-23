@@ -1864,7 +1864,7 @@
                     </buttonCell>
                     <accessibility description="Begin Setup"/>
                     <connections>
-                        <action selector="showWelcomeSheet:" target="U6M-jc-NbT" id="t5s-aH-Fdt"/>
+                        <action selector="showOnboardingWindow:" target="U6M-jc-NbT" id="t5s-aH-Fdt"/>
                     </connections>
                 </button>
             </subviews>

@@ -494,6 +494,19 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 }
 
 #pragma mark -
+#pragma mark Onboarding
+
++ (void)setOnboardingCompleted:(BOOL)onboardingCompleted
+{
+	[RZUserDefaults() setBool:onboardingCompleted forKey:@"Onboarding -> Completed"];
+}
+
++ (BOOL)onboardingCompleted
+{
+	return [RZUserDefaults() boolForKey:@"Onboarding -> Completed"];
+}
+
+#pragma mark -
 #pragma mark Theme
 
 + (void)setAppearance:(TXPreferredAppearance)appearance

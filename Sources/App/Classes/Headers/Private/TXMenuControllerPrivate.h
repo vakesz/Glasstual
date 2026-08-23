@@ -80,7 +80,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface TXMenuControllerMainWindowProxy : NSObject
-- (IBAction)showWelcomeSheet:(nullable id)sender;
+- (IBAction)showOnboardingWindow:(nullable id)sender;
 @end
 
 NS_ASSUME_NONNULL_END

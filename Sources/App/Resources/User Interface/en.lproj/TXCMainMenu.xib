@@ -989,6 +989,13 @@ CQ
                                     <action selector="emptyAction:" target="267" id="c1K-oo-2Iu"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" tag="911" id="obw-sp-001"/>
+                            <menuItem title="Welcome to Glasstual…" tag="912" id="obw-mi-001" image="hand.wave">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showOnboardingWindow:" target="267" id="obw-ac-001"/>
+                                </connections>
+                            </menuItem>
                         </items>
                         <connections>
                             <outlet property="delegate" destination="267" id="xBH-z6-KOr"/>
@@ -1442,6 +1449,7 @@ CA
         <image name="gearshape" catalog="system" width="16" height="16"/>
         <image name="hand.raised" catalog="system" width="16" height="16"/>
         <image name="hand.raised.slash" catalog="system" width="16" height="16"/>
+        <image name="hand.wave" catalog="system" width="16" height="16"/>
         <image name="info.circle" catalog="system" width="16" height="16"/>
         <image name="link" catalog="system" width="16" height="16"/>
         <image name="list.bullet" catalog="system" width="16" height="16"/>
