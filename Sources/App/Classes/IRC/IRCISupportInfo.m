@@ -543,7 +543,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	NSNumber *limit = self.maximumTargetsByCommand[command.uppercaseString];
 
-	if (limit) {
+	if (limit != nil) {
 		return limit.unsignedIntegerValue;
 	}
 

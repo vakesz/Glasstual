@@ -341,7 +341,7 @@ static NSString *const _groupCellIdentifier = @"GroupCell";
 
 	NSTextField *addressField = [NSTextField textFieldWithString:@""];
 
-	addressField.placeholderString = @"irc.example.org";
+	addressField.placeholderString = TXTLS(@"TDCOnboardingWindow[np1-sh]");
 	addressField.delegate = self;
 	addressField.translatesAutoresizingMaskIntoConstraints = NO;
 
@@ -349,7 +349,7 @@ static NSString *const _groupCellIdentifier = @"GroupCell";
 
 	NSTextField *portField = [NSTextField textFieldWithString:@""];
 
-	portField.placeholderString = @"6697";
+	portField.placeholderString = TXTLS(@"TDCOnboardingWindow[np1-pp]");
 	portField.delegate = self;
 	portField.alignment = NSTextAlignmentRight;
 	portField.translatesAutoresizingMaskIntoConstraints = NO;
@@ -718,7 +718,7 @@ static NSString *const _groupCellIdentifier = @"GroupCell";
 	} else {
 		self.detailTitleField.stringValue = TXTLS(@"TDCOnboardingWindow[np1-cs]");
 		self.serverAddressField.stringValue = @"";
-		self.serverPortField.stringValue = @"6697";
+		self.serverPortField.stringValue = TXTLS(@"TDCOnboardingWindow[np1-pp]");
 		self.securedCheck.state = NSControlStateValueOn;
 		self.saslCheck.state = NSControlStateValueOn;
 		self.saslCheck.enabled = YES;
