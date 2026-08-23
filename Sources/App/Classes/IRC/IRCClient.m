@@ -93,7 +93,6 @@
 #import "THOPluginDispatcherPrivate.h"
 #import "THOPluginManagerPrivate.h"
 #import "THOPluginProtocol.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOFileLoggerPrivate.h"
 #import "TLOInputHistoryPrivate.h"
 #import "TLOLocalization.h"
@@ -157,6 +156,7 @@
 #import "IRCUserRelationsPrivate.h"
 #import "IRCWorldPrivate.h"
 #import "IRCClientPrivate.h"
+#import "IRCTypingTrackerPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -284,7 +284,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @property(nonatomic, strong) NSMutableDictionary<NSString *, IRCLabeledDelivery *> *pendingDeliveries;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSString *> *labelForBatchToken;
 @property(nonatomic, assign) NSUInteger labelCounter;
-@property(nonatomic, assign) TVCLogLineDeliveryState nextLineDeliveryState; // Consumed by the next -print:
+@property(nonatomic, assign) TVCLogLineDeliveryState nextLineDeliveryState;		 // Consumed by the next -print:
+@property(nonatomic, copy, nullable) NSString *nextLineReplyToMessageIdentifier; // Consumed by the next -print:
+/* Channel unique identifier -> last +typing value sent ("active" or "paused") */
+@property(nonatomic, strong) NSMutableDictionary<NSString *, NSString *> *typingStateSent;
+/* Channel unique identifier -> when +typing=active was last sent */
+@property(nonatomic, strong) NSMutableDictionary<NSString *, NSDate *> *typingActiveSentAt;
 @property(nonatomic, assign) NSUInteger connectDelay;
 @property(nonatomic, assign) NSUInteger lastServerSelected;
 @property(nonatomic, assign) NSUInteger lastWhoRequestChannelListIndex;
@@ -377,6 +382,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	self.saslTriedMechanisms = [NSMutableArray array];
 	self.pendingDeliveries = [NSMutableDictionary dictionary];
 	self.labelForBatchToken = [NSMutableDictionary dictionary];
+
+	self.typingTracker = [[IRCTypingTracker alloc] initWithClient:self];
+	self.typingStateSent = [NSMutableDictionary dictionary];
+	self.typingActiveSentAt = [NSMutableDictionary dictionary];
 
 	self.channelListPrivate = [NSMutableArray array];
 
@@ -945,20 +954,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	return self.config.nickname;
 }
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (NSString *)encryptionAccountNameForLocalUser
-{
-	return [sharedEncryptionManager() accountNameForUser:self.userNickname onClient:self];
-}
-
-- (NSString *)encryptionAccountNameForUser:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
-
-	return [sharedEncryptionManager() accountNameForUser:nickname onClient:self];
-}
-#endif
 
 - (TDCFileTransferDialog *)fileTransferController
 {
@@ -1584,162 +1579,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	}
 
 	return NO;
-}
-
-#pragma mark -
-#pragma mark Encryption and Decryption
-
-- (NSDictionary<NSString *, NSString *> *)listOfNicknamesToDisallowEncryption
-{
-	return [TPCResourceManager dictionaryFromResources:@"StaticStore"
-												   key:@"IRCClient List of Nicknames that Encryption Forbids"];
-}
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (BOOL)encryptionAllowedForTarget:(NSString *)target
-{
-	return [self encryptionAllowedForTarget:target lenient:NO];
-}
-
-- (BOOL)encryptionAllowedForTarget:(NSString *)target lenient:(BOOL)lenient
-{
-	NSParameterAssert(target != nil);
-
-	/* Encryption is disabled */
-	if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-		return NO;
-	}
-
-	/* General rules */
-	if ([self stringIsNickname:target] == NO) { // Do not allow channel names
-		return NO;
-	} else if ([self nicknameIsMyself:target] && lenient == NO) { // Do not allow the local user
-		return NO;
-	} else if ([self nicknameIsZNCUser:target] && lenient == NO) { // Do not allow a ZNC private user
-		return NO;
-	}
-
-	/* Build context information for lookup */
-	NSDictionary *exceptionRules = [self listOfNicknamesToDisallowEncryption];
-
-	NSString *lowercaseNickname = target.lowercaseString;
-
-	/* Check network specific rules (such as "X" on UnderNet) */
-	NSString *networkName = self.supportInfo.networkName;
-
-	if (networkName) {
-		NSArray *networkSpecificData = [exceptionRules arrayForKey:networkName];
-
-		if ([networkSpecificData containsObject:lowercaseNickname]) {
-			return NO;
-		}
-	}
-
-	/* Look up rules for all networks */
-	NSArray *defaultsData = exceptionRules[@"-default-"];
-
-	if ([defaultsData containsObject:lowercaseNickname]) {
-		return NO;
-	}
-
-	/* Allow the nickname through when there are no rules */
-	return YES;
-}
-#endif
-
-- (NSUInteger)lengthOfEncryptedMessageDirectedAt:(NSString *)messageTo thatFitsWithinBounds:(NSUInteger)maximumLength
-{
-	return 0;
-}
-
-- (void)encryptMessage:(NSString *)messageBody
-			directedAt:(NSString *)messageTo
-	  encodingCallback:(TLOEncryptionManagerEncodingDecodingCallbackBlock)encodingCallback
-	 injectionCallback:(TLOEncryptionManagerInjectCallbackBlock)injectionCallback
-{
-	NSParameterAssert(messageBody != nil);
-	NSParameterAssert(messageTo != nil);
-	NSParameterAssert(encodingCallback != nil);
-	NSParameterAssert(injectionCallback != nil);
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	/* Check if we are accepting encryption from this user */
-	if (messageBody.length == 0 || [self encryptionAllowedForTarget:messageTo] == NO) {
-#endif
-		if (encodingCallback) {
-			encodingCallback(messageBody, NO);
-		}
-
-		if (injectionCallback) {
-			injectionCallback(messageBody);
-		}
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-		return;
-	}
-
-	/* Continue with normal encryption operations */
-	[sharedEncryptionManager() encryptMessage:messageBody
-										 from:[self encryptionAccountNameForLocalUser]
-										   to:[self encryptionAccountNameForUser:messageTo]
-							 encodingCallback:encodingCallback
-							injectionCallback:injectionCallback];
-#endif
-}
-
-- (void)decryptMessage:(NSString *)messageBody
-				  from:(NSString *)messageFrom
-				target:(NSString *)target
-	  decodingCallback:(TLOEncryptionManagerEncodingDecodingCallbackBlock)decodingCallback
-{
-	NSParameterAssert(messageBody != nil);
-	NSParameterAssert(messageFrom != nil);
-	NSParameterAssert(target != nil);
-	NSParameterAssert(decodingCallback != nil);
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	/* Check if we are accepting encryption from this user */
-	if (messageBody.length == 0 || [self encryptionAllowedForTarget:target lenient:YES] == NO) {
-#endif
-		if (decodingCallback) {
-			decodingCallback(messageBody, NO);
-		}
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-		return;
-	}
-
-	/* Continue with normal encryption operations */
-	[sharedEncryptionManager() decryptMessage:messageBody
-										 from:[self encryptionAccountNameForUser:messageFrom]
-										   to:[self encryptionAccountNameForLocalUser]
-							 decodingCallback:decodingCallback];
-#endif
-}
-
-- (void)encryptionAuthenticateUser:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	/* Encryption is disabled */
-	if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-		return;
-	}
-
-	/* General rules */
-	if ([self stringIsNickname:nickname] == NO) {
-		return;
-	}
-
-	if ([self nicknameIsMyself:nickname]) {
-		return;
-	}
-
-	/* Authenticate user */
-	[sharedEncryptionManager() authenticateUser:[self encryptionAccountNameForUser:nickname]
-										   from:[self encryptionAccountNameForLocalUser]];
-#endif
 }
 
 #pragma mark -
@@ -3104,14 +2943,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 - (void)sendText:(NSAttributedString *)string asCommand:(IRCRemoteCommand)command toChannel:(IRCChannel *)channel
 {
-	[self sendText:string asCommand:command toChannel:channel withEncryption:YES];
-}
-
-- (void)sendText:(NSAttributedString *)string
-		 asCommand:(IRCRemoteCommand)command
-		 toChannel:(IRCChannel *)channel
-	withEncryption:(BOOL)encryptText
-{
 	NSParameterAssert(string != nil);
 	NSParameterAssert(channel != nil);
 
@@ -3155,88 +2986,258 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		return;
 	}
 
+	/* Whatever was being typed is now sent. */
+	[self localUserSentMessageInChannel:channel];
+
+	/* A reply answers one message: the tag goes on the first line
+	 sent and the local print of that line carries the reference. */
+	NSString *replyIdentifier = self.nextMessageReplyIdentifier;
+
+	self.nextMessageReplyIdentifier = nil;
+
+	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags] == NO) {
+		replyIdentifier = nil;
+	}
+
 	NSArray *lines = string.splitIntoLines;
 
 	for (NSAttributedString *line in lines) {
 		NSMutableAttributedString *lineMutable = [line mutableCopy];
 
 		while (lineMutable.length > 0) {
-			NSString *unencryptedMessage = [lineMutable stringFormattedForChannel:channel.name
-																		 onClient:self
-																	 withLineType:lineType];
+			NSString *message = [lineMutable stringFormattedForChannel:channel.name
+															  onClient:self
+														  withLineType:lineType];
 
-			__block NSString *deliveryLabel = nil;
+			NSString *deliveryLabel = nil;
 
-			TLOEncryptionManagerEncodingDecodingCallbackBlock encryptionBlock =
-				^(NSString *originalString, BOOL wasEncrypted) {
-					if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage] && wasEncrypted == NO) {
-						/* With labeled-response the local line is printed now
-						 in a pending state and updated when the echo returns;
-						 without it, echo-message suppresses the local print. */
-						if ([self labeledResponseTrackingEnabled] == NO) {
-							return;
-						}
+			NSString *lineReplyIdentifier = replyIdentifier;
 
-						deliveryLabel = [self registerPendingDeliveryForChannel:channel];
+			replyIdentifier = nil;
 
-						self.nextLineDeliveryState = TVCLogLineDeliveryStatePending;
+			self.nextLineReplyToMessageIdentifier = lineReplyIdentifier;
 
-						[self print:[IRCClient redactedServiceMessage:originalString sentTo:channel.name]
-										  by:self.userNickname
-								   inChannel:channel
-									  asType:lineType
-									 command:commandToSend
-								  receivedAt:[NSDate date]
-								 isEncrypted:wasEncrypted
-							referenceMessage:nil
-							 completionBlock:^(TVCLogControllerPrintOperationContext *context) {
-								 [self attachLineNumber:context.lineNumber toDeliveryWithLabel:deliveryLabel];
-							 }];
+			NSString *redactedMessage = [IRCClient redactedServiceMessage:message sentTo:channel.name];
 
-						return;
-					}
+			if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
+				/* With labeled-response the local line is printed now
+				 in a pending state and updated when the echo returns;
+				 without it, echo-message suppresses the local print. */
+				if ([self labeledResponseTrackingEnabled]) {
+					deliveryLabel = [self registerPendingDeliveryForChannel:channel];
 
-					[self print:[IRCClient redactedServiceMessage:originalString sentTo:channel.name]
-								 by:self.userNickname
-						  inChannel:channel
-							 asType:lineType
-							command:commandToSend
-						 receivedAt:[NSDate date]
-						isEncrypted:wasEncrypted];
-				};
+					self.nextLineDeliveryState = TVCLogLineDeliveryStatePending;
 
-			TLOEncryptionManagerInjectCallbackBlock injectionBlock = ^(NSString *encodedString) {
-				NSString *sendMessage = encodedString;
+					NSString *label = deliveryLabel;
 
-				if (lineType == TVCLogLineTypeAction) {
-					sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
+					[self print:redactedMessage
+									  by:self.userNickname
+							   inChannel:channel
+								  asType:lineType
+								 command:commandToSend
+							  receivedAt:[NSDate date]
+							 isEncrypted:NO
+						referenceMessage:nil
+						 completionBlock:^(TVCLogControllerPrintOperationContext *context) {
+							 [self attachLineNumber:context.lineNumber toDeliveryWithLabel:label];
+						 }];
 				}
-
-				if (deliveryLabel) {
-					[self sendCommand:commandToSend
-							arguments:@[ channel.name, sendMessage ]
-								 tags:@{@"label" : deliveryLabel}];
-				} else {
-					[self send:commandToSend, channel.name, sendMessage, nil];
-				}
-			};
-
-			if (encryptText == NO) {
-				encryptionBlock(unencryptedMessage, NO);
-
-				injectionBlock(unencryptedMessage);
-
-				continue;
+			} else {
+				[self print:redactedMessage
+							 by:self.userNickname
+					  inChannel:channel
+						 asType:lineType
+						command:commandToSend
+					 receivedAt:[NSDate date]
+					isEncrypted:NO];
 			}
 
-			[self encryptMessage:unencryptedMessage
-					   directedAt:channel.name
-				 encodingCallback:encryptionBlock
-				injectionCallback:injectionBlock];
+			NSString *sendMessage = message;
+
+			if (lineType == TVCLogLineTypeAction) {
+				sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
+			}
+
+			/* The reference is consumed by the local print above. When
+			 echo-message suppressed that print, it is dropped here so
+			 no unrelated line inherits it. */
+			self.nextLineReplyToMessageIdentifier = nil;
+
+			NSMutableDictionary<NSString *, NSString *> *tags = [NSMutableDictionary dictionary];
+
+			if (deliveryLabel) {
+				tags[@"label"] = deliveryLabel;
+			}
+
+			if (lineReplyIdentifier) {
+				tags[@"+draft/reply"] = lineReplyIdentifier;
+			}
+
+			if (tags.count > 0) {
+				[self sendCommand:commandToSend arguments:@[ channel.name, sendMessage ] tags:tags];
+			} else {
+				[self send:commandToSend, channel.name, sendMessage, nil];
+			}
 		}
 	}
 
 	[self processBundlesUserMessage:string.string command:commandToSend];
+}
+
+#pragma mark -
+#pragma mark Typing Notifications
+
+/* Typing is reported with the "+typing" client tag (IRCv3). "active"
+ is sent at most every three seconds while the user keeps writing,
+ "paused" once they stop with text still in the field, and "done" when
+ the text is sent or cleared. Nothing is sent for commands, for the
+ server console, or when the preference is off. */
+#define _typingActiveInterval 3.0
+#define _typingPausedDelay 5.0
+
+- (BOOL)typingNotificationsAvailableForChannel:(nullable IRCChannel *)channel
+{
+	if (channel == nil || channel.isUtility) {
+		return NO;
+	}
+
+	if (channel.isChannel == NO && channel.isPrivateMessage == NO) {
+		return NO;
+	}
+
+	if (self.isLoggedIn == NO) {
+		return NO;
+	}
+
+	return [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags];
+}
+
+- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel
+{
+	[self noteLocalUserTyping:text inChannel:channel atDate:[NSDate date]];
+}
+
+- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel atDate:(NSDate *)date
+{
+	NSParameterAssert(text != nil);
+	NSParameterAssert(date != nil);
+
+	if ([self typingNotificationsAvailableForChannel:channel] == NO) {
+		return;
+	}
+
+	BOOL isCommand = [text hasPrefix:@"/"];
+
+	if (text.length == 0 || isCommand || [TPCPreferences sendTypingNotifications] == NO) {
+		[self sendTypingDoneInChannel:channel];
+
+		return;
+	}
+
+	NSString *channelKey = channel.uniqueIdentifier;
+
+	NSDate *activeSentAt = self.typingActiveSentAt[channelKey];
+
+	NSString *stateSent = self.typingStateSent[channelKey];
+
+	BOOL sendActive = (activeSentAt == nil || [stateSent isEqualToString:@"active"] == NO ||
+					   [date timeIntervalSinceDate:activeSentAt] >= _typingActiveInterval);
+
+	if (sendActive) {
+		if ([self sendTagMessage:@{@"+typing" : @"active"} toTarget:channel.name]) {
+			self.typingActiveSentAt[channelKey] = date;
+			self.typingStateSent[channelKey] = @"active";
+		}
+	}
+
+	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(typingPauseTimerFired:) object:channel];
+
+	[self performSelector:@selector(typingPauseTimerFired:) withObject:channel afterDelay:_typingPausedDelay];
+}
+
+- (void)typingPauseTimerFired:(IRCChannel *)channel
+{
+	NSParameterAssert(channel != nil);
+
+	NSString *channelKey = channel.uniqueIdentifier;
+
+	if ([self.typingStateSent[channelKey] isEqualToString:@"active"] == NO) {
+		return;
+	}
+
+	if ([self typingNotificationsAvailableForChannel:channel] == NO) {
+		[self.typingStateSent removeObjectForKey:channelKey];
+
+		return;
+	}
+
+	if ([self sendTagMessage:@{@"+typing" : @"paused"} toTarget:channel.name]) {
+		self.typingStateSent[channelKey] = @"paused";
+	}
+}
+
+- (void)sendTypingDoneInChannel:(nullable IRCChannel *)channel
+{
+	if (channel == nil) {
+		return;
+	}
+
+	NSString *channelKey = channel.uniqueIdentifier;
+
+	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(typingPauseTimerFired:) object:channel];
+
+	if (self.typingStateSent[channelKey] == nil) {
+		return;
+	}
+
+	[self.typingStateSent removeObjectForKey:channelKey];
+	[self.typingActiveSentAt removeObjectForKey:channelKey];
+
+	if ([self typingNotificationsAvailableForChannel:channel]) {
+		[self sendTagMessage:@{@"+typing" : @"done"} toTarget:channel.name];
+	}
+}
+
+- (void)localUserSentMessageInChannel:(nullable IRCChannel *)channel
+{
+	[self sendTypingDoneInChannel:channel];
+}
+
+- (void)localUserClearedTextInChannel:(nullable IRCChannel *)channel
+{
+	[self sendTypingDoneInChannel:channel];
+}
+
+#pragma mark -
+#pragma mark Reactions
+
+- (BOOL)sendReaction:(NSString *)emoji toMessageIdentifier:(NSString *)messageIdentifier inChannel:(IRCChannel *)channel
+{
+	NSParameterAssert(emoji != nil);
+	NSParameterAssert(messageIdentifier != nil);
+	NSParameterAssert(channel != nil);
+
+	if (emoji.length == 0 || messageIdentifier.length == 0 || channel.isUtility) {
+		return NO;
+	}
+
+	NSDictionary *tags = @{@"+draft/react" : emoji, @"+draft/reply" : messageIdentifier};
+
+	if ([self sendTagMessage:tags toTarget:channel.name] == NO) {
+		return NO;
+	}
+
+	/* Shown at once. A server that echoes the TAGMSG back delivers the
+	 same reaction again, which the view ignores as a repeat. */
+	[self deliverClientTags:@{@"draft/react" : emoji, @"draft/reply" : messageIdentifier}
+				 fromSender:self.userNickname
+				   toTarget:channel.name
+					 inItem:channel
+				  timestamp:[NSDate date]
+		  messageIdentifier:nil
+					account:nil];
+
+	return YES;
 }
 
 - (void)sendPrivmsg:(NSString *)message toChannel:(IRCChannel *)channel
@@ -5100,7 +5101,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		BOOL isOperatorMessage = NO;
 		BOOL isSecretMessage = NO;
-		BOOL isUnencryptedMessage = NO;
 
 		NSString *commandToSend = nil;
 
@@ -5119,7 +5119,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 			isOperatorMessage = (commandNumeric == IRCLocalCommandOmsg);
 			isSecretMessage = (commandNumeric == IRCLocalCommandSmsg || isSilentConnectCommand);
-			isUnencryptedMessage = (commandNumeric == IRCLocalCommandUmsg || isSilentConnectCommand);
 		} else if (commandNumeric == IRCLocalCommandMe || commandNumeric == IRCLocalCommandSme ||
 				   commandNumeric == IRCLocalCommandUme) {
 			commandToSend = @"PRIVMSG";
@@ -5127,7 +5126,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 			lineType = TVCLogLineTypeAction;
 
 			isSecretMessage = (commandNumeric == IRCLocalCommandSme);
-			isUnencryptedMessage = (commandNumeric == IRCLocalCommandUme);
 		} else if (commandNumeric == IRCLocalCommandNotice ||  // Command: NOTICE
 				   commandNumeric == IRCLocalCommandOnotice || // Command: ONOTICE
 				   commandNumeric == IRCLocalCommandUnotice)   // Command: UNOTICE
@@ -5137,7 +5135,6 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 			lineType = TVCLogLineTypeNotice;
 
 			isOperatorMessage = (commandNumeric == IRCLocalCommandOnotice);
-			isUnencryptedMessage = (commandNumeric == IRCLocalCommandUnotice);
 		}
 
 		if (isOperatorMessage) {
@@ -5205,7 +5202,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 				2. Try to find channel that already exists which matches
 				   the destination. If a channel does not exist, then we 
 				   create one depending on whether this is a secret message.
-				3. The message is then encrypted and sent off.
+				3. The message is then sent off.
 			 */
 		NSArray *destinations = [targetChannelName componentsSeparatedByString:@","];
 
@@ -5213,7 +5210,7 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 		/* TARGMAX: joined channels addressed without a status prefix are sent
 		 as comma separated target groups. Nicknames keep the per-target path
-		 below because those messages may be encrypted. */
+		 below. */
 		if (isSecretMessage == NO && isSilentConnectCommand == NO && channelNamePrefix == nil &&
 			[self.supportInfo maximumTargetsForCommand:commandToSend] > 1) {
 			NSMutableArray<IRCChannel *> *groupedChannels = [NSMutableArray array];
@@ -5294,88 +5291,61 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 			NSMutableAttributedString *lineMutable = [stringIn mutableCopy];
 
 			while (lineMutable.length > 0) {
-				NSString *unencryptedMessage = [lineMutable stringFormattedForChannel:destinationName
-																			 onClient:self
-																		 withLineType:lineType];
+				NSString *message = [lineMutable stringFormattedForChannel:destinationName
+																  onClient:self
+															  withLineType:lineType];
 
-				__block NSString *deliveryLabel = nil;
+				NSString *deliveryLabel = nil;
 
-				TLOEncryptionManagerEncodingDecodingCallbackBlock encryptionBlock = ^(NSString *originalString,
-																					  BOOL wasEncrypted) {
-					if (isSilentConnectCommand) {
-						[self printDebugInformationToConsole:TXTLS(@"IRC[ccs-1a]",
-																   destinationName,
-																   [IRCClient redactedServiceMessage:originalString
-																							  sentTo:destinationName])];
+				NSString *redactedMessage = [IRCClient redactedServiceMessage:message sentTo:destinationName];
 
-						return;
-					}
-
-					if (destination == nil) {
-						return;
-					}
-
-					if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage] && wasEncrypted == NO) {
-						if ([self labeledResponseTrackingEnabled] == NO) {
-							return;
-						}
-
+				if (isSilentConnectCommand) {
+					[self printDebugInformationToConsole:TXTLS(@"IRC[ccs-1a]", destinationName, redactedMessage)];
+				} else if (destination == nil) {
+					/* Nothing to print locally */
+				} else if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
+					if ([self labeledResponseTrackingEnabled]) {
 						deliveryLabel = [self registerPendingDeliveryForChannel:destination];
 
 						self.nextLineDeliveryState = TVCLogLineDeliveryStatePending;
 
-						[self print:[IRCClient redactedServiceMessage:originalString sentTo:destinationName]
+						NSString *label = deliveryLabel;
+
+						[self print:redactedMessage
 										  by:self.userNickname
 								   inChannel:destination
 									  asType:lineType
 									 command:command
 								  receivedAt:[NSDate date]
-								 isEncrypted:wasEncrypted
+								 isEncrypted:NO
 							referenceMessage:nil
 							 completionBlock:^(TVCLogControllerPrintOperationContext *context) {
-								 [self attachLineNumber:context.lineNumber toDeliveryWithLabel:deliveryLabel];
+								 [self attachLineNumber:context.lineNumber toDeliveryWithLabel:label];
 							 }];
-
-						return;
 					}
-
-					[self print:[IRCClient redactedServiceMessage:originalString sentTo:destinationName]
+				} else {
+					[self print:redactedMessage
 								 by:self.userNickname
 						  inChannel:destination
 							 asType:lineType
 							command:command
 						 receivedAt:[NSDate date]
-						isEncrypted:wasEncrypted];
-				};
-
-				TLOEncryptionManagerInjectCallbackBlock injectionBlock = ^(NSString *encodedString) {
-					NSString *sendMessage = encodedString;
-
-					if (lineType == TVCLogLineTypeAction) {
-						sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
-					}
-
-					if (deliveryLabel) {
-						[self sendCommand:commandToSend
-								arguments:@[ destinationName, sendMessage ]
-									 tags:@{@"label" : deliveryLabel}];
-					} else {
-						[self send:commandToSend, destinationName, sendMessage, nil];
-					}
-				};
-
-				if (destination == nil || isUnencryptedMessage) {
-					encryptionBlock(unencryptedMessage, NO);
-
-					injectionBlock(unencryptedMessage);
-
-					continue;
+						isEncrypted:NO];
 				}
 
-				[self encryptMessage:unencryptedMessage
-						   directedAt:destination.name
-					 encodingCallback:encryptionBlock
-					injectionCallback:injectionBlock];
+				NSString *sendMessage = message;
+
+				if (lineType == TVCLogLineTypeAction) {
+					sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
+				}
+
+				if (deliveryLabel) {
+					[self sendCommand:commandToSend
+							arguments:@[ destinationName, sendMessage ]
+								 tags:@{@"label" : deliveryLabel}];
+				} else {
+					[self send:commandToSend, destinationName, sendMessage, nil];
+				}
 			}
 		} // destination for()
 
@@ -5902,6 +5872,20 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	self.nextLineDeliveryState = TVCLogLineDeliveryStateNone;
 
+	/* The message this one answers (+draft/reply), either carried by
+	 the message itself or set by the send path for the local print. */
+	NSString *replyToMessageIdentifier = referenceMessage.messageTags[@"+draft/reply"];
+
+	if (replyToMessageIdentifier.length == 0) {
+		replyToMessageIdentifier = self.nextLineReplyToMessageIdentifier;
+	}
+
+	self.nextLineReplyToMessageIdentifier = nil;
+
+	if (replyToMessageIdentifier.length > 0) {
+		logLine.replyToMessageIdentifier = replyToMessageIdentifier;
+	}
+
 	logLine.lineType = lineType;
 	logLine.memberType = memberType;
 
@@ -6158,6 +6142,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 	// because their state must be kept or they are reset elsewhere
 
 	[self.batchMessages dequeueEntries];
+
+	[self.typingTracker removeAll];
+	[self.typingStateSent removeAllObjects];
+	[self.typingActiveSentAt removeAllObjects];
+
+	self.nextLineReplyToMessageIdentifier = nil;
+	self.nextMessageReplyIdentifier = nil;
 
 	self.connectDelay = 0;
 
@@ -6975,22 +6966,13 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		}
 	}
 
-	/* Even though OTR doesn't allow channel decryption, we still wrap everything
-	 in a decryption block because Blowfish plugin may swizzle the logic.
-	 That plugin does support channel decryption. */
-	BOOL performDecryption = YES;
-
-	TLOEncryptionManagerEncodingDecodingCallbackBlock decryptionBlock = nil;
-
 	/* Public message (directed at channel) */
 	if ([self stringIsChannelName:target]) {
 		if (ignoreInfo.ignorePublicMessages) {
 			return;
 		}
 
-		decryptionBlock = ^(NSString *originalString, BOOL wasEncrypted) {
-			[self _receiveText_Public:m lineType:lineType target:target text:originalString wasEncrypted:wasEncrypted];
-		};
+		[self _receiveText_Public:m lineType:lineType target:target text:text wasEncrypted:NO];
 	}
 
 	/* Private message (from user) */
@@ -6999,32 +6981,12 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 			return;
 		}
 
-		decryptionBlock = ^(NSString *originalString, BOOL wasEncrypted) {
-			[self _receiveText_Private:m lineType:lineType target:target text:originalString wasEncrypted:wasEncrypted];
-		};
+		[self _receiveText_Private:m lineType:lineType target:target text:text wasEncrypted:NO];
 	}
 
 	/* Private message (from server) */
 	else {
-		/* It is not possible to hold an OTR conversation with a server. */
-		performDecryption = NO;
-
-		decryptionBlock = ^(NSString *originalString, BOOL wasEncrypted) {
-			[self _receiveText_PrivateServer:m
-									lineType:lineType
-									  target:target
-										text:originalString
-								wasEncrypted:wasEncrypted];
-		};
-	}
-
-	/* Perform decryption */
-	if (performDecryption) {
-		NSString *sender = m.senderNickname;
-
-		[self decryptMessage:text from:sender target:target decodingCallback:decryptionBlock];
-	} else {
-		decryptionBlock(text, NO);
+		[self _receiveText_PrivateServer:m lineType:lineType target:target text:text wasEncrypted:NO];
 	}
 }
 
@@ -8832,9 +8794,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 #pragma mark Message Tags
 
 /* TAGMSG carries nothing but tags. Client-only tags ("+typing",
- "+draft/react", "+draft/reply") are the interesting ones. They are
- handed to the style as one structured event so a theme can act on
- them; the app itself does not render anything for them yet. */
+ "+draft/react", "+draft/reply") are the interesting ones. Typing is
+ tracked by the client for the input bar; reactions are recorded with
+ the view; and every event is handed to the style as one structured
+ event so a theme can act on it. */
 - (void)receiveTagMessage:(IRCMessage *)m
 {
 	NSParameterAssert(m != nil);
@@ -8861,6 +8824,17 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 	LogToConsoleDebug("TAGMSG from %{public}@ to %{public}@: %{public}@", sender, target, clientTags);
 
+	/* Ignored users are ignored here as well. */
+	IRCAddressBookEntry *ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
+
+	if (ignoreInfo.ignorePublicMessages && [self stringIsChannelName:target]) {
+		return;
+	}
+
+	if (ignoreInfo.ignorePrivateMessages && [self stringIsChannelName:target] == NO) {
+		return;
+	}
+
 	/* Resolve the view the event belongs to: the channel, the query
 	 with the sender, or the server console. */
 	IRCChannel *channel = nil;
@@ -8873,26 +8847,82 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 		channel = [self findChannel:target];
 	}
 
-	NSMutableDictionary<NSString *, id> *event = [NSMutableDictionary dictionary];
+	BOOL fromLocalUser = (sender.length > 0 && [sender isEqualToString:self.userNickname]);
 
-	event[@"sender"] = (sender ?: @"");
-	event[@"target"] = target;
-	event[@"tags"] = [clientTags copy];
-	event[@"timestamp"] = @(m.receivedAt.timeIntervalSince1970);
+	NSString *typing = clientTags[@"typing"];
 
-	if (m.messageIdentifier) {
-		event[@"msgid"] = m.messageIdentifier;
+	if (typing && channel && fromLocalUser == NO) {
+		[self.typingTracker noteTypingState:[IRCTypingTracker stateForTagValue:typing]
+							   fromNickname:sender
+								  inChannel:channel
+									 atDate:m.receivedAt];
 	}
 
-	if (m.senderAccount) {
-		event[@"account"] = m.senderAccount;
-	}
-
-	IRCTreeItem *item = (channel ?: self);
-
-	[item.viewController evaluateFunction:@"Glasstual.tagMessageReceived" withArguments:@[ [event copy] ] onQueue:NO];
+	[self deliverClientTags:clientTags
+				 fromSender:(sender ?: @"")toTarget:target
+					 inItem:(channel ?: self)timestamp:m.receivedAt
+		  messageIdentifier:m.messageIdentifier
+					account:m.senderAccount];
 
 	[self postReceivedMessage:m];
+}
+
+/* Records a reaction with the view and hands the event to the style.
+ Used for received TAGMSGs and for the local user's own reactions. */
+- (void)deliverClientTags:(NSDictionary<NSString *, NSString *> *)clientTags
+			   fromSender:(NSString *)sender
+				 toTarget:(NSString *)target
+				   inItem:(IRCTreeItem *)item
+				timestamp:(NSDate *)timestamp
+		messageIdentifier:(nullable NSString *)messageIdentifier
+				  account:(nullable NSString *)account
+{
+	NSParameterAssert(clientTags != nil);
+	NSParameterAssert(item != nil);
+
+	NSString *reaction = clientTags[@"draft/react"];
+	NSString *reactedTo = clientTags[@"draft/reply"];
+
+	if (reaction.length > 0 && reactedTo.length > 0 && sender.length > 0) {
+		[item.viewController noteReaction:reaction fromNickname:sender toMessageIdentifier:reactedTo];
+	}
+
+	NSDictionary *event = [self tagMessageEventWithClientTags:clientTags
+													   sender:sender
+													   target:target
+													timestamp:timestamp
+											messageIdentifier:messageIdentifier
+													  account:account];
+
+	[item.viewController evaluateFunction:@"_Glasstual.tagMessageReceived" withArguments:@[ event ] onQueue:NO];
+}
+
+/* The object handed to Glasstual.tagMessageReceived() in the view. */
+- (NSDictionary<NSString *, id> *)tagMessageEventWithClientTags:(NSDictionary<NSString *, NSString *> *)clientTags
+														 sender:(NSString *)sender
+														 target:(NSString *)target
+													  timestamp:(NSDate *)timestamp
+											  messageIdentifier:(nullable NSString *)messageIdentifier
+														account:(nullable NSString *)account
+{
+	NSMutableDictionary<NSString *, id> *event = [NSMutableDictionary dictionary];
+
+	event[@"sender"] = sender;
+	event[@"target"] = target;
+	event[@"tags"] = [clientTags copy];
+	event[@"timestamp"] = @(timestamp.timeIntervalSince1970);
+	event[@"fromLocalUser"] = @([sender isEqualToString:self.userNickname]);
+	event[@"localUserNickname"] = self.userNickname;
+
+	if (messageIdentifier) {
+		event[@"msgid"] = messageIdentifier;
+	}
+
+	if (account) {
+		event[@"account"] = account;
+	}
+
+	return [event copy];
 }
 
 #pragma mark -

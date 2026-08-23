@@ -244,6 +244,9 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	MTWKGeneralPasteSeparator = 1207,			   // "-"
 	MTWKGeneralQueryLogs = 1208,				   // "Query Logs"
 	MTWKGeneralChannelMenu = 1209,				   // "Channel"
+	MTWKGeneralReplySeparator = 1210,			   // "-"
+	MTWKGeneralReply = 1211,					   // "Reply"
+	MTWKGeneralReact = 1212,					   // "React"
 
 	/* Main window segmented controller */
 	MTMainWindowSegmentedControllerAddServer = 1300,		  // "Add Server…"
@@ -252,17 +255,6 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 
 	/* Empty server list menu */
 	MTMainWindowServerListAddServer = 1400, // "Add Server…"
-
-	/* Off-the-Record Messaging status button */
-	/* 1500 and 1501 belonged to a "What is this?" item, and the separator
-	 beneath it, which linked to documentation this fork does not host. */
-	MTOTRStatusButtonStartPrivateConversation = 1502,		  // "Start Private Conversation"
-	MTOTRStatusButtonRefreshPrivateConversation = 1503,		  // "Refresh Private Conversation"
-	MTOTRStatusButtonEndPrivateConversation = 1504,			  // "End Private Conversation"
-	MTOTRStatusButtonEndPrivateConversationSeparator = 1505,  // "-"
-	MTOTRStatusButtonAuthenticateChatPartner = 1506,		  // "Authenticate Chat Partner"
-	MTOTRStatusButtonAuthenticateChatPartnerSeparator = 1507, // "-"
-	MTOTRStatusButtonViewListOfFingerprints = 1508,			  // "View List of Fingerprints"
 
 	/* User context menu */
 	MTUserControlsLowestTag = 1600,
@@ -325,10 +317,6 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 @property(readonly, strong) NSMenu *channelViewURLMenu;
 
 @property(readonly, strong) NSMenu *dockMenu;
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-@property(readonly, strong) NSMenu *encryptionManagerStatusMenu;
-#endif
 
 @property(readonly, weak) NSMenu *mainMenuNavigationChannelListMenu;
 @property(readonly, weak) NSMenu *mainMenuChannelMenu;
@@ -479,14 +467,6 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 - (IBAction)toggleMuteOnNotifications:(nullable id)sender;
 - (IBAction)toggleMuteOnNotificationSounds:(nullable id)sender;
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (IBAction)encryptionStartPrivateConversation:(nullable id)sender;
-- (IBAction)encryptionRefreshPrivateConversation:(nullable id)sender;
-- (IBAction)encryptionEndPrivateConversation:(nullable id)sender;
-- (IBAction)encryptionAuthenticateChatPartner:(nullable id)sender;
-- (IBAction)encryptionListFingerprints:(nullable id)sender;
-#endif
-
 - (IBAction)copyUniqueIdentifier:(nullable id)sender;
 
 - (IBAction)copyUrl:(nullable id)sender;
@@ -500,6 +480,16 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 
 - (IBAction)lookUpInDictionary:(nullable id)sender;
 - (IBAction)searchGoogle:(nullable id)sender;
+/* Replies and reactions to a message line (IRCv3 +draft/reply,
+ +draft/react). The sender's represented object is a dictionary with
+ "messageIdentifier", "nickname" and "excerpt"; a reaction adds "emoji". */
+- (NSArray<NSMenuItem *> *)messageReplyMenuItemsForMessageIdentifier:(NSString *)messageIdentifier
+															nickname:(nullable NSString *)nickname
+															 excerpt:(nullable NSString *)excerpt;
+- (IBAction)replyToMessage:(nullable id)sender;
+- (IBAction)reactToMessage:(nullable id)sender;
+- (IBAction)reactToMessageWithOtherEmoji:(nullable id)sender;
+
 - (IBAction)copyLogAsHtml:(nullable id)sender;
 - (IBAction)forceReloadTheme:(nullable id)sender;
 - (IBAction)openWebInspector:(nullable id)sender;

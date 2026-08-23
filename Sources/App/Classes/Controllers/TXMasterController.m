@@ -41,7 +41,6 @@
 #import "NSObjectHelperPrivate.h"
 #import "OELReachability.h"
 #import "TDCAlert.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TLOSpeechSynthesizerPrivate.h"
 #import "THOPluginManagerPrivate.h"
@@ -464,10 +463,6 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 	[[TXSharedApplication sharedSpeechSynthesizer] setIsStopped:YES];
 
 	[TVCLogControllerInlineMediaSharedInstance() prepareForApplicationTermination];
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	[sharedEncryptionManager() prepareForApplicationTermination];
-#endif
 
 	[self.menuController prepareForApplicationTermination];
 

@@ -44,6 +44,8 @@
                                                     <accessibility description="Main Text Field"/>
                                                     <connections>
                                                         <outlet property="contentView" destination="phB-0r-qij" id="q5a-XP-rcM"/>
+                                                        <outlet property="inputBarContainerView" destination="nbK-l5-9k5" id="acc-00-001"/>
+                                                        <outlet property="inputBarTopConstraint" destination="awN-Bn-Ddd" id="acc-00-002"/>
                                                         <outlet property="textViewHeightConstraint" destination="4wi-57-9OA" id="WKH-Kh-F86"/>
                                                         <outlet property="windowContentViewMinimumHeight" destination="XJm-Dd-FjI" id="yUG-1i-yuZ"/>
                                                     </connections>

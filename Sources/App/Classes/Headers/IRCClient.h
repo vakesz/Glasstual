@@ -39,7 +39,6 @@
 #import "IRCCommandIndex.h"
 #import "IRCConnection.h"
 #import "IRCTreeItem.h"
-#import "TLOEncryptionManager.h"
 #import "TVCLogController.h"
 #import "TVCLogLine.h"
 
@@ -333,10 +332,6 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 - (void)sendCommand:(NSString *)command toZNCModuleNamed:(NSString *)module;
 
 - (void)sendText:(NSAttributedString *)string asCommand:(IRCRemoteCommand)command toChannel:(IRCChannel *)channel;
-- (void)sendText:(NSAttributedString *)string
-		 asCommand:(IRCRemoteCommand)command
-		 toChannel:(IRCChannel *)channel
-	withEncryption:(BOOL)encryptText;
 
 /* Sends string to every channel in channels. When the server advertises a
  TARGMAX / MAXTARGETS limit for the command, joined channels are grouped into
@@ -354,26 +349,6 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 - (void)sendNotice:(NSString *)message toChannel:(IRCChannel *)channel;
 
 #pragma mark -
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (NSUInteger)lengthOfEncryptedMessageDirectedAt:(NSString *)messageTo thatFitsWithinBounds:(NSUInteger)maximumLength;
-
-- (BOOL)encryptionAllowedForTarget:(NSString *)target;
-
-- (void)encryptMessage:(NSString *)messageBody
-			directedAt:(NSString *)messageTo
-	  encodingCallback:(TLOEncryptionManagerEncodingDecodingCallbackBlock)encodingCallback
-	 injectionCallback:(TLOEncryptionManagerInjectCallbackBlock)injectionCallback;
-- (void)decryptMessage:(NSString *)messageBody
-				  from:(NSString *)messageFrom
-				target:(NSString *)target
-	  decodingCallback:(TLOEncryptionManagerEncodingDecodingCallbackBlock)decodingCallback;
-
-@property(nonatomic, readonly, copy) NSString *_Nonnull encryptionAccountNameForLocalUser;
-- (NSString *)encryptionAccountNameForUser:(NSString *)nickname;
-
-- (void)encryptionAuthenticateUser:(NSString *)nickname;
-#endif
 
 #pragma mark -
 

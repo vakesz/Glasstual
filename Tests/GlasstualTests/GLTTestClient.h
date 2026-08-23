@@ -95,6 +95,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong) NSMutableArray<NSString *> *saslTriedMechanisms;
 - (BOOL)retrySASLNegotiationWithMechanisms:(NSArray<NSString *> *)mechanisms;
 
+/* Message tags: typing, replies and reactions. */
+- (NSDictionary<NSString *, id> *)tagMessageEventWithClientTags:(NSDictionary<NSString *, NSString *> *)clientTags
+														 sender:(NSString *)sender
+														 target:(NSString *)target
+													  timestamp:(NSDate *)timestamp
+											  messageIdentifier:(nullable NSString *)messageIdentifier
+														account:(nullable NSString *)account;
+
 /* labeled-response delivery tracking. */
 - (BOOL)labeledResponseTrackingEnabled;
 - (nullable NSString *)registerPendingDeliveryForChannel:(nullable IRCChannel *)channel;

@@ -195,7 +195,7 @@ The certificate was not trusted by the system: %@";
 "kig-m1" = "Disable WebKit2 or upgrade to a newer version of macOS.";
 
 "ios-na" = "Glasstual has copied the following content to a new location your Mac:";
-"qy4-5o" = "Caches, custom addons, custom styles, encryption keys, preferences, and scrollback history.
+"qy4-5o" = "Caches, custom addons, custom styles, preferences, and scrollback history.
 
 Would you like to clear up disk space by removing this content from the old location?";
 "q3t-45" = "I would like to remove the old content";

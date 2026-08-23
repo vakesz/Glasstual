@@ -36,3 +36,10 @@
  *********************************************************************** */
 
 "shr-m1" = "Share…";
+
+/* Message context menu: replies and reactions. */
+"rpl-to" = "Reply";
+"rct-to" = "React";
+"rct-ot" = "Other…";
+"rct-sd" = "Send";
+"rct-ph" = "Emoji";

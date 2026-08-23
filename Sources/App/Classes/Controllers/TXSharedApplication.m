@@ -45,7 +45,6 @@
 #import "TPCThemeController.h"
 #import "THOPluginManagerPrivate.h"
 #import "IRCWorld.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLONotificationController.h"
 #import "TLOSpeechSynthesizerPrivate.h"
 #import "TDCFileTransferDialogPrivate.h"
@@ -74,10 +73,6 @@ NSString *const TXErrorDomain = @"GlasstualErrorDomain";
 
 // clang-format off
 _defineSharedInstance(sharedAppearance, TXAppearance, new)
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-_defineSharedInstance(sharedEncryptionManager, TLOEncryptionManager, new)
-#endif
 
 _defineSharedInstance(sharedNetworkReachabilityNotifier, OELReachability, reachabilityForInternetConnection)
 _defineSharedInstance(sharedNotificationController, TLONotificationController, new)

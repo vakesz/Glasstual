@@ -50,7 +50,6 @@
 #import "IRCClient.h"
 #import "IRCConnectionConfig.h"
 #import "IRCWorld.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TLOpenLink.h"
 #import "TVCMainWindowPrivate.h"
@@ -217,10 +216,6 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 @property(nonatomic, strong) IBOutlet NSView *contentViewDefaultIdentity;
 @property(nonatomic, strong) IBOutlet NSView *contentViewDefaultIRCopMessages;
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-@property(nonatomic, strong) IBOutlet NSView *contentViewOffRecordMessaging;
-#endif
-
 @property(nonatomic, strong) IBOutlet NSView *contentViewHiddenPreferences;
 @property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToServerConsoleButton;
 @property(nonatomic, weak) IBOutlet NSButton *forwardNoticeToSelectedChannelButton;
@@ -273,10 +268,6 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 - (IBAction)onResetUserListModeColorsToDefaults:(nullable id)sender;
 - (IBAction)onSelectNewFont:(nullable id)sender;
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (IBAction)offRecordMessagingPolicyChanged:(nullable id)sender;
-- (IBAction)offRecordMessagingOpenOfficialWebsite:(nullable id)sender;
-#endif
 @end
 
 @implementation TDCPreferencesController
@@ -474,9 +465,6 @@ static const TDCPreferencesSettingsPane _settingsPanes[] = {
 	{@"logLocation", @"folder", @"contentViewLogLocation", _settingsGroupAdvanced},
 	{@"defaultIdentity", @"person.crop.circle", @"contentViewDefaultIdentity", _settingsGroupAdvanced},
 	{@"defaultIRCopMessages", @"shield", @"contentViewDefaultIRCopMessages", _settingsGroupAdvanced},
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	{@"offRecordMessaging", @"lock.fill", @"contentViewOffRecordMessaging", _settingsGroupAdvanced},
-#endif
 	{@"hidden", @"eye.slash", @"contentViewHiddenPreferences", _settingsGroupAdvanced},
 };
 
@@ -1316,110 +1304,6 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 	[TPCPreferences setFileTransferPortRangeEnd:value.integerValue];
 }
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
-{
-	[TPCPreferences setTextEncryptionIsOpportunistic:textEncryptionIsOpportunistic];
-}
-
-- (BOOL)textEncryptionIsOpportunistic
-{
-	if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-		return NO;
-	}
-
-	if ([TPCPreferences textEncryptionIsRequired]) {
-		return YES;
-	}
-
-	return [TPCPreferences textEncryptionIsOpportunistic];
-}
-
-- (BOOL)textEncryptionIsOpportunisticPreferenceEnabled
-{
-	return ([TPCPreferences textEncryptionIsEnabled] && [TPCPreferences textEncryptionIsRequired] == NO);
-}
-
-- (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired
-{
-	[TPCPreferences setTextEncryptionIsRequired:textEncryptionIsRequired];
-
-	[self willChangeValueForKey:@"textEncryptionIsOpportunistic"];
-	[self didChangeValueForKey:@"textEncryptionIsOpportunistic"];
-}
-
-- (BOOL)textEncryptionIsRequired
-{
-	if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-		return NO;
-	}
-
-	return [TPCPreferences textEncryptionIsRequired];
-}
-
-- (BOOL)textEncryptionIsRequiredPreferenceEnabled
-{
-	return [TPCPreferences textEncryptionIsEnabled];
-}
-
-- (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled
-{
-	[TPCPreferences setTextEncryptionIsEnabled:textEncryptionIsEnabled];
-
-	[self willChangeValueForKey:@"textEncryptionIsOpportunistic"];
-	[self willChangeValueForKey:@"textEncryptionIsOpportunisticPreferenceEnabled"];
-	[self willChangeValueForKey:@"textEncryptionIsRequired"];
-	[self willChangeValueForKey:@"textEncryptionIsRequiredPreferenceEnabled"];
-
-	[self didChangeValueForKey:@"textEncryptionIsOpportunistic"];
-	[self didChangeValueForKey:@"textEncryptionIsOpportunisticPreferenceEnabled"];
-	[self didChangeValueForKey:@"textEncryptionIsRequired"];
-	[self didChangeValueForKey:@"textEncryptionIsRequiredPreferenceEnabled"];
-}
-
-- (BOOL)textEncryptionIsEnabled
-{
-	return [TPCPreferences textEncryptionIsEnabled];
-}
-#else
-- (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
-{
-}
-
-- (BOOL)textEncryptionIsOpportunistic
-{
-	return NO;
-}
-
-- (BOOL)textEncryptionIsOpportunisticPreferenceEnabled
-{
-	return NO;
-}
-
-- (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired
-{
-}
-
-- (BOOL)textEncryptionIsRequired
-{
-	return NO;
-}
-
-- (BOOL)textEncryptionIsRequiredPreferenceEnabled
-{
-	return NO;
-}
-
-- (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled
-{
-}
-
-- (BOOL)textEncryptionIsEnabled
-{
-	return NO;
-}
-#endif
-
 - (BOOL)highlightCurrentNickname
 {
 	if ([TPCPreferences highlightMatchingMethod] == TXNicknameHighlightMatchTypeRegularExpression) {
@@ -1785,13 +1669,66 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 {
 	[self.themeSelectionButton removeAllItems];
 
-	NSMenuItem *nativeItem = [[NSMenuItem alloc] initWithTitle:TXTLS(@"TDCPreferencesController[native-style]")
-														action:nil
-												 keyEquivalent:@""];
-	nativeItem.tag = 100;
-	[self.themeSelectionButton.menu addItem:nativeItem];
+	NSString *currentThemeName = themeController().name;
+
+	TPCThemeStorageLocation currentStorageLocation = themeController().storageLocation;
+
+	/* Bundled styles are listed first, then the user's own, with a
+	 separator between the two groups. */
+	NSMutableArray<NSMenuItem *> *bundledItems = [NSMutableArray array];
+	NSMutableArray<NSMenuItem *> *customItems = [NSMutableArray array];
+
+	[themeController()
+		enumerateAvailableThemesWithBlock:^(
+			NSString *themeName, TPCThemeStorageLocation storageLocation, BOOL multipleVariants, BOOL *stop) {
+			NSString *displayName = themeName;
+
+			if (multipleVariants) {
+				displayName =
+					[NSString stringWithFormat:@"%@ (%@)",
+											   themeName,
+											   [TPCThemeController descriptionForStorageLocation:storageLocation]];
+			}
+
+			NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:displayName action:nil keyEquivalent:@""];
+
+			item.representedObject = @{@"themeName" : themeName, @"storageLocation" : @(storageLocation)};
+
+			if ([currentThemeName isEqualToString:themeName] && currentStorageLocation == storageLocation) {
+				item.tag = 100; // Tag for item to select
+			}
+
+			if (storageLocation == TPCThemeStorageLocationBundle) {
+				[bundledItems addObject:item];
+			} else {
+				[customItems addObject:item];
+			}
+		}];
+
+	NSComparator byTitle = ^NSComparisonResult(NSMenuItem *item1, NSMenuItem *item2) {
+		return [item1.title localizedStandardCompare:item2.title];
+	};
+
+	[bundledItems sortUsingComparator:byTitle];
+	[customItems sortUsingComparator:byTitle];
+
+	NSMenu *menu = self.themeSelectionButton.menu;
+
+	for (NSMenuItem *item in bundledItems) {
+		[menu addItem:item];
+	}
+
+	if (bundledItems.count > 0 && customItems.count > 0) {
+		[menu addItem:[NSMenuItem separatorItem]];
+	}
+
+	for (NSMenuItem *item in customItems) {
+		[menu addItem:item];
+	}
+
 	[self.themeSelectionButton selectItemWithTag:100];
-	self.themeSelectionButton.enabled = NO;
+
+	self.themeSelectionButton.enabled = (menu.numberOfItems > 0);
 }
 
 - (void)onChangedThemeSelection:(nullable id)sender
@@ -1964,18 +1901,6 @@ static const TDCPreferencesSettingsPane *_Nullable TDCPreferencesSettingsPaneFor
 {
 	[self onChangedTheme:nil];
 }
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-- (void)offRecordMessagingPolicyChanged:(nullable id)sender
-{
-	[TPCPreferences performReloadAction:TPCPreferencesReloadActionEncryptionPolicy];
-}
-
-- (void)offRecordMessagingOpenOfficialWebsite:(nullable id)sender
-{
-	[TLOpenLink openWithString:@"https://otr.cypherpunks.ca/"];
-}
-#endif
 
 - (void)onChangedHighlightType:(nullable id)sender
 {

@@ -445,14 +445,6 @@ NS_ASSUME_NONNULL_BEGIN
 			  withSelector:@selector(_copySelectionWhenPermitted:)];
 }
 
-- (void)encryptionAuthenticateUser:(id)inputData inWebView:(id)webView
-{
-	[self processInputData:inputData
-				 forCaller:@"app.encryptionAuthenticateUser()"
-				 inWebView:webView
-			  withSelector:@selector(_encryptionAuthenticateUser:)];
-}
-
 - (void)inlineMediaEnabledForView:(id)inputData inWebView:(id)webView
 {
 	[self processInputData:inputData
@@ -765,6 +757,18 @@ NS_ASSUME_NONNULL_BEGIN
 			  }];
 }
 
+- (void)setLineContext:(id)inputData inWebView:(id)webView
+{
+	[self processInputData:inputData
+				   forCaller:@"app.setLineContext()"
+				   inWebView:webView
+				withSelector:@selector(_setLineContext:)
+		minimumArgumentCount:1
+			  withValidation:^BOOL(NSUInteger argumentIndex, id argument) {
+				  return ([argument isKindOfClass:[NSNull class]] || [argument isKindOfClass:[NSDictionary class]]);
+			  }];
+}
+
 - (void)setSelection:(id)inputData inWebView:(id)webView
 {
 	[self processInputData:inputData
@@ -905,29 +909,6 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	context.completionBlock(@(NO));
-}
-
-- (void)_encryptionAuthenticateUser:(TVCLogScriptEventSinkContext *)context
-{
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	IRCClient *client = context.associatedClient;
-
-	if (client.isLoggedIn == NO) {
-		return;
-	}
-
-	IRCChannel *channel = context.associatedChannel;
-
-	if (channel == nil || channel.isPrivateMessage == NO) {
-		[self.class throwJavaScriptException:@"View is not a private message"
-								   forCaller:context.caller
-								   inWebView:context.webView];
-
-		return;
-	}
-
-	[client encryptionAuthenticateUser:channel.name];
-#endif
 }
 
 - (void)_inlineMediaEnabledForView:(TVCLogScriptEventSinkContext *)context
@@ -1550,6 +1531,21 @@ NS_ASSUME_NONNULL_BEGIN
 	NSString *value = [self.class objectValueToCommon:arguments[0]];
 
 	context.webView.contextMenuTarget.nickname = value;
+}
+
+- (void)_setLineContext:(TVCLogScriptEventSinkContext *)context
+{
+	NSArray *arguments = context.arguments;
+
+	NSDictionary *value = [self.class objectValueToCommon:arguments[0]];
+
+	TVCLogPolicyTarget *target = context.webView.contextMenuTarget;
+
+	target.lineNumber = [value stringForKey:@"lineNumber"];
+	target.lineMessageIdentifier = [value stringForKey:@"msgid"];
+	target.lineType = [value stringForKey:@"lineType"];
+	target.lineNickname = [value stringForKey:@"nickname"];
+	target.lineExcerpt = [value stringForKey:@"excerpt"];
 }
 
 - (void)_setSelection:(TVCLogScriptEventSinkContext *)context

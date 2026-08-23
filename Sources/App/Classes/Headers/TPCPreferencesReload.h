@@ -61,9 +61,6 @@ typedef NS_OPTIONS(NSUInteger, TPCPreferencesReloadAction) {
 	TPCPreferencesReloadActionTextDirection = 1 << 19,
 	TPCPreferencesReloadActionTextFieldFontSize = 1 << 20,
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	TPCPreferencesReloadActionEncryptionPolicy = 1 << 22,
-#endif
 };
 
 @interface TPCPreferences (TPCPreferencesReload)

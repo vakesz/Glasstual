@@ -168,9 +168,13 @@ _Glasstual.messageAddedToView = function(lineNumber, fromBuffer) /* PRIVATE */
 	/* Allow lineNumber to be an array of line numbers or a single line number. */
 	if (Array.isArray(lineNumber)) {
 		for (var i = 0; i < lineNumber.length; i++) {
+			_MessageTags.lineAdded(lineNumber[i]);
+
 			Glasstual.messageAddedToView(lineNumber[i], fromBuffer);
 		}
 	} else {
+		_MessageTags.lineAdded(lineNumber);
+
 		Glasstual.messageAddedToView(lineNumber, fromBuffer);
 	}
 

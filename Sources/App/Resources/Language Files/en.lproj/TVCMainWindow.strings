@@ -92,3 +92,14 @@
 
 /* Dock icon badge shown when the count exceeds what fits in the badge. */
 "dki-bg" = "%@+";
+
+/* Caption of the scrollback mark. Styles may show it next to the mark. */
+"hin-um" = "Unread messages";
+
+/* Input bar: reply banner and typing row. */
+"rpl-to" = "Replying to %@";
+"rpl-an" = "a message";
+"rpl-cl" = "Cancel Reply";
+"typ-1" = "%@ is typing…";
+"typ-2" = "%@ and %@ are typing…";
+"typ-n" = "%@ people are typing…";

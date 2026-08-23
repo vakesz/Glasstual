@@ -67,7 +67,6 @@
 #import "TXMasterControllerPrivate.h"
 #import "TXMenuControllerPrivate.h"
 #import "THOPluginDispatcherPrivate.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOKeyEventHandler.h"
 #import "TLOInputHistoryPrivate.h"
 #import "TLOLocalization.h"
@@ -99,8 +98,6 @@ NSString *const TVCMainWindowSelectionChangedNotification = @"TVCMainWindowSelec
 @property(nonatomic, strong) NSSplitViewItem *serverListSplitItem;
 @property(nonatomic, strong) NSSplitViewItem *memberListSplitItem;
 @property(nonatomic, strong) NSSplitViewItemAccessoryViewController *sidebarFooterController;
-@property(nonatomic, weak) NSToolbarItem *lockToolbarItem;
-@property(nonatomic, assign) SEL lockToolbarItemAction;
 @property(nonatomic, strong) TLOInputHistory *inputHistoryManager;
 @property(nonatomic, strong) TLONicknameCompletionStatus *nicknameCompletionStatus;
 @property(nonatomic, strong, readwrite) TVCMainWindowAppearance *userInterfaceObjects;
@@ -217,20 +214,7 @@ static NSPasteboardType const TVCMainWindowTreeItemPasteboardType = @"com.vakesz
 	[masterController() applicationWakeStepTwo];
 }
 
-static NSToolbarItemIdentifier const TVCMainWindowToolbarLockItemIdentifier = @"TVCMainWindowToolbarLockItem";
-
 static const CGFloat _sidebarFooterHeight = 32.0;
-
-static void
-TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSString *label, BOOL navigational)
-{
-	item.image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:label];
-	item.label = label;
-	item.paletteLabel = label;
-	item.toolTip = label;
-	item.bordered = YES;
-	item.navigational = navigational;
-}
 
 - (void)installWindowChrome
 {
@@ -256,21 +240,18 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 /* AppKit supplies the sidebar and inspector tracking separators, along with
  their toggle items, for any NSSplitViewController that vends a sidebar and an
- inspector. We only contribute the connection security indicator. */
+ inspector. We contribute nothing of our own. */
 - (NSArray<NSToolbarItemIdentifier> *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
 	return @[
 		NSToolbarToggleSidebarItemIdentifier,
 		NSToolbarSidebarTrackingSeparatorItemIdentifier,
 		NSToolbarFlexibleSpaceItemIdentifier,
-		TVCMainWindowToolbarLockItemIdentifier,
 		NSToolbarSpaceItemIdentifier,
 		NSToolbarToggleInspectorItemIdentifier
 	];
 }
 
-/* The lock item is absent from the default set. It is inserted and removed as
- the selection changes rather than hidden in place. See -setLockToolbarItemVisible:action: */
 - (NSArray<NSToolbarItemIdentifier> *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
 	return @[
@@ -280,106 +261,6 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 		NSToolbarSpaceItemIdentifier,
 		NSToolbarToggleInspectorItemIdentifier
 	];
-}
-
-- (nullable NSToolbarItem *)toolbar:(NSToolbar *)toolbar
-			  itemForItemIdentifier:(NSToolbarItemIdentifier)itemIdentifier
-		  willBeInsertedIntoToolbar:(BOOL)flag
-{
-	if ([itemIdentifier isEqualToString:TVCMainWindowToolbarLockItemIdentifier] == NO) {
-		return nil;
-	}
-
-	SEL action = self.lockToolbarItemAction;
-
-	if (action == NULL) {
-		action = @selector(presentCertificateTrustInformation:);
-	}
-
-	NSToolbarItem *item = nil;
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	/* An image-only NSToolbarItem has no view to position a menu against, so
-	 the encryption status menu is attached through NSMenuToolbarItem which
-	 presents it from the item itself on click. */
-	if (action == @selector(titlebarAccessoryViewLockButtonClicked:)) {
-		NSMenuToolbarItem *menuItem = [[NSMenuToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
-		menuItem.menu = menuController().encryptionManagerStatusMenu;
-		menuItem.showsIndicator = NO;
-
-		item = menuItem;
-	}
-#endif
-
-	if (item == nil) {
-		item = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
-		item.target = self;
-		item.action = action;
-	}
-
-	NSString *label = TXTLS(@"TVCMainWindow[tb-cs]");
-
-	TVCMainWindowConfigureToolbarItem(item, @"lock.fill", label, NO);
-
-	/* Assign the style once, here, rather than each time the item is updated.
-	 AppKit only reconsiders which group an item belongs to when the item is
-	 inserted, so a style applied later tints whichever group it landed in. */
-	item.style = NSToolbarItemStyleProminent;
-
-	self.lockToolbarItem = item;
-
-	return item;
-}
-
-- (NSUInteger)indexOfToolbarItemWithIdentifier:(NSToolbarItemIdentifier)identifier
-{
-	return [self.toolbar.items indexOfObjectPassingTest:^BOOL(NSToolbarItem *item, NSUInteger index, BOOL *stop) {
-		return [item.itemIdentifier isEqualToString:identifier];
-	}];
-}
-
-/* The item is added to and removed from the toolbar instead of being hidden in
- place. AppKit builds an item's backing control — and the SwiftUI hosting graph
- that draws its glass — while the item is being inserted. An item that is hidden
- at that moment never gets one, and the empty item viewer left behind still
- takes part in hit testing: the next mouse down anywhere in the title bar walks
- into a view graph that was never rooted and crashes inside AppKit. */
-- (void)setLockToolbarItemVisible:(BOOL)visible action:(SEL)action
-{
-	NSToolbar *toolbar = self.toolbar;
-
-	NSUInteger currentIndex = [self indexOfToolbarItemWithIdentifier:TVCMainWindowToolbarLockItemIdentifier];
-
-	if (visible == NO) {
-		if (currentIndex != NSNotFound) {
-			[toolbar removeItemAtIndex:currentIndex];
-		}
-
-		return;
-	}
-
-	/* The action is decided by the selection, but it has to be in place before
-	 the item is built, which is why it is stashed for the delegate to read. */
-	if (currentIndex != NSNotFound) {
-		if (self.lockToolbarItemAction == action) {
-			return;
-		}
-
-		[toolbar removeItemAtIndex:currentIndex];
-	}
-
-	self.lockToolbarItemAction = action;
-
-	/* The prominent style tints the background of the group an item belongs to.
-	 Inserting ahead of the space keeps the lock out of the group the inspector
-	 toggle lives in so that only the lock is tinted. */
-	NSUInteger insertionIndex = [self indexOfToolbarItemWithIdentifier:NSToolbarSpaceItemIdentifier];
-
-	if (insertionIndex == NSNotFound) {
-		insertionIndex = toolbar.items.count;
-	}
-
-	[toolbar insertItemWithItemIdentifier:TVCMainWindowToolbarLockItemIdentifier atIndex:insertionIndex];
 }
 
 - (void)installContentSplitViewController
@@ -1839,6 +1720,8 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 	[self.inputHistoryManager add:stringValue];
 
+	[self.inputTextField consumeReplyIntoClient:self.selectedClient];
+
 	[self inputText:stringValue asCommand:command];
 }
 
@@ -2436,79 +2319,6 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 #pragma mark -
 #pragma mark Window Extras
 
-- (void)presentCertificateTrustInformation:(id)sender
-{
-	IRCClient *u = self.selectedClient;
-
-	if (u) {
-		[u presentCertificateTrustInformation];
-	}
-}
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-/* The lock item is built as an NSMenuToolbarItem which presents the
- encryption status menu itself. This action is only used as the marker
- the toolbar delegate keys off of, and as a fallback should the item
- ever be invoked without its menu attached. */
-- (void)titlebarAccessoryViewLockButtonClicked:(id)sender
-{
-	NSMenu *statusMenu = menuController().encryptionManagerStatusMenu;
-
-	NSView *positioningView = nil;
-
-	if ([sender isKindOfClass:[NSView class]]) {
-		positioningView = sender;
-	} else if ([sender isKindOfClass:[NSToolbarItem class]]) {
-		positioningView = ((NSToolbarItem *)sender).view;
-	}
-
-	if (positioningView == nil) {
-		positioningView = self.lockToolbarItem.view;
-	}
-
-	if (positioningView) {
-		[statusMenu popUpMenuPositioningItem:nil
-								  atLocation:NSMakePoint(0.0, NSHeight(positioningView.bounds))
-									  inView:positioningView];
-
-		return;
-	}
-
-	/* No view to anchor against; fall back to the current event location. */
-	NSEvent *event = NSApp.currentEvent;
-
-	NSView *contentView = self.contentView;
-
-	if (event && contentView) {
-		NSPoint location = [contentView convertPoint:event.locationInWindow fromView:nil];
-
-		[statusMenu popUpMenuPositioningItem:nil atLocation:location inView:contentView];
-	}
-}
-#endif
-
-- (void)updateAccessoryViewLockButton
-{
-	BOOL showLock = NO;
-	SEL lockAction = @selector(presentCertificateTrustInformation:);
-
-	/* Whether a connection is secured by TLS is drawn beside its name in the
-	 server list, so the toolbar no longer carries that. What remains here is
-	 the affordance for the encryption status menu, which is per conversation
-	 and has nowhere else to live. */
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	IRCClient *u = self.selectedClient;
-	IRCChannel *c = self.selectedChannel;
-
-	if (c.isPrivateMessage && [u encryptionAllowedForTarget:c.name]) {
-		showLock = YES;
-		lockAction = @selector(titlebarAccessoryViewLockButtonClicked:);
-	}
-#endif
-
-	[self setLockToolbarItemVisible:showLock action:lockAction];
-}
-
 - (void)updateTitleFor:(IRCTreeItem *)item
 {
 	NSParameterAssert(item != nil);
@@ -2522,8 +2332,6 @@ TVCMainWindowConfigureToolbarItem(NSToolbarItem *item, NSString *symbolName, NSS
 
 - (void)updateTitle
 {
-	[self updateAccessoryViewLockButton];
-
 	IRCClient *u = self.selectedClient;
 	IRCChannel *c = self.selectedChannel;
 

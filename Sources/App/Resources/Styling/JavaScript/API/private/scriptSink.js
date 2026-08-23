@@ -126,6 +126,15 @@ appPrivate.setNickname = function(object)
 	window.webkit.messageHandlers.setNickname.postMessage(object);
 };
 
+appPrivate.setLineContext = function(object)
+{
+	if (object === null) {
+		window.webkit.messageHandlers.setLineContext.postMessage(null);
+	} else {
+		window.webkit.messageHandlers.setLineContext.postMessage({"values" : [object]});
+	}
+};
+
 appPrivate.channelNameDoubleClicked = function()
 {
 	window.webkit.messageHandlers.channelNameDoubleClicked.postMessage(null);
@@ -222,11 +231,6 @@ appPrivate.loadInlineMedia = function(address, uniqueIdentifier, lineNumber, ind
 	var dataValue = {"values" : [address, uniqueIdentifier, lineNumber, index]};
 
 	window.webkit.messageHandlers.loadInlineMedia.postMessage(dataValue);
-};
-
-appPrivate.encryptionAuthenticateUser = function()
-{
-	window.webkit.messageHandlers.encryptionAuthenticateUser.postMessage(null);
 };
 
 /* ************************************************** */

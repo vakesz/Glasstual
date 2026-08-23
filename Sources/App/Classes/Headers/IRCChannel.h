@@ -79,10 +79,6 @@ GLASSTUAL_EXTERN NSNotificationName const IRCChannelConfigurationWasUpdatedNotif
 @property(readonly, weak)
 	TVCLogLine *lastLine; // Last line in the channel. There is no guarantee it's visible to the user when accessed.
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-@property(readonly) BOOL encryptionStateIsEncrypted;
-#endif
-
 - (instancetype)init NS_UNAVAILABLE;
 
 - (void)activate;

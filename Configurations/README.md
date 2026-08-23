@@ -31,13 +31,9 @@ never edit it directly: the next `xcodegen generate` overwrites it.
   Core Media plugin. The app and each XPC service keep their own entitlements
   next to their sources.
 
-## Feature flags
+## Build configuration header
 
-The one feature flag is a plain build setting in `Base.xcconfig`
-(`GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION`). It is passed to the compilers
-through `GCC_PREPROCESSOR_DEFINITIONS` and
-`SWIFT_ACTIVE_COMPILATION_CONDITIONS`. Set it to `1` or `0`; there is no
-per-flag xcconfig. The `BuildConfig` aggregate target
+There are no feature flags. The `BuildConfig` aggregate target
 (`Scripts/GenerateBuildConfig.sh`) writes `BuildConfig.h` (bundle identifier,
 group container, version) for the code that includes that header.
 

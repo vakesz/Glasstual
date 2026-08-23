@@ -155,9 +155,20 @@ Glasstual.handleEvent                            = function(eventToken) {};
     timestamp  - Unix timestamp of the message
     msgid      - Message identifier (only present when the server sent one)
     account    - Account name of the sender (only present when the server sent one)
+    fromLocalUser     - true when the local user sent it (their own reaction)
+    localUserNickname - Nickname of the local user
 
-    Glasstual does not display these messages itself. This callback is
-    always invoked; no settings.plist entry is required.
+    Before this is called, Glasstual updates the line the event refers
+    to: a "draft/react" adds a pill to the line's .reactions element
+    (one .reaction per emoji, with .emoji and .count; data-mine="true"
+    when the local user reacted) and adds two keys to the event:
+
+    lineNumber - The line reacted to, when it is in the view
+    reactions  - Its reactions: { "👍" : ["mara", "jonas"], … }
+
+    Typing ("typing") is shown by the app in the input bar, not the view.
+
+    This callback is always invoked; no settings.plist entry is required.
 */
 Glasstual.tagMessageReceived                     = function(event) {};
 
@@ -177,6 +188,22 @@ Glasstual.tagMessageReceived                     = function(event) {};
     reason      - Failure description, or null
 */
 Glasstual.lineDeliveryStateChanged               = function(lineNumber, state, msgid, reason) {};
+
+/*
+    Replies (+draft/reply) and reactions (+draft/react) on lines:
+
+    A line that answers another carries data-reply-to="<msgid>". When
+    it is added to the view Glasstual inserts a .replyQuote (holding a
+    .replySender and a .replyExcerpt) at the start of its .innerMessage;
+    clicking the quote scrolls to the referenced line and gives it the
+    "flash" class for a moment. A line rendered with reactions carries
+    data-reactions with the JSON described above and gets its .reactions
+    element before messageAddedToView() is called. Styles lay these
+    elements out; they do not have to create them.
+
+    MessageTags.excerptOfLine(line) and MessageTags.senderOfLine(line)
+    are available to styles that want the same excerpt the app uses.
+*/
 
 /* *********************************************************************** */
 /*						Application Object								   */

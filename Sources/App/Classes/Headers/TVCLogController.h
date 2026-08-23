@@ -45,7 +45,6 @@ GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNot
 
 @interface TVCLogController : NSObject
 @property(readonly) TVCLogView *backingView;
-@property(readonly, getter=viewIsEncrypted) BOOL encrypted;
 @property(readonly, getter=viewIsLoaded) BOOL loaded;
 @property(readonly, getter=viewIsSelected) BOOL selected;
 @property(readonly, getter=viewIsVisible) BOOL visible;

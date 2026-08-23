@@ -54,6 +54,7 @@ Glasstual.initializeCore = function(resourcesPath)
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/events.js");
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/inlineMedia.js");
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/messageBuffer.js");
+	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/messageTags.js");
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/core/scrollTo.js");
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/state.js");
 	Glasstual.includeScriptResourceFile(resourcesPath + "/JavaScript/API/private/scroller/automatic.js");
