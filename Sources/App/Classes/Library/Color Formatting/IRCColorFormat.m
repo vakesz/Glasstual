@@ -457,15 +457,6 @@ static NSFont *_monospaceFontMatching(NSFont *baseFont)
 		maximumLength = (serverLineLength - 2);
 	}
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	NSUInteger encryptionEstimate = [client lengthOfEncryptedMessageDirectedAt:channelName
-														  thatFitsWithinBounds:(maximumLength - minimumLength)];
-
-	if (encryptionEstimate > 0) {
-		maximumLength = encryptionEstimate;
-	}
-#endif
-
 	/* Perform truncation */
 	NSString *string = self.string;
 

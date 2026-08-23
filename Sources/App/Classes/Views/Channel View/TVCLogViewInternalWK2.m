@@ -132,6 +132,7 @@ static TVCLogScriptEventSink *_sharedWebViewScriptSink = nil;
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"serverIsConnected"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setChannelName"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setNickname"];
+		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setLineContext"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setSelection"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink name:@"setURLAddress"];
 		[_sharedUserContentController addScriptMessageHandler:(id)_sharedWebViewScriptSink

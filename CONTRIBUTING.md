@@ -88,8 +88,10 @@ formatters above. Xcode users need nothing extra.
   `Sources/App/Resources/Styles/`. The JavaScript API the app exposes lives in
   `Sources/App/Resources/Styling/JavaScript/API/`.
 - **A plugin**: plugins are `.bundle` targets in `Sources/Plugins/` loaded
-  through `THOPluginManager`. Third-party plugins must be signed with a
-  Developer ID certificate; the app asks the user once before loading one.
+  through `THOPluginManager`. Library validation is on (a Mac App Store
+  requirement), so a plugin loads only if it is signed with the same Team ID
+  as the app; the app still asks the user once before loading a bundle from
+  outside the application bundle.
 
 ## Reporting problems
 

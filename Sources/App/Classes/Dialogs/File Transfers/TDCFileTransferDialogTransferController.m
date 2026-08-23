@@ -41,7 +41,6 @@
 #import "IRCClientPrivate.h"
 #import "TPCPathInfo.h"
 #import "TPCPreferencesLocal.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TDCFileTransferDialogSocketPrivate.h"
 #import "TDCFileTransferDialogTableCellPrivate.h"
@@ -149,20 +148,6 @@ NS_ASSUME_NONNULL_BEGIN
 	NSParameterAssert(path != nil);
 
 	NSString *filename = path.lastPathComponent;
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	if ([TPCPreferences textEncryptionIsEnabled]) {
-		/* Ask whether we should be allowed to add the file. */
-		BOOL allowWithOTR = [sharedEncryptionManager() safeToTransferFile:filename
-																	   to:[client encryptionAccountNameForUser:nickname]
-																	 from:[client encryptionAccountNameForLocalUser]
-												   isIncomingFileTransfer:NO];
-
-		if (allowWithOTR == NO) {
-			return nil; // This operation is not allowed...
-		}
-	}
-#endif
 
 	/* Gather file information */
 	NSDictionary *fileAttributes = [RZFileManager() attributesOfItemAtPath:path error:NULL];
@@ -316,25 +301,6 @@ NS_ASSUME_NONNULL_BEGIN
 	self.transferProgressHandler = nil;
 }
 
-- (BOOL)receiveUnencryptedFile
-{
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	if ([TPCPreferences textEncryptionIsEnabled]) {
-		BOOL allowWithOTR =
-			[sharedEncryptionManager() safeToTransferFile:self.filename
-													   to:[self.client encryptionAccountNameForUser:self.peerNickname]
-													 from:[self.client encryptionAccountNameForLocalUser]
-								   isIncomingFileTransfer:YES];
-
-		if (allowWithOTR == NO) {
-			return NO; // This operation is not allowed...
-		}
-	}
-#endif
-
-	return YES;
-}
-
 - (void)open
 {
 	[self openWithPath:nil];
@@ -368,10 +334,6 @@ NS_ASSUME_NONNULL_BEGIN
 	if (self.isSender) {
 		[self openTransfer];
 	} else {
-		if ([self receiveUnencryptedFile] == NO) {
-			return;
-		}
-
 		[self sendTransferResumeRequestToClient];
 	}
 }

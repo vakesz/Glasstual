@@ -106,6 +106,12 @@ typedef NS_ENUM(NSUInteger, TVCLogLineDeliveryState) {
 @property(readonly, copy) NSString *uniqueIdentifier;
 @property(readonly, copy, nullable)
 	NSString *messageIdentifier; // The IRCv3 msgid= of the message, when the server sent one
+@property(readonly, copy, nullable)
+	NSString *replyToMessageIdentifier; // The msgid this message answers (+draft/reply), when it does
+/* Reactions (+draft/react) to this message: emoji -> nicknames. Lines
+ are archived when they are printed, so reactions that arrive later are
+ kept with the view for the session rather than written back here. */
+@property(readonly, copy, nullable) NSDictionary<NSString *, NSArray<NSString *> *> *reactions;
 @property(readonly) TVCLogLineType lineType;
 @property(readonly) TVCLogLineMemberType memberType;
 @property(readonly) TVCLogLineDeliveryState deliveryState;
@@ -142,6 +148,8 @@ typedef NS_ENUM(NSUInteger, TVCLogLineDeliveryState) {
 @property(nonatomic, copy, readwrite) NSString *messageBody;
 @property(nonatomic, copy, readwrite) NSString *command;
 @property(nonatomic, copy, readwrite, nullable) NSString *messageIdentifier;
+@property(nonatomic, copy, readwrite, nullable) NSString *replyToMessageIdentifier;
+@property(nonatomic, copy, readwrite, nullable) NSDictionary<NSString *, NSArray<NSString *> *> *reactions;
 @property(nonatomic, assign, readwrite) TVCLogLineType lineType;
 @property(nonatomic, assign, readwrite) TVCLogLineMemberType memberType;
 @property(nonatomic, assign, readwrite) TVCLogLineDeliveryState deliveryState;

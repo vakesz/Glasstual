@@ -178,12 +178,6 @@
 	<integer>0</integer>
 	<key>Private Extension Store -&gt; Caffeine Extension -&gt; Prevent Sleep</key>
 	<integer>0</integer>
-	<key>Off-the-Record Messaging -&gt; Automatically Enable Service</key>
-	<integer>0</integer>
-	<key>Off-the-Record Messaging -&gt; Enable Encryption</key>
-	<integer>0</integer>
-	<key>Off-the-Record Messaging -&gt; Require Encryption</key>
-	<integer>0</integer>
 	<key>OnlySpeakNotificationsForSelection</key>
 	<integer>0</integer>
 	<key>OpenClickedLinksInBackgroundBrowser</key>

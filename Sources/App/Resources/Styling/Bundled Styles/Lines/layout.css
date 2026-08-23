@@ -1,0 +1,713 @@
+/* Lines — the line-per-message layout.
+
+ This file is shared by the Light and Dark varieties. Each variety's
+ design.css declares the palette tokens and then imports this file.
+
+ Text, links and fills use the system semantic colours wherever WebKit
+ exposes them (-apple-system-label, -apple-system-control-accent, …).
+ Every such declaration is preceded by a plain fallback so that a keyword
+ WebKit does not understand leaves the previous value in place. */
+
+/* Basic Body Structure */
+
+* {
+	margin: 0;
+	padding: 0;
+	font-size: 100%;
+	word-wrap: break-word;
+	word-break: break-word;
+}
+
+body {
+	color: var(--label);
+	height: 100%;
+	z-index: 100;
+	font-size: 13px;
+	overflow: hidden;
+	background-color: transparent;
+	font-family: -apple-system, BlinkMacSystemFont, system-ui, "SF Pro Text", sans-serif;
+	-webkit-font-smoothing: antialiased;
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum";
+}
+
+::selection {
+	background-color: var(--selection);
+}
+
+#body {
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+	max-height: 100%;
+	overflow-y: auto;
+	z-index: 100;
+	position: absolute;
+	opacity: 0; /* Set by JavaScript */
+	-webkit-transition: opacity 0.8s linear;
+}
+
+/* Only factor in height of topic bar when selected == true
+ because that is only time the topic is displayed according
+ to the logic defined by baseLayout.css */
+body[data-selected="true"][data-view-type="channel"] #body {
+	max-height: calc(100% - 2.0em); /* height minus topic */
+}
+
+#messageBuffer {
+	padding: 6px 0;
+}
+
+/* Every line gets the same box. Anything that wants to stand out does so by
+ tinting that box. Turning a tint on never moves the text. */
+
+div.line {
+	clear: both;
+	position: relative;
+	padding: 2px 14px;
+	line-height: 1.45;
+}
+
+body[dir="rtl"] .sender {
+	display: inline-block;
+}
+
+/* Scrolling */
+
+body[data-custom-scroller="true"]::-webkit-scrollbar {
+	width: 13px;
+}
+
+body[data-custom-scroller="true"]::-webkit-scrollbar:horizontal {
+	height: 0;
+}
+
+body[data-custom-scroller="true"]::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+body[data-custom-scroller="true"]::-webkit-scrollbar-thumb {
+	background-color: var(--scroll-thumb);
+	border: 3px solid transparent;
+	border-radius: 10px;
+	background-clip: content-box;
+}
+
+body[data-custom-scroller="true"]::-webkit-scrollbar-thumb:hover {
+	background-color: var(--scroll-thumb-active);
+}
+
+/* Loading Screen */
+
+#loadingScreen {
+	position: absolute;
+	top: 45%;
+	left: calc(50% - (320px / 2)); /* half of width + padding */
+	width: 300px;
+	font-size: 15px;
+	text-align: center;
+	color: var(--secondary-label);
+	background: var(--surface-raised);
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	border: 1px solid var(--rule);
+	border-radius: 12px;
+	padding: 10px 14px;
+	opacity: 1; /* Set by JavaScript */
+	-webkit-transition: opacity 0.8s linear;
+}
+
+/* Time */
+
+.time {
+	color: var(--tertiary-label);
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum";
+}
+
+body[dir="rtl"] .time {
+	padding-left: 0.4em;
+	display: inline-block;
+}
+
+/* Encryption Lock */
+
+.encryptionLock img {
+	float: right;
+	margin: 0;
+	padding: 0;
+	height: 11px;
+	margin-top: 2px;
+	padding-left: 10px;
+	opacity: 0.6;
+}
+
+/* Links */
+
+a {
+	color: var(--link);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+/* Topic Bar */
+
+#topicBar {
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 400;
+	opacity: 0; /* Set by JavaScript */
+	color: var(--secondary-label);
+	position: fixed;
+	padding: 3px 14px;
+	background: var(--surface-raised);
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	border-bottom: 1px solid var(--rule);
+	-webkit-transition: opacity 0.8s linear;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+#topicBar:hover {
+	overflow: visible;
+	white-space: normal;
+}
+
+#topicBar a,
+#topicBar span.channel {
+	color: var(--link);
+}
+
+/* Scrollback mark
+
+ A thin accent rule with a centered caption. The caption is drawn by
+ CSS so the template stays the one every style shares. */
+
+#mark {
+	clear: both;
+	position: relative;
+	z-index: 295;
+	display: flex;
+	align-items: center;
+	height: auto;
+	margin: 6px 14px;
+	-webkit-transition: opacity 0.2s linear;
+	transition: opacity 0.2s linear;
+}
+
+#mark::before,
+#mark::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: var(--accent);
+	opacity: 0.7;
+}
+
+/* The caption is inserted between the two rules by scripts.js
+ (Glasstual.historyIndicatorAddedToView). It sits on its own so the
+ rules on either side can stretch. */
+#mark .markCaption {
+	flex: none;
+	margin: 0 10px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--accent);
+}
+
+/* Message buffer loading animation */
+
+.message_buffer_loading_indicator {
+	text-align: center;
+	height: 42px;
+}
+
+.message_buffer_loading_indicator span {
+	font-size: 30px;
+	font-weight: 600;
+	letter-spacing: 4px;
+	line-height: 43px;
+	color: var(--tertiary-label);
+	-webkit-animation: ellipsis-period 1.5s infinite;
+	animation: ellipsis-period 1.5s infinite;
+}
+
+.message_buffer_loading_indicator span:nth-child(1) {
+	-webkit-animation-delay: 0.0s;
+	animation-delay: 0.0s;
+}
+
+.message_buffer_loading_indicator span:nth-child(2) {
+	-webkit-animation-delay: 0.1s;
+	animation-delay: 0.1s;
+}
+
+.message_buffer_loading_indicator span:nth-child(3) {
+	-webkit-animation-delay: 0.2s;
+	animation-delay: 0.2s;
+}
+
+@keyframes ellipsis-period {
+	0% { opacity: 0.2; }
+	20% { opacity: 1.0; }
+	100% { opacity: 0.2; }
+}
+
+/* Date and session separators */
+
+.date_indicator,
+.session_indicator {
+	display: flex;
+	display: -webkit-flex;
+	padding: 0.7em 14px;
+}
+
+.date_indicator > hr,
+.session_indicator > hr {
+	background: var(--rule);
+	border: 0;
+	height: 1px;
+	margin-top: 0.62em;
+	flex: 1;
+	-webkit-flex: 1;
+}
+
+.date_indicator > span,
+.session_indicator > span {
+	font-size: 0.85em;
+	font-weight: 500;
+	margin: 0 0.9em;
+	color: var(--secondary-label);
+}
+
+.date_indicator + #mark,
+.session_indicator + #mark {
+	display: none;
+}
+
+/* NOTICE/CTCP/WALLOPS
+
+ Routine traffic from somewhere else: a quiet fill, no alarm colours. */
+
+div.line[data-line-type="ctcp"],
+div.line[data-line-type="notice"],
+div.line[data-line-type="wallops"] {
+	z-index: 191;
+	background: var(--fill-quiet);
+}
+
+div.line[data-line-type="notice"] .sender,
+div.line[data-line-type="wallops"] .sender {
+	color: var(--secondary-label);
+	font-weight: 600;
+}
+
+/* Delivery state (labeled-response + echo-message) */
+
+div.line[data-delivery-state="pending"] {
+	opacity: 0.55;
+	transition: opacity 0.3s;
+}
+
+div.line[data-delivery-state="failed"] {
+	box-shadow: inset 3px 0 0 0 var(--danger);
+}
+
+body[dir="rtl"] div.line[data-delivery-state="failed"] {
+	box-shadow: inset -3px 0 0 0 var(--danger);
+}
+
+div.line .deliveryFailure {
+	display: block;
+	font-size: 0.85em;
+	color: var(--danger);
+}
+
+div.line .deliveryFailure:empty {
+	display: none;
+}
+
+/* Selected User Messages */
+
+.sender {
+	cursor: pointer;
+}
+
+div.line[data-line-type="privmsg"]:not(.selectedUser),
+div.line[data-line-type="action"]:not(.selectedUser) {
+	transition-property: background-color, box-shadow;
+	transition-duration: 0.5s, 0.5s;
+}
+
+div.line.selectedUser[data-highlight="false"] {
+	transition-property: background-color, box-shadow;
+	transition-duration: 0.5s, 0.5s;
+
+	z-index: 190;
+	position: relative;
+	background-color: var(--fill-selected) !important;
+}
+
+/* PRIVMSG */
+
+div.line[data-line-type="privmsg"][data-highlight="true"],
+div.line[data-line-type="action"][data-highlight="true"] {
+	z-index: 191;
+	position: relative;
+	font-weight: normal;
+	background-color: var(--fill-highlight) !important;
+	box-shadow: inset 3px 0 0 0 var(--accent);
+}
+
+body[dir="rtl"] div.line[data-line-type="privmsg"][data-highlight="true"],
+body[dir="rtl"] div.line[data-line-type="action"][data-highlight="true"] {
+	box-shadow: inset -3px 0 0 0 var(--accent);
+}
+
+div.line[data-line-type="privmsg"] .message {
+	color: var(--label);
+}
+
+div.line[data-line-type="privmsg"] .sender {
+	font-weight: 600;
+	white-space: pre-wrap;
+}
+
+/* Mode badge: the "@" or "+" of the nickname format in the secondary
+ colour so the name itself carries the nickname colour. */
+.sender::first-letter {
+	color: inherit;
+}
+
+/* ACTION */
+
+div.line[data-line-type="action"] .message {
+	color: var(--label);
+}
+
+div.line[data-line-type="action"] .sender {
+	font-weight: 600;
+}
+
+div.line[data-line-type="action"] .innerMessage {
+	font-style: italic;
+}
+
+body[dir="ltr"] div.line[data-line-type="action"] .sender:before {
+	content: "\2022";
+	margin-right: 0.4em;
+	color: var(--tertiary-label);
+}
+
+body[dir="rtl"] div.line[data-line-type="action"] .sender:before {
+	content: "\2022";
+	margin-left: 0.4em;
+	color: var(--tertiary-label);
+}
+
+/* DEBUG/INVITE
+
+ The client's own status lines. These are the bulk of a server view, so
+ they carry no fill at all: they are secondary text. */
+
+div.line[data-line-type="invite"],
+div.line[data-line-type="debug"],
+div.line[data-line-type="dcc-file-transfer"],
+div.line[data-line-type="off-the-record-encryption-status"] {
+	color: var(--secondary-label);
+	z-index: 190;
+	position: relative;
+}
+
+div.line[data-line-type="off-the-record-encryption-status"] .message {
+	color: var(--danger);
+	font-weight: 600;
+}
+
+/* Message of the Day (MOTD) */
+/* 720, 721, 722 are used by ShadowIRCd for Oper MOTD. */
+/* 372, 375, 376 are normal MOTD shared by several IRCds. */
+
+div.line[data-command="372"],
+div.line[data-command="375"],
+div.line[data-command="376"],
+div.line[data-command="720"],
+div.line[data-command="721"],
+div.line[data-command="722"] {
+	background: none;
+	box-shadow: none;
+	color: var(--secondary-label);
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+div.line[data-command="375"],
+div.line[data-command="720"] { /* Start. */
+	padding-top: 4px;
+}
+
+div.line[data-command="376"],
+div.line[data-command="722"] { /* End. */
+	padding-bottom: 4px;
+}
+
+div.line[data-command="372"] .message,
+div.line[data-command="375"] .message,
+div.line[data-command="376"] .message,
+div.line[data-command="720"] .message,
+div.line[data-command="721"] .message,
+div.line[data-command="722"] .message {
+	font-family: ui-monospace, "SF Mono", Menlo, monospace;
+	font-size: 0.92em;
+}
+
+/* GENERAL EVENT */
+
+div.line[data-line-type="join"],
+div.line[data-line-type="part"],
+div.line[data-line-type="kick"],
+div.line[data-line-type="kill"],
+div.line[data-line-type="quit"],
+div.line[data-line-type="nick"],
+div.line[data-line-type="mode"],
+div.line[data-line-type="topic"],
+div.line[data-line-type="website"] {
+	color: var(--secondary-label);
+}
+
+div.line[data-line-type="join"] .message:before {
+	content: "\2192";
+	color: var(--arrive);
+	margin-right: 0.4em;
+}
+
+div.line[data-line-type="kick"] .message:before,
+div.line[data-line-type="kill"] .message:before,
+div.line[data-line-type="part"] .message:before,
+div.line[data-line-type="quit"] .message:before {
+	content: "\2190";
+	color: var(--depart);
+	margin-right: 0.4em;
+}
+
+div.line[data-line-type="nick"] .message:before,
+div.line[data-line-type="mode"] .message:before,
+div.line[data-line-type="topic"] .message:before {
+	content: "\2022";
+	color: var(--tertiary-label);
+	margin-right: 0.4em;
+}
+
+body[dir="rtl"] div.line[data-line-type="join"] .message:before,
+body[dir="rtl"] div.line[data-line-type="kick"] .message:before,
+body[dir="rtl"] div.line[data-line-type="kill"] .message:before,
+body[dir="rtl"] div.line[data-line-type="part"] .message:before,
+body[dir="rtl"] div.line[data-line-type="quit"] .message:before,
+body[dir="rtl"] div.line[data-line-type="nick"] .message:before,
+body[dir="rtl"] div.line[data-line-type="mode"] .message:before,
+body[dir="rtl"] div.line[data-line-type="topic"] .message:before {
+	margin-right: 0;
+	margin-left: 0.4em;
+}
+
+/* Nickname Colors
+
+ The colour comes from the app's nickname colour generator as an inline
+ style on .sender. Nothing here overrides it; only the weight is set. */
+
+.inlineSender {
+	font-weight: 600;
+}
+
+div.line[data-line-type="privmsg"] .sender[data-member-type="myself"],
+div.line[data-line-type="action"] .sender[data-member-type="myself"] {
+	color: var(--accent);
+}
+
+/* Replies
+
+ A quoted excerpt of the line being answered, placed above the text.
+ Clicking it scrolls to the referenced line. */
+
+.replyQuote {
+	display: block;
+	margin: 1px 0 2px 0;
+	padding: 1px 8px;
+	font-size: 0.92em;
+	color: var(--secondary-label);
+	border-left: 2px solid var(--rule-strong);
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 60%;
+}
+
+body[dir="rtl"] .replyQuote {
+	border-left: 0;
+	border-right: 2px solid var(--rule-strong);
+}
+
+.replyQuote .replySender {
+	font-weight: 600;
+	margin-right: 0.4em;
+}
+
+.replyQuote:hover {
+	color: var(--label);
+}
+
+/* Reactions
+
+ A row of pills under the text: emoji and count. A pill the local user
+ contributed to is tinted with the accent colour. */
+
+.reactions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin: 3px 0 1px 0;
+	text-indent: 0;
+}
+
+.reactions:empty {
+	display: none;
+}
+
+.reaction {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 1px 7px;
+	border-radius: 10px;
+	font-size: 11px;
+	line-height: 16px;
+	color: var(--secondary-label);
+	background: var(--fill-quiet);
+	border: 1px solid transparent;
+	cursor: default;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.reaction[data-mine="true"] {
+	color: var(--accent);
+	border-color: var(--accent);
+	background: var(--fill-accent);
+}
+
+.reaction .count {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Line flash when a reply quote was followed. */
+
+@keyframes line-flash {
+	0% { background-color: var(--fill-accent); }
+	100% { background-color: transparent; }
+}
+
+div.line.flash {
+	animation: line-flash 1.2s ease-out;
+}
+
+/* Find bar
+
+ WebKit's find highlights the matching text itself; the line around it
+ gets a quiet fill so it can be spotted while scrolling. */
+
+div.line.findMatch {
+	background-color: var(--fill-quiet);
+}
+
+/* Inline media */
+
+.inlineImage .content,
+.inlineVideo .content,
+.inlineVideoService .content,
+.inlineHTML .content {
+	display: inline-block;
+	float: left;
+	margin-right: 12px;
+	margin-left: 10px;
+	min-width: 40px;
+	max-width: 90%;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.inlineImage .closeButton,
+.inlineVideo .closeButton,
+.inlineVideoService .closeButton,
+.inlineHTML .closeButton {
+	cursor: pointer;
+	border-radius: 9px;
+	border: 0;
+	color: var(--secondary-label);
+	background: var(--fill-quiet);
+	display: inline-block;
+	line-height: 18px;
+	font-size: 13px;
+	text-align: center;
+	width: 18px;
+	height: 18px;
+	float: left;
+}
+
+/* Accessibility
+
+ Reduce Motion turns off the fades and the loading animation.
+
+ Increase Contrast strengthens the hairlines and the tints and lifts the
+ quiet lines the rest of the way to full label colour. */
+
+@media (prefers-reduced-motion: reduce) {
+	#body,
+	#topicBar,
+	#loadingScreen,
+	#mark,
+	div.line,
+	div.line.flash {
+		-webkit-transition: none;
+		transition: none;
+		animation: none;
+	}
+
+	.message_buffer_loading_indicator span {
+		-webkit-animation: none;
+		animation: none;
+		opacity: 1;
+	}
+}
+
+@media (prefers-contrast: more) {
+	.time,
+	.date_indicator > span,
+	.session_indicator > span,
+	div.line[data-line-type="invite"],
+	div.line[data-line-type="debug"],
+	div.line[data-line-type="dcc-file-transfer"],
+	div.line[data-line-type="join"],
+	div.line[data-line-type="part"],
+	div.line[data-line-type="kick"],
+	div.line[data-line-type="quit"],
+	div.line[data-line-type="kill"],
+	div.line[data-line-type="nick"],
+	div.line[data-line-type="mode"],
+	div.line[data-line-type="topic"],
+	div.line[data-line-type="website"] {
+		color: var(--label);
+	}
+
+	a {
+		text-decoration: underline;
+	}
+}

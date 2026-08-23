@@ -28,6 +28,8 @@
 	<string>TXCMainMenu</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>26.0</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSPrincipalClass</key>
 	<string>TXApplication</string>
 	<key>NSAppleScriptEnabled</key>

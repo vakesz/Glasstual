@@ -37,6 +37,7 @@
 
 #import "TLONotificationController.h"
 #import "IRCClient.h"
+#import "IRCTypingTrackerPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -92,6 +93,26 @@ enum {
 
 - (void)enableCapability:(ClientIRCv3SupportedCapability)capability;
 - (void)disableCapability:(ClientIRCv3SupportedCapability)capability;
+
+/* Typing notifications (IRCv3 "+typing"). The input bar reports what
+ is being written; "active" is sent at most every three seconds,
+ "paused" after five seconds without a change, "done" when the text is
+ sent or cleared. */
+@property(nonatomic, strong) IRCTypingTracker *typingTracker; // Who is typing where
+- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel;
+- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel atDate:(NSDate *)date;
+- (void)typingPauseTimerFired:(IRCChannel *)channel;
+- (void)localUserSentMessageInChannel:(nullable IRCChannel *)channel;
+- (void)localUserClearedTextInChannel:(nullable IRCChannel *)channel;
+
+/* Replies (+draft/reply). The next text sent with -sendText:… carries
+ this identifier on its first line, then it is cleared. */
+@property(nonatomic, copy, nullable) NSString *nextMessageReplyIdentifier;
+
+/* Reactions (+draft/react). Sends TAGMSG and shows the reaction. */
+- (BOOL)sendReaction:(NSString *)emoji
+	toMessageIdentifier:(NSString *)messageIdentifier
+			  inChannel:(IRCChannel *)channel;
 
 /* Capability negotiation. Capabilities offered by the server in CAP LS
  and CAP NEW are collected here and requested in registry order.

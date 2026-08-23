@@ -1,0 +1,65 @@
+/* Lines — Dark variety.
+
+ Only the palette lives here. Each token is declared twice: a plain value
+ first, then the system keyword, so WebKit keeps whichever it understands
+ last. The keywords track the accent colour and the accessibility settings
+ on their own. */
+
+@import "../../layout.css";
+
+:root {
+	supported-color-schemes: dark;
+	color-scheme: dark;
+
+	--label: rgba(255, 255, 255, 0.85);
+	--label: -apple-system-label;
+	--secondary-label: rgba(255, 255, 255, 0.55);
+	--secondary-label: -apple-system-secondary-label;
+	--tertiary-label: rgba(255, 255, 255, 0.25);
+	--tertiary-label: -apple-system-tertiary-label;
+
+	--accent: #0A84FF;
+	--accent: -apple-system-control-accent;
+	--link: #419CFF;
+	--link: -webkit-link;
+
+	--selection: rgba(10, 132, 255, 0.35);
+	--selection: -apple-system-selected-text-background;
+
+	--rule: rgba(235, 235, 245, 0.16);
+	--rule-strong: rgba(235, 235, 245, 0.32);
+	--fill-quiet: rgba(120, 120, 128, 0.20);
+
+	--fill-accent: rgba(10, 132, 255, 0.22);
+	--fill-accent: color-mix(in srgb, -apple-system-control-accent 22%, transparent);
+	--fill-highlight: rgba(10, 132, 255, 0.14);
+	--fill-highlight: color-mix(in srgb, -apple-system-control-accent 14%, transparent);
+
+	--fill-selected: rgba(120, 120, 128, 0.24);
+
+	--danger: #FF453A;
+	--danger: -apple-system-red;
+	--arrive: #30D158;
+	--arrive: -apple-system-green;
+	--depart: #FF9F0A;
+	--depart: -apple-system-orange;
+
+	--scroll-thumb: rgba(255, 255, 255, 0.26);
+	--scroll-thumb-active: rgba(255, 255, 255, 0.45);
+
+	--surface-raised: rgba(30, 30, 30, 0.80);
+}
+
+@media (prefers-contrast: more) {
+	:root {
+		--rule: rgba(235, 235, 245, 0.36);
+		--rule-strong: rgba(235, 235, 245, 0.60);
+		--fill-quiet: rgba(120, 120, 128, 0.34);
+		--fill-highlight: rgba(10, 132, 255, 0.26);
+		--fill-highlight: color-mix(in srgb, -apple-system-control-accent 26%, transparent);
+		--fill-selected: rgba(120, 120, 128, 0.36);
+
+		--scroll-thumb: rgba(255, 255, 255, 0.42);
+		--scroll-thumb-active: rgba(255, 255, 255, 0.62);
+	}
+}

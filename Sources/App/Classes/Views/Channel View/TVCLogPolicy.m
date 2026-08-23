@@ -117,6 +117,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 				[menuItems addObject:newItem];
 			}
+
+			[menuItems addObjectsFromArray:[self messageMenuItemsForTarget:target inWebView:webView]];
 		}
 	} else if (channelName) {
 		NSMenu *chanMenu = menuController().channelViewChannelNameMenu;
@@ -165,6 +167,8 @@ NS_ASSUME_NONNULL_BEGIN
 			[menuItems addObject:newItem];
 		}
 
+		[menuItems addObjectsFromArray:[self messageMenuItemsForTarget:target inWebView:webView]];
+
 		if ([TPCPreferences developerModeEnabled]) {
 			[menuItems addObject:[NSMenuItem separatorItem]];
 
@@ -187,6 +191,34 @@ NS_ASSUME_NONNULL_BEGIN
 	}
 
 	return [menuItems copy];
+}
+
+/* Reply and React for the message line under the pointer. Only lines
+ with a message identifier and of a type that can be answered. */
+- (NSArray<NSMenuItem *> *)messageMenuItemsForTarget:(TVCLogPolicyTarget *)target inWebView:(TVCLogView *)webView
+{
+	NSString *messageIdentifier = target.lineMessageIdentifier;
+
+	if (messageIdentifier.length == 0) {
+		return @[];
+	}
+
+	NSString *lineType = target.lineType;
+
+	if ([lineType isEqualToString:@"privmsg"] == NO && [lineType isEqualToString:@"action"] == NO &&
+		[lineType isEqualToString:@"notice"] == NO) {
+		return @[];
+	}
+
+	IRCChannel *channel = webView.viewController.associatedChannel;
+
+	if (channel == nil || channel.isUtility) {
+		return @[];
+	}
+
+	return [menuController() messageReplyMenuItemsForMessageIdentifier:messageIdentifier
+															  nickname:target.lineNickname
+															   excerpt:target.lineExcerpt];
 }
 
 - (NSMenu *)constructContextMenuForWebView:(TVCLogView *)webView

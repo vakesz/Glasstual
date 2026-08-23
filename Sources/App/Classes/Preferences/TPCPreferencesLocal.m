@@ -179,39 +179,6 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 	return [RZUserDefaults() boolForKey:@"ApplyCommandToAllConnections -> clearall"];
 }
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-+ (void)setTextEncryptionIsOpportunistic:(BOOL)textEncryptionIsOpportunistic
-{
-	[RZUserDefaults() setBool:textEncryptionIsOpportunistic
-					   forKey:@"Off-the-Record Messaging -> Automatically Enable Service"];
-}
-
-+ (BOOL)textEncryptionIsOpportunistic
-{
-	return [RZUserDefaults() boolForKey:@"Off-the-Record Messaging -> Automatically Enable Service"];
-}
-
-+ (void)setTextEncryptionIsRequired:(BOOL)textEncryptionIsRequired
-{
-	[RZUserDefaults() setBool:textEncryptionIsRequired forKey:@"Off-the-Record Messaging -> Require Encryption"];
-}
-
-+ (BOOL)textEncryptionIsRequired
-{
-	return [RZUserDefaults() boolForKey:@"Off-the-Record Messaging -> Require Encryption"];
-}
-
-+ (void)setTextEncryptionIsEnabled:(BOOL)textEncryptionIsEnabled
-{
-	[RZUserDefaults() setBool:textEncryptionIsEnabled forKey:@"Off-the-Record Messaging -> Enable Encryption"];
-}
-
-+ (BOOL)textEncryptionIsEnabled
-{
-	return [RZUserDefaults() boolForKey:@"Off-the-Record Messaging -> Enable Encryption"];
-}
-#endif
-
 + (BOOL)enableEchoMessageCapability
 {
 	//	return [RZUserDefaults() boolForKey:@"IRC -> Enable echo-message Capability"];
@@ -377,6 +344,11 @@ NSUInteger const TPCPreferencesDictionaryVersion = 602;
 + (BOOL)openBrowserInBackground
 {
 	return [RZUserDefaults() boolForKey:@"OpenClickedLinksInBackgroundBrowser"];
+}
+
++ (BOOL)sendTypingNotifications
+{
+	return [RZUserDefaults() boolForKey:@"SendTypingNotifications"];
 }
 
 + (BOOL)showDateChanges
@@ -1191,16 +1163,6 @@ static NSArray<NSString *> *_matchKeywords = nil;
 	[self _populateDefaultNickname];
 
 	[self registerWebKit2DynamicDefaults];
-
-	NSMutableDictionary *dynamicDefaults = [NSMutableDictionary dictionary];
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	[dynamicDefaults setBool:YES forKey:@"System -> Built with Off-the-Record Messaging Support"];
-#else
-	[dynamicDefaults setBool:NO forKey:@"System -> Built with Off-the-Record Messaging Support"];
-#endif
-
-	[RZUserDefaults() registerDefaults:dynamicDefaults];
 
 	[self registerPreferencesDictionaryVersion];
 }

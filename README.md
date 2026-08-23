@@ -12,6 +12,12 @@ Glasstual is a highly customizable app for interacting with Internet Relay Chat 
 
 Glasstual can be customized with styles written in CSS, HTML, and JavaScript; plugins written in Objective-C & Swift; and scripts written in AppleScript (plus many other languages).
 
+## Features
+
+### Chat styles
+
+Two styles ship with the app and are picked in Settings › Style. **Lines** is the classic layout: one line per message with a nickname column and timestamps, set in the system font and colours. **Bubbles** lays the conversation out like Messages: your own messages on the right in the accent colour, everyone else's on the left in a grey bubble, messages from the same person grouped together, and joins, parts and other events as small centred captions. Both follow light and dark mode, the accent colour and the accessibility settings, and both show replies and reactions. Existing installations keep Lines.
+
 ## Relationship to Textual
 
 **Glasstual is a fork and continuation of [Textual](https://github.com/Codeux-Software/Textual)**, the IRC client by Codeux Software, LLC. Upstream Textual is no longer actively maintained — it had a single full-time maintainer for the life of the project, who has since moved on. Everyone who contributed to Textual in any form, be it a suggestion, bug report, pull request, financial support, or anything else, made this codebase what it is.
@@ -36,7 +42,7 @@ Copyright and license notices from Textual and LimeChat are left intact througho
 
 ## Note Regarding Third-Party Frameworks
 
-The Codeux frameworks Glasstual builds on (Cocoa Extensions, Encryption Kit) and the prebuilt static libraries live in `Frameworks/` as vendored sources, not submodules. `Frameworks/PROVENANCE.md` records the upstream commit each one was taken from. A plain clone is enough:
+The Codeux framework Glasstual builds on (Cocoa Extensions) and the prebuilt static libraries live in `Frameworks/` as vendored sources, not submodules. `Frameworks/PROVENANCE.md` records the upstream commit each one was taken from. A plain clone is enough:
 
 ```
 git clone https://github.com/vakesz/Glasstual.git
@@ -103,6 +109,30 @@ Textual was removed together with the upstream appcast so that this fork can
 never offer Codeux's builds as an update to itself. New releases are published
 on the GitHub releases page.
 
+## Distribution
+
+Glasstual is built to be distributable both as a notarized direct download and
+through the Mac App Store from the same tree:
+
+- Every process is sandboxed, the hardened runtime is on and library
+  validation is **not** disabled. Plugins therefore load only when signed with
+  the same Team ID as the app.
+- Off-the-Record (OTR) messaging was removed on 2026-08-22. It depended on
+  libotr, libgcrypt and libgpg-error, which are LGPL 2.1 and cannot be
+  statically linked into an App Store build. Network traffic is protected by
+  TLS instead.
+- `ITSAppUsesNonExemptEncryption` is `false`: the app uses only the
+  TLS/crypto provided by the operating system, which is exempt from export
+  compliance paperwork.
+- The direct-download pipeline (`.github/workflows/release.yml`) signs with a
+  Developer ID identity. An App Store submission uses the same project with an
+  Apple Distribution identity and App Store provisioning profiles (set in
+  `Configurations/Signing.xcconfig` or on the `xcodebuild` command line).
+- Textual and LimeChat are BSD-licensed, so selling builds is permitted as
+  long as the notices in [Licenses](#licenses) and `Acknowledgements.pdf`
+  ship inside the app (they do: Help ▸ Acknowledgements) and the names
+  Textual and Codeux Software are not used to promote the product.
+
 ## Supported IRC features
 
 IRCv3 capabilities Glasstual negotiates when the server offers them:
@@ -118,6 +148,9 @@ IRCv3 capabilities Glasstual negotiates when the server offers them:
 - `invite-notify` (invites for other users are shown in the channel)
 - `labeled-response` (with `echo-message`, each outgoing `PRIVMSG`/`NOTICE` is labelled and its line shown as pending until the echo, an `ACK`/`BATCH` or a `FAIL` resolves it; styles react through `Glasstual.lineDeliveryStateChanged` and the `data-delivery-state` attribute)
 - `message-tags` (incoming and outgoing tags, `TAGMSG`; `msgid` is stored with each line and exposed to styles as `data-msgid`; the `bot` tag marks the sender as a bot)
+- `+typing` (client tag on `TAGMSG`): who is typing is shown above the input field, and what you type is reported to the channel or query (`active` at most every three seconds, `paused` after five seconds idle, `done` on send or clear; never for commands or the server console; can be switched off in Settings › Behavior)
+- `+draft/reply` (client tag): Reply in a message's context menu quotes that message above the input field and tags what you send; a reply is shown as a quote above the line that clicking scrolls to
+- `+draft/react` (client tag on `TAGMSG`): React in a message's context menu sends an emoji; reactions are shown as a row of pills under the line and kept for the session
 - `multi-prefix`
 - `pre-away` (an away message in effect when a connection dropped is restored before registration completes on reconnect)
 - `read-marker` (and `draft/read-marker`): `MARKREAD` from other clients clears unread counts and moves the scrollback mark; viewing a channel tells the bouncer it is read

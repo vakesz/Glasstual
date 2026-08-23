@@ -81,6 +81,11 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface TVCLogController ()
+/* Reactions received this session: msgid -> emoji -> nicknames. The
+ archived line cannot be rewritten, so these live with the view. */
+@property(nonatomic, strong)
+	NSMutableDictionary<NSString *, NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *>
+		*reactionsByMessageIdentifier;
 @property(nonatomic, assign, readwrite, getter=viewIsLoaded) BOOL loaded;
 @property(nonatomic, assign) BOOL terminating;
 @property(nonatomic, assign) BOOL historyLoadedForFirstTime;
@@ -170,9 +175,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 
 - (void)prepareInitialState
 {
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	self.encrypted = self.associatedChannel.encryptionStateIsEncrypted;
-#endif
+	self.reactionsByMessageIdentifier = [NSMutableDictionary dictionary];
 
 	self.highlightedLineNumbers = [NSMutableArray new];
 
@@ -274,8 +277,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	if (
 		/* 1 */ [TPCPreferences reloadScrollbackOnLaunch] == NO ||
 		/* 2 */ channel.isUtility || channel.isDirectChat ||
-		/* 3 */ (channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO) ||
-		/* 4 */ self.encrypted) {
+		/* 3 */ (channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO)) {
 		[self historicLogResetChannel];
 	}
 }
@@ -440,7 +442,9 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 - (void)mark
 {
 	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		NSString *markTemplate = [TVCLogRenderer renderTemplateNamed:@"historyIndicator"];
+		NSString *markTemplate =
+			[TVCLogRenderer renderTemplateNamed:@"historyIndicator"
+									 attributes:@{@"historyIndicatorMessage" : TXTLS(@"TVCMainWindow[hin-um]")}];
 
 		[self _evaluateFunction:@"_Glasstual.historyIndicatorAdd" withArguments:@[ markTemplate ]];
 	};
@@ -455,7 +459,9 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	NSParameterAssert(date != nil);
 
 	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		NSString *markTemplate = [TVCLogRenderer renderTemplateNamed:@"historyIndicator"];
+		NSString *markTemplate =
+			[TVCLogRenderer renderTemplateNamed:@"historyIndicator"
+									 attributes:@{@"historyIndicatorMessage" : TXTLS(@"TVCMainWindow[hin-um]")}];
 
 		[self _evaluateFunction:@"_Glasstual.historyIndicatorAddAfterTimestamp"
 				  withArguments:@[ markTemplate, @(date.timeIntervalSince1970) ]];
@@ -572,10 +578,9 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	IRCChannel *channel = self.associatedChannel;
 
 	if (
-		/* 1 */ self.encrypted ||
-		/* 2 */ (firstTimeLoadingHistory && [TPCPreferences reloadScrollbackOnLaunch] == NO) ||
-		/* 3 */ channel.isUtility || channel.isDirectChat ||
-		/* 4 */
+		/* 1 */ (firstTimeLoadingHistory && [TPCPreferences reloadScrollbackOnLaunch] == NO) ||
+		/* 2 */ channel.isUtility || channel.isDirectChat ||
+		/* 3 */
 		(firstTimeLoadingHistory && channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO)) {
 		self.historyLoadedForFirstTime = YES;
 
@@ -1365,16 +1370,7 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 			}
 
 			/* Log this log line */
-			/* If the channel is encrypted, then we refuse to write to
-			 the actual historic log so there is no trace of the chatter
-			 on the disk in the form of an unencrypted cache file. */
-			/* Doing it this way does break the ability to reload chatter
-			 in the view as well as playback on restart, but the added
-			 security can be seen as a bonus. */
-			if (self.encrypted == NO) {
-				[TVCLogControllerHistoricLogSharedInstance() writeNewEntryWithLogLine:logLine
-																			  forItem:self.associatedItem];
-			}
+			[TVCLogControllerHistoricLogSharedInstance() writeNewEntryWithLogLine:logLine forItem:self.associatedItem];
 
 			/* Using information provided by conversation tracking we can update 
 			 our internal array of favored nicknames for nick completion. */
@@ -1401,6 +1397,101 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 	};
 
 	_enqueueBlock(printBlock)
+}
+
+#pragma mark -
+#pragma mark Reactions
+
+- (void)noteReaction:(NSString *)emoji
+		   fromNickname:(NSString *)nickname
+	toMessageIdentifier:(NSString *)messageIdentifier
+{
+	NSParameterAssert(emoji != nil);
+	NSParameterAssert(nickname != nil);
+	NSParameterAssert(messageIdentifier != nil);
+
+	if (emoji.length == 0 || nickname.length == 0 || messageIdentifier.length == 0) {
+		return;
+	}
+
+	@synchronized(self.reactionsByMessageIdentifier) {
+		NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *reactions =
+			self.reactionsByMessageIdentifier[messageIdentifier];
+
+		if (reactions == nil) {
+			reactions = [NSMutableDictionary dictionary];
+
+			self.reactionsByMessageIdentifier[messageIdentifier] = reactions;
+		}
+
+		NSMutableOrderedSet<NSString *> *nicknames = reactions[emoji];
+
+		if (nicknames == nil) {
+			nicknames = [NSMutableOrderedSet orderedSet];
+
+			reactions[emoji] = nicknames;
+		}
+
+		[nicknames addObject:nickname];
+	}
+}
+
+- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactionsForMessageIdentifier:
+	(NSString *)messageIdentifier
+{
+	NSParameterAssert(messageIdentifier != nil);
+
+	@synchronized(self.reactionsByMessageIdentifier) {
+		NSDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *reactions =
+			self.reactionsByMessageIdentifier[messageIdentifier];
+
+		if (reactions.count == 0) {
+			return nil;
+		}
+
+		NSMutableDictionary<NSString *, NSArray<NSString *> *> *result = [NSMutableDictionary dictionary];
+
+		[reactions enumerateKeysAndObjectsUsingBlock:^(
+					   NSString *emoji, NSMutableOrderedSet<NSString *> *nicknames, BOOL *stop) {
+			result[emoji] = nicknames.array;
+		}];
+
+		return [result copy];
+	}
+}
+
+/* What the line was archived with, merged with what arrived since. */
+- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactionsForLogLine:(TVCLogLine *)logLine
+{
+	NSString *messageIdentifier = logLine.messageIdentifier;
+
+	NSDictionary<NSString *, NSArray<NSString *> *> *archived = logLine.reactions;
+
+	NSDictionary<NSString *, NSArray<NSString *> *> *session = nil;
+
+	if (messageIdentifier.length > 0) {
+		session = [self reactionsForMessageIdentifier:messageIdentifier];
+	}
+
+	if (session.count == 0) {
+		return archived;
+	}
+
+	if (archived.count == 0) {
+		return session;
+	}
+
+	NSMutableDictionary<NSString *, NSArray<NSString *> *> *merged = [archived mutableCopy];
+
+	[session enumerateKeysAndObjectsUsingBlock:^(NSString *emoji, NSArray<NSString *> *nicknames, BOOL *stop) {
+		NSMutableOrderedSet<NSString *> *set = [NSMutableOrderedSet orderedSetWithArray:(merged[emoji] ?: @[])];
+
+		[set addObjectsFromArray:nicknames];
+
+		merged[emoji] = set.array;
+	}];
+
+	return [merged copy];
 }
 
 - (nullable NSString *)renderLogLine:(TVCLogLine *)logLine
@@ -1513,6 +1604,23 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 
 	if (deliveryState) {
 		templateAttributes[@"deliveryState"] = deliveryState;
+	}
+
+	NSString *replyToMessageIdentifier = logLine.replyToMessageIdentifier;
+
+	if (replyToMessageIdentifier.length > 0) {
+		templateAttributes[@"replyToMessageIdentifier"] = replyToMessageIdentifier;
+	}
+
+	NSDictionary *reactions = [self reactionsForLogLine:logLine];
+
+	if (reactions.count > 0) {
+		NSData *reactionsData = [NSJSONSerialization dataWithJSONObject:reactions options:0 error:NULL];
+
+		if (reactionsData) {
+			templateAttributes[@"reactionsJSON"] = [[NSString alloc] initWithData:reactionsData
+																		 encoding:NSUTF8StringEncoding];
+		}
 	}
 
 	// ---- //

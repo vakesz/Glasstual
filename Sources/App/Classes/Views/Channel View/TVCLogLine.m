@@ -145,6 +145,10 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	self->_command = [aDecoder decodeStringForKey:@"command"];
 	self->_messageBody = [aDecoder decodeStringForKey:@"messageBody"];
 	self->_messageIdentifier = [aDecoder decodeStringForKey:@"messageIdentifier"];
+	self->_replyToMessageIdentifier = [aDecoder decodeStringForKey:@"replyToMessageIdentifier"];
+	self->_reactions = [aDecoder
+		decodeObjectOfClasses:[NSSet setWithObjects:[NSDictionary class], [NSArray class], [NSString class], nil]
+					   forKey:@"reactions"];
 	self->_nickname = [aDecoder decodeStringForKey:@"nickname"];
 
 	self->_lineType = [aDecoder decodeIntegerForKey:@"lineType"];
@@ -218,6 +222,8 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	[aCoder maybeEncodeObject:self.highlightKeywords forKey:@"highlightKeywords"];
 	[aCoder maybeEncodeObject:self.rendererAttributes forKey:@"rendererAttributes"];
 	[aCoder maybeEncodeObject:self.messageIdentifier forKey:@"messageIdentifier"];
+	[aCoder maybeEncodeObject:self.replyToMessageIdentifier forKey:@"replyToMessageIdentifier"];
+	[aCoder maybeEncodeObject:self.reactions forKey:@"reactions"];
 	[aCoder maybeEncodeObject:self.nickname forKey:@"nickname"];
 
 	[aCoder encodeBool:self.isEncrypted forKey:@"isEncrypted"];
@@ -469,6 +475,8 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 	object->_command = self->_command;
 	object->_messageBody = self->_messageBody;
 	object->_messageIdentifier = self->_messageIdentifier;
+	object->_replyToMessageIdentifier = self->_replyToMessageIdentifier;
+	object->_reactions = self->_reactions;
 	object->_nickname = self->_nickname;
 	object->_nicknameColorStyle = self->_nicknameColorStyle;
 
@@ -503,6 +511,8 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 @dynamic deliveryState;
 @dynamic messageBody;
 @dynamic messageIdentifier;
+@dynamic replyToMessageIdentifier;
+@dynamic reactions;
 @dynamic nickname;
 @dynamic receivedAt;
 
@@ -573,6 +583,20 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 {
 	if (self->_messageIdentifier != messageIdentifier) {
 		self->_messageIdentifier = [messageIdentifier copy];
+	}
+}
+
+- (void)setReplyToMessageIdentifier:(nullable NSString *)replyToMessageIdentifier
+{
+	if (self->_replyToMessageIdentifier != replyToMessageIdentifier) {
+		self->_replyToMessageIdentifier = [replyToMessageIdentifier copy];
+	}
+}
+
+- (void)setReactions:(nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactions
+{
+	if (self->_reactions != reactions) {
+		self->_reactions = [reactions copy];
 	}
 }
 

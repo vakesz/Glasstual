@@ -50,6 +50,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable) NSString *anchorURL;
 @property(nonatomic, copy, nullable) NSString *channelName;
 @property(nonatomic, copy, nullable) NSString *nickname;
+
+/* The line under the pointer, reported by the style ahead of the menu.
+ A line with a message identifier can be replied to and reacted to. */
+@property(nonatomic, copy, nullable) NSString *lineNumber;
+@property(nonatomic, copy, nullable) NSString *lineMessageIdentifier;
+@property(nonatomic, copy, nullable) NSString *lineType;
+@property(nonatomic, copy, nullable) NSString *lineNickname;
+@property(nonatomic, copy, nullable) NSString *lineExcerpt;
 @end
 
 /* One instance is shared by every web view. It holds no per-view state. */

@@ -154,12 +154,6 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (NSString *)IRCopDefaultGlineMessage;
 + (NSString *)IRCopDefaultShunMessage;
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-+ (BOOL)textEncryptionIsOpportunistic;
-+ (BOOL)textEncryptionIsRequired;
-+ (BOOL)textEncryptionIsEnabled;
-#endif
-
 + (BOOL)enableEchoMessageCapability;
 
 + (BOOL)giveFocusOnMessageCommand;
@@ -218,6 +212,7 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 + (BOOL)controlEnterSendsMessage;
 
 + (BOOL)openBrowserInBackground;
++ (BOOL)sendTypingNotifications; // IRCv3 +typing client tag
 
 + (BOOL)connectOnDoubleclick;
 + (BOOL)disconnectOnDoubleclick;

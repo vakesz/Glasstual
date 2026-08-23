@@ -53,7 +53,6 @@
 #import "TVCMemberList.h"
 #import "TVCMainWindowPrivate.h"
 #import "TVCMainWindowTextView.h"
-#import "TLOEncryptionManagerPrivate.h"
 #import "TLOLocalization.h"
 #import "TLOpenLink.h"
 #import "TDCAboutDialogPrivate.h"
@@ -79,6 +78,8 @@
 #import "TXMasterControllerPrivate.h"
 #import "TXWindowControllerPrivate.h"
 #import "TXMenuControllerPrivate.h"
+#import "TDCReactionPopoverControllerPrivate.h"
+#import "TVCMainWindowTextViewPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -98,12 +99,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) TDCFileTransferDialog *fileTransferController;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *channelViewChannelNameMenu;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *channelViewGeneralMenu;
+@property(nonatomic, strong, nullable) TDCReactionPopoverController *reactionPopover;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *channelViewURLMenu;
 @property(nonatomic, strong, readwrite) IBOutlet NSMenu *dockMenu;
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-@property(nonatomic, strong, readwrite) IBOutlet NSMenu *encryptionManagerStatusMenu;
-#endif
 
 @property(nonatomic, weak, readwrite) IBOutlet NSMenu *mainMenuNavigationChannelListMenu;
 @property(nonatomic, weak, readwrite) IBOutlet NSMenu *mainMenuChannelMenu;
@@ -177,7 +175,6 @@ NS_ASSUME_NONNULL_BEGIN
 	addMenu(self.channelViewGeneralMenu);
 	addMenu(self.channelViewURLMenu);
 	addMenu(self.dockMenu);
-	addMenu(self.encryptionManagerStatusMenu);
 	/* The channel and query menus are attached to the menu bar on
 	 demand, so they are not reachable from the main menu here. */
 	addMenu(self.mainMenuChannelMenu);
@@ -961,31 +958,6 @@ NS_ASSUME_NONNULL_BEGIN
 		return (u.isLoggedIn && c.isUtility == NO);
 	}
 
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-	case MTOTRStatusButtonStartPrivateConversation:
-	case MTOTRStatusButtonRefreshPrivateConversation:
-	case MTOTRStatusButtonEndPrivateConversation:
-	case MTOTRStatusButtonAuthenticateChatPartner:
-	case MTOTRStatusButtonViewListOfFingerprints: {
-		/* Even if we are not logged in, we still ask the encryption manager
-			 to validate the menu item first so that it can hide specific menu items.
-			 After it has done that, then we can disable if not logged in. */
-		if ([TPCPreferences textEncryptionIsEnabled] == NO) {
-			return NO;
-		}
-
-		if (u.isLoggedIn == NO) {
-			return NO;
-		}
-
-		BOOL valid = [sharedEncryptionManager() validateMenuItem:menuItem
-													 withStateOf:[u encryptionAccountNameForUser:c.name]
-															from:[u encryptionAccountNameForLocalUser]];
-
-		return valid;
-	}
-#endif
-
 	case MTWKGeneralSearchWithGoogle: // "Search With Google"
 	{
 		TVCLogView *webView = self.selectedViewControllerBackingView;
@@ -1073,6 +1045,13 @@ NS_ASSUME_NONNULL_BEGIN
 	case MTMainWindowSegmentedControllerAddChannel: // "Add Channel…"
 	{
 		return (u != nil);
+	}
+
+	case MTWKGeneralReply: // "Reply"
+	case MTWKGeneralReact: // "React"
+	{
+		return (u != nil && c != nil && c.isUtility == NO &&
+				[u isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags]);
 	}
 
 	default: {
@@ -1373,6 +1352,159 @@ NS_ASSUME_NONNULL_BEGIN
 	if ([firstResponder respondsToSelector:@selector(print:)]) {
 		[firstResponder performSelector:@selector(print:) withObject:sender];
 	}
+}
+
+#pragma mark -
+#pragma mark Replies and Reactions
+
+static NSString *_Nonnull const _reactionEmoji[] = {@"👍", @"❤️", @"😂", @"😮", @"😢", @"👎"};
+
+- (NSArray<NSMenuItem *> *)messageReplyMenuItemsForMessageIdentifier:(NSString *)messageIdentifier
+															nickname:(nullable NSString *)nickname
+															 excerpt:(nullable NSString *)excerpt
+{
+	NSParameterAssert(messageIdentifier != nil);
+
+	NSMutableDictionary<NSString *, NSString *> *context = [NSMutableDictionary dictionary];
+
+	context[@"messageIdentifier"] = messageIdentifier;
+
+	if (nickname) {
+		context[@"nickname"] = nickname;
+	}
+
+	if (excerpt) {
+		context[@"excerpt"] = excerpt;
+	}
+
+	NSMenuItem *separator = [NSMenuItem separatorItem];
+
+	separator.tag = MTWKGeneralReplySeparator;
+
+	NSMenuItem *reply = [NSMenuItem menuItemWithTitle:TXTLS(@"TXMenuController[rpl-to]")
+											   target:self
+											   action:@selector(replyToMessage:)];
+
+	reply.tag = MTWKGeneralReply;
+	reply.representedObject = [context copy];
+	reply.image = [NSImage imageWithSystemSymbolName:@"arrowshape.turn.up.left" accessibilityDescription:reply.title];
+
+	NSMenuItem *react = [[NSMenuItem alloc] initWithTitle:TXTLS(@"TXMenuController[rct-to]")
+												   action:nil
+											keyEquivalent:@""];
+
+	react.tag = MTWKGeneralReact;
+	react.image = [NSImage imageWithSystemSymbolName:@"face.smiling" accessibilityDescription:react.title];
+
+	NSMenu *reactMenu = [[NSMenu alloc] initWithTitle:react.title];
+
+	for (NSUInteger i = 0; i < (sizeof(_reactionEmoji) / sizeof(_reactionEmoji[0])); i++) {
+		NSString *emoji = _reactionEmoji[i];
+
+		NSMenuItem *item = [NSMenuItem menuItemWithTitle:emoji target:self action:@selector(reactToMessage:)];
+
+		NSMutableDictionary *itemContext = [context mutableCopy];
+
+		itemContext[@"emoji"] = emoji;
+
+		item.tag = MTWKGeneralReact;
+		item.representedObject = [itemContext copy];
+
+		[reactMenu addItem:item];
+	}
+
+	[reactMenu addItem:[NSMenuItem separatorItem]];
+
+	NSMenuItem *other = [NSMenuItem menuItemWithTitle:TXTLS(@"TXMenuController[rct-ot]")
+											   target:self
+											   action:@selector(reactToMessageWithOtherEmoji:)];
+
+	other.tag = MTWKGeneralReact;
+	other.representedObject = [context copy];
+
+	[reactMenu addItem:other];
+
+	react.submenu = reactMenu;
+
+	return @[ separator, reply, react ];
+}
+
+- (void)replyToMessage:(nullable id)sender
+{
+	NSDictionary *context = ((NSMenuItem *)sender).representedObject;
+
+	NSString *messageIdentifier = context[@"messageIdentifier"];
+
+	if (messageIdentifier.length == 0) {
+		return;
+	}
+
+	[mainWindow().inputTextField beginReplyToMessageIdentifier:messageIdentifier
+													  nickname:context[@"nickname"]
+													   excerpt:context[@"excerpt"]];
+}
+
+- (void)reactToMessage:(nullable id)sender
+{
+	NSDictionary *context = ((NSMenuItem *)sender).representedObject;
+
+	[self sendReaction:context[@"emoji"] toMessageIdentifier:context[@"messageIdentifier"]];
+}
+
+- (void)sendReaction:(nullable NSString *)emoji toMessageIdentifier:(nullable NSString *)messageIdentifier
+{
+	if (emoji.length == 0 || messageIdentifier.length == 0) {
+		return;
+	}
+
+	IRCClient *u = mainWindow().selectedClient;
+	IRCChannel *c = mainWindow().selectedChannel;
+
+	if (u == nil || c == nil) {
+		return;
+	}
+
+	[u sendReaction:emoji toMessageIdentifier:messageIdentifier inChannel:c];
+}
+
+/* "Other…" presents a small popover with one field for the emoji. The
+ field is focused so the Character Palette goes straight into it. */
+- (void)reactToMessageWithOtherEmoji:(nullable id)sender
+{
+	NSDictionary *context = ((NSMenuItem *)sender).representedObject;
+
+	NSString *messageIdentifier = context[@"messageIdentifier"];
+
+	if (messageIdentifier.length == 0) {
+		return;
+	}
+
+	TVCLogView *webView = self.selectedViewControllerBackingView;
+
+	NSView *anchorView = webView.webView;
+
+	if (anchorView == nil) {
+		return;
+	}
+
+	TDCReactionPopoverController *popover =
+		[[TDCReactionPopoverController alloc] initWithMessageIdentifier:messageIdentifier];
+
+	__weak TXMenuController *weakSelf = self;
+
+	popover.completionBlock = ^(NSString *emoji, NSString *identifier) {
+		[weakSelf sendReaction:emoji toMessageIdentifier:identifier];
+	};
+
+	NSPoint mouseLocation = [anchorView.window convertPointFromScreen:[NSEvent mouseLocation]];
+
+	NSPoint viewLocation = [anchorView convertPoint:mouseLocation fromView:nil];
+
+	NSRect anchorRect = NSMakeRect(viewLocation.x, viewLocation.y, 1.0, 1.0);
+
+	[popover presentRelativeToRect:anchorRect ofView:anchorView];
+
+	self.reactionPopover = popover;
 }
 
 #pragma mark -
@@ -2787,72 +2919,6 @@ NS_ASSUME_NONNULL_BEGIN
 {
 	[TPCPreferencesImportExport exportInWindow:mainWindow()];
 }
-
-#pragma mark -
-#pragma mark Off-the-Record Messaging
-
-#if GLASSTUAL_BUILT_WITH_ADVANCED_ENCRYPTION == 1
-#define _encryptionNotEnabled ([TPCPreferences textEncryptionIsEnabled] == NO)
-
-- (void)encryptionStartPrivateConversation:(nullable id)sender
-{
-	IRCClient *u = self.selectedClient;
-	IRCChannel *c = self.selectedChannel;
-
-	if (_encryptionNotEnabled || u == nil || c == nil || u.isLoggedIn == NO || c.isPrivateMessage == NO) {
-		return;
-	}
-
-	[sharedEncryptionManager() beginConversationWith:[u encryptionAccountNameForUser:c.name]
-												from:[u encryptionAccountNameForLocalUser]];
-}
-
-- (void)encryptionRefreshPrivateConversation:(nullable id)sender
-{
-	IRCClient *u = self.selectedClient;
-	IRCChannel *c = self.selectedChannel;
-
-	if (_encryptionNotEnabled || u == nil || c == nil || u.isLoggedIn == NO || c.isPrivateMessage == NO) {
-		return;
-	}
-
-	[sharedEncryptionManager() refreshConversationWith:[u encryptionAccountNameForUser:c.name]
-												  from:[u encryptionAccountNameForLocalUser]];
-}
-
-- (void)encryptionEndPrivateConversation:(nullable id)sender
-{
-	IRCClient *u = self.selectedClient;
-	IRCChannel *c = self.selectedChannel;
-
-	if (_encryptionNotEnabled || u == nil || c == nil || u.isLoggedIn == NO || c.isPrivateMessage == NO) {
-		return;
-	}
-
-	[sharedEncryptionManager() endConversationWith:[u encryptionAccountNameForUser:c.name]
-											  from:[u encryptionAccountNameForLocalUser]];
-}
-
-- (void)encryptionAuthenticateChatPartner:(nullable id)sender
-{
-	IRCClient *u = self.selectedClient;
-	IRCChannel *c = self.selectedChannel;
-
-	if (_encryptionNotEnabled || u == nil || c == nil || u.isLoggedIn == NO || c.isPrivateMessage == NO) {
-		return;
-	}
-
-	[sharedEncryptionManager() authenticateUser:[u encryptionAccountNameForUser:c.name]
-										   from:[u encryptionAccountNameForLocalUser]];
-}
-
-- (void)encryptionListFingerprints:(nullable id)sender
-{
-	[sharedEncryptionManager() presentListOfFingerprints];
-}
-
-#undef _encryptionNotEnabled
-#endif
 
 #pragma mark -
 #pragma mark Notifications

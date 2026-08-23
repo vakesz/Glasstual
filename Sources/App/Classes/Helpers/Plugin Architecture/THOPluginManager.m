@@ -385,11 +385,12 @@ typedef NS_ENUM(NSUInteger, THOPluginApprovalState) {
 						   userInfo:@{NSLocalizedDescriptionKey : (message ?: @"Unknown error")}];
 }
 
-/* Validates that the bundle carries an intact signature that either
- chains to an Apple root (Developer ID, Mac App Store, Apple Development)
- or was produced by the same Team ID as the running application. Unsigned
- and ad-hoc signed bundles fail because they carry no Team ID at all.
- On success, the Team ID of the signer is returned. */
+/* Verifies that a bundle is signed by the same Team ID as the running
+ application. Library validation (hardened runtime, required on the Mac
+ App Store) refuses anything else at load time; this check exists so the
+ failure is reported up front with a usable error. Unsigned and ad-hoc
+ signed bundles fail because they carry no Team ID at all. On success,
+ the Team ID of the signer is returned. */
 - (BOOL)_validateSignatureOfBundle:(NSBundle *)bundle
 					teamIdentifier:(NSString *_Nullable *_Nonnull)teamIdentifier
 							 error:(NSError *_Nullable *_Nonnull)error
@@ -454,19 +455,23 @@ typedef NS_ENUM(NSUInteger, THOPluginApprovalState) {
 		return NO;
 	}
 
-	/* Step three: the signer must be Apple-issued, or the same team
-	 that signed the running application (which covers development
-	 builds where the certificate may not chain the way Developer ID does). */
+	/* Step three: the signer must be the same team that signed the
+	 running application. This mirrors what library validation enforces
+	 when the bundle is loaded. */
 	NSString *applicationTeam = [self.class _applicationTeamIdentifier];
 
 	BOOL sameTeam = (applicationTeam != nil && [team isEqualToString:applicationTeam]);
 
-	NSString *requirementString = @"anchor apple generic";
+	if (sameTeam == NO) {
+		CFRelease(staticCode);
 
-	if (sameTeam) {
-		requirementString = [NSString
-			stringWithFormat:@"anchor apple generic or certificate leaf[subject.OU] = \"%@\"", applicationTeam];
+		*error = [self.class _errorWithStatus:errSecCSSignatureUntrusted];
+
+		return NO;
 	}
+
+	NSString *requirementString =
+		[NSString stringWithFormat:@"anchor apple generic and certificate leaf[subject.OU] = \"%@\"", applicationTeam];
 
 	SecRequirementRef requirement = NULL;
 
@@ -487,7 +492,7 @@ typedef NS_ENUM(NSUInteger, THOPluginApprovalState) {
 	CFRelease(requirement);
 	CFRelease(staticCode);
 
-	if (status != errSecSuccess && sameTeam == NO) {
+	if (status != errSecSuccess) {
 		if (validityError) {
 			*error = (__bridge_transfer NSError *)validityError;
 		} else {

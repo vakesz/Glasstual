@@ -184,12 +184,6 @@
 	<true/>
 	<key>PreferModernCiphers</key>
 	<false/>
-	<key>Off-the-Record Messaging -&gt; Automatically Enable Service</key>
-	<false/>
-	<key>Off-the-Record Messaging -&gt; Enable Encryption</key>
-	<true/>
-	<key>Off-the-Record Messaging -&gt; Require Encryption</key>
-	<false/>
 	<key>OnlySpeakNotificationsForSelection</key>
 	<true/>
 	<key>OpenClickedLinksInBackgroundBrowser</key>
@@ -198,6 +192,8 @@
 	<true/>
 	<key>RejoinChannelOnLocalKick</key>
 	<false/>
+	<key>SendTypingNotifications</key>
+	<true/>
 	<key>ReloadScrollbackOnLaunch</key>
 	<true/>
 	<key>RightToLeftTextFormatting</key>
@@ -255,7 +251,7 @@
 	<key>Theme -&gt; Font Size</key>
 	<real>13</real>
 	<key>Theme -&gt; Name</key>
-	<string>resource:Simplified</string>
+	<string>resource:Lines</string>
 	<key>Theme -&gt; Nickname Format</key>
 	<string>&lt;%@%n&gt;</string>
 	<key>Theme -&gt; Timestamp Format</key>

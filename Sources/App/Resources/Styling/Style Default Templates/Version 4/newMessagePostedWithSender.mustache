@@ -24,6 +24,14 @@
 	data-delivery-state="{{deliveryState}}"
 {{/ isEmpty(deliveryState) }}
 
+{{^ isEmpty(replyToMessageIdentifier) }}
+	data-reply-to="{{replyToMessageIdentifier}}"
+{{/ isEmpty(replyToMessageIdentifier) }}
+
+{{^ isEmpty(reactionsJSON) }}
+	data-reactions="{{reactionsJSON}}"
+{{/ isEmpty(reactionsJSON) }}
+
 {{^isRemoteMessage}}
 	data-member-type="{{nicknameType}}"
 {{/isRemoteMessage}}
