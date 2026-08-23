@@ -43,6 +43,7 @@
 #import "IRCChannelUserPrivate.h"
 #import "IRCUser.h"
 #import "TVCMemberListPrivate.h"
+#import "TVCMemberListCellPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -53,6 +54,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong) GLTTestClient *client;
 @property(nonatomic, strong) TVCMemberList *memberList;
 @property(nonatomic, strong) IRCChannelMemberListController *controller;
+@end
+
+@interface TVCMemberListCell (TVCMemberListSectionTests)
+- (void)setStatusImageVisible:(BOOL)visible;
 @end
 
 @implementation TVCMemberListSectionTests
@@ -207,6 +212,43 @@ NS_ASSUME_NONNULL_BEGIN
 	XCTAssertNil([self.memberList.delegate tableView:self.memberList typeSelectStringForTableColumn:nil row:0]);
 	XCTAssertEqualObjects([self.memberList.delegate tableView:self.memberList typeSelectStringForTableColumn:nil row:1],
 						  @"carol");
+}
+
+- (void)testMemberCellUsesSingleLineTailTruncation
+{
+	TVCMemberListCell *cell = [[TVCMemberListCell alloc] initWithFrame:NSMakeRect(0.0, 0.0, 150.0, 28.0)];
+
+	NSTextField *nicknameField = [NSTextField labelWithString:@""];
+
+	[cell setValue:nicknameField forKey:@"cellTextField"];
+
+	[cell awakeFromNib];
+
+	XCTAssertTrue(nicknameField.usesSingleLineMode);
+	XCTAssertEqual(nicknameField.maximumNumberOfLines, 1);
+	XCTAssertEqual(nicknameField.lineBreakMode, NSLineBreakByTruncatingTail);
+}
+
+- (void)testMemberCellCollapsesUnusedStatusImage
+{
+	TVCMemberListCell *cell = [[TVCMemberListCell alloc] initWithFrame:NSMakeRect(0.0, 0.0, 150.0, 28.0)];
+
+	NSImageView *statusImageView = [NSImageView new];
+
+	NSLayoutConstraint *statusWidthConstraint = [statusImageView.widthAnchor constraintEqualToConstant:16.0];
+
+	[cell setValue:statusImageView forKey:@"statusImageView"];
+	[cell setValue:statusWidthConstraint forKey:@"statusImageWidthConstraint"];
+
+	[cell setStatusImageVisible:NO];
+
+	XCTAssertTrue(statusImageView.hidden);
+	XCTAssertEqual(statusWidthConstraint.constant, 0.0);
+
+	[cell setStatusImageVisible:YES];
+
+	XCTAssertFalse(statusImageView.hidden);
+	XCTAssertEqual(statusWidthConstraint.constant, 16.0);
 }
 
 @end

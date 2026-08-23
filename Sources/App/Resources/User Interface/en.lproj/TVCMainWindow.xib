@@ -251,7 +251,7 @@
                                                                         </imageView>
                                                                         <textField focusRingType="none" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="jld-0X-vn0">
                                                                             <rect key="frame" x="34" y="6" width="92" height="16"/>
-                                                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Label" id="Mby-SL-PEz">
+                                                                            <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Label" usesSingleLineMode="YES" id="Mby-SL-PEz">
                                                                                 <font key="font" metaFont="cellTitle"/>
                                                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -279,6 +279,7 @@
                                                                         <outlet property="cellTextField" destination="jld-0X-vn0" id="L5s-IO-xaA"/>
                                                                         <outlet property="imageView" destination="Lq2-t9-aDp" id="3RI-Vl-ylD"/>
                                                                         <outlet property="statusImageView" destination="mls-St-img" id="mls-St-out"/>
+                                                                        <outlet property="statusImageWidthConstraint" destination="mls-St-w16" id="mls-St-wol"/>
                                                                     </connections>
                                                                 </tableCellView>
                                                                 <tableCellView identifier="HeaderView" translatesAutoresizingMaskIntoConstraints="NO" id="mls-Hd-vw" customClass="TVCMemberListHeaderCell">
@@ -294,7 +295,7 @@
                                                                         </textField>
                                                                     </subviews>
                                                                     <constraints>
-                                                                        <constraint firstItem="mls-Hd-tf" firstAttribute="leading" secondItem="mls-Hd-vw" secondAttribute="leading" constant="2" id="mls-Hd-ld"/>
+                                                                        <constraint firstItem="mls-Hd-tf" firstAttribute="leading" secondItem="mls-Hd-vw" secondAttribute="leading" constant="8" id="mls-Hd-ld"/>
                                                                         <constraint firstAttribute="trailing" secondItem="mls-Hd-tf" secondAttribute="trailing" constant="2" id="mls-Hd-tr"/>
                                                                         <constraint firstItem="mls-Hd-tf" firstAttribute="centerY" secondItem="mls-Hd-vw" secondAttribute="centerY" id="mls-Hd-cy"/>
                                                                     </constraints>

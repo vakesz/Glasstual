@@ -114,6 +114,8 @@ targetTemplates:
     type: framework
     settings:
       base:
+        # Embedded frameworks are signed by the host's CodeSignOnCopy phase.
+        CODE_SIGN_IDENTITY: ""
         FRAMEWORK_VERSION: A
         INSTALL_PATH: "@rpath"
         SKIP_INSTALL: YES
@@ -197,6 +199,7 @@ targets:
     productName: Scrollback History Manager
     settings:
       base:
+        REGISTER_APP_GROUPS: YES
         PRODUCT_NAME: Scrollback History Manager
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.ScrollbackHistoryManager
         INFOPLIST_FILE: XPC Services/Historic Log File Manager/Resources/Property Lists/Info.plist
@@ -223,6 +226,7 @@ targets:
     productName: Inline Content Loader
     settings:
       base:
+        REGISTER_APP_GROUPS: YES
         PRODUCT_NAME: Inline Content Loader
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader
         INFOPLIST_FILE: XPC Services/Inline Content Loader/Resources/Property Lists/Info.plist
@@ -449,6 +453,7 @@ targets:
     productName: Glasstual
     settings:
       base:
+        REGISTER_APP_GROUPS: YES
         PRODUCT_NAME: Glasstual
         PRODUCT_BUNDLE_IDENTIFIER: $(GLASSTUAL_BUNDLE_IDENTIFIER)
         PRODUCT_MODULE_NAME: Glasstual

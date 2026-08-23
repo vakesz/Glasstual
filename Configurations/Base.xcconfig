@@ -14,7 +14,7 @@ GLASSTUAL_GROUP_CONTAINER_IDENTIFIER = group.$(DEVELOPMENT_TEAM).$(GLASSTUAL_BUN
 // Fallback version. Scripts/UpdateVersion.sh (run as a scheme pre-action)
 // writes Version.generated.xcconfig with CURRENT_PROJECT_VERSION derived
 // from the date of the last git commit; that file is included at the bottom.
-MARKETING_VERSION = 1.0.3
+MARKETING_VERSION = 1.0.4
 CURRENT_PROJECT_VERSION = 0
 
 // The generated BuildConfig.h is written here by the BuildConfig aggregate
@@ -112,7 +112,6 @@ GENERATE_INFOPLIST_FILE = NO
 LOCALIZATION_PREFERS_STRING_CATALOGS = NO
 STRING_CATALOG_GENERATE_SYMBOLS = NO
 REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES = YES
-ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO
 EXTRACT_APP_INTENTS_METADATA = NO
 ENABLE_DEBUG_DYLIB = NO
 
