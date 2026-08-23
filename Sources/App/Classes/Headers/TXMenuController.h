@@ -218,6 +218,8 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 	MTMMHelpConnectToTestingChannel = 908,						// "Connect to Testing Channel"
 	MTMMHelpConnectToTestingChannelSeparator = 909,				// "-"
 	MTMMHelpAdvancedMenu = 910,									// "Advanced"
+	MTMMHelpAdvancedMenuSeparator = 911,						// "-"
+	MTMMHelpWelcomeWindow = 912,								// "Welcome to Glasstual…"
 	MTMMHelpAdvancedMenuEnableDeveloperMode = 9100000,			// "Enable Developer Mode"
 	MTMMHelpAdvancedMenuEnableDeveloperModeSeparator = 9100001, // "-"
 	MTMMHelpAdvancedMenuHiddenPreferences = 9100002,			// "Hidden Settings…"
@@ -449,7 +451,7 @@ typedef NS_ENUM(NSInteger, TXMenuControllerMenuTag) {
 - (IBAction)showServerPropertiesSheet:(nullable id)sender;
 - (IBAction)showSetVhostPrompt:(nullable id)sender;
 - (IBAction)showStylePreferences:(nullable id)sender;
-- (IBAction)showWelcomeSheet:(nullable id)sender;
+- (IBAction)showOnboardingWindow:(nullable id)sender;
 
 - (IBAction)sortChannelListNames:(nullable id)sender;
 

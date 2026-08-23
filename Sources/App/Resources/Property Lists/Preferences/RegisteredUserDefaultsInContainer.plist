@@ -246,6 +246,8 @@
 	<true/>
 	<key>GlasstualDeveloperEnvironment</key>
 	<false/>
+	<key>Onboarding -&gt; Completed</key>
+	<false/>
 	<key>Theme -&gt; Font Name</key>
 	<string>.AppleSystemUIFont</string>
 	<key>Theme -&gt; Font Size</key>

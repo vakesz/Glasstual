@@ -5,7 +5,6 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
@@ -36,21 +35,31 @@
  *
  *********************************************************************** */
 
-#import "TDCSheetBase.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
-@class IRCClientConfig;
+@protocol TDCOnboardingWindowControllerDelegate;
 
-@interface TDCWelcomeSheet : TDCSheetBase
-- (void)start;
+/* The first-launch setup flow: identity, look and feel, notifications,
+ and the first network. Presented once when there are no configured
+ clients; reachable afterwards from Help > "Welcome to Glasstual…". */
+@interface TDCOnboardingWindowController : NSWindowController
+@property(nonatomic, weak, nullable) id<TDCOnboardingWindowControllerDelegate> delegate;
+
+/* YES when onboarding has not been completed and no client is configured. */
++ (BOOL)shouldPresentOnLaunch;
+
+- (instancetype)init;
+
+- (void)show;
+
+- (IBAction)back:(nullable id)sender;
+- (IBAction)continueToNextStep:(nullable id)sender;
+- (IBAction)skip:(nullable id)sender;
 @end
 
-@protocol TDCWelcomeSheetDelegate <NSObject>
+@protocol TDCOnboardingWindowControllerDelegate <NSObject>
 @required
-
-- (void)welcomeSheet:(TDCWelcomeSheet *)sender onOk:(IRCClientConfig *)config;
-- (void)welcomeSheetWillClose:(TDCWelcomeSheet *)sender;
+- (void)onboardingWindowControllerWillClose:(TDCOnboardingWindowController *)sender;
 @end
 
 NS_ASSUME_NONNULL_END

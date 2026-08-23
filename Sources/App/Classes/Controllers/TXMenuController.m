@@ -69,7 +69,7 @@
 #import "TDCServerChangeNicknameSheetPrivate.h"
 #import "TDCServerHighlightListSheetPrivate.h"
 #import "TDCServerPropertiesSheetPrivate.h"
-#import "TDCWelcomeSheetPrivate.h"
+#import "TDCOnboardingWindowController.h"
 #import "TPCPathInfoPrivate.h"
 #import "TPCPreferencesImportExport.h"
 #import "TPCPreferencesLocalPrivate.h"
@@ -401,6 +401,7 @@ NS_ASSUME_NONNULL_BEGIN
 		case MTMMHelpAcknowledgements:				// "Acknowledgements"
 		case MTMMHelpAdvancedMenu:					// "Advanced"
 		case MTMMHelpAdvancedMenuExportPreferences: // "Export Preferences"
+		case MTMMHelpWelcomeWindow:					// "Welcome to Glasstual…"
 		{
 			validationResult = YES;
 
@@ -3413,35 +3414,24 @@ static NSString *_Nonnull const _reactionEmoji[] = {@"👍", @"❤️", @"😂",
 }
 
 #pragma mark -
-#pragma mark Welcome Sheet
+#pragma mark Onboarding Window
 
-- (void)showWelcomeSheet:(nullable id)sender
+- (void)showOnboardingWindow:(nullable id)sender
 {
+	_popWindowViewIfExists(@"TDCOnboardingWindowController");
+
 	[windowController() popMainWindowSheetIfExists];
 
-	TDCWelcomeSheet *sheet = [[TDCWelcomeSheet alloc] initWithWindow:mainWindow()];
+	TDCOnboardingWindowController *onboarding = [TDCOnboardingWindowController new];
 
-	sheet.delegate = (id)self;
+	onboarding.delegate = (id)self;
 
-	[sheet start];
+	[onboarding show];
 
-	[windowController() addWindowToWindowList:sheet];
+	[windowController() addWindowToWindowList:onboarding];
 }
 
-- (void)welcomeSheet:(TDCWelcomeSheet *)sender onOk:(IRCClientConfig *)config
-{
-	IRCClient *u = [worldController() createClientWithConfig:config reload:YES];
-
-	[mainWindow() expandClient:u];
-
-	[worldController() save];
-
-	[u connect];
-
-	[u selectFirstChannelInChannelList];
-}
-
-- (void)welcomeSheetWillClose:(TDCWelcomeSheet *)sender
+- (void)onboardingWindowControllerWillClose:(TDCOnboardingWindowController *)sender
 {
 	[windowController() removeWindowFromWindowList:sender];
 }
@@ -3810,9 +3800,9 @@ static NSString *_Nonnull const _reactionEmoji[] = {@"👍", @"❤️", @"😂",
 
 @implementation TXMenuControllerMainWindowProxy
 
-- (void)showWelcomeSheet:(nullable id)sender
+- (void)showOnboardingWindow:(nullable id)sender
 {
-	[menuController() showWelcomeSheet:sender];
+	[menuController() showOnboardingWindow:sender];
 }
 
 @end

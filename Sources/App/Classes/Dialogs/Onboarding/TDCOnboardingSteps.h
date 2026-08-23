@@ -5,7 +5,6 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
@@ -36,51 +35,36 @@
  *
  *********************************************************************** */
 
-#import "TDCServerPropertiesSheetPrivate.h"
-#import "TXMenuController.h"
+#import "TDCOnboardingStepViewController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class IRCTreeItem;
-
-@interface TXMenuController ()
-@property(nonatomic, copy, nullable)
-	NSString *pointedNickname; // Takes priority if sender of an action returns nil userInfo value
-
-- (void)populateNavigationChannelList;
-
-- (IBAction)performNavigationAction:(nullable id)sender;
-
-- (IBAction)joinChannelClicked:(nullable id)sender;
-
-- (void)memberChangeColor:(NSString *)nickname;
-
-- (void)memberInChannelViewDoubleClicked:(nullable id)sender;
-- (void)memberInMemberListDoubleClicked:(id)sender;
-
-- (void)memberSendDroppedFiles:(NSArray<NSString *> *)files to:(NSString *)nickname;
-- (void)memberSendDroppedFiles:(NSArray<NSString *> *)files row:(NSUInteger)row;
-- (void)memberSendDroppedFilesToSelectedChannel:
-	(NSArray<NSString *> *)files; // Only works if -selectedChannel is a private message
-
-- (void)showServerPropertiesSheetForClient:(IRCClient *)client
-							 withSelection:(TDCServerPropertiesSheetSelection)selection
-								   context:(nullable id)context;
-
-- (void)toggleMuteOnNotificationsShortcutOn:(BOOL)toggleOn;
-- (void)toggleMuteOnNotificationSoundsShortcutOn:(BOOL)toggleOn;
-
-- (void)navigateToTreeItemAtURL:(NSURL *)url;
-- (void)navigateToTreeItemWithIdentifier:(NSString *)identifier;
-- (void)navigateToTreeItem:(IRCTreeItem *)item;
-
-/* No-op action. Menu items that only own a submenu target this so that
- they take part in validation; nothing should call it directly. */
-- (IBAction)emptyAction:(nullable id)sender;
+/* Welcome and identity: nickname, real name, alternate nickname. */
+@interface TDCOnboardingIdentityStepViewController : TDCOnboardingStepViewController
 @end
 
-@interface TXMenuControllerMainWindowProxy : NSObject
-- (IBAction)showOnboardingWindow:(nullable id)sender;
+/* Look and feel: chat style, text size, appearance. */
+@interface TDCOnboardingAppearanceStepViewController : TDCOnboardingStepViewController
+@end
+
+/* Notifications: what to notify about and the permission request. */
+@interface TDCOnboardingNotificationsStepViewController : TDCOnboardingStepViewController
+@end
+
+/* First network: the network picker, auto-connect, suggested channels. */
+@interface TDCOnboardingNetworkStepViewController : TDCOnboardingStepViewController
+@end
+
+/* A static mockup of a short conversation drawn with AppKit views, used to
+ preview the "Bubbles" and "Lines" chat styles. */
+@interface TDCOnboardingStylePreviewView : NSView
+@property(nonatomic, copy) NSString *styleName;
+@property(nonatomic, copy) NSString *styleTitle;
+@property(nonatomic, copy) NSString *styleDescription;
+@property(nonatomic, assign, getter=isSelected) BOOL selected;
+@property(nonatomic, assign) CGFloat messageFontSize;
+@property(nonatomic, weak, nullable) id target;
+@property(nonatomic, assign, nullable) SEL action;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -262,6 +262,8 @@
 	<integer>0</integer>
 	<key>GlasstualDeveloperEnvironment</key>
 	<integer>0</integer>
+	<key>Onboarding -&gt; Completed</key>
+	<integer>0</integer>
 	<key>Glasstual Chat Filter Extension -&gt; Filters</key>
 	<integer>0</integer>
 	<key>Theme -&gt; Channel Font Preference Enabled</key>

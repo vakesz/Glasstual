@@ -41,6 +41,7 @@
 #import "NSObjectHelperPrivate.h"
 #import "OELReachability.h"
 #import "TDCAlert.h"
+#import "TDCOnboardingWindowController.h"
 #import "TLOLocalization.h"
 #import "TLOSpeechSynthesizerPrivate.h"
 #import "THOPluginManagerPrivate.h"
@@ -245,6 +246,20 @@ static const NSTimeInterval _terminationHistoricLogSaveTimeout = 15.0;
 	if ([self.mainWindow reloadLoadingScreen]) {
 		[self.world autoConnectAfterWakeup:NO];
 	}
+
+	[self presentOnboardingIfNeeded];
+}
+
+/* First launch: no client has been configured and the setup flow has not
+ been completed or skipped before. The flow is shown on top of the main
+ window's "add a server" placeholder. */
+- (void)presentOnboardingIfNeeded
+{
+	if ([TDCOnboardingWindowController shouldPresentOnLaunch] == NO) {
+		return;
+	}
+
+	[self.menuController showOnboardingWindow:nil];
 }
 
 - (void)applicationWillResignActive:(NSNotification *)notification

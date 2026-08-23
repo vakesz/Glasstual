@@ -5,7 +5,6 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
@@ -36,51 +35,117 @@
  *
  *********************************************************************** */
 
-#import "TDCServerPropertiesSheetPrivate.h"
-#import "TXMenuController.h"
+#import "TDCOnboardingStepViewController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class IRCTreeItem;
+@implementation TDCOnboardingSettings
 
-@interface TXMenuController ()
-@property(nonatomic, copy, nullable)
-	NSString *pointedNickname; // Takes priority if sender of an action returns nil userInfo value
+- (instancetype)init
+{
+	if ((self = [super init])) {
+		self.nickname = @"";
+		self.realName = @"";
+		self.styleName = @"Bubbles";
+		self.textSize = TDCOnboardingTextSizeMedium;
+		self.appearance = TXPreferredAppearanceInherited;
+		self.notifyOnHighlight = YES;
+		self.notifyOnPrivateMessage = YES;
+		self.playSounds = YES;
+		self.connectWhenFinished = YES;
+		self.channelsToJoin = @[];
 
-- (void)populateNavigationChannelList;
+		return self;
+	}
 
-- (IBAction)performNavigationAction:(nullable id)sender;
+	return nil;
+}
 
-- (IBAction)joinChannelClicked:(nullable id)sender;
++ (CGFloat)fontSizeForTextSize:(TDCOnboardingTextSize)textSize
+{
+	switch (textSize) {
+	case TDCOnboardingTextSizeSmall: {
+		return 11.0;
+	}
+	case TDCOnboardingTextSizeLarge: {
+		return 15.0;
+	}
+	default: {
+		return 13.0;
+	}
+	}
+}
 
-- (void)memberChangeColor:(NSString *)nickname;
++ (TDCOnboardingTextSize)textSizeForFontSize:(CGFloat)fontSize
+{
+	if (fontSize < 12.0) {
+		return TDCOnboardingTextSizeSmall;
+	}
 
-- (void)memberInChannelViewDoubleClicked:(nullable id)sender;
-- (void)memberInMemberListDoubleClicked:(id)sender;
+	if (fontSize > 14.0) {
+		return TDCOnboardingTextSizeLarge;
+	}
 
-- (void)memberSendDroppedFiles:(NSArray<NSString *> *)files to:(NSString *)nickname;
-- (void)memberSendDroppedFiles:(NSArray<NSString *> *)files row:(NSUInteger)row;
-- (void)memberSendDroppedFilesToSelectedChannel:
-	(NSArray<NSString *> *)files; // Only works if -selectedChannel is a private message
+	return TDCOnboardingTextSizeMedium;
+}
 
-- (void)showServerPropertiesSheetForClient:(IRCClient *)client
-							 withSelection:(TDCServerPropertiesSheetSelection)selection
-								   context:(nullable id)context;
-
-- (void)toggleMuteOnNotificationsShortcutOn:(BOOL)toggleOn;
-- (void)toggleMuteOnNotificationSoundsShortcutOn:(BOOL)toggleOn;
-
-- (void)navigateToTreeItemAtURL:(NSURL *)url;
-- (void)navigateToTreeItemWithIdentifier:(NSString *)identifier;
-- (void)navigateToTreeItem:(IRCTreeItem *)item;
-
-/* No-op action. Menu items that only own a submenu target this so that
- they take part in validation; nothing should call it directly. */
-- (IBAction)emptyAction:(nullable id)sender;
 @end
 
-@interface TXMenuControllerMainWindowProxy : NSObject
-- (IBAction)showOnboardingWindow:(nullable id)sender;
+#pragma mark -
+
+@implementation TDCOnboardingStepViewController
+
+- (instancetype)initWithSettings:(TDCOnboardingSettings *)settings
+{
+	NSParameterAssert(settings != nil);
+
+	if ((self = [super initWithNibName:nil bundle:nil])) {
+		self.settings = settings;
+
+		return self;
+	}
+
+	return nil;
+}
+
+- (NSString *)stepTitle
+{
+	return @"";
+}
+
+- (NSString *)stepSubtitle
+{
+	return @"";
+}
+
+- (BOOL)skippable
+{
+	return YES;
+}
+
+- (void)stepWillAppear
+{
+}
+
+- (BOOL)commitWithError:(NSString *_Nullable *_Nullable)errorDescription
+{
+	return YES;
+}
+
+- (nullable NSView *)preferredFirstResponder
+{
+	return nil;
+}
+
+- (NSView *)makeContentView
+{
+	NSView *view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 600, 380)];
+
+	view.translatesAutoresizingMaskIntoConstraints = NO;
+
+	return view;
+}
+
 @end
 
 NS_ASSUME_NONNULL_END

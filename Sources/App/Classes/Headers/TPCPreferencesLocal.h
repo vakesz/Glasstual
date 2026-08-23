@@ -124,6 +124,9 @@ typedef NS_ENUM(NSUInteger, TXPreferredAppearance) {
 
 + (BOOL)developerModeEnabled;
 
+/* YES once the first-launch onboarding window has been completed or skipped. */
++ (BOOL)onboardingCompleted;
+
 + (nullable NSString *)masqueradeCTCPVersion;
 
 + (BOOL)channelNavigationIsServerSpecific;
