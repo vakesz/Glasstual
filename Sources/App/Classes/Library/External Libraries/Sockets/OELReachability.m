@@ -32,7 +32,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OELReachability ()
-@property (nonatomic, strong) nw_path_monitor_t monitor;
+@property (nonatomic, strong, nullable) nw_path_monitor_t monitor;
 @property (nonatomic, strong) dispatch_queue_t monitorQueue;
 @property (nonatomic, assign) BOOL currentlyReachable;
 @property (nonatomic, assign) BOOL receivedInitialPath;

@@ -372,7 +372,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 	row.translatesAutoresizingMaskIntoConstraints = NO;
 
-	NSTextField *timeField = [NSTextField labelWithString:@"09:41"];
+	NSTextField *timeField = [NSTextField labelWithString:TXTLS(@"TDCOnboardingWindow[lf1-tm]")];
 
 	timeField.font = [NSFont monospacedDigitSystemFontOfSize:(fontSize - 2) weight:NSFontWeightRegular];
 	timeField.textColor = [NSColor tertiaryLabelColor];

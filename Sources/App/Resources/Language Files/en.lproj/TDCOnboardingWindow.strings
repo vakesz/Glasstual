@@ -75,6 +75,7 @@
 "lf1-n1" = "alice";
 "lf1-n2" = "bob";
 "lf1-n3" = "you";
+"lf1-tm" = "09:41";
 "lf1-ax" = "Chat style";
 
 /* Step: Notifications */
@@ -104,7 +105,9 @@
 "np1-cd" = "Connect to any IRC server by address";
 "np1-lk" = "Secure connection";
 "np1-sv" = "Server address:";
+"np1-sh" = "irc.example.org";
 "np1-pt" = "Port:";
+"np1-pp" = "6697";
 "np1-tl" = "Use SSL/TLS";
 "np1-ac" = "Account";
 "np1-an" = "Account name:";

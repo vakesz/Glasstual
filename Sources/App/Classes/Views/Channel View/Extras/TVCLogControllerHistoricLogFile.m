@@ -394,7 +394,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Line Index
 
-- (TVCLogControllerHistoricLogViewIndex *)_viewIndexForItem:(IRCTreeItem *)item create:(BOOL)create
+- (nullable TVCLogControllerHistoricLogViewIndex *)_viewIndexForItem:(IRCTreeItem *)item create:(BOOL)create
 {
 	NSString *viewId = item.uniqueIdentifier;
 
