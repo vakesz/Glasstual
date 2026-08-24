@@ -126,11 +126,11 @@ public extension TPCPreferences {
 
 		if reloadAction.contains(.serverList) {
 			if didReloadUserInterface == false {
-				serverList?.applicationAppearanceChanged()
+				serverList?.perform(Selector(("applicationAppearanceChanged")))
 			}
 		} else if reloadAction.contains(.serverListUnreadBadges) {
 			if didReloadUserInterface == false {
-				serverList?.refreshAllDrawings()
+				(serverList as ServerList?)?.refreshAllDrawings()
 			}
 		}
 

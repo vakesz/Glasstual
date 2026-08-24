@@ -67,7 +67,8 @@
 #import "IRCNetworkList.h"
 #import "IRCServerPrivate.h"
 #import "IRCSTSPolicy.h"
-#import "IRCUser.h"
+/* IRCUser / IRCUserMutable are Swift (User / UserMutable). Keep IRCUser.h
+ out of this bridging graph. */
 #import "IRCUserPersistentStorePrivate.h"
 #import "IRCWorld.h"
 #import "IRCWorldPrivate.h"
@@ -173,7 +174,9 @@
 #import "TVCLogRenderer.h"
 #import "TVCMemberList.h"
 #import "TVCMemberListPrivate.h"
-#import "TVCServerListPrivate.h"
+/* TVCServerList is Swift (ServerList). Keep TVCServerList.h out of this
+ bridging graph; cell private APIs stay available for drawing. */
+#import "TVCServerListCellPrivate.h"
 #import "TVCLogViewInternalWK2.h"
 #import "TVCLogScriptEventSinkPrivate.h"
 #import "NSTableVIewHelperPrivate.h"

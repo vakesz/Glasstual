@@ -822,7 +822,6 @@ targets:
           - "AppKitSupport/TVCLogViewInternalWK2.swift"
           - "AppKitSupport/TVCMainWindowChannelView.swift"
           - "AppKitSupport/TVCMemberListCell.swift"
-          - "AppKitSupport/TVCServerList.swift"
           - "AppKitSupport/TVCServerListCell.swift"
           - "AppKitSupport/TVCTextViewWithIRCFormatter.swift"
           - "IRCProtocol/Connection/IRCConnection.swift"
@@ -833,7 +832,6 @@ targets:
           - "IRCProtocol/Presence/IRCChannelConfig.swift"
           - "IRCProtocol/Presence/IRCChannelMemberList.swift"
           - "IRCProtocol/Presence/IRCChannelUser.swift"
-          - "IRCProtocol/Presence/IRCUser.swift"
           - "IRCProtocol/Presence/IRCWorld.swift"
           - "Plugins/**"
       - path: Sources/App/Modules/AppKitSupport/TDCChannelPropertiesSheet.swift
@@ -866,9 +864,6 @@ targets:
       - path: Sources/App/Modules/AppKitSupport/TVCMemberListCell.swift
         optional: true
         buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCServerList.swift
-        optional: true
-        buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TVCServerListCell.swift
         optional: true
         buildPhase: none
@@ -894,9 +889,6 @@ targets:
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/IRCProtocol/Presence/IRCChannelUser.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/IRCProtocol/Presence/IRCUser.swift
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/IRCProtocol/Presence/IRCWorld.swift
