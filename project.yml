@@ -817,7 +817,6 @@ targets:
           - "AppKitSupport/TDCFileTransferDialogSocketConstants.m"
           - "AppKitSupport/TDCFileTransferDialogTableCell.swift"
           - "AppKitSupport/TDCFileTransferDialogTransferController.swift"
-          - "AppKitSupport/TDCNetworkPickerViewController.swift"
           - "AppKitSupport/THOPluginItem.swift"
           - "AppKitSupport/THOPluginItemImplementation.m"
           - "AppKitSupport/TVCAppearance.swift"
@@ -868,9 +867,6 @@ targets:
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialogTransferController.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TDCNetworkPickerViewController.swift
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/THOPluginItem.swift

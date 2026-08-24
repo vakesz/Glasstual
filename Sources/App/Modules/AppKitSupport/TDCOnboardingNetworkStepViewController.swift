@@ -14,10 +14,8 @@ import AppKit
 
 @objc(TDCOnboardingNetworkStepViewController)
 @MainActor
-public final class OnboardingNetworkStepViewController: OnboardingStepViewController,
-	TDCNetworkPickerViewControllerDelegate
-{
-	private var picker: TDCNetworkPickerViewController!
+public final class OnboardingNetworkStepViewController: OnboardingStepViewController {
+	private var picker: NetworkPickerViewController!
 	private var connectCheck: NSButton!
 	private var channelsLabel: NSTextField!
 	private var channelStack: NSStackView!
@@ -39,7 +37,7 @@ public final class OnboardingNetworkStepViewController: OnboardingStepViewContro
 		let view = makeContentView()
 		self.view = view
 
-		let picker = TDCNetworkPickerViewController()
+		let picker = NetworkPickerViewController()
 		picker.delegate = self
 		addChild(picker)
 
@@ -145,11 +143,13 @@ public final class OnboardingNetworkStepViewController: OnboardingStepViewContro
 
 	// MARK: - Picker Delegate
 
-	public func networkPickerSelectionDidChange(_: TDCNetworkPickerViewController) {
+	@objc(networkPickerSelectionDidChange:)
+	public func networkPickerSelectionDidChange(_: NetworkPickerViewController) {
 		rebuildChannelList()
 	}
 
-	public func networkPickerDidConfirmSelection(_: TDCNetworkPickerViewController) {
+	@objc(networkPickerDidConfirmSelection:)
+	public func networkPickerDidConfirmSelection(_: NetworkPickerViewController) {
 		/* Double-clicking a network behaves like pressing the default button. */
 		view.window?.defaultButtonCell?.performClick(nil)
 	}
