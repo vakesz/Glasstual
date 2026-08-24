@@ -102,7 +102,7 @@ public final class PreferencesImportExport: NSObject {
 			return
 		}
 
-		let mainWindow = NSObject.masterController().mainWindow
+		let mainWindow = NSObject.masterController().mainWindow!
 		mainWindow.loadingScreen?.showProgressView(withReason: LocalizedKey("TVCMainWindow[5g1-i9]"))
 
 		NSObject.masterController().world.isImportingConfiguration = true
@@ -169,7 +169,7 @@ public final class PreferencesImportExport: NSObject {
 	@objc(importClientConfiguration:)
 	public class func importClientConfiguration(_ config: [String: Any]) {
 		let clientConfig = IRCClientConfig(dictionary: config)
-		let world = NSObject.masterController().world
+		let world = NSObject.masterController().world!
 
 		if let client = world.findClient(withId: clientConfig.uniqueIdentifier) {
 			client.updateConfig(clientConfig)
@@ -182,7 +182,7 @@ public final class PreferencesImportExport: NSObject {
 	public class func importPostflightCleanup(_ changedKeys: [String]) {
 		TPCPreferences.performReloadAction(forKeys: changedKeys)
 
-		let mainWindow = NSObject.masterController().mainWindow
+		let mainWindow = NSObject.masterController().mainWindow!
 		mainWindow.serverList?.endUpdates()
 		NSObject.masterController().world.isImportingConfiguration = false
 		_ = mainWindow.reloadLoadingScreen()

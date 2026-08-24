@@ -93,7 +93,7 @@ public extension TPCPreferences {
 	@objc(performReloadAction:forKey:)
 	class func performReloadAction(_ reloadAction: TPCPreferencesReloadAction, forKey key: String?) {
 		let masterController = NSObject.masterController()
-		let mainWindow = masterController.mainWindow
+		let mainWindow = masterController.mainWindow!
 		let memberList = mainWindow.memberList
 		let serverList = mainWindow.serverList
 		let inputTextField = mainWindow.inputTextField

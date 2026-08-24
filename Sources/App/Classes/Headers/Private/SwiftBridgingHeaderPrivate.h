@@ -77,7 +77,6 @@
 
 // Application and preferences
 #import "BuildConfig.h"
-#import "NSStringHelper.h"
 #import "TDCChannelPropertiesSheetPrivate.h"
 #import "TDCChannelPropertiesSheetInternal.h"
 #import "TPCApplicationInfo.h"
@@ -93,7 +92,8 @@
 #import "TPCTheme.h"
 #import "TPCThemeController.h"
 #import "TPCThemeControllerPrivate.h"
-#import "TXMasterController.h"
+/* TXMasterController is Swift (MasterController). Keep TXMasterController.h
+ out of this bridging graph. */
 #import "TLOTimer.h"
 
 // AppKitSupport
@@ -159,7 +159,8 @@
 #import "TDCNicknameColorSheetPrivate.h"
 #import "TDCServerChangeNicknameSheetPrivate.h"
 #import "TXWindowControllerPrivate.h"
-#import "TVCAppearancePrivate.h"
+/* TVCAppearance / TVCApplicationAppearance are Swift (ViewAppearance /
+ ApplicationAppearance). Keep TVCAppearance.h out of this bridging graph. */
 #import "IRCUserNicknameColorStyleGeneratorPrivate.h"
 
 // Text and presentation

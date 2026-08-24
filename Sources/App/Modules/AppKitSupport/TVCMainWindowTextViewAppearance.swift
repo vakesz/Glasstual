@@ -13,7 +13,7 @@
 import AppKit
 
 @objc(TVCMainWindowTextViewAppearance)
-public final class MainWindowTextViewAppearance: TVCApplicationAppearance {
+public final class MainWindowTextViewAppearance: ApplicationAppearance {
 	@objc public private(set) var textViewInset: NSSize = .zero
 	@objc public private(set) var textViewTextColor: NSColor?
 	@objc public private(set) var textViewPlaceholderTextColor: NSColor?

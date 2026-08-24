@@ -13,7 +13,7 @@
 import AppKit
 
 @objc(TVCMainWindowAppearance)
-public final class MainWindowAppearance: TVCApplicationAppearance {
+public final class MainWindowAppearance: ApplicationAppearance {
 	@objc public private(set) var textView: MainWindowTextViewAppearance!
 	@objc public private(set) var defaultWindowSize: NSSize = .zero
 	@objc public private(set) var channelViewOverlayDefaultBackgroundColorActiveWindow: NSColor?

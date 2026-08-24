@@ -523,7 +523,9 @@ public final class PluginManager: NSObject {
 		}
 
 		let tildePath = (bundle.bundleURL as NSURL).standardizedTildePath ?? bundle.bundlePath
-		let window = NSObject.masterController().mainWindow
+		guard let window = NSObject.masterController().mainWindow else {
+			return
+		}
 
 		TDCAlert.alertSheet(
 			with: window,

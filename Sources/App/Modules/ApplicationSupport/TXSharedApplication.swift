@@ -113,20 +113,20 @@ public final class SharedApplication: NSObject {
 }
 
 extension NSObject {
-	nonisolated(unsafe) private static weak var globalMasterControllerReference: TXMasterController?
+	nonisolated(unsafe) private static weak var globalMasterControllerReference: MasterController?
 
 	@objc
-	public class func setGlobalMasterControllerClassReference(_ masterController: TXMasterController) {
+	public class func setGlobalMasterControllerClassReference(_ masterController: MasterController) {
 		globalMasterControllerReference = masterController
 	}
 
 	@objc(masterController)
-	public var masterController: TXMasterController {
+	public var masterController: MasterController {
 		Self.globalMasterControllerReference!
 	}
 
 	@objc(masterController)
-	public class func masterController() -> TXMasterController {
+	public class func masterController() -> MasterController {
 		globalMasterControllerReference!
 	}
 }

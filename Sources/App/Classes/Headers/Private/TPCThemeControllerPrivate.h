@@ -46,6 +46,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)load;
 - (void)reload;
 
+- (void)prepareForApplicationTermination;
+
 - (void)recreateTemporaryCopyOfThemeIfNecessary;
 
 - (void)copyActiveThemeToDestinationLocation:(TPCThemeStorageLocation)destinationLocation

@@ -50,6 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setupConfiguration;
 
+- (void)prepareForApplicationTermination;
+
 - (nullable IRCTreeItem *)findItemWithPasteboardString:(NSString *)string;
 - (NSString *)pasteboardStringForItem:(IRCTreeItem *)item;
 

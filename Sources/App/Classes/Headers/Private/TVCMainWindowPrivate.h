@@ -78,6 +78,8 @@ typedef NS_OPTIONS(NSUInteger, TVCMainWindowMouseLocation) {
 
 - (BOOL)reloadLoadingScreen;
 
+- (void)prepareForApplicationTermination;
+
 - (void)updateTitle;
 - (void)updateTitleFor:(IRCTreeItem *)item;
 
