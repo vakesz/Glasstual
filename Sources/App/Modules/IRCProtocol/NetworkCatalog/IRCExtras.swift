@@ -397,6 +397,10 @@ public final class Extras: NSObject {
 		)
 	}
 
+	private static var isRunningUnitTests: Bool {
+		ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+	}
+
 	private static func createConnectionToServer(
 		_ serverAddress: String,
 		serverPort: UInt16,
@@ -409,6 +413,12 @@ public final class Extras: NSObject {
 	) {
 		precondition(!serverAddress.isEmpty)
 		precondition(serverPort > 0)
+
+		/* Unit tests load into Glasstual.app (TEST_HOST). Never mutate the
+		 live connection list or present merge prompts from that context. */
+		if isRunningUnitTests {
+			return
+		}
 
 		let channelListCount = channelList?.count ?? 0
 
