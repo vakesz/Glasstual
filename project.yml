@@ -813,8 +813,6 @@ targets:
           - "AppKitSupport/TDCFileTransferDialogSocket.swift"
           - "AppKitSupport/TDCFileTransferDialogSocketConstants.m"
           - "AppKitSupport/TDCFileTransferDialogTransferController.swift"
-          - "AppKitSupport/THOPluginItem.swift"
-          - "AppKitSupport/THOPluginItemImplementation.m"
           - "AppKitSupport/TVCAppearance.swift"
           - "AppKitSupport/TVCLogLine.swift"
           - "AppKitSupport/TVCLogLineCompatibility.m"
@@ -854,9 +852,6 @@ targets:
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialogTransferController.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/THOPluginItem.swift
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TVCAppearance.swift

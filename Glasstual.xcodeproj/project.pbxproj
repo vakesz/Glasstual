@@ -207,6 +207,7 @@
 		54A491F4D5FDECDB223894EA /* XRAccessibility.h in Headers */ = {isa = PBXBuildFile; fileRef = F75A136E6C1206E2C3EF7AF6 /* XRAccessibility.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		54B8308BE7B7F833A10AF1EA /* BasicLanguage.strings in Resources */ = {isa = PBXBuildFile; fileRef = 64505ABD5CDA527AAA6EF9EA /* BasicLanguage.strings */; };
 		55DDDD1832B2CC2E57910C7F /* RCMTrustPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = 24B5415345A8BCEB726CADB4 /* RCMTrustPanel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		562AEB55D9DEAC8A685354B2 /* THOPluginItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9885E994FAF87EA42A2D6B4 /* THOPluginItem.swift */; };
 		565B126AE21F3E1CCAC1E421 /* NSErrorHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F3E8BB2C1D4A329A58F2BBE /* NSErrorHelper.m */; };
 		56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 61007C54B3B72295EFDB82FF /* Inline Content Loader.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		56FA4B7C2582336FEFCF09E5 /* TPI_ChatFilterExtension.strings in Resources */ = {isa = PBXBuildFile; fileRef = 908177CE8D5097BC765E0519 /* TPI_ChatFilterExtension.strings */; };
@@ -490,7 +491,6 @@
 		DE1192F23FAF60A5C6EFCB60 /* NSColorHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 36228270225A33B8DF326B6A /* NSColorHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DE48488A6E9C9F6B8F547984 /* TPCPreferencesLocal.m in Sources */ = {isa = PBXBuildFile; fileRef = 75D287B81D5D24E82F7EC034 /* TPCPreferencesLocal.m */; };
 		DEE1E7A70EF2DAD145D7EFCA /* NSCoderHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = C40E6123C12E47027304A3DB /* NSCoderHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		DF07B5B6883ACE1E0B5426D1 /* THOPluginItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 4BF776B9309728B1E45E6E9C /* THOPluginItem.m */; };
 		DFD5F562876A32242945E395 /* TDCOnboardingWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F15F931066A064FFC1A812E2 /* TDCOnboardingWindow.xib */; };
 		E06E82D21C2B3A2DDB2637B1 /* TVCLogPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F1134B930883A1CE804DBC6 /* TVCLogPolicy.swift */; };
 		E072393F817940C1691B0B85 /* IRCClientUserIdentityTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 190FAF6E55D16E0067BB3EF7 /* IRCClientUserIdentityTests.m */; };
@@ -829,20 +829,6 @@
 		070DCA40BB8576D920BC2970 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Preferences;
-			dstSubfolderSpec = 7;
-			files = (
-				FA71C3278375D1BD0925B4A6 /* KeysExcludedFromContainer.plist in CopyFiles */,
-				E62A165D2759362C23247FA4 /* KeysExcludedFromExport.plist in CopyFiles */,
-				12E7B04A8D1C89F3E824563D /* PreferenceKeyMasterList.plist in CopyFiles */,
-				EB3C2F7F50214F6CC6EC1F6A /* RegisteredUserDefaults.plist in CopyFiles */,
-				EC95BE126D4DA67BD4016649 /* RegisteredUserDefaultsInContainer.plist in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = Documentation;
 			dstSubfolderSpec = 7;
 			files = (
@@ -850,7 +836,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
+		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
@@ -859,6 +845,20 @@
 				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
 				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
 				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Preferences;
+			dstSubfolderSpec = 7;
+			files = (
+				FA71C3278375D1BD0925B4A6 /* KeysExcludedFromContainer.plist in CopyFiles */,
+				E62A165D2759362C23247FA4 /* KeysExcludedFromExport.plist in CopyFiles */,
+				12E7B04A8D1C89F3E824563D /* PreferenceKeyMasterList.plist in CopyFiles */,
+				EB3C2F7F50214F6CC6EC1F6A /* RegisteredUserDefaults.plist in CopyFiles */,
+				EC95BE126D4DA67BD4016649 /* RegisteredUserDefaultsInContainer.plist in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1197,7 +1197,6 @@
 		4B6C65DF7DC143B92BEDF51F /* TVCMainWindowTextView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCMainWindowTextView.m; sourceTree = "<group>"; };
 		4B9E85B806B1714219F250FD /* IRCMessageBatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCMessageBatch.swift; sourceTree = "<group>"; };
 		4BB548CAFB6EF00E80982420 /* HLSHistoricLogViewContextPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HLSHistoricLogViewContextPrivate.h; sourceTree = "<group>"; };
-		4BF776B9309728B1E45E6E9C /* THOPluginItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = THOPluginItem.m; sourceTree = "<group>"; };
 		4C39BCCA4D56BD2461DC5237 /* NSTableViewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSTableViewHelper.swift; sourceTree = "<group>"; };
 		4C4215735298FBAE0F0CB426 /* TLONotificationConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLONotificationConfiguration.swift; sourceTree = "<group>"; };
 		4C535E4E9CE02DF5436E354E /* TLOInputHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLOInputHistory.swift; sourceTree = "<group>"; };
@@ -1543,6 +1542,7 @@
 		B1186236E8214662B5DCF116 /* IRCColorFormatMigrationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCColorFormatMigrationTests.m; sourceTree = "<group>"; };
 		B1230AF05540E2AFA2DFC5A0 /* IRCChannelMemberList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannelMemberList.swift; sourceTree = "<group>"; };
 		B1C09A5077ED4078F3707B60 /* IRCServerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCServerPrivate.h; sourceTree = "<group>"; };
+		B2701B00173FD708A2A9A4B9 /* THOPluginItemSupportedFeature.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = THOPluginItemSupportedFeature.h; sourceTree = "<group>"; };
 		B2E0AF486656B0FA13BEF59A /* ICMYouTube.mustache */ = {isa = PBXFileReference; path = ICMYouTube.mustache; sourceTree = "<group>"; };
 		B3083EFED5E6E2EB9DD43473 /* TVCAutoExpandingField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVCAutoExpandingField.swift; sourceTree = "<group>"; };
 		B3092CEFA559AA19396FE5D1 /* GLTTestClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GLTTestClient.h; sourceTree = "<group>"; };
@@ -3868,6 +3868,7 @@
 				D175727F097F32CCE310A1B6 /* TDCSharedProtocolDefinitionsPrivate.h */,
 				0BAB99EBA387F1C753D692E1 /* THOPluginDispatcherPrivate.h */,
 				A7026E50226CC4D1318A122A /* THOPluginItemPrivate.h */,
+				B2701B00173FD708A2A9A4B9 /* THOPluginItemSupportedFeature.h */,
 				CF6A52790E8343FF9CDB3173 /* THOPluginManagerPrivate.h */,
 				08643B157506F2D632B8F504 /* THOPluginProtocolPrivate.h */,
 				E22B36A1A55EAA6762D6BAA3 /* TLOFileLoggerPrivate.h */,
@@ -4093,7 +4094,6 @@
 			isa = PBXGroup;
 			children = (
 				695990A6B714E424F317D4A3 /* THOPluginDispatcher.m */,
-				4BF776B9309728B1E45E6E9C /* THOPluginItem.m */,
 				8CF15BC7E668EFA56FBA0150 /* THOPluginManager.m */,
 			);
 			path = "Plugin Architecture";
@@ -5135,7 +5135,7 @@
 				E541431291DF6BEC4B34F2FD /* TDCSheetBase.swift in Sources */,
 				585EF6A4AD7A4EB18F7C482A /* TDCWindowBase.m in Sources */,
 				4B5D4CFAACE4F920A0CB0B15 /* THOPluginDispatcher.m in Sources */,
-				DF07B5B6883ACE1E0B5426D1 /* THOPluginItem.m in Sources */,
+				562AEB55D9DEAC8A685354B2 /* THOPluginItem.swift in Sources */,
 				5F8AB297E2FCDA1E1EF4285A /* THOPluginItemLogging.swift in Sources */,
 				49FC2AC5591E1D6EF9A710A7 /* THOPluginManager.m in Sources */,
 				935F75A5E2A994650AC19B59 /* THOUnicodeHelper.swift in Sources */,
