@@ -808,12 +808,10 @@ targets:
       - path: Sources/App/Classes
       - path: Sources/App/Modules
         excludes:
-          - "AppKitSupport/TDCChannelSpotlightController.swift"
           - "AppKitSupport/TDCChannelPropertiesSheet.swift"
           - "AppKitSupport/TDCFileTransferDialog.swift"
           - "AppKitSupport/TDCFileTransferDialogSocket.swift"
           - "AppKitSupport/TDCFileTransferDialogSocketConstants.m"
-          - "AppKitSupport/TDCFileTransferDialogTableCell.swift"
           - "AppKitSupport/TDCFileTransferDialogTransferController.swift"
           - "AppKitSupport/THOPluginItem.swift"
           - "AppKitSupport/THOPluginItemImplementation.m"
@@ -843,9 +841,6 @@ targets:
           - "IRCProtocol/Presence/IRCUser.swift"
           - "IRCProtocol/Presence/IRCWorld.swift"
           - "Plugins/**"
-      - path: Sources/App/Modules/AppKitSupport/TDCChannelSpotlightController.swift
-        optional: true
-        buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TDCChannelPropertiesSheet.swift
         optional: true
         buildPhase: none
@@ -856,9 +851,6 @@ targets:
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialogSocketConstants.m
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialogTableCell.swift
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialogTransferController.swift
