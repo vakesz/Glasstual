@@ -78,7 +78,6 @@
 // Application and preferences
 #import "BuildConfig.h"
 #import "NSStringHelper.h"
-#import "TDCAlert.h"
 #import "TDCChannelPropertiesSheetPrivate.h"
 #import "TDCChannelPropertiesSheetInternal.h"
 #import "TDCPreferencesControllerPrivate.h"
@@ -168,10 +167,7 @@
 #import "TDCNicknameColorSheetPrivate.h"
 #import "TDCServerChangeNicknameSheetPrivate.h"
 #import "TXWindowControllerPrivate.h"
-#import "TVCMainWindowAppearancePrivate.h"
-#import "TVCMainWindowTextViewAppearancePrivate.h"
-#import "TDCChannelSpotlightAppearancePrivate.h"
-#import "TDCChannelSpotlightAppearanceInternal.h"
+#import "TVCAppearancePrivate.h"
 #import "IRCUserNicknameColorStyleGeneratorPrivate.h"
 
 // Text and presentation

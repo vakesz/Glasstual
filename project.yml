@@ -808,8 +808,6 @@ targets:
       - path: Sources/App/Classes
       - path: Sources/App/Modules
         excludes:
-          - "AppKitSupport/TDCAlert.swift"
-          - "AppKitSupport/TDCAlertConstants.m"
           - "AppKitSupport/TDCChannelSpotlightController.swift"
           - "AppKitSupport/TDCChannelPropertiesSheet.swift"
           - "AppKitSupport/TDCFileTransferDialog.swift"
@@ -845,9 +843,6 @@ targets:
           - "IRCProtocol/Presence/IRCUser.swift"
           - "IRCProtocol/Presence/IRCWorld.swift"
           - "Plugins/**"
-      - path: Sources/App/Modules/AppKitSupport/TDCAlert.swift
-        optional: true
-        buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TDCChannelSpotlightController.swift
         optional: true
         buildPhase: none
