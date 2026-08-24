@@ -13,7 +13,7 @@
 import AppKit
 
 @objc(TDCChannelSpotlightController)
-public final class ChannelSpotlightController: TDCWindowBase, NSTableViewDataSource, NSTableViewDelegate,
+public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource, NSTableViewDelegate,
 	NSControlTextEditingDelegate, NSWindowDelegate
 {
 	@objc public private(set) var userInterfaceObjects: ChannelSpotlightAppearance!
@@ -361,16 +361,16 @@ public final class ChannelSpotlightController: TDCWindowBase, NSTableViewDataSou
 
 	override public func close() {
 		saveWindowFrame()
-		window.close()
+		window!.close()
 	}
 
 	override public func show() {
 		restoreWindowFrame()
-		window.makeKeyAndOrderFront(nil)
+		window!.makeKeyAndOrderFront(nil)
 	}
 
 	private func restoreWindowFrame() {
-		let window = self.window
+		let window = self.window!
 
 		window.saveSizeAsDefault()
 		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
@@ -381,7 +381,7 @@ public final class ChannelSpotlightController: TDCWindowBase, NSTableViewDataSou
 		 that the frame we save is same we open. */
 		resetSearch()
 
-		let window = self.window
+		let window = self.window!
 
 		/* We call -restoreDefaultSizeAndDisplay: before saving
 		 the frame because the window wont register the changes

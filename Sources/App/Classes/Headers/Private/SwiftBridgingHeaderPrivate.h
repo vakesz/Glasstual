@@ -80,7 +80,6 @@
 #import "NSStringHelper.h"
 #import "TDCChannelPropertiesSheetPrivate.h"
 #import "TDCChannelPropertiesSheetInternal.h"
-#import "TDCPreferencesControllerPrivate.h"
 #import "TPCApplicationInfo.h"
 #import "TPCPathInfo.h"
 #import "TPCPathInfoPrivate.h"
@@ -95,7 +94,6 @@
 #import "TPCThemeController.h"
 #import "TPCThemeControllerPrivate.h"
 #import "TXMasterController.h"
-#import "TXSharedApplication.h"
 #import "TLOTimer.h"
 
 // AppKitSupport
@@ -128,7 +126,7 @@
 
 // Networking and notifications
 #import "OELReachability.h"
-#import "TDCFileTransferDialogPrivate.h"
+#import "TDCFileTransferDialogTypes.h"
 #import "TDCFileTransferDialogTransferControllerPrivate.h"
 #import "TLOFileLoggerPrivate.h"
 #import "TLOInternetAddressLookup.h"
@@ -137,7 +135,6 @@
 #import "TLOSpeechSynthesizerEnginePrivate.h"
 #import "TXMenuController.h"
 #import "TXMenuControllerPrivate.h"
-#import "TXSharedApplicationPrivate.h"
 #import "TXApplicationPrivate.h"
 #import "TDCSheetBase.h"
 #import "TDCInputPrompt.h"
@@ -179,3 +176,14 @@
 #import "TVCLogViewInternalWK2.h"
 #import "TVCLogScriptEventSinkPrivate.h"
 #import "NSTableVIewHelperPrivate.h"
+
+/* Minimal stubs for ObjC types whose full private headers subclass
+ TDCWindowBase (now Swift). Keep WindowBase.h out of this bridging graph. */
+@interface TDCPreferencesController : NSObject
++ (void)openProxySettingsInSystemPreferences;
+@end
+
+@interface TDCFileTransferDialog : NSObject
+- (void)show:(BOOL)makeKeyWindow restorePosition:(BOOL)restorePosition;
+- (nullable TDCFileTransferDialogTransferController *)fileTransferWithUniqueIdentifier:(NSString *)identifier;
+@end

@@ -22,7 +22,7 @@ public final class ServerChannelListDialogEntry: NSObject {
 
 @objc(TDCServerChannelListDialog)
 @MainActor
-public final class ServerChannelListDialog: TDCWindowBase {
+public final class ServerChannelListDialog: WindowBase {
 	@objc public private(set) var client: IRCClient!
 	@objc public private(set) var clientId = ""
 	@objc public var contentAlreadyReceived = false
