@@ -160,7 +160,7 @@ public final class OnboardingStylePreviewView: NSView {
 	}
 
 	override public func accessibilityValue() -> Any? {
-		isSelected
+		selected
 	}
 
 	override public func accessibilityPerformPress() -> Bool {
@@ -182,7 +182,7 @@ public final class OnboardingStylePreviewView: NSView {
 		effectiveAppearance.performAsCurrentDrawingAppearance {
 			canvas.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
 
-			if isSelected {
+			if selected {
 				canvas.layer?.borderColor = NSColor.controlAccentColor.cgColor
 				canvas.layer?.borderWidth = 2
 			} else {

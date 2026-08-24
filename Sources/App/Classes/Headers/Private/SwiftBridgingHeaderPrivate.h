@@ -95,9 +95,9 @@
 #import "TPCTheme.h"
 #import "TPCThemeController.h"
 #import "TPCThemeControllerPrivate.h"
-#import "TLOTimer.h"
 #import "TXMasterController.h"
 #import "TXSharedApplication.h"
+#import "TLOTimer.h"
 
 // AppKitSupport
 #import "TVCAutoExpandingTextField.h"
@@ -154,8 +154,6 @@
 #import "TVCErrorMessagePopoverControllerPrivate.h"
 #import "TVCValidatedComboBox.h"
 #import "TDCNetworkPickerViewController.h"
-#import "TDCOnboardingStepViewController.h"
-#import "TDCOnboardingSteps.h"
 #import "TXAppearance.h"
 #import "TXAppearancePrivate.h"
 #import "TVCMainWindowLoadingScreen.h"
