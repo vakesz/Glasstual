@@ -108,6 +108,7 @@
 #import "THOPluginManagerPrivate.h"
 #import "THOPluginProtocol.h"
 #import "THOPluginProtocolPrivate.h"
+#import "THOPluginItemSupportedFeature.h"
 
 @interface IRCMessage (IRCMessagePluginExtension)
 - (THOPluginDidReceiveServerInputConcreteObject *)didReceiveServerInputConcreteObject;
