@@ -105,7 +105,6 @@
 #import "TLOInputHistoryPrivate.h"
 #import "TLOKeyEventHandler.h"
 #import "TLONicknameCompletionStatusPrivate.h"
-#import "THOPluginManagerPrivate.h"
 #import "THOPluginProtocol.h"
 #import "THOPluginProtocolPrivate.h"
 #import "THOPluginItemSupportedFeature.h"
@@ -114,7 +113,6 @@
 - (THOPluginDidReceiveServerInputConcreteObject *)didReceiveServerInputConcreteObject;
 @end
 
-#import "THOPluginDispatcherPrivate.h"
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 #import "TVCLogPolicyPrivate.h"
 #import "TVCLogViewPrivate.h"

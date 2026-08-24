@@ -40,6 +40,7 @@
 #import "TPI_ChatFilterLogic.h"
 
 #import "THOPluginProtocolPrivate.h"
+#import "THOPluginProtocolNSObjectExtension.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

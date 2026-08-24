@@ -24,6 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)testParseIRCProtocolURIAcceptsBasicIrcURL
 {
+	/* Parsing only: connection creation is a no-op under XCTest so the
+	 host app's saved servers are not mutated and merge prompts are skipped. */
 	XCTAssertNoThrow([IRCExtras parseIRCProtocolURI:@"irc://irc.example.test/#chat"]);
 }
 

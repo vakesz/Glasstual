@@ -825,7 +825,6 @@ targets:
           - "AppKitSupport/TVCMemberListCell.swift"
           - "AppKitSupport/TVCServerList.swift"
           - "AppKitSupport/TVCServerListCell.swift"
-          - "AppKitSupport/TVCTextFormatterMenu.swift"
           - "AppKitSupport/TVCTextViewWithIRCFormatter.swift"
           - "AppKitSupport/NSStringHelper.swift"
           - "IRCProtocol/Connection/IRCConnection.swift"
@@ -876,9 +875,6 @@ targets:
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TVCServerListCell.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCTextFormatterMenu.swift
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TVCTextViewWithIRCFormatter.swift
