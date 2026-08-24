@@ -112,7 +112,7 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 
 			if (address as NSString).isValidInternetAddress == false {
 				throw NSError(
-					domain: TXErrorDomain,
+					domain: "GlasstualErrorDomain",
 					code: 71013,
 					userInfo: [
 						NSLocalizedDescriptionKey: LocalizedKey("TDCServerEndpointListSheet[iis-gr]"),
@@ -125,7 +125,7 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 
 			if (port as NSString).isValidInternetPort == false {
 				throw NSError(
-					domain: TXErrorDomain,
+					domain: "GlasstualErrorDomain",
 					code: 71014,
 					userInfo: [
 						NSLocalizedDescriptionKey: LocalizedKey("TDCServerEndpointListSheet[qeb-ip]"),

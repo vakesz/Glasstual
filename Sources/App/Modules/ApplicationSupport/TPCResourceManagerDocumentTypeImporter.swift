@@ -109,7 +109,7 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 	public func panel(_: Any, validate url: URL) throws {
 		guard let scriptsPath = PathInfo.customScripts, url.path.hasPrefix(scriptsPath) else {
 			throw NSError(
-				domain: TXErrorDomain,
+				domain: "GlasstualErrorDomain",
 				code: 27984,
 				userInfo: [
 					NSURLErrorKey: url,

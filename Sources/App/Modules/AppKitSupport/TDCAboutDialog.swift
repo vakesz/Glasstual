@@ -13,7 +13,7 @@
 import AppKit
 
 @objc(TDCAboutDialog)
-public final class AboutDialog: TDCWindowBase {
+public final class AboutDialog: WindowBase {
 	@IBOutlet private var versionInfoTextField: NSTextField!
 
 	override public init() {

@@ -37,37 +37,13 @@
  *********************************************************************** */
 
 #import "TDCWindowBase.h"
+#import "TDCFileTransferDialogTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient, TDCFileTransferDialogTransferController, TVCBasicTableView;
 
-typedef NS_ENUM(NSUInteger, TDCFileTransferDialogTransferStatus) {
-	TDCFileTransferDialogTransferStatusComplete,
-	TDCFileTransferDialogTransferStatusConnecting,
-	TDCFileTransferDialogTransferStatusFatalError,
-	TDCFileTransferDialogTransferStatusInitializing,
-	TDCFileTransferDialogTransferStatusIsListeningAsReceiver,
-	TDCFileTransferDialogTransferStatusIsListeningAsSender,
-	TDCFileTransferDialogTransferStatusMappingListeningPort,
-	TDCFileTransferDialogTransferStatusReceiving,
-	TDCFileTransferDialogTransferStatusRecoverableError,
-	TDCFileTransferDialogTransferStatusSending,
-	TDCFileTransferDialogTransferStatusStopped,
-	TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress,
-	TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept,
-	TDCFileTransferDialogTransferStatusWaitingForResumeAccept
-};
-
-typedef NS_ENUM(NSUInteger, TDCFileTransferDialogSelection) {
-	TDCFileTransferDialogSelectionAll = 0,
-	TDCFileTransferDialogSelectionSending = 1,
-	TDCFileTransferDialogSelectionReceiving = 2
-};
-
 @class TDCFileTransferDialogTransferController;
-
-typedef void (^TDCFileTransferDialogIPAddressBlock)(NSString *_Nullable address);
 
 @interface TDCFileTransferDialog : TDCWindowBase
 @property(readonly, weak) TVCBasicTableView *fileTransferTable;

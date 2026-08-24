@@ -37,11 +37,11 @@
  *********************************************************************** */
 
 #import "TDCSharedProtocolDefinitionsPrivate.h"
-#import "TDCFileTransferDialogPrivate.h"
+#import "TDCFileTransferDialogTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class IRCClient, TDCFileTransferDialogTableCell;
+@class IRCClient, TDCFileTransferDialog, TDCFileTransferDialogTableCell;
 
 @interface TDCFileTransferDialogTransferController : NSObject <TDCClientPrototype>
 @property(nonatomic, weak) TDCFileTransferDialogTableCell *transferTableCell;
