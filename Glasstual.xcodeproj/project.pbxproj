@@ -266,7 +266,7 @@
 		6E25D551995504FE3F960670 /* XRLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0824E4F17951B02D44628EF9 /* XRLogging.swift */; };
 		6F29EBE3D4BB501E51679928 /* TXWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58A88535A43C1B28455A55B /* TXWindowController.swift */; };
 		702E5842F15DAAF52F3264A8 /* IRCCommandIndexTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 7EDA23FA91543089C2FBC02B /* IRCCommandIndexTests.m */; };
-		70E305C2D574928CF9DFA57A /* TVCServerList.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F8270727B042242FCB44976 /* TVCServerList.m */; };
+		70E13DF9F59AA1090B1A6CAB /* IRCUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6B7EAC36BD251D374B85A4 /* IRCUser.swift */; };
 		70EAD04DCC255F302570C48E /* XRPortablePropertyDict.h in Headers */ = {isa = PBXBuildFile; fileRef = 76AA2966E5288E465645FEC0 /* XRPortablePropertyDict.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		710FED407BDEE576DD7D49A5 /* TDCNicknameColorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A7595DAC566DC8F85F2BE4 /* TDCNicknameColorSheet.swift */; };
 		71EDB04B246675F7D688CA2D /* TVCMainWindowTextViewAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19F09AADBB62439076327CD /* TVCMainWindowTextViewAppearance.swift */; };
@@ -292,6 +292,7 @@
 		7CBA4D1EC25CCF5314B08D3A /* TLONotificationConfigurationConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 94B8A0F927FAEC99D2B7D747 /* TLONotificationConfigurationConstants.m */; };
 		7CFD8E823C556BC03F144CEC /* IRCUserRelations.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD7EF156E869462B38DC5E05 /* IRCUserRelations.swift */; };
 		7ECEFE9DFD6D49FB6145B85A /* SecurityInterface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09337EC215A29A9E3EF5FF5E /* SecurityInterface.framework */; };
+		7FFD1530DD4A8EDC4E5F790C /* TVCServerList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 356E26C0BBA8557946395836 /* TVCServerList.swift */; };
 		803956BF5C4295B5280B553E /* TVCLogControllerHistoricLogFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 197AA16232A5482D666BC58D /* TVCLogControllerHistoricLogFile.m */; };
 		803CB42EAC05B45B83E57D56 /* NSWindowHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 754B3C6B9B160C3BAA7C44BD /* NSWindowHelper.m */; };
 		80C5064D13259D8E3D4BF22F /* ICMInlineVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 44379DA4D25B3CA4CFAAB44E /* ICMInlineVideo.m */; };
@@ -473,7 +474,6 @@
 		D3CDB7DAD23323BFE0A0B407 /* BasicLanguage.strings in Resources */ = {isa = PBXBuildFile; fileRef = 54B64D65585A3E35D81B53C9 /* BasicLanguage.strings */; };
 		D3D8B7FE33477E93ABC3A94C /* IRCCommandIndexLocalData.plist in Resources */ = {isa = PBXBuildFile; fileRef = 51855780F0191CF867480E7D /* IRCCommandIndexLocalData.plist */; };
 		D410D39668FB1D6638E74BB7 /* XRLoggingPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 492BB772F54DA9F0C8264EB8 /* XRLoggingPrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		D458691BA9D872B9F41012DE /* IRCUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BA2D5313F4FA56E19041020 /* IRCUser.m */; };
 		D475E53AD5C320B235F74155 /* NSWindowHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = BE018FEB97BB0047641FBBBA /* NSWindowHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D494106F8765F33E46AEC578 /* NSTableViewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C39BCCA4D56BD2461DC5237 /* NSTableViewHelper.swift */; };
 		D51E6912F0940F726FF566C9 /* conversionTable.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1849394415473F78E3FC9080 /* conversionTable.plist */; };
@@ -833,12 +833,14 @@
 		070DCA40BB8576D920BC2970 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
-			dstSubfolderSpec = 16;
+			dstPath = Preferences;
+			dstSubfolderSpec = 7;
 			files = (
-				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
-				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
-				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+				FA71C3278375D1BD0925B4A6 /* KeysExcludedFromContainer.plist in CopyFiles */,
+				E62A165D2759362C23247FA4 /* KeysExcludedFromExport.plist in CopyFiles */,
+				12E7B04A8D1C89F3E824563D /* PreferenceKeyMasterList.plist in CopyFiles */,
+				EB3C2F7F50214F6CC6EC1F6A /* RegisteredUserDefaults.plist in CopyFiles */,
+				EC95BE126D4DA67BD4016649 /* RegisteredUserDefaultsInContainer.plist in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -855,14 +857,12 @@
 		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Preferences;
-			dstSubfolderSpec = 7;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
+			dstSubfolderSpec = 16;
 			files = (
-				FA71C3278375D1BD0925B4A6 /* KeysExcludedFromContainer.plist in CopyFiles */,
-				E62A165D2759362C23247FA4 /* KeysExcludedFromExport.plist in CopyFiles */,
-				12E7B04A8D1C89F3E824563D /* PreferenceKeyMasterList.plist in CopyFiles */,
-				EB3C2F7F50214F6CC6EC1F6A /* RegisteredUserDefaults.plist in CopyFiles */,
-				EC95BE126D4DA67BD4016649 /* RegisteredUserDefaultsInContainer.plist in CopyFiles */,
+				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
+				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
+				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -970,7 +970,6 @@
 		0B5EAE9E1B9C001BA72EB467 /* IRCClientRequestedCommandsPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCClientRequestedCommandsPrivate.h; sourceTree = "<group>"; };
 		0B5F0F550C24A0719EB52BE9 /* SWStringHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWStringHelper.swift; sourceTree = "<group>"; };
 		0B64F726549C0B2AE16F8A80 /* IRCISupportInfoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCISupportInfoTests.m; sourceTree = "<group>"; };
-		0BA2D5313F4FA56E19041020 /* IRCUser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCUser.m; sourceTree = "<group>"; };
 		0BAB99EBA387F1C753D692E1 /* THOPluginDispatcherPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = THOPluginDispatcherPrivate.h; sourceTree = "<group>"; };
 		0C024594D8234E3B2BDC7C2D /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TPI_ChatFilterExtension.xib; sourceTree = "<group>"; };
 		0CC15F2EDB588B4244528518 /* IRCISupportTokenParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCISupportTokenParser.swift; sourceTree = "<group>"; };
@@ -1156,7 +1155,6 @@
 		3E10F1A940ED2B569423A510 /* TLOSpeechSynthesizerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TLOSpeechSynthesizerTests.m; sourceTree = "<group>"; };
 		3E63757AF02BC4C4FAF93633 /* IRCSenderPrefixParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSenderPrefixParser.swift; sourceTree = "<group>"; };
 		3EEA0F8E0E78312564442F13 /* TDCAboutDialogPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCAboutDialogPrivate.h; sourceTree = "<group>"; };
-		3F8270727B042242FCB44976 /* TVCServerList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVCServerList.m; sourceTree = "<group>"; };
 		3F883757F027FA0930C354CF /* IRCClientConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCClientConfig.h; sourceTree = "<group>"; };
 		3FBDE70CCAE74FB1C5C5E072 /* ICLMediaAssessor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ICLMediaAssessor.m; sourceTree = "<group>"; };
 		4007F8C23295C0D2C4C11127 /* IRCChannel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCChannel.m; sourceTree = "<group>"; };
@@ -2226,7 +2224,6 @@
 		2CF069308399C7F5F13DC3C8 /* Server List */ = {
 			isa = PBXGroup;
 			children = (
-				3F8270727B042242FCB44976 /* TVCServerList.m */,
 				2250921A743C20C45F751710 /* TVCServerListCell.m */,
 			);
 			path = "Server List";
@@ -3740,7 +3737,6 @@
 			isa = PBXGroup;
 			children = (
 				918A8826BCFF3A70EF9B4534 /* IRCChannelUser.m */,
-				0BA2D5313F4FA56E19041020 /* IRCUser.m */,
 			);
 			path = Users;
 			sourceTree = "<group>";
@@ -5067,7 +5063,7 @@
 				03CA4B7AB08835DA918D681D /* IRCTreeItem.m in Sources */,
 				AB9443C382015F20CBAD7A4A /* IRCTypingTracker.swift in Sources */,
 				ECDBC66744E2226608D54F73 /* IRCTypingTrackerCompatibility.m in Sources */,
-				D458691BA9D872B9F41012DE /* IRCUser.m in Sources */,
+				70E13DF9F59AA1090B1A6CAB /* IRCUser.swift in Sources */,
 				2C79131A3462EB99311E5AED /* IRCUserNicknameColorStyleGenerator.swift in Sources */,
 				0EE0DD082B5EEFFD0163729F /* IRCUserPersistentStore.swift in Sources */,
 				7CFD8E823C556BC03F144CEC /* IRCUserRelations.swift in Sources */,
@@ -5193,7 +5189,7 @@
 				D82B79A0EE414ABDF99B0241 /* TVCMemberListCell.m in Sources */,
 				582B5CCE7954D00F3578682F /* TVCMemberListUserInfoPopover.swift in Sources */,
 				3CB0A536F289E1604792F35D /* TVCNotificationConfigurationViewController.swift in Sources */,
-				70E305C2D574928CF9DFA57A /* TVCServerList.m in Sources */,
+				7FFD1530DD4A8EDC4E5F790C /* TVCServerList.swift in Sources */,
 				4C525D3B52A566AF410EBE8A /* TVCServerListCell.m in Sources */,
 				15E6F726F2AD82934357B9B9 /* TVCTextFormatterMenu.swift in Sources */,
 				3A776EA93F55670A8A21B80D /* TVCTextViewWithIRCFormatter.m in Sources */,
