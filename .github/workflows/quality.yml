@@ -20,9 +20,14 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Install linters
-        run: brew install actionlint shellcheck shfmt
+      - name: Install development tools
+        run: brew bundle
 
       - name: Lint and check formatting
         run: make lint
+
+      - name: Verify generated Xcode project
+        run: make project-check

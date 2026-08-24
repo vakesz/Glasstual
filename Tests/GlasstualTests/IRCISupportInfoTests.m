@@ -153,6 +153,84 @@ NS_ASSUME_NONNULL_BEGIN
 	XCTAssertEqualObjects(modes[3].modeParameter, @"10");
 }
 
+- (void)testParseModesDoesNotConsumeParameterWhenUnsetModeDoesNotRequireOne
+{
+	IRCISupportInfo *supportInfo = [self supportInfoWithConfiguration:@"CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+"];
+
+	NSArray<IRCModeInfo *> *modes = [supportInfo parseModes:@"-l leftover +t"];
+
+	XCTAssertEqual(modes.count, 2);
+	XCTAssertEqualObjects(modes[0].modeSymbol, @"l");
+	XCTAssertFalse(modes[0].modeIsSet);
+	XCTAssertNil(modes[0].modeParameter);
+	XCTAssertEqualObjects(modes[1].modeSymbol, @"t");
+	XCTAssertTrue(modes[1].modeIsSet);
+}
+
+- (void)testParseModesAllowsMissingRequiredParameter
+{
+	IRCISupportInfo *supportInfo = [self supportInfoWithConfiguration:@"CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+"];
+
+	NSArray<IRCModeInfo *> *modes = [supportInfo parseModes:@"+k"];
+
+	XCTAssertEqual(modes.count, 1);
+	XCTAssertEqualObjects(modes[0].modeSymbol, @"k");
+	XCTAssertTrue(modes[0].modeIsSet);
+	XCTAssertNil(modes[0].modeParameter);
+}
+
+- (void)testLimitTokensAndTargetChunking
+{
+	IRCISupportInfo *supportInfo =
+		[self supportInfoWithConfiguration:@"CHANLIMIT=#&:50,+: TARGMAX=privmsg:4,JOIN: MAXTARGETS=3 MAXLIST=beI:60"];
+
+	XCTAssertEqual([supportInfo channelLimitForChannelNamed:@"#chat"], 50);
+	XCTAssertEqual([supportInfo channelLimitForChannelNamed:@"&local"], 50);
+	XCTAssertEqual([supportInfo channelLimitForChannelNamed:@"+modeless"], 0);
+	XCTAssertEqual([supportInfo maximumTargetsForCommand:@"PRIVMSG"], 4);
+	XCTAssertEqual([supportInfo maximumTargetsForCommand:@"notice"], 3);
+	XCTAssertEqual([supportInfo maximumTargetsForCommand:@"join"], 0);
+	XCTAssertEqual([supportInfo maximumListEntriesForModeSymbol:@"b"], 60);
+	XCTAssertEqual([supportInfo maximumListEntriesForModeSymbol:@"I"], 60);
+
+	NSArray *targets = @[ @"a", @"b", @"c", @"d", @"e" ];
+
+	XCTAssertEqualObjects([IRCISupportInfo chunkTargets:targets limit:2],
+						  (@[ @[ @"a", @"b" ], @[ @"c", @"d" ], @[ @"e" ] ]));
+
+	NSArray *conservativeChunks = [IRCISupportInfo chunkTargets:@[ @"a", @"b" ] limit:0];
+
+	XCTAssertEqualObjects(conservativeChunks, (@[ @[ @"a" ], @[ @"b" ] ]));
+}
+
+- (void)testClientTagDenyAllowsExceptionsToWildcard
+{
+	IRCISupportInfo *supportInfo =
+		[self supportInfoWithConfiguration:@"CLIENTTAGDENY=*,-draft/typing,-example/allowed"];
+
+	XCTAssertTrue([supportInfo isClientTagDenied:@"example/other"]);
+	XCTAssertFalse([supportInfo isClientTagDenied:@"DRAFT/TYPING"]);
+	XCTAssertFalse([supportInfo isClientTagDenied:@"example/allowed"]);
+}
+
+- (void)testExtendedBanTokenSeparatesPrefixAndTypes
+{
+	IRCISupportInfo *supportInfo = [self supportInfoWithConfiguration:@"EXTBAN=$,ac"];
+
+	XCTAssertEqualObjects(supportInfo.extendedBanPrefix, @"$");
+	XCTAssertEqualObjects(supportInfo.extendedBanTypes, (@[ @"a", @"c" ]));
+	XCTAssertNotNil([supportInfo descriptionForExtendedBanMask:@"$a:account"]);
+	XCTAssertNil([supportInfo descriptionForExtendedBanMask:@"$q:quiet"]);
+}
+
+- (void)testMalformedPrefixDoesNotReplaceDefaults
+{
+	IRCISupportInfo *supportInfo = [self supportInfoWithConfiguration:@"PREFIX=invalid"];
+
+	XCTAssertEqualObjects([supportInfo userPrefixForModeSymbol:@"o"], @"@");
+	XCTAssertEqualObjects([supportInfo userPrefixForModeSymbol:@"v"], @"+");
+}
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -238,6 +238,7 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 @property(nonatomic, weak) IBOutlet NSView *notificationControllerHostView;
 @property(nonatomic, strong) IBOutlet TVCNotificationConfigurationViewController *notificationController;
 @property(nonatomic, strong, nullable) TDCPreferencesUserStyleSheet *userStyleSheet;
+@property(nonatomic, strong) NSArray *nibTopLevelObjects;
 
 - (IBAction)onAddExcludeKeyword:(nullable id)sender;
 - (IBAction)onAddHighlightKeyword:(nullable id)sender; // changed
@@ -285,7 +286,11 @@ static NSUserInterfaceItemIdentifier const _sidebarGroupCellIdentifier = @"TDCPr
 
 - (void)prepareInitialState
 {
-	[RZMainBundle() loadNibNamed:@"TDCPreferences" owner:self topLevelObjects:nil];
+	NSArray *topLevelObjects = nil;
+
+	[RZMainBundle() loadNibNamed:@"TDCPreferences" owner:self topLevelObjects:&topLevelObjects];
+
+	self.nibTopLevelObjects = topLevelObjects;
 }
 
 - (void)awakeFromNib

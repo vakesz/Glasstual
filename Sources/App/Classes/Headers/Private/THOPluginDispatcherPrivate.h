@@ -49,6 +49,13 @@ NS_ASSUME_NONNULL_BEGIN
 @interface THOPluginDispatcher : NSObject
 + (dispatch_queue_t)dispatchQueue;
 
++ (BOOL)dispatchReceivedCommand:(NSString *)command
+					   withText:(nullable NSString *)text
+					 authoredBy:(IRCPrefix *)textAuthor
+					destinedFor:(nullable IRCChannel *)textDestination
+					   onClient:(IRCClient *)client
+					 receivedAt:(NSDate *)receivedAt
+			   referenceMessage:(nullable IRCMessage *)referenceMessage;
 + (BOOL)receivedCommand:(NSString *)command
 			   withText:(nullable NSString *)text
 			 authoredBy:(IRCPrefix *)textAuthor

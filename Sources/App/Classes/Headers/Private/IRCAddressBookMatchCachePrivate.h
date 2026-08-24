@@ -40,8 +40,9 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCAddressBookEntry, IRCClient;
 
 @interface IRCAddressBookMatchCache : NSObject
-@property(readonly, weak) IRCClient *client;
+@property(readonly, weak, nullable) IRCClient *client;
 
+- (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithClient:(IRCClient *)client;
 
 /* If multiple address book entries exist for the same host,

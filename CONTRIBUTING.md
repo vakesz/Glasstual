@@ -13,25 +13,24 @@ conventions; the [README](README.md) covers what the app does.
   make setup
   ```
 
-  This installs XcodeGen, shellcheck, shfmt and actionlint. clang-format and
-  swift-format ship with Xcode.
+  This installs XcodeGen, SwiftFormat, SwiftLint, shellcheck, shfmt and
+  actionlint. clang-format ships with Xcode.
 
 - A code signing certificate. It does not need to be issued by Apple. Set
-  your identity and Team ID in `Configurations/Signing.xcconfig`; do not
-  change signing settings inside Xcode, the project file is generated.
+  your identity and Team ID in `project.yml` (`CODE_SIGN_IDENTITY`,
+  `DEVELOPMENT_TEAM`); do not change signing settings inside Xcode, the
+  project file is generated.
 
 ## Project layout
 
 | Path | Contents |
 | --- | --- |
-| `project.yml` | The XcodeGen spec. `Glasstual.xcodeproj` is generated from it and committed. |
-| `Configurations/` | xcconfig files and entitlements. `Signing.xcconfig` is the only one most people edit. |
-| `Sources/App/` | The application: `Classes/` (IRC core, controllers, views, dialogs, preferences), `Resources/` (xibs, strings, plists, styles). |
+| `project.yml` | XcodeGen single source of truth for targets, schemes, build settings, signing, Info.plist files, and entitlements. `Glasstual.xcodeproj` is generated from it and committed. |
+| `Sources/App/` | The application: `Classes/` / `Modules/` (IRC core, controllers, views, dialogs, preferences), `Resources/` (xibs, strings, plists, styles). |
 | `Sources/Shared/` | Code compiled into both the app and the XPC services. |
 | `Sources/Plugins/` | Bundled plugins (Caffeine, Chat Filter, Smiley Converter, System Profiler, ZNC Additions). |
 | `XPC Services/` | The IRC connection host, the scrollback history store, and the inline media loader. |
 | `Frameworks/` | Vendored Codeux frameworks and prebuilt static libraries. `PROVENANCE.md` records their origin. |
-| `Scripts/` | Build, version, lint and format helpers used by the `Makefile` and CI. |
 | `Tests/GlasstualTests/` | XCTest unit tests for the IRC core. |
 
 ## Day to day
@@ -41,9 +40,8 @@ make generate          # regenerate the Xcode project after editing project.yml
 make build             # Debug build into DerivedData/
 make run               # build and launch
 make test              # unit tests
-make lint              # shellcheck, actionlint, plist and xib validation, format check
+make lint              # SwiftLint, SwiftFormat, shellcheck, actionlint and resource validation
 make format            # rewrite Objective-C, Swift and shell sources in place
-make compile-commands  # compile_commands.json for clangd (VS Code, Neovim, …)
 ```
 
 `.vscode/` holds recommended extensions and settings that match the
@@ -52,8 +50,8 @@ formatters above. Xcode users need nothing extra.
 ## Conventions
 
 - **Formatting** is mechanical: `.clang-format` for Objective-C and C,
-  `.swift-format` for Swift, `shfmt -i 0 -ci -sr` for shell. Run
-  `make format` before committing; CI runs `make format-check`.
+  `.swiftformat` for Swift, `shfmt -i 0 -ci -sr` for shell. Run
+  `make format` before committing; CI runs the same checks through `make lint`.
 - **Indentation** is tabs in source, two spaces in JSON/YAML/JS/CSS
   (`.editorconfig`).
 - **Objective-C** files keep the `NS_ASSUME_NONNULL_BEGIN`/`END` pair, declare

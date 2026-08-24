@@ -1,0 +1,9 @@
+--swiftversion 6.0
+--indent tab
+--tabwidth 4
+--maxwidth 120
+--wraparguments preserve
+--wrapcollections preserve
+--exclude Frameworks
+--exclude DerivedData
+--exclude build

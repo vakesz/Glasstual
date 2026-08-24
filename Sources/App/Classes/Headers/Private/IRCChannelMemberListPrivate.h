@@ -74,6 +74,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface IRCChannelMemberList () <IRCChannelMemberListPrivatePrototype>
 - (instancetype)initWithChannel:(IRCChannel *)channel NS_DESIGNATED_INITIALIZER;
 
+- (void)assignController:(nullable IRCChannelMemberListController *)controller;
+
 + (void)suspendMemberListSerialQueues;
 + (void)resumeMemberListSerialQueues;
 @end

@@ -46,6 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)onMaintenanceTimer;
 
+- (void)prepareInitialState;
 - (void)reloadStatusInformation;
 @end
 

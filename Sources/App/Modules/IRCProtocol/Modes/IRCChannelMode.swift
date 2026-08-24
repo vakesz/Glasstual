@@ -1,0 +1,279 @@
+/* *********************************************************************
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
+ *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ *********************************************************************** */
+
+import Foundation
+
+@objc(IRCChannelMode)
+public final class ChannelMode: NSObject {
+	private weak var client: IRCClient?
+	private weak var channel: IRCChannel?
+
+	@objc public private(set) var modes: ChannelModeContainer
+
+	@available(*, unavailable)
+	override public init() {
+		fatalError("Use init(channel:)")
+	}
+
+	@objc(initWithChannel:)
+	public init(channel: IRCChannel) {
+		guard let associatedClient = channel.associatedClient else {
+			fatalError("ChannelMode requires an associated client")
+		}
+
+		client = associatedClient
+		self.channel = channel
+		modes = ChannelModeContainer(client: associatedClient)
+
+		super.init()
+	}
+
+	@objc(updateModes:)
+	public func updateModes(_ modeString: String) -> [ModeInfo] {
+		let parsedModes = client!.supportInfo.parseModes(modeString)
+
+		modes.apply(parsedModes)
+
+		return parsedModes
+	}
+
+	@objc(getChangeCommand:)
+	public func changeCommand(for modes: ChannelModeContainer) -> String {
+		let modesSetOld = self.modes.modes
+		let modesSetNew = modes.modes
+
+		var modeAddString = ""
+		var modeRemoveString = ""
+		var modeRemoveParamString = ""
+		var modeAddParamString = ""
+
+		for modeSymbol in sortedSymbols(modesSetOld) where modesSetNew[modeSymbol] == nil {
+			if modeRemoveString.isEmpty {
+				modeRemoveString = "-\(modeSymbol)"
+			} else {
+				modeRemoveString += modeSymbol
+			}
+		}
+
+		for modeSymbol in sortedSymbols(modesSetNew) {
+			guard let mode = modesSetNew[modeSymbol] else {
+				continue
+			}
+
+			if let modeOld = modesSetOld[modeSymbol], mode.isEqual(modeOld) {
+				continue
+			}
+
+			if mode.modeIsSet {
+				if modeAddString.isEmpty {
+					modeAddString = "+\(modeSymbol)"
+				} else {
+					modeAddString += modeSymbol
+				}
+			} else {
+				if modeRemoveString.isEmpty {
+					modeRemoveString = "-\(modeSymbol)"
+				} else {
+					modeRemoveString += modeSymbol
+				}
+			}
+
+			guard let modeParameter = mode.modeParameter, modeParameter.isEmpty == false else {
+				continue
+			}
+
+			if mode.modeIsSet {
+				modeAddParamString += " \(modeParameter)"
+			} else {
+				modeRemoveParamString += " \(modeParameter)"
+			}
+		}
+
+		return modeRemoveString + modeAddString + modeRemoveParamString + modeAddParamString
+	}
+
+	@objc
+	public func clear() {
+		modes.clear()
+	}
+
+	@objc(modeIsDefined:)
+	public func modeIsDefined(_ modeSymbol: String) -> Bool {
+		modes.modeIsDefined(modeSymbol)
+	}
+
+	@objc(modeInfoFor:)
+	public func modeInfo(for modeSymbol: String) -> ModeInfo? {
+		modes.modeInfo(for: modeSymbol)
+	}
+
+	@objc public var string: String {
+		string(maskingPassword: false)
+	}
+
+	@objc public var stringWithMaskedPassword: String {
+		string(maskingPassword: true)
+	}
+
+	private func string(maskingPassword: Bool) -> String {
+		var modeSetString = ""
+		var modeParamString = ""
+
+		for modeSymbol in sortedSymbols(modes.modes) {
+			guard let mode = modes.modes[modeSymbol], mode.modeIsSet else {
+				continue
+			}
+
+			if modeSetString.isEmpty {
+				modeSetString = "+\(modeSymbol)"
+			} else {
+				modeSetString += modeSymbol
+			}
+
+			guard let modeParameter = mode.modeParameter, modeParameter.isEmpty == false else {
+				continue
+			}
+
+			if modeSymbol == "k", maskingPassword {
+				modeParamString += " ******"
+			} else {
+				modeParamString += " \(modeParameter)"
+			}
+		}
+
+		return modeSetString + modeParamString
+	}
+
+	private func sortedSymbols(_ modes: [String: ModeInfo]) -> [String] {
+		(modes as NSDictionary).sortedDictionaryKeys as? [String] ?? modes.keys.sorted()
+	}
+}
+
+@objc(IRCChannelModeContainer)
+public final class ChannelModeContainer: NSObject, NSCopying {
+	private weak var client: IRCClient?
+	private let modeObjectsLock = NSLock()
+	private var modeObjects: [String: ModeInfo] = [:]
+
+	public init(client: IRCClient) {
+		self.client = client
+		super.init()
+	}
+
+	@objc
+	public func clear() {
+		modeObjectsLock.lock()
+		modeObjects.removeAll()
+		modeObjectsLock.unlock()
+	}
+
+	@objc public var modes: [String: ModeInfo] {
+		modeObjectsLock.lock()
+		let modes = modeObjects
+		modeObjectsLock.unlock()
+		return modes
+	}
+
+	private var unwantedModes: [String] {
+		let supportInfo = client?.supportInfo
+
+		return [
+			supportInfo?.modeSymbol(for: .ban) ?? "not supported: b",
+			supportInfo?.modeSymbol(for: .banException) ?? "not supported: e",
+			supportInfo?.modeSymbol(for: .inviteException) ?? "not supported: I",
+			supportInfo?.modeSymbol(for: .quiet) ?? "not supported: q",
+		]
+	}
+
+	private func modeIsPermitted(_ modeSymbol: String) -> Bool {
+		if unwantedModes.contains(modeSymbol) {
+			return false
+		}
+
+		if client?.supportInfo.modeSymbolIsUserPrefix(modeSymbol) == true {
+			return false
+		}
+
+		return true
+	}
+
+	@objc(modeIsDefined:)
+	public func modeIsDefined(_ modeSymbol: String) -> Bool {
+		modes[modeSymbol] != nil
+	}
+
+	@objc(modeInfoFor:)
+	public func modeInfo(for modeSymbol: String) -> ModeInfo? {
+		modeObjectsLock.lock()
+		defer { modeObjectsLock.unlock() }
+
+		if let mode = modeObjects[modeSymbol] {
+			return mode
+		}
+
+		guard modeIsPermitted(modeSymbol) else {
+			return nil
+		}
+
+		let mode = ModeInfo(modeSymbol: modeSymbol)
+
+		modeObjects[modeSymbol] = mode
+
+		return mode
+	}
+
+	@objc(applyModes:)
+	public func apply(_ modes: [ModeInfo]) {
+		for mode in modes {
+			changeMode(mode.modeSymbol, modeIsSet: mode.modeIsSet, modeParameter: mode.modeParameter)
+		}
+	}
+
+	@objc(changeMode:modeIsSet:)
+	public func changeMode(_ modeSymbol: String, modeIsSet: Bool) {
+		changeMode(modeSymbol, modeIsSet: modeIsSet, modeParameter: nil)
+	}
+
+	@objc(changeMode:modeIsSet:modeParameter:)
+	public func changeMode(_ modeSymbol: String, modeIsSet: Bool, modeParameter: String?) {
+		guard let mode = modeInfo(for: modeSymbol) else {
+			return
+		}
+
+		let modeMutable = mode.mutableCopy() as! MutableModeInfo
+
+		modeMutable.modeSymbol = modeSymbol
+		modeMutable.modeIsSet = modeIsSet
+		modeMutable.modeParameter = modeParameter
+
+		let modeUpdated = modeMutable.copy() as! ModeInfo
+
+		modeObjectsLock.lock()
+		modeObjects[modeSymbol] = modeUpdated
+		modeObjectsLock.unlock()
+	}
+
+	public func copy(with _: NSZone? = nil) -> Any {
+		let object = ChannelModeContainer(client: client!)
+
+		modeObjectsLock.lock()
+		let snapshot = modeObjects
+		modeObjectsLock.unlock()
+
+		object.modeObjectsLock.lock()
+		object.modeObjects = snapshot
+		object.modeObjectsLock.unlock()
+
+		return object
+	}
+}

@@ -62,4 +62,9 @@ NS_ASSUME_NONNULL_BEGIN
 						   withLineType:(TVCLogLineType)lineType;
 @end
 
+@interface NSMutableString (IRCTextFormatterPrivate)
+/* Returns the number of characters deleted, or NSNotFound if none. */
+- (NSUInteger)wrapIRCTextFormatterResultWith:(NSUInteger)minimumIndex maxDistance:(NSUInteger)maxDistance;
+@end
+
 NS_ASSUME_NONNULL_END

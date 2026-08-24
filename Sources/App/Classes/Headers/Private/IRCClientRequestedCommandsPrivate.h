@@ -35,8 +35,6 @@
  *
  *********************************************************************** */
 
-#import "IRCCommandIndex.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
 /* The response of some commands are shown and hidden depending

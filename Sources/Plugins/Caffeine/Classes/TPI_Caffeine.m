@@ -117,11 +117,9 @@ NS_ASSUME_NONNULL_BEGIN
 		NSArray *clientList = worldController().clientList;
 
 		for (IRCClient *client in self.observedClients) {
-			/* Only stop observing client if they are still in -clientList */
-			/* If they are not, then we are only dangling a reference to a
-			 client that no longer exists and can free it below. */
+			BOOL keepObserving = observeClients && [clientList containsObject:client];
 
-			if ([clientList containsObject:client] || observeClients == NO) {
+			if (keepObserving == NO) {
 				@try {
 					[client removeObserver:self forKeyPath:@"isLoggedIn"];
 				} @catch (NSException *exception) {
@@ -136,20 +134,20 @@ NS_ASSUME_NONNULL_BEGIN
 		if (observeClients == NO) {
 			self.observedClients = nil;
 		} else {
-			if (self.observedClients == nil) {
-				self.observedClients = [NSMutableArray array];
-			}
+			NSMutableArray<IRCClient *> *nextObservedClients = [NSMutableArray array];
 
 			for (IRCClient *client in clientList) {
 				if ([self.observedClients containsObject:client] == NO) {
-					[self.observedClients addObject:client];
-
 					[client addObserver:self
 							 forKeyPath:@"isLoggedIn"
 								options:NSKeyValueObservingOptionNew
 								context:NULL];
 				}
+
+				[nextObservedClients addObject:client];
 			}
+
+			self.observedClients = nextObservedClients;
 		}
 
 		[self toggleSleepMode];
