@@ -13,7 +13,7 @@
 import AppKit
 
 @objc(TDCChannelSpotlightAppearance)
-public final class ChannelSpotlightAppearance: TVCApplicationAppearance {
+public final class ChannelSpotlightAppearance: ApplicationAppearance {
 	@objc public private(set) var searchFieldTextColor: NSColor?
 	@objc public private(set) var searchFieldNoResultsTextColor: NSColor?
 	@objc public private(set) var searchResultKeyboardShortcutDeselectedOffset: CGFloat = 0

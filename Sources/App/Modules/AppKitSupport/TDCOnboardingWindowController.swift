@@ -109,7 +109,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 			return false
 		}
 
-		return NSObject.masterController().world.clientCount == 0
+		return (NSObject.masterController().world?.clientCount ?? 0) == 0
 	}
 
 	@objc public init() {
@@ -422,8 +422,8 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 		config.channelList = channelList
 
-		let world = NSObject.masterController().world
-		let mainWindow = NSObject.masterController().mainWindow
+		let world = NSObject.masterController().world!
+		let mainWindow = NSObject.masterController().mainWindow!
 
 		/* -initWithConfig: moves the account password into the keychain. */
 		let client = world.createClient(with: config.copy() as! IRCClientConfig, reload: true)

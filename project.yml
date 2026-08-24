@@ -813,7 +813,6 @@ targets:
           - "AppKitSupport/TDCFileTransferDialogSocket.swift"
           - "AppKitSupport/TDCFileTransferDialogSocketConstants.m"
           - "AppKitSupport/TDCFileTransferDialogTransferController.swift"
-          - "AppKitSupport/TVCAppearance.swift"
           - "AppKitSupport/TVCLogLine.swift"
           - "AppKitSupport/TVCLogLineCompatibility.m"
           - "AppKitSupport/TVCLogLineConstants.m"
@@ -826,7 +825,6 @@ targets:
           - "AppKitSupport/TVCServerList.swift"
           - "AppKitSupport/TVCServerListCell.swift"
           - "AppKitSupport/TVCTextViewWithIRCFormatter.swift"
-          - "AppKitSupport/NSStringHelper.swift"
           - "IRCProtocol/Connection/IRCConnection.swift"
           - "IRCProtocol/DirectChat/IRCDirectChatConnection.swift"
           - "IRCProtocol/Inbound/IRCMessage.swift"
@@ -853,9 +851,6 @@ targets:
       - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialogTransferController.swift
         optional: true
         buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCAppearance.swift
-        optional: true
-        buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TVCLogLine.swift
         optional: true
         buildPhase: none
@@ -878,9 +873,6 @@ targets:
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TVCTextViewWithIRCFormatter.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/NSStringHelper.swift
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/IRCProtocol/Connection/IRCConnection.swift

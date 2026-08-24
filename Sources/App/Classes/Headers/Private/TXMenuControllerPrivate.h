@@ -49,6 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)populateNavigationChannelList;
 
+- (void)prepareForApplicationTermination;
+
 - (IBAction)performNavigationAction:(nullable id)sender;
 
 - (IBAction)joinChannelClicked:(nullable id)sender;

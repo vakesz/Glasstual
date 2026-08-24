@@ -107,9 +107,9 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	@objc
 	private func mainWindowSelectionChanged(_: Notification) {
-		let mainWindow = NSObject.masterController().mainWindow
-
-		guard let client = mainWindow.selectedClient else {
+		guard let mainWindow = NSObject.masterController().mainWindow,
+			let client = mainWindow.selectedClient
+		else {
 			return
 		}
 
@@ -581,7 +581,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			return
 		}
 
-		let world = NSObject.masterController().world
+		let world = NSObject.masterController().world!
 
 		let channel: IRCChannel?
 		let client: IRCClient?
