@@ -97,6 +97,44 @@ NS_ASSUME_NONNULL_BEGIN
 	XCTAssertEqualObjects(channelMode.stringWithMaskedPassword, @"+klnt ****** 5");
 }
 
+- (void)testChangeCommandIsDeterministic
+{
+	IRCChannelMode *channelMode = [self channelModeWithCurrentModes:@""];
+
+	IRCChannelModeContainer *modes = [channelMode.modes copy];
+
+	[modes changeMode:@"z" modeIsSet:YES modeParameter:@"last"];
+	[modes changeMode:@"a" modeIsSet:YES modeParameter:@"first"];
+
+	XCTAssertEqualObjects([channelMode getChangeCommand:modes], @"+az first last");
+}
+
+- (void)testListAndUserModesAreNotStoredAsChannelState
+{
+	IRCChannelMode *channelMode = [self channelModeWithCurrentModes:@""];
+
+	XCTAssertNil([channelMode modeInfoFor:@"b"]);
+	XCTAssertNil([channelMode modeInfoFor:@"o"]);
+	XCTAssertNotNil([channelMode modeInfoFor:@"n"]);
+}
+
+- (void)testCopiedContainerHasIndependentState
+{
+	IRCChannelMode *channelMode = [self channelModeWithCurrentModes:@"+nt"];
+
+	IRCChannelModeContainer *modes = [channelMode.modes copy];
+
+	[modes changeMode:@"k" modeIsSet:YES modeParameter:@"secret"];
+
+	XCTAssertFalse([channelMode modeIsDefined:@"k"]);
+	XCTAssertTrue([modes modeIsDefined:@"k"]);
+
+	[modes clear];
+
+	XCTAssertTrue([channelMode modeIsDefined:@"n"]);
+	XCTAssertEqual(modes.modes.count, 0);
+}
+
 @end
 
 NS_ASSUME_NONNULL_END

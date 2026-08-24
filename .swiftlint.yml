@@ -1,0 +1,7 @@
+excluded:
+  - DerivedData
+  - Frameworks
+  - build
+
+line_length: 120
+reporter: xcode

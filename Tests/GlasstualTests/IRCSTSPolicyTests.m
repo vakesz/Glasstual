@@ -122,6 +122,33 @@ NS_ASSUME_NONNULL_BEGIN
 	XCTAssertNil([store policyForHost:@"irc.example.net"]);
 }
 
+- (void)testPolicyPersistsAndReloadsFromUserDefaults
+{
+	NSString *suiteName = [NSString stringWithFormat:@"%@.%@", self.className, NSUUID.UUID.UUIDString];
+	NSUserDefaults *userDefaults = [[NSUserDefaults alloc] initWithSuiteName:suiteName];
+
+	[userDefaults removePersistentDomainForName:suiteName];
+
+	IRCSTSPolicyStore *store = [[IRCSTSPolicyStore alloc] initWithUserDefaults:userDefaults];
+	IRCSTSPolicy *policy = [[IRCSTSPolicy alloc] initWithPort:6697
+													expiresAt:[NSDate dateWithTimeIntervalSinceNow:300]
+													  preload:YES];
+
+	[store setPolicy:policy forHost:@"IRC.EXAMPLE.NET"];
+
+	NSDictionary *storedDictionary = [userDefaults dictionaryForKey:IRCSTSPolicyStoreDefaultsKey];
+
+	XCTAssertNotNil(storedDictionary[@"irc.example.net"]);
+
+	IRCSTSPolicyStore *reloadedStore = [[IRCSTSPolicyStore alloc] initWithUserDefaults:userDefaults];
+	IRCSTSPolicy *reloadedPolicy = [reloadedStore policyForHost:@"irc.example.net"];
+
+	XCTAssertEqual(reloadedPolicy.port, 6697);
+	XCTAssertTrue(reloadedPolicy.preload);
+
+	[userDefaults removePersistentDomainForName:suiteName];
+}
+
 #pragma mark -
 #pragma mark Applying a policy to connection parameters
 

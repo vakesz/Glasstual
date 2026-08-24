@@ -88,6 +88,18 @@ GLASSTUAL_EXTERN NSString *const TXNotificationHighlightLogStandardMessageFormat
 							  message:(NSString *)message
 							 userInfo:(nullable NSDictionary<NSString *, id> *)userInfo
 					 threadIdentifier:(NSString *)threadIdentifier;
+
+/* Pure helpers exposed for tests and shared call sites. */
++ (nullable NSString *)threadIdentifierForClient:(nullable NSString *)clientIdentifier
+										 channel:(nullable NSString *)channelIdentifier;
+
++ (BOOL)userInfo:(NSDictionary<NSString *, id> *)userInfo
+	isInScopeOfClientIdentifier:(NSString *)clientIdentifier
+			  channelIdentifier:(nullable NSString *)channelIdentifier;
+
++ (NSString *)notificationIdentifierWithTitle:(NSString *)title
+									  message:(NSString *)message
+							 threadIdentifier:(nullable NSString *)threadIdentifier;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -57,7 +57,7 @@ git clone https://github.com/vakesz/Glasstual.git
 
 **DO NOT change the Code Signing settings through Xcode.** `Glasstual.xcodeproj` is generated from `project.yml` and any change made in the target editor is lost on the next `xcodegen generate`.
 
-**DO** edit the file located at _[Configurations ➜ Signing.xcconfig](Configurations/Signing.xcconfig)_
+**DO** edit `CODE_SIGN_IDENTITY`, `DEVELOPMENT_TEAM`, and related keys in [`project.yml`](project.yml) (`settings.base`). Target Info.plist contents and sandbox entitlements are declared there too; `xcodegen generate` writes those files beside their targets.
 
 **It is HIGHLY DISCOURAGED to turn off code signing.** Certain features rely on the fact that Glasstual is properly signed and is within a sandboxed environment.
 
@@ -70,7 +70,7 @@ Glasstual requires Xcode 26 or later on macOS 26 (Tahoe) or later, an Apple Sili
 This tree has **no paid-license or trial checks**. Precompiled store builds of Textual from codeux.com are a separate product.
 
 1. Install the development tools: `brew bundle` (this includes XcodeGen).
-2. Set your Apple Developer **Team ID** in _[Configurations ➜ Signing.xcconfig](Configurations/Signing.xcconfig)_ and, if you are not building the official fork, `GLASSTUAL_BUNDLE_IDENTIFIER` in _[Configurations ➜ Base.xcconfig](Configurations/Base.xcconfig)_. The defaults are:
+2. Set your Apple Developer **Team ID** as `DEVELOPMENT_TEAM` in [`project.yml`](project.yml) and, if you are not building the official fork, `GLASSTUAL_BUNDLE_IDENTIFIER` there too. The defaults are:
    - Bundle ID: `com.vakesz.glasstual`
    - Team ID: `H8W5DK3FN2`
    - App Group: `group.<Team ID>.<Bundle ID>`
@@ -85,9 +85,9 @@ This tree has **no paid-license or trial checks**. Precompiled store builds of T
    make run              # build and launch
    ```
 
-   `make help` lists every target; they are thin wrappers around `xcodebuild` and the scripts in `Scripts/`.
+   `make help` lists every target; they call `xcodebuild` and the repository tools directly.
 
-   Run and Profile use the `Debug` configuration; Archive uses `Release`. The scheme's pre-action writes the build number from the last git commit date (see [Configurations/README.md](Configurations/README.md)).
+   Run and Profile use the `Debug` configuration; Archive uses `Release`. Versions, target Info.plist files, entitlements, schemes, and build settings are declared in `project.yml`.
 
 ### Code quality
 
@@ -96,16 +96,19 @@ Install the development tools and run the repository-wide checks with:
 ```sh
 make setup    # brew bundle
 make test     # unit tests (GlasstualTests, run inside the Debug app)
-make lint     # shellcheck, actionlint, plist/xib validation, format check
-make format   # clang-format, swift-format, shfmt
+make lint     # SwiftLint, SwiftFormat, shellcheck, actionlint and resource validation
+make format   # clang-format, SwiftFormat, shfmt
 ```
 
 The unit tests live in `Tests/GlasstualTests` and do not use the network.
 
 Formatting and linting intentionally exclude the vendored frameworks under
-`Frameworks/` and `External Libraries`. The `Quality` workflow runs `make lint` (shellcheck, actionlint,
-plist/xib validation and format checks) on every pull request; `Signed Release`
-is run manually to archive, notarize and publish.
+`Frameworks/` and `External Libraries`. `make lint` installs SwiftFormat or
+SwiftLint with Homebrew when either executable is missing. The `Quality`
+workflow runs the same command on every pull request; `Signed Release`
+is run manually from `master` to archive, notarize, attest and publish. Each
+GitHub Release includes the notarized ZIP, its SHA-256 checksum and generated
+release notes.
 
 ### Software Updates
 
@@ -132,7 +135,7 @@ through the Mac App Store from the same tree:
 - The direct-download pipeline (`.github/workflows/release.yml`) signs with a
   Developer ID identity. An App Store submission uses the same project with an
   Apple Distribution identity and App Store provisioning profiles (set in
-  `Configurations/Signing.xcconfig` or on the `xcodebuild` command line).
+  `project.yml` or on the `xcodebuild` command line).
 - Textual and LimeChat are BSD-licensed, so selling builds is permitted as
   long as the notices in [Licenses](#licenses) and `Acknowledgements.pdf`
   ship inside the app (they do: Help ▸ Acknowledgements) and the names

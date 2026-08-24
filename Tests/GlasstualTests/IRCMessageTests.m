@@ -87,6 +87,17 @@ NS_ASSUME_NONNULL_BEGIN
 	XCTAssertEqualObjects([message paramAt:0], @"token");
 }
 
+- (void)testParserConsumesWhitespaceBetweenProtocolSections
+{
+	IRCMessage *message = [[IRCMessage alloc] initWithLine:@"@flag\t:nick!user@host   privmsg\t#channel :hello  world"];
+
+	XCTAssertNotNil(message);
+	XCTAssertEqualObjects(message.messageTags[@"flag"], @"");
+	XCTAssertEqualObjects(message.senderNickname, @"nick");
+	XCTAssertEqualObjects(message.command, @"PRIVMSG");
+	XCTAssertEqualObjects(message.params, (@[ @"#channel", @"hello  world" ]));
+}
+
 - (void)testParsesTagsWithEscapes
 {
 	IRCMessage *message =

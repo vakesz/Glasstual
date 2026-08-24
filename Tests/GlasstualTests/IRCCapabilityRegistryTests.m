@@ -89,6 +89,14 @@ NS_ASSUME_NONNULL_BEGIN
 	XCTAssertEqualObjects([IRCCapabilityRegistry parseCapabilityList:@""], empty);
 }
 
+- (void)testParseCapabilityListUsesLastDuplicateAndIgnoresEmptyNamesAndValues
+{
+	NSDictionary *offered = [IRCCapabilityRegistry parseCapabilityList:@"SASL=PLAIN sasl=EXTERNAL,,SCRAM-SHA-256 =bad"];
+
+	XCTAssertEqualObjects(offered[@"sasl"], (@[ @"EXTERNAL", @"SCRAM-SHA-256" ]));
+	XCTAssertEqual(offered.count, 1);
+}
+
 - (void)testLookupIsCaseInsensitive
 {
 	IRCCapabilityRegistry *registry = [self registryWithGateAllowed:YES];
@@ -146,6 +154,26 @@ NS_ASSUME_NONNULL_BEGIN
 	NSArray<IRCCapability *> *request = [registry capabilitiesToRequestFromOffered:@{@"example.com/vendor" : @[]}];
 
 	XCTAssertEqual(request.count, 0);
+}
+
+- (void)testCyclicDependenciesAreNeverRequested
+{
+	IRCCapability *first = [[IRCCapability alloc] initWithName:@"first"
+													identifier:0
+											requestedByDefault:YES
+												preferenceGate:nil
+												  dependencies:@[ @"second" ]
+											   negotiationHook:nil];
+	IRCCapability *second = [[IRCCapability alloc] initWithName:@"second"
+													 identifier:0
+											 requestedByDefault:YES
+												 preferenceGate:nil
+												   dependencies:@[ @"first" ]
+												negotiationHook:nil];
+	IRCCapabilityRegistry *registry = [[IRCCapabilityRegistry alloc] initWithCapabilities:@[ first, second ]];
+	NSDictionary *offered = @{@"first" : @[], @"second" : @[]};
+
+	XCTAssertEqual([registry capabilitiesToRequestFromOffered:offered].count, 0);
 }
 
 - (void)testDefaultRegistryContents
