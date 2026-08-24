@@ -146,6 +146,7 @@
 		370BC812B8CF645807BF735B /* TVCAppearance.m in Sources */ = {isa = PBXBuildFile; fileRef = E38819AE9773D76585EDE02C /* TVCAppearance.m */; };
 		3768A98AE5D8001AE915BB3E /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = DCA0037A04E5776D7E789452 /* LICENSE.txt */; };
 		377EE167EA109152074E3C85 /* Smiley Converter.bundle in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = F5EB1AD83A6B0C7A8413C0C2 /* Smiley Converter.bundle */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		384EF86CFCF9438D68B00CC6 /* TDCNetworkPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 924B596C9F00539C80DA412B /* TDCNetworkPickerViewController.swift */; };
 		389900098184C5E290FB960F /* TDCInputPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3121F824D47C0D093E1AD519 /* TDCInputPrompt.swift */; };
 		395833295FD5EE7D6EE2C0A0 /* TVCValidatedTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF659AF17C8CFBFC595178E3 /* TVCValidatedTextField.swift */; };
 		3A35995DEFA206D37647B3F9 /* StaticDefinitions.h in Headers */ = {isa = PBXBuildFile; fileRef = 7DC4F0294F79C5F66A1DB074 /* StaticDefinitions.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -360,7 +361,6 @@
 		9B5CFA246FDDDDB8D0972AFD /* ICLPluginManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 31751C9C98BAD79D402FB1AE /* ICLPluginManager.m */; };
 		9B9E3A9A31AE06460363A97C /* NSColorHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EE472DC3A589214F72B4134 /* NSColorHelper.swift */; };
 		9C7A952FC9B99D12263364A2 /* TPIUserInsights.m in Sources */ = {isa = PBXBuildFile; fileRef = CFC20564AAB3A8274DC81958 /* TPIUserInsights.m */; };
-		9C983462A622E01D0DCC8436 /* TDCNetworkPickerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 78B92982CD33687AD6C2C8D2 /* TDCNetworkPickerViewController.m */; };
 		9DA6EF2CDC0BD84D89891C63 /* IRCMessageTagParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EEB086053CDC92F4535047 /* IRCMessageTagParser.swift */; };
 		9E85544D293B1E0CC9FF35D9 /* TPI_ChatFilterLogic.strings in Resources */ = {isa = PBXBuildFile; fileRef = F2B02BA6CB4EE76805B02E91 /* TPI_ChatFilterLogic.strings */; };
 		9F3050BC34902E2E0B73807E /* ICMInlineImage.css in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5213B70AD4720A81A99E85AD /* ICMInlineImage.css */; };
@@ -830,16 +830,6 @@
 		070DCA40BB8576D920BC2970 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation;
-			dstSubfolderSpec = 7;
-			files = (
-				4888B2AB78F64980FAE8E62C /* Acknowledgements.pdf in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = Preferences;
 			dstSubfolderSpec = 7;
 			files = (
@@ -851,7 +841,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
+		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
@@ -860,6 +850,16 @@
 				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
 				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
 				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Documentation;
+			dstSubfolderSpec = 7;
+			files = (
+				4888B2AB78F64980FAE8E62C /* Acknowledgements.pdf in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1348,7 +1348,6 @@
 		7745A9C89A6F9B8BBDD9A3FD /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCChannelInviteSheet.xib; sourceTree = "<group>"; };
 		77ACE8D91C6D8330E2D8FBD8 /* TPCPreferencesImportExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TPCPreferencesImportExport.swift; sourceTree = "<group>"; };
 		7873771D11222885395DAF5A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
-		78B92982CD33687AD6C2C8D2 /* TDCNetworkPickerViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TDCNetworkPickerViewController.m; sourceTree = "<group>"; };
 		7947F3824B3A6A447D5C9D3B /* NSStringHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NSStringHelper.h; sourceTree = "<group>"; };
 		796F24B544FF592A0817B2C8 /* IRCMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCMessage.h; sourceTree = "<group>"; };
 		79A3538EDAD31D781B3CB771 /* TDCChannelModifyTopicSheetPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCChannelModifyTopicSheetPrivate.h; sourceTree = "<group>"; };
@@ -2282,7 +2281,6 @@
 			isa = PBXGroup;
 			children = (
 				5236CFBA15B4702CC9115B37 /* TDCNetworkPickerViewController.h */,
-				78B92982CD33687AD6C2C8D2 /* TDCNetworkPickerViewController.m */,
 				248EA213CA149DCDABEC04F8 /* TDCOnboardingSteps.h */,
 				406D3AEA98901D0B632D0471 /* TDCOnboardingStepViewController.h */,
 				5970EC56BA7D380BCA0D091F /* TDCOnboardingWindowController.h */,
@@ -5132,7 +5130,7 @@
 				D7715816A1BDDC68EBF86659 /* TDCFileTransferDialogTransferController.m in Sources */,
 				A69AE329079DFC3CC863772A /* TDCHighlightEntrySheet.swift in Sources */,
 				389900098184C5E290FB960F /* TDCInputPrompt.swift in Sources */,
-				9C983462A622E01D0DCC8436 /* TDCNetworkPickerViewController.m in Sources */,
+				384EF86CFCF9438D68B00CC6 /* TDCNetworkPickerViewController.swift in Sources */,
 				710FED407BDEE576DD7D49A5 /* TDCNicknameColorSheet.swift in Sources */,
 				E177087BCDEAECC8ABD37038 /* TDCOnboardingAppearanceStepViewController.swift in Sources */,
 				EC3DA32316660A78B4F1F0CF /* TDCOnboardingIdentityStepViewController.swift in Sources */,
