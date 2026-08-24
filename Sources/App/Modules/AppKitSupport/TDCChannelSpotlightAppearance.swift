@@ -20,7 +20,7 @@ public final class ChannelSpotlightAppearance: TVCApplicationAppearance {
 	@objc public private(set) var searchResultKeyboardShortcutSelectedOffset: CGFloat = 0
 
 	@objc(initWithWindow:)
-	public init?(window _: TDCChannelSpotlightPanel) {
+	public init?(window _: ChannelSpotlightPanel) {
 		guard let appearanceLocation = Bundle.main.url(
 			forResource: "TDCChannelSpotlightAppearance",
 			withExtension: "plist"
