@@ -29,5 +29,5 @@ jobs:
       - name: Lint and check formatting
         run: make lint
 
-      - name: Verify generated Xcode project
-        run: make project-check
+      - name: Validate Xcode project generation
+        run: make generate

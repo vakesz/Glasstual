@@ -13,6 +13,7 @@
 import AppKit
 
 @objc(IRCChannelMemberListController)
+@MainActor
 public final class IRCChannelMemberListController: NSArrayController {
 	private weak var memberList: IRCChannelMemberList?
 

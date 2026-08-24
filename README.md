@@ -103,9 +103,11 @@ make format   # clang-format, SwiftFormat, shfmt
 The unit tests live in `Tests/GlasstualTests` and do not use the network.
 
 Formatting and linting intentionally exclude the vendored frameworks under
-`Frameworks/` and `External Libraries`. `make lint` installs SwiftFormat or
-SwiftLint with Homebrew when either executable is missing. The `Quality`
-workflow runs the same command on every pull request; `Signed Release`
+`Frameworks/` and `External Libraries`. SwiftLint's checked-in baseline records
+the legacy findings present when Swift sources were brought under the linter;
+new findings still fail the build. `make lint` installs SwiftFormat or SwiftLint
+with Homebrew when either executable is missing. The `Quality` workflow runs
+the same command on every pull request; `Signed Release`
 is run manually from `master` to archive, notarize, attest and publish. Each
 GitHub Release includes the notarized ZIP, its SHA-256 checksum and generated
 release notes.

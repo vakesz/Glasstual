@@ -18,7 +18,6 @@ permissions:
 concurrency:
   group: signed-release
   cancel-in-progress: false
-  queue: max
 
 jobs:
   release:
@@ -265,13 +264,16 @@ jobs:
           set -euo pipefail
           APP="${ARCHIVE_PATH}/Products/Applications/Glasstual.app"
           VERSION="${{ steps.version.outputs.version }}"
-          OUT="build/Glasstual-${VERSION}.zip"
+          ARCHIVE_NAME="Glasstual-${VERSION}.zip"
+          OUT="build/${ARCHIVE_NAME}"
           CHECKSUM="${OUT}.sha256"
           ditto -c -k --sequesterRsrc --keepParent "${APP}" "${OUT}"
-          shasum -a 256 "${OUT}" > "${CHECKSUM}"
-          echo "path=${OUT}" >> "${GITHUB_OUTPUT}"
-          echo "name=Glasstual-${VERSION}.zip" >> "${GITHUB_OUTPUT}"
-          echo "checksum=${CHECKSUM}" >> "${GITHUB_OUTPUT}"
+          (cd build && shasum -a 256 "${ARCHIVE_NAME}") > "${CHECKSUM}"
+          {
+            echo "path=${OUT}"
+            echo "name=${ARCHIVE_NAME}"
+            echo "checksum=${CHECKSUM}"
+          } >> "${GITHUB_OUTPUT}"
           cat "${CHECKSUM}"
 
       - name: Attest release archive

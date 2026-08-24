@@ -1,4 +1,7 @@
+baseline: .swiftlint-baseline.json
+
 excluded:
+  - .agents
   - DerivedData
   - Frameworks
   - build
