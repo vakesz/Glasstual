@@ -364,6 +364,7 @@ targets:
         PRODUCT_NAME: Scrollback History Manager
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.ScrollbackHistoryManager
         GCC_PREFIX_HEADER: Sources/Services/Historic Log File Manager/Classes/Headers/Private/HSLHistoricLogPCHPrivate.h
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Services/Historic Log File Manager/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
       configs:
         Release:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE)
@@ -404,6 +405,7 @@ targets:
         PRODUCT_NAME: Inline Content Loader
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader
         GCC_PREFIX_HEADER: Sources/Services/Inline Content Loader/Classes/Headers/Private/ICLProcessPCHPrivate.h
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Services/Inline Content Loader/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
         # The Core Media plugin resolves symbols from this binary at runtime.
         DEAD_CODE_STRIPPING: NO
         GCC_SYMBOLS_PRIVATE_EXTERN: NO
@@ -466,6 +468,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader.CoreMedia
         WRAPPER_EXTENSION: mediaPlugin
         GCC_PREFIX_HEADER: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes/Headers/Private/ICPCoreMediaPCHPrivate.h
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
         HEADER_SEARCH_PATHS:
           - $(inherited)
           - '"$(SRCROOT)/Sources/Services/Inline Content Loader/Classes/Headers/**"'

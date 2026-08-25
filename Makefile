@@ -47,7 +47,7 @@ ensure-linters: ensure-formatters
 	@command -v actionlint >/dev/null 2>&1 || brew install actionlint
 
 lint: ensure-linters format-check ## Run all linters and format checks
-	swiftlint lint --strict --no-cache
+	swiftlint lint --strict --no-cache Sources Tests
 	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shellcheck "$${files[@]}"; fi
 	actionlint
 	@git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ] && [ "$${file##*/}" != distribution.plist ]; then plutil -lint "$$file" >/dev/null; fi; done
@@ -55,12 +55,12 @@ lint: ensure-linters format-check ## Run all linters and format checks
 	git diff --check
 
 format: ensure-formatters ## Format Objective-C, Swift and shell sources in place
-	swiftformat --cache ignore .
+	swiftformat --cache ignore Sources Tests
 	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.c' '*.cc' '*.cpp' '*.h' '*.m' '*.mm'); if [ "$${#files[@]}" -gt 0 ]; then xcrun clang-format -i --style=file "$${files[@]}"; fi
 	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -w -i 0 -ci -sr "$${files[@]}"; fi
 
 format-check: ensure-formatters ## Verify formatting without changing files
-	swiftformat --lint --cache ignore .
+	swiftformat --lint --cache ignore Sources Tests
 	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.c' '*.cc' '*.cpp' '*.h' '*.m' '*.mm'); if [ "$${#files[@]}" -gt 0 ]; then xcrun clang-format --dry-run --Werror --style=file "$${files[@]}"; fi
 	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -d -i 0 -ci -sr "$${files[@]}"; fi
 

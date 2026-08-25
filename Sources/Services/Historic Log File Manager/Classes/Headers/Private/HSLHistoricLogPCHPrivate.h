@@ -45,4 +45,3 @@
 #import "HLSHistoricLogProtocol.h"
 #import "HLSHistoricLogViewContextPrivate.h"
 #import "HLSHistoricLogProcessMainPrivate.h"
-#import "HSLHistoricLogProcessDelegatePrivate.h"

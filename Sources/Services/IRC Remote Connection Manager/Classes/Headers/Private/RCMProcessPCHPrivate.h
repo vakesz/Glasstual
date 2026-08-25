@@ -46,5 +46,3 @@
 #import "IRCConnectionConfig.h"
 #import "IRCConnectionErrors.h"
 #import "RCMConnectionManagerProtocol.h"
-#import "RCMProcessDelegatePrivate.h"
-#import "RCMProcessMainPrivate.h"
