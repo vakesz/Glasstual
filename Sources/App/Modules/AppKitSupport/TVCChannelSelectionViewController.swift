@@ -137,11 +137,9 @@ public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSo
 			}
 
 			if let channels = cachedChannelList[item] as? [IRCChannel] {
-				for channel in channels {
-					if cachedSelectedChannelIdsStorage.contains(channel.uniqueIdentifier) {
-						cellView.selectedCheckbox.state = .mixed
-						return
-					}
+				for channel in channels where cachedSelectedChannelIdsStorage.contains(channel.uniqueIdentifier) {
+					cellView.selectedCheckbox.state = .mixed
+					return
 				}
 			}
 

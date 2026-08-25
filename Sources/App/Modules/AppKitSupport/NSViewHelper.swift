@@ -37,7 +37,7 @@ public extension NSWindow {
 
 		newFrame.size.width = minSize.width
 		newFrame.size.height = bezelHeight + minSize.height
-		newFrame.origin.y = NSMaxY(oldFrame) - newFrame.size.height
+		newFrame.origin.y = oldFrame.maxY - newFrame.size.height
 
 		setFrame(newFrame, display: display, animate: animate)
 	}

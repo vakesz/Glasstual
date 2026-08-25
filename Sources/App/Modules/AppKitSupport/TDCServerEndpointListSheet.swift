@@ -36,8 +36,10 @@ public final class ServerEndpointListSheet: SheetBase {
 		entryTable.registerForDraggedTypes([endpointEntryTableDragToken])
 		entryTable.draggingDestinationFeedbackStyle = .gap
 
-		canRemoveObservation = entryTableController.observe(\.canRemove, options: [.initial, .new]) {
-			[weak self] _, _ in
+		canRemoveObservation = entryTableController.observe(\.canRemove, options: [
+			.initial,
+			.new,
+		]) { [weak self] _, _ in
 			self?.updateEntryActionsSegmentedControlEnabledState()
 		}
 	}

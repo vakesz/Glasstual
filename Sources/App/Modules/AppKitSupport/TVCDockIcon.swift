@@ -134,12 +134,12 @@ public final class DockIconBadgeView: NSView {
 		let separator: CGFloat = 1.0
 
 		if highlightCount > 0 {
-			let top = NSMaxY(bounds) - badgeHeight - separator
+			let top = bounds.maxY - badgeHeight - separator
 
 			_ = drawBadge(
 				withCount: highlightCount,
 				color: .systemGreen,
-				topRight: NSPoint(x: NSMaxX(bounds), y: top),
+				topRight: NSPoint(x: bounds.maxX, y: top),
 				height: badgeHeight
 			)
 		}
@@ -171,8 +171,8 @@ public final class DockIconBadgeView: NSView {
 		pill.stroke()
 
 		let textOrigin = NSPoint(
-			x: NSMidX(frame) - (textSize.width / 2.0),
-			y: NSMidY(frame) - (textSize.height / 2.0)
+			x: frame.midX - (textSize.width / 2.0),
+			y: frame.midY - (textSize.height / 2.0)
 		)
 
 		string.draw(at: textOrigin, withAttributes: attributes)

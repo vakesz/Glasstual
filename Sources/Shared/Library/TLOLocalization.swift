@@ -56,9 +56,7 @@
 // When the key is assigned in the strings file, it is not prefaced by the table name.
 //
 
-///
-/// Performs localization with a special key
-///
+// Performs localization with a special key.
 // swift-format-ignore: AlwaysUseLowerCamelCase
 public func LocalizedKey(
 	_ key: String, _ arguments: CVarArg..., table: String = "BasicLanguage", bundle: Bundle = Bundle.main
@@ -66,9 +64,7 @@ public func LocalizedKey(
 	localize(string: key, arguments: arguments, table: table, bundle: bundle, specialKey: true)
 }
 
-///
-/// Performs localization with input string
-///
+// Performs localization with an input string.
 // swift-format-ignore: AlwaysUseLowerCamelCase
 public func LocalizedString(
 	_ string: String, _ arguments: CVarArg..., table: String = "BasicLanguage", bundle: Bundle = Bundle.main

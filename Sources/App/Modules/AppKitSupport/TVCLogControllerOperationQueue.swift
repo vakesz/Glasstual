@@ -46,11 +46,11 @@ private final class LogControllerPrintingOperation: Operation, @unchecked Sendab
 	}
 
 	override var isExecuting: Bool {
-		operationExecuting
+		requiresExplicitFinish ? operationExecuting : super.isExecuting
 	}
 
 	override var isFinished: Bool {
-		operationFinished
+		requiresExplicitFinish ? operationFinished : super.isFinished
 	}
 
 	override func start() {
@@ -125,6 +125,9 @@ private final class LogControllerPrintingOperation: Operation, @unchecked Sendab
 
 @objc(TVCLogControllerPrintingOperationQueue)
 public final class LogControllerPrintingOperationQueue: OperationQueue, @unchecked Sendable {
+	/* objc_sync was recursive. Keep that behavior while using a stable lock
+	 identity because operation completion can re-enter queue bookkeeping. */
+	private let pendingOperationsLock = NSRecursiveLock()
 	private var pendingOperations: [String: NSMutableArray] = [:]
 
 	override public init() {
@@ -203,18 +206,17 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 	private func pendingOperations(for viewController: TVCLogController) -> [LogControllerPrintingOperation] {
 		let key = pendingOperationsKey(for: viewController)
 
-		objc_sync_enter(pendingOperations)
-		let operations = pendingOperations[key] as? [LogControllerPrintingOperation] ?? []
-		objc_sync_exit(pendingOperations)
+		pendingOperationsLock.lock()
+		defer { pendingOperationsLock.unlock() }
 
-		return operations
+		return pendingOperations[key] as? [LogControllerPrintingOperation] ?? []
 	}
 
 	private func addPendingOperation(_ operation: LogControllerPrintingOperation) {
 		var operationDependency: LogControllerPrintingOperation?
 		let pendingOperationsKey = operation.pendingOperationsKey
 
-		objc_sync_enter(pendingOperations)
+		pendingOperationsLock.lock()
 
 		let pendingList: NSMutableArray
 		if let existing = pendingOperations[pendingOperationsKey] {
@@ -234,7 +236,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 		}
 
 		pendingList.add(operation)
-		objc_sync_exit(pendingOperations)
+		pendingOperationsLock.unlock()
 
 		if let operationDependency {
 			operation.addDependency(operationDependency)
@@ -253,10 +255,10 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 	private func removePendingOperation(_ operation: LogControllerPrintingOperation) {
 		let pendingOperationsKey = operation.pendingOperationsKey
 
-		objc_sync_enter(pendingOperations)
+		pendingOperationsLock.lock()
 
 		guard let pendingList = pendingOperations[pendingOperationsKey] else {
-			objc_sync_exit(pendingOperations)
+			pendingOperationsLock.unlock()
 			logControllerOperationQueueLogger.error(
 				"'pendingOperations' is nil when it's not supposed to be. wat?"
 			)
@@ -273,7 +275,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 			pendingOperations.removeValue(forKey: pendingOperationsKey)
 		}
 
-		objc_sync_exit(pendingOperations)
+		pendingOperationsLock.unlock()
 
 		if let operationDependency = operation.dependencies.first {
 			operation.removeDependency(operationDependency)

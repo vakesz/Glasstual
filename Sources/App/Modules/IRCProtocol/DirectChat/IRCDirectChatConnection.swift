@@ -267,7 +267,8 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		)
 
 		if portMapping.isMapped {
-			directChatLogger.info("Direct chat: port \(hostPort, privacy: .public) mapped")
+			let port = hostPort
+			directChatLogger.info("Direct chat: port \(port, privacy: .public) mapped")
 		} else {
 			directChatLogger.error(
 				"Direct chat: port mapping failed with error code \(portMapping.error, privacy: .public)"
@@ -304,7 +305,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		}
 
 		let data = NSMutableData(data: encoded)
-		data.append("\r\n".data(using: .utf8)!)
+		data.append(Data("\r\n".utf8))
 		connection?.write(data as Data, timeout: writeTimeout)
 	}
 
