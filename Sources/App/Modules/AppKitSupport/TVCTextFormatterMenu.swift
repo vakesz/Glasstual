@@ -30,8 +30,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		generateColorList()
 	}
 
-	private var textField: TVCTextViewWithIRCFormatter? {
-		guard let firstResponder = NSApp.keyWindow?.firstResponder as? TVCTextViewWithIRCFormatter else {
+	private var textField: TextViewWithIRCFormatter? {
+		guard let firstResponder = NSApp.keyWindow?.firstResponder as? TextViewWithIRCFormatter else {
 			return nil
 		}
 

@@ -381,7 +381,7 @@ public final class MasterController: NSObject, NSApplicationDelegate {
 
 		Self.terminationLogger.debug("All clients finished; saving historic log")
 
-		TVCLogControllerHistoricLogFile.sharedInstance()
+		LogControllerHistoricLogFile.shared()
 			.prepareForApplicationTermination { [weak self] in
 				guard let self else {
 					return

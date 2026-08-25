@@ -125,14 +125,14 @@ public final class PreferencesNotificationConfiguration: NotificationConfigurati
 
 @objc(TDCChannelPropertiesNotificationConfiguration)
 public final class ChannelPropertiesNotificationConfiguration: NotificationConfiguration {
-	private weak var sheet: TDCChannelPropertiesSheet?
+	private weak var sheet: ChannelPropertiesSheet?
 
 	public required init(eventType: TXNotificationType) {
 		super.init(eventType: eventType)
 	}
 
 	@objc(initWithEventType:inSheet:)
-	public init(eventType: TXNotificationType, in sheet: TDCChannelPropertiesSheet) {
+	public init(eventType: TXNotificationType, in sheet: ChannelPropertiesSheet) {
 		self.sheet = sheet
 
 		super.init(eventType: eventType)

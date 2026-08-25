@@ -107,7 +107,7 @@ public final class MessageBatch: NSObject {
 
 	@objc(queueEntry:)
 	public func queueEntry(_ entry: Any) {
-		guard entry is IRCMessage || entry is MessageBatch else {
+		guard entry is Message || entry is MessageBatch else {
 			return
 		}
 
@@ -118,7 +118,7 @@ public final class MessageBatch: NSObject {
 
 	@objc(dequeueEntry:)
 	public func dequeueEntry(_ entry: Any) {
-		guard entry is IRCMessage || entry is MessageBatch else {
+		guard entry is Message || entry is MessageBatch else {
 			return
 		}
 

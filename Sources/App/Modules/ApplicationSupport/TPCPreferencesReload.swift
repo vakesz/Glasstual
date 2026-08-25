@@ -171,7 +171,7 @@ public extension TPCPreferences {
 		}
 
 		if reloadAction.contains(.textDirection) {
-			inputTextField?.updateTextDirection()
+			inputTextField?.perform(Selector(("updateTextDirection")))
 
 			if didReloadActiveStyle == false {
 				mainWindow.reloadTheme()
@@ -179,7 +179,7 @@ public extension TPCPreferences {
 		}
 
 		if reloadAction.contains(.textFieldFontSize) {
-			inputTextField?.updateTextBasedOnPreferredFontSize()
+			inputTextField?.perform(Selector(("updateTextBasedOnPreferredFontSize")))
 		}
 
 		if reloadAction.contains(.inputHistoryScope) {
@@ -201,7 +201,7 @@ public extension TPCPreferences {
 		}
 
 		if reloadAction.contains(.scrollbackSaveLimit) {
-			TVCLogControllerHistoricLogFile.sharedInstance().resetMaximumLineCount()
+			LogControllerHistoricLogFile.shared().resetMaximumLineCount()
 		}
 
 		if reloadAction.contains(.scrollbackVisibleLimit) {

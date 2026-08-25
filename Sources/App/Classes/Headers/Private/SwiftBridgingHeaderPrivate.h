@@ -54,7 +54,6 @@
 #import "TLOLinkParser.h"
 #import "IRCConnectionErrors.h"
 #import "IRCConnectionPrivate.h"
-#import "IRCDirectChatConnectionPrivate.h"
 #import "RCMConnectionManagerProtocol.h"
 #import "TDCFileTransferDialogSocketPrivate.h"
 #import "IRCHighlightLogEntryPrivate.h"
@@ -62,7 +61,9 @@
 #import "IRCISupportInfo.h"
 #import "IRCISupportInfoPrivate.h"
 #import "IRCChannelMode.h"
-#import "IRCMessage.h"
+/* IRCMessage / IRCMessageMutable are Swift (Message / MessageMutable).
+ Keep IRCMessage.h out of this bridging graph. Plugin category lives in
+ THOPluginDispatcherSupport.m for ObjC callers. */
 #import "IRCMessageBatchPrivate.h"
 #import "IRCNetworkList.h"
 #import "IRCServerPrivate.h"
@@ -78,8 +79,6 @@
 
 // Application and preferences
 #import "BuildConfig.h"
-#import "TDCChannelPropertiesSheetPrivate.h"
-#import "TDCChannelPropertiesSheetInternal.h"
 #import "TPCApplicationInfo.h"
 #import "TPCPathInfo.h"
 #import "TPCPathInfoPrivate.h"
@@ -108,10 +107,6 @@
 #import "THOPluginProtocolPrivate.h"
 #import "THOPluginItemSupportedFeature.h"
 
-@interface IRCMessage (IRCMessagePluginExtension)
-- (THOPluginDidReceiveServerInputConcreteObject *)didReceiveServerInputConcreteObject;
-@end
-
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 #import "TVCLogPolicyPrivate.h"
 #import "TVCLogViewPrivate.h"
@@ -121,9 +116,6 @@
 #import "ICLInlineContentProtocol.h"
 #import "TVCMainWindow.h"
 #import "TVCMainWindowPrivate.h"
-#import "TVCMainWindowTextView.h"
-#import "TVCMainWindowTextViewPrivate.h"
-#import "TVCTextViewWithIRCFormatterPrivate.h"
 
 // Networking and notifications
 #import "OELReachability.h"
@@ -166,7 +158,7 @@
 
 // Text and presentation
 #import "TVCLogControllerPrivate.h"
-#import "TVCLogControllerHistoricLogFilePrivate.h"
+#import "HLSHistoricLogProtocol.h"
 #import "TVCLogControllerOperationQueuePrivate.h"
 #import "TVCLogLine.h"
 #import "TVCLogLinePrivate.h"
@@ -176,7 +168,7 @@
 #import "TVCMemberListPrivate.h"
 /* TVCServerList is Swift (ServerList). Keep TVCServerList.h out of this
  bridging graph; cell private APIs stay available for drawing. */
-#import "TVCServerListCellPrivate.h"
+/* TVCServerListCell* are Swift (ServerListCell*). Keep Private out of bridging. */
 #import "TVCLogViewInternalWK2.h"
 #import "TVCLogScriptEventSinkPrivate.h"
 #import "NSTableVIewHelperPrivate.h"

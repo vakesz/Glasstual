@@ -808,7 +808,6 @@ targets:
       - path: Sources/App/Classes
       - path: Sources/App/Modules
         excludes:
-          - "AppKitSupport/TDCChannelPropertiesSheet.swift"
           - "AppKitSupport/TDCFileTransferDialog.swift"
           - "AppKitSupport/TDCFileTransferDialogSocket.swift"
           - "AppKitSupport/TDCFileTransferDialogSocketConstants.m"
@@ -820,13 +819,7 @@ targets:
           - "AppKitSupport/TVCLogViewConsoleShim.m"
           - "AppKitSupport/TVCLogViewConstants.m"
           - "AppKitSupport/TVCLogViewInternalWK2.swift"
-          - "AppKitSupport/TVCMainWindowChannelView.swift"
-          - "AppKitSupport/TVCMemberListCell.swift"
-          - "AppKitSupport/TVCServerListCell.swift"
-          - "AppKitSupport/TVCTextViewWithIRCFormatter.swift"
           - "IRCProtocol/Connection/IRCConnection.swift"
-          - "IRCProtocol/DirectChat/IRCDirectChatConnection.swift"
-          - "IRCProtocol/Inbound/IRCMessage.swift"
           - "IRCProtocol/IRCProtocolObjCConstants.m"
           - "IRCProtocol/Presence/IRCChannel.swift"
           - "IRCProtocol/Presence/IRCChannelConfig.swift"
@@ -834,9 +827,6 @@ targets:
           - "IRCProtocol/Presence/IRCChannelUser.swift"
           - "IRCProtocol/Presence/IRCWorld.swift"
           - "Plugins/**"
-      - path: Sources/App/Modules/AppKitSupport/TDCChannelPropertiesSheet.swift
-        optional: true
-        buildPhase: none
       - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialog.swift
         optional: true
         buildPhase: none
@@ -858,25 +848,7 @@ targets:
       - path: Sources/App/Modules/AppKitSupport/TVCLogViewInternalWK2.swift
         optional: true
         buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCMainWindowChannelView.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCMemberListCell.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCServerListCell.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCTextViewWithIRCFormatter.swift
-        optional: true
-        buildPhase: none
       - path: Sources/App/Modules/IRCProtocol/Connection/IRCConnection.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/IRCProtocol/DirectChat/IRCDirectChatConnection.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/IRCProtocol/Inbound/IRCMessage.swift
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/IRCProtocol/Presence/IRCChannel.swift
