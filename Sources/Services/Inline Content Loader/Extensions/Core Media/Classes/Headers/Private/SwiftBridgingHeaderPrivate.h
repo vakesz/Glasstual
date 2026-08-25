@@ -38,15 +38,9 @@
 #import <CocoaExtensions/CocoaExtensions.h>
 
 #import "ICLPluginProtocol.h"
-
-#import "ICMCommonInlineImages.h"
-#import "ICMCommonInlineVideos.h"
-#import "ICMDailymotion.h"
-#import "ICMGyazo.h"
-#import "ICMImgurGifv.h"
-#import "ICMPornhub.h"
-#import "ICMStreamable.h"
-#import "ICMTweet.h"
-#import "ICMVimeo.h"
-#import "ICMXkcd.h"
-#import "ICMYouTube.h"
+#import "ICLHelpers.h"
+#import "ICLInlineContentModulePrivate.h"
+#import "ICMInlineHTML.h"
+#import "ICMInlineImage.h"
+#import "ICMInlineVideo.h"
+#import "TPCPreferences.h"

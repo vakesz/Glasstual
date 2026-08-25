@@ -61,8 +61,11 @@ final class RemoteConnectionProcess: NSObject, RCMConnectionManagerServerProtoco
 		serviceConnection = nil
 	}
 
-	func open(with config: IRCConnectionConfig) {
+	func open(with portableConfig: Any) {
 		precondition(connection == nil, "Method invoked with connection already open")
+		guard let config = portableConfig as? IRCConnectionConfig else {
+			preconditionFailure("Connection host received an invalid configuration object")
+		}
 
 		guard let serviceConnection else {
 			RCMLog.connection.error("Cannot open a connection after the client connection ended")

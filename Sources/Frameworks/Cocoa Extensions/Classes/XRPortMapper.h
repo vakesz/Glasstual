@@ -96,6 +96,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /** This notification is posted asynchronously when the status of a 
     port mapping (its error, publicAddress or publicPort) changes. */
-COCOA_EXTENSIONS_EXTERN NSString *const XRPortMapperDidChangedNotification;
+#define XRPortMapperDidChangedNotification @"XRPortMapperDidChangedNotification"
 
 NS_ASSUME_NONNULL_END

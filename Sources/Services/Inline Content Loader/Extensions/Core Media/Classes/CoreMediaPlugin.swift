@@ -41,17 +41,17 @@ import Foundation
 final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
 	@objc class var modules: [AnyClass] {
 		[
-			ICMDailymotion.self,
-			ICMGyazo.self,
-			ICMImgurGifv.self,
-			ICMPornhub.self,
-			ICMStreamable.self,
-			ICMTweet.self,
-			ICMVimeo.self,
-			ICMXkcd.self,
-			ICMYouTube.self,
-			ICMCommonInlineVideos.self,
-			ICMCommonInlineImages.self,
+			DailymotionModule.self,
+			GyazoModule.self,
+			ImgurGifvModule.self,
+			PornhubModule.self,
+			StreamableModule.self,
+			TweetModule.self,
+			VimeoModule.self,
+			XkcdModule.self,
+			YouTubeModule.self,
+			CommonInlineVideosModule.self,
+			CommonInlineImagesModule.self,
 		]
 	}
 }
