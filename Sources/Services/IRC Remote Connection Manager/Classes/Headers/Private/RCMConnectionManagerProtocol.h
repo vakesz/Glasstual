@@ -39,8 +39,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class IRCConnectionConfig;
-
 /* trustFailureDescription is nil when the system trusted the certificate
  chain. Otherwise it describes why the chain was not trusted, whether the
  connection then ignored that or the user chose to trust the chain. */
@@ -58,7 +56,7 @@ typedef void (^NS_SWIFT_SENDABLE RCMSecureConnectionInformationCompletionBlock)(
 @protocol RCMConnectionManagerServerProtocol
 @required
 
-- (void)openWithConfig:(IRCConnectionConfig *)config;
+- (void)openWithConfig:(id)config NS_SWIFT_NAME(open(with:));
 - (void)close;
 
 /* -sendData: does not append \r\n. It is assumed client does that. */

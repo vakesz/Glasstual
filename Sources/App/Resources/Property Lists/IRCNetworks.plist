@@ -216,6 +216,30 @@
 	</dict>
 	<dict>
 		<key>name</key>
+		<string>DumaNet</string>
+		<key>serverAddress</key>
+		<string>dumanet.hu</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>Hungarian-language network operating since 2010.</string>
+		<key>website</key>
+		<string>https://www.dumanet.hu/</string>
+		<key>saslSupported</key>
+		<false/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register at https://www.dumanet.hu/register, then identify with NickServ after connecting.</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#help</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
 		<string>EFnet</string>
 		<key>serverAddress</key>
 		<string>irc.efnet.org</string>
@@ -428,6 +452,30 @@
 		<key>suggestedChannels</key>
 		<array>
 			<string>#hackint</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>HybridIRC</string>
+		<key>serverAddress</key>
+		<string>irc.hybridirc.com</string>
+		<key>serverPort</key>
+		<integer>6697</integer>
+		<key>prefersSecuredConnection</key>
+		<true/>
+		<key>description</key>
+		<string>General-purpose network with web-chat communities.</string>
+		<key>website</key>
+		<string>https://www.hybridirc.com/</string>
+		<key>saslSupported</key>
+		<true/>
+		<key>registration</key>
+		<string>optional</string>
+		<key>registrationNote</key>
+		<string>Register with NickServ: /msg NickServ REGISTER &lt;password&gt; &lt;email&gt;</string>
+		<key>suggestedChannels</key>
+		<array>
+			<string>#help</string>
 		</array>
 	</dict>
 	<dict>

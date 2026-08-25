@@ -1,3 +1,9 @@
+import XCTest
+
+// Preprocessor directives found in file:
+// #import <XCTest/XCTest.h>
+// #import "IRCMessageTagParserPrivate.h"
+// #import "IRCSenderPrefixParserPrivate.h"
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
@@ -5,7 +11,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,24 +40,39 @@
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+@objc
+class IRCMessageParsingTests: XCTestCase {
+    @objc
+    func testMessageTagsDecodeEscapesAndMetadata() {
+        let parsed: UnsafeMutablePointer<IRCParsedMessageTags>! = IRCMessageTagParser.parsedTagsFromSection("msgid=abc;account=alice;a=b\\\\:c\\\\sd\\\\\\\\e\\\\r\\\\n;flag")
 
-import Foundation
+        XCTAssertEqualObjects(parsed.tags["a"], "b;c d\\\\e\\r\\n")
+        XCTAssertEqualObjects(parsed.tags["flag"], "")
+        XCTAssertEqualObjects(parsed.messageIdentifier, "abc")
+        XCTAssertEqualObjects(parsed.senderAccount, "alice")
+    }
+    @objc
+    func testMessageTagsPreserveLastDuplicateAndUnknownEscapeRules() {
+        let parsed: UnsafeMutablePointer<IRCParsedMessageTags>! = IRCMessageTagParser.parsedTagsFromSection("a=first;;a=second;b=x\\\\qy;c=end\\\\")
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
-	}
+        XCTAssertEqualObjects(parsed.tags["a"], "second")
+        XCTAssertEqualObjects(parsed.tags["b"], "xqy")
+        XCTAssertEqualObjects(parsed.tags["c"], "end")
+
+        XCTAssertNil(parsed.messageIdentifier)
+        XCTAssertNil(parsed.senderAccount)
+    }
+    @objc
+    func testSenderPrefixUsesFirstBangAndLastAtSign() {
+        let parsed: UnsafeMutablePointer<IRCParsedSenderPrefix>! = IRCSenderPrefixParser.parsedPrefixFromString("nick!user!name@cloak@host")
+
+        XCTAssertEqualObjects(parsed.nickname, "nick")
+        XCTAssertEqualObjects(parsed.username, "user!name@cloak")
+        XCTAssertEqualObjects(parsed.address, "host")
+    }
+    @objc
+    func testSenderPrefixRejectsMissingOrReversedSeparators() {
+        XCTAssertNil(IRCSenderPrefixParser.parsedPrefixFromString("irc.example.net"))
+        XCTAssertNil(IRCSenderPrefixParser.parsedPrefixFromString("nick@host!user"))
+    }
 }

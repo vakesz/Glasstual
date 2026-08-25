@@ -37,21 +37,42 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
+@objc(ICMDailymotion)
+final class DailymotionModule: ICMInlineVideoFoundation {
+	private func performAction(forVideo identifier: String) {
+		let attributes: [String: Any] = [
+			"uniqueIdentifier": payload.uniqueIdentifier,
+			"videoIdentifier": identifier,
 		]
+		guard let template else { return cancel() }
+		do {
+			payload.html = try template.renderObject(attributes)
+			finalize()
+		} catch {
+			finalizeWithError(error)
+		}
+	}
+
+	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+		guard let identifier = videoIdentifier(for: url) else { return nil }
+		return { module in
+			(module as? DailymotionModule)?.performAction(forVideo: identifier)
+		}
+	}
+
+	private class func videoIdentifier(for url: URL) -> String? {
+		let path = url.path(percentEncoded: true)
+		guard path.hasPrefix("/video/") else { return nil }
+		let identifier = String(path.dropFirst(7).prefix { $0 != "_" })
+		guard identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else { return nil }
+		return identifier
+	}
+
+	override class var domains: [String]? {
+		["dailymotion.com", "www.dailymotion.com", "mobile.dailymotion.com"]
+	}
+
+	override var templateURL: URL? {
+		Bundle(for: DailymotionModule.self).url(forResource: "ICMDailymotion", withExtension: "mustache")
 	}
 }

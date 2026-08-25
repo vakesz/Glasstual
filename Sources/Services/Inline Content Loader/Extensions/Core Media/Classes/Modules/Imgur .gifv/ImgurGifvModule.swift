@@ -37,21 +37,36 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
+@objc(ICMImgurGifv)
+final class ImgurGifvModule: ICMInlineGifVideo {
+	private static let validFileExtensions = ["mp4", "gif", "gifv", "webp"]
+
+	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+		guard let address = finalAddress(for: url) else { return nil }
+		return super.actionBlock(forAddress: address)
+	}
+
+	private class func finalAddress(for url: URL) -> String? {
+		let path = url.path(percentEncoded: true)
+		guard path.count > 1 else { return nil }
+
+		let filename = String(path.dropFirst()) as NSString
+		guard validFileExtensions.contains(filename.pathExtension) else { return nil }
+
+		let identifier = filename.deletingPathExtension
+		guard identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else { return nil }
+		return "https://i.imgur.com/\(identifier).mp4"
+	}
+
+	override class var domains: [String]? {
+		["i.imgur.com"]
+	}
+
+	override class var contentIsFile: Bool {
+		true
+	}
+
+	override func finalizePreflight() {
+		payload.classAttribute = "inlineImgurGifv"
 	}
 }

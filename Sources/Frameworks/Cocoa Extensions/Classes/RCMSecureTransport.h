@@ -43,8 +43,8 @@ typedef NS_ENUM(NSUInteger, RCMCipherSuiteCollection) {
 	RCMCipherSuiteCollectionNone = 100
 };
 
-COCOA_EXTENSIONS_EXTERN const tls_protocol_version_t tls_protocol_version_unknown;
-COCOA_EXTENSIONS_EXTERN const tls_ciphersuite_t tls_ciphersuite_unknown;
+#define tls_protocol_version_unknown ((tls_protocol_version_t)0)
+#define tls_ciphersuite_unknown ((tls_ciphersuite_t)0)
 
 @interface RCMSecureTransport : NSObject
 @property(class, readonly) tls_protocol_version_t minimumProtocolType; // TLS 1.2

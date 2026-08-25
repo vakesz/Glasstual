@@ -1,11 +1,14 @@
-/* *********************************************************************
+import Glasstual
+import XCTest
+
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ *    Copyright (c) 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,24 +37,66 @@
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+class IRCClientRequestedCommandsTests: XCTestCase {
+	func testVisibleRequestIsReportedUntilClosed() {
+		let requests = IRCClientRequestedCommands()
 
-import Foundation
+		XCTAssertFalse(requests.inVisibleIsonRequest)
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
+		requests.recordIsonRequestOpenedAsVisible()
+
+		XCTAssertTrue(requests.inVisibleIsonRequest)
+
+		requests.recordIsonRequestClosed()
+
+		XCTAssertFalse(requests.inVisibleIsonRequest)
+	}
+
+	func testRequestsWithSameCommandCloseInInsertionOrder() {
+		let requests = IRCClientRequestedCommands()
+
+		requests.recordWhoRequestOpened()
+		requests.recordWhoRequestOpenedAsVisible()
+
+		XCTAssertFalse(requests.inVisibleWhoRequest)
+
+		requests.recordWhoRequestClosed()
+
+		XCTAssertTrue(requests.inVisibleWhoRequest)
+
+		requests.recordWhoRequestClosed()
+
+		XCTAssertFalse(requests.inVisibleWhoRequest)
+	}
+
+	func testIsonAndWhoRequestsAreIndependent() {
+		let requests = IRCClientRequestedCommands()
+
+		requests.recordIsonRequestOpenedAsVisible()
+		requests.recordWhoRequestOpened()
+
+		XCTAssertTrue(requests.inVisibleIsonRequest)
+
+		XCTAssertFalse(requests.inVisibleWhoRequest)
+
+		requests.recordIsonRequestClosed()
+
+		XCTAssertFalse(requests.inVisibleIsonRequest)
+		XCTAssertFalse(requests.inVisibleWhoRequest)
+	}
+
+	func testRemoveCommandsClearsEveryRequest() {
+		let requests = IRCClientRequestedCommands()
+
+		requests.recordIsonRequestOpenedAsVisible()
+		requests.recordWhoRequestOpenedAsVisible()
+		requests.remove()
+
+		XCTAssertFalse(requests.inVisibleIsonRequest)
+		XCTAssertFalse(requests.inVisibleWhoRequest)
+
+		/* Closing a command that is not open remains a no-op. */
+		requests.recordIsonRequestClosed()
+		requests.recordWhoRequestClosed()
 	}
 }

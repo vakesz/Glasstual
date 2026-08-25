@@ -467,7 +467,6 @@ targets:
         PRODUCT_NAME: Core Media
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader.CoreMedia
         WRAPPER_EXTENSION: mediaPlugin
-        GCC_PREFIX_HEADER: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes/Headers/Private/ICPCoreMediaPCHPrivate.h
         SWIFT_OBJC_BRIDGING_HEADER: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
         HEADER_SEARCH_PATHS:
           - $(inherited)
@@ -537,8 +536,8 @@ targets:
       - path: Sources/Services/IRC Remote Connection Manager/Resources/Language Files
       - path: Sources/Shared/Headers
       - path: Sources/Shared/Helpers/Cocoa (Objective-C)/NSObjectHelper.m
-      - path: Sources/Shared/IRC/IRCConnectionConfig.m
-      - path: Sources/Shared/IRC/IRCConnectionErrors.m
+      - path: Sources/Shared/IRC/IRCConnectionConfig.swift
+      - path: Sources/Shared/IRC/IRCConnectionErrors.swift
       - path: Sources/Shared/Library/TLOLocalization.m
       - path: Sources/Shared/Library/TLOLocalization.swift
       - path: Sources/Shared/Library/TLOTimer.m
@@ -556,6 +555,7 @@ targets:
       base:
         PRODUCT_NAME: Caffeine
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.caffeine
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
       path: Generated/Xcode/Caffeine-Info.plist
       properties:
@@ -582,6 +582,7 @@ targets:
       base:
         PRODUCT_NAME: Chat Filters
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.chat-filter
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
       path: Generated/Xcode/ChatFilter-Info.plist
       properties:
@@ -609,6 +610,7 @@ targets:
       base:
         PRODUCT_NAME: Smiley Converter
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.smiley-converter
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
       path: Generated/Xcode/SmileyConverter-Info.plist
       properties:
@@ -635,6 +637,7 @@ targets:
       base:
         PRODUCT_NAME: System Info
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.system-profiler
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/System Profiler/Classes/SystemProfiler.h
     info:
       path: Generated/Xcode/SystemProfiler-Info.plist
       properties:
@@ -653,7 +656,6 @@ targets:
     dependencies:
       - target: CocoaExtensions
         embed: false
-      - sdk: IOKit.framework
       - sdk: Metal.framework
 
   UserInsights:
@@ -663,6 +665,7 @@ targets:
       base:
         PRODUCT_NAME: User Insights
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.user-insights
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
       path: Generated/Xcode/UserInsights-Info.plist
       properties:
@@ -690,6 +693,7 @@ targets:
       base:
         PRODUCT_NAME: ZNC Additions
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.znc-additions
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
       path: Generated/Xcode/ZNCAdditions-Info.plist
       properties:
@@ -972,6 +976,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: GlasstualTests
+        SWIFT_OBJC_BRIDGING_HEADER: Tests/GlasstualTests/SwiftBridgingHeader.h
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.tests
         GCC_PREFIX_HEADER: Sources/App/Classes/Headers/Private/GlasstualPrivate.h
         HEADER_SEARCH_PATHS:

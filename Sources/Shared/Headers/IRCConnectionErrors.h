@@ -37,7 +37,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern NSErrorDomain const IRCConnectionErrorDomain NS_SWIFT_NAME(ConnectionErrorDomain);
+#define IRCConnectionErrorDomain @"Glasstual.ConnectionError"
 
 typedef NS_ENUM(NSUInteger, IRCConnectionErrorCode) {
 	IRCConnectionErrorCodeSocket = 999,

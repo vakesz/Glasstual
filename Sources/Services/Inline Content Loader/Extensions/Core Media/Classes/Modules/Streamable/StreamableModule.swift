@@ -37,21 +37,43 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
+@objc(ICMStreamable)
+final class StreamableModule: ICMInlineVideo {
+	private func performAction(forVideo identifier: String) {
+		let address = "https://api.streamable.com/videos/\(identifier)"
+		ICLHelpers.requestJSONObject(
+			"url",
+			ofType: NSString.self,
+			inHierarchy: ["files", "mp4"],
+			fromAddress: address
+		) { [weak self] object in
+			guard let self, let address = object as? String else {
+				self?.notifyUnsafeToLoad()
+				return
+			}
+			performAction(forAddress: address)
+		}
+	}
+
+	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+		let identifier = url.path(percentEncoded: true).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+		guard !identifier.isEmpty,
+		      identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) })
+		else { return nil }
+		return { module in
+			(module as? StreamableModule)?.performAction(forVideo: identifier)
+		}
+	}
+
+	override class var domains: [String]? {
+		["streamable.com", "www.streamable.com"]
+	}
+
+	override class var contentIsFile: Bool {
+		true
+	}
+
+	override func finalizePreflight() {
+		payload.classAttribute = "inlineStreamable"
 	}
 }

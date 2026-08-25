@@ -44,8 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 #define IRCConnectionConfigFloodControlMinimumMessageCount 1
 #define IRCConnectionConfigFloodControlMaximumMessageCount 60
 
-GLASSTUAL_EXTERN uint16_t const IRCConnectionDefaultServerPort;
-GLASSTUAL_EXTERN uint16_t const IRCConnectionDefaultProxyPort;
+#define IRCConnectionDefaultServerPort ((uint16_t)6667)
+#define IRCConnectionDefaultProxyPort ((uint16_t)1080)
 
 /* Raw values are persisted. Values 4 (SOCKS4) and 7 (HTTPS) are retired
  and must not be reused; stored configurations carrying them decode as None. */

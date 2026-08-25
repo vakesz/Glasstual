@@ -1,3 +1,8 @@
+import XCTest
+
+// Preprocessor directives found in file:
+// #import <XCTest/XCTest.h>
+// #import "TVCLogLine.h"
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
@@ -5,7 +10,8 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,24 +40,42 @@
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+@objc
+class TVCLogLineTests: XCTestCase {
+    @objc
+    func testMessageIdentifierSurvivesArchivingAndCopying() {
+        var line: UnsafeMutablePointer<TVCLogLineMutable>! = TVCLogLineMutable()
 
-import Foundation
+        line.command = "privmsg"
+        line.lineType = TVCLogLineTypePrivateMessage
+        line.nickname = "alice"
+        line.messageBody = "hello"
+        line.messageIdentifier = "63E1033A0"
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
-	}
+        let copy: UnsafeMutablePointer<TVCLogLine>! = line.copy()
+
+        XCTAssertEqualObjects(copy.messageIdentifier, "63E1033A0")
+
+        let data: NSData! = NSKeyedArchiver.archivedDataWithRootObject(copy, requiringSecureCoding: true, error: nil)
+
+        XCTAssertNotNil(data)
+
+        let decoded: UnsafeMutablePointer<TVCLogLine>! = TVCLogLine.logLineWithData(data)
+
+        XCTAssertEqualObjects(decoded.messageIdentifier, "63E1033A0")
+        XCTAssertEqualObjects(decoded.uniqueIdentifier, copy.uniqueIdentifier)
+        XCTAssertEqualObjects(decoded.messageBody, "hello")
+    }
+    @objc
+    func testMessageIdentifierIsOptional() {
+        var line: UnsafeMutablePointer<TVCLogLineMutable>! = TVCLogLineMutable()
+
+        line.messageBody = "hello"
+
+        let data: NSData! = NSKeyedArchiver.archivedDataWithRootObject(line.copy(), requiringSecureCoding: true, error: nil)
+        let decoded: UnsafeMutablePointer<TVCLogLine>! = TVCLogLine.logLineWithData(data)
+
+        XCTAssertNotNil(decoded)
+        XCTAssertNil(decoded.messageIdentifier)
+    }
 }

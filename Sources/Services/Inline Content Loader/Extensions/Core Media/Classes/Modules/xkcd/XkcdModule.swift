@@ -37,21 +37,41 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
+@objc(ICMXkcd)
+final class XkcdModule: ICMInlineImage {
+	private func performAction(forComic identifier: String) {
+		let address = "https://xkcd.com/\(identifier)/info.0.json"
+		ICLHelpers.requestJSONObject(
+			"img",
+			ofType: NSString.self,
+			inHierarchy: nil,
+			fromAddress: address
+		) { [weak self] object in
+			guard let self, let address = object as? String else {
+				self?.notifyUnsafeToLoad()
+				return
+			}
+			performAction(forAddress: address)
+		}
+	}
+
+	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+		let identifier = url.path(percentEncoded: true).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+		guard !identifier.isEmpty, identifier.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+		return { module in
+			(module as? XkcdModule)?.performAction(forComic: identifier)
+		}
+	}
+
+	override class var domains: [String]? {
+		["xkcd.com", "www.xkcd.com"]
+	}
+
+	override class var contentIsFile: Bool {
+		true
+	}
+
+	override func finalizePreflight() {
+		payload.classAttribute = "inlineXkcd"
 	}
 }

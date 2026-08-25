@@ -5,7 +5,8 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,23 +36,46 @@
  *
  *********************************************************************** */
 
-import Foundation
+@import AppKit;
+@import Foundation;
+@import XCTest;
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
-	}
-}
+#import "GlasstualPrivate.h"
+#import "GLTTestClient.h"
+#import "IRCAddressBook.h"
+#import "IRCAddressBookMatchCachePrivate.h"
+#import "IRCAddressBookUserTrackingPrivate.h"
+#import "IRCChannelMemberListControllerPrivate.h"
+#import "IRCChannelModePrivate.h"
+#import "IRCChannelPrivate.h"
+#import "IRCClientRequestedCommandsPrivate.h"
+#import "IRCColorFormatPrivate.h"
+#import "IRCCommandIndexPrivate.h"
+#import "IRCExtrasPrivate.h"
+#import "IRCISupportInfoPrivate.h"
+#import "IRCMessageBatchPrivate.h"
+#import "IRCMessageTagParserPrivate.h"
+#import "IRCSTSPolicy.h"
+#import "IRCSenderPrefixParserPrivate.h"
+#import "IRCTimerCommandPrivate.h"
+#import "IRCTypingTrackerPrivate.h"
+#import "IRCUserRelationsPrivate.h"
+#import "OELReachabilityPrivate.h"
+#import "RCMSecureTransport.h"
+#import "TDCOnboardingSteps.h"
+#import "TDCPreferencesNotificationConfigurationPrivate.h"
+#import "THOUnicodeHelper.h"
+#import "TLOInternetAddressLookupPrivate.h"
+#import "TLOKeyEventHandler.h"
+#import "TLONicknameCompletionStatusPrivate.h"
+#import "TLONotificationConfigurationPrivate.h"
+#import "TLOSCRAMClient.h"
+#import "TLOSoundPlayerPrivate.h"
+#import "TLOSpeechSynthesizerTestingPrivate.h"
+#import "TLOSpokenNotificationPrivate.h"
+#import "TVCAutoExpandingTextField.h"
+#import "TVCAutoExpandingTokenField.h"
+#import "TVCMainWindowTextView.h"
+#import "TVCMemberListCellPrivate.h"
+#import "TVCMemberListPrivate.h"
+#import "TVCMemberListUserInfoPopoverPrivate.h"

@@ -37,21 +37,56 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
+@objc(ICMYouTube)
+final class YouTubeModule: ICMInlineVideoFoundation {
+	private func performAction(forVideo identifier: String) {
+		let attributes: [String: Any] = [
+			"uniqueIdentifier": payload.uniqueIdentifier,
+			"videoIdentifier": identifier,
+			"videoStartTime": videoStartTime,
 		]
+		guard let template else { return cancel() }
+		do {
+			payload.html = try template.renderObject(attributes)
+			finalize()
+		} catch {
+			finalizeWithError(error)
+		}
+	}
+
+	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+		guard let video = video(for: url) else { return nil }
+		return { module in
+			guard let module = module as? YouTubeModule else { return }
+			module.videoStartTime = video.startTime
+			module.performAction(forVideo: video.identifier)
+		}
+	}
+
+	private class func video(for url: URL) -> (identifier: String, startTime: TimeInterval)? {
+		let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+		var identifier: String?
+
+		if url.host(percentEncoded: true) == "youtu.be" {
+			identifier = String(url.path(percentEncoded: true).dropFirst())
+		} else if url.host(percentEncoded: true)?.hasSuffix("youtube.com") == true,
+		          url.path(percentEncoded: true) == "/watch"
+		{
+			identifier = queryItems.first(where: { $0.name == "v" })?.value
+		}
+
+		guard var identifier, identifier.count >= 11 else { return nil }
+		identifier = String(identifier.prefix(11))
+		let timestamp = queryItems.first(where: { $0.name == "t" })?.value
+		let startTime = timestamp.map(parseYouTubeEsqueTimestamp) ?? 0
+		return (identifier, startTime)
+	}
+
+	override class var domains: [String]? {
+		["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"]
+	}
+
+	override var templateURL: URL? {
+		Bundle(for: YouTubeModule.self).url(forResource: "ICMYouTube", withExtension: "mustache")
 	}
 }

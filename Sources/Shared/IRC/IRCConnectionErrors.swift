@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ *    Copyright (c) 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,21 +37,4 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
-	}
-}
+public let ConnectionErrorDomain = "Glasstual.ConnectionError"

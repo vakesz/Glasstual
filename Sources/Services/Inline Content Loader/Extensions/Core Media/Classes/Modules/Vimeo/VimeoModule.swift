@@ -37,21 +37,40 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
+@objc(ICMVimeo)
+final class VimeoModule: ICMInlineVideoFoundation {
+	private func performAction(forVideo identifier: String) {
+		let attributes: [String: Any] = [
+			"uniqueIdentifier": payload.uniqueIdentifier,
+			"videoIdentifier": identifier,
 		]
+		guard let template else { return cancel() }
+		do {
+			payload.html = try template.renderObject(attributes)
+			finalize()
+		} catch {
+			finalizeWithError(error)
+		}
+	}
+
+	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+		guard let identifier = videoIdentifier(for: url) else { return nil }
+		return { module in
+			(module as? VimeoModule)?.performAction(forVideo: identifier)
+		}
+	}
+
+	private class func videoIdentifier(for url: URL) -> String? {
+		let identifier = url.path(percentEncoded: true).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+		guard !identifier.isEmpty, identifier.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+		return identifier
+	}
+
+	override class var domains: [String]? {
+		["vimeo.com", "www.vimeo.com"]
+	}
+
+	override var templateURL: URL? {
+		Bundle(for: VimeoModule.self).url(forResource: "ICMVimeo", withExtension: "mustache")
 	}
 }

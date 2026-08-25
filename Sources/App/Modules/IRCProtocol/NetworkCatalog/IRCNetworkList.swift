@@ -41,16 +41,18 @@ import Foundation
 public final class NetworkList: NSObject {
 	private static let popularNetworkNames = [
 		"Libera.Chat",
-		"OFTC",
-		"EFnet",
+		"HybridIRC",
 		"IRCnet",
 		"Undernet",
-		"QuakeNet",
+		"OFTC",
 		"Rizon",
+		"EFnet",
 		"DALnet",
+		"QuakeNet",
 		"hackint",
 		"Snoonet",
 		"Tilde.Chat",
+		"DumaNet",
 	]
 
 	@objc public let listOfNetworks: [Network]

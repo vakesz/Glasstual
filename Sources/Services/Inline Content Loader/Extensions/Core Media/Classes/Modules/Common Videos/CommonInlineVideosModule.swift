@@ -37,21 +37,32 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
+@objc(ICMCommonInlineVideos)
+final class CommonInlineVideosModule: ICMInlineVideo {
+	private static let validFileExtensions = ["mp4", "mov", "m4v", "3gp", "3g2"]
+
+	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+		guard let address = finalAddress(for: url) else { return nil }
+		return super.actionBlock(forAddress: address)
+	}
+
+	private class func finalAddress(for url: URL) -> String? {
+		let path = url.path(percentEncoded: true)
+		let host = url.host(percentEncoded: true) ?? ""
+		let hasFileExtension = validFileExtensions.contains((path as NSString).pathExtension)
+
+		if hasFileExtension, host != "video.nest.com" {
+			return url.absoluteString
+		}
+
+		guard host == "video.nest.com", path.hasPrefix("/clip/") else { return nil }
+		let filename = (path as NSString).lastPathComponent
+		let identifier = (filename as NSString).deletingPathExtension
+		guard identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else { return nil }
+		return "https://clips.dropcam.com/\(filename)"
+	}
+
+	override class var contentIsFile: Bool {
+		true
 	}
 }

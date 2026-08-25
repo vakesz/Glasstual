@@ -37,21 +37,65 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
+@objc(ICMTweet)
+final class TweetModule: ICMInlineHTML {
+	private func loadTweetContents() {
+		var components = URLComponents(string: "https://publish.twitter.com/oembed")
+		components?.queryItems = [
+			URLQueryItem(name: "dnt", value: "true"),
+			URLQueryItem(name: "maxwidth", value: "500"),
+			URLQueryItem(name: "omit_script", value: "true"),
+			URLQueryItem(name: "url", value: payload.address),
 		]
+		guard let url = components?.url else { return notifyUnableToPresent() }
+
+		ICLHelpers.requestJSONObject(
+			"html",
+			ofType: NSString.self,
+			inHierarchy: nil,
+			from: url
+		) { [weak self] object in
+			guard let self, let html = object as? String else {
+				self?.notifyUnableToPresent()
+				return
+			}
+			performAction(forHTML: html)
+		}
+	}
+
+	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+		guard isTweet(url) else { return nil }
+		return { module in
+			(module as? TweetModule)?.loadTweetContents()
+		}
+	}
+
+	private class func isTweet(_ url: URL) -> Bool {
+		let components = url.path(percentEncoded: true).split(separator: "/", omittingEmptySubsequences: true)
+		guard components.count >= 3, components[1] == "status" else { return false }
+		return components[2].allSatisfy { $0.isASCII && $0.isNumber }
+	}
+
+	override class var domains: [String]? {
+		[
+			"twitter.com", "www.twitter.com", "mobile.twitter.com",
+			"x.com", "www.x.com", "mobile.x.com",
+		]
+	}
+
+	override var scriptResources: [URL]? {
+		let resources = [
+			URL(string: "https://platform.twitter.com/widgets.js"),
+			Bundle(for: TweetModule.self).url(forResource: "ICMTweet", withExtension: "js"),
+		].compactMap(\.self)
+		return (super.scriptResources ?? []) + resources
+	}
+
+	override var entrypoint: String? {
+		"_ICMTweet"
+	}
+
+	override func finalizePreflight() {
+		payload.classAttribute = "inlineTweet"
 	}
 }

@@ -37,21 +37,70 @@
 
 import Foundation
 
-@objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
-		[
-			DailymotionModule.self,
-			GyazoModule.self,
-			ImgurGifvModule.self,
-			PornhubModule.self,
-			StreamableModule.self,
-			TweetModule.self,
-			VimeoModule.self,
-			XkcdModule.self,
-			YouTubeModule.self,
-			CommonInlineVideosModule.self,
-			CommonInlineImagesModule.self,
-		]
+@objc(ICMGyazo)
+final class GyazoModule: ICLInlineContentModule {
+	private var contentIdentifier = ""
+
+	private func loadContent() {
+		var components = URLComponents(string: "https://api.gyazo.com/api/oembed")
+		components?.queryItems = [URLQueryItem(name: "url", value: payload.address)]
+		guard let url = components?.url else { return cancel() }
+
+		ICLHelpers.requestJSONData(from: url) { [weak self] success, data in
+			guard let self, success, let data else {
+				self?.cancel()
+				return
+			}
+			process(data)
+		}
+	}
+
+	private func process(_ data: [String: Any]) {
+		guard let type = data["type"] as? String else { return cancel() }
+
+		switch type {
+		case "photo":
+			guard let address = data["url"] as? String, let url = ICLHelpers.url(with: address) else {
+				return cancel()
+			}
+			payload.urlToInline = url
+			self.defer(as: .image)
+		case "video":
+			guard let url = ICLHelpers.url(with: "https://i.gyazo.com/\(contentIdentifier).mp4") else {
+				return cancel()
+			}
+			payload.urlToInline = url
+			self.defer(as: .videoGif)
+		default:
+			cancel()
+		}
+	}
+
+	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+		let path = url.path(percentEncoded: true)
+		guard path.count == 33 else { return nil }
+		let identifier = String(path.dropFirst())
+		guard identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else { return nil }
+		return { module in
+			guard let module = module as? GyazoModule else { return }
+			module.contentIdentifier = identifier
+			module.loadContent()
+		}
+	}
+
+	override class var domains: [String]? {
+		["gyazo.com", "www.gyazo.com"]
+	}
+
+	override class var contentImageOrVideo: Bool {
+		true
+	}
+
+	override class var contentIsFile: Bool {
+		true
+	}
+
+	override func finalizePreflight() {
+		payload.classAttribute = "inlineGyazo"
 	}
 }
