@@ -121,7 +121,7 @@ public final class PluginManager: NSObject {
 
 		for bundlePath in bundlesToLoad {
 			guard let bundle = Bundle(path: bundlePath),
-				let bundleIdentifier = bundle.bundleIdentifier
+			      let bundleIdentifier = bundle.bundleIdentifier
 			else {
 				continue
 			}
@@ -267,8 +267,8 @@ public final class PluginManager: NSObject {
 				return
 			}
 
-			self.checkForRejectedBundles()
-			self.checkForObsoleteBundles()
+			checkForRejectedBundles()
+			checkForObsoleteBundles()
 
 			NotificationCenter.default.post(
 				name: Notification.Name("THOPluginManagerFinishedLoadingPluginsNotification"),
@@ -464,13 +464,12 @@ public final class PluginManager: NSObject {
 			return .unknown
 		}
 
-		let approved: Bool
-		if let number = record[Self.approvalApprovedKey] as? NSNumber {
-			approved = number.boolValue
+		let approved: Bool = if let number = record[Self.approvalApprovedKey] as? NSNumber {
+			number.boolValue
 		} else if let bool = record[Self.approvalApprovedKey] as? Bool {
-			approved = bool
+			bool
 		} else {
-			approved = false
+			false
 		}
 
 		return approved ? .approved : .declined
@@ -547,7 +546,7 @@ public final class PluginManager: NSObject {
 
 			let approved = (buttonClicked == .alternate)
 
-			self.recordApproval(
+			recordApproval(
 				approved,
 				forBundleIdentifier: bundleIdentifier,
 				teamIdentifier: teamIdentifier
@@ -622,11 +621,10 @@ public final class PluginManager: NSObject {
 		}
 		scriptPaths.append(PathInfo.bundledScripts)
 
-		let returnValue: NSObject
-		if returnPathInfo {
-			returnValue = NSMutableDictionary()
+		let returnValue: NSObject = if returnPathInfo {
+			NSMutableDictionary()
 		} else {
-			returnValue = NSMutableArray()
+			NSMutableArray()
 		}
 
 		for path in scriptPaths {
@@ -643,7 +641,7 @@ public final class PluginManager: NSObject {
 				let executable = FileManager.default.isExecutableFile(atPath: filePath)
 
 				if executable == false,
-					fileExtension != TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod
+				   fileExtension != TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod
 				{
 					Self.logger.info(
 						"WARNING: File “\(file, privacy: .public)“ found in unsupervised script folder but it isn't AppleScript or an executable. It will be ignored."
@@ -782,7 +780,7 @@ public final class PluginManager: NSObject {
 
 		for plugin in loadedPlugins ?? [] {
 			guard plugin.supportsFeature(.outputSuppressionRules),
-				let rules = plugin.outputSuppressionRules
+			      let rules = plugin.outputSuppressionRules
 			else {
 				continue
 			}
@@ -807,7 +805,7 @@ public final class PluginManager: NSObject {
 
 		for plugin in loadedPlugins ?? [] {
 			guard plugin.supportsFeature(.subscribedUserInputCommands),
-				let commands = plugin.supportedUserInputCommands
+			      let commands = plugin.supportedUserInputCommands
 			else {
 				continue
 			}
@@ -835,7 +833,7 @@ public final class PluginManager: NSObject {
 
 		for plugin in loadedPlugins ?? [] {
 			guard plugin.supportsFeature(.subscribedServerInputCommands),
-				let commands = plugin.supportedServerInputCommands
+			      let commands = plugin.supportedServerInputCommands
 			else {
 				continue
 			}

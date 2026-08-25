@@ -27,18 +27,82 @@ private func pendingOperationsKey(for viewController: TVCLogController) -> Strin
 }
 
 @objc(TVCLogControllerPrintingOperation)
-private final class LogControllerPrintingOperation: Operation {
+private final class LogControllerPrintingOperation: Operation, @unchecked Sendable {
 	@objc var executionBlock: TVCLogControllerPrintingBlock?
 	@objc weak var viewController: TVCLogController?
 	@objc var pendingOperationsKey = ""
 	@objc var standalone = false
+	@objc var requiresExplicitFinish = false
+	private let stateLock = NSLock()
+	private var operationExecuting = false
+	private var operationFinished = false
 
 	@objc var isPending: Bool {
 		isCancelled == false && isExecuting == false && isFinished == false
 	}
 
+	override var isAsynchronous: Bool {
+		requiresExplicitFinish
+	}
+
+	override var isExecuting: Bool {
+		operationExecuting
+	}
+
+	override var isFinished: Bool {
+		operationFinished
+	}
+
+	override func start() {
+		guard requiresExplicitFinish else {
+			super.start()
+			return
+		}
+
+		if isCancelled {
+			willChangeValue(forKey: "isFinished")
+			operationFinished = true
+			didChangeValue(forKey: "isFinished")
+			return
+		}
+
+		willChangeValue(forKey: "isExecuting")
+		operationExecuting = true
+		didChangeValue(forKey: "isExecuting")
+
+		executeBlock()
+
+		if viewController == nil {
+			finish()
+		}
+	}
+
 	override func main() {
 		executeBlock()
+	}
+
+	override func cancel() {
+		super.cancel()
+
+		if requiresExplicitFinish {
+			finish()
+		}
+	}
+
+	@objc func finish() {
+		stateLock.lock()
+		guard requiresExplicitFinish, operationFinished == false else {
+			stateLock.unlock()
+			return
+		}
+
+		willChangeValue(forKey: "isExecuting")
+		willChangeValue(forKey: "isFinished")
+		operationExecuting = false
+		operationFinished = true
+		didChangeValue(forKey: "isFinished")
+		didChangeValue(forKey: "isExecuting")
+		stateLock.unlock()
 	}
 
 	private func executeBlock() {
@@ -60,7 +124,7 @@ private final class LogControllerPrintingOperation: Operation {
 }
 
 @objc(TVCLogControllerPrintingOperationQueue)
-public final class LogControllerPrintingOperationQueue: OperationQueue {
+public final class LogControllerPrintingOperationQueue: OperationQueue, @unchecked Sendable {
 	private var pendingOperations: [String: NSMutableArray] = [:]
 
 	override public init() {
@@ -88,17 +152,51 @@ public final class LogControllerPrintingOperationQueue: OperationQueue {
 		for viewController: TVCLogController,
 		isStandalone: Bool
 	) {
-		if NSObject.masterController().applicationIsTerminating {
+		enqueueMessageBlock(
+			callbackBlock,
+			for: viewController,
+			isStandalone: isStandalone,
+			requiresExplicitFinish: false
+		)
+	}
+
+	@objc(enqueueAsynchronousMessageBlock:for:isStandalone:)
+	public func enqueueAsynchronousMessageBlock(
+		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
+		for viewController: TVCLogController,
+		isStandalone: Bool
+	) {
+		enqueueMessageBlock(
+			callbackBlock,
+			for: viewController,
+			isStandalone: isStandalone,
+			requiresExplicitFinish: true
+		)
+	}
+
+	private func enqueueMessageBlock(
+		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
+		for viewController: TVCLogController,
+		isStandalone: Bool,
+		requiresExplicitFinish: Bool
+	) {
+		guard NSObject.masterController().applicationIsTerminating == false else {
 			return
 		}
 
 		let operation = LogControllerPrintingOperation()
 		operation.executionBlock = callbackBlock
 		operation.standalone = isStandalone
+		operation.requiresExplicitFinish = requiresExplicitFinish
 		operation.viewController = viewController
 		operation.pendingOperationsKey = pendingOperationsKey(for: viewController)
 
 		addPendingOperation(operation)
+	}
+
+	@objc(finishOperation:)
+	public func finishOperation(_ operation: Operation) {
+		(operation as? LogControllerPrintingOperation)?.finish()
 	}
 
 	@objc(pendingOperationsForViewController:)

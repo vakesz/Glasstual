@@ -18,7 +18,7 @@ open class Message: XRPortablePropertyObject {
 	fileprivate var isHistoricStorage = false
 	fileprivate var isEventOnlyMessageStorage = false
 	fileprivate var isPrintOnlyMessageStorage = false
-	fileprivate var senderStorage: Prefix = Prefix()
+	fileprivate var senderStorage: Prefix = .init()
 	fileprivate var paramsStorage: [String] = []
 	fileprivate var receivedAtStorage = Date()
 	fileprivate var messageTagsStorage: [String: String] = [:]
@@ -256,12 +256,12 @@ open class Message: XRPortablePropertyObject {
 			let dateString = parsedTags.tags["time"] ?? parsedTags.tags["t"]
 
 			if let dateString {
-				let dateObject: Date?
-
-				if dateString.unicodeScalars.allSatisfy(CharacterSet.decimalDigits.union(CharacterSet(charactersIn: ".")).contains) {
-					dateObject = Date(timeIntervalSince1970: (dateString as NSString).doubleValue)
+				let dateObject: Date? = if dateString.unicodeScalars
+					.allSatisfy(CharacterSet.decimalDigits.union(CharacterSet(charactersIn: ".")).contains)
+				{
+					Date(timeIntervalSince1970: (dateString as NSString).doubleValue)
 				} else {
-					dateObject = sharedISOStandardDateFormatter().date(from: dateString)
+					sharedISOStandardDateFormatter().date(from: dateString)
 				}
 
 				if let dateObject {
@@ -273,9 +273,9 @@ open class Message: XRPortablePropertyObject {
 
 		if client.isCapabilityEnabled(.batch) {
 			if let batchToken = parsedTags.tags["batch"],
-				batchToken.unicodeScalars.allSatisfy({
-					CharacterSet.alphanumerics.contains($0) || $0 == "_" || $0 == "-"
-				})
+			   batchToken.unicodeScalars.allSatisfy({
+			   	CharacterSet.alphanumerics.contains($0) || $0 == "_" || $0 == "-"
+			   })
 			{
 				batchTokenStorage = batchToken
 				parentBatchMessageStorage = client.queuedBatchMessage(withToken: batchToken) as? MessageBatch

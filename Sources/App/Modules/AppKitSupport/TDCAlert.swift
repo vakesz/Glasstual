@@ -115,7 +115,9 @@ public final class TDCAlert: NSObject {
 		)
 	}
 
-	@objc(modalAlertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:accessoryView:suppressionResponse:)
+	@objc(
+		modalAlertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:accessoryView:suppressionResponse:
+	)
 	public class func modalAlert(
 		withMessage bodyText: String,
 		title titleText: String,
@@ -162,7 +164,9 @@ public final class TDCAlert: NSObject {
 		)
 	}
 
-	@objc(modalAlertWithMessage:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:accessoryView:suppressionResponse:)
+	@objc(
+		modalAlertWithMessage:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:accessoryView:suppressionResponse:
+	)
 	public class func modalAlert(
 		withMessage bodyText: String,
 		title titleText: String,
@@ -376,7 +380,9 @@ public final class TDCAlert: NSObject {
 		)
 	}
 
-	@objc(alertWithMessage:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:completionBlock:)
+	@objc(
+		alertWithMessage:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:completionBlock:
+	)
 	public class func alert(
 		withMessage bodyText: String,
 		title titleText: String,
@@ -400,7 +406,9 @@ public final class TDCAlert: NSObject {
 		)
 	}
 
-	@objc(alertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:accessoryView:completionBlock:)
+	@objc(
+		alertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:accessoryView:completionBlock:
+	)
 	public class func alert(
 		withMessage bodyText: String,
 		title titleText: String,
@@ -424,7 +432,9 @@ public final class TDCAlert: NSObject {
 		)
 	}
 
-	@objc(alertWithMessage:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:accessoryView:completionBlock:)
+	@objc(
+		alertWithMessage:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:accessoryView:completionBlock:
+	)
 	public class func alert(
 		withMessage bodyText: String,
 		title titleText: String,
@@ -606,7 +616,9 @@ public final class TDCAlert: NSObject {
 		)
 	}
 
-	@objc(alertSheetWithWindow:body:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:completionBlock:)
+	@objc(
+		alertSheetWithWindow:body:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:completionBlock:
+	)
 	public class func alertSheet(
 		with window: NSWindow,
 		body bodyText: String,
@@ -632,7 +644,9 @@ public final class TDCAlert: NSObject {
 		)
 	}
 
-	@objc(alertSheetWithWindow:body:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:accessoryView:completionBlock:)
+	@objc(
+		alertSheetWithWindow:body:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:accessoryView:completionBlock:
+	)
 	public class func alertSheet(
 		with window: NSWindow,
 		body bodyText: String,
@@ -773,11 +787,11 @@ public final class TDCAlert: NSObject {
 	private class func convertResponse(from response: NSApplication.ModalResponse) -> TDCAlertResponse {
 		switch response {
 		case .alertSecondButtonReturn:
-			return .alternate
+			.alternate
 		case .alertThirdButtonReturn:
-			return .other
+			.other
 		default:
-			return .default
+			.default
 		}
 	}
 }

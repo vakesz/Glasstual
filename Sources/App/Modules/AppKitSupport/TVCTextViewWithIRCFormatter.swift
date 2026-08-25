@@ -57,12 +57,12 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 		}
 	}
 
-	public override init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
+	override public init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
 		super.init(frame: frameRect, textContainer: container)
 		prepareInitialState()
 	}
 
-	public override init(frame frameRect: NSRect) {
+	override public init(frame frameRect: NSRect) {
 		super.init(frame: frameRect)
 		prepareInitialState()
 	}
@@ -202,7 +202,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 	public func resetTypeSetterAttributes() {
 		typingAttributes = [
 			.font: preferredFontStorage,
-			.foregroundColor: preferredFontColorStorage
+			.foregroundColor: preferredFontColorStorage,
 		]
 	}
 
@@ -235,7 +235,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 
 		let documentStart = contentManager.documentRange.location
 		guard let start = contentManager.location(documentStart, offsetBy: characterRange.location),
-			let end = contentManager.location(start, offsetBy: characterRange.length)
+		      let end = contentManager.location(start, offsetBy: characterRange.length)
 		else {
 			return contentManager.documentRange
 		}
@@ -243,7 +243,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 		return NSTextRange(location: start, end: end) ?? contentManager.documentRange
 	}
 
-	/* Lays out the whole document, then visits every line in order. The
+	/** Lays out the whole document, then visits every line in order. The
 	 character range handed to the block is relative to the document.
 	 Return NO from the block to stop. */
 	@objc(enumerateLineFragmentsUsingBlock:)
@@ -251,7 +251,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 		using block: @escaping (NSTextLineFragment, NSRange) -> Bool
 	) {
 		guard let layoutManager = textLayoutManager,
-			let contentManager = layoutManager.textContentManager
+		      let contentManager = layoutManager.textContentManager
 		else {
 			return
 		}
@@ -294,7 +294,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 
 	@objc public var selectedRect: NSRect {
 		guard let layoutManager = textLayoutManager,
-			let textRange = textRange(forCharacterRange: selectedRange())
+		      let textRange = textRange(forCharacterRange: selectedRange())
 		else {
 			return .zero
 		}
@@ -321,7 +321,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 	}
 
 	@objc public var caretLocation: TVCTextViewCaretLocation {
-		let stringLength = self.stringLength
+		let stringLength = stringLength
 
 		if stringLength == 0 {
 			return .onlyLine
@@ -343,7 +343,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 		let inFirstLine = selectedRange.location < NSMaxRange(firstLineRange)
 		let inLastLine =
 			NSMaxRange(selectedRange) == stringLength
-			|| selectedRange.location >= lastLineRange.location
+				|| selectedRange.location >= lastLineRange.location
 
 		if inFirstLine, inLastLine {
 			return .onlyLine

@@ -14,9 +14,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSNotificationName const TXApplicationAppearanceChangedNotification =
-	@"TXApplicationAppearanceChangedNotification";
-NSNotificationName const TXSystemAppearanceChangedNotification =
-	@"TXSystemAppearanceChangedNotification";
+NSNotificationName const TXApplicationAppearanceChangedNotification = @"TXApplicationAppearanceChangedNotification";
+NSNotificationName const TXSystemAppearanceChangedNotification = @"TXSystemAppearanceChangedNotification";
 
 NS_ASSUME_NONNULL_END

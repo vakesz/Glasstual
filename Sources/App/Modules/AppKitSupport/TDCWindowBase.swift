@@ -18,8 +18,8 @@ open class WindowBase: NSObject {
 	public weak var delegate: AnyObject?
 
 	@IBOutlet public var window: NSWindow!
-	@IBOutlet public weak var okButton: NSButton?
-	@IBOutlet public weak var cancelButton: NSButton?
+	@IBOutlet public var okButton: NSButton?
+	@IBOutlet public var cancelButton: NSButton?
 
 	open func show() {
 		window.makeKeyAndOrderFront(nil)
@@ -30,12 +30,12 @@ open class WindowBase: NSObject {
 	}
 
 	@objc(ok:)
-	open func ok(_ sender: Any?) {
+	open func ok(_: Any?) {
 		close()
 	}
 
 	@objc(cancel:)
-	open func cancel(_ sender: Any?) {
+	open func cancel(_: Any?) {
 		close()
 	}
 }

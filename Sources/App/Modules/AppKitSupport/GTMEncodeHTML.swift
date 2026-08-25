@@ -66,7 +66,10 @@ extension NSString {
 						let hexSequence = escapeString.substring(with: NSRange(location: 3, length: escapeLength - 4))
 						if let value = UInt32(hexSequence, radix: 16), value > 0 {
 							if value < UInt32(UInt16.max) {
-								finalString.replaceCharacters(in: escapeRange, with: Self.string(fromUTF16: [UniChar(value)]))
+								finalString.replaceCharacters(
+									in: escapeRange,
+									with: Self.string(fromUTF16: [UniChar(value)])
+								)
 							} else if value >= 0x10000, value <= 0x10FFFF {
 								let subtractedValue = Int(value - 0x10000)
 								let uchars: [UniChar] = [
@@ -77,10 +80,16 @@ extension NSString {
 							}
 						}
 					} else {
-						let numberSequence = escapeString.substring(with: NSRange(location: 2, length: escapeLength - 3))
+						let numberSequence = escapeString.substring(with: NSRange(
+							location: 2,
+							length: escapeLength - 3
+						))
 						if let value = Int(numberSequence), value > 0 {
 							if value < Int(UInt16.max) {
-								finalString.replaceCharacters(in: escapeRange, with: Self.string(fromUTF16: [UniChar(value)]))
+								finalString.replaceCharacters(
+									in: escapeRange,
+									with: Self.string(fromUTF16: [UniChar(value)])
+								)
 							} else if value >= 0x10000, value <= 0x10FFFF {
 								let subtractedValue = value - 0x10000
 								let uchars: [UniChar] = [
@@ -109,7 +118,7 @@ extension NSString {
 	}
 
 	private func stringByEscapingHTML(using table: [HTMLEscapeMap], escapeUnicode: Bool) -> String? {
-		let length = self.length
+		let length = length
 
 		if length == 0 {
 			return self as String
@@ -120,7 +129,7 @@ extension NSString {
 		buffer2.reserveCapacity(length)
 
 		for i in 0 ..< length {
-			let character = self.character(at: i)
+			let character = character(at: i)
 
 			if let match = Self.escapeMapEntry(for: character, in: table) {
 				if buffer2.isEmpty == false {
@@ -147,7 +156,6 @@ extension NSString {
 
 		return finalString as String
 	}
-
 
 	private static func string(fromUTF16 codeUnits: [UniChar]) -> String {
 		codeUnits.withUnsafeBufferPointer { buffer in

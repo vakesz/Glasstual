@@ -22,21 +22,21 @@ private let transferInfoFieldWithoutProgressBarYCord: CGFloat = 16
 
 @objc(TDCFileTransferDialogTableCell)
 public final class FileTransferDialogTableCell: NSTableCellView {
-	@IBOutlet private weak var progressIndicator: NSProgressIndicator!
-	@IBOutlet private weak var fileIconView: NSImageView!
-	@IBOutlet private weak var filenameTextField: NSTextField!
-	@IBOutlet private weak var filesizeTextField: NSTextField!
-	@IBOutlet private weak var transferProgressTextField: NSTextField!
-	@IBOutlet private weak var filenameTextFieldConstraint: NSLayoutConstraint!
-	@IBOutlet private weak var transferProgressTextFieldConstraint: NSLayoutConstraint!
+	@IBOutlet private var progressIndicator: NSProgressIndicator!
+	@IBOutlet private var fileIconView: NSImageView!
+	@IBOutlet private var filenameTextField: NSTextField!
+	@IBOutlet private var filesizeTextField: NSTextField!
+	@IBOutlet private var transferProgressTextField: NSTextField!
+	@IBOutlet private var filenameTextFieldConstraint: NSLayoutConstraint!
+	@IBOutlet private var transferProgressTextFieldConstraint: NSLayoutConstraint!
 
 	@objc
 	public func prepareInitialState() {
-		let filename = self.filename
+		let filename = filename
 
 		filenameTextField.stringValue = filename
 
-		let totalFilesize = self.totalFilesize
+		let totalFilesize = totalFilesize
 
 		filesizeTextField.stringValue =
 			ByteCountFormatter.stringFromByteCount(withPaddedDigits: Int64(totalFilesize)) ?? ""
@@ -79,22 +79,22 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 	}
 
 	private func reloadStatusInformationOnMain() {
-		let transferStatus = self.transferStatus
+		let transferStatus = transferStatus
 
 		let transferIsStopped =
 			transferStatus == .complete
-			|| transferStatus == .fatalError
-			|| transferStatus == .recoverableError
-			|| transferStatus == .stopped
-			|| transferStatus == .isListeningAsSender
-			|| transferStatus == .isListeningAsReceiver
-			|| transferStatus == .initializing
-			|| transferStatus == .mappingListeningPort
-			|| transferStatus == .waitingForLocalIPAddress
-			|| transferStatus == .waitingForReceiverToAccept
-			|| transferStatus == .waitingForResumeAccept
+				|| transferStatus == .fatalError
+				|| transferStatus == .recoverableError
+				|| transferStatus == .stopped
+				|| transferStatus == .isListeningAsSender
+				|| transferStatus == .isListeningAsReceiver
+				|| transferStatus == .initializing
+				|| transferStatus == .mappingListeningPort
+				|| transferStatus == .waitingForLocalIPAddress
+				|| transferStatus == .waitingForReceiverToAccept
+				|| transferStatus == .waitingForResumeAccept
 
-		let processedFilesize = self.processedFilesize
+		let processedFilesize = processedFilesize
 
 		if transferIsStopped {
 			if progressIndicator.isHidden == false {
@@ -208,8 +208,8 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 		case .sending, .receiving:
 			var timeRemainingString: String?
 
-			let currentSpeed = self.currentSpeed
-			let totalFilesize = self.totalFilesize
+			let currentSpeed = currentSpeed
+			let totalFilesize = totalFilesize
 
 			/* The peer may send more than it announced. Never let the
 			 unsigned subtraction wrap into a multi-century estimate. */
@@ -228,11 +228,9 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 			let processedFilesizeString =
 				ByteCountFormatter.stringFromByteCount(withPaddedDigits: Int64(processedFilesize)) ?? ""
 
-			let statusString: String
-
-			if isReceiving {
+			let statusString: String = if isReceiving {
 				if let timeRemainingString {
-					statusString = LocalizedKey(
+					LocalizedKey(
 						"TDCFileTransferDialog[9xn-7j]",
 						processedFilesizeString,
 						totalFilesizeString,
@@ -241,7 +239,7 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 						timeRemainingString
 					)
 				} else {
-					statusString = LocalizedKey(
+					LocalizedKey(
 						"TDCFileTransferDialog[7dk-lp]",
 						processedFilesizeString,
 						totalFilesizeString,
@@ -250,7 +248,7 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 					)
 				}
 			} else if let timeRemainingString {
-				statusString = LocalizedKey(
+				LocalizedKey(
 					"TDCFileTransferDialog[u17-ql]",
 					processedFilesizeString,
 					totalFilesizeString,
@@ -259,7 +257,7 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 					timeRemainingString
 				)
 			} else {
-				statusString = LocalizedKey(
+				LocalizedKey(
 					"TDCFileTransferDialog[nvm-nd]",
 					processedFilesizeString,
 					totalFilesizeString,
@@ -358,7 +356,7 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 	}
 
 	private var currentSpeed: UInt64 {
-		let speedRecords = self.speedRecords
+		let speedRecords = speedRecords
 
 		guard speedRecords.isEmpty == false else {
 			return 0

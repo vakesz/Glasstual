@@ -141,7 +141,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 }
 
 - (void)openDatabaseInDirectory:(NSString *)databaseDirectory
-			withCompletionBlock:(void(NS_NOESCAPE ^ _Nullable)(BOOL))completionBlock
+			withCompletionBlock:(void (^_Nullable)(BOOL))completionBlock
 {
 	NSParameterAssert(databaseDirectory != nil);
 
@@ -308,7 +308,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 	 beforeUniqueIdentifier:(NSString *)uniqueId
 				 fetchLimit:(NSUInteger)fetchLimit
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	return [self fetchEntriesForView:viewId
 				withUniqueIdentifier:uniqueId
@@ -322,7 +322,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 	  afterUniqueIdentifier:(NSString *)uniqueId
 				 fetchLimit:(NSUInteger)fetchLimit
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	return [self fetchEntriesForView:viewId
 				withUniqueIdentifier:uniqueId
@@ -338,7 +338,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 		   beforeFetchLimit:(NSUInteger)fetchLimitBefore
 			afterFetchLimit:(NSUInteger)fetchLimitAfter
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	NSParameterAssert(viewId != nil);
 	NSParameterAssert(uniqueId != nil);
@@ -405,7 +405,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 	  afterUniqueIdentifier:(NSString *)uniqueIdAfter
 	 beforeUniqueIdentifier:(NSString *)uniqueIdBefore
 				 fetchLimit:(NSUInteger)fetchLimit
-		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	NSParameterAssert(viewId != nil);
 	NSParameterAssert(uniqueIdAfter != nil);
@@ -476,7 +476,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 				  fetchType:(HLSHistoricLogUniqueIdentifierFetchType)fetchType
 				 fetchLimit:(NSUInteger)fetchLimit
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	NSParameterAssert(viewId != nil);
 	NSParameterAssert(uniqueId != nil);
@@ -571,7 +571,7 @@ typedef NS_ENUM(NSUInteger, HLSHistoricLogUniqueIdentifierFetchType) {
 				  ascending:(BOOL)ascending
 				 fetchLimit:(NSUInteger)fetchLimit
 				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
+		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock
 {
 	NSParameterAssert(viewId != nil);
 	NSParameterAssert(completionBlock != nil);

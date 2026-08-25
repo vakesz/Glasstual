@@ -26,10 +26,10 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	@objc public private(set) var clientId: String?
 	@objc public private(set) var channelId: String?
 
-	/* Accessed from NotificationConfiguration outside the main-actor
+	/** Accessed from NotificationConfiguration outside the main-actor
 	 isolation domain that SheetBase inherits. Config mutations stay on
 	 the main thread in practice (sheet UI). */
-	@objc nonisolated(unsafe) public var config: IRCChannelConfigMutable!
+	@objc public nonisolated(unsafe) var config: IRCChannelConfigMutable!
 
 	private var secretKeyLengthAlertDisplayed = false
 	private var navigationTree: [[Any]] = []
@@ -112,7 +112,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 		navigationTree = [
 			[contentViewGeneralView as Any, channelNameTextField as Any],
 			[contentViewDefaultsView as Any, defaultTopicTextField as Any],
-			[contentViewNotifications as Any, NSNull()]
+			[contentViewNotifications as Any, NSNull()],
 		]
 
 		channelNameTextField.stringValueIsInvalidOnEmpty = true
@@ -347,7 +347,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 		super.cancel(sender)
 	}
 
-	@IBAction override public func ok(_ sender: Any?) {
+	@IBAction override public func ok(_: Any?) {
 		guard okOrError() else {
 			return
 		}

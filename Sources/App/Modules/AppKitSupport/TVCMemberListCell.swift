@@ -68,14 +68,14 @@ private func avatarColor(forNickname nickname: String) -> NSColor {
 	return NSColor(hue: h, saturation: s, brightness: b, alpha: 1.0)
 }
 
-/* The first letter or digit of the nickname. Leading punctuation such
+/** The first letter or digit of the nickname. Leading punctuation such
  as the brackets and underscores IRC users decorate nicknames with is
  skipped so that "[away]bob" still reads as "B". */
 private func avatarInitial(forNickname nickname: String) -> String {
 	var initial: String?
 
 	nickname.enumerateSubstrings(
-		in: nickname.startIndex..<nickname.endIndex,
+		in: nickname.startIndex ..< nickname.endIndex,
 		options: .byComposedCharacterSequences
 	) { substring, _, _, stop in
 		guard let substring else {
@@ -101,7 +101,7 @@ private func makeAvatarImage(initial: String, color: NSColor, size: CGFloat) -> 
 		string: initial,
 		attributes: [
 			.font: font,
-			.foregroundColor: NSColor.white
+			.foregroundColor: NSColor.white,
 		]
 	)
 
@@ -124,7 +124,7 @@ private func makeAvatarImage(initial: String, color: NSColor, size: CGFloat) -> 
 
 private func userModeColor(defaultsKey: String) -> NSColor? {
 	guard let color = TPCPreferencesUserDefaults.shared().color(forKey: defaultsKey),
-		color != .clear
+	      color != .clear
 	else {
 		return nil
 	}
@@ -135,38 +135,38 @@ private func userModeColor(defaultsKey: String) -> NSColor? {
 private func color(for rank: IRCUserRank) -> NSColor? {
 	switch rank {
 	case .irCopByMode:
-		return userModeColor(defaultsKey: "User List Mode Badge Colors -> +y")
+		userModeColor(defaultsKey: "User List Mode Badge Colors -> +y")
 	case .channelOwner:
-		return userModeColor(defaultsKey: "User List Mode Badge Colors -> +q")
+		userModeColor(defaultsKey: "User List Mode Badge Colors -> +q")
 	case .superOperator:
-		return userModeColor(defaultsKey: "User List Mode Badge Colors -> +a")
+		userModeColor(defaultsKey: "User List Mode Badge Colors -> +a")
 	case .normalOperator:
-		return userModeColor(defaultsKey: "User List Mode Badge Colors -> +o")
+		userModeColor(defaultsKey: "User List Mode Badge Colors -> +o")
 	case .halfOperator:
-		return userModeColor(defaultsKey: "User List Mode Badge Colors -> +h")
+		userModeColor(defaultsKey: "User List Mode Badge Colors -> +h")
 	case .voiced:
-		return userModeColor(defaultsKey: "User List Mode Badge Colors -> +v")
+		userModeColor(defaultsKey: "User List Mode Badge Colors -> +v")
 	default:
-		return nil
+		nil
 	}
 }
 
 private func symbolName(for rank: IRCUserRank) -> String? {
 	switch rank {
 	case .irCopByMode:
-		return "checkmark.shield.fill"
+		"checkmark.shield.fill"
 	case .channelOwner:
-		return "crown.fill"
+		"crown.fill"
 	case .superOperator:
-		return "star.fill"
+		"star.fill"
 	case .normalOperator:
-		return "shield.fill"
+		"shield.fill"
 	case .halfOperator:
-		return "shield.lefthalf.filled"
+		"shield.lefthalf.filled"
 	case .voiced:
-		return "mic.fill"
+		"mic.fill"
 	default:
-		return nil
+		nil
 	}
 }
 
@@ -212,13 +212,12 @@ public final class MemberListCell: NSTableCellView {
 		true
 	}
 
-
 	override public func updateLayer() {
 		updateDrawing()
 	}
 
 	private func updateDrawing() {
-		let drawingContext = self.drawingContext
+		let drawingContext = drawingContext
 		updateTextField(in: drawingContext)
 		updateAvatar(in: drawingContext)
 		updateStatus(in: drawingContext)
@@ -300,7 +299,7 @@ public final class MemberListCell: NSTableCellView {
 			string: cellItem.user.nickname,
 			attributes: [
 				.font: controlFont,
-				.foregroundColor: controlColor
+				.foregroundColor: controlColor,
 			]
 		)
 
@@ -313,7 +312,7 @@ public final class MemberListCell: NSTableCellView {
 				string: caption,
 				attributes: [
 					.font: captionFont,
-					.foregroundColor: NSColor.secondaryLabelColor
+					.foregroundColor: NSColor.secondaryLabelColor,
 				]
 			)
 			mutableStringValue.append(captionValue)
@@ -421,11 +420,11 @@ public final class MemberListCell: NSTableCellView {
 		if stripIRCFormatting {
 			userInfoPopover.addressField.stringValue = hostmaskAddress
 		} else if let font = userInfoPopover.addressField.font,
-			let formatted = (hostmaskAddress as NSString).attributedString(
-				withIRCFormatting: font,
-				preferredFontColor: nil,
-				honorFormattingPreference: false
-			)
+		          let formatted = (hostmaskAddress as NSString).attributedString(
+		          	withIRCFormatting: font,
+		          	preferredFontColor: nil,
+		          	honorFormattingPreference: false
+		          )
 		{
 			userInfoPopover.addressField.attributedStringValue = formatted
 		}
@@ -438,11 +437,11 @@ public final class MemberListCell: NSTableCellView {
 		if stripIRCFormatting {
 			userInfoPopover.realNameField.stringValue = realName
 		} else if let font = userInfoPopover.realNameField.font,
-			let formatted = (realName as NSString).attributedString(
-				withIRCFormatting: font,
-				preferredFontColor: nil,
-				honorFormattingPreference: false
-			)
+		          let formatted = (realName as NSString).attributedString(
+		          	withIRCFormatting: font,
+		          	preferredFontColor: nil,
+		          	honorFormattingPreference: false
+		          )
 		{
 			userInfoPopover.realNameField.attributedStringValue = formatted
 		}
@@ -470,7 +469,7 @@ public final class MemberListCell: NSTableCellView {
 
 		/* Presenting the popover will steal focus. To workaround this,
 		 we record the active first responder then set it back. */
-		let window = self.window
+		let window = window
 		let activeFirstResponder = window?.firstResponder
 
 		userInfoPopover.show(relativeTo: cellFrame, of: memberList, preferredEdge: .maxX)
@@ -564,7 +563,7 @@ public final class MemberListRowCell: NSTableRowView {
 		childCell?.needsDisplay = true
 	}
 
-	/* AppKit emphasizes a selection only while the window is key. Mail and
+	/** AppKit emphasizes a selection only while the window is key. Mail and
 	 Finder keep the accent fill while a sheet or panel is key, so emphasis
 	 follows main-window status instead. Both the getter and the background
 	 style are overridden so that drawing and text colours agree regardless

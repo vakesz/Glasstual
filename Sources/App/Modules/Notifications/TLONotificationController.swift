@@ -108,7 +108,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	@objc
 	private func mainWindowSelectionChanged(_: Notification) {
 		guard let mainWindow = NSObject.masterController().mainWindow,
-			let client = mainWindow.selectedClient
+		      let client = mainWindow.selectedClient
 		else {
 			return
 		}

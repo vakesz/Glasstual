@@ -52,7 +52,7 @@ public class ServerListCell: NSTableCellView {
 	}
 
 	private func updateDrawing() {
-		let drawingContext = self.drawingContext
+		let drawingContext = drawingContext
 		updateTextField(in: drawingContext)
 		updateDrawing(in: drawingContext)
 	}
@@ -120,15 +120,13 @@ public class ServerListCell: NSTableCellView {
 			return nil
 		}
 
-		let unreadCountDescription: String
-
-		if unreadCount == 1 {
-			unreadCountDescription = LocalizedKey(
+		let unreadCountDescription: String = if unreadCount == 1 {
+			LocalizedKey(
 				"TDCChannelSpotlightController[43s-x4]",
 				formattedNumber(Int(unreadCount))
 			)
 		} else {
-			unreadCountDescription = LocalizedKey(
+			LocalizedKey(
 				"TDCChannelSpotlightController[vzj-30]",
 				formattedNumber(Int(unreadCount))
 			)
@@ -140,15 +138,13 @@ public class ServerListCell: NSTableCellView {
 			return unreadCountDescription
 		}
 
-		let nicknameHighlightCountDescription: String
-
-		if nicknameHighlightCount == 1 {
-			nicknameHighlightCountDescription = LocalizedKey(
+		let nicknameHighlightCountDescription: String = if nicknameHighlightCount == 1 {
+			LocalizedKey(
 				"TDCChannelSpotlightController[0lz-oh]",
 				formattedNumber(Int(nicknameHighlightCount))
 			)
 		} else {
-			nicknameHighlightCountDescription = LocalizedKey(
+			LocalizedKey(
 				"TDCChannelSpotlightController[c4u-21]",
 				formattedNumber(Int(nicknameHighlightCount))
 			)
@@ -298,8 +294,8 @@ public class ServerListCell: NSTableCellView {
 
 		var drawMessageBadge =
 			isSelected == false
-			|| (isSelectedFrontmost == false && isSelected && multipleRowsSelected)
-			|| (isWindowActive == false && isSelected)
+				|| (isSelectedFrontmost == false && isSelected && multipleRowsSelected)
+				|| (isWindowActive == false && isSelected)
 
 		if associatedChannel.config.showTreeBadgeCount == false {
 			drawMessageBadge = false
@@ -385,7 +381,7 @@ public class ServerListCell: NSTableCellView {
 			attributes: [
 				.foregroundColor: textColor,
 				.font: controlFont,
-				.paragraphStyle: paragraphStyle
+				.paragraphStyle: paragraphStyle,
 			]
 		)
 
@@ -520,7 +516,7 @@ public class ServerListRowCell: NSTableRowView {
 		childCell?.needsDisplay = true
 	}
 
-	/* AppKit emphasizes a selection only while the window is key. Mail and
+	/** AppKit emphasizes a selection only while the window is key. Mail and
 	 Finder keep the accent fill while a sheet or panel is key, so emphasis
 	 follows main-window status instead. Both the getter and the background
 	 style are overridden so that drawing and text colours agree regardless

@@ -59,14 +59,14 @@ public final class PluginItem: NSObject {
 					sharedRules.append(rule)
 				}
 
-				self.outputSuppressionRules = sharedRules
+				outputSuppressionRules = sharedRules
 				supportedFeatures.insert(.outputSuppressionRules)
 			}
 		}
 
 		/* Does the bundle have a preference pane?... */
 		if primaryClass.responds(to: Selector(("pluginPreferencesPaneMenuItemName"))),
-			primaryClass.responds(to: Selector(("pluginPreferencesPaneView")))
+		   primaryClass.responds(to: Selector(("pluginPreferencesPaneView")))
 		{
 			let itemTitle = primaryClass.value(forKey: "pluginPreferencesPaneMenuItemName") as? String
 
@@ -85,9 +85,9 @@ public final class PluginItem: NSObject {
 
 		/* Process user input commands */
 		if primaryClass.responds(to: Selector(("subscribedUserInputCommands"))),
-			primaryClass.responds(
-				to: Selector(("userInputCommandInvokedOnClient:commandString:messageString:"))
-			)
+		   primaryClass.responds(
+		   	to: Selector(("userInputCommandInvokedOnClient:commandString:messageString:"))
+		   )
 		{
 			let subscribedCommands = primaryClass.value(forKey: "subscribedUserInputCommands")
 
@@ -109,7 +109,7 @@ public final class PluginItem: NSObject {
 
 		/* Process server input commands */
 		if primaryClass.responds(to: Selector(("subscribedServerInputCommands"))),
-			primaryClass.responds(to: Selector(("didReceiveServerInput:onClient:")))
+		   primaryClass.responds(to: Selector(("didReceiveServerInput:onClient:")))
 		{
 			let subscribedCommands = primaryClass.value(forKey: "subscribedServerInputCommands")
 

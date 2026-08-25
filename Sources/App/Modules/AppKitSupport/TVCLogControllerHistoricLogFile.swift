@@ -18,7 +18,7 @@ private let historicLogLogger = Logger(
 	category: "HistoricLog"
 )
 
-/* What the client knows about the lines of one view, kept in memory so
+/** What the client knows about the lines of one view, kept in memory so
  that chat history replayed by the server can be checked against the
  local scrollback without a round trip to the XPC service. The index is
  filled from every line written and every line fetched. */
@@ -32,6 +32,7 @@ private final class LogControllerHistoricLogViewIndex: NSObject {
 @objc(TVCLogControllerHistoricLogFile)
 public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientProtocol, @unchecked Sendable {
 	private let viewIndexes = NSMutableDictionary()
+	private let processStateLock = NSLock()
 	@objc public private(set) var isSaving = false
 	private var isTerminating = false
 	private var processLoaded = false
@@ -45,7 +46,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	@objc(sharedInstance)
 	public class func shared() -> LogControllerHistoricLogFile {
 		enum Storage {
-			nonisolated(unsafe) static let instance = LogControllerHistoricLogFile()
+			static let instance = LogControllerHistoricLogFile()
 		}
 		return Storage.instance
 	}
@@ -59,6 +60,9 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	}
 
 	private func warmProcessIfNeeded() {
+		processStateLock.lock()
+		defer { processStateLock.unlock() }
+
 		if processLoading || processLoaded {
 			return
 		}
@@ -71,6 +75,9 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	}
 
 	private func invalidateProcess() {
+		processStateLock.lock()
+		defer { processStateLock.unlock() }
+
 		if processLoading == false, processLoaded == false {
 			return
 		}
@@ -88,8 +95,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		}
 
 		remoteObjectProxy(withErrorHandler: { [weak self] _ in
-			self?.processLoading = false
-			self?.processLoaded = false
+			self?.setProcessLoadState(loading: false, loaded: false)
 			historicLogLogger.error("Failed to communicate with process to open database")
 		})?.openDatabase(
 			inDirectory: databaseSavePath,
@@ -100,8 +106,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 					historicLogLogger.error("Failed to open database")
 				}
 
-				self?.processLoading = false
-				self?.processLoaded = success
+				self?.setProcessLoadState(loading: false, loaded: success)
 			}
 		)
 	}
@@ -119,7 +124,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 			"fetchEntriesForView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:",
 			"fetchEntriesForView:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
 			"fetchEntriesForView:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
-			"fetchEntriesForView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:"
+			"fetchEntriesForView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:",
 		]
 
 		for selectorName in fetchSelectors {
@@ -190,9 +195,20 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	}
 
 	private func resetContext() {
+		processStateLock.lock()
+		defer { processStateLock.unlock() }
+
 		isSaving = false
 		processLoading = false
 		processLoaded = false
+	}
+
+	private func setProcessLoadState(loading: Bool, loaded: Bool) {
+		processStateLock.lock()
+		defer { processStateLock.unlock() }
+
+		processLoading = loading
+		processLoaded = loaded
 	}
 
 	@objc
@@ -248,8 +264,8 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		for xpcObject in xpcObjects {
 			let selector = NSSelectorFromString("logLineFromXPCObject:")
 			guard TVCLogLine.responds(to: selector),
-				let logLine = (TVCLogLine.perform(selector, with: xpcObject)?.takeUnretainedValue()
-					as? TVCLogLine)
+			      let logLine = (TVCLogLine.perform(selector, with: xpcObject)?.takeUnretainedValue()
+			      	as? TVCLogLine)
 			else {
 				historicLogLogger.error(
 					"Failed to initialize object \(String(describing: xpcObject), privacy: .public). Corrupt data?"
@@ -353,11 +369,11 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		for item: IRCTreeItem
 	) -> Bool {
 		guard let index = viewIndex(for: item, create: false),
-			let fallbackKey = Self.fallbackKey(
-				for: receivedAt,
-				nickname: nickname,
-				messageBody: messageBody
-			)
+		      let fallbackKey = Self.fallbackKey(
+		      	for: receivedAt,
+		      	nickname: nickname,
+		      	messageBody: messageBody
+		      )
 		else {
 			return false
 		}
@@ -409,7 +425,9 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	) {
 		warmProcessIfNeeded()
 
-		remoteObjectProxy()?.fetchEntries(
+		remoteObjectProxy(withErrorHandler: { _ in
+			completionBlock([])
+		})?.fetchEntries(
 			forView: item.uniqueIdentifier,
 			ascending: ascending,
 			fetchLimit: fetchLimit,
@@ -432,7 +450,9 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	) {
 		warmProcessIfNeeded()
 
-		remoteObjectProxy()?.fetchEntries(
+		remoteObjectProxy(withErrorHandler: { _ in
+			completionBlock([])
+		})?.fetchEntries(
 			forView: item.uniqueIdentifier,
 			withUniqueIdentifier: uniqueId,
 			beforeFetchLimit: fetchLimitBefore,
@@ -455,7 +475,9 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	) {
 		warmProcessIfNeeded()
 
-		remoteObjectProxy()?.fetchEntries(
+		remoteObjectProxy(withErrorHandler: { _ in
+			completionBlock([])
+		})?.fetchEntries(
 			forView: item.uniqueIdentifier,
 			beforeUniqueIdentifier: uniqueId,
 			fetchLimit: fetchLimit,
@@ -477,7 +499,9 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	) {
 		warmProcessIfNeeded()
 
-		remoteObjectProxy()?.fetchEntries(
+		remoteObjectProxy(withErrorHandler: { _ in
+			completionBlock([])
+		})?.fetchEntries(
 			forView: item.uniqueIdentifier,
 			afterUniqueIdentifier: uniqueId,
 			fetchLimit: fetchLimit,
@@ -499,7 +523,9 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	) {
 		warmProcessIfNeeded()
 
-		remoteObjectProxy()?.fetchEntries(
+		remoteObjectProxy(withErrorHandler: { _ in
+			completionBlock([])
+		})?.fetchEntries(
 			forView: item.uniqueIdentifier,
 			afterUniqueIdentifier: uniqueIdAfter,
 			beforeUniqueIdentifier: uniqueIdBefore,

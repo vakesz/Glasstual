@@ -1,51 +1,52 @@
 /* *********************************************************************
-*                  _____         _               _
-*                 |_   _|____  _| |_ _   _  __ _| |
-*                   | |/ _ \ \/ / __| | | |/ _` | |
-*                   | |  __/>  <| |_| |_| | (_| | |
-*                   |_|\___/_/\_\\__|\__,_|\__,_|_|
-*
-*    Copyright (c) 2018 Codeux Software, LLC & respective contributors.
-*       Please see Acknowledgements.pdf for additional information.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-*  * Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-*  * Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*  * Neither the name of Textual, "Codeux Software, LLC", nor the
-*    names of its contributors may be used to endorse or promote products
-*    derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
-*
-*********************************************************************** */
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *
+ *    Copyright (c) 2018 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
 
 import Network
 import os
 
-/* Logging for the connection classes. `Logger` is Sendable which keeps
+/** Logging for the connection classes. `Logger` is Sendable which keeps
  these usable from queue-confined code under strict concurrency. */
 enum RCMLog {
 	static let connection = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "com.vakesz.glasstual.IRCConnectionHost", category: "Connection")
+		subsystem: Bundle.main.bundleIdentifier ?? "com.vakesz.glasstual.IRCConnectionHost", category: "Connection"
+	)
 }
 
-/* ConnectionSocket holds the state and helpers shared by the transport
+/** ConnectionSocket holds the state and helpers shared by the transport
  layer. ConnectionSocketNWF is the only transport; it subclasses this to
  talk to Network.framework.
 
@@ -71,8 +72,9 @@ class ConnectionSocket: @unchecked Sendable {
 	var connected = false
 	var disconnecting = false
 	var disconnected: Bool {
-		return (connecting == false && connected == false)
+		connecting == false && connected == false
 	}
+
 	var secured = false
 	var sending = false
 
@@ -86,11 +88,11 @@ class ConnectionSocket: @unchecked Sendable {
 	final let torProxyTypePort: UInt16 = 9150
 
 	/// Maximum bytes requested from the transport in a single read.
-	final let maximumDataLength = (1000 * 1000 * 100)  // 100 megabytes
+	final let maximumDataLength = (1000 * 1000 * 100) // 100 megabytes
 
 	/// Maximum bytes buffered while waiting for a newline. A peer that
 	/// never sends one is disconnected instead of growing memory forever.
-	final let maximumBufferedLineLength = (1024 * 1024)  // 1 MiB
+	final let maximumBufferedLineLength = (1024 * 1024) // 1 MiB
 
 	/// Seconds allowed for the transport to reach the ready state.
 	final let connectTimeout: TimeInterval = 30
@@ -134,7 +136,7 @@ class ConnectionSocket: @unchecked Sendable {
 
 		if config.connectionShouldValidateCertificateChain == false {
 			RCMLog.connection.error(
-				"Certificate chain for '\(self.config.serverAddress, privacy: .public)' failed validation but the connection is configured to ignore that: \(failureDescription, privacy: .public)"
+				"Certificate chain for '\(config.serverAddress, privacy: .public)' failed validation but the connection is configured to ignore that: \(failureDescription, privacy: .public)"
 			)
 
 			response(true)
@@ -143,7 +145,7 @@ class ConnectionSocket: @unchecked Sendable {
 		}
 
 		RCMLog.connection.error(
-			"Certificate chain for '\(self.config.serverAddress, privacy: .public)' failed validation: \(failureDescription, privacy: .public)"
+			"Certificate chain for '\(config.serverAddress, privacy: .public)' failed validation: \(failureDescription, privacy: .public)"
 		)
 
 		var evaluationResult: SecTrustResultType = .invalid
@@ -162,7 +164,7 @@ class ConnectionSocket: @unchecked Sendable {
 	/// The client side identity, if one is configured.
 	/// The keychain is consulted once; the result is cached for the
 	/// life of the socket because a handshake asks for it more than once.
-	final private(set) lazy var clientSideCertificate: (identity: SecIdentity, certificate: SecCertificate)? =
+	private(set) final lazy var clientSideCertificate: (identity: SecIdentity, certificate: SecCertificate)? =
 		loadClientSideCertificate()
 
 	private func loadClientSideCertificate() -> (identity: SecIdentity, certificate: SecCertificate)? {
@@ -179,7 +181,8 @@ class ConnectionSocket: @unchecked Sendable {
 				kSecClass: kSecClassCertificate,
 				kSecValuePersistentRef: certificateDataIn,
 				kSecReturnRef: true,
-			] as CFDictionary, &certificateObject)
+			] as CFDictionary, &certificateObject
+		)
 
 		if status != errSecSuccess {
 			RCMLog.connection.error("Client certificate lookup failed: \(status, privacy: .public)")
@@ -188,7 +191,7 @@ class ConnectionSocket: @unchecked Sendable {
 		}
 
 		guard let certificateObject,
-			CFGetTypeID(certificateObject) == SecCertificateGetTypeID()
+		      CFGetTypeID(certificateObject) == SecCertificateGetTypeID()
 		else {
 			return nil
 		}
@@ -245,14 +248,15 @@ extension ConnectionError {
 	}
 }
 
-/* All delegate methods are invoked on the socket's queue. */
+/** All delegate methods are invoked on the socket's queue. */
 protocol ConnectionSocketDelegate: AnyObject {
 	func connection(_ connection: ConnectionSocket, willConnectToProxy address: String, on port: UInt16)
 	func connection(_ connection: ConnectionSocket, willConnectTo address: String, on port: UInt16)
 	// The address is nil when connecting to a proxy.
 	func connection(_ connection: ConnectionSocket, didConnectTo address: String?)
 	func connection(
-		_ connection: ConnectionSocket, securedWith protocol: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t)
+		_ connection: ConnectionSocket, securedWith protocol: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t
+	)
 	func connection(_ connection: ConnectionSocket, requiresTrust response: @escaping (Bool) -> Void)
 	func connectionClosedReadStream(_ connection: ConnectionSocket)
 	func connectionDisconnected(_ connection: ConnectionSocket)

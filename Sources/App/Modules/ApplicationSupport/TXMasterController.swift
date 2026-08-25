@@ -32,7 +32,7 @@ public final class MasterController: NSObject, NSApplicationDelegate {
 		category: "Termination"
 	)
 
-	nonisolated(unsafe) private static var awakeFromNibCalled = false
+	private nonisolated(unsafe) static var awakeFromNibCalled = false
 
 	private var worldStorage: IRCWorld!
 	private var mainWindowStorage: TVCMainWindow!
@@ -50,7 +50,7 @@ public final class MasterController: NSObject, NSApplicationDelegate {
 	private var terminateHistoricLogSaveStarted = false
 	private var terminateStepThreePerformed = false
 
-	/* Nib connects these via KVC (`setValue:forKey:`). IUO matches the
+	/** Nib connects these via KVC (`setValue:forKey:`). IUO matches the
 	 ObjC nonnull headers while still allowing nil before wake / in tests. */
 	@objc public var mainWindow: TVCMainWindow! {
 		get { mainWindowStorage }
@@ -244,7 +244,7 @@ public final class MasterController: NSObject, NSApplicationDelegate {
 		presentOnboardingIfNeeded()
 	}
 
-	/* First launch: no client has been configured and the setup flow has not
+	/** First launch: no client has been configured and the setup flow has not
 	 been completed or skipped before. The flow is shown on top of the main
 	 window's "add a server" placeholder. */
 	private func presentOnboardingIfNeeded() {
@@ -309,7 +309,7 @@ public final class MasterController: NSObject, NSApplicationDelegate {
 		menuController?.dockMenu
 	}
 
-	/* Returns `.terminateNow` when termination may begin immediately,
+	/** Returns `.terminateNow` when termination may begin immediately,
 	 `.terminateCancel` when refused outright. When a confirmation is needed
 	 the answer is deferred: the sheet's completion reports to NSApp and
 	 begins termination itself. */
@@ -387,8 +387,8 @@ public final class MasterController: NSObject, NSApplicationDelegate {
 					return
 				}
 
-				self.perform(
-					#selector(self.completeHistoricLogSaveAndContinueTermination),
+				perform(
+					#selector(completeHistoricLogSaveAndContinueTermination),
 					on: .main,
 					with: nil,
 					waitUntilDone: false

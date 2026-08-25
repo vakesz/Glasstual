@@ -14,10 +14,10 @@ import AppKit
 
 @objc(TDCChannelSpotlightSearchResultCellView)
 public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
-	@IBOutlet private weak var channelNameField: NSTextField!
-	@IBOutlet private weak var keyboardShortcutField: NSTextField!
-	@IBOutlet private weak var keyboardShortcutFieldOffsetConstraint: NSLayoutConstraint!
-	@IBOutlet private weak var unreadCountDescriptionField: NSTextField!
+	@IBOutlet private var channelNameField: NSTextField!
+	@IBOutlet private var keyboardShortcutField: NSTextField!
+	@IBOutlet private var keyboardShortcutFieldOffsetConstraint: NSLayoutConstraint!
+	@IBOutlet private var unreadCountDescriptionField: NSTextField!
 
 	private var observedChannel: IRCChannel?
 
@@ -46,7 +46,7 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 
 	private func updateTextFieldTextColor(isSelected: Bool) {
 		let appearance = userInterfaceObjects
-		let rowCell = self.rowCell
+		let rowCell = rowCell
 
 		/* Selection is drawn by AppKit. Only the text colours follow it:
 		 an emphasized (key window) selection is drawn with the accent
@@ -72,7 +72,7 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 
 	@objc public var channelName: NSAttributedString {
 		guard let searchResult = objectValue as? ChannelSpotlightSearchResult,
-			let channel = searchResult.channel
+		      let channel = searchResult.channel
 		else {
 			return NSAttributedString()
 		}
@@ -147,36 +147,32 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 
 	@objc public var unreadCountDescription: String {
 		guard let searchResult = objectValue as? ChannelSpotlightSearchResult,
-			let channel = searchResult.channel
+		      let channel = searchResult.channel
 		else {
 			return ""
 		}
 
 		let nicknameHighlightCount = channel.nicknameHighlightCount
-		let nicknameHighlightCountDescription: String
-
-		if nicknameHighlightCount == 1 {
-			nicknameHighlightCountDescription = LocalizedKey(
+		let nicknameHighlightCountDescription: String = if nicknameHighlightCount == 1 {
+			LocalizedKey(
 				"TDCChannelSpotlightController[0lz-oh]",
 				formattedNumber(Int(nicknameHighlightCount)) as String
 			)
 		} else {
-			nicknameHighlightCountDescription = LocalizedKey(
+			LocalizedKey(
 				"TDCChannelSpotlightController[c4u-21]",
 				formattedNumber(Int(nicknameHighlightCount)) as String
 			)
 		}
 
 		let unreadCount = channel.treeUnreadCount
-		let unreadCountDescription: String
-
-		if unreadCount == 1 {
-			unreadCountDescription = LocalizedKey(
+		let unreadCountDescription: String = if unreadCount == 1 {
+			LocalizedKey(
 				"TDCChannelSpotlightController[43s-x4]",
 				formattedNumber(Int(unreadCount)) as String
 			)
 		} else {
-			unreadCountDescription = LocalizedKey(
+			LocalizedKey(
 				"TDCChannelSpotlightController[vzj-30]",
 				formattedNumber(Int(unreadCount)) as String
 			)
@@ -197,7 +193,7 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 
 	private func updateAccessibilityLabel() {
 		guard let searchResult = objectValue as? ChannelSpotlightSearchResult,
-			let channel = searchResult.channel
+		      let channel = searchResult.channel
 		else {
 			setAccessibilityLabel(nil)
 			return
@@ -318,7 +314,7 @@ public final class ChannelSpotlightSearchResultRowView: NSTableRowView {
 	}
 
 	@available(*, unavailable)
-	public required init?(coder: NSCoder) {
+	public required init?(coder _: NSCoder) {
 		fatalError("init(coder:) has not been implemented")
 	}
 

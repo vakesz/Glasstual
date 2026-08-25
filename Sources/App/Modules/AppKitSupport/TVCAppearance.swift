@@ -44,7 +44,7 @@ open class ViewAppearance: NSObject {
 
 	private func loadAppearanceNamed(_ appearanceName: String, at appearanceLocation: URL) -> Bool {
 		guard let appearances = NSDictionary(contentsOf: appearanceLocation) as? [String: Any],
-			let appearance = appearances[appearanceName] as? [String: Any]
+		      let appearance = appearances[appearanceName] as? [String: Any]
 		else {
 			return false
 		}
@@ -62,7 +62,7 @@ open class ViewAppearance: NSObject {
 
 	private func value(inGroup group: [String: Any], withKey key: String, expectedType: AnyClass) -> Any? {
 		guard let referenceObject = group[key],
-			(referenceObject as AnyObject).isKind(of: expectedType)
+		      (referenceObject as AnyObject).isKind(of: expectedType)
 		else {
 			return nil
 		}
@@ -78,7 +78,7 @@ open class ViewAppearance: NSObject {
 		let stateKey = forActiveWindow ? "activeWindow" : "inactiveWindow"
 
 		guard let stateValue = referenceObject[stateKey],
-			(stateValue as AnyObject).isKind(of: expectedType)
+		      (stateValue as AnyObject).isKind(of: expectedType)
 		else {
 			return nil
 		}

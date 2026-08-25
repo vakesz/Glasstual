@@ -53,7 +53,7 @@ private final class NetworkPickerRow: NSObject {
 
 // MARK: - Cell View
 
-/* Name on the first line, description on the second, and a lock on the
+/** Name on the first line, description on the second, and a lock on the
  trailing edge when the network prefers TLS. */
 private final class NetworkPickerCellView: NSTableCellView {
 	var descriptionField: NSTextField!
@@ -65,7 +65,7 @@ private final class NetworkPickerCellView: NSTableCellView {
 	}
 
 	@available(*, unavailable)
-	required init?(coder: NSCoder) {
+	required init?(coder _: NSCoder) {
 		fatalError("init(coder:) has not been implemented")
 	}
 
@@ -163,7 +163,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	}
 
 	@available(*, unavailable)
-	public required init?(coder: NSCoder) {
+	public required init?(coder _: NSCoder) {
 		fatalError("init(coder:) has not been implemented")
 	}
 
@@ -747,7 +747,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 
 	@objc private func openWebsite(_: Any?) {
 		guard let website = selectedNetwork?.website, website.isEmpty == false,
-			let url = URL(string: website)
+		      let url = URL(string: website)
 		else {
 			return
 		}
