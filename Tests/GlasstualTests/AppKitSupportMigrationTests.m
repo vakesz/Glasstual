@@ -130,7 +130,6 @@ NS_ASSUME_NONNULL_BEGIN
 	 the suite. Nib outlet wiring is what this test guards. */
 }
 
-
 - (void)testMemberInfoPopoverUsesTransientBehavior
 {
 	TVCMemberListUserInfoPopover *popover = [TVCMemberListUserInfoPopover new];

@@ -18,13 +18,13 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 {
 	@objc public private(set) var userInterfaceObjects: ChannelSpotlightAppearance!
 
-	@IBOutlet private weak var visualEffectView: NSVisualEffectView!
-	@IBOutlet private weak var noResultsLabel: NSTextField!
-	@IBOutlet private weak var noResultsLabelLeadingConstraint: NSLayoutConstraint!
-	@IBOutlet private weak var searchResultsView: NSView!
-	@IBOutlet private weak var searchResultsViewHeightConstraint: NSLayoutConstraint!
-	@IBOutlet private weak var searchField: NSTextField!
-	@IBOutlet private weak var searchResultsTable: NSTableView!
+	@IBOutlet private var visualEffectView: NSVisualEffectView!
+	@IBOutlet private var noResultsLabel: NSTextField!
+	@IBOutlet private var noResultsLabelLeadingConstraint: NSLayoutConstraint!
+	@IBOutlet private var searchResultsView: NSView!
+	@IBOutlet private var searchResultsViewHeightConstraint: NSLayoutConstraint!
+	@IBOutlet private var searchField: NSTextField!
+	@IBOutlet private var searchResultsTable: NSTableView!
 	@IBOutlet private var searchResultsController: NSArrayController!
 
 	private var mouseEventMonitor: Any?
@@ -177,7 +177,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 	private func applicationAppearanceChanged() {
 		guard let panel = window as? ChannelSpotlightPanel,
-			let appearance = ChannelSpotlightAppearance(window: panel)
+		      let appearance = ChannelSpotlightAppearance(window: panel)
 		else {
 			return
 		}
@@ -242,7 +242,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 		switch event.keyCode {
 		case 18, 19, 20, 21, 22, 23, 25, 26, 28, 29,
-			82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92:
+		     82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92:
 			var keyboardKeys = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 			keyboardKeys.remove(.numericPad)
 
@@ -269,7 +269,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 	}
 
 	private func handlePageUpDownEvent(_ event: NSEvent) -> NSEvent? {
-		let searchResultsCount = self.searchResultsCount
+		let searchResultsCount = searchResultsCount
 
 		if searchResultsCount == 0 {
 			return nil
@@ -370,7 +370,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 	}
 
 	private func restoreWindowFrame() {
-		let window = self.window!
+		let window = window!
 
 		window.saveSizeAsDefault()
 		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
@@ -381,7 +381,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		 that the frame we save is same we open. */
 		resetSearch()
 
-		let window = self.window!
+		let window = window!
 
 		/* We call -restoreDefaultSizeAndDisplay: before saving
 		 the frame because the window wont register the changes

@@ -12,7 +12,7 @@
 
 import AppKit
 
-/* The delegate lives in an object of its own rather than on the split view.
+/** The delegate lives in an object of its own rather than on the split view.
  AppKit answers -respondsToSelector: for toggleSidebar: on any NSSplitView by
  putting the same question to that view's delegate, so a split view that is its
  own delegate asks itself forever. Toolbar validation of the sidebar toggle item
@@ -31,7 +31,7 @@ private func sortChannelViewSubviews(
 	_: UnsafeMutableRawPointer?
 ) -> ComparisonResult {
 	guard let firstView = firstView as? MainWindowChannelViewSubview,
-		let secondView = secondView as? MainWindowChannelViewSubview
+	      let secondView = secondView as? MainWindowChannelViewSubview
 	else {
 		return .orderedSame
 	}
@@ -386,7 +386,7 @@ private final class MainWindowChannelViewSubview: NSView {
 			webView.trailingAnchor.constraint(equalTo: safeArea.trailingAnchor),
 			webView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor),
 			minimumWidth,
-			minimumHeight
+			minimumHeight,
 		])
 	}
 
@@ -452,7 +452,7 @@ private final class MainWindowChannelViewSubview: NSView {
 			overlayView.leadingAnchor.constraint(equalTo: leadingAnchor),
 			overlayView.trailingAnchor.constraint(equalTo: trailingAnchor),
 			overlayView.topAnchor.constraint(equalTo: topAnchor),
-			overlayView.bottomAnchor.constraint(equalTo: bottomAnchor)
+			overlayView.bottomAnchor.constraint(equalTo: bottomAnchor),
 		])
 
 		overlayVisible = true
@@ -503,12 +503,10 @@ private final class MainWindowChannelViewSubviewOverlayView: NSView {
 			return
 		}
 
-		var backgroundColor: NSColor?
-
-		if subview.backingViewIsLoading {
-			backgroundColor = TXSharedApplication.sharedThemeController().settings.underlyingWindowColor
+		var backgroundColor: NSColor? = if subview.backingViewIsLoading {
+			TXSharedApplication.sharedThemeController().settings.underlyingWindowColor
 		} else {
-			backgroundColor = TXSharedApplication.sharedThemeController().settings.channelViewOverlayColor
+			TXSharedApplication.sharedThemeController().settings.channelViewOverlayColor
 		}
 
 		if backgroundColor == nil {

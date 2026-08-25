@@ -14,7 +14,7 @@ import Foundation
 
 @objc(THOPluginDispatcher)
 public final class PluginDispatcher: NSObject {
-	nonisolated(unsafe) private static let didPostNewMessageObjectCache =
+	private nonisolated(unsafe) static let didPostNewMessageObjectCache =
 		NSCache<NSString, THOPluginDidPostNewMessageConcreteObject>()
 
 	private static let _dispatchQueue = DispatchQueue(
@@ -51,9 +51,9 @@ public final class PluginDispatcher: NSObject {
 
 		for plugin in plugins {
 			guard plugin.supportsFeature(.didReceiveCommandEvent),
-				let primaryClass = plugin.primaryClass as? NSObject,
-				primaryClass.responds(to: selector),
-				let method = class_getInstanceMethod(type(of: primaryClass), selector)
+			      let primaryClass = plugin.primaryClass as? NSObject,
+			      primaryClass.responds(to: selector),
+			      let method = class_getInstanceMethod(type(of: primaryClass), selector)
 			else {
 				continue
 			}
@@ -91,7 +91,7 @@ public final class PluginDispatcher: NSObject {
 	) -> Bool {
 		for plugin in plugins {
 			guard plugin.supportsFeature(.didReceivePlainTextMessageEvent),
-				let primaryClass = plugin.primaryClass as? THOPluginProtocol
+			      let primaryClass = plugin.primaryClass as? THOPluginProtocol
 			else {
 				continue
 			}
@@ -121,7 +121,7 @@ public final class PluginDispatcher: NSObject {
 
 		for plugin in plugins {
 			guard plugin.supportsFeature(.serverInputDataInterception),
-				let primaryClass = plugin.primaryClass as? THOPluginProtocol
+			      let primaryClass = plugin.primaryClass as? THOPluginProtocol
 			else {
 				continue
 			}
@@ -148,7 +148,7 @@ public final class PluginDispatcher: NSObject {
 
 		for plugin in plugins {
 			guard plugin.supportsFeature(.userInputDataInterception),
-				let primaryClass = plugin.primaryClass as? THOPluginProtocol
+			      let primaryClass = plugin.primaryClass as? THOPluginProtocol
 			else {
 				continue
 			}
@@ -167,7 +167,7 @@ public final class PluginDispatcher: NSObject {
 			}()
 
 			if equal == false,
-				returnedValue is String || returnedValue is NSAttributedString
+			   returnedValue is String || returnedValue is NSAttributedString
 			{
 				if returnedValue is NSMutableString || returnedValue is NSMutableAttributedString {
 					returnValue = (returnedValue as AnyObject).copy()
@@ -191,13 +191,13 @@ public final class PluginDispatcher: NSObject {
 
 		for plugin in plugins {
 			guard plugin.supportsFeature(.willRenderMessageEvent),
-				let primaryClass = plugin.primaryClass as? THOPluginProtocol,
-				let returnedValue = primaryClass.willRenderMessage?(
-					returnValue,
-					forViewController: viewController,
-					lineType: lineType,
-					memberType: memberType
-				), returnedValue.isEmpty == false
+			      let primaryClass = plugin.primaryClass as? THOPluginProtocol,
+			      let returnedValue = primaryClass.willRenderMessage?(
+			      	returnValue,
+			      	forViewController: viewController,
+			      	lineType: lineType,
+			      	memberType: memberType
+			      ), returnedValue.isEmpty == false
 			else {
 				continue
 			}
@@ -224,8 +224,8 @@ public final class PluginDispatcher: NSObject {
 
 			for plugin in self.plugins {
 				guard plugin.supportsFeature(.subscribedUserInputCommands),
-					plugin.supportedUserInputCommands?.contains(lowercaseCommand) == true,
-					let primaryClass = plugin.primaryClass as? THOPluginProtocol
+				      plugin.supportedUserInputCommands?.contains(lowercaseCommand) == true,
+				      let primaryClass = plugin.primaryClass as? THOPluginProtocol
 				else {
 					continue
 				}
@@ -247,7 +247,7 @@ public final class PluginDispatcher: NSObject {
 		XRPerformBlockAsynchronouslyOnQueue(dispatchQueue()) {
 			for plugin in self.plugins {
 				guard plugin.supportsFeature(.webViewJavaScriptPayloads),
-					let primaryClass = plugin.primaryClass as? THOPluginProtocol
+				      let primaryClass = plugin.primaryClass as? THOPluginProtocol
 				else {
 					continue
 				}
@@ -269,8 +269,8 @@ public final class PluginDispatcher: NSObject {
 
 			for plugin in self.plugins {
 				guard plugin.supportsFeature(.subscribedServerInputCommands),
-					plugin.supportedServerInputCommands?.contains(lowercaseCommand) == true,
-					let primaryClass = plugin.primaryClass as? THOPluginProtocol
+				      plugin.supportedServerInputCommands?.contains(lowercaseCommand) == true,
+				      let primaryClass = plugin.primaryClass as? THOPluginProtocol
 				else {
 					continue
 				}
@@ -298,7 +298,7 @@ public final class PluginDispatcher: NSObject {
 		XRPerformBlockAsynchronouslyOnQueue(dispatchQueue()) {
 			for plugin in self.plugins {
 				guard plugin.supportsFeature(.newMessagePostedEvent),
-					let primaryClass = plugin.primaryClass as? THOPluginProtocol
+				      let primaryClass = plugin.primaryClass as? THOPluginProtocol
 				else {
 					continue
 				}

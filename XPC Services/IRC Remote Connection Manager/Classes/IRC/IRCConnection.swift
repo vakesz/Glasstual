@@ -1,41 +1,41 @@
 /* *********************************************************************
-*                  _____         _               _
-*                 |_   _|____  _| |_ _   _  __ _| |
-*                   | |/ _ \ \/ / __| | | |/ _` | |
-*                   | |  __/>  <| |_| |_| | (_| | |
-*                   |_|\___/_/\_\\__|\__,_|\__,_|_|
-*
-* Copyright (c) 2018 - 2020 Codeux Software, LLC & respective contributors.
-*       Please see Acknowledgements.pdf for additional information.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-*  * Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-*  * Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*  * Neither the name of Textual, "Codeux Software, LLC", nor the
-*    names of its contributors may be used to endorse or promote products
-*    derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
-*
-*********************************************************************** */
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2018 - 2020 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
 
-/* Connection is the object RCMProcessMain drives over XPC. It owns the
+/** Connection is the object RCMProcessMain drives over XPC. It owns the
  send queue, flood control, and the transport socket.
 
  Concurrency model:
@@ -59,13 +59,11 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 
 	fileprivate var sendQueue: [Data] = []
 
-	fileprivate lazy var floodControlTimer: TLOTimer =
-		{
-			return TLOTimer(
-				actionBlock: { [weak self] _ in
-					self?.onFloodControlTimer()
-				}, on: queue)
-		}()
+	fileprivate lazy var floodControlTimer: TLOTimer = .init(
+		actionBlock: { [weak self] _ in
+			self?.onFloodControlTimer()
+		}, on: queue
+	)
 
 	fileprivate var floodControlCurrentMessageCount = 0
 	fileprivate var floodControlEnforced = false
@@ -75,7 +73,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 		/// For example: Network.framework
 		case socket(error: Error)
 
-		// otherError are errors returned by ConnectionSocket instances.
+		/// otherError are errors returned by ConnectionSocket instances.
 		case other(message: String)
 
 		/// invalidCertificate are errors returned when the connection
@@ -85,7 +83,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 		/// unableToSecure are errors returned when the connection
 		/// cannot be secured for some reason. e.g. handshake failure
 		case unableToSecure(failureReason: String)
-	}  // ConnectionError
+	} // ConnectionError
 
 	// MARK: - Initialization
 
@@ -116,7 +114,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	}
 
 	fileprivate func openOnQueue() {
-		RCMLog.connection.debug("Opening connection \(self.socket.uniqueIdentifier, privacy: .public)...")
+		RCMLog.connection.debug("Opening connection \(socket.uniqueIdentifier, privacy: .public)...")
 
 		if socket.disconnected == false {
 			RCMLog.connection.error("Already connected")
@@ -137,7 +135,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	}
 
 	fileprivate func closeOnQueue() {
-		RCMLog.connection.debug("Closing connection \(self.socket.uniqueIdentifier, privacy: .public)...")
+		RCMLog.connection.debug("Closing connection \(socket.uniqueIdentifier, privacy: .public)...")
 
 		if socket.disconnected {
 			RCMLog.connection.debug("Not connected")
@@ -259,9 +257,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	fileprivate func onFloodControlTimer() {
 		floodControlCurrentMessageCount = 0
 
-		while tryToSend() {
-
-		}
+		while tryToSend() {}
 	}
 
 	// MARK: - Socket Proxy
@@ -280,7 +276,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	/// A proxy whose failures are logged. Messages sent through it
 	/// are one way; nothing here waits on the client.
 	fileprivate var remoteObjectProxy: RCMConnectionManagerClientProtocol? {
-		let proxy = serviceConnection.remoteObjectProxyWithErrorHandler { (error) in
+		let proxy = serviceConnection.remoteObjectProxyWithErrorHandler { error in
 			RCMLog.connection.error("Error communicating with client: \(error.localizedDescription, privacy: .public)")
 		}
 
@@ -293,28 +289,26 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 		return proxy
 	}
 
-	final func connection(_ connection: ConnectionSocket, willConnectToProxy address: String, on port: UInt16) {
+	final func connection(_: ConnectionSocket, willConnectToProxy address: String, on port: UInt16) {
 		remoteObjectProxy?.ircConnectionWillConnect(toProxy: address, port: port)
 	}
 
-	final func connection(_ connection: ConnectionSocket, willConnectTo address: String, on port: UInt16) {
+	final func connection(_: ConnectionSocket, willConnectTo _: String, on _: UInt16) {}
 
-	}
-
-	final func connection(_ connection: ConnectionSocket, didConnectTo address: String?) {
+	final func connection(_: ConnectionSocket, didConnectTo address: String?) {
 		remoteObjectProxy?.ircConnectionDidConnect(toHost: address)
 	}
 
 	final func connection(
-		_ connection: ConnectionSocket, securedWith protocol: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t
+		_: ConnectionSocket, securedWith protocol: tls_protocol_version_t, cipherSuite: tls_ciphersuite_t
 	) {
 		remoteObjectProxy?.ircConnectionDidSecureConnection(withProtocolType: `protocol`, cipherSuite: cipherSuite)
 	}
 
-	final func connection(_ connection: ConnectionSocket, requiresTrust response: @escaping (Bool) -> Void) {
+	final func connection(_: ConnectionSocket, requiresTrust response: @escaping (Bool) -> Void) {
 		/* If the client cannot be reached, answer "not trusted" so the
 		 handshake completes (with failure) instead of hanging forever. */
-		let proxy = serviceConnection.remoteObjectProxyWithErrorHandler { (error) in
+		let proxy = serviceConnection.remoteObjectProxyWithErrorHandler { error in
 			RCMLog.connection.error("Trust request failed: \(error.localizedDescription, privacy: .public)")
 
 			response(false)
@@ -329,31 +323,31 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 		proxy.ircConnectionRequestInsecureCertificateTrust(response)
 	}
 
-	final func connectionClosedReadStream(_ connection: ConnectionSocket) {
+	final func connectionClosedReadStream(_: ConnectionSocket) {
 		remoteObjectProxy?.ircConnectionDidCloseReadStream()
 	}
 
-	final func connectionDisconnected(_ connection: ConnectionSocket) {
+	final func connectionDisconnected(_: ConnectionSocket) {
 		resetState()
 
 		remoteObjectProxy?.ircConnectionDidDisconnectWithError(nil)
 	}
 
-	final func connection(_ connection: ConnectionSocket, disconnectedWith error: ConnectionError) {
+	final func connection(_: ConnectionSocket, disconnectedWith error: ConnectionError) {
 		resetState()
 
 		remoteObjectProxy?.ircConnectionDidDisconnectWithError(error as NSError)
 	}
 
-	final func connection(_ connection: ConnectionSocket, received data: Data) {
+	final func connection(_: ConnectionSocket, received data: Data) {
 		remoteObjectProxy?.ircConnectionDidReceive(data)
 	}
 
-	final func connection(_ connection: ConnectionSocket, willSend data: Data) {
+	final func connection(_: ConnectionSocket, willSend data: Data) {
 		remoteObjectProxy?.ircConnectionWillSend(data)
 	}
 
-	final func connectionDidSend(_ connection: ConnectionSocket) {
+	final func connectionDidSend(_: ConnectionSocket) {
 		remoteObjectProxy?.ircConnectionDidSendData()
 
 		tryToSend()
@@ -365,21 +359,19 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 typealias ConnectionError = Connection.ConnectionError
 
 extension ConnectionError: CustomNSError {
-	/* Error domain and codes are defined in IRCConnectionErrors.h/m */
+	/** Error domain and codes are defined in IRCConnectionErrors.h/m */
 	static let errorDomain = ConnectionErrorDomain
 
 	var errorCode: Int {
-		let errorCode: ConnectionErrorCode
-
-		switch self {
-		case .socket(_):
-			errorCode = .socket
-		case .other(_):
-			errorCode = .other
-		case .badCertificate(_):
-			errorCode = .badCertificate
-		case .unableToSecure(_):
-			errorCode = .unableToSecure
+		let errorCode: ConnectionErrorCode = switch self {
+		case .socket:
+			.socket
+		case .other:
+			.other
+		case .badCertificate:
+			.badCertificate
+		case .unableToSecure:
+			.unableToSecure
 		}
 
 		return Int(errorCode.rawValue)
@@ -388,7 +380,7 @@ extension ConnectionError: CustomNSError {
 	var errorUserInfo: [String: Any] {
 		var userInfo: [String: Any] = [:]
 
-		if let errorDescription = errorDescription {
+		if let errorDescription {
 			userInfo[NSLocalizedDescriptionKey] = errorDescription
 		}
 
@@ -397,13 +389,14 @@ extension ConnectionError: CustomNSError {
 		// time, we may be interested in its contents. Only the
 		// domain, code, and description are kept so that the error
 		// is guaranteed to survive secure coding across XPC.
-		if case .socket(let error) = self {
+		if case let .socket(error) = self {
 			let nsError = error as NSError
 
 			userInfo["UnderlyingSocketError"] = NSError(
 				domain: nsError.domain,
 				code: nsError.code,
-				userInfo: [NSLocalizedDescriptionKey: nsError.localizedDescription])
+				userInfo: [NSLocalizedDescriptionKey: nsError.localizedDescription]
+			)
 		}
 
 		return userInfo
@@ -413,14 +406,14 @@ extension ConnectionError: CustomNSError {
 extension ConnectionError: LocalizedError {
 	var errorDescription: String? {
 		switch self {
-		case .socket(let error):
+		case let .socket(error):
 			/* The underlying socket error is almost always an NSError
 			 which means we can just ask for its localized description. */
-			return error.localizedDescription
-		case .other(let message),
-			.badCertificate(let message),
-			.unableToSecure(let message):
-			return message
+			error.localizedDescription
+		case let .other(message),
+		     let .badCertificate(message),
+		     let .unableToSecure(message):
+			message
 		}
 	}
 }

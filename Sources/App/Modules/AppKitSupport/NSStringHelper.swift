@@ -17,9 +17,9 @@ private func isBase10Numeric(_ character: unichar) -> Bool {
 	character >= 0x30 && character <= 0x39
 }
 
-extension NSString {
+public extension NSString {
 	@objc(isValidInternetAddress)
-	public var isValidInternetAddress: Bool {
+	var isValidInternetAddress: Bool {
 		guard length > 0 else {
 			return false
 		}
@@ -32,7 +32,7 @@ extension NSString {
 	}
 
 	@objc(isValidInternetPort)
-	public var isValidInternetPort: Bool {
+	var isValidInternetPort: Bool {
 		guard isNumericOnly else {
 			return false
 		}
@@ -41,12 +41,12 @@ extension NSString {
 		return value > 0 && value <= 65535
 	}
 
-	@objc public var stringByAppendingIRCFormattingStop: String {
+	@objc var stringByAppendingIRCFormattingStop: String {
 		(self as String) + String(utf16CodeUnits: [UniChar(IRCTextFormatterTerminatingCharacter)], count: 1)
 	}
 
 	@objc(hostmaskComponents:username:address:)
-	public func hostmaskComponents(
+	func hostmaskComponents(
 		_ nickname: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		username: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		address: AutoreleasingUnsafeMutablePointer<NSString?>?
@@ -55,7 +55,7 @@ extension NSString {
 	}
 
 	@objc(hostmaskComponents:username:address:onClient:)
-	public func hostmaskComponents(
+	func hostmaskComponents(
 		_ nickname: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		username: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		address: AutoreleasingUnsafeMutablePointer<NSString?>?,
@@ -69,8 +69,8 @@ extension NSString {
 		let bang2pos = range(of: "@", options: [.literal, .backwards])
 
 		guard bang1pos.location != NSNotFound,
-			bang2pos.location != NSNotFound,
-			bang2pos.location > bang1pos.location
+		      bang2pos.location != NSNotFound,
+		      bang2pos.location > bang1pos.location
 		else {
 			return false
 		}
@@ -85,8 +85,8 @@ extension NSString {
 		let addressInt = substring(after: UInt(bang2pos.location)) as NSString
 
 		guard nicknameInt.isHostmaskNickname(on: client),
-			usernameInt.isHostmaskUsername(on: client),
-			addressInt.isHostmaskAddress(on: client)
+		      usernameInt.isHostmaskUsername(on: client),
+		      addressInt.isHostmaskAddress(on: client)
 		else {
 			return false
 		}
@@ -99,39 +99,39 @@ extension NSString {
 	}
 
 	@objc(isHostmask)
-	public var isHostmask: Bool {
+	var isHostmask: Bool {
 		hostmaskComponents(nil, username: nil, address: nil)
 	}
 
 	@objc(isHostmaskAddress)
-	public var isHostmaskAddress: Bool {
+	var isHostmaskAddress: Bool {
 		isHostmaskAddress(on: nil)
 	}
 
 	@objc(isHostmaskAddressOn:)
-	public func isHostmaskAddress(on _: IRCClient?) -> Bool {
+	func isHostmaskAddress(on _: IRCClient?) -> Bool {
 		length > 0 && containsCharacters("\u{021}\u{040}\u{000}\u{020}\u{00d}\u{00a}") == false
 	}
 
 	@objc(isHostmaskUsername)
-	public var isHostmaskUsername: Bool {
+	var isHostmaskUsername: Bool {
 		isHostmaskUsername(on: nil)
 	}
 
 	@objc(isHostmaskUsernameOn:)
-	public func isHostmaskUsername(on _: IRCClient?) -> Bool {
+	func isHostmaskUsername(on _: IRCClient?) -> Bool {
 		length > 0
 			&& length <= 40
 			&& containsCharacters("\u{000}\u{020}\u{00d}\u{00a}") == false
 	}
 
 	@objc(isHostmaskNickname)
-	public var isHostmaskNickname: Bool {
+	var isHostmaskNickname: Bool {
 		isHostmaskNickname(on: nil)
 	}
 
 	@objc(isHostmaskNicknameOn:)
-	public func isHostmaskNickname(on client: IRCClient?) -> Bool {
+	func isHostmaskNickname(on client: IRCClient?) -> Bool {
 		var maximumLength: UInt = 50
 
 		if let client {
@@ -157,7 +157,7 @@ extension NSString {
 	}
 
 	@objc(isChannelNameOn:)
-	public func isChannelName(on client: IRCClient) -> Bool {
+	func isChannelName(on client: IRCClient) -> Bool {
 		guard length > 0 else {
 			return false
 		}
@@ -177,7 +177,7 @@ extension NSString {
 	}
 
 	@objc(isChannelName)
-	public var isChannelName: Bool {
+	var isChannelName: Bool {
 		guard length > 0 else {
 			return false
 		}
@@ -186,7 +186,7 @@ extension NSString {
 		return c == 0x23 || c == 0x26 || c == 0x2B || c == 0x21 || c == 0x7E || c == 0x3F
 	}
 
-	@objc public var channelNameWithoutBang: String? {
+	@objc var channelNameWithoutBang: String? {
 		guard isChannelName else {
 			return self as String
 		}
@@ -195,7 +195,7 @@ extension NSString {
 	}
 
 	@objc(channelNameWithoutBangOn:)
-	public func channelNameWithoutBang(on client: IRCClient) -> String? {
+	func channelNameWithoutBang(on client: IRCClient) -> String? {
 		guard isChannelName(on: client) else {
 			return self as String
 		}
@@ -214,7 +214,7 @@ extension NSString {
 		return self as String
 	}
 
-	@objc public var nicknameFromHostmask: String? {
+	@objc var nicknameFromHostmask: String? {
 		var nickname: NSString?
 		if hostmaskComponents(&nickname, username: nil, address: nil) {
 			return nickname as String?
@@ -223,7 +223,7 @@ extension NSString {
 		return self as String
 	}
 
-	@objc public var usernameFromHostmask: String? {
+	@objc var usernameFromHostmask: String? {
 		var username: NSString?
 		if hostmaskComponents(nil, username: &username, address: nil) {
 			return username as String?
@@ -232,7 +232,7 @@ extension NSString {
 		return nil
 	}
 
-	@objc public var addressFromHostmask: String? {
+	@objc var addressFromHostmask: String? {
 		var address: NSString?
 		if hostmaskComponents(nil, username: nil, address: &address) {
 			return address as String?
@@ -241,12 +241,12 @@ extension NSString {
 		return nil
 	}
 
-	@objc public var stringWithValidURIScheme: String? {
+	@objc var stringWithValidURIScheme: String? {
 		LinkParser.urlWithProperScheme(self as String)
 	}
 
 	@objc(attributedStringWithIRCFormatting:preferredFontColor:honorFormattingPreference:)
-	public func attributedString(
+	func attributedString(
 		withIRCFormatting preferredFont: NSFont,
 		preferredFontColor: NSColor?,
 		honorFormattingPreference formattingPreference: Bool
@@ -267,7 +267,7 @@ extension NSString {
 	}
 
 	@objc(attributedStringWithIRCFormatting:preferredFontColor:)
-	public func attributedString(
+	func attributedString(
 		withIRCFormatting preferredFont: NSFont,
 		preferredFontColor: NSColor?
 	) -> NSAttributedString? {
@@ -278,7 +278,7 @@ extension NSString {
 		)
 	}
 
-	@objc public var stripIRCEffects: String {
+	@objc var stripIRCEffects: String {
 		let stringLength = length
 
 		guard stringLength > 0 else {
@@ -298,15 +298,15 @@ extension NSString {
 
 			switch character {
 			case UniChar(IRCTextFormatterEffectBoldCharacter),
-				UniChar(IRCTextFormatterEffectItalicCharacter),
-				UniChar(IRCTextFormatterEffectItalicCharacterOld),
-				UniChar(IRCTextFormatterEffectMonospaceCharacter),
-				UniChar(IRCTextFormatterEffectStrikethroughCharacter),
-				UniChar(IRCTextFormatterEffectUnderlineCharacter),
-				UniChar(IRCTextFormatterTerminatingCharacter):
+			     UniChar(IRCTextFormatterEffectItalicCharacter),
+			     UniChar(IRCTextFormatterEffectItalicCharacterOld),
+			     UniChar(IRCTextFormatterEffectMonospaceCharacter),
+			     UniChar(IRCTextFormatterEffectStrikethroughCharacter),
+			     UniChar(IRCTextFormatterEffectUnderlineCharacter),
+			     UniChar(IRCTextFormatterTerminatingCharacter):
 				break
 			case UniChar(IRCTextFormatterEffectColorAsDigitCharacter),
-				UniChar(IRCTextFormatterEffectColorAsHexCharacter):
+			     UniChar(IRCTextFormatterEffectColorAsHexCharacter):
 				i += Int(
 					colorComponents(
 						ofCharacter: character,
@@ -327,7 +327,7 @@ extension NSString {
 	}
 
 	@objc(colorComponentsOfCharacter:startingAt:foregroundColor:backgroundColor:)
-	public func colorComponents(
+	func colorComponents(
 		ofCharacter character: unichar,
 		startingAt rangeStart: UInt,
 		foregroundColor: AutoreleasingUnsafeMutablePointer<AnyObject?>?,
@@ -468,13 +468,13 @@ extension NSString {
 			}
 
 			if mForegroundColor != NSNotFound,
-				mForegroundColor <= Int(IRCTextFormatterEffectColorHighestDigit)
+			   mForegroundColor <= Int(IRCTextFormatterEffectColorHighestDigit)
 			{
 				foregroundColor = NSNumber(value: mForegroundColor)
 			}
 
 			if mBackgroundColor != NSNotFound,
-				mBackgroundColor <= Int(IRCTextFormatterEffectColorHighestDigit)
+			   mBackgroundColor <= Int(IRCTextFormatterEffectColorHighestDigit)
 			{
 				backgroundColor = NSNumber(value: mBackgroundColor)
 			}
@@ -549,7 +549,7 @@ extension NSString {
 	}
 
 	@objc(base64EncodingWithLineLength:)
-	public func base64Encoding(withLineLength lineLength: UInt) -> [String] {
+	func base64Encoding(withLineLength lineLength: UInt) -> [String] {
 		guard length > 0 else {
 			return [self as String]
 		}
@@ -563,7 +563,7 @@ extension NSString {
 	}
 
 	@objc(padNicknameWithCharacter:maximumLength:)
-	public func padNickname(withCharacter padCharacter: unichar, maximumLength: UInt) -> String? {
+	func padNickname(withCharacter padCharacter: unichar, maximumLength: UInt) -> String? {
 		precondition(padCharacter != 0)
 		precondition(maximumLength > 0)
 
@@ -585,7 +585,7 @@ extension NSString {
 			let stringHead = substring.substring(to: i)
 			var stringHeadMutable = stringHead
 
-			for _ in i..<substring.length {
+			for _ in i ..< substring.length {
 				stringHeadMutable += "_"
 			}
 
@@ -595,7 +595,7 @@ extension NSString {
 		return nil
 	}
 
-	@objc public var encodedMessageTagString: String {
+	@objc var encodedMessageTagString: String {
 		guard length > 0 else {
 			return self as String
 		}
@@ -612,8 +612,8 @@ extension NSString {
 		return bob as String
 	}
 
-	@objc public var decodedMessageTagString: String {
-		let length = self.length
+	@objc var decodedMessageTagString: String {
+		let length = length
 
 		guard length > 0 else {
 			return self as String
@@ -667,7 +667,7 @@ extension NSString {
 	}
 
 	@objc(isModeSymbol)
-	public var isModeSymbol: Bool {
+	var isModeSymbol: Bool {
 		guard length == 1 else {
 			return false
 		}

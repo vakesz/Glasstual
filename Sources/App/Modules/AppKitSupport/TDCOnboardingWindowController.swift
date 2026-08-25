@@ -368,7 +368,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 			}
 		} else {
 			onboardingLogger.info(
-				"Chat style '\(self.settings.styleName, privacy: .public)' is not bundled; keeping the current theme"
+				"Chat style '\(settings.styleName, privacy: .public)' is not bundled; keeping the current theme"
 			)
 		}
 

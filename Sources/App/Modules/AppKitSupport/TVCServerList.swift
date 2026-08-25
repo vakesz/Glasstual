@@ -130,7 +130,12 @@ public final class ServerList: NSOutlineView {
 		}
 	}
 
-	override public func moveItem(at fromIndex: Int, inParent oldParent: Any?, to toIndex: Int, inParent newParent: Any?) {
+	override public func moveItem(
+		at fromIndex: Int,
+		inParent oldParent: Any?,
+		to toIndex: Int,
+		inParent newParent: Any?
+	) {
 		if fromIndex < toIndex {
 			super.moveItem(at: fromIndex, inParent: oldParent, to: toIndex - 1, inParent: newParent)
 		} else {
@@ -314,8 +319,8 @@ public final class ServerList: NSOutlineView {
 
 	// MARK: - Events
 
-	override public func menu(for event: NSEvent) -> NSMenu? {
-		let rowBeneathMouse = self.rowBeneathMouse
+	override public func menu(for _: NSEvent) -> NSMenu? {
+		let rowBeneathMouse = rowBeneathMouse
 
 		if rowBeneathMouse >= 0 {
 			if rowBeneathMouse != selectedRow || numberOfSelectedRows > 1 {

@@ -19,9 +19,9 @@ private let formattingMenuHexColorMenuItemTag = 300
 @objc(TVCTextViewIRCFormattingMenu)
 @MainActor
 public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
-	@IBOutlet @objc public weak var formatterMenu: NSMenuItem!
-	@IBOutlet @objc public weak var foregroundColorMenu: NSMenu!
-	@IBOutlet @objc public weak var backgroundColorMenu: NSMenu!
+	@IBOutlet public var formatterMenu: NSMenuItem!
+	@IBOutlet public var foregroundColorMenu: NSMenu!
+	@IBOutlet public var backgroundColorMenu: NSMenu!
 
 	private var observingColorPanel = false
 
@@ -53,8 +53,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			item.state = boldText ? .on : .off
 			item.action =
 				boldText
-				? #selector(removeBoldCharFromTextBox(_:))
-				: #selector(insertBoldCharIntoTextBox(_:))
+					? #selector(removeBoldCharFromTextBox(_:))
+					: #selector(insertBoldCharIntoTextBox(_:))
 			return true
 
 		case 101: // Italics
@@ -62,8 +62,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			item.state = italicText ? .on : .off
 			item.action =
 				italicText
-				? #selector(removeItalicCharFromTextBox(_:))
-				: #selector(insertItalicCharIntoTextBox(_:))
+					? #selector(removeItalicCharFromTextBox(_:))
+					: #selector(insertItalicCharIntoTextBox(_:))
 			return true
 
 		case 102: // Monospace
@@ -71,8 +71,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			item.state = monospaceText ? .on : .off
 			item.action =
 				monospaceText
-				? #selector(removeMonospaceCharFromTextBox(_:))
-				: #selector(insertMonospaceCharIntoTextBox(_:))
+					? #selector(removeMonospaceCharFromTextBox(_:))
+					: #selector(insertMonospaceCharIntoTextBox(_:))
 			return true
 
 		case 103: // Spoiler
@@ -80,8 +80,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			item.state = spoilerText ? .on : .off
 			item.action =
 				spoilerText
-				? #selector(removeSpoilerCharFromTextBox(_:))
-				: #selector(insertSpoilerCharIntoTextBox(_:))
+					? #selector(removeSpoilerCharFromTextBox(_:))
+					: #selector(insertSpoilerCharIntoTextBox(_:))
 			return true
 
 		case 104: // Strikethrough
@@ -89,8 +89,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			item.state = struckthroughText ? .on : .off
 			item.action =
 				struckthroughText
-				? #selector(removeStrikethroughCharFromTextBox(_:))
-				: #selector(insertStrikethroughCharIntoTextBox(_:))
+					? #selector(removeStrikethroughCharFromTextBox(_:))
+					: #selector(insertStrikethroughCharIntoTextBox(_:))
 			return true
 
 		case 105: // Underline
@@ -98,8 +98,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			item.state = underlineText ? .on : .off
 			item.action =
 				underlineText
-				? #selector(removeUnderlineCharFromTextBox(_:))
-				: #selector(insertUnderlineCharIntoTextBox(_:))
+					? #selector(removeUnderlineCharFromTextBox(_:))
+					: #selector(insertUnderlineCharIntoTextBox(_:))
 			return true
 
 		case 108: // Foreground Color Missing
@@ -330,7 +330,11 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			return
 		}
 
-		applyEffectToTextBox(.foregroundColor, withValue: NSNumber(value: sender.tag), inRange: textField.selectedRange())
+		applyEffectToTextBox(
+			.foregroundColor,
+			withValue: NSNumber(value: sender.tag),
+			inRange: textField.selectedRange()
+		)
 	}
 
 	@IBAction @objc(insertBackgroundColorCharIntoTextBox:)
@@ -356,7 +360,11 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			return
 		}
 
-		applyEffectToTextBox(.backgroundColor, withValue: NSNumber(value: sender.tag), inRange: textField.selectedRange())
+		applyEffectToTextBox(
+			.backgroundColor,
+			withValue: NSNumber(value: sender.tag),
+			inRange: textField.selectedRange()
+		)
 	}
 
 	private func insertRainbowColorCharInfoTextBox(asForegroundColor: Bool) {
@@ -406,7 +414,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		applyAttributedStringToTextBox(mutableStringCopy, inRange: selectedTextRange)
 	}
 
-	/* The color panel is shared with every other user of it in the app.
+	/** The color panel is shared with every other user of it in the app.
 	 While it is open on our behalf it sends its action to us; once it
 	 closes the target and action are cleared so a later, unrelated
 	 presentation does not keep formatting the input field. */

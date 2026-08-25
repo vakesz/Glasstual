@@ -72,6 +72,9 @@ NS_ASSUME_NONNULL_BEGIN
 #define _enqueueBlockStandalone(operationBlock)                                                                        \
 	[self.printingQueue enqueueMessageBlock:(operationBlock) for:self isStandalone:YES];
 
+#define _enqueueAsynchronousBlockStandalone(operationBlock)                                                            \
+	[self.printingQueue enqueueAsynchronousMessageBlock:(operationBlock) for:self isStandalone:YES];
+
 @interface TVCLogControllerPrintOperationContext ()
 @property(nonatomic, weak, readwrite) IRCClient *client;
 @property(nonatomic, weak, readwrite) IRCChannel *channel;
@@ -636,14 +639,16 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 															 limitToDate:limitToDate
 													 withCompletionBlock:^(NSArray<TVCLogLine *> *objects) {
 														 if ([operation isCancelled]) {
+															 [self.printingQueue finishOperation:operation];
 															 return;
 														 }
 
 														 reloadBlock(objects.reverseObjectEnumerator.allObjects);
+														 [self.printingQueue finishOperation:operation];
 													 }];
 	};
 
-	_enqueueBlockStandalone(operationBlock)
+	_enqueueAsynchronousBlockStandalone(operationBlock)
 }
 
 - (void)reloadTheme

@@ -17,15 +17,15 @@ import os
 public final class SharedApplication: NSObject {
 	private static let lock = NSLock()
 
-	nonisolated(unsafe) private static var appearance: Appearance?
-	nonisolated(unsafe) private static var networkReachabilityNotifier: Reachability?
-	nonisolated(unsafe) private static var notificationController: NotificationController?
-	nonisolated(unsafe) private static var pluginManager: PluginManager?
-	nonisolated(unsafe) private static var printingQueue: LogControllerPrintingOperationQueue?
-	nonisolated(unsafe) private static var speechSynthesizer: SpeechSynthesizer?
-	nonisolated(unsafe) private static var themeController: TPCThemeController?
-	nonisolated(unsafe) private static var windowController: WindowController?
-	nonisolated(unsafe) private static var fileTransferDialog: TDCFileTransferDialog?
+	private nonisolated(unsafe) static var appearance: Appearance?
+	private nonisolated(unsafe) static var networkReachabilityNotifier: Reachability?
+	private nonisolated(unsafe) static var notificationController: NotificationController?
+	private nonisolated(unsafe) static var pluginManager: PluginManager?
+	private nonisolated(unsafe) static var printingQueue: LogControllerPrintingOperationQueue?
+	private nonisolated(unsafe) static var speechSynthesizer: SpeechSynthesizer?
+	private nonisolated(unsafe) static var themeController: TPCThemeController?
+	private nonisolated(unsafe) static var windowController: WindowController?
+	private nonisolated(unsafe) static var fileTransferDialog: TDCFileTransferDialog?
 
 	private static func once<T: AnyObject>(
 		_ storage: inout T?,
@@ -112,21 +112,21 @@ public final class SharedApplication: NSObject {
 	}
 }
 
-extension NSObject {
-	nonisolated(unsafe) private static weak var globalMasterControllerReference: MasterController?
+public extension NSObject {
+	private nonisolated(unsafe) weak static var globalMasterControllerReference: MasterController?
 
 	@objc
-	public class func setGlobalMasterControllerClassReference(_ masterController: MasterController) {
+	class func setGlobalMasterControllerClassReference(_ masterController: MasterController) {
 		globalMasterControllerReference = masterController
 	}
 
 	@objc(masterController)
-	public var masterController: MasterController {
+	var masterController: MasterController {
 		Self.globalMasterControllerReference!
 	}
 
 	@objc(masterController)
-	public class func masterController() -> MasterController {
+	class func masterController() -> MasterController {
 		globalMasterControllerReference!
 	}
 }

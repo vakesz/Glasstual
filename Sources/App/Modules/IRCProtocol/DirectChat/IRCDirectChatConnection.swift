@@ -51,7 +51,7 @@ public protocol IRCDirectChatConnectionDelegate: NSObjectProtocol {
 	func directChatConnection(_ connection: DirectChatConnection, didCloseWithError error: Error?)
 }
 
-/* A DCC CHAT session. One instance is one TCP connection to one peer.
+/** A DCC CHAT session. One instance is one TCP connection to one peer.
  All state belongs to the main queue: the socket delivers its callbacks
  there and every method below must be called from there. */
 @objc(IRCDirectChatConnection)
@@ -231,7 +231,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		}
 	}
 
-	/* Mirrors the file transfer behaviour: try to map the port through the
+	/** Mirrors the file transfer behaviour: try to map the port through the
 	 router, but advertise the listener either way. */
 	private func mapListeningPort(_ port: UInt16) {
 		let portMapping = XRPortMapper(port: port)
@@ -267,7 +267,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		)
 
 		if portMapping.isMapped {
-			directChatLogger.info("Direct chat: port \(self.hostPort, privacy: .public) mapped")
+			directChatLogger.info("Direct chat: port \(hostPort, privacy: .public) mapped")
 		} else {
 			directChatLogger.error(
 				"Direct chat: port mapping failed with error code \(portMapping.error, privacy: .public)"
@@ -347,7 +347,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 
 	private func consumeReceivedLine(_ lineData: Data) {
 		guard let client,
-			var line = client.convert(fromCommonEncoding: lineData)
+		      var line = client.convert(fromCommonEncoding: lineData)
 		else {
 			return
 		}
@@ -368,7 +368,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 			if line.count > (prefixLength + suffixLength) {
 				let start = line.index(line.startIndex, offsetBy: prefixLength)
 				let end = line.index(line.endIndex, offsetBy: -suffixLength)
-				line = String(line[start..<end])
+				line = String(line[start ..< end])
 			} else {
 				line = ""
 			}
@@ -466,8 +466,8 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		/* A clean close by the peer arrives as a "closed by peer" error.
 		 Treat that as a normal end of the conversation. */
 		if let nsError = error as NSError?,
-			nsError.domain == TDCFileTransferDialogSocketErrorDomain,
-			nsError.code == TDCFileTransferDialogSocketError.closedByPeer.rawValue
+		   nsError.domain == TDCFileTransferDialogSocketErrorDomain,
+		   nsError.code == TDCFileTransferDialogSocketError.closedByPeer.rawValue
 		{
 			closeError = nil
 		}

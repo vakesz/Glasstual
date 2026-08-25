@@ -1,43 +1,43 @@
 /* *********************************************************************
-*                  _____         _               _
-*                 |_   _|____  _| |_ _   _  __ _| |
-*                   | |/ _ \ \/ / __| | | |/ _` | |
-*                   | |  __/>  <| |_| |_| | (_| | |
-*                   |_|\___/_/\_\\__|\__,_|\__,_|_|
-*
-* Copyright (c) 2018, 2019 Codeux Software, LLC & respective contributors.
-*       Please see Acknowledgements.pdf for additional information.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-*  * Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-*  * Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*  * Neither the name of Textual, "Codeux Software, LLC", nor the
-*    names of its contributors may be used to endorse or promote products
-*    derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-* SUCH DAMAGE.
-*
-*********************************************************************** */
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2018, 2019 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
 
 import Network
 
-/* ConnectionSocketNWF is the Network.framework transport.
+/** ConnectionSocketNWF is the Network.framework transport.
  See ConnectionSocket for the queue confinement rules; every method
  here runs on `queue`, including the NWConnection callbacks. */
 final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @unchecked Sendable {
@@ -52,12 +52,10 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 	// MARK: - Open/Close Socket
 
 	fileprivate func constructedParameters() throws -> NWParameters {
-		let parameters: NWParameters
-
-		if config.connectionPrefersSecuredConnection {
-			parameters = NWParameters(tls: constructedTLSOptions)
+		let parameters: NWParameters = if config.connectionPrefersSecuredConnection {
+			NWParameters(tls: constructedTLSOptions)
 		} else {
-			parameters = .tcp
+			.tcp
 		}
 
 		try applyProxy(to: parameters)
@@ -90,17 +88,19 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		} else {
 			RCMSecureTransport.appendCipherSuites(
 				in: config.cipherSuites,
-				includeDeprecated: (config.connectionPrefersModernCiphersOnly == false),
-				to: secOptions)
+				includeDeprecated: config.connectionPrefersModernCiphersOnly == false,
+				to: secOptions
+			)
 		}
 
 		sec_protocol_options_set_min_tls_protocol_version(secOptions, RCMSecureTransport.minimumProtocolType)
 
 		sec_protocol_options_set_verify_block(
 			secOptions,
-			{ [weak self] (_, trust, completionBlock) in
+			{ [weak self] _, trust, completionBlock in
 				self?.tlsVerifySecProtocol(trust, response: completionBlock)
-			}, queue)
+			}, queue
+		)
 
 		return tlsOptions
 	}
@@ -130,15 +130,16 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		let connection = NWConnection(
 			host: NWEndpoint.Host(serverAddress),
 			port: NWEndpoint.Port(integerLiteral: serverPort),
-			using: parameters)
+			using: parameters
+		)
 
-		connection.stateUpdateHandler = { [weak self] (state) in
+		connection.stateUpdateHandler = { [weak self] state in
 			self?.statusUpdateHandler(state)
 		}
 
 		self.connection = connection
 
-		if let proxyEndpoint = proxyEndpoint {
+		if let proxyEndpoint {
 			delegate?.connection(self, willConnectToProxy: proxyEndpoint.host, on: proxyEndpoint.port)
 		} else {
 			delegate?.connection(self, willConnectTo: serverAddress, on: serverPort)
@@ -211,7 +212,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		}
 
 		RCMLog.connection.error(
-			"Connection \(self.uniqueIdentifier, privacy: .public) timed out after \(self.connectTimeout, privacy: .public) seconds"
+			"Connection \(uniqueIdentifier, privacy: .public) timed out after \(connectTimeout, privacy: .public) seconds"
 		)
 
 		let errorMessage = LocalizedString("Connection timed out", table: "ConnectionErrors")
@@ -251,27 +252,27 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		case .socks5, .HTTP, .tor:
 			guard let endpoint = proxyEndpoint else {
 				throw ConnectionError.other(
-					message: LocalizedString("Proxy address is missing", table: "ConnectionErrors"))
+					message: LocalizedString("Proxy address is missing", table: "ConnectionErrors")
+				)
 			}
 
 			let nwEndpoint = NWEndpoint.hostPort(
 				host: NWEndpoint.Host(endpoint.host),
-				port: NWEndpoint.Port(integerLiteral: endpoint.port))
+				port: NWEndpoint.Port(integerLiteral: endpoint.port)
+			)
 
-			var proxyConfiguration: ProxyConfiguration
-
-			if config.proxyType == .HTTP {
-				proxyConfiguration = ProxyConfiguration(httpCONNECTProxy: nwEndpoint)
+			var proxyConfiguration = if config.proxyType == .HTTP {
+				ProxyConfiguration(httpCONNECTProxy: nwEndpoint)
 			} else {
-				proxyConfiguration = ProxyConfiguration(socksv5Proxy: nwEndpoint)
+				ProxyConfiguration(socksv5Proxy: nwEndpoint)
 			}
 
 			/* A proxy the user asked for must be used; never fall back to a direct connection. */
 			proxyConfiguration.allowFailover = false
 
 			if config.proxyType != .tor,
-				let username = config.proxyUsername, username.isEmpty == false,
-				let password = config.proxyPassword, password.isEmpty == false
+			   let username = config.proxyUsername, username.isEmpty == false,
+			   let password = config.proxyPassword, password.isEmpty == false
 			{
 				proxyConfiguration.applyCredential(username: username, password: password)
 			}
@@ -285,7 +286,8 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 			parameters.preferNoProxies = false
 		@unknown default:
 			throw ConnectionError.other(
-				message: LocalizedString("Unsupported proxy type", table: "ConnectionErrors"))
+				message: LocalizedString("Unsupported proxy type", table: "ConnectionErrors")
+			)
 		}
 	}
 
@@ -299,9 +301,10 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		connection?.receive(
 			minimumIncompleteLength: 0,
 			maximumLength: maximumDataLength,
-			completion: { [weak self] (content, contentContext, isComplete, error) in
+			completion: { [weak self] content, contentContext, isComplete, error in
 				self?.readCompletionHandler(content, contentContext, isComplete, error)
-			})
+			}
+		)
 	}
 
 	func readIn(_ data: Data) {
@@ -330,7 +333,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 
 		if readInBuffer.count > maximumBufferedLineLength {
 			RCMLog.connection.error(
-				"Connection \(self.uniqueIdentifier, privacy: .public) buffered \(self.readInBuffer.count, privacy: .public) bytes without a newline"
+				"Connection \(uniqueIdentifier, privacy: .public) buffered \(readInBuffer.count, privacy: .public) bytes without a newline"
 			)
 
 			let errorMessage = LocalizedString("Peer sent a line that is too long", table: "ConnectionErrors")
@@ -355,9 +358,10 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 
 		connection?.send(
 			content: data,
-			completion: .contentProcessed({ [weak self] (error) in
+			completion: .contentProcessed { [weak self] error in
 				self?.writeCompletionHandler(error)
-			}))
+			}
+		)
 	}
 
 	// MARK: - Properties
@@ -367,13 +371,13 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 			return nil
 		}
 
-		if case .hostPort(let host, _) = endpoint {
+		if case let .hostPort(host, _) = endpoint {
 			switch host {
-			case .name(let address, _):
+			case let .name(address, _):
 				return address
-			case .ipv4(let address):
+			case let .ipv4(address):
 				return address.rawValue.IPv4Address
-			case .ipv6(let address):
+			case let .ipv6(address):
 				return address.rawValue.IPv6Address
 			@unknown default:
 				return nil
@@ -404,7 +408,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		/* We call onSecured() regardless of other preconditions then
 		 only mark ourselves as secured if we have protocol information. */
 		guard let protocolType = tlsNegotiatedProtocol,
-			let cipherSuite = tlsNegotiatedCipherSuite
+		      let cipherSuite = tlsNegotiatedCipherSuite
 		else {
 			return
 		}
@@ -445,13 +449,13 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 			return
 		}
 
-		if let error = error {
+		if let error {
 			close(with: error)
 
 			return
 		}
 
-		if contentContext?.isFinal == true && isComplete {
+		if contentContext?.isFinal == true, isComplete {
 			/* The final bytes (typically an ERROR line with the reason
 			 for the disconnect) can arrive together with the EOF. */
 			if let content, content.isEmpty == false {
@@ -481,7 +485,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 
 		sending = false
 
-		if let error = error {
+		if let error {
 			close(with: error)
 
 			return
@@ -494,18 +498,18 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		switch status {
 		case .setup, .preparing:
 			break
-		case .waiting(let error):
+		case let .waiting(error):
 			/* Waiting is not fatal. The path may become viable (network
 			 comes back, proxy starts answering); the connect timeout
 			 bounds how long we are willing to wait. */
 			RCMLog.connection.notice(
-				"Connection \(self.uniqueIdentifier, privacy: .public) waiting: \(error.localizedDescription, privacy: .public)"
+				"Connection \(uniqueIdentifier, privacy: .public) waiting: \(error.localizedDescription, privacy: .public)"
 			)
 		case .ready:
 			onConnect()
 		case .cancelled:
 			onDisconnect(with: nil)
-		case .failed(let error):
+		case let .failed(error):
 			onDisconnect(with: error)
 		@unknown default:
 			break
@@ -520,7 +524,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 
 		self.trustRef = trustRef
 
-		tlsVerify(trustRef) { (underlyingResponse) in
+		tlsVerify(trustRef) { underlyingResponse in
 			response(underlyingResponse)
 		}
 	}
@@ -528,7 +532,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 	var tlsNegotiatedProtocol: tls_protocol_version_t? {
 		var protocolType: tls_protocol_version_t?
 
-		accessTLSMetadata { (metadata) in
+		accessTLSMetadata { metadata in
 			protocolType = sec_protocol_metadata_get_negotiated_tls_protocol_version(metadata)
 		}
 
@@ -538,7 +542,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 	var tlsNegotiatedCipherSuite: tls_ciphersuite_t? {
 		var cipherSuite: tls_ciphersuite_t?
 
-		accessTLSMetadata { (metadata) in
+		accessTLSMetadata { metadata in
 			cipherSuite = sec_protocol_metadata_get_negotiated_tls_ciphersuite(metadata)
 		}
 
@@ -548,7 +552,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 	var tlsCertificateChainData: [Data]? {
 		var certificateChain: [Data]?
 
-		accessTLSTrustRef { (trustRef) in
+		accessTLSTrustRef { trustRef in
 			certificateChain = RCMSecureTransport.certificates(in: trustRef)
 		}
 
@@ -558,27 +562,27 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 	var tlsPolicyName: String? {
 		var policyName: String?
 
-		accessTLSTrustRef { (trustRef) in
+		accessTLSTrustRef { trustRef in
 			policyName = RCMSecureTransport.policyName(in: trustRef)
 
 			if policyName == nil {
 				/*
-				June 09, 2019 with 10.15 Beta (19A471t):
+				 June 09, 2019 with 10.15 Beta (19A471t):
 
-				Despite us having a trustRef, we do not have a policy name
-				when connecting with modern sockets to an IP address.
-				The IP address itself is what is being matched against the
-				certificate name anyways so let's just return it from config.
+				 Despite us having a trustRef, we do not have a policy name
+				 when connecting with modern sockets to an IP address.
+				 The IP address itself is what is being matched against the
+				 certificate name anyways so let's just return it from config.
 
-				TODO: Revisit this in a later beta or GM.
-				*/
+				 TODO: Revisit this in a later beta or GM.
+				 */
 
 				let serverAddress = config.serverAddress
 
 				if serverAddress.isIPAddress {
 					policyName = serverAddress
 				}
-			}  // policyName
+			} // policyName
 		}
 
 		return policyName
@@ -597,7 +601,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 	}
 
 	fileprivate func accessTLSTrustRef(with closure: (SecTrust) -> Void) {
-		if let trustRef = trustRef {
+		if let trustRef {
 			closure(trustRef)
 		}
 	}
@@ -610,20 +614,21 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		/* And I thought I wrote verbose names... */
 		return sec_identity_create_with_certificates(
 			clientCertificate.identity,
-			([clientCertificate.certificate] as CFArray))
+			[clientCertificate.certificate] as CFArray
+		)
 	}
 
 	// MARK: - Error Handling
 
 	fileprivate func translateError(_ error: NWError) -> ConnectionError {
 		switch error {
-		case .dns(let errorCode):
+		case let .dns(errorCode):
 			return ConnectionError(nwDNSError: errorCode)
-		case .posix(let errorCode):
+		case let .posix(errorCode):
 			return ConnectionError(nwPOSIXError: errorCode.rawValue)
-		case .tls(let errorCode):
+		case let .tls(errorCode):
 			return ConnectionError(nwTLSError: errorCode)
-		case .wifiAware(_):
+		case .wifiAware:
 			return ConnectionError(otherError: "Wi-Fi Aware error")
 		@unknown default:
 			return ConnectionError(otherError: error.localizedDescription)
@@ -631,77 +636,75 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 	}
 }
 
-fileprivate extension ConnectionError {
+private extension ConnectionError {
 	init(nwDNSError: DNSServiceErrorType) {
 		let errorCode = Int(nwDNSError)
 
-		let errorReason: String
-
-		switch errorCode {
+		let errorReason = switch errorCode {
 		case kDNSServiceErr_NoError:
-			errorReason = "No error"
+			"No error"
 		case kDNSServiceErr_NoSuchName:
-			errorReason = "No such name"
+			"No such name"
 		case kDNSServiceErr_NoMemory:
-			errorReason = "No memory"
+			"No memory"
 		case kDNSServiceErr_BadParam:
-			errorReason = "Bad parameter"
+			"Bad parameter"
 		case kDNSServiceErr_BadReference:
-			errorReason = "Bad reference"
+			"Bad reference"
 		case kDNSServiceErr_BadState:
-			errorReason = "Bad state"
+			"Bad state"
 		case kDNSServiceErr_BadFlags:
-			errorReason = "Bad flags"
+			"Bad flags"
 		case kDNSServiceErr_Unsupported:
-			errorReason = "Unsupported"
+			"Unsupported"
 		case kDNSServiceErr_NotInitialized:
-			errorReason = "Not initialized"
+			"Not initialized"
 		case kDNSServiceErr_AlreadyRegistered:
-			errorReason = "Already registered"
+			"Already registered"
 		case kDNSServiceErr_NameConflict:
-			errorReason = "Name conflict"
+			"Name conflict"
 		case kDNSServiceErr_Invalid:
-			errorReason = "Invalid"
+			"Invalid"
 		case kDNSServiceErr_Firewall:
-			errorReason = "Firewall"
+			"Firewall"
 		case kDNSServiceErr_Incompatible: /* client library incompatible with daemon */
-			errorReason = "Incompatible"
+			"Incompatible"
 		case kDNSServiceErr_BadInterfaceIndex:
-			errorReason = "Bad interface index"
+			"Bad interface index"
 		case kDNSServiceErr_Refused:
-			errorReason = "Refused"
+			"Refused"
 		case kDNSServiceErr_NoSuchRecord:
-			errorReason = "No such record"
+			"No such record"
 		case kDNSServiceErr_NoAuth:
-			errorReason = "No authentication"
+			"No authentication"
 		case kDNSServiceErr_NoSuchKey:
-			errorReason = "No such key"
+			"No such key"
 		case kDNSServiceErr_NATTraversal:
-			errorReason = "NAT traversal"
+			"NAT traversal"
 		case kDNSServiceErr_DoubleNAT:
-			errorReason = "Double NAT"
+			"Double NAT"
 		case kDNSServiceErr_BadTime: /* Codes up to here existed in Tiger */
-			errorReason = "Bad time"
+			"Bad time"
 		case kDNSServiceErr_BadSig:
-			errorReason = "Bad signature"
+			"Bad signature"
 		case kDNSServiceErr_BadKey:
-			errorReason = "Bad key"
+			"Bad key"
 		case kDNSServiceErr_Transient:
-			errorReason = "Transient"
+			"Transient"
 		case kDNSServiceErr_ServiceNotRunning: /* Background daemon not running */
-			errorReason = "Service not running"
+			"Service not running"
 		case kDNSServiceErr_NATPortMappingUnsupported: /* NAT doesn't support PCP, NAT-PMP or UPnP */
-			errorReason = "NAT port mapping unsupported"
+			"NAT port mapping unsupported"
 		case kDNSServiceErr_NATPortMappingDisabled: /* NAT supports PCP, NAT-PMP or UPnP, but it's disabled by the administrator */
-			errorReason = "NAT port mapping disabled"
+			"NAT port mapping disabled"
 		case kDNSServiceErr_NoRouter: /* No router currently configured (probably no network connectivity) */
-			errorReason = "No router"
+			"No router"
 		case kDNSServiceErr_PollingMode:
-			errorReason = "Polling mode"
+			"Polling mode"
 		case kDNSServiceErr_Timeout:
-			errorReason = "Timeout"
+			"Timeout"
 		default:
-			errorReason = "Unknown"
+			"Unknown"
 		}
 
 		let errorMessage = LocalizedString("DNS Error: %@ (%ld)", errorReason, errorCode, table: "ConnectionErrors")
@@ -709,7 +712,8 @@ fileprivate extension ConnectionError {
 		let nsError = NSError(
 			domain: "NWErrorDomainDNS",
 			code: errorCode,
-			userInfo: [NSLocalizedDescriptionKey: errorMessage])
+			userInfo: [NSLocalizedDescriptionKey: errorMessage]
+		)
 
 		self.init(socketError: nsError)
 	}
@@ -717,12 +721,10 @@ fileprivate extension ConnectionError {
 	init(nwPOSIXError: Int32) {
 		let errorCode = Int(nwPOSIXError)
 
-		let errorReason: String
-
-		if let errorReasonC = strerror(nwPOSIXError) {
-			errorReason = String(cString: errorReasonC)
+		let errorReason = if let errorReasonC = strerror(nwPOSIXError) {
+			String(cString: errorReasonC)
 		} else {
-			errorReason = "Unknown"
+			"Unknown"
 		}
 
 		let errorMessage = LocalizedString("POSIX Error: %@ (%ld)", errorReason, errorCode, table: "ConnectionErrors")
@@ -730,7 +732,8 @@ fileprivate extension ConnectionError {
 		let nsError = NSError(
 			domain: "NWErrorDomainPOSIX",
 			code: errorCode,
-			userInfo: [NSLocalizedDescriptionKey: errorMessage])
+			userInfo: [NSLocalizedDescriptionKey: errorMessage]
+		)
 
 		self.init(socketError: nsError)
 	}

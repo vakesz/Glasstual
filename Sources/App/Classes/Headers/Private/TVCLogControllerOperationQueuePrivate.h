@@ -44,6 +44,8 @@ typedef void (^TVCLogControllerPrintingBlock)(NSOperation *sender);
 @interface TVCLogControllerPrintingOperationQueue : NSOperationQueue
 - (void)enqueueMessageBlock:(TVCLogControllerPrintingBlock)callbackBlock for:(TVCLogController *)viewController;
 - (void)enqueueMessageBlock:(TVCLogControllerPrintingBlock)callbackBlock for:(TVCLogController *)viewController isStandalone:(BOOL)isStandalone;
+- (void)enqueueAsynchronousMessageBlock:(TVCLogControllerPrintingBlock)callbackBlock for:(TVCLogController *)viewController isStandalone:(BOOL)isStandalone;
+- (void)finishOperation:(NSOperation *)operation;
 
 - (void)cancelOperationsForClient:(IRCClient *)client;
 - (void)cancelOperationsForChannel:(IRCChannel *)channel;
