@@ -167,7 +167,7 @@ public func sharedISOStandardDateFormatter() -> DateFormatter {
 
 @_cdecl("TXRandomNumber")
 public func randomNumber(_ maximum: UInt32) -> UInt {
-	UInt(arc4random_uniform(maximum))
+	UInt(UInt32.random(in: 0 ..< maximum))
 }
 
 @_cdecl("TXFormattedNumber")

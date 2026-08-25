@@ -96,6 +96,13 @@ public final class SharedApplication: NSObject {
 		once(&speechSynthesizer, create: SpeechSynthesizer.init)
 	}
 
+	public class func existingSpeechSynthesizer() -> SpeechSynthesizer? {
+		lock.lock()
+		defer { lock.unlock() }
+
+		return speechSynthesizer
+	}
+
 	@objc
 	public class func sharedThemeController() -> TPCThemeController {
 		once(&themeController, create: TPCThemeController.init)

@@ -459,7 +459,7 @@ public final class MasterController: NSObject, NSApplicationDelegate {
 		SharedApplication.sharedNetworkReachabilityNotifier().stopNotifier()
 
 		Self.terminationLogger.debug("Stopping speech synthesizer")
-		SharedApplication.sharedSpeechSynthesizer().isStopped = true
+		SharedApplication.existingSpeechSynthesizer()?.isStopped = true
 
 		LogControllerInlineMediaService.shared().prepareForApplicationTermination()
 

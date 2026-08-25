@@ -131,12 +131,13 @@ class ConnectionSocket: @unchecked Sendable {
 		}
 
 		let failureDescription = (error as Error?)?.localizedDescription ?? "Unknown error"
+		let serverAddress = config.serverAddress
 
 		tlsTrustFailureDescription = failureDescription
 
 		if config.connectionShouldValidateCertificateChain == false {
 			RCMLog.connection.error(
-				"Certificate chain for '\(config.serverAddress, privacy: .public)' failed validation but the connection is configured to ignore that: \(failureDescription, privacy: .public)"
+				"Certificate chain for '\(serverAddress, privacy: .public)' failed validation but the connection is configured to ignore that: \(failureDescription, privacy: .public)"
 			)
 
 			response(true)
@@ -145,7 +146,7 @@ class ConnectionSocket: @unchecked Sendable {
 		}
 
 		RCMLog.connection.error(
-			"Certificate chain for '\(config.serverAddress, privacy: .public)' failed validation: \(failureDescription, privacy: .public)"
+			"Certificate chain for '\(serverAddress, privacy: .public)' failed validation: \(failureDescription, privacy: .public)"
 		)
 
 		var evaluationResult: SecTrustResultType = .invalid

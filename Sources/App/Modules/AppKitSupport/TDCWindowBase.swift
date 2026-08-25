@@ -26,7 +26,7 @@ open class WindowBase: NSObject {
 	}
 
 	open func close() {
-		window.close()
+		window?.close()
 	}
 
 	@objc(ok:)

@@ -114,8 +114,8 @@ private func makeAvatarImage(initial: String, color: NSColor, size: CGFloat) -> 
 		 baseline sits |descender| above that. */
 		let textSize = text.size()
 		let textOrigin = NSPoint(
-			x: NSMidX(dstRect) - (textSize.width / 2.0),
-			y: NSMidY(dstRect) - (font.capHeight / 2.0) + font.descender
+			x: dstRect.midX - (textSize.width / 2.0),
+			y: dstRect.midY - (font.capHeight / 2.0) + font.descender
 		)
 		text.draw(at: textOrigin)
 		return true

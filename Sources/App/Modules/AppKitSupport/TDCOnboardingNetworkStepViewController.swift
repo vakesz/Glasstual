@@ -132,10 +132,8 @@ public final class OnboardingNetworkStepViewController: OnboardingStepViewContro
 	@objc private func channelCheckChanged(_: Any?) {
 		var channels: [String] = []
 
-		for case let check as NSButton in channelStack.arrangedSubviews {
-			if check.state == .on {
-				channels.append(check.title)
-			}
+		for case let check as NSButton in channelStack.arrangedSubviews where check.state == .on {
+			channels.append(check.title)
 		}
 
 		settings.channelsToJoin = channels

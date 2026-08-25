@@ -401,7 +401,7 @@ public class ServerListCell: NSTableCellView {
 
 			/* Centre on the font's cap height so the digits sit optically level. */
 			var textRect = dstRect
-			textRect.origin.y = NSMidY(dstRect) - (controlFont.capHeight / 2.0) + controlFont.descender
+			textRect.origin.y = dstRect.midY - (controlFont.capHeight / 2.0) + controlFont.descender
 			textRect.size.height = dstRect.height - textRect.origin.y
 
 			stringToDraw.draw(in: textRect)

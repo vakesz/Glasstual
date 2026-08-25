@@ -101,11 +101,9 @@ extension NSString {
 						}
 					}
 				} else {
-					for entry in Self.asciiHTMLEscapeMap {
-						if escapeString as String == entry.sequence {
-							finalString.replaceCharacters(in: escapeRange, with: Self.string(fromUTF16: [entry.code]))
-							break
-						}
+					for entry in Self.asciiHTMLEscapeMap where escapeString as String == entry.sequence {
+						finalString.replaceCharacters(in: escapeRange, with: Self.string(fromUTF16: [entry.code]))
+						break
 					}
 				}
 			}

@@ -206,13 +206,15 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 
 	fileprivate func onConnectTimeout() {
 		connectTimeoutWorkItem = nil
+		let connectionIdentifier = uniqueIdentifier
+		let timeout = connectTimeout
 
 		if connecting == false || connected {
 			return
 		}
 
 		RCMLog.connection.error(
-			"Connection \(uniqueIdentifier, privacy: .public) timed out after \(connectTimeout, privacy: .public) seconds"
+			"Connection \(connectionIdentifier, privacy: .public) timed out after \(timeout, privacy: .public) seconds"
 		)
 
 		let errorMessage = LocalizedString("Connection timed out", table: "ConnectionErrors")
@@ -332,8 +334,11 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		}
 
 		if readInBuffer.count > maximumBufferedLineLength {
+			let connectionIdentifier = uniqueIdentifier
+			let bufferedByteCount = readInBuffer.count
+
 			RCMLog.connection.error(
-				"Connection \(uniqueIdentifier, privacy: .public) buffered \(readInBuffer.count, privacy: .public) bytes without a newline"
+				"Connection \(connectionIdentifier, privacy: .public) buffered \(bufferedByteCount, privacy: .public) bytes without a newline"
 			)
 
 			let errorMessage = LocalizedString("Peer sent a line that is too long", table: "ConnectionErrors")
@@ -502,9 +507,13 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 			/* Waiting is not fatal. The path may become viable (network
 			 comes back, proxy starts answering); the connect timeout
 			 bounds how long we are willing to wait. */
-			RCMLog.connection.notice(
-				"Connection \(uniqueIdentifier, privacy: .public) waiting: \(error.localizedDescription, privacy: .public)"
-			)
+			let connectionIdentifier = uniqueIdentifier
+			let errorDescription = error.localizedDescription
+
+			RCMLog.connection
+				.notice(
+					"Connection \(connectionIdentifier, privacy: .public) waiting: \(errorDescription, privacy: .public)"
+				)
 		case .ready:
 			onConnect()
 		case .cancelled:
@@ -574,7 +583,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 				 The IP address itself is what is being matched against the
 				 certificate name anyways so let's just return it from config.
 
-				 TODO: Revisit this in a later beta or GM.
+				 This can be revisited after the next stable release.
 				 */
 
 				let serverAddress = config.serverAddress

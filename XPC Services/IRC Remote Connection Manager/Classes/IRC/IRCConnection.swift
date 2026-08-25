@@ -114,6 +114,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	}
 
 	fileprivate func openOnQueue() {
+		let socket = socket
 		RCMLog.connection.debug("Opening connection \(socket.uniqueIdentifier, privacy: .public)...")
 
 		if socket.disconnected == false {
@@ -135,6 +136,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	}
 
 	fileprivate func closeOnQueue() {
+		let socket = socket
 		RCMLog.connection.debug("Closing connection \(socket.uniqueIdentifier, privacy: .public)...")
 
 		if socket.disconnected {
@@ -203,6 +205,10 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	}
 
 	fileprivate func sendOnQueue(_ data: Data, bypassQueue: Bool) {
+		RCMLog.connection.notice(
+			"[DEBUG-irc-send] enqueue bytes=\(data.count, privacy: .public) connected=\(self.socket.connected, privacy: .public) sending=\(self.socket.sending, privacy: .public)"
+		)
+
 		if socket.disconnected {
 			RCMLog.connection.error("Cannot send data while disconnected")
 
