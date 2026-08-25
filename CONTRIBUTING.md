@@ -29,8 +29,8 @@ conventions; the [README](README.md) covers what the app does.
 | `Sources/App/` | The application: `Classes/` / `Modules/` (IRC core, controllers, views, dialogs, preferences), `Resources/` (xibs, strings, plists, styles). |
 | `Sources/Shared/` | Code compiled into both the app and the XPC services. |
 | `Sources/Plugins/` | Bundled plugins (Caffeine, Chat Filter, Smiley Converter, System Profiler, ZNC Additions). |
-| `XPC Services/` | The IRC connection host, the scrollback history store, and the inline media loader. |
-| `Frameworks/` | Vendored Codeux frameworks and prebuilt static libraries. `PROVENANCE.md` records their origin. |
+| `Sources/Services/` | The IRC connection host, the scrollback history store, and the inline media loader. |
+| `Sources/Frameworks/` | Vendored Codeux frameworks and prebuilt static libraries. `PROVENANCE.md` records their origin. |
 | `Tests/GlasstualTests/` | XCTest unit tests for the IRC core. |
 
 ## Day to day

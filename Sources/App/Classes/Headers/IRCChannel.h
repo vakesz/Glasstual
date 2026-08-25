@@ -36,13 +36,13 @@
  *
  *********************************************************************** */
 
-#import "IRCChannelConfig.h"
+#import "IRCChannelConfigTypes.h"
 #import "IRCChannelMemberList.h"
 #import "IRCTreeItem.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class IRCChannelMode, IRCChannelUser, IRCUser;
+@class IRCChannelConfig, IRCChannelMode, IRCChannelUser, IRCUser;
 @class TVCLogLine;
 
 typedef NS_ENUM(NSUInteger, IRCChannelStatus) {
@@ -64,7 +64,7 @@ GLASSTUAL_EXTERN NSNotificationName const IRCChannelConfigurationWasUpdatedNotif
 @property(getter=isPrivateMessage, readonly) BOOL privateMessage;
 @property(getter=isPrivateMessageForZNCUser, readonly)
 	BOOL privateMessageForZNCUser;						  // For example: *status, *nickserv, etc.
-@property(getter=isUtility, readonly) BOOL utility;		  // See IRCChannelTypeUtility in IRCChannelConfig.h
+@property(getter=isUtility, readonly) BOOL utility;		  // See IRCChannelTypeUtility in IRCChannelConfigTypes.h
 @property(getter=isDirectChat, readonly) BOOL directChat; // DCC CHAT session with a single user
 @property(readonly) IRCChannelStatus status;
 @property(readonly) BOOL errorOnLastJoinAttempt;

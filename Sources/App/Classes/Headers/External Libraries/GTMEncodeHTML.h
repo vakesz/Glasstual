@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///  Returns:
 ///    Autoreleased NSString
 ///
-@property (readonly, copy, nullable) NSString *gtm_stringByEscapingForHTML;
+@property(readonly, copy, nullable) NSString *gtm_stringByEscapingForHTML;
 
 /// Get a string where internal characters that need escaping for HTML are escaped
 ///
@@ -53,7 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///  Returns:
 ///    Autoreleased NSString
 ///
-@property (readonly, copy) NSString *gtm_stringByEscapingForAsciiHTML;
+@property(readonly, copy) NSString *gtm_stringByEscapingForAsciiHTML;
 
 /// Get a string where internal characters that are escaped for HTML are unescaped
 ///
@@ -63,7 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///  Returns:
 ///    Autoreleased NSString
 ///
-@property (readonly, copy) NSString *gtm_stringByUnescapingFromHTML;
+@property(readonly, copy) NSString *gtm_stringByUnescapingFromHTML;
 
 @end
 

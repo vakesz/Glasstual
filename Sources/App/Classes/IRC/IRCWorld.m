@@ -51,6 +51,7 @@
 #import "IRCClientConfig.h"
 #import "IRCClientPrivate.h"
 #import "IRCChannelPrivate.h"
+#import "IRCChannelConfig.h"
 #import "IRCServer.h"
 #import "IRCTreeItemPrivate.h"
 #import "IRCWorldPrivate.h"

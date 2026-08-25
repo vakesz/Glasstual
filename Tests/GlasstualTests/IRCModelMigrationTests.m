@@ -5,6 +5,11 @@
 
 #import <XCTest/XCTest.h>
 
+#import "GLTTestClient.h"
+#import "IRCChannelConfig.h"
+#import "IRCConnection.h"
+#import "IRCConnectionConfig.h"
+#import "IRCConnectionPrivate.h"
 #import "IRCHighlightLogEntryPrivate.h"
 #import "IRCHighlightMatchCondition.h"
 #import "IRCServerPrivate.h"
@@ -18,6 +23,111 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @implementation IRCModelMigrationTests
+
+#pragma mark - Connection
+
+- (void)testConnectionInitialStateAndConfigIsolation
+{
+	GLTTestClient *client = [GLTTestClient testClient];
+	IRCConnectionConfigMutable *sourceConfig = [IRCConnectionConfigMutable new];
+	sourceConfig.serverAddress = @"irc.example.test";
+
+	IRCConnection *connection = [[IRCConnection alloc] initWithConfig:sourceConfig onClient:client];
+	sourceConfig.serverAddress = @"changed.example.test";
+
+	XCTAssertEqual(connection.client, client);
+	XCTAssertEqualObjects(connection.config.serverAddress, @"irc.example.test");
+	XCTAssertGreaterThan(connection.uniqueIdentifier.length, 0);
+	XCTAssertFalse(connection.isConnecting);
+	XCTAssertFalse(connection.isConnected);
+	XCTAssertFalse(connection.isDisconnecting);
+	XCTAssertFalse(connection.isSecured);
+	XCTAssertFalse(connection.isSending);
+	XCTAssertFalse(connection.EOFReceived);
+}
+
+- (void)testConnectionResetClearsTransientState
+{
+	GLTTestClient *client = [GLTTestClient testClient];
+	IRCConnection *connection = [[IRCConnection alloc] initWithConfig:[IRCConnectionConfig new] onClient:client];
+
+	[connection resetState];
+
+	XCTAssertFalse(connection.isConnecting);
+	XCTAssertFalse(connection.isConnected);
+	XCTAssertFalse(connection.isConnectedWithClientSideCertificate);
+	XCTAssertFalse(connection.isDisconnecting);
+	XCTAssertFalse(connection.isSecured);
+	XCTAssertFalse(connection.isSending);
+	XCTAssertFalse(connection.EOFReceived);
+	XCTAssertNil(connection.connectedAddress);
+}
+
+#pragma mark - Channel config
+
+- (void)testChannelConfigDefaultsAndLegacyKeys
+{
+	IRCChannelConfig *defaults = [IRCChannelConfig seedWithName:@"#general"];
+
+	XCTAssertTrue(defaults.autoJoin);
+	XCTAssertTrue(defaults.pushNotifications);
+	XCTAssertTrue(defaults.showTreeBadgeCount);
+	XCTAssertEqual(defaults.type, IRCChannelTypeChannel);
+	XCTAssertEqualObjects(defaults.channelName, @"#general");
+	XCTAssertGreaterThan(defaults.uniqueIdentifier.length, 0);
+
+	IRCChannelConfig *legacy = [[IRCChannelConfig alloc] initWithDictionary:@{
+		@"channelName" : @"#legacy",
+		@"joinOnConnect" : @NO,
+		@"ignoreJPQActivity" : @YES,
+		@"enableNotifications" : @NO,
+		@"enableTreeBadgeCountDrawing" : @NO
+	}];
+
+	XCTAssertFalse(legacy.autoJoin);
+	XCTAssertTrue(legacy.ignoreGeneralEventMessages);
+	XCTAssertFalse(legacy.pushNotifications);
+	XCTAssertFalse(legacy.showTreeBadgeCount);
+}
+
+- (void)testChannelConfigMutableAndUniqueCopiesPreserveValues
+{
+	IRCChannelConfigMutable *mutable = [IRCChannelConfigMutable new];
+	mutable.channelName = @"#swift";
+	mutable.label = @"Swift migration";
+	mutable.defaultModes = @"+nt";
+	mutable.secretKey = @"join-key";
+
+	IRCChannelConfig *copy = [mutable copy];
+	IRCChannelConfigMutable *unique = [mutable uniqueCopyMutable];
+
+	XCTAssertEqualObjects(copy.channelName, @"#swift");
+	XCTAssertEqualObjects(copy.label, @"Swift migration");
+	XCTAssertEqualObjects(copy.defaultModes, @"+nt");
+	XCTAssertEqualObjects(copy.secretKey, @"join-key");
+	XCTAssertEqualObjects(copy.uniqueIdentifier, mutable.uniqueIdentifier);
+
+	XCTAssertEqualObjects(unique.channelName, @"#swift");
+	XCTAssertEqualObjects(unique.secretKey, @"join-key");
+	XCTAssertNotEqualObjects(unique.uniqueIdentifier, mutable.uniqueIdentifier);
+}
+
+- (void)testChannelConfigNotificationOverridesUseThreeStateSemantics
+{
+	IRCChannelConfigMutable *config = [IRCChannelConfigMutable new];
+	TXNotificationType event = TXNotificationTypeHighlight;
+
+	XCTAssertEqual([config notificationEnabledForEvent:event], NSControlStateValueMixed);
+
+	[config setNotificationEnabled:NSControlStateValueOn forEvent:event];
+	XCTAssertEqual([config notificationEnabledForEvent:event], NSControlStateValueOn);
+
+	[config setNotificationEnabled:NSControlStateValueOff forEvent:event];
+	XCTAssertEqual([config notificationEnabledForEvent:event], NSControlStateValueOff);
+
+	[config setNotificationEnabled:NSControlStateValueMixed forEvent:event];
+	XCTAssertEqual([config notificationEnabledForEvent:event], NSControlStateValueMixed);
+}
 
 #pragma mark - Highlight match condition
 

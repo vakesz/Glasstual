@@ -13,9 +13,10 @@ DerivedData/
 build/
 Build Results/
 .tmp/
+Generated/
 
 # Prebuilt static libraries are part of the tree even if a global ignore hides *.a.
-!Frameworks/Static Libraries/Libraries/*.a
+!Sources/Frameworks/Static Libraries/Libraries/*.a
 
 # Local agent/tool state.
 .agents/

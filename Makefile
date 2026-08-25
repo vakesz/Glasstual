@@ -48,7 +48,7 @@ ensure-linters: ensure-formatters
 
 lint: ensure-linters format-check ## Run all linters and format checks
 	swiftlint lint --strict --no-cache
-	@files=(); while IFS= read -r -d '' file; do case "$$file" in Frameworks/*|*'/External Libraries/'*) continue;; esac; if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shellcheck "$${files[@]}"; fi
+	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shellcheck "$${files[@]}"; fi
 	actionlint
 	@git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ] && [ "$${file##*/}" != distribution.plist ]; then plutil -lint "$$file" >/dev/null; fi; done
 	@git ls-files --cached --others --exclude-standard -z -- '*.xib' '*.xcscheme' '*.xcworkspacedata' 'distribution.plist' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then xmllint --noout "$$file"; fi; done
@@ -56,13 +56,13 @@ lint: ensure-linters format-check ## Run all linters and format checks
 
 format: ensure-formatters ## Format Objective-C, Swift and shell sources in place
 	swiftformat --cache ignore .
-	@files=(); while IFS= read -r -d '' file; do case "$$file" in Frameworks/*|*'/External Libraries/'*) continue;; esac; if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.c' '*.cc' '*.cpp' '*.h' '*.m' '*.mm'); if [ "$${#files[@]}" -gt 0 ]; then xcrun clang-format -i --style=file "$${files[@]}"; fi
-	@files=(); while IFS= read -r -d '' file; do case "$$file" in Frameworks/*|*'/External Libraries/'*) continue;; esac; if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -w -i 0 -ci -sr "$${files[@]}"; fi
+	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.c' '*.cc' '*.cpp' '*.h' '*.m' '*.mm'); if [ "$${#files[@]}" -gt 0 ]; then xcrun clang-format -i --style=file "$${files[@]}"; fi
+	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -w -i 0 -ci -sr "$${files[@]}"; fi
 
 format-check: ensure-formatters ## Verify formatting without changing files
 	swiftformat --lint --cache ignore .
-	@files=(); while IFS= read -r -d '' file; do case "$$file" in Frameworks/*|*'/External Libraries/'*) continue;; esac; if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.c' '*.cc' '*.cpp' '*.h' '*.m' '*.mm'); if [ "$${#files[@]}" -gt 0 ]; then xcrun clang-format --dry-run --Werror --style=file "$${files[@]}"; fi
-	@files=(); while IFS= read -r -d '' file; do case "$$file" in Frameworks/*|*'/External Libraries/'*) continue;; esac; if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -d -i 0 -ci -sr "$${files[@]}"; fi
+	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.c' '*.cc' '*.cpp' '*.h' '*.m' '*.mm'); if [ "$${#files[@]}" -gt 0 ]; then xcrun clang-format --dry-run --Werror --style=file "$${files[@]}"; fi
+	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -d -i 0 -ci -sr "$${files[@]}"; fi
 
 clean: ## Remove build products and generated files
 	rm -rf $(DERIVED_DATA) build "Build Results" .tmp

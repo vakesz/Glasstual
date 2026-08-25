@@ -43,7 +43,7 @@
 
 #import <GRMustache/GRMustache.h>
 
-#import "StaticDefinitions.h"
+#import "GlasstualStaticDefinitions.h"
 
 /* Defines for script support instead of importing the
  entire Carbon framework for three items. */

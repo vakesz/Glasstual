@@ -29,7 +29,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	/** Accessed from NotificationConfiguration outside the main-actor
 	 isolation domain that SheetBase inherits. Config mutations stay on
 	 the main thread in practice (sheet UI). */
-	@objc public nonisolated(unsafe) var config: IRCChannelConfigMutable!
+	@objc public nonisolated(unsafe) var config: MutableChannelConfig!
 
 	private var secretKeyLengthAlertDisplayed = false
 	private var navigationTree: [[Any]] = []
@@ -72,28 +72,28 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 		clientId = channel.associatedClient?.uniqueIdentifier
 		self.channel = channel
 		channelId = channel.uniqueIdentifier
-		config = channel.config.mutableCopy() as? IRCChannelConfigMutable ?? IRCChannelConfigMutable()
+		config = channel.config.mutableCopy() as? MutableChannelConfig ?? MutableChannelConfig()
 
 		prepareInitialState()
 		loadConfig()
 	}
 
 	@objc(initWithConfig:)
-	public convenience init(config: IRCChannelConfig?) {
+	public convenience init(config: ChannelConfig?) {
 		self.init(config: config, onClientWithId: nil)
 	}
 
 	@objc(initWithConfig:onClient:)
-	public init(config: IRCChannelConfig?, onClient client: IRCClient?) {
+	public init(config: ChannelConfig?, onClient client: IRCClient?) {
 		super.init(window: nil)
 
 		self.client = client
 		clientId = client?.uniqueIdentifier
 
 		if let config {
-			self.config = config.mutableCopy() as? IRCChannelConfigMutable ?? IRCChannelConfigMutable()
+			self.config = config.mutableCopy() as? MutableChannelConfig ?? MutableChannelConfig()
 		} else {
-			self.config = IRCChannelConfigMutable()
+			self.config = MutableChannelConfig()
 		}
 
 		prepareInitialState()
@@ -101,7 +101,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	}
 
 	@objc(initWithConfig:onClientWithId:)
-	public convenience init(config: IRCChannelConfig?, onClientWithId clientId: String?) {
+	public convenience init(config: ChannelConfig?, onClientWithId clientId: String?) {
 		self.init(config: config, onClient: nil)
 		self.clientId = clientId
 	}
@@ -315,7 +315,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 			}
 
 			close()
-			config = channel.config.copy() as? IRCChannelConfigMutable ?? IRCChannelConfigMutable()
+			config = channel.config.mutableCopy() as? MutableChannelConfig ?? MutableChannelConfig()
 			loadConfig()
 			reloadNotificationsController()
 			start()
