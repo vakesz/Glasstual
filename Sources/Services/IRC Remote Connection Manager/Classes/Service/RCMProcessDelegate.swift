@@ -35,14 +35,35 @@
  *
  *********************************************************************** */
 
-#import <CocoaExtensions/CocoaExtensions.h>
+import Foundation
+import os
 
-#import <Security/Security.h>
+private let processDelegateLogger = Logger(
+	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+	category: "RCMProcessDelegate"
+)
 
-#import "GlasstualStaticDefinitions.h"
-#import "NSObjectHelperPrivate.h"
-#import "TLOLocalization.h"
-#import "TLOTimer.h"
-#import "IRCConnectionConfig.h"
-#import "IRCConnectionErrors.h"
-#import "RCMConnectionManagerProtocol.h"
+@objc(RCMProcessDelegate)
+final class RemoteConnectionProcessDelegate: NSObject, NSXPCListenerDelegate {
+	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
+		connection.exportedInterface = NSXPCInterface(with: RCMConnectionManagerServerProtocol.self)
+		connection.remoteObjectInterface = NSXPCInterface(with: RCMConnectionManagerClientProtocol.self)
+
+		let exportedObject = RemoteConnectionProcess(xpcConnection: connection)
+		connection.exportedObject = exportedObject
+		connection.interruptionHandler = {
+			processDelegateLogger.debug("Client connection interrupted")
+			exportedObject.clientConnectionEnded()
+		}
+		connection.invalidationHandler = { [weak connection] in
+			processDelegateLogger.debug("Client connection invalidated")
+			exportedObject.clientConnectionEnded()
+			connection?.exportedObject = nil
+			connection?.interruptionHandler = nil
+			connection?.invalidationHandler = nil
+		}
+
+		connection.resume()
+		return true
+	}
+}

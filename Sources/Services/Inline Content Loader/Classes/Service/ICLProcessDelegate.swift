@@ -35,14 +35,31 @@
  *
  *********************************************************************** */
 
-#import <CocoaExtensions/CocoaExtensions.h>
+import Foundation
 
-#import <Security/Security.h>
+@objc(ICLProcessDelegate)
+final class InlineContentProcessDelegate: NSObject, NSXPCListenerDelegate {
+	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
+		let exportedInterface = NSXPCInterface(with: ICLInlineContentServerProtocol.self)
+		exportedInterface.setClasses(
+			NSSet(objects: NSArray.self, NSURL.self) as! Set<AnyHashable>,
+			for: #selector((any ICLInlineContentServerProtocol).warmServiceByLoadingPlugins(atLocations:)),
+			argumentIndex: 0,
+			ofReply: false
+		)
 
-#import "GlasstualStaticDefinitions.h"
-#import "NSObjectHelperPrivate.h"
-#import "TLOLocalization.h"
-#import "TLOTimer.h"
-#import "IRCConnectionConfig.h"
-#import "IRCConnectionErrors.h"
-#import "RCMConnectionManagerProtocol.h"
+		connection.exportedInterface = exportedInterface
+		connection.remoteObjectInterface = NSXPCInterface(with: ICLInlineContentClientProtocol.self)
+
+		let exportedObject = ICLProcessMain(xpcConnection: connection)
+		connection.exportedObject = exportedObject
+		connection.invalidationHandler = { [weak connection] in
+			exportedObject.connectionInvalidated()
+			connection?.exportedObject = nil
+			connection?.invalidationHandler = nil
+		}
+
+		connection.resume()
+		return true
+	}
+}

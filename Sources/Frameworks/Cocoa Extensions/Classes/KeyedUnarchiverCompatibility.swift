@@ -1,12 +1,7 @@
 /* *********************************************************************
- *                  _____         _               _
- *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \ \/ / __| | | |/ _` | |
- *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
- *       Please see Acknowledgements.pdf for additional information.
+ *            Copyright (c) 2023 Codeux Software, LLC
+ *     Please see ACKNOWLEDGEMENT for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -17,9 +12,9 @@
  *  * Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of Textual, "Codeux Software, LLC", nor the
- *    names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ *  * Neither the name of "Codeux Software, LLC", nor the names of its
+ *    contributors may be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -35,14 +30,22 @@
  *
  *********************************************************************** */
 
-#import <CocoaExtensions/CocoaExtensions.h>
+import Foundation
 
-#import <Security/Security.h>
+extension NSKeyedUnarchiver {
+	@objc(legacyCompatUnarchivedObjectOfClass:fromData:)
+	class func textual_legacyCompatUnarchivedObject(ofClass objectClass: AnyClass, from data: Data) -> Any? {
+		do {
+			guard let secureCodingClass = objectClass as? (NSObject & NSSecureCoding).Type else {
+				return nil
+			}
 
-#import "GlasstualStaticDefinitions.h"
-#import "NSObjectHelperPrivate.h"
-#import "TLOLocalization.h"
-#import "TLOTimer.h"
-#import "IRCConnectionConfig.h"
-#import "IRCConnectionErrors.h"
-#import "RCMConnectionManagerProtocol.h"
+			return try unarchivedObject(ofClass: secureCodingClass, from: data)
+		} catch {
+			Logging.frameworkSubsystem?.error(
+				"Failed to read contents archived data: \(error.localizedDescription, privacy: .public)"
+			)
+			return nil
+		}
+	}
+}

@@ -35,14 +35,23 @@
  *
  *********************************************************************** */
 
-#import <CocoaExtensions/CocoaExtensions.h>
+import Foundation
 
-#import <Security/Security.h>
-
-#import "GlasstualStaticDefinitions.h"
-#import "NSObjectHelperPrivate.h"
-#import "TLOLocalization.h"
-#import "TLOTimer.h"
-#import "IRCConnectionConfig.h"
-#import "IRCConnectionErrors.h"
-#import "RCMConnectionManagerProtocol.h"
+@objc(ICPCoreMedia)
+final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
+	@objc class var modules: [AnyClass] {
+		[
+			ICMDailymotion.self,
+			ICMGyazo.self,
+			ICMImgurGifv.self,
+			ICMPornhub.self,
+			ICMStreamable.self,
+			ICMTweet.self,
+			ICMVimeo.self,
+			ICMXkcd.self,
+			ICMYouTube.self,
+			ICMCommonInlineVideos.self,
+			ICMCommonInlineImages.self,
+		]
+	}
+}

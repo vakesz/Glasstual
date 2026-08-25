@@ -37,12 +37,16 @@
 
 #import <CocoaExtensions/CocoaExtensions.h>
 
-#import <Security/Security.h>
+#import "ICLPluginProtocol.h"
 
-#import "GlasstualStaticDefinitions.h"
-#import "NSObjectHelperPrivate.h"
-#import "TLOLocalization.h"
-#import "TLOTimer.h"
-#import "IRCConnectionConfig.h"
-#import "IRCConnectionErrors.h"
-#import "RCMConnectionManagerProtocol.h"
+#import "ICMCommonInlineImages.h"
+#import "ICMCommonInlineVideos.h"
+#import "ICMDailymotion.h"
+#import "ICMGyazo.h"
+#import "ICMImgurGifv.h"
+#import "ICMPornhub.h"
+#import "ICMStreamable.h"
+#import "ICMTweet.h"
+#import "ICMVimeo.h"
+#import "ICMXkcd.h"
+#import "ICMYouTube.h"

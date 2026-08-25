@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2016 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,14 +35,42 @@
  *
  *********************************************************************** */
 
-#import <CocoaExtensions/CocoaExtensions.h>
+import Foundation
 
-#import <Security/Security.h>
+@objc(HSLHistoricLogProcessDelegate)
+final class HistoricLogProcessDelegate: NSObject, NSXPCListenerDelegate {
+	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
+		let exportedInterface = NSXPCInterface(with: HLSHistoricLogServerProtocol.self)
+		let replyClasses = NSSet(objects: NSArray.self, TVCLogLineXPC.self) as! Set<AnyHashable>
+		let fetchSelectors = [
+			"fetchEntriesForView:ascending:fetchLimit:limitToDate:withCompletionBlock:",
+			"fetchEntriesForView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:",
+			"fetchEntriesForView:beforeUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
+			"fetchEntriesForView:afterUniqueIdentifier:fetchLimit:limitToDate:withCompletionBlock:",
+			"fetchEntriesForView:afterUniqueIdentifier:beforeUniqueIdentifier:fetchLimit:withCompletionBlock:",
+		]
 
-#import "GlasstualStaticDefinitions.h"
-#import "NSObjectHelperPrivate.h"
-#import "TLOLocalization.h"
-#import "TLOTimer.h"
-#import "IRCConnectionConfig.h"
-#import "IRCConnectionErrors.h"
-#import "RCMConnectionManagerProtocol.h"
+		for selectorName in fetchSelectors {
+			exportedInterface.setClasses(
+				replyClasses,
+				for: NSSelectorFromString(selectorName),
+				argumentIndex: 0,
+				ofReply: true
+			)
+		}
+
+		connection.exportedInterface = exportedInterface
+		connection.remoteObjectInterface = NSXPCInterface(with: HLSHistoricLogClientProtocol.self)
+
+		let exportedObject = HLSHistoricLogProcessMain(connection: connection)
+		connection.exportedObject = exportedObject
+		connection.invalidationHandler = { [weak connection] in
+			exportedObject.connectionInvalidated()
+			connection?.exportedObject = nil
+			connection?.invalidationHandler = nil
+		}
+
+		connection.resume()
+		return true
+	}
+}

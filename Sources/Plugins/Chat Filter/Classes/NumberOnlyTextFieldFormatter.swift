@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2015 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,14 +35,22 @@
  *
  *********************************************************************** */
 
-#import <CocoaExtensions/CocoaExtensions.h>
+import AppKit
 
-#import <Security/Security.h>
+@objc(TPI_NumberOnlyTextFieldFormatter)
+final class NumberOnlyTextFieldFormatter: NumberFormatter, @unchecked Sendable {
+	override func isPartialStringValid(
+		_ partialString: String,
+		newEditingString _: AutoreleasingUnsafeMutablePointer<NSString?>?,
+		errorDescription _: AutoreleasingUnsafeMutablePointer<NSString?>?
+	) -> Bool {
+		guard !partialString.isEmpty else { return true }
 
-#import "GlasstualStaticDefinitions.h"
-#import "NSObjectHelperPrivate.h"
-#import "TLOLocalization.h"
-#import "TLOTimer.h"
-#import "IRCConnectionConfig.h"
-#import "IRCConnectionErrors.h"
-#import "RCMConnectionManagerProtocol.h"
+		guard partialString.allSatisfy({ $0.isASCII && $0.isNumber }) else {
+			NSSound.beep()
+			return false
+		}
+
+		return true
+	}
+}

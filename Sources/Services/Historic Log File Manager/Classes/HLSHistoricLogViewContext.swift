@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2016 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,14 +35,12 @@
  *
  *********************************************************************** */
 
-#import <CocoaExtensions/CocoaExtensions.h>
+import CoreData
 
-#import <Security/Security.h>
-
-#import "GlasstualStaticDefinitions.h"
-#import "NSObjectHelperPrivate.h"
-#import "TLOLocalization.h"
-#import "TLOTimer.h"
-#import "IRCConnectionConfig.h"
-#import "IRCConnectionErrors.h"
-#import "RCMConnectionManagerProtocol.h"
+@objc(HLSHistoricLogViewContext)
+final class HistoricLogViewContext: NSManagedObjectContext {
+	@objc(hls_viewId) var viewIdentifier = ""
+	@objc(hls_totalLineCount) var totalLineCount: UInt = 0
+	@objc(hls_newestIdentifier) var newestIdentifier: UInt = 0
+	@objc(hls_resizeTimer) var resizeTimer: AnyObject?
+}
