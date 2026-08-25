@@ -504,7 +504,7 @@ public final class Extras: NSObject {
 			channelListConfigs.reserveCapacity(channelListCount)
 
 			for channelName in channelList ?? [] {
-				let channelConfig = IRCChannelConfig.seed(withName: channelName)
+				let channelConfig = ChannelConfig.seed(withName: channelName)
 
 				channelListConfigs.append(channelConfig)
 			}

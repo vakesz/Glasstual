@@ -415,11 +415,11 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 		config.autoConnect = settings.connectWhenFinished
 
-		var channelList: [IRCChannelConfig] = []
+		var channelList: [ChannelConfig] = []
 		channelList.reserveCapacity(settings.channelsToJoin.count)
 
 		for channelName in settings.channelsToJoin {
-			channelList.append(IRCChannelConfig.seed(withName: channelName))
+			channelList.append(ChannelConfig.seed(withName: channelName))
 		}
 
 		config.channelList = channelList

@@ -42,6 +42,7 @@
 #import "IRCClientConfigPrivate.h"
 #import "IRCClient.h"
 #import "IRCChannel.h"
+#import "IRCChannelConfig.h"
 #import "IRCHighlightMatchCondition.h"
 #import "IRCNetworkList.h"
 #import "IRCServer.h"

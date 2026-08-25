@@ -40,7 +40,7 @@
 #import <CocoaExtensions/CocoaExtensions.h>
 
 /* Static Definitions */
-#import "StaticDefinitions.h"
+#import "GlasstualStaticDefinitions.h"
 
 /* IRC Controllers — Core */
 #import "IRC.h"

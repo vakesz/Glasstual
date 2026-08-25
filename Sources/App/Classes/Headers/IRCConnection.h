@@ -36,6 +36,8 @@
  *
  *********************************************************************** */
 
+#import "IRCConnectionTypes.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient, IRCConnectionConfig;
@@ -62,20 +64,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)sendLine:(NSString *)line;
 
 - (void)clearSendQueue;
-@end
-
-@protocol IRCConnectionDelegate <NSObject>
-@required
-
-- (void)ircConnection:(IRCConnection *)sender willConnectToProxy:(NSString *)proxyHost port:(uint16_t)proxyPort;
-- (void)ircConnectionDidConnect:(IRCConnection *)sender;
-- (void)ircConnectionDidSecureConnection:(IRCConnection *)sender
-						withProtocolType:(tls_protocol_version_t)protocolType
-							 cipherSuite:(tls_ciphersuite_t)cipherSuite;
-- (void)ircConnectionDidCloseReadStream:(IRCConnection *)sender;
-- (void)ircConnection:(IRCConnection *)sender didDisconnectWithError:(nullable NSError *)disconnectError;
-- (void)ircConnection:(IRCConnection *)sender didReceiveData:(NSString *)data;
-- (void)ircConnection:(IRCConnection *)sender willSendData:(NSString *)data;
 @end
 
 NS_ASSUME_NONNULL_END

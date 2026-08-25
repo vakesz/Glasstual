@@ -35,12 +35,12 @@ typedef void (^OELReachabilityNetworkReachableBlock)(OELReachability *reachabili
 typedef void (^OELReachabilityNetworkUnreachableBlock)(OELReachability *reachability);
 
 @interface OELReachability : NSObject
-@property (nonatomic, copy, nullable) OELReachabilityNetworkReachableBlock reachableBlock;
-@property (nonatomic, copy, nullable) OELReachabilityNetworkUnreachableBlock unreachableBlock;
+@property(nonatomic, copy, nullable) OELReachabilityNetworkReachableBlock reachableBlock;
+@property(nonatomic, copy, nullable) OELReachabilityNetworkUnreachableBlock unreachableBlock;
 
 + (nullable OELReachability *)reachabilityForInternetConnection;
 
-@property (getter=isReachable, readonly) BOOL reachable;
+@property(getter=isReachable, readonly) BOOL reachable;
 
 - (BOOL)startNotifier;
 - (void)stopNotifier;

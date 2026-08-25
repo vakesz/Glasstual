@@ -168,7 +168,7 @@ public final class ChannelPropertiesNotificationConfiguration: NotificationConfi
 		set { config?.setBounceDockIconRepeatedly(controlState(from: newValue), forEvent: eventType) }
 	}
 
-	private var config: IRCChannelConfigMutable? {
+	private var config: MutableChannelConfig? {
 		sheet?.config
 	}
 

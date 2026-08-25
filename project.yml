@@ -21,7 +21,7 @@ options:
   defaultConfig: Debug
   transitivelyLinkDependencies: false
   groupOrdering:
-    - order: [Sources, Tests, XPC Services, Frameworks]
+    - order: [Sources, Tests]
 
 configs:
   Debug: debug
@@ -200,7 +200,7 @@ targetTemplates:
         GCC_PREFIX_HEADER: ""
         FRAMEWORK_SEARCH_PATHS:
           - $(inherited)
-          - '"$(SRCROOT)/Frameworks/Static Libraries/Libraries"'
+          - '"$(SRCROOT)/Sources/Frameworks/Static Libraries/Libraries"'
 
   # Plugins bundled in Glasstual.app/Contents/Resources/Bundled Extensions.
   GlasstualExtension:
@@ -215,7 +215,7 @@ targetTemplates:
           - $(inherited)
           - "@loader_path/../../../Frameworks"
     entitlements:
-      path: Sources/Plugins/Inherited.entitlements
+      path: Generated/Xcode/Plugin-Inherited.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.inherit: true
@@ -231,7 +231,7 @@ targetTemplates:
           - "$(SRCROOT)/Sources/Shared/Headers/**"
         FRAMEWORK_SEARCH_PATHS:
           - $(inherited)
-          - '"$(SRCROOT)/Frameworks/Static Libraries/Libraries"'
+          - '"$(SRCROOT)/Sources/Frameworks/Static Libraries/Libraries"'
         LD_RUNPATH_SEARCH_PATHS:
           - $(inherited)
           - "@loader_path/../../../../Frameworks"
@@ -314,10 +314,10 @@ targets:
       base:
         PRODUCT_NAME: CocoaExtensions
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.CocoaExtensions
-        GCC_PREFIX_HEADER: Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
-        MODULEMAP_PRIVATE_FILE: Frameworks/Cocoa Extensions/Classes/module.private.modulemap
+        GCC_PREFIX_HEADER: Sources/Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
+        MODULEMAP_PRIVATE_FILE: Sources/Frameworks/Cocoa Extensions/Classes/module.private.modulemap
     info:
-      path: Frameworks/Cocoa Extensions/Resources/Info.plist
+      path: Generated/Xcode/CocoaExtensions-Info.plist
       properties:
         CFBundleDevelopmentRegion: English
         CFBundleExecutable: $(EXECUTABLE_NAME)
@@ -328,25 +328,25 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSHumanReadableCopyright: Copyright © 2015 - 2020 Codeux Software, LLC. All rights reserved.
     sources:
-      - path: Frameworks/Cocoa Extensions/Classes
+      - path: Sources/Frameworks/Cocoa Extensions/Classes
         excludes:
           - CocoaExtensionsPrivate.h
           - XRLoggingPrivate.h
           - CocoaExtensions_Prefix.pch
           - module.private.modulemap
         headerVisibility: public
-      - path: Frameworks/Cocoa Extensions/Classes/CocoaExtensionsPrivate.h
+      - path: Sources/Frameworks/Cocoa Extensions/Classes/CocoaExtensionsPrivate.h
         headerVisibility: private
-      - path: Frameworks/Cocoa Extensions/Classes/XRLoggingPrivate.h
+      - path: Sources/Frameworks/Cocoa Extensions/Classes/XRLoggingPrivate.h
         headerVisibility: private
-      - path: Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
+      - path: Sources/Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
         buildPhase: none
-      - path: Frameworks/Cocoa Extensions/Classes/module.private.modulemap
+      - path: Sources/Frameworks/Cocoa Extensions/Classes/module.private.modulemap
         buildPhase: none
-      - path: Frameworks/Cocoa Extensions/Resources/Language Files
-      - path: Frameworks/Cocoa Extensions/LICENSE.txt
+      - path: Sources/Frameworks/Cocoa Extensions/Resources/Language Files
+      - path: Sources/Frameworks/Cocoa Extensions/LICENSE.txt
         buildPhase: resources
-      - path: Frameworks/Cocoa Extensions/ACKNOWLEDGEMENT.txt
+      - path: Sources/Frameworks/Cocoa Extensions/ACKNOWLEDGEMENT.txt
         buildPhase: resources
     dependencies:
       - sdk: Foundation.framework
@@ -363,12 +363,12 @@ targets:
         REGISTER_APP_GROUPS: YES
         PRODUCT_NAME: Scrollback History Manager
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.ScrollbackHistoryManager
-        GCC_PREFIX_HEADER: XPC Services/Historic Log File Manager/Classes/Headers/Private/HSLHistoricLogPCHPrivate.h
+        GCC_PREFIX_HEADER: Sources/Services/Historic Log File Manager/Classes/Headers/Private/HSLHistoricLogPCHPrivate.h
       configs:
         Release:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE)
     info:
-      path: XPC Services/Historic Log File Manager/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/HistoricLogFileManager-Info.plist
       properties:
         CFBundleDisplayName: Scrollback History Manager
         CFBundleExecutable: $(EXECUTABLE_NAME)
@@ -381,15 +381,14 @@ targets:
         XPCService:
           ServiceType: Application
     entitlements:
-      path: XPC Services/Historic Log File Manager/HistoricLogFileManager.entitlements
+      path: Generated/Xcode/HistoricLogFileManager.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
           - "$(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)"
     sources:
-      - path: XPC Services/Historic Log File Manager/Classes
-      - path: XPC Services/Historic Log File Manager/Resources
-        excludes: ["Property Lists/Info.plist"]
+      - path: Sources/Services/Historic Log File Manager/Classes
+      - path: Sources/Services/Historic Log File Manager/Resources
       - path: Sources/Shared/Headers
       - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.m
       - path: Sources/Shared/Views/Channel View/TVCLogLineXPC.m
@@ -404,7 +403,7 @@ targets:
         REGISTER_APP_GROUPS: YES
         PRODUCT_NAME: Inline Content Loader
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader
-        GCC_PREFIX_HEADER: XPC Services/Inline Content Loader/Classes/Headers/Private/ICLProcessPCHPrivate.h
+        GCC_PREFIX_HEADER: Sources/Services/Inline Content Loader/Classes/Headers/Private/ICLProcessPCHPrivate.h
         # The Core Media plugin resolves symbols from this binary at runtime.
         DEAD_CODE_STRIPPING: NO
         GCC_SYMBOLS_PRIVATE_EXTERN: NO
@@ -413,7 +412,7 @@ targets:
         Release:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE)
     info:
-      path: XPC Services/Inline Content Loader/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/InlineContentLoader-Info.plist
       properties:
         CFBundleDisplayName: Inline Content Loader
         CFBundleExecutable: $(EXECUTABLE_NAME)
@@ -426,15 +425,15 @@ targets:
         XPCService:
           ServiceType: Application
     entitlements:
-      path: XPC Services/Inline Content Loader/InlineContentLoader.entitlements
+      path: Generated/Xcode/InlineContentLoader.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
           - "$(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)"
         com.apple.security.network.client: true
     sources:
-      - path: XPC Services/Inline Content Loader/Classes
-      - path: XPC Services/Inline Content Loader/Resources/Modules
+      - path: Sources/Services/Inline Content Loader/Classes
+      - path: Sources/Services/Inline Content Loader/Resources/Modules
         excludes:
           # Loaded from the bundle root, not from Components (see ICMInlineImage.m).
           - InlineImageLiveResize.js
@@ -442,14 +441,14 @@ targets:
           copyFiles:
             destination: resources
             subpath: Components
-      - path: XPC Services/Inline Content Loader/Resources/Modules/InlineImageLiveResize.js
+      - path: Sources/Services/Inline Content Loader/Resources/Modules/InlineImageLiveResize.js
         buildPhase: resources
       - path: Sources/Shared/Headers
       - path: Sources/Shared/Preferences/TPCPreferences.m
       - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.m
     dependencies:
       - sdk: ImageIO.framework
-      - framework: Frameworks/Static Libraries/Libraries/GRMustache.framework
+      - framework: Sources/Frameworks/Static Libraries/Libraries/GRMustache.framework
         embed: false
       - target: InlineContentLoaderCoreMedia
         embed: true
@@ -466,18 +465,18 @@ targets:
         PRODUCT_NAME: Core Media
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader.CoreMedia
         WRAPPER_EXTENSION: mediaPlugin
-        GCC_PREFIX_HEADER: XPC Services/Inline Content Loader/Extensions/Core Media/Classes/Headers/Private/ICPCoreMediaPCHPrivate.h
+        GCC_PREFIX_HEADER: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes/Headers/Private/ICPCoreMediaPCHPrivate.h
         HEADER_SEARCH_PATHS:
           - $(inherited)
-          - '"$(SRCROOT)/XPC Services/Inline Content Loader/Classes/Headers/**"'
-          - '"$(SRCROOT)/XPC Services/Inline Content Loader/Classes/Modules/**"'
+          - '"$(SRCROOT)/Sources/Services/Inline Content Loader/Classes/Headers/**"'
+          - '"$(SRCROOT)/Sources/Services/Inline Content Loader/Classes/Modules/**"'
           - "$(SRCROOT)/Sources/Shared/Headers/**"
         LD_RUNPATH_SEARCH_PATHS:
           - $(inherited)
           - "@loader_path/../../../../../../../Frameworks"
         PROVISIONING_PROFILE_SPECIFIER: ""
     info:
-      path: XPC Services/Inline Content Loader/Extensions/Core Media/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/InlineContentLoaderCoreMedia-Info.plist
       properties:
         CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
         CFBundleExecutable: $(EXECUTABLE_NAME)
@@ -489,13 +488,13 @@ targets:
         NSHumanReadableCopyright: Copyright © 2017, 2018 Codeux Software, LLC. All rights reserved.
         NSPrincipalClass: ICPCoreMedia
     entitlements:
-      path: XPC Services/Inline Content Loader/Extensions/Core Media/CoreMedia.entitlements
+      path: Generated/Xcode/InlineContentLoaderCoreMedia.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.inherit: true
     sources:
-      - path: XPC Services/Inline Content Loader/Extensions/Core Media/Classes
-      - path: XPC Services/Inline Content Loader/Extensions/Core Media/Resources/Modules
+      - path: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes
+      - path: Sources/Services/Inline Content Loader/Extensions/Core Media/Resources/Modules
     dependencies:
       - target: CocoaExtensions
         embed: false
@@ -507,13 +506,13 @@ targets:
       base:
         PRODUCT_NAME: IRC Connection Host
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.IRCConnectionHost
-        GCC_PREFIX_HEADER: XPC Services/IRC Remote Connection Manager/Classes/Headers/Private/RCMProcessPCHPrivate.h
-        SWIFT_OBJC_BRIDGING_HEADER: XPC Services/IRC Remote Connection Manager/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
+        GCC_PREFIX_HEADER: Sources/Services/IRC Remote Connection Manager/Classes/Headers/Private/RCMProcessPCHPrivate.h
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/Services/IRC Remote Connection Manager/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
       configs:
         Release:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_IRC_PROVISIONING_PROFILE)
     info:
-      path: XPC Services/IRC Remote Connection Manager/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/IRCRemoteConnectionManager-Info.plist
       properties:
         CFBundleDisplayName: IRC Connection Host
         CFBundleExecutable: $(EXECUTABLE_NAME)
@@ -526,13 +525,13 @@ targets:
         XPCService:
           ServiceType: Application
     entitlements:
-      path: XPC Services/IRC Remote Connection Manager/IRCRemoteConnectionManager.entitlements
+      path: Generated/Xcode/IRCRemoteConnectionManager.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.network.client: true
     sources:
-      - path: XPC Services/IRC Remote Connection Manager/Classes
-      - path: XPC Services/IRC Remote Connection Manager/Resources/Language Files
+      - path: Sources/Services/IRC Remote Connection Manager/Classes
+      - path: Sources/Services/IRC Remote Connection Manager/Resources/Language Files
       - path: Sources/Shared/Headers
       - path: Sources/Shared/Helpers/Cocoa (Objective-C)/NSObjectHelper.m
       - path: Sources/Shared/IRC/IRCConnectionConfig.m
@@ -555,7 +554,7 @@ targets:
         PRODUCT_NAME: Caffeine
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.caffeine
     info:
-      path: Sources/Plugins/Caffeine/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/Caffeine-Info.plist
       properties:
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
@@ -569,7 +568,6 @@ targets:
     sources:
       - path: Sources/Plugins/Caffeine/Classes
       - path: Sources/Plugins/Caffeine/Resources
-        excludes: ["Property Lists/Info.plist"]
     dependencies:
       - target: CocoaExtensions
         embed: false
@@ -582,7 +580,7 @@ targets:
         PRODUCT_NAME: Chat Filters
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.chat-filter
     info:
-      path: Sources/Plugins/Chat Filter/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/ChatFilter-Info.plist
       properties:
         CFBundleDevelopmentRegion: English
         CFBundleExecutable: $(EXECUTABLE_NAME)
@@ -597,7 +595,6 @@ targets:
     sources:
       - path: Sources/Plugins/Chat Filter/Classes
       - path: Sources/Plugins/Chat Filter/Resources
-        excludes: ["Property Lists/Info.plist"]
     dependencies:
       - target: CocoaExtensions
         embed: false
@@ -610,7 +607,7 @@ targets:
         PRODUCT_NAME: Smiley Converter
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.smiley-converter
     info:
-      path: Sources/Plugins/Smiley Converter/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/SmileyConverter-Info.plist
       properties:
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
@@ -624,7 +621,6 @@ targets:
     sources:
       - path: Sources/Plugins/Smiley Converter/Classes
       - path: Sources/Plugins/Smiley Converter/Resources
-        excludes: ["Property Lists/Info.plist"]
     dependencies:
       - target: CocoaExtensions
         embed: false
@@ -637,7 +633,7 @@ targets:
         PRODUCT_NAME: System Info
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.system-profiler
     info:
-      path: Sources/Plugins/System Profiler/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/SystemProfiler-Info.plist
       properties:
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
@@ -651,7 +647,6 @@ targets:
     sources:
       - path: Sources/Plugins/System Profiler/Classes
       - path: Sources/Plugins/System Profiler/Resources
-        excludes: ["Property Lists/Info.plist"]
     dependencies:
       - target: CocoaExtensions
         embed: false
@@ -666,7 +661,7 @@ targets:
         PRODUCT_NAME: User Insights
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.user-insights
     info:
-      path: Sources/Plugins/User Insights/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/UserInsights-Info.plist
       properties:
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
@@ -680,7 +675,6 @@ targets:
     sources:
       - path: Sources/Plugins/User Insights/Classes
       - path: Sources/Plugins/User Insights/Resources
-        excludes: ["Property Lists/Info.plist"]
     dependencies:
       - target: CocoaExtensions
         embed: false
@@ -694,7 +688,7 @@ targets:
         PRODUCT_NAME: ZNC Additions
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.znc-additions
     info:
-      path: Sources/Plugins/ZNC Additions/Resources/Property Lists/Info.plist
+      path: Generated/Xcode/ZNCAdditions-Info.plist
       properties:
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
@@ -708,7 +702,6 @@ targets:
     sources:
       - path: Sources/Plugins/ZNC Additions/Classes
       - path: Sources/Plugins/ZNC Additions/Resources
-        excludes: ["Property Lists/Info.plist"]
     dependencies:
       - target: CocoaExtensions
         embed: false
@@ -737,7 +730,7 @@ targets:
           - "$(SRCROOT)/Sources/App/Classes/Dialogs/Onboarding"
         FRAMEWORK_SEARCH_PATHS:
           - $(inherited)
-          - '"$(SRCROOT)/Frameworks/Static Libraries/Libraries"'
+          - '"$(SRCROOT)/Sources/Frameworks/Static Libraries/Libraries"'
         # Bundled extensions resolve symbols from this binary at runtime.
         DEAD_CODE_STRIPPING: NO
         GCC_SYMBOLS_PRIVATE_EXTERN: NO
@@ -746,7 +739,7 @@ targets:
         Release:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_MAIN_PROVISIONING_PROFILE)
     info:
-      path: Sources/App/Resources/Property Lists/Application Properties/Info.plist
+      path: Generated/Xcode/Glasstual-Info.plist
       properties:
         CFBundleDisplayName: Glasstual
         CFBundleDocumentTypes:
@@ -790,7 +783,7 @@ targets:
     # Debug and Release use the same sandbox. Library validation stays on
     # (Mac App Store): only Apple-signed or same-Team-ID bundles load.
     entitlements:
-      path: Sources/App/Glasstual.entitlements
+      path: Generated/Xcode/Glasstual.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
@@ -819,10 +812,8 @@ targets:
           - "AppKitSupport/TVCLogViewConsoleShim.m"
           - "AppKitSupport/TVCLogViewConstants.m"
           - "AppKitSupport/TVCLogViewInternalWK2.swift"
-          - "IRCProtocol/Connection/IRCConnection.swift"
           - "IRCProtocol/IRCProtocolObjCConstants.m"
           - "IRCProtocol/Presence/IRCChannel.swift"
-          - "IRCProtocol/Presence/IRCChannelConfig.swift"
           - "IRCProtocol/Presence/IRCWorld.swift"
           - "Plugins/**"
       - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialog.swift
@@ -846,13 +837,7 @@ targets:
       - path: Sources/App/Modules/AppKitSupport/TVCLogViewInternalWK2.swift
         optional: true
         buildPhase: none
-      - path: Sources/App/Modules/IRCProtocol/Connection/IRCConnection.swift
-        optional: true
-        buildPhase: none
       - path: Sources/App/Modules/IRCProtocol/Presence/IRCChannel.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/IRCProtocol/Presence/IRCChannelConfig.swift
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/IRCProtocol/Presence/IRCWorld.swift
@@ -924,7 +909,7 @@ targets:
       - target: CocoaExtensions
         embed: true
         codeSign: true
-      - framework: Frameworks/Static Libraries/Libraries/GRMustache.framework
+      - framework: Sources/Frameworks/Static Libraries/Libraries/GRMustache.framework
         embed: true
         codeSign: true
       - target: HistoricLogFileManager
@@ -993,9 +978,9 @@ targets:
           - "$(SRCROOT)/Sources/App/Classes/Dialogs/Onboarding"
         FRAMEWORK_SEARCH_PATHS:
           - $(inherited)
-          - '"$(SRCROOT)/Frameworks/Static Libraries/Libraries"'
+          - '"$(SRCROOT)/Sources/Frameworks/Static Libraries/Libraries"'
     info:
-      path: Tests/GlasstualTests/Info.plist
+      path: Generated/Xcode/GlasstualTests-Info.plist
       properties:
         CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
         CFBundleExecutable: $(EXECUTABLE_NAME)
@@ -1007,7 +992,7 @@ targets:
     # Sandboxed hosts require the injected bundle to share the host's
     # entitlements.
     entitlements:
-      path: Tests/GlasstualTests/GlasstualTests.entitlements
+      path: Generated/Xcode/GlasstualTests.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.inherit: true

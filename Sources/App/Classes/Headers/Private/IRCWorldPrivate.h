@@ -35,10 +35,12 @@
  *
  *********************************************************************** */
 
-#import "IRCChannelConfigPrivate.h"
+#import "IRCChannelConfigTypes.h"
 #import "IRCWorld.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+@class IRCChannelConfig;
 
 @interface IRCWorld ()
 /* Traffic counters are incremented from the socket's queue and

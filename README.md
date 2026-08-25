@@ -47,7 +47,7 @@ The conversation shown above was generated on a loopback-only demo network. It d
 
 ## Note Regarding Third-Party Frameworks
 
-The Codeux framework Glasstual builds on (Cocoa Extensions) and the prebuilt static libraries live in `Frameworks/` as vendored sources, not submodules. `Frameworks/PROVENANCE.md` records the upstream commit each one was taken from. A plain clone is enough:
+The Codeux framework Glasstual builds on (Cocoa Extensions) and the prebuilt static libraries live in `Sources/Frameworks/` as vendored sources, not submodules. `Sources/Frameworks/PROVENANCE.md` records the upstream commit each one was taken from. A plain clone is enough:
 
 ```
 git clone https://github.com/vakesz/Glasstual.git
@@ -103,7 +103,7 @@ make format   # clang-format, SwiftFormat, shfmt
 The unit tests live in `Tests/GlasstualTests` and do not use the network.
 
 Formatting and linting intentionally exclude the vendored frameworks under
-`Frameworks/` and `External Libraries`. SwiftLint's checked-in baseline records
+`Sources/Frameworks/` and `External Libraries`. SwiftLint's checked-in baseline records
 the legacy findings present when Swift sources were brought under the linter;
 new findings still fail the build. `make lint` installs SwiftFormat or SwiftLint
 with Homebrew when either executable is missing. The `Quality` workflow runs

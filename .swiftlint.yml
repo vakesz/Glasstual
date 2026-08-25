@@ -1,7 +1,6 @@
 excluded:
   - .agents
   - DerivedData
-  - Frameworks
   - build
 
 reporter: xcode

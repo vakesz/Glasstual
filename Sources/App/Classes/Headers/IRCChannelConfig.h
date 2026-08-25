@@ -36,16 +36,10 @@
  *
  *********************************************************************** */
 
+#import "IRCChannelConfigTypes.h"
 #import "TLONotificationController.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-typedef NS_ENUM(NSUInteger, IRCChannelType) {
-	IRCChannelTypeChannel = 0,
-	IRCChannelTypePrivateMessage,
-	IRCChannelTypeUtility,
-	IRCChannelTypeDirectChat, // DCC CHAT. Never persisted.
-};
 
 #pragma mark -
 #pragma mark Immutable Object

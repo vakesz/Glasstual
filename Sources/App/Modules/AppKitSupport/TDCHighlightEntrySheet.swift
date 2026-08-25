@@ -17,7 +17,7 @@ import AppKit
 @MainActor
 public final class HighlightEntrySheet: SheetBase {
 	private var config: MutableHighlightMatchCondition!
-	private var channelList: [IRCChannelConfig] = []
+	private var channelList: [ChannelConfig] = []
 
 	@IBOutlet private var matchKeywordTextField: TVCValidatedTextField!
 	@IBOutlet private var matchTypePopupButton: NSPopUpButton!
@@ -57,7 +57,7 @@ public final class HighlightEntrySheet: SheetBase {
 	}
 
 	@objc(startWithChannels:)
-	public func start(with channels: [IRCChannelConfig]) {
+	public func start(with channels: [ChannelConfig]) {
 		channelList = channels
 
 		let matchChannelId = config.matchChannelId
