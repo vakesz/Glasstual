@@ -15,7 +15,7 @@ import AppKit
 @objc(IRCChannelMemberListController)
 @MainActor
 public final class IRCChannelMemberListController: NSArrayController {
-	private weak var memberList: IRCChannelMemberList?
+	private weak var memberList: ChannelMemberList?
 
 	@IBOutlet public private(set) var tableView: TVCMemberList!
 
@@ -25,7 +25,7 @@ public final class IRCChannelMemberListController: NSArrayController {
 			memberList.assign(nil)
 		}
 
-		let newList = channel?.memberInfo
+		let newList = (channel?.memberInfo as AnyObject?) as? ChannelMemberList
 
 		if let newList {
 			newList.assign(self)
@@ -39,7 +39,7 @@ public final class IRCChannelMemberListController: NSArrayController {
 	}
 
 	@objc(replaceContents:)
-	public func replaceContents(_ contents: [IRCChannelUser]) {
+	public func replaceContents(_ contents: [ChannelUser]) {
 		content = NSMutableArray(array: contents)
 		tableView.membersReplaced()
 	}

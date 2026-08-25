@@ -499,7 +499,7 @@ public final class MasterController: NSObject, NSApplicationDelegate {
 		}
 
 		Self.terminationLogger.debug("Suspending member list dispatch queue")
-		IRCChannelMemberList.suspendSerialQueues()
+		ChannelMemberList.suspendSerialQueues()
 
 		Self.terminationLogger.debug("Unloading plugins")
 		SharedApplication.sharedPluginManager().unloadPlugins()

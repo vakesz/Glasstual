@@ -230,7 +230,6 @@
 		5B241CA207E0F1A8D014BFCB /* OELReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0994686A91EC1332C4F9B7 /* OELReachability.swift */; };
 		5BC42648F2BB9B496CA34964 /* TDCChannelModifyTopicSheet.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2D86762DD565C66E6B437882 /* TDCChannelModifyTopicSheet.strings */; };
 		5BF8F62D90EBB79EA0CBA359 /* CommonErrors.strings in Resources */ = {isa = PBXBuildFile; fileRef = 38BEA8E2C4015EA63FB8338C /* CommonErrors.strings */; };
-		5C2C5D658B6ED141E3D1ACC1 /* IRCChannelMemberList.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C1DC86BB99383BFE8EE2F86 /* IRCChannelMemberList.m */; };
 		5C8797A285F5F687B89E9C1F /* HSLHistoricLogProcessDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4861675198141B46C1440A06 /* HSLHistoricLogProcessDelegate.m */; };
 		5CE799CA958931A6298B915E /* NSScreenHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = F9CCB9E40CC7DDF966497F71 /* NSScreenHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5D3EF5F61484277EC2DE78DE /* ICLPayloadShared.m in Sources */ = {isa = PBXBuildFile; fileRef = A7D340A448FA5D1A8A573912 /* ICLPayloadShared.m */; };
@@ -283,6 +282,7 @@
 		74A2FA3BF46AB9285BA823B5 /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
 		74A542DFD44BCB51CFB6BA4A /* SecurityInterface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09337EC215A29A9E3EF5FF5E /* SecurityInterface.framework */; };
 		7522194871704C76B43B31F5 /* ICLProcessDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 65206E48E0681BFA8BD0EDDD /* ICLProcessDelegate.m */; };
+		76BC54343C1EBFF9ECEF1D43 /* IRCChannelMemberList.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1230AF05540E2AFA2DFC5A0 /* IRCChannelMemberList.swift */; };
 		775392C831C432609E54594B /* SWDictionaryHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9412922721B2E84569FCF88A /* SWDictionaryHelper.swift */; };
 		793C5EB9842E34C0B7E1C326 /* TVCLogRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 874138A5C9B90364080B8057 /* TVCLogRenderer.m */; };
 		79561ADDF058CA93FC4606D2 /* NSLayoutConstraintHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8B8F444E2EAA90F1DF9357A3 /* NSLayoutConstraintHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -355,6 +355,7 @@
 		97659B1D199B6E35E787A3EE /* ICMInlineVideo.css in CopyFiles */ = {isa = PBXBuildFile; fileRef = A048EFDD0EE8F2CF8D8A573E /* ICMInlineVideo.css */; };
 		978645816495E033E20FB59E /* IRCISupportTokenParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC15F2EDB588B4244528518 /* IRCISupportTokenParser.swift */; };
 		9798D2DA1A737058560149DB /* GRMustache.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2387424F53D52D925E36D60A /* GRMustache.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		991DA6E8E0AAB26D871992D2 /* IRCChannelUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD357E7FCBA7B12144C8F74 /* IRCChannelUser.swift */; };
 		99228CC6A2FF88D9FDA167D2 /* XRLogging.m in Sources */ = {isa = PBXBuildFile; fileRef = 1B2FDF63B6F369F02C4E7E9B /* XRLogging.m */; };
 		9951A931DB8FE317D4D91353 /* TLOSpeechSynthesizerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E10F1A940ED2B569423A510 /* TLOSpeechSynthesizerTests.m */; };
 		99A65FA0BB1A5B9DC04BBB86 /* TDCServerEndpointListSheet.xib in Resources */ = {isa = PBXBuildFile; fileRef = FB05F73989CBA79730544A9A /* TDCServerEndpointListSheet.xib */; };
@@ -460,7 +461,6 @@
 		CA8875594B53E72C4A52A459 /* IRCUserNicknameColorStyleGeneratorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 33ACF8C493736CC1DB4299F4 /* IRCUserNicknameColorStyleGeneratorTests.m */; };
 		CC95EE7E72EB7F44C3B7C1B5 /* NSDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 06C9DEDBEC51DE5F2E6016BC /* NSDataHelper.m */; };
 		CCB80CBB6DF5BE6746393A65 /* TemplateLineTypes.plist in Resources */ = {isa = PBXBuildFile; fileRef = 210563EB1057D39C53BBF20A /* TemplateLineTypes.plist */; };
-		CCF129BCCA8957E0B5EA3E9A /* IRCChannelUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 918A8826BCFF3A70EF9B4534 /* IRCChannelUser.m */; };
 		CCF555BD830DA35C91FED634 /* IRCConnectionConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 05553D50FEAD342C4F42FE60 /* IRCConnectionConfig.m */; };
 		CD2A11FAADF69751785EC88A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B586F0E6CAB57502BAF81EE3 /* Security.framework */; };
 		CDA083511ED8B8F6A3C5D77C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E54876E58FD02CA70788D1A0 /* AudioToolbox.framework */; };
@@ -847,22 +847,22 @@
 		1DFB85849B97F57629D2DA8D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
-			dstSubfolderSpec = 16;
+			dstPath = Documentation;
+			dstSubfolderSpec = 7;
 			files = (
-				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
-				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
-				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
+				4888B2AB78F64980FAE8E62C /* Acknowledgements.pdf in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4ADF42B6AE8105A1432C6FDC /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = Documentation;
-			dstSubfolderSpec = 7;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
+			dstSubfolderSpec = 16;
 			files = (
-				4888B2AB78F64980FAE8E62C /* Acknowledgements.pdf in CopyFiles */,
+				E2BBAF26802FC79FA2A6A1F1 /* Scrollback History Manager.xpc in CopyFiles */,
+				56E312632C1C48D3E426B46A /* Inline Content Loader.xpc in CopyFiles */,
+				3B51A045C82FBD48A872E950 /* IRC Connection Host.xpc in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1021,7 +1021,6 @@
 		1A8C63666782C0ACA8A26A61 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		1B2FDF63B6F369F02C4E7E9B /* XRLogging.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XRLogging.m; sourceTree = "<group>"; };
 		1B6BB840FE313721F18B2C91 /* TDCChannelSpotlightControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCChannelSpotlightControls.swift; sourceTree = "<group>"; };
-		1C1DC86BB99383BFE8EE2F86 /* IRCChannelMemberList.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCChannelMemberList.m; sourceTree = "<group>"; };
 		1C9B54A2E25B5825DA48FFF8 /* GlasstualPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlasstualPrivate.h; sourceTree = "<group>"; };
 		1CD175AD858DEACD34AA3E2D /* ICMYouTube.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ICMYouTube.m; sourceTree = "<group>"; };
 		1CF0C39135952E40B9FF50D4 /* IRCCapabilityDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCCapabilityDefaults.swift; sourceTree = "<group>"; };
@@ -1422,7 +1421,6 @@
 		90ECD7BA7542610B676FC406 /* XRRegularExpression.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XRRegularExpression.h; sourceTree = "<group>"; };
 		913545608610C16B365DD052 /* IRCChannelConfigInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCChannelConfigInternal.h; sourceTree = "<group>"; };
 		91497CE42F16826686203BF6 /* TVCLogControllerInlineMediaServicePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCLogControllerInlineMediaServicePrivate.h; sourceTree = "<group>"; };
-		918A8826BCFF3A70EF9B4534 /* IRCChannelUser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IRCChannelUser.m; sourceTree = "<group>"; };
 		92038B8DC72A719D2CBF7B25 /* LogControllerStorageModel (model 3).xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "LogControllerStorageModel (model 3).xcdatamodel"; sourceTree = "<group>"; };
 		9240D4D7C2C908AC6CB1DF47 /* TDCServerChangeNicknameSheetPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDCServerChangeNicknameSheetPrivate.h; sourceTree = "<group>"; };
 		924B596C9F00539C80DA412B /* TDCNetworkPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCNetworkPickerViewController.swift; sourceTree = "<group>"; };
@@ -1459,6 +1457,7 @@
 		9B5A256F13C157EE752EDE5E /* TVCMainWindowTextViewAppearance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVCMainWindowTextViewAppearance.h; sourceTree = "<group>"; };
 		9B5DA454B13296EE0CCE62F9 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		9BA9D349B284B16FD86FEF95 /* TLOSpeechSynthesizerEnginePrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TLOSpeechSynthesizerEnginePrivate.h; sourceTree = "<group>"; };
+		9C292F2FB844E61067102AC0 /* IRCChannelUserTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCChannelUserTypes.h; sourceTree = "<group>"; };
 		9C6004559F238AD377D1AE3F /* TDCServerChannelListDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCServerChannelListDialog.swift; sourceTree = "<group>"; };
 		9C9A51731DFA6C431FD8B7FD /* IRCModeInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IRCModeInfo.h; sourceTree = "<group>"; };
 		9D59277B7A86D2E14275CADD /* TDCChannelBanListSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCChannelBanListSheet.swift; sourceTree = "<group>"; };
@@ -2144,10 +2143,8 @@
 		27871C908CF009836A8E938E /* IRC */ = {
 			isa = PBXGroup;
 			children = (
-				E39792F2813214505D09530E /* Users */,
 				4007F8C23295C0D2C4C11127 /* IRCChannel.m */,
 				6001A73A9FC41EFCAD22C9C7 /* IRCChannelConfig.m */,
-				1C1DC86BB99383BFE8EE2F86 /* IRCChannelMemberList.m */,
 				54773006180206982DE51B48 /* IRCClient.m */,
 				578891DF4D00C898BD1022D4 /* IRCClientConfig.m */,
 				0B2EC90CC835E3F535F52CD1 /* IRCConnection.m */,
@@ -3376,6 +3373,7 @@
 				6C81460EFF1AA65C42B590A8 /* IRCChannelMemberList.h */,
 				2F18FA0B596F7C6E985FB992 /* IRCChannelMode.h */,
 				C00B94A74D2F0007311E3B02 /* IRCChannelUser.h */,
+				9C292F2FB844E61067102AC0 /* IRCChannelUserTypes.h */,
 				F65537FD2E235F2018776962 /* IRCClient.h */,
 				3F883757F027FA0930C354CF /* IRCClientConfig.h */,
 				C418906DA2C60018598F0A85 /* IRCColorFormat.h */,
@@ -3700,14 +3698,6 @@
 				B39183880A8C62027C54230D /* GlasstualTests */,
 			);
 			path = Tests;
-			sourceTree = "<group>";
-		};
-		E39792F2813214505D09530E /* Users */ = {
-			isa = PBXGroup;
-			children = (
-				918A8826BCFF3A70EF9B4534 /* IRCChannelUser.m */,
-			);
-			path = Users;
 			sourceTree = "<group>";
 		};
 		E55A05A4F6422FAA9A3C63F3 /* Resources */ = {
@@ -4986,10 +4976,10 @@
 				7282CA06F1D92DCBFB8C13FA /* IRCCapabilityDefaults.swift in Sources */,
 				682F789C2DEB53A927B3D44C /* IRCChannel.m in Sources */,
 				C39309259CC9F07839ECBBC6 /* IRCChannelConfig.m in Sources */,
-				5C2C5D658B6ED141E3D1ACC1 /* IRCChannelMemberList.m in Sources */,
+				76BC54343C1EBFF9ECEF1D43 /* IRCChannelMemberList.swift in Sources */,
 				B9C35EF84A492B54858B8376 /* IRCChannelMemberListController.swift in Sources */,
 				F55D8D05A941A129EBE53971 /* IRCChannelMode.swift in Sources */,
-				CCF129BCCA8957E0B5EA3E9A /* IRCChannelUser.m in Sources */,
+				991DA6E8E0AAB26D871992D2 /* IRCChannelUser.swift in Sources */,
 				4D2D56AD1C8D86338F063F43 /* IRCClient.m in Sources */,
 				7B15534CD12DE357336F735E /* IRCClientConfig.m in Sources */,
 				AF12601A5DF8EBD45A35753A /* IRCClientRequestedCommands.swift in Sources */,

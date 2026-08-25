@@ -192,21 +192,25 @@ public final class NicknameCompletionStatus: NSObject {
 			return []
 		}
 
+		let members = (channel.memberList ?? []).compactMap { member in
+			(member as AnyObject) as? ChannelUser
+		}
+
 		return nicknameCandidates(
-			from: channel.memberList ?? [],
+			from: members,
 			client: client,
 			searchPatternIsEmpty: searchPatternIsEmpty
 		)
 	}
 
 	private func nicknameCandidates(
-		from members: [IRCChannelUser],
+		from members: [ChannelUser],
 		client: IRCClient,
 		searchPatternIsEmpty: Bool
 	) -> [Candidate] {
-		var greatestWeightUser: IRCChannelUser?
+		var greatestWeightUser: ChannelUser?
 		var noUserHadGreaterWeightThanOriginal = true
-		let sortedMembers: [IRCChannelUser]
+		let sortedMembers: [ChannelUser]
 
 		if !searchPatternIsEmpty {
 			sortedMembers = members.sorted { $0.compare(usingWeights: $1) == .orderedAscending }
@@ -221,7 +225,7 @@ public final class NicknameCompletionStatus: NSObject {
 				}
 			}
 
-			sortedMembers = members.sorted { (left: IRCChannelUser, right: IRCChannelUser) -> Bool in
+			sortedMembers = members.sorted { (left: ChannelUser, right: ChannelUser) -> Bool in
 				left.user.nickname.caseInsensitiveCompare(right.user.nickname) == .orderedAscending
 			}
 		}

@@ -36,19 +36,11 @@
  *
  *********************************************************************** */
 
+#import "IRCChannelUserTypes.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @class IRCUser, IRCUserMutable;
-
-typedef NS_OPTIONS(NSUInteger, IRCUserRank) {
-	IRCUserRankNone = 1 << 0,			// nothing
-	IRCUserRankIRCopByMode = 1 << 1,	// +y/+Y
-	IRCUserRankChannelOwner = 1 << 2,	// +q
-	IRCUserRankSuperOperator = 1 << 3,	// +a
-	IRCUserRankNormalOperator = 1 << 4, // +o
-	IRCUserRankHalfOperator = 1 << 5,	// +h
-	IRCUserRankVoiced = 1 << 6			// +v
-};
 
 #pragma mark -
 #pragma mark Immutable Object
