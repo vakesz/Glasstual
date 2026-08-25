@@ -143,7 +143,7 @@ open class User: XRPortablePropertyObject {
 		return false
 	}
 
-	@objc public var relations: [IRCChannel: IRCChannelUser] {
+	@objc public var relations: [IRCChannel: ChannelUser] {
 		relationsInt.relations
 	}
 
@@ -295,7 +295,7 @@ open class User: XRPortablePropertyObject {
 	// MARK: - Relations
 
 	@objc(associateUser:withChannel:)
-	public func associate(_ user: IRCChannelUser, with channel: IRCChannel) {
+	public func associate(_ user: ChannelUser, with channel: IRCChannel) {
 		relationsInt.associate(user, with: channel)
 		toggleRemoveUserTimer()
 	}
@@ -307,7 +307,7 @@ open class User: XRPortablePropertyObject {
 	}
 
 	@objc(userAssociatedWithChannel:)
-	public func userAssociated(with channel: IRCChannel) -> IRCChannelUser? {
+	public func userAssociated(with channel: IRCChannel) -> ChannelUser? {
 		relationsInt.userAssociated(with: channel)
 	}
 
@@ -326,7 +326,7 @@ open class User: XRPortablePropertyObject {
 
 	@objc(enumerateRelations:)
 	public func enumerateRelations(
-		_ block: (IRCChannel, IRCChannelUser, UnsafeMutablePointer<ObjCBool>) -> Void
+		_ block: (IRCChannel, ChannelUser, UnsafeMutablePointer<ObjCBool>) -> Void
 	) {
 		relationsInt.enumerateRelations(block)
 	}

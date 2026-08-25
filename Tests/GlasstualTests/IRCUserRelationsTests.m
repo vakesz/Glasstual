@@ -7,6 +7,7 @@
 
 #import "GLTTestClient.h"
 #import "IRCChannelPrivate.h"
+#import "IRCChannelMemberListPrivate.h"
 #import "IRCChannelUserPrivate.h"
 #import "IRCTreeItemPrivate.h"
 #import "IRCUser.h"
@@ -104,6 +105,66 @@ NS_ASSUME_NONNULL_BEGIN
 
 	XCTAssertEqual(self.relations.numberOfRelations, 0);
 	XCTAssertNil([self.relations userAssociatedWithChannel:privateMessage]);
+}
+
+- (void)testChannelUserCopiesPreserveIdentityModesAndConversationWeights
+{
+	IRCUser *user = [[IRCUser alloc] initWithNickname:@"alice" onClient:self.client];
+	IRCChannelUserMutable *member = [[IRCChannelUserMutable alloc] initWithUser:user];
+	member.modes = @"ov";
+	[member incomingConversation];
+	[member outgoingConversation];
+
+	IRCChannelUser *copy = [member copy];
+	IRCChannelUserMutable *uniqueMutableCopy = [member uniqueCopyMutable];
+
+	XCTAssertEqual(copy.user, user);
+	XCTAssertEqualObjects(copy.modes, @"ov");
+	XCTAssertEqual(copy.ranks, IRCUserRankNormalOperator | IRCUserRankVoiced);
+	XCTAssertEqual(copy.incomingWeight, 100.0);
+	XCTAssertEqual(copy.outgoingWeight, 20.0);
+	XCTAssertEqual(copy.creationTime, member.creationTime);
+
+	XCTAssertEqual(uniqueMutableCopy.user, user);
+	XCTAssertEqualObjects(uniqueMutableCopy.modes, @"ov");
+	XCTAssertEqual(uniqueMutableCopy.incomingWeight, 100.0);
+	XCTAssertEqual(uniqueMutableCopy.outgoingWeight, 20.0);
+}
+
+- (void)testChannelMemberListAddsSortsAndRemovesMembers
+{
+	IRCChannel *channel = [self channelNamed:@"#chat"];
+	IRCChannelMemberList *memberList = [[IRCChannelMemberList alloc] initWithChannel:channel];
+	IRCChannelUser *bob = [self memberNamed:@"bob"];
+	IRCChannelUser *alice = [self memberNamed:@"alice"];
+
+	[memberList addMember:bob];
+	[memberList addMember:alice];
+
+	XCTAssertEqual(memberList.numberOfMembers, 2);
+	XCTAssertEqualObjects([memberList.memberList valueForKeyPath:@"user.nickname"], (@[ @"alice", @"bob" ]));
+
+	[memberList removeMember:alice];
+
+	XCTAssertEqual(memberList.numberOfMembers, 1);
+	XCTAssertEqualObjects(memberList.memberList, @[ bob ]);
+	XCTAssertNil([alice.user userAssociatedWithChannel:channel]);
+}
+
+- (void)testChannelMemberListDuplicateCheckReplacesExistingRelation
+{
+	IRCChannel *channel = [self channelNamed:@"#chat"];
+	IRCChannelMemberList *memberList = [[IRCChannelMemberList alloc] initWithChannel:channel];
+	IRCUser *user = [[IRCUser alloc] initWithNickname:@"alice" onClient:self.client];
+	IRCChannelUser *original = [[IRCChannelUser alloc] initWithUser:user];
+	IRCChannelUser *replacement = [[IRCChannelUser alloc] initWithUser:user];
+
+	[memberList addMember:original];
+	[memberList addMember:replacement checkForDuplicates:YES];
+
+	XCTAssertEqual(memberList.numberOfMembers, 1);
+	XCTAssertEqual(memberList.memberList.firstObject, replacement);
+	XCTAssertEqual([user userAssociatedWithChannel:channel], replacement);
 }
 
 @end

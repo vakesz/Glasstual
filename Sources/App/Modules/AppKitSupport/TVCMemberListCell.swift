@@ -253,7 +253,7 @@ public final class MemberListCell: NSTableCellView {
 	}
 
 	@objc(privilegesDescriptionForUser:)
-	public class func privilegesDescription(for cellItem: IRCChannelUser) -> String {
+	public class func privilegesDescription(for cellItem: ChannelUser) -> String {
 		var userRank = cellItem.rank
 
 		if cellItem.user.isIRCop {
@@ -483,8 +483,8 @@ public final class MemberListCell: NSTableCellView {
 		superview as? MemberListRowCell
 	}
 
-	private var cellItem: IRCChannelUser? {
-		objectValue as? IRCChannelUser
+	private var cellItem: ChannelUser? {
+		objectValue as? ChannelUser
 	}
 
 	private var memberList: TVCMemberList? {

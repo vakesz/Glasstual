@@ -823,8 +823,6 @@ targets:
           - "IRCProtocol/IRCProtocolObjCConstants.m"
           - "IRCProtocol/Presence/IRCChannel.swift"
           - "IRCProtocol/Presence/IRCChannelConfig.swift"
-          - "IRCProtocol/Presence/IRCChannelMemberList.swift"
-          - "IRCProtocol/Presence/IRCChannelUser.swift"
           - "IRCProtocol/Presence/IRCWorld.swift"
           - "Plugins/**"
       - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialog.swift
@@ -855,12 +853,6 @@ targets:
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/IRCProtocol/Presence/IRCChannelConfig.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/IRCProtocol/Presence/IRCChannelMemberList.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/IRCProtocol/Presence/IRCChannelUser.swift
         optional: true
         buildPhase: none
       - path: Sources/App/Modules/IRCProtocol/Presence/IRCWorld.swift

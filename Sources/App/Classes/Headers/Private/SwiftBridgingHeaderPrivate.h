@@ -43,8 +43,11 @@
 #import "IRCAddressBook.h"
 #import "IRCCapability.h"
 #import "IRCChannelPrivate.h"
-#import "IRCChannelMemberListPrivate.h"
-#import "IRCChannelUserPrivate.h"
+/* IRCChannelMemberList is Swift (ChannelMemberList). Keep its declarations
+ out of the bridging graph. */
+/* IRCChannelUser / IRCChannelUserMutable are Swift (ChannelUser /
+ ChannelUserMutable). Import only the shared rank options here. */
+#import "IRCChannelUserTypes.h"
 #import "IRCClient.h"
 #import "IRCClientPrivate.h"
 #import "IRCClientConfig.h"

@@ -15,9 +15,9 @@ import Foundation
 @objc(IRCUserRelations)
 public final class UserRelations: NSObject {
 	private let lock = NSLock()
-	private var storage: [IRCChannel: IRCChannelUser] = [:]
+	private var storage: [IRCChannel: ChannelUser] = [:]
 
-	@objc public var relations: [IRCChannel: IRCChannelUser] {
+	@objc public var relations: [IRCChannel: ChannelUser] {
 		withLock { storage }
 	}
 
@@ -25,7 +25,7 @@ public final class UserRelations: NSObject {
 		withLock { Array(storage.keys) }
 	}
 
-	@objc public var relatedUsers: [IRCChannelUser] {
+	@objc public var relatedUsers: [ChannelUser] {
 		withLock { Array(storage.values) }
 	}
 
@@ -34,7 +34,7 @@ public final class UserRelations: NSObject {
 	}
 
 	@objc(associateUser:withChannel:)
-	public func associate(_ user: IRCChannelUser, with channel: IRCChannel) {
+	public func associate(_ user: ChannelUser, with channel: IRCChannel) {
 		guard channel.isChannel else {
 			return
 		}
@@ -56,7 +56,7 @@ public final class UserRelations: NSObject {
 	}
 
 	@objc(userAssociatedWithChannel:)
-	public func userAssociated(with channel: IRCChannel) -> IRCChannelUser? {
+	public func userAssociated(with channel: IRCChannel) -> ChannelUser? {
 		guard channel.isChannel else {
 			return nil
 		}
@@ -66,7 +66,7 @@ public final class UserRelations: NSObject {
 
 	@objc(enumerateRelations:)
 	public func enumerateRelations(
-		_ block: (IRCChannel, IRCChannelUser, UnsafeMutablePointer<ObjCBool>) -> Void
+		_ block: (IRCChannel, ChannelUser, UnsafeMutablePointer<ObjCBool>) -> Void
 	) {
 		let snapshot = relations
 		var stop = ObjCBool(false)

@@ -205,8 +205,10 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	}
 
 	fileprivate func sendOnQueue(_ data: Data, bypassQueue: Bool) {
+		let socket = socket
+
 		RCMLog.connection.notice(
-			"[DEBUG-irc-send] enqueue bytes=\(data.count, privacy: .public) connected=\(self.socket.connected, privacy: .public) sending=\(self.socket.sending, privacy: .public)"
+			"[DEBUG-irc-send] enqueue bytes=\(data.count, privacy: .public) connected=\(socket.connected, privacy: .public) sending=\(socket.sending, privacy: .public)"
 		)
 
 		if socket.disconnected {

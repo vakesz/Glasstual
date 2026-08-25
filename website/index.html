@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="theme-color" content="#eef3ff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0a0b10" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Glasstual is a customizable, native IRC client for macOS Tahoe and later.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Glasstual for macOS">
+    <meta property="og:description" content="A modern, customizable IRC client built for macOS Tahoe and later.">
+    <meta property="og:url" content="https://vakesz.github.io/Glasstual/">
+    <meta property="og:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Glasstual for macOS">
+    <meta name="twitter:description" content="A modern, customizable IRC client built for macOS Tahoe and later.">
+    <meta name="twitter:image" content="https://vakesz.github.io/Glasstual/assets/og.png">
+    <link rel="canonical" href="https://vakesz.github.io/Glasstual/">
+    <link rel="icon" href="assets/app-icon.png">
+    <link rel="preload" href="assets/main-window-light.png" as="image" media="(prefers-color-scheme: light)">
+    <link rel="preload" href="assets/main-window-dark.png" as="image" media="(prefers-color-scheme: dark)">
+    <link rel="stylesheet" href="styles.css">
+    <title>Glasstual for macOS</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="Glasstual home">
+        <img src="assets/app-icon.png" alt="" width="36" height="36">
+        <span>Glasstual</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#settings">Settings</a>
+        <a href="#screenshots">Screenshots</a>
+        <a class="github-link" href="https://github.com/vakesz/Glasstual">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero section-shell" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Meet Glasstual</p>
+          <h1 id="hero-title">IRC, at home<br><span>on the Mac.</span></h1>
+          <p class="hero-summary">A fast, customizable IRC client for macOS Tahoe, with modern IRCv3 features and a proper native interface.</p>
+          <div class="hero-actions">
+            <a class="primary-button" id="download-button" href="https://github.com/vakesz/Glasstual/releases/latest">
+              <span>Download latest release</span>
+              <small>macOS 26+, Apple silicon</small>
+            </a>
+            <a class="text-link" href="https://github.com/vakesz/Glasstual">View source <span aria-hidden="true">↗</span></a>
+          </div>
+          <p class="release-note" id="release-note" aria-live="polite">Signed and notarized. Free and open source.</p>
+        </div>
+        <div class="hero-art">
+          <div class="ambient-orb orb-one"></div>
+          <div class="ambient-orb orb-two"></div>
+          <img src="assets/app-icon.png" alt="Glasstual app icon" width="1024" height="1024">
+        </div>
+      </section>
+
+      <section class="proof-strip" aria-label="Product highlights">
+        <span>Native AppKit</span>
+        <span>IRCv3 ready</span>
+        <span>Signed and notarized</span>
+        <span>BSD licensed</span>
+      </section>
+
+      <section class="section-shell feature-section" id="features" aria-labelledby="features-title">
+        <div class="section-heading">
+          <p class="eyebrow">Comfortable in a crowd</p>
+          <h2 id="features-title">The useful parts of modern chat, without leaving IRC behind.</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card feature-card-wide">
+            <div class="feature-icon" aria-hidden="true">⌁</div>
+            <h3>Modern IRC, properly supported</h3>
+            <p>Replies, reactions, typing indicators, message history, read markers, SASL, server-time, and more. Glasstual negotiates the capabilities your server offers.</p>
+            <div class="capability-cloud" aria-hidden="true">
+              <span>chathistory</span><span>draft/reply</span><span>+typing</span><span>sasl</span><span>read-marker</span>
+            </div>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">◐</div>
+            <h3>Lines or Bubbles</h3>
+            <p>Pick the compact IRC layout or a conversation view inspired by Messages. Both follow your Mac's appearance and accent colour.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">◇</div>
+            <h3>Your app, your rules</h3>
+            <p>Fine-tune alerts, highlights, behaviour, inline media, text, and themes. Power users can go further with CSS, JavaScript, Swift, and AppleScript.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="settings-section" id="settings" aria-labelledby="settings-title">
+        <div class="section-shell settings-layout">
+          <div class="settings-copy">
+            <p class="eyebrow">Make it yours</p>
+            <h2 id="settings-title">Set up chat your way.</h2>
+            <p>Choose how chat looks, what earns your attention, and how Glasstual behaves on each network. The defaults get you connected quickly.</p>
+            <div class="style-picker" role="group" aria-label="Preview chat style">
+              <button class="style-option is-active" type="button" data-style="lines" aria-pressed="true">Lines</button>
+              <button class="style-option" type="button" data-style="bubbles" aria-pressed="false">Bubbles</button>
+            </div>
+          </div>
+          <div class="settings-card" aria-label="Interactive style settings preview">
+            <div class="settings-toolbar">
+              <span class="traffic-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+              <strong>Style</strong>
+            </div>
+            <div class="settings-body">
+              <div class="settings-sidebar" aria-hidden="true">
+                <span>General</span><span>Interface</span><span class="selected">Style</span><span>Notifications</span><span>Behavior</span>
+              </div>
+              <div class="settings-panel">
+                <p class="settings-label">Conversation style</p>
+                <div class="chat-preview lines-preview" id="chat-preview">
+                  <div class="chat-line"><time>10:41</time><b class="nick-one">mira</b><span>Morning. Did the history sync?</span></div>
+                  <div class="chat-line"><time>10:42</time><b class="nick-two">fox</b><span>Yep, picked up right where I left off.</span></div>
+                  <div class="chat-line"><time>10:42</time><b class="nick-one">mira</b><span>Perfect.</span></div>
+                </div>
+                <div class="setting-row"><span>Match system appearance</span><span class="switch is-on" aria-hidden="true"></span></div>
+                <div class="setting-row"><span>Show timestamps</span><span class="switch is-on" aria-hidden="true"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-shell screenshot-section" id="screenshots" aria-labelledby="screenshots-title">
+        <div class="section-heading screenshot-heading">
+          <div>
+            <p class="eyebrow">Built for macOS</p>
+            <h2 id="screenshots-title">Familiar from the first launch.</h2>
+          </div>
+          <button class="appearance-button" id="appearance-button" type="button" aria-pressed="false">Show dark appearance</button>
+        </div>
+        <div class="screenshot-grid" data-appearance="light">
+          <figure class="main-shot">
+            <img class="light-shot" src="assets/main-window-light.png" alt="Glasstual main window in light appearance" width="800" height="477" loading="lazy">
+            <img class="dark-shot" src="assets/main-window-dark.png" alt="Glasstual main window in dark appearance" width="800" height="477" loading="lazy">
+            <figcaption>Channels, conversation, and member list stay close at hand.</figcaption>
+          </figure>
+          <figure class="welcome-shot">
+            <img class="light-shot" src="assets/welcome-light.png" alt="Glasstual welcome window in light appearance" width="680" height="690" loading="lazy">
+            <img class="dark-shot" src="assets/welcome-dark.png" alt="Glasstual welcome window in dark appearance" width="680" height="690" loading="lazy">
+            <figcaption>A short first run gets you connected.</figcaption>
+          </figure>
+        </div>
+        <p class="privacy-note">The conversations in these screenshots come from a loopback-only demo network. No real accounts or messages are shown.</p>
+      </section>
+
+      <section class="download-section" aria-labelledby="download-title">
+        <img src="assets/app-icon.png" alt="" width="112" height="112" loading="lazy">
+        <p class="eyebrow">Ready when you are</p>
+        <h2 id="download-title">Come back to IRC.</h2>
+        <p>Glasstual runs on macOS Tahoe and later on Apple silicon.</p>
+        <a class="primary-button" id="download-button-bottom" href="https://github.com/vakesz/Glasstual/releases/latest">
+          <span>Download latest release</span>
+          <small>Signed and notarized</small>
+        </a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <span>Glasstual is an independent fork of Textual.</span>
+        <span>Copyright notices remain with their respective owners.</span>
+      </div>
+      <nav aria-label="Footer navigation">
+        <a href="https://github.com/vakesz/Glasstual/releases">Releases</a>
+        <a href="https://github.com/vakesz/Glasstual#building-glasstual">Build it</a>
+        <a href="https://github.com/vakesz/Glasstual#licenses">Licenses</a>
+      </nav>
+    </footer>
+    <script src="app.js"></script>
+  </body>
+</html>
