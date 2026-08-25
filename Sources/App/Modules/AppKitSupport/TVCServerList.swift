@@ -249,11 +249,11 @@ public final class ServerList: NSOutlineView {
 			return
 		}
 
-		guard let rowView = view(atColumn: 0, row: rowIndex, makeIfNecessary: false) as? TVCServerListCell else {
+		guard let rowView = view(atColumn: 0, row: rowIndex, makeIfNecessary: false) as? ServerListCell else {
 			return
 		}
 
-		if rowView is TVCServerListCellChildItem {
+		if rowView is ServerListCellChildItem {
 			rowView.populateMessageCountBadge()
 		}
 	}
@@ -295,7 +295,7 @@ public final class ServerList: NSOutlineView {
 		/* Row emphasis follows main-window status (see TVCServerListRowCell),
 		 which AppKit does not re-evaluate on its own. */
 		enumerateAvailableRowViews { rowView, _ in
-			if let serverListRow = rowView as? TVCServerListRowCell {
+			if let serverListRow = rowView as? ServerListRowCell {
 				serverListRow.refreshEmphasis()
 			}
 		}

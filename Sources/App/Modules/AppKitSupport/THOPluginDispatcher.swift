@@ -39,14 +39,14 @@ public final class PluginDispatcher: NSObject {
 		destinedFor textDestination: IRCChannel?,
 		onClient client: IRCClient,
 		receivedAt: Date,
-		referenceMessage: IRCMessage?
+		referenceMessage: Message?
 	) -> Bool {
 		let selector = NSSelectorFromString(
 			"receivedCommand:withText:authoredBy:destinedFor:onClient:receivedAt:referenceMessage:"
 		)
 
 		typealias MethodType = @convention(c) (
-			AnyObject, Selector, NSString, NSString?, IRCPrefix, IRCChannel?, IRCClient, NSDate, IRCMessage?
+			AnyObject, Selector, NSString, NSString?, IRCPrefix, IRCChannel?, IRCClient, NSDate, Message?
 		) -> Bool
 
 		for plugin in plugins {
@@ -116,8 +116,8 @@ public final class PluginDispatcher: NSObject {
 	}
 
 	@objc(interceptServerInput:for:)
-	public class func interceptServerInput(_ inputObject: IRCMessage, for client: IRCClient) -> IRCMessage? {
-		var returnValue: IRCMessage = inputObject
+	public class func interceptServerInput(_ inputObject: Message, for client: IRCClient) -> Message? {
+		var returnValue: Message = inputObject
 
 		for plugin in plugins {
 			guard plugin.supportsFeature(.serverInputDataInterception),
@@ -131,8 +131,8 @@ public final class PluginDispatcher: NSObject {
 			}
 
 			if returnedValue !== returnValue {
-				if returnedValue is IRCMessageMutable {
-					returnValue = returnedValue.copy() as! IRCMessage
+				if returnedValue is MessageMutable {
+					returnValue = returnedValue.copy() as! Message
 				} else {
 					returnValue = returnedValue
 				}
@@ -258,11 +258,9 @@ public final class PluginDispatcher: NSObject {
 	}
 
 	@objc(didReceiveServerInput:onClient:)
-	public class func didReceiveServerInput(_ inputObject: IRCMessage, onClient client: IRCClient) {
+	public class func didReceiveServerInput(_ inputObject: Message, onClient client: IRCClient) {
 		XRPerformBlockAsynchronouslyOnQueue(dispatchQueue()) {
-			guard let messageObject = inputObject.didReceiveServerInputConcreteObject() else {
-				return
-			}
+			let messageObject = inputObject.didReceiveServerInputConcreteObject()
 
 			messageObject.networkAddress = client.serverAddress
 			messageObject.networkName = client.networkName

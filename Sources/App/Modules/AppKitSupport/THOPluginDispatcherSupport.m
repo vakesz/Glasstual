@@ -19,32 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 NSString *const THOPluginProtocolCompatibilityMinimumVersion = @"7.2.4";
 
-@implementation IRCMessage (IRCMessagePluginExtension)
-
-- (THOPluginDidReceiveServerInputConcreteObject *)didReceiveServerInputConcreteObject
-{
-	THOPluginDidReceiveServerInputConcreteObject *messageObject = [THOPluginDidReceiveServerInputConcreteObject new];
-
-	messageObject.senderIsServer = self.senderIsServer;
-
-	messageObject.senderNickname = self.senderNickname;
-	messageObject.senderUsername = self.senderUsername;
-	messageObject.senderAddress = self.senderAddress;
-	messageObject.senderHostmask = self.senderHostmask;
-
-	messageObject.receivedAt = self.receivedAt;
-
-	messageObject.messageParameters = self.params;
-	messageObject.messageParamaters = self.params;
-	messageObject.messageSequence = self.sequence;
-
-	messageObject.messageCommand = self.command;
-	messageObject.messageCommandNumeric = self.commandNumeric;
-
-	return messageObject;
-}
-
-@end
+/* IRCMessage plugin helper is implemented in Swift (Message). */
 
 @implementation THOPluginDidPostNewMessageConcreteObject
 @end

@@ -174,7 +174,7 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 	}
 
 	private func disableBackgroundControlsStepTwo() {
-		guard let textField = mainWindow?.inputTextField else {
+		guard let textField = mainWindow?.inputTextField as? TextViewWithIRCFormatter else {
 			return
 		}
 
@@ -187,7 +187,7 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 	}
 
 	private func enableBackgroundControlsStepTwo() {
-		guard let textField = mainWindow?.inputTextField else {
+		guard let textField = mainWindow?.inputTextField as? TextViewWithIRCFormatter else {
 			return
 		}
 

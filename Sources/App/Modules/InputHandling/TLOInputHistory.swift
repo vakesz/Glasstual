@@ -155,7 +155,7 @@ public final class InputHistory: NSObject {
 	@MainActor
 	public func moveFocus(to treeItem: IRCTreeItem) {
 		guard TPCPreferences.inputHistoryIsChannelSpecific(),
-		      let textView = window?.inputTextField
+		      let textView = window?.inputTextField as? TextViewWithIRCFormatter
 		else {
 			return
 		}

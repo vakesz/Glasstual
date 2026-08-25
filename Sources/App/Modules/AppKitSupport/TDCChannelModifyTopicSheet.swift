@@ -22,7 +22,7 @@ public final class ChannelModifyTopicSheet: SheetBase {
 	@objc public private(set) var channelId = ""
 
 	@IBOutlet private var headerTitleTextField: NSTextField!
-	@IBOutlet private var topicValueTextField: TVCTextViewWithIRCFormatter!
+	@IBOutlet private var topicValueTextField: TextViewWithIRCFormatter!
 
 	private var topicLengthAlertDisplayed = false
 

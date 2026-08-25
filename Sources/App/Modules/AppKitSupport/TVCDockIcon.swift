@@ -22,10 +22,15 @@ public final class DockIcon: NSObject {
 			return
 		}
 
+		guard let world = NSObject.masterController().world else {
+			// World is not yet initialized (e.g. called during early nib wake-up).
+			return
+		}
+
 		var highlightCount: UInt = 0
 		var messageCount: UInt = 0
 
-		for client in NSObject.masterController().world.clientList as? [IRCClient] ?? [] {
+		for client in world.clientList as? [IRCClient] ?? [] {
 			for channel in client.channelList as? [IRCChannel] ?? [] {
 				if channel.config.pushNotifications {
 					messageCount += UInt(channel.dockUnreadCount)

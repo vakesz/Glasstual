@@ -70,11 +70,11 @@ public final class NicknameCompletionStatus: NSObject {
 	}
 
 	private func performCompletion(movingForward: Bool) {
-		guard let textView = window?.inputTextField else {
+		guard let textView = window?.inputTextField as? TextViewWithIRCFormatter else {
 			return
 		}
 
-		textView.focus()
+		textView.window?.makeFirstResponder(textView)
 
 		let selectedRange = textView.selectedRange()
 
@@ -270,7 +270,7 @@ public final class NicknameCompletionStatus: NSObject {
 	}
 
 	private func performCompletionStepTwo() {
-		guard let completedValue, let textView = window?.inputTextField else {
+		guard let completedValue, let textView = window?.inputTextField as? TextViewWithIRCFormatter else {
 			return
 		}
 
@@ -326,7 +326,7 @@ public final class NicknameCompletionStatus: NSObject {
 
 	private func performCompletionStepFour() {
 		guard let completedValue,
-		      let textView = window?.inputTextField
+		      let textView = window?.inputTextField as? TextViewWithIRCFormatter
 		else {
 			return
 		}
