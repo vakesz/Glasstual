@@ -1,10 +1,11 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "GLTTestClient.h"
-// #import "IRCAddressBookUserTrackingPrivate.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "GLTTestClient.h"
+/// #import "IRCAddressBookUserTrackingPrivate.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \\ \/ / __| | | |/ _` | |
@@ -40,63 +41,62 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 class IRCAddressBookUserTrackingTests: XCTestCase {
-    @objc var client: UnsafeMutablePointer<GLTTestClient>
-    @objc var tracker: UnsafeMutablePointer<IRCAddressBookUserTrackingContainer>
+	private var tracker: IRCAddressBookUserTrackingContainer!
 
-    @objc
-    override func setUp() {
-        super.setUp()
-        self.client = GLTTestClient.testClient()
-        self.tracker = IRCAddressBookUserTrackingContainer(client: self.client)
-    }
-    @objc
-    func testTrackingIsCaseInsensitiveAndPreservesOriginalNickname() {
-        self.tracker.addTrackedUser("Alice")
-        self.tracker.addTrackedUser("ALICE")
+	override func setUp() {
+		super.setUp()
+		tracker = IRCAddressBookUserTrackingContainer(client: GLTTestClient())
+	}
 
-        XCTAssertEqual(self.tracker.trackedUsers.count, 1)
+	func testTrackingIsCaseInsensitiveAndPreservesOriginalNickname() {
+		tracker.addTrackedUser("Alice")
+		tracker.addTrackedUser("ALICE")
 
-        XCTAssertNotNil(self.tracker.trackedUsers["Alice"])
+		XCTAssertEqual(tracker.trackedUsers.count, 1)
+		XCTAssertNotNil(tracker.trackedUsers["Alice"])
+		XCTAssertEqual(tracker.status(ofUser: "alice"), .notAvailable)
 
-        XCTAssertEqual(self.tracker.statusOfUser("alice"), IRCAddressBookUserTrackingStatusNotAvailable)
+		tracker.status(ofTrackedNickname: "aLiCe", changedTo: .available)
 
-        self.tracker.statusOfTrackedNickname("aLiCe", changedTo: IRCAddressBookUserTrackingStatusAvailable)
+		XCTAssertEqual(tracker.status(ofUser: "ALICE"), .available)
+		XCTAssertEqual(tracker.trackedUsers["Alice"], true)
+	}
 
-        XCTAssertEqual(self.tracker.statusOfUser("ALICE"), IRCAddressBookUserTrackingStatusAvailable)
+	func testSignedOnAddsUnknownUserButSignedOffDoesNot() {
+		tracker.status(ofTrackedNickname: "new-user", changedTo: .signedOn)
+		tracker.status(ofTrackedNickname: "absent", changedTo: .signedOff)
 
-        XCTAssertEqualObjects(self.tracker.trackedUsers["Alice"], true)
-    }
-    @objc
-    func testSignedOnAddsUnknownUserButSignedOffDoesNot() {
-        self.tracker.statusOfTrackedNickname("new-user", changedTo: IRCAddressBookUserTrackingStatusSignedOn)
-        self.tracker.statusOfTrackedNickname("absent", changedTo: IRCAddressBookUserTrackingStatusSignedOff)
+		XCTAssertEqual(tracker.status(ofUser: "NEW-USER"), .available)
+		XCTAssertEqual(tracker.status(ofUser: "absent"), .unknown)
+	}
 
-        XCTAssertEqual(self.tracker.statusOfUser("NEW-USER"), IRCAddressBookUserTrackingStatusAvailable)
-        XCTAssertEqual(self.tracker.statusOfUser("absent"), IRCAddressBookUserTrackingStatusUnknown)
-    }
-    @objc
-    func testRemovalUsesCanonicalNicknameInNotification() {
-        self.tracker.addTrackedUser("Alice")
+	func testRemovalUsesCanonicalNicknameInNotification() {
+		tracker.addTrackedUser("Alice")
+		let expectation = expectation(
+			forNotification: .IRCAddressBookUserTrackingRemovedTrackedUser,
+			object: tracker
+		) { notification in
+			notification.userInfo?["nickname"] as? String == "Alice"
+		}
 
-        let expectation: UnsafeMutablePointer<XCTestExpectation>! = self.expectationForNotification(IRCAddressBookUserTrackingRemovedTrackedUserNotification, object: self.tracker) { (notification: Notification) -> Bool in
-            return notification.userInfo["nickname"] == "Alice"
-        }
+		tracker.removeTrackedUser("ALICE")
 
-        self.tracker.removeTrackedUser("ALICE")
-        self.waitForExpectations([expectation], timeout: 1.0)
-        XCTAssertEqual(self.tracker.trackedUsers.count, 0)
-    }
-    @objc
-    func testClearPostsNotificationAndRemovesAllUsers() {
-        self.tracker.addTrackedUser("Alice")
-        self.tracker.addTrackedUser("Bob")
+		wait(for: [expectation], timeout: 1)
+		XCTAssertTrue(tracker.trackedUsers.isEmpty)
+	}
 
-        let expectation: UnsafeMutablePointer<XCTestExpectation>! = self.expectationForNotification(IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification, object: self.tracker, handler: nil)
+	func testClearPostsNotificationAndRemovesAllUsers() {
+		tracker.addTrackedUser("Alice")
+		tracker.addTrackedUser("Bob")
+		let expectation = expectation(
+			forNotification: .IRCAddressBookUserTrackingRemovedAllTrackedUsers,
+			object: tracker
+		)
 
-        self.tracker.clearTrackedUsers()
-        self.waitForExpectations([expectation], timeout: 1.0)
-        XCTAssertEqual(self.tracker.trackedUsers.count, 0)
-    }
+		tracker.clearTrackedUsers()
+
+		wait(for: [expectation], timeout: 1)
+		XCTAssertTrue(tracker.trackedUsers.isEmpty)
+	}
 }

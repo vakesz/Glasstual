@@ -1,52 +1,61 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "TDCPreferencesNotificationConfigurationPrivate.h"
-// #import "TLONotificationConfigurationPrivate.h"
-// #import "TPCPreferencesLocal.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "TDCPreferencesNotificationConfigurationPrivate.h"
+/// #import "TLONotificationConfigurationPrivate.h"
+/// #import "TPCPreferencesLocal.h"
+/** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 @objc
 class TLONotificationConfigurationTests: XCTestCase {
-    @objc
-    func testBaseConfigurationPreservesEventAndDisplayName() {
-        let configuration: UnsafeMutablePointer<TLONotificationConfiguration>! = TLONotificationConfiguration.configurationWithEventType(TXNotificationTypeHighlight)
+	@objc
+	func testBaseConfigurationPreservesEventAndDisplayName() {
+		let configuration = NotificationConfiguration.configuration(withEventType: .highlight)
 
-        XCTAssertEqual(configuration.eventType, TXNotificationTypeHighlight)
-        XCTAssertGreaterThan(configuration.displayName.length, 0)
-    }
-    @objc
-    func testLocalizedSoundTitlesAndConstantsRemainAvailable() {
-        XCTAssertGreaterThan(TLONotificationConfiguration.localizedAlertDefaultSoundTitle.length, 0)
-        XCTAssertGreaterThan(TLONotificationConfiguration.localizedAlertNoSoundTitle.length, 0)
+		XCTAssertEqual(configuration.eventType, .highlight)
+		XCTAssertFalse(configuration.displayName.isEmpty)
+	}
 
-        XCTAssertEqualObjects(TXDefaultAlertSoundPreferenceValue, "Default")
-        XCTAssertEqualObjects(TXNoAlertSoundPreferenceValue, "None")
-    }
-    @objc
-    func testPreferencesConfigurationReadsExistingGlobalValues() {
-        let eventType: TXNotificationType = TXNotificationTypeHighlight
-        let configuration: UnsafeMutablePointer<TDCPreferencesNotificationConfiguration>! = TDCPreferencesNotificationConfiguration.objectWithEventType(eventType)
-        let expectedSound: String! = TPCPreferences.soundForEvent(eventType) ?? TXNoAlertSoundPreferenceValue
+	@objc
+	func testLocalizedSoundTitlesAndConstantsRemainAvailable() {
+		XCTAssertFalse(NotificationConfiguration.localizedAlertDefaultSoundTitle().isEmpty)
+		XCTAssertFalse(NotificationConfiguration.localizedAlertNoSoundTitle().isEmpty)
 
-        XCTAssertEqual(configuration.eventType, eventType)
+		XCTAssertEqual(TLONotificationAlertSound.TXDefaultAlertSoundPreferenceValue.rawValue, "Default")
+		XCTAssertEqual(TLONotificationAlertSound.TXNoAlertSoundPreferenceValue.rawValue, "None")
+	}
 
-        XCTAssertEqualObjects(configuration.alertSound, expectedSound)
+	@objc
+	func testPreferencesConfigurationReadsExistingGlobalValues() {
+		let eventType = TXNotificationType.highlight
+		let configuration = PreferencesNotificationConfiguration.object(withEventType: eventType)
+		let expectedSound = TPCPreferences.sound(forEvent: eventType)
+			?? TLONotificationAlertSound.TXNoAlertSoundPreferenceValue.rawValue
 
-        XCTAssertEqual(configuration.pushNotification, TPCPreferences.notificationEnabledForEvent(eventType))
-        XCTAssertEqual(configuration.speakEvent, TPCPreferences.speakEvent(eventType))
-        XCTAssertEqual(configuration.disabledWhileAway, TPCPreferences.disabledWhileAwayForEvent(eventType))
-        XCTAssertEqual(configuration.bounceDockIcon, TPCPreferences.bounceDockIconForEvent(eventType))
-        XCTAssertEqual(configuration.bounceDockIconRepeatedly, TPCPreferences.bounceDockIconRepeatedlyForEvent(eventType))
-    }
-    @objc
-    func testBaseFactoryRemainsPolymorphicForSubclasses() {
-        let configuration: UnsafeMutablePointer<TLONotificationConfiguration>! = TDCPreferencesNotificationConfiguration.configurationWithEventType(TXNotificationTypeInvite)
+		XCTAssertEqual(configuration.eventType, eventType)
 
-        XCTAssertTrue(configuration.isKindOfClass(TDCPreferencesNotificationConfiguration.class))
-        XCTAssertEqual(configuration.eventType, TXNotificationTypeInvite)
-    }
+		XCTAssertEqual(configuration.alertSound, expectedSound)
+
+		XCTAssertEqual(configuration.pushNotification != 0, TPCPreferences.notificationEnabled(forEvent: eventType))
+		XCTAssertEqual(configuration.speakEvent != 0, TPCPreferences.speakEvent(eventType))
+		XCTAssertEqual(configuration.disabledWhileAway != 0, TPCPreferences.disabledWhileAway(forEvent: eventType))
+		XCTAssertEqual(configuration.bounceDockIcon != 0, TPCPreferences.bounceDockIcon(forEvent: eventType))
+		XCTAssertEqual(
+			configuration.bounceDockIconRepeatedly != 0,
+			TPCPreferences.bounceDockIconRepeatedly(forEvent: eventType)
+		)
+	}
+
+	@objc
+	func testBaseFactoryRemainsPolymorphicForSubclasses() {
+		let configuration: NotificationConfiguration = PreferencesNotificationConfiguration
+			.configuration(withEventType: .invite)
+
+		XCTAssertTrue(configuration is PreferencesNotificationConfiguration)
+		XCTAssertEqual(configuration.eventType, .invite)
+	}
 }

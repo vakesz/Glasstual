@@ -1,11 +1,12 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "GLTTestClient.h"
-// #import "IRCAddressBook.h"
-// #import "IRCAddressBookMatchCachePrivate.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "GLTTestClient.h"
+/// #import "IRCAddressBook.h"
+/// #import "IRCAddressBookMatchCachePrivate.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -41,53 +42,62 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 class IRCAddressBookMatchCacheTests: XCTestCase {
-    @objc var client: UnsafeMutablePointer<GLTTestClient>
+	private var client: GLTTestClient!
 
-    @objc
-    func cacheWithIgnoreList(_ ignoreList: [[String: AnyObject]]) -> UnsafeMutablePointer<IRCAddressBookMatchCache> {
-        self.client = GLTTestClient.testClientWithConfigDictionary(["ignoreList": ignoreList])
+	private func cache(ignoreList: [[String: AnyObject]]) -> IRCAddressBookMatchCache {
+		client = GLTTestClient(configDictionary: ["ignoreList": ignoreList])
+		return IRCAddressBookMatchCache(client: client)
+	}
 
-        return IRCAddressBookMatchCache(client: self.client)
-    }
-    @objc
-    func testSingleMatchingEntryIsReturned() {
-        let cache = self.cacheWithIgnoreList([["entryType": IRCAddressBookEntryTypeIgnore, "hostmask": "nick!*@example.com", "ignorePrivateMessages": true]])
-        let match: UnsafeMutablePointer<IRCAddressBookEntry>! = cache.findAddressBookEntryForHostmask("Nick!user@example.com")
+	func testSingleMatchingEntryIsReturned() throws {
+		let cache = cache(ignoreList: [[
+			"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
+			"hostmask": "nick!*@example.com" as NSString,
+			"ignorePrivateMessages": true as NSNumber,
+		]])
+		let match = try XCTUnwrap(cache.findAddressBookEntry(forHostmask: "Nick!user@example.com"))
 
-        XCTAssertNotNil(match)
+		XCTAssertEqual(match.entryType, .ignore)
+		XCTAssertTrue(match.ignorePrivateMessages)
+		XCTAssertEqual(cache.findIgnores(forHostmask: "Nick!user@example.com").count, 1)
+	}
 
-        XCTAssertEqual(match.entryType, IRCAddressBookEntryTypeIgnore)
+	func testMultipleMatchesAreMerged() throws {
+		let cache = cache(ignoreList: [
+			[
+				"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
+				"hostmask": "*!user@example.com" as NSString,
+				"ignorePrivateMessages": true as NSNumber,
+			],
+			[
+				"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
+				"hostmask": "nick!*@example.com" as NSString,
+				"ignorePublicMessages": true as NSNumber,
+			],
+		])
+		let hostmask = "nick!user@example.com"
+		let match = try XCTUnwrap(cache.findAddressBookEntry(forHostmask: hostmask))
 
-        XCTAssertTrue(match.ignorePrivateMessages)
+		XCTAssertEqual(match.entryType, .mixed)
+		XCTAssertEqual(match.parentEntries?.count, 2)
+		XCTAssertTrue(match.ignorePrivateMessages)
+		XCTAssertTrue(match.ignorePublicMessages)
+		XCTAssertEqual(cache.findIgnores(forHostmask: hostmask).count, 2)
+		XCTAssertTrue(match === cache.findAddressBookEntry(forHostmask: hostmask))
+	}
 
-        XCTAssertEqual(cache.findIgnoresForHostmask("Nick!user@example.com").count, 1)
-    }
-    @objc
-    func testMultipleMatchesAreMerged() {
-        let cache = self.cacheWithIgnoreList([["entryType": IRCAddressBookEntryTypeIgnore, "hostmask": "*!user@example.com", "ignorePrivateMessages": true], ["entryType": IRCAddressBookEntryTypeIgnore, "hostmask": "nick!*@example.com", "ignorePublicMessages": true]])
-        let match: UnsafeMutablePointer<IRCAddressBookEntry>! = cache.findAddressBookEntryForHostmask("nick!user@example.com")
+	func testAbsentMatchReturnsNilAndNoIgnores() {
+		let cache = cache(ignoreList: [[
+			"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
+			"hostmask": "nick!*@example.com" as NSString,
+		]])
+		let hostmask = "someone!user@elsewhere.test"
 
-        XCTAssertEqual(match.entryType, IRCAddressBookEntryTypeMixed)
-        XCTAssertEqual(match.parentEntries.count, 2)
+		XCTAssertNil(cache.findAddressBookEntry(forHostmask: hostmask))
+		XCTAssertTrue(cache.findIgnores(forHostmask: hostmask).isEmpty)
 
-        XCTAssertTrue(match.ignorePrivateMessages)
-        XCTAssertTrue(match.ignorePublicMessages)
-
-        XCTAssertEqual(cache.findIgnoresForHostmask("nick!user@example.com").count, 2)
-
-        XCTAssertTrue(match == cache.findAddressBookEntryForHostmask("nick!user@example.com"))
-    }
-    @objc
-    func testAbsentMatchReturnsNilAndNoIgnores() {
-        let cache = self.cacheWithIgnoreList([["entryType": IRCAddressBookEntryTypeIgnore, "hostmask": "nick!*@example.com"]])
-
-        XCTAssertNil(cache.findAddressBookEntryForHostmask("someone!user@elsewhere.test"))
-
-        XCTAssertEqual(cache.findIgnoresForHostmask("someone!user@elsewhere.test").count, 0)
-
-        cache.clearCachedMatchesForHostmask("someone!user@elsewhere.test")
-        cache.clearCachedMatches()
-    }
+		cache.clearCachedMatches(forHostmask: hostmask)
+		cache.clearCachedMatches()
+	}
 }

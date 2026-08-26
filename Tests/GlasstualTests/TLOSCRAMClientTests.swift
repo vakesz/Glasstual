@@ -1,9 +1,10 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "TLOSCRAMClient.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "TLOSCRAMClient.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -39,101 +40,89 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 class TLOSCRAMClientTests: XCTestCase {
-    /* RFC 7677 section 3 worked example: user "user", password "pencil",
- client nonce "rOprNGfwEbeRWgbNEkqO". */
-    @objc
-    func exampleClient() -> UnsafeMutablePointer<TLOSCRAMClient> {
-        return TLOSCRAMClient(username: "user", password: "pencil", clientNonce: "rOprNGfwEbeRWgbNEkqO")
-    }
-    @objc
-    func testClientFirstMessage() {
-        let client = self.exampleClient()
+	private let serverFirst =
+		"r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096"
 
-        XCTAssertEqualObjects(client.clientFirstMessage, "n,,n=user,r=rOprNGfwEbeRWgbNEkqO")
-        XCTAssertEqual(client.state, TLOSCRAMClientStateSentClientFirst)
-    }
-    @objc
-    func testClientFinalMessageMatchesRFC7677Vector() {
-        let client = self.exampleClient()
+	private func exampleClient() -> SCRAMClient {
+		SCRAMClient(username: "user", password: "pencil", clientNonce: "rOprNGfwEbeRWgbNEkqO")
+	}
 
-        client.clientFirstMessage as? Void
+	func testClientFirstMessage() {
+		let client = exampleClient()
 
-        let serverFirst = "r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096"
-        var error: Error! = nil
-        let clientFinal: String! = client.clientFinalMessageForServerFirstMessage(serverFirst, error: &error)
+		XCTAssertEqual(client.clientFirstMessage, "n,,n=user,r=rOprNGfwEbeRWgbNEkqO")
+		XCTAssertEqual(client.state, .sentClientFirst)
+	}
 
-        XCTAssertNil(error)
-        XCTAssertEqualObjects(clientFinal, "c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,p=dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ=")
-    }
-    @objc
-    func testVerifyServerFinalMessageSucceedsForCorrectSignature() {
-        let client = self.exampleClient()
+	func testClientFinalMessageMatchesRFC7677Vector() throws {
+		let client = exampleClient()
+		_ = client.clientFirstMessage
 
-        client.clientFirstMessage as? Void
+		let clientFinal = try client.clientFinalMessage(forServerFirstMessage: serverFirst)
 
-        var error: Error! = nil
+		XCTAssertEqual(
+			clientFinal,
+			"c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,p=dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ="
+		)
+	}
 
-        client.clientFinalMessageForServerFirstMessage("r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096", error: &error)
+	func testVerifyServerFinalMessageSucceedsForCorrectSignature() throws {
+		let client = exampleClient()
+		_ = client.clientFirstMessage
+		_ = try client.clientFinalMessage(forServerFirstMessage: serverFirst)
 
-        let verified: Bool = client.verifyServerFinalMessage("v=6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=", error: &error)
+		try client.verifyServerFinalMessage("v=6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=")
 
-        XCTAssertTrue(verified)
-        XCTAssertNil(error)
-        XCTAssertEqual(client.state, TLOSCRAMClientStateAuthenticated)
-    }
-    @objc
-    func testVerifyServerFinalMessageRejectsWrongSignature() {
-        let client = self.exampleClient()
+		XCTAssertEqual(client.state, .authenticated)
+	}
 
-        client.clientFirstMessage as? Void
+	func testVerifyServerFinalMessageRejectsWrongSignature() throws {
+		let client = exampleClient()
+		_ = client.clientFirstMessage
+		_ = try client.clientFinalMessage(forServerFirstMessage: serverFirst)
 
-        var error: Error! = nil
+		XCTAssertThrowsError(
+			try client.verifyServerFinalMessage("v=7rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=")
+		) { error in
+			XCTAssertEqual((error as NSError).code, SCRAMClientErrorCode.serverSignatureMismatch.rawValue)
+		}
+		XCTAssertEqual(client.state, .failed)
+	}
 
-        client.clientFinalMessageForServerFirstMessage("r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096", error: &error)
+	func testServerNonceMustBeginWithClientNonce() {
+		assertFailure(
+			for: "r=differentNonce,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096",
+			code: .nonceMismatch
+		)
+	}
 
-        /* A single flipped character must be rejected. */
-        let verified: Bool = client.verifyServerFinalMessage("v=7rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=", error: &error)
+	func testIterationCountBelowMinimumIsRejected() {
+		assertFailure(
+			for: "r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=1024",
+			code: .iterationCountTooLow
+		)
+	}
 
-        XCTAssertFalse(verified)
-        XCTAssertEqual(error?.code, TLOSCRAMClientErrorCodeServerSignatureMismatch)
-        XCTAssertEqual(client.state, TLOSCRAMClientStateFailed)
-    }
-    @objc
-    func testServerNonceMustBeginWithClientNonce() {
-        let client = self.exampleClient()
+	func testMalformedServerFirstMessageIsRejected() {
+		assertFailure(for: "nonsense", code: .malformedServerMessage)
+	}
 
-        client.clientFirstMessage as? Void
+	private func assertFailure(
+		for serverMessage: String,
+		code: SCRAMClientErrorCode,
+		file: StaticString = #filePath,
+		line: UInt = #line
+	) {
+		let client = exampleClient()
+		_ = client.clientFirstMessage
 
-        var error: Error! = nil
-        let clientFinal: String! = client.clientFinalMessageForServerFirstMessage("r=differentNonce,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096", error: &error)
-
-        XCTAssertNil(clientFinal)
-        XCTAssertEqual(error?.code, TLOSCRAMClientErrorCodeNonceMismatch)
-    }
-    @objc
-    func testIterationCountBelowMinimumIsRejected() {
-        let client = self.exampleClient()
-
-        client.clientFirstMessage as? Void
-
-        var error: Error! = nil
-        let clientFinal: String! = client.clientFinalMessageForServerFirstMessage("r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=1024", error: &error)
-
-        XCTAssertNil(clientFinal)
-        XCTAssertEqual(error?.code, TLOSCRAMClientErrorCodeIterationCountTooLow)
-    }
-    @objc
-    func testMalformedServerFirstMessageIsRejected() {
-        let client = self.exampleClient()
-
-        client.clientFirstMessage as? Void
-
-        var error: Error! = nil
-        let clientFinal: String! = client.clientFinalMessageForServerFirstMessage("nonsense", error: &error)
-
-        XCTAssertNil(clientFinal)
-        XCTAssertEqual(error?.code, TLOSCRAMClientErrorCodeMalformedServerMessage)
-    }
+		XCTAssertThrowsError(
+			try client.clientFinalMessage(forServerFirstMessage: serverMessage),
+			file: file,
+			line: line
+		) { error in
+			XCTAssertEqual((error as NSError).code, code.rawValue, file: file, line: line)
+		}
+	}
 }

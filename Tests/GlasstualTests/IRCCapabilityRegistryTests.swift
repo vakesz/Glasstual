@@ -1,9 +1,10 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "IRCCapability.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "Capability.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -41,120 +42,180 @@ import XCTest
  *
  *********************************************************************** */
 @objc
-class IRCCapabilityRegistryTests: XCTestCase {
-    @objc
-    func registryWithGateAllowed(_ gateAllowed: Bool) -> UnsafeMutablePointer<IRCCapabilityRegistry> {
-        let tags: UnsafeMutablePointer<IRCCapability>! = IRCCapability.capabilityNamed("message-tags", identifier: ClientIRCv3SupportedCapabilityMessageTags)
-        let gated: UnsafeMutablePointer<IRCCapability>! = IRCCapability(name: "echo-message", identifier: ClientIRCv3SupportedCapabilityEchoMessage, requestedByDefault: true, preferenceGate: { () -> Bool in
-            return gateAllowed
-        }, dependencies: nil, negotiationHook: nil)
-        let dependent: UnsafeMutablePointer<IRCCapability>! = IRCCapability(name: "draft/typing", identifier: 0, requestedByDefault: true, preferenceGate: nil, dependencies: ["message-tags"], negotiationHook: nil)
-        let optional: UnsafeMutablePointer<IRCCapability>! = IRCCapability.capabilityNamed("draft/opt-in", identifier: 0, requestedByDefault: false)
+class CapabilityRegistryTests: XCTestCase {
+	@objc
+	func registryWithGateAllowed(_ gateAllowed: Bool) -> CapabilityRegistry {
+		let tags: Capability! = Capability.capability(
+			named: "message-tags",
+			identifier: ClientIRCv3SupportedCapability.messageTags
+		)
+		let gated: Capability! = Capability(
+			name: "echo-message",
+			identifier: ClientIRCv3SupportedCapability.echoMessage,
+			requestedByDefault: true,
+			preferenceGate: { () -> Bool in
+				return gateAllowed
+			},
+			dependencies: nil,
+			negotiationHook: nil
+		)
+		let dependent = Capability(
+			name: "draft/typing",
+			identifier: [],
+			requestedByDefault: true,
+			preferenceGate: nil,
+			dependencies: ["message-tags"],
+			negotiationHook: nil
+		)
+		let optional = Capability.capability(named: "draft/opt-in", identifier: [], requestedByDefault: false)
 
-        return IRCCapabilityRegistry(capabilities: [tags, gated, dependent, optional])
-    }
-    @objc
-    func testParseCapabilityList() {
-        let offered: NSDictionary! = IRCCapabilityRegistry.parseCapabilityList("multi-prefix SASL=PLAIN,EXTERNAL  cap-notify x=")
+		return CapabilityRegistry(capabilities: [tags, gated, dependent, optional])
+	}
 
-        XCTAssertEqualObjects(offered["multi-prefix"], [])
-        XCTAssertEqualObjects(offered["sasl"], ["PLAIN", "EXTERNAL"])
-        XCTAssertEqualObjects(offered["cap-notify"], [])
-        XCTAssertEqualObjects(offered["x"], [])
+	@objc
+	func testParseCapabilityList() {
+		let offered = CapabilityRegistry.parseCapabilityList("multi-prefix SASL=PLAIN,EXTERNAL  cap-notify x=")
 
-        XCTAssertEqual(offered.count, 4)
+		XCTAssertEqual(offered["multi-prefix"], [])
+		XCTAssertEqual(offered["sasl"], ["PLAIN", "EXTERNAL"])
+		XCTAssertEqual(offered["cap-notify"], [])
+		XCTAssertEqual(offered["x"], [])
 
-        let empty = [:]
+		XCTAssertEqual(offered.count, 4)
 
-        XCTAssertEqualObjects(IRCCapabilityRegistry.parseCapabilityList(""), empty)
-    }
-    @objc
-    func testParseCapabilityListUsesLastDuplicateAndIgnoresEmptyNamesAndValues() {
-        let offered: NSDictionary! = IRCCapabilityRegistry.parseCapabilityList("SASL=PLAIN sasl=EXTERNAL,,SCRAM-SHA-256 =bad")
+		let empty: [String: [String]] = [:]
 
-        XCTAssertEqualObjects(offered["sasl"], ["EXTERNAL", "SCRAM-SHA-256"])
-        XCTAssertEqual(offered.count, 1)
-    }
-    @objc
-    func testLookupIsCaseInsensitive() {
-        let registry = self.registryWithGateAllowed(true)
+		XCTAssertEqual(CapabilityRegistry.parseCapabilityList(""), empty)
+	}
 
-        XCTAssertEqualObjects(registry.capabilityNamed("Message-Tags").name, "message-tags")
+	@objc
+	func testParseCapabilityListUsesLastDuplicateAndIgnoresEmptyNamesAndValues() {
+		let offered = CapabilityRegistry.parseCapabilityList("SASL=PLAIN sasl=EXTERNAL,,SCRAM-SHA-256 =bad")
 
-        XCTAssertNil(registry.capabilityNamed("unknown"))
+		XCTAssertEqual(offered["sasl"], ["EXTERNAL", "SCRAM-SHA-256"])
+		XCTAssertEqual(offered.count, 1)
+	}
 
-        XCTAssertEqualObjects(registry.capabilityForIdentifier(ClientIRCv3SupportedCapabilityEchoMessage).name, "echo-message")
+	@objc
+	func testLookupIsCaseInsensitive() {
+		let registry = registryWithGateAllowed(true)
 
-        XCTAssertNil(registry.capabilityForIdentifier(ClientIRCv3SupportedCapabilityBatch))
-    }
-    @objc
-    func testRequestListRespectsPreferenceGate() {
-        let offered: NSDictionary = ["message-tags": [], "echo-message": []]
-        let allowed: [IRCCapability]! = self.registryWithGateAllowed(true).capabilitiesToRequestFromOffered(offered)
+		XCTAssertEqual(registry.capability(named: "Message-Tags")?.name, "message-tags")
 
-        XCTAssertEqualObjects(allowed.valueForKey("name"), ["message-tags", "echo-message"])
+		XCTAssertNil(registry.capability(named: "unknown"))
 
-        let denied: [IRCCapability]! = self.registryWithGateAllowed(false).capabilitiesToRequestFromOffered(offered)
+		XCTAssertEqual(registry.capability(for: .echoMessage)?.name, "echo-message")
 
-        XCTAssertEqualObjects(denied.valueForKey("name"), ["message-tags"])
-        XCTAssertTrue(self.registryWithGateAllowed(true).isCapabilitySupported("echo-message"))
-        XCTAssertFalse(self.registryWithGateAllowed(false).isCapabilitySupported("echo-message"))
-    }
-    @objc
-    func testRequestListRespectsDependencies() {
-        let registry = self.registryWithGateAllowed(true)
-        let withoutTags: [IRCCapability]! = registry.capabilitiesToRequestFromOffered(["draft/typing": []])
+		XCTAssertNil(registry.capability(for: ClientIRCv3SupportedCapability.batch))
+	}
 
-        XCTAssertEqual(withoutTags.count, 0)
+	@objc
+	func testRequestListRespectsPreferenceGate() {
+		let offered: [String: [String]] = ["message-tags": [], "echo-message": []]
+		let allowed = registryWithGateAllowed(true).capabilitiesToRequest(fromOffered: offered)
 
-        let withTags: [IRCCapability]! = registry.capabilitiesToRequestFromOffered(["draft/typing": [], "message-tags": []])
+		XCTAssertEqual(allowed.map(\.name), ["message-tags", "echo-message"])
 
-        XCTAssertEqualObjects(withTags.valueForKey("name"), ["message-tags", "draft/typing"])
-    }
-    @objc
-    func testCapabilitiesNotRequestedByDefaultAreSkipped() {
-        let registry = self.registryWithGateAllowed(true)
-        let request: [IRCCapability]! = registry.capabilitiesToRequestFromOffered(["draft/opt-in": []])
+		let denied = registryWithGateAllowed(false).capabilitiesToRequest(fromOffered: offered)
 
-        XCTAssertEqual(request.count, 0)
-    }
-    @objc
-    func testUnknownCapabilitiesAreNeverRequested() {
-        let registry = self.registryWithGateAllowed(true)
-        let request: [IRCCapability]! = registry.capabilitiesToRequestFromOffered(["example.com/vendor": []])
+		XCTAssertEqual(denied.map(\.name), ["message-tags"])
+		XCTAssertTrue(registryWithGateAllowed(true).isCapabilitySupported("echo-message"))
+		XCTAssertFalse(registryWithGateAllowed(false).isCapabilitySupported("echo-message"))
+	}
 
-        XCTAssertEqual(request.count, 0)
-    }
-    @objc
-    func testCyclicDependenciesAreNeverRequested() {
-        let first: UnsafeMutablePointer<IRCCapability>! = IRCCapability(name: "first", identifier: 0, requestedByDefault: true, preferenceGate: nil, dependencies: ["second"], negotiationHook: nil)
-        let second: UnsafeMutablePointer<IRCCapability>! = IRCCapability(name: "second", identifier: 0, requestedByDefault: true, preferenceGate: nil, dependencies: ["first"], negotiationHook: nil)
-        let registry: UnsafeMutablePointer<IRCCapabilityRegistry>! = IRCCapabilityRegistry(capabilities: [first, second])
-        let offered: NSDictionary = ["first": [], "second": []]
+	@objc
+	func testRequestListRespectsDependencies() {
+		let registry = registryWithGateAllowed(true)
+		let withoutTags: [Capability]! = registry.capabilitiesToRequest(fromOffered: ["draft/typing": []])
 
-        XCTAssertEqual(registry.capabilitiesToRequestFromOffered(offered).count, 0)
-    }
-    @objc
-    func testDefaultRegistryContents() {
-        let registry: UnsafeMutablePointer<IRCCapabilityRegistry>! = IRCCapabilityRegistry.defaultRegistry()
+		XCTAssertEqual(withoutTags.count, 0)
 
-        for name in ["away-notify", "batch", "cap-notify", "chghost", "echo-message", "message-tags", "multi-prefix", "sasl", "server-time", "standard-replies", "userhost-in-names", "znc.in/playback", "znc.in/self-message", "znc.in/server-time", "znc.in/server-time-iso", "znc.in/tlsinfo"] {
-            XCTAssertNotNil(registry.capabilityNamed(name), "%@ is missing from the default registry", name)
-        }
+		let withTags: [Capability]! = registry.capabilitiesToRequest(fromOffered: [
+			"draft/typing": [],
+			"message-tags": [],
+		])
 
-        XCTAssertNil(registry.capabilityNamed("identify-msg"))
-        XCTAssertNil(registry.capabilityNamed("identify-ctcp"))
-        XCTAssertNil(registry.capabilityNamed("plan.io/playback"))
+		XCTAssertEqual(withTags.map(\.name), ["message-tags", "draft/typing"])
+	}
 
-        XCTAssertNotNil(registry.capabilityNamed("sasl").negotiationHook)
+	@objc
+	func testCapabilitiesNotRequestedByDefaultAreSkipped() {
+		let registry = registryWithGateAllowed(true)
+		let request: [Capability]! = registry.capabilitiesToRequest(fromOffered: ["draft/opt-in": []])
 
-        /* Vendor variants switch on the generic bit too. */
-        let zncServerTime: ClientIRCv3SupportedCapability = registry.capabilityNamed("znc.in/server-time-iso").identifier
+		XCTAssertEqual(request.count, 0)
+	}
 
-        XCTAssertEqual(zncServerTime & ClientIRCv3SupportedCapabilityServerTime, ClientIRCv3SupportedCapabilityServerTime)
+	@objc
+	func testUnknownCapabilitiesAreNeverRequested() {
+		let registry = registryWithGateAllowed(true)
+		let request: [Capability]! = registry.capabilitiesToRequest(fromOffered: ["example.com/vendor": []])
 
-        let zncPlayback: ClientIRCv3SupportedCapability = registry.capabilityNamed("znc.in/playback").identifier
+		XCTAssertEqual(request.count, 0)
+	}
 
-        XCTAssertEqual(zncPlayback & ClientIRCv3SupportedCapabilityPlayback, ClientIRCv3SupportedCapabilityPlayback)
-    }
+	@objc
+	func testCyclicDependenciesAreNeverRequested() {
+		let first = Capability(
+			name: "first",
+			identifier: [],
+			requestedByDefault: true,
+			preferenceGate: nil,
+			dependencies: ["second"],
+			negotiationHook: nil
+		)
+		let second = Capability(
+			name: "second",
+			identifier: [],
+			requestedByDefault: true,
+			preferenceGate: nil,
+			dependencies: ["first"],
+			negotiationHook: nil
+		)
+		let registry: CapabilityRegistry! = CapabilityRegistry(capabilities: [first, second])
+		let offered: [String: [String]] = ["first": [], "second": []]
+
+		XCTAssertEqual(registry.capabilitiesToRequest(fromOffered: offered).count, 0)
+	}
+
+	@objc
+	func testDefaultRegistryContents() throws {
+		let registry: CapabilityRegistry! = CapabilityRegistry.defaultRegistry
+
+		for name in [
+			"away-notify",
+			"batch",
+			"cap-notify",
+			"chghost",
+			"echo-message",
+			"message-tags",
+			"multi-prefix",
+			"sasl",
+			"server-time",
+			"standard-replies",
+			"userhost-in-names",
+			"znc.in/playback",
+			"znc.in/self-message",
+			"znc.in/server-time",
+			"znc.in/server-time-iso",
+			"znc.in/tlsinfo",
+		] {
+			XCTAssertNotNil(registry.capability(named: name), "\(name) is missing from the default registry")
+		}
+
+		XCTAssertNil(registry.capability(named: "identify-msg"))
+		XCTAssertNil(registry.capability(named: "identify-ctcp"))
+		XCTAssertNil(registry.capability(named: "plan.io/playback"))
+
+		XCTAssertNotNil(registry.capability(named: "sasl")?.negotiationHook)
+
+		/* Vendor variants switch on the generic bit too. */
+		let zncServerTime = try XCTUnwrap(registry.capability(named: "znc.in/server-time-iso")?.identifier)
+
+		XCTAssertTrue(zncServerTime.contains(.serverTime))
+
+		let zncPlayback = try XCTUnwrap(registry.capability(named: "znc.in/playback")?.identifier)
+
+		XCTAssertTrue(zncPlayback.contains(.playback))
+	}
 }

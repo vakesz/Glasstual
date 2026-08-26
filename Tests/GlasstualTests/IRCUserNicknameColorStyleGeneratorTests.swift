@@ -1,30 +1,45 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "IRCUserNicknameColorStyleGeneratorPrivate.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "IRCUserNicknameColorStyleGeneratorPrivate.h"
+/** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 @objc
 class IRCUserNicknameColorStyleGeneratorTests: XCTestCase {
-    @objc
-    func testHashRemainsCompatibleWithLegacyMD5ByteOrder() {
-        let hash: NSNumber! = IRCUserNicknameColorStyleGenerator.hashForString("alice", colorStyle: TPCThemeSettingsNicknameColorStyleLight)
+	@objc
+	func testHashRemainsCompatibleWithLegacyMD5ByteOrder() {
+		let hash = IRCUserNicknameColorStyleGenerator.hash(for: "alice", colorStyle: .light)
 
-        XCTAssertEqual(hash.unsignedIntValue, 2746080018)
-    }
-    @objc
-    func testLightAndDarkStylesRemainStable() {
-        let hash: NSNumber = 2746080018
+		XCTAssertEqual(hash.uint32Value, 2_746_080_018)
+	}
 
-        XCTAssertEqualObjects(IRCUserNicknameColorStyleGenerator.nicknameColorStyleForHash(hash, colorStyle: TPCThemeSettingsNicknameColorStyleLight), "hsl(18,45%,54%)")
-        XCTAssertEqualObjects(IRCUserNicknameColorStyleGenerator.nicknameColorStyleForHash(hash, colorStyle: TPCThemeSettingsNicknameColorStyleDark), "hsl(18,45%,49%)")
-    }
-    @objc
-    func testHueSpecificAdjustmentsRemainStable() {
-        XCTAssertEqualObjects(IRCUserNicknameColorStyleGenerator.nicknameColorStyleForHash(1507889104, colorStyle: TPCThemeSettingsNicknameColorStyleDark), "hsl(304,47%,54%)")
-        XCTAssertEqualObjects(IRCUserNicknameColorStyleGenerator.nicknameColorStyleForHash(3807608927, colorStyle: TPCThemeSettingsNicknameColorStyleLight), "hsl(167,78%,34%)")
-    }
+	@objc
+	func testLightAndDarkStylesRemainStable() {
+		let hash: NSNumber = 2_746_080_018
+
+		XCTAssertEqual(
+			IRCUserNicknameColorStyleGenerator.nicknameColorStyle(forHash: hash, colorStyle: .light),
+			"hsl(18,45%,54%)"
+		)
+		XCTAssertEqual(
+			IRCUserNicknameColorStyleGenerator.nicknameColorStyle(forHash: hash, colorStyle: .dark),
+			"hsl(18,45%,49%)"
+		)
+	}
+
+	@objc
+	func testHueSpecificAdjustmentsRemainStable() {
+		XCTAssertEqual(
+			IRCUserNicknameColorStyleGenerator.nicknameColorStyle(forHash: 1_507_889_104, colorStyle: .dark),
+			"hsl(304,47%,54%)"
+		)
+		XCTAssertEqual(
+			IRCUserNicknameColorStyleGenerator.nicknameColorStyle(forHash: 3_807_608_927, colorStyle: .light),
+			"hsl(167,78%,34%)"
+		)
+	}
 }

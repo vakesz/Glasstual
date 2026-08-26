@@ -1,9 +1,10 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "TVCLogLine.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "TVCLogLine.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -40,42 +41,33 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 class TVCLogLineTests: XCTestCase {
-    @objc
-    func testMessageIdentifierSurvivesArchivingAndCopying() {
-        var line: UnsafeMutablePointer<TVCLogLineMutable>! = TVCLogLineMutable()
+	func testMessageIdentifierSurvivesArchivingAndCopying() throws {
+		let line = TVCLogLineMutable()
+		line.command = "privmsg"
+		line.lineType = .privateMessage
+		line.nickname = "alice"
+		line.messageBody = "hello"
+		line.messageIdentifier = "63E1033A0"
 
-        line.command = "privmsg"
-        line.lineType = TVCLogLineTypePrivateMessage
-        line.nickname = "alice"
-        line.messageBody = "hello"
-        line.messageIdentifier = "63E1033A0"
+		let copy = try XCTUnwrap(line.copy() as? TVCLogLine)
+		XCTAssertEqual(copy.messageIdentifier, "63E1033A0")
 
-        let copy: UnsafeMutablePointer<TVCLogLine>! = line.copy()
+		let data = try NSKeyedArchiver.archivedData(withRootObject: copy, requiringSecureCoding: true)
+		let decoded = try XCTUnwrap(TVCLogLine(data: data))
 
-        XCTAssertEqualObjects(copy.messageIdentifier, "63E1033A0")
+		XCTAssertEqual(decoded.messageIdentifier, "63E1033A0")
+		XCTAssertEqual(decoded.uniqueIdentifier, copy.uniqueIdentifier)
+		XCTAssertEqual(decoded.messageBody, "hello")
+	}
 
-        let data: NSData! = NSKeyedArchiver.archivedDataWithRootObject(copy, requiringSecureCoding: true, error: nil)
+	func testMessageIdentifierIsOptional() throws {
+		let line = TVCLogLineMutable()
+		line.messageBody = "hello"
 
-        XCTAssertNotNil(data)
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.copy(), requiringSecureCoding: true)
+		let decoded = try XCTUnwrap(TVCLogLine(data: data))
 
-        let decoded: UnsafeMutablePointer<TVCLogLine>! = TVCLogLine.logLineWithData(data)
-
-        XCTAssertEqualObjects(decoded.messageIdentifier, "63E1033A0")
-        XCTAssertEqualObjects(decoded.uniqueIdentifier, copy.uniqueIdentifier)
-        XCTAssertEqualObjects(decoded.messageBody, "hello")
-    }
-    @objc
-    func testMessageIdentifierIsOptional() {
-        var line: UnsafeMutablePointer<TVCLogLineMutable>! = TVCLogLineMutable()
-
-        line.messageBody = "hello"
-
-        let data: NSData! = NSKeyedArchiver.archivedDataWithRootObject(line.copy(), requiringSecureCoding: true, error: nil)
-        let decoded: UnsafeMutablePointer<TVCLogLine>! = TVCLogLine.logLineWithData(data)
-
-        XCTAssertNotNil(decoded)
-        XCTAssertNil(decoded.messageIdentifier)
-    }
+		XCTAssertNil(decoded.messageIdentifier)
+	}
 }

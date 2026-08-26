@@ -1,64 +1,85 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "OELReachabilityPrivate.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "OELReachabilityPrivate.h"
+/** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 @objc
 class OELReachabilityMigrationTests: XCTestCase {
-    @objc
-    func testFactoryCreatesNotifier() {
-        let reachability: UnsafeMutablePointer<OELReachability>! = OELReachability.reachabilityForInternetConnection()
+	@objc
+	func testFactoryCreatesNotifier() throws {
+		let reachability = try XCTUnwrap(OELReachability.forInternetConnection())
 
-        XCTAssertNotNil(reachability)
-        XCTAssertFalse(reachability.isReachable)
-    }
-    @objc
-    func testFirstPathSeedsWithoutEvent() {
-        var currentlyReachable = false
-        var receivedInitialPath = false
-        let event: Int = OELReachability.evaluatePathChange(true, currentlyReachable: &currentlyReachable, receivedInitialPath: &receivedInitialPath)
+		XCTAssertNotNil(reachability)
+		XCTAssertFalse(reachability.isReachable)
+	}
 
-        XCTAssertEqual(event, 0)
-        XCTAssertTrue(currentlyReachable)
-        XCTAssertTrue(receivedInitialPath)
-    }
-    @objc
-    func testUnchangedPathProducesNoEvent() {
-        var currentlyReachable = true
-        var receivedInitialPath = true
-        let event: Int = OELReachability.evaluatePathChange(true, currentlyReachable: &currentlyReachable, receivedInitialPath: &receivedInitialPath)
+	@objc
+	func testFirstPathSeedsWithoutEvent() {
+		var currentlyReachable = ObjCBool(false)
+		var receivedInitialPath = ObjCBool(false)
+		let event: Int = OELReachability.evaluatePathChange(
+			true,
+			currentlyReachable: &currentlyReachable,
+			receivedInitialPath: &receivedInitialPath
+		)
 
-        XCTAssertEqual(event, 0)
-        XCTAssertTrue(currentlyReachable)
-    }
-    @objc
-    func testReachabilityTransitionsEmitExpectedEvents() {
-        var currentlyReachable = true
-        var receivedInitialPath = true
-        let becameUnreachable: Int = OELReachability.evaluatePathChange(false, currentlyReachable: &currentlyReachable, receivedInitialPath: &receivedInitialPath)
+		XCTAssertEqual(event, 0)
+		XCTAssertTrue(currentlyReachable.boolValue)
+		XCTAssertTrue(receivedInitialPath.boolValue)
+	}
 
-        XCTAssertEqual(becameUnreachable, 2)
-        XCTAssertFalse(currentlyReachable)
+	@objc
+	func testUnchangedPathProducesNoEvent() {
+		var currentlyReachable = ObjCBool(true)
+		var receivedInitialPath = ObjCBool(true)
+		let event: Int = OELReachability.evaluatePathChange(
+			true,
+			currentlyReachable: &currentlyReachable,
+			receivedInitialPath: &receivedInitialPath
+		)
 
-        let becameReachable: Int = OELReachability.evaluatePathChange(true, currentlyReachable: &currentlyReachable, receivedInitialPath: &receivedInitialPath)
+		XCTAssertEqual(event, 0)
+		XCTAssertTrue(currentlyReachable.boolValue)
+	}
 
-        XCTAssertEqual(becameReachable, 1)
-        XCTAssertTrue(currentlyReachable)
-    }
-    @objc
-    func testStartAndStopNotifierRoundTrip() {
-        let reachability: UnsafeMutablePointer<OELReachability>! = OELReachability.reachabilityForInternetConnection()
+	@objc
+	func testReachabilityTransitionsEmitExpectedEvents() {
+		var currentlyReachable = ObjCBool(true)
+		var receivedInitialPath = ObjCBool(true)
+		let becameUnreachable: Int = OELReachability.evaluatePathChange(
+			false,
+			currentlyReachable: &currentlyReachable,
+			receivedInitialPath: &receivedInitialPath
+		)
 
-        XCTAssertTrue(reachability.startNotifier())
+		XCTAssertEqual(becameUnreachable, 2)
+		XCTAssertFalse(currentlyReachable.boolValue)
 
-        reachability.stopNotifier()
+		let becameReachable: Int = OELReachability.evaluatePathChange(
+			true,
+			currentlyReachable: &currentlyReachable,
+			receivedInitialPath: &receivedInitialPath
+		)
 
-        XCTAssertTrue(reachability.startNotifier())
+		XCTAssertEqual(becameReachable, 1)
+		XCTAssertTrue(currentlyReachable.boolValue)
+	}
 
-        reachability.stopNotifier()
-    }
+	@objc
+	func testStartAndStopNotifierRoundTrip() throws {
+		let reachability = try XCTUnwrap(OELReachability.forInternetConnection())
+
+		XCTAssertTrue(reachability.startNotifier())
+
+		reachability.stopNotifier()
+
+		XCTAssertTrue(reachability.startNotifier())
+
+		reachability.stopNotifier()
+	}
 }

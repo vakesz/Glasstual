@@ -1,10 +1,7 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "IRCMessageTagParserPrivate.h"
-// #import "IRCSenderPrefixParserPrivate.h"
-/* *********************************************************************
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -42,37 +39,42 @@ import XCTest
  *********************************************************************** */
 @objc
 class IRCMessageParsingTests: XCTestCase {
-    @objc
-    func testMessageTagsDecodeEscapesAndMetadata() {
-        let parsed: UnsafeMutablePointer<IRCParsedMessageTags>! = IRCMessageTagParser.parsedTagsFromSection("msgid=abc;account=alice;a=b\\\\:c\\\\sd\\\\\\\\e\\\\r\\\\n;flag")
+	@objc
+	func testMessageTagsDecodeEscapesAndMetadata() {
+		let parsed: IRCParsedMessageTags! = IRCMessageTagParser
+			.parsedTags(fromSection: "msgid=abc;account=alice;a=b\\:c\\sd\\\\e\\r\\n;flag")
 
-        XCTAssertEqualObjects(parsed.tags["a"], "b;c d\\\\e\\r\\n")
-        XCTAssertEqualObjects(parsed.tags["flag"], "")
-        XCTAssertEqualObjects(parsed.messageIdentifier, "abc")
-        XCTAssertEqualObjects(parsed.senderAccount, "alice")
-    }
-    @objc
-    func testMessageTagsPreserveLastDuplicateAndUnknownEscapeRules() {
-        let parsed: UnsafeMutablePointer<IRCParsedMessageTags>! = IRCMessageTagParser.parsedTagsFromSection("a=first;;a=second;b=x\\\\qy;c=end\\\\")
+		XCTAssertEqual(parsed.tags["a"], "b;c d\\e\r\n")
+		XCTAssertEqual(parsed.tags["flag"], "")
+		XCTAssertEqual(parsed.messageIdentifier, "abc")
+		XCTAssertEqual(parsed.senderAccount, "alice")
+	}
 
-        XCTAssertEqualObjects(parsed.tags["a"], "second")
-        XCTAssertEqualObjects(parsed.tags["b"], "xqy")
-        XCTAssertEqualObjects(parsed.tags["c"], "end")
+	@objc
+	func testMessageTagsPreserveLastDuplicateAndUnknownEscapeRules() {
+		let parsed: IRCParsedMessageTags! = IRCMessageTagParser
+			.parsedTags(fromSection: "a=first;;a=second;b=x\\qy;c=end\\")
 
-        XCTAssertNil(parsed.messageIdentifier)
-        XCTAssertNil(parsed.senderAccount)
-    }
-    @objc
-    func testSenderPrefixUsesFirstBangAndLastAtSign() {
-        let parsed: UnsafeMutablePointer<IRCParsedSenderPrefix>! = IRCSenderPrefixParser.parsedPrefixFromString("nick!user!name@cloak@host")
+		XCTAssertEqual(parsed.tags["a"], "second")
+		XCTAssertEqual(parsed.tags["b"], "xqy")
+		XCTAssertEqual(parsed.tags["c"], "end")
 
-        XCTAssertEqualObjects(parsed.nickname, "nick")
-        XCTAssertEqualObjects(parsed.username, "user!name@cloak")
-        XCTAssertEqualObjects(parsed.address, "host")
-    }
-    @objc
-    func testSenderPrefixRejectsMissingOrReversedSeparators() {
-        XCTAssertNil(IRCSenderPrefixParser.parsedPrefixFromString("irc.example.net"))
-        XCTAssertNil(IRCSenderPrefixParser.parsedPrefixFromString("nick@host!user"))
-    }
+		XCTAssertNil(parsed.messageIdentifier)
+		XCTAssertNil(parsed.senderAccount)
+	}
+
+	@objc
+	func testSenderPrefixUsesFirstBangAndLastAtSign() {
+		let parsed: IRCParsedSenderPrefix! = IRCSenderPrefixParser.parsedPrefix(from: "nick!user!name@cloak@host")
+
+		XCTAssertEqual(parsed.nickname, "nick")
+		XCTAssertEqual(parsed.username, "user!name@cloak")
+		XCTAssertEqual(parsed.address, "host")
+	}
+
+	@objc
+	func testSenderPrefixRejectsMissingOrReversedSeparators() {
+		XCTAssertNil(IRCSenderPrefixParser.parsedPrefix(from: "irc.example.net"))
+		XCTAssertNil(IRCSenderPrefixParser.parsedPrefix(from: "nick@host!user"))
+	}
 }

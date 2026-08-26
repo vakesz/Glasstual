@@ -1,4 +1,4 @@
-import Glasstual
+@testable import Glasstual
 import XCTest
 
 /** *********************************************************************
