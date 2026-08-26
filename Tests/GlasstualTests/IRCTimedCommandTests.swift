@@ -1,12 +1,13 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "GLTTestClient.h"
-// #import "IRCChannelPrivate.h"
-// #import "IRCTimerCommandPrivate.h"
-// #import "IRCTreeItemPrivate.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "GLTTestClient.h"
+/// #import "IRCChannelPrivate.h"
+/// #import "IRCTimerCommandPrivate.h"
+/// #import "IRCTreeItemPrivate.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \\ \/ / __| | | |/ _` | |
@@ -44,48 +45,47 @@ import XCTest
  *********************************************************************** */
 @objc
 class IRCTimedCommandTests: XCTestCase {
-    @objc
-    func testInitializationCapturesCommandContextAndUniqueIdentifiers() {
-        let client: UnsafeMutablePointer<GLTTestClient>! = GLTTestClient.testClient()
-        var channel: UnsafeMutablePointer<IRCChannel>! = IRCChannel(configDictionary: ["channelName": "#chat"])
+	@objc
+	func testInitializationCapturesCommandContextAndUniqueIdentifiers() {
+		let client = GLTTestClient()
+		let channel = IRCChannel(configDictionary: ["channelName": "#chat"])
 
-        channel.associatedClient = client
+		let first = TimedCommand(command: "WHO #chat", onClient: client, inChannel: channel)
+		let second = TimedCommand(command: "PING", onClient: client)
 
-        let first: UnsafeMutablePointer<IRCTimedCommand>! = IRCTimedCommand(command: "WHO #chat", onClient: client, inChannel: channel)
-        let second: UnsafeMutablePointer<IRCTimedCommand>! = IRCTimedCommand(command: "PING", onClient: client)
+		XCTAssertEqual(first.command, "WHO #chat")
+		XCTAssertEqual(first.clientId, client.uniqueIdentifier)
+		XCTAssertEqual(first.channelId, channel.uniqueIdentifier)
 
-        XCTAssertEqualObjects(first.command, "WHO #chat")
-        XCTAssertEqualObjects(first.clientId, client.uniqueIdentifier)
-        XCTAssertEqualObjects(first.channelId, channel.uniqueIdentifier)
+		XCTAssertNil(second.channelId)
 
-        XCTAssertNil(second.channelId)
+		XCTAssertNotEqual(first.identifier, second.identifier)
+	}
 
-        XCTAssertNotEqualObjects(first.identifier, second.identifier)
-    }
-    @objc
-    func testRestartRequiresPreviousStartAndPreservesTimerConfiguration() {
-        let client: UnsafeMutablePointer<GLTTestClient>! = GLTTestClient.testClient()
-        let command: UnsafeMutablePointer<IRCTimedCommand>! = IRCTimedCommand(command: "PING", onClient: client)
+	@objc
+	func testRestartRequiresPreviousStartAndPreservesTimerConfiguration() {
+		let client = GLTTestClient()
+		let command = TimedCommand(command: "PING", onClient: client)
 
-        XCTAssertFalse(command.restart)
+		XCTAssertFalse(command.restart())
 
-        command.start(30, onRepeat: true, iterations: 3)
+		command.start(30, onRepeat: true, iterations: 3)
 
-        XCTAssertTrue(command.timerIsActive)
+		XCTAssertTrue(command.timerIsActive)
 
-        XCTAssertEqual(command.timerInterval, 30)
+		XCTAssertEqual(command.timerInterval, 30)
 
-        XCTAssertTrue(command.repeatTimer)
+		XCTAssertTrue(command.repeatTimer)
 
-        XCTAssertEqual(command.iterations, 3)
+		XCTAssertEqual(command.iterations, 3)
 
-        command.stop()
+		command.stop()
 
-        XCTAssertFalse(command.timerIsActive)
+		XCTAssertFalse(command.timerIsActive)
 
-        XCTAssertTrue(command.restart)
-        XCTAssertTrue(command.timerIsActive)
+		XCTAssertTrue(command.restart())
+		XCTAssertTrue(command.timerIsActive)
 
-        command.stop()
-    }
+		command.stop()
+	}
 }

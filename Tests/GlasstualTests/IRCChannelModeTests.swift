@@ -1,13 +1,14 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "GLTTestClient.h"
-// #import "IRCChannelModePrivate.h"
-// #import "IRCChannelPrivate.h"
-// #import "IRCISupportInfoPrivate.h"
-// #import "IRCTreeItemPrivate.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "GLTTestClient.h"
+/// #import "ChannelModePrivate.h"
+/// #import "IRCChannelPrivate.h"
+/// #import "IRCISupportInfoPrivate.h"
+/// #import "IRCTreeItemPrivate.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -44,80 +45,70 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
-class IRCChannelModeTests: XCTestCase {
-    @objc
-    func channelModeWithCurrentModes(_ modeString: String) -> UnsafeMutablePointer<IRCChannelMode> {
-        let client: UnsafeMutablePointer<GLTTestClient>! = GLTTestClient.testClient()
+class ChannelModeTests: XCTestCase {
+	private var client: GLTTestClient!
 
-        client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
+	private func channelMode(currentModes modeString: String) -> ChannelMode {
+		client = GLTTestClient()
+		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 
-        var channel: UnsafeMutablePointer<IRCChannel>! = IRCChannel(configDictionary: ["channelName": "#chat"])
+		let channel = client.findChannelOrCreate("#chat")!
+		let channelMode = ChannelMode(channel: channel)
+		channelMode.updateModes(modeString)
+		return channelMode
+	}
 
-        channel.associatedClient = client
+	func testRemovedModeParametersPrecedeAddedOnes() throws {
+		let channelMode = channelMode(currentModes: "+nk secret")
+		let modes = try XCTUnwrap(channelMode.modes.copy() as? ChannelModeContainer)
+		modes.changeMode("k", modeIsSet: false, modeParameter: "secret")
+		modes.changeMode("l", modeIsSet: true, modeParameter: "10")
 
-        let channelMode: UnsafeMutablePointer<IRCChannelMode>! = IRCChannelMode(channel: channel)
+		XCTAssertEqual(channelMode.changeCommand(for: modes), "-k+l secret 10")
+	}
 
-        channelMode.updateModes(modeString)
+	func testUnchangedModesProduceNoCommand() throws {
+		let channelMode = channelMode(currentModes: "+nt")
+		let modes = try XCTUnwrap(channelMode.modes.copy() as? ChannelModeContainer)
 
-        return channelMode
-    }
-    @objc
-    func testRemovedModeParametersPrecedeAddedOnes() {
-        let channelMode = self.channelModeWithCurrentModes("+nk secret")
-        let modes: UnsafeMutablePointer<IRCChannelModeContainer>! = channelMode.modes.copy()
+		XCTAssertEqual(channelMode.changeCommand(for: modes), "")
+	}
 
-        modes.changeMode("k", modeIsSet: false, modeParameter: "secret")
-        modes.changeMode("l", modeIsSet: true, modeParameter: "10")
-        /* "-k+l secret 10": the server consumes parameters in the order
-	 the letters appear. */
-        XCTAssertEqualObjects(channelMode.getChangeCommand(modes), "-k+l secret 10")
-    }
-    @objc
-    func testUnchangedModesProduceNoCommand() {
-        let channelMode = self.channelModeWithCurrentModes("+nt")
+	func testModeStringListsParametersAfterLetters() {
+		let channelMode = channelMode(currentModes: "+ntk secret +l 5")
 
-        XCTAssertEqualObjects(channelMode.getChangeCommand(channelMode.modes.copy()), "")
-    }
-    @objc
-    func testModeStringListsParametersAfterLetters() {
-        let channelMode = self.channelModeWithCurrentModes("+ntk secret +l 5")
+		XCTAssertEqual(channelMode.string, "+klnt secret 5")
+		XCTAssertEqual(channelMode.stringWithMaskedPassword, "+klnt ****** 5")
+	}
 
-        XCTAssertEqualObjects(channelMode.string, "+klnt secret 5")
-        XCTAssertEqualObjects(channelMode.stringWithMaskedPassword, "+klnt ****** 5")
-    }
-    @objc
-    func testChangeCommandIsDeterministic() {
-        let channelMode = self.channelModeWithCurrentModes("")
-        let modes: UnsafeMutablePointer<IRCChannelModeContainer>! = channelMode.modes.copy()
+	func testChangeCommandIsDeterministic() throws {
+		let channelMode = channelMode(currentModes: "")
+		let modes = try XCTUnwrap(channelMode.modes.copy() as? ChannelModeContainer)
+		modes.changeMode("z", modeIsSet: true, modeParameter: "last")
+		modes.changeMode("a", modeIsSet: true, modeParameter: "first")
 
-        modes.changeMode("z", modeIsSet: true, modeParameter: "last")
-        modes.changeMode("a", modeIsSet: true, modeParameter: "first")
-        XCTAssertEqualObjects(channelMode.getChangeCommand(modes), "+az first last")
-    }
-    @objc
-    func testListAndUserModesAreNotStoredAsChannelState() {
-        let channelMode = self.channelModeWithCurrentModes("")
+		XCTAssertEqual(channelMode.changeCommand(for: modes), "+az first last")
+	}
 
-        XCTAssertNil(channelMode.modeInfoFor("b"))
-        XCTAssertNil(channelMode.modeInfoFor("o"))
-        XCTAssertNotNil(channelMode.modeInfoFor("n"))
-    }
-    @objc
-    func testCopiedContainerHasIndependentState() {
-        let channelMode = self.channelModeWithCurrentModes("+nt")
-        let modes: UnsafeMutablePointer<IRCChannelModeContainer>! = channelMode.modes.copy()
+	func testListAndUserModesAreNotStoredAsChannelState() {
+		let channelMode = channelMode(currentModes: "")
 
-        modes.changeMode("k", modeIsSet: true, modeParameter: "secret")
+		XCTAssertNil(channelMode.modeInfo(for: "b"))
+		XCTAssertNil(channelMode.modeInfo(for: "o"))
+		XCTAssertNotNil(channelMode.modeInfo(for: "n"))
+	}
 
-        XCTAssertFalse(channelMode.modeIsDefined("k"))
+	func testCopiedContainerHasIndependentState() throws {
+		let channelMode = channelMode(currentModes: "+nt")
+		let modes = try XCTUnwrap(channelMode.modes.copy() as? ChannelModeContainer)
+		modes.changeMode("k", modeIsSet: true, modeParameter: "secret")
 
-        XCTAssertTrue(modes.modeIsDefined("k"))
+		XCTAssertFalse(channelMode.modeIsDefined("k"))
+		XCTAssertTrue(modes.modeIsDefined("k"))
 
-        modes.clear()
+		modes.clear()
 
-        XCTAssertTrue(channelMode.modeIsDefined("n"))
-
-        XCTAssertEqual(modes.modes.count, 0)
-    }
+		XCTAssertTrue(channelMode.modeIsDefined("n"))
+		XCTAssertTrue(modes.modes.isEmpty)
+	}
 }

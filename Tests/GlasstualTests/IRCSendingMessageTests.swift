@@ -1,11 +1,12 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "IRCMessage.h"
-// #import "IRCSendingMessage.h"
-// #import "NSStringHelper.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "IRCMessage.h"
+/// #import "IRCSendingMessage.h"
+/// #import "NSStringHelper.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -42,42 +43,52 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 class IRCSendingMessageTests: XCTestCase {
-    @objc
-    func testCommandWithoutTagsIsUnchanged() {
-        let line: String! = IRCSendingMessage.stringWithCommand("privmsg", arguments: ["#c", "hello world"], tags: nil)
+	func testCommandWithoutTagsIsUnchanged() {
+		XCTAssertEqual(
+			SendingMessage.string(command: "privmsg", arguments: ["#c", "hello world"], tags: nil),
+			"PRIVMSG #c :hello world"
+		)
+		XCTAssertEqual(
+			SendingMessage.string(command: "PRIVMSG", arguments: ["#c", "hi"], tags: [:]),
+			"PRIVMSG #c :hi"
+		)
+	}
 
-        XCTAssertEqualObjects(line, "PRIVMSG #c :hello world")
+	func testTagsAreSerializedSortedAndEscaped() {
+		let tags = ["+typing": "active", "+draft/reply": "a b;c\\d\r\n", "flag": ""]
 
-        let lineWithEmptyTags: String! = IRCSendingMessage.stringWithCommand("PRIVMSG", arguments: ["#c", "hi"], tags: [:])
+		XCTAssertEqual(
+			SendingMessage.string(messageTags: tags),
+			"+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag"
+		)
+		XCTAssertEqual(
+			SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags),
+			"@+draft/reply=a\\sb\\:c\\\\d\\r\\n;+typing=active;flag TAGMSG #c"
+		)
+	}
 
-        XCTAssertEqualObjects(lineWithEmptyTags, "PRIVMSG #c :hi")
-    }
-    @objc
-    func testTagsAreSerializedSortedAndEscaped() {
-        let tags: NSDictionary = ["+typing": "active", "+draft/reply": "a b;c\\\\d\\r\\n", "flag": ""]
+	func testTagEscapingRoundTrips() {
+		let tags = [
+			"a": "plain",
+			"b": "semi;colon",
+			"c": "with space",
+			"d": "back\\slash",
+			"e": "line\r\nbreak",
+			"f": "trailing\\",
+			"g": "unicode ✓",
+			"h": "",
+		]
+		let line = SendingMessage.string(command: "TAGMSG", arguments: ["#c"], tags: tags)
+		let message = Message(line: line)
 
-        XCTAssertEqualObjects(IRCSendingMessage.stringWithMessageTags(tags), "+draft/reply=a\\\\sb\\\\:c\\\\\\\\d\\\\r\\\\n;+typing=active;flag")
+		XCTAssertEqual(message?.command, "TAGMSG")
+		XCTAssertEqual(message?.messageTags, tags)
+	}
 
-        let line: String! = IRCSendingMessage.stringWithCommand("TAGMSG", arguments: ["#c"], tags: tags)
+	func testEncodeDecodeHelpersRoundTripEveryEscape() {
+		let value = "a;b \r\n\\s\\:end\\"
 
-        XCTAssertEqualObjects(line, "@+draft/reply=a\\\\sb\\\\:c\\\\\\\\d\\\\r\\\\n;+typing=active;flag TAGMSG #c")
-    }
-    @objc
-    func testTagEscapingRoundTrips() {
-        let tags: NSDictionary = ["a": "plain", "b": "semi;colon", "c": "with space", "d": "back\\\\slash", "e": "line\\r\\nbreak", "f": "trailing\\\\", "g": "unicode ✓", "h": ""]
-        let line: String! = IRCSendingMessage.stringWithCommand("TAGMSG", arguments: ["#c"], tags: tags)
-        let message: UnsafeMutablePointer<IRCMessage>! = IRCMessage(line: line)
-
-        XCTAssertNotNil(message)
-        XCTAssertEqualObjects(message.command, "TAGMSG")
-        XCTAssertEqualObjects(message.messageTags, tags)
-    }
-    @objc
-    func testEncodeDecodeHelpersRoundTripEveryEscape() {
-        let value = "a;b \\r\\n\\\\s\\\\:end\\\\"
-
-        XCTAssertEqualObjects(value.encodedMessageTagString.decodedMessageTagString, value)
-    }
+		XCTAssertEqual(value.encodedMessageTagString.decodedMessageTagString, value)
+	}
 }

@@ -1,10 +1,11 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "IRCMessage.h"
-// #import "IRCMessageBatchPrivate.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "IRCMessage.h"
+/// #import "IRCMessageBatchPrivate.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -42,73 +43,80 @@ import XCTest
  *********************************************************************** */
 @objc
 class IRCMessageBatchTests: XCTestCase {
-    @objc
-    func batchWithToken(_ token: String) -> UnsafeMutablePointer<IRCMessageBatchMessage> {
-        var batch: UnsafeMutablePointer<IRCMessageBatchMessage>! = IRCMessageBatchMessage()
+	@objc
+	func batchWithToken(_ token: String) -> MessageBatch {
+		let batch = MessageBatch()
 
-        batch.batchToken = token
+		batch.batchToken = token
 
-        return batch
-    }
-    @objc
-    func testContainerQueuesAndDequeuesBatchesByToken() {
-        let container: UnsafeMutablePointer<IRCMessageBatchMessageContainer>! = IRCMessageBatchMessageContainer()
-        let batch = self.batchWithToken("history-1")
-        let message: UnsafeMutablePointer<IRCMessage>! = IRCMessage(line: ":nick!user@host PRIVMSG #channel :hello")
+		return batch
+	}
 
-        batch.queueEntry(message)
+	@objc
+	func testContainerQueuesAndDequeuesBatchesByToken() {
+		let container = MessageBatchContainer()
+		let batch = batchWithToken("history-1")
+		let message = Message(line: ":nick!user@host PRIVMSG #channel :hello")
 
-        container.queueEntry(batch)
+		batch.queueEntry(message)
 
-        XCTAssertEqual(container.queuedEntryWithBatchToken("history-1"), batch)
+		container.queueEntry(batch)
 
-        XCTAssertEqualObjects(container.queuedEntries, ["history-1": batch])
-        XCTAssertEqualObjects(batch.queuedEntries, [message])
+		XCTAssertTrue(container.queuedEntry(withBatchToken: "history-1") === batch)
 
-        container.dequeueEntry("history-1")
+		XCTAssertTrue(container.queuedEntries["history-1"] === batch)
+		XCTAssertTrue(batch.queuedEntries.first as? Message === message)
 
-        XCTAssertNil(container.queuedEntryWithBatchToken("history-1"))
+		container.dequeueEntry("history-1")
 
-        XCTAssertEqual(batch.queuedEntries.count, 0)
-    }
-    @objc
-    func testBatchAcceptsMessagesAndNestedBatchesOnly() {
-        let parent = self.batchWithToken("parent")
-        var child = self.batchWithToken("child")
-        let first: UnsafeMutablePointer<IRCMessage>! = IRCMessage(line: "PING :first")
-        let second: UnsafeMutablePointer<IRCMessage>! = IRCMessage(line: "PING :second")
+		XCTAssertNil(container.queuedEntry(withBatchToken: "history-1"))
 
-        child.parentBatchMessage = parent
+		XCTAssertEqual(batch.queuedEntries.count, 0)
+	}
 
-        parent.queueEntry(first)
-        parent.queueEntry(first)
-        parent.queueEntry("invalid")
-        parent.queueEntry(child)
-        parent.queueEntry(second)
+	@objc
+	func testBatchAcceptsMessagesAndNestedBatchesOnly() {
+		let parent = batchWithToken("parent")
+		let child = batchWithToken("child")
+		let first = Message(line: "PING :first")
+		let second = Message(line: "PING :second")
 
-        XCTAssertEqualObjects(parent.queuedEntries, [first, first, child, second])
+		child.parentBatchMessage = parent
 
-        XCTAssertEqual(child.parentBatchMessage, parent)
+		parent.queueEntry(first)
+		parent.queueEntry(first)
+		parent.queueEntry("invalid")
+		parent.queueEntry(child)
+		parent.queueEntry(second)
 
-        parent.dequeueEntry(first)
-        parent.dequeueEntry(child)
+		XCTAssertEqual(parent.queuedEntries.count, 4)
+		XCTAssertTrue(parent.queuedEntries[0] as? Message === first)
+		XCTAssertTrue(parent.queuedEntries[1] as? Message === first)
+		XCTAssertTrue(parent.queuedEntries[2] as? MessageBatch === child)
+		XCTAssertTrue(parent.queuedEntries[3] as? Message === second)
 
-        XCTAssertEqualObjects(parent.queuedEntries, [second])
-    }
-    @objc
-    func testContainerIgnoresNonBatchEntriesAndDequeueAllKeepsBatchContents() {
-        let container: UnsafeMutablePointer<IRCMessageBatchMessageContainer>! = IRCMessageBatchMessageContainer()
-        let batch = self.batchWithToken("batch")
-        let message: UnsafeMutablePointer<IRCMessage>! = IRCMessage(line: "PING :token")
+		XCTAssertTrue(child.parentBatchMessage === parent)
 
-        batch.queueEntry(message)
+		parent.dequeueEntry(first)
+		parent.dequeueEntry(child)
 
-        container.queueEntry("invalid")
-        container.queueEntry(batch)
-        container.dequeueEntries()
+		XCTAssertTrue(parent.queuedEntries.first as? Message === second)
+	}
 
-        XCTAssertEqual(container.queuedEntries.count, 0)
+	@objc
+	func testContainerIgnoresNonBatchEntriesAndDequeueAllKeepsBatchContents() {
+		let container = MessageBatchContainer()
+		let batch = batchWithToken("batch")
+		let message = Message(line: "PING :token")
 
-        XCTAssertEqualObjects(batch.queuedEntries, [message])
-    }
+		batch.queueEntry(message)
+
+		container.queueEntry("invalid")
+		container.queueEntry(batch)
+		container.dequeueEntries()
+
+		XCTAssertEqual(container.queuedEntries.count, 0)
+
+		XCTAssertTrue(batch.queuedEntries.first as? Message === message)
+	}
 }

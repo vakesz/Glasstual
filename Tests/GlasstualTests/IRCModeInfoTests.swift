@@ -1,11 +1,12 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "GLTTestClient.h"
-// #import "IRCISupportInfoPrivate.h"
-// #import "IRCModeInfo.h"
-/* *********************************************************************
+/// Preprocessor directives found in file:
+/// #import <XCTest/XCTest.h>
+/// #import "GLTTestClient.h"
+/// #import "IRCISupportInfoPrivate.h"
+/// #import "ModeInfo.h"
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \\ \/ / __| | | |/ _` | |
@@ -41,83 +42,66 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
-class IRCModeInfoTests: XCTestCase {
-    @objc
-    func testConvenienceInitializers() {
-        let unset: UnsafeMutablePointer<IRCModeInfo>! = IRCModeInfo(modeSymbol: "n")
-        let set: UnsafeMutablePointer<IRCModeInfo>! = IRCModeInfo(modeSymbol: "t", modeIsSet: true)
+class ModeInfoTests: XCTestCase {
+	func testConvenienceInitializers() {
+		let unset = ModeInfo(modeSymbol: "n")
+		let set = ModeInfo(modeSymbol: "t", modeIsSet: true)
 
-        XCTAssertEqualObjects(unset.modeSymbol, "n")
+		XCTAssertEqual(unset.modeSymbol, "n")
+		XCTAssertFalse(unset.modeIsSet)
+		XCTAssertNil(unset.modeParameter)
+		XCTAssertEqual(set.modeSymbol, "t")
+		XCTAssertTrue(set.modeIsSet)
+	}
 
-        XCTAssertFalse(unset.modeIsSet)
+	func testMutableCopyCanChangeWithoutChangingOriginal() throws {
+		let original = ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
+		let changed = try XCTUnwrap(original.mutableCopy() as? MutableModeInfo)
+		changed.modeIsSet = false
+		changed.modeParameter = nil
 
-        XCTAssertNil(unset.modeParameter)
+		XCTAssertFalse(original.isMutable)
+		XCTAssertTrue(changed.isMutable)
+		XCTAssertTrue(original.modeIsSet)
+		XCTAssertEqual(original.modeParameter, "secret")
+		XCTAssertFalse(changed.modeIsSet)
+		XCTAssertNil(changed.modeParameter)
+	}
 
-        XCTAssertEqualObjects(set.modeSymbol, "t")
+	func testUniqueCopyEntryPointsPreserveValuesAndRequestedMutability() throws {
+		let original = ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
+		let unique = try XCTUnwrap(original.uniqueCopy() as? ModeInfo)
+		let uniqueMutable = try XCTUnwrap(original.uniqueCopyMutable() as? MutableModeInfo)
 
-        XCTAssertTrue(set.modeIsSet)
-    }
-    @objc
-    func testMutableCopyCanChangeWithoutChangingOriginal() {
-        let original: UnsafeMutablePointer<IRCModeInfo>! = IRCModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
-        var changed: UnsafeMutablePointer<IRCModeInfoMutable>! = original.mutableCopy()
+		XCTAssertFalse(unique === original)
+		XCTAssertEqual(unique, original)
+		XCTAssertFalse(unique.isMutable)
+		XCTAssertTrue(uniqueMutable.isMutable)
+		XCTAssertEqual(uniqueMutable, original)
+	}
 
-        changed.modeIsSet = false
-        changed.modeParameter = nil
+	func testEqualityAndHashUseAllFields() throws {
+		let first = ModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
+		let second = try XCTUnwrap(first.mutableCopy() as? MutableModeInfo)
 
-        XCTAssertFalse(original.mutable)
+		XCTAssertEqual(first, second)
+		XCTAssertEqual(first.hash, second.hash)
 
-        XCTAssertTrue(changed.mutable)
-        XCTAssertTrue(original.modeIsSet)
+		second.modeParameter = "other"
 
-        XCTAssertEqualObjects(original.modeParameter, "secret")
+		XCTAssertNotEqual(first, second)
+	}
 
-        XCTAssertFalse(changed.modeIsSet)
+	func testMemberModeRequiresAParameterAndPrefixMode() {
+		let client = GLTTestClient()
+		client.supportInfo.processConfigurationData("PREFIX=(ov)@+")
 
-        XCTAssertNil(changed.modeParameter)
-    }
-    @objc
-    func testUniqueCopyEntryPointsPreserveValuesAndRequestedMutability() {
-        let original: UnsafeMutablePointer<IRCModeInfo>! = IRCModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
-        let unique: UnsafeMutablePointer<IRCModeInfo>! = original.uniqueCopy()
-        let uniqueMutable: UnsafeMutablePointer<IRCModeInfoMutable>! = original.uniqueCopyMutable()
+		let memberMode = ModeInfo(modeSymbol: "o", modeIsSet: true, modeParameter: "nick")
+		let missingParameter = ModeInfo(modeSymbol: "o", modeIsSet: true)
+		let channelMode = ModeInfo(modeSymbol: "n", modeIsSet: true, modeParameter: "nick")
 
-        XCTAssertNotEqual(unique, original)
-
-        XCTAssertEqualObjects(unique, original)
-
-        XCTAssertFalse(unique.mutable)
-
-        XCTAssertTrue(uniqueMutable.mutable)
-
-        XCTAssertEqualObjects(uniqueMutable, original)
-    }
-    @objc
-    func testEqualityAndHashUseAllFields() {
-        let first: UnsafeMutablePointer<IRCModeInfo>! = IRCModeInfo(modeSymbol: "k", modeIsSet: true, modeParameter: "secret")
-        var second: UnsafeMutablePointer<IRCModeInfoMutable>! = first.mutableCopy()
-
-        XCTAssertEqualObjects(first, second)
-
-        XCTAssertEqual(first.hash, second.hash)
-
-        second.modeParameter = "other"
-
-        XCTAssertNotEqualObjects(first, second)
-    }
-    @objc
-    func testMemberModeRequiresAParameterAndPrefixMode() {
-        let client: UnsafeMutablePointer<GLTTestClient>! = GLTTestClient.testClient()
-
-        client.supportInfo.processConfigurationData("PREFIX=(ov)@+")
-
-        let memberMode: UnsafeMutablePointer<IRCModeInfo>! = IRCModeInfo(modeSymbol: "o", modeIsSet: true, modeParameter: "nick")
-        let missingParameter: UnsafeMutablePointer<IRCModeInfo>! = IRCModeInfo(modeSymbol: "o", modeIsSet: true)
-        let channelMode: UnsafeMutablePointer<IRCModeInfo>! = IRCModeInfo(modeSymbol: "n", modeIsSet: true, modeParameter: "nick")
-
-        XCTAssertTrue(memberMode.isModeForChangingMemberModeOn(client))
-        XCTAssertFalse(missingParameter.isModeForChangingMemberModeOn(client))
-        XCTAssertFalse(channelMode.isModeForChangingMemberModeOn(client))
-    }
+		XCTAssertTrue(memberMode.isModeForChangingMemberMode(on: client))
+		XCTAssertFalse(missingParameter.isModeForChangingMemberMode(on: client))
+		XCTAssertFalse(channelMode.isModeForChangingMemberMode(on: client))
+	}
 }

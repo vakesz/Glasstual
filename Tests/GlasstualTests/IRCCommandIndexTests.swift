@@ -1,9 +1,7 @@
+@testable import Glasstual
 import XCTest
 
-// Preprocessor directives found in file:
-// #import <XCTest/XCTest.h>
-// #import "IRCCommandIndexPrivate.h"
-/* *********************************************************************
+/** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -41,39 +39,43 @@ import XCTest
  *********************************************************************** */
 @objc
 class IRCCommandIndexTests: XCTestCase {
-    @objc
-    static func setUp() {
-        super.setUp()
-        IRCCommandIndex.populateCommandIndex()
-    }
-    @objc
-    func testCommandIndexesAreCaseInsensitive() {
-        XCTAssertEqual(IRCCommandIndex.indexOfRemoteCommand("privmsg"), IRCRemoteCommandPrivmsg)
-        XCTAssertEqual(IRCCommandIndex.indexOfRemoteCommand("PRIVMSG"), IRCRemoteCommandPrivmsg)
-        XCTAssertEqual(IRCCommandIndex.indexOfLocalCommand("join"), IRCLocalCommandJoin)
-        XCTAssertEqual(IRCCommandIndex.indexOfLocalCommand("JOIN"), IRCLocalCommandJoin)
-    }
-    @objc
-    func testUnknownCommandsReturnNotFound() {
-        XCTAssertEqual(IRCCommandIndex.indexOfRemoteCommand("not-a-command"), NSNotFound)
-        XCTAssertEqual(IRCCommandIndex.indexOfLocalCommand("not-a-command"), NSNotFound)
-        XCTAssertEqual(IRCCommandIndex.colonPositionForRemoteCommand("not-a-command"), NSNotFound)
-    }
-    @objc
-    func testOutgoingColonPositionsComeFromRemoteCommandMetadata() {
-        XCTAssertEqual(IRCCommandIndex.colonPositionForRemoteCommand("PRIVMSG"), 1)
-        XCTAssertEqual(IRCCommandIndex.colonPositionForRemoteCommand("FAIL"), 2)
-        XCTAssertEqual(IRCCommandIndex.colonPositionForRemoteCommand("PASS"), NSNotFound)
-    }
-    @objc
-    func testLocalCommandSyntaxAndCompletionList() {
-        XCTAssertEqualObjects(IRCCommandIndex.syntaxForLocalCommand("away"), "AWAY [comment]")
-        XCTAssertEqualObjects(IRCCommandIndex.syntaxForLocalCommand("back"), "BACK")
-        XCTAssertNil(IRCCommandIndex.syntaxForLocalCommand("not-a-command"))
+	@objc
+	override static func setUp() {
+		super.setUp()
+		CommandIndex.populateCommandIndex()
+	}
 
-        let commands: [String]! = IRCCommandIndex.localCommandList()
+	@objc
+	func testCommandIndexesAreCaseInsensitive() {
+		XCTAssertEqual(CommandIndex.index(ofRemoteCommand: "privmsg"), 1035)
+		XCTAssertEqual(CommandIndex.index(ofRemoteCommand: "PRIVMSG"), 1035)
+		XCTAssertEqual(CommandIndex.index(ofLocalCommand: "join"), 5032)
+		XCTAssertEqual(CommandIndex.index(ofLocalCommand: "JOIN"), 5032)
+	}
 
-        XCTAssertTrue(commands.containsObject("JOIN"))
-        XCTAssertFalse(commands.containsObject("Reserved Information"))
-    }
+	@objc
+	func testUnknownCommandsReturnNotFound() {
+		XCTAssertEqual(CommandIndex.index(ofRemoteCommand: "not-a-command"), UInt(NSNotFound))
+		XCTAssertEqual(CommandIndex.index(ofLocalCommand: "not-a-command"), UInt(NSNotFound))
+		XCTAssertEqual(CommandIndex.colonPosition(forRemoteCommand: "not-a-command"), UInt(NSNotFound))
+	}
+
+	@objc
+	func testOutgoingColonPositionsComeFromRemoteCommandMetadata() {
+		XCTAssertEqual(CommandIndex.colonPosition(forRemoteCommand: "PRIVMSG"), 1)
+		XCTAssertEqual(CommandIndex.colonPosition(forRemoteCommand: "FAIL"), 2)
+		XCTAssertEqual(CommandIndex.colonPosition(forRemoteCommand: "PASS"), UInt(NSNotFound))
+	}
+
+	@objc
+	func testLocalCommandSyntaxAndCompletionList() {
+		XCTAssertEqual(CommandIndex.syntax(forLocalCommand: "away"), "AWAY [comment]")
+		XCTAssertEqual(CommandIndex.syntax(forLocalCommand: "back"), "BACK")
+		XCTAssertNil(CommandIndex.syntax(forLocalCommand: "not-a-command"))
+
+		let commands: [String]! = CommandIndex.localCommandList()
+
+		XCTAssertTrue(commands.contains("JOIN"))
+		XCTAssertFalse(commands.contains("Reserved Information"))
+	}
 }
