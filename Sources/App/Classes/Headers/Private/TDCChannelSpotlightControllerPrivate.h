@@ -49,8 +49,10 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TDCChannelSpotlightControllerDelegate <NSObject>
 @required
 
-- (void)channelSpotlightController:(TDCChannelSpotlightController *)sender selectChannel:(IRCChannel *)channel;
-- (void)channelSpotlightControllerWillClose:(TDCChannelSpotlightController *)sender;
+- (void)channelSpotlightController:(TDCChannelSpotlightController *)sender
+                     selectChannel:(IRCChannel *)channel;
+- (void)channelSpotlightControllerWillClose:
+    (TDCChannelSpotlightController *)sender;
 @end
 
 NS_ASSUME_NONNULL_END

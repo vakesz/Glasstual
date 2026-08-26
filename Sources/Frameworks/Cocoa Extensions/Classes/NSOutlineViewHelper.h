@@ -51,15 +51,19 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSTableView (CSTableViewHelper)
 @property(readonly) NSInteger rowBeneathMouse;
 
-- (void)invalidateBackgroundForSelection; // See -[NSTableRowView invalidateSelectionBackground]
+- (void)invalidateBackgroundForSelection; // See -[NSTableRowView
+                                          // invalidateSelectionBackground]
 @property(readonly) BOOL invalidatingBackgroundForSelection;
 
 - (void)selectItemAtIndex:(NSUInteger)index;
 
-- (NSIndexSet *)selectionIndexesForProposedSelection:(NSIndexSet *)proposedSelectionIndexes
-						   maximumNumberOfSelections:(NSUInteger)maximumNumberOfSelections;
+- (NSIndexSet *)
+    selectionIndexesForProposedSelection:(NSIndexSet *)proposedSelectionIndexes
+               maximumNumberOfSelections:(NSUInteger)maximumNumberOfSelections;
 
-- (void)selectRowIndexes:(NSIndexSet *)indexes byExtendingSelection:(BOOL)extend scrollToSelection:(BOOL)scroll;
+- (void)selectRowIndexes:(NSIndexSet *)indexes
+    byExtendingSelection:(BOOL)extend
+       scrollToSelection:(BOOL)scroll;
 @end
 
 @interface NSTableRowView (CSTableRowViewHelper)

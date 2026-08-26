@@ -30,41 +30,47 @@
  *
  *********************************************************************** */
 
-#define NSAssertReturn(c)                                                                                              \
-	if ((c) == NO) {                                                                                                   \
-		return;                                                                                                        \
-	}
-#define NSAssertReturnR(c, r)                                                                                          \
-	if ((c) == NO) {                                                                                                   \
-		return (r);                                                                                                    \
-	}
-#define NSAssertReturnLoopBreak(c)                                                                                     \
-	if ((c) == NO) {                                                                                                   \
-		break;                                                                                                         \
-	}
+#define NSAssertReturn(c)                                                      \
+  if ((c) == NO) {                                                             \
+    return;                                                                    \
+  }
+#define NSAssertReturnR(c, r)                                                  \
+  if ((c) == NO) {                                                             \
+    return (r);                                                                \
+  }
+#define NSAssertReturnLoopBreak(c)                                             \
+  if ((c) == NO) {                                                             \
+    break;                                                                     \
+  }
 
 #define COCOA_EXTENSIONS_EXTERN extern
 
 #define COCOA_EXTENSIONS_INLINE static __inline__ __attribute__((always_inline))
 
-#define COCOA_EXTENSIONS_DEPRECATED(reason) __attribute__((deprecated((reason))))
+#define COCOA_EXTENSIONS_DEPRECATED(reason)                                    \
+  __attribute__((deprecated((reason))))
 
-#define COCOA_EXTENSIONS_DEPRECATED_ASSERT NSAssert1(NO, @"Deprecated Method: %s", __PRETTY_FUNCTION__);
-#define COCOA_EXTENSIONS_DEPRECATED_ASSERT_C NSCAssert1(NO, @"Deprecated Method: %s", __PRETTY_FUNCTION__);
+#define COCOA_EXTENSIONS_DEPRECATED_ASSERT                                     \
+  NSAssert1(NO, @"Deprecated Method: %s", __PRETTY_FUNCTION__);
+#define COCOA_EXTENSIONS_DEPRECATED_ASSERT_C                                   \
+  NSCAssert1(NO, @"Deprecated Method: %s", __PRETTY_FUNCTION__);
 
-#define COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN                                                                      \
-	_Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")                 \
-		_Pragma("clang diagnostic ignored \"-Wdeprecated-implementations\"")
+#define COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN                              \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")        \
+          _Pragma("clang diagnostic ignored \"-Wdeprecated-implementations\"")
 
 #define COCOA_EXTENSIONS_IGNORE_DEPRECATION_END _Pragma("clang diagnostic pop")
 
-#define COCOA_EXTENSIONS_DEPRECATED_WARNING                                                                            \
-	NSLog(@"DEPRECATED: Use of the method named %s is deprecated. This method will cease to exist in a future "        \
-		  @"version of this framework.\n\nCurrent Stack: %@",                                                          \
-		  __PRETTY_FUNCTION__,                                                                                         \
-		  [NSThread callStackSymbols]);
+#define COCOA_EXTENSIONS_DEPRECATED_WARNING                                    \
+  NSLog(@"DEPRECATED: Use of the method named %s is deprecated. This method "  \
+        @"will cease to exist in a future "                                    \
+        @"version of this framework.\n\nCurrent Stack: %@",                    \
+        __PRETTY_FUNCTION__, [NSThread callStackSymbols]);
 
-#define DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN                                                                    \
-	_Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wobjc-designated-initializers\"")
+#define DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN                            \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Wobjc-designated-initializers\"")
 
-#define DESIGNATED_INITIALIZER_EXCEPTION_BODY_END _Pragma("clang diagnostic pop")
+#define DESIGNATED_INITIALIZER_EXCEPTION_BODY_END                              \
+  _Pragma("clang diagnostic pop")

@@ -35,14 +35,16 @@
  *
  *********************************************************************** */
 
+#import <Foundation/Foundation.h>
+
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, ICLMediaType) {
-	ICLMediaTypeUnknown = 0,
-	ICLMediaTypeImage,
-	ICLMediaTypeVideo,
-	ICLMediaTypeVideoGif,
-	ICLMediaTypeOther
+  ICLMediaTypeUnknown = 0,
+  ICLMediaTypeImage,
+  ICLMediaTypeVideo,
+  ICLMediaTypeVideoGif,
+  ICLMediaTypeOther
 };
 
 NS_ASSUME_NONNULL_END

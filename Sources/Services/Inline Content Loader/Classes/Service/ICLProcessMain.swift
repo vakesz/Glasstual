@@ -1,0 +1,265 @@
+/* *********************************************************************
+ *                  _____         _               _
+ *                 |_   _|____  _| |_ _   _  __ _| |
+ *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |  __/>  <| |_| |_| | (_| | |
+ *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *
+ * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
+ *       Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *********************************************************************** */
+
+import Foundation
+import os
+
+@objc(ICLProcessMain)
+final class InlineContentProcess: NSObject, @unchecked Sendable {
+	private static let logger = Logger(
+		subsystem: "com.vakesz.glasstual.InlineContentLoader",
+		category: "Process"
+	)
+	private static let warmLock = NSLock()
+	private nonisolated(unsafe) static var loadedPlugins = false
+	private nonisolated(unsafe) static var registeredDefaults = false
+
+	private var serviceConnection: NSXPCConnection?
+	private let moduleReferencesLock = NSLock()
+	private var moduleReferences = Set<InlineContentModule>()
+
+	private lazy var modulesByDomain: [String: [InlineContentModule.Type]] = {
+		var mappedModules: [String: [InlineContentModule.Type]] = [:]
+
+		for module in moduleClasses {
+			let domains = module.domains
+			for domain in domains?.isEmpty == false ? domains! : ["*"] {
+				mappedModules[domain, default: []].append(module)
+			}
+		}
+
+		return mappedModules
+	}()
+
+	private var moduleClasses: [InlineContentModule.Type] {
+		let pluginModules = InlineContentPluginManager.shared.modules.compactMap { $0 as? InlineContentModule.Type }
+		return pluginModules + [AssessedMediaModule.self]
+	}
+
+	@available(*, unavailable, message: "Use init(xpcConnection:)")
+	override init() {
+		fatalError("Use init(xpcConnection:)")
+	}
+
+	@objc(initWithXPCConnection:)
+	init(xpcConnection: NSXPCConnection) {
+		serviceConnection = xpcConnection
+		super.init()
+	}
+
+	@objc(processURL:withUniqueIdentifier:atLineNumber:index:inView:)
+	func process(
+		_ url: URL,
+		withUniqueIdentifier uniqueIdentifier: String,
+		atLineNumber lineNumber: String,
+		index: UInt,
+		inView viewIdentifier: String
+	) {
+		precondition(!url.isFileURL)
+		let payload = InlineContentPayloadMutable(
+			url: url,
+			withUniqueIdentifier: uniqueIdentifier,
+			atLineNumber: lineNumber,
+			index: index,
+			inView: viewIdentifier
+		)
+
+		process(payload)
+	}
+
+	@objc(processPayload:)
+	func process(_ payload: InlineContentPayload) {
+		guard let scheme = payload.url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
+			return
+		}
+
+		let mutablePayload = (payload as? InlineContentPayloadMutable)
+			?? payload.mutableCopy() as! InlineContentPayloadMutable
+		let host = mutablePayload.url.host?.lowercased() ?? ""
+
+		if process(mutablePayload, withModulesFor: host) {
+			return
+		}
+		_ = process(mutablePayload, withModulesFor: "*")
+	}
+
+	private func process(_ payload: InlineContentPayloadMutable, withModulesFor domain: String) -> Bool {
+		for module in modulesByDomain[domain] ?? [] where process(payload, using: module) {
+			return true
+		}
+		return false
+	}
+
+	private func process(_ payload: InlineContentPayloadMutable, using moduleType: InlineContentModule.Type) -> Bool {
+		if !moduleType.contentImageOrVideo, TPCPreferences.inlineMediaLimitToBasics() {
+			return false
+		}
+		if !moduleType.contentIsFile,
+		   TPCPreferences.inlineMediaLimitToBasics(),
+		   TPCPreferences.inlineMediaLimitBasicsToFiles()
+		{
+			return false
+		}
+		if moduleType.contentNotSafeForWork, TPCPreferences.inlineMediaLimitNaughtyContent() {
+			return false
+		}
+		if moduleType.contentUntrusted, TPCPreferences.inlineMediaLimitUnsafeContent() {
+			return false
+		}
+
+		let actionBlock = moduleType.actionBlock(for: payload.url)
+		let action = actionBlock == nil ? moduleType.action(for: payload.url) : nil
+		guard actionBlock != nil || action != nil else { return false }
+
+		let module = moduleType.init(payload: payload, inProcess: self)
+		retain(module)
+
+		if let actionBlock {
+			actionBlock(module)
+		} else if let action {
+			_ = module.perform(action)
+		}
+
+		return true
+	}
+
+	func finalize(module: InlineContentModule, error originalError: NSError?) {
+		let payload = module.payload.copy() as! InlineContentPayload
+		release(module)
+
+		let error: NSError? = if payload.html.isEmpty, payload.scriptResources.isEmpty {
+			NSError(
+				domain: inlineContentErrorDomain,
+				code: 1001,
+				userInfo: [
+					NSLocalizedDescriptionKey: "-[ICLPayload scriptResources] must contain at least one path if -[ICLPayload html] is empty",
+				]
+			)
+		} else if payload.html.isEmpty, payload.entrypoint?.isEmpty != false {
+			NSError(
+				domain: inlineContentErrorDomain,
+				code: 1002,
+				userInfo: [
+					NSLocalizedDescriptionKey: "-[ICLPayload html] and -[ICLPayload entrypoint] cannot both be empty",
+				]
+			)
+		} else {
+			originalError
+		}
+
+		guard let remoteObjectProxy else { return }
+		let xpcPayload = unsafeBitCast(payload, to: ICLPayload.self)
+		if let error {
+			remoteObjectProxy.processingPayload(xpcPayload, failedWithError: error)
+		} else {
+			remoteObjectProxy.processingPayloadSucceeded(xpcPayload)
+		}
+	}
+
+	func cancel(module: InlineContentModule) {
+		release(module)
+	}
+
+	func deferModule(_ module: InlineContentModule, as type: ICLMediaType, performCheck: Bool) {
+		switch type {
+		case .image:
+			let image = InlineImageModule(deferredModule: module)
+			retain(image)
+			image.performAction(withImageCheck: performCheck)
+		case .video:
+			let video = InlineVideoModule(deferredModule: module)
+			retain(video)
+			video.performAction(withVideoCheck: performCheck)
+		case .videoGif:
+			let video = InlineGifVideoModule(deferredModule: module)
+			retain(video)
+			video.performAction(withVideoCheck: performCheck)
+		default:
+			Self.logger.error("Unexpected deferred media type: \(type.rawValue, privacy: .public)")
+			return
+		}
+	}
+
+	private func retain(_ module: InlineContentModule) {
+		_ = moduleReferencesLock.withLock {
+			moduleReferences.insert(module)
+		}
+	}
+
+	private func release(_ module: InlineContentModule) {
+		_ = moduleReferencesLock.withLock {
+			moduleReferences.remove(module)
+		}
+	}
+
+	@objc
+	func connectionInvalidated() {
+		Self.logger.debug("Connection invalidated")
+		moduleReferencesLock.withLock {
+			moduleReferences.removeAll()
+		}
+		serviceConnection = nil
+	}
+
+	@objc(warmServiceByLoadingPluginsAtLocations:)
+	func warmServiceByLoadingPlugins(atLocations pluginLocations: [URL]) {
+		Self.warmLock.withLock {
+			guard !Self.loadedPlugins else { return }
+			Self.loadedPlugins = true
+
+			if !pluginLocations.isEmpty {
+				Self.logger.info(
+					"Ignoring \(pluginLocations.count, privacy: .public) external module location(s); only bundled modules are loaded"
+				)
+			}
+			InlineContentPluginManager.shared.loadBundledPlugins()
+		}
+	}
+
+	@objc(warmServiceByRegisteringDefaults:)
+	func warmServiceByRegistering(defaults: [String: Any]) {
+		Self.warmLock.withLock {
+			guard !Self.registeredDefaults else { return }
+			Self.registeredDefaults = true
+			TPCPreferencesUserDefaults.shared().register(defaults: defaults)
+		}
+	}
+
+	private var remoteObjectProxy: (any ICLInlineContentClientProtocol)? {
+		serviceConnection?.remoteObjectProxy as? any ICLInlineContentClientProtocol
+	}
+}

@@ -17,17 +17,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 NSErrorDomain const TXErrorDomain = @"GlasstualErrorDomain";
 
-os_log_t ApplicationTerminationLogSubsystem(void)
-{
-	static os_log_t cachedValue = NULL;
+os_log_t ApplicationTerminationLogSubsystem(void) {
+  static os_log_t cachedValue = NULL;
 
-	static dispatch_once_t onceToken;
+  static dispatch_once_t onceToken;
 
-	dispatch_once(&onceToken, ^{
-		cachedValue = os_log_create(TXBundleBuildProductIdentifierCString, "Termination");
-	});
+  dispatch_once(&onceToken, ^{
+    cachedValue =
+        os_log_create(TXBundleBuildProductIdentifierCString, "Termination");
+  });
 
-	return cachedValue;
+  return cachedValue;
 }
 
 NS_ASSUME_NONNULL_END

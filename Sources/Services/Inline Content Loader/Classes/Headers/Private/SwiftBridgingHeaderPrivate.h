@@ -3,6 +3,14 @@
  * Please see Acknowledgements.pdf and the project license for details.
  *********************************************************************** */
 
-#import "ICLProcessPCHPrivate.h"
+#import <CocoaExtensions/CocoaExtensions.h>
+#import <GRMustache/GRMustache.h>
+
+#import "ICLHelpers.h"
 #import "ICLInlineContentProtocol.h"
-#import "ICLProcessMainPrivate.h"
+#import "ICLMediaType.h"
+#import "ICLPluginManagerPrivate.h"
+#import "ICLPluginProtocol.h"
+#import "ICLProcessPCHPrivate.h"
+#import "TPCPreferences.h"
+#import "TPCPreferencesUserDefaults.h"

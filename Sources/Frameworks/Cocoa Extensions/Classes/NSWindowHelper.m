@@ -34,203 +34,192 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString *const NSWindowAutosaveFrameMovesToActiveDisplay = @"NSWindowAutosaveFrameMovesToActiveDisplay";
+NSString *const NSWindowAutosaveFrameMovesToActiveDisplay =
+    @"NSWindowAutosaveFrameMovesToActiveDisplay";
 
 @implementation NSWindow (CSWindowHelper)
 
-- (BOOL)isOccluded
-{
-	return ((self.occlusionState & NSWindowOcclusionStateVisible) == 0);
+- (BOOL)isOccluded {
+  return ((self.occlusionState & NSWindowOcclusionStateVisible) == 0);
 }
 
-- (BOOL)isInactive
-{
-	return (self.keyWindow == NO && self.mainWindow == NO);
+- (BOOL)isInactive {
+  return (self.keyWindow == NO && self.mainWindow == NO);
 }
 
-- (BOOL)isActiveForDrawing
-{
-	if (self.inFullscreenMode) {
-		return YES;
-	}
+- (BOOL)isActiveForDrawing {
+  if (self.inFullscreenMode) {
+    return YES;
+  }
 
-	BOOL applicationHasNoModal = ([NSApp modalWindow] == nil);
+  BOOL applicationHasNoModal = ([NSApp modalWindow] == nil);
 
-	BOOL applicationIsActive = [NSApp isActive];
+  BOOL applicationIsActive = [NSApp isActive];
 
-	BOOL windowIsMainWindow = self.mainWindow;
-	BOOL windowIsOnActiveSpace = self.onActiveSpace;
-	BOOL windowIsVisible = self.visible;
+  BOOL windowIsMainWindow = self.mainWindow;
+  BOOL windowIsOnActiveSpace = self.onActiveSpace;
+  BOOL windowIsVisible = self.visible;
 
-	return (windowIsMainWindow && windowIsOnActiveSpace && windowIsVisible && applicationIsActive &&
-			applicationHasNoModal);
+  return (windowIsMainWindow && windowIsOnActiveSpace && windowIsVisible &&
+          applicationIsActive && applicationHasNoModal);
 }
 
-- (BOOL)isBeneathMouse
-{
-	return (self == [NSWindow windowBeneathMouse]);
+- (BOOL)isBeneathMouse {
+  return (self == [NSWindow windowBeneathMouse]);
 }
 
-+ (nullable NSWindow *)windowBeneathMouse
-{
-	NSPoint cursorLocation = [NSEvent mouseLocation];
++ (nullable NSWindow *)windowBeneathMouse {
+  NSPoint cursorLocation = [NSEvent mouseLocation];
 
-	NSArray *windowList = [NSApp orderedWindows];
+  NSArray *windowList = [NSApp orderedWindows];
 
-	for (NSWindow *window in windowList) {
-		if (NSMouseInRect(cursorLocation, window.frame, NO)) {
-			return window;
-		}
-	}
+  for (NSWindow *window in windowList) {
+    if (NSMouseInRect(cursorLocation, window.frame, NO)) {
+      return window;
+    }
+  }
 
-	return nil;
+  return nil;
 }
 
-- (NSRect)titlebarFrame
-{
-	NSView *contentView = self.contentView;
+- (NSRect)titlebarFrame {
+  NSView *contentView = self.contentView;
 
-	NSRect contentViewFrame = contentView.frame;
+  NSRect contentViewFrame = contentView.frame;
 
-	NSRect selfFrame = self.frame;
+  NSRect selfFrame = self.frame;
 
-	selfFrame.origin.y += contentViewFrame.size.height;
+  selfFrame.origin.y += contentViewFrame.size.height;
 
-	selfFrame.size.height -= contentViewFrame.size.height;
+  selfFrame.size.height -= contentViewFrame.size.height;
 
-	return selfFrame;
+  return selfFrame;
 }
 
-- (BOOL)runningInHighResolutionMode
-{
-	return self.screen.runningInHighResolutionMode;
+- (BOOL)runningInHighResolutionMode {
+  return self.screen.runningInHighResolutionMode;
 }
 
-- (void)exactlyCenterWindow
-{
-	NSScreen *screen = [NSScreen mainScreen];
+- (void)exactlyCenterWindow {
+  NSScreen *screen = [NSScreen mainScreen];
 
-	if (screen) {
-		NSRect remoteFrame = screen.visibleFrame;
+  if (screen) {
+    NSRect remoteFrame = screen.visibleFrame;
 
-		NSRect localFrame = self.frame;
+    NSRect localFrame = self.frame;
 
-		localFrame = NSRectCenteredInRect(localFrame, remoteFrame);
+    localFrame = NSRectCenteredInRect(localFrame, remoteFrame);
 
-		[self setFrame:localFrame display:YES animate:YES];
-	}
+    [self setFrame:localFrame display:YES animate:YES];
+  }
 }
 
-- (void)saveWindowStateForClass:(Class)owner
-{
-	[self saveWindowStateUsingKeyword:NSStringFromClass(owner)];
+- (void)saveWindowStateForClass:(Class)owner {
+  [self saveWindowStateUsingKeyword:NSStringFromClass(owner)];
 }
 
-- (void)restoreWindowStateForClass:(Class)owner
-{
-	[self restoreWindowStateUsingKeyword:NSStringFromClass(owner)];
+- (void)restoreWindowStateForClass:(Class)owner {
+  [self restoreWindowStateUsingKeyword:NSStringFromClass(owner)];
 }
 
-- (void)saveWindowStateUsingKeyword:(NSString *)keyword
-{
-	NSParameterAssert(keyword.length > 0);
+- (void)saveWindowStateUsingKeyword:(NSString *)keyword {
+  NSParameterAssert(keyword.length > 0);
 
-	keyword = [NSString stringWithFormat:@"NSWindow Frame -> Internal (v3) -> %@", keyword];
+  keyword = [NSString
+      stringWithFormat:@"NSWindow Frame -> Internal (v3) -> %@", keyword];
 
-	[[NSUserDefaults standardUserDefaults] setObject:self.stringWithSavedFrame forKey:keyword];
+  [[NSUserDefaults standardUserDefaults] setObject:self.stringWithSavedFrame
+                                            forKey:keyword];
 }
 
-- (void)restoreWindowStateUsingKeyword:(NSString *)keyword
-{
-	NSParameterAssert(keyword.length > 0);
+- (void)restoreWindowStateUsingKeyword:(NSString *)keyword {
+  NSParameterAssert(keyword.length > 0);
 
-	keyword = [NSString stringWithFormat:@"NSWindow Frame -> Internal (v3) -> %@", keyword];
+  keyword = [NSString
+      stringWithFormat:@"NSWindow Frame -> Internal (v3) -> %@", keyword];
 
-	NSString *savedFrame = [[NSUserDefaults standardUserDefaults] stringForKey:keyword];
+  NSString *savedFrame =
+      [[NSUserDefaults standardUserDefaults] stringForKey:keyword];
 
-	if (savedFrame) {
-		[self setFrameFromString:savedFrame];
-	}
+  if (savedFrame) {
+    [self setFrameFromString:savedFrame];
+  }
 }
 
-- (BOOL)isInFullscreenMode
-{
-	return ((self.styleMask & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen);
+- (BOOL)isInFullscreenMode {
+  return ((self.styleMask & NSWindowStyleMaskFullScreen) ==
+          NSWindowStyleMaskFullScreen);
 }
 
-- (NSWindow *)deepestWindow
-{
-	return [NSWindow deepestWindowInWindow:self];
+- (NSWindow *)deepestWindow {
+  return [NSWindow deepestWindowInWindow:self];
 }
 
-+ (NSWindow *)deepestWindowInWindow:(NSWindow *)window
-{
-	NSParameterAssert(window != nil);
++ (NSWindow *)deepestWindowInWindow:(NSWindow *)window {
+  NSParameterAssert(window != nil);
 
-	NSWindow *attachedSheet = window.attachedSheet;
+  NSWindow *attachedSheet = window.attachedSheet;
 
-	if (attachedSheet) {
-		return [NSWindow deepestWindowInWindow:attachedSheet];
-	}
+  if (attachedSheet) {
+    return [NSWindow deepestWindowInWindow:attachedSheet];
+  }
 
-	return window;
+  return window;
 }
 
-- (void)saveSizeAsDefault
-{
-	self.defaultSize = self.frame.size;
+- (void)saveSizeAsDefault {
+  self.defaultSize = self.frame.size;
 }
 
-- (void)setDefaultSize:(NSSize)defaultSize
-{
-	objc_setAssociatedObject(self, @selector(defaultSize), NSStringFromSize(defaultSize), OBJC_ASSOCIATION_COPY);
+- (void)setDefaultSize:(NSSize)defaultSize {
+  objc_setAssociatedObject(self, @selector(defaultSize),
+                           NSStringFromSize(defaultSize),
+                           OBJC_ASSOCIATION_COPY);
 }
 
-- (NSSize)defaultSize
-{
-	NSString *defaultSize = objc_getAssociatedObject(self, @selector(defaultSize));
+- (NSSize)defaultSize {
+  NSString *defaultSize =
+      objc_getAssociatedObject(self, @selector(defaultSize));
 
-	if (defaultSize) {
-		return NSSizeFromString(defaultSize);
-	}
+  if (defaultSize) {
+    return NSSizeFromString(defaultSize);
+  }
 
-	return NSZeroSize;
+  return NSZeroSize;
 }
 
-- (NSRect)defaultFrame
-{
-	NSSize defaultSize = self.defaultSize;
+- (NSRect)defaultFrame {
+  NSSize defaultSize = self.defaultSize;
 
-	if (NSEqualSizes(defaultSize, NSZeroSize)) {
-		return NSZeroRect;
-	}
+  if (NSEqualSizes(defaultSize, NSZeroSize)) {
+    return NSZeroRect;
+  }
 
-	NSRect windowFrame = self.frame;
+  NSRect windowFrame = self.frame;
 
-	CGFloat widthDifference = (windowFrame.size.width - defaultSize.width);
+  CGFloat widthDifference = (windowFrame.size.width - defaultSize.width);
 
-	windowFrame.size.width -= widthDifference;
+  windowFrame.size.width -= widthDifference;
 
-	windowFrame.origin.x += widthDifference;
+  windowFrame.origin.x += widthDifference;
 
-	CGFloat heightDifference = (windowFrame.size.height - defaultSize.height);
+  CGFloat heightDifference = (windowFrame.size.height - defaultSize.height);
 
-	windowFrame.size.height -= heightDifference;
+  windowFrame.size.height -= heightDifference;
 
-	windowFrame.origin.y += heightDifference;
+  windowFrame.origin.y += heightDifference;
 
-	return windowFrame;
+  return windowFrame;
 }
 
-- (void)restoreDefaultSizeAndDisplay:(BOOL)display
-{
-	NSRect defaultFrame = self.defaultFrame;
+- (void)restoreDefaultSizeAndDisplay:(BOOL)display {
+  NSRect defaultFrame = self.defaultFrame;
 
-	if (NSIsEmptyRect(defaultFrame)) {
-		return;
-	}
+  if (NSIsEmptyRect(defaultFrame)) {
+    return;
+  }
 
-	[self setFrame:defaultFrame display:display];
+  [self setFrame:defaultFrame display:display];
 }
 
 @end

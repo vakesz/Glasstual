@@ -35,8 +35,8 @@
  *
  *********************************************************************** */
 
-#import "TVCLogLine.h"
 #import "IRCColorFormat.h"
+#import "TVCLogLine.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -50,21 +50,22 @@ NS_ASSUME_NONNULL_BEGIN
 /* effectiveRange is the range of the result in the attributed string.
  Use this value to delete those characters during enumeration.  */
 - (NSString *)stringFormattedForChannel:(NSString *)channelName
-							   onClient:(IRCClient *)client
-						   withLineType:(TVCLogLineType)lineType
-						 effectiveRange:(NSRange *_Nullable)effectiveRange;
+                               onClient:(IRCClient *)client
+                           withLineType:(TVCLogLineType)lineType
+                         effectiveRange:(NSRange *_Nullable)effectiveRange;
 @end
 
 @interface NSMutableAttributedString (IRCTextFormatterPrivate)
 /* This method truncates self to the effective range */
 - (NSString *)stringFormattedForChannel:(NSString *)channelName
-							   onClient:(IRCClient *)client
-						   withLineType:(TVCLogLineType)lineType;
+                               onClient:(IRCClient *)client
+                           withLineType:(TVCLogLineType)lineType;
 @end
 
 @interface NSMutableString (IRCTextFormatterPrivate)
 /* Returns the number of characters deleted, or NSNotFound if none. */
-- (NSUInteger)wrapIRCTextFormatterResultWith:(NSUInteger)minimumIndex maxDistance:(NSUInteger)maxDistance;
+- (NSUInteger)wrapIRCTextFormatterResultWith:(NSUInteger)minimumIndex
+                                 maxDistance:(NSUInteger)maxDistance;
 @end
 
 NS_ASSUME_NONNULL_END

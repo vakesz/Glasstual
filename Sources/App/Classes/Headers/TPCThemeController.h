@@ -41,12 +41,15 @@
 NS_ASSUME_NONNULL_BEGIN
 
 GLASSTUAL_EXTERN NSString *const TPCThemeControllerCustomThemeNameBasicPrefix;
-GLASSTUAL_EXTERN NSString *const TPCThemeControllerCustomThemeNameCompletePrefix;
+GLASSTUAL_EXTERN NSString *const
+    TPCThemeControllerCustomThemeNameCompletePrefix;
 
 GLASSTUAL_EXTERN NSString *const TPCThemeControllerBundledThemeNameBasicPrefix;
-GLASSTUAL_EXTERN NSString *const TPCThemeControllerBundledThemeNameCompletePrefix;
+GLASSTUAL_EXTERN NSString *const
+    TPCThemeControllerBundledThemeNameCompletePrefix;
 
-GLASSTUAL_EXTERN NSNotificationName const TPCThemeControllerThemeListDidChangeNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TPCThemeControllerThemeListDidChangeNotification;
 
 /* Theme is not loaded until main window is woken which means
  while you could in theory access this object before then,
@@ -60,7 +63,8 @@ GLASSTUAL_EXTERN NSNotificationName const TPCThemeControllerThemeListDidChangeNo
 
 @property(readonly, copy) NSString *name;
 
-@property(readonly, copy) NSURL *originalURL;  // Where original copy of theme is.
+@property(readonly, copy)
+    NSURL *originalURL; // Where original copy of theme is.
 @property(readonly, copy) NSURL *temporaryURL; // Where cached copy of theme is.
 
 @property(readonly, copy) NSString *originalPath;
@@ -71,25 +75,28 @@ GLASSTUAL_EXTERN NSNotificationName const TPCThemeControllerThemeListDidChangeNo
 @property(getter=isBundledTheme, readonly) BOOL bundledTheme;
 
 /* Calls for all themes */
-- (void)enumerateAvailableThemesWithBlock:(void(NS_NOESCAPE ^)(NSString *fileName,
-															   TPCThemeStorageLocation storageLocation,
-															   BOOL multipleVariants,
-															   BOOL *stop))enumerationBlock;
+- (void)enumerateAvailableThemesWithBlock:
+    (void(NS_NOESCAPE ^)(NSString *fileName,
+                         TPCThemeStorageLocation storageLocation,
+                         BOOL multipleVariants, BOOL *stop))enumerationBlock;
 
 - (BOOL)themeExists:(NSString *)themeName;
 
 + (nullable NSString *)pathOfThemeWithName:(NSString *)themeName;
 + (nullable NSString *)pathOfThemeWithName:(NSString *)themeName
-						   storageLocation:(nullable TPCThemeStorageLocation *)storageLocation;
+                           storageLocation:(nullable TPCThemeStorageLocation *)
+                                               storageLocation;
 
-+ (nullable NSString *)buildFilename:(NSString *)name forStorageLocation:(TPCThemeStorageLocation)storageLocation;
++ (nullable NSString *)buildFilename:(NSString *)name
+                  forStorageLocation:(TPCThemeStorageLocation)storageLocation;
 
 + (nullable NSString *)extractThemeSource:(NSString *)source;
 + (nullable NSString *)extractThemeName:(NSString *)source;
 
 + (TPCThemeStorageLocation)storageLocationOfThemeWithName:(NSString *)themeName;
 
-+ (nullable NSString *)descriptionForStorageLocation:(TPCThemeStorageLocation)storageLocation;
++ (nullable NSString *)descriptionForStorageLocation:
+    (TPCThemeStorageLocation)storageLocation;
 @end
 
 NS_ASSUME_NONNULL_END

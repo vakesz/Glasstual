@@ -39,49 +39,40 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation NSObject (TXObjectHelper)
 
-- (void)applicationDidFinishLaunching
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (void)applicationDidFinishLaunching {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-- (void)preferencesChanged
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (void)preferencesChanged {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-- (void)prepareInitialState
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (void)prepareInitialState {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-- (void)prepareForApplicationTermination
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (void)prepareForApplicationTermination {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-- (void)prepareForPermanentDestruction
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (void)prepareForPermanentDestruction {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-+ (void)preferencesChanged
-{
-	[self doesNotRecognizeSelector:_cmd];
++ (void)preferencesChanged {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-+ (void)prepareInitialState
-{
-	[self doesNotRecognizeSelector:_cmd];
++ (void)prepareInitialState {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-+ (void)prepareForApplicationTermination
-{
-	[self doesNotRecognizeSelector:_cmd];
++ (void)prepareForApplicationTermination {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-+ (void)prepareForPermanentDestruction
-{
-	[self doesNotRecognizeSelector:_cmd];
++ (void)prepareForPermanentDestruction {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
 @end

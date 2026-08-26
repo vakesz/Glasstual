@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSWindow (TXWindowHelper)
 /* Reset size of window to accommodate -minSize */
-- (void)changeFrameToMin;						  // display = YES; animate = NO
+- (void)changeFrameToMin;                         // display = YES; animate = NO
 - (void)changeFrameToMinAndDisplay:(BOOL)display; // animate = NO
 - (void)changeFrameToMinAndDisplay:(BOOL)display animate:(BOOL)animate;
 
@@ -60,7 +60,7 @@ NS_ASSUME_NONNULL_BEGIN
  priority of 550. The subview top, right, bottom, and left will equal
  that of the superview with 0.0 constant. */
 /* See 	-addConstraintsToSuperviewToHugEdges
-		-addConstraintsToSuperviewToEqualDimensions */
+                -addConstraintsToSuperviewToEqualDimensions */
 - (void)replaceFirstSubview:(NSView *)withView;
 @end
 

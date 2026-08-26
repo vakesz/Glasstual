@@ -39,12 +39,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCModeInfo ()
-{
-  @protected
-	BOOL _modeIsSet;
-	NSString *_modeSymbol;
-	NSString *_modeParameter;
+@interface IRCModeInfo () {
+@protected
+  BOOL _modeIsSet;
+  NSString *_modeSymbol;
+  NSString *_modeParameter;
 }
 
 @end

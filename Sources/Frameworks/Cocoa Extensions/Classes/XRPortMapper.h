@@ -1,6 +1,6 @@
 
 /*
-Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
+Disclaimer: IMPORTANT:  This Apple software is supplied to you by
 Apple Inc. ("Apple") in consideration of your agreement to the
 following terms, and your use, installation, modification or
 redistribution of this Apple software constitutes acceptance of these
@@ -14,8 +14,8 @@ license, under Apple's copyrights in this original Apple software (the
 Software, with or without modifications, in source and/or binary forms;
 provided that if you redistribute the Apple Software in its entirety and
 without modifications, you must retain this notice and the following
-text and disclaimers in all such redistributions of the Apple Software. 
-Neither the name, trademarks, service marks or logos of Apple Inc. 
+text and disclaimers in all such redistributions of the Apple Software.
+Neither the name, trademarks, service marks or logos of Apple Inc.
 may be used to endorse or promote products derived from the Apple
 Software without specific prior written permission from Apple.  Except
 as expressly stated in this notice, no other rights or licenses, express
@@ -44,9 +44,10 @@ Copyright © 2007 Apple Inc. All Rights Reserved.
 NS_ASSUME_NONNULL_BEGIN
 
 @interface XRPortMapper : NSObject
-/** Initializes a copy of XRPortMapper that will map the given local (private) port.
-    By default it will map TCP and not UDP, and will not suggest a desired public port,
-    but this can be configured by setting properties before opening the port mapper.
+/** Initializes a copy of XRPortMapper that will map the given local (private)
+   port. By default it will map TCP and not UDP, and will not suggest a desired
+   public port, but this can be configured by setting properties before opening
+   the port mapper.
  */
 - (instancetype)initWithPort:(UInt16)port NS_DESIGNATED_INITIALIZER;
 
@@ -72,19 +73,22 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)close;
 
 /** The following properties are valid only while the port mapper is open.
-    They are all KV-observable, or you can listen for a XRPortMapperDidChangedNotification.
-    If error is non-zero, none of the other properties are valid (they'll all be zero/nil.) */
-@property(readonly) SInt32 error;							 // Really DNSServiceErrorType
-@property(readonly, copy, nullable) NSString *publicAddress; // IPv4 dotted-quad string
+    They are all KV-observable, or you can listen for a
+   XRPortMapperDidChangedNotification. If error is non-zero, none of the other
+   properties are valid (they'll all be zero/nil.) */
+@property(readonly) SInt32 error; // Really DNSServiceErrorType
+@property(readonly, copy, nullable)
+    NSString *publicAddress; // IPv4 dotted-quad string
 @property(readonly) unsigned short publicPort;
 
-/** Returns YES if a non-null port mapping is in effect: 
+/** Returns YES if a non-null port mapping is in effect:
     that is, if the public address differs from the local one. */
 @property(readonly) BOOL isMapped;
 
 #pragma mark -
 
-/** Determine the main interface's public IP address, without mapping any ports. */
+/** Determine the main interface's public IP address, without mapping any ports.
+ */
 + (nullable NSString *)findPublicAddress;
 
 /** Returns this computer's local IPv4 address. */
@@ -94,7 +98,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)localAddressIsPrivate;
 @end
 
-/** This notification is posted asynchronously when the status of a 
+/** This notification is posted asynchronously when the status of a
     port mapping (its error, publicAddress or publicPort) changes. */
 #define XRPortMapperDidChangedNotification @"XRPortMapperDidChangedNotification"
 

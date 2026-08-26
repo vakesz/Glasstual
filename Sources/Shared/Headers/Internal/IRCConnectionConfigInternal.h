@@ -39,26 +39,25 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCConnectionConfig ()
-{
-  @protected
-	BOOL _connectionPrefersModernCiphersOnly;
-	BOOL _connectionPrefersSecuredConnection;
-	BOOL _connectionShouldValidateCertificateChain;
-	IRCConnectionAddressType _addressType;
-	IRCConnectionProxyType _proxyType;
-	NSData *_identityClientSideCertificate;
-	NSString *_proxyAddress;
-	NSString *_proxyPassword;
-	NSString *_proxyUsername;
-	NSString *_serverAddress;
-	NSUInteger _floodControlDelayInterval;
-	NSUInteger _floodControlMaximumMessages;
-	uint16_t _proxyPort;
-	uint16_t _serverPort;
-	NSStringEncoding _primaryEncoding;
-	NSStringEncoding _fallbackEncoding;
-	RCMCipherSuiteCollection _cipherSuites;
+@interface IRCConnectionConfig () {
+@protected
+  BOOL _connectionPrefersModernCiphersOnly;
+  BOOL _connectionPrefersSecuredConnection;
+  BOOL _connectionShouldValidateCertificateChain;
+  IRCConnectionAddressType _addressType;
+  IRCConnectionProxyType _proxyType;
+  NSData *_identityClientSideCertificate;
+  NSString *_proxyAddress;
+  NSString *_proxyPassword;
+  NSString *_proxyUsername;
+  NSString *_serverAddress;
+  NSUInteger _floodControlDelayInterval;
+  NSUInteger _floodControlMaximumMessages;
+  uint16_t _proxyPort;
+  uint16_t _serverPort;
+  NSStringEncoding _primaryEncoding;
+  NSStringEncoding _fallbackEncoding;
+  RCMCipherSuiteCollection _cipherSuites;
 }
 
 @end

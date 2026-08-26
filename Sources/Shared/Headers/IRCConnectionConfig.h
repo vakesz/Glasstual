@@ -50,18 +50,19 @@ NS_ASSUME_NONNULL_BEGIN
 /* Raw values are persisted. Values 4 (SOCKS4) and 7 (HTTPS) are retired
  and must not be reused; stored configurations carrying them decode as None. */
 typedef NS_ENUM(NSUInteger, IRCConnectionProxyType) {
-	IRCConnectionProxyTypeNone = 0,
-	IRCConnectionProxyTypeAutomatic = 1, // System proxy settings
-	IRCConnectionProxyTypeSocks5 = 5,
-	IRCConnectionProxyTypeHTTP = 6, // HTTP CONNECT
-	IRCConnectionProxyTypeTor = 8	// SOCKS5 to the Tor Browser bundle on 127.0.0.1:9150
+  IRCConnectionProxyTypeNone = 0,
+  IRCConnectionProxyTypeAutomatic = 1, // System proxy settings
+  IRCConnectionProxyTypeSocks5 = 5,
+  IRCConnectionProxyTypeHTTP = 6, // HTTP CONNECT
+  IRCConnectionProxyTypeTor =
+      8 // SOCKS5 to the Tor Browser bundle on 127.0.0.1:9150
 };
 
 /* Select specific protocol to use. This does not define preference.
  When a specific protocol is enabled, its counterpart is disabled. */
 typedef NS_ENUM(NSUInteger, IRCConnectionAddressType) {
-	IRCConnectionAddressTypeDefault = 0, // enable both
-	IRCConnectionAddressTypeIPv4 NS_SWIFT_NAME(v4) = 1, IRCConnectionAddressTypeIPv6 NS_SWIFT_NAME(v6) = 2 };
+  IRCConnectionAddressTypeDefault = 0, // enable both
+  IRCConnectionAddressTypeIPv4 NS_SWIFT_NAME(v4) = 1, IRCConnectionAddressTypeIPv6 NS_SWIFT_NAME(v6) = 2 };
 
 #pragma mark -
 #pragma mark Immutable Object
@@ -92,7 +93,8 @@ typedef NS_ENUM(NSUInteger, IRCConnectionAddressType) {
 @interface IRCConnectionConfigMutable : IRCConnectionConfig
 @property(nonatomic, assign, readwrite) BOOL connectionPrefersModernCiphersOnly;
 @property(nonatomic, assign, readwrite) BOOL connectionPrefersSecuredConnection;
-@property(nonatomic, assign, readwrite) BOOL connectionShouldValidateCertificateChain;
+@property(nonatomic, assign, readwrite)
+    BOOL connectionShouldValidateCertificateChain;
 @property(nonatomic, assign, readwrite) IRCConnectionAddressType addressType;
 @property(nonatomic, assign, readwrite) IRCConnectionProxyType proxyType;
 @property(nonatomic, assign, readwrite) NSUInteger floodControlDelayInterval;
@@ -103,9 +105,12 @@ typedef NS_ENUM(NSUInteger, IRCConnectionAddressType) {
 @property(nonatomic, copy, readwrite, nullable) NSString *proxyAddress;
 @property(nonatomic, copy, readwrite, nullable) NSString *proxyPassword;
 @property(nonatomic, copy, readwrite, nullable) NSString *proxyUsername;
-@property(nonatomic, copy, readwrite, nullable) NSData *identityClientSideCertificate;
-@property(nonatomic, assign, readwrite) NSStringEncoding primaryEncoding NS_UNAVAILABLE;
-@property(nonatomic, assign, readwrite) NSStringEncoding fallbackEncoding NS_UNAVAILABLE;
+@property(nonatomic, copy, readwrite, nullable)
+    NSData *identityClientSideCertificate;
+@property(nonatomic, assign, readwrite)
+    NSStringEncoding primaryEncoding NS_UNAVAILABLE;
+@property(nonatomic, assign, readwrite)
+    NSStringEncoding fallbackEncoding NS_UNAVAILABLE;
 @property(nonatomic, assign, readwrite) RCMCipherSuiteCollection cipherSuites;
 @end
 

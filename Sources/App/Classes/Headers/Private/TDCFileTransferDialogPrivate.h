@@ -36,8 +36,8 @@
  *
  *********************************************************************** */
 
-#import "TDCWindowBase.h"
 #import "TDCFileTransferDialogTypes.h"
+#import "TDCWindowBase.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -63,36 +63,41 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* The next two method return a unique identifier specific to each
  added request. This identifier is different from a request token
- as it is available always and never is seen by the other user. 
+ as it is available always and never is seen by the other user.
  It is used internally for finding specific requests. */
 /* Returning nil means that something failed and the transfer was
  never added to list of transfers. */
 - (nullable NSString *)addReceiverForClient:(IRCClient *)client
-								   nickname:(NSString *)nickname
-									address:(NSString *)hostAddress
-									   port:(uint16_t)hostPort
-								   filename:(NSString *)filename
-								   filesize:(uint64_t)totalFilesize
-									  token:(nullable NSString *)transferToken;
+                                   nickname:(NSString *)nickname
+                                    address:(NSString *)hostAddress
+                                       port:(uint16_t)hostPort
+                                   filename:(NSString *)filename
+                                   filesize:(uint64_t)totalFilesize
+                                      token:(nullable NSString *)transferToken;
 
 - (nullable NSString *)addSenderForClient:(IRCClient *)client
-								 nickname:(NSString *)nickname
-									 path:(NSString *)path
-								 autoOpen:(BOOL)autoOpen;
+                                 nickname:(NSString *)nickname
+                                     path:(NSString *)path
+                                 autoOpen:(BOOL)autoOpen;
 
 - (BOOL)fileTransferExistsWithToken:(NSString *)transferToken;
 
-- (nullable TDCFileTransferDialogTransferController *)fileTransferMatchingPort:(uint16_t)port;
+- (nullable TDCFileTransferDialogTransferController *)fileTransferMatchingPort:
+    (uint16_t)port;
 
-- (nullable TDCFileTransferDialogTransferController *)fileTransferSenderMatchingToken:(NSString *)transferToken;
-- (nullable TDCFileTransferDialogTransferController *)fileTransferReceiverMatchingToken:(NSString *)transferToken;
+- (nullable TDCFileTransferDialogTransferController *)
+    fileTransferSenderMatchingToken:(NSString *)transferToken;
+- (nullable TDCFileTransferDialogTransferController *)
+    fileTransferReceiverMatchingToken:(NSString *)transferToken;
 
-- (nullable TDCFileTransferDialogTransferController *)fileTransferWithUniqueIdentifier:(NSString *)identifier;
+- (nullable TDCFileTransferDialogTransferController *)
+    fileTransferWithUniqueIdentifier:(NSString *)identifier;
 @end
 
 #pragma mark -
 
-@interface TDCFileTransferDialog (TDCFileTransferDialogDownloadDestinationExtension)
+@interface TDCFileTransferDialog (
+    TDCFileTransferDialogDownloadDestinationExtension)
 - (nullable NSURL *)downloadDestinationURL;
 
 - (void)setDownloadDestinationURL:(nullable NSData *)downloadDestinationURL;

@@ -39,15 +39,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCHighlightMatchCondition ()
-{
-  @protected
-	BOOL _matchIsExcluded;
-	NSString *_matchChannelId;
-	NSString *_matchKeyword;
+@interface IRCHighlightMatchCondition () {
+@protected
+  BOOL _matchIsExcluded;
+  NSString *_matchChannelId;
+  NSString *_matchKeyword;
 
-  @private
-	NSString *_uniqueIdentifier;
+@private
+  NSString *_uniqueIdentifier;
 }
 
 @end

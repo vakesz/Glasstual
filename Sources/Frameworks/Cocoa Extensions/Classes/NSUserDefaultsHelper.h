@@ -40,7 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setLong:(long)value forKey:(NSString *)defaultName;
 - (void)setUnsignedLong:(unsigned long)value forKey:(NSString *)defaultName;
 - (void)setLongLong:(long long)value forKey:(NSString *)defaultName;
-- (void)setUnsignedLongLong:(unsigned long long)value forKey:(NSString *)defaultName;
+- (void)setUnsignedLongLong:(unsigned long long)value
+                     forKey:(NSString *)defaultName;
 
 - (nullable NSColor *)colorForKey:(NSString *)defaultName;
 - (NSUInteger)unsignedIntegerForKey:(NSString *)defaultName;

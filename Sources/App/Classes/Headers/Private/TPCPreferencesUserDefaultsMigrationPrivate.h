@@ -14,7 +14,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TPCPreferencesUserDefaults (TPCPreferencesUserDefaultsMigrationPrivate)
+@interface TPCPreferencesUserDefaults (
+    TPCPreferencesUserDefaultsMigrationPrivate)
 - (void)_setObject:(nullable id)value forKey:(NSString *)defaultName;
 - (void)_migrateObject:(nullable id)value forKey:(NSString *)defaultName;
 @end

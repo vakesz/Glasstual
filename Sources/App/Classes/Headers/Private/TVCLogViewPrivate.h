@@ -58,7 +58,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, assign) BOOL viewingBottom;
 
-- (instancetype)initWithViewController:(TVCLogController *)viewController NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithViewController:(TVCLogController *)viewController
+    NS_DESIGNATED_INITIALIZER;
 
 - (void)informDelegateWebViewClosedUnexpectedly;
 - (void)informDelegateWebViewFinishedLoading;
@@ -87,7 +88,8 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface TVCLogView (TVCLogViewJavaScriptHandlerPrivate)
-- (NSString *)compiledFunctionCall:(NSString *)function withArguments:(nullable NSArray<id> *)arguments;
+- (NSString *)compiledFunctionCall:(NSString *)function
+                     withArguments:(nullable NSArray<id> *)arguments;
 
 @end
 

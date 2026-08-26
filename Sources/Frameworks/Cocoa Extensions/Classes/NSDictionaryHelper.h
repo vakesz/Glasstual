@@ -51,24 +51,36 @@ NS_ASSUME_NONNULL_BEGIN
 - (double)doubleForKey:(id)key;
 - (nullable id)objectForKey:(id)key orUseDefault:(nullable id)defaultValue;
 - (BOOL)boolForKey:(id)key orUseDefault:(BOOL)defaultValue;
-- (nullable NSArray *)arrayForKey:(id)key orUseDefault:(nullable NSArray *)defaultValue;
-- (nullable NSDictionary *)dictionaryForKey:(id)key orUseDefault:(nullable NSDictionary *)defaultValue;
-- (nullable NSString *)stringForKey:(id)key orUseDefault:(nullable NSString *)defaultValue;
+- (nullable NSArray *)arrayForKey:(id)key
+                     orUseDefault:(nullable NSArray *)defaultValue;
+- (nullable NSDictionary *)dictionaryForKey:(id)key
+                               orUseDefault:
+                                   (nullable NSDictionary *)defaultValue;
+- (nullable NSString *)stringForKey:(id)key
+                       orUseDefault:(nullable NSString *)defaultValue;
 - (NSInteger)integerForKey:(id)key orUseDefault:(NSInteger)defaultValue;
-- (NSUInteger)unsignedIntegerForKey:(id)key orUseDefault:(NSUInteger)defaultValue;
+- (NSUInteger)unsignedIntegerForKey:(id)key
+                       orUseDefault:(NSUInteger)defaultValue;
 - (short)shortForKey:(id)key orUseDefault:(short)defaultValue;
-- (unsigned short)unsignedShortForKey:(id)key orUseDefault:(unsigned short)defaultValue;
+- (unsigned short)unsignedShortForKey:(id)key
+                         orUseDefault:(unsigned short)defaultValue;
 - (long)longForKey:(id)key orUseDefault:(long)defaultValue;
-- (unsigned long)unsignedLongForKey:(id)key orUseDefault:(unsigned long)defaultValue;
+- (unsigned long)unsignedLongForKey:(id)key
+                       orUseDefault:(unsigned long)defaultValue;
 - (long long)longLongForKey:(id)key orUseDefault:(long long)defaultValue;
-- (unsigned long long)unsignedLongLongForKey:(id)key orUseDefault:(unsigned long long)defaultValue;
+- (unsigned long long)unsignedLongLongForKey:(id)key
+                                orUseDefault:(unsigned long long)defaultValue;
 - (double)doubleForKey:(id)key orUseDefault:(double)defaultValue;
 /* Objects are copied to the pointer using -copy */
 - (void)assignObjectTo:(__strong _Nonnull id *_Nonnull)pointer forKey:(id)key;
-- (void)assignObjectTo:(__strong _Nonnull id *_Nonnull)pointer forKey:(id)key performCopy:(BOOL)copyValue;
+- (void)assignObjectTo:(__strong _Nonnull id *_Nonnull)pointer
+                forKey:(id)key
+           performCopy:(BOOL)copyValue;
 - (void)assignBoolTo:(BOOL *)pointer forKey:(id)key;
-- (void)assignArrayTo:(__strong NSArray *_Nonnull *_Nonnull)pointer forKey:(id)key;
-- (void)assignStringTo:(__strong NSString *_Nonnull *_Nonnull)pointer forKey:(id)key;
+- (void)assignArrayTo:(__strong NSArray *_Nonnull *_Nonnull)pointer
+               forKey:(id)key;
+- (void)assignStringTo:(__strong NSString *_Nonnull *_Nonnull)pointer
+                forKey:(id)key;
 - (void)assignUnsignedIntegerTo:(NSUInteger *)pointer forKey:(id)key;
 - (void)assignUnsignedShortTo:(unsigned short *)pointer forKey:(id)key;
 - (void)assignDoubleTo:(double *)pointer forKey:(id)key;
@@ -80,13 +92,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, copy) NSArray *sortedDictionaryKeys;
 @property(readonly, copy) NSArray *sortedDictionaryKeysReversed;
 
-/* Returns a new dictionary without values that are already defined by "defaults" 
- or are empty (zero length, or zero count). This method is not recursive which 
- means it only performs one pass on all top level objects. */
-/* "defaults" is allowed to be nil in which case only empty objects are removed. */
-- (NSDictionary *)dictionaryByRemovingDefaults:(nullable NSDictionary *)defaults;
+/* Returns a new dictionary without values that are already defined by
+ "defaults" or are empty (zero length, or zero count). This method is not
+ recursive which means it only performs one pass on all top level objects. */
+/* "defaults" is allowed to be nil in which case only empty objects are removed.
+ */
+- (NSDictionary *)dictionaryByRemovingDefaults:
+    (nullable NSDictionary *)defaults;
 - (NSDictionary *)dictionaryByRemovingDefaults:(nullable NSDictionary *)defaults
-							  allowEmptyValues:(BOOL)allowEmptyValues;
+                              allowEmptyValues:(BOOL)allowEmptyValues;
 
 /* Abstraction of query items that uses a custom
  separator and allows for custom encoding logic. */
@@ -95,7 +109,9 @@ NS_ASSUME_NONNULL_BEGIN
 /* Object types that are accepted: NSString, NSNumber, NSNull */
 - (NSString *)formDataUsingSeparator:(NSString *)separator;
 - (NSString *)formDataUsingSeparator:(NSString *)separator
-					   encodingBlock:(NSString *(NS_NOESCAPE ^)(NSString *value))encodingBlock;
+                       encodingBlock:
+                           (NSString *(NS_NOESCAPE ^)(NSString *value))
+                               encodingBlock;
 @end
 
 @interface NSMutableDictionary (CSMutableDictionaryHelper)

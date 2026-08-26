@@ -34,49 +34,46 @@ NS_ASSUME_NONNULL_BEGIN
 
 static os_log_t XRLogToConsoleDefaultSubsystem = nil;
 
-os_log_t _Nullable _CSFrameworkInternalLogSubsystem(void)
-{
-	__block os_log_t subsystem = nil;
+os_log_t _Nullable _CSFrameworkInternalLogSubsystem(void) {
+  __block os_log_t subsystem = nil;
 
-	static dispatch_once_t onceToken;
+  static dispatch_once_t onceToken;
 
-	dispatch_once(&onceToken, ^{
-		subsystem = os_log_create("com.vakesz.glasstual.frameworks.CocoaExtensions", "Framework");
-	});
+  dispatch_once(&onceToken, ^{
+    subsystem = os_log_create("com.vakesz.glasstual.frameworks.CocoaExtensions",
+                              "Framework");
+  });
 
-	return subsystem;
+  return subsystem;
 }
 
-os_log_t _LogToConsoleDefaultSubsystem(void)
-{
-	return ((XRLogToConsoleDefaultSubsystem) ?: OS_LOG_DEFAULT);
+os_log_t _LogToConsoleDefaultSubsystem(void) {
+  return ((XRLogToConsoleDefaultSubsystem) ?: OS_LOG_DEFAULT);
 }
 
-void _LogToConsoleSetDefaultSubsystem(os_log_t _Nullable subsystem)
-{
-	XRLogToConsoleDefaultSubsystem = subsystem;
+void _LogToConsoleSetDefaultSubsystem(os_log_t _Nullable subsystem) {
+  XRLogToConsoleDefaultSubsystem = subsystem;
 
-	XRLoggingProxy.defaultSubsystem = subsystem;
+  XRLoggingProxy.defaultSubsystem = subsystem;
 }
 
-void _LogToConsoleSetDefaultSubsystemToMainBundle(NSString *category)
-{
-	NSCParameterAssert(category != nil);
+void _LogToConsoleSetDefaultSubsystemToMainBundle(NSString *category) {
+  NSCParameterAssert(category != nil);
 
-	NSBundle *mainBundle = [NSBundle mainBundle];
+  NSBundle *mainBundle = [NSBundle mainBundle];
 
-	NSString *identifier = mainBundle.bundleIdentifier;
+  NSString *identifier = mainBundle.bundleIdentifier;
 
-	os_log_t subsystem = os_log_create(identifier.UTF8String, category.UTF8String);
+  os_log_t subsystem =
+      os_log_create(identifier.UTF8String, category.UTF8String);
 
-	_LogToConsoleSetDefaultSubsystem(subsystem);
+  _LogToConsoleSetDefaultSubsystem(subsystem);
 }
 
-NSString *_LogToConsoleFormattedStackTrace(NSArray<NSString *> *trace)
-{
-	NSCParameterAssert(trace != nil);
+NSString *_LogToConsoleFormattedStackTrace(NSArray<NSString *> *trace) {
+  NSCParameterAssert(trace != nil);
 
-	return [trace componentsJoinedByString:@"\n"];
+  return [trace componentsJoinedByString:@"\n"];
 }
 
 NS_ASSUME_NONNULL_END

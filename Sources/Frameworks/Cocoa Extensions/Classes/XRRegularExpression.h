@@ -34,30 +34,38 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface XRRegularExpression : NSObject
 + (NSArray *)matchesInString:(NSString *)haystack
-				   withRegex:(NSString *)needle
-				 withoutCase:(BOOL)caseless
-			 substringGroups:(BOOL)substringGroups;
+                   withRegex:(NSString *)needle
+                 withoutCase:(BOOL)caseless
+             substringGroups:(BOOL)substringGroups;
 
 + (NSUInteger)matches:(NSArray *_Nullable *_Nonnull)matches
-			 inString:(NSString *)haystack
-			withRegex:(NSString *)needle; // caseless = NO, substring = NO
+             inString:(NSString *)haystack
+            withRegex:(NSString *)needle; // caseless = NO, substring = NO
 + (NSUInteger)matches:(NSArray *_Nullable *_Nonnull)matches
-			 inString:(NSString *)haystack
-			withRegex:(NSString *)needle
-		  withoutCase:(BOOL)caseless; // substring = NO
+             inString:(NSString *)haystack
+            withRegex:(NSString *)needle
+          withoutCase:(BOOL)caseless; // substring = NO
 + (NSUInteger)matches:(NSArray *_Nullable *_Nonnull)matches
-			 inString:(NSString *)haystack
-			withRegex:(NSString *)needle
-		  withoutCase:(BOOL)caseless
-	  substringGroups:(BOOL)substringGroups;
+             inString:(NSString *)haystack
+            withRegex:(NSString *)needle
+          withoutCase:(BOOL)caseless
+      substringGroups:(BOOL)substringGroups;
 
-+ (BOOL)string:(NSString *)haystack isMatchedByRegex:(NSString *)needle; // caseless = NO
-+ (BOOL)string:(NSString *)haystack isMatchedByRegex:(NSString *)needle withoutCase:(BOOL)caseless;
++ (BOOL)string:(NSString *)haystack
+    isMatchedByRegex:(NSString *)needle; // caseless = NO
++ (BOOL)string:(NSString *)haystack
+    isMatchedByRegex:(NSString *)needle
+         withoutCase:(BOOL)caseless;
 
-+ (NSRange)string:(NSString *)haystack rangeOfRegex:(NSString *)needle; // caseless = NO
-+ (NSRange)string:(NSString *)haystack rangeOfRegex:(NSString *)needle withoutCase:(BOOL)caseless;
++ (NSRange)string:(NSString *)haystack
+     rangeOfRegex:(NSString *)needle; // caseless = NO
++ (NSRange)string:(NSString *)haystack
+     rangeOfRegex:(NSString *)needle
+      withoutCase:(BOOL)caseless;
 
-+ (NSString *)string:(NSString *)haystack replacedByRegex:(NSString *)needle withString:(NSString *)puppy;
++ (NSString *)string:(NSString *)haystack
+     replacedByRegex:(NSString *)needle
+          withString:(NSString *)puppy;
 @end
 
 NS_ASSUME_NONNULL_END

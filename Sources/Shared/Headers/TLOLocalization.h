@@ -39,16 +39,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 GLASSTUAL_EXTERN NSString *TXTLS(NSString *key, ...);
 
-GLASSTUAL_EXTERN NSString *TXLocalizedString(NSBundle *bundle, NSString *key, va_list arguments) GLASSTUAL_SYMBOL_USED;
-GLASSTUAL_EXTERN NSString *TXLocalizedStringAlternative(NSBundle *bundle, NSString *key, ...) GLASSTUAL_SYMBOL_USED;
+GLASSTUAL_EXTERN NSString *
+TXLocalizedString(NSBundle *bundle, NSString *key,
+                  va_list arguments) GLASSTUAL_SYMBOL_USED;
+GLASSTUAL_EXTERN NSString *
+TXLocalizedStringAlternative(NSBundle *bundle, NSString *key,
+                             ...) GLASSTUAL_SYMBOL_USED;
 
 /* This function exists so that static analyzer doesn't warn
  certain static strings aren't localized. Some strings wont
  be localized because it is inappropriate (e.g. a number) */
 __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
-TXLocalizationNotNeeded(NSString *string)
-{
-	return string;
+TXLocalizationNotNeeded(NSString *string) {
+  return string;
 }
 
 NS_ASSUME_NONNULL_END

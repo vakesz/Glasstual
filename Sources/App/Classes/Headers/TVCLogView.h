@@ -54,39 +54,55 @@ GLASSTUAL_EXTERN NSString *const TVCLogViewCommonUserAgentString;
 
 @interface TVCLogView (TVCLogViewJavaScriptHandler)
 - (void)evaluateJavaScript:(NSString *)code;
-- (void)evaluateJavaScript:(NSString *)code completionHandler:(void (^_Nullable)(id _Nullable result))completionHandler;
+- (void)evaluateJavaScript:(NSString *)code
+         completionHandler:
+             (void (^_Nullable)(id _Nullable result))completionHandler;
 
 - (void)evaluateFunction:(NSString *)function;
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments;
 - (void)evaluateFunction:(NSString *)function
-		   withArguments:(nullable NSArray<id> *)arguments
-	   completionHandler:(void (^_Nullable)(id _Nullable result))completionHandler;
+           withArguments:(nullable NSArray<id> *)arguments;
+- (void)evaluateFunction:(NSString *)function
+           withArguments:(nullable NSArray<id> *)arguments
+       completionHandler:
+           (void (^_Nullable)(id _Nullable result))completionHandler;
 
 - (void)booleanByEvaluatingFunction:(NSString *)function
-				  completionHandler:(void (^_Nullable)(BOOL result))completionHandler;
+                  completionHandler:
+                      (void (^_Nullable)(BOOL result))completionHandler;
 - (void)booleanByEvaluatingFunction:(NSString *)function
-					  withArguments:(nullable NSArray<id> *)arguments
-				  completionHandler:(void (^_Nullable)(BOOL result))completionHandler;
+                      withArguments:(nullable NSArray<id> *)arguments
+                  completionHandler:
+                      (void (^_Nullable)(BOOL result))completionHandler;
 
 - (void)stringByEvaluatingFunction:(NSString *)function
-				 completionHandler:(void (^_Nullable)(NSString *_Nullable result))completionHandler;
+                 completionHandler:
+                     (void (^_Nullable)(NSString *_Nullable result))
+                         completionHandler;
 - (void)stringByEvaluatingFunction:(NSString *)function
-					 withArguments:(nullable NSArray<id> *)arguments
-				 completionHandler:(void (^_Nullable)(NSString *_Nullable result))completionHandler;
+                     withArguments:(nullable NSArray<id> *)arguments
+                 completionHandler:
+                     (void (^_Nullable)(NSString *_Nullable result))
+                         completionHandler;
 
 - (void)arrayByEvaluatingFunction:(NSString *)function
-				completionHandler:(void (^_Nullable)(NSArray *_Nullable result))completionHandler;
+                completionHandler:(void (^_Nullable)(NSArray *_Nullable result))
+                                      completionHandler;
 - (void)arrayByEvaluatingFunction:(NSString *)function
-					withArguments:(nullable NSArray<id> *)arguments
-				completionHandler:(void (^_Nullable)(NSArray *_Nullable result))completionHandler;
+                    withArguments:(nullable NSArray<id> *)arguments
+                completionHandler:(void (^_Nullable)(NSArray *_Nullable result))
+                                      completionHandler;
 
 - (void)dictionaryByEvaluatingFunction:(NSString *)function
-					 completionHandler:
-						 (void (^_Nullable)(NSDictionary<NSString *, id> *_Nullable result))completionHandler;
+                     completionHandler:
+                         (void (^_Nullable)(
+                             NSDictionary<NSString *, id> *_Nullable result))
+                             completionHandler;
 - (void)dictionaryByEvaluatingFunction:(NSString *)function
-						 withArguments:(nullable NSArray<id> *)arguments
-					 completionHandler:
-						 (void (^_Nullable)(NSDictionary<NSString *, id> *_Nullable result))completionHandler;
+                         withArguments:(nullable NSArray<id> *)arguments
+                     completionHandler:
+                         (void (^_Nullable)(
+                             NSDictionary<NSString *, id> *_Nullable result))
+                             completionHandler;
 
 + (NSString *)escapeJavaScriptString:(NSString *)string;
 

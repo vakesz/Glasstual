@@ -14,6 +14,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString *const TDCAlertSuppressionPrefix = @"Text Input Prompt Suppression -> ";
+NSString *const TDCAlertSuppressionPrefix =
+    @"Text Input Prompt Suppression -> ";
 
 NS_ASSUME_NONNULL_END

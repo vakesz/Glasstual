@@ -35,8 +35,8 @@
  *
  *********************************************************************** */
 
-#import "THOPluginManager.h"
 #import "IRCCommandIndex.h"
+#import "THOPluginManager.h"
 #import "TVCLogLine.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -53,7 +53,8 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Localization
 
-#define TPILocalizedString(k, ...) TXLocalizedStringAlternative(TPIBundleFromClass(), k, ##__VA_ARGS__)
+#define TPILocalizedString(k, ...)                                             \
+  TXLocalizedStringAlternative(TPIBundleFromClass(), k, ##__VA_ARGS__)
 
 /**
  * @brief Returns the NSBundle that owns the calling class.
@@ -61,22 +62,25 @@ NS_ASSUME_NONNULL_BEGIN
 #define TPIBundleFromClass() [NSBundle bundleForClass:[self class]]
 
 /**
- * A plugin must declare the minimum version of Glasstual that it is compatible with.
+ * A plugin must declare the minimum version of Glasstual that it is compatible
+ * with.
  *
- * Glasstual declares the constant named THOPluginProtocolCompatibilityMinimumVersion.
- * This constant is compared against the minimum version that a plugin specifies.
- * If the plugin's value is equal to or greater than this constant, then the plugin
- * is considered safe to load. 
+ * Glasstual declares the constant named
+ * THOPluginProtocolCompatibilityMinimumVersion. This constant is compared
+ * against the minimum version that a plugin specifies. If the plugin's value is
+ * equal to or greater than this constant, then the plugin is considered safe to
+ * load.
  *
- * Unlike the version information that visible to the end user, this constant does
- * not change often. It only changes when modifications have been made to Glasstual’s
- * codebase that may result in crashes when loading existing plugins.
+ * Unlike the version information that visible to the end user, this constant
+ * does not change often. It only changes when modifications have been made to
+ * Glasstual’s codebase that may result in crashes when loading existing
+ * plugins.
  *
- * For example, even though Glasstual’s visible version number is “5.0.4”, the value
- * of this constant is “5.0.0”
+ * For example, even though Glasstual’s visible version number is “5.0.4”, the
+ * value of this constant is “5.0.0”
  *
- * To declare compatibility, add a new entry to a plugin's Info.plist file with 
- * the key named: "MinimumGlasstualVersion" - Set the value of this entry, as a 
+ * To declare compatibility, add a new entry to a plugin's Info.plist file with
+ * the key named: "MinimumGlasstualVersion" - Set the value of this entry, as a
  * String, to the return value of THOPluginProtocolCompatibilityMinimumVersion.
  *
  * @return "7.2.4" as of June 30, 2024
@@ -84,7 +88,7 @@ NS_ASSUME_NONNULL_BEGIN
 extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 
 /**
- * The `THOPluginProtocol` protocol defines methods and properties that the 
+ * The `THOPluginProtocol` protocol defines methods and properties that the
  * primary class of a plugin can inherit from.
  */
 @protocol THOPluginProtocol <NSObject>
@@ -99,9 +103,9 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 /**
  * @brief Method invoked during initialization of a plugin.
  *
- * @discussion This method is invoked very early on. It occurs once the principal 
- *  class of the plugin has been allocated and is guaranteed to be the first call
- *  home that a plugin will receive.
+ * @discussion This method is invoked very early on. It occurs once the
+ * principal class of the plugin has been allocated and is guaranteed to be the
+ * first call home that a plugin will receive.
  */
 - (void)pluginLoadedIntoMemory;
 
@@ -116,12 +120,13 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 /** @name Input Manipulation */
 
 /**
- * @brief Method invoked to inform the plugin that a plain text message was received
+ * @brief Method invoked to inform the plugin that a plain text message was
+ * received
  *  (*PRIVMSG*, *ACTION*, or *NOTICE*)
  *
- * @discussion This method is invoked on the main thread which means that slow code
- *  can lockup the user interface of Glasstual. If you have no intent to ignore content,
- *  then do work in the background and immediately return `YES`.
+ * @discussion This method is invoked on the main thread which means that slow
+ * code can lockup the user interface of Glasstual. If you have no intent to
+ * ignore content, then do work in the background and immediately return `YES`.
  *
  * @param text The message contents
  * @param textAuthor The author (sender) of the message
@@ -131,57 +136,63 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
  *    Possible values: `TVCLogLineTypePrivateMessage`, `TVCLogLineTypeAction`,
  *           `TVCLogLineTypeNotice`
  * @param client The client the message was received on
- * @param receivedAt The date & time of the message. Depending on whether a custom
- *    value was specified using the server-time IRCv3 capability, this `NSDate`
- *    object may be very far in the past, or even possibly in the future.
+ * @param receivedAt The date & time of the message. Depending on whether a
+ * custom value was specified using the server-time IRCv3 capability, this
+ * `NSDate` object may be very far in the past, or even possibly in the future.
  * @param wasEncrypted Whether or not the message was encrypted
  *
- * @return `YES` to display the contents of the message to the user, `NO` otherwise.
+ * @return `YES` to display the contents of the message to the user, `NO`
+ * otherwise.
  */
 - (BOOL)receivedText:(NSString *)text
-		  authoredBy:(IRCPrefix *)textAuthor
-		 destinedFor:(nullable IRCChannel *)textDestination
-		  asLineType:(TVCLogLineType)lineType
-			onClient:(IRCClient *)client
-		  receivedAt:(NSDate *)receivedAt
-		wasEncrypted:(BOOL)wasEncrypted;
+          authoredBy:(IRCPrefix *)textAuthor
+         destinedFor:(nullable IRCChannel *)textDestination
+          asLineType:(TVCLogLineType)lineType
+            onClient:(IRCClient *)client
+          receivedAt:(NSDate *)receivedAt
+        wasEncrypted:(BOOL)wasEncrypted;
 
 /**
- * @brief Method used to modify and/or completely ignore incoming data from the server.
+ * @brief Method used to modify and/or completely ignore incoming data from the
+ * server.
  *
- * @warning This method is invoked on each plugin in the order loaded. This method
- *  does not stop for the first result returned which means that value being passed may
- *  have been modified by a plugin above the one being talked to.
+ * @warning This method is invoked on each plugin in the order loaded. This
+ * method does not stop for the first result returned which means that value
+ * being passed may have been modified by a plugin above the one being talked
+ * to.
  *
- * @warning Glasstual does not perform validation against the instance of `IRCMessage` that
- *  is returned which means that if Glasstual tries to access specific information which
- *  has been improperly modified or removed, then the entire application may crash.
+ * @warning Glasstual does not perform validation against the instance of
+ * `IRCMessage` that is returned which means that if Glasstual tries to access
+ * specific information which has been improperly modified or removed, then the
+ * entire application may crash.
  *
  * @param input An instance of `IRCMessage`
  * @param client The client responsible for the event
  *
- * @return The original and/or modified copy of `IRCMessage` or `nil` to prevent the data
- *  from being processed altogether.
+ * @return The original and/or modified copy of `IRCMessage` or `nil` to prevent
+ * the data from being processed altogether.
  */
 - (nullable IRCMessage *)interceptServerInput:(IRCMessage *)input for:(IRCClient *)client;
 
 /**
- * @brief Method used to modify and/or completely ignore text entered into the main text
- *  field of Glasstual.
+ * @brief Method used to modify and/or completely ignore text entered into the
+ * main text field of Glasstual.
  *
- * @warning This method is invoked on each plugin in the order loaded. This method
- *  does not stop for the first result returned which means that value being passed may
- *  have been modified by a plugin above the one being talked to.
+ * @warning This method is invoked on each plugin in the order loaded. This
+ * method does not stop for the first result returned which means that value
+ * being passed may have been modified by a plugin above the one being talked
+ * to.
  *
- * @param input The value of the text field as either an instance of `NSString` or
- *  `NSAttributedString`.
- * @param command Glasstual allows the end user to send text entered into the text field as
- *  an action without using the `/me` command. When this occurs, Glasstual informs lower-level
- *  APIs of this intent by changing the value of this parameter from “privmsg” to “action” —
- *  In most cases a plugin should disregard this parameter and pass it untouched.
+ * @param input The value of the text field as either an instance of `NSString`
+ * or `NSAttributedString`.
+ * @param command Glasstual allows the end user to send text entered into the
+ * text field as an action without using the `/me` command. When this occurs,
+ * Glasstual informs lower-level APIs of this intent by changing the value of
+ * this parameter from “privmsg” to “action” — In most cases a plugin should
+ * disregard this parameter and pass it untouched.
  *
- * @return The original and/or modified copy of input or `nil` to prevent the data from
- *  being processed altogether.
+ * @return The original and/or modified copy of input or `nil` to prevent the
+ * data from being processed altogether.
  */
 - (nullable id)interceptUserInput:(id)input command:(IRCRemoteCommand)command;
 
@@ -202,7 +213,8 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
  * @brief Defines an `NSString` which is used by the Preferences window of
  *  Glasstual to create a new entry in its navigation list.
  */
-@property(nonatomic, readonly, copy) NSString *pluginPreferencesPaneMenuItemName;
+@property(nonatomic, readonly, copy)
+    NSString *pluginPreferencesPaneMenuItemName;
 
 #pragma mark -
 #pragma mark Renderer Events
@@ -210,25 +222,27 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 /** @name Renderer Events */
 
 /**
- * @brief Method invoked prior to a message being converted to its HTML equivalent.
+ * @brief Method invoked prior to a message being converted to its HTML
+ * equivalent.
  *
- * @discussion This methods can be used to modify the text that will be displayed for a 
- *  certain message by replacing one or more segments of it.
- * 
+ * @discussion This methods can be used to modify the text that will be
+ * displayed for a certain message by replacing one or more segments of it.
+ *
  * Considerations:
  *
- * 1. `nil` or a string with zero length indicates that there is no interest in modifying 
- *  `newMessage`
- * 2. There is no way to inform the renderer that you do not want a specific value of 
- *  `newMessage` shown to the end user. Use the various other methods provided by the 
- *  `THOPluginProtocol` to accomplish that task.
+ * 1. `nil` or a string with zero length indicates that there is no interest in
+ * modifying `newMessage`
+ * 2. There is no way to inform the renderer that you do not want a specific
+ * value of `newMessage` shown to the end user. Use the various other methods
+ * provided by the `THOPluginProtocol` to accomplish that task.
  *
- * @warning This method is invoked on each plugin in the order loaded. This method does not 
- *  stop for the first result returned which means that value being passed may have been
- *  modified by a plugin above the one being talked to.
+ * @warning This method is invoked on each plugin in the order loaded. This
+ * method does not stop for the first result returned which means that value
+ * being passed may have been modified by a plugin above the one being talked
+ * to.
  *
- * @warning Under no circumstances should you insert HTML at this point. Doing so will result 
- *  in undefined behavior.
+ * @warning Under no circumstances should you insert HTML at this point. Doing
+ * so will result in undefined behavior.
  *
  * @param newMessage An unedited copy of the message being rendered
  * @param viewController The view responsible for the event
@@ -238,9 +252,9 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
  * @return The original and/or modified copy of `newMessage`
  */
 - (nullable NSString *)willRenderMessage:(NSString *)newMessage
-					   forViewController:(TVCLogController *)viewController
-								lineType:(TVCLogLineType)lineType
-							  memberType:(TVCLogLineMemberType)memberType;
+                       forViewController:(TVCLogController *)viewController
+                                lineType:(TVCLogLineType)lineType
+                              memberType:(TVCLogLineMemberType)memberType;
 
 #pragma mark -
 #pragma mark Subscribed Events
@@ -266,38 +280,47 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
  * @return An `NSArray` containing a lowercase list of commands that the plugin
  *  will support as user input from the main text field.
  */
-@property(nonatomic, readonly, copy) NSArray<NSString *> *subscribedUserInputCommands;
+@property(nonatomic, readonly, copy)
+    NSArray<NSString *> *subscribedUserInputCommands;
 
 /**
- * @brief Method invoked when a subscribed user input command requires processing.
+ * @brief Method invoked when a subscribed user input command requires
+ * processing.
  *
  * @param client The client responsible for the event
  * @param commandString The name of the command
  * @param messageString Data that follows `commandString`
  */
 - (void)userInputCommandInvokedOnClient:(IRCClient *)client
-						  commandString:(NSString *)commandString
-						  messageString:(NSString *)messageString;
+                          commandString:(NSString *)commandString
+                          messageString:(NSString *)messageString;
 
 /**
- * @brief Defines a list of commands that the plugin will support as server input.
+ * @brief Defines a list of commands that the plugin will support as server
+ * input.
  *
  * @return An `NSArray` containing a lowercase list of commands that the plugin
  *  will support as server input.
  *
- * @discussion If a command is a number, then insert it into the array as an `NSString`
+ * @discussion If a command is a number, then insert it into the array as an
+ * `NSString`
  */
-@property(nonatomic, readonly, copy) NSArray<NSString *> *subscribedServerInputCommands;
+@property(nonatomic, readonly, copy)
+    NSArray<NSString *> *subscribedServerInputCommands;
 
 /**
- * @brief Method invoked when a subscribed server input command requires processing.
+ * @brief Method invoked when a subscribed server input command requires
+ * processing.
  *
- * @param inputObject An instance of THOPluginDidReceiveServerInputConcreteObject
+ * @param inputObject An instance of
+ * THOPluginDidReceiveServerInputConcreteObject
  * @param client The client responsible for the event
  *
  * @see THOPluginDidReceiveServerInputConcreteObject
  */
-- (void)didReceiveServerInput:(THOPluginDidReceiveServerInputConcreteObject *)inputObject onClient:(IRCClient *)client;
+- (void)didReceiveServerInput:
+            (THOPluginDidReceiveServerInputConcreteObject *)inputObject
+                     onClient:(IRCClient *)client;
 
 #pragma mark -
 #pragma mark WebView Events
@@ -305,48 +328,55 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 /** @name WebView Events */
 
 /**
- * @brief Method invoked when the Document Object Model (DOM) of a view has been modified.
+ * @brief Method invoked when the Document Object Model (DOM) of a view has been
+ * modified.
  *
- * @discussion This method is invoked when a message has been added to the Document Object
- *  Model (DOM) of viewController
+ * @discussion This method is invoked when a message has been added to the
+ * Document Object Model (DOM) of viewController
  *
  * @warning Do not do any heavy work when the
- *  [isProcessedInBulk]([THOPluginDidPostNewMessageConcreteObject isProcessedInBulk]) property 
- *  of `messageObject` is set to `YES` because thousand of other messages may be processing at 
- *  the same time.
+ *  [isProcessedInBulk]([THOPluginDidPostNewMessageConcreteObject
+ * isProcessedInBulk]) property of `messageObject` is set to `YES` because
+ * thousand of other messages may be processing at the same time.
  *
- * @warning This method is invoked on an asynchronous background dispatch queue. Not the
- *  main thread. If you interact with WebKit when this method is invoked, then make sure
- *  that you do so on the main thread. If you don't, WebKit will throw an exception.
+ * @warning This method is invoked on an asynchronous background dispatch queue.
+ * Not the main thread. If you interact with WebKit when this method is invoked,
+ * then make sure that you do so on the main thread. If you don't, WebKit will
+ * throw an exception.
  *
  * @param messageObject An instance of THOPluginDidPostNewMessageConcreteObject
  * @param viewController The view responsible for the event
  *
  * @see THOPluginDidPostNewMessageConcreteObject
  */
-- (void)didPostNewMessage:(THOPluginDidPostNewMessageConcreteObject *)messageObject
-		forViewController:(TVCLogController *)viewController;
+- (void)didPostNewMessage:
+            (THOPluginDidPostNewMessageConcreteObject *)messageObject
+        forViewController:(TVCLogController *)viewController;
 
 /**
- * @brief Method invoked when the JavaScript function `app.sendPluginPayload()` is executed.
+ * @brief Method invoked when the JavaScript function `app.sendPluginPayload()`
+ * is executed.
  *
- * @discussion A plugin that injects JavaScript into Glasstual's WebView can use this method
- *  to send data back to the plugin.
- * 
- * A payload can be passed by invoking the JavaScript function 
+ * @discussion A plugin that injects JavaScript into Glasstual's WebView can use
+ * this method to send data back to the plugin.
+ *
+ * A payload can be passed by invoking the JavaScript function
  *  `app.sendPluginPayload(payloadLabel, payloadContent)`
  *
- * @warning This method is invoked on an asynchronous background dispatch queue. Not the
- *  main thread. If you interact with WebKit when this method is invoked, then make sure
- *  that you do so on the main thread. If you don't, WebKit will throw an exception.
+ * @warning This method is invoked on an asynchronous background dispatch queue.
+ * Not the main thread. If you interact with WebKit when this method is invoked,
+ * then make sure that you do so on the main thread. If you don't, WebKit will
+ * throw an exception.
  *
- * @param payloadObject An instance of THOPluginWebViewJavaScriptPayloadConcreteObject
+ * @param payloadObject An instance of
+ * THOPluginWebViewJavaScriptPayloadConcreteObject
  * @param viewController The view responsible for the event
  *
  * @see THOPluginWebViewJavaScriptPayloadConcreteObject
  */
-- (void)didReceiveJavaScriptPayload:(THOPluginWebViewJavaScriptPayloadConcreteObject *)payloadObject
-				 fromViewController:(TVCLogController *)viewController;
+- (void)didReceiveJavaScriptPayload:
+            (THOPluginWebViewJavaScriptPayloadConcreteObject *)payloadObject
+                 fromViewController:(TVCLogController *)viewController;
 
 #pragma mark -
 #pragma mark Reserved Calls
@@ -354,7 +384,8 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 /* The behavior of this method call is undefined. It exists for internal
  purposes for the plugins packaged with Glasstual by default. It is not
  recommended to use it, or try to understand it. */
-@property(nonatomic, readonly, copy) NSArray<THOPluginOutputSuppressionRule *> *pluginOutputSuppressionRules;
+@property(nonatomic, readonly, copy)
+    NSArray<THOPluginOutputSuppressionRule *> *pluginOutputSuppressionRules;
 @end
 
 #pragma mark -
@@ -375,12 +406,13 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 @property(readonly, copy) NSString *messageContents;
 
 /**
- * @brief The ID of the message that can be used to access it using `getElementByID()`
+ * @brief The ID of the message that can be used to access it using
+ * `getElementByID()`
  */
 @property(readonly, copy) NSString *lineNumber;
 
 /**
- * @brief The nickname of the person and/or server responsible for producing the 
+ * @brief The nickname of the person and/or server responsible for producing the
  *  message.
  *
  * @discussion This value may be empty.
@@ -433,7 +465,8 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 /**
  * @brief The nickname section of the sender's hostmask
  *
- * @discussion The value of this property is the server address if senderIsServer is `YES`
+ * @discussion The value of this property is the server address if
+ * senderIsServer is `YES`
  */
 @property(readonly, copy) NSString *senderNickname;
 
@@ -455,9 +488,10 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 /**
  * @brief The date & time during which the input was received
  *
- * @discussion If the original message specifies a custom value using the server-time
- *  capability, then the value of this property will reflect the value defined by the
- *  server-time capability; not the exact date & time it was received on the socket.
+ * @discussion If the original message specifies a custom value using the
+ * server-time capability, then the value of this property will reflect the
+ * value defined by the server-time capability; not the exact date & time it was
+ * received on the socket.
  */
 @property(readonly, copy) NSDate *receivedAt;
 
@@ -484,7 +518,7 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 /**
  * @brief The server address of the IRC network
  *
- * @discussion The value of this attribute is the address of the server that 
+ * @discussion The value of this attribute is the address of the server that
  *  Glasstual is currently connected to and may differ from senderNickname even
  *  if senderIsServer is `YES`
  */
@@ -499,7 +533,7 @@ extern NSString *const THOPluginProtocolCompatibilityMinimumVersion;
 #pragma mark -
 
 /**
- * This object is a container for values related to 
+ * This object is a container for values related to
  * [THOPluginProtocol didReceiveJavaScriptPayload:fromViewController:]
  */
 @interface THOPluginWebViewJavaScriptPayloadConcreteObject : NSObject

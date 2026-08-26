@@ -46,7 +46,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly, copy) NSString *searchString;
 @property(readonly) NSArray<TDCChannelSpotlightSearchResult *> *searchResults;
-@property(readonly) NSArray<TDCChannelSpotlightSearchResult *> *searchResultsFiltered;
+@property(readonly)
+    NSArray<TDCChannelSpotlightSearchResult *> *searchResultsFiltered;
 @property(readonly) NSUInteger searchResultsCount;
 @property(readonly) NSInteger selectedSearchResult; // -1 = none selected
 @end

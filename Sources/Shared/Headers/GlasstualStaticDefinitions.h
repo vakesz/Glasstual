@@ -39,7 +39,8 @@
 #define RZAnimationCurrentContext() [NSAnimationContext currentContext]
 #define RZAppleEventManager() [NSAppleEventManager sharedAppleEventManager]
 #define RZCurrentCalendar() [NSCalendar currentCalendar]
-#define RZDistributedNotificationCenter() [NSDistributedNotificationCenter defaultCenter]
+#define RZDistributedNotificationCenter()                                      \
+  [NSDistributedNotificationCenter defaultCenter]
 #define RZFileManager() [NSFileManager defaultManager]
 #define RZFontManager() [NSFontManager sharedFontManager]
 #define RZMainBundle() [NSBundle mainBundle]
@@ -51,9 +52,11 @@
 #define RZRunningApplication() [NSRunningApplication currentApplication]
 #define RZSharedApplication() [NSApplication sharedApplication]
 #define RZSpellChecker() [NSSpellChecker sharedSpellChecker]
-#define RZUserNotificationCenter() [UNUserNotificationCenter currentNotificationCenter]
+#define RZUserNotificationCenter()                                             \
+  [UNUserNotificationCenter currentNotificationCenter]
 #define RZWorkspace() [NSWorkspace sharedWorkspace]
-#define RZWorkspaceNotificationCenter() [[NSWorkspace sharedWorkspace] notificationCenter]
+#define RZWorkspaceNotificationCenter()                                        \
+  [[NSWorkspace sharedWorkspace] notificationCenter]
 
 /* Misc. */
 #define NSInvertedComparisonResult(c) ((c) * (-1))
@@ -70,15 +73,16 @@
 
 #define GLASSTUAL_DEPRECATED_WARNING COCOA_EXTENSIONS_DEPRECATED_WARNING
 
-#define GLASSTUAL_IGNORE_DEPRECATION_BEGIN COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
+#define GLASSTUAL_IGNORE_DEPRECATION_BEGIN                                     \
+  COCOA_EXTENSIONS_IGNORE_DEPRECATION_BEGIN
 #define GLASSTUAL_IGNORE_DEPRECATION_END COCOA_EXTENSIONS_IGNORE_DEPRECATION_END
 
 /* Helper function */
 #define StringFromBOOL(value) ((value) ? @"YES" : @"NO")
 
-#define SetVariableIfNil(variable, value)                                                                              \
-	if ((variable) == nil) {                                                                                           \
-		(variable) = (value);                                                                                          \
-	}
+#define SetVariableIfNil(variable, value)                                      \
+  if ((variable) == nil) {                                                     \
+    (variable) = (value);                                                      \
+  }
 
 /* @end */

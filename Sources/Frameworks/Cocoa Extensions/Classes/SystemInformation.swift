@@ -34,7 +34,7 @@ import AppKit
 import Darwin
 
 @objc(XRSystemInformation)
-final class SystemInformation: NSObject {
+public final class SystemInformation: NSObject {
 	private static let sleepStateLock = NSLock()
 	private nonisolated(unsafe) static var sleeping = false
 
@@ -51,18 +51,18 @@ final class SystemInformation: NSObject {
 	}()
 
 	@objc(systemIsSleeping)
-	class var systemIsSleeping: Bool {
+	public class var systemIsSleeping: Bool {
 		_ = sleepObservers
 		return sleepStateLock.withLock { sleeping }
 	}
 
 	@objc(systemBuildVersion)
-	class var systemBuildVersion: String? {
+	public class var systemBuildVersion: String? {
 		SystemVersion.shared.productBuildVersion
 	}
 
 	@objc(systemStandardVersion)
-	class var systemStandardVersion: String {
+	public class var systemStandardVersion: String {
 		let version = ProcessInfo.processInfo.operatingSystemVersion
 		if version.patchVersion == 0 {
 			return "\(version.majorVersion).\(version.minorVersion)"
@@ -71,14 +71,14 @@ final class SystemInformation: NSObject {
 	}
 
 	@objc(systemOperatingSystemName)
-	class var systemOperatingSystemName: String {
+	public class var systemOperatingSystemName: String {
 		let key = ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 26 ? "macOS Tahoe" : "macOS"
 		return localizedString(key)
 	}
 
 	@available(*, deprecated, message: "Return value is not reliable on new Macs. No alternative available.")
 	@objc(systemModelName)
-	class var systemModelName: String? {
+	public class var systemModelName: String? {
 		guard let token = systemModelToken?.lowercased(), !token.isEmpty else { return nil }
 
 		let names = [

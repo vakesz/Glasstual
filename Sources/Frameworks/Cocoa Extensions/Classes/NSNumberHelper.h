@@ -34,9 +34,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define NSNumberInRange(n, s, e) (n >= s && n <= e)
 
-COCOA_EXTENSIONS_INLINE BOOL CGFloatAreEqual(CGFloat firstValue, CGFloat secondValue)
-{
-	return (fabs(firstValue - secondValue) <= __DBL_EPSILON__);
+COCOA_EXTENSIONS_INLINE BOOL CGFloatAreEqual(CGFloat firstValue,
+                                             CGFloat secondValue) {
+  return (fabs(firstValue - secondValue) <= __DBL_EPSILON__);
 }
 
 @interface NSNumber (CSNumberHelper)

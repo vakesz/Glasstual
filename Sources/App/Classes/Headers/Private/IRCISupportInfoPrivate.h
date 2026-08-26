@@ -46,7 +46,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly, copy, nullable) NSString *stringValueForLastUpdate;
 
-- (instancetype)initWithClient:(nullable IRCClient *)client NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithClient:(nullable IRCClient *)client
+    NS_DESIGNATED_INITIALIZER;
 
 - (void)processConfigurationData:(NSString *)configurationData;
 

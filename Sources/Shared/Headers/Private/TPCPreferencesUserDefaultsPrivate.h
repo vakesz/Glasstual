@@ -40,7 +40,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface TPCPreferencesUserDefaults ()
-- (void)setObject:(nullable id)value forKey:(NSString *)defaultName postNotification:(BOOL)postNotification;
+- (void)setObject:(nullable id)value
+              forKey:(NSString *)defaultName
+    postNotification:(BOOL)postNotification;
 @end
 
 NS_ASSUME_NONNULL_END

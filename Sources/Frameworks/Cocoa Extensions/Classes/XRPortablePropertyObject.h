@@ -32,7 +32,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/* XRPortablePropertyObject as a base class for objects that 
+/* XRPortablePropertyObject as a base class for objects that
  typically come in immutable and mutable pairs. It helps manages more
  common tasks such as maintaining defaults for mutable properties,
  performing health checks after init, and different levels of copying. */
@@ -57,11 +57,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* Called after alloc and before init during a regular copy to allow properties
  to be populated as needed. Default implementation does nothing. */
-- (void)populateDuringCopy:(__kindof XRPortablePropertyObject *)newObject mutableCopy:(BOOL)mutableCopy;
+- (void)populateDuringCopy:(__kindof XRPortablePropertyObject *)newObject
+               mutableCopy:(BOOL)mutableCopy;
 
 /* Called after alloc and before init during a unique copy to allow properties
  to be populated as needed. Default implementation does nothing. */
-- (void)populateDuringUniqueCopy:(__kindof XRPortablePropertyObject *)newObject mutableCopy:(BOOL)mutableCopy;
+- (void)populateDuringUniqueCopy:(__kindof XRPortablePropertyObject *)newObject
+                     mutableCopy:(BOOL)mutableCopy;
 
 /* Called during -initWithCoder: to allow properties to be populated. */
 /* Return YES on success, NO on failure. On failure, nil is immediately
@@ -75,7 +77,8 @@ NS_ASSUME_NONNULL_BEGIN
  an actual new copy when said object is already immutable.
  This behavior is on by default for most subclasses. */
 @interface XRPortablePropertyObject
-	: NSObject <NSCopying, NSMutableCopying, NSCoding, NSSecureCoding, XRPortablePropertyObjectPrototype>
+    : NSObject <NSCopying, NSMutableCopying, NSCoding, NSSecureCoding,
+                XRPortablePropertyObjectPrototype>
 /* -init returns self. It does not perform calls to prototype methods.
  It is expected subclasses will replace -init or mark unavailable. */
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
@@ -99,7 +102,8 @@ NS_ASSUME_NONNULL_BEGIN
 /* Defines whether the class we are in is mutable. */
 /* This property defaults to NO. */
 @property(readonly, getter=isMutable, class) BOOL mutable;
-@property(readonly, getter=isMutable) BOOL mutable; // Mirrors [Class mutable] by default
+@property(readonly, getter=isMutable)
+    BOOL mutable; // Mirrors [Class mutable] by default
 
 /* When -copy or -copyWithZone: is called on an immutable class,
  does the class want a reference to the original object returned

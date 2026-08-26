@@ -40,5 +40,3 @@
 #import <GRMustache/GRMustache.h>
 
 #import "GlasstualStaticDefinitions.h"
-
-extern NSErrorDomain const ICLInlineContentErrorDomain;

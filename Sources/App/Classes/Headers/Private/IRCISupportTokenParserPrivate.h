@@ -48,16 +48,25 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface IRCISupportTokenParser : NSObject
-+ (NSDictionary<NSString *, NSNumber *> *)channelLimitsFromToken:(NSString *)token;
-+ (NSDictionary<NSString *, NSNumber *> *)maximumTargetsFromToken:(NSString *)token;
-+ (NSDictionary<NSString *, NSNumber *> *)maximumListEntriesFromToken:(NSString *)token;
-+ (IRCISupportExtendedBanConfiguration *)extendedBanConfigurationFromToken:(NSString *)token;
-+ (nullable IRCISupportPrefixConfiguration *)userPrefixConfigurationFromToken:(NSString *)token;
-+ (NSDictionary<NSString *, NSNumber *> *)channelModesFromToken:(NSString *)token
-												   mergingModes:(NSDictionary<NSString *, NSNumber *> *)existingModes;
-+ (NSString *)casefoldString:(NSString *)string caseMapping:(NSUInteger)caseMapping;
-+ (BOOL)isClientTag:(NSString *)tagName deniedByEntries:(NSArray<NSString *> *)entries;
-+ (NSArray<NSArray<NSString *> *> *)chunkTargets:(NSArray<NSString *> *)targets limit:(NSUInteger)limit;
++ (NSDictionary<NSString *, NSNumber *> *)channelLimitsFromToken:
+    (NSString *)token;
++ (NSDictionary<NSString *, NSNumber *> *)maximumTargetsFromToken:
+    (NSString *)token;
++ (NSDictionary<NSString *, NSNumber *> *)maximumListEntriesFromToken:
+    (NSString *)token;
++ (IRCISupportExtendedBanConfiguration *)extendedBanConfigurationFromToken:
+    (NSString *)token;
++ (nullable IRCISupportPrefixConfiguration *)userPrefixConfigurationFromToken:
+    (NSString *)token;
++ (NSDictionary<NSString *, NSNumber *> *)
+    channelModesFromToken:(NSString *)token
+             mergingModes:(NSDictionary<NSString *, NSNumber *> *)existingModes;
++ (NSString *)casefoldString:(NSString *)string
+                 caseMapping:(NSUInteger)caseMapping;
++ (BOOL)isClientTag:(NSString *)tagName
+    deniedByEntries:(NSArray<NSString *> *)entries;
++ (NSArray<NSArray<NSString *> *> *)chunkTargets:(NSArray<NSString *> *)targets
+                                           limit:(NSUInteger)limit;
 @end
 
 NS_ASSUME_NONNULL_END

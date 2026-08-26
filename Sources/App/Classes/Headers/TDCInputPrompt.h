@@ -39,17 +39,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^TDCInputPromptCompletionBlock)(NSModalResponse response, NSString *resultString);
+typedef void (^TDCInputPromptCompletionBlock)(NSModalResponse response,
+                                              NSString *resultString);
 
 @interface TDCInputPrompt : TDCAlert
 /* Presents the prompt as a sheet on the key window (or the main window).
  Falls back to an application modal only when no window is available. */
 + (void)promptWithMessage:(NSString *)bodyText
-					title:(NSString *)titleText
-			defaultButton:(NSString *)buttonDefault
-		  alternateButton:(nullable NSString *)buttonAlternate
-			prefillString:(nullable NSString *)prefillString
-		  completionBlock:(TDCInputPromptCompletionBlock)completionBlock;
+                    title:(NSString *)titleText
+            defaultButton:(NSString *)buttonDefault
+          alternateButton:(nullable NSString *)buttonAlternate
+            prefillString:(nullable NSString *)prefillString
+          completionBlock:(TDCInputPromptCompletionBlock)completionBlock;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -37,45 +37,54 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, RCMCipherSuiteCollection) {
-	RCMCipherSuiteCollectionDefault = 0,
-	RCMCipherSuiteCollectionMozilla2015 = 1,
-	RCMCipherSuiteCollectionMozilla2017 = 2,
-	RCMCipherSuiteCollectionNone = 100
+  RCMCipherSuiteCollectionDefault = 0,
+  RCMCipherSuiteCollectionMozilla2015 = 1,
+  RCMCipherSuiteCollectionMozilla2017 = 2,
+  RCMCipherSuiteCollectionNone = 100
 };
 
 #define tls_protocol_version_unknown ((tls_protocol_version_t)0)
 #define tls_ciphersuite_unknown ((tls_ciphersuite_t)0)
 
 @interface RCMSecureTransport : NSObject
-@property(class, readonly) tls_protocol_version_t minimumProtocolType; // TLS 1.2
+@property(class, readonly)
+    tls_protocol_version_t minimumProtocolType; // TLS 1.2
 
-+ (nullable NSString *)descriptionForProtocolType:(tls_protocol_version_t)protocolType;
++ (nullable NSString *)descriptionForProtocolType:
+    (tls_protocol_version_t)protocolType;
 
 /* Technically speaking, tls_ciphersuite_t and SSLCipherSuite
  are interchangeable since they refer to the same code points. */
 + (nullable NSString *)descriptionForCipherSuite:(tls_ciphersuite_t)cipherSuite;
-+ (nullable NSString *)descriptionForCipherSuite:(tls_ciphersuite_t)cipherSuite withProtocol:(BOOL)appendProtocol;
++ (nullable NSString *)descriptionForCipherSuite:(tls_ciphersuite_t)cipherSuite
+                                    withProtocol:(BOOL)appendProtocol;
 
 + (BOOL)isCipherSuiteDeprecated:(tls_ciphersuite_t)cipherSuite;
 
-+ (NSArray<NSString *> *)descriptionsForCipherListCollection:(RCMCipherSuiteCollection)collection;
-+ (NSArray<NSString *> *)descriptionsForCipherListCollection:(RCMCipherSuiteCollection)collection
-												withProtocol:(BOOL)appendProtocol;
++ (NSArray<NSString *> *)descriptionsForCipherListCollection:
+    (RCMCipherSuiteCollection)collection;
++ (NSArray<NSString *> *)
+    descriptionsForCipherListCollection:(RCMCipherSuiteCollection)collection
+                           withProtocol:(BOOL)appendProtocol;
 
-+ (NSArray<NSNumber *> *)cipherSuitesInCollection:(RCMCipherSuiteCollection)collection;
++ (NSArray<NSNumber *> *)cipherSuitesInCollection:
+    (RCMCipherSuiteCollection)collection;
 
 + (void)appendCipherSuitesInCollection:(RCMCipherSuiteCollection)collection
-					 includeDeprecated:(BOOL)includeDeprecated
-							 toOptions:(sec_protocol_options_t)protocolOptions;
+                     includeDeprecated:(BOOL)includeDeprecated
+                             toOptions:(sec_protocol_options_t)protocolOptions;
 
 + (BOOL)isTLSError:(NSError *)error;
 /* -descriptionForErrorCode: returns "Unknown" for out of range error codes */
 + (NSString *)descriptionForErrorCode:(NSInteger)errorCode;
-+ (nullable NSString *)descriptionForBadCertificateErrorCode:(NSInteger)errorCode;
++ (nullable NSString *)descriptionForBadCertificateErrorCode:
+    (NSInteger)errorCode;
 + (BOOL)isBadCertificateErrorCode:(NSInteger)errorCode;
 
-+ (nullable SecTrustRef)trustFromCertificateChain:(NSArray<NSData *> *)certificateChain
-								   withPolicyName:(NSString *)policyName CF_RETURNS_RETAINED;
++ (nullable SecTrustRef)trustFromCertificateChain:
+                            (NSArray<NSData *> *)certificateChain
+                                   withPolicyName:(NSString *)policyName
+    CF_RETURNS_RETAINED;
 
 + (nullable NSArray<NSData *> *)certificatesInTrust:(SecTrustRef)trustRef;
 + (nullable NSString *)policyNameInTrust:(SecTrustRef)trustRef;

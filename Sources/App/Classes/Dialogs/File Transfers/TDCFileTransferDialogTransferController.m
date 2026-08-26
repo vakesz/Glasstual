@@ -36,16 +36,16 @@
  *
  *********************************************************************** */
 
-#import "NSObjectHelperPrivate.h"
-#import "TXGlobalModels.h"
 #import "IRCClientPrivate.h"
-#import "TPCPathInfo.h"
-#import "TPCPreferencesLocal.h"
-#import "TLOLocalization.h"
+#import "NSObjectHelperPrivate.h"
+#import "TDCFileTransferDialogInternal.h"
 #import "TDCFileTransferDialogSocketPrivate.h"
 #import "TDCFileTransferDialogTableCellPrivate.h"
 #import "TDCFileTransferDialogTransferControllerPrivate.h"
-#import "TDCFileTransferDialogInternal.h"
+#import "TLOLocalization.h"
+#import "TPCPathInfo.h"
+#import "TPCPreferencesLocal.h"
+#import "TXGlobalModels.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -68,18 +68,22 @@ NS_ASSUME_NONNULL_BEGIN
  it are a single uninterrupted unit on one queue. */
 #define _assertMainQueue() dispatch_assert_queue(dispatch_get_main_queue())
 
-@interface TDCFileTransferDialogTransferController () <TDCFileTransferDialogSocketDelegate>
+@interface TDCFileTransferDialogTransferController () <
+    TDCFileTransferDialogSocketDelegate>
 @property(nonatomic, strong, readwrite) IRCClient *client;
 @property(nonatomic, copy, readwrite) NSString *clientId;
 @property(nonatomic, assign, readwrite) BOOL isResume;
 @property(nonatomic, assign, readwrite) BOOL isReversed;
 @property(nonatomic, assign, readwrite) BOOL isSender;
-@property(nonatomic, assign, readwrite) TDCFileTransferDialogTransferStatus transferStatus;
+@property(nonatomic, assign, readwrite)
+    TDCFileTransferDialogTransferStatus transferStatus;
 @property(nonatomic, assign, readwrite) uint64_t totalFilesize;
 @property(nonatomic, assign, readwrite) uint64_t processedFilesize;
 @property(nonatomic, assign, readwrite) uint64_t currentRecord;
-@property(nonatomic, strong) NSMutableArray<NSNumber *> *speedRecordsPrivate; // Main queue only
-@property(nonatomic, copy, readwrite, nullable) NSString *errorMessageDescription;
+@property(nonatomic, strong)
+    NSMutableArray<NSNumber *> *speedRecordsPrivate; // Main queue only
+@property(nonatomic, copy, readwrite, nullable)
+    NSString *errorMessageDescription;
 @property(nonatomic, copy, readwrite, nullable) NSString *path;
 @property(nonatomic, copy, readwrite) NSString *filename;
 @property(nonatomic, copy, readwrite) NSString *hostAddress;
@@ -90,10 +94,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong, nullable) NSFileHandle *fileHandle;
 @property(nonatomic, strong, nullable) XRPortMapper *portMapping;
 @property(nonatomic, assign) NSUInteger sendQueueSize;
-@property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *listeningServer;
-@property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *listeningServerConnectedClient;
-@property(nonatomic, strong, nullable) TDCFileTransferDialogSocket *connectionToRemoteServer;
-@property(nonatomic, strong, nullable) id transferProgressHandler; // Used to prevent system sleep
+@property(nonatomic, strong, nullable)
+    TDCFileTransferDialogSocket *listeningServer;
+@property(nonatomic, strong, nullable)
+    TDCFileTransferDialogSocket *listeningServerConnectedClient;
+@property(nonatomic, strong, nullable)
+    TDCFileTransferDialogSocket *connectionToRemoteServer;
+@property(nonatomic, strong, nullable)
+    id transferProgressHandler; // Used to prevent system sleep
 @property(readonly) uint64_t currentFilesize;
 @property(readonly) TDCFileTransferDialog *transferDialog;
 @property(readonly, nullable) TDCFileTransferDialogSocket *readSocket;
@@ -106,1233 +114,1250 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Initialization
 
 + (nullable instancetype)receiverForClient:(IRCClient *)client
-								  nickname:(NSString *)nickname
-								   address:(NSString *)hostAddress
-									  port:(uint16_t)hostPort
-								  filename:(NSString *)filename
-								  filesize:(uint64_t)totalFilesize
-									 token:(nullable NSString *)transferToken
-{
-	NSParameterAssert(client != nil);
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(hostAddress != nil);
-	NSParameterAssert(filename != nil);
+                                  nickname:(NSString *)nickname
+                                   address:(NSString *)hostAddress
+                                      port:(uint16_t)hostPort
+                                  filename:(NSString *)filename
+                                  filesize:(uint64_t)totalFilesize
+                                     token:(nullable NSString *)transferToken {
+  NSParameterAssert(client != nil);
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(hostAddress != nil);
+  NSParameterAssert(filename != nil);
 
-	/* Construct controller */
-	TDCFileTransferDialogTransferController *controller = [[self alloc] initWithClient:client];
+  /* Construct controller */
+  TDCFileTransferDialogTransferController *controller =
+      [[self alloc] initWithClient:client];
 
-	if (transferToken.length > 0) {
-		controller.transferToken = transferToken;
+  if (transferToken.length > 0) {
+    controller.transferToken = transferToken;
 
-		controller.isReversed = YES;
-	}
+    controller.isReversed = YES;
+  }
 
-	controller.isSender = NO;
+  controller.isSender = NO;
 
-	controller.peerNickname = nickname;
+  controller.peerNickname = nickname;
 
-	controller.hostAddress = hostAddress;
-	controller.hostPort = hostPort;
+  controller.hostAddress = hostAddress;
+  controller.hostPort = hostPort;
 
-	controller.filename = filename;
+  controller.filename = filename;
 
-	controller.totalFilesize = totalFilesize;
+  controller.totalFilesize = totalFilesize;
 
-	return controller;
+  return controller;
 }
 
-+ (nullable instancetype)senderForClient:(IRCClient *)client nickname:(NSString *)nickname path:(NSString *)path
-{
-	NSParameterAssert(client != nil);
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(path != nil);
++ (nullable instancetype)senderForClient:(IRCClient *)client
+                                nickname:(NSString *)nickname
+                                    path:(NSString *)path {
+  NSParameterAssert(client != nil);
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(path != nil);
 
-	NSString *filename = path.lastPathComponent;
+  NSString *filename = path.lastPathComponent;
 
-	/* Gather file information */
-	NSDictionary *fileAttributes = [RZFileManager() attributesOfItemAtPath:path error:NULL];
+  /* Gather file information */
+  NSDictionary *fileAttributes = [RZFileManager() attributesOfItemAtPath:path
+                                                                   error:NULL];
 
-	if (fileAttributes == nil) {
-		return nil;
-	}
+  if (fileAttributes == nil) {
+    return nil;
+  }
 
-	uint64_t totalFilesize = [fileAttributes fileSize];
+  uint64_t totalFilesize = [fileAttributes fileSize];
 
-	if (totalFilesize == 0) {
-		LogToConsoleError("Fatal error: Cannot create sender because filesize == 0");
+  if (totalFilesize == 0) {
+    LogToConsoleError(
+        "Fatal error: Cannot create sender because filesize == 0");
 
-		return nil;
-	}
+    return nil;
+  }
 
-	NSString *filePath = path.stringByDeletingLastPathComponent;
+  NSString *filePath = path.stringByDeletingLastPathComponent;
 
-	/* Construct controller */
-	TDCFileTransferDialogTransferController *controller = [[self alloc] initWithClient:client];
+  /* Construct controller */
+  TDCFileTransferDialogTransferController *controller =
+      [[self alloc] initWithClient:client];
 
-	controller.isReversed = [TPCPreferences fileTransferRequestsAreReversed];
+  controller.isReversed = [TPCPreferences fileTransferRequestsAreReversed];
 
-	controller.isSender = YES;
+  controller.isSender = YES;
 
-	controller.peerNickname = nickname;
+  controller.peerNickname = nickname;
 
-	controller.path = filePath;
-	controller.filename = filename;
+  controller.path = filePath;
+  controller.filename = filename;
 
-	controller.totalFilesize = totalFilesize;
+  controller.totalFilesize = totalFilesize;
 
-	return controller;
+  return controller;
 }
 
-- (instancetype)init
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (instancetype)init {
+  [self doesNotRecognizeSelector:_cmd];
 
-	return nil;
+  return nil;
 }
 
-- (instancetype)initWithClient:(IRCClient *)client
-{
-	NSParameterAssert(client != nil);
+- (instancetype)initWithClient:(IRCClient *)client {
+  NSParameterAssert(client != nil);
 
-	if ((self = [super init])) {
-		self.client = client;
-		self.clientId = client.uniqueIdentifier;
+  if ((self = [super init])) {
+    self.client = client;
+    self.clientId = client.uniqueIdentifier;
 
-		[self prepareInitialState];
+    [self prepareInitialState];
 
-		return self;
-	}
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 
-- (void)prepareInitialState
-{
-	_assertMainQueue();
+- (void)prepareInitialState {
+  _assertMainQueue();
 
-	self.speedRecordsPrivate = [NSMutableArray array];
+  self.speedRecordsPrivate = [NSMutableArray array];
 
-	self.transferStatus = TDCFileTransferDialogTransferStatusStopped;
+  self.transferStatus = TDCFileTransferDialogTransferStatusStopped;
 
-	self.uniqueIdentifier = [NSString stringWithUUID];
+  self.uniqueIdentifier = [NSString stringWithUUID];
 
-	[RZNotificationCenter() addObserver:self
-							   selector:@selector(clientDisconnected:)
-								   name:IRCClientDidDisconnectNotification
-								 object:self.client];
-	[RZNotificationCenter() addObserver:self
-							   selector:@selector(peerNicknameChanged:)
-								   name:IRCClientUserNicknameChangedNotification
-								 object:self.client];
+  [RZNotificationCenter() addObserver:self
+                             selector:@selector(clientDisconnected:)
+                                 name:IRCClientDidDisconnectNotification
+                               object:self.client];
+  [RZNotificationCenter() addObserver:self
+                             selector:@selector(peerNicknameChanged:)
+                                 name:IRCClientUserNicknameChangedNotification
+                               object:self.client];
 }
 
-- (void)prepareForPermanentDestruction
-{
-	_assertMainQueue();
+- (void)prepareForPermanentDestruction {
+  _assertMainQueue();
 
-	self.transferTableCell = nil;
+  self.transferTableCell = nil;
 
-	[self closeAndPostNotification:NO];
+  [self closeAndPostNotification:NO];
 
-	[RZNotificationCenter() removeObserver:self];
+  [RZNotificationCenter() removeObserver:self];
 }
 
 #pragma mark -
 #pragma mark Error Handling
 
-- (void)failWithNoSpaceLeftOnDevice
-{
-	[self closeWithLocalizedError:@"TDCFileTransferDialog[79f-s0]"];
+- (void)failWithNoSpaceLeftOnDevice {
+  [self closeWithLocalizedError:@"TDCFileTransferDialog[79f-s0]"];
+}
+
+- (void)closeWithLocalizedError:(NSString *)errorLocalization {
+  [self closeWithLocalizedError:errorLocalization
+                    description:nil
+                   isFatalError:NO];
 }
 
 - (void)closeWithLocalizedError:(NSString *)errorLocalization
-{
-	[self closeWithLocalizedError:errorLocalization description:nil isFatalError:NO];
-}
-
-- (void)closeWithLocalizedError:(NSString *)errorLocalization isFatalError:(BOOL)isFatalError
-{
-	[self closeWithLocalizedError:errorLocalization description:nil isFatalError:isFatalError];
-}
-
-- (void)closeWithLocalizedError:(NSString *)errorLocalization description:(nullable NSString *)errorDescription
-{
-	[self closeWithLocalizedError:errorLocalization description:errorDescription isFatalError:NO];
+                   isFatalError:(BOOL)isFatalError {
+  [self closeWithLocalizedError:errorLocalization
+                    description:nil
+                   isFatalError:isFatalError];
 }
 
 - (void)closeWithLocalizedError:(NSString *)errorLocalization
-					description:(nullable NSString *)errorDescription
-				   isFatalError:(BOOL)isFatalError
-{
-	NSParameterAssert(errorLocalization != nil);
+                    description:(nullable NSString *)errorDescription {
+  [self closeWithLocalizedError:errorLocalization
+                    description:errorDescription
+                   isFatalError:NO];
+}
 
-	if (errorDescription == nil) {
-		self.errorMessageDescription = TXTLS(errorLocalization, self.peerNickname);
-	} else {
-		self.errorMessageDescription = TXTLS(errorLocalization, self.peerNickname, errorDescription);
-	}
+- (void)closeWithLocalizedError:(NSString *)errorLocalization
+                    description:(nullable NSString *)errorDescription
+                   isFatalError:(BOOL)isFatalError {
+  NSParameterAssert(errorLocalization != nil);
 
-	if (isFatalError) {
-		self.transferStatus = TDCFileTransferDialogTransferStatusFatalError;
-	} else {
-		self.transferStatus = TDCFileTransferDialogTransferStatusRecoverableError;
-	}
+  if (errorDescription == nil) {
+    self.errorMessageDescription = TXTLS(errorLocalization, self.peerNickname);
+  } else {
+    self.errorMessageDescription =
+        TXTLS(errorLocalization, self.peerNickname, errorDescription);
+  }
 
-	[self close];
+  if (isFatalError) {
+    self.transferStatus = TDCFileTransferDialogTransferStatusFatalError;
+  } else {
+    self.transferStatus = TDCFileTransferDialogTransferStatusRecoverableError;
+  }
+
+  [self close];
 }
 
 #pragma mark -
 #pragma mark Opening/Closing Transfer
 
-- (void)disableSystemSleep
-{
-	self.transferProgressHandler = [RZProcessInfo() beginActivityWithOptions:NSActivityUserInitiated
-																	  reason:@"Transferring file"];
+- (void)disableSystemSleep {
+  self.transferProgressHandler =
+      [RZProcessInfo() beginActivityWithOptions:NSActivityUserInitiated
+                                         reason:@"Transferring file"];
 }
 
-- (void)enableSystemSleep
-{
-	if (self.transferProgressHandler == nil) {
-		return;
-	}
+- (void)enableSystemSleep {
+  if (self.transferProgressHandler == nil) {
+    return;
+  }
 
-	[RZProcessInfo() endActivity:self.transferProgressHandler];
+  [RZProcessInfo() endActivity:self.transferProgressHandler];
 
-	self.transferProgressHandler = nil;
+  self.transferProgressHandler = nil;
 }
 
-- (void)open
-{
-	[self openWithPath:nil];
+- (void)open {
+  [self openWithPath:nil];
 }
 
-- (void)openWithPathOrUserDownloads
-{
-	NSString *path = nil;
+- (void)openWithPathOrUserDownloads {
+  NSString *path = nil;
 
-	if (self.path == nil) {
-		path = [TPCPathInfo userDownloads];
-	}
+  if (self.path == nil) {
+    path = [TPCPathInfo userDownloads];
+  }
 
-	[self openWithPath:path];
+  [self openWithPath:path];
 }
 
-- (void)openWithPath:(nullable NSString *)path
-{
-	_assertMainQueue();
+- (void)openWithPath:(nullable NSString *)path {
+  _assertMainQueue();
 
-	if (self.path == nil) {
-		self.path = path;
-	}
+  if (self.path == nil) {
+    self.path = path;
+  }
 
-	if (self.client.isLoggedIn == NO) {
-		[self _closeWithClientDisconnectedError];
+  if (self.client.isLoggedIn == NO) {
+    [self _closeWithClientDisconnectedError];
 
-		return;
-	}
+    return;
+  }
 
-	if (self.isSender) {
-		[self openTransfer];
-	} else {
-		[self sendTransferResumeRequestToClient];
-	}
+  if (self.isSender) {
+    [self openTransfer];
+  } else {
+    [self sendTransferResumeRequestToClient];
+  }
 }
 
-- (void)openTransfer
-{
-	if (self.isSender) {
-		if (self.isReversed) {
-			[self updateIPAddress];
-		} else {
-			[self openConnectionAsServer];
-		}
-	} else {
-		if (self.isReversed) {
-			[self openConnectionAsServer];
-		} else {
-			[self openConnectionToHost];
-		}
-	}
+- (void)openTransfer {
+  if (self.isSender) {
+    if (self.isReversed) {
+      [self updateIPAddress];
+    } else {
+      [self openConnectionAsServer];
+    }
+  } else {
+    if (self.isReversed) {
+      [self openConnectionAsServer];
+    } else {
+      [self openConnectionToHost];
+    }
+  }
 }
 
-- (void)openConnectionToHost
-{
-	_assertMainQueue();
+- (void)openConnectionToHost {
+  _assertMainQueue();
 
-	[self closeAndPostNotification:NO];
+  [self closeAndPostNotification:NO];
 
-	[self resetProperties];
+  [self resetProperties];
 
-	self.transferStatus = TDCFileTransferDialogTransferStatusConnecting;
+  self.transferStatus = TDCFileTransferDialogTransferStatusConnecting;
 
-	if (self.hostAddress.length == 0 || self.hostPort == 0) {
-		LogToConsoleError("DCC Connect Error: Invalid host address or port");
+  if (self.hostAddress.length == 0 || self.hostPort == 0) {
+    LogToConsoleError("DCC Connect Error: Invalid host address or port");
 
-		[self closeWithLocalizedError:@"TDCFileTransferDialog[fn8-sx]"];
+    [self closeWithLocalizedError:@"TDCFileTransferDialog[fn8-sx]"];
 
-		return;
-	}
+    return;
+  }
 
-	TDCFileTransferDialogSocket *connectionToRemoteServer =
-		[[TDCFileTransferDialogSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+  TDCFileTransferDialogSocket *connectionToRemoteServer =
+      [[TDCFileTransferDialogSocket alloc]
+          initWithDelegate:self
+             delegateQueue:dispatch_get_main_queue()];
 
-	self.connectionToRemoteServer = connectionToRemoteServer;
+  self.connectionToRemoteServer = connectionToRemoteServer;
 
-	/* Use the interface of the configured IP address instead of the default. */
-	/* Default interface is used if IP address is not found locally. */
-	NSString *networkInterface = [self networkInterfaceMatchingAddress];
+  /* Use the interface of the configured IP address instead of the default. */
+  /* Default interface is used if IP address is not found locally. */
+  NSString *networkInterface = [self networkInterfaceMatchingAddress];
 
-	[connectionToRemoteServer connectToHost:self.hostAddress
-									   port:self.hostPort
-							   viaInterface:networkInterface
-									timeout:_connectTimeout];
+  [connectionToRemoteServer connectToHost:self.hostAddress
+                                     port:self.hostPort
+                             viaInterface:networkInterface
+                                  timeout:_connectTimeout];
 
-	[self disableSystemSleep];
+  [self disableSystemSleep];
 }
 
-- (void)openConnectionAsServer
-{
-	_assertMainQueue();
+- (void)openConnectionAsServer {
+  _assertMainQueue();
 
-	[self closeAndPostNotification:NO];
+  [self closeAndPostNotification:NO];
 
-	[self resetProperties];
+  [self resetProperties];
 
-	self.transferStatus = TDCFileTransferDialogTransferStatusInitializing;
+  self.transferStatus = TDCFileTransferDialogTransferStatusInitializing;
 
-	uint16_t portRangeStart = [TPCPreferences fileTransferPortRangeStart];
-	uint16_t portRangeEnd = [TPCPreferences fileTransferPortRangeEnd];
+  uint16_t portRangeStart = [TPCPreferences fileTransferPortRangeStart];
+  uint16_t portRangeEnd = [TPCPreferences fileTransferPortRangeEnd];
 
-	if (portRangeStart == 0 || portRangeStart > portRangeEnd) {
-		[self closeWithLocalizedError:@"TDCFileTransferDialog[vxc-sd]"];
+  if (portRangeStart == 0 || portRangeStart > portRangeEnd) {
+    [self closeWithLocalizedError:@"TDCFileTransferDialog[vxc-sd]"];
 
-		return;
-	}
+    return;
+  }
 
-	TDCFileTransferDialogSocket *listeningServer =
-		[[TDCFileTransferDialogSocket alloc] initWithDelegate:self delegateQueue:dispatch_get_main_queue()];
+  TDCFileTransferDialogSocket *listeningServer =
+      [[TDCFileTransferDialogSocket alloc]
+          initWithDelegate:self
+             delegateQueue:dispatch_get_main_queue()];
 
-	self.listeningServer = listeningServer;
+  self.listeningServer = listeningServer;
 
-	/* The result is delivered to -socket:didStartListeningOnPort:
-	 or -socket:didFailToListenWithError: */
-	[listeningServer listenOnPortRangeFrom:portRangeStart to:portRangeEnd];
+  /* The result is delivered to -socket:didStartListeningOnPort:
+   or -socket:didFailToListenWithError: */
+  [listeningServer listenOnPortRangeFrom:portRangeStart to:portRangeEnd];
 
-	[self disableSystemSleep];
+  [self disableSystemSleep];
 }
 
-- (void)listeningServerDidStartOnPort:(uint16_t)port
-{
-	NSAssertReturn(self.transferStatus == TDCFileTransferDialogTransferStatusInitializing);
+- (void)listeningServerDidStartOnPort:(uint16_t)port {
+  NSAssertReturn(self.transferStatus ==
+                 TDCFileTransferDialogTransferStatusInitializing);
 
-	self.hostPort = port;
+  self.hostPort = port;
 
-	/* Try to map the port */
-	XRPortMapper *portMapping = [[XRPortMapper alloc] initWithPort:self.hostPort];
+  /* Try to map the port */
+  XRPortMapper *portMapping = [[XRPortMapper alloc] initWithPort:self.hostPort];
 
-	portMapping.mapTCP = YES;
-	portMapping.mapUDP = NO;
+  portMapping.mapTCP = YES;
+  portMapping.mapUDP = NO;
 
-	portMapping.desiredPublicPort = self.hostPort;
+  portMapping.desiredPublicPort = self.hostPort;
 
-	self.portMapping = portMapping;
+  self.portMapping = portMapping;
 
-	[RZNotificationCenter() addObserver:self
-							   selector:@selector(portMapperDidFinishWork:)
-								   name:XRPortMapperDidChangedNotification
-								 object:self.portMapping];
+  [RZNotificationCenter() addObserver:self
+                             selector:@selector(portMapperDidFinishWork:)
+                                 name:XRPortMapperDidChangedNotification
+                               object:self.portMapping];
 
-	self.transferStatus = TDCFileTransferDialogTransferStatusMappingListeningPort;
+  self.transferStatus = TDCFileTransferDialogTransferStatusMappingListeningPort;
 
-	if ([self.portMapping open] == NO) {
-		[self portMapperDidFinishWork:nil];
-	}
+  if ([self.portMapping open] == NO) {
+    [self portMapperDidFinishWork:nil];
+  }
 }
 
-- (nullable NSString *)networkInterfaceMatchingAddress
-{
-	return [TPCPreferences fileTransferIPAddressInterfaceName];
+- (nullable NSString *)networkInterfaceMatchingAddress {
+  return [TPCPreferences fileTransferIPAddressInterfaceName];
 }
 
-- (void)portMapperDidFinishWork:(nullable NSNotification *)aNotification
-{
-	NSAssertReturn(self.transferStatus == TDCFileTransferDialogTransferStatusMappingListeningPort);
+- (void)portMapperDidFinishWork:(nullable NSNotification *)aNotification {
+  NSAssertReturn(self.transferStatus ==
+                 TDCFileTransferDialogTransferStatusMappingListeningPort);
 
-	if (self.portMapping.isMapped) {
-		[self updateIPAddress];
+  if (self.portMapping.isMapped) {
+    [self updateIPAddress];
 
-		LogToConsoleInfo("Successful port mapping on port %{public}hu", self.hostPort);
+    LogToConsoleInfo("Successful port mapping on port %{public}hu",
+                     self.hostPort);
 
-		return;
-	}
+    return;
+  }
 
-	LogToConsoleError("Port mapping failed with error code: %{public}i", self.portMapping.error);
+  LogToConsoleError("Port mapping failed with error code: %{public}i",
+                    self.portMapping.error);
 
-	if (self.isReversed) {
-		[self closeWithLocalizedError:@"TDCFileTransferDialog[vxc-sd]"];
+  if (self.isReversed) {
+    [self closeWithLocalizedError:@"TDCFileTransferDialog[vxc-sd]"];
 
-		return;
-	}
+    return;
+  }
 
-	/* If mapping fails, we silently fail */
-	/* We tried and it was successful, then that is good, but if we
-	 did not, still start listening just incase other conditions allow
-	 the transfer to still take place. */
-	[self updateIPAddress];
+  /* If mapping fails, we silently fail */
+  /* We tried and it was successful, then that is good, but if we
+   did not, still start listening just incase other conditions allow
+   the transfer to still take place. */
+  [self updateIPAddress];
 }
 
-- (void)updateIPAddress
-{
-	LogStackTraceWithType(LogToConsoleTypeDebug);
+- (void)updateIPAddress {
+  LogStackTraceWithType(LogToConsoleTypeDebug);
 
-	NSString *address = self.transferDialog.IPAddress;
+  NSString *address = self.transferDialog.IPAddress;
 
-	LogToConsoleDebug("TDCFileTransferDialog cached IP address: %{private}@", address);
+  LogToConsoleDebug("TDCFileTransferDialog cached IP address: %{private}@",
+                    address);
 
-	TXFileTransferIPAddressMethodDetection detectionMethod = [TPCPreferences fileTransferIPAddressDetectionMethod];
+  TXFileTransferIPAddressMethodDetection detectionMethod =
+      [TPCPreferences fileTransferIPAddressDetectionMethod];
 
-	BOOL manuallyDetect = (detectionMethod == TXFileTransferIPAddressMethodManual);
+  BOOL manuallyDetect =
+      (detectionMethod == TXFileTransferIPAddressMethodManual);
 
-	if (address == nil && manuallyDetect == NO) {
-		NSString *publicAddress = self.portMapping.publicAddress;
+  if (address == nil && manuallyDetect == NO) {
+    NSString *publicAddress = self.portMapping.publicAddress;
 
-		LogToConsoleDebug("Port mapper public IP address: %{private}@", publicAddress);
+    LogToConsoleDebug("Port mapper public IP address: %{private}@",
+                      publicAddress);
 
-		if (publicAddress.isIPAddress) {
-			self.transferDialog.IPAddress = publicAddress;
+    if (publicAddress.isIPAddress) {
+      self.transferDialog.IPAddress = publicAddress;
 
-			address = publicAddress;
-		}
-	}
+      address = publicAddress;
+    }
+  }
 
-	/* Request address? */
-	if (address == nil) {
-		if (manuallyDetect || detectionMethod == TXFileTransferIPAddressMethodRouterOnly) {
-			LogToConsoleError("User has set IP address detection to be manual but have no address set");
+  /* Request address? */
+  if (address == nil) {
+    if (manuallyDetect ||
+        detectionMethod == TXFileTransferIPAddressMethodRouterOnly) {
+      LogToConsoleError("User has set IP address detection to be manual but "
+                        "have no address set");
 
-			[self noteIPAddressLookupFailed];
-		} else {
-			LogToConsoleDebug("Performing IP address lookup using the Internet");
+      [self noteIPAddressLookupFailed];
+    } else {
+      LogToConsoleDebug("Performing IP address lookup using the Internet");
 
-			[self.transferDialog requestIPAddress];
+      [self.transferDialog requestIPAddress];
 
-			self.transferStatus = TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress;
-		}
+      self.transferStatus =
+          TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress;
+    }
 
-		return;
-	}
+    return;
+  }
 
-	[self noteIPAddressLookupSucceeded];
+  [self noteIPAddressLookupSucceeded];
 }
 
-- (void)closePortMapping
-{
-	if (self.portMapping == nil) {
-		return;
-	}
+- (void)closePortMapping {
+  if (self.portMapping == nil) {
+    return;
+  }
 
-	XRPortMapper *portMapping = self.portMapping;
+  XRPortMapper *portMapping = self.portMapping;
 
-	[RZNotificationCenter() removeObserver:self name:XRPortMapperDidChangedNotification object:portMapping];
+  [RZNotificationCenter() removeObserver:self
+                                    name:XRPortMapperDidChangedNotification
+                                  object:portMapping];
 
-	self.portMapping = nil;
+  self.portMapping = nil;
 
-	[portMapping close];
+  [portMapping close];
 }
 
-- (void)noteIPAddressLookupSucceeded
-{
-	LogStackTraceWithType(LogToConsoleTypeDebug);
+- (void)noteIPAddressLookupSucceeded {
+  LogStackTraceWithType(LogToConsoleTypeDebug);
 
-	if (self.isSender) {
-		if (self.isReversed) {
-			self.transferStatus = TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept;
-		} else {
-			self.transferStatus = TDCFileTransferDialogTransferStatusIsListeningAsSender;
-		}
-	} else {
-		if (self.isReversed) {
-			self.transferStatus = TDCFileTransferDialogTransferStatusIsListeningAsReceiver;
-		} else {
-			return;
-		}
-	}
+  if (self.isSender) {
+    if (self.isReversed) {
+      self.transferStatus =
+          TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept;
+    } else {
+      self.transferStatus =
+          TDCFileTransferDialogTransferStatusIsListeningAsSender;
+    }
+  } else {
+    if (self.isReversed) {
+      self.transferStatus =
+          TDCFileTransferDialogTransferStatusIsListeningAsReceiver;
+    } else {
+      return;
+    }
+  }
 
-	[self sendTransferRequestToClient];
+  [self sendTransferRequestToClient];
 }
 
-- (void)noteIPAddressLookupFailed
-{
-	[self closeWithLocalizedError:@"TDCFileTransferDialog[47s-1s]"];
+- (void)noteIPAddressLookupFailed {
+  [self closeWithLocalizedError:@"TDCFileTransferDialog[47s-1s]"];
 }
 
-- (void)didReceiveResumeRequest:(uint64_t)proposedPosition
-{
-	_assertMainQueue();
+- (void)didReceiveResumeRequest:(uint64_t)proposedPosition {
+  _assertMainQueue();
 
-	uint64_t currentFilesize = self.currentFilesize;
+  uint64_t currentFilesize = self.currentFilesize;
 
-	if (proposedPosition == 0 || currentFilesize < proposedPosition) {
-		return;
-	}
+  if (proposedPosition == 0 || currentFilesize < proposedPosition) {
+    return;
+  }
 
-	self.isResume = YES;
+  self.isResume = YES;
 
-	self.processedFilesize = proposedPosition;
+  self.processedFilesize = proposedPosition;
 
-	[self sendTransferResumeAcceptToClient];
+  [self sendTransferResumeAcceptToClient];
 }
 
-- (void)didReceiveResumeAccept:(uint64_t)proposedPosition
-{
-	_assertMainQueue();
+- (void)didReceiveResumeAccept:(uint64_t)proposedPosition {
+  _assertMainQueue();
 
-	[self cancelPerformRequestsWithSelector:@selector(transferResumeRequestTimeout) object:nil];
+  [self
+      cancelPerformRequestsWithSelector:@selector(transferResumeRequestTimeout)
+                                 object:nil];
 
-	uint64_t currentFilesize = self.currentFilesize;
+  uint64_t currentFilesize = self.currentFilesize;
 
-	if (currentFilesize != proposedPosition) {
-		[self closeWithLocalizedError:@"TDCFileTransferDialog[0ov-tr]" isFatalError:YES];
+  if (currentFilesize != proposedPosition) {
+    [self closeWithLocalizedError:@"TDCFileTransferDialog[0ov-tr]"
+                     isFatalError:YES];
 
-		return;
-	}
+    return;
+  }
 
-	self.isResume = YES;
+  self.isResume = YES;
 
-	self.processedFilesize = currentFilesize;
+  self.processedFilesize = currentFilesize;
 
-	[self openTransfer];
+  [self openTransfer];
 }
 
-- (void)didReceiveSendRequest:(NSString *)hostAddress hostPort:(uint16_t)hostPort
-{
-	NSParameterAssert(hostAddress != nil);
+- (void)didReceiveSendRequest:(NSString *)hostAddress
+                     hostPort:(uint16_t)hostPort {
+  NSParameterAssert(hostAddress != nil);
 
-	_assertMainQueue();
+  _assertMainQueue();
 
-	self.hostAddress = hostAddress;
+  self.hostAddress = hostAddress;
 
-	self.hostPort = hostPort;
+  self.hostPort = hostPort;
 
-	self.processedFilesize = 0;
+  self.processedFilesize = 0;
 
-	[self openConnectionToHost];
+  [self openConnectionToHost];
 }
 
-- (void)buildTransferToken
-{
-	NSUInteger loopedCount = 0;
+- (void)buildTransferToken {
+  NSUInteger loopedCount = 0;
 
-	do {
-		NSString *transferToken = [NSString stringWithUnsignedInteger:TXRandomNumber(9999)];
+  do {
+    NSString *transferToken =
+        [NSString stringWithUnsignedInteger:TXRandomNumber(9999)];
 
-		BOOL transferExists = [self.transferDialog fileTransferExistsWithToken:transferToken];
+    BOOL transferExists =
+        [self.transferDialog fileTransferExistsWithToken:transferToken];
 
-		if (transferExists == NO) {
-			self.transferToken = transferToken;
+    if (transferExists == NO) {
+      self.transferToken = transferToken;
 
-			break;
-		}
+      break;
+    }
 
-		loopedCount += 1;
-	} while (loopedCount < 300);
+    loopedCount += 1;
+  } while (loopedCount < 300);
 }
 
-- (void)sendTransferRequestToClient
-{
-	if (self.isSender) {
-		uint64_t currentFilesize = self.currentFilesize;
+- (void)sendTransferRequestToClient {
+  if (self.isSender) {
+    uint64_t currentFilesize = self.currentFilesize;
 
-		if (self.isReversed) {
-			[self buildTransferToken];
+    if (self.isReversed) {
+      [self buildTransferToken];
 
-			[self.client sendFile:self.peerNickname
-							 port:0
-						 filename:self.filename
-						 filesize:currentFilesize
-							token:self.transferToken];
-		} else {
-			[self.client sendFile:self.peerNickname
-							 port:self.hostPort
-						 filename:self.filename
-						 filesize:currentFilesize
-							token:nil];
-		}
-	} else {
-		if (self.isReversed) {
-			[self.client sendFile:self.peerNickname
-							 port:self.hostPort
-						 filename:self.filename
-						 filesize:self.totalFilesize
-							token:self.transferToken];
-		}
-	}
+      [self.client sendFile:self.peerNickname
+                       port:0
+                   filename:self.filename
+                   filesize:currentFilesize
+                      token:self.transferToken];
+    } else {
+      [self.client sendFile:self.peerNickname
+                       port:self.hostPort
+                   filename:self.filename
+                   filesize:currentFilesize
+                      token:nil];
+    }
+  } else {
+    if (self.isReversed) {
+      [self.client sendFile:self.peerNickname
+                       port:self.hostPort
+                   filename:self.filename
+                   filesize:self.totalFilesize
+                      token:self.transferToken];
+    }
+  }
 }
 
-- (void)sendTransferResumeRequestToClient
-{
-	_assertMainQueue();
+- (void)sendTransferResumeRequestToClient {
+  _assertMainQueue();
 
-	uint64_t currentFilesize = self.currentFilesize;
+  uint64_t currentFilesize = self.currentFilesize;
 
-	if (currentFilesize == 0 || currentFilesize > self.totalFilesize) {
-		[self transferResumeRequestTimeout];
+  if (currentFilesize == 0 || currentFilesize > self.totalFilesize) {
+    [self transferResumeRequestTimeout];
 
-		return;
-	}
+    return;
+  }
 
-	/* Scheduled on the main run loop. -closeAndPostNotification: cancels
-	 it from the main queue as well, so the cancel always finds it. */
-	[self performSelectorInCommonModes:@selector(transferResumeRequestTimeout)
-							withObject:nil
-							afterDelay:_resumeAcceptTimeout];
+  /* Scheduled on the main run loop. -closeAndPostNotification: cancels
+   it from the main queue as well, so the cancel always finds it. */
+  [self performSelectorInCommonModes:@selector(transferResumeRequestTimeout)
+                          withObject:nil
+                          afterDelay:_resumeAcceptTimeout];
 
-	self.transferStatus = TDCFileTransferDialogTransferStatusWaitingForResumeAccept;
+  self.transferStatus =
+      TDCFileTransferDialogTransferStatusWaitingForResumeAccept;
 
-	if (self.isReversed) {
-		[self.client sendFileResume:self.peerNickname
-							   port:0
-						   filename:self.filename
-						   filesize:currentFilesize
-							  token:self.transferToken];
-	} else {
-		[self.client sendFileResume:self.peerNickname
-							   port:self.hostPort
-						   filename:self.filename
-						   filesize:currentFilesize
-							  token:nil];
-	}
+  if (self.isReversed) {
+    [self.client sendFileResume:self.peerNickname
+                           port:0
+                       filename:self.filename
+                       filesize:currentFilesize
+                          token:self.transferToken];
+  } else {
+    [self.client sendFileResume:self.peerNickname
+                           port:self.hostPort
+                       filename:self.filename
+                       filesize:currentFilesize
+                          token:nil];
+  }
 }
 
-- (void)sendTransferResumeAcceptToClient
-{
-	if (self.isReversed) {
-		[self.client sendFileResumeAccept:self.peerNickname
-									 port:0
-								 filename:self.filename
-								 filesize:self.processedFilesize
-									token:self.transferToken];
-	} else {
-		[self.client sendFileResumeAccept:self.peerNickname
-									 port:self.hostPort
-								 filename:self.filename
-								 filesize:self.processedFilesize
-									token:nil];
-	}
+- (void)sendTransferResumeAcceptToClient {
+  if (self.isReversed) {
+    [self.client sendFileResumeAccept:self.peerNickname
+                                 port:0
+                             filename:self.filename
+                             filesize:self.processedFilesize
+                                token:self.transferToken];
+  } else {
+    [self.client sendFileResumeAccept:self.peerNickname
+                                 port:self.hostPort
+                             filename:self.filename
+                             filesize:self.processedFilesize
+                                token:nil];
+  }
 }
 
-- (void)transferResumeRequestTimeout
-{
-	[self openTransfer];
+- (void)transferResumeRequestTimeout {
+  [self openTransfer];
 }
 
-- (void)peerNicknameChanged:(NSNotification *)notification
-{
-	NSDictionary *userInfo = notification.userInfo;
+- (void)peerNicknameChanged:(NSNotification *)notification {
+  NSDictionary *userInfo = notification.userInfo;
 
-	NSString *oldNickname = userInfo[@"oldNickname"];
+  NSString *oldNickname = userInfo[@"oldNickname"];
 
-	if ([self.peerNickname isEqualToString:oldNickname] == NO) {
-		return;
-	}
+  if ([self.peerNickname isEqualToString:oldNickname] == NO) {
+    return;
+  }
 
-	self.peerNickname = userInfo[@"newNickname"];
+  self.peerNickname = userInfo[@"newNickname"];
 }
 
-- (void)clientDisconnected:(NSNotification *)notification
-{
-	/* IRCClient posts this from the main thread. */
-	[self closeWithClientDisconnectedError];
+- (void)clientDisconnected:(NSNotification *)notification {
+  /* IRCClient posts this from the main thread. */
+  [self closeWithClientDisconnectedError];
 }
 
-- (void)closeWithClientDisconnectedError
-{
-	/* If the controller is already sending or receiving data, then a connection
-	 is already established to the peer which can function without a connection
-	 to IRC. If data is not being transferred then fail immediately. */
-	TDCFileTransferDialogTransferStatus transferStatus = self.transferStatus;
+- (void)closeWithClientDisconnectedError {
+  /* If the controller is already sending or receiving data, then a connection
+   is already established to the peer which can function without a connection
+   to IRC. If data is not being transferred then fail immediately. */
+  TDCFileTransferDialogTransferStatus transferStatus = self.transferStatus;
 
-	if (transferStatus != TDCFileTransferDialogTransferStatusConnecting &&
-		transferStatus != TDCFileTransferDialogTransferStatusInitializing &&
-		transferStatus != TDCFileTransferDialogTransferStatusIsListeningAsReceiver &&
-		transferStatus != TDCFileTransferDialogTransferStatusIsListeningAsSender &&
-		transferStatus != TDCFileTransferDialogTransferStatusMappingListeningPort &&
-		transferStatus != TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress &&
-		transferStatus != TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept &&
-		transferStatus != TDCFileTransferDialogTransferStatusWaitingForResumeAccept) {
-		return;
-	}
+  if (transferStatus != TDCFileTransferDialogTransferStatusConnecting &&
+      transferStatus != TDCFileTransferDialogTransferStatusInitializing &&
+      transferStatus !=
+          TDCFileTransferDialogTransferStatusIsListeningAsReceiver &&
+      transferStatus !=
+          TDCFileTransferDialogTransferStatusIsListeningAsSender &&
+      transferStatus !=
+          TDCFileTransferDialogTransferStatusMappingListeningPort &&
+      transferStatus !=
+          TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress &&
+      transferStatus !=
+          TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept &&
+      transferStatus !=
+          TDCFileTransferDialogTransferStatusWaitingForResumeAccept) {
+    return;
+  }
 
-	[self _closeWithClientDisconnectedError];
+  [self _closeWithClientDisconnectedError];
 }
 
-- (void)_closeWithClientDisconnectedError
-{
-	[self closeWithLocalizedError:@"TDCFileTransferDialog[12p-0v]" isFatalError:NO];
+- (void)_closeWithClientDisconnectedError {
+  [self closeWithLocalizedError:@"TDCFileTransferDialog[12p-0v]"
+                   isFatalError:NO];
 }
 
-- (void)close
-{
-	[self closeAndPostNotification:YES];
+- (void)close {
+  [self closeAndPostNotification:YES];
 }
 
-- (void)closeAndPostNotification:(BOOL)postNotification
-{
-	_assertMainQueue();
+- (void)closeAndPostNotification:(BOOL)postNotification {
+  _assertMainQueue();
 
-	[self cancelPerformRequests];
+  [self cancelPerformRequests];
 
-	if (self.listeningServer) {
-		[self.listeningServer disconnect];
-		self.listeningServer = nil;
-	}
+  if (self.listeningServer) {
+    [self.listeningServer disconnect];
+    self.listeningServer = nil;
+  }
 
-	if (self.listeningServerConnectedClient) {
-		[self.listeningServerConnectedClient disconnect];
-		self.listeningServerConnectedClient = nil;
-	}
+  if (self.listeningServerConnectedClient) {
+    [self.listeningServerConnectedClient disconnect];
+    self.listeningServerConnectedClient = nil;
+  }
 
-	if (self.connectionToRemoteServer) {
-		[self.connectionToRemoteServer disconnect];
-		self.connectionToRemoteServer = nil;
-	}
+  if (self.connectionToRemoteServer) {
+    [self.connectionToRemoteServer disconnect];
+    self.connectionToRemoteServer = nil;
+  }
 
-	[self closePortMapping];
+  [self closePortMapping];
 
-	[self closeFileHandle];
+  [self closeFileHandle];
 
-	if (self.transferStatus != TDCFileTransferDialogTransferStatusComplete &&
-		self.transferStatus != TDCFileTransferDialogTransferStatusFatalError &&
-		self.transferStatus != TDCFileTransferDialogTransferStatusRecoverableError) {
-		self.transferStatus = TDCFileTransferDialogTransferStatusStopped;
-	}
+  if (self.transferStatus != TDCFileTransferDialogTransferStatusComplete &&
+      self.transferStatus != TDCFileTransferDialogTransferStatusFatalError &&
+      self.transferStatus !=
+          TDCFileTransferDialogTransferStatusRecoverableError) {
+    self.transferStatus = TDCFileTransferDialogTransferStatusStopped;
+  }
 
-	if (postNotification) {
-		if (self.transferStatus == TDCFileTransferDialogTransferStatusFatalError ||
-			self.transferStatus == TDCFileTransferDialogTransferStatusRecoverableError) {
-			if (self.isSender) {
-				[self.client notifyFileTransfer:TXNotificationTypeFileTransferSendFailed
-									   nickname:self.peerNickname
-									   filename:self.filename
-									   filesize:self.totalFilesize
-							  requestIdentifier:self.uniqueIdentifier];
-			} else {
-				[self.client notifyFileTransfer:TXNotificationTypeFileTransferReceiveFailed
-									   nickname:self.peerNickname
-									   filename:self.filename
-									   filesize:self.totalFilesize
-							  requestIdentifier:self.uniqueIdentifier];
-			}
-		} else if (self.transferStatus == TDCFileTransferDialogTransferStatusComplete) {
-			if (self.isSender) {
-				[self.client notifyFileTransfer:TXNotificationTypeFileTransferSendSuccessful
-									   nickname:self.peerNickname
-									   filename:self.filename
-									   filesize:self.totalFilesize
-							  requestIdentifier:self.uniqueIdentifier];
-			} else {
-				[self.client notifyFileTransfer:TXNotificationTypeFileTransferReceiveSuccessful
-									   nickname:self.peerNickname
-									   filename:self.filename
-									   filesize:self.totalFilesize
-							  requestIdentifier:self.uniqueIdentifier];
-			}
-		}
-	}
+  if (postNotification) {
+    if (self.transferStatus == TDCFileTransferDialogTransferStatusFatalError ||
+        self.transferStatus ==
+            TDCFileTransferDialogTransferStatusRecoverableError) {
+      if (self.isSender) {
+        [self.client notifyFileTransfer:TXNotificationTypeFileTransferSendFailed
+                               nickname:self.peerNickname
+                               filename:self.filename
+                               filesize:self.totalFilesize
+                      requestIdentifier:self.uniqueIdentifier];
+      } else {
+        [self.client
+            notifyFileTransfer:TXNotificationTypeFileTransferReceiveFailed
+                      nickname:self.peerNickname
+                      filename:self.filename
+                      filesize:self.totalFilesize
+             requestIdentifier:self.uniqueIdentifier];
+      }
+    } else if (self.transferStatus ==
+               TDCFileTransferDialogTransferStatusComplete) {
+      if (self.isSender) {
+        [self.client
+            notifyFileTransfer:TXNotificationTypeFileTransferSendSuccessful
+                      nickname:self.peerNickname
+                      filename:self.filename
+                      filesize:self.totalFilesize
+             requestIdentifier:self.uniqueIdentifier];
+      } else {
+        [self.client
+            notifyFileTransfer:TXNotificationTypeFileTransferReceiveSuccessful
+                      nickname:self.peerNickname
+                      filename:self.filename
+                      filesize:self.totalFilesize
+             requestIdentifier:self.uniqueIdentifier];
+      }
+    }
+  }
 
-	[self.transferDialog updateMaintenanceTimer];
+  [self.transferDialog updateMaintenanceTimer];
 
-	[self enableSystemSleep];
+  [self enableSystemSleep];
 }
 
 #pragma mark -
 #pragma mark Timer
 
-- (void)onMaintenanceTimer
-{
-	_assertMainQueue();
+- (void)onMaintenanceTimer {
+  _assertMainQueue();
 
-	NSAssertReturn(self.transferStatus == TDCFileTransferDialogTransferStatusReceiving ||
-				   self.transferStatus == TDCFileTransferDialogTransferStatusSending);
+  NSAssertReturn(
+      self.transferStatus == TDCFileTransferDialogTransferStatusReceiving ||
+      self.transferStatus == TDCFileTransferDialogTransferStatusSending);
 
-	[self.speedRecordsPrivate addObject:@(self.currentRecord)];
+  [self.speedRecordsPrivate addObject:@(self.currentRecord)];
 
-	if (self.speedRecordsPrivate.count > RECORDS_LENGTH) {
-		[self.speedRecordsPrivate removeObjectAtIndex:0];
-	}
+  if (self.speedRecordsPrivate.count > RECORDS_LENGTH) {
+    [self.speedRecordsPrivate removeObjectAtIndex:0];
+  }
 
-	self.currentRecord = 0;
+  self.currentRecord = 0;
 
-	[self reloadStatusInformation];
+  [self reloadStatusInformation];
 
-	[self send];
+  [self send];
 }
 
 #pragma mark -
 #pragma mark File Handle
 
-- (void)setNonexistentFilename
-{
-	NSString *filePath = self.filePath;
+- (void)setNonexistentFilename {
+  NSString *filePath = self.filePath;
 
-	if ([RZFileManager() fileExistsAtPath:filePath] == NO) {
-		return;
-	}
+  if ([RZFileManager() fileExistsAtPath:filePath] == NO) {
+    return;
+  }
 
-	NSString *filenameExtension = self.filename.pathExtension;
+  NSString *filenameExtension = self.filename.pathExtension;
 
-	NSString *filenameWithoutExtension = self.filename.stringByDeletingPathExtension;
+  NSString *filenameWithoutExtension =
+      self.filename.stringByDeletingPathExtension;
 
-	NSUInteger i = 1;
+  NSUInteger i = 1;
 
-	do {
-		NSString *newFilename = nil;
+  do {
+    NSString *newFilename = nil;
 
-		if (filenameExtension.length == 0) {
-			newFilename = [NSString stringWithFormat:@"%@_%lu", filenameWithoutExtension, i];
-		} else {
-			newFilename = [NSString stringWithFormat:@"%@_%lu.%@", filenameWithoutExtension, i, filenameExtension];
-		}
+    if (filenameExtension.length == 0) {
+      newFilename =
+          [NSString stringWithFormat:@"%@_%lu", filenameWithoutExtension, i];
+    } else {
+      newFilename =
+          [NSString stringWithFormat:@"%@_%lu.%@", filenameWithoutExtension, i,
+                                     filenameExtension];
+    }
 
-		filePath = [self.path stringByAppendingPathComponent:newFilename];
+    filePath = [self.path stringByAppendingPathComponent:newFilename];
 
-		i += 1;
-	} while ([RZFileManager() fileExistsAtPath:filePath]);
+    i += 1;
+  } while ([RZFileManager() fileExistsAtPath:filePath]);
 
-	self.filename = filePath.lastPathComponent;
+  self.filename = filePath.lastPathComponent;
 }
 
-- (BOOL)openFileHandle
-{
-	NSString *filePath = self.filePath;
+- (BOOL)openFileHandle {
+  NSString *filePath = self.filePath;
 
-	if (self.isSender == NO && self.isResume == NO) {
-		[self setNonexistentFilename];
+  if (self.isSender == NO && self.isResume == NO) {
+    [self setNonexistentFilename];
 
-		[RZFileManager() createFileAtPath:filePath contents:[NSData data] attributes:nil];
-	}
+    [RZFileManager() createFileAtPath:filePath
+                             contents:[NSData data]
+                           attributes:nil];
+  }
 
-	NSFileHandle *fileHandle = [NSFileHandle fileHandleForUpdatingAtPath:filePath];
+  NSFileHandle *fileHandle =
+      [NSFileHandle fileHandleForUpdatingAtPath:filePath];
 
-	if (fileHandle == nil) {
-		[self closeWithLocalizedError:@"TDCFileTransferDialog[nab-dx]"];
+  if (fileHandle == nil) {
+    [self closeWithLocalizedError:@"TDCFileTransferDialog[nab-dx]"];
 
-		return NO;
-	}
+    return NO;
+  }
 
-	if (self.isResume) {
-		NSError *seekError = nil;
+  if (self.isResume) {
+    NSError *seekError = nil;
 
-		if ([fileHandle seekToOffset:self.processedFilesize error:&seekError] == NO) {
-			LogToConsoleError("Failed to seek file handle: %{public}@", seekError.localizedDescription);
+    if ([fileHandle seekToOffset:self.processedFilesize
+                           error:&seekError] == NO) {
+      LogToConsoleError("Failed to seek file handle: %{public}@",
+                        seekError.localizedDescription);
 
-			[fileHandle closeAndReturnError:NULL];
+      [fileHandle closeAndReturnError:NULL];
 
-			[self closeWithLocalizedError:@"TDCFileTransferDialog[nab-dx]"];
+      [self closeWithLocalizedError:@"TDCFileTransferDialog[nab-dx]"];
 
-			return NO;
-		}
-	}
+      return NO;
+    }
+  }
 
-	self.fileHandle = fileHandle;
+  self.fileHandle = fileHandle;
 
-	return YES;
+  return YES;
 }
 
-- (void)closeFileHandle
-{
-	if (self.fileHandle == nil) {
-		return;
-	}
+- (void)closeFileHandle {
+  if (self.fileHandle == nil) {
+    return;
+  }
 
-	NSError *closeError = nil;
+  NSError *closeError = nil;
 
-	if ([self.fileHandle closeAndReturnError:&closeError] == NO) {
-		LogToConsoleError("Failed to close file handle: %{public}@", closeError.localizedDescription);
-	}
+  if ([self.fileHandle closeAndReturnError:&closeError] == NO) {
+    LogToConsoleError("Failed to close file handle: %{public}@",
+                      closeError.localizedDescription);
+  }
 
-	self.fileHandle = nil;
+  self.fileHandle = nil;
 }
 
 #pragma mark -
 #pragma mark Socket Delegate
 
-- (void)socket:(TDCFileTransferDialogSocket *)socket didStartListeningOnPort:(uint16_t)port
-{
-	_assertMainQueue();
+- (void)socket:(TDCFileTransferDialogSocket *)socket
+    didStartListeningOnPort:(uint16_t)port {
+  _assertMainQueue();
 
-	if (socket != self.listeningServer) {
-		return;
-	}
+  if (socket != self.listeningServer) {
+    return;
+  }
 
-	[self listeningServerDidStartOnPort:port];
+  [self listeningServerDidStartOnPort:port];
 }
 
-- (void)socket:(TDCFileTransferDialogSocket *)socket didFailToListenWithError:(NSError *)error
-{
-	_assertMainQueue();
+- (void)socket:(TDCFileTransferDialogSocket *)socket
+    didFailToListenWithError:(NSError *)error {
+  _assertMainQueue();
 
-	if (socket != self.listeningServer) {
-		return;
-	}
+  if (socket != self.listeningServer) {
+    return;
+  }
 
-	LogToConsoleError("DCC Listen Error: %{public}@", error.localizedDescription);
+  LogToConsoleError("DCC Listen Error: %{public}@", error.localizedDescription);
 
-	[self closeWithLocalizedError:@"TDCFileTransferDialog[vxc-sd]"];
+  [self closeWithLocalizedError:@"TDCFileTransferDialog[vxc-sd]"];
 }
 
-- (void)socket:(TDCFileTransferDialogSocket *)socket didAcceptConnection:(TDCFileTransferDialogSocket *)connection
-{
-	_assertMainQueue();
+- (void)socket:(TDCFileTransferDialogSocket *)socket
+    didAcceptConnection:(TDCFileTransferDialogSocket *)connection {
+  _assertMainQueue();
 
-	if (socket != self.listeningServer || self.isActingAsServer == NO) {
-		[connection disconnect];
+  if (socket != self.listeningServer || self.isActingAsServer == NO) {
+    [connection disconnect];
 
-		return;
-	}
+    return;
+  }
 
-	if (self.listeningServerConnectedClient == nil) {
-		self.listeningServerConnectedClient = connection;
-	} else {
-		[connection disconnect];
+  if (self.listeningServerConnectedClient == nil) {
+    self.listeningServerConnectedClient = connection;
+  } else {
+    [connection disconnect];
 
-		return;
-	}
+    return;
+  }
 
-	if (self.isReversed) {
-		self.transferStatus = TDCFileTransferDialogTransferStatusReceiving;
-	} else {
-		self.transferStatus = TDCFileTransferDialogTransferStatusSending;
-	}
+  if (self.isReversed) {
+    self.transferStatus = TDCFileTransferDialogTransferStatusReceiving;
+  } else {
+    self.transferStatus = TDCFileTransferDialogTransferStatusSending;
+  }
 
-	[self.transferDialog updateMaintenanceTimer];
+  [self.transferDialog updateMaintenanceTimer];
 
-	if ([self openFileHandle] == NO) {
-		return;
-	}
+  if ([self openFileHandle] == NO) {
+    return;
+  }
 
-	if (self.isReversed) {
-		[self.readSocket readData];
-	} else {
-		[self send];
-	}
+  if (self.isReversed) {
+    [self.readSocket readData];
+  } else {
+    [self send];
+  }
 }
 
-- (void)socketDidConnect:(TDCFileTransferDialogSocket *)socket
-{
-	_assertMainQueue();
+- (void)socketDidConnect:(TDCFileTransferDialogSocket *)socket {
+  _assertMainQueue();
 
-	if (socket != self.connectionToRemoteServer || self.isActingAsClient == NO) {
-		return;
-	}
+  if (socket != self.connectionToRemoteServer || self.isActingAsClient == NO) {
+    return;
+  }
 
-	if (self.isReversed == NO) {
-		self.transferStatus = TDCFileTransferDialogTransferStatusReceiving;
-	} else {
-		self.transferStatus = TDCFileTransferDialogTransferStatusSending;
-	}
+  if (self.isReversed == NO) {
+    self.transferStatus = TDCFileTransferDialogTransferStatusReceiving;
+  } else {
+    self.transferStatus = TDCFileTransferDialogTransferStatusSending;
+  }
 
-	[self.transferDialog updateMaintenanceTimer];
+  [self.transferDialog updateMaintenanceTimer];
 
-	if ([self openFileHandle] == NO) {
-		return;
-	}
+  if ([self openFileHandle] == NO) {
+    return;
+  }
 
-	if (self.isReversed == NO) {
-		[self.readSocket readData];
-	} else {
-		[self send];
-	}
+  if (self.isReversed == NO) {
+    [self.readSocket readData];
+  } else {
+    [self send];
+  }
 }
 
-- (void)socket:(TDCFileTransferDialogSocket *)socket didDisconnectWithError:(nullable NSError *)error
-{
-	_assertMainQueue();
+- (void)socket:(TDCFileTransferDialogSocket *)socket
+    didDisconnectWithError:(nullable NSError *)error {
+  _assertMainQueue();
 
-	if (socket != self.listeningServer && socket != self.listeningServerConnectedClient &&
-		socket != self.connectionToRemoteServer) {
-		return;
-	}
+  if (socket != self.listeningServer &&
+      socket != self.listeningServerConnectedClient &&
+      socket != self.connectionToRemoteServer) {
+    return;
+  }
 
-	if (self.transferStatus == TDCFileTransferDialogTransferStatusComplete ||
-		self.transferStatus == TDCFileTransferDialogTransferStatusFatalError ||
-		self.transferStatus == TDCFileTransferDialogTransferStatusRecoverableError) {
-		return;
-	}
+  if (self.transferStatus == TDCFileTransferDialogTransferStatusComplete ||
+      self.transferStatus == TDCFileTransferDialogTransferStatusFatalError ||
+      self.transferStatus ==
+          TDCFileTransferDialogTransferStatusRecoverableError) {
+    return;
+  }
 
-	if (error) {
-		[self closeWithLocalizedError:@"TDCFileTransferDialog[s79-3a]" description:error.localizedDescription];
-	} else {
-		[self close];
-	}
+  if (error) {
+    [self closeWithLocalizedError:@"TDCFileTransferDialog[s79-3a]"
+                      description:error.localizedDescription];
+  } else {
+    [self close];
+  }
 }
 
-- (void)socket:(TDCFileTransferDialogSocket *)socket didReadData:(NSData *)data
-{
-	_assertMainQueue();
+- (void)socket:(TDCFileTransferDialogSocket *)socket
+    didReadData:(NSData *)data {
+  _assertMainQueue();
 
-	if (socket != self.readSocket || self.isSender != NO) {
-		return;
-	}
+  if (socket != self.readSocket || self.isSender != NO) {
+    return;
+  }
 
-	/* Update progress */
-	self.currentRecord += data.length;
+  /* Update progress */
+  self.currentRecord += data.length;
 
-	self.processedFilesize += data.length;
+  self.processedFilesize += data.length;
 
-	if (data.length > 0) {
-		NSError *writeError = nil;
+  if (data.length > 0) {
+    NSError *writeError = nil;
 
-		if ([self.fileHandle writeData:data error:&writeError] == NO) {
-			LogToConsoleError("Failed to write data: %{public}@", writeError.localizedDescription);
+    if ([self.fileHandle writeData:data error:&writeError] == NO) {
+      LogToConsoleError("Failed to write data: %{public}@",
+                        writeError.localizedDescription);
 
-			if ([writeError.domain isEqualToString:NSPOSIXErrorDomain] && writeError.code == ENOSPC) {
-				[self failWithNoSpaceLeftOnDevice];
+      if ([writeError.domain isEqualToString:NSPOSIXErrorDomain] &&
+          writeError.code == ENOSPC) {
+        [self failWithNoSpaceLeftOnDevice];
 
-				return;
-			}
+        return;
+      }
 
-			[self closeWithLocalizedError:@"TDCFileTransferDialog[05g-c8]"];
+      [self closeWithLocalizedError:@"TDCFileTransferDialog[05g-c8]"];
 
-			return;
-		}
-	}
+      return;
+    }
+  }
 
-	/* Send acknowledgement back to server */
-	uint32_t processedFilesize = (self.processedFilesize & 0xFFFFFFFF);
+  /* Send acknowledgement back to server */
+  uint32_t processedFilesize = (self.processedFilesize & 0xFFFFFFFF);
 
-	unsigned char ackPacket[4];
+  unsigned char ackPacket[4];
 
-	ackPacket[0] = ((processedFilesize >> 24) & 0xFF);
-	ackPacket[1] = ((processedFilesize >> 16) & 0xFF);
-	ackPacket[2] = ((processedFilesize >> 8) & 0xFF);
-	ackPacket[3] = (processedFilesize & 0xFF);
+  ackPacket[0] = ((processedFilesize >> 24) & 0xFF);
+  ackPacket[1] = ((processedFilesize >> 16) & 0xFF);
+  ackPacket[2] = ((processedFilesize >> 8) & 0xFF);
+  ackPacket[3] = (processedFilesize & 0xFF);
 
-	NSData *ackPacketData = [NSData dataWithBytes:ackPacket length:4];
+  NSData *ackPacketData = [NSData dataWithBytes:ackPacket length:4];
 
-	[self.readSocket writeData:ackPacketData timeout:(-1)];
+  [self.readSocket writeData:ackPacketData timeout:(-1)];
 
-	/* Continue requesting data if the transfer is not complete */
-	if (self.processedFilesize < self.totalFilesize) {
-		[self.readSocket readData];
+  /* Continue requesting data if the transfer is not complete */
+  if (self.processedFilesize < self.totalFilesize) {
+    [self.readSocket readData];
 
-		return;
-	}
+    return;
+  }
 
-	/* Update status and tear down transfer */
-	self.transferStatus = TDCFileTransferDialogTransferStatusComplete;
+  /* Update status and tear down transfer */
+  self.transferStatus = TDCFileTransferDialogTransferStatusComplete;
 
-	[self close];
+  [self close];
 }
 
 #pragma mark -
 #pragma mark Socket Write
 
-- (void)socketDidWriteData:(TDCFileTransferDialogSocket *)socket
-{
-	_assertMainQueue();
+- (void)socketDidWriteData:(TDCFileTransferDialogSocket *)socket {
+  _assertMainQueue();
 
-	if (socket != self.writeSocket || self.isSender == NO) {
-		return;
-	}
+  if (socket != self.writeSocket || self.isSender == NO) {
+    return;
+  }
 
-	/* Acknowledge sent data */
-	self.sendQueueSize -= 1;
+  /* Acknowledge sent data */
+  self.sendQueueSize -= 1;
 
-	/* Continue sending data if the transfer is not complete */
-	if (self.processedFilesize < self.totalFilesize) {
-		[self send];
+  /* Continue sending data if the transfer is not complete */
+  if (self.processedFilesize < self.totalFilesize) {
+    [self send];
 
-		return;
-	}
+    return;
+  }
 
-	/* Wait until the send queue has cleared before closing 
-	 connection. Just because we finished processing the 
-	 data here doesn't mean it has been sent yet. */
-	if (self.sendQueueSize > 0) {
-		return;
-	}
+  /* Wait until the send queue has cleared before closing
+   connection. Just because we finished processing the
+   data here doesn't mean it has been sent yet. */
+  if (self.sendQueueSize > 0) {
+    return;
+  }
 
-	/* Update status and tear down transfer */
-	self.transferStatus = TDCFileTransferDialogTransferStatusComplete;
+  /* Update status and tear down transfer */
+  self.transferStatus = TDCFileTransferDialogTransferStatusComplete;
 
-	[self close];
+  [self close];
 }
 
-- (void)send
-{
-	if (self.isSender == NO) {
-		return;
-	}
+- (void)send {
+  if (self.isSender == NO) {
+    return;
+  }
 
-	if (self.transferStatus != TDCFileTransferDialogTransferStatusSending) {
-		return;
-	}
+  if (self.transferStatus != TDCFileTransferDialogTransferStatusSending) {
+    return;
+  }
 
-	do {
-		if (self.currentRecord >= RATE_LIMIT) {
-			return;
-		}
+  do {
+    if (self.currentRecord >= RATE_LIMIT) {
+      return;
+    }
 
-		if (self.sendQueueSize >= MAX_QUEUE_SIZE) {
-			return;
-		}
+    if (self.sendQueueSize >= MAX_QUEUE_SIZE) {
+      return;
+    }
 
-		if (self.processedFilesize >= self.totalFilesize) {
-			return;
-		}
+    if (self.processedFilesize >= self.totalFilesize) {
+      return;
+    }
 
-		NSError *readError = nil;
+    NSError *readError = nil;
 
-		NSData *dataToWrite = [self.fileHandle readDataUpToLength:BUFFER_SIZE error:&readError];
+    NSData *dataToWrite = [self.fileHandle readDataUpToLength:BUFFER_SIZE
+                                                        error:&readError];
 
-		if (dataToWrite == nil || dataToWrite.length == 0) {
-			if (readError) {
-				LogToConsoleError("Failed to read data: %{public}@", readError.localizedDescription);
-			}
+    if (dataToWrite == nil || dataToWrite.length == 0) {
+      if (readError) {
+        LogToConsoleError("Failed to read data: %{public}@",
+                          readError.localizedDescription);
+      }
 
-			[self closeWithLocalizedError:@"TDCFileTransferDialog[nab-dx]"];
+      [self closeWithLocalizedError:@"TDCFileTransferDialog[nab-dx]"];
 
-			return;
-		}
+      return;
+    }
 
-		self.currentRecord += dataToWrite.length;
+    self.currentRecord += dataToWrite.length;
 
-		self.processedFilesize += dataToWrite.length;
+    self.processedFilesize += dataToWrite.length;
 
-		self.sendQueueSize += 1;
+    self.sendQueueSize += 1;
 
-		[self.writeSocket writeData:dataToWrite timeout:_sendDataTimeout];
-	} while (1);
+    [self.writeSocket writeData:dataToWrite timeout:_sendDataTimeout];
+  } while (1);
 }
 
 #pragma mark -
 #pragma mark Actions
 
-- (void)updateClearButton
-{
-	[self.transferDialog updateClearButton];
+- (void)updateClearButton {
+  [self.transferDialog updateClearButton];
 }
 
-- (void)reloadStatusInformation
-{
-	TDCFileTransferDialogTableCell *transferTableCell = self.transferTableCell;
+- (void)reloadStatusInformation {
+  TDCFileTransferDialogTableCell *transferTableCell = self.transferTableCell;
 
-	if (transferTableCell == nil) {
-		return;
-	}
+  if (transferTableCell == nil) {
+    return;
+  }
 
-	[transferTableCell reloadStatusInformation];
+  [transferTableCell reloadStatusInformation];
 }
 
 #pragma mark -
 #pragma mark Properties
 
-- (nullable TDCFileTransferDialogSocket *)writeSocket
-{
-	if (self.isReversed) {
-		return self.connectionToRemoteServer;
-	} else {
-		return self.listeningServerConnectedClient;
-	}
+- (nullable TDCFileTransferDialogSocket *)writeSocket {
+  if (self.isReversed) {
+    return self.connectionToRemoteServer;
+  } else {
+    return self.listeningServerConnectedClient;
+  }
 }
 
-- (nullable TDCFileTransferDialogSocket *)readSocket
-{
-	if (self.isReversed) {
-		return self.listeningServerConnectedClient;
-	} else {
-		return self.connectionToRemoteServer;
-	}
+- (nullable TDCFileTransferDialogSocket *)readSocket {
+  if (self.isReversed) {
+    return self.listeningServerConnectedClient;
+  } else {
+    return self.connectionToRemoteServer;
+  }
 }
 
-- (BOOL)isActingAsServer
-{
-	return ((self.isSender && self.isReversed == NO) || (self.isSender == NO && self.isReversed));
+- (BOOL)isActingAsServer {
+  return ((self.isSender && self.isReversed == NO) ||
+          (self.isSender == NO && self.isReversed));
 }
 
-- (BOOL)isActingAsClient
-{
-	return ((self.isSender == NO && self.isReversed == NO) || (self.isSender && self.isReversed));
+- (BOOL)isActingAsClient {
+  return ((self.isSender == NO && self.isReversed == NO) ||
+          (self.isSender && self.isReversed));
 }
 
-- (TDCFileTransferDialog *)transferDialog
-{
-	return [TXSharedApplication sharedFileTransferDialog];
+- (TDCFileTransferDialog *)transferDialog {
+  return [TXSharedApplication sharedFileTransferDialog];
 }
 
-- (NSArray<NSNumber *> *)speedRecords
-{
-	_assertMainQueue();
+- (NSArray<NSNumber *> *)speedRecords {
+  _assertMainQueue();
 
-	return [self.speedRecordsPrivate copy];
+  return [self.speedRecordsPrivate copy];
 }
 
-- (nullable NSString *)filePath
-{
-	NSString *path = self.path;
+- (nullable NSString *)filePath {
+  NSString *path = self.path;
 
-	NSString *filename = self.filename;
+  NSString *filename = self.filename;
 
-	if (path == nil || filename == nil) {
-		return nil;
-	}
+  if (path == nil || filename == nil) {
+    return nil;
+  }
 
-	return [path stringByAppendingPathComponent:filename];
+  return [path stringByAppendingPathComponent:filename];
 }
 
-- (nullable NSURL *)fileURL
-{
-	NSString *filePath = self.filePath;
+- (nullable NSURL *)fileURL {
+  NSString *filePath = self.filePath;
 
-	if (filePath == nil) {
-		return nil;
-	}
+  if (filePath == nil) {
+    return nil;
+  }
 
-	return [NSURL fileURLWithPath:filePath];
+  return [NSURL fileURLWithPath:filePath];
 }
 
-- (uint64_t)currentFilesize
-{
-	NSString *filePath = self.filePath;
+- (uint64_t)currentFilesize {
+  NSString *filePath = self.filePath;
 
-	if (filePath == nil) {
-		return 0;
-	}
+  if (filePath == nil) {
+    return 0;
+  }
 
-	if ([RZFileManager() fileExistsAtPath:filePath] == NO) {
-		return 0;
-	}
+  if ([RZFileManager() fileExistsAtPath:filePath] == NO) {
+    return 0;
+  }
 
-	NSDictionary *fileAttributes = [RZFileManager() attributesOfItemAtPath:filePath error:NULL];
+  NSDictionary *fileAttributes =
+      [RZFileManager() attributesOfItemAtPath:filePath error:NULL];
 
-	return fileAttributes.fileSize;
+  return fileAttributes.fileSize;
 }
 
-- (void)setTransferStatus:(TDCFileTransferDialogTransferStatus)transferStatus
-{
-	_assertMainQueue();
+- (void)setTransferStatus:(TDCFileTransferDialogTransferStatus)transferStatus {
+  _assertMainQueue();
 
-	if (self->_transferStatus != transferStatus) {
-		self->_transferStatus = transferStatus;
+  if (self->_transferStatus != transferStatus) {
+    self->_transferStatus = transferStatus;
 
-		[self reloadStatusInformation];
-	}
+    [self reloadStatusInformation];
+  }
 }
 
-- (void)resetProperties
-{
-	if (self.isResume == NO) {
-		self.processedFilesize = 0;
-	}
+- (void)resetProperties {
+  if (self.isResume == NO) {
+    self.processedFilesize = 0;
+  }
 
-	self.currentRecord = 0;
+  self.currentRecord = 0;
 
-	self.errorMessageDescription = nil;
+  self.errorMessageDescription = nil;
 
-	self.sendQueueSize = 0;
+  self.sendQueueSize = 0;
 
-	[self.speedRecordsPrivate removeAllObjects];
+  [self.speedRecordsPrivate removeAllObjects];
 }
 
 @end

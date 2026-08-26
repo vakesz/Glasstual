@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
-  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString *TLONotificationAlertSound NS_EXTENSIBLE_STRING_ENUM;
 
-GLASSTUAL_EXTERN TLONotificationAlertSound const TXDefaultAlertSoundPreferenceValue;
+GLASSTUAL_EXTERN TLONotificationAlertSound const
+    TXDefaultAlertSoundPreferenceValue;
 GLASSTUAL_EXTERN TLONotificationAlertSound const TXNoAlertSoundPreferenceValue;
 
 @interface TLONotificationConfiguration : NSObject
@@ -60,7 +61,8 @@ GLASSTUAL_EXTERN TLONotificationAlertSound const TXNoAlertSoundPreferenceValue;
 + (instancetype)configurationWithEventType:(TXNotificationType)eventType;
 
 - (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithEventType:(TXNotificationType)aEventType NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithEventType:(TXNotificationType)aEventType
+    NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -41,26 +41,29 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClient, IRCDirectChatConnection;
 
 typedef NS_ENUM(NSUInteger, IRCDirectChatConnectionState) {
-	IRCDirectChatConnectionStateIdle = 0,
-	IRCDirectChatConnectionStateListening,	// Waiting for the peer to connect to us
-	IRCDirectChatConnectionStateConnecting, // Connecting to the peer
-	IRCDirectChatConnectionStateConnected,
-	IRCDirectChatConnectionStateClosed,
+  IRCDirectChatConnectionStateIdle = 0,
+  IRCDirectChatConnectionStateListening,  // Waiting for the peer to connect to
+                                          // us
+  IRCDirectChatConnectionStateConnecting, // Connecting to the peer
+  IRCDirectChatConnectionStateConnected,
+  IRCDirectChatConnectionStateClosed,
 };
 
 @protocol IRCDirectChatConnectionDelegate <NSObject>
 @required
 /* The listener is up. The delegate is expected to advertise the
  port to the peer (DCC CHAT chat <address> <port> [token]). */
-- (void)directChatConnection:(IRCDirectChatConnection *)connection didStartListeningOnPort:(uint16_t)port;
+- (void)directChatConnection:(IRCDirectChatConnection *)connection
+     didStartListeningOnPort:(uint16_t)port;
 - (void)directChatConnectionDidConnect:(IRCDirectChatConnection *)connection;
 /* One line of text from the peer. CTCP ACTION is already unwrapped. */
 - (void)directChatConnection:(IRCDirectChatConnection *)connection
-		   didReceiveMessage:(NSString *)message
-					isAction:(BOOL)isAction;
+           didReceiveMessage:(NSString *)message
+                    isAction:(BOOL)isAction;
 /* error is nil when the peer closed the connection cleanly.
  Not delivered after -close. Delivered at most once. */
-- (void)directChatConnection:(IRCDirectChatConnection *)connection didCloseWithError:(nullable NSError *)error;
+- (void)directChatConnection:(IRCDirectChatConnection *)connection
+           didCloseWithError:(nullable NSError *)error;
 @end
 
 /* A DCC CHAT session. One instance is one TCP connection to one peer.
@@ -68,11 +71,14 @@ typedef NS_ENUM(NSUInteger, IRCDirectChatConnectionState) {
  there and every method below must be called from there. */
 @interface IRCDirectChatConnection : NSObject
 @property(readonly, weak) IRCClient *client;
-@property(readonly, weak, nullable) id<IRCDirectChatConnectionDelegate> delegate;
+@property(readonly, weak, nullable) id<IRCDirectChatConnectionDelegate>
+    delegate;
 @property(readonly, copy) NSString *peerNickname;
-@property(readonly, copy, nullable) NSString *hostAddress;	 // Peer address (only when connecting to them)
-@property(readonly) uint16_t hostPort;						 // Peer port, or the port we listen on
-@property(readonly, copy, nullable) NSString *transferToken; // Passive (reverse) DCC only
+@property(readonly, copy, nullable)
+    NSString *hostAddress; // Peer address (only when connecting to them)
+@property(readonly) uint16_t hostPort; // Peer port, or the port we listen on
+@property(readonly, copy, nullable)
+    NSString *transferToken; // Passive (reverse) DCC only
 @property(readonly) IRCDirectChatConnectionState state;
 @property(getter=isConnected, readonly) BOOL connected;
 
@@ -80,17 +86,18 @@ typedef NS_ENUM(NSUInteger, IRCDirectChatConnectionState) {
 
 /* Peer offered "DCC CHAT chat <address> <port>". We connect to them. */
 + (instancetype)connectionToPeer:(NSString *)nickname
-						 address:(NSString *)hostAddress
-							port:(uint16_t)hostPort
-						onClient:(IRCClient *)client
-						delegate:(id<IRCDirectChatConnectionDelegate>)delegate;
+                         address:(NSString *)hostAddress
+                            port:(uint16_t)hostPort
+                        onClient:(IRCClient *)client
+                        delegate:(id<IRCDirectChatConnectionDelegate>)delegate;
 
 /* We offer the chat (or the peer asked for a passive one with token):
  listen on the configured DCC port range and wait for the peer. */
 + (instancetype)listeningConnectionForPeer:(NSString *)nickname
-									 token:(nullable NSString *)transferToken
-								  onClient:(IRCClient *)client
-								  delegate:(id<IRCDirectChatConnectionDelegate>)delegate;
+                                     token:(nullable NSString *)transferToken
+                                  onClient:(IRCClient *)client
+                                  delegate:(id<IRCDirectChatConnectionDelegate>)
+                                               delegate;
 
 - (void)open;
 

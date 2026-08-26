@@ -47,7 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, copy) NSArray<NSString *> *nicknames;
 
 - (instancetype)initWithNicknames:(NSArray<NSString *> *)nicknames
-						 onClient:(IRCClient *)client NS_DESIGNATED_INITIALIZER;
+                         onClient:(IRCClient *)client NS_DESIGNATED_INITIALIZER;
 
 - (void)startWithChannels:(NSArray<NSString *> *)channels;
 @end
@@ -55,7 +55,8 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TDCChannelInviteSheetDelegate <NSObject>
 @required
 
-- (void)channelInviteSheet:(TDCChannelInviteSheet *)sender onSelectChannel:(NSString *)channelName;
+- (void)channelInviteSheet:(TDCChannelInviteSheet *)sender
+           onSelectChannel:(NSString *)channelName;
 - (void)channelInviteSheetWillClose:(TDCChannelInviteSheet *)sender;
 @end
 

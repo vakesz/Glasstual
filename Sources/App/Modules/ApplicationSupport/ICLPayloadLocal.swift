@@ -18,7 +18,7 @@ private let payloadLogger = Logger(
 	category: "ICLPayload"
 )
 
-extension ICLPayload {
+extension InlineContentPayload {
 	@objc(_resourcesTemporaryLocation)
 	func _resourcesTemporaryLocation() -> String {
 		let sourcePath = TXSharedApplication.sharedThemeController().temporaryPath as NSString
@@ -43,7 +43,7 @@ extension ICLPayload {
 				return resourceURL.absoluteString
 			}
 
-			let resourcePath = resourceURL.relativePath
+			let resourcePath = resourceURL.path(percentEncoded: false)
 			let filename = "\((resourcePath as NSString).sha256).\((resourcePath as NSString).pathExtension)"
 			let destinationPath = basePath.appendingPathComponent(filename)
 

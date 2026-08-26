@@ -78,7 +78,8 @@ NS_ASSUME_NONNULL_BEGIN
  The methods that IRCChannel proxy will not post KVO changes. */
 @property(readonly) NSUInteger numberOfMembers;
 
-@property(readonly, copy, nullable) NSArray<IRCChannelUser *> *memberList; // Automatically sorted by channel rank
+@property(readonly, copy, nullable) NSArray<IRCChannelUser *>
+    *memberList; // Automatically sorted by channel rank
 
 /* Resort the entire member list using all known conditions. */
 /* This can be an expensive task for large channels. */

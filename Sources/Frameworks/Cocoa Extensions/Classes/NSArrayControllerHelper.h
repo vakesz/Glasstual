@@ -35,9 +35,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSArrayController (CSArrayControllerHelper)
 - (void)removeAllArrangedObjects;
 
-- (void)replaceObjectAtArrangedObjectIndex:(NSUInteger)oldObjectIndex withObject:(id)newObject;
+- (void)replaceObjectAtArrangedObjectIndex:(NSUInteger)oldObjectIndex
+                                withObject:(id)newObject;
 
-- (void)moveObjectAtArrangedObjectIndex:(NSUInteger)fromIndex toIndex:(NSUInteger)toIndex;
+- (void)moveObjectAtArrangedObjectIndex:(NSUInteger)fromIndex
+                                toIndex:(NSUInteger)toIndex;
 @end
 
 NS_ASSUME_NONNULL_END

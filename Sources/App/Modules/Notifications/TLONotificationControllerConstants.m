@@ -11,5 +11,6 @@ NSString *const TXNotificationUserInfoChannelIdentifierKey = @"channelId";
 NSString *const TXNotificationDialogStandardNicknameFormat = @"%@ %@";
 NSString *const TXNotificationDialogActionNicknameFormat = @"\u2022 %@: %@";
 
-NSString *const TXNotificationHighlightLogStandardActionFormat = @"\u2022 %@: %@";
+NSString *const TXNotificationHighlightLogStandardActionFormat =
+    @"\u2022 %@: %@";
 NSString *const TXNotificationHighlightLogStandardMessageFormat = @"%@ %@";

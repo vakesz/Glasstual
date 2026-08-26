@@ -40,19 +40,23 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /* Welcome and identity: nickname, real name, alternate nickname. */
-@interface TDCOnboardingIdentityStepViewController : TDCOnboardingStepViewController
+@interface TDCOnboardingIdentityStepViewController
+    : TDCOnboardingStepViewController
 @end
 
 /* Look and feel: chat style, text size, appearance. */
-@interface TDCOnboardingAppearanceStepViewController : TDCOnboardingStepViewController
+@interface TDCOnboardingAppearanceStepViewController
+    : TDCOnboardingStepViewController
 @end
 
 /* Notifications: what to notify about and the permission request. */
-@interface TDCOnboardingNotificationsStepViewController : TDCOnboardingStepViewController
+@interface TDCOnboardingNotificationsStepViewController
+    : TDCOnboardingStepViewController
 @end
 
 /* First network: the network picker, auto-connect, suggested channels. */
-@interface TDCOnboardingNetworkStepViewController : TDCOnboardingStepViewController
+@interface TDCOnboardingNetworkStepViewController
+    : TDCOnboardingStepViewController
 @end
 
 /* A static mockup of a short conversation drawn with AppKit views, used to

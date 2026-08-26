@@ -41,16 +41,19 @@ NS_ASSUME_NONNULL_BEGIN
  Send button. The field is focused so the Character Palette (Control +
  Command + Space) types straight into it. */
 @interface TDCReactionPopoverController : NSViewController
-- (instancetype)initWithMessageIdentifier:(NSString *)messageIdentifier NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithMessageIdentifier:(NSString *)messageIdentifier
+    NS_DESIGNATED_INITIALIZER;
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE;
 - (instancetype)initWithNibName:(nullable NSNibName)nibNameOrNil
-						 bundle:(nullable NSBundle *)nibBundleOrNil NS_UNAVAILABLE;
+                         bundle:(nullable NSBundle *)nibBundleOrNil
+    NS_UNAVAILABLE;
 
 @property(readonly, copy) NSString *messageIdentifier;
 
 /* Called with the emoji when Send is pressed. */
-@property(nonatomic, copy, nullable) void (^completionBlock)(NSString *emoji, NSString *messageIdentifier);
+@property(nonatomic, copy, nullable) void (^completionBlock)
+    (NSString *emoji, NSString *messageIdentifier);
 
 - (void)presentRelativeToRect:(NSRect)rect ofView:(NSView *)view;
 - (void)close;

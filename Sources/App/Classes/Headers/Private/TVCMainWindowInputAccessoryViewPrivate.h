@@ -47,8 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 /* Reply banner */
 @property(readonly, copy, nullable) NSString *replyMessageIdentifier;
 - (void)showReplyToMessageIdentifier:(NSString *)messageIdentifier
-							nickname:(nullable NSString *)nickname
-							 excerpt:(nullable NSString *)excerpt;
+                            nickname:(nullable NSString *)nickname
+                             excerpt:(nullable NSString *)excerpt;
 - (void)hideReply;
 
 /* Typing row. An empty array hides the row. */

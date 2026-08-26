@@ -6,7 +6,9 @@
 #import "TPCResourceManager.h"
 
 NSString *const TPCResourceManagerBundleDocumentTypeExtension = @".bundle";
-NSString *const TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod = @"bundle";
+NSString *const TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod =
+    @"bundle";
 
 NSString *const TPCResourceManagerScriptDocumentTypeExtension = @".scpt";
-NSString *const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod = @"scpt";
+NSString *const TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod =
+    @"scpt";

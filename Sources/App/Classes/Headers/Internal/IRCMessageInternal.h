@@ -39,30 +39,31 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCMessage ()
-{
-  @protected
-	BOOL _isHistoric;
-	BOOL _isEventOnlyMessage;
-	BOOL _isPrintOnlyMessage;
-	IRCPrefix *_sender;
-	NSArray<NSString *> *_params;
-	NSDate *_receivedAt;
-	NSDictionary<NSString *, NSString *> *_messageTags;
-	NSString *_batchToken;
-	NSString *_command;
-	NSString *_messageIdentifier;
-	NSString *_senderAccount;
-	NSUInteger _commandNumeric;
-	IRCMessageBatchMessage *_parentBatchMessage;
+@interface IRCMessage () {
+@protected
+  BOOL _isHistoric;
+  BOOL _isEventOnlyMessage;
+  BOOL _isPrintOnlyMessage;
+  IRCPrefix *_sender;
+  NSArray<NSString *> *_params;
+  NSDate *_receivedAt;
+  NSDictionary<NSString *, NSString *> *_messageTags;
+  NSString *_batchToken;
+  NSString *_command;
+  NSString *_messageIdentifier;
+  NSString *_senderAccount;
+  NSUInteger _commandNumeric;
+  IRCMessageBatchMessage *_parentBatchMessage;
 }
 
 @end
 
 @interface IRCMessage (IRCMessageLineParser)
 - (BOOL)parseLine:(NSString *)line forClient:(nullable IRCClient *)client;
-- (void)parseExtensions:(NSString *)extensionInfo forClient:(nullable IRCClient *)client;
-- (void)parseSender:(NSString *)senderInfo forClient:(nullable IRCClient *)client;
+- (void)parseExtensions:(NSString *)extensionInfo
+              forClient:(nullable IRCClient *)client;
+- (void)parseSender:(NSString *)senderInfo
+          forClient:(nullable IRCClient *)client;
 @end
 
 NS_ASSUME_NONNULL_END

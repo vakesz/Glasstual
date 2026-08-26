@@ -38,7 +38,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /* IRCUserPersistentStore is a class used by IRCUser to store
- properties which are persistent between multiple read-only 
+ properties which are persistent between multiple read-only
  and mutable copies of the same IRCUser instance. */
 @class IRCUserRelations;
 

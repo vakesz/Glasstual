@@ -16,12 +16,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSObject (THOPluginProtocolExtension)
 - (BOOL)receivedCommand:(NSString *)command
-			   withText:(nullable NSString *)text
-			 authoredBy:(IRCPrefix *)textAuthor
-			destinedFor:(nullable IRCChannel *)textDestination
-			   onClient:(IRCClient *)client
-			 receivedAt:(NSDate *)receivedAt
-	   referenceMessage:(nullable IRCMessage *)referenceMessage;
+               withText:(nullable NSString *)text
+             authoredBy:(IRCPrefix *)textAuthor
+            destinedFor:(nullable IRCChannel *)textDestination
+               onClient:(IRCClient *)client
+             receivedAt:(NSDate *)receivedAt
+       referenceMessage:(nullable IRCMessage *)referenceMessage;
 @end
 
 NS_ASSUME_NONNULL_END

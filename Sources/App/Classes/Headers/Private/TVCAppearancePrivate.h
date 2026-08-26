@@ -43,7 +43,8 @@ NS_ASSUME_NONNULL_BEGIN
 /* Colors are expected to be semantic (type 3) so one appearance
  serves light and dark, retina and non-retina alike. */
 - (nullable instancetype)initWithAppearanceNamed:(NSString *)appearanceName
-										   atURL:(NSURL *)appearanceLocation NS_DESIGNATED_INITIALIZER;
+                                           atURL:(NSURL *)appearanceLocation
+    NS_DESIGNATED_INITIALIZER;
 
 /* When a subclass finishes applying all appearance values to properties,
  it can flush the top level group which will cause it to disappear from
@@ -53,7 +54,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCApplicationAppearance ()
 /* Appearance name is inherited from TXApplication */
-- (nullable instancetype)initWithAppearanceAtURL:(NSURL *)appearanceLocation NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithAppearanceAtURL:(NSURL *)appearanceLocation
+    NS_DESIGNATED_INITIALIZER;
 
 /* Semantic colors make the display's scale irrelevant; the flag is
  ignored. Kept so existing callers keep compiling. Call

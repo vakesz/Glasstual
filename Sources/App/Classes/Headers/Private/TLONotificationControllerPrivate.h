@@ -49,7 +49,8 @@ GLASSTUAL_EXTERN NSString *const TXNotificationDialogStandardNicknameFormat;
 GLASSTUAL_EXTERN NSString *const TXNotificationDialogActionNicknameFormat;
 
 GLASSTUAL_EXTERN NSString *const TXNotificationHighlightLogStandardActionFormat;
-GLASSTUAL_EXTERN NSString *const TXNotificationHighlightLogStandardMessageFormat;
+GLASSTUAL_EXTERN NSString *const
+    TXNotificationHighlightLogStandardMessageFormat;
 
 @interface TLONotificationController ()
 /* All methods in this controller do not honor any user preference for
@@ -61,45 +62,55 @@ GLASSTUAL_EXTERN NSString *const TXNotificationHighlightLogStandardMessageFormat
  formatter stripping if need be. In addition to properly separating
  notifications by threads. */
 - (void)notify:(TXNotificationType)eventType
-		  title:(nullable NSString *)eventTitle
-	description:(nullable NSString *)eventDescription
-	   userInfo:(nullable NSDictionary<NSString *, id> *)eventContext;
+          title:(nullable NSString *)eventTitle
+    description:(nullable NSString *)eventDescription
+       userInfo:(nullable NSDictionary<NSString *, id> *)eventContext;
 
-- (void)dismissNotificationsForChannel:(nullable IRCChannel *)channel onClient:(IRCClient *)client;
+- (void)dismissNotificationsForChannel:(nullable IRCChannel *)channel
+                              onClient:(IRCClient *)client;
 
 /* These methods schedule notifications with the UserNotification.framework.
  Nothing more. -notify:title:description:userInfo: is the proper entry point
  for sending notifications related to IRC. These entry points are conveniences
- for sending unrelated notifications such as from the license manager or addons. */
-- (void)scheduleNotificationWithTitle:(NSString *)title message:(NSString *)message onClient:(IRCClient *)client;
-
-- (void)scheduleNotificationWithTitle:(NSString *)title message:(NSString *)message forChannel:(IRCChannel *)channel;
+ for sending unrelated notifications such as from the license manager or addons.
+ */
+- (void)scheduleNotificationWithTitle:(NSString *)title
+                              message:(NSString *)message
+                             onClient:(IRCClient *)client;
 
 - (void)scheduleNotificationWithTitle:(NSString *)title
-							  message:(NSString *)message
-						   forChannel:(nullable IRCChannel *)channel
-							 onClient:(IRCClient *)client;
+                              message:(NSString *)message
+                           forChannel:(IRCChannel *)channel;
 
 - (void)scheduleNotificationWithTitle:(NSString *)title
-							  message:(NSString *)message
-							 userInfo:(nullable NSDictionary<NSString *, id> *)userInfo;
+                              message:(NSString *)message
+                           forChannel:(nullable IRCChannel *)channel
+                             onClient:(IRCClient *)client;
 
 - (void)scheduleNotificationWithTitle:(NSString *)title
-							  message:(NSString *)message
-							 userInfo:(nullable NSDictionary<NSString *, id> *)userInfo
-					 threadIdentifier:(NSString *)threadIdentifier;
+                              message:(NSString *)message
+                             userInfo:(nullable NSDictionary<NSString *, id> *)
+                                          userInfo;
+
+- (void)scheduleNotificationWithTitle:(NSString *)title
+                              message:(NSString *)message
+                             userInfo:(nullable NSDictionary<NSString *, id> *)
+                                          userInfo
+                     threadIdentifier:(NSString *)threadIdentifier;
 
 /* Pure helpers exposed for tests and shared call sites. */
-+ (nullable NSString *)threadIdentifierForClient:(nullable NSString *)clientIdentifier
-										 channel:(nullable NSString *)channelIdentifier;
++ (nullable NSString *)
+    threadIdentifierForClient:(nullable NSString *)clientIdentifier
+                      channel:(nullable NSString *)channelIdentifier;
 
 + (BOOL)userInfo:(NSDictionary<NSString *, id> *)userInfo
-	isInScopeOfClientIdentifier:(NSString *)clientIdentifier
-			  channelIdentifier:(nullable NSString *)channelIdentifier;
+    isInScopeOfClientIdentifier:(NSString *)clientIdentifier
+              channelIdentifier:(nullable NSString *)channelIdentifier;
 
 + (NSString *)notificationIdentifierWithTitle:(NSString *)title
-									  message:(NSString *)message
-							 threadIdentifier:(nullable NSString *)threadIdentifier;
+                                      message:(NSString *)message
+                             threadIdentifier:
+                                 (nullable NSString *)threadIdentifier;
 @end
 
 NS_ASSUME_NONNULL_END

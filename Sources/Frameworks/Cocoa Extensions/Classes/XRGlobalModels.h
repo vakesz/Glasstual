@@ -32,84 +32,89 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-COCOA_EXTENSIONS_EXTERN BOOL NSObjectIsEmpty(id _Nullable obj) COCOA_EXTENSIONS_DEPRECATED("Use -length or -count");
+COCOA_EXTENSIONS_EXTERN BOOL NSObjectIsEmpty(id _Nullable obj)
+    COCOA_EXTENSIONS_DEPRECATED("Use -length or -count");
 COCOA_EXTENSIONS_INLINE
-BOOL NSObjectsAreEqual(id _Nullable obj1, id _Nullable obj2)
-{
-	return ((obj1 == nil && obj2 == nil) || [obj1 isEqual:obj2]);
+BOOL NSObjectsAreEqual(id _Nullable obj1, id _Nullable obj2) {
+  return ((obj1 == nil && obj2 == nil) || [obj1 isEqual:obj2]);
 }
 
 #pragma mark -
 #pragma mark Grand Central Dispatch
 
 COCOA_EXTENSIONS_INLINE
-void XRPerformBlockSynchronouslyOnQueue(dispatch_queue_t queue, DISPATCH_NOESCAPE dispatch_block_t block)
-{
-	dispatch_sync(queue, ^{
-		@autoreleasepool {
-			block();
-		}
-	});
+void XRPerformBlockSynchronouslyOnQueue(
+    dispatch_queue_t queue, DISPATCH_NOESCAPE dispatch_block_t block) {
+  dispatch_sync(queue, ^{
+    @autoreleasepool {
+      block();
+    }
+  });
 }
 
 COCOA_EXTENSIONS_INLINE
-void XRPerformBlockAsynchronouslyOnQueue(dispatch_queue_t queue, dispatch_block_t block)
-{
-	dispatch_async(queue, ^{
-		@autoreleasepool {
-			block();
-		}
-	});
+void XRPerformBlockAsynchronouslyOnQueue(dispatch_queue_t queue,
+                                         dispatch_block_t block) {
+  dispatch_async(queue, ^{
+    @autoreleasepool {
+      block();
+    }
+  });
 }
 
 COCOA_EXTENSIONS_INLINE
-void XRPerformBlockSynchronouslyOnMainQueue(DISPATCH_NOESCAPE dispatch_block_t block)
-{
-	/* Check thread we are on. */
-	/* If we are already on the main thread and performing a synchronous action,
-	 then all we have to do is invoke the block supplied to us. */
-	if ([NSThread isMainThread]) {
-		block(); // Perform block.
-	} else {
-		XRPerformBlockSynchronouslyOnQueue(dispatch_get_main_queue(), block);
-	}
+void XRPerformBlockSynchronouslyOnMainQueue(
+    DISPATCH_NOESCAPE dispatch_block_t block) {
+  /* Check thread we are on. */
+  /* If we are already on the main thread and performing a synchronous action,
+   then all we have to do is invoke the block supplied to us. */
+  if ([NSThread isMainThread]) {
+    block(); // Perform block.
+  } else {
+    XRPerformBlockSynchronouslyOnQueue(dispatch_get_main_queue(), block);
+  }
 }
 
 COCOA_EXTENSIONS_INLINE
-void XRPerformBlockAsynchronouslyOnMainQueue(dispatch_block_t block)
-{
-	XRPerformBlockAsynchronouslyOnQueue(dispatch_get_main_queue(), block);
+void XRPerformBlockAsynchronouslyOnMainQueue(dispatch_block_t block) {
+  XRPerformBlockAsynchronouslyOnQueue(dispatch_get_main_queue(), block);
 }
 
 COCOA_EXTENSIONS_INLINE
-void XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(dispatch_block_t block, dispatch_queue_priority_t priority)
-{
-	XRPerformBlockAsynchronouslyOnQueue(dispatch_get_global_queue(priority, 0), block);
+void XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(
+    dispatch_block_t block, dispatch_queue_priority_t priority) {
+  XRPerformBlockAsynchronouslyOnQueue(dispatch_get_global_queue(priority, 0),
+                                      block);
 }
 
 COCOA_EXTENSIONS_INLINE
-void XRPerformBlockAsynchronouslyOnGlobalQueue(dispatch_block_t block)
-{
-	XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(block, DISPATCH_QUEUE_PRIORITY_DEFAULT);
+void XRPerformBlockAsynchronouslyOnGlobalQueue(dispatch_block_t block) {
+  XRPerformBlockAsynchronouslyOnGlobalQueueWithPriority(
+      block, DISPATCH_QUEUE_PRIORITY_DEFAULT);
 }
 
-COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueue(dispatch_block_t block,
-																				 NSTimeInterval delay);
-COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueueWithPriority(
-	dispatch_block_t block, NSTimeInterval delay, dispatch_queue_priority_t priority);
-COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnMainQueue(dispatch_block_t block,
-																			   NSTimeInterval delay);
-COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnQueue(dispatch_queue_t queue,
-																		   dispatch_block_t block,
-																		   NSTimeInterval delay,
-																		   BOOL repeat);
+COCOA_EXTENSIONS_EXTERN
+dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueue(dispatch_block_t block,
+                                                         NSTimeInterval delay);
+COCOA_EXTENSIONS_EXTERN
+dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueueWithPriority(
+    dispatch_block_t block, NSTimeInterval delay,
+    dispatch_queue_priority_t priority);
+COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnMainQueue(
+    dispatch_block_t block, NSTimeInterval delay);
+COCOA_EXTENSIONS_EXTERN dispatch_source_t _Nullable XRScheduleBlockOnQueue(
+    dispatch_queue_t queue, dispatch_block_t block, NSTimeInterval delay,
+    BOOL repeat);
 
-COCOA_EXTENSIONS_EXTERN void XRResumeScheduledBlock(dispatch_source_t blockSource);
-COCOA_EXTENSIONS_EXTERN void XRCancelScheduledBlock(dispatch_source_t blockSource);
+COCOA_EXTENSIONS_EXTERN void
+XRResumeScheduledBlock(dispatch_source_t blockSource);
+COCOA_EXTENSIONS_EXTERN void
+XRCancelScheduledBlock(dispatch_source_t blockSource);
 
 #pragma mark -
 #pragma mark Swizzling
 
 COCOA_EXTENSIONS_EXTERN void
-XRExchangeInstanceMethod(NSString *className, NSString *originalMethod, NSString *replacementMethod);
+XRExchangeInstanceMethod(NSString *className, NSString *originalMethod,
+                         NSString *replacementMethod);
 NS_ASSUME_NONNULL_END

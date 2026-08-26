@@ -50,7 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TVCMemberListSection : NSObject
 @property(readonly) IRCUserRank rank;
 @property(readonly, copy) NSString *title;
-@property(readonly) NSRange memberRange; // Indexes into the controller's arranged objects
+@property(readonly)
+    NSRange memberRange; // Indexes into the controller's arranged objects
 @end
 
 @interface TVCMemberList ()

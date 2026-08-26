@@ -47,24 +47,29 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogController;
 
 typedef NS_ENUM(NSUInteger, TVCServerListNavigationMovementType) {
-	TVCServerListNavigationMovementTypeAll = 0, // Move to next item
-	TVCServerListNavigationMovementTypeActive,	// Move to next active item
-	TVCServerListNavigationMovementTypeUnread,	// Move to next unread item
+  TVCServerListNavigationMovementTypeAll = 0, // Move to next item
+  TVCServerListNavigationMovementTypeActive,  // Move to next active item
+  TVCServerListNavigationMovementTypeUnread,  // Move to next unread item
 };
 
 typedef NS_ENUM(NSUInteger, TVCServerListNavigationSelectionType) {
-	TVCServerListNavigationSelectionTypeAny = 0, // Move to next item
-	TVCServerListNavigationSelectionTypeChannel, // Move to next channel item
-	TVCServerListNavigationSelectionTypeServer,	 // Move to next server item
+  TVCServerListNavigationSelectionTypeAny = 0, // Move to next item
+  TVCServerListNavigationSelectionTypeChannel, // Move to next channel item
+  TVCServerListNavigationSelectionTypeServer,  // Move to next server item
 };
 
-GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowAppearanceChangedNotification;
-GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowRedrawSubviewsNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TVCMainWindowAppearanceChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TVCMainWindowRedrawSubviewsNotification;
 
-GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowWillReloadThemeNotification;
-GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowDidReloadThemeNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TVCMainWindowWillReloadThemeNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TVCMainWindowDidReloadThemeNotification;
 
-GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowSelectionChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TVCMainWindowSelectionChangedNotification;
 
 @interface TVCMainWindow : NSWindow
 @property(readonly, getter=isDisabled) BOOL disabled;
@@ -99,9 +104,12 @@ GLASSTUAL_EXTERN NSNotificationName const TVCMainWindowSelectionChangedNotificat
 
 - (nullable IRCChannel *)selectedChannelOn:(IRCClient *)client;
 
-- (void)navigateServerEntries:(BOOL)isMovingDown withNavigationType:(TVCServerListNavigationMovementType)navigationType;
+- (void)navigateServerEntries:(BOOL)isMovingDown
+           withNavigationType:
+               (TVCServerListNavigationMovementType)navigationType;
 - (void)navigateChannelEntries:(BOOL)isMovingDown
-			withNavigationType:(TVCServerListNavigationMovementType)navigationType;
+            withNavigationType:
+                (TVCServerListNavigationMovementType)navigationType;
 - (void)navigateToNextEntry:(BOOL)isMovingDown;
 
 - (void)selectNextServer:(NSEvent *)e;

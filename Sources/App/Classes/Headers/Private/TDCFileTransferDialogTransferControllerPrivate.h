@@ -36,14 +36,15 @@
  *
  *********************************************************************** */
 
-#import "TDCSharedProtocolDefinitionsPrivate.h"
 #import "TDCFileTransferDialogTypes.h"
+#import "TDCSharedProtocolDefinitionsPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient, TDCFileTransferDialog, TDCFileTransferDialogTableCell;
 
-@interface TDCFileTransferDialogTransferController : NSObject <TDCClientPrototype>
+@interface TDCFileTransferDialogTransferController
+    : NSObject <TDCClientPrototype>
 @property(nonatomic, weak) TDCFileTransferDialogTableCell *transferTableCell;
 
 @property(readonly) BOOL isResume;
@@ -68,20 +69,23 @@ NS_ASSUME_NONNULL_BEGIN
 @property(getter=isActingAsServer, readonly) BOOL actingAsServer;
 
 + (nullable instancetype)receiverForClient:(IRCClient *)client
-								  nickname:(NSString *)nickname
-								   address:(NSString *)hostAddress
-									  port:(uint16_t)hostPort
-								  filename:(NSString *)filename
-								  filesize:(uint64_t)totalFilesize
-									 token:(nullable NSString *)transferToken;
+                                  nickname:(NSString *)nickname
+                                   address:(NSString *)hostAddress
+                                      port:(uint16_t)hostPort
+                                  filename:(NSString *)filename
+                                  filesize:(uint64_t)totalFilesize
+                                     token:(nullable NSString *)transferToken;
 
-+ (nullable instancetype)senderForClient:(IRCClient *)client nickname:(NSString *)nickname path:(NSString *)path;
++ (nullable instancetype)senderForClient:(IRCClient *)client
+                                nickname:(NSString *)nickname
+                                    path:(NSString *)path;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 - (void)open;
 - (void)openWithPathOrUserDownloads;
-- (void)openWithPath:(nullable NSString *)path; // Only changes path if self.path == nil
+- (void)openWithPath:
+    (nullable NSString *)path; // Only changes path if self.path == nil
 
 - (void)close;
 - (void)closeAndPostNotification:(BOOL)postNotification;
@@ -91,7 +95,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)noteIPAddressLookupFailed;
 - (void)noteIPAddressLookupSucceeded;
 
-- (void)didReceiveSendRequest:(NSString *)hostAddress hostPort:(uint16_t)hostPort;
+- (void)didReceiveSendRequest:(NSString *)hostAddress
+                     hostPort:(uint16_t)hostPort;
 
 - (void)didReceiveResumeAccept:(uint64_t)proposedPosition;
 - (void)didReceiveResumeRequest:(uint64_t)proposedPosition;

@@ -392,7 +392,7 @@ targets:
       - path: Sources/Services/Historic Log File Manager/Resources
       - path: Sources/Shared/Headers
       - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.m
-      - path: Sources/Shared/Views/Channel View/TVCLogLineXPC.m
+      - path: Sources/Shared/Views/Channel View/TVCLogLineXPC.swift
     dependencies:
       - sdk: CoreData.framework
 
@@ -540,7 +540,7 @@ targets:
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
       - path: Sources/Shared/Library/TLOLocalization.m
       - path: Sources/Shared/Library/TLOLocalization.swift
-      - path: Sources/Shared/Library/TLOTimer.m
+      - path: Sources/Shared/Library/TLOTimer.swift
     dependencies:
       - sdk: Security.framework
       - sdk: SecurityInterface.framework
@@ -866,6 +866,7 @@ targets:
         optional: true
         buildPhase: none
       - path: Sources/Shared
+      - path: Sources/Services/Inline Content Loader/Classes/Service/ICLPayload.swift
       # Resources -----------------------------------------------------------
       - path: Sources/App/Resources/Images
         excludes:

@@ -43,17 +43,18 @@ NS_ASSUME_NONNULL_BEGIN
  * Subsystem that plugin can use for logging using `os_log` and related systems.
  *
  * Plugins are loaded directly into Glasstual and are not executed on a separate
- * process. As such, the returned subsystem uses the same identifier of Glasstual.
- * The category is different. The category is in the format:
+ * process. As such, the returned subsystem uses the same identifier of
+ * Glasstual. The category is different. The category is in the format:
  * `Extension['<BUNDLE NAME>']`
  *
- * Accessing the logging subsystem through this function is not optimized 
+ * Accessing the logging subsystem through this function is not optimized
  * if aggressive logging is performed. In that case, retain a reference,
  * or create a subsystem outside of this initializer.
  *
  * @return Subsystem that plugin can use for logging.
  */
-#define THOPluginLoggingSubsystem() _THOPluginLoggingSubsystemForBundle([NSBundle bundleForClass:[self class]])
+#define THOPluginLoggingSubsystem()                                            \
+  _THOPluginLoggingSubsystemForBundle([NSBundle bundleForClass:[self class]])
 
 GLASSTUAL_EXTERN os_log_t _THOPluginLoggingSubsystemForBundle(NSBundle *bundle);
 

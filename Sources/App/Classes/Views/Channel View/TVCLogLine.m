@@ -36,18 +36,18 @@
  *
  *********************************************************************** */
 
+#import "IRCChannel.h"
+#import "IRCClient.h"
+#import "IRCUserNicknameColorStyleGeneratorPrivate.h"
 #import "NSObjectHelperPrivate.h"
 #import "NSStringHelper.h"
-#import "TXGlobalModels.h"
-#import "IRCClient.h"
-#import "IRCChannel.h"
-#import "IRCUserNicknameColorStyleGeneratorPrivate.h"
-#import "TPCPreferencesLocal.h"
-#import "TPCThemeController.h"
-#import "TPCTheme.h"
 #import "TLOFileLoggerPrivate.h"
+#import "TPCPreferencesLocal.h"
+#import "TPCTheme.h"
+#import "TPCThemeController.h"
 #import "TVCLogLineInternal.h"
 #import "TVCLogLineXPCPrivate.h"
+#import "TXGlobalModels.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -66,15 +66,14 @@ NSString *const TVCLogLineDefaultCommandValue = @"-100";
 @implementation TVCLogLine
 
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN
-- (instancetype)init
-{
-	if ((self = [super init])) {
-		[self populateDefaultsPostflight];
+- (instancetype)init {
+  if ((self = [super init])) {
+    [self populateDefaultsPostflight];
 
-		return self;
-	}
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
@@ -82,416 +81,435 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
  produced is discarded in favor of it. Returning a different object from an
  initializer is permitted under ARC, which releases the original receiver. */
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN
-- (nullable instancetype)initWithData:(NSData *)data
-{
-	NSParameterAssert(data != nil);
+- (nullable instancetype)initWithData:(NSData *)data {
+  NSParameterAssert(data != nil);
 
-	return [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:data error:NULL];
+  return [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class]
+                                           fromData:data
+                                              error:NULL];
 }
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
-+ (nullable instancetype)logLineWithData:(NSData *)data
-{
-	return [[self alloc] initWithData:data];
++ (nullable instancetype)logLineWithData:(NSData *)data {
+  return [[self alloc] initWithData:data];
 }
 
-+ (nullable TVCLogLine *)logLineFromXPCObject:(TVCLogLineXPC *)xpcObject
-{
-	NSParameterAssert(xpcObject != nil);
++ (nullable TVCLogLine *)logLineFromXPCObject:(TVCLogLineXPC *)xpcObject {
+  NSParameterAssert(xpcObject != nil);
 
-	/* In earlier versions of the historic log database, the unique identifier was
-	 not stored in the archived data of the log line. We need a unique identifier now,
-	 which the database automatically creates if none is present, but it does it without
-	 unarchiving the data because the process does not have this class. It therefore just
-	 attaches the unique identifier to the XPC object. We can then write it out here. */
-	/* We check if the object's unique identifier is nil before setting the database's
-	 value because the value may have already been unarchived if it is present. */
-	NSData *data = xpcObject.data;
+  /* In earlier versions of the historic log database, the unique identifier was
+   not stored in the archived data of the log line. We need a unique identifier
+   now, which the database automatically creates if none is present, but it does
+   it without unarchiving the data because the process does not have this class.
+   It therefore just attaches the unique identifier to the XPC object. We can
+   then write it out here. */
+  /* We check if the object's unique identifier is nil before setting the
+   database's value because the value may have already been unarchived if it is
+   present. */
+  NSData *data = xpcObject.data;
 
-	if (data == nil) {
-		return nil;
-	}
+  if (data == nil) {
+    return nil;
+  }
 
-	TVCLogLine *object = [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class] fromData:data error:NULL];
+  TVCLogLine *object =
+      [NSKeyedUnarchiver unarchivedObjectOfClass:[TVCLogLine class]
+                                        fromData:data
+                                           error:NULL];
 
-	if (object == nil) {
-		return nil;
-	}
+  if (object == nil) {
+    return nil;
+  }
 
-	if (object->_uniqueIdentifier == nil) {
-		object->_uniqueIdentifier = [xpcObject.uniqueIdentifier copy];
-	}
+  if (object->_uniqueIdentifier == nil) {
+    object->_uniqueIdentifier = [xpcObject.uniqueIdentifier copy];
+  }
 
-	return [object copy];
+  return [object copy];
 }
 
-- (BOOL)populateWithDecoder:(NSCoder *)aDecoder
-{
-	self->_receivedAt = [aDecoder decodeObjectOfClass:[NSDate class] forKey:@"receivedAt"];
+- (BOOL)populateWithDecoder:(NSCoder *)aDecoder {
+  self->_receivedAt = [aDecoder decodeObjectOfClass:[NSDate class]
+                                             forKey:@"receivedAt"];
 
-	self->_excludeKeywords =
-		[aDecoder decodeObjectOfClasses:[NSSet setWithObjects:[NSArray class], [NSString class], nil]
-								 forKey:@"excludeKeywords"];
+  self->_excludeKeywords = [aDecoder
+      decodeObjectOfClasses:[NSSet setWithObjects:[NSArray class],
+                                                  [NSString class], nil]
+                     forKey:@"excludeKeywords"];
 
-	self->_highlightKeywords =
-		[aDecoder decodeObjectOfClasses:[NSSet setWithObjects:[NSArray class], [NSString class], nil]
-								 forKey:@"highlightKeywords"];
+  self->_highlightKeywords = [aDecoder
+      decodeObjectOfClasses:[NSSet setWithObjects:[NSArray class],
+                                                  [NSString class], nil]
+                     forKey:@"highlightKeywords"];
 
-	self->_rendererAttributes = [aDecoder decodeDictionaryForKey:@"rendererAttributes"];
+  self->_rendererAttributes =
+      [aDecoder decodeDictionaryForKey:@"rendererAttributes"];
 
-	self->_isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
-	self->_isFirstForDay = [aDecoder decodeBoolForKey:@"isFirstForDay"];
+  self->_isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
+  self->_isFirstForDay = [aDecoder decodeBoolForKey:@"isFirstForDay"];
 
-	self->_command = [aDecoder decodeStringForKey:@"command"];
-	self->_messageBody = [aDecoder decodeStringForKey:@"messageBody"];
-	self->_messageIdentifier = [aDecoder decodeStringForKey:@"messageIdentifier"];
-	self->_replyToMessageIdentifier = [aDecoder decodeStringForKey:@"replyToMessageIdentifier"];
-	self->_reactions = [aDecoder
-		decodeObjectOfClasses:[NSSet setWithObjects:[NSDictionary class], [NSArray class], [NSString class], nil]
-					   forKey:@"reactions"];
-	self->_nickname = [aDecoder decodeStringForKey:@"nickname"];
+  self->_command = [aDecoder decodeStringForKey:@"command"];
+  self->_messageBody = [aDecoder decodeStringForKey:@"messageBody"];
+  self->_messageIdentifier = [aDecoder decodeStringForKey:@"messageIdentifier"];
+  self->_replyToMessageIdentifier =
+      [aDecoder decodeStringForKey:@"replyToMessageIdentifier"];
+  self->_reactions = [aDecoder
+      decodeObjectOfClasses:[NSSet setWithObjects:[NSDictionary class],
+                                                  [NSArray class],
+                                                  [NSString class], nil]
+                     forKey:@"reactions"];
+  self->_nickname = [aDecoder decodeStringForKey:@"nickname"];
 
-	self->_lineType = [aDecoder decodeIntegerForKey:@"lineType"];
-	self->_memberType = [aDecoder decodeIntegerForKey:@"memberType"];
+  self->_lineType = [aDecoder decodeIntegerForKey:@"lineType"];
+  self->_memberType = [aDecoder decodeIntegerForKey:@"memberType"];
 
-	/* A line that was still pending when it was archived can no longer
-	 be resolved: the connection that sent it is gone. */
-	TVCLogLineDeliveryState deliveryState = [aDecoder decodeIntegerForKey:@"deliveryState"];
+  /* A line that was still pending when it was archived can no longer
+   be resolved: the connection that sent it is gone. */
+  TVCLogLineDeliveryState deliveryState =
+      [aDecoder decodeIntegerForKey:@"deliveryState"];
 
-	if (deliveryState == TVCLogLineDeliveryStatePending) {
-		deliveryState = TVCLogLineDeliveryStateNone;
-	}
+  if (deliveryState == TVCLogLineDeliveryStatePending) {
+    deliveryState = TVCLogLineDeliveryStateNone;
+  }
 
-	self->_deliveryState = deliveryState;
+  self->_deliveryState = deliveryState;
 
-	self->_uniqueIdentifier = [aDecoder decodeStringForKey:@"uniqueIdentifier"];
+  self->_uniqueIdentifier = [aDecoder decodeStringForKey:@"uniqueIdentifier"];
 
-	self->_sessionIdentifier = [aDecoder decodeIntegerForKey:@"sessionIdentifier"];
+  self->_sessionIdentifier =
+      [aDecoder decodeIntegerForKey:@"sessionIdentifier"];
 
-	[self computeNicknameColorStyle];
+  [self computeNicknameColorStyle];
 
-	return YES;
+  return YES;
 }
 
-- (void)populateDefaultsPostflight
-{
-	[self populateDefaultUniqueIdentifier];
-	[self populateDefaultSessionIdentifier];
+- (void)populateDefaultsPostflight {
+  [self populateDefaultUniqueIdentifier];
+  [self populateDefaultSessionIdentifier];
 
-	SetVariableIfNil(self->_command, TVCLogLineDefaultCommandValue) SetVariableIfNil(self->_messageBody, @"")
-		SetVariableIfNil(self->_receivedAt, [NSDate date])
+  SetVariableIfNil(self->_command, TVCLogLineDefaultCommandValue)
+      SetVariableIfNil(self->_messageBody, @"")
+          SetVariableIfNil(self->_receivedAt, [NSDate date])
 
-			if (self->_lineType == TVCLogLineTypeActionNoHighlight)
-	{
-		self->_lineType = TVCLogLineTypeAction;
+              if (self->_lineType == TVCLogLineTypeActionNoHighlight) {
+    self->_lineType = TVCLogLineTypeAction;
 
-		self->_highlightKeywords = nil;
-	}
-	else if (self->_lineType == TVCLogLineTypePrivateMessageNoHighlight)
-	{
-		self->_lineType = TVCLogLineTypePrivateMessage;
+    self->_highlightKeywords = nil;
+  }
+  else if (self->_lineType == TVCLogLineTypePrivateMessageNoHighlight) {
+    self->_lineType = TVCLogLineTypePrivateMessage;
 
-		self->_highlightKeywords = nil;
-	}
+    self->_highlightKeywords = nil;
+  }
 }
 
-- (void)populateDefaultUniqueIdentifier
-{
-	if (self->_uniqueIdentifier != nil) {
-		return;
-	}
+- (void)populateDefaultUniqueIdentifier {
+  if (self->_uniqueIdentifier != nil) {
+    return;
+  }
 
-	self->_uniqueIdentifier = [self.class newUniqueIdentifier];
+  self->_uniqueIdentifier = [self.class newUniqueIdentifier];
 }
 
-- (void)populateDefaultSessionIdentifier
-{
-	if (self->_sessionIdentifier != 0) {
-		return;
-	}
+- (void)populateDefaultSessionIdentifier {
+  if (self->_sessionIdentifier != 0) {
+    return;
+  }
 
-	self->_sessionIdentifier = [self.class currentSessionIdentifier];
+  self->_sessionIdentifier = [self.class currentSessionIdentifier];
 }
 
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-	[aCoder encodeObject:self.command forKey:@"command"];
-	[aCoder encodeObject:self.messageBody forKey:@"messageBody"];
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+  [aCoder encodeObject:self.command forKey:@"command"];
+  [aCoder encodeObject:self.messageBody forKey:@"messageBody"];
 
-	[aCoder maybeEncodeObject:self.excludeKeywords forKey:@"excludeKeywords"];
-	[aCoder maybeEncodeObject:self.highlightKeywords forKey:@"highlightKeywords"];
-	[aCoder maybeEncodeObject:self.rendererAttributes forKey:@"rendererAttributes"];
-	[aCoder maybeEncodeObject:self.messageIdentifier forKey:@"messageIdentifier"];
-	[aCoder maybeEncodeObject:self.replyToMessageIdentifier forKey:@"replyToMessageIdentifier"];
-	[aCoder maybeEncodeObject:self.reactions forKey:@"reactions"];
-	[aCoder maybeEncodeObject:self.nickname forKey:@"nickname"];
+  [aCoder maybeEncodeObject:self.excludeKeywords forKey:@"excludeKeywords"];
+  [aCoder maybeEncodeObject:self.highlightKeywords forKey:@"highlightKeywords"];
+  [aCoder maybeEncodeObject:self.rendererAttributes
+                     forKey:@"rendererAttributes"];
+  [aCoder maybeEncodeObject:self.messageIdentifier forKey:@"messageIdentifier"];
+  [aCoder maybeEncodeObject:self.replyToMessageIdentifier
+                     forKey:@"replyToMessageIdentifier"];
+  [aCoder maybeEncodeObject:self.reactions forKey:@"reactions"];
+  [aCoder maybeEncodeObject:self.nickname forKey:@"nickname"];
 
-	[aCoder encodeBool:self.isEncrypted forKey:@"isEncrypted"];
-	[aCoder encodeBool:self.isFirstForDay forKey:@"isFirstForDay"];
+  [aCoder encodeBool:self.isEncrypted forKey:@"isEncrypted"];
+  [aCoder encodeBool:self.isFirstForDay forKey:@"isFirstForDay"];
 
-	[aCoder encodeObject:self.receivedAt forKey:@"receivedAt"];
+  [aCoder encodeObject:self.receivedAt forKey:@"receivedAt"];
 
-	[aCoder encodeInteger:self.lineType forKey:@"lineType"];
-	[aCoder encodeInteger:self.memberType forKey:@"memberType"];
+  [aCoder encodeInteger:self.lineType forKey:@"lineType"];
+  [aCoder encodeInteger:self.memberType forKey:@"memberType"];
 
-	if (self.deliveryState != TVCLogLineDeliveryStateNone) {
-		[aCoder encodeInteger:self.deliveryState forKey:@"deliveryState"];
-	}
+  if (self.deliveryState != TVCLogLineDeliveryStateNone) {
+    [aCoder encodeInteger:self.deliveryState forKey:@"deliveryState"];
+  }
 
-	[aCoder encodeObject:self.uniqueIdentifier forKey:@"uniqueIdentifier"];
+  [aCoder encodeObject:self.uniqueIdentifier forKey:@"uniqueIdentifier"];
 
-	[aCoder encodeInteger:self.sessionIdentifier forKey:@"sessionIdentifier"];
+  [aCoder encodeInteger:self.sessionIdentifier forKey:@"sessionIdentifier"];
 }
 
-+ (BOOL)supportsSecureCoding
-{
-	return YES;
++ (BOOL)supportsSecureCoding {
+  return YES;
 }
 
-- (TVCLogLineXPC *)xpcObjectForTreeItem:(IRCTreeItem *)treeItem
-{
-	NSParameterAssert(treeItem != nil);
+- (TVCLogLineXPC *)xpcObjectForTreeItem:(IRCTreeItem *)treeItem {
+  NSParameterAssert(treeItem != nil);
 
-	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self requiringSecureCoding:YES error:NULL];
+  NSData *data = [NSKeyedArchiver archivedDataWithRootObject:self
+                                       requiringSecureCoding:YES
+                                                       error:NULL];
 
-	TVCLogLineXPC *xpcObject = [[TVCLogLineXPC alloc] initWithLogLineData:data
-														 uniqueIdentifier:self.uniqueIdentifier
-														   viewIdentifier:treeItem.uniqueIdentifier
-														sessionIdentifier:self.sessionIdentifier];
+  TVCLogLineXPC *xpcObject =
+      [[TVCLogLineXPC alloc] initWithLogLineData:data
+                                uniqueIdentifier:self.uniqueIdentifier
+                                  viewIdentifier:treeItem.uniqueIdentifier
+                               sessionIdentifier:self.sessionIdentifier];
 
-	return xpcObject;
+  return xpcObject;
 }
 
-+ (NSString *)newUniqueIdentifier
-{
-	NSString *printIdentifier = [NSString stringWithUUID]; // Example: 68753A44-4D6F-1226-9C60-0050E4C00067
++ (NSString *)newUniqueIdentifier {
+  NSString *printIdentifier = [NSString
+      stringWithUUID]; // Example: 68753A44-4D6F-1226-9C60-0050E4C00067
 
-	return [printIdentifier substringFromIndex:19]; // Example: 9C60-0050E4C00067
+  return [printIdentifier substringFromIndex:19]; // Example: 9C60-0050E4C00067
 }
 
-+ (NSUInteger)currentSessionIdentifier
-{
-	static NSUInteger sessionIdentifier = 0;
++ (NSUInteger)currentSessionIdentifier {
+  static NSUInteger sessionIdentifier = 0;
 
-	static dispatch_once_t onceToken;
+  static dispatch_once_t onceToken;
 
-	dispatch_once(&onceToken, ^{
-		sessionIdentifier = TXRandomNumber(999999);
-	});
+  dispatch_once(&onceToken, ^{
+    sessionIdentifier = TXRandomNumber(999999);
+  });
 
-	return sessionIdentifier;
+  return sessionIdentifier;
 }
 
-- (BOOL)fromCurrentSession
-{
-	return (self.sessionIdentifier == [self.class currentSessionIdentifier]);
+- (BOOL)fromCurrentSession {
+  return (self.sessionIdentifier == [self.class currentSessionIdentifier]);
 }
 
-+ (nullable NSString *)stringForLineType:(TVCLogLineType)type
-{
-#define _dv(lineType, returnValue)                                                                                     \
-	case (lineType): {                                                                                                 \
-		return (returnValue);                                                                                          \
-		break;                                                                                                         \
-	}
++ (nullable NSString *)stringForLineType:(TVCLogLineType)type {
+#define _dv(lineType, returnValue)                                             \
+  case (lineType): {                                                           \
+    return (returnValue);                                                      \
+    break;                                                                     \
+  }
 
-	switch (type) {
-		_dv(TVCLogLineTypeAction, @"action") _dv(TVCLogLineTypeActionNoHighlight, @"action")
-			_dv(TVCLogLineTypeCTCP, @"ctcp") _dv(TVCLogLineTypeCTCPQuery, @"ctcp") _dv(TVCLogLineTypeCTCPReply, @"ctcp")
-				_dv(TVCLogLineTypeDCCFileTransfer, @"dcc-file-transfer") _dv(TVCLogLineTypeDebug, @"debug")
-					_dv(TVCLogLineTypeInvite, @"invite") _dv(TVCLogLineTypeJoin, @"join")
-						_dv(TVCLogLineTypeKick, @"kick") _dv(TVCLogLineTypeKill, @"kill")
-							_dv(TVCLogLineTypeMode, @"mode") _dv(TVCLogLineTypeNick, @"nick")
-								_dv(TVCLogLineTypeNotice, @"notice")
-									_dv(TVCLogLineTypeOffTheRecordEncryptionStatus, @"off-the-record-encryption-status")
-										_dv(TVCLogLineTypePart, @"part") _dv(TVCLogLineTypePrivateMessage, @"privmsg")
-											_dv(TVCLogLineTypePrivateMessageNoHighlight, @"privmsg")
-												_dv(TVCLogLineTypeQuit, @"quit") _dv(TVCLogLineTypeTopic, @"topic")
-													_dv(TVCLogLineTypeWebsite, @"website")
+  switch (type) {
+    _dv(TVCLogLineTypeAction, @"action") _dv(TVCLogLineTypeActionNoHighlight,
+                                             @"action")
+        _dv(TVCLogLineTypeCTCP, @"ctcp") _dv(TVCLogLineTypeCTCPQuery, @"ctcp")
+            _dv(TVCLogLineTypeCTCPReply, @"ctcp") _dv(
+                TVCLogLineTypeDCCFileTransfer,
+                @"dcc-file-transfer") _dv(TVCLogLineTypeDebug, @"debug")
+                _dv(TVCLogLineTypeInvite,
+                    @"invite") _dv(TVCLogLineTypeJoin,
+                                   @"join") _dv(TVCLogLineTypeKick, @"kick")
+                    _dv(TVCLogLineTypeKill,
+                        @"kill") _dv(TVCLogLineTypeMode,
+                                     @"mode") _dv(TVCLogLineTypeNick, @"nick")
+                        _dv(TVCLogLineTypeNotice, @"notice") _dv(
+                            TVCLogLineTypeOffTheRecordEncryptionStatus,
+                            @"off-the-record-encryption-status")
+                            _dv(TVCLogLineTypePart, @"part") _dv(
+                                TVCLogLineTypePrivateMessage, @"privmsg")
+                                _dv(TVCLogLineTypePrivateMessageNoHighlight,
+                                    @"privmsg") _dv(TVCLogLineTypeQuit, @"quit")
+                                    _dv(TVCLogLineTypeTopic, @"topic")
+                                        _dv(TVCLogLineTypeWebsite, @"website")
 
-														default:
-		{
-			return nil;
-		}
-	}
+                                            default : {
+      return nil;
+    }
+  }
 
 #undef _dv
 }
 
-+ (NSString *)stringForMemberType:(TVCLogLineMemberType)type
-{
-	if (type == TVCLogLineMemberTypeLocalUser) {
-		return @"myself";
-	} else {
-		return @"normal";
-	}
++ (NSString *)stringForMemberType:(TVCLogLineMemberType)type {
+  if (type == TVCLogLineMemberTypeLocalUser) {
+    return @"myself";
+  } else {
+    return @"normal";
+  }
 }
 
-- (nullable NSString *)lineTypeString
-{
-	return [self.class stringForLineType:self.lineType];
+- (nullable NSString *)lineTypeString {
+  return [self.class stringForLineType:self.lineType];
 }
 
-- (NSString *)memberTypeString
-{
-	return [self.class stringForMemberType:self.memberType];
+- (NSString *)memberTypeString {
+  return [self.class stringForMemberType:self.memberType];
 }
 
-+ (nullable NSString *)stringForDeliveryState:(TVCLogLineDeliveryState)state
-{
-	switch (state) {
-	case TVCLogLineDeliveryStatePending:
-		return @"pending";
-	case TVCLogLineDeliveryStateDelivered:
-		return @"delivered";
-	case TVCLogLineDeliveryStateFailed:
-		return @"failed";
-	case TVCLogLineDeliveryStateNone:
-		return nil;
-	}
++ (nullable NSString *)stringForDeliveryState:(TVCLogLineDeliveryState)state {
+  switch (state) {
+  case TVCLogLineDeliveryStatePending:
+    return @"pending";
+  case TVCLogLineDeliveryStateDelivered:
+    return @"delivered";
+  case TVCLogLineDeliveryStateFailed:
+    return @"failed";
+  case TVCLogLineDeliveryStateNone:
+    return nil;
+  }
 
-	return nil;
+  return nil;
 }
 
-- (nullable NSString *)deliveryStateString
-{
-	return [self.class stringForDeliveryState:self.deliveryState];
+- (nullable NSString *)deliveryStateString {
+  return [self.class stringForDeliveryState:self.deliveryState];
 }
 
-- (NSString *)formattedTimestamp
-{
-	return [self formattedTimestampWithFormat:nil];
+- (NSString *)formattedTimestamp {
+  return [self formattedTimestampWithFormat:nil];
 }
 
-- (NSString *)formattedTimestampWithFormat:(nullable NSString *)format
-{
-	if (format.length == 0) {
-		format = themeSettings().themeTimestampFormat;
-	}
+- (NSString *)formattedTimestampWithFormat:(nullable NSString *)format {
+  if (format.length == 0) {
+    format = themeSettings().themeTimestampFormat;
+  }
 
-	if (format.length == 0) {
-		format = [TPCPreferences themeTimestampFormat];
-	}
+  if (format.length == 0) {
+    format = [TPCPreferences themeTimestampFormat];
+  }
 
-	if (format.length == 0) {
-		format = [TPCPreferences themeTimestampFormatDefault];
-	}
+  if (format.length == 0) {
+    format = [TPCPreferences themeTimestampFormatDefault];
+  }
 
-	NSString *time = TXFormattedTimestamp(self.receivedAt, format);
+  NSString *time = TXFormattedTimestamp(self.receivedAt, format);
 
-	return time;
+  return time;
+}
+
+- (nullable NSString *)formattedNicknameInChannel:
+    (nullable IRCChannel *)channel {
+  return [self formattedNicknameInChannel:channel withFormat:nil];
 }
 
 - (nullable NSString *)formattedNicknameInChannel:(nullable IRCChannel *)channel
-{
-	return [self formattedNicknameInChannel:channel withFormat:nil];
+                                       withFormat:(nullable NSString *)format {
+  if (self.nickname == nil) {
+    return nil;
+  }
+
+  if (format == nil) {
+    if (self.lineType == TVCLogLineTypeAction) {
+      return [NSString
+          stringWithFormat:TVCLogLineActionNicknameFormat, self.nickname];
+    } else if (self.lineType == TVCLogLineTypeNotice) {
+      return [NSString
+          stringWithFormat:TVCLogLineNoticeNicknameFormat, self.nickname];
+    }
+  }
+
+  return [channel.associatedClient formatNickname:self.nickname
+                                        inChannel:channel
+                                       withFormat:format];
 }
 
-- (nullable NSString *)formattedNicknameInChannel:(nullable IRCChannel *)channel withFormat:(nullable NSString *)format
-{
-	if (self.nickname == nil) {
-		return nil;
-	}
-
-	if (format == nil) {
-		if (self.lineType == TVCLogLineTypeAction) {
-			return [NSString stringWithFormat:TVCLogLineActionNicknameFormat, self.nickname];
-		} else if (self.lineType == TVCLogLineTypeNotice) {
-			return [NSString stringWithFormat:TVCLogLineNoticeNicknameFormat, self.nickname];
-		}
-	}
-
-	return [channel.associatedClient formatNickname:self.nickname inChannel:channel withFormat:format];
+- (NSString *)renderedBodyForTranscriptLog {
+  return [self renderedBodyForTranscriptLogInChannel:nil];
 }
 
-- (NSString *)renderedBodyForTranscriptLog
-{
-	return [self renderedBodyForTranscriptLogInChannel:nil];
+- (NSString *)renderedBodyForTranscriptLogInChannel:
+    (nullable IRCChannel *)channel {
+  NSMutableString *s = [NSMutableString string];
+
+  NSString *timeFormatted =
+      [self formattedTimestampWithFormat:TLOFileLoggerISOStandardClockFormat];
+
+  if (timeFormatted) {
+    [s appendString:timeFormatted];
+    [s appendString:@" "];
+  }
+
+  NSString *nicknameFormatted = nil;
+
+  if (self.lineType == TVCLogLineTypeAction) {
+    nicknameFormatted =
+        [self formattedNicknameInChannel:channel
+                              withFormat:TLOFileLoggerActionNicknameFormat];
+  } else if (self.lineType == TVCLogLineTypeNotice) {
+    nicknameFormatted =
+        [self formattedNicknameInChannel:channel
+                              withFormat:TLOFileLoggerNoticeNicknameFormat];
+  } else {
+    nicknameFormatted =
+        [self formattedNicknameInChannel:channel
+                              withFormat:TLOFileLoggerUndefinedNicknameFormat];
+  }
+
+  if (nicknameFormatted) {
+    [s appendString:nicknameFormatted];
+    [s appendString:@" "];
+  }
+
+  [s appendString:self.messageBody];
+
+  return s.stripIRCEffects;
 }
 
-- (NSString *)renderedBodyForTranscriptLogInChannel:(nullable IRCChannel *)channel
-{
-	NSMutableString *s = [NSMutableString string];
+- (void)computeNicknameColorStyle {
+  if (self.nickname != nil &&
+      (self.lineType == TVCLogLineTypePrivateMessage ||
+       self.lineType == TVCLogLineTypePrivateMessageNoHighlight ||
+       self.lineType == TVCLogLineTypeAction ||
+       self.lineType == TVCLogLineTypeActionNoHighlight)) {
+    BOOL isOverride = NO;
 
-	NSString *timeFormatted = [self formattedTimestampWithFormat:TLOFileLoggerISOStandardClockFormat];
+    self->_nicknameColorStyle = [IRCUserNicknameColorStyleGenerator
+        nicknameColorStyleForString:self.nickname
+                         isOverride:&isOverride];
 
-	if (timeFormatted) {
-		[s appendString:timeFormatted];
-		[s appendString:@" "];
-	}
-
-	NSString *nicknameFormatted = nil;
-
-	if (self.lineType == TVCLogLineTypeAction) {
-		nicknameFormatted = [self formattedNicknameInChannel:channel withFormat:TLOFileLoggerActionNicknameFormat];
-	} else if (self.lineType == TVCLogLineTypeNotice) {
-		nicknameFormatted = [self formattedNicknameInChannel:channel withFormat:TLOFileLoggerNoticeNicknameFormat];
-	} else {
-		nicknameFormatted = [self formattedNicknameInChannel:channel withFormat:TLOFileLoggerUndefinedNicknameFormat];
-	}
-
-	if (nicknameFormatted) {
-		[s appendString:nicknameFormatted];
-		[s appendString:@" "];
-	}
-
-	[s appendString:self.messageBody];
-
-	return s.stripIRCEffects;
+    self->_nicknameColorStyleOverride = isOverride;
+  } else {
+    self->_nicknameColorStyle = nil;
+  }
 }
 
-- (void)computeNicknameColorStyle
-{
-	if (self.nickname != nil &&
-		(self.lineType == TVCLogLineTypePrivateMessage || self.lineType == TVCLogLineTypePrivateMessageNoHighlight ||
-		 self.lineType == TVCLogLineTypeAction || self.lineType == TVCLogLineTypeActionNoHighlight)) {
-		BOOL isOverride = NO;
+- (void)populateDuringCopy:(__kindof XRPortablePropertyObject *)newObject
+               mutableCopy:(BOOL)mutableCopy {
+  TVCLogLine *object = (TVCLogLine *)newObject;
 
-		self->_nicknameColorStyle = [IRCUserNicknameColorStyleGenerator nicknameColorStyleForString:self.nickname
-																						 isOverride:&isOverride];
+  object->_uniqueIdentifier = self->_uniqueIdentifier;
 
-		self->_nicknameColorStyleOverride = isOverride;
-	} else {
-		self->_nicknameColorStyle = nil;
-	}
+  object->_isEncrypted = self->_isEncrypted;
+  object->_isFirstForDay = self->_isFirstForDay;
+
+  object->_excludeKeywords = self->_excludeKeywords;
+  object->_highlightKeywords = self->_highlightKeywords;
+
+  object->_rendererAttributes = self->_rendererAttributes;
+
+  object->_receivedAt = self->_receivedAt;
+
+  object->_command = self->_command;
+  object->_messageBody = self->_messageBody;
+  object->_messageIdentifier = self->_messageIdentifier;
+  object->_replyToMessageIdentifier = self->_replyToMessageIdentifier;
+  object->_reactions = self->_reactions;
+  object->_nickname = self->_nickname;
+  object->_nicknameColorStyle = self->_nicknameColorStyle;
+
+  object->_nicknameColorStyleOverride = self->_nicknameColorStyleOverride;
+
+  object->_lineType = self->_lineType;
+  object->_memberType = self->_memberType;
+  object->_deliveryState = self->_deliveryState;
+
+  object->_sessionIdentifier = self->_sessionIdentifier;
 }
 
-- (void)populateDuringCopy:(__kindof XRPortablePropertyObject *)newObject mutableCopy:(BOOL)mutableCopy
-{
-	TVCLogLine *object = (TVCLogLine *)newObject;
-
-	object->_uniqueIdentifier = self->_uniqueIdentifier;
-
-	object->_isEncrypted = self->_isEncrypted;
-	object->_isFirstForDay = self->_isFirstForDay;
-
-	object->_excludeKeywords = self->_excludeKeywords;
-	object->_highlightKeywords = self->_highlightKeywords;
-
-	object->_rendererAttributes = self->_rendererAttributes;
-
-	object->_receivedAt = self->_receivedAt;
-
-	object->_command = self->_command;
-	object->_messageBody = self->_messageBody;
-	object->_messageIdentifier = self->_messageIdentifier;
-	object->_replyToMessageIdentifier = self->_replyToMessageIdentifier;
-	object->_reactions = self->_reactions;
-	object->_nickname = self->_nickname;
-	object->_nicknameColorStyle = self->_nicknameColorStyle;
-
-	object->_nicknameColorStyleOverride = self->_nicknameColorStyleOverride;
-
-	object->_lineType = self->_lineType;
-	object->_memberType = self->_memberType;
-	object->_deliveryState = self->_deliveryState;
-
-	object->_sessionIdentifier = self->_sessionIdentifier;
-}
-
-- (__kindof XRPortablePropertyObject *)mutableClass
-{
-	return [TVCLogLineMutable self];
+- (__kindof XRPortablePropertyObject *)mutableClass {
+  return [TVCLogLineMutable self];
 }
 
 @end
@@ -516,127 +534,113 @@ DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 @dynamic nickname;
 @dynamic receivedAt;
 
-+ (BOOL)isMutable
-{
-	return YES;
++ (BOOL)isMutable {
+  return YES;
 }
 
-- (__kindof XRPortablePropertyObject *)immutableClass
-{
-	return [TVCLogLine self];
+- (__kindof XRPortablePropertyObject *)immutableClass {
+  return [TVCLogLine self];
 }
 
-- (void)setIsEncrypted:(BOOL)isEncrypted
-{
-	if (self->_isEncrypted != isEncrypted) {
-		self->_isEncrypted = isEncrypted;
-	}
+- (void)setIsEncrypted:(BOOL)isEncrypted {
+  if (self->_isEncrypted != isEncrypted) {
+    self->_isEncrypted = isEncrypted;
+  }
 }
 
-- (void)setIsFirstForDay:(BOOL)isFirstForDay
-{
-	if (self->_isFirstForDay != isFirstForDay) {
-		self->_isFirstForDay = isFirstForDay;
-	}
+- (void)setIsFirstForDay:(BOOL)isFirstForDay {
+  if (self->_isFirstForDay != isFirstForDay) {
+    self->_isFirstForDay = isFirstForDay;
+  }
 }
 
-- (void)setExcludeKeywords:(nullable NSArray<NSString *> *)excludeKeywords
-{
-	if (self->_excludeKeywords != excludeKeywords) {
-		self->_excludeKeywords = [excludeKeywords copy];
-	}
+- (void)setExcludeKeywords:(nullable NSArray<NSString *> *)excludeKeywords {
+  if (self->_excludeKeywords != excludeKeywords) {
+    self->_excludeKeywords = [excludeKeywords copy];
+  }
 }
 
-- (void)setHighlightKeywords:(nullable NSArray<NSString *> *)highlightKeywords
-{
-	if (self->_highlightKeywords != highlightKeywords) {
-		self->_highlightKeywords = [highlightKeywords copy];
-	}
+- (void)setHighlightKeywords:(nullable NSArray<NSString *> *)highlightKeywords {
+  if (self->_highlightKeywords != highlightKeywords) {
+    self->_highlightKeywords = [highlightKeywords copy];
+  }
 }
 
-- (void)setRendererAttributes:(nullable NSDictionary<NSString *, id> *)rendererAttributes
-{
-	if (self->_rendererAttributes != rendererAttributes) {
-		self->_rendererAttributes = [rendererAttributes copy];
-	}
+- (void)setRendererAttributes:
+    (nullable NSDictionary<NSString *, id> *)rendererAttributes {
+  if (self->_rendererAttributes != rendererAttributes) {
+    self->_rendererAttributes = [rendererAttributes copy];
+  }
 }
 
-- (void)setReceivedAt:(NSDate *)receivedAt
-{
-	NSParameterAssert(receivedAt != nil);
+- (void)setReceivedAt:(NSDate *)receivedAt {
+  NSParameterAssert(receivedAt != nil);
 
-	if (self->_receivedAt != receivedAt) {
-		self->_receivedAt = [receivedAt copy];
-	}
+  if (self->_receivedAt != receivedAt) {
+    self->_receivedAt = [receivedAt copy];
+  }
 }
 
-- (void)setCommand:(NSString *)command
-{
-	NSParameterAssert(command != nil);
+- (void)setCommand:(NSString *)command {
+  NSParameterAssert(command != nil);
 
-	if (self->_command != command) {
-		self->_command = [command copy];
-	}
+  if (self->_command != command) {
+    self->_command = [command copy];
+  }
 }
 
-- (void)setMessageIdentifier:(nullable NSString *)messageIdentifier
-{
-	if (self->_messageIdentifier != messageIdentifier) {
-		self->_messageIdentifier = [messageIdentifier copy];
-	}
+- (void)setMessageIdentifier:(nullable NSString *)messageIdentifier {
+  if (self->_messageIdentifier != messageIdentifier) {
+    self->_messageIdentifier = [messageIdentifier copy];
+  }
 }
 
-- (void)setReplyToMessageIdentifier:(nullable NSString *)replyToMessageIdentifier
-{
-	if (self->_replyToMessageIdentifier != replyToMessageIdentifier) {
-		self->_replyToMessageIdentifier = [replyToMessageIdentifier copy];
-	}
+- (void)setReplyToMessageIdentifier:
+    (nullable NSString *)replyToMessageIdentifier {
+  if (self->_replyToMessageIdentifier != replyToMessageIdentifier) {
+    self->_replyToMessageIdentifier = [replyToMessageIdentifier copy];
+  }
 }
 
-- (void)setReactions:(nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactions
-{
-	if (self->_reactions != reactions) {
-		self->_reactions = [reactions copy];
-	}
+- (void)setReactions:
+    (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactions {
+  if (self->_reactions != reactions) {
+    self->_reactions = [reactions copy];
+  }
 }
 
-- (void)setMessageBody:(NSString *)messageBody
-{
-	NSParameterAssert(messageBody != nil);
+- (void)setMessageBody:(NSString *)messageBody {
+  NSParameterAssert(messageBody != nil);
 
-	if (self->_messageBody != messageBody) {
-		self->_messageBody = [messageBody copy];
-	}
+  if (self->_messageBody != messageBody) {
+    self->_messageBody = [messageBody copy];
+  }
 }
 
-- (void)setNickname:(nullable NSString *)nickname
-{
-	if (self->_nickname != nickname) {
-		self->_nickname = [nickname copy];
+- (void)setNickname:(nullable NSString *)nickname {
+  if (self->_nickname != nickname) {
+    self->_nickname = [nickname copy];
 
-		[self computeNicknameColorStyle];
-	}
+    [self computeNicknameColorStyle];
+  }
 }
 
-- (void)setDeliveryState:(TVCLogLineDeliveryState)deliveryState
-{
-	if (self->_deliveryState != deliveryState) {
-		self->_deliveryState = deliveryState;
-	}
+- (void)setDeliveryState:(TVCLogLineDeliveryState)deliveryState {
+  if (self->_deliveryState != deliveryState) {
+    self->_deliveryState = deliveryState;
+  }
 }
 
-- (void)setMemberType:(TVCLogLineMemberType)memberType
-{
-	if (self->_memberType != memberType) {
-		self->_memberType = memberType;
-	}
+- (void)setMemberType:(TVCLogLineMemberType)memberType {
+  if (self->_memberType != memberType) {
+    self->_memberType = memberType;
+  }
 }
 
-- (void)setLineType:(TVCLogLineType)lineType
-{
-	if (self->_lineType != lineType) {
-		self->_lineType = lineType;
-	}
+- (void)setLineType:(TVCLogLineType)lineType {
+  if (self->_lineType != lineType) {
+    self->_lineType = lineType;
+  }
 }
 
 @end

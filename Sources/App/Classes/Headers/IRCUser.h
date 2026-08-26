@@ -36,7 +36,7 @@
  *
  *********************************************************************** */
 
-/* Each user on a server is allocated one instance of IRCUser. 
+/* Each user on a server is allocated one instance of IRCUser.
  IRCUser is used to keep track of information related to the user. */
 /* There is ever only one instance of IRCUser kept track of by the
  IRCClient class. It is possible to create a mutable copy of a user
@@ -56,13 +56,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, copy, nullable) NSString *username;
 @property(readonly, copy, nullable) NSString *address;
 @property(readonly, copy, nullable) NSString *hostmask;
-@property(readonly, copy, nullable) NSString *hostmaskFragment; // -hostmask without nickname
+@property(readonly, copy, nullable)
+    NSString *hostmaskFragment; // -hostmask without nickname
 @property(readonly, copy, nullable) NSString *realName;
 @property(readonly, copy, nullable)
-	NSString *account; // Services account (account-notify, extended-join, account-tag, WHOX). nil when logged out.
+    NSString *account; // Services account (account-notify, extended-join,
+                       // account-tag, WHOX). nil when logged out.
 @property(readonly) BOOL isAway;
 @property(readonly) BOOL isIRCop;
-@property(readonly) BOOL isBot; // Set from the BOT user mode (ISUPPORT BOT), WHO flags, or RPL_WHOISBOT
+@property(readonly) BOOL isBot; // Set from the BOT user mode (ISUPPORT BOT),
+                                // WHO flags, or RPL_WHOISBOT
 
 @property(readonly, copy) NSString *banMask;
 
@@ -76,7 +79,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)init NS_UNAVAILABLE;
 
-- (instancetype)initWithNickname:(NSString *)nickname onClient:(IRCClient *)client NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithNickname:(NSString *)nickname
+                        onClient:(IRCClient *)client NS_DESIGNATED_INITIALIZER;
 
 - (void)markAsAway;
 - (void)markAsReturned;
@@ -86,7 +90,8 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Mutable Object
 
 @interface IRCUserMutable : IRCUser
-@property(nonatomic, copy, readwrite) NSString *nickname; // Defaults to empty string
+@property(nonatomic, copy, readwrite)
+    NSString *nickname; // Defaults to empty string
 @property(nonatomic, copy, readwrite, nullable) NSString *username;
 @property(nonatomic, copy, readwrite, nullable) NSString *address;
 @property(nonatomic, copy, readwrite, nullable) NSString *realName;

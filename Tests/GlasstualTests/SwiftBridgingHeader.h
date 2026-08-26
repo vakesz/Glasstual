@@ -41,7 +41,6 @@
 @import XCTest;
 
 #import "GlasstualPrivate.h"
-#import "GLTTestClient.h"
 #import "IRCAddressBook.h"
 #import "IRCAddressBookMatchCachePrivate.h"
 #import "IRCAddressBookUserTrackingPrivate.h"

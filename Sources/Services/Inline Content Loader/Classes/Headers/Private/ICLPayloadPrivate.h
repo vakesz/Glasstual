@@ -41,10 +41,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ICLPayload (ICLPayloadPrivate)
 - (nullable instancetype)initWithURL:(NSURL *)url
-				withUniqueIdentifier:(NSString *)uniqueIdentifier
-						atLineNumber:(NSString *)lineNumber
-							   index:(NSUInteger)index
-							  inView:(NSString *)viewIdentifier;
+                withUniqueIdentifier:(NSString *)uniqueIdentifier
+                        atLineNumber:(NSString *)lineNumber
+                               index:(NSUInteger)index
+                              inView:(NSString *)viewIdentifier;
 
 - (instancetype)initWithDeferredPayload:(ICLPayload *)payload;
 @end

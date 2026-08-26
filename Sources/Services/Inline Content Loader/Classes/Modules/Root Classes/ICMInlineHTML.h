@@ -48,7 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ICMInlineHTML : ICMInlineHTMLFoundation
 - (void)performActionForHTML:(NSString *)unescapedHTML;
 
-+ (ICLInlineContentModuleActionBlock)actionBlockForHTML:(NSString *)unescapedHTML;
++ (ICLInlineContentModuleActionBlock)actionBlockForHTML:
+    (NSString *)unescapedHTML;
 
 - (void)notifyUnableToPresentHTML;
 @end

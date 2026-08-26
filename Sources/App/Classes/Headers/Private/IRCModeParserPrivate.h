@@ -40,8 +40,9 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCModeInfo;
 
 @interface IRCModeParser : NSObject
-+ (NSArray<IRCModeInfo *> *)parseModeString:(NSString *)modeString
-							   channelModes:(NSDictionary<NSString *, NSNumber *> *)channelModes;
++ (NSArray<IRCModeInfo *> *)
+    parseModeString:(NSString *)modeString
+       channelModes:(NSDictionary<NSString *, NSNumber *> *)channelModes;
 @end
 
 NS_ASSUME_NONNULL_END

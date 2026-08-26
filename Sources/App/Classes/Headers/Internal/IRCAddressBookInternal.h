@@ -39,29 +39,28 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCAddressBookEntry ()
-{
-  @protected
-	BOOL _ignoreClientToClientProtocol;
-	BOOL _ignoreFileTransferRequests;
-	BOOL _ignoreGeneralEventMessages;
-	BOOL _ignoreInlineMedia;
-	BOOL _ignoreNoticeMessages;
-	BOOL _ignorePrivateMessageHighlights;
-	BOOL _ignorePrivateMessages;
-	BOOL _ignorePublicMessageHighlights;
-	BOOL _ignorePublicMessages;
-	BOOL _trackUserActivity;
-	IRCAddressBookEntryType _entryType;
-	NSString *_hostmask;
-	NSString *_hostmaskRegularExpression;
-	NSRegularExpression *_compiledHostmaskRegularExpression;
-	NSString *_trackingNickname;
-	NSArray<IRCAddressBookEntry *> *_parentEntries;
+@interface IRCAddressBookEntry () {
+@protected
+  BOOL _ignoreClientToClientProtocol;
+  BOOL _ignoreFileTransferRequests;
+  BOOL _ignoreGeneralEventMessages;
+  BOOL _ignoreInlineMedia;
+  BOOL _ignoreNoticeMessages;
+  BOOL _ignorePrivateMessageHighlights;
+  BOOL _ignorePrivateMessages;
+  BOOL _ignorePublicMessageHighlights;
+  BOOL _ignorePublicMessages;
+  BOOL _trackUserActivity;
+  IRCAddressBookEntryType _entryType;
+  NSString *_hostmask;
+  NSString *_hostmaskRegularExpression;
+  NSRegularExpression *_compiledHostmaskRegularExpression;
+  NSString *_trackingNickname;
+  NSArray<IRCAddressBookEntry *> *_parentEntries;
 
-  @private
-	NSString *_uniqueIdentifier;
-	NSDictionary *_defaults;
+@private
+  NSString *_uniqueIdentifier;
+  NSDictionary *_defaults;
 }
 
 @end

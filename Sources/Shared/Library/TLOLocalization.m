@@ -44,44 +44,42 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSString *)_swift_localizedKey:(NSString *)string bundle:(NSBundle *)bundle;
 @end
 
-NSString *TXTLS(NSString *key, ...)
-{
-	NSCParameterAssert(key != nil);
+NSString *TXTLS(NSString *key, ...) {
+  NSCParameterAssert(key != nil);
 
-	va_list arguments;
-	va_start(arguments, key);
+  va_list arguments;
+  va_start(arguments, key);
 
-	NSString *result = TXLocalizedString(RZMainBundle(), key, arguments);
+  NSString *result = TXLocalizedString(RZMainBundle(), key, arguments);
 
-	va_end(arguments);
+  va_end(arguments);
 
-	return result;
+  return result;
 }
 
-NSString *TXLocalizedString(NSBundle *bundle, NSString *key, va_list arguments)
-{
-	NSCParameterAssert(bundle != nil);
-	NSCParameterAssert(key != nil);
-	NSCParameterAssert(arguments != NULL);
+NSString *TXLocalizedString(NSBundle *bundle, NSString *key,
+                            va_list arguments) {
+  NSCParameterAssert(bundle != nil);
+  NSCParameterAssert(key != nil);
+  NSCParameterAssert(arguments != NULL);
 
-	NSString *localValue = [NSString _swift_localizedKey:key bundle:bundle];
+  NSString *localValue = [NSString _swift_localizedKey:key bundle:bundle];
 
-	return [[NSString alloc] initWithFormat:localValue arguments:arguments];
+  return [[NSString alloc] initWithFormat:localValue arguments:arguments];
 }
 
-NSString *TXLocalizedStringAlternative(NSBundle *bundle, NSString *key, ...)
-{
-	NSCParameterAssert(bundle != nil);
-	NSCParameterAssert(key != nil);
+NSString *TXLocalizedStringAlternative(NSBundle *bundle, NSString *key, ...) {
+  NSCParameterAssert(bundle != nil);
+  NSCParameterAssert(key != nil);
 
-	va_list arguments;
-	va_start(arguments, key);
+  va_list arguments;
+  va_start(arguments, key);
 
-	NSString *result = TXLocalizedString(bundle, key, arguments);
+  NSString *result = TXLocalizedString(bundle, key, arguments);
 
-	va_end(arguments);
+  va_end(arguments);
 
-	return result;
+  return result;
 }
 
 NS_ASSUME_NONNULL_END

@@ -47,18 +47,21 @@ GLASSTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
 @property(readonly, copy) NSString *stringByAppendingIRCFormattingStop;
 
 @property(readonly, copy, nullable)
-	NSString *channelNameWithoutBang; // "#channel" -> "channel", "##channel" -> "#channel"
+    NSString *channelNameWithoutBang; // "#channel" -> "channel", "##channel" ->
+                                      // "#channel"
 - (nullable NSString *)channelNameWithoutBangOn:(IRCClient *)client;
 
 @property(readonly, copy, nullable) NSString *nicknameFromHostmask;
 @property(readonly, copy, nullable) NSString *usernameFromHostmask;
 @property(readonly, copy, nullable) NSString *addressFromHostmask;
 
-- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont
-												preferredFontColor:(nullable NSColor *)preferredFontColor;
-- (nullable NSAttributedString *)attributedStringWithIRCFormatting:(NSFont *)preferredFont
-												preferredFontColor:(nullable NSColor *)preferredFontColor
-										 honorFormattingPreference:(BOOL)formattingPreference;
+- (nullable NSAttributedString *)
+    attributedStringWithIRCFormatting:(NSFont *)preferredFont
+                   preferredFontColor:(nullable NSColor *)preferredFontColor;
+- (nullable NSAttributedString *)
+    attributedStringWithIRCFormatting:(NSFont *)preferredFont
+                   preferredFontColor:(nullable NSColor *)preferredFontColor
+            honorFormattingPreference:(BOOL)formattingPreference;
 
 @property(readonly, copy) NSString *stripIRCEffects;
 
@@ -72,13 +75,13 @@ GLASSTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
 @property(getter=isIPAddress, readonly) BOOL IPAddress;
 
 - (BOOL)hostmaskComponents:(NSString *_Nullable *_Nullable)nickname
-				  username:(NSString *_Nullable *_Nullable)username
-				   address:(NSString *_Nullable *_Nullable)address;
+                  username:(NSString *_Nullable *_Nullable)username
+                   address:(NSString *_Nullable *_Nullable)address;
 
 - (BOOL)hostmaskComponents:(NSString *_Nullable *_Nullable)nickname
-				  username:(NSString *_Nullable *_Nullable)username
-				   address:(NSString *_Nullable *_Nullable)address
-				  onClient:(nullable IRCClient *)client;
+                  username:(NSString *_Nullable *_Nullable)username
+                   address:(NSString *_Nullable *_Nullable)address
+                  onClient:(nullable IRCClient *)client;
 
 @property(getter=isHostmaskNickname, readonly) BOOL hostmaskNickname;
 @property(getter=isHostmaskAddress, readonly) BOOL hostmaskAddress;
@@ -98,12 +101,14 @@ GLASSTUAL_EXTERN NSStringEncoding const TXDefaultFallbackStringEncoding;
 
 - (NSArray<NSString *> *)base64EncodingWithLineLength:(NSUInteger)lineLength;
 
-- (NSUInteger)colorComponentsOfCharacter:(UniChar)character
-							  startingAt:(NSUInteger)rangeStart
-						 foregroundColor:(id _Nullable *_Nullable)foregroundColor
-						 backgroundColor:(id _Nullable *_Nullable)backgroundColor;
+- (NSUInteger)
+    colorComponentsOfCharacter:(UniChar)character
+                    startingAt:(NSUInteger)rangeStart
+               foregroundColor:(id _Nullable *_Nullable)foregroundColor
+               backgroundColor:(id _Nullable *_Nullable)backgroundColor;
 
-- (nullable NSString *)padNicknameWithCharacter:(UniChar)padCharacter maximumLength:(NSUInteger)maximumLength;
+- (nullable NSString *)padNicknameWithCharacter:(UniChar)padCharacter
+                                  maximumLength:(NSUInteger)maximumLength;
 
 @property(readonly, copy) NSString *encodedMessageTagString;
 @property(readonly, copy) NSString *decodedMessageTagString;

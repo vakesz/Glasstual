@@ -44,10 +44,12 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannel;
 
 typedef NS_ENUM(NSUInteger, TDCChannelBanListSheetEntryType) {
-	TDCChannelBanListSheetEntryTypeBan = IRCISupportInfoListTypeBan,
-	TDCChannelBanListSheetEntryTypeBanException = IRCISupportInfoListTypeBanException,
-	TDCChannelBanListSheetEntryTypeInviteException = IRCISupportInfoListTypeInviteException,
-	TDCChannelBanListSheetEntryTypeQuiet = IRCISupportInfoListTypeQuiet
+  TDCChannelBanListSheetEntryTypeBan = IRCISupportInfoListTypeBan,
+  TDCChannelBanListSheetEntryTypeBanException =
+      IRCISupportInfoListTypeBanException,
+  TDCChannelBanListSheetEntryTypeInviteException =
+      IRCISupportInfoListTypeInviteException,
+  TDCChannelBanListSheetEntryTypeQuiet = IRCISupportInfoListTypeQuiet
 };
 
 @interface TDCChannelBanListSheet : TDCSheetBase <TDCChannelPrototype>
@@ -57,16 +59,18 @@ typedef NS_ENUM(NSUInteger, TDCChannelBanListSheetEntryType) {
 @property(nonatomic, assign) BOOL contentAlreadyReceived;
 
 /* Returns nil if entry type is not supported by client */
-- (nullable instancetype)initWithEntryType:(TDCChannelBanListSheetEntryType)entryType
-								 inChannel:(IRCChannel *)channel NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithEntryType:
+                             (TDCChannelBanListSheetEntryType)entryType
+                                 inChannel:(IRCChannel *)channel
+    NS_DESIGNATED_INITIALIZER;
 
 - (void)start;
 
 - (void)clear;
 
 - (void)addEntry:(NSString *)entryMask
-		   setBy:(nullable NSString *)entryAuthor
-	creationDate:(nullable NSDate *)entryCreationDate;
+           setBy:(nullable NSString *)entryAuthor
+    creationDate:(nullable NSDate *)entryCreationDate;
 @end
 
 @protocol TDCChannelBanListSheetDelegate <NSObject>

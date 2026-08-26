@@ -20,10 +20,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, nullable) NSBundle *bundle;
 @property(readonly, nullable) id primaryClass;
 @property(readonly, assign) THOPluginItemSupportedFeature supportedFeatures;
-@property(readonly, copy, nullable) NSArray<NSString *> *supportedServerInputCommands;
-@property(readonly, copy, nullable) NSArray<NSString *> *supportedUserInputCommands;
-@property(readonly, copy, nullable) NSArray<THOPluginOutputSuppressionRule *> *outputSuppressionRules;
-@property(readonly, copy, nullable) NSString *pluginPreferencesPaneMenuItemTitle;
+@property(readonly, copy, nullable)
+    NSArray<NSString *> *supportedServerInputCommands;
+@property(readonly, copy, nullable)
+    NSArray<NSString *> *supportedUserInputCommands;
+@property(readonly, copy, nullable)
+    NSArray<THOPluginOutputSuppressionRule *> *outputSuppressionRules;
+@property(readonly, copy, nullable)
+    NSString *pluginPreferencesPaneMenuItemTitle;
 @property(readonly, nullable) NSView *pluginPreferencesPaneView;
 
 - (BOOL)loadBundle:(NSBundle *)bundle;

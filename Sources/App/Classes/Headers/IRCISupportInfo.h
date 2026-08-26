@@ -41,16 +41,16 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCModeInfo;
 
 typedef NS_ENUM(NSUInteger, IRCISupportInfoListType) {
-	IRCISupportInfoListTypeBan,
-	IRCISupportInfoListTypeBanException,
-	IRCISupportInfoListTypeInviteException,
-	IRCISupportInfoListTypeQuiet
+  IRCISupportInfoListTypeBan,
+  IRCISupportInfoListTypeBanException,
+  IRCISupportInfoListTypeInviteException,
+  IRCISupportInfoListTypeQuiet
 };
 
 typedef NS_ENUM(NSUInteger, IRCISupportInfoCaseMapping) {
-	IRCISupportInfoCaseMappingRFC1459 = 0,	 // [ ] \ ~ fold to { } | ^ (default)
-	IRCISupportInfoCaseMappingStrictRFC1459, // [ ] \ fold to { } |
-	IRCISupportInfoCaseMappingASCII
+  IRCISupportInfoCaseMappingRFC1459 = 0,   // [ ] \ ~ fold to { } | ^ (default)
+  IRCISupportInfoCaseMappingStrictRFC1459, // [ ] \ fold to { } |
+  IRCISupportInfoCaseMappingASCII
 };
 
 #define IRCISupportInfoHighestUserPrefixRank 100
@@ -60,10 +60,11 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoCaseMapping) {
 
 @interface IRCISupportInfo : NSObject
 @property(readonly) BOOL configurationReceived;
-@property(readonly) NSUInteger maximumAwayLength;		 // 0 = no limit
-@property(readonly) NSUInteger maximumChannelNameLength; // 0 = no limit - unused
-@property(readonly) NSUInteger maximumKeyLength;		 // 0 = no limit
-@property(readonly) NSUInteger maximumKickLength;		 // 0 = no limit
+@property(readonly) NSUInteger maximumAwayLength; // 0 = no limit
+@property(readonly)
+    NSUInteger maximumChannelNameLength;          // 0 = no limit - unused
+@property(readonly) NSUInteger maximumKeyLength;  // 0 = no limit
+@property(readonly) NSUInteger maximumKickLength; // 0 = no limit
 @property(readonly) NSUInteger maximumNicknameLength;
 @property(readonly) NSUInteger maximumTopicLength; // 0 = no limit
 @property(readonly) NSUInteger maximumModeCount;
@@ -78,25 +79,39 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoCaseMapping) {
 @property(readonly, copy, nullable) NSString *networkNameFormatted;
 @property(readonly) IRCISupportInfoCaseMapping caseMapping;
 
-/* Tokens below are 0, nil, NO or empty when the server has not advertised them. */
-@property(readonly) NSUInteger maximumLineLength;		// LINELEN (bytes, includes CRLF). 0 = assume 512
-@property(readonly) NSUInteger maximumTargets;			// MAXTARGETS. 0 = no limit advertised
-@property(readonly) NSUInteger maximumSilenceEntries;	// SILENCE=<n>. 0 = no limit advertised
-@property(readonly) NSUInteger chatHistoryMaximumLines; // CHATHISTORY=<n> (or draft/CHATHISTORY). 0 = not advertised
-@property(readonly) BOOL silenceSupported;				// SILENCE
-@property(readonly) BOOL safeListSupported;				// SAFELIST
-@property(readonly) BOOL whoxSupported;					// WHOX
-@property(readonly) BOOL utf8Only;						// UTF8ONLY
-@property(readonly, copy, nullable) NSString *botModeSymbol;							 // BOT=<mode>
-@property(readonly, copy, nullable) NSString *callerIDModeSymbol;						 // CALLERID[=<mode>]
-@property(readonly, copy, nullable) NSString *deafModeSymbol;							 // DEAF[=<mode>]
-@property(readonly, copy, nullable) NSString *extendedBanPrefix;						 // EXTBAN=<prefix>,<types>
-@property(readonly, copy) NSArray<NSString *> *extendedBanTypes;						 // EXTBAN=<prefix>,<types>
-@property(readonly, copy) NSArray<NSString *> *extendedListTokens;						 // ELIST=<tokens> (uppercase)
-@property(readonly, copy) NSArray<NSString *> *clientTagDenyList;						 // CLIENTTAGDENY=<entries>
-@property(readonly, copy) NSDictionary<NSString *, NSNumber *> *channelLimits;			 // CHANLIMIT: prefix -> limit
-@property(readonly, copy) NSDictionary<NSString *, NSNumber *> *maximumListEntries;		 // MAXLIST: mode -> limit
-@property(readonly, copy) NSDictionary<NSString *, NSNumber *> *maximumTargetsByCommand; // TARGMAX
+/* Tokens below are 0, nil, NO or empty when the server has not advertised them.
+ */
+@property(readonly) NSUInteger
+    maximumLineLength; // LINELEN (bytes, includes CRLF). 0 = assume 512
+@property(readonly)
+    NSUInteger maximumTargets; // MAXTARGETS. 0 = no limit advertised
+@property(readonly)
+    NSUInteger maximumSilenceEntries; // SILENCE=<n>. 0 = no limit advertised
+@property(readonly) NSUInteger
+    chatHistoryMaximumLines; // CHATHISTORY=<n> (or draft/CHATHISTORY). 0 = not
+                             // advertised
+@property(readonly) BOOL silenceSupported;                   // SILENCE
+@property(readonly) BOOL safeListSupported;                  // SAFELIST
+@property(readonly) BOOL whoxSupported;                      // WHOX
+@property(readonly) BOOL utf8Only;                           // UTF8ONLY
+@property(readonly, copy, nullable) NSString *botModeSymbol; // BOT=<mode>
+@property(readonly, copy, nullable)
+    NSString *callerIDModeSymbol; // CALLERID[=<mode>]
+@property(readonly, copy, nullable) NSString *deafModeSymbol; // DEAF[=<mode>]
+@property(readonly, copy, nullable)
+    NSString *extendedBanPrefix; // EXTBAN=<prefix>,<types>
+@property(readonly, copy)
+    NSArray<NSString *> *extendedBanTypes; // EXTBAN=<prefix>,<types>
+@property(readonly, copy)
+    NSArray<NSString *> *extendedListTokens; // ELIST=<tokens> (uppercase)
+@property(readonly, copy)
+    NSArray<NSString *> *clientTagDenyList; // CLIENTTAGDENY=<entries>
+@property(readonly, copy) NSDictionary<NSString *, NSNumber *>
+    *channelLimits; // CHANLIMIT: prefix -> limit
+@property(readonly, copy) NSDictionary<NSString *, NSNumber *>
+    *maximumListEntries; // MAXLIST: mode -> limit
+@property(readonly, copy)
+    NSDictionary<NSString *, NSNumber *> *maximumTargetsByCommand; // TARGMAX
 
 /* Creates an instance that is not attached to a client.
  Tokens that trigger client side effects (NAMESX, UHNAMES, ...)
@@ -111,7 +126,8 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoCaseMapping) {
  accepts at once. 0 = no limit known. */
 - (NSUInteger)maximumTargetsForCommand:(NSString *)command;
 
-/* MAXLIST: maximum number of entries the list mode (e.g. "b") can hold. 0 = unknown. */
+/* MAXLIST: maximum number of entries the list mode (e.g. "b") can hold. 0 =
+ * unknown. */
 - (NSUInteger)maximumListEntriesForModeSymbol:(NSString *)modeSymbol;
 
 /* ELIST: whether the server accepts the given search token (e.g. "U", "M"). */
@@ -126,7 +142,8 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoCaseMapping) {
 
 /* Splits targets into groups no larger than limit. A limit of 0
  returns every target in its own group (the conservative default). */
-+ (NSArray<NSArray<NSString *> *> *)chunkTargets:(NSArray<NSString *> *)targets limit:(NSUInteger)limit;
++ (NSArray<NSArray<NSString *> *> *)chunkTargets:(NSArray<NSString *> *)targets
+                                           limit:(NSUInteger)limit;
 
 /* Returns a casefolded copy of string according to the CASEMAPPING
  advertised by the server. Two nicknames (or channel names) are equal
@@ -142,12 +159,13 @@ typedef NS_ENUM(NSUInteger, IRCISupportInfoCaseMapping) {
 - (nullable NSString *)statusMessagePrefixForModeSymbol:(NSString *)modeSymbol;
 - (NSString *)extractStatusMessagePrefixFromChannelNamed:(NSString *)channel;
 
-- (NSUInteger)rankForUserPrefixWithMode:(NSString *)modeSymbol; // Starts at 100; 100 = highest rank
+- (NSUInteger)rankForUserPrefixWithMode:
+    (NSString *)modeSymbol; // Starts at 100; 100 = highest rank
 
 - (IRCModeInfo *)createModeWithSymbol:(NSString *)modeSymbol;
 - (IRCModeInfo *)createModeWithSymbol:(NSString *)modeSymbol
-							modeIsSet:(BOOL)modeIsSet
-						modeParameter:(nullable NSString *)modeParameter;
+                            modeIsSet:(BOOL)modeIsSet
+                        modeParameter:(nullable NSString *)modeParameter;
 
 - (BOOL)isListSupported:(IRCISupportInfoListType)listType;
 

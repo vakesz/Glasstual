@@ -40,12 +40,13 @@ NS_ASSUME_NONNULL_BEGIN
 #define RZUserDefaults() [TPCPreferencesUserDefaults sharedUserDefaults]
 
 /* The user info dictionary of this notification contains the changed key. */
-GLASSTUAL_EXTERN NSNotificationName const TPCPreferencesUserDefaultsDidChangeNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TPCPreferencesUserDefaultsDidChangeNotification;
 
-/* TPCPreferencesUserDefaults subclasses NSUserDefaults to allow Glasstual to fire off
- notifications for changed keys on a per-key basis so that the iCloud controller can
- know what keys change instead of having to sync every single key, every time that it
- performs an upstream sync. */
+/* TPCPreferencesUserDefaults subclasses NSUserDefaults to allow Glasstual to
+ fire off notifications for changed keys on a per-key basis so that the iCloud
+ controller can know what keys change instead of having to sync every single
+ key, every time that it performs an upstream sync. */
 @interface TPCPreferencesUserDefaults : NSUserDefaults
 + (TPCPreferencesUserDefaults *)sharedUserDefaults;
 

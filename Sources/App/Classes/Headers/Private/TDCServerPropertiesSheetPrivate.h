@@ -44,38 +44,41 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClient, IRCClientConfig;
 
 typedef NS_ENUM(NSUInteger, TDCServerPropertiesSheetSelection) {
-	TDCServerPropertiesSheetSelectionDefault = 0,
+  TDCServerPropertiesSheetSelectionDefault = 0,
 
-	TDCServerPropertiesSheetSelectionAddressBook = 1,
-	TDCServerPropertiesSheetSelectionAutojoin = 2,
-	TDCServerPropertiesSheetSelectionConnectCommands = 3,
-	TDCServerPropertiesSheetSelectionEncoding = 4,
-	TDCServerPropertiesSheetSelectionGeneral = 5,
-	TDCServerPropertiesSheetSelectionIdentity = 6,
-	TDCServerPropertiesSheetSelectionHighlights = 7,
-	TDCServerPropertiesSheetSelectionDisconnectMessages = 8,
-	TDCServerPropertiesSheetSelectionZncBouncer = 10,
-	TDCServerPropertiesSheetSelectionClientCertificate = 12,
-	TDCServerPropertiesSheetSelectionFloodControl = 13,
-	TDCServerPropertiesSheetSelectionNetworkSocket = 14,
-	TDCServerPropertiesSheetSelectionProxyServer = 15,
-	TDCServerPropertiesSheetSelectionRedundancy = 16,
+  TDCServerPropertiesSheetSelectionAddressBook = 1,
+  TDCServerPropertiesSheetSelectionAutojoin = 2,
+  TDCServerPropertiesSheetSelectionConnectCommands = 3,
+  TDCServerPropertiesSheetSelectionEncoding = 4,
+  TDCServerPropertiesSheetSelectionGeneral = 5,
+  TDCServerPropertiesSheetSelectionIdentity = 6,
+  TDCServerPropertiesSheetSelectionHighlights = 7,
+  TDCServerPropertiesSheetSelectionDisconnectMessages = 8,
+  TDCServerPropertiesSheetSelectionZncBouncer = 10,
+  TDCServerPropertiesSheetSelectionClientCertificate = 12,
+  TDCServerPropertiesSheetSelectionFloodControl = 13,
+  TDCServerPropertiesSheetSelectionNetworkSocket = 14,
+  TDCServerPropertiesSheetSelectionProxyServer = 15,
+  TDCServerPropertiesSheetSelectionRedundancy = 16,
 
-	TDCServerPropertiesSheetSelectionNewIgnoreEntry = 200
+  TDCServerPropertiesSheetSelectionNewIgnoreEntry = 200
 };
 
 @protocol TDCServerPropertiesSheetDelegate;
 
 @interface TDCServerPropertiesSheet : TDCSheetBase <TDCClientPrototype>
-- (instancetype)initWithClient:(nullable IRCClient *)client NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithClient:(nullable IRCClient *)client
+    NS_DESIGNATED_INITIALIZER;
 
-- (void)startWithSelection:(TDCServerPropertiesSheetSelection)selection context:(nullable id)context;
+- (void)startWithSelection:(TDCServerPropertiesSheetSelection)selection
+                   context:(nullable id)context;
 @end
 
 @protocol TDCServerPropertiesSheetDelegate <NSObject>
 @required
 
-- (void)serverPropertiesSheet:(TDCServerPropertiesSheet *)sender onOk:(IRCClientConfig *)config;
+- (void)serverPropertiesSheet:(TDCServerPropertiesSheet *)sender
+                         onOk:(IRCClientConfig *)config;
 - (void)serverPropertiesSheetWillClose:(TDCServerPropertiesSheet *)sender;
 @end
 

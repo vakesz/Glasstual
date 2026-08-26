@@ -46,26 +46,30 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogLine;
 
 typedef NS_ENUM(NSUInteger, IRCChannelStatus) {
-	IRCChannelStatusParted = 0,
-	IRCChannelStatusJoining,
-	IRCChannelStatusJoined,
-	IRCChannelStatusTerminated,
+  IRCChannelStatusParted = 0,
+  IRCChannelStatusJoining,
+  IRCChannelStatusJoined,
+  IRCChannelStatusTerminated,
 };
 
-GLASSTUAL_EXTERN NSNotificationName const IRCChannelConfigurationWasUpdatedNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    IRCChannelConfigurationWasUpdatedNotification;
 
 @interface IRCChannel : IRCTreeItem <IRCChannelMemberListPrototype>
 @property(readonly, copy) IRCChannelConfig *config;
-@property(nonatomic, copy) NSString *name; // -setName: will do nothing if type != IRCChannelTypePrivateMessage
+@property(nonatomic, copy) NSString
+    *name; // -setName: will do nothing if type != IRCChannelTypePrivateMessage
 @property(nonatomic, copy, nullable) NSString *topic;
 @property(nonatomic, assign) BOOL autoJoin;
 @property(readonly) IRCChannelType type;
 @property(getter=isChannel, readonly) BOOL channel;
 @property(getter=isPrivateMessage, readonly) BOOL privateMessage;
 @property(getter=isPrivateMessageForZNCUser, readonly)
-	BOOL privateMessageForZNCUser;						  // For example: *status, *nickserv, etc.
-@property(getter=isUtility, readonly) BOOL utility;		  // See IRCChannelTypeUtility in IRCChannelConfigTypes.h
-@property(getter=isDirectChat, readonly) BOOL directChat; // DCC CHAT session with a single user
+    BOOL privateMessageForZNCUser; // For example: *status, *nickserv, etc.
+@property(getter=isUtility, readonly)
+    BOOL utility; // See IRCChannelTypeUtility in IRCChannelConfigTypes.h
+@property(getter=isDirectChat, readonly)
+    BOOL directChat; // DCC CHAT session with a single user
 @property(readonly) IRCChannelStatus status;
 @property(readonly) BOOL errorOnLastJoinAttempt;
 @property(readonly) NSTimeInterval channelJoinTime;
@@ -75,9 +79,11 @@ GLASSTUAL_EXTERN NSNotificationName const IRCChannelConfigurationWasUpdatedNotif
 @property(readonly, copy, nullable) NSString *secretKey;
 @property(readonly, copy, nullable) NSURL *logFilePath;
 @property(readonly)
-	NSUInteger logFileSessionCount; // Number of lines sent to channel log file for session (from connect to disconnect)
+    NSUInteger logFileSessionCount; // Number of lines sent to channel log file
+                                    // for session (from connect to disconnect)
 @property(readonly, weak)
-	TVCLogLine *lastLine; // Last line in the channel. There is no guarantee it's visible to the user when accessed.
+    TVCLogLine *lastLine; // Last line in the channel. There is no guarantee
+                          // it's visible to the user when accessed.
 
 - (instancetype)init NS_UNAVAILABLE;
 

@@ -42,7 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannel, IRCChannelUser;
 
 @interface IRCUser (IRCUserRelations)
-@property(readonly, copy) NSDictionary<IRCChannel *, IRCChannelUser *> *relations;
+@property(readonly, copy)
+    NSDictionary<IRCChannel *, IRCChannelUser *> *relations;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -59,8 +59,8 @@ NS_ASSUME_NONNULL_BEGIN
  the text is sent. Escape or the banner's close button leaves it. */
 @property(readonly, copy, nullable) NSString *replyMessageIdentifier;
 - (void)beginReplyToMessageIdentifier:(NSString *)messageIdentifier
-							 nickname:(nullable NSString *)nickname
-							  excerpt:(nullable NSString *)excerpt;
+                             nickname:(nullable NSString *)nickname
+                              excerpt:(nullable NSString *)excerpt;
 - (void)cancelReply;
 - (void)consumeReplyIntoClient:(nullable IRCClient *)client;
 @end

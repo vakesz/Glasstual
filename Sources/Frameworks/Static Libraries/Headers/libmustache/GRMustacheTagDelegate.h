@@ -20,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import <Foundation/Foundation.h>
 #import "GRMustacheAvailabilityMacros.h"
+#import <Foundation/Foundation.h>
 
 @class GRMustacheTag;
 
@@ -29,7 +29,8 @@
  * Objects conforming to the GRMustacheTagDelegate protocol can observe and
  * alter, the rendering of Mustache tags.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
  *
  * @since v6.0
  */
@@ -53,7 +54,8 @@
  *
  * @since v6.0
  */
-- (id)mustacheTag:(GRMustacheTag *)tag willRenderObject:(id)object AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+- (id)mustacheTag:(GRMustacheTag *)tag
+    willRenderObject:(id)object AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Sent after a Mustache tag has rendered.
@@ -67,8 +69,9 @@
  * @since v6.0
  */
 - (void)mustacheTag:(GRMustacheTag *)tag
-	didRenderObject:(id)object
-				 as:(NSString *)rendering AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+    didRenderObject:(id)object
+                 as:(NSString *)rendering
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Sent right after a Mustache tag has failed rendering.
@@ -82,7 +85,8 @@
  * @since v6.0
  */
 - (void)mustacheTag:(GRMustacheTag *)tag
-	didFailRenderingObject:(id)object
-				 withError:(NSError *)error AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+    didFailRenderingObject:(id)object
+                 withError:(NSError *)error
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 @end

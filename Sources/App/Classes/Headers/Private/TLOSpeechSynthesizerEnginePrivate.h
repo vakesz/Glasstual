@@ -10,7 +10,8 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @protocol TLOSpeechSynthesizerEngine <NSObject>
-@property(nonatomic, weak, nullable) id<TLOSpeechSynthesizerEngineDelegate> delegate;
+@property(nonatomic, weak, nullable) id<TLOSpeechSynthesizerEngineDelegate>
+    delegate;
 @property(nonatomic, readonly, getter=isSpeaking) BOOL speaking;
 
 - (void)speakText:(NSString *)text;

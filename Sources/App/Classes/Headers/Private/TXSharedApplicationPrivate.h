@@ -41,7 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define windowController() [TXSharedApplication sharedWindowController]
 
-#define sharedNotificationController() [TXSharedApplication sharedNotificationController]
+#define sharedNotificationController()                                         \
+  [TXSharedApplication sharedNotificationController]
 
 #define sharedPluginManager() [TXSharedApplication sharedPluginManager]
 
@@ -65,12 +66,14 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface NSObject (TXSharedApplicationObjectExtensionPrivate)
-+ (void)setGlobalMasterControllerClassReference:(TXMasterController *)masterController;
++ (void)setGlobalMasterControllerClassReference:
+    (TXMasterController *)masterController;
 @end
 
 GLASSTUAL_EXTERN os_log_t ApplicationTerminationLogSubsystem(void);
 
-#define LogToConsoleTerminationProgress(_message, ...)                                                                 \
-	LogToConsoleDebugWithSubsystem(ApplicationTerminationLogSubsystem(), _message, ##__VA_ARGS__)
+#define LogToConsoleTerminationProgress(_message, ...)                         \
+  LogToConsoleDebugWithSubsystem(ApplicationTerminationLogSubsystem(),         \
+                                 _message, ##__VA_ARGS__)
 
 NS_ASSUME_NONNULL_END

@@ -44,25 +44,32 @@ NS_ASSUME_NONNULL_BEGIN
 */
 @class XRFileSystemEvent;
 
-typedef void (^XRFileSystemMonitorCallbackBlock)(NSArray<XRFileSystemEvent *> *events);
+typedef void (^XRFileSystemMonitorCallbackBlock)(
+    NSArray<XRFileSystemEvent *> *events);
 
 @interface XRFileSystemMonitor : NSObject
 @property(nonatomic, readonly, getter=isMonitoring) BOOL monitoring;
 
 - (instancetype)initWithFileURL:(NSURL *)url
-				  callbackBlock:(XRFileSystemMonitorCallbackBlock)callbackBlock NS_DESIGNATED_INITIALIZER;
+                  callbackBlock:(XRFileSystemMonitorCallbackBlock)callbackBlock
+    NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithFileURL:(NSURL *)url
-						context:(nullable id)contextObject
-				  callbackBlock:(XRFileSystemMonitorCallbackBlock)callbackBlock NS_DESIGNATED_INITIALIZER;
+                        context:(nullable id)contextObject
+                  callbackBlock:(XRFileSystemMonitorCallbackBlock)callbackBlock
+    NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithFileURLs:(NSArray<NSURL *> *)urls
-				   callbackBlock:(XRFileSystemMonitorCallbackBlock)callbackBlock NS_DESIGNATED_INITIALIZER;
-- (instancetype)initWithFileURLs:(NSArray<NSURL *> *)urls
-						 context:(nullable NSDictionary<NSURL *, id> *)contextObjects
-				   callbackBlock:(XRFileSystemMonitorCallbackBlock)callbackBlock NS_DESIGNATED_INITIALIZER;
+                   callbackBlock:(XRFileSystemMonitorCallbackBlock)callbackBlock
+    NS_DESIGNATED_INITIALIZER;
+- (instancetype)
+    initWithFileURLs:(NSArray<NSURL *> *)urls
+             context:(nullable NSDictionary<NSURL *, id> *)contextObjects
+       callbackBlock:(XRFileSystemMonitorCallbackBlock)callbackBlock
+    NS_DESIGNATED_INITIALIZER;
 
-- (void)startMonitoring;									// latency = 0.0
-- (void)startMonitoringWithLatency:(NSTimeInterval)latency; // Will replace monitor if one is active
+- (void)startMonitoring; // latency = 0.0
+- (void)startMonitoringWithLatency:
+    (NSTimeInterval)latency; // Will replace monitor if one is active
 
 - (void)stopMonitoring;
 

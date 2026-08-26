@@ -40,32 +40,33 @@ NS_ASSUME_NONNULL_BEGIN
  keychain and then deleted. */
 @interface XRKeychain : NSObject
 + (BOOL)deleteKeychainItem:(NSString *)keychainItemName
-			  withItemKind:(NSString *)keychainItemKind
-			   forUsername:(nullable NSString *)username
-			   serviceName:(NSString *)service;
+              withItemKind:(NSString *)keychainItemKind
+               forUsername:(nullable NSString *)username
+               serviceName:(NSString *)service;
 
 + (BOOL)modifyOrAddKeychainItem:(NSString *)keychainItemName
-				   withItemKind:(NSString *)keychainItemKind
-					forUsername:(nullable NSString *)username
-				withNewPassword:(nullable NSString *)newPassword
-					serviceName:(NSString *)service;
+                   withItemKind:(NSString *)keychainItemKind
+                    forUsername:(nullable NSString *)username
+                withNewPassword:(nullable NSString *)newPassword
+                    serviceName:(NSString *)service;
 
 + (BOOL)addKeychainItem:(NSString *)keychainItemName
-		   withItemKind:(NSString *)keychainItemKind
-			forUsername:(nullable NSString *)username
-		   withPassword:(NSString *)password
-			serviceName:(NSString *)service;
+           withItemKind:(NSString *)keychainItemKind
+            forUsername:(nullable NSString *)username
+           withPassword:(NSString *)password
+            serviceName:(NSString *)service;
 
 + (nullable NSString *)getPasswordFromKeychainItem:(NSString *)keychainItemName
-									  withItemKind:(NSString *)keychainItemKind
-									   forUsername:(nullable NSString *)username
-									   serviceName:(NSString *)service;
+                                      withItemKind:(NSString *)keychainItemKind
+                                       forUsername:(nullable NSString *)username
+                                       serviceName:(NSString *)service;
 
 + (nullable NSString *)getPasswordFromKeychainItem:(NSString *)keychainItemName
-									  withItemKind:(NSString *)keychainItemKind
-									   forUsername:(nullable NSString *)username
-									   serviceName:(NSString *)service
-								returnedStatusCode:(OSStatus *_Nullable)statusCode;
+                                      withItemKind:(NSString *)keychainItemKind
+                                       forUsername:(nullable NSString *)username
+                                       serviceName:(NSString *)service
+                                returnedStatusCode:
+                                    (OSStatus *_Nullable)statusCode;
 @end
 
 NS_ASSUME_NONNULL_END

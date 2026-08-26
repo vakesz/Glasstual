@@ -39,30 +39,29 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TVCLogLine ()
-{
-  @protected
-	BOOL _isEncrypted;
-	BOOL _isFirstForDay;
-	BOOL _nicknameColorStyleOverride;
-	NSArray<NSString *> *_excludeKeywords;
-	NSArray<NSString *> *_highlightKeywords;
-	NSDictionary<NSString *, id> *_rendererAttributes;
-	NSDate *_receivedAt;
-	NSString *_command;
-	NSString *_messageBody;
-	NSString *_messageIdentifier;
-	NSString *_replyToMessageIdentifier;
-	NSDictionary<NSString *, NSArray<NSString *> *> *_reactions;
-	NSString *_nickname;
-	NSString *_nicknameColorStyle;
-	TVCLogLineMemberType _memberType;
-	TVCLogLineDeliveryState _deliveryState;
-	TVCLogLineType _lineType;
-	NSUInteger _sessionIdentifier;
+@interface TVCLogLine () {
+@protected
+  BOOL _isEncrypted;
+  BOOL _isFirstForDay;
+  BOOL _nicknameColorStyleOverride;
+  NSArray<NSString *> *_excludeKeywords;
+  NSArray<NSString *> *_highlightKeywords;
+  NSDictionary<NSString *, id> *_rendererAttributes;
+  NSDate *_receivedAt;
+  NSString *_command;
+  NSString *_messageBody;
+  NSString *_messageIdentifier;
+  NSString *_replyToMessageIdentifier;
+  NSDictionary<NSString *, NSArray<NSString *> *> *_reactions;
+  NSString *_nickname;
+  NSString *_nicknameColorStyle;
+  TVCLogLineMemberType _memberType;
+  TVCLogLineDeliveryState _deliveryState;
+  TVCLogLineType _lineType;
+  NSUInteger _sessionIdentifier;
 
-  @private
-	NSString *_uniqueIdentifier;
+@private
+  NSString *_uniqueIdentifier;
 }
 
 @end

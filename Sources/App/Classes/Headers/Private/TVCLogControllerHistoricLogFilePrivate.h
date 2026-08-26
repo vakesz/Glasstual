@@ -39,17 +39,21 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCTreeItem, TVCLogLine;
 
-#define TVCLogControllerHistoricLogSharedInstance() [TVCLogControllerHistoricLogFile sharedInstance]
+#define TVCLogControllerHistoricLogSharedInstance()                            \
+  [TVCLogControllerHistoricLogFile sharedInstance]
 
 @interface TVCLogControllerHistoricLogFile : NSObject
 + (TVCLogControllerHistoricLogFile *)sharedInstance;
 
-- (void)writeNewEntryWithLogLine:(TVCLogLine *)logLine forItem:(IRCTreeItem *)item;
+- (void)writeNewEntryWithLogLine:(TVCLogLine *)logLine
+                         forItem:(IRCTreeItem *)item;
 
-- (BOOL)saveData; // asynchronous operation; returns NO when there is nothing to save
+- (BOOL)saveData; // asynchronous operation; returns NO when there is nothing to
+                  // save
 
 - (void)prepareForApplicationTermination;
-- (void)prepareForApplicationTerminationWithCompletionBlock:(void (^_Nullable)(void))completionBlock;
+- (void)prepareForApplicationTerminationWithCompletionBlock:
+    (void (^_Nullable)(void))completionBlock;
 
 - (void)resetMaximumLineCount;
 
@@ -66,47 +70,53 @@ NS_ASSUME_NONNULL_BEGIN
  with -indexLogLine:forItem:. */
 - (void)indexLogLine:(TVCLogLine *)logLine forItem:(IRCTreeItem *)item;
 
-- (BOOL)containsMessageIdentifier:(NSString *)messageIdentifier forItem:(IRCTreeItem *)item;
+- (BOOL)containsMessageIdentifier:(NSString *)messageIdentifier
+                          forItem:(IRCTreeItem *)item;
 
 /* For lines without a msgid: the same server time, sender and text. */
 - (BOOL)containsLineReceivedAt:(NSDate *)receivedAt
-					  nickname:(nullable NSString *)nickname
-				   messageBody:(NSString *)messageBody
-					   forItem:(IRCTreeItem *)item;
+                      nickname:(nullable NSString *)nickname
+                   messageBody:(NSString *)messageBody
+                       forItem:(IRCTreeItem *)item;
 
 - (nullable NSDate *)newestLineDateForItem:(IRCTreeItem *)item;
 - (nullable NSDate *)oldestLineDateForItem:(IRCTreeItem *)item;
 
 - (void)fetchEntriesForItem:(IRCTreeItem *)item
-				  ascending:(BOOL)ascending
-				 fetchLimit:(NSUInteger)fetchLimit
-				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
+                  ascending:(BOOL)ascending
+                 fetchLimit:(NSUInteger)fetchLimit
+                limitToDate:(nullable NSDate *)limitToDate
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
 
 - (void)fetchEntriesForItem:(IRCTreeItem *)item
-	   withUniqueIdentifier:(NSString *)uniqueId
-		   beforeFetchLimit:(NSUInteger)fetchLimitBefore
-			afterFetchLimit:(NSUInteger)fetchLimitAfter
-				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
+       withUniqueIdentifier:(NSString *)uniqueId
+           beforeFetchLimit:(NSUInteger)fetchLimitBefore
+            afterFetchLimit:(NSUInteger)fetchLimitAfter
+                limitToDate:(nullable NSDate *)limitToDate
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
 
 - (void)fetchEntriesForItem:(IRCTreeItem *)item
-	 beforeUniqueIdentifier:(NSString *)uniqueId
-				 fetchLimit:(NSUInteger)fetchLimit
-				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
+     beforeUniqueIdentifier:(NSString *)uniqueId
+                 fetchLimit:(NSUInteger)fetchLimit
+                limitToDate:(nullable NSDate *)limitToDate
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
 
 - (void)fetchEntriesForItem:(IRCTreeItem *)item
-	  afterUniqueIdentifier:(NSString *)uniqueId
-				 fetchLimit:(NSUInteger)fetchLimit
-				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
+      afterUniqueIdentifier:(NSString *)uniqueId
+                 fetchLimit:(NSUInteger)fetchLimit
+                limitToDate:(nullable NSDate *)limitToDate
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
 
 - (void)fetchEntriesForItem:(IRCTreeItem *)item
-	  afterUniqueIdentifier:(NSString *)uniqueIdAfter
-	 beforeUniqueIdentifier:(NSString *)uniqueIdBefore
-				 fetchLimit:(NSUInteger)fetchLimit
-		withCompletionBlock:(void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
+      afterUniqueIdentifier:(NSString *)uniqueIdAfter
+     beforeUniqueIdentifier:(NSString *)uniqueIdBefore
+                 fetchLimit:(NSUInteger)fetchLimit
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLine *> *entries))completionBlock;
 @end
 
 NS_ASSUME_NONNULL_END

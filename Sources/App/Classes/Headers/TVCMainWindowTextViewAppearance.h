@@ -35,8 +35,8 @@
  *
  *********************************************************************** */
 
-#import "TVCAppearance.h"
 #import "TPCPreferencesLocal.h"
+#import "TVCAppearance.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -50,8 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)preferredTextViewFontChanged;
 @property(readonly, copy, nullable) NSFont *textViewPreferredFont;
-@property(readonly)
-	TVCMainWindowTextViewFontSize textViewPreferredFontSize; // not assigned until -preferredFont is called
+@property(readonly) TVCMainWindowTextViewFontSize
+    textViewPreferredFontSize; // not assigned until -preferredFont is called
 
 #pragma mark -
 #pragma mark Background View

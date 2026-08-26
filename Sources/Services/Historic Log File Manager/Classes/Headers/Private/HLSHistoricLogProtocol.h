@@ -46,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol HLSHistoricLogServerProtocol
 - (void)openDatabaseInDirectory:(NSString *)databaseDirectory
-			withCompletionBlock:(void (^_Nullable)(BOOL))completionBlock;
+            withCompletionBlock:(void (^_Nullable)(BOOL))completionBlock;
 
 - (void)writeLogLine:(TVCLogLineXPC *)logLine;
 
@@ -57,35 +57,42 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)resetDataForView:(NSString *)viewId;
 
 - (void)fetchEntriesForView:(NSString *)viewId
-				  ascending:(BOOL)ascending
-				 fetchLimit:(NSUInteger)fetchLimit // optional (0 == no limit)
-				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
+                  ascending:(BOOL)ascending
+                 fetchLimit:(NSUInteger)fetchLimit // optional (0 == no limit)
+                limitToDate:(nullable NSDate *)limitToDate
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
 
 - (void)fetchEntriesForView:(NSString *)viewId
-	   withUniqueIdentifier:(NSString *)uniqueId
-		   beforeFetchLimit:(NSUInteger)fetchLimitBefore // optional (0 == only uniqueId)
-			afterFetchLimit:(NSUInteger)fetchLimitAfter	 // optional (0 == only uniqueId)
-				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
+       withUniqueIdentifier:(NSString *)uniqueId
+           beforeFetchLimit:
+               (NSUInteger)fetchLimitBefore // optional (0 == only uniqueId)
+            afterFetchLimit:
+                (NSUInteger)fetchLimitAfter // optional (0 == only uniqueId)
+                limitToDate:(nullable NSDate *)limitToDate
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
 
 - (void)fetchEntriesForView:(NSString *)viewId
-	 beforeUniqueIdentifier:(NSString *)uniqueId
-				 fetchLimit:(NSUInteger)fetchLimit // required (> 0)
-				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
+     beforeUniqueIdentifier:(NSString *)uniqueId
+                 fetchLimit:(NSUInteger)fetchLimit // required (> 0)
+                limitToDate:(nullable NSDate *)limitToDate
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
 
 - (void)fetchEntriesForView:(NSString *)viewId
-	  afterUniqueIdentifier:(NSString *)uniqueId
-				 fetchLimit:(NSUInteger)fetchLimit // required (> 0)
-				limitToDate:(nullable NSDate *)limitToDate
-		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
+      afterUniqueIdentifier:(NSString *)uniqueId
+                 fetchLimit:(NSUInteger)fetchLimit // required (> 0)
+                limitToDate:(nullable NSDate *)limitToDate
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
 
 - (void)fetchEntriesForView:(NSString *)viewId
-	  afterUniqueIdentifier:(NSString *)uniqueIdAfter
-	 beforeUniqueIdentifier:(NSString *)uniqueIdBefore
-				 fetchLimit:(NSUInteger)fetchLimit // optional (0 == no limit)
-		withCompletionBlock:(void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
+      afterUniqueIdentifier:(NSString *)uniqueIdAfter
+     beforeUniqueIdentifier:(NSString *)uniqueIdBefore
+                 fetchLimit:(NSUInteger)fetchLimit // optional (0 == no limit)
+        withCompletionBlock:
+            (void (^)(NSArray<TVCLogLineXPC *> *entries))completionBlock;
 
 - (void)setMaximumLineCount:(NSUInteger)maximumLineCount;
 @end
@@ -94,7 +101,8 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark Client Protocol
 
 @protocol HLSHistoricLogClientProtocol
-- (void)willDeleteUniqueIdentifiers:(NSArray<NSString *> *)uniqueIdentifiers inView:(NSString *)viewId;
+- (void)willDeleteUniqueIdentifiers:(NSArray<NSString *> *)uniqueIdentifiers
+                             inView:(NSString *)viewId;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -51,7 +51,7 @@ final class InlineContentProcessDelegate: NSObject, NSXPCListenerDelegate {
 		connection.exportedInterface = exportedInterface
 		connection.remoteObjectInterface = NSXPCInterface(with: ICLInlineContentClientProtocol.self)
 
-		let exportedObject = ICLProcessMain(xpcConnection: connection)
+		let exportedObject = InlineContentProcess(xpcConnection: connection)
 		connection.exportedObject = exportedObject
 		connection.invalidationHandler = { [weak connection] in
 			exportedObject.connectionInvalidated()

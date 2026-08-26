@@ -35,8 +35,8 @@
  *
  *********************************************************************** */
 
-#import "TPCPreferencesPrivate.h"
 #import "TPCPreferencesLocal.h"
+#import "TPCPreferencesPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -70,11 +70,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)setThemeChannelViewFontSize:(CGFloat)value;
 
-+ (void)setThemeNicknameFormatPreferenceUserConfigurable:(BOOL)themeNicknameFormatPreferenceUserConfigurable;
-+ (void)setThemeTimestampFormatPreferenceUserConfigurable:(BOOL)themeTimestampFormatPreferenceUserConfigurable;
-+ (void)setThemeChannelViewFontPreferenceUserConfigurable:(BOOL)themeChannelViewFontPreferenceUserConfigurable;
++ (void)setThemeNicknameFormatPreferenceUserConfigurable:
+    (BOOL)themeNicknameFormatPreferenceUserConfigurable;
++ (void)setThemeTimestampFormatPreferenceUserConfigurable:
+    (BOOL)themeTimestampFormatPreferenceUserConfigurable;
++ (void)setThemeChannelViewFontPreferenceUserConfigurable:
+    (BOOL)themeChannelViewFontPreferenceUserConfigurable;
 
-+ (void)setThemeUserStyleSheetRules:(nullable NSString *)themeUserStyleSheetRules;
++ (void)setThemeUserStyleSheetRules:
+    (nullable NSString *)themeUserStyleSheetRules;
 
 + (void)setScrollbackSaveLimit:(NSUInteger)scrollbackSaveLimit;
 + (void)setScrollbackVisibleLimit:(NSUInteger)scrollbackVisibleLimit;
@@ -88,10 +92,12 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)setNotificationEnabled:(BOOL)value forEvent:(TXNotificationType)event;
 + (void)setDisabledWhileAway:(BOOL)value forEvent:(TXNotificationType)event;
 + (void)setBounceDockIcon:(BOOL)value forEvent:(TXNotificationType)event;
-+ (void)setBounceDockIconRepeatedly:(BOOL)value forEvent:(TXNotificationType)event;
++ (void)setBounceDockIconRepeatedly:(BOOL)value
+                           forEvent:(TXNotificationType)event;
 + (void)setEventIsSpoken:(BOOL)value forEvent:(TXNotificationType)event;
 
-+ (nullable NSString *)keyForEvent:(TXNotificationType)event category:(NSString *)category;
++ (nullable NSString *)keyForEvent:(TXNotificationType)event
+                          category:(NSString *)category;
 
 + (void)setFileTransferPortRangeStart:(uint16_t)value;
 + (void)setFileTransferPortRangeEnd:(uint16_t)value;

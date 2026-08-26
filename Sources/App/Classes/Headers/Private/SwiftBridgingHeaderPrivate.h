@@ -47,39 +47,39 @@
  out of the bridging graph. */
 /* IRCChannelUser / IRCChannelUserMutable are Swift (ChannelUser /
  ChannelUserMutable). Import only the shared rank options here. */
+#import "IRCChannelMode.h"
 #import "IRCChannelUserTypes.h"
 #import "IRCClient.h"
-#import "IRCClientPrivate.h"
 #import "IRCClientConfig.h"
-#import "IRCCommandIndexPrivate.h"
+#import "IRCClientPrivate.h"
 #import "IRCColorFormatPrivate.h"
-#import "IRCPrefix.h"
-#import "TLOLinkParser.h"
-#import "IRCConnectionErrors.h"
+#import "IRCCommandIndexPrivate.h"
 #import "IRCConnectionConfig.h"
+#import "IRCConnectionErrors.h"
 #import "IRCConnectionTypes.h"
-#import "RCMConnectionManagerProtocol.h"
-#import "TDCFileTransferDialogSocketPrivate.h"
 #import "IRCHighlightLogEntryPrivate.h"
 #import "IRCHighlightMatchCondition.h"
 #import "IRCISupportInfo.h"
 #import "IRCISupportInfoPrivate.h"
-#import "IRCChannelMode.h"
+#import "IRCPrefix.h"
+#import "RCMConnectionManagerProtocol.h"
+#import "TDCFileTransferDialogSocketPrivate.h"
+#import "TLOLinkParser.h"
 /* IRCMessage / IRCMessageMutable are Swift (Message / MessageMutable).
  Keep IRCMessage.h out of this bridging graph. Plugin category lives in
  THOPluginDispatcherSupport.m for ObjC callers. */
 #import "IRCMessageBatchPrivate.h"
 #import "IRCNetworkList.h"
-#import "IRCServerPrivate.h"
 #import "IRCSTSPolicy.h"
+#import "IRCServerPrivate.h"
 /* IRCUser / IRCUserMutable are Swift (User / UserMutable). Keep IRCUser.h
  out of this bridging graph. */
+#import "IRCTimedCommandCallbackPrivate.h"
+#import "IRCTreeItemPrivate.h"
+#import "IRCTypingTrackerPrivate.h"
 #import "IRCUserPersistentStorePrivate.h"
 #import "IRCWorld.h"
 #import "IRCWorldPrivate.h"
-#import "IRCTreeItemPrivate.h"
-#import "IRCTypingTrackerPrivate.h"
-#import "IRCTimedCommandCallbackPrivate.h"
 
 // Application and preferences
 #import "BuildConfig.h"
@@ -104,66 +104,66 @@
 #import "TVCAutoExpandingTextField.h"
 
 // InputHandling
+#import "THOPluginItemSupportedFeature.h"
+#import "THOPluginProtocol.h"
+#import "THOPluginProtocolPrivate.h"
 #import "TLOInputHistoryPrivate.h"
 #import "TLOKeyEventHandler.h"
 #import "TLONicknameCompletionStatusPrivate.h"
-#import "THOPluginProtocol.h"
-#import "THOPluginProtocolPrivate.h"
-#import "THOPluginItemSupportedFeature.h"
 
+#import "ICLInlineContentProtocol.h"
+#import "TLOpenLink.h"
+#import "TPCPreferencesImportExport.h"
+#import "TPCPreferencesImportExportPrivate.h"
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 #import "TVCLogPolicyPrivate.h"
 #import "TVCLogViewPrivate.h"
-#import "TPCPreferencesImportExport.h"
-#import "TPCPreferencesImportExportPrivate.h"
-#import "TLOpenLink.h"
-#import "ICLInlineContentProtocol.h"
 #import "TVCMainWindow.h"
 #import "TVCMainWindowPrivate.h"
 
 // Networking and notifications
 #import "OELReachability.h"
-#import "TDCFileTransferDialogTypes.h"
+#import "TDCAddressBookSheetPrivate.h"
+#import "TDCChannelBanListSheetPrivate.h"
+#import "TDCChannelInviteSheetPrivate.h"
+#import "TDCChannelModifyModesSheetPrivate.h"
+#import "TDCChannelModifyTopicSheetPrivate.h"
+#import "TDCChannelSpotlightSearchResultPrivate.h"
 #import "TDCFileTransferDialogTransferControllerPrivate.h"
+#import "TDCFileTransferDialogTypes.h"
+#import "TDCHighlightEntrySheetPrivate.h"
+#import "TDCInputPrompt.h"
+#import "TDCNicknameColorSheetPrivate.h"
+#import "TDCPreferencesUserStyleSheetPrivate.h"
+#import "TDCReactionPopoverControllerPrivate.h"
+#import "TDCServerChangeNicknameSheetPrivate.h"
+#import "TDCServerHighlightListSheetPrivate.h"
+#import "TDCSheetBase.h"
 #import "TLOFileLoggerPrivate.h"
 #import "TLOInternetAddressLookup.h"
 #import "TLONotificationConfigurationPrivate.h"
 #import "TLONotificationControllerPrivate.h"
 #import "TLOSpeechSynthesizerEnginePrivate.h"
-#import "TXMenuController.h"
-#import "TXMenuControllerPrivate.h"
-#import "TXApplicationPrivate.h"
-#import "TDCSheetBase.h"
-#import "TDCInputPrompt.h"
-#import "TDCChannelInviteSheetPrivate.h"
-#import "TDCChannelSpotlightSearchResultPrivate.h"
 #import "TVCDockIconPrivate.h"
-#import "TVCErrorMessagePopoverPrivate.h"
 #import "TVCErrorMessagePopoverControllerPrivate.h"
+#import "TVCErrorMessagePopoverPrivate.h"
+#import "TVCMainWindowLoadingScreen.h"
 #import "TVCValidatedComboBox.h"
+#import "TVCValidatedTextField.h"
 #import "TXAppearance.h"
 #import "TXAppearancePrivate.h"
-#import "TVCMainWindowLoadingScreen.h"
-#import "TVCValidatedTextField.h"
-#import "TDCPreferencesUserStyleSheetPrivate.h"
-#import "TDCHighlightEntrySheetPrivate.h"
-#import "TDCChannelModifyTopicSheetPrivate.h"
-#import "TDCServerHighlightListSheetPrivate.h"
-#import "TDCAddressBookSheetPrivate.h"
-#import "TDCChannelModifyModesSheetPrivate.h"
-#import "TDCChannelBanListSheetPrivate.h"
-#import "TDCReactionPopoverControllerPrivate.h"
-#import "TDCNicknameColorSheetPrivate.h"
-#import "TDCServerChangeNicknameSheetPrivate.h"
+#import "TXApplicationPrivate.h"
+#import "TXMenuController.h"
+#import "TXMenuControllerPrivate.h"
 #import "TXWindowControllerPrivate.h"
 /* TVCAppearance / TVCApplicationAppearance are Swift (ViewAppearance /
  ApplicationAppearance). Keep TVCAppearance.h out of this bridging graph. */
 #import "IRCUserNicknameColorStyleGeneratorPrivate.h"
 
 // Text and presentation
-#import "TVCLogControllerPrivate.h"
 #import "HLSHistoricLogProtocol.h"
 #import "TVCLogControllerOperationQueuePrivate.h"
+#import "TVCLogControllerPrivate.h"
 #import "TVCLogLine.h"
 #import "TVCLogLinePrivate.h"
 #import "TVCLogLineXPCPrivate.h"
@@ -172,10 +172,11 @@
 #import "TVCMemberListPrivate.h"
 /* TVCServerList is Swift (ServerList). Keep TVCServerList.h out of this
  bridging graph; cell private APIs stay available for drawing. */
-/* TVCServerListCell* are Swift (ServerListCell*). Keep Private out of bridging. */
-#import "TVCLogViewInternalWK2.h"
-#import "TVCLogScriptEventSinkPrivate.h"
+/* TVCServerListCell* are Swift (ServerListCell*). Keep Private out of bridging.
+ */
 #import "NSTableVIewHelperPrivate.h"
+#import "TVCLogScriptEventSinkPrivate.h"
+#import "TVCLogViewInternalWK2.h"
 
 /* Minimal stubs for ObjC types whose full private headers subclass
  TDCWindowBase (now Swift). Keep WindowBase.h out of this bridging graph. */
@@ -185,5 +186,6 @@
 
 @interface TDCFileTransferDialog : NSObject
 - (void)show:(BOOL)makeKeyWindow restorePosition:(BOOL)restorePosition;
-- (nullable TDCFileTransferDialogTransferController *)fileTransferWithUniqueIdentifier:(NSString *)identifier;
+- (nullable TDCFileTransferDialogTransferController *)
+    fileTransferWithUniqueIdentifier:(NSString *)identifier;
 @end

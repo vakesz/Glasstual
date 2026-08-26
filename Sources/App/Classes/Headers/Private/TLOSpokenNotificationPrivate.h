@@ -51,10 +51,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) TXNotificationType notificationType;
 
 - (instancetype)initWithNotification:(TXNotificationType)notificationType
-							lineType:(TVCLogLineType)lineType
-							  target:(null_unspecified IRCTreeItem *)target
-							nickname:(null_unspecified NSString *)nickname
-								text:(null_unspecified NSString *)text;
+                            lineType:(TVCLogLineType)lineType
+                              target:(null_unspecified IRCTreeItem *)target
+                            nickname:(null_unspecified NSString *)nickname
+                                text:(null_unspecified NSString *)text;
 @end
 
 NS_ASSUME_NONNULL_END

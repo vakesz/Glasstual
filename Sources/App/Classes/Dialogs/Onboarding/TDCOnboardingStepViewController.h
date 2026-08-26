@@ -42,9 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClientConfigMutable;
 
 typedef NS_ENUM(NSUInteger, TDCOnboardingTextSize) {
-	TDCOnboardingTextSizeSmall = 0,
-	TDCOnboardingTextSizeMedium,
-	TDCOnboardingTextSizeLarge
+  TDCOnboardingTextSizeSmall = 0,
+  TDCOnboardingTextSizeMedium,
+  TDCOnboardingTextSizeLarge
 };
 
 /* Everything the onboarding steps collect. Steps write into it as the user

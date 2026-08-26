@@ -50,7 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TDCServerEndpointListSheetDelegate <NSObject>
 @required
 
-- (void)serverEndpointListSheet:(TDCServerEndpointListSheet *)ender onOk:(NSArray<IRCServer *> *)serverList;
+- (void)serverEndpointListSheet:(TDCServerEndpointListSheet *)ender
+                           onOk:(NSArray<IRCServer *> *)serverList;
 - (void)serverEndpointListSheetWillClose:(TDCServerEndpointListSheet *)sender;
 @end
 

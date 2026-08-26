@@ -15,14 +15,16 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /* Owns the derived matching state for an address-book entry. The public
- configuration object remains Objective-C because AppKit binds to it directly. */
+ configuration object remains Objective-C because AppKit binds to it directly.
+ */
 @interface IRCAddressBookEntryMatcher : NSObject
 @property(readonly, copy) NSString *regularExpressionPattern;
 @property(readonly, copy, nullable) NSString *trackingNickname;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithEntryType:(IRCAddressBookEntryType)entryType
-						 hostmask:(NSString *)hostmask NS_DESIGNATED_INITIALIZER;
+                         hostmask:(NSString *)hostmask
+    NS_DESIGNATED_INITIALIZER;
 
 - (BOOL)matchesHostmask:(NSString *)hostmask;
 @end

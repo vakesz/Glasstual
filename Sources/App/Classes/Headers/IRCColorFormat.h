@@ -39,29 +39,37 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, IRCTextFormatterEffectType) {
-	IRCTextFormatterEffectNone = 0,
-	IRCTextFormatterEffectBold,
-	IRCTextFormatterEffectItalic,
-	IRCTextFormatterEffectMonospace,
-	IRCTextFormatterEffectStrikethrough,
-	IRCTextFormatterEffectUnderline,
-	IRCTextFormatterEffectForegroundColor,
-	IRCTextFormatterEffectBackgroundColor,
-	IRCTextFormatterEffectSpoiler,
+  IRCTextFormatterEffectNone = 0,
+  IRCTextFormatterEffectBold,
+  IRCTextFormatterEffectItalic,
+  IRCTextFormatterEffectMonospace,
+  IRCTextFormatterEffectStrikethrough,
+  IRCTextFormatterEffectUnderline,
+  IRCTextFormatterEffectForegroundColor,
+  IRCTextFormatterEffectBackgroundColor,
+  IRCTextFormatterEffectSpoiler,
 };
 
 typedef NSString *IRCTextFormatterAttributeName NS_EXTENSIBLE_STRING_ENUM;
 
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterBoldAttributeName;			 // BOOL
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterItalicAttributeName;		 // BOOL
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterMonospaceAttributeName;	 // BOOL
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterStrikethroughAttributeName; // BOOL
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterUnderlineAttributeName;	 // BOOL
 GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-	IRCTextFormatterForegroundColorAttributeName; // NSNumber, 0-15 - or, NSColor
+    IRCTextFormatterBoldAttributeName; // BOOL
 GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-	IRCTextFormatterBackgroundColorAttributeName; // NSNumber, 0-15 - or, NSColor
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterSpoilerAttributeName; // BOOL
+    IRCTextFormatterItalicAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
+    IRCTextFormatterMonospaceAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
+    IRCTextFormatterStrikethroughAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
+    IRCTextFormatterUnderlineAttributeName; // BOOL
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
+    IRCTextFormatterForegroundColorAttributeName; // NSNumber, 0-15 - or,
+                                                  // NSColor
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
+    IRCTextFormatterBackgroundColorAttributeName; // NSNumber, 0-15 - or,
+                                                  // NSColor
+GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
+    IRCTextFormatterSpoilerAttributeName; // BOOL
 
 #define IRCTextFormatterEffectColorAsDigitCharacter 0x03
 #define IRCTextFormatterEffectColorAsHexCharacter 0x04
@@ -88,11 +96,13 @@ GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterSpoilerAttr
 @property(readonly) NSUInteger length;
 
 + (nullable instancetype)effectWithType:(IRCTextFormatterEffectType)type;
-+ (nullable instancetype)effectWithType:(IRCTextFormatterEffectType)type withValue:(nullable id)value;
++ (nullable instancetype)effectWithType:(IRCTextFormatterEffectType)type
+                              withValue:(nullable id)value;
 
 - (nullable instancetype)initWithEffect:(IRCTextFormatterEffectType)type;
 - (nullable instancetype)initWithEffect:(IRCTextFormatterEffectType)type
-							  withValue:(nullable id)value NS_DESIGNATED_INITIALIZER;
+                              withValue:(nullable id)value
+    NS_DESIGNATED_INITIALIZER;
 
 /* Appends control character and value for the effect.
  For background color, appends comma and color value instead. */
@@ -111,7 +121,8 @@ GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterSpoilerAttr
 
 + (instancetype)effectsInAttributes:(NSDictionary<NSString *, id> *)attributes;
 
-- (instancetype)initWithAttributes:(NSDictionary<NSString *, id> *)attributes NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithAttributes:(NSDictionary<NSString *, id> *)attributes
+    NS_DESIGNATED_INITIALIZER;
 
 - (void)appendToStartOf:(NSMutableString *)string;
 - (void)appendToEndOf:(NSMutableString *)string;
@@ -120,7 +131,8 @@ GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterSpoilerAttr
 #pragma mark -
 
 @interface NSAttributedString (IRCTextFormatter)
-- (BOOL)IRCFormatterAttributeSetInRange:(IRCTextFormatterEffectType)effect range:(NSRange)limitRange;
+- (BOOL)IRCFormatterAttributeSetInRange:(IRCTextFormatterEffectType)effect
+                                  range:(NSRange)limitRange;
 
 /* Returns an NSString with appropriate formatting characters. */
 @property(readonly, copy) NSString *stringFormattedForIRC;
@@ -129,9 +141,12 @@ GLASSTUAL_EXTERN IRCTextFormatterAttributeName const IRCTextFormatterSpoilerAttr
 #pragma mark -
 
 @interface NSMutableAttributedString (IRCTextFormatter)
-- (void)setIRCFormatterAttribute:(IRCTextFormatterEffectType)effect value:(id)value range:(NSRange)limitRange;
+- (void)setIRCFormatterAttribute:(IRCTextFormatterEffectType)effect
+                           value:(id)value
+                           range:(NSRange)limitRange;
 
-- (void)removeIRCFormatterAttribute:(IRCTextFormatterEffectType)effect range:(NSRange)limitRange;
+- (void)removeIRCFormatterAttribute:(IRCTextFormatterEffectType)effect
+                              range:(NSRange)limitRange;
 @end
 
 NS_ASSUME_NONNULL_END

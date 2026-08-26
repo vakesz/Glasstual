@@ -44,7 +44,8 @@ typedef void (^TLOTimerActionBlock)(TLOTimer *sender);
 
 @interface TLOTimer : NSObject
 @property(readonly, copy) TLOTimerActionBlock actionBlock;
-@property(nonatomic, strong, nullable) dispatch_queue_t queue; // Defaults to main queue. Changed ignored while active.
+@property(nonatomic, strong, nullable) dispatch_queue_t
+    queue; // Defaults to main queue. Changed ignored while active.
 @property(nonatomic, strong, nullable) id context;
 
 @property(readonly) NSTimeInterval startTime;
@@ -58,18 +59,21 @@ typedef void (^TLOTimerActionBlock)(TLOTimer *sender);
 @property(readonly) NSUInteger currentIteration;
 
 + (instancetype)timerWithActionBlock:(TLOTimerActionBlock)actionBlock;
-+ (instancetype)timerWithActionBlock:(TLOTimerActionBlock)actionBlock onQueue:(nullable dispatch_queue_t)queue;
++ (instancetype)timerWithActionBlock:(TLOTimerActionBlock)actionBlock
+                             onQueue:(nullable dispatch_queue_t)queue;
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithActionBlock:(TLOTimerActionBlock)actionBlock;
 - (instancetype)initWithActionBlock:(TLOTimerActionBlock)actionBlock
-							onQueue:(nullable dispatch_queue_t)queue NS_DESIGNATED_INITIALIZER;
+                            onQueue:(nullable dispatch_queue_t)queue
+    NS_DESIGNATED_INITIALIZER;
 
-- (void)start:(NSTimeInterval)interval;									// repeatTimer = NO
-- (void)start:(NSTimeInterval)timerInterval onRepeat:(BOOL)repeatTimer; // iterations = 0
+- (void)start:(NSTimeInterval)interval; // repeatTimer = NO
 - (void)start:(NSTimeInterval)timerInterval
-	  onRepeat:(BOOL)repeatTimer
-	iterations:(NSUInteger)iterations; // 0 iterations = infinite
+     onRepeat:(BOOL)repeatTimer; // iterations = 0
+- (void)start:(NSTimeInterval)timerInterval
+      onRepeat:(BOOL)repeatTimer
+    iterations:(NSUInteger)iterations; // 0 iterations = infinite
 
 - (void)stop;
 @end

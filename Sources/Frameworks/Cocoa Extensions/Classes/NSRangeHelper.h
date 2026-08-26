@@ -32,22 +32,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-COCOA_EXTENSIONS_INLINE NSRange NSEmptyRange(void)
-{
-	return NSMakeRange(NSNotFound, 0);
+COCOA_EXTENSIONS_INLINE NSRange NSEmptyRange(void) {
+  return NSMakeRange(NSNotFound, 0);
 }
 
-COCOA_EXTENSIONS_INLINE BOOL NSRangeIsValid(NSRange r)
-{
-	return (r.location != NSNotFound);
+COCOA_EXTENSIONS_INLINE BOOL NSRangeIsValid(NSRange r) {
+  return (r.location != NSNotFound);
 }
 
-COCOA_EXTENSIONS_INLINE BOOL NSRangeIsValidInBounds(NSRange r, NSUInteger maxLength)
-{
-	NSAssertReturnR((r.location <= maxLength), NO);
-	NSAssertReturnR((r.length <= maxLength), NO);
+COCOA_EXTENSIONS_INLINE BOOL NSRangeIsValidInBounds(NSRange r,
+                                                    NSUInteger maxLength) {
+  NSAssertReturnR((r.location <= maxLength), NO);
+  NSAssertReturnR((r.length <= maxLength), NO);
 
-	return (NSRangeIsValid(r) && (r.location + r.length) <= maxLength);
+  return (NSRangeIsValid(r) && (r.location + r.length) <= maxLength);
 }
 
 NS_ASSUME_NONNULL_END

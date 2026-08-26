@@ -36,45 +36,45 @@
  *
  *********************************************************************** */
 
-#import "NSObjectHelperPrivate.h"
-#import "TXGlobalModels.h"
-#import "TXMasterController.h"
-#import "TXMenuControllerPrivate.h"
 #import "ICLPayloadLocalPrivate.h"
-#import "IRCClientConfig.h"
-#import "IRCClientPrivate.h"
 #import "IRCChannel.h"
 #import "IRCChannelConfig.h"
 #import "IRCChannelUserPrivate.h"
+#import "IRCClientConfig.h"
+#import "IRCClientPrivate.h"
+#import "NSObjectHelperPrivate.h"
 #import "THOPluginDispatcherPrivate.h"
 #import "THOPluginManagerPrivate.h"
 #import "THOPluginProtocolPrivate.h"
+#import "TLOLinkParser.h"
+#import "TLOLocalization.h"
 #import "TPCPathInfo.h"
 #import "TPCPreferencesLocalPrivate.h"
 #import "TPCPreferencesUserDefaults.h"
 #import "TPCThemeController.h"
 #import "TPCThemePrivate.h"
-#import "TLOLinkParser.h"
-#import "TLOLocalization.h"
-#import "TVCLogViewPrivate.h"
-#import "TVCLogLine.h"
-#import "TVCLogRenderer.h"
 #import "TVCLogControllerHistoricLogFilePrivate.h"
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 #import "TVCLogControllerOperationQueuePrivate.h"
-#import "TVCMainWindowPrivate.h"
 #import "TVCLogControllerPrivate.h"
+#import "TVCLogLine.h"
+#import "TVCLogRenderer.h"
+#import "TVCLogViewPrivate.h"
+#import "TVCMainWindowPrivate.h"
+#import "TXGlobalModels.h"
+#import "TXMasterController.h"
+#import "TXMenuControllerPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _enqueueBlock(operationBlock)                                                                                  \
-	[self.printingQueue enqueueMessageBlock:(operationBlock) for:self isStandalone:NO];
+#define _enqueueBlock(operationBlock)                                          \
+        [self.printingQueue enqueueMessageBlock:(operationBlock) for:self isStandalone:NO];
 
-#define _enqueueBlockStandalone(operationBlock)                                                                        \
-	[self.printingQueue enqueueMessageBlock:(operationBlock) for:self isStandalone:YES];
+#define _enqueueBlockStandalone(operationBlock)                                \
+        [self.printingQueue enqueueMessageBlock:(operationBlock) for:self isStandalone:YES];
 
-#define _enqueueAsynchronousBlockStandalone(operationBlock)                                                            \
-	[self.printingQueue enqueueAsynchronousMessageBlock:(operationBlock) for:self isStandalone:YES];
+#define _enqueueAsynchronousBlockStandalone(operationBlock)                    \
+        [self.printingQueue enqueueAsynchronousMessageBlock:(operationBlock) for:self isStandalone:YES];
 
 @interface TVCLogControllerPrintOperationContext ()
 @property(nonatomic, weak, readwrite) IRCClient *client;
@@ -87,9 +87,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TVCLogController ()
 /* Reactions received this session: msgid -> emoji -> nicknames. The
  archived line cannot be rewritten, so these live with the view. */
-@property(nonatomic, strong)
-	NSMutableDictionary<NSString *, NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *>
-		*reactionsByMessageIdentifier;
+@property(nonatomic, strong) NSMutableDictionary<
+    NSString *,
+    NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *>
+    *reactionsByMessageIdentifier;
 @property(nonatomic, assign, readwrite, getter=viewIsLoaded) BOOL loaded;
 @property(nonatomic, assign) BOOL terminating;
 @property(nonatomic, assign) BOOL historyLoadedForFirstTime;
@@ -98,13 +99,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign) BOOL historyLoaded;
 @property(nonatomic, assign) NSInteger activeLineCount;
 @property(nonatomic, copy, nullable) NSString *lastVisitedHighlight;
-@property(nonatomic, copy, nullable, readwrite) NSString *newestLineNumberFromPreviousSession;
+@property(nonatomic, copy, nullable, readwrite)
+    NSString *newestLineNumberFromPreviousSession;
 @property(nonatomic, copy, nullable, readwrite) NSString *oldestLineNumber;
 @property(nonatomic, copy, nullable, readwrite) NSString *newestLineNumber;
 @property(nonatomic, strong, nullable) TVCLogLine *lastLine;
 @property(nonatomic, strong, nullable) TVCLogLine *oldestLine;
 @property(nonatomic, strong) NSMutableArray<NSString *> *highlightedLineNumbers;
-@property(nonatomic, strong) NSMutableDictionary<NSString *, void (^)(BOOL)> *jumpToLineCallbacks;
+@property(nonatomic, strong)
+    NSMutableDictionary<NSString *, void (^)(BOOL)> *jumpToLineCallbacks;
 @property(nonatomic, strong, readwrite) TVCLogView *backingView;
 @property(weak, readonly) IRCTreeItem *associatedItem;
 @property(nonatomic, weak, readwrite) IRCClient *associatedClient;
@@ -115,13 +118,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, copy) NSURL *baseURL;
 @end
 
-NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogControllerViewFinishedLoadingNotification";
+NSString *const TVCLogControllerViewFinishedLoadingNotification =
+    @"TVCLogControllerViewFinishedLoadingNotification";
 
-@implementation TVCLogController
-{
-	/* The property is nonnull for the lifetime of the controller;
-	 the backing storage is only cleared during teardown. */
-	TVCLogView *_Nullable _backingView;
+@implementation TVCLogController {
+  /* The property is nonnull for the lifetime of the controller;
+   the backing storage is only cleared during teardown. */
+  TVCLogView *_Nullable _backingView;
 }
 
 @synthesize backingView = _backingView;
@@ -129,1819 +132,1906 @@ NSString *const TVCLogControllerViewFinishedLoadingNotification = @"TVCLogContro
 #pragma mark -
 #pragma mark Initialization
 
-- (instancetype)init
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (instancetype)init {
+  [self doesNotRecognizeSelector:_cmd];
 
-	return nil;
+  return nil;
 }
 
-- (instancetype)initWithClient:(IRCClient *)client inWindow:(TVCMainWindow *)window
-{
-	NSParameterAssert(client != nil);
-	NSParameterAssert(window != nil);
+- (instancetype)initWithClient:(IRCClient *)client
+                      inWindow:(TVCMainWindow *)window {
+  NSParameterAssert(client != nil);
+  NSParameterAssert(window != nil);
 
-	if ((self = [super init])) {
-		self.associatedClient = client;
+  if ((self = [super init])) {
+    self.associatedClient = client;
 
-		self.attachedWindow = window;
+    self.attachedWindow = window;
 
-		[self prepareInitialState];
+    [self prepareInitialState];
 
-		[self setUp];
+    [self setUp];
 
-		return self;
-	}
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 
-- (instancetype)initWithChannel:(IRCChannel *)channel inWindow:(TVCMainWindow *)window
-{
-	NSParameterAssert(channel != nil);
-	NSParameterAssert(window != nil);
+- (instancetype)initWithChannel:(IRCChannel *)channel
+                       inWindow:(TVCMainWindow *)window {
+  NSParameterAssert(channel != nil);
+  NSParameterAssert(window != nil);
 
-	if ((self = [super init])) {
-		self.associatedClient = channel.associatedClient;
-		self.associatedChannel = channel;
+  if ((self = [super init])) {
+    self.associatedClient = channel.associatedClient;
+    self.associatedChannel = channel;
 
-		self.attachedWindow = window;
+    self.attachedWindow = window;
 
-		[self prepareInitialState];
+    [self prepareInitialState];
 
-		[self setUp];
+    [self setUp];
 
-		return self;
-	}
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 
-- (void)prepareInitialState
-{
-	self.reactionsByMessageIdentifier = [NSMutableDictionary dictionary];
+- (void)prepareInitialState {
+  self.reactionsByMessageIdentifier = [NSMutableDictionary dictionary];
 
-	self.highlightedLineNumbers = [NSMutableArray new];
+  self.highlightedLineNumbers = [NSMutableArray new];
 
-	self.jumpToLineCallbacks = [NSMutableDictionary dictionary];
+  self.jumpToLineCallbacks = [NSMutableDictionary dictionary];
 }
 
-- (void)prepareForTermination:(BOOL)isTerminatingApplication
-{
-	self.terminating = YES;
+- (void)prepareForTermination:(BOOL)isTerminatingApplication {
+  self.terminating = YES;
 
-	self.loaded = NO;
+  self.loaded = NO;
 
-	[self.backingView stopLoading]; // allow view to teardown
-	/* The property is nonnull; teardown is the one exception. */
-	self->_backingView = nil;
+  [self.backingView stopLoading]; // allow view to teardown
+  /* The property is nonnull; teardown is the one exception. */
+  self->_backingView = nil;
 
-	[self.printingQueue cancelOperationsForViewController:self];
+  [self.printingQueue cancelOperationsForViewController:self];
 
-	if (isTerminatingApplication) {
-		[self closeHistoricLog];
-	} else {
-		[self historicLogForgetChannel];
-	}
+  if (isTerminatingApplication) {
+    [self closeHistoricLog];
+  } else {
+    [self historicLogForgetChannel];
+  }
 }
 
-- (void)prepareForApplicationTermination
-{
-	LogToConsoleTerminationProgress("Preparing view controller: %{public}@", self.uniqueIdentifier);
+- (void)prepareForApplicationTermination {
+  LogToConsoleTerminationProgress("Preparing view controller: %{public}@",
+                                  self.uniqueIdentifier);
 
-	[self prepareForTermination:YES];
+  [self prepareForTermination:YES];
 }
 
-- (void)prepareForPermanentDestruction
-{
-	[self prepareForTermination:NO];
+- (void)prepareForPermanentDestruction {
+  [self prepareForTermination:NO];
 }
 
-- (void)dealloc
-{
-	[self cancelPerformRequests];
+- (void)dealloc {
+  [self cancelPerformRequests];
 }
 
 #pragma mark -
 #pragma mark Create View
 
-- (void)setUp
-{
-	[self buildBackingView];
+- (void)setUp {
+  [self buildBackingView];
 
-	[self loadInitialDocument];
+  [self loadInitialDocument];
 }
 
-- (void)buildBackingView
-{
-	self.backingView = [[TVCLogView alloc] initWithViewController:self];
+- (void)buildBackingView {
+  self.backingView = [[TVCLogView alloc] initWithViewController:self];
 }
 
-- (void)loadInitialDocument
-{
-	[self loadAlternateHTML:[self initialDocument]];
+- (void)loadInitialDocument {
+  [self loadAlternateHTML:[self initialDocument]];
 }
 
-- (void)loadAlternateHTML:(NSString *)newHTML
-{
-	NSParameterAssert(newHTML != nil);
+- (void)loadAlternateHTML:(NSString *)newHTML {
+  NSParameterAssert(newHTML != nil);
 
-	[self.backingView stopLoading];
+  [self.backingView stopLoading];
 
-	[self.backingView loadHTMLString:newHTML baseURL:self.baseURL];
+  [self.backingView loadHTMLString:newHTML baseURL:self.baseURL];
 }
 
 #pragma mark -
 #pragma mark Manage Historic Log
 
-- (void)historicLogForgetChannel
-{
-	/* Delete any trace of the channel, including context */
-	[TVCLogControllerHistoricLogSharedInstance() forgetItem:self.associatedItem];
+- (void)historicLogForgetChannel {
+  /* Delete any trace of the channel, including context */
+  [TVCLogControllerHistoricLogSharedInstance() forgetItem:self.associatedItem];
 }
 
-- (void)historicLogResetChannel
-{
-	/* Delete log for channel but keep context */
-	[TVCLogControllerHistoricLogSharedInstance() resetDataForItem:self.associatedItem];
+- (void)historicLogResetChannel {
+  /* Delete log for channel but keep context */
+  [TVCLogControllerHistoricLogSharedInstance()
+      resetDataForItem:self.associatedItem];
 }
 
-- (void)closeHistoricLog
-{
-	/* The historic log file is always open regardless of whether the user asked
-	 Glasstual to remember the history between restarts. It is always open because
-	 the reloading of a theme uses it to fill in the backlog after a reload.
-	 -closeHistoricLog is the point where we decide to actually save the file
-	 or erase it. If the user has Glasstual configured to remember between restarts,
-	 then we call a save before terminating. Or, we just erase the file from the
-	 path that it is written to entirely. */
+- (void)closeHistoricLog {
+  /* The historic log file is always open regardless of whether the user asked
+   Glasstual to remember the history between restarts. It is always open because
+   the reloading of a theme uses it to fill in the backlog after a reload.
+   -closeHistoricLog is the point where we decide to actually save the file
+   or erase it. If the user has Glasstual configured to remember between
+   restarts, then we call a save before terminating. Or, we just erase the file
+   from the path that it is written to entirely. */
 
-	IRCChannel *channel = self.associatedChannel;
+  IRCChannel *channel = self.associatedChannel;
 
-	if (
-		/* 1 */ [TPCPreferences reloadScrollbackOnLaunch] == NO ||
-		/* 2 */ channel.isUtility || channel.isDirectChat ||
-		/* 3 */ (channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO)) {
-		[self historicLogResetChannel];
-	}
+  if (
+      /* 1 */ [TPCPreferences reloadScrollbackOnLaunch] == NO ||
+      /* 2 */ channel.isUtility || channel.isDirectChat ||
+      /* 3 */
+      (channel.isPrivateMessage &&
+       [TPCPreferences rememberServerListQueryStates] == NO)) {
+    [self historicLogResetChannel];
+  }
 }
 
 #pragma mark -
 #pragma mark Properties
 
-- (nullable IRCTreeItem *)associatedItem
-{
-	if (self.associatedChannel) {
-		return self.associatedChannel;
-	} else {
-		return self.associatedClient;
-	}
+- (nullable IRCTreeItem *)associatedItem {
+  if (self.associatedChannel) {
+    return self.associatedChannel;
+  } else {
+    return self.associatedClient;
+  }
 }
 
-- (NSString *)uniqueIdentifier
-{
-	return self.associatedItem.uniqueIdentifier;
+- (NSString *)uniqueIdentifier {
+  return self.associatedItem.uniqueIdentifier;
 }
 
-- (NSURL *)baseURL
-{
-	return themeController().temporaryURL;
+- (NSURL *)baseURL {
+  return themeController().temporaryURL;
 }
 
-- (TVCLogControllerPrintingOperationQueue *)printingQueue
-{
-	return [TXSharedApplication sharedPrintingQueue];
+- (TVCLogControllerPrintingOperationQueue *)printingQueue {
+  return [TXSharedApplication sharedPrintingQueue];
 }
 
-- (BOOL)inlineMediaEnabledForView
-{
-	IRCChannel *channel = self.associatedChannel;
+- (BOOL)inlineMediaEnabledForView {
+  IRCChannel *channel = self.associatedChannel;
 
-	if (channel == nil) {
-		return NO;
-	}
+  if (channel == nil) {
+    return NO;
+  }
 
-	IRCChannelConfig *config = channel.config;
+  IRCChannelConfig *config = channel.config;
 
-	return (([TPCPreferences showInlineMedia] && config.inlineMediaDisabled == NO) ||
-			([TPCPreferences showInlineMedia] == NO && config.inlineMediaEnabled));
+  return (
+      ([TPCPreferences showInlineMedia] && config.inlineMediaDisabled == NO) ||
+      ([TPCPreferences showInlineMedia] == NO && config.inlineMediaEnabled));
 }
 
-- (BOOL)viewIsSelected
-{
-	return (self.attachedWindow.selectedViewController == self);
+- (BOOL)viewIsSelected {
+  return (self.attachedWindow.selectedViewController == self);
 }
 
-- (BOOL)viewIsVisible
-{
-	IRCChannel *channel = self.associatedChannel;
+- (BOOL)viewIsVisible {
+  IRCChannel *channel = self.associatedChannel;
 
-	if (channel) {
-		return [self.attachedWindow isItemVisible:channel];
-	} else {
-		return [self.attachedWindow isItemVisible:self.associatedClient];
-	}
+  if (channel) {
+    return [self.attachedWindow isItemVisible:channel];
+  } else {
+    return [self.attachedWindow isItemVisible:self.associatedClient];
+  }
 }
 
 #pragma mark -
 #pragma mark Document Append & JavaScript Controller
 
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments
-{
-	[self evaluateFunction:function withArguments:arguments onQueue:YES];
+- (void)evaluateFunction:(NSString *)function
+           withArguments:(nullable NSArray<id> *)arguments {
+  [self evaluateFunction:function withArguments:arguments onQueue:YES];
 }
 
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments onQueue:(BOOL)onQueue
-{
-	NSParameterAssert(function != nil);
+- (void)evaluateFunction:(NSString *)function
+           withArguments:(nullable NSArray<id> *)arguments
+                 onQueue:(BOOL)onQueue {
+  NSParameterAssert(function != nil);
 
-	if (self.terminating) {
-		return;
-	}
+  if (self.terminating) {
+    return;
+  }
 
-	if (onQueue) {
-		TVCLogControllerPrintingBlock scriptBlock = ^(id operation) {
-			[self _evaluateFunction:function withArguments:arguments];
-		};
+  if (onQueue) {
+    TVCLogControllerPrintingBlock scriptBlock = ^(id operation) {
+      [self _evaluateFunction:function withArguments:arguments];
+    };
 
-		_enqueueBlock(scriptBlock)
-	} else {
-		[self _evaluateFunction:function withArguments:arguments];
-	}
+    _enqueueBlock(scriptBlock)
+  } else {
+    [self _evaluateFunction:function withArguments:arguments];
+  }
 }
 
-- (void)_evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments
-{
-	NSParameterAssert(function != nil);
+- (void)_evaluateFunction:(NSString *)function
+            withArguments:(nullable NSArray<id> *)arguments {
+  NSParameterAssert(function != nil);
 
-	if (self.loaded == NO || self.terminating) {
-		return;
-	}
+  if (self.loaded == NO || self.terminating) {
+    return;
+  }
 
-	[self.backingView evaluateFunction:function withArguments:arguments];
+  [self.backingView evaluateFunction:function withArguments:arguments];
 }
 
-- (void)appendToDocumentBody:(NSString *)html withLineNumbers:(NSArray<NSString *> *)lineNumbers
-{
-	NSParameterAssert(html != nil);
+- (void)appendToDocumentBody:(NSString *)html
+             withLineNumbers:(NSArray<NSString *> *)lineNumbers {
+  NSParameterAssert(html != nil);
 
-	[self _evaluateFunction:@"MessageBuffer.bufferElementAppend" withArguments:@[ html, lineNumbers ]];
+  [self _evaluateFunction:@"MessageBuffer.bufferElementAppend"
+            withArguments:@[ html, lineNumbers ]];
 }
 
 #pragma mark -
 #pragma mark Channel Topic Bar
 
-- (void)setInitialTopic
-{
-	NSString *topic = self.associatedChannel.topic;
+- (void)setInitialTopic {
+  NSString *topic = self.associatedChannel.topic;
 
-	[self setTopic:topic];
+  [self setTopic:topic];
 }
 
-- (void)setTopic:(nullable NSString *)topic
-{
-	if (self.terminating) {
-		return;
-	}
+- (void)setTopic:(nullable NSString *)topic {
+  if (self.terminating) {
+    return;
+  }
 
-	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		NSString *topicString = nil;
+  TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+    NSString *topicString = nil;
 
-		if (topic == nil || topic.length == 0) {
-			topicString = TXTLS(@"TVCMainWindow[vi3-23]");
-		} else {
-			topicString = topic;
-		}
+    if (topic == nil || topic.length == 0) {
+      topicString = TXTLS(@"TVCMainWindow[vi3-23]");
+    } else {
+      topicString = topic;
+    }
 
-		NSString *topicTemplate = [TVCLogRenderer renderBody:topicString
-										   forViewController:self
-											  withAttributes:@{
-												  TVCLogRendererConfigurationRenderLinksAttribute : @YES,
-												  TVCLogRendererConfigurationLineTypeAttribute : @(TVCLogLineTypeTopic)
-											  }
-												  resultInfo:NULL];
+    NSString *topicTemplate =
+        [TVCLogRenderer renderBody:topicString
+                 forViewController:self
+                    withAttributes:@{
+                      TVCLogRendererConfigurationRenderLinksAttribute : @YES,
+                      TVCLogRendererConfigurationLineTypeAttribute :
+                          @(TVCLogLineTypeTopic)
+                    }
+                        resultInfo:NULL];
 
-		[self _evaluateFunction:@"Glasstual.setTopicBarValue" withArguments:@[ topicString, topicTemplate ]];
-	};
+    [self _evaluateFunction:@"Glasstual.setTopicBarValue"
+              withArguments:@[ topicString, topicTemplate ]];
+  };
 
-	_enqueueBlockStandalone(operationBlock)
+  _enqueueBlockStandalone(operationBlock)
 }
 
 #pragma mark -
 #pragma mark Move to Bottom/Top
 
-- (void)moveToTop
-{
-	[self _evaluateFunction:@"Glasstual.scrollToTopOfView" withArguments:@[ @(YES) ]];
+- (void)moveToTop {
+  [self _evaluateFunction:@"Glasstual.scrollToTopOfView"
+            withArguments:@[ @(YES) ]];
 }
 
-- (void)moveToBottom
-{
-	[self _evaluateFunction:@"Glasstual.scrollToBottomOfView" withArguments:@[ @(YES) ]];
+- (void)moveToBottom {
+  [self _evaluateFunction:@"Glasstual.scrollToBottomOfView"
+            withArguments:@[ @(YES) ]];
 }
 
 #pragma mark -
 #pragma mark Add/Remove History Mark
 
-- (void)mark
-{
-	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		NSString *markTemplate =
-			[TVCLogRenderer renderTemplateNamed:@"historyIndicator"
-									 attributes:@{@"historyIndicatorMessage" : TXTLS(@"TVCMainWindow[hin-um]")}];
+- (void)mark {
+  TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+    NSString *markTemplate =
+        [TVCLogRenderer renderTemplateNamed:@"historyIndicator"
+                                 attributes:@{
+                                   @"historyIndicatorMessage" :
+                                       TXTLS(@"TVCMainWindow[hin-um]")
+                                 }];
 
-		[self _evaluateFunction:@"_Glasstual.historyIndicatorAdd" withArguments:@[ markTemplate ]];
-	};
+    [self _evaluateFunction:@"_Glasstual.historyIndicatorAdd"
+              withArguments:@[ markTemplate ]];
+  };
 
-	_enqueueBlock(operationBlock);
+  _enqueueBlock(operationBlock);
 }
 
 /* Places the mark after the last line received at or before `date`.
  Used for read markers shared by other clients. */
-- (void)markAtDate:(NSDate *)date
-{
-	NSParameterAssert(date != nil);
+- (void)markAtDate:(NSDate *)date {
+  NSParameterAssert(date != nil);
 
-	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		NSString *markTemplate =
-			[TVCLogRenderer renderTemplateNamed:@"historyIndicator"
-									 attributes:@{@"historyIndicatorMessage" : TXTLS(@"TVCMainWindow[hin-um]")}];
+  TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+    NSString *markTemplate =
+        [TVCLogRenderer renderTemplateNamed:@"historyIndicator"
+                                 attributes:@{
+                                   @"historyIndicatorMessage" :
+                                       TXTLS(@"TVCMainWindow[hin-um]")
+                                 }];
 
-		[self _evaluateFunction:@"_Glasstual.historyIndicatorAddAfterTimestamp"
-				  withArguments:@[ markTemplate, @(date.timeIntervalSince1970) ]];
-	};
+    [self _evaluateFunction:@"_Glasstual.historyIndicatorAddAfterTimestamp"
+              withArguments:@[ markTemplate, @(date.timeIntervalSince1970) ]];
+  };
 
-	_enqueueBlock(operationBlock);
+  _enqueueBlock(operationBlock);
 }
 
-- (void)unmark
-{
-	[self _evaluateFunction:@"_Glasstual.historyIndicatorRemove" withArguments:nil];
+- (void)unmark {
+  [self _evaluateFunction:@"_Glasstual.historyIndicatorRemove"
+            withArguments:nil];
 }
 
-- (void)goToMark
-{
-	[self _evaluateFunction:@"Glasstual.scrollToHistoryIndicator" withArguments:nil];
+- (void)goToMark {
+  [self _evaluateFunction:@"Glasstual.scrollToHistoryIndicator"
+            withArguments:nil];
 }
 
 #pragma mark -
 #pragma mark Reload Scrollback
 
 - (void)appendHistoricMessageFragment:(NSString *)html
-					  withLineNumbers:(NSArray<NSString *> *)lineNumbers
-							 isReload:(BOOL)isReload
-{
-	NSParameterAssert(html != nil);
+                      withLineNumbers:(NSArray<NSString *> *)lineNumbers
+                             isReload:(BOOL)isReload {
+  NSParameterAssert(html != nil);
 
-	[self _evaluateFunction:@"_Glasstual.documentBodyAppendHistoric" withArguments:@[ html, lineNumbers, @(isReload) ]];
+  [self _evaluateFunction:@"_Glasstual.documentBodyAppendHistoric"
+            withArguments:@[ html, lineNumbers, @(isReload) ]];
 }
 
 /* reloadOldLines: is supposed to be called from inside a queue. */
-- (void)reloadOldLines:(NSArray<TVCLogLine *> *)oldLines isReload:(BOOL)isReload
-{
-	NSParameterAssert(oldLines != nil);
+- (void)reloadOldLines:(NSArray<TVCLogLine *> *)oldLines
+              isReload:(BOOL)isReload {
+  NSParameterAssert(oldLines != nil);
 
-	NSMutableArray<NSString *> *lineNumbers = [NSMutableArray array];
+  NSMutableArray<NSString *> *lineNumbers = [NSMutableArray array];
 
-	NSMutableString *patchedAppend = [NSMutableString string];
+  NSMutableString *patchedAppend = [NSMutableString string];
 
-	NSMutableArray<THOPluginDidPostNewMessageConcreteObject *> *pluginObjects = nil;
+  NSMutableArray<THOPluginDidPostNewMessageConcreteObject *> *pluginObjects =
+      nil;
 
-	for (TVCLogLine *logLine in oldLines) {
-		/* Render result info HTML */
-		NSDictionary<NSString *, id> *resultInfo = nil;
+  for (TVCLogLine *logLine in oldLines) {
+    /* Render result info HTML */
+    NSDictionary<NSString *, id> *resultInfo = nil;
 
-		NSString *html = [self renderLogLine:logLine resultInfo:&resultInfo];
+    NSString *html = [self renderLogLine:logLine resultInfo:&resultInfo];
 
-		if (html == nil) {
-			LogToConsoleError("Failed to render log line %{public}@", logLine.description);
+    if (html == nil) {
+      LogToConsoleError("Failed to render log line %{public}@",
+                        logLine.description);
 
-			continue;
-		}
+      continue;
+    }
 
-		[patchedAppend appendString:html];
+    [patchedAppend appendString:html];
 
-		/* Record information about rendering */
-		NSString *lineNumber = logLine.uniqueIdentifier;
+    /* Record information about rendering */
+    NSString *lineNumber = logLine.uniqueIdentifier;
 
-		[lineNumbers addObject:lineNumber];
+    [lineNumbers addObject:lineNumber];
 
-		/* Add reference to plugin concrete object */
-		THOPluginDidPostNewMessageConcreteObject *pluginObject = resultInfo[@"pluginConcreteObject"];
+    /* Add reference to plugin concrete object */
+    THOPluginDidPostNewMessageConcreteObject *pluginObject =
+        resultInfo[@"pluginConcreteObject"];
 
-		if (pluginObject) {
-			if (pluginObjects == nil) {
-				pluginObjects = [NSMutableArray array];
-			}
+    if (pluginObject) {
+      if (pluginObjects == nil) {
+        pluginObjects = [NSMutableArray array];
+      }
 
-			[pluginObjects addObject:pluginObject];
-		}
+      [pluginObjects addObject:pluginObject];
+    }
 
-		/* Record highlights */
-		BOOL highlighted = [resultInfo boolForKey:TVCLogRendererResultsKeywordMatchFoundAttribute];
+    /* Record highlights */
+    BOOL highlighted =
+        [resultInfo boolForKey:TVCLogRendererResultsKeywordMatchFoundAttribute];
 
-		if (highlighted) {
-			@synchronized(self.highlightedLineNumbers) {
-				[self.highlightedLineNumbers addObject:lineNumber];
-			}
-		}
-	}
+    if (highlighted) {
+      @synchronized(self.highlightedLineNumbers) {
+        [self.highlightedLineNumbers addObject:lineNumber];
+      }
+    }
+  }
 
-	/* Render the result in WebKit */
-	[self appendHistoricMessageFragment:patchedAppend withLineNumbers:lineNumbers isReload:isReload];
+  /* Render the result in WebKit */
+  [self appendHistoricMessageFragment:patchedAppend
+                      withLineNumbers:lineNumbers
+                             isReload:isReload];
 
-	/* Inform plugins of new content */
-	for (THOPluginDidPostNewMessageConcreteObject *pluginObject in pluginObjects) {
-		pluginObject.isProcessedInBulk = YES;
+  /* Inform plugins of new content */
+  for (THOPluginDidPostNewMessageConcreteObject
+           *pluginObject in pluginObjects) {
+    pluginObject.isProcessedInBulk = YES;
 
-		[THOPluginDispatcher enqueueDidPostNewMessage:pluginObject];
-	}
+    [THOPluginDispatcher enqueueDidPostNewMessage:pluginObject];
+  }
 }
 
-- (void)maybeReloadHistory
-{
-	if (self.loaded == NO) {
-		return;
-	}
+- (void)maybeReloadHistory {
+  if (self.loaded == NO) {
+    return;
+  }
 
-	if (self.historyLoaded) {
-		return;
-	}
+  if (self.historyLoaded) {
+    return;
+  }
 
-	[self reloadHistory];
+  [self reloadHistory];
 }
 
-- (void)reloadHistory
-{
-	if (self.terminating) {
-		return;
-	}
+- (void)reloadHistory {
+  if (self.terminating) {
+    return;
+  }
 
-	BOOL firstTimeLoadingHistory = (self.historyLoadedForFirstTime == NO);
+  BOOL firstTimeLoadingHistory = (self.historyLoadedForFirstTime == NO);
 
-	IRCChannel *channel = self.associatedChannel;
+  IRCChannel *channel = self.associatedChannel;
 
-	if (
-		/* 1 */ (firstTimeLoadingHistory && [TPCPreferences reloadScrollbackOnLaunch] == NO) ||
-		/* 2 */ channel.isUtility || channel.isDirectChat ||
-		/* 3 */
-		(firstTimeLoadingHistory && channel.isPrivateMessage && [TPCPreferences rememberServerListQueryStates] == NO)) {
-		self.historyLoadedForFirstTime = YES;
+  if (
+      /* 1 */ (firstTimeLoadingHistory &&
+               [TPCPreferences reloadScrollbackOnLaunch] == NO) ||
+      /* 2 */ channel.isUtility || channel.isDirectChat ||
+      /* 3 */
+      (firstTimeLoadingHistory && channel.isPrivateMessage &&
+       [TPCPreferences rememberServerListQueryStates] == NO)) {
+    self.historyLoadedForFirstTime = YES;
 
-		self.historyLoaded = YES;
+    self.historyLoaded = YES;
 
-		[self notifyViewFinishedLoadingHistory];
+    [self notifyViewFinishedLoadingHistory];
 
-		return;
-	} else {
-		BOOL lazyLoadHistory = [RZUserDefaults() boolForKey:@"Optimizations -> Load History Lazily"];
+    return;
+  } else {
+    BOOL lazyLoadHistory =
+        [RZUserDefaults() boolForKey:@"Optimizations -> Load History Lazily"];
 
-		if (lazyLoadHistory && self.visible == NO) {
-			return;
-		}
-	}
+    if (lazyLoadHistory && self.visible == NO) {
+      return;
+    }
+  }
 
-	self.reloadingHistory = YES;
+  self.reloadingHistory = YES;
 
-	void (^reloadBlock)(NSArray *) = ^(NSArray<TVCLogLine *> *objects) {
-		TVCLogLine *lastLine = objects.lastObject;
+  void (^reloadBlock)(NSArray *) = ^(NSArray<TVCLogLine *> *objects) {
+    TVCLogLine *lastLine = objects.lastObject;
 
-		/* Only assign lastLine to self if there is none because
-		 if we do it when there is some, then there will be a big
-		 cluster fuck of incorrect date changes. */
-		if (self.lastLine == nil) {
-			self.lastLine = lastLine;
-		}
+    /* Only assign lastLine to self if there is none because
+     if we do it when there is some, then there will be a big
+     cluster fuck of incorrect date changes. */
+    if (self.lastLine == nil) {
+      self.lastLine = lastLine;
+    }
 
-		[self noteOldestLineCandidate:objects.firstObject];
+    [self noteOldestLineCandidate:objects.firstObject];
 
-		if (firstTimeLoadingHistory) {
-			NSString *newestLineNumber = lastLine.uniqueIdentifier;
+    if (firstTimeLoadingHistory) {
+      NSString *newestLineNumber = lastLine.uniqueIdentifier;
 
-			self.newestLineNumberFromPreviousSession = newestLineNumber;
-		}
+      self.newestLineNumberFromPreviousSession = newestLineNumber;
+    }
 
-		[self reloadOldLines:objects isReload:(firstTimeLoadingHistory == NO)];
+    [self reloadOldLines:objects isReload:(firstTimeLoadingHistory == NO)];
 
-		self.reloadingHistory = NO;
+    self.reloadingHistory = NO;
 
-		self.historyLoaded = YES;
-		self.historyLoadedForFirstTime = YES;
+    self.historyLoaded = YES;
+    self.historyLoadedForFirstTime = YES;
 
-		[self notifyViewFinishedLoadingHistory];
-	};
+    [self notifyViewFinishedLoadingHistory];
+  };
 
-	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		NSDate *limitToDate = [NSDate dateWithTimeIntervalSince1970:self.viewLoadedTimestamp];
+  TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+    NSDate *limitToDate =
+        [NSDate dateWithTimeIntervalSince1970:self.viewLoadedTimestamp];
 
-		[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
-															   ascending:NO
-															  fetchLimit:100
-															 limitToDate:limitToDate
-													 withCompletionBlock:^(NSArray<TVCLogLine *> *objects) {
-														 if ([operation isCancelled]) {
-															 [self.printingQueue finishOperation:operation];
-															 return;
-														 }
+    [TVCLogControllerHistoricLogSharedInstance()
+        fetchEntriesForItem:self.associatedItem
+                  ascending:NO
+                 fetchLimit:100
+                limitToDate:limitToDate
+        withCompletionBlock:^(NSArray<TVCLogLine *> *objects) {
+          if ([operation isCancelled]) {
+            [self.printingQueue finishOperation:operation];
+            return;
+          }
 
-														 reloadBlock(objects.reverseObjectEnumerator.allObjects);
-														 [self.printingQueue finishOperation:operation];
-													 }];
-	};
+          reloadBlock(objects.reverseObjectEnumerator.allObjects);
+          [self.printingQueue finishOperation:operation];
+        }];
+  };
 
-	_enqueueAsynchronousBlockStandalone(operationBlock)
+  _enqueueAsynchronousBlockStandalone(operationBlock)
 }
 
-- (void)reloadTheme
-{
-	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[self _reloadTheme];
-	});
+- (void)reloadTheme {
+  XRPerformBlockAsynchronouslyOnMainQueue(^{
+    [self _reloadTheme];
+  });
 }
 
-- (void)_reloadTheme
-{
-	if (self.terminating) {
-		return;
-	}
+- (void)_reloadTheme {
+  if (self.terminating) {
+    return;
+  }
 
-	if (self.reloadingTheme) {
-		return;
-	}
+  if (self.reloadingTheme) {
+    return;
+  }
 
-	/* Even if the user has never loaded their history, we force this
-	 flag to YES when reloading theme. We do not want history to be
-	 displayed as historic when playing it back after a reload. */
-	self.historyLoadedForFirstTime = YES;
+  /* Even if the user has never loaded their history, we force this
+   flag to YES when reloading theme. We do not want history to be
+   displayed as historic when playing it back after a reload. */
+  self.historyLoadedForFirstTime = YES;
 
-	self.reloadingTheme = YES;
+  self.reloadingTheme = YES;
 
-	[self clearWithReset:NO];
+  [self clearWithReset:NO];
 
-	self.reloadingTheme = NO;
+  self.reloadingTheme = NO;
 }
 
-- (NSString *)dateIndicatorWithDate:(NSDate *)date
-{
-	NSParameterAssert(date != nil);
+- (NSString *)dateIndicatorWithDate:(NSDate *)date {
+  NSParameterAssert(date != nil);
 
-	NSString *dateString = TXFormatDate(date, NSDateFormatterLongStyle, NSDateFormatterNoStyle, NO);
+  NSString *dateString =
+      TXFormatDate(date, NSDateFormatterLongStyle, NSDateFormatterNoStyle, NO);
 
-	return dateString;
+  return dateString;
 }
 
 #pragma mark -
 #pragma mark Utilities
 
-- (void)jumpToCurrentSession
-{
-	NSString *lineNumber = self.newestLineNumberFromPreviousSession;
+- (void)jumpToCurrentSession {
+  NSString *lineNumber = self.newestLineNumberFromPreviousSession;
 
-	if (lineNumber == nil) {
-		lineNumber = self.oldestLineNumber;
-	}
+  if (lineNumber == nil) {
+    lineNumber = self.oldestLineNumber;
+  }
 
-	if (lineNumber == nil) {
-		return;
-	}
+  if (lineNumber == nil) {
+    return;
+  }
 
-	[self jumpToLine:lineNumber];
+  [self jumpToLine:lineNumber];
 }
 
-- (void)jumpToPresent
-{
-	NSString *lineNumber = self.newestLineNumber;
+- (void)jumpToPresent {
+  NSString *lineNumber = self.newestLineNumber;
 
-	if (lineNumber == nil) {
-		lineNumber = self.newestLineNumberFromPreviousSession;
-	}
+  if (lineNumber == nil) {
+    lineNumber = self.newestLineNumberFromPreviousSession;
+  }
 
-	if (lineNumber == nil) {
-		return;
-	}
+  if (lineNumber == nil) {
+    return;
+  }
 
-	[self jumpToLine:lineNumber];
+  [self jumpToLine:lineNumber];
+}
+
+- (void)jumpToLine:(NSString *)lineNumber {
+  [self jumpToLine:lineNumber completionHandler:nil];
 }
 
 - (void)jumpToLine:(NSString *)lineNumber
-{
-	[self jumpToLine:lineNumber completionHandler:nil];
-}
+    completionHandler:(void (^_Nullable)(BOOL result))completionHandler {
+  NSParameterAssert(lineNumber != nil);
 
-- (void)jumpToLine:(NSString *)lineNumber completionHandler:(void (^_Nullable)(BOOL result))completionHandler
-{
-	NSParameterAssert(lineNumber != nil);
+  /* Jumping to line chains callback functions which may take time to load.
+   We do not want invoke the completion handler until we know for certain
+   whether the line was jumped to. We therefore change the completion
+   handler and call it from a bridged function when we are finished. */
+  if (completionHandler) {
+    [self.jumpToLineCallbacks setObject:completionHandler forKey:lineNumber];
+  }
 
-	/* Jumping to line chains callback functions which may take time to load.
-	 We do not want invoke the completion handler until we know for certain
-	 whether the line was jumped to. We therefore change the completion
-	 handler and call it from a bridged function when we are finished. */
-	if (completionHandler) {
-		[self.jumpToLineCallbacks setObject:completionHandler forKey:lineNumber];
-	}
-
-	[self.backingView evaluateFunction:@"Glasstual.jumpToLine" withArguments:@[ lineNumber ]];
+  [self.backingView evaluateFunction:@"Glasstual.jumpToLine"
+                       withArguments:@[ lineNumber ]];
 }
 
 - (void)notifyDidBecomeVisible /* When the view is switched to */
 {
-	[self _evaluateFunction:@"_Glasstual.notifyDidBecomeVisible" withArguments:nil];
+  [self _evaluateFunction:@"_Glasstual.notifyDidBecomeVisible"
+            withArguments:nil];
 
-	[self maybeReloadHistory];
+  [self maybeReloadHistory];
 }
 
-- (void)notifySelectionChanged
-{
-	[self _evaluateFunction:@"_Glasstual.notifySelectionChanged" withArguments:@[ @(self.selected) ]];
+- (void)notifySelectionChanged {
+  [self _evaluateFunction:@"_Glasstual.notifySelectionChanged"
+            withArguments:@[ @(self.selected) ]];
 }
 
-- (void)notifyDidBecomeHidden
-{
-	[self _evaluateFunction:@"_Glasstual.notifyDidBecomeHidden" withArguments:nil];
+- (void)notifyDidBecomeHidden {
+  [self _evaluateFunction:@"_Glasstual.notifyDidBecomeHidden"
+            withArguments:nil];
 }
 
-- (void)notifyViewFinishedLoadingHistory
-{
-	[self _evaluateFunction:@"_Glasstual.viewFinishedLoadingHistory" withArguments:nil];
+- (void)notifyViewFinishedLoadingHistory {
+  [self _evaluateFunction:@"_Glasstual.viewFinishedLoadingHistory"
+            withArguments:nil];
 }
 
-- (void)changeTextSize:(BOOL)bigger
-{
-	double sizeMultiplier = self.attachedWindow.textSizeMultiplier;
+- (void)changeTextSize:(BOOL)bigger {
+  double sizeMultiplier = self.attachedWindow.textSizeMultiplier;
 
-	[self _evaluateFunction:@"Glasstual.changeTextSizeMultiplier" withArguments:@[ @(sizeMultiplier) ]];
+  [self _evaluateFunction:@"Glasstual.changeTextSizeMultiplier"
+            withArguments:@[ @(sizeMultiplier) ]];
 
-	[self _evaluateFunction:@"Glasstual.viewFontSizeChanged" withArguments:@[ @(bigger) ]];
+  [self _evaluateFunction:@"Glasstual.viewFontSizeChanged"
+            withArguments:@[ @(bigger) ]];
 }
 
-- (void)changeScrollbackLimit
-{
-	NSUInteger scrollbackLimit = [TPCPreferences scrollbackVisibleLimit];
+- (void)changeScrollbackLimit {
+  NSUInteger scrollbackLimit = [TPCPreferences scrollbackVisibleLimit];
 
-	[self _evaluateFunction:@"_MessageBuffer.setBufferLimit" withArguments:@[ @(scrollbackLimit) ]];
+  [self _evaluateFunction:@"_MessageBuffer.setBufferLimit"
+            withArguments:@[ @(scrollbackLimit) ]];
 }
 
 #pragma mark -
 #pragma mark Plugins
 
-- (void)notifyJumpToLine:(NSString *)lineNumber successful:(BOOL)successful scrolledToBottom:(BOOL)scrolledToBottom
-{
-	NSParameterAssert(lineNumber != nil);
+- (void)notifyJumpToLine:(NSString *)lineNumber
+              successful:(BOOL)successful
+        scrolledToBottom:(BOOL)scrolledToBottom {
+  NSParameterAssert(lineNumber != nil);
 
-	/* scrolledToBottom was consumed by the WebKit1 automatic scroller.
-	 The WebKit2 scroller lives in JavaScript and tracks this itself. */
-	void (^callbackHandler)(BOOL) = self.jumpToLineCallbacks[lineNumber];
+  /* scrolledToBottom was consumed by the WebKit1 automatic scroller.
+   The WebKit2 scroller lives in JavaScript and tracks this itself. */
+  void (^callbackHandler)(BOOL) = self.jumpToLineCallbacks[lineNumber];
 
-	if (callbackHandler == nil) {
-		return;
-	}
+  if (callbackHandler == nil) {
+    return;
+  }
 
-	/* Remove callback handler first incase the callback handler
-	 tries to jump to same line number again for some reason. */
-	[self.jumpToLineCallbacks removeObjectForKey:lineNumber];
+  /* Remove callback handler first incase the callback handler
+   tries to jump to same line number again for some reason. */
+  [self.jumpToLineCallbacks removeObjectForKey:lineNumber];
 
-	callbackHandler(successful);
+  callbackHandler(successful);
 }
 
-- (void)notifyLinesAddedToView:(NSArray<NSString *> *)lineNumbers
-{
-	NSParameterAssert(lineNumbers != nil);
+- (void)notifyLinesAddedToView:(NSArray<NSString *> *)lineNumbers {
+  NSParameterAssert(lineNumbers != nil);
 
-	if (self.loaded == NO || self.terminating) {
-		return;
-	}
+  if (self.loaded == NO || self.terminating) {
+    return;
+  }
 
-	self.activeLineCount += lineNumbers.count;
+  self.activeLineCount += lineNumbers.count;
 
-	if ([sharedPluginManager() supportsFeature:THOPluginItemSupportedFeatureNewMessagePostedEvent] == NO) {
-		return;
-	}
+  if ([sharedPluginManager()
+          supportsFeature:THOPluginItemSupportedFeatureNewMessagePostedEvent] ==
+      NO) {
+    return;
+  }
 
-	for (NSString *lineNumber in lineNumbers) {
-		[THOPluginDispatcher dequeueDidPostNewMessageWithLineNumber:lineNumber forViewController:self];
-	}
+  for (NSString *lineNumber in lineNumbers) {
+    [THOPluginDispatcher dequeueDidPostNewMessageWithLineNumber:lineNumber
+                                              forViewController:self];
+  }
 }
 
-- (void)notifyLinesRemovedFromView:(NSArray<NSString *> *)lineNumbers
-{
-	NSParameterAssert(lineNumbers != nil);
+- (void)notifyLinesRemovedFromView:(NSArray<NSString *> *)lineNumbers {
+  NSParameterAssert(lineNumbers != nil);
 
-	if (self.loaded == NO || self.terminating) {
-		return;
-	}
+  if (self.loaded == NO || self.terminating) {
+    return;
+  }
 
-	self.activeLineCount -= lineNumbers.count;
+  self.activeLineCount -= lineNumbers.count;
 }
 
-- (void)notifyHistoricLogWillDeleteLines:(NSArray<NSString *> *)lineNumbers
-{
-	NSParameterAssert(lineNumbers != nil);
+- (void)notifyHistoricLogWillDeleteLines:(NSArray<NSString *> *)lineNumbers {
+  NSParameterAssert(lineNumbers != nil);
 
-	/* It is possible for this method to be invoked before loaded is YES
-	 such as when performing a clear. */
-	if (/* self.loaded == NO || */ self.terminating) {
-		return;
-	}
+  /* It is possible for this method to be invoked before loaded is YES
+   such as when performing a clear. */
+  if (/* self.loaded == NO || */ self.terminating) {
+    return;
+  }
 
-	@synchronized(self.highlightedLineNumbers) {
-		[self.highlightedLineNumbers removeObjectsInArray:lineNumbers];
-	}
+  @synchronized(self.highlightedLineNumbers) {
+    [self.highlightedLineNumbers removeObjectsInArray:lineNumbers];
+  }
 }
 
 #pragma mark -
 #pragma mark Inline Media
 
-- (void)processingInlineMediaPayloadSucceeded:(ICLPayload *)payload
-{
-	[self _evaluateFunction:@"_InlineMediaLoader.processPayload" withArguments:@[ payload.javaScriptObject ]];
+- (void)processingInlineMediaPayloadSucceeded:(ICLPayload *)payload {
+  [self _evaluateFunction:@"_InlineMediaLoader.processPayload"
+            withArguments:@[ payload.javaScriptObject ]];
 }
 
-- (void)processingInlineMediaPayload:(ICLPayload *)payload failedWithError:(NSError *)error
-{
-	LogToConsoleError("Processing request for '%{public}@' at '%{public}@' failed with error: %{public}@",
-					  payload.uniqueIdentifier,
-					  payload.lineNumber,
-					  error.localizedDescription);
+- (void)processingInlineMediaPayload:(ICLPayload *)payload
+                     failedWithError:(NSError *)error {
+  LogToConsoleError("Processing request for '%{public}@' at '%{public}@' "
+                    "failed with error: %{public}@",
+                    payload.uniqueIdentifier, payload.lineNumber,
+                    error.localizedDescription);
 }
 
-- (void)processInlineMedia:(NSArray<TLOLinkParserResult *> *)mediaLinks atLineNumber:(NSString *)lineNumber
-{
-	NSParameterAssert(mediaLinks != nil);
-	NSParameterAssert(lineNumber != nil);
+- (void)processInlineMedia:(NSArray<TLOLinkParserResult *> *)mediaLinks
+              atLineNumber:(NSString *)lineNumber {
+  NSParameterAssert(mediaLinks != nil);
+  NSParameterAssert(lineNumber != nil);
 
-	if (mediaLinks.count == 0) {
-		return;
-	}
+  if (mediaLinks.count == 0) {
+    return;
+  }
 
-	[mediaLinks enumerateObjectsUsingBlock:^(TLOLinkParserResult *link, NSUInteger index, BOOL *stop) {
-		[self processInlineMediaAtAddress:link.stringValue
-					 withUniqueIdentifier:link.uniqueIdentifier
-							 atLineNumber:lineNumber
-									index:index];
-	}];
+  [mediaLinks enumerateObjectsUsingBlock:^(TLOLinkParserResult *link,
+                                           NSUInteger index, BOOL *stop) {
+    [self processInlineMediaAtAddress:link.stringValue
+                 withUniqueIdentifier:link.uniqueIdentifier
+                         atLineNumber:lineNumber
+                                index:index];
+  }];
 }
 
 - (void)processInlineMediaAtAddress:(NSString *)address
-			   withUniqueIdentifier:(NSString *)uniqueIdentifier
-					   atLineNumber:(NSString *)lineNumber
-							  index:(NSUInteger)index
-{
-	NSParameterAssert(address != nil);
-	NSParameterAssert(uniqueIdentifier != nil);
-	NSParameterAssert(lineNumber != nil);
+               withUniqueIdentifier:(NSString *)uniqueIdentifier
+                       atLineNumber:(NSString *)lineNumber
+                              index:(NSUInteger)index {
+  NSParameterAssert(address != nil);
+  NSParameterAssert(uniqueIdentifier != nil);
+  NSParameterAssert(lineNumber != nil);
 
-	IRCTreeItem *associatedItem = self.associatedItem;
+  IRCTreeItem *associatedItem = self.associatedItem;
 
-	[TVCLogControllerInlineMediaSharedInstance() processAddress:address
-										   withUniqueIdentifier:uniqueIdentifier
-												   atLineNumber:lineNumber
-														  index:index
-														forItem:associatedItem];
+  [TVCLogControllerInlineMediaSharedInstance() processAddress:address
+                                         withUniqueIdentifier:uniqueIdentifier
+                                                 atLineNumber:lineNumber
+                                                        index:index
+                                                      forItem:associatedItem];
 }
 
 #pragma mark -
 #pragma mark Manage Highlights
 
-- (NSUInteger)numberOfLines
-{
-	return self.activeLineCount;
+- (NSUInteger)numberOfLines {
+  return self.activeLineCount;
 }
 
-- (BOOL)highlightAvailable:(BOOL)previous
-{
-	if (self.loaded == NO || self.terminating) {
-		return NO;
-	}
+- (BOOL)highlightAvailable:(BOOL)previous {
+  if (self.loaded == NO || self.terminating) {
+    return NO;
+  }
 
-	@synchronized(self.highlightedLineNumbers) {
-		return (self.highlightedLineNumbers.count > 0);
-	}
+  @synchronized(self.highlightedLineNumbers) {
+    return (self.highlightedLineNumbers.count > 0);
+  }
 }
 
-- (void)nextHighlight
-{
-	if (self.loaded == NO || self.terminating) {
-		return;
-	}
+- (void)nextHighlight {
+  if (self.loaded == NO || self.terminating) {
+    return;
+  }
 
-	@synchronized(self.highlightedLineNumbers) {
-		if (self.highlightedLineNumbers.count == 0) {
-			return;
-		}
+  @synchronized(self.highlightedLineNumbers) {
+    if (self.highlightedLineNumbers.count == 0) {
+      return;
+    }
 
-		if ([self.highlightedLineNumbers containsObject:self.lastVisitedHighlight]) {
-			NSUInteger hli_ci = [self.highlightedLineNumbers indexOfObject:self.lastVisitedHighlight];
+    if ([self.highlightedLineNumbers
+            containsObject:self.lastVisitedHighlight]) {
+      NSUInteger hli_ci =
+          [self.highlightedLineNumbers indexOfObject:self.lastVisitedHighlight];
 
-			if (hli_ci == (self.highlightedLineNumbers.count - 1)) {
-				/* Circle around back to the beginning of the list. */
-				self.lastVisitedHighlight = self.highlightedLineNumbers[0];
-			} else {
-				self.lastVisitedHighlight = self.highlightedLineNumbers[(hli_ci + 1)];
-			}
-		} else {
-			self.lastVisitedHighlight = self.highlightedLineNumbers[0];
-		}
+      if (hli_ci == (self.highlightedLineNumbers.count - 1)) {
+        /* Circle around back to the beginning of the list. */
+        self.lastVisitedHighlight = self.highlightedLineNumbers[0];
+      } else {
+        self.lastVisitedHighlight = self.highlightedLineNumbers[(hli_ci + 1)];
+      }
+    } else {
+      self.lastVisitedHighlight = self.highlightedLineNumbers[0];
+    }
 
-		[self jumpToLine:self.lastVisitedHighlight];
-	}
+    [self jumpToLine:self.lastVisitedHighlight];
+  }
 }
 
-- (void)previousHighlight
-{
-	if (self.loaded == NO || self.terminating) {
-		return;
-	}
+- (void)previousHighlight {
+  if (self.loaded == NO || self.terminating) {
+    return;
+  }
 
-	@synchronized(self.highlightedLineNumbers) {
-		if (self.highlightedLineNumbers.count == 0) {
-			return;
-		}
+  @synchronized(self.highlightedLineNumbers) {
+    if (self.highlightedLineNumbers.count == 0) {
+      return;
+    }
 
-		if ([self.highlightedLineNumbers containsObject:self.lastVisitedHighlight]) {
-			NSInteger hli_ci = [self.highlightedLineNumbers indexOfObject:self.lastVisitedHighlight];
+    if ([self.highlightedLineNumbers
+            containsObject:self.lastVisitedHighlight]) {
+      NSInteger hli_ci =
+          [self.highlightedLineNumbers indexOfObject:self.lastVisitedHighlight];
 
-			if (hli_ci == 0) {
-				/* Circle around back to the end of the list. */
-				self.lastVisitedHighlight = self.highlightedLineNumbers[(self.highlightedLineNumbers.count - 1)];
-			} else {
-				self.lastVisitedHighlight = self.highlightedLineNumbers[(hli_ci - 1)];
-			}
-		} else {
-			self.lastVisitedHighlight = self.highlightedLineNumbers[0];
-		}
+      if (hli_ci == 0) {
+        /* Circle around back to the end of the list. */
+        self.lastVisitedHighlight = self.highlightedLineNumbers[(
+            self.highlightedLineNumbers.count - 1)];
+      } else {
+        self.lastVisitedHighlight = self.highlightedLineNumbers[(hli_ci - 1)];
+      }
+    } else {
+      self.lastVisitedHighlight = self.highlightedLineNumbers[0];
+    }
 
-		[self jumpToLine:self.lastVisitedHighlight];
-	}
+    [self jumpToLine:self.lastVisitedHighlight];
+  }
 }
 
-- (void)clearWithReset:(BOOL)clearWithReset
-{
-	if (self.terminating) {
-		return;
-	}
+- (void)clearWithReset:(BOOL)clearWithReset {
+  if (self.terminating) {
+    return;
+  }
 
-	[self.printingQueue cancelOperationsForViewController:self];
+  [self.printingQueue cancelOperationsForViewController:self];
 
-	if (clearWithReset) {
-		[self historicLogResetChannel];
-	}
+  if (clearWithReset) {
+    [self historicLogResetChannel];
+  }
 
-	@synchronized(self.highlightedLineNumbers) {
-		[self.highlightedLineNumbers removeAllObjects];
-	}
+  @synchronized(self.highlightedLineNumbers) {
+    [self.highlightedLineNumbers removeAllObjects];
+  }
 
-	self.activeLineCount = 0;
+  self.activeLineCount = 0;
 
-	self.lastVisitedHighlight = nil;
+  self.lastVisitedHighlight = nil;
 
-	self.oldestLineNumber = nil;
-	self.newestLineNumber = nil;
+  self.oldestLineNumber = nil;
+  self.newestLineNumber = nil;
 
-	self.lastLine = nil;
-	self.oldestLine = nil;
+  self.lastLine = nil;
+  self.oldestLine = nil;
 
-	self.loaded = NO;
+  self.loaded = NO;
 
-	self.reloadingHistory = NO;
+  self.reloadingHistory = NO;
 
-	self.historyLoaded = NO;
+  self.historyLoaded = NO;
 
-	[self loadInitialDocument];
+  [self loadInitialDocument];
 }
 
-- (void)clear
-{
-	if (self.terminating) {
-		return;
-	}
+- (void)clear {
+  if (self.terminating) {
+    return;
+  }
 
-	[self clearWithReset:YES];
+  [self clearWithReset:YES];
 }
 
 #pragma mark -
 #pragma mark History
 
 - (void)renderLogLinesBeforeLineNumber:(NSString *)lineNumber
-				  maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
-					   completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
-{
-	[self _renderLogLinesAfter:NO
-					lineNumber:lineNumber
-		  maximumNumberOfLines:maximumNumberOfLines
-			   completionBlock:completionBlock];
+                  maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+                       completionBlock:
+                           (void (^)(NSArray<NSDictionary<NSString *, id> *> *))
+                               completionBlock {
+  [self _renderLogLinesAfter:NO
+                  lineNumber:lineNumber
+        maximumNumberOfLines:maximumNumberOfLines
+             completionBlock:completionBlock];
 }
 
 - (void)renderLogLinesAfterLineNumber:(NSString *)lineNumber
-				 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
-					  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
-{
-	[self _renderLogLinesAfter:YES
-					lineNumber:lineNumber
-		  maximumNumberOfLines:maximumNumberOfLines
-			   completionBlock:completionBlock];
+                 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+                      completionBlock:
+                          (void (^)(NSArray<NSDictionary<NSString *, id> *> *))
+                              completionBlock {
+  [self _renderLogLinesAfter:YES
+                  lineNumber:lineNumber
+        maximumNumberOfLines:maximumNumberOfLines
+             completionBlock:completionBlock];
 }
 
 - (void)_renderLogLinesAfter:(BOOL)after
-				  lineNumber:(NSString *)lineNumber
-		maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
-			 completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
-{
-	NSParameterAssert(lineNumber != nil);
-	NSParameterAssert(maximumNumberOfLines > 0);
-	NSParameterAssert(completionBlock != nil);
+                  lineNumber:(NSString *)lineNumber
+        maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+             completionBlock:
+                 (void (^)(NSArray<NSDictionary<NSString *, id> *> *))
+                     completionBlock {
+  NSParameterAssert(lineNumber != nil);
+  NSParameterAssert(maximumNumberOfLines > 0);
+  NSParameterAssert(completionBlock != nil);
 
-	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		void (^historicLogCompletionBlock)(NSArray *) = ^(NSArray<TVCLogLine *> *entries) {
-			if ([operation isCancelled]) {
-				return;
-			}
+  TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+    void (^historicLogCompletionBlock)(NSArray *) =
+        ^(NSArray<TVCLogLine *> *entries) {
+          if ([operation isCancelled]) {
+            return;
+          }
 
-			[self _renderLogLinesAfterLineNumberPostFlight:entries completionBlock:completionBlock];
-		};
+          [self _renderLogLinesAfterLineNumberPostFlight:entries
+                                         completionBlock:completionBlock];
+        };
 
-		if (after == NO) {
-			void (^beforeCompletionBlock)(NSArray *) = ^(NSArray<TVCLogLine *> *entries) {
-				if ([operation isCancelled]) {
-					return;
-				}
+    if (after == NO) {
+      void (^beforeCompletionBlock)(NSArray *) =
+          ^(NSArray<TVCLogLine *> *entries) {
+            if ([operation isCancelled]) {
+              return;
+            }
 
-				[self noteOldestLineCandidate:entries.firstObject];
+            [self noteOldestLineCandidate:entries.firstObject];
 
-				/* The local store has nothing older. The server might. */
-				if (entries.count == 0) {
-					[self _noteLocalScrollbackExhausted];
-				}
+            /* The local store has nothing older. The server might. */
+            if (entries.count == 0) {
+              [self _noteLocalScrollbackExhausted];
+            }
 
-				historicLogCompletionBlock(entries);
-			};
+            historicLogCompletionBlock(entries);
+          };
 
-			[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
-													  beforeUniqueIdentifier:lineNumber
-																  fetchLimit:maximumNumberOfLines
-																 limitToDate:nil
-														 withCompletionBlock:beforeCompletionBlock];
-		} else {
-			[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
-													   afterUniqueIdentifier:lineNumber
-																  fetchLimit:maximumNumberOfLines
-																 limitToDate:nil
-														 withCompletionBlock:historicLogCompletionBlock];
-		}
-	};
+      [TVCLogControllerHistoricLogSharedInstance()
+             fetchEntriesForItem:self.associatedItem
+          beforeUniqueIdentifier:lineNumber
+                      fetchLimit:maximumNumberOfLines
+                     limitToDate:nil
+             withCompletionBlock:beforeCompletionBlock];
+    } else {
+      [TVCLogControllerHistoricLogSharedInstance()
+            fetchEntriesForItem:self.associatedItem
+          afterUniqueIdentifier:lineNumber
+                     fetchLimit:maximumNumberOfLines
+                    limitToDate:nil
+            withCompletionBlock:historicLogCompletionBlock];
+    }
+  };
 
-	_enqueueBlockStandalone(operationBlock)
+  _enqueueBlockStandalone(operationBlock)
 }
 
 - (void)renderLogLinesAfterLineNumber:(NSString *)lineNumberAfter
-					 beforeLineNumber:(NSString *)lineNumberBefore
-				 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
-					  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))completionBlock
-{
-	NSParameterAssert(lineNumberAfter != nil);
-	NSParameterAssert(lineNumberBefore != nil);
-	NSParameterAssert(completionBlock != nil);
+                     beforeLineNumber:(NSString *)lineNumberBefore
+                 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+                      completionBlock:
+                          (void (^)(NSArray<NSDictionary<NSString *, id> *>
+                                        *_Nonnull))completionBlock {
+  NSParameterAssert(lineNumberAfter != nil);
+  NSParameterAssert(lineNumberBefore != nil);
+  NSParameterAssert(completionBlock != nil);
 
-	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		void (^historicLogCompletionBlock)(NSArray *) = ^(NSArray<TVCLogLine *> *entries) {
-			if ([operation isCancelled]) {
-				return;
-			}
+  TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+    void (^historicLogCompletionBlock)(NSArray *) =
+        ^(NSArray<TVCLogLine *> *entries) {
+          if ([operation isCancelled]) {
+            return;
+          }
 
-			[self _renderLogLinesAfterLineNumberPostFlight:entries completionBlock:completionBlock];
-		};
+          [self _renderLogLinesAfterLineNumberPostFlight:entries
+                                         completionBlock:completionBlock];
+        };
 
-		[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
-												   afterUniqueIdentifier:lineNumberAfter
-												  beforeUniqueIdentifier:lineNumberBefore
-															  fetchLimit:maximumNumberOfLines
-													 withCompletionBlock:historicLogCompletionBlock];
-	};
+    [TVCLogControllerHistoricLogSharedInstance()
+           fetchEntriesForItem:self.associatedItem
+         afterUniqueIdentifier:lineNumberAfter
+        beforeUniqueIdentifier:lineNumberBefore
+                    fetchLimit:maximumNumberOfLines
+           withCompletionBlock:historicLogCompletionBlock];
+  };
 
-	_enqueueBlockStandalone(operationBlock)
+  _enqueueBlockStandalone(operationBlock)
 }
 
-- (void)renderLogLineAtLineNumber:(NSString *)lineNumber
-			  numberOfLinesBefore:(NSUInteger)numberOfLinesBefore
-			   numberOfLinesAfter:(NSUInteger)numberOfLinesAfter
-				  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))completionBlock
-{
-	NSParameterAssert(lineNumber != nil);
-	NSParameterAssert(completionBlock != nil);
+- (void)
+    renderLogLineAtLineNumber:(NSString *)lineNumber
+          numberOfLinesBefore:(NSUInteger)numberOfLinesBefore
+           numberOfLinesAfter:(NSUInteger)numberOfLinesAfter
+              completionBlock:
+                  (void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))
+                      completionBlock {
+  NSParameterAssert(lineNumber != nil);
+  NSParameterAssert(completionBlock != nil);
 
-	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		void (^historicLogCompletionBlock)(NSArray *) = ^(NSArray<TVCLogLine *> *entries) {
-			if ([operation isCancelled]) {
-				return;
-			}
+  TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+    void (^historicLogCompletionBlock)(NSArray *) =
+        ^(NSArray<TVCLogLine *> *entries) {
+          if ([operation isCancelled]) {
+            return;
+          }
 
-			[self _renderLogLinesAfterLineNumberPostFlight:entries completionBlock:completionBlock];
-		};
+          [self _renderLogLinesAfterLineNumberPostFlight:entries
+                                         completionBlock:completionBlock];
+        };
 
-		[TVCLogControllerHistoricLogSharedInstance() fetchEntriesForItem:self.associatedItem
-													withUniqueIdentifier:lineNumber
-														beforeFetchLimit:numberOfLinesBefore
-														 afterFetchLimit:numberOfLinesAfter
-															 limitToDate:nil
-													 withCompletionBlock:historicLogCompletionBlock];
-	};
+    [TVCLogControllerHistoricLogSharedInstance()
+         fetchEntriesForItem:self.associatedItem
+        withUniqueIdentifier:lineNumber
+            beforeFetchLimit:numberOfLinesBefore
+             afterFetchLimit:numberOfLinesAfter
+                 limitToDate:nil
+         withCompletionBlock:historicLogCompletionBlock];
+  };
 
-	_enqueueBlockStandalone(operationBlock)
+  _enqueueBlockStandalone(operationBlock)
 }
 
-- (void)_renderLogLinesAfterLineNumberPostFlight:(NSArray<TVCLogLine *> *)logLines
-								 completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock
-{
-	NSParameterAssert(logLines != nil);
-	NSParameterAssert(completionBlock != nil);
+- (void)
+    _renderLogLinesAfterLineNumberPostFlight:(NSArray<TVCLogLine *> *)logLines
+                             completionBlock:
+                                 (void (^)(
+                                     NSArray<NSDictionary<NSString *, id> *> *))
+                                     completionBlock {
+  NSParameterAssert(logLines != nil);
+  NSParameterAssert(completionBlock != nil);
 
-	NSMutableArray<NSDictionary<NSString *, id> *> *renderedLogLines =
-		[NSMutableArray arrayWithCapacity:logLines.count];
+  NSMutableArray<NSDictionary<NSString *, id> *> *renderedLogLines =
+      [NSMutableArray arrayWithCapacity:logLines.count];
 
-	NSMutableArray<THOPluginDidPostNewMessageConcreteObject *> *pluginObjects = nil;
+  NSMutableArray<THOPluginDidPostNewMessageConcreteObject *> *pluginObjects =
+      nil;
 
-	for (TVCLogLine *logLine in logLines) {
-		/* Render result info HTML */
-		NSDictionary<NSString *, id> *resultInfo = nil;
+  for (TVCLogLine *logLine in logLines) {
+    /* Render result info HTML */
+    NSDictionary<NSString *, id> *resultInfo = nil;
 
-		NSString *html = [self renderLogLine:logLine resultInfo:&resultInfo];
+    NSString *html = [self renderLogLine:logLine resultInfo:&resultInfo];
 
-		if (html == nil) {
-			LogToConsoleError("Failed to render log line %{public}@", logLine.description);
+    if (html == nil) {
+      LogToConsoleError("Failed to render log line %{public}@",
+                        logLine.description);
 
-			continue;
-		}
+      continue;
+    }
 
-		/* Record information about rendering */
-		NSString *lineNumber = logLine.uniqueIdentifier;
+    /* Record information about rendering */
+    NSString *lineNumber = logLine.uniqueIdentifier;
 
-		[renderedLogLines addObject:@{
-			@"lineNumber" : lineNumber,
-			@"html" : html,
-			@"timestamp" : @(logLine.receivedAt.timeIntervalSince1970)
-		}];
+    [renderedLogLines addObject:@{
+      @"lineNumber" : lineNumber,
+      @"html" : html,
+      @"timestamp" : @(logLine.receivedAt.timeIntervalSince1970)
+    }];
 
-		/* Add reference to plugin concrete object */
-		THOPluginDidPostNewMessageConcreteObject *pluginObject = resultInfo[@"pluginConcreteObject"];
+    /* Add reference to plugin concrete object */
+    THOPluginDidPostNewMessageConcreteObject *pluginObject =
+        resultInfo[@"pluginConcreteObject"];
 
-		if (pluginObject) {
-			if (pluginObjects == nil) {
-				pluginObjects = [NSMutableArray array];
-			}
+    if (pluginObject) {
+      if (pluginObjects == nil) {
+        pluginObjects = [NSMutableArray array];
+      }
 
-			[pluginObjects addObject:pluginObject];
-		}
-	}
+      [pluginObjects addObject:pluginObject];
+    }
+  }
 
-	/* Inform plugins of new content */
-	for (THOPluginDidPostNewMessageConcreteObject *pluginObject in pluginObjects) {
-		pluginObject.isProcessedInBulk = YES;
+  /* Inform plugins of new content */
+  for (THOPluginDidPostNewMessageConcreteObject
+           *pluginObject in pluginObjects) {
+    pluginObject.isProcessedInBulk = YES;
 
-		[THOPluginDispatcher enqueueDidPostNewMessage:pluginObject];
-	}
+    [THOPluginDispatcher enqueueDidPostNewMessage:pluginObject];
+  }
 
-	/* Finish */
-	completionBlock([renderedLogLines copy]);
+  /* Finish */
+  completionBlock([renderedLogLines copy]);
 }
 
 #pragma mark -
 #pragma mark Remote History
 
-- (void)noteOldestLineCandidate:(nullable TVCLogLine *)logLine
-{
-	if (logLine == nil) {
-		return;
-	}
+- (void)noteOldestLineCandidate:(nullable TVCLogLine *)logLine {
+  if (logLine == nil) {
+    return;
+  }
 
-	TVCLogLine *oldestLine = self.oldestLine;
+  TVCLogLine *oldestLine = self.oldestLine;
 
-	if (oldestLine == nil || [logLine.receivedAt compare:oldestLine.receivedAt] == NSOrderedAscending) {
-		self.oldestLine = logLine;
-	}
+  if (oldestLine == nil || [logLine.receivedAt compare:oldestLine.receivedAt] ==
+                               NSOrderedAscending) {
+    self.oldestLine = logLine;
+  }
 }
 
-- (void)_noteLocalScrollbackExhausted
-{
-	IRCChannel *channel = self.associatedChannel;
+- (void)_noteLocalScrollbackExhausted {
+  IRCChannel *channel = self.associatedChannel;
 
-	if (channel == nil) {
-		return;
-	}
+  if (channel == nil) {
+    return;
+  }
 
-	TVCLogLine *oldestLine = self.oldestLine;
+  TVCLogLine *oldestLine = self.oldestLine;
 
-	if (oldestLine == nil) {
-		return;
-	}
+  if (oldestLine == nil) {
+    return;
+  }
 
-	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[self.associatedClient requestChatHistoryBeforeDate:oldestLine.receivedAt inChannel:channel];
-	});
+  XRPerformBlockAsynchronouslyOnMainQueue(^{
+    [self.associatedClient requestChatHistoryBeforeDate:oldestLine.receivedAt
+                                              inChannel:channel];
+  });
 }
 
 /* Lines the server replayed from before the oldest line in the view.
  They are rendered above the scrollback and are not written to the
  store, which is append only; the server is their store. */
-- (void)prependHistoricLogLines:(NSArray<TVCLogLine *> *)logLines
-{
-	NSParameterAssert(logLines != nil);
+- (void)prependHistoricLogLines:(NSArray<TVCLogLine *> *)logLines {
+  NSParameterAssert(logLines != nil);
 
-	if (self.terminating || logLines.count == 0) {
-		return;
-	}
+  if (self.terminating || logLines.count == 0) {
+    return;
+  }
 
-	IRCTreeItem *item = self.associatedItem;
+  IRCTreeItem *item = self.associatedItem;
 
-	for (TVCLogLine *logLine in logLines) {
-		[TVCLogControllerHistoricLogSharedInstance() indexLogLine:logLine forItem:item];
-	}
+  for (TVCLogLine *logLine in logLines) {
+    [TVCLogControllerHistoricLogSharedInstance() indexLogLine:logLine
+                                                      forItem:item];
+  }
 
-	[self noteOldestLineCandidate:logLines.firstObject];
+  [self noteOldestLineCandidate:logLines.firstObject];
 
-	TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
-		NSMutableArray<NSString *> *lineNumbers = [NSMutableArray arrayWithCapacity:logLines.count];
+  TVCLogControllerPrintingBlock operationBlock = ^(id operation) {
+    NSMutableArray<NSString *> *lineNumbers =
+        [NSMutableArray arrayWithCapacity:logLines.count];
 
-		NSMutableString *html = [NSMutableString string];
+    NSMutableString *html = [NSMutableString string];
 
-		for (TVCLogLine *logLine in logLines) {
-			NSDictionary<NSString *, id> *resultInfo = nil;
+    for (TVCLogLine *logLine in logLines) {
+      NSDictionary<NSString *, id> *resultInfo = nil;
 
-			NSString *lineHTML = [self renderLogLine:logLine resultInfo:&resultInfo];
+      NSString *lineHTML = [self renderLogLine:logLine resultInfo:&resultInfo];
 
-			if (lineHTML == nil) {
-				LogToConsoleError("Failed to render log line %{public}@", logLine.description);
+      if (lineHTML == nil) {
+        LogToConsoleError("Failed to render log line %{public}@",
+                          logLine.description);
 
-				continue;
-			}
+        continue;
+      }
 
-			[html appendString:lineHTML];
+      [html appendString:lineHTML];
 
-			[lineNumbers addObject:logLine.uniqueIdentifier];
-		}
+      [lineNumbers addObject:logLine.uniqueIdentifier];
+    }
 
-		if (lineNumbers.count == 0) {
-			return;
-		}
+    if (lineNumbers.count == 0) {
+      return;
+    }
 
-		[self _evaluateFunction:@"_Glasstual.documentBodyPrependRemoteHistory"
-				  withArguments:@[ [html copy], [lineNumbers copy] ]];
-	};
+    [self _evaluateFunction:@"_Glasstual.documentBodyPrependRemoteHistory"
+              withArguments:@[ [html copy], [lineNumbers copy] ]];
+  };
 
-	_enqueueBlock(operationBlock);
+  _enqueueBlock(operationBlock);
 }
 
 #pragma mark -
 #pragma mark Print
 
-- (void)print:(TVCLogLine *)logLine
-{
-	[self print:logLine completionBlock:NULL];
+- (void)print:(TVCLogLine *)logLine {
+  [self print:logLine completionBlock:NULL];
 }
 
 - (void)print:(TVCLogLine *)logLine
-	completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)postPrintBlock
-{
-	NSParameterAssert(logLine != nil);
+    completionBlock:
+        (nullable TVCLogControllerPrintOperationCompletionBlock)postPrintBlock {
+  NSParameterAssert(logLine != nil);
 
-	if (self.terminating) {
-		return;
-	}
+  if (self.terminating) {
+    return;
+  }
 
-	if ([logLine isKindOfClass:[TVCLogLineMutable class]]) {
-		logLine = [logLine copy];
-	}
+  if ([logLine isKindOfClass:[TVCLogLineMutable class]]) {
+    logLine = [logLine copy];
+  }
 
-	self.lastLine = logLine;
+  self.lastLine = logLine;
 
-	[self noteOldestLineCandidate:logLine];
+  [self noteOldestLineCandidate:logLine];
 
-	TVCLogControllerPrintingBlock printBlock = ^(id operation) {
-		NSDictionary<NSString *, id> *resultInfo = nil;
+  TVCLogControllerPrintingBlock printBlock = ^(id operation) {
+    NSDictionary<NSString *, id> *resultInfo = nil;
 
-		NSString *html = [self renderLogLine:logLine resultInfo:&resultInfo];
+    NSString *html = [self renderLogLine:logLine resultInfo:&resultInfo];
 
-		if (html == nil) {
-			LogToConsoleError("Failed to render log line %{public}@", logLine.description);
+    if (html == nil) {
+      LogToConsoleError("Failed to render log line %{public}@",
+                        logLine.description);
 
-			return;
-		}
+      return;
+    }
 
-		NSString *lineNumber = logLine.uniqueIdentifier;
+    NSString *lineNumber = logLine.uniqueIdentifier;
 
-		NSSet<IRCChannelUser *> *listOfUsers = resultInfo[TVCLogRendererResultsListOfUsersFoundAttribute];
+    NSSet<IRCChannelUser *> *listOfUsers =
+        resultInfo[TVCLogRendererResultsListOfUsersFoundAttribute];
 
-		BOOL processInlineMedia = [resultInfo boolForKey:@"processInlineMedia"];
+    BOOL processInlineMedia = [resultInfo boolForKey:@"processInlineMedia"];
 
-		BOOL highlighted = [resultInfo boolForKey:TVCLogRendererResultsKeywordMatchFoundAttribute];
+    BOOL highlighted =
+        [resultInfo boolForKey:TVCLogRendererResultsKeywordMatchFoundAttribute];
 
-		THOPluginDidPostNewMessageConcreteObject *pluginObject = resultInfo[@"pluginConcreteObject"];
+    THOPluginDidPostNewMessageConcreteObject *pluginObject =
+        resultInfo[@"pluginConcreteObject"];
 
-		XRPerformBlockAsynchronouslyOnMainQueue(^{
-			if (self.terminating) {
-				return;
-			}
+    XRPerformBlockAsynchronouslyOnMainQueue(^{
+      if (self.terminating) {
+        return;
+      }
 
-			if (self.oldestLineNumber == nil) {
-				self.oldestLineNumber = lineNumber;
-			}
+      if (self.oldestLineNumber == nil) {
+        self.oldestLineNumber = lineNumber;
+      }
 
-			self.newestLineNumber = lineNumber;
+      self.newestLineNumber = lineNumber;
 
-			IRCClient *client = self.associatedClient;
-			IRCChannel *channel = self.associatedChannel;
+      IRCClient *client = self.associatedClient;
+      IRCChannel *channel = self.associatedChannel;
 
-			if (highlighted) {
-				@synchronized(self.highlightedLineNumbers) {
-					[self.highlightedLineNumbers addObject:lineNumber];
-				}
+      if (highlighted) {
+        @synchronized(self.highlightedLineNumbers) {
+          [self.highlightedLineNumbers addObject:lineNumber];
+        }
 
-				[client cacheHighlightInChannel:channel withLogLine:logLine];
-			}
+        [client cacheHighlightInChannel:channel withLogLine:logLine];
+      }
 
-			if (pluginObject) {
-				[THOPluginDispatcher enqueueDidPostNewMessage:resultInfo[@"pluginConcreteObject"]];
-			}
+      if (pluginObject) {
+        [THOPluginDispatcher
+            enqueueDidPostNewMessage:resultInfo[@"pluginConcreteObject"]];
+      }
 
-			[self appendToDocumentBody:html withLineNumbers:@[ lineNumber ]];
+      [self appendToDocumentBody:html withLineNumbers:@[ lineNumber ]];
 
-			/* TODO: Modify logic of inline media to only truly
-			 process images if the line is in fact on the WebView. */
-			/* Begin processing inline media */
-			/* We go through the inline media list here and pass to the loader now so
-			 that we know the links have hit the WebView before we even try loading them. */
-			if (processInlineMedia) {
-				NSArray<TLOLinkParserResult *> *listOfLinks =
-					resultInfo[TVCLogRendererResultsListOfLinksInBodyAttribute];
+      /* TODO: Modify logic of inline media to only truly
+       process images if the line is in fact on the WebView. */
+      /* Begin processing inline media */
+      /* We go through the inline media list here and pass to the loader now so
+       that we know the links have hit the WebView before we even try loading
+       them. */
+      if (processInlineMedia) {
+        NSArray<TLOLinkParserResult *> *listOfLinks =
+            resultInfo[TVCLogRendererResultsListOfLinksInBodyAttribute];
 
-				[self processInlineMedia:listOfLinks atLineNumber:lineNumber];
-			}
+        [self processInlineMedia:listOfLinks atLineNumber:lineNumber];
+      }
 
-			/* Log this log line */
-			[TVCLogControllerHistoricLogSharedInstance() writeNewEntryWithLogLine:logLine forItem:self.associatedItem];
+      /* Log this log line */
+      [TVCLogControllerHistoricLogSharedInstance()
+          writeNewEntryWithLogLine:logLine
+                           forItem:self.associatedItem];
 
-			/* Using information provided by conversation tracking we can update 
-			 our internal array of favored nicknames for nick completion. */
-			if (logLine.memberType == TVCLogLineMemberTypeLocalUser) {
-				[listOfUsers.allObjects makeObjectsPerformSelector:@selector(outgoingConversation)];
-			} else {
-				[listOfUsers.allObjects makeObjectsPerformSelector:@selector(conversation)];
-			}
+      /* Using information provided by conversation tracking we can update
+       our internal array of favored nicknames for nick completion. */
+      if (logLine.memberType == TVCLogLineMemberTypeLocalUser) {
+        [listOfUsers.allObjects
+            makeObjectsPerformSelector:@selector(outgoingConversation)];
+      } else {
+        [listOfUsers.allObjects
+            makeObjectsPerformSelector:@selector(conversation)];
+      }
 
-			if (postPrintBlock == nil) {
-				return;
-			}
+      if (postPrintBlock == nil) {
+        return;
+      }
 
-			TVCLogControllerPrintOperationContext *contextObject = [TVCLogControllerPrintOperationContext new];
+      TVCLogControllerPrintOperationContext *contextObject =
+          [TVCLogControllerPrintOperationContext new];
 
-			contextObject.client = client;
-			contextObject.channel = channel;
-			contextObject.highlight = highlighted;
-			contextObject.logLine = logLine;
-			contextObject.lineNumber = lineNumber;
+      contextObject.client = client;
+      contextObject.channel = channel;
+      contextObject.highlight = highlighted;
+      contextObject.logLine = logLine;
+      contextObject.lineNumber = lineNumber;
 
-			postPrintBlock(contextObject);
-		});
-	};
+      postPrintBlock(contextObject);
+    });
+  };
 
-	_enqueueBlock(printBlock)
+  _enqueueBlock(printBlock)
 }
 
 #pragma mark -
 #pragma mark Reactions
 
 - (void)noteReaction:(NSString *)emoji
-		   fromNickname:(NSString *)nickname
-	toMessageIdentifier:(NSString *)messageIdentifier
-{
-	NSParameterAssert(emoji != nil);
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(messageIdentifier != nil);
+           fromNickname:(NSString *)nickname
+    toMessageIdentifier:(NSString *)messageIdentifier {
+  NSParameterAssert(emoji != nil);
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(messageIdentifier != nil);
 
-	if (emoji.length == 0 || nickname.length == 0 || messageIdentifier.length == 0) {
-		return;
-	}
+  if (emoji.length == 0 || nickname.length == 0 ||
+      messageIdentifier.length == 0) {
+    return;
+  }
 
-	@synchronized(self.reactionsByMessageIdentifier) {
-		NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *reactions =
-			self.reactionsByMessageIdentifier[messageIdentifier];
+  @synchronized(self.reactionsByMessageIdentifier) {
+    NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *>
+        *reactions = self.reactionsByMessageIdentifier[messageIdentifier];
 
-		if (reactions == nil) {
-			reactions = [NSMutableDictionary dictionary];
+    if (reactions == nil) {
+      reactions = [NSMutableDictionary dictionary];
 
-			self.reactionsByMessageIdentifier[messageIdentifier] = reactions;
-		}
+      self.reactionsByMessageIdentifier[messageIdentifier] = reactions;
+    }
 
-		NSMutableOrderedSet<NSString *> *nicknames = reactions[emoji];
+    NSMutableOrderedSet<NSString *> *nicknames = reactions[emoji];
 
-		if (nicknames == nil) {
-			nicknames = [NSMutableOrderedSet orderedSet];
+    if (nicknames == nil) {
+      nicknames = [NSMutableOrderedSet orderedSet];
 
-			reactions[emoji] = nicknames;
-		}
+      reactions[emoji] = nicknames;
+    }
 
-		[nicknames addObject:nickname];
-	}
+    [nicknames addObject:nickname];
+  }
 }
 
-- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactionsForMessageIdentifier:
-	(NSString *)messageIdentifier
-{
-	NSParameterAssert(messageIdentifier != nil);
+- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)
+    reactionsForMessageIdentifier:(NSString *)messageIdentifier {
+  NSParameterAssert(messageIdentifier != nil);
 
-	@synchronized(self.reactionsByMessageIdentifier) {
-		NSDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *reactions =
-			self.reactionsByMessageIdentifier[messageIdentifier];
+  @synchronized(self.reactionsByMessageIdentifier) {
+    NSDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *reactions =
+        self.reactionsByMessageIdentifier[messageIdentifier];
 
-		if (reactions.count == 0) {
-			return nil;
-		}
+    if (reactions.count == 0) {
+      return nil;
+    }
 
-		NSMutableDictionary<NSString *, NSArray<NSString *> *> *result = [NSMutableDictionary dictionary];
+    NSMutableDictionary<NSString *, NSArray<NSString *> *> *result =
+        [NSMutableDictionary dictionary];
 
-		[reactions enumerateKeysAndObjectsUsingBlock:^(
-					   NSString *emoji, NSMutableOrderedSet<NSString *> *nicknames, BOOL *stop) {
-			result[emoji] = nicknames.array;
-		}];
+    [reactions enumerateKeysAndObjectsUsingBlock:^(
+                   NSString *emoji, NSMutableOrderedSet<NSString *> *nicknames,
+                   BOOL *stop) {
+      result[emoji] = nicknames.array;
+    }];
 
-		return [result copy];
-	}
+    return [result copy];
+  }
 }
 
 /* What the line was archived with, merged with what arrived since. */
-- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactionsForLogLine:(TVCLogLine *)logLine
-{
-	NSString *messageIdentifier = logLine.messageIdentifier;
+- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)
+    reactionsForLogLine:(TVCLogLine *)logLine {
+  NSString *messageIdentifier = logLine.messageIdentifier;
 
-	NSDictionary<NSString *, NSArray<NSString *> *> *archived = logLine.reactions;
+  NSDictionary<NSString *, NSArray<NSString *> *> *archived = logLine.reactions;
 
-	NSDictionary<NSString *, NSArray<NSString *> *> *session = nil;
+  NSDictionary<NSString *, NSArray<NSString *> *> *session = nil;
 
-	if (messageIdentifier.length > 0) {
-		session = [self reactionsForMessageIdentifier:messageIdentifier];
-	}
+  if (messageIdentifier.length > 0) {
+    session = [self reactionsForMessageIdentifier:messageIdentifier];
+  }
 
-	if (session.count == 0) {
-		return archived;
-	}
+  if (session.count == 0) {
+    return archived;
+  }
 
-	if (archived.count == 0) {
-		return session;
-	}
+  if (archived.count == 0) {
+    return session;
+  }
 
-	NSMutableDictionary<NSString *, NSArray<NSString *> *> *merged = [archived mutableCopy];
+  NSMutableDictionary<NSString *, NSArray<NSString *> *> *merged =
+      [archived mutableCopy];
 
-	[session enumerateKeysAndObjectsUsingBlock:^(NSString *emoji, NSArray<NSString *> *nicknames, BOOL *stop) {
-		NSMutableOrderedSet<NSString *> *set = [NSMutableOrderedSet orderedSetWithArray:(merged[emoji] ?: @[])];
+  [session enumerateKeysAndObjectsUsingBlock:^(
+               NSString *emoji, NSArray<NSString *> *nicknames, BOOL *stop) {
+    NSMutableOrderedSet<NSString *> *set =
+        [NSMutableOrderedSet orderedSetWithArray:(merged[emoji] ?: @[])];
 
-		[set addObjectsFromArray:nicknames];
+    [set addObjectsFromArray:nicknames];
 
-		merged[emoji] = set.array;
-	}];
+    merged[emoji] = set.array;
+  }];
 
-	return [merged copy];
+  return [merged copy];
 }
 
 - (nullable NSString *)renderLogLine:(TVCLogLine *)logLine
-						  resultInfo:(NSDictionary<NSString *, id> **_Nullable)resultInfo
-{
-	NSParameterAssert(logLine != nil);
+                          resultInfo:(NSDictionary<NSString *, id> **_Nullable)
+                                         resultInfo {
+  NSParameterAssert(logLine != nil);
 
-	// ************************************************************************** /
+  // **************************************************************************
+  // /
 
-	TVCLogLineType lineType = logLine.lineType;
+  TVCLogLineType lineType = logLine.lineType;
 
-	NSString *lineTypeString = logLine.lineTypeString;
+  NSString *lineTypeString = logLine.lineTypeString;
 
-	BOOL renderLinks = ([[TLOLinkParser bannedLineTypes] containsObject:lineTypeString] == NO);
+  BOOL renderLinks =
+      ([[TLOLinkParser bannedLineTypes] containsObject:lineTypeString] == NO);
 
-	NSMutableDictionary<NSString *, id> *rendererAttributes = [NSMutableDictionary dictionary];
+  NSMutableDictionary<NSString *, id> *rendererAttributes =
+      [NSMutableDictionary dictionary];
 
-	if (logLine.rendererAttributes != nil) {
-		[rendererAttributes addEntriesFromDictionary:logLine.rendererAttributes];
-	}
+  if (logLine.rendererAttributes != nil) {
+    [rendererAttributes addEntriesFromDictionary:logLine.rendererAttributes];
+  }
 
-	[rendererAttributes maybeSetObject:logLine.excludeKeywords
-								forKey:TVCLogRendererConfigurationExcludedKeywordsAttribute];
-	[rendererAttributes maybeSetObject:logLine.highlightKeywords
-								forKey:TVCLogRendererConfigurationHighlightKeywordsAttribute];
+  [rendererAttributes
+      maybeSetObject:logLine.excludeKeywords
+              forKey:TVCLogRendererConfigurationExcludedKeywordsAttribute];
+  [rendererAttributes
+      maybeSetObject:logLine.highlightKeywords
+              forKey:TVCLogRendererConfigurationHighlightKeywordsAttribute];
 
-	[rendererAttributes setBool:renderLinks forKey:TVCLogRendererConfigurationRenderLinksAttribute];
+  [rendererAttributes setBool:renderLinks
+                       forKey:TVCLogRendererConfigurationRenderLinksAttribute];
 
-	[rendererAttributes setUnsignedInteger:logLine.lineType forKey:TVCLogRendererConfigurationLineTypeAttribute];
-	[rendererAttributes setUnsignedInteger:logLine.memberType forKey:TVCLogRendererConfigurationMemberTypeAttribute];
+  [rendererAttributes
+      setUnsignedInteger:logLine.lineType
+                  forKey:TVCLogRendererConfigurationLineTypeAttribute];
+  [rendererAttributes
+      setUnsignedInteger:logLine.memberType
+                  forKey:TVCLogRendererConfigurationMemberTypeAttribute];
 
-	NSDictionary<NSString *, id> *rendererResults = nil;
+  NSDictionary<NSString *, id> *rendererResults = nil;
 
-	NSString *renderedBody = [TVCLogRenderer renderBody:logLine.messageBody
-									  forViewController:self
-										 withAttributes:rendererAttributes
-											 resultInfo:&rendererResults];
+  NSString *renderedBody = [TVCLogRenderer renderBody:logLine.messageBody
+                                    forViewController:self
+                                       withAttributes:rendererAttributes
+                                           resultInfo:&rendererResults];
 
-	if (renderedBody == nil) {
-		return nil;
-	}
+  if (renderedBody == nil) {
+    return nil;
+  }
 
-	NSMutableDictionary<NSString *, id> *resultInfoTemp = nil;
+  NSMutableDictionary<NSString *, id> *resultInfoTemp = nil;
 
-	if (resultInfo) {
-		resultInfoTemp = [rendererResults mutableCopy];
-	}
+  if (resultInfo) {
+    resultInfoTemp = [rendererResults mutableCopy];
+  }
 
-	BOOL highlighted = [rendererResults boolForKey:TVCLogRendererResultsKeywordMatchFoundAttribute];
+  BOOL highlighted = [rendererResults
+      boolForKey:TVCLogRendererResultsKeywordMatchFoundAttribute];
 
-	BOOL inlineMedia = (self.inlineMediaEnabledForView &&
-						(lineType == TVCLogLineTypePrivateMessage || lineType == TVCLogLineTypeAction));
+  BOOL inlineMedia = (self.inlineMediaEnabledForView &&
+                      (lineType == TVCLogLineTypePrivateMessage ||
+                       lineType == TVCLogLineTypeAction));
 
-	NSString *lineNumber = logLine.uniqueIdentifier;
+  NSString *lineNumber = logLine.uniqueIdentifier;
 
-	NSDate *receivedAt = logLine.receivedAt;
+  NSDate *receivedAt = logLine.receivedAt;
 
-	// ************************************************************************** /
+  // **************************************************************************
+  // /
 
-	NSMutableDictionary<NSString *, id> *pathAttributes = [NSMutableDictionary new];
+  NSMutableDictionary<NSString *, id> *pathAttributes =
+      [NSMutableDictionary new];
 
-	pathAttributes[@"activeStyleAbsolutePath"] = self.baseURL.path;
+  pathAttributes[@"activeStyleAbsolutePath"] = self.baseURL.path;
 
-	pathAttributes[@"applicationResourcePath"] = [TPCPathInfo applicationResources];
+  pathAttributes[@"applicationResourcePath"] =
+      [TPCPathInfo applicationResources];
 
-	NSMutableDictionary<NSString *, id> *templateAttributes = [pathAttributes mutableCopy];
+  NSMutableDictionary<NSString *, id> *templateAttributes =
+      [pathAttributes mutableCopy];
 
-	// ---- //
+  // ---- //
 
-	templateAttributes[@"timestamp"] = @(receivedAt.timeIntervalSince1970);
+  templateAttributes[@"timestamp"] = @(receivedAt.timeIntervalSince1970);
 
-	templateAttributes[@"formattedTimestamp"] = logLine.formattedTimestamp;
+  templateAttributes[@"formattedTimestamp"] = logLine.formattedTimestamp;
 
-	templateAttributes[@"localizedTimestamp"] = TXFormatDateLongStyle(receivedAt, NO);
+  templateAttributes[@"localizedTimestamp"] =
+      TXFormatDateLongStyle(receivedAt, NO);
 
-	// ---- //
+  // ---- //
 
-	NSString *nickname = [logLine formattedNicknameInChannel:self.associatedChannel];
+  NSString *nickname =
+      [logLine formattedNicknameInChannel:self.associatedChannel];
 
-	if (nickname.length == 0) {
-		templateAttributes[@"isNicknameAvailable"] = @(NO);
-	} else {
-		templateAttributes[@"isNicknameAvailable"] = @(YES);
+  if (nickname.length == 0) {
+    templateAttributes[@"isNicknameAvailable"] = @(NO);
+  } else {
+    templateAttributes[@"isNicknameAvailable"] = @(YES);
 
-		templateAttributes[@"nicknameColorStyle"] = logLine.nicknameColorStyle;
-		templateAttributes[@"nicknameColorStyleOverride"] = @(logLine.nicknameColorStyleOverride);
+    templateAttributes[@"nicknameColorStyle"] = logLine.nicknameColorStyle;
+    templateAttributes[@"nicknameColorStyleOverride"] =
+        @(logLine.nicknameColorStyleOverride);
 
-		templateAttributes[@"nicknameColorHashingEnabled"] = @([TPCPreferences disableNicknameColorHashing] == NO);
+    templateAttributes[@"nicknameColorHashingEnabled"] =
+        @([TPCPreferences disableNicknameColorHashing] == NO);
 
-		templateAttributes[@"formattedNickname"] = nickname.trim;
+    templateAttributes[@"formattedNickname"] = nickname.trim;
 
-		templateAttributes[@"nickname"] = logLine.nickname;
-		templateAttributes[@"nicknameType"] = logLine.memberTypeString;
-	}
+    templateAttributes[@"nickname"] = logLine.nickname;
+    templateAttributes[@"nicknameType"] = logLine.memberTypeString;
+  }
 
-	// ---- //
+  // ---- //
 
-	templateAttributes[@"lineType"] = lineTypeString;
+  templateAttributes[@"lineType"] = lineTypeString;
 
-	templateAttributes[@"command"] = logLine.command;
-	templateAttributes[@"rawCommand"] = logLine.command; // Legacy key
+  templateAttributes[@"command"] = logLine.command;
+  templateAttributes[@"rawCommand"] = logLine.command; // Legacy key
 
-	NSString *messageIdentifier = logLine.messageIdentifier;
+  NSString *messageIdentifier = logLine.messageIdentifier;
 
-	if (messageIdentifier.length > 0) {
-		templateAttributes[@"messageIdentifier"] = messageIdentifier;
-	}
+  if (messageIdentifier.length > 0) {
+    templateAttributes[@"messageIdentifier"] = messageIdentifier;
+  }
 
-	NSString *deliveryState = logLine.deliveryStateString;
+  NSString *deliveryState = logLine.deliveryStateString;
 
-	if (deliveryState) {
-		templateAttributes[@"deliveryState"] = deliveryState;
-	}
+  if (deliveryState) {
+    templateAttributes[@"deliveryState"] = deliveryState;
+  }
 
-	NSString *replyToMessageIdentifier = logLine.replyToMessageIdentifier;
+  NSString *replyToMessageIdentifier = logLine.replyToMessageIdentifier;
 
-	if (replyToMessageIdentifier.length > 0) {
-		templateAttributes[@"replyToMessageIdentifier"] = replyToMessageIdentifier;
-	}
+  if (replyToMessageIdentifier.length > 0) {
+    templateAttributes[@"replyToMessageIdentifier"] = replyToMessageIdentifier;
+  }
 
-	NSDictionary *reactions = [self reactionsForLogLine:logLine];
+  NSDictionary *reactions = [self reactionsForLogLine:logLine];
 
-	if (reactions.count > 0) {
-		NSData *reactionsData = [NSJSONSerialization dataWithJSONObject:reactions options:0 error:NULL];
+  if (reactions.count > 0) {
+    NSData *reactionsData = [NSJSONSerialization dataWithJSONObject:reactions
+                                                            options:0
+                                                              error:NULL];
 
-		if (reactionsData) {
-			templateAttributes[@"reactionsJSON"] = [[NSString alloc] initWithData:reactionsData
-																		 encoding:NSUTF8StringEncoding];
-		}
-	}
+    if (reactionsData) {
+      templateAttributes[@"reactionsJSON"] =
+          [[NSString alloc] initWithData:reactionsData
+                                encoding:NSUTF8StringEncoding];
+    }
+  }
 
-	// ---- //
+  // ---- //
 
-	NSString *classAttribute = nil;
+  NSString *classAttribute = nil;
 
-	if (lineType == TVCLogLineTypePrivateMessage || lineType == TVCLogLineTypeAction ||
-		lineType == TVCLogLineTypeNotice) {
-		classAttribute = @"text";
-	} else {
-		classAttribute = @"event";
-	}
+  if (lineType == TVCLogLineTypePrivateMessage ||
+      lineType == TVCLogLineTypeAction || lineType == TVCLogLineTypeNotice) {
+    classAttribute = @"text";
+  } else {
+    classAttribute = @"event";
+  }
 
-	templateAttributes[@"lineClassAttribute"] = classAttribute;
+  templateAttributes[@"lineClassAttribute"] = classAttribute;
 
-	// ---- //
+  // ---- //
 
-	if (highlighted) {
-		templateAttributes[@"highlightAttribute"] = @"true";
-	} else {
-		templateAttributes[@"highlightAttribute"] = @"false";
-	}
+  if (highlighted) {
+    templateAttributes[@"highlightAttribute"] = @"true";
+  } else {
+    templateAttributes[@"highlightAttribute"] = @"false";
+  }
 
-	// ---- //
+  // ---- //
 
-	templateAttributes[@"message"] = logLine.messageBody;
+  templateAttributes[@"message"] = logLine.messageBody;
 
-	templateAttributes[@"formattedMessage"] = renderedBody;
+  templateAttributes[@"formattedMessage"] = renderedBody;
 
-	templateAttributes[@"isHighlight"] = @(highlighted);
+  templateAttributes[@"isHighlight"] = @(highlighted);
 
-	templateAttributes[@"isRemoteMessage"] = @(logLine.memberType == TVCLogLineMemberTypeNormal);
+  templateAttributes[@"isRemoteMessage"] =
+      @(logLine.memberType == TVCLogLineMemberTypeNormal);
 
-	// ---- //
+  // ---- //
 
-	if (logLine.isEncrypted) {
-		templateAttributes[@"isEncrypted"] = @(YES);
-	}
+  if (logLine.isEncrypted) {
+    templateAttributes[@"isEncrypted"] = @(YES);
+  }
 
-	// ---- //
+  // ---- //
 
-	NSString *serverName = self.associatedClient.networkNameAlt;
+  NSString *serverName = self.associatedClient.networkNameAlt;
 
-	if (serverName) {
-		templateAttributes[@"configuredServerName"] = serverName;
-	}
+  if (serverName) {
+    templateAttributes[@"configuredServerName"] = serverName;
+  }
 
-	// ---- //
+  // ---- //
 
-	templateAttributes[@"inlineMediaEnabled"] = @(inlineMedia);
+  templateAttributes[@"inlineMediaEnabled"] = @(inlineMedia);
 
-	templateAttributes[@"lineNumber"] = lineNumber;
+  templateAttributes[@"lineNumber"] = lineNumber;
 
-	templateAttributes[@"lineRenderTime"] = @([NSDate timeIntervalSince1970]);
+  templateAttributes[@"lineRenderTime"] = @([NSDate timeIntervalSince1970]);
 
-	// ---- //
+  // ---- //
 
-	if (logLine.isFirstForDay && [TPCPreferences showDateChanges]) {
-		templateAttributes[@"showDateIndicator"] = @(YES);
+  if (logLine.isFirstForDay && [TPCPreferences showDateChanges]) {
+    templateAttributes[@"showDateIndicator"] = @(YES);
 
-		templateAttributes[@"dateIndicatorMessage"] = [self dateIndicatorWithDate:receivedAt];
-	}
+    templateAttributes[@"dateIndicatorMessage"] =
+        [self dateIndicatorWithDate:receivedAt];
+  }
 
-	if ([lineNumber isEqualToString:self.newestLineNumberFromPreviousSession]) {
-		templateAttributes[@"showSessionIndicator"] = @(YES);
+  if ([lineNumber isEqualToString:self.newestLineNumberFromPreviousSession]) {
+    templateAttributes[@"showSessionIndicator"] = @(YES);
 
-		templateAttributes[@"sessionIndicatorMessage"] = TXTLS(@"TVCMainWindow[4yo-mk]");
-	}
+    templateAttributes[@"sessionIndicatorMessage"] =
+        TXTLS(@"TVCMainWindow[4yo-mk]");
+  }
 
-	// ************************************************************************** /
+  // **************************************************************************
+  // /
 
-	if (resultInfoTemp) {
-		resultInfoTemp[@"processInlineMedia"] = @(inlineMedia);
+  if (resultInfoTemp) {
+    resultInfoTemp[@"processInlineMedia"] = @(inlineMedia);
 
-		if ([sharedPluginManager() supportsFeature:THOPluginItemSupportedFeatureNewMessagePostedEvent]) {
-			NSArray<TLOLinkParserResult *> *listOfLinks =
-				rendererResults[TVCLogRendererResultsListOfLinksInBodyAttribute];
+    if ([sharedPluginManager()
+            supportsFeature:
+                THOPluginItemSupportedFeatureNewMessagePostedEvent]) {
+      NSArray<TLOLinkParserResult *> *listOfLinks =
+          rendererResults[TVCLogRendererResultsListOfLinksInBodyAttribute];
 
-			THOPluginDidPostNewMessageConcreteObject *pluginConcreteObject =
-				[THOPluginDidPostNewMessageConcreteObject new];
+      THOPluginDidPostNewMessageConcreteObject *pluginConcreteObject =
+          [THOPluginDidPostNewMessageConcreteObject new];
 
-			pluginConcreteObject.keywordMatchFound = highlighted;
+      pluginConcreteObject.keywordMatchFound = highlighted;
 
-			pluginConcreteObject.lineType = lineType;
-			pluginConcreteObject.memberType = logLine.memberType;
+      pluginConcreteObject.lineType = lineType;
+      pluginConcreteObject.memberType = logLine.memberType;
 
-			pluginConcreteObject.senderNickname = logLine.nickname;
+      pluginConcreteObject.senderNickname = logLine.nickname;
 
-			pluginConcreteObject.receivedAt = receivedAt;
+      pluginConcreteObject.receivedAt = receivedAt;
 
-			pluginConcreteObject.lineNumber = lineNumber;
+      pluginConcreteObject.lineNumber = lineNumber;
 
-			pluginConcreteObject.messageContents =
-				rendererResults[TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute];
+      pluginConcreteObject.messageContents = rendererResults
+          [TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute];
 
-			pluginConcreteObject.listOfHyperlinks = listOfLinks;
+      pluginConcreteObject.listOfHyperlinks = listOfLinks;
 
-			pluginConcreteObject.listOfUsers = rendererResults[TVCLogRendererResultsListOfUsersFoundAttribute];
+      pluginConcreteObject.listOfUsers =
+          rendererResults[TVCLogRendererResultsListOfUsersFoundAttribute];
 
-			resultInfoTemp[@"pluginConcreteObject"] = pluginConcreteObject;
-		}
-	}
+      resultInfoTemp[@"pluginConcreteObject"] = pluginConcreteObject;
+    }
+  }
 
-	// ************************************************************************** /
+  // **************************************************************************
+  // /
 
-	if (resultInfo) {
-		*resultInfo = [resultInfoTemp copy];
-	}
+  if (resultInfo) {
+    *resultInfo = [resultInfoTemp copy];
+  }
 
-	// ************************************************************************** /
+  // **************************************************************************
+  // /
 
-	GRMustacheTemplate *template = [theme() templateWithLineType:lineType];
+  GRMustacheTemplate *template = [theme() templateWithLineType:lineType];
 
-	NSString *html = [TVCLogRenderer renderTemplate:template attributes:templateAttributes];
+  NSString *html = [TVCLogRenderer renderTemplate:template
+                                       attributes:templateAttributes];
 
-	return html;
+  return html;
 }
 
 #pragma mark -
 #pragma mark Initial Document
 
-- (BOOL)usesCustomScrollers
-{
-	NSScrollerStyle preferredScrollerStyle = [NSScroller preferredScrollerStyle];
+- (BOOL)usesCustomScrollers {
+  NSScrollerStyle preferredScrollerStyle = [NSScroller preferredScrollerStyle];
 
-	BOOL onlyShowDuringScrolling = (preferredScrollerStyle == NSScrollerStyleOverlay);
+  BOOL onlyShowDuringScrolling =
+      (preferredScrollerStyle == NSScrollerStyleOverlay);
 
-	BOOL usesCustomScrollers = [TPCPreferences themeChannelViewUsesCustomScrollers];
+  BOOL usesCustomScrollers =
+      [TPCPreferences themeChannelViewUsesCustomScrollers];
 
-	return (onlyShowDuringScrolling == NO && usesCustomScrollers);
+  return (onlyShowDuringScrolling == NO && usesCustomScrollers);
 }
 
-- (NSString *)initialDocument
-{
-	NSMutableDictionary *templateTokens = [self generateOverrideStyle];
+- (NSString *)initialDocument {
+  NSMutableDictionary *templateTokens = [self generateOverrideStyle];
 
-	templateTokens[@"applicationResourcePath"] = [TPCPathInfo applicationResources];
+  templateTokens[@"applicationResourcePath"] =
+      [TPCPathInfo applicationResources];
 
-	templateTokens[@"applicationTemplatesPath"] = theme().applicationTemplateRepositoryPath;
+  templateTokens[@"applicationTemplatesPath"] =
+      theme().applicationTemplateRepositoryPath;
 
-	templateTokens[@"activeStyleAbsolutePath"] = self.baseURL.path;
+  templateTokens[@"activeStyleAbsolutePath"] = self.baseURL.path;
 
-	templateTokens[@"activeStyleCSSFiles"] = theme().temporaryCSSFilePaths;
-	templateTokens[@"activeStyleJSFiles"] = theme().temporaryJSFilePaths;
+  templateTokens[@"activeStyleCSSFiles"] = theme().temporaryCSSFilePaths;
+  templateTokens[@"activeStyleJSFiles"] = theme().temporaryJSFilePaths;
 
-	templateTokens[@"cacheToken"] = themeController().cacheToken;
+  templateTokens[@"cacheToken"] = themeController().cacheToken;
 
-	templateTokens[@"configuredServerName"] = self.associatedClient.networkNameAlt;
+  templateTokens[@"configuredServerName"] =
+      self.associatedClient.networkNameAlt;
 
-	templateTokens[@"isReloadingStyle"] = @(self.reloadingTheme);
+  templateTokens[@"isReloadingStyle"] = @(self.reloadingTheme);
 
-	templateTokens[@"operatingSystemVersion"] = [XRSystemInformation systemStandardVersion];
+  templateTokens[@"operatingSystemVersion"] =
+      [XRSystemInformation systemStandardVersion];
 
-	TVCMainWindowAppearance *appearance = self.attachedWindow.userInterfaceObjects;
+  TVCMainWindowAppearance *appearance =
+      self.attachedWindow.userInterfaceObjects;
 
-	templateTokens[@"appearanceDescription"] = appearance.shortAppearanceDescription;
-	templateTokens[@"sidebarInversionIsEnabled"] = @(appearance.isDarkAppearance);
+  templateTokens[@"appearanceDescription"] =
+      appearance.shortAppearanceDescription;
+  templateTokens[@"sidebarInversionIsEnabled"] = @(appearance.isDarkAppearance);
 
-	templateTokens[@"userConfiguredTextEncoding"] =
-		[NSString charsetRepFromStringEncoding:self.associatedClient.config.primaryEncoding];
+  templateTokens[@"userConfiguredTextEncoding"] =
+      [NSString charsetRepFromStringEncoding:self.associatedClient.config
+                                                 .primaryEncoding];
 
-	templateTokens[@"userStyleSheetRules"] = [TPCPreferences themeUserStyleSheetRules];
+  templateTokens[@"userStyleSheetRules"] =
+      [TPCPreferences themeUserStyleSheetRules];
 
-	templateTokens[@"usesCustomScrollers"] = @([self usesCustomScrollers]);
+  templateTokens[@"usesCustomScrollers"] = @([self usesCustomScrollers]);
 
-	IRCChannel *channel = self.associatedChannel;
+  IRCChannel *channel = self.associatedChannel;
 
-	if (channel) {
-		templateTokens[@"isChannelView"] = @(channel.isChannel);
-		templateTokens[@"isPrivateMessageView"] = @(channel.isPrivateMessage);
-		templateTokens[@"isUtilityView"] = @(channel.isUtility);
+  if (channel) {
+    templateTokens[@"isChannelView"] = @(channel.isChannel);
+    templateTokens[@"isPrivateMessageView"] = @(channel.isPrivateMessage);
+    templateTokens[@"isUtilityView"] = @(channel.isUtility);
 
-		templateTokens[@"channelName"] = channel.name;
+    templateTokens[@"channelName"] = channel.name;
 
-		templateTokens[@"viewTypeToken"] = channel.channelTypeString;
-	} else {
-		templateTokens[@"viewTypeToken"] = @"server";
-	}
+    templateTokens[@"viewTypeToken"] = channel.channelTypeString;
+  } else {
+    templateTokens[@"viewTypeToken"] = @"server";
+  }
 
-	if ([TPCPreferences rightToLeftFormatting]) {
-		templateTokens[@"textDirectionToken"] = @"rtl";
-	} else {
-		templateTokens[@"textDirectionToken"] = @"ltr";
-	}
+  if ([TPCPreferences rightToLeftFormatting]) {
+    templateTokens[@"textDirectionToken"] = @"rtl";
+  } else {
+    templateTokens[@"textDirectionToken"] = @"ltr";
+  }
 
-	if ([themeSettings() underlyingWindowColorIsDark]) {
-		templateTokens[@"appearanceToken"] = @"dark";
-	} else {
-		templateTokens[@"appearanceToken"] = @"light";
-	}
+  if ([themeSettings() underlyingWindowColorIsDark]) {
+    templateTokens[@"appearanceToken"] = @"dark";
+  } else {
+    templateTokens[@"appearanceToken"] = @"light";
+  }
 
-	return [TVCLogRenderer renderTemplateNamed:@"baseLayout" attributes:templateTokens];
+  return [TVCLogRenderer renderTemplateNamed:@"baseLayout"
+                                  attributes:templateTokens];
 }
 
-- (NSMutableDictionary<NSString *, id> *)generateOverrideStyle
-{
-	NSMutableDictionary<NSString *, id> *templateTokens = [NSMutableDictionary dictionary];
+- (NSMutableDictionary<NSString *, id> *)generateOverrideStyle {
+  NSMutableDictionary<NSString *, id> *templateTokens =
+      [NSMutableDictionary dictionary];
 
-	// ---- //
+  // ---- //
 
-	NSFont *channelFont = themeSettings().themeChannelViewFont;
+  NSFont *channelFont = themeSettings().themeChannelViewFont;
 
-	if (channelFont == nil) {
-		channelFont = [TPCPreferences themeChannelViewFont];
-	}
+  if (channelFont == nil) {
+    channelFont = [TPCPreferences themeChannelViewFont];
+  }
 
-	NSString *fontName = channelFont.fontName;
+  NSString *fontName = channelFont.fontName;
 
-	if ([fontName hasPrefix:@"."]) {
-		templateTokens[@"userConfiguredFontName"] = @"-apple-system, BlinkMacSystemFont, system-ui, sans-serif";
-	} else {
-		templateTokens[@"userConfiguredFontName"] = [NSString stringWithFormat:@"\"%@\"", fontName];
-	}
+  if ([fontName hasPrefix:@"."]) {
+    templateTokens[@"userConfiguredFontName"] =
+        @"-apple-system, BlinkMacSystemFont, system-ui, sans-serif";
+  } else {
+    templateTokens[@"userConfiguredFontName"] =
+        [NSString stringWithFormat:@"\"%@\"", fontName];
+  }
 
-	templateTokens[@"userConfiguredFontSize"] = @(channelFont.pointSize * (72.0 / 96.0));
+  templateTokens[@"userConfiguredFontSize"] =
+      @(channelFont.pointSize * (72.0 / 96.0));
 
-	// ---- //
+  // ---- //
 
-	double indentOffset = themeSettings().indentationOffset;
+  double indentOffset = themeSettings().indentationOffset;
 
-	if (round(indentOffset) < 0.0 || [TPCPreferences rightToLeftFormatting]) {
-		templateTokens[@"nicknameIndentationAvailable"] = @(NO);
-	} else {
-		templateTokens[@"nicknameIndentationAvailable"] = @(YES);
+  if (round(indentOffset) < 0.0 || [TPCPreferences rightToLeftFormatting]) {
+    templateTokens[@"nicknameIndentationAvailable"] = @(NO);
+  } else {
+    templateTokens[@"nicknameIndentationAvailable"] = @(YES);
 
-		NSString *timeFormat = themeSettings().themeTimestampFormat;
+    NSString *timeFormat = themeSettings().themeTimestampFormat;
 
-		if (timeFormat == nil) {
-			timeFormat = [TPCPreferences themeTimestampFormat];
-		}
+    if (timeFormat == nil) {
+      timeFormat = [TPCPreferences themeTimestampFormat];
+    }
 
-		NSString *time = TXFormattedTimestamp([NSDate date], timeFormat);
+    NSString *time = TXFormattedTimestamp([NSDate date], timeFormat);
 
-		NSSize textSize = [time sizeWithAttributes:@{NSFontAttributeName : channelFont}];
+    NSSize textSize =
+        [time sizeWithAttributes:@{NSFontAttributeName : channelFont}];
 
-		templateTokens[@"predefinedTimestampWidth"] = @(textSize.width + indentOffset);
-	}
+    templateTokens[@"predefinedTimestampWidth"] =
+        @(textSize.width + indentOffset);
+  }
 
-	// ---- //
+  // ---- //
 
-	return templateTokens;
+  return templateTokens;
 }
 
 #pragma mark -
 #pragma mark LogView Delegate
 
-- (void)logViewWebViewFinishedLoading
-{
-	if (self.loaded == NO) {
-		self.loaded = YES;
-	} else {
-		return;
-	}
+- (void)logViewWebViewFinishedLoading {
+  if (self.loaded == NO) {
+    self.loaded = YES;
+  } else {
+    return;
+  }
 
-	self.viewLoadedTimestamp = [NSDate timeIntervalSince1970];
+  self.viewLoadedTimestamp = [NSDate timeIntervalSince1970];
 
-	IRCChannel *channel = self.associatedChannel;
+  IRCChannel *channel = self.associatedChannel;
 
-	NSString *viewType = nil;
+  NSString *viewType = nil;
 
-	if (channel) {
-		viewType = channel.channelTypeString;
-	} else {
-		viewType = @"server";
-	}
+  if (channel) {
+    viewType = channel.channelTypeString;
+  } else {
+    viewType = @"server";
+  }
 
-	[self _evaluateFunction:@"Glasstual.viewInitiated"
-			  withArguments:@[
-				  NSDictionaryNilValue(viewType),
-				  NSDictionaryNilValue(self.associatedClient.uniqueIdentifier),
-				  NSDictionaryNilValue(channel.uniqueIdentifier),
-				  NSDictionaryNilValue(channel.name)
-			  ]];
+  [self _evaluateFunction:@"Glasstual.viewInitiated"
+            withArguments:@[
+              NSDictionaryNilValue(viewType),
+              NSDictionaryNilValue(self.associatedClient.uniqueIdentifier),
+              NSDictionaryNilValue(channel.uniqueIdentifier),
+              NSDictionaryNilValue(channel.name)
+            ]];
 
-	double textSizeMultiplier = self.attachedWindow.textSizeMultiplier;
+  double textSizeMultiplier = self.attachedWindow.textSizeMultiplier;
 
-	NSUInteger scrollbackLimit = [TPCPreferences scrollbackVisibleLimit];
+  NSUInteger scrollbackLimit = [TPCPreferences scrollbackVisibleLimit];
 
-	[self _evaluateFunction:@"_Glasstual.viewFinishedLoading"
-			  withArguments:@[ @{
-				  @"selected" : @(self.selected),
-				  @"visible" : @(self.visible),
-				  @"reloadingTheme" : @(self.reloadingTheme), // TODO: Fix this always being false
-				  @"textSizeMultiplier" : @(textSizeMultiplier),
-				  @"scrollbackLimit" : @(scrollbackLimit)
-			  } ]];
+  [self _evaluateFunction:@"_Glasstual.viewFinishedLoading"
+            withArguments:@[ @{
+              @"selected" : @(self.selected),
+              @"visible" : @(self.visible),
+              @"reloadingTheme" :
+                  @(self.reloadingTheme), // TODO: Fix this always being false
+              @"textSizeMultiplier" : @(textSizeMultiplier),
+              @"scrollbackLimit" : @(scrollbackLimit)
+            } ]];
 
-	[self setInitialTopic];
+  [self setInitialTopic];
 
-	[self reloadHistory];
+  [self reloadHistory];
 
-	[RZNotificationCenter() postNotificationName:TVCLogControllerViewFinishedLoadingNotification object:self];
+  [RZNotificationCenter()
+      postNotificationName:TVCLogControllerViewFinishedLoadingNotification
+                    object:self];
 
-	[self.printingQueue updateReadinessState:self];
+  [self.printingQueue updateReadinessState:self];
 }
 
-- (void)logViewWebViewClosedUnexpectedly
-{
-	/* The web content process died. Reload the document without
-	 resetting the historic log so the history is replayed into it. */
-	if (self.terminating) {
-		return;
-	}
+- (void)logViewWebViewClosedUnexpectedly {
+  /* The web content process died. Reload the document without
+   resetting the historic log so the history is replayed into it. */
+  if (self.terminating) {
+    return;
+  }
 
-	[self clearWithReset:NO];
+  [self clearWithReset:NO];
 }
 
-- (void)logViewWebViewKeyDown:(NSEvent *)e
-{
-	[self.attachedWindow redirectKeyDown:e];
+- (void)logViewWebViewKeyDown:(NSEvent *)e {
+  [self.attachedWindow redirectKeyDown:e];
 }
 
-- (void)logViewWebViewReceivedDropWithFile:(NSString *)filename
-{
-	[menuController() memberSendDroppedFilesToSelectedChannel:@[ filename ]];
+- (void)logViewWebViewReceivedDropWithFile:(NSString *)filename {
+  [menuController() memberSendDroppedFilesToSelectedChannel:@[ filename ]];
 }
 
 @end

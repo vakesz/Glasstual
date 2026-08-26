@@ -212,7 +212,8 @@ NS_ASSUME_NONNULL_BEGIN
 
  Custom types are treated as "undefined"
  */
-@property(copy, readonly) NSDictionary<NSString *, id<NSCopying>> *entrypointPayload;
+@property(copy, readonly)
+    NSDictionary<NSString *, id<NSCopying>> *entrypointPayload;
 
 /**
  An optional class that is appended to the inlined media.
@@ -237,7 +238,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, readwrite) NSArray<NSURL *> *scriptResources;
 @property(nonatomic, copy, readwrite) NSString *html;
 @property(nonatomic, copy, nullable, readwrite) NSString *entrypoint;
-@property(nonatomic, copy, null_resettable, readwrite) NSDictionary<NSString *, id<NSCopying>> *entrypointPayload;
+@property(nonatomic, copy, null_resettable, readwrite)
+    NSDictionary<NSString *, id<NSCopying>> *entrypointPayload;
 @property(nonatomic, copy, readwrite) NSString *classAttribute;
 
 - (instancetype)init;

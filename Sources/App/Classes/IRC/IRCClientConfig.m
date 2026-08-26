@@ -36,25 +36,25 @@
  *
  *********************************************************************** */
 
-#import "NSObjectHelperPrivate.h"
-#import "NSStringHelper.h"
 #import "IRC.h"
 #import "IRCAddressBook.h"
 #import "IRCChannelConfig.h"
+#import "IRCClientConfigInternal.h"
 #import "IRCHighlightMatchCondition.h"
 #import "IRCNetworkList.h"
 #import "IRCServerPrivate.h"
-#import "TPCPreferencesLocal.h"
+#import "NSObjectHelperPrivate.h"
+#import "NSStringHelper.h"
 #import "TLOLocalization.h"
-#import "IRCClientConfigInternal.h"
+#import "TPCPreferencesLocal.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 #define IRCClientConfigDictionaryVersionLatest 710
 
 #define IRCClientConfigFloodControlDefaultDelayIntervalLimited 2
-#define IRCClientConfigFloodControlDefaultMessageCountLimited                                                          \
-	2 // freenode gets a special case 'cause they are strict about flood control
+#define IRCClientConfigFloodControlDefaultMessageCountLimited                  \
+  2 // freenode gets a special case 'cause they are strict about flood control
 
 @interface IRCClientConfig ()
 @property(readonly) BOOL prefersSecuredConnection_;
@@ -70,959 +70,1060 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Defaults
 
-- (void)populateDefaultsPreflight
-{
-	if (self.initializedAsCopy) {
-		return;
-	}
+- (void)populateDefaultsPreflight {
+  if (self.initializedAsCopy) {
+    return;
+  }
 
-	/* Even if a value is NO, include it as a default. */
-	/* This allows NO values to be stripped from output dictionary. */
-	NSMutableDictionary<NSString *, id> *defaults = [NSMutableDictionary dictionary];
+  /* Even if a value is NO, include it as a default. */
+  /* This allows NO values to be stripped from output dictionary. */
+  NSMutableDictionary<NSString *, id> *defaults =
+      [NSMutableDictionary dictionary];
 
-	defaults[@"addressType"] = @(IRCConnectionAddressTypeDefault);
-	defaults[@"autoConnect"] = @(NO);
-	defaults[@"autoReconnect"] = @(NO);
-	defaults[@"autoSleepModeDisconnect"] = @(YES);
-	defaults[@"autojoinWaitsForNickServ"] = @(NO);
-	defaults[@"cachedLastServerTimeCapabilityReceivedAtTimestamp"] = @(0);
-	defaults[@"cipherSuites"] = @(RCMCipherSuiteCollectionDefault);
-	defaults[@"connectionName"] = TXTLS(@"BasicLanguage[vfu-c0]");
-	defaults[@"fallbackEncoding"] = @(TXDefaultFallbackStringEncoding);
-	defaults[@"floodControlDelayTimerInterval"] = @(IRCConnectionConfigFloodControlDefaultDelayInterval);
-	defaults[@"floodControlMaximumMessages"] = @(IRCConnectionConfigFloodControlDefaultMessageCount);
-	defaults[@"hideAutojoinDelayedWarnings"] = @(NO);
-	defaults[@"hideNetworkUnavailabilityNotices"] = @(NO);
-	defaults[@"normalLeavingComment"] = TXTLS(@"BasicLanguage[1dd-0f]");
-	defaults[@"performDisconnectOnPongTimer"] = @(NO);
-	defaults[@"performDisconnectOnReachabilityChange"] = @(YES);
-	defaults[@"performPongTimer"] = @(YES);
-	defaults[@"prefersSecuredConnection"] = @(NO);
-	defaults[@"primaryEncoding"] = @(TXDefaultPrimaryStringEncoding);
-	defaults[@"proxyPort"] = @(IRCConnectionDefaultProxyPort);
-	defaults[@"proxyType"] = @(IRCConnectionProxyTypeAutomatic);
-	defaults[@"saslAuthenticationDisableExternalMechanism"] = @(NO);
-	defaults[@"sendAuthenticationRequestsToUserServ"] = @(NO);
-	defaults[@"sendWhoCommandRequestsToChannels"] = @(YES);
-	defaults[@"serverPort"] = @(IRCConnectionDefaultServerPort);
-	defaults[@"setInvisibleModeOnConnect"] = @(NO);
-	defaults[@"runConnectCommandsSilently"] = @(YES);
-	defaults[@"sidebarItemExpanded"] = @(YES);
-	defaults[@"sleepModeLeavingComment"] = TXTLS(@"BasicLanguage[qi7-5y]");
-	defaults[@"validateServerCertificateChain"] = @(YES);
-	defaults[@"zncIgnoreConfiguredAutojoin"] = @(NO);
-	defaults[@"zncIgnorePlaybackNotifications"] = @(YES);
-	defaults[@"zncIgnoreUserNotifications"] = @(NO);
-	defaults[@"zncOnlyPlaybackLatest"] = @(YES);
+  defaults[@"addressType"] = @(IRCConnectionAddressTypeDefault);
+  defaults[@"autoConnect"] = @(NO);
+  defaults[@"autoReconnect"] = @(NO);
+  defaults[@"autoSleepModeDisconnect"] = @(YES);
+  defaults[@"autojoinWaitsForNickServ"] = @(NO);
+  defaults[@"cachedLastServerTimeCapabilityReceivedAtTimestamp"] = @(0);
+  defaults[@"cipherSuites"] = @(RCMCipherSuiteCollectionDefault);
+  defaults[@"connectionName"] = TXTLS(@"BasicLanguage[vfu-c0]");
+  defaults[@"fallbackEncoding"] = @(TXDefaultFallbackStringEncoding);
+  defaults[@"floodControlDelayTimerInterval"] =
+      @(IRCConnectionConfigFloodControlDefaultDelayInterval);
+  defaults[@"floodControlMaximumMessages"] =
+      @(IRCConnectionConfigFloodControlDefaultMessageCount);
+  defaults[@"hideAutojoinDelayedWarnings"] = @(NO);
+  defaults[@"hideNetworkUnavailabilityNotices"] = @(NO);
+  defaults[@"normalLeavingComment"] = TXTLS(@"BasicLanguage[1dd-0f]");
+  defaults[@"performDisconnectOnPongTimer"] = @(NO);
+  defaults[@"performDisconnectOnReachabilityChange"] = @(YES);
+  defaults[@"performPongTimer"] = @(YES);
+  defaults[@"prefersSecuredConnection"] = @(NO);
+  defaults[@"primaryEncoding"] = @(TXDefaultPrimaryStringEncoding);
+  defaults[@"proxyPort"] = @(IRCConnectionDefaultProxyPort);
+  defaults[@"proxyType"] = @(IRCConnectionProxyTypeAutomatic);
+  defaults[@"saslAuthenticationDisableExternalMechanism"] = @(NO);
+  defaults[@"sendAuthenticationRequestsToUserServ"] = @(NO);
+  defaults[@"sendWhoCommandRequestsToChannels"] = @(YES);
+  defaults[@"serverPort"] = @(IRCConnectionDefaultServerPort);
+  defaults[@"setInvisibleModeOnConnect"] = @(NO);
+  defaults[@"runConnectCommandsSilently"] = @(YES);
+  defaults[@"sidebarItemExpanded"] = @(YES);
+  defaults[@"sleepModeLeavingComment"] = TXTLS(@"BasicLanguage[qi7-5y]");
+  defaults[@"validateServerCertificateChain"] = @(YES);
+  defaults[@"zncIgnoreConfiguredAutojoin"] = @(NO);
+  defaults[@"zncIgnorePlaybackNotifications"] = @(YES);
+  defaults[@"zncIgnoreUserNotifications"] = @(NO);
+  defaults[@"zncOnlyPlaybackLatest"] = @(YES);
 
-	self->_defaults = [defaults copy];
+  self->_defaults = [defaults copy];
 }
 
-- (void)populateDefaultsPostflight
-{
-	if (self.initializedAsCopy) {
-		return;
-	}
+- (void)populateDefaultsPostflight {
+  if (self.initializedAsCopy) {
+    return;
+  }
 
-	SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
+  SetVariableIfNil(self->_uniqueIdentifier, [NSString stringWithUUID])
 
-		SetVariableIfNil(self->_nickname, [TPCPreferences defaultNickname])
-			SetVariableIfNil(self->_awayNickname, [TPCPreferences defaultAwayNickname])
-				SetVariableIfNil(self->_username, [TPCPreferences defaultUsername])
-					SetVariableIfNil(self->_realName, [TPCPreferences defaultRealName])
+      SetVariableIfNil(self->_nickname, [TPCPreferences defaultNickname])
+          SetVariableIfNil(self->_awayNickname,
+                           [TPCPreferences defaultAwayNickname])
+              SetVariableIfNil(self->_username,
+                               [TPCPreferences defaultUsername])
+                  SetVariableIfNil(self->_realName,
+                                   [TPCPreferences defaultRealName])
 
-						SetVariableIfNil(self->_ignoreList, @[]) SetVariableIfNil(self->_channelList, @[])
-							SetVariableIfNil(self->_highlightList, @[]) SetVariableIfNil(self->_serverList, @[])
+                      SetVariableIfNil(self->_ignoreList, @[]) SetVariableIfNil(
+                          self->_channelList,
+                          @[]) SetVariableIfNil(self->_highlightList, @[])
+                          SetVariableIfNil(self->_serverList, @[])
 
-								SetVariableIfNil(self->_alternateNicknames, @[])
+                              SetVariableIfNil(self->_alternateNicknames, @[])
 
-									SetVariableIfNil(self->_loginCommands, @[])
+                                  SetVariableIfNil(self->_loginCommands, @[])
 
-										[self modifyFloodControlDefaults];
+                                      [self modifyFloodControlDefaults];
 }
 
-- (void)populateDefaultsByAppendingDictionary:(NSDictionary<NSString *, id> *)defaultsToAppend
-{
-	NSParameterAssert(defaultsToAppend != nil);
+- (void)populateDefaultsByAppendingDictionary:
+    (NSDictionary<NSString *, id> *)defaultsToAppend {
+  NSParameterAssert(defaultsToAppend != nil);
 
-	self->_defaults = [self->_defaults dictionaryByAddingEntries:defaultsToAppend];
+  self->_defaults =
+      [self->_defaults dictionaryByAddingEntries:defaultsToAppend];
 }
 
-- (void)modifyFloodControlDefaults
-{
-	if (self.floodControlDelayTimerInterval != IRCConnectionConfigFloodControlDefaultDelayInterval ||
-		self.floodControlMaximumMessages != IRCConnectionConfigFloodControlDefaultMessageCount) {
-		return;
-	}
+- (void)modifyFloodControlDefaults {
+  if (self.floodControlDelayTimerInterval !=
+          IRCConnectionConfigFloodControlDefaultDelayInterval ||
+      self.floodControlMaximumMessages !=
+          IRCConnectionConfigFloodControlDefaultMessageCount) {
+    return;
+  }
 
-	BOOL haveLimitedServer = NO;
+  BOOL haveLimitedServer = NO;
 
-	for (IRCServer *server in self.serverList) {
-		if ([server.serverAddress hasSuffix:@".freenode.net"] == NO) {
-			continue;
-		}
+  for (IRCServer *server in self.serverList) {
+    if ([server.serverAddress hasSuffix:@".freenode.net"] == NO) {
+      continue;
+    }
 
-		haveLimitedServer = YES;
+    haveLimitedServer = YES;
 
-		break;
-	}
+    break;
+  }
 
-	if (haveLimitedServer == NO) {
-		return;
-	}
+  if (haveLimitedServer == NO) {
+    return;
+  }
 
-	NSUInteger floodControlDelayTimerInterval = IRCClientConfigFloodControlDefaultDelayIntervalLimited;
-	NSUInteger floodControlMaximumMessages = IRCClientConfigFloodControlDefaultMessageCountLimited;
+  NSUInteger floodControlDelayTimerInterval =
+      IRCClientConfigFloodControlDefaultDelayIntervalLimited;
+  NSUInteger floodControlMaximumMessages =
+      IRCClientConfigFloodControlDefaultMessageCountLimited;
 
-	[self populateDefaultsByAppendingDictionary:@{
-		@"floodControlDelayTimerInterval" : @(floodControlDelayTimerInterval),
-		@"floodControlMaximumMessages" : @(floodControlMaximumMessages)
-	}];
+  [self populateDefaultsByAppendingDictionary:@{
+    @"floodControlDelayTimerInterval" : @(floodControlDelayTimerInterval),
+    @"floodControlMaximumMessages" : @(floodControlMaximumMessages)
+  }];
 
-	self->_floodControlDelayTimerInterval = floodControlDelayTimerInterval;
-	self->_floodControlMaximumMessages = floodControlMaximumMessages;
+  self->_floodControlDelayTimerInterval = floodControlDelayTimerInterval;
+  self->_floodControlMaximumMessages = floodControlMaximumMessages;
 }
 
 #pragma mark -
 #pragma mark Server Configuration
 
-- (instancetype)init
-{
-	return [self initWithDictionary:@{}];
+- (instancetype)init {
+  return [self initWithDictionary:@{}];
+}
+
+- (instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dic {
+  return [self initWithDictionary:dic ignorePrivateMessages:NO];
 }
 
 - (instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dic
-{
-	return [self initWithDictionary:dic ignorePrivateMessages:NO];
+             ignorePrivateMessages:(BOOL)ignorePrivateMessages {
+  if ((self = [super init])) {
+    [self populateDefaultsPreflight];
+
+    [self populateDictionaryValue:dic
+            ignorePrivateMessages:ignorePrivateMessages
+                    applyDefaults:YES
+                bypassIsCopyCheck:NO];
+
+    [self populateDefaultsPostflight];
+
+    [self initializedClassHealthCheck];
+
+    return self;
+  }
+
+  return nil;
 }
 
-- (instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dic ignorePrivateMessages:(BOOL)ignorePrivateMessages
-{
-	if ((self = [super init])) {
-		[self populateDefaultsPreflight];
+- (void)initializedClassHealthCheck {
+  if (self.initializedAsCopy) {
+    return;
+  }
 
-		[self populateDictionaryValue:dic
-				ignorePrivateMessages:ignorePrivateMessages
-						applyDefaults:YES
-					bypassIsCopyCheck:NO];
+  if (self->_proxyPort == 0) {
+    self->_proxyPort = IRCConnectionDefaultProxyPort;
+  }
 
-		[self populateDefaultsPostflight];
+  if ([self isMutable]) {
+    return;
+  }
 
-		[self initializedClassHealthCheck];
-
-		return self;
-	}
-
-	return nil;
+  NSParameterAssert(self->_connectionName.length > 0);
 }
 
-- (void)initializedClassHealthCheck
-{
-	if (self.initializedAsCopy) {
-		return;
-	}
++ (instancetype)newConfigByMerging:(IRCClientConfig *)config1
+                              with:(IRCClientConfig *)config2 {
+  NSParameterAssert(config1 != nil);
+  NSParameterAssert(config2 != nil);
 
-	if (self->_proxyPort == 0) {
-		self->_proxyPort = IRCConnectionDefaultProxyPort;
-	}
+  IRCClientConfigMutable *config1Mutable = [config1 mutableCopy];
 
-	if ([self isMutable]) {
-		return;
-	}
+  [config1Mutable populateDictionaryValue:config2.dictionaryValue
+                    ignorePrivateMessages:NO
+                            applyDefaults:NO
+                        bypassIsCopyCheck:YES];
 
-	NSParameterAssert(self->_connectionName.length > 0);
+  if ([self isMutable]) {
+    return config1Mutable;
+  }
+
+  return [config1Mutable copy];
 }
 
-+ (instancetype)newConfigByMerging:(IRCClientConfig *)config1 with:(IRCClientConfig *)config2
-{
-	NSParameterAssert(config1 != nil);
-	NSParameterAssert(config2 != nil);
++ (instancetype)newConfigWithNetwork:(IRCNetwork *)network {
+  NSParameterAssert(network != nil);
 
-	IRCClientConfigMutable *config1Mutable = [config1 mutableCopy];
+  IRCClientConfigMutable *configMutable = [IRCClientConfigMutable new];
 
-	[config1Mutable populateDictionaryValue:config2.dictionaryValue
-					  ignorePrivateMessages:NO
-							  applyDefaults:NO
-						  bypassIsCopyCheck:YES];
+  configMutable.connectionName = network.networkName;
 
-	if ([self isMutable]) {
-		return config1Mutable;
-	}
+  IRCServerMutable *server = [IRCServerMutable new];
 
-	return [config1Mutable copy];
-}
+  server.serverAddress = network.serverAddress;
+  server.serverPort = network.serverPort;
 
-+ (instancetype)newConfigWithNetwork:(IRCNetwork *)network
-{
-	NSParameterAssert(network != nil);
+  server.prefersSecuredConnection = network.prefersSecuredConnection;
 
-	IRCClientConfigMutable *configMutable = [IRCClientConfigMutable new];
+  configMutable.serverList = @[ [server copy] ];
 
-	configMutable.connectionName = network.networkName;
+  if ([self isMutable]) {
+    return configMutable;
+  }
 
-	IRCServerMutable *server = [IRCServerMutable new];
-
-	server.serverAddress = network.serverAddress;
-	server.serverPort = network.serverPort;
-
-	server.prefersSecuredConnection = network.prefersSecuredConnection;
-
-	configMutable.serverList = @[ [server copy] ];
-
-	if ([self isMutable]) {
-		return configMutable;
-	}
-
-	return [configMutable copy];
+  return [configMutable copy];
 }
 
 - (void)populateDictionaryValue:(NSDictionary<NSString *, id> *)dic
-		  ignorePrivateMessages:(BOOL)ignorePrivateMessages
-				  applyDefaults:(BOOL)applyDefaults
-			  bypassIsCopyCheck:(BOOL)bypassIsCopyCheck
-{
-	NSParameterAssert(dic != nil);
+          ignorePrivateMessages:(BOOL)ignorePrivateMessages
+                  applyDefaults:(BOOL)applyDefaults
+              bypassIsCopyCheck:(BOOL)bypassIsCopyCheck {
+  NSParameterAssert(dic != nil);
 
-	NSMutableDictionary<NSString *, id> *defaultsMutable = nil;
+  NSMutableDictionary<NSString *, id> *defaultsMutable = nil;
 
-	if (applyDefaults) {
-		defaultsMutable = [self->_defaults mutableCopy];
+  if (applyDefaults) {
+    defaultsMutable = [self->_defaults mutableCopy];
 
-		[defaultsMutable addEntriesFromDictionary:dic];
-	} else {
-		defaultsMutable = [dic mutableCopy];
-	}
+    [defaultsMutable addEntriesFromDictionary:dic];
+  } else {
+    defaultsMutable = [dic mutableCopy];
+  }
 
-	/* Load the newest set of keys. */
-	[defaultsMutable assignUnsignedIntegerTo:&self->_dictionaryVersion forKey:@"dictionaryVersion"];
+  /* Load the newest set of keys. */
+  [defaultsMutable assignUnsignedIntegerTo:&self->_dictionaryVersion
+                                    forKey:@"dictionaryVersion"];
 
-	[defaultsMutable assignArrayTo:&self->_alternateNicknames forKey:@"alternateNicknames"];
-	[defaultsMutable assignArrayTo:&self->_loginCommands forKey:@"onConnectCommands"];
+  [defaultsMutable assignArrayTo:&self->_alternateNicknames
+                          forKey:@"alternateNicknames"];
+  [defaultsMutable assignArrayTo:&self->_loginCommands
+                          forKey:@"onConnectCommands"];
 
-	[defaultsMutable assignBoolTo:&self->_autoConnect forKey:@"autoConnect"];
-	[defaultsMutable assignBoolTo:&self->_autoReconnect forKey:@"autoReconnect"];
-	[defaultsMutable assignBoolTo:&self->_autoSleepModeDisconnect forKey:@"autoSleepModeDisconnect"];
-	[defaultsMutable assignBoolTo:&self->_autojoinWaitsForNickServ forKey:@"autojoinWaitsForNickServ"];
-	[defaultsMutable assignBoolTo:&self->_hideAutojoinDelayedWarnings forKey:@"hideAutojoinDelayedWarnings"];
-	[defaultsMutable assignBoolTo:&self->_hideNetworkUnavailabilityNotices forKey:@"hideNetworkUnavailabilityNotices"];
-	[defaultsMutable assignBoolTo:&self->_performDisconnectOnPongTimer forKey:@"performDisconnectOnPongTimer"];
-	[defaultsMutable assignBoolTo:&self->_performDisconnectOnReachabilityChange
-						   forKey:@"performDisconnectOnReachabilityChange"];
-	[defaultsMutable assignBoolTo:&self->_performPongTimer forKey:@"performPongTimer"];
-	[defaultsMutable assignBoolTo:&self->_prefersSecuredConnection forKey:@"prefersSecuredConnection"];
-	[defaultsMutable assignBoolTo:&self->_saslAuthenticationDisableExternalMechanism
-						   forKey:@"saslAuthenticationDisableExternalMechanism"];
-	[defaultsMutable assignBoolTo:&self->_sendAuthenticationRequestsToUserServ
-						   forKey:@"sendAuthenticationRequestsToUserServ"];
-	[defaultsMutable assignBoolTo:&self->_sendWhoCommandRequestsToChannels forKey:@"sendWhoCommandRequestsToChannels"];
-	[defaultsMutable assignBoolTo:&self->_setInvisibleModeOnConnect forKey:@"setInvisibleModeOnConnect"];
-	[defaultsMutable assignBoolTo:&self->_runConnectCommandsSilently forKey:@"runConnectCommandsSilently"];
-	[defaultsMutable assignBoolTo:&self->_sidebarItemExpanded forKey:@"sidebarItemExpanded"];
-	[defaultsMutable assignBoolTo:&self->_validateServerCertificateChain forKey:@"validateServerCertificateChain"];
-	[defaultsMutable assignBoolTo:&self->_zncIgnoreConfiguredAutojoin forKey:@"zncIgnoreConfiguredAutojoin"];
-	[defaultsMutable assignBoolTo:&self->_zncIgnorePlaybackNotifications forKey:@"zncIgnorePlaybackNotifications"];
-	[defaultsMutable assignBoolTo:&self->_zncIgnoreUserNotifications forKey:@"zncIgnoreUserNotifications"];
-	[defaultsMutable assignBoolTo:&self->_zncOnlyPlaybackLatest forKey:@"zncOnlyPlaybackLatest"];
+  [defaultsMutable assignBoolTo:&self->_autoConnect forKey:@"autoConnect"];
+  [defaultsMutable assignBoolTo:&self->_autoReconnect forKey:@"autoReconnect"];
+  [defaultsMutable assignBoolTo:&self->_autoSleepModeDisconnect
+                         forKey:@"autoSleepModeDisconnect"];
+  [defaultsMutable assignBoolTo:&self->_autojoinWaitsForNickServ
+                         forKey:@"autojoinWaitsForNickServ"];
+  [defaultsMutable assignBoolTo:&self->_hideAutojoinDelayedWarnings
+                         forKey:@"hideAutojoinDelayedWarnings"];
+  [defaultsMutable assignBoolTo:&self->_hideNetworkUnavailabilityNotices
+                         forKey:@"hideNetworkUnavailabilityNotices"];
+  [defaultsMutable assignBoolTo:&self->_performDisconnectOnPongTimer
+                         forKey:@"performDisconnectOnPongTimer"];
+  [defaultsMutable assignBoolTo:&self->_performDisconnectOnReachabilityChange
+                         forKey:@"performDisconnectOnReachabilityChange"];
+  [defaultsMutable assignBoolTo:&self->_performPongTimer
+                         forKey:@"performPongTimer"];
+  [defaultsMutable assignBoolTo:&self->_prefersSecuredConnection
+                         forKey:@"prefersSecuredConnection"];
+  [defaultsMutable
+      assignBoolTo:&self->_saslAuthenticationDisableExternalMechanism
+            forKey:@"saslAuthenticationDisableExternalMechanism"];
+  [defaultsMutable assignBoolTo:&self->_sendAuthenticationRequestsToUserServ
+                         forKey:@"sendAuthenticationRequestsToUserServ"];
+  [defaultsMutable assignBoolTo:&self->_sendWhoCommandRequestsToChannels
+                         forKey:@"sendWhoCommandRequestsToChannels"];
+  [defaultsMutable assignBoolTo:&self->_setInvisibleModeOnConnect
+                         forKey:@"setInvisibleModeOnConnect"];
+  [defaultsMutable assignBoolTo:&self->_runConnectCommandsSilently
+                         forKey:@"runConnectCommandsSilently"];
+  [defaultsMutable assignBoolTo:&self->_sidebarItemExpanded
+                         forKey:@"sidebarItemExpanded"];
+  [defaultsMutable assignBoolTo:&self->_validateServerCertificateChain
+                         forKey:@"validateServerCertificateChain"];
+  [defaultsMutable assignBoolTo:&self->_zncIgnoreConfiguredAutojoin
+                         forKey:@"zncIgnoreConfiguredAutojoin"];
+  [defaultsMutable assignBoolTo:&self->_zncIgnorePlaybackNotifications
+                         forKey:@"zncIgnorePlaybackNotifications"];
+  [defaultsMutable assignBoolTo:&self->_zncIgnoreUserNotifications
+                         forKey:@"zncIgnoreUserNotifications"];
+  [defaultsMutable assignBoolTo:&self->_zncOnlyPlaybackLatest
+                         forKey:@"zncOnlyPlaybackLatest"];
 
-	[defaultsMutable assignDoubleTo:&self->_lastMessageServerTime
-							 forKey:@"cachedLastServerTimeCapabilityReceivedAtTimestamp"];
-	[defaultsMutable assignObjectTo:&self->_identityClientSideCertificate forKey:@"identityClientSideCertificate"];
-	[defaultsMutable assignStringTo:&self->_awayNickname forKey:@"awayNickname"];
-	[defaultsMutable assignStringTo:&self->_saslMechanismPreference forKey:@"saslMechanismPreference"];
-	[defaultsMutable assignStringTo:&self->_connectionName forKey:@"connectionName"];
-	[defaultsMutable assignStringTo:&self->_ctcpVersionReply forKey:@"ctcpVersionReply"];
-	[defaultsMutable assignStringTo:&self->_nickname forKey:@"nickname"];
-	[defaultsMutable assignStringTo:&self->_normalLeavingComment forKey:@"normalLeavingComment"];
-	[defaultsMutable assignStringTo:&self->_proxyAddress forKey:@"proxyAddress"];
-	[defaultsMutable assignStringTo:&self->_proxyUsername forKey:@"proxyUsername"];
-	[defaultsMutable assignStringTo:&self->_realName forKey:@"realName"];
-	[defaultsMutable assignStringTo:&self->_serverAddress forKey:@"serverAddress"];
-	[defaultsMutable assignStringTo:&self->_sleepModeLeavingComment forKey:@"sleepModeLeavingComment"];
-	[defaultsMutable assignStringTo:&self->_uniqueIdentifier forKey:@"uniqueIdentifier"];
-	[defaultsMutable assignStringTo:&self->_username forKey:@"username"];
+  [defaultsMutable
+      assignDoubleTo:&self->_lastMessageServerTime
+              forKey:@"cachedLastServerTimeCapabilityReceivedAtTimestamp"];
+  [defaultsMutable assignObjectTo:&self->_identityClientSideCertificate
+                           forKey:@"identityClientSideCertificate"];
+  [defaultsMutable assignStringTo:&self->_awayNickname forKey:@"awayNickname"];
+  [defaultsMutable assignStringTo:&self->_saslMechanismPreference
+                           forKey:@"saslMechanismPreference"];
+  [defaultsMutable assignStringTo:&self->_connectionName
+                           forKey:@"connectionName"];
+  [defaultsMutable assignStringTo:&self->_ctcpVersionReply
+                           forKey:@"ctcpVersionReply"];
+  [defaultsMutable assignStringTo:&self->_nickname forKey:@"nickname"];
+  [defaultsMutable assignStringTo:&self->_normalLeavingComment
+                           forKey:@"normalLeavingComment"];
+  [defaultsMutable assignStringTo:&self->_proxyAddress forKey:@"proxyAddress"];
+  [defaultsMutable assignStringTo:&self->_proxyUsername
+                           forKey:@"proxyUsername"];
+  [defaultsMutable assignStringTo:&self->_realName forKey:@"realName"];
+  [defaultsMutable assignStringTo:&self->_serverAddress
+                           forKey:@"serverAddress"];
+  [defaultsMutable assignStringTo:&self->_sleepModeLeavingComment
+                           forKey:@"sleepModeLeavingComment"];
+  [defaultsMutable assignStringTo:&self->_uniqueIdentifier
+                           forKey:@"uniqueIdentifier"];
+  [defaultsMutable assignStringTo:&self->_username forKey:@"username"];
 
-	[defaultsMutable assignUnsignedIntegerTo:&self->_addressType forKey:@"addressType"];
-	[defaultsMutable assignUnsignedIntegerTo:&self->_cipherSuites forKey:@"cipherSuites"];
-	[defaultsMutable assignUnsignedIntegerTo:&self->_fallbackEncoding forKey:@"fallbackEncoding"];
-	[defaultsMutable assignUnsignedIntegerTo:&self->_floodControlDelayTimerInterval
-									  forKey:@"floodControlDelayTimerInterval"];
-	[defaultsMutable assignUnsignedIntegerTo:&self->_floodControlMaximumMessages forKey:@"floodControlMaximumMessages"];
-	[defaultsMutable assignUnsignedIntegerTo:&self->_primaryEncoding forKey:@"primaryEncoding"];
-	[defaultsMutable assignUnsignedIntegerTo:&self->_proxyType forKey:@"proxyType"];
+  [defaultsMutable assignUnsignedIntegerTo:&self->_addressType
+                                    forKey:@"addressType"];
+  [defaultsMutable assignUnsignedIntegerTo:&self->_cipherSuites
+                                    forKey:@"cipherSuites"];
+  [defaultsMutable assignUnsignedIntegerTo:&self->_fallbackEncoding
+                                    forKey:@"fallbackEncoding"];
+  [defaultsMutable
+      assignUnsignedIntegerTo:&self->_floodControlDelayTimerInterval
+                       forKey:@"floodControlDelayTimerInterval"];
+  [defaultsMutable assignUnsignedIntegerTo:&self->_floodControlMaximumMessages
+                                    forKey:@"floodControlMaximumMessages"];
+  [defaultsMutable assignUnsignedIntegerTo:&self->_primaryEncoding
+                                    forKey:@"primaryEncoding"];
+  [defaultsMutable assignUnsignedIntegerTo:&self->_proxyType
+                                    forKey:@"proxyType"];
 
-	[defaultsMutable assignUnsignedShortTo:&self->_proxyPort forKey:@"proxyPort"];
-	[defaultsMutable assignUnsignedShortTo:&self->_serverPort forKey:@"serverPort"];
+  [defaultsMutable assignUnsignedShortTo:&self->_proxyPort forKey:@"proxyPort"];
+  [defaultsMutable assignUnsignedShortTo:&self->_serverPort
+                                  forKey:@"serverPort"];
 
-	/* -connectionPrefersIPv4 is a special exception to legacy support.
-	 We still load its value, regardless of dictionary version, so that
-	 we can show a user a warning when -connectionPrefersIPv4 == YES
-	 and -addressType == IPv6 (which is automatically migrates to).
-	 We then change value to NO when user modifies -addressType. */
-	[defaultsMutable assignBoolTo:&self->_connectionPrefersIPv4 forKey:@"connectionPrefersIPv4"];
+  /* -connectionPrefersIPv4 is a special exception to legacy support.
+   We still load its value, regardless of dictionary version, so that
+   we can show a user a warning when -connectionPrefersIPv4 == YES
+   and -addressType == IPv6 (which is automatically migrates to).
+   We then change value to NO when user modifies -addressType. */
+  [defaultsMutable assignBoolTo:&self->_connectionPrefersIPv4
+                         forKey:@"connectionPrefersIPv4"];
 
-	/* If this is a copy operation, then we can just stop here. The rest of the data processed below,
-	 such as other configurations and backwards keys are already taken care of. */
-	if (self.initializedAsCopy && bypassIsCopyCheck == NO) {
-		return;
-	}
+  /* If this is a copy operation, then we can just stop here. The rest of the
+   data processed below, such as other configurations and backwards keys are
+   already taken care of. */
+  if (self.initializedAsCopy && bypassIsCopyCheck == NO) {
+    return;
+  }
 
-	/* Channel list */
-	NSMutableArray<IRCChannelConfig *> *channelListOut = [NSMutableArray array];
+  /* Channel list */
+  NSMutableArray<IRCChannelConfig *> *channelListOut = [NSMutableArray array];
 
-	NSArray<NSDictionary *> *channelListIn = [defaultsMutable arrayForKey:@"channelList"];
+  NSArray<NSDictionary *> *channelListIn =
+      [defaultsMutable arrayForKey:@"channelList"];
 
-	for (NSDictionary<NSString *, id> *e in channelListIn) {
-		IRCChannelConfig *c = [[IRCChannelConfig alloc] initWithDictionary:e];
+  for (NSDictionary<NSString *, id> *e in channelListIn) {
+    IRCChannelConfig *c = [[IRCChannelConfig alloc] initWithDictionary:e];
 
-		if (c.type == IRCChannelTypePrivateMessage) {
-			if (ignorePrivateMessages == NO) {
-				[channelListOut addObject:c];
-			}
-		} else {
-			[channelListOut addObject:c];
-		}
-	}
+    if (c.type == IRCChannelTypePrivateMessage) {
+      if (ignorePrivateMessages == NO) {
+        [channelListOut addObject:c];
+      }
+    } else {
+      [channelListOut addObject:c];
+    }
+  }
 
-	self->_channelList = [channelListOut copy];
+  self->_channelList = [channelListOut copy];
 
-	/* Ignore list */
-	NSMutableArray<IRCAddressBookEntry *> *ignoreListOut = [NSMutableArray array];
+  /* Ignore list */
+  NSMutableArray<IRCAddressBookEntry *> *ignoreListOut = [NSMutableArray array];
 
-	NSArray<NSDictionary *> *ignoreListIn = [defaultsMutable arrayForKey:@"ignoreList"];
+  NSArray<NSDictionary *> *ignoreListIn =
+      [defaultsMutable arrayForKey:@"ignoreList"];
 
-	for (NSDictionary<NSString *, id> *e in ignoreListIn) {
-		IRCAddressBookEntry *c = [[IRCAddressBookEntry alloc] initWithDictionary:e];
+  for (NSDictionary<NSString *, id> *e in ignoreListIn) {
+    IRCAddressBookEntry *c = [[IRCAddressBookEntry alloc] initWithDictionary:e];
 
-		[ignoreListOut addObject:c];
-	}
+    [ignoreListOut addObject:c];
+  }
 
-	self->_ignoreList = [ignoreListOut copy];
+  self->_ignoreList = [ignoreListOut copy];
 
-	/* Highlight list */
-	NSMutableArray<IRCHighlightMatchCondition *> *highlightListOut = [NSMutableArray array];
+  /* Highlight list */
+  NSMutableArray<IRCHighlightMatchCondition *> *highlightListOut =
+      [NSMutableArray array];
 
-	NSArray<NSDictionary *> *highlightListIn = [defaultsMutable arrayForKey:@"highlightList"];
+  NSArray<NSDictionary *> *highlightListIn =
+      [defaultsMutable arrayForKey:@"highlightList"];
 
-	for (NSDictionary<NSString *, id> *e in highlightListIn) {
-		IRCHighlightMatchCondition *c = [[IRCHighlightMatchCondition alloc] initWithDictionary:e];
+  for (NSDictionary<NSString *, id> *e in highlightListIn) {
+    IRCHighlightMatchCondition *c =
+        [[IRCHighlightMatchCondition alloc] initWithDictionary:e];
 
-		[highlightListOut addObject:c];
-	}
+    [highlightListOut addObject:c];
+  }
 
-	self->_highlightList = [highlightListOut copy];
+  self->_highlightList = [highlightListOut copy];
 
-	/* Server List */
-	NSMutableArray<IRCServer *> *serverListOut = [NSMutableArray array];
+  /* Server List */
+  NSMutableArray<IRCServer *> *serverListOut = [NSMutableArray array];
 
-	NSArray<NSDictionary *> *serverListIn = [defaultsMutable arrayForKey:@"serverList"];
+  NSArray<NSDictionary *> *serverListIn =
+      [defaultsMutable arrayForKey:@"serverList"];
 
-	for (NSDictionary<NSString *, id> *e in serverListIn) {
-		IRCServer *c = [[IRCServer alloc] initWithDictionary:e];
+  for (NSDictionary<NSString *, id> *e in serverListIn) {
+    IRCServer *c = [[IRCServer alloc] initWithDictionary:e];
 
-		[serverListOut addObject:c];
-	}
+    [serverListOut addObject:c];
+  }
 
-	self->_serverList = [serverListOut copy];
+  self->_serverList = [serverListOut copy];
 
-	/* Perform migration */
-	/* If legacy keys were assigned before new keys, then a transition would not occur properly. */
-	/* Since the new keys will read from -defaults if they are not present in /dic/, then those
-	 would override legacy keys when performing a first pass. */
+  /* Perform migration */
+  /* If legacy keys were assigned before new keys, then a transition would not
+   * occur properly. */
+  /* Since the new keys will read from -defaults if they are not present in
+   /dic/, then those would override legacy keys when performing a first pass. */
 
-	/* Is everything up to date? */
-	NSUInteger dictionaryVersion = self->_dictionaryVersion;
+  /* Is everything up to date? */
+  NSUInteger dictionaryVersion = self->_dictionaryVersion;
 
-	if (dictionaryVersion == IRCClientConfigDictionaryVersionLatest) {
-		return;
-	}
+  if (dictionaryVersion == IRCClientConfigDictionaryVersionLatest) {
+    return;
+  }
 
-	/* 710 is latest version which means we migrate it at all times */
-	[self _migrate710Dictionary:dic withDefaults:defaultsMutable];
+  /* 710 is latest version which means we migrate it at all times */
+  [self _migrate710Dictionary:dic withDefaults:defaultsMutable];
 
-	/* 704 is no longer the latest version but there was no version before
-	 it which means we only have to migrate it when the version is unknown. */
-	if (dictionaryVersion == 0) {
-		[self _migrate704Dictionary:dic withDefaults:defaultsMutable];
-	}
+  /* 704 is no longer the latest version but there was no version before
+   it which means we only have to migrate it when the version is unknown. */
+  if (dictionaryVersion == 0) {
+    [self _migrate704Dictionary:dic withDefaults:defaultsMutable];
+  }
 
-	/* Update version */
-	self->_dictionaryVersion = IRCClientConfigDictionaryVersionLatest;
+  /* Update version */
+  self->_dictionaryVersion = IRCClientConfigDictionaryVersionLatest;
 }
 
-- (void)_migrate710Dictionary:(NSDictionary *)dic withDefaults:(NSMutableDictionary *)defaultsMutable
-{
-	NSParameterAssert(dic != nil);
-	NSParameterAssert(defaultsMutable != nil);
+- (void)_migrate710Dictionary:(NSDictionary *)dic
+                 withDefaults:(NSMutableDictionary *)defaultsMutable {
+  NSParameterAssert(dic != nil);
+  NSParameterAssert(defaultsMutable != nil);
 
-	GLASSTUAL_IGNORE_DEPRECATION_BEGIN
-	if (self.connectionPrefersIPv4) {
-		GLASSTUAL_IGNORE_DEPRECATION_END
+  GLASSTUAL_IGNORE_DEPRECATION_BEGIN
+  if (self.connectionPrefersIPv4) {
+    GLASSTUAL_IGNORE_DEPRECATION_END
 
-		self->_addressType = IRCConnectionAddressTypeIPv4;
-	}
+    self->_addressType = IRCConnectionAddressTypeIPv4;
+  }
 }
 
-- (void)_migrate704Dictionary:(NSDictionary *)dic withDefaults:(NSMutableDictionary *)defaultsMutable
-{
-	NSParameterAssert(dic != nil);
-	NSParameterAssert(defaultsMutable != nil);
+- (void)_migrate704Dictionary:(NSDictionary *)dic
+                 withDefaults:(NSMutableDictionary *)defaultsMutable {
+  NSParameterAssert(dic != nil);
+  NSParameterAssert(defaultsMutable != nil);
 
-	[defaultsMutable assignArrayTo:&self->_alternateNicknames forKey:@"identityAlternateNicknames"];
+  [defaultsMutable assignArrayTo:&self->_alternateNicknames
+                          forKey:@"identityAlternateNicknames"];
 
-	[defaultsMutable assignBoolTo:&self->_autoConnect forKey:@"connectOnLaunch"];
-	[defaultsMutable assignBoolTo:&self->_autoReconnect forKey:@"connectOnDisconnect"];
-	[defaultsMutable assignBoolTo:&self->_autoSleepModeDisconnect forKey:@"disconnectOnSleepMode"];
-	[defaultsMutable assignBoolTo:&self->_autojoinWaitsForNickServ forKey:@"autojoinWaitsForNickServIdentification"];
-	[defaultsMutable assignBoolTo:&self->_prefersSecuredConnection forKey:@"connectUsingSSL"];
-	[defaultsMutable assignBoolTo:&self->_setInvisibleModeOnConnect forKey:@"setInvisibleOnConnect"];
-	[defaultsMutable assignBoolTo:&self->_sidebarItemExpanded forKey:@"serverListItemIsExpanded"];
-	[defaultsMutable assignBoolTo:&self->_validateServerCertificateChain forKey:@"validateServerSideSSLCertificate"];
+  [defaultsMutable assignBoolTo:&self->_autoConnect forKey:@"connectOnLaunch"];
+  [defaultsMutable assignBoolTo:&self->_autoReconnect
+                         forKey:@"connectOnDisconnect"];
+  [defaultsMutable assignBoolTo:&self->_autoSleepModeDisconnect
+                         forKey:@"disconnectOnSleepMode"];
+  [defaultsMutable assignBoolTo:&self->_autojoinWaitsForNickServ
+                         forKey:@"autojoinWaitsForNickServIdentification"];
+  [defaultsMutable assignBoolTo:&self->_prefersSecuredConnection
+                         forKey:@"connectUsingSSL"];
+  [defaultsMutable assignBoolTo:&self->_setInvisibleModeOnConnect
+                         forKey:@"setInvisibleOnConnect"];
+  [defaultsMutable assignBoolTo:&self->_sidebarItemExpanded
+                         forKey:@"serverListItemIsExpanded"];
+  [defaultsMutable assignBoolTo:&self->_validateServerCertificateChain
+                         forKey:@"validateServerSideSSLCertificate"];
 
-	[defaultsMutable assignObjectTo:&self->_identityClientSideCertificate forKey:@"IdentitySSLCertificate"];
+  [defaultsMutable assignObjectTo:&self->_identityClientSideCertificate
+                           forKey:@"IdentitySSLCertificate"];
 
-	[defaultsMutable assignStringTo:&self->_awayNickname forKey:@"identityAwayNickname"];
-	[defaultsMutable assignStringTo:&self->_nickname forKey:@"identityNickname"];
-	[defaultsMutable assignStringTo:&self->_normalLeavingComment forKey:@"connectionDisconnectDefaultMessage"];
-	[defaultsMutable assignStringTo:&self->_proxyAddress forKey:@"proxyServerAddress"];
-	[defaultsMutable assignStringTo:&self->_proxyUsername forKey:@"proxyServerUsername"];
-	[defaultsMutable assignStringTo:&self->_realName forKey:@"identityRealname"];
-	[defaultsMutable assignStringTo:&self->_sleepModeLeavingComment forKey:@"connectionDisconnectSleepModeMessage"];
-	[defaultsMutable assignStringTo:&self->_username forKey:@"identityUsername"];
+  [defaultsMutable assignStringTo:&self->_awayNickname
+                           forKey:@"identityAwayNickname"];
+  [defaultsMutable assignStringTo:&self->_nickname forKey:@"identityNickname"];
+  [defaultsMutable assignStringTo:&self->_normalLeavingComment
+                           forKey:@"connectionDisconnectDefaultMessage"];
+  [defaultsMutable assignStringTo:&self->_proxyAddress
+                           forKey:@"proxyServerAddress"];
+  [defaultsMutable assignStringTo:&self->_proxyUsername
+                           forKey:@"proxyServerUsername"];
+  [defaultsMutable assignStringTo:&self->_realName forKey:@"identityRealname"];
+  [defaultsMutable assignStringTo:&self->_sleepModeLeavingComment
+                           forKey:@"connectionDisconnectSleepModeMessage"];
+  [defaultsMutable assignStringTo:&self->_username forKey:@"identityUsername"];
 
-	[defaultsMutable assignUnsignedIntegerTo:&self->_primaryEncoding forKey:@"characterEncodingDefault"];
-	[defaultsMutable assignUnsignedIntegerTo:&self->_fallbackEncoding forKey:@"characterEncodingFallback"];
-	[defaultsMutable assignUnsignedIntegerTo:&self->_proxyType forKey:@"proxyServerType"];
+  [defaultsMutable assignUnsignedIntegerTo:&self->_primaryEncoding
+                                    forKey:@"characterEncodingDefault"];
+  [defaultsMutable assignUnsignedIntegerTo:&self->_fallbackEncoding
+                                    forKey:@"characterEncodingFallback"];
+  [defaultsMutable assignUnsignedIntegerTo:&self->_proxyType
+                                    forKey:@"proxyServerType"];
 
-	[defaultsMutable assignUnsignedShortTo:&self->_proxyPort forKey:@"proxyServerPort"];
+  [defaultsMutable assignUnsignedShortTo:&self->_proxyPort
+                                  forKey:@"proxyServerPort"];
 
-	[defaultsMutable assignDoubleTo:&self->_lastMessageServerTime
-							 forKey:@"cachedLastServerTimeCapacityReceivedAtTimestamp"];
+  [defaultsMutable
+      assignDoubleTo:&self->_lastMessageServerTime
+              forKey:@"cachedLastServerTimeCapacityReceivedAtTimestamp"];
 
-	/* Flood control */
-	/* This is here to migrate to the new properties. Saving these values
-	 in this dictionary key is no longer preferred. */
-	BOOL floodControlSetToDisabled = NO;
+  /* Flood control */
+  /* This is here to migrate to the new properties. Saving these values
+   in this dictionary key is no longer preferred. */
+  BOOL floodControlSetToDisabled = NO;
 
-	NSDictionary *floodControlDic = [defaultsMutable dictionaryForKey:@"floodControl"];
+  NSDictionary *floodControlDic =
+      [defaultsMutable dictionaryForKey:@"floodControl"];
 
-	if (floodControlDic) {
-		NSNumber *serviceEnabled = floodControlDic[@"serviceEnabled"];
+  if (floodControlDic) {
+    NSNumber *serviceEnabled = floodControlDic[@"serviceEnabled"];
 
-		if (serviceEnabled && serviceEnabled.boolValue == NO) {
-			floodControlSetToDisabled = YES;
-		}
+    if (serviceEnabled && serviceEnabled.boolValue == NO) {
+      floodControlSetToDisabled = YES;
+    }
 
-		[floodControlDic assignUnsignedIntegerTo:&self->_floodControlDelayTimerInterval forKey:@"delayTimerInterval"];
-		[floodControlDic assignUnsignedIntegerTo:&self->_floodControlMaximumMessages forKey:@"maximumMessageCount"];
-	}
+    [floodControlDic
+        assignUnsignedIntegerTo:&self->_floodControlDelayTimerInterval
+                         forKey:@"delayTimerInterval"];
+    [floodControlDic assignUnsignedIntegerTo:&self->_floodControlMaximumMessages
+                                      forKey:@"maximumMessageCount"];
+  }
 
-	if (floodControlSetToDisabled == NO) {
-		NSNumber *floodControlEnabled = defaultsMutable[@"isOutgoingFloodControlEnabled"];
+  if (floodControlSetToDisabled == NO) {
+    NSNumber *floodControlEnabled =
+        defaultsMutable[@"isOutgoingFloodControlEnabled"];
 
-		if (floodControlEnabled && floodControlEnabled.boolValue == NO) {
-			floodControlSetToDisabled = YES;
-		}
-	}
+    if (floodControlEnabled && floodControlEnabled.boolValue == NO) {
+      floodControlSetToDisabled = YES;
+    }
+  }
 
-	/* An option to disable flood control no longer exists.
-	 If the user had flood control disabled when the option did exist,
-	 then set the the current values to appear disabled. */
-	if (floodControlSetToDisabled) {
-		self->_floodControlDelayTimerInterval = IRCConnectionConfigFloodControlMinimumDelayInterval;
-		self->_floodControlMaximumMessages = IRCConnectionConfigFloodControlMaximumMessageCount;
-	}
+  /* An option to disable flood control no longer exists.
+   If the user had flood control disabled when the option did exist,
+   then set the the current values to appear disabled. */
+  if (floodControlSetToDisabled) {
+    self->_floodControlDelayTimerInterval =
+        IRCConnectionConfigFloodControlMinimumDelayInterval;
+    self->_floodControlMaximumMessages =
+        IRCConnectionConfigFloodControlMaximumMessageCount;
+  }
 
-	/* Migrate to keychain. */
-	NSString *proxyPassword = [defaultsMutable stringForKey:@"proxyServerPassword"];
+  /* Migrate to keychain. */
+  NSString *proxyPassword =
+      [defaultsMutable stringForKey:@"proxyServerPassword"];
 
-	if (proxyPassword) {
-		self->_proxyPassword = [proxyPassword copy];
+  if (proxyPassword) {
+    self->_proxyPassword = [proxyPassword copy];
 
-		[self writeProxyPasswordToKeychain];
-	}
+    [self writeProxyPasswordToKeychain];
+  }
 
-	/* Cipher suites */
-	/* The dictionary excludes defaults which means we need to be cautious
-	 about reading the value of dic when performing migration. */
-	if (dic[@"cipherSuites"] == nil) {
-		NSNumber *connectionPrefersModernCiphers = dic[@"connectionPrefersModernCiphers"];
+  /* Cipher suites */
+  /* The dictionary excludes defaults which means we need to be cautious
+   about reading the value of dic when performing migration. */
+  if (dic[@"cipherSuites"] == nil) {
+    NSNumber *connectionPrefersModernCiphers =
+        dic[@"connectionPrefersModernCiphers"];
 
-		if (connectionPrefersModernCiphers && connectionPrefersModernCiphers.boolValue == NO) {
-			self->_cipherSuites = RCMCipherSuiteCollectionNone;
-		}
-	}
+    if (connectionPrefersModernCiphers &&
+        connectionPrefersModernCiphers.boolValue == NO) {
+      self->_cipherSuites = RCMCipherSuiteCollectionNone;
+    }
+  }
 
-	/* Migrate servers */
-	[self _migrateDictionaryToServerListV1Layout:defaultsMutable];
+  /* Migrate servers */
+  [self _migrateDictionaryToServerListV1Layout:defaultsMutable];
 }
 
-- (void)_migrateDictionaryToServerListV1Layout:(NSDictionary *)dic
-{
-	NSParameterAssert(dic != nil);
+- (void)_migrateDictionaryToServerListV1Layout:(NSDictionary *)dic {
+  NSParameterAssert(dic != nil);
 
-	/* This key is no longer assigned. We still check it so that
-	 clients that did not set dictionaryVersion but did set this
-	 key wont trigger migration again. */
-	id migratedToServerListV1Layout = dic[@"migratedToServerListV1Layout"];
+  /* This key is no longer assigned. We still check it so that
+   clients that did not set dictionaryVersion but did set this
+   key wont trigger migration again. */
+  id migratedToServerListV1Layout = dic[@"migratedToServerListV1Layout"];
 
-	if (migratedToServerListV1Layout && [migratedToServerListV1Layout boolValue]) {
-		return;
-	}
+  if (migratedToServerListV1Layout &&
+      [migratedToServerListV1Layout boolValue]) {
+    return;
+  }
 
-	/* Do not perform migration if already one server exists. */
-	/* IRCClientConfig inserts these values back into the exported dictionary 
-	 for backwards compatibility which means once we imported them and have
-	 at least one server, then importing again will not help. */
-	if (self.serverList.count > 0) {
-		return;
-	}
+  /* Do not perform migration if already one server exists. */
+  /* IRCClientConfig inserts these values back into the exported dictionary
+   for backwards compatibility which means once we imported them and have
+   at least one server, then importing again will not help. */
+  if (self.serverList.count > 0) {
+    return;
+  }
 
-	/* Perform migration */
-	NSString *serverAddress = [dic stringForKey:@"serverAddress"];
+  /* Perform migration */
+  NSString *serverAddress = [dic stringForKey:@"serverAddress"];
 
-	if (serverAddress.isValidInternetAddress == NO) {
-		LogToConsoleDebug("Migration cancelled because of bad server address");
+  if (serverAddress.isValidInternetAddress == NO) {
+    LogToConsoleDebug("Migration cancelled because of bad server address");
 
-		return;
-	}
+    return;
+  }
 
-	uint16_t serverPort = [dic unsignedShortForKey:@"serverPort"];
+  uint16_t serverPort = [dic unsignedShortForKey:@"serverPort"];
 
-	if (serverPort == 0 || serverPort > TXMaximumTCPPort) {
-		LogToConsoleDebug("Migration cancelled because of bad server port");
+  if (serverPort == 0 || serverPort > TXMaximumTCPPort) {
+    LogToConsoleDebug("Migration cancelled because of bad server port");
 
-		return;
-	}
+    return;
+  }
 
-	BOOL prefersSecuredConnection = [dic boolForKey:@"prefersSecuredConnection"];
+  BOOL prefersSecuredConnection = [dic boolForKey:@"prefersSecuredConnection"];
 
-	NSString *serverPasswordServiceName = [NSString stringWithFormat:@"glasstual.server.%@", self.uniqueIdentifier];
+  NSString *serverPasswordServiceName =
+      [NSString stringWithFormat:@"glasstual.server.%@", self.uniqueIdentifier];
 
-	NSString *serverPassword = [XRKeychain getPasswordFromKeychainItem:@"Glasstual (Server Password)"
-														  withItemKind:@"application password"
-														   forUsername:nil
-														   serviceName:serverPasswordServiceName];
+  NSString *serverPassword =
+      [XRKeychain getPasswordFromKeychainItem:@"Glasstual (Server Password)"
+                                 withItemKind:@"application password"
+                                  forUsername:nil
+                                  serviceName:serverPasswordServiceName];
 
-	IRCServerMutable *server = [IRCServerMutable new];
+  IRCServerMutable *server = [IRCServerMutable new];
 
-	server.serverAddress = serverAddress;
-	server.serverPort = serverPort;
+  server.serverAddress = serverAddress;
+  server.serverPort = serverPort;
 
-	server.serverPassword = serverPassword;
+  server.serverPassword = serverPassword;
 
-	server.prefersSecuredConnection = prefersSecuredConnection;
+  server.prefersSecuredConnection = prefersSecuredConnection;
 
-	[server writeServerPasswordToKeychain];
+  [server writeServerPasswordToKeychain];
 
-	self->_serverList = @[ [server copy] ];
+  self->_serverList = @[ [server copy] ];
 
-	self->_migratedServerPasswordPendingDestroy = YES;
+  self->_migratedServerPasswordPendingDestroy = YES;
 }
 
-- (BOOL)isEqual:(id)object
-{
-	if (object == nil) {
-		return NO;
-	}
+- (BOOL)isEqual:(id)object {
+  if (object == nil) {
+    return NO;
+  }
 
-	if (object == self) {
-		return YES;
-	}
+  if (object == self) {
+    return YES;
+  }
 
-	if ([object isKindOfClass:[IRCClientConfig class]] == NO) {
-		return NO;
-	}
+  if ([object isKindOfClass:[IRCClientConfig class]] == NO) {
+    return NO;
+  }
 
-	IRCClientConfig *objectCast = (IRCClientConfig *)object;
+  IRCClientConfig *objectCast = (IRCClientConfig *)object;
 
-	NSDictionary *s1 = self.dictionaryValue;
+  NSDictionary *s1 = self.dictionaryValue;
 
-	NSDictionary *s2 = objectCast.dictionaryValue;
+  NSDictionary *s2 = objectCast.dictionaryValue;
 
-	return ([s1 isEqualToDictionary:s2] &&
+  return ([s1 isEqualToDictionary:s2] &&
 
-			((self->_nicknamePassword == nil && objectCast->_nicknamePassword == nil) ||
-			 [self->_nicknamePassword isEqualToString:objectCast->_nicknamePassword]) &&
+          ((self->_nicknamePassword == nil &&
+            objectCast->_nicknamePassword == nil) ||
+           [self->_nicknamePassword
+               isEqualToString:objectCast->_nicknamePassword]) &&
 
-			((self->_proxyPassword == nil && objectCast->_proxyPassword == nil) ||
-			 [self->_proxyPassword isEqualToString:objectCast->_proxyPassword]));
+          ((self->_proxyPassword == nil && objectCast->_proxyPassword == nil) ||
+           [self->_proxyPassword isEqualToString:objectCast->_proxyPassword]));
 }
 
-- (NSUInteger)hash
-{
-	return self.uniqueIdentifier.hash;
+- (NSUInteger)hash {
+  return self.uniqueIdentifier.hash;
 }
 
-- (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing
-{
-	IRCClientConfig *config = [self allocForCopyAsMutable:mutableCopy];
+- (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing {
+  IRCClientConfig *config = [self allocForCopyAsMutable:mutableCopy];
 
-	config->_nicknamePassword = self->_nicknamePassword;
-	config->_proxyPassword = self->_proxyPassword;
+  config->_nicknamePassword = self->_nicknamePassword;
+  config->_proxyPassword = self->_proxyPassword;
 
-	config->_defaults = self->_defaults;
+  config->_defaults = self->_defaults;
 
-	config->_migratedServerPasswordPendingDestroy = self->_migratedServerPasswordPendingDestroy;
+  config->_migratedServerPasswordPendingDestroy =
+      self->_migratedServerPasswordPendingDestroy;
 
-	if (uniquing) {
-		NSMutableArray *channelList = [self.channelList mutableCopy];
-		NSMutableArray *highlightList = [self.highlightList mutableCopy];
-		NSMutableArray *ignoreList = [self.ignoreList mutableCopy];
-		NSMutableArray *serverList = [self.serverList mutableCopy];
+  if (uniquing) {
+    NSMutableArray *channelList = [self.channelList mutableCopy];
+    NSMutableArray *highlightList = [self.highlightList mutableCopy];
+    NSMutableArray *ignoreList = [self.ignoreList mutableCopy];
+    NSMutableArray *serverList = [self.serverList mutableCopy];
 
-		[channelList performSelectorOnObjectValueAndReplace:@selector(uniqueCopy)];
-		[highlightList performSelectorOnObjectValueAndReplace:@selector(uniqueCopy)];
-		[ignoreList performSelectorOnObjectValueAndReplace:@selector(uniqueCopy)];
-		[serverList performSelectorOnObjectValueAndReplace:@selector(uniqueCopy)];
+    [channelList performSelectorOnObjectValueAndReplace:@selector(uniqueCopy)];
+    [highlightList
+        performSelectorOnObjectValueAndReplace:@selector(uniqueCopy)];
+    [ignoreList performSelectorOnObjectValueAndReplace:@selector(uniqueCopy)];
+    [serverList performSelectorOnObjectValueAndReplace:@selector(uniqueCopy)];
 
-		config->_channelList = [channelList copy];
-		config->_highlightList = [highlightList copy];
-		config->_ignoreList = [ignoreList copy];
-		config->_serverList = [serverList copy];
+    config->_channelList = [channelList copy];
+    config->_highlightList = [highlightList copy];
+    config->_ignoreList = [ignoreList copy];
+    config->_serverList = [serverList copy];
 
-		config->_uniqueIdentifier = [NSString stringWithUUID];
-	} else // uniquing
-	{
-		config->_channelList = self->_channelList;
-		config->_highlightList = self->_highlightList;
-		config->_ignoreList = self->_ignoreList;
-		config->_serverList = self->_serverList;
-	}
+    config->_uniqueIdentifier = [NSString stringWithUUID];
+  } else // uniquing
+  {
+    config->_channelList = self->_channelList;
+    config->_highlightList = self->_highlightList;
+    config->_ignoreList = self->_ignoreList;
+    config->_serverList = self->_serverList;
+  }
 
-	return [config initWithDictionary:self.dictionaryValueForCopy ignorePrivateMessages:NO];
+  return [config initWithDictionary:self.dictionaryValueForCopy
+              ignorePrivateMessages:NO];
 }
 
-- (__kindof XRPortablePropertyDict *)mutableClass
-{
-	return [IRCClientConfigMutable self];
+- (__kindof XRPortablePropertyDict *)mutableClass {
+  return [IRCClientConfigMutable self];
 }
 
-- (NSDictionary<NSString *, id> *)dictionaryValueForTarget:(XRPortablePropertyDictTarget)target
-{
-	NSMutableDictionary<NSString *, id> *dic = [NSMutableDictionary dictionary];
+- (NSDictionary<NSString *, id> *)dictionaryValueForTarget:
+    (XRPortablePropertyDictTarget)target {
+  NSMutableDictionary<NSString *, id> *dic = [NSMutableDictionary dictionary];
 
-	[dic setUnsignedInteger:self->_dictionaryVersion forKey:@"dictionaryVersion"];
+  [dic setUnsignedInteger:self->_dictionaryVersion forKey:@"dictionaryVersion"];
 
-	[dic maybeSetObject:self.alternateNicknames forKey:@"alternateNicknames"];
-	[dic maybeSetObject:self.awayNickname forKey:@"awayNickname"];
-	[dic maybeSetObject:self.saslMechanismPreference forKey:@"saslMechanismPreference"];
-	[dic maybeSetObject:self.connectionName forKey:@"connectionName"];
-	[dic maybeSetObject:self.ctcpVersionReply forKey:@"ctcpVersionReply"];
-	[dic maybeSetObject:self.loginCommands forKey:@"onConnectCommands"];
-	[dic maybeSetObject:self.nickname forKey:@"nickname"];
-	[dic maybeSetObject:self.normalLeavingComment forKey:@"normalLeavingComment"];
-	[dic maybeSetObject:self.proxyAddress forKey:@"proxyAddress"];
-	[dic maybeSetObject:self.proxyUsername forKey:@"proxyUsername"];
-	[dic maybeSetObject:self.realName forKey:@"realName"];
-	[dic maybeSetObject:self.sleepModeLeavingComment forKey:@"sleepModeLeavingComment"];
-	[dic maybeSetObject:self.uniqueIdentifier forKey:@"uniqueIdentifier"];
-	[dic maybeSetObject:self.username forKey:@"username"];
+  [dic maybeSetObject:self.alternateNicknames forKey:@"alternateNicknames"];
+  [dic maybeSetObject:self.awayNickname forKey:@"awayNickname"];
+  [dic maybeSetObject:self.saslMechanismPreference
+               forKey:@"saslMechanismPreference"];
+  [dic maybeSetObject:self.connectionName forKey:@"connectionName"];
+  [dic maybeSetObject:self.ctcpVersionReply forKey:@"ctcpVersionReply"];
+  [dic maybeSetObject:self.loginCommands forKey:@"onConnectCommands"];
+  [dic maybeSetObject:self.nickname forKey:@"nickname"];
+  [dic maybeSetObject:self.normalLeavingComment forKey:@"normalLeavingComment"];
+  [dic maybeSetObject:self.proxyAddress forKey:@"proxyAddress"];
+  [dic maybeSetObject:self.proxyUsername forKey:@"proxyUsername"];
+  [dic maybeSetObject:self.realName forKey:@"realName"];
+  [dic maybeSetObject:self.sleepModeLeavingComment
+               forKey:@"sleepModeLeavingComment"];
+  [dic maybeSetObject:self.uniqueIdentifier forKey:@"uniqueIdentifier"];
+  [dic maybeSetObject:self.username forKey:@"username"];
 
-	[dic setBool:self.autoConnect forKey:@"autoConnect"];
-	[dic setBool:self.autoReconnect forKey:@"autoReconnect"];
-	[dic setBool:self.autoSleepModeDisconnect forKey:@"autoSleepModeDisconnect"];
-	[dic setBool:self.autojoinWaitsForNickServ forKey:@"autojoinWaitsForNickServ"];
-	[dic setBool:self.hideAutojoinDelayedWarnings forKey:@"hideAutojoinDelayedWarnings"];
-	[dic setBool:self.hideNetworkUnavailabilityNotices forKey:@"hideNetworkUnavailabilityNotices"];
-	[dic setBool:self.performDisconnectOnPongTimer forKey:@"performDisconnectOnPongTimer"];
-	[dic setBool:self.performDisconnectOnReachabilityChange forKey:@"performDisconnectOnReachabilityChange"];
-	[dic setBool:self.performPongTimer forKey:@"performPongTimer"];
-	[dic setBool:self.saslAuthenticationDisableExternalMechanism forKey:@"saslAuthenticationDisableExternalMechanism"];
-	[dic setBool:self.sendAuthenticationRequestsToUserServ forKey:@"sendAuthenticationRequestsToUserServ"];
-	[dic setBool:self.sendWhoCommandRequestsToChannels forKey:@"sendWhoCommandRequestsToChannels"];
-	[dic setBool:self.setInvisibleModeOnConnect forKey:@"setInvisibleModeOnConnect"];
-	[dic setBool:self.runConnectCommandsSilently forKey:@"runConnectCommandsSilently"];
-	[dic setBool:self.validateServerCertificateChain forKey:@"validateServerCertificateChain"];
-	[dic setBool:self.zncIgnoreConfiguredAutojoin forKey:@"zncIgnoreConfiguredAutojoin"];
-	[dic setBool:self.zncIgnorePlaybackNotifications forKey:@"zncIgnorePlaybackNotifications"];
-	[dic setBool:self.zncIgnoreUserNotifications forKey:@"zncIgnoreUserNotifications"];
-	[dic setBool:self.zncOnlyPlaybackLatest forKey:@"zncOnlyPlaybackLatest"];
+  [dic setBool:self.autoConnect forKey:@"autoConnect"];
+  [dic setBool:self.autoReconnect forKey:@"autoReconnect"];
+  [dic setBool:self.autoSleepModeDisconnect forKey:@"autoSleepModeDisconnect"];
+  [dic setBool:self.autojoinWaitsForNickServ
+        forKey:@"autojoinWaitsForNickServ"];
+  [dic setBool:self.hideAutojoinDelayedWarnings
+        forKey:@"hideAutojoinDelayedWarnings"];
+  [dic setBool:self.hideNetworkUnavailabilityNotices
+        forKey:@"hideNetworkUnavailabilityNotices"];
+  [dic setBool:self.performDisconnectOnPongTimer
+        forKey:@"performDisconnectOnPongTimer"];
+  [dic setBool:self.performDisconnectOnReachabilityChange
+        forKey:@"performDisconnectOnReachabilityChange"];
+  [dic setBool:self.performPongTimer forKey:@"performPongTimer"];
+  [dic setBool:self.saslAuthenticationDisableExternalMechanism
+        forKey:@"saslAuthenticationDisableExternalMechanism"];
+  [dic setBool:self.sendAuthenticationRequestsToUserServ
+        forKey:@"sendAuthenticationRequestsToUserServ"];
+  [dic setBool:self.sendWhoCommandRequestsToChannels
+        forKey:@"sendWhoCommandRequestsToChannels"];
+  [dic setBool:self.setInvisibleModeOnConnect
+        forKey:@"setInvisibleModeOnConnect"];
+  [dic setBool:self.runConnectCommandsSilently
+        forKey:@"runConnectCommandsSilently"];
+  [dic setBool:self.validateServerCertificateChain
+        forKey:@"validateServerCertificateChain"];
+  [dic setBool:self.zncIgnoreConfiguredAutojoin
+        forKey:@"zncIgnoreConfiguredAutojoin"];
+  [dic setBool:self.zncIgnorePlaybackNotifications
+        forKey:@"zncIgnorePlaybackNotifications"];
+  [dic setBool:self.zncIgnoreUserNotifications
+        forKey:@"zncIgnoreUserNotifications"];
+  [dic setBool:self.zncOnlyPlaybackLatest forKey:@"zncOnlyPlaybackLatest"];
 
-	[dic setUnsignedInteger:self.addressType forKey:@"addressType"];
-	[dic setUnsignedInteger:self.cipherSuites forKey:@"cipherSuites"];
-	[dic setUnsignedInteger:self.fallbackEncoding forKey:@"fallbackEncoding"];
-	[dic setUnsignedInteger:self.floodControlDelayTimerInterval forKey:@"floodControlDelayTimerInterval"];
-	[dic setUnsignedInteger:self.floodControlMaximumMessages forKey:@"floodControlMaximumMessages"];
-	[dic setUnsignedInteger:self.primaryEncoding forKey:@"primaryEncoding"];
-	[dic setUnsignedInteger:self.proxyType forKey:@"proxyType"];
+  [dic setUnsignedInteger:self.addressType forKey:@"addressType"];
+  [dic setUnsignedInteger:self.cipherSuites forKey:@"cipherSuites"];
+  [dic setUnsignedInteger:self.fallbackEncoding forKey:@"fallbackEncoding"];
+  [dic setUnsignedInteger:self.floodControlDelayTimerInterval
+                   forKey:@"floodControlDelayTimerInterval"];
+  [dic setUnsignedInteger:self.floodControlMaximumMessages
+                   forKey:@"floodControlMaximumMessages"];
+  [dic setUnsignedInteger:self.primaryEncoding forKey:@"primaryEncoding"];
+  [dic setUnsignedInteger:self.proxyType forKey:@"proxyType"];
 
-	[dic setUnsignedShort:self.proxyPort forKey:@"proxyPort"];
+  [dic setUnsignedShort:self.proxyPort forKey:@"proxyPort"];
 
-	/* These are items that cannot be synced over iCloud because they access data specific to 
-	 this device or only contain state information which is not useful to other devices. */
-	[dic maybeSetObject:self.identityClientSideCertificate forKey:@"identityClientSideCertificate"];
+  /* These are items that cannot be synced over iCloud because they access data
+   specific to this device or only contain state information which is not useful
+   to other devices. */
+  [dic maybeSetObject:self.identityClientSideCertificate
+               forKey:@"identityClientSideCertificate"];
 
-	[dic setBool:self.sidebarItemExpanded forKey:@"sidebarItemExpanded"];
+  [dic setBool:self.sidebarItemExpanded forKey:@"sidebarItemExpanded"];
 
-	[dic setDouble:self.lastMessageServerTime forKey:@"cachedLastServerTimeCapabilityReceivedAtTimestamp"];
+  [dic setDouble:self.lastMessageServerTime
+          forKey:@"cachedLastServerTimeCapabilityReceivedAtTimestamp"];
 
-	/* Deprecated */
-	/* These values are inserted here for backwards compatibility 
-	 with earlier versions of Glasstual */
-	GLASSTUAL_IGNORE_DEPRECATION_BEGIN
-	[dic setBool:self.connectionPrefersIPv4 forKey:@"connectionPrefersIPv4"];
-	GLASSTUAL_IGNORE_DEPRECATION_END
+  /* Deprecated */
+  /* These values are inserted here for backwards compatibility
+   with earlier versions of Glasstual */
+  GLASSTUAL_IGNORE_DEPRECATION_BEGIN
+  [dic setBool:self.connectionPrefersIPv4 forKey:@"connectionPrefersIPv4"];
+  GLASSTUAL_IGNORE_DEPRECATION_END
 
-	[dic setBool:self.legacyConnectionPrefersModernCiphers forKey:@"connectionPrefersModernCiphers"];
+  [dic setBool:self.legacyConnectionPrefersModernCiphers
+        forKey:@"connectionPrefersModernCiphers"];
 
-	[dic maybeSetObject:self.legacyServerAddress forKey:@"serverAddress"];
+  [dic maybeSetObject:self.legacyServerAddress forKey:@"serverAddress"];
 
-	[dic setBool:self.legacyPrefersSecuredConnection forKey:@"prefersSecuredConnection"];
+  [dic setBool:self.legacyPrefersSecuredConnection
+        forKey:@"prefersSecuredConnection"];
 
-	[dic setUnsignedShort:self.legacyServerPort forKey:@"serverPort"];
+  [dic setUnsignedShort:self.legacyServerPort forKey:@"serverPort"];
 
-	/* During a copy operation, it is faster to copy these arrays as a whole.
-	 It also preserves -secretKey value in IRCChannelConfig since that will
-	 be lost when reconstructing from dictionary value. */
-	if (target == XRPortablePropertyDictTargetCopy || target == XRPortablePropertyDictTargetMutableCopy) {
-		return [dic copy];
-	}
+  /* During a copy operation, it is faster to copy these arrays as a whole.
+   It also preserves -secretKey value in IRCChannelConfig since that will
+   be lost when reconstructing from dictionary value. */
+  if (target == XRPortablePropertyDictTargetCopy ||
+      target == XRPortablePropertyDictTargetMutableCopy) {
+    return [dic copy];
+  }
 
-	/* Channel List */
-	NSMutableArray<NSDictionary *> *channelListOut = [NSMutableArray array];
+  /* Channel List */
+  NSMutableArray<NSDictionary *> *channelListOut = [NSMutableArray array];
 
-	for (IRCChannelConfig *e in self.channelList) {
-		NSDictionary *d = e.dictionaryValue;
+  for (IRCChannelConfig *e in self.channelList) {
+    NSDictionary *d = e.dictionaryValue;
 
-		[channelListOut addObject:d];
-	}
+    [channelListOut addObject:d];
+  }
 
-	if (channelListOut.count > 0) {
-		dic[@"channelList"] = [channelListOut copy];
-	}
+  if (channelListOut.count > 0) {
+    dic[@"channelList"] = [channelListOut copy];
+  }
 
-	/* Highlight list */
-	NSMutableArray<NSDictionary *> *highlightListOut = [NSMutableArray array];
+  /* Highlight list */
+  NSMutableArray<NSDictionary *> *highlightListOut = [NSMutableArray array];
 
-	for (IRCHighlightMatchCondition *e in self.highlightList) {
-		NSDictionary *d = e.dictionaryValue;
+  for (IRCHighlightMatchCondition *e in self.highlightList) {
+    NSDictionary *d = e.dictionaryValue;
 
-		[highlightListOut addObject:d];
-	}
+    [highlightListOut addObject:d];
+  }
 
-	if (highlightListOut.count > 0) {
-		dic[@"highlightList"] = [highlightListOut copy];
-	}
+  if (highlightListOut.count > 0) {
+    dic[@"highlightList"] = [highlightListOut copy];
+  }
 
-	/* Ignore list */
-	NSMutableArray<NSDictionary *> *ignoreListOut = [NSMutableArray array];
+  /* Ignore list */
+  NSMutableArray<NSDictionary *> *ignoreListOut = [NSMutableArray array];
 
-	for (IRCAddressBookEntry *e in self.ignoreList) {
-		NSDictionary *d = e.dictionaryValue;
+  for (IRCAddressBookEntry *e in self.ignoreList) {
+    NSDictionary *d = e.dictionaryValue;
 
-		[ignoreListOut addObject:d];
-	}
+    [ignoreListOut addObject:d];
+  }
 
-	if (ignoreListOut.count > 0) {
-		dic[@"ignoreList"] = [ignoreListOut copy];
-	}
+  if (ignoreListOut.count > 0) {
+    dic[@"ignoreList"] = [ignoreListOut copy];
+  }
 
-	/* Servers */
-	NSMutableArray<NSDictionary *> *serverListOut = [NSMutableArray array];
+  /* Servers */
+  NSMutableArray<NSDictionary *> *serverListOut = [NSMutableArray array];
 
-	for (IRCServer *e in self.serverList) {
-		NSDictionary *d = e.dictionaryValue;
+  for (IRCServer *e in self.serverList) {
+    NSDictionary *d = e.dictionaryValue;
 
-		[serverListOut addObject:d];
-	}
+    [serverListOut addObject:d];
+  }
 
-	if (serverListOut.count > 0) {
-		dic[@"serverList"] = [serverListOut copy];
-	}
+  if (serverListOut.count > 0) {
+    dic[@"serverList"] = [serverListOut copy];
+  }
 
-	return [dic dictionaryByRemovingDefaults:self->_defaults allowEmptyValues:YES];
+  return [dic dictionaryByRemovingDefaults:self->_defaults
+                          allowEmptyValues:YES];
 }
 
 #pragma mark -
 #pragma mark Keychain Management
 
-- (nullable NSString *)nicknamePassword
-{
-	if (self->_nicknamePassword) {
-		return self->_nicknamePassword;
-	}
+- (nullable NSString *)nicknamePassword {
+  if (self->_nicknamePassword) {
+    return self->_nicknamePassword;
+  }
 
-	/* Keychain reads are synchronous and comparatively slow.
-	 The result is cached until the password is modified or
-	 destroyed through this object. */
-	if (self->_nicknamePasswordKeychainCacheIsValid) {
-		return self->_nicknamePasswordKeychainCache;
-	}
+  /* Keychain reads are synchronous and comparatively slow.
+   The result is cached until the password is modified or
+   destroyed through this object. */
+  if (self->_nicknamePasswordKeychainCacheIsValid) {
+    return self->_nicknamePasswordKeychainCache;
+  }
 
-	NSString *kcPassword = self.nicknamePasswordFromKeychain;
+  NSString *kcPassword = self.nicknamePasswordFromKeychain;
 
-	self->_nicknamePasswordKeychainCache = [kcPassword copy];
-	self->_nicknamePasswordKeychainCacheIsValid = YES;
+  self->_nicknamePasswordKeychainCache = [kcPassword copy];
+  self->_nicknamePasswordKeychainCacheIsValid = YES;
 
-	return kcPassword;
+  return kcPassword;
 }
 
-- (void)invalidateNicknamePasswordKeychainCache
-{
-	self->_nicknamePasswordKeychainCache = nil;
-	self->_nicknamePasswordKeychainCacheIsValid = NO;
+- (void)invalidateNicknamePasswordKeychainCache {
+  self->_nicknamePasswordKeychainCache = nil;
+  self->_nicknamePasswordKeychainCacheIsValid = NO;
 }
 
-- (nullable NSString *)nicknamePasswordFromKeychain
-{
-	NSString *nicknamePasswordServiceName = [NSString stringWithFormat:@"glasstual.nickserv.%@", self.uniqueIdentifier];
+- (nullable NSString *)nicknamePasswordFromKeychain {
+  NSString *nicknamePasswordServiceName = [NSString
+      stringWithFormat:@"glasstual.nickserv.%@", self.uniqueIdentifier];
 
-	NSString *kcPassword = [XRKeychain getPasswordFromKeychainItem:@"Glasstual (NickServ)"
-													  withItemKind:@"application password"
-													   forUsername:nil
-													   serviceName:nicknamePasswordServiceName];
+  NSString *kcPassword =
+      [XRKeychain getPasswordFromKeychainItem:@"Glasstual (NickServ)"
+                                 withItemKind:@"application password"
+                                  forUsername:nil
+                                  serviceName:nicknamePasswordServiceName];
 
-	return kcPassword;
+  return kcPassword;
 }
 
-- (nullable NSString *)proxyPassword
-{
-	if (self->_proxyPassword) {
-		return self->_proxyPassword;
-	}
+- (nullable NSString *)proxyPassword {
+  if (self->_proxyPassword) {
+    return self->_proxyPassword;
+  }
 
-	return self.proxyPasswordFromKeychain;
+  return self.proxyPasswordFromKeychain;
 }
 
-- (nullable NSString *)proxyPasswordFromKeychain
-{
-	NSString *proxyPasswordServiceName =
-		[NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
+- (nullable NSString *)proxyPasswordFromKeychain {
+  NSString *proxyPasswordServiceName = [NSString
+      stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
 
-	NSString *kcPassword = [XRKeychain getPasswordFromKeychainItem:@"Glasstual (Proxy Server Password)"
-													  withItemKind:@"application password"
-													   forUsername:nil
-													   serviceName:proxyPasswordServiceName];
+  NSString *kcPassword = [XRKeychain
+      getPasswordFromKeychainItem:@"Glasstual (Proxy Server Password)"
+                     withItemKind:@"application password"
+                      forUsername:nil
+                      serviceName:proxyPasswordServiceName];
 
-	return kcPassword;
+  return kcPassword;
 }
 
-- (void)writeNicknamePasswordToKeychain
-{
-	if (self->_nicknamePassword == nil) {
-		return;
-	}
+- (void)writeNicknamePasswordToKeychain {
+  if (self->_nicknamePassword == nil) {
+    return;
+  }
 
-	NSString *nicknamePasswordServiceName = [NSString stringWithFormat:@"glasstual.nickserv.%@", self.uniqueIdentifier];
+  NSString *nicknamePasswordServiceName = [NSString
+      stringWithFormat:@"glasstual.nickserv.%@", self.uniqueIdentifier];
 
-	[XRKeychain modifyOrAddKeychainItem:@"Glasstual (NickServ)"
-						   withItemKind:@"application password"
-							forUsername:nil
-						withNewPassword:self->_nicknamePassword
-							serviceName:nicknamePasswordServiceName];
+  [XRKeychain modifyOrAddKeychainItem:@"Glasstual (NickServ)"
+                         withItemKind:@"application password"
+                          forUsername:nil
+                      withNewPassword:self->_nicknamePassword
+                          serviceName:nicknamePasswordServiceName];
 
-	self->_nicknamePassword = nil;
+  self->_nicknamePassword = nil;
 
-	[self invalidateNicknamePasswordKeychainCache];
+  [self invalidateNicknamePasswordKeychainCache];
 }
 
-- (void)writeProxyPasswordToKeychain
-{
-	if (self->_proxyPassword == nil) {
-		return;
-	}
+- (void)writeProxyPasswordToKeychain {
+  if (self->_proxyPassword == nil) {
+    return;
+  }
 
-	NSString *proxyPasswordServiceName =
-		[NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
+  NSString *proxyPasswordServiceName = [NSString
+      stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
 
-	[XRKeychain modifyOrAddKeychainItem:@"Glasstual (Proxy Server Password)"
-						   withItemKind:@"application password"
-							forUsername:nil
-						withNewPassword:self->_proxyPassword
-							serviceName:proxyPasswordServiceName];
+  [XRKeychain modifyOrAddKeychainItem:@"Glasstual (Proxy Server Password)"
+                         withItemKind:@"application password"
+                          forUsername:nil
+                      withNewPassword:self->_proxyPassword
+                          serviceName:proxyPasswordServiceName];
 
-	self->_proxyPassword = nil;
+  self->_proxyPassword = nil;
 }
 
-- (void)destroyNicknamePasswordKeychainItem
-{
-	NSString *nicknamePasswordServiceName = [NSString stringWithFormat:@"glasstual.nickserv.%@", self.uniqueIdentifier];
+- (void)destroyNicknamePasswordKeychainItem {
+  NSString *nicknamePasswordServiceName = [NSString
+      stringWithFormat:@"glasstual.nickserv.%@", self.uniqueIdentifier];
 
-	[XRKeychain deleteKeychainItem:@"Glasstual (NickServ)"
-					  withItemKind:@"application password"
-					   forUsername:nil
-					   serviceName:nicknamePasswordServiceName];
+  [XRKeychain deleteKeychainItem:@"Glasstual (NickServ)"
+                    withItemKind:@"application password"
+                     forUsername:nil
+                     serviceName:nicknamePasswordServiceName];
 
-	self->_nicknamePassword = nil;
+  self->_nicknamePassword = nil;
 
-	[self invalidateNicknamePasswordKeychainCache];
+  [self invalidateNicknamePasswordKeychainCache];
 }
 
-- (void)destroyProxyPasswordKeychainItem
-{
-	NSString *proxyPasswordServiceName =
-		[NSString stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
+- (void)destroyProxyPasswordKeychainItem {
+  NSString *proxyPasswordServiceName = [NSString
+      stringWithFormat:@"glasstual.proxy-server.%@", self.uniqueIdentifier];
 
-	[XRKeychain deleteKeychainItem:@"Glasstual (Proxy Server Password)"
-					  withItemKind:@"application password"
-					   forUsername:nil
-					   serviceName:proxyPasswordServiceName];
+  [XRKeychain deleteKeychainItem:@"Glasstual (Proxy Server Password)"
+                    withItemKind:@"application password"
+                     forUsername:nil
+                     serviceName:proxyPasswordServiceName];
 
-	self->_proxyPassword = nil;
+  self->_proxyPassword = nil;
 }
 
-- (void)destroyServerPasswordKeychainItemAfterMigration
-{
-	if (self->_migratedServerPasswordPendingDestroy == NO) {
-		return;
-	}
+- (void)destroyServerPasswordKeychainItemAfterMigration {
+  if (self->_migratedServerPasswordPendingDestroy == NO) {
+    return;
+  }
 
-	self->_migratedServerPasswordPendingDestroy = NO;
+  self->_migratedServerPasswordPendingDestroy = NO;
 
-	NSString *serverPasswordServiceName = [NSString stringWithFormat:@"glasstual.server.%@", self.uniqueIdentifier];
+  NSString *serverPasswordServiceName =
+      [NSString stringWithFormat:@"glasstual.server.%@", self.uniqueIdentifier];
 
-	[XRKeychain deleteKeychainItem:@"Glasstual (Server Password)"
-					  withItemKind:@"application password"
-					   forUsername:nil
-					   serviceName:serverPasswordServiceName];
+  [XRKeychain deleteKeychainItem:@"Glasstual (Server Password)"
+                    withItemKind:@"application password"
+                     forUsername:nil
+                     serviceName:serverPasswordServiceName];
 }
 
 #pragma mark -
 #pragma mark Deprecated Properties
 
-- (nullable NSString *)legacyServerAddress
-{
-	IRCServer *server = self.serverList.firstObject;
+- (nullable NSString *)legacyServerAddress {
+  IRCServer *server = self.serverList.firstObject;
 
-	if (server == nil) {
-		return self->_serverAddress;
-	}
+  if (server == nil) {
+    return self->_serverAddress;
+  }
 
-	return server.serverAddress;
+  return server.serverAddress;
 }
 
-- (uint16_t)legacyServerPort
-{
-	IRCServer *server = self.serverList.firstObject;
+- (uint16_t)legacyServerPort {
+  IRCServer *server = self.serverList.firstObject;
 
-	if (server == nil) {
-		return self->_serverPort;
-	}
+  if (server == nil) {
+    return self->_serverPort;
+  }
 
-	return server.serverPort;
+  return server.serverPort;
 }
 
-- (BOOL)legacyPrefersSecuredConnection
-{
-	IRCServer *server = self.serverList.firstObject;
+- (BOOL)legacyPrefersSecuredConnection {
+  IRCServer *server = self.serverList.firstObject;
 
-	if (server == nil) {
-		return self->_prefersSecuredConnection;
-	}
+  if (server == nil) {
+    return self->_prefersSecuredConnection;
+  }
 
-	return server.prefersSecuredConnection;
+  return server.prefersSecuredConnection;
 }
 
-- (BOOL)legacyConnectionPrefersModernCiphers
-{
-	return (self.cipherSuites != RCMCipherSuiteCollectionNone);
+- (BOOL)legacyConnectionPrefersModernCiphers {
+  return (self.cipherSuites != RCMCipherSuiteCollectionNone);
 }
 
-- (BOOL)showConnectionPrefersIPv4Warning
-{
-	GLASSTUAL_IGNORE_DEPRECATION_BEGIN
-	return (self.addressType == IRCConnectionAddressTypeIPv4 && self.connectionPrefersIPv4);
-	GLASSTUAL_IGNORE_DEPRECATION_END
+- (BOOL)showConnectionPrefersIPv4Warning {
+  GLASSTUAL_IGNORE_DEPRECATION_BEGIN
+  return (self.addressType == IRCConnectionAddressTypeIPv4 &&
+          self.connectionPrefersIPv4);
+  GLASSTUAL_IGNORE_DEPRECATION_END
 }
 
 @end
@@ -1082,398 +1183,367 @@ NS_ASSUME_NONNULL_BEGIN
 @dynamic zncIgnoreUserNotifications;
 @dynamic zncOnlyPlaybackLatest;
 
-+ (BOOL)isMutable
-{
-	return YES;
++ (BOOL)isMutable {
+  return YES;
 }
 
-- (__kindof XRPortablePropertyDict *)immutableClass
-{
-	return [IRCClientConfig self];
+- (__kindof XRPortablePropertyDict *)immutableClass {
+  return [IRCClientConfig self];
 }
 
-- (void)setAutoConnect:(BOOL)autoConnect
-{
-	if (self->_autoConnect != autoConnect) {
-		self->_autoConnect = autoConnect;
-	}
+- (void)setAutoConnect:(BOOL)autoConnect {
+  if (self->_autoConnect != autoConnect) {
+    self->_autoConnect = autoConnect;
+  }
 }
 
-- (void)setAutoReconnect:(BOOL)autoReconnect
-{
-	if (self->_autoReconnect != autoReconnect) {
-		self->_autoReconnect = autoReconnect;
-	}
+- (void)setAutoReconnect:(BOOL)autoReconnect {
+  if (self->_autoReconnect != autoReconnect) {
+    self->_autoReconnect = autoReconnect;
+  }
 }
 
-- (void)setAutoSleepModeDisconnect:(BOOL)autoSleepModeDisconnect
-{
-	if (self->_autoSleepModeDisconnect != autoSleepModeDisconnect) {
-		self->_autoSleepModeDisconnect = autoSleepModeDisconnect;
-	}
+- (void)setAutoSleepModeDisconnect:(BOOL)autoSleepModeDisconnect {
+  if (self->_autoSleepModeDisconnect != autoSleepModeDisconnect) {
+    self->_autoSleepModeDisconnect = autoSleepModeDisconnect;
+  }
 }
 
-- (void)setAutojoinWaitsForNickServ:(BOOL)autojoinWaitsForNickServ
-{
-	if (self->_autojoinWaitsForNickServ != autojoinWaitsForNickServ) {
-		self->_autojoinWaitsForNickServ = autojoinWaitsForNickServ;
-	}
+- (void)setAutojoinWaitsForNickServ:(BOOL)autojoinWaitsForNickServ {
+  if (self->_autojoinWaitsForNickServ != autojoinWaitsForNickServ) {
+    self->_autojoinWaitsForNickServ = autojoinWaitsForNickServ;
+  }
 }
 
-- (void)setConnectionPrefersIPv4:(BOOL)connectionPrefersIPv4
-{
-	GLASSTUAL_DEPRECATED_WARNING
+- (void)setConnectionPrefersIPv4:(BOOL)connectionPrefersIPv4 {
+  GLASSTUAL_DEPRECATED_WARNING
 
-	if (self->_connectionPrefersIPv4 != connectionPrefersIPv4) {
-		self->_connectionPrefersIPv4 = connectionPrefersIPv4;
-	}
+  if (self->_connectionPrefersIPv4 != connectionPrefersIPv4) {
+    self->_connectionPrefersIPv4 = connectionPrefersIPv4;
+  }
 }
 
-- (void)setHideAutojoinDelayedWarnings:(BOOL)hideAutojoinDelayedWarnings
-{
-	if (self->_hideAutojoinDelayedWarnings != hideAutojoinDelayedWarnings) {
-		self->_hideAutojoinDelayedWarnings = hideAutojoinDelayedWarnings;
-	}
+- (void)setHideAutojoinDelayedWarnings:(BOOL)hideAutojoinDelayedWarnings {
+  if (self->_hideAutojoinDelayedWarnings != hideAutojoinDelayedWarnings) {
+    self->_hideAutojoinDelayedWarnings = hideAutojoinDelayedWarnings;
+  }
 }
 
-- (void)setHideNetworkUnavailabilityNotices:(BOOL)hideNetworkUnavailabilityNotices
-{
-	if (self->_hideNetworkUnavailabilityNotices != hideNetworkUnavailabilityNotices) {
-		self->_hideNetworkUnavailabilityNotices = hideNetworkUnavailabilityNotices;
-	}
+- (void)setHideNetworkUnavailabilityNotices:
+    (BOOL)hideNetworkUnavailabilityNotices {
+  if (self->_hideNetworkUnavailabilityNotices !=
+      hideNetworkUnavailabilityNotices) {
+    self->_hideNetworkUnavailabilityNotices = hideNetworkUnavailabilityNotices;
+  }
 }
 
-- (void)setPerformDisconnectOnPongTimer:(BOOL)performDisconnectOnPongTimer
-{
-	if (self->_performDisconnectOnPongTimer != performDisconnectOnPongTimer) {
-		self->_performDisconnectOnPongTimer = performDisconnectOnPongTimer;
-	}
+- (void)setPerformDisconnectOnPongTimer:(BOOL)performDisconnectOnPongTimer {
+  if (self->_performDisconnectOnPongTimer != performDisconnectOnPongTimer) {
+    self->_performDisconnectOnPongTimer = performDisconnectOnPongTimer;
+  }
 }
 
-- (void)setPerformDisconnectOnReachabilityChange:(BOOL)performDisconnectOnReachabilityChange
-{
-	if (self->_performDisconnectOnReachabilityChange != performDisconnectOnReachabilityChange) {
-		self->_performDisconnectOnReachabilityChange = performDisconnectOnReachabilityChange;
-	}
+- (void)setPerformDisconnectOnReachabilityChange:
+    (BOOL)performDisconnectOnReachabilityChange {
+  if (self->_performDisconnectOnReachabilityChange !=
+      performDisconnectOnReachabilityChange) {
+    self->_performDisconnectOnReachabilityChange =
+        performDisconnectOnReachabilityChange;
+  }
 }
 
-- (void)setPerformPongTimer:(BOOL)performPongTimer
-{
-	if (self->_performPongTimer != performPongTimer) {
-		self->_performPongTimer = performPongTimer;
-	}
+- (void)setPerformPongTimer:(BOOL)performPongTimer {
+  if (self->_performPongTimer != performPongTimer) {
+    self->_performPongTimer = performPongTimer;
+  }
 }
 
-- (void)setSaslAuthenticationDisableExternalMechanism:(BOOL)saslAuthenticationDisableExternalMechanism
-{
-	if (self->_saslAuthenticationDisableExternalMechanism != saslAuthenticationDisableExternalMechanism) {
-		self->_saslAuthenticationDisableExternalMechanism = saslAuthenticationDisableExternalMechanism;
-	}
+- (void)setSaslAuthenticationDisableExternalMechanism:
+    (BOOL)saslAuthenticationDisableExternalMechanism {
+  if (self->_saslAuthenticationDisableExternalMechanism !=
+      saslAuthenticationDisableExternalMechanism) {
+    self->_saslAuthenticationDisableExternalMechanism =
+        saslAuthenticationDisableExternalMechanism;
+  }
 }
 
-- (void)setSendAuthenticationRequestsToUserServ:(BOOL)sendAuthenticationRequestsToUserServ
-{
-	if (self->_sendAuthenticationRequestsToUserServ != sendAuthenticationRequestsToUserServ) {
-		self->_sendAuthenticationRequestsToUserServ = sendAuthenticationRequestsToUserServ;
-	}
+- (void)setSendAuthenticationRequestsToUserServ:
+    (BOOL)sendAuthenticationRequestsToUserServ {
+  if (self->_sendAuthenticationRequestsToUserServ !=
+      sendAuthenticationRequestsToUserServ) {
+    self->_sendAuthenticationRequestsToUserServ =
+        sendAuthenticationRequestsToUserServ;
+  }
 }
 
-- (void)setSendWhoCommandRequestsToChannels:(BOOL)sendWhoCommandRequestsToChannels
-{
-	if (self->_sendWhoCommandRequestsToChannels != sendWhoCommandRequestsToChannels) {
-		self->_sendWhoCommandRequestsToChannels = sendWhoCommandRequestsToChannels;
-	}
+- (void)setSendWhoCommandRequestsToChannels:
+    (BOOL)sendWhoCommandRequestsToChannels {
+  if (self->_sendWhoCommandRequestsToChannels !=
+      sendWhoCommandRequestsToChannels) {
+    self->_sendWhoCommandRequestsToChannels = sendWhoCommandRequestsToChannels;
+  }
 }
 
-- (void)setSetInvisibleModeOnConnect:(BOOL)setInvisibleModeOnConnect
-{
-	if (self->_setInvisibleModeOnConnect != setInvisibleModeOnConnect) {
-		self->_setInvisibleModeOnConnect = setInvisibleModeOnConnect;
-	}
+- (void)setSetInvisibleModeOnConnect:(BOOL)setInvisibleModeOnConnect {
+  if (self->_setInvisibleModeOnConnect != setInvisibleModeOnConnect) {
+    self->_setInvisibleModeOnConnect = setInvisibleModeOnConnect;
+  }
 }
 
-- (void)setRunConnectCommandsSilently:(BOOL)runConnectCommandsSilently
-{
-	if (self->_runConnectCommandsSilently != runConnectCommandsSilently) {
-		self->_runConnectCommandsSilently = runConnectCommandsSilently;
-	}
+- (void)setRunConnectCommandsSilently:(BOOL)runConnectCommandsSilently {
+  if (self->_runConnectCommandsSilently != runConnectCommandsSilently) {
+    self->_runConnectCommandsSilently = runConnectCommandsSilently;
+  }
 }
 
-- (void)setSidebarItemExpanded:(BOOL)sidebarItemExpanded
-{
-	if (self->_sidebarItemExpanded != sidebarItemExpanded) {
-		self->_sidebarItemExpanded = sidebarItemExpanded;
-	}
+- (void)setSidebarItemExpanded:(BOOL)sidebarItemExpanded {
+  if (self->_sidebarItemExpanded != sidebarItemExpanded) {
+    self->_sidebarItemExpanded = sidebarItemExpanded;
+  }
 }
 
-- (void)setValidateServerCertificateChain:(BOOL)validateServerCertificateChain
-{
-	if (self->_validateServerCertificateChain != validateServerCertificateChain) {
-		self->_validateServerCertificateChain = validateServerCertificateChain;
-	}
+- (void)setValidateServerCertificateChain:(BOOL)validateServerCertificateChain {
+  if (self->_validateServerCertificateChain != validateServerCertificateChain) {
+    self->_validateServerCertificateChain = validateServerCertificateChain;
+  }
 }
 
-- (void)setZncIgnoreConfiguredAutojoin:(BOOL)zncIgnoreConfiguredAutojoin
-{
-	if (self->_zncIgnoreConfiguredAutojoin != zncIgnoreConfiguredAutojoin) {
-		self->_zncIgnoreConfiguredAutojoin = zncIgnoreConfiguredAutojoin;
-	}
+- (void)setZncIgnoreConfiguredAutojoin:(BOOL)zncIgnoreConfiguredAutojoin {
+  if (self->_zncIgnoreConfiguredAutojoin != zncIgnoreConfiguredAutojoin) {
+    self->_zncIgnoreConfiguredAutojoin = zncIgnoreConfiguredAutojoin;
+  }
 }
 
-- (void)setZncIgnorePlaybackNotifications:(BOOL)zncIgnorePlaybackNotifications
-{
-	if (self->_zncIgnorePlaybackNotifications != zncIgnorePlaybackNotifications) {
-		self->_zncIgnorePlaybackNotifications = zncIgnorePlaybackNotifications;
-	}
+- (void)setZncIgnorePlaybackNotifications:(BOOL)zncIgnorePlaybackNotifications {
+  if (self->_zncIgnorePlaybackNotifications != zncIgnorePlaybackNotifications) {
+    self->_zncIgnorePlaybackNotifications = zncIgnorePlaybackNotifications;
+  }
 }
 
-- (void)setZncIgnoreUserNotifications:(BOOL)zncIgnoreUserNotifications
-{
-	if (self->_zncIgnoreUserNotifications != zncIgnoreUserNotifications) {
-		self->_zncIgnoreUserNotifications = zncIgnoreUserNotifications;
-	}
+- (void)setZncIgnoreUserNotifications:(BOOL)zncIgnoreUserNotifications {
+  if (self->_zncIgnoreUserNotifications != zncIgnoreUserNotifications) {
+    self->_zncIgnoreUserNotifications = zncIgnoreUserNotifications;
+  }
 }
 
-- (void)setZncOnlyPlaybackLatest:(BOOL)zncOnlyPlaybackLatest
-{
-	if (self->_zncOnlyPlaybackLatest != zncOnlyPlaybackLatest) {
-		self->_zncOnlyPlaybackLatest = zncOnlyPlaybackLatest;
-	}
+- (void)setZncOnlyPlaybackLatest:(BOOL)zncOnlyPlaybackLatest {
+  if (self->_zncOnlyPlaybackLatest != zncOnlyPlaybackLatest) {
+    self->_zncOnlyPlaybackLatest = zncOnlyPlaybackLatest;
+  }
 }
 
-- (void)setAddressType:(IRCConnectionAddressType)addressType
-{
-	if (self->_addressType != addressType) {
-		self->_addressType = addressType;
-	}
+- (void)setAddressType:(IRCConnectionAddressType)addressType {
+  if (self->_addressType != addressType) {
+    self->_addressType = addressType;
+  }
 }
 
-- (void)setProxyType:(IRCConnectionProxyType)proxyType
-{
-	if (self->_proxyType != proxyType) {
-		self->_proxyType = proxyType;
-	}
+- (void)setProxyType:(IRCConnectionProxyType)proxyType {
+  if (self->_proxyType != proxyType) {
+    self->_proxyType = proxyType;
+  }
 }
 
-- (void)setIgnoreList:(NSArray<IRCAddressBookEntry *> *)ignoreList
-{
-	NSParameterAssert(ignoreList != nil);
+- (void)setIgnoreList:(NSArray<IRCAddressBookEntry *> *)ignoreList {
+  NSParameterAssert(ignoreList != nil);
 
-	if (self->_ignoreList != ignoreList) {
-		self->_ignoreList = [ignoreList copy];
-	}
+  if (self->_ignoreList != ignoreList) {
+    self->_ignoreList = [ignoreList copy];
+  }
 }
 
-- (void)setChannelList:(NSArray<IRCChannelConfig *> *)channelList
-{
-	NSParameterAssert(channelList != nil);
+- (void)setChannelList:(NSArray<IRCChannelConfig *> *)channelList {
+  NSParameterAssert(channelList != nil);
 
-	if (self->_channelList != channelList) {
-		self->_channelList = [channelList copy];
-	}
+  if (self->_channelList != channelList) {
+    self->_channelList = [channelList copy];
+  }
 }
 
-- (void)setHighlightList:(NSArray<IRCHighlightMatchCondition *> *)highlightList
-{
-	NSParameterAssert(highlightList != nil);
+- (void)setHighlightList:
+    (NSArray<IRCHighlightMatchCondition *> *)highlightList {
+  NSParameterAssert(highlightList != nil);
 
-	if (self->_highlightList != highlightList) {
-		self->_highlightList = [highlightList copy];
-	}
+  if (self->_highlightList != highlightList) {
+    self->_highlightList = [highlightList copy];
+  }
 }
 
-- (void)setAlternateNicknames:(NSArray<NSString *> *)alternateNicknames
-{
-	NSParameterAssert(alternateNicknames != nil);
+- (void)setAlternateNicknames:(NSArray<NSString *> *)alternateNicknames {
+  NSParameterAssert(alternateNicknames != nil);
 
-	if (self->_alternateNicknames != alternateNicknames) {
-		self->_alternateNicknames = [alternateNicknames copy];
-	}
+  if (self->_alternateNicknames != alternateNicknames) {
+    self->_alternateNicknames = [alternateNicknames copy];
+  }
 }
 
-- (void)setLoginCommands:(NSArray<NSString *> *)loginCommands
-{
-	NSParameterAssert(loginCommands != nil);
+- (void)setLoginCommands:(NSArray<NSString *> *)loginCommands {
+  NSParameterAssert(loginCommands != nil);
 
-	if (self->_loginCommands != loginCommands) {
-		self->_loginCommands = [loginCommands copy];
-	}
+  if (self->_loginCommands != loginCommands) {
+    self->_loginCommands = [loginCommands copy];
+  }
 }
 
-- (void)setServerList:(NSArray<IRCServer *> *)serverList
-{
-	NSParameterAssert(serverList != nil);
+- (void)setServerList:(NSArray<IRCServer *> *)serverList {
+  NSParameterAssert(serverList != nil);
 
-	if (self->_serverList != serverList) {
-		self->_serverList = [serverList copy];
-	}
+  if (self->_serverList != serverList) {
+    self->_serverList = [serverList copy];
+  }
 }
 
-- (void)setIdentityClientSideCertificate:(nullable NSData *)identityClientSideCertificate
-{
-	if (self->_identityClientSideCertificate != identityClientSideCertificate) {
-		self->_identityClientSideCertificate = [identityClientSideCertificate copy];
-	}
+- (void)setIdentityClientSideCertificate:
+    (nullable NSData *)identityClientSideCertificate {
+  if (self->_identityClientSideCertificate != identityClientSideCertificate) {
+    self->_identityClientSideCertificate = [identityClientSideCertificate copy];
+  }
 }
 
-- (void)setSaslMechanismPreference:(nullable NSString *)saslMechanismPreference
-{
-	if (self->_saslMechanismPreference != saslMechanismPreference) {
-		self->_saslMechanismPreference = [saslMechanismPreference copy];
-	}
+- (void)setSaslMechanismPreference:
+    (nullable NSString *)saslMechanismPreference {
+  if (self->_saslMechanismPreference != saslMechanismPreference) {
+    self->_saslMechanismPreference = [saslMechanismPreference copy];
+  }
 }
 
-- (void)setAwayNickname:(nullable NSString *)awayNickname
-{
-	if (self->_awayNickname != awayNickname) {
-		self->_awayNickname = [awayNickname copy];
-	}
+- (void)setAwayNickname:(nullable NSString *)awayNickname {
+  if (self->_awayNickname != awayNickname) {
+    self->_awayNickname = [awayNickname copy];
+  }
 }
 
-- (void)setCtcpVersionReply:(nullable NSString *)ctcpVersionReply
-{
-	if (self->_ctcpVersionReply != ctcpVersionReply) {
-		self->_ctcpVersionReply = [ctcpVersionReply copy];
-	}
+- (void)setCtcpVersionReply:(nullable NSString *)ctcpVersionReply {
+  if (self->_ctcpVersionReply != ctcpVersionReply) {
+    self->_ctcpVersionReply = [ctcpVersionReply copy];
+  }
 }
 
-- (void)setConnectionName:(NSString *)connectionName
-{
-	NSParameterAssert(connectionName != nil);
+- (void)setConnectionName:(NSString *)connectionName {
+  NSParameterAssert(connectionName != nil);
 
-	if (self->_connectionName != connectionName) {
-		self->_connectionName = [connectionName copy];
-	}
+  if (self->_connectionName != connectionName) {
+    self->_connectionName = [connectionName copy];
+  }
 }
 
-- (void)setNickname:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (void)setNickname:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	if (self->_nickname != nickname) {
-		self->_nickname = [nickname copy];
-	}
+  if (self->_nickname != nickname) {
+    self->_nickname = [nickname copy];
+  }
 }
 
-- (void)setNicknamePassword:(nullable NSString *)nicknamePassword
-{
-	if (self->_nicknamePassword != nicknamePassword) {
-		self->_nicknamePassword = [nicknamePassword copy];
+- (void)setNicknamePassword:(nullable NSString *)nicknamePassword {
+  if (self->_nicknamePassword != nicknamePassword) {
+    self->_nicknamePassword = [nicknamePassword copy];
 
-		[self invalidateNicknamePasswordKeychainCache];
-	}
+    [self invalidateNicknamePasswordKeychainCache];
+  }
 }
 
-- (void)setNormalLeavingComment:(NSString *)normalLeavingComment
-{
-	NSParameterAssert(normalLeavingComment != nil);
+- (void)setNormalLeavingComment:(NSString *)normalLeavingComment {
+  NSParameterAssert(normalLeavingComment != nil);
 
-	if (self->_normalLeavingComment != normalLeavingComment) {
-		self->_normalLeavingComment = [normalLeavingComment copy];
-	}
+  if (self->_normalLeavingComment != normalLeavingComment) {
+    self->_normalLeavingComment = [normalLeavingComment copy];
+  }
 }
 
-- (void)setProxyAddress:(nullable NSString *)proxyAddress
-{
-	if (self->_proxyAddress != proxyAddress) {
-		self->_proxyAddress = [proxyAddress copy];
-	}
+- (void)setProxyAddress:(nullable NSString *)proxyAddress {
+  if (self->_proxyAddress != proxyAddress) {
+    self->_proxyAddress = [proxyAddress copy];
+  }
 }
 
-- (void)setProxyPassword:(nullable NSString *)proxyPassword
-{
-	if (self->_proxyPassword != proxyPassword) {
-		self->_proxyPassword = [proxyPassword copy];
-	}
+- (void)setProxyPassword:(nullable NSString *)proxyPassword {
+  if (self->_proxyPassword != proxyPassword) {
+    self->_proxyPassword = [proxyPassword copy];
+  }
 }
 
-- (void)setProxyUsername:(nullable NSString *)proxyUsername
-{
-	if (self->_proxyUsername != proxyUsername) {
-		self->_proxyUsername = [proxyUsername copy];
-	}
+- (void)setProxyUsername:(nullable NSString *)proxyUsername {
+  if (self->_proxyUsername != proxyUsername) {
+    self->_proxyUsername = [proxyUsername copy];
+  }
 }
 
-- (void)setRealName:(NSString *)realName
-{
-	NSParameterAssert(realName != nil);
+- (void)setRealName:(NSString *)realName {
+  NSParameterAssert(realName != nil);
 
-	if (self->_realName != realName) {
-		self->_realName = [realName copy];
-	}
+  if (self->_realName != realName) {
+    self->_realName = [realName copy];
+  }
 }
 
-- (void)setSleepModeLeavingComment:(NSString *)sleepModeLeavingComment
-{
-	NSParameterAssert(sleepModeLeavingComment != nil);
+- (void)setSleepModeLeavingComment:(NSString *)sleepModeLeavingComment {
+  NSParameterAssert(sleepModeLeavingComment != nil);
 
-	if (self->_sleepModeLeavingComment != sleepModeLeavingComment) {
-		self->_sleepModeLeavingComment = [sleepModeLeavingComment copy];
-	}
+  if (self->_sleepModeLeavingComment != sleepModeLeavingComment) {
+    self->_sleepModeLeavingComment = [sleepModeLeavingComment copy];
+  }
 }
 
-- (void)setUsername:(NSString *)username
-{
-	NSParameterAssert(username != nil);
+- (void)setUsername:(NSString *)username {
+  NSParameterAssert(username != nil);
 
-	if (self->_username != username) {
-		self->_username = [username copy];
-	}
+  if (self->_username != username) {
+    self->_username = [username copy];
+  }
 }
 
-- (void)setFallbackEncoding:(NSStringEncoding)fallbackEncoding
-{
-	if (self->_fallbackEncoding != fallbackEncoding) {
-		self->_fallbackEncoding = fallbackEncoding;
-	}
+- (void)setFallbackEncoding:(NSStringEncoding)fallbackEncoding {
+  if (self->_fallbackEncoding != fallbackEncoding) {
+    self->_fallbackEncoding = fallbackEncoding;
+  }
 }
 
-- (void)setPrimaryEncoding:(NSStringEncoding)primaryEncoding
-{
-	if (self->_primaryEncoding != primaryEncoding) {
-		self->_primaryEncoding = primaryEncoding;
-	}
+- (void)setPrimaryEncoding:(NSStringEncoding)primaryEncoding {
+  if (self->_primaryEncoding != primaryEncoding) {
+    self->_primaryEncoding = primaryEncoding;
+  }
 }
 
-- (void)setLastMessageServerTime:(NSTimeInterval)lastMessageServerTime
-{
-	if (self->_lastMessageServerTime != lastMessageServerTime) {
-		self->_lastMessageServerTime = lastMessageServerTime;
-	}
+- (void)setLastMessageServerTime:(NSTimeInterval)lastMessageServerTime {
+  if (self->_lastMessageServerTime != lastMessageServerTime) {
+    self->_lastMessageServerTime = lastMessageServerTime;
+  }
 }
 
-- (void)setFloodControlDelayTimerInterval:(NSUInteger)floodControlDelayTimerInterval
-{
-	NSParameterAssert(floodControlDelayTimerInterval >= IRCConnectionConfigFloodControlMinimumDelayInterval &&
-					  floodControlDelayTimerInterval <= IRCConnectionConfigFloodControlMaximumDelayInterval);
+- (void)setFloodControlDelayTimerInterval:
+    (NSUInteger)floodControlDelayTimerInterval {
+  NSParameterAssert(floodControlDelayTimerInterval >=
+                        IRCConnectionConfigFloodControlMinimumDelayInterval &&
+                    floodControlDelayTimerInterval <=
+                        IRCConnectionConfigFloodControlMaximumDelayInterval);
 
-	if (self->_floodControlDelayTimerInterval != floodControlDelayTimerInterval) {
-		self->_floodControlDelayTimerInterval = floodControlDelayTimerInterval;
-	}
+  if (self->_floodControlDelayTimerInterval != floodControlDelayTimerInterval) {
+    self->_floodControlDelayTimerInterval = floodControlDelayTimerInterval;
+  }
 }
 
-- (void)setFloodControlMaximumMessages:(NSUInteger)floodControlMaximumMessages
-{
-	NSParameterAssert(floodControlMaximumMessages >= IRCConnectionConfigFloodControlMinimumMessageCount &&
-					  floodControlMaximumMessages <= IRCConnectionConfigFloodControlMaximumMessageCount);
+- (void)setFloodControlMaximumMessages:(NSUInteger)floodControlMaximumMessages {
+  NSParameterAssert(floodControlMaximumMessages >=
+                        IRCConnectionConfigFloodControlMinimumMessageCount &&
+                    floodControlMaximumMessages <=
+                        IRCConnectionConfigFloodControlMaximumMessageCount);
 
-	if (self->_floodControlMaximumMessages != floodControlMaximumMessages) {
-		self->_floodControlMaximumMessages = floodControlMaximumMessages;
-	}
+  if (self->_floodControlMaximumMessages != floodControlMaximumMessages) {
+    self->_floodControlMaximumMessages = floodControlMaximumMessages;
+  }
 }
 
-- (void)setProxyPort:(uint16_t)proxyPort
-{
-	if (self->_proxyPort != proxyPort) {
-		self->_proxyPort = proxyPort;
-	}
+- (void)setProxyPort:(uint16_t)proxyPort {
+  if (self->_proxyPort != proxyPort) {
+    self->_proxyPort = proxyPort;
+  }
 }
 
-- (void)setCipherSuites:(RCMCipherSuiteCollection)cipherSuites
-{
-	if (self->_cipherSuites != cipherSuites) {
-		self->_cipherSuites = cipherSuites;
-	}
+- (void)setCipherSuites:(RCMCipherSuiteCollection)cipherSuites {
+  if (self->_cipherSuites != cipherSuites) {
+    self->_cipherSuites = cipherSuites;
+  }
 }
 
 @end

@@ -44,8 +44,10 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TDCAddressBookSheetDelegate;
 
 @interface TDCAddressBookSheet : TDCSheetBase
-- (instancetype)initWithEntryType:(IRCAddressBookEntryType)entryType NS_DESIGNATED_INITIALIZER;
-- (instancetype)initWithConfig:(IRCAddressBookEntry *)config NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithEntryType:(IRCAddressBookEntryType)entryType
+    NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithConfig:(IRCAddressBookEntry *)config
+    NS_DESIGNATED_INITIALIZER;
 
 - (void)start;
 @end
@@ -53,7 +55,8 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TDCAddressBookSheetDelegate <NSObject>
 @required
 
-- (void)addressBookSheet:(TDCAddressBookSheet *)sender onOk:(IRCAddressBookEntry *)config;
+- (void)addressBookSheet:(TDCAddressBookSheet *)sender
+                    onOk:(IRCAddressBookEntry *)config;
 - (void)addressBookSheetWillClose:(TDCAddressBookSheet *)sender;
 @end
 

@@ -35,9 +35,9 @@
  *
  *********************************************************************** */
 
-#import "TLONotificationController.h"
 #import "IRCClient.h"
 #import "IRCTypingTrackerPrivate.h"
+#import "TLONotificationController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -45,14 +45,19 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCAddressBookUserTrackingContainer, IRCTimedCommand, IRCUserMutable;
 
 enum {
-	ClientIRCv3SupportedCapabilitySASLGeneric = 1 << 22,	  // YES if the sasl CAP was acknowledged
-	ClientIRCv3SupportedCapabilityZNCServerTime = 1 << 25,	  // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCServerTimeISO = 1 << 26, // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCPlaybackModule = 1 << 27 // YES if the ZNC vendor specific CAP supported
+  ClientIRCv3SupportedCapabilitySASLGeneric =
+      1 << 22, // YES if the sasl CAP was acknowledged
+  ClientIRCv3SupportedCapabilityZNCServerTime =
+      1 << 25, // YES if the ZNC vendor specific CAP supported
+  ClientIRCv3SupportedCapabilityZNCServerTimeISO =
+      1 << 26, // YES if the ZNC vendor specific CAP supported
+  ClientIRCv3SupportedCapabilityZNCPlaybackModule =
+      1 << 27 // YES if the ZNC vendor specific CAP supported
 };
 
 @interface IRCClient ()
-+ (NSString *)redactedServiceMessage:(NSString *)message sentTo:(nullable NSString *)target;
++ (NSString *)redactedServiceMessage:(NSString *)message
+                              sentTo:(nullable NSString *)target;
 + (BOOL)targetLooksLikeService:(nullable NSString *)target;
 @property(nonatomic, copy, nullable) dispatch_block_t disconnectCallback;
 @property(nonatomic, assign, readwrite) IRCClientConnectMode connectType;
@@ -61,11 +66,13 @@ enum {
 @property(nonatomic, copy, readwrite) NSArray<IRCChannel *> *channelList;
 @property(nonatomic, weak, readwrite) IRCChannel *lastSelectedChannel;
 
-- (instancetype)initWithConfig:(IRCClientConfig *)config NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithConfig:(IRCClientConfig *)config
+    NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithConfigDictionary:(NSDictionary<NSString *, id> *)dic;
 
 - (void)updateConfig:(IRCClientConfig *)config;
-- (void)updateConfig:(IRCClientConfig *)config updateSelection:(BOOL)updateSelection;
+- (void)updateConfig:(IRCClientConfig *)config
+     updateSelection:(BOOL)updateSelection;
 
 - (NSDictionary<NSString *, id> *)configurationDictionary;
 
@@ -73,8 +80,9 @@ enum {
 - (void)addChannel:(IRCChannel *)channel atPosition:(NSUInteger)position;
 
 - (void)removeChannel:
-	(IRCChannel *)
-		channel; // This only removes the channel from channel array. Use world controller to properly destroy a channel.
+    (IRCChannel *)
+        channel; // This only removes the channel from channel array. Use world
+                 // controller to properly destroy a channel.
 
 - (NSUInteger)indexOfChannel:(IRCChannel *)channel;
 
@@ -84,12 +92,15 @@ enum {
 
 - (void)updateStoredChannelList;
 
-- (void)cacheHighlightInChannel:(IRCChannel *)channel withLogLine:(TVCLogLine *)logLine;
+- (void)cacheHighlightInChannel:(IRCChannel *)channel
+                    withLogLine:(TVCLogLine *)logLine;
 
 - (void)inputText:(id)string destination:(IRCTreeItem *)destination;
 
 - (void)inputText:(id)string asCommand:(IRCRemoteCommand)command;
-- (void)inputText:(id)string asCommand:(IRCRemoteCommand)command destination:(IRCTreeItem *)destination;
+- (void)inputText:(id)string
+        asCommand:(IRCRemoteCommand)command
+      destination:(IRCTreeItem *)destination;
 
 - (void)enableCapability:(ClientIRCv3SupportedCapability)capability;
 - (void)disableCapability:(ClientIRCv3SupportedCapability)capability;
@@ -98,9 +109,13 @@ enum {
  is being written; "active" is sent at most every three seconds,
  "paused" after five seconds without a change, "done" when the text is
  sent or cleared. */
-@property(nonatomic, strong) IRCTypingTracker *typingTracker; // Who is typing where
-- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel;
-- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel atDate:(NSDate *)date;
+@property(nonatomic, strong)
+    IRCTypingTracker *typingTracker; // Who is typing where
+- (void)noteLocalUserTyping:(NSString *)text
+                  inChannel:(nullable IRCChannel *)channel;
+- (void)noteLocalUserTyping:(NSString *)text
+                  inChannel:(nullable IRCChannel *)channel
+                     atDate:(NSDate *)date;
 - (void)typingPauseTimerFired:(IRCChannel *)channel;
 - (void)localUserSentMessageInChannel:(nullable IRCChannel *)channel;
 - (void)localUserClearedTextInChannel:(nullable IRCChannel *)channel;
@@ -111,8 +126,8 @@ enum {
 
 /* Reactions (+draft/react). Sends TAGMSG and shows the reaction. */
 - (BOOL)sendReaction:(NSString *)emoji
-	toMessageIdentifier:(NSString *)messageIdentifier
-			  inChannel:(IRCChannel *)channel;
+    toMessageIdentifier:(NSString *)messageIdentifier
+              inChannel:(IRCChannel *)channel;
 
 /* Capability negotiation. Capabilities offered by the server in CAP LS
  and CAP NEW are collected here and requested in registry order.
@@ -135,9 +150,11 @@ enum {
  view when scrolling up runs out of local history. */
 - (void)noteChannelActivated:(IRCChannel *)channel;
 - (void)requestChatHistoryForChannel:(IRCChannel *)channel;
-- (void)requestChatHistoryBeforeDate:(NSDate *)date inChannel:(IRCChannel *)channel;
+- (void)requestChatHistoryBeforeDate:(NSDate *)date
+                           inChannel:(IRCChannel *)channel;
 - (NSUInteger)chatHistoryRequestLimit;
-- (NSString *)chatHistoryLatestCommandForTarget:(NSString *)target since:(nullable NSDate *)date;
+- (NSString *)chatHistoryLatestCommandForTarget:(NSString *)target
+                                          since:(nullable NSDate *)date;
 
 /* Read markers (read-marker CAP). -markChannelAsRead: is called by the
  main window when the user views a channel; the MARKREAD is debounced. */
@@ -148,57 +165,64 @@ enum {
 - (void)autoConnectWithDelay:(NSUInteger)delay afterWakeUp:(BOOL)afterWakeUp;
 
 - (void)postEventToViewController:(NSString *)eventToken;
-- (void)postEventToViewController:(NSString *)eventToken forChannel:(IRCChannel *)channel;
+- (void)postEventToViewController:(NSString *)eventToken
+                       forChannel:(IRCChannel *)channel;
 
 - (void)sendFile:(NSString *)nickname
-			port:(uint16_t)port
-		filename:(NSString *)filename
-		filesize:(uint64_t)totalFilesize
-		   token:(nullable NSString *)transferToken;
+            port:(uint16_t)port
+        filename:(NSString *)filename
+        filesize:(uint64_t)totalFilesize
+           token:(nullable NSString *)transferToken;
 - (void)sendFileResume:(NSString *)nickname
-				  port:(uint16_t)port
-			  filename:(NSString *)filename
-			  filesize:(uint64_t)totalFilesize
-				 token:(nullable NSString *)transferToken;
+                  port:(uint16_t)port
+              filename:(NSString *)filename
+              filesize:(uint64_t)totalFilesize
+                 token:(nullable NSString *)transferToken;
 - (void)sendFileResumeAccept:(NSString *)nickname
-						port:(uint16_t)port
-					filename:(NSString *)filename
-					filesize:(uint64_t)totalFilesize
-					   token:(nullable NSString *)transferToken;
+                        port:(uint16_t)port
+                    filename:(NSString *)filename
+                    filesize:(uint64_t)totalFilesize
+                       token:(nullable NSString *)transferToken;
 
 - (void)notifyFileTransfer:(TXNotificationType)type
-				  nickname:(NSString *)nickname
-				  filename:(NSString *)filename
-				  filesize:(uint64_t)totalFilesize
-		 requestIdentifier:(NSString *)identifier;
+                  nickname:(NSString *)nickname
+                  filename:(NSString *)filename
+                  filesize:(uint64_t)totalFilesize
+         requestIdentifier:(NSString *)identifier;
 
 - (IRCAddressBookUserTrackingContainer *)trackedUsers;
 
 - (IRCUserMutable *)mutableCopyOfUserWithNickname:(NSString *)nickname;
 
-- (void)modifyUser:(IRCUser *)user withBlock:(void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))block;
+- (void)modifyUser:(IRCUser *)user
+         withBlock:(void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))block;
 - (void)modifyUserUserWithNickname:(NSString *)nickname
-						 withBlock:(void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))block;
+                         withBlock:
+                             (void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))
+                                 block;
 
 - (void)reopenLogFileIfNeeded;
 - (void)closeLogFile;
 
-- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName isUtility:(BOOL)isUtility;
+- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName
+                                   isUtility:(BOOL)isUtility;
 
-- (nullable NSString *)formatNotificationToSpeak:(TLOSpokenNotification *)notification;
+- (nullable NSString *)formatNotificationToSpeak:
+    (TLOSpokenNotification *)notification;
 
 - (id)queuedBatchMessageWithToken:(NSString *)batchToken;
 
 - (void)print:(NSString *)messageBody
-			   by:(nullable NSString *)nickname
-		inChannel:(nullable IRCChannel *)channel
-		   asType:(TVCLogLineType)lineType
-		  command:(NSString *)command
-	escapeMessage:(BOOL)escapeMessage;
+               by:(nullable NSString *)nickname
+        inChannel:(nullable IRCChannel *)channel
+           asType:(TVCLogLineType)lineType
+          command:(NSString *)command
+    escapeMessage:(BOOL)escapeMessage;
 
 - (void)onTimedCommand:(IRCTimedCommand *)timedCommand;
 
-- (void)logFileRecordSessionChanged:(BOOL)toNewSession inChannel:(nullable IRCChannel *)channel;
+- (void)logFileRecordSessionChanged:(BOOL)toNewSession
+                          inChannel:(nullable IRCChannel *)channel;
 @end
 
 NS_ASSUME_NONNULL_END
