@@ -76,6 +76,34 @@ final class TVCMemberListSectionTests: XCTestCase {
 		XCTAssertEqual(rowDescriptions, ["alice", "bob"])
 	}
 
+	func testObjectiveCRuntimeContractIsPreserved() {
+		XCTAssertEqual(NSStringFromClass(type(of: memberList)), "TVCMemberList")
+
+		let selectors = [
+			"assignToChannel:",
+			"contentController",
+			"isGroupRow:",
+			"itemAtRow:",
+			"memberInsertedAtIndex:",
+			"memberListUserInfoPopover",
+			"memberRemovedAtIndex:",
+			"membersReplaced",
+			"refreshAllDrawings",
+			"refreshDrawingForChangesToPreference:",
+			"refreshDrawingForMember:",
+			"refreshDrawingForRow:",
+			"rowForItem:",
+			"rowForMemberAtIndex:",
+		]
+
+		for selectorName in selectors {
+			XCTAssertTrue(
+				memberList.responds(to: NSSelectorFromString(selectorName)),
+				"Missing Objective-C selector \(selectorName)"
+			)
+		}
+	}
+
 	func testSecondRankAddsHeadersForEverySection() {
 		insert(makeMember(named: "alice"), at: 0)
 		insert(makeMember(named: "bob"), at: 1)
@@ -124,6 +152,15 @@ final class TVCMemberListSectionTests: XCTestCase {
 
 		XCTAssertEqual(rowDescriptions, ["alice"])
 		XCTAssertEqual(memberList.numberOfRows, 1)
+	}
+
+	func testRemovingOnlyMemberLeavesAnEmptyFlatList() {
+		insert(makeMember(named: "alice"), at: 0)
+
+		controller.remove(atArrangedObjectIndex: 0)
+
+		XCTAssertEqual(memberList.numberOfRows, 0)
+		XCTAssertEqual(rowDescriptions, [])
 	}
 
 	func testReplacingContentsRebuildsSections() {

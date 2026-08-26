@@ -257,16 +257,11 @@ open class User: XRPortablePropertyObject {
 			return
 		}
 
-		let blockToFire = removeUserTimerBlockToFire()
-
-		guard let removeUserTimer = XRScheduleBlockOnMainQueue(blockToFire, removeUserTimerInterval) else {
-			userLogger.fault("Failed to create timer to remove user")
-			blockToFire()
-			return
-		}
-
+		let removeUserTimer = DispatchSource.makeTimerSource(queue: .main)
+		removeUserTimer.schedule(deadline: .now() + removeUserTimerInterval)
+		removeUserTimer.setEventHandler(handler: removeUserTimerBlockToFire())
 		persistentStore.removeUserTimer = removeUserTimer
-		XRResumeScheduledBlock(removeUserTimer)
+		removeUserTimer.activate()
 	}
 
 	@objc
@@ -275,7 +270,7 @@ open class User: XRPortablePropertyObject {
 			return
 		}
 
-		XRCancelScheduledBlock(removeUserTimer)
+		removeUserTimer.cancel()
 		persistentStore.removeUserTimer = nil
 	}
 

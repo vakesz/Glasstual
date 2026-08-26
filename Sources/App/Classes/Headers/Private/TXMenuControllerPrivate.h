@@ -36,7 +36,7 @@
  *
  *********************************************************************** */
 
-#import "TDCServerPropertiesSheetPrivate.h"
+#import "TDCServerPropertiesSheetTypes.h"
 #import "TXMenuController.h"
 
 NS_ASSUME_NONNULL_BEGIN

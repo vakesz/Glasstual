@@ -595,7 +595,8 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		}
 
 		if let channel {
-			NSObject.masterController().mainWindow.select(channel)
+			let treeItem = (channel as AnyObject) as! IRCTreeItem
+			NSObject.masterController().mainWindow.select(treeItem)
 		} else if let client {
 			NSObject.masterController().mainWindow.select(client)
 		}
@@ -608,7 +609,8 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			return
 		}
 
-		channel.associatedClient?.inputText(message, destination: channel)
+		let treeItem = (channel as AnyObject) as! IRCTreeItem
+		channel.associatedClient?.inputText(message, destination: treeItem)
 	}
 
 	// MARK: - Preferences

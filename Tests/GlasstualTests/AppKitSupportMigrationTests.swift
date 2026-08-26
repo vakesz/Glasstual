@@ -4,11 +4,60 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 @testable import Glasstual
 import XCTest
 
 @MainActor
 final class AppKitSupportMigrationTests: XCTestCase {
+	func testTextHelpersTrimValuesAndExposeTextViewState() throws {
+		let field = NSTextField(string: "  join #swift  \n")
+		XCTAssertEqual(field.trimmedStringValue, "join #swift")
+		XCTAssertEqual(field.trimmedFirstTokenStringValue, "join")
+
+		let scrollView = NSTextView.scrollableTextView()
+		let textView = try XCTUnwrap(scrollView.documentView as? NSTextView)
+		textView.string = "hello 👋"
+
+		XCTAssertEqual(textView.stringLength, 8)
+		XCTAssertEqual(textView.range, NSRange(location: 0, length: 8))
+		XCTAssertTrue(textView.scrollView === scrollView)
+		XCTAssertTrue(NSTextView.instancesRespond(to: NSSelectorFromString("isFocused")))
+	}
+
+	func testWindowDefaultSizeRestorationKeepsTopRightCornerFixed() {
+		let window = NSWindow(
+			contentRect: NSRect(x: 100, y: 200, width: 640, height: 480),
+			styleMask: [.titled, .resizable],
+			backing: .buffered,
+			defer: false
+		)
+		window.ce_saveSizeAsDefault()
+		let savedFrame = window.frame
+
+		window.setFrame(
+			NSRect(
+				x: savedFrame.minX,
+				y: savedFrame.minY,
+				width: savedFrame.width + 200,
+				height: savedFrame.height + 100
+			),
+			display: false
+		)
+		let expandedFrame = window.frame
+		window.ce_restoreDefaultSize(display: false)
+
+		XCTAssertEqual(window.frame.size, savedFrame.size)
+		XCTAssertEqual(window.frame.maxX, expandedFrame.maxX)
+		XCTAssertEqual(window.frame.maxY, expandedFrame.maxY)
+	}
+
+	func testWindowHelperRetainsObjectiveCSelectors() {
+		XCTAssertTrue(NSWindow.instancesRespond(to: NSSelectorFromString("saveSizeAsDefault")))
+		XCTAssertTrue(NSWindow.instancesRespond(to: NSSelectorFromString("restoreDefaultSizeAndDisplay:")))
+		XCTAssertTrue(NSWindow.instancesRespond(to: NSSelectorFromString("isActiveForDrawing")))
+	}
+
 	func testAutoExpandingFieldsTrackTheirLayoutWidth() {
 		let textField = TVCAutoExpandingTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 20))
 		textField.cell?.wraps = true
@@ -32,7 +81,7 @@ final class AppKitSupportMigrationTests: XCTestCase {
 	}
 
 	func testPreferencesControllerLoadsWindowFromNib() {
-		let controller = TDCPreferencesController()
+		let controller = PreferencesController()
 
 		XCTAssertNotNil(controller.value(forKey: "window"))
 	}
@@ -94,7 +143,7 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		let notification = TLOSpokenNotification(
 			notification: .channelMessage,
 			lineType: .privateMessage,
-			target: channel,
+			target: (channel as AnyObject) as! IRCTreeItem,
 			nickname: "alice",
 			text: "hello"
 		)

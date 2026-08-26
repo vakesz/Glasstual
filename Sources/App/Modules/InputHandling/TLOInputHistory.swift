@@ -138,7 +138,8 @@ public final class InputHistory: NSObject {
 		withLock {
 			if let client = treeItem as? IRCClient {
 				for channel in client.channelList {
-					destroy(channel)
+					let channelTreeItem = (channel as AnyObject) as! IRCTreeItem
+					destroy(channelTreeItem)
 				}
 			}
 
@@ -173,7 +174,7 @@ public final class InputHistory: NSObject {
 		}
 	}
 
-	@objc public func noteInputHistoryObjectScopeDidChange() {
+	@MainActor @objc public func noteInputHistoryObjectScopeDidChange() {
 		withLock {
 			if TPCPreferences.inputHistoryIsChannelSpecific() {
 				for client in NSObject.masterController().world.clientList {

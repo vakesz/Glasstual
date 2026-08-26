@@ -1,3 +1,4 @@
+@testable import Glasstual
 import XCTest
 
 /// Preprocessor directives found in file:
@@ -29,23 +30,11 @@ class GLTKeyEventTarget: NSObject {
 	}
 }
 
-@objc
-class GLTCompletionWindow: TVCMainWindow {
-	@objc var testInputTextField = TVCMainWindowTextView(frame: .zero)
-	@objc var testSelectedClient: IRCClient?
-	@objc var testSelectedChannel: IRCChannel?
-
-	override var inputTextField: TVCMainWindowTextView? {
-		testInputTextField
-	}
-
-	override var selectedClient: IRCClient? {
-		testSelectedClient
-	}
-
-	override var selectedChannel: IRCChannel? {
-		testSelectedChannel
-	}
+@MainActor
+private final class GLTCompletionWindow: NicknameCompletionWindow {
+	var inputTextField: MainWindowTextView!
+	var selectedClient: IRCClient?
+	var selectedChannel: IRCChannel?
 }
 
 @objc
@@ -58,6 +47,7 @@ class GLTCompletionChannel: IRCChannel {
 }
 
 @objc
+@MainActor
 class InputHandlingMigrationTests: XCTestCase {
 	@objc
 	func testInputHistoryNavigatesEntriesAndSkipsConsecutiveDuplicates() {
@@ -133,23 +123,24 @@ class InputHandlingMigrationTests: XCTestCase {
 	func testNicknameCompletionCompletesLocalCommandAndPreservesCommandPrefix() {
 		IRCCommandIndex.populateCommandIndex()
 
-		let window: GLTCompletionWindow! = GLTCompletionWindow(
+		let hostWindow = NSWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 400, height: 100),
 			styleMask: .borderless,
 			backing: .buffered,
 			defer: false
 		)
+		let textField = MainWindowTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 100))
+		let window = GLTCompletionWindow()
+		window.inputTextField = textField
+		hostWindow.contentView?.addSubview(textField)
+		textField.stringValue = "/jo"
+		textField.setSelectedRange(NSRange(location: 3, length: 0))
 
-		window.testInputTextField = TVCMainWindowTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 100))
-		window.contentView?.addSubview(window.testInputTextField)
-		window.testInputTextField.stringValue = "/jo"
-		window.testInputTextField.setSelectedRange(NSRange(location: 3, length: 0))
-
-		let completion = TLONicknameCompletionStatus(window: window)
+		let completion = NicknameCompletionStatus(window: window)
 
 		completion.completeNickname(true)
-		XCTAssertEqual(window.testInputTextField.string, "/join ")
-		XCTAssertEqual(window.testInputTextField.selectedRange.location, 6)
+		XCTAssertEqual(textField.string, "/join ")
+		XCTAssertEqual(textField.selectedRange.location, 6)
 	}
 
 	@objc
@@ -166,24 +157,25 @@ class InputHandlingMigrationTests: XCTestCase {
 
 		channel.testMembers = [member]
 
-		let window: GLTCompletionWindow! = GLTCompletionWindow(
+		let hostWindow = NSWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 400, height: 100),
 			styleMask: .borderless,
 			backing: .buffered,
 			defer: false
 		)
+		let textField = MainWindowTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 100))
+		let window = GLTCompletionWindow()
+		window.selectedClient = client
+		window.selectedChannel = channel
+		window.inputTextField = textField
+		hostWindow.contentView?.addSubview(textField)
+		textField.stringValue = "Al"
+		textField.setSelectedRange(NSRange(location: 2, length: 0))
 
-		window.testSelectedClient = client
-		window.testSelectedChannel = channel
-		window.testInputTextField = TVCMainWindowTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 100))
-		window.contentView?.addSubview(window.testInputTextField)
-		window.testInputTextField.stringValue = "Al"
-		window.testInputTextField.setSelectedRange(NSRange(location: 2, length: 0))
-
-		let completion = TLONicknameCompletionStatus(window: window)
+		let completion = NicknameCompletionStatus(window: window)
 
 		completion.completeNickname(true)
-		XCTAssertEqual(window.testInputTextField.string, "Alice: ")
+		XCTAssertEqual(textField.string, "Alice: ")
 
 		if let originalSuffix {
 			defaults.set(originalSuffix, forKey: preferenceKey)

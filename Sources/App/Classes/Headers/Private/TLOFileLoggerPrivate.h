@@ -40,15 +40,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCClient, IRCChannel, IRCTreeItem, TVCLogLine;
 
-GLASSTUAL_EXTERN NSString *const TLOFileLoggerConsoleDirectoryName;
-GLASSTUAL_EXTERN NSString *const TLOFileLoggerChannelDirectoryName;
-GLASSTUAL_EXTERN NSString *const TLOFileLoggerPrivateMessageDirectoryName;
+static NSString *const TLOFileLoggerConsoleDirectoryName = @"Console";
+static NSString *const TLOFileLoggerChannelDirectoryName = @"Channels";
+static NSString *const TLOFileLoggerPrivateMessageDirectoryName = @"Queries";
 
-GLASSTUAL_EXTERN NSString *const TLOFileLoggerUndefinedNicknameFormat;
-GLASSTUAL_EXTERN NSString *const TLOFileLoggerActionNicknameFormat;
-GLASSTUAL_EXTERN NSString *const TLOFileLoggerNoticeNicknameFormat;
+static NSString *const TLOFileLoggerUndefinedNicknameFormat = @"<%@%n>";
+static NSString *const TLOFileLoggerActionNicknameFormat = @"\u2022 %n:";
+static NSString *const TLOFileLoggerNoticeNicknameFormat = @"-%n-";
 
-GLASSTUAL_EXTERN NSString *const TLOFileLoggerISOStandardClockFormat;
+static NSString *const TLOFileLoggerISOStandardClockFormat =
+    @"[%Y-%m-%dT%H:%M:%S%z]";
 
 @interface TLOFileLogger : NSObject
 - (instancetype)init NS_UNAVAILABLE;

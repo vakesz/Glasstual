@@ -601,10 +601,15 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 
 	@objc(willDeleteUniqueIdentifiers:inView:)
 	public func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView viewId: String) {
-		guard let item = NSObject.masterController().world?.findItem(withId: viewId) else {
-			return
-		}
+		XRPerformBlockSynchronouslyOnMainQueue {
+			MainActor.assumeIsolated {
+				guard let item = NSObject.masterController().world?.findItem(withId: viewId) else {
+					return
+				}
 
-		item.viewController.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
+				(item.viewController as AnyObject as? LogController)?
+					.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
+			}
+		}
 	}
 }

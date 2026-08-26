@@ -105,7 +105,15 @@ public final class SharedApplication: NSObject {
 
 	@objc
 	public class func sharedThemeController() -> TPCThemeController {
-		once(&themeController, create: TPCThemeController.init)
+		once(&themeController) {
+			if Thread.isMainThread {
+				return MainActor.assumeIsolated { TPCThemeController() }
+			}
+
+			return DispatchQueue.main.sync {
+				MainActor.assumeIsolated { TPCThemeController() }
+			}
+		}
 	}
 
 	@objc

@@ -52,24 +52,30 @@ typedef NS_ENUM(NSUInteger, IRCTextFormatterEffectType) {
 
 typedef NSString *IRCTextFormatterAttributeName NS_EXTENSIBLE_STRING_ENUM;
 
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-    IRCTextFormatterBoldAttributeName; // BOOL
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-    IRCTextFormatterItalicAttributeName; // BOOL
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-    IRCTextFormatterMonospaceAttributeName; // BOOL
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-    IRCTextFormatterStrikethroughAttributeName; // BOOL
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-    IRCTextFormatterUnderlineAttributeName; // BOOL
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-    IRCTextFormatterForegroundColorAttributeName; // NSNumber, 0-15 - or,
-                                                  // NSColor
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-    IRCTextFormatterBackgroundColorAttributeName; // NSNumber, 0-15 - or,
-                                                  // NSColor
-GLASSTUAL_EXTERN IRCTextFormatterAttributeName const
-    IRCTextFormatterSpoilerAttributeName; // BOOL
+static IRCTextFormatterAttributeName const IRCTextFormatterBoldAttributeName =
+    @"IRCTextFormatterBoldAttributeName"; // BOOL
+static IRCTextFormatterAttributeName const IRCTextFormatterItalicAttributeName =
+    @"IRCTextFormatterItalicAttributeName"; // BOOL
+static IRCTextFormatterAttributeName const
+    IRCTextFormatterMonospaceAttributeName =
+        @"IRCTextFormatterMonospaceAttributeName"; // BOOL
+static IRCTextFormatterAttributeName const
+    IRCTextFormatterStrikethroughAttributeName =
+        @"IRCTextFormatterStrikethroughAttributeName"; // BOOL
+static IRCTextFormatterAttributeName const
+    IRCTextFormatterUnderlineAttributeName =
+        @"IRCTextFormatterUnderlineAttributeName"; // BOOL
+static IRCTextFormatterAttributeName const
+    IRCTextFormatterForegroundColorAttributeName =
+        @"IRCTextFormatterForegroundColorAttributeName"; // NSNumber, 0-15 - or,
+                                                         // NSColor
+static IRCTextFormatterAttributeName const
+    IRCTextFormatterBackgroundColorAttributeName =
+        @"IRCTextFormatterBackgroundColorAttributeName"; // NSNumber, 0-15 - or,
+                                                         // NSColor
+static IRCTextFormatterAttributeName const
+    IRCTextFormatterSpoilerAttributeName =
+        @"IRCTextFormatterSpoilerAttributeName"; // BOOL
 
 #define IRCTextFormatterEffectColorAsDigitCharacter 0x03
 #define IRCTextFormatterEffectColorAsHexCharacter 0x04

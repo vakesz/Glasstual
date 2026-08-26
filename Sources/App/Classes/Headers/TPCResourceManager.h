@@ -37,13 +37,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString *const TPCResourceManagerBundleDocumentTypeExtension;
-GLASSTUAL_EXTERN NSString *const
-    TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod;
+static NSString *const TPCResourceManagerBundleDocumentTypeExtension =
+    @".bundle";
+static NSString *const
+    TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod = @"bundle";
 
-GLASSTUAL_EXTERN NSString *const TPCResourceManagerScriptDocumentTypeExtension;
-GLASSTUAL_EXTERN NSString *const
-    TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod;
+static NSString *const TPCResourceManagerScriptDocumentTypeExtension = @".scpt";
+static NSString *const
+    TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod = @"scpt";
 
 @interface TPCResourceManager : NSObject
 /* Open a property list file in the Resources folder of Glasstual named `name`

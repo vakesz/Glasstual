@@ -75,7 +75,7 @@ public final class TimedCommand: NSObject {
 				return
 			}
 
-			IRCInvokeTimedCommand(client, self)
+			_ = client.perform(NSSelectorFromString("onTimedCommand:"), with: self)
 		})
 	}
 

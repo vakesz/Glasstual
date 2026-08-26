@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+#include "BuildConfig.h"
 #import "TXSharedApplication.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -70,7 +71,17 @@ NS_ASSUME_NONNULL_BEGIN
     (TXMasterController *)masterController;
 @end
 
-GLASSTUAL_EXTERN os_log_t ApplicationTerminationLogSubsystem(void);
+static inline os_log_t ApplicationTerminationLogSubsystem(void) {
+  static os_log_t cachedValue = NULL;
+  static dispatch_once_t onceToken;
+
+  dispatch_once(&onceToken, ^{
+    cachedValue =
+        os_log_create(TXBundleBuildProductIdentifierCString, "Termination");
+  });
+
+  return cachedValue;
+}
 
 #define LogToConsoleTerminationProgress(_message, ...)                         \
   LogToConsoleDebugWithSubsystem(ApplicationTerminationLogSubsystem(),         \

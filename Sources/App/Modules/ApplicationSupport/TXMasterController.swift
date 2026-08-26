@@ -21,6 +21,7 @@ private let pluginsFinishedLoadingNotification = Notification.Name(
 )
 
 @objc(TXMasterController)
+@MainActor
 public final class MasterController: NSObject, NSApplicationDelegate {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",

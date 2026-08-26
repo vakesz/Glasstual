@@ -715,7 +715,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		server.serverPort = serverPort
 		server.prefersSecuredConnection = prefersSecuredConnection
 
-		config.serverList = [server.copy() as! IRCServer]
+		config.serverList = [server.copy() as! Server]
 
 		let password = accountPassword
 

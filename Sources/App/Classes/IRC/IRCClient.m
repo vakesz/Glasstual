@@ -94,6 +94,7 @@
 #import "IRCClientConfigPrivate.h"
 #import "IRCClientPrivate.h"
 #import "IRCClientRequestedCommandsPrivate.h"
+#import "IRCClientWireUtilitiesPrivate.h"
 #import "IRCColorFormatPrivate.h"
 #import "IRCConnectionConfig.h"
 #import "IRCConnectionErrors.h"
@@ -1145,57 +1146,11 @@ NSString *const IRCClientUserNicknameChangedNotification =
   NSParameterAssert(modeSymbol.length == 1);
   NSParameterAssert(modeParameters != nil);
 
-  if (modeParameters.count == 0) {
-    return @[];
-  }
-
-  NSMutableArray<NSString *> *listOfChanges = [NSMutableArray array];
-
-  NSMutableString *modeSetString = [NSMutableString string];
-  NSMutableString *modeParamString = [NSMutableString string];
-
-  NSUInteger numberOfEntries = 0;
-
-  for (NSString *modeParameter in modeParameters) {
-    if (modeParameter.length == 0) {
-      continue;
-    }
-
-    if (modeSetString.length == 0) {
-      if (modeIsSet) {
-        [modeSetString appendFormat:@"+%@", modeSymbol];
-      } else {
-        [modeSetString appendFormat:@"-%@", modeSymbol];
-      }
-    } else {
-      [modeSetString appendString:modeSymbol];
-    }
-
-    [modeParamString appendFormat:@" %@", modeParameter];
-
-    numberOfEntries += 1;
-
-    if (numberOfEntries == self.supportInfo.maximumModeCount) {
-      numberOfEntries = 0;
-
-      NSString *modeSetCombined =
-          [modeSetString stringByAppendingString:modeParamString];
-
-      [listOfChanges addObject:modeSetCombined];
-
-      [modeSetString setString:@""];
-      [modeParamString setString:@""];
-    }
-  }
-
-  if (modeSetString.length > 0 && modeParamString.length > 0) {
-    NSString *modeSetCombined =
-        [modeSetString stringByAppendingString:modeParamString];
-
-    [listOfChanges addObject:modeSetCombined];
-  }
-
-  return [listOfChanges copy];
+  return [IRCClientWireUtilities
+      compileModeChangesWithSymbol:modeSymbol
+                             isSet:modeIsSet
+                        parameters:modeParameters
+                      maximumModes:self.supportInfo.maximumModeCount];
 }
 
 - (void)separateTargetsInString:(NSString *)targetString
@@ -2747,76 +2702,11 @@ NSString *const IRCClientUserNicknameChangedNotification =
                               sentTo:(nullable NSString *)target {
   NSParameterAssert(message != nil);
 
-  if ([self targetLooksLikeService:target] == NO) {
-    return message;
-  }
-
-  static NSSet<NSString *> *sensitiveVerbs = nil;
-
-  static dispatch_once_t onceToken;
-
-  dispatch_once(&onceToken, ^{
-    sensitiveVerbs = [NSSet setWithArray:@[
-      @"IDENTIFY", @"SIDENTIFY", @"LOGIN", @"AUTH", @"REGISTER", @"GHOST",
-      @"RECOVER", @"RELEASE", @"REGAIN", @"SET", @"PASSWD", @"PASSWORD",
-      @"SENDPASS", @"RESETPASS", @"SETPASS", @"GROUP", @"CONFIRM"
-    ]];
-  });
-
-  NSArray<NSString *> *tokens = [message componentsSeparatedByString:@" "];
-
-  if (tokens.count < 2 || [sensitiveVerbs
-                              containsObject:tokens[0].uppercaseString] == NO) {
-    return message;
-  }
-
-  /* "SET PASSWORD <value>" keeps two leading words, everything else one. */
-  NSUInteger keep = 1;
-
-  if ([tokens[0] isEqualToStringIgnoringCase:@"SET"]) {
-    if (tokens.count < 3 ||
-        [tokens[1] isEqualToStringIgnoringCase:@"PASSWORD"] == NO) {
-      return message;
-    }
-
-    keep = 2;
-  }
-
-  NSMutableArray<NSString *> *redacted =
-      [[tokens subarrayWithRange:NSMakeRange(0, keep)] mutableCopy];
-
-  for (NSUInteger i = keep; i < tokens.count; i++) {
-    [redacted addObject:((tokens[i].length == 0)
-                             ? @""
-                             : @"\u2022\u2022\u2022\u2022\u2022\u2022")];
-  }
-
-  return [redacted componentsJoinedByString:@" "];
+  return [IRCClientWireUtilities redactedServiceMessage:message sentTo:target];
 }
 
 + (BOOL)targetLooksLikeService:(nullable NSString *)target {
-  if (target.length == 0) {
-    return NO;
-  }
-
-  NSString *nickname = target;
-
-  /* NickServ@services.example.net */
-  NSRange atRange = [nickname rangeOfString:@"@"];
-
-  if (atRange.location != NSNotFound) {
-    nickname = [nickname substringToIndex:atRange.location];
-  }
-
-  NSString *lowercased = nickname.lowercaseString;
-
-  if ([lowercased hasSuffix:@"serv"] || [lowercased isEqualToString:@"q"] ||
-      [lowercased isEqualToString:@"l"] || [lowercased isEqualToString:@"x"] ||
-      [lowercased isEqualToString:@"authserv"]) {
-    return YES;
-  }
-
-  return NO;
+  return [IRCClientWireUtilities targetLooksLikeService:target];
 }
 
 - (void)sendLine:(NSString *)string {
@@ -5749,65 +5639,9 @@ NSString *const IRCClientUserNicknameChangedNotification =
     }
   }
 
-  NSString *formatMarker = @"%";
-
-  NSString *chunk = nil;
-
-  NSScanner *scanner = [NSScanner scannerWithString:format];
-
-  scanner.charactersToBeSkipped = nil;
-
-  NSMutableString *buffer = [NSMutableString new];
-
-  while (scanner.atEnd == NO) {
-    if ([scanner scanUpToString:formatMarker intoString:&chunk]) {
-      [buffer appendString:chunk];
-    }
-
-    if ([scanner scanString:formatMarker intoString:nil] == NO) {
-      break;
-    }
-
-    NSInteger paddingWidth = 0;
-
-    [scanner scanInteger:&paddingWidth];
-
-    /* Read the output type marker */
-    NSString *outputValue = nil;
-
-    if ([scanner scanString:@"@" intoString:nil]) {
-      outputValue = modeSymbol;
-    } else if ([scanner scanString:@"n" intoString:nil]) {
-      outputValue = nickname;
-    } else if ([scanner scanString:formatMarker intoString:nil]) {
-      outputValue = formatMarker;
-    }
-
-    if (outputValue) {
-      if (paddingWidth < 0 &&
-          (NSUInteger)ABS(paddingWidth) > outputValue.length) {
-        NSString *paddedString = [@""
-            stringByPaddingToLength:(ABS(paddingWidth) - outputValue.length)
-                         withString:@" "
-                    startingAtIndex:0];
-
-        [buffer appendString:paddedString];
-      }
-
-      [buffer appendString:outputValue];
-
-      if (paddingWidth > 0 && (NSUInteger)paddingWidth > outputValue.length) {
-        NSString *paddedString =
-            [@"" stringByPaddingToLength:(paddingWidth - outputValue.length)
-                              withString:@" "
-                         startingAtIndex:0];
-
-        [buffer appendString:paddedString];
-      }
-    }
-  }
-
-  return [buffer copy];
+  return [IRCClientWireUtilities formatNickname:nickname
+                                     modeSymbol:modeSymbol
+                                         format:format];
 }
 
 - (void)printAndLog:(TVCLogLine *)logLine
@@ -9725,9 +9559,10 @@ NSString *const IRCClientUserNicknameChangedNotification =
   NSString *selector =
       ((date) ? [self chatHistoryTimestampForDate:date] : @"*");
 
-  return [NSString
-      stringWithFormat:@"CHATHISTORY LATEST %@ %@ %lu", target, selector,
-                       (unsigned long)self.chatHistoryRequestLimit];
+  return [IRCClientWireUtilities
+      chatHistoryLatestCommandForTarget:target
+                               selector:selector
+                                  limit:self.chatHistoryRequestLimit];
 }
 
 - (NSString *)chatHistoryBeforeCommandForTarget:(NSString *)target
@@ -9735,10 +9570,10 @@ NSString *const IRCClientUserNicknameChangedNotification =
   NSParameterAssert(target != nil);
   NSParameterAssert(date != nil);
 
-  return
-      [NSString stringWithFormat:@"CHATHISTORY BEFORE %@ %@ %lu", target,
-                                 [self chatHistoryTimestampForDate:date],
-                                 (unsigned long)self.chatHistoryRequestLimit];
+  return [IRCClientWireUtilities
+      chatHistoryBeforeCommandForTarget:target
+                               selector:[self chatHistoryTimestampForDate:date]
+                                  limit:self.chatHistoryRequestLimit];
 }
 
 /* The server time of the newest line in the local scrollback, or nil
@@ -10195,17 +10030,9 @@ NSString *const IRCClientUserNicknameChangedNotification =
     (NSOrderedSet<NSString *> *)nicknames {
   NSParameterAssert(nicknames != nil);
 
-  NSUInteger count = nicknames.count;
-
-  if (count <= _netsplitSummaryNicknameLimit) {
-    return [nicknames.array componentsJoinedByString:@", "];
-  }
-
-  NSArray<NSString *> *shown = [nicknames.array
-      subarrayWithRange:NSMakeRange(0, _netsplitSummaryNicknameLimit)];
-
-  return TXTLS(@"IRC[ns3-mr]", [shown componentsJoinedByString:@", "],
-               (unsigned long)(count - _netsplitSummaryNicknameLimit));
+  return [IRCClientWireUtilities
+      netsplitNicknameList:nicknames
+                     limit:_netsplitSummaryNicknameLimit];
 }
 
 /* YES when the message is a JOIN or QUIT of the batch being collapsed.
@@ -15339,21 +15166,7 @@ present_error:
 - (NSString *)DCCSendEscapeFilename:(NSString *)filename {
   NSParameterAssert(filename != nil);
 
-  NSString *filenameEscaped = filename.safeFilename;
-
-  if ([filenameEscaped contains:@" "] == NO) {
-    return filenameEscaped;
-  }
-
-  /* Escape double quotes because the filename will be wrapped.
-   February 20, 2017: Maybe we should replace the double quote
-   with another character or remove completely? Untested how other
-   clients will handle an escaped double quote. */
-  filenameEscaped =
-      [filenameEscaped stringByReplacingOccurrencesOfString:@"\""
-                                                 withString:@"\\\""];
-
-  return [NSString stringWithFormat:@"\"%@\"", filenameEscaped];
+  return [IRCClientWireUtilities escapedDCCFilename:filename];
 }
 
 - (nullable NSString *)DCCTransferAddress {
@@ -15371,34 +15184,13 @@ present_error:
 - (nullable NSString *)DCCFormattedAddress:(NSString *)address {
   NSParameterAssert(address != nil);
 
-  if (address.IPv6Address) {
-    return address;
-  }
+  NSString *formattedAddress = [IRCClientWireUtilities wireDCCAddress:address];
 
-  NSArray *addressOctets = [address componentsSeparatedByString:@"."];
-
-  if (addressOctets.count != 4) {
+  if (formattedAddress == nil) {
     LogToConsoleError("User configured a silly IP address");
-
-    return nil;
   }
 
-  NSInteger w = [addressOctets[0] integerValue];
-  NSInteger x = [addressOctets[1] integerValue];
-  NSInteger y = [addressOctets[2] integerValue];
-  NSInteger z = [addressOctets[3] integerValue];
-
-  unsigned long long a = 0;
-
-  a |= w;
-  a <<= 8;
-  a |= x;
-  a <<= 8;
-  a |= y;
-  a <<= 8;
-  a |= z;
-
-  return [NSString stringWithFormat:@"%llu", a];
+  return formattedAddress;
 }
 
 /* Inverse of -DCCFormattedAddress: — an integer becomes dotted IPv4,
@@ -15406,21 +15198,7 @@ present_error:
 - (NSString *)DCCAddressFromString:(NSString *)string {
   NSParameterAssert(string != nil);
 
-  if (string.numericOnly == NO) {
-    return string;
-  }
-
-  unsigned long long a = strtoull(string.UTF8String, NULL, 10);
-
-  unsigned long w = (a & 0xff);
-  a >>= 8;
-  unsigned long x = (a & 0xff);
-  a >>= 8;
-  unsigned long y = (a & 0xff);
-  a >>= 8;
-  unsigned long z = (a & 0xff);
-
-  return [NSString stringWithFormat:@"%lu.%lu.%lu.%lu", z, y, x, w];
+  return [IRCClientWireUtilities displayDCCAddress:string];
 }
 
 #pragma mark -

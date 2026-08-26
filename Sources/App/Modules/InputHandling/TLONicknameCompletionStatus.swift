@@ -13,6 +13,15 @@
 
 import AppKit
 
+@MainActor
+protocol NicknameCompletionWindow: AnyObject {
+	var inputTextField: MainWindowTextView! { get }
+	var selectedClient: IRCClient? { get }
+	var selectedChannel: IRCChannel? { get }
+}
+
+extension MainWindow: NicknameCompletionWindow {}
+
 @objc(TLONicknameCompletionStatus)
 @MainActor
 public final class NicknameCompletionStatus: NSObject {
@@ -21,7 +30,7 @@ public final class NicknameCompletionStatus: NSObject {
 		let comparisonValue: String
 	}
 
-	private weak var window: TVCMainWindow?
+	private weak var window: (any NicknameCompletionWindow)?
 	private var completedValue: String?
 	private var completedValueCompletionSuffix: String?
 	private var currentTextViewStringValue: String?
@@ -47,7 +56,15 @@ public final class NicknameCompletionStatus: NSObject {
 	}
 
 	@objc(initWithWindow:)
-	public init(window: TVCMainWindow) {
+	public init(window: MainWindow) {
+		self.window = window
+
+		super.init()
+
+		clear()
+	}
+
+	init(window: any NicknameCompletionWindow) {
 		self.window = window
 
 		super.init()

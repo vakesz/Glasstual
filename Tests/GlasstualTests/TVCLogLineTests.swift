@@ -70,4 +70,97 @@ class TVCLogLineTests: XCTestCase {
 
 		XCTAssertNil(decoded.messageIdentifier)
 	}
+
+	func testMutableCopyPreservesCompleteValueState() throws {
+		let receivedAt = Date(timeIntervalSince1970: 1_725_000_000)
+		let line = TVCLogLineMutable()
+		line.isEncrypted = true
+		line.isFirstForDay = true
+		line.receivedAt = receivedAt
+		line.nickname = "alice"
+		line.messageBody = "hello"
+		line.command = "PRIVMSG"
+		line.messageIdentifier = "message-id"
+		line.replyToMessageIdentifier = "parent-id"
+		line.reactions = ["👍": ["bob", "carol"]]
+		line.lineType = .privateMessage
+		line.memberType = .localUser
+		line.deliveryState = .delivered
+		line.highlightKeywords = ["hello"]
+		line.excludeKeywords = ["ignore"]
+		line.rendererAttributes = ["key": "value"]
+
+		let copy = try XCTUnwrap(line.copy() as? TVCLogLine)
+
+		XCTAssertFalse(copy is TVCLogLineMutable)
+		XCTAssertTrue(copy.isEncrypted)
+		XCTAssertTrue(copy.isFirstForDay)
+		XCTAssertEqual(copy.receivedAt, receivedAt)
+		XCTAssertEqual(copy.nickname, "alice")
+		XCTAssertEqual(copy.messageBody, "hello")
+		XCTAssertEqual(copy.command, "PRIVMSG")
+		XCTAssertEqual(copy.messageIdentifier, "message-id")
+		XCTAssertEqual(copy.replyToMessageIdentifier, "parent-id")
+		XCTAssertEqual(copy.reactions, ["👍": ["bob", "carol"]])
+		XCTAssertEqual(copy.lineType, .privateMessage)
+		XCTAssertEqual(copy.memberType, .localUser)
+		XCTAssertEqual(copy.deliveryState, .delivered)
+		XCTAssertEqual(copy.highlightKeywords, ["hello"])
+		XCTAssertEqual(copy.excludeKeywords, ["ignore"])
+		XCTAssertEqual(copy.rendererAttributes?["key"] as? String, "value")
+		XCTAssertEqual(copy.uniqueIdentifier, line.uniqueIdentifier)
+		XCTAssertEqual(copy.sessionIdentifier, line.sessionIdentifier)
+	}
+
+	func testPendingDeliveryStateIsNotRestoredFromArchive() throws {
+		let line = TVCLogLineMutable()
+		line.deliveryState = .pending
+
+		let data = try NSKeyedArchiver.archivedData(withRootObject: line.copy(), requiringSecureCoding: true)
+		let decoded = try XCTUnwrap(TVCLogLine(data: data))
+
+		XCTAssertEqual(decoded.deliveryState, .none)
+		XCTAssertNil(decoded.deliveryStateString)
+	}
+
+	func testLineTypeAndMemberTypeStringsRetainRendererValues() {
+		XCTAssertEqual(TVCLogLine.string(for: .actionNoHighlight), "action")
+		XCTAssertEqual(TVCLogLine.string(for: .ctcpReply), "ctcp")
+		XCTAssertEqual(TVCLogLine.string(for: .dccFileTransfer), "dcc-file-transfer")
+		XCTAssertEqual(TVCLogLine.string(for: .offTheRecordEncryptionStatus), "off-the-record-encryption-status")
+		XCTAssertEqual(TVCLogLine.string(for: .privateMessageNoHighlight), "privmsg")
+		XCTAssertNil(TVCLogLine.string(for: .undefined))
+		XCTAssertEqual(TVCLogLine.string(for: .localUser), "myself")
+		XCTAssertEqual(TVCLogLine.string(for: .normal), "normal")
+	}
+
+	func testObjectiveCRuntimeSelectorsRemainAvailable() {
+		let instanceSelectors = [
+			"initWithData:",
+			"formattedTimestampWithFormat:",
+			"formattedNicknameInChannel:",
+			"formattedNicknameInChannel:withFormat:",
+			"renderedBodyForTranscriptLog",
+			"renderedBodyForTranscriptLogInChannel:",
+			"xpcObjectForTreeItem:",
+			"fromCurrentSession",
+		]
+		let classSelectors = [
+			"logLineWithData:",
+			"logLineFromXPCObject:",
+			"stringForLineType:",
+			"stringForMemberType:",
+			"stringForDeliveryState:",
+			"newUniqueIdentifier",
+			"currentSessionIdentifier",
+		]
+
+		for selector in instanceSelectors {
+			XCTAssertTrue(TVCLogLine.instancesRespond(to: NSSelectorFromString(selector)), selector)
+		}
+
+		for selector in classSelectors {
+			XCTAssertTrue(TVCLogLine.responds(to: NSSelectorFromString(selector)), selector)
+		}
+	}
 }

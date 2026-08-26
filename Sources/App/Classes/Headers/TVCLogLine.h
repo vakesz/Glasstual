@@ -40,13 +40,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class IRCChannel;
 
-GLASSTUAL_EXTERN NSString *const TVCLogLineUndefinedNicknameFormat;
-GLASSTUAL_EXTERN NSString *const TVCLogLineActionNicknameFormat;
-GLASSTUAL_EXTERN NSString *const TVCLogLineNoticeNicknameFormat;
+static NSString *const TVCLogLineUndefinedNicknameFormat = @"<%@%n>";
+static NSString *const TVCLogLineActionNicknameFormat = @"%@ ";
+static NSString *const TVCLogLineNoticeNicknameFormat = @"-%@-";
 
-GLASSTUAL_EXTERN NSString *const TVCLogLineSpecialNoticeMessageFormat;
+static NSString *const TVCLogLineSpecialNoticeMessageFormat = @"[%@]: %@";
 
-GLASSTUAL_EXTERN NSString *const TVCLogLineDefaultCommandValue;
+static NSString *const TVCLogLineDefaultCommandValue = @"-100";
 
 typedef NS_ENUM(NSUInteger, TVCLogLineType) {
   TVCLogLineTypeUndefined = 0,

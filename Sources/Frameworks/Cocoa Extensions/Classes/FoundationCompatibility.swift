@@ -128,12 +128,12 @@ extension NSCoder {
 
 	@objc(encodeData:forKey:)
 	func textual_encodeData(_ value: Data, forKey key: String) {
-		encode(value, forKey: key)
+		encode(value as NSData, forKey: key)
 	}
 
 	@objc(encodeString:forKey:)
 	func textual_encodeString(_ value: String, forKey key: String) {
-		encode(value, forKey: key)
+		encode(value as NSString, forKey: key)
 	}
 
 	@objc(encodeUnsignedInteger:forKey:)

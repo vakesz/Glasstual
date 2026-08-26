@@ -42,8 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
 /* Posted on the main queue when the set of people typing in a channel
  changes. The object is the IRCClient; the channel is in the user info
  under IRCTypingTrackerChannelKey. */
-GLASSTUAL_EXTERN NSNotificationName const IRCTypingTrackerDidChangeNotification;
-GLASSTUAL_EXTERN NSString *const IRCTypingTrackerChannelKey;
+static NSNotificationName const IRCTypingTrackerDidChangeNotification =
+    @"IRCTypingTrackerDidChangeNotification";
+static NSString *const IRCTypingTrackerChannelKey = @"channel";
 
 typedef NS_ENUM(NSUInteger, IRCTypingState) {
   IRCTypingStateDone = 0,

@@ -41,9 +41,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef NSString *TLONotificationAlertSound NS_EXTENSIBLE_STRING_ENUM;
 
-GLASSTUAL_EXTERN TLONotificationAlertSound const
-    TXDefaultAlertSoundPreferenceValue;
-GLASSTUAL_EXTERN TLONotificationAlertSound const TXNoAlertSoundPreferenceValue;
+static TLONotificationAlertSound const TXDefaultAlertSoundPreferenceValue =
+    @"Default";
+static TLONotificationAlertSound const TXNoAlertSoundPreferenceValue = @"None";
 
 @interface TLONotificationConfiguration : NSObject
 @property(readonly) TXNotificationType eventType;

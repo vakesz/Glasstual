@@ -14,6 +14,8 @@ import AppKit
 import os
 import UniformTypeIdentifiers
 
+extension ICLPayload: @unchecked Sendable {}
+
 private let inlineMediaLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "InlineMediaService"
@@ -26,7 +28,7 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	@objc(sharedInstance)
 	public class func shared() -> LogControllerInlineMediaService {
 		enum Storage {
-			nonisolated(unsafe) static let instance = LogControllerInlineMediaService()
+			static let instance = LogControllerInlineMediaService()
 		}
 
 		return Storage.instance
@@ -187,24 +189,29 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 
 	@objc(processingPayloadSucceeded:)
 	public func processingPayloadSucceeded(_ payload: ICLPayload) {
-		guard let item = NSObject.masterController().world.findItem(withId: payload.viewIdentifier) else {
-			return
-		}
+		performOnMain {
+			guard let item = NSObject.masterController().world.findItem(withId: payload.viewIdentifier) else {
+				return
+			}
 
-		processingPayloadSucceeded(payload, forItem: item)
+			self.processingPayloadSucceeded(payload, forItem: item)
+		}
 	}
 
 	@objc(processingPayload:failedWithError:)
 	public func processingPayload(_ payload: ICLPayload, failedWithError error: Error) {
-		guard let item = NSObject.masterController().world.findItem(withId: payload.viewIdentifier) else {
-			return
-		}
+		let error = error as NSError
+		performOnMain {
+			guard let item = NSObject.masterController().world.findItem(withId: payload.viewIdentifier) else {
+				return
+			}
 
-		processingPayload(payload, forItem: item, failedWithError: error as NSError)
+			self.processingPayload(payload, forItem: item, failedWithError: error)
+		}
 	}
 
 	private func processingPayloadSucceeded(_ payload: ICLPayload, forItem item: IRCTreeItem) {
-		item.viewController.processingInlineMediaPayloadSucceeded(payload)
+		(item.viewController as AnyObject as? LogController)?.processingInlineMediaPayloadSucceeded(payload)
 	}
 
 	private func processingPayload(
@@ -212,11 +219,25 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 		forItem item: IRCTreeItem,
 		failedWithError error: NSError
 	) {
-		item.viewController.processingInlineMediaPayload(payload, failedWithError: error)
+		(item.viewController as AnyObject as? LogController)?.processingInlineMediaPayload(
+			payload,
+			failedWithError: error
+		)
 	}
 
 	@objc(askPermissionToEnableInlineMediaWithCompletionBlock:)
 	public class func askPermissionToEnableInlineMedia(completionBlock: @escaping @Sendable (Bool) -> Void) {
+		XRPerformBlockSynchronouslyOnMainQueue {
+			MainActor.assumeIsolated {
+				askPermissionToEnableInlineMediaOnMain(completionBlock: completionBlock)
+			}
+		}
+	}
+
+	@MainActor
+	private class func askPermissionToEnableInlineMediaOnMain(
+		completionBlock: @escaping @Sendable (Bool) -> Void
+	) {
 		let clientList = NSObject.masterController().world.clientList as? [IRCClient] ?? []
 		let presentDialog = clientList.contains { client in
 			client.config.proxyType != .none
@@ -240,6 +261,7 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 		presentInlineMediaPermissionAlert(for: window, completionBlock: completionBlock)
 	}
 
+	@MainActor
 	private class func presentInlineMediaPermissionAlert(
 		for window: NSWindow,
 		completionBlock: @escaping @Sendable (Bool) -> Void
@@ -254,7 +276,7 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 
 		alert.beginSheetModal(for: window) { response in
 			if response == .alertThirdButtonReturn {
-				TDCPreferencesController.openProxySettingsInSystemPreferences()
+				PreferencesController.openProxySettingsInSystemPreferences()
 
 				DispatchQueue.main.async {
 					presentInlineMediaPermissionAlert(for: window, completionBlock: completionBlock)
@@ -264,6 +286,14 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 			}
 
 			completionBlock(response == .alertFirstButtonReturn)
+		}
+	}
+
+	private func performOnMain(_ operation: @escaping @MainActor () -> Void) {
+		XRPerformBlockSynchronouslyOnMainQueue {
+			MainActor.assumeIsolated {
+				operation()
+			}
 		}
 	}
 }

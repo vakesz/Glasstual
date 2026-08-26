@@ -112,6 +112,6 @@ typedef NS_ENUM(NSUInteger, IRCSTSPolicyAction) {
                                 upgradePort:(nullable uint16_t *)upgradePort;
 @end
 
-extern NSString *const IRCSTSPolicyStoreDefaultsKey;
+static NSString *const IRCSTSPolicyStoreDefaultsKey = @"IRC -> STS Policies";
 
 NS_ASSUME_NONNULL_END

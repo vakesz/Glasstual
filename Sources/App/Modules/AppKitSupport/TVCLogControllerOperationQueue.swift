@@ -22,14 +22,14 @@ private enum LogControllerPrintingOperationQueueKVOContext {
 	nonisolated(unsafe) static var token = 0
 }
 
-private func pendingOperationsKey(for viewController: TVCLogController) -> String {
+private func pendingOperationsKey(for viewController: LogController) -> String {
 	viewController.uniqueIdentifier
 }
 
 @objc(TVCLogControllerPrintingOperation)
 private final class LogControllerPrintingOperation: Operation, @unchecked Sendable {
 	@objc var executionBlock: TVCLogControllerPrintingBlock?
-	@objc weak var viewController: TVCLogController?
+	@objc weak var viewController: LogController?
 	@objc var pendingOperationsKey = ""
 	@objc var standalone = false
 	@objc var requiresExplicitFinish = false
@@ -144,7 +144,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 	@objc(enqueueMessageBlock:for:)
 	public func enqueueMessageBlock(
 		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
-		for viewController: TVCLogController
+		for viewController: LogController
 	) {
 		enqueueMessageBlock(callbackBlock, for: viewController, isStandalone: false)
 	}
@@ -152,7 +152,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 	@objc(enqueueMessageBlock:for:isStandalone:)
 	public func enqueueMessageBlock(
 		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
-		for viewController: TVCLogController,
+		for viewController: LogController,
 		isStandalone: Bool
 	) {
 		enqueueMessageBlock(
@@ -166,7 +166,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 	@objc(enqueueAsynchronousMessageBlock:for:isStandalone:)
 	public func enqueueAsynchronousMessageBlock(
 		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
-		for viewController: TVCLogController,
+		for viewController: LogController,
 		isStandalone: Bool
 	) {
 		enqueueMessageBlock(
@@ -179,11 +179,28 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 
 	private func enqueueMessageBlock(
 		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
-		for viewController: TVCLogController,
+		for viewController: LogController,
 		isStandalone: Bool,
 		requiresExplicitFinish: Bool
 	) {
-		guard NSObject.masterController().applicationIsTerminating == false else {
+		let masterController = NSObject.masterController()
+		let applicationIsTerminating: Bool
+
+		if Thread.isMainThread {
+			applicationIsTerminating = MainActor.assumeIsolated {
+				masterController.applicationIsTerminating
+			}
+		} else {
+			nonisolated(unsafe) var terminating = false
+			XRPerformBlockSynchronouslyOnMainQueue {
+				terminating = MainActor.assumeIsolated {
+					masterController.applicationIsTerminating
+				}
+			}
+			applicationIsTerminating = terminating
+		}
+
+		guard applicationIsTerminating == false else {
 			return
 		}
 
@@ -203,7 +220,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 	}
 
 	@objc(pendingOperationsForViewController:)
-	private func pendingOperations(for viewController: TVCLogController) -> [LogControllerPrintingOperation] {
+	private func pendingOperations(for viewController: LogController) -> [LogControllerPrintingOperation] {
 		let key = pendingOperationsKey(for: viewController)
 
 		pendingOperationsLock.lock()
@@ -289,7 +306,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 	}
 
 	@objc(cancelOperationsForViewController:)
-	public func cancelOperations(for viewController: TVCLogController) {
+	public func cancelOperations(for viewController: LogController) {
 		for operation in pendingOperations(for: viewController) {
 			operation.cancel()
 		}
@@ -297,7 +314,10 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 
 	@objc(cancelOperationsForClient:)
 	public func cancelOperations(for client: IRCClient) {
-		cancelOperations(for: client.viewController)
+		guard let viewController = client.viewController as AnyObject as? LogController else {
+			return
+		}
+		cancelOperations(for: viewController)
 	}
 
 	@objc(cancelOperationsForChannel:)
@@ -306,7 +326,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 	}
 
 	@objc(updateReadinessState:)
-	public func updateReadinessState(for viewController: TVCLogController) {
+	public func updateReadinessState(for viewController: LogController) {
 		for operation in pendingOperations(for: viewController) {
 			if operation.isPending == false || operation.dependencies.count > 0 {
 				continue

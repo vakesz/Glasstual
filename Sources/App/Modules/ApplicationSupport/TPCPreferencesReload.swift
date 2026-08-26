@@ -183,7 +183,7 @@ public extension TPCPreferences {
 		}
 
 		if reloadAction.contains(.inputHistoryScope) {
-			mainWindow.inputHistoryManager().noteObjectScopeDidChange()
+			mainWindow.inputHistoryManager().noteInputHistoryObjectScopeDidChange()
 		}
 
 		if reloadAction.contains(.ircCommandCache) {
@@ -206,7 +206,7 @@ public extension TPCPreferences {
 
 		if reloadAction.contains(.scrollbackVisibleLimit) {
 			for client in masterController.world.clientList as? [IRCClient] ?? [] {
-				client.viewController.changeScrollbackLimit()
+				(client.viewController as AnyObject as? LogController)?.changeScrollbackLimit()
 
 				for channel in client.channelList as? [IRCChannel] ?? [] {
 					channel.viewController.changeScrollbackLimit()

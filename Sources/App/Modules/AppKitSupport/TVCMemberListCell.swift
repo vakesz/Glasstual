@@ -185,9 +185,11 @@ public final class MemberListCell: NSTableCellView {
 	override public func awakeFromNib() {
 		super.awakeFromNib()
 
-		cellTextField.usesSingleLineMode = true
-		cellTextField.maximumNumberOfLines = 1
-		cellTextField.lineBreakMode = .byTruncatingTail
+		MainActor.assumeIsolated {
+			cellTextField.usesSingleLineMode = true
+			cellTextField.maximumNumberOfLines = 1
+			cellTextField.lineBreakMode = .byTruncatingTail
+		}
 	}
 
 	@objc(avatarImageForNickname:size:)
@@ -387,11 +389,10 @@ public final class MemberListCell: NSTableCellView {
 
 	@objc
 	public func drawWithExpansionFrame() {
-		guard let memberList, let cellItem else {
+		guard let memberList, let cellItem, let userInfoPopover = memberList.memberListUserInfoPopover else {
 			return
 		}
 
-		let userInfoPopover = memberList.memberListUserInfoPopover()
 		let nickname = cellItem.user.nickname
 
 		userInfoPopover.nicknameField.stringValue = nickname
@@ -487,7 +488,7 @@ public final class MemberListCell: NSTableCellView {
 		objectValue as? ChannelUser
 	}
 
-	private var memberList: TVCMemberList? {
+	private var memberList: MemberList? {
 		rowCell?.memberList
 	}
 
@@ -535,11 +536,11 @@ public final class MemberListHeaderCell: NSTableCellView {
 
 @objc(TVCMemberListRowCell)
 public final class MemberListRowCell: NSTableRowView {
-	@objc public private(set) weak var memberList: TVCMemberList?
+	@objc public private(set) weak var memberList: MemberList?
 	private weak var cachedChildCell: MemberListCell?
 
 	@objc(initWithMemberList:)
-	public init(memberList: TVCMemberList) {
+	public init(memberList: MemberList) {
 		self.memberList = memberList
 		super.init(frame: .zero)
 	}

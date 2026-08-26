@@ -3,6 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+@testable import Glasstual
 import XCTest
 
 final class IRCUserRelationsTests: XCTestCase {

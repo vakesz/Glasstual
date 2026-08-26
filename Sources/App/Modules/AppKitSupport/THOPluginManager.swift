@@ -31,6 +31,25 @@ private final class PluginPendingApproval: NSObject {
 	}
 }
 
+/// Carries the approval workflow across the plugin queue and the main actor.
+/// Access remains serialized by those queues; the envelope prevents Swift from
+/// treating its legacy Objective-C collection as independently transferable.
+private final class PluginApprovalTransfer: @unchecked Sendable {
+	weak var manager: PluginManager?
+	let pendingApprovals: [PluginPendingApproval]
+	let loadedPlugins: NSMutableArray
+
+	init(
+		manager: PluginManager,
+		pendingApprovals: [PluginPendingApproval],
+		loadedPlugins: NSMutableArray
+	) {
+		self.manager = manager
+		self.pendingApprovals = pendingApprovals
+		self.loadedPlugins = loadedPlugins
+	}
+}
+
 @objc(THOPluginManager)
 public final class PluginManager: NSObject {
 	private static let logger = Logger(
@@ -239,10 +258,20 @@ public final class PluginManager: NSObject {
 			return
 		}
 
-		let mutableLoaded = NSMutableArray(array: loadedPlugins)
+		let approvalTransfer = PluginApprovalTransfer(
+			manager: self,
+			pendingApprovals: pendingApprovals,
+			loadedPlugins: NSMutableArray(array: loadedPlugins)
+		)
 
-		XRPerformBlockAsynchronouslyOnMainQueue { [weak self] in
-			self?.promptForPendingApprovals(pendingApprovals, at: 0, loadedPlugins: mutableLoaded)
+		XRPerformBlockAsynchronouslyOnMainQueue {
+			MainActor.assumeIsolated {
+				approvalTransfer.manager?.promptForPendingApprovals(
+					approvalTransfer.pendingApprovals,
+					at: 0,
+					loadedPlugins: approvalTransfer.loadedPlugins
+				)
+			}
 		}
 	}
 
@@ -496,6 +525,7 @@ public final class PluginManager: NSObject {
 		TPCPreferencesUserDefaults.shared().removeObject(forKey: approvalsDefaultsKey)
 	}
 
+	@MainActor
 	private func promptForPendingApprovals(
 		_ pendingApprovals: [PluginPendingApproval],
 		at index: Int,
@@ -564,11 +594,13 @@ public final class PluginManager: NSObject {
 				}
 
 				XRPerformBlockAsynchronouslyOnMainQueue {
-					self.promptForPendingApprovals(
-						pendingApprovals,
-						at: index + 1,
-						loadedPlugins: loadedPlugins
-					)
+					MainActor.assumeIsolated {
+						self.promptForPendingApprovals(
+							pendingApprovals,
+							at: index + 1,
+							loadedPlugins: loadedPlugins
+						)
+					}
 				}
 			}
 		}

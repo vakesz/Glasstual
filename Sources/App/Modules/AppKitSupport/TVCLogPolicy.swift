@@ -196,7 +196,8 @@ public final class TVCLogPolicy: NSObject {
 					menuItems.append(newItem)
 				}
 
-				menuItems.append(contentsOf: messageMenuItems(for: target as! TVCLogPolicyTarget, in: webView))
+				let swiftTarget = (target as AnyObject) as! TVCLogPolicyTarget
+				menuItems.append(contentsOf: messageMenuItems(for: swiftTarget, in: webView))
 			}
 		} else if let channelName {
 			let chanMenu = NSObject.masterController().menuController?.channelViewChannelNameMenu
@@ -230,7 +231,7 @@ public final class TVCLogPolicy: NSObject {
 			}
 
 			for item in menu?.items ?? [] {
-				guard var newItem = item.copy() as? NSMenuItem else {
+				guard let newItem = item.copy() as? NSMenuItem else {
 					continue
 				}
 
@@ -247,7 +248,8 @@ public final class TVCLogPolicy: NSObject {
 				menuItems.append(newItem)
 			}
 
-			menuItems.append(contentsOf: messageMenuItems(for: target as! TVCLogPolicyTarget, in: webView))
+			let swiftTarget = (target as AnyObject) as! TVCLogPolicyTarget
+			menuItems.append(contentsOf: messageMenuItems(for: swiftTarget, in: webView))
 
 			if TPCPreferences.developerModeEnabled() {
 				let menuController = NSObject.masterController().menuController

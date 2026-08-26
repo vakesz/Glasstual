@@ -36,61 +36,43 @@
  *
  *********************************************************************** */
 
+#import "TPCThemeTypes.h"
 #import "TVCLogLine.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-#define TPCThemeSettingsDisabledIndentationOffset -99
-
-#define TPCThemeSettingsNewestTemplateEngineVersion 4
-
-typedef NS_ENUM(NSUInteger, TPCThemeAppearanceType) {
-  TPCThemeAppearanceTypeDefault =
-      0, // Automatically picked based on window appearance
-  TPCThemeAppearanceTypeDark,
-  TPCThemeAppearanceTypeLight
-};
-
-typedef NS_ENUM(NSUInteger, TPCThemeStorageLocation) {
-  TPCThemeStorageLocationUnknown = 0,
-  TPCThemeStorageLocationBundle,
-  TPCThemeStorageLocationCustom
-};
-
-typedef NS_ENUM(NSUInteger, TPCThemeSettingsNicknameColorStyle) {
-  TPCThemeSettingsNicknameColorStyleDefault =
-      0, // Automatically picked based on appearance
-  TPCThemeSettingsNicknameColorStyleDark,
-  TPCThemeSettingsNicknameColorStyleLight
-};
 
 /* If a theme is modified in such a way after it is initialized
  that it can no longer be used, then this notification is posted.
  A way, amongst many, in which the integrity of a theme can
  be compromised is by deleting the CSS or JavaScript file. */
-GLASSTUAL_EXTERN NSNotificationName const
-    TPCThemeIntegrityCompromisedNotification;
+static NSNotificationName const TPCThemeIntegrityCompromisedNotification =
+    @"TPCThemeIntegrityCompromisedNotification";
 
 /* If theme has been restored to a usable state. */
-GLASSTUAL_EXTERN NSNotificationName const TPCThemeIntegrityRestoredNotification;
+static NSNotificationName const TPCThemeIntegrityRestoredNotification =
+    @"TPCThemeIntegrityRestoredNotification";
 
 /* If the theme has been deleted. Drop reference to theme object
  when this occurs. Holding a reference to a theme object after
  it has been deleted can result in undefined behavior especially
  if another theme is installed using the same URL. */
-GLASSTUAL_EXTERN NSNotificationName const TPCThemeWasDeletedNotification;
+static NSNotificationName const TPCThemeWasDeletedNotification =
+    @"TPCThemeWasDeletedNotification";
 
 /* The theme can change the variety to match appearance changes,
  or when one variety becomes compromised and another must be used. */
 /* Notification used for first case. */
-GLASSTUAL_EXTERN NSNotificationName const TPCThemeAppearanceChangedNotification;
+static NSNotificationName const TPCThemeAppearanceChangedNotification =
+    @"TPCThemeAppearanceChangedNotification";
 
 /* Notification used for second case. */
-GLASSTUAL_EXTERN NSNotificationName const TPCThemeVarietyChangedNotification;
+static NSNotificationName const TPCThemeVarietyChangedNotification =
+    @"TPCThemeVarietyChangedNotification";
 
 /* A CSS or JavaScript file within the global variety or the variety
  in use was modified. */
-GLASSTUAL_EXTERN NSNotificationName const TPCThemeWasModifiedNotification;
+static NSNotificationName const TPCThemeWasModifiedNotification =
+    @"TPCThemeWasModifiedNotification";
 
 @class GRMustacheTemplate, GRMustacheTemplateRepository;
 @class TPCThemeSettings;

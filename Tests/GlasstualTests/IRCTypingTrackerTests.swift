@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+@testable import Glasstual
 import XCTest
 
 final class IRCTypingTrackerTests: XCTestCase {

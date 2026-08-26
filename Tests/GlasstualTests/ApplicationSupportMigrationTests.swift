@@ -3,6 +3,7 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+@testable import Glasstual
 import XCTest
 
 final class ApplicationSupportMigrationTests: XCTestCase {
@@ -121,21 +122,24 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 			"/\(clientFolder)/\(TLOFileLoggerChannelDirectoryName)/\("#chat".safeFilename)/"
 		)
 
-		XCTAssertEqual(TLOFileLogger.writePath(for: channel, relativeTo: root), expectedChannel)
+		let channelTreeItem = (channel as AnyObject) as! IRCTreeItem
+		XCTAssertEqual(TLOFileLogger.writePath(for: channelTreeItem, relativeTo: root), expectedChannel)
 
 		let query = makeChannel(named: "alice", type: .privateMessage, client: client)
 		let expectedQuery = (root as NSString).appendingPathComponent(
 			"/\(clientFolder)/\(TLOFileLoggerPrivateMessageDirectoryName)/\("alice".safeFilename)/"
 		)
 
-		XCTAssertEqual(TLOFileLogger.writePath(for: query, relativeTo: root), expectedQuery)
+		let queryTreeItem = (query as AnyObject) as! IRCTreeItem
+		XCTAssertEqual(TLOFileLogger.writePath(for: queryTreeItem, relativeTo: root), expectedQuery)
 	}
 
 	func testFileLoggerSkipsUtilityChannelsAndRequiresTranscriptFolder() {
 		let client = GLTTestClient()
 		let utility = makeChannel(named: "Utility", type: .utility, client: client)
 
-		XCTAssertNil(TLOFileLogger.writePath(for: utility, relativeTo: "/tmp/glasstual-logs"))
+		let utilityTreeItem = (utility as AnyObject) as! IRCTreeItem
+		XCTAssertNil(TLOFileLogger.writePath(for: utilityTreeItem, relativeTo: "/tmp/glasstual-logs"))
 		XCTAssertNil(TLOFileLogger.writePath(for: client))
 	}
 

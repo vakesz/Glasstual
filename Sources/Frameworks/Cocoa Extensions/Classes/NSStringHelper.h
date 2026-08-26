@@ -37,11 +37,11 @@ NS_ASSUME_NONNULL_BEGIN
 #define CS_StringIsBase10Numeric(c) ('0' <= (c) && (c) <= '9')
 #define CS_StringIsAlphabetic(c)                                               \
   ('a' <= (c) && (c) <= 'z' || 'A' <= (c) && (c) <= 'Z')
-COCOA_EXTENSIONS_EXTERN NSString *const NSStringEmptyPlaceholder;
-COCOA_EXTENSIONS_EXTERN NSString *const NSStringNewlinePlaceholder;
-COCOA_EXTENSIONS_EXTERN NSString *const NSStringWhitespacePlaceholder;
+static NSString *const NSStringEmptyPlaceholder = @"";
+static NSString *const NSStringNewlinePlaceholder = @"\x0a";
+static NSString *const NSStringWhitespacePlaceholder = @"\x20";
 
-COCOA_EXTENSIONS_EXTERN NSString *const CS_UnicodeReplacementCharacter;
+static NSString *const CS_UnicodeReplacementCharacter = @"�";
 
 typedef NS_OPTIONS(NSUInteger, CSStringType) {
   CSStringTypeAny = 1 << 0,            // Always returns YES when length > 0

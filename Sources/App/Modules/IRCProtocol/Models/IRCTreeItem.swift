@@ -54,40 +54,40 @@ private final class WeakObjectBox: NSObject {
 }
 
 @objc(IRCTreeItem)
-public class TreeItem: NSObject {
-	@objc public var isActive: Bool {
+open class TreeItem: NSObject {
+	@objc open var isActive: Bool {
 		false
 	}
 
-	@objc public var isClient: Bool {
+	@objc open var isClient: Bool {
 		false
 	}
 
-	@objc public var isChannel: Bool {
+	@objc open var isChannel: Bool {
 		false
 	}
 
-	@objc public var isPrivateMessage: Bool {
+	@objc open var isPrivateMessage: Bool {
 		false
 	}
 
-	@objc public var associatedChannel: IRCChannel? {
+	@objc open var associatedChannel: IRCChannel? {
 		nil
 	}
 
-	@objc public var label: String {
+	@objc open var label: String {
 		""
 	}
 
-	@objc public var name: String {
+	@objc open var name: String {
 		""
 	}
 
-	@objc public var uniqueIdentifier: String {
+	@objc open var uniqueIdentifier: String {
 		""
 	}
 
-	@objc public var numberOfChildren: Int {
+	@objc open var numberOfChildren: Int {
 		0
 	}
 
@@ -118,8 +118,8 @@ public class TreeItem: NSObject {
 		}
 	}
 
-	@objc public var viewController: TVCLogController! {
-		get { objc_getAssociatedObject(self, &viewControllerKey) as? TVCLogController }
+	@objc public var viewController: LogController! {
+		get { objc_getAssociatedObject(self, &viewControllerKey) as? LogController }
 		set { objc_setAssociatedObject(self, &viewControllerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
 	}
 
@@ -133,7 +133,7 @@ public class TreeItem: NSObject {
 		setInteger(0, forKey: &treeUnreadCountKey)
 	}
 
-	@objc(childAtIndex:) public func child(at _: Int) -> TreeItem? {
+	@objc(childAtIndex:) open func child(at _: Int) -> TreeItem? {
 		nil
 	}
 

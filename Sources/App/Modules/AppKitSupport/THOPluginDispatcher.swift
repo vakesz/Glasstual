@@ -12,6 +12,10 @@
 
 import Foundation
 
+private func legacyLogController(_ controller: LogController) -> TVCLogController {
+	unsafeBitCast(controller, to: TVCLogController.self)
+}
+
 @objc(THOPluginDispatcher)
 public final class PluginDispatcher: NSObject {
 	private nonisolated(unsafe) static let didPostNewMessageObjectCache =
@@ -183,7 +187,7 @@ public final class PluginDispatcher: NSObject {
 	@objc(willRenderMessage:forViewController:lineType:memberType:)
 	public class func willRenderMessage(
 		_ newMessage: String,
-		forViewController viewController: TVCLogController,
+		forViewController viewController: LogController,
 		lineType: TVCLogLineType,
 		memberType: TVCLogLineMemberType
 	) -> String {
@@ -191,14 +195,17 @@ public final class PluginDispatcher: NSObject {
 
 		for plugin in plugins {
 			guard plugin.supportsFeature(.willRenderMessageEvent),
-			      let primaryClass = plugin.primaryClass as? THOPluginProtocol,
-			      let returnedValue = primaryClass.willRenderMessage?(
-			      	returnValue,
-			      	forViewController: viewController,
-			      	lineType: lineType,
-			      	memberType: memberType
-			      ), returnedValue.isEmpty == false
+			      let primaryClass = plugin.primaryClass as? THOPluginProtocol
 			else {
+				continue
+			}
+
+			guard let returnedValue = primaryClass.willRenderMessage?(
+				returnValue,
+				forViewController: legacyLogController(viewController),
+				lineType: lineType,
+				memberType: memberType
+			), returnedValue.isEmpty == false else {
 				continue
 			}
 
@@ -242,7 +249,7 @@ public final class PluginDispatcher: NSObject {
 	@objc(didReceiveJavaScriptPayload:fromViewController:)
 	public class func didReceiveJavaScriptPayload(
 		_ payloadObject: THOPluginWebViewJavaScriptPayloadConcreteObject,
-		fromViewController viewController: TVCLogController
+		fromViewController viewController: LogController
 	) {
 		XRPerformBlockAsynchronouslyOnQueue(dispatchQueue()) {
 			for plugin in self.plugins {
@@ -252,7 +259,10 @@ public final class PluginDispatcher: NSObject {
 					continue
 				}
 
-				primaryClass.didReceiveJavaScriptPayload?(payloadObject, fromViewController: viewController)
+				primaryClass.didReceiveJavaScriptPayload?(
+					payloadObject,
+					fromViewController: legacyLogController(viewController)
+				)
 			}
 		}
 	}
@@ -288,7 +298,7 @@ public final class PluginDispatcher: NSObject {
 	@objc(dequeueDidPostNewMessageWithLineNumber:forViewController:)
 	public class func dequeueDidPostNewMessage(
 		withLineNumber messageLineNumber: String,
-		forViewController viewController: TVCLogController
+		forViewController viewController: LogController
 	) {
 		guard let messageObject = didPostNewMessageObjectCache.object(forKey: messageLineNumber as NSString)
 		else {
@@ -303,7 +313,10 @@ public final class PluginDispatcher: NSObject {
 					continue
 				}
 
-				primaryClass.didPostNewMessage?(messageObject, forViewController: viewController)
+				primaryClass.didPostNewMessage?(
+					messageObject,
+					forViewController: legacyLogController(viewController)
+				)
 			}
 		}
 	}

@@ -61,7 +61,7 @@ public final class AddressBookMatchCache: NSObject {
 	}
 
 	@objc(findIgnoresForHostmask:)
-	public func findIgnores(forHostmask hostmask: String) -> [IRCAddressBookEntry] {
+	public func findIgnores(forHostmask hostmask: String) -> [AddressBookEntry] {
 		guard let match = findAddressBookEntry(forHostmask: hostmask) else {
 			return []
 		}
@@ -78,11 +78,11 @@ public final class AddressBookMatchCache: NSObject {
 	}
 
 	@objc(findAddressBookEntryForHostmask:)
-	public func findAddressBookEntry(forHostmask hostmask: String) -> IRCAddressBookEntry? {
+	public func findAddressBookEntry(forHostmask hostmask: String) -> AddressBookEntry? {
 		let cacheKey = hostmask as NSString
 
 		if let cached = matches.object(forKey: cacheKey) {
-			return cached is NSNull ? nil : cached as? IRCAddressBookEntry
+			return cached is NSNull ? nil : cached as? AddressBookEntry
 		}
 
 		let match = uncachedMatch(forHostmask: hostmask)
@@ -92,9 +92,9 @@ public final class AddressBookMatchCache: NSObject {
 		return match
 	}
 
-	private func uncachedMatch(forHostmask hostmask: String) -> IRCAddressBookEntry? {
-		var singleMatch: IRCAddressBookEntry?
-		var multipleMatches: [IRCAddressBookEntry]?
+	private func uncachedMatch(forHostmask hostmask: String) -> AddressBookEntry? {
+		var singleMatch: AddressBookEntry?
+		var multipleMatches: [AddressBookEntry]?
 
 		for entry in client?.config.ignoreList ?? [] where entry.checkMatch(hostmask) {
 			if multipleMatches != nil {
@@ -114,8 +114,8 @@ public final class AddressBookMatchCache: NSObject {
 		return singleMatch
 	}
 
-	private func mergedEntry(from entries: [IRCAddressBookEntry]) -> IRCAddressBookEntry {
-		let mixedEntry = IRCAddressBookEntryMutable()
+	private func mergedEntry(from entries: [AddressBookEntry]) -> AddressBookEntry {
+		let mixedEntry = MutableAddressBookEntry()
 
 		mixedEntry.entryType = .mixed
 		mixedEntry.parentEntries = entries
@@ -130,6 +130,6 @@ public final class AddressBookMatchCache: NSObject {
 		mixedEntry.ignoreInlineMedia = entries.contains { $0.ignoreInlineMedia }
 		mixedEntry.trackUserActivity = entries.contains { $0.trackUserActivity }
 
-		return mixedEntry.copy() as! IRCAddressBookEntry
+		return mixedEntry.copy() as! AddressBookEntry
 	}
 }

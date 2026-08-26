@@ -41,16 +41,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString *const TPCPreferencesThemeNameDefaultsKey;
-GLASSTUAL_EXTERN NSString *const TPCPreferencesThemeFontNameDefaultsKey;
-GLASSTUAL_EXTERN NSString *const TPCPreferencesThemeFontSizeDefaultsKey;
+static NSString *const TPCPreferencesThemeNameDefaultsKey = @"Theme -> Name";
+static NSString *const TPCPreferencesThemeFontNameDefaultsKey =
+    @"Theme -> Font Name";
+static NSString *const TPCPreferencesThemeFontSizeDefaultsKey =
+    @"Theme -> Font Size";
 
-GLASSTUAL_EXTERN NSString *const
-    TPCPreferencesThemeNameMissingLocallyDefaultsKey;
-GLASSTUAL_EXTERN NSString *const
-    TPCPreferencesThemeFontNameMissingLocallyDefaultsKey;
+static NSString *const TPCPreferencesThemeNameMissingLocallyDefaultsKey =
+    @"Theme -> Name -> Did Not Exist During Last Sync";
+static NSString *const TPCPreferencesThemeFontNameMissingLocallyDefaultsKey =
+    @"Theme -> Font Name -> Did Not Exist During Last Sync";
 
-GLASSTUAL_EXTERN NSUInteger const TPCPreferencesDictionaryVersion;
+static NSUInteger const TPCPreferencesDictionaryVersion = 602;
 
 typedef NS_ENUM(NSUInteger, TXNicknameHighlightMatchType) {
   TXNicknameHighlightMatchTypePartial = 0,

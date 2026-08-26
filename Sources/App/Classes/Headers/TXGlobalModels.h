@@ -55,6 +55,9 @@ GLASSTUAL_EXTERN NSString *TXFormattedNumber(NSInteger number);
 
 GLASSTUAL_EXTERN NSUInteger TXRandomNumber(u_int32_t maximum);
 
-GLASSTUAL_EXTERN NSComparator NSDefaultComparator;
+static NSComparator const NSDefaultComparator =
+    ^NSComparisonResult(id object1, id object2) {
+      return [object1 compare:object2];
+    };
 
 NS_ASSUME_NONNULL_END

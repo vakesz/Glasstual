@@ -37,7 +37,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString *const TDCAlertSuppressionPrefix;
+static NSString *const TDCAlertSuppressionPrefix =
+    @"Text Input Prompt Suppression -> ";
 
 typedef NS_ENUM(NSUInteger, TDCAlertResponse) {
   TDCAlertResponseDefault = 1000,

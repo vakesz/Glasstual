@@ -37,14 +37,49 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString *TXTLS(NSString *key, ...);
+/* Swift owns key parsing. These inline adapters retain the variadic C API
+ used by Objective-C callers until those callers finish migrating. */
+@interface NSString (LocalizationPrivate)
++ (NSString *)_swift_localizedKey:(NSString *)string bundle:(NSBundle *)bundle;
+@end
 
-GLASSTUAL_EXTERN NSString *
-TXLocalizedString(NSBundle *bundle, NSString *key,
-                  va_list arguments) GLASSTUAL_SYMBOL_USED;
-GLASSTUAL_EXTERN NSString *
-TXLocalizedStringAlternative(NSBundle *bundle, NSString *key,
-                             ...) GLASSTUAL_SYMBOL_USED;
+static inline NSString *TXLocalizedString(NSBundle *bundle, NSString *key,
+                                          va_list arguments) {
+  NSCParameterAssert(bundle != nil);
+  NSCParameterAssert(key != nil);
+
+  NSString *localValue = [NSString _swift_localizedKey:key bundle:bundle];
+
+  return [[NSString alloc] initWithFormat:localValue arguments:arguments];
+}
+
+static inline NSString *TXTLS(NSString *key, ...) {
+  NSCParameterAssert(key != nil);
+
+  va_list arguments;
+  va_start(arguments, key);
+
+  NSString *result = TXLocalizedString(RZMainBundle(), key, arguments);
+
+  va_end(arguments);
+
+  return result;
+}
+
+static inline NSString *TXLocalizedStringAlternative(NSBundle *bundle,
+                                                     NSString *key, ...) {
+  NSCParameterAssert(bundle != nil);
+  NSCParameterAssert(key != nil);
+
+  va_list arguments;
+  va_start(arguments, key);
+
+  NSString *result = TXLocalizedString(bundle, key, arguments);
+
+  va_end(arguments);
+
+  return result;
+}
 
 /* This function exists so that static analyzer doesn't warn
  certain static strings aren't localized. Some strings wont

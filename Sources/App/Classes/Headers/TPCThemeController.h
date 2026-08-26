@@ -40,16 +40,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString *const TPCThemeControllerCustomThemeNameBasicPrefix;
-GLASSTUAL_EXTERN NSString *const
-    TPCThemeControllerCustomThemeNameCompletePrefix;
+static NSString *const TPCThemeControllerCustomThemeNameBasicPrefix = @"user";
+static NSString *const TPCThemeControllerCustomThemeNameCompletePrefix =
+    @"user:";
 
-GLASSTUAL_EXTERN NSString *const TPCThemeControllerBundledThemeNameBasicPrefix;
-GLASSTUAL_EXTERN NSString *const
-    TPCThemeControllerBundledThemeNameCompletePrefix;
+static NSString *const TPCThemeControllerBundledThemeNameBasicPrefix =
+    @"resource";
+static NSString *const TPCThemeControllerBundledThemeNameCompletePrefix =
+    @"resource:";
 
-GLASSTUAL_EXTERN NSNotificationName const
-    TPCThemeControllerThemeListDidChangeNotification;
+static NSNotificationName const
+    TPCThemeControllerThemeListDidChangeNotification =
+        @"TPCThemeControllerThemeListDidChangeNotification";
 
 /* Theme is not loaded until main window is woken which means
  while you could in theory access this object before then,
