@@ -44,17 +44,21 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* Top level group */
 /* Nonnull until -flushAppearanceProperties is called. */
-@property(readonly, copy, nullable) NSDictionary<NSString *, id> *appearanceProperties;
+@property(readonly, copy, nullable)
+    NSDictionary<NSString *, id> *appearanceProperties;
 
 /* Stateless Accessors */
 - (nullable NSColor *)colorForKey:(NSString *)key;
-- (nullable NSColor *)colorInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key;
+- (nullable NSColor *)colorInGroup:(NSDictionary<NSString *, id> *)group
+                           withKey:(NSString *)key;
 
 - (NSSize)sizeForKey:(NSString *)key;
-- (NSSize)sizeInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key;
+- (NSSize)sizeInGroup:(NSDictionary<NSString *, id> *)group
+              withKey:(NSString *)key;
 
 - (CGFloat)measurementForKey:(NSString *)key;
-- (CGFloat)measurementInGroup:(NSDictionary<NSString *, id> *)group withKey:(NSString *)key;
+- (CGFloat)measurementInGroup:(NSDictionary<NSString *, id> *)group
+                      withKey:(NSString *)key;
 
 /* Stateful Accessors */
 /* Stateful appearance properties may have an "activeWindow" and an
@@ -65,26 +69,27 @@ NS_ASSUME_NONNULL_BEGIN
 
  <key>exampleStatefulColor</key>
  <dict>
-	 <key>activeWindow</key>
-	 <dict>
-		 <key>type</key>
-		 <integer>1</integer>
-		 <key>value</key>
-		 <string>0.0 0.3</string>
-	 </dict>
-	 <key>inactiveWindow</key>
-	 <dict>
-		 <key>type</key>
-		 <integer>1</integer>
-		 <key>value</key>
-		 <string>1.0</string>
-	 </dict>
+         <key>activeWindow</key>
+         <dict>
+                 <key>type</key>
+                 <integer>1</integer>
+                 <key>value</key>
+                 <string>0.0 0.3</string>
+         </dict>
+         <key>inactiveWindow</key>
+         <dict>
+                 <key>type</key>
+                 <integer>1</integer>
+                 <key>value</key>
+                 <string>1.0</string>
+         </dict>
  </dict>
 */
-- (nullable NSColor *)colorForKey:(NSString *)key forActiveWindow:(BOOL)forActiveWindow;
+- (nullable NSColor *)colorForKey:(NSString *)key
+                  forActiveWindow:(BOOL)forActiveWindow;
 - (nullable NSColor *)colorInGroup:(NSDictionary<NSString *, id> *)group
-						   withKey:(NSString *)key
-				   forActiveWindow:(BOOL)forActiveWindow;
+                           withKey:(NSString *)key
+                   forActiveWindow:(BOOL)forActiveWindow;
 @end
 
 /* TVCApplicationAppearance keeps a copy of TXAppearance properties.

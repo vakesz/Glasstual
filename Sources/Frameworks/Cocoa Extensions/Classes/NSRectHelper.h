@@ -32,20 +32,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NS_INLINE NSRect NSSizeCenteredInRect(NSSize size, NSRect rect)
-{
-	NSPoint centerPoint =
-		NSMakePoint((rect.origin.x + (rect.size.width / 2)), (rect.origin.y + (rect.size.height / 2)));
+NS_INLINE NSRect NSSizeCenteredInRect(NSSize size, NSRect rect) {
+  NSPoint centerPoint = NSMakePoint((rect.origin.x + (rect.size.width / 2)),
+                                    (rect.origin.y + (rect.size.height / 2)));
 
-	CGFloat width = size.width;
-	CGFloat height = size.height;
+  CGFloat width = size.width;
+  CGFloat height = size.height;
 
-	return NSMakeRect((centerPoint.x - (width / 2)), (centerPoint.y - (height / 2)), width, height);
+  return NSMakeRect((centerPoint.x - (width / 2)),
+                    (centerPoint.y - (height / 2)), width, height);
 }
 
-NS_INLINE NSRect NSRectCenteredInRect(NSRect childRect, NSRect parentRect)
-{
-	return NSSizeCenteredInRect(childRect.size, parentRect);
+NS_INLINE NSRect NSRectCenteredInRect(NSRect childRect, NSRect parentRect) {
+  return NSSizeCenteredInRect(childRect.size, parentRect);
 }
 
 NS_ASSUME_NONNULL_END

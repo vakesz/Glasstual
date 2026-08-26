@@ -47,34 +47,40 @@ typedef NSString *TVCLogRendererResultsAttribute NS_STRING_ENUM;
 /* Properties to configure the renderer and provide additional
  context so that it can provide the best possible results. */
 /* These properties do not apply to attributed strings */
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationRenderLinksAttribute; // BOOL
 GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-	TVCLogRendererConfigurationLineTypeAttribute; // TVCLogLineType
+    TVCLogRendererConfigurationRenderLinksAttribute; // BOOL
 GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-	TVCLogRendererConfigurationMemberTypeAttribute; // TVCLogMemberType
+    TVCLogRendererConfigurationLineTypeAttribute; // TVCLogLineType
 GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-	TVCLogRendererConfigurationHighlightKeywordsAttribute; // NSArray<NSString *>
+    TVCLogRendererConfigurationMemberTypeAttribute; // TVCLogMemberType
 GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-	TVCLogRendererConfigurationExcludedKeywordsAttribute; // NSArray<NSString *>
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const TVCLogRendererConfigurationDoNotEscapeBodyAttribute; // BOOL
+    TVCLogRendererConfigurationHighlightKeywordsAttribute; // NSArray<NSString
+                                                           // *>
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationExcludedKeywordsAttribute; // NSArray<NSString *>
+GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationDoNotEscapeBodyAttribute; // BOOL
 
 /* These properties apply to attributed strings */
 GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-	TVCLogRendererConfigurationAttributedStringPreferredFontAttribute; // NSFont
+    TVCLogRendererConfigurationAttributedStringPreferredFontAttribute; // NSFont
 GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-	TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute; // NSColor
+    TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute; // NSColor
 
 /* Properties that are returned in the outputDictionary of a render */
 /* The output dictionary is not guaranteed to contain any key. */
 GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-	TVCLogRendererResultsListOfLinksInBodyAttribute; // NSArray<TLOLinkParserResult *>
+    TVCLogRendererResultsListOfLinksInBodyAttribute; // NSArray<TLOLinkParserResult
+                                                     // *>
 GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-	TVCLogRendererResultsListOfLinksMappedInBodyAttribute; // NSDictionary<NSString *, NSString *>
-GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const TVCLogRendererResultsKeywordMatchFoundAttribute; // BOOL
+    TVCLogRendererResultsListOfLinksMappedInBodyAttribute; // NSDictionary<NSString
+                                                           // *, NSString *>
 GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-	TVCLogRendererResultsListOfUsersFoundAttribute; // NSSet<IRCChannelUser *>
+    TVCLogRendererResultsKeywordMatchFoundAttribute; // BOOL
 GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-	TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute; // NSString
+    TVCLogRendererResultsListOfUsersFoundAttribute; // NSSet<IRCChannelUser *>
+GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
+    TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute; // NSString
 
 @interface TVCLogRenderer : NSObject
 + (NSString *)escapeHTML:(NSString *)html;
@@ -83,21 +89,28 @@ GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
 + (NSColor *)mapColorCode:(NSUInteger)colorCode;
 
 + (nullable NSString *)renderTemplateNamed:(NSString *)templateName;
-+ (nullable NSString *)renderTemplateNamed:(NSString *)templateName
-								attributes:(nullable NSDictionary<NSString *, id> *)templateTokens;
++ (nullable NSString *)
+    renderTemplateNamed:(NSString *)templateName
+             attributes:(nullable NSDictionary<NSString *, id> *)templateTokens;
 
 + (nullable NSString *)renderTemplate:(GRMustacheTemplate *)template;
 + (nullable NSString *)renderTemplate:(GRMustacheTemplate *)template
-						   attributes:(nullable NSDictionary<NSString *, id> *)templateTokens;
+                           attributes:(nullable NSDictionary<NSString *, id> *)
+                                          templateTokens;
 
-+ (NSAttributedString *)renderBodyAsAttributedString:(NSString *)body
-									  withAttributes:
-										  (NSDictionary<TVCLogRendererConfigurationAttribute, id> *)inputDictionary;
++ (NSAttributedString *)
+    renderBodyAsAttributedString:(NSString *)body
+                  withAttributes:
+                      (NSDictionary<TVCLogRendererConfigurationAttribute, id> *)
+                          inputDictionary;
 
 + (NSString *)renderBody:(NSString *)body
-	   forViewController:(TVCLogController *)viewController
-		  withAttributes:(NSDictionary<TVCLogRendererConfigurationAttribute, id> *)inputDictionary
-			  resultInfo:(NSDictionary<TVCLogRendererResultsAttribute, id> *_Nullable *_Nullable)outputDictionary;
+       forViewController:(TVCLogController *)viewController
+          withAttributes:
+              (NSDictionary<TVCLogRendererConfigurationAttribute, id> *)
+                  inputDictionary
+              resultInfo:(NSDictionary<TVCLogRendererResultsAttribute, id>
+                              *_Nullable *_Nullable)outputDictionary;
 @end
 
 NS_ASSUME_NONNULL_END

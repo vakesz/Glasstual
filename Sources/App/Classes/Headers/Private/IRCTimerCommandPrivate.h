@@ -59,16 +59,19 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) NSUInteger currentIteration;
 
 - (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithCommand:(NSString *)command onClient:(IRCClient *)client;
 - (instancetype)initWithCommand:(NSString *)command
-					   onClient:(IRCClient *)client
-					  inChannel:(nullable IRCChannel *)channel NS_DESIGNATED_INITIALIZER;
+                       onClient:(IRCClient *)client;
+- (instancetype)initWithCommand:(NSString *)command
+                       onClient:(IRCClient *)client
+                      inChannel:(nullable IRCChannel *)channel
+    NS_DESIGNATED_INITIALIZER;
 
-- (void)start:(NSTimeInterval)interval;									// repeatTimer = NO
-- (void)start:(NSTimeInterval)timerInterval onRepeat:(BOOL)repeatTimer; // iterations = 0
+- (void)start:(NSTimeInterval)interval; // repeatTimer = NO
 - (void)start:(NSTimeInterval)timerInterval
-	  onRepeat:(BOOL)repeatTimer
-	iterations:(NSUInteger)iterations; // 0 iterations = infinite
+     onRepeat:(BOOL)repeatTimer; // iterations = 0
+- (void)start:(NSTimeInterval)timerInterval
+      onRepeat:(BOOL)repeatTimer
+    iterations:(NSUInteger)iterations; // 0 iterations = infinite
 
 - (void)stop;
 

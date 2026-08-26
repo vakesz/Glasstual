@@ -42,12 +42,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 GLASSTUAL_EXTERN NSString *const IRCWorldClientListDefaultsKey;
 
-GLASSTUAL_EXTERN NSNotificationName const IRCWorldClientListWasModifiedNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    IRCWorldClientListWasModifiedNotification;
 
 GLASSTUAL_EXTERN NSNotificationName const IRCWorldDateHasChangedNotification;
 
 GLASSTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyClientNotification;
-GLASSTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyChannelNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    IRCWorldWillDestroyChannelNotification;
 
 @interface IRCWorld : NSObject
 @property(readonly) NSUInteger messagesSent;
@@ -60,25 +62,32 @@ GLASSTUAL_EXTERN NSNotificationName const IRCWorldWillDestroyChannelNotification
 - (void)save;
 - (void)savePeriodically;
 
-- (NSArray<__kindof IRCTreeItem *> *)findItemsWithIds:(NSArray<NSString *> *)itemIds;
+- (NSArray<__kindof IRCTreeItem *> *)findItemsWithIds:
+    (NSArray<NSString *> *)itemIds;
 
 - (nullable IRCTreeItem *)findItemWithId:(NSString *)itemId;
 
 - (nullable IRCClient *)findClientWithId:(NSString *)clientId;
-- (nullable IRCChannel *)findChannelWithId:(NSString *)channelId onClientWithId:(NSString *)clientId;
+- (nullable IRCChannel *)findChannelWithId:(NSString *)channelId
+                            onClientWithId:(NSString *)clientId;
 
 - (nullable IRCClient *)findClientWithServerAddress:(NSString *)serverAddress;
 
 - (IRCClient *)createClientWithConfig:(IRCClientConfig *)config;
-- (IRCChannel *)createChannelWithConfig:(IRCChannelConfig *)config onClient:(IRCClient *)client;
-- (IRCChannel *)createPrivateMessage:(NSString *)nickname onClient:(IRCClient *)client;
+- (IRCChannel *)createChannelWithConfig:(IRCChannelConfig *)config
+                               onClient:(IRCClient *)client;
+- (IRCChannel *)createPrivateMessage:(NSString *)nickname
+                            onClient:(IRCClient *)client;
 
 - (void)destroyClient:(IRCClient *)client;
 - (void)destroyChannel:(IRCChannel *)channel;
 
 - (void)evaluateFunctionOnAllViews:(NSString *)function
-						 arguments:(nullable NSArray *)arguments; // Defaults to onQueue YES
-- (void)evaluateFunctionOnAllViews:(NSString *)function arguments:(nullable NSArray *)arguments onQueue:(BOOL)onQueue;
+                         arguments:(nullable NSArray *)
+                                       arguments; // Defaults to onQueue YES
+- (void)evaluateFunctionOnAllViews:(NSString *)function
+                         arguments:(nullable NSArray *)arguments
+                           onQueue:(BOOL)onQueue;
 @end
 
 NS_ASSUME_NONNULL_END

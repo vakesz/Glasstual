@@ -42,11 +42,14 @@ NS_ASSUME_NONNULL_BEGIN
  be maintained a reference to at any given time. Supply a related
  object in order to uniquely identify a window. */
 - (void)addWindowToWindowList:(id)window;
-- (void)addWindowToWindowList:(id)window inRelationTo:(nullable id)relatedObject;
-- (void)addWindowToWindowList:(id)window withDescription:(NSString *)windowDescription;
+- (void)addWindowToWindowList:(id)window
+                 inRelationTo:(nullable id)relatedObject;
+- (void)addWindowToWindowList:(id)window
+              withDescription:(NSString *)windowDescription;
 
 - (void)removeWindowFromWindowList:(id)window;
-- (void)removeWindowFromWindowList:(id)window inRelationTo:(nullable id)relatedObject;
+- (void)removeWindowFromWindowList:(id)window
+                      inRelationTo:(nullable id)relatedObject;
 
 - (nullable id)windowFromWindowList:(NSString *)windowDescription;
 

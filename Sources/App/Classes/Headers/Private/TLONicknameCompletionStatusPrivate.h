@@ -42,7 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TLONicknameCompletionStatus : NSObject
 - (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithWindow:(TVCMainWindow *)mainWindow NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithWindow:(TVCMainWindow *)mainWindow
+    NS_DESIGNATED_INITIALIZER;
 
 - (void)completeNickname:(BOOL)movingForward;
 

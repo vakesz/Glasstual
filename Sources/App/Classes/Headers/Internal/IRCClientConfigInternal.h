@@ -39,70 +39,69 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCClientConfig ()
-{
-  @protected
-	BOOL _autoConnect;
-	BOOL _autoReconnect;
-	BOOL _autoSleepModeDisconnect;
-	BOOL _autojoinWaitsForNickServ;
-	BOOL _connectionPrefersIPv4;
-	BOOL _hideAutojoinDelayedWarnings;
-	BOOL _hideNetworkUnavailabilityNotices;
-	BOOL _performDisconnectOnPongTimer;
-	BOOL _performDisconnectOnReachabilityChange;
-	BOOL _performPongTimer;
-	BOOL _prefersSecuredConnection;
-	BOOL _saslAuthenticationDisableExternalMechanism;
-	BOOL _sendAuthenticationRequestsToUserServ;
-	BOOL _sendWhoCommandRequestsToChannels;
-	BOOL _setInvisibleModeOnConnect;
-	BOOL _runConnectCommandsSilently;
-	BOOL _sidebarItemExpanded;
-	BOOL _validateServerCertificateChain;
-	BOOL _zncIgnoreConfiguredAutojoin;
-	BOOL _zncIgnorePlaybackNotifications;
-	BOOL _zncIgnoreUserNotifications;
-	BOOL _zncOnlyPlaybackLatest;
-	IRCConnectionAddressType _addressType;
-	IRCConnectionProxyType _proxyType;
-	NSArray<IRCAddressBookEntry *> *_ignoreList;
-	NSArray<IRCChannelConfig *> *_channelList;
-	NSArray<IRCHighlightMatchCondition *> *_highlightList;
-	NSArray<NSString *> *_alternateNicknames;
-	NSArray<NSString *> *_loginCommands;
-	NSArray<IRCServer *> *_serverList;
-	NSData *_identityClientSideCertificate;
-	NSString *_awayNickname;
-	NSString *_saslMechanismPreference;
-	NSString *_ctcpVersionReply;
-	NSString *_connectionName;
-	NSString *_nickname;
-	NSString *_nicknamePassword;
-	NSString *_nicknamePasswordKeychainCache;
-	BOOL _nicknamePasswordKeychainCacheIsValid;
-	NSString *_normalLeavingComment;
-	NSString *_proxyAddress;
-	NSString *_proxyPassword;
-	NSString *_proxyUsername;
-	NSString *_realName;
-	NSString *_serverAddress;
-	NSString *_sleepModeLeavingComment;
-	NSString *_username;
-	NSStringEncoding _fallbackEncoding;
-	NSStringEncoding _primaryEncoding;
-	NSTimeInterval _lastMessageServerTime;
-	NSUInteger _floodControlDelayTimerInterval;
-	NSUInteger _floodControlMaximumMessages;
-	uint16_t _proxyPort;
-	uint16_t _serverPort;
-	RCMCipherSuiteCollection _cipherSuites;
+@interface IRCClientConfig () {
+@protected
+  BOOL _autoConnect;
+  BOOL _autoReconnect;
+  BOOL _autoSleepModeDisconnect;
+  BOOL _autojoinWaitsForNickServ;
+  BOOL _connectionPrefersIPv4;
+  BOOL _hideAutojoinDelayedWarnings;
+  BOOL _hideNetworkUnavailabilityNotices;
+  BOOL _performDisconnectOnPongTimer;
+  BOOL _performDisconnectOnReachabilityChange;
+  BOOL _performPongTimer;
+  BOOL _prefersSecuredConnection;
+  BOOL _saslAuthenticationDisableExternalMechanism;
+  BOOL _sendAuthenticationRequestsToUserServ;
+  BOOL _sendWhoCommandRequestsToChannels;
+  BOOL _setInvisibleModeOnConnect;
+  BOOL _runConnectCommandsSilently;
+  BOOL _sidebarItemExpanded;
+  BOOL _validateServerCertificateChain;
+  BOOL _zncIgnoreConfiguredAutojoin;
+  BOOL _zncIgnorePlaybackNotifications;
+  BOOL _zncIgnoreUserNotifications;
+  BOOL _zncOnlyPlaybackLatest;
+  IRCConnectionAddressType _addressType;
+  IRCConnectionProxyType _proxyType;
+  NSArray<IRCAddressBookEntry *> *_ignoreList;
+  NSArray<IRCChannelConfig *> *_channelList;
+  NSArray<IRCHighlightMatchCondition *> *_highlightList;
+  NSArray<NSString *> *_alternateNicknames;
+  NSArray<NSString *> *_loginCommands;
+  NSArray<IRCServer *> *_serverList;
+  NSData *_identityClientSideCertificate;
+  NSString *_awayNickname;
+  NSString *_saslMechanismPreference;
+  NSString *_ctcpVersionReply;
+  NSString *_connectionName;
+  NSString *_nickname;
+  NSString *_nicknamePassword;
+  NSString *_nicknamePasswordKeychainCache;
+  BOOL _nicknamePasswordKeychainCacheIsValid;
+  NSString *_normalLeavingComment;
+  NSString *_proxyAddress;
+  NSString *_proxyPassword;
+  NSString *_proxyUsername;
+  NSString *_realName;
+  NSString *_serverAddress;
+  NSString *_sleepModeLeavingComment;
+  NSString *_username;
+  NSStringEncoding _fallbackEncoding;
+  NSStringEncoding _primaryEncoding;
+  NSTimeInterval _lastMessageServerTime;
+  NSUInteger _floodControlDelayTimerInterval;
+  NSUInteger _floodControlMaximumMessages;
+  uint16_t _proxyPort;
+  uint16_t _serverPort;
+  RCMCipherSuiteCollection _cipherSuites;
 
-  @private
-	BOOL _migratedServerPasswordPendingDestroy;
-	NSUInteger _dictionaryVersion;
-	NSString *_uniqueIdentifier;
-	NSDictionary *_defaults;
+@private
+  BOOL _migratedServerPasswordPendingDestroy;
+  NSUInteger _dictionaryVersion;
+  NSString *_uniqueIdentifier;
+  NSDictionary *_defaults;
 }
 
 @end

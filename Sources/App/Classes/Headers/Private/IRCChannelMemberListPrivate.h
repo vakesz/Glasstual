@@ -42,21 +42,28 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannel, IRCChannelMemberListController;
 
 @protocol IRCChannelMemberListPrivatePrototype <NSObject>
-- (void)addMember:(IRCChannelUser *)member checkForDuplicates:(BOOL)checkForDuplicates;
+- (void)addMember:(IRCChannelUser *)member
+    checkForDuplicates:(BOOL)checkForDuplicates;
 
-/* The replaceInAllChannels: flag should only be used in extreme cases because there is A LOT
- of overhead to setting it. Glasstual only does it when the user list is configured to sort IRCop
- at top and IRCop status changes. That change requires the user to be resorted in every channel
- they are in. Knowing which channels they are in is easy because of IRCUserRelations, but the
- actual process of finding where to sort them at is very expensive. */
-- (void)replaceMember:(IRCChannelUser *)member1 withMember:(IRCChannelUser *)member2;
-- (void)replaceMember:(IRCChannelUser *)member1 withMember:(IRCChannelUser *)member2 resort:(BOOL)resort;
+/* The replaceInAllChannels: flag should only be used in extreme cases because
+ there is A LOT of overhead to setting it. Glasstual only does it when the user
+ list is configured to sort IRCop at top and IRCop status changes. That change
+ requires the user to be resorted in every channel they are in. Knowing which
+ channels they are in is easy because of IRCUserRelations, but the actual
+ process of finding where to sort them at is very expensive. */
 - (void)replaceMember:(IRCChannelUser *)member1
-			  withMember:(IRCChannelUser *)member2
-				  resort:(BOOL)resort
-	replaceInAllChannels:(BOOL)replaceInAllChannels;
+           withMember:(IRCChannelUser *)member2;
+- (void)replaceMember:(IRCChannelUser *)member1
+           withMember:(IRCChannelUser *)member2
+               resort:(BOOL)resort;
+- (void)replaceMember:(IRCChannelUser *)member1
+              withMember:(IRCChannelUser *)member2
+                  resort:(BOOL)resort
+    replaceInAllChannels:(BOOL)replaceInAllChannels;
 
-- (void)changeMember:(NSString *)nickname mode:(NSString *)mode value:(BOOL)value;
+- (void)changeMember:(NSString *)nickname
+                mode:(NSString *)mode
+               value:(BOOL)value;
 
 - (void)resortMember:(IRCChannelUser *)member;
 
@@ -64,11 +71,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSData *)pasteboardDataForMembers:(NSArray<IRCChannelUser *> *)members;
 + (BOOL)readNicknamesFromPasteboardData:(NSData *)pasteboardData
-							  withBlock:(void(NS_NOESCAPE ^)(IRCChannel *channel, NSArray<NSString *> *nicknames))
-											callbackBlock;
+                              withBlock:(void(NS_NOESCAPE ^)(
+                                            IRCChannel *channel,
+                                            NSArray<NSString *> *nicknames))
+                                            callbackBlock;
 + (BOOL)readMembersFromPasteboardData:(NSData *)pasteboardData
-							withBlock:(void(NS_NOESCAPE ^)(IRCChannel *channel, NSArray<IRCChannelUser *> *members))
-										  callbackBlock;
+                            withBlock:(void(NS_NOESCAPE ^)(
+                                          IRCChannel *channel,
+                                          NSArray<IRCChannelUser *> *members))
+                                          callbackBlock;
 @end
 
 @interface IRCChannelMemberList () <IRCChannelMemberListPrivatePrototype>

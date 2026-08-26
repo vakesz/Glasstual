@@ -38,10 +38,13 @@
 #import "IRCAddressBookUserTracking.h"
 
 NSNotificationName const IRCAddressBookUserTrackingStatusChangedNotification =
-	@"IRCAddressBookUserTrackingStatusChangedNotification";
-NSNotificationName const IRCAddressBookUserTrackingAddedTrackedUserNotification =
-	@"IRCAddressBookUserTrackingAddedTrackedUserNotification";
-NSNotificationName const IRCAddressBookUserTrackingRemovedTrackedUserNotification =
-	@"IRCAddressBookUserTrackingRemovedTrackedUserNotification";
-NSNotificationName const IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification =
-	@"IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification";
+    @"IRCAddressBookUserTrackingStatusChangedNotification";
+NSNotificationName const
+    IRCAddressBookUserTrackingAddedTrackedUserNotification =
+        @"IRCAddressBookUserTrackingAddedTrackedUserNotification";
+NSNotificationName const
+    IRCAddressBookUserTrackingRemovedTrackedUserNotification =
+        @"IRCAddressBookUserTrackingRemovedTrackedUserNotification";
+NSNotificationName const
+    IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification =
+        @"IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification";

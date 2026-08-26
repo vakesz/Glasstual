@@ -36,31 +36,34 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef void (^RCMTrustResponse)(BOOL trusted);
 
-typedef void (^RCMTrustPanelCompletionBlock)(SecTrustRef trustRef, BOOL trusted, id _Nullable contextInfo);
+typedef void (^RCMTrustPanelCompletionBlock)(SecTrustRef trustRef, BOOL trusted,
+                                             id _Nullable contextInfo);
 
 /* The panel takes ownership of (consumes) the +1 reference to trustRef.
  It is released after the completion block returns. Callers must NOT
  release trustRef themselves and must not use it after the completion
  block has been invoked. */
 @interface RCMTrustPanel : NSObject
-+ (SFCertificateTrustPanel *)presentTrustPanelInWindow:(nullable NSWindow *)window
-												  body:(NSString *)bodyText
-												 title:(NSString *)titleText
-										 defaultButton:(NSString *)buttonDefault
-									   alternateButton:(nullable NSString *)buttonAlternate
-											  trustRef:(SecTrustRef)trustRef
-									   completionBlock:(RCMTrustPanelCompletionBlock)completionBlock
-	NS_SWIFT_NAME(present(inWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:));
++ (SFCertificateTrustPanel *)
+    presentTrustPanelInWindow:(nullable NSWindow *)window
+                         body:(NSString *)bodyText
+                        title:(NSString *)titleText
+                defaultButton:(NSString *)buttonDefault
+              alternateButton:(nullable NSString *)buttonAlternate
+                     trustRef:(SecTrustRef)trustRef
+              completionBlock:(RCMTrustPanelCompletionBlock)completionBlock
+    NS_SWIFT_NAME(present(inWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:));
 
-+ (SFCertificateTrustPanel *)presentTrustPanelInWindow:(nullable NSWindow *)window
-												  body:(NSString *)bodyText
-												 title:(NSString *)titleText
-										 defaultButton:(NSString *)buttonDefault
-									   alternateButton:(nullable NSString *)buttonAlternate
-											  trustRef:(SecTrustRef)trustRef
-									   completionBlock:(RCMTrustPanelCompletionBlock)completionBlock
-										   contextInfo:(nullable id)contextInfo
-	NS_SWIFT_NAME(present(inWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:contextInfo:));
++ (SFCertificateTrustPanel *)
+    presentTrustPanelInWindow:(nullable NSWindow *)window
+                         body:(NSString *)bodyText
+                        title:(NSString *)titleText
+                defaultButton:(NSString *)buttonDefault
+              alternateButton:(nullable NSString *)buttonAlternate
+                     trustRef:(SecTrustRef)trustRef
+              completionBlock:(RCMTrustPanelCompletionBlock)completionBlock
+                  contextInfo:(nullable id)contextInfo
+    NS_SWIFT_NAME(present(inWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:contextInfo:));
 @end
 
 NS_ASSUME_NONNULL_END

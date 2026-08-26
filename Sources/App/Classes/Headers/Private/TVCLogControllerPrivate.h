@@ -43,8 +43,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TVCLogController ()
 
-- (instancetype)initWithClient:(IRCClient *)client inWindow:(TVCMainWindow *)window NS_DESIGNATED_INITIALIZER;
-- (instancetype)initWithChannel:(IRCChannel *)channel inWindow:(TVCMainWindow *)window NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithClient:(IRCClient *)client
+                      inWindow:(TVCMainWindow *)window
+    NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithChannel:(IRCChannel *)channel
+                       inWindow:(TVCMainWindow *)window
+    NS_DESIGNATED_INITIALIZER;
 
 - (void)notifyDidBecomeHidden;
 - (void)notifyDidBecomeVisible;
@@ -56,40 +60,53 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)print:(TVCLogLine *)logLine;
 - (void)print:(TVCLogLine *)logLine
-	completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock;
+    completionBlock:
+        (nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock;
 
-- (void)renderLogLineAtLineNumber:(NSString *)lineNumber
-			  numberOfLinesBefore:(NSUInteger)numberOfLinesBefore
-			   numberOfLinesAfter:(NSUInteger)numberOfLinesAfter
-				  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))completionBlock;
+- (void)
+    renderLogLineAtLineNumber:(NSString *)lineNumber
+          numberOfLinesBefore:(NSUInteger)numberOfLinesBefore
+           numberOfLinesAfter:(NSUInteger)numberOfLinesAfter
+              completionBlock:
+                  (void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))
+                      completionBlock;
 
 - (void)renderLogLinesBeforeLineNumber:(NSString *)lineNumber
-				  maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
-					   completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock;
+                  maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+                       completionBlock:
+                           (void (^)(NSArray<NSDictionary<NSString *, id> *> *))
+                               completionBlock;
 
 - (void)renderLogLinesAfterLineNumber:(NSString *)lineNumber
-				 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
-					  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *))completionBlock;
+                 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+                      completionBlock:
+                          (void (^)(NSArray<NSDictionary<NSString *, id> *> *))
+                              completionBlock;
 
 - (void)renderLogLinesAfterLineNumber:(NSString *)lineNumberAfter
-					 beforeLineNumber:(NSString *)lineNumberBefore
-				 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
-					  completionBlock:(void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nonnull))completionBlock;
+                     beforeLineNumber:(NSString *)lineNumberBefore
+                 maximumNumberOfLines:(NSUInteger)maximumNumberOfLines
+                      completionBlock:
+                          (void (^)(NSArray<NSDictionary<NSString *, id> *>
+                                        *_Nonnull))completionBlock;
 
 - (void)notifyLinesAddedToView:(NSArray<NSString *> *)lineNumbers;
 - (void)notifyLinesRemovedFromView:(NSArray<NSString *> *)lineNumbers;
 
-- (void)notifyJumpToLine:(NSString *)lineNumber successful:(BOOL)successful scrolledToBottom:(BOOL)scrolledToBottom;
+- (void)notifyJumpToLine:(NSString *)lineNumber
+              successful:(BOOL)successful
+        scrolledToBottom:(BOOL)scrolledToBottom;
 
 - (void)notifyHistoricLogWillDeleteLines:(NSArray<NSString *> *)lineNumbers;
 
 - (void)processInlineMediaAtAddress:(NSString *)address
-			   withUniqueIdentifier:(NSString *)uniqueIdentifier
-					   atLineNumber:(NSString *)lineNumber
-							  index:(NSUInteger)index;
+               withUniqueIdentifier:(NSString *)uniqueIdentifier
+                       atLineNumber:(NSString *)lineNumber
+                              index:(NSUInteger)index;
 
 - (void)processingInlineMediaPayloadSucceeded:(ICLPayload *)payload;
-- (void)processingInlineMediaPayload:(ICLPayload *)payload failedWithError:(NSError *)error;
+- (void)processingInlineMediaPayload:(ICLPayload *)payload
+                     failedWithError:(NSError *)error;
 
 - (void)logViewWebViewClosedUnexpectedly;
 - (void)logViewWebViewFinishedLoading;
@@ -104,16 +121,17 @@ NS_ASSUME_NONNULL_BEGIN
 /* Inserts lines above everything in the view (chathistory BEFORE). */
 - (void)prependHistoricLogLines:(NSArray<TVCLogLine *> *)logLines;
 
-/* Moves the scrollback mark to sit after the last line at or before the date. */
+/* Moves the scrollback mark to sit after the last line at or before the date.
+ */
 - (void)markAtDate:(NSDate *)date;
 
 /* Reactions (+draft/react) received for lines of this view. They are
  kept for the session and rendered with the line. */
 - (void)noteReaction:(NSString *)emoji
-		   fromNickname:(NSString *)nickname
-	toMessageIdentifier:(NSString *)messageIdentifier;
-- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)reactionsForMessageIdentifier:
-	(NSString *)messageIdentifier;
+           fromNickname:(NSString *)nickname
+    toMessageIdentifier:(NSString *)messageIdentifier;
+- (nullable NSDictionary<NSString *, NSArray<NSString *> *> *)
+    reactionsForMessageIdentifier:(NSString *)messageIdentifier;
 @end
 
 NS_ASSUME_NONNULL_END

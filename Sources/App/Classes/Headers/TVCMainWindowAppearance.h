@@ -46,8 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly) NSSize defaultWindowSize;
 
-@property(readonly, copy, nullable) NSColor *channelViewOverlayDefaultBackgroundColorActiveWindow;
-@property(readonly, copy, nullable) NSColor *channelViewOverlayDefaultBackgroundColorInactiveWindow;
+@property(readonly, copy, nullable)
+    NSColor *channelViewOverlayDefaultBackgroundColorActiveWindow;
+@property(readonly, copy, nullable)
+    NSColor *channelViewOverlayDefaultBackgroundColorInactiveWindow;
 
 @end
 

@@ -39,13 +39,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_OPTIONS(NSUInteger, IRCUserRank) {
-	IRCUserRankNone = 1 << 0,
-	IRCUserRankIRCopByMode = 1 << 1,
-	IRCUserRankChannelOwner = 1 << 2,
-	IRCUserRankSuperOperator = 1 << 3,
-	IRCUserRankNormalOperator = 1 << 4,
-	IRCUserRankHalfOperator = 1 << 5,
-	IRCUserRankVoiced = 1 << 6
+  IRCUserRankNone = 1 << 0,
+  IRCUserRankIRCopByMode = 1 << 1,
+  IRCUserRankChannelOwner = 1 << 2,
+  IRCUserRankSuperOperator = 1 << 3,
+  IRCUserRankNormalOperator = 1 << 4,
+  IRCUserRankHalfOperator = 1 << 5,
+  IRCUserRankVoiced = 1 << 6
 };
 
 NS_ASSUME_NONNULL_END

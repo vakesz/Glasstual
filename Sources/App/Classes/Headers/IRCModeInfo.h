@@ -50,10 +50,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithModeSymbol:(NSString *)modeSymbol;
-- (instancetype)initWithModeSymbol:(NSString *)modeSymbol modeIsSet:(BOOL)modeIsSet;
 - (instancetype)initWithModeSymbol:(NSString *)modeSymbol
-						 modeIsSet:(BOOL)modeIsSet
-					 modeParameter:(nullable NSString *)modeParameter NS_DESIGNATED_INITIALIZER;
+                         modeIsSet:(BOOL)modeIsSet;
+- (instancetype)initWithModeSymbol:(NSString *)modeSymbol
+                         modeIsSet:(BOOL)modeIsSet
+                     modeParameter:(nullable NSString *)modeParameter
+    NS_DESIGNATED_INITIALIZER;
 
 - (BOOL)isModeForChangingMemberModeOn:(IRCClient *)client;
 @end

@@ -43,122 +43,113 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Initialization
 
-- (instancetype)init
-{
-	return [super init];
+- (instancetype)init {
+  return [super init];
 }
 
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN
-- (instancetype)initOnCopy
-{
-	return [super initOnCopy];
+- (instancetype)initOnCopy {
+  return [super initOnCopy];
 }
 
-- (instancetype)initOnMutate
-{
-	return [super initOnMutate];
+- (instancetype)initOnMutate {
+  return [super initOnMutate];
 }
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
-- (instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dic
-{
-	if ((self = [super init])) {
-		[self populateDefaultsPreflight];
+- (instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dic {
+  if ((self = [super init])) {
+    [self populateDefaultsPreflight];
 
-		[self populateDictionaryValues:dic];
+    [self populateDictionaryValues:dic];
 
-		[self populateDefaultsPostflight];
+    [self populateDefaultsPostflight];
 
-		[self initializedClassHealthCheck];
+    [self initializedClassHealthCheck];
 
-		return self;
-	}
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 
-- (void)populateDictionaryValues:(nonnull NSDictionary<NSString *, id> *)dic
-{
+- (void)populateDictionaryValues:(nonnull NSDictionary<NSString *, id> *)dic {
 }
 
-- (BOOL)isEqual:(id)object
-{
-	if (object == nil) {
-		return NO;
-	}
+- (BOOL)isEqual:(id)object {
+  if (object == nil) {
+    return NO;
+  }
 
-	if (object == self) {
-		return YES;
-	}
+  if (object == self) {
+    return YES;
+  }
 
-	if ([object isKindOfClass:[XRPortablePropertyDict class]] == NO) {
-		return NO;
-	}
+  if ([object isKindOfClass:[XRPortablePropertyDict class]] == NO) {
+    return NO;
+  }
 
-	NSDictionary *s1 = ((XRPortablePropertyDict *)object).dictionaryValue;
+  NSDictionary *s1 = ((XRPortablePropertyDict *)object).dictionaryValue;
 
-	NSDictionary *s2 = self.dictionaryValue;
+  NSDictionary *s2 = self.dictionaryValue;
 
-	return [s1 isEqualToDictionary:s2];
+  return [s1 isEqualToDictionary:s2];
 }
 
 #pragma mark -
 #pragma mark Getters
 
-- (NSDictionary<NSString *, id> *)dictionaryValue
-{
-	return [self dictionaryValueForTarget:XRPortablePropertyDictTargetDefault];
+- (NSDictionary<NSString *, id> *)dictionaryValue {
+  return [self dictionaryValueForTarget:XRPortablePropertyDictTargetDefault];
 }
 
-- (NSDictionary<NSString *, id> *)dictionaryValueForCloud
-{
-	return [self dictionaryValueForTarget:XRPortablePropertyDictTargetCloud];
+- (NSDictionary<NSString *, id> *)dictionaryValueForCloud {
+  return [self dictionaryValueForTarget:XRPortablePropertyDictTargetCloud];
 }
 
-- (NSDictionary<NSString *, id> *)dictionaryValueForCopy
-{
-	return [self dictionaryValueForTarget:XRPortablePropertyDictTargetCopy];
+- (NSDictionary<NSString *, id> *)dictionaryValueForCopy {
+  return [self dictionaryValueForTarget:XRPortablePropertyDictTargetCopy];
 }
 
-- (NSDictionary<NSString *, id> *)dictionaryValueForTarget:(XRPortablePropertyDictTarget)target
-{
-	return @{};
+- (NSDictionary<NSString *, id> *)dictionaryValueForTarget:
+    (XRPortablePropertyDictTarget)target {
+  return @{};
 }
 
-- (__kindof XRPortablePropertyDict *)immutableClass
-{
-	return [super immutableClass];
+- (__kindof XRPortablePropertyDict *)immutableClass {
+  return [super immutableClass];
 }
 
-- (__kindof XRPortablePropertyDict *)mutableClass
-{
-	return [super mutableClass];
+- (__kindof XRPortablePropertyDict *)mutableClass {
+  return [super mutableClass];
 }
 
 #pragma mark -
 #pragma mark Copying
 
-- (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing
-{
-	XRPortablePropertyDict *object = ((mutableCopy) ? self.mutableClass : self.immutableClass);
+- (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing {
+  XRPortablePropertyDict *object =
+      ((mutableCopy) ? self.mutableClass : self.immutableClass);
 
-	Class objectClass = [object class];
+  Class objectClass = [object class];
 
-	object = [objectClass alloc];
+  object = [objectClass alloc];
 
-	/* Always define first because it is common for some subclasses
-	 to skip certain work in defaults pre/post flight when copying. */
-	object.initializedAsCopy = YES;
+  /* Always define first because it is common for some subclasses
+   to skip certain work in defaults pre/post flight when copying. */
+  object.initializedAsCopy = YES;
 
-	NSDictionary *dictionaryValue = nil;
+  NSDictionary *dictionaryValue = nil;
 
-	if (mutableCopy) {
-		dictionaryValue = [self dictionaryValueForTarget:XRPortablePropertyDictTargetMutableCopy];
-	} else {
-		dictionaryValue = [self dictionaryValueForTarget:XRPortablePropertyDictTargetCopy];
-	}
+  if (mutableCopy) {
+    dictionaryValue =
+        [self dictionaryValueForTarget:XRPortablePropertyDictTargetMutableCopy];
+  } else {
+    dictionaryValue =
+        [self dictionaryValueForTarget:XRPortablePropertyDictTargetCopy];
+  }
 
-	return [object initWithDictionary:dictionaryValue];
+  return [object initWithDictionary:dictionaryValue];
 }
 
 @end

@@ -40,9 +40,9 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCNetwork;
 
 typedef NS_ENUM(NSUInteger, IRCNetworkRegistration) {
-	IRCNetworkRegistrationNone = 0, // The network has no account services
-	IRCNetworkRegistrationOptional, // Accounts exist but are not required to chat
-	IRCNetworkRegistrationRequired	// An account is required to connect or chat
+  IRCNetworkRegistrationNone = 0, // The network has no account services
+  IRCNetworkRegistrationOptional, // Accounts exist but are not required to chat
+  IRCNetworkRegistrationRequired  // An account is required to connect or chat
 };
 
 /* The bundled list of well known networks (IRCNetworks.plist). Entries are
@@ -61,7 +61,8 @@ typedef NS_ENUM(NSUInteger, IRCNetworkRegistration) {
 /* Whether the account group (account name, password, SASL) applies to a
  network with the given registration policy and SASL support. Kept as a
  pure function so that it can be tested without a network object. */
-+ (BOOL)accountFieldsApplyToRegistration:(IRCNetworkRegistration)registration saslSupported:(BOOL)saslSupported;
++ (BOOL)accountFieldsApplyToRegistration:(IRCNetworkRegistration)registration
+                           saslSupported:(BOOL)saslSupported;
 
 + (IRCNetworkRegistration)registrationFromString:(nullable NSString *)string;
 @end
@@ -87,7 +88,8 @@ typedef NS_ENUM(NSUInteger, IRCNetworkRegistration) {
 
 /* Designated initializer. Returns nil when the name or address is missing.
  Used by the bundled list and by tests. */
-- (nullable instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dictionary NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithDictionary:
+    (NSDictionary<NSString *, id> *)dictionary NS_DESIGNATED_INITIALIZER;
 @end
 
 NS_ASSUME_NONNULL_END

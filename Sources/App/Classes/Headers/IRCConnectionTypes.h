@@ -42,13 +42,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol IRCConnectionDelegate <NSObject>
 @required
-- (void)ircConnection:(IRCConnection *)sender willConnectToProxy:(NSString *)proxyHost port:(uint16_t)proxyPort;
+- (void)ircConnection:(IRCConnection *)sender
+    willConnectToProxy:(NSString *)proxyHost
+                  port:(uint16_t)proxyPort;
 - (void)ircConnectionDidConnect:(IRCConnection *)sender;
 - (void)ircConnectionDidSecureConnection:(IRCConnection *)sender
-						withProtocolType:(tls_protocol_version_t)protocolType
-							 cipherSuite:(tls_ciphersuite_t)cipherSuite;
+                        withProtocolType:(tls_protocol_version_t)protocolType
+                             cipherSuite:(tls_ciphersuite_t)cipherSuite;
 - (void)ircConnectionDidCloseReadStream:(IRCConnection *)sender;
-- (void)ircConnection:(IRCConnection *)sender didDisconnectWithError:(nullable NSError *)disconnectError;
+- (void)ircConnection:(IRCConnection *)sender
+    didDisconnectWithError:(nullable NSError *)disconnectError;
 - (void)ircConnection:(IRCConnection *)sender didReceiveData:(NSString *)data;
 - (void)ircConnection:(IRCConnection *)sender willSendData:(NSString *)data;
 @end

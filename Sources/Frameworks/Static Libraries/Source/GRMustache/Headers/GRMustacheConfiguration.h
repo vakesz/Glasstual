@@ -30,7 +30,8 @@
 /**
  * A GRMustacheConfiguration instance configures GRMustache rendering.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/configuration.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/configuration.md
  *
  * The default configuration [GRMustacheConfiguration defaultConfiguration]
  * applies to all GRMustache rendering by default:
@@ -38,7 +39,8 @@
  * ```
  * // Have GRMustache templates render text by default,
  * // and do not HTML-escape their input.
- * [GRMustacheConfiguration defaultConfiguration].contentType = GRMustacheContentTypeText;
+ * [GRMustacheConfiguration defaultConfiguration].contentType =
+ * GRMustacheContentTypeText;
  * ```
  *
  * You can also alter the configuration of a specific template repository: its
@@ -47,20 +49,21 @@
  *
  * ```
  * // All templates loaded from _repo_ will use [[ and ]] as tag delimiters.
- * GRMustacheTemplateRepository *repo = [GRMustacheTemplateRepository templateRepositoryWithBundle:nil];
- * repo.configuration.tagStartDelimiter = @"[[";
- * repo.configuration.tagEndDelimiter = @"]]";
+ * GRMustacheTemplateRepository *repo = [GRMustacheTemplateRepository
+ * templateRepositoryWithBundle:nil]; repo.configuration.tagStartDelimiter =
+ * @"[["; repo.configuration.tagEndDelimiter = @"]]";
  * ```
  *
- * A third option is to create a new configuration, and assign it to the template:
+ * A third option is to create a new configuration, and assign it to the
+ * template:
  *
  * ```
  * // Create a configuration
- * GRMustacheConfiguration *configuration = [GRMustacheConfiguration configuration];
- * configuration.... // setup
+ * GRMustacheConfiguration *configuration = [GRMustacheConfiguration
+ * configuration]; configuration.... // setup
  *
- * GRMustacheTemplateRepository *repo = [GRMustacheTemplateRepository templateRepositoryWithBundle:nil];
- * repo.configuration = configuration;
+ * GRMustacheTemplateRepository *repo = [GRMustacheTemplateRepository
+ * templateRepositoryWithBundle:nil]; repo.configuration = configuration;
  * ```
  *
  * The `contentType` option can be specified at the template level, so that your
@@ -75,14 +78,13 @@
  *
  * @since v6.2
  */
-@interface GRMustacheConfiguration : NSObject <NSCopying>
-{
-  @private
-	GRMustacheContentType _contentType;
-	NSString *_tagStartDelimiter;
-	NSString *_tagEndDelimiter;
-	GRMustacheContext *_baseContext;
-	BOOL _locked;
+@interface GRMustacheConfiguration : NSObject <NSCopying> {
+@private
+  GRMustacheContentType _contentType;
+  NSString *_tagStartDelimiter;
+  NSString *_tagEndDelimiter;
+  GRMustacheContext *_baseContext;
+  BOOL _locked;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +104,8 @@
  *
  * @since v6.2
  */
-+ (GRMustacheConfiguration *)defaultConfiguration AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
++ (GRMustacheConfiguration *)
+    defaultConfiguration AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @name Creating Configuration
@@ -116,7 +119,8 @@
  *
  * @since v6.2
  */
-+ (GRMustacheConfiguration *)configuration AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
++ (GRMustacheConfiguration *)
+    configuration AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @name Set Up Configuration
@@ -130,7 +134,8 @@
  *
  * @since v6.4
  */
-@property(nonatomic, retain) GRMustacheContext *baseContext AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+@property(nonatomic, retain)
+    GRMustacheContext *baseContext AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Extends the base context of the receiver with the provided object, making its
@@ -139,7 +144,8 @@
  * For example:
  *
  * ```
- * GRMustacheConfiguration *configuration = [GRMustacheConfiguration defaultConfiguration];
+ * GRMustacheConfiguration *configuration = [GRMustacheConfiguration
+ * defaultConfiguration];
  *
  * // Have the `name` key defined for all template renderings:
  * id object = @{ @"name": @"Arthur" };
@@ -154,13 +160,15 @@
  *
  * ```
  * // Renders "Billy", not "Arthur"
- * [GRMustacheTemplate renderObject:nil:@{ @"name": @"Billy" } fromString:@"{{name}}" error:NULL];
+ * [GRMustacheTemplate renderObject:nil:@{ @"name": @"Billy" }
+ * fromString:@"{{name}}" error:NULL];
  * ```
  *
  * This method is a shortcut. It is equivalent to the following line of code:
  *
  * ```
- * configuration.baseContext = [configuration.baseContext contextByAddingObject:object];
+ * configuration.baseContext = [configuration.baseContext
+ * contextByAddingObject:object];
  * ```
  *
  * @param object  An object
@@ -171,7 +179,8 @@
  *
  * @since v6.8
  */
-- (void)extendBaseContextWithObject:(id)object AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+- (void)extendBaseContextWithObject:(id)object
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Extends the base context of the receiver with the provided object, making its
@@ -183,19 +192,23 @@
  * For example:
  *
  * ```
- * GRMustacheConfiguration *configuration = [GRMustacheConfiguration defaultConfiguration];
+ * GRMustacheConfiguration *configuration = [GRMustacheConfiguration
+ * defaultConfiguration];
  *
  * // The `precious` key is given priority:
- * [configuration extendBaseContextWithProtectedObject:@{ @"precious": @"gold" }];
+ * [configuration extendBaseContextWithProtectedObject:@{ @"precious": @"gold"
+ * }];
  *
  * // Renders "gold", not "lead".
- * [GRMustacheTemplate renderObject:nil:@{ @"precious": @"lead" } fromString:@"{{precious}}" error:NULL];
+ * [GRMustacheTemplate renderObject:nil:@{ @"precious": @"lead" }
+ * fromString:@"{{precious}}" error:NULL];
  * ```
  *
  * This method is a shortcut. It is equivalent to the following line of code:
  *
  * ```
- * configuration.baseContext = [configuration.baseContext contextByAddingProtectedObject:object];
+ * configuration.baseContext = [configuration.baseContext
+ * contextByAddingProtectedObject:object];
  * ```
  *
  * @param object  An object
@@ -206,7 +219,8 @@
  *
  * @since v6.8
  */
-- (void)extendBaseContextWithProtectedObject:(id)object AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+- (void)extendBaseContextWithProtectedObject:(id)object
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 ;
 
 /**
@@ -216,7 +230,8 @@
  * This method is a shortcut. It is equivalent to the following line of code:
  *
  * ```
- * configuration.baseContext = [configuration.baseContext contextByAddingTagDelegate:tagDelegate];
+ * configuration.baseContext = [configuration.baseContext
+ * contextByAddingTagDelegate:tagDelegate];
  * ```
  *
  * @param tagDelegate  A tag delegate
@@ -228,7 +243,7 @@
  * @since v6.8
  */
 - (void)extendBaseContextWithTagDelegate:(id<GRMustacheTagDelegate>)tagDelegate
-	AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 ;
 
 /**
@@ -269,7 +284,8 @@
  *
  * @since v6.2
  */
-@property(nonatomic) GRMustacheContentType contentType AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+@property(nonatomic) GRMustacheContentType contentType
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * The opening delimiter for Mustache tags. Its default value is `{{`.
@@ -279,7 +295,8 @@
  *
  * @since v6.4
  */
-@property(nonatomic, copy) NSString *tagStartDelimiter AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+@property(nonatomic, copy)
+    NSString *tagStartDelimiter AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * The closing delimiter for Mustache tags. Its default value is `}}`.
@@ -289,6 +306,7 @@
  *
  * @since v6.4
  */
-@property(nonatomic, copy) NSString *tagEndDelimiter AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+@property(nonatomic, copy)
+    NSString *tagEndDelimiter AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 @end

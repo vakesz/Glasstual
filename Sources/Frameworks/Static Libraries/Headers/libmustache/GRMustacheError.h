@@ -20,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import <Foundation/Foundation.h>
 #import "GRMustacheAvailabilityMacros.h"
+#import <Foundation/Foundation.h>
 
 /**
  * The codes of a GRMustache-generated NSError
@@ -29,26 +29,27 @@
  * @since v1.0
  */
 typedef NS_ENUM(NSInteger, GRMustacheErrorCode) {
-	/**
-     * The error code for parse errors.
-     *
-     * @since v1.0
-     */
-	GRMustacheErrorCodeParseError AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER,
+  /**
+   * The error code for parse errors.
+   *
+   * @since v1.0
+   */
+  GRMustacheErrorCodeParseError AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER,
 
-	/**
-     * The error code for not found templates and partials.
-     *
-     * @since v1.0
-     */
-	GRMustacheErrorCodeTemplateNotFound AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER,
+  /**
+   * The error code for not found templates and partials.
+   *
+   * @since v1.0
+   */
+  GRMustacheErrorCodeTemplateNotFound
+      AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER,
 
-	/**
-     * The error code for not rendering errors.
-     *
-     * @since v6.3
-     */
-	GRMustacheErrorCodeRenderingError AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER,
+  /**
+   * The error code for not rendering errors.
+   *
+   * @since v6.3
+   */
+  GRMustacheErrorCodeRenderingError AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER,
 
 } AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
@@ -57,11 +58,13 @@ typedef NS_ENUM(NSInteger, GRMustacheErrorCode) {
  *
  * @since v1.0
  */
-extern NSString *const GRMustacheErrorDomain AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+extern NSString *const GRMustacheErrorDomain
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * The name of exceptions raised by GRMustache when rendering a template.
  *
  * @since v5.1
  */
-extern NSString *const GRMustacheRenderingException AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+extern NSString *const GRMustacheRenderingException
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;

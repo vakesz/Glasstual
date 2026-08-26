@@ -40,26 +40,27 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_OPTIONS(NSUInteger, TPCPreferencesReloadAction) {
-	TPCPreferencesReloadActionAppearance = 1 << 0,
-	TPCPreferencesReloadActionChannelViewArrangement = 1 << 1,
-	TPCPreferencesReloadActionDockIconBadges = 1 << 2,
-	TPCPreferencesReloadActionHighlightKeywords = 1 << 3,
-	TPCPreferencesReloadActionHighlightLogging = 1 << 4,
-	TPCPreferencesReloadActionIRCCommandCache = 1 << 5,
-	TPCPreferencesReloadActionInputHistoryScope = 1 << 6,
-	TPCPreferencesReloadActionLogTranscripts = 1 << 7,
-	TPCPreferencesReloadActionMemberList = 1 << 9,
-	TPCPreferencesReloadActionMemberListSortOrder = 1 << 10,
-	TPCPreferencesReloadActionMemberListUserBadges = 1 << 11,
-	TPCPreferencesReloadActionPreferencesChanged = 1 << 12,
-	TPCPreferencesReloadActionScrollbackSaveLimit = 1 << 13,
-	TPCPreferencesReloadActionScrollbackVisibleLimit = 1 << 14,
-	TPCPreferencesReloadActionServerList = 1 << 15,
-	TPCPreferencesReloadActionServerListUnreadBadges = 1 << 16,
-	TPCPreferencesReloadActionStyle = 1 << 17,
-	//	TPCPreferencesReloadActionStyleWithTableViews					= 1 << 18,
-	TPCPreferencesReloadActionTextDirection = 1 << 19,
-	TPCPreferencesReloadActionTextFieldFontSize = 1 << 20,
+  TPCPreferencesReloadActionAppearance = 1 << 0,
+  TPCPreferencesReloadActionChannelViewArrangement = 1 << 1,
+  TPCPreferencesReloadActionDockIconBadges = 1 << 2,
+  TPCPreferencesReloadActionHighlightKeywords = 1 << 3,
+  TPCPreferencesReloadActionHighlightLogging = 1 << 4,
+  TPCPreferencesReloadActionIRCCommandCache = 1 << 5,
+  TPCPreferencesReloadActionInputHistoryScope = 1 << 6,
+  TPCPreferencesReloadActionLogTranscripts = 1 << 7,
+  TPCPreferencesReloadActionMemberList = 1 << 9,
+  TPCPreferencesReloadActionMemberListSortOrder = 1 << 10,
+  TPCPreferencesReloadActionMemberListUserBadges = 1 << 11,
+  TPCPreferencesReloadActionPreferencesChanged = 1 << 12,
+  TPCPreferencesReloadActionScrollbackSaveLimit = 1 << 13,
+  TPCPreferencesReloadActionScrollbackVisibleLimit = 1 << 14,
+  TPCPreferencesReloadActionServerList = 1 << 15,
+  TPCPreferencesReloadActionServerListUnreadBadges = 1 << 16,
+  TPCPreferencesReloadActionStyle = 1 << 17,
+  //	TPCPreferencesReloadActionStyleWithTableViews
+  //= 1 << 18,
+  TPCPreferencesReloadActionTextDirection = 1 << 19,
+  TPCPreferencesReloadActionTextFieldFontSize = 1 << 20,
 
 };
 
@@ -67,7 +68,8 @@ typedef NS_OPTIONS(NSUInteger, TPCPreferencesReloadAction) {
 + (void)performReloadActionForKeys:(NSArray<NSString *> *)keys;
 + (void)performReloadAction:(TPCPreferencesReloadAction)reloadAction;
 + (void)performReloadAction:(TPCPreferencesReloadAction)reloadAction
-					 forKey:(nullable NSString *)key; // key is only used for context
+                     forKey:(nullable NSString *)
+                                key; // key is only used for context
 @end
 
 NS_ASSUME_NONNULL_END

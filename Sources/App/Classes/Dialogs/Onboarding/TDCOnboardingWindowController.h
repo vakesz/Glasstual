@@ -43,7 +43,8 @@ NS_ASSUME_NONNULL_BEGIN
  and the first network. Presented once when there are no configured
  clients; reachable afterwards from Help > "Welcome to Glasstual…". */
 @interface TDCOnboardingWindowController : NSWindowController
-@property(nonatomic, weak, nullable) id<TDCOnboardingWindowControllerDelegate> delegate;
+@property(nonatomic, weak, nullable) id<TDCOnboardingWindowControllerDelegate>
+    delegate;
 
 /* YES when onboarding has not been completed and no client is configured. */
 + (BOOL)shouldPresentOnLaunch;
@@ -59,7 +60,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol TDCOnboardingWindowControllerDelegate <NSObject>
 @required
-- (void)onboardingWindowControllerWillClose:(TDCOnboardingWindowController *)sender;
+- (void)onboardingWindowControllerWillClose:
+    (TDCOnboardingWindowController *)sender;
 @end
 
 NS_ASSUME_NONNULL_END

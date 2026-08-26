@@ -48,7 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Designated initializer
  */
-- (instancetype)initWithURL:(NSURL *)url asType:(ICLMediaType)type NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithURL:(NSURL *)url
+                     asType:(ICLMediaType)type NS_DESIGNATED_INITIALIZER;
 
 /**
  The final URL that was assessed.
@@ -81,7 +82,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ICLMediaAssessmentMutable : ICLMediaAssessment
 @property(nonatomic, assign, readwrite) ICLMediaType type;
-@property(nonatomic, copy, readwrite) NSString *contentType; // Defaults to "application/binary"
+@property(nonatomic, copy, readwrite)
+    NSString *contentType; // Defaults to "application/binary"
 @property(nonatomic, assign, readwrite) unsigned long long contentLength;
 @end
 

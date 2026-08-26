@@ -42,7 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannelConfig, IRCHighlightMatchCondition;
 
 @interface TDCHighlightEntrySheet : TDCSheetBase
-- (instancetype)initWithConfig:(nullable IRCHighlightMatchCondition *)config NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithConfig:(nullable IRCHighlightMatchCondition *)config
+    NS_DESIGNATED_INITIALIZER;
 
 - (void)startWithChannels:(NSArray<IRCChannelConfig *> *)channels;
 @end
@@ -50,7 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TDCHighlightEntrySheetDelegate <NSObject>
 @required
 
-- (void)highlightEntrySheet:(TDCHighlightEntrySheet *)sender onOk:(IRCHighlightMatchCondition *)config;
+- (void)highlightEntrySheet:(TDCHighlightEntrySheet *)sender
+                       onOk:(IRCHighlightMatchCondition *)config;
 - (void)highlightEntrySheetWillClose:(TDCHighlightEntrySheet *)sender;
 @end
 

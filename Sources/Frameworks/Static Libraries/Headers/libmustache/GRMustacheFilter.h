@@ -23,8 +23,8 @@
 #ifndef GRMUSTACHE_FILTER
 #define GRMUSTACHE_FILTER
 
-#import <Foundation/Foundation.h>
 #import "GRMustacheAvailabilityMacros.h"
+#import <Foundation/Foundation.h>
 
 // =============================================================================
 #pragma mark - <GRMustacheFilter>
@@ -32,7 +32,8 @@
 /**
  * The protocol for implementing GRMustache filters.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/filters.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/filters.md
  *
  * The responsability of a GRMustacheFilter is to transform a value into
  * another.
@@ -69,7 +70,8 @@
  * The GRMustacheFilter class helps building mustache filters without writing a
  * custom class that conforms to the GRMustacheFilter protocol.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/filters.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/filters.md
  *
  * @see GRMustacheFilter protocol
  *
@@ -93,7 +95,8 @@
  *
  * @see variadicFilterWithBlock:
  */
-+ (id<GRMustacheFilter>)filterWithBlock:(id (^)(id value))block AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
++ (id<GRMustacheFilter>)filterWithBlock:(id (^)(id value))block
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Returns a GRMustacheFilter object that executes the provided block, given an
@@ -114,8 +117,9 @@
  *
  * @see filterWithBlock:
  */
-+ (id<GRMustacheFilter>)variadicFilterWithBlock:(id (^)(NSArray *arguments))block
-	AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
++ (id<GRMustacheFilter>)variadicFilterWithBlock:
+    (id (^)(NSArray *arguments))block
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 @end
 

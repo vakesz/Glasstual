@@ -37,120 +37,117 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Swizzling
 
-/* Swizzle functions take strings to make it difficult for Apple to find private APIs */
-void XRExchangeInstanceMethod(NSString *className, NSString *originalMethod, NSString *replacementMethod)
-{
-	NSCParameterAssert(className != nil);
-	NSCParameterAssert(originalMethod != nil);
-	NSCParameterAssert(replacementMethod != nil);
+/* Swizzle functions take strings to make it difficult for Apple to find private
+ * APIs */
+void XRExchangeInstanceMethod(NSString *className, NSString *originalMethod,
+                              NSString *replacementMethod) {
+  NSCParameterAssert(className != nil);
+  NSCParameterAssert(originalMethod != nil);
+  NSCParameterAssert(replacementMethod != nil);
 
-	Class class = NSClassFromString(className);
+  Class class = NSClassFromString(className);
 
-	SEL originalSelector = NSSelectorFromString(originalMethod);
-	SEL swizzledSelector = NSSelectorFromString(replacementMethod);
+  SEL originalSelector = NSSelectorFromString(originalMethod);
+  SEL swizzledSelector = NSSelectorFromString(replacementMethod);
 
-	Method originalMethodDcl = class_getInstanceMethod(class, originalSelector);
-	Method swizzledMethodDcl = class_getInstanceMethod(class, swizzledSelector);
+  Method originalMethodDcl = class_getInstanceMethod(class, originalSelector);
+  Method swizzledMethodDcl = class_getInstanceMethod(class, swizzledSelector);
 
-	if (originalMethodDcl == NULL || swizzledMethodDcl == NULL) {
-		LogToConsoleErrorWithSubsystem(_CSFrameworkInternalLogSubsystem(),
-									   "Cannot swizzle -[%{public}@ %{public}@] with %{public}@: method not found",
-									   className,
-									   originalMethod,
-									   replacementMethod);
+  if (originalMethodDcl == NULL || swizzledMethodDcl == NULL) {
+    LogToConsoleErrorWithSubsystem(_CSFrameworkInternalLogSubsystem(),
+                                   "Cannot swizzle -[%{public}@ %{public}@] "
+                                   "with %{public}@: method not found",
+                                   className, originalMethod,
+                                   replacementMethod);
 
-		return;
-	}
+    return;
+  }
 
-	BOOL methodAdded = class_addMethod(class,
-									   originalSelector,
-									   method_getImplementation(swizzledMethodDcl),
-									   method_getTypeEncoding(swizzledMethodDcl));
+  BOOL methodAdded = class_addMethod(
+      class, originalSelector, method_getImplementation(swizzledMethodDcl),
+      method_getTypeEncoding(swizzledMethodDcl));
 
-	if (methodAdded) {
-		class_replaceMethod(class,
-							swizzledSelector,
-							method_getImplementation(originalMethodDcl),
-							method_getTypeEncoding(originalMethodDcl));
-	} else {
-		method_exchangeImplementations(originalMethodDcl, swizzledMethodDcl);
-	}
+  if (methodAdded) {
+    class_replaceMethod(class, swizzledSelector,
+                        method_getImplementation(originalMethodDcl),
+                        method_getTypeEncoding(originalMethodDcl));
+  } else {
+    method_exchangeImplementations(originalMethodDcl, swizzledMethodDcl);
+  }
 }
 
 #pragma mark -
 #pragma mark Validity
 
-BOOL NSObjectIsEmpty(id _Nullable obj)
-{
-	if (obj == nil || obj == NULL) {
-		return YES;
-	} else if ([obj respondsToSelector:@selector(length)]) {
-		return ([obj length] < 1);
-	} else if ([obj respondsToSelector:@selector(count)]) {
-		return ([obj count] < 1);
-	} else if ([obj isKindOfClass:[NSNull class]]) {
-		return YES;
-	}
+BOOL NSObjectIsEmpty(id _Nullable obj) {
+  if (obj == nil || obj == NULL) {
+    return YES;
+  } else if ([obj respondsToSelector:@selector(length)]) {
+    return ([obj length] < 1);
+  } else if ([obj respondsToSelector:@selector(count)]) {
+    return ([obj count] < 1);
+  } else if ([obj isKindOfClass:[NSNull class]]) {
+    return YES;
+  }
 
-	return NO;
+  return NO;
 }
 
 #pragma mark -
 #pragma mark Grand Central Dispatch
 
-dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueue(dispatch_block_t block, NSTimeInterval delay)
-{
-	return XRScheduleBlockOnGlobalQueueWithPriority(block, delay, DISPATCH_QUEUE_PRIORITY_DEFAULT);
+dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueue(dispatch_block_t block,
+                                                         NSTimeInterval delay) {
+  return XRScheduleBlockOnGlobalQueueWithPriority(
+      block, delay, DISPATCH_QUEUE_PRIORITY_DEFAULT);
 }
 
-dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueueWithPriority(dispatch_block_t block,
-																	 NSTimeInterval delay,
-																	 dispatch_queue_priority_t priority)
-{
-	dispatch_queue_t workerQueue = dispatch_get_global_queue(priority, 0);
+dispatch_source_t _Nullable XRScheduleBlockOnGlobalQueueWithPriority(
+    dispatch_block_t block, NSTimeInterval delay,
+    dispatch_queue_priority_t priority) {
+  dispatch_queue_t workerQueue = dispatch_get_global_queue(priority, 0);
 
-	return XRScheduleBlockOnQueue(workerQueue, block, delay, NO);
+  return XRScheduleBlockOnQueue(workerQueue, block, delay, NO);
 }
 
-dispatch_source_t _Nullable XRScheduleBlockOnMainQueue(dispatch_block_t block, NSTimeInterval delay)
-{
-	return XRScheduleBlockOnQueue(dispatch_get_main_queue(), block, delay, NO);
+dispatch_source_t _Nullable XRScheduleBlockOnMainQueue(dispatch_block_t block,
+                                                       NSTimeInterval delay) {
+  return XRScheduleBlockOnQueue(dispatch_get_main_queue(), block, delay, NO);
 }
 
 dispatch_source_t _Nullable XRScheduleBlockOnQueue(dispatch_queue_t queue,
-												   dispatch_block_t block,
-												   NSTimeInterval delay,
-												   BOOL repeat)
-{
-	NSCParameterAssert(delay >= 0);
+                                                   dispatch_block_t block,
+                                                   NSTimeInterval delay,
+                                                   BOOL repeat) {
+  NSCParameterAssert(delay >= 0);
 
-	dispatch_source_t timerSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
+  dispatch_source_t timerSource =
+      dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
 
-	if (timerSource == NULL) {
-		return NULL;
-	}
+  if (timerSource == NULL) {
+    return NULL;
+  }
 
-	dispatch_time_t timer = dispatch_time(DISPATCH_TIME_NOW, (delay * NSEC_PER_SEC));
+  dispatch_time_t timer =
+      dispatch_time(DISPATCH_TIME_NOW, (delay * NSEC_PER_SEC));
 
-	if (repeat) {
-		dispatch_source_set_timer(timerSource, timer, (delay * NSEC_PER_SEC), 0);
-	} else {
-		dispatch_source_set_timer(timerSource, timer, DISPATCH_TIME_FOREVER, 0);
-	}
+  if (repeat) {
+    dispatch_source_set_timer(timerSource, timer, (delay * NSEC_PER_SEC), 0);
+  } else {
+    dispatch_source_set_timer(timerSource, timer, DISPATCH_TIME_FOREVER, 0);
+  }
 
-	dispatch_source_set_event_handler(timerSource, block);
+  dispatch_source_set_event_handler(timerSource, block);
 
-	return timerSource;
+  return timerSource;
 }
 
-void XRResumeScheduledBlock(dispatch_source_t blockSource)
-{
-	dispatch_resume(blockSource);
+void XRResumeScheduledBlock(dispatch_source_t blockSource) {
+  dispatch_resume(blockSource);
 }
 
-void XRCancelScheduledBlock(dispatch_source_t blockSource)
-{
-	dispatch_source_cancel(blockSource);
+void XRCancelScheduledBlock(dispatch_source_t blockSource) {
+  dispatch_source_cancel(blockSource);
 }
 
 NS_ASSUME_NONNULL_END

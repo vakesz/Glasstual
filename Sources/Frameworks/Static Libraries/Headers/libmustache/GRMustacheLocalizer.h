@@ -20,16 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import <Foundation/Foundation.h>
 #import "GRMustacheAvailabilityMacros.h"
-#import "GRMustacheRendering.h"
 #import "GRMustacheFilter.h"
+#import "GRMustacheRendering.h"
+#import <Foundation/Foundation.h>
 
 /**
  * GRMustacheLocalizer can localize the content of a Mustache section.
  * It also has a filter facet that localizes your data.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/standard_library.md#localize
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/standard_library.md#localize
  *
  * The GRMustache standard library has a `localize` key which returns a
  * GRMustacheLocalizer that localizes just like the NSLocalizableString macro
@@ -52,11 +53,11 @@
  *
  * ### Localize sections with arguments and conditions:
  *
- * `{{#localize}}Good morning {{#title}}{{title}}{{/title}} {{name}}{{/localize}}`
- * build the format string `Good morning %@" or @"Good morning %@ %@`,
- * depending on the presence of the `title` key. It then injects the name, or
- * both title and name, with `[NSString stringWithFormat:]`, to build the final
- * rendering.
+ * `{{#localize}}Good morning {{#title}}{{title}}{{/title}}
+ * {{name}}{{/localize}}` build the format string `Good morning %@" or @"Good
+ * morning %@ %@`, depending on the presence of the `title` key. It then injects
+ * the name, or both title and name, with `[NSString stringWithFormat:]`, to
+ * build the final rendering.
  *
  * ### Custom GRMustacheLocalizer
  *
@@ -66,12 +67,12 @@
  *
  * @since v6.4
  */
-@interface GRMustacheLocalizer : NSObject <GRMustacheRendering, GRMustacheFilter>
-{
-  @private
-	NSBundle *_bundle;
-	NSString *_tableName;
-	NSMutableArray *_formatArguments;
+@interface GRMustacheLocalizer
+    : NSObject <GRMustacheRendering, GRMustacheFilter> {
+@private
+  NSBundle *_bundle;
+  NSString *_tableName;
+  NSMutableArray *_formatArguments;
 }
 
 /**
@@ -87,14 +88,16 @@
  * @since v6.4
  */
 - (instancetype)initWithBundle:(NSBundle *)bundle
-					 tableName:(NSString *)tableName AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+                     tableName:(NSString *)tableName
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * The bundle where to look for localized strings.
  *
  * @since v6.4
  */
-@property(nonatomic, retain, readonly) NSBundle *bundle AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+@property(nonatomic, retain, readonly)
+    NSBundle *bundle AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * The table where to look for localized strings.
@@ -103,6 +106,7 @@
  *
  * @since v6.4
  */
-@property(nonatomic, retain, readonly) NSString *tableName AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+@property(nonatomic, retain, readonly)
+    NSString *tableName AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 @end

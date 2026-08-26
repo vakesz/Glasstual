@@ -37,6 +37,8 @@
 
 /* *** XPC PROTOCOL HEADERS ARE PRIVATE *** */
 
+#import <Foundation/Foundation.h>
+
 NS_ASSUME_NONNULL_BEGIN
 
 @class ICLPayload;
@@ -47,14 +49,16 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol ICLInlineContentServerProtocol
 @required
 
-- (void)warmServiceByLoadingPluginsAtLocations:(NSArray<NSURL *> *)pluginLocations;
-- (void)warmServiceByRegisteringDefaults:(NSDictionary<NSString *, id> *)defaults;
+- (void)warmServiceByLoadingPluginsAtLocations:
+    (NSArray<NSURL *> *)pluginLocations;
+- (void)warmServiceByRegisteringDefaults:
+    (NSDictionary<NSString *, id> *)defaults;
 
 - (void)processURL:(NSURL *)url
-	withUniqueIdentifier:(NSString *)uniqueIdentifier
-			atLineNumber:(NSString *)lineNumber
-				   index:(NSUInteger)index
-				  inView:(NSString *)viewIdentifier;
+    withUniqueIdentifier:(NSString *)uniqueIdentifier
+            atLineNumber:(NSString *)lineNumber
+                   index:(NSUInteger)index
+                  inView:(NSString *)viewIdentifier;
 
 - (void)processPayload:(ICLPayload *)payload;
 @end
@@ -66,7 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
 @required
 
 - (void)processingPayloadSucceeded:(ICLPayload *)payload;
-- (void)processingPayload:(ICLPayload *)payload failedWithError:(NSError *)error;
+- (void)processingPayload:(ICLPayload *)payload
+          failedWithError:(NSError *)error;
 @end
 
 NS_ASSUME_NONNULL_END

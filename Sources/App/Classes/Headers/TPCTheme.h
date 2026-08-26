@@ -45,28 +45,31 @@ NS_ASSUME_NONNULL_BEGIN
 #define TPCThemeSettingsNewestTemplateEngineVersion 4
 
 typedef NS_ENUM(NSUInteger, TPCThemeAppearanceType) {
-	TPCThemeAppearanceTypeDefault = 0, // Automatically picked based on window appearance
-	TPCThemeAppearanceTypeDark,
-	TPCThemeAppearanceTypeLight
+  TPCThemeAppearanceTypeDefault =
+      0, // Automatically picked based on window appearance
+  TPCThemeAppearanceTypeDark,
+  TPCThemeAppearanceTypeLight
 };
 
 typedef NS_ENUM(NSUInteger, TPCThemeStorageLocation) {
-	TPCThemeStorageLocationUnknown = 0,
-	TPCThemeStorageLocationBundle,
-	TPCThemeStorageLocationCustom
+  TPCThemeStorageLocationUnknown = 0,
+  TPCThemeStorageLocationBundle,
+  TPCThemeStorageLocationCustom
 };
 
 typedef NS_ENUM(NSUInteger, TPCThemeSettingsNicknameColorStyle) {
-	TPCThemeSettingsNicknameColorStyleDefault = 0, // Automatically picked based on appearance
-	TPCThemeSettingsNicknameColorStyleDark,
-	TPCThemeSettingsNicknameColorStyleLight
+  TPCThemeSettingsNicknameColorStyleDefault =
+      0, // Automatically picked based on appearance
+  TPCThemeSettingsNicknameColorStyleDark,
+  TPCThemeSettingsNicknameColorStyleLight
 };
 
 /* If a theme is modified in such a way after it is initialized
  that it can no longer be used, then this notification is posted.
  A way, amongst many, in which the integrity of a theme can
  be compromised is by deleting the CSS or JavaScript file. */
-GLASSTUAL_EXTERN NSNotificationName const TPCThemeIntegrityCompromisedNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TPCThemeIntegrityCompromisedNotification;
 
 /* If theme has been restored to a usable state. */
 GLASSTUAL_EXTERN NSNotificationName const TPCThemeIntegrityRestoredNotification;
@@ -98,7 +101,8 @@ GLASSTUAL_EXTERN NSNotificationName const TPCThemeWasModifiedNotification;
 @property(readonly, copy) NSURL *originalURL;
 @property(readonly) TPCThemeStorageLocation storageLocation;
 
-@property(readonly) BOOL usable; // If the theme is in a state that can be selected by the user.
+@property(readonly)
+    BOOL usable; // If the theme is in a state that can be selected by the user.
 
 @property(readonly) TPCThemeAppearanceType appearance;
 
@@ -112,7 +116,8 @@ GLASSTUAL_EXTERN NSNotificationName const TPCThemeWasModifiedNotification;
 @property(readonly, copy) NSArray<NSString *> *jsFilePaths;
 
 /* Order of repositories is: variety specific -> global -> app */
-@property(readonly, copy) NSArray<GRMustacheTemplateRepository *> *templateRepositories;
+@property(readonly, copy)
+    NSArray<GRMustacheTemplateRepository *> *templateRepositories;
 
 /* Settings */
 @property(readonly, strong) TPCThemeSettings *settings;
@@ -156,10 +161,12 @@ GLASSTUAL_EXTERN NSNotificationName const TPCThemeWasModifiedNotification;
 
 - (instancetype)init NS_UNAVAILABLE;
 
-- (nullable id)styleSettingsRetrieveValueForKey:(NSString *)key error:(NSString *_Nullable *_Nullable)resultError;
+- (nullable id)styleSettingsRetrieveValueForKey:(NSString *)key
+                                          error:(NSString *_Nullable *_Nullable)
+                                                    resultError;
 - (BOOL)styleSettingsSetValue:(nullable id)objectValue
-					   forKey:(NSString *)objectKey
-						error:(NSString *_Nullable *_Nullable)resultError;
+                       forKey:(NSString *)objectKey
+                        error:(NSString *_Nullable *_Nullable)resultError;
 @end
 
 NS_ASSUME_NONNULL_END

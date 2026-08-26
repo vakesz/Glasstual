@@ -40,10 +40,10 @@ NS_ASSUME_NONNULL_BEGIN
 #define IRCConnectionErrorDomain @"Glasstual.ConnectionError"
 
 typedef NS_ENUM(NSUInteger, IRCConnectionErrorCode) {
-	IRCConnectionErrorCodeSocket = 999,
-	IRCConnectionErrorCodeOther = 1000,
-	IRCConnectionErrorCodeBadCertificate = 1001,
-	IRCConnectionErrorCodeUnableToSecure = 1002
+  IRCConnectionErrorCodeSocket = 999,
+  IRCConnectionErrorCodeOther = 1000,
+  IRCConnectionErrorCodeBadCertificate = 1001,
+  IRCConnectionErrorCodeUnableToSecure = 1002
 } NS_SWIFT_NAME(ConnectionErrorCode);
 
 NS_ASSUME_NONNULL_END

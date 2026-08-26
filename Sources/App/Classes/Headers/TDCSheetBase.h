@@ -50,7 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE;
 
 /* Window is allowed to be set after init */
-- (instancetype)initWithWindow:(nullable NSWindow *)window; // NS_DESIGNATED_INITIALIZER
+- (instancetype)initWithWindow:
+    (nullable NSWindow *)window; // NS_DESIGNATED_INITIALIZER
 
 - (void)startSheet;
 - (void)endSheet;

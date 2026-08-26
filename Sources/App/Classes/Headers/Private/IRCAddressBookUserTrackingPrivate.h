@@ -52,7 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)clearTrackedUsers;
 
-- (void)statusOfTrackedNickname:(NSString *)nickname changedTo:(IRCAddressBookUserTrackingStatus)newStatus;
+- (void)statusOfTrackedNickname:(NSString *)nickname
+                      changedTo:(IRCAddressBookUserTrackingStatus)newStatus;
 @end
 
 NS_ASSUME_NONNULL_END

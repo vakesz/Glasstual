@@ -66,19 +66,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)noteReachabilityChanged:(BOOL)reachable;
 
-- (IRCClient *)createClientWithConfig:(IRCClientConfig *)config reload:(BOOL)reload;
+- (IRCClient *)createClientWithConfig:(IRCClientConfig *)config
+                               reload:(BOOL)reload;
 - (IRCChannel *)createChannelWithConfig:(IRCChannelConfig *)config
-							   onClient:(IRCClient *)client
-									add:(BOOL)add
-								 adjust:(BOOL)adjust
-								 reload:(BOOL)reload;
+                               onClient:(IRCClient *)client
+                                    add:(BOOL)add
+                                 adjust:(BOOL)adjust
+                                 reload:(BOOL)reload;
 
-- (IRCChannel *)createPrivateMessage:(NSString *)nickname onClient:(IRCClient *)client asType:(IRCChannelType)type;
+- (IRCChannel *)createPrivateMessage:(NSString *)nickname
+                            onClient:(IRCClient *)client
+                              asType:(IRCChannelType)type;
 
 - (void)destroyClient:(IRCClient *)client;
 
 - (void)destroyChannel:(IRCChannel *)channel reload:(BOOL)reload;
-- (void)destroyChannel:(IRCChannel *)channel reload:(BOOL)reload part:(BOOL)partChannel;
+- (void)destroyChannel:(IRCChannel *)channel
+                reload:(BOOL)reload
+                  part:(BOOL)partChannel;
 @end
 
 NS_ASSUME_NONNULL_END

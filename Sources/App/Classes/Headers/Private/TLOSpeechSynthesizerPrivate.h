@@ -41,7 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TLOSpeechSynthesizer : NSObject
 /* If stopped, any items supplied to speak: will be completely ignored. */
-/* Setting the synthesizer to stopped does not clear the queue. Just 
+/* Setting the synthesizer to stopped does not clear the queue. Just
  forces speaking to stop and does not allow additions. */
 @property(nonatomic, assign) BOOL isStopped;
 

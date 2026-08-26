@@ -13,5 +13,5 @@
 #import <Foundation/Foundation.h>
 
 NSComparator NSDefaultComparator = ^(id object1, id object2) {
-	return [object1 compare:object2];
+  return [object1 compare:object2];
 };

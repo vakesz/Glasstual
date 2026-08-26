@@ -44,11 +44,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ICLProcessMain : NSObject <ICLInlineContentServerProtocol>
 - (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithXPCConnection:(NSXPCConnection *)connection NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithXPCConnection:(NSXPCConnection *)connection
+    NS_DESIGNATED_INITIALIZER;
 
-- (void)_finalizeModule:(ICLInlineContentModule *)module withError:(nullable NSError *)error;
+- (void)_finalizeModule:(ICLInlineContentModule *)module
+              withError:(nullable NSError *)error;
 - (void)_cancelModule:(ICLInlineContentModule *)module;
-- (void)_deferModule:(ICLInlineContentModule *)module asType:(ICLMediaType)type performCheck:(BOOL)performCheck;
+- (void)_deferModule:(ICLInlineContentModule *)module
+              asType:(ICLMediaType)type
+        performCheck:(BOOL)performCheck;
 
 /* Drops in-flight modules and releases the connection. */
 - (void)connectionInvalidated;

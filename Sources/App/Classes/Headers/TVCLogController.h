@@ -41,7 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCClient, IRCChannel;
 @class TVCLogLine, TVCLogView, TVCMainWindow;
 
-GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TVCLogControllerViewFinishedLoadingNotification;
 
 @interface TVCLogController : NSObject
 @property(readonly) TVCLogView *backingView;
@@ -52,7 +53,8 @@ GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNot
 @property(readonly, weak) IRCClient *associatedClient;
 @property(readonly, weak) IRCChannel *associatedChannel;
 @property(readonly, weak) TVCMainWindow *attachedWindow;
-@property(readonly, copy, nullable) NSString *newestLineNumberFromPreviousSession;
+@property(readonly, copy, nullable)
+    NSString *newestLineNumberFromPreviousSession;
 @property(readonly, copy, nullable) NSString *oldestLineNumber;
 @property(readonly, copy, nullable) NSString *newestLineNumber;
 
@@ -72,7 +74,8 @@ GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNot
 - (void)jumpToPresent;
 
 - (void)jumpToLine:(NSString *)lineNumber;
-- (void)jumpToLine:(NSString *)lineNumber completionHandler:(void (^_Nullable)(BOOL result))completionHandler;
+- (void)jumpToLine:(NSString *)lineNumber
+    completionHandler:(void (^_Nullable)(BOOL result))completionHandler;
 
 - (void)setTopic:(nullable NSString *)topic;
 
@@ -88,8 +91,11 @@ GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNot
 - (void)changeTextSize:(BOOL)bigger;
 
 - (void)evaluateFunction:(NSString *)function
-		   withArguments:(nullable NSArray<id> *)arguments; // Defaults to onQueue YES
-- (void)evaluateFunction:(NSString *)function withArguments:(nullable NSArray<id> *)arguments onQueue:(BOOL)onQueue;
+           withArguments:
+               (nullable NSArray<id> *)arguments; // Defaults to onQueue YES
+- (void)evaluateFunction:(NSString *)function
+           withArguments:(nullable NSArray<id> *)arguments
+                 onQueue:(BOOL)onQueue;
 @end
 
 #pragma mark -
@@ -102,6 +108,7 @@ GLASSTUAL_EXTERN NSNotificationName const TVCLogControllerViewFinishedLoadingNot
 @property(readonly, copy) NSString *lineNumber;
 @end
 
-typedef void (^TVCLogControllerPrintOperationCompletionBlock)(TVCLogControllerPrintOperationContext *context);
+typedef void (^TVCLogControllerPrintOperationCompletionBlock)(
+    TVCLogControllerPrintOperationContext *context);
 
 NS_ASSUME_NONNULL_END

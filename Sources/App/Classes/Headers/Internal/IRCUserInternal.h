@@ -39,17 +39,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCUser ()
-{
-  @protected
-	NSString *_nickname;
-	NSString *_username;
-	NSString *_address;
-	NSString *_realName;
-	NSString *_account;
-	BOOL _isAway;
-	BOOL _isIRCop;
-	BOOL _isBot;
+@interface IRCUser () {
+@protected
+  NSString *_nickname;
+  NSString *_username;
+  NSString *_address;
+  NSString *_realName;
+  NSString *_account;
+  BOOL _isAway;
+  BOOL _isIRCop;
+  BOOL _isBot;
 }
 
 @end

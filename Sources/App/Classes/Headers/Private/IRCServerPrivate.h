@@ -41,8 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface IRCServer ()
 /* IRCClient retains a copy of the active IRCServer instance.
- When the -serverList in IRCClientConfig is modified, 
- any servers that are removed will have their keychain 
+ When the -serverList in IRCClientConfig is modified,
+ any servers that are removed will have their keychain
  items destroyed. We do not want to destroy the keychain
  items for the IRCServer instance that IRCClient has a copy
  of, so the -destroyKeychainItemsDuringDealloc flag is used.

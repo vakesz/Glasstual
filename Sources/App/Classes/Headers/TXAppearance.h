@@ -38,18 +38,18 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, TXAppearanceType) {
-	TXAppearanceTypeLight,
-	TXAppearanceTypeDark,
+  TXAppearanceTypeLight,
+  TXAppearanceTypeDark,
 };
 
 /* TXAppKitAppearanceTarget defines which items the NSAppearance
  object returned by -appKitAppearance should be assigned to. */
 typedef NS_ENUM(NSUInteger, TXAppKitAppearanceTarget) {
-	/* The NSAppearance object should be assigned to the window. */
-	TXAppKitAppearanceTargetWindow,
+  /* The NSAppearance object should be assigned to the window. */
+  TXAppKitAppearanceTargetWindow,
 
-	/* The NSAppearance object shouldn't be assigned to anything. */
-	TXAppKitAppearanceTargetNone
+  /* The NSAppearance object shouldn't be assigned to anything. */
+  TXAppKitAppearanceTargetNone
 };
 
 /* None of these properties are observable.
@@ -59,12 +59,14 @@ typedef NS_ENUM(NSUInteger, TXAppKitAppearanceTarget) {
 
 @property(readonly) TXAppearanceType appearanceType;
 
-@property(readonly, copy) NSString *shortAppearanceDescription; // e.g. "light", "dark"
+@property(readonly, copy)
+    NSString *shortAppearanceDescription; // e.g. "light", "dark"
 
 @property(readonly) BOOL isDarkAppearance;
 
 @property(readonly) TXAppKitAppearanceTarget appKitAppearanceTarget;
-@property(readonly, nullable) NSAppearance *appKitAppearance; // nil when -appKitAppearanceTarget = none
+@property(readonly, nullable)
+    NSAppearance *appKitAppearance; // nil when -appKitAppearanceTarget = none
 @end
 
 @interface TXAppearancePropertyCollection : NSObject <TXAppearanceProperties>
@@ -83,7 +85,8 @@ typedef NS_ENUM(NSUInteger, TXAppKitAppearanceTarget) {
 @property(readonly, strong) TXAppearancePropertyCollection *properties;
 @end
 
-GLASSTUAL_EXTERN NSNotificationName const TXApplicationAppearanceChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    TXApplicationAppearanceChangedNotification;
 GLASSTUAL_EXTERN NSNotificationName const TXSystemAppearanceChangedNotification;
 
 NS_ASSUME_NONNULL_END

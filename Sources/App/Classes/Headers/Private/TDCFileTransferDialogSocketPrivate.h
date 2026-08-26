@@ -48,41 +48,50 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TDCFileTransferDialogSocketDelegate <NSObject>
 @optional
 /* Listener */
-- (void)socket:(TDCFileTransferDialogSocket *)socket didStartListeningOnPort:(uint16_t)port;
-- (void)socket:(TDCFileTransferDialogSocket *)socket didFailToListenWithError:(NSError *)error;
+- (void)socket:(TDCFileTransferDialogSocket *)socket
+    didStartListeningOnPort:(uint16_t)port;
+- (void)socket:(TDCFileTransferDialogSocket *)socket
+    didFailToListenWithError:(NSError *)error;
 
 /* The accepted connection is already established and shares the delegate
  and delegate queue of the listener. */
-- (void)socket:(TDCFileTransferDialogSocket *)socket didAcceptConnection:(TDCFileTransferDialogSocket *)connection;
+- (void)socket:(TDCFileTransferDialogSocket *)socket
+    didAcceptConnection:(TDCFileTransferDialogSocket *)connection;
 
 /* Connection */
 - (void)socketDidConnect:(TDCFileTransferDialogSocket *)socket;
 - (void)socket:(TDCFileTransferDialogSocket *)socket didReadData:(NSData *)data;
 - (void)socketDidWriteData:(TDCFileTransferDialogSocket *)socket;
-- (void)socket:(TDCFileTransferDialogSocket *)socket didDisconnectWithError:(nullable NSError *)error;
+- (void)socket:(TDCFileTransferDialogSocket *)socket
+    didDisconnectWithError:(nullable NSError *)error;
 @end
 
 GLASSTUAL_EXTERN NSErrorDomain const TDCFileTransferDialogSocketErrorDomain;
 
-typedef NS_ERROR_ENUM(TDCFileTransferDialogSocketErrorDomain, TDCFileTransferDialogSocketError){
-	TDCFileTransferDialogSocketErrorConnectTimeout = 1,
-	TDCFileTransferDialogSocketErrorWriteTimeout = 2,
-	TDCFileTransferDialogSocketErrorClosedByPeer = 3,
-	TDCFileTransferDialogSocketErrorNoOpenPort = 4,
-	TDCFileTransferDialogSocketErrorBadParameter = 5,
+typedef NS_ERROR_ENUM(TDCFileTransferDialogSocketErrorDomain,
+                      TDCFileTransferDialogSocketError){
+    TDCFileTransferDialogSocketErrorConnectTimeout = 1,
+    TDCFileTransferDialogSocketErrorWriteTimeout = 2,
+    TDCFileTransferDialogSocketErrorClosedByPeer = 3,
+    TDCFileTransferDialogSocketErrorNoOpenPort = 4,
+    TDCFileTransferDialogSocketErrorBadParameter = 5,
 };
 
 @interface TDCFileTransferDialogSocket : NSObject
-@property(readonly, weak, nullable) id<TDCFileTransferDialogSocketDelegate> delegate;
+@property(readonly, weak, nullable) id<TDCFileTransferDialogSocketDelegate>
+    delegate;
 @property(readonly) dispatch_queue_t delegateQueue;
 @property(readonly) BOOL isListener;
 @property(readonly) BOOL isConnected;
 
 - (instancetype)init NS_UNAVAILABLE;
-- (instancetype)initWithDelegate:(id<TDCFileTransferDialogSocketDelegate>)delegate
-				   delegateQueue:(dispatch_queue_t)delegateQueue NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithDelegate:
+                    (id<TDCFileTransferDialogSocketDelegate>)delegate
+                   delegateQueue:(dispatch_queue_t)delegateQueue
+    NS_DESIGNATED_INITIALIZER;
 
-+ (NSError *)errorWithCode:(TDCFileTransferDialogSocketError)code description:(NSString *)description;
++ (NSError *)errorWithCode:(TDCFileTransferDialogSocketError)code
+               description:(NSString *)description;
 
 /* Tries each port in [startPort, endPort] in turn until one can be bound.
  Reports the result through -socket:didStartListeningOnPort: or
@@ -92,9 +101,9 @@ typedef NS_ERROR_ENUM(TDCFileTransferDialogSocketErrorDomain, TDCFileTransferDia
 /* interfaceName is a BSD interface name (e.g. "en0"). If it is given and
  has an address, the connection is bound to that address before connecting. */
 - (void)connectToHost:(NSString *)host
-				 port:(uint16_t)port
-		 viaInterface:(nullable NSString *)interfaceName
-			  timeout:(NSTimeInterval)timeout;
+                 port:(uint16_t)port
+         viaInterface:(nullable NSString *)interfaceName
+              timeout:(NSTimeInterval)timeout;
 
 /* Reads whatever is available (at most 64 KiB). One -socket:didReadData:
  callback is delivered for each call. */

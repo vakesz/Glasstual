@@ -5,23 +5,22 @@
 
 #import "TVCAutoExpandingTextField.h"
 
-BOOL TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(NSTextField *field)
-{
-	NSCParameterAssert(field != nil);
+BOOL TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(NSTextField *field) {
+  NSCParameterAssert(field != nil);
 
-	if (field.cell.wraps == NO) {
-		return NO;
-	}
+  if (field.cell.wraps == NO) {
+    return NO;
+  }
 
-	CGFloat width = NSWidth(field.bounds);
+  CGFloat width = NSWidth(field.bounds);
 
-	if (width <= 0.0 || field.preferredMaxLayoutWidth == width) {
-		return NO;
-	}
+  if (width <= 0.0 || field.preferredMaxLayoutWidth == width) {
+    return NO;
+  }
 
-	field.preferredMaxLayoutWidth = width;
+  field.preferredMaxLayoutWidth = width;
 
-	[field invalidateIntrinsicContentSize];
+  [field invalidateIntrinsicContentSize];
 
-	return YES;
+  return YES;
 }

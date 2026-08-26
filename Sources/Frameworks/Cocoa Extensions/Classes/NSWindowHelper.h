@@ -32,7 +32,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-COCOA_EXTENSIONS_EXTERN NSString *const NSWindowAutosaveFrameMovesToActiveDisplay;
+COCOA_EXTENSIONS_EXTERN NSString *const
+    NSWindowAutosaveFrameMovesToActiveDisplay;
 
 @interface NSWindow (CSWindowHelper)
 @property(getter=isOccluded, readonly) BOOL occluded;

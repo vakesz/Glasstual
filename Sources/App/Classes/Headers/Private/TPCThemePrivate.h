@@ -41,7 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TPCTheme ()
 - (instancetype)initWithURL:(NSURL *)url
-		  inStorageLocation:(TPCThemeStorageLocation)storageLocation NS_DESIGNATED_INITIALIZER;
+          inStorageLocation:(TPCThemeStorageLocation)storageLocation
+    NS_DESIGNATED_INITIALIZER;
 
 @property(readonly, copy) NSString *applicationTemplateRepositoryPath;
 

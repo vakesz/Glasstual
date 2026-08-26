@@ -35,8 +35,8 @@
  *
  *********************************************************************** */
 
-#import "ICLMediaType.h"
 #import "ICLMediaAssessment.h"
+#import "ICLMediaType.h"
 
 /* Given a URL, the accessor will load the contents of that URL
  to determine what type of media it is: image, video, or other.
@@ -52,23 +52,30 @@ NS_ASSUME_NONNULL_BEGIN
  If that is the case, the assessor was able to determine the type
  of media, but it was unable to perform extended validation.
  Treat as failure. */
-typedef void (^ICLMediaAssessorCompletionBlock)(ICLMediaAssessment *_Nullable assessment, NSError *_Nullable error);
+typedef void (^ICLMediaAssessorCompletionBlock)(
+    ICLMediaAssessment *_Nullable assessment, NSError *_Nullable error);
 
 @interface ICLMediaAssessor : NSObject
 - (instancetype)init NS_UNAVAILABLE;
 
 /* Use the following two methods to determine what type of media a URL is. */
-+ (instancetype)assessorForURL:(NSURL *)url completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
-+ (instancetype)assessorForAddress:(NSString *)address completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
-
-/* Use the following two methods to determine whether the URL is the type of media. */
-/* If you are expecting the URL to be a specific type of media, these methods are better. */
 + (instancetype)assessorForURL:(NSURL *)url
-					  withType:(ICLMediaType)type
-			   completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
+               completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
 + (instancetype)assessorForAddress:(NSString *)address
-						  withType:(ICLMediaType)type
-				   completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
+                   completionBlock:
+                       (ICLMediaAssessorCompletionBlock)completionBlock;
+
+/* Use the following two methods to determine whether the URL is the type of
+ * media. */
+/* If you are expecting the URL to be a specific type of media, these methods
+ * are better. */
++ (instancetype)assessorForURL:(NSURL *)url
+                      withType:(ICLMediaType)type
+               completionBlock:(ICLMediaAssessorCompletionBlock)completionBlock;
++ (instancetype)assessorForAddress:(NSString *)address
+                          withType:(ICLMediaType)type
+                   completionBlock:
+                       (ICLMediaAssessorCompletionBlock)completionBlock;
 
 /* Suspend assessment */
 - (void)suspend;
@@ -82,32 +89,32 @@ typedef void (^ICLMediaAssessorCompletionBlock)(ICLMediaAssessment *_Nullable as
 
 /* Error codes */
 typedef NS_ENUM(NSUInteger, ICLMediaAssessorErrorCode) {
-	/* Catch all */
-	ICLMediaAssessorErrorCodeAssessmentFailed = 0,
+  /* Catch all */
+  ICLMediaAssessorErrorCodeAssessmentFailed = 0,
 
-	/* Endpoint did not respond with OK (200) */
-	ICLMediaAssessorErrorCodeUnexpectedStatusCode = 1001,
+  /* Endpoint did not respond with OK (200) */
+  ICLMediaAssessorErrorCodeUnexpectedStatusCode = 1001,
 
-	/* Content-Type header is improperly formatted */
-	ICLMediaAssessorErrorCodeMalformedContentType = 1002,
+  /* Content-Type header is improperly formatted */
+  ICLMediaAssessorErrorCodeMalformedContentType = 1002,
 
-	/* Content-Length header is improperly formatted */
-	ICLMediaAssessorErrorCodeMalformedContentLength = 1003,
+  /* Content-Length header is improperly formatted */
+  ICLMediaAssessorErrorCodeMalformedContentLength = 1003,
 
-	/* Unexpected media type */
-	ICLMediaAssessorErrorCodeUnexpectedType = 1004,
+  /* Unexpected media type */
+  ICLMediaAssessorErrorCodeUnexpectedType = 1004,
 
-	/* Unexpected response type (not HTTP) */
-	ICLMediaAssessorErrorCodeUnexpectedResponse = 1005,
+  /* Unexpected response type (not HTTP) */
+  ICLMediaAssessorErrorCodeUnexpectedResponse = 1005,
 
-	/* Maximum response size exceeded */
-	ICLMediaAssessorErrorCodeContentLengthExceeded = 1006,
+  /* Maximum response size exceeded */
+  ICLMediaAssessorErrorCodeContentLengthExceeded = 1006,
 
-	/* Image validation: Maximum width exceeded */
-	ICLMediaAssessorErrorCodeMaximumWidthExceeded = 1007,
+  /* Image validation: Maximum width exceeded */
+  ICLMediaAssessorErrorCodeMaximumWidthExceeded = 1007,
 
-	/* Image validation: Maximum height exceeded */
-	ICLMediaAssessorErrorCodeMaximumHeightExceeded = 1008,
+  /* Image validation: Maximum height exceeded */
+  ICLMediaAssessorErrorCodeMaximumHeightExceeded = 1008,
 };
 
 NS_ASSUME_NONNULL_END

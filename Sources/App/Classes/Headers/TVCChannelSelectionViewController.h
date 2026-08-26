@@ -40,7 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TVCChannelSelectionViewControllerDelegate;
 
 @interface TVCChannelSelectionViewController : NSObject
-@property(nonatomic, weak) id<TVCChannelSelectionViewControllerDelegate> delegate;
+@property(nonatomic, weak) id<TVCChannelSelectionViewControllerDelegate>
+    delegate;
 
 @property(nonatomic, copy) NSArray<NSString *> *selectedClientIds;
 @property(nonatomic, copy) NSArray<NSString *> *selectedChannelIds;
@@ -53,7 +54,8 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TVCChannelSelectionViewControllerDelegate <NSObject>
 @required
 
-- (void)channelSelectionControllerSelectionChanged:(TVCChannelSelectionViewController *)controller;
+- (void)channelSelectionControllerSelectionChanged:
+    (TVCChannelSelectionViewController *)controller;
 @end
 
 NS_ASSUME_NONNULL_END

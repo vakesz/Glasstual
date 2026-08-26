@@ -37,32 +37,43 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/* Keep the validation block as fast as possible as it is called every time 
+/* Keep the validation block as fast as possible as it is called every time
  that the value of the text field is changed. */
 /* Validation block returns nil on success or a string that can be presented
  to the user as an error description. */
-typedef NSString *_Nullable (^TVCValidatedTextFieldValidationBlock)(NSString *currentValue);
+typedef NSString *_Nullable (^TVCValidatedTextFieldValidationBlock)(
+    NSString *currentValue);
 
 /* The callback was described only in a comment, which left the selector
- undeclared everywhere it is sent from. Naming it here keeps -Wundeclared-selector
- able to catch a genuine misspelling. Conformance is optional: the property stays
- a plain id so existing callbacks do not have to be re-declared. */
+ undeclared everywhere it is sent from. Naming it here keeps
+ -Wundeclared-selector able to catch a genuine misspelling. Conformance is
+ optional: the property stays a plain id so existing callbacks do not have to be
+ re-declared. */
 @protocol TVCValidatedTextFieldTextDidChangeCallback <NSObject>
 - (void)validatedTextFieldTextDidChange:(id)sender;
 @end
 
 @interface TVCValidatedTextField : NSTextField
-@property(nonatomic, copy, nullable) TVCValidatedTextFieldValidationBlock validationBlock;
+@property(nonatomic, copy, nullable)
+    TVCValidatedTextFieldValidationBlock validationBlock;
 @property(nonatomic, assign)
-	BOOL stringValueUsesOnlyFirstToken; // Only use everything before first space (" ") as value.
-@property(nonatomic, assign) BOOL
-	stringValueIsTrimmed; // Returned value is trimmed of whitespaces and newlines when returned. The value is returned trimmed by -value. It is also sent to the validation block as trimmed.
-@property(nonatomic, assign) BOOL stringValueIsInvalidOnEmpty; // Is an empty string considered invalid?
+    BOOL stringValueUsesOnlyFirstToken; // Only use everything before first
+                                        // space (" ") as value.
+@property(nonatomic, assign)
+    BOOL stringValueIsTrimmed; // Returned value is trimmed of whitespaces and
+                               // newlines when returned. The value is returned
+                               // trimmed by -value. It is also sent to the
+                               // validation block as trimmed.
+@property(nonatomic, assign)
+    BOOL stringValueIsInvalidOnEmpty; // Is an empty string considered invalid?
 @property(nonatomic, assign) BOOL performValidationWhenEmpty;
 @property(nonatomic, weak) id
-	textDidChangeCallback; // Calls method "-(void)validatedTextFieldTextDidChange:(id)sender" whereas "sender" is the text field.
-@property(nonatomic, copy, nullable) NSString *
-	defaultValue; // A value to return from -value if the text field is empty. Only used if stringValueIsInvalidOnEmpty = NO
+    textDidChangeCallback; // Calls method
+                           // "-(void)validatedTextFieldTextDidChange:(id)sender"
+                           // whereas "sender" is the text field.
+@property(nonatomic, copy, nullable) NSString
+    *defaultValue; // A value to return from -value if the text field is empty.
+                   // Only used if stringValueIsInvalidOnEmpty = NO
 
 @property(readonly, copy) NSString *value; /* The current value. */
 @property(readonly, copy) NSString *lowercaseValue;
@@ -76,7 +87,8 @@ typedef NSString *_Nullable (^TVCValidatedTextFieldValidationBlock)(NSString *cu
 - (BOOL)showValidationErrorPopover;
 - (void)closeValidationErrorPopover;
 
-- (void)performValidation; /* Force the text field to clear cache and validate value */
+- (void)performValidation; /* Force the text field to clear cache and validate
+                              value */
 @end
 
 @interface TVCValidatedTextFieldCell : NSTextFieldCell

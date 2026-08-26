@@ -15,6 +15,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 NSNotificationName const THOPluginManagerFinishedLoadingPluginsNotification =
-	@"THOPluginManagerFinishedLoadingPluginsNotification";
+    @"THOPluginManagerFinishedLoadingPluginsNotification";
 
 NS_ASSUME_NONNULL_END

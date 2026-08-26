@@ -47,6 +47,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* Call from -layout after super. Returns YES when the width changed and
  the intrinsic content size was invalidated. */
-GLASSTUAL_EXTERN BOOL TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(NSTextField *field);
+GLASSTUAL_EXTERN BOOL
+TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(NSTextField *field);
 
 NS_ASSUME_NONNULL_END

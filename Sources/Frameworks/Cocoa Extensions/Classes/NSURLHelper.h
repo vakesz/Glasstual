@@ -39,24 +39,30 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable id)resourceValueForKey:(NSString *)key error:(NSError **)error;
 
 - (nullable id)resourceValueForKeyWithLoggedError:(NSString *)key;
-- (nullable NSDictionary<NSURLResourceKey, id> *)resourceValuesForKeyWithLoggedError:(NSArray<NSURLResourceKey> *)keys;
+- (nullable NSDictionary<NSURLResourceKey, id> *)
+    resourceValuesForKeyWithLoggedError:(NSArray<NSURLResourceKey> *)keys;
 
 - (BOOL)isEqualByFileRepresentation:(NSURL *)url;
 // Age of resource based on creation date or modification date.
 // Interval will be positive as long as the date is in the past.
 // Value is negative when an error occurs... or
 // if for some reason the date is in the future.
-- (NSTimeInterval)intervalSinceCreatedWithError:(NSError *_Nullable *_Nullable)error;
-- (NSTimeInterval)intervalSinceLastModificationWithError:(NSError *_Nullable *_Nullable)error;
+- (NSTimeInterval)intervalSinceCreatedWithError:
+    (NSError *_Nullable *_Nullable)error;
+- (NSTimeInterval)intervalSinceLastModificationWithError:
+    (NSError *_Nullable *_Nullable)error;
 
-/* Current replaces user home folder path with tilde. Behavior may expand in future. */
+/* Current replaces user home folder path with tilde. Behavior may expand in
+ * future. */
 /* Returns nil if URL is not a file URL. */
 @property(readonly, copy, nullable) NSString *standardizedTildePath;
 @end
 
 @interface NSArray (CSURLHelper)
-+ (NSArray<NSString *> *)pathsArrayForFileURLs:(NSArray<NSURL *> *)fileURLs; // standardizingPaths = YES
-+ (NSArray<NSString *> *)pathsArrayForFileURLs:(NSArray<NSURL *> *)fileURLs standardizingPaths:(BOOL)standardizingPaths;
++ (NSArray<NSString *> *)pathsArrayForFileURLs:
+    (NSArray<NSURL *> *)fileURLs; // standardizingPaths = YES
++ (NSArray<NSString *> *)pathsArrayForFileURLs:(NSArray<NSURL *> *)fileURLs
+                            standardizingPaths:(BOOL)standardizingPaths;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -36,18 +36,19 @@
  *
  *********************************************************************** */
 
-/* A portion of this source file contains copyrighted work derived from one or more
- 3rd-party, open source projects. The use of this work is hereby acknowledged. */
+/* A portion of this source file contains copyrighted work derived from one or
+ more 3rd-party, open source projects. The use of this work is hereby
+ acknowledged. */
 
-/* This source file contains work that originated from the Chat Core 
+/* This source file contains work that originated from the Chat Core
  framework of the Colloquy project. The source in question is in relation
- to the handling of SASL authentication requests. The license of the 
- Chat Core project is as follows: 
+ to the handling of SASL authentication requests. The license of the
+ Chat Core project is as follows:
 
  This document can be found mirrored at the author's website:
  <http://colloquy.info/project/browser/trunk/Resources/BSD%20License.txt>
 
- No actual copyright is presented in the license file or the actual 
+ No actual copyright is presented in the license file or the actual
  source file in which this work was obtained so the work is assumed to
  be Copyright © 2000 - 2012 the Colloquy IRC Client
 
@@ -81,15 +82,48 @@
 #import <objc/message.h>
 #import <os/lock.h>
 
+#import "IRC.h"
+#import "IRCAddressBook.h"
+#import "IRCAddressBookMatchCachePrivate.h"
+#import "IRCAddressBookUserTrackingPrivate.h"
+#import "IRCCapability.h"
+#import "IRCChannelConfig.h"
+#import "IRCChannelModePrivate.h"
+#import "IRCChannelPrivate.h"
+#import "IRCChannelUserPrivate.h"
+#import "IRCClientConfigPrivate.h"
+#import "IRCClientPrivate.h"
+#import "IRCClientRequestedCommandsPrivate.h"
+#import "IRCColorFormatPrivate.h"
+#import "IRCConnectionConfig.h"
+#import "IRCConnectionErrors.h"
+#import "IRCConnectionPrivate.h"
+#import "IRCDirectChatConnectionPrivate.h"
+#import "IRCExtrasPrivate.h"
+#import "IRCHighlightLogEntryPrivate.h"
+#import "IRCHighlightMatchCondition.h"
+#import "IRCISupportInfoPrivate.h"
+#import "IRCMessageBatchPrivate.h"
+#import "IRCMessagePrivate.h"
+#import "IRCModeInfo.h"
+#import "IRCNumerics.h"
+#import "IRCSTSPolicy.h"
+#import "IRCSendingMessage.h"
+#import "IRCServerPrivate.h"
+#import "IRCTimerCommandPrivate.h"
+#import "IRCTreeItemPrivate.h"
+#import "IRCTypingTrackerPrivate.h"
+#import "IRCUserPrivate.h"
+#import "IRCUserRelationsPrivate.h"
+#import "IRCWorldPrivate.h"
 #import "NSObjectHelperPrivate.h"
 #import "NSStringHelper.h"
-#import "TPCApplicationInfo.h"
-#import "TPCPathInfo.h"
-#import "TPCPreferencesLocalPrivate.h"
-#import "TPCPreferencesUserDefaults.h"
-#import "TPCResourceManager.h"
-#import "TPCThemeController.h"
-#import "TPCTheme.h"
+#import "TDCAlert.h"
+#import "TDCChannelBanListSheetPrivate.h"
+#import "TDCFileTransferDialogPrivate.h"
+#import "TDCFileTransferDialogTransferControllerPrivate.h"
+#import "TDCServerChannelListDialogPrivate.h"
+#import "TDCServerHighlightListSheetPrivate.h"
 #import "THOPluginDispatcherPrivate.h"
 #import "THOPluginManagerPrivate.h"
 #import "THOPluginProtocol.h"
@@ -98,69 +132,37 @@
 #import "TLOLocalization.h"
 #import "TLONotificationControllerPrivate.h"
 #import "TLOSCRAMClient.h"
-#import "TLOpenLink.h"
 #import "TLOSoundPlayer.h"
 #import "TLOSpeechSynthesizerPrivate.h"
 #import "TLOSpokenNotificationPrivate.h"
 #import "TLOTimer.h"
-#import "TXGlobalModelsPrivate.h"
-#import "TXMasterControllerPrivate.h"
-#import "TXMenuControllerPrivate.h"
-#import "TXWindowControllerPrivate.h"
+#import "TLOpenLink.h"
+#import "TPCApplicationInfo.h"
+#import "TPCPathInfo.h"
+#import "TPCPreferencesLocalPrivate.h"
+#import "TPCPreferencesUserDefaults.h"
+#import "TPCResourceManager.h"
+#import "TPCTheme.h"
+#import "TPCThemeController.h"
 #import "TVCDockIconPrivate.h"
-#import "TVCLogControllerPrivate.h"
 #import "TVCLogControllerHistoricLogFilePrivate.h"
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 #import "TVCLogControllerOperationQueuePrivate.h"
+#import "TVCLogControllerPrivate.h"
 #import "TVCLogRenderer.h"
 #import "TVCLogViewPrivate.h"
 #import "TVCMainWindowPrivate.h"
 #import "TVCMainWindowTextViewPrivate.h"
 #import "TVCServerListPrivate.h"
-#import "TDCAlert.h"
-#import "TDCChannelBanListSheetPrivate.h"
-#import "TDCFileTransferDialogPrivate.h"
-#import "IRCDirectChatConnectionPrivate.h"
-#import "TDCFileTransferDialogTransferControllerPrivate.h"
-#import "TDCServerChannelListDialogPrivate.h"
-#import "TDCServerHighlightListSheetPrivate.h"
-#import "IRC.h"
-#import "IRCAddressBook.h"
-#import "IRCAddressBookMatchCachePrivate.h"
-#import "IRCAddressBookUserTrackingPrivate.h"
-#import "IRCCapability.h"
-#import "IRCSTSPolicy.h"
-#import "IRCChannelConfig.h"
-#import "IRCChannelModePrivate.h"
-#import "IRCChannelUserPrivate.h"
-#import "IRCChannelPrivate.h"
-#import "IRCClientConfigPrivate.h"
-#import "IRCClientRequestedCommandsPrivate.h"
-#import "IRCColorFormatPrivate.h"
-#import "IRCConnectionPrivate.h"
-#import "IRCConnectionConfig.h"
-#import "IRCConnectionErrors.h"
-#import "IRCExtrasPrivate.h"
-#import "IRCHighlightLogEntryPrivate.h"
-#import "IRCHighlightMatchCondition.h"
-#import "IRCISupportInfoPrivate.h"
-#import "IRCMessagePrivate.h"
-#import "IRCMessageBatchPrivate.h"
-#import "IRCModeInfo.h"
-#import "IRCNumerics.h"
-#import "IRCSendingMessage.h"
-#import "IRCServerPrivate.h"
-#import "IRCTimerCommandPrivate.h"
-#import "IRCTreeItemPrivate.h"
-#import "IRCUserPrivate.h"
-#import "IRCUserRelationsPrivate.h"
-#import "IRCWorldPrivate.h"
-#import "IRCClientPrivate.h"
-#import "IRCTypingTrackerPrivate.h"
+#import "TXGlobalModelsPrivate.h"
+#import "TXMasterControllerPrivate.h"
+#import "TXMenuControllerPrivate.h"
+#import "TXWindowControllerPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define _autojoinDelayedWarningInterval 90 // max delay after identification is 10 so keep this above that
+#define _autojoinDelayedWarningInterval                                        \
+  90 // max delay after identification is 10 so keep this above that
 #define _autojoinDelayedWarningMaxCount 3
 
 #define _isonCheckInterval 30
@@ -174,18 +176,26 @@ NS_ASSUME_NONNULL_BEGIN
 /* Token sent with WHOX requests so replies can be matched to them. */
 static NSString *const IRCClientWhoxToken = @"152";
 
-NSString *const IRCClientConfigurationWasUpdatedNotification = @"IRCClientConfigurationWasUpdatedNotification";
+NSString *const IRCClientConfigurationWasUpdatedNotification =
+    @"IRCClientConfigurationWasUpdatedNotification";
 
-NSString *const IRCClientChannelListWasModifiedNotification = @"IRCClientChannelListWasModifiedNotification";
+NSString *const IRCClientChannelListWasModifiedNotification =
+    @"IRCClientChannelListWasModifiedNotification";
 
-NSString *const IRCClientWillConnectNotification = @"IRCClientWillConnectNotification";
-NSString *const IRCClientDidConnectNotification = @"IRCClientDidConnectNotification";
+NSString *const IRCClientWillConnectNotification =
+    @"IRCClientWillConnectNotification";
+NSString *const IRCClientDidConnectNotification =
+    @"IRCClientDidConnectNotification";
 
-NSString *const IRCClientWillSendQuitNotification = @"IRCClientWillSendQuitNotification";
-NSString *const IRCClientWillDisconnectNotification = @"IRCClientWillDisconnectNotification";
-NSString *const IRCClientDidDisconnectNotification = @"IRCClientDidDisconnectNotification";
+NSString *const IRCClientWillSendQuitNotification =
+    @"IRCClientWillSendQuitNotification";
+NSString *const IRCClientWillDisconnectNotification =
+    @"IRCClientWillDisconnectNotification";
+NSString *const IRCClientDidDisconnectNotification =
+    @"IRCClientDidDisconnectNotification";
 
-NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNicknameChangedNotification";
+NSString *const IRCClientUserNicknameChangedNotification =
+    @"IRCClientUserNicknameChangedNotification";
 
 /* One outgoing PRIVMSG/NOTICE/TAGMSG awaiting its labeled response.
  The line is printed immediately in the pending state; the label ties
@@ -193,7 +203,8 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @interface IRCLabeledDelivery : NSObject
 @property(nonatomic, copy) NSString *label;
 @property(nonatomic, weak, nullable) IRCChannel *channel;
-@property(nonatomic, copy, nullable) NSString *lineNumber; // Set once the line is printed
+@property(nonatomic, copy, nullable)
+    NSString *lineNumber; // Set once the line is printed
 @property(nonatomic, assign) BOOL resolved;
 @property(nonatomic, assign) TVCLogLineDeliveryState state;
 @end
@@ -224,8 +235,10 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @property(nonatomic, assign, readwrite) BOOL serverHasNickServ;
 @property(nonatomic, assign, readwrite) NSTimeInterval lastMessageReceived;
 @property(nonatomic, assign, readwrite) NSTimeInterval lastMessageServerTime;
-@property(nonatomic, assign, readwrite) ClientIRCv3SupportedCapability capabilities;
-@property(nonatomic, copy, readwrite) NSArray<IRCHighlightLogEntry *> *cachedHighlights;
+@property(nonatomic, assign, readwrite)
+    ClientIRCv3SupportedCapability capabilities;
+@property(nonatomic, copy, readwrite)
+    NSArray<IRCHighlightLogEntry *> *cachedHighlights;
 @property(nonatomic, copy, readwrite, nullable) NSString *userHostmask;
 @property(nonatomic, copy, readwrite) NSString *userNickname;
 @property(nonatomic, copy, readwrite) NSString *serverAddress;
@@ -259,37 +272,52 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
  BEFORE request outstanding, and the lines of a BEFORE reply being
  collected for insertion above the scrollback. */
 @property(nonatomic, strong) NSMutableSet<NSString *> *chatHistoryFailedTargets;
-@property(nonatomic, strong) NSMutableSet<NSString *> *chatHistoryPendingBeforeTargets;
+@property(nonatomic, strong)
+    NSMutableSet<NSString *> *chatHistoryPendingBeforeTargets;
 @property(nonatomic, strong, nullable) IRCChannel *chatHistoryPrependChannel;
-@property(nonatomic, strong, nullable) NSMutableArray<TVCLogLine *> *chatHistoryPrependedLines;
+@property(nonatomic, strong, nullable)
+    NSMutableArray<TVCLogLine *> *chatHistoryPrependedLines;
 /* read-marker: the newest timestamp sent per channel and the channels
  waiting for the debounce timer. */
-@property(nonatomic, strong) NSMutableDictionary<NSString *, NSDate *> *readMarkerSentDates;
-@property(nonatomic, strong) NSMutableSet<IRCChannel *> *readMarkerPendingChannels;
+@property(nonatomic, strong)
+    NSMutableDictionary<NSString *, NSDate *> *readMarkerSentDates;
+@property(nonatomic, strong)
+    NSMutableSet<IRCChannel *> *readMarkerPendingChannels;
 @property(nonatomic, strong) TLOTimer *readMarkerTimer;
 /* netsplit/netjoin: the batch being collapsed and, per channel
  identifier, the nicknames it touched. */
-@property(nonatomic, strong, nullable) IRCMessageBatchMessage *collapsedNetsplitBatch;
 @property(nonatomic, strong, nullable)
-	NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *collapsedNetsplitNicknames;
-@property(nonatomic, strong) NSMutableArray<NSString *> *pendingCapabilityRequestsMutable;
-@property(nonatomic, strong) NSMutableOrderedSet<NSString *> *enabledCapabilityNames;
-@property(nonatomic, strong) NSMutableDictionary<NSString *, NSArray<NSString *> *> *offeredCapabilities;
-@property(nonatomic, copy, nullable) NSString *lastAwayMessage; // Away message in effect before a reconnect (pre-away)
-@property(nonatomic, copy, nullable) NSString *saslMechanism;
+    IRCMessageBatchMessage *collapsedNetsplitBatch;
+@property(nonatomic, strong, nullable)
+    NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *>
+        *collapsedNetsplitNicknames;
+@property(nonatomic, strong)
+    NSMutableArray<NSString *> *pendingCapabilityRequestsMutable;
+@property(nonatomic, strong)
+    NSMutableOrderedSet<NSString *> *enabledCapabilityNames;
+@property(nonatomic, strong)
+    NSMutableDictionary<NSString *, NSArray<NSString *> *> *offeredCapabilities;
+@property(nonatomic, copy, nullable) NSString
+    *lastAwayMessage; // Away message in effect before a reconnect (pre-away)
 @property(nonatomic, copy, nullable) NSArray<NSString *> *saslOfferedMechanisms;
-@property(nonatomic, strong) NSMutableArray<NSString *> *saslTriedMechanisms;
 @property(nonatomic, strong, nullable) TLOSCRAMClient *saslScramClient;
 @property(nonatomic, strong, nullable) NSMutableString *saslIncomingPayload;
-@property(nonatomic, strong) NSMutableDictionary<NSString *, IRCLabeledDelivery *> *pendingDeliveries;
-@property(nonatomic, strong) NSMutableDictionary<NSString *, NSString *> *labelForBatchToken;
+@property(nonatomic, strong)
+    NSMutableDictionary<NSString *, IRCLabeledDelivery *> *pendingDeliveries;
+@property(nonatomic, strong)
+    NSMutableDictionary<NSString *, NSString *> *labelForBatchToken;
 @property(nonatomic, assign) NSUInteger labelCounter;
-@property(nonatomic, assign) TVCLogLineDeliveryState nextLineDeliveryState;		 // Consumed by the next -print:
-@property(nonatomic, copy, nullable) NSString *nextLineReplyToMessageIdentifier; // Consumed by the next -print:
-/* Channel unique identifier -> last +typing value sent ("active" or "paused") */
-@property(nonatomic, strong) NSMutableDictionary<NSString *, NSString *> *typingStateSent;
+@property(nonatomic, assign) TVCLogLineDeliveryState
+    nextLineDeliveryState; // Consumed by the next -print:
+@property(nonatomic, copy, nullable)
+    NSString *nextLineReplyToMessageIdentifier; // Consumed by the next -print:
+/* Channel unique identifier -> last +typing value sent ("active" or "paused")
+ */
+@property(nonatomic, strong)
+    NSMutableDictionary<NSString *, NSString *> *typingStateSent;
 /* Channel unique identifier -> when +typing=active was last sent */
-@property(nonatomic, strong) NSMutableDictionary<NSString *, NSDate *> *typingActiveSentAt;
+@property(nonatomic, strong)
+    NSMutableDictionary<NSString *, NSDate *> *typingActiveSentAt;
 @property(nonatomic, assign) NSUInteger connectDelay;
 @property(nonatomic, assign) NSUInteger lastServerSelected;
 @property(nonatomic, assign) NSUInteger lastWhoRequestChannelListIndex;
@@ -298,33 +326,40 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 @property(nonatomic, assign) NSUInteger autojoinDelayedWarningCount;
 @property(nonatomic, copy, nullable) NSString *tryingNicknameSentNickname;
 @property(nonatomic, strong) NSMutableArray<IRCChannel *> *channelListPrivate;
-@property(nonatomic, strong, nullable) NSMutableArray<IRCChannel *> *channelsToAutojoin;
+@property(nonatomic, strong, nullable)
+    NSMutableArray<IRCChannel *> *channelsToAutojoin;
 @property(nonatomic, strong) IRCAddressBookMatchCache *addressBookMatchCache;
 @property(nonatomic, strong) IRCAddressBookUserTrackingContainer *trackedUsers;
 @property(nonatomic, strong) IRCClientRequestedCommands *requestedCommands;
-@property(nonatomic, strong) NSMutableDictionary<NSString *, IRCTimedCommand *> *timedCommands;
-@property(nonatomic, strong) NSMutableDictionary<NSString *, IRCUser *> *userListPrivate;
-@property(nonatomic, strong, nullable) NSMutableString *zncBouncerCertificateChainDataMutable;
+@property(nonatomic, strong)
+    NSMutableDictionary<NSString *, IRCTimedCommand *> *timedCommands;
+@property(nonatomic, strong)
+    NSMutableDictionary<NSString *, IRCUser *> *userListPrivate;
+@property(nonatomic, strong, nullable)
+    NSMutableString *zncBouncerCertificateChainDataMutable;
 @property(nonatomic, copy, nullable) NSString *temporaryServerAddressOverride;
 @property(nonatomic, assign) uint16_t temporaryServerPortOverride;
-@property(nonatomic, assign) BOOL performedSTSUpgrade;				   // Guards against an STS upgrade loop
-@property(nonatomic, assign) BOOL forceSecuredConnectionOnNextConnect; // One-shot TLS for an STS upgrade
+@property(nonatomic, assign)
+    BOOL performedSTSUpgrade; // Guards against an STS upgrade loop
+@property(nonatomic, assign)
+    BOOL forceSecuredConnectionOnNextConnect; // One-shot TLS for an STS upgrade
 @property(readonly) BOOL isBrokenIRCd_aka_Twitch;
 @property(readonly) BOOL monitorAwayStatus;
 @property(readonly) BOOL supportsAdvancedTracking;
-@property(readonly, copy) NSArray<NSString *> *nickServSupportedNeedIdentificationTokens;
-@property(readonly, copy) NSArray<NSString *> *nickServSupportedSuccessfulIdentificationTokens;
+@property(readonly, copy)
+    NSArray<NSString *> *nickServSupportedNeedIdentificationTokens;
+@property(readonly, copy)
+    NSArray<NSString *> *nickServSupportedSuccessfulIdentificationTokens;
 @property(nonatomic, strong, nullable) IRCChannel *rawDataLogQuery;
 @property(nonatomic, strong, nullable) IRCChannel *hiddenCommandResponsesQuery;
 @end
 
-@implementation IRCClient
-{
-	os_unfair_lock _userListLock;
+@implementation IRCClient {
+  os_unfair_lock _userListLock;
 
-	/* The property is nonnull because the getter falls back to the
-	 configured nickname, but the backing storage is cleared on disconnect. */
-	NSString *_Nullable _userNickname;
+  /* The property is nonnull because the getter falls back to the
+   configured nickname, but the backing storage is cleared on disconnect. */
+  NSString *_Nullable _userNickname;
 }
 
 @synthesize userNickname = _userNickname;
@@ -332,1097 +367,1077 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 #pragma mark -
 #pragma mark Initialization
 
-- (instancetype)init
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (instancetype)init {
+  [self doesNotRecognizeSelector:_cmd];
 
-	return nil;
+  return nil;
 }
 
-- (instancetype)initWithConfigDictionary:(NSDictionary<NSString *, id> *)dic
-{
-	NSParameterAssert(dic != nil);
+- (instancetype)initWithConfigDictionary:(NSDictionary<NSString *, id> *)dic {
+  NSParameterAssert(dic != nil);
 
-	IRCClientConfig *config = [[IRCClientConfig alloc] initWithDictionary:dic];
+  IRCClientConfig *config = [[IRCClientConfig alloc] initWithDictionary:dic];
 
-	return [self initWithConfig:config];
+  return [self initWithConfig:config];
 }
 
-- (instancetype)initWithConfig:(IRCClientConfig *)config
-{
-	NSParameterAssert(config != nil);
+- (instancetype)initWithConfig:(IRCClientConfig *)config {
+  NSParameterAssert(config != nil);
 
-	if ((self = [super init])) {
-		self.config = config;
+  if ((self = [super init])) {
+    self.config = config;
 
-		[self writePasswordsToKeychain];
+    [self writePasswordsToKeychain];
 
-		[self prepareInitialState];
+    [self prepareInitialState];
 
-		return self;
-	}
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 
-- (void)prepareInitialState
-{
-	self.batchMessages = [IRCMessageBatchMessageContainer new];
+- (void)prepareInitialState {
+  self.batchMessages = [IRCMessageBatchMessageContainer new];
 
-	self.supportInfo = [[IRCISupportInfo alloc] initWithClient:self];
+  self.supportInfo = [[IRCISupportInfo alloc] initWithClient:self];
 
-	self.connectType = IRCClientConnectModeNormal;
-	self.disconnectType = IRCClientDisconnectModeNormal;
+  self.connectType = IRCClientConnectModeNormal;
+  self.disconnectType = IRCClientDisconnectModeNormal;
 
-	self.cachedHighlights = @[];
+  self.cachedHighlights = @[];
 
-	self.pendingCapabilityRequestsMutable = [NSMutableArray array];
-	self.enabledCapabilityNames = [NSMutableOrderedSet orderedSet];
-	self.offeredCapabilities = [NSMutableDictionary dictionary];
-	self.saslTriedMechanisms = [NSMutableArray array];
-	self.pendingDeliveries = [NSMutableDictionary dictionary];
-	self.labelForBatchToken = [NSMutableDictionary dictionary];
+  self.pendingCapabilityRequestsMutable = [NSMutableArray array];
+  self.enabledCapabilityNames = [NSMutableOrderedSet orderedSet];
+  self.offeredCapabilities = [NSMutableDictionary dictionary];
+  self.saslTriedMechanisms = [NSMutableArray array];
+  self.pendingDeliveries = [NSMutableDictionary dictionary];
+  self.labelForBatchToken = [NSMutableDictionary dictionary];
 
-	self.typingTracker = [[IRCTypingTracker alloc] initWithClient:self];
-	self.typingStateSent = [NSMutableDictionary dictionary];
-	self.typingActiveSentAt = [NSMutableDictionary dictionary];
+  self.typingTracker = [[IRCTypingTracker alloc] initWithClient:self];
+  self.typingStateSent = [NSMutableDictionary dictionary];
+  self.typingActiveSentAt = [NSMutableDictionary dictionary];
 
-	self.channelListPrivate = [NSMutableArray array];
+  self.channelListPrivate = [NSMutableArray array];
 
-	self.timedCommands = [NSMutableDictionary dictionary];
+  self.timedCommands = [NSMutableDictionary dictionary];
 
-	self->_userListLock = OS_UNFAIR_LOCK_INIT;
+  self->_userListLock = OS_UNFAIR_LOCK_INIT;
 
-	self.userListPrivate = [NSMutableDictionary dictionary];
+  self.userListPrivate = [NSMutableDictionary dictionary];
 
-	self.addressBookMatchCache = [[IRCAddressBookMatchCache alloc] initWithClient:self];
+  self.addressBookMatchCache =
+      [[IRCAddressBookMatchCache alloc] initWithClient:self];
 
-	self.trackedUsers = [[IRCAddressBookUserTrackingContainer alloc] initWithClient:self];
+  self.trackedUsers =
+      [[IRCAddressBookUserTrackingContainer alloc] initWithClient:self];
 
-	self.requestedCommands = [IRCClientRequestedCommands new];
+  self.requestedCommands = [IRCClientRequestedCommands new];
 
-	self.lastMessageServerTime = self.config.lastMessageServerTime;
+  self.lastMessageServerTime = self.config.lastMessageServerTime;
 
-	self.lastServerSelected = NSNotFound;
+  self.lastServerSelected = NSNotFound;
 
-	__weak typeof(self) weakSelf = self;
+  __weak typeof(self) weakSelf = self;
 
-	self.autojoinTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[weakSelf onAutojoinTimer];
-	}];
+  self.autojoinTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+    [weakSelf onAutojoinTimer];
+  }];
 
-	self.autojoinNextJoinTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[weakSelf onAutojoinNextJoinTimer];
-	}];
+  self.autojoinNextJoinTimer =
+      [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+        [weakSelf onAutojoinNextJoinTimer];
+      }];
 
-	self.autojoinDelayedWarningTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[weakSelf onAutojoinDelayedWarningTimer];
-	}];
+  self.autojoinDelayedWarningTimer =
+      [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+        [weakSelf onAutojoinDelayedWarningTimer];
+      }];
 
-	self.isonTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[weakSelf onISONTimer];
-	}];
+  self.isonTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+    [weakSelf onISONTimer];
+  }];
 
-	self.reconnectTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[weakSelf onReconnectTimer];
-	}];
+  self.reconnectTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+    [weakSelf onReconnectTimer];
+  }];
 
-	self.retryTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[weakSelf onRetryTimer];
-	}];
+  self.retryTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+    [weakSelf onRetryTimer];
+  }];
 
-	self.pongTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[weakSelf onPongTimer];
-	}];
+  self.pongTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+    [weakSelf onPongTimer];
+  }];
 
-	self.whoTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[weakSelf onWhoTimer];
-	}];
+  self.whoTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+    [weakSelf onWhoTimer];
+  }];
 
-	self.chatHistoryFailedTargets = [NSMutableSet set];
-	self.chatHistoryPendingBeforeTargets = [NSMutableSet set];
+  self.chatHistoryFailedTargets = [NSMutableSet set];
+  self.chatHistoryPendingBeforeTargets = [NSMutableSet set];
 
-	self.readMarkerSentDates = [NSMutableDictionary dictionary];
-	self.readMarkerPendingChannels = [NSMutableSet set];
+  self.readMarkerSentDates = [NSMutableDictionary dictionary];
+  self.readMarkerPendingChannels = [NSMutableSet set];
 
-	self.readMarkerTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
-		[weakSelf onReadMarkerTimer];
-	}];
+  self.readMarkerTimer = [TLOTimer timerWithActionBlock:^(TLOTimer *sender) {
+    [weakSelf onReadMarkerTimer];
+  }];
 
-	[RZNotificationCenter() addObserver:self
-							   selector:@selector(willDestroyChannel:)
-								   name:IRCWorldWillDestroyChannelNotification
-								 object:nil];
+  [RZNotificationCenter() addObserver:self
+                             selector:@selector(willDestroyChannel:)
+                                 name:IRCWorldWillDestroyChannelNotification
+                               object:nil];
 }
 
-- (void)dealloc
-{
-	[RZNotificationCenter() removeObserver:self];
+- (void)dealloc {
+  [RZNotificationCenter() removeObserver:self];
 
-	[self.autojoinTimer stop];
-	[self.autojoinNextJoinTimer stop];
-	[self.autojoinDelayedWarningTimer stop];
-	[self.isonTimer stop];
-	[self.pongTimer stop];
-	[self.reconnectTimer stop];
-	[self.retryTimer stop];
-	[self.whoTimer stop];
-	[self.readMarkerTimer stop];
+  [self.autojoinTimer stop];
+  [self.autojoinNextJoinTimer stop];
+  [self.autojoinDelayedWarningTimer stop];
+  [self.isonTimer stop];
+  [self.pongTimer stop];
+  [self.reconnectTimer stop];
+  [self.retryTimer stop];
+  [self.whoTimer stop];
+  [self.readMarkerTimer stop];
 
-	[self cancelPerformRequests];
+  [self cancelPerformRequests];
+}
+
+- (void)updateConfig:(IRCClientConfig *)config {
+  [self updateConfig:config updateSelection:YES];
 }
 
 - (void)updateConfig:(IRCClientConfig *)config
-{
-	[self updateConfig:config updateSelection:YES];
+     updateSelection:(BOOL)updateSelection {
+  NSParameterAssert(config != nil);
+
+  if (self.isTerminating) {
+    return;
+  }
+
+  IRCClientConfig *currentConfig = self.config;
+
+  if ([currentConfig isEqual:config]) {
+    return;
+  }
+
+  if ([currentConfig.uniqueIdentifier
+          isEqualToString:config.uniqueIdentifier] == NO) {
+    LogToConsoleError("Tried to load configuration for incorrect client");
+
+    return;
+  }
+
+  self.config = config;
+
+  /* Update channel list */
+  {
+    NSMutableArray<IRCChannel *> *channelListOld =
+        [self.channelList mutableCopy];
+
+    NSMutableArray<IRCChannel *> *channelListNew = [NSMutableArray array];
+
+    NSMutableArray<NSString *> *channelListNewNames = [NSMutableArray array];
+
+    NSArray *channelConfigurations = self.config.channelList;
+
+    for (IRCChannelConfig *channelConfig in channelConfigurations) {
+      /* Block duplicate channel names by maintaining array of names */
+      NSString *channelName = channelConfig.channelName;
+
+      if ([channelListNewNames containsObject:channelName] == NO) {
+        [channelListNewNames addObject:channelName];
+      } else {
+        continue;
+      }
+
+      /* Check whether the channel exists in the current list of channels */
+      /* If it does not exist, then create it. Otherwise, update it. */
+      IRCChannel *channel = [self findChannel:channelConfig.channelName
+                                       inList:channelListOld];
+
+      if (channel == nil) {
+        channel = [worldController() createChannelWithConfig:channelConfig
+                                                    onClient:self
+                                                         add:NO
+                                                      adjust:NO
+                                                      reload:NO];
+      } else {
+        [channel updateConfig:channelConfig
+            fireChangedNotification:NO
+            updateStoredChannelList:NO];
+
+        [channelListOld removeObjectIdenticalTo:channel];
+      }
+
+      [channelListNew addObject:channel];
+    }
+
+    /* Any channels left in the old array can be destroyed
+     or if they are not a channel, then they can be reinserted
+     because we do not care about private messages being updated
+     above so they must be reinserted here. */
+    for (IRCChannel *channel in channelListOld) {
+      if (channel.isChannel == NO) {
+        [channelListNew addObject:channel];
+      } else {
+        [worldController() destroyChannel:channel reload:NO];
+      }
+    }
+
+    /* Save updated channel list then safe its contents */
+    self.channelList = channelListNew;
+  }
+
+  /* Update server list */
+  {
+    /* To update the server list, we first make a map of all existing
+     servers in a dictionary with the key as the identifier and the
+     object is the server itself. */
+    NSArray *serverListOld = currentConfig.serverList;
+
+    NSMutableDictionary<NSString *, IRCServer *> *serverListOldMap =
+        [[NSMutableDictionary alloc] initWithCapacity:serverListOld.count];
+
+    for (IRCServer *server in serverListOld) {
+      serverListOldMap[server.uniqueIdentifier] = server;
+    }
+
+    /* We then make a map of the new server list */
+    NSArray *serverListNew = self.config.serverList;
+
+    NSMutableDictionary<NSString *, IRCServer *> *serverListNewMap =
+        [[NSMutableDictionary alloc] initWithCapacity:serverListNew.count];
+
+    for (IRCServer *server in serverListNew) {
+      serverListNewMap[server.uniqueIdentifier] = server;
+    }
+
+    /* Record information about the current server (if any). */
+    IRCServer *serverInUse = self.server;
+
+    NSString *uniqueIdentifierInUse = serverInUse.uniqueIdentifier;
+
+    /* Enumerate old server list */
+    /* If an old server no longer appears in the new list of identifiers,
+     then we destroy its keychain items. If the server is the active server,
+     then we mark the keychain items to be destroyed later, incase they
+     need to be reused by IRCClient. */
+    [serverListOldMap
+        enumerateKeysAndObjectsUsingBlock:^(NSString *uniqueIdentifier,
+                                            IRCServer *server, BOOL *stop) {
+          if ([serverListNewMap containsKey:uniqueIdentifier]) {
+            return;
+          }
+
+          if ([uniqueIdentifier isEqualToString:uniqueIdentifierInUse]) {
+            serverInUse.destroyKeychainItemsDuringDealloc = YES;
+          } else {
+            [server destroyServerPasswordKeychainItem];
+          }
+        }];
+
+    /* Enumerate new server list */
+    /* All servers in the new server list have their keychain item written. */
+    if (serverListNew.count == 0) {
+      self.lastServerSelected = NSNotFound;
+    } else {
+      [serverListNewMap
+          enumerateKeysAndObjectsUsingBlock:^(NSString *uniqueIdentifier,
+                                              IRCServer *server, BOOL *stop) {
+            [server writeServerPasswordToKeychain];
+          }];
+    }
+  }
+
+  /* -reloadItem will drop the views and reload them. */
+  /* We need to remember the selection because of this. */
+  if (updateSelection) {
+    [self reloadServerListItems];
+  }
+
+  /* Update navigation list */
+  [menuController() populateNavigationChannelList];
+
+  /* Write passwords to keychain */
+  [self writePasswordsToKeychain];
+
+  [self destroyServerPasswordKeychainItemAfterMigration];
+
+  /* Update main window title */
+  [mainWindow() updateTitleFor:self];
+
+  /* Rebuild list of users that are ignored and/or tracked */
+  [self clearAddressBookCache];
+
+  [self populateISONTrackedUsersList];
+
+  /* Post notification */
+  [RZNotificationCenter()
+      postNotificationName:IRCClientConfigurationWasUpdatedNotification
+                    object:self];
 }
 
-- (void)updateConfig:(IRCClientConfig *)config updateSelection:(BOOL)updateSelection
-{
-	NSParameterAssert(config != nil);
+- (void)reloadServerListItems {
+  mainWindow().ignoreOutlineViewSelectionChanges = YES;
 
-	if (self.isTerminating) {
-		return;
-	}
+  [mainWindowServerList() beginUpdates];
 
-	IRCClientConfig *currentConfig = self.config;
+  [mainWindowServerList() reloadItem:self reloadChildren:YES];
 
-	if ([currentConfig isEqual:config]) {
-		return;
-	}
+  [mainWindowServerList() endUpdates];
 
-	if ([currentConfig.uniqueIdentifier isEqualToString:config.uniqueIdentifier] == NO) {
-		LogToConsoleError("Tried to load configuration for incorrect client");
+  [mainWindow() adjustSelection];
 
-		return;
-	}
-
-	self.config = config;
-
-	/* Update channel list */
-	{
-		NSMutableArray<IRCChannel *> *channelListOld = [self.channelList mutableCopy];
-
-		NSMutableArray<IRCChannel *> *channelListNew = [NSMutableArray array];
-
-		NSMutableArray<NSString *> *channelListNewNames = [NSMutableArray array];
-
-		NSArray *channelConfigurations = self.config.channelList;
-
-		for (IRCChannelConfig *channelConfig in channelConfigurations) {
-			/* Block duplicate channel names by maintaining array of names */
-			NSString *channelName = channelConfig.channelName;
-
-			if ([channelListNewNames containsObject:channelName] == NO) {
-				[channelListNewNames addObject:channelName];
-			} else {
-				continue;
-			}
-
-			/* Check whether the channel exists in the current list of channels */
-			/* If it does not exist, then create it. Otherwise, update it. */
-			IRCChannel *channel = [self findChannel:channelConfig.channelName inList:channelListOld];
-
-			if (channel == nil) {
-				channel = [worldController() createChannelWithConfig:channelConfig
-															onClient:self
-																 add:NO
-															  adjust:NO
-															  reload:NO];
-			} else {
-				[channel updateConfig:channelConfig fireChangedNotification:NO updateStoredChannelList:NO];
-
-				[channelListOld removeObjectIdenticalTo:channel];
-			}
-
-			[channelListNew addObject:channel];
-		}
-
-		/* Any channels left in the old array can be destroyed 
-		 or if they are not a channel, then they can be reinserted
-		 because we do not care about private messages being updated
-		 above so they must be reinserted here. */
-		for (IRCChannel *channel in channelListOld) {
-			if (channel.isChannel == NO) {
-				[channelListNew addObject:channel];
-			} else {
-				[worldController() destroyChannel:channel reload:NO];
-			}
-		}
-
-		/* Save updated channel list then safe its contents */
-		self.channelList = channelListNew;
-	}
-
-	/* Update server list */
-	{
-		/* To update the server list, we first make a map of all existing
-		 servers in a dictionary with the key as the identifier and the
-		 object is the server itself. */
-		NSArray *serverListOld = currentConfig.serverList;
-
-		NSMutableDictionary<NSString *, IRCServer *> *serverListOldMap =
-			[[NSMutableDictionary alloc] initWithCapacity:serverListOld.count];
-
-		for (IRCServer *server in serverListOld) {
-			serverListOldMap[server.uniqueIdentifier] = server;
-		}
-
-		/* We then make a map of the new server list */
-		NSArray *serverListNew = self.config.serverList;
-
-		NSMutableDictionary<NSString *, IRCServer *> *serverListNewMap =
-			[[NSMutableDictionary alloc] initWithCapacity:serverListNew.count];
-
-		for (IRCServer *server in serverListNew) {
-			serverListNewMap[server.uniqueIdentifier] = server;
-		}
-
-		/* Record information about the current server (if any). */
-		IRCServer *serverInUse = self.server;
-
-		NSString *uniqueIdentifierInUse = serverInUse.uniqueIdentifier;
-
-		/* Enumerate old server list */
-		/* If an old server no longer appears in the new list of identifiers,
-		 then we destroy its keychain items. If the server is the active server,
-		 then we mark the keychain items to be destroyed later, incase they
-		 need to be reused by IRCClient. */
-		[serverListOldMap
-			enumerateKeysAndObjectsUsingBlock:^(NSString *uniqueIdentifier, IRCServer *server, BOOL *stop) {
-				if ([serverListNewMap containsKey:uniqueIdentifier]) {
-					return;
-				}
-
-				if ([uniqueIdentifier isEqualToString:uniqueIdentifierInUse]) {
-					serverInUse.destroyKeychainItemsDuringDealloc = YES;
-				} else {
-					[server destroyServerPasswordKeychainItem];
-				}
-			}];
-
-		/* Enumerate new server list */
-		/* All servers in the new server list have their keychain item written. */
-		if (serverListNew.count == 0) {
-			self.lastServerSelected = NSNotFound;
-		} else {
-			[serverListNewMap
-				enumerateKeysAndObjectsUsingBlock:^(NSString *uniqueIdentifier, IRCServer *server, BOOL *stop) {
-					[server writeServerPasswordToKeychain];
-				}];
-		}
-	}
-
-	/* -reloadItem will drop the views and reload them. */
-	/* We need to remember the selection because of this. */
-	if (updateSelection) {
-		[self reloadServerListItems];
-	}
-
-	/* Update navigation list */
-	[menuController() populateNavigationChannelList];
-
-	/* Write passwords to keychain */
-	[self writePasswordsToKeychain];
-
-	[self destroyServerPasswordKeychainItemAfterMigration];
-
-	/* Update main window title */
-	[mainWindow() updateTitleFor:self];
-
-	/* Rebuild list of users that are ignored and/or tracked */
-	[self clearAddressBookCache];
-
-	[self populateISONTrackedUsersList];
-
-	/* Post notification */
-	[RZNotificationCenter() postNotificationName:IRCClientConfigurationWasUpdatedNotification object:self];
+  mainWindow().ignoreOutlineViewSelectionChanges = NO;
 }
 
-- (void)reloadServerListItems
-{
-	mainWindow().ignoreOutlineViewSelectionChanges = YES;
-
-	[mainWindowServerList() beginUpdates];
-
-	[mainWindowServerList() reloadItem:self reloadChildren:YES];
-
-	[mainWindowServerList() endUpdates];
-
-	[mainWindow() adjustSelection];
-
-	mainWindow().ignoreOutlineViewSelectionChanges = NO;
+- (void)writePasswordsToKeychain {
+  [self.config writeNicknamePasswordToKeychain];
+  [self.config writeProxyPasswordToKeychain];
 }
 
-- (void)writePasswordsToKeychain
-{
-	[self.config writeNicknamePasswordToKeychain];
-	[self.config writeProxyPasswordToKeychain];
+- (void)destroyServerPasswordKeychainItemAfterMigration {
+  [self.config destroyServerPasswordKeychainItemAfterMigration];
 }
 
-- (void)destroyServerPasswordKeychainItemAfterMigration
-{
-	[self.config destroyServerPasswordKeychainItemAfterMigration];
+- (void)updateStoredConfiguration {
+  if (self.configurationIsStale == NO) {
+    return;
+  }
+
+  IRCClientConfigMutable *configMutable = [self.config mutableCopy];
+
+  configMutable.lastMessageServerTime = self.lastMessageServerTime;
+
+  configMutable.sidebarItemExpanded = self.sidebarItemIsExpanded;
+
+  self.config = configMutable;
 }
 
-- (void)updateStoredConfiguration
-{
-	if (self.configurationIsStale == NO) {
-		return;
-	}
+- (void)updateStoredChannelList {
+  /* Rebuild list of channel configurations */
+  NSMutableArray<IRCChannelConfig *> *channelList = [NSMutableArray array];
 
-	IRCClientConfigMutable *configMutable = [self.config mutableCopy];
+  for (IRCChannel *channel in self.channelList) {
+    if (channel.isUtility || channel.isDirectChat) {
+      continue;
+    }
 
-	configMutable.lastMessageServerTime = self.lastMessageServerTime;
+    if (channel.isChannel == NO &&
+        [TPCPreferences rememberServerListQueryStates] == NO) {
+      continue;
+    }
 
-	configMutable.sidebarItemExpanded = self.sidebarItemIsExpanded;
+    [channelList addObject:channel.config];
+  }
 
-	self.config = configMutable;
+  /* Save list */
+  IRCClientConfigMutable *mutableConfig = [self.config mutableCopy];
+
+  mutableConfig.channelList = channelList;
+
+  self.config = mutableConfig;
+
+  /* Post notification */
+  [RZNotificationCenter()
+      postNotificationName:IRCClientChannelListWasModifiedNotification
+                    object:self];
 }
 
-- (void)updateStoredChannelList
-{
-	/* Rebuild list of channel configurations */
-	NSMutableArray<IRCChannelConfig *> *channelList = [NSMutableArray array];
+- (NSDictionary<NSString *, id> *)configurationDictionary {
+  [self updateStoredConfiguration];
 
-	for (IRCChannel *channel in self.channelList) {
-		if (channel.isUtility || channel.isDirectChat) {
-			continue;
-		}
-
-		if (channel.isChannel == NO && [TPCPreferences rememberServerListQueryStates] == NO) {
-			continue;
-		}
-
-		[channelList addObject:channel.config];
-	}
-
-	/* Save list */
-	IRCClientConfigMutable *mutableConfig = [self.config mutableCopy];
-
-	mutableConfig.channelList = channelList;
-
-	self.config = mutableConfig;
-
-	/* Post notification */
-	[RZNotificationCenter() postNotificationName:IRCClientChannelListWasModifiedNotification object:self];
+  return [self.config dictionaryValue];
 }
 
-- (NSDictionary<NSString *, id> *)configurationDictionary
-{
-	[self updateStoredConfiguration];
+- (void)prepareForApplicationTermination {
+  self.isTerminating = YES;
 
-	return [self.config dictionaryValue];
+  LogToConsoleTerminationProgress("Preparing client: <%{public}@>",
+                                  self.uniqueIdentifier);
+
+  LogToConsoleTerminationProgress("[%{public}@] Closing dialogs",
+                                  self.uniqueIdentifier);
+
+  [self closeDialogs];
+
+  if (self.isConnecting || self.isConnected) {
+    LogToConsoleTerminationProgress("[%{public}@] Performing disconnect",
+                                    self.uniqueIdentifier);
+
+    __weak IRCClient *weakSelf = self;
+
+    self.disconnectCallback = ^{
+      [weakSelf prepareForApplicationTerminationPostflight];
+    };
+
+    [self quit];
+
+    return;
+  }
+
+  [self prepareForApplicationTerminationPostflight];
 }
 
-- (void)prepareForApplicationTermination
-{
-	self.isTerminating = YES;
+- (void)prepareForApplicationTerminationPostflight {
+  LogToConsoleTerminationProgress("[%{public}@] Closing log file",
+                                  self.uniqueIdentifier);
 
-	LogToConsoleTerminationProgress("Preparing client: <%{public}@>", self.uniqueIdentifier);
+  [self closeLogFile];
 
-	LogToConsoleTerminationProgress("[%{public}@] Closing dialogs", self.uniqueIdentifier);
+  LogToConsoleTerminationProgress(
+      "[%{public}@] Removing unspoken messages from speech synthesizer",
+      self.uniqueIdentifier);
 
-	[self closeDialogs];
+  [self clearEventsToSpeak];
 
-	if (self.isConnecting || self.isConnected) {
-		LogToConsoleTerminationProgress("[%{public}@] Performing disconnect", self.uniqueIdentifier);
+  LogToConsoleTerminationProgress("[%{public}@] Emptying Address Book cache",
+                                  self.uniqueIdentifier);
 
-		__weak IRCClient *weakSelf = self;
+  [self clearAddressBookCache];
 
-		self.disconnectCallback = ^{
-			[weakSelf prepareForApplicationTerminationPostflight];
-		};
+  LogToConsoleTerminationProgress("[%{public}@] Removing all tracked users",
+                                  self.uniqueIdentifier);
 
-		[self quit];
+  [self clearTrackedUsers];
 
-		return;
-	}
+  LogToConsoleTerminationProgress(
+      "[%{public}@] Preparing channels: %{public}ld", self.uniqueIdentifier,
+      self.channelCount);
 
-	[self prepareForApplicationTerminationPostflight];
+  for (IRCChannel *c in self.channelList) {
+    [c prepareForApplicationTermination];
+  }
+
+  LogToConsoleTerminationProgress(
+      "[%{public}@] Preparing view controller: <%{public}@>",
+      self.uniqueIdentifier, self.viewController.uniqueIdentifier);
+
+  [self.viewController prepareForApplicationTermination];
+
+  LogToConsoleTerminationProgress("[%{public}@] Decrementing client count",
+                                  self.uniqueIdentifier);
+
+  masterController().terminatingClientCount -= 1;
 }
 
-- (void)prepareForApplicationTerminationPostflight
-{
-	LogToConsoleTerminationProgress("[%{public}@] Closing log file", self.uniqueIdentifier);
+- (void)prepareForPermanentDestruction {
+  self.isTerminating = YES;
 
-	[self closeLogFile];
+  //	[self disconnect];	// Disconnect is called by IRCWorld for us
 
-	LogToConsoleTerminationProgress("[%{public}@] Removing unspoken messages from speech synthesizer",
-									self.uniqueIdentifier);
+  [self stopAllTimers];
 
-	[self clearEventsToSpeak];
+  [self closeDialogs];
 
-	LogToConsoleTerminationProgress("[%{public}@] Emptying Address Book cache", self.uniqueIdentifier);
+  [self closeLogFile];
 
-	[self clearAddressBookCache];
+  [self clearEventsToSpeak];
 
-	LogToConsoleTerminationProgress("[%{public}@] Removing all tracked users", self.uniqueIdentifier);
+  [self clearAddressBookCache];
 
-	[self clearTrackedUsers];
+  [self clearTrackedUsers];
 
-	LogToConsoleTerminationProgress(
-		"[%{public}@] Preparing channels: %{public}ld", self.uniqueIdentifier, self.channelCount);
+  [self.config destroyNicknamePasswordKeychainItem];
+  [self.config destroyProxyPasswordKeychainItem];
 
-	for (IRCChannel *c in self.channelList) {
-		[c prepareForApplicationTermination];
-	}
+  [self destroyServerPasswordsKeychainItems];
 
-	LogToConsoleTerminationProgress("[%{public}@] Preparing view controller: <%{public}@>",
-									self.uniqueIdentifier,
-									self.viewController.uniqueIdentifier);
+  for (IRCChannel *c in self.channelList) {
+    [c prepareForPermanentDestruction];
+  }
 
-	[self.viewController prepareForApplicationTermination];
+  [[mainWindow() inputHistoryManager] destroy:self];
 
-	LogToConsoleTerminationProgress("[%{public}@] Decrementing client count", self.uniqueIdentifier);
-
-	masterController().terminatingClientCount -= 1;
+  [self.viewController prepareForPermanentDestruction];
 }
 
-- (void)prepareForPermanentDestruction
-{
-	self.isTerminating = YES;
+- (void)closeDialogs {
+  TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
 
-	//	[self disconnect];	// Disconnect is called by IRCWorld for us
+  if (channelListDialog) {
+    [channelListDialog close];
+  }
 
-	[self stopAllTimers];
+  NSArray *openWindows = [windowController() windowsFromWindowList:@[
+    @"TDCChannelInviteSheet", @"TDCServerChangeNicknameSheet",
+    @"TDCServerHighlightListSheet", @"TDCServerPropertiesSheet"
+  ]];
 
-	[self closeDialogs];
-
-	[self closeLogFile];
-
-	[self clearEventsToSpeak];
-
-	[self clearAddressBookCache];
-
-	[self clearTrackedUsers];
-
-	[self.config destroyNicknamePasswordKeychainItem];
-	[self.config destroyProxyPasswordKeychainItem];
-
-	[self destroyServerPasswordsKeychainItems];
-
-	for (IRCChannel *c in self.channelList) {
-		[c prepareForPermanentDestruction];
-	}
-
-	[[mainWindow() inputHistoryManager] destroy:self];
-
-	[self.viewController prepareForPermanentDestruction];
+  for (TDCSheetBase<TDCClientPrototype> *windowObject in openWindows) {
+    if ([windowObject.clientId isEqualToString:self.uniqueIdentifier]) {
+      [windowObject close];
+    }
+  }
 }
 
-- (void)closeDialogs
-{
-	TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
+- (void)preferencesChanged {
+  for (IRCChannel *c in self.channelList) {
+    [c preferencesChanged];
+  }
 
-	if (channelListDialog) {
-		[channelListDialog close];
-	}
-
-	NSArray *openWindows = [windowController() windowsFromWindowList:@[
-		@"TDCChannelInviteSheet",
-		@"TDCServerChangeNicknameSheet",
-		@"TDCServerHighlightListSheet",
-		@"TDCServerPropertiesSheet"
-	]];
-
-	for (TDCSheetBase<TDCClientPrototype> *windowObject in openWindows) {
-		if ([windowObject.clientId isEqualToString:self.uniqueIdentifier]) {
-			[windowObject close];
-		}
-	}
+  if (self.monitorAwayStatus == NO) {
+    [self resetAwayStatusForUsers];
+  }
 }
 
-- (void)preferencesChanged
-{
-	for (IRCChannel *c in self.channelList) {
-		[c preferencesChanged];
-	}
+- (void)willDestroyChannel:(NSNotification *)notification {
+  IRCChannel *channel = notification.object;
 
-	if (self.monitorAwayStatus == NO) {
-		[self resetAwayStatusForUsers];
-	}
+  if (channel.associatedClient != self) {
+    return;
+  }
+
+  [self zncPlaybackClearChannel:channel];
+
+  if (self.hiddenCommandResponsesQuery == channel) {
+    self.hiddenCommandResponsesQuery = nil;
+  }
+
+  if (self.rawDataLogQuery == channel) {
+    self.rawDataLogQuery = nil;
+  }
 }
 
-- (void)willDestroyChannel:(NSNotification *)notification
-{
-	IRCChannel *channel = notification.object;
+- (id)copyWithZone:(nullable NSZone *)zone {
+  /* Implement this method to allow client to be
+   used as a dictionary key. */
 
-	if (channel.associatedClient != self) {
-		return;
-	}
-
-	[self zncPlaybackClearChannel:channel];
-
-	if (self.hiddenCommandResponsesQuery == channel) {
-		self.hiddenCommandResponsesQuery = nil;
-	}
-
-	if (self.rawDataLogQuery == channel) {
-		self.rawDataLogQuery = nil;
-	}
-}
-
-- (id)copyWithZone:(nullable NSZone *)zone
-{
-	/* Implement this method to allow client to be
-	 used as a dictionary key. */
-
-	return self;
+  return self;
 }
 
 #pragma mark -
 #pragma mark Servers
 
-- (void)enumerateServers:(void(NS_NOESCAPE ^)(IRCServer *server, NSUInteger index, BOOL *stop))block
-{
-	[self.config.serverList enumerateObjectsUsingBlock:block];
+- (void)enumerateServers:
+    (void(NS_NOESCAPE ^)(IRCServer *server, NSUInteger index, BOOL *stop))
+        block {
+  [self.config.serverList enumerateObjectsUsingBlock:block];
 }
 
-- (void)writeServerPasswordsToKeychain
-{
-	[self enumerateServers:^(IRCServer *server, NSUInteger index, BOOL *stop) {
-		[server writeServerPasswordToKeychain];
-	}];
+- (void)writeServerPasswordsToKeychain {
+  [self enumerateServers:^(IRCServer *server, NSUInteger index, BOOL *stop) {
+    [server writeServerPasswordToKeychain];
+  }];
 }
 
-- (void)destroyServerPasswordsKeychainItems
-{
-	[self enumerateServers:^(IRCServer *server, NSUInteger index, BOOL *stop) {
-		[server destroyServerPasswordKeychainItem];
-	}];
+- (void)destroyServerPasswordsKeychainItems {
+  [self enumerateServers:^(IRCServer *server, NSUInteger index, BOOL *stop) {
+    [server destroyServerPasswordKeychainItem];
+  }];
 }
 
 #pragma mark -
 #pragma mark Properties
 
-- (NSString *)description
-{
-	return [NSString stringWithFormat:@"<IRCClient [%@]: %@>", self.networkNameAlt, self.serverAddress];
+- (NSString *)description {
+  return [NSString stringWithFormat:@"<IRCClient [%@]: %@>",
+                                    self.networkNameAlt, self.serverAddress];
 }
 
-- (NSString *)uniqueIdentifier
-{
-	return self.config.uniqueIdentifier;
+- (NSString *)uniqueIdentifier {
+  return self.config.uniqueIdentifier;
 }
 
-- (NSString *)name
-{
-	return self.config.connectionName;
+- (NSString *)name {
+  return self.config.connectionName;
 }
 
-- (nullable NSString *)networkName
-{
-	return self.supportInfo.networkNameFormatted;
+- (nullable NSString *)networkName {
+  return self.supportInfo.networkNameFormatted;
 }
 
-- (NSString *)networkNameAlt
-{
-	NSString *networkName = self.networkName;
+- (NSString *)networkNameAlt {
+  NSString *networkName = self.networkName;
 
-	if (networkName) {
-		return networkName;
-	}
+  if (networkName) {
+    return networkName;
+  }
 
-	return self.config.connectionName;
+  return self.config.connectionName;
 }
 
-- (nullable NSString *)serverAddress
-{
-	NSString *serverAddress = self.supportInfo.serverAddress;
+- (nullable NSString *)serverAddress {
+  NSString *serverAddress = self.supportInfo.serverAddress;
 
-	if (serverAddress) {
-		return serverAddress;
-	}
+  if (serverAddress) {
+    return serverAddress;
+  }
 
-	NSString *serverAddressOnSocket = self.socket.config.serverAddress;
+  NSString *serverAddressOnSocket = self.socket.config.serverAddress;
 
-	if (serverAddressOnSocket) {
-		return serverAddressOnSocket;
-	}
+  if (serverAddressOnSocket) {
+    return serverAddressOnSocket;
+  }
 
-	return self.server.serverAddress;
+  return self.server.serverAddress;
 }
 
-- (NSString *)userNickname
-{
-	NSString *userNickname = self->_userNickname;
+- (NSString *)userNickname {
+  NSString *userNickname = self->_userNickname;
 
-	if (userNickname) {
-		return userNickname;
-	}
+  if (userNickname) {
+    return userNickname;
+  }
 
-	return self.config.nickname;
+  return self.config.nickname;
 }
 
-- (TDCFileTransferDialog *)fileTransferController
-{
-	return [TXSharedApplication sharedFileTransferDialog];
+- (TDCFileTransferDialog *)fileTransferController {
+  return [TXSharedApplication sharedFileTransferDialog];
 }
 
-- (BOOL)isReconnecting
-{
-	return self.reconnectTimer.timerIsActive;
+- (BOOL)isReconnecting {
+  return self.reconnectTimer.timerIsActive;
 }
 
-- (void)setSidebarItemIsExpanded:(BOOL)sidebarItemIsExpanded
-{
-	/* This is a non-critical property that can be saved periodically */
-	if (self->_sidebarItemIsExpanded != sidebarItemIsExpanded) {
-		self->_sidebarItemIsExpanded = sidebarItemIsExpanded;
+- (void)setSidebarItemIsExpanded:(BOOL)sidebarItemIsExpanded {
+  /* This is a non-critical property that can be saved periodically */
+  if (self->_sidebarItemIsExpanded != sidebarItemIsExpanded) {
+    self->_sidebarItemIsExpanded = sidebarItemIsExpanded;
 
-		self.configurationIsStale = YES;
+    self.configurationIsStale = YES;
 
-		[worldController() savePeriodically];
-	}
+    [worldController() savePeriodically];
+  }
 }
 
-- (void)setLastMessageServerTime:(NSTimeInterval)lastMessageServerTime
-{
-	/* This is a non-critical property that can be saved periodically */
-	if (self->_lastMessageServerTime != lastMessageServerTime) {
-		self->_lastMessageServerTime = lastMessageServerTime;
+- (void)setLastMessageServerTime:(NSTimeInterval)lastMessageServerTime {
+  /* This is a non-critical property that can be saved periodically */
+  if (self->_lastMessageServerTime != lastMessageServerTime) {
+    self->_lastMessageServerTime = lastMessageServerTime;
 
-		self.configurationIsStale = YES;
+    self.configurationIsStale = YES;
 
-		[worldController() savePeriodically];
-	}
+    [worldController() savePeriodically];
+  }
 }
 
-- (BOOL)isSecured
-{
-	if (self.socket) {
-		return self.socket.isSecured;
-	}
+- (BOOL)isSecured {
+  if (self.socket) {
+    return self.socket.isSecured;
+  }
 
-	return NO;
+  return NO;
 }
 
-- (nullable NSData *)zncBouncerCertificateChainData
-{
-	/* If the data is still being processed, then return
-	 nil so that partial data is not returned. */
-	if (self.isConnectedToZNC == NO || self.zncBouncerIsSendingCertificateInfo ||
-		self.zncBouncerCertificateChainDataMutable == nil) {
-		return nil;
-	}
+- (nullable NSData *)zncBouncerCertificateChainData {
+  /* If the data is still being processed, then return
+   nil so that partial data is not returned. */
+  if (self.isConnectedToZNC == NO || self.zncBouncerIsSendingCertificateInfo ||
+      self.zncBouncerCertificateChainDataMutable == nil) {
+    return nil;
+  }
 
-	return [self.zncBouncerCertificateChainDataMutable dataUsingEncoding:NSASCIIStringEncoding];
+  return [self.zncBouncerCertificateChainDataMutable
+      dataUsingEncoding:NSASCIIStringEncoding];
 }
 
-- (BOOL)isBrokenIRCd_aka_Twitch
-{
-	return [self.serverAddress hasSuffix:@".twitch.tv"];
+- (BOOL)isBrokenIRCd_aka_Twitch {
+  return [self.serverAddress hasSuffix:@".twitch.tv"];
 }
 
-- (BOOL)supportsAdvancedTracking
-{
-	return ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMonitorCommand] ||
-			[self isCapabilityEnabled:ClientIRCv3SupportedCapabilityWatchCommand]);
+- (BOOL)supportsAdvancedTracking {
+  return (
+      [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMonitorCommand] ||
+      [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityWatchCommand]);
 }
 
-- (BOOL)monitorAwayStatus
-{
-	return ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityAwayNotify] ||
-			[TPCPreferences trackUserAwayStatusMaximumChannelSize] > 0);
+- (BOOL)monitorAwayStatus {
+  return ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityAwayNotify] ||
+          [TPCPreferences trackUserAwayStatusMaximumChannelSize] > 0);
 }
 
-- (nullable TVCLogLine *)lastLine
-{
-	return self.viewController.lastLine;
+- (nullable TVCLogLine *)lastLine {
+  return self.viewController.lastLine;
 }
 
 #pragma mark -
 #pragma mark Standalone Utilities
 
-- (BOOL)messageIsFromMyself:(IRCMessage *)message
-{
-	NSParameterAssert(message != nil);
+- (BOOL)messageIsFromMyself:(IRCMessage *)message {
+  NSParameterAssert(message != nil);
 
-	return [self nicknameIsMyself:message.senderNickname];
+  return [self nicknameIsMyself:message.senderNickname];
 }
 
-- (BOOL)nicknameIsMyself:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (BOOL)nicknameIsMyself:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	NSString *myNickname = self.userNickname;
+  NSString *myNickname = self.userNickname;
 
-	if (myNickname == nil) {
-		return NO;
-	}
+  if (myNickname == nil) {
+    return NO;
+  }
 
-	return [[self casefoldNickname:myNickname] isEqualToString:[self casefoldNickname:nickname]];
+  return [[self casefoldNickname:myNickname]
+      isEqualToString:[self casefoldNickname:nickname]];
 }
 
-- (NSString *)casefoldNickname:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (NSString *)casefoldNickname:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	IRCISupportInfo *supportInfo = self.supportInfo;
+  IRCISupportInfo *supportInfo = self.supportInfo;
 
-	if (supportInfo == nil) {
-		return nickname.lowercaseString;
-	}
+  if (supportInfo == nil) {
+    return nickname.lowercaseString;
+  }
 
-	return [supportInfo casefoldString:nickname];
+  return [supportInfo casefoldString:nickname];
 }
 
-- (BOOL)stringIsNickname:(NSString *)string
-{
-	NSParameterAssert(string != nil);
+- (BOOL)stringIsNickname:(NSString *)string {
+  NSParameterAssert(string != nil);
 
-	return ([string isHostmaskNicknameOn:self] && [string isChannelNameOn:self] == NO);
+  return ([string isHostmaskNicknameOn:self] &&
+          [string isChannelNameOn:self] == NO);
 }
 
-- (BOOL)stringIsChannelName:(NSString *)string
-{
-	NSParameterAssert(string != nil);
+- (BOOL)stringIsChannelName:(NSString *)string {
+  NSParameterAssert(string != nil);
 
-	return [string isChannelNameOn:self];
+  return [string isChannelNameOn:self];
 }
 
-- (BOOL)stringIsChannelNameOrZero:(NSString *)string
-{
-	NSParameterAssert(string != nil);
+- (BOOL)stringIsChannelNameOrZero:(NSString *)string {
+  NSParameterAssert(string != nil);
 
-	return ([self stringIsChannelName:string] || [string isEqualToString:@"0"]);
+  return ([self stringIsChannelName:string] || [string isEqualToString:@"0"]);
 }
 
-- (NSArray<NSString *> *)compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
-													 modeIsSet:(BOOL)modeIsSet
-											   parameterString:(NSString *)parameterString
-{
-	return [self compileListOfModeChangesForModeSymbol:modeSymbol
-											 modeIsSet:modeIsSet
-									   parameterString:parameterString
-										  characterSet:[NSCharacterSet whitespaceCharacterSet]];
+- (NSArray<NSString *> *)
+    compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
+                                modeIsSet:(BOOL)modeIsSet
+                          parameterString:(NSString *)parameterString {
+  return
+      [self compileListOfModeChangesForModeSymbol:modeSymbol
+                                        modeIsSet:modeIsSet
+                                  parameterString:parameterString
+                                     characterSet:[NSCharacterSet
+                                                      whitespaceCharacterSet]];
 }
 
-- (NSArray<NSString *> *)compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
-													 modeIsSet:(BOOL)modeIsSet
-											   parameterString:(NSString *)parameterString
-												  characterSet:(NSCharacterSet *)characterList
-{
-	NSParameterAssert(parameterString != nil);
-	NSParameterAssert(characterList != nil);
+- (NSArray<NSString *> *)
+    compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
+                                modeIsSet:(BOOL)modeIsSet
+                          parameterString:(NSString *)parameterString
+                             characterSet:(NSCharacterSet *)characterList {
+  NSParameterAssert(parameterString != nil);
+  NSParameterAssert(characterList != nil);
 
-	NSArray *modeParameters = [parameterString componentsSeparatedByCharactersInSet:characterList];
+  NSArray *modeParameters =
+      [parameterString componentsSeparatedByCharactersInSet:characterList];
 
-	return [self compileListOfModeChangesForModeSymbol:modeSymbol modeIsSet:modeIsSet modeParameters:modeParameters];
+  return [self compileListOfModeChangesForModeSymbol:modeSymbol
+                                           modeIsSet:modeIsSet
+                                      modeParameters:modeParameters];
 }
 
-- (NSArray<NSString *> *)compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
-													 modeIsSet:(BOOL)modeIsSet
-												modeParameters:(NSArray<NSString *> *)modeParameters
-{
-	NSParameterAssert(modeSymbol.length == 1);
-	NSParameterAssert(modeParameters != nil);
+- (NSArray<NSString *> *)
+    compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
+                                modeIsSet:(BOOL)modeIsSet
+                           modeParameters:
+                               (NSArray<NSString *> *)modeParameters {
+  NSParameterAssert(modeSymbol.length == 1);
+  NSParameterAssert(modeParameters != nil);
 
-	if (modeParameters.count == 0) {
-		return @[];
-	}
+  if (modeParameters.count == 0) {
+    return @[];
+  }
 
-	NSMutableArray<NSString *> *listOfChanges = [NSMutableArray array];
+  NSMutableArray<NSString *> *listOfChanges = [NSMutableArray array];
 
-	NSMutableString *modeSetString = [NSMutableString string];
-	NSMutableString *modeParamString = [NSMutableString string];
+  NSMutableString *modeSetString = [NSMutableString string];
+  NSMutableString *modeParamString = [NSMutableString string];
 
-	NSUInteger numberOfEntries = 0;
+  NSUInteger numberOfEntries = 0;
 
-	for (NSString *modeParameter in modeParameters) {
-		if (modeParameter.length == 0) {
-			continue;
-		}
+  for (NSString *modeParameter in modeParameters) {
+    if (modeParameter.length == 0) {
+      continue;
+    }
 
-		if (modeSetString.length == 0) {
-			if (modeIsSet) {
-				[modeSetString appendFormat:@"+%@", modeSymbol];
-			} else {
-				[modeSetString appendFormat:@"-%@", modeSymbol];
-			}
-		} else {
-			[modeSetString appendString:modeSymbol];
-		}
+    if (modeSetString.length == 0) {
+      if (modeIsSet) {
+        [modeSetString appendFormat:@"+%@", modeSymbol];
+      } else {
+        [modeSetString appendFormat:@"-%@", modeSymbol];
+      }
+    } else {
+      [modeSetString appendString:modeSymbol];
+    }
 
-		[modeParamString appendFormat:@" %@", modeParameter];
+    [modeParamString appendFormat:@" %@", modeParameter];
 
-		numberOfEntries += 1;
+    numberOfEntries += 1;
 
-		if (numberOfEntries == self.supportInfo.maximumModeCount) {
-			numberOfEntries = 0;
+    if (numberOfEntries == self.supportInfo.maximumModeCount) {
+      numberOfEntries = 0;
 
-			NSString *modeSetCombined = [modeSetString stringByAppendingString:modeParamString];
+      NSString *modeSetCombined =
+          [modeSetString stringByAppendingString:modeParamString];
 
-			[listOfChanges addObject:modeSetCombined];
+      [listOfChanges addObject:modeSetCombined];
 
-			[modeSetString setString:@""];
-			[modeParamString setString:@""];
-		}
-	}
+      [modeSetString setString:@""];
+      [modeParamString setString:@""];
+    }
+  }
 
-	if (modeSetString.length > 0 && modeParamString.length > 0) {
-		NSString *modeSetCombined = [modeSetString stringByAppendingString:modeParamString];
+  if (modeSetString.length > 0 && modeParamString.length > 0) {
+    NSString *modeSetCombined =
+        [modeSetString stringByAppendingString:modeParamString];
 
-		[listOfChanges addObject:modeSetCombined];
-	}
+    [listOfChanges addObject:modeSetCombined];
+  }
 
-	return [listOfChanges copy];
+  return [listOfChanges copy];
 }
 
 - (void)separateTargetsInString:(NSString *)targetString
-			withCompletionBlock:(void(NS_NOESCAPE ^)(NSArray<NSString *> *targets))completionBlock
-{
-	NSParameterAssert(targetString != nil);
-	NSParameterAssert(completionBlock != nil);
+            withCompletionBlock:
+                (void(NS_NOESCAPE ^)(NSArray<NSString *> *targets))
+                    completionBlock {
+  NSParameterAssert(targetString != nil);
+  NSParameterAssert(completionBlock != nil);
 
-	NSArray *targets = [targetString componentsSeparatedByString:@","];
+  NSArray *targets = [targetString componentsSeparatedByString:@","];
 
-	completionBlock(targets);
+  completionBlock(targets);
 }
 
 - (void)enumerateTargetsInString:(NSString *)targetString
-					   withBlock:(void (^)(NSString *target, NSUInteger atIndex, NSUInteger ofTotal, BOOL *stop))block
-{
-	NSParameterAssert(targetString != nil);
-	NSParameterAssert(block != nil);
+                       withBlock:(void (^)(NSString *target, NSUInteger atIndex,
+                                           NSUInteger ofTotal,
+                                           BOOL *stop))block {
+  NSParameterAssert(targetString != nil);
+  NSParameterAssert(block != nil);
 
-	NSArray *targets = [targetString componentsSeparatedByString:@","];
+  NSArray *targets = [targetString componentsSeparatedByString:@","];
 
-	NSUInteger targetsCount = targets.count;
+  NSUInteger targetsCount = targets.count;
 
-	[targets enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop) {
-		block(object, index, targetsCount, stop);
-	}];
+  [targets
+      enumerateObjectsUsingBlock:^(id object, NSUInteger index, BOOL *stop) {
+        block(object, index, targetsCount, stop);
+      }];
 }
 
 #pragma mark -
 #pragma mark Highlights
 
-- (void)clearCachedHighlights
-{
-	self.cachedHighlights = @[];
+- (void)clearCachedHighlights {
+  self.cachedHighlights = @[];
 }
 
-- (void)cacheHighlightInChannel:(IRCChannel *)channel withLogLine:(TVCLogLine *)logLine
-{
-	NSParameterAssert(channel != nil);
-	NSParameterAssert(logLine != nil);
+- (void)cacheHighlightInChannel:(IRCChannel *)channel
+                    withLogLine:(TVCLogLine *)logLine {
+  NSParameterAssert(channel != nil);
+  NSParameterAssert(logLine != nil);
 
-	if ([TPCPreferences logHighlights] == NO) {
-		return;
-	}
+  if ([TPCPreferences logHighlights] == NO) {
+    return;
+  }
 
-	/* Create entry */
-	IRCHighlightLogEntryMutable *newEntry = [IRCHighlightLogEntryMutable new];
+  /* Create entry */
+  IRCHighlightLogEntryMutable *newEntry = [IRCHighlightLogEntryMutable new];
 
-	newEntry.clientId = self.uniqueIdentifier;
-	newEntry.channelId = channel.uniqueIdentifier;
+  newEntry.clientId = self.uniqueIdentifier;
+  newEntry.channelId = channel.uniqueIdentifier;
 
-	newEntry.lineLogged = logLine;
+  newEntry.lineLogged = logLine;
 
-	/* We insert at head so that latest is always on top. */
-	NSMutableArray *cachedHighlights = [self.cachedHighlights mutableCopy];
+  /* We insert at head so that latest is always on top. */
+  NSMutableArray *cachedHighlights = [self.cachedHighlights mutableCopy];
 
-	[cachedHighlights insertObject:[newEntry copy] atIndex:0];
+  [cachedHighlights insertObject:[newEntry copy] atIndex:0];
 
-	self.cachedHighlights = cachedHighlights;
+  self.cachedHighlights = cachedHighlights;
 
-	/* Reload table if the window is open. */
-	TDCServerHighlightListSheet *highlightListSheet =
-		[windowController() windowFromWindowList:@"TDCServerHighlightListSheet"];
+  /* Reload table if the window is open. */
+  TDCServerHighlightListSheet *highlightListSheet =
+      [windowController() windowFromWindowList:@"TDCServerHighlightListSheet"];
 
-	if ([highlightListSheet.clientId isEqualToString:self.uniqueIdentifier] == NO) {
-		return;
-	}
+  if ([highlightListSheet.clientId isEqualToString:self.uniqueIdentifier] ==
+      NO) {
+    return;
+  }
 
-	[highlightListSheet addEntry:self.cachedHighlights.firstObject];
+  [highlightListSheet addEntry:self.cachedHighlights.firstObject];
 }
 
 #pragma mark -
 #pragma mark Reachability
 
-- (void)noteReachabilityChanged:(BOOL)reachable
-{
-	if (reachable) {
-		return;
-	}
+- (void)noteReachabilityChanged:(BOOL)reachable {
+  if (reachable) {
+    return;
+  }
 
-	[self disconnectOnReachabilityChange];
+  [self disconnectOnReachabilityChange];
 }
 
-- (void)disconnectOnReachabilityChange
-{
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+- (void)disconnectOnReachabilityChange {
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	if (self.config.performDisconnectOnReachabilityChange == NO) {
-		return;
-	}
+  if (self.config.performDisconnectOnReachabilityChange == NO) {
+    return;
+  }
 
-	self.disconnectType = IRCClientDisconnectModeReachabilityChange;
+  self.disconnectType = IRCClientDisconnectModeReachabilityChange;
 
-	self.reconnectEnabled = YES;
+  self.reconnectEnabled = YES;
 
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[self disconnect];
-	});
+  XRPerformBlockSynchronouslyOnMainQueue(^{
+    [self disconnect];
+  });
 }
 
 #pragma mark -
 #pragma mark Channel Storage
 
-- (void)selectFirstChannelInChannelList
-{
-	NSArray *channelList = self.channelList;
+- (void)selectFirstChannelInChannelList {
+  NSArray *channelList = self.channelList;
 
-	if (channelList.count == 0) {
-		return;
-	}
+  if (channelList.count == 0) {
+    return;
+  }
 
-	[mainWindow() select:channelList[0]];
+  [mainWindow() select:channelList[0]];
 }
 
-- (void)addChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)addChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	@synchronized(self.channelListPrivate) {
-		if ([self.channelListPrivate containsObject:channel]) {
-			return;
-		}
+  @synchronized(self.channelListPrivate) {
+    if ([self.channelListPrivate containsObject:channel]) {
+      return;
+    }
 
-		/* Add channels atop of the first non-channel (private message).
-		 Private messages can be add to the bottom of the array. */
-		if (channel.isChannel == NO) {
-			[self.channelListPrivate addObject:channel];
-		} else {
-			NSUInteger privateMessageIndex = [self.channelListPrivate
-				indexOfObjectPassingTest:^BOOL(IRCChannel *object, NSUInteger index, BOOL *stop) {
-					return (object.isChannel == NO);
-				}];
+    /* Add channels atop of the first non-channel (private message).
+     Private messages can be add to the bottom of the array. */
+    if (channel.isChannel == NO) {
+      [self.channelListPrivate addObject:channel];
+    } else {
+      NSUInteger privateMessageIndex = [self.channelListPrivate
+          indexOfObjectPassingTest:^BOOL(IRCChannel *object, NSUInteger index,
+                                         BOOL *stop) {
+            return (object.isChannel == NO);
+          }];
 
-			if (privateMessageIndex == NSNotFound) {
-				[self.channelListPrivate addObject:channel];
-			} else {
-				[self.channelListPrivate insertObject:channel atIndex:privateMessageIndex];
-			}
-		}
+      if (privateMessageIndex == NSNotFound) {
+        [self.channelListPrivate addObject:channel];
+      } else {
+        [self.channelListPrivate insertObject:channel
+                                      atIndex:privateMessageIndex];
+      }
+    }
 
-		[self updateStoredChannelList];
-	}
+    [self updateStoredChannelList];
+  }
 }
 
-- (void)addChannel:(IRCChannel *)channel atPosition:(NSUInteger)position
-{
-	NSParameterAssert(channel != nil);
+- (void)addChannel:(IRCChannel *)channel atPosition:(NSUInteger)position {
+  NSParameterAssert(channel != nil);
 
-	@synchronized(self.channelListPrivate) {
-		if ([self.channelListPrivate containsObject:channel]) {
-			return;
-		}
+  @synchronized(self.channelListPrivate) {
+    if ([self.channelListPrivate containsObject:channel]) {
+      return;
+    }
 
-		[self.channelListPrivate insertObject:channel atIndex:position];
+    [self.channelListPrivate insertObject:channel atIndex:position];
 
-		[self updateStoredChannelList];
-	}
+    [self updateStoredChannelList];
+  }
 }
 
-- (void)removeChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)removeChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	@synchronized(self.channelListPrivate) {
-		[self.channelListPrivate removeObjectIdenticalTo:channel];
+  @synchronized(self.channelListPrivate) {
+    [self.channelListPrivate removeObjectIdenticalTo:channel];
 
-		[self updateStoredChannelList];
-	}
+    [self updateStoredChannelList];
+  }
 }
 
-- (NSUInteger)indexOfChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (NSUInteger)indexOfChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	@synchronized(self.channelListPrivate) {
-		return [self.channelListPrivate indexOfObject:channel];
-	}
+  @synchronized(self.channelListPrivate) {
+    return [self.channelListPrivate indexOfObject:channel];
+  }
 }
 
-- (NSUInteger)channelCount
-{
-	@synchronized(self.channelListPrivate) {
-		return self.channelListPrivate.count;
-	}
+- (NSUInteger)channelCount {
+  @synchronized(self.channelListPrivate) {
+    return self.channelListPrivate.count;
+  }
 }
 
-- (NSArray<IRCChannel *> *)channelList
-{
-	@synchronized(self.channelListPrivate) {
-		return [self.channelListPrivate copy];
-	}
+- (NSArray<IRCChannel *> *)channelList {
+  @synchronized(self.channelListPrivate) {
+    return [self.channelListPrivate copy];
+  }
 }
 
-- (nullable IRCChannel *)channelAtIndex:(NSUInteger)index
-{
-	@synchronized(self.channelListPrivate) {
-		if (index >= self.channelListPrivate.count) {
-			return nil;
-		}
+- (nullable IRCChannel *)channelAtIndex:(NSUInteger)index {
+  @synchronized(self.channelListPrivate) {
+    if (index >= self.channelListPrivate.count) {
+      return nil;
+    }
 
-		return self.channelListPrivate[index];
-	}
+    return self.channelListPrivate[index];
+  }
 }
 
-- (void)setChannelList:(NSArray<IRCChannel *> *)channelList
-{
-	NSParameterAssert(channelList != nil);
+- (void)setChannelList:(NSArray<IRCChannel *> *)channelList {
+  NSParameterAssert(channelList != nil);
 
-	@synchronized(self.channelListPrivate) {
-		[self.channelListPrivate removeAllObjects];
+  @synchronized(self.channelListPrivate) {
+    [self.channelListPrivate removeAllObjects];
 
-		[self.channelListPrivate addObjectsFromArray:channelList];
+    [self.channelListPrivate addObjectsFromArray:channelList];
 
-		[self updateStoredChannelList];
-	}
+    [self updateStoredChannelList];
+  }
 }
 
 #pragma mark -
 #pragma mark IRCTreeItem
 
-- (BOOL)isClient
-{
-	return YES;
+- (BOOL)isClient {
+  return YES;
 }
 
-- (BOOL)isActive
-{
-	return self.isLoggedIn;
+- (BOOL)isActive {
+  return self.isLoggedIn;
 }
 
-- (nullable IRCClient *)associatedClient
-{
-	return self;
+- (nullable IRCClient *)associatedClient {
+  return self;
 }
 
-- (nullable IRCChannel *)associatedChannel
-{
-	return nil;
+- (nullable IRCChannel *)associatedChannel {
+  return nil;
 }
 
-- (NSUInteger)numberOfChildren
-{
-	return self.channelCount;
+- (NSUInteger)numberOfChildren {
+  return self.channelCount;
 }
 
-- (nullable id)childAtIndex:(NSUInteger)index
-{
-	return [self channelAtIndex:index];
+- (nullable id)childAtIndex:(NSUInteger)index {
+  return [self channelAtIndex:index];
 }
 
-- (NSString *)label
-{
-	return self.config.connectionName;
+- (NSString *)label {
+  return self.config.connectionName;
 }
 
 #pragma mark -
@@ -1430,1241 +1445,1293 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 /* UTF8ONLY (ISUPPORT) servers reject anything that is not UTF-8, so the
  configured encodings are ignored for the lifetime of such a connection. */
-- (NSStringEncoding)effectivePrimaryEncoding
-{
-	if (self.supportInfo.utf8Only) {
-		return NSUTF8StringEncoding;
-	}
+- (NSStringEncoding)effectivePrimaryEncoding {
+  if (self.supportInfo.utf8Only) {
+    return NSUTF8StringEncoding;
+  }
 
-	return self.config.primaryEncoding;
+  return self.config.primaryEncoding;
 }
 
-- (NSStringEncoding)effectiveFallbackEncoding
-{
-	if (self.supportInfo.utf8Only) {
-		return NSUTF8StringEncoding;
-	}
+- (NSStringEncoding)effectiveFallbackEncoding {
+  if (self.supportInfo.utf8Only) {
+    return NSUTF8StringEncoding;
+  }
 
-	return self.config.fallbackEncoding;
+  return self.config.fallbackEncoding;
 }
 
-- (nullable NSData *)convertToCommonEncoding:(NSString *)string
-{
-	NSParameterAssert(string != nil);
+- (nullable NSData *)convertToCommonEncoding:(NSString *)string {
+  NSParameterAssert(string != nil);
 
-	NSData *data = [string dataUsingEncoding:self.effectivePrimaryEncoding allowLossyConversion:NO];
+  NSData *data = [string dataUsingEncoding:self.effectivePrimaryEncoding
+                      allowLossyConversion:NO];
 
-	if (data == nil) {
-		data = [string dataUsingEncoding:self.effectiveFallbackEncoding allowLossyConversion:NO];
+  if (data == nil) {
+    data = [string dataUsingEncoding:self.effectiveFallbackEncoding
+                allowLossyConversion:NO];
 
-		if (data == nil) {
-			data = [string dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES];
-		}
-	}
+    if (data == nil) {
+      data = [string dataUsingEncoding:NSASCIIStringEncoding
+                  allowLossyConversion:YES];
+    }
+  }
 
-	if (data == nil) {
-		LogToConsoleError("NSData encode failure");
-		LogStackTrace();
-	}
+  if (data == nil) {
+    LogToConsoleError("NSData encode failure");
+    LogStackTrace();
+  }
 
-	return data;
+  return data;
 }
 
-- (nullable NSString *)convertFromCommonEncoding:(NSData *)data
-{
-	NSParameterAssert(data != nil);
+- (nullable NSString *)convertFromCommonEncoding:(NSData *)data {
+  NSParameterAssert(data != nil);
 
-	NSString *string = [NSString stringWithBytes:data.bytes length:data.length encoding:self.effectivePrimaryEncoding];
+  NSString *string = [NSString stringWithBytes:data.bytes
+                                        length:data.length
+                                      encoding:self.effectivePrimaryEncoding];
 
-	if (string == nil) {
-		string = [NSString stringWithBytes:data.bytes length:data.length encoding:self.effectiveFallbackEncoding];
+  if (string == nil) {
+    string = [NSString stringWithBytes:data.bytes
+                                length:data.length
+                              encoding:self.effectiveFallbackEncoding];
 
-		/* ISO Latin 1 maps every byte to a character which means
-		 decoding can never fail at this point; ASCII would reject
-		 any byte above 0x7F and leave the line undecoded. */
-		if (string == nil) {
-			string = [NSString stringWithBytes:data.bytes length:data.length encoding:NSISOLatin1StringEncoding];
-		}
-	}
+    /* ISO Latin 1 maps every byte to a character which means
+     decoding can never fail at this point; ASCII would reject
+     any byte above 0x7F and leave the line undecoded. */
+    if (string == nil) {
+      string = [NSString stringWithBytes:data.bytes
+                                  length:data.length
+                                encoding:NSISOLatin1StringEncoding];
+    }
+  }
 
-	if (string == nil) {
-		LogToConsoleError("NSData decode failure");
-		LogStackTrace();
-	}
+  if (string == nil) {
+    LogToConsoleError("NSData decode failure");
+    LogStackTrace();
+  }
 
-	return string;
+  return string;
 }
 
 #pragma mark -
 #pragma mark Address Book
 
-- (NSArray<IRCAddressBookEntry *> *)findIgnoresForHostmask:(NSString *)hostmask
-{
-	return [self.addressBookMatchCache findIgnoresForHostmask:hostmask];
+- (NSArray<IRCAddressBookEntry *> *)findIgnoresForHostmask:
+    (NSString *)hostmask {
+  return [self.addressBookMatchCache findIgnoresForHostmask:hostmask];
 }
 
-- (nullable IRCAddressBookEntry *)findUserTrackingAddressBookEntryForHostmask:(NSString *)hostmask
-{
-	/* We chop off the nickname from the host and only use that in the
-	 matching to keep everything a little more consistent internally. */
-	NSString *nickname = hostmask.nicknameFromHostmask;
+- (nullable IRCAddressBookEntry *)findUserTrackingAddressBookEntryForHostmask:
+    (NSString *)hostmask {
+  /* We chop off the nickname from the host and only use that in the
+   matching to keep everything a little more consistent internally. */
+  NSString *nickname = hostmask.nicknameFromHostmask;
 
-	if (nickname == nil) {
-		return nil;
-	}
+  if (nickname == nil) {
+    return nil;
+  }
 
-	return [self findUserTrackingAddressBookEntryForNickname:nickname];
+  return [self findUserTrackingAddressBookEntryForNickname:nickname];
 }
 
-- (nullable IRCAddressBookEntry *)findUserTrackingAddressBookEntryForNickname:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (nullable IRCAddressBookEntry *)findUserTrackingAddressBookEntryForNickname:
+    (NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	NSString *hostmask = [NSString stringWithFormat:@"%@!*@*", nickname];
+  NSString *hostmask = [NSString stringWithFormat:@"%@!*@*", nickname];
 
-	return [self findAddressBookEntryForHostmask:hostmask];
+  return [self findAddressBookEntryForHostmask:hostmask];
 }
 
-- (nullable IRCAddressBookEntry *)findAddressBookEntryForHostmask:(NSString *)hostmask
-{
-	return [self.addressBookMatchCache findAddressBookEntryForHostmask:hostmask];
+- (nullable IRCAddressBookEntry *)findAddressBookEntryForHostmask:
+    (NSString *)hostmask {
+  return [self.addressBookMatchCache findAddressBookEntryForHostmask:hostmask];
 }
 
-- (void)clearAddressBookCache
-{
-	[self.addressBookMatchCache clearCachedMatches];
+- (void)clearAddressBookCache {
+  [self.addressBookMatchCache clearCachedMatches];
 }
 
-- (void)clearAddressBookCacheForHostmask:(NSString *)hostmask
-{
-	/* Clear host */
-	[self.addressBookMatchCache clearCachedMatchesForHostmask:hostmask];
+- (void)clearAddressBookCacheForHostmask:(NSString *)hostmask {
+  /* Clear host */
+  [self.addressBookMatchCache clearCachedMatchesForHostmask:hostmask];
 
-	/* Clear nickname */
-	NSString *nickname = hostmask.nicknameFromHostmask;
+  /* Clear nickname */
+  NSString *nickname = hostmask.nicknameFromHostmask;
 
-	NSString *nicknameHostmask = [NSString stringWithFormat:@"%@!*@*", nickname];
+  NSString *nicknameHostmask = [NSString stringWithFormat:@"%@!*@*", nickname];
 
-	[self.addressBookMatchCache clearCachedMatchesForHostmask:nicknameHostmask];
+  [self.addressBookMatchCache clearCachedMatchesForHostmask:nicknameHostmask];
 }
 
 #pragma mark -
 #pragma mark Output Rules
 
-- (BOOL)outputRuleMatchedInMessage:(NSString *)message inChannel:(nullable IRCChannel *)channel
-{
-	NSParameterAssert(message != nil);
+- (BOOL)outputRuleMatchedInMessage:(NSString *)message
+                         inChannel:(nullable IRCChannel *)channel {
+  NSParameterAssert(message != nil);
 
-	if ([TPCPreferences removeAllFormatting] == NO) {
-		message = message.stripIRCEffects;
-	}
+  if ([TPCPreferences removeAllFormatting] == NO) {
+    message = message.stripIRCEffects;
+  }
 
-	NSArray *rules = sharedPluginManager().pluginOutputSuppressionRules;
+  NSArray *rules = sharedPluginManager().pluginOutputSuppressionRules;
 
-	for (THOPluginOutputSuppressionRule *rule in rules) {
-		if ([XRRegularExpression string:message isMatchedByRegex:rule.match] == NO) {
-			continue;
-		}
+  for (THOPluginOutputSuppressionRule *rule in rules) {
+    if ([XRRegularExpression string:message
+                   isMatchedByRegex:rule.match] == NO) {
+      continue;
+    }
 
-		if (channel) {
-			if ((channel.isChannel && rule.restrictChannel) ||
-				(channel.isPrivateMessage && rule.restrictPrivateMessage)) {
-				return YES;
-			}
-		} else {
-			if (rule.restrictConsole) {
-				return YES;
-			}
-		}
-	}
+    if (channel) {
+      if ((channel.isChannel && rule.restrictChannel) ||
+          (channel.isPrivateMessage && rule.restrictPrivateMessage)) {
+        return YES;
+      }
+    } else {
+      if (rule.restrictConsole) {
+        return YES;
+      }
+    }
+  }
 
-	return NO;
+  return NO;
 }
 
 #pragma mark -
 #pragma mark Notifications
 
-- (nullable NSString *)formatNotificationToSpeak:(TLOSpokenNotification *)notification
-{
-	NSParameterAssert(notification != nil);
+- (nullable NSString *)formatNotificationToSpeak:
+    (TLOSpokenNotification *)notification {
+  NSParameterAssert(notification != nil);
+
+  if (self.isTerminating) {
+    return nil;
+  }
+
+  NSString *formattedMessage = nil;
+
+  TXNotificationType eventType = notification.notificationType;
+
+  IRCChannel *channel = notification.channel;
+
+  NSString *nickname = notification.nickname;
+
+  NSString *text = notification.text;
+
+  if (text) {
+    text = text.trim;
+
+    if ([TPCPreferences removeAllFormatting] == NO) {
+      text = text.stripIRCEffects;
+    }
+  }
+
+  switch (eventType) {
+  case TXNotificationTypeHighlight: {
+    NSParameterAssert(channel != nil);
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
+
+    if (text.length == 0) {
+      break;
+    }
+
+    /* Highlights are spoken regardless of whether the user has configured
+             Channel Messages to be only spoken for selection. When the user has
+             configured that preference, then we exclude the channel name at
+       least because that information is uninteresting. */
+    /* For private messages, we speak everything, regardless of any preference.
+     */
+    BOOL isChannel = channel.isChannel;
+
+    BOOL onlySpeakEventsForSelection =
+        [TPCPreferences onlySpeakEventsForSelection];
+
+    BOOL speakChannelName =
+        /* 1 */ (isChannel == NO ||
+                 /* 2 */
+                 (onlySpeakEventsForSelection == NO &&
+                  [TPCPreferences channelMessageSpeakChannelName]) ||
+                 /* 2 */
+                 (onlySpeakEventsForSelection &&
+                  [mainWindow() isItemSelected:channel] == NO));
+
+    BOOL speakNickname =
+        (isChannel == NO || [TPCPreferences channelMessageSpeakNickname]);
+
+    NSMutableString *mutableMessage = [NSMutableString string];
+
+    [mutableMessage appendString:TXTLS(@"Notifications[qld-sa]")];
+
+    if (speakChannelName || speakNickname) {
+      if (speakChannelName) {
+        if (isChannel) {
+          [mutableMessage
+              appendString:TXTLS(
+                               @"Notifications[ke8-17]",
+                               channel.name.channelNameWithoutBang)]; // Channel
+        } else {
+          [mutableMessage
+              appendString:TXTLS(@"Notifications[6nw-ec]")]; // Private Message
+        }
+      }
+
+      if (speakNickname) {
+        if (isChannel) {
+          [mutableMessage appendString:TXTLS(@"Notifications[qy9-86]",
+                                             nickname)]; // by <nickname>
+        } else {
+          [mutableMessage appendString:TXTLS(@"Notifications[a7i-pu]",
+                                             nickname)]; // from <nickname>
+        }
+      }
+
+      [mutableMessage appendString:TXTLS(@"Notifications[g9t-bt]")];
+    }
+
+    [mutableMessage appendString:text];
+
+    formattedMessage = [mutableMessage copy];
+
+    break;
+  }
+  case TXNotificationTypeChannelMessage:
+  case TXNotificationTypeChannelNotice: {
+    NSParameterAssert(channel != nil);
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
+
+    if (text.length == 0) {
+      break;
+    }
 
-	if (self.isTerminating) {
-		return nil;
-	}
+    BOOL onlySpeakEventsForSelection =
+        [TPCPreferences onlySpeakEventsForSelection];
 
-	NSString *formattedMessage = nil;
+    BOOL channelIsSelected = [mainWindow() isItemSelected:channel];
 
-	TXNotificationType eventType = notification.notificationType;
+    if (onlySpeakEventsForSelection && channelIsSelected == NO) {
+      break;
+    }
 
-	IRCChannel *channel = notification.channel;
+    BOOL speakChannelName = (onlySpeakEventsForSelection == NO &&
+                             [TPCPreferences channelMessageSpeakChannelName]);
 
-	NSString *nickname = notification.nickname;
+    BOOL speakNickname = [TPCPreferences channelMessageSpeakNickname];
 
-	NSString *text = notification.text;
+    NSMutableString *mutableMessage = [NSMutableString string];
 
-	if (text) {
-		text = text.trim;
+    if (speakChannelName || speakNickname) {
+      if (eventType == TXNotificationTypeChannelMessage) {
+        [mutableMessage appendString:TXTLS(@"Notifications[tao-i2]")];
+      } else if (eventType == TXNotificationTypeChannelNotice) {
+        [mutableMessage appendString:TXTLS(@"Notifications[kk4-68]")];
+      }
 
-		if ([TPCPreferences removeAllFormatting] == NO) {
-			text = text.stripIRCEffects;
-		}
-	}
+      if (speakChannelName) {
+        [mutableMessage
+            appendString:TXTLS(@"Notifications[ke8-17]",
+                               channel.name.channelNameWithoutBang)];
+      }
+
+      if (speakNickname) {
+        [mutableMessage appendString:TXTLS(@"Notifications[qy9-86]", nickname)];
+      }
+
+      [mutableMessage appendString:TXTLS(@"Notifications[g9t-bt]")];
+    }
+
+    [mutableMessage appendString:text];
+
+    formattedMessage = [mutableMessage copy];
+
+    break;
+  }
+  case TXNotificationTypeNewPrivateMessage:
+  case TXNotificationTypePrivateMessage:
+  case TXNotificationTypePrivateNotice: {
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
+
+    if (text.length == 0) {
+      break;
+    }
+
+    NSString *formatter = nil;
+
+    if (eventType == TXNotificationTypeNewPrivateMessage) {
+      formatter = @"Notifications[rvb-9l]";
+    } else if (eventType == TXNotificationTypePrivateMessage) {
+      formatter = @"Notifications[2bu-ep]";
+    } else if (eventType == TXNotificationTypePrivateNotice) {
+      formatter = @"Notifications[6jl-vh]";
+    }
+
+    formattedMessage = TXTLS(formatter, nickname, text);
 
-	switch (eventType) {
-	case TXNotificationTypeHighlight: {
-		NSParameterAssert(channel != nil);
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
+    break;
+  }
+  case TXNotificationTypeKick: {
+    NSParameterAssert(channel != nil);
+    NSParameterAssert(nickname != nil);
 
-		if (text.length == 0) {
-			break;
-		}
+    NSString *formatter = @"Notifications[5yu-bf]";
 
-		/* Highlights are spoken regardless of whether the user has configured
-			 Channel Messages to be only spoken for selection. When the user has 
-			 configured that preference, then we exclude the channel name at least
-			 because that information is uninteresting. */
-		/* For private messages, we speak everything, regardless of any preference. */
-		BOOL isChannel = channel.isChannel;
+    formattedMessage =
+        TXTLS(formatter, channel.name.channelNameWithoutBang, nickname);
 
-		BOOL onlySpeakEventsForSelection = [TPCPreferences onlySpeakEventsForSelection];
+    break;
+  }
+  case TXNotificationTypeInvite: {
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
 
-		BOOL speakChannelName =
-			/* 1 */ (isChannel == NO ||
-					 /* 2 */ (onlySpeakEventsForSelection == NO && [TPCPreferences channelMessageSpeakChannelName]) ||
-					 /* 2 */ (onlySpeakEventsForSelection && [mainWindow() isItemSelected:channel] == NO));
+    NSString *formatter = @"Notifications[l5i-at]";
 
-		BOOL speakNickname = (isChannel == NO || [TPCPreferences channelMessageSpeakNickname]);
+    formattedMessage = TXTLS(formatter, text.channelNameWithoutBang, nickname);
 
-		NSMutableString *mutableMessage = [NSMutableString string];
+    break;
+  }
+  case TXNotificationTypeConnect:
+  case TXNotificationTypeDisconnect: {
+    NSString *formatter = nil;
 
-		[mutableMessage appendString:TXTLS(@"Notifications[qld-sa]")];
+    if (eventType == TXNotificationTypeConnect) {
+      formatter = @"Notifications[z4p-yr]";
+    } else if (eventType == TXNotificationTypeDisconnect) {
+      formatter = @"Notifications[fd0-f8]";
+    }
 
-		if (speakChannelName || speakNickname) {
-			if (speakChannelName) {
-				if (isChannel) {
-					[mutableMessage
-						appendString:TXTLS(@"Notifications[ke8-17]", channel.name.channelNameWithoutBang)]; // Channel
-				} else {
-					[mutableMessage appendString:TXTLS(@"Notifications[6nw-ec]")]; // Private Message
-				}
-			}
+    formattedMessage = TXTLS(formatter, self.networkNameAlt);
 
-			if (speakNickname) {
-				if (isChannel) {
-					[mutableMessage appendString:TXTLS(@"Notifications[qy9-86]", nickname)]; // by <nickname>
-				} else {
-					[mutableMessage appendString:TXTLS(@"Notifications[a7i-pu]", nickname)]; // from <nickname>
-				}
-			}
+    break;
+  }
+  case TXNotificationTypeAddressBookMatch: {
+    NSParameterAssert(text != nil);
 
-			[mutableMessage appendString:TXTLS(@"Notifications[g9t-bt]")];
-		}
+    formattedMessage = text;
 
-		[mutableMessage appendString:text];
+    break;
+  }
+  case TXNotificationTypeFileTransferSendSuccessful:
+  case TXNotificationTypeFileTransferReceiveSuccessful:
+  case TXNotificationTypeFileTransferSendFailed:
+  case TXNotificationTypeFileTransferReceiveFailed:
+  case TXNotificationTypeFileTransferReceiveRequested: {
+    NSParameterAssert(nickname != nil);
 
-		formattedMessage = [mutableMessage copy];
+    NSString *formatter = nil;
 
-		break;
-	}
-	case TXNotificationTypeChannelMessage:
-	case TXNotificationTypeChannelNotice: {
-		NSParameterAssert(channel != nil);
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
+    if (eventType == TXNotificationTypeFileTransferSendSuccessful) {
+      formatter = @"Notifications[5e4-vg]";
+    } else if (eventType == TXNotificationTypeFileTransferReceiveSuccessful) {
+      formatter = @"Notifications[4cd-p3]";
+    } else if (eventType == TXNotificationTypeFileTransferSendFailed) {
+      formatter = @"Notifications[f0u-32]";
+    } else if (eventType == TXNotificationTypeFileTransferReceiveFailed) {
+      formatter = @"Notifications[mak-bj]";
+    } else if (eventType == TXNotificationTypeFileTransferReceiveRequested) {
+      formatter = @"Notifications[at0-vi]";
+    }
 
-		if (text.length == 0) {
-			break;
-		}
+    formattedMessage = TXTLS(formatter, nickname);
 
-		BOOL onlySpeakEventsForSelection = [TPCPreferences onlySpeakEventsForSelection];
+    break;
+  }
+  case TXNotificationTypeUserJoined:
+  case TXNotificationTypeUserParted: {
+    NSParameterAssert(channel != nil);
+    NSParameterAssert(nickname != nil);
 
-		BOOL channelIsSelected = [mainWindow() isItemSelected:channel];
+    NSString *formatter = nil;
 
-		if (onlySpeakEventsForSelection && channelIsSelected == NO) {
-			break;
-		}
+    if (eventType == TXNotificationTypeUserJoined) {
+      formatter = @"Notifications[bwu-ps]";
+    } else if (eventType == TXNotificationTypeUserParted) {
+      formatter = @"Notifications[4aq-hz]";
+    }
 
-		BOOL speakChannelName = (onlySpeakEventsForSelection == NO && [TPCPreferences channelMessageSpeakChannelName]);
+    formattedMessage =
+        TXTLS(formatter, nickname, channel.name.channelNameWithoutBang);
 
-		BOOL speakNickname = [TPCPreferences channelMessageSpeakNickname];
+    break;
+  }
+  case TXNotificationTypeUserDisconnected: {
+    NSParameterAssert(nickname != nil);
 
-		NSMutableString *mutableMessage = [NSMutableString string];
+    NSString *formatter = @"Notifications[sqf-4y]";
 
-		if (speakChannelName || speakNickname) {
-			if (eventType == TXNotificationTypeChannelMessage) {
-				[mutableMessage appendString:TXTLS(@"Notifications[tao-i2]")];
-			} else if (eventType == TXNotificationTypeChannelNotice) {
-				[mutableMessage appendString:TXTLS(@"Notifications[kk4-68]")];
-			}
-
-			if (speakChannelName) {
-				[mutableMessage appendString:TXTLS(@"Notifications[ke8-17]", channel.name.channelNameWithoutBang)];
-			}
-
-			if (speakNickname) {
-				[mutableMessage appendString:TXTLS(@"Notifications[qy9-86]", nickname)];
-			}
-
-			[mutableMessage appendString:TXTLS(@"Notifications[g9t-bt]")];
-		}
-
-		[mutableMessage appendString:text];
-
-		formattedMessage = [mutableMessage copy];
+    formattedMessage = TXTLS(formatter, nickname);
 
-		break;
-	}
-	case TXNotificationTypeNewPrivateMessage:
-	case TXNotificationTypePrivateMessage:
-	case TXNotificationTypePrivateNotice: {
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
+    break;
+  }
+  }
 
-		if (text.length == 0) {
-			break;
-		}
-
-		NSString *formatter = nil;
-
-		if (eventType == TXNotificationTypeNewPrivateMessage) {
-			formatter = @"Notifications[rvb-9l]";
-		} else if (eventType == TXNotificationTypePrivateMessage) {
-			formatter = @"Notifications[2bu-ep]";
-		} else if (eventType == TXNotificationTypePrivateNotice) {
-			formatter = @"Notifications[6jl-vh]";
-		}
-
-		formattedMessage = TXTLS(formatter, nickname, text);
-
-		break;
-	}
-	case TXNotificationTypeKick: {
-		NSParameterAssert(channel != nil);
-		NSParameterAssert(nickname != nil);
-
-		NSString *formatter = @"Notifications[5yu-bf]";
-
-		formattedMessage = TXTLS(formatter, channel.name.channelNameWithoutBang, nickname);
-
-		break;
-	}
-	case TXNotificationTypeInvite: {
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
-
-		NSString *formatter = @"Notifications[l5i-at]";
-
-		formattedMessage = TXTLS(formatter, text.channelNameWithoutBang, nickname);
-
-		break;
-	}
-	case TXNotificationTypeConnect:
-	case TXNotificationTypeDisconnect: {
-		NSString *formatter = nil;
-
-		if (eventType == TXNotificationTypeConnect) {
-			formatter = @"Notifications[z4p-yr]";
-		} else if (eventType == TXNotificationTypeDisconnect) {
-			formatter = @"Notifications[fd0-f8]";
-		}
-
-		formattedMessage = TXTLS(formatter, self.networkNameAlt);
-
-		break;
-	}
-	case TXNotificationTypeAddressBookMatch: {
-		NSParameterAssert(text != nil);
-
-		formattedMessage = text;
-
-		break;
-	}
-	case TXNotificationTypeFileTransferSendSuccessful:
-	case TXNotificationTypeFileTransferReceiveSuccessful:
-	case TXNotificationTypeFileTransferSendFailed:
-	case TXNotificationTypeFileTransferReceiveFailed:
-	case TXNotificationTypeFileTransferReceiveRequested: {
-		NSParameterAssert(nickname != nil);
-
-		NSString *formatter = nil;
-
-		if (eventType == TXNotificationTypeFileTransferSendSuccessful) {
-			formatter = @"Notifications[5e4-vg]";
-		} else if (eventType == TXNotificationTypeFileTransferReceiveSuccessful) {
-			formatter = @"Notifications[4cd-p3]";
-		} else if (eventType == TXNotificationTypeFileTransferSendFailed) {
-			formatter = @"Notifications[f0u-32]";
-		} else if (eventType == TXNotificationTypeFileTransferReceiveFailed) {
-			formatter = @"Notifications[mak-bj]";
-		} else if (eventType == TXNotificationTypeFileTransferReceiveRequested) {
-			formatter = @"Notifications[at0-vi]";
-		}
-
-		formattedMessage = TXTLS(formatter, nickname);
-
-		break;
-	}
-	case TXNotificationTypeUserJoined:
-	case TXNotificationTypeUserParted: {
-		NSParameterAssert(channel != nil);
-		NSParameterAssert(nickname != nil);
-
-		NSString *formatter = nil;
-
-		if (eventType == TXNotificationTypeUserJoined) {
-			formatter = @"Notifications[bwu-ps]";
-		} else if (eventType == TXNotificationTypeUserParted) {
-			formatter = @"Notifications[4aq-hz]";
-		}
-
-		formattedMessage = TXTLS(formatter, nickname, channel.name.channelNameWithoutBang);
-
-		break;
-	}
-	case TXNotificationTypeUserDisconnected: {
-		NSParameterAssert(nickname != nil);
-
-		NSString *formatter = @"Notifications[sqf-4y]";
-
-		formattedMessage = TXTLS(formatter, nickname);
-
-		break;
-	}
-	}
-
-	return formattedMessage;
+  return formattedMessage;
 }
 
-- (void)clearEventsToSpeak
-{
-	[[TXSharedApplication sharedSpeechSynthesizer] clearQueueForClient:self];
+- (void)clearEventsToSpeak {
+  [[TXSharedApplication sharedSpeechSynthesizer] clearQueueForClient:self];
 }
 
 - (void)speakEvent:(TXNotificationType)eventType
-		  lineType:(TVCLogLineType)lineType
-			target:(null_unspecified IRCTreeItem *)target
-		  nickname:(null_unspecified NSString *)nickname
-			  text:(null_unspecified NSString *)text
-{
-	if ([sharedNotificationController() speakEvent:eventType inChannel:(IRCChannel *)target] == NO) {
-		return;
-	}
+          lineType:(TVCLogLineType)lineType
+            target:(null_unspecified IRCTreeItem *)target
+          nickname:(null_unspecified NSString *)nickname
+              text:(null_unspecified NSString *)text {
+  if ([sharedNotificationController() speakEvent:eventType
+                                       inChannel:(IRCChannel *)target] == NO) {
+    return;
+  }
 
-	if (target == nil) {
-		target = self;
-	}
+  if (target == nil) {
+    target = self;
+  }
 
-	TLOSpokenNotification *notification = [[TLOSpokenNotification alloc] initWithNotification:eventType
-																					 lineType:lineType
-																					   target:target
-																					 nickname:nickname
-																						 text:text];
+  TLOSpokenNotification *notification =
+      [[TLOSpokenNotification alloc] initWithNotification:eventType
+                                                 lineType:lineType
+                                                   target:target
+                                                 nickname:nickname
+                                                     text:text];
 
-	[[TXSharedApplication sharedSpeechSynthesizer] speak:notification];
+  [[TXSharedApplication sharedSpeechSynthesizer] speak:notification];
 }
 
 - (BOOL)notifyText:(TXNotificationType)eventType
-		  lineType:(TVCLogLineType)lineType
-			target:(IRCChannel *)target
-		  nickname:(NSString *)nickname
-			  text:(NSString *)text
-{
-	return [self notifyEvent:eventType lineType:lineType target:target nickname:nickname text:text userInfo:nil];
-}
-
-- (BOOL)notifyEvent:(TXNotificationType)eventType lineType:(TVCLogLineType)lineType
-{
-	return [self notifyEvent:eventType lineType:lineType target:nil nickname:nil text:nil userInfo:nil];
-}
-
-- (BOOL)notifyEvent:(TXNotificationType)eventType
-		   lineType:(TVCLogLineType)lineType
-			 target:(null_unspecified IRCChannel *)target
-		   nickname:(null_unspecified NSString *)nickname
-			   text:(null_unspecified NSString *)text
-{
-	return [self notifyEvent:eventType lineType:lineType target:target nickname:nickname text:text userInfo:nil];
+          lineType:(TVCLogLineType)lineType
+            target:(IRCChannel *)target
+          nickname:(NSString *)nickname
+              text:(NSString *)text {
+  return [self notifyEvent:eventType
+                  lineType:lineType
+                    target:target
+                  nickname:nickname
+                      text:text
+                  userInfo:nil];
 }
 
 - (BOOL)notifyEvent:(TXNotificationType)eventType
-		   lineType:(TVCLogLineType)lineType
-			 target:(null_unspecified IRCChannel *)target
-		   nickname:(null_unspecified NSString *)nickname
-			   text:(null_unspecified NSString *)text
-		   userInfo:(nullable NSDictionary<NSString *, id> *)userInfo
-{
-	if (self.isTerminating) {
-		return NO;
-	}
+           lineType:(TVCLogLineType)lineType {
+  return [self notifyEvent:eventType
+                  lineType:lineType
+                    target:nil
+                  nickname:nil
+                      text:nil
+                  userInfo:nil];
+}
 
-	/* One netsplit is one event, not one per user. */
-	if (self.collapsedNetsplitBatch != nil &&
-		(eventType == TXNotificationTypeUserJoined || eventType == TXNotificationTypeUserDisconnected)) {
-		return NO;
-	}
+- (BOOL)notifyEvent:(TXNotificationType)eventType
+           lineType:(TVCLogLineType)lineType
+             target:(null_unspecified IRCChannel *)target
+           nickname:(null_unspecified NSString *)nickname
+               text:(null_unspecified NSString *)text {
+  return [self notifyEvent:eventType
+                  lineType:lineType
+                    target:target
+                  nickname:nickname
+                      text:text
+                  userInfo:nil];
+}
 
-	BOOL isTextEvent = (eventType == TXNotificationTypeHighlight || eventType == TXNotificationTypeNewPrivateMessage ||
-						eventType == TXNotificationTypeChannelMessage || eventType == TXNotificationTypeChannelNotice ||
-						eventType == TXNotificationTypePrivateMessage || eventType == TXNotificationTypePrivateNotice);
+- (BOOL)notifyEvent:(TXNotificationType)eventType
+           lineType:(TVCLogLineType)lineType
+             target:(null_unspecified IRCChannel *)target
+           nickname:(null_unspecified NSString *)nickname
+               text:(null_unspecified NSString *)text
+           userInfo:(nullable NSDictionary<NSString *, id> *)userInfo {
+  if (self.isTerminating) {
+    return NO;
+  }
 
-	if (isTextEvent) {
-		if ([self nicknameIsMyself:nickname]) {
-			return NO;
-		}
-	}
+  /* One netsplit is one event, not one per user. */
+  if (self.collapsedNetsplitBatch != nil &&
+      (eventType == TXNotificationTypeUserJoined ||
+       eventType == TXNotificationTypeUserDisconnected)) {
+    return NO;
+  }
 
-	if (target && text != nil) {
-		if ([self outputRuleMatchedInMessage:text inChannel:target]) {
-			return NO;
-		}
-	}
+  BOOL isTextEvent = (eventType == TXNotificationTypeHighlight ||
+                      eventType == TXNotificationTypeNewPrivateMessage ||
+                      eventType == TXNotificationTypeChannelMessage ||
+                      eventType == TXNotificationTypeChannelNotice ||
+                      eventType == TXNotificationTypePrivateMessage ||
+                      eventType == TXNotificationTypePrivateNotice);
 
-	IRCChannelConfig *targetConfig = nil;
+  if (isTextEvent) {
+    if ([self nicknameIsMyself:nickname]) {
+      return NO;
+    }
+  }
 
-	if (target) {
-		targetConfig = target.config;
+  if (target && text != nil) {
+    if ([self outputRuleMatchedInMessage:text inChannel:target]) {
+      return NO;
+    }
+  }
 
-		if (eventType == TXNotificationTypeHighlight) {
-			if (targetConfig.ignoreHighlights) {
-				return YES;
-			}
-		} else {
-			if (targetConfig.pushNotifications == NO) {
-				return YES;
-			}
-		}
-	}
+  IRCChannelConfig *targetConfig = nil;
 
-	if ([sharedNotificationController() bounceDockIconForEvent:eventType inChannel:target]) {
-		if ([sharedNotificationController() bounceDockIconRepeatedlyForEvent:eventType inChannel:target]) {
-			[NSApp requestUserAttention:NSCriticalRequest];
-		} else {
-			[NSApp requestUserAttention:NSInformationalRequest];
-		}
-	}
+  if (target) {
+    targetConfig = target.config;
 
-	if (sharedNotificationController().areNotificationsDisabled) {
-		return YES;
-	}
+    if (eventType == TXNotificationTypeHighlight) {
+      if (targetConfig.ignoreHighlights) {
+        return YES;
+      }
+    } else {
+      if (targetConfig.pushNotifications == NO) {
+        return YES;
+      }
+    }
+  }
 
-	BOOL mainWindowIsFocused = (mainWindow().inactive == NO);
+  if ([sharedNotificationController() bounceDockIconForEvent:eventType
+                                                   inChannel:target]) {
+    if ([sharedNotificationController()
+            bounceDockIconRepeatedlyForEvent:eventType
+                                   inChannel:target]) {
+      [NSApp requestUserAttention:NSCriticalRequest];
+    } else {
+      [NSApp requestUserAttention:NSInformationalRequest];
+    }
+  }
 
-	BOOL postNotificationsWhileFocused = [TPCPreferences postNotificationsWhileInFocus];
+  if (sharedNotificationController().areNotificationsDisabled) {
+    return YES;
+  }
 
-	BOOL targetIsSelected = [mainWindow() isItemSelected:target];
+  BOOL mainWindowIsFocused = (mainWindow().inactive == NO);
 
-	BOOL onlySpeakEvent = (postNotificationsWhileFocused && mainWindowIsFocused && targetIsSelected);
+  BOOL postNotificationsWhileFocused =
+      [TPCPreferences postNotificationsWhileInFocus];
 
-	if ([TPCPreferences soundIsMuted] == NO) {
-		if (onlySpeakEvent == NO) {
-			NSString *soundName = [sharedNotificationController() soundForEvent:eventType inChannel:target];
+  BOOL targetIsSelected = [mainWindow() isItemSelected:target];
 
-			if (soundName) {
-				[TLOSoundPlayer playAlertSound:soundName];
-			}
-		}
+  BOOL onlySpeakEvent = (postNotificationsWhileFocused && mainWindowIsFocused &&
+                         targetIsSelected);
 
-		[self speakEvent:eventType lineType:lineType target:target nickname:nickname text:text];
-	}
+  if ([TPCPreferences soundIsMuted] == NO) {
+    if (onlySpeakEvent == NO) {
+      NSString *soundName =
+          [sharedNotificationController() soundForEvent:eventType
+                                              inChannel:target];
 
-	if (onlySpeakEvent) {
-		return YES;
-	}
+      if (soundName) {
+        [TLOSoundPlayer playAlertSound:soundName];
+      }
+    }
 
-	if ([sharedNotificationController() notificationEnabledForEvent:eventType inChannel:target] == NO) {
-		return YES;
-	}
+    [self speakEvent:eventType
+            lineType:lineType
+              target:target
+            nickname:nickname
+                text:text];
+  }
 
-	if (postNotificationsWhileFocused == NO && mainWindowIsFocused) {
-		if (eventType != TXNotificationTypeAddressBookMatch) {
-			return YES;
-		}
-	}
+  if (onlySpeakEvent) {
+    return YES;
+  }
 
-	if ([sharedNotificationController() disabledWhileAwayForEvent:eventType inChannel:target]) {
-		if (self.userIsAway) {
-			return YES;
-		}
-	}
+  if ([sharedNotificationController()
+          notificationEnabledForEvent:eventType
+                            inChannel:target] == NO) {
+    return YES;
+  }
 
-	NSString *eventTitle = nil;
+  if (postNotificationsWhileFocused == NO && mainWindowIsFocused) {
+    if (eventType != TXNotificationTypeAddressBookMatch) {
+      return YES;
+    }
+  }
 
-	NSString *eventDescription = nil;
+  if ([sharedNotificationController() disabledWhileAwayForEvent:eventType
+                                                      inChannel:target]) {
+    if (self.userIsAway) {
+      return YES;
+    }
+  }
 
-	if (userInfo == nil) {
-		if (target) {
-			userInfo = @{
-				TXNotificationUserInfoClientIdentifierKey : self.uniqueIdentifier,
-				TXNotificationUserInfoChannelIdentifierKey : target.uniqueIdentifier
-			};
-		} else {
-			userInfo = @{TXNotificationUserInfoClientIdentifierKey : self.uniqueIdentifier};
-		}
-	}
+  NSString *eventTitle = nil;
 
-	switch (eventType) {
-	case TXNotificationTypeHighlight:
-	case TXNotificationTypeNewPrivateMessage:
-	case TXNotificationTypeChannelMessage:
-	case TXNotificationTypeChannelNotice:
-	case TXNotificationTypePrivateMessage:
-	case TXNotificationTypePrivateNotice: {
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
+  NSString *eventDescription = nil;
 
-		if (eventType == TXNotificationTypeHighlight || eventType == TXNotificationTypeChannelMessage ||
-			eventType == TXNotificationTypeChannelNotice) {
-			NSParameterAssert(target != nil);
+  if (userInfo == nil) {
+    if (target) {
+      userInfo = @{
+        TXNotificationUserInfoClientIdentifierKey : self.uniqueIdentifier,
+        TXNotificationUserInfoChannelIdentifierKey : target.uniqueIdentifier
+      };
+    } else {
+      userInfo =
+          @{TXNotificationUserInfoClientIdentifierKey : self.uniqueIdentifier};
+    }
+  }
 
-			eventTitle = target.name;
-		}
+  switch (eventType) {
+  case TXNotificationTypeHighlight:
+  case TXNotificationTypeNewPrivateMessage:
+  case TXNotificationTypeChannelMessage:
+  case TXNotificationTypeChannelNotice:
+  case TXNotificationTypePrivateMessage:
+  case TXNotificationTypePrivateNotice: {
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
 
-		if (lineType == TVCLogLineTypeAction || lineType == TVCLogLineTypeActionNoHighlight) {
-			eventDescription = [NSString stringWithFormat:TXNotificationDialogActionNicknameFormat, nickname, text];
-		} else {
-			nickname = [self formatNickname:nickname inChannel:target];
+    if (eventType == TXNotificationTypeHighlight ||
+        eventType == TXNotificationTypeChannelMessage ||
+        eventType == TXNotificationTypeChannelNotice) {
+      NSParameterAssert(target != nil);
 
-			eventDescription = [NSString stringWithFormat:TXNotificationDialogStandardNicknameFormat, nickname, text];
-		}
+      eventTitle = target.name;
+    }
 
-		break;
-	}
-	case TXNotificationTypeFileTransferSendSuccessful:
-	case TXNotificationTypeFileTransferReceiveSuccessful:
-	case TXNotificationTypeFileTransferSendFailed:
-	case TXNotificationTypeFileTransferReceiveFailed:
-	case TXNotificationTypeFileTransferReceiveRequested: {
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
+    if (lineType == TVCLogLineTypeAction ||
+        lineType == TVCLogLineTypeActionNoHighlight) {
+      eventDescription =
+          [NSString stringWithFormat:TXNotificationDialogActionNicknameFormat,
+                                     nickname, text];
+    } else {
+      nickname = [self formatNickname:nickname inChannel:target];
 
-		eventTitle = nickname;
+      eventDescription =
+          [NSString stringWithFormat:TXNotificationDialogStandardNicknameFormat,
+                                     nickname, text];
+    }
 
-		eventDescription = text;
+    break;
+  }
+  case TXNotificationTypeFileTransferSendSuccessful:
+  case TXNotificationTypeFileTransferReceiveSuccessful:
+  case TXNotificationTypeFileTransferSendFailed:
+  case TXNotificationTypeFileTransferReceiveFailed:
+  case TXNotificationTypeFileTransferReceiveRequested: {
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
 
-		break;
-	}
-	case TXNotificationTypeConnect: {
-		eventTitle = self.networkNameAlt;
+    eventTitle = nickname;
 
-		break;
-	}
-	case TXNotificationTypeDisconnect: {
-		eventTitle = self.networkNameAlt;
+    eventDescription = text;
 
-		break;
-	}
-	case TXNotificationTypeAddressBookMatch: {
-		NSParameterAssert(text != nil);
+    break;
+  }
+  case TXNotificationTypeConnect: {
+    eventTitle = self.networkNameAlt;
 
-		eventDescription = text;
+    break;
+  }
+  case TXNotificationTypeDisconnect: {
+    eventTitle = self.networkNameAlt;
 
-		break;
-	}
-	case TXNotificationTypeKick: {
-		NSParameterAssert(target != nil);
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
+    break;
+  }
+  case TXNotificationTypeAddressBookMatch: {
+    NSParameterAssert(text != nil);
 
-		eventTitle = self.networkNameAlt;
+    eventDescription = text;
 
-		eventDescription = TXTLS(@"Notifications[fkt-p3]", nickname, target.name, text);
+    break;
+  }
+  case TXNotificationTypeKick: {
+    NSParameterAssert(target != nil);
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
 
-		break;
-	}
-	case TXNotificationTypeInvite: {
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
+    eventTitle = self.networkNameAlt;
 
-		eventTitle = self.networkNameAlt;
+    eventDescription =
+        TXTLS(@"Notifications[fkt-p3]", nickname, target.name, text);
 
-		eventDescription = TXTLS(@"Notifications[xl5-dn]", nickname, text);
+    break;
+  }
+  case TXNotificationTypeInvite: {
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
 
-		break;
-	}
-	case TXNotificationTypeUserJoined: {
-		NSParameterAssert(target != nil);
-		NSParameterAssert(nickname != nil);
+    eventTitle = self.networkNameAlt;
 
-		eventTitle = self.networkNameAlt;
+    eventDescription = TXTLS(@"Notifications[xl5-dn]", nickname, text);
 
-		eventDescription = TXTLS(@"Notifications[yas-us]", nickname, target.name);
+    break;
+  }
+  case TXNotificationTypeUserJoined: {
+    NSParameterAssert(target != nil);
+    NSParameterAssert(nickname != nil);
 
-		break;
-	}
-	case TXNotificationTypeUserParted: {
-		NSParameterAssert(target != nil);
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
+    eventTitle = self.networkNameAlt;
 
-		eventTitle = self.networkNameAlt;
+    eventDescription = TXTLS(@"Notifications[yas-us]", nickname, target.name);
 
-		if (text == nil || text.length == 0) {
-			eventDescription = TXTLS(@"Notifications[bu2-9m]", nickname, target.name);
-		} else {
-			eventDescription = TXTLS(@"Notifications[3ur-i8]", nickname, target.name, text);
-		}
+    break;
+  }
+  case TXNotificationTypeUserParted: {
+    NSParameterAssert(target != nil);
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
 
-		break;
-	}
-	case TXNotificationTypeUserDisconnected: {
-		NSParameterAssert(nickname != nil);
-		NSParameterAssert(text != nil);
+    eventTitle = self.networkNameAlt;
 
-		eventTitle = self.networkNameAlt;
+    if (text == nil || text.length == 0) {
+      eventDescription = TXTLS(@"Notifications[bu2-9m]", nickname, target.name);
+    } else {
+      eventDescription =
+          TXTLS(@"Notifications[3ur-i8]", nickname, target.name, text);
+    }
 
-		if (text == nil || text.length == 0) {
-			eventDescription = TXTLS(@"Notifications[7ao-n8]", nickname);
-		} else {
-			eventDescription = TXTLS(@"Notifications[ssw-m6]", nickname, text);
-		}
+    break;
+  }
+  case TXNotificationTypeUserDisconnected: {
+    NSParameterAssert(nickname != nil);
+    NSParameterAssert(text != nil);
 
-		break;
-	}
-	default: {
-		return YES;
-	}
-	}
+    eventTitle = self.networkNameAlt;
 
-	[sharedNotificationController() notify:eventType title:eventTitle description:eventDescription userInfo:userInfo];
+    if (text == nil || text.length == 0) {
+      eventDescription = TXTLS(@"Notifications[7ao-n8]", nickname);
+    } else {
+      eventDescription = TXTLS(@"Notifications[ssw-m6]", nickname, text);
+    }
 
-	return YES;
+    break;
+  }
+  default: {
+    return YES;
+  }
+  }
+
+  [sharedNotificationController() notify:eventType
+                                   title:eventTitle
+                             description:eventDescription
+                                userInfo:userInfo];
+
+  return YES;
 }
 
 #pragma mark -
 #pragma mark Playback
 
-- (void)playbackClearChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)playbackClearChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPlayback] == NO) {
-		return;
-	}
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPlayback] == NO) {
+    return;
+  }
 
-	if (channel.isPrivateMessage == NO || channel.isPrivateMessageForZNCUser) {
-		return;
-	}
+  if (channel.isPrivateMessage == NO || channel.isPrivateMessageForZNCUser) {
+    return;
+  }
 
-	NSString *command = [NSString stringWithFormat:@"clear %@", channel.name];
+  NSString *command = [NSString stringWithFormat:@"clear %@", channel.name];
 
-	if (self.isConnectedToZNC) {
-		[self sendCommand:command toZNCModuleNamed:@"playback"];
+  if (self.isConnectedToZNC) {
+    [self sendCommand:command toZNCModuleNamed:@"playback"];
 
-		return;
-	}
+    return;
+  }
 
-	[self send:@"PRIVMSG", @"*playback", command, nil];
+  [self send:@"PRIVMSG", @"*playback", command, nil];
 }
 
-- (void)requestPlayback
-{
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPlayback] == NO) {
-		return;
-	}
+- (void)requestPlayback {
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPlayback] == NO) {
+    return;
+  }
 
-	/* chathistory is requested per target as channels are joined and
-	 only fetches what the local scrollback lacks. It wins over a
-	 bouncer replaying everything. */
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityChatHistory]) {
-		return;
-	}
+  /* chathistory is requested per target as channels are joined and
+   only fetches what the local scrollback lacks. It wins over a
+   bouncer replaying everything. */
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityChatHistory]) {
+    return;
+  }
 
-	/* For our first connect, only playback using timestamp if logging was enabled. */
-	/* For all other connects, then playback timestamp regardless of logging. */
-	NSString *command = nil;
+  /* For our first connect, only playback using timestamp if logging was
+   * enabled. */
+  /* For all other connects, then playback timestamp regardless of logging. */
+  NSString *command = nil;
 
-	if ((self.successfulConnects > 1 || (self.successfulConnects == 1 && self.config.zncOnlyPlaybackLatest)) &&
-		self.lastMessageServerTime > 0) {
-		command = [NSString stringWithFormat:@"play * %.0f", self.lastMessageServerTime];
-	} else {
-		command = @"play * 0";
-	}
+  if ((self.successfulConnects > 1 ||
+       (self.successfulConnects == 1 && self.config.zncOnlyPlaybackLatest)) &&
+      self.lastMessageServerTime > 0) {
+    command =
+        [NSString stringWithFormat:@"play * %.0f", self.lastMessageServerTime];
+  } else {
+    command = @"play * 0";
+  }
 
-	if (self.isConnectedToZNC) {
-		[self sendCommand:command toZNCModuleNamed:@"playback"];
+  if (self.isConnectedToZNC) {
+    [self sendCommand:command toZNCModuleNamed:@"playback"];
 
-		return;
-	}
+    return;
+  }
 
-	[self send:@"PRIVMSG", @"*playback", command, nil];
+  [self send:@"PRIVMSG", @"*playback", command, nil];
 }
 
 #pragma mark -
 #pragma mark ZNC Bouncer Accessories
 
-- (void)zncPlaybackClearChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)zncPlaybackClearChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if (self.isConnectedToZNC == NO) {
-		return;
-	}
+  if (self.isConnectedToZNC == NO) {
+    return;
+  }
 
-	[self playbackClearChannel:channel];
+  [self playbackClearChannel:channel];
 }
 
-- (BOOL)nicknameIsZNCUser:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (BOOL)nicknameIsZNCUser:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	if (self.isConnectedToZNC == NO) {
-		return NO;
-	}
+  if (self.isConnectedToZNC == NO) {
+    return NO;
+  }
 
-	return [nickname hasPrefix:@"*"];
+  return [nickname hasPrefix:@"*"];
 }
 
-- (BOOL)nickname:(NSString *)nickname isZNCUser:(NSString *)zncNickname
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(zncNickname != nil);
+- (BOOL)nickname:(NSString *)nickname isZNCUser:(NSString *)zncNickname {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(zncNickname != nil);
 
-	return [nickname isEqualToString:[self nicknameAsZNCUser:zncNickname]];
+  return [nickname isEqualToString:[self nicknameAsZNCUser:zncNickname]];
 }
 
-- (nullable NSString *)nicknameAsZNCUser:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (nullable NSString *)nicknameAsZNCUser:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	if (self.isConnectedToZNC == NO) {
-		return nil;
-	}
+  if (self.isConnectedToZNC == NO) {
+    return nil;
+  }
 
-	return [@"*" stringByAppendingString:nickname];
+  return [@"*" stringByAppendingString:nickname];
 }
 
-- (BOOL)isSafeToPostNotificationForMessage:(IRCMessage *)message inChannel:(nullable IRCChannel *)channel
-{
-	NSParameterAssert(message != nil);
+- (BOOL)isSafeToPostNotificationForMessage:(IRCMessage *)message
+                                 inChannel:(nullable IRCChannel *)channel {
+  NSParameterAssert(message != nil);
 
-	/* History the server replayed on request is never news. */
-	if ([self batchMessageOfType:@"chathistory" containingMessage:message] != nil) {
-		return NO;
-	}
+  /* History the server replayed on request is never news. */
+  if ([self batchMessageOfType:@"chathistory"
+             containingMessage:message] != nil) {
+    return NO;
+  }
 
-	if (self.isConnectedToZNC == NO) {
-		return YES;
-	}
+  if (self.isConnectedToZNC == NO) {
+    return YES;
+  }
 
-	if (self.config.zncIgnoreUserNotifications) {
-		if (channel && [self nicknameIsZNCUser:channel.name]) {
-			return NO;
-		}
-	}
+  if (self.config.zncIgnoreUserNotifications) {
+    if (channel && [self nicknameIsZNCUser:channel.name]) {
+      return NO;
+    }
+  }
 
-	if (self.config.zncIgnorePlaybackNotifications == NO) {
-		return YES;
-	}
+  if (self.config.zncIgnorePlaybackNotifications == NO) {
+    return YES;
+  }
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityBatch]) {
-		NSString *batchType = message.parentBatchMessage.batchType;
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityBatch]) {
+    NSString *batchType = message.parentBatchMessage.batchType;
 
-		return ([batchType isEqualToString:@"znc.in/playback"] == NO);
-	}
+    return ([batchType isEqualToString:@"znc.in/playback"] == NO);
+  }
 
-	return (message.isHistoric == NO);
+  return (message.isHistoric == NO);
 }
 
-- (void)updateConnectedToZNCPropertyWithMessage:(IRCMessage *)message
-{
-	NSParameterAssert(message != nil);
+- (void)updateConnectedToZNCPropertyWithMessage:(IRCMessage *)message {
+  NSParameterAssert(message != nil);
 
-	if (self.isConnectedToZNC) {
-		return;
-	}
+  if (self.isConnectedToZNC) {
+    return;
+  }
 
-	if (message.senderIsServer == NO) {
-		return;
-	}
+  if (message.senderIsServer == NO) {
+    return;
+  }
 
-	if ([message.senderNickname isEqualToString:@"irc.znc.in"]) {
-		self.isConnectedToZNC = YES;
+  if ([message.senderNickname isEqualToString:@"irc.znc.in"]) {
+    self.isConnectedToZNC = YES;
 
-		LogToConsole("ZNC detected...");
-	}
+    LogToConsole("ZNC detected...");
+  }
 }
 
-- (void)sendCommand:(NSString *)command toZNCModuleNamed:(NSString *)module
-{
-	NSParameterAssert(command != nil);
-	NSParameterAssert(module != nil);
+- (void)sendCommand:(NSString *)command toZNCModuleNamed:(NSString *)module {
+  NSParameterAssert(command != nil);
+  NSParameterAssert(module != nil);
 
-	NSString *destination = [self nicknameAsZNCUser:module];
+  NSString *destination = [self nicknameAsZNCUser:module];
 
-	if (destination == nil) {
-		return;
-	}
+  if (destination == nil) {
+    return;
+  }
 
-	NSString *stringToSend = [NSString stringWithFormat:@"ZNC %@ %@", destination, command];
+  NSString *stringToSend =
+      [NSString stringWithFormat:@"ZNC %@ %@", destination, command];
 
-	[self sendLine:stringToSend];
+  [self sendLine:stringToSend];
 }
 
 #pragma mark -
 #pragma mark Channel States
 
-- (void)setHighlightStateForChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)setHighlightStateForChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if (mainWindow().keyWindow && [mainWindow() isItemSelected:channel]) {
-		return;
-	}
+  if (mainWindow().keyWindow && [mainWindow() isItemSelected:channel]) {
+    return;
+  }
 
-	channel.nicknameHighlightCount += 1;
+  channel.nicknameHighlightCount += 1;
 
-	[TVCDockIcon updateDockIcon];
+  [TVCDockIcon updateDockIcon];
 
-	[mainWindow() reloadTreeItem:channel];
+  [mainWindow() reloadTreeItem:channel];
+}
+
+- (void)setUnreadStateForChannel:(IRCChannel *)channel {
+  [self setUnreadStateForChannel:channel isHighlight:NO];
 }
 
 - (void)setUnreadStateForChannel:(IRCChannel *)channel
-{
-	[self setUnreadStateForChannel:channel isHighlight:NO];
-}
+                     isHighlight:(BOOL)isHighlight {
+  NSParameterAssert(channel != nil);
 
-- (void)setUnreadStateForChannel:(IRCChannel *)channel isHighlight:(BOOL)isHighlight
-{
-	NSParameterAssert(channel != nil);
+  if (mainWindow().keyWindow && [mainWindow() isItemSelected:channel]) {
+    return;
+  }
 
-	if (mainWindow().keyWindow && [mainWindow() isItemSelected:channel]) {
-		return;
-	}
+  if (channel.isChannel == NO ||
+      [TPCPreferences displayPublicMessageCountOnDockBadge]) {
+    channel.dockUnreadCount += 1;
 
-	if (channel.isChannel == NO || [TPCPreferences displayPublicMessageCountOnDockBadge]) {
-		channel.dockUnreadCount += 1;
+    [TVCDockIcon updateDockIcon];
+  }
 
-		[TVCDockIcon updateDockIcon];
-	}
+  channel.treeUnreadCount += 1;
 
-	channel.treeUnreadCount += 1;
-
-	// The isHighlight flag is not sent for the purpose of incrementing
-	// a count. It's passed so that we can know whether the option to
-	// show badge count should be ignored when performing update.
-	if (isHighlight || channel.config.showTreeBadgeCount) {
-		[mainWindowServerList() refreshMessageCountForItem:channel];
-	}
+  // The isHighlight flag is not sent for the purpose of incrementing
+  // a count. It's passed so that we can know whether the option to
+  // show badge count should be ignored when performing update.
+  if (isHighlight || channel.config.showTreeBadgeCount) {
+    [mainWindowServerList() refreshMessageCountForItem:channel];
+  }
 }
 
 #pragma mark -
 #pragma mark Find Channel
 
-- (nullable IRCChannel *)findChannel:(NSString *)withName inList:(NSArray<IRCChannel *> *)channelList
-{
-	NSParameterAssert(withName != nil);
-	NSParameterAssert(channelList != nil);
+- (nullable IRCChannel *)findChannel:(NSString *)withName
+                              inList:(NSArray<IRCChannel *> *)channelList {
+  NSParameterAssert(withName != nil);
+  NSParameterAssert(channelList != nil);
 
-	/* Channel names follow the server casemapping, like nicknames. */
-	NSString *withNameFolded = [self casefoldNickname:withName];
+  /* Channel names follow the server casemapping, like nicknames. */
+  NSString *withNameFolded = [self casefoldNickname:withName];
 
-	NSUInteger channelIndex =
-		[channelList indexOfObjectWithOptions:NSEnumerationConcurrent
-								  passingTest:^BOOL(IRCChannel *channel, NSUInteger index, BOOL *stop) {
-									  return [withNameFolded isEqualToString:[self casefoldNickname:channel.name]];
-								  }];
+  NSUInteger channelIndex = [channelList
+      indexOfObjectWithOptions:NSEnumerationConcurrent
+                   passingTest:^BOOL(IRCChannel *channel, NSUInteger index,
+                                     BOOL *stop) {
+                     return [withNameFolded
+                         isEqualToString:[self casefoldNickname:channel.name]];
+                   }];
 
-	if (channelIndex != NSNotFound) {
-		return channelList[channelIndex];
-	}
+  if (channelIndex != NSNotFound) {
+    return channelList[channelIndex];
+  }
 
-	return nil;
+  return nil;
 }
 
-- (nullable IRCChannel *)findChannel:(NSString *)name
-{
-	return [self findChannel:name inList:self.channelList];
+- (nullable IRCChannel *)findChannel:(NSString *)name {
+  return [self findChannel:name inList:self.channelList];
 }
 
-- (nullable IRCChannel *)findChannelOrCreate:(NSString *)name
-{
-	return [self findChannelOrCreate:name isPrivateMessage:NO];
+- (nullable IRCChannel *)findChannelOrCreate:(NSString *)name {
+  return [self findChannelOrCreate:name isPrivateMessage:NO];
 }
 
-- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName isPrivateMessage:(BOOL)isPrivateMessage
-{
-	NSParameterAssert(withName != nil);
+- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName
+                            isPrivateMessage:(BOOL)isPrivateMessage {
+  NSParameterAssert(withName != nil);
 
-	if (isPrivateMessage == NO) {
-		return [self findChannelOrCreate:withName asType:IRCChannelTypeChannel];
-	} else {
-		return [self findChannelOrCreate:withName asType:IRCChannelTypePrivateMessage];
-	}
+  if (isPrivateMessage == NO) {
+    return [self findChannelOrCreate:withName asType:IRCChannelTypeChannel];
+  } else {
+    return [self findChannelOrCreate:withName
+                              asType:IRCChannelTypePrivateMessage];
+  }
 }
 
-- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName isUtility:(BOOL)isUtility
-{
-	NSParameterAssert(withName != nil);
+- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName
+                                   isUtility:(BOOL)isUtility {
+  NSParameterAssert(withName != nil);
 
-	if (isUtility == NO) {
-		return [self findChannelOrCreate:withName asType:IRCChannelTypeChannel];
-	} else {
-		return [self findChannelOrCreate:withName asType:IRCChannelTypeUtility];
-	}
+  if (isUtility == NO) {
+    return [self findChannelOrCreate:withName asType:IRCChannelTypeChannel];
+  } else {
+    return [self findChannelOrCreate:withName asType:IRCChannelTypeUtility];
+  }
 }
 
-- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName asType:(IRCChannelType)type
-{
-	NSParameterAssert(withName != nil);
+- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName
+                                      asType:(IRCChannelType)type {
+  NSParameterAssert(withName != nil);
 
-	IRCChannel *channel = [self findChannel:withName];
+  IRCChannel *channel = [self findChannel:withName];
 
-	if (channel) {
-		return channel;
-	}
+  if (channel) {
+    return channel;
+  }
 
-	if (type == IRCChannelTypeChannel) {
-		IRCChannelConfig *config = [IRCChannelConfig seedWithName:withName];
+  if (type == IRCChannelTypeChannel) {
+    IRCChannelConfig *config = [IRCChannelConfig seedWithName:withName];
 
-		channel = [worldController() createChannelWithConfig:config onClient:self add:YES adjust:YES reload:YES];
+    channel = [worldController() createChannelWithConfig:config
+                                                onClient:self
+                                                     add:YES
+                                                  adjust:YES
+                                                  reload:YES];
 
-		[worldController() savePeriodically];
-	} else {
-		channel = [worldController() createPrivateMessage:withName onClient:self asType:type];
-	}
+    [worldController() savePeriodically];
+  } else {
+    channel = [worldController() createPrivateMessage:withName
+                                             onClient:self
+                                               asType:type];
+  }
 
-	return channel;
+  return channel;
 }
 
 #pragma mark -
 #pragma mark User List
 
-- (nullable IRCUser *)myself
-{
-	return [self findUser:self.userNickname];
+- (nullable IRCUser *)myself {
+  return [self findUser:self.userNickname];
 }
 
-- (BOOL)userExists:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (BOOL)userExists:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	return ([self findUser:nickname] != nil);
+  return ([self findUser:nickname] != nil);
 }
 
-- (nullable IRCUser *)findUser:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (nullable IRCUser *)findUser:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	nickname = [self casefoldNickname:nickname];
+  nickname = [self casefoldNickname:nickname];
 
-	os_unfair_lock_lock(&self->_userListLock);
+  os_unfair_lock_lock(&self->_userListLock);
 
-	IRCUser *user = self.userListPrivate[nickname];
+  IRCUser *user = self.userListPrivate[nickname];
 
-	os_unfair_lock_unlock(&self->_userListLock);
+  os_unfair_lock_unlock(&self->_userListLock);
 
-	return user;
+  return user;
 }
 
-- (void)rekeyUserList
-{
-	os_unfair_lock_lock(&self->_userListLock);
+- (void)rekeyUserList {
+  os_unfair_lock_lock(&self->_userListLock);
 
-	NSArray<IRCUser *> *users = self.userListPrivate.allValues;
+  NSArray<IRCUser *> *users = self.userListPrivate.allValues;
 
-	[self.userListPrivate removeAllObjects];
+  [self.userListPrivate removeAllObjects];
 
-	for (IRCUser *user in users) {
-		self.userListPrivate[[self casefoldNickname:user.nickname]] = user;
-	}
+  for (IRCUser *user in users) {
+    self.userListPrivate[[self casefoldNickname:user.nickname]] = user;
+  }
 
-	os_unfair_lock_unlock(&self->_userListLock);
+  os_unfair_lock_unlock(&self->_userListLock);
 }
 
-- (IRCUserMutable *)mutableCopyOfUserWithNickname:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (IRCUserMutable *)mutableCopyOfUserWithNickname:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	IRCUser *user = [self findUser:nickname];
+  IRCUser *user = [self findUser:nickname];
 
-	if (user == nil) {
-		return [[IRCUserMutable alloc] initWithNickname:nickname onClient:self];
-	} else {
-		return [user mutableCopy];
-	}
+  if (user == nil) {
+    return [[IRCUserMutable alloc] initWithNickname:nickname onClient:self];
+  } else {
+    return [user mutableCopy];
+  }
 }
 
-- (NSUInteger)numberOfUsers
-{
-	os_unfair_lock_lock(&self->_userListLock);
+- (NSUInteger)numberOfUsers {
+  os_unfair_lock_lock(&self->_userListLock);
 
-	NSUInteger numberOfUsers = self.userListPrivate.count;
+  NSUInteger numberOfUsers = self.userListPrivate.count;
 
-	os_unfair_lock_unlock(&self->_userListLock);
+  os_unfair_lock_unlock(&self->_userListLock);
 
-	return numberOfUsers;
+  return numberOfUsers;
 }
 
-- (NSArray<IRCUser *> *)userList
-{
-	os_unfair_lock_lock(&self->_userListLock);
+- (NSArray<IRCUser *> *)userList {
+  os_unfair_lock_lock(&self->_userListLock);
 
-	NSArray *userList = self.userListPrivate.allValues;
+  NSArray *userList = self.userListPrivate.allValues;
 
-	os_unfair_lock_unlock(&self->_userListLock);
+  os_unfair_lock_unlock(&self->_userListLock);
 
-	return userList;
+  return userList;
 }
 
-- (void)addUser:(IRCUser *)user
-{
-	[self addUserAndReturn:user];
+- (void)addUser:(IRCUser *)user {
+  [self addUserAndReturn:user];
 }
 
-- (IRCUser *)addUserAndReturn:(IRCUser *)user
-{
-	NSParameterAssert(user != nil);
+- (IRCUser *)addUserAndReturn:(IRCUser *)user {
+  NSParameterAssert(user != nil);
 
-	if ([user isKindOfClass:[IRCUserMutable class]]) {
-		user = [user copy];
-	}
+  if ([user isKindOfClass:[IRCUserMutable class]]) {
+    user = [user copy];
+  }
 
-	NSString *nickname = [self casefoldNickname:user.nickname];
+  NSString *nickname = [self casefoldNickname:user.nickname];
 
-	os_unfair_lock_lock(&self->_userListLock);
+  os_unfair_lock_lock(&self->_userListLock);
 
-	self.userListPrivate[nickname] = user;
+  self.userListPrivate[nickname] = user;
 
-	os_unfair_lock_unlock(&self->_userListLock);
+  os_unfair_lock_unlock(&self->_userListLock);
 
-	[user becamePrimaryUser];
+  [user becamePrimaryUser];
 
-	return user;
+  return user;
 }
 
-- (IRCUser *)findUserOrCreate:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (IRCUser *)findUserOrCreate:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	IRCUser *user = [self findUser:nickname];
+  IRCUser *user = [self findUser:nickname];
 
-	if (user == nil) {
-		user = [[IRCUser alloc] initWithNickname:nickname onClient:self];
+  if (user == nil) {
+    user = [[IRCUser alloc] initWithNickname:nickname onClient:self];
 
-		[self addUser:user];
-	}
+    [self addUser:user];
+  }
 
-	return user;
+  return user;
 }
 
-- (void)removeUser:(IRCUser *)user
-{
-	NSParameterAssert(user != nil);
+- (void)removeUser:(IRCUser *)user {
+  NSParameterAssert(user != nil);
 
-	[user cancelRemoveUserTimer];
+  [user cancelRemoveUserTimer];
 
-	NSString *hostmask = user.hostmask;
+  NSString *hostmask = user.hostmask;
 
-	if (hostmask) {
-		[self clearAddressBookCacheForHostmask:hostmask];
-	}
+  if (hostmask) {
+    [self clearAddressBookCacheForHostmask:hostmask];
+  }
 
-	[self removeUserWithNickname:user.nickname];
+  [self removeUserWithNickname:user.nickname];
 }
 
-- (void)removeUserWithNickname:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (void)removeUserWithNickname:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	nickname = [self casefoldNickname:nickname];
+  nickname = [self casefoldNickname:nickname];
 
-	os_unfair_lock_lock(&self->_userListLock);
+  os_unfair_lock_lock(&self->_userListLock);
 
-	[self.userListPrivate removeObjectForKey:nickname];
+  [self.userListPrivate removeObjectForKey:nickname];
 
-	os_unfair_lock_unlock(&self->_userListLock);
+  os_unfair_lock_unlock(&self->_userListLock);
 }
 
-- (void)renameUser:(IRCUser *)user to:(NSString *)toNickname
-{
-	NSParameterAssert(user != nil);
-	NSParameterAssert(toNickname != nil);
+- (void)renameUser:(IRCUser *)user to:(NSString *)toNickname {
+  NSParameterAssert(user != nil);
+  NSParameterAssert(toNickname != nil);
 
-	[self modifyUser:user
-		   withBlock:^(IRCUserMutable *userMutable) {
-			   userMutable.nickname = toNickname;
-		   }];
+  [self modifyUser:user
+         withBlock:^(IRCUserMutable *userMutable) {
+           userMutable.nickname = toNickname;
+         }];
 }
 
-- (void)renameUserWithNickname:(NSString *)fromNickname to:(NSString *)toNickname
-{
-	NSParameterAssert(fromNickname != nil);
-	NSParameterAssert(toNickname != nil);
+- (void)renameUserWithNickname:(NSString *)fromNickname
+                            to:(NSString *)toNickname {
+  NSParameterAssert(fromNickname != nil);
+  NSParameterAssert(toNickname != nil);
 
-	IRCUser *user = [self findUser:fromNickname];
+  IRCUser *user = [self findUser:fromNickname];
 
-	if (user == nil) {
-		return;
-	}
+  if (user == nil) {
+    return;
+  }
 
-	[self renameUser:user to:toNickname];
+  [self renameUser:user to:toNickname];
 }
 
-- (void)modifyUser:(IRCUser *)user withBlock:(void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))block
-{
-	NSParameterAssert(user != nil);
-	NSParameterAssert(block != nil);
+- (void)modifyUser:(IRCUser *)user
+         withBlock:(void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))block {
+  NSParameterAssert(user != nil);
+  NSParameterAssert(block != nil);
 
-	IRCUserMutable *userMutable = [user mutableCopy];
+  IRCUserMutable *userMutable = [user mutableCopy];
 
-	block(userMutable);
+  block(userMutable);
 
-	if ([user.nickname isEqualToString:userMutable.nickname] == NO) {
-		[self removeUser:user];
-	}
+  if ([user.nickname isEqualToString:userMutable.nickname] == NO) {
+    [self removeUser:user];
+  }
 
-	[self addUser:userMutable];
+  [self addUser:userMutable];
 }
 
 - (void)modifyUserUserWithNickname:(NSString *)nickname
-						 withBlock:(void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))block
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(block != nil);
+                         withBlock:
+                             (void(NS_NOESCAPE ^)(IRCUserMutable *userMutable))
+                                 block {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(block != nil);
 
-	IRCUser *user = [self findUser:nickname];
+  IRCUser *user = [self findUser:nickname];
 
-	if (user == nil) {
-		return;
-	}
+  if (user == nil) {
+    return;
+  }
 
-	[self modifyUser:user withBlock:block];
+  [self modifyUser:user withBlock:block];
 }
 
-- (void)modifyUserWithNickname:(NSString *)nickname asAway:(BOOL)away
-{
-	NSParameterAssert(nickname != nil);
+- (void)modifyUserWithNickname:(NSString *)nickname asAway:(BOOL)away {
+  NSParameterAssert(nickname != nil);
 
-	IRCUser *user = [self findUser:nickname];
+  IRCUser *user = [self findUser:nickname];
 
-	if (user == nil) {
-		return;
-	}
+  if (user == nil) {
+    return;
+  }
 
-	[self modifyUser:user asAway:away];
+  [self modifyUser:user asAway:away];
 }
 
-- (void)modifyUser:(IRCUser *)user asAway:(BOOL)away
-{
-	NSParameterAssert(user != nil);
+- (void)modifyUser:(IRCUser *)user asAway:(BOOL)away {
+  NSParameterAssert(user != nil);
 
-	if (self.monitorAwayStatus == NO) {
-		return;
-	}
+  if (self.monitorAwayStatus == NO) {
+    return;
+  }
 
-	if (away) {
-		[user markAsAway];
-	} else {
-		[user markAsReturned];
-	}
+  if (away) {
+    [user markAsAway];
+  } else {
+    [user markAsReturned];
+  }
 
-	[mainWindow() updateDrawingForUserInUserList:user];
+  [mainWindow() updateDrawingForUserInUserList:user];
 }
 
-- (void)resetAwayStatusForUsers
-{
-	[self.userList makeObjectsPerformSelector:@selector(markAsReturned)];
+- (void)resetAwayStatusForUsers {
+  [self.userList makeObjectsPerformSelector:@selector(markAsReturned)];
 }
 
 #pragma mark -
@@ -2676,412 +2743,419 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 /* Messages to services that carry a password are shown with the
  arguments masked. The wire message is untouched; only what the user
  sees in their own client changes. */
-+ (NSString *)redactedServiceMessage:(NSString *)message sentTo:(nullable NSString *)target
-{
-	NSParameterAssert(message != nil);
++ (NSString *)redactedServiceMessage:(NSString *)message
+                              sentTo:(nullable NSString *)target {
+  NSParameterAssert(message != nil);
 
-	if ([self targetLooksLikeService:target] == NO) {
-		return message;
-	}
+  if ([self targetLooksLikeService:target] == NO) {
+    return message;
+  }
 
-	static NSSet<NSString *> *sensitiveVerbs = nil;
+  static NSSet<NSString *> *sensitiveVerbs = nil;
 
-	static dispatch_once_t onceToken;
+  static dispatch_once_t onceToken;
 
-	dispatch_once(&onceToken, ^{
-		sensitiveVerbs = [NSSet setWithArray:@[
-			@"IDENTIFY",
-			@"SIDENTIFY",
-			@"LOGIN",
-			@"AUTH",
-			@"REGISTER",
-			@"GHOST",
-			@"RECOVER",
-			@"RELEASE",
-			@"REGAIN",
-			@"SET",
-			@"PASSWD",
-			@"PASSWORD",
-			@"SENDPASS",
-			@"RESETPASS",
-			@"SETPASS",
-			@"GROUP",
-			@"CONFIRM"
-		]];
-	});
+  dispatch_once(&onceToken, ^{
+    sensitiveVerbs = [NSSet setWithArray:@[
+      @"IDENTIFY", @"SIDENTIFY", @"LOGIN", @"AUTH", @"REGISTER", @"GHOST",
+      @"RECOVER", @"RELEASE", @"REGAIN", @"SET", @"PASSWD", @"PASSWORD",
+      @"SENDPASS", @"RESETPASS", @"SETPASS", @"GROUP", @"CONFIRM"
+    ]];
+  });
 
-	NSArray<NSString *> *tokens = [message componentsSeparatedByString:@" "];
+  NSArray<NSString *> *tokens = [message componentsSeparatedByString:@" "];
 
-	if (tokens.count < 2 || [sensitiveVerbs containsObject:tokens[0].uppercaseString] == NO) {
-		return message;
-	}
+  if (tokens.count < 2 || [sensitiveVerbs
+                              containsObject:tokens[0].uppercaseString] == NO) {
+    return message;
+  }
 
-	/* "SET PASSWORD <value>" keeps two leading words, everything else one. */
-	NSUInteger keep = 1;
+  /* "SET PASSWORD <value>" keeps two leading words, everything else one. */
+  NSUInteger keep = 1;
 
-	if ([tokens[0] isEqualToStringIgnoringCase:@"SET"]) {
-		if (tokens.count < 3 || [tokens[1] isEqualToStringIgnoringCase:@"PASSWORD"] == NO) {
-			return message;
-		}
+  if ([tokens[0] isEqualToStringIgnoringCase:@"SET"]) {
+    if (tokens.count < 3 ||
+        [tokens[1] isEqualToStringIgnoringCase:@"PASSWORD"] == NO) {
+      return message;
+    }
 
-		keep = 2;
-	}
+    keep = 2;
+  }
 
-	NSMutableArray<NSString *> *redacted = [[tokens subarrayWithRange:NSMakeRange(0, keep)] mutableCopy];
+  NSMutableArray<NSString *> *redacted =
+      [[tokens subarrayWithRange:NSMakeRange(0, keep)] mutableCopy];
 
-	for (NSUInteger i = keep; i < tokens.count; i++) {
-		[redacted addObject:((tokens[i].length == 0) ? @"" : @"\u2022\u2022\u2022\u2022\u2022\u2022")];
-	}
+  for (NSUInteger i = keep; i < tokens.count; i++) {
+    [redacted addObject:((tokens[i].length == 0)
+                             ? @""
+                             : @"\u2022\u2022\u2022\u2022\u2022\u2022")];
+  }
 
-	return [redacted componentsJoinedByString:@" "];
+  return [redacted componentsJoinedByString:@" "];
 }
 
-+ (BOOL)targetLooksLikeService:(nullable NSString *)target
-{
-	if (target.length == 0) {
-		return NO;
-	}
++ (BOOL)targetLooksLikeService:(nullable NSString *)target {
+  if (target.length == 0) {
+    return NO;
+  }
 
-	NSString *nickname = target;
+  NSString *nickname = target;
 
-	/* NickServ@services.example.net */
-	NSRange atRange = [nickname rangeOfString:@"@"];
+  /* NickServ@services.example.net */
+  NSRange atRange = [nickname rangeOfString:@"@"];
 
-	if (atRange.location != NSNotFound) {
-		nickname = [nickname substringToIndex:atRange.location];
-	}
+  if (atRange.location != NSNotFound) {
+    nickname = [nickname substringToIndex:atRange.location];
+  }
 
-	NSString *lowercased = nickname.lowercaseString;
+  NSString *lowercased = nickname.lowercaseString;
 
-	if ([lowercased hasSuffix:@"serv"] || [lowercased isEqualToString:@"q"] || [lowercased isEqualToString:@"l"] ||
-		[lowercased isEqualToString:@"x"] || [lowercased isEqualToString:@"authserv"]) {
-		return YES;
-	}
+  if ([lowercased hasSuffix:@"serv"] || [lowercased isEqualToString:@"q"] ||
+      [lowercased isEqualToString:@"l"] || [lowercased isEqualToString:@"x"] ||
+      [lowercased isEqualToString:@"authserv"]) {
+    return YES;
+  }
 
-	return NO;
+  return NO;
 }
 
-- (void)sendLine:(NSString *)string
-{
-	NSParameterAssert(string != nil);
+- (void)sendLine:(NSString *)string {
+  NSParameterAssert(string != nil);
 
-	if (self.isConnected == NO) {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[6rj-2r]")];
+  if (self.isConnected == NO) {
+    [self printDebugInformationToConsole:TXTLS(@"IRC[6rj-2r]")];
 
-		return;
-	}
+    return;
+  }
 
-	[self.socket sendLine:string];
+  [self.socket sendLine:string];
 
-	[worldController() noteMessageSentWithLength:string.length];
+  [worldController() noteMessageSentWithLength:string.length];
 }
 
-- (void)send:(NSString *)string arguments:(NSArray<NSString *> *)arguments
-{
-	NSParameterAssert(string != nil);
-	NSParameterAssert(arguments != nil);
+- (void)send:(NSString *)string arguments:(NSArray<NSString *> *)arguments {
+  NSParameterAssert(string != nil);
+  NSParameterAssert(arguments != nil);
 
-	NSString *stringToSend = [IRCSendingMessage stringWithCommand:string arguments:arguments];
+  NSString *stringToSend = [IRCSendingMessage stringWithCommand:string
+                                                      arguments:arguments];
 
-	[self sendLine:stringToSend];
+  [self sendLine:stringToSend];
 }
 
 - (void)sendCommand:(NSString *)command
-		  arguments:(NSArray<NSString *> *)arguments
-			   tags:(nullable NSDictionary<NSString *, NSString *> *)tags
-{
-	NSParameterAssert(command != nil);
-	NSParameterAssert(arguments != nil);
+          arguments:(NSArray<NSString *> *)arguments
+               tags:(nullable NSDictionary<NSString *, NSString *> *)tags {
+  NSParameterAssert(command != nil);
+  NSParameterAssert(arguments != nil);
 
-	/* Tags are only understood once message-tags was negotiated.
-	 Before that the command is sent without them. */
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags] == NO) {
-		tags = nil;
-	}
+  /* Tags are only understood once message-tags was negotiated.
+   Before that the command is sent without them. */
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags] ==
+      NO) {
+    tags = nil;
+  }
 
-	NSString *stringToSend = [IRCSendingMessage stringWithCommand:command arguments:arguments tags:tags];
+  NSString *stringToSend = [IRCSendingMessage stringWithCommand:command
+                                                      arguments:arguments
+                                                           tags:tags];
 
-	[self sendLine:stringToSend];
+  [self sendLine:stringToSend];
 }
 
-- (BOOL)sendTagMessage:(NSDictionary<NSString *, NSString *> *)tags toTarget:(NSString *)target
-{
-	NSParameterAssert(tags != nil);
-	NSParameterAssert(target != nil);
+- (BOOL)sendTagMessage:(NSDictionary<NSString *, NSString *> *)tags
+              toTarget:(NSString *)target {
+  NSParameterAssert(tags != nil);
+  NSParameterAssert(target != nil);
 
-	/* TAGMSG exists only as a carrier for tags. Without message-tags
-	 there is nothing to carry and the server would reject it. */
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags] == NO) {
-		return NO;
-	}
+  /* TAGMSG exists only as a carrier for tags. Without message-tags
+   there is nothing to carry and the server would reject it. */
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags] ==
+      NO) {
+    return NO;
+  }
 
-	if (tags.count == 0 || target.length == 0) {
-		return NO;
-	}
+  if (tags.count == 0 || target.length == 0) {
+    return NO;
+  }
 
-	[self sendCommand:@"TAGMSG" arguments:@[ target ] tags:tags];
+  [self sendCommand:@"TAGMSG" arguments:@[ target ] tags:tags];
 
-	return YES;
+  return YES;
 }
 
-- (void)send:(NSString *)string, ...
-{
-	NSParameterAssert(string != nil);
+- (void)send:(NSString *)string, ... {
+  NSParameterAssert(string != nil);
 
-	NSMutableArray<NSString *> *argumentsOut = [NSMutableArray array];
+  NSMutableArray<NSString *> *argumentsOut = [NSMutableArray array];
 
-	va_list argumentsIn;
-	va_start(argumentsIn, string);
+  va_list argumentsIn;
+  va_start(argumentsIn, string);
 
-	NSString *argumentInString = nil;
+  NSString *argumentInString = nil;
 
-	while ((argumentInString = va_arg(argumentsIn, NSString *))) {
-		[argumentsOut addObject:argumentInString];
-	}
+  while ((argumentInString = va_arg(argumentsIn, NSString *))) {
+    [argumentsOut addObject:argumentInString];
+  }
 
-	va_end(argumentsIn);
+  va_end(argumentsIn);
 
-	[self send:string arguments:argumentsOut];
+  [self send:string arguments:argumentsOut];
 }
 
 #pragma mark -
 #pragma mark Sending Text
 
-- (void)inputText:(id)string asCommand:(IRCRemoteCommand)command
-{
-	IRCTreeItem *destination = mainWindow().selectedItem;
+- (void)inputText:(id)string asCommand:(IRCRemoteCommand)command {
+  IRCTreeItem *destination = mainWindow().selectedItem;
 
-	[self inputText:string asCommand:command destination:destination];
+  [self inputText:string asCommand:command destination:destination];
 }
 
-- (void)inputText:(id)string destination:(IRCTreeItem *)destination
-{
-	[self inputText:string asCommand:IRCRemoteCommandPrivmsg destination:destination];
+- (void)inputText:(id)string destination:(IRCTreeItem *)destination {
+  [self inputText:string
+        asCommand:IRCRemoteCommandPrivmsg
+      destination:destination];
 }
 
-- (void)inputText:(id)string asCommand:(IRCRemoteCommand)command destination:(IRCTreeItem *)destination
-{
-	NSParameterAssert(string != nil);
-	NSParameterAssert(destination != nil);
+- (void)inputText:(id)string
+        asCommand:(IRCRemoteCommand)command
+      destination:(IRCTreeItem *)destination {
+  NSParameterAssert(string != nil);
+  NSParameterAssert(destination != nil);
 
-	if (self.isTerminating) {
-		return;
-	}
+  if (self.isTerminating) {
+    return;
+  }
 
-	BOOL inputIsNSString = [string isKindOfClass:[NSString class]];
+  BOOL inputIsNSString = [string isKindOfClass:[NSString class]];
 
-	if (inputIsNSString == NO && [string isKindOfClass:[NSAttributedString class]] == NO) {
-		NSAssert(NO, @"'string' must be NSString or NSAttributedString");
-	}
+  if (inputIsNSString == NO &&
+      [string isKindOfClass:[NSAttributedString class]] == NO) {
+    NSAssert(NO, @"'string' must be NSString or NSAttributedString");
+  }
 
-	if (command != IRCRemoteCommandPrivmsg && command != IRCRemoteCommandPrivmsgAction &&
-		command != IRCRemoteCommandNotice) {
-		NSAssert(NO, @"Bad 'command' value");
-	}
+  if (command != IRCRemoteCommandPrivmsg &&
+      command != IRCRemoteCommandPrivmsgAction &&
+      command != IRCRemoteCommandNotice) {
+    NSAssert(NO, @"Bad 'command' value");
+  }
 
-	if ([string length] == 0) {
-		return;
-	}
+  if ([string length] == 0) {
+    return;
+  }
 
-	NSAttributedString *stringIn = nil;
+  NSAttributedString *stringIn = nil;
 
-	if (inputIsNSString) {
-		stringIn = [NSAttributedString attributedStringWithString:string];
-	} else {
-		stringIn = string;
-	}
+  if (inputIsNSString) {
+    stringIn = [NSAttributedString attributedStringWithString:string];
+  } else {
+    stringIn = string;
+  }
 
-	NSArray *lines = ((NSAttributedString *)stringIn).splitIntoLines;
+  NSArray *lines = ((NSAttributedString *)stringIn).splitIntoLines;
 
-	/* Warn if the split value is above 4 lines or if the total string 
-	 length exceeds TXMaximumIRCBodyLength times 4. */
-	if (lines.count > 4 || (stringIn.length > (TXMaximumIRCBodyLength * 4))) {
-		BOOL continueInput = [TDCAlert modalAlertWithMessage:TXTLS(@"IRC[lql-8i]")
-													   title:TXTLS(@"IRC[u4c-7i]")
-											   defaultButton:TXTLS(@"Prompts[mvh-ms]")
-											 alternateButton:TXTLS(@"Prompts[99q-gg]")
-											  suppressionKey:@"input_text_possible_flood_warning"
-											 suppressionText:nil];
+  /* Warn if the split value is above 4 lines or if the total string
+   length exceeds TXMaximumIRCBodyLength times 4. */
+  if (lines.count > 4 || (stringIn.length > (TXMaximumIRCBodyLength * 4))) {
+    BOOL continueInput =
+        [TDCAlert modalAlertWithMessage:TXTLS(@"IRC[lql-8i]")
+                                  title:TXTLS(@"IRC[u4c-7i]")
+                          defaultButton:TXTLS(@"Prompts[mvh-ms]")
+                        alternateButton:TXTLS(@"Prompts[99q-gg]")
+                         suppressionKey:@"input_text_possible_flood_warning"
+                        suppressionText:nil];
 
-		if (continueInput == NO) {
-			return;
-		}
-	}
+    if (continueInput == NO) {
+      return;
+    }
+  }
 
-	for (__strong NSAttributedString *line in lines) {
-		NSString *lineString = line.string;
+  for (__strong NSAttributedString *line in lines) {
+    NSString *lineString = line.string;
 
-		BOOL isPrefixed = [lineString hasPrefix:@"/"];
+    BOOL isPrefixed = [lineString hasPrefix:@"/"];
 
-		if (destination.isClient) {
-			if (isPrefixed) {
-				line = [line attributedSubstringFromIndex:1];
-			}
+    if (destination.isClient) {
+      if (isPrefixed) {
+        line = [line attributedSubstringFromIndex:1];
+      }
 
-			[self sendCommand:line];
+      [self sendCommand:line];
 
-			continue;
-		}
+      continue;
+    }
 
-		NSUInteger lineLength = line.length;
+    NSUInteger lineLength = line.length;
 
-		IRCChannel *channel = (IRCChannel *)destination;
+    IRCChannel *channel = (IRCChannel *)destination;
 
-		if (isPrefixed && [lineString hasPrefix:@"//"] == NO && lineLength > 1) {
-			line = [line attributedSubstringFromIndex:1];
+    if (isPrefixed && [lineString hasPrefix:@"//"] == NO && lineLength > 1) {
+      line = [line attributedSubstringFromIndex:1];
 
-			[self sendCommand:line];
-		} else {
-			if (isPrefixed && lineLength > 1) {
-				line = [line attributedSubstringFromIndex:1];
-			}
+      [self sendCommand:line];
+    } else {
+      if (isPrefixed && lineLength > 1) {
+        line = [line attributedSubstringFromIndex:1];
+      }
 
-			[self sendText:line asCommand:command toChannel:channel];
-		}
-	}
+      [self sendText:line asCommand:command toChannel:channel];
+    }
+  }
 }
 
-- (void)sendText:(NSAttributedString *)string asCommand:(IRCRemoteCommand)command toChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(string != nil);
-	NSParameterAssert(channel != nil);
+- (void)sendText:(NSAttributedString *)string
+       asCommand:(IRCRemoteCommand)command
+       toChannel:(IRCChannel *)channel {
+  NSParameterAssert(string != nil);
+  NSParameterAssert(channel != nil);
 
-	if (string.length == 0) {
-		return;
-	}
+  if (string.length == 0) {
+    return;
+  }
 
-	if (channel.isUtility) {
-		[self printDebugInformation:TXTLS(@"IRC[z2r-sd]") inChannel:channel];
+  if (channel.isUtility) {
+    [self printDebugInformation:TXTLS(@"IRC[z2r-sd]") inChannel:channel];
 
-		return;
-	}
+    return;
+  }
 
-	if (channel.isDirectChat) {
-		[self sendDirectChatText:string asCommand:command toChannel:channel];
+  if (channel.isDirectChat) {
+    [self sendDirectChatText:string asCommand:command toChannel:channel];
 
-		return;
-	}
+    return;
+  }
 
-	NSString *commandToSend = nil;
+  NSString *commandToSend = nil;
 
-	TVCLogLineType lineType = TVCLogLineTypeUndefined;
+  TVCLogLineType lineType = TVCLogLineTypeUndefined;
 
-	if (command == IRCRemoteCommandPrivmsg) {
-		commandToSend = @"PRIVMSG";
+  if (command == IRCRemoteCommandPrivmsg) {
+    commandToSend = @"PRIVMSG";
 
-		lineType = TVCLogLineTypePrivateMessage;
-	} else if (command == IRCRemoteCommandPrivmsgAction) {
-		commandToSend = @"PRIVMSG";
+    lineType = TVCLogLineTypePrivateMessage;
+  } else if (command == IRCRemoteCommandPrivmsgAction) {
+    commandToSend = @"PRIVMSG";
 
-		lineType = TVCLogLineTypeAction;
-	} else if (command == IRCRemoteCommandNotice) {
-		commandToSend = @"NOTICE";
+    lineType = TVCLogLineTypeAction;
+  } else if (command == IRCRemoteCommandNotice) {
+    commandToSend = @"NOTICE";
 
-		lineType = TVCLogLineTypeNotice;
-	}
+    lineType = TVCLogLineTypeNotice;
+  }
 
-	if (commandToSend == nil || lineType == TVCLogLineTypeUndefined) {
-		NSParameterAssert(commandToSend != nil && lineType != TVCLogLineTypeUndefined);
+  if (commandToSend == nil || lineType == TVCLogLineTypeUndefined) {
+    NSParameterAssert(commandToSend != nil &&
+                      lineType != TVCLogLineTypeUndefined);
 
-		return;
-	}
+    return;
+  }
 
-	/* Whatever was being typed is now sent. */
-	[self localUserSentMessageInChannel:channel];
+  /* Whatever was being typed is now sent. */
+  [self localUserSentMessageInChannel:channel];
 
-	/* A reply answers one message: the tag goes on the first line
-	 sent and the local print of that line carries the reference. */
-	NSString *replyIdentifier = self.nextMessageReplyIdentifier;
+  /* A reply answers one message: the tag goes on the first line
+   sent and the local print of that line carries the reference. */
+  NSString *replyIdentifier = self.nextMessageReplyIdentifier;
 
-	self.nextMessageReplyIdentifier = nil;
+  self.nextMessageReplyIdentifier = nil;
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags] == NO) {
-		replyIdentifier = nil;
-	}
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags] ==
+      NO) {
+    replyIdentifier = nil;
+  }
 
-	NSArray *lines = string.splitIntoLines;
+  NSArray *lines = string.splitIntoLines;
 
-	for (NSAttributedString *line in lines) {
-		NSMutableAttributedString *lineMutable = [line mutableCopy];
+  for (NSAttributedString *line in lines) {
+    NSMutableAttributedString *lineMutable = [line mutableCopy];
 
-		while (lineMutable.length > 0) {
-			NSString *message = [lineMutable stringFormattedForChannel:channel.name
-															  onClient:self
-														  withLineType:lineType];
+    while (lineMutable.length > 0) {
+      NSString *message = [lineMutable stringFormattedForChannel:channel.name
+                                                        onClient:self
+                                                    withLineType:lineType];
 
-			NSString *deliveryLabel = nil;
+      NSString *deliveryLabel = nil;
 
-			NSString *lineReplyIdentifier = replyIdentifier;
+      NSString *lineReplyIdentifier = replyIdentifier;
 
-			replyIdentifier = nil;
+      replyIdentifier = nil;
 
-			self.nextLineReplyToMessageIdentifier = lineReplyIdentifier;
+      self.nextLineReplyToMessageIdentifier = lineReplyIdentifier;
 
-			NSString *redactedMessage = [IRCClient redactedServiceMessage:message sentTo:channel.name];
+      NSString *redactedMessage =
+          [IRCClient redactedServiceMessage:message sentTo:channel.name];
 
-			if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
-				/* With labeled-response the local line is printed now
-				 in a pending state and updated when the echo returns;
-				 without it, echo-message suppresses the local print. */
-				if ([self labeledResponseTrackingEnabled]) {
-					deliveryLabel = [self registerPendingDeliveryForChannel:channel];
+      if ([self
+              isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
+        /* With labeled-response the local line is printed now
+         in a pending state and updated when the echo returns;
+         without it, echo-message suppresses the local print. */
+        if ([self labeledResponseTrackingEnabled]) {
+          deliveryLabel = [self registerPendingDeliveryForChannel:channel];
 
-					self.nextLineDeliveryState = TVCLogLineDeliveryStatePending;
+          self.nextLineDeliveryState = TVCLogLineDeliveryStatePending;
 
-					NSString *label = deliveryLabel;
+          NSString *label = deliveryLabel;
 
-					[self print:redactedMessage
-									  by:self.userNickname
-							   inChannel:channel
-								  asType:lineType
-								 command:commandToSend
-							  receivedAt:[NSDate date]
-							 isEncrypted:NO
-						referenceMessage:nil
-						 completionBlock:^(TVCLogControllerPrintOperationContext *context) {
-							 [self attachLineNumber:context.lineNumber toDeliveryWithLabel:label];
-						 }];
-				}
-			} else {
-				[self print:redactedMessage
-							 by:self.userNickname
-					  inChannel:channel
-						 asType:lineType
-						command:commandToSend
-					 receivedAt:[NSDate date]
-					isEncrypted:NO];
-			}
+          [self print:redactedMessage
+                            by:self.userNickname
+                     inChannel:channel
+                        asType:lineType
+                       command:commandToSend
+                    receivedAt:[NSDate date]
+                   isEncrypted:NO
+              referenceMessage:nil
+               completionBlock:^(
+                   TVCLogControllerPrintOperationContext *context) {
+                 [self attachLineNumber:context.lineNumber
+                     toDeliveryWithLabel:label];
+               }];
+        }
+      } else {
+        [self print:redactedMessage
+                     by:self.userNickname
+              inChannel:channel
+                 asType:lineType
+                command:commandToSend
+             receivedAt:[NSDate date]
+            isEncrypted:NO];
+      }
 
-			NSString *sendMessage = message;
+      NSString *sendMessage = message;
 
-			if (lineType == TVCLogLineTypeAction) {
-				sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
-			}
+      if (lineType == TVCLogLineTypeAction) {
+        sendMessage = [NSString
+            stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
+      }
 
-			/* The reference is consumed by the local print above. When
-			 echo-message suppressed that print, it is dropped here so
-			 no unrelated line inherits it. */
-			self.nextLineReplyToMessageIdentifier = nil;
+      /* The reference is consumed by the local print above. When
+       echo-message suppressed that print, it is dropped here so
+       no unrelated line inherits it. */
+      self.nextLineReplyToMessageIdentifier = nil;
 
-			NSMutableDictionary<NSString *, NSString *> *tags = [NSMutableDictionary dictionary];
+      NSMutableDictionary<NSString *, NSString *> *tags =
+          [NSMutableDictionary dictionary];
 
-			if (deliveryLabel) {
-				tags[@"label"] = deliveryLabel;
-			}
+      if (deliveryLabel) {
+        tags[@"label"] = deliveryLabel;
+      }
 
-			if (lineReplyIdentifier) {
-				tags[@"+draft/reply"] = lineReplyIdentifier;
-			}
+      if (lineReplyIdentifier) {
+        tags[@"+draft/reply"] = lineReplyIdentifier;
+      }
 
-			if (tags.count > 0) {
-				[self sendCommand:commandToSend arguments:@[ channel.name, sendMessage ] tags:tags];
-			} else {
-				[self send:commandToSend, channel.name, sendMessage, nil];
-			}
-		}
-	}
+      if (tags.count > 0) {
+        [self sendCommand:commandToSend
+                arguments:@[ channel.name, sendMessage ]
+                     tags:tags];
+      } else {
+        [self send:commandToSend, channel.name, sendMessage, nil];
+      }
+    }
+  }
 
-	[self processBundlesUserMessage:string.string command:commandToSend];
+  [self processBundlesUserMessage:string.string command:commandToSend];
 }
 
 #pragma mark -
@@ -3095,3380 +3169,3530 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 #define _typingActiveInterval 3.0
 #define _typingPausedDelay 5.0
 
-- (BOOL)typingNotificationsAvailableForChannel:(nullable IRCChannel *)channel
-{
-	if (channel == nil || channel.isUtility) {
-		return NO;
-	}
+- (BOOL)typingNotificationsAvailableForChannel:(nullable IRCChannel *)channel {
+  if (channel == nil || channel.isUtility) {
+    return NO;
+  }
 
-	if (channel.isChannel == NO && channel.isPrivateMessage == NO) {
-		return NO;
-	}
+  if (channel.isChannel == NO && channel.isPrivateMessage == NO) {
+    return NO;
+  }
 
-	if (self.isLoggedIn == NO) {
-		return NO;
-	}
+  if (self.isLoggedIn == NO) {
+    return NO;
+  }
 
-	return [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags];
+  return [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMessageTags];
 }
 
-- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel
-{
-	[self noteLocalUserTyping:text inChannel:channel atDate:[NSDate date]];
+- (void)noteLocalUserTyping:(NSString *)text
+                  inChannel:(nullable IRCChannel *)channel {
+  [self noteLocalUserTyping:text inChannel:channel atDate:[NSDate date]];
 }
 
-- (void)noteLocalUserTyping:(NSString *)text inChannel:(nullable IRCChannel *)channel atDate:(NSDate *)date
-{
-	NSParameterAssert(text != nil);
-	NSParameterAssert(date != nil);
+- (void)noteLocalUserTyping:(NSString *)text
+                  inChannel:(nullable IRCChannel *)channel
+                     atDate:(NSDate *)date {
+  NSParameterAssert(text != nil);
+  NSParameterAssert(date != nil);
 
-	if ([self typingNotificationsAvailableForChannel:channel] == NO) {
-		return;
-	}
+  if ([self typingNotificationsAvailableForChannel:channel] == NO) {
+    return;
+  }
 
-	BOOL isCommand = [text hasPrefix:@"/"];
+  BOOL isCommand = [text hasPrefix:@"/"];
 
-	if (text.length == 0 || isCommand || [TPCPreferences sendTypingNotifications] == NO) {
-		[self sendTypingDoneInChannel:channel];
+  if (text.length == 0 || isCommand ||
+      [TPCPreferences sendTypingNotifications] == NO) {
+    [self sendTypingDoneInChannel:channel];
 
-		return;
-	}
+    return;
+  }
 
-	NSString *channelKey = channel.uniqueIdentifier;
+  NSString *channelKey = channel.uniqueIdentifier;
 
-	NSDate *activeSentAt = self.typingActiveSentAt[channelKey];
+  NSDate *activeSentAt = self.typingActiveSentAt[channelKey];
 
-	NSString *stateSent = self.typingStateSent[channelKey];
+  NSString *stateSent = self.typingStateSent[channelKey];
 
-	BOOL sendActive = (activeSentAt == nil || [stateSent isEqualToString:@"active"] == NO ||
-					   [date timeIntervalSinceDate:activeSentAt] >= _typingActiveInterval);
+  BOOL sendActive =
+      (activeSentAt == nil || [stateSent isEqualToString:@"active"] == NO ||
+       [date timeIntervalSinceDate:activeSentAt] >= _typingActiveInterval);
 
-	if (sendActive) {
-		if ([self sendTagMessage:@{@"+typing" : @"active"} toTarget:channel.name]) {
-			self.typingActiveSentAt[channelKey] = date;
-			self.typingStateSent[channelKey] = @"active";
-		}
-	}
+  if (sendActive) {
+    if ([self sendTagMessage:@{@"+typing" : @"active"} toTarget:channel.name]) {
+      self.typingActiveSentAt[channelKey] = date;
+      self.typingStateSent[channelKey] = @"active";
+    }
+  }
 
-	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(typingPauseTimerFired:) object:channel];
+  [NSObject
+      cancelPreviousPerformRequestsWithTarget:self
+                                     selector:@selector(typingPauseTimerFired:)
+                                       object:channel];
 
-	[self performSelector:@selector(typingPauseTimerFired:) withObject:channel afterDelay:_typingPausedDelay];
+  [self performSelector:@selector(typingPauseTimerFired:)
+             withObject:channel
+             afterDelay:_typingPausedDelay];
 }
 
-- (void)typingPauseTimerFired:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)typingPauseTimerFired:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	NSString *channelKey = channel.uniqueIdentifier;
+  NSString *channelKey = channel.uniqueIdentifier;
 
-	if ([self.typingStateSent[channelKey] isEqualToString:@"active"] == NO) {
-		return;
-	}
+  if ([self.typingStateSent[channelKey] isEqualToString:@"active"] == NO) {
+    return;
+  }
 
-	if ([self typingNotificationsAvailableForChannel:channel] == NO) {
-		[self.typingStateSent removeObjectForKey:channelKey];
+  if ([self typingNotificationsAvailableForChannel:channel] == NO) {
+    [self.typingStateSent removeObjectForKey:channelKey];
 
-		return;
-	}
+    return;
+  }
 
-	if ([self sendTagMessage:@{@"+typing" : @"paused"} toTarget:channel.name]) {
-		self.typingStateSent[channelKey] = @"paused";
-	}
+  if ([self sendTagMessage:@{@"+typing" : @"paused"} toTarget:channel.name]) {
+    self.typingStateSent[channelKey] = @"paused";
+  }
 }
 
-- (void)sendTypingDoneInChannel:(nullable IRCChannel *)channel
-{
-	if (channel == nil) {
-		return;
-	}
+- (void)sendTypingDoneInChannel:(nullable IRCChannel *)channel {
+  if (channel == nil) {
+    return;
+  }
 
-	NSString *channelKey = channel.uniqueIdentifier;
+  NSString *channelKey = channel.uniqueIdentifier;
 
-	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(typingPauseTimerFired:) object:channel];
+  [NSObject
+      cancelPreviousPerformRequestsWithTarget:self
+                                     selector:@selector(typingPauseTimerFired:)
+                                       object:channel];
 
-	if (self.typingStateSent[channelKey] == nil) {
-		return;
-	}
+  if (self.typingStateSent[channelKey] == nil) {
+    return;
+  }
 
-	[self.typingStateSent removeObjectForKey:channelKey];
-	[self.typingActiveSentAt removeObjectForKey:channelKey];
+  [self.typingStateSent removeObjectForKey:channelKey];
+  [self.typingActiveSentAt removeObjectForKey:channelKey];
 
-	if ([self typingNotificationsAvailableForChannel:channel]) {
-		[self sendTagMessage:@{@"+typing" : @"done"} toTarget:channel.name];
-	}
+  if ([self typingNotificationsAvailableForChannel:channel]) {
+    [self sendTagMessage:@{@"+typing" : @"done"} toTarget:channel.name];
+  }
 }
 
-- (void)localUserSentMessageInChannel:(nullable IRCChannel *)channel
-{
-	[self sendTypingDoneInChannel:channel];
+- (void)localUserSentMessageInChannel:(nullable IRCChannel *)channel {
+  [self sendTypingDoneInChannel:channel];
 }
 
-- (void)localUserClearedTextInChannel:(nullable IRCChannel *)channel
-{
-	[self sendTypingDoneInChannel:channel];
+- (void)localUserClearedTextInChannel:(nullable IRCChannel *)channel {
+  [self sendTypingDoneInChannel:channel];
 }
 
 #pragma mark -
 #pragma mark Reactions
 
-- (BOOL)sendReaction:(NSString *)emoji toMessageIdentifier:(NSString *)messageIdentifier inChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(emoji != nil);
-	NSParameterAssert(messageIdentifier != nil);
-	NSParameterAssert(channel != nil);
+- (BOOL)sendReaction:(NSString *)emoji
+    toMessageIdentifier:(NSString *)messageIdentifier
+              inChannel:(IRCChannel *)channel {
+  NSParameterAssert(emoji != nil);
+  NSParameterAssert(messageIdentifier != nil);
+  NSParameterAssert(channel != nil);
 
-	if (emoji.length == 0 || messageIdentifier.length == 0 || channel.isUtility) {
-		return NO;
-	}
+  if (emoji.length == 0 || messageIdentifier.length == 0 || channel.isUtility) {
+    return NO;
+  }
 
-	NSDictionary *tags = @{@"+draft/react" : emoji, @"+draft/reply" : messageIdentifier};
+  NSDictionary *tags =
+      @{@"+draft/react" : emoji, @"+draft/reply" : messageIdentifier};
 
-	if ([self sendTagMessage:tags toTarget:channel.name] == NO) {
-		return NO;
-	}
+  if ([self sendTagMessage:tags toTarget:channel.name] == NO) {
+    return NO;
+  }
 
-	/* Shown at once. A server that echoes the TAGMSG back delivers the
-	 same reaction again, which the view ignores as a repeat. */
-	[self deliverClientTags:@{@"draft/react" : emoji, @"draft/reply" : messageIdentifier}
-				 fromSender:self.userNickname
-				   toTarget:channel.name
-					 inItem:channel
-				  timestamp:[NSDate date]
-		  messageIdentifier:nil
-					account:nil];
+  /* Shown at once. A server that echoes the TAGMSG back delivers the
+   same reaction again, which the view ignores as a repeat. */
+  [self deliverClientTags:@{
+    @"draft/react" : emoji,
+    @"draft/reply" : messageIdentifier
+  }
+               fromSender:self.userNickname
+                 toTarget:channel.name
+                   inItem:channel
+                timestamp:[NSDate date]
+        messageIdentifier:nil
+                  account:nil];
 
-	return YES;
+  return YES;
 }
 
-- (void)sendPrivmsg:(NSString *)message toChannel:(IRCChannel *)channel
-{
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[self sendText:[NSAttributedString attributedStringWithString:message]
-			 asCommand:IRCRemoteCommandPrivmsg
-			 toChannel:channel];
-	});
+- (void)sendPrivmsg:(NSString *)message toChannel:(IRCChannel *)channel {
+  XRPerformBlockSynchronouslyOnMainQueue(^{
+    [self sendText:[NSAttributedString attributedStringWithString:message]
+         asCommand:IRCRemoteCommandPrivmsg
+         toChannel:channel];
+  });
 }
 
-- (void)sendAction:(NSString *)message toChannel:(IRCChannel *)channel
-{
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[self sendText:[NSAttributedString attributedStringWithString:message]
-			 asCommand:IRCRemoteCommandPrivmsgAction
-			 toChannel:channel];
-	});
+- (void)sendAction:(NSString *)message toChannel:(IRCChannel *)channel {
+  XRPerformBlockSynchronouslyOnMainQueue(^{
+    [self sendText:[NSAttributedString attributedStringWithString:message]
+         asCommand:IRCRemoteCommandPrivmsgAction
+         toChannel:channel];
+  });
 }
 
-- (void)sendNotice:(NSString *)message toChannel:(IRCChannel *)channel
-{
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[self sendText:[NSAttributedString attributedStringWithString:message]
-			 asCommand:IRCRemoteCommandNotice
-			 toChannel:channel];
-	});
+- (void)sendNotice:(NSString *)message toChannel:(IRCChannel *)channel {
+  XRPerformBlockSynchronouslyOnMainQueue(^{
+    [self sendText:[NSAttributedString attributedStringWithString:message]
+         asCommand:IRCRemoteCommandNotice
+         toChannel:channel];
+  });
 }
 
-- (void)sendPrivmsgToSelectedChannel:(NSString *)message
-{
-	IRCChannel *channel = [mainWindow() selectedChannelOn:self];
+- (void)sendPrivmsgToSelectedChannel:(NSString *)message {
+  IRCChannel *channel = [mainWindow() selectedChannelOn:self];
 
-	if (channel == nil) {
-		return;
-	}
+  if (channel == nil) {
+    return;
+  }
 
-	[self sendPrivmsg:message toChannel:channel];
+  [self sendPrivmsg:message toChannel:channel];
 }
 
-- (void)sendCTCPQuery:(NSString *)nickname command:(NSString *)command text:(nullable NSString *)text
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(command != nil);
+- (void)sendCTCPQuery:(NSString *)nickname
+              command:(NSString *)command
+                 text:(nullable NSString *)text {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(command != nil);
 
-	NSString *stringToSend = nil;
+  NSString *stringToSend = nil;
 
-	if (text == nil) {
-		stringToSend = command;
-	} else {
-		stringToSend = [NSString stringWithFormat:@"%@ %@", command, text];
-	}
+  if (text == nil) {
+    stringToSend = command;
+  } else {
+    stringToSend = [NSString stringWithFormat:@"%@ %@", command, text];
+  }
 
-	NSString *message = [NSString stringWithFormat:@"%c%@%c", 0x01, stringToSend, 0x01];
+  NSString *message =
+      [NSString stringWithFormat:@"%c%@%c", 0x01, stringToSend, 0x01];
 
-	[self send:@"PRIVMSG", nickname, message, nil];
+  [self send:@"PRIVMSG", nickname, message, nil];
 }
 
-- (void)sendCTCPReply:(NSString *)nickname command:(NSString *)command text:(nullable NSString *)text
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(command != nil);
+- (void)sendCTCPReply:(NSString *)nickname
+              command:(NSString *)command
+                 text:(nullable NSString *)text {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(command != nil);
 
-	NSString *stringToSend = nil;
+  NSString *stringToSend = nil;
 
-	if (text == nil) {
-		stringToSend = command;
-	} else {
-		stringToSend = [NSString stringWithFormat:@"%@ %@", command, text];
-	}
+  if (text == nil) {
+    stringToSend = command;
+  } else {
+    stringToSend = [NSString stringWithFormat:@"%@ %@", command, text];
+  }
 
-	/* A reply is a single line; configured text must not be able to
-	 inject a second command. */
-	stringToSend = [stringToSend stringByReplacingOccurrencesOfString:@"\r" withString:@" "];
-	stringToSend = [stringToSend stringByReplacingOccurrencesOfString:@"\n" withString:@" "];
+  /* A reply is a single line; configured text must not be able to
+   inject a second command. */
+  stringToSend = [stringToSend stringByReplacingOccurrencesOfString:@"\r"
+                                                         withString:@" "];
+  stringToSend = [stringToSend stringByReplacingOccurrencesOfString:@"\n"
+                                                         withString:@" "];
 
-	NSString *message = [NSString stringWithFormat:@"%c%@%c", 0x01, stringToSend, 0x01];
+  NSString *message =
+      [NSString stringWithFormat:@"%c%@%c", 0x01, stringToSend, 0x01];
 
-	[self send:@"NOTICE", nickname, message, nil];
+  [self send:@"NOTICE", nickname, message, nil];
 }
 
-- (void)sendCTCPPing:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (void)sendCTCPPing:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	NSString *text = [NSString stringWithFormat:@"%f", [NSDate timeIntervalSince1970]];
+  NSString *text =
+      [NSString stringWithFormat:@"%f", [NSDate timeIntervalSince1970]];
 
-	[self sendCTCPQuery:nickname command:@"PING" text:text];
+  [self sendCTCPQuery:nickname command:@"PING" text:text];
 }
 
 #pragma mark -
 #pragma mark Send Command
 
+- (void)sendCommand:(id)string {
+  [self sendCommand:string completeTarget:YES target:nil];
+}
+
 - (void)sendCommand:(id)string
-{
-	[self sendCommand:string completeTarget:YES target:nil];
+     completeTarget:(BOOL)completeTarget
+             target:(nullable NSString *)targetChannelName {
+  NSParameterAssert(string != nil);
+
+  BOOL inputIsNSString = [string isKindOfClass:[NSString class]];
+
+  if (inputIsNSString == NO &&
+      [string isKindOfClass:[NSAttributedString class]] == NO) {
+    NSAssert(NO, @"'string' must be NSString or NSAttributedString");
+  }
+
+  if ([string length] == 0) {
+    return;
+  }
+
+  NSMutableAttributedString *stringIn = nil;
+
+  if (inputIsNSString) {
+    stringIn = [[NSMutableAttributedString alloc] initWithString:string];
+  } else {
+    stringIn = [string mutableCopy];
+  }
+
+  if ([stringIn.string hasPrefix:@"/"]) {
+    [stringIn deleteCharactersInRange:NSMakeRange(0, 1)];
+  }
+
+  NSString *command = stringIn.tokenAsString;
+
+  NSString *lowercaseCommand = command.lowercaseString;
+  NSString *uppercaseCommand = command.uppercaseString;
+
+  IRCClient *selectedClient = mainWindow().selectedClient;
+  IRCChannel *selectedChannel = mainWindow().selectedChannel;
+
+  IRCChannel *targetChannel = nil;
+
+  NSInteger commandNumeric = [IRCCommandIndex indexOfLocalCommand:command];
+
+  if (completeTarget && targetChannelName != nil) {
+    targetChannel = [self findChannel:targetChannelName];
+  } else if (completeTarget && selectedClient == self && selectedChannel) {
+    targetChannel = selectedChannel;
+  }
+
+  switch (commandNumeric) {
+  case IRCLocalCommandAme:  // Command: AME
+  case IRCLocalCommandAmsg: // Command: AMSG
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    IRCRemoteCommand sendAsCommand = 0;
+
+    if (commandNumeric == IRCLocalCommandAmsg) {
+      sendAsCommand = IRCRemoteCommandPrivmsg;
+    } else {
+      sendAsCommand = IRCRemoteCommandPrivmsgAction;
+    }
+
+    for (IRCClient *client in worldController().clientList) {
+      if (client != self && [TPCPreferences amsgAllConnections] == NO) {
+        continue;
+      }
+
+      NSMutableArray<IRCChannel *> *channels = [NSMutableArray array];
+
+      for (IRCChannel *channel in client.channelList) {
+        if (channel.isActive == NO || channel.isChannel == NO) {
+          continue;
+        }
+
+        [channels addObject:channel];
+      }
+
+      /* Grouped by TARGMAX when the server advertises one. */
+      [client sendText:stringIn asCommand:sendAsCommand toChannels:channels];
+    }
+
+    break;
+  }
+  case IRCLocalCommandAquote: // Command: AQUOTE
+  case IRCLocalCommandAraw:   // Command: ARAW
+  {
+    NSAssertReturnLoopBreak(self.isConnected);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    for (IRCClient *client in worldController().clientList) {
+      [client sendLine:stringIn.string];
+    }
+
+    break;
+  }
+  case IRCLocalCommandAutojoin: // Command: AUTOJOIN
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    [self performAutoJoinInitiatedByUser:YES];
+
+    break;
+  }
+  case IRCLocalCommandAway: // Command: AWAY
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    for (IRCClient *client in worldController().clientList) {
+      if (client != self && [TPCPreferences awayAllConnections] == NO) {
+        continue;
+      }
+
+      NSString *comment = stringIn.string;
+
+      /* We enforce the maximum away length here instead of
+               -toggleAwayStatusWithComment: so that we have an easier
+               way to know when it is truncated so the user can be informed. */
+      NSUInteger commentMaximumLength = client.supportInfo.maximumAwayLength;
+
+      if (commentMaximumLength > 0 && comment.length > commentMaximumLength) {
+        [client printDebugInformation:TXTLS(@"IRC[41y-p2]", self.networkNameAlt,
+                                            commentMaximumLength)];
+      }
+
+      [client toggleAwayStatusWithComment:comment];
+    }
+
+    break;
+  }
+  case IRCLocalCommandBack: // Command: BACK
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    for (IRCClient *client in worldController().clientList) {
+      if (client != self && [TPCPreferences awayAllConnections] == NO) {
+        continue;
+      }
+
+      [client toggleAwayStatus:NO withComment:nil];
+    }
+
+    break;
+  }
+  case IRCLocalCommandCap:  // Command: CAP
+  case IRCLocalCommandCaps: // Command: CAPS
+  {
+    NSString *capabilities = self.enabledCapabilitiesStringValue;
+
+    if (capabilities.length == 0) {
+      [self printDebugInformation:TXTLS(@"IRC[5wa-lb]")];
+    } else {
+      [self printDebugInformation:TXTLS(@"IRC[7p9-rs]", capabilities)];
+    }
+
+    break;
+  }
+  case IRCLocalCommandClear: // Command: CLEAR
+  {
+    if (targetChannel) {
+      [mainWindow() clearContentsOfChannel:targetChannel];
+    } else {
+      [mainWindow() clearContentsOfClient:self];
+    }
+
+    break;
+  }
+  case IRCLocalCommandClearall: // Command: CLEARALL
+  {
+    for (IRCClient *client in worldController().clientList) {
+      if (client != self && [TPCPreferences clearAllConnections] == NO) {
+        continue;
+      }
+
+      [mainWindow() clearContentsOfClient:client];
+
+      for (IRCChannel *channel in client.channelList) {
+        [mainWindow() clearContentsOfChannel:channel];
+      }
+    }
+
+    break;
+  }
+  case IRCLocalCommandClose:  // Command: CLOSE
+  case IRCLocalCommandRemove: // Command: REMOVE
+  {
+    NSString *channelName = stringIn.tokenAsString;
+
+    if (channelName.length == 0) {
+      if (targetChannel) {
+        [worldController() destroyChannel:targetChannel];
+      }
+
+      break;
+    }
+
+    IRCChannel *channel = [self findChannel:channelName];
+
+    if (channel == nil) {
+      [self printDebugInformation:TXTLS(@"IRC[pxa-ox]", channelName)];
+
+      break;
+    }
+
+    [worldController() destroyChannel:channel];
+
+    break;
+  }
+  case IRCLocalCommandConn: // Command: CONN
+  {
+    NSString *serverAddress = stringIn.lowercaseGetToken;
+
+    if (serverAddress.length > 0) {
+      if (serverAddress.isValidInternetAddress == NO) {
+        [self printDebugInformation:TXTLS(@"IRC[zef-q9]")];
+
+        break;
+      }
+
+      self.temporaryServerAddressOverride = serverAddress;
+    }
+
+    if (self.isConnecting || self.isConnected) {
+      __weak IRCClient *weakSelf = self;
+
+      self.disconnectCallback = ^{
+        [weakSelf connect];
+      };
+
+      [self quit];
+
+      break;
+    }
+
+    [self connect];
+
+    break;
+  }
+  case IRCLocalCommandCtcp:      // Command: CTCP
+  case IRCLocalCommandCtcpreply: // Command: CTCPREPLY
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (targetChannel && targetChannel != selectedChannel) {
+      if (targetChannel.isUtility) {
+        [self printDebugInformation:TXTLS(@"sxf-qx")];
+
+        break;
+      }
+
+      targetChannelName = targetChannel.name;
+    } else {
+      targetChannelName = stringIn.tokenAsString;
+    }
+
+    NSString *subCommand = stringIn.uppercaseGetToken;
+
+    if (subCommand.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    if (commandNumeric == IRCLocalCommandCtcp) {
+      if ([subCommand isEqualToString:@"PING"]) {
+        [self sendCTCPPing:targetChannelName];
+      } else {
+        [self sendCTCPQuery:targetChannelName
+                    command:subCommand
+                       text:stringIn.string];
+      }
+    } else {
+      [self sendCTCPReply:targetChannelName
+                  command:subCommand
+                     text:stringIn.string];
+    }
+
+    break;
+  }
+  case IRCLocalCommandCycle:  // Command: CYCLE
+  case IRCLocalCommandHop:    // Command: HOP
+  case IRCLocalCommandRejoin: // Command: REJOIN
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (targetChannel == nil || targetChannel.isChannel == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
+
+      break;
+    }
+
+    [self partChannel:targetChannel];
+
+    [self forceJoinChannel:targetChannel.name password:targetChannel.secretKey];
+
+    break;
+  }
+  case IRCLocalCommandDcc: // Command: DCC
+  {
+    [self handleDCCCommand:stringIn
+                   command:command
+             targetChannel:targetChannel];
+
+    break;
+  }
+  case IRCLocalCommandDehalfop: // Command: DEHALFOP
+  case IRCLocalCommandDeop:     // Command: DEOP
+  case IRCLocalCommandDevoice:  // Command: DEVOICE
+  case IRCLocalCommandHalfop:   // Command: HALFOP
+  case IRCLocalCommandOp:       // Command: OP
+  case IRCLocalCommandVoice:    // Command: VOICE
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    BOOL modeIsSet = (commandNumeric == IRCLocalCommandOp ||
+                      commandNumeric == IRCLocalCommandHalfop ||
+                      commandNumeric == IRCLocalCommandVoice);
+
+    NSString *modeSymbol = nil;
+
+    if (commandNumeric == IRCLocalCommandOp ||
+        commandNumeric == IRCLocalCommandDeop) {
+      modeSymbol = @"o";
+    } else if (commandNumeric == IRCLocalCommandHalfop ||
+               commandNumeric == IRCLocalCommandDehalfop) {
+      modeSymbol = @"h";
+    } else if (commandNumeric == IRCLocalCommandVoice ||
+               commandNumeric == IRCLocalCommandDevoice) {
+      modeSymbol = @"v";
+    }
+
+    if ([self.supportInfo modeSymbolIsUserPrefix:modeSymbol] == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[dwi-d1]", modeSymbol)];
+
+      break;
+    }
+
+    if ([self stringIsChannelName:stringIn.string] == NO) {
+      if (targetChannel && targetChannel.isChannel) {
+        targetChannelName = targetChannel.name;
+      } else {
+        [self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
+
+        break;
+      }
+    } else {
+      targetChannelName = stringIn.tokenAsString;
+    }
+
+    NSString *nicknamesString = stringIn.string;
+
+    if (nicknamesString.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    NSArray *modeChanges =
+        [self compileListOfModeChangesForModeSymbol:modeSymbol
+                                          modeIsSet:modeIsSet
+                                    parameterString:nicknamesString];
+
+    for (NSString *modeChange in modeChanges) {
+      [self send:@"MODE", targetChannelName, modeChange, nil];
+    }
+
+    break;
+  }
+  case IRCLocalCommandDebug: // Command: DEBUG
+  case IRCLocalCommandEcho:  // Command: ECHO
+  {
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    NSString *stringInString = stringIn.string;
+
+    if ([stringInString isEqualToStringIgnoringCase:@"raw on"]) {
+      [self createRawDataLogQuery];
+    } else if ([stringInString isEqualToStringIgnoringCase:@"raw off"]) {
+      [self destroyRawDataLogQuery];
+    } else {
+      [self printDebugInformation:stringInString];
+    }
+
+    break;
+  }
+  case IRCLocalCommandDefaults: // Command: DEFAULTS
+  {
+    if (stringIn.length == 0) {
+      [self printDebugInformation:TXTLS(@"IRC[1dz-jb]")];
+
+      break;
+    }
+
+    NSString *action = stringIn.tokenAsString;
+
+    /* Present help */
+    if ([action isEqualToString:@"help"]) {
+      NSString *help = TXTLS(@"IRC[bkk-lo]");
+
+      [self printDebugInformationMultiline:help];
+
+      break;
+    }
+
+    /* Prepare to toggle feature */
+    NSString *feature = stringIn.tokenInsideQuotes.string;
+
+    BOOL applyToAll = [feature isEqualToString:@"-a"];
+
+    if (applyToAll) {
+      feature = stringIn.tokenInsideQuotes.string;
+    }
+
+    NSDictionary *features = @{
+      @"Ignore Notifications by Private ZNC Users" :
+          @"setZncIgnoreUserNotifications:",
+      @"Send Authentication Requests to UserServ" :
+          @"setSendAuthenticationRequestsToUserServ:",
+      @"Disable Automatic SASL EXTERNAL Response" :
+          @"setSaslAuthenticationDisableExternalMechanism:",
+      @"Send WHO Command Requests to Channels" :
+          @"setSendWhoCommandRequestsToChannels:",
+    };
+
+    BOOL enableFeature = [action isEqualToString:@"enable"];
+
+    /* Cannot toggle feature if the user doesn't tell us which */
+    if (feature.length == 0) {
+      [self printDebugInformation:TXTLS(@"IRC[1dz-jb]")];
+
+      break;
+    }
+
+    /* Make sure the feature exists */
+    if ([features containsKey:feature] == NO) {
+      if (enableFeature) {
+        [self printDebugInformation:TXTLS(@"IRC[pc4-67]", feature)];
+      } else {
+        [self printDebugInformation:TXTLS(@"IRC[d7y-pv]", feature)];
+      }
+
+      break;
+    }
+
+    /* Toggle the feature by mutating the client's configuration,
+             invoking the appropriate method, then saving it. */
+    void (^toggleFeature)(IRCClient *, NSString *, BOOL) =
+        ^(IRCClient *client, NSString *featureKey, BOOL featureValue) {
+          NSString *selectorString = features[featureKey];
+
+          SEL selector = NSSelectorFromString(selectorString);
+
+          IRCClientConfigMutable *mutableClientConfig =
+              [client.config mutableCopy];
+
+          NSMethodSignature *signature =
+              [mutableClientConfig methodSignatureForSelector:selector];
+
+          NSInvocation *invocation =
+              [NSInvocation invocationWithMethodSignature:signature];
+
+          [invocation setTarget:mutableClientConfig];
+          [invocation setSelector:selector];
+
+          [invocation setArgument:&featureValue atIndex:2];
+
+          [invocation invoke];
+
+          client.config = mutableClientConfig;
+        };
+
+    /* Toggle feature */
+    for (IRCClient *client in worldController().clientList) {
+      if (client != self && applyToAll == NO) {
+        continue;
+      }
+
+      toggleFeature(client, feature, enableFeature);
+
+      if (enableFeature) {
+        [client printDebugInformation:TXTLS(@"IRC[5ke-18]", feature)];
+      } else {
+        [client printDebugInformation:TXTLS(@"IRC[0gn-cb]", feature)];
+      }
+    }
+
+    /* Save modified client */
+    [worldController() save];
+
+    break;
+  }
+  case IRCLocalCommandGline:    // Command: GLINE
+  case IRCLocalCommandGzline:   // Command: GZLINE
+  case IRCLocalCommandShun:     // Command: SHUN
+  case IRCLocalCommandTempshun: // Command: TEMPSHUN
+  case IRCLocalCommandZline:    // Command: ZLINE
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    NSString *segment1 = stringIn.getTokenAsString;
+    NSString *segment2 = stringIn.getTokenAsString;
+
+    [self send:uppercaseCommand, segment1, segment2, stringIn.string, nil];
+
+    break;
+  }
+  case IRCLocalCommandGoto: // Command: GOTO
+  {
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    NSString *needle = stringIn.tokenAsString;
+
+    IRCTreeItem *bestMatch = mainWindow().selectedItem;
+
+    CGFloat bestScore = 0.0;
+
+    for (IRCClient *client in worldController().clientList) {
+      for (IRCChannel *channel in client.channelList) {
+        CGFloat currentScore = [channel.name compareWithWord:needle
+                                         lengthPenaltyWeight:0.1];
+
+        if (currentScore > bestScore) {
+          bestMatch = channel;
+
+          bestScore = currentScore;
+        }
+      }
+    }
+
+    [mainWindow() select:bestMatch];
+
+    break;
+  }
+  case IRCLocalCommandIgnore:   // Command: IGNORE
+  case IRCLocalCommandUnignore: // Command: UNIGNORE
+  {
+    BOOL isIgnoreCommand = (commandNumeric == IRCLocalCommandIgnore);
+
+    if (stringIn.length == 0 || targetChannel == nil) {
+      if (isIgnoreCommand) {
+        [menuController()
+            showServerPropertiesSheetForClient:self
+                                 withSelection:
+                                     TDCServerPropertiesSheetSelectionNewIgnoreEntry
+                                       context:@""];
+      } else {
+        [menuController()
+            showServerPropertiesSheetForClient:self
+                                 withSelection:
+                                     TDCServerPropertiesSheetSelectionAddressBook
+                                       context:nil];
+      }
+
+      break;
+    }
+
+    NSString *nickname = stringIn.tokenAsString;
+
+    IRCUser *member = [self findUser:nickname];
+
+    if (member == nil) {
+      if (isIgnoreCommand) {
+        [menuController()
+            showServerPropertiesSheetForClient:self
+                                 withSelection:
+                                     TDCServerPropertiesSheetSelectionNewIgnoreEntry
+                                       context:nickname];
+      } else {
+        [menuController()
+            showServerPropertiesSheetForClient:self
+                                 withSelection:
+                                     TDCServerPropertiesSheetSelectionAddressBook
+                                       context:nil];
+      }
+
+      break;
+    }
+
+    /* Build list of ignores that already match the user's host */
+    NSString *hostmask = member.hostmask;
+
+    if (hostmask == nil) {
+      hostmask = [NSString stringWithFormat:@"%@!*@*", nickname];
+    }
+
+    NSMutableArray *matchedIgnores = [NSMutableArray array];
+
+    for (IRCAddressBookEntry *ignore in self.config.ignoreList) {
+      if (ignore.entryType != IRCAddressBookEntryTypeIgnore) {
+        continue;
+      }
+
+      if ([ignore checkMatch:hostmask]) {
+        [matchedIgnores addObject:ignore];
+      }
+    }
+
+    /* Cancel if there is nothing to change */
+    if (isIgnoreCommand) {
+      if (matchedIgnores.count > 0) {
+        [self printDebugInformation:TXTLS(@"IRC[5ix-zn]", member.nickname)];
+
+        break;
+      }
+    } else {
+      if (matchedIgnores.count == 0) {
+        [self printDebugInformation:TXTLS(@"IRC[wu0-jp]", member.nickname)];
+
+        break;
+      } else if (matchedIgnores.count > 1) {
+        [self printDebugInformation:TXTLS(@"IRC[vrx-1f]", member.nickname)];
+
+        break;
+      }
+    }
+
+    /* Modify ignore list and inform user of change */
+    NSMutableArray *mutableIgnoreList = [self.config.ignoreList mutableCopy];
+
+    if (isIgnoreCommand) {
+      IRCAddressBookEntry *ignore =
+          [IRCAddressBookEntry newIgnoreEntryForHostmask:member.banMask];
+
+      [self printDebugInformation:TXTLS(@"IRC[ret-20]", member.nickname,
+                                        ignore.hostmask)];
+
+      [mutableIgnoreList addObject:ignore];
+    } else {
+      IRCAddressBookEntry *ignore = matchedIgnores[0];
+
+      [self printDebugInformation:TXTLS(@"IRC[jzg-g8]", member.nickname,
+                                        ignore.hostmask)];
+
+      [mutableIgnoreList removeObjectIdenticalTo:ignore];
+    }
+
+    /* Save modified ignore list */
+    IRCClientConfigMutable *mutableClientConfig = [self.config mutableCopy];
+
+    mutableClientConfig.ignoreList = mutableIgnoreList;
+
+    self.config = mutableClientConfig;
+
+    /* Clear cache */
+    /* If we have a host, then it's easy to clear only that.
+             If we don't have a host, then we have to clear everything. */
+    if (hostmask) {
+      [self clearAddressBookCacheForHostmask:hostmask];
+    } else {
+      [self clearAddressBookCache];
+    }
+
+    break;
+  }
+  case IRCLocalCommandInvite: // Command: INVITE
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    NSArray *nicknames = [stringIn.string
+        componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                                 whitespaceCharacterSet]];
+
+    if ([self stringIsChannelName:nicknames.lastObject] == NO) {
+      if (targetChannel && targetChannel.isChannel) {
+        targetChannelName = targetChannel.name;
+      } else {
+        [self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
+
+        break;
+      }
+    } else {
+      targetChannelName = nicknames.lastObject;
+
+      nicknames =
+          [nicknames subarrayWithRange:NSMakeRange(0, (nicknames.count - 1))];
+    }
+
+    for (NSString *nickname in nicknames) {
+      if ([self stringIsNickname:nickname] == NO) {
+        continue;
+      }
+
+      [self send:@"INVITE", nickname, targetChannelName, nil];
+    }
+
+    break;
+  }
+  case IRCLocalCommandIson: // Command: ISON
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    [self createHiddenCommandResponses];
+
+    [self.requestedCommands recordIsonRequestOpenedAsVisible];
+
+    [self send:@"ISON", stringIn.string, nil];
+
+    break;
+  }
+  case IRCLocalCommandJ:    // Command: J
+  case IRCLocalCommandJoin: // Command: JOIN
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      if (targetChannel && targetChannel.isChannel) {
+        targetChannelName = targetChannel.name;
+      } else {
+        [self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
+
+        break;
+      }
+    } else {
+      targetChannelName = stringIn.tokenAsString;
+
+      if (targetChannelName.length == 0) {
+        [self printInvalidSyntaxMessageForCommand:command];
+
+        break;
+      }
+
+      if ([self stringIsChannelNameOrZero:targetChannelName] == NO) {
+        targetChannelName = [@"#" stringByAppendingString:targetChannelName];
+      }
+    }
+
+    [self joinUnlistedChannelsWithStringAndSelectBestMatch:targetChannelName
+                                                 passwords:stringIn.string];
+
+    break;
+  }
+  case IRCLocalCommandJoinRandom: // Command: JOIN_RANDOM
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    NSInteger numberOfChannelsToJoin = 0;
+
+    NSString *numberOfChannelsToken = stringIn.tokenAsString;
+
+    if (numberOfChannelsToken.isNumericOnly) {
+      numberOfChannelsToJoin = numberOfChannelsToken.integerValue;
+    }
+
+    if (numberOfChannelsToJoin <= 0) {
+      numberOfChannelsToJoin = 1;
+    }
+
+    for (NSInteger i = 0; i < numberOfChannelsToJoin; i++) {
+      NSString *channelName = [NSString
+          stringWithFormat:@"#debug-channel-%lu", TXRandomNumber(9999999)];
+
+      [self send:@"JOIN", channelName, nil];
+    }
+
+    break;
+  }
+  case IRCLocalCommandBan:     // Command: BAN
+  case IRCLocalCommandKb:      // Command: KB
+  case IRCLocalCommandKick:    // Command: KICK
+  case IRCLocalCommandKickban: // Command: KICKBAN
+  case IRCLocalCommandUnban:   // Command: UNBAN
+  case IRCLocalCommandUnquiet: // Command: UNQUIET
+  case IRCLocalCommandQuiet:   // Command: QUIET
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    NSString *nickname = stringIn.tokenAsString;
+
+    if ([self stringIsChannelName:nickname] == NO) {
+      if (targetChannel && targetChannel.isChannel) {
+        targetChannelName = targetChannel.name;
+      } else {
+        [self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
+
+        break;
+      }
+    } else {
+      targetChannelName = nickname;
+
+      targetChannel = [self findChannel:targetChannelName];
+
+      nickname = stringIn.tokenAsString;
+    }
+
+    if (nickname.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    if (commandNumeric == IRCLocalCommandKickban ||
+        commandNumeric == IRCLocalCommandKb ||
+        commandNumeric == IRCLocalCommandBan ||
+        commandNumeric == IRCLocalCommandUnban ||
+        commandNumeric == IRCLocalCommandQuiet ||
+        commandNumeric == IRCLocalCommandUnquiet) {
+      IRCChannelUser *member = [targetChannel findMember:nickname];
+
+      NSString *banMask = member.user.banMask;
+
+      if (banMask == nil) {
+        banMask = nickname;
+      }
+
+      NSString *modeSymbol = nil;
+
+      if (commandNumeric == IRCLocalCommandQuiet ||
+          commandNumeric == IRCLocalCommandUnquiet) {
+        modeSymbol = @"q";
+      } else {
+        modeSymbol = @"b";
+      }
+
+      if ([self.supportInfo modeSymbolIsUserPrefix:modeSymbol]) {
+        [self printDebugInformation:TXTLS(@"IRC[dwi-d1]", modeSymbol)];
+
+        break;
+      }
+
+      if (commandNumeric == IRCLocalCommandUnban ||
+          commandNumeric == IRCLocalCommandUnquiet) {
+        [self send:@"MODE", targetChannelName,
+                   [@"-" stringByAppendingString:modeSymbol], banMask, nil];
+      } else {
+        [self send:@"MODE", targetChannelName,
+                   [@"+" stringByAppendingString:modeSymbol], banMask, nil];
+      }
+    }
+
+    if (commandNumeric == IRCLocalCommandKb ||
+        commandNumeric == IRCLocalCommandKick ||
+        commandNumeric == IRCLocalCommandKickban) {
+      NSString *reason = stringIn.string;
+
+      if (reason.length == 0) {
+        reason = [TPCPreferences defaultKickMessage];
+      }
+
+      NSUInteger reasonMaximumLength = self.supportInfo.maximumKickLength;
+
+      if (reasonMaximumLength > 0 && reason.length > reasonMaximumLength) {
+        [self printDebugInformation:TXTLS(@"IRC[59a-ir]", self.networkNameAlt,
+                                          reasonMaximumLength)];
+      }
+
+      [self send:@"KICK", targetChannelName, nickname, reason, nil];
+    }
+
+    break;
+  }
+  case IRCLocalCommandKill: // Command: KILL
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    NSString *nickname = stringIn.getTokenAsString;
+
+    if (nickname.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    NSString *reason = stringIn.string;
+
+    if (reason.length == 0) {
+      reason = [TPCPreferences IRCopDefaultKillMessage];
+    }
+
+    [self send:@"KILL", nickname, reason, nil];
+
+    break;
+  }
+  case IRCLocalCommandLagcheck: // Command: LAGCHECK
+  case IRCLocalCommandMylag:    // Command: MYLAG
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    /* We only accept LAGCHECK CTCP responses from ourselves which
+             means it is relatively safe to pack some data on the end of
+             the CTCP so that we can provide ourselves some context. */
+    NSMutableDictionary *lagCheckContext =
+        [NSMutableDictionary dictionaryWithCapacity:3];
+
+    lagCheckContext[@"connection"] = self.socket.uniqueIdentifier;
+
+    lagCheckContext[@"time"] = @([NSDate timeIntervalSince1970]);
+
+    if (commandNumeric == IRCLocalCommandMylag) {
+      IRCChannel *selectedChannel = [mainWindow() selectedChannelOn:self];
+
+      if (selectedChannel) {
+        lagCheckContext[@"channel"] = selectedChannel.name;
+      }
+    }
+
+    NSString *ctcpContext = [lagCheckContext formDataUsingSeparator:@"&"];
+
+    [self sendCTCPQuery:self.userNickname command:@"LAGCHECK" text:ctcpContext];
+
+    [self printDebugInformation:TXTLS(@"IRC[qoh-kt]")];
+
+    break;
+  }
+  case IRCLocalCommandLeave: // Command: LEAVE
+  case IRCLocalCommandPart:  // Command: PART
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if ([self stringIsChannelName:stringIn.string] == NO) {
+      if (targetChannel && targetChannel.isChannel) {
+        targetChannelName = targetChannel.name;
+      } else if (targetChannel) {
+        [worldController() destroyChannel:targetChannel];
+
+        break;
+      } else {
+        break;
+      }
+    } else {
+      targetChannelName = stringIn.tokenAsString;
+    }
+
+    NSString *reason = stringIn.string;
+
+    if (reason.length == 0) {
+      reason = self.config.normalLeavingComment;
+    }
+
+    [self send:@"PART", targetChannelName, reason, nil];
+
+    break;
+  }
+  case IRCLocalCommandList: // Command: LIST
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
+
+    if (channelListDialog == nil) {
+      [self createChannelListDialog];
+    }
+
+    [self requestChannelList];
+
+    break;
+  }
+  case IRCLocalCommandM:    // Command: M
+  case IRCLocalCommandMode: // Command: MODE
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    NSString *modeString = stringIn.string;
+
+    if (modeString.length == 0 ||
+        ([modeString hasPrefix:@"+"] || [modeString hasPrefix:@"-"])) {
+      if (targetChannel && targetChannel.isChannel) {
+        targetChannelName = targetChannel.name;
+      } else {
+        [self printInvalidSyntaxMessageForCommand:command];
+
+        break;
+      }
+    } else {
+      targetChannelName = stringIn.tokenAsString;
+    }
+
+    if (modeString.length == 0) {
+      [self send:@"MODE", targetChannelName, nil];
+    } else {
+      [self send:@"MODE", targetChannelName, modeString, nil];
+    }
+
+    break;
+  }
+  case IRCLocalCommandMute: // Command: MUTE
+  {
+    if ([TPCPreferences soundIsMuted]) {
+      [self printDebugInformation:TXTLS(@"IRC[sdn-yr]")];
+    } else {
+      [self printDebugInformation:TXTLS(@"IRC[u48-aa]")];
+
+      [menuController() toggleMuteOnNotificationSoundsShortcutOn:YES];
+    }
+
+    break;
+  }
+  case IRCLocalCommandMyversion: // Command: MYVERSION
+  {
+    NSString *applicationName =
+        [TPCApplicationInfo applicationNameWithoutVersion];
+    NSString *versionLong = [TPCApplicationInfo applicationVersion];
+    NSString *versionShort = [TPCApplicationInfo applicationVersionShort];
+
+    NSString *downloadSource = @""; // Assume standalone by default
+    NSString *buildType = TXTLS(@"IRC[b8p-44]", TXTLS(@"IRC[g1u-os]"));
+
+    NSString *message = TXTLS(@"IRC[ccb-ur]", applicationName, versionShort,
+                              versionLong, downloadSource, buildType);
+
+    if (targetChannel) {
+      message = TXTLS(@"IRC[pqj-1y]", message);
+
+      [self sendPrivmsg:message toChannel:targetChannel];
+    } else {
+      [self printDebugInformationToConsole:message];
+    }
+
+    break;
+  }
+  case IRCLocalCommandNick: // Command: NICK
+  {
+    /* Use -isConnected instead of -isLoggedIn so that
+             user can change their nickname during registration
+             phase before the 001 numeric is received. */
+    NSAssertReturnLoopBreak(self.isConnected);
+
+    NSString *newNickname = stringIn.tokenAsString;
+
+    if (newNickname.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    for (IRCClient *client in worldController().clientList) {
+      if (client != self && [TPCPreferences nickAllConnections] == NO) {
+        continue;
+      }
+
+      [client changeNickname:newNickname];
+    }
+
+    break;
+  }
+  case IRCLocalCommandNotifybubble: // Command: NOTIFYBUBBLE
+  {
+    if ([self stringIsChannelName:stringIn.string]) {
+      targetChannel = [self findChannel:stringIn.tokenAsString];
+    } else {
+      targetChannel = nil;
+    }
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    NSString *title = [TPCApplicationInfo applicationNameWithoutVersion];
+
+    NSString *message = stringIn.string;
+
+    [sharedNotificationController() scheduleNotificationWithTitle:title
+                                                          message:message
+                                                       forChannel:targetChannel
+                                                         onClient:self];
+
+    break;
+  }
+  case IRCLocalCommandNotifysound: // Command: NOTIFYSOUND
+  {
+    NSString *soundName = stringIn.tokenAsString;
+
+    if (soundName.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    [TLOSoundPlayer playAlertSound:soundName];
+
+    break;
+  }
+  case IRCLocalCommandNotifyspeak: // Command: NOTIFYSPEAK
+  {
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    [[TXSharedApplication sharedSpeechSynthesizer] speak:stringIn.string];
+
+    break;
+  }
+  case IRCLocalCommandQuery: // Command: QUERY
+  {
+    NSString *nickname = stringIn.tokenAsString;
+
+    if (nickname.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    if ([self stringIsNickname:nickname] == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[zef-q9]")];
+
+      break;
+    }
+
+    IRCChannel *query = [self findChannelOrCreate:nickname
+                                 isPrivateMessage:YES];
+
+    [mainWindow() select:query];
+
+    if (stringIn.length > 0) {
+      [self sendText:stringIn
+           asCommand:IRCRemoteCommandPrivmsg
+           toChannel:query];
+    }
+
+    break;
+  }
+  case IRCLocalCommandQuote: // Command: QUOTE
+  case IRCLocalCommandRaw:   // Command: RAW
+  {
+    NSAssertReturnLoopBreak(self.isConnected);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    [self sendLine:stringIn.string];
+
+    break;
+  }
+  case IRCLocalCommandQuit: // Command: QUIT
+  {
+    NSAssertReturnLoopBreak(self.isConnected);
+
+    if (stringIn.length == 0) {
+      [self quit];
+    } else {
+      [self quitWithComment:stringIn.string];
+    }
+
+    break;
+  }
+  case IRCLocalCommandNames: // Command: NAMES
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    [self createHiddenCommandResponses];
+
+    [self send:@"NAMES", stringIn.string, nil];
+
+    break;
+  }
+  case IRCLocalCommandRecv: // Command: RECV
+  {
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    [self ircConnection:self.socket didReceiveData:stringIn.string];
+
+    break;
+  }
+  case IRCLocalCommandSetcolor: // Command: SETCOLOR
+  {
+    if ([TPCPreferences disableNicknameColorHashing]) {
+      [self printDebugInformation:TXTLS(@"IRC[026-qv]")];
+
+      break;
+    }
+
+    NSString *nickname = stringIn.lowercaseGetToken;
+
+    if (nickname.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    if ([self stringIsNickname:nickname] == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[8dy-6f]", nickname)];
+
+      break;
+    }
+
+    [menuController() memberChangeColor:nickname];
+
+    break;
+  }
+  case IRCLocalCommandSetname: // Command: SETNAME
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilitySetName] ==
+        NO) {
+      [self printDebugInformation:TXTLS(@"IRC[set-nm]")];
+
+      break;
+    }
+
+    [self send:@"SETNAME", stringIn.string, nil];
+
+    break;
+  }
+  case IRCLocalCommandSetqueryname: // Command: SETQUERYNAME
+  {
+    if (targetChannel == nil || targetChannel.isPrivateMessage == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[m6o-z1]")];
+
+      break;
+    }
+
+    NSString *nickname = stringIn.getTokenAsString;
+
+    if (nickname.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    if ([self stringIsNickname:nickname] == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[zef-q9]")];
+
+      break;
+    }
+
+    IRCChannel *oldQuery = [self findChannel:nickname];
+
+    if (oldQuery) {
+      BOOL deleteOldQuery = [TDCAlert
+          modalAlertWithMessage:TXTLS(@"Prompts[61s-jc]")
+                          title:TXTLS(@"Prompts[d22-76]", oldQuery.name)
+                  defaultButton:TXTLS(@"Prompts[mvh-ms]")
+                alternateButton:TXTLS(@"Prompts[99q-gg]")];
+
+      if (deleteOldQuery) {
+        [worldController() destroyChannel:oldQuery];
+      } else {
+        break;
+      }
+    }
+
+    targetChannel.name = nickname;
+
+    [mainWindow() reloadTreeItem:targetChannel];
+
+    [mainWindow() updateTitleFor:targetChannel];
+
+    break;
+  }
+  case IRCLocalCommandServer: // Command: SERVER
+  {
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    [IRCExtras createConnectionToServer:stringIn.string
+                            channelList:nil
+                     connectWhenCreated:YES];
+
+    break;
+  }
+  case IRCLocalCommandSslcontext: // Command: SSLCONTEXT
+  {
+    [self presentCertificateTrustInformation];
+
+    break;
+  }
+  case IRCLocalCommandChathistory: // Command: CHATHISTORY
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityChatHistory] ==
+        NO) {
+      [self printDebugInformation:TXTLS(@"IRC[hc1-ah]")];
+
+      break;
+    }
+
+    /* Passed through as typed: "/chathistory BEFORE #chan timestamp=... 50" */
+    [self sendLine:[@"CHATHISTORY " stringByAppendingString:stringIn.string]];
+
+    break;
+  }
+  case IRCLocalCommandTage: // Command: TAGE
+  {
+    NSTimeInterval timePassed =
+        [NSDate timeIntervalSinceNow:[TPCApplicationInfo applicationBirthday]];
+
+    NSString *message =
+        TXTLS(@"IRC[v9x-18]", TXHumanReadableTimeInterval(timePassed, NO, 0));
+
+    if (targetChannel) {
+      [self sendPrivmsg:message toChannel:targetChannel];
+    } else {
+      [self printDebugInformationToConsole:message];
+    }
+
+    break;
+  }
+  case IRCLocalCommandTimer: // Command: TIMER
+  {
+    if (stringIn.length == 0) {
+      [self printDebugInformation:TXTLS(@"IRC[jj9-94]")];
+
+      break;
+    }
+
+    NSString *action = stringIn.tokenAsString;
+
+    /* Present help */
+    if ([action isEqualToString:@"help"]) {
+      NSString *topic = stringIn.tokenAsString;
+
+      [self printDebugInformation:TXTLS(@"IRC[aox-zz]")]; // divider
+
+      if ([topic isEqualToStringIgnoringCase:@"add"]) {
+        [self printDebugInformationMultiline:TXTLS(@"IRC[6r0-il]")];
+      } else if ([topic isEqualToStringIgnoringCase:@"remove"]) {
+        [self printDebugInformationMultiline:TXTLS(@"IRC[i2d-x5]")];
+      } else if ([topic isEqualToStringIgnoringCase:@"list"]) {
+        [self printDebugInformationMultiline:TXTLS(@"IRC[x1n-ve]")];
+      } else if ([topic isEqualToStringIgnoringCase:@"stop"]) {
+        [self printDebugInformationMultiline:TXTLS(@"IRC[bx2-n1]")];
+      } else if ([topic isEqualToStringIgnoringCase:@"restart"]) {
+        [self printDebugInformationMultiline:TXTLS(@"IRC[r27-tv]")];
+      } else {
+        [self printDebugInformationMultiline:TXTLS(@"IRC[xkq-rt]")];
+      }
+
+      break;
+    }
+
+    /* Stop timer */
+    if ([action isEqualToString:@"stop"]) {
+      NSString *identifier = stringIn.tokenAsString;
+
+      if (identifier.length == 0) {
+        [self printDebugInformation:TXTLS(@"IRC[p6l-o4]")];
+
+        break;
+      }
+
+      IRCTimedCommand *timedCommand =
+          [self timedCommandWithIdentifier:identifier];
+
+      if (timedCommand == nil) {
+        [self printDebugInformation:TXTLS(@"IRC[vzu-xh]", identifier)];
+
+        break;
+      }
+
+      if (timedCommand.timerIsActive == NO) {
+        [self printDebugInformation:TXTLS(@"IRC[ax6-n9]", identifier)];
+
+        break;
+      }
+
+      [self stopTimedCommand:timedCommand];
+
+      [self printDebugInformation:TXTLS(@"IRC[hs0-up]", identifier)];
+
+      break;
+    }
+
+    /* Restart timer */
+    if ([action isEqualToString:@"restart"]) {
+      NSString *identifier = stringIn.tokenAsString;
+
+      if (identifier.length == 0) {
+        [self printDebugInformation:TXTLS(@"IRC[p6l-o4]")];
+
+        break;
+      }
+
+      IRCTimedCommand *timedCommand =
+          [self timedCommandWithIdentifier:identifier];
+
+      if (timedCommand == nil) {
+        [self printDebugInformation:TXTLS(@"IRC[vzu-xh]", identifier)];
+
+        break;
+      }
+
+      if ([self restartTimedCommand:timedCommand]) {
+        [self printDebugInformation:TXTLS(@"IRC[qb7-mi]", identifier)];
+      } else {
+        [self printDebugInformation:TXTLS(@"IRC[dgp-d4]", identifier)];
+      }
+
+      break;
+    }
+
+    /* Remove timer */
+    if ([action isEqualToString:@"remove"]) {
+      NSString *identifier = stringIn.tokenAsString;
+
+      if (identifier.length == 0) {
+        [self printDebugInformation:TXTLS(@"IRC[p6l-o4]")];
+
+        break;
+      }
+
+      if ([identifier isEqualToStringIgnoringCase:@"all"]) {
+        [self removeTimedCommands];
+
+        [self printDebugInformation:TXTLS(@"IRC[808-bs]")];
+
+        break;
+      }
+
+      IRCTimedCommand *timedCommand =
+          [self timedCommandWithIdentifier:identifier];
+
+      if (timedCommand == nil) {
+        [self printDebugInformation:TXTLS(@"IRC[vzu-xh]", identifier)];
+
+        break;
+      }
+
+      [self removeTimedCommand:timedCommand];
+
+      [self printDebugInformation:TXTLS(@"IRC[p7s-is]", identifier)];
+
+      break;
+    }
+
+    /* List timers */
+    if ([action isEqualToString:@"list"]) {
+      NSArray *timedCommands = [self listOfTimedCommands];
+
+      NSUInteger numberOfTimers = timedCommands.count;
+
+      if (numberOfTimers == 0) {
+        [self printDebugInformation:TXTLS(@"IRC[pqk-5k]")];
+
+        break;
+      } else if (numberOfTimers == 1) {
+        [self printDebugInformation:TXTLS(@"IRC[6ts-oi]", numberOfTimers)];
+      } else {
+        [self printDebugInformation:TXTLS(@"IRC[q1m-1e]", numberOfTimers)];
+      }
+
+      for (IRCTimedCommand *timedCommand in timedCommands) {
+        NSString *description = [self descriptionForTimedCommand:timedCommand];
+
+        [self printDebugInformation:description];
+      }
+
+      break;
+    }
+
+    /* Add timer */
+    /*
+             This command is designed to be backwards compatible.
+
+             Old syntax:
+             "/timer <seconds> <command>"
+
+             New syntax:
+             "/timer <seconds> <repeat> <command>"
+
+             We check the value of the second argument. If it's a number,
+             then we treat it as the new syntax which means that number
+             is the repeat count for the timer.
+             */
+
+    /* Parse interval */
+    NSString *intervalString = action;
+
+    if (intervalString.length == 0) {
+      [self printDebugInformation:TXTLS(@"IRC[jj9-94]")];
+
+      break;
+    }
+
+    NSInteger interval = intervalString.integerValue;
+
+    if (interval <= 0) {
+      [self printDebugInformation:TXTLS(@"IRC[327-pv]")];
+
+      break;
+    }
+
+    /* Parse repeat count and/or command */
+    /*
+             Repeat argument is treated as such:
+               == 0 — repeat and never stop
+               == 1 - perform timer once, do not repeat
+               > 1 — repeat number of times
+             */
+    NSString *repeatString = stringIn.tokenAsString;
+
+    NSInteger repeat = NSNotFound;
+
+    NSString *command = stringIn.trimmedString;
+
+    if ([repeatString contentsIsOfType:CSStringTypeAnyNumber]) {
+      /* Contents of second argument is a number,
+               which means we want to treat it as the repeat count. */
+      repeat = repeatString.integerValue;
+    } else {
+      /* Contents of second argument is NOT a number,
+               which means we need to merge that back with the
+               remainder of the command value. */
+      if (command.length == 0) {
+        command = repeatString;
+      } else {
+        command = [repeatString stringByAppendingFormat:@" %@", command];
+      }
+    }
+
+    /* Perform additional validation */
+    if (repeat < 0) {
+      [self printDebugInformation:TXTLS(@"IRC[eud-kc]")];
+
+      break;
+    }
+
+    if (command.length == 0) {
+      [self printDebugInformation:TXTLS(@"IRC[jj9-94]")];
+
+      break;
+    }
+
+    /* If we have no repeat value, then treat is one pass. */
+    if (repeat == NSNotFound) {
+      repeat = 1;
+    }
+
+    /* Add timer */
+    IRCTimedCommand *timedCommand = nil;
+
+    if (targetChannel == nil) {
+      timedCommand = [[IRCTimedCommand alloc] initWithCommand:command
+                                                     onClient:self];
+    } else {
+      timedCommand = [[IRCTimedCommand alloc] initWithCommand:command
+                                                     onClient:self
+                                                    inChannel:targetChannel];
+    }
+
+    [self addTimedCommand:timedCommand];
+
+    [self startTimedCommand:timedCommand
+                   interval:interval
+                   onRepeat:(repeat != 1)
+                 iterations:repeat];
+
+    break;
+  }
+  case IRCLocalCommandT:     // Command: T
+  case IRCLocalCommandTopic: // Command: TOPIC
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if ([self stringIsChannelName:stringIn.string] == NO) {
+      if (targetChannel && targetChannel.isChannel) {
+        targetChannelName = targetChannel.name;
+      } else {
+        break;
+      }
+    } else {
+      targetChannelName = stringIn.tokenAsString;
+    }
+
+    NSString *topic = stringIn.stringFormattedForIRC;
+
+    NSUInteger topicLength = topic.length;
+
+    if (topicLength == 0) {
+      [self send:@"TOPIC", targetChannelName, nil];
+
+      return;
+    }
+
+    NSUInteger topicLengthMaximum = self.supportInfo.maximumTopicLength;
+
+    if (topicLengthMaximum > 0 && topicLength > topicLengthMaximum) {
+      [self printDebugInformation:TXTLS(@"IRC[1oo-3b]", self.networkNameAlt,
+                                        topicLengthMaximum)];
+    }
+
+    [self send:@"TOPIC", targetChannelName, topic, nil];
+
+    break;
+  }
+  case IRCLocalCommandUmode: // Command: UMODE
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self send:@"MODE", self.userNickname, nil];
+    } else {
+      [self send:@"MODE", self.userNickname, stringIn.string, nil];
+    }
+
+    break;
+  }
+  case IRCLocalCommandUnmute: // Command: UNMUTE
+  {
+    if ([TPCPreferences soundIsMuted] == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[5rf-mj]")];
+    } else {
+      [self printDebugInformation:TXTLS(@"IRC[190-f2]")];
+
+      [menuController() toggleMuteOnNotificationSoundsShortcutOn:NO];
+    }
+
+    break;
+  }
+  case IRCLocalCommandWallops: // Command: WALLOPS
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    [self send:@"WALLOPS", stringIn.string, nil];
+
+    break;
+  }
+  case IRCLocalCommandMonitor: // Command: MONITOR
+  case IRCLocalCommandWatch:   // Command: WATCH
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    BOOL isClearCommand = NO;
+    BOOL isModifierCommand = NO;
+
+    /* UnrealIRCd splits arguments using space and loops through all of them
+             which means a modifier or clear command can appear at the same
+       time. */
+    NSArray *arguments = [stringIn.string
+        componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                                 whitespaceCharacterSet]];
+
+    for (NSString *argument in arguments) {
+      if ([argument hasPrefix:@"-"] || [stringIn.string hasPrefix:@"+"]) {
+        isModifierCommand = YES;
+
+        break;
+      } else if ([argument isEqualIgnoringCase:@"c"]) {
+        isClearCommand = YES;
+      }
+    }
+
+    if (isModifierCommand) {
+      [self printDebugInformation:TXTLS(@"IRC[khw-4y]")];
+
+      break;
+    }
+
+    /* The clear command doesn't produce a result */
+    if (isClearCommand == NO) {
+      [self createHiddenCommandResponses];
+    }
+
+    [self sendCommand:uppercaseCommand withData:stringIn.string];
+
+    break;
+  }
+  case IRCLocalCommandSilence: // Command: SILENCE
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (self.supportInfo.silenceSupported == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[m2v-sd]")];
+
+      break;
+    }
+
+    /* Without arguments the server lists the current entries (271/272). */
+    [self sendCommand:uppercaseCommand withData:stringIn.string];
+
+    break;
+  }
+  case IRCLocalCommandWho: // Command: WHO
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    if (stringIn.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    [self createHiddenCommandResponses];
+
+    [self.requestedCommands recordWhoRequestOpenedAsVisible];
+
+    [self send:@"WHO", stringIn.string, nil];
+
+    break;
+  }
+  case IRCLocalCommandWeights: // Command: WEIGHTS
+  {
+    if (targetChannel == nil || targetChannel.isChannel == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
+
+      break;
+    }
+
+    [self printDebugInformation:TXTLS(@"IRC[zud-u3]", targetChannel.name)];
+
+    BOOL haveWeights = NO;
+
+    for (IRCChannelUser *member in targetChannel.memberList) {
+      double incomingWeight = member.incomingWeight;
+      double outgoingWeight = member.outgoingWeight;
+
+      CGFloat weight = (incomingWeight + outgoingWeight);
+
+      if (weight > 0) {
+        haveWeights = YES;
+
+        [self printDebugInformation:TXTLS(@"IRC[24r-8c]", member.user.nickname,
+                                          outgoingWeight, incomingWeight,
+                                          weight)];
+      }
+    }
+
+    if (haveWeights == NO) {
+      [self printDebugInformation:TXTLS(@"IRC[dje-41]")];
+    }
+
+    break;
+  }
+  case IRCLocalCommandWhois: // Command: WHOIS
+  {
+    NSAssertReturnLoopBreak(self.isLoggedIn);
+
+    NSString *nickname1 = stringIn.tokenAsString;
+
+    if (nickname1.length == 0) {
+      if (targetChannel && targetChannel.isPrivateMessage) {
+        nickname1 = targetChannel.name;
+      } else {
+        [self printInvalidSyntaxMessageForCommand:command];
+
+        break;
+      }
+    }
+
+    NSString *nickname2 = stringIn.tokenAsString;
+
+    if (nickname2.length == 0) {
+      [self send:@"WHOIS", nickname1, nickname1, nil];
+    } else {
+      [self send:@"WHOIS", nickname1, nickname2, nil];
+    }
+
+    break;
+  }
+  case IRCLocalCommandMe:      // Command: ME
+  case IRCLocalCommandMsg:     // Command: MSG
+  case IRCLocalCommandNotice:  // Command: NOTICE
+  case IRCLocalCommandOmsg:    // Command: OMSG
+  case IRCLocalCommandOnotice: // Command: ONOTICE
+  case IRCLocalCommandSme:     // Command: SME
+  case IRCLocalCommandSmsg:    // Command: SMSG
+  case IRCLocalCommandUme:     // Command: UME
+  case IRCLocalCommandUmsg:    // Command: UMSG
+  case IRCLocalCommandUnotice: // Command: UNOTICE
+  {
+    /* Where would se send data to? */
+    if (self.isLoggedIn == NO) {
+      [self printDebugInformationToConsole:TXTLS(@"IRC[6rj-2r]")];
+
+      break;
+    }
+
+    /* Establish context for comand */
+    NSString *channelNamePrefix = nil;
+
+    BOOL isOperatorMessage = NO;
+    BOOL isSecretMessage = NO;
+
+    NSString *commandToSend = nil;
+
+    TVCLogLineType lineType = TVCLogLineTypeUndefined;
+
+    /* Connect commands run silently by default: nothing is echoed and no
+     query is opened, so a password in "/msg NickServ IDENTIFY" never lands
+     in a chat view. A redacted note goes to the server console instead. */
+    BOOL isSilentConnectCommand = (self.isPerformingConnectCommands &&
+                                   self.config.runConnectCommandsSilently);
+
+    if (commandNumeric == IRCLocalCommandMsg ||
+        commandNumeric == IRCLocalCommandOmsg ||
+        commandNumeric == IRCLocalCommandSmsg ||
+        commandNumeric == IRCLocalCommandUmsg) {
+      commandToSend = @"PRIVMSG";
+
+      lineType = TVCLogLineTypePrivateMessage;
+
+      isOperatorMessage = (commandNumeric == IRCLocalCommandOmsg);
+      isSecretMessage =
+          (commandNumeric == IRCLocalCommandSmsg || isSilentConnectCommand);
+    } else if (commandNumeric == IRCLocalCommandMe ||
+               commandNumeric == IRCLocalCommandSme ||
+               commandNumeric == IRCLocalCommandUme) {
+      commandToSend = @"PRIVMSG";
+
+      lineType = TVCLogLineTypeAction;
+
+      isSecretMessage = (commandNumeric == IRCLocalCommandSme);
+    } else if (commandNumeric == IRCLocalCommandNotice ||  // Command: NOTICE
+               commandNumeric == IRCLocalCommandOnotice || // Command: ONOTICE
+               commandNumeric == IRCLocalCommandUnotice)   // Command: UNOTICE
+    {
+      commandToSend = @"NOTICE";
+
+      lineType = TVCLogLineTypeNotice;
+
+      isOperatorMessage = (commandNumeric == IRCLocalCommandOnotice);
+    }
+
+    if (isOperatorMessage) {
+      channelNamePrefix =
+          [self.supportInfo statusMessagePrefixForModeSymbol:@"o"];
+
+      /* If the user is sending an operator message and the user mode +o does
+               not exist, then fail here. The user may be trying to send
+         something secret with an expectation for privacy and we cannot deliver
+         that. */
+      if (channelNamePrefix == nil) {
+        [self printDebugInformation:TXTLS(@"IRC[54l-h7]", @"o")];
+
+        break;
+      }
+    }
+
+    /* Pick the best target */
+    /* All actions except (SME) should use the target channel */
+    /* Operator messages should use the target channel unless the
+             string in is a channel name */
+    /* All other scenarios use the string in (token) */
+    if (isSecretMessage == NO && lineType == TVCLogLineTypeAction &&
+        targetChannel) {
+      if (targetChannel.isUtility) {
+        [self printDebugInformation:TXTLS(@"sxf-qx")];
+
+        break;
+      }
+
+      /* Direct chats never touch the IRC server. */
+      if (targetChannel.isDirectChat) {
+        if (stringIn.length == 0) {
+          [stringIn replaceCharactersInRange:NSMakeRange(0, 0) withString:@" "];
+        }
+
+        [self sendDirectChatText:stringIn
+                       asCommand:IRCRemoteCommandPrivmsgAction
+                       toChannel:targetChannel];
+
+        break;
+      }
+
+      targetChannelName = targetChannel.name;
+    } else if (isOperatorMessage &&
+               [self stringIsChannelName:stringIn.string] == NO &&
+               targetChannel.isChannel) {
+      targetChannelName = targetChannel.name;
+    } else {
+      targetChannelName = stringIn.tokenAsString;
+    }
+
+    if (targetChannelName.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
+
+      break;
+    }
+
+    /* Actions are allowed to have an empty message but all other
+             types are not. Empty actions use a whitespace. */
+    if (stringIn.length == 0) {
+      if (lineType == TVCLogLineTypeAction) {
+        [stringIn replaceCharactersInRange:NSMakeRange(0, 0) withString:@" "];
+      } else {
+        break;
+      }
+    }
+
+    /* At this point, the following will occur:
+             1. Each destination is looped over
+                    1. Prefix characters are removed from the destination name
+                    2. Try to find channel that already exists which matches
+                       the destination. If a channel does not exist, then we
+                       create one depending on whether this is a secret message.
+                    3. The message is then sent off.
+             */
+    NSArray *destinations =
+        [targetChannelName componentsSeparatedByString:@","];
+
+    IRCChannel *destinationToSelect = nil;
+
+    /* TARGMAX: joined channels addressed without a status prefix are sent
+     as comma separated target groups. Nicknames keep the per-target path
+     below. */
+    if (isSecretMessage == NO && isSilentConnectCommand == NO &&
+        channelNamePrefix == nil &&
+        [self.supportInfo maximumTargetsForCommand:commandToSend] > 1) {
+      NSMutableArray<IRCChannel *> *groupedChannels = [NSMutableArray array];
+      NSMutableArray<NSString *> *remainingDestinations =
+          [NSMutableArray array];
+
+      for (NSString *destinationName in destinations) {
+        IRCChannel *destination = [self findChannel:destinationName];
+
+        if (destination.isChannel && destination.isActive) {
+          [groupedChannels addObject:destination];
+        } else {
+          [remainingDestinations addObject:destinationName];
+        }
+      }
+
+      if (groupedChannels.count > 1) {
+        IRCRemoteCommand groupedCommand = IRCRemoteCommandPrivmsg;
+
+        if (lineType == TVCLogLineTypeAction) {
+          groupedCommand = IRCRemoteCommandPrivmsgAction;
+        } else if (lineType == TVCLogLineTypeNotice) {
+          groupedCommand = IRCRemoteCommandNotice;
+        }
+
+        [self sendText:stringIn
+             asCommand:groupedCommand
+            toChannels:groupedChannels];
+
+        if ([TPCPreferences giveFocusOnMessageCommand]) {
+          destinationToSelect = groupedChannels.firstObject;
+        }
+
+        destinations = remainingDestinations;
+      }
+    }
+
+    for (__strong NSString *destinationName in destinations) {
+      /* If the user prefixed the target with a mode (e.g. +#channel)
+               to indicate that they want the message only seen by that group
+               of users, then we first have to remove that prefix to perform
+               our own processing of the target. When it comes time to send
+               the message, then the prefix is added back to the target name. */
+      NSString *destinationNamePrefix = [self.supportInfo
+          extractStatusMessagePrefixFromChannelNamed:destinationName];
+
+      if (destinationNamePrefix.length == 0) {
+        destinationNamePrefix = channelNamePrefix;
+      } else {
+        destinationName = [destinationName substringFromIndex:1];
+      }
+
+      /* Locate object that matches destination */
+      IRCChannel *destination = [self findChannel:destinationName];
+
+      if (isSecretMessage == NO) {
+        /* If the destination does not exist and this isn't a secret
+                 message, then create a private message if the destination
+                 is believed to be a user. */
+        if (destination == nil && [self stringIsNickname:destinationName]) {
+          destination = [worldController() createPrivateMessage:destinationName
+                                                       onClient:self];
+        }
+
+        /* Define the channel that will be selected */
+        if ([TPCPreferences giveFocusOnMessageCommand]) {
+          if (destinationToSelect == nil) {
+            destinationToSelect = destination;
+          }
+        }
+      }
+
+      /* Add prefix back if the destination is a channel */
+      BOOL destinationIsChannel =
+          (destination.isChannel ||
+           (destination == nil && [self stringIsChannelName:destinationName]));
+
+      if (destinationNamePrefix && destinationIsChannel) {
+        destinationName =
+            [destinationNamePrefix stringByAppendingString:destinationName];
+      }
+
+      /* Break text up into substrings which can then be sent. */
+      NSMutableAttributedString *lineMutable = [stringIn mutableCopy];
+
+      while (lineMutable.length > 0) {
+        NSString *message =
+            [lineMutable stringFormattedForChannel:destinationName
+                                          onClient:self
+                                      withLineType:lineType];
+
+        NSString *deliveryLabel = nil;
+
+        NSString *redactedMessage =
+            [IRCClient redactedServiceMessage:message sentTo:destinationName];
+
+        if (isSilentConnectCommand) {
+          [self printDebugInformationToConsole:TXTLS(@"IRC[ccs-1a]",
+                                                     destinationName,
+                                                     redactedMessage)];
+        } else if (destination == nil) {
+          /* Nothing to print locally */
+        } else if ([self isCapabilityEnabled:
+                             ClientIRCv3SupportedCapabilityEchoMessage]) {
+          if ([self labeledResponseTrackingEnabled]) {
+            deliveryLabel =
+                [self registerPendingDeliveryForChannel:destination];
+
+            self.nextLineDeliveryState = TVCLogLineDeliveryStatePending;
+
+            NSString *label = deliveryLabel;
+
+            [self print:redactedMessage
+                              by:self.userNickname
+                       inChannel:destination
+                          asType:lineType
+                         command:command
+                      receivedAt:[NSDate date]
+                     isEncrypted:NO
+                referenceMessage:nil
+                 completionBlock:^(
+                     TVCLogControllerPrintOperationContext *context) {
+                   [self attachLineNumber:context.lineNumber
+                       toDeliveryWithLabel:label];
+                 }];
+          }
+        } else {
+          [self print:redactedMessage
+                       by:self.userNickname
+                inChannel:destination
+                   asType:lineType
+                  command:command
+               receivedAt:[NSDate date]
+              isEncrypted:NO];
+        }
+
+        NSString *sendMessage = message;
+
+        if (lineType == TVCLogLineTypeAction) {
+          sendMessage = [NSString
+              stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
+        }
+
+        if (deliveryLabel) {
+          [self sendCommand:commandToSend
+                  arguments:@[ destinationName, sendMessage ]
+                       tags:@{@"label" : deliveryLabel}];
+        } else {
+          [self send:commandToSend, destinationName, sendMessage, nil];
+        }
+      }
+    } // destination for()
+
+    /* Focus destination */
+    if (destinationToSelect) {
+      [mainWindow() select:destinationToSelect];
+    }
+
+    break;
+  }
+  default: {
+    /* Find an addon responsible for this command. */
+    NSString *addonPath = nil;
+
+    BOOL pluginFound = NO;
+    BOOL scriptFound = NO;
+
+    [sharedPluginManager() findHandlerForOutgoingCommand:lowercaseCommand
+                                                    path:&addonPath
+                                                isScript:&scriptFound
+                                             isExtension:&pluginFound];
+
+    /* Perform script or plugin. */
+    if (pluginFound && scriptFound) {
+      [self printDebugInformation:TXTLS(@"IRC[d3c-9b]", uppercaseCommand)];
+
+      break;
+    } else if (pluginFound && scriptFound == NO) {
+      [self processBundlesUserMessage:stringIn.string command:lowercaseCommand];
+
+      break;
+    } else if (pluginFound == NO && scriptFound) {
+      NSMutableDictionary<NSString *, NSString *> *context =
+          [NSMutableDictionary dictionaryWithCapacity:3];
+
+      [context maybeSetObject:stringIn.string forKey:@"inputString"];
+
+      [context maybeSetObject:addonPath forKey:@"path"];
+
+      [context maybeSetObject:targetChannel.name forKey:@"targetChannel"];
+
+      [self executeGlasstualCmdScriptInContext:context];
+
+      break;
+    }
+
+    /* Send input to server */
+    [self sendCommand:uppercaseCommand withData:stringIn.string];
+
+    break;
+  }
+  }
 }
 
-- (void)sendCommand:(id)string completeTarget:(BOOL)completeTarget target:(nullable NSString *)targetChannelName
-{
-	NSParameterAssert(string != nil);
+- (void)sendCommand:(NSString *)command withData:(NSString *)data {
+  NSParameterAssert(command != nil);
+  NSParameterAssert(data != nil);
 
-	BOOL inputIsNSString = [string isKindOfClass:[NSString class]];
+  NSString *stringToSend = [NSString stringWithFormat:@"%@ %@", command, data];
 
-	if (inputIsNSString == NO && [string isKindOfClass:[NSAttributedString class]] == NO) {
-		NSAssert(NO, @"'string' must be NSString or NSAttributedString");
-	}
-
-	if ([string length] == 0) {
-		return;
-	}
-
-	NSMutableAttributedString *stringIn = nil;
-
-	if (inputIsNSString) {
-		stringIn = [[NSMutableAttributedString alloc] initWithString:string];
-	} else {
-		stringIn = [string mutableCopy];
-	}
-
-	if ([stringIn.string hasPrefix:@"/"]) {
-		[stringIn deleteCharactersInRange:NSMakeRange(0, 1)];
-	}
-
-	NSString *command = stringIn.tokenAsString;
-
-	NSString *lowercaseCommand = command.lowercaseString;
-	NSString *uppercaseCommand = command.uppercaseString;
-
-	IRCClient *selectedClient = mainWindow().selectedClient;
-	IRCChannel *selectedChannel = mainWindow().selectedChannel;
-
-	IRCChannel *targetChannel = nil;
-
-	NSInteger commandNumeric = [IRCCommandIndex indexOfLocalCommand:command];
-
-	if (completeTarget && targetChannelName != nil) {
-		targetChannel = [self findChannel:targetChannelName];
-	} else if (completeTarget && selectedClient == self && selectedChannel) {
-		targetChannel = selectedChannel;
-	}
-
-	switch (commandNumeric) {
-	case IRCLocalCommandAme:  // Command: AME
-	case IRCLocalCommandAmsg: // Command: AMSG
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		IRCRemoteCommand sendAsCommand = 0;
-
-		if (commandNumeric == IRCLocalCommandAmsg) {
-			sendAsCommand = IRCRemoteCommandPrivmsg;
-		} else {
-			sendAsCommand = IRCRemoteCommandPrivmsgAction;
-		}
-
-		for (IRCClient *client in worldController().clientList) {
-			if (client != self && [TPCPreferences amsgAllConnections] == NO) {
-				continue;
-			}
-
-			NSMutableArray<IRCChannel *> *channels = [NSMutableArray array];
-
-			for (IRCChannel *channel in client.channelList) {
-				if (channel.isActive == NO || channel.isChannel == NO) {
-					continue;
-				}
-
-				[channels addObject:channel];
-			}
-
-			/* Grouped by TARGMAX when the server advertises one. */
-			[client sendText:stringIn asCommand:sendAsCommand toChannels:channels];
-		}
-
-		break;
-	}
-	case IRCLocalCommandAquote: // Command: AQUOTE
-	case IRCLocalCommandAraw:	// Command: ARAW
-	{
-		NSAssertReturnLoopBreak(self.isConnected);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		for (IRCClient *client in worldController().clientList) {
-			[client sendLine:stringIn.string];
-		}
-
-		break;
-	}
-	case IRCLocalCommandAutojoin: // Command: AUTOJOIN
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		[self performAutoJoinInitiatedByUser:YES];
-
-		break;
-	}
-	case IRCLocalCommandAway: // Command: AWAY
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		for (IRCClient *client in worldController().clientList) {
-			if (client != self && [TPCPreferences awayAllConnections] == NO) {
-				continue;
-			}
-
-			NSString *comment = stringIn.string;
-
-			/* We enforce the maximum away length here instead of
-				 -toggleAwayStatusWithComment: so that we have an easier
-				 way to know when it is truncated so the user can be informed. */
-			NSUInteger commentMaximumLength = client.supportInfo.maximumAwayLength;
-
-			if (commentMaximumLength > 0 && comment.length > commentMaximumLength) {
-				[client printDebugInformation:TXTLS(@"IRC[41y-p2]", self.networkNameAlt, commentMaximumLength)];
-			}
-
-			[client toggleAwayStatusWithComment:comment];
-		}
-
-		break;
-	}
-	case IRCLocalCommandBack: // Command: BACK
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		for (IRCClient *client in worldController().clientList) {
-			if (client != self && [TPCPreferences awayAllConnections] == NO) {
-				continue;
-			}
-
-			[client toggleAwayStatus:NO withComment:nil];
-		}
-
-		break;
-	}
-	case IRCLocalCommandCap:  // Command: CAP
-	case IRCLocalCommandCaps: // Command: CAPS
-	{
-		NSString *capabilities = self.enabledCapabilitiesStringValue;
-
-		if (capabilities.length == 0) {
-			[self printDebugInformation:TXTLS(@"IRC[5wa-lb]")];
-		} else {
-			[self printDebugInformation:TXTLS(@"IRC[7p9-rs]", capabilities)];
-		}
-
-		break;
-	}
-	case IRCLocalCommandClear: // Command: CLEAR
-	{
-		if (targetChannel) {
-			[mainWindow() clearContentsOfChannel:targetChannel];
-		} else {
-			[mainWindow() clearContentsOfClient:self];
-		}
-
-		break;
-	}
-	case IRCLocalCommandClearall: // Command: CLEARALL
-	{
-		for (IRCClient *client in worldController().clientList) {
-			if (client != self && [TPCPreferences clearAllConnections] == NO) {
-				continue;
-			}
-
-			[mainWindow() clearContentsOfClient:client];
-
-			for (IRCChannel *channel in client.channelList) {
-				[mainWindow() clearContentsOfChannel:channel];
-			}
-		}
-
-		break;
-	}
-	case IRCLocalCommandClose:	// Command: CLOSE
-	case IRCLocalCommandRemove: // Command: REMOVE
-	{
-		NSString *channelName = stringIn.tokenAsString;
-
-		if (channelName.length == 0) {
-			if (targetChannel) {
-				[worldController() destroyChannel:targetChannel];
-			}
-
-			break;
-		}
-
-		IRCChannel *channel = [self findChannel:channelName];
-
-		if (channel == nil) {
-			[self printDebugInformation:TXTLS(@"IRC[pxa-ox]", channelName)];
-
-			break;
-		}
-
-		[worldController() destroyChannel:channel];
-
-		break;
-	}
-	case IRCLocalCommandConn: // Command: CONN
-	{
-		NSString *serverAddress = stringIn.lowercaseGetToken;
-
-		if (serverAddress.length > 0) {
-			if (serverAddress.isValidInternetAddress == NO) {
-				[self printDebugInformation:TXTLS(@"IRC[zef-q9]")];
-
-				break;
-			}
-
-			self.temporaryServerAddressOverride = serverAddress;
-		}
-
-		if (self.isConnecting || self.isConnected) {
-			__weak IRCClient *weakSelf = self;
-
-			self.disconnectCallback = ^{
-				[weakSelf connect];
-			};
-
-			[self quit];
-
-			break;
-		}
-
-		[self connect];
-
-		break;
-	}
-	case IRCLocalCommandCtcp:	   // Command: CTCP
-	case IRCLocalCommandCtcpreply: // Command: CTCPREPLY
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (targetChannel && targetChannel != selectedChannel) {
-			if (targetChannel.isUtility) {
-				[self printDebugInformation:TXTLS(@"sxf-qx")];
-
-				break;
-			}
-
-			targetChannelName = targetChannel.name;
-		} else {
-			targetChannelName = stringIn.tokenAsString;
-		}
-
-		NSString *subCommand = stringIn.uppercaseGetToken;
-
-		if (subCommand.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		if (commandNumeric == IRCLocalCommandCtcp) {
-			if ([subCommand isEqualToString:@"PING"]) {
-				[self sendCTCPPing:targetChannelName];
-			} else {
-				[self sendCTCPQuery:targetChannelName command:subCommand text:stringIn.string];
-			}
-		} else {
-			[self sendCTCPReply:targetChannelName command:subCommand text:stringIn.string];
-		}
-
-		break;
-	}
-	case IRCLocalCommandCycle:	// Command: CYCLE
-	case IRCLocalCommandHop:	// Command: HOP
-	case IRCLocalCommandRejoin: // Command: REJOIN
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (targetChannel == nil || targetChannel.isChannel == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
-
-			break;
-		}
-
-		[self partChannel:targetChannel];
-
-		[self forceJoinChannel:targetChannel.name password:targetChannel.secretKey];
-
-		break;
-	}
-	case IRCLocalCommandDcc: // Command: DCC
-	{
-		[self handleDCCCommand:stringIn command:command targetChannel:targetChannel];
-
-		break;
-	}
-	case IRCLocalCommandDehalfop: // Command: DEHALFOP
-	case IRCLocalCommandDeop:	  // Command: DEOP
-	case IRCLocalCommandDevoice:  // Command: DEVOICE
-	case IRCLocalCommandHalfop:	  // Command: HALFOP
-	case IRCLocalCommandOp:		  // Command: OP
-	case IRCLocalCommandVoice:	  // Command: VOICE
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		BOOL modeIsSet = (commandNumeric == IRCLocalCommandOp || commandNumeric == IRCLocalCommandHalfop ||
-						  commandNumeric == IRCLocalCommandVoice);
-
-		NSString *modeSymbol = nil;
-
-		if (commandNumeric == IRCLocalCommandOp || commandNumeric == IRCLocalCommandDeop) {
-			modeSymbol = @"o";
-		} else if (commandNumeric == IRCLocalCommandHalfop || commandNumeric == IRCLocalCommandDehalfop) {
-			modeSymbol = @"h";
-		} else if (commandNumeric == IRCLocalCommandVoice || commandNumeric == IRCLocalCommandDevoice) {
-			modeSymbol = @"v";
-		}
-
-		if ([self.supportInfo modeSymbolIsUserPrefix:modeSymbol] == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[dwi-d1]", modeSymbol)];
-
-			break;
-		}
-
-		if ([self stringIsChannelName:stringIn.string] == NO) {
-			if (targetChannel && targetChannel.isChannel) {
-				targetChannelName = targetChannel.name;
-			} else {
-				[self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
-
-				break;
-			}
-		} else {
-			targetChannelName = stringIn.tokenAsString;
-		}
-
-		NSString *nicknamesString = stringIn.string;
-
-		if (nicknamesString.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		NSArray *modeChanges = [self compileListOfModeChangesForModeSymbol:modeSymbol
-																 modeIsSet:modeIsSet
-														   parameterString:nicknamesString];
-
-		for (NSString *modeChange in modeChanges) {
-			[self send:@"MODE", targetChannelName, modeChange, nil];
-		}
-
-		break;
-	}
-	case IRCLocalCommandDebug: // Command: DEBUG
-	case IRCLocalCommandEcho:  // Command: ECHO
-	{
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		NSString *stringInString = stringIn.string;
-
-		if ([stringInString isEqualToStringIgnoringCase:@"raw on"]) {
-			[self createRawDataLogQuery];
-		} else if ([stringInString isEqualToStringIgnoringCase:@"raw off"]) {
-			[self destroyRawDataLogQuery];
-		} else {
-			[self printDebugInformation:stringInString];
-		}
-
-		break;
-	}
-	case IRCLocalCommandDefaults: // Command: DEFAULTS
-	{
-		if (stringIn.length == 0) {
-			[self printDebugInformation:TXTLS(@"IRC[1dz-jb]")];
-
-			break;
-		}
-
-		NSString *action = stringIn.tokenAsString;
-
-		/* Present help */
-		if ([action isEqualToString:@"help"]) {
-			NSString *help = TXTLS(@"IRC[bkk-lo]");
-
-			[self printDebugInformationMultiline:help];
-
-			break;
-		}
-
-		/* Prepare to toggle feature */
-		NSString *feature = stringIn.tokenInsideQuotes.string;
-
-		BOOL applyToAll = [feature isEqualToString:@"-a"];
-
-		if (applyToAll) {
-			feature = stringIn.tokenInsideQuotes.string;
-		}
-
-		NSDictionary *features = @{
-			@"Ignore Notifications by Private ZNC Users" : @"setZncIgnoreUserNotifications:",
-			@"Send Authentication Requests to UserServ" : @"setSendAuthenticationRequestsToUserServ:",
-			@"Disable Automatic SASL EXTERNAL Response" : @"setSaslAuthenticationDisableExternalMechanism:",
-			@"Send WHO Command Requests to Channels" : @"setSendWhoCommandRequestsToChannels:",
-		};
-
-		BOOL enableFeature = [action isEqualToString:@"enable"];
-
-		/* Cannot toggle feature if the user doesn't tell us which */
-		if (feature.length == 0) {
-			[self printDebugInformation:TXTLS(@"IRC[1dz-jb]")];
-
-			break;
-		}
-
-		/* Make sure the feature exists */
-		if ([features containsKey:feature] == NO) {
-			if (enableFeature) {
-				[self printDebugInformation:TXTLS(@"IRC[pc4-67]", feature)];
-			} else {
-				[self printDebugInformation:TXTLS(@"IRC[d7y-pv]", feature)];
-			}
-
-			break;
-		}
-
-		/* Toggle the feature by mutating the client's configuration,
-			 invoking the appropriate method, then saving it. */
-		void (^toggleFeature)(IRCClient *, NSString *, BOOL) =
-			^(IRCClient *client, NSString *featureKey, BOOL featureValue) {
-				NSString *selectorString = features[featureKey];
-
-				SEL selector = NSSelectorFromString(selectorString);
-
-				IRCClientConfigMutable *mutableClientConfig = [client.config mutableCopy];
-
-				NSMethodSignature *signature = [mutableClientConfig methodSignatureForSelector:selector];
-
-				NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
-
-				[invocation setTarget:mutableClientConfig];
-				[invocation setSelector:selector];
-
-				[invocation setArgument:&featureValue atIndex:2];
-
-				[invocation invoke];
-
-				client.config = mutableClientConfig;
-			};
-
-		/* Toggle feature */
-		for (IRCClient *client in worldController().clientList) {
-			if (client != self && applyToAll == NO) {
-				continue;
-			}
-
-			toggleFeature(client, feature, enableFeature);
-
-			if (enableFeature) {
-				[client printDebugInformation:TXTLS(@"IRC[5ke-18]", feature)];
-			} else {
-				[client printDebugInformation:TXTLS(@"IRC[0gn-cb]", feature)];
-			}
-		}
-
-		/* Save modified client */
-		[worldController() save];
-
-		break;
-	}
-	case IRCLocalCommandGline:	  // Command: GLINE
-	case IRCLocalCommandGzline:	  // Command: GZLINE
-	case IRCLocalCommandShun:	  // Command: SHUN
-	case IRCLocalCommandTempshun: // Command: TEMPSHUN
-	case IRCLocalCommandZline:	  // Command: ZLINE
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		NSString *segment1 = stringIn.getTokenAsString;
-		NSString *segment2 = stringIn.getTokenAsString;
-
-		[self send:uppercaseCommand, segment1, segment2, stringIn.string, nil];
-
-		break;
-	}
-	case IRCLocalCommandGoto: // Command: GOTO
-	{
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		NSString *needle = stringIn.tokenAsString;
-
-		IRCTreeItem *bestMatch = mainWindow().selectedItem;
-
-		CGFloat bestScore = 0.0;
-
-		for (IRCClient *client in worldController().clientList) {
-			for (IRCChannel *channel in client.channelList) {
-				CGFloat currentScore = [channel.name compareWithWord:needle lengthPenaltyWeight:0.1];
-
-				if (currentScore > bestScore) {
-					bestMatch = channel;
-
-					bestScore = currentScore;
-				}
-			}
-		}
-
-		[mainWindow() select:bestMatch];
-
-		break;
-	}
-	case IRCLocalCommandIgnore:	  // Command: IGNORE
-	case IRCLocalCommandUnignore: // Command: UNIGNORE
-	{
-		BOOL isIgnoreCommand = (commandNumeric == IRCLocalCommandIgnore);
-
-		if (stringIn.length == 0 || targetChannel == nil) {
-			if (isIgnoreCommand) {
-				[menuController() showServerPropertiesSheetForClient:self
-													   withSelection:TDCServerPropertiesSheetSelectionNewIgnoreEntry
-															 context:@""];
-			} else {
-				[menuController() showServerPropertiesSheetForClient:self
-													   withSelection:TDCServerPropertiesSheetSelectionAddressBook
-															 context:nil];
-			}
-
-			break;
-		}
-
-		NSString *nickname = stringIn.tokenAsString;
-
-		IRCUser *member = [self findUser:nickname];
-
-		if (member == nil) {
-			if (isIgnoreCommand) {
-				[menuController() showServerPropertiesSheetForClient:self
-													   withSelection:TDCServerPropertiesSheetSelectionNewIgnoreEntry
-															 context:nickname];
-			} else {
-				[menuController() showServerPropertiesSheetForClient:self
-													   withSelection:TDCServerPropertiesSheetSelectionAddressBook
-															 context:nil];
-			}
-
-			break;
-		}
-
-		/* Build list of ignores that already match the user's host */
-		NSString *hostmask = member.hostmask;
-
-		if (hostmask == nil) {
-			hostmask = [NSString stringWithFormat:@"%@!*@*", nickname];
-		}
-
-		NSMutableArray *matchedIgnores = [NSMutableArray array];
-
-		for (IRCAddressBookEntry *ignore in self.config.ignoreList) {
-			if (ignore.entryType != IRCAddressBookEntryTypeIgnore) {
-				continue;
-			}
-
-			if ([ignore checkMatch:hostmask]) {
-				[matchedIgnores addObject:ignore];
-			}
-		}
-
-		/* Cancel if there is nothing to change */
-		if (isIgnoreCommand) {
-			if (matchedIgnores.count > 0) {
-				[self printDebugInformation:TXTLS(@"IRC[5ix-zn]", member.nickname)];
-
-				break;
-			}
-		} else {
-			if (matchedIgnores.count == 0) {
-				[self printDebugInformation:TXTLS(@"IRC[wu0-jp]", member.nickname)];
-
-				break;
-			} else if (matchedIgnores.count > 1) {
-				[self printDebugInformation:TXTLS(@"IRC[vrx-1f]", member.nickname)];
-
-				break;
-			}
-		}
-
-		/* Modify ignore list and inform user of change */
-		NSMutableArray *mutableIgnoreList = [self.config.ignoreList mutableCopy];
-
-		if (isIgnoreCommand) {
-			IRCAddressBookEntry *ignore = [IRCAddressBookEntry newIgnoreEntryForHostmask:member.banMask];
-
-			[self printDebugInformation:TXTLS(@"IRC[ret-20]", member.nickname, ignore.hostmask)];
-
-			[mutableIgnoreList addObject:ignore];
-		} else {
-			IRCAddressBookEntry *ignore = matchedIgnores[0];
-
-			[self printDebugInformation:TXTLS(@"IRC[jzg-g8]", member.nickname, ignore.hostmask)];
-
-			[mutableIgnoreList removeObjectIdenticalTo:ignore];
-		}
-
-		/* Save modified ignore list */
-		IRCClientConfigMutable *mutableClientConfig = [self.config mutableCopy];
-
-		mutableClientConfig.ignoreList = mutableIgnoreList;
-
-		self.config = mutableClientConfig;
-
-		/* Clear cache */
-		/* If we have a host, then it's easy to clear only that.
-			 If we don't have a host, then we have to clear everything. */
-		if (hostmask) {
-			[self clearAddressBookCacheForHostmask:hostmask];
-		} else {
-			[self clearAddressBookCache];
-		}
-
-		break;
-	}
-	case IRCLocalCommandInvite: // Command: INVITE
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		NSArray *nicknames =
-			[stringIn.string componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-
-		if ([self stringIsChannelName:nicknames.lastObject] == NO) {
-			if (targetChannel && targetChannel.isChannel) {
-				targetChannelName = targetChannel.name;
-			} else {
-				[self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
-
-				break;
-			}
-		} else {
-			targetChannelName = nicknames.lastObject;
-
-			nicknames = [nicknames subarrayWithRange:NSMakeRange(0, (nicknames.count - 1))];
-		}
-
-		for (NSString *nickname in nicknames) {
-			if ([self stringIsNickname:nickname] == NO) {
-				continue;
-			}
-
-			[self send:@"INVITE", nickname, targetChannelName, nil];
-		}
-
-		break;
-	}
-	case IRCLocalCommandIson: // Command: ISON
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		[self createHiddenCommandResponses];
-
-		[self.requestedCommands recordIsonRequestOpenedAsVisible];
-
-		[self send:@"ISON", stringIn.string, nil];
-
-		break;
-	}
-	case IRCLocalCommandJ:	  // Command: J
-	case IRCLocalCommandJoin: // Command: JOIN
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			if (targetChannel && targetChannel.isChannel) {
-				targetChannelName = targetChannel.name;
-			} else {
-				[self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
-
-				break;
-			}
-		} else {
-			targetChannelName = stringIn.tokenAsString;
-
-			if (targetChannelName.length == 0) {
-				[self printInvalidSyntaxMessageForCommand:command];
-
-				break;
-			}
-
-			if ([self stringIsChannelNameOrZero:targetChannelName] == NO) {
-				targetChannelName = [@"#" stringByAppendingString:targetChannelName];
-			}
-		}
-
-		[self joinUnlistedChannelsWithStringAndSelectBestMatch:targetChannelName passwords:stringIn.string];
-
-		break;
-	}
-	case IRCLocalCommandJoinRandom: // Command: JOIN_RANDOM
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		NSInteger numberOfChannelsToJoin = 0;
-
-		NSString *numberOfChannelsToken = stringIn.tokenAsString;
-
-		if (numberOfChannelsToken.isNumericOnly) {
-			numberOfChannelsToJoin = numberOfChannelsToken.integerValue;
-		}
-
-		if (numberOfChannelsToJoin <= 0) {
-			numberOfChannelsToJoin = 1;
-		}
-
-		for (NSInteger i = 0; i < numberOfChannelsToJoin; i++) {
-			NSString *channelName = [NSString stringWithFormat:@"#debug-channel-%lu", TXRandomNumber(9999999)];
-
-			[self send:@"JOIN", channelName, nil];
-		}
-
-		break;
-	}
-	case IRCLocalCommandBan:	 // Command: BAN
-	case IRCLocalCommandKb:		 // Command: KB
-	case IRCLocalCommandKick:	 // Command: KICK
-	case IRCLocalCommandKickban: // Command: KICKBAN
-	case IRCLocalCommandUnban:	 // Command: UNBAN
-	case IRCLocalCommandUnquiet: // Command: UNQUIET
-	case IRCLocalCommandQuiet:	 // Command: QUIET
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		NSString *nickname = stringIn.tokenAsString;
-
-		if ([self stringIsChannelName:nickname] == NO) {
-			if (targetChannel && targetChannel.isChannel) {
-				targetChannelName = targetChannel.name;
-			} else {
-				[self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
-
-				break;
-			}
-		} else {
-			targetChannelName = nickname;
-
-			targetChannel = [self findChannel:targetChannelName];
-
-			nickname = stringIn.tokenAsString;
-		}
-
-		if (nickname.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		if (commandNumeric == IRCLocalCommandKickban || commandNumeric == IRCLocalCommandKb ||
-			commandNumeric == IRCLocalCommandBan || commandNumeric == IRCLocalCommandUnban ||
-			commandNumeric == IRCLocalCommandQuiet || commandNumeric == IRCLocalCommandUnquiet) {
-			IRCChannelUser *member = [targetChannel findMember:nickname];
-
-			NSString *banMask = member.user.banMask;
-
-			if (banMask == nil) {
-				banMask = nickname;
-			}
-
-			NSString *modeSymbol = nil;
-
-			if (commandNumeric == IRCLocalCommandQuiet || commandNumeric == IRCLocalCommandUnquiet) {
-				modeSymbol = @"q";
-			} else {
-				modeSymbol = @"b";
-			}
-
-			if ([self.supportInfo modeSymbolIsUserPrefix:modeSymbol]) {
-				[self printDebugInformation:TXTLS(@"IRC[dwi-d1]", modeSymbol)];
-
-				break;
-			}
-
-			if (commandNumeric == IRCLocalCommandUnban || commandNumeric == IRCLocalCommandUnquiet) {
-				[self send:@"MODE", targetChannelName, [@"-" stringByAppendingString:modeSymbol], banMask, nil];
-			} else {
-				[self send:@"MODE", targetChannelName, [@"+" stringByAppendingString:modeSymbol], banMask, nil];
-			}
-		}
-
-		if (commandNumeric == IRCLocalCommandKb || commandNumeric == IRCLocalCommandKick ||
-			commandNumeric == IRCLocalCommandKickban) {
-			NSString *reason = stringIn.string;
-
-			if (reason.length == 0) {
-				reason = [TPCPreferences defaultKickMessage];
-			}
-
-			NSUInteger reasonMaximumLength = self.supportInfo.maximumKickLength;
-
-			if (reasonMaximumLength > 0 && reason.length > reasonMaximumLength) {
-				[self printDebugInformation:TXTLS(@"IRC[59a-ir]", self.networkNameAlt, reasonMaximumLength)];
-			}
-
-			[self send:@"KICK", targetChannelName, nickname, reason, nil];
-		}
-
-		break;
-	}
-	case IRCLocalCommandKill: // Command: KILL
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		NSString *nickname = stringIn.getTokenAsString;
-
-		if (nickname.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		NSString *reason = stringIn.string;
-
-		if (reason.length == 0) {
-			reason = [TPCPreferences IRCopDefaultKillMessage];
-		}
-
-		[self send:@"KILL", nickname, reason, nil];
-
-		break;
-	}
-	case IRCLocalCommandLagcheck: // Command: LAGCHECK
-	case IRCLocalCommandMylag:	  // Command: MYLAG
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		/* We only accept LAGCHECK CTCP responses from ourselves which
-			 means it is relatively safe to pack some data on the end of
-			 the CTCP so that we can provide ourselves some context. */
-		NSMutableDictionary *lagCheckContext = [NSMutableDictionary dictionaryWithCapacity:3];
-
-		lagCheckContext[@"connection"] = self.socket.uniqueIdentifier;
-
-		lagCheckContext[@"time"] = @([NSDate timeIntervalSince1970]);
-
-		if (commandNumeric == IRCLocalCommandMylag) {
-			IRCChannel *selectedChannel = [mainWindow() selectedChannelOn:self];
-
-			if (selectedChannel) {
-				lagCheckContext[@"channel"] = selectedChannel.name;
-			}
-		}
-
-		NSString *ctcpContext = [lagCheckContext formDataUsingSeparator:@"&"];
-
-		[self sendCTCPQuery:self.userNickname command:@"LAGCHECK" text:ctcpContext];
-
-		[self printDebugInformation:TXTLS(@"IRC[qoh-kt]")];
-
-		break;
-	}
-	case IRCLocalCommandLeave: // Command: LEAVE
-	case IRCLocalCommandPart:  // Command: PART
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if ([self stringIsChannelName:stringIn.string] == NO) {
-			if (targetChannel && targetChannel.isChannel) {
-				targetChannelName = targetChannel.name;
-			} else if (targetChannel) {
-				[worldController() destroyChannel:targetChannel];
-
-				break;
-			} else {
-				break;
-			}
-		} else {
-			targetChannelName = stringIn.tokenAsString;
-		}
-
-		NSString *reason = stringIn.string;
-
-		if (reason.length == 0) {
-			reason = self.config.normalLeavingComment;
-		}
-
-		[self send:@"PART", targetChannelName, reason, nil];
-
-		break;
-	}
-	case IRCLocalCommandList: // Command: LIST
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
-
-		if (channelListDialog == nil) {
-			[self createChannelListDialog];
-		}
-
-		[self requestChannelList];
-
-		break;
-	}
-	case IRCLocalCommandM:	  // Command: M
-	case IRCLocalCommandMode: // Command: MODE
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		NSString *modeString = stringIn.string;
-
-		if (modeString.length == 0 || ([modeString hasPrefix:@"+"] || [modeString hasPrefix:@"-"])) {
-			if (targetChannel && targetChannel.isChannel) {
-				targetChannelName = targetChannel.name;
-			} else {
-				[self printInvalidSyntaxMessageForCommand:command];
-
-				break;
-			}
-		} else {
-			targetChannelName = stringIn.tokenAsString;
-		}
-
-		if (modeString.length == 0) {
-			[self send:@"MODE", targetChannelName, nil];
-		} else {
-			[self send:@"MODE", targetChannelName, modeString, nil];
-		}
-
-		break;
-	}
-	case IRCLocalCommandMute: // Command: MUTE
-	{
-		if ([TPCPreferences soundIsMuted]) {
-			[self printDebugInformation:TXTLS(@"IRC[sdn-yr]")];
-		} else {
-			[self printDebugInformation:TXTLS(@"IRC[u48-aa]")];
-
-			[menuController() toggleMuteOnNotificationSoundsShortcutOn:YES];
-		}
-
-		break;
-	}
-	case IRCLocalCommandMyversion: // Command: MYVERSION
-	{
-		NSString *applicationName = [TPCApplicationInfo applicationNameWithoutVersion];
-		NSString *versionLong = [TPCApplicationInfo applicationVersion];
-		NSString *versionShort = [TPCApplicationInfo applicationVersionShort];
-
-		NSString *downloadSource = @""; // Assume standalone by default
-		NSString *buildType = TXTLS(@"IRC[b8p-44]", TXTLS(@"IRC[g1u-os]"));
-
-		NSString *message =
-			TXTLS(@"IRC[ccb-ur]", applicationName, versionShort, versionLong, downloadSource, buildType);
-
-		if (targetChannel) {
-			message = TXTLS(@"IRC[pqj-1y]", message);
-
-			[self sendPrivmsg:message toChannel:targetChannel];
-		} else {
-			[self printDebugInformationToConsole:message];
-		}
-
-		break;
-	}
-	case IRCLocalCommandNick: // Command: NICK
-	{
-		/* Use -isConnected instead of -isLoggedIn so that
-			 user can change their nickname during registration
-			 phase before the 001 numeric is received. */
-		NSAssertReturnLoopBreak(self.isConnected);
-
-		NSString *newNickname = stringIn.tokenAsString;
-
-		if (newNickname.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		for (IRCClient *client in worldController().clientList) {
-			if (client != self && [TPCPreferences nickAllConnections] == NO) {
-				continue;
-			}
-
-			[client changeNickname:newNickname];
-		}
-
-		break;
-	}
-	case IRCLocalCommandNotifybubble: // Command: NOTIFYBUBBLE
-	{
-		if ([self stringIsChannelName:stringIn.string]) {
-			targetChannel = [self findChannel:stringIn.tokenAsString];
-		} else {
-			targetChannel = nil;
-		}
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		NSString *title = [TPCApplicationInfo applicationNameWithoutVersion];
-
-		NSString *message = stringIn.string;
-
-		[sharedNotificationController() scheduleNotificationWithTitle:title
-															  message:message
-														   forChannel:targetChannel
-															 onClient:self];
-
-		break;
-	}
-	case IRCLocalCommandNotifysound: // Command: NOTIFYSOUND
-	{
-		NSString *soundName = stringIn.tokenAsString;
-
-		if (soundName.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		[TLOSoundPlayer playAlertSound:soundName];
-
-		break;
-	}
-	case IRCLocalCommandNotifyspeak: // Command: NOTIFYSPEAK
-	{
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		[[TXSharedApplication sharedSpeechSynthesizer] speak:stringIn.string];
-
-		break;
-	}
-	case IRCLocalCommandQuery: // Command: QUERY
-	{
-		NSString *nickname = stringIn.tokenAsString;
-
-		if (nickname.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		if ([self stringIsNickname:nickname] == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[zef-q9]")];
-
-			break;
-		}
-
-		IRCChannel *query = [self findChannelOrCreate:nickname isPrivateMessage:YES];
-
-		[mainWindow() select:query];
-
-		if (stringIn.length > 0) {
-			[self sendText:stringIn asCommand:IRCRemoteCommandPrivmsg toChannel:query];
-		}
-
-		break;
-	}
-	case IRCLocalCommandQuote: // Command: QUOTE
-	case IRCLocalCommandRaw:   // Command: RAW
-	{
-		NSAssertReturnLoopBreak(self.isConnected);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		[self sendLine:stringIn.string];
-
-		break;
-	}
-	case IRCLocalCommandQuit: // Command: QUIT
-	{
-		NSAssertReturnLoopBreak(self.isConnected);
-
-		if (stringIn.length == 0) {
-			[self quit];
-		} else {
-			[self quitWithComment:stringIn.string];
-		}
-
-		break;
-	}
-	case IRCLocalCommandNames: // Command: NAMES
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		[self createHiddenCommandResponses];
-
-		[self send:@"NAMES", stringIn.string, nil];
-
-		break;
-	}
-	case IRCLocalCommandRecv: // Command: RECV
-	{
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		[self ircConnection:self.socket didReceiveData:stringIn.string];
-
-		break;
-	}
-	case IRCLocalCommandSetcolor: // Command: SETCOLOR
-	{
-		if ([TPCPreferences disableNicknameColorHashing]) {
-			[self printDebugInformation:TXTLS(@"IRC[026-qv]")];
-
-			break;
-		}
-
-		NSString *nickname = stringIn.lowercaseGetToken;
-
-		if (nickname.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		if ([self stringIsNickname:nickname] == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[8dy-6f]", nickname)];
-
-			break;
-		}
-
-		[menuController() memberChangeColor:nickname];
-
-		break;
-	}
-	case IRCLocalCommandSetname: // Command: SETNAME
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilitySetName] == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[set-nm]")];
-
-			break;
-		}
-
-		[self send:@"SETNAME", stringIn.string, nil];
-
-		break;
-	}
-	case IRCLocalCommandSetqueryname: // Command: SETQUERYNAME
-	{
-		if (targetChannel == nil || targetChannel.isPrivateMessage == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[m6o-z1]")];
-
-			break;
-		}
-
-		NSString *nickname = stringIn.getTokenAsString;
-
-		if (nickname.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		if ([self stringIsNickname:nickname] == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[zef-q9]")];
-
-			break;
-		}
-
-		IRCChannel *oldQuery = [self findChannel:nickname];
-
-		if (oldQuery) {
-			BOOL deleteOldQuery = [TDCAlert modalAlertWithMessage:TXTLS(@"Prompts[61s-jc]")
-															title:TXTLS(@"Prompts[d22-76]", oldQuery.name)
-													defaultButton:TXTLS(@"Prompts[mvh-ms]")
-												  alternateButton:TXTLS(@"Prompts[99q-gg]")];
-
-			if (deleteOldQuery) {
-				[worldController() destroyChannel:oldQuery];
-			} else {
-				break;
-			}
-		}
-
-		targetChannel.name = nickname;
-
-		[mainWindow() reloadTreeItem:targetChannel];
-
-		[mainWindow() updateTitleFor:targetChannel];
-
-		break;
-	}
-	case IRCLocalCommandServer: // Command: SERVER
-	{
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		[IRCExtras createConnectionToServer:stringIn.string channelList:nil connectWhenCreated:YES];
-
-		break;
-	}
-	case IRCLocalCommandSslcontext: // Command: SSLCONTEXT
-	{
-		[self presentCertificateTrustInformation];
-
-		break;
-	}
-	case IRCLocalCommandChathistory: // Command: CHATHISTORY
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityChatHistory] == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[hc1-ah]")];
-
-			break;
-		}
-
-		/* Passed through as typed: "/chathistory BEFORE #chan timestamp=... 50" */
-		[self sendLine:[@"CHATHISTORY " stringByAppendingString:stringIn.string]];
-
-		break;
-	}
-	case IRCLocalCommandTage: // Command: TAGE
-	{
-		NSTimeInterval timePassed = [NSDate timeIntervalSinceNow:[TPCApplicationInfo applicationBirthday]];
-
-		NSString *message = TXTLS(@"IRC[v9x-18]", TXHumanReadableTimeInterval(timePassed, NO, 0));
-
-		if (targetChannel) {
-			[self sendPrivmsg:message toChannel:targetChannel];
-		} else {
-			[self printDebugInformationToConsole:message];
-		}
-
-		break;
-	}
-	case IRCLocalCommandTimer: // Command: TIMER
-	{
-		if (stringIn.length == 0) {
-			[self printDebugInformation:TXTLS(@"IRC[jj9-94]")];
-
-			break;
-		}
-
-		NSString *action = stringIn.tokenAsString;
-
-		/* Present help */
-		if ([action isEqualToString:@"help"]) {
-			NSString *topic = stringIn.tokenAsString;
-
-			[self printDebugInformation:TXTLS(@"IRC[aox-zz]")]; // divider
-
-			if ([topic isEqualToStringIgnoringCase:@"add"]) {
-				[self printDebugInformationMultiline:TXTLS(@"IRC[6r0-il]")];
-			} else if ([topic isEqualToStringIgnoringCase:@"remove"]) {
-				[self printDebugInformationMultiline:TXTLS(@"IRC[i2d-x5]")];
-			} else if ([topic isEqualToStringIgnoringCase:@"list"]) {
-				[self printDebugInformationMultiline:TXTLS(@"IRC[x1n-ve]")];
-			} else if ([topic isEqualToStringIgnoringCase:@"stop"]) {
-				[self printDebugInformationMultiline:TXTLS(@"IRC[bx2-n1]")];
-			} else if ([topic isEqualToStringIgnoringCase:@"restart"]) {
-				[self printDebugInformationMultiline:TXTLS(@"IRC[r27-tv]")];
-			} else {
-				[self printDebugInformationMultiline:TXTLS(@"IRC[xkq-rt]")];
-			}
-
-			break;
-		}
-
-		/* Stop timer */
-		if ([action isEqualToString:@"stop"]) {
-			NSString *identifier = stringIn.tokenAsString;
-
-			if (identifier.length == 0) {
-				[self printDebugInformation:TXTLS(@"IRC[p6l-o4]")];
-
-				break;
-			}
-
-			IRCTimedCommand *timedCommand = [self timedCommandWithIdentifier:identifier];
-
-			if (timedCommand == nil) {
-				[self printDebugInformation:TXTLS(@"IRC[vzu-xh]", identifier)];
-
-				break;
-			}
-
-			if (timedCommand.timerIsActive == NO) {
-				[self printDebugInformation:TXTLS(@"IRC[ax6-n9]", identifier)];
-
-				break;
-			}
-
-			[self stopTimedCommand:timedCommand];
-
-			[self printDebugInformation:TXTLS(@"IRC[hs0-up]", identifier)];
-
-			break;
-		}
-
-		/* Restart timer */
-		if ([action isEqualToString:@"restart"]) {
-			NSString *identifier = stringIn.tokenAsString;
-
-			if (identifier.length == 0) {
-				[self printDebugInformation:TXTLS(@"IRC[p6l-o4]")];
-
-				break;
-			}
-
-			IRCTimedCommand *timedCommand = [self timedCommandWithIdentifier:identifier];
-
-			if (timedCommand == nil) {
-				[self printDebugInformation:TXTLS(@"IRC[vzu-xh]", identifier)];
-
-				break;
-			}
-
-			if ([self restartTimedCommand:timedCommand]) {
-				[self printDebugInformation:TXTLS(@"IRC[qb7-mi]", identifier)];
-			} else {
-				[self printDebugInformation:TXTLS(@"IRC[dgp-d4]", identifier)];
-			}
-
-			break;
-		}
-
-		/* Remove timer */
-		if ([action isEqualToString:@"remove"]) {
-			NSString *identifier = stringIn.tokenAsString;
-
-			if (identifier.length == 0) {
-				[self printDebugInformation:TXTLS(@"IRC[p6l-o4]")];
-
-				break;
-			}
-
-			if ([identifier isEqualToStringIgnoringCase:@"all"]) {
-				[self removeTimedCommands];
-
-				[self printDebugInformation:TXTLS(@"IRC[808-bs]")];
-
-				break;
-			}
-
-			IRCTimedCommand *timedCommand = [self timedCommandWithIdentifier:identifier];
-
-			if (timedCommand == nil) {
-				[self printDebugInformation:TXTLS(@"IRC[vzu-xh]", identifier)];
-
-				break;
-			}
-
-			[self removeTimedCommand:timedCommand];
-
-			[self printDebugInformation:TXTLS(@"IRC[p7s-is]", identifier)];
-
-			break;
-		}
-
-		/* List timers */
-		if ([action isEqualToString:@"list"]) {
-			NSArray *timedCommands = [self listOfTimedCommands];
-
-			NSUInteger numberOfTimers = timedCommands.count;
-
-			if (numberOfTimers == 0) {
-				[self printDebugInformation:TXTLS(@"IRC[pqk-5k]")];
-
-				break;
-			} else if (numberOfTimers == 1) {
-				[self printDebugInformation:TXTLS(@"IRC[6ts-oi]", numberOfTimers)];
-			} else {
-				[self printDebugInformation:TXTLS(@"IRC[q1m-1e]", numberOfTimers)];
-			}
-
-			for (IRCTimedCommand *timedCommand in timedCommands) {
-				NSString *description = [self descriptionForTimedCommand:timedCommand];
-
-				[self printDebugInformation:description];
-			}
-
-			break;
-		}
-
-		/* Add timer */
-		/*
-			 This command is designed to be backwards compatible.
-
-			 Old syntax:
-			 "/timer <seconds> <command>"
-
-			 New syntax:
-			 "/timer <seconds> <repeat> <command>"
-
-			 We check the value of the second argument. If it's a number,
-			 then we treat it as the new syntax which means that number
-			 is the repeat count for the timer.
-			 */
-
-		/* Parse interval */
-		NSString *intervalString = action;
-
-		if (intervalString.length == 0) {
-			[self printDebugInformation:TXTLS(@"IRC[jj9-94]")];
-
-			break;
-		}
-
-		NSInteger interval = intervalString.integerValue;
-
-		if (interval <= 0) {
-			[self printDebugInformation:TXTLS(@"IRC[327-pv]")];
-
-			break;
-		}
-
-		/* Parse repeat count and/or command */
-		/*
-			 Repeat argument is treated as such:
-			   == 0 — repeat and never stop
-			   == 1 - perform timer once, do not repeat
-			   > 1 — repeat number of times
-			 */
-		NSString *repeatString = stringIn.tokenAsString;
-
-		NSInteger repeat = NSNotFound;
-
-		NSString *command = stringIn.trimmedString;
-
-		if ([repeatString contentsIsOfType:CSStringTypeAnyNumber]) {
-			/* Contents of second argument is a number,
-				 which means we want to treat it as the repeat count. */
-			repeat = repeatString.integerValue;
-		} else {
-			/* Contents of second argument is NOT a number,
-				 which means we need to merge that back with the
-				 remainder of the command value. */
-			if (command.length == 0) {
-				command = repeatString;
-			} else {
-				command = [repeatString stringByAppendingFormat:@" %@", command];
-			}
-		}
-
-		/* Perform additional validation */
-		if (repeat < 0) {
-			[self printDebugInformation:TXTLS(@"IRC[eud-kc]")];
-
-			break;
-		}
-
-		if (command.length == 0) {
-			[self printDebugInformation:TXTLS(@"IRC[jj9-94]")];
-
-			break;
-		}
-
-		/* If we have no repeat value, then treat is one pass. */
-		if (repeat == NSNotFound) {
-			repeat = 1;
-		}
-
-		/* Add timer */
-		IRCTimedCommand *timedCommand = nil;
-
-		if (targetChannel == nil) {
-			timedCommand = [[IRCTimedCommand alloc] initWithCommand:command onClient:self];
-		} else {
-			timedCommand = [[IRCTimedCommand alloc] initWithCommand:command onClient:self inChannel:targetChannel];
-		}
-
-		[self addTimedCommand:timedCommand];
-
-		[self startTimedCommand:timedCommand interval:interval onRepeat:(repeat != 1) iterations:repeat];
-
-		break;
-	}
-	case IRCLocalCommandT:	   // Command: T
-	case IRCLocalCommandTopic: // Command: TOPIC
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if ([self stringIsChannelName:stringIn.string] == NO) {
-			if (targetChannel && targetChannel.isChannel) {
-				targetChannelName = targetChannel.name;
-			} else {
-				break;
-			}
-		} else {
-			targetChannelName = stringIn.tokenAsString;
-		}
-
-		NSString *topic = stringIn.stringFormattedForIRC;
-
-		NSUInteger topicLength = topic.length;
-
-		if (topicLength == 0) {
-			[self send:@"TOPIC", targetChannelName, nil];
-
-			return;
-		}
-
-		NSUInteger topicLengthMaximum = self.supportInfo.maximumTopicLength;
-
-		if (topicLengthMaximum > 0 && topicLength > topicLengthMaximum) {
-			[self printDebugInformation:TXTLS(@"IRC[1oo-3b]", self.networkNameAlt, topicLengthMaximum)];
-		}
-
-		[self send:@"TOPIC", targetChannelName, topic, nil];
-
-		break;
-	}
-	case IRCLocalCommandUmode: // Command: UMODE
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self send:@"MODE", self.userNickname, nil];
-		} else {
-			[self send:@"MODE", self.userNickname, stringIn.string, nil];
-		}
-
-		break;
-	}
-	case IRCLocalCommandUnmute: // Command: UNMUTE
-	{
-		if ([TPCPreferences soundIsMuted] == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[5rf-mj]")];
-		} else {
-			[self printDebugInformation:TXTLS(@"IRC[190-f2]")];
-
-			[menuController() toggleMuteOnNotificationSoundsShortcutOn:NO];
-		}
-
-		break;
-	}
-	case IRCLocalCommandWallops: // Command: WALLOPS
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		[self send:@"WALLOPS", stringIn.string, nil];
-
-		break;
-	}
-	case IRCLocalCommandMonitor: // Command: MONITOR
-	case IRCLocalCommandWatch:	 // Command: WATCH
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		BOOL isClearCommand = NO;
-		BOOL isModifierCommand = NO;
-
-		/* UnrealIRCd splits arguments using space and loops through all of them
-			 which means a modifier or clear command can appear at the same time. */
-		NSArray *arguments =
-			[stringIn.string componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-
-		for (NSString *argument in arguments) {
-			if ([argument hasPrefix:@"-"] || [stringIn.string hasPrefix:@"+"]) {
-				isModifierCommand = YES;
-
-				break;
-			} else if ([argument isEqualIgnoringCase:@"c"]) {
-				isClearCommand = YES;
-			}
-		}
-
-		if (isModifierCommand) {
-			[self printDebugInformation:TXTLS(@"IRC[khw-4y]")];
-
-			break;
-		}
-
-		/* The clear command doesn't produce a result */
-		if (isClearCommand == NO) {
-			[self createHiddenCommandResponses];
-		}
-
-		[self sendCommand:uppercaseCommand withData:stringIn.string];
-
-		break;
-	}
-	case IRCLocalCommandSilence: // Command: SILENCE
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (self.supportInfo.silenceSupported == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[m2v-sd]")];
-
-			break;
-		}
-
-		/* Without arguments the server lists the current entries (271/272). */
-		[self sendCommand:uppercaseCommand withData:stringIn.string];
-
-		break;
-	}
-	case IRCLocalCommandWho: // Command: WHO
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		if (stringIn.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		[self createHiddenCommandResponses];
-
-		[self.requestedCommands recordWhoRequestOpenedAsVisible];
-
-		[self send:@"WHO", stringIn.string, nil];
-
-		break;
-	}
-	case IRCLocalCommandWeights: // Command: WEIGHTS
-	{
-		if (targetChannel == nil || targetChannel.isChannel == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[g01-qn]")];
-
-			break;
-		}
-
-		[self printDebugInformation:TXTLS(@"IRC[zud-u3]", targetChannel.name)];
-
-		BOOL haveWeights = NO;
-
-		for (IRCChannelUser *member in targetChannel.memberList) {
-			double incomingWeight = member.incomingWeight;
-			double outgoingWeight = member.outgoingWeight;
-
-			CGFloat weight = (incomingWeight + outgoingWeight);
-
-			if (weight > 0) {
-				haveWeights = YES;
-
-				[self printDebugInformation:TXTLS(@"IRC[24r-8c]",
-												  member.user.nickname,
-												  outgoingWeight,
-												  incomingWeight,
-												  weight)];
-			}
-		}
-
-		if (haveWeights == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[dje-41]")];
-		}
-
-		break;
-	}
-	case IRCLocalCommandWhois: // Command: WHOIS
-	{
-		NSAssertReturnLoopBreak(self.isLoggedIn);
-
-		NSString *nickname1 = stringIn.tokenAsString;
-
-		if (nickname1.length == 0) {
-			if (targetChannel && targetChannel.isPrivateMessage) {
-				nickname1 = targetChannel.name;
-			} else {
-				[self printInvalidSyntaxMessageForCommand:command];
-
-				break;
-			}
-		}
-
-		NSString *nickname2 = stringIn.tokenAsString;
-
-		if (nickname2.length == 0) {
-			[self send:@"WHOIS", nickname1, nickname1, nil];
-		} else {
-			[self send:@"WHOIS", nickname1, nickname2, nil];
-		}
-
-		break;
-	}
-	case IRCLocalCommandMe:		 // Command: ME
-	case IRCLocalCommandMsg:	 // Command: MSG
-	case IRCLocalCommandNotice:	 // Command: NOTICE
-	case IRCLocalCommandOmsg:	 // Command: OMSG
-	case IRCLocalCommandOnotice: // Command: ONOTICE
-	case IRCLocalCommandSme:	 // Command: SME
-	case IRCLocalCommandSmsg:	 // Command: SMSG
-	case IRCLocalCommandUme:	 // Command: UME
-	case IRCLocalCommandUmsg:	 // Command: UMSG
-	case IRCLocalCommandUnotice: // Command: UNOTICE
-	{
-		/* Where would se send data to? */
-		if (self.isLoggedIn == NO) {
-			[self printDebugInformationToConsole:TXTLS(@"IRC[6rj-2r]")];
-
-			break;
-		}
-
-		/* Establish context for comand */
-		NSString *channelNamePrefix = nil;
-
-		BOOL isOperatorMessage = NO;
-		BOOL isSecretMessage = NO;
-
-		NSString *commandToSend = nil;
-
-		TVCLogLineType lineType = TVCLogLineTypeUndefined;
-
-		/* Connect commands run silently by default: nothing is echoed and no
-		 query is opened, so a password in "/msg NickServ IDENTIFY" never lands
-		 in a chat view. A redacted note goes to the server console instead. */
-		BOOL isSilentConnectCommand = (self.isPerformingConnectCommands && self.config.runConnectCommandsSilently);
-
-		if (commandNumeric == IRCLocalCommandMsg || commandNumeric == IRCLocalCommandOmsg ||
-			commandNumeric == IRCLocalCommandSmsg || commandNumeric == IRCLocalCommandUmsg) {
-			commandToSend = @"PRIVMSG";
-
-			lineType = TVCLogLineTypePrivateMessage;
-
-			isOperatorMessage = (commandNumeric == IRCLocalCommandOmsg);
-			isSecretMessage = (commandNumeric == IRCLocalCommandSmsg || isSilentConnectCommand);
-		} else if (commandNumeric == IRCLocalCommandMe || commandNumeric == IRCLocalCommandSme ||
-				   commandNumeric == IRCLocalCommandUme) {
-			commandToSend = @"PRIVMSG";
-
-			lineType = TVCLogLineTypeAction;
-
-			isSecretMessage = (commandNumeric == IRCLocalCommandSme);
-		} else if (commandNumeric == IRCLocalCommandNotice ||  // Command: NOTICE
-				   commandNumeric == IRCLocalCommandOnotice || // Command: ONOTICE
-				   commandNumeric == IRCLocalCommandUnotice)   // Command: UNOTICE
-		{
-			commandToSend = @"NOTICE";
-
-			lineType = TVCLogLineTypeNotice;
-
-			isOperatorMessage = (commandNumeric == IRCLocalCommandOnotice);
-		}
-
-		if (isOperatorMessage) {
-			channelNamePrefix = [self.supportInfo statusMessagePrefixForModeSymbol:@"o"];
-
-			/* If the user is sending an operator message and the user mode +o does
-				 not exist, then fail here. The user may be trying to send something 
-				 secret with an expectation for privacy and we cannot deliver that. */
-			if (channelNamePrefix == nil) {
-				[self printDebugInformation:TXTLS(@"IRC[54l-h7]", @"o")];
-
-				break;
-			}
-		}
-
-		/* Pick the best target */
-		/* All actions except (SME) should use the target channel */
-		/* Operator messages should use the target channel unless the
-			 string in is a channel name */
-		/* All other scenarios use the string in (token) */
-		if (isSecretMessage == NO && lineType == TVCLogLineTypeAction && targetChannel) {
-			if (targetChannel.isUtility) {
-				[self printDebugInformation:TXTLS(@"sxf-qx")];
-
-				break;
-			}
-
-			/* Direct chats never touch the IRC server. */
-			if (targetChannel.isDirectChat) {
-				if (stringIn.length == 0) {
-					[stringIn replaceCharactersInRange:NSMakeRange(0, 0) withString:@" "];
-				}
-
-				[self sendDirectChatText:stringIn asCommand:IRCRemoteCommandPrivmsgAction toChannel:targetChannel];
-
-				break;
-			}
-
-			targetChannelName = targetChannel.name;
-		} else if (isOperatorMessage && [self stringIsChannelName:stringIn.string] == NO && targetChannel.isChannel) {
-			targetChannelName = targetChannel.name;
-		} else {
-			targetChannelName = stringIn.tokenAsString;
-		}
-
-		if (targetChannelName.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
-
-			break;
-		}
-
-		/* Actions are allowed to have an empty message but all other
-			 types are not. Empty actions use a whitespace. */
-		if (stringIn.length == 0) {
-			if (lineType == TVCLogLineTypeAction) {
-				[stringIn replaceCharactersInRange:NSMakeRange(0, 0) withString:@" "];
-			} else {
-				break;
-			}
-		}
-
-		/* At this point, the following will occur:
-			 1. Each destination is looped over
-				1. Prefix characters are removed from the destination name
-				2. Try to find channel that already exists which matches
-				   the destination. If a channel does not exist, then we 
-				   create one depending on whether this is a secret message.
-				3. The message is then sent off.
-			 */
-		NSArray *destinations = [targetChannelName componentsSeparatedByString:@","];
-
-		IRCChannel *destinationToSelect = nil;
-
-		/* TARGMAX: joined channels addressed without a status prefix are sent
-		 as comma separated target groups. Nicknames keep the per-target path
-		 below. */
-		if (isSecretMessage == NO && isSilentConnectCommand == NO && channelNamePrefix == nil &&
-			[self.supportInfo maximumTargetsForCommand:commandToSend] > 1) {
-			NSMutableArray<IRCChannel *> *groupedChannels = [NSMutableArray array];
-			NSMutableArray<NSString *> *remainingDestinations = [NSMutableArray array];
-
-			for (NSString *destinationName in destinations) {
-				IRCChannel *destination = [self findChannel:destinationName];
-
-				if (destination.isChannel && destination.isActive) {
-					[groupedChannels addObject:destination];
-				} else {
-					[remainingDestinations addObject:destinationName];
-				}
-			}
-
-			if (groupedChannels.count > 1) {
-				IRCRemoteCommand groupedCommand = IRCRemoteCommandPrivmsg;
-
-				if (lineType == TVCLogLineTypeAction) {
-					groupedCommand = IRCRemoteCommandPrivmsgAction;
-				} else if (lineType == TVCLogLineTypeNotice) {
-					groupedCommand = IRCRemoteCommandNotice;
-				}
-
-				[self sendText:stringIn asCommand:groupedCommand toChannels:groupedChannels];
-
-				if ([TPCPreferences giveFocusOnMessageCommand]) {
-					destinationToSelect = groupedChannels.firstObject;
-				}
-
-				destinations = remainingDestinations;
-			}
-		}
-
-		for (__strong NSString *destinationName in destinations) {
-			/* If the user prefixed the target with a mode (e.g. +#channel)
-				 to indicate that they want the message only seen by that group
-				 of users, then we first have to remove that prefix to perform
-				 our own processing of the target. When it comes time to send 
-				 the message, then the prefix is added back to the target name. */
-			NSString *destinationNamePrefix =
-				[self.supportInfo extractStatusMessagePrefixFromChannelNamed:destinationName];
-
-			if (destinationNamePrefix.length == 0) {
-				destinationNamePrefix = channelNamePrefix;
-			} else {
-				destinationName = [destinationName substringFromIndex:1];
-			}
-
-			/* Locate object that matches destination */
-			IRCChannel *destination = [self findChannel:destinationName];
-
-			if (isSecretMessage == NO) {
-				/* If the destination does not exist and this isn't a secret
-					 message, then create a private message if the destination 
-					 is believed to be a user. */
-				if (destination == nil && [self stringIsNickname:destinationName]) {
-					destination = [worldController() createPrivateMessage:destinationName onClient:self];
-				}
-
-				/* Define the channel that will be selected */
-				if ([TPCPreferences giveFocusOnMessageCommand]) {
-					if (destinationToSelect == nil) {
-						destinationToSelect = destination;
-					}
-				}
-			}
-
-			/* Add prefix back if the destination is a channel */
-			BOOL destinationIsChannel =
-				(destination.isChannel || (destination == nil && [self stringIsChannelName:destinationName]));
-
-			if (destinationNamePrefix && destinationIsChannel) {
-				destinationName = [destinationNamePrefix stringByAppendingString:destinationName];
-			}
-
-			/* Break text up into substrings which can then be sent. */
-			NSMutableAttributedString *lineMutable = [stringIn mutableCopy];
-
-			while (lineMutable.length > 0) {
-				NSString *message = [lineMutable stringFormattedForChannel:destinationName
-																  onClient:self
-															  withLineType:lineType];
-
-				NSString *deliveryLabel = nil;
-
-				NSString *redactedMessage = [IRCClient redactedServiceMessage:message sentTo:destinationName];
-
-				if (isSilentConnectCommand) {
-					[self printDebugInformationToConsole:TXTLS(@"IRC[ccs-1a]", destinationName, redactedMessage)];
-				} else if (destination == nil) {
-					/* Nothing to print locally */
-				} else if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
-					if ([self labeledResponseTrackingEnabled]) {
-						deliveryLabel = [self registerPendingDeliveryForChannel:destination];
-
-						self.nextLineDeliveryState = TVCLogLineDeliveryStatePending;
-
-						NSString *label = deliveryLabel;
-
-						[self print:redactedMessage
-										  by:self.userNickname
-								   inChannel:destination
-									  asType:lineType
-									 command:command
-								  receivedAt:[NSDate date]
-								 isEncrypted:NO
-							referenceMessage:nil
-							 completionBlock:^(TVCLogControllerPrintOperationContext *context) {
-								 [self attachLineNumber:context.lineNumber toDeliveryWithLabel:label];
-							 }];
-					}
-				} else {
-					[self print:redactedMessage
-								 by:self.userNickname
-						  inChannel:destination
-							 asType:lineType
-							command:command
-						 receivedAt:[NSDate date]
-						isEncrypted:NO];
-				}
-
-				NSString *sendMessage = message;
-
-				if (lineType == TVCLogLineTypeAction) {
-					sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
-				}
-
-				if (deliveryLabel) {
-					[self sendCommand:commandToSend
-							arguments:@[ destinationName, sendMessage ]
-								 tags:@{@"label" : deliveryLabel}];
-				} else {
-					[self send:commandToSend, destinationName, sendMessage, nil];
-				}
-			}
-		} // destination for()
-
-		/* Focus destination */
-		if (destinationToSelect) {
-			[mainWindow() select:destinationToSelect];
-		}
-
-		break;
-	}
-	default: {
-		/* Find an addon responsible for this command. */
-		NSString *addonPath = nil;
-
-		BOOL pluginFound = NO;
-		BOOL scriptFound = NO;
-
-		[sharedPluginManager() findHandlerForOutgoingCommand:lowercaseCommand
-														path:&addonPath
-													isScript:&scriptFound
-												 isExtension:&pluginFound];
-
-		/* Perform script or plugin. */
-		if (pluginFound && scriptFound) {
-			[self printDebugInformation:TXTLS(@"IRC[d3c-9b]", uppercaseCommand)];
-
-			break;
-		} else if (pluginFound && scriptFound == NO) {
-			[self processBundlesUserMessage:stringIn.string command:lowercaseCommand];
-
-			break;
-		} else if (pluginFound == NO && scriptFound) {
-			NSMutableDictionary<NSString *, NSString *> *context = [NSMutableDictionary dictionaryWithCapacity:3];
-
-			[context maybeSetObject:stringIn.string forKey:@"inputString"];
-
-			[context maybeSetObject:addonPath forKey:@"path"];
-
-			[context maybeSetObject:targetChannel.name forKey:@"targetChannel"];
-
-			[self executeGlasstualCmdScriptInContext:context];
-
-			break;
-		}
-
-		/* Send input to server */
-		[self sendCommand:uppercaseCommand withData:stringIn.string];
-
-		break;
-	}
-	}
+  [self sendLine:stringToSend];
 }
 
-- (void)sendCommand:(NSString *)command withData:(NSString *)data
-{
-	NSParameterAssert(command != nil);
-	NSParameterAssert(data != nil);
+- (void)printInvalidSyntaxMessageForCommand:(NSString *)command {
+  NSParameterAssert(command != nil);
 
-	NSString *stringToSend = [NSString stringWithFormat:@"%@ %@", command, data];
+  NSString *syntax = [IRCCommandIndex syntaxForLocalCommand:command];
 
-	[self sendLine:stringToSend];
-}
+  if (syntax == nil) {
+    return;
+  }
 
-- (void)printInvalidSyntaxMessageForCommand:(NSString *)command
-{
-	NSParameterAssert(command != nil);
-
-	NSString *syntax = [IRCCommandIndex syntaxForLocalCommand:command];
-
-	if (syntax == nil) {
-		return;
-	}
-
-	[self printDebugInformation:TXTLS(@"IRC[atq-93]", syntax)];
+  [self printDebugInformation:TXTLS(@"IRC[atq-93]", syntax)];
 }
 
 #pragma mark -
 #pragma mark Log File
 
-- (void)reopenLogFileIfNeeded
-{
-	if ([TPCPreferences logToDiskIsEnabled]) {
-		if (self.logFile) {
-			[self.logFile reopenIfNeeded];
-		}
-	} else {
-		[self closeLogFile];
-	}
+- (void)reopenLogFileIfNeeded {
+  if ([TPCPreferences logToDiskIsEnabled]) {
+    if (self.logFile) {
+      [self.logFile reopenIfNeeded];
+    }
+  } else {
+    [self closeLogFile];
+  }
 }
 
-- (void)closeLogFile
-{
-	if (self.logFile == nil) {
-		return;
-	}
+- (void)closeLogFile {
+  if (self.logFile == nil) {
+    return;
+  }
 
-	[self.logFile close];
+  [self.logFile close];
 }
 
-- (void)writeToLogLineToLogFile:(TVCLogLine *)logLine
-{
-	NSParameterAssert(logLine != nil);
+- (void)writeToLogLineToLogFile:(TVCLogLine *)logLine {
+  NSParameterAssert(logLine != nil);
 
-	if ([TPCPreferences logToDiskIsEnabled] == NO) {
-		return;
-	}
+  if ([TPCPreferences logToDiskIsEnabled] == NO) {
+    return;
+  }
 
-	// Perform addition before if statement to avoid infinite loop
-	self.logFileSessionCount += 1;
+  // Perform addition before if statement to avoid infinite loop
+  self.logFileSessionCount += 1;
 
-	if (self.logFileSessionCount == 1) {
-		[self logFileWriteSessionBegin];
-	}
+  if (self.logFileSessionCount == 1) {
+    [self logFileWriteSessionBegin];
+  }
 
-	if (self.logFile == nil) {
-		self.logFile = [[TLOFileLogger alloc] initWithClient:self];
-	}
+  if (self.logFile == nil) {
+    self.logFile = [[TLOFileLogger alloc] initWithClient:self];
+  }
 
-	[self.logFile writeLogLine:logLine];
+  [self.logFile writeLogLine:logLine];
 }
 
-- (void)logFileRecordSessionChanged:(BOOL)toNewSession inChannel:(nullable IRCChannel *)channel
-{
-	NSParameterAssert(channel.isUtility == NO);
+- (void)logFileRecordSessionChanged:(BOOL)toNewSession
+                          inChannel:(nullable IRCChannel *)channel {
+  NSParameterAssert(channel.isUtility == NO);
 
-	NSString *localization = nil;
+  NSString *localization = nil;
 
-	if (toNewSession) {
-		localization = @"IRC[qrg-ua]";
-	} else {
-		localization = @"IRC[d5d-uy]";
-	}
+  if (toNewSession) {
+    localization = @"IRC[qrg-ua]";
+  } else {
+    localization = @"IRC[d5d-uy]";
+  }
 
-	TVCLogLineMutable *logLine = [TVCLogLineMutable new];
+  TVCLogLineMutable *logLine = [TVCLogLineMutable new];
 
-	/* ============================ */
+  /* ============================ */
 
-	logLine.messageBody = @" ";
+  logLine.messageBody = @" ";
 
-	if (channel) {
-		[channel writeToLogLineToLogFile:logLine];
-	} else {
-		[self writeToLogLineToLogFile:logLine];
-	}
+  if (channel) {
+    [channel writeToLogLineToLogFile:logLine];
+  } else {
+    [self writeToLogLineToLogFile:logLine];
+  }
 
-	/* ============================ */
+  /* ============================ */
 
-	logLine.messageBody = TXTLS(localization);
+  logLine.messageBody = TXTLS(localization);
 
-	if (channel) {
-		[channel writeToLogLineToLogFile:logLine];
-	} else {
-		[self writeToLogLineToLogFile:logLine];
-	}
+  if (channel) {
+    [channel writeToLogLineToLogFile:logLine];
+  } else {
+    [self writeToLogLineToLogFile:logLine];
+  }
 
-	/* ============================ */
+  /* ============================ */
 
-	logLine.messageBody = @" ";
+  logLine.messageBody = @" ";
 
-	if (channel) {
-		[channel writeToLogLineToLogFile:logLine];
-	} else {
-		[self writeToLogLineToLogFile:logLine];
-	}
+  if (channel) {
+    [channel writeToLogLineToLogFile:logLine];
+  } else {
+    [self writeToLogLineToLogFile:logLine];
+  }
 }
 
-- (void)endLoggingSessions
-{
-	for (IRCChannel *channel in self.channelList) {
-		if (channel.isUtility) {
-			continue;
-		}
+- (void)endLoggingSessions {
+  for (IRCChannel *channel in self.channelList) {
+    if (channel.isUtility) {
+      continue;
+    }
 
-		[channel logFileWriteSessionEnd];
-	}
+    [channel logFileWriteSessionEnd];
+  }
 
-	[self logFileWriteSessionEnd];
+  [self logFileWriteSessionEnd];
 }
 
-- (void)logFileWriteSessionBegin
-{
-	[self logFileRecordSessionChanged:YES inChannel:nil];
+- (void)logFileWriteSessionBegin {
+  [self logFileRecordSessionChanged:YES inChannel:nil];
 }
 
-- (void)logFileWriteSessionEnd
-{
-	[self logFileRecordSessionChanged:NO inChannel:nil];
+- (void)logFileWriteSessionEnd {
+  [self logFileRecordSessionChanged:NO inChannel:nil];
 
-	self.logFileSessionCount = 0;
+  self.logFileSessionCount = 0;
 }
 
 #pragma mark -
 #pragma mark Print
 
-- (NSString *)formatNickname:(NSString *)nickname inChannel:(nullable IRCChannel *)channel
-{
-	return [self formatNickname:nickname inChannel:channel withFormat:nil];
+- (NSString *)formatNickname:(NSString *)nickname
+                   inChannel:(nullable IRCChannel *)channel {
+  return [self formatNickname:nickname inChannel:channel withFormat:nil];
 }
 
 - (NSString *)formatNickname:(NSString *)nickname
-				   inChannel:(nullable IRCChannel *)channel
-				  withFormat:(nullable NSString *)format
-{
-	NSParameterAssert(nickname != nil);
+                   inChannel:(nullable IRCChannel *)channel
+                  withFormat:(nullable NSString *)format {
+  NSParameterAssert(nickname != nil);
 
-	if (format.length == 0) {
-		format = themeSettings().themeNicknameFormat;
-	}
+  if (format.length == 0) {
+    format = themeSettings().themeNicknameFormat;
+  }
 
-	if (format.length == 0) {
-		format = [TPCPreferences themeNicknameFormat];
-	}
+  if (format.length == 0) {
+    format = [TPCPreferences themeNicknameFormat];
+  }
 
-	if (format.length == 0) {
-		format = [TPCPreferences themeNicknameFormatDefault];
-	}
+  if (format.length == 0) {
+    format = [TPCPreferences themeNicknameFormatDefault];
+  }
 
-	NSString *modeSymbol = @"";
+  NSString *modeSymbol = @"";
 
-	if (channel.isChannel) {
-		IRCChannelUser *member = [channel findMember:nickname];
+  if (channel.isChannel) {
+    IRCChannelUser *member = [channel findMember:nickname];
 
-		if (member) {
-			modeSymbol = member.mark;
-		}
-	}
+    if (member) {
+      modeSymbol = member.mark;
+    }
+  }
 
-	NSString *formatMarker = @"%";
+  NSString *formatMarker = @"%";
 
-	NSString *chunk = nil;
+  NSString *chunk = nil;
 
-	NSScanner *scanner = [NSScanner scannerWithString:format];
+  NSScanner *scanner = [NSScanner scannerWithString:format];
 
-	scanner.charactersToBeSkipped = nil;
+  scanner.charactersToBeSkipped = nil;
 
-	NSMutableString *buffer = [NSMutableString new];
+  NSMutableString *buffer = [NSMutableString new];
 
-	while (scanner.atEnd == NO) {
-		if ([scanner scanUpToString:formatMarker intoString:&chunk]) {
-			[buffer appendString:chunk];
-		}
+  while (scanner.atEnd == NO) {
+    if ([scanner scanUpToString:formatMarker intoString:&chunk]) {
+      [buffer appendString:chunk];
+    }
 
-		if ([scanner scanString:formatMarker intoString:nil] == NO) {
-			break;
-		}
+    if ([scanner scanString:formatMarker intoString:nil] == NO) {
+      break;
+    }
 
-		NSInteger paddingWidth = 0;
+    NSInteger paddingWidth = 0;
 
-		[scanner scanInteger:&paddingWidth];
+    [scanner scanInteger:&paddingWidth];
 
-		/* Read the output type marker */
-		NSString *outputValue = nil;
+    /* Read the output type marker */
+    NSString *outputValue = nil;
 
-		if ([scanner scanString:@"@" intoString:nil]) {
-			outputValue = modeSymbol;
-		} else if ([scanner scanString:@"n" intoString:nil]) {
-			outputValue = nickname;
-		} else if ([scanner scanString:formatMarker intoString:nil]) {
-			outputValue = formatMarker;
-		}
+    if ([scanner scanString:@"@" intoString:nil]) {
+      outputValue = modeSymbol;
+    } else if ([scanner scanString:@"n" intoString:nil]) {
+      outputValue = nickname;
+    } else if ([scanner scanString:formatMarker intoString:nil]) {
+      outputValue = formatMarker;
+    }
 
-		if (outputValue) {
-			if (paddingWidth < 0 && (NSUInteger)ABS(paddingWidth) > outputValue.length) {
-				NSString *paddedString = [@"" stringByPaddingToLength:(ABS(paddingWidth) - outputValue.length)
-														   withString:@" "
-													  startingAtIndex:0];
+    if (outputValue) {
+      if (paddingWidth < 0 &&
+          (NSUInteger)ABS(paddingWidth) > outputValue.length) {
+        NSString *paddedString = [@""
+            stringByPaddingToLength:(ABS(paddingWidth) - outputValue.length)
+                         withString:@" "
+                    startingAtIndex:0];
 
-				[buffer appendString:paddedString];
-			}
+        [buffer appendString:paddedString];
+      }
 
-			[buffer appendString:outputValue];
+      [buffer appendString:outputValue];
 
-			if (paddingWidth > 0 && (NSUInteger)paddingWidth > outputValue.length) {
-				NSString *paddedString = [@"" stringByPaddingToLength:(paddingWidth - outputValue.length)
-														   withString:@" "
-													  startingAtIndex:0];
+      if (paddingWidth > 0 && (NSUInteger)paddingWidth > outputValue.length) {
+        NSString *paddedString =
+            [@"" stringByPaddingToLength:(paddingWidth - outputValue.length)
+                              withString:@" "
+                         startingAtIndex:0];
 
-				[buffer appendString:paddedString];
-			}
-		}
-	}
+        [buffer appendString:paddedString];
+      }
+    }
+  }
 
-	return [buffer copy];
+  return [buffer copy];
 }
 
 - (void)printAndLog:(TVCLogLine *)logLine
-	completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock
-{
-	NSParameterAssert(logLine != nil);
+    completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)
+                        completionBlock {
+  NSParameterAssert(logLine != nil);
 
-	[self.viewController print:logLine completionBlock:completionBlock];
+  [self.viewController print:logLine completionBlock:completionBlock];
 
-	[self writeToLogLineToLogFile:logLine];
+  [self writeToLogLineToLogFile:logLine];
 }
 
 - (void)print:(NSString *)messageBody
-		   by:(nullable NSString *)nickname
-	inChannel:(nullable IRCChannel *)channel
-	   asType:(TVCLogLineType)lineType
-	  command:(NSString *)command
-{
-	[self print:messageBody
-					  by:nickname
-			   inChannel:channel
-				  asType:lineType
-				 command:command
-			  receivedAt:[NSDate date]
-			 isEncrypted:NO
-		   escapeMessage:YES
-		referenceMessage:nil
-		 completionBlock:nil];
+           by:(nullable NSString *)nickname
+    inChannel:(nullable IRCChannel *)channel
+       asType:(TVCLogLineType)lineType
+      command:(NSString *)command {
+  [self print:messageBody
+                    by:nickname
+             inChannel:channel
+                asType:lineType
+               command:command
+            receivedAt:[NSDate date]
+           isEncrypted:NO
+         escapeMessage:YES
+      referenceMessage:nil
+       completionBlock:nil];
 }
 
 - (void)print:(NSString *)messageBody
-			   by:(nullable NSString *)nickname
-		inChannel:(nullable IRCChannel *)channel
-		   asType:(TVCLogLineType)lineType
-		  command:(NSString *)command
-	escapeMessage:(BOOL)escapeMessage
-{
-	[self print:messageBody
-					  by:nickname
-			   inChannel:channel
-				  asType:lineType
-				 command:command
-			  receivedAt:[NSDate date]
-			 isEncrypted:NO
-		   escapeMessage:escapeMessage
-		referenceMessage:nil
-		 completionBlock:nil];
+               by:(nullable NSString *)nickname
+        inChannel:(nullable IRCChannel *)channel
+           asType:(TVCLogLineType)lineType
+          command:(NSString *)command
+    escapeMessage:(BOOL)escapeMessage {
+  [self print:messageBody
+                    by:nickname
+             inChannel:channel
+                asType:lineType
+               command:command
+            receivedAt:[NSDate date]
+           isEncrypted:NO
+         escapeMessage:escapeMessage
+      referenceMessage:nil
+       completionBlock:nil];
 }
 
 - (void)print:(NSString *)messageBody
-			by:(nullable NSString *)nickname
-	 inChannel:(nullable IRCChannel *)channel
-		asType:(TVCLogLineType)lineType
-	   command:(NSString *)command
-	receivedAt:(NSDate *)receivedAt
-{
-	[self print:messageBody
-					  by:nickname
-			   inChannel:channel
-				  asType:lineType
-				 command:command
-			  receivedAt:receivedAt
-			 isEncrypted:NO
-		   escapeMessage:YES
-		referenceMessage:nil
-		 completionBlock:nil];
+            by:(nullable NSString *)nickname
+     inChannel:(nullable IRCChannel *)channel
+        asType:(TVCLogLineType)lineType
+       command:(NSString *)command
+    receivedAt:(NSDate *)receivedAt {
+  [self print:messageBody
+                    by:nickname
+             inChannel:channel
+                asType:lineType
+               command:command
+            receivedAt:receivedAt
+           isEncrypted:NO
+         escapeMessage:YES
+      referenceMessage:nil
+       completionBlock:nil];
 }
 
 - (void)print:(NSString *)messageBody
-			 by:(nullable NSString *)nickname
-	  inChannel:(nullable IRCChannel *)channel
-		 asType:(TVCLogLineType)lineType
-		command:(NSString *)command
-	 receivedAt:(NSDate *)receivedAt
-	isEncrypted:(BOOL)isEncrypted
-{
-	[self print:messageBody
-					  by:nickname
-			   inChannel:channel
-				  asType:lineType
-				 command:command
-			  receivedAt:receivedAt
-			 isEncrypted:isEncrypted
-		   escapeMessage:YES
-		referenceMessage:nil
-		 completionBlock:nil];
+             by:(nullable NSString *)nickname
+      inChannel:(nullable IRCChannel *)channel
+         asType:(TVCLogLineType)lineType
+        command:(NSString *)command
+     receivedAt:(NSDate *)receivedAt
+    isEncrypted:(BOOL)isEncrypted {
+  [self print:messageBody
+                    by:nickname
+             inChannel:channel
+                asType:lineType
+               command:command
+            receivedAt:receivedAt
+           isEncrypted:isEncrypted
+         escapeMessage:YES
+      referenceMessage:nil
+       completionBlock:nil];
 }
 
 - (void)print:(NSString *)messageBody
-				  by:(nullable NSString *)nickname
-		   inChannel:(nullable IRCChannel *)channel
-			  asType:(TVCLogLineType)lineType
-			 command:(nullable NSString *)command
-		  receivedAt:(NSDate *)receivedAt
-		 isEncrypted:(BOOL)isEncrypted
-	referenceMessage:(nullable IRCMessage *)referenceMessage
-{
-	[self print:messageBody
-					  by:nickname
-			   inChannel:channel
-				  asType:lineType
-				 command:command
-			  receivedAt:receivedAt
-			 isEncrypted:isEncrypted
-		   escapeMessage:YES
-		referenceMessage:referenceMessage
-		 completionBlock:nil];
+                  by:(nullable NSString *)nickname
+           inChannel:(nullable IRCChannel *)channel
+              asType:(TVCLogLineType)lineType
+             command:(nullable NSString *)command
+          receivedAt:(NSDate *)receivedAt
+         isEncrypted:(BOOL)isEncrypted
+    referenceMessage:(nullable IRCMessage *)referenceMessage {
+  [self print:messageBody
+                    by:nickname
+             inChannel:channel
+                asType:lineType
+               command:command
+            receivedAt:receivedAt
+           isEncrypted:isEncrypted
+         escapeMessage:YES
+      referenceMessage:referenceMessage
+       completionBlock:nil];
 }
 
 - (void)print:(NSString *)messageBody
-				  by:(nullable NSString *)nickname
-		   inChannel:(nullable IRCChannel *)channel
-			  asType:(TVCLogLineType)lineType
-			 command:(nullable NSString *)command
-		  receivedAt:(NSDate *)receivedAt
-		 isEncrypted:(BOOL)isEncrypted
-	referenceMessage:(nullable IRCMessage *)referenceMessage
-	 completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock
-{
-	[self print:messageBody
-					  by:nickname
-			   inChannel:channel
-				  asType:lineType
-				 command:command
-			  receivedAt:receivedAt
-			 isEncrypted:isEncrypted
-		   escapeMessage:YES
-		referenceMessage:referenceMessage
-		 completionBlock:completionBlock];
+                  by:(nullable NSString *)nickname
+           inChannel:(nullable IRCChannel *)channel
+              asType:(TVCLogLineType)lineType
+             command:(nullable NSString *)command
+          receivedAt:(NSDate *)receivedAt
+         isEncrypted:(BOOL)isEncrypted
+    referenceMessage:(nullable IRCMessage *)referenceMessage
+     completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)
+                         completionBlock {
+  [self print:messageBody
+                    by:nickname
+             inChannel:channel
+                asType:lineType
+               command:command
+            receivedAt:receivedAt
+           isEncrypted:isEncrypted
+         escapeMessage:YES
+      referenceMessage:referenceMessage
+       completionBlock:completionBlock];
 }
 
 - (void)print:(NSString *)messageBody
-				  by:(nullable NSString *)nickname
-		   inChannel:(nullable IRCChannel *)channel
-			  asType:(TVCLogLineType)lineType
-			 command:(nullable NSString *)command
-		  receivedAt:(NSDate *)receivedAt
-		 isEncrypted:(BOOL)isEncrypted
-	   escapeMessage:(BOOL)escapeMessage
-	referenceMessage:(nullable IRCMessage *)referenceMessage
-	 completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)postPrintBlock
-{
-	NSParameterAssert(messageBody != nil);
-	NSParameterAssert(command != nil || referenceMessage != nil);
+                  by:(nullable NSString *)nickname
+           inChannel:(nullable IRCChannel *)channel
+              asType:(TVCLogLineType)lineType
+             command:(nullable NSString *)command
+          receivedAt:(NSDate *)receivedAt
+         isEncrypted:(BOOL)isEncrypted
+       escapeMessage:(BOOL)escapeMessage
+    referenceMessage:(nullable IRCMessage *)referenceMessage
+     completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)
+                         postPrintBlock {
+  NSParameterAssert(messageBody != nil);
+  NSParameterAssert(command != nil || referenceMessage != nil);
 
-	if (self.isTerminating) {
-		return;
-	}
+  if (self.isTerminating) {
+    return;
+  }
 
-	/* If an operation does not specify a command value, 
-	 then try to obtain it from the reference message. */
-	if (command == nil) {
-		command = referenceMessage.command;
-	}
+  /* If an operation does not specify a command value,
+   then try to obtain it from the reference message. */
+  if (command == nil) {
+    command = referenceMessage.command;
+  }
 
-	/* Prevent stupid plugin authors */
-	if ([channel isKindOfClass:[IRCChannel class]] == NO) {
-		channel = nil;
-	}
+  /* Prevent stupid plugin authors */
+  if ([channel isKindOfClass:[IRCChannel class]] == NO) {
+    channel = nil;
+  }
 
-	/* Do not print this message? */
-	if (channel) {
-		if ([self outputRuleMatchedInMessage:messageBody inChannel:channel]) {
-			return;
-		}
-	}
+  /* Do not print this message? */
+  if (channel) {
+    if ([self outputRuleMatchedInMessage:messageBody inChannel:channel]) {
+      return;
+    }
+  }
 
-	/* Define where the message originated */
-	NSString *localNickname = self.userNickname;
+  /* Define where the message originated */
+  NSString *localNickname = self.userNickname;
 
-	TVCLogLineMemberType memberType = TVCLogLineMemberTypeNormal;
+  TVCLogLineMemberType memberType = TVCLogLineMemberTypeNormal;
 
-	if ([nickname isEqualToString:localNickname]) {
-		memberType = TVCLogLineMemberTypeLocalUser;
-	}
+  if ([nickname isEqualToString:localNickname]) {
+    memberType = TVCLogLineMemberTypeLocalUser;
+  }
 
-	/* Define list of highlight keywords */
-	BOOL matchHighlights = (channel && channel.config.ignoreHighlights == NO &&
-							(lineType == TVCLogLineTypePrivateMessage || lineType == TVCLogLineTypeAction) &&
-							memberType == TVCLogLineMemberTypeNormal);
+  /* Define list of highlight keywords */
+  BOOL matchHighlights = (channel && channel.config.ignoreHighlights == NO &&
+                          (lineType == TVCLogLineTypePrivateMessage ||
+                           lineType == TVCLogLineTypeAction) &&
+                          memberType == TVCLogLineMemberTypeNormal);
 
-	NSMutableArray<NSString *> *excludeKeywords = nil;
-	NSMutableArray<NSString *> *matchKeywords = nil;
+  NSMutableArray<NSString *> *excludeKeywords = nil;
+  NSMutableArray<NSString *> *matchKeywords = nil;
 
-	if (matchHighlights) {
-		/* Global highlight keywords */
-		excludeKeywords = [[TPCPreferences highlightExcludeKeywords] mutableCopy];
-		matchKeywords = [[TPCPreferences highlightMatchKeywords] mutableCopy];
+  if (matchHighlights) {
+    /* Global highlight keywords */
+    excludeKeywords = [[TPCPreferences highlightExcludeKeywords] mutableCopy];
+    matchKeywords = [[TPCPreferences highlightMatchKeywords] mutableCopy];
 
-		/* Self nickname keyword */
-		if ([TPCPreferences highlightMatchingMethod] != TXNicknameHighlightMatchTypeRegularExpression &&
-			[TPCPreferences highlightCurrentNickname]) {
-			[matchKeywords addObjectWithoutDuplication:localNickname];
-		}
+    /* Self nickname keyword */
+    if ([TPCPreferences highlightMatchingMethod] !=
+            TXNicknameHighlightMatchTypeRegularExpression &&
+        [TPCPreferences highlightCurrentNickname]) {
+      [matchKeywords addObjectWithoutDuplication:localNickname];
+    }
 
-		/* Client/channel specific keywords */
-		NSArray *clientHighlightList = self.config.highlightList;
+    /* Client/channel specific keywords */
+    NSArray *clientHighlightList = self.config.highlightList;
 
-		NSString *channelId = channel.uniqueIdentifier;
+    NSString *channelId = channel.uniqueIdentifier;
 
-		for (IRCHighlightMatchCondition *e in clientHighlightList) {
-			NSString *matchChannelId = e.matchChannelId;
+    for (IRCHighlightMatchCondition *e in clientHighlightList) {
+      NSString *matchChannelId = e.matchChannelId;
 
-			if (matchChannelId.length > 0) {
-				if ([matchChannelId isEqualToString:channelId] == NO) {
-					continue;
-				}
-			}
+      if (matchChannelId.length > 0) {
+        if ([matchChannelId isEqualToString:channelId] == NO) {
+          continue;
+        }
+      }
 
-			if (e.matchIsExcluded) {
-				[excludeKeywords addObjectWithoutDuplication:e.matchKeyword];
-			} else {
-				[matchKeywords addObjectWithoutDuplication:e.matchKeyword];
-			}
-		}
-	} // matchKeywords
+      if (e.matchIsExcluded) {
+        [excludeKeywords addObjectWithoutDuplication:e.matchKeyword];
+      } else {
+        [matchKeywords addObjectWithoutDuplication:e.matchKeyword];
+      }
+    }
+  } // matchKeywords
 
-	if (lineType == TVCLogLineTypeActionNoHighlight) {
-		lineType = TVCLogLineTypeAction;
-	} else if (lineType == TVCLogLineTypePrivateMessageNoHighlight) {
-		lineType = TVCLogLineTypePrivateMessage;
-	}
+  if (lineType == TVCLogLineTypeActionNoHighlight) {
+    lineType = TVCLogLineTypeAction;
+  } else if (lineType == TVCLogLineTypePrivateMessageNoHighlight) {
+    lineType = TVCLogLineTypePrivateMessage;
+  }
 
-	/* Renderer attributes */
-	NSDictionary<NSString *, id> *rendererAttributes = nil;
+  /* Renderer attributes */
+  NSDictionary<NSString *, id> *rendererAttributes = nil;
 
-	if (escapeMessage == NO) {
-		rendererAttributes = @{TVCLogRendererConfigurationDoNotEscapeBodyAttribute : @(YES)};
-	}
+  if (escapeMessage == NO) {
+    rendererAttributes =
+        @{TVCLogRendererConfigurationDoNotEscapeBodyAttribute : @(YES)};
+  }
 
-	/* Create new log entry */
-	TVCLogLineMutable *logLine = [TVCLogLineMutable new];
+  /* Create new log entry */
+  TVCLogLineMutable *logLine = [TVCLogLineMutable new];
 
-	logLine.command = command.lowercaseString;
+  logLine.command = command.lowercaseString;
 
-	logLine.messageIdentifier = referenceMessage.messageIdentifier;
+  logLine.messageIdentifier = referenceMessage.messageIdentifier;
 
-	/* Set by the labeled-response send path for an outgoing pending line;
-	 consumed once so no other line inherits it. */
-	logLine.deliveryState = self.nextLineDeliveryState;
+  /* Set by the labeled-response send path for an outgoing pending line;
+   consumed once so no other line inherits it. */
+  logLine.deliveryState = self.nextLineDeliveryState;
 
-	self.nextLineDeliveryState = TVCLogLineDeliveryStateNone;
+  self.nextLineDeliveryState = TVCLogLineDeliveryStateNone;
 
-	/* The message this one answers (+draft/reply), either carried by
-	 the message itself or set by the send path for the local print. */
-	NSString *replyToMessageIdentifier = referenceMessage.messageTags[@"+draft/reply"];
+  /* The message this one answers (+draft/reply), either carried by
+   the message itself or set by the send path for the local print. */
+  NSString *replyToMessageIdentifier =
+      referenceMessage.messageTags[@"+draft/reply"];
 
-	if (replyToMessageIdentifier.length == 0) {
-		replyToMessageIdentifier = self.nextLineReplyToMessageIdentifier;
-	}
+  if (replyToMessageIdentifier.length == 0) {
+    replyToMessageIdentifier = self.nextLineReplyToMessageIdentifier;
+  }
 
-	self.nextLineReplyToMessageIdentifier = nil;
+  self.nextLineReplyToMessageIdentifier = nil;
 
-	if (replyToMessageIdentifier.length > 0) {
-		logLine.replyToMessageIdentifier = replyToMessageIdentifier;
-	}
+  if (replyToMessageIdentifier.length > 0) {
+    logLine.replyToMessageIdentifier = replyToMessageIdentifier;
+  }
 
-	logLine.lineType = lineType;
-	logLine.memberType = memberType;
+  logLine.lineType = lineType;
+  logLine.memberType = memberType;
 
-	logLine.isEncrypted = isEncrypted;
+  logLine.isEncrypted = isEncrypted;
 
-	logLine.excludeKeywords = excludeKeywords;
-	logLine.highlightKeywords = matchKeywords;
+  logLine.excludeKeywords = excludeKeywords;
+  logLine.highlightKeywords = matchKeywords;
 
-	logLine.rendererAttributes = rendererAttributes;
+  logLine.rendererAttributes = rendererAttributes;
 
-	logLine.nickname = nickname;
+  logLine.nickname = nickname;
 
-	logLine.messageBody = messageBody;
+  logLine.messageBody = messageBody;
 
-	/* Has the date changed */
-	TVCLogLine *lastLine = ((channel) ? channel.lastLine : self.lastLine);
+  /* Has the date changed */
+  TVCLogLine *lastLine = ((channel) ? channel.lastLine : self.lastLine);
 
-	if (lastLine == nil) {
-		logLine.isFirstForDay = YES;
-	} else {
-		logLine.isFirstForDay = ([receivedAt isInSameDayAsDate:lastLine.receivedAt] == NO);
-	}
+  if (lastLine == nil) {
+    logLine.isFirstForDay = YES;
+  } else {
+    logLine.isFirstForDay =
+        ([receivedAt isInSameDayAsDate:lastLine.receivedAt] == NO);
+  }
 
-	logLine.receivedAt = receivedAt;
+  logLine.receivedAt = receivedAt;
 
-	/* Print to server console if there is no channel */
-	if (channel == nil) {
-		[self printAndLog:logLine completionBlock:postPrintBlock];
+  /* Print to server console if there is no channel */
+  if (channel == nil) {
+    [self printAndLog:logLine completionBlock:postPrintBlock];
 
-		return;
-	}
+    return;
+  }
 
-	/* History from before the scrollback is collected and inserted
-	 above it once the batch is complete. See -flushChatHistoryPrependedLines. */
-	if (self.chatHistoryPrependChannel == channel) {
-		[self.chatHistoryPrependedLines addObject:[logLine copy]];
+  /* History from before the scrollback is collected and inserted
+   above it once the batch is complete. See -flushChatHistoryPrependedLines. */
+  if (self.chatHistoryPrependChannel == channel) {
+    [self.chatHistoryPrependedLines addObject:[logLine copy]];
 
-		return;
-	}
+    return;
+  }
 
-	/* Add scrollback marker to channel if conditions are met */
-	if ([TPCPreferences autoAddScrollbackMark]) {
-		if ([mainWindow() isItemVisible:channel] == NO || mainWindow().mainWindow == NO) {
-			if (channel.isUnread == NO && (lineType == TVCLogLineTypePrivateMessage ||
-										   lineType == TVCLogLineTypeAction || lineType == TVCLogLineTypeNotice)) {
-				[channel.viewController mark];
-			}
-		}
-	}
+  /* Add scrollback marker to channel if conditions are met */
+  if ([TPCPreferences autoAddScrollbackMark]) {
+    if ([mainWindow() isItemVisible:channel] == NO ||
+        mainWindow().mainWindow == NO) {
+      if (channel.isUnread == NO && (lineType == TVCLogLineTypePrivateMessage ||
+                                     lineType == TVCLogLineTypeAction ||
+                                     lineType == TVCLogLineTypeNotice)) {
+        [channel.viewController mark];
+      }
+    }
+  }
 
-	/* Print to channel */
-	[channel print:logLine completionBlock:postPrintBlock];
+  /* Print to channel */
+  [channel print:logLine completionBlock:postPrintBlock];
 
-	/* A line arriving in the channel the user is looking at is read. */
-	if (mainWindow().keyWindow && [mainWindow() isItemVisible:channel]) {
-		[self scheduleReadMarkerForChannel:channel date:receivedAt];
-	}
+  /* A line arriving in the channel the user is looking at is read. */
+  if (mainWindow().keyWindow && [mainWindow() isItemVisible:channel]) {
+    [self scheduleReadMarkerForChannel:channel date:receivedAt];
+  }
+}
+
+- (void)printReply:(IRCMessage *)message {
+  [self printReply:message inChannel:nil];
 }
 
 - (void)printReply:(IRCMessage *)message
-{
-	[self printReply:message inChannel:nil];
+         inChannel:(nullable IRCChannel *)channel {
+  [self printReply:message inChannel:channel withSequence:1];
 }
 
-- (void)printReply:(IRCMessage *)message inChannel:(nullable IRCChannel *)channel
-{
-	[self printReply:message inChannel:channel withSequence:1];
+- (void)printReply:(IRCMessage *)message
+         inChannel:(nullable IRCChannel *)channel
+      withSequence:(NSUInteger)sequence {
+  NSParameterAssert(message != nil);
+
+  [self print:[message sequence:sequence]
+              by:nil
+       inChannel:channel
+          asType:TVCLogLineTypeDebug
+         command:message.command
+      receivedAt:message.receivedAt];
 }
 
-- (void)printReply:(IRCMessage *)message inChannel:(nullable IRCChannel *)channel withSequence:(NSUInteger)sequence
-{
-	NSParameterAssert(message != nil);
-
-	[self print:[message sequence:sequence]
-				by:nil
-		 inChannel:channel
-			asType:TVCLogLineTypeDebug
-		   command:message.command
-		receivedAt:message.receivedAt];
-}
-
-- (void)printUnknownReply:(IRCMessage *)message
-{
-	[self printUnknownReply:message inChannel:nil];
-}
-
-- (void)printUnknownReply:(IRCMessage *)message inChannel:(nullable IRCChannel *)channel
-{
-	[self printUnknownReply:message inChannel:channel withSequence:1];
+- (void)printUnknownReply:(IRCMessage *)message {
+  [self printUnknownReply:message inChannel:nil];
 }
 
 - (void)printUnknownReply:(IRCMessage *)message
-				inChannel:(nullable IRCChannel *)channel
-			 withSequence:(NSUInteger)sequence
-{
-	NSParameterAssert(message != nil);
+                inChannel:(nullable IRCChannel *)channel {
+  [self printUnknownReply:message inChannel:channel withSequence:1];
+}
 
-	[self print:[message sequence:sequence]
-				by:nil
-		 inChannel:channel
-			asType:TVCLogLineTypeDebug
-		   command:message.command
-		receivedAt:message.receivedAt];
+- (void)printUnknownReply:(IRCMessage *)message
+                inChannel:(nullable IRCChannel *)channel
+             withSequence:(NSUInteger)sequence {
+  NSParameterAssert(message != nil);
+
+  [self print:[message sequence:sequence]
+              by:nil
+       inChannel:channel
+          asType:TVCLogLineTypeDebug
+         command:message.command
+      receivedAt:message.receivedAt];
+}
+
+- (void)printErrorReply:(IRCMessage *)message {
+  [self printErrorReply:message inChannel:nil];
 }
 
 - (void)printErrorReply:(IRCMessage *)message
-{
-	[self printErrorReply:message inChannel:nil];
+              inChannel:(nullable IRCChannel *)channel {
+  [self printErrorReply:message inChannel:channel withSequence:NSNotFound];
 }
 
-- (void)printErrorReply:(IRCMessage *)message inChannel:(nullable IRCChannel *)channel
-{
-	[self printErrorReply:message inChannel:channel withSequence:NSNotFound];
+- (void)printErrorReply:(IRCMessage *)message
+              inChannel:(nullable IRCChannel *)channel
+           withSequence:(NSUInteger)sequence {
+  NSParameterAssert(message != nil);
+
+  NSString *sequenceMessage = nil;
+
+  if (sequence == NSNotFound) {
+    sequenceMessage = message.sequence;
+  } else {
+    sequenceMessage = [message sequence:sequence];
+  }
+
+  NSString *errorMessage =
+      TXTLS(@"IRC[3yo-gw]", message.commandNumeric, sequenceMessage);
+
+  [self print:errorMessage
+             by:nil
+      inChannel:channel
+         asType:TVCLogLineTypeDebug
+        command:message.command];
 }
 
-- (void)printErrorReply:(IRCMessage *)message inChannel:(nullable IRCChannel *)channel withSequence:(NSUInteger)sequence
-{
-	NSParameterAssert(message != nil);
-
-	NSString *sequenceMessage = nil;
-
-	if (sequence == NSNotFound) {
-		sequenceMessage = message.sequence;
-	} else {
-		sequenceMessage = [message sequence:sequence];
-	}
-
-	NSString *errorMessage = TXTLS(@"IRC[3yo-gw]", message.commandNumeric, sequenceMessage);
-
-	[self print:errorMessage by:nil inChannel:channel asType:TVCLogLineTypeDebug command:message.command];
+- (void)printError:(NSString *)errorMessage asCommand:(NSString *)command {
+  [self print:errorMessage
+             by:nil
+      inChannel:nil
+         asType:TVCLogLineTypeDebug
+        command:command];
 }
 
-- (void)printError:(NSString *)errorMessage asCommand:(NSString *)command
-{
-	[self print:errorMessage by:nil inChannel:nil asType:TVCLogLineTypeDebug command:command];
-}
-
-- (void)printDebugInformationToConsole:(NSString *)message
-{
-	[self printDebugInformationToConsole:message asCommand:TVCLogLineDefaultCommandValue escapeMessage:YES];
-}
-
-- (void)printDebugInformationToConsole:(NSString *)message asCommand:(NSString *)command
-{
-	[self printDebugInformationToConsole:message asCommand:command escapeMessage:YES];
-}
-
-- (void)printDebugInformationToConsole:(NSString *)message escapeMessage:(BOOL)escapeMessage
-{
-	[self printDebugInformationToConsole:message asCommand:TVCLogLineDefaultCommandValue escapeMessage:escapeMessage];
+- (void)printDebugInformationToConsole:(NSString *)message {
+  [self printDebugInformationToConsole:message
+                             asCommand:TVCLogLineDefaultCommandValue
+                         escapeMessage:YES];
 }
 
 - (void)printDebugInformationToConsole:(NSString *)message
-							 asCommand:(NSString *)command
-						 escapeMessage:(BOOL)escapeMessage
-{
-	[self print:message by:nil inChannel:nil asType:TVCLogLineTypeDebug command:command escapeMessage:escapeMessage];
+                             asCommand:(NSString *)command {
+  [self printDebugInformationToConsole:message
+                             asCommand:command
+                         escapeMessage:YES];
+}
+
+- (void)printDebugInformationToConsole:(NSString *)message
+                         escapeMessage:(BOOL)escapeMessage {
+  [self printDebugInformationToConsole:message
+                             asCommand:TVCLogLineDefaultCommandValue
+                         escapeMessage:escapeMessage];
+}
+
+- (void)printDebugInformationToConsole:(NSString *)message
+                             asCommand:(NSString *)command
+                         escapeMessage:(BOOL)escapeMessage {
+  [self print:message
+                 by:nil
+          inChannel:nil
+             asType:TVCLogLineTypeDebug
+            command:command
+      escapeMessage:escapeMessage];
+}
+
+- (void)printDebugInformation:(NSString *)message {
+  [self printDebugInformation:message
+                    asCommand:TVCLogLineDefaultCommandValue
+                escapeMessage:YES];
+}
+
+- (void)printDebugInformationMultiline:(NSString *)message {
+  [message enumerateSplitOnNewLinesWithBlock:^(NSString *sequence, BOOL *stop) {
+    [self printDebugInformation:sequence];
+  }];
 }
 
 - (void)printDebugInformation:(NSString *)message
-{
-	[self printDebugInformation:message asCommand:TVCLogLineDefaultCommandValue escapeMessage:YES];
-}
-
-- (void)printDebugInformationMultiline:(NSString *)message
-{
-	[message enumerateSplitOnNewLinesWithBlock:^(NSString *sequence, BOOL *stop) {
-		[self printDebugInformation:sequence];
-	}];
-}
-
-- (void)printDebugInformation:(NSString *)message asCommand:(NSString *)command
-{
-	[self printDebugInformation:message asCommand:command escapeMessage:YES];
-}
-
-- (void)printDebugInformation:(NSString *)message escapeMessage:(BOOL)escapeMessage
-{
-	[self printDebugInformation:message asCommand:TVCLogLineDefaultCommandValue escapeMessage:escapeMessage];
-}
-
-- (void)printDebugInformation:(NSString *)message asCommand:(NSString *)command escapeMessage:(BOOL)escapeMessage
-{
-	IRCChannel *channel = [mainWindow() selectedChannelOn:self];
-
-	[self printDebugInformation:message inChannel:channel asCommand:TVCLogLineDefaultCommandValue escapeMessage:YES];
-}
-
-- (void)printDebugInformation:(NSString *)message inChannel:(nullable IRCChannel *)channel
-{
-	[self printDebugInformation:message inChannel:channel asCommand:TVCLogLineDefaultCommandValue escapeMessage:YES];
-}
-
-- (void)printDebugInformation:(NSString *)message inChannel:(nullable IRCChannel *)channel asCommand:(NSString *)command
-{
-	[self print:message by:nil inChannel:channel asType:TVCLogLineTypeDebug command:command escapeMessage:YES];
+                    asCommand:(NSString *)command {
+  [self printDebugInformation:message asCommand:command escapeMessage:YES];
 }
 
 - (void)printDebugInformation:(NSString *)message
-					inChannel:(nullable IRCChannel *)channel
-				escapeMessage:(BOOL)escapeMessage
-{
-	[self printDebugInformation:message
-					  inChannel:channel
-					  asCommand:TVCLogLineDefaultCommandValue
-				  escapeMessage:escapeMessage];
+                escapeMessage:(BOOL)escapeMessage {
+  [self printDebugInformation:message
+                    asCommand:TVCLogLineDefaultCommandValue
+                escapeMessage:escapeMessage];
 }
 
 - (void)printDebugInformation:(NSString *)message
-					inChannel:(nullable IRCChannel *)channel
-					asCommand:(NSString *)command
-				escapeMessage:(BOOL)escapeMessage
-{
-	[self print:message
-				   by:nil
-			inChannel:channel
-			   asType:TVCLogLineTypeDebug
-			  command:command
-		escapeMessage:escapeMessage];
+                    asCommand:(NSString *)command
+                escapeMessage:(BOOL)escapeMessage {
+  IRCChannel *channel = [mainWindow() selectedChannelOn:self];
+
+  [self printDebugInformation:message
+                    inChannel:channel
+                    asCommand:TVCLogLineDefaultCommandValue
+                escapeMessage:YES];
+}
+
+- (void)printDebugInformation:(NSString *)message
+                    inChannel:(nullable IRCChannel *)channel {
+  [self printDebugInformation:message
+                    inChannel:channel
+                    asCommand:TVCLogLineDefaultCommandValue
+                escapeMessage:YES];
+}
+
+- (void)printDebugInformation:(NSString *)message
+                    inChannel:(nullable IRCChannel *)channel
+                    asCommand:(NSString *)command {
+  [self print:message
+                 by:nil
+          inChannel:channel
+             asType:TVCLogLineTypeDebug
+            command:command
+      escapeMessage:YES];
+}
+
+- (void)printDebugInformation:(NSString *)message
+                    inChannel:(nullable IRCChannel *)channel
+                escapeMessage:(BOOL)escapeMessage {
+  [self printDebugInformation:message
+                    inChannel:channel
+                    asCommand:TVCLogLineDefaultCommandValue
+                escapeMessage:escapeMessage];
+}
+
+- (void)printDebugInformation:(NSString *)message
+                    inChannel:(nullable IRCChannel *)channel
+                    asCommand:(NSString *)command
+                escapeMessage:(BOOL)escapeMessage {
+  [self print:message
+                 by:nil
+          inChannel:channel
+             asType:TVCLogLineTypeDebug
+            command:command
+      escapeMessage:escapeMessage];
+}
+
+- (void)printDebugInformationInAllViews:(NSString *)message {
+  [self printDebugInformationInAllViews:message
+                              asCommand:TVCLogLineDefaultCommandValue
+                          escapeMessage:YES];
 }
 
 - (void)printDebugInformationInAllViews:(NSString *)message
-{
-	[self printDebugInformationInAllViews:message asCommand:TVCLogLineDefaultCommandValue escapeMessage:YES];
-}
-
-- (void)printDebugInformationInAllViews:(NSString *)message asCommand:(NSString *)command
-{
-	[self printDebugInformationInAllViews:message asCommand:command escapeMessage:YES];
-}
-
-- (void)printDebugInformationInAllViews:(NSString *)message escapeMessage:(BOOL)escapeMessage
-{
-	[self printDebugInformationInAllViews:message asCommand:TVCLogLineDefaultCommandValue escapeMessage:escapeMessage];
+                              asCommand:(NSString *)command {
+  [self printDebugInformationInAllViews:message
+                              asCommand:command
+                          escapeMessage:YES];
 }
 
 - (void)printDebugInformationInAllViews:(NSString *)message
-							  asCommand:(NSString *)command
-						  escapeMessage:(BOOL)escapeMessage
-{
-	for (IRCChannel *channel in self.channelList) {
-		[self printDebugInformation:message inChannel:channel asCommand:command escapeMessage:escapeMessage];
-	}
+                          escapeMessage:(BOOL)escapeMessage {
+  [self printDebugInformationInAllViews:message
+                              asCommand:TVCLogLineDefaultCommandValue
+                          escapeMessage:escapeMessage];
+}
 
-	[self printDebugInformationToConsole:message asCommand:command escapeMessage:escapeMessage];
+- (void)printDebugInformationInAllViews:(NSString *)message
+                              asCommand:(NSString *)command
+                          escapeMessage:(BOOL)escapeMessage {
+  for (IRCChannel *channel in self.channelList) {
+    [self printDebugInformation:message
+                      inChannel:channel
+                      asCommand:command
+                  escapeMessage:escapeMessage];
+  }
+
+  [self printDebugInformationToConsole:message
+                             asCommand:command
+                         escapeMessage:escapeMessage];
 }
 
 #pragma mark -
 #pragma mark IRCConnection Delegate
 
-- (void)resetAllPropertyValues
-{
-	// Some properties are purposely excluded from this method
-	// because their state must be kept or they are reset elsewhere
+- (void)resetAllPropertyValues {
+  // Some properties are purposely excluded from this method
+  // because their state must be kept or they are reset elsewhere
 
-	[self.batchMessages dequeueEntries];
+  [self.batchMessages dequeueEntries];
 
-	[self.typingTracker removeAll];
-	[self.typingStateSent removeAllObjects];
-	[self.typingActiveSentAt removeAllObjects];
+  [self.typingTracker removeAll];
+  [self.typingStateSent removeAllObjects];
+  [self.typingActiveSentAt removeAllObjects];
 
-	self.nextLineReplyToMessageIdentifier = nil;
-	self.nextMessageReplyIdentifier = nil;
+  self.nextLineReplyToMessageIdentifier = nil;
+  self.nextMessageReplyIdentifier = nil;
 
-	self.connectDelay = 0;
+  self.connectDelay = 0;
 
-	self.invokingISONCommandForFirstTime = NO;
+  self.invokingISONCommandForFirstTime = NO;
 
-	self.isAutojoining = NO;
-	self.isAutojoined = NO;
+  self.isAutojoining = NO;
+  self.isAutojoined = NO;
 
-	self.autojoinDelayedWarningCount = 0;
+  self.autojoinDelayedWarningCount = 0;
 
-	self.isConnected = NO;
-	self.isConnecting = NO;
-	self.isLoggedIn = NO;
-	self.isQuitting = NO;
-	self.isDisconnecting = NO;
+  self.isConnected = NO;
+  self.isConnecting = NO;
+  self.isLoggedIn = NO;
+  self.isQuitting = NO;
+  self.isDisconnecting = NO;
 
-	self.inWhoisResponse = NO;
-	self.inWhowasResponse = NO;
+  self.inWhoisResponse = NO;
+  self.inWhowasResponse = NO;
 
-	self.isWaitingForNickServ = NO;
-	self.serverHasNickServ = NO;
-	self.userIsIdentifiedWithNickServ = NO;
+  self.isWaitingForNickServ = NO;
+  self.serverHasNickServ = NO;
+  self.userIsIdentifiedWithNickServ = NO;
 
-	self.userIsAway = NO;
-	self.userIsIRCop = NO;
+  self.userIsAway = NO;
+  self.userIsIRCop = NO;
 
-	self.isConnectedToZNC = NO;
-	self.zncBouncerIsSendingCertificateInfo = NO;
-	self.zncBouncerCertificateChainDataMutable = nil;
-	self.zncBouncerIsPlayingBackHistory = NO;
+  self.isConnectedToZNC = NO;
+  self.zncBouncerIsSendingCertificateInfo = NO;
+  self.zncBouncerCertificateChainDataMutable = nil;
+  self.zncBouncerIsPlayingBackHistory = NO;
 
-	[self resetChatHistoryState];
+  [self resetChatHistoryState];
 
-	self.reconnectEnabled = NO;
+  self.reconnectEnabled = NO;
 
-	self.timeoutWarningShownToUser = NO;
+  self.timeoutWarningShownToUser = NO;
 
-	self.lastWhoRequestChannelListIndex = 0;
+  self.lastWhoRequestChannelListIndex = 0;
 
-	self.server = nil;
+  self.server = nil;
 
-	self.userHostmask = nil;
-	self->_userNickname = nil; // Getter falls back to config nickname when unset
+  self.userHostmask = nil;
+  self->_userNickname = nil; // Getter falls back to config nickname when unset
 
-	self.tryingNicknameNumber = 0;
-	self.tryingNicknameSentNickname = nil;
+  self.tryingNicknameNumber = 0;
+  self.tryingNicknameSentNickname = nil;
 
-	self.preAwayUserNickname = nil;
+  self.preAwayUserNickname = nil;
 
-	self.lastMessageReceived = 0;
+  self.lastMessageReceived = 0;
 
-	[self resetCapabilityNegotiation];
+  [self resetCapabilityNegotiation];
 
-	os_unfair_lock_lock(&self->_userListLock);
+  os_unfair_lock_lock(&self->_userListLock);
 
-	[self.userListPrivate removeAllObjects];
+  [self.userListPrivate removeAllObjects];
 
-	os_unfair_lock_unlock(&self->_userListLock);
+  os_unfair_lock_unlock(&self->_userListLock);
 }
 
-- (void)changeStateOff
-{
-	[self changeStateOffWithError:nil];
+- (void)changeStateOff {
+  [self changeStateOffWithError:nil];
 }
 
-- (void)changeStateOffWithError:(nullable NSError *)disconnectError
-{
-	if (self.isConnecting == NO && self.isConnected == NO) {
-		return;
-	}
+- (void)changeStateOffWithError:(nullable NSError *)disconnectError {
+  if (self.isConnecting == NO && self.isConnected == NO) {
+    return;
+  }
 
-	BOOL isTerminating = self.isTerminating;
+  BOOL isTerminating = self.isTerminating;
 
-	self.socket = nil;
+  self.socket = nil;
 
-	[self removeTimedCommands];
+  [self removeTimedCommands];
 
-	[self removeRequestedCommands];
+  [self removeRequestedCommands];
 
-	[self stopAutojoinTimer];
-	[self stopAutojoinNextJoinTimer];
-	[self stopAutojoinDelayedWarningTimer];
-	[self stopISONTimer];
-	[self stopPongTimer];
-	[self stopRetryTimer];
+  [self stopAutojoinTimer];
+  [self stopAutojoinNextJoinTimer];
+  [self stopAutojoinDelayedWarningTimer];
+  [self stopISONTimer];
+  [self stopPongTimer];
+  [self stopRetryTimer];
 
-	[self cancelPerformRequests];
+  [self cancelPerformRequests];
 
-	if (isTerminating == NO && self.reconnectEnabled) {
-		[self startReconnectTimer];
-	}
+  if (isTerminating == NO && self.reconnectEnabled) {
+    [self startReconnectTimer];
+  }
 
-	[self.supportInfo reset];
+  [self.supportInfo reset];
 
-	[self clearAddressBookCache];
+  [self clearAddressBookCache];
 
-	[self clearTrackedUsers];
+  [self clearTrackedUsers];
 
-	if (isTerminating == NO) {
-		/* -prepareForApplicationTermination in TVCLogController will cancel
-		 all operations for this client for us during termination. */
-		[[TXSharedApplication sharedPrintingQueue] cancelOperationsForClient:self];
+  if (isTerminating == NO) {
+    /* -prepareForApplicationTermination in TVCLogController will cancel
+     all operations for this client for us during termination. */
+    [[TXSharedApplication sharedPrintingQueue] cancelOperationsForClient:self];
 
-		IRCClientDisconnectMode disconnectType = self.disconnectType;
+    IRCClientDisconnectMode disconnectType = self.disconnectType;
 
-		if (disconnectError) {
-			if (disconnectError.code == IRCConnectionErrorCodeBadCertificate &&
-				[disconnectError.domain isEqualToString:IRCConnectionErrorDomain]) {
-				disconnectType = IRCClientDisconnectModeBadCertificate;
-			}
+    if (disconnectError) {
+      if (disconnectError.code == IRCConnectionErrorCodeBadCertificate &&
+          [disconnectError.domain isEqualToString:IRCConnectionErrorDomain]) {
+        disconnectType = IRCClientDisconnectModeBadCertificate;
+      }
 
-			[self printError:disconnectError.localizedDescription asCommand:TVCLogLineDefaultCommandValue];
-		}
+      [self printError:disconnectError.localizedDescription
+             asCommand:TVCLogLineDefaultCommandValue];
+    }
 
-		NSString *disconnectMessage = nil;
+    NSString *disconnectMessage = nil;
 
-		switch (disconnectType) {
-		case IRCClientDisconnectModeNormal: {
-			disconnectMessage = TXTLS(@"IRC[9b4-10]");
+    switch (disconnectType) {
+    case IRCClientDisconnectModeNormal: {
+      disconnectMessage = TXTLS(@"IRC[9b4-10]");
 
-			break;
-		}
-		case IRCClientDisconnectModeComputerSleep: {
-			disconnectMessage = TXTLS(@"IRC[drg-b7]");
+      break;
+    }
+    case IRCClientDisconnectModeComputerSleep: {
+      disconnectMessage = TXTLS(@"IRC[drg-b7]");
 
-			break;
-		}
-		case IRCClientDisconnectModeBadCertificate: {
-			disconnectMessage = TXTLS(@"IRC[zro-bg]");
+      break;
+    }
+    case IRCClientDisconnectModeBadCertificate: {
+      disconnectMessage = TXTLS(@"IRC[zro-bg]");
 
-			break;
-		}
-		case IRCClientDisconnectModeServerRedirect: {
-			disconnectMessage = TXTLS(@"IRC[wcl-po]");
+      break;
+    }
+    case IRCClientDisconnectModeServerRedirect: {
+      disconnectMessage = TXTLS(@"IRC[wcl-po]");
 
-			break;
-		}
-		case IRCClientDisconnectModeReachabilityChange: {
-			disconnectMessage = TXTLS(@"IRC[isx-fi]");
+      break;
+    }
+    case IRCClientDisconnectModeReachabilityChange: {
+      disconnectMessage = TXTLS(@"IRC[isx-fi]");
 
-			break;
-		}
-		} // switch()
+      break;
+    }
+    } // switch()
 
-		for (IRCChannel *channel in self.channelList) {
-			if (channel.isActive == NO) {
-				channel.errorOnLastJoinAttempt = NO;
-			} else {
-				[channel deactivate];
+    for (IRCChannel *channel in self.channelList) {
+      if (channel.isActive == NO) {
+        channel.errorOnLastJoinAttempt = NO;
+      } else {
+        [channel deactivate];
 
-				if (channel.isUtility) {
-					continue;
-				}
+        if (channel.isUtility) {
+          continue;
+        }
 
-				[self printDebugInformation:disconnectMessage inChannel:channel];
-			}
-		}
+        [self printDebugInformation:disconnectMessage inChannel:channel];
+      }
+    }
 
-		[self printDebugInformationToConsole:disconnectMessage];
+    [self printDebugInformationToConsole:disconnectMessage];
 
-		[self.viewController mark];
+    [self.viewController mark];
 
-		if (self.isConnected) {
-			[self notifyEvent:TXNotificationTypeDisconnect lineType:TVCLogLineTypeDebug];
-		}
+    if (self.isConnected) {
+      [self notifyEvent:TXNotificationTypeDisconnect
+               lineType:TVCLogLineTypeDebug];
+    }
 
-		[self postEventToViewController:@"serverDisconnected"];
-	}
+    [self postEventToViewController:@"serverDisconnected"];
+  }
 
-	[self endLoggingSessions];
+  [self endLoggingSessions];
 
-	[self resetAllPropertyValues];
+  [self resetAllPropertyValues];
 
-	if (isTerminating == NO) {
-		[mainWindow() reloadTreeGroup:self];
+  if (isTerminating == NO) {
+    [mainWindow() reloadTreeGroup:self];
 
-		[mainWindow() updateTitleFor:self];
-	}
+    [mainWindow() updateTitleFor:self];
+  }
 }
 
-- (void)ircConnection:(IRCConnection *)sender willConnectToProxy:(NSString *)proxyHost port:(uint16_t)proxyPort
-{
-	NSParameterAssert(sender == self.socket);
+- (void)ircConnection:(IRCConnection *)sender
+    willConnectToProxy:(NSString *)proxyHost
+                  port:(uint16_t)proxyPort {
+  NSParameterAssert(sender == self.socket);
 
-	IRCConnectionProxyType proxyType = self.socket.config.proxyType;
+  IRCConnectionProxyType proxyType = self.socket.config.proxyType;
 
-	if (proxyType == IRCConnectionProxyTypeSocks5 || proxyType == IRCConnectionProxyTypeTor) {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[ni5-cy]", proxyHost, proxyPort)];
-	} else if (proxyType == IRCConnectionProxyTypeHTTP) {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[oby-av]", proxyHost, proxyPort)];
-	}
+  if (proxyType == IRCConnectionProxyTypeSocks5 ||
+      proxyType == IRCConnectionProxyTypeTor) {
+    [self printDebugInformationToConsole:TXTLS(@"IRC[ni5-cy]", proxyHost,
+                                               proxyPort)];
+  } else if (proxyType == IRCConnectionProxyTypeHTTP) {
+    [self printDebugInformationToConsole:TXTLS(@"IRC[oby-av]", proxyHost,
+                                               proxyPort)];
+  }
 }
 
 - (void)ircConnectionDidSecureConnection:(IRCConnection *)sender
-						withProtocolType:(tls_protocol_version_t)protocolType
-							 cipherSuite:(tls_ciphersuite_t)cipherSuite
-{
-	NSParameterAssert(sender == self.socket);
+                        withProtocolType:(tls_protocol_version_t)protocolType
+                             cipherSuite:(tls_ciphersuite_t)cipherSuite {
+  NSParameterAssert(sender == self.socket);
 
-	/* A secure connection was reached; a later plaintext bounce may
-	 upgrade again. */
-	self.performedSTSUpgrade = NO;
+  /* A secure connection was reached; a later plaintext bounce may
+   upgrade again. */
+  self.performedSTSUpgrade = NO;
 
-	NSString *protocolDescription = [RCMSecureTransport descriptionForProtocolType:protocolType];
+  NSString *protocolDescription =
+      [RCMSecureTransport descriptionForProtocolType:protocolType];
 
-	NSString *cipherDescription = [RCMSecureTransport descriptionForCipherSuite:cipherSuite];
+  NSString *cipherDescription =
+      [RCMSecureTransport descriptionForCipherSuite:cipherSuite];
 
-	if (protocolDescription == nil || cipherDescription == nil) {
-		return;
-	}
+  if (protocolDescription == nil || cipherDescription == nil) {
+    return;
+  }
 
-	NSString *description = nil;
+  NSString *description = nil;
 
-	if ([RCMSecureTransport isCipherSuiteDeprecated:cipherSuite] == NO) {
-		description = TXTLS(@"IRC[uyz-4r]", protocolDescription, cipherDescription);
-	} else {
-		description = TXTLS(@"IRC[xwj-xy]", protocolDescription, cipherDescription);
-	}
+  if ([RCMSecureTransport isCipherSuiteDeprecated:cipherSuite] == NO) {
+    description = TXTLS(@"IRC[uyz-4r]", protocolDescription, cipherDescription);
+  } else {
+    description = TXTLS(@"IRC[xwj-xy]", protocolDescription, cipherDescription);
+  }
 
-	[self printDebugInformationToConsole:TXTLS(@"IRC[ex4-f8]", description)];
+  [self printDebugInformationToConsole:TXTLS(@"IRC[ex4-f8]", description)];
 }
 
-- (void)ircConnectionDidConnect:(IRCConnection *)sender
-{
-	NSParameterAssert(sender == self.socket);
+- (void)ircConnectionDidConnect:(IRCConnection *)sender {
+  NSParameterAssert(sender == self.socket);
 
-	if (self.isTerminating) {
-		return;
-	}
+  if (self.isTerminating) {
+    return;
+  }
 
-	[self startRetryTimer];
+  [self startRetryTimer];
 
-	/* If the address we are connecting to is not an IP address,
-	 then we report back the actual IP address it was resolved to. */
-	NSString *connectedAddress = self.socket.connectedAddress;
+  /* If the address we are connecting to is not an IP address,
+   then we report back the actual IP address it was resolved to. */
+  NSString *connectedAddress = self.socket.connectedAddress;
 
-	if (connectedAddress == nil || self.socket.config.serverAddress.IPAddress) {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[4vt-ow]")];
-	} else {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[l21-p7]", connectedAddress)];
-	}
+  if (connectedAddress == nil || self.socket.config.serverAddress.IPAddress) {
+    [self printDebugInformationToConsole:TXTLS(@"IRC[4vt-ow]")];
+  } else {
+    [self
+        printDebugInformationToConsole:TXTLS(@"IRC[l21-p7]", connectedAddress)];
+  }
 
-	self.isConnecting = NO;
-	self.isConnected = YES;
+  self.isConnecting = NO;
+  self.isConnected = YES;
 
-	self.userNickname = self.config.nickname;
+  self.userNickname = self.config.nickname;
 
-	self.tryingNicknameSentNickname = self.config.nickname;
+  self.tryingNicknameSentNickname = self.config.nickname;
 
-	[mainWindow() updateTitleFor:self];
+  [mainWindow() updateTitleFor:self];
 
-	[RZNotificationCenter() postNotificationName:IRCClientDidConnectNotification object:self];
+  [RZNotificationCenter() postNotificationName:IRCClientDidConnectNotification
+                                        object:self];
 
-	NSString *username = self.config.username;
-	NSString *realName = self.config.realName;
+  NSString *username = self.config.username;
+  NSString *realName = self.config.realName;
 
-	NSString *modeSymbols = @"0";
+  NSString *modeSymbols = @"0";
 
-	NSString *serverPassword = self.server.serverPassword;
+  NSString *serverPassword = self.server.serverPassword;
 
-	if (self.config.setInvisibleModeOnConnect) {
-		modeSymbols = @"8";
-	}
+  if (self.config.setInvisibleModeOnConnect) {
+    modeSymbols = @"8";
+  }
 
-	if (username.length == 0) {
-		username = self.config.nickname;
-	}
+  if (username.length == 0) {
+    username = self.config.nickname;
+  }
 
-	if (realName.length == 0) {
-		realName = self.config.nickname;
-	}
+  if (realName.length == 0) {
+    realName = self.config.nickname;
+  }
 
-	[self sendCapability:@"LS" data:@"302"];
+  [self sendCapability:@"LS" data:@"302"];
 
-	if (serverPassword) {
-		[self sendPassword:serverPassword];
-	}
+  if (serverPassword) {
+    [self sendPassword:serverPassword];
+  }
 
-	[self changeNickname:self.tryingNicknameSentNickname];
+  [self changeNickname:self.tryingNicknameSentNickname];
 
-	[self send:@"USER", username, modeSymbols, @"*", realName, nil];
+  [self send:@"USER", username, modeSymbols, @"*", realName, nil];
 }
 
-- (void)ircConnection:(IRCConnection *)sender didDisconnectWithError:(nullable NSError *)disconnectError
-{
-	NSParameterAssert(sender == self.socket);
+- (void)ircConnection:(IRCConnection *)sender
+    didDisconnectWithError:(nullable NSError *)disconnectError {
+  NSParameterAssert(sender == self.socket);
 
-	//	if (self.isTerminating) {
-	//		return;
-	//	}
+  //	if (self.isTerminating) {
+  //		return;
+  //	}
 
-	[self changeStateOffWithError:disconnectError];
+  [self changeStateOffWithError:disconnectError];
 
-	if (self.disconnectCallback) {
-		self.disconnectCallback();
-		self.disconnectCallback = nil;
-	}
+  if (self.disconnectCallback) {
+    self.disconnectCallback();
+    self.disconnectCallback = nil;
+  }
 
-	[RZNotificationCenter() postNotificationName:IRCClientDidDisconnectNotification object:self];
+  [RZNotificationCenter()
+      postNotificationName:IRCClientDidDisconnectNotification
+                    object:self];
 }
 
-- (void)ircConnectionDidCloseReadStream:(IRCConnection *)sender
-{
-	NSParameterAssert(sender == self.socket);
+- (void)ircConnectionDidCloseReadStream:(IRCConnection *)sender {
+  NSParameterAssert(sender == self.socket);
 
-	if (self.isTerminating) {
-		return;
-	}
+  if (self.isTerminating) {
+    return;
+  }
 
-	if (self.isDisconnecting) {
-		return;
-	}
+  if (self.isDisconnecting) {
+    return;
+  }
 
-	if (self.isQuitting) {
-		[self disconnect];
+  if (self.isQuitting) {
+    [self disconnect];
 
-		return;
-	}
+    return;
+  }
 
-	[self printDebugInformationToConsole:TXTLS(@"IRC[5h5-sl]")];
+  [self printDebugInformationToConsole:TXTLS(@"IRC[5h5-sl]")];
 }
 
 /* This delegate call is not invoked on the main thread. Everything
@@ -6476,2244 +6700,2331 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
  queue, the client state the handlers mutate) is owned by the main
  thread, so the work is performed there. The XPC queue is serial and
  the hop is synchronous, which preserves line ordering. */
-- (void)ircConnection:(IRCConnection *)sender didReceiveData:(NSString *)data
-{
-	NSParameterAssert(sender == self.socket);
+- (void)ircConnection:(IRCConnection *)sender didReceiveData:(NSString *)data {
+  NSParameterAssert(sender == self.socket);
 
-	if (data.length == 0) {
-		return;
-	}
+  if (data.length == 0) {
+    return;
+  }
 
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[self _ircConnectionDidReceiveData:data];
-	});
+  XRPerformBlockSynchronouslyOnMainQueue(^{
+    [self _ircConnectionDidReceiveData:data];
+  });
 }
 
-- (void)_ircConnectionDidReceiveData:(NSString *)data
-{
-	if (self.isConnected == NO || self.isTerminating) {
-		return;
-	}
+- (void)_ircConnectionDidReceiveData:(NSString *)data {
+  if (self.isConnected == NO || self.isTerminating) {
+    return;
+  }
 
-	self.lastMessageReceived = [NSDate timeIntervalSince1970];
+  self.lastMessageReceived = [NSDate timeIntervalSince1970];
 
-	[worldController() noteMessageReceivedWithLength:data.length];
+  [worldController() noteMessageReceivedWithLength:data.length];
 
-	[self rawDataLogIncomingTraffic:data];
+  [self rawDataLogIncomingTraffic:data];
 
-	if ([TPCPreferences removeAllFormatting]) {
-		data = data.stripIRCEffects;
-	}
+  if ([TPCPreferences removeAllFormatting]) {
+    data = data.stripIRCEffects;
+  }
 
-	IRCMessage *message = [[IRCMessage alloc] initWithLine:data onClient:self];
+  IRCMessage *message = [[IRCMessage alloc] initWithLine:data onClient:self];
 
-	if (message == nil) {
-		return;
-	}
+  if (message == nil) {
+    return;
+  }
 
-	message = [THOPluginDispatcher interceptServerInput:message for:self];
+        message = [THOPluginDispatcher interceptServerInput:message for:self];
 
-	if (message == nil) {
-		return;
-	}
+        if (message == nil) {
+          return;
+        }
 
-	if ([self filterBatchCommandIncomingData:message]) {
-		return;
-	}
+        if ([self filterBatchCommandIncomingData:message]) {
+          return;
+        }
 
-	[self processIncomingMessage:message];
+        [self processIncomingMessage:message];
 }
 
-- (void)processIncomingMessageAttributes:(IRCMessage *)message
-{
-	NSParameterAssert(message != nil);
+- (void)processIncomingMessageAttributes:(IRCMessage *)message {
+  NSParameterAssert(message != nil);
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	if (message.isHistoric == NO) {
-		return;
-	}
+  if (message.isHistoric == NO) {
+    return;
+  }
 
-	NSTimeInterval receivedTime = message.receivedAt.timeIntervalSince1970;
+  NSTimeInterval receivedTime = message.receivedAt.timeIntervalSince1970;
 
-	if (receivedTime <= self.lastMessageServerTime) {
-		return;
-	}
+  if (receivedTime <= self.lastMessageServerTime) {
+    return;
+  }
 
-	self.lastMessageServerTime = receivedTime;
+  self.lastMessageServerTime = receivedTime;
 
-	/* If the playback module is in use, then all messages are
-	 set as historic, so we set any lines above our current 
-	 reference date as not historic to avoid collisions. */
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPlayback] && [self batchMessageOfType:@"chathistory"
-																					containingMessage:message] == nil) {
-		[message markAsNotHistoric];
-	}
+  /* If the playback module is in use, then all messages are
+   set as historic, so we set any lines above our current
+   reference date as not historic to avoid collisions. */
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPlayback] &&
+      [self batchMessageOfType:@"chathistory"
+             containingMessage:message] == nil) {
+    [message markAsNotHistoric];
+  }
 }
 
-- (void)processIncomingMessage:(IRCMessage *)message
-{
-	NSParameterAssert(message != nil);
+- (void)processIncomingMessage:(IRCMessage *)message {
+  NSParameterAssert(message != nil);
 
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[self _processIncomingMessage:message];
-	});
+  XRPerformBlockSynchronouslyOnMainQueue(^{
+    [self _processIncomingMessage:message];
+  });
 }
 
-- (void)_processIncomingMessage:(IRCMessage *)message
-{
-	NSParameterAssert(message != nil);
+- (void)_processIncomingMessage:(IRCMessage *)message {
+  NSParameterAssert(message != nil);
 
-	[self processIncomingMessageAttributes:message];
+  [self processIncomingMessageAttributes:message];
 
-	/* An echo, ACK or FAIL for one of our own labeled messages resolves
-	 the pending line and is not processed as a fresh message. */
-	if ([self resolveLabeledResponseForMessage:message]) {
-		[self processBundlesServerMessage:message];
+  /* An echo, ACK or FAIL for one of our own labeled messages resolves
+   the pending line and is not processed as a fresh message. */
+  if ([self resolveLabeledResponseForMessage:message]) {
+    [self processBundlesServerMessage:message];
 
-		return;
-	}
+    return;
+  }
 
-	if (message.commandNumeric > 0) {
-		[self receiveNumericReply:message];
-	} else {
-		NSUInteger commandNumeric = [IRCCommandIndex indexOfRemoteCommand:message.command];
+  if (message.commandNumeric > 0) {
+    [self receiveNumericReply:message];
+  } else {
+    NSUInteger commandNumeric =
+        [IRCCommandIndex indexOfRemoteCommand:message.command];
 
-		switch (commandNumeric) {
-		case IRCRemoteCommandNotice:  // Command: NOTICE
-		case IRCRemoteCommandPrivmsg: // Command: PRIVMSG
-		{
-			[self receivePrivmsgAndNotice:message];
+    switch (commandNumeric) {
+    case IRCRemoteCommandNotice:  // Command: NOTICE
+    case IRCRemoteCommandPrivmsg: // Command: PRIVMSG
+    {
+      [self receivePrivmsgAndNotice:message];
 
-			break;
-		}
-		case IRCRemoteCommandError: // Command: ERROR
-		{
-			[self receiveError:message];
+      break;
+    }
+    case IRCRemoteCommandError: // Command: ERROR
+    {
+      [self receiveError:message];
 
-			break;
-		}
-		case IRCRemoteCommandInvite: // Command: INVITE
-		{
-			[self receiveInvite:message];
+      break;
+    }
+    case IRCRemoteCommandInvite: // Command: INVITE
+    {
+      [self receiveInvite:message];
 
-			break;
-		}
-		case IRCRemoteCommandJoin: // Command: JOIN
-		{
-			[self receiveJoin:message];
+      break;
+    }
+    case IRCRemoteCommandJoin: // Command: JOIN
+    {
+      [self receiveJoin:message];
 
-			break;
-		}
-		case IRCRemoteCommandKick: // Command: KICK
-		{
-			[self receiveKick:message];
+      break;
+    }
+    case IRCRemoteCommandKick: // Command: KICK
+    {
+      [self receiveKick:message];
 
-			break;
-		}
-		case IRCRemoteCommandKill: // Command: KILL
-		{
-			[self receiveKill:message];
+      break;
+    }
+    case IRCRemoteCommandKill: // Command: KILL
+    {
+      [self receiveKill:message];
 
-			break;
-		}
-		case IRCRemoteCommandMode: // Command: MODE
-		{
-			[self receiveMode:message];
+      break;
+    }
+    case IRCRemoteCommandMode: // Command: MODE
+    {
+      [self receiveMode:message];
 
-			break;
-		}
-		case IRCRemoteCommandNick: // Command: NICK
-		{
-			[self receiveNick:message];
+      break;
+    }
+    case IRCRemoteCommandNick: // Command: NICK
+    {
+      [self receiveNick:message];
 
-			break;
-		}
-		case IRCRemoteCommandPart: // Command: PART
-		{
-			[self receivePart:message];
+      break;
+    }
+    case IRCRemoteCommandPart: // Command: PART
+    {
+      [self receivePart:message];
 
-			break;
-		}
-		case IRCRemoteCommandPing: // Command: PING
-		{
-			[self receivePing:message];
+      break;
+    }
+    case IRCRemoteCommandPing: // Command: PING
+    {
+      [self receivePing:message];
 
-			break;
-		}
-		case IRCRemoteCommandQuit: // Command: QUIT
-		{
-			[self receiveQuit:message];
+      break;
+    }
+    case IRCRemoteCommandQuit: // Command: QUIT
+    {
+      [self receiveQuit:message];
 
-			break;
-		}
-		case IRCRemoteCommandTopic: // Command: TOPIC
-		{
-			[self receiveTopic:message];
+      break;
+    }
+    case IRCRemoteCommandTopic: // Command: TOPIC
+    {
+      [self receiveTopic:message];
 
-			break;
-		}
-		case IRCRemoteCommandWallops: // Command: WALLOPS
-		{
-			[self receiveWallops:message];
+      break;
+    }
+    case IRCRemoteCommandWallops: // Command: WALLOPS
+    {
+      [self receiveWallops:message];
 
-			break;
-		}
-		case IRCRemoteCommandAuthenticate: // Command: AUTHENTICATE
-		case IRCRemoteCommandCap:		   // Command: CAP
-		{
-			[self updateConnectedToZNCPropertyWithMessage:message];
+      break;
+    }
+    case IRCRemoteCommandAuthenticate: // Command: AUTHENTICATE
+    case IRCRemoteCommandCap:          // Command: CAP
+    {
+      [self updateConnectedToZNCPropertyWithMessage:message];
 
-			[self receiveCapabilityOrAuthenticationRequest:message];
+      [self receiveCapabilityOrAuthenticationRequest:message];
 
-			break;
-		}
-		case IRCRemoteCommandAway: // Command: AWAY (away-notify CAP)
-		{
-			[self receiveAwayNotifyCapability:message];
+      break;
+    }
+    case IRCRemoteCommandAway: // Command: AWAY (away-notify CAP)
+    {
+      [self receiveAwayNotifyCapability:message];
 
-			break;
-		}
-		case IRCRemoteCommandBatch: // BATCH
-		{
-			[self receiveBatch:message];
+      break;
+    }
+    case IRCRemoteCommandBatch: // BATCH
+    {
+      [self receiveBatch:message];
 
-			break;
-		}
-		case IRCRemoteCommandCertinfo: // CERTINFO
-		{
-			[self receiveCertInfo:message];
+      break;
+    }
+    case IRCRemoteCommandCertinfo: // CERTINFO
+    {
+      [self receiveCertInfo:message];
 
-			break;
-		}
-		case IRCRemoteCommandChghost: {
-			[self receiveChangeHost:message];
+      break;
+    }
+    case IRCRemoteCommandChghost: {
+      [self receiveChangeHost:message];
 
-			break;
-		}
-		case IRCRemoteCommandAccount: // ACCOUNT (account-notify CAP)
-		{
-			[self receiveAccountNotify:message];
+      break;
+    }
+    case IRCRemoteCommandAccount: // ACCOUNT (account-notify CAP)
+    {
+      [self receiveAccountNotify:message];
 
-			break;
-		}
-		case IRCRemoteCommandSetname: // SETNAME (setname CAP)
-		{
-			[self receiveSetName:message];
+      break;
+    }
+    case IRCRemoteCommandSetname: // SETNAME (setname CAP)
+    {
+      [self receiveSetName:message];
 
-			break;
-		}
-		case IRCRemoteCommandTagmsg: // TAGMSG (message-tags CAP)
-		{
-			[self receiveTagMessage:message];
+      break;
+    }
+    case IRCRemoteCommandTagmsg: // TAGMSG (message-tags CAP)
+    {
+      [self receiveTagMessage:message];
 
-			break;
-		}
-		case IRCRemoteCommandFail: // FAIL, WARN, NOTE (standard-replies CAP)
-		case IRCRemoteCommandWarn:
-		case IRCRemoteCommandNote: {
-			[self receiveStandardReply:message];
+      break;
+    }
+    case IRCRemoteCommandFail: // FAIL, WARN, NOTE (standard-replies CAP)
+    case IRCRemoteCommandWarn:
+    case IRCRemoteCommandNote: {
+      [self receiveStandardReply:message];
 
-			break;
-		}
-		case IRCRemoteCommandMarkread: // MARKREAD (read-marker CAP)
-		{
-			[self receiveReadMarker:message];
+      break;
+    }
+    case IRCRemoteCommandMarkread: // MARKREAD (read-marker CAP)
+    {
+      [self receiveReadMarker:message];
 
-			break;
-		}
-		} // switch
-	}
+      break;
+    }
+    } // switch
+  }
 
-	[self processBundlesServerMessage:message];
+  [self processBundlesServerMessage:message];
 }
 
-- (void)ircConnection:(IRCConnection *)sender willSendData:(NSString *)data
-{
-	NSParameterAssert(sender == self.socket);
+- (void)ircConnection:(IRCConnection *)sender willSendData:(NSString *)data {
+  NSParameterAssert(sender == self.socket);
 
-	if (self.isTerminating) {
-		return;
-	}
+  if (self.isTerminating) {
+    return;
+  }
 
-	[self rawDataLogOutgoingTraffic:data];
+  [self rawDataLogOutgoingTraffic:data];
 }
 
 #pragma mark -
 #pragma mark Raw Data Logging
 
-- (void)createRawDataLogQuery
-{
-	if (self.isTerminating) {
-		return;
-	}
+- (void)createRawDataLogQuery {
+  if (self.isTerminating) {
+    return;
+  }
 
-	if (self.rawDataLogQuery != nil) {
-		return;
-	}
+  if (self.rawDataLogQuery != nil) {
+    return;
+  }
 
-	IRCChannel *query = [self findChannelOrCreate:@"Server Traffic" isUtility:YES];
+  IRCChannel *query = [self findChannelOrCreate:@"Server Traffic"
+                                      isUtility:YES];
 
-	self.rawDataLogQuery = query;
+  self.rawDataLogQuery = query;
 
-	[mainWindow() select:query];
+  [mainWindow() select:query];
 
-	[self rawDataLog:TXTLS(@"IRC[ik6-dl]")];
+  [self rawDataLog:TXTLS(@"IRC[ik6-dl]")];
 }
 
-- (void)destroyRawDataLogQuery
-{
-	if (self.isTerminating) {
-		return;
-	}
+- (void)destroyRawDataLogQuery {
+  if (self.isTerminating) {
+    return;
+  }
 
-	if (self.rawDataLogQuery == nil) {
-		return;
-	}
+  if (self.rawDataLogQuery == nil) {
+    return;
+  }
 
-	[worldController() destroyChannel:self.rawDataLogQuery];
+  [worldController() destroyChannel:self.rawDataLogQuery];
 }
 
-- (void)rawDataLog:(NSString *)data
-{
-	NSParameterAssert(data != nil);
+- (void)rawDataLog:(NSString *)data {
+  NSParameterAssert(data != nil);
 
-	if (self.isTerminating) {
-		return;
-	}
+  if (self.isTerminating) {
+    return;
+  }
 
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		[self printDebugInformation:data inChannel:self.rawDataLogQuery];
-	});
+  XRPerformBlockSynchronouslyOnMainQueue(^{
+    [self printDebugInformation:data inChannel:self.rawDataLogQuery];
+  });
 }
 
-- (void)rawDataLogOutgoingTraffic:(NSString *)data
-{
-	NSParameterAssert(data != nil);
+- (void)rawDataLogOutgoingTraffic:(NSString *)data {
+  NSParameterAssert(data != nil);
 
-	if (self.rawDataLogQuery == nil) {
-		return;
-	}
+  if (self.rawDataLogQuery == nil) {
+    return;
+  }
 
-	NSString *dataToLog = [NSString stringWithFormat:@"<< %@", data];
+  NSString *dataToLog = [NSString stringWithFormat:@"<< %@", data];
 
-	[self rawDataLog:dataToLog];
+  [self rawDataLog:dataToLog];
 }
 
-- (void)rawDataLogIncomingTraffic:(NSString *)data
-{
-	NSParameterAssert(data != nil);
+- (void)rawDataLogIncomingTraffic:(NSString *)data {
+  NSParameterAssert(data != nil);
 
-	if (self.rawDataLogQuery == nil) {
-		return;
-	}
+  if (self.rawDataLogQuery == nil) {
+    return;
+  }
 
-	NSString *dataToLog = [NSString stringWithFormat:@">> %@", data];
+  NSString *dataToLog = [NSString stringWithFormat:@">> %@", data];
 
-	[self rawDataLog:dataToLog];
+  [self rawDataLog:dataToLog];
 }
 
 #pragma mark -
 #pragma mark NickServ Information
 
-- (NSArray<NSString *> *)nickServSupportedNeedIdentificationTokens
-{
-	return [TPCResourceManager arrayFromResources:@"StaticStore"
-											  key:@"IRCClient List of NickServ Needs Identification Tokens"];
+- (NSArray<NSString *> *)nickServSupportedNeedIdentificationTokens {
+  return [TPCResourceManager arrayFromResources:@"StaticStore"
+                                            key:@"IRCClient List of NickServ "
+                                                @"Needs Identification Tokens"];
 }
 
-- (NSArray<NSString *> *)nickServSupportedSuccessfulIdentificationTokens
-{
-	return [TPCResourceManager arrayFromResources:@"StaticStore"
-											  key:@"IRCClient List of NickServ Successfully Identified Tokens"];
+- (NSArray<NSString *> *)nickServSupportedSuccessfulIdentificationTokens {
+  return
+      [TPCResourceManager arrayFromResources:@"StaticStore"
+                                         key:@"IRCClient List of NickServ "
+                                             @"Successfully Identified Tokens"];
 }
 
 #pragma mark -
 #pragma mark Protocol Handlers
 
-- (void)receiveWallops:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveWallops:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 0);
+  NSAssertReturn([m paramsCount] > 0);
 
-	/* WALLOPS are rewritten so that they can be parsed as regular notices */
-	NSMutableArray *paramsMutable = [m.params mutableCopy];
+  /* WALLOPS are rewritten so that they can be parsed as regular notices */
+  NSMutableArray *paramsMutable = [m.params mutableCopy];
 
-	[paramsMutable insertObject:self.userNickname atIndex:0];
+  [paramsMutable insertObject:self.userNickname atIndex:0];
 
-	NSString *text = [NSString stringWithFormat:TVCLogLineSpecialNoticeMessageFormat, m.command, paramsMutable[1]];
+  NSString *text =
+      [NSString stringWithFormat:TVCLogLineSpecialNoticeMessageFormat,
+                                 m.command, paramsMutable[1]];
 
-	paramsMutable[1] = text;
+  paramsMutable[1] = text;
 
-	/* ======================================== */
+  /* ======================================== */
 
-	IRCMessageMutable *messageMutable = [m mutableCopy];
+  IRCMessageMutable *messageMutable = [m mutableCopy];
 
-	messageMutable.command = @"NOTICE";
+  messageMutable.command = @"NOTICE";
 
-	messageMutable.params = paramsMutable;
+  messageMutable.params = paramsMutable;
 
-	/* ======================================== */
+  /* ======================================== */
 
-	[self receivePrivmsgAndNotice:[messageMutable copy]];
+  [self receivePrivmsgAndNotice:[messageMutable copy]];
 }
 
-- (void)receivePrivmsgAndNotice:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receivePrivmsgAndNotice:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 1);
+  NSAssertReturn([m paramsCount] > 1);
 
-	[self updateUserIdentityFromMessageTags:m];
+  [self updateUserIdentityFromMessageTags:m];
 
-	NSString *text = [m paramAt:1];
+  NSString *text = [m paramAt:1];
 
-	TVCLogLineType lineType = TVCLogLineTypePrivateMessage;
+  TVCLogLineType lineType = TVCLogLineTypePrivateMessage;
 
-	BOOL isPlainText = [m.command isEqualToString:@"PRIVMSG"];
+  BOOL isPlainText = [m.command isEqualToString:@"PRIVMSG"];
 
-	if ([text hasPrefix:@"\x01"]) {
-		text = [text substringFromIndex:1];
+  if ([text hasPrefix:@"\x01"]) {
+    text = [text substringFromIndex:1];
 
-		NSInteger closingIndex = [text stringPosition:@"\x01"];
+    NSInteger closingIndex = [text stringPosition:@"\x01"];
 
-		if (closingIndex >= 0) {
-			text = [text substringToIndex:closingIndex];
-		}
+    if (closingIndex >= 0) {
+      text = [text substringToIndex:closingIndex];
+    }
 
-		if (isPlainText) {
-			if ([text hasPrefixIgnoringCase:@"ACTION "]) {
-				text = [text substringFromIndex:7];
+    if (isPlainText) {
+      if ([text hasPrefixIgnoringCase:@"ACTION "]) {
+        text = [text substringFromIndex:7];
 
-				lineType = TVCLogLineTypeAction;
-			} else {
-				lineType = TVCLogLineTypeCTCPQuery;
-			}
-		} else {
-			lineType = TVCLogLineTypeCTCPReply; // notice -> query
-		}
-	} else if (isPlainText == NO) {
-		lineType = TVCLogLineTypeNotice;
-	}
+        lineType = TVCLogLineTypeAction;
+      } else {
+        lineType = TVCLogLineTypeCTCPQuery;
+      }
+    } else {
+      lineType = TVCLogLineTypeCTCPReply; // notice -> query
+    }
+  } else if (isPlainText == NO) {
+    lineType = TVCLogLineTypeNotice;
+  }
 
-	if (lineType == TVCLogLineTypeAction || lineType == TVCLogLineTypePrivateMessage ||
-		lineType == TVCLogLineTypeNotice) {
-		[self receiveText:m lineType:lineType text:text];
-	} else if (lineType == TVCLogLineTypeCTCPQuery) {
-		[self receiveCTCPQuery:m text:text];
-	} else if (lineType == TVCLogLineTypeCTCPReply) {
-		[self receiveCTCPReply:m text:text];
-	}
+  if (lineType == TVCLogLineTypeAction ||
+      lineType == TVCLogLineTypePrivateMessage ||
+      lineType == TVCLogLineTypeNotice) {
+    [self receiveText:m lineType:lineType text:text];
+  } else if (lineType == TVCLogLineTypeCTCPQuery) {
+    [self receiveCTCPQuery:m text:text];
+  } else if (lineType == TVCLogLineTypeCTCPReply) {
+    [self receiveCTCPReply:m text:text];
+  }
 }
 
-- (void)receiveText:(IRCMessage *)m lineType:(TVCLogLineType)lineType text:(NSString *)text
-{
-	NSParameterAssert(m != nil);
+- (void)receiveText:(IRCMessage *)m
+           lineType:(TVCLogLineType)lineType
+               text:(NSString *)text {
+  NSParameterAssert(m != nil);
 
-	NSParameterAssert(lineType == TVCLogLineTypeAction || lineType == TVCLogLineTypeActionNoHighlight ||
-					  lineType == TVCLogLineTypePrivateMessage || lineType == TVCLogLineTypePrivateMessageNoHighlight ||
-					  lineType == TVCLogLineTypeNotice);
+  NSParameterAssert(lineType == TVCLogLineTypeAction ||
+                    lineType == TVCLogLineTypeActionNoHighlight ||
+                    lineType == TVCLogLineTypePrivateMessage ||
+                    lineType == TVCLogLineTypePrivateMessageNoHighlight ||
+                    lineType == TVCLogLineTypeNotice);
 
-	NSParameterAssert(text != nil);
+  NSParameterAssert(text != nil);
 
-	NSAssertReturn([m paramsCount] > 1);
+  NSAssertReturn([m paramsCount] > 1);
 
-	/* Allow empty actions but no other type */
-	if (text.length == 0) {
-		if (lineType == TVCLogLineTypeAction || lineType == TVCLogLineTypeActionNoHighlight) {
-			text = @" ";
-		} else {
-			return;
-		}
-	}
+  /* Allow empty actions but no other type */
+  if (text.length == 0) {
+    if (lineType == TVCLogLineTypeAction ||
+        lineType == TVCLogLineTypeActionNoHighlight) {
+      text = @" ";
+    } else {
+      return;
+    }
+  }
 
-	/* Process target */
-	NSString *target = [m paramAt:0];
+  /* Process target */
+  NSString *target = [m paramAt:0];
 
-	if (target.length == 0) {
-		return;
-	}
+  if (target.length == 0) {
+    return;
+  }
 
-	/* It is possible for a channel to have a user mode character in front
-	 of it when the message is being addressed to a specific group of users.
-	 For example, "+#channel" as the channel name means that the message is
-	 addressed to only the voiced users of #channel. We don't care about this
-	 mode but we still have to remove it while also taking into account
-	 channels who use a character other than the pound symbol as their prefix. */
-	NSString *targetPrefix = [self.supportInfo extractStatusMessagePrefixFromChannelNamed:target];
+  /* It is possible for a channel to have a user mode character in front
+   of it when the message is being addressed to a specific group of users.
+   For example, "+#channel" as the channel name means that the message is
+   addressed to only the voiced users of #channel. We don't care about this
+   mode but we still have to remove it while also taking into account
+   channels who use a character other than the pound symbol as their prefix. */
+  NSString *targetPrefix =
+      [self.supportInfo extractStatusMessagePrefixFromChannelNamed:target];
 
-	if (targetPrefix.length == 1) {
-		target = [target substringFromIndex:1];
-	}
+  if (targetPrefix.length == 1) {
+    target = [target substringFromIndex:1];
+  }
 
-	/* Perform ignore check */
-	IRCAddressBookEntry *ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
+  /* Perform ignore check */
+  IRCAddressBookEntry *ignoreInfo =
+      [self findAddressBookEntryForHostmask:m.senderHostmask];
 
-	if (ignoreInfo.ignorePublicMessageHighlights) {
-		if (lineType == TVCLogLineTypeAction) {
-			lineType = TVCLogLineTypeActionNoHighlight;
-		} else if (lineType == TVCLogLineTypePrivateMessage) {
-			lineType = TVCLogLineTypePrivateMessageNoHighlight;
-		}
-	}
+  if (ignoreInfo.ignorePublicMessageHighlights) {
+    if (lineType == TVCLogLineTypeAction) {
+      lineType = TVCLogLineTypeActionNoHighlight;
+    } else if (lineType == TVCLogLineTypePrivateMessage) {
+      lineType = TVCLogLineTypePrivateMessageNoHighlight;
+    }
+  }
 
-	if (lineType == TVCLogLineTypeNotice) {
-		if (ignoreInfo.ignoreNoticeMessages) {
-			return;
-		}
-	}
+  if (lineType == TVCLogLineTypeNotice) {
+    if (ignoreInfo.ignoreNoticeMessages) {
+      return;
+    }
+  }
 
-	/* Public message (directed at channel) */
-	if ([self stringIsChannelName:target]) {
-		if (ignoreInfo.ignorePublicMessages) {
-			return;
-		}
+  /* Public message (directed at channel) */
+  if ([self stringIsChannelName:target]) {
+    if (ignoreInfo.ignorePublicMessages) {
+      return;
+    }
 
-		[self _receiveText_Public:m lineType:lineType target:target text:text wasEncrypted:NO];
-	}
+    [self _receiveText_Public:m
+                     lineType:lineType
+                       target:target
+                         text:text
+                 wasEncrypted:NO];
+  }
 
-	/* Private message (from user) */
-	else if (m.senderIsServer == NO) {
-		if (ignoreInfo.ignorePrivateMessages) {
-			return;
-		}
+  /* Private message (from user) */
+  else if (m.senderIsServer == NO) {
+    if (ignoreInfo.ignorePrivateMessages) {
+      return;
+    }
 
-		[self _receiveText_Private:m lineType:lineType target:target text:text wasEncrypted:NO];
-	}
+    [self _receiveText_Private:m
+                      lineType:lineType
+                        target:target
+                          text:text
+                  wasEncrypted:NO];
+  }
 
-	/* Private message (from server) */
-	else {
-		[self _receiveText_PrivateServer:m lineType:lineType target:target text:text wasEncrypted:NO];
-	}
+  /* Private message (from server) */
+  else {
+    [self _receiveText_PrivateServer:m
+                            lineType:lineType
+                              target:target
+                                text:text
+                        wasEncrypted:NO];
+  }
 }
 
 - (void)_receiveText_Public:(IRCMessage *)m
-				   lineType:(TVCLogLineType)lineType
-					 target:(NSString *)target
-					   text:(NSString *)text
-			   wasEncrypted:(BOOL)wasEncrypted
-{
-	NSParameterAssert(m != nil);
-	NSParameterAssert(target != nil);
-	NSParameterAssert(text != nil);
+                   lineType:(TVCLogLineType)lineType
+                     target:(NSString *)target
+                       text:(NSString *)text
+               wasEncrypted:(BOOL)wasEncrypted {
+  NSParameterAssert(m != nil);
+  NSParameterAssert(target != nil);
+  NSParameterAssert(text != nil);
 
-	IRCChannel *channel = [self findChannel:target];
+  IRCChannel *channel = [self findChannel:target];
 
-	if (channel == nil) {
-		return;
-	}
+  if (channel == nil) {
+    return;
+  }
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	BOOL isSelfMessage = NO;
+  BOOL isSelfMessage = NO;
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
-		isSelfMessage = [self nicknameIsMyself:sender];
-	}
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
+    isSelfMessage = [self nicknameIsMyself:sender];
+  }
 
-	TVCLogControllerPrintOperationCompletionBlock printCompletionBlock = nil;
+  TVCLogControllerPrintOperationCompletionBlock printCompletionBlock = nil;
 
-	BOOL isPlainText = (lineType != TVCLogLineTypeNotice);
+  BOOL isPlainText = (lineType != TVCLogLineTypeNotice);
 
-	if (isPlainText == NO) {
-		/* Completion block for notices */
+  if (isPlainText == NO) {
+    /* Completion block for notices */
 
-		printCompletionBlock = ^(TVCLogControllerPrintOperationContext *context) {
-			if ([self isSafeToPostNotificationForMessage:m inChannel:channel]) {
-				[self notifyText:TXNotificationTypeChannelNotice
-						lineType:lineType
-						  target:channel
-						nickname:sender
-							text:text];
-			}
-		};
-	} else {
-		/* Completion block for regular messages */
+    printCompletionBlock = ^(TVCLogControllerPrintOperationContext *context) {
+      if ([self isSafeToPostNotificationForMessage:m inChannel:channel]) {
+        [self notifyText:TXNotificationTypeChannelNotice
+                lineType:lineType
+                  target:channel
+                nickname:sender
+                    text:text];
+      }
+    };
+  } else {
+    /* Completion block for regular messages */
 
-		printCompletionBlock = ^(TVCLogControllerPrintOperationContext *context) {
-			if (isSelfMessage) {
-				return;
-			}
+    printCompletionBlock = ^(TVCLogControllerPrintOperationContext *context) {
+      if (isSelfMessage) {
+        return;
+      }
 
-			BOOL isHighlight = context.highlight;
+      BOOL isHighlight = context.highlight;
 
-			BOOL postEvent = YES;
+      BOOL postEvent = YES;
 
-			if ([self isSafeToPostNotificationForMessage:m inChannel:channel]) {
-				if (isHighlight) {
-					postEvent = [self notifyText:TXNotificationTypeHighlight
-										lineType:lineType
-										  target:channel
-										nickname:sender
-											text:text];
-				} else {
-					postEvent = [self notifyText:TXNotificationTypeChannelMessage
-										lineType:lineType
-										  target:channel
-										nickname:sender
-											text:text];
-				}
-			}
+      if ([self isSafeToPostNotificationForMessage:m inChannel:channel]) {
+        if (isHighlight) {
+          postEvent = [self notifyText:TXNotificationTypeHighlight
+                              lineType:lineType
+                                target:channel
+                              nickname:sender
+                                  text:text];
+        } else {
+          postEvent = [self notifyText:TXNotificationTypeChannelMessage
+                              lineType:lineType
+                                target:channel
+                              nickname:sender
+                                  text:text];
+        }
+      }
 
-			if (postEvent == NO) {
-				return;
-			}
+      if (postEvent == NO) {
+        return;
+      }
 
-			if (isHighlight) {
-				[self setHighlightStateForChannel:channel];
-			}
+      if (isHighlight) {
+        [self setHighlightStateForChannel:channel];
+      }
 
-			[self setUnreadStateForChannel:channel isHighlight:isHighlight];
-		};
-	}
+      [self setUnreadStateForChannel:channel isHighlight:isHighlight];
+    };
+  }
 
-	/* Ask for permission to print message */
-	BOOL printMessage = YES;
+  /* Ask for permission to print message */
+  BOOL printMessage = YES;
 
-	if ([sharedPluginManager() supportsFeature:THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent]) {
-		printMessage = [THOPluginDispatcher receivedText:text
-											  authoredBy:m.sender
-											 destinedFor:channel
-											  asLineType:lineType
-												onClient:self
-											  receivedAt:m.receivedAt
-											wasEncrypted:wasEncrypted];
-	}
+  if ([sharedPluginManager()
+          supportsFeature:
+              THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent]) {
+    printMessage = [THOPluginDispatcher receivedText:text
+                                          authoredBy:m.sender
+                                         destinedFor:channel
+                                          asLineType:lineType
+                                            onClient:self
+                                          receivedAt:m.receivedAt
+                                        wasEncrypted:wasEncrypted];
+  }
 
-	/* Print message */
-	if (printMessage) {
-		[self print:text
-						  by:sender
-				   inChannel:channel
-					  asType:lineType
-					 command:m.command
-				  receivedAt:m.receivedAt
-				 isEncrypted:wasEncrypted
-			referenceMessage:m
-			 completionBlock:printCompletionBlock];
-	}
+  /* Print message */
+  if (printMessage) {
+    [self print:text
+                      by:sender
+               inChannel:channel
+                  asType:lineType
+                 command:m.command
+              receivedAt:m.receivedAt
+             isEncrypted:wasEncrypted
+        referenceMessage:m
+         completionBlock:printCompletionBlock];
+  }
 
-	/* The remaining logic does not apply to notices */
-	if (isPlainText == NO) {
-		return;
-	}
+  /* The remaining logic does not apply to notices */
+  if (isPlainText == NO) {
+    return;
+  }
 
-	/* Update weights of user we're talking with */
-	IRCChannelUser *senderMember = [channel findMember:sender];
+  /* Update weights of user we're talking with */
+  IRCChannelUser *senderMember = [channel findMember:sender];
 
-	if (senderMember == nil) {
-		return;
-	}
+  if (senderMember == nil) {
+    return;
+  }
 
-	NSString *localNickname =
-		[self.userNickname trimCharacters:@"_"]; // Remove any underscores from around nickname (Guest___ becomes Guest)
+  NSString *localNickname = [self.userNickname
+      trimCharacters:@"_"]; // Remove any underscores from around nickname
+                            // (Guest___ becomes Guest)
 
-	/* If we are mentioned in this piece of text, then update our weight for the user */
-	if ([text contains:localNickname]) {
-		[senderMember outgoingConversation];
-	} else {
-		[senderMember conversation];
-	}
+  /* If we are mentioned in this piece of text, then update our weight for the
+   * user */
+  if ([text contains:localNickname]) {
+    [senderMember outgoingConversation];
+  } else {
+    [senderMember conversation];
+  }
 }
 
 - (void)_receiveText_Private:(IRCMessage *)m
-					lineType:(TVCLogLineType)lineType
-					  target:(NSString *)target
-						text:(NSString *)text
-				wasEncrypted:(BOOL)wasEncrypted
-{
-	NSParameterAssert(m != nil);
-	NSParameterAssert(target != nil);
-	NSParameterAssert(text != nil);
+                    lineType:(TVCLogLineType)lineType
+                      target:(NSString *)target
+                        text:(NSString *)text
+                wasEncrypted:(BOOL)wasEncrypted {
+  NSParameterAssert(m != nil);
+  NSParameterAssert(target != nil);
+  NSParameterAssert(text != nil);
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	TVCLogControllerPrintOperationCompletionBlock printCompletionBlock = nil;
+  TVCLogControllerPrintOperationCompletionBlock printCompletionBlock = nil;
 
-	BOOL isPlainText = (lineType != TVCLogLineTypeNotice);
+  BOOL isPlainText = (lineType != TVCLogLineTypeNotice);
 
-	/* If the self-message CAP is not enabled, we still check if we are on a ZNC
-	 based connections because older versions of ZNC combined with the privmsg
-	 module need the correct behavior which the self-message CAP evolved into. */
-	BOOL isSelfMessage = NO;
+  /* If the self-message CAP is not enabled, we still check if we are on a ZNC
+   based connections because older versions of ZNC combined with the privmsg
+   module need the correct behavior which the self-message CAP evolved into. */
+  BOOL isSelfMessage = NO;
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage] ||
-		[self isCapabilityEnabled:ClientIRCv3SupportedCapabilityZNCSelfMessage] || self.isConnectedToZNC) {
-		isSelfMessage = [self nicknameIsMyself:sender];
-	}
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage] ||
+      [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityZNCSelfMessage] ||
+      self.isConnectedToZNC) {
+    isSelfMessage = [self nicknameIsMyself:sender];
+  }
 
-	/* Does the query for the sender already exist?... */
-	IRCChannel *query = nil;
+  /* Does the query for the sender already exist?... */
+  IRCChannel *query = nil;
 
-	if (isSelfMessage) {
-		query = [self findChannel:target]; // Look for a query related to target, rather than sender
-	} else {
-		query = [self findChannel:sender];
-	}
+  if (isSelfMessage) {
+    query = [self findChannel:target]; // Look for a query related to target,
+                                       // rather than sender
+  } else {
+    query = [self findChannel:sender];
+  }
 
-	BOOL newPrivateMessage = NO;
+  BOOL newPrivateMessage = NO;
 
-	if (isPlainText == NO) {
-		/* Logic for notices */
+  if (isPlainText == NO) {
+    /* Logic for notices */
 
-		/* Process services */
-		if ([sender isEqualToStringIgnoringCase:@"ChanServ"]) {
-			[self _receiveText_PrivateNoticeFromChanServ:&query text:&text];
-		} else if ([sender isEqualToStringIgnoringCase:@"NickServ"]) {
-			[self _receiveText_PrivateNoticeFromNickServ:&query text:&text];
-		}
+    /* Process services */
+    if ([sender isEqualToStringIgnoringCase:@"ChanServ"]) {
+      [self _receiveText_PrivateNoticeFromChanServ:&query text:&text];
+    } else if ([sender isEqualToStringIgnoringCase:@"NickServ"]) {
+      [self _receiveText_PrivateNoticeFromNickServ:&query text:&text];
+    }
 
-		/* Determine where to send notice messages */
-		if ([TPCPreferences locationToSendNotices] == TXNoticeSendLocationSelectedChannel) {
-			query = [mainWindow() selectedChannelOn:self];
-		}
+    /* Determine where to send notice messages */
+    if ([TPCPreferences locationToSendNotices] ==
+        TXNoticeSendLocationSelectedChannel) {
+      query = [mainWindow() selectedChannelOn:self];
+    }
 
-		/* Do not create query until after ChanServ notices have been processed
-		 so that entry messages do not create a new window. */
-		if (query == nil) {
-			if ([TPCPreferences locationToSendNotices] == TXNoticeSendLocationQuery) {
-				//				newPrivateMessage = YES;
+    /* Do not create query until after ChanServ notices have been processed
+     so that entry messages do not create a new window. */
+    if (query == nil) {
+      if ([TPCPreferences locationToSendNotices] == TXNoticeSendLocationQuery) {
+        //				newPrivateMessage = YES;
 
-				if (isSelfMessage) {
-					query = [worldController() createPrivateMessage:target onClient:self];
-				} else {
-					query = [worldController() createPrivateMessage:sender onClient:self];
-				}
-			}
-		}
+        if (isSelfMessage) {
+          query = [worldController() createPrivateMessage:target onClient:self];
+        } else {
+          query = [worldController() createPrivateMessage:sender onClient:self];
+        }
+      }
+    }
 
-		printCompletionBlock = ^(TVCLogControllerPrintOperationContext *context) {
-			if (isSelfMessage) {
-				return;
-			}
+    printCompletionBlock = ^(TVCLogControllerPrintOperationContext *context) {
+      if (isSelfMessage) {
+        return;
+      }
 
-			BOOL postEvent = YES;
+      BOOL postEvent = YES;
 
-			if ([self isSafeToPostNotificationForMessage:m inChannel:query]) {
-				postEvent = [self notifyText:TXNotificationTypePrivateNotice
-									lineType:lineType
-									  target:query
-									nickname:sender
-										text:text];
-			}
+      if ([self isSafeToPostNotificationForMessage:m inChannel:query]) {
+        postEvent = [self notifyText:TXNotificationTypePrivateNotice
+                            lineType:lineType
+                              target:query
+                            nickname:sender
+                                text:text];
+      }
 
-			if (postEvent && query != nil) {
-				[self setUnreadStateForChannel:query];
-			}
-		};
-	} else // NOTICE message
-	{
-		/* Logic for regular messages */
+      if (postEvent && query != nil) {
+        [self setUnreadStateForChannel:query];
+      }
+    };
+  } else // NOTICE message
+  {
+    /* Logic for regular messages */
 
-		if (query == nil) {
-			newPrivateMessage = YES;
+    if (query == nil) {
+      newPrivateMessage = YES;
 
-			if (isSelfMessage) {
-				query = [worldController() createPrivateMessage:target onClient:self];
-			} else {
-				query = [worldController() createPrivateMessage:sender onClient:self];
-			}
-		}
+      if (isSelfMessage) {
+        query = [worldController() createPrivateMessage:target onClient:self];
+      } else {
+        query = [worldController() createPrivateMessage:sender onClient:self];
+      }
+    }
 
-		printCompletionBlock = ^(TVCLogControllerPrintOperationContext *context) {
-			if (isSelfMessage) {
-				return;
-			}
+    printCompletionBlock = ^(TVCLogControllerPrintOperationContext *context) {
+      if (isSelfMessage) {
+        return;
+      }
 
-			BOOL isHighlight = context.highlight;
+      BOOL isHighlight = context.highlight;
 
-			BOOL postEvent = YES;
+      BOOL postEvent = YES;
 
-			if ([self isSafeToPostNotificationForMessage:m inChannel:query]) {
-				if (isHighlight) {
-					postEvent = [self notifyText:TXNotificationTypeHighlight
-										lineType:lineType
-										  target:query
-										nickname:sender
-											text:text];
-				} else {
-					if (newPrivateMessage) {
-						postEvent = [self notifyText:TXNotificationTypeNewPrivateMessage
-											lineType:lineType
-											  target:query
-											nickname:sender
-												text:text];
-					} else {
-						postEvent = [self notifyText:TXNotificationTypePrivateMessage
-											lineType:lineType
-											  target:query
-											nickname:sender
-												text:text];
-					}
-				}
-			}
+      if ([self isSafeToPostNotificationForMessage:m inChannel:query]) {
+        if (isHighlight) {
+          postEvent = [self notifyText:TXNotificationTypeHighlight
+                              lineType:lineType
+                                target:query
+                              nickname:sender
+                                  text:text];
+        } else {
+          if (newPrivateMessage) {
+            postEvent = [self notifyText:TXNotificationTypeNewPrivateMessage
+                                lineType:lineType
+                                  target:query
+                                nickname:sender
+                                    text:text];
+          } else {
+            postEvent = [self notifyText:TXNotificationTypePrivateMessage
+                                lineType:lineType
+                                  target:query
+                                nickname:sender
+                                    text:text];
+          }
+        }
+      }
 
-			if (postEvent == NO) {
-				return;
-			}
+      if (postEvent == NO) {
+        return;
+      }
 
-			if (isHighlight) {
-				[self setHighlightStateForChannel:query];
-			}
+      if (isHighlight) {
+        [self setHighlightStateForChannel:query];
+      }
 
-			[self setUnreadStateForChannel:query isHighlight:isHighlight];
-		};
-	}
+      [self setUnreadStateForChannel:query isHighlight:isHighlight];
+    };
+  }
 
-	/* Ask for permission to print message */
-	BOOL printMessage = YES;
+  /* Ask for permission to print message */
+  BOOL printMessage = YES;
 
-	if ([sharedPluginManager() supportsFeature:THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent]) {
-		printMessage = [THOPluginDispatcher receivedText:text
-											  authoredBy:m.sender
-											 destinedFor:query
-											  asLineType:lineType
-												onClient:self
-											  receivedAt:m.receivedAt
-											wasEncrypted:wasEncrypted];
-	}
+  if ([sharedPluginManager()
+          supportsFeature:
+              THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent]) {
+    printMessage = [THOPluginDispatcher receivedText:text
+                                          authoredBy:m.sender
+                                         destinedFor:query
+                                          asLineType:lineType
+                                            onClient:self
+                                          receivedAt:m.receivedAt
+                                        wasEncrypted:wasEncrypted];
+  }
 
-	/* Print message */
-	if (printMessage) {
-		[self print:text
-						  by:sender
-				   inChannel:query
-					  asType:lineType
-					 command:m.command
-				  receivedAt:m.receivedAt
-				 isEncrypted:wasEncrypted
-			referenceMessage:m
-			 completionBlock:printCompletionBlock];
-	}
+  /* Print message */
+  if (printMessage) {
+    [self print:text
+                      by:sender
+               inChannel:query
+                  asType:lineType
+                 command:m.command
+              receivedAt:m.receivedAt
+             isEncrypted:wasEncrypted
+        referenceMessage:m
+         completionBlock:printCompletionBlock];
+  }
 
-	/* The remaining logic does not apply to notices */
-	if (isPlainText == NO) {
-		return;
-	}
+  /* The remaining logic does not apply to notices */
+  if (isPlainText == NO) {
+    return;
+  }
 
-	/* Update query status */
-	if (query.isActive == NO) {
-		[query activate];
+  /* Update query status */
+  if (query.isActive == NO) {
+    [query activate];
 
-		[mainWindow() reloadTreeItem:query];
-	}
+    [mainWindow() reloadTreeItem:query];
+  }
 }
 
-- (void)_receiveText_PrivateNoticeFromChanServ:(IRCChannel **)target text:(NSString **)text
-{
-	NSParameterAssert(target != NULL);
-	NSParameterAssert(text != NULL);
+- (void)_receiveText_PrivateNoticeFromChanServ:(IRCChannel **)target
+                                          text:(NSString **)text {
+  NSParameterAssert(target != NULL);
+  NSParameterAssert(text != NULL);
 
-	NSString *textIn = (*text);
+  NSString *textIn = (*text);
 
-	/* Forward entry messages to the channel they are associated with. */
-	/* Format we are going for: -ChanServ- [#channelname] blah blah... */
-	NSInteger spacePosition = [textIn stringPosition:@" "];
+  /* Forward entry messages to the channel they are associated with. */
+  /* Format we are going for: -ChanServ- [#channelname] blah blah... */
+  NSInteger spacePosition = [textIn stringPosition:@" "];
 
-	if ([textIn hasPrefix:@"["] == NO || spacePosition < 4) {
-		return;
-	}
+  if ([textIn hasPrefix:@"["] == NO || spacePosition < 4) {
+    return;
+  }
 
-	NSString *textHead = [textIn substringToIndex:spacePosition];
+  NSString *textHead = [textIn substringToIndex:spacePosition];
 
-	if ([textHead hasSuffix:@"]"] == NO) {
-		return;
-	}
+  if ([textHead hasSuffix:@"]"] == NO) {
+    return;
+  }
 
-	textHead = [textHead substringToIndex:(textHead.length - 1)]; // Remove the ]
-	textHead = [textHead substringFromIndex:1];					  // Remove the [
+  textHead = [textHead substringToIndex:(textHead.length - 1)]; // Remove the ]
+  textHead = [textHead substringFromIndex:1];                   // Remove the [
 
-	if ([self stringIsChannelName:textHead] == NO) {
-		return;
-	}
+  if ([self stringIsChannelName:textHead] == NO) {
+    return;
+  }
 
-	IRCChannel *channel = [self findChannel:textHead];
+  IRCChannel *channel = [self findChannel:textHead];
 
-	if (channel == nil) {
-		return;
-	}
+  if (channel == nil) {
+    return;
+  }
 
-	*text = [textIn substringFromIndex:(spacePosition + 1)]; // Remove the "[#channelname] " from the text
+  *text = [textIn
+      substringFromIndex:(spacePosition +
+                          1)]; // Remove the "[#channelname] " from the text
 
-	*target = channel;
+  *target = channel;
 }
 
-- (void)_receiveText_PrivateNoticeFromNickServ:(IRCChannel **)target text:(NSString **)text
-{
-	NSParameterAssert(target != NULL);
-	NSParameterAssert(text != NULL);
+- (void)_receiveText_PrivateNoticeFromNickServ:(IRCChannel **)target
+                                          text:(NSString **)text {
+  NSParameterAssert(target != NULL);
+  NSParameterAssert(text != NULL);
 
-	self.serverHasNickServ = YES;
+  self.serverHasNickServ = YES;
 
-	NSString *textIn = nil;
+  NSString *textIn = nil;
 
-	if ([TPCPreferences removeAllFormatting] == NO) {
-		textIn = (*text).stripIRCEffects;
-	} else {
-		textIn = (*text);
-	}
+  if ([TPCPreferences removeAllFormatting] == NO) {
+    textIn = (*text).stripIRCEffects;
+  } else {
+    textIn = (*text);
+  }
 
-	/* If we are not waiting for a response from NickServ, 
-	 then try sending our password if that's what it requested. */
-	if (self.isWaitingForNickServ == NO) {
-		NSString *nicknamePassword = self.config.nicknamePassword;
+  /* If we are not waiting for a response from NickServ,
+   then try sending our password if that's what it requested. */
+  if (self.isWaitingForNickServ == NO) {
+    NSString *nicknamePassword = self.config.nicknamePassword;
 
-		if (nicknamePassword.length == 0) {
-			return;
-		}
+    if (nicknamePassword.length == 0) {
+      return;
+    }
 
-		for (NSString *token in self.nickServSupportedNeedIdentificationTokens) {
-			if ([textIn containsIgnoringCase:token] == NO) {
-				continue;
-			}
+    for (NSString *token in self.nickServSupportedNeedIdentificationTokens) {
+      if ([textIn containsIgnoringCase:token] == NO) {
+        continue;
+      }
 
-			// Send password
-			if ([self.serverAddress hasSuffix:@".dal.net"]) {
-				NSString *message = [NSString stringWithFormat:@"IDENTIFY %@", nicknamePassword];
+      // Send password
+      if ([self.serverAddress hasSuffix:@".dal.net"]) {
+        NSString *message =
+            [NSString stringWithFormat:@"IDENTIFY %@", nicknamePassword];
 
-				[self send:@"PRIVMSG", @"NickServ@services.dal.net", message, nil];
-			} else if (self.config.sendAuthenticationRequestsToUserServ) {
-				NSString *message = [NSString stringWithFormat:@"login %@ %@", self.config.nickname, nicknamePassword];
+        [self send:@"PRIVMSG", @"NickServ@services.dal.net", message, nil];
+      } else if (self.config.sendAuthenticationRequestsToUserServ) {
+        NSString *message =
+            [NSString stringWithFormat:@"login %@ %@", self.config.nickname,
+                                       nicknamePassword];
 
-				[self send:@"PRIVMSG", @"userserv", message, nil];
-			} else {
-				NSString *message = [NSString stringWithFormat:@"IDENTIFY %@", nicknamePassword];
+        [self send:@"PRIVMSG", @"userserv", message, nil];
+      } else {
+        NSString *message =
+            [NSString stringWithFormat:@"IDENTIFY %@", nicknamePassword];
 
-				[self send:@"PRIVMSG", @"NickServ", message, nil];
-			}
+        [self send:@"PRIVMSG", @"NickServ", message, nil];
+      }
 
-			// Reset properties
-			self.isWaitingForNickServ = YES;
+      // Reset properties
+      self.isWaitingForNickServ = YES;
 
-			self.userIsIdentifiedWithNickServ = NO;
+      self.userIsIdentifiedWithNickServ = NO;
 
-			break;
-		}
+      break;
+    }
 
-		return;
-	}
+    return;
+  }
 
-	/* Scan for messages telling us that we are now identified */
-	for (NSString *token in self.nickServSupportedSuccessfulIdentificationTokens) {
-		if ([textIn containsIgnoringCase:token] == NO) {
-			continue;
-		}
+  /* Scan for messages telling us that we are now identified */
+  for (NSString *token in self
+           .nickServSupportedSuccessfulIdentificationTokens) {
+    if ([textIn containsIgnoringCase:token] == NO) {
+      continue;
+    }
 
-		self.isWaitingForNickServ = NO;
+    self.isWaitingForNickServ = NO;
 
-		self.userIsIdentifiedWithNickServ = YES;
+    self.userIsIdentifiedWithNickServ = YES;
 
-		if (self.config.autojoinWaitsForNickServ) {
-			[self performAutoJoin];
-		}
+    if (self.config.autojoinWaitsForNickServ) {
+      [self performAutoJoin];
+    }
 
-		break;
-	}
+    break;
+  }
 }
 
 - (void)_receiveText_PrivateServer:(IRCMessage *)m
-						  lineType:(TVCLogLineType)lineType
-							target:(NSString *)target
-							  text:(NSString *)text
-					  wasEncrypted:(BOOL)wasEncrypted
-{
-	NSParameterAssert(m != nil);
-	NSParameterAssert(target != nil);
-	NSParameterAssert(text != nil);
+                          lineType:(TVCLogLineType)lineType
+                            target:(NSString *)target
+                              text:(NSString *)text
+                      wasEncrypted:(BOOL)wasEncrypted {
+  NSParameterAssert(m != nil);
+  NSParameterAssert(target != nil);
+  NSParameterAssert(text != nil);
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	BOOL isPlainText = (lineType != TVCLogLineTypeNotice);
+  BOOL isPlainText = (lineType != TVCLogLineTypeNotice);
 
-	IRCChannel *query = nil;
+  IRCChannel *query = nil;
 
-	/* For notices, send to a query if a query for the server already exists.
-	 Otherwise, it is always sent to the console. Plain text messages always
-	 create a new query but does not post a notification. */
-	if (isPlainText == NO) {
-		query = [self findChannel:sender];
-	} else { // NOTICE message
-		query = [self findChannelOrCreate:sender isPrivateMessage:YES];
-	}
+  /* For notices, send to a query if a query for the server already exists.
+   Otherwise, it is always sent to the console. Plain text messages always
+   create a new query but does not post a notification. */
+  if (isPlainText == NO) {
+    query = [self findChannel:sender];
+  } else { // NOTICE message
+    query = [self findChannelOrCreate:sender isPrivateMessage:YES];
+  }
 
-	/* Print message */
-	BOOL printMessage = YES;
+  /* Print message */
+  BOOL printMessage = YES;
 
-	if ([sharedPluginManager() supportsFeature:THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent]) {
-		printMessage = [THOPluginDispatcher receivedText:text
-											  authoredBy:m.sender
-											 destinedFor:query
-											  asLineType:lineType
-												onClient:self
-											  receivedAt:m.receivedAt
-											wasEncrypted:wasEncrypted];
-	}
+  if ([sharedPluginManager()
+          supportsFeature:
+              THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent]) {
+    printMessage = [THOPluginDispatcher receivedText:text
+                                          authoredBy:m.sender
+                                         destinedFor:query
+                                          asLineType:lineType
+                                            onClient:self
+                                          receivedAt:m.receivedAt
+                                        wasEncrypted:wasEncrypted];
+  }
 
-	if (printMessage) {
-		[self print:text
-					 by:sender
-			  inChannel:query
-				 asType:lineType
-				command:m.command
-			 receivedAt:m.receivedAt
-			isEncrypted:wasEncrypted];
-	}
+  if (printMessage) {
+    [self print:text
+                 by:sender
+          inChannel:query
+             asType:lineType
+            command:m.command
+         receivedAt:m.receivedAt
+        isEncrypted:wasEncrypted];
+  }
 
-	/* Disconnect and reconnect if message is believed to be from an irssi proxy */
-	/* If we do not do this, the internal state of the client becomes fucked all around */
-	if ([sender hasSuffix:@".proxy"] && [text isEqualToString:@"Connected to server"]) {
-		__weak IRCClient *weakSelf = self;
+  /* Disconnect and reconnect if message is believed to be from an irssi proxy
+   */
+  /* If we do not do this, the internal state of the client becomes fucked all
+   * around */
+  if ([sender hasSuffix:@".proxy"] &&
+      [text isEqualToString:@"Connected to server"]) {
+    __weak IRCClient *weakSelf = self;
 
-		self.disconnectCallback = ^{
-			[weakSelf printDebugInformationToConsole:TXTLS(@"IRC[5i4-qq]")];
+    self.disconnectCallback = ^{
+      [weakSelf printDebugInformationToConsole:TXTLS(@"IRC[5i4-qq]")];
 
-			[weakSelf connect:IRCClientConnectModeReconnect];
-		};
+      [weakSelf connect:IRCClientConnectModeReconnect];
+    };
 
-		[self disconnect];
-	}
+    [self disconnect];
+  }
 }
 
-- (void)receiveCTCPQuery:(IRCMessage *)m text:(NSString *)text
-{
-	NSParameterAssert(m != nil);
-	NSParameterAssert(text != nil);
+- (void)receiveCTCPQuery:(IRCMessage *)m text:(NSString *)text {
+  NSParameterAssert(m != nil);
+  NSParameterAssert(text != nil);
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	BOOL myself = [self nicknameIsMyself:sender];
+  BOOL myself = [self nicknameIsMyself:sender];
 
-	IRCAddressBookEntry *ignoreInfo = nil;
+  IRCAddressBookEntry *ignoreInfo = nil;
 
-	if (myself) {
-		/* Ignore messages echoed back to ourselves */
-		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
-			return;
-		}
-	} else {
-		/* Find ignore for sender and possibly exit method */
-		ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
+  if (myself) {
+    /* Ignore messages echoed back to ourselves */
+    if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]) {
+      return;
+    }
+  } else {
+    /* Find ignore for sender and possibly exit method */
+    ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
 
-		if (ignoreInfo.ignoreClientToClientProtocol) {
-			return;
-		}
-	}
+    if (ignoreInfo.ignoreClientToClientProtocol) {
+      return;
+    }
+  }
 
-	/* Context */
-	NSMutableString *textMutable = [text mutableCopy];
+  /* Context */
+  NSMutableString *textMutable = [text mutableCopy];
 
-	NSString *command = textMutable.uppercaseGetToken;
+  NSString *command = textMutable.uppercaseGetToken;
 
-	if (command.length == 0) {
-		return;
-	}
+  if (command.length == 0) {
+    return;
+  }
 
-	/* Lag check responses should only ever come from ourselves so we
-	 let it through. The method we call into already has a built-in
-	 check for myself so no need to wrap an if statement here. */
-	if ([command isEqualToString:@"LAGCHECK"]) {
-		[self receiveCTCPLagCheckQuery:m text:textMutable];
+  /* Lag check responses should only ever come from ourselves so we
+   let it through. The method we call into already has a built-in
+   check for myself so no need to wrap an if statement here. */
+  if ([command isEqualToString:@"LAGCHECK"]) {
+    [self receiveCTCPLagCheckQuery:m text:textMutable];
 
-		return;
-	}
+    return;
+  }
 
-	/* Ignore query if the user has configured Glasstual to do so */
-	if ([TPCPreferences replyToCTCPRequests] == NO) {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[bg3-h2]", command, sender)];
+  /* Ignore query if the user has configured Glasstual to do so */
+  if ([TPCPreferences replyToCTCPRequests] == NO) {
+    [self
+        printDebugInformationToConsole:TXTLS(@"IRC[bg3-h2]", command, sender)];
 
-		return;
-	}
+    return;
+  }
 
-	/* Process DCC requests elsewhere */
-	if ([command isEqualToString:@"DCC"]) {
-		[self receivedDCCQuery:m text:textMutable ignoreInfo:ignoreInfo];
+  /* Process DCC requests elsewhere */
+  if ([command isEqualToString:@"DCC"]) {
+    [self receivedDCCQuery:m text:textMutable ignoreInfo:ignoreInfo];
 
-		return;
-	}
+    return;
+  }
 
-	/* Print message */
-	IRCChannel *printTarget = nil;
+  /* Print message */
+  IRCChannel *printTarget = nil;
 
-	if ([TPCPreferences locationToSendNotices] == TXNoticeSendLocationSelectedChannel) {
-		printTarget = [mainWindow() selectedChannelOn:self];
-	}
+  if ([TPCPreferences locationToSendNotices] ==
+      TXNoticeSendLocationSelectedChannel) {
+    printTarget = [mainWindow() selectedChannelOn:self];
+  }
 
-	NSString *messageToPrint = TXTLS(@"IRC[6o8-eu]", command, sender);
+  NSString *messageToPrint = TXTLS(@"IRC[6o8-eu]", command, sender);
 
-	[self print:messageToPrint
-				by:nil
-		 inChannel:printTarget
-			asType:TVCLogLineTypeCTCPQuery
-		   command:m.command
-		receivedAt:m.receivedAt];
+  [self print:messageToPrint
+              by:nil
+       inChannel:printTarget
+          asType:TVCLogLineTypeCTCPQuery
+         command:m.command
+      receivedAt:m.receivedAt];
 
-	/* CLIENTINFO command */
-	if ([command isEqualToString:@"CLIENTINFO"]) {
-		[self sendCTCPReply:sender command:command text:TXTLS(@"IRC[jer-ju]")];
-	}
+  /* CLIENTINFO command */
+  if ([command isEqualToString:@"CLIENTINFO"]) {
+    [self sendCTCPReply:sender command:command text:TXTLS(@"IRC[jer-ju]")];
+  }
 
-	/* FINGER command */
-	else if ([command isEqualToString:@"FINGER"]) {
-		[self sendCTCPReply:sender command:command text:TXTLS(@"IRC[en6-mw]")];
-	}
+  /* FINGER command */
+  else if ([command isEqualToString:@"FINGER"]) {
+    [self sendCTCPReply:sender command:command text:TXTLS(@"IRC[en6-mw]")];
+  }
 
-	/* PING command */
-	else if ([command isEqualToString:@"PING"]) {
-		if (textMutable.length > 50) {
-			LogToConsoleFault("Ignoring PING query that exceeds 50 bytes");
+  /* PING command */
+  else if ([command isEqualToString:@"PING"]) {
+    if (textMutable.length > 50) {
+      LogToConsoleFault("Ignoring PING query that exceeds 50 bytes");
 
-			return;
-		}
+      return;
+    }
 
-		[self sendCTCPReply:sender command:command text:textMutable];
-	}
+    [self sendCTCPReply:sender command:command text:textMutable];
+  }
 
-	/* TIME command */
-	else if ([command isEqualToString:@"TIME"]) {
-		NSDateFormatter *dateFormatter = TXSharedISOStandardDateFormatter();
+  /* TIME command */
+  else if ([command isEqualToString:@"TIME"]) {
+    NSDateFormatter *dateFormatter = TXSharedISOStandardDateFormatter();
 
-		NSString *text = [dateFormatter stringFromDate:[NSDate date]];
+    NSString *text = [dateFormatter stringFromDate:[NSDate date]];
 
-		[self sendCTCPReply:sender command:command text:text];
-	}
+    [self sendCTCPReply:sender command:command text:text];
+  }
 
-	/* USERINFO command */
-	else if ([command isEqualToString:@"USERINFO"]) {
-		[self sendCTCPReply:sender command:command text:self.config.realName];
-	}
+  /* USERINFO command */
+  else if ([command isEqualToString:@"USERINFO"]) {
+    [self sendCTCPReply:sender command:command text:self.config.realName];
+  }
 
-	/* VERSION command */
-	else if ([command isEqualToString:@"VERSION"]) {
-		/* A reply set on the connection wins over the global masquerade
-		 because networks that gate on the client string do so per network. */
-		NSString *fakeVersion = self.config.ctcpVersionReply;
+  /* VERSION command */
+  else if ([command isEqualToString:@"VERSION"]) {
+    /* A reply set on the connection wins over the global masquerade
+     because networks that gate on the client string do so per network. */
+    NSString *fakeVersion = self.config.ctcpVersionReply;
 
-		if (fakeVersion.length == 0) {
-			fakeVersion = [TPCPreferences masqueradeCTCPVersion];
-		}
+    if (fakeVersion.length == 0) {
+      fakeVersion = [TPCPreferences masqueradeCTCPVersion];
+    }
 
-		if (fakeVersion.length > 0) {
-			[self sendCTCPReply:sender command:command text:fakeVersion];
+    if (fakeVersion.length > 0) {
+      [self sendCTCPReply:sender command:command text:fakeVersion];
 
-			return;
-		}
+      return;
+    }
 
-		NSString *applicationName = [TPCApplicationInfo applicationNameWithoutVersion];
-		NSString *versionShort = [TPCApplicationInfo applicationVersionShort];
+    NSString *applicationName =
+        [TPCApplicationInfo applicationNameWithoutVersion];
+    NSString *versionShort = [TPCApplicationInfo applicationVersionShort];
 
-		NSString *text = TXTLS(@"IRC[vzu-u7]", applicationName, versionShort);
+    NSString *text = TXTLS(@"IRC[vzu-u7]", applicationName, versionShort);
 
-		[self sendCTCPReply:sender command:command text:text];
-	}
+    [self sendCTCPReply:sender command:command text:text];
+  }
 }
 
-- (void)receiveCTCPLagCheckQuery:(IRCMessage *)m text:(NSString *)text
-{
-	NSParameterAssert(m != nil);
+- (void)receiveCTCPLagCheckQuery:(IRCMessage *)m text:(NSString *)text {
+  NSParameterAssert(m != nil);
 
-	if ([self messageIsFromMyself:m] == NO) {
-		return;
-	}
+  if ([self messageIsFromMyself:m] == NO) {
+    return;
+  }
 
-	NSDictionary *lagCheckContext = [text formDataUsingSeparator:@"&"];
+  NSDictionary *lagCheckContext = [text formDataUsingSeparator:@"&"];
 
-	if (lagCheckContext.count == 0) {
-		return;
-	}
+  if (lagCheckContext.count == 0) {
+    return;
+  }
 
-	NSString *connectionIdentifier = lagCheckContext[@"connection"];
+  NSString *connectionIdentifier = lagCheckContext[@"connection"];
 
-	if ([connectionIdentifier isEqualToString:self.socket.uniqueIdentifier] == NO) {
-		/* We check which connection this event is linked to so that
-		 we ignore events after reconnects (such as from a bouncer). */
+  if ([connectionIdentifier isEqualToString:self.socket.uniqueIdentifier] ==
+      NO) {
+    /* We check which connection this event is linked to so that
+     we ignore events after reconnects (such as from a bouncer). */
 
-		return;
-	}
+    return;
+  }
 
-	NSTimeInterval firstTime = [lagCheckContext doubleForKey:@"time"];
+  NSTimeInterval firstTime = [lagCheckContext doubleForKey:@"time"];
 
-	double delta = (([NSDate timeIntervalSince1970] - firstTime) * 1000);
+  double delta = (([NSDate timeIntervalSince1970] - firstTime) * 1000);
 
-	NSString *ratingString = nil;
+  NSString *ratingString = nil;
 
-	if (delta <= 10) { // Yeah, okay…
-		ratingString = TXTLS(@"IRC[58g-m9]");
-	} else if (delta > 10 && delta <= 25) { // Are you plugged into the server?
-		ratingString = TXTLS(@"IRC[0jp-93]");
-	} else if (delta > 25 && delta <= 100) { // Pretty good
-		ratingString = TXTLS(@"IRC[yym-8y]");
-	} else if (delta > 100 && delta <= 125) { // Not bad
-		ratingString = TXTLS(@"IRC[mic-qe]");
-	} else if (delta > 125 && delta <= 200) { // Okay
-		ratingString = TXTLS(@"IRC[mqg-wi]");
-	} else if (delta > 200 && delta <= 225) { // Needs work
-		ratingString = TXTLS(@"IRC[ut8-7s]");
-	} else if (delta > 225 && delta <= 300) { // Slow
-		ratingString = TXTLS(@"IRC[8fo-ss]");
-	} else if (delta > 300) { // Very Slow
-		ratingString = TXTLS(@"IRC[4oc-p2]");
-	}
+  if (delta <= 10) { // Yeah, okay…
+    ratingString = TXTLS(@"IRC[58g-m9]");
+  } else if (delta > 10 && delta <= 25) { // Are you plugged into the server?
+    ratingString = TXTLS(@"IRC[0jp-93]");
+  } else if (delta > 25 && delta <= 100) { // Pretty good
+    ratingString = TXTLS(@"IRC[yym-8y]");
+  } else if (delta > 100 && delta <= 125) { // Not bad
+    ratingString = TXTLS(@"IRC[mic-qe]");
+  } else if (delta > 125 && delta <= 200) { // Okay
+    ratingString = TXTLS(@"IRC[mqg-wi]");
+  } else if (delta > 200 && delta <= 225) { // Needs work
+    ratingString = TXTLS(@"IRC[ut8-7s]");
+  } else if (delta > 225 && delta <= 300) { // Slow
+    ratingString = TXTLS(@"IRC[8fo-ss]");
+  } else if (delta > 300) { // Very Slow
+    ratingString = TXTLS(@"IRC[4oc-p2]");
+  }
 
-	NSString *message = TXTLS(@"IRC[5bf-jp]", self.serverAddress, delta, ratingString);
+  NSString *message =
+      TXTLS(@"IRC[5bf-jp]", self.serverAddress, delta, ratingString);
 
-	NSString *channelName = lagCheckContext[@"channel"];
+  NSString *channelName = lagCheckContext[@"channel"];
 
-	IRCChannel *channel = nil;
+  IRCChannel *channel = nil;
 
-	if (channelName) {
-		channel = [self findChannel:channelName];
-	}
+  if (channelName) {
+    channel = [self findChannel:channelName];
+  }
 
-	if (channel) {
-		[self sendPrivmsg:message toChannel:channel];
-	} else {
-		[self printDebugInformation:message];
-	}
+  if (channel) {
+    [self sendPrivmsg:message toChannel:channel];
+  } else {
+    [self printDebugInformation:message];
+  }
 }
 
-- (void)receiveCTCPReply:(IRCMessage *)m text:(NSString *)text
-{
-	NSParameterAssert(m != nil);
-	NSParameterAssert(text != nil);
+- (void)receiveCTCPReply:(IRCMessage *)m text:(NSString *)text {
+  NSParameterAssert(m != nil);
+  NSParameterAssert(text != nil);
 
-	/* Find ignore for sender and possibly exit method */
-	IRCAddressBookEntry *ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
+  /* Find ignore for sender and possibly exit method */
+  IRCAddressBookEntry *ignoreInfo =
+      [self findAddressBookEntryForHostmask:m.senderHostmask];
 
-	if (ignoreInfo.ignoreClientToClientProtocol) {
-		return;
-	}
+  if (ignoreInfo.ignoreClientToClientProtocol) {
+    return;
+  }
 
-	/* Context */
-	NSMutableString *textMutable = [text mutableCopy];
+  /* Context */
+  NSMutableString *textMutable = [text mutableCopy];
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	NSString *command = textMutable.uppercaseGetToken;
+  NSString *command = textMutable.uppercaseGetToken;
 
-	if (command.length == 0) {
-		return;
-	}
+  if (command.length == 0) {
+    return;
+  }
 
-	/* Print message */
-	IRCChannel *printTarget = nil;
+  /* Print message */
+  IRCChannel *printTarget = nil;
 
-	if ([TPCPreferences locationToSendNotices] == TXNoticeSendLocationSelectedChannel) {
-		printTarget = [mainWindow() selectedChannelOn:self];
-	}
+  if ([TPCPreferences locationToSendNotices] ==
+      TXNoticeSendLocationSelectedChannel) {
+    printTarget = [mainWindow() selectedChannelOn:self];
+  }
 
-	NSString *messageToPrint = nil;
+  NSString *messageToPrint = nil;
 
-	if ([command isEqualToString:@"PING"]) {
-		double delta = ([NSDate timeIntervalSince1970] - textMutable.doubleValue);
+  if ([command isEqualToString:@"PING"]) {
+    double delta = ([NSDate timeIntervalSince1970] - textMutable.doubleValue);
 
-		messageToPrint = TXTLS(@"IRC[vy7-pk]", sender, command, delta);
-	} else {
-		messageToPrint = TXTLS(@"IRC[dri-l7]", sender, command, textMutable);
-	}
+    messageToPrint = TXTLS(@"IRC[vy7-pk]", sender, command, delta);
+  } else {
+    messageToPrint = TXTLS(@"IRC[dri-l7]", sender, command, textMutable);
+  }
 
-	[self print:messageToPrint
-				by:nil
-		 inChannel:printTarget
-			asType:TVCLogLineTypeCTCPReply
-		   command:m.command
-		receivedAt:m.receivedAt];
+  [self print:messageToPrint
+              by:nil
+       inChannel:printTarget
+          asType:TVCLogLineTypeCTCPReply
+         command:m.command
+      receivedAt:m.receivedAt];
 }
 
-- (void)receiveJoin:(IRCMessage *)m
-{
-	NSAssertReturn([m paramsCount] > 0);
+- (void)receiveJoin:(IRCMessage *)m {
+  NSAssertReturn([m paramsCount] > 0);
 
-	BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
+  BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	BOOL myself = [self nicknameIsMyself:sender];
+  BOOL myself = [self nicknameIsMyself:sender];
 
-	NSString *channelName = [m paramAt:0];
+  NSString *channelName = [m paramAt:0];
 
-	IRCChannel *channel = nil;
+  IRCChannel *channel = nil;
 
-	if (isPrintOnlyMessage == NO && myself) {
-		channel = [self findChannelOrCreate:channelName];
+  if (isPrintOnlyMessage == NO && myself) {
+    channel = [self findChannelOrCreate:channelName];
 
-		if (channel.isActive == NO && channel.isChannel) {
-			[channel activate];
-		} else {
-			return;
-		}
+    if (channel.isActive == NO && channel.isChannel) {
+      [channel activate];
+    } else {
+      return;
+    }
 
-		self.userHostmask = m.senderHostmask;
+    self.userHostmask = m.senderHostmask;
 
-		[mainWindow() reloadTreeItem:channel];
-	} else // myself
-	{
-		channel = [self findChannel:channelName];
+    [mainWindow() reloadTreeItem:channel];
+  } else // myself
+  {
+    channel = [self findChannel:channelName];
 
-		if (channel == nil || channel.isChannel == NO) {
-			return;
-		}
-	}
+    if (channel == nil || channel.isChannel == NO) {
+      return;
+    }
+  }
 
-	if (isPrintOnlyMessage == NO) {
-		/* A user might already exist by having a private message open */
-		IRCUserMutable *userMutable = [self mutableCopyOfUserWithNickname:sender];
+  if (isPrintOnlyMessage == NO) {
+    /* A user might already exist by having a private message open */
+    IRCUserMutable *userMutable = [self mutableCopyOfUserWithNickname:sender];
 
-		userMutable.nickname = m.senderNickname;
-		userMutable.username = m.senderUsername;
-		userMutable.address = m.senderAddress;
+    userMutable.nickname = m.senderNickname;
+    userMutable.username = m.senderUsername;
+    userMutable.address = m.senderAddress;
 
-		/* extended-join: JOIN <channel> <account|*> :<real name> */
-		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityExtendedJoin] && [m paramsCount] >= 3) {
-			userMutable.account = [self.class accountFromWireValue:[m paramAt:1]];
-			userMutable.realName = [m paramAt:2];
-		}
+    /* extended-join: JOIN <channel> <account|*> :<real name> */
+    if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityExtendedJoin] &&
+        [m paramsCount] >= 3) {
+      userMutable.account = [self.class accountFromWireValue:[m paramAt:1]];
+      userMutable.realName = [m paramAt:2];
+    }
 
-		IRCUser *userAdded = [self addUserAndReturn:userMutable];
+    IRCUser *userAdded = [self addUserAndReturn:userMutable];
 
-		IRCChannelUser *member = [[IRCChannelUser alloc] initWithUser:userAdded];
+    IRCChannelUser *member = [[IRCChannelUser alloc] initWithUser:userAdded];
 
-		[channel addMember:member checkForDuplicates:YES];
-	}
+    [channel addMember:member checkForDuplicates:YES];
+  }
 
-	if (isPrintOnlyMessage == NO && myself == NO) {
-		IRCChannel *senderQuery = [self findChannel:sender];
+  if (isPrintOnlyMessage == NO && myself == NO) {
+    IRCChannel *senderQuery = [self findChannel:sender];
 
-		if (senderQuery && senderQuery.isActive == NO) {
-			[senderQuery activate];
+    if (senderQuery && senderQuery.isActive == NO) {
+      [senderQuery activate];
 
-			[self print:TXTLS(@"IRC[q0q-ch]", sender)
-						by:nil
-				 inChannel:senderQuery
-					asType:TVCLogLineTypeJoin
-				   command:m.command
-				receivedAt:m.receivedAt];
+      [self print:TXTLS(@"IRC[q0q-ch]", sender)
+                  by:nil
+           inChannel:senderQuery
+              asType:TVCLogLineTypeJoin
+             command:m.command
+          receivedAt:m.receivedAt];
 
-			[mainWindow() reloadTreeItem:senderQuery];
-		}
-	}
+      [mainWindow() reloadTreeItem:senderQuery];
+    }
+  }
 
-	IRCAddressBookEntry *ignoreInfo = nil;
+  IRCAddressBookEntry *ignoreInfo = nil;
 
-	if (myself == NO) {
-		ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
+  if (myself == NO) {
+    ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
 
-		if (ignoreInfo && isPrintOnlyMessage == NO) {
-			[self updateUserTrackingStatusForEntry:ignoreInfo withMessage:m];
-		}
-	}
+    if (ignoreInfo && isPrintOnlyMessage == NO) {
+      [self updateUserTrackingStatusForEntry:ignoreInfo withMessage:m];
+    }
+  }
 
-	BOOL printMessage = [self postReceivedMessage:m withText:nil destinedFor:channel];
+  BOOL printMessage = [self postReceivedMessage:m
+                                       withText:nil
+                                    destinedFor:channel];
 
-	if (printMessage && myself == NO) {
-		if ([TPCPreferences showJoinLeave] == NO) {
-			printMessage = NO;
-		} else if (channel.config.ignoreGeneralEventMessages) {
-			printMessage = NO;
-		} else if (ignoreInfo) {
-			printMessage = (ignoreInfo.ignoreGeneralEventMessages == NO);
-		}
-	}
+  if (printMessage && myself == NO) {
+    if ([TPCPreferences showJoinLeave] == NO) {
+      printMessage = NO;
+    } else if (channel.config.ignoreGeneralEventMessages) {
+      printMessage = NO;
+    } else if (ignoreInfo) {
+      printMessage = (ignoreInfo.ignoreGeneralEventMessages == NO);
+    }
+  }
 
-	if (printMessage) {
-		NSString *message =
-			TXTLS(@"IRC[ziu-p9]", sender, m.senderUsername, m.senderAddress.stringByAppendingIRCFormattingStop);
+  if (printMessage) {
+    NSString *message =
+        TXTLS(@"IRC[ziu-p9]", sender, m.senderUsername,
+              m.senderAddress.stringByAppendingIRCFormattingStop);
 
-		[self print:message
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeJoin
-			   command:m.command
-			receivedAt:m.receivedAt];
-	}
+    [self print:message
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeJoin
+           command:m.command
+        receivedAt:m.receivedAt];
+  }
 
-	if (isPrintOnlyMessage) {
-		return;
-	}
+  if (isPrintOnlyMessage) {
+    return;
+  }
 
-	[mainWindow() updateTitleFor:channel];
+  [mainWindow() updateTitleFor:channel];
 
-	if (myself) {
-		if (self.config.sendWhoCommandRequestsToChannels && self.isBrokenIRCd_aka_Twitch == NO) {
-			[self requestModesForChannel:channel];
-		}
-	} else {
-		[self notifyEvent:TXNotificationTypeUserJoined
-				 lineType:TVCLogLineTypeJoin
-				   target:channel
-				 nickname:sender
-					 text:nil];
-	}
+  if (myself) {
+    if (self.config.sendWhoCommandRequestsToChannels &&
+        self.isBrokenIRCd_aka_Twitch == NO) {
+      [self requestModesForChannel:channel];
+    }
+  } else {
+    [self notifyEvent:TXNotificationTypeUserJoined
+             lineType:TVCLogLineTypeJoin
+               target:channel
+             nickname:sender
+                 text:nil];
+  }
 }
 
-- (void)receivePart:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receivePart:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 0);
+  NSAssertReturn([m paramsCount] > 0);
 
-	/* ZNC sends PART messages for every channel when the client disconnects to force
-	 it to update its local status. This is incredibly misleading to the user, as they
-	 see the message that they left the channel and believe they did. This condition
-	 filters out these messages. Because Glasstual is intelligent enough to clear status
-	 related to channels when the connection is quit, this is safe. */
-	if (self.isQuitting && self.isConnectedToZNC) {
-		return;
-	}
+  /* ZNC sends PART messages for every channel when the client disconnects to
+   force it to update its local status. This is incredibly misleading to the
+   user, as they see the message that they left the channel and believe they
+   did. This condition filters out these messages. Because Glasstual is
+   intelligent enough to clear status related to channels when the connection is
+   quit, this is safe. */
+  if (self.isQuitting && self.isConnectedToZNC) {
+    return;
+  }
 
-	BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
+  BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
 
-	NSString *channelName = [m paramAt:0];
+  NSString *channelName = [m paramAt:0];
 
-	IRCChannel *channel = [self findChannel:channelName];
+  IRCChannel *channel = [self findChannel:channelName];
 
-	if (channel == nil || channel.isChannel == NO) {
-		return;
-	}
+  if (channel == nil || channel.isChannel == NO) {
+    return;
+  }
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	NSString *comment = [m paramAt:1];
+  NSString *comment = [m paramAt:1];
 
-	BOOL myself = [self nicknameIsMyself:sender];
+  BOOL myself = [self nicknameIsMyself:sender];
 
-	if (isPrintOnlyMessage == NO) {
-		if (myself) {
-			[channel deactivate];
+  if (isPrintOnlyMessage == NO) {
+    if (myself) {
+      [channel deactivate];
 
-			[mainWindow() reloadTreeItem:channel];
-		} else {
-			[channel removeMemberWithNickname:sender];
+      [mainWindow() reloadTreeItem:channel];
+    } else {
+      [channel removeMemberWithNickname:sender];
 
-			/* Notify user */
-			[self notifyEvent:TXNotificationTypeUserParted
-					 lineType:TVCLogLineTypePart
-					   target:channel
-					 nickname:sender
-						 text:comment];
-		}
-	}
+      /* Notify user */
+      [self notifyEvent:TXNotificationTypeUserParted
+               lineType:TVCLogLineTypePart
+                 target:channel
+               nickname:sender
+                   text:comment];
+    }
+  }
 
-	BOOL printMessage = [self postReceivedMessage:m withText:comment destinedFor:channel];
+  BOOL printMessage = [self postReceivedMessage:m
+                                       withText:comment
+                                    destinedFor:channel];
 
-	if (printMessage && myself == NO) {
-		if ([TPCPreferences showJoinLeave] == NO) {
-			printMessage = NO;
-		} else if (channel.config.ignoreGeneralEventMessages) {
-			printMessage = NO;
-		} else {
-			IRCAddressBookEntry *ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
+  if (printMessage && myself == NO) {
+    if ([TPCPreferences showJoinLeave] == NO) {
+      printMessage = NO;
+    } else if (channel.config.ignoreGeneralEventMessages) {
+      printMessage = NO;
+    } else {
+      IRCAddressBookEntry *ignoreInfo =
+          [self findAddressBookEntryForHostmask:m.senderHostmask];
 
-			if (ignoreInfo) {
-				printMessage = (ignoreInfo.ignoreGeneralEventMessages == NO);
-			}
-		}
-	}
+      if (ignoreInfo) {
+        printMessage = (ignoreInfo.ignoreGeneralEventMessages == NO);
+      }
+    }
+  }
 
-	if (printMessage) {
-		NSString *message =
-			TXTLS(@"IRC[nkr-kf]", sender, m.senderUsername, m.senderAddress.stringByAppendingIRCFormattingStop);
+  if (printMessage) {
+    NSString *message =
+        TXTLS(@"IRC[nkr-kf]", sender, m.senderUsername,
+              m.senderAddress.stringByAppendingIRCFormattingStop);
 
-		if (comment.length > 0) {
-			message = TXTLS(@"IRC[ozy-6i]", message, comment.stringByAppendingIRCFormattingStop);
-		}
+    if (comment.length > 0) {
+      message = TXTLS(@"IRC[ozy-6i]", message,
+                      comment.stringByAppendingIRCFormattingStop);
+    }
 
-		[self print:message
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypePart
-			   command:m.command
-			receivedAt:m.receivedAt];
-	}
+    [self print:message
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypePart
+           command:m.command
+        receivedAt:m.receivedAt];
+  }
 
-	if (isPrintOnlyMessage == NO) {
-		[mainWindow() updateTitleFor:channel];
-	}
+  if (isPrintOnlyMessage == NO) {
+    [mainWindow() updateTitleFor:channel];
+  }
 }
 
-- (void)receiveKick:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveKick:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 1);
+  NSAssertReturn([m paramsCount] > 1);
 
-	BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
+  BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
 
-	NSString *channelName = [m paramAt:0];
+  NSString *channelName = [m paramAt:0];
 
-	IRCChannel *channel = [self findChannel:channelName];
+  IRCChannel *channel = [self findChannel:channelName];
 
-	if (channel == nil || channel.isChannel == NO) {
-		return;
-	}
+  if (channel == nil || channel.isChannel == NO) {
+    return;
+  }
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	NSString *target = [m paramAt:1];
-	NSString *comment = [m paramAt:2];
+  NSString *target = [m paramAt:1];
+  NSString *comment = [m paramAt:2];
 
-	BOOL myself = [self nicknameIsMyself:target];
+  BOOL myself = [self nicknameIsMyself:target];
 
-	if (isPrintOnlyMessage == NO) {
-		if (myself) {
-			[channel deactivate];
+  if (isPrintOnlyMessage == NO) {
+    if (myself) {
+      [channel deactivate];
 
-			[mainWindow() reloadTreeItem:channel];
+      [mainWindow() reloadTreeItem:channel];
 
-			/* Notify user */
-			[self notifyEvent:TXNotificationTypeKick
-					 lineType:TVCLogLineTypeKick
-					   target:channel
-					 nickname:sender
-						 text:comment];
+      /* Notify user */
+      [self notifyEvent:TXNotificationTypeKick
+               lineType:TVCLogLineTypeKick
+                 target:channel
+               nickname:sender
+                   text:comment];
 
-			/* Rejoin channel */
-			if ([TPCPreferences rejoinOnKick] && channel.errorOnLastJoinAttempt == NO) {
-				[self printDebugInformation:TXTLS(@"IRC[zzj-2h]") inChannel:channel];
+      /* Rejoin channel */
+      if ([TPCPreferences rejoinOnKick] &&
+          channel.errorOnLastJoinAttempt == NO) {
+        [self printDebugInformation:TXTLS(@"IRC[zzj-2h]") inChannel:channel];
 
-				[self cancelPerformRequestsWithSelector:@selector(joinKickedChannel:) object:channel];
+        [self cancelPerformRequestsWithSelector:@selector(joinKickedChannel:)
+                                         object:channel];
 
-				[self performSelectorInCommonModes:@selector(joinKickedChannel:) withObject:channel afterDelay:3.0];
-			}
-		} else // myself
-		{
-			[channel removeMemberWithNickname:target];
-		}
-	}
+        [self performSelectorInCommonModes:@selector(joinKickedChannel:)
+                                withObject:channel
+                                afterDelay:3.0];
+      }
+    } else // myself
+    {
+      [channel removeMemberWithNickname:target];
+    }
+  }
 
-	BOOL printMessage = [self postReceivedMessage:m withText:comment destinedFor:channel];
+  BOOL printMessage = [self postReceivedMessage:m
+                                       withText:comment
+                                    destinedFor:channel];
 
-	if (printMessage && myself == NO) {
-		if ([TPCPreferences showJoinLeave] == NO) {
-			printMessage = NO;
-		} else if (channel.config.ignoreGeneralEventMessages) {
-			printMessage = NO;
-		} else {
-			IRCAddressBookEntry *ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
+  if (printMessage && myself == NO) {
+    if ([TPCPreferences showJoinLeave] == NO) {
+      printMessage = NO;
+    } else if (channel.config.ignoreGeneralEventMessages) {
+      printMessage = NO;
+    } else {
+      IRCAddressBookEntry *ignoreInfo =
+          [self findAddressBookEntryForHostmask:m.senderHostmask];
 
-			if (ignoreInfo) {
-				printMessage = (ignoreInfo.ignoreGeneralEventMessages == NO);
-			}
-		}
-	}
+      if (ignoreInfo) {
+        printMessage = (ignoreInfo.ignoreGeneralEventMessages == NO);
+      }
+    }
+  }
 
-	if (printMessage) {
-		NSString *message = TXTLS(@"IRC[9aj-bd]", sender, target, comment.stringByAppendingIRCFormattingStop);
+  if (printMessage) {
+    NSString *message = TXTLS(@"IRC[9aj-bd]", sender, target,
+                              comment.stringByAppendingIRCFormattingStop);
 
-		[self print:message
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeKick
-			   command:m.command
-			receivedAt:m.receivedAt];
-	}
+    [self print:message
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeKick
+           command:m.command
+        receivedAt:m.receivedAt];
+  }
 
-	if (isPrintOnlyMessage == NO) {
-		[mainWindow() updateTitleFor:channel];
-	}
+  if (isPrintOnlyMessage == NO) {
+    [mainWindow() updateTitleFor:channel];
+  }
 }
 
-- (void)receiveQuit:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveQuit:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 0);
+  NSAssertReturn([m paramsCount] > 0);
 
-	BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
+  BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
 
-	NSString *channelName = nil;
+  NSString *channelName = nil;
 
-	NSString *comment = nil;
+  NSString *comment = nil;
 
-	if (isPrintOnlyMessage) {
-		channelName = [m paramAt:0];
+  if (isPrintOnlyMessage) {
+    channelName = [m paramAt:0];
 
-		comment = [m paramAt:1];
-	} else {
-		comment = [m paramAt:0];
-	}
+    comment = [m paramAt:1];
+  } else {
+    comment = [m paramAt:0];
+  }
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	BOOL myself = [self nicknameIsMyself:sender];
+  BOOL myself = [self nicknameIsMyself:sender];
 
-	IRCUser *user = nil;
+  IRCUser *user = nil;
 
-	if (isPrintOnlyMessage == NO) {
-		user = [self findUser:sender];
+  if (isPrintOnlyMessage == NO) {
+    user = [self findUser:sender];
 
-		if (user == nil) {
-			return;
-		}
-	}
+    if (user == nil) {
+      return;
+    }
+  }
 
-	IRCAddressBookEntry *ignoreInfo = nil;
+  IRCAddressBookEntry *ignoreInfo = nil;
 
-	if (myself == NO) {
-		ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
+  if (myself == NO) {
+    ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
 
-		if (ignoreInfo && isPrintOnlyMessage == NO) {
-			[self updateUserTrackingStatusForEntry:ignoreInfo withMessage:m];
-		}
-	}
+    if (ignoreInfo && isPrintOnlyMessage == NO) {
+      [self updateUserTrackingStatusForEntry:ignoreInfo withMessage:m];
+    }
+  }
 
-	NSString *messageToPrint =
-		TXTLS(@"IRC[53b-dm]", sender, m.senderUsername, m.senderAddress.stringByAppendingIRCFormattingStop);
+  NSString *messageToPrint =
+      TXTLS(@"IRC[53b-dm]", sender, m.senderUsername,
+            m.senderAddress.stringByAppendingIRCFormattingStop);
 
-	if (comment.length > 0) {
-		messageToPrint = TXTLS(@"IRC[tok-st]", messageToPrint, comment.stringByAppendingIRCFormattingStop);
-	}
+  if (comment.length > 0) {
+    messageToPrint = TXTLS(@"IRC[tok-st]", messageToPrint,
+                           comment.stringByAppendingIRCFormattingStop);
+  }
 
-	void (^printingBlock)(IRCChannel *) = ^(IRCChannel *channel) {
-		if (myself == NO && isPrintOnlyMessage == NO) {
-			switch (channel.type) {
-			case IRCChannelTypeChannel: {
-				IRCChannelUser *member = [user userAssociatedWithChannel:channel];
+  void (^printingBlock)(IRCChannel *) = ^(IRCChannel *channel) {
+    if (myself == NO && isPrintOnlyMessage == NO) {
+      switch (channel.type) {
+      case IRCChannelTypeChannel: {
+        IRCChannelUser *member = [user userAssociatedWithChannel:channel];
 
-				if (member == nil) {
-					return;
-				}
+        if (member == nil) {
+          return;
+        }
 
-				[channel removeMember:member];
+        [channel removeMember:member];
 
-				break;
-			}
-			case IRCChannelTypePrivateMessage: {
-				if ([sender isEqualToStringIgnoringCase:channel.name] == NO) {
-					return;
-				}
+        break;
+      }
+      case IRCChannelTypePrivateMessage: {
+        if ([sender isEqualToStringIgnoringCase:channel.name] == NO) {
+          return;
+        }
 
-				if (channel.isActive) {
-					[channel deactivate];
+        if (channel.isActive) {
+          [channel deactivate];
 
-					[mainWindow() reloadTreeItem:channel];
-				}
+          [mainWindow() reloadTreeItem:channel];
+        }
 
-				break;
-			}
-			default: {
-				return;
-			}
-			}
-		}
+        break;
+      }
+      default: {
+        return;
+      }
+      }
+    }
 
-		NSString *message = messageToPrint;
+    NSString *message = messageToPrint;
 
-		if (channel.isChannel) {
-			BOOL printMessage = [self postReceivedMessage:m withText:comment destinedFor:channel];
+    if (channel.isChannel) {
+      BOOL printMessage = [self postReceivedMessage:m
+                                           withText:comment
+                                        destinedFor:channel];
 
-			if (printMessage && myself == NO) {
-				if ([TPCPreferences showJoinLeave] == NO) {
-					printMessage = NO;
-				} else if (channel.config.ignoreGeneralEventMessages) {
-					printMessage = NO;
-				} else if (ignoreInfo) {
-					printMessage = (ignoreInfo.ignoreGeneralEventMessages == NO);
-				}
-			}
+      if (printMessage && myself == NO) {
+        if ([TPCPreferences showJoinLeave] == NO) {
+          printMessage = NO;
+        } else if (channel.config.ignoreGeneralEventMessages) {
+          printMessage = NO;
+        } else if (ignoreInfo) {
+          printMessage = (ignoreInfo.ignoreGeneralEventMessages == NO);
+        }
+      }
 
-			[mainWindow() updateTitleFor:channel];
+      [mainWindow() updateTitleFor:channel];
 
-			if (printMessage == NO) {
-				return;
-			}
-		} else // -isChannel
-		{
-			message = TXTLS(@"IRC[8bk-mx]", sender);
-		}
+      if (printMessage == NO) {
+        return;
+      }
+    } else // -isChannel
+    {
+      message = TXTLS(@"IRC[8bk-mx]", sender);
+    }
 
-		[self print:message
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeQuit
-			   command:m.command
-			receivedAt:m.receivedAt];
-	};
+    [self print:message
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeQuit
+           command:m.command
+        receivedAt:m.receivedAt];
+  };
 
-	if (isPrintOnlyMessage) {
-		IRCChannel *channel = [self findChannel:channelName];
+  if (isPrintOnlyMessage) {
+    IRCChannel *channel = [self findChannel:channelName];
 
-		if (channel == nil) {
-			return;
-		}
+    if (channel == nil) {
+      return;
+    }
 
-		printingBlock(channel);
+    printingBlock(channel);
 
-		return;
-	}
+    return;
+  }
 
-	for (IRCChannel *c in self.channelList) {
-		printingBlock(c);
-	}
+  for (IRCChannel *c in self.channelList) {
+    printingBlock(c);
+  }
 
-	if (myself == NO) {
-		[mainWindow() updateTitleFor:self];
+  if (myself == NO) {
+    [mainWindow() updateTitleFor:self];
 
-		[self notifyEvent:TXNotificationTypeUserDisconnected
-				 lineType:TVCLogLineTypeQuit
-				   target:nil
-				 nickname:sender
-					 text:comment];
-	}
+    [self notifyEvent:TXNotificationTypeUserDisconnected
+             lineType:TVCLogLineTypeQuit
+               target:nil
+             nickname:sender
+                 text:comment];
+  }
 }
 
-- (void)receiveKill:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveKill:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 0);
+  NSAssertReturn([m paramsCount] > 0);
 
-	NSString *nickname = [m paramAt:0];
+  NSString *nickname = [m paramAt:0];
 
-	for (IRCChannel *c in self.channelList) {
-		[c removeMemberWithNickname:nickname];
-	}
+  for (IRCChannel *c in self.channelList) {
+    [c removeMemberWithNickname:nickname];
+  }
 }
 
-- (void)receiveNick:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveNick:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	/* Print-only NICK messages (ZNC playback) carry the channel as an extra parameter. */
-	NSAssertReturn([m paramsCount] >= 1);
+  /* Print-only NICK messages (ZNC playback) carry the channel as an extra
+   * parameter. */
+  NSAssertReturn([m paramsCount] >= 1);
 
-	/* Print only messages target specific channels which means
-	 the index of incoming data will be different */
-	BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
+  /* Print only messages target specific channels which means
+   the index of incoming data will be different */
+  BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
 
-	NSString *channelName = nil;
+  NSString *channelName = nil;
 
-	NSString *newNickname = nil;
+  NSString *newNickname = nil;
 
-	if (isPrintOnlyMessage) {
-		channelName = [m paramAt:0];
+  if (isPrintOnlyMessage) {
+    channelName = [m paramAt:0];
 
-		newNickname = [m paramAt:1];
-	} else {
-		newNickname = [m paramAt:0];
-	}
+    newNickname = [m paramAt:1];
+  } else {
+    newNickname = [m paramAt:0];
+  }
 
-	/* There's no reason to perform an update if nothing changed */
-	NSString *oldNickname = m.senderNickname;
+  /* There's no reason to perform an update if nothing changed */
+  NSString *oldNickname = m.senderNickname;
 
-	if ([oldNickname isEqualToString:newNickname]) {
-		return;
-	}
+  if ([oldNickname isEqualToString:newNickname]) {
+    return;
+  }
 
-	BOOL myself = [self nicknameIsMyself:oldNickname];
+  BOOL myself = [self nicknameIsMyself:oldNickname];
 
-	/* Find address book entry for old nickname and update tracking
-	 status. This entry will also be used later on,	 when printing, 
-	 to decide whether to print the message. */
-	IRCAddressBookEntry *oldNicknameIgnoreInfo = nil;
+  /* Find address book entry for old nickname and update tracking
+   status. This entry will also be used later on,	 when printing,
+   to decide whether to print the message. */
+  IRCAddressBookEntry *oldNicknameIgnoreInfo = nil;
 
-	if (myself == NO) {
-		oldNicknameIgnoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
-	}
+  if (myself == NO) {
+    oldNicknameIgnoreInfo =
+        [self findAddressBookEntryForHostmask:m.senderHostmask];
+  }
 
-	/* Perform restricted actions */
-	if (isPrintOnlyMessage == NO) {
-		if (myself) {
-			self.userNickname = newNickname;
+  /* Perform restricted actions */
+  if (isPrintOnlyMessage == NO) {
+    if (myself) {
+      self.userNickname = newNickname;
 
-			if (self.tryingNicknameSentNickname != nil) {
-				self.tryingNicknameSentNickname = newNickname;
-			}
+      if (self.tryingNicknameSentNickname != nil) {
+        self.tryingNicknameSentNickname = newNickname;
+      }
 
-			/* Reload window title (our nickname is shown there) */
-			[mainWindow() updateTitleFor:self];
-		} else {
-			/* Update user tracking status for old nickname */
-			if (oldNicknameIgnoreInfo) {
-				[self updateUserTrackingStatusForEntry:oldNicknameIgnoreInfo withMessage:m];
-			}
+      /* Reload window title (our nickname is shown there) */
+      [mainWindow() updateTitleFor:self];
+    } else {
+      /* Update user tracking status for old nickname */
+      if (oldNicknameIgnoreInfo) {
+        [self updateUserTrackingStatusForEntry:oldNicknameIgnoreInfo
+                                   withMessage:m];
+      }
 
-			/* Update user tracking status for new nickname */
-			IRCAddressBookEntry *newNicknameIgnoreInfo = [self findUserTrackingAddressBookEntryForNickname:newNickname];
+      /* Update user tracking status for new nickname */
+      IRCAddressBookEntry *newNicknameIgnoreInfo =
+          [self findUserTrackingAddressBookEntryForNickname:newNickname];
 
-			if (newNicknameIgnoreInfo) {
-				[self updateUserTrackingStatusForEntry:newNicknameIgnoreInfo withMessage:m];
-			}
-		}
+      if (newNicknameIgnoreInfo) {
+        [self updateUserTrackingStatusForEntry:newNicknameIgnoreInfo
+                                   withMessage:m];
+      }
+    }
 
-		/* Inform style of change */
-		[self postEventToViewController:@"nicknameChanged"];
-	}
+    /* Inform style of change */
+    [self postEventToViewController:@"nicknameChanged"];
+  }
 
-	/* Inform observers */
-	[RZNotificationCenter() postNotificationName:IRCClientUserNicknameChangedNotification
-										  object:self
-										userInfo:@{@"oldNickname" : oldNickname, @"newNickname" : newNickname}];
+  /* Inform observers */
+  [RZNotificationCenter()
+      postNotificationName:IRCClientUserNicknameChangedNotification
+                    object:self
+                  userInfo:@{
+                    @"oldNickname" : oldNickname,
+                    @"newNickname" : newNickname
+                  }];
 
-	/* Look for user */
-	IRCUser *user = nil;
+  /* Look for user */
+  IRCUser *user = nil;
 
-	if (isPrintOnlyMessage == NO) {
-		user = [self findUser:oldNickname];
+  if (isPrintOnlyMessage == NO) {
+    user = [self findUser:oldNickname];
 
-		if (user == nil) {
-			return;
-		}
-	}
+    if (user == nil) {
+      return;
+    }
+  }
 
-	/* Setup block that is used by printing operations */
-	NSString *messageToPrint = nil;
+  /* Setup block that is used by printing operations */
+  NSString *messageToPrint = nil;
 
-	if (myself) {
-		messageToPrint = TXTLS(@"IRC[rr6-yo]", newNickname);
-	} else {
-		messageToPrint = TXTLS(@"IRC[fxw-5s]", oldNickname, newNickname);
-	}
+  if (myself) {
+    messageToPrint = TXTLS(@"IRC[rr6-yo]", newNickname);
+  } else {
+    messageToPrint = TXTLS(@"IRC[fxw-5s]", oldNickname, newNickname);
+  }
 
-	void (^printingBlock)(IRCChannel *) = ^(IRCChannel *channel) {
-		if (isPrintOnlyMessage == NO) {
-			switch (channel.type) {
-			case IRCChannelTypeChannel: {
-				/* Rename the user in the channel */
-				IRCChannelUser *member = [user userAssociatedWithChannel:channel];
+  void (^printingBlock)(IRCChannel *) = ^(IRCChannel *channel) {
+    if (isPrintOnlyMessage == NO) {
+      switch (channel.type) {
+      case IRCChannelTypeChannel: {
+        /* Rename the user in the channel */
+        IRCChannelUser *member = [user userAssociatedWithChannel:channel];
 
-				if (member == nil) {
-					return;
-				}
+        if (member == nil) {
+          return;
+        }
 
-				[channel resortMember:member];
+        [channel resortMember:member];
 
-				break;
-			}
-			case IRCChannelTypePrivateMessage: {
-				/* Rename private message if one with old name is found */
-				if ([oldNickname isEqualToStringIgnoringCase:channel.name] == NO) {
-					return;
-				}
+        break;
+      }
+      case IRCChannelTypePrivateMessage: {
+        /* Rename private message if one with old name is found */
+        if ([oldNickname isEqualToStringIgnoringCase:channel.name] == NO) {
+          return;
+        }
 
-				IRCChannel *newNicknameQuery = [self findChannel:newNickname];
+        IRCChannel *newNicknameQuery = [self findChannel:newNickname];
 
-				if (newNicknameQuery) {
-					break;
-				}
+        if (newNicknameQuery) {
+          break;
+        }
 
-				channel.name = newNickname;
+        channel.name = newNickname;
 
-				[mainWindow() reloadTreeItem:channel];
+        [mainWindow() reloadTreeItem:channel];
 
-				[mainWindow() updateTitleFor:channel]; // Refresh hostmask
+        [mainWindow() updateTitleFor:channel]; // Refresh hostmask
 
-				break;
-			}
-			default: {
-				return;
-			}
-			}
-		} // isPrintOnlyMessage == NO
+        break;
+      }
+      default: {
+        return;
+      }
+      }
+    } // isPrintOnlyMessage == NO
 
-		/* Determine whether the message should be printed */
-		if (channel.isChannel) {
-			BOOL printMessage = [self postReceivedMessage:m withText:newNickname destinedFor:channel];
+    /* Determine whether the message should be printed */
+    if (channel.isChannel) {
+      BOOL printMessage = [self postReceivedMessage:m
+                                           withText:newNickname
+                                        destinedFor:channel];
 
-			if (printMessage && myself == NO) {
-				if ([TPCPreferences showJoinLeave] == NO) {
-					printMessage = NO;
-				} else if (channel.config.ignoreGeneralEventMessages) {
-					printMessage = NO;
-				} else if (oldNicknameIgnoreInfo) {
-					printMessage = (oldNicknameIgnoreInfo.ignoreGeneralEventMessages == NO);
-				}
-			}
+      if (printMessage && myself == NO) {
+        if ([TPCPreferences showJoinLeave] == NO) {
+          printMessage = NO;
+        } else if (channel.config.ignoreGeneralEventMessages) {
+          printMessage = NO;
+        } else if (oldNicknameIgnoreInfo) {
+          printMessage =
+              (oldNicknameIgnoreInfo.ignoreGeneralEventMessages == NO);
+        }
+      }
 
-			if (printMessage == NO) {
-				return;
-			}
-		}
+      if (printMessage == NO) {
+        return;
+      }
+    }
 
-		/* Print message */
-		[self print:messageToPrint
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeNick
-			   command:m.command
-			receivedAt:m.receivedAt];
-	};
+    /* Print message */
+    [self print:messageToPrint
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeNick
+           command:m.command
+        receivedAt:m.receivedAt];
+  };
 
-	/* Target print */
-	if (isPrintOnlyMessage) {
-		IRCChannel *channel = [self findChannel:channelName];
+  /* Target print */
+  if (isPrintOnlyMessage) {
+    IRCChannel *channel = [self findChannel:channelName];
 
-		if (channel == nil) {
-			return;
-		}
+    if (channel == nil) {
+      return;
+    }
 
-		printingBlock(channel);
+    printingBlock(channel);
 
-		return;
-	}
+    return;
+  }
 
-	/* Continue with normal operations */
-	[self renameUser:user to:newNickname];
+  /* Continue with normal operations */
+  [self renameUser:user to:newNickname];
 
-	for (IRCChannel *c in self.channelList) {
-		printingBlock(c);
-	}
+  for (IRCChannel *c in self.channelList) {
+    printingBlock(c);
+  }
 }
 
-- (void)receiveMode:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveMode:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 1);
+  NSAssertReturn([m paramsCount] > 1);
 
-	BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
+  BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	NSString *channelName = [m paramAt:0];
-	NSString *modeString = [m sequence:1];
+  NSString *channelName = [m paramAt:0];
+  NSString *modeString = [m sequence:1];
 
-	/* Present user modes */
-	if ([self stringIsChannelName:channelName] == NO) {
-		BOOL printMessage = [self postReceivedCommand:@"UMODE" withText:modeString destinedFor:nil referenceMessage:m];
+  /* Present user modes */
+  if ([self stringIsChannelName:channelName] == NO) {
+    BOOL printMessage = [self postReceivedCommand:@"UMODE"
+                                         withText:modeString
+                                      destinedFor:nil
+                                 referenceMessage:m];
 
-		if (printMessage) {
-			[self print:TXTLS(@"IRC[v5d-ix]", sender, modeString)
-						by:nil
-				 inChannel:nil
-					asType:TVCLogLineTypeMode
-				   command:m.command
-				receivedAt:m.receivedAt];
-		}
+    if (printMessage) {
+      [self print:TXTLS(@"IRC[v5d-ix]", sender, modeString)
+                  by:nil
+           inChannel:nil
+              asType:TVCLogLineTypeMode
+             command:m.command
+          receivedAt:m.receivedAt];
+    }
 
-		return;
-	}
+    return;
+  }
 
-	/* Present channel modes */
-	IRCChannel *channel = [self findChannel:channelName];
+  /* Present channel modes */
+  IRCChannel *channel = [self findChannel:channelName];
 
-	if (channel == nil || channel.isChannel == NO) {
-		return;
-	}
+  if (channel == nil || channel.isChannel == NO) {
+    return;
+  }
 
-	if (isPrintOnlyMessage == NO) {
-		NSArray *modes = [channel.modeInfo updateModes:modeString];
+  if (isPrintOnlyMessage == NO) {
+    NSArray *modes = [channel.modeInfo updateModes:modeString];
 
-		for (IRCModeInfo *mode in modes) {
-			if ([mode isModeForChangingMemberModeOn:self] == NO) {
-				continue;
-			}
+    for (IRCModeInfo *mode in modes) {
+      if ([mode isModeForChangingMemberModeOn:self] == NO) {
+        continue;
+      }
 
-			[channel changeMember:mode.modeParameter mode:mode.modeSymbol value:mode.modeIsSet];
-		}
-	}
+      [channel changeMember:mode.modeParameter
+                       mode:mode.modeSymbol
+                      value:mode.modeIsSet];
+    }
+  }
 
-	BOOL printMessage = [self postReceivedMessage:m withText:modeString destinedFor:channel];
+  BOOL printMessage = [self postReceivedMessage:m
+                                       withText:modeString
+                                    destinedFor:channel];
 
-	if (printMessage) {
-		printMessage = ([TPCPreferences showJoinLeave] && channel.config.ignoreGeneralEventMessages == NO);
-	}
+  if (printMessage) {
+    printMessage = ([TPCPreferences showJoinLeave] &&
+                    channel.config.ignoreGeneralEventMessages == NO);
+  }
 
-	if (printMessage) {
-		[self print:TXTLS(@"IRC[v5d-ix]", sender, modeString)
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeMode
-			   command:m.command
-			receivedAt:m.receivedAt];
-	}
+  if (printMessage) {
+    [self print:TXTLS(@"IRC[v5d-ix]", sender, modeString)
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeMode
+           command:m.command
+        receivedAt:m.receivedAt];
+  }
 
-	if (isPrintOnlyMessage == NO) {
-		[mainWindow() updateTitleFor:channel];
-	}
+  if (isPrintOnlyMessage == NO) {
+    [mainWindow() updateTitleFor:channel];
+  }
 }
 
-- (void)receiveTopic:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveTopic:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] == 2);
+  NSAssertReturn([m paramsCount] == 2);
 
-	BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
+  BOOL isPrintOnlyMessage = m.isPrintOnlyMessage;
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	NSString *channelName = [m paramAt:0];
-	NSString *topic = [m paramAt:1];
+  NSString *channelName = [m paramAt:0];
+  NSString *topic = [m paramAt:1];
 
-	IRCChannel *channel = [self findChannel:channelName];
+  IRCChannel *channel = [self findChannel:channelName];
 
-	if (channel == nil || channel.isChannel == NO) {
-		return;
-	}
+  if (channel == nil || channel.isChannel == NO) {
+    return;
+  }
 
-	if (isPrintOnlyMessage == NO) {
-		channel.topic = topic;
-	}
+  if (isPrintOnlyMessage == NO) {
+    channel.topic = topic;
+  }
 
-	BOOL printMessage = [self postReceivedMessage:m withText:topic destinedFor:channel];
+  BOOL printMessage = [self postReceivedMessage:m
+                                       withText:topic
+                                    destinedFor:channel];
 
-	if (printMessage) {
-		[self print:TXTLS(@"IRC[qq2-66]", sender, topic)
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeTopic
-			   command:m.command
-			receivedAt:m.receivedAt];
-	}
+  if (printMessage) {
+    [self print:TXTLS(@"IRC[qq2-66]", sender, topic)
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeTopic
+           command:m.command
+        receivedAt:m.receivedAt];
+  }
 }
 
-- (void)receiveInvite:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveInvite:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] == 2);
+  NSAssertReturn([m paramsCount] == 2);
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	NSString *invitee = [m paramAt:0];
+  NSString *invitee = [m paramAt:0];
 
-	NSString *channelName = [m paramAt:1];
+  NSString *channelName = [m paramAt:1];
 
-	/* invite-notify: an invite for somebody else is informational. It is
-	 shown in the channel it concerns and never triggers the invite prompt. */
-	if ([self nicknameIsMyself:invitee] == NO) {
-		IRCChannel *channel = [self findChannel:channelName];
+  /* invite-notify: an invite for somebody else is informational. It is
+   shown in the channel it concerns and never triggers the invite prompt. */
+  if ([self nicknameIsMyself:invitee] == NO) {
+    IRCChannel *channel = [self findChannel:channelName];
 
-		if (channel == nil || [self postReceivedMessage:m withText:channelName destinedFor:channel] == NO) {
-			return;
-		}
+    if (channel == nil || [self postReceivedMessage:m
+                                           withText:channelName
+                                        destinedFor:channel] == NO) {
+      return;
+    }
 
-		[self print:TXTLS(@"IRC[inv-nt]", sender, invitee, channelName)
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeInvite
-			   command:m.command
-			receivedAt:m.receivedAt];
+    [self print:TXTLS(@"IRC[inv-nt]", sender, invitee, channelName)
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeInvite
+           command:m.command
+        receivedAt:m.receivedAt];
 
-		return;
-	}
+    return;
+  }
 
-	NSString *message = TXTLS(@"IRC[qw4-t3]", sender, m.senderUsername, m.senderAddress, channelName);
+  NSString *message = TXTLS(@"IRC[qw4-t3]", sender, m.senderUsername,
+                            m.senderAddress, channelName);
 
-	/* Invite notifications are sent to frontmost channel on server of if it is
-	 not on server, then it will be redirected to console. */
-	BOOL printMessage = [self postReceivedMessage:m withText:channelName destinedFor:nil];
+  /* Invite notifications are sent to frontmost channel on server of if it is
+   not on server, then it will be redirected to console. */
+  BOOL printMessage = [self postReceivedMessage:m
+                                       withText:channelName
+                                    destinedFor:nil];
 
-	if (printMessage) {
-		[self print:message
-					by:nil
-			 inChannel:[mainWindow() selectedChannelOn:self]
-				asType:TVCLogLineTypeInvite
-			   command:m.command
-			receivedAt:m.receivedAt];
-	}
+  if (printMessage) {
+    [self print:message
+                by:nil
+         inChannel:[mainWindow() selectedChannelOn:self]
+            asType:TVCLogLineTypeInvite
+           command:m.command
+        receivedAt:m.receivedAt];
+  }
 
-	[self notifyEvent:TXNotificationTypeInvite
-			 lineType:TVCLogLineTypeInvite
-			   target:nil
-			 nickname:sender
-				 text:channelName];
+  [self notifyEvent:TXNotificationTypeInvite
+           lineType:TVCLogLineTypeInvite
+             target:nil
+           nickname:sender
+               text:channelName];
 
-	if ([TPCPreferences autoJoinOnInvite]) {
-		[self joinUnlistedChannel:channelName];
-	}
+  if ([TPCPreferences autoJoinOnInvite]) {
+    [self joinUnlistedChannel:channelName];
+  }
 }
 
-- (void)receiveError:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveError:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSString *message = m.sequence;
+  NSString *message = m.sequence;
 
-	if (([message hasPrefix:@"Closing Link:"] && [message hasSuffix:@"(Excess Flood)"]) ||
-		([message hasPrefix:@"Closing Link:"] && [message hasSuffix:@"(Max SendQ exceeded)"])) {
-		__weak IRCClient *weakSelf = self;
+  if (([message hasPrefix:@"Closing Link:"] &&
+       [message hasSuffix:@"(Excess Flood)"]) ||
+      ([message hasPrefix:@"Closing Link:"] &&
+       [message hasSuffix:@"(Max SendQ exceeded)"])) {
+    __weak IRCClient *weakSelf = self;
 
-		self.disconnectCallback = ^{
-			[weakSelf cancelReconnect];
-		};
-	}
+    self.disconnectCallback = ^{
+      [weakSelf cancelReconnect];
+    };
+  }
 
-	[self printError:message asCommand:m.command];
+  [self printError:message asCommand:m.command];
 }
 
-- (void)receiveCertInfo:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveCertInfo:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] == 2);
+  NSAssertReturn([m paramsCount] == 2);
 
-	/* CERTINFO is not a standard command for Glasstual to
-	 receive which means we should be strict about what
-	 conditions we will accept it under. */
-	if (self.zncBouncerIsSendingCertificateInfo == NO || m.senderIsServer == NO ||
-		[m.senderNickname isEqualToString:@"znc.in"] == NO) {
-		return;
-	}
+  /* CERTINFO is not a standard command for Glasstual to
+   receive which means we should be strict about what
+   conditions we will accept it under. */
+  if (self.zncBouncerIsSendingCertificateInfo == NO || m.senderIsServer == NO ||
+      [m.senderNickname isEqualToString:@"znc.in"] == NO) {
+    return;
+  }
 
-	/* The data we expect to receive should be chunk split 
-	 which means it is safe to assume a maximum length. */
-	NSString *data = m.sequence;
+  /* The data we expect to receive should be chunk split
+   which means it is safe to assume a maximum length. */
+  NSString *data = m.sequence;
 
-	if (data.length < 2 || data.length > 65) {
-		return;
-	}
+  if (data.length < 2 || data.length > 65) {
+    return;
+  }
 
-	/* Write line to the mutable buffer */
-	if (self.zncBouncerCertificateChainDataMutable) {
-		[self.zncBouncerCertificateChainDataMutable appendFormat:@"%@\n", data];
-	}
+  /* Write line to the mutable buffer */
+  if (self.zncBouncerCertificateChainDataMutable) {
+    [self.zncBouncerCertificateChainDataMutable appendFormat:@"%@\n", data];
+  }
 }
 
-- (void)receiveBatch:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveBatch:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] >= 1);
+  NSAssertReturn([m paramsCount] >= 1);
 
-	NSString *batchToken = [m paramAt:0];
+  NSString *batchToken = [m paramAt:0];
 
-	if (batchToken.length <= 1) {
-		LogToConsoleError("Cannot process BATCH command because [batchToken length] <= 1");
+  if (batchToken.length <= 1) {
+    LogToConsoleError(
+        "Cannot process BATCH command because [batchToken length] <= 1");
 
-		return;
-	}
+    return;
+  }
 
-	NSString *batchType = [m paramAt:1];
+  NSString *batchType = [m paramAt:1];
 
-	BOOL isBatchOpening = NO;
+  BOOL isBatchOpening = NO;
 
-	if ([batchToken hasPrefix:@"+"]) {
-		batchToken = [batchToken substringFromIndex:1];
+  if ([batchToken hasPrefix:@"+"]) {
+    batchToken = [batchToken substringFromIndex:1];
 
-		isBatchOpening = YES;
-	} else if ([batchToken hasPrefix:@"-"]) {
-		batchToken = [batchToken substringFromIndex:1];
+    isBatchOpening = YES;
+  } else if ([batchToken hasPrefix:@"-"]) {
+    batchToken = [batchToken substringFromIndex:1];
 
-		isBatchOpening = NO;
-	} else {
-		LogToConsoleError("Cannot process BATCH command because there was no open or close modifier");
+    isBatchOpening = NO;
+  } else {
+    LogToConsoleError("Cannot process BATCH command because there was no open "
+                      "or close modifier");
 
-		return;
-	}
+    return;
+  }
 
-	if ([batchToken onlyContainsCharactersFromCharacterSet:[NSCharacterSet Ato9UnderscoreDash]] == NO) {
-		LogToConsoleError("Cannot process BATCH command because the batch token contains illegal characters");
+  if ([batchToken
+          onlyContainsCharactersFromCharacterSet:[NSCharacterSet
+                                                     Ato9UnderscoreDash]] ==
+      NO) {
+    LogToConsoleError("Cannot process BATCH command because the batch token "
+                      "contains illegal characters");
 
-		return;
-	}
+    return;
+  }
 
-	if (isBatchOpening == NO) {
-		/* Find batch message matching known token */
-		IRCMessageBatchMessage *thisBatchMessage = [self.batchMessages queuedEntryWithBatchToken:batchToken];
+  if (isBatchOpening == NO) {
+    /* Find batch message matching known token */
+    IRCMessageBatchMessage *thisBatchMessage =
+        [self.batchMessages queuedEntryWithBatchToken:batchToken];
 
-		if (thisBatchMessage == nil) {
-			LogToConsoleError("Cannot process BATCH command because -queuedEntryWithBatchToken: returned nil");
+    if (thisBatchMessage == nil) {
+      LogToConsoleError("Cannot process BATCH command because "
+                        "-queuedEntryWithBatchToken: returned nil");
 
-			return;
-		}
+      return;
+    }
 
-		thisBatchMessage.batchIsOpen = NO;
+    thisBatchMessage.batchIsOpen = NO;
 
-		/* The messages of a nested batch are queued on the outermost
-		 batch (see -filterBatchCommandIncomingData:) and replayed when
-		 that one closes. The nested batch itself is done now. */
-		if (thisBatchMessage.parentBatchMessage) {
-			[self.batchMessages dequeueEntry:thisBatchMessage];
+    /* The messages of a nested batch are queued on the outermost
+     batch (see -filterBatchCommandIncomingData:) and replayed when
+     that one closes. The nested batch itself is done now. */
+    if (thisBatchMessage.parentBatchMessage) {
+      [self.batchMessages dequeueEntry:thisBatchMessage];
 
-			return;
-		}
+      return;
+    }
 
-		batchType = thisBatchMessage.batchType;
+    batchType = thisBatchMessage.batchType;
 
-		/* Process queued entries for this batch message. */
-		/* The method used for processing queued entries will 
-		 also remove it from queue once completed. */
-		if ([self batchTypeIsChatHistory:batchType]) {
-			[self replayChatHistoryBatch:thisBatchMessage];
-		} else if ([self batchTypeIsNetsplit:batchType]) {
-			[self replayNetsplitBatch:thisBatchMessage];
-		} else {
-			[self recursivelyProcessBatchMessage:thisBatchMessage];
-		}
+    /* Process queued entries for this batch message. */
+    /* The method used for processing queued entries will
+     also remove it from queue once completed. */
+    if ([self batchTypeIsChatHistory:batchType]) {
+      [self replayChatHistoryBatch:thisBatchMessage];
+    } else if ([self batchTypeIsNetsplit:batchType]) {
+      [self replayNetsplitBatch:thisBatchMessage];
+    } else {
+      [self recursivelyProcessBatchMessage:thisBatchMessage];
+    }
 
-		/* Set vendor specific flags based on BATCH command values */
-		if ([batchType isEqualToString:@"znc.in/playback"]) {
-			self.zncBouncerIsPlayingBackHistory = NO;
-		} else if ([batchType isEqualToString:@"znc.in/tlsinfo"]) {
-			self.zncBouncerIsSendingCertificateInfo = NO;
-		}
-	} else // isBatchOpening == NO
-	{
-		/* Check batch= value to look for possible parent batch.*/
-		IRCMessageBatchMessage *parentBatchMessage = nil;
+    /* Set vendor specific flags based on BATCH command values */
+    if ([batchType isEqualToString:@"znc.in/playback"]) {
+      self.zncBouncerIsPlayingBackHistory = NO;
+    } else if ([batchType isEqualToString:@"znc.in/tlsinfo"]) {
+      self.zncBouncerIsSendingCertificateInfo = NO;
+    }
+  } else // isBatchOpening == NO
+  {
+    /* Check batch= value to look for possible parent batch.*/
+    IRCMessageBatchMessage *parentBatchMessage = nil;
 
-		NSString *parentBatchMessageToken = m.batchToken;
+    NSString *parentBatchMessageToken = m.batchToken;
 
-		if (parentBatchMessageToken) {
-			parentBatchMessage = [self.batchMessages queuedEntryWithBatchToken:parentBatchMessageToken];
-		}
+    if (parentBatchMessageToken) {
+      parentBatchMessage = [self.batchMessages
+          queuedEntryWithBatchToken:parentBatchMessageToken];
+    }
 
-		/* Create new batch message and queue it. */
-		IRCMessageBatchMessage *newBatchMessage = [IRCMessageBatchMessage new];
+    /* Create new batch message and queue it. */
+    IRCMessageBatchMessage *newBatchMessage = [IRCMessageBatchMessage new];
 
-		newBatchMessage.batchIsOpen = YES;
+    newBatchMessage.batchIsOpen = YES;
 
-		newBatchMessage.batchToken = batchToken;
-		newBatchMessage.batchType = batchType;
+    newBatchMessage.batchToken = batchToken;
+    newBatchMessage.batchType = batchType;
 
-		/* Parameters after the type: the target of a chathistory
-		 batch, the two servers of a netsplit or netjoin. */
-		if ([m paramsCount] > 2) {
-			newBatchMessage.batchParameters = [m.params subarrayWithRange:NSMakeRange(2, ([m paramsCount] - 2))];
-		}
+    /* Parameters after the type: the target of a chathistory
+     batch, the two servers of a netsplit or netjoin. */
+    if ([m paramsCount] > 2) {
+      newBatchMessage.batchParameters =
+          [m.params subarrayWithRange:NSMakeRange(2, ([m paramsCount] - 2))];
+    }
 
-		newBatchMessage.parentBatchMessage = parentBatchMessage;
+    newBatchMessage.parentBatchMessage = parentBatchMessage;
 
-		[self.batchMessages queueEntry:newBatchMessage];
+    [self.batchMessages queueEntry:newBatchMessage];
 
-		/* Set vendor specific flags based on BATCH command values */
-		if ([batchType isEqualToString:@"znc.in/playback"]) {
-			self.zncBouncerIsPlayingBackHistory = self.isConnectedToZNC;
-		} else if ([batchType isEqualToString:@"znc.in/tlsinfo"]) {
-			self.zncBouncerIsSendingCertificateInfo = self.isConnectedToZNC;
+    /* Set vendor specific flags based on BATCH command values */
+    if ([batchType isEqualToString:@"znc.in/playback"]) {
+      self.zncBouncerIsPlayingBackHistory = self.isConnectedToZNC;
+    } else if ([batchType isEqualToString:@"znc.in/tlsinfo"]) {
+      self.zncBouncerIsSendingCertificateInfo = self.isConnectedToZNC;
 
-			/* If this is parent batch (there is no @batch=), then we
-			 reset the mutable object to read new data. */
-			if (parentBatchMessageToken == nil) {
-				self.zncBouncerCertificateChainDataMutable = [NSMutableString string];
-			}
-		}
-	}
+      /* If this is parent batch (there is no @batch=), then we
+       reset the mutable object to read new data. */
+      if (parentBatchMessageToken == nil) {
+        self.zncBouncerCertificateChainDataMutable = [NSMutableString string];
+      }
+    }
+  }
 }
 
-- (void)receiveChangeHost:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveChangeHost:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] == 2);
+  NSAssertReturn([m paramsCount] == 2);
 
-	NSString *username = [m paramAt:0];
+  NSString *username = [m paramAt:0];
 
-	if ([username isHostmaskUsernameOn:self] == NO) {
-		LogToConsoleError("Username ('%{private}@') received from CHGHOST command is improperly formatted", username);
+  if ([username isHostmaskUsernameOn:self] == NO) {
+    LogToConsoleError("Username ('%{private}@') received from CHGHOST command "
+                      "is improperly formatted",
+                      username);
 
-		return;
-	}
+    return;
+  }
 
-	NSString *address = [m paramAt:1];
+  NSString *address = [m paramAt:1];
 
-	if ([address isHostmaskAddressOn:self] == NO) {
-		LogToConsoleError("Address ('%{private}@') received from CHGHOST command is improperly formatted", address);
+  if ([address isHostmaskAddressOn:self] == NO) {
+    LogToConsoleError("Address ('%{private}@') received from CHGHOST command "
+                      "is improperly formatted",
+                      address);
 
-		return;
-	}
+    return;
+  }
 
-	NSString *nickname = m.senderNickname;
+  NSString *nickname = m.senderNickname;
 
-	[self modifyUserUserWithNickname:nickname
-						   withBlock:^(IRCUserMutable *userMutable) {
-							   userMutable.username = username;
-							   userMutable.address = address;
-						   }];
+  [self modifyUserUserWithNickname:nickname
+                         withBlock:^(IRCUserMutable *userMutable) {
+                           userMutable.username = username;
+                           userMutable.address = address;
+                         }];
 }
 
 #pragma mark -
@@ -8721,73 +9032,71 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 /* "*" on the wire (ACCOUNT, extended-join) and "0" (WHOX) both mean
  the user is not logged in. */
-+ (nullable NSString *)accountFromWireValue:(nullable NSString *)value
-{
-	if (value.length == 0 || [value isEqualToString:@"*"] || [value isEqualToString:@"0"]) {
-		return nil;
-	}
++ (nullable NSString *)accountFromWireValue:(nullable NSString *)value {
+  if (value.length == 0 || [value isEqualToString:@"*"] ||
+      [value isEqualToString:@"0"]) {
+    return nil;
+  }
 
-	return value;
+  return value;
 }
 
-- (void)receiveAccountNotify:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveAccountNotify:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 0);
+  NSAssertReturn([m paramsCount] > 0);
 
-	/* The user may not share a channel with us (extended-monitor);
-	 -modifyUserUserWithNickname: ignores nicknames we do not track. */
-	NSString *account = [self.class accountFromWireValue:[m paramAt:0]];
+  /* The user may not share a channel with us (extended-monitor);
+   -modifyUserUserWithNickname: ignores nicknames we do not track. */
+  NSString *account = [self.class accountFromWireValue:[m paramAt:0]];
 
-	[self modifyUserUserWithNickname:m.senderNickname
-						   withBlock:^(IRCUserMutable *userMutable) {
-							   userMutable.account = account;
-						   }];
+  [self modifyUserUserWithNickname:m.senderNickname
+                         withBlock:^(IRCUserMutable *userMutable) {
+                           userMutable.account = account;
+                         }];
 }
 
-- (void)receiveSetName:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveSetName:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 0);
+  NSAssertReturn([m paramsCount] > 0);
 
-	NSString *realName = [m paramAt:0];
+  NSString *realName = [m paramAt:0];
 
-	[self modifyUserUserWithNickname:m.senderNickname
-						   withBlock:^(IRCUserMutable *userMutable) {
-							   userMutable.realName = realName;
-						   }];
+  [self modifyUserUserWithNickname:m.senderNickname
+                         withBlock:^(IRCUserMutable *userMutable) {
+                           userMutable.realName = realName;
+                         }];
 }
 
 /* account-tag and the bot tag ride on PRIVMSG, NOTICE and TAGMSG.
  The sender is only updated when the server sent the tag. */
-- (void)updateUserIdentityFromMessageTags:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)updateUserIdentityFromMessageTags:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	if (m.senderIsServer || m.senderNickname.length == 0) {
-		return;
-	}
+  if (m.senderIsServer || m.senderNickname.length == 0) {
+    return;
+  }
 
-	NSString *account = m.senderAccount;
+  NSString *account = m.senderAccount;
 
-	BOOL isBot = (m.messageTags[@"bot"] != nil);
+  BOOL isBot = (m.messageTags[@"bot"] != nil);
 
-	if (account == nil && isBot == NO) {
-		return;
-	}
+  if (account == nil && isBot == NO) {
+    return;
+  }
 
-	[self modifyUserUserWithNickname:m.senderNickname
-						   withBlock:^(IRCUserMutable *userMutable) {
-							   if (account) {
-								   userMutable.account = [self.class accountFromWireValue:account];
-							   }
+  [self modifyUserUserWithNickname:m.senderNickname
+                         withBlock:^(IRCUserMutable *userMutable) {
+                           if (account) {
+                             userMutable.account =
+                                 [self.class accountFromWireValue:account];
+                           }
 
-							   if (isBot) {
-								   userMutable.isBot = YES;
-							   }
-						   }];
+                           if (isBot) {
+                             userMutable.isBot = YES;
+                           }
+                         }];
 }
 
 #pragma mark -
@@ -8798,131 +9107,142 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
  tracked by the client for the input bar; reactions are recorded with
  the view; and every event is handed to the style as one structured
  event so a theme can act on it. */
-- (void)receiveTagMessage:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveTagMessage:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 0);
+  NSAssertReturn([m paramsCount] > 0);
 
-	[self updateUserIdentityFromMessageTags:m];
+  [self updateUserIdentityFromMessageTags:m];
 
-	NSString *target = [m paramAt:0];
+  NSString *target = [m paramAt:0];
 
-	NSString *sender = m.senderNickname;
+  NSString *sender = m.senderNickname;
 
-	NSMutableDictionary<NSString *, NSString *> *clientTags = [NSMutableDictionary dictionary];
+  NSMutableDictionary<NSString *, NSString *> *clientTags =
+      [NSMutableDictionary dictionary];
 
-	[m.messageTags enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *value, BOOL *stop) {
-		if ([key hasPrefix:@"+"]) {
-			clientTags[[key substringFromIndex:1]] = value;
-		}
-	}];
+  [m.messageTags enumerateKeysAndObjectsUsingBlock:^(
+                     NSString *key, NSString *value, BOOL *stop) {
+    if ([key hasPrefix:@"+"]) {
+      clientTags[[key substringFromIndex:1]] = value;
+    }
+  }];
 
-	if (clientTags.count == 0) {
-		return;
-	}
+  if (clientTags.count == 0) {
+    return;
+  }
 
-	LogToConsoleDebug("TAGMSG from %{public}@ to %{public}@: %{public}@", sender, target, clientTags);
+  LogToConsoleDebug("TAGMSG from %{public}@ to %{public}@: %{public}@", sender,
+                    target, clientTags);
 
-	/* Ignored users are ignored here as well. */
-	IRCAddressBookEntry *ignoreInfo = [self findAddressBookEntryForHostmask:m.senderHostmask];
+  /* Ignored users are ignored here as well. */
+  IRCAddressBookEntry *ignoreInfo =
+      [self findAddressBookEntryForHostmask:m.senderHostmask];
 
-	if (ignoreInfo.ignorePublicMessages && [self stringIsChannelName:target]) {
-		return;
-	}
+  if (ignoreInfo.ignorePublicMessages && [self stringIsChannelName:target]) {
+    return;
+  }
 
-	if (ignoreInfo.ignorePrivateMessages && [self stringIsChannelName:target] == NO) {
-		return;
-	}
+  if (ignoreInfo.ignorePrivateMessages &&
+      [self stringIsChannelName:target] == NO) {
+    return;
+  }
 
-	/* Resolve the view the event belongs to: the channel, the query
-	 with the sender, or the server console. */
-	IRCChannel *channel = nil;
+  /* Resolve the view the event belongs to: the channel, the query
+   with the sender, or the server console. */
+  IRCChannel *channel = nil;
 
-	if ([self stringIsChannelName:target]) {
-		channel = [self findChannel:target];
-	} else if (sender.length > 0 && [sender isEqualToString:self.userNickname] == NO) {
-		channel = [self findChannel:sender];
-	} else if (target.length > 0) {
-		channel = [self findChannel:target];
-	}
+  if ([self stringIsChannelName:target]) {
+    channel = [self findChannel:target];
+  } else if (sender.length > 0 &&
+             [sender isEqualToString:self.userNickname] == NO) {
+    channel = [self findChannel:sender];
+  } else if (target.length > 0) {
+    channel = [self findChannel:target];
+  }
 
-	BOOL fromLocalUser = (sender.length > 0 && [sender isEqualToString:self.userNickname]);
+  BOOL fromLocalUser =
+      (sender.length > 0 && [sender isEqualToString:self.userNickname]);
 
-	NSString *typing = clientTags[@"typing"];
+  NSString *typing = clientTags[@"typing"];
 
-	if (typing && channel && fromLocalUser == NO) {
-		[self.typingTracker noteTypingState:[IRCTypingTracker stateForTagValue:typing]
-							   fromNickname:sender
-								  inChannel:channel
-									 atDate:m.receivedAt];
-	}
+  if (typing && channel && fromLocalUser == NO) {
+    [self.typingTracker
+        noteTypingState:[IRCTypingTracker stateForTagValue:typing]
+           fromNickname:sender
+              inChannel:channel
+                 atDate:m.receivedAt];
+  }
 
-	[self deliverClientTags:clientTags
-				 fromSender:(sender ?: @"")toTarget:target
-					 inItem:(channel ?: self)timestamp:m.receivedAt
-		  messageIdentifier:m.messageIdentifier
-					account:m.senderAccount];
+  [self deliverClientTags:clientTags
+               fromSender:(sender ?: @"")toTarget:target
+                   inItem:(channel ?: self)timestamp:m.receivedAt
+        messageIdentifier:m.messageIdentifier
+                  account:m.senderAccount];
 
-	[self postReceivedMessage:m];
+  [self postReceivedMessage:m];
 }
 
 /* Records a reaction with the view and hands the event to the style.
  Used for received TAGMSGs and for the local user's own reactions. */
 - (void)deliverClientTags:(NSDictionary<NSString *, NSString *> *)clientTags
-			   fromSender:(NSString *)sender
-				 toTarget:(NSString *)target
-				   inItem:(IRCTreeItem *)item
-				timestamp:(NSDate *)timestamp
-		messageIdentifier:(nullable NSString *)messageIdentifier
-				  account:(nullable NSString *)account
-{
-	NSParameterAssert(clientTags != nil);
-	NSParameterAssert(item != nil);
+               fromSender:(NSString *)sender
+                 toTarget:(NSString *)target
+                   inItem:(IRCTreeItem *)item
+                timestamp:(NSDate *)timestamp
+        messageIdentifier:(nullable NSString *)messageIdentifier
+                  account:(nullable NSString *)account {
+  NSParameterAssert(clientTags != nil);
+  NSParameterAssert(item != nil);
 
-	NSString *reaction = clientTags[@"draft/react"];
-	NSString *reactedTo = clientTags[@"draft/reply"];
+  NSString *reaction = clientTags[@"draft/react"];
+  NSString *reactedTo = clientTags[@"draft/reply"];
 
-	if (reaction.length > 0 && reactedTo.length > 0 && sender.length > 0) {
-		[item.viewController noteReaction:reaction fromNickname:sender toMessageIdentifier:reactedTo];
-	}
+  if (reaction.length > 0 && reactedTo.length > 0 && sender.length > 0) {
+    [item.viewController noteReaction:reaction
+                         fromNickname:sender
+                  toMessageIdentifier:reactedTo];
+  }
 
-	NSDictionary *event = [self tagMessageEventWithClientTags:clientTags
-													   sender:sender
-													   target:target
-													timestamp:timestamp
-											messageIdentifier:messageIdentifier
-													  account:account];
+  NSDictionary *event = [self tagMessageEventWithClientTags:clientTags
+                                                     sender:sender
+                                                     target:target
+                                                  timestamp:timestamp
+                                          messageIdentifier:messageIdentifier
+                                                    account:account];
 
-	[item.viewController evaluateFunction:@"_Glasstual.tagMessageReceived" withArguments:@[ event ] onQueue:NO];
+  [item.viewController evaluateFunction:@"_Glasstual.tagMessageReceived"
+                          withArguments:@[ event ]
+                                onQueue:NO];
 }
 
 /* The object handed to Glasstual.tagMessageReceived() in the view. */
-- (NSDictionary<NSString *, id> *)tagMessageEventWithClientTags:(NSDictionary<NSString *, NSString *> *)clientTags
-														 sender:(NSString *)sender
-														 target:(NSString *)target
-													  timestamp:(NSDate *)timestamp
-											  messageIdentifier:(nullable NSString *)messageIdentifier
-														account:(nullable NSString *)account
-{
-	NSMutableDictionary<NSString *, id> *event = [NSMutableDictionary dictionary];
+- (NSDictionary<NSString *, id> *)
+    tagMessageEventWithClientTags:
+        (NSDictionary<NSString *, NSString *> *)clientTags
+                           sender:(NSString *)sender
+                           target:(NSString *)target
+                        timestamp:(NSDate *)timestamp
+                messageIdentifier:(nullable NSString *)messageIdentifier
+                          account:(nullable NSString *)account {
+  NSMutableDictionary<NSString *, id> *event = [NSMutableDictionary dictionary];
 
-	event[@"sender"] = sender;
-	event[@"target"] = target;
-	event[@"tags"] = [clientTags copy];
-	event[@"timestamp"] = @(timestamp.timeIntervalSince1970);
-	event[@"fromLocalUser"] = @([sender isEqualToString:self.userNickname]);
-	event[@"localUserNickname"] = self.userNickname;
+  event[@"sender"] = sender;
+  event[@"target"] = target;
+  event[@"tags"] = [clientTags copy];
+  event[@"timestamp"] = @(timestamp.timeIntervalSince1970);
+  event[@"fromLocalUser"] = @([sender isEqualToString:self.userNickname]);
+  event[@"localUserNickname"] = self.userNickname;
 
-	if (messageIdentifier) {
-		event[@"msgid"] = messageIdentifier;
-	}
+  if (messageIdentifier) {
+    event[@"msgid"] = messageIdentifier;
+  }
 
-	if (account) {
-		event[@"account"] = account;
-	}
+  if (account) {
+    event[@"account"] = account;
+  }
 
-	return [event copy];
+  return [event copy];
 }
 
 #pragma mark -
@@ -8932,196 +9252,208 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
  messages (labeled-response) and hears them back (echo-message). Without
  both, today's behaviour stands: echo-message suppresses the local print,
  or a plain local print is made. */
-- (BOOL)labeledResponseTrackingEnabled
-{
-	return ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityLabeledResponse] &&
-			[self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]);
+- (BOOL)labeledResponseTrackingEnabled {
+  return (
+      [self
+          isCapabilityEnabled:ClientIRCv3SupportedCapabilityLabeledResponse] &&
+      [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage]);
 }
 
-- (NSString *)nextMessageLabel
-{
-	self.labelCounter += 1;
+- (NSString *)nextMessageLabel {
+  self.labelCounter += 1;
 
-	return [NSString stringWithFormat:@"g%lu", (unsigned long)self.labelCounter];
+  return [NSString stringWithFormat:@"g%lu", (unsigned long)self.labelCounter];
 }
 
 /* Registers a delivery and returns the tags to attach to the outgoing
  message, or nil when tracking is off. */
-- (nullable NSString *)registerPendingDeliveryForChannel:(nullable IRCChannel *)channel
-{
-	if ([self labeledResponseTrackingEnabled] == NO) {
-		return nil;
-	}
+- (nullable NSString *)registerPendingDeliveryForChannel:
+    (nullable IRCChannel *)channel {
+  if ([self labeledResponseTrackingEnabled] == NO) {
+    return nil;
+  }
 
-	NSString *label = [self nextMessageLabel];
+  NSString *label = [self nextMessageLabel];
 
-	IRCLabeledDelivery *delivery = [IRCLabeledDelivery new];
+  IRCLabeledDelivery *delivery = [IRCLabeledDelivery new];
 
-	delivery.label = label;
-	delivery.channel = channel;
-	delivery.state = TVCLogLineDeliveryStatePending;
+  delivery.label = label;
+  delivery.channel = channel;
+  delivery.state = TVCLogLineDeliveryStatePending;
 
-	self.pendingDeliveries[label] = delivery;
+  self.pendingDeliveries[label] = delivery;
 
-	/* A response that never arrives leaves the line pending forever
-	 without this. */
-	[self performSelector:@selector(timeoutDeliveryWithLabel:) withObject:label afterDelay:30.0];
+  /* A response that never arrives leaves the line pending forever
+   without this. */
+  [self performSelector:@selector(timeoutDeliveryWithLabel:)
+             withObject:label
+             afterDelay:30.0];
 
-	return label;
+  return label;
 }
 
-- (void)attachLineNumber:(NSString *)lineNumber toDeliveryWithLabel:(NSString *)label
-{
-	IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
+- (void)attachLineNumber:(NSString *)lineNumber
+     toDeliveryWithLabel:(NSString *)label {
+  IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
 
-	if (delivery == nil) {
-		return;
-	}
+  if (delivery == nil) {
+    return;
+  }
 
-	delivery.lineNumber = lineNumber;
+  delivery.lineNumber = lineNumber;
 }
 
-- (void)timeoutDeliveryWithLabel:(NSString *)label
-{
-	IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
+- (void)timeoutDeliveryWithLabel:(NSString *)label {
+  IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
 
-	if (delivery == nil || delivery.resolved) {
-		return;
-	}
+  if (delivery == nil || delivery.resolved) {
+    return;
+  }
 
-	[self resolveDeliveryWithLabel:label
-							 state:TVCLogLineDeliveryStateFailed
-				 messageIdentifier:nil
-							reason:TXTLS(@"IRC[lbl-to]")];
+  [self resolveDeliveryWithLabel:label
+                           state:TVCLogLineDeliveryStateFailed
+               messageIdentifier:nil
+                          reason:TXTLS(@"IRC[lbl-to]")];
 }
 
 - (void)resolveDeliveryWithLabel:(NSString *)label
-						   state:(TVCLogLineDeliveryState)state
-			   messageIdentifier:(nullable NSString *)messageIdentifier
-						  reason:(nullable NSString *)reason
-{
-	IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
+                           state:(TVCLogLineDeliveryState)state
+               messageIdentifier:(nullable NSString *)messageIdentifier
+                          reason:(nullable NSString *)reason {
+  IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
 
-	if (delivery == nil || delivery.resolved) {
-		return;
-	}
+  if (delivery == nil || delivery.resolved) {
+    return;
+  }
 
-	delivery.resolved = YES;
-	delivery.state = state;
+  delivery.resolved = YES;
+  delivery.state = state;
 
-	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(timeoutDeliveryWithLabel:) object:label];
+  [NSObject cancelPreviousPerformRequestsWithTarget:self
+                                           selector:@selector
+                                           (timeoutDeliveryWithLabel:)
+                                             object:label];
 
-	NSString *lineNumber = delivery.lineNumber;
+  NSString *lineNumber = delivery.lineNumber;
 
-	if (lineNumber == nil) {
-		return;
-	}
+  if (lineNumber == nil) {
+    return;
+  }
 
-	IRCChannel *channel = delivery.channel;
+  IRCChannel *channel = delivery.channel;
 
-	NSString *stateString = [TVCLogLine stringForDeliveryState:state] ?: @"";
+  NSString *stateString = [TVCLogLine stringForDeliveryState:state] ?: @"";
 
-	NSMutableArray<id> *arguments = [NSMutableArray arrayWithObject:lineNumber];
+  NSMutableArray<id> *arguments = [NSMutableArray arrayWithObject:lineNumber];
 
-	[arguments addObject:stateString];
-	[arguments addObject:(messageIdentifier ?: [NSNull null])];
-	[arguments addObject:(reason ?: [NSNull null])];
+  [arguments addObject:stateString];
+  [arguments addObject:(messageIdentifier ?: [NSNull null])];
+  [arguments addObject:(reason ?: [NSNull null])];
 
-	[channel.viewController evaluateFunction:@"_Glasstual.lineDeliveryStateChanged" withArguments:arguments];
+  [channel.viewController
+      evaluateFunction:@"_Glasstual.lineDeliveryStateChanged"
+         withArguments:arguments];
 }
 
 /* Resolves the delivery a labeled message refers to. Returns YES when
  the message was consumed (the echo, an ACK or a FAIL for one of our
  own messages) and must not be processed further. */
-- (BOOL)resolveLabeledResponseForMessage:(IRCMessage *)m
-{
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityLabeledResponse] == NO) {
-		return NO;
-	}
+- (BOOL)resolveLabeledResponseForMessage:(IRCMessage *)m {
+  if ([self
+          isCapabilityEnabled:ClientIRCv3SupportedCapabilityLabeledResponse] ==
+      NO) {
+    return NO;
+  }
 
-	NSString *command = m.command;
+  NSString *command = m.command;
 
-	/* A labeled-response batch carries the label on the BATCH command;
-	 the messages inside it carry only the batch token. Remember the
-	 mapping so a batched echo can still be tied to its delivery. */
-	if ([command isEqualToStringIgnoringCase:@"BATCH"]) {
-		NSString *reference = [m paramAt:0];
+  /* A labeled-response batch carries the label on the BATCH command;
+   the messages inside it carry only the batch token. Remember the
+   mapping so a batched echo can still be tied to its delivery. */
+  if ([command isEqualToStringIgnoringCase:@"BATCH"]) {
+    NSString *reference = [m paramAt:0];
 
-		if ([reference hasPrefix:@"+"]) {
-			NSString *label = m.messageTags[@"label"];
+    if ([reference hasPrefix:@"+"]) {
+      NSString *label = m.messageTags[@"label"];
 
-			if (label.length > 0) {
-				self.labelForBatchToken[[reference substringFromIndex:1]] = label;
-			}
-		} else if ([reference hasPrefix:@"-"]) {
-			NSString *token = [reference substringFromIndex:1];
+      if (label.length > 0) {
+        self.labelForBatchToken[[reference substringFromIndex:1]] = label;
+      }
+    } else if ([reference hasPrefix:@"-"]) {
+      NSString *token = [reference substringFromIndex:1];
 
-			NSString *label = self.labelForBatchToken[token];
+      NSString *label = self.labelForBatchToken[token];
 
-			if (label) {
-				[self.labelForBatchToken removeObjectForKey:token];
+      if (label) {
+        [self.labelForBatchToken removeObjectForKey:token];
 
-				/* A batch that produced no echo is an acknowledgement. */
-				[self resolveDeliveryWithLabel:label
-										 state:TVCLogLineDeliveryStateDelivered
-							 messageIdentifier:nil
-										reason:nil];
-			}
-		}
+        /* A batch that produced no echo is an acknowledgement. */
+        [self resolveDeliveryWithLabel:label
+                                 state:TVCLogLineDeliveryStateDelivered
+                     messageIdentifier:nil
+                                reason:nil];
+      }
+    }
 
-		return NO;
-	}
+    return NO;
+  }
 
-	NSString *label = m.messageTags[@"label"];
+  NSString *label = m.messageTags[@"label"];
 
-	if (label.length == 0 && m.batchToken.length > 0) {
-		label = self.labelForBatchToken[m.batchToken];
-	}
+  if (label.length == 0 && m.batchToken.length > 0) {
+    label = self.labelForBatchToken[m.batchToken];
+  }
 
-	if (label.length == 0 || self.pendingDeliveries[label] == nil) {
-		return NO;
-	}
+  if (label.length == 0 || self.pendingDeliveries[label] == nil) {
+    return NO;
+  }
 
-	if ([command isEqualToStringIgnoringCase:@"FAIL"]) {
-		NSString *reason = [m paramAt:([m paramsCount] - 1)];
+  if ([command isEqualToStringIgnoringCase:@"FAIL"]) {
+    NSString *reason = [m paramAt:([m paramsCount] - 1)];
 
-		[self resolveDeliveryWithLabel:label state:TVCLogLineDeliveryStateFailed messageIdentifier:nil reason:reason];
+    [self resolveDeliveryWithLabel:label
+                             state:TVCLogLineDeliveryStateFailed
+                 messageIdentifier:nil
+                            reason:reason];
 
-		return YES;
-	}
+    return YES;
+  }
 
-	if ([command isEqualToStringIgnoringCase:@"ACK"]) {
-		[self resolveDeliveryWithLabel:label state:TVCLogLineDeliveryStateDelivered messageIdentifier:nil reason:nil];
+  if ([command isEqualToStringIgnoringCase:@"ACK"]) {
+    [self resolveDeliveryWithLabel:label
+                             state:TVCLogLineDeliveryStateDelivered
+                 messageIdentifier:nil
+                            reason:nil];
 
-		return YES;
-	}
+    return YES;
+  }
 
-	NSUInteger commandNumeric = [IRCCommandIndex indexOfRemoteCommand:command];
+  NSUInteger commandNumeric = [IRCCommandIndex indexOfRemoteCommand:command];
 
-	if (commandNumeric == IRCRemoteCommandPrivmsg || commandNumeric == IRCRemoteCommandNotice ||
-		commandNumeric == IRCRemoteCommandTagmsg) {
-		/* The echo of our own message: mark delivered and adopt the msgid
-		 the server assigned so reply/react can reference the line. */
-		[self resolveDeliveryWithLabel:label
-								 state:TVCLogLineDeliveryStateDelivered
-					 messageIdentifier:m.messageIdentifier
-								reason:nil];
+  if (commandNumeric == IRCRemoteCommandPrivmsg ||
+      commandNumeric == IRCRemoteCommandNotice ||
+      commandNumeric == IRCRemoteCommandTagmsg) {
+    /* The echo of our own message: mark delivered and adopt the msgid
+     the server assigned so reply/react can reference the line. */
+    [self resolveDeliveryWithLabel:label
+                             state:TVCLogLineDeliveryStateDelivered
+                 messageIdentifier:m.messageIdentifier
+                            reason:nil];
 
-		return YES;
-	}
+    return YES;
+  }
 
-	return NO;
+  return NO;
 }
 
-- (TVCLogLineDeliveryState)deliveryStateForLabel:(NSString *)label
-{
-	IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
+- (TVCLogLineDeliveryState)deliveryStateForLabel:(NSString *)label {
+  IRCLabeledDelivery *delivery = self.pendingDeliveries[label];
 
-	if (delivery) {
-		return delivery.state;
-	}
+  if (delivery) {
+    return delivery.state;
+  }
 
-	return TVCLogLineDeliveryStateNone;
+  return TVCLogLineDeliveryStateNone;
 }
 
 #pragma mark -
@@ -9131,186 +9463,193 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
  The description is printed as "<command>/<code>: <description>" in the
  channel named by the first context parameter when the client is in it,
  otherwise in the server console. */
-- (void)receiveStandardReply:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveStandardReply:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] >= 3);
+  NSAssertReturn([m paramsCount] >= 3);
 
-	NSString *command = [m paramAt:0];
-	NSString *code = [m paramAt:1];
-	NSString *description = m.params.lastObject;
+  NSString *command = [m paramAt:0];
+  NSString *code = [m paramAt:1];
+  NSString *description = m.params.lastObject;
 
-	if ([m.command isEqualToString:@"FAIL"] && [command isEqualToStringIgnoringCase:@"CHATHISTORY"]) {
-		if ([self noteChatHistoryFailure:m] == NO) {
-			return; // Already reported for this target
-		}
-	}
+  if ([m.command isEqualToString:@"FAIL"] &&
+      [command isEqualToStringIgnoringCase:@"CHATHISTORY"]) {
+    if ([self noteChatHistoryFailure:m] == NO) {
+      return; // Already reported for this target
+    }
+  }
 
-	IRCChannel *channel = nil;
+  IRCChannel *channel = nil;
 
-	if ([m paramsCount] > 3) {
-		NSString *context = [m paramAt:2];
+  if ([m paramsCount] > 3) {
+    NSString *context = [m paramAt:2];
 
-		if ([self stringIsChannelName:context]) {
-			channel = [self findChannel:context];
-		}
-	}
+    if ([self stringIsChannelName:context]) {
+      channel = [self findChannel:context];
+    }
+  }
 
-	NSString *text = nil;
+  NSString *text = nil;
 
-	TVCLogLineType lineType = TVCLogLineTypeNotice;
+  TVCLogLineType lineType = TVCLogLineTypeNotice;
 
-	if ([m.command isEqualToString:@"FAIL"]) {
-		text = TXTLS(@"IRC[p4r-6n]", command, code, description);
+  if ([m.command isEqualToString:@"FAIL"]) {
+    text = TXTLS(@"IRC[p4r-6n]", command, code, description);
 
-		lineType = TVCLogLineTypeDebug;
-	} else if ([m.command isEqualToString:@"WARN"]) {
-		text = TXTLS(@"IRC[y7t-zk]", command, code, description);
-	} else {
-		text = TXTLS(@"IRC[k2e-cb]", command, code, description);
-	}
+    lineType = TVCLogLineTypeDebug;
+  } else if ([m.command isEqualToString:@"WARN"]) {
+    text = TXTLS(@"IRC[y7t-zk]", command, code, description);
+  } else {
+    text = TXTLS(@"IRC[k2e-cb]", command, code, description);
+  }
 
-	BOOL printMessage = [self postReceivedMessage:m withText:text destinedFor:channel];
+  BOOL printMessage = [self postReceivedMessage:m
+                                       withText:text
+                                    destinedFor:channel];
 
-	if (printMessage == NO) {
-		return;
-	}
+  if (printMessage == NO) {
+    return;
+  }
 
-	[self print:text by:nil inChannel:channel asType:lineType command:m.command receivedAt:m.receivedAt];
+  [self print:text
+              by:nil
+       inChannel:channel
+          asType:lineType
+         command:m.command
+      receivedAt:m.receivedAt];
 }
 
 #pragma mark -
 #pragma mark BATCH Command
 
-- (id)queuedBatchMessageWithToken:(NSString *)batchToken
-{
-	return [self.batchMessages queuedEntryWithBatchToken:batchToken];
+- (id)queuedBatchMessageWithToken:(NSString *)batchToken {
+  return [self.batchMessages queuedEntryWithBatchToken:batchToken];
 }
 
-- (BOOL)filterBatchCommandIncomingData:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (BOOL)filterBatchCommandIncomingData:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	/* BATCH commands themselves are never queued. A nested batch opens
-	 and closes with the parent's token in its batch= tag and has to be
-	 registered immediately so that its own messages can be queued. */
-	if ([m.command isEqualToStringIgnoringCase:@"BATCH"]) {
-		return NO;
-	}
+  /* BATCH commands themselves are never queued. A nested batch opens
+   and closes with the parent's token in its batch= tag and has to be
+   registered immediately so that its own messages can be queued. */
+  if ([m.command isEqualToStringIgnoringCase:@"BATCH"]) {
+    return NO;
+  }
 
-	NSString *batchToken = m.batchToken;
+  NSString *batchToken = m.batchToken;
 
-	if (batchToken == nil) {
-		return NO;
-	}
+  if (batchToken == nil) {
+    return NO;
+  }
 
-	IRCMessageBatchMessage *thisBatchMessage = [self.batchMessages queuedEntryWithBatchToken:batchToken];
+  IRCMessageBatchMessage *thisBatchMessage =
+      [self.batchMessages queuedEntryWithBatchToken:batchToken];
 
-	if (thisBatchMessage.batchIsOpen == NO) {
-		return NO;
-	}
+  if (thisBatchMessage.batchIsOpen == NO) {
+    return NO;
+  }
 
-	/* Messages are queued on the outermost batch so that a batch
-	 nested in another is replayed in the order the server sent it,
-	 interleaved with the messages of its parent. The message keeps a
-	 reference to its own batch for the batch type. */
-	IRCMessageBatchMessage *rootBatchMessage = thisBatchMessage;
+  /* Messages are queued on the outermost batch so that a batch
+   nested in another is replayed in the order the server sent it,
+   interleaved with the messages of its parent. The message keeps a
+   reference to its own batch for the batch type. */
+  IRCMessageBatchMessage *rootBatchMessage = thisBatchMessage;
 
-	while (rootBatchMessage.parentBatchMessage) {
-		rootBatchMessage = rootBatchMessage.parentBatchMessage;
-	}
+  while (rootBatchMessage.parentBatchMessage) {
+    rootBatchMessage = rootBatchMessage.parentBatchMessage;
+  }
 
-	[rootBatchMessage queueEntry:m];
+  [rootBatchMessage queueEntry:m];
 
-	return YES;
+  return YES;
+}
+
+- (void)recursivelyProcessBatchMessage:(IRCMessageBatchMessage *)batchMessage {
+  [self recursivelyProcessBatchMessage:batchMessage depth:0];
 }
 
 - (void)recursivelyProcessBatchMessage:(IRCMessageBatchMessage *)batchMessage
-{
-	[self recursivelyProcessBatchMessage:batchMessage depth:0];
-}
+                                 depth:(NSInteger)recursionDepth {
+  NSParameterAssert(batchMessage != nil);
 
-- (void)recursivelyProcessBatchMessage:(IRCMessageBatchMessage *)batchMessage depth:(NSInteger)recursionDepth
-{
-	NSParameterAssert(batchMessage != nil);
+  if (batchMessage.batchIsOpen) {
+    return;
+  }
 
-	if (batchMessage.batchIsOpen) {
-		return;
-	}
+  NSArray *queuedEntries = batchMessage.queuedEntries;
 
-	NSArray *queuedEntries = batchMessage.queuedEntries;
+  for (id queuedEntry in queuedEntries) {
+    if ([queuedEntry isKindOfClass:[IRCMessage class]]) {
+      [self processIncomingMessage:queuedEntry];
+    } else if ([queuedEntry isKindOfClass:[IRCMessageBatchMessage class]]) {
+      [self recursivelyProcessBatchMessage:queuedEntry
+                                     depth:(recursionDepth + 1)];
+    }
+  }
 
-	for (id queuedEntry in queuedEntries) {
-		if ([queuedEntry isKindOfClass:[IRCMessage class]]) {
-			[self processIncomingMessage:queuedEntry];
-		} else if ([queuedEntry isKindOfClass:[IRCMessageBatchMessage class]]) {
-			[self recursivelyProcessBatchMessage:queuedEntry depth:(recursionDepth + 1)];
-		}
-	}
-
-	[self.batchMessages dequeueEntry:batchMessage];
+  [self.batchMessages dequeueEntry:batchMessage];
 }
 
 #pragma mark -
 #pragma mark Batch Helpers
 
-- (BOOL)batchTypeIsChatHistory:(nullable NSString *)batchType
-{
-	return ([batchType isEqualToString:@"chathistory"] || [batchType isEqualToString:@"draft/chathistory"]);
+- (BOOL)batchTypeIsChatHistory:(nullable NSString *)batchType {
+  return ([batchType isEqualToString:@"chathistory"] ||
+          [batchType isEqualToString:@"draft/chathistory"]);
 }
 
-- (BOOL)batchTypeIsNetsplit:(nullable NSString *)batchType
-{
-	return ([batchType isEqualToString:@"netsplit"] || [batchType isEqualToString:@"netjoin"]);
+- (BOOL)batchTypeIsNetsplit:(nullable NSString *)batchType {
+  return ([batchType isEqualToString:@"netsplit"] ||
+          [batchType isEqualToString:@"netjoin"]);
 }
 
 /* The nearest batch of the type given that the message is part of,
  walking from the message's own batch up through its parents. */
-- (nullable IRCMessageBatchMessage *)batchMessageOfType:(NSString *)batchType containingMessage:(IRCMessage *)message
-{
-	NSParameterAssert(batchType != nil);
-	NSParameterAssert(message != nil);
+- (nullable IRCMessageBatchMessage *)batchMessageOfType:(NSString *)batchType
+                                      containingMessage:(IRCMessage *)message {
+  NSParameterAssert(batchType != nil);
+  NSParameterAssert(message != nil);
 
-	IRCMessageBatchMessage *batchMessage = message.parentBatchMessage;
+  IRCMessageBatchMessage *batchMessage = message.parentBatchMessage;
 
-	NSUInteger depth = 0;
+  NSUInteger depth = 0;
 
-	while (batchMessage && depth < 16) {
-		NSString *type = batchMessage.batchType;
+  while (batchMessage && depth < 16) {
+    NSString *type = batchMessage.batchType;
 
-		if ([type isEqualToString:batchType] || [type isEqualToString:[@"draft/" stringByAppendingString:batchType]]) {
-			return batchMessage;
-		}
+    if ([type isEqualToString:batchType] ||
+        [type isEqualToString:[@"draft/" stringByAppendingString:batchType]]) {
+      return batchMessage;
+    }
 
-		batchMessage = batchMessage.parentBatchMessage;
+    batchMessage = batchMessage.parentBatchMessage;
 
-		depth += 1;
-	}
+    depth += 1;
+  }
 
-	return nil;
+  return nil;
 }
 
 /* The channel or query the message is addressed to, for messages that
  carry a target as their first parameter. A message addressed to us is
  a query with the sender. */
-- (nullable IRCChannel *)channelForTargetedMessage:(IRCMessage *)message
-{
-	if ([message paramsCount] == 0) {
-		return nil;
-	}
+- (nullable IRCChannel *)channelForTargetedMessage:(IRCMessage *)message {
+  if ([message paramsCount] == 0) {
+    return nil;
+  }
 
-	NSString *target = [message paramAt:0];
+  NSString *target = [message paramAt:0];
 
-	if ([self stringIsChannelName:target] == NO && [self nicknameIsMyself:target]) {
-		target = message.senderNickname;
-	}
+  if ([self stringIsChannelName:target] == NO &&
+      [self nicknameIsMyself:target]) {
+    target = message.senderNickname;
+  }
 
-	if (target.length == 0) {
-		return nil;
-	}
+  if (target.length == 0) {
+    return nil;
+  }
 
-	return [self findChannel:target];
+  return [self findChannel:target];
 }
 
 #pragma mark -
@@ -9318,295 +9657,294 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 #define _chatHistoryDefaultLimit 100
 
-- (void)resetChatHistoryState
-{
-	[self.chatHistoryFailedTargets removeAllObjects];
-	[self.chatHistoryPendingBeforeTargets removeAllObjects];
+- (void)resetChatHistoryState {
+  [self.chatHistoryFailedTargets removeAllObjects];
+  [self.chatHistoryPendingBeforeTargets removeAllObjects];
 
-	self.chatHistoryPrependChannel = nil;
-	self.chatHistoryPrependedLines = nil;
+  self.chatHistoryPrependChannel = nil;
+  self.chatHistoryPrependedLines = nil;
 
-	[self.readMarkerSentDates removeAllObjects];
-	[self.readMarkerPendingChannels removeAllObjects];
+  [self.readMarkerSentDates removeAllObjects];
+  [self.readMarkerPendingChannels removeAllObjects];
 
-	[self.readMarkerTimer stop];
+  [self.readMarkerTimer stop];
 }
 
-- (NSUInteger)chatHistoryRequestLimit
-{
-	NSUInteger serverLimit = self.supportInfo.chatHistoryMaximumLines;
+- (NSUInteger)chatHistoryRequestLimit {
+  NSUInteger serverLimit = self.supportInfo.chatHistoryMaximumLines;
 
-	if (serverLimit == 0 || serverLimit > _chatHistoryDefaultLimit) {
-		return _chatHistoryDefaultLimit;
-	}
+  if (serverLimit == 0 || serverLimit > _chatHistoryDefaultLimit) {
+    return _chatHistoryDefaultLimit;
+  }
 
-	return serverLimit;
+  return serverLimit;
 }
 
-- (BOOL)chatHistoryIsAvailableForChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (BOOL)chatHistoryIsAvailableForChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if (self.isLoggedIn == NO) {
-		return NO;
-	}
+  if (self.isLoggedIn == NO) {
+    return NO;
+  }
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityChatHistory] == NO) {
-		return NO;
-	}
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityChatHistory] ==
+      NO) {
+    return NO;
+  }
 
-	if (channel.isUtility || channel.isDirectChat) {
-		return NO;
-	}
+  if (channel.isUtility || channel.isDirectChat) {
+    return NO;
+  }
 
-	if (channel.isPrivateMessage && channel.isPrivateMessageForZNCUser) {
-		return NO;
-	}
+  if (channel.isPrivateMessage && channel.isPrivateMessageForZNCUser) {
+    return NO;
+  }
 
-	if ([self.chatHistoryFailedTargets containsObject:[self casefoldedTarget:channel.name]]) {
-		return NO;
-	}
+  if ([self.chatHistoryFailedTargets
+          containsObject:[self casefoldedTarget:channel.name]]) {
+    return NO;
+  }
 
-	return YES;
+  return YES;
 }
 
-- (NSString *)casefoldedTarget:(NSString *)target
-{
-	return [self.supportInfo casefoldString:target];
+- (NSString *)casefoldedTarget:(NSString *)target {
+  return [self.supportInfo casefoldString:target];
 }
 
-- (NSString *)chatHistoryTimestampForDate:(NSDate *)date
-{
-	return [NSString stringWithFormat:@"timestamp=%@", [TXSharedISOStandardDateFormatter() stringFromDate:date]];
+- (NSString *)chatHistoryTimestampForDate:(NSDate *)date {
+  return [NSString
+      stringWithFormat:@"timestamp=%@", [TXSharedISOStandardDateFormatter()
+                                            stringFromDate:date]];
 }
 
-- (NSString *)chatHistoryLatestCommandForTarget:(NSString *)target since:(nullable NSDate *)date
-{
-	NSParameterAssert(target != nil);
+- (NSString *)chatHistoryLatestCommandForTarget:(NSString *)target
+                                          since:(nullable NSDate *)date {
+  NSParameterAssert(target != nil);
 
-	NSString *selector = ((date) ? [self chatHistoryTimestampForDate:date] : @"*");
+  NSString *selector =
+      ((date) ? [self chatHistoryTimestampForDate:date] : @"*");
 
-	return [NSString stringWithFormat:@"CHATHISTORY LATEST %@ %@ %lu",
-									  target,
-									  selector,
-									  (unsigned long)self.chatHistoryRequestLimit];
+  return [NSString
+      stringWithFormat:@"CHATHISTORY LATEST %@ %@ %lu", target, selector,
+                       (unsigned long)self.chatHistoryRequestLimit];
 }
 
-- (NSString *)chatHistoryBeforeCommandForTarget:(NSString *)target date:(NSDate *)date
-{
-	NSParameterAssert(target != nil);
-	NSParameterAssert(date != nil);
+- (NSString *)chatHistoryBeforeCommandForTarget:(NSString *)target
+                                           date:(NSDate *)date {
+  NSParameterAssert(target != nil);
+  NSParameterAssert(date != nil);
 
-	return [NSString stringWithFormat:@"CHATHISTORY BEFORE %@ %@ %lu",
-									  target,
-									  [self chatHistoryTimestampForDate:date],
-									  (unsigned long)self.chatHistoryRequestLimit];
+  return
+      [NSString stringWithFormat:@"CHATHISTORY BEFORE %@ %@ %lu", target,
+                                 [self chatHistoryTimestampForDate:date],
+                                 (unsigned long)self.chatHistoryRequestLimit];
 }
 
 /* The server time of the newest line in the local scrollback, or nil
  when the scrollback is empty. The view is consulted first; the store
  index covers a view that has not loaded its history yet. */
-- (nullable NSDate *)newestKnownLineDateForChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (nullable NSDate *)newestKnownLineDateForChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	NSDate *viewDate = channel.lastLine.receivedAt;
+  NSDate *viewDate = channel.lastLine.receivedAt;
 
-	NSDate *storeDate = [TVCLogControllerHistoricLogSharedInstance() newestLineDateForItem:channel];
+  NSDate *storeDate = [TVCLogControllerHistoricLogSharedInstance()
+      newestLineDateForItem:channel];
 
-	if (viewDate == nil) {
-		return storeDate;
-	}
+  if (viewDate == nil) {
+    return storeDate;
+  }
 
-	if (storeDate && [storeDate compare:viewDate] == NSOrderedDescending) {
-		return storeDate;
-	}
+  if (storeDate && [storeDate compare:viewDate] == NSOrderedDescending) {
+    return storeDate;
+  }
 
-	return viewDate;
+  return viewDate;
 }
 
 /* Called when a channel is joined or a query becomes active. Fetches
  what the local scrollback is missing and asks for the read marker. */
-- (void)noteChannelActivated:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)noteChannelActivated:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if (self.isTerminating) {
-		return;
-	}
+  if (self.isTerminating) {
+    return;
+  }
 
-	[self requestChatHistoryForChannel:channel];
+  [self requestChatHistoryForChannel:channel];
 
-	[self requestReadMarkerForChannel:channel];
+  [self requestReadMarkerForChannel:channel];
 }
 
-- (void)requestChatHistoryForChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)requestChatHistoryForChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if ([self chatHistoryIsAvailableForChannel:channel] == NO) {
-		return;
-	}
+  if ([self chatHistoryIsAvailableForChannel:channel] == NO) {
+    return;
+  }
 
-	NSDate *since = [self newestKnownLineDateForChannel:channel];
+  NSDate *since = [self newestKnownLineDateForChannel:channel];
 
-	[self sendLine:[self chatHistoryLatestCommandForTarget:channel.name since:since]];
+  [self sendLine:[self chatHistoryLatestCommandForTarget:channel.name
+                                                   since:since]];
 }
 
 /* The view ran out of local history while scrolling up. */
-- (void)requestChatHistoryBeforeDate:(NSDate *)date inChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(date != nil);
-	NSParameterAssert(channel != nil);
+- (void)requestChatHistoryBeforeDate:(NSDate *)date
+                           inChannel:(IRCChannel *)channel {
+  NSParameterAssert(date != nil);
+  NSParameterAssert(channel != nil);
 
-	if ([self chatHistoryIsAvailableForChannel:channel] == NO) {
-		return;
-	}
+  if ([self chatHistoryIsAvailableForChannel:channel] == NO) {
+    return;
+  }
 
-	NSString *target = [self casefoldedTarget:channel.name];
+  NSString *target = [self casefoldedTarget:channel.name];
 
-	/* One request at a time per target: the reply decides whether
-	 there is anything older to ask for. */
-	if ([self.chatHistoryPendingBeforeTargets containsObject:target]) {
-		return;
-	}
+  /* One request at a time per target: the reply decides whether
+   there is anything older to ask for. */
+  if ([self.chatHistoryPendingBeforeTargets containsObject:target]) {
+    return;
+  }
 
-	[self.chatHistoryPendingBeforeTargets addObject:target];
+  [self.chatHistoryPendingBeforeTargets addObject:target];
 
-	[self sendLine:[self chatHistoryBeforeCommandForTarget:channel.name date:date]];
+  [self sendLine:[self chatHistoryBeforeCommandForTarget:channel.name
+                                                    date:date]];
 }
 
 /* YES when the line the server replayed is already in the scrollback. */
-- (BOOL)chatHistoryMessageIsDuplicate:(IRCMessage *)message
-{
-	NSParameterAssert(message != nil);
+- (BOOL)chatHistoryMessageIsDuplicate:(IRCMessage *)message {
+  NSParameterAssert(message != nil);
 
-	IRCChannel *channel = [self channelForTargetedMessage:message];
+  IRCChannel *channel = [self channelForTargetedMessage:message];
 
-	if (channel == nil) {
-		return NO;
-	}
+  if (channel == nil) {
+    return NO;
+  }
 
-	TVCLogControllerHistoricLogFile *historicLog = TVCLogControllerHistoricLogSharedInstance();
+  TVCLogControllerHistoricLogFile *historicLog =
+      TVCLogControllerHistoricLogSharedInstance();
 
-	NSString *messageIdentifier = message.messageIdentifier;
+  NSString *messageIdentifier = message.messageIdentifier;
 
-	if (messageIdentifier.length > 0) {
-		return [historicLog containsMessageIdentifier:messageIdentifier forItem:channel];
-	}
+  if (messageIdentifier.length > 0) {
+    return [historicLog containsMessageIdentifier:messageIdentifier
+                                          forItem:channel];
+  }
 
-	/* Without a msgid, the same server time from the same sender
-	 with the same text is the same line. */
-	NSString *text = message.params.lastObject;
+  /* Without a msgid, the same server time from the same sender
+   with the same text is the same line. */
+  NSString *text = message.params.lastObject;
 
-	if (message.isHistoric == NO || text == nil) {
-		return NO;
-	}
+  if (message.isHistoric == NO || text == nil) {
+    return NO;
+  }
 
-	return [historicLog containsLineReceivedAt:message.receivedAt
-									  nickname:message.senderNickname
-								   messageBody:text
-									   forItem:channel];
+  return [historicLog containsLineReceivedAt:message.receivedAt
+                                    nickname:message.senderNickname
+                                 messageBody:text
+                                     forItem:channel];
 }
 
 /* A closed chathistory batch. Lines are replayed in order as history
  with duplicates of the local scrollback dropped. A reply to a BEFORE
  request is inserted above the scrollback instead of below it. */
-- (void)replayChatHistoryBatch:(IRCMessageBatchMessage *)batchMessage
-{
-	NSParameterAssert(batchMessage != nil);
+- (void)replayChatHistoryBatch:(IRCMessageBatchMessage *)batchMessage {
+  NSParameterAssert(batchMessage != nil);
 
-	NSString *target = batchMessage.batchParameters.firstObject;
+  NSString *target = batchMessage.batchParameters.firstObject;
 
-	IRCChannel *channel = ((target) ? [self findChannel:target] : nil);
+  IRCChannel *channel = ((target) ? [self findChannel:target] : nil);
 
-	NSString *casefoldedTarget = ((target) ? [self casefoldedTarget:target] : nil);
+  NSString *casefoldedTarget =
+      ((target) ? [self casefoldedTarget:target] : nil);
 
-	BOOL prepend = (channel != nil && [self.chatHistoryPendingBeforeTargets containsObject:casefoldedTarget]);
+  BOOL prepend = (channel != nil && [self.chatHistoryPendingBeforeTargets
+                                        containsObject:casefoldedTarget]);
 
-	if (prepend) {
-		[self.chatHistoryPendingBeforeTargets removeObject:casefoldedTarget];
+  if (prepend) {
+    [self.chatHistoryPendingBeforeTargets removeObject:casefoldedTarget];
 
-		self.chatHistoryPrependChannel = channel;
-		self.chatHistoryPrependedLines = [NSMutableArray array];
-	}
+    self.chatHistoryPrependChannel = channel;
+    self.chatHistoryPrependedLines = [NSMutableArray array];
+  }
 
-	for (id queuedEntry in batchMessage.queuedEntries) {
-		if ([queuedEntry isKindOfClass:[IRCMessage class]] == NO) {
-			continue;
-		}
+  for (id queuedEntry in batchMessage.queuedEntries) {
+    if ([queuedEntry isKindOfClass:[IRCMessage class]] == NO) {
+      continue;
+    }
 
-		IRCMessage *message = queuedEntry;
+    IRCMessage *message = queuedEntry;
 
-		if ([self chatHistoryMessageIsDuplicate:message]) {
-			continue;
-		}
+    if ([self chatHistoryMessageIsDuplicate:message]) {
+      continue;
+    }
 
-		[message markAsHistoric];
+    [message markAsHistoric];
 
-		[self processIncomingMessage:message];
-	}
+    [self processIncomingMessage:message];
+  }
 
-	[self.batchMessages dequeueEntry:batchMessage];
+  [self.batchMessages dequeueEntry:batchMessage];
 
-	if (prepend) {
-		[self flushChatHistoryPrependedLines];
-	}
+  if (prepend) {
+    [self flushChatHistoryPrependedLines];
+  }
 }
 
-- (void)flushChatHistoryPrependedLines
-{
-	IRCChannel *channel = self.chatHistoryPrependChannel;
+- (void)flushChatHistoryPrependedLines {
+  IRCChannel *channel = self.chatHistoryPrependChannel;
 
-	NSArray<TVCLogLine *> *lines = [self.chatHistoryPrependedLines copy];
+  NSArray<TVCLogLine *> *lines = [self.chatHistoryPrependedLines copy];
 
-	self.chatHistoryPrependChannel = nil;
-	self.chatHistoryPrependedLines = nil;
+  self.chatHistoryPrependChannel = nil;
+  self.chatHistoryPrependedLines = nil;
 
-	if (channel == nil || lines.count == 0) {
-		return;
-	}
+  if (channel == nil || lines.count == 0) {
+    return;
+  }
 
-	[channel.viewController prependHistoricLogLines:lines];
+  [channel.viewController prependHistoricLogLines:lines];
 }
 
 /* FAIL CHATHISTORY <code> <subcommand> [<target>] :<description>
  Returns YES the first time a target fails so the reply is printed;
  later failures for the same target are silent and no further
  requests are made for it this session. */
-- (BOOL)noteChatHistoryFailure:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (BOOL)noteChatHistoryFailure:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSString *target = nil;
+  NSString *target = nil;
 
-	/* The target is wherever the server put it among the context
-	 parameters; the subcommand and the trailing description are not it. */
-	NSUInteger count = [m paramsCount];
+  /* The target is wherever the server put it among the context
+   parameters; the subcommand and the trailing description are not it. */
+  NSUInteger count = [m paramsCount];
 
-	for (NSUInteger i = 2; (i + 1) < count; i++) {
-		NSString *parameter = [m paramAt:i];
+  for (NSUInteger i = 2; (i + 1) < count; i++) {
+    NSString *parameter = [m paramAt:i];
 
-		if ([self findChannel:parameter] != nil) {
-			target = [self casefoldedTarget:parameter];
+    if ([self findChannel:parameter] != nil) {
+      target = [self casefoldedTarget:parameter];
 
-			break;
-		}
-	}
+      break;
+    }
+  }
 
-	if (target == nil) {
-		return YES;
-	}
+  if (target == nil) {
+    return YES;
+  }
 
-	[self.chatHistoryPendingBeforeTargets removeObject:target];
+  [self.chatHistoryPendingBeforeTargets removeObject:target];
 
-	if ([self.chatHistoryFailedTargets containsObject:target]) {
-		return NO;
-	}
+  if ([self.chatHistoryFailedTargets containsObject:target]) {
+    return NO;
+  }
 
-	[self.chatHistoryFailedTargets addObject:target];
+  [self.chatHistoryFailedTargets addObject:target];
 
-	return YES;
+  return YES;
 }
 
 #undef _chatHistoryDefaultLimit
@@ -9616,177 +9954,174 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 
 #define _readMarkerDebounceInterval 1.0
 
-- (BOOL)readMarkerIsAvailableForChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (BOOL)readMarkerIsAvailableForChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if (self.isLoggedIn == NO) {
-		return NO;
-	}
+  if (self.isLoggedIn == NO) {
+    return NO;
+  }
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityReadMarker] == NO) {
-		return NO;
-	}
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityReadMarker] ==
+      NO) {
+    return NO;
+  }
 
-	if (channel.isUtility || channel.isDirectChat) {
-		return NO;
-	}
+  if (channel.isUtility || channel.isDirectChat) {
+    return NO;
+  }
 
-	if (channel.isPrivateMessage && channel.isPrivateMessageForZNCUser) {
-		return NO;
-	}
+  if (channel.isPrivateMessage && channel.isPrivateMessageForZNCUser) {
+    return NO;
+  }
 
-	return YES;
+  return YES;
 }
 
 /* MARKREAD <target> without a timestamp asks the server for the marker. */
-- (void)requestReadMarkerForChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)requestReadMarkerForChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if ([self readMarkerIsAvailableForChannel:channel] == NO) {
-		return;
-	}
+  if ([self readMarkerIsAvailableForChannel:channel] == NO) {
+    return;
+  }
 
-	[self send:@"MARKREAD", channel.name, nil];
+  [self send:@"MARKREAD", channel.name, nil];
 }
 
 /* The user is looking at the channel: everything in it is read. */
-- (void)markChannelAsRead:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)markChannelAsRead:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	NSDate *newestLineDate = [self newestKnownLineDateForChannel:channel];
+  NSDate *newestLineDate = [self newestKnownLineDateForChannel:channel];
 
-	if (newestLineDate == nil) {
-		return;
-	}
+  if (newestLineDate == nil) {
+    return;
+  }
 
-	[self scheduleReadMarkerForChannel:channel date:newestLineDate];
+  [self scheduleReadMarkerForChannel:channel date:newestLineDate];
 }
 
 /* Sends are debounced so that a burst of lines in the selected channel
  produces one MARKREAD with the newest timestamp. */
-- (void)scheduleReadMarkerForChannel:(IRCChannel *)channel date:(NSDate *)date
-{
-	NSParameterAssert(channel != nil);
-	NSParameterAssert(date != nil);
+- (void)scheduleReadMarkerForChannel:(IRCChannel *)channel date:(NSDate *)date {
+  NSParameterAssert(channel != nil);
+  NSParameterAssert(date != nil);
 
-	if ([self readMarkerIsAvailableForChannel:channel] == NO) {
-		return;
-	}
+  if ([self readMarkerIsAvailableForChannel:channel] == NO) {
+    return;
+  }
 
-	NSDate *sentDate = self.readMarkerSentDates[channel.uniqueIdentifier];
+  NSDate *sentDate = self.readMarkerSentDates[channel.uniqueIdentifier];
 
-	if (sentDate && [date compare:sentDate] != NSOrderedDescending) {
-		return;
-	}
+  if (sentDate && [date compare:sentDate] != NSOrderedDescending) {
+    return;
+  }
 
-	[self.readMarkerPendingChannels addObject:channel];
+  [self.readMarkerPendingChannels addObject:channel];
 
-	if (self.readMarkerTimer.timerIsActive == NO) {
-		[self.readMarkerTimer start:_readMarkerDebounceInterval];
-	}
+  if (self.readMarkerTimer.timerIsActive == NO) {
+    [self.readMarkerTimer start:_readMarkerDebounceInterval];
+  }
 }
 
-- (void)onReadMarkerTimer
-{
-	NSSet<IRCChannel *> *channels = [self.readMarkerPendingChannels copy];
+- (void)onReadMarkerTimer {
+  NSSet<IRCChannel *> *channels = [self.readMarkerPendingChannels copy];
 
-	[self.readMarkerPendingChannels removeAllObjects];
+  [self.readMarkerPendingChannels removeAllObjects];
 
-	for (IRCChannel *channel in channels) {
-		[self sendReadMarkerForChannel:channel];
-	}
+  for (IRCChannel *channel in channels) {
+    [self sendReadMarkerForChannel:channel];
+  }
 }
 
-- (void)sendReadMarkerForChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)sendReadMarkerForChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if ([self readMarkerIsAvailableForChannel:channel] == NO) {
-		return;
-	}
+  if ([self readMarkerIsAvailableForChannel:channel] == NO) {
+    return;
+  }
 
-	NSDate *newestLineDate = [self newestKnownLineDateForChannel:channel];
+  NSDate *newestLineDate = [self newestKnownLineDateForChannel:channel];
 
-	if (newestLineDate == nil) {
-		return;
-	}
+  if (newestLineDate == nil) {
+    return;
+  }
 
-	NSDate *sentDate = self.readMarkerSentDates[channel.uniqueIdentifier];
+  NSDate *sentDate = self.readMarkerSentDates[channel.uniqueIdentifier];
 
-	if (sentDate && [newestLineDate compare:sentDate] != NSOrderedDescending) {
-		return;
-	}
+  if (sentDate && [newestLineDate compare:sentDate] != NSOrderedDescending) {
+    return;
+  }
 
-	self.readMarkerSentDates[channel.uniqueIdentifier] = newestLineDate;
+  self.readMarkerSentDates[channel.uniqueIdentifier] = newestLineDate;
 
-	[self send:@"MARKREAD", channel.name, [self chatHistoryTimestampForDate:newestLineDate], nil];
+  [self send:@"MARKREAD", channel.name,
+             [self chatHistoryTimestampForDate:newestLineDate], nil];
 }
 
 /* MARKREAD <target> timestamp=<time>   -- the marker, from the server or
  set by another client
  MARKREAD <target> *                  -- no marker yet */
-- (void)receiveReadMarker:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveReadMarker:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] >= 2);
+  NSAssertReturn([m paramsCount] >= 2);
 
-	IRCChannel *channel = [self findChannel:[m paramAt:0]];
+  IRCChannel *channel = [self findChannel:[m paramAt:0]];
 
-	if (channel == nil) {
-		return;
-	}
+  if (channel == nil) {
+    return;
+  }
 
-	NSString *marker = [m paramAt:1];
+  NSString *marker = [m paramAt:1];
 
-	if ([marker hasPrefix:@"timestamp="] == NO) {
-		return;
-	}
+  if ([marker hasPrefix:@"timestamp="] == NO) {
+    return;
+  }
 
-	NSDate *date = [TXSharedISOStandardDateFormatter() dateFromString:[marker substringFromIndex:10]];
+  NSDate *date = [TXSharedISOStandardDateFormatter()
+      dateFromString:[marker substringFromIndex:10]];
 
-	if (date == nil) {
-		return;
-	}
+  if (date == nil) {
+    return;
+  }
 
-	/* Anything we send from here on must be newer than what the
-	 server already has. */
-	NSDate *sentDate = self.readMarkerSentDates[channel.uniqueIdentifier];
+  /* Anything we send from here on must be newer than what the
+   server already has. */
+  NSDate *sentDate = self.readMarkerSentDates[channel.uniqueIdentifier];
 
-	if (sentDate == nil || [date compare:sentDate] == NSOrderedDescending) {
-		self.readMarkerSentDates[channel.uniqueIdentifier] = date;
-	}
+  if (sentDate == nil || [date compare:sentDate] == NSOrderedDescending) {
+    self.readMarkerSentDates[channel.uniqueIdentifier] = date;
+  }
 
-	[self applyReadMarkerDate:date toChannel:channel];
+  [self applyReadMarkerDate:date toChannel:channel];
 }
 
-- (void)applyReadMarkerDate:(NSDate *)date toChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(date != nil);
-	NSParameterAssert(channel != nil);
+- (void)applyReadMarkerDate:(NSDate *)date toChannel:(IRCChannel *)channel {
+  NSParameterAssert(date != nil);
+  NSParameterAssert(channel != nil);
 
-	NSDate *newestLineDate = [self newestKnownLineDateForChannel:channel];
+  NSDate *newestLineDate = [self newestKnownLineDateForChannel:channel];
 
-	/* Read up to and including the newest line: nothing is unread. */
-	if (newestLineDate == nil || [newestLineDate compare:date] != NSOrderedDescending) {
-		if (channel.isUnread || channel.nicknameHighlightCount > 0) {
-			[channel resetState];
+  /* Read up to and including the newest line: nothing is unread. */
+  if (newestLineDate == nil ||
+      [newestLineDate compare:date] != NSOrderedDescending) {
+    if (channel.isUnread || channel.nicknameHighlightCount > 0) {
+      [channel resetState];
 
-			[mainWindowServerList() refreshMessageCountForItem:channel];
+      [mainWindowServerList() refreshMessageCountForItem:channel];
 
-			[TVCDockIcon updateDockIcon];
-		}
+      [TVCDockIcon updateDockIcon];
+    }
 
-		return;
-	}
+    return;
+  }
 
-	/* Newer lines exist: the mark goes where the other client stopped. */
-	if ([mainWindow() isItemVisible:channel] == NO || mainWindow().keyWindow == NO) {
-		[channel.viewController markAtDate:date];
-	}
+  /* Newer lines exist: the mark goes where the other client stopped. */
+  if ([mainWindow() isItemVisible:channel] == NO ||
+      mainWindow().keyWindow == NO) {
+    [channel.viewController markAtDate:date];
+  }
 }
 
 #undef _readMarkerDebounceInterval
@@ -9800,114 +10135,124 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
  applied through the usual handlers; -collapseNetsplitMessage:inChannel:
  swallows their lines and records the nicknames for one summary line
  per channel. */
-- (void)replayNetsplitBatch:(IRCMessageBatchMessage *)batchMessage
-{
-	NSParameterAssert(batchMessage != nil);
+- (void)replayNetsplitBatch:(IRCMessageBatchMessage *)batchMessage {
+  NSParameterAssert(batchMessage != nil);
 
-	self.collapsedNetsplitBatch = batchMessage;
-	self.collapsedNetsplitNicknames = [NSMutableDictionary dictionary];
+  self.collapsedNetsplitBatch = batchMessage;
+  self.collapsedNetsplitNicknames = [NSMutableDictionary dictionary];
 
-	[self recursivelyProcessBatchMessage:batchMessage];
+  [self recursivelyProcessBatchMessage:batchMessage];
 
-	NSDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *nicknames = self.collapsedNetsplitNicknames;
+  NSDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *nicknames =
+      self.collapsedNetsplitNicknames;
 
-	self.collapsedNetsplitBatch = nil;
-	self.collapsedNetsplitNicknames = nil;
+  self.collapsedNetsplitBatch = nil;
+  self.collapsedNetsplitNicknames = nil;
 
-	BOOL isNetsplit = [batchMessage.batchType isEqualToString:@"netsplit"];
+  BOOL isNetsplit = [batchMessage.batchType isEqualToString:@"netsplit"];
 
-	NSArray<NSString *> *servers = batchMessage.batchParameters;
+  NSArray<NSString *> *servers = batchMessage.batchParameters;
 
-	NSString *server1 = ((servers.count > 0) ? servers[0] : @"?");
-	NSString *server2 = ((servers.count > 1) ? servers[1] : @"?");
+  NSString *server1 = ((servers.count > 0) ? servers[0] : @"?");
+  NSString *server2 = ((servers.count > 1) ? servers[1] : @"?");
 
-	for (IRCChannel *channel in self.channelList) {
-		NSOrderedSet<NSString *> *channelNicknames = nicknames[channel.uniqueIdentifier];
+  for (IRCChannel *channel in self.channelList) {
+    NSOrderedSet<NSString *> *channelNicknames =
+        nicknames[channel.uniqueIdentifier];
 
-		if (channelNicknames.count == 0) {
-			continue;
-		}
+    if (channelNicknames.count == 0) {
+      continue;
+    }
 
-		if ([TPCPreferences showJoinLeave] == NO || channel.config.ignoreGeneralEventMessages) {
-			continue;
-		}
+    if ([TPCPreferences showJoinLeave] == NO ||
+        channel.config.ignoreGeneralEventMessages) {
+      continue;
+    }
 
-		NSString *nicknameList = [self.class netsplitNicknameListForNicknames:channelNicknames];
+    NSString *nicknameList =
+        [self.class netsplitNicknameListForNicknames:channelNicknames];
 
-		NSString *message = nil;
+    NSString *message = nil;
 
-		if (isNetsplit) {
-			message = TXTLS(@"IRC[ns1-sp]", server1, server2, (unsigned long)channelNicknames.count, nicknameList);
-		} else {
-			message = TXTLS(@"IRC[ns2-jn]", server1, server2, (unsigned long)channelNicknames.count, nicknameList);
-		}
+    if (isNetsplit) {
+      message = TXTLS(@"IRC[ns1-sp]", server1, server2,
+                      (unsigned long)channelNicknames.count, nicknameList);
+    } else {
+      message = TXTLS(@"IRC[ns2-jn]", server1, server2,
+                      (unsigned long)channelNicknames.count, nicknameList);
+    }
 
-		[self print:message
-				   by:nil
-			inChannel:channel
-			   asType:((isNetsplit) ? TVCLogLineTypeQuit : TVCLogLineTypeJoin)command
-					 :((isNetsplit) ? @"QUIT" : @"JOIN")];
-	}
+    [self print:message
+               by:nil
+        inChannel:channel
+           asType:((isNetsplit) ? TVCLogLineTypeQuit
+                                : TVCLogLineTypeJoin)command
+                 :((isNetsplit) ? @"QUIT" : @"JOIN")];
+  }
 }
 
-+ (NSString *)netsplitNicknameListForNicknames:(NSOrderedSet<NSString *> *)nicknames
-{
-	NSParameterAssert(nicknames != nil);
++ (NSString *)netsplitNicknameListForNicknames:
+    (NSOrderedSet<NSString *> *)nicknames {
+  NSParameterAssert(nicknames != nil);
 
-	NSUInteger count = nicknames.count;
+  NSUInteger count = nicknames.count;
 
-	if (count <= _netsplitSummaryNicknameLimit) {
-		return [nicknames.array componentsJoinedByString:@", "];
-	}
+  if (count <= _netsplitSummaryNicknameLimit) {
+    return [nicknames.array componentsJoinedByString:@", "];
+  }
 
-	NSArray<NSString *> *shown = [nicknames.array subarrayWithRange:NSMakeRange(0, _netsplitSummaryNicknameLimit)];
+  NSArray<NSString *> *shown = [nicknames.array
+      subarrayWithRange:NSMakeRange(0, _netsplitSummaryNicknameLimit)];
 
-	return TXTLS(
-		@"IRC[ns3-mr]", [shown componentsJoinedByString:@", "], (unsigned long)(count - _netsplitSummaryNicknameLimit));
+  return TXTLS(@"IRC[ns3-mr]", [shown componentsJoinedByString:@", "],
+               (unsigned long)(count - _netsplitSummaryNicknameLimit));
 }
 
 /* YES when the message is a JOIN or QUIT of the batch being collapsed.
  The nickname is recorded for the channel's summary line. */
-- (BOOL)collapseNetsplitMessage:(IRCMessage *)message inChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(message != nil);
-	NSParameterAssert(channel != nil);
+- (BOOL)collapseNetsplitMessage:(IRCMessage *)message
+                      inChannel:(IRCChannel *)channel {
+  NSParameterAssert(message != nil);
+  NSParameterAssert(channel != nil);
 
-	IRCMessageBatchMessage *collapsedBatch = self.collapsedNetsplitBatch;
+  IRCMessageBatchMessage *collapsedBatch = self.collapsedNetsplitBatch;
 
-	if (collapsedBatch == nil) {
-		return NO;
-	}
+  if (collapsedBatch == nil) {
+    return NO;
+  }
 
-	NSString *command = message.command;
+  NSString *command = message.command;
 
-	if ([command isEqualToStringIgnoringCase:@"QUIT"] == NO && [command isEqualToStringIgnoringCase:@"JOIN"] == NO) {
-		return NO;
-	}
+  if ([command isEqualToStringIgnoringCase:@"QUIT"] == NO &&
+      [command isEqualToStringIgnoringCase:@"JOIN"] == NO) {
+    return NO;
+  }
 
-	if ([self batchMessageOfType:collapsedBatch.batchType containingMessage:message] == nil) {
-		return NO;
-	}
+  if ([self batchMessageOfType:collapsedBatch.batchType
+             containingMessage:message] == nil) {
+    return NO;
+  }
 
-	NSString *nickname = message.senderNickname;
+  NSString *nickname = message.senderNickname;
 
-	if (nickname.length == 0) {
-		return NO;
-	}
+  if (nickname.length == 0) {
+    return NO;
+  }
 
-	NSString *channelId = channel.uniqueIdentifier;
+  NSString *channelId = channel.uniqueIdentifier;
 
-	NSMutableOrderedSet<NSString *> *nicknames = self.collapsedNetsplitNicknames[channelId];
+  NSMutableOrderedSet<NSString *> *nicknames =
+      self.collapsedNetsplitNicknames[channelId];
 
-	if (nicknames == nil) {
-		nicknames = [NSMutableOrderedSet orderedSet];
+  if (nicknames == nil) {
+    nicknames = [NSMutableOrderedSet orderedSet];
 
-		self.collapsedNetsplitNicknames[channelId] = nicknames;
-	}
+    self.collapsedNetsplitNicknames[channelId] = nicknames;
+  }
 
-	[nicknames addObject:nickname];
+  [nicknames addObject:nickname];
 
-	return YES;
+  return YES;
 }
 
 #undef _netsplitSummaryNicknameLimit
@@ -9915,365 +10260,369 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
 #pragma mark -
 #pragma mark Server Capability
 
-- (void)enableCapability:(ClientIRCv3SupportedCapability)capability
-{
-	if ([self isCapabilityEnabled:capability] == NO) {
-		self->_capabilities |= capability;
-	}
+- (void)enableCapability:(ClientIRCv3SupportedCapability)capability {
+  if ([self isCapabilityEnabled:capability] == NO) {
+    self->_capabilities |= capability;
+  }
 }
 
-- (void)disableCapability:(ClientIRCv3SupportedCapability)capability
-{
-	if ([self isCapabilityEnabled:capability]) {
-		self->_capabilities &= ~capability;
-	}
+- (void)disableCapability:(ClientIRCv3SupportedCapability)capability {
+  if ([self isCapabilityEnabled:capability]) {
+    self->_capabilities &= ~capability;
+  }
 }
 
-- (BOOL)isCapabilityEnabled:(ClientIRCv3SupportedCapability)capability
-{
-	return ((self->_capabilities & capability) == capability);
+- (BOOL)isCapabilityEnabled:(ClientIRCv3SupportedCapability)capability {
+  return ((self->_capabilities & capability) == capability);
 }
 
-- (IRCCapabilityRegistry *)capabilityRegistry
-{
-	return [IRCCapabilityRegistry defaultRegistry];
+- (IRCCapabilityRegistry *)capabilityRegistry {
+  return [IRCCapabilityRegistry defaultRegistry];
 }
 
-- (BOOL)isCapabilitySupported:(NSString *)capabilityString
-{
-	NSParameterAssert(capabilityString != nil);
+- (BOOL)isCapabilitySupported:(NSString *)capabilityString {
+  NSParameterAssert(capabilityString != nil);
 
-	return [self.capabilityRegistry isCapabilitySupported:capabilityString];
+  return [self.capabilityRegistry isCapabilitySupported:capabilityString];
 }
 
-- (NSArray<NSString *> *)pendingCapabilityRequests
-{
-	@synchronized(self.pendingCapabilityRequestsMutable) {
-		return [self.pendingCapabilityRequestsMutable copy];
-	}
+- (NSArray<NSString *> *)pendingCapabilityRequests {
+  @synchronized(self.pendingCapabilityRequestsMutable) {
+    return [self.pendingCapabilityRequestsMutable copy];
+  }
 }
 
-- (NSString *)enabledCapabilitiesStringValue
-{
-	NSMutableArray<NSString *> *enabledCapabilities = [self.enabledCapabilityNames.array mutableCopy];
+- (NSString *)enabledCapabilitiesStringValue {
+  NSMutableArray<NSString *> *enabledCapabilities =
+      [self.enabledCapabilityNames.array mutableCopy];
 
-	/* SASL is reported once the server confirms the login, which
-	 is what the user wants to know when they ask. */
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL]) {
-		[enabledCapabilities addObjectWithoutDuplication:@"sasl"];
-	}
+  /* SASL is reported once the server confirms the login, which
+   is what the user wants to know when they ask. */
+  if ([self isCapabilityEnabled:
+                ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL]) {
+    [enabledCapabilities addObjectWithoutDuplication:@"sasl"];
+  }
 
-	return [enabledCapabilities componentsJoinedByString:@", "];
+  return [enabledCapabilities componentsJoinedByString:@", "];
 }
 
-- (void)resetCapabilityNegotiation
-{
-	self.capabilities = 0;
-	self.capabilityNegotiationIsPaused = NO;
+- (void)resetCapabilityNegotiation {
+  self.capabilities = 0;
+  self.capabilityNegotiationIsPaused = NO;
 
-	self.saslMechanism = nil;
-	self.saslOfferedMechanisms = nil;
-	self.saslScramClient = nil;
-	self.saslIncomingPayload = nil;
+  self.saslMechanism = nil;
+  self.saslOfferedMechanisms = nil;
+  self.saslScramClient = nil;
+  self.saslIncomingPayload = nil;
 
-	[self.saslTriedMechanisms removeAllObjects];
+  [self.saslTriedMechanisms removeAllObjects];
 
-	/* Any outstanding timeout finds its entry gone and does nothing. */
-	[self.pendingDeliveries removeAllObjects];
-	[self.labelForBatchToken removeAllObjects];
+  /* Any outstanding timeout finds its entry gone and does nothing. */
+  [self.pendingDeliveries removeAllObjects];
+  [self.labelForBatchToken removeAllObjects];
 
-	[self.enabledCapabilityNames removeAllObjects];
-	[self.offeredCapabilities removeAllObjects];
+  [self.enabledCapabilityNames removeAllObjects];
+  [self.offeredCapabilities removeAllObjects];
 
-	@synchronized(self.pendingCapabilityRequestsMutable) {
-		[self.pendingCapabilityRequestsMutable removeAllObjects];
-	}
+  @synchronized(self.pendingCapabilityRequestsMutable) {
+    [self.pendingCapabilityRequestsMutable removeAllObjects];
+  }
 }
 
 /* Decides which of the capabilities offered by the server are
  requested and queues them. The registry applies defaults, preference
  gates and dependencies; negotiation hooks are run here because they
  need the client (SASL checks the configured credentials). */
-- (void)queueCapabilityRequestsFromOffered:(NSDictionary<NSString *, NSArray<NSString *> *> *)offered
-{
-	NSParameterAssert(offered != nil);
+- (void)queueCapabilityRequestsFromOffered:
+    (NSDictionary<NSString *, NSArray<NSString *> *> *)offered {
+  NSParameterAssert(offered != nil);
 
-	[self handleSTSCapabilityFromOffered:offered];
+  [self handleSTSCapabilityFromOffered:offered];
 
-	NSArray<IRCCapability *> *requestable = [self.capabilityRegistry capabilitiesToRequestFromOffered:offered];
+  NSArray<IRCCapability *> *requestable =
+      [self.capabilityRegistry capabilitiesToRequestFromOffered:offered];
 
-	@synchronized(self.pendingCapabilityRequestsMutable) {
-		for (IRCCapability *capability in requestable) {
-			NSString *name = capability.name;
+  @synchronized(self.pendingCapabilityRequestsMutable) {
+    for (IRCCapability *capability in requestable) {
+      NSString *name = capability.name;
 
-			if ([self.enabledCapabilityNames containsObject:name]) {
-				continue;
-			}
+      if ([self.enabledCapabilityNames containsObject:name]) {
+        continue;
+      }
 
-			IRCCapabilityNegotiationHook hook = capability.negotiationHook;
+      IRCCapabilityNegotiationHook hook = capability.negotiationHook;
 
-			if (hook && hook(self, offered[name]) == NO) {
-				continue;
-			}
+      if (hook && hook(self, offered[name]) == NO) {
+        continue;
+      }
 
-			[self.pendingCapabilityRequestsMutable addObjectWithoutDuplication:name];
-		}
-	}
+      [self.pendingCapabilityRequestsMutable addObjectWithoutDuplication:name];
+    }
+  }
 }
 
 /* IRCv3 Strict Transport Security. The "sts" capability is never
  requested; its values drive a per host policy and, on a plaintext
  connection, an immediate secure reconnect. */
-- (void)handleSTSCapabilityFromOffered:(NSDictionary<NSString *, NSArray<NSString *> *> *)offered
-{
-	NSArray<NSString *> *values = offered[@"sts"];
+- (void)handleSTSCapabilityFromOffered:
+    (NSDictionary<NSString *, NSArray<NSString *> *> *)offered {
+  NSArray<NSString *> *values = offered[@"sts"];
 
-	if (values == nil) {
-		return;
-	}
+  if (values == nil) {
+    return;
+  }
 
-	IRCSTSCapabilityValues *parsed = [IRCSTSCapabilityValues valuesFromCapabilityValues:values];
+  IRCSTSCapabilityValues *parsed =
+      [IRCSTSCapabilityValues valuesFromCapabilityValues:values];
 
-	if (parsed == nil) {
-		return;
-	}
+  if (parsed == nil) {
+    return;
+  }
 
-	NSString *host = self.socket.config.serverAddress;
+  NSString *host = self.socket.config.serverAddress;
 
-	if (host.length == 0) {
-		host = self.serverAddress;
-	}
+  if (host.length == 0) {
+    host = self.serverAddress;
+  }
 
-	if (host.length == 0) {
-		return;
-	}
+  if (host.length == 0) {
+    return;
+  }
 
-	uint16_t connectedPort = self.socket.config.serverPort;
+  uint16_t connectedPort = self.socket.config.serverPort;
 
-	uint16_t upgradePort = 0;
+  uint16_t upgradePort = 0;
 
-	IRCSTSPolicyAction action = [[IRCSTSPolicyStore sharedStore] applyCapabilityValues:parsed
-																			   forHost:host
-																		 connectedPort:connectedPort
-																			   secured:self.isSecured
-																		   upgradePort:&upgradePort];
+  IRCSTSPolicyAction action =
+      [[IRCSTSPolicyStore sharedStore] applyCapabilityValues:parsed
+                                                     forHost:host
+                                               connectedPort:connectedPort
+                                                     secured:self.isSecured
+                                                 upgradePort:&upgradePort];
 
-	switch (action) {
-	case IRCSTSPolicyActionUpgrade: {
-		/* Never upgrade more than once per connection to avoid a loop. */
-		if (self.performedSTSUpgrade || upgradePort == 0) {
-			break;
-		}
+  switch (action) {
+  case IRCSTSPolicyActionUpgrade: {
+    /* Never upgrade more than once per connection to avoid a loop. */
+    if (self.performedSTSUpgrade || upgradePort == 0) {
+      break;
+    }
 
-		self.performedSTSUpgrade = YES;
+    self.performedSTSUpgrade = YES;
 
-		[self printDebugInformationToConsole:TXTLS(@"IRC[sts-p2]", upgradePort)];
+    [self printDebugInformationToConsole:TXTLS(@"IRC[sts-p2]", upgradePort)];
 
-		__weak IRCClient *weakSelf = self;
+    __weak IRCClient *weakSelf = self;
 
-		self.disconnectCallback = ^{
-			IRCClient *strongSelf = weakSelf;
+    self.disconnectCallback = ^{
+      IRCClient *strongSelf = weakSelf;
 
-			strongSelf.temporaryServerAddressOverride = host;
-			strongSelf.temporaryServerPortOverride = upgradePort;
-			strongSelf.forceSecuredConnectionOnNextConnect = YES;
+      strongSelf.temporaryServerAddressOverride = host;
+      strongSelf.temporaryServerPortOverride = upgradePort;
+      strongSelf.forceSecuredConnectionOnNextConnect = YES;
 
-			[strongSelf connect];
-		};
+      [strongSelf connect];
+    };
 
-		[self disconnect];
+    [self disconnect];
 
-		break;
-	}
-	case IRCSTSPolicyActionStored: {
-		IRCSTSPolicy *policy = [[IRCSTSPolicyStore sharedStore] policyForHost:host];
+    break;
+  }
+  case IRCSTSPolicyActionStored: {
+    IRCSTSPolicy *policy = [[IRCSTSPolicyStore sharedStore] policyForHost:host];
 
-		[self printDebugInformationToConsole:TXTLS(@"IRC[sts-p3]", policy ? policy.port : connectedPort)];
+    [self printDebugInformationToConsole:TXTLS(@"IRC[sts-p3]",
+                                               policy ? policy.port
+                                                      : connectedPort)];
 
-		break;
-	}
-	case IRCSTSPolicyActionCleared: {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[sts-p4]")];
+    break;
+  }
+  case IRCSTSPolicyActionCleared: {
+    [self printDebugInformationToConsole:TXTLS(@"IRC[sts-p4]")];
 
-		break;
-	}
-	case IRCSTSPolicyActionNone:
-		break;
-	}
+    break;
+  }
+  case IRCSTSPolicyActionNone:
+    break;
+  }
 }
 
-- (void)sendNextCapability
-{
-	if (self.capabilityNegotiationIsPaused) {
-		return;
-	}
+- (void)sendNextCapability {
+  if (self.capabilityNegotiationIsPaused) {
+    return;
+  }
 
-	NSString *capability = nil;
+  NSString *capability = nil;
 
-	@synchronized(self.pendingCapabilityRequestsMutable) {
-		capability = self.pendingCapabilityRequestsMutable.firstObject;
+  @synchronized(self.pendingCapabilityRequestsMutable) {
+    capability = self.pendingCapabilityRequestsMutable.firstObject;
 
-		if (capability) {
-			[self.pendingCapabilityRequestsMutable removeObjectAtIndex:0];
-		}
-	}
+    if (capability) {
+      [self.pendingCapabilityRequestsMutable removeObjectAtIndex:0];
+    }
+  }
 
-	if (capability == nil) {
-		/* CAP END only belongs to registration. After that, CAP NEW/ACK
-		 exchanges must not end with it. */
-		if (self.isLoggedIn == NO) {
-			[self sendPreAwayIfNeeded];
+  if (capability == nil) {
+    /* CAP END only belongs to registration. After that, CAP NEW/ACK
+     exchanges must not end with it. */
+    if (self.isLoggedIn == NO) {
+      [self sendPreAwayIfNeeded];
 
-			[self sendCapability:@"END" data:nil];
-		}
+      [self sendCapability:@"END" data:nil];
+    }
 
-		return;
-	}
+    return;
+  }
 
-	[self sendCapability:@"REQ" data:capability];
+  [self sendCapability:@"REQ" data:capability];
 }
 
 /* pre-away: AWAY may be sent before registration completes so the
  client never appears present in between. There is no "away on
  connect" setting, so the only message restored is the one that was
  in effect when a connection dropped and is now being re-established. */
-- (nullable NSString *)awayMessageForRegistration
-{
-	if (self.connectType != IRCClientConnectModeReconnect && self.connectType != IRCClientConnectModeRetry) {
-		return nil;
-	}
+- (nullable NSString *)awayMessageForRegistration {
+  if (self.connectType != IRCClientConnectModeReconnect &&
+      self.connectType != IRCClientConnectModeRetry) {
+    return nil;
+  }
 
-	return self.lastAwayMessage;
+  return self.lastAwayMessage;
 }
 
-- (void)sendPreAwayIfNeeded
-{
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPreAway] == NO) {
-		return;
-	}
+- (void)sendPreAwayIfNeeded {
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityPreAway] == NO) {
+    return;
+  }
 
-	NSString *awayMessage = [self awayMessageForRegistration];
+  NSString *awayMessage = [self awayMessageForRegistration];
 
-	if (awayMessage == nil) {
-		return;
-	}
+  if (awayMessage == nil) {
+    return;
+  }
 
-	[self send:@"AWAY", awayMessage, nil];
+  [self send:@"AWAY", awayMessage, nil];
 }
 
-- (void)pauseCapabilityNegotiation
-{
-	self.capabilityNegotiationIsPaused = YES;
+- (void)pauseCapabilityNegotiation {
+  self.capabilityNegotiationIsPaused = YES;
 }
 
-- (void)resumeCapabilityNegotiation
-{
-	self.capabilityNegotiationIsPaused = NO;
+- (void)resumeCapabilityNegotiation {
+  self.capabilityNegotiationIsPaused = NO;
 
-	[self sendNextCapability];
+  [self sendNextCapability];
 }
 
-- (void)toggleCapability:(NSString *)capabilityString enabled:(BOOL)enabled
-{
-	NSParameterAssert(capabilityString != nil);
+- (void)toggleCapability:(NSString *)capabilityString enabled:(BOOL)enabled {
+  NSParameterAssert(capabilityString != nil);
 
-	/* CAP ACK may carry a "-" prefix for a capability that was disabled. */
-	if ([capabilityString hasPrefix:@"-"]) {
-		capabilityString = [capabilityString substringFromIndex:1];
+  /* CAP ACK may carry a "-" prefix for a capability that was disabled. */
+  if ([capabilityString hasPrefix:@"-"]) {
+    capabilityString = [capabilityString substringFromIndex:1];
 
-		enabled = NO;
-	}
+    enabled = NO;
+  }
 
-	/* Values can be echoed back on ACK by some servers ("sasl=PLAIN"). */
-	NSString *name = [IRCCapabilityRegistry parseCapabilityList:capabilityString].allKeys.firstObject;
+  /* Values can be echoed back on ACK by some servers ("sasl=PLAIN"). */
+  NSString *name = [IRCCapabilityRegistry parseCapabilityList:capabilityString]
+                       .allKeys.firstObject;
 
-	if (name == nil) {
-		return;
-	}
+  if (name == nil) {
+    return;
+  }
 
-	IRCCapability *capability = [self.capabilityRegistry capabilityNamed:name];
+  IRCCapability *capability = [self.capabilityRegistry capabilityNamed:name];
 
-	if (capability == nil) {
-		return;
-	}
+  if (capability == nil) {
+    return;
+  }
 
-	if (enabled) {
-		[self enableCapability:capability.identifier];
+  if (enabled) {
+    [self enableCapability:capability.identifier];
 
-		[self.enabledCapabilityNames addObject:name];
-	} else {
-		[self disableCapability:capability.identifier];
+    [self.enabledCapabilityNames addObject:name];
+  } else {
+    [self disableCapability:capability.identifier];
 
-		[self.enabledCapabilityNames removeObject:name];
-	}
+    [self.enabledCapabilityNames removeObject:name];
+  }
 
-	if (enabled && [name isEqualToString:@"sasl"]) {
-		if ([self sendSASLIdentificationRequest]) {
-			[self pauseCapabilityNegotiation];
-		}
-	}
+  if (enabled && [name isEqualToString:@"sasl"]) {
+    if ([self sendSASLIdentificationRequest]) {
+      [self pauseCapabilityNegotiation];
+    }
+  }
 }
 
-- (void)receiveCapabilityOrAuthenticationRequest:(IRCMessage *)m
-{
-	/* Implementation based off Colloquy's own. */
-	NSParameterAssert(m != nil);
+- (void)receiveCapabilityOrAuthenticationRequest:(IRCMessage *)m {
+  /* Implementation based off Colloquy's own. */
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 0);
+  NSAssertReturn([m paramsCount] > 0);
 
-	NSString *command = m.command;
-	NSString *modifier = [m paramAt:0];
-	NSString *subcommand = [m paramAt:1];
-	NSString *actions = [m sequence:2];
+  NSString *command = m.command;
+  NSString *modifier = [m paramAt:0];
+  NSString *subcommand = [m paramAt:1];
+  NSString *actions = [m sequence:2];
 
-	if ([command isEqualToStringIgnoringCase:@"CAP"]) {
-		if ([subcommand isEqualToStringIgnoringCase:@"LS"]) {
-			/* CAP LS 302 may span multiple lines. Every line except the last
-			 carries a "*" before the capability list. Do not request anything
-			 until the full list has arrived. */
-			BOOL moreToCome = [[m paramAt:2] isEqualToString:@"*"];
+  if ([command isEqualToStringIgnoringCase:@"CAP"]) {
+    if ([subcommand isEqualToStringIgnoringCase:@"LS"]) {
+      /* CAP LS 302 may span multiple lines. Every line except the last
+       carries a "*" before the capability list. Do not request anything
+       until the full list has arrived. */
+      BOOL moreToCome = [[m paramAt:2] isEqualToString:@"*"];
 
-			if (moreToCome) {
-				actions = [m sequence:3];
-			}
+      if (moreToCome) {
+        actions = [m sequence:3];
+      }
 
-			[self.offeredCapabilities addEntriesFromDictionary:[IRCCapabilityRegistry parseCapabilityList:actions]];
+      [self.offeredCapabilities
+          addEntriesFromDictionary:[IRCCapabilityRegistry
+                                       parseCapabilityList:actions]];
 
-			if (moreToCome) {
-				return;
-			}
+      if (moreToCome) {
+        return;
+      }
 
-			[self queueCapabilityRequestsFromOffered:self.offeredCapabilities];
+      [self queueCapabilityRequestsFromOffered:self.offeredCapabilities];
 
-			[self.offeredCapabilities removeAllObjects];
-		} else if ([subcommand isEqualToStringIgnoringCase:@"ACK"]) {
-			NSArray *caps = [actions componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+      [self.offeredCapabilities removeAllObjects];
+    } else if ([subcommand isEqualToStringIgnoringCase:@"ACK"]) {
+      NSArray *caps = [actions
+          componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                                   whitespaceCharacterSet]];
 
-			for (NSString *cap in caps) {
-				[self toggleCapability:cap enabled:YES];
-			}
-		} else if ([subcommand isEqualToStringIgnoringCase:@"NAK"]) {
-			NSArray *caps = [actions componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+      for (NSString *cap in caps) {
+        [self toggleCapability:cap enabled:YES];
+      }
+    } else if ([subcommand isEqualToStringIgnoringCase:@"NAK"]) {
+      NSArray *caps = [actions
+          componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                                   whitespaceCharacterSet]];
 
-			for (NSString *cap in caps) {
-				[self toggleCapability:cap enabled:NO];
-			}
-		} else if ([subcommand isEqualToStringIgnoringCase:@"NEW"]) {
-			[self queueCapabilityRequestsFromOffered:[IRCCapabilityRegistry parseCapabilityList:actions]];
-		} else if ([subcommand isEqualToStringIgnoringCase:@"DEL"]) {
-			NSArray *caps = [actions componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+      for (NSString *cap in caps) {
+        [self toggleCapability:cap enabled:NO];
+      }
+    } else if ([subcommand isEqualToStringIgnoringCase:@"NEW"]) {
+      [self
+          queueCapabilityRequestsFromOffered:[IRCCapabilityRegistry
+                                                 parseCapabilityList:actions]];
+    } else if ([subcommand isEqualToStringIgnoringCase:@"DEL"]) {
+      NSArray *caps = [actions
+          componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                                   whitespaceCharacterSet]];
 
-			for (NSString *cap in caps) {
-				[self toggleCapability:cap enabled:NO];
-			}
-		}
+      for (NSString *cap in caps) {
+        [self toggleCapability:cap enabled:NO];
+      }
+    }
 
-		[self sendNextCapability];
-	} else if ([command isEqualToStringIgnoringCase:@"AUTHENTICATE"]) {
-		[self receiveSASLAuthenticatePayload:modifier];
-	}
+    [self sendNextCapability];
+  } else if ([command isEqualToStringIgnoringCase:@"AUTHENTICATE"]) {
+    [self receiveSASLAuthenticatePayload:modifier];
+  }
 
-	[self postReceivedMessage:m];
+  [self postReceivedMessage:m];
 }
 
 #pragma mark -
@@ -10283,3370 +10632,3491 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
  comes first when a client certificate is present because it needs no
  password. SCRAM-SHA-256 is preferred over PLAIN because it never puts
  the password on the wire. */
-- (NSArray<NSString *> *)saslSupportedMechanismsInPreferenceOrder
-{
-	NSMutableArray<NSString *> *mechanisms = [NSMutableArray array];
+- (NSArray<NSString *> *)saslSupportedMechanismsInPreferenceOrder {
+  NSMutableArray<NSString *> *mechanisms = [NSMutableArray array];
 
-	if (self.socket.isConnectedWithClientSideCertificate &&
-		self.config.saslAuthenticationDisableExternalMechanism == NO) {
-		[mechanisms addObject:@"EXTERNAL"];
-	}
+  if (self.socket.isConnectedWithClientSideCertificate &&
+      self.config.saslAuthenticationDisableExternalMechanism == NO) {
+    [mechanisms addObject:@"EXTERNAL"];
+  }
 
-	if (self.config.nicknamePassword.length > 0) {
-		[mechanisms addObject:TLOSCRAMClient.mechanismName];
-		[mechanisms addObject:@"PLAIN"];
-	}
+  if (self.config.nicknamePassword.length > 0) {
+    [mechanisms addObject:TLOSCRAMClient.mechanismName];
+    [mechanisms addObject:@"PLAIN"];
+  }
 
-	/* A configured preference is promoted to the front when it is usable. */
-	NSString *preference = self.config.saslMechanismPreference;
+  /* A configured preference is promoted to the front when it is usable. */
+  NSString *preference = self.config.saslMechanismPreference;
 
-	if (preference.length > 0) {
-		for (NSString *mechanism in mechanisms) {
-			if ([mechanism isEqualToStringIgnoringCase:preference]) {
-				[mechanisms removeObject:mechanism];
-				[mechanisms insertObject:mechanism atIndex:0];
+  if (preference.length > 0) {
+    for (NSString *mechanism in mechanisms) {
+      if ([mechanism isEqualToStringIgnoringCase:preference]) {
+        [mechanisms removeObject:mechanism];
+        [mechanisms insertObject:mechanism atIndex:0];
 
-				break;
-			}
-		}
-	}
+        break;
+      }
+    }
+  }
 
-	return mechanisms;
+  return mechanisms;
 }
 
 /* Picks the first mechanism the client supports that the server offered
  (or any supported one when the server did not list them) and has not
  already been tried this negotiation. */
-- (nullable NSString *)saslNextMechanismFromOffered:(NSArray<NSString *> *)offered
-{
-	for (NSString *mechanism in [self saslSupportedMechanismsInPreferenceOrder]) {
-		if ([self.saslTriedMechanisms containsObjectIgnoringCase:mechanism]) {
-			continue;
-		}
+- (nullable NSString *)saslNextMechanismFromOffered:
+    (NSArray<NSString *> *)offered {
+  for (NSString *mechanism in [self saslSupportedMechanismsInPreferenceOrder]) {
+    if ([self.saslTriedMechanisms containsObjectIgnoringCase:mechanism]) {
+      continue;
+    }
 
-		if (offered.count == 0 || [offered containsObjectIgnoringCase:mechanism]) {
-			return mechanism;
-		}
-	}
+    if (offered.count == 0 || [offered containsObjectIgnoringCase:mechanism]) {
+      return mechanism;
+    }
+  }
 
-	return nil;
+  return nil;
 }
 
-- (BOOL)selectSASLMechanismFromOffered:(NSArray<NSString *> *)mechanisms
-{
-	NSParameterAssert(mechanisms != nil);
+- (BOOL)selectSASLMechanismFromOffered:(NSArray<NSString *> *)mechanisms {
+  NSParameterAssert(mechanisms != nil);
 
-	self.saslOfferedMechanisms = mechanisms;
+  self.saslOfferedMechanisms = mechanisms;
 
-	NSString *mechanism = [self saslNextMechanismFromOffered:mechanisms];
+  NSString *mechanism = [self saslNextMechanismFromOffered:mechanisms];
 
-	self.saslMechanism = mechanism;
+  self.saslMechanism = mechanism;
 
-	return (mechanism != nil);
+  return (mechanism != nil);
 }
 
 /* Reassembles an incoming AUTHENTICATE payload, which the server may
  split into 400 character chunks that end with a shorter chunk or "+". */
-- (void)receiveSASLAuthenticatePayload:(NSString *)payload
-{
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsInSASLNegotiation] == NO) {
-		return;
-	}
+- (void)receiveSASLAuthenticatePayload:(NSString *)payload {
+  if ([self isCapabilityEnabled:
+                ClientIRCv3SupportedCapabilityIsInSASLNegotiation] == NO) {
+    return;
+  }
 
-	NSString *chunk = payload;
+  NSString *chunk = payload;
 
-	if ([chunk isEqualToString:@"+"]) {
-		chunk = @"";
-	}
+  if ([chunk isEqualToString:@"+"]) {
+    chunk = @"";
+  }
 
-	if (self.saslIncomingPayload == nil) {
-		self.saslIncomingPayload = [NSMutableString string];
-	}
+  if (self.saslIncomingPayload == nil) {
+    self.saslIncomingPayload = [NSMutableString string];
+  }
 
-	[self.saslIncomingPayload appendString:chunk];
+  [self.saslIncomingPayload appendString:chunk];
 
-	if (chunk.length == 400) {
-		/* A full length chunk means more is coming. */
-		return;
-	}
+  if (chunk.length == 400) {
+    /* A full length chunk means more is coming. */
+    return;
+  }
 
-	NSString *assembled = [self.saslIncomingPayload copy];
+  NSString *assembled = [self.saslIncomingPayload copy];
 
-	self.saslIncomingPayload = nil;
+  self.saslIncomingPayload = nil;
 
-	[self sendSASLIdentificationInformationForServerData:assembled];
+  [self sendSASLIdentificationInformationForServerData:assembled];
 }
 
-- (void)sendSASLIdentificationInformationForServerData:(NSString *)serverData
-{
-	NSString *mechanism = self.saslMechanism;
+- (void)sendSASLIdentificationInformationForServerData:(NSString *)serverData {
+  NSString *mechanism = self.saslMechanism;
 
-	if ([mechanism isEqualToString:@"PLAIN"]) {
-		/* Same fallback as the USER command: an empty username means
-		 the nickname is the account name. */
-		NSString *username = self.config.username;
+  if ([mechanism isEqualToString:@"PLAIN"]) {
+    /* Same fallback as the USER command: an empty username means
+     the nickname is the account name. */
+    NSString *username = self.config.username;
 
-		if (username.length == 0) {
-			username = self.config.nickname;
-		}
+    if (username.length == 0) {
+      username = self.config.nickname;
+    }
 
-		NSString *authString =
-			[NSString stringWithFormat:@"%@%C%@%C%@", username, 0x00, username, 0x00, self.config.nicknamePassword];
+    NSString *authString =
+        [NSString stringWithFormat:@"%@%C%@%C%@", username, 0x00, username,
+                                   0x00, self.config.nicknamePassword];
 
-		[self sendSASLPayloadInChunks:authString];
-	} else if ([mechanism isEqualToString:@"EXTERNAL"]) {
-		[self sendCapabilityAuthenticate:@"+"];
-	} else if ([mechanism isEqualToString:TLOSCRAMClient.mechanismName]) {
-		[self sendSASLScramInformationForServerData:serverData];
-	}
+    [self sendSASLPayloadInChunks:authString];
+  } else if ([mechanism isEqualToString:@"EXTERNAL"]) {
+    [self sendCapabilityAuthenticate:@"+"];
+  } else if ([mechanism isEqualToString:TLOSCRAMClient.mechanismName]) {
+    [self sendSASLScramInformationForServerData:serverData];
+  }
 }
 
-- (void)sendSASLScramInformationForServerData:(NSString *)serverData
-{
-	NSString *username = self.config.username;
+- (void)sendSASLScramInformationForServerData:(NSString *)serverData {
+  NSString *username = self.config.username;
 
-	if (username.length == 0) {
-		username = self.config.nickname;
-	}
+  if (username.length == 0) {
+    username = self.config.nickname;
+  }
 
-	/* First AUTHENTICATE + from the server: reply with client-first. */
-	if (self.saslScramClient == nil) {
-		self.saslScramClient = [[TLOSCRAMClient alloc] initWithUsername:username password:self.config.nicknamePassword];
+  /* First AUTHENTICATE + from the server: reply with client-first. */
+  if (self.saslScramClient == nil) {
+    self.saslScramClient =
+        [[TLOSCRAMClient alloc] initWithUsername:username
+                                        password:self.config.nicknamePassword];
 
-		NSString *clientFirst = self.saslScramClient.clientFirstMessage;
+    NSString *clientFirst = self.saslScramClient.clientFirstMessage;
 
-		[self sendSASLPayloadInChunks:clientFirst];
+    [self sendSASLPayloadInChunks:clientFirst];
 
-		return;
-	}
+    return;
+  }
 
-	NSData *decoded = [[NSData alloc] initWithBase64EncodedString:serverData options:0];
+  NSData *decoded = [[NSData alloc] initWithBase64EncodedString:serverData
+                                                        options:0];
 
-	NSString *message = nil;
+  NSString *message = nil;
 
-	if (decoded) {
-		message = [[NSString alloc] initWithData:decoded encoding:NSUTF8StringEncoding];
-	}
+  if (decoded) {
+    message = [[NSString alloc] initWithData:decoded
+                                    encoding:NSUTF8StringEncoding];
+  }
 
-	if (message == nil) {
-		[self abortSASLNegotiationWithReason:TXTLS(@"IRC[sts-sc1]")];
+  if (message == nil) {
+    [self abortSASLNegotiationWithReason:TXTLS(@"IRC[sts-sc1]")];
 
-		return;
-	}
+    return;
+  }
 
-	NSError *error = nil;
+  NSError *error = nil;
 
-	if (self.saslScramClient.state == TLOSCRAMClientStateSentClientFinal) {
-		/* Server final message: verify the signature and finish. */
-		if ([self.saslScramClient verifyServerFinalMessage:message error:&error] == NO) {
-			[self abortSASLNegotiationWithReason:TXTLS(@"IRC[sts-sc2]", error.localizedDescription)];
+  if (self.saslScramClient.state == TLOSCRAMClientStateSentClientFinal) {
+    /* Server final message: verify the signature and finish. */
+    if ([self.saslScramClient verifyServerFinalMessage:message
+                                                 error:&error] == NO) {
+      [self abortSASLNegotiationWithReason:TXTLS(@"IRC[sts-sc2]",
+                                                 error.localizedDescription)];
 
-			return;
-		}
+      return;
+    }
 
-		[self sendCapabilityAuthenticate:@"+"];
+    [self sendCapabilityAuthenticate:@"+"];
 
-		return;
-	}
+    return;
+  }
 
-	/* Server first message: compute and send client-final. */
-	NSString *clientFinal = [self.saslScramClient clientFinalMessageForServerFirstMessage:message error:&error];
+  /* Server first message: compute and send client-final. */
+  NSString *clientFinal =
+      [self.saslScramClient clientFinalMessageForServerFirstMessage:message
+                                                              error:&error];
 
-	if (clientFinal == nil) {
-		[self abortSASLNegotiationWithReason:TXTLS(@"IRC[sts-sc2]", error.localizedDescription)];
+  if (clientFinal == nil) {
+    [self abortSASLNegotiationWithReason:TXTLS(@"IRC[sts-sc2]",
+                                               error.localizedDescription)];
 
-		return;
-	}
+    return;
+  }
 
-	[self sendSASLPayloadInChunks:clientFinal];
+  [self sendSASLPayloadInChunks:clientFinal];
 }
 
 /* Base64 encodes a SASL message and sends it as AUTHENTICATE chunks of
  at most 400 characters. An empty payload, or one whose last chunk is
  exactly 400 characters, is terminated with "+". */
-- (void)sendSASLPayloadInChunks:(NSString *)payload
-{
-	NSArray<NSString *> *chunks = [payload base64EncodingWithLineLength:400];
+- (void)sendSASLPayloadInChunks:(NSString *)payload {
+  NSArray<NSString *> *chunks = [payload base64EncodingWithLineLength:400];
 
-	for (NSString *chunk in chunks) {
-		[self sendCapabilityAuthenticate:chunk];
-	}
+  for (NSString *chunk in chunks) {
+    [self sendCapabilityAuthenticate:chunk];
+  }
 
-	if (chunks.count == 0 || ((NSString *)chunks.lastObject).length == 400) {
-		[self sendCapabilityAuthenticate:@"+"];
-	}
+  if (chunks.count == 0 || ((NSString *)chunks.lastObject).length == 400) {
+    [self sendCapabilityAuthenticate:@"+"];
+  }
 }
 
-- (void)abortSASLNegotiationWithReason:(NSString *)reason
-{
-	[self printDebugInformationToConsole:reason];
+- (void)abortSASLNegotiationWithReason:(NSString *)reason {
+  [self printDebugInformationToConsole:reason];
 
-	[self sendCapabilityAuthenticate:@"*"];
+  [self sendCapabilityAuthenticate:@"*"];
 
-	self.saslScramClient = nil;
-	self.saslIncomingPayload = nil;
+  self.saslScramClient = nil;
+  self.saslIncomingPayload = nil;
 }
 
 /* Called on RPL_SASLMECHS (908): the mechanism was refused and the
  server listed what it does support. Retry with the next one. Returns
  YES when a retry was started. */
-- (BOOL)retrySASLNegotiationWithMechanisms:(NSArray<NSString *> *)mechanisms
-{
-	if (self.saslMechanism) {
-		[self.saslTriedMechanisms addObjectWithoutDuplication:self.saslMechanism];
-	}
+- (BOOL)retrySASLNegotiationWithMechanisms:(NSArray<NSString *> *)mechanisms {
+  if (self.saslMechanism) {
+    [self.saslTriedMechanisms addObjectWithoutDuplication:self.saslMechanism];
+  }
 
-	self.saslScramClient = nil;
-	self.saslIncomingPayload = nil;
+  self.saslScramClient = nil;
+  self.saslIncomingPayload = nil;
 
-	NSArray<NSString *> *offered = (mechanisms.count > 0 ? mechanisms : self.saslOfferedMechanisms) ?: @[];
+  NSArray<NSString *> *offered =
+      (mechanisms.count > 0 ? mechanisms : self.saslOfferedMechanisms) ?: @[];
 
-	NSString *mechanism = [self saslNextMechanismFromOffered:offered];
+  NSString *mechanism = [self saslNextMechanismFromOffered:offered];
 
-	if (mechanism == nil) {
-		return NO;
-	}
+  if (mechanism == nil) {
+    return NO;
+  }
 
-	self.saslMechanism = mechanism;
-	self.saslOfferedMechanisms = offered;
+  self.saslMechanism = mechanism;
+  self.saslOfferedMechanisms = offered;
 
-	[self sendCapabilityAuthenticate:mechanism];
+  [self sendCapabilityAuthenticate:mechanism];
 
-	return YES;
+  return YES;
 }
 
-- (BOOL)sendSASLIdentificationRequest
-{
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL]) {
-		return NO;
-	}
+- (BOOL)sendSASLIdentificationRequest {
+  if ([self isCapabilityEnabled:
+                ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL]) {
+    return NO;
+  }
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsInSASLNegotiation]) {
-		return NO;
-	}
+  if ([self isCapabilityEnabled:
+                ClientIRCv3SupportedCapabilityIsInSASLNegotiation]) {
+    return NO;
+  }
 
-	NSString *mechanism = self.saslMechanism;
+  NSString *mechanism = self.saslMechanism;
 
-	if (mechanism == nil) {
-		return NO;
-	}
+  if (mechanism == nil) {
+    return NO;
+  }
 
-	[self enableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
+  [self enableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
 
-	[self sendCapabilityAuthenticate:mechanism];
+  [self sendCapabilityAuthenticate:mechanism];
 
-	return YES;
+  return YES;
 }
 
-- (void)resetSASLNegotiation
-{
-	[self disableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
-	[self disableCapability:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL];
+- (void)resetSASLNegotiation {
+  [self disableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
+  [self disableCapability:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL];
 
-	self.saslScramClient = nil;
-	self.saslIncomingPayload = nil;
+  self.saslScramClient = nil;
+  self.saslIncomingPayload = nil;
 }
 
 #pragma mark -
 #pragma mark Protocol Handlers
 
-- (void)receivePing:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receivePing:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSAssertReturn([m paramsCount] > 0);
+  NSAssertReturn([m paramsCount] > 0);
 
-	NSString *token = [m sequence:0];
+  NSString *token = [m sequence:0];
 
-	[self sendPong:token];
+  [self sendPong:token];
 
-	[self postReceivedMessage:m];
+  [self postReceivedMessage:m];
 }
 
 /* Shared by RPL_WHOREPLY and RPL_WHOSPCRPL. Only WHOX carries an
  account, so the account is left alone unless updateAccount is set. */
 - (void)receiveWhoReplyInChannel:(IRCChannel *)channel
-						nickname:(NSString *)nickname
-						username:(NSString *)username
-						 address:(NSString *)address
-						   flags:(NSString *)flags
-						realName:(NSString *)realName
-						 account:(nullable NSString *)account
-				   updateAccount:(BOOL)updateAccount
-{
-	NSParameterAssert(channel != nil);
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(flags != nil);
+                        nickname:(NSString *)nickname
+                        username:(NSString *)username
+                         address:(NSString *)address
+                           flags:(NSString *)flags
+                        realName:(NSString *)realName
+                         account:(nullable NSString *)account
+                   updateAccount:(BOOL)updateAccount {
+  NSParameterAssert(channel != nil);
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(flags != nil);
 
-	BOOL isAway = NO;
-	BOOL isIRCop = NO;
-	BOOL isBot = NO;
+  BOOL isAway = NO;
+  BOOL isIRCop = NO;
+  BOOL isBot = NO;
 
-	/* Servers that advertise a BOT user mode flag bots with "B" in WHO. */
-	BOOL botFlagSupported = (self.supportInfo.botModeSymbol != nil);
+  /* Servers that advertise a BOT user mode flag bots with "B" in WHO. */
+  BOOL botFlagSupported = (self.supportInfo.botModeSymbol != nil);
 
-	// Field Syntax: <H|G>[*][B][@|+]
-	// Strip G or H (away status).
-	NSMutableString *userModes = [NSMutableString string];
+  // Field Syntax: <H|G>[*][B][@|+]
+  // Strip G or H (away status).
+  NSMutableString *userModes = [NSMutableString string];
 
-	for (NSUInteger i = 0; i < flags.length; i++) {
-		NSString *character = [flags stringCharacterAtIndex:i];
+  for (NSUInteger i = 0; i < flags.length; i++) {
+    NSString *character = [flags stringCharacterAtIndex:i];
 
-		if ([character isEqualToString:@"G"]) {
-			isAway = self.monitorAwayStatus;
+    if ([character isEqualToString:@"G"]) {
+      isAway = self.monitorAwayStatus;
 
-			continue;
-		} else if ([character isEqualToString:@"*"]) {
-			isIRCop = YES;
+      continue;
+    } else if ([character isEqualToString:@"*"]) {
+      isIRCop = YES;
 
-			continue;
-		} else if (botFlagSupported && [character isEqualToString:@"B"]) {
-			isBot = YES;
+      continue;
+    } else if (botFlagSupported && [character isEqualToString:@"B"]) {
+      isBot = YES;
 
-			continue;
-		}
+      continue;
+    }
 
-		NSString *modeSymbol = [self.supportInfo modeSymbolForUserPrefix:character];
+    NSString *modeSymbol = [self.supportInfo modeSymbolForUserPrefix:character];
 
-		if (modeSymbol == nil) {
-			continue;
-		}
+    if (modeSymbol == nil) {
+      continue;
+    }
 
-		[userModes appendString:modeSymbol];
-	}
+    [userModes appendString:modeSymbol];
+  }
 
-	/* Find global user and create mutable copy */
-	IRCUser *user = [self findUser:nickname];
+  /* Find global user and create mutable copy */
+  IRCUser *user = [self findUser:nickname];
 
-	IRCUserMutable *userMutable = nil;
+  IRCUserMutable *userMutable = nil;
 
-	if (user == nil) {
-		userMutable = [[IRCUserMutable alloc] initWithNickname:nickname onClient:self];
-	} else {
-		userMutable = [user mutableCopy];
-	}
+  if (user == nil) {
+    userMutable = [[IRCUserMutable alloc] initWithNickname:nickname
+                                                  onClient:self];
+  } else {
+    userMutable = [user mutableCopy];
+  }
 
-	userMutable.nickname = nickname;
-	userMutable.username = username;
-	userMutable.address = address;
+  userMutable.nickname = nickname;
+  userMutable.username = username;
+  userMutable.address = address;
 
-	userMutable.isAway = isAway;
-	userMutable.isIRCop = isIRCop;
+  userMutable.isAway = isAway;
+  userMutable.isIRCop = isIRCop;
 
-	if (botFlagSupported) {
-		userMutable.isBot = isBot;
-	}
+  if (botFlagSupported) {
+    userMutable.isBot = isBot;
+  }
 
-	userMutable.realName = realName;
+  userMutable.realName = realName;
 
-	if (updateAccount) {
-		userMutable.account = account;
-	}
+  if (updateAccount) {
+    userMutable.account = account;
+  }
 
-	/* Insert the user into the client and return the final copy that was */
-	BOOL userChanged = (user != nil && [user isEqual:userMutable] == NO);
+  /* Insert the user into the client and return the final copy that was */
+  BOOL userChanged = (user != nil && [user isEqual:userMutable] == NO);
 
-	IRCUser *userAdded = nil;
+  IRCUser *userAdded = nil;
 
-	if (user == nil || userChanged) {
-		userAdded = [self addUserAndReturn:userMutable];
-	} else {
-		userAdded = user;
-	}
+  if (user == nil || userChanged) {
+    userAdded = [self addUserAndReturn:userMutable];
+  } else {
+    userAdded = user;
+  }
 
-	/* Find the user associated with this channel  */
-	IRCChannelUser *member = [user userAssociatedWithChannel:channel];
+  /* Find the user associated with this channel  */
+  IRCChannelUser *member = [user userAssociatedWithChannel:channel];
 
-	if (member == nil) {
-		IRCChannelUserMutable *memberMutable = [[IRCChannelUserMutable alloc] initWithUser:userAdded];
+  if (member == nil) {
+    IRCChannelUserMutable *memberMutable =
+        [[IRCChannelUserMutable alloc] initWithUser:userAdded];
 
-		memberMutable.modes = userModes;
+    memberMutable.modes = userModes;
 
-		[channel addMember:memberMutable];
-	} else if (userChanged) {
-		/* Determine whether the users were modified in such a way that
-			 they require their cell in the user list be resorted. */
-		/* We do not want to resort unless absolutely necessary because
-			 sorting a channel with a few hundred users has overhead. */
-		BOOL IRCopStatusChanged = (user.isIRCop != userAdded.isIRCop);
+    [channel addMember:memberMutable];
+  } else if (userChanged) {
+    /* Determine whether the users were modified in such a way that
+             they require their cell in the user list be resorted. */
+    /* We do not want to resort unless absolutely necessary because
+             sorting a channel with a few hundred users has overhead. */
+    BOOL IRCopStatusChanged = (user.isIRCop != userAdded.isIRCop);
 
-		BOOL resortMember = IRCopStatusChanged;
+    BOOL resortMember = IRCopStatusChanged;
 
-		BOOL replaceInAllChannels = (IRCopStatusChanged && [TPCPreferences memberListSortFavorsServerStaff]);
+    BOOL replaceInAllChannels =
+        (IRCopStatusChanged &&
+         [TPCPreferences memberListSortFavorsServerStaff]);
 
-		if (resortMember) {
-			[channel replaceMember:member
-						  withMember:member
-							  resort:resortMember
-				replaceInAllChannels:replaceInAllChannels];
-		} else if (user.isAway != userAdded.isAway) {
-			[mainWindow() updateDrawingForUserInUserList:userAdded];
-		}
-	}
+    if (resortMember) {
+      [channel replaceMember:member
+                    withMember:member
+                        resort:resortMember
+          replaceInAllChannels:replaceInAllChannels];
+    } else if (user.isAway != userAdded.isAway) {
+      [mainWindow() updateDrawingForUserInUserList:userAdded];
+    }
+  }
 
-	/* Update local cache of our hostmask */
-	if ([self nicknameIsMyself:nickname]) {
-		NSString *hostmask = [NSString stringWithFormat:@"%@!%@@%@", nickname, username, address];
+  /* Update local cache of our hostmask */
+  if ([self nicknameIsMyself:nickname]) {
+    NSString *hostmask =
+        [NSString stringWithFormat:@"%@!%@@%@", nickname, username, address];
 
-		self.userHostmask = hostmask;
-	}
+    self.userHostmask = hostmask;
+  }
 }
 
-- (void)receiveAwayNotifyCapability:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveAwayNotifyCapability:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityAwayNotify] == NO) {
-		return;
-	}
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityAwayNotify] ==
+      NO) {
+    return;
+  }
 
-	BOOL away = (m.sequence.length > 0);
+  BOOL away = (m.sequence.length > 0);
 
-	NSString *nickname = m.senderNickname;
+  NSString *nickname = m.senderNickname;
 
-	[self modifyUserWithNickname:nickname asAway:away];
+  [self modifyUserWithNickname:nickname asAway:away];
 }
 
 - (void)receiveInit:(IRCMessage *)m // Raw numeric = 001
 {
-	NSParameterAssert(m != nil);
+  NSParameterAssert(m != nil);
 
-	/* Manage timers */
-	[self startPongTimer];
+  /* Manage timers */
+  [self startPongTimer];
 
-	[self stopRetryTimer];
+  [self stopRetryTimer];
 
-	/* Manage properties */
-	self.isLoggedIn = YES;
+  /* Manage properties */
+  self.isLoggedIn = YES;
 
-	self.supportInfo.serverAddress = m.senderHostmask;
+  self.supportInfo.serverAddress = m.senderHostmask;
 
-	self.invokingISONCommandForFirstTime = YES;
+  self.invokingISONCommandForFirstTime = YES;
 
-	self.reconnectEnabledBecauseOfSleepMode = NO;
+  self.reconnectEnabledBecauseOfSleepMode = NO;
 
-	self.tryingNicknameSentNickname = nil;
+  self.tryingNicknameSentNickname = nil;
 
-	self.userNickname = [m paramAt:0];
+  self.userNickname = [m paramAt:0];
 
-	self.successfulConnects += 1;
+  self.successfulConnects += 1;
 
-	/* Begin enforcing flood control */
-	[self.socket enforceFloodControl];
+  /* Begin enforcing flood control */
+  [self.socket enforceFloodControl];
 
-	/* Post event */
-	[self postEventToViewController:@"serverConnected"];
+  /* Post event */
+  [self postEventToViewController:@"serverConnected"];
 
-	[self notifyEvent:TXNotificationTypeConnect lineType:TVCLogLineTypeDebug];
+  [self notifyEvent:TXNotificationTypeConnect lineType:TVCLogLineTypeDebug];
 
-	/* Perform login commands */
-	self.isPerformingConnectCommands = YES;
+  /* Perform login commands */
+  self.isPerformingConnectCommands = YES;
 
-	for (__strong NSString *command in self.config.loginCommands) {
-		if ([command hasPrefix:@"/"]) {
-			command = [command substringFromIndex:1];
-		}
+  for (__strong NSString *command in self.config.loginCommands) {
+    if ([command hasPrefix:@"/"]) {
+      command = [command substringFromIndex:1];
+    }
 
-		[self sendCommand:command completeTarget:NO target:nil];
-	}
+    [self sendCommand:command completeTarget:NO target:nil];
+  }
 
-	self.isPerformingConnectCommands = NO;
+  self.isPerformingConnectCommands = NO;
 
-	/* Request certificate information */
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityZNCCertInfoModule]) {
-		[self sendCommand:@"send-data" toZNCModuleNamed:@"tlsinfo"];
-	}
+  /* Request certificate information */
+  if ([self isCapabilityEnabled:
+                ClientIRCv3SupportedCapabilityZNCCertInfoModule]) {
+    [self sendCommand:@"send-data" toZNCModuleNamed:@"tlsinfo"];
+  }
 
-	/* Request playback since the last seen message when previously connected */
-	[self requestPlayback];
+  /* Request playback since the last seen message when previously connected */
+  [self requestPlayback];
 
-	/* Activate existing queries */
-	for (IRCChannel *c in self.channelList) {
-		if (c.privateMessage) {
-			[c activate];
+  /* Activate existing queries */
+  for (IRCChannel *c in self.channelList) {
+    if (c.privateMessage) {
+      [c activate];
 
-			[mainWindow() reloadTreeItem:c];
-		}
-	}
+      [mainWindow() reloadTreeItem:c];
+    }
+  }
 
-	[mainWindow() reloadTreeItem:self];
+  [mainWindow() reloadTreeItem:self];
 
-	[mainWindow() updateTitleFor:self];
+  [mainWindow() updateTitleFor:self];
 
-	/* Everything else */
-	if (self.config.autojoinWaitsForNickServ == NO ||
-		[self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL]) {
-		[self performAutoJoin];
-	} else {
-		/* If we wait for NickServ we set a timer of 3.0 seconds before performing auto join.
-		 When this timer is executed, if we do not have any knowledge of NickServ existing
-		 on the current server, then we perform the autojoin. This is primarily a fix for the
-		 ZNC SASL module which will complete identification before connecting and once connected
-		 Glasstual will have no knowledge of whether the local user is identified or not. */
-		/* NickServ will send a notice asking for identification as soon as connection occurs so
-		 this is the best patch. At least for right now. */
+  /* Everything else */
+  if (self.config.autojoinWaitsForNickServ == NO ||
+      [self isCapabilityEnabled:
+                ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL]) {
+    [self performAutoJoin];
+  } else {
+    /* If we wait for NickServ we set a timer of 3.0 seconds before performing
+     auto join. When this timer is executed, if we do not have any knowledge of
+     NickServ existing on the current server, then we perform the autojoin. This
+     is primarily a fix for the ZNC SASL module which will complete
+     identification before connecting and once connected Glasstual will have no
+     knowledge of whether the local user is identified or not. */
+    /* NickServ will send a notice asking for identification as soon as
+     connection occurs so this is the best patch. At least for right now. */
 
-		if (self.isConnectedToZNC) {
-			[self performSelectorInCommonModes:@selector(performAutoJoin) withObject:nil afterDelay:3.0];
-		} else {
-			[self startAutojoinDelayedWarningTimer];
-		}
-	}
+    if (self.isConnectedToZNC) {
+      [self performSelectorInCommonModes:@selector(performAutoJoin)
+                              withObject:nil
+                              afterDelay:3.0];
+    } else {
+      [self startAutojoinDelayedWarningTimer];
+    }
+  }
 
-	/* We need time for the server to send its configuration */
-	[self performSelectorInCommonModes:@selector(populateISONTrackedUsersList) withObject:nil afterDelay:10.0];
+  /* We need time for the server to send its configuration */
+  [self performSelectorInCommonModes:@selector(populateISONTrackedUsersList)
+                          withObject:nil
+                          afterDelay:10.0];
 }
 
-- (void)receiveNumericReply:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveNumericReply:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSInteger numeric = m.commandNumeric;
+  NSInteger numeric = m.commandNumeric;
 
-	if (numeric > 400 && numeric < 597 && numeric != ERR_NOMOTD) {
-		[self receiveErrorNumericReply:m];
+  if (numeric > 400 && numeric < 597 && numeric != ERR_NOMOTD) {
+    [self receiveErrorNumericReply:m];
 
-		return;
-	}
+    return;
+  }
 
-	BOOL printMessage = YES;
+  BOOL printMessage = YES;
 
-	/* These numerics are treated differently below which is why the exception exists.
-	 For example, for channel topic, only the contents of the topic are sent to the filter. */
-	if (numeric != RPL_UMODEIS && numeric != RPL_CHANNELMODEIS && numeric != RPL_TOPIC && numeric != RPL_TOPICWHOTIME) {
-		printMessage = [self postReceivedMessage:m];
-	}
+  /* These numerics are treated differently below which is why the exception
+   exists. For example, for channel topic, only the contents of the topic are
+   sent to the filter. */
+  if (numeric != RPL_UMODEIS && numeric != RPL_CHANNELMODEIS &&
+      numeric != RPL_TOPIC && numeric != RPL_TOPICWHOTIME) {
+    printMessage = [self postReceivedMessage:m];
+  }
 
-	switch (numeric) {
-	case RPL_WELCOME: {
-		[self receiveInit:m];
+  switch (numeric) {
+  case RPL_WELCOME: {
+    [self receiveInit:m];
 
-		if (printMessage) {
-			[self printReply:m];
-		}
+    if (printMessage) {
+      [self printReply:m];
+    }
 
-		break;
-	}
-	case RPL_YOURHOST:
-	case RPL_CREATED:
-	case RPL_MYINFO: {
-		if (printMessage) {
-			[self printReply:m];
-		}
+    break;
+  }
+  case RPL_YOURHOST:
+  case RPL_CREATED:
+  case RPL_MYINFO: {
+    if (printMessage) {
+      [self printReply:m];
+    }
+
+    break;
+  }
+  case RPL_ISUPPORT: {
+    NSAssertReturn([m paramsCount] >= 3);
+
+    NSMutableArray *params = [m.params mutableCopy];
 
-		break;
-	}
-	case RPL_ISUPPORT: {
-		NSAssertReturn([m paramsCount] >= 3);
-
-		NSMutableArray *params = [m.params mutableCopy];
-
-		[params removeObjectAtIndex:0]; // Remove nickname
-
-		NSString *message = params.lastObject;
-
-		[params removeLastObject]; // Remove "are supported by this server"
-
-		NSString *configuration = [params componentsJoinedByString:@" "];
-
-		IRCISupportInfoCaseMapping caseMappingBefore = self.supportInfo.caseMapping;
-
-		BOOL wasUTF8Only = self.supportInfo.utf8Only;
-
-		[self.supportInfo processConfigurationData:configuration];
-
-		/* Users created before CASEMAPPING arrived (ourselves, private
-		 message peers) are keyed under the default rfc1459 folding. */
-		if (self.supportInfo.caseMapping != caseMappingBefore) {
-			[self rekeyUserList];
-		}
-
-		if (printMessage) {
-			NSString *configurationFormatted = self.supportInfo.stringValueForLastUpdate;
-
-			[self printDebugInformationToConsole:TXTLS(@"IRC[u51-nn]", configurationFormatted, message)
-									   asCommand:m.command];
-		}
-
-		/* UTF8ONLY: the configured encodings are overridden for this connection. */
-		if (wasUTF8Only == NO && self.supportInfo.utf8Only) {
-			[self printDebugInformationToConsole:TXTLS(@"IRC[y3h-ud]") asCommand:m.command];
-		}
-
-		break;
-	}
-	case RPL_REDIR: {
-		NSAssertReturn([m paramsCount] == 4);
-
-		NSString *serverAddress = [m paramAt:1];
-		NSString *serverPort = [m paramAt:2];
-
-		self.disconnectType = IRCClientDisconnectModeServerRedirect;
-
-		/* If the address is thought to be invalid, then we still
-			 perform the disconnect suggested by the redirect, but
-			 we do not go any further than that. */
-		if (serverAddress.validInternetAddress == NO || serverPort.validInternetPort == NO) {
-			[self disconnect];
-
-			return;
-		}
-
-		/* Perform reconnect to specified locations */
-		__weak IRCClient *weakSelf = self;
-
-		self.disconnectCallback = ^{
-			[weakSelf connect];
-		};
-
-		[self disconnect];
-
-		/* -disconnect would destroy this so we set them after... */
-		self.temporaryServerAddressOverride = serverAddress;
-		self.temporaryServerPortOverride = serverPort.integerValue;
-
-		break;
-	}
-	case RPL_STATSCONN:
-	case RPL_LUSERCLIENT:
-	case RPL_LUSERHOP:
-	case RPL_LUSERUNKNOWN:
-	case RPL_LUSERCHANNELS:
-	case RPL_LUSERME: {
-		if (printMessage) {
-			[self printReply:m];
-		}
-
-		break;
-	}
-	case RPL_LOCALUSERS:
-	case RPL_GLOBALUSERS: {
-		NSAssertReturn(printMessage);
-
-		NSString *message = nil;
-
-		if (m.paramsCount == 4) {
-			/* Removes user count from in front of messages on IRCds that send them.
-				 Example: ">> :irc.example.com 265 Guest 2 3 :Current local users 2, max 3" */
-
-			message = [m sequence:3];
-		} else {
-			message = m.sequence;
-		}
-
-		[self print:message by:nil inChannel:nil asType:TVCLogLineTypeDebug command:m.command receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_MOTD:
-	case RPL_MOTDSTART:
-	case RPL_ENDOFMOTD:
-	case ERR_NOMOTD: {
-		NSAssertReturn(printMessage);
-
-		if ([TPCPreferences displayServerMOTD] == NO) {
-			break;
-		}
-
-		if (numeric == ERR_NOMOTD) {
-			[self printErrorReply:m];
-		} else {
-			[self printReply:m];
-		}
-
-		break;
-	}
-	case RPL_UMODEIS: {
-		NSAssertReturn([m paramsCount] > 1);
-
-		NSString *nickname = [m paramAt:0];
-
-		NSString *modeString = [m paramAt:1];
-
-		if ([modeString isEqualToString:@"+"]) {
-			break;
-		}
-
-		printMessage = [self postReceivedMessage:m withText:modeString destinedFor:nil];
-
-		if (printMessage) {
-			[self print:TXTLS(@"IRC[ipj-34]", nickname, modeString)
-						by:nil
-				 inChannel:nil
-					asType:TVCLogLineTypeDebug
-				   command:m.command
-				receivedAt:m.receivedAt];
-		}
-
-		break;
-	}
-	case RPL_AWAY: {
-		NSAssertReturn([m paramsCount] == 3);
-
-		NSString *awayNickname = [m paramAt:1];
-		NSString *awayComment = [m paramAt:2];
-
-		IRCChannel *channel = [self findChannel:awayNickname];
-
-		NSString *message = TXTLS(@"IRC[c1h-fq]", awayNickname, awayComment);
-
-		if (channel == nil) {
-			channel = [mainWindow() selectedChannelOn:self];
-		}
-
-		IRCUser *user = [self findUser:awayNickname];
-
-		if (user) {
-			if (self.monitorAwayStatus) {
-				[user markAsAway];
-			}
-
-			if (user.presentAwayMessageFor301 == NO) {
-				break;
-			}
-		}
-
-		if (printMessage) {
-			[self print:message
-						by:nil
-				 inChannel:channel
-					asType:TVCLogLineTypeDebug
-				   command:m.command
-				receivedAt:m.receivedAt];
-		}
-
-		break;
-	}
-	case RPL_SILELIST: {
-		/* Shapes seen in the wild: "<me> <mask>", "<me> <me> <mask>" and
-		 "<me> <me> <mask> <flags>" (InspIRCd). The mask is the last
-		 parameter that is not our own nickname, flags follow it. */
-		NSAssertReturn([m paramsCount] > 1);
-
-		NSMutableArray<NSString *> *entry = [NSMutableArray array];
-
-		for (NSUInteger i = 1; i < [m paramsCount]; i++) {
-			NSString *param = [m paramAt:i];
-
-			if (entry.count == 0 && [self nicknameIsMyself:param]) {
-				continue;
-			}
-
-			[entry addObject:param];
-		}
-
-		if (printMessage && entry.count > 0) {
-			[self printDebugInformation:TXTLS(@"IRC[m2v-sb]", [entry componentsJoinedByString:@" "])
-							  inChannel:[mainWindow() selectedChannelOn:self]
-							  asCommand:m.command];
-		}
-
-		break;
-	}
-	case RPL_ENDOFSILELIST: {
-		if (printMessage) {
-			[self printDebugInformation:TXTLS(@"IRC[m2v-sc]")
-							  inChannel:[mainWindow() selectedChannelOn:self]
-							  asCommand:m.command];
-		}
-
-		break;
-	}
-	case RPL_UNAWAY:
-	case RPL_NOWAWAY: {
-		BOOL away = (numeric == RPL_NOWAWAY);
-
-		self.userIsAway = away;
-
-		[mainWindow() updateTitle];
-
-		if (printMessage) {
-			[self printReply:m];
-		}
-
-		/* Update our own status. This has to only be done with away-notify CAP enabled.
-			 Old, WHO based information requests will still show our own status. */
-		IRCUser *myself = self.myself;
-
-		if (myself == nil) {
-			break;
-		}
-
-		[self modifyUser:myself asAway:away];
-
-		break;
-	}
-	case RPL_WHOISBOT: {
-		NSAssertReturn([m paramsCount] > 1);
-
-		NSString *nickname = [m paramAt:1];
-
-		[self modifyUserUserWithNickname:nickname
-							   withBlock:^(IRCUserMutable *userMutable) {
-								   userMutable.isBot = YES;
-							   }];
-
-		if (printMessage) {
-			if ([m paramsCount] > 2) {
-				[self printReply:m inChannel:[mainWindow() selectedChannelOn:self]];
-			} else {
-				[self print:TXTLS(@"IRC[m2v-se]", nickname)
-							by:nil
-					 inChannel:[mainWindow() selectedChannelOn:self]
-						asType:TVCLogLineTypeDebug
-					   command:m.command
-					receivedAt:m.receivedAt];
-			}
-		}
-
-		break;
-	}
-	case RPL_CHANNELSMSG:
-	case RPL_WHOISHELPOP:
-	case RPL_WHOISHOST:
-	case RPL_WHOISMODES:
-	case RPL_WHOISOPERATOR:
-	case RPL_WHOISREALIP:
-	case RPL_WHOISREGNICK:
-	case RPL_WHOISSECURE:
-	case RPL_WHOISSPECIAL: {
-		NSAssertReturn([m paramsCount] > 2);
-
-		if (printMessage) {
-			[self printReply:m inChannel:[mainWindow() selectedChannelOn:self]];
-		}
-
-		break;
-	}
-	case RPL_WHOISACTUALLY: {
-		NSAssertReturn([m paramsCount] == 5);
-
-		NSAssertReturn(printMessage);
-
-		NSString *nickname = [m paramAt:1];
-		NSString *hostmask = [m paramAt:2];
-		NSString *ipAddress = [m paramAt:3];
-
-		NSString *message = nil;
-
-		if (self.inWhowasResponse) { // bahamut sends RPL_WHOISACTUALLY in WHOWAS
-			message = TXTLS(@"IRC[x69-rz]", nickname, hostmask, ipAddress);
-		} else {
-			message = TXTLS(@"IRC[3oa-mv]", nickname, hostmask, ipAddress);
-		}
-
-		[self print:message
-					by:nil
-			 inChannel:[mainWindow() selectedChannelOn:self]
-				asType:TVCLogLineTypeDebug
-			   command:m.command
-			receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_WHOISUSER:
-	case RPL_WHOWASUSER: {
-		NSAssertReturn([m paramsCount] >= 6);
-
-		NSString *nickname = [m paramAt:1];
-		NSString *username = [m paramAt:2];
-		NSString *address = [m paramAt:3];
-		NSString *realName = [m paramAt:5];
-
-		if ([realName hasPrefix:@":"]) {
-			realName = [realName substringFromIndex:1];
-		}
-
-		self.inWhoisResponse = (numeric == RPL_WHOISUSER);
-		self.inWhowasResponse = (numeric == RPL_WHOWASUSER);
-
-		NSString *message = nil;
-
-		if (self.inWhowasResponse) {
-			if (printMessage) {
-				message = TXTLS(@"IRC[32c-87]", nickname, username, address, realName);
-			}
-		} else {
-			if (printMessage) {
-				message = TXTLS(@"IRC[plg-lr]", nickname, username, address, realName);
-			}
-
-			/* Update local cache of our hostmask */
-			if ([self nicknameIsMyself:nickname]) {
-				NSString *hostmask = [NSString stringWithFormat:@"%@!%@@%@", nickname, username, address];
-
-				self.userHostmask = hostmask;
-			}
-		}
-
-		if (message) {
-			[self print:message
-						by:nil
-				 inChannel:[mainWindow() selectedChannelOn:self]
-					asType:TVCLogLineTypeDebug
-				   command:m.command
-				receivedAt:m.receivedAt];
-		}
-
-		break;
-	}
-	case RPL_WHOISSERVER: {
-		NSAssertReturn([m paramsCount] == 4);
-
-		NSAssertReturn(printMessage);
-
-		NSString *nickname = [m paramAt:1];
-		NSString *serverAddress = [m paramAt:2];
-		NSString *serverInfo = [m paramAt:3];
-
-		NSString *message = nil;
-
-		if (self.inWhowasResponse) { // bahamut sends RPL_WHOISSERVER in WHOWAS
-			NSString *timeInfo = TXFormatDateLongStyle(serverInfo, YES);
-
-			if (timeInfo == nil) {
-				timeInfo = serverInfo;
-			}
-
-			message = TXTLS(@"IRC[cdu-ed]", nickname, serverAddress, timeInfo);
-		} else {
-			message = TXTLS(@"IRC[h19-n2]", nickname, serverAddress, serverInfo);
-		}
-
-		[self print:message
-					by:nil
-			 inChannel:[mainWindow() selectedChannelOn:self]
-				asType:TVCLogLineTypeDebug
-			   command:m.command
-			receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_WHOISIDLE: {
-		/* RFC 1459 servers omit the sign-on time: <nick> <idle> :seconds idle */
-		NSAssertReturn([m paramsCount] >= 4);
-
-		NSAssertReturn(printMessage);
-
-		NSString *nickname = [m paramAt:1];
-		NSString *idleTime = [m paramAt:2];
-		NSString *connectTime = [m paramAt:3];
-
-		idleTime = TXHumanReadableTimeInterval(idleTime.doubleValue, NO, 0);
-
-		NSDate *connTimeDate = [NSDate dateWithTimeIntervalSince1970:connectTime.doubleValue];
-
-		connectTime = TXFormatDateLongStyle(connTimeDate, YES);
-
-		NSString *message = TXTLS(@"IRC[6hn-o6]", nickname, connectTime, idleTime);
-
-		[self print:message
-					by:nil
-			 inChannel:[mainWindow() selectedChannelOn:self]
-				asType:TVCLogLineTypeDebug
-			   command:m.command
-			receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_WHOISCHANNELS: {
-		NSAssertReturn([m paramsCount] == 3);
-
-		NSAssertReturn(printMessage);
-
-		NSString *nickname = [m paramAt:1];
-		NSString *channels = [m paramAt:2];
-
-		NSString *message = TXTLS(@"IRC[onk-l5]", nickname, channels);
-
-		[self print:message
-					by:nil
-			 inChannel:[mainWindow() selectedChannelOn:self]
-				asType:TVCLogLineTypeDebug
-			   command:m.command
-			receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_WHOISACCOUNT: {
-		NSAssertReturn([m paramsCount] == 4);
-
-		NSAssertReturn(printMessage);
-
-		NSString *message = [NSString stringWithFormat:@"%@ %@ %@", [m paramAt:1], [m sequence:3], [m paramAt:2]];
-
-		[self print:message
-					by:nil
-			 inChannel:[mainWindow() selectedChannelOn:self]
-				asType:TVCLogLineTypeDebug
-			   command:m.command
-			receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_ENDOFWHOIS: {
-		self.inWhoisResponse = NO;
-
-		/*			if (printMessage) {
-				[self printReply:m inChannel:[mainWindow() selectedChannelOn:self]];
-			} */
-
-		break;
-	}
-	case RPL_ENDOFWHOWAS: {
-		self.inWhowasResponse = NO;
-
-		/*			if (printMessage) {
-				[self printReply:m inChannel:[mainWindow() selectedChannelOn:self]];
-			} */
-
-		break;
-	}
-	case RPL_CHANNELMODEIS: {
-		NSAssertReturn([m paramsCount] > 2);
-
-		NSString *channelName = [m paramAt:1];
-
-		NSString *modeString = [m sequence:2];
-
-		if ([modeString isEqualToString:@"+"]) {
-			return;
-		}
-
-		IRCChannel *channel = [self findChannel:channelName];
-
-		if (channel == nil) {
-			break;
-		}
-
-		if (channel.isActive) {
-			[channel.modeInfo clear];
-
-			[channel.modeInfo updateModes:modeString];
-		}
-
-		printMessage = [self postReceivedMessage:m withText:modeString destinedFor:channel];
-
-		/* We perform this check after printMessage is defined so that
-			 filters have a chance to act on the input. */
-		/* IRCClient perform mode requests for channels without the user
-			 asking for it so we must check that here. */
-		if (channel.channelModesReceived == NO) {
-			channel.channelModesReceived = YES;
-		}
-
-		if (printMessage) {
-			NSString *message = channel.modeInfo.stringWithMaskedPassword;
-
-			[self print:TXTLS(@"IRC[obp-ww]", message)
-						by:nil
-				 inChannel:channel
-					asType:TVCLogLineTypeMode
-				   command:m.command
-				receivedAt:m.receivedAt];
-		}
-
-		break;
-	}
-	case RPL_TOPIC: {
-		NSAssertReturn([m paramsCount] == 3);
-
-		NSString *channelName = [m paramAt:1];
-		NSString *topic = [m paramAt:2];
-
-		IRCChannel *channel = [self findChannel:channelName];
-
-		if (channel == nil) {
-			break;
-		}
-
-		printMessage = [self postReceivedMessage:m withText:topic destinedFor:channel];
-
-		channel.topic = topic;
-
-		if (printMessage) {
-			[self print:TXTLS(@"IRC[7nm-7v]", topic)
-						by:nil
-				 inChannel:channel
-					asType:TVCLogLineTypeTopic
-				   command:m.command
-				receivedAt:m.receivedAt];
-		}
-
-		break;
-	}
-	case RPL_TOPICWHOTIME: {
-		NSAssertReturn([m paramsCount] == 4);
-
-		NSString *channelName = [m paramAt:1];
-
-		IRCChannel *channel = [self findChannel:channelName];
-
-		if (channel == nil) {
-			break;
-		}
-
-		printMessage = [self postReceivedMessage:m withText:nil destinedFor:channel];
-
-		if (printMessage == NO) {
-			return;
-		}
-
-		NSString *topicSetter = [m paramAt:2];
-		NSString *setTime = [m paramAt:3];
-
-		topicSetter = topicSetter.nicknameFromHostmask;
-
-		NSDate *setTimeDate = [NSDate dateWithTimeIntervalSince1970:setTime.doubleValue];
-
-		setTime = TXFormatDateLongStyle(setTimeDate, YES);
-
-		NSString *message = TXTLS(@"IRC[y7s-3e]", topicSetter, setTime);
-
-		[self print:message
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeTopic
-			   command:m.command
-			receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_CREATIONTIME: {
-		break; // Ignore
-	}
-	case RPL_INVITING: {
-		NSAssertReturn([m paramsCount] == 3);
-
-		NSAssertReturn(printMessage);
-
-		NSString *nickname = [m paramAt:1];
-		NSString *channelName = [m paramAt:2];
-
-		IRCChannel *channel = [self findChannel:channelName];
-
-		if (channel == nil) {
-			break;
-		}
-
-		[self print:TXTLS(@"IRC[wk4-rv]", nickname, channelName)
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeDebug
-			   command:m.command
-			receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_ISON: {
-		/* Present reply to the user if we have destination */
-		BOOL visibleIsonRequest = self.requestedCommands.visibleIsonRequest;
-
-		[self.requestedCommands recordIsonRequestClosed];
-
-		if (visibleIsonRequest) {
-			if (printMessage) {
-				[self printReplyToHiddenCommandResponsesQuery:m];
-			}
-
-			/* It is important that we don't process logic for visible
-				 requests because if user does ISON for people that aren't
-				 on the tracked list and the logic below sees the response
-				 missing those, then it will think everyone tracked went offline. */
-			break;
-		}
-
-		/* If the ISON records were not requested by the user, then
-			 treat the results as user tracking information. */
-		NSString *onlineNicknamesString = m.sequence;
-
-		NSArray *onlineNicknames =
-			[onlineNicknamesString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-
-		/* Start going over the list of tracked nicknames. When the server
-		 supports MONITOR or WATCH, tracked nicknames are not part of the
-		 ISON request so their absence from the reply means nothing. */
-		NSDictionary *trackedUsers = (self.supportsAdvancedTracking ? @{} : self.trackedUsers.trackedUsers);
-
-		[trackedUsers
-			enumerateKeysAndObjectsUsingBlock:^(NSString *trackedUser, NSNumber *trackingStatusInt, BOOL *stop) {
-				IRCAddressBookUserTrackingStatus trackingStatus = IRCAddressBookUserTrackingStatusUnknown;
-
-				/* Was the user on during the last check? */
-				BOOL ison = trackingStatusInt.boolValue;
-
-				if (ison) {
-					/* If the user was on before, but is not in the list of ISON
-					 users in this reply, then they are considered gone. Log that. */
-					if ([onlineNicknames containsObjectIgnoringCase:trackedUser] == NO) {
-						if (self.invokingISONCommandForFirstTime == NO) {
-							trackingStatus = IRCAddressBookUserTrackingStatusSignedOff;
-						}
-					}
-				} else {
-					/* If they were not on but now are, then log that too. */
-					if ([onlineNicknames containsObjectIgnoringCase:trackedUser]) {
-						if (self.invokingISONCommandForFirstTime) {
-							trackingStatus = IRCAddressBookUserTrackingStatusAvailable;
-						} else {
-							trackingStatus = IRCAddressBookUserTrackingStatusSignedOn;
-						}
-					}
-				}
-
-				/* If something changed (non-nil localization string), then scan 
-				 the list of address book entries to report the result. */
-				if (trackingStatus != IRCAddressBookUserTrackingStatusUnknown) {
-					[self statusOfTrackedNickname:trackedUser changedTo:trackingStatus notify:YES];
-				}
-			}]; // for
-
-		if (self.invokingISONCommandForFirstTime) { // Reset internal property
-			self.invokingISONCommandForFirstTime = NO;
-		}
-
-		/* Update private messages */
-		for (IRCChannel *channel in self.channelList) {
-			if (channel.privateMessage == NO) {
-				continue;
-			}
-
-			if (channel.isActive) {
-				/* If the user is no longer on, deactivate the private message */
-				if ([onlineNicknames containsObjectIgnoringCase:channel.name] == NO) {
-					[channel deactivate];
-
-					[mainWindow() reloadTreeItem:channel];
-				}
-			} else {
-				/* Activate the private message if the user is back online */
-				if ([onlineNicknames containsObjectIgnoringCase:channel.name]) {
-					[channel activate];
-
-					[mainWindow() reloadTreeItem:channel];
-				}
-			}
-		}
-
-		break;
-	}
-	case RPL_WHOREPLY: {
-		NSAssertReturn([m paramsCount] >= 8);
-
-		/* Present reply to the user if we have destination */
-		if (self.requestedCommands.visibleWhoRequest) {
-			if (printMessage) {
-				[self printReplyToHiddenCommandResponsesQuery:m];
-			}
-
-			/* We could remove this and be fine, but it's a lot
-				 over overhead to process WHO responses so let's just
-				 wait until the next automated one. */
-			break;
-		}
-
-		/* Process reply */
-		NSString *channelName = [m paramAt:1];
-
-		IRCChannel *channel = [self findChannel:channelName];
-
-		if (channel == nil) {
-			break;
-		}
-
-		/* Example incoming data:
-				<channel> <user> <host> <server> <nick> <H|G>[*][@|+] <hopcount> <real name>
-
-				#freenode znc unaffiliated/namikaze kornbluth.freenode.net Namikaze G 0 Christian
-				#freenode ~D unaffiliated/solprefixer kornbluth.freenode.net solprefixer H 0 solprefixer
-			*/
-
-		NSString *realName = [m paramAt:7];
-
-		/* Parameter 7 includes the hop count and real name because it begins with a :
-			 Therefore, we cut after the first space to get the real, real name value. */
-		NSInteger realNameFirstSpace = [realName stringPosition:@" "];
-
-		if (realNameFirstSpace > 0 && (NSUInteger)realNameFirstSpace < realName.length) {
-			realName = [realName substringAfterIndex:realNameFirstSpace];
-		}
-
-		[self receiveWhoReplyInChannel:channel
-							  nickname:[m paramAt:5]
-							  username:[m paramAt:2]
-							   address:[m paramAt:3]
-								 flags:[m paramAt:6]
-							  realName:realName
-							   account:nil
-						 updateAccount:NO];
-
-		break;
-	}
-	case RPL_WHOSPCRPL: {
-		/* WHOX reply to the fields requested by -sendWhoToChannelNamed:
-				<token> <channel> <user> <host> <nick> <flags> <account> :<real name>
-		   Replies to other tokens were not asked for by us. */
-		NSAssertReturn([m paramsCount] >= 9);
-
-		if ([[m paramAt:1] isEqualToString:IRCClientWhoxToken] == NO) {
-			if (printMessage) {
-				[self printReplyToHiddenCommandResponsesQuery:m];
-			}
-
-			break;
-		}
-
-		if (self.requestedCommands.visibleWhoRequest) {
-			if (printMessage) {
-				[self printReplyToHiddenCommandResponsesQuery:m];
-			}
-
-			break;
-		}
-
-		IRCChannel *channel = [self findChannel:[m paramAt:2]];
-
-		if (channel == nil) {
-			break;
-		}
-
-		[self receiveWhoReplyInChannel:channel
-							  nickname:[m paramAt:5]
-							  username:[m paramAt:3]
-							   address:[m paramAt:4]
-								 flags:[m paramAt:6]
-							  realName:[m paramAt:8]
-							   account:[self.class accountFromWireValue:[m paramAt:7]]
-						 updateAccount:YES];
-
-		break;
-	}
-	case RPL_ENDOFWHO: {
-		BOOL visibleWhoRequest = self.requestedCommands.visibleWhoRequest;
-
-		[self.requestedCommands recordWhoRequestClosed];
-
-		if (visibleWhoRequest && printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		break;
-	}
-	case RPL_NAMEREPLY: {
-		NSAssertReturn([m paramsCount] > 3);
-
-		/* Present reply to the user if we have destination */
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		/* Process reply */
-		NSString *channelName = [m paramAt:2];
-
-		IRCChannel *channel = [self findChannel:channelName];
-
-		if (channel == nil || channel.channelNamesReceived) {
-			break;
-		}
-
-		NSString *nicknamesString = [m paramAt:3];
-
-		NSArray *nicknames =
-			[nicknamesString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-
-		for (NSString *nickname in nicknames) {
-			if (nickname.length == 0) {
-				continue;
-			}
-
-			/* Find first character that is not a user mode */
-			NSMutableString *memberModes = [NSMutableString string];
-
-			NSUInteger characterIndex = 0;
-
-			for (characterIndex = 0; characterIndex < nickname.length; characterIndex++) {
-				NSString *prefix = [nickname stringCharacterAtIndex:characterIndex];
-
-				NSString *modeSymbol = [self.supportInfo modeSymbolForUserPrefix:prefix];
-
-				if (modeSymbol == nil) {
-					break;
-				}
-
-				[memberModes appendString:modeSymbol];
-			} // for
-
-			/* Split away hostmask if available */
-			NSString *newNickname = [nickname substringFromIndex:characterIndex];
-
-			NSString *nicknameInt = nil;
-			NSString *usernameInt = nil;
-			NSString *addressInt = nil;
-
-			if ([newNickname hostmaskComponents:&nicknameInt username:&usernameInt address:&addressInt
-									   onClient:self] == NO) {
-				/* When NAMES reply is not a host, then set the nicknameInt
-					 to the value of nickname and leave the rest as nil. */
-
-				nicknameInt = newNickname;
-			}
-
-			/* Find global user */
-			/* An instance of IRCUser may already exist from a NAMES
-				 reply for another channel. If one already exist, then
-				 we don't make an effort to change it's credentials. */
-			IRCUser *userAdded = nil;
-
-			IRCUser *user = [self findUser:nicknameInt];
-
-			if (user == nil) {
-				IRCUserMutable *userMutable = [[IRCUserMutable alloc] initWithNickname:nicknameInt onClient:self];
-
-				userMutable.nickname = nicknameInt;
-				userMutable.username = usernameInt;
-				userMutable.address = addressInt;
-
-				userAdded = [self addUserAndReturn:userMutable];
-			} else {
-				userAdded = user;
-			}
-
-			/* Find channel user */
-			IRCChannelUser *member = [userAdded userAssociatedWithChannel:channel];
-
-			IRCChannelUserMutable *memberMutable = nil;
-
-			if (member == nil) {
-				memberMutable = [[IRCChannelUserMutable alloc] initWithUser:userAdded];
-			} else if ([self nicknameIsMyself:nicknameInt]) {
-				memberMutable = [member mutableCopy];
-			} else {
-				/* If a user with this name already exists in the channel,
-					 then we skip it unless its us. We are added to the
-					 channel when the JOIN is received, but we still need modes. */
-
-				continue;
-			}
-
-			/* Create channel user */
-			memberMutable.modes = memberModes;
-
-			/* Add user to channel */
-			[channel addMember:memberMutable checkForDuplicates:YES];
-		} // for
-
-		break;
-	}
-	case RPL_ENDOFNAMES: {
-		NSAssertReturn([m paramsCount] == 3);
-
-		/* Present reply to the user if we have destination */
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		/* Process reply */
-		NSString *channelName = [m paramAt:1];
-
-		IRCChannel *channel = [self findChannel:channelName];
-
-		if (channel == nil || channel.channelNamesReceived) {
-			break;
-		}
-
-		channel.channelNamesReceived = YES;
-
-		/* We have to wait until names are processed before populating
-			 defaults for a channel so that we are certain there is actually
-			 only one user, which is us. */
-		if (channel.numberOfMembers == 1 && self.isBrokenIRCd_aka_Twitch == NO) {
-			NSString *defaultModes = channel.config.defaultModes;
-
-			if (defaultModes.length > 0) {
-				[self sendModes:defaultModes withParametersString:nil inChannel:channel];
-			}
-
-			NSString *defaultTopic = channel.config.defaultTopic;
-
-			if (defaultTopic.length > 0) {
-				[self sendTopicTo:defaultTopic inChannel:channel];
-			}
-		}
-
-		/* Update user count in title */
-		[mainWindow() updateTitleFor:channel];
-
-		break;
-	}
-	case RPL_LISTSTART: {
-		TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
-
-		if (channelListDialog) {
-			channelListDialog.contentAlreadyReceived = NO;
-
-			[channelListDialog clear];
-		}
-
-		break;
-	}
-	case RPL_LIST: {
-		NSAssertReturn([m paramsCount] > 2);
-
-		NSString *channel = [m paramAt:1];
-		NSString *userCount = [m paramAt:2];
-		NSString *topic = [m sequence:3];
-
-		if ([channel isEqualToString:@"*"]) {
-			break;
-		}
-
-		TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
-
-		if (channelListDialog) {
-			[channelListDialog addChannel:channel count:userCount.integerValue topic:topic];
-		}
-
-		break;
-	}
-	case RPL_LISTEND: {
-		TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
-
-		if (channelListDialog) {
-			channelListDialog.contentAlreadyReceived = YES;
-		}
-
-		break;
-	}
-	case RPL_BANLIST:
-	case RPL_INVITELIST:
-	case RPL_EXCEPTLIST:
-	case RPL_QUIETLIST: {
-		NSAssertReturn([m paramsCount] > 2);
-
-		NSUInteger paramsOffset = 0;
-
-		/* Quiet list has an extra argument which is the string "q" */
-		if (numeric == RPL_QUIETLIST && m.paramsCount == 6) {
-			paramsOffset = 1;
-		}
-
-		NSString *channelName = [m paramAt:1];
-
-		NSString *entryMask = [m paramAt:(2 + paramsOffset)];
-
-		NSString *entryAuthor = nil;
-
-		NSDate *entryCreationDate = nil;
-
-		BOOL extendedLine = (m.paramsCount > (4 + paramsOffset));
-
-		if (extendedLine) {
-			entryAuthor = [m paramAt:(3 + paramsOffset)].nicknameFromHostmask;
-
-			entryCreationDate = [NSDate dateWithTimeIntervalSince1970:[m paramAt:(4 + paramsOffset)].doubleValue];
-		}
-
-		TDCChannelBanListSheet *listSheet = [windowController() windowFromWindowList:@"TDCChannelBanListSheet"];
-
-		if (listSheet) {
-			if (listSheet.contentAlreadyReceived) {
-				listSheet.contentAlreadyReceived = NO;
-
-				[listSheet clear];
-			}
-
-			[listSheet addEntry:entryMask setBy:entryAuthor creationDate:entryCreationDate];
-
-			return;
-		}
-
-		if (printMessage == NO) {
-			return;
-		}
-
-		NSString *localization = nil;
-
-		if (numeric == RPL_BANLIST) {
-			localization = @"c04-d0";
-		} else if (numeric == RPL_INVITELIST) {
-			localization = @"py2-qh";
-		} else if (numeric == RPL_EXCEPTLIST) {
-			localization = @"ov2-ci";
-		} else if (numeric == RPL_QUIETLIST) {
-			localization = @"u5z-az";
-		}
-
-		if (extendedLine) {
-			localization = [NSString stringWithFormat:@"IRC[%@-1]", localization];
-		} else {
-			localization = [NSString stringWithFormat:@"IRC[%@-2]", localization];
-		}
-
-		NSString *message = nil;
-
-		if (extendedLine) {
-			NSString *entryCreationDateFormatted = TXFormatDateLongStyle(entryCreationDate, YES);
-
-			message = TXTLS(localization, channelName, entryMask, entryAuthor, entryCreationDateFormatted);
-		} else {
-			message = TXTLS(localization, channelName, entryMask);
-		}
-
-		[self print:message by:nil inChannel:nil asType:TVCLogLineTypeDebug command:m.command receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_ENDOFBANLIST:
-	case RPL_ENDOFINVITELIST:
-	case RPL_ENDOFEXCEPTLIST:
-	case RPL_ENDOFQUIETLIST: {
-		TDCChannelBanListSheet *listSheet = [windowController() windowFromWindowList:@"TDCChannelBanListSheet"];
-
-		if (listSheet) {
-			listSheet.contentAlreadyReceived = YES;
-
-			break;
-		}
-
-		if (printMessage) {
-			[self printReply:m];
-		}
-
-		break;
-	}
-	case RPL_YOUREOPER: {
-		if (self.userIsIRCop == NO) {
-			self.userIsIRCop = YES;
-		} else {
-			break;
-		}
-
-		if (printMessage) {
-			[self print:TXTLS(@"IRC[6bh-br]", m.senderNickname)
-						by:nil
-				 inChannel:nil
-					asType:TVCLogLineTypeDebug
-				   command:m.command
-				receivedAt:m.receivedAt];
-		}
-
-		break;
-	}
-	case RPL_CHANNEL_URL: {
-		NSAssertReturn([m paramsCount] == 3);
-
-		NSAssertReturn(printMessage);
-
-		NSString *channelName = [m paramAt:1];
-		NSString *website = [m paramAt:2];
-
-		IRCChannel *channel = [self findChannel:channelName];
-
-		if (channel == nil) {
-			return;
-		}
-
-		[self print:TXTLS(@"IRC[8tq-g6]", website)
-					by:nil
-			 inChannel:channel
-				asType:TVCLogLineTypeWebsite
-			   command:m.command
-			receivedAt:m.receivedAt];
-
-		break;
-	}
-	case RPL_WATCHSTAT:
-	case RPL_WATCHLIST: {
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		break;
-	}
-	case RPL_REAWAY:
-	case RPL_GONEAWAY:
-	case RPL_NOTAWAY: {
-		NSAssertReturn([m paramsCount] > 4);
-
-		/* Present reply to the user if we have destination */
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		/* Process reply */
-		NSString *nickname = [m paramAt:1];
-
-		IRCAddressBookEntry *addressBookEntry = [self findUserTrackingAddressBookEntryForNickname:nickname];
-
-		if (addressBookEntry == nil) {
-			break;
-		}
-
-		switch (numeric) {
-		case RPL_REAWAY:
-		case RPL_GONEAWAY: // is away
-		{
-			[self modifyUserWithNickname:nickname asAway:YES];
-
-			break;
-		}
-		case RPL_NOTAWAY: // is no longer away
-		{
-			[self modifyUserWithNickname:nickname asAway:NO];
-
-			break;
-		}
-		default: {
-			break;
-		}
-		} // switch()
-
-		break;
-	}
-	case RPL_LOGON:
-	case RPL_LOGOFF: {
-		NSAssertReturn([m paramsCount] > 4);
-
-		/* Present reply to the user if we have destination */
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		/* Process reply */
-		NSString *nickname = [m paramAt:1];
-
-		IRCAddressBookEntry *addressBookEntry = [self findUserTrackingAddressBookEntryForNickname:nickname];
-
-		if (addressBookEntry == nil) {
-			break;
-		}
-
-		switch (numeric) {
-		case RPL_LOGON: // logged online
-		{
-			[self statusOfTrackedNickname:nickname changedTo:IRCAddressBookUserTrackingStatusSignedOn notify:YES];
-
-			break;
-		}
-		case RPL_LOGOFF: // logged offline
-		{
-			[self statusOfTrackedNickname:nickname changedTo:IRCAddressBookUserTrackingStatusSignedOff notify:YES];
-
-			break;
-		}
-		default: {
-			break;
-		}
-		} // switch()
-
-		break;
-	}
-	case RPL_NOWON:
-	case RPL_NOWOFF: {
-		NSAssertReturn([m paramsCount] > 4);
-
-		/* Present reply to the user if we have destination */
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		/* Process reply */
-		NSString *nickname = [m paramAt:1];
-
-		IRCAddressBookEntry *addressBookEntry = [self findUserTrackingAddressBookEntryForNickname:nickname];
-
-		if (addressBookEntry == nil) {
-			break;
-		}
-
-		switch (numeric) {
-		case RPL_NOWON: // is online
-		{
-			[self statusOfTrackedNickname:nickname changedTo:IRCAddressBookUserTrackingStatusAvailable notify:NO];
-
-			break;
-		}
-		case RPL_NOWOFF: // is offline
-		{
-			[self statusOfTrackedNickname:nickname changedTo:IRCAddressBookUserTrackingStatusNotAvailable notify:NO];
-
-			break;
-		}
-		default: {
-			break;
-		}
-		} // switch()
-
-		break;
-	}
-	case RPL_WATCHOFF: {
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		break;
-	}
-	case ERR_TOOMANYWATCH: {
-		/* This message is always printed because Glasstual does not
-			 make an effort to check the maximum allowance for this
-			 command. We therefore want a user to know why tracking
-			 breaks in Glasstual instead of blaming it on a bug. */
-		if (printMessage) {
-			[self printErrorReply:m];
-		}
-
-		break;
-	}
-		//		case RPL_CLEARWATCH: /* Not implemented by any IRCd */
-	case RPL_ENDOFWATCHLIST: {
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		break;
-	}
-	case RPL_MONLIST: {
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		break;
-	}
-	case RPL_MONONLINE:
-	case RPL_MONOFFLINE: {
-		NSAssertReturn([m paramsCount] == 2);
-
-		/* Present reply to the user if we have destination */
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		/* Process reply */
-		NSString *changedUsersString = [m paramAt:1];
-
-		NSArray *changedUsers = [changedUsersString componentsSeparatedByString:@","];
-
-		for (NSString *changedUser in changedUsers) {
-			NSString *nickname = nil;
-
-			if ([changedUser hostmaskComponents:&nickname username:NULL address:NULL onClient:self] == NO) {
-				nickname = changedUser;
-			}
-
-			IRCAddressBookEntry *addressBookEntry = [self findUserTrackingAddressBookEntryForNickname:nickname];
-
-			if (addressBookEntry == nil) {
-				continue;
-			}
-
-			if (numeric == RPL_MONONLINE) { // logged online
-				[self statusOfTrackedNickname:nickname changedTo:IRCAddressBookUserTrackingStatusSignedOn notify:YES];
-			} else {
-				[self statusOfTrackedNickname:nickname changedTo:IRCAddressBookUserTrackingStatusSignedOff notify:YES];
-			}
-		}
-
-		break;
-	}
-	case ERR_MONLISTFULL: {
-		/* See ERR_TOOMANYWATCH for reason we always print this. */
-		if (printMessage) {
-			[self printErrorReply:m];
-		}
-
-		break;
-	}
-	case RPL_ENDOFMONLIST: {
-		if (printMessage) {
-			[self printReplyToHiddenCommandResponsesQuery:m];
-		}
-
-		break;
-	}
-	case RPL_TARGUMODEG: {
-		// Ignore. 717 will take care of notification.
-
-		break;
-	}
-	case RPL_TARGNOTIFY: {
-		NSAssertReturn([m paramsCount] == 3);
-
-		NSAssertReturn(printMessage);
-
-		NSString *nickname = [m paramAt:1];
-
-		[self printDebugInformation:TXTLS(@"IRC[11i-ev]", nickname)];
-
-		break;
-	}
-	case RPL_UMODEGMSG: {
-		NSAssertReturn([m paramsCount] == 4);
-
-		NSAssertReturn(printMessage);
-
-		NSString *nickname = [m paramAt:1];
-		NSString *hostmask = [m paramAt:2];
-
-		NSString *message = TXTLS(@"IRC[3yj-in]", nickname, hostmask);
-
-		IRCChannel *channel = nil;
-
-		if ([TPCPreferences locationToSendNotices] == TXNoticeSendLocationSelectedChannel) {
-			channel = [mainWindow() selectedChannelOn:self];
-		}
-
-		if (channel) {
-			[self printDebugInformation:message inChannel:channel];
-		} else {
-			[self printDebugInformationToConsole:message];
-		}
-
-		break;
-	}
-	case RPL_LOGGEDIN: {
-		NSAssertReturn([m paramsCount] == 4);
-
-		[self enableCapability:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL];
-
-		if (printMessage) {
-			[self print:[m sequence:3]
-						by:nil
-				 inChannel:nil
-					asType:TVCLogLineTypeDebug
-				   command:m.command
-				receivedAt:m.receivedAt];
-		}
-
-		break;
-	}
-	case RPL_LOGGEDOUT: {
-		NSAssertReturn([m paramsCount] == 3);
-
-		[self resetSASLNegotiation];
-
-		if (printMessage) {
-			[self print:[m sequence:2]
-						by:nil
-				 inChannel:nil
-					asType:TVCLogLineTypeDebug
-				   command:m.command
-				receivedAt:m.receivedAt];
-		}
-
-		break;
-	}
-	case RPL_SASLMECHS: /* 908: mechanism refused, server lists what it has */
-	{
-		if (printMessage) {
-			[self printErrorReply:m];
-		}
-
-		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsInSASLNegotiation] == NO) {
-			break;
-		}
-
-		/* "<nick> <mechanisms> :are available SASL mechanisms" */
-		NSArray<NSString *> *mechanisms = @[];
-
-		if ([m paramsCount] >= 2) {
-			NSCharacterSet *separators = [NSCharacterSet characterSetWithCharactersInString:@", "];
-
-			mechanisms = [[[m paramAt:1] componentsSeparatedByCharactersInSet:separators] arrayByRemovingEmptyValues];
-		}
-
-		if ([self retrySASLNegotiationWithMechanisms:mechanisms]) {
-			break; // Negotiation continues with the next mechanism.
-		}
-
-		[self disableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
-
-		[self resumeCapabilityNegotiation];
-
-		break;
-	}
-	case RPL_SASLSUCCESS:
-	case ERR_NICKLOCKED:
-	case ERR_SASLFAIL:
-	case ERR_SASLTOOLONG:
-	case ERR_SASLABORTED:
-	case ERR_SASLALREADY: {
-		if (printMessage) {
-			if (numeric == RPL_SASLSUCCESS) { // success
-				[self printReply:m];
-			} else {
-				[self printErrorReply:m];
-			}
-		}
-
-		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsInSASLNegotiation]) {
-			[self disableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
-
-			self.saslScramClient = nil;
-			self.saslIncomingPayload = nil;
-
-			[self resumeCapabilityNegotiation];
-		}
-
-		break;
-	}
-	default: {
-		/* We will handle custom WHOIS responses here because there
-			 are so many that it is impossible to cover them all above. */
-		/* For those that we don't handle, give a plugin a chance first. */
-		NSString *numericString = [NSString stringWithUnsignedInteger:numeric];
-
-		if ([sharedPluginManager().supportedServerInputCommands containsObject:numericString]) {
-			break;
-		}
-
-		if (printMessage) {
-			/* Output custom WHOIS response to proper target */
-			if (self.inWhoisResponse && m.paramsCount > 2) {
-				[self printUnknownReply:m inChannel:[mainWindow() selectedChannelOn:self]];
-
-				break;
-			}
-
-			/* Output unknown result */
-			[self printUnknownReply:m];
-		}
-
-		break;
-	}
-	} // switch()
+    [params removeObjectAtIndex:0]; // Remove nickname
+
+    NSString *message = params.lastObject;
+
+    [params removeLastObject]; // Remove "are supported by this server"
+
+    NSString *configuration = [params componentsJoinedByString:@" "];
+
+    IRCISupportInfoCaseMapping caseMappingBefore = self.supportInfo.caseMapping;
+
+    BOOL wasUTF8Only = self.supportInfo.utf8Only;
+
+    [self.supportInfo processConfigurationData:configuration];
+
+    /* Users created before CASEMAPPING arrived (ourselves, private
+     message peers) are keyed under the default rfc1459 folding. */
+    if (self.supportInfo.caseMapping != caseMappingBefore) {
+      [self rekeyUserList];
+    }
+
+    if (printMessage) {
+      NSString *configurationFormatted =
+          self.supportInfo.stringValueForLastUpdate;
+
+      [self
+          printDebugInformationToConsole:TXTLS(@"IRC[u51-nn]",
+                                               configurationFormatted, message)
+                               asCommand:m.command];
+    }
+
+    /* UTF8ONLY: the configured encodings are overridden for this connection. */
+    if (wasUTF8Only == NO && self.supportInfo.utf8Only) {
+      [self printDebugInformationToConsole:TXTLS(@"IRC[y3h-ud]")
+                                 asCommand:m.command];
+    }
+
+    break;
+  }
+  case RPL_REDIR: {
+    NSAssertReturn([m paramsCount] == 4);
+
+    NSString *serverAddress = [m paramAt:1];
+    NSString *serverPort = [m paramAt:2];
+
+    self.disconnectType = IRCClientDisconnectModeServerRedirect;
+
+    /* If the address is thought to be invalid, then we still
+             perform the disconnect suggested by the redirect, but
+             we do not go any further than that. */
+    if (serverAddress.validInternetAddress == NO ||
+        serverPort.validInternetPort == NO) {
+      [self disconnect];
+
+      return;
+    }
+
+    /* Perform reconnect to specified locations */
+    __weak IRCClient *weakSelf = self;
+
+    self.disconnectCallback = ^{
+      [weakSelf connect];
+    };
+
+    [self disconnect];
+
+    /* -disconnect would destroy this so we set them after... */
+    self.temporaryServerAddressOverride = serverAddress;
+    self.temporaryServerPortOverride = serverPort.integerValue;
+
+    break;
+  }
+  case RPL_STATSCONN:
+  case RPL_LUSERCLIENT:
+  case RPL_LUSERHOP:
+  case RPL_LUSERUNKNOWN:
+  case RPL_LUSERCHANNELS:
+  case RPL_LUSERME: {
+    if (printMessage) {
+      [self printReply:m];
+    }
+
+    break;
+  }
+  case RPL_LOCALUSERS:
+  case RPL_GLOBALUSERS: {
+    NSAssertReturn(printMessage);
+
+    NSString *message = nil;
+
+    if (m.paramsCount == 4) {
+      /* Removes user count from in front of messages on IRCds that send them.
+               Example: ">> :irc.example.com 265 Guest 2 3 :Current local users
+         2, max 3" */
+
+      message = [m sequence:3];
+    } else {
+      message = m.sequence;
+    }
+
+    [self print:message
+                by:nil
+         inChannel:nil
+            asType:TVCLogLineTypeDebug
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_MOTD:
+  case RPL_MOTDSTART:
+  case RPL_ENDOFMOTD:
+  case ERR_NOMOTD: {
+    NSAssertReturn(printMessage);
+
+    if ([TPCPreferences displayServerMOTD] == NO) {
+      break;
+    }
+
+    if (numeric == ERR_NOMOTD) {
+      [self printErrorReply:m];
+    } else {
+      [self printReply:m];
+    }
+
+    break;
+  }
+  case RPL_UMODEIS: {
+    NSAssertReturn([m paramsCount] > 1);
+
+    NSString *nickname = [m paramAt:0];
+
+    NSString *modeString = [m paramAt:1];
+
+    if ([modeString isEqualToString:@"+"]) {
+      break;
+    }
+
+    printMessage = [self postReceivedMessage:m
+                                    withText:modeString
+                                 destinedFor:nil];
+
+    if (printMessage) {
+      [self print:TXTLS(@"IRC[ipj-34]", nickname, modeString)
+                  by:nil
+           inChannel:nil
+              asType:TVCLogLineTypeDebug
+             command:m.command
+          receivedAt:m.receivedAt];
+    }
+
+    break;
+  }
+  case RPL_AWAY: {
+    NSAssertReturn([m paramsCount] == 3);
+
+    NSString *awayNickname = [m paramAt:1];
+    NSString *awayComment = [m paramAt:2];
+
+    IRCChannel *channel = [self findChannel:awayNickname];
+
+    NSString *message = TXTLS(@"IRC[c1h-fq]", awayNickname, awayComment);
+
+    if (channel == nil) {
+      channel = [mainWindow() selectedChannelOn:self];
+    }
+
+    IRCUser *user = [self findUser:awayNickname];
+
+    if (user) {
+      if (self.monitorAwayStatus) {
+        [user markAsAway];
+      }
+
+      if (user.presentAwayMessageFor301 == NO) {
+        break;
+      }
+    }
+
+    if (printMessage) {
+      [self print:message
+                  by:nil
+           inChannel:channel
+              asType:TVCLogLineTypeDebug
+             command:m.command
+          receivedAt:m.receivedAt];
+    }
+
+    break;
+  }
+  case RPL_SILELIST: {
+    /* Shapes seen in the wild: "<me> <mask>", "<me> <me> <mask>" and
+     "<me> <me> <mask> <flags>" (InspIRCd). The mask is the last
+     parameter that is not our own nickname, flags follow it. */
+    NSAssertReturn([m paramsCount] > 1);
+
+    NSMutableArray<NSString *> *entry = [NSMutableArray array];
+
+    for (NSUInteger i = 1; i < [m paramsCount]; i++) {
+      NSString *param = [m paramAt:i];
+
+      if (entry.count == 0 && [self nicknameIsMyself:param]) {
+        continue;
+      }
+
+      [entry addObject:param];
+    }
+
+    if (printMessage && entry.count > 0) {
+      [self printDebugInformation:TXTLS(@"IRC[m2v-sb]",
+                                        [entry componentsJoinedByString:@" "])
+                        inChannel:[mainWindow() selectedChannelOn:self]
+                        asCommand:m.command];
+    }
+
+    break;
+  }
+  case RPL_ENDOFSILELIST: {
+    if (printMessage) {
+      [self printDebugInformation:TXTLS(@"IRC[m2v-sc]")
+                        inChannel:[mainWindow() selectedChannelOn:self]
+                        asCommand:m.command];
+    }
+
+    break;
+  }
+  case RPL_UNAWAY:
+  case RPL_NOWAWAY: {
+    BOOL away = (numeric == RPL_NOWAWAY);
+
+    self.userIsAway = away;
+
+    [mainWindow() updateTitle];
+
+    if (printMessage) {
+      [self printReply:m];
+    }
+
+    /* Update our own status. This has to only be done with away-notify CAP
+       enabled. Old, WHO based information requests will still show our own
+       status. */
+    IRCUser *myself = self.myself;
+
+    if (myself == nil) {
+      break;
+    }
+
+    [self modifyUser:myself asAway:away];
+
+    break;
+  }
+  case RPL_WHOISBOT: {
+    NSAssertReturn([m paramsCount] > 1);
+
+    NSString *nickname = [m paramAt:1];
+
+    [self modifyUserUserWithNickname:nickname
+                           withBlock:^(IRCUserMutable *userMutable) {
+                             userMutable.isBot = YES;
+                           }];
+
+    if (printMessage) {
+      if ([m paramsCount] > 2) {
+        [self printReply:m inChannel:[mainWindow() selectedChannelOn:self]];
+      } else {
+        [self print:TXTLS(@"IRC[m2v-se]", nickname)
+                    by:nil
+             inChannel:[mainWindow() selectedChannelOn:self]
+                asType:TVCLogLineTypeDebug
+               command:m.command
+            receivedAt:m.receivedAt];
+      }
+    }
+
+    break;
+  }
+  case RPL_CHANNELSMSG:
+  case RPL_WHOISHELPOP:
+  case RPL_WHOISHOST:
+  case RPL_WHOISMODES:
+  case RPL_WHOISOPERATOR:
+  case RPL_WHOISREALIP:
+  case RPL_WHOISREGNICK:
+  case RPL_WHOISSECURE:
+  case RPL_WHOISSPECIAL: {
+    NSAssertReturn([m paramsCount] > 2);
+
+    if (printMessage) {
+      [self printReply:m inChannel:[mainWindow() selectedChannelOn:self]];
+    }
+
+    break;
+  }
+  case RPL_WHOISACTUALLY: {
+    NSAssertReturn([m paramsCount] == 5);
+
+    NSAssertReturn(printMessage);
+
+    NSString *nickname = [m paramAt:1];
+    NSString *hostmask = [m paramAt:2];
+    NSString *ipAddress = [m paramAt:3];
+
+    NSString *message = nil;
+
+    if (self.inWhowasResponse) { // bahamut sends RPL_WHOISACTUALLY in WHOWAS
+      message = TXTLS(@"IRC[x69-rz]", nickname, hostmask, ipAddress);
+    } else {
+      message = TXTLS(@"IRC[3oa-mv]", nickname, hostmask, ipAddress);
+    }
+
+    [self print:message
+                by:nil
+         inChannel:[mainWindow() selectedChannelOn:self]
+            asType:TVCLogLineTypeDebug
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_WHOISUSER:
+  case RPL_WHOWASUSER: {
+    NSAssertReturn([m paramsCount] >= 6);
+
+    NSString *nickname = [m paramAt:1];
+    NSString *username = [m paramAt:2];
+    NSString *address = [m paramAt:3];
+    NSString *realName = [m paramAt:5];
+
+    if ([realName hasPrefix:@":"]) {
+      realName = [realName substringFromIndex:1];
+    }
+
+    self.inWhoisResponse = (numeric == RPL_WHOISUSER);
+    self.inWhowasResponse = (numeric == RPL_WHOWASUSER);
+
+    NSString *message = nil;
+
+    if (self.inWhowasResponse) {
+      if (printMessage) {
+        message = TXTLS(@"IRC[32c-87]", nickname, username, address, realName);
+      }
+    } else {
+      if (printMessage) {
+        message = TXTLS(@"IRC[plg-lr]", nickname, username, address, realName);
+      }
+
+      /* Update local cache of our hostmask */
+      if ([self nicknameIsMyself:nickname]) {
+        NSString *hostmask = [NSString
+            stringWithFormat:@"%@!%@@%@", nickname, username, address];
+
+        self.userHostmask = hostmask;
+      }
+    }
+
+    if (message) {
+      [self print:message
+                  by:nil
+           inChannel:[mainWindow() selectedChannelOn:self]
+              asType:TVCLogLineTypeDebug
+             command:m.command
+          receivedAt:m.receivedAt];
+    }
+
+    break;
+  }
+  case RPL_WHOISSERVER: {
+    NSAssertReturn([m paramsCount] == 4);
+
+    NSAssertReturn(printMessage);
+
+    NSString *nickname = [m paramAt:1];
+    NSString *serverAddress = [m paramAt:2];
+    NSString *serverInfo = [m paramAt:3];
+
+    NSString *message = nil;
+
+    if (self.inWhowasResponse) { // bahamut sends RPL_WHOISSERVER in WHOWAS
+      NSString *timeInfo = TXFormatDateLongStyle(serverInfo, YES);
+
+      if (timeInfo == nil) {
+        timeInfo = serverInfo;
+      }
+
+      message = TXTLS(@"IRC[cdu-ed]", nickname, serverAddress, timeInfo);
+    } else {
+      message = TXTLS(@"IRC[h19-n2]", nickname, serverAddress, serverInfo);
+    }
+
+    [self print:message
+                by:nil
+         inChannel:[mainWindow() selectedChannelOn:self]
+            asType:TVCLogLineTypeDebug
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_WHOISIDLE: {
+    /* RFC 1459 servers omit the sign-on time: <nick> <idle> :seconds idle */
+    NSAssertReturn([m paramsCount] >= 4);
+
+    NSAssertReturn(printMessage);
+
+    NSString *nickname = [m paramAt:1];
+    NSString *idleTime = [m paramAt:2];
+    NSString *connectTime = [m paramAt:3];
+
+    idleTime = TXHumanReadableTimeInterval(idleTime.doubleValue, NO, 0);
+
+    NSDate *connTimeDate =
+        [NSDate dateWithTimeIntervalSince1970:connectTime.doubleValue];
+
+    connectTime = TXFormatDateLongStyle(connTimeDate, YES);
+
+    NSString *message = TXTLS(@"IRC[6hn-o6]", nickname, connectTime, idleTime);
+
+    [self print:message
+                by:nil
+         inChannel:[mainWindow() selectedChannelOn:self]
+            asType:TVCLogLineTypeDebug
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_WHOISCHANNELS: {
+    NSAssertReturn([m paramsCount] == 3);
+
+    NSAssertReturn(printMessage);
+
+    NSString *nickname = [m paramAt:1];
+    NSString *channels = [m paramAt:2];
+
+    NSString *message = TXTLS(@"IRC[onk-l5]", nickname, channels);
+
+    [self print:message
+                by:nil
+         inChannel:[mainWindow() selectedChannelOn:self]
+            asType:TVCLogLineTypeDebug
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_WHOISACCOUNT: {
+    NSAssertReturn([m paramsCount] == 4);
+
+    NSAssertReturn(printMessage);
+
+    NSString *message =
+        [NSString stringWithFormat:@"%@ %@ %@", [m paramAt:1], [m sequence:3],
+                                   [m paramAt:2]];
+
+    [self print:message
+                by:nil
+         inChannel:[mainWindow() selectedChannelOn:self]
+            asType:TVCLogLineTypeDebug
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_ENDOFWHOIS: {
+    self.inWhoisResponse = NO;
+
+    /*			if (printMessage) {
+                    [self printReply:m inChannel:[mainWindow()
+       selectedChannelOn:self]];
+            } */
+
+    break;
+  }
+  case RPL_ENDOFWHOWAS: {
+    self.inWhowasResponse = NO;
+
+    /*			if (printMessage) {
+                    [self printReply:m inChannel:[mainWindow()
+       selectedChannelOn:self]];
+            } */
+
+    break;
+  }
+  case RPL_CHANNELMODEIS: {
+    NSAssertReturn([m paramsCount] > 2);
+
+    NSString *channelName = [m paramAt:1];
+
+    NSString *modeString = [m sequence:2];
+
+    if ([modeString isEqualToString:@"+"]) {
+      return;
+    }
+
+    IRCChannel *channel = [self findChannel:channelName];
+
+    if (channel == nil) {
+      break;
+    }
+
+    if (channel.isActive) {
+      [channel.modeInfo clear];
+
+      [channel.modeInfo updateModes:modeString];
+    }
+
+    printMessage = [self postReceivedMessage:m
+                                    withText:modeString
+                                 destinedFor:channel];
+
+    /* We perform this check after printMessage is defined so that
+             filters have a chance to act on the input. */
+    /* IRCClient perform mode requests for channels without the user
+             asking for it so we must check that here. */
+    if (channel.channelModesReceived == NO) {
+      channel.channelModesReceived = YES;
+    }
+
+    if (printMessage) {
+      NSString *message = channel.modeInfo.stringWithMaskedPassword;
+
+      [self print:TXTLS(@"IRC[obp-ww]", message)
+                  by:nil
+           inChannel:channel
+              asType:TVCLogLineTypeMode
+             command:m.command
+          receivedAt:m.receivedAt];
+    }
+
+    break;
+  }
+  case RPL_TOPIC: {
+    NSAssertReturn([m paramsCount] == 3);
+
+    NSString *channelName = [m paramAt:1];
+    NSString *topic = [m paramAt:2];
+
+    IRCChannel *channel = [self findChannel:channelName];
+
+    if (channel == nil) {
+      break;
+    }
+
+    printMessage = [self postReceivedMessage:m
+                                    withText:topic
+                                 destinedFor:channel];
+
+    channel.topic = topic;
+
+    if (printMessage) {
+      [self print:TXTLS(@"IRC[7nm-7v]", topic)
+                  by:nil
+           inChannel:channel
+              asType:TVCLogLineTypeTopic
+             command:m.command
+          receivedAt:m.receivedAt];
+    }
+
+    break;
+  }
+  case RPL_TOPICWHOTIME: {
+    NSAssertReturn([m paramsCount] == 4);
+
+    NSString *channelName = [m paramAt:1];
+
+    IRCChannel *channel = [self findChannel:channelName];
+
+    if (channel == nil) {
+      break;
+    }
+
+    printMessage = [self postReceivedMessage:m
+                                    withText:nil
+                                 destinedFor:channel];
+
+    if (printMessage == NO) {
+      return;
+    }
+
+    NSString *topicSetter = [m paramAt:2];
+    NSString *setTime = [m paramAt:3];
+
+    topicSetter = topicSetter.nicknameFromHostmask;
+
+    NSDate *setTimeDate =
+        [NSDate dateWithTimeIntervalSince1970:setTime.doubleValue];
+
+    setTime = TXFormatDateLongStyle(setTimeDate, YES);
+
+    NSString *message = TXTLS(@"IRC[y7s-3e]", topicSetter, setTime);
+
+    [self print:message
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeTopic
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_CREATIONTIME: {
+    break; // Ignore
+  }
+  case RPL_INVITING: {
+    NSAssertReturn([m paramsCount] == 3);
+
+    NSAssertReturn(printMessage);
+
+    NSString *nickname = [m paramAt:1];
+    NSString *channelName = [m paramAt:2];
+
+    IRCChannel *channel = [self findChannel:channelName];
+
+    if (channel == nil) {
+      break;
+    }
+
+    [self print:TXTLS(@"IRC[wk4-rv]", nickname, channelName)
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeDebug
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_ISON: {
+    /* Present reply to the user if we have destination */
+    BOOL visibleIsonRequest = self.requestedCommands.visibleIsonRequest;
+
+    [self.requestedCommands recordIsonRequestClosed];
+
+    if (visibleIsonRequest) {
+      if (printMessage) {
+        [self printReplyToHiddenCommandResponsesQuery:m];
+      }
+
+      /* It is important that we don't process logic for visible
+               requests because if user does ISON for people that aren't
+               on the tracked list and the logic below sees the response
+               missing those, then it will think everyone tracked went offline.
+       */
+      break;
+    }
+
+    /* If the ISON records were not requested by the user, then
+             treat the results as user tracking information. */
+    NSString *onlineNicknamesString = m.sequence;
+
+    NSArray *onlineNicknames = [onlineNicknamesString
+        componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                                 whitespaceCharacterSet]];
+
+    /* Start going over the list of tracked nicknames. When the server
+     supports MONITOR or WATCH, tracked nicknames are not part of the
+     ISON request so their absence from the reply means nothing. */
+    NSDictionary *trackedUsers =
+        (self.supportsAdvancedTracking ? @{} : self.trackedUsers.trackedUsers);
+
+    [trackedUsers enumerateKeysAndObjectsUsingBlock:^(
+                      NSString *trackedUser, NSNumber *trackingStatusInt,
+                      BOOL *stop) {
+      IRCAddressBookUserTrackingStatus trackingStatus =
+          IRCAddressBookUserTrackingStatusUnknown;
+
+      /* Was the user on during the last check? */
+      BOOL ison = trackingStatusInt.boolValue;
+
+      if (ison) {
+        /* If the user was on before, but is not in the list of ISON
+         users in this reply, then they are considered gone. Log that. */
+        if ([onlineNicknames containsObjectIgnoringCase:trackedUser] == NO) {
+          if (self.invokingISONCommandForFirstTime == NO) {
+            trackingStatus = IRCAddressBookUserTrackingStatusSignedOff;
+          }
+        }
+      } else {
+        /* If they were not on but now are, then log that too. */
+        if ([onlineNicknames containsObjectIgnoringCase:trackedUser]) {
+          if (self.invokingISONCommandForFirstTime) {
+            trackingStatus = IRCAddressBookUserTrackingStatusAvailable;
+          } else {
+            trackingStatus = IRCAddressBookUserTrackingStatusSignedOn;
+          }
+        }
+      }
+
+      /* If something changed (non-nil localization string), then scan
+       the list of address book entries to report the result. */
+      if (trackingStatus != IRCAddressBookUserTrackingStatusUnknown) {
+        [self statusOfTrackedNickname:trackedUser
+                            changedTo:trackingStatus
+                               notify:YES];
+      }
+    }]; // for
+
+    if (self.invokingISONCommandForFirstTime) { // Reset internal property
+      self.invokingISONCommandForFirstTime = NO;
+    }
+
+    /* Update private messages */
+    for (IRCChannel *channel in self.channelList) {
+      if (channel.privateMessage == NO) {
+        continue;
+      }
+
+      if (channel.isActive) {
+        /* If the user is no longer on, deactivate the private message */
+        if ([onlineNicknames containsObjectIgnoringCase:channel.name] == NO) {
+          [channel deactivate];
+
+          [mainWindow() reloadTreeItem:channel];
+        }
+      } else {
+        /* Activate the private message if the user is back online */
+        if ([onlineNicknames containsObjectIgnoringCase:channel.name]) {
+          [channel activate];
+
+          [mainWindow() reloadTreeItem:channel];
+        }
+      }
+    }
+
+    break;
+  }
+  case RPL_WHOREPLY: {
+    NSAssertReturn([m paramsCount] >= 8);
+
+    /* Present reply to the user if we have destination */
+    if (self.requestedCommands.visibleWhoRequest) {
+      if (printMessage) {
+        [self printReplyToHiddenCommandResponsesQuery:m];
+      }
+
+      /* We could remove this and be fine, but it's a lot
+               over overhead to process WHO responses so let's just
+               wait until the next automated one. */
+      break;
+    }
+
+    /* Process reply */
+    NSString *channelName = [m paramAt:1];
+
+    IRCChannel *channel = [self findChannel:channelName];
+
+    if (channel == nil) {
+      break;
+    }
+
+    /* Example incoming data:
+                    <channel> <user> <host> <server> <nick> <H|G>[*][@|+]
+       <hopcount> <real name>
+
+                    #freenode znc unaffiliated/namikaze kornbluth.freenode.net
+       Namikaze G 0 Christian #freenode ~D unaffiliated/solprefixer
+       kornbluth.freenode.net solprefixer H 0 solprefixer
+            */
+
+    NSString *realName = [m paramAt:7];
+
+    /* Parameter 7 includes the hop count and real name because it begins with a
+       : Therefore, we cut after the first space to get the real, real name
+       value. */
+    NSInteger realNameFirstSpace = [realName stringPosition:@" "];
+
+    if (realNameFirstSpace > 0 &&
+        (NSUInteger)realNameFirstSpace < realName.length) {
+      realName = [realName substringAfterIndex:realNameFirstSpace];
+    }
+
+    [self receiveWhoReplyInChannel:channel
+                          nickname:[m paramAt:5]
+                          username:[m paramAt:2]
+                           address:[m paramAt:3]
+                             flags:[m paramAt:6]
+                          realName:realName
+                           account:nil
+                     updateAccount:NO];
+
+    break;
+  }
+  case RPL_WHOSPCRPL: {
+    /* WHOX reply to the fields requested by -sendWhoToChannelNamed:
+                    <token> <channel> <user> <host> <nick> <flags> <account>
+       :<real name> Replies to other tokens were not asked for by us. */
+    NSAssertReturn([m paramsCount] >= 9);
+
+    if ([[m paramAt:1] isEqualToString:IRCClientWhoxToken] == NO) {
+      if (printMessage) {
+        [self printReplyToHiddenCommandResponsesQuery:m];
+      }
+
+      break;
+    }
+
+    if (self.requestedCommands.visibleWhoRequest) {
+      if (printMessage) {
+        [self printReplyToHiddenCommandResponsesQuery:m];
+      }
+
+      break;
+    }
+
+    IRCChannel *channel = [self findChannel:[m paramAt:2]];
+
+    if (channel == nil) {
+      break;
+    }
+
+    [self
+        receiveWhoReplyInChannel:channel
+                        nickname:[m paramAt:5]
+                        username:[m paramAt:3]
+                         address:[m paramAt:4]
+                           flags:[m paramAt:6]
+                        realName:[m paramAt:8]
+                         account:[self.class accountFromWireValue:[m paramAt:7]]
+                   updateAccount:YES];
+
+    break;
+  }
+  case RPL_ENDOFWHO: {
+    BOOL visibleWhoRequest = self.requestedCommands.visibleWhoRequest;
+
+    [self.requestedCommands recordWhoRequestClosed];
+
+    if (visibleWhoRequest && printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    break;
+  }
+  case RPL_NAMEREPLY: {
+    NSAssertReturn([m paramsCount] > 3);
+
+    /* Present reply to the user if we have destination */
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    /* Process reply */
+    NSString *channelName = [m paramAt:2];
+
+    IRCChannel *channel = [self findChannel:channelName];
+
+    if (channel == nil || channel.channelNamesReceived) {
+      break;
+    }
+
+    NSString *nicknamesString = [m paramAt:3];
+
+    NSArray *nicknames = [nicknamesString
+        componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                                 whitespaceCharacterSet]];
+
+    for (NSString *nickname in nicknames) {
+      if (nickname.length == 0) {
+        continue;
+      }
+
+      /* Find first character that is not a user mode */
+      NSMutableString *memberModes = [NSMutableString string];
+
+      NSUInteger characterIndex = 0;
+
+      for (characterIndex = 0; characterIndex < nickname.length;
+           characterIndex++) {
+        NSString *prefix = [nickname stringCharacterAtIndex:characterIndex];
+
+        NSString *modeSymbol =
+            [self.supportInfo modeSymbolForUserPrefix:prefix];
+
+        if (modeSymbol == nil) {
+          break;
+        }
+
+        [memberModes appendString:modeSymbol];
+      } // for
+
+      /* Split away hostmask if available */
+      NSString *newNickname = [nickname substringFromIndex:characterIndex];
+
+      NSString *nicknameInt = nil;
+      NSString *usernameInt = nil;
+      NSString *addressInt = nil;
+
+      if ([newNickname hostmaskComponents:&nicknameInt
+                                 username:&usernameInt
+                                  address:&addressInt
+                                 onClient:self] == NO) {
+        /* When NAMES reply is not a host, then set the nicknameInt
+                 to the value of nickname and leave the rest as nil. */
+
+        nicknameInt = newNickname;
+      }
+
+      /* Find global user */
+      /* An instance of IRCUser may already exist from a NAMES
+               reply for another channel. If one already exist, then
+               we don't make an effort to change it's credentials. */
+      IRCUser *userAdded = nil;
+
+      IRCUser *user = [self findUser:nicknameInt];
+
+      if (user == nil) {
+        IRCUserMutable *userMutable =
+            [[IRCUserMutable alloc] initWithNickname:nicknameInt onClient:self];
+
+        userMutable.nickname = nicknameInt;
+        userMutable.username = usernameInt;
+        userMutable.address = addressInt;
+
+        userAdded = [self addUserAndReturn:userMutable];
+      } else {
+        userAdded = user;
+      }
+
+      /* Find channel user */
+      IRCChannelUser *member = [userAdded userAssociatedWithChannel:channel];
+
+      IRCChannelUserMutable *memberMutable = nil;
+
+      if (member == nil) {
+        memberMutable = [[IRCChannelUserMutable alloc] initWithUser:userAdded];
+      } else if ([self nicknameIsMyself:nicknameInt]) {
+        memberMutable = [member mutableCopy];
+      } else {
+        /* If a user with this name already exists in the channel,
+                 then we skip it unless its us. We are added to the
+                 channel when the JOIN is received, but we still need modes. */
+
+        continue;
+      }
+
+      /* Create channel user */
+      memberMutable.modes = memberModes;
+
+      /* Add user to channel */
+      [channel addMember:memberMutable checkForDuplicates:YES];
+    } // for
+
+    break;
+  }
+  case RPL_ENDOFNAMES: {
+    NSAssertReturn([m paramsCount] == 3);
+
+    /* Present reply to the user if we have destination */
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    /* Process reply */
+    NSString *channelName = [m paramAt:1];
+
+    IRCChannel *channel = [self findChannel:channelName];
+
+    if (channel == nil || channel.channelNamesReceived) {
+      break;
+    }
+
+    channel.channelNamesReceived = YES;
+
+    /* We have to wait until names are processed before populating
+             defaults for a channel so that we are certain there is actually
+             only one user, which is us. */
+    if (channel.numberOfMembers == 1 && self.isBrokenIRCd_aka_Twitch == NO) {
+      NSString *defaultModes = channel.config.defaultModes;
+
+      if (defaultModes.length > 0) {
+        [self sendModes:defaultModes
+            withParametersString:nil
+                       inChannel:channel];
+      }
+
+      NSString *defaultTopic = channel.config.defaultTopic;
+
+      if (defaultTopic.length > 0) {
+        [self sendTopicTo:defaultTopic inChannel:channel];
+      }
+    }
+
+    /* Update user count in title */
+    [mainWindow() updateTitleFor:channel];
+
+    break;
+  }
+  case RPL_LISTSTART: {
+    TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
+
+    if (channelListDialog) {
+      channelListDialog.contentAlreadyReceived = NO;
+
+      [channelListDialog clear];
+    }
+
+    break;
+  }
+  case RPL_LIST: {
+    NSAssertReturn([m paramsCount] > 2);
+
+    NSString *channel = [m paramAt:1];
+    NSString *userCount = [m paramAt:2];
+    NSString *topic = [m sequence:3];
+
+    if ([channel isEqualToString:@"*"]) {
+      break;
+    }
+
+    TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
+
+    if (channelListDialog) {
+      [channelListDialog addChannel:channel
+                              count:userCount.integerValue
+                              topic:topic];
+    }
+
+    break;
+  }
+  case RPL_LISTEND: {
+    TDCServerChannelListDialog *channelListDialog = [self channelListDialog];
+
+    if (channelListDialog) {
+      channelListDialog.contentAlreadyReceived = YES;
+    }
+
+    break;
+  }
+  case RPL_BANLIST:
+  case RPL_INVITELIST:
+  case RPL_EXCEPTLIST:
+  case RPL_QUIETLIST: {
+    NSAssertReturn([m paramsCount] > 2);
+
+    NSUInteger paramsOffset = 0;
+
+    /* Quiet list has an extra argument which is the string "q" */
+    if (numeric == RPL_QUIETLIST && m.paramsCount == 6) {
+      paramsOffset = 1;
+    }
+
+    NSString *channelName = [m paramAt:1];
+
+    NSString *entryMask = [m paramAt:(2 + paramsOffset)];
+
+    NSString *entryAuthor = nil;
+
+    NSDate *entryCreationDate = nil;
+
+    BOOL extendedLine = (m.paramsCount > (4 + paramsOffset));
+
+    if (extendedLine) {
+      entryAuthor = [m paramAt:(3 + paramsOffset)].nicknameFromHostmask;
+
+      entryCreationDate =
+          [NSDate dateWithTimeIntervalSince1970:[m paramAt:(4 + paramsOffset)]
+                                                    .doubleValue];
+    }
+
+    TDCChannelBanListSheet *listSheet =
+        [windowController() windowFromWindowList:@"TDCChannelBanListSheet"];
+
+    if (listSheet) {
+      if (listSheet.contentAlreadyReceived) {
+        listSheet.contentAlreadyReceived = NO;
+
+        [listSheet clear];
+      }
+
+      [listSheet addEntry:entryMask
+                    setBy:entryAuthor
+             creationDate:entryCreationDate];
+
+      return;
+    }
+
+    if (printMessage == NO) {
+      return;
+    }
+
+    NSString *localization = nil;
+
+    if (numeric == RPL_BANLIST) {
+      localization = @"c04-d0";
+    } else if (numeric == RPL_INVITELIST) {
+      localization = @"py2-qh";
+    } else if (numeric == RPL_EXCEPTLIST) {
+      localization = @"ov2-ci";
+    } else if (numeric == RPL_QUIETLIST) {
+      localization = @"u5z-az";
+    }
+
+    if (extendedLine) {
+      localization = [NSString stringWithFormat:@"IRC[%@-1]", localization];
+    } else {
+      localization = [NSString stringWithFormat:@"IRC[%@-2]", localization];
+    }
+
+    NSString *message = nil;
+
+    if (extendedLine) {
+      NSString *entryCreationDateFormatted =
+          TXFormatDateLongStyle(entryCreationDate, YES);
+
+      message = TXTLS(localization, channelName, entryMask, entryAuthor,
+                      entryCreationDateFormatted);
+    } else {
+      message = TXTLS(localization, channelName, entryMask);
+    }
+
+    [self print:message
+                by:nil
+         inChannel:nil
+            asType:TVCLogLineTypeDebug
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_ENDOFBANLIST:
+  case RPL_ENDOFINVITELIST:
+  case RPL_ENDOFEXCEPTLIST:
+  case RPL_ENDOFQUIETLIST: {
+    TDCChannelBanListSheet *listSheet =
+        [windowController() windowFromWindowList:@"TDCChannelBanListSheet"];
+
+    if (listSheet) {
+      listSheet.contentAlreadyReceived = YES;
+
+      break;
+    }
+
+    if (printMessage) {
+      [self printReply:m];
+    }
+
+    break;
+  }
+  case RPL_YOUREOPER: {
+    if (self.userIsIRCop == NO) {
+      self.userIsIRCop = YES;
+    } else {
+      break;
+    }
+
+    if (printMessage) {
+      [self print:TXTLS(@"IRC[6bh-br]", m.senderNickname)
+                  by:nil
+           inChannel:nil
+              asType:TVCLogLineTypeDebug
+             command:m.command
+          receivedAt:m.receivedAt];
+    }
+
+    break;
+  }
+  case RPL_CHANNEL_URL: {
+    NSAssertReturn([m paramsCount] == 3);
+
+    NSAssertReturn(printMessage);
+
+    NSString *channelName = [m paramAt:1];
+    NSString *website = [m paramAt:2];
+
+    IRCChannel *channel = [self findChannel:channelName];
+
+    if (channel == nil) {
+      return;
+    }
+
+    [self print:TXTLS(@"IRC[8tq-g6]", website)
+                by:nil
+         inChannel:channel
+            asType:TVCLogLineTypeWebsite
+           command:m.command
+        receivedAt:m.receivedAt];
+
+    break;
+  }
+  case RPL_WATCHSTAT:
+  case RPL_WATCHLIST: {
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    break;
+  }
+  case RPL_REAWAY:
+  case RPL_GONEAWAY:
+  case RPL_NOTAWAY: {
+    NSAssertReturn([m paramsCount] > 4);
+
+    /* Present reply to the user if we have destination */
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    /* Process reply */
+    NSString *nickname = [m paramAt:1];
+
+    IRCAddressBookEntry *addressBookEntry =
+        [self findUserTrackingAddressBookEntryForNickname:nickname];
+
+    if (addressBookEntry == nil) {
+      break;
+    }
+
+    switch (numeric) {
+    case RPL_REAWAY:
+    case RPL_GONEAWAY: // is away
+    {
+      [self modifyUserWithNickname:nickname asAway:YES];
+
+      break;
+    }
+    case RPL_NOTAWAY: // is no longer away
+    {
+      [self modifyUserWithNickname:nickname asAway:NO];
+
+      break;
+    }
+    default: {
+      break;
+    }
+    } // switch()
+
+    break;
+  }
+  case RPL_LOGON:
+  case RPL_LOGOFF: {
+    NSAssertReturn([m paramsCount] > 4);
+
+    /* Present reply to the user if we have destination */
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    /* Process reply */
+    NSString *nickname = [m paramAt:1];
+
+    IRCAddressBookEntry *addressBookEntry =
+        [self findUserTrackingAddressBookEntryForNickname:nickname];
+
+    if (addressBookEntry == nil) {
+      break;
+    }
+
+    switch (numeric) {
+    case RPL_LOGON: // logged online
+    {
+      [self statusOfTrackedNickname:nickname
+                          changedTo:IRCAddressBookUserTrackingStatusSignedOn
+                             notify:YES];
+
+      break;
+    }
+    case RPL_LOGOFF: // logged offline
+    {
+      [self statusOfTrackedNickname:nickname
+                          changedTo:IRCAddressBookUserTrackingStatusSignedOff
+                             notify:YES];
+
+      break;
+    }
+    default: {
+      break;
+    }
+    } // switch()
+
+    break;
+  }
+  case RPL_NOWON:
+  case RPL_NOWOFF: {
+    NSAssertReturn([m paramsCount] > 4);
+
+    /* Present reply to the user if we have destination */
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    /* Process reply */
+    NSString *nickname = [m paramAt:1];
+
+    IRCAddressBookEntry *addressBookEntry =
+        [self findUserTrackingAddressBookEntryForNickname:nickname];
+
+    if (addressBookEntry == nil) {
+      break;
+    }
+
+    switch (numeric) {
+    case RPL_NOWON: // is online
+    {
+      [self statusOfTrackedNickname:nickname
+                          changedTo:IRCAddressBookUserTrackingStatusAvailable
+                             notify:NO];
+
+      break;
+    }
+    case RPL_NOWOFF: // is offline
+    {
+      [self statusOfTrackedNickname:nickname
+                          changedTo:IRCAddressBookUserTrackingStatusNotAvailable
+                             notify:NO];
+
+      break;
+    }
+    default: {
+      break;
+    }
+    } // switch()
+
+    break;
+  }
+  case RPL_WATCHOFF: {
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    break;
+  }
+  case ERR_TOOMANYWATCH: {
+    /* This message is always printed because Glasstual does not
+             make an effort to check the maximum allowance for this
+             command. We therefore want a user to know why tracking
+             breaks in Glasstual instead of blaming it on a bug. */
+    if (printMessage) {
+      [self printErrorReply:m];
+    }
+
+    break;
+  }
+    //		case RPL_CLEARWATCH: /* Not implemented by any IRCd */
+  case RPL_ENDOFWATCHLIST: {
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    break;
+  }
+  case RPL_MONLIST: {
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    break;
+  }
+  case RPL_MONONLINE:
+  case RPL_MONOFFLINE: {
+    NSAssertReturn([m paramsCount] == 2);
+
+    /* Present reply to the user if we have destination */
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    /* Process reply */
+    NSString *changedUsersString = [m paramAt:1];
+
+    NSArray *changedUsers =
+        [changedUsersString componentsSeparatedByString:@","];
+
+    for (NSString *changedUser in changedUsers) {
+      NSString *nickname = nil;
+
+      if ([changedUser hostmaskComponents:&nickname
+                                 username:NULL
+                                  address:NULL
+                                 onClient:self] == NO) {
+        nickname = changedUser;
+      }
+
+      IRCAddressBookEntry *addressBookEntry =
+          [self findUserTrackingAddressBookEntryForNickname:nickname];
+
+      if (addressBookEntry == nil) {
+        continue;
+      }
+
+      if (numeric == RPL_MONONLINE) { // logged online
+        [self statusOfTrackedNickname:nickname
+                            changedTo:IRCAddressBookUserTrackingStatusSignedOn
+                               notify:YES];
+      } else {
+        [self statusOfTrackedNickname:nickname
+                            changedTo:IRCAddressBookUserTrackingStatusSignedOff
+                               notify:YES];
+      }
+    }
+
+    break;
+  }
+  case ERR_MONLISTFULL: {
+    /* See ERR_TOOMANYWATCH for reason we always print this. */
+    if (printMessage) {
+      [self printErrorReply:m];
+    }
+
+    break;
+  }
+  case RPL_ENDOFMONLIST: {
+    if (printMessage) {
+      [self printReplyToHiddenCommandResponsesQuery:m];
+    }
+
+    break;
+  }
+  case RPL_TARGUMODEG: {
+    // Ignore. 717 will take care of notification.
+
+    break;
+  }
+  case RPL_TARGNOTIFY: {
+    NSAssertReturn([m paramsCount] == 3);
+
+    NSAssertReturn(printMessage);
+
+    NSString *nickname = [m paramAt:1];
+
+    [self printDebugInformation:TXTLS(@"IRC[11i-ev]", nickname)];
+
+    break;
+  }
+  case RPL_UMODEGMSG: {
+    NSAssertReturn([m paramsCount] == 4);
+
+    NSAssertReturn(printMessage);
+
+    NSString *nickname = [m paramAt:1];
+    NSString *hostmask = [m paramAt:2];
+
+    NSString *message = TXTLS(@"IRC[3yj-in]", nickname, hostmask);
+
+    IRCChannel *channel = nil;
+
+    if ([TPCPreferences locationToSendNotices] ==
+        TXNoticeSendLocationSelectedChannel) {
+      channel = [mainWindow() selectedChannelOn:self];
+    }
+
+    if (channel) {
+      [self printDebugInformation:message inChannel:channel];
+    } else {
+      [self printDebugInformationToConsole:message];
+    }
+
+    break;
+  }
+  case RPL_LOGGEDIN: {
+    NSAssertReturn([m paramsCount] == 4);
+
+    [self enableCapability:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL];
+
+    if (printMessage) {
+      [self print:[m sequence:3]
+                  by:nil
+           inChannel:nil
+              asType:TVCLogLineTypeDebug
+             command:m.command
+          receivedAt:m.receivedAt];
+    }
+
+    break;
+  }
+  case RPL_LOGGEDOUT: {
+    NSAssertReturn([m paramsCount] == 3);
+
+    [self resetSASLNegotiation];
+
+    if (printMessage) {
+      [self print:[m sequence:2]
+                  by:nil
+           inChannel:nil
+              asType:TVCLogLineTypeDebug
+             command:m.command
+          receivedAt:m.receivedAt];
+    }
+
+    break;
+  }
+  case RPL_SASLMECHS: /* 908: mechanism refused, server lists what it has */
+  {
+    if (printMessage) {
+      [self printErrorReply:m];
+    }
+
+    if ([self isCapabilityEnabled:
+                  ClientIRCv3SupportedCapabilityIsInSASLNegotiation] == NO) {
+      break;
+    }
+
+    /* "<nick> <mechanisms> :are available SASL mechanisms" */
+    NSArray<NSString *> *mechanisms = @[];
+
+    if ([m paramsCount] >= 2) {
+      NSCharacterSet *separators =
+          [NSCharacterSet characterSetWithCharactersInString:@", "];
+
+      mechanisms =
+          [[[m paramAt:1] componentsSeparatedByCharactersInSet:separators]
+              arrayByRemovingEmptyValues];
+    }
+
+    if ([self retrySASLNegotiationWithMechanisms:mechanisms]) {
+      break; // Negotiation continues with the next mechanism.
+    }
+
+    [self disableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
+
+    [self resumeCapabilityNegotiation];
+
+    break;
+  }
+  case RPL_SASLSUCCESS:
+  case ERR_NICKLOCKED:
+  case ERR_SASLFAIL:
+  case ERR_SASLTOOLONG:
+  case ERR_SASLABORTED:
+  case ERR_SASLALREADY: {
+    if (printMessage) {
+      if (numeric == RPL_SASLSUCCESS) { // success
+        [self printReply:m];
+      } else {
+        [self printErrorReply:m];
+      }
+    }
+
+    if ([self isCapabilityEnabled:
+                  ClientIRCv3SupportedCapabilityIsInSASLNegotiation]) {
+      [self
+          disableCapability:ClientIRCv3SupportedCapabilityIsInSASLNegotiation];
+
+      self.saslScramClient = nil;
+      self.saslIncomingPayload = nil;
+
+      [self resumeCapabilityNegotiation];
+    }
+
+    break;
+  }
+  default: {
+    /* We will handle custom WHOIS responses here because there
+             are so many that it is impossible to cover them all above. */
+    /* For those that we don't handle, give a plugin a chance first. */
+    NSString *numericString = [NSString stringWithUnsignedInteger:numeric];
+
+    if ([sharedPluginManager().supportedServerInputCommands
+            containsObject:numericString]) {
+      break;
+    }
+
+    if (printMessage) {
+      /* Output custom WHOIS response to proper target */
+      if (self.inWhoisResponse && m.paramsCount > 2) {
+        [self printUnknownReply:m
+                      inChannel:[mainWindow() selectedChannelOn:self]];
+
+        break;
+      }
+
+      /* Output unknown result */
+      [self printUnknownReply:m];
+    }
+
+    break;
+  }
+  } // switch()
 }
 
-- (void)receiveErrorNumericReply:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveErrorNumericReply:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	NSUInteger numeric = m.commandNumeric;
+  NSUInteger numeric = m.commandNumeric;
 
-	BOOL printMessage = [self postReceivedMessage:m];
+  BOOL printMessage = [self postReceivedMessage:m];
 
-	switch (numeric) {
-	case ERR_NOSUCHNICK: {
-		NSAssertReturn(printMessage);
+  switch (numeric) {
+  case ERR_NOSUCHNICK: {
+    NSAssertReturn(printMessage);
 
-		NSString *channelName = [m paramAt:1];
+    NSString *channelName = [m paramAt:1];
 
-		IRCChannel *channel = [self findChannel:channelName];
+    IRCChannel *channel = [self findChannel:channelName];
 
-		if (channel) {
-			[self printErrorReply:m inChannel:channel withSequence:2];
-		} else {
-			[self printErrorReply:m];
-		}
+    if (channel) {
+      [self printErrorReply:m inChannel:channel withSequence:2];
+    } else {
+      [self printErrorReply:m];
+    }
 
-		break;
-	}
-	case ERR_NOSUCHSERVER:
-	case ERR_NOSUCHCHANNEL: {
-		if (printMessage) {
-			[self printErrorReply:m];
-		}
+    break;
+  }
+  case ERR_NOSUCHSERVER:
+  case ERR_NOSUCHCHANNEL: {
+    if (printMessage) {
+      [self printErrorReply:m];
+    }
 
-		break;
-	}
-	case ERR_NICKNAMEINUSE:
-	case ERR_ERRONEUSNICKNAME: {
-		if (self.isLoggedIn) {
-			if (printMessage) {
-				[self printErrorReply:m];
-			}
+    break;
+  }
+  case ERR_NICKNAMEINUSE:
+  case ERR_ERRONEUSNICKNAME: {
+    if (self.isLoggedIn) {
+      if (printMessage) {
+        [self printErrorReply:m];
+      }
 
-			break;
-		}
+      break;
+    }
 
-		[self receiveNicknameCollisionError:m];
+    [self receiveNicknameCollisionError:m];
 
-		break;
-	}
-	case ERR_UNAVAILRESOURCE: {
-		NSString *target = [m paramAt:1];
+    break;
+  }
+  case ERR_UNAVAILRESOURCE: {
+    NSString *target = [m paramAt:1];
 
-		if (self.isLoggedIn || [self stringIsNickname:target] == NO) {
-			if (printMessage) {
-				[self printErrorReply:m];
-			}
+    if (self.isLoggedIn || [self stringIsNickname:target] == NO) {
+      if (printMessage) {
+        [self printErrorReply:m];
+      }
 
-			break;
-		}
+      break;
+    }
 
-		[self receiveNicknameCollisionError:m];
+    [self receiveNicknameCollisionError:m];
 
-		break;
-	}
-	case ERR_CANNOTSENDTOCHAN: {
-		NSAssertReturn(printMessage);
+    break;
+  }
+  case ERR_CANNOTSENDTOCHAN: {
+    NSAssertReturn(printMessage);
 
-		NSString *channelName = [m paramAt:1];
+    NSString *channelName = [m paramAt:1];
 
-		IRCChannel *channel = [self findChannel:channelName];
+    IRCChannel *channel = [self findChannel:channelName];
 
-		if (channel) {
-			[self printErrorReply:m inChannel:channel withSequence:2];
-		} else {
-			[self printErrorReply:m];
-		}
+    if (channel) {
+      [self printErrorReply:m inChannel:channel withSequence:2];
+    } else {
+      [self printErrorReply:m];
+    }
 
-		break;
-	}
-	case ERR_ADMONLY:
-	case ERR_BADCHANMASK:
-	case ERR_BADCHANNAME:
-	case ERR_BADCHANNEL:
-	case ERR_BADCHANNELKEY:
-	case ERR_BANNEDFROMCHAN:
-	case ERR_CHANNELISFULL:
-	case ERR_DELAYREJOIN:
-	case ERR_FORBIDDENCHANNEL:
-	case ERR_INVITEONLYCHAN:
-	case ERR_LINKCHANNEL:
-	case ERR_NEEDREGGEDNICK:
-	case ERR_NOHIDING:
-	case ERR_OPERONLY:
-	case ERR_OPERSPVERIFY:
-	case ERR_SECUREONLYCHAN:
-	case ERR_THROTTLE:
-	case ERR_TOOMANYCHANNELS:
-	case ERR_TOOMANYJOINS: {
-		NSString *channelName = [m paramAt:1];
+    break;
+  }
+  case ERR_ADMONLY:
+  case ERR_BADCHANMASK:
+  case ERR_BADCHANNAME:
+  case ERR_BADCHANNEL:
+  case ERR_BADCHANNELKEY:
+  case ERR_BANNEDFROMCHAN:
+  case ERR_CHANNELISFULL:
+  case ERR_DELAYREJOIN:
+  case ERR_FORBIDDENCHANNEL:
+  case ERR_INVITEONLYCHAN:
+  case ERR_LINKCHANNEL:
+  case ERR_NEEDREGGEDNICK:
+  case ERR_NOHIDING:
+  case ERR_OPERONLY:
+  case ERR_OPERSPVERIFY:
+  case ERR_SECUREONLYCHAN:
+  case ERR_THROTTLE:
+  case ERR_TOOMANYCHANNELS:
+  case ERR_TOOMANYJOINS: {
+    NSString *channelName = [m paramAt:1];
 
-		IRCChannel *channel = [self findChannel:channelName];
+    IRCChannel *channel = [self findChannel:channelName];
 
-		if (channel) {
-			channel.errorOnLastJoinAttempt = YES;
+    if (channel) {
+      channel.errorOnLastJoinAttempt = YES;
 
-			/* In addition to the console, print join errors in
-				 the channel itself because user might check there. */
-			if (printMessage) {
-				[self printErrorReply:m inChannel:channel withSequence:2];
-			}
-		}
+      /* In addition to the console, print join errors in
+               the channel itself because user might check there. */
+      if (printMessage) {
+        [self printErrorReply:m inChannel:channel withSequence:2];
+      }
+    }
 
-		/* Print to console */
-		if (printMessage) {
-			[self printErrorReply:m];
-		}
+    /* Print to console */
+    if (printMessage) {
+      [self printErrorReply:m];
+    }
 
-		break;
-	}
-	case ERR_WHOSYNTAX:
-	case ERR_WHOLIMEXCEED: {
-		[self.requestedCommands recordWhoRequestClosed];
+    break;
+  }
+  case ERR_WHOSYNTAX:
+  case ERR_WHOLIMEXCEED: {
+    [self.requestedCommands recordWhoRequestClosed];
 
-		if (printMessage) {
-			[self printErrorReply:m];
-		}
+    if (printMessage) {
+      [self printErrorReply:m];
+    }
 
-		break;
-	}
-	case ERR_DISABLED:
-	case ERR_UNKNOWNCOMMAND:
-	case ERR_NEEDMOREPARAMS: {
-		NSString *command = [m paramAt:1];
+    break;
+  }
+  case ERR_DISABLED:
+  case ERR_UNKNOWNCOMMAND:
+  case ERR_NEEDMOREPARAMS: {
+    NSString *command = [m paramAt:1];
 
-		if ([command isEqualToString:@"ISON"]) {
-			[self.requestedCommands recordIsonRequestClosed];
-		} else if ([command isEqualToString:@"WHO"]) {
-			[self.requestedCommands recordWhoRequestClosed];
-		}
+    if ([command isEqualToString:@"ISON"]) {
+      [self.requestedCommands recordIsonRequestClosed];
+    } else if ([command isEqualToString:@"WHO"]) {
+      [self.requestedCommands recordWhoRequestClosed];
+    }
 
-		if (printMessage) {
-			[self printErrorReply:m];
-		}
+    if (printMessage) {
+      [self printErrorReply:m];
+    }
 
-		break;
-	}
-	default: {
-		if (printMessage) {
-			[self printErrorReply:m];
-		}
+    break;
+  }
+  default: {
+    if (printMessage) {
+      [self printErrorReply:m];
+    }
 
-		break;
-	}
-	} // switch()
+    break;
+  }
+  } // switch()
 }
 
-- (void)receiveNicknameCollisionError:(IRCMessage *)m
-{
-	NSParameterAssert(m != nil);
+- (void)receiveNicknameCollisionError:(IRCMessage *)m {
+  NSParameterAssert(m != nil);
 
-	if (self.isConnected == NO || self.isLoggedIn) {
-		return;
-	}
+  if (self.isConnected == NO || self.isLoggedIn) {
+    return;
+  }
 
-	NSArray *alternateNicknames = self.config.alternateNicknames;
+  NSArray *alternateNicknames = self.config.alternateNicknames;
 
-	NSString *tryingNickname = self.tryingNicknameSentNickname;
+  NSString *tryingNickname = self.tryingNicknameSentNickname;
 
-	[self printDebugInformationToConsole:TXTLS(@"IRC[js3-9v]", tryingNickname)];
+  [self printDebugInformationToConsole:TXTLS(@"IRC[js3-9v]", tryingNickname)];
 
-	NSUInteger tryingNicknameNumber = self.tryingNicknameNumber;
+  NSUInteger tryingNicknameNumber = self.tryingNicknameNumber;
 
-	if (alternateNicknames.count > tryingNicknameNumber) {
-		NSString *nickname = alternateNicknames[tryingNicknameNumber];
+  if (alternateNicknames.count > tryingNicknameNumber) {
+    NSString *nickname = alternateNicknames[tryingNicknameNumber];
 
-		self.tryingNicknameSentNickname = nickname;
+    self.tryingNicknameSentNickname = nickname;
 
-		[self changeNickname:nickname];
-	} else {
-		[self tryAnotherNickname];
-	}
+    [self changeNickname:nickname];
+  } else {
+    [self tryAnotherNickname];
+  }
 
-	self.tryingNicknameNumber += 1;
+  self.tryingNicknameNumber += 1;
 }
 
-- (void)tryAnotherNickname
-{
-	if (self.isConnected == NO || self.isLoggedIn) {
-		return;
-	}
+- (void)tryAnotherNickname {
+  if (self.isConnected == NO || self.isLoggedIn) {
+    return;
+  }
 
-	/* IRCISupportInfo would not be populated by now which means we cannot use a
-	 server-specific maximum nickname length value at this point. */
-	const NSUInteger maximumLength = IRCProtocolDefaultNicknameMaximumLength;
+  /* IRCISupportInfo would not be populated by now which means we cannot use a
+   server-specific maximum nickname length value at this point. */
+  const NSUInteger maximumLength = IRCProtocolDefaultNicknameMaximumLength;
 
-	NSString *tryingNickname = [self.tryingNicknameSentNickname padNicknameWithCharacter:'_'
-																		   maximumLength:maximumLength];
+  NSString *tryingNickname =
+      [self.tryingNicknameSentNickname padNicknameWithCharacter:'_'
+                                                  maximumLength:maximumLength];
 
-	if (tryingNickname) {
-		self.tryingNicknameSentNickname = tryingNickname;
-	} else {
-		self.tryingNicknameSentNickname = @"0";
-	}
+  if (tryingNickname) {
+    self.tryingNicknameSentNickname = tryingNickname;
+  } else {
+    self.tryingNicknameSentNickname = @"0";
+  }
 
-	[self changeNickname:self.tryingNicknameSentNickname];
+  [self changeNickname:self.tryingNicknameSentNickname];
 }
 
 #pragma mark -
 #pragma mark Autojoin
 
-- (void)startAutojoinTimer
-{
-	if (self.autojoinTimer.timerIsActive) {
-		return;
-	}
+- (void)startAutojoinTimer {
+  if (self.autojoinTimer.timerIsActive) {
+    return;
+  }
 
-	NSTimeInterval interval = [TPCPreferences autojoinDelayAfterIdentification];
+  NSTimeInterval interval = [TPCPreferences autojoinDelayAfterIdentification];
 
-	if (CGFloatAreEqual(interval, 0.0)) {
-		[self onAutojoinTimer];
+  if (CGFloatAreEqual(interval, 0.0)) {
+    [self onAutojoinTimer];
 
-		return;
-	}
+    return;
+  }
 
-	[self.autojoinTimer start:interval onRepeat:NO];
+  [self.autojoinTimer start:interval onRepeat:NO];
 }
 
-- (void)stopAutojoinTimer
-{
-	if (self.autojoinTimer.timerIsActive == NO) {
-		return;
-	}
+- (void)stopAutojoinTimer {
+  if (self.autojoinTimer.timerIsActive == NO) {
+    return;
+  }
 
-	[self.autojoinTimer stop];
+  [self.autojoinTimer stop];
 }
 
-- (void)onAutojoinTimer
-{
-	[self startAutojoinNextJoinTimer];
+- (void)onAutojoinTimer {
+  [self startAutojoinNextJoinTimer];
 }
 
-- (void)startAutojoinDelayedWarningTimer
-{
-	if (self.autojoinDelayedWarningTimer.timerIsActive) {
-		return;
-	}
+- (void)startAutojoinDelayedWarningTimer {
+  if (self.autojoinDelayedWarningTimer.timerIsActive) {
+    return;
+  }
 
-	[self.autojoinDelayedWarningTimer start:_autojoinDelayedWarningInterval onRepeat:YES];
+  [self.autojoinDelayedWarningTimer start:_autojoinDelayedWarningInterval
+                                 onRepeat:YES];
 }
 
-- (void)stopAutojoinDelayedWarningTimer
-{
-	if (self.autojoinDelayedWarningTimer.timerIsActive == NO) {
-		return;
-	}
+- (void)stopAutojoinDelayedWarningTimer {
+  if (self.autojoinDelayedWarningTimer.timerIsActive == NO) {
+    return;
+  }
 
-	[self.autojoinDelayedWarningTimer stop];
+  [self.autojoinDelayedWarningTimer stop];
 }
 
-- (void)onAutojoinDelayedWarningTimer
-{
-	if (self.isLoggedIn == NO || self.config.hideAutojoinDelayedWarnings ||
-		self.autojoinDelayedWarningCount >= _autojoinDelayedWarningMaxCount) {
-		[self stopAutojoinDelayedWarningTimer];
+- (void)onAutojoinDelayedWarningTimer {
+  if (self.isLoggedIn == NO || self.config.hideAutojoinDelayedWarnings ||
+      self.autojoinDelayedWarningCount >= _autojoinDelayedWarningMaxCount) {
+    [self stopAutojoinDelayedWarningTimer];
 
-		return;
-	}
+    return;
+  }
 
-	self.autojoinDelayedWarningCount += 1;
+  self.autojoinDelayedWarningCount += 1;
 
-	/* This message is posted to the server console and the 
-	 front most channel if it is on this server. */
-	NSString *text = TXTLS(@"IRC[r5h-fj]");
+  /* This message is posted to the server console and the
+   front most channel if it is on this server. */
+  NSString *text = TXTLS(@"IRC[r5h-fj]");
 
-	[self printDebugInformationToConsole:text];
+  [self printDebugInformationToConsole:text];
 
-	IRCChannel *c = [mainWindow() selectedChannelOn:self];
+  IRCChannel *c = [mainWindow() selectedChannelOn:self];
 
-	if (c != nil) {
-		[self printDebugInformation:text inChannel:c];
-	}
+  if (c != nil) {
+    [self printDebugInformation:text inChannel:c];
+  }
 }
 
-- (void)startAutojoinNextJoinTimer
-{
-	if (self.autojoinNextJoinTimer.timerIsActive) {
-		return;
-	}
+- (void)startAutojoinNextJoinTimer {
+  if (self.autojoinNextJoinTimer.timerIsActive) {
+    return;
+  }
 
-	NSTimeInterval interval = [TPCPreferences autojoinDelayBetweenChannelJoins];
+  NSTimeInterval interval = [TPCPreferences autojoinDelayBetweenChannelJoins];
 
-	[self.autojoinNextJoinTimer start:interval onRepeat:YES];
+  [self.autojoinNextJoinTimer start:interval onRepeat:YES];
 
-	/* Fake first event */
-	[self onAutojoinNextJoinTimer];
+  /* Fake first event */
+  [self onAutojoinNextJoinTimer];
 }
 
-- (void)stopAutojoinNextJoinTimer
-{
-	if (self.autojoinNextJoinTimer.timerIsActive == NO) {
-		return;
-	}
+- (void)stopAutojoinNextJoinTimer {
+  if (self.autojoinNextJoinTimer.timerIsActive == NO) {
+    return;
+  }
 
-	[self.autojoinNextJoinTimer stop];
+  [self.autojoinNextJoinTimer stop];
 
-	self.channelsToAutojoin = nil;
+  self.channelsToAutojoin = nil;
 }
 
-- (void)onAutojoinNextJoinTimer
-{
-	[self autojoinNextChannel];
+- (void)onAutojoinNextJoinTimer {
+  [self autojoinNextChannel];
 }
 
-- (void)autojoinNextChannel
-{
-	if (self.isAutojoining == NO) {
-		return;
-	}
+- (void)autojoinNextChannel {
+  if (self.isAutojoining == NO) {
+    return;
+  }
 
-	/* The autojoin list is only ever touched on the main thread
-	 (timer callbacks and message processing) so no lock is required.
-	 The previous @synchronized on the property itself was ineffective
-	 because the property is nil or replaced between calls. */
-	NSMutableArray<IRCChannel *> *channelsToAutojoin = self.channelsToAutojoin;
+  /* The autojoin list is only ever touched on the main thread
+   (timer callbacks and message processing) so no lock is required.
+   The previous @synchronized on the property itself was ineffective
+   because the property is nil or replaced between calls. */
+  NSMutableArray<IRCChannel *> *channelsToAutojoin = self.channelsToAutojoin;
 
-	NSUInteger numberOfChannelsRemaining = channelsToAutojoin.count;
+  NSUInteger numberOfChannelsRemaining = channelsToAutojoin.count;
 
-	NSUInteger maximumNumberOfJoins = [TPCPreferences autojoinMaximumChannelJoins];
+  NSUInteger maximumNumberOfJoins =
+      [TPCPreferences autojoinMaximumChannelJoins];
 
-	NSRange arrayRange;
+  NSRange arrayRange;
 
-	BOOL endOfArray = (numberOfChannelsRemaining <= maximumNumberOfJoins);
+  BOOL endOfArray = (numberOfChannelsRemaining <= maximumNumberOfJoins);
 
-	if (endOfArray == NO) {
-		arrayRange = NSMakeRange(0, maximumNumberOfJoins);
-	} else {
-		arrayRange = NSMakeRange(0, numberOfChannelsRemaining);
-	}
+  if (endOfArray == NO) {
+    arrayRange = NSMakeRange(0, maximumNumberOfJoins);
+  } else {
+    arrayRange = NSMakeRange(0, numberOfChannelsRemaining);
+  }
 
-	NSArray *channelsToJoin = [channelsToAutojoin subarrayWithRange:arrayRange];
+  NSArray *channelsToJoin = [channelsToAutojoin subarrayWithRange:arrayRange];
 
-	[self autojoinChannels:channelsToJoin];
+  [self autojoinChannels:channelsToJoin];
 
-	if (endOfArray == NO) {
-		[channelsToAutojoin removeObjectsInRange:arrayRange];
-	} else {
-		self.isAutojoining = NO;
+  if (endOfArray == NO) {
+    [channelsToAutojoin removeObjectsInRange:arrayRange];
+  } else {
+    self.isAutojoining = NO;
 
-		self.isAutojoined = YES;
+    self.isAutojoined = YES;
 
-		[self stopAutojoinNextJoinTimer];
-	}
+    [self stopAutojoinNextJoinTimer];
+  }
 }
 
-- (void)autojoinChannels:(NSArray<IRCChannel *> *)channels
-{
-	NSParameterAssert(channels != nil);
+- (void)autojoinChannels:(NSArray<IRCChannel *> *)channels {
+  NSParameterAssert(channels != nil);
 
-	[self joinChannels:channels];
+  [self joinChannels:channels];
 }
 
-- (void)performAutoJoin
-{
-	[self performAutoJoinInitiatedByUser:NO];
+- (void)performAutoJoin {
+  [self performAutoJoinInitiatedByUser:NO];
 }
 
-- (void)performAutoJoinInitiatedByUser:(BOOL)initiatedByUser
-{
-	if (self.isAutojoining) {
-		return;
-	}
+- (void)performAutoJoinInitiatedByUser:(BOOL)initiatedByUser {
+  if (self.isAutojoining) {
+    return;
+  }
 
-	[self stopAutojoinDelayedWarningTimer];
+  [self stopAutojoinDelayedWarningTimer];
 
-	if (initiatedByUser == NO) {
-		/* Ignore previous invocations of this method */
-		if (self.isAutojoined) {
-			return;
-		}
+  if (initiatedByUser == NO) {
+    /* Ignore previous invocations of this method */
+    if (self.isAutojoined) {
+      return;
+    }
 
-		/* Ignore autojoin based on ZNC preferences */
-		if (self.isConnectedToZNC && self.config.zncIgnoreConfiguredAutojoin) {
-			self.isAutojoined = YES;
+    /* Ignore autojoin based on ZNC preferences */
+    if (self.isConnectedToZNC && self.config.zncIgnoreConfiguredAutojoin) {
+      self.isAutojoined = YES;
 
-			return;
-		}
+      return;
+    }
 
-		/* Do nothing unless certain conditions are met */
-		if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL] == NO) {
-			if (self.config.autojoinWaitsForNickServ) {
-				if (self.serverHasNickServ && self.userIsIdentifiedWithNickServ == NO) {
-					return;
-				}
-			}
-		}
-	}
+    /* Do nothing unless certain conditions are met */
+    if ([self isCapabilityEnabled:
+                  ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL] == NO) {
+      if (self.config.autojoinWaitsForNickServ) {
+        if (self.serverHasNickServ && self.userIsIdentifiedWithNickServ == NO) {
+          return;
+        }
+      }
+    }
+  }
 
-	NSMutableArray<IRCChannel *> *channelsToAutojoin = [NSMutableArray array];
+  NSMutableArray<IRCChannel *> *channelsToAutojoin = [NSMutableArray array];
 
-	for (IRCChannel *c in self.channelList) {
-		if (c.isChannel && c.isActive == NO) {
-			if (c.config.autoJoin) {
-				[channelsToAutojoin addObject:c];
-			}
-		}
-	}
+  for (IRCChannel *c in self.channelList) {
+    if (c.isChannel && c.isActive == NO) {
+      if (c.config.autoJoin) {
+        [channelsToAutojoin addObject:c];
+      }
+    }
+  }
 
-	if (channelsToAutojoin.count == 0) {
-		self.isAutojoining = NO;
+  if (channelsToAutojoin.count == 0) {
+    self.isAutojoining = NO;
 
-		self.isAutojoined = YES;
+    self.isAutojoined = YES;
 
-		return;
-	}
+    return;
+  }
 
-	self.isAutojoining = YES;
+  self.isAutojoining = YES;
 
-	[channelsToAutojoin shuffle];
+  [channelsToAutojoin shuffle];
 
-	self.channelsToAutojoin = channelsToAutojoin;
+  self.channelsToAutojoin = channelsToAutojoin;
 
-	[self startAutojoinTimer];
+  [self startAutojoinTimer];
 }
 
 #pragma mark -
 #pragma mark Post Events
 
+- (void)postEventToViewController:(NSString *)eventToken {
+  if (themeSettings().js_postHandleEventNotifications == NO) {
+    return; // Cancel operation...
+  }
+
+  [self postEventToViewController:eventToken forItem:self];
+
+  for (IRCChannel *channel in self.channelList) {
+    [self postEventToViewController:eventToken forItem:channel];
+  }
+}
+
 - (void)postEventToViewController:(NSString *)eventToken
-{
-	if (themeSettings().js_postHandleEventNotifications == NO) {
-		return; // Cancel operation...
-	}
+                       forChannel:(IRCChannel *)channel {
+  if (themeSettings().js_postHandleEventNotifications == NO) {
+    return; // Cancel operation...
+  }
 
-	[self postEventToViewController:eventToken forItem:self];
-
-	for (IRCChannel *channel in self.channelList) {
-		[self postEventToViewController:eventToken forItem:channel];
-	}
+  [self postEventToViewController:eventToken forItem:channel];
 }
 
-- (void)postEventToViewController:(NSString *)eventToken forChannel:(IRCChannel *)channel
-{
-	if (themeSettings().js_postHandleEventNotifications == NO) {
-		return; // Cancel operation...
-	}
+- (void)postEventToViewController:(NSString *)eventToken
+                          forItem:(IRCTreeItem *)item {
+  NSParameterAssert(eventToken != nil);
+  NSParameterAssert(item != nil);
 
-	[self postEventToViewController:eventToken forItem:channel];
-}
+  if (self.isTerminating) {
+    return;
+  }
 
-- (void)postEventToViewController:(NSString *)eventToken forItem:(IRCTreeItem *)item
-{
-	NSParameterAssert(eventToken != nil);
-	NSParameterAssert(item != nil);
-
-	if (self.isTerminating) {
-		return;
-	}
-
-	[item.viewController evaluateFunction:@"Glasstual.handleEvent" withArguments:@[ eventToken ] onQueue:NO];
+  [item.viewController evaluateFunction:@"Glasstual.handleEvent"
+                          withArguments:@[ eventToken ]
+                                onQueue:NO];
 }
 
 #pragma mark -
 #pragma mark Timers
 
-- (void)stopAllTimers
-{
-	[self stopAutojoinTimer];
-	[self stopAutojoinDelayedWarningTimer];
-	[self stopAutojoinNextJoinTimer];
-	[self stopISONTimer];
-	[self stopReconnectTimer];
-	[self stopRetryTimer];
-	[self stopPongTimer];
-	[self stopWhoTimer];
+- (void)stopAllTimers {
+  [self stopAutojoinTimer];
+  [self stopAutojoinDelayedWarningTimer];
+  [self stopAutojoinNextJoinTimer];
+  [self stopISONTimer];
+  [self stopReconnectTimer];
+  [self stopRetryTimer];
+  [self stopPongTimer];
+  [self stopWhoTimer];
 }
 
-- (void)startPongTimer
-{
-	if (self.pongTimer.timerIsActive) {
-		return;
-	}
+- (void)startPongTimer {
+  if (self.pongTimer.timerIsActive) {
+    return;
+  }
 
-	[self.pongTimer start:_pongCheckInterval onRepeat:YES];
+  [self.pongTimer start:_pongCheckInterval onRepeat:YES];
 }
 
-- (void)stopPongTimer
-{
-	if (self.pongTimer.timerIsActive == NO) {
-		return;
-	}
+- (void)stopPongTimer {
+  if (self.pongTimer.timerIsActive == NO) {
+    return;
+  }
 
-	[self.pongTimer stop];
+  [self.pongTimer stop];
 }
 
-- (void)onPongTimer
-{
-	if (self.isLoggedIn == NO) {
-		[self stopPongTimer];
+- (void)onPongTimer {
+  if (self.isLoggedIn == NO) {
+    [self stopPongTimer];
 
-		return;
-	}
+    return;
+  }
 
-	/* Instead of stopping and starting the timer every time this changes, it
-	 it is easier to check if we should do it every timer iteration.
-	 The ability to disable this is important on PSYBNC connection because
-	 PSYBNC doesn't respond to PING commands. There are other irc daemons that
-	 don't reply to PING either and they should all be shot. */
-	NSTimeInterval timeSpent = [NSDate timeIntervalSinceNow:self.lastMessageReceived];
+  /* Instead of stopping and starting the timer every time this changes, it
+   it is easier to check if we should do it every timer iteration.
+   The ability to disable this is important on PSYBNC connection because
+   PSYBNC doesn't respond to PING commands. There are other irc daemons that
+   don't reply to PING either and they should all be shot. */
+  NSTimeInterval timeSpent =
+      [NSDate timeIntervalSinceNow:self.lastMessageReceived];
 
-	if (timeSpent >= _timeoutInterval) {
-		/* If EOF Received when we were not expecting it, then timeout regardless
-		 of user preference once our timeout interval is reached. */
-		if (self.socket.EOFReceived || self.config.performDisconnectOnPongTimer) {
-			[self printDebugInformation:TXTLS(@"IRC[bps-la]", (timeSpent / 60.0)) inChannel:nil];
+  if (timeSpent >= _timeoutInterval) {
+    /* If EOF Received when we were not expecting it, then timeout regardless
+     of user preference once our timeout interval is reached. */
+    if (self.socket.EOFReceived || self.config.performDisconnectOnPongTimer) {
+      [self printDebugInformation:TXTLS(@"IRC[bps-la]", (timeSpent / 60.0))
+                        inChannel:nil];
 
-			XRPerformBlockSynchronouslyOnMainQueue(^{
-				[self disconnect];
-			});
+      XRPerformBlockSynchronouslyOnMainQueue(^{
+        [self disconnect];
+      });
 
-			return;
-		}
+      return;
+    }
 
-		if (self.timeoutWarningShownToUser == NO) {
-			self.timeoutWarningShownToUser = YES;
+    if (self.timeoutWarningShownToUser == NO) {
+      self.timeoutWarningShownToUser = YES;
 
-			[self printDebugInformation:TXTLS(@"IRC[gzo-54]", (timeSpent / 60.0)) inChannel:nil];
-		}
-	} else if (timeSpent >= _pingInterval) {
-		if (self.config.performPongTimer == NO) {
-			return;
-		}
+      [self printDebugInformation:TXTLS(@"IRC[gzo-54]", (timeSpent / 60.0))
+                        inChannel:nil];
+    }
+  } else if (timeSpent >= _pingInterval) {
+    if (self.config.performPongTimer == NO) {
+      return;
+    }
 
-		[self sendPing:self.serverAddress];
-	}
+    [self sendPing:self.serverAddress];
+  }
 }
 
-- (void)startReconnectTimer
-{
-	if ((self.reconnectEnabledBecauseOfSleepMode && self.config.autoSleepModeDisconnect == NO) ||
-		(self.reconnectEnabledBecauseOfSleepMode == NO && self.config.autoReconnect == NO)) {
-		return;
-	}
+- (void)startReconnectTimer {
+  if ((self.reconnectEnabledBecauseOfSleepMode &&
+       self.config.autoSleepModeDisconnect == NO) ||
+      (self.reconnectEnabledBecauseOfSleepMode == NO &&
+       self.config.autoReconnect == NO)) {
+    return;
+  }
 
-	if (self.reconnectTimer.timerIsActive) {
-		return;
-	}
+  if (self.reconnectTimer.timerIsActive) {
+    return;
+  }
 
-	[self.reconnectTimer start:_reconnectInterval onRepeat:YES];
+  [self.reconnectTimer start:_reconnectInterval onRepeat:YES];
 }
 
-- (void)stopReconnectTimer
-{
-	if (self.reconnectTimer.timerIsActive == NO) {
-		return;
-	}
+- (void)stopReconnectTimer {
+  if (self.reconnectTimer.timerIsActive == NO) {
+    return;
+  }
 
-	[self.reconnectTimer stop];
+  [self.reconnectTimer stop];
 }
 
-- (void)onReconnectTimer
-{
-	if (self.isConnecting || self.isConnected) {
-		return;
-	}
+- (void)onReconnectTimer {
+  if (self.isConnecting || self.isConnected) {
+    return;
+  }
 
-	[self connect:IRCClientConnectModeReconnect];
+  [self connect:IRCClientConnectModeReconnect];
 }
 
-- (void)startRetryTimer
-{
-	if (self.retryTimer.timerIsActive) {
-		return;
-	}
+- (void)startRetryTimer {
+  if (self.retryTimer.timerIsActive) {
+    return;
+  }
 
-	[self.retryTimer start:_retryInterval];
+  [self.retryTimer start:_retryInterval];
 }
 
-- (void)stopRetryTimer
-{
-	if (self.retryTimer.timerIsActive == NO) {
-		return;
-	}
+- (void)stopRetryTimer {
+  if (self.retryTimer.timerIsActive == NO) {
+    return;
+  }
 
-	[self.retryTimer stop];
+  [self.retryTimer stop];
 }
 
-- (void)onRetryTimer
-{
-	if (self.isConnected == NO) {
-		return;
-	}
+- (void)onRetryTimer {
+  if (self.isConnected == NO) {
+    return;
+  }
 
-	XRPerformBlockSynchronouslyOnMainQueue(^{
-		__weak IRCClient *weakSelf = self;
+  XRPerformBlockSynchronouslyOnMainQueue(^{
+    __weak IRCClient *weakSelf = self;
 
-		self.disconnectCallback = ^{
-			[weakSelf connect:IRCClientConnectModeRetry];
-		};
+    self.disconnectCallback = ^{
+      [weakSelf connect:IRCClientConnectModeRetry];
+    };
 
-		[self disconnect];
-	});
+    [self disconnect];
+  });
 }
 
 #pragma mark -
 #pragma mark Requested Commands
 
-- (void)removeRequestedCommands
-{
-	[self.requestedCommands removeCommands];
+- (void)removeRequestedCommands {
+  [self.requestedCommands removeCommands];
 }
 
-- (void)createHiddenCommandResponses
-{
-	if (self.isTerminating) {
-		return;
-	}
+- (void)createHiddenCommandResponses {
+  if (self.isTerminating) {
+    return;
+  }
 
-	if (self.hiddenCommandResponsesQuery != nil) {
-		return;
-	}
+  if (self.hiddenCommandResponsesQuery != nil) {
+    return;
+  }
 
-	IRCChannel *query = [self findChannelOrCreate:@"Hidden Responses" isUtility:YES];
+  IRCChannel *query = [self findChannelOrCreate:@"Hidden Responses"
+                                      isUtility:YES];
 
-	self.hiddenCommandResponsesQuery = query;
+  self.hiddenCommandResponsesQuery = query;
 
-	[mainWindow() select:query];
+  [mainWindow() select:query];
 
-	[self printDebugInformation:TXTLS(@"IRC[yem-td]") inChannel:query];
+  [self printDebugInformation:TXTLS(@"IRC[yem-td]") inChannel:query];
 }
 
-- (void)printReplyToHiddenCommandResponsesQuery:(IRCMessage *)message
-{
-	IRCChannel *query = self.hiddenCommandResponsesQuery;
+- (void)printReplyToHiddenCommandResponsesQuery:(IRCMessage *)message {
+  IRCChannel *query = self.hiddenCommandResponsesQuery;
 
-	if (query == nil) {
-		return;
-	}
+  if (query == nil) {
+    return;
+  }
 
-	[self printReply:message inChannel:query];
+  [self printReply:message inChannel:query];
 }
 
 #pragma mark -
 #pragma mark Plugins and Scripts
 
 - (void)outputDescriptionForError:(NSError *)error
-	  forGlasstualCmdScriptAtPath:(NSString *)path
-					  inputString:(NSString *)inputString
-{
-	NSString *filename = path.lastPathComponent;
+      forGlasstualCmdScriptAtPath:(NSString *)path
+                      inputString:(NSString *)inputString {
+  NSString *filename = path.lastPathComponent;
 
-	NSString *errorDescription = error.userInfo[NSAppleScriptErrorMessage];
+  NSString *errorDescription = error.userInfo[NSAppleScriptErrorMessage];
 
-	if (errorDescription == nil) {
-		errorDescription = error.userInfo[NSAppleScriptErrorBriefMessage];
-	}
+  if (errorDescription == nil) {
+    errorDescription = error.userInfo[NSAppleScriptErrorBriefMessage];
+  }
 
-	if (errorDescription == nil) {
-		errorDescription = error.localizedFailureReason;
-	}
+  if (errorDescription == nil) {
+    errorDescription = error.localizedFailureReason;
+  }
 
-	if (errorDescription == nil) {
-		errorDescription = error.localizedDescription;
-	}
+  if (errorDescription == nil) {
+    errorDescription = error.localizedDescription;
+  }
 
-	if (inputString.length == 0) {
-		inputString = @"(no input)";
-	}
+  if (inputString.length == 0) {
+    inputString = @"(no input)";
+  }
 
-	[self printDebugInformation:TXTLS(@"IRC[2mc-h0]", filename, inputString, errorDescription)];
+  [self printDebugInformation:TXTLS(@"IRC[2mc-h0]", filename, inputString,
+                                    errorDescription)];
 
-	LogToConsoleError("%{public}@", TXTLS(@"IRC[ax0-mt]", errorDescription));
+  LogToConsoleError("%{public}@", TXTLS(@"IRC[ax0-mt]", errorDescription));
 }
 
-- (void)sendGlasstualCmdScriptResult:(NSString *)resultString toChannel:(nullable NSString *)channel
-{
-	NSParameterAssert(resultString != nil);
+- (void)sendGlasstualCmdScriptResult:(NSString *)resultString
+                           toChannel:(nullable NSString *)channel {
+  NSParameterAssert(resultString != nil);
 
-	IRCTreeItem *destination = nil;
+  IRCTreeItem *destination = nil;
 
-	if (channel == nil) {
-		destination = self;
-	} else {
-		destination = [self findChannel:channel];
-	}
+  if (channel == nil) {
+    destination = self;
+  } else {
+    destination = [self findChannel:channel];
+  }
 
-	if (destination == nil) {
-		LogToConsoleFault("A script returned a result but its destination no longer exists");
+  if (destination == nil) {
+    LogToConsoleFault(
+        "A script returned a result but its destination no longer exists");
 
-		return;
-	}
+    return;
+  }
 
-	resultString = resultString.trim;
+  resultString = resultString.trim;
 
-	XRPerformBlockAsynchronouslyOnMainQueue(^{
-		[self inputText:resultString destination:destination];
-	});
+  XRPerformBlockAsynchronouslyOnMainQueue(^{
+    [self inputText:resultString destination:destination];
+  });
 }
 
-- (void)executeGlasstualCmdScriptInContext:(NSDictionary<NSString *, NSString *> *)context
-{
-	XRPerformBlockAsynchronouslyOnQueue([THOPluginDispatcher dispatchQueue], ^{
-		[self _executeGlasstualCmdScriptInContext:context];
-	});
+- (void)executeGlasstualCmdScriptInContext:
+    (NSDictionary<NSString *, NSString *> *)context {
+  XRPerformBlockAsynchronouslyOnQueue([THOPluginDispatcher dispatchQueue], ^{
+    [self _executeGlasstualCmdScriptInContext:context];
+  });
 }
 
-- (void)_executeGlasstualCmdScriptInContext:(NSDictionary<NSString *, NSString *> *)context
-{
-	NSParameterAssert(context != nil);
+- (void)_executeGlasstualCmdScriptInContext:
+    (NSDictionary<NSString *, NSString *> *)context {
+  NSParameterAssert(context != nil);
 
-	NSString *inputString = context[@"inputString"];
+  NSString *inputString = context[@"inputString"];
 
-	NSString *path = context[@"path"];
+  NSString *path = context[@"path"];
 
-	NSString *targetChannel = context[@"targetChannel"];
+  NSString *targetChannel = context[@"targetChannel"];
 
-	NSParameterAssert(path != nil);
+  NSParameterAssert(path != nil);
 
-	NSURL *pathURL = [NSURL fileURLWithPath:path];
+  NSURL *pathURL = [NSURL fileURLWithPath:path];
 
-	/* Is it AppleScript? */
-	if ([path hasSuffix:TPCResourceManagerScriptDocumentTypeExtension]) {
-		BOOL isBuiltinScript = [path hasPrefix:[TPCPathInfo applicationResources]];
+  /* Is it AppleScript? */
+  if ([path hasSuffix:TPCResourceManagerScriptDocumentTypeExtension]) {
+    BOOL isBuiltinScript = [path hasPrefix:[TPCPathInfo applicationResources]];
 
-		/* /////////////////////////////////////////////////////// */
-		/* Event Descriptor */
-		/* /////////////////////////////////////////////////////// */
+    /* /////////////////////////////////////////////////////// */
+    /* Event Descriptor */
+    /* /////////////////////////////////////////////////////// */
 
-		NSAppleEventDescriptor *firstParameter = [NSAppleEventDescriptor descriptorWithString:inputString];
-		NSAppleEventDescriptor *secondParameter = [NSAppleEventDescriptor descriptorWithString:targetChannel];
+    NSAppleEventDescriptor *firstParameter =
+        [NSAppleEventDescriptor descriptorWithString:inputString];
+    NSAppleEventDescriptor *secondParameter =
+        [NSAppleEventDescriptor descriptorWithString:targetChannel];
 
-		NSAppleEventDescriptor *parameters = [NSAppleEventDescriptor listDescriptor];
+    NSAppleEventDescriptor *parameters =
+        [NSAppleEventDescriptor listDescriptor];
 
-		[parameters insertDescriptor:firstParameter atIndex:1];
-		[parameters insertDescriptor:secondParameter atIndex:2];
+    [parameters insertDescriptor:firstParameter atIndex:1];
+    [parameters insertDescriptor:secondParameter atIndex:2];
 
-		ProcessSerialNumber process = {0, kCurrentProcess};
+    ProcessSerialNumber process = {0, kCurrentProcess};
 
-		NSAppleEventDescriptor *target =
-			[NSAppleEventDescriptor descriptorWithDescriptorType:typeProcessSerialNumber
-														   bytes:&process
-														  length:sizeof(ProcessSerialNumber)];
+    NSAppleEventDescriptor *target = [NSAppleEventDescriptor
+        descriptorWithDescriptorType:typeProcessSerialNumber
+                               bytes:&process
+                              length:sizeof(ProcessSerialNumber)];
 
-		NSAppleEventDescriptor *handler = [NSAppleEventDescriptor descriptorWithString:@"glasstualcmd"];
+    NSAppleEventDescriptor *handler =
+        [NSAppleEventDescriptor descriptorWithString:@"glasstualcmd"];
 
-		NSAppleEventDescriptor *event = [NSAppleEventDescriptor appleEventWithEventClass:kASAppleScriptSuite
-																				 eventID:kASSubroutineEvent
-																		targetDescriptor:target
-																				returnID:kAutoGenerateReturnID
-																		   transactionID:kAnyTransactionID];
+    NSAppleEventDescriptor *event =
+        [NSAppleEventDescriptor appleEventWithEventClass:kASAppleScriptSuite
+                                                 eventID:kASSubroutineEvent
+                                        targetDescriptor:target
+                                                returnID:kAutoGenerateReturnID
+                                           transactionID:kAnyTransactionID];
 
-		[event setParamDescriptor:handler forKeyword:keyASSubroutineName];
+    [event setParamDescriptor:handler forKeyword:keyASSubroutineName];
 
-		[event setParamDescriptor:parameters forKeyword:keyDirectObject];
+    [event setParamDescriptor:parameters forKeyword:keyDirectObject];
 
-		/* /////////////////////////////////////////////////////// */
-		/* Execute Event */
-		/* /////////////////////////////////////////////////////// */
-		/* NSUserAppleScriptTask expects the script to be in the Application Scripts folder 
-		 which means if we want to execute scripts in the app's Resources folder, we use a
-		 regular call to NSAppleScript. It's pretty safe to say that scripts we make ourselves
-		 wont produce errors which means the logic for handling errors is ignored for scripts
-		 that are performed in the Resources folder. */
+    /* /////////////////////////////////////////////////////// */
+    /* Execute Event */
+    /* /////////////////////////////////////////////////////// */
+    /* NSUserAppleScriptTask expects the script to be in the Application Scripts
+     folder which means if we want to execute scripts in the app's Resources
+     folder, we use a regular call to NSAppleScript. It's pretty safe to say
+     that scripts we make ourselves wont produce errors which means the logic
+     for handling errors is ignored for scripts that are performed in the
+     Resources folder. */
 
-		if (isBuiltinScript) {
-			NSAppleScript *appleScript = [[NSAppleScript alloc] initWithContentsOfURL:pathURL error:NULL];
+    if (isBuiltinScript) {
+      NSAppleScript *appleScript =
+          [[NSAppleScript alloc] initWithContentsOfURL:pathURL error:NULL];
 
-			if (appleScript == nil) {
-				return;
-			}
+      if (appleScript == nil) {
+        return;
+      }
 
-			NSAppleEventDescriptor *result = [appleScript executeAppleEvent:event error:NULL];
+      NSAppleEventDescriptor *result = [appleScript executeAppleEvent:event
+                                                                error:NULL];
 
-			if (result == nil) {
-				return;
-			}
+      if (result == nil) {
+        return;
+      }
 
-			[self sendGlasstualCmdScriptResult:result.stringValue toChannel:targetChannel];
-		} else // isBuiltinScript
-		{
-			NSError *appleScriptError = nil;
+      [self sendGlasstualCmdScriptResult:result.stringValue
+                               toChannel:targetChannel];
+    } else // isBuiltinScript
+    {
+      NSError *appleScriptError = nil;
 
-			NSUserAppleScriptTask *appleScript = [[NSUserAppleScriptTask alloc] initWithURL:pathURL
-																					  error:&appleScriptError];
+      NSUserAppleScriptTask *appleScript =
+          [[NSUserAppleScriptTask alloc] initWithURL:pathURL
+                                               error:&appleScriptError];
 
-			if (appleScript == nil) {
-				[self outputDescriptionForError:appleScriptError
-					forGlasstualCmdScriptAtPath:path
-									inputString:inputString];
+      if (appleScript == nil) {
+        [self outputDescriptionForError:appleScriptError
+            forGlasstualCmdScriptAtPath:path
+                            inputString:inputString];
 
-				return;
-			}
+        return;
+      }
 
-			[appleScript executeWithAppleEvent:event
-							 completionHandler:^(NSAppleEventDescriptor *result, NSError *error) {
-								 if (result == nil) {
-									 [self outputDescriptionForError:error
-										 forGlasstualCmdScriptAtPath:path
-														 inputString:inputString];
-								 } else {
-									 [self sendGlasstualCmdScriptResult:result.stringValue toChannel:targetChannel];
-								 }
-							 }];
-		}
+      [appleScript executeWithAppleEvent:event
+                       completionHandler:^(NSAppleEventDescriptor *result,
+                                           NSError *error) {
+                         if (result == nil) {
+                           [self outputDescriptionForError:error
+                               forGlasstualCmdScriptAtPath:path
+                                               inputString:inputString];
+                         } else {
+                           [self sendGlasstualCmdScriptResult:result.stringValue
+                                                    toChannel:targetChannel];
+                         }
+                       }];
+    }
 
-		return;
-	}
+    return;
+  }
 
-	/* /////////////////////////////////////////////////////// */
-	/* Execute Shell Script */
-	/* /////////////////////////////////////////////////////// */
+  /* /////////////////////////////////////////////////////// */
+  /* Execute Shell Script */
+  /* /////////////////////////////////////////////////////// */
 
-	/* Build list of arguments. */
-	NSMutableArray *taskArguments = [NSMutableArray array];
+  /* Build list of arguments. */
+  NSMutableArray *taskArguments = [NSMutableArray array];
 
-	if (targetChannel) {
-		[taskArguments addObject:targetChannel];
-	} else {
-		[taskArguments addObject:@""];
-	}
+  if (targetChannel) {
+    [taskArguments addObject:targetChannel];
+  } else {
+    [taskArguments addObject:@""];
+  }
 
-	NSArray *inputStringComponents =
-		[inputString componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+  NSArray *inputStringComponents = [inputString
+      componentsSeparatedByCharactersInSet:[NSCharacterSet
+                                               whitespaceCharacterSet]];
 
-	[taskArguments addObjectsFromArray:inputStringComponents];
+  [taskArguments addObjectsFromArray:inputStringComponents];
 
-	/* Create task object */
-	NSError *taskError = nil;
+  /* Create task object */
+  NSError *taskError = nil;
 
-	NSUserUnixTask *task = [[NSUserUnixTask alloc] initWithURL:pathURL error:&taskError];
+  NSUserUnixTask *task = [[NSUserUnixTask alloc] initWithURL:pathURL
+                                                       error:&taskError];
 
-	if (task == nil) {
-		[self outputDescriptionForError:taskError forGlasstualCmdScriptAtPath:path inputString:inputString];
+  if (task == nil) {
+    [self outputDescriptionForError:taskError
+        forGlasstualCmdScriptAtPath:path
+                        inputString:inputString];
 
-		return;
-	}
+    return;
+  }
 
-	/* Prepare pipe */
-	NSPipe *standardOutputPipe = [NSPipe pipe];
+  /* Prepare pipe */
+  NSPipe *standardOutputPipe = [NSPipe pipe];
 
-	NSFileHandle *readingPipe = standardOutputPipe.fileHandleForReading;
-	NSFileHandle *writingPipe = standardOutputPipe.fileHandleForWriting;
+  NSFileHandle *readingPipe = standardOutputPipe.fileHandleForReading;
+  NSFileHandle *writingPipe = standardOutputPipe.fileHandleForWriting;
 
-	task.standardOutput = writingPipe;
+  task.standardOutput = writingPipe;
 
-	/* Try performing task */
-	[task executeWithArguments:taskArguments
-			 completionHandler:^(NSError *error) {
-				 if (error) {
-					 [self outputDescriptionForError:error forGlasstualCmdScriptAtPath:path inputString:inputString];
+  /* Try performing task */
+  [task executeWithArguments:taskArguments
+           completionHandler:^(NSError *error) {
+             if (error) {
+               [self outputDescriptionForError:error
+                   forGlasstualCmdScriptAtPath:path
+                                   inputString:inputString];
 
-					 return;
-				 }
+               return;
+             }
 
-				 NSData *result = [readingPipe readDataToEndOfFile];
+             NSData *result = [readingPipe readDataToEndOfFile];
 
-				 NSString *resultString = [NSString stringWithData:result encoding:NSUTF8StringEncoding];
+             NSString *resultString =
+                 [NSString stringWithData:result encoding:NSUTF8StringEncoding];
 
-				 [self sendGlasstualCmdScriptResult:resultString toChannel:targetChannel];
-			 }];
+             [self sendGlasstualCmdScriptResult:resultString
+                                      toChannel:targetChannel];
+           }];
 }
 
-- (void)processBundlesUserMessage:(NSString *)message command:(NSString *)command
-{
-	NSParameterAssert(message != nil);
+- (void)processBundlesUserMessage:(NSString *)message
+                          command:(NSString *)command {
+  NSParameterAssert(message != nil);
 
-	[THOPluginDispatcher userInputCommandInvokedOnClient:self commandString:command messageString:message];
+  [THOPluginDispatcher userInputCommandInvokedOnClient:self
+                                         commandString:command
+                                         messageString:message];
 }
 
-- (void)processBundlesServerMessage:(IRCMessage *)message
-{
-	NSParameterAssert(message != nil);
+- (void)processBundlesServerMessage:(IRCMessage *)message {
+  NSParameterAssert(message != nil);
 
-	[THOPluginDispatcher didReceiveServerInput:message onClient:self];
+  [THOPluginDispatcher didReceiveServerInput:message onClient:self];
+}
+
+- (BOOL)postReceivedMessage:(IRCMessage *)referenceMessage {
+  NSParameterAssert(referenceMessage != nil);
+
+  return [self postReceivedMessage:referenceMessage
+                          withText:referenceMessage.sequence
+                       destinedFor:nil];
 }
 
 - (BOOL)postReceivedMessage:(IRCMessage *)referenceMessage
-{
-	NSParameterAssert(referenceMessage != nil);
+                   withText:(nullable NSString *)text
+                destinedFor:(nullable IRCChannel *)textDestination {
+  NSParameterAssert(referenceMessage != nil);
 
-	return [self postReceivedMessage:referenceMessage withText:referenceMessage.sequence destinedFor:nil];
-}
-
-- (BOOL)postReceivedMessage:(IRCMessage *)referenceMessage
-				   withText:(nullable NSString *)text
-				destinedFor:(nullable IRCChannel *)textDestination
-{
-	NSParameterAssert(referenceMessage != nil);
-
-	return [self postReceivedCommand:referenceMessage.command
-							withText:text
-						 destinedFor:textDestination
-					referenceMessage:referenceMessage];
+  return [self postReceivedCommand:referenceMessage.command
+                          withText:text
+                       destinedFor:textDestination
+                  referenceMessage:referenceMessage];
 }
 
 - (BOOL)postReceivedCommand:(NSString *)command
-				   withText:(nullable NSString *)text
-				destinedFor:(nullable IRCChannel *)textDestination
-		   referenceMessage:(IRCMessage *)referenceMessage
-{
-	NSParameterAssert(command != nil);
-	NSParameterAssert(referenceMessage != nil);
+                   withText:(nullable NSString *)text
+                destinedFor:(nullable IRCChannel *)textDestination
+           referenceMessage:(IRCMessage *)referenceMessage {
+  NSParameterAssert(command != nil);
+  NSParameterAssert(referenceMessage != nil);
 
-	BOOL printMessage = [THOPluginDispatcher receivedCommand:command
-													withText:text
-												  authoredBy:referenceMessage.sender
-												 destinedFor:textDestination
-													onClient:self
-												  receivedAt:referenceMessage.receivedAt
-											referenceMessage:referenceMessage];
+  BOOL printMessage =
+      [THOPluginDispatcher receivedCommand:command
+                                  withText:text
+                                authoredBy:referenceMessage.sender
+                               destinedFor:textDestination
+                                  onClient:self
+                                receivedAt:referenceMessage.receivedAt
+                          referenceMessage:referenceMessage];
 
-	/* The JOIN and QUIT of a netsplit or netjoin are folded into one
-	 line per channel. The handlers still update the member lists. */
-	if (printMessage && textDestination && [self collapseNetsplitMessage:referenceMessage inChannel:textDestination]) {
-		return NO;
-	}
+  /* The JOIN and QUIT of a netsplit or netjoin are folded into one
+   line per channel. The handlers still update the member lists. */
+  if (printMessage && textDestination &&
+      [self collapseNetsplitMessage:referenceMessage
+                          inChannel:textDestination]) {
+    return NO;
+  }
 
-	return printMessage;
+  return printMessage;
 }
 
 #pragma mark -
 #pragma mark Commands
 
-- (void)connect
-{
-	[self connect:IRCClientConnectModeNormal];
+- (void)connect {
+  [self connect:IRCClientConnectModeNormal];
+}
+
+- (void)connect:(IRCClientConnectMode)connectMode {
+  [self connect:connectMode bypassProxy:NO];
 }
 
 - (void)connect:(IRCClientConnectMode)connectMode
-{
-	[self connect:connectMode bypassProxy:NO];
+    bypassProxy:(BOOL)bypassProxy {
+  /* Do not allow a connect to occur until the current
+   socket has completed disconnecting */
+  if (self.isConnecting || self.isConnected || self.isQuitting ||
+      self.isDisconnecting) {
+    return;
+  }
+
+  /* Check if system is sleeping. */
+  if ([XRSystemInformation systemIsSleeping]) {
+    LogToConsoleInfo("Refusing to connect because system is sleeping");
+
+    return;
+  }
+
+  /* Do we have somewhere to connect to? */
+  NSArray *servers = self.config.serverList;
+
+  if (servers.count == 0) {
+    [self printDebugInformationToConsole:TXTLS(@"IRC[iaa-0u]")];
+
+    return;
+  }
+
+  /* Begin populating configuration */
+  /* Temporary values take priority. When a temporary server
+   address is specified, then the temporary port is used too,
+   or 6667 without SSL is used. Nothing from the current
+   server configuration is read if there is temporary server. */
+  NSString *serverAddress = nil;
+
+  uint16_t serverPort = IRCConnectionDefaultServerPort;
+
+  BOOL connectionPrefersSecuredConnection = NO;
+
+  if (self.temporaryServerAddressOverride) {
+    serverAddress = self.temporaryServerAddressOverride;
+
+    if (self.temporaryServerPortOverride > 0 &&
+        self.temporaryServerPortOverride <= TXMaximumTCPPort) {
+      serverPort = self.temporaryServerPortOverride;
+    }
+  }
+
+  if (serverAddress.isValidInternetAddress == NO) {
+    NSUInteger serverIndex = self.lastServerSelected;
+
+    if (serverIndex == NSNotFound) {
+      serverIndex = 0;
+    } else {
+      serverIndex += 1;
+
+      if (serverIndex >= servers.count) {
+        serverIndex = 0;
+      }
+    }
+
+    self.lastServerSelected = serverIndex;
+
+    IRCServer *server = servers[serverIndex];
+
+    serverAddress = server.serverAddress;
+    serverPort = server.serverPort;
+
+    connectionPrefersSecuredConnection = server.prefersSecuredConnection;
+
+    self.server = server;
+  }
+
+  /* Do not wait for an actual connect before destroying the temporary
+   store. Once its defined, its to be nil'd out no matter what. */
+  self.temporaryServerAddressOverride = nil;
+  self.temporaryServerPortOverride = 0;
+
+  /* Strict Transport Security: an unexpired policy for this host forces
+   TLS on the policy port whatever the configuration says. Never a
+   downgrade — a configuration that already prefers TLS is left alone. */
+  uint16_t stsPort = serverPort;
+  BOOL stsSecured = connectionPrefersSecuredConnection;
+
+  if ([[IRCSTSPolicyStore sharedStore] applyPolicyForHost:serverAddress
+                                                   toPort:&stsPort
+                                                  secured:&stsSecured]) {
+    if (stsPort != serverPort ||
+        stsSecured != connectionPrefersSecuredConnection) {
+      [self printDebugInformationToConsole:TXTLS(@"IRC[sts-p1]", stsPort)];
+    }
+
+    serverPort = stsPort;
+
+    connectionPrefersSecuredConnection = stsSecured;
+  }
+
+  /* A pending STS upgrade (see -handleSTSCapabilityFromOffered:) forces
+   TLS for this one reconnect even without a stored policy. */
+  if (self.forceSecuredConnectionOnNextConnect) {
+    self.forceSecuredConnectionOnNextConnect = NO;
+
+    connectionPrefersSecuredConnection = YES;
+  }
+
+  /* Reset status */
+  self.connectType = connectMode;
+
+  self.disconnectType = IRCClientDisconnectModeNormal;
+
+  self.isConnecting = YES;
+
+  /* Disable reconnect attempt but permit more */
+  [self stopReconnectTimer];
+
+  self.reconnectEnabled = YES;
+
+  /* Present status to user */
+  [mainWindow() updateTitleFor:self];
+
+  if (connectMode == IRCClientConnectModeReconnect) {
+    [self printDebugInformationToConsole:TXTLS(@"IRC[xxb-y2]")];
+  } else if (connectMode == IRCClientConnectModeRetry) {
+    [self printDebugInformationToConsole:TXTLS(@"IRC[ky3-36]")];
+  }
+
+  /* To provide user with similar behavior, when migrating
+   -connectionPrefersIPv4 in IRCClientConfig, we set the address type to
+   IRCConnectionAddressTypeIPv4. We check if both values are set to offer the
+   user a warning that the preference they had has changed in a way they may not
+   want. When user changes the address type in Server Properties, we unset
+   -connectionPrefersIPv4 so that the warning does not appear again, ever. */
+  IRCConnectionAddressType addressType = self.config.addressType;
+
+  if (self.config.showConnectionPrefersIPv4Warning) {
+    [self printDebugInformation:TXTLS(@"IRC[w05-ph]")];
+  }
+
+  [self printDebugInformationToConsole:TXTLS(@"IRC[o77-ls]", serverAddress,
+                                             serverPort)];
+
+  [RZNotificationCenter() postNotificationName:IRCClientWillConnectNotification
+                                        object:self];
+
+  /* Create socket */
+  IRCConnectionConfigMutable *socketConfig = [IRCConnectionConfigMutable new];
+
+  socketConfig.addressType = addressType;
+
+  socketConfig.serverAddress = serverAddress;
+  socketConfig.serverPort = serverPort;
+
+  IRCConnectionProxyType proxyType = self.config.proxyType;
+
+  socketConfig.cipherSuites = self.config.cipherSuites;
+
+  socketConfig.connectionPrefersSecuredConnection =
+      connectionPrefersSecuredConnection;
+  socketConfig.connectionShouldValidateCertificateChain =
+      self.config.validateServerCertificateChain;
+
+  socketConfig.identityClientSideCertificate =
+      self.config.identityClientSideCertificate;
+
+  if (bypassProxy == NO) {
+    socketConfig.proxyType = proxyType;
+
+    if (socketConfig.proxyType == IRCConnectionProxyTypeSocks5 ||
+        socketConfig.proxyType == IRCConnectionProxyTypeHTTP) {
+      socketConfig.proxyPort = self.config.proxyPort;
+      socketConfig.proxyAddress = self.config.proxyAddress;
+      socketConfig.proxyPassword = self.config.proxyPassword;
+      socketConfig.proxyUsername = self.config.proxyUsername;
+    }
+  }
+
+  socketConfig.floodControlDelayInterval =
+      self.config.floodControlDelayTimerInterval;
+  socketConfig.floodControlMaximumMessages =
+      self.config.floodControlMaximumMessages;
+
+  socketConfig.connectionPrefersModernCiphersOnly =
+      [TPCPreferences preferModernCiphers];
+
+  self.socket = [[IRCConnection alloc] initWithConfig:socketConfig
+                                             onClient:self];
+
+  [self.socket open];
+
+  /* Pass status to view controller */
+  [self postEventToViewController:@"serverConnecting"];
 }
 
-- (void)connect:(IRCClientConnectMode)connectMode bypassProxy:(BOOL)bypassProxy
-{
-	/* Do not allow a connect to occur until the current 
-	 socket has completed disconnecting */
-	if (self.isConnecting || self.isConnected || self.isQuitting || self.isDisconnecting) {
-		return;
-	}
+- (void)autoConnectWithDelay:(NSUInteger)delay afterWakeUp:(BOOL)afterWakeUp {
+  self.connectDelay = delay;
 
-	/* Check if system is sleeping. */
-	if ([XRSystemInformation systemIsSleeping]) {
-		LogToConsoleInfo("Refusing to connect because system is sleeping");
-
-		return;
-	}
-
-	/* Do we have somewhere to connect to? */
-	NSArray *servers = self.config.serverList;
-
-	if (servers.count == 0) {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[iaa-0u]")];
-
-		return;
-	}
-
-	/* Begin populating configuration */
-	/* Temporary values take priority. When a temporary server
-	 address is specified, then the temporary port is used too,
-	 or 6667 without SSL is used. Nothing from the current
-	 server configuration is read if there is temporary server. */
-	NSString *serverAddress = nil;
-
-	uint16_t serverPort = IRCConnectionDefaultServerPort;
-
-	BOOL connectionPrefersSecuredConnection = NO;
-
-	if (self.temporaryServerAddressOverride) {
-		serverAddress = self.temporaryServerAddressOverride;
-
-		if (self.temporaryServerPortOverride > 0 && self.temporaryServerPortOverride <= TXMaximumTCPPort) {
-			serverPort = self.temporaryServerPortOverride;
-		}
-	}
-
-	if (serverAddress.isValidInternetAddress == NO) {
-		NSUInteger serverIndex = self.lastServerSelected;
-
-		if (serverIndex == NSNotFound) {
-			serverIndex = 0;
-		} else {
-			serverIndex += 1;
-
-			if (serverIndex >= servers.count) {
-				serverIndex = 0;
-			}
-		}
-
-		self.lastServerSelected = serverIndex;
-
-		IRCServer *server = servers[serverIndex];
-
-		serverAddress = server.serverAddress;
-		serverPort = server.serverPort;
-
-		connectionPrefersSecuredConnection = server.prefersSecuredConnection;
-
-		self.server = server;
-	}
-
-	/* Do not wait for an actual connect before destroying the temporary
-	 store. Once its defined, its to be nil'd out no matter what. */
-	self.temporaryServerAddressOverride = nil;
-	self.temporaryServerPortOverride = 0;
-
-	/* Strict Transport Security: an unexpired policy for this host forces
-	 TLS on the policy port whatever the configuration says. Never a
-	 downgrade — a configuration that already prefers TLS is left alone. */
-	uint16_t stsPort = serverPort;
-	BOOL stsSecured = connectionPrefersSecuredConnection;
-
-	if ([[IRCSTSPolicyStore sharedStore] applyPolicyForHost:serverAddress toPort:&stsPort secured:&stsSecured]) {
-		if (stsPort != serverPort || stsSecured != connectionPrefersSecuredConnection) {
-			[self printDebugInformationToConsole:TXTLS(@"IRC[sts-p1]", stsPort)];
-		}
-
-		serverPort = stsPort;
-
-		connectionPrefersSecuredConnection = stsSecured;
-	}
-
-	/* A pending STS upgrade (see -handleSTSCapabilityFromOffered:) forces
-	 TLS for this one reconnect even without a stored policy. */
-	if (self.forceSecuredConnectionOnNextConnect) {
-		self.forceSecuredConnectionOnNextConnect = NO;
-
-		connectionPrefersSecuredConnection = YES;
-	}
-
-	/* Reset status */
-	self.connectType = connectMode;
-
-	self.disconnectType = IRCClientDisconnectModeNormal;
-
-	self.isConnecting = YES;
-
-	/* Disable reconnect attempt but permit more */
-	[self stopReconnectTimer];
-
-	self.reconnectEnabled = YES;
-
-	/* Present status to user */
-	[mainWindow() updateTitleFor:self];
-
-	if (connectMode == IRCClientConnectModeReconnect) {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[xxb-y2]")];
-	} else if (connectMode == IRCClientConnectModeRetry) {
-		[self printDebugInformationToConsole:TXTLS(@"IRC[ky3-36]")];
-	}
-
-	/* To provide user with similar behavior, when migrating -connectionPrefersIPv4
-	 in IRCClientConfig, we set the address type to IRCConnectionAddressTypeIPv4.
-	 We check if both values are set to offer the user a warning that the preference
-	 they had has changed in a way they may not want. When user changes the address
-	 type in Server Properties, we unset -connectionPrefersIPv4 so that the warning
-	 does not appear again, ever. */
-	IRCConnectionAddressType addressType = self.config.addressType;
-
-	if (self.config.showConnectionPrefersIPv4Warning) {
-		[self printDebugInformation:TXTLS(@"IRC[w05-ph]")];
-	}
-
-	[self printDebugInformationToConsole:TXTLS(@"IRC[o77-ls]", serverAddress, serverPort)];
-
-	[RZNotificationCenter() postNotificationName:IRCClientWillConnectNotification object:self];
-
-	/* Create socket */
-	IRCConnectionConfigMutable *socketConfig = [IRCConnectionConfigMutable new];
-
-	socketConfig.addressType = addressType;
-
-	socketConfig.serverAddress = serverAddress;
-	socketConfig.serverPort = serverPort;
-
-	IRCConnectionProxyType proxyType = self.config.proxyType;
-
-	socketConfig.cipherSuites = self.config.cipherSuites;
-
-	socketConfig.connectionPrefersSecuredConnection = connectionPrefersSecuredConnection;
-	socketConfig.connectionShouldValidateCertificateChain = self.config.validateServerCertificateChain;
-
-	socketConfig.identityClientSideCertificate = self.config.identityClientSideCertificate;
-
-	if (bypassProxy == NO) {
-		socketConfig.proxyType = proxyType;
-
-		if (socketConfig.proxyType == IRCConnectionProxyTypeSocks5 ||
-			socketConfig.proxyType == IRCConnectionProxyTypeHTTP) {
-			socketConfig.proxyPort = self.config.proxyPort;
-			socketConfig.proxyAddress = self.config.proxyAddress;
-			socketConfig.proxyPassword = self.config.proxyPassword;
-			socketConfig.proxyUsername = self.config.proxyUsername;
-		}
-	}
-
-	socketConfig.floodControlDelayInterval = self.config.floodControlDelayTimerInterval;
-	socketConfig.floodControlMaximumMessages = self.config.floodControlMaximumMessages;
-
-	socketConfig.connectionPrefersModernCiphersOnly = [TPCPreferences preferModernCiphers];
-
-	self.socket = [[IRCConnection alloc] initWithConfig:socketConfig onClient:self];
-
-	[self.socket open];
-
-	/* Pass status to view controller */
-	[self postEventToViewController:@"serverConnecting"];
+  if (afterWakeUp) {
+    [self autoConnectAfterWakeUp];
+  } else {
+    [self autoConnect];
+  }
 }
 
-- (void)autoConnectWithDelay:(NSUInteger)delay afterWakeUp:(BOOL)afterWakeUp
-{
-	self.connectDelay = delay;
+- (void)autoConnect {
+  NSUInteger connectDelay = self.connectDelay;
 
-	if (afterWakeUp) {
-		[self autoConnectAfterWakeUp];
-	} else {
-		[self autoConnect];
-	}
+  if (connectDelay == 0) {
+    [self autoConnectPerformConnect];
+
+    return;
+  }
+
+  [self performSelectorInCommonModes:@selector(autoConnectPerformConnect)
+                          withObject:nil
+                          afterDelay:connectDelay];
 }
 
-- (void)autoConnect
-{
-	NSUInteger connectDelay = self.connectDelay;
+- (void)autoConnectPerformConnect {
+  if (self.isConnecting || self.isConnected) {
+    return;
+  }
 
-	if (connectDelay == 0) {
-		[self autoConnectPerformConnect];
-
-		return;
-	}
-
-	[self performSelectorInCommonModes:@selector(autoConnectPerformConnect) withObject:nil afterDelay:connectDelay];
+  [self connect];
 }
 
-- (void)autoConnectPerformConnect
-{
-	if (self.isConnecting || self.isConnected) {
-		return;
-	}
+- (void)autoConnectAfterWakeUp {
+  NSUInteger connectDelay = self.connectDelay;
 
-	[self connect];
+  if (connectDelay == 0) {
+    [self autoConnectAfterWakeUpPerformConnect];
+
+    return;
+  }
+
+  [self printDebugInformationToConsole:TXTLS(@"IRC[3s6-e6]", connectDelay)];
+
+  [self performSelectorInCommonModes:@selector
+        (autoConnectAfterWakeUpPerformConnect)
+                          withObject:nil
+                          afterDelay:connectDelay];
 }
 
-- (void)autoConnectAfterWakeUp
-{
-	NSUInteger connectDelay = self.connectDelay;
+- (void)autoConnectAfterWakeUpPerformConnect {
+  if (self.isConnecting || self.isConnected) {
+    return;
+  }
 
-	if (connectDelay == 0) {
-		[self autoConnectAfterWakeUpPerformConnect];
+  self.reconnectEnabledBecauseOfSleepMode = YES;
 
-		return;
-	}
-
-	[self printDebugInformationToConsole:TXTLS(@"IRC[3s6-e6]", connectDelay)];
-
-	[self performSelectorInCommonModes:@selector(autoConnectAfterWakeUpPerformConnect)
-							withObject:nil
-							afterDelay:connectDelay];
+  [self connect:IRCClientConnectModeReconnect];
 }
 
-- (void)autoConnectAfterWakeUpPerformConnect
-{
-	if (self.isConnecting || self.isConnected) {
-		return;
-	}
+- (void)disconnect {
+  [self cancelPerformRequestsWithSelector:@selector(disconnect) object:nil];
 
-	self.reconnectEnabledBecauseOfSleepMode = YES;
+  if (self.isConnecting == NO && self.isConnected == NO) {
+    return;
+  }
 
-	[self connect:IRCClientConnectModeReconnect];
+  if (self.socket == nil) {
+    return;
+  }
+
+  self.isDisconnecting = YES;
+
+  [RZNotificationCenter()
+      postNotificationName:IRCClientWillDisconnectNotification
+                    object:self];
+
+  [self.socket close];
 }
 
-- (void)disconnect
-{
-	[self cancelPerformRequestsWithSelector:@selector(disconnect) object:nil];
+- (void)quit {
+  NSString *comment = nil;
 
-	if (self.isConnecting == NO && self.isConnected == NO) {
-		return;
-	}
+  if (self.disconnectType == IRCClientDisconnectModeComputerSleep) {
+    comment = self.config.sleepModeLeavingComment;
+  } else {
+    comment = self.config.normalLeavingComment;
+  }
 
-	if (self.socket == nil) {
-		return;
-	}
-
-	self.isDisconnecting = YES;
-
-	[RZNotificationCenter() postNotificationName:IRCClientWillDisconnectNotification object:self];
-
-	[self.socket close];
+  [self quitWithComment:comment];
 }
 
-- (void)quit
-{
-	NSString *comment = nil;
+- (void)quitWithComment:(NSString *)comment {
+  NSParameterAssert(comment != nil);
 
-	if (self.disconnectType == IRCClientDisconnectModeComputerSleep) {
-		comment = self.config.sleepModeLeavingComment;
-	} else {
-		comment = self.config.normalLeavingComment;
-	}
+  if ((self.isConnecting == NO && self.isConnected == NO) || self.isQuitting ||
+      self.isDisconnecting) {
+    return;
+  }
 
-	[self quitWithComment:comment];
+  self.isQuitting = YES;
+
+  [self cancelReconnect];
+
+  if (self.isTerminating == NO) {
+    [self postEventToViewController:@"serverDisconnecting"];
+  }
+
+  [RZNotificationCenter() postNotificationName:IRCClientWillSendQuitNotification
+                                        object:self];
+
+  [self.socket clearSendQueue];
+
+  /* If -isLoggedIn is NO, then the connection does not need
+   to be closed gracefully because the user hasn't even joined
+   a channel yet, so who are we doing it for? */
+  if (self.isLoggedIn == NO) {
+    [self disconnect];
+
+    return;
+  }
+
+  [self send:@"QUIT", comment, nil];
+
+  /* We give it two seconds before forcefully breaking so that the graceful
+   quit with the quit message above can be performed. */
+  [self performSelectorInCommonModes:@selector(disconnect)
+                          withObject:nil
+                          afterDelay:2.0];
 }
 
-- (void)quitWithComment:(NSString *)comment
-{
-	NSParameterAssert(comment != nil);
+- (void)cancelReconnect {
+  self.reconnectEnabled = NO;
+  self.reconnectEnabledBecauseOfSleepMode = NO;
 
-	if ((self.isConnecting == NO && self.isConnected == NO) || self.isQuitting || self.isDisconnecting) {
-		return;
-	}
+  [self stopReconnectTimer];
 
-	self.isQuitting = YES;
-
-	[self cancelReconnect];
-
-	if (self.isTerminating == NO) {
-		[self postEventToViewController:@"serverDisconnecting"];
-	}
-
-	[RZNotificationCenter() postNotificationName:IRCClientWillSendQuitNotification object:self];
-
-	[self.socket clearSendQueue];
-
-	/* If -isLoggedIn is NO, then the connection does not need 
-	 to be closed gracefully because the user hasn't even joined
-	 a channel yet, so who are we doing it for? */
-	if (self.isLoggedIn == NO) {
-		[self disconnect];
-
-		return;
-	}
-
-	[self send:@"QUIT", comment, nil];
-
-	/* We give it two seconds before forcefully breaking so that the graceful
-	 quit with the quit message above can be performed. */
-	[self performSelectorInCommonModes:@selector(disconnect) withObject:nil afterDelay:2.0];
+  [mainWindow() updateTitleFor:self];
 }
 
-- (void)cancelReconnect
-{
-	self.reconnectEnabled = NO;
-	self.reconnectEnabledBecauseOfSleepMode = NO;
+- (void)changeNickname:(NSString *)newNickname {
+  NSParameterAssert(newNickname != nil);
 
-	[self stopReconnectTimer];
+  if (self.isConnected == NO) {
+    return;
+  }
 
-	[mainWindow() updateTitleFor:self];
+  if (newNickname.length == 0) {
+    return;
+  }
+
+  [self send:@"NICK", newNickname, nil];
 }
 
-- (void)changeNickname:(NSString *)newNickname
-{
-	NSParameterAssert(newNickname != nil);
-
-	if (self.isConnected == NO) {
-		return;
-	}
-
-	if (newNickname.length == 0) {
-		return;
-	}
-
-	[self send:@"NICK", newNickname, nil];
+- (void)joinKickedChannel:(IRCChannel *)channel {
+  [self joinChannel:channel];
 }
 
-- (void)joinKickedChannel:(IRCChannel *)channel
-{
-	[self joinChannel:channel];
+- (void)joinChannel:(IRCChannel *)channel {
+  [self joinChannel:channel password:nil];
+}
+
+- (void)joinUnlistedChannel:(NSString *)channel {
+  [self joinUnlistedChannel:channel password:nil];
 }
 
 - (void)joinChannel:(IRCChannel *)channel
-{
-	[self joinChannel:channel password:nil];
+           password:(nullable NSString *)password {
+  NSParameterAssert(channel != nil);
+
+  if (channel.isChannel == NO || channel.isActive) {
+    return;
+  }
+
+  channel.status = IRCChannelStatusJoining;
+
+  if (password == nil) {
+    password = channel.secretKey;
+  }
+
+  [self forceJoinChannel:channel.name password:password];
 }
 
 - (void)joinUnlistedChannel:(NSString *)channel
-{
-	[self joinUnlistedChannel:channel password:nil];
+                   password:(nullable NSString *)password {
+  NSParameterAssert(channel != nil);
+
+  if ([self stringIsChannelName:channel] == NO) {
+    // Many IRCd (I don't know of any that don't) use "JOIN 0" as a
+    // secret way to have the user part all channels they are in.
+    if ([channel isEqualToString:@"0"]) {
+      [self forceJoinChannel:channel password:password];
+    }
+
+    return;
+  }
+
+  IRCChannel *channelPointer = [self findChannel:channel];
+
+  if (channelPointer) {
+    [self joinChannel:channelPointer password:password];
+
+    return;
+  }
+
+  [self forceJoinChannel:channel password:password];
 }
 
-- (void)joinChannel:(IRCChannel *)channel password:(nullable NSString *)password
-{
-	NSParameterAssert(channel != nil);
+- (void)forceJoinChannel:(NSString *)channel
+                password:(nullable NSString *)password {
+  NSParameterAssert(channel != nil);
 
-	if (channel.isChannel == NO || channel.isActive) {
-		return;
-	}
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	channel.status = IRCChannelStatusJoining;
+  if (channel.length == 0) {
+    return;
+  }
 
-	if (password == nil) {
-		password = channel.secretKey;
-	}
+  [self warnIfJoiningChannelsExceedsLimit:@[ channel ]];
 
-	[self forceJoinChannel:channel.name password:password];
-}
-
-- (void)joinUnlistedChannel:(NSString *)channel password:(nullable NSString *)password
-{
-	NSParameterAssert(channel != nil);
-
-	if ([self stringIsChannelName:channel] == NO) {
-		// Many IRCd (I don't know of any that don't) use "JOIN 0" as a
-		// secret way to have the user part all channels they are in.
-		if ([channel isEqualToString:@"0"]) {
-			[self forceJoinChannel:channel password:password];
-		}
-
-		return;
-	}
-
-	IRCChannel *channelPointer = [self findChannel:channel];
-
-	if (channelPointer) {
-		[self joinChannel:channelPointer password:password];
-
-		return;
-	}
-
-	[self forceJoinChannel:channel password:password];
-}
-
-- (void)forceJoinChannel:(NSString *)channel password:(nullable NSString *)password
-{
-	NSParameterAssert(channel != nil);
-
-	if (self.isLoggedIn == NO) {
-		return;
-	}
-
-	if (channel.length == 0) {
-		return;
-	}
-
-	[self warnIfJoiningChannelsExceedsLimit:@[ channel ]];
-
-	[self send:@"JOIN", channel, password, nil];
+  [self send:@"JOIN", channel, password, nil];
 }
 
 /* CHANLIMIT (ISUPPORT): warn in the server console, before the JOIN is
@@ -13654,1290 +14124,1303 @@ NSString *const IRCClientUserNicknameChangedNotification = @"IRCClientUserNickna
  channels sharing a prefix past the advertised limit. The join is still
  attempted because the server is the authority (and the limit can be
  raised for operators). */
-- (void)warnIfJoiningChannelsExceedsLimit:(NSArray<NSString *> *)channels
-{
-	NSParameterAssert(channels != nil);
+- (void)warnIfJoiningChannelsExceedsLimit:(NSArray<NSString *> *)channels {
+  NSParameterAssert(channels != nil);
 
-	IRCISupportInfo *supportInfo = self.supportInfo;
+  IRCISupportInfo *supportInfo = self.supportInfo;
 
-	if (supportInfo.channelLimits.count == 0) {
-		return;
-	}
+  if (supportInfo.channelLimits.count == 0) {
+    return;
+  }
 
-	NSMutableDictionary<NSString *, NSNumber *> *joinedCountByPrefix = [NSMutableDictionary dictionary];
+  NSMutableDictionary<NSString *, NSNumber *> *joinedCountByPrefix =
+      [NSMutableDictionary dictionary];
 
-	for (IRCChannel *channel in self.channelList) {
-		if (channel.isChannel == NO || channel.isActive == NO) {
-			continue;
-		}
+  for (IRCChannel *channel in self.channelList) {
+    if (channel.isChannel == NO || channel.isActive == NO) {
+      continue;
+    }
 
-		NSString *prefix = [channel.name stringCharacterAtIndex:0];
+    NSString *prefix = [channel.name stringCharacterAtIndex:0];
 
-		joinedCountByPrefix[prefix] = @([joinedCountByPrefix[prefix] unsignedIntegerValue] + 1);
-	}
+    joinedCountByPrefix[prefix] =
+        @([joinedCountByPrefix[prefix] unsignedIntegerValue] + 1);
+  }
 
-	NSMutableSet<NSString *> *warnedPrefixes = [NSMutableSet set];
+  NSMutableSet<NSString *> *warnedPrefixes = [NSMutableSet set];
 
-	for (NSString *channelName in channels) {
-		if ([self stringIsChannelName:channelName] == NO) {
-			continue;
-		}
+  for (NSString *channelName in channels) {
+    if ([self stringIsChannelName:channelName] == NO) {
+      continue;
+    }
 
-		IRCChannel *channel = [self findChannel:channelName];
+    IRCChannel *channel = [self findChannel:channelName];
 
-		if (channel.isActive) {
-			continue;
-		}
+    if (channel.isActive) {
+      continue;
+    }
 
-		NSString *prefix = [channelName stringCharacterAtIndex:0];
+    NSString *prefix = [channelName stringCharacterAtIndex:0];
 
-		NSUInteger limit = [supportInfo channelLimitForChannelNamed:channelName];
+    NSUInteger limit = [supportInfo channelLimitForChannelNamed:channelName];
 
-		if (limit == 0) {
-			continue;
-		}
+    if (limit == 0) {
+      continue;
+    }
 
-		NSUInteger joinedCount = [joinedCountByPrefix[prefix] unsignedIntegerValue] + 1;
+    NSUInteger joinedCount =
+        [joinedCountByPrefix[prefix] unsignedIntegerValue] + 1;
 
-		joinedCountByPrefix[prefix] = @(joinedCount);
+    joinedCountByPrefix[prefix] = @(joinedCount);
 
-		if (joinedCount <= limit || [warnedPrefixes containsObject:prefix]) {
-			continue;
-		}
+    if (joinedCount <= limit || [warnedPrefixes containsObject:prefix]) {
+      continue;
+    }
 
-		[warnedPrefixes addObject:prefix];
+    [warnedPrefixes addObject:prefix];
 
-		[self printDebugInformationToConsole:TXTLS(@"IRC[w7c-lm]", channelName, limit, prefix)];
-	}
+    [self printDebugInformationToConsole:TXTLS(@"IRC[w7c-lm]", channelName,
+                                               limit, prefix)];
+  }
+}
+
+- (void)joinUnlistedChannelsWithStringAndSelectBestMatch:(NSString *)channels {
+  [self joinUnlistedChannelsWithStringAndSelectBestMatch:channels
+                                               passwords:nil];
 }
 
 - (void)joinUnlistedChannelsWithStringAndSelectBestMatch:(NSString *)channels
-{
-	[self joinUnlistedChannelsWithStringAndSelectBestMatch:channels passwords:nil];
+                                               passwords:(nullable NSString *)
+                                                             passwords {
+  NSParameterAssert(channels != nil);
+
+  if (channels.length == 0) {
+    return;
+  }
+
+  NSArray *targets = [channels componentsSeparatedByString:@","];
+
+  [self joinUnlistedChannelsAndSelectBestMatch:targets passwords:passwords];
 }
 
-- (void)joinUnlistedChannelsWithStringAndSelectBestMatch:(NSString *)channels passwords:(nullable NSString *)passwords
-{
-	NSParameterAssert(channels != nil);
-
-	if (channels.length == 0) {
-		return;
-	}
-
-	NSArray *targets = [channels componentsSeparatedByString:@","];
-
-	[self joinUnlistedChannelsAndSelectBestMatch:targets passwords:passwords];
+- (void)joinUnlistedChannelsAndSelectBestMatch:(NSArray<NSString *> *)channels {
+  [self joinUnlistedChannelsAndSelectBestMatch:channels passwords:nil];
 }
 
 - (void)joinUnlistedChannelsAndSelectBestMatch:(NSArray<NSString *> *)channels
-{
-	[self joinUnlistedChannelsAndSelectBestMatch:channels passwords:nil];
+                                     passwords:(nullable NSString *)passwords {
+  NSParameterAssert(channels != nil);
+
+  if (self.isLoggedIn == NO) {
+    return;
+  }
+
+  if (channels.count == 0) {
+    return;
+  }
+
+  __block BOOL performJoin = YES;
+
+  __block IRCChannel *channelToSelect = nil;
+
+  for (NSString *channel in channels) {
+    if (channelToSelect == nil && [self stringIsChannelName:channel]) {
+      channelToSelect = [self findChannelOrCreate:channel];
+
+      performJoin = (channelToSelect.isActive == NO || channels.count > 1);
+
+      break;
+    }
+  }
+
+  if (performJoin) {
+    [self warnIfJoiningChannelsExceedsLimit:channels];
+
+    [self
+        send:@"JOIN", [channels componentsJoinedByString:@","], passwords, nil];
+  }
+
+  if (channelToSelect) {
+    [mainWindow() select:channelToSelect];
+  }
 }
 
-- (void)joinUnlistedChannelsAndSelectBestMatch:(NSArray<NSString *> *)channels passwords:(nullable NSString *)passwords
-{
-	NSParameterAssert(channels != nil);
+- (void)joinChannels:(NSArray<IRCChannel *> *)channels {
+  NSParameterAssert(channels != nil);
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	if (channels.count == 0) {
-		return;
-	}
+  if (channels.count == 0) {
+    return;
+  }
 
-	__block BOOL performJoin = YES;
+  NSMutableString *joinStringWithoutKey = nil;
+  NSMutableString *joinStringWithKey = nil;
 
-	__block IRCChannel *channelToSelect = nil;
+  NSMutableString *keyString = nil;
 
-	for (NSString *channel in channels) {
-		if (channelToSelect == nil && [self stringIsChannelName:channel]) {
-			channelToSelect = [self findChannelOrCreate:channel];
+  NSMutableArray<NSString *> *channelNames =
+      [NSMutableArray arrayWithCapacity:channels.count];
 
-			performJoin = (channelToSelect.isActive == NO || channels.count > 1);
+  for (IRCChannel *channel in channels) {
+    if (channel.isChannel == NO || channel.isActive) {
+      continue;
+    }
 
-			break;
-		}
-	}
+    [channelNames addObject:channel.name];
+  }
 
-	if (performJoin) {
-		[self warnIfJoiningChannelsExceedsLimit:channels];
+  [self warnIfJoiningChannelsExceedsLimit:channelNames];
 
-		[self send:@"JOIN", [channels componentsJoinedByString:@","], passwords, nil];
-	}
+  for (IRCChannel *channel in channels) {
+    if (channel.isChannel == NO || channel.isActive) {
+      continue;
+    }
 
-	if (channelToSelect) {
-		[mainWindow() select:channelToSelect];
-	}
-}
+    channel.status = IRCChannelStatusJoining;
 
-- (void)joinChannels:(NSArray<IRCChannel *> *)channels
-{
-	NSParameterAssert(channels != nil);
+    NSString *password = channel.secretKey;
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+    if (password.length == 0) {
+      if (joinStringWithoutKey == nil) {
+        joinStringWithoutKey = [NSMutableString stringWithString:channel.name];
+      } else {
+        [joinStringWithoutKey appendFormat:@",%@", channel.name];
+      }
+    } else {
+      if (joinStringWithKey == nil) {
+        joinStringWithKey = [NSMutableString stringWithString:channel.name];
+      } else {
+        [joinStringWithKey appendFormat:@",%@", channel.name];
+      }
 
-	if (channels.count == 0) {
-		return;
-	}
+      if (keyString == nil) {
+        keyString = [NSMutableString stringWithString:password];
+      } else {
+        [keyString appendFormat:@",%@", password];
+      }
+    }
+  }
 
-	NSMutableString *joinStringWithoutKey = nil;
-	NSMutableString *joinStringWithKey = nil;
+  if (joinStringWithoutKey) {
+    [self send:@"JOIN", joinStringWithoutKey, nil];
+  }
 
-	NSMutableString *keyString = nil;
-
-	NSMutableArray<NSString *> *channelNames = [NSMutableArray arrayWithCapacity:channels.count];
-
-	for (IRCChannel *channel in channels) {
-		if (channel.isChannel == NO || channel.isActive) {
-			continue;
-		}
-
-		[channelNames addObject:channel.name];
-	}
-
-	[self warnIfJoiningChannelsExceedsLimit:channelNames];
-
-	for (IRCChannel *channel in channels) {
-		if (channel.isChannel == NO || channel.isActive) {
-			continue;
-		}
-
-		channel.status = IRCChannelStatusJoining;
-
-		NSString *password = channel.secretKey;
-
-		if (password.length == 0) {
-			if (joinStringWithoutKey == nil) {
-				joinStringWithoutKey = [NSMutableString stringWithString:channel.name];
-			} else {
-				[joinStringWithoutKey appendFormat:@",%@", channel.name];
-			}
-		} else {
-			if (joinStringWithKey == nil) {
-				joinStringWithKey = [NSMutableString stringWithString:channel.name];
-			} else {
-				[joinStringWithKey appendFormat:@",%@", channel.name];
-			}
-
-			if (keyString == nil) {
-				keyString = [NSMutableString stringWithString:password];
-			} else {
-				[keyString appendFormat:@",%@", password];
-			}
-		}
-	}
-
-	if (joinStringWithoutKey) {
-		[self send:@"JOIN", joinStringWithoutKey, nil];
-	}
-
-	if (joinStringWithKey && keyString) {
-		[self send:@"JOIN", joinStringWithKey, keyString, nil];
-	}
+  if (joinStringWithKey && keyString) {
+    [self send:@"JOIN", joinStringWithKey, keyString, nil];
+  }
 }
 
 #pragma mark -
 #pragma mark Multi-target Messages
 
 - (void)sendText:(NSAttributedString *)string
-	   asCommand:(IRCRemoteCommand)command
-	  toChannels:(NSArray<IRCChannel *> *)channels
-{
-	NSParameterAssert(string != nil);
-	NSParameterAssert(channels != nil);
+       asCommand:(IRCRemoteCommand)command
+      toChannels:(NSArray<IRCChannel *> *)channels {
+  NSParameterAssert(string != nil);
+  NSParameterAssert(channels != nil);
 
-	if (string.length == 0 || channels.count == 0) {
-		return;
-	}
+  if (string.length == 0 || channels.count == 0) {
+    return;
+  }
 
-	NSString *commandToSend = nil;
+  NSString *commandToSend = nil;
 
-	TVCLogLineType lineType = TVCLogLineTypeUndefined;
+  TVCLogLineType lineType = TVCLogLineTypeUndefined;
 
-	if (command == IRCRemoteCommandPrivmsg) {
-		commandToSend = @"PRIVMSG";
+  if (command == IRCRemoteCommandPrivmsg) {
+    commandToSend = @"PRIVMSG";
 
-		lineType = TVCLogLineTypePrivateMessage;
-	} else if (command == IRCRemoteCommandPrivmsgAction) {
-		commandToSend = @"PRIVMSG";
+    lineType = TVCLogLineTypePrivateMessage;
+  } else if (command == IRCRemoteCommandPrivmsgAction) {
+    commandToSend = @"PRIVMSG";
 
-		lineType = TVCLogLineTypeAction;
-	} else if (command == IRCRemoteCommandNotice) {
-		commandToSend = @"NOTICE";
+    lineType = TVCLogLineTypeAction;
+  } else if (command == IRCRemoteCommandNotice) {
+    commandToSend = @"NOTICE";
 
-		lineType = TVCLogLineTypeNotice;
-	}
+    lineType = TVCLogLineTypeNotice;
+  }
 
-	if (commandToSend == nil) {
-		NSParameterAssert(commandToSend != nil);
+  if (commandToSend == nil) {
+    NSParameterAssert(commandToSend != nil);
 
-		return;
-	}
+    return;
+  }
 
-	/* Without an advertised TARGMAX / MAXTARGETS every target gets its own
-	 line which is what every server accepts. Queries and utility windows
-	 always take that path because their messages may be encrypted. */
-	NSUInteger targetLimit = [self.supportInfo maximumTargetsForCommand:commandToSend];
+  /* Without an advertised TARGMAX / MAXTARGETS every target gets its own
+   line which is what every server accepts. Queries and utility windows
+   always take that path because their messages may be encrypted. */
+  NSUInteger targetLimit =
+      [self.supportInfo maximumTargetsForCommand:commandToSend];
 
-	NSMutableArray<IRCChannel *> *groupedChannels = [NSMutableArray arrayWithCapacity:channels.count];
+  NSMutableArray<IRCChannel *> *groupedChannels =
+      [NSMutableArray arrayWithCapacity:channels.count];
 
-	for (IRCChannel *channel in channels) {
-		if (targetLimit > 1 && channel.isChannel) {
-			[groupedChannels addObject:channel];
-		} else {
-			[self sendText:string asCommand:command toChannel:channel];
-		}
-	}
+  for (IRCChannel *channel in channels) {
+    if (targetLimit > 1 && channel.isChannel) {
+      [groupedChannels addObject:channel];
+    } else {
+      [self sendText:string asCommand:command toChannel:channel];
+    }
+  }
 
-	if (groupedChannels.count == 0) {
-		return;
-	}
+  if (groupedChannels.count == 0) {
+    return;
+  }
 
-	NSArray<NSString *> *targetNames = [groupedChannels valueForKey:@"name"];
+  NSArray<NSString *> *targetNames = [groupedChannels valueForKey:@"name"];
 
-	NSArray<NSArray<NSString *> *> *targetGroups = [IRCISupportInfo chunkTargets:targetNames limit:targetLimit];
+  NSArray<NSArray<NSString *> *> *targetGroups =
+      [IRCISupportInfo chunkTargets:targetNames limit:targetLimit];
 
-	BOOL echoMessageEnabled = [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage];
+  BOOL echoMessageEnabled =
+      [self isCapabilityEnabled:ClientIRCv3SupportedCapabilityEchoMessage];
 
-	NSUInteger groupOffset = 0;
+  NSUInteger groupOffset = 0;
 
-	for (NSArray<NSString *> *targetGroup in targetGroups) {
-		NSArray<IRCChannel *> *groupChannels =
-			[groupedChannels subarrayWithRange:NSMakeRange(groupOffset, targetGroup.count)];
+  for (NSArray<NSString *> *targetGroup in targetGroups) {
+    NSArray<IRCChannel *> *groupChannels = [groupedChannels
+        subarrayWithRange:NSMakeRange(groupOffset, targetGroup.count)];
 
-		groupOffset += targetGroup.count;
+    groupOffset += targetGroup.count;
 
-		NSString *targetList = [targetGroup componentsJoinedByString:@","];
+    NSString *targetList = [targetGroup componentsJoinedByString:@","];
 
-		for (NSAttributedString *line in string.splitIntoLines) {
-			NSMutableAttributedString *lineMutable = [line mutableCopy];
+    for (NSAttributedString *line in string.splitIntoLines) {
+      NSMutableAttributedString *lineMutable = [line mutableCopy];
 
-			while (lineMutable.length > 0) {
-				/* The whole target list is passed so the line budget accounts for it. */
-				NSString *message = [lineMutable stringFormattedForChannel:targetList
-																  onClient:self
-															  withLineType:lineType];
+      while (lineMutable.length > 0) {
+        /* The whole target list is passed so the line budget accounts for it.
+         */
+        NSString *message = [lineMutable stringFormattedForChannel:targetList
+                                                          onClient:self
+                                                      withLineType:lineType];
 
-				if (echoMessageEnabled == NO) {
-					for (IRCChannel *channel in groupChannels) {
-						[self print:[IRCClient redactedServiceMessage:message sentTo:channel.name]
-									 by:self.userNickname
-							  inChannel:channel
-								 asType:lineType
-								command:commandToSend
-							 receivedAt:[NSDate date]
-							isEncrypted:NO];
-					}
-				}
+        if (echoMessageEnabled == NO) {
+          for (IRCChannel *channel in groupChannels) {
+            [self print:[IRCClient redactedServiceMessage:message
+                                                   sentTo:channel.name]
+                         by:self.userNickname
+                  inChannel:channel
+                     asType:lineType
+                    command:commandToSend
+                 receivedAt:[NSDate date]
+                isEncrypted:NO];
+          }
+        }
 
-				NSString *sendMessage = message;
+        NSString *sendMessage = message;
 
-				if (lineType == TVCLogLineTypeAction) {
-					sendMessage = [NSString stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
-				}
+        if (lineType == TVCLogLineTypeAction) {
+          sendMessage = [NSString
+              stringWithFormat:@"%cACTION %@%c", 0x01, sendMessage, 0x01];
+        }
 
-				[self send:commandToSend, targetList, sendMessage, nil];
-			}
-		}
-	}
+        [self send:commandToSend, targetList, sendMessage, nil];
+      }
+    }
+  }
 
-	[self processBundlesUserMessage:string.string command:commandToSend];
+  [self processBundlesUserMessage:string.string command:commandToSend];
 }
 
 #pragma mark -
 #pragma mark Commands
 
+- (void)partUnlistedChannel:(NSString *)channel {
+  [self partUnlistedChannel:channel withComment:nil];
+}
+
+- (void)partChannel:(IRCChannel *)channel {
+  [self partChannel:channel withComment:nil];
+}
+
 - (void)partUnlistedChannel:(NSString *)channel
-{
-	[self partUnlistedChannel:channel withComment:nil];
+                withComment:(nullable NSString *)comment {
+  NSParameterAssert(channel != nil);
+
+  if ([self stringIsChannelName:channel] == NO) {
+    return;
+  }
+
+  IRCChannel *channelPointer = [self findChannel:channel];
+
+  if (channelPointer == nil) {
+    return;
+  }
+
+  [self partChannel:channelPointer withComment:comment];
 }
 
 - (void)partChannel:(IRCChannel *)channel
-{
-	[self partChannel:channel withComment:nil];
+        withComment:(nullable NSString *)comment {
+  NSParameterAssert(channel != nil);
+
+  if (self.isLoggedIn == NO) {
+    return;
+  }
+
+  if (channel.isChannel == NO || channel.isActive == NO) {
+    return;
+  }
+
+  if (comment == nil) {
+    comment = self.config.normalLeavingComment;
+  }
+
+  [self send:@"PART", channel.name, comment, nil];
 }
 
-- (void)partUnlistedChannel:(NSString *)channel withComment:(nullable NSString *)comment
-{
-	NSParameterAssert(channel != nil);
-
-	if ([self stringIsChannelName:channel] == NO) {
-		return;
-	}
-
-	IRCChannel *channelPointer = [self findChannel:channel];
-
-	if (channelPointer == nil) {
-		return;
-	}
-
-	[self partChannel:channelPointer withComment:comment];
+- (void)sendWhoToChannel:(IRCChannel *)channel {
+  [self sendWhoToChannel:channel hideResponse:NO];
 }
 
-- (void)partChannel:(IRCChannel *)channel withComment:(nullable NSString *)comment
-{
-	NSParameterAssert(channel != nil);
+- (void)sendWhoToChannel:(IRCChannel *)channel hideResponse:(BOOL)hideResponse {
+  NSParameterAssert(channel != nil);
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+  if (channel.isChannel == NO) {
+    return;
+  }
 
-	if (channel.isChannel == NO || channel.isActive == NO) {
-		return;
-	}
-
-	if (comment == nil) {
-		comment = self.config.normalLeavingComment;
-	}
-
-	[self send:@"PART", channel.name, comment, nil];
+  [self sendWhoToChannelNamed:channel.name hideResponse:hideResponse];
 }
 
-- (void)sendWhoToChannel:(IRCChannel *)channel
-{
-	[self sendWhoToChannel:channel hideResponse:NO];
-}
-
-- (void)sendWhoToChannel:(IRCChannel *)channel hideResponse:(BOOL)hideResponse
-{
-	NSParameterAssert(channel != nil);
-
-	if (channel.isChannel == NO) {
-		return;
-	}
-
-	[self sendWhoToChannelNamed:channel.name hideResponse:hideResponse];
+- (void)sendWhoToChannelNamed:(NSString *)channel {
+  [self sendWhoToChannelNamed:channel hideResponse:NO];
 }
 
 - (void)sendWhoToChannelNamed:(NSString *)channel
-{
-	[self sendWhoToChannelNamed:channel hideResponse:NO];
+                 hideResponse:(BOOL)hideResponse {
+  NSParameterAssert(channel != nil);
+
+  if (self.isLoggedIn == NO) {
+    return;
+  }
+
+  if (channel.length == 0) {
+    return;
+  }
+
+  if (hideResponse == NO) {
+    [self.requestedCommands recordWhoRequestOpenedAsVisible];
+  } else {
+    [self.requestedCommands recordWhoRequestOpened];
+  }
+
+  /* WHOX adds the account to each reply. The token lets
+   RPL_WHOSPCRPL tell our requests apart from the user's own. */
+  if (self.supportInfo.whoxSupported) {
+    NSString *fields =
+        [NSString stringWithFormat:@"%%tcuhnfar,%@", IRCClientWhoxToken];
+
+    [self send:@"WHO", channel, fields, nil];
+
+    return;
+  }
+
+  [self send:@"WHO", channel, nil];
 }
 
-- (void)sendWhoToChannelNamed:(NSString *)channel hideResponse:(BOOL)hideResponse
-{
-	NSParameterAssert(channel != nil);
+- (void)sendWhois:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	if (channel.length == 0) {
-		return;
-	}
+  if (nickname.length == 0) {
+    return;
+  }
 
-	if (hideResponse == NO) {
-		[self.requestedCommands recordWhoRequestOpenedAsVisible];
-	} else {
-		[self.requestedCommands recordWhoRequestOpened];
-	}
-
-	/* WHOX adds the account to each reply. The token lets
-	 RPL_WHOSPCRPL tell our requests apart from the user's own. */
-	if (self.supportInfo.whoxSupported) {
-		NSString *fields = [NSString stringWithFormat:@"%%tcuhnfar,%@", IRCClientWhoxToken];
-
-		[self send:@"WHO", channel, fields, nil];
-
-		return;
-	}
-
-	[self send:@"WHO", channel, nil];
+  [self send:@"WHOIS", nickname, nickname, nil];
 }
 
-- (void)sendWhois:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (void)kick:(NSString *)nickname inChannel:(IRCChannel *)channel {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(channel != nil);
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	if (nickname.length == 0) {
-		return;
-	}
+  if (channel.isChannel == NO || channel.isActive == NO) {
+    return;
+  }
 
-	[self send:@"WHOIS", nickname, nickname, nil];
+  if (nickname.length == 0) {
+    return;
+  }
+
+  NSString *reason = [TPCPreferences defaultKickMessage];
+
+  [self send:@"KICK", channel.name, nickname, reason, nil];
 }
 
-- (void)kick:(NSString *)nickname inChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(channel != nil);
+- (void)toggleAwayStatusWithComment:(nullable NSString *)comment {
+  if (self.userIsAway) {
+    [self toggleAwayStatus:NO withComment:nil];
+  } else {
+    if (comment.length == 0) {
+      comment = TXTLS(@"IRC[xog-in]");
+    }
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
-
-	if (channel.isChannel == NO || channel.isActive == NO) {
-		return;
-	}
-
-	if (nickname.length == 0) {
-		return;
-	}
-
-	NSString *reason = [TPCPreferences defaultKickMessage];
-
-	[self send:@"KICK", channel.name, nickname, reason, nil];
+    [self toggleAwayStatus:YES withComment:comment];
+  }
 }
 
-- (void)toggleAwayStatusWithComment:(nullable NSString *)comment
-{
-	if (self.userIsAway) {
-		[self toggleAwayStatus:NO withComment:nil];
-	} else {
-		if (comment.length == 0) {
-			comment = TXTLS(@"IRC[xog-in]");
-		}
+- (void)toggleAwayStatus:(BOOL)setAway {
+  NSString *comment = TXTLS(@"IRC[xog-in]");
 
-		[self toggleAwayStatus:YES withComment:comment];
-	}
+  [self toggleAwayStatus:setAway withComment:comment];
 }
 
 - (void)toggleAwayStatus:(BOOL)setAway
-{
-	NSString *comment = TXTLS(@"IRC[xog-in]");
+             withComment:(nullable NSString *)comment {
+  NSParameterAssert(setAway == NO || comment != nil);
 
-	[self toggleAwayStatus:setAway withComment:comment];
+  if (self.isLoggedIn == NO) {
+    return;
+  }
+
+  if (setAway) {
+    [self send:@"AWAY", comment, nil];
+  } else {
+    [self send:@"AWAY", nil];
+  }
+
+  self.lastAwayMessage = (setAway ? comment : nil);
+
+  NSString *newNickname = nil;
+
+  if (setAway) {
+    newNickname = self.config.awayNickname;
+
+    self.preAwayUserNickname = self.userNickname;
+  } else {
+    newNickname = self.preAwayUserNickname;
+
+    self.preAwayUserNickname = nil;
+
+    /* If we have an away nickname configured but no preAwayNickname set,
+     then use the configured nickname instead. User probably was on bouncer
+     and relaunched Glasstual, losing preAwayNickname.*/
+    if (newNickname == nil && self.config.awayNickname.length > 0) {
+      newNickname = self.config.nickname;
+    }
+  }
+
+  if (newNickname) {
+    [self changeNickname:newNickname];
+  }
 }
 
-- (void)toggleAwayStatus:(BOOL)setAway withComment:(nullable NSString *)comment
-{
-	NSParameterAssert(setAway == NO || comment != nil);
+- (void)presentCertificateTrustInformation {
+  if (self.isSecured == NO) {
+    return;
+  }
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
-
-	if (setAway) {
-		[self send:@"AWAY", comment, nil];
-	} else {
-		[self send:@"AWAY", nil];
-	}
-
-	self.lastAwayMessage = (setAway ? comment : nil);
-
-	NSString *newNickname = nil;
-
-	if (setAway) {
-		newNickname = self.config.awayNickname;
-
-		self.preAwayUserNickname = self.userNickname;
-	} else {
-		newNickname = self.preAwayUserNickname;
-
-		self.preAwayUserNickname = nil;
-
-		/* If we have an away nickname configured but no preAwayNickname set,
-		 then use the configured nickname instead. User probably was on bouncer
-		 and relaunched Glasstual, losing preAwayNickname.*/
-		if (newNickname == nil && self.config.awayNickname.length > 0) {
-			newNickname = self.config.nickname;
-		}
-	}
-
-	if (newNickname) {
-		[self changeNickname:newNickname];
-	}
+  [self.socket openSecuredConnectionCertificateModal];
 }
 
-- (void)presentCertificateTrustInformation
-{
-	if (self.isSecured == NO) {
-		return;
-	}
-
-	[self.socket openSecuredConnectionCertificateModal];
+- (void)requestModesForChannel:(IRCChannel *)channel {
+  [self sendModes:nil withParameters:nil inChannel:channel];
 }
 
-- (void)requestModesForChannel:(IRCChannel *)channel
-{
-	[self sendModes:nil withParameters:nil inChannel:channel];
-}
-
-- (void)requestModesForChannelNamed:(NSString *)channel
-{
-	[self sendModes:nil withParameters:nil inChannelNamed:channel];
+- (void)requestModesForChannelNamed:(NSString *)channel {
+  [self sendModes:nil withParameters:nil inChannelNamed:channel];
 }
 
 - (void)sendModes:(nullable NSString *)modeSymbols
-	withParameters:(nullable NSArray<NSString *> *)parameters
-		 inChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+    withParameters:(nullable NSArray<NSString *> *)parameters
+         inChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	[self sendModes:modeSymbols withParameters:parameters inChannelNamed:channel.name];
+  [self sendModes:modeSymbols
+      withParameters:parameters
+      inChannelNamed:channel.name];
 }
 
 - (void)sendModes:(nullable NSString *)modeSymbols
-	withParametersString:(nullable NSString *)parametersString
-			   inChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+    withParametersString:(nullable NSString *)parametersString
+               inChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	[self sendModes:modeSymbols withParametersString:parametersString inChannelNamed:channel.name];
+  [self sendModes:modeSymbols
+      withParametersString:parametersString
+            inChannelNamed:channel.name];
 }
 
 - (void)sendModes:(nullable NSString *)modeSymbols
-	withParameters:(nullable NSArray<NSString *> *)parameters
-	inChannelNamed:(NSString *)channel
-{
-	NSString *parametersString = [parameters componentsJoinedByString:@" "];
+    withParameters:(nullable NSArray<NSString *> *)parameters
+    inChannelNamed:(NSString *)channel {
+  NSString *parametersString = [parameters componentsJoinedByString:@" "];
 
-	[self sendModes:modeSymbols withParametersString:parametersString inChannelNamed:channel];
+  [self sendModes:modeSymbols
+      withParametersString:parametersString
+            inChannelNamed:channel];
 }
 
 - (void)sendModes:(nullable NSString *)modeSymbols
-	withParametersString:(nullable NSString *)parametersString
-		  inChannelNamed:(NSString *)channel
-{
-	NSParameterAssert(channel != nil);
+    withParametersString:(nullable NSString *)parametersString
+          inChannelNamed:(NSString *)channel {
+  NSParameterAssert(channel != nil);
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	if (channel.length == 0) {
-		return;
-	}
+  if (channel.length == 0) {
+    return;
+  }
 
-	[self send:@"MODE", channel, modeSymbols, parametersString, nil];
+  [self send:@"MODE", channel, modeSymbols, parametersString, nil];
 }
 
-- (void)sendPing:(NSString *)tokenString
-{
-	NSParameterAssert(tokenString != nil);
+- (void)sendPing:(NSString *)tokenString {
+  NSParameterAssert(tokenString != nil);
 
-	if (self.isConnected == NO) {
-		return;
-	}
+  if (self.isConnected == NO) {
+    return;
+  }
 
-	[self send:@"PING", tokenString, nil];
+  [self send:@"PING", tokenString, nil];
 }
 
-- (void)sendPong:(NSString *)tokenString
-{
-	NSParameterAssert(tokenString != nil);
+- (void)sendPong:(NSString *)tokenString {
+  NSParameterAssert(tokenString != nil);
 
-	if (self.isConnected == NO) {
-		return;
-	}
+  if (self.isConnected == NO) {
+    return;
+  }
 
-	[self send:@"PONG", tokenString, nil];
+  [self send:@"PONG", tokenString, nil];
 }
 
-- (void)sendInviteTo:(NSString *)nickname toJoinChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)sendInviteTo:(NSString *)nickname toJoinChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if (channel.isChannel == NO) {
-		return;
-	}
+  if (channel.isChannel == NO) {
+    return;
+  }
 
-	[self sendInviteTo:nickname toJoinChannelNamed:channel.name];
+  [self sendInviteTo:nickname toJoinChannelNamed:channel.name];
 }
 
-- (void)sendInviteTo:(NSString *)nickname toJoinChannelNamed:(NSString *)channel
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(channel != nil);
+- (void)sendInviteTo:(NSString *)nickname
+    toJoinChannelNamed:(NSString *)channel {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(channel != nil);
 
-	if (nickname.length == 0 || channel.length == 0) {
-		return;
-	}
+  if (nickname.length == 0 || channel.length == 0) {
+    return;
+  }
 
-	[self send:@"INVITE", nickname, channel, nil];
+  [self send:@"INVITE", nickname, channel, nil];
 }
 
-- (void)requestTopicForChannel:(IRCChannel *)channel
-{
-	[self sendTopicTo:nil inChannel:channel];
+- (void)requestTopicForChannel:(IRCChannel *)channel {
+  [self sendTopicTo:nil inChannel:channel];
 }
 
-- (void)requestTopicForChannelNamed:(NSString *)channel
-{
-	[self sendTopicTo:nil inChannelNamed:channel];
+- (void)requestTopicForChannelNamed:(NSString *)channel {
+  [self sendTopicTo:nil inChannelNamed:channel];
 }
 
-- (void)sendTopicTo:(nullable NSString *)topic inChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)sendTopicTo:(nullable NSString *)topic inChannel:(IRCChannel *)channel {
+  NSParameterAssert(channel != nil);
 
-	if (channel.isChannel == NO || channel.isActive == NO) {
-		return;
-	}
+  if (channel.isChannel == NO || channel.isActive == NO) {
+    return;
+  }
 
-	[self sendTopicTo:topic inChannelNamed:channel.name];
+  [self sendTopicTo:topic inChannelNamed:channel.name];
 }
 
-- (void)sendTopicTo:(nullable NSString *)topic inChannelNamed:(NSString *)channel
-{
-	NSParameterAssert(channel != nil);
+- (void)sendTopicTo:(nullable NSString *)topic
+     inChannelNamed:(NSString *)channel {
+  NSParameterAssert(channel != nil);
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	if (channel.length == 0) {
-		return;
-	}
+  if (channel.length == 0) {
+    return;
+  }
 
-	[self send:@"TOPIC", channel, topic, nil];
+  [self send:@"TOPIC", channel, topic, nil];
 }
 
-- (void)sendCapability:(NSString *)subcommand data:(nullable NSString *)data
-{
-	NSParameterAssert(subcommand != nil);
+- (void)sendCapability:(NSString *)subcommand data:(nullable NSString *)data {
+  NSParameterAssert(subcommand != nil);
 
-	if (self.isConnected == NO) {
-		return;
-	}
+  if (self.isConnected == NO) {
+    return;
+  }
 
-	[self send:@"CAP", subcommand, data, nil];
+  [self send:@"CAP", subcommand, data, nil];
 }
 
-- (void)sendCapabilityAuthenticate:(NSString *)data
-{
-	NSParameterAssert(data != nil);
+- (void)sendCapabilityAuthenticate:(NSString *)data {
+  NSParameterAssert(data != nil);
 
-	if (self.isConnected == NO) {
-		return;
-	}
+  if (self.isConnected == NO) {
+    return;
+  }
 
-	if (data.length == 0) {
-		return;
-	}
+  if (data.length == 0) {
+    return;
+  }
 
-	[self send:@"AUTHENTICATE", data, nil];
+  [self send:@"AUTHENTICATE", data, nil];
+}
+
+- (void)sendIsonForNicknames:(NSArray<NSString *> *)nicknames {
+  [self sendIsonForNicknames:nicknames hideResponse:NO];
 }
 
 - (void)sendIsonForNicknames:(NSArray<NSString *> *)nicknames
-{
-	[self sendIsonForNicknames:nicknames hideResponse:NO];
+                hideResponse:(BOOL)hideResponse {
+  NSParameterAssert(nicknames != nil);
+
+  /* Split nicknames into fixed number per-command in case there are a lot or
+   * are long. */
+  /* June 11, 2018: Disabled this because Glasstual expects nicknames to appear
+   in ISON response or they are considered offline. If we chunk out results,
+   then user may disappear in one ISON response and then appear in another. The
+   long term solution is to stop relying on ISON but no idea when that will
+   come. */
+  //	[nicknames enumerateSubarraysOfSize:8 usingBlock:^(NSArray *objects,
+  // BOOL *stop) {
+  [self _sendIsonForNicknames:nicknames hideResponse:hideResponse];
+  //	}];
 }
 
-- (void)sendIsonForNicknames:(NSArray<NSString *> *)nicknames hideResponse:(BOOL)hideResponse
-{
-	NSParameterAssert(nicknames != nil);
+- (void)_sendIsonForNicknames:(NSArray<NSString *> *)nicknames
+                 hideResponse:(BOOL)hideResponse {
+  NSParameterAssert(nicknames != nil);
 
-	/* Split nicknames into fixed number per-command in case there are a lot or are long. */
-	/* June 11, 2018: Disabled this because Glasstual expects nicknames to appear in ISON
-	 response or they are considered offline. If we chunk out results, then user may
-	 disappear in one ISON response and then appear in another. The long term solution
-	 is to stop relying on ISON but no idea when that will come. */
-	//	[nicknames enumerateSubarraysOfSize:8 usingBlock:^(NSArray *objects, BOOL *stop) {
-	[self _sendIsonForNicknames:nicknames hideResponse:hideResponse];
-	//	}];
+  if (self.isLoggedIn == NO) {
+    return;
+  }
+
+  if (nicknames.count == 0) {
+    return;
+  }
+
+  if (hideResponse == NO) {
+    [self.requestedCommands recordIsonRequestOpenedAsVisible];
+  } else {
+    [self.requestedCommands recordIsonRequestOpened];
+  }
+
+  NSString *nicknamesString = [nicknames componentsJoinedByString:@" "];
+
+  [self send:@"ISON", nicknamesString, nil];
 }
 
-- (void)_sendIsonForNicknames:(NSArray<NSString *> *)nicknames hideResponse:(BOOL)hideResponse
-{
-	NSParameterAssert(nicknames != nil);
-
-	if (self.isLoggedIn == NO) {
-		return;
-	}
-
-	if (nicknames.count == 0) {
-		return;
-	}
-
-	if (hideResponse == NO) {
-		[self.requestedCommands recordIsonRequestOpenedAsVisible];
-	} else {
-		[self.requestedCommands recordIsonRequestOpened];
-	}
-
-	NSString *nicknamesString = [nicknames componentsJoinedByString:@" "];
-
-	[self send:@"ISON", nicknamesString, nil];
+- (void)requestChannelList {
+  [self requestChannelListWithArguments:nil];
 }
 
-- (void)requestChannelList
-{
-	[self requestChannelListWithArguments:nil];
+- (void)requestChannelListWithArguments:(nullable NSString *)arguments {
+  if (self.isLoggedIn == NO) {
+    return;
+  }
+
+  if (arguments.length == 0) {
+    [self send:@"LIST", nil];
+
+    return;
+  }
+
+  [self send:@"LIST", arguments, nil];
 }
 
-- (void)requestChannelListWithArguments:(nullable NSString *)arguments
-{
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+- (void)sendPassword:(NSString *)password {
+  NSParameterAssert(password != nil);
 
-	if (arguments.length == 0) {
-		[self send:@"LIST", nil];
+  if (self.isConnected == NO) {
+    return;
+  }
 
-		return;
-	}
+  if (password.length == 0) {
+    return;
+  }
 
-	[self send:@"LIST", arguments, nil];
+  [self send:@"PASS", password, nil];
 }
 
-- (void)sendPassword:(NSString *)password
-{
-	NSParameterAssert(password != nil);
+- (void)modifyWatchListBy:(BOOL)adding
+                nicknames:(NSArray<NSString *> *)nicknames {
+  NSParameterAssert(nicknames != nil);
 
-	if (self.isConnected == NO) {
-		return;
-	}
-
-	if (password.length == 0) {
-		return;
-	}
-
-	[self send:@"PASS", password, nil];
+  /* Split nicknames into fixed number per-command in case there are a lot or
+   * are long. */
+  [nicknames enumerateSubarraysOfSize:8
+                           usingBlock:^(NSArray *objects, BOOL *stop) {
+                             [self _modifyWatchListBy:adding nicknames:objects];
+                           }];
 }
 
-- (void)modifyWatchListBy:(BOOL)adding nicknames:(NSArray<NSString *> *)nicknames
-{
-	NSParameterAssert(nicknames != nil);
+- (void)_modifyWatchListBy:(BOOL)adding
+                 nicknames:(NSArray<NSString *> *)nicknames {
+  NSParameterAssert(nicknames != nil);
 
-	/* Split nicknames into fixed number per-command in case there are a lot or are long. */
-	[nicknames enumerateSubarraysOfSize:8
-							 usingBlock:^(NSArray *objects, BOOL *stop) {
-								 [self _modifyWatchListBy:adding nicknames:objects];
-							 }];
-}
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-- (void)_modifyWatchListBy:(BOOL)adding nicknames:(NSArray<NSString *> *)nicknames
-{
-	NSParameterAssert(nicknames != nil);
+  if (nicknames.count == 0) {
+    return;
+  }
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+  NSString *modifier = nil;
 
-	if (nicknames.count == 0) {
-		return;
-	}
+  if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMonitorCommand]) {
+    if (adding) {
+      modifier = @"+";
+    } else {
+      modifier = @"-";
+    }
 
-	NSString *modifier = nil;
+    NSString *nicknamesString = [nicknames componentsJoinedByString:@","];
 
-	if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityMonitorCommand]) {
-		if (adding) {
-			modifier = @"+";
-		} else {
-			modifier = @"-";
-		}
+    [self send:@"MONITOR", modifier, nicknamesString, nil];
+  } else if ([self isCapabilityEnabled:
+                       ClientIRCv3SupportedCapabilityWatchCommand]) {
+    if (adding) {
+      modifier = @" +";
+    } else {
+      modifier = @" -";
+    }
 
-		NSString *nicknamesString = [nicknames componentsJoinedByString:@","];
+    NSString *nicknamesString = [nicknames componentsJoinedByString:modifier];
 
-		[self send:@"MONITOR", modifier, nicknamesString, nil];
-	} else if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityWatchCommand]) {
-		if (adding) {
-			modifier = @" +";
-		} else {
-			modifier = @" -";
-		}
-
-		NSString *nicknamesString = [nicknames componentsJoinedByString:modifier];
-
-		[self send:@"WATCH", [modifier stringByAppendingString:nicknamesString], nil];
-	}
+    [self
+        send:@"WATCH", [modifier stringByAppendingString:nicknamesString], nil];
+  }
 }
 
 #pragma mark -
 #pragma mark File Transfers
 
 - (void)notifyFileTransfer:(TXNotificationType)type
-				  nickname:(NSString *)nickname
-				  filename:(NSString *)filename
-				  filesize:(uint64_t)totalFilesize
-		 requestIdentifier:(NSString *)identifier
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(filename != nil);
-	NSParameterAssert(identifier != nil);
+                  nickname:(NSString *)nickname
+                  filename:(NSString *)filename
+                  filesize:(uint64_t)totalFilesize
+         requestIdentifier:(NSString *)identifier {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(filename != nil);
+  NSParameterAssert(identifier != nil);
 
-	NSString *description = nil;
+  NSString *description = nil;
 
-	switch (type) {
-	case TXNotificationTypeFileTransferSendSuccessful: {
-		description = TXTLS(@"Notifications[fhn-dd]", filename, totalFilesize);
+  switch (type) {
+  case TXNotificationTypeFileTransferSendSuccessful: {
+    description = TXTLS(@"Notifications[fhn-dd]", filename, totalFilesize);
 
-		break;
-	}
-	case TXNotificationTypeFileTransferReceiveSuccessful: {
-		description = TXTLS(@"Notifications[oqh-pn]", filename, totalFilesize);
+    break;
+  }
+  case TXNotificationTypeFileTransferReceiveSuccessful: {
+    description = TXTLS(@"Notifications[oqh-pn]", filename, totalFilesize);
 
-		break;
-	}
-	case TXNotificationTypeFileTransferSendFailed: {
-		description = TXTLS(@"Notifications[9r4-cq]", filename);
+    break;
+  }
+  case TXNotificationTypeFileTransferSendFailed: {
+    description = TXTLS(@"Notifications[9r4-cq]", filename);
 
-		break;
-	}
-	case TXNotificationTypeFileTransferReceiveFailed: {
-		description = TXTLS(@"Notifications[cqq-ci]", filename);
+    break;
+  }
+  case TXNotificationTypeFileTransferReceiveFailed: {
+    description = TXTLS(@"Notifications[cqq-ci]", filename);
 
-		break;
-	}
-	case TXNotificationTypeFileTransferReceiveRequested: {
-		description = TXTLS(@"Notifications[wik-wq]", filename, totalFilesize);
+    break;
+  }
+  case TXNotificationTypeFileTransferReceiveRequested: {
+    description = TXTLS(@"Notifications[wik-wq]", filename, totalFilesize);
 
-		break;
-	}
-	default: {
-		break;
-	}
-	}
+    break;
+  }
+  default: {
+    break;
+  }
+  }
 
-	NSDictionary *info = @{
-		@"isFileTransferNotification" : @(YES),
-		@"fileTransferUniqueIdentifier" : identifier,
-		@"fileTransferNotificationType" : @(type)
-	};
+  NSDictionary *info = @{
+    @"isFileTransferNotification" : @(YES),
+    @"fileTransferUniqueIdentifier" : identifier,
+    @"fileTransferNotificationType" : @(type)
+  };
 
-	[self notifyEvent:type
-			 lineType:TVCLogLineTypeUndefined
-			   target:nil
-			 nickname:nickname
-				 text:description
-			 userInfo:info];
+  [self notifyEvent:type
+           lineType:TVCLogLineTypeUndefined
+             target:nil
+           nickname:nickname
+               text:description
+           userInfo:info];
 }
 
-- (void)receivedDCCQuery:(IRCMessage *)m text:(NSString *)text ignoreInfo:(nullable IRCAddressBookEntry *)ignoreInfo
-{
-	NSParameterAssert(m != nil);
-	NSParameterAssert(text != nil);
+- (void)receivedDCCQuery:(IRCMessage *)m
+                    text:(NSString *)text
+              ignoreInfo:(nullable IRCAddressBookEntry *)ignoreInfo {
+  NSParameterAssert(m != nil);
+  NSParameterAssert(text != nil);
 
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	/* Do not continue if the user has configured an ignore for file transfers */
-	if (ignoreInfo.ignoreFileTransferRequests) {
-		return;
-	}
+  /* Do not continue if the user has configured an ignore for file transfers */
+  if (ignoreInfo.ignoreFileTransferRequests) {
+    return;
+  }
 
-	/* Do not continue if we are not the target */
-	if ([self nicknameIsMyself:[m paramAt:0]] == NO) {
-		return;
-	}
+  /* Do not continue if we are not the target */
+  if ([self nicknameIsMyself:[m paramAt:0]] == NO) {
+    return;
+  }
 
-	/* Record information */
-	NSString *sender = m.senderNickname;
+  /* Record information */
+  NSString *sender = m.senderNickname;
 
-	NSMutableString *textMutable = [text mutableCopy];
+  NSMutableString *textMutable = [text mutableCopy];
 
-	NSString *subcommand = textMutable.uppercaseGetToken;
+  NSString *subcommand = textMutable.uppercaseGetToken;
 
-	if ([subcommand isEqualToString:@"CHAT"]) {
-		[self receivedDCCChatQuery:sender text:textMutable];
+  if ([subcommand isEqualToString:@"CHAT"]) {
+    [self receivedDCCChatQuery:sender text:textMutable];
 
-		return;
-	}
+    return;
+  }
 
-	BOOL isSendRequest = ([subcommand isEqualToString:@"SEND"]);
-	BOOL isResumeRequest = ([subcommand isEqualToString:@"RESUME"]);
-	BOOL isAcceptRequest = ([subcommand isEqualToString:@"ACCEPT"]);
+  BOOL isSendRequest = ([subcommand isEqualToString:@"SEND"]);
+  BOOL isResumeRequest = ([subcommand isEqualToString:@"RESUME"]);
+  BOOL isAcceptRequest = ([subcommand isEqualToString:@"ACCEPT"]);
 
-	if (isSendRequest == NO && isResumeRequest == NO && isAcceptRequest == NO) {
-		return;
-	}
+  if (isSendRequest == NO && isResumeRequest == NO && isAcceptRequest == NO) {
+    return;
+  }
 
-	NSString *section1 = nil;
+  NSString *section1 = nil;
 
-	if ([textMutable hasPrefix:@"\""]) {
-		section1 = textMutable.tokenInsideQuotes;
-	} else {
-		section1 = textMutable.token;
-	}
+  if ([textMutable hasPrefix:@"\""]) {
+    section1 = textMutable.tokenInsideQuotes;
+  } else {
+    section1 = textMutable.token;
+  }
 
-	NSString *section2 = textMutable.token;
-	NSString *section3 = textMutable.token;
-	NSString *section4 = textMutable.token;
-	NSString *section5 = textMutable.token;
+  NSString *section2 = textMutable.token;
+  NSString *section3 = textMutable.token;
+  NSString *section4 = textMutable.token;
+  NSString *section5 = textMutable.token;
 
-	/* Trim whitespaces in case someone tries to send blank 
-	 spaces in a quoted string for filename. */
-	section1 = section1.trim;
+  /* Trim whitespaces in case someone tries to send blank
+   spaces in a quoted string for filename. */
+  section1 = section1.trim;
 
-	/* Remove T from in front of token if it is there. */
-	if (isSendRequest) {
-		if ([section5 hasPrefix:@"T"]) {
-			section5 = [section5 substringFromIndex:1];
-		}
-	} else if (isAcceptRequest || isResumeRequest) {
-		if ([section4 hasPrefix:@"T"]) {
-			section4 = [section4 substringFromIndex:1];
-		}
-	}
+  /* Remove T from in front of token if it is there. */
+  if (isSendRequest) {
+    if ([section5 hasPrefix:@"T"]) {
+      section5 = [section5 substringFromIndex:1];
+    }
+  } else if (isAcceptRequest || isResumeRequest) {
+    if ([section4 hasPrefix:@"T"]) {
+      section4 = [section4 substringFromIndex:1];
+    }
+  }
 
-	/* Valid values? */
-	if (section1.length == 0 || section2.length == 0 || (section4.length == 0 && isSendRequest)) {
-		return;
-	}
+  /* Valid values? */
+  if (section1.length == 0 || section2.length == 0 ||
+      (section4.length == 0 && isSendRequest)) {
+    return;
+  }
 
-	/* Start data association. */
-	NSString *hostAddress = nil;
-	NSString *hostPort = nil;
-	NSString *filename = nil;
-	NSString *filesize = nil;
-	NSString *transferToken = nil;
+  /* Start data association. */
+  NSString *hostAddress = nil;
+  NSString *hostPort = nil;
+  NSString *filename = nil;
+  NSString *filesize = nil;
+  NSString *transferToken = nil;
 
-	/* Match data variables. */
-	if (isSendRequest) {
-		/* Get normal information */
-		filename = section1.safeFilename;
+  /* Match data variables. */
+  if (isSendRequest) {
+    /* Get normal information */
+    filename = section1.safeFilename;
 
-		filesize = section4;
+    filesize = section4;
 
-		hostPort = section3;
+    hostPort = section3;
 
-		transferToken = section5;
+    transferToken = section5;
 
-		/* Translate host address */
-		hostAddress = [self DCCAddressFromString:section2];
-	} else if (isResumeRequest || isAcceptRequest) {
-		filename = section1.safeFilename;
+    /* Translate host address */
+    hostAddress = [self DCCAddressFromString:section2];
+  } else if (isResumeRequest || isAcceptRequest) {
+    filename = section1.safeFilename;
 
-		filesize = section3;
+    filesize = section3;
 
-		hostPort = section2;
+    hostPort = section2;
 
-		transferToken = section4;
+    transferToken = section4;
 
-		hostAddress = nil;
-	}
+    hostAddress = nil;
+  }
 
-	if (transferToken && transferToken.length == 0) {
-		transferToken = nil;
-	}
+  if (transferToken && transferToken.length == 0) {
+    transferToken = nil;
+  }
 
-	/* Important checks */
-	if (transferToken.length > 0 && transferToken.numericOnly == NO) {
-		LogToConsoleError("Fatal error: Received transfer token that is not a number");
+  /* Important checks */
+  if (transferToken.length > 0 && transferToken.numericOnly == NO) {
+    LogToConsoleError(
+        "Fatal error: Received transfer token that is not a number");
 
-		goto present_error;
-	}
+    goto present_error;
+  }
 
-	NSInteger hostPortInt = hostPort.integerValue;
+  NSInteger hostPortInt = hostPort.integerValue;
 
-	if (hostPortInt == 0 && transferToken == nil) {
-		LogToConsoleError("Fatal error: Port cannot be zero without a transfer token");
+  if (hostPortInt == 0 && transferToken == nil) {
+    LogToConsoleError(
+        "Fatal error: Port cannot be zero without a transfer token");
 
-		goto present_error;
-	} else if (hostPortInt < 0 || hostPortInt > TXMaximumTCPPort) {
-		LogToConsoleError("Fatal error: Port cannot be less than zero or greater than 65535");
+    goto present_error;
+  } else if (hostPortInt < 0 || hostPortInt > TXMaximumTCPPort) {
+    LogToConsoleError(
+        "Fatal error: Port cannot be less than zero or greater than 65535");
 
-		goto present_error;
-	}
+    goto present_error;
+  }
 
-	long long filesizeInt = filesize.longLongValue;
+  long long filesizeInt = filesize.longLongValue;
 
-	if (filesizeInt <= 0 || filesizeInt > powl(1000, 4)) { // 1 TB
-		LogToConsoleError("Fatal error: Filesize is silly");
+  if (filesizeInt <= 0 || filesizeInt > powl(1000, 4)) { // 1 TB
+    LogToConsoleError("Fatal error: Filesize is silly");
 
-		goto present_error;
-	}
+    goto present_error;
+  }
 
-	/* Process individual commands */
-	if (isSendRequest) {
-		/* DCC SEND <filename> <peer-ip> <port> <filesize> [token] */
+  /* Process individual commands */
+  if (isSendRequest) {
+    /* DCC SEND <filename> <peer-ip> <port> <filesize> [token] */
 
-		if (transferToken) {
-			TDCFileTransferDialogTransferController *e =
-				[[self fileTransferController] fileTransferSenderMatchingToken:transferToken];
+    if (transferToken) {
+      TDCFileTransferDialogTransferController *e =
+          [[self fileTransferController]
+              fileTransferSenderMatchingToken:transferToken];
 
-			/* 0 port indicates a new request in reverse DCC */
-			if (hostPortInt == 0) {
-				if (e != nil) {
-					LogToConsoleError("Fatal error: Received reverse DCC request with token '%{public}@' but the token "
-									  "already exists",
-									  transferToken);
+      /* 0 port indicates a new request in reverse DCC */
+      if (hostPortInt == 0) {
+        if (e != nil) {
+          LogToConsoleError("Fatal error: Received reverse DCC request with "
+                            "token '%{public}@' but the token "
+                            "already exists",
+                            transferToken);
 
-					goto present_error;
-				}
+          goto present_error;
+        }
 
-				[self receivedDCCSend:sender
-							 filename:filename
-							  address:hostAddress
-								 port:hostPortInt
-							 filesize:filesizeInt
-								token:transferToken];
+        [self receivedDCCSend:sender
+                     filename:filename
+                      address:hostAddress
+                         port:hostPortInt
+                     filesize:filesizeInt
+                        token:transferToken];
 
-				return;
-			} else if (e) {
-				if (e.transferStatus != TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept) {
-					LogToConsoleError("Fatal error: Unexpected request to begin transfer");
+        return;
+      } else if (e) {
+        if (e.transferStatus !=
+            TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept) {
+          LogToConsoleError(
+              "Fatal error: Unexpected request to begin transfer");
 
-					goto present_error;
-				}
+          goto present_error;
+        }
 
-				[e didReceiveSendRequest:hostAddress hostPort:hostPortInt];
+        [e didReceiveSendRequest:hostAddress hostPort:hostPortInt];
 
-				return;
-			}
-		} else // transferToken
-		{
-			/* Treat as normal DCC request */
-			[self receivedDCCSend:sender
-						 filename:filename
-						  address:hostAddress
-							 port:hostPort.integerValue
-						 filesize:filesize.longLongValue
-							token:nil];
+        return;
+      }
+    } else // transferToken
+    {
+      /* Treat as normal DCC request */
+      [self receivedDCCSend:sender
+                   filename:filename
+                    address:hostAddress
+                       port:hostPort.integerValue
+                   filesize:filesize.longLongValue
+                      token:nil];
 
-			return;
-		}
-	} else if (isResumeRequest || isAcceptRequest) {
-		TDCFileTransferDialogTransferController *e = nil;
+      return;
+    }
+  } else if (isResumeRequest || isAcceptRequest) {
+    TDCFileTransferDialogTransferController *e = nil;
 
-		if (transferToken && hostPortInt == 0) {
-			e = [[self fileTransferController] fileTransferSenderMatchingToken:transferToken];
-		} else if (transferToken == nil && hostPortInt > 0) {
-			e = [[self fileTransferController] fileTransferMatchingPort:hostPortInt];
-		}
+    if (transferToken && hostPortInt == 0) {
+      e = [[self fileTransferController]
+          fileTransferSenderMatchingToken:transferToken];
+    } else if (transferToken == nil && hostPortInt > 0) {
+      e = [[self fileTransferController] fileTransferMatchingPort:hostPortInt];
+    }
 
-		if (e == nil) {
-			LogToConsoleError("Fatal error: Could not locate file transfer that matches resume request");
+    if (e == nil) {
+      LogToConsoleError("Fatal error: Could not locate file transfer that "
+                        "matches resume request");
 
-			goto present_error;
-		}
+      goto present_error;
+    }
 
-		if ((isResumeRequest && (e.transferStatus != TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept &&
-								 e.transferStatus != TDCFileTransferDialogTransferStatusIsListeningAsSender)) ||
-			(isAcceptRequest && e.transferStatus != TDCFileTransferDialogTransferStatusWaitingForResumeAccept)) {
-			LogToConsoleError("Fatal error: Bad transfer status");
+    if ((isResumeRequest &&
+         (e.transferStatus !=
+              TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept &&
+          e.transferStatus !=
+              TDCFileTransferDialogTransferStatusIsListeningAsSender)) ||
+        (isAcceptRequest &&
+         e.transferStatus !=
+             TDCFileTransferDialogTransferStatusWaitingForResumeAccept)) {
+      LogToConsoleError("Fatal error: Bad transfer status");
 
-			goto present_error;
-		}
+      goto present_error;
+    }
 
-		if (isResumeRequest) {
-			[e didReceiveResumeRequest:filesizeInt];
-		} else {
-			[e didReceiveResumeAccept:filesizeInt];
-		}
+    if (isResumeRequest) {
+      [e didReceiveResumeRequest:filesizeInt];
+    } else {
+      [e didReceiveResumeAccept:filesizeInt];
+    }
 
-		return;
-	}
+    return;
+  }
 
-	// Report an error
+  // Report an error
 present_error:
-	[self print:TXTLS(@"IRC[y3w-la]", sender)
-			   by:nil
-		inChannel:nil
-		   asType:TVCLogLineTypeDCCFileTransfer
-		  command:TVCLogLineDefaultCommandValue];
+  [self print:TXTLS(@"IRC[y3w-la]", sender)
+             by:nil
+      inChannel:nil
+         asType:TVCLogLineTypeDCCFileTransfer
+        command:TVCLogLineDefaultCommandValue];
 }
 
 - (void)receivedDCCSend:(NSString *)nickname
-			   filename:(NSString *)filename
-				address:(NSString *)address
-				   port:(uint16_t)port
-			   filesize:(uint64_t)totalFilesize
-				  token:(nullable NSString *)transferToken
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(filename != nil);
-	NSParameterAssert(address != nil);
+               filename:(NSString *)filename
+                address:(NSString *)address
+                   port:(uint16_t)port
+               filesize:(uint64_t)totalFilesize
+                  token:(nullable NSString *)transferToken {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(filename != nil);
+  NSParameterAssert(address != nil);
 
-	NSString *message = TXTLS(@"IRC[snf-45]", nickname, filename, totalFilesize);
+  NSString *message = TXTLS(@"IRC[snf-45]", nickname, filename, totalFilesize);
 
-	[self print:message
-			   by:nil
-		inChannel:nil
-		   asType:TVCLogLineTypeDCCFileTransfer
-		  command:TVCLogLineDefaultCommandValue];
+  [self print:message
+             by:nil
+      inChannel:nil
+         asType:TVCLogLineTypeDCCFileTransfer
+        command:TVCLogLineDefaultCommandValue];
 
-	if ([TPCPreferences fileTransferRequestReplyAction] == TXFileTransferRequestReplyIgnore) {
-		return;
-	}
+  if ([TPCPreferences fileTransferRequestReplyAction] ==
+      TXFileTransferRequestReplyIgnore) {
+    return;
+  }
 
-	NSString *addedRequest = [[self fileTransferController] addReceiverForClient:self
-																		nickname:nickname
-																		 address:address
-																			port:port
-																		filename:filename
-																		filesize:totalFilesize
-																		   token:transferToken];
+  NSString *addedRequest =
+      [[self fileTransferController] addReceiverForClient:self
+                                                 nickname:nickname
+                                                  address:address
+                                                     port:port
+                                                 filename:filename
+                                                 filesize:totalFilesize
+                                                    token:transferToken];
 
-	if (addedRequest == nil) {
-		return;
-	}
+  if (addedRequest == nil) {
+    return;
+  }
 
-	[self notifyFileTransfer:TXNotificationTypeFileTransferReceiveRequested
-					nickname:nickname
-					filename:filename
-					filesize:totalFilesize
-		   requestIdentifier:addedRequest];
+  [self notifyFileTransfer:TXNotificationTypeFileTransferReceiveRequested
+                  nickname:nickname
+                  filename:filename
+                  filesize:totalFilesize
+         requestIdentifier:addedRequest];
 }
 
 - (void)sendFileResume:(NSString *)nickname
-				  port:(uint16_t)port
-			  filename:(NSString *)filename
-			  filesize:(uint64_t)totalFilesize
-				 token:(nullable NSString *)transferToken
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(filename != nil);
+                  port:(uint16_t)port
+              filename:(NSString *)filename
+              filesize:(uint64_t)totalFilesize
+                 token:(nullable NSString *)transferToken {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(filename != nil);
 
-	NSString *escapedFilename = [self DCCSendEscapeFilename:filename];
+  NSString *escapedFilename = [self DCCSendEscapeFilename:filename];
 
-	NSString *stringToSend = nil;
+  NSString *stringToSend = nil;
 
-	if (transferToken) {
-		stringToSend =
-			[NSString stringWithFormat:@"%@ %hu %lli %@", escapedFilename, port, totalFilesize, transferToken];
-	} else {
-		stringToSend = [NSString stringWithFormat:@"%@ %hu %lli", escapedFilename, port, totalFilesize];
-	}
+  if (transferToken) {
+    stringToSend =
+        [NSString stringWithFormat:@"%@ %hu %lli %@", escapedFilename, port,
+                                   totalFilesize, transferToken];
+  } else {
+    stringToSend = [NSString
+        stringWithFormat:@"%@ %hu %lli", escapedFilename, port, totalFilesize];
+  }
 
-	[self sendCTCPQuery:nickname command:@"DCC RESUME" text:stringToSend];
+  [self sendCTCPQuery:nickname command:@"DCC RESUME" text:stringToSend];
 }
 
 - (void)sendFileResumeAccept:(NSString *)nickname
-						port:(uint16_t)port
-					filename:(NSString *)filename
-					filesize:(uint64_t)totalFilesize
-					   token:(nullable NSString *)transferToken
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(filename != nil);
+                        port:(uint16_t)port
+                    filename:(NSString *)filename
+                    filesize:(uint64_t)totalFilesize
+                       token:(nullable NSString *)transferToken {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(filename != nil);
 
-	NSString *escapedFilename = [self DCCSendEscapeFilename:filename];
+  NSString *escapedFilename = [self DCCSendEscapeFilename:filename];
 
-	NSString *stringToSend = nil;
+  NSString *stringToSend = nil;
 
-	if (transferToken) {
-		stringToSend =
-			[NSString stringWithFormat:@"%@ %hu %lli %@", escapedFilename, port, totalFilesize, transferToken];
-	} else {
-		stringToSend = [NSString stringWithFormat:@"%@ %hu %lli", escapedFilename, port, totalFilesize];
-	}
+  if (transferToken) {
+    stringToSend =
+        [NSString stringWithFormat:@"%@ %hu %lli %@", escapedFilename, port,
+                                   totalFilesize, transferToken];
+  } else {
+    stringToSend = [NSString
+        stringWithFormat:@"%@ %hu %lli", escapedFilename, port, totalFilesize];
+  }
 
-	[self sendCTCPQuery:nickname command:@"DCC ACCEPT" text:stringToSend];
+  [self sendCTCPQuery:nickname command:@"DCC ACCEPT" text:stringToSend];
 }
 
 - (void)sendFile:(NSString *)nickname
-			port:(uint16_t)port
-		filename:(NSString *)filename
-		filesize:(uint64_t)totalFilesize
-		   token:(nullable NSString *)transferToken
-{
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(filename != nil);
+            port:(uint16_t)port
+        filename:(NSString *)filename
+        filesize:(uint64_t)totalFilesize
+           token:(nullable NSString *)transferToken {
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(filename != nil);
 
-	NSString *address = [self DCCTransferAddress];
+  NSString *address = [self DCCTransferAddress];
 
-	if (address == nil) {
-		return;
-	}
+  if (address == nil) {
+    return;
+  }
 
-	NSString *escapedFilename = [self DCCSendEscapeFilename:filename];
+  NSString *escapedFilename = [self DCCSendEscapeFilename:filename];
 
-	NSString *stringToSend = nil;
+  NSString *stringToSend = nil;
 
-	if (transferToken.length > 0) {
-		stringToSend = [NSString
-			stringWithFormat:@"%@ %@ %hu %lli %@", escapedFilename, address, port, totalFilesize, transferToken];
-	} else {
-		stringToSend = [NSString stringWithFormat:@"%@ %@ %hu %lli", escapedFilename, address, port, totalFilesize];
-	}
+  if (transferToken.length > 0) {
+    stringToSend =
+        [NSString stringWithFormat:@"%@ %@ %hu %lli %@", escapedFilename,
+                                   address, port, totalFilesize, transferToken];
+  } else {
+    stringToSend =
+        [NSString stringWithFormat:@"%@ %@ %hu %lli", escapedFilename, address,
+                                   port, totalFilesize];
+  }
 
-	[self sendCTCPQuery:nickname command:@"DCC SEND" text:stringToSend];
+  [self sendCTCPQuery:nickname command:@"DCC SEND" text:stringToSend];
 
-	NSString *message = TXTLS(@"IRC[ags-s8]", nickname, filename, totalFilesize);
+  NSString *message = TXTLS(@"IRC[ags-s8]", nickname, filename, totalFilesize);
 
-	[self print:message
-			   by:nil
-		inChannel:nil
-		   asType:TVCLogLineTypeDCCFileTransfer
-		  command:TVCLogLineDefaultCommandValue];
+  [self print:message
+             by:nil
+      inChannel:nil
+         asType:TVCLogLineTypeDCCFileTransfer
+        command:TVCLogLineDefaultCommandValue];
 }
 
-- (NSString *)DCCSendEscapeFilename:(NSString *)filename
-{
-	NSParameterAssert(filename != nil);
+- (NSString *)DCCSendEscapeFilename:(NSString *)filename {
+  NSParameterAssert(filename != nil);
 
-	NSString *filenameEscaped = filename.safeFilename;
+  NSString *filenameEscaped = filename.safeFilename;
 
-	if ([filenameEscaped contains:@" "] == NO) {
-		return filenameEscaped;
-	}
+  if ([filenameEscaped contains:@" "] == NO) {
+    return filenameEscaped;
+  }
 
-	/* Escape double quotes because the filename will be wrapped.
-	 February 20, 2017: Maybe we should replace the double quote
-	 with another character or remove completely? Untested how other
-	 clients will handle an escaped double quote. */
-	filenameEscaped = [filenameEscaped stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+  /* Escape double quotes because the filename will be wrapped.
+   February 20, 2017: Maybe we should replace the double quote
+   with another character or remove completely? Untested how other
+   clients will handle an escaped double quote. */
+  filenameEscaped =
+      [filenameEscaped stringByReplacingOccurrencesOfString:@"\""
+                                                 withString:@"\\\""];
 
-	return [NSString stringWithFormat:@"\"%@\"", filenameEscaped];
+  return [NSString stringWithFormat:@"\"%@\"", filenameEscaped];
 }
 
-- (nullable NSString *)DCCTransferAddress
-{
-	NSString *address = [self fileTransferController].IPAddress;
+- (nullable NSString *)DCCTransferAddress {
+  NSString *address = [self fileTransferController].IPAddress;
 
-	if (address == nil) {
-		return nil;
-	}
+  if (address == nil) {
+    return nil;
+  }
 
-	return [self DCCFormattedAddress:address];
+  return [self DCCFormattedAddress:address];
 }
 
 /* DCC carries IPv4 addresses as a single unsigned integer and IPv6
  addresses in their textual form. */
-- (nullable NSString *)DCCFormattedAddress:(NSString *)address
-{
-	NSParameterAssert(address != nil);
+- (nullable NSString *)DCCFormattedAddress:(NSString *)address {
+  NSParameterAssert(address != nil);
 
-	if (address.IPv6Address) {
-		return address;
-	}
+  if (address.IPv6Address) {
+    return address;
+  }
 
-	NSArray *addressOctets = [address componentsSeparatedByString:@"."];
+  NSArray *addressOctets = [address componentsSeparatedByString:@"."];
 
-	if (addressOctets.count != 4) {
-		LogToConsoleError("User configured a silly IP address");
+  if (addressOctets.count != 4) {
+    LogToConsoleError("User configured a silly IP address");
 
-		return nil;
-	}
+    return nil;
+  }
 
-	NSInteger w = [addressOctets[0] integerValue];
-	NSInteger x = [addressOctets[1] integerValue];
-	NSInteger y = [addressOctets[2] integerValue];
-	NSInteger z = [addressOctets[3] integerValue];
+  NSInteger w = [addressOctets[0] integerValue];
+  NSInteger x = [addressOctets[1] integerValue];
+  NSInteger y = [addressOctets[2] integerValue];
+  NSInteger z = [addressOctets[3] integerValue];
 
-	unsigned long long a = 0;
+  unsigned long long a = 0;
 
-	a |= w;
-	a <<= 8;
-	a |= x;
-	a <<= 8;
-	a |= y;
-	a <<= 8;
-	a |= z;
+  a |= w;
+  a <<= 8;
+  a |= x;
+  a <<= 8;
+  a |= y;
+  a <<= 8;
+  a |= z;
 
-	return [NSString stringWithFormat:@"%llu", a];
+  return [NSString stringWithFormat:@"%llu", a];
 }
 
 /* Inverse of -DCCFormattedAddress: — an integer becomes dotted IPv4,
  anything else (IPv6, or a client that sent dotted IPv4) is kept. */
-- (NSString *)DCCAddressFromString:(NSString *)string
-{
-	NSParameterAssert(string != nil);
+- (NSString *)DCCAddressFromString:(NSString *)string {
+  NSParameterAssert(string != nil);
 
-	if (string.numericOnly == NO) {
-		return string;
-	}
+  if (string.numericOnly == NO) {
+    return string;
+  }
 
-	unsigned long long a = strtoull(string.UTF8String, NULL, 10);
+  unsigned long long a = strtoull(string.UTF8String, NULL, 10);
 
-	unsigned long w = (a & 0xff);
-	a >>= 8;
-	unsigned long x = (a & 0xff);
-	a >>= 8;
-	unsigned long y = (a & 0xff);
-	a >>= 8;
-	unsigned long z = (a & 0xff);
+  unsigned long w = (a & 0xff);
+  a >>= 8;
+  unsigned long x = (a & 0xff);
+  a >>= 8;
+  unsigned long y = (a & 0xff);
+  a >>= 8;
+  unsigned long z = (a & 0xff);
 
-	return [NSString stringWithFormat:@"%lu.%lu.%lu.%lu", z, y, x, w];
+  return [NSString stringWithFormat:@"%lu.%lu.%lu.%lu", z, y, x, w];
 }
 
 #pragma mark -
@@ -14945,1027 +15428,1042 @@ present_error:
 
 /* The server list entry for a direct chat is named after the peer with
  a leading "=" (the mIRC convention) so it never collides with a query. */
-- (NSString *)directChatChannelNameForNickname:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (NSString *)directChatChannelNameForNickname:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	return [@"=" stringByAppendingString:nickname];
+  return [@"=" stringByAppendingString:nickname];
 }
 
-- (nullable IRCChannel *)directChatChannelForConnection:(IRCDirectChatConnection *)connection
-{
-	NSParameterAssert(connection != nil);
+- (nullable IRCChannel *)directChatChannelForConnection:
+    (IRCDirectChatConnection *)connection {
+  NSParameterAssert(connection != nil);
 
-	for (IRCChannel *channel in self.channelList) {
-		if (channel.isDirectChat && channel.directChatConnection == connection) {
-			return channel;
-		}
-	}
+  for (IRCChannel *channel in self.channelList) {
+    if (channel.isDirectChat && channel.directChatConnection == connection) {
+      return channel;
+    }
+  }
 
-	return nil;
+  return nil;
 }
 
-- (nullable IRCChannel *)directChatChannelForNickname:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (nullable IRCChannel *)directChatChannelForNickname:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	IRCChannel *channel = [self findChannel:[self directChatChannelNameForNickname:nickname]];
+  IRCChannel *channel =
+      [self findChannel:[self directChatChannelNameForNickname:nickname]];
 
-	if (channel.isDirectChat) {
-		return channel;
-	}
+  if (channel.isDirectChat) {
+    return channel;
+  }
 
-	return nil;
+  return nil;
 }
 
 - (void)handleDCCCommand:(NSMutableAttributedString *)stringIn
-				 command:(NSString *)command
-		   targetChannel:(nullable IRCChannel *)targetChannel
-{
-	NSParameterAssert(stringIn != nil);
-	NSParameterAssert(command != nil);
+                 command:(NSString *)command
+           targetChannel:(nullable IRCChannel *)targetChannel {
+  NSParameterAssert(stringIn != nil);
+  NSParameterAssert(command != nil);
 
-	NSString *subcommand = stringIn.uppercaseGetToken;
+  NSString *subcommand = stringIn.uppercaseGetToken;
 
-	if ([subcommand isEqualToString:@"CHAT"]) {
-		if (self.isLoggedIn == NO) {
-			[self printDebugInformationToConsole:TXTLS(@"IRC[6rj-2r]")];
+  if ([subcommand isEqualToString:@"CHAT"]) {
+    if (self.isLoggedIn == NO) {
+      [self printDebugInformationToConsole:TXTLS(@"IRC[6rj-2r]")];
 
-			return;
-		}
+      return;
+    }
 
-		NSString *nickname = stringIn.tokenAsString;
+    NSString *nickname = stringIn.tokenAsString;
 
-		/* "/dcc chat" inside a query or a direct chat targets that user. */
-		if (nickname.length == 0) {
-			if (targetChannel.isPrivateMessage) {
-				nickname = targetChannel.name;
-			} else if (targetChannel.isDirectChat) {
-				nickname = targetChannel.directChatConnection.peerNickname ?: [targetChannel.name substringFromIndex:1];
-			}
-		}
+    /* "/dcc chat" inside a query or a direct chat targets that user. */
+    if (nickname.length == 0) {
+      if (targetChannel.isPrivateMessage) {
+        nickname = targetChannel.name;
+      } else if (targetChannel.isDirectChat) {
+        nickname = targetChannel.directChatConnection.peerNickname
+                       ?: [targetChannel.name substringFromIndex:1];
+      }
+    }
 
-		if (nickname.length == 0 || [self stringIsNickname:nickname] == NO) {
-			[self printInvalidSyntaxMessageForCommand:command];
+    if (nickname.length == 0 || [self stringIsNickname:nickname] == NO) {
+      [self printInvalidSyntaxMessageForCommand:command];
 
-			return;
-		}
+      return;
+    }
 
-		[self startDirectChatWithNickname:nickname];
+    [self startDirectChatWithNickname:nickname];
 
-		return;
-	}
+    return;
+  }
 
-	if ([subcommand isEqualToString:@"SEND"]) {
-		NSString *nickname = stringIn.tokenAsString;
+  if ([subcommand isEqualToString:@"SEND"]) {
+    NSString *nickname = stringIn.tokenAsString;
 
-		NSString *path = stringIn.string.trim.stringByExpandingTildeInPath;
+    NSString *path = stringIn.string.trim.stringByExpandingTildeInPath;
 
-		if (nickname.length == 0 || [self stringIsNickname:nickname] == NO || path.length == 0) {
-			[self printInvalidSyntaxMessageForCommand:command];
+    if (nickname.length == 0 || [self stringIsNickname:nickname] == NO ||
+        path.length == 0) {
+      [self printInvalidSyntaxMessageForCommand:command];
 
-			return;
-		}
+      return;
+    }
 
-		if ([[self fileTransferController] addSenderForClient:self nickname:nickname path:path autoOpen:YES] == nil) {
-			[self printDebugInformation:TXTLS(@"IRC[dcc-s1]", path)];
-		}
+    if ([[self fileTransferController] addSenderForClient:self
+                                                 nickname:nickname
+                                                     path:path
+                                                 autoOpen:YES] == nil) {
+      [self printDebugInformation:TXTLS(@"IRC[dcc-s1]", path)];
+    }
 
-		return;
-	}
+    return;
+  }
 
-	[self printInvalidSyntaxMessageForCommand:command];
+  [self printInvalidSyntaxMessageForCommand:command];
 }
 
 /* DCC CHAT chat <address> <port> [token]
  A port of 0 with a token is a passive (reverse) request: the peer
  cannot listen so we do, and tell them where through the same CTCP. */
-- (void)receivedDCCChatQuery:(NSString *)sender text:(NSMutableString *)text
-{
-	NSParameterAssert(sender != nil);
-	NSParameterAssert(text != nil);
+- (void)receivedDCCChatQuery:(NSString *)sender text:(NSMutableString *)text {
+  NSParameterAssert(sender != nil);
+  NSParameterAssert(text != nil);
 
-	NSString *protocol = text.uppercaseGetToken;
+  NSString *protocol = text.uppercaseGetToken;
 
-	NSString *addressString = text.token;
-	NSString *portString = text.token;
-	NSString *transferToken = text.token;
+  NSString *addressString = text.token;
+  NSString *portString = text.token;
+  NSString *transferToken = text.token;
 
-	if ([transferToken hasPrefix:@"T"]) {
-		transferToken = [transferToken substringFromIndex:1];
-	}
+  if ([transferToken hasPrefix:@"T"]) {
+    transferToken = [transferToken substringFromIndex:1];
+  }
 
-	if (transferToken.length == 0) {
-		transferToken = nil;
-	}
+  if (transferToken.length == 0) {
+    transferToken = nil;
+  }
 
-	NSInteger port = portString.integerValue;
+  NSInteger port = portString.integerValue;
 
-	if ([protocol isEqualToString:@"CHAT"] == NO || addressString.length == 0 || portString.numericOnly == NO ||
-		port < 0 || port > TXMaximumTCPPort || (port == 0 && transferToken == nil) ||
-		(transferToken && transferToken.numericOnly == NO)) {
-		[self print:TXTLS(@"IRC[y3w-la]", sender)
-				   by:nil
-			inChannel:nil
-			   asType:TVCLogLineTypeDCCFileTransfer
-			  command:TVCLogLineDefaultCommandValue];
+  if ([protocol isEqualToString:@"CHAT"] == NO || addressString.length == 0 ||
+      portString.numericOnly == NO || port < 0 || port > TXMaximumTCPPort ||
+      (port == 0 && transferToken == nil) ||
+      (transferToken && transferToken.numericOnly == NO)) {
+    [self print:TXTLS(@"IRC[y3w-la]", sender)
+               by:nil
+        inChannel:nil
+           asType:TVCLogLineTypeDCCFileTransfer
+          command:TVCLogLineDefaultCommandValue];
 
-		return;
-	}
+    return;
+  }
 
-	NSString *address = [self DCCAddressFromString:addressString];
+  NSString *address = [self DCCAddressFromString:addressString];
 
-	if (port > 0 && address.isIPAddress == NO) {
-		[self print:TXTLS(@"IRC[y3w-la]", sender)
-				   by:nil
-			inChannel:nil
-			   asType:TVCLogLineTypeDCCFileTransfer
-			  command:TVCLogLineDefaultCommandValue];
+  if (port > 0 && address.isIPAddress == NO) {
+    [self print:TXTLS(@"IRC[y3w-la]", sender)
+               by:nil
+        inChannel:nil
+           asType:TVCLogLineTypeDCCFileTransfer
+          command:TVCLogLineDefaultCommandValue];
 
-		return;
-	}
+    return;
+  }
 
-	/* A token with a real port is the reply to a passive request.
-	 Glasstual never makes those, so there is nothing to match it to. */
-	if (port > 0 && transferToken) {
-		IRCChannel *existing = [self directChatChannelForNickname:sender];
+  /* A token with a real port is the reply to a passive request.
+   Glasstual never makes those, so there is nothing to match it to. */
+  if (port > 0 && transferToken) {
+    IRCChannel *existing = [self directChatChannelForNickname:sender];
 
-		if (existing.directChatConnection.state != IRCDirectChatConnectionStateListening) {
-			LogToConsoleError("Received passive DCC CHAT reply from '%{public}@' without a matching request", sender);
+    if (existing.directChatConnection.state !=
+        IRCDirectChatConnectionStateListening) {
+      LogToConsoleError("Received passive DCC CHAT reply from '%{public}@' "
+                        "without a matching request",
+                        sender);
 
-			return;
-		}
-	}
+      return;
+    }
+  }
 
-	[self print:TXTLS(@"IRC[dcc-c1]", sender)
-			   by:nil
-		inChannel:nil
-		   asType:TVCLogLineTypeDCCFileTransfer
-		  command:TVCLogLineDefaultCommandValue];
+  [self print:TXTLS(@"IRC[dcc-c1]", sender)
+             by:nil
+      inChannel:nil
+         asType:TVCLogLineTypeDCCFileTransfer
+        command:TVCLogLineDefaultCommandValue];
 
-	[TDCAlert alertSheetWithWindow:mainWindow()
-							  body:TXTLS(@"Prompts[dcc-c2]", sender)
-							 title:TXTLS(@"Prompts[dcc-c3]", sender)
-					 defaultButton:TXTLS(@"Prompts[dcc-c4]")
-				   alternateButton:TXTLS(@"Prompts[dcc-c5]")
-					   otherButton:nil
-				   completionBlock:^(TDCAlertResponse buttonClicked, BOOL suppressed, id underlyingAlert) {
-					   if (buttonClicked != TDCAlertResponseDefault) {
-						   [self print:TXTLS(@"IRC[dcc-c6]", sender)
-									  by:nil
-							   inChannel:nil
-								  asType:TVCLogLineTypeDCCFileTransfer
-								 command:TVCLogLineDefaultCommandValue];
+  [TDCAlert alertSheetWithWindow:mainWindow()
+                            body:TXTLS(@"Prompts[dcc-c2]", sender)
+                           title:TXTLS(@"Prompts[dcc-c3]", sender)
+                   defaultButton:TXTLS(@"Prompts[dcc-c4]")
+                 alternateButton:TXTLS(@"Prompts[dcc-c5]")
+                     otherButton:nil
+                 completionBlock:^(TDCAlertResponse buttonClicked,
+                                   BOOL suppressed, id underlyingAlert) {
+                   if (buttonClicked != TDCAlertResponseDefault) {
+                     [self print:TXTLS(@"IRC[dcc-c6]", sender)
+                                by:nil
+                         inChannel:nil
+                            asType:TVCLogLineTypeDCCFileTransfer
+                           command:TVCLogLineDefaultCommandValue];
 
-						   return;
-					   }
+                     return;
+                   }
 
-					   if (self.isLoggedIn == NO) {
-						   return;
-					   }
+                   if (self.isLoggedIn == NO) {
+                     return;
+                   }
 
-					   if (port == 0) {
-						   [self openDirectChatWithNickname:sender listeningWithToken:transferToken];
-					   } else {
-						   [self openDirectChatWithNickname:sender address:address port:(uint16_t)port];
-					   }
-				   }];
+                   if (port == 0) {
+                     [self openDirectChatWithNickname:sender
+                                   listeningWithToken:transferToken];
+                   } else {
+                     [self openDirectChatWithNickname:sender
+                                              address:address
+                                                 port:(uint16_t)port];
+                   }
+                 }];
 }
 
-- (void)startDirectChatWithNickname:(NSString *)nickname
-{
-	NSParameterAssert(nickname != nil);
+- (void)startDirectChatWithNickname:(NSString *)nickname {
+  NSParameterAssert(nickname != nil);
 
-	if ([self nicknameIsMyself:nickname]) {
-		return;
-	}
+  if ([self nicknameIsMyself:nickname]) {
+    return;
+  }
 
-	[self openDirectChatWithNickname:nickname listeningWithToken:nil];
+  [self openDirectChatWithNickname:nickname listeningWithToken:nil];
 }
 
-- (IRCChannel *)prepareDirectChatChannelForNickname:(NSString *)nickname
-{
-	IRCChannel *channel = [self findChannelOrCreate:[self directChatChannelNameForNickname:nickname]
-											 asType:IRCChannelTypeDirectChat];
+- (IRCChannel *)prepareDirectChatChannelForNickname:(NSString *)nickname {
+  IRCChannel *channel =
+      [self findChannelOrCreate:[self directChatChannelNameForNickname:nickname]
+                         asType:IRCChannelTypeDirectChat];
 
-	/* A second chat with the same user replaces the first. */
-	[channel closeDirectChatConnection];
+  /* A second chat with the same user replaces the first. */
+  [channel closeDirectChatConnection];
 
-	if (channel.isActive) {
-		[channel deactivate];
-	}
+  if (channel.isActive) {
+    [channel deactivate];
+  }
 
-	return channel;
+  return channel;
 }
 
-- (void)openDirectChatWithNickname:(NSString *)nickname address:(NSString *)address port:(uint16_t)port
-{
-	IRCChannel *channel = [self prepareDirectChatChannelForNickname:nickname];
+- (void)openDirectChatWithNickname:(NSString *)nickname
+                           address:(NSString *)address
+                              port:(uint16_t)port {
+  IRCChannel *channel = [self prepareDirectChatChannelForNickname:nickname];
 
-	IRCDirectChatConnection *connection =
-		[IRCDirectChatConnection connectionToPeer:nickname
-										  address:address
-											 port:port
-										 onClient:self
-										 delegate:(id<IRCDirectChatConnectionDelegate>)self];
+  IRCDirectChatConnection *connection = [IRCDirectChatConnection
+      connectionToPeer:nickname
+               address:address
+                  port:port
+              onClient:self
+              delegate:(id<IRCDirectChatConnectionDelegate>)self];
 
-	channel.directChatConnection = connection;
+  channel.directChatConnection = connection;
 
-	[self printDebugInformation:TXTLS(@"IRC[dcc-c7]", nickname, address, port) inChannel:channel];
+  [self printDebugInformation:TXTLS(@"IRC[dcc-c7]", nickname, address, port)
+                    inChannel:channel];
 
-	[mainWindow() select:channel];
+  [mainWindow() select:channel];
 
-	[connection open];
+  [connection open];
 }
 
-- (void)openDirectChatWithNickname:(NSString *)nickname listeningWithToken:(nullable NSString *)transferToken
-{
-	IRCChannel *channel = [self prepareDirectChatChannelForNickname:nickname];
+- (void)openDirectChatWithNickname:(NSString *)nickname
+                listeningWithToken:(nullable NSString *)transferToken {
+  IRCChannel *channel = [self prepareDirectChatChannelForNickname:nickname];
 
-	IRCDirectChatConnection *connection =
-		[IRCDirectChatConnection listeningConnectionForPeer:nickname
-													  token:transferToken
-												   onClient:self
-												   delegate:(id<IRCDirectChatConnectionDelegate>)self];
+  IRCDirectChatConnection *connection = [IRCDirectChatConnection
+      listeningConnectionForPeer:nickname
+                           token:transferToken
+                        onClient:self
+                        delegate:(id<IRCDirectChatConnectionDelegate>)self];
 
-	channel.directChatConnection = connection;
+  channel.directChatConnection = connection;
 
-	[self printDebugInformation:TXTLS(@"IRC[dcc-c8]", nickname) inChannel:channel];
+  [self printDebugInformation:TXTLS(@"IRC[dcc-c8]", nickname)
+                    inChannel:channel];
 
-	[mainWindow() select:channel];
+  [mainWindow() select:channel];
 
-	[connection open];
+  [connection open];
 }
 
 - (void)sendDirectChatText:(NSAttributedString *)string
-				 asCommand:(IRCRemoteCommand)command
-				 toChannel:(IRCChannel *)channel
-{
-	NSParameterAssert(string != nil);
-	NSParameterAssert(channel != nil);
+                 asCommand:(IRCRemoteCommand)command
+                 toChannel:(IRCChannel *)channel {
+  NSParameterAssert(string != nil);
+  NSParameterAssert(channel != nil);
 
-	IRCDirectChatConnection *connection = channel.directChatConnection;
+  IRCDirectChatConnection *connection = channel.directChatConnection;
 
-	if (connection.isConnected == NO) {
-		[self printDebugInformation:TXTLS(@"IRC[dcc-c9]") inChannel:channel];
+  if (connection.isConnected == NO) {
+    [self printDebugInformation:TXTLS(@"IRC[dcc-c9]") inChannel:channel];
 
-		return;
-	}
+    return;
+  }
 
-	BOOL isAction = (command == IRCRemoteCommandPrivmsgAction);
+  BOOL isAction = (command == IRCRemoteCommandPrivmsgAction);
 
-	TVCLogLineType lineType = (isAction ? TVCLogLineTypeAction : TVCLogLineTypePrivateMessage);
+  TVCLogLineType lineType =
+      (isAction ? TVCLogLineTypeAction : TVCLogLineTypePrivateMessage);
 
-	NSArray *lines = string.splitIntoLines;
+  NSArray *lines = string.splitIntoLines;
 
-	for (NSAttributedString *line in lines) {
-		NSMutableAttributedString *lineMutable = [line mutableCopy];
+  for (NSAttributedString *line in lines) {
+    NSMutableAttributedString *lineMutable = [line mutableCopy];
 
-		while (lineMutable.length > 0) {
-			NSString *message = [lineMutable stringFormattedForChannel:channel.name
-															  onClient:self
-														  withLineType:lineType];
+    while (lineMutable.length > 0) {
+      NSString *message = [lineMutable stringFormattedForChannel:channel.name
+                                                        onClient:self
+                                                    withLineType:lineType];
 
-			if (isAction) {
-				[connection sendAction:message];
-			} else {
-				[connection sendMessage:message];
-			}
+      if (isAction) {
+        [connection sendAction:message];
+      } else {
+        [connection sendMessage:message];
+      }
 
-			[self print:message
-						 by:self.userNickname
-				  inChannel:channel
-					 asType:lineType
-					command:@"PRIVMSG"
-				 receivedAt:[NSDate date]
-				isEncrypted:NO];
-		}
-	}
+      [self print:message
+                   by:self.userNickname
+            inChannel:channel
+               asType:lineType
+              command:@"PRIVMSG"
+           receivedAt:[NSDate date]
+          isEncrypted:NO];
+    }
+  }
 }
 
 #pragma mark -
 #pragma mark DCC CHAT Connection Delegate
 
-- (void)directChatConnection:(IRCDirectChatConnection *)connection didStartListeningOnPort:(uint16_t)port
-{
-	IRCChannel *channel = [self directChatChannelForConnection:connection];
+- (void)directChatConnection:(IRCDirectChatConnection *)connection
+     didStartListeningOnPort:(uint16_t)port {
+  IRCChannel *channel = [self directChatChannelForConnection:connection];
 
-	if (channel == nil) {
-		[connection close];
+  if (channel == nil) {
+    [connection close];
 
-		return;
-	}
+    return;
+  }
 
-	NSString *nickname = connection.peerNickname;
+  NSString *nickname = connection.peerNickname;
 
-	NSString *transferToken = connection.transferToken;
+  NSString *transferToken = connection.transferToken;
 
-	[[self fileTransferController] requestIPAddress:^(NSString *_Nullable address) {
-		if (channel.directChatConnection != connection || connection.state != IRCDirectChatConnectionStateListening) {
-			return;
-		}
+  [[self fileTransferController]
+      requestIPAddress:^(NSString *_Nullable address) {
+        if (channel.directChatConnection != connection ||
+            connection.state != IRCDirectChatConnectionStateListening) {
+          return;
+        }
 
-		NSString *formattedAddress = nil;
+        NSString *formattedAddress = nil;
 
-		if (address) {
-			formattedAddress = [self DCCFormattedAddress:address];
-		}
+        if (address) {
+          formattedAddress = [self DCCFormattedAddress:address];
+        }
 
-		if (formattedAddress == nil || self.isLoggedIn == NO) {
-			[self printDebugInformation:TXTLS(@"IRC[dcc-ca]", nickname) inChannel:channel];
+        if (formattedAddress == nil || self.isLoggedIn == NO) {
+          [self printDebugInformation:TXTLS(@"IRC[dcc-ca]", nickname)
+                            inChannel:channel];
 
-			[channel closeDirectChatConnection];
+          [channel closeDirectChatConnection];
 
-			return;
-		}
+          return;
+        }
 
-		NSString *stringToSend = nil;
+        NSString *stringToSend = nil;
 
-		if (transferToken) {
-			stringToSend = [NSString stringWithFormat:@"chat %@ %hu %@", formattedAddress, port, transferToken];
-		} else {
-			stringToSend = [NSString stringWithFormat:@"chat %@ %hu", formattedAddress, port];
-		}
+        if (transferToken) {
+          stringToSend =
+              [NSString stringWithFormat:@"chat %@ %hu %@", formattedAddress,
+                                         port, transferToken];
+        } else {
+          stringToSend = [NSString
+              stringWithFormat:@"chat %@ %hu", formattedAddress, port];
+        }
 
-		[self sendCTCPQuery:nickname command:@"DCC CHAT" text:stringToSend];
+        [self sendCTCPQuery:nickname command:@"DCC CHAT" text:stringToSend];
 
-		[self printDebugInformation:TXTLS(@"IRC[dcc-cb]", nickname, port) inChannel:channel];
-	}];
+        [self printDebugInformation:TXTLS(@"IRC[dcc-cb]", nickname, port)
+                          inChannel:channel];
+      }];
 }
 
-- (void)directChatConnectionDidConnect:(IRCDirectChatConnection *)connection
-{
-	IRCChannel *channel = [self directChatChannelForConnection:connection];
+- (void)directChatConnectionDidConnect:(IRCDirectChatConnection *)connection {
+  IRCChannel *channel = [self directChatChannelForConnection:connection];
 
-	if (channel == nil) {
-		[connection close];
+  if (channel == nil) {
+    [connection close];
 
-		return;
-	}
+    return;
+  }
 
-	[channel activate];
+  [channel activate];
 
-	[mainWindow() reloadTreeItem:channel];
+  [mainWindow() reloadTreeItem:channel];
 
-	[mainWindow() updateTitleFor:channel];
+  [mainWindow() updateTitleFor:channel];
 
-	[self printDebugInformation:TXTLS(@"IRC[dcc-cc]", connection.peerNickname) inChannel:channel];
+  [self printDebugInformation:TXTLS(@"IRC[dcc-cc]", connection.peerNickname)
+                    inChannel:channel];
 }
 
 - (void)directChatConnection:(IRCDirectChatConnection *)connection
-		   didReceiveMessage:(NSString *)message
-					isAction:(BOOL)isAction
-{
-	IRCChannel *channel = [self directChatChannelForConnection:connection];
+           didReceiveMessage:(NSString *)message
+                    isAction:(BOOL)isAction {
+  IRCChannel *channel = [self directChatChannelForConnection:connection];
 
-	if (channel == nil) {
-		return;
-	}
+  if (channel == nil) {
+    return;
+  }
 
-	NSString *nickname = connection.peerNickname;
+  NSString *nickname = connection.peerNickname;
 
-	TVCLogLineType lineType = (isAction ? TVCLogLineTypeAction : TVCLogLineTypePrivateMessage);
+  TVCLogLineType lineType =
+      (isAction ? TVCLogLineTypeAction : TVCLogLineTypePrivateMessage);
 
-	[self print:message
-				 by:nickname
-		  inChannel:channel
-			 asType:lineType
-			command:@"PRIVMSG"
-		 receivedAt:[NSDate date]
-		isEncrypted:NO];
+  [self print:message
+               by:nickname
+        inChannel:channel
+           asType:lineType
+          command:@"PRIVMSG"
+       receivedAt:[NSDate date]
+      isEncrypted:NO];
 
-	[self notifyText:TXNotificationTypePrivateMessage lineType:lineType target:channel nickname:nickname text:message];
+  [self notifyText:TXNotificationTypePrivateMessage
+          lineType:lineType
+            target:channel
+          nickname:nickname
+              text:message];
 }
 
-- (void)directChatConnection:(IRCDirectChatConnection *)connection didCloseWithError:(nullable NSError *)error
-{
-	IRCChannel *channel = [self directChatChannelForConnection:connection];
+- (void)directChatConnection:(IRCDirectChatConnection *)connection
+           didCloseWithError:(nullable NSError *)error {
+  IRCChannel *channel = [self directChatChannelForConnection:connection];
 
-	if (channel == nil) {
-		return;
-	}
+  if (channel == nil) {
+    return;
+  }
 
-	channel.directChatConnection = nil;
+  channel.directChatConnection = nil;
 
-	if (error) {
-		[self printDebugInformation:TXTLS(@"IRC[dcc-cd]", connection.peerNickname, error.localizedDescription)
-						  inChannel:channel];
-	} else {
-		[self printDebugInformation:TXTLS(@"IRC[dcc-ce]", connection.peerNickname) inChannel:channel];
-	}
+  if (error) {
+    [self printDebugInformation:TXTLS(@"IRC[dcc-cd]", connection.peerNickname,
+                                      error.localizedDescription)
+                      inChannel:channel];
+  } else {
+    [self printDebugInformation:TXTLS(@"IRC[dcc-ce]", connection.peerNickname)
+                      inChannel:channel];
+  }
 
-	if (channel.isActive) {
-		[channel deactivate];
-	}
+  if (channel.isActive) {
+    [channel deactivate];
+  }
 
-	[mainWindow() reloadTreeItem:channel];
+  [mainWindow() reloadTreeItem:channel];
 
-	[mainWindow() updateTitleFor:channel];
+  [mainWindow() updateTitleFor:channel];
 }
 
 #pragma mark -
 #pragma mark Command Queue
 
-- (NSString *)descriptionForTimedCommand:(IRCTimedCommand *)timedCommand
-{
-	NSParameterAssert(timedCommand != nil);
+- (NSString *)descriptionForTimedCommand:(IRCTimedCommand *)timedCommand {
+  NSParameterAssert(timedCommand != nil);
 
-	NSString *timerInterval = TXHumanReadableTimeInterval(timedCommand.timerInterval, NO, 0);
+  NSString *timerInterval =
+      TXHumanReadableTimeInterval(timedCommand.timerInterval, NO, 0);
 
-	NSString *timeRemaining = TXHumanReadableTimeInterval(timedCommand.timeRemaining, NO, 0);
+  NSString *timeRemaining =
+      TXHumanReadableTimeInterval(timedCommand.timeRemaining, NO, 0);
 
-	NSString *timerStatus = nil;
+  NSString *timerStatus = nil;
 
-	if (timedCommand.timerIsActive == NO) {
-		timerStatus = TXTLS(@"IRC[ww4-sn]");
-	} else {
-		timerStatus = TXTLS(@"IRC[bhz-9e]");
-	}
+  if (timedCommand.timerIsActive == NO) {
+    timerStatus = TXTLS(@"IRC[ww4-sn]");
+  } else {
+    timerStatus = TXTLS(@"IRC[bhz-9e]");
+  }
 
-	if (timedCommand.repeatTimer == NO) {
-		return TXTLS(
-			@"IRC[4n6-2x]", timedCommand.identifier, timerStatus, timerInterval, timeRemaining, timedCommand.command);
-	} else {
-		NSUInteger repeatLimit = timedCommand.iterations;
+  if (timedCommand.repeatTimer == NO) {
+    return TXTLS(@"IRC[4n6-2x]", timedCommand.identifier, timerStatus,
+                 timerInterval, timeRemaining, timedCommand.command);
+  } else {
+    NSUInteger repeatLimit = timedCommand.iterations;
 
-		NSString *repeatLimitDescriptor = nil;
+    NSString *repeatLimitDescriptor = nil;
 
-		if (repeatLimit == 0) {
-			repeatLimitDescriptor = TXTLS(@"IRC[o26-ae]");
-		} else {
-			repeatLimitDescriptor = [NSString stringWithUnsignedInteger:repeatLimit];
-		}
+    if (repeatLimit == 0) {
+      repeatLimitDescriptor = TXTLS(@"IRC[o26-ae]");
+    } else {
+      repeatLimitDescriptor = [NSString stringWithUnsignedInteger:repeatLimit];
+    }
 
-		return TXTLS(@"IRC[uw0-v2]",
-					 timedCommand.identifier,
-					 timerStatus,
-					 timerInterval,
-					 timeRemaining,
-					 repeatLimitDescriptor,
-					 timedCommand.currentIteration,
-					 timedCommand.command);
-	}
+    return TXTLS(@"IRC[uw0-v2]", timedCommand.identifier, timerStatus,
+                 timerInterval, timeRemaining, repeatLimitDescriptor,
+                 timedCommand.currentIteration, timedCommand.command);
+  }
 }
 
-- (nullable IRCTimedCommand *)timedCommandWithIdentifier:(NSString *)identifier
-{
-	NSParameterAssert(identifier != nil);
+- (nullable IRCTimedCommand *)timedCommandWithIdentifier:
+    (NSString *)identifier {
+  NSParameterAssert(identifier != nil);
 
-	@synchronized(self.timedCommands) {
-		return self.timedCommands[identifier];
-	}
+  @synchronized(self.timedCommands) {
+    return self.timedCommands[identifier];
+  }
 }
 
-- (NSArray<IRCTimedCommand *> *)listOfTimedCommands
-{
-	@synchronized(self.timedCommands) {
-		return self.timedCommands.allValues;
-	}
+- (NSArray<IRCTimedCommand *> *)listOfTimedCommands {
+  @synchronized(self.timedCommands) {
+    return self.timedCommands.allValues;
+  }
 }
 
-- (void)addTimedCommand:(IRCTimedCommand *)timedCommand
-{
-	NSParameterAssert(timedCommand != nil);
+- (void)addTimedCommand:(IRCTimedCommand *)timedCommand {
+  NSParameterAssert(timedCommand != nil);
 
-	@synchronized(self.timedCommands) {
-		self.timedCommands[timedCommand.identifier] = timedCommand;
-	}
+  @synchronized(self.timedCommands) {
+    self.timedCommands[timedCommand.identifier] = timedCommand;
+  }
 }
 
-- (void)removeTimedCommands
-{
-	@synchronized(self.timedCommands) {
-		[self.timedCommands removeAllObjects];
-	}
+- (void)removeTimedCommands {
+  @synchronized(self.timedCommands) {
+    [self.timedCommands removeAllObjects];
+  }
 }
 
-- (void)removeTimedCommand:(IRCTimedCommand *)timedCommand
-{
-	NSParameterAssert(timedCommand != nil);
+- (void)removeTimedCommand:(IRCTimedCommand *)timedCommand {
+  NSParameterAssert(timedCommand != nil);
 
-	@synchronized(self.timedCommands) {
-		[self.timedCommands removeObjectForKey:timedCommand.identifier];
-	}
+  @synchronized(self.timedCommands) {
+    [self.timedCommands removeObjectForKey:timedCommand.identifier];
+  }
 }
 
-- (void)stopTimedCommand:(IRCTimedCommand *)timedCommand
-{
-	NSParameterAssert(timedCommand != nil);
+- (void)stopTimedCommand:(IRCTimedCommand *)timedCommand {
+  NSParameterAssert(timedCommand != nil);
 
-	[timedCommand stop];
-}
-
-- (void)startTimedCommand:(IRCTimedCommand *)timedCommand interval:(NSUInteger)timerInterval
-{
-	NSParameterAssert(timedCommand != nil);
-
-	[self startTimedCommand:timedCommand interval:timerInterval onRepeat:NO iterations:0];
-}
-
-- (void)startTimedCommand:(IRCTimedCommand *)timedCommand interval:(NSUInteger)timerInterval onRepeat:(BOOL)repeatTimer
-{
-	NSParameterAssert(timedCommand != nil);
-
-	[self startTimedCommand:timedCommand interval:timerInterval onRepeat:repeatTimer iterations:0];
+  [timedCommand stop];
 }
 
 - (void)startTimedCommand:(IRCTimedCommand *)timedCommand
-				 interval:(NSUInteger)timerInterval
-				 onRepeat:(BOOL)repeatTimer
-			   iterations:(NSUInteger)iterations
-{
-	NSParameterAssert(timedCommand != nil);
+                 interval:(NSUInteger)timerInterval {
+  NSParameterAssert(timedCommand != nil);
 
-	[timedCommand start:timerInterval onRepeat:repeatTimer iterations:iterations];
+  [self startTimedCommand:timedCommand
+                 interval:timerInterval
+                 onRepeat:NO
+               iterations:0];
 }
 
-- (BOOL)restartTimedCommand:(IRCTimedCommand *)timedCommand
-{
-	NSParameterAssert(timedCommand != nil);
+- (void)startTimedCommand:(IRCTimedCommand *)timedCommand
+                 interval:(NSUInteger)timerInterval
+                 onRepeat:(BOOL)repeatTimer {
+  NSParameterAssert(timedCommand != nil);
 
-	return [timedCommand restart];
+  [self startTimedCommand:timedCommand
+                 interval:timerInterval
+                 onRepeat:repeatTimer
+               iterations:0];
 }
 
-- (void)onTimedCommand:(IRCTimedCommand *)timedCommand
-{
-	NSParameterAssert(timedCommand != nil);
+- (void)startTimedCommand:(IRCTimedCommand *)timedCommand
+                 interval:(NSUInteger)timerInterval
+                 onRepeat:(BOOL)repeatTimer
+               iterations:(NSUInteger)iterations {
+  NSParameterAssert(timedCommand != nil);
 
-	/* Remove timer */
-	if (timedCommand.timerIsActive == NO) {
-		[self removeTimedCommand:timedCommand];
-	}
+  [timedCommand start:timerInterval onRepeat:repeatTimer iterations:iterations];
+}
 
-	/* The -channelId is only a suggestion. It's okay if this returns nil.
-	 The channel is what was selected at the time that the timer was created.
-	 -sendCommand:completeTarget:target: may very well ignore the channel we
-	 give it, even if it's non-nil, depending on format of command. */
-	IRCChannel *channel = (IRCChannel *)[worldController() findItemWithId:timedCommand.channelId];
+- (BOOL)restartTimedCommand:(IRCTimedCommand *)timedCommand {
+  NSParameterAssert(timedCommand != nil);
 
-	[self sendCommand:timedCommand.command completeTarget:YES target:channel.name];
+  return [timedCommand restart];
+}
+
+- (void)onTimedCommand:(IRCTimedCommand *)timedCommand {
+  NSParameterAssert(timedCommand != nil);
+
+  /* Remove timer */
+  if (timedCommand.timerIsActive == NO) {
+    [self removeTimedCommand:timedCommand];
+  }
+
+  /* The -channelId is only a suggestion. It's okay if this returns nil.
+   The channel is what was selected at the time that the timer was created.
+   -sendCommand:completeTarget:target: may very well ignore the channel we
+   give it, even if it's non-nil, depending on format of command. */
+  IRCChannel *channel =
+      (IRCChannel *)[worldController() findItemWithId:timedCommand.channelId];
+
+  [self sendCommand:timedCommand.command
+      completeTarget:YES
+              target:channel.name];
 }
 
 #pragma mark -
 #pragma mark User Tracking
 
-- (void)clearTrackedUsers
-{
-	[self.trackedUsers clearTrackedUsers];
-}
-
-- (void)statusOfTrackedNickname:(NSString *)nickname changedTo:(IRCAddressBookUserTrackingStatus)newStatus
-{
-	[self statusOfTrackedNickname:nickname changedTo:newStatus notify:NO];
+- (void)clearTrackedUsers {
+  [self.trackedUsers clearTrackedUsers];
 }
 
 - (void)statusOfTrackedNickname:(NSString *)nickname
-					  changedTo:(IRCAddressBookUserTrackingStatus)newStatus
-						 notify:(BOOL)notify
-{
-	NSParameterAssert(nickname != nil);
-
-	[self.trackedUsers statusOfTrackedNickname:nickname changedTo:newStatus];
-
-	if (notify) {
-		[self notifyStatusOfTrackedNickname:nickname changedTo:newStatus];
-	}
+                      changedTo:(IRCAddressBookUserTrackingStatus)newStatus {
+  [self statusOfTrackedNickname:nickname changedTo:newStatus notify:NO];
 }
 
-- (void)notifyStatusOfTrackedNickname:(NSString *)nickname changedTo:(IRCAddressBookUserTrackingStatus)newStatus
-{
-	NSParameterAssert(nickname != nil);
+- (void)statusOfTrackedNickname:(NSString *)nickname
+                      changedTo:(IRCAddressBookUserTrackingStatus)newStatus
+                         notify:(BOOL)notify {
+  NSParameterAssert(nickname != nil);
 
-	NSString *message = nil;
+  [self.trackedUsers statusOfTrackedNickname:nickname changedTo:newStatus];
 
-	if (newStatus == IRCAddressBookUserTrackingStatusSignedOn) {
-		message = TXTLS(@"Notifications[xk2-1l]", nickname);
-	} else if (newStatus == IRCAddressBookUserTrackingStatusSignedOff) {
-		message = TXTLS(@"Notifications[rif-9r]", nickname);
-	} else if (newStatus == IRCAddressBookUserTrackingStatusAvailable) {
-		message = TXTLS(@"Notifications[97r-0l]", nickname);
-	}
-
-	if (message == nil) {
-		return;
-	}
-
-	[self notifyEvent:TXNotificationTypeAddressBookMatch
-			 lineType:TVCLogLineTypeNotice
-			   target:nil
-			 nickname:nickname
-				 text:message];
+  if (notify) {
+    [self notifyStatusOfTrackedNickname:nickname changedTo:newStatus];
+  }
 }
 
-- (void)populateISONTrackedUsersList
-{
-	if (self.isLoggedIn == NO) {
-		return;
-	}
+- (void)notifyStatusOfTrackedNickname:(NSString *)nickname
+                            changedTo:
+                                (IRCAddressBookUserTrackingStatus)newStatus {
+  NSParameterAssert(nickname != nil);
 
-	/* Additions & Removals for WATCH command. ISON does not access these. */
-	NSMutableArray<NSString *> *watchAdditions = [NSMutableArray array];
-	NSMutableArray<NSString *> *watchRemovals = [NSMutableArray array];
+  NSString *message = nil;
 
-	/* Compare configuration to the list of tracked nicknames.
-	 * Nicknames that are new are added to watchAdditions */
-	NSDictionary *trackedUsersOld = self.trackedUsers.trackedUsers;
+  if (newStatus == IRCAddressBookUserTrackingStatusSignedOn) {
+    message = TXTLS(@"Notifications[xk2-1l]", nickname);
+  } else if (newStatus == IRCAddressBookUserTrackingStatusSignedOff) {
+    message = TXTLS(@"Notifications[rif-9r]", nickname);
+  } else if (newStatus == IRCAddressBookUserTrackingStatusAvailable) {
+    message = TXTLS(@"Notifications[97r-0l]", nickname);
+  }
 
-	NSMutableArray<NSString *> *trackedUsersNew = [NSMutableArray array];
+  if (message == nil) {
+    return;
+  }
 
-	for (IRCAddressBookEntry *g in self.config.ignoreList) {
-		if (g.trackUserActivity == NO) {
-			continue;
-		}
-
-		NSString *trackingNickname = g.trackingNickname;
-
-		IRCAddressBookUserTrackingStatus trackingStatus = [self.trackedUsers statusOfUser:trackingNickname];
-
-		if (trackingStatus != IRCAddressBookUserTrackingStatusUnknown) {
-			[trackedUsersNew addObject:trackingNickname];
-
-			continue;
-		}
-
-		[watchAdditions addObject:trackingNickname];
-
-		[self.trackedUsers _addTrackedUser:trackingNickname];
-	}
-
-	/* Compare old list of tracked nicknames to new list to find
-	 those that no longer appear. Mark those for removal. */
-	for (NSString *trackedUser in trackedUsersOld) {
-		if ([trackedUsersNew containsObjectIgnoringCase:trackedUser]) {
-			continue;
-		}
-
-		[watchRemovals addObject:trackedUser];
-
-		[self.trackedUsers _removeTrackedUser:trackedUser];
-	}
-
-	/* Set new entries */
-	[self modifyWatchListBy:YES nicknames:watchAdditions];
-
-	[self modifyWatchListBy:NO nicknames:watchRemovals];
-
-	[self startISONTimer];
+  [self notifyEvent:TXNotificationTypeAddressBookMatch
+           lineType:TVCLogLineTypeNotice
+             target:nil
+           nickname:nickname
+               text:message];
 }
 
-- (void)startISONTimer
-{
-	if (self.isonTimer.timerIsActive) {
-		return;
-	}
+- (void)populateISONTrackedUsersList {
+  if (self.isLoggedIn == NO) {
+    return;
+  }
 
-	[self.isonTimer start:_isonCheckInterval onRepeat:YES];
+  /* Additions & Removals for WATCH command. ISON does not access these. */
+  NSMutableArray<NSString *> *watchAdditions = [NSMutableArray array];
+  NSMutableArray<NSString *> *watchRemovals = [NSMutableArray array];
 
-	[self startWhoTimer];
+  /* Compare configuration to the list of tracked nicknames.
+   * Nicknames that are new are added to watchAdditions */
+  NSDictionary *trackedUsersOld = self.trackedUsers.trackedUsers;
+
+  NSMutableArray<NSString *> *trackedUsersNew = [NSMutableArray array];
+
+  for (IRCAddressBookEntry *g in self.config.ignoreList) {
+    if (g.trackUserActivity == NO) {
+      continue;
+    }
+
+    NSString *trackingNickname = g.trackingNickname;
+
+    IRCAddressBookUserTrackingStatus trackingStatus =
+        [self.trackedUsers statusOfUser:trackingNickname];
+
+    if (trackingStatus != IRCAddressBookUserTrackingStatusUnknown) {
+      [trackedUsersNew addObject:trackingNickname];
+
+      continue;
+    }
+
+    [watchAdditions addObject:trackingNickname];
+
+    [self.trackedUsers _addTrackedUser:trackingNickname];
+  }
+
+  /* Compare old list of tracked nicknames to new list to find
+   those that no longer appear. Mark those for removal. */
+  for (NSString *trackedUser in trackedUsersOld) {
+    if ([trackedUsersNew containsObjectIgnoringCase:trackedUser]) {
+      continue;
+    }
+
+    [watchRemovals addObject:trackedUser];
+
+    [self.trackedUsers _removeTrackedUser:trackedUser];
+  }
+
+  /* Set new entries */
+  [self modifyWatchListBy:YES nicknames:watchAdditions];
+
+  [self modifyWatchListBy:NO nicknames:watchRemovals];
+
+  [self startISONTimer];
 }
 
-- (void)stopISONTimer
-{
-	if (self.isonTimer.timerIsActive == NO) {
-		return;
-	}
+- (void)startISONTimer {
+  if (self.isonTimer.timerIsActive) {
+    return;
+  }
 
-	[self.isonTimer stop];
+  [self.isonTimer start:_isonCheckInterval onRepeat:YES];
 
-	[self stopWhoTimer];
+  [self startWhoTimer];
 }
 
-- (void)onISONTimer
-{
-	if (self.isLoggedIn == NO || self.isBrokenIRCd_aka_Twitch) {
-		return;
-	}
+- (void)stopISONTimer {
+  if (self.isonTimer.timerIsActive == NO) {
+    return;
+  }
 
-	NSMutableArray<NSString *> *nicknames = [NSMutableArray array];
+  [self.isonTimer stop];
 
-	// Request ISON status for tracked users
-	if (self.supportsAdvancedTracking == NO) {
-		for (NSString *trackedUser in self.trackedUsers.trackedUsers) {
-			[nicknames addObject:trackedUser];
-		}
-	}
-
-	// Request ISON status for private messages
-	for (IRCChannel *channel in self.channelList) {
-		if (channel.privateMessage) {
-			[nicknames addObject:channel.name];
-		}
-	}
-
-	[self sendIsonForNicknames:nicknames hideResponse:YES];
+  [self stopWhoTimer];
 }
 
-- (void)startWhoTimer
-{
-	if (self.whoTimer.timerIsActive) {
-		return;
-	}
+- (void)onISONTimer {
+  if (self.isLoggedIn == NO || self.isBrokenIRCd_aka_Twitch) {
+    return;
+  }
 
-	[self.whoTimer start:_whoCheckInterval onRepeat:YES];
+  NSMutableArray<NSString *> *nicknames = [NSMutableArray array];
+
+  // Request ISON status for tracked users
+  if (self.supportsAdvancedTracking == NO) {
+    for (NSString *trackedUser in self.trackedUsers.trackedUsers) {
+      [nicknames addObject:trackedUser];
+    }
+  }
+
+  // Request ISON status for private messages
+  for (IRCChannel *channel in self.channelList) {
+    if (channel.privateMessage) {
+      [nicknames addObject:channel.name];
+    }
+  }
+
+  [self sendIsonForNicknames:nicknames hideResponse:YES];
 }
 
-- (void)stopWhoTimer
-{
-	if (self.whoTimer.timerIsActive == NO) {
-		return;
-	}
+- (void)startWhoTimer {
+  if (self.whoTimer.timerIsActive) {
+    return;
+  }
 
-	[self.whoTimer stop];
+  [self.whoTimer start:_whoCheckInterval onRepeat:YES];
 }
 
-- (void)onWhoTimer
-{
-	if (self.isLoggedIn == NO || self.isBrokenIRCd_aka_Twitch) {
-		return;
-	}
+- (void)stopWhoTimer {
+  if (self.whoTimer.timerIsActive == NO) {
+    return;
+  }
 
-	NSArray *channelList = self.channelList;
-
-	[self sendTimedWhoRequestsToChannels:channelList];
+  [self.whoTimer stop];
 }
 
-- (void)sendTimedWhoRequestsToChannels:(NSArray<IRCChannel *> *)channelList
-{
-	NSParameterAssert(channelList != nil);
+- (void)onWhoTimer {
+  if (self.isLoggedIn == NO || self.isBrokenIRCd_aka_Twitch) {
+    return;
+  }
 
-	if (self.isLoggedIn == NO || self.isBrokenIRCd_aka_Twitch) {
-		return;
-	}
+  NSArray *channelList = self.channelList;
+
+  [self sendTimedWhoRequestsToChannels:channelList];
+}
+
+- (void)sendTimedWhoRequestsToChannels:(NSArray<IRCChannel *> *)channelList {
+  NSParameterAssert(channelList != nil);
+
+  if (self.isLoggedIn == NO || self.isBrokenIRCd_aka_Twitch) {
+    return;
+  }
 
 #define _maximumChannelCountPerWhoBatchRequest 4
 #define _maximumSingleChannelSizePerWhoBatchRequest 5000
 #define _maximumTotalChannelSizePerWhoBatchRequest 2000
 
-	NSUInteger channelCount = channelList.count;
+  NSUInteger channelCount = channelList.count;
 
-	if (channelCount == 0) {
-		return;
-	}
+  if (channelCount == 0) {
+    return;
+  }
 
-	NSUInteger startingPosition = self.lastWhoRequestChannelListIndex;
+  NSUInteger startingPosition = self.lastWhoRequestChannelListIndex;
 
-	if (startingPosition >= channelCount) {
-		startingPosition = 0;
-	}
+  if (startingPosition >= channelCount) {
+    startingPosition = 0;
+  }
 
-	NSUInteger endingPosition = (startingPosition + _maximumChannelCountPerWhoBatchRequest);
+  NSUInteger endingPosition =
+      (startingPosition + _maximumChannelCountPerWhoBatchRequest);
 
-	if (endingPosition >= channelCount) {
-		endingPosition = (channelCount - 1);
-	}
+  if (endingPosition >= channelCount) {
+    endingPosition = (channelCount - 1);
+  }
 
-	NSUInteger totalMemberCount = 0;
+  NSUInteger totalMemberCount = 0;
 
-	NSMutableArray<IRCChannel *> *channelsToQuery = nil;
+  NSMutableArray<IRCChannel *> *channelsToQuery = nil;
 
-	for (NSUInteger channelIndex = startingPosition; channelIndex <= endingPosition; channelIndex++) {
-		IRCChannel *channel = channelList[channelIndex];
+  for (NSUInteger channelIndex = startingPosition;
+       channelIndex <= endingPosition; channelIndex++) {
+    IRCChannel *channel = channelList[channelIndex];
 
-		if (channel.isActive == NO || channel.isChannel == NO) {
-			continue;
-		}
+    if (channel.isActive == NO || channel.isChannel == NO) {
+      continue;
+    }
 
-		/* Update internal state of flag */
-		BOOL sentInitialWhoRequest = channel.sentInitialWhoRequest;
+    /* Update internal state of flag */
+    BOOL sentInitialWhoRequest = channel.sentInitialWhoRequest;
 
-		if (sentInitialWhoRequest == NO) {
-			channel.sentInitialWhoRequest = YES;
-		}
+    if (sentInitialWhoRequest == NO) {
+      channel.sentInitialWhoRequest = YES;
+    }
 
-		/* continue to next channel and do not break so that the
-		 -sentInitialWhoRequest flag of all channels can be updated. */
-		if (self.config.sendWhoCommandRequestsToChannels == NO) {
-			continue;
-		}
+    /* continue to next channel and do not break so that the
+     -sentInitialWhoRequest flag of all channels can be updated. */
+    if (self.config.sendWhoCommandRequestsToChannels == NO) {
+      continue;
+    }
 
-		/* Perform comparisons to know whether channel is acceptable */
-		NSUInteger numberOfMembers = channel.numberOfMembers;
+    /* Perform comparisons to know whether channel is acceptable */
+    NSUInteger numberOfMembers = channel.numberOfMembers;
 
-		if (sentInitialWhoRequest == NO) {
-			if (numberOfMembers > _maximumSingleChannelSizePerWhoBatchRequest) {
-				continue;
-			}
-		} else {
-			if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityAwayNotify]) {
-				continue;
-			}
+    if (sentInitialWhoRequest == NO) {
+      if (numberOfMembers > _maximumSingleChannelSizePerWhoBatchRequest) {
+        continue;
+      }
+    } else {
+      if ([self isCapabilityEnabled:ClientIRCv3SupportedCapabilityAwayNotify]) {
+        continue;
+      }
 
-			if (numberOfMembers > [TPCPreferences trackUserAwayStatusMaximumChannelSize]) {
-				continue;
-			}
-		}
+      if (numberOfMembers >
+          [TPCPreferences trackUserAwayStatusMaximumChannelSize]) {
+        continue;
+      }
+    }
 
-		/* Add channel to list */
-		if (channelsToQuery == nil) {
-			channelsToQuery = [NSMutableArray new];
-		}
+    /* Add channel to list */
+    if (channelsToQuery == nil) {
+      channelsToQuery = [NSMutableArray new];
+    }
 
-		[channelsToQuery addObject:channel];
+    [channelsToQuery addObject:channel];
 
-		/* Update total number of members and maybe break loop */
-		totalMemberCount += numberOfMembers;
+    /* Update total number of members and maybe break loop */
+    totalMemberCount += numberOfMembers;
 
-		if (totalMemberCount > _maximumTotalChannelSizePerWhoBatchRequest) {
-			endingPosition = channelIndex;
+    if (totalMemberCount > _maximumTotalChannelSizePerWhoBatchRequest) {
+      endingPosition = channelIndex;
 
-			break;
-		}
-	}
+      break;
+    }
+  }
 
-	self.lastWhoRequestChannelListIndex = (endingPosition + 1);
+  self.lastWhoRequestChannelListIndex = (endingPosition + 1);
 
-	/* Send WHO requests */
-	if (channelsToQuery == nil) {
-		return;
-	}
+  /* Send WHO requests */
+  if (channelsToQuery == nil) {
+    return;
+  }
 
-	for (IRCChannel *channel in channelsToQuery) {
-		[self sendWhoToChannel:channel hideResponse:YES];
-	}
+  for (IRCChannel *channel in channelsToQuery) {
+    [self sendWhoToChannel:channel hideResponse:YES];
+  }
 
 #undef _maximumChannelCountPerWhoBatchRequest
 #undef _maximumSingleChannelSizePerWhoBatchRequest
 #undef _maximumTotalChannelSizePerWhoBatchRequest
 }
 
-- (void)updateUserTrackingStatusForEntry:(IRCAddressBookEntry *)addressBookEntry withMessage:(IRCMessage *)message
-{
-	NSParameterAssert(addressBookEntry != nil);
-	NSParameterAssert(message != nil);
+- (void)updateUserTrackingStatusForEntry:(IRCAddressBookEntry *)addressBookEntry
+                             withMessage:(IRCMessage *)message {
+  NSParameterAssert(addressBookEntry != nil);
+  NSParameterAssert(message != nil);
 
-	if (self.supportsAdvancedTracking) {
-		return;
-	}
+  if (self.supportsAdvancedTracking) {
+    return;
+  }
 
-	IRCAddressBookUserTrackingStatus trackingStatus = [self.trackedUsers statusOfEntry:addressBookEntry];
+  IRCAddressBookUserTrackingStatus trackingStatus =
+      [self.trackedUsers statusOfEntry:addressBookEntry];
 
-	if (trackingStatus == IRCAddressBookUserTrackingStatusUnknown) {
-		return;
-	}
+  if (trackingStatus == IRCAddressBookUserTrackingStatusUnknown) {
+    return;
+  }
 
-	BOOL ison = (trackingStatus == IRCAddressBookUserTrackingStatusAvailable);
+  BOOL ison = (trackingStatus == IRCAddressBookUserTrackingStatusAvailable);
 
-	/* Notification Type: JOIN Command */
-	if ([message.command isEqualToStringIgnoringCase:@"JOIN"]) {
-		if (ison == NO) {
-			[self statusOfTrackedNickname:message.senderNickname
-								changedTo:IRCAddressBookUserTrackingStatusSignedOn
-								   notify:YES];
-		}
+  /* Notification Type: JOIN Command */
+  if ([message.command isEqualToStringIgnoringCase:@"JOIN"]) {
+    if (ison == NO) {
+      [self statusOfTrackedNickname:message.senderNickname
+                          changedTo:IRCAddressBookUserTrackingStatusSignedOn
+                             notify:YES];
+    }
 
-		return;
-	}
+    return;
+  }
 
-	/* Notification Type: QUIT Command */
-	if ([message.command isEqualToStringIgnoringCase:@"QUIT"]) {
-		if (ison) {
-			[self statusOfTrackedNickname:message.senderNickname
-								changedTo:IRCAddressBookUserTrackingStatusSignedOff
-								   notify:YES];
-		}
+  /* Notification Type: QUIT Command */
+  if ([message.command isEqualToStringIgnoringCase:@"QUIT"]) {
+    if (ison) {
+      [self statusOfTrackedNickname:message.senderNickname
+                          changedTo:IRCAddressBookUserTrackingStatusSignedOff
+                             notify:YES];
+    }
 
-		return;
-	}
+    return;
+  }
 
-	/* Notification Type: NICK Command */
-	if ([message.command isEqualToStringIgnoringCase:@"NICK"]) {
-		if (ison) {
-			[self statusOfTrackedNickname:message.senderNickname
-								changedTo:IRCAddressBookUserTrackingStatusSignedOff
-								   notify:YES];
-		} else {
-			[self statusOfTrackedNickname:message.senderNickname
-								changedTo:IRCAddressBookUserTrackingStatusSignedOn
-								   notify:YES];
-		}
+  /* Notification Type: NICK Command */
+  if ([message.command isEqualToStringIgnoringCase:@"NICK"]) {
+    if (ison) {
+      [self statusOfTrackedNickname:message.senderNickname
+                          changedTo:IRCAddressBookUserTrackingStatusSignedOff
+                             notify:YES];
+    } else {
+      [self statusOfTrackedNickname:message.senderNickname
+                          changedTo:IRCAddressBookUserTrackingStatusSignedOn
+                             notify:YES];
+    }
 
-		return;
-	}
+    return;
+  }
 }
 
 #pragma mark -
 #pragma mark Channel Ban List Dialog
 
-- (void)createChannelInviteExceptionListSheet
-{
-	[self createChannelBanListSheet:TDCChannelBanListSheetEntryTypeInviteException];
+- (void)createChannelInviteExceptionListSheet {
+  [self
+      createChannelBanListSheet:TDCChannelBanListSheetEntryTypeInviteException];
 }
 
-- (void)createChannelBanExceptionListSheet
-{
-	[self createChannelBanListSheet:TDCChannelBanListSheetEntryTypeBanException];
+- (void)createChannelBanExceptionListSheet {
+  [self createChannelBanListSheet:TDCChannelBanListSheetEntryTypeBanException];
 }
 
-- (void)createChannelBanListSheet
-{
-	[self createChannelBanListSheet:TDCChannelBanListSheetEntryTypeBan];
+- (void)createChannelBanListSheet {
+  [self createChannelBanListSheet:TDCChannelBanListSheetEntryTypeBan];
 }
 
-- (void)createChannelQuietListSheet
-{
-	[self createChannelBanListSheet:TDCChannelBanListSheetEntryTypeQuiet];
+- (void)createChannelQuietListSheet {
+  [self createChannelBanListSheet:TDCChannelBanListSheetEntryTypeQuiet];
 }
 
-- (void)createChannelBanListSheet:(TDCChannelBanListSheetEntryType)entryType
-{
-	[windowController() popMainWindowSheetIfExists];
+- (void)createChannelBanListSheet:(TDCChannelBanListSheetEntryType)entryType {
+  [windowController() popMainWindowSheetIfExists];
 
-	IRCChannel *c = mainWindow().selectedChannel;
+  IRCChannel *c = mainWindow().selectedChannel;
 
-	if (c == nil) {
-		return;
-	}
+  if (c == nil) {
+    return;
+  }
 
-	TDCChannelBanListSheet *listSheet = [[TDCChannelBanListSheet alloc] initWithEntryType:entryType inChannel:c];
+  TDCChannelBanListSheet *listSheet =
+      [[TDCChannelBanListSheet alloc] initWithEntryType:entryType inChannel:c];
 
-	if (listSheet == nil) {
-		return;
-	}
+  if (listSheet == nil) {
+    return;
+  }
 
-	listSheet.delegate = (id)self;
+  listSheet.delegate = (id)self;
 
-	listSheet.window = mainWindow();
+  listSheet.window = mainWindow();
 
-	[listSheet start];
+  [listSheet start];
 
-	[windowController() addWindowToWindowList:listSheet];
+  [windowController() addWindowToWindowList:listSheet];
 }
 
-- (void)channelBanListSheetOnUpdate:(TDCChannelBanListSheet *)sender
-{
-	IRCChannel *channel = sender.channel;
+- (void)channelBanListSheetOnUpdate:(TDCChannelBanListSheet *)sender {
+  IRCChannel *channel = sender.channel;
 
-	if (channel == nil) {
-		return;
-	}
+  if (channel == nil) {
+    return;
+  }
 
-	NSString *modeSend = [NSString stringWithFormat:@"+%@", sender.modeSymbol];
+  NSString *modeSend = [NSString stringWithFormat:@"+%@", sender.modeSymbol];
 
-	[self sendModes:modeSend withParametersString:nil inChannel:channel];
+  [self sendModes:modeSend withParametersString:nil inChannel:channel];
 }
 
-- (void)channelBanListSheetWillClose:(TDCChannelBanListSheet *)sender
-{
-	IRCChannel *channel = sender.channel;
+- (void)channelBanListSheetWillClose:(TDCChannelBanListSheet *)sender {
+  IRCChannel *channel = sender.channel;
 
-	if (channel == nil) {
-		return;
-	}
+  if (channel == nil) {
+    return;
+  }
 
-	NSArray *listOfChanges = sender.listOfChanges;
+  NSArray *listOfChanges = sender.listOfChanges;
 
-	for (NSString *change in listOfChanges) {
-		[self sendModes:change withParametersString:nil inChannel:channel];
-	}
+  for (NSString *change in listOfChanges) {
+    [self sendModes:change withParametersString:nil inChannel:channel];
+  }
 
-	[windowController() removeWindowFromWindowList:sender];
+  [windowController() removeWindowFromWindowList:sender];
 }
 
 #pragma mark -
 #pragma mark Network Channel List Dialog
 
-- (NSString *)channelListDialogWindowKey
-{
-	return [NSString stringWithFormat:@"TDCServerChannelListDialog -> %@", self.uniqueIdentifier];
+- (NSString *)channelListDialogWindowKey {
+  return [NSString stringWithFormat:@"TDCServerChannelListDialog -> %@",
+                                    self.uniqueIdentifier];
 }
 
-- (nullable TDCServerChannelListDialog *)channelListDialog
-{
-	return [windowController() windowFromWindowList:[self channelListDialogWindowKey]];
+- (nullable TDCServerChannelListDialog *)channelListDialog {
+  return [windowController()
+      windowFromWindowList:[self channelListDialogWindowKey]];
 }
 
-- (void)createChannelListDialog
-{
-	if ([windowController() maybeBringWindowForward:[self channelListDialogWindowKey]]) {
-		return; // The window was brought forward already.
-	}
+- (void)createChannelListDialog {
+  if ([windowController()
+          maybeBringWindowForward:[self channelListDialogWindowKey]]) {
+    return; // The window was brought forward already.
+  }
 
-	TDCServerChannelListDialog *channelListDialog = [[TDCServerChannelListDialog alloc] initWithClient:self];
+  TDCServerChannelListDialog *channelListDialog =
+      [[TDCServerChannelListDialog alloc] initWithClient:self];
 
-	channelListDialog.delegate = (id)self;
+  channelListDialog.delegate = (id)self;
 
-	[channelListDialog show];
+  [channelListDialog show];
 
-	[windowController() addWindowToWindowList:channelListDialog withDescription:[self channelListDialogWindowKey]];
+  [windowController() addWindowToWindowList:channelListDialog
+                            withDescription:[self channelListDialogWindowKey]];
 }
 
-- (void)serverChannelListDialogOnUpdate:(TDCServerChannelListDialog *)sender
-{
-	/* ELIST filters are sent server-side when the server supports them. */
-	[self requestChannelListWithArguments:sender.serverSideListArguments];
+- (void)serverChannelListDialogOnUpdate:(TDCServerChannelListDialog *)sender {
+  /* ELIST filters are sent server-side when the server supports them. */
+  [self requestChannelListWithArguments:sender.serverSideListArguments];
 }
 
-- (void)serverChannelListDialog:(TDCServerChannelListDialog *)sender joinChannels:(NSArray<NSString *> *)channels
-{
-	[self joinUnlistedChannelsAndSelectBestMatch:channels];
+- (void)serverChannelListDialog:(TDCServerChannelListDialog *)sender
+                   joinChannels:(NSArray<NSString *> *)channels {
+  [self joinUnlistedChannelsAndSelectBestMatch:channels];
 }
 
-- (void)serverChannelDialogWillClose:(TDCServerChannelListDialog *)sender
-{
-	[windowController() removeWindowFromWindowList:[self channelListDialogWindowKey]];
+- (void)serverChannelDialogWillClose:(TDCServerChannelListDialog *)sender {
+  [windowController()
+      removeWindowFromWindowList:[self channelListDialogWindowKey]];
 }
 
 @end

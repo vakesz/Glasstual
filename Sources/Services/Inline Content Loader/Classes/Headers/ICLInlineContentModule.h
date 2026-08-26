@@ -35,8 +35,8 @@
  *
  *********************************************************************** */
 
-#import "ICLPayload.h"
 #import "ICLMediaType.h"
+#import "ICLPayload.h"
 
 #import <GRMustache/GRMustache.h>
 
@@ -45,7 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 @class ICLInlineContentModule;
 
 /* See description for -actionBlockForURL: */
-typedef void (^ICLInlineContentModuleActionBlock)(ICLInlineContentModule *module);
+typedef void (^ICLInlineContentModuleActionBlock)(
+    ICLInlineContentModule *module);
 
 /**
  * Modules are always a subclass, instead of a protocol, to give us

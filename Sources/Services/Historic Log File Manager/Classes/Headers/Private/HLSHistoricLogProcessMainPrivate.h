@@ -35,6 +35,8 @@
  *
  *********************************************************************** */
 
+#import "HLSHistoricLogProtocol.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface HLSHistoricLogProcessMain : NSObject <HLSHistoricLogServerProtocol>

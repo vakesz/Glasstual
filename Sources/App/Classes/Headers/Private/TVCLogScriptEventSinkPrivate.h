@@ -41,10 +41,14 @@ NS_ASSUME_NONNULL_BEGIN
 @class TVCLogView;
 
 @interface TVCLogScriptEventSink : NSObject
-- (instancetype)initWithWebView:(nullable TVCLogView *)webView NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithWebView:(nullable TVCLogView *)webView
+    NS_DESIGNATED_INITIALIZER;
 
-+ (void)logToJavaScriptConsole:(NSString *)message inWebView:(TVCLogView *)webView, ...;
-+ (void)logToJavaScriptConsole:(NSString *)message inWebView:(TVCLogView *)webView withArguments:(va_list)arguments;
++ (void)logToJavaScriptConsole:(NSString *)message
+                     inWebView:(TVCLogView *)webView, ...;
++ (void)logToJavaScriptConsole:(NSString *)message
+                     inWebView:(TVCLogView *)webView
+                 withArguments:(va_list)arguments;
 @end
 
 NS_ASSUME_NONNULL_END

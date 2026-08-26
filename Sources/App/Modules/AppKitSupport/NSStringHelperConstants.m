@@ -15,6 +15,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 NSStringEncoding const TXDefaultPrimaryStringEncoding = NSUTF8StringEncoding;
-NSStringEncoding const TXDefaultFallbackStringEncoding = NSISOLatin1StringEncoding;
+NSStringEncoding const TXDefaultFallbackStringEncoding =
+    NSISOLatin1StringEncoding;
 
 NS_ASSUME_NONNULL_END

@@ -43,25 +43,25 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannel;
 
 typedef NS_ENUM(NSUInteger, TXNotificationType) {
-	TXNotificationTypeHighlight = 1000,
-	TXNotificationTypeNewPrivateMessage = 1001,
-	TXNotificationTypeChannelMessage = 1002,
-	TXNotificationTypeChannelNotice = 1003,
-	TXNotificationTypePrivateMessage = 1004,
-	TXNotificationTypePrivateNotice = 1005,
-	TXNotificationTypeKick = 1006,
-	TXNotificationTypeInvite = 1007,
-	TXNotificationTypeConnect = 1008,
-	TXNotificationTypeDisconnect = 1009,
-	TXNotificationTypeAddressBookMatch = 1010,
-	TXNotificationTypeFileTransferSendSuccessful = 1011,
-	TXNotificationTypeFileTransferReceiveSuccessful = 1012,
-	TXNotificationTypeFileTransferSendFailed = 1013,
-	TXNotificationTypeFileTransferReceiveFailed = 1014,
-	TXNotificationTypeFileTransferReceiveRequested = 1015,
-	TXNotificationTypeUserJoined = 1016,
-	TXNotificationTypeUserParted = 1017,
-	TXNotificationTypeUserDisconnected = 1018
+  TXNotificationTypeHighlight = 1000,
+  TXNotificationTypeNewPrivateMessage = 1001,
+  TXNotificationTypeChannelMessage = 1002,
+  TXNotificationTypeChannelNotice = 1003,
+  TXNotificationTypePrivateMessage = 1004,
+  TXNotificationTypePrivateNotice = 1005,
+  TXNotificationTypeKick = 1006,
+  TXNotificationTypeInvite = 1007,
+  TXNotificationTypeConnect = 1008,
+  TXNotificationTypeDisconnect = 1009,
+  TXNotificationTypeAddressBookMatch = 1010,
+  TXNotificationTypeFileTransferSendSuccessful = 1011,
+  TXNotificationTypeFileTransferReceiveSuccessful = 1012,
+  TXNotificationTypeFileTransferSendFailed = 1013,
+  TXNotificationTypeFileTransferReceiveFailed = 1014,
+  TXNotificationTypeFileTransferReceiveRequested = 1015,
+  TXNotificationTypeUserJoined = 1016,
+  TXNotificationTypeUserParted = 1017,
+  TXNotificationTypeUserDisconnected = 1018
 };
 
 @interface TLONotificationController : NSObject
@@ -71,12 +71,18 @@ typedef NS_ENUM(NSUInteger, TXNotificationType) {
 @end
 
 @interface TLONotificationController (Preferences)
-- (nullable NSString *)soundForEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel;
-- (BOOL)speakEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel;
-- (BOOL)notificationEnabledForEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel;
-- (BOOL)disabledWhileAwayForEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel;
-- (BOOL)bounceDockIconForEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel;
-- (BOOL)bounceDockIconRepeatedlyForEvent:(TXNotificationType)event inChannel:(nullable IRCChannel *)channel;
+- (nullable NSString *)soundForEvent:(TXNotificationType)event
+                           inChannel:(nullable IRCChannel *)channel;
+- (BOOL)speakEvent:(TXNotificationType)event
+         inChannel:(nullable IRCChannel *)channel;
+- (BOOL)notificationEnabledForEvent:(TXNotificationType)event
+                          inChannel:(nullable IRCChannel *)channel;
+- (BOOL)disabledWhileAwayForEvent:(TXNotificationType)event
+                        inChannel:(nullable IRCChannel *)channel;
+- (BOOL)bounceDockIconForEvent:(TXNotificationType)event
+                     inChannel:(nullable IRCChannel *)channel;
+- (BOOL)bounceDockIconRepeatedlyForEvent:(TXNotificationType)event
+                               inChannel:(nullable IRCChannel *)channel;
 @end
 
 NS_ASSUME_NONNULL_END

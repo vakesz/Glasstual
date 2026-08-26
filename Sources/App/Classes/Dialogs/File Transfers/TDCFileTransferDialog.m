@@ -38,20 +38,20 @@
 
 #import <QuickLookUI/QuickLookUI.h>
 
+#import "IRCWorld.h"
 #import "NSObjectHelperPrivate.h"
-#import "TPCPathInfo.h"
-#import "TXMasterController.h"
-#import "TXMenuController.h"
-#import "TPCPreferencesLocal.h"
-#import "TPCPreferencesUserDefaults.h"
+#import "TDCFileTransferDialogInternal.h"
+#import "TDCFileTransferDialogTableCellPrivate.h"
+#import "TDCFileTransferDialogTransferControllerPrivate.h"
 #import "TLOInternetAddressLookup.h"
 #import "TLOLocalization.h"
 #import "TLOTimer.h"
-#import "IRCWorld.h"
+#import "TPCPathInfo.h"
+#import "TPCPreferencesLocal.h"
+#import "TPCPreferencesUserDefaults.h"
 #import "TVCBasicTableView.h"
-#import "TDCFileTransferDialogTableCellPrivate.h"
-#import "TDCFileTransferDialogTransferControllerPrivate.h"
-#import "TDCFileTransferDialogInternal.h"
+#import "TXMasterController.h"
+#import "TXMenuController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -62,21 +62,24 @@ NS_ASSUME_NONNULL_BEGIN
 #define _menuItemTagQuickLook 3007
 #define _menuItemTagShare 3008
 
-@interface TDCFileTransferDialog () <NSMenuItemValidation,
-									 NSMenuDelegate,
-									 QLPreviewPanelDataSource,
-									 QLPreviewPanelDelegate>
+@interface TDCFileTransferDialog () <NSMenuItemValidation, NSMenuDelegate,
+                                     QLPreviewPanelDataSource,
+                                     QLPreviewPanelDelegate>
 @property(nonatomic, weak) IBOutlet NSButton *clearButton;
 @property(nonatomic, weak) IBOutlet NSSegmentedControl *navigationControl;
-@property(nonatomic, weak, readwrite) IBOutlet TVCBasicTableView *fileTransferTable;
-@property(nonatomic, strong) IBOutlet NSArrayController *fileTransfersController;
-@property(nonatomic, strong, nullable) TLOInternetAddressLookup *IPAddressRequest;
+@property(nonatomic, weak, readwrite)
+    IBOutlet TVCBasicTableView *fileTransferTable;
+@property(nonatomic, strong)
+    IBOutlet NSArrayController *fileTransfersController;
+@property(nonatomic, strong, nullable)
+    TLOInternetAddressLookup *IPAddressRequest;
 @property(readonly) TDCFileTransferDialogSelection navigationSelection;
 @property(nonatomic, strong, nullable) TLOTimer *maintenanceTimer;
 @property(nonatomic, copy, nullable) NSURL *downloadDestinationURLPrivate;
 @property(nonatomic, strong, nullable) id keyDownEventMonitor;
 @property(nonatomic, copy) NSArray<NSURL *> *previewItems;
-@property(nonatomic, strong) NSMutableArray<TDCFileTransferDialogIPAddressBlock> *IPAddressCompletionBlocks;
+@property(nonatomic, strong) NSMutableArray<TDCFileTransferDialogIPAddressBlock>
+    *IPAddressCompletionBlocks;
 
 - (IBAction)hideWindow:(nullable id)sender;
 
@@ -103,33 +106,30 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TDCFileTransferDialogWindow
 
-- (BOOL)acceptsPreviewPanelControl:(QLPreviewPanel *)panel
-{
-	id delegate = self.delegate;
+- (BOOL)acceptsPreviewPanelControl:(QLPreviewPanel *)panel {
+  id delegate = self.delegate;
 
-	if ([delegate respondsToSelector:@selector(acceptsPreviewPanelControl:)]) {
-		return [delegate acceptsPreviewPanelControl:panel];
-	}
+  if ([delegate respondsToSelector:@selector(acceptsPreviewPanelControl:)]) {
+    return [delegate acceptsPreviewPanelControl:panel];
+  }
 
-	return NO;
+  return NO;
 }
 
-- (void)beginPreviewPanelControl:(QLPreviewPanel *)panel
-{
-	id delegate = self.delegate;
+- (void)beginPreviewPanelControl:(QLPreviewPanel *)panel {
+  id delegate = self.delegate;
 
-	if ([delegate respondsToSelector:@selector(beginPreviewPanelControl:)]) {
-		[delegate beginPreviewPanelControl:panel];
-	}
+  if ([delegate respondsToSelector:@selector(beginPreviewPanelControl:)]) {
+    [delegate beginPreviewPanelControl:panel];
+  }
 }
 
-- (void)endPreviewPanelControl:(QLPreviewPanel *)panel
-{
-	id delegate = self.delegate;
+- (void)endPreviewPanelControl:(QLPreviewPanel *)panel {
+  id delegate = self.delegate;
 
-	if ([delegate respondsToSelector:@selector(endPreviewPanelControl:)]) {
-		[delegate endPreviewPanelControl:panel];
-	}
+  if ([delegate respondsToSelector:@selector(endPreviewPanelControl:)]) {
+    [delegate endPreviewPanelControl:panel];
+  }
 }
 
 @end
@@ -139,1163 +139,1203 @@ NS_ASSUME_NONNULL_BEGIN
 
 @implementation TDCFileTransferDialog
 
-- (instancetype)init
-{
-	if ((self = [super init])) {
-		self.previewItems = @[];
+- (instancetype)init {
+  if ((self = [super init])) {
+    self.previewItems = @[];
 
-		self.IPAddressCompletionBlocks = [NSMutableArray array];
+    self.IPAddressCompletionBlocks = [NSMutableArray array];
 
-		[self prepareInitialState];
-	}
+    [self prepareInitialState];
+  }
 
-	return self;
+  return self;
 }
 
-- (void)prepareInitialState
-{
-	[RZMainBundle() loadNibNamed:@"TDCFileTransferDialog" owner:self topLevelObjects:nil];
+- (void)prepareInitialState {
+  [RZMainBundle() loadNibNamed:@"TDCFileTransferDialog"
+                         owner:self
+               topLevelObjects:nil];
 
-	self.fileTransferTable.style = NSTableViewStyleInset;
+  self.fileTransferTable.style = NSTableViewStyleInset;
 
-	[self prepareTableMenu];
+  [self prepareTableMenu];
 
-	[self installKeyDownEventMonitor];
+  [self installKeyDownEventMonitor];
 
-	/* Transfer controllers own their state on the main queue and the
-	 array controller is only ever enumerated there, so the timer lives
-	 on the main queue as well. */
-	self.maintenanceTimer = [TLOTimer
-		timerWithActionBlock:^(TLOTimer *sender) {
-			[self onMaintenanceTimer];
-		}
-					 onQueue:dispatch_get_main_queue()];
+  /* Transfer controllers own their state on the main queue and the
+   array controller is only ever enumerated there, so the timer lives
+   on the main queue as well. */
+  self.maintenanceTimer = [TLOTimer
+      timerWithActionBlock:^(TLOTimer *sender) {
+        [self onMaintenanceTimer];
+      }
+                   onQueue:dispatch_get_main_queue()];
 
-	[RZNotificationCenter() addObserver:self
-							   selector:@selector(clientWillBeDestroyed:)
-								   name:IRCWorldWillDestroyClientNotification
-								 object:nil];
+  [RZNotificationCenter() addObserver:self
+                             selector:@selector(clientWillBeDestroyed:)
+                                 name:IRCWorldWillDestroyClientNotification
+                               object:nil];
 }
 
-- (void)dealloc
-{
-	[RZNotificationCenter() removeObserver:self];
+- (void)dealloc {
+  [RZNotificationCenter() removeObserver:self];
 
-	[self.maintenanceTimer stop];
-	self.maintenanceTimer = nil;
+  [self.maintenanceTimer stop];
+  self.maintenanceTimer = nil;
 
-	[self removeKeyDownEventMonitor];
+  [self removeKeyDownEventMonitor];
 }
 
-- (void)prepareTableMenu
-{
-	NSMenu *menu = self.fileTransferTable.menu;
+- (void)prepareTableMenu {
+  NSMenu *menu = self.fileTransferTable.menu;
 
-	[[menu itemWithTag:_menuItemTagQuickLook] setImage:[self menuItemImageForSymbolNamed:@"eye"]];
-	[[menu itemWithTag:3006] setImage:[self menuItemImageForSymbolNamed:@"folder"]];
+  [[menu itemWithTag:_menuItemTagQuickLook]
+      setImage:[self menuItemImageForSymbolNamed:@"eye"]];
+  [[menu itemWithTag:3006]
+      setImage:[self menuItemImageForSymbolNamed:@"folder"]];
 }
 
-- (NSImage *)menuItemImageForSymbolNamed:(NSString *)symbolName
-{
-	NSImage *image = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:nil];
+- (NSImage *)menuItemImageForSymbolNamed:(NSString *)symbolName {
+  NSImage *image = [NSImage imageWithSystemSymbolName:symbolName
+                             accessibilityDescription:nil];
 
-	NSImageSymbolConfiguration *configuration =
-		[NSImageSymbolConfiguration configurationWithPointSize:[NSFont systemFontSize]
-														weight:NSFontWeightRegular
-														 scale:NSImageSymbolScaleMedium];
+  NSImageSymbolConfiguration *configuration = [NSImageSymbolConfiguration
+      configurationWithPointSize:[NSFont systemFontSize]
+                          weight:NSFontWeightRegular
+                           scale:NSImageSymbolScaleMedium];
 
-	return [image imageWithSymbolConfiguration:configuration];
+  return [image imageWithSymbolConfiguration:configuration];
 }
 
-- (void)installKeyDownEventMonitor
-{
-	/* The table view does not forward unhandled keys anywhere the
-	 dialog can see them, so Space is picked up here before the
-	 table gets it. Only events aimed at the table are consumed. */
-	__weak TDCFileTransferDialog *weakSelf = self;
+- (void)installKeyDownEventMonitor {
+  /* The table view does not forward unhandled keys anywhere the
+   dialog can see them, so Space is picked up here before the
+   table gets it. Only events aimed at the table are consumed. */
+  __weak TDCFileTransferDialog *weakSelf = self;
 
-	self.keyDownEventMonitor =
-		[NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
-											  handler:^NSEvent *_Nullable(NSEvent *event) {
-												  TDCFileTransferDialog *strongSelf = weakSelf;
+  self.keyDownEventMonitor = [NSEvent
+      addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
+                                   handler:^NSEvent *_Nullable(NSEvent *event) {
+                                     TDCFileTransferDialog *strongSelf =
+                                         weakSelf;
 
-												  if (strongSelf == nil) {
-													  return event;
-												  }
+                                     if (strongSelf == nil) {
+                                       return event;
+                                     }
 
-												  if ([strongSelf keyDownEventTogglesQuickLook:event]) {
-													  [strongSelf toggleQuickLookPanel];
+                                     if ([strongSelf
+                                             keyDownEventTogglesQuickLook:
+                                                 event]) {
+                                       [strongSelf toggleQuickLookPanel];
 
-													  return nil;
-												  }
+                                       return nil;
+                                     }
 
-												  return event;
-											  }];
+                                     return event;
+                                   }];
 }
 
-- (void)removeKeyDownEventMonitor
-{
-	if (self.keyDownEventMonitor == nil) {
-		return;
-	}
+- (void)removeKeyDownEventMonitor {
+  if (self.keyDownEventMonitor == nil) {
+    return;
+  }
 
-	[NSEvent removeMonitor:self.keyDownEventMonitor];
-	self.keyDownEventMonitor = nil;
+  [NSEvent removeMonitor:self.keyDownEventMonitor];
+  self.keyDownEventMonitor = nil;
 }
 
-- (BOOL)keyDownEventTogglesQuickLook:(NSEvent *)event
-{
-	if (event.window != self.window) {
-		return NO;
-	}
+- (BOOL)keyDownEventTogglesQuickLook:(NSEvent *)event {
+  if (event.window != self.window) {
+    return NO;
+  }
 
-	if (self.window.firstResponder != self.fileTransferTable) {
-		return NO;
-	}
+  if (self.window.firstResponder != self.fileTransferTable) {
+    return NO;
+  }
 
-	NSEventModifierFlags modifierFlags = (event.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask);
+  NSEventModifierFlags modifierFlags =
+      (event.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask);
 
-	if (modifierFlags != 0) {
-		return NO;
-	}
+  if (modifierFlags != 0) {
+    return NO;
+  }
 
-	if ([event.charactersIgnoringModifiers isEqualToString:@" "] == NO) {
-		return NO;
-	}
+  if ([event.charactersIgnoringModifiers isEqualToString:@" "] == NO) {
+    return NO;
+  }
 
-	return ([self selectedFileTransfersWithLocalFiles].count > 0);
+  return ([self selectedFileTransfersWithLocalFiles].count > 0);
 }
 
-- (void)show
-{
-	[self show:YES restorePosition:YES];
+- (void)show {
+  [self show:YES restorePosition:YES];
 }
 
-- (void)show:(BOOL)makeKeyWindow
-{
-	[self show:makeKeyWindow restorePosition:YES];
+- (void)show:(BOOL)makeKeyWindow {
+  [self show:makeKeyWindow restorePosition:YES];
 }
 
-- (void)show:(BOOL)makeKeyWindow restorePosition:(BOOL)restorePosition
-{
-	if (makeKeyWindow) {
-		[self.window makeKeyAndOrderFront:nil];
-	} else {
-		[self.window orderFront:nil];
-	}
+- (void)show:(BOOL)makeKeyWindow restorePosition:(BOOL)restorePosition {
+  if (makeKeyWindow) {
+    [self.window makeKeyAndOrderFront:nil];
+  } else {
+    [self.window orderFront:nil];
+  }
 
-	if (restorePosition) {
-		[self.window restoreWindowStateForClass:self.class];
-	}
+  if (restorePosition) {
+    [self.window restoreWindowStateForClass:self.class];
+  }
 }
 
-- (nullable TDCFileTransferDialogTransferController *)fileTransferMatchingPort:(uint16_t)port
-{
-	TDCFileTransferDialogTransferController *fileTransfer =
-		[self fileTransferMatchingCondition:^BOOL(TDCFileTransferDialogTransferController *controller) {
-			return (controller.hostPort == port);
-		}];
+- (nullable TDCFileTransferDialogTransferController *)fileTransferMatchingPort:
+    (uint16_t)port {
+  TDCFileTransferDialogTransferController *fileTransfer =
+      [self fileTransferMatchingCondition:^BOOL(
+                TDCFileTransferDialogTransferController *controller) {
+        return (controller.hostPort == port);
+      }];
 
-	return fileTransfer;
+  return fileTransfer;
 }
 
-- (nullable TDCFileTransferDialogTransferController *)fileTransferWithUniqueIdentifier:(NSString *)identifier
-{
-	NSParameterAssert(identifier != nil);
+- (nullable TDCFileTransferDialogTransferController *)
+    fileTransferWithUniqueIdentifier:(NSString *)identifier {
+  NSParameterAssert(identifier != nil);
 
-	TDCFileTransferDialogTransferController *fileTransfer =
-		[self fileTransferMatchingCondition:^BOOL(TDCFileTransferDialogTransferController *controller) {
-			return [identifier isEqualToString:controller.uniqueIdentifier];
-		}];
+  TDCFileTransferDialogTransferController *fileTransfer =
+      [self fileTransferMatchingCondition:^BOOL(
+                TDCFileTransferDialogTransferController *controller) {
+        return [identifier isEqualToString:controller.uniqueIdentifier];
+      }];
 
-	return fileTransfer;
+  return fileTransfer;
 }
 
-- (BOOL)fileTransferExistsWithToken:(NSString *)transferToken
-{
-	NSParameterAssert(transferToken != nil);
+- (BOOL)fileTransferExistsWithToken:(NSString *)transferToken {
+  NSParameterAssert(transferToken != nil);
 
-	TDCFileTransferDialogTransferController *fileTransfer =
-		[self fileTransferMatchingCondition:^BOOL(TDCFileTransferDialogTransferController *controller) {
-			return [transferToken isEqualToString:controller.transferToken];
-		}];
+  TDCFileTransferDialogTransferController *fileTransfer =
+      [self fileTransferMatchingCondition:^BOOL(
+                TDCFileTransferDialogTransferController *controller) {
+        return [transferToken isEqualToString:controller.transferToken];
+      }];
 
-	return (fileTransfer != nil);
+  return (fileTransfer != nil);
 }
 
-- (nullable TDCFileTransferDialogTransferController *)fileTransferSenderMatchingToken:(NSString *)transferToken
-{
-	NSParameterAssert(transferToken != nil);
+- (nullable TDCFileTransferDialogTransferController *)
+    fileTransferSenderMatchingToken:(NSString *)transferToken {
+  NSParameterAssert(transferToken != nil);
 
-	TDCFileTransferDialogTransferController *fileTransfer =
-		[self fileTransferMatchingCondition:^BOOL(TDCFileTransferDialogTransferController *controller) {
-			return ([transferToken isEqualToString:controller.transferToken] && controller.isSender);
-		}];
+  TDCFileTransferDialogTransferController *fileTransfer =
+      [self fileTransferMatchingCondition:^BOOL(
+                TDCFileTransferDialogTransferController *controller) {
+        return ([transferToken isEqualToString:controller.transferToken] &&
+                controller.isSender);
+      }];
 
-	return fileTransfer;
+  return fileTransfer;
 }
 
-- (nullable TDCFileTransferDialogTransferController *)fileTransferReceiverMatchingToken:(NSString *)transferToken
-{
-	NSParameterAssert(transferToken != nil);
+- (nullable TDCFileTransferDialogTransferController *)
+    fileTransferReceiverMatchingToken:(NSString *)transferToken {
+  NSParameterAssert(transferToken != nil);
 
-	TDCFileTransferDialogTransferController *fileTransfer =
-		[self fileTransferMatchingCondition:^BOOL(TDCFileTransferDialogTransferController *controller) {
-			return ([transferToken isEqualToString:controller.transferToken] && controller.isSender == NO);
-		}];
+  TDCFileTransferDialogTransferController *fileTransfer =
+      [self fileTransferMatchingCondition:^BOOL(
+                TDCFileTransferDialogTransferController *controller) {
+        return ([transferToken isEqualToString:controller.transferToken] &&
+                controller.isSender == NO);
+      }];
 
-	return fileTransfer;
+  return fileTransfer;
 }
 
-- (void)prepareForApplicationTermination
-{
-	LogToConsoleTerminationProgress("Stopping access to download destination bookmark");
+- (void)prepareForApplicationTermination {
+  LogToConsoleTerminationProgress(
+      "Stopping access to download destination bookmark");
 
-	if (self.downloadDestinationURLPrivate) {
-		[self.downloadDestinationURLPrivate stopAccessingSecurityScopedResource];
-	}
+  if (self.downloadDestinationURLPrivate) {
+    [self.downloadDestinationURLPrivate stopAccessingSecurityScopedResource];
+  }
 
-	LogToConsoleTerminationProgress("Closing file transfer window");
+  LogToConsoleTerminationProgress("Closing file transfer window");
 
-	[self close];
+  [self close];
 
-	LogToConsoleTerminationProgress("Preparing all file transfers for destruction");
+  LogToConsoleTerminationProgress(
+      "Preparing all file transfers for destruction");
 
-	[self enumerateFileTransfers:^(TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
-		[fileTransfer prepareForPermanentDestruction];
-	}];
+  [self enumerateFileTransfers:^(
+            TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
+    [fileTransfer prepareForPermanentDestruction];
+  }];
 }
 
 - (nullable NSString *)addReceiverForClient:(IRCClient *)client
-								   nickname:(NSString *)nickname
-									address:(NSString *)hostAddress
-									   port:(uint16_t)hostPort
-								   filename:(NSString *)filename
-								   filesize:(uint64_t)totalFilesize
-									  token:(nullable NSString *)transferToken
-{
-	NSParameterAssert(client != nil);
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(hostAddress != nil);
-	NSParameterAssert(filename != nil);
+                                   nickname:(NSString *)nickname
+                                    address:(NSString *)hostAddress
+                                       port:(uint16_t)hostPort
+                                   filename:(NSString *)filename
+                                   filesize:(uint64_t)totalFilesize
+                                      token:(nullable NSString *)transferToken {
+  NSParameterAssert(client != nil);
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(hostAddress != nil);
+  NSParameterAssert(filename != nil);
 
-	/* A hard limit exists to prevent a bad person continuously sending file transfers 
-	 which appear in the file transfer, exhausting resources. */
-	if ([self receiverCount] > _addReceiverHardLimit) {
-		LogToConsoleError("Max receiver count of %{public}i exceeded", _addReceiverHardLimit);
+  /* A hard limit exists to prevent a bad person continuously sending file
+   transfers which appear in the file transfer, exhausting resources. */
+  if ([self receiverCount] > _addReceiverHardLimit) {
+    LogToConsoleError("Max receiver count of %{public}i exceeded",
+                      _addReceiverHardLimit);
 
-		return nil;
-	}
+    return nil;
+  }
 
-	TDCFileTransferDialogTransferController *controller =
-		[TDCFileTransferDialogTransferController receiverForClient:client
-														  nickname:nickname
-														   address:hostAddress
-															  port:hostPort
-														  filename:filename
-														  filesize:totalFilesize
-															 token:transferToken];
+  TDCFileTransferDialogTransferController *controller =
+      [TDCFileTransferDialogTransferController receiverForClient:client
+                                                        nickname:nickname
+                                                         address:hostAddress
+                                                            port:hostPort
+                                                        filename:filename
+                                                        filesize:totalFilesize
+                                                           token:transferToken];
 
-	if (controller == nil) {
-		return nil;
-	}
+  if (controller == nil) {
+    return nil;
+  }
 
-	[self show:NO restorePosition:NO];
+  [self show:NO restorePosition:NO];
 
-	[self addFileTransfer:controller];
+  [self addFileTransfer:controller];
 
-	NSString *savePath = self.downloadDestinationURLPrivate.path;
+  NSString *savePath = self.downloadDestinationURLPrivate.path;
 
-	if ([TPCPreferences fileTransferRequestReplyAction] == TXFileTransferRequestReplyAutomaticallyDownload) {
-		if (savePath == nil) {
-			savePath = [TPCPathInfo userDownloads];
-		}
+  if ([TPCPreferences fileTransferRequestReplyAction] ==
+      TXFileTransferRequestReplyAutomaticallyDownload) {
+    if (savePath == nil) {
+      savePath = [TPCPathInfo userDownloads];
+    }
 
-		[controller openWithPath:savePath];
-	}
+    [controller openWithPath:savePath];
+  }
 
-	return controller.uniqueIdentifier;
+  return controller.uniqueIdentifier;
 }
 
 - (nullable NSString *)addSenderForClient:(IRCClient *)client
-								 nickname:(NSString *)nickname
-									 path:(NSString *)path
-								 autoOpen:(BOOL)autoOpen
-{
-	NSParameterAssert(client != nil);
-	NSParameterAssert(nickname != nil);
-	NSParameterAssert(path != nil);
+                                 nickname:(NSString *)nickname
+                                     path:(NSString *)path
+                                 autoOpen:(BOOL)autoOpen {
+  NSParameterAssert(client != nil);
+  NSParameterAssert(nickname != nil);
+  NSParameterAssert(path != nil);
 
-	TDCFileTransferDialogTransferController *controller =
-		[TDCFileTransferDialogTransferController senderForClient:client nickname:nickname path:path];
+  TDCFileTransferDialogTransferController *controller =
+      [TDCFileTransferDialogTransferController senderForClient:client
+                                                      nickname:nickname
+                                                          path:path];
 
-	if (controller == nil) {
-		return nil;
-	}
+  if (controller == nil) {
+    return nil;
+  }
 
-	[self show:YES restorePosition:NO];
+  [self show:YES restorePosition:NO];
 
-	[self addFileTransfer:controller];
+  [self addFileTransfer:controller];
 
-	if (autoOpen) {
-		[controller open];
-	}
+  if (autoOpen) {
+    [controller open];
+  }
 
-	return controller.uniqueIdentifier;
+  return controller.uniqueIdentifier;
 }
 
-- (void)updateClearButton
-{
-	NSArray *stoppedFileTransfers = [self stoppedFileTransfers];
+- (void)updateClearButton {
+  NSArray *stoppedFileTransfers = [self stoppedFileTransfers];
 
-	self.clearButton.enabled = (stoppedFileTransfers.count > 0);
+  self.clearButton.enabled = (stoppedFileTransfers.count > 0);
 }
 
-- (void)addFileTransfer:(TDCFileTransferDialogTransferController *)controller
-{
-	/* Resetting the predicate the each time a controller is added is stupid,
-	 but this is a low frequency task that we can forgive. */
-	NSPredicate *filterPredicate = self.fileTransfersController.filterPredicate;
+- (void)addFileTransfer:(TDCFileTransferDialogTransferController *)controller {
+  /* Resetting the predicate the each time a controller is added is stupid,
+   but this is a low frequency task that we can forgive. */
+  NSPredicate *filterPredicate = self.fileTransfersController.filterPredicate;
 
-	self.fileTransfersController.filterPredicate = nil;
+  self.fileTransfersController.filterPredicate = nil;
 
-	[self.fileTransfersController insertObject:controller atArrangedObjectIndex:0];
+  [self.fileTransfersController insertObject:controller
+                       atArrangedObjectIndex:0];
 
-	self.fileTransfersController.filterPredicate = filterPredicate;
+  self.fileTransfersController.filterPredicate = filterPredicate;
 }
 
-- (void)removeFileTransfersMatchingClient:(IRCClient *)client
-{
-	NSParameterAssert(client != nil);
+- (void)removeFileTransfersMatchingClient:(IRCClient *)client {
+  NSParameterAssert(client != nil);
 
-	NSArray *fileTransfers = [self fileTransfersMatchingClient:client];
+  NSArray *fileTransfers = [self fileTransfersMatchingClient:client];
 
-	if (fileTransfers.count == 0) {
-		return;
-	}
+  if (fileTransfers.count == 0) {
+    return;
+  }
 
-	[fileTransfers makeObjectsPerformSelector:@selector(prepareForPermanentDestruction)];
+  [fileTransfers
+      makeObjectsPerformSelector:@selector(prepareForPermanentDestruction)];
 
-	[self.fileTransfersController removeObjects:fileTransfers];
+  [self.fileTransfersController removeObjects:fileTransfers];
 }
 
 #pragma mark -
 #pragma mark Notifications
 
-- (void)clientWillBeDestroyed:(NSNotification *)notification
-{
-	[self removeFileTransfersMatchingClient:notification.object];
+- (void)clientWillBeDestroyed:(NSNotification *)notification {
+  [self removeFileTransfersMatchingClient:notification.object];
 }
 
 #pragma mark -
 #pragma mark Actions
 
-- (BOOL)validateMenuItem:(NSMenuItem *)item
-{
-	NSInteger tag = item.tag;
+- (BOOL)validateMenuItem:(NSMenuItem *)item {
+  NSInteger tag = item.tag;
 
-	NSArray *selectedFileTransfers = [self selectedFileTransfers];
+  NSArray *selectedFileTransfers = [self selectedFileTransfers];
 
-	if (selectedFileTransfers.count == 0) {
-		return NO;
-	}
+  if (selectedFileTransfers.count == 0) {
+    return NO;
+  }
 
-	/* Begin actual validation. */
-	switch (tag) {
-	case 3001: // Start Download
-	{
-		for (TDCFileTransferDialogTransferController *fileTransfer in selectedFileTransfers) {
-			TDCFileTransferDialogTransferStatus transferStatus = fileTransfer.transferStatus;
+  /* Begin actual validation. */
+  switch (tag) {
+  case 3001: // Start Download
+  {
+    for (TDCFileTransferDialogTransferController
+             *fileTransfer in selectedFileTransfers) {
+      TDCFileTransferDialogTransferStatus transferStatus =
+          fileTransfer.transferStatus;
 
-			if (transferStatus == TDCFileTransferDialogTransferStatusStopped ||
-				transferStatus == TDCFileTransferDialogTransferStatusRecoverableError) {
-				return YES;
-			}
-		}
+      if (transferStatus == TDCFileTransferDialogTransferStatusStopped ||
+          transferStatus ==
+              TDCFileTransferDialogTransferStatusRecoverableError) {
+        return YES;
+      }
+    }
 
-		return NO;
-	}
-	case 3003: // Stop Download
-	{
-		for (TDCFileTransferDialogTransferController *fileTransfer in selectedFileTransfers) {
-			TDCFileTransferDialogTransferStatus transferStatus = fileTransfer.transferStatus;
+    return NO;
+  }
+  case 3003: // Stop Download
+  {
+    for (TDCFileTransferDialogTransferController
+             *fileTransfer in selectedFileTransfers) {
+      TDCFileTransferDialogTransferStatus transferStatus =
+          fileTransfer.transferStatus;
 
-			if (transferStatus == TDCFileTransferDialogTransferStatusConnecting ||
-				transferStatus == TDCFileTransferDialogTransferStatusReceiving ||
-				transferStatus == TDCFileTransferDialogTransferStatusIsListeningAsSender ||
-				transferStatus == TDCFileTransferDialogTransferStatusIsListeningAsReceiver ||
-				transferStatus == TDCFileTransferDialogTransferStatusSending ||
-				transferStatus == TDCFileTransferDialogTransferStatusMappingListeningPort ||
-				transferStatus == TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress ||
-				transferStatus == TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept ||
-				transferStatus == TDCFileTransferDialogTransferStatusWaitingForResumeAccept) {
-				return YES;
-			}
-		}
+      if (transferStatus == TDCFileTransferDialogTransferStatusConnecting ||
+          transferStatus == TDCFileTransferDialogTransferStatusReceiving ||
+          transferStatus ==
+              TDCFileTransferDialogTransferStatusIsListeningAsSender ||
+          transferStatus ==
+              TDCFileTransferDialogTransferStatusIsListeningAsReceiver ||
+          transferStatus == TDCFileTransferDialogTransferStatusSending ||
+          transferStatus ==
+              TDCFileTransferDialogTransferStatusMappingListeningPort ||
+          transferStatus ==
+              TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress ||
+          transferStatus ==
+              TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept ||
+          transferStatus ==
+              TDCFileTransferDialogTransferStatusWaitingForResumeAccept) {
+        return YES;
+      }
+    }
 
-		return NO;
-	}
-	case 3004: // Remove Item
-	{
-		return YES;
-	}
-	case 3005: // Open File
-	case 3006: // Show in Finder
-	{
-		for (TDCFileTransferDialogTransferController *fileTransfer in selectedFileTransfers) {
-			if ([self fileTransferHasLocalFile:fileTransfer]) {
-				return YES;
-			}
-		}
+    return NO;
+  }
+  case 3004: // Remove Item
+  {
+    return YES;
+  }
+  case 3005: // Open File
+  case 3006: // Show in Finder
+  {
+    for (TDCFileTransferDialogTransferController
+             *fileTransfer in selectedFileTransfers) {
+      if ([self fileTransferHasLocalFile:fileTransfer]) {
+        return YES;
+      }
+    }
 
-		return NO;
-	}
-	case _menuItemTagQuickLook:
-	case _menuItemTagShare: {
-		/* Every selected row must have a file on disk. */
-		for (TDCFileTransferDialogTransferController *fileTransfer in selectedFileTransfers) {
-			if ([self fileTransferHasLocalFile:fileTransfer] == NO) {
-				return NO;
-			}
-		}
+    return NO;
+  }
+  case _menuItemTagQuickLook:
+  case _menuItemTagShare: {
+    /* Every selected row must have a file on disk. */
+    for (TDCFileTransferDialogTransferController
+             *fileTransfer in selectedFileTransfers) {
+      if ([self fileTransferHasLocalFile:fileTransfer] == NO) {
+        return NO;
+      }
+    }
 
-		return YES;
-	}
-	}
+    return YES;
+  }
+  }
 
-	return NO; // Default validation to NO.
+  return NO; // Default validation to NO.
 }
 
-- (BOOL)fileTransferHasLocalFile:(TDCFileTransferDialogTransferController *)fileTransfer
-{
-	/* A received file is only usable once the transfer is complete.
-	 A sent file exists for as long as the user keeps it around. */
-	if (fileTransfer.isSender == NO && fileTransfer.transferStatus != TDCFileTransferDialogTransferStatusComplete) {
-		return NO;
-	}
+- (BOOL)fileTransferHasLocalFile:
+    (TDCFileTransferDialogTransferController *)fileTransfer {
+  /* A received file is only usable once the transfer is complete.
+   A sent file exists for as long as the user keeps it around. */
+  if (fileTransfer.isSender == NO &&
+      fileTransfer.transferStatus !=
+          TDCFileTransferDialogTransferStatusComplete) {
+    return NO;
+  }
 
-	NSString *filePath = fileTransfer.filePath;
+  NSString *filePath = fileTransfer.filePath;
 
-	if (filePath == nil) {
-		return NO;
-	}
+  if (filePath == nil) {
+    return NO;
+  }
 
-	return [RZFileManager() fileExistsAtPath:filePath];
+  return [RZFileManager() fileExistsAtPath:filePath];
 }
 
-- (NSArray<TDCFileTransferDialogTransferController *> *)selectedFileTransfersWithLocalFiles
-{
-	NSMutableArray<TDCFileTransferDialogTransferController *> *fileTransfers = [NSMutableArray array];
+- (NSArray<TDCFileTransferDialogTransferController *> *)
+    selectedFileTransfersWithLocalFiles {
+  NSMutableArray<TDCFileTransferDialogTransferController *> *fileTransfers =
+      [NSMutableArray array];
 
-	[self enumerateSelectedFileTransfers:^(
-			  TDCFileTransferDialogTransferController *fileTransfer, NSUInteger index, BOOL *stop) {
-		if ([self fileTransferHasLocalFile:fileTransfer] == NO) {
-			return;
-		}
+  [self enumerateSelectedFileTransfers:^(
+            TDCFileTransferDialogTransferController *fileTransfer,
+            NSUInteger index, BOOL *stop) {
+    if ([self fileTransferHasLocalFile:fileTransfer] == NO) {
+      return;
+    }
 
-		[fileTransfers addObject:fileTransfer];
-	}];
+    [fileTransfers addObject:fileTransfer];
+  }];
 
-	return [fileTransfers copy];
+  return [fileTransfers copy];
 }
 
-- (NSArray<NSURL *> *)selectedFileURLs
-{
-	/* Received files live beneath the download destination whose
-	 security scope the dialog keeps open for the life of the app
-	 (or beneath a folder chosen in an open panel), and sent files
-	 came from an open panel or a drag. Both remain readable, so
-	 the URL is built from the path as-is. */
-	NSMutableArray<NSURL *> *fileURLs = [NSMutableArray array];
+- (NSArray<NSURL *> *)selectedFileURLs {
+  /* Received files live beneath the download destination whose
+   security scope the dialog keeps open for the life of the app
+   (or beneath a folder chosen in an open panel), and sent files
+   came from an open panel or a drag. Both remain readable, so
+   the URL is built from the path as-is. */
+  NSMutableArray<NSURL *> *fileURLs = [NSMutableArray array];
 
-	for (TDCFileTransferDialogTransferController *fileTransfer in [self selectedFileTransfersWithLocalFiles]) {
-		NSURL *fileURL = fileTransfer.fileURL;
+  for (TDCFileTransferDialogTransferController *fileTransfer in
+       [self selectedFileTransfersWithLocalFiles]) {
+    NSURL *fileURL = fileTransfer.fileURL;
 
-		if (fileURL == nil) {
-			continue;
-		}
+    if (fileURL == nil) {
+      continue;
+    }
 
-		[fileURLs addObject:fileURL];
-	}
+    [fileURLs addObject:fileURL];
+  }
 
-	return [fileURLs copy];
+  return [fileURLs copy];
 }
 
 #pragma mark -
 #pragma mark Menu Delegate
 
-- (void)menuNeedsUpdate:(NSMenu *)menu
-{
-	if (menu != self.fileTransferTable.menu) {
-		return;
-	}
+- (void)menuNeedsUpdate:(NSMenu *)menu {
+  if (menu != self.fileTransferTable.menu) {
+    return;
+  }
 
-	/* The share item is rebuilt for each presentation so that its
-	 submenu reflects the files which are selected. */
-	NSInteger shareItemIndex = [menu indexOfItemWithTag:_menuItemTagShare];
+  /* The share item is rebuilt for each presentation so that its
+   submenu reflects the files which are selected. */
+  NSInteger shareItemIndex = [menu indexOfItemWithTag:_menuItemTagShare];
 
-	if (shareItemIndex < 0) {
-		return;
-	}
+  if (shareItemIndex < 0) {
+    return;
+  }
 
-	[menu removeItemAtIndex:shareItemIndex];
+  [menu removeItemAtIndex:shareItemIndex];
 
-	/* Share is offered only when every selected row has a file;
-	 an empty list produces a disabled item. */
-	NSArray<NSURL *> *shareItems = [self selectedFileURLs];
+  /* Share is offered only when every selected row has a file;
+   an empty list produces a disabled item. */
+  NSArray<NSURL *> *shareItems = [self selectedFileURLs];
 
-	if (shareItems.count != self.fileTransferTable.selectedRowIndexes.count) {
-		shareItems = @[];
-	}
+  if (shareItems.count != self.fileTransferTable.selectedRowIndexes.count) {
+    shareItems = @[];
+  }
 
-	NSMenuItem *shareItem = [menuController() shareMenuItemForItems:shareItems];
+  NSMenuItem *shareItem = [menuController() shareMenuItemForItems:shareItems];
 
-	shareItem.tag = _menuItemTagShare;
+  shareItem.tag = _menuItemTagShare;
 
-	[menu insertItem:shareItem atIndex:shareItemIndex];
+  [menu insertItem:shareItem atIndex:shareItemIndex];
 }
 
-- (void)clear:(nullable id)sender
-{
-	NSArray *stoppedFileTransfers = [self stoppedFileTransfers];
+- (void)clear:(nullable id)sender {
+  NSArray *stoppedFileTransfers = [self stoppedFileTransfers];
 
-	[stoppedFileTransfers makeObjectsPerformSelector:@selector(prepareForPermanentDestruction)];
+  [stoppedFileTransfers
+      makeObjectsPerformSelector:@selector(prepareForPermanentDestruction)];
 
-	[self.fileTransfersController removeObjects:stoppedFileTransfers];
+  [self.fileTransfersController removeObjects:stoppedFileTransfers];
 
-	[self updateClearButton];
+  [self updateClearButton];
 }
 
-- (void)startTransferOfFile:(nullable id)sender
-{
-	NSString *savePath = self.downloadDestinationURLPrivate.path;
+- (void)startTransferOfFile:(nullable id)sender {
+  NSString *savePath = self.downloadDestinationURLPrivate.path;
 
-	NSMutableArray<TDCFileTransferDialogTransferController *> *fileTransfersPending = [NSMutableArray array];
+  NSMutableArray<TDCFileTransferDialogTransferController *>
+      *fileTransfersPending = [NSMutableArray array];
 
-	/* Open all file transfers who are senders or have a path */
-	[self enumerateSelectedFileTransfers:^(
-			  TDCFileTransferDialogTransferController *fileTransfer, NSUInteger index, BOOL *stop) {
-		TDCFileTransferDialogTransferStatus transferStatus = fileTransfer.transferStatus;
+  /* Open all file transfers who are senders or have a path */
+  [self enumerateSelectedFileTransfers:^(
+            TDCFileTransferDialogTransferController *fileTransfer,
+            NSUInteger index, BOOL *stop) {
+    TDCFileTransferDialogTransferStatus transferStatus =
+        fileTransfer.transferStatus;
 
-		if (transferStatus != TDCFileTransferDialogTransferStatusStopped &&
-			transferStatus != TDCFileTransferDialogTransferStatusRecoverableError) {
-			return;
-		}
+    if (transferStatus != TDCFileTransferDialogTransferStatusStopped &&
+        transferStatus != TDCFileTransferDialogTransferStatusRecoverableError) {
+      return;
+    }
 
-		if (fileTransfer.isSender || fileTransfer.path != nil) {
-			[fileTransfer open];
+    if (fileTransfer.isSender || fileTransfer.path != nil) {
+      [fileTransfer open];
 
-			return;
-		} else if (fileTransfer.path == nil && savePath != nil) {
-			[fileTransfer openWithPath:savePath];
+      return;
+    } else if (fileTransfer.path == nil && savePath != nil) {
+      [fileTransfer openWithPath:savePath];
 
-			return;
-		}
+      return;
+    }
 
-		[fileTransfersPending addObject:fileTransfer];
-	}];
+    [fileTransfersPending addObject:fileTransfer];
+  }];
 
-	/* If there are file transfers that weren't opened because of a missing
-	 path, then we now prompt the user for where they want to save the files. */
-	if (fileTransfersPending.count == 0) {
-		return;
-	}
+  /* If there are file transfers that weren't opened because of a missing
+   path, then we now prompt the user for where they want to save the files. */
+  if (fileTransfersPending.count == 0) {
+    return;
+  }
 
-	NSOpenPanel *openDialog = [NSOpenPanel openPanel];
+  NSOpenPanel *openDialog = [NSOpenPanel openPanel];
 
-	openDialog.directoryURL = [TPCPathInfo userDownloadsURL];
+  openDialog.directoryURL = [TPCPathInfo userDownloadsURL];
 
-	openDialog.allowsMultipleSelection = NO;
-	openDialog.canChooseDirectories = YES;
-	openDialog.canChooseFiles = NO;
-	openDialog.canCreateDirectories = YES;
-	openDialog.resolvesAliases = YES;
+  openDialog.allowsMultipleSelection = NO;
+  openDialog.canChooseDirectories = YES;
+  openDialog.canChooseFiles = NO;
+  openDialog.canCreateDirectories = YES;
+  openDialog.resolvesAliases = YES;
 
-	openDialog.message = TXTLS(@"TDCFileTransferDialog[dcm-w7]");
+  openDialog.message = TXTLS(@"TDCFileTransferDialog[dcm-w7]");
 
-	openDialog.prompt = TXTLS(@"Prompts[xne-79]");
+  openDialog.prompt = TXTLS(@"Prompts[xne-79]");
 
-	[openDialog beginSheetModalForWindow:self.window
-					   completionHandler:^(NSInteger result) {
-						   if (result != NSModalResponseOK) {
-							   return;
-						   }
+  [openDialog beginSheetModalForWindow:self.window
+                     completionHandler:^(NSInteger result) {
+                       if (result != NSModalResponseOK) {
+                         return;
+                       }
 
-						   NSString *path = openDialog.URL.path;
+                       NSString *path = openDialog.URL.path;
 
-						   for (TDCFileTransferDialogTransferController *fileTransfer in fileTransfersPending) {
-							   [fileTransfer openWithPath:path];
-						   }
-					   }];
+                       for (TDCFileTransferDialogTransferController
+                                *fileTransfer in fileTransfersPending) {
+                         [fileTransfer openWithPath:path];
+                       }
+                     }];
 }
 
-- (void)stopTransferOfFile:(nullable id)sender
-{
-	[self enumerateSelectedFileTransfers:^(
-			  TDCFileTransferDialogTransferController *fileTransfer, NSUInteger index, BOOL *stop) {
-		[fileTransfer closeAndPostNotification:NO];
-	}];
+- (void)stopTransferOfFile:(nullable id)sender {
+  [self enumerateSelectedFileTransfers:^(
+            TDCFileTransferDialogTransferController *fileTransfer,
+            NSUInteger index, BOOL *stop) {
+    [fileTransfer closeAndPostNotification:NO];
+  }];
 }
 
-- (void)removeTransferFromList:(nullable id)sender
-{
-	NSArray *selectedFileTransfers = [self selectedFileTransfers];
+- (void)removeTransferFromList:(nullable id)sender {
+  NSArray *selectedFileTransfers = [self selectedFileTransfers];
 
-	for (TDCFileTransferDialogTransferController *fileTransfer in selectedFileTransfers) {
-		[fileTransfer prepareForPermanentDestruction];
-	}
+  for (TDCFileTransferDialogTransferController
+           *fileTransfer in selectedFileTransfers) {
+    [fileTransfer prepareForPermanentDestruction];
+  }
 
-	[self.fileTransfersController removeObjects:selectedFileTransfers];
+  [self.fileTransfersController removeObjects:selectedFileTransfers];
 }
 
-- (void)openReceivedFile:(nullable id)sender
-{
-	for (NSURL *fileURL in [self selectedFileURLs]) {
-		[RZWorkspace() openURL:fileURL];
-	}
+- (void)openReceivedFile:(nullable id)sender {
+  for (NSURL *fileURL in [self selectedFileURLs]) {
+    [RZWorkspace() openURL:fileURL];
+  }
 }
 
-- (void)revealReceivedFileInFinder:(nullable id)sender
-{
-	NSArray<NSURL *> *fileURLs = [self selectedFileURLs];
+- (void)revealReceivedFileInFinder:(nullable id)sender {
+  NSArray<NSURL *> *fileURLs = [self selectedFileURLs];
 
-	if (fileURLs.count == 0) {
-		return;
-	}
+  if (fileURLs.count == 0) {
+    return;
+  }
 
-	[RZWorkspace() activateFileViewerSelectingURLs:fileURLs];
+  [RZWorkspace() activateFileViewerSelectingURLs:fileURLs];
 }
 
-- (void)quickLookFile:(nullable id)sender
-{
-	[self toggleQuickLookPanel];
+- (void)quickLookFile:(nullable id)sender {
+  [self toggleQuickLookPanel];
 }
 
 #pragma mark -
 #pragma mark Quick Look
 
-- (void)toggleQuickLookPanel
-{
-	QLPreviewPanel *panel = [QLPreviewPanel sharedPreviewPanel];
+- (void)toggleQuickLookPanel {
+  QLPreviewPanel *panel = [QLPreviewPanel sharedPreviewPanel];
 
-	if ([QLPreviewPanel sharedPreviewPanelExists] && panel.isVisible && panel.currentController == self) {
-		[panel orderOut:nil];
+  if ([QLPreviewPanel sharedPreviewPanelExists] && panel.isVisible &&
+      panel.currentController == self) {
+    [panel orderOut:nil];
 
-		return;
-	}
+    return;
+  }
 
-	[self.window makeFirstResponder:self.fileTransferTable];
+  [self.window makeFirstResponder:self.fileTransferTable];
 
-	[panel makeKeyAndOrderFront:nil];
+  [panel makeKeyAndOrderFront:nil];
 }
 
-- (void)reloadQuickLookPanel
-{
-	if ([QLPreviewPanel sharedPreviewPanelExists] == NO) {
-		return;
-	}
+- (void)reloadQuickLookPanel {
+  if ([QLPreviewPanel sharedPreviewPanelExists] == NO) {
+    return;
+  }
 
-	QLPreviewPanel *panel = [QLPreviewPanel sharedPreviewPanel];
+  QLPreviewPanel *panel = [QLPreviewPanel sharedPreviewPanel];
 
-	if (panel.currentController != self) {
-		return;
-	}
+  if (panel.currentController != self) {
+    return;
+  }
 
-	self.previewItems = [self selectedFileURLs];
+  self.previewItems = [self selectedFileURLs];
 
-	[panel reloadData];
+  [panel reloadData];
 }
 
-- (BOOL)acceptsPreviewPanelControl:(QLPreviewPanel *)panel
-{
-	return YES;
+- (BOOL)acceptsPreviewPanelControl:(QLPreviewPanel *)panel {
+  return YES;
 }
 
-- (void)beginPreviewPanelControl:(QLPreviewPanel *)panel
-{
-	self.previewItems = [self selectedFileURLs];
+- (void)beginPreviewPanelControl:(QLPreviewPanel *)panel {
+  self.previewItems = [self selectedFileURLs];
 
-	panel.dataSource = self;
-	panel.delegate = self;
+  panel.dataSource = self;
+  panel.delegate = self;
 }
 
-- (void)endPreviewPanelControl:(QLPreviewPanel *)panel
-{
-	panel.dataSource = nil;
-	panel.delegate = nil;
+- (void)endPreviewPanelControl:(QLPreviewPanel *)panel {
+  panel.dataSource = nil;
+  panel.delegate = nil;
 
-	self.previewItems = @[];
+  self.previewItems = @[];
 }
 
-- (NSInteger)numberOfPreviewItemsInPreviewPanel:(QLPreviewPanel *)panel
-{
-	return self.previewItems.count;
+- (NSInteger)numberOfPreviewItemsInPreviewPanel:(QLPreviewPanel *)panel {
+  return self.previewItems.count;
 }
 
-- (nullable id<QLPreviewItem>)previewPanel:(QLPreviewPanel *)panel previewItemAtIndex:(NSInteger)index
-{
-	NSArray<NSURL *> *previewItems = self.previewItems;
+- (nullable id<QLPreviewItem>)previewPanel:(QLPreviewPanel *)panel
+                        previewItemAtIndex:(NSInteger)index {
+  NSArray<NSURL *> *previewItems = self.previewItems;
 
-	if (index < 0 || (NSUInteger)index >= previewItems.count) {
-		return nil;
-	}
+  if (index < 0 || (NSUInteger)index >= previewItems.count) {
+    return nil;
+  }
 
-	return previewItems[index];
+  return previewItems[index];
 }
 
-- (BOOL)previewPanel:(QLPreviewPanel *)panel handleEvent:(NSEvent *)event
-{
-	/* Arrow keys move the table's selection while the panel is up,
-	 which in turn reloads the panel with the new selection. */
-	if (event.type != NSEventTypeKeyDown && event.type != NSEventTypeKeyUp) {
-		return NO;
-	}
+- (BOOL)previewPanel:(QLPreviewPanel *)panel handleEvent:(NSEvent *)event {
+  /* Arrow keys move the table's selection while the panel is up,
+   which in turn reloads the panel with the new selection. */
+  if (event.type != NSEventTypeKeyDown && event.type != NSEventTypeKeyUp) {
+    return NO;
+  }
 
-	NSString *characters = event.charactersIgnoringModifiers;
+  NSString *characters = event.charactersIgnoringModifiers;
 
-	if (characters.length != 1) {
-		return NO;
-	}
+  if (characters.length != 1) {
+    return NO;
+  }
 
-	unichar character = [characters characterAtIndex:0];
+  unichar character = [characters characterAtIndex:0];
 
-	if (character != NSUpArrowFunctionKey && character != NSDownArrowFunctionKey) {
-		return NO;
-	}
+  if (character != NSUpArrowFunctionKey &&
+      character != NSDownArrowFunctionKey) {
+    return NO;
+  }
 
-	if (event.type == NSEventTypeKeyDown) {
-		[self.fileTransferTable keyDown:event];
-	} else {
-		[self.fileTransferTable keyUp:event];
-	}
+  if (event.type == NSEventTypeKeyDown) {
+    [self.fileTransferTable keyDown:event];
+  } else {
+    [self.fileTransferTable keyUp:event];
+  }
 
-	return YES;
+  return YES;
 }
 
-- (nullable TDCFileTransferDialogTableCell *)tableCellForPreviewItem:(id<QLPreviewItem>)item
-{
-	NSURL *itemURL = item.previewItemURL;
+- (nullable TDCFileTransferDialogTableCell *)tableCellForPreviewItem:
+    (id<QLPreviewItem>)item {
+  NSURL *itemURL = item.previewItemURL;
 
-	if (itemURL == nil) {
-		return nil;
-	}
+  if (itemURL == nil) {
+    return nil;
+  }
 
-	__block TDCFileTransferDialogTableCell *tableCell = nil;
+  __block TDCFileTransferDialogTableCell *tableCell = nil;
 
-	[self enumerateSelectedFileTransfers:^(
-			  TDCFileTransferDialogTransferController *fileTransfer, NSUInteger index, BOOL *stop) {
-		if ([fileTransfer.fileURL isEqual:itemURL] == NO) {
-			return;
-		}
+  [self enumerateSelectedFileTransfers:^(
+            TDCFileTransferDialogTransferController *fileTransfer,
+            NSUInteger index, BOOL *stop) {
+    if ([fileTransfer.fileURL isEqual:itemURL] == NO) {
+      return;
+    }
 
-		tableCell = [self.fileTransferTable viewAtColumn:0 row:index makeIfNecessary:NO];
+    tableCell = [self.fileTransferTable viewAtColumn:0
+                                                 row:index
+                                     makeIfNecessary:NO];
 
-		*stop = YES;
-	}];
+    *stop = YES;
+  }];
 
-	return tableCell;
+  return tableCell;
 }
 
-- (NSRect)previewPanel:(QLPreviewPanel *)panel sourceFrameOnScreenForPreviewItem:(id<QLPreviewItem>)item
-{
-	TDCFileTransferDialogTableCell *tableCell = [self tableCellForPreviewItem:item];
+- (NSRect)previewPanel:(QLPreviewPanel *)panel
+    sourceFrameOnScreenForPreviewItem:(id<QLPreviewItem>)item {
+  TDCFileTransferDialogTableCell *tableCell =
+      [self tableCellForPreviewItem:item];
 
-	if (tableCell == nil) {
-		return NSZeroRect;
-	}
+  if (tableCell == nil) {
+    return NSZeroRect;
+  }
 
-	NSRect iconFrame = tableCell.fileIconFrameOnScreen;
+  NSRect iconFrame = tableCell.fileIconFrameOnScreen;
 
-	/* Only zoom from the icon when it is actually visible. */
-	NSRect visibleRect = [self.fileTransferTable convertRect:self.fileTransferTable.visibleRect toView:nil];
+  /* Only zoom from the icon when it is actually visible. */
+  NSRect visibleRect =
+      [self.fileTransferTable convertRect:self.fileTransferTable.visibleRect
+                                   toView:nil];
 
-	NSRect visibleRectOnScreen = [self.window convertRectToScreen:visibleRect];
+  NSRect visibleRectOnScreen = [self.window convertRectToScreen:visibleRect];
 
-	if (NSIntersectsRect(iconFrame, visibleRectOnScreen) == NO) {
-		return NSZeroRect;
-	}
+  if (NSIntersectsRect(iconFrame, visibleRectOnScreen) == NO) {
+    return NSZeroRect;
+  }
 
-	return iconFrame;
+  return iconFrame;
 }
 
 - (nullable id)previewPanel:(QLPreviewPanel *)panel
-	transitionImageForPreviewItem:(id<QLPreviewItem>)item
-					  contentRect:(NSRect *)contentRect
-{
-	return [self tableCellForPreviewItem:item].fileIcon;
+    transitionImageForPreviewItem:(id<QLPreviewItem>)item
+                      contentRect:(NSRect *)contentRect {
+  return [self tableCellForPreviewItem:item].fileIcon;
 }
 
 #pragma mark -
 #pragma mark Timer
 
-- (void)updateMaintenanceTimer
-{
-	dispatch_assert_queue(dispatch_get_main_queue());
+- (void)updateMaintenanceTimer {
+  dispatch_assert_queue(dispatch_get_main_queue());
 
-	NSArray *activeFileTransfers = [self activeFileTransfers];
+  NSArray *activeFileTransfers = [self activeFileTransfers];
 
-	if (self.maintenanceTimer.timerIsActive) {
-		if (activeFileTransfers.count == 0) {
-			[self.maintenanceTimer stop];
-		}
-	} else {
-		if (activeFileTransfers.count > 0) {
-			[self.maintenanceTimer start:1.0 onRepeat:YES];
-		}
-	}
+  if (self.maintenanceTimer.timerIsActive) {
+    if (activeFileTransfers.count == 0) {
+      [self.maintenanceTimer stop];
+    }
+  } else {
+    if (activeFileTransfers.count > 0) {
+      [self.maintenanceTimer start:1.0 onRepeat:YES];
+    }
+  }
 }
 
-- (void)onMaintenanceTimer
-{
-	dispatch_assert_queue(dispatch_get_main_queue());
+- (void)onMaintenanceTimer {
+  dispatch_assert_queue(dispatch_get_main_queue());
 
-	NSArray *activeFileTransfers = [self activeFileTransfers];
+  NSArray *activeFileTransfers = [self activeFileTransfers];
 
-	for (TDCFileTransferDialogTransferController *fileTransfer in activeFileTransfers) {
-		[fileTransfer onMaintenanceTimer];
-	}
+  for (TDCFileTransferDialogTransferController
+           *fileTransfer in activeFileTransfers) {
+    [fileTransfer onMaintenanceTimer];
+  }
 }
 
 #pragma mark -
 #pragma mark Table View Delegate
 
 - (nullable NSView *)tableView:(NSTableView *)tableView
-			viewForTableColumn:(nullable NSTableColumn *)tableColumn
-						   row:(NSInteger)row
-{
-	TDCFileTransferDialogTransferController *fileTransfer = self.fileTransfersController.arrangedObjects[row];
+            viewForTableColumn:(nullable NSTableColumn *)tableColumn
+                           row:(NSInteger)row {
+  TDCFileTransferDialogTransferController *fileTransfer =
+      self.fileTransfersController.arrangedObjects[row];
 
-	TDCFileTransferDialogTableCell *newView =
-		(TDCFileTransferDialogTableCell *)[tableView makeViewWithIdentifier:@"GroupView" owner:self];
+  TDCFileTransferDialogTableCell *newView =
+      (TDCFileTransferDialogTableCell *)[tableView
+          makeViewWithIdentifier:@"GroupView"
+                           owner:self];
 
-	fileTransfer.transferTableCell = newView;
+  fileTransfer.transferTableCell = newView;
 
-	return newView;
+  return newView;
 }
 
-- (void)tableView:(NSTableView *)tableView didAddRowView:(NSTableRowView *)rowView forRow:(NSInteger)row
-{
-	TDCFileTransferDialogTableCell *tableCell = [tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+- (void)tableView:(NSTableView *)tableView
+    didAddRowView:(NSTableRowView *)rowView
+           forRow:(NSInteger)row {
+  TDCFileTransferDialogTableCell *tableCell = [tableView viewAtColumn:0
+                                                                  row:row
+                                                      makeIfNecessary:NO];
 
-	[tableCell prepareInitialState];
+  [tableCell prepareInitialState];
 }
 
-- (void)tableViewSelectionDidChange:(NSNotification *)notification
-{
-	[self reloadQuickLookPanel];
+- (void)tableViewSelectionDidChange:(NSNotification *)notification {
+  [self reloadQuickLookPanel];
 }
 
 #pragma mark -
 #pragma mark Network Information
 
-- (nullable NSString *)IPAddress
-{
-	if ([TPCPreferences fileTransferIPAddressDetectionMethod] == TXFileTransferIPAddressMethodManual) {
-		NSString *userAddress = [TPCPreferences fileTransferManuallyEnteredIPAddress];
+- (nullable NSString *)IPAddress {
+  if ([TPCPreferences fileTransferIPAddressDetectionMethod] ==
+      TXFileTransferIPAddressMethodManual) {
+    NSString *userAddress =
+        [TPCPreferences fileTransferManuallyEnteredIPAddress];
 
-		if (userAddress.length == 0) {
-			return nil;
-		}
+    if (userAddress.length == 0) {
+      return nil;
+    }
 
-		return userAddress;
-	}
+    return userAddress;
+  }
 
-	return self->_IPAddress;
+  return self->_IPAddress;
 }
 
-- (void)clearIPAddress
-{
-	self.IPAddress = nil;
+- (void)clearIPAddress {
+  self.IPAddress = nil;
 
-	[self.IPAddressRequest cancelLookup];
-	self.IPAddressRequest = nil;
+  [self.IPAddressRequest cancelLookup];
+  self.IPAddressRequest = nil;
 
-	[self flushIPAddressCompletionBlocks:nil];
+  [self flushIPAddressCompletionBlocks:nil];
 }
 
-- (void)requestIPAddress:(TDCFileTransferDialogIPAddressBlock)completionBlock
-{
-	NSParameterAssert(completionBlock != nil);
+- (void)requestIPAddress:(TDCFileTransferDialogIPAddressBlock)completionBlock {
+  NSParameterAssert(completionBlock != nil);
 
-	dispatch_assert_queue(dispatch_get_main_queue());
+  dispatch_assert_queue(dispatch_get_main_queue());
 
-	NSString *address = self.IPAddress;
+  NSString *address = self.IPAddress;
 
-	if (address) {
-		completionBlock(address);
+  if (address) {
+    completionBlock(address);
 
-		return;
-	}
+    return;
+  }
 
-	TXFileTransferIPAddressMethodDetection detectionMethod = [TPCPreferences fileTransferIPAddressDetectionMethod];
+  TXFileTransferIPAddressMethodDetection detectionMethod =
+      [TPCPreferences fileTransferIPAddressDetectionMethod];
 
-	if (detectionMethod == TXFileTransferIPAddressMethodManual ||
-		detectionMethod == TXFileTransferIPAddressMethodRouterOnly) {
-		completionBlock(nil);
+  if (detectionMethod == TXFileTransferIPAddressMethodManual ||
+      detectionMethod == TXFileTransferIPAddressMethodRouterOnly) {
+    completionBlock(nil);
 
-		return;
-	}
+    return;
+  }
 
-	[self.IPAddressCompletionBlocks addObject:completionBlock];
+  [self.IPAddressCompletionBlocks addObject:completionBlock];
 
-	[self requestIPAddress];
+  [self requestIPAddress];
 }
 
-- (void)flushIPAddressCompletionBlocks:(nullable NSString *)address
-{
-	NSArray *completionBlocks = [self.IPAddressCompletionBlocks copy];
+- (void)flushIPAddressCompletionBlocks:(nullable NSString *)address {
+  NSArray *completionBlocks = [self.IPAddressCompletionBlocks copy];
 
-	[self.IPAddressCompletionBlocks removeAllObjects];
+  [self.IPAddressCompletionBlocks removeAllObjects];
 
-	for (TDCFileTransferDialogIPAddressBlock completionBlock in completionBlocks) {
-		completionBlock(address);
-	}
+  for (TDCFileTransferDialogIPAddressBlock completionBlock in
+           completionBlocks) {
+    completionBlock(address);
+  }
 }
 
-- (void)requestIPAddress
-{
-	if (self.IPAddressRequest != nil) {
-		return;
-	}
+- (void)requestIPAddress {
+  if (self.IPAddressRequest != nil) {
+    return;
+  }
 
-	TLOInternetAddressLookup *lookupRequest = [[TLOInternetAddressLookup alloc] initWithDelegate:(id)self];
+  TLOInternetAddressLookup *lookupRequest =
+      [[TLOInternetAddressLookup alloc] initWithDelegate:(id)self];
 
-	[lookupRequest performLookup];
+  [lookupRequest performLookup];
 
-	self.IPAddressRequest = lookupRequest;
+  self.IPAddressRequest = lookupRequest;
 }
 
-- (void)internetAddressLookupReturnedAddress:(NSString *)address
-{
-	self.IPAddress = address;
+- (void)internetAddressLookupReturnedAddress:(NSString *)address {
+  self.IPAddress = address;
 
-	[self enumerateFileTransferSenders:^(TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
-		if (fileTransfer.transferStatus != TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress) {
-			return;
-		}
+  [self enumerateFileTransferSenders:^(
+            TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
+    if (fileTransfer.transferStatus !=
+        TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress) {
+      return;
+    }
 
-		[fileTransfer noteIPAddressLookupSucceeded];
-	}];
+    [fileTransfer noteIPAddressLookupSucceeded];
+  }];
 
-	self.IPAddressRequest = nil;
+  self.IPAddressRequest = nil;
 
-	[self flushIPAddressCompletionBlocks:address];
+  [self flushIPAddressCompletionBlocks:address];
 }
 
-- (void)internetAddressLookupFailed
-{
-	[self enumerateFileTransferSenders:^(TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
-		if (fileTransfer.transferStatus != TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress) {
-			return;
-		}
+- (void)internetAddressLookupFailed {
+  [self enumerateFileTransferSenders:^(
+            TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
+    if (fileTransfer.transferStatus !=
+        TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress) {
+      return;
+    }
 
-		[fileTransfer noteIPAddressLookupFailed];
-	}];
+    [fileTransfer noteIPAddressLookupFailed];
+  }];
 
-	self.IPAddressRequest = nil;
+  self.IPAddressRequest = nil;
 
-	[self flushIPAddressCompletionBlocks:nil];
+  [self flushIPAddressCompletionBlocks:nil];
 }
 
 #pragma mark -
 #pragma mark Navigation
 
-- (TDCFileTransferDialogSelection)navigationSelection
-{
-	return self.navigationControl.selectedSegment;
+- (TDCFileTransferDialogSelection)navigationSelection {
+  return self.navigationControl.selectedSegment;
 }
 
-- (void)navigationSelectionDidChange:(nullable id)sender
-{
-	TDCFileTransferDialogSelection selection = self.navigationSelection;
+- (void)navigationSelectionDidChange:(nullable id)sender {
+  TDCFileTransferDialogSelection selection = self.navigationSelection;
 
-	NSPredicate *filterPredicate = nil;
+  NSPredicate *filterPredicate = nil;
 
-	if (selection == TDCFileTransferDialogSelectionSending) {
-		filterPredicate = [NSPredicate predicateWithFormat:@"isSender == YES"];
-	} else if (selection == TDCFileTransferDialogSelectionReceiving) {
-		filterPredicate = [NSPredicate predicateWithFormat:@"isSender == NO"];
-	}
+  if (selection == TDCFileTransferDialogSelectionSending) {
+    filterPredicate = [NSPredicate predicateWithFormat:@"isSender == YES"];
+  } else if (selection == TDCFileTransferDialogSelectionReceiving) {
+    filterPredicate = [NSPredicate predicateWithFormat:@"isSender == NO"];
+  }
 
-	self.fileTransfersController.filterPredicate = filterPredicate;
+  self.fileTransfersController.filterPredicate = filterPredicate;
 }
 
 #pragma mark -
 #pragma mark Transfer Search
 
-- (NSUInteger)receiverCount
-{
-	__block NSUInteger receiverCount = 0;
+- (NSUInteger)receiverCount {
+  __block NSUInteger receiverCount = 0;
 
-	[self enumerateFileTransferReceivers:^(TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
-		receiverCount += 1;
-	}];
+  [self enumerateFileTransferReceivers:^(
+            TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
+    receiverCount += 1;
+  }];
 
-	return receiverCount;
+  return receiverCount;
 }
 
-- (NSArray<TDCFileTransferDialogTransferController *> *)stoppedFileTransfers
-{
-	return [self fileTransfersMatchingCondition:^BOOL(TDCFileTransferDialogTransferController *fileTransfer) {
-		TDCFileTransferDialogTransferStatus transferStatus = fileTransfer.transferStatus;
+- (NSArray<TDCFileTransferDialogTransferController *> *)stoppedFileTransfers {
+  return [self fileTransfersMatchingCondition:^BOOL(
+                   TDCFileTransferDialogTransferController *fileTransfer) {
+    TDCFileTransferDialogTransferStatus transferStatus =
+        fileTransfer.transferStatus;
 
-		if (transferStatus != TDCFileTransferDialogTransferStatusComplete &&
-			transferStatus != TDCFileTransferDialogTransferStatusStopped &&
-			transferStatus != TDCFileTransferDialogTransferStatusFatalError &&
-			transferStatus != TDCFileTransferDialogTransferStatusRecoverableError) {
-			return NO;
-		}
+    if (transferStatus != TDCFileTransferDialogTransferStatusComplete &&
+        transferStatus != TDCFileTransferDialogTransferStatusStopped &&
+        transferStatus != TDCFileTransferDialogTransferStatusFatalError &&
+        transferStatus != TDCFileTransferDialogTransferStatusRecoverableError) {
+      return NO;
+    }
 
-		return YES;
-	}];
+    return YES;
+  }];
 }
 
-- (NSArray<TDCFileTransferDialogTransferController *> *)activeFileTransfers
-{
-	return [self fileTransfersMatchingCondition:^BOOL(TDCFileTransferDialogTransferController *fileTransfer) {
-		TDCFileTransferDialogTransferStatus transferStatus = fileTransfer.transferStatus;
+- (NSArray<TDCFileTransferDialogTransferController *> *)activeFileTransfers {
+  return [self fileTransfersMatchingCondition:^BOOL(
+                   TDCFileTransferDialogTransferController *fileTransfer) {
+    TDCFileTransferDialogTransferStatus transferStatus =
+        fileTransfer.transferStatus;
 
-		if (transferStatus != TDCFileTransferDialogTransferStatusReceiving &&
-			transferStatus != TDCFileTransferDialogTransferStatusSending) {
-			return NO;
-		}
+    if (transferStatus != TDCFileTransferDialogTransferStatusReceiving &&
+        transferStatus != TDCFileTransferDialogTransferStatusSending) {
+      return NO;
+    }
 
-		return YES;
-	}];
+    return YES;
+  }];
 }
 
-- (NSArray<TDCFileTransferDialogTransferController *> *)fileTransfersMatchingCondition:
-	(BOOL(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer))matchCondition
-{
-	NSMutableArray<TDCFileTransferDialogTransferController *> *fileTransfers = [NSMutableArray array];
+- (NSArray<TDCFileTransferDialogTransferController *>
+       *)fileTransfersMatchingCondition:
+    (BOOL(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer))
+        matchCondition {
+  NSMutableArray<TDCFileTransferDialogTransferController *> *fileTransfers =
+      [NSMutableArray array];
 
-	[self enumerateFileTransfers:^(TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
-		if (matchCondition(fileTransfer) == NO) {
-			return;
-		}
+  [self enumerateFileTransfers:^(
+            TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
+    if (matchCondition(fileTransfer) == NO) {
+      return;
+    }
 
-		[fileTransfers addObject:fileTransfer];
-	}];
+    [fileTransfers addObject:fileTransfer];
+  }];
 
-	return [fileTransfers copy];
+  return [fileTransfers copy];
 }
 
-- (nullable TDCFileTransferDialogTransferController *)fileTransferMatchingCondition:
-	(BOOL(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer))matchCondition
-{
-	__block TDCFileTransferDialogTransferController *fileTransferMatched = nil;
+- (nullable TDCFileTransferDialogTransferController
+       *)fileTransferMatchingCondition:
+    (BOOL(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer))
+        matchCondition {
+  __block TDCFileTransferDialogTransferController *fileTransferMatched = nil;
 
-	[self enumerateFileTransfers:^(TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
-		if (matchCondition(fileTransfer) == NO) {
-			return;
-		}
+  [self enumerateFileTransfers:^(
+            TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop) {
+    if (matchCondition(fileTransfer) == NO) {
+      return;
+    }
 
-		fileTransferMatched = fileTransfer;
+    fileTransferMatched = fileTransfer;
 
-		*stop = YES;
-	}];
+    *stop = YES;
+  }];
 
-	return fileTransferMatched;
+  return fileTransferMatched;
 }
 
-- (NSArray<TDCFileTransferDialogTransferController *> *)selectedFileTransfers
-{
-	NSMutableArray<TDCFileTransferDialogTransferController *> *selectedFileTransfers = [NSMutableArray array];
+- (NSArray<TDCFileTransferDialogTransferController *> *)selectedFileTransfers {
+  NSMutableArray<TDCFileTransferDialogTransferController *>
+      *selectedFileTransfers = [NSMutableArray array];
 
-	[self enumerateSelectedFileTransfers:^(
-			  TDCFileTransferDialogTransferController *fileTransfer, NSUInteger index, BOOL *stop) {
-		[selectedFileTransfers addObject:fileTransfer];
-	}];
+  [self enumerateSelectedFileTransfers:^(
+            TDCFileTransferDialogTransferController *fileTransfer,
+            NSUInteger index, BOOL *stop) {
+    [selectedFileTransfers addObject:fileTransfer];
+  }];
 
-	return [selectedFileTransfers copy];
+  return [selectedFileTransfers copy];
 }
 
-- (NSArray<TDCFileTransferDialogTransferController *> *)fileTransfersMatchingClient:(IRCClient *)client
-{
-	NSParameterAssert(client != nil);
+- (NSArray<TDCFileTransferDialogTransferController *> *)
+    fileTransfersMatchingClient:(IRCClient *)client {
+  NSParameterAssert(client != nil);
 
-	return [self fileTransfersMatchingCondition:^BOOL(TDCFileTransferDialogTransferController *_Nonnull fileTransfer) {
-		return (fileTransfer.client == client);
-	}];
+  return [self
+      fileTransfersMatchingCondition:^BOOL(
+          TDCFileTransferDialogTransferController *_Nonnull fileTransfer) {
+        return (fileTransfer.client == client);
+      }];
 }
 
 - (void)enumerateSelectedFileTransfers:
-	(void(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer, NSUInteger index, BOOL *stop))
-		enumerationBlock
-{
-	NSIndexSet *selectedRows = self.fileTransferTable.selectedRowIndexes;
+    (void(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer,
+                         NSUInteger index, BOOL *stop))enumerationBlock {
+  NSIndexSet *selectedRows = self.fileTransferTable.selectedRowIndexes;
 
-	[selectedRows enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
-		TDCFileTransferDialogTransferController *fileTransfer = self.fileTransfersController.arrangedObjects[index];
+  [selectedRows enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) {
+    TDCFileTransferDialogTransferController *fileTransfer =
+        self.fileTransfersController.arrangedObjects[index];
 
-		enumerationBlock(fileTransfer, index, stop);
-	}];
+    enumerationBlock(fileTransfer, index, stop);
+  }];
 }
 
-- (void)enumerateFileTransfers:(void(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop))
-								   enumerationBlock
-{
-	[self _enumerateFileTransfers:enumerationBlock limitScope:NO limitScopeToSenders:NO];
+- (void)enumerateFileTransfers:
+    (void(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer,
+                         BOOL *stop))enumerationBlock {
+  [self _enumerateFileTransfers:enumerationBlock
+                     limitScope:NO
+            limitScopeToSenders:NO];
 }
 
-- (void)enumerateFileTransferReceivers:(void(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer,
-															BOOL *stop))enumerationBlock
-{
-	[self _enumerateFileTransfers:enumerationBlock limitScope:YES limitScopeToSenders:NO];
+- (void)enumerateFileTransferReceivers:
+    (void(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer,
+                         BOOL *stop))enumerationBlock {
+  [self _enumerateFileTransfers:enumerationBlock
+                     limitScope:YES
+            limitScopeToSenders:NO];
 }
 
-- (void)enumerateFileTransferSenders:(void(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer,
-														  BOOL *stop))enumerationBlock
-{
-	[self _enumerateFileTransfers:enumerationBlock limitScope:YES limitScopeToSenders:YES];
+- (void)enumerateFileTransferSenders:
+    (void(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer,
+                         BOOL *stop))enumerationBlock {
+  [self _enumerateFileTransfers:enumerationBlock
+                     limitScope:YES
+            limitScopeToSenders:YES];
 }
 
-- (void)_enumerateFileTransfers:(void(NS_NOESCAPE ^)(TDCFileTransferDialogTransferController *fileTransfer, BOOL *stop))
-									enumerationBlock
-					 limitScope:(BOOL)limitScope
-			limitScopeToSenders:(BOOL)limitScopeToSenders
-{
-	NSParameterAssert(enumerationBlock != nil);
+- (void)_enumerateFileTransfers:
+            (void(NS_NOESCAPE ^)(
+                TDCFileTransferDialogTransferController *fileTransfer,
+                BOOL *stop))enumerationBlock
+                     limitScope:(BOOL)limitScope
+            limitScopeToSenders:(BOOL)limitScopeToSenders {
+  NSParameterAssert(enumerationBlock != nil);
 
-	/* NSArrayController is not thread safe and the controllers it holds
-	 are main queue objects. */
-	dispatch_assert_queue(dispatch_get_main_queue());
+  /* NSArrayController is not thread safe and the controllers it holds
+   are main queue objects. */
+  dispatch_assert_queue(dispatch_get_main_queue());
 
-	for (TDCFileTransferDialogTransferController *fileTransfer in self.fileTransfersController.arrangedObjects) {
-		if (limitScope && limitScopeToSenders != fileTransfer.isSender) {
-			continue;
-		}
+  for (TDCFileTransferDialogTransferController *fileTransfer in self
+           .fileTransfersController.arrangedObjects) {
+    if (limitScope && limitScopeToSenders != fileTransfer.isSender) {
+      continue;
+    }
 
-		BOOL stop = NO;
+    BOOL stop = NO;
 
-		enumerationBlock(fileTransfer, &stop);
+    enumerationBlock(fileTransfer, &stop);
 
-		if (stop) {
-			break;
-		}
-	}
+    if (stop) {
+      break;
+    }
+  }
 }
 
 #pragma mark -
 #pragma mark Window Delegate
 
-- (void)windowWillClose:(NSNotification *)note
-{
-	[self.window saveWindowStateForClass:self.class];
+- (void)windowWillClose:(NSNotification *)note {
+  [self.window saveWindowStateForClass:self.class];
 
-	/* The panel is ours only while the window is in front. */
-	if ([QLPreviewPanel sharedPreviewPanelExists]) {
-		QLPreviewPanel *panel = [QLPreviewPanel sharedPreviewPanel];
+  /* The panel is ours only while the window is in front. */
+  if ([QLPreviewPanel sharedPreviewPanelExists]) {
+    QLPreviewPanel *panel = [QLPreviewPanel sharedPreviewPanel];
 
-		if (panel.isVisible && panel.currentController == self) {
-			[panel orderOut:nil];
-		}
-	}
+    if (panel.isVisible && panel.currentController == self) {
+      [panel orderOut:nil];
+    }
+  }
 }
 
-- (void)hideWindow:(nullable id)sender
-{
-	[self close];
+- (void)hideWindow:(nullable id)sender {
+  [self close];
 }
 
 @end
@@ -1303,87 +1343,90 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Destination Folder
 
-@implementation TDCFileTransferDialog (TDCFileTransferDialogDownloadDestinationExtension)
+@implementation
+    TDCFileTransferDialog (TDCFileTransferDialogDownloadDestinationExtension)
 
-- (nullable NSURL *)downloadDestinationURL
-{
-	return self.downloadDestinationURLPrivate;
+- (nullable NSURL *)downloadDestinationURL {
+  return self.downloadDestinationURLPrivate;
 }
 
-- (void)startUsingDownloadDestinationURL
-{
-	NSData *bookmark = [RZUserDefaults() dataForKey:@"File Transfers -> File Transfer Download Folder Bookmark"];
+- (void)startUsingDownloadDestinationURL {
+  NSData *bookmark = [RZUserDefaults()
+      dataForKey:@"File Transfers -> File Transfer Download Folder Bookmark"];
 
-	if (bookmark == nil) {
-		return;
-	}
+  if (bookmark == nil) {
+    return;
+  }
 
-	BOOL resolvedBookmarkIsStale = YES;
+  BOOL resolvedBookmarkIsStale = YES;
 
-	NSError *resolvedBookmarkError = nil;
+  NSError *resolvedBookmarkError = nil;
 
-	NSURL *resolvedBookmark = [NSURL URLByResolvingBookmarkData:bookmark
-														options:NSURLBookmarkResolutionWithSecurityScope
-												  relativeToURL:nil
-											bookmarkDataIsStale:&resolvedBookmarkIsStale
-														  error:&resolvedBookmarkError];
+  NSURL *resolvedBookmark =
+      [NSURL URLByResolvingBookmarkData:bookmark
+                                options:NSURLBookmarkResolutionWithSecurityScope
+                          relativeToURL:nil
+                    bookmarkDataIsStale:&resolvedBookmarkIsStale
+                                  error:&resolvedBookmarkError];
 
-	if (resolvedBookmark == nil) {
-		LogToConsoleError("Error resolving bookmark for URL: %{public}@", resolvedBookmarkError.localizedDescription);
+  if (resolvedBookmark == nil) {
+    LogToConsoleError("Error resolving bookmark for URL: %{public}@",
+                      resolvedBookmarkError.localizedDescription);
 
-		return;
-	}
+    return;
+  }
 
-	if (resolvedBookmarkIsStale) {
-		/* The bookmark must be recreated from the resolved URL and the
-		 stored copy replaced. Creating a security scoped bookmark
-		 requires that the resource is being accessed. */
-		NSData *newBookmark = nil;
+  if (resolvedBookmarkIsStale) {
+    /* The bookmark must be recreated from the resolved URL and the
+     stored copy replaced. Creating a security scoped bookmark
+     requires that the resource is being accessed. */
+    NSData *newBookmark = nil;
 
-		if ([resolvedBookmark startAccessingSecurityScopedResource]) {
-			newBookmark = [resolvedBookmark bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
-									 includingResourceValuesForKeys:nil
-													  relativeToURL:nil
-															  error:NULL];
+    if ([resolvedBookmark startAccessingSecurityScopedResource]) {
+      newBookmark = [resolvedBookmark
+                 bookmarkDataWithOptions:NSURLBookmarkCreationWithSecurityScope
+          includingResourceValuesForKeys:nil
+                           relativeToURL:nil
+                                   error:NULL];
 
-			[resolvedBookmark stopAccessingSecurityScopedResource];
-		}
+      [resolvedBookmark stopAccessingSecurityScopedResource];
+    }
 
-		if (newBookmark == nil) {
-			LogToConsoleError("Failed to refresh stale bookmark");
+    if (newBookmark == nil) {
+      LogToConsoleError("Failed to refresh stale bookmark");
 
-			return;
-		}
+      return;
+    }
 
-		/* -setDownloadDestinationURL: stores the new bookmark and
-		 calls back into this method, which then takes the path below. */
-		[self setDownloadDestinationURL:newBookmark];
+    /* -setDownloadDestinationURL: stores the new bookmark and
+     calls back into this method, which then takes the path below. */
+    [self setDownloadDestinationURL:newBookmark];
 
-		return;
-	}
+    return;
+  }
 
-	/* Only retain the URL when access was granted so that the
-	 -stopAccessingSecurityScopedResource calls remain balanced. */
-	if ([resolvedBookmark startAccessingSecurityScopedResource] == NO) {
-		LogToConsoleError("Failed to access bookmark");
+  /* Only retain the URL when access was granted so that the
+   -stopAccessingSecurityScopedResource calls remain balanced. */
+  if ([resolvedBookmark startAccessingSecurityScopedResource] == NO) {
+    LogToConsoleError("Failed to access bookmark");
 
-		return;
-	}
+    return;
+  }
 
-	self.downloadDestinationURLPrivate = resolvedBookmark;
+  self.downloadDestinationURLPrivate = resolvedBookmark;
 }
 
-- (void)setDownloadDestinationURL:(nullable NSData *)downloadDestinationURL
-{
-	if (self.downloadDestinationURLPrivate) {
-		[self.downloadDestinationURLPrivate stopAccessingSecurityScopedResource];
-		self.downloadDestinationURLPrivate = nil;
-	}
+- (void)setDownloadDestinationURL:(nullable NSData *)downloadDestinationURL {
+  if (self.downloadDestinationURLPrivate) {
+    [self.downloadDestinationURLPrivate stopAccessingSecurityScopedResource];
+    self.downloadDestinationURLPrivate = nil;
+  }
 
-	[RZUserDefaults() setObject:downloadDestinationURL
-						 forKey:@"File Transfers -> File Transfer Download Folder Bookmark"];
+  [RZUserDefaults()
+      setObject:downloadDestinationURL
+         forKey:@"File Transfers -> File Transfer Download Folder Bookmark"];
 
-	[self startUsingDownloadDestinationURL];
+  [self startUsingDownloadDestinationURL];
 }
 
 @end

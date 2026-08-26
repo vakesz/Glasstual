@@ -44,7 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface TVCChannelSelectionViewController ()
 - (NSOutlineView *)outlineView;
 
-- (void)selectionCheckboxClickedInCell:(TVCChannelSelectionOutlineCellView *)clickedCell;
+- (void)selectionCheckboxClickedInCell:
+    (TVCChannelSelectionOutlineCellView *)clickedCell;
 @end
 
 NS_ASSUME_NONNULL_END

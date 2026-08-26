@@ -49,7 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
  then we return all of them combined into a single instance.
  This object will have a blank hostmask and the entry type
  IRCAddressBookEntryTypeMixed. */
-- (nullable IRCAddressBookEntry *)findAddressBookEntryForHostmask:(NSString *)hostmask;
+- (nullable IRCAddressBookEntry *)findAddressBookEntryForHostmask:
+    (NSString *)hostmask;
 
 - (NSArray<IRCAddressBookEntry *> *)findIgnoresForHostmask:(NSString *)hostmask;
 

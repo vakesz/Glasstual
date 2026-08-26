@@ -35,8 +35,8 @@
  *
  *********************************************************************** */
 
-#import "TVCLogLine.h"
 #import "THOPluginProtocol.h"
+#import "TVCLogLine.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -48,7 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) TVCLogLineType lineType;
 @property(nonatomic, assign, readwrite) TVCLogLineMemberType memberType;
 @property(nonatomic, copy, readwrite) NSDate *receivedAt;
-@property(nonatomic, copy, readwrite) NSArray<TLOLinkParserResult *> *listOfHyperlinks;
+@property(nonatomic, copy, readwrite)
+    NSArray<TLOLinkParserResult *> *listOfHyperlinks;
 @property(nonatomic, copy, readwrite) NSSet<IRCChannelUser *> *listOfUsers;
 @property(nonatomic, assign, readwrite) BOOL keywordMatchFound;
 @end

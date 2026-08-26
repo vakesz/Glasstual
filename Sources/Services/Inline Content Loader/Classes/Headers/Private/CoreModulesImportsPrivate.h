@@ -36,7 +36,7 @@
  *********************************************************************** */
 
 #import "ICMInlineHTML.h"
-#import "ICMInlineVideo.h"
 #import "ICMInlineImage.h"
+#import "ICMInlineVideo.h"
 
 #import "ICMAssessedMedia.h"

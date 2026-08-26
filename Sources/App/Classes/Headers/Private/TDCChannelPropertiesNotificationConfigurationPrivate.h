@@ -36,13 +36,15 @@
  *********************************************************************** */
 
 #import "TDCChannelPropertiesSheetPrivate.h"
-#import "TLONotificationController.h"
 #import "TLONotificationConfigurationPrivate.h"
+#import "TLONotificationController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TDCChannelPropertiesNotificationConfiguration : TLONotificationConfiguration
-- (instancetype)initWithEventType:(TXNotificationType)aEventType inSheet:(TDCChannelPropertiesSheet *)sheet;
+@interface TDCChannelPropertiesNotificationConfiguration
+    : TLONotificationConfiguration
+- (instancetype)initWithEventType:(TXNotificationType)aEventType
+                          inSheet:(TDCChannelPropertiesSheet *)sheet;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -48,10 +48,12 @@ NS_ASSUME_NONNULL_BEGIN
 @interface IRCSTSCapabilityValues : NSObject
 @property(readonly) uint16_t port; // 0 when the port key is absent or invalid
 @property(readonly) BOOL hasDuration;
-@property(readonly) NSTimeInterval duration; // Seconds; meaningful when hasDuration
+@property(readonly)
+    NSTimeInterval duration; // Seconds; meaningful when hasDuration
 @property(readonly) BOOL preload;
 
-+ (nullable instancetype)valuesFromCapabilityValues:(NSArray<NSString *> *)values;
++ (nullable instancetype)valuesFromCapabilityValues:
+    (NSArray<NSString *> *)values;
 @end
 
 /* A stored policy. */
@@ -62,15 +64,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(readonly) BOOL isExpired;
 
-- (instancetype)initWithPort:(uint16_t)port expiresAt:(NSDate *)expiresAt preload:(BOOL)preload;
+- (instancetype)initWithPort:(uint16_t)port
+                   expiresAt:(NSDate *)expiresAt
+                     preload:(BOOL)preload;
 @end
 
 /* What the client should do after the server offered "sts=". */
 typedef NS_ENUM(NSUInteger, IRCSTSPolicyAction) {
-	IRCSTSPolicyActionNone = 0, // Nothing usable in the values
-	IRCSTSPolicyActionUpgrade,	// Plaintext connection: reconnect with TLS on -port
-	IRCSTSPolicyActionStored,	// TLS connection: policy stored or refreshed
-	IRCSTSPolicyActionCleared,	// TLS connection: duration=0, policy removed
+  IRCSTSPolicyActionNone = 0, // Nothing usable in the values
+  IRCSTSPolicyActionUpgrade,  // Plaintext connection: reconnect with TLS on
+                              // -port
+  IRCSTSPolicyActionStored,   // TLS connection: policy stored or refreshed
+  IRCSTSPolicyActionCleared,  // TLS connection: duration=0, policy removed
 };
 
 /* The per host policy table. The shared store persists to user defaults
@@ -91,7 +96,9 @@ typedef NS_ENUM(NSUInteger, IRCSTSPolicyAction) {
  With an unexpired policy for the host, *port becomes the policy port and
  *secured becomes YES. Returns YES when the parameters were changed or
  confirmed by a policy, NO when there is none. */
-- (BOOL)applyPolicyForHost:(NSString *)host toPort:(inout uint16_t *)port secured:(inout BOOL *)secured;
+- (BOOL)applyPolicyForHost:(NSString *)host
+                    toPort:(inout uint16_t *)port
+                   secured:(inout BOOL *)secured;
 
 /* Decides what an "sts=" capability means for a connection to the host
  that is currently on `connectedPort`, over TLS or not. Policies are
@@ -99,10 +106,10 @@ typedef NS_ENUM(NSUInteger, IRCSTSPolicyAction) {
  advertised port when present, otherwise the connected port. Returns
  the action and, for an upgrade, the port to reconnect on in *upgradePort. */
 - (IRCSTSPolicyAction)applyCapabilityValues:(IRCSTSCapabilityValues *)values
-									forHost:(NSString *)host
-							  connectedPort:(uint16_t)connectedPort
-									secured:(BOOL)secured
-								upgradePort:(nullable uint16_t *)upgradePort;
+                                    forHost:(NSString *)host
+                              connectedPort:(uint16_t)connectedPort
+                                    secured:(BOOL)secured
+                                upgradePort:(nullable uint16_t *)upgradePort;
 @end
 
 extern NSString *const IRCSTSPolicyStoreDefaultsKey;

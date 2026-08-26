@@ -36,13 +36,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, class, readonly) BOOL systemIsSleeping;
 
-@property(nonatomic, class, copy, nullable, readonly) NSString *systemBuildVersion;
-@property(nonatomic, class, copy, nullable, readonly) NSString *systemStandardVersion;
+@property(nonatomic, class, copy, nullable, readonly)
+    NSString *systemBuildVersion;
+@property(nonatomic, class, copy, nullable, readonly)
+    NSString *systemStandardVersion;
 
-@property(nonatomic, class, copy, nullable, readonly) NSString *systemOperatingSystemName;
+@property(nonatomic, class, copy, nullable, readonly)
+    NSString *systemOperatingSystemName;
 
-@property(nonatomic, class, copy, nullable, readonly) NSString *systemModelName COCOA_EXTENSIONS_DEPRECATED(
-	"Return value is not reliable on new Macs. No alternative available."); // "iMac," "MacBook," "MacBook Pro," etc.
+@property(nonatomic, class, copy, nullable, readonly)
+    NSString *systemModelName COCOA_EXTENSIONS_DEPRECATED(
+        "Return value is not reliable on new Macs. No alternative available.")
+        ; // "iMac," "MacBook," "MacBook Pro," etc.
 @end
 
 NS_ASSUME_NONNULL_END

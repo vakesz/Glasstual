@@ -43,7 +43,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)resetCachedCount;
 
 + (void)drawWithoutCount;
-+ (void)drawWithHighlightCount:(NSUInteger)highlightCount messageCount:(NSUInteger)messageCount;
++ (void)drawWithHighlightCount:(NSUInteger)highlightCount
+                  messageCount:(NSUInteger)messageCount;
 @end
 
 NS_ASSUME_NONNULL_END

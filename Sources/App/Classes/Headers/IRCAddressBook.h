@@ -38,22 +38,22 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, IRCAddressBookEntryType) {
-	IRCAddressBookEntryTypeIgnore = 0,
-	IRCAddressBookEntryTypeUserTracking,
+  IRCAddressBookEntryTypeIgnore = 0,
+  IRCAddressBookEntryTypeUserTracking,
 
-	/* Entry type used when multiple instances of IRCAddressBookEntry
-	 are combined into a single object which represents all. */
-	IRCAddressBookEntryTypeMixed
+  /* Entry type used when multiple instances of IRCAddressBookEntry
+   are combined into a single object which represents all. */
+  IRCAddressBookEntryTypeMixed
 };
 
 typedef NS_ENUM(NSUInteger, IRCAddressBookUserTrackingStatus) {
-	IRCAddressBookUserTrackingStatusUnknown = 0,
-	IRCAddressBookUserTrackingStatusSignedOff,
-	IRCAddressBookUserTrackingStatusSignedOn,
-	IRCAddressBookUserTrackingStatusAvailable,
-	IRCAddressBookUserTrackingStatusNotAvailable,
-	IRCAddressBookUserTrackingStatusAway,
-	IRCAddressBookUserTrackingStatusNotAway
+  IRCAddressBookUserTrackingStatusUnknown = 0,
+  IRCAddressBookUserTrackingStatusSignedOff,
+  IRCAddressBookUserTrackingStatusSignedOn,
+  IRCAddressBookUserTrackingStatusAvailable,
+  IRCAddressBookUserTrackingStatusNotAvailable,
+  IRCAddressBookUserTrackingStatusAway,
+  IRCAddressBookUserTrackingStatusNotAway
 };
 
 #pragma mark -
@@ -79,7 +79,8 @@ typedef NS_ENUM(NSUInteger, IRCAddressBookUserTrackingStatus) {
 
 /* When IRCAddressBookEntryTypeMixed is mixed, this array holds
  a reference to each entry that is mixed into the current object. */
-@property(readonly, copy, nullable) NSArray<IRCAddressBookEntry *> *parentEntries;
+@property(readonly, copy, nullable)
+    NSArray<IRCAddressBookEntry *> *parentEntries;
 
 + (instancetype)newIgnoreEntry;
 + (instancetype)newIgnoreEntryForHostmask:(nullable NSString *)hostmask;
@@ -105,7 +106,8 @@ typedef NS_ENUM(NSUInteger, IRCAddressBookUserTrackingStatus) {
 @property(nonatomic, assign, readwrite) BOOL ignoreFileTransferRequests;
 @property(nonatomic, assign, readwrite) BOOL ignoreInlineMedia;
 @property(nonatomic, assign, readwrite) BOOL trackUserActivity;
-@property(nonatomic, copy, readwrite, nullable) NSArray<IRCAddressBookEntry *> *parentEntries;
+@property(nonatomic, copy, readwrite, nullable)
+    NSArray<IRCAddressBookEntry *> *parentEntries;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -36,13 +36,15 @@
  *
  *********************************************************************** */
 
-#import "TLONotificationController.h"
 #import "TLONotificationConfigurationPrivate.h"
+#import "TLONotificationController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface TDCPreferencesNotificationConfiguration : TLONotificationConfiguration
-+ (TDCPreferencesNotificationConfiguration *)objectWithEventType:(TXNotificationType)eventType;
+@interface TDCPreferencesNotificationConfiguration
+    : TLONotificationConfiguration
++ (TDCPreferencesNotificationConfiguration *)objectWithEventType:
+    (TXNotificationType)eventType;
 @end
 
 NS_ASSUME_NONNULL_END

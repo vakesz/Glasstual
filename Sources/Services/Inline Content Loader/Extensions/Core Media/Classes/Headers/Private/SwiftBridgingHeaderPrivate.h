@@ -37,9 +37,9 @@
 
 #import <CocoaExtensions/CocoaExtensions.h>
 
-#import "ICLPluginProtocol.h"
 #import "ICLHelpers.h"
 #import "ICLInlineContentModulePrivate.h"
+#import "ICLPluginProtocol.h"
 #import "ICMInlineHTML.h"
 #import "ICMInlineImage.h"
 #import "ICMInlineVideo.h"

@@ -45,7 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) BOOL fromCurrentSession;
 
 - (NSString *)renderedBodyForTranscriptLog;
-- (NSString *)renderedBodyForTranscriptLogInChannel:(nullable IRCChannel *)channel;
+- (NSString *)renderedBodyForTranscriptLogInChannel:
+    (nullable IRCChannel *)channel;
 
 + (nullable TVCLogLine *)logLineFromXPCObject:(TVCLogLineXPC *)xpcObject;
 - (TVCLogLineXPC *)xpcObjectForTreeItem:(IRCTreeItem *)treeItem;

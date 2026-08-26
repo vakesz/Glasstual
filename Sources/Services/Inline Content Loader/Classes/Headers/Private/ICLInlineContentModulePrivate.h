@@ -35,15 +35,16 @@
  *
  *********************************************************************** */
 
-#import "ICLInlineContentProtocol.h"
 #import "ICLInlineContentModule.h"
+#import "ICLInlineContentProtocol.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class GRMustacheTemplate, ICLPayloadMutable, ICLProcessMain;
 
 @interface ICLInlineContentModule ()
-- (instancetype)initWithPayload:(ICLPayloadMutable *)payload inProcess:(ICLProcessMain *)process;
+- (instancetype)initWithPayload:(ICLPayloadMutable *)payload
+                      inProcess:(ICLProcessMain *)process;
 
 - (instancetype)initWithDeferredModule:(ICLInlineContentModule *)module;
 @end

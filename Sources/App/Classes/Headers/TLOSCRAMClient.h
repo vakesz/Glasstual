@@ -40,21 +40,21 @@ NS_ASSUME_NONNULL_BEGIN
 /* Implemented in TLOSCRAMClient.swift */
 
 typedef NS_ENUM(NSInteger, TLOSCRAMClientErrorCode) {
-	TLOSCRAMClientErrorCodeInvalidState = 1,
-	TLOSCRAMClientErrorCodeMalformedServerMessage,
-	TLOSCRAMClientErrorCodeNonceMismatch,
-	TLOSCRAMClientErrorCodeIterationCountTooLow,
-	TLOSCRAMClientErrorCodeServerRejected,
-	TLOSCRAMClientErrorCodeServerSignatureMismatch,
-	TLOSCRAMClientErrorCodeKeyDerivationFailed,
+  TLOSCRAMClientErrorCodeInvalidState = 1,
+  TLOSCRAMClientErrorCodeMalformedServerMessage,
+  TLOSCRAMClientErrorCodeNonceMismatch,
+  TLOSCRAMClientErrorCodeIterationCountTooLow,
+  TLOSCRAMClientErrorCodeServerRejected,
+  TLOSCRAMClientErrorCodeServerSignatureMismatch,
+  TLOSCRAMClientErrorCodeKeyDerivationFailed,
 };
 
 typedef NS_ENUM(NSInteger, TLOSCRAMClientState) {
-	TLOSCRAMClientStateInitial = 0,
-	TLOSCRAMClientStateSentClientFirst,
-	TLOSCRAMClientStateSentClientFinal,
-	TLOSCRAMClientStateAuthenticated,
-	TLOSCRAMClientStateFailed,
+  TLOSCRAMClientStateInitial = 0,
+  TLOSCRAMClientStateSentClientFirst,
+  TLOSCRAMClientStateSentClientFinal,
+  TLOSCRAMClientStateAuthenticated,
+  TLOSCRAMClientStateFailed,
 };
 
 /**
@@ -72,18 +72,23 @@ typedef NS_ENUM(NSInteger, TLOSCRAMClientState) {
 
 @property(readonly) TLOSCRAMClientState state;
 
-- (instancetype)initWithUsername:(NSString *)username password:(NSString *)password;
 - (instancetype)initWithUsername:(NSString *)username
-						password:(NSString *)password
-					 clientNonce:(NSString *)clientNonce NS_DESIGNATED_INITIALIZER;
+                        password:(NSString *)password;
+- (instancetype)initWithUsername:(NSString *)username
+                        password:(NSString *)password
+                     clientNonce:(NSString *)clientNonce
+    NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 @property(readonly, copy) NSString *clientFirstMessage;
 
-- (nullable NSString *)clientFinalMessageForServerFirstMessage:(NSString *)serverFirstMessage error:(NSError **)error;
+- (nullable NSString *)
+    clientFinalMessageForServerFirstMessage:(NSString *)serverFirstMessage
+                                      error:(NSError **)error;
 
-- (BOOL)verifyServerFinalMessage:(NSString *)serverFinalMessage error:(NSError **)error;
+- (BOOL)verifyServerFinalMessage:(NSString *)serverFinalMessage
+                           error:(NSError **)error;
 @end
 
 NS_ASSUME_NONNULL_END

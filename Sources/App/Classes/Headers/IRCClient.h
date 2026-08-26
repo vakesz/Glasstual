@@ -44,59 +44,88 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class IRCChannel, IRCClientConfig, IRCConnection, IRCHighlightLogEntry, IRCISupportInfo;
+@class IRCChannel, IRCClientConfig, IRCConnection, IRCHighlightLogEntry,
+    IRCISupportInfo;
 @class IRCAddressBookEntry, IRCMessage, IRCServer, IRCUser;
 
 typedef NS_ENUM(NSUInteger, IRCClientConnectMode) {
-	IRCClientConnectModeNormal = 0,
-	IRCClientConnectModeRetry,
-	IRCClientConnectModeReconnect,
+  IRCClientConnectModeNormal = 0,
+  IRCClientConnectModeRetry,
+  IRCClientConnectModeReconnect,
 };
 
 typedef NS_ENUM(NSUInteger, IRCClientDisconnectMode) {
-	IRCClientDisconnectModeNormal = 0,
-	IRCClientDisconnectModeComputerSleep,
-	IRCClientDisconnectModeBadCertificate,
-	IRCClientDisconnectModeReachabilityChange,
-	IRCClientDisconnectModeServerRedirect
+  IRCClientDisconnectModeNormal = 0,
+  IRCClientDisconnectModeComputerSleep,
+  IRCClientDisconnectModeBadCertificate,
+  IRCClientDisconnectModeReachabilityChange,
+  IRCClientDisconnectModeServerRedirect
 };
 
 /* Identifiers for capabilities. Each value is an opaque bit that the
  capability registry (IRCCapability.h) maps to one or more wire names.
  Use -isCapabilityEnabled: to query them. */
 typedef NS_OPTIONS(NSUInteger, ClientIRCv3SupportedCapability) {
-	ClientIRCv3SupportedCapabilityAwayNotify = 1 << 0,			 // YES if away-notify CAP supported
-	ClientIRCv3SupportedCapabilityBatch = 1 << 1,				 // YES if batch CAP supported
-	ClientIRCv3SupportedCapabilityEchoMessage = 1 << 2,			 // YES if echo-message CAP supported
-	ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL = 1 << 5, // YES if SASL authentication was successful
-	ClientIRCv3SupportedCapabilityIsInSASLNegotiation = 1 << 6,	 // YES if in SASL CAP authentication request
-	ClientIRCv3SupportedCapabilityMonitorCommand = 1 << 7,		 // YES if the MONITOR command is supported
-	ClientIRCv3SupportedCapabilityMultiPrefix = 1 << 8,			 // YES if multi-prefix CAP supported
-	ClientIRCv3SupportedCapabilityPlayback = 1 << 9,			 // YES if a playback CAP (znc.in/playback) is supported
-	ClientIRCv3SupportedCapabilityServerTime = 1 << 10,		   // YES if server-time CAP (or a vendor variant) supported
-	ClientIRCv3SupportedCapabilityUserhostInNames = 1 << 11,   // YES if userhost-in-names CAP supported
-	ClientIRCv3SupportedCapabilityWatchCommand = 1 << 12,	   // YES if the WATCH command is supported
-	ClientIRCv3SupportedCapabilityZNCCertInfoModule = 1 << 13, // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityZNCSelfMessage = 1 << 14,	   // YES if the ZNC vendor specific CAP supported
-	ClientIRCv3SupportedCapabilityChangeHost = 1 << 15,		   // YES if the CHGHOST CAP supported
-	ClientIRCv3SupportedCapabilityMessageTags = 1 << 16,	   // YES if message-tags CAP supported
-	ClientIRCv3SupportedCapabilityCapNotify = 1 << 17,		   // YES if cap-notify CAP supported
-	ClientIRCv3SupportedCapabilityStandardReplies = 1 << 18,   // YES if standard-replies CAP supported
-	ClientIRCv3SupportedCapabilityAccountNotify = 1UL << 28,   // YES if account-notify CAP supported
-	ClientIRCv3SupportedCapabilityExtendedJoin = 1UL << 29,	   // YES if extended-join CAP supported
-	ClientIRCv3SupportedCapabilityAccountTag = 1UL << 30,	   // YES if account-tag CAP supported
-	ClientIRCv3SupportedCapabilitySetName = 1UL << 31,		   // YES if setname CAP supported
-	ClientIRCv3SupportedCapabilityInviteNotify = 1UL << 32,	   // YES if invite-notify CAP supported
-	ClientIRCv3SupportedCapabilityExtendedMonitor = 1UL << 33, // YES if extended-monitor CAP supported
-	ClientIRCv3SupportedCapabilityPreAway = 1UL << 34,		   // YES if pre-away CAP supported
-	ClientIRCv3SupportedCapabilityChatHistory = 1 << 19,	// YES if chathistory (or draft/chathistory) CAP supported
-	ClientIRCv3SupportedCapabilityReadMarker = 1 << 20,		// YES if read-marker (or draft/read-marker) CAP supported
-	ClientIRCv3SupportedCapabilityLabeledResponse = 1 << 21 // YES if labeled-response CAP supported
+  ClientIRCv3SupportedCapabilityAwayNotify =
+      1 << 0, // YES if away-notify CAP supported
+  ClientIRCv3SupportedCapabilityBatch = 1 << 1, // YES if batch CAP supported
+  ClientIRCv3SupportedCapabilityEchoMessage =
+      1 << 2, // YES if echo-message CAP supported
+  ClientIRCv3SupportedCapabilityIsIdentifiedWithSASL =
+      1 << 5, // YES if SASL authentication was successful
+  ClientIRCv3SupportedCapabilityIsInSASLNegotiation =
+      1 << 6, // YES if in SASL CAP authentication request
+  ClientIRCv3SupportedCapabilityMonitorCommand =
+      1 << 7, // YES if the MONITOR command is supported
+  ClientIRCv3SupportedCapabilityMultiPrefix =
+      1 << 8, // YES if multi-prefix CAP supported
+  ClientIRCv3SupportedCapabilityPlayback =
+      1 << 9, // YES if a playback CAP (znc.in/playback) is supported
+  ClientIRCv3SupportedCapabilityServerTime =
+      1 << 10, // YES if server-time CAP (or a vendor variant) supported
+  ClientIRCv3SupportedCapabilityUserhostInNames =
+      1 << 11, // YES if userhost-in-names CAP supported
+  ClientIRCv3SupportedCapabilityWatchCommand =
+      1 << 12, // YES if the WATCH command is supported
+  ClientIRCv3SupportedCapabilityZNCCertInfoModule =
+      1 << 13, // YES if the ZNC vendor specific CAP supported
+  ClientIRCv3SupportedCapabilityZNCSelfMessage =
+      1 << 14, // YES if the ZNC vendor specific CAP supported
+  ClientIRCv3SupportedCapabilityChangeHost =
+      1 << 15, // YES if the CHGHOST CAP supported
+  ClientIRCv3SupportedCapabilityMessageTags =
+      1 << 16, // YES if message-tags CAP supported
+  ClientIRCv3SupportedCapabilityCapNotify =
+      1 << 17, // YES if cap-notify CAP supported
+  ClientIRCv3SupportedCapabilityStandardReplies =
+      1 << 18, // YES if standard-replies CAP supported
+  ClientIRCv3SupportedCapabilityAccountNotify =
+      1UL << 28, // YES if account-notify CAP supported
+  ClientIRCv3SupportedCapabilityExtendedJoin =
+      1UL << 29, // YES if extended-join CAP supported
+  ClientIRCv3SupportedCapabilityAccountTag =
+      1UL << 30, // YES if account-tag CAP supported
+  ClientIRCv3SupportedCapabilitySetName = 1UL
+                                          << 31, // YES if setname CAP supported
+  ClientIRCv3SupportedCapabilityInviteNotify =
+      1UL << 32, // YES if invite-notify CAP supported
+  ClientIRCv3SupportedCapabilityExtendedMonitor =
+      1UL << 33, // YES if extended-monitor CAP supported
+  ClientIRCv3SupportedCapabilityPreAway =
+      1UL << 34, // YES if pre-away CAP supported
+  ClientIRCv3SupportedCapabilityChatHistory =
+      1 << 19, // YES if chathistory (or draft/chathistory) CAP supported
+  ClientIRCv3SupportedCapabilityReadMarker =
+      1 << 20, // YES if read-marker (or draft/read-marker) CAP supported
+  ClientIRCv3SupportedCapabilityLabeledResponse =
+      1 << 21 // YES if labeled-response CAP supported
 };
 
-GLASSTUAL_EXTERN NSNotificationName const IRCClientConfigurationWasUpdatedNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    IRCClientConfigurationWasUpdatedNotification;
 
-GLASSTUAL_EXTERN NSNotificationName const IRCClientChannelListWasModifiedNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    IRCClientChannelListWasModifiedNotification;
 
 GLASSTUAL_EXTERN NSNotificationName const IRCClientWillConnectNotification;
 GLASSTUAL_EXTERN NSNotificationName const IRCClientDidConnectNotification;
@@ -105,51 +134,78 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientWillSendQuitNotification;
 GLASSTUAL_EXTERN NSNotificationName const IRCClientWillDisconnectNotification;
 GLASSTUAL_EXTERN NSNotificationName const IRCClientDidDisconnectNotification;
 
-GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotification;
+GLASSTUAL_EXTERN NSNotificationName const
+    IRCClientUserNicknameChangedNotification;
 
 @interface IRCClient : IRCTreeItem <IRCConnectionDelegate>
 @property(readonly, copy) IRCClientConfig *config;
 @property(readonly, copy, nullable)
-	IRCServer *server; // Where is being connected to. Use -serverAddress for server address connected to.
+    IRCServer *server; // Where is being connected to. Use -serverAddress for
+                       // server address connected to.
 @property(readonly) IRCISupportInfo *supportInfo;
 @property(readonly) IRCClientConnectMode connectType;
 @property(readonly) IRCClientDisconnectMode disconnectType;
-@property(readonly) BOOL isAutojoined;					// YES if autojoin has completed
-@property(readonly) BOOL isAutojoining;					// YES if autojoin is in progress
-@property(readonly) BOOL isConnecting;					// YES if socket is connecting. Set to NO on raw numeric 001.
-@property(readonly) BOOL isConnected;					// YES if socket is connected
-@property(readonly) BOOL isConnectedToZNC;				// YES if Glasstual detected that this connection is ZNC
-@property(readonly) BOOL isLoggedIn;					// YES if logged into server. Set to YES on raw numeric 001.
-@property(readonly) BOOL isQuitting;					// YES if socket is disconnecting
-@property(readonly) BOOL isReconnecting;				// YES if reconnect is pending
-@property(readonly) BOOL isSecured;						// YES if socket is connected using SSL/TLS
-@property(readonly) BOOL userIsAway;					// YES if local user is away
-@property(readonly) BOOL userIsIRCop;					// YES if local user is IRCop
-@property(readonly) BOOL userIsIdentifiedWithNickServ;	// YES if NickServ identification was successful
-@property(readonly) BOOL isWaitingForNickServ;			// YES if NickServ identification is pending
-@property(readonly) BOOL serverHasNickServ;				// YES if NickServ service was found on server
-@property(readonly) NSTimeInterval lastMessageReceived; // The time at which the last of any incoming data was received
+@property(readonly) BOOL isAutojoined;  // YES if autojoin has completed
+@property(readonly) BOOL isAutojoining; // YES if autojoin is in progress
+@property(readonly) BOOL
+    isConnecting; // YES if socket is connecting. Set to NO on raw numeric 001.
+@property(readonly) BOOL isConnected; // YES if socket is connected
+@property(readonly) BOOL
+    isConnectedToZNC; // YES if Glasstual detected that this connection is ZNC
+@property(readonly) BOOL
+    isLoggedIn; // YES if logged into server. Set to YES on raw numeric 001.
+@property(readonly) BOOL isQuitting;     // YES if socket is disconnecting
+@property(readonly) BOOL isReconnecting; // YES if reconnect is pending
+@property(readonly) BOOL isSecured;  // YES if socket is connected using SSL/TLS
+@property(readonly) BOOL userIsAway; // YES if local user is away
+@property(readonly) BOOL userIsIRCop; // YES if local user is IRCop
 @property(readonly)
-	NSTimeInterval lastMessageServerTime; // The time of the last message received that contained a server-time CAP
+    BOOL userIsIdentifiedWithNickServ; // YES if NickServ identification was
+                                       // successful
+@property(readonly)
+    BOOL isWaitingForNickServ; // YES if NickServ identification is pending
+@property(readonly)
+    BOOL serverHasNickServ; // YES if NickServ service was found on server
+@property(readonly)
+    NSTimeInterval lastMessageReceived; // The time at which the last of any
+                                        // incoming data was received
+@property(readonly) NSTimeInterval
+    lastMessageServerTime; // The time of the last message received that
+                           // contained a server-time CAP
 @property(readonly) NSUInteger channelCount;
-@property(readonly, weak) IRCChannel *
-	lastSelectedChannel; // If this is the selected client, then the value of this property is the current selection. If the current client is not selected, then this value is either its previous selection or nil.
-@property(readonly, weak) TVCLogLine
-	*lastLine; // Last line in the server console. There is no guarantee it's visible to the user when accessed.
+@property(readonly, weak) IRCChannel
+    *lastSelectedChannel; // If this is the selected client, then the value of
+                          // this property is the current selection. If the
+                          // current client is not selected, then this value is
+                          // either its previous selection or nil.
+@property(readonly, weak)
+    TVCLogLine *lastLine; // Last line in the server console. There is no
+                          // guarantee it's visible to the user when accessed.
 @property(readonly, copy) NSArray<IRCChannel *> *channelList;
 @property(readonly, copy) NSArray<IRCHighlightLogEntry *> *cachedHighlights;
-@property(readonly, copy, nullable) NSString *userHostmask;		// The hostmask of the local user
-@property(readonly) NSStringEncoding effectivePrimaryEncoding;	// Configured encoding, or UTF-8 on UTF8ONLY servers
-@property(readonly) NSStringEncoding effectiveFallbackEncoding; // Configured fallback, or UTF-8 on UTF8ONLY servers
-@property(readonly, copy) NSString *userNickname;				// The nickname of the local user
-@property(readonly, copy, nullable) NSString *serverAddress;	// The address of the server connected to or nil
-@property(readonly, copy, nullable) NSString *networkName;		// The name of the network connected to or nil
+@property(readonly, copy, nullable)
+    NSString *userHostmask; // The hostmask of the local user
+@property(readonly)
+    NSStringEncoding effectivePrimaryEncoding; // Configured encoding, or UTF-8
+                                               // on UTF8ONLY servers
+@property(readonly)
+    NSStringEncoding effectiveFallbackEncoding; // Configured fallback, or UTF-8
+                                                // on UTF8ONLY servers
 @property(readonly, copy)
-	NSString *networkNameAlt; // The name of the network connected to or the configured Connection Name
-@property(readonly, copy, nullable) NSString *preAwayUserNickname; // Nickname before away was set or nil
+    NSString *userNickname; // The nickname of the local user
+@property(readonly, copy, nullable)
+    NSString *serverAddress; // The address of the server connected to or nil
+@property(readonly, copy, nullable)
+    NSString *networkName; // The name of the network connected to or nil
+@property(readonly, copy)
+    NSString *networkNameAlt; // The name of the network connected to or the
+                              // configured Connection Name
+@property(readonly, copy, nullable)
+    NSString *preAwayUserNickname; // Nickname before away was set or nil
 @property(readonly, copy, nullable) NSData *zncBouncerCertificateChainData;
 @property(readonly) NSUInteger
-	logFileSessionCount; // Number of lines sent to server console log file for session (from connect to disconnect)
+    logFileSessionCount; // Number of lines sent to server console log file for
+                         // session (from connect to disconnect)
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -170,23 +226,32 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 - (BOOL)isCapabilityEnabled:(ClientIRCv3SupportedCapability)capability;
 
 - (void)joinChannel:(IRCChannel *)channel;
-- (void)joinChannel:(IRCChannel *)channel password:(nullable NSString *)password;
+- (void)joinChannel:(IRCChannel *)channel
+           password:(nullable NSString *)password;
 - (void)joinChannels:(NSArray<IRCChannel *> *)channels;
 - (void)joinUnlistedChannel:(NSString *)channel;
-- (void)joinUnlistedChannel:(NSString *)channel password:(nullable NSString *)password;
-- (void)forceJoinChannel:(NSString *)channel password:(nullable NSString *)password;
+- (void)joinUnlistedChannel:(NSString *)channel
+                   password:(nullable NSString *)password;
+- (void)forceJoinChannel:(NSString *)channel
+                password:(nullable NSString *)password;
 
 - (void)partChannel:(IRCChannel *)channel;
-- (void)partChannel:(IRCChannel *)channel withComment:(nullable NSString *)comment;
+- (void)partChannel:(IRCChannel *)channel
+        withComment:(nullable NSString *)comment;
 - (void)partUnlistedChannel:(NSString *)channel;
-- (void)partUnlistedChannel:(NSString *)channel withComment:(nullable NSString *)comment;
+- (void)partUnlistedChannel:(NSString *)channel
+                withComment:(nullable NSString *)comment;
 
 - (void)changeNickname:(NSString *)newNickname;
 
 - (void)kick:(NSString *)nickname inChannel:(IRCChannel *)channel;
 
-- (void)sendCTCPQuery:(NSString *)nickname command:(NSString *)command text:(nullable NSString *)text;
-- (void)sendCTCPReply:(NSString *)nickname command:(NSString *)command text:(nullable NSString *)text;
+- (void)sendCTCPQuery:(NSString *)nickname
+              command:(NSString *)command
+                 text:(nullable NSString *)text;
+- (void)sendCTCPReply:(NSString *)nickname
+              command:(NSString *)command
+                 text:(nullable NSString *)text;
 - (void)sendCTCPPing:(NSString *)nickname;
 
 - (void)sendWhois:(NSString *)nickname;
@@ -201,62 +266,70 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 - (void)requestModesForChannelNamed:(NSString *)channel;
 
 - (void)sendModes:(nullable NSString *)modeSymbols
-	withParameters:(nullable NSArray<NSString *> *)parameters
-		 inChannel:(IRCChannel *)channel;
+    withParameters:(nullable NSArray<NSString *> *)parameters
+         inChannel:(IRCChannel *)channel;
 - (void)sendModes:(nullable NSString *)modeSymbols
-	withParametersString:(nullable NSString *)parametersString
-			   inChannel:(IRCChannel *)channel;
+    withParametersString:(nullable NSString *)parametersString
+               inChannel:(IRCChannel *)channel;
 
 - (void)sendModes:(nullable NSString *)modeSymbols
-	withParameters:(nullable NSArray<NSString *> *)parameters
-	inChannelNamed:(NSString *)channel;
+    withParameters:(nullable NSArray<NSString *> *)parameters
+    inChannelNamed:(NSString *)channel;
 - (void)sendModes:(nullable NSString *)modeSymbols
-	withParametersString:(nullable NSString *)parametersString
-		  inChannelNamed:(NSString *)channel;
+    withParametersString:(nullable NSString *)parametersString
+          inChannelNamed:(NSString *)channel;
 
 - (void)sendPing:(NSString *)tokenString;
 - (void)sendPong:(NSString *)tokenString;
 
 - (void)sendInviteTo:(NSString *)nickname toJoinChannel:(IRCChannel *)channel;
-- (void)sendInviteTo:(NSString *)nickname toJoinChannelNamed:(NSString *)channel;
+- (void)sendInviteTo:(NSString *)nickname
+    toJoinChannelNamed:(NSString *)channel;
 
 - (void)requestTopicForChannel:(IRCChannel *)channel;
 - (void)requestTopicForChannelNamed:(NSString *)channel;
 
 - (void)sendTopicTo:(nullable NSString *)topic inChannel:(IRCChannel *)channel;
-- (void)sendTopicTo:(nullable NSString *)topic inChannelNamed:(NSString *)channel;
+- (void)sendTopicTo:(nullable NSString *)topic
+     inChannelNamed:(NSString *)channel;
 
 - (void)sendCapability:(NSString *)subcommand data:(nullable NSString *)data;
 
 /* Sends a command with IRCv3 message tags. Tags are dropped when the
  server did not negotiate message-tags. */
 - (void)sendCommand:(NSString *)command
-		  arguments:(NSArray<NSString *> *)arguments
-			   tags:(nullable NSDictionary<NSString *, NSString *> *)tags;
+          arguments:(NSArray<NSString *> *)arguments
+               tags:(nullable NSDictionary<NSString *, NSString *> *)tags;
 
 /* Sends TAGMSG to target carrying only tags (for example
  @{ @"+typing" : @"active" }). Returns NO, and sends nothing, when
  message-tags is not enabled or there is nothing to send. */
-- (BOOL)sendTagMessage:(NSDictionary<NSString *, NSString *> *)tags toTarget:(NSString *)target;
+- (BOOL)sendTagMessage:(NSDictionary<NSString *, NSString *> *)tags
+              toTarget:(NSString *)target;
 
 - (void)sendIsonForNicknames:(NSArray<NSString *> *)nicknames;
 
-- (void)modifyWatchListBy:(BOOL)adding nicknames:(NSArray<NSString *> *)nicknames;
+- (void)modifyWatchListBy:(BOOL)adding
+                nicknames:(NSArray<NSString *> *)nicknames;
 
 - (void)requestChannelList;
-- (void)requestChannelListWithArguments:(nullable NSString *)arguments; // e.g. ELIST conditions ">10,*linux*"
+- (void)requestChannelListWithArguments:
+    (nullable NSString *)arguments; // e.g. ELIST conditions ">10,*linux*"
 
-- (NSArray<NSString *> *)compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
-													 modeIsSet:(BOOL)modeIsSet
-											   parameterString:(NSString *)parameterString;
-- (NSArray<NSString *> *)compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
-													 modeIsSet:(BOOL)modeIsSet
-											   parameterString:(NSString *)parameterString
-												  characterSet:(NSCharacterSet *)characterList;
+- (NSArray<NSString *> *)
+    compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
+                                modeIsSet:(BOOL)modeIsSet
+                          parameterString:(NSString *)parameterString;
+- (NSArray<NSString *> *)
+    compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
+                                modeIsSet:(BOOL)modeIsSet
+                          parameterString:(NSString *)parameterString
+                             characterSet:(NSCharacterSet *)characterList;
 
-- (NSArray<NSString *> *)compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
-													 modeIsSet:(BOOL)modeIsSet
-												modeParameters:(NSArray<NSString *> *)modeParameters;
+- (NSArray<NSString *> *)
+    compileListOfModeChangesForModeSymbol:(NSString *)modeSymbol
+                                modeIsSet:(BOOL)modeIsSet
+                           modeParameters:(NSArray<NSString *> *)modeParameters;
 
 - (void)createChannelListDialog;
 - (void)createChannelInviteExceptionListSheet;
@@ -291,21 +364,25 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 #pragma mark -
 
 - (nullable IRCChannel *)findChannel:(NSString *)withName;
-- (nullable IRCChannel *)channelAtIndex:(NSUInteger)index; // nil if out of bounds
+- (nullable IRCChannel *)channelAtIndex:
+    (NSUInteger)index; // nil if out of bounds
 - (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName;
-- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName isPrivateMessage:(BOOL)isPrivateMessage;
+- (nullable IRCChannel *)findChannelOrCreate:(NSString *)withName
+                            isPrivateMessage:(BOOL)isPrivateMessage;
 
 - (nullable NSData *)convertToCommonEncoding:(NSString *)string;
 - (nullable NSString *)convertFromCommonEncoding:(NSData *)data;
 
-- (NSString *)formatNickname:(NSString *)nickname inChannel:(nullable IRCChannel *)channel;
 - (NSString *)formatNickname:(NSString *)nickname
-				   inChannel:(nullable IRCChannel *)channel
-				  withFormat:(nullable NSString *)format;
+                   inChannel:(nullable IRCChannel *)channel;
+- (NSString *)formatNickname:(NSString *)nickname
+                   inChannel:(nullable IRCChannel *)channel
+                  withFormat:(nullable NSString *)format;
 
 - (BOOL)nicknameIsZNCUser:(NSString *)nickname;
 - (BOOL)nickname:(NSString *)nickname isZNCUser:(NSString *)zncNickname;
-- (nullable NSString *)nicknameAsZNCUser:(NSString *)nickname; // Returns nil if not connected to ZNC
+- (nullable NSString *)nicknameAsZNCUser:
+    (NSString *)nickname; // Returns nil if not connected to ZNC
 
 - (BOOL)nicknameIsMyself:(NSString *)nickname;
 
@@ -315,36 +392,84 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 - (BOOL)stringIsNickname:(NSString *)string;
 - (BOOL)stringIsChannelName:(NSString *)string;
 
-- (BOOL)outputRuleMatchedInMessage:(NSString *)message inChannel:(nullable IRCChannel *)channel;
+- (BOOL)outputRuleMatchedInMessage:(NSString *)message
+                         inChannel:(nullable IRCChannel *)channel;
 
 #pragma mark -
 
 - (void)setUnreadStateForChannel:(IRCChannel *)channel;
-- (void)setUnreadStateForChannel:(IRCChannel *)channel isHighlight:(BOOL)isHighlight;
+- (void)setUnreadStateForChannel:(IRCChannel *)channel
+                     isHighlight:(BOOL)isHighlight;
 
 - (void)setHighlightStateForChannel:(IRCChannel *)channel;
 
 #pragma mark -
 
 - (void)sendCommand:(id)string;
-- (void)sendCommand:(id)string completeTarget:(BOOL)completeTarget target:(nullable NSString *)targetChannelName;
+- (void)sendCommand:(id)string
+     completeTarget:(BOOL)completeTarget
+             target:(nullable NSString *)targetChannelName;
 
 - (void)sendCommand:(NSString *)command toZNCModuleNamed:(NSString *)module;
 
-- (void)sendText:(NSAttributedString *)string asCommand:(IRCRemoteCommand)command toChannel:(IRCChannel *)channel;
+- (void)sendText:(NSAttributedString *)string
+       asCommand:(IRCRemoteCommand)command
+       toChannel:(IRCChannel *)channel;
 
 /* Sends string to every channel in channels. When the server advertises a
  TARGMAX / MAXTARGETS limit for the command, joined channels are grouped into
  comma separated target lists no longer than that limit; otherwise one line
  is sent per channel exactly as -sendText:asCommand:toChannel: would. */
 - (void)sendText:(NSAttributedString *)string
-	   asCommand:(IRCRemoteCommand)command
-	  toChannels:(NSArray<IRCChannel *> *)channels;
+       asCommand:(IRCRemoteCommand)command
+      toChannels:(NSArray<IRCChannel *> *)channels;
 
 - (void)sendLine:(NSString *)string;
 - (void)send:(NSString *)string, ...;
 
-- (void)sendPrivmsg:(NSString *)message toChannel:(IRCChannel *)channel; // Invoke -sendText: with proper values
+/* Incoming message dispatch is overridable by alternate transports and test
+ clients while the individual protocol handlers remain implementation detail. */
+- (void)processIncomingMessage:(IRCMessage *)message;
+- (void)receiveBatch:(IRCMessage *)message;
+- (BOOL)filterBatchCommandIncomingData:(IRCMessage *)message;
+- (void)receiveStandardReply:(IRCMessage *)message;
+- (void)receiveTagMessage:(IRCMessage *)message;
+- (void)receiveJoin:(IRCMessage *)message;
+- (void)receiveInvite:(IRCMessage *)message;
+- (void)receiveAccountNotify:(IRCMessage *)message;
+- (void)receiveSetName:(IRCMessage *)message;
+- (void)receivePrivmsgAndNotice:(IRCMessage *)message;
+- (void)receiveNumericReply:(IRCMessage *)message;
+- (void)sendNextCapability;
+- (void)receiveReadMarker:(IRCMessage *)message;
+- (BOOL)chatHistoryMessageIsDuplicate:(IRCMessage *)message;
+- (void)onReadMarkerTimer;
+- (void)requestPlayback;
+
+- (BOOL)selectSASLMechanismFromOffered:(NSArray<NSString *> *)mechanisms;
+@property(nonatomic, copy, nullable) NSString *saslMechanism;
+@property(nonatomic, strong) NSMutableArray<NSString *> *saslTriedMechanisms;
+- (BOOL)retrySASLNegotiationWithMechanisms:(NSArray<NSString *> *)mechanisms;
+
+- (NSDictionary<NSString *, id> *)
+    tagMessageEventWithClientTags:
+        (NSDictionary<NSString *, NSString *> *)clientTags
+                           sender:(NSString *)sender
+                           target:(NSString *)target
+                        timestamp:(NSDate *)timestamp
+                messageIdentifier:(nullable NSString *)messageIdentifier
+                          account:(nullable NSString *)account;
+
+- (BOOL)labeledResponseTrackingEnabled;
+- (nullable NSString *)registerPendingDeliveryForChannel:
+    (nullable IRCChannel *)channel;
+- (BOOL)resolveLabeledResponseForMessage:(IRCMessage *)message;
+- (void)timeoutDeliveryWithLabel:(NSString *)label;
+- (TVCLogLineDeliveryState)deliveryStateForLabel:(NSString *)label;
+
+- (void)sendPrivmsg:(NSString *)message
+          toChannel:
+              (IRCChannel *)channel; // Invoke -sendText: with proper values
 - (void)sendAction:(NSString *)message toChannel:(IRCChannel *)channel;
 - (void)sendNotice:(NSString *)message toChannel:(IRCChannel *)channel;
 
@@ -356,62 +481,66 @@ GLASSTUAL_EXTERN NSNotificationName const IRCClientUserNicknameChangedNotificati
 // referenceMessage.command is used if command == nil
 // referenceMessage and command cannot be nil together (this throws exceptions)
 - (void)print:(NSString *)messageBody
-				  by:(nullable NSString *)nickname
-		   inChannel:(nullable IRCChannel *)channel
-			  asType:(TVCLogLineType)lineType
-			 command:(nullable NSString *)command
-		  receivedAt:(NSDate *)receivedAt
-		 isEncrypted:(BOOL)isEncrypted
-	   escapeMessage:(BOOL)escapeMessage
-	referenceMessage:(nullable IRCMessage *)referenceMessage
-	 completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock;
+                  by:(nullable NSString *)nickname
+           inChannel:(nullable IRCChannel *)channel
+              asType:(TVCLogLineType)lineType
+             command:(nullable NSString *)command
+          receivedAt:(NSDate *)receivedAt
+         isEncrypted:(BOOL)isEncrypted
+       escapeMessage:(BOOL)escapeMessage
+    referenceMessage:(nullable IRCMessage *)referenceMessage
+     completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)
+                         completionBlock;
 
 - (void)print:(NSString *)messageBody
-		   by:(nullable NSString *)nickname
-	inChannel:(nullable IRCChannel *)channel
-	   asType:(TVCLogLineType)lineType
-	  command:(NSString *)command;
+           by:(nullable NSString *)nickname
+    inChannel:(nullable IRCChannel *)channel
+       asType:(TVCLogLineType)lineType
+      command:(NSString *)command;
 - (void)print:(NSString *)messageBody
-			by:(nullable NSString *)nickname
-	 inChannel:(nullable IRCChannel *)channel
-		asType:(TVCLogLineType)lineType
-	   command:(NSString *)command
-	receivedAt:(NSDate *)receivedAt;
+            by:(nullable NSString *)nickname
+     inChannel:(nullable IRCChannel *)channel
+        asType:(TVCLogLineType)lineType
+       command:(NSString *)command
+    receivedAt:(NSDate *)receivedAt;
 - (void)print:(NSString *)messageBody
-			 by:(nullable NSString *)nickname
-	  inChannel:(nullable IRCChannel *)channel
-		 asType:(TVCLogLineType)lineType
-		command:(NSString *)command
-	 receivedAt:(NSDate *)receivedAt
-	isEncrypted:(BOOL)isEncrypted;
+             by:(nullable NSString *)nickname
+      inChannel:(nullable IRCChannel *)channel
+         asType:(TVCLogLineType)lineType
+        command:(NSString *)command
+     receivedAt:(NSDate *)receivedAt
+    isEncrypted:(BOOL)isEncrypted;
 - (void)print:(NSString *)messageBody
-				  by:(nullable NSString *)nickname
-		   inChannel:(nullable IRCChannel *)channel
-			  asType:(TVCLogLineType)lineType
-			 command:(nullable NSString *)command
-		  receivedAt:(NSDate *)receivedAt
-		 isEncrypted:(BOOL)isEncrypted
-	referenceMessage:(nullable IRCMessage *)referenceMessage;
+                  by:(nullable NSString *)nickname
+           inChannel:(nullable IRCChannel *)channel
+              asType:(TVCLogLineType)lineType
+             command:(nullable NSString *)command
+          receivedAt:(NSDate *)receivedAt
+         isEncrypted:(BOOL)isEncrypted
+    referenceMessage:(nullable IRCMessage *)referenceMessage;
 - (void)print:(NSString *)messageBody
-				  by:(nullable NSString *)nickname
-		   inChannel:(nullable IRCChannel *)channel
-			  asType:(TVCLogLineType)lineType
-			 command:(nullable NSString *)command
-		  receivedAt:(NSDate *)receivedAt
-		 isEncrypted:(BOOL)isEncrypted
-	referenceMessage:(nullable IRCMessage *)referenceMessage
-	 completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock;
+                  by:(nullable NSString *)nickname
+           inChannel:(nullable IRCChannel *)channel
+              asType:(TVCLogLineType)lineType
+             command:(nullable NSString *)command
+          receivedAt:(NSDate *)receivedAt
+         isEncrypted:(BOOL)isEncrypted
+    referenceMessage:(nullable IRCMessage *)referenceMessage
+     completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)
+                         completionBlock;
 
 - (void)printDebugInformationToConsole:(NSString *)message;
-- (void)printDebugInformationToConsole:(NSString *)message asCommand:(NSString *)command;
+- (void)printDebugInformationToConsole:(NSString *)message
+                             asCommand:(NSString *)command;
 
 - (void)printDebugInformation:(NSString *)message;
 - (void)printDebugInformation:(NSString *)message asCommand:(NSString *)command;
 
-- (void)printDebugInformation:(NSString *)message inChannel:(nullable IRCChannel *)channel;
 - (void)printDebugInformation:(NSString *)message
-					inChannel:(nullable IRCChannel *)channel
-					asCommand:(NSString *)command;
+                    inChannel:(nullable IRCChannel *)channel;
+- (void)printDebugInformation:(NSString *)message
+                    inChannel:(nullable IRCChannel *)channel
+                    asCommand:(NSString *)command;
 
 #pragma mark -
 

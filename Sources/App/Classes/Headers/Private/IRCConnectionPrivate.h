@@ -42,8 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* The public interface declares these properties atomic. The readwrite
  redeclarations must match. They are written on the main queue only
- (see the XPC client protocol implementation in IRCConnection.swift) and read from
- the main thread by IRCClient. */
+ (see the XPC client protocol implementation in IRCConnection.swift) and read
+ from the main thread by IRCClient. */
 @interface IRCConnection ()
 @property(copy, readwrite) IRCConnectionConfig *config;
 @property(assign, readwrite) BOOL isConnected;

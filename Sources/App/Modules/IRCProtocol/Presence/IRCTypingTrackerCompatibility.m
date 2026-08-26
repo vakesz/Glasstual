@@ -37,5 +37,6 @@
 
 #import "IRCTypingTrackerPrivate.h"
 
-NSNotificationName const IRCTypingTrackerDidChangeNotification = @"IRCTypingTrackerDidChangeNotification";
+NSNotificationName const IRCTypingTrackerDidChangeNotification =
+    @"IRCTypingTrackerDidChangeNotification";
 NSString *const IRCTypingTrackerChannelKey = @"channel";

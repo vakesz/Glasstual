@@ -35,7 +35,8 @@
 /**
  * The protocol for your own objects that perform custom rendering.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/rendering_objects.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/rendering_objects.md
  */
 @protocol GRMustacheRendering <NSObject>
 
@@ -68,9 +69,10 @@
  * @since v6.0
  */
 - (NSString *)renderForMustacheTag:(GRMustacheTag *)tag
-						   context:(GRMustacheContext *)context
-						  HTMLSafe:(BOOL *)HTMLSafe
-							 error:(NSError **)error AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+                           context:(GRMustacheContext *)context
+                          HTMLSafe:(BOOL *)HTMLSafe
+                             error:(NSError **)error
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 @end
 
 // =============================================================================
@@ -80,7 +82,8 @@
  * The GRMustacheRendering class helps building rendering objects without
  * writing a custom class that conforms to the GRMustacheRendering protocol.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/rendering_objects.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/rendering_objects.md
  *
  * @see GRMustacheRendering protocol
  *
@@ -104,7 +107,8 @@
  *
  * @since v7.0
  */
-+ (id<GRMustacheRendering>)renderingObjectForObject:(id)object AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
++ (id<GRMustacheRendering>)renderingObjectForObject:(id)object
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Returns a rendering object that renders with the provided block.
@@ -121,8 +125,9 @@
  * @since v7.0
  */
 + (id<GRMustacheRendering>)renderingObjectWithBlock:
-	(NSString * (^)(GRMustacheTag *tag, GRMustacheContext *context, BOOL *HTMLSafe, NSError **error))renderingBlock
-	AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+    (NSString * (^)(GRMustacheTag *tag, GRMustacheContext *context,
+                    BOOL *HTMLSafe, NSError **error))renderingBlock
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 @end
 

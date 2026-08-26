@@ -33,7 +33,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NSByteCountFormatter (CSByteCountFormatterHelper)
-/* Return formatted string with zeroPadsFractionDigits set to YES. See NSByteCountFormatter.h */
+/* Return formatted string with zeroPadsFractionDigits set to YES. See
+ * NSByteCountFormatter.h */
 + (nullable NSString *)stringFromByteCountWithPaddedDigits:(long long)byteCount;
 @end
 

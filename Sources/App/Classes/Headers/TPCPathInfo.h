@@ -53,14 +53,18 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, class, copy, nullable) NSString *groupContainer;
 @property(readonly, class, copy, nullable) NSURL *groupContainerURL;
 
-@property(readonly, class, copy, nullable) NSString *groupContainerApplicationCaches;
-@property(readonly, class, copy, nullable) NSURL *groupContainerApplicationCachesURL;
+@property(readonly, class, copy, nullable)
+    NSString *groupContainerApplicationCaches;
+@property(readonly, class, copy, nullable)
+    NSURL *groupContainerApplicationCachesURL;
 
 @property(readonly, class, copy, nullable) NSString *applicationSupport;
 @property(readonly, class, copy, nullable) NSURL *applicationSupportURL;
 
-@property(readonly, class, copy, nullable) NSString *groupContainerApplicationSupport;
-@property(readonly, class, copy, nullable) NSURL *groupContainerApplicationSupportURL;
+@property(readonly, class, copy, nullable)
+    NSString *groupContainerApplicationSupport;
+@property(readonly, class, copy, nullable)
+    NSURL *groupContainerApplicationSupportURL;
 
 @property(readonly, class, copy, nullable) NSString *applicationLogs;
 @property(readonly, class, copy, nullable) NSURL *applicationLogsURL;

@@ -93,7 +93,8 @@ GLASSTUAL_EXTERN NSString *const TLOFileLoggerISOStandardClockFormat;
 
 /* Builds the transcript folder path for an item under an arbitrary root.
  Returns nil for utility channels. */
-+ (nullable NSString *)writePathForItem:(IRCTreeItem *)item relativeTo:(NSString *)sourcePath;
++ (nullable NSString *)writePathForItem:(IRCTreeItem *)item
+                             relativeTo:(NSString *)sourcePath;
 @end
 
 NS_ASSUME_NONNULL_END

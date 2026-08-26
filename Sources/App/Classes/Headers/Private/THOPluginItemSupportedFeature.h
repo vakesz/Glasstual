@@ -13,18 +13,19 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_OPTIONS(NSUInteger, THOPluginItemSupportedFeature) {
-	THOPluginItemSupportedFeatureDidReceiveCommandEvent = 1 << 1,
-	THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent = 1 << 2,
-	//	THOPluginItemSupportedFeatureInlineMediaManipulation			= 1 << 3,
-	THOPluginItemSupportedFeatureNewMessagePostedEvent = 1 << 4,
-	THOPluginItemSupportedFeatureOutputSuppressionRules = 1 << 5,
-	THOPluginItemSupportedFeaturePreferencePane = 1 << 6,
-	THOPluginItemSupportedFeatureServerInputDataInterception = 1 << 7,
-	THOPluginItemSupportedFeatureSubscribedServerInputCommands = 1 << 8,
-	THOPluginItemSupportedFeatureSubscribedUserInputCommands = 1 << 9,
-	THOPluginItemSupportedFeatureUserInputDataInterception = 1 << 10,
-	THOPluginItemSupportedFeatureWebViewJavaScriptPayloads = 1 << 11,
-	THOPluginItemSupportedFeatureWillRenderMessageEvent = 1 << 12,
+  THOPluginItemSupportedFeatureDidReceiveCommandEvent = 1 << 1,
+  THOPluginItemSupportedFeatureDidReceivePlainTextMessageEvent = 1 << 2,
+  //	THOPluginItemSupportedFeatureInlineMediaManipulation
+  //= 1 << 3,
+  THOPluginItemSupportedFeatureNewMessagePostedEvent = 1 << 4,
+  THOPluginItemSupportedFeatureOutputSuppressionRules = 1 << 5,
+  THOPluginItemSupportedFeaturePreferencePane = 1 << 6,
+  THOPluginItemSupportedFeatureServerInputDataInterception = 1 << 7,
+  THOPluginItemSupportedFeatureSubscribedServerInputCommands = 1 << 8,
+  THOPluginItemSupportedFeatureSubscribedUserInputCommands = 1 << 9,
+  THOPluginItemSupportedFeatureUserInputDataInterception = 1 << 10,
+  THOPluginItemSupportedFeatureWebViewJavaScriptPayloads = 1 << 11,
+  THOPluginItemSupportedFeatureWillRenderMessageEvent = 1 << 12,
 };
 
 NS_ASSUME_NONNULL_END

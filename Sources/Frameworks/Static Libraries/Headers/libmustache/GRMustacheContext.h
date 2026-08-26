@@ -20,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#import <Foundation/Foundation.h>
 #import "GRMustacheAvailabilityMacros.h"
+#import <Foundation/Foundation.h>
 
 @protocol GRMustacheTagDelegate;
 
@@ -49,22 +49,21 @@
  *
  * @see GRMustacheRendering protocol
  */
-@interface GRMustacheContext : NSObject
-{
-  @private
+@interface GRMustacheContext : NSObject {
+@private
 #define GRMUSTACHE_STACK_TOP_IVAR(stackName) _##stackName##Object
 #define GRMUSTACHE_STACK_PARENT_IVAR(stackName) _##stackName##Parent
-#define GRMUSTACHE_STACK_DECLARE_IVARS(stackName, type)                                                                \
-	GRMustacheContext *GRMUSTACHE_STACK_PARENT_IVAR(stackName);                                                        \
-	type GRMUSTACHE_STACK_TOP_IVAR(stackName)
+#define GRMUSTACHE_STACK_DECLARE_IVARS(stackName, type)                        \
+  GRMustacheContext *GRMUSTACHE_STACK_PARENT_IVAR(stackName);                  \
+  type GRMUSTACHE_STACK_TOP_IVAR(stackName)
 
-	GRMUSTACHE_STACK_DECLARE_IVARS(contextStack, id);
-	GRMUSTACHE_STACK_DECLARE_IVARS(protectedContextStack, id);
-	GRMUSTACHE_STACK_DECLARE_IVARS(hiddenContextStack, id);
-	GRMUSTACHE_STACK_DECLARE_IVARS(tagDelegateStack, id<GRMustacheTagDelegate>);
-	GRMUSTACHE_STACK_DECLARE_IVARS(inheritablePartialNodeStack, id);
+  GRMUSTACHE_STACK_DECLARE_IVARS(contextStack, id);
+  GRMUSTACHE_STACK_DECLARE_IVARS(protectedContextStack, id);
+  GRMUSTACHE_STACK_DECLARE_IVARS(hiddenContextStack, id);
+  GRMUSTACHE_STACK_DECLARE_IVARS(tagDelegateStack, id<GRMustacheTagDelegate>);
+  GRMUSTACHE_STACK_DECLARE_IVARS(inheritablePartialNodeStack, id);
 
-	BOOL _unsafeKeyAccess;
+  BOOL _unsafeKeyAccess;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +124,8 @@
  * If _object_ conforms to the GRMustacheTemplateDelegate protocol, it is also
  * made the top of the tag delegate stack.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
  *
  * @param object  An object
  *
@@ -137,7 +137,8 @@
  *
  * @since v6.4
  */
-+ (instancetype)contextWithObject:(id)object AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
++ (instancetype)contextWithObject:(id)object
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Returns a context containing a single priority object.
@@ -147,7 +148,8 @@
  *
  * ```
  * // Create a context with a priority `precious` key
- * context = [GRMustacheContext contextWithProtectedObject:@{ @"precious": @"gold" }];
+ * context = [GRMustacheContext contextWithProtectedObject:@{ @"precious":
+ * @"gold" }];
  *
  * // Derive a new context by attempting to override the `precious` key:
  * context = [context contextByAddingObject:@{ @"precious": @"lead" }];
@@ -156,7 +158,8 @@
  * [context valueForMustacheKey:@"precious"];   // @"gold"
  * ```
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/security.md#priority-keys
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/security.md#priority-keys
  *
  * @param object  An object
  *
@@ -166,7 +169,8 @@
  *
  * @since v6.4
  */
-+ (instancetype)contextWithProtectedObject:(id)object AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
++ (instancetype)contextWithProtectedObject:(id)object
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Returns a context containing a single tag delegate.
@@ -178,7 +182,8 @@
  * not provide any key to the templates. It will only be notified of the
  * rendering of tags.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
  *
  * @param tagDelegate  A tag delegate
  *
@@ -189,7 +194,7 @@
  * @since v6.4
  */
 + (instancetype)contextWithTagDelegate:(id<GRMustacheTagDelegate>)tagDelegate
-	AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @name Deriving New Contexts
@@ -204,8 +209,8 @@
  * unknown to _object_ will be looked up deeper in the context stack.
  *
  * ```
- * context = [GRMustacheContext contextWithObject:@{ @"a": @"ignored", @"b": @"foo" }];
- * context = [context contextByAddingObject:@{ @"a": @"bar" }];
+ * context = [GRMustacheContext contextWithObject:@{ @"a": @"ignored", @"b":
+ * @"foo" }]; context = [context contextByAddingObject:@{ @"a": @"bar" }];
  *
  * // `a` is overriden
  * [context valueForMustacheKey:@"a"];   // @"bar"
@@ -221,7 +226,8 @@
  * If _object_ conforms to the GRMustacheTemplateDelegate protocol, it is also
  * added at the top of the tag delegate stack.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
  *
  * @param object  An object
  *
@@ -231,7 +237,8 @@
  *
  * @since v6.0
  */
-- (instancetype)contextByAddingObject:(id)object AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+- (instancetype)contextByAddingObject:(id)object
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Returns a new rendering context that is the copy of the receiver, and the
@@ -251,7 +258,8 @@
  * [context valueForMustacheKey:@"precious"];   // @"gold"
  * ```
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/security.md#priority-keys
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/security.md#priority-keys
  *
  * @param object  An object
  *
@@ -259,7 +267,8 @@
  *
  * @since v6.0
  */
-- (instancetype)contextByAddingProtectedObject:(id)object AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+- (instancetype)contextByAddingProtectedObject:(id)object
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Returns a new rendering context that is the copy of the receiver, and the
@@ -272,7 +281,8 @@
  * _tagDelegate_ will not provide any key to the templates. It will only be
  * notified of the rendering of tags.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/delegate.md
  *
  * @param tagDelegate  A tag delegate
  *
@@ -282,8 +292,9 @@
  *
  * @since v6.0
  */
-- (instancetype)contextByAddingTagDelegate:(id<GRMustacheTagDelegate>)tagDelegate
-	AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+- (instancetype)contextByAddingTagDelegate:
+    (id<GRMustacheTagDelegate>)tagDelegate
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @name Fetching Values from the Context Stack
@@ -308,7 +319,8 @@
  *
  * @since v6.7
  */
-@property(nonatomic, readonly) id topMustacheObject AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+@property(nonatomic, readonly)
+    id topMustacheObject AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Returns the value stored in the context stack for the given key.
@@ -349,7 +361,8 @@
  *
  * 3. If none of the above situations occurs, returns nil.
  *
- * **Companion guides:** https://github.com/groue/GRMustache/blob/master/Guides/runtime.md,
+ * **Companion guides:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/runtime.md,
  * https://github.com/groue/GRMustache/blob/master/Guides/view_model.md
  *
  * @param key  a key such as @"name"
@@ -361,12 +374,14 @@
  *
  * @since v6.6
  */
-- (id)valueForMustacheKey:(NSString *)key AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+- (id)valueForMustacheKey:(NSString *)key
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Evaluates an expression such as `name`, or `uppercase(user.name)`.
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/view_model.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/view_model.md
  *
  * @param value       Upon return contains the value of the expression.
  * @param expression  An expression.
@@ -380,8 +395,9 @@
  * @since v6.8
  */
 - (BOOL)hasValue:(id *)value
-	forMustacheExpression:(NSString *)expression
-					error:(NSError **)error AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+    forMustacheExpression:(NSString *)expression
+                    error:(NSError **)error
+    AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @name Unsafe Key Access
@@ -392,7 +408,8 @@
  *
  * @since v7.0
  */
-@property(nonatomic, readonly) BOOL unsafeKeyAccess AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+@property(nonatomic, readonly)
+    BOOL unsafeKeyAccess AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Returns a new context with unsafe key access.
@@ -418,7 +435,8 @@
  *
  * DBRecord *record = ...;
  * NSString *templateString = @"{{ deleteRecord }}";
- * GRMustacheTemplate * template = [GRMustacheTemplate templateWithString:templateString error:NULL];
+ * GRMustacheTemplate * template = [GRMustacheTemplate
+ * templateWithString:templateString error:NULL];
  *
  * // Safe rendering of the dangerous template: record is not deleted.
  * [template renderObject:record error:NULL];
@@ -428,13 +446,15 @@
  * [template renderObject:record error:NULL];
  * ```
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/security.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/security.md
  *
  * @see GRMustacheSafeKeyAccess
  *
  * @since v7.0
  */
-+ (instancetype)contextWithUnsafeKeyAccess AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
++ (instancetype)
+    contextWithUnsafeKeyAccess AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 /**
  * Returns a new rendering context that is the copy of the receiver, with unsafe
@@ -461,7 +481,8 @@
  *
  * DBRecord *record = ...;
  * NSString *templateString = @"{{ deleteRecord }}";
- * GRMustacheTemplate * template = [GRMustacheTemplate templateWithString:templateString error:NULL];
+ * GRMustacheTemplate * template = [GRMustacheTemplate
+ * templateWithString:templateString error:NULL];
  *
  * // Safe rendering of the dangerous template: record is not deleted.
  * [template renderObject:record error:NULL];
@@ -471,12 +492,14 @@
  * [template renderObject:record error:NULL];
  * ```
  *
- * **Companion guide:** https://github.com/groue/GRMustache/blob/master/Guides/security.md
+ * **Companion guide:**
+ * https://github.com/groue/GRMustache/blob/master/Guides/security.md
  *
  * @see GRMustacheSafeKeyAccess
  *
  * @since v7.0
  */
-- (instancetype)contextWithUnsafeKeyAccess AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
+- (instancetype)
+    contextWithUnsafeKeyAccess AVAILABLE_GRMUSTACHE_VERSION_7_0_AND_LATER;
 
 @end

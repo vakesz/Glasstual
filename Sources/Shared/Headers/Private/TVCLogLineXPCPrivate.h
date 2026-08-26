@@ -47,9 +47,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) NSTimeInterval creationDate;
 
 - (instancetype)initWithLogLineData:(NSData *)data
-				   uniqueIdentifier:(NSString *)uniqueIdentifier
-					 viewIdentifier:(NSString *)viewIdentifier
-				  sessionIdentifier:(NSUInteger)sessionIdentifier;
+                   uniqueIdentifier:(NSString *)uniqueIdentifier
+                     viewIdentifier:(NSString *)viewIdentifier
+                  sessionIdentifier:(NSUInteger)sessionIdentifier;
 
 - (instancetype)initWithManagedObject:(NSManagedObject *)managedObject;
 @end

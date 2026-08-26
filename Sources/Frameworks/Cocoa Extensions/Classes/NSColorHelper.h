@@ -38,7 +38,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSColor *)colorWithHexadecimalValue:(NSString *)string;
 
-+ (NSColor *)calibratedColorWithRed:(CGFloat)red green:(CGFloat)green blue:(CGFloat)blue alpha:(CGFloat)alpha;
++ (NSColor *)calibratedColorWithRed:(CGFloat)red
+                              green:(CGFloat)green
+                               blue:(CGFloat)blue
+                              alpha:(CGFloat)alpha;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -41,19 +41,21 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NSMenuItem (CSMenuItemHelper)
 
-- (void)
-	setUserInfo:(nullable NSString *)userInfo
-	recursively:
-		(BOOL)
-			recursively; // Setting recursively to YES will apply userInfo to this menu item as well as all items within its submenu if it has one
-
-+ (instancetype)menuItemWithTitle:(NSString *)aString target:(id)aTarget action:(SEL)aSelector;
+- (void)setUserInfo:(nullable NSString *)userInfo
+        recursively:
+            (BOOL)recursively; // Setting recursively to YES will apply userInfo
+                               // to this menu item as well as all items within
+                               // its submenu if it has one
 
 + (instancetype)menuItemWithTitle:(NSString *)aString
-						   target:(id)aTarget
-						   action:(SEL)aSelector
-					keyEquivalent:(NSString *)charCode
-				keyEquivalentMask:(NSUInteger)mask;
+                           target:(id)aTarget
+                           action:(SEL)aSelector;
+
++ (instancetype)menuItemWithTitle:(NSString *)aString
+                           target:(id)aTarget
+                           action:(SEL)aSelector
+                    keyEquivalent:(NSString *)charCode
+                keyEquivalentMask:(NSUInteger)mask;
 @end
 
 NS_ASSUME_NONNULL_END

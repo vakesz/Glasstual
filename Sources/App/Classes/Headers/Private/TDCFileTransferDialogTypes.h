@@ -13,28 +13,29 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, TDCFileTransferDialogTransferStatus) {
-	TDCFileTransferDialogTransferStatusComplete,
-	TDCFileTransferDialogTransferStatusConnecting,
-	TDCFileTransferDialogTransferStatusFatalError,
-	TDCFileTransferDialogTransferStatusInitializing,
-	TDCFileTransferDialogTransferStatusIsListeningAsReceiver,
-	TDCFileTransferDialogTransferStatusIsListeningAsSender,
-	TDCFileTransferDialogTransferStatusMappingListeningPort,
-	TDCFileTransferDialogTransferStatusReceiving,
-	TDCFileTransferDialogTransferStatusRecoverableError,
-	TDCFileTransferDialogTransferStatusSending,
-	TDCFileTransferDialogTransferStatusStopped,
-	TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress,
-	TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept,
-	TDCFileTransferDialogTransferStatusWaitingForResumeAccept
+  TDCFileTransferDialogTransferStatusComplete,
+  TDCFileTransferDialogTransferStatusConnecting,
+  TDCFileTransferDialogTransferStatusFatalError,
+  TDCFileTransferDialogTransferStatusInitializing,
+  TDCFileTransferDialogTransferStatusIsListeningAsReceiver,
+  TDCFileTransferDialogTransferStatusIsListeningAsSender,
+  TDCFileTransferDialogTransferStatusMappingListeningPort,
+  TDCFileTransferDialogTransferStatusReceiving,
+  TDCFileTransferDialogTransferStatusRecoverableError,
+  TDCFileTransferDialogTransferStatusSending,
+  TDCFileTransferDialogTransferStatusStopped,
+  TDCFileTransferDialogTransferStatusWaitingForLocalIPAddress,
+  TDCFileTransferDialogTransferStatusWaitingForReceiverToAccept,
+  TDCFileTransferDialogTransferStatusWaitingForResumeAccept
 };
 
 typedef NS_ENUM(NSUInteger, TDCFileTransferDialogSelection) {
-	TDCFileTransferDialogSelectionAll = 0,
-	TDCFileTransferDialogSelectionSending = 1,
-	TDCFileTransferDialogSelectionReceiving = 2
+  TDCFileTransferDialogSelectionAll = 0,
+  TDCFileTransferDialogSelectionSending = 1,
+  TDCFileTransferDialogSelectionReceiving = 2
 };
 
-typedef void (^TDCFileTransferDialogIPAddressBlock)(NSString *_Nullable address);
+typedef void (^TDCFileTransferDialogIPAddressBlock)(
+    NSString *_Nullable address);
 
 NS_ASSUME_NONNULL_END

@@ -38,7 +38,7 @@
 import CoreData
 
 @objc(HLSHistoricLogViewContext)
-final class HistoricLogViewContext: NSManagedObjectContext {
+final class HistoricLogViewContext: NSManagedObjectContext, @unchecked Sendable {
 	@objc(hls_viewId) var viewIdentifier = ""
 	@objc(hls_totalLineCount) var totalLineCount: UInt = 0
 	@objc(hls_newestIdentifier) var newestIdentifier: UInt = 0

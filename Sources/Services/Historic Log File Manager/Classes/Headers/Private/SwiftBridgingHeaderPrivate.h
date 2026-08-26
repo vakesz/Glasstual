@@ -4,3 +4,4 @@
  *********************************************************************** */
 
 #import "HSLHistoricLogPCHPrivate.h"
+#import "TPCPreferencesUserDefaults.h"

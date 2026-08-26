@@ -49,43 +49,43 @@ GLASSTUAL_EXTERN NSString *const TVCLogLineSpecialNoticeMessageFormat;
 GLASSTUAL_EXTERN NSString *const TVCLogLineDefaultCommandValue;
 
 typedef NS_ENUM(NSUInteger, TVCLogLineType) {
-	TVCLogLineTypeUndefined = 0,
-	TVCLogLineTypeAction,
-	TVCLogLineTypeActionNoHighlight,
-	TVCLogLineTypeCTCP,
-	TVCLogLineTypeCTCPQuery,
-	TVCLogLineTypeCTCPReply,
-	TVCLogLineTypeDCCFileTransfer,
-	TVCLogLineTypeDebug,
-	TVCLogLineTypeInvite,
-	TVCLogLineTypeJoin,
-	TVCLogLineTypeKick,
-	TVCLogLineTypeKill,
-	TVCLogLineTypeMode,
-	TVCLogLineTypeNick,
-	TVCLogLineTypeNotice,
-	TVCLogLineTypeOffTheRecordEncryptionStatus,
-	TVCLogLineTypePart,
-	TVCLogLineTypePrivateMessage,
-	TVCLogLineTypePrivateMessageNoHighlight,
-	TVCLogLineTypeQuit,
-	TVCLogLineTypeTopic,
-	TVCLogLineTypeWebsite,
+  TVCLogLineTypeUndefined = 0,
+  TVCLogLineTypeAction,
+  TVCLogLineTypeActionNoHighlight,
+  TVCLogLineTypeCTCP,
+  TVCLogLineTypeCTCPQuery,
+  TVCLogLineTypeCTCPReply,
+  TVCLogLineTypeDCCFileTransfer,
+  TVCLogLineTypeDebug,
+  TVCLogLineTypeInvite,
+  TVCLogLineTypeJoin,
+  TVCLogLineTypeKick,
+  TVCLogLineTypeKill,
+  TVCLogLineTypeMode,
+  TVCLogLineTypeNick,
+  TVCLogLineTypeNotice,
+  TVCLogLineTypeOffTheRecordEncryptionStatus,
+  TVCLogLineTypePart,
+  TVCLogLineTypePrivateMessage,
+  TVCLogLineTypePrivateMessageNoHighlight,
+  TVCLogLineTypeQuit,
+  TVCLogLineTypeTopic,
+  TVCLogLineTypeWebsite,
 };
 
 typedef NS_ENUM(NSUInteger, TVCLogLineMemberType) {
-	TVCLogLineMemberTypeNormal = 0,
-	TVCLogLineMemberTypeLocalUser,
+  TVCLogLineMemberTypeNormal = 0,
+  TVCLogLineMemberTypeLocalUser,
 };
 
 /* Whether a line the local user sent has been confirmed by the server.
  Only lines sent with labeled-response and echo-message are tracked;
  every other line is TVCLogLineDeliveryStateNone. */
 typedef NS_ENUM(NSUInteger, TVCLogLineDeliveryState) {
-	TVCLogLineDeliveryStateNone = 0,
-	TVCLogLineDeliveryStatePending,
-	TVCLogLineDeliveryStateDelivered,
-	TVCLogLineDeliveryStateFailed,
+  TVCLogLineDeliveryStateNone = 0,
+  TVCLogLineDeliveryStatePending,
+  TVCLogLineDeliveryStateDelivered,
+  TVCLogLineDeliveryStateFailed,
 };
 
 #define IRCCommandFromLineType(t) [TVCLogLine stringForLineType:t]
@@ -95,29 +95,37 @@ typedef NS_ENUM(NSUInteger, TVCLogLineDeliveryState) {
 
 @interface TVCLogLine : XRPortablePropertyObject
 @property(readonly) BOOL isEncrypted;
-@property(readonly) BOOL isFirstForDay; // // YES if is first line for the day defined by receivedAt
+@property(readonly) BOOL
+    isFirstForDay; // // YES if is first line for the day defined by receivedAt
 @property(readonly, copy) NSDate *receivedAt;
 @property(readonly, copy) NSString *nicknameColorStyle;
-@property(readonly) BOOL nicknameColorStyleOverride; // YES if the nicknameColorStyle was set by the user
+@property(readonly)
+    BOOL nicknameColorStyleOverride; // YES if the nicknameColorStyle was set by
+                                     // the user
 @property(readonly, copy, nullable) NSString *nickname;
 @property(readonly, copy) NSString *messageBody;
 @property(readonly, copy)
-	NSString *command; // Can be the actual command (PRIVMSG, NOTICE, etc.) or the raw numeric (001, 002, etc.)
+    NSString *command; // Can be the actual command (PRIVMSG, NOTICE, etc.) or
+                       // the raw numeric (001, 002, etc.)
 @property(readonly, copy) NSString *uniqueIdentifier;
 @property(readonly, copy, nullable)
-	NSString *messageIdentifier; // The IRCv3 msgid= of the message, when the server sent one
+    NSString *messageIdentifier; // The IRCv3 msgid= of the message, when the
+                                 // server sent one
 @property(readonly, copy, nullable)
-	NSString *replyToMessageIdentifier; // The msgid this message answers (+draft/reply), when it does
+    NSString *replyToMessageIdentifier; // The msgid this message answers
+                                        // (+draft/reply), when it does
 /* Reactions (+draft/react) to this message: emoji -> nicknames. Lines
  are archived when they are printed, so reactions that arrive later are
  kept with the view for the session rather than written back here. */
-@property(readonly, copy, nullable) NSDictionary<NSString *, NSArray<NSString *> *> *reactions;
+@property(readonly, copy, nullable)
+    NSDictionary<NSString *, NSArray<NSString *> *> *reactions;
 @property(readonly) TVCLogLineType lineType;
 @property(readonly) TVCLogLineMemberType memberType;
 @property(readonly) TVCLogLineDeliveryState deliveryState;
 @property(readonly, copy, nullable) NSArray<NSString *> *highlightKeywords;
 @property(readonly, copy, nullable) NSArray<NSString *> *excludeKeywords;
-@property(readonly, copy, nullable) NSDictionary<NSString *, id> *rendererAttributes;
+@property(readonly, copy, nullable)
+    NSDictionary<NSString *, id> *rendererAttributes;
 @property(readonly) NSUInteger sessionIdentifier;
 
 - (nullable instancetype)initWithData:(NSData *)data NS_DESIGNATED_INITIALIZER;
@@ -126,11 +134,13 @@ typedef NS_ENUM(NSUInteger, TVCLogLineDeliveryState) {
 @property(readonly, copy) NSString *formattedTimestamp;
 
 @property(readonly, copy) NSString *formattedNickname;
-- (nullable NSString *)formattedNicknameInChannel:(nullable IRCChannel *)channel;
+- (nullable NSString *)formattedNicknameInChannel:
+    (nullable IRCChannel *)channel;
 
 @property(readonly, copy, nullable) NSString *lineTypeString;
 @property(readonly, copy) NSString *memberTypeString;
-@property(readonly, copy, nullable) NSString *deliveryStateString; // nil for TVCLogLineDeliveryStateNone
+@property(readonly, copy, nullable)
+    NSString *deliveryStateString; // nil for TVCLogLineDeliveryStateNone
 
 + (nullable NSString *)stringForLineType:(TVCLogLineType)type;
 + (NSString *)stringForMemberType:(TVCLogLineMemberType)type;
@@ -148,14 +158,19 @@ typedef NS_ENUM(NSUInteger, TVCLogLineDeliveryState) {
 @property(nonatomic, copy, readwrite) NSString *messageBody;
 @property(nonatomic, copy, readwrite) NSString *command;
 @property(nonatomic, copy, readwrite, nullable) NSString *messageIdentifier;
-@property(nonatomic, copy, readwrite, nullable) NSString *replyToMessageIdentifier;
-@property(nonatomic, copy, readwrite, nullable) NSDictionary<NSString *, NSArray<NSString *> *> *reactions;
+@property(nonatomic, copy, readwrite, nullable)
+    NSString *replyToMessageIdentifier;
+@property(nonatomic, copy, readwrite, nullable)
+    NSDictionary<NSString *, NSArray<NSString *> *> *reactions;
 @property(nonatomic, assign, readwrite) TVCLogLineType lineType;
 @property(nonatomic, assign, readwrite) TVCLogLineMemberType memberType;
 @property(nonatomic, assign, readwrite) TVCLogLineDeliveryState deliveryState;
-@property(nonatomic, copy, readwrite, nullable) NSArray<NSString *> *highlightKeywords;
-@property(nonatomic, copy, readwrite, nullable) NSArray<NSString *> *excludeKeywords;
-@property(nonatomic, copy, readwrite, nullable) NSDictionary<NSString *, id> *rendererAttributes;
+@property(nonatomic, copy, readwrite, nullable)
+    NSArray<NSString *> *highlightKeywords;
+@property(nonatomic, copy, readwrite, nullable)
+    NSArray<NSString *> *excludeKeywords;
+@property(nonatomic, copy, readwrite, nullable)
+    NSDictionary<NSString *, id> *rendererAttributes;
 @end
 
 NS_ASSUME_NONNULL_END

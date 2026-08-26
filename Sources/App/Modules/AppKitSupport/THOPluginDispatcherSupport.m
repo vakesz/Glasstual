@@ -12,8 +12,8 @@
 
 #import "IRCClient.h"
 #import "IRCMessage.h"
-#import "THOPluginProtocolPrivate.h"
 #import "THOPluginProtocolNSObjectExtension.h"
+#import "THOPluginProtocolPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

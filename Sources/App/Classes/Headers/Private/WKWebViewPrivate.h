@@ -7,9 +7,11 @@
  TVCLogViewInternalWK2.m only. */
 
 @interface WKPreferences ()
-@property(nonatomic, setter=_setAllowFileAccessFromFileURLs:) BOOL _allowFileAccessFromFileURLs;
+@property(nonatomic, setter=_setAllowFileAccessFromFileURLs:)
+    BOOL _allowFileAccessFromFileURLs;
 @end
 
 @interface WKWebViewConfiguration ()
-@property(nonatomic, setter=_setAllowUniversalAccessFromFileURLs:) BOOL _allowUniversalAccessFromFileURLs;
+@property(nonatomic, setter=_setAllowUniversalAccessFromFileURLs:)
+    BOOL _allowUniversalAccessFromFileURLs;
 @end

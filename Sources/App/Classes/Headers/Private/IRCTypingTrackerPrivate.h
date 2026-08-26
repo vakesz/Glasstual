@@ -46,9 +46,9 @@ GLASSTUAL_EXTERN NSNotificationName const IRCTypingTrackerDidChangeNotification;
 GLASSTUAL_EXTERN NSString *const IRCTypingTrackerChannelKey;
 
 typedef NS_ENUM(NSUInteger, IRCTypingState) {
-	IRCTypingStateDone = 0,
-	IRCTypingStateActive,
-	IRCTypingStatePaused,
+  IRCTypingStateDone = 0,
+  IRCTypingStateActive,
+  IRCTypingStatePaused,
 };
 
 /* Who is typing where (IRCv3 "+typing" client tag). An active entry
@@ -58,17 +58,21 @@ typedef NS_ENUM(NSUInteger, IRCTypingState) {
 - (instancetype)initWithClient:(IRCClient *)client NS_DESIGNATED_INITIALIZER;
 - (instancetype)init NS_UNAVAILABLE;
 
-+ (IRCTypingState)stateForTagValue:(nullable NSString *)value; // "active", "paused", anything else = done
++ (IRCTypingState)stateForTagValue:
+    (nullable NSString *)value; // "active", "paused", anything else = done
 
-- (void)noteTypingState:(IRCTypingState)state fromNickname:(NSString *)nickname inChannel:(IRCChannel *)channel;
 - (void)noteTypingState:(IRCTypingState)state
-		   fromNickname:(NSString *)nickname
-			  inChannel:(IRCChannel *)channel
-				 atDate:(NSDate *)date;
+           fromNickname:(NSString *)nickname
+              inChannel:(IRCChannel *)channel;
+- (void)noteTypingState:(IRCTypingState)state
+           fromNickname:(NSString *)nickname
+              inChannel:(IRCChannel *)channel
+                 atDate:(NSDate *)date;
 
 /* Nicknames still considered typing, in the order they started. */
 - (NSArray<NSString *> *)typingNicknamesInChannel:(IRCChannel *)channel;
-- (NSArray<NSString *> *)typingNicknamesInChannel:(IRCChannel *)channel atDate:(NSDate *)date;
+- (NSArray<NSString *> *)typingNicknamesInChannel:(IRCChannel *)channel
+                                           atDate:(NSDate *)date;
 
 - (void)removeNickname:(NSString *)nickname;
 - (void)removeAllInChannel:(IRCChannel *)channel;

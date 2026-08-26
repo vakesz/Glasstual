@@ -39,10 +39,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, IRCChannelType) {
-	IRCChannelTypeChannel = 0,
-	IRCChannelTypePrivateMessage,
-	IRCChannelTypeUtility,
-	IRCChannelTypeDirectChat, // DCC CHAT. Never persisted.
+  IRCChannelTypeChannel = 0,
+  IRCChannelTypePrivateMessage,
+  IRCChannelTypeUtility,
+  IRCChannelTypeDirectChat, // DCC CHAT. Never persisted.
 };
 
 NS_ASSUME_NONNULL_END

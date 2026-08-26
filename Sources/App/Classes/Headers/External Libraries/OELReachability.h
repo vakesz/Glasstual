@@ -22,7 +22,7 @@
  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- POSSIBILITY OF SUCH DAMAGE. 
+ POSSIBILITY OF SUCH DAMAGE.
  */
 
 #import <Foundation/Foundation.h>
@@ -31,12 +31,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class OELReachability;
 
-typedef void (^OELReachabilityNetworkReachableBlock)(OELReachability *reachability);
-typedef void (^OELReachabilityNetworkUnreachableBlock)(OELReachability *reachability);
+typedef void (^OELReachabilityNetworkReachableBlock)(
+    OELReachability *reachability);
+typedef void (^OELReachabilityNetworkUnreachableBlock)(
+    OELReachability *reachability);
 
 @interface OELReachability : NSObject
-@property(nonatomic, copy, nullable) OELReachabilityNetworkReachableBlock reachableBlock;
-@property(nonatomic, copy, nullable) OELReachabilityNetworkUnreachableBlock unreachableBlock;
+@property(nonatomic, copy, nullable)
+    OELReachabilityNetworkReachableBlock reachableBlock;
+@property(nonatomic, copy, nullable)
+    OELReachabilityNetworkUnreachableBlock unreachableBlock;
 
 + (nullable OELReachability *)reachabilityForInternetConnection;
 

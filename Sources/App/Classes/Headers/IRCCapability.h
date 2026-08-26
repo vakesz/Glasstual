@@ -49,7 +49,8 @@ typedef BOOL (^IRCCapabilityPreferenceGate)(void);
  `values` is the comma separated value list, or an empty array when
  the server advertised the capability without values. Return NO to
  leave the capability unrequested. */
-typedef BOOL (^IRCCapabilityNegotiationHook)(IRCClient *client, NSArray<NSString *> *values);
+typedef BOOL (^IRCCapabilityNegotiationHook)(IRCClient *client,
+                                             NSArray<NSString *> *values);
 
 /* One entry of the capability registry.
 
@@ -67,23 +68,27 @@ typedef BOOL (^IRCCapabilityNegotiationHook)(IRCClient *client, NSArray<NSString
 @property(readonly) BOOL requestedByDefault;
 @property(readonly, copy, nullable) IRCCapabilityPreferenceGate preferenceGate;
 @property(readonly, copy) NSArray<NSString *> *dependencies;
-@property(readonly, copy, nullable) IRCCapabilityNegotiationHook negotiationHook;
+@property(readonly, copy, nullable)
+    IRCCapabilityNegotiationHook negotiationHook;
 
 /* YES when there is no preference gate or the gate allows the capability. */
 @property(readonly) BOOL isEnabledByPreferences;
 
-+ (instancetype)capabilityNamed:(NSString *)name identifier:(ClientIRCv3SupportedCapability)identifier;
++ (instancetype)capabilityNamed:(NSString *)name
+                     identifier:(ClientIRCv3SupportedCapability)identifier;
 
 + (instancetype)capabilityNamed:(NSString *)name
-					 identifier:(ClientIRCv3SupportedCapability)identifier
-			 requestedByDefault:(BOOL)requestedByDefault;
+                     identifier:(ClientIRCv3SupportedCapability)identifier
+             requestedByDefault:(BOOL)requestedByDefault;
 
-- (instancetype)initWithName:(NSString *)name
-				  identifier:(ClientIRCv3SupportedCapability)identifier
-		  requestedByDefault:(BOOL)requestedByDefault
-			  preferenceGate:(nullable IRCCapabilityPreferenceGate)preferenceGate
-				dependencies:(nullable NSArray<NSString *> *)dependencies
-			 negotiationHook:(nullable IRCCapabilityNegotiationHook)negotiationHook NS_DESIGNATED_INITIALIZER;
+- (instancetype)
+          initWithName:(NSString *)name
+            identifier:(ClientIRCv3SupportedCapability)identifier
+    requestedByDefault:(BOOL)requestedByDefault
+        preferenceGate:(nullable IRCCapabilityPreferenceGate)preferenceGate
+          dependencies:(nullable NSArray<NSString *> *)dependencies
+       negotiationHook:(nullable IRCCapabilityNegotiationHook)negotiationHook
+    NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)init NS_UNAVAILABLE;
 @end
@@ -97,7 +102,8 @@ typedef BOOL (^IRCCapabilityNegotiationHook)(IRCClient *client, NSArray<NSString
 
 @property(readonly, copy) NSArray<IRCCapability *> *capabilities;
 
-- (instancetype)initWithCapabilities:(NSArray<IRCCapability *> *)capabilities NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithCapabilities:(NSArray<IRCCapability *> *)capabilities
+    NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)init NS_UNAVAILABLE;
 
@@ -106,7 +112,8 @@ typedef BOOL (^IRCCapabilityNegotiationHook)(IRCClient *client, NSArray<NSString
 
 /* The first registered capability whose identifier covers every bit of
  the identifier given. */
-- (nullable IRCCapability *)capabilityForIdentifier:(ClientIRCv3SupportedCapability)identifier;
+- (nullable IRCCapability *)capabilityForIdentifier:
+    (ClientIRCv3SupportedCapability)identifier;
 
 /* YES when the capability is registered and allowed by preferences. */
 - (BOOL)isCapabilitySupported:(NSString *)name;
@@ -115,7 +122,8 @@ typedef BOOL (^IRCCapabilityNegotiationHook)(IRCClient *client, NSArray<NSString
  "sasl=PLAIN,EXTERNAL cap-notify" becomes
  { "sasl" : [ "PLAIN", "EXTERNAL" ], "cap-notify" : [] }. Keys are
  lowercased. */
-+ (NSDictionary<NSString *, NSArray<NSString *> *> *)parseCapabilityList:(NSString *)list;
++ (NSDictionary<NSString *, NSArray<NSString *> *> *)parseCapabilityList:
+    (NSString *)list;
 
 /* The capabilities to send in CAP REQ for the capabilities offered,
  in registry order. A capability is included when it is requested by
@@ -123,7 +131,7 @@ typedef BOOL (^IRCCapabilityNegotiationHook)(IRCClient *client, NSArray<NSString
  its dependencies is included as well. Negotiation hooks are not run;
  the caller evaluates them with the values in `offered`. */
 - (NSArray<IRCCapability *> *)capabilitiesToRequestFromOffered:
-	(NSDictionary<NSString *, NSArray<NSString *> *> *)offered;
+    (NSDictionary<NSString *, NSArray<NSString *> *> *)offered;
 @end
 
 NS_ASSUME_NONNULL_END

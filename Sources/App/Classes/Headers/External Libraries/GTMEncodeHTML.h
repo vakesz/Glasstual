@@ -13,8 +13,8 @@
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 //  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-//  License for the specific language governing permissions and limitations under
-//  the License.
+//  License for the specific language governing permissions and limitations
+//  under the License.
 //
 
 #import <Foundation/Foundation.h>
@@ -24,7 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// Utilities for NSStrings containing HTML
 @interface NSString (GTMNSStringHTMLAdditions)
 
-/// Get a string where internal characters that need escaping for HTML are escaped
+/// Get a string where internal characters that need escaping for HTML are
+/// escaped
 ///
 ///  For example, '&' become '&amp;'. This will only cover characters from table
 ///  A.2.2 of http://www.w3.org/TR/xhtml1/dtds.html#a_dtd_Special_characters
@@ -39,7 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 @property(readonly, copy, nullable) NSString *gtm_stringByEscapingForHTML;
 
-/// Get a string where internal characters that need escaping for HTML are escaped
+/// Get a string where internal characters that need escaping for HTML are
+/// escaped
 ///
 ///  For example, '&' become '&amp;'
 ///  All non-mapped characters (unicode that don't have a &keyword; mapping)
@@ -55,7 +57,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 @property(readonly, copy) NSString *gtm_stringByEscapingForAsciiHTML;
 
-/// Get a string where internal characters that are escaped for HTML are unescaped
+/// Get a string where internal characters that are escaped for HTML are
+/// unescaped
 ///
 ///  For example, '&amp;' becomes '&'
 ///  Handles &#32; and &#x32; cases as well

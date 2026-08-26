@@ -46,178 +46,164 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString *const TPCPreferencesUserDefaultsDidChangeNotification = @"TPCPreferencesUserDefaultsDidChangeNotification";
+NSString *const TPCPreferencesUserDefaultsDidChangeNotification =
+    @"TPCPreferencesUserDefaultsDidChangeNotification";
 
 #pragma mark -
 #pragma mark Reading & Writing
 
 @implementation TPCPreferencesUserDefaults
 
-+ (TPCPreferencesUserDefaults *)sharedUserDefaults
-{
-	static id sharedSelf = nil;
++ (TPCPreferencesUserDefaults *)sharedUserDefaults {
+  static id sharedSelf = nil;
 
-	static dispatch_once_t onceToken;
+  static dispatch_once_t onceToken;
 
-	dispatch_once(&onceToken, ^{
-		sharedSelf = [[self alloc] _initGroupContainer];
-	});
+  dispatch_once(&onceToken, ^{
+    sharedSelf = [[self alloc] _initGroupContainer];
+  });
 
-	return sharedSelf;
+  return sharedSelf;
 }
 
-- (instancetype)_initGroupContainer
-{
+- (instancetype)_initGroupContainer {
 #if DEBUG
-	NSString *reviewSuite = NSProcessInfo.processInfo.environment[@"GLASSTUAL_UI_REVIEW_SUITE"];
+  NSString *reviewSuite =
+      NSProcessInfo.processInfo.environment[@"GLASSTUAL_UI_REVIEW_SUITE"];
 
-	if (reviewSuite.length > 0) {
-		return [super initWithSuiteName:reviewSuite];
-	}
+  if (reviewSuite.length > 0) {
+    return [super initWithSuiteName:reviewSuite];
+  }
 #endif
 
-	TPCPreferencesUserDefaults *defaults = [super initWithSuiteName:TXBundleBuildGroupContainerIdentifier];
+  TPCPreferencesUserDefaults *defaults =
+      [super initWithSuiteName:TXBundleBuildGroupContainerIdentifier];
 
-	return defaults;
+  return defaults;
 }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wobjc-designated-initializers"
-- (instancetype)init
-{
-	return [self.class sharedUserDefaults];
+- (instancetype)init {
+  return [self.class sharedUserDefaults];
 }
 
-- (nullable instancetype)initWithSuiteName:(nullable NSString *)suitename
-{
-	return [self.class sharedUserDefaults];
+- (nullable instancetype)initWithSuiteName:(nullable NSString *)suitename {
+  return [self.class sharedUserDefaults];
 }
 
 #pragma clang diagnostic pop
 
-- (void)_setObject:(nullable id)value forKey:(NSString *)defaultName
-{
-	[super setObject:value forKey:defaultName];
+- (void)_setObject:(nullable id)value forKey:(NSString *)defaultName {
+  [super setObject:value forKey:defaultName];
 }
 
-- (void)setObject:(nullable id)value forKey:(NSString *)defaultName
-{
-	[self setObject:value forKey:defaultName postNotification:YES];
+- (void)setObject:(nullable id)value forKey:(NSString *)defaultName {
+  [self setObject:value forKey:defaultName postNotification:YES];
 }
 
-- (void)setObject:(nullable id)value forKey:(NSString *)defaultName postNotification:(BOOL)postNotification
-{
-	NSParameterAssert(defaultName != nil);
+- (void)setObject:(nullable id)value
+              forKey:(NSString *)defaultName
+    postNotification:(BOOL)postNotification {
+  NSParameterAssert(defaultName != nil);
 
-	id oldValue = [self objectForKey:defaultName];
+  id oldValue = [self objectForKey:defaultName];
 
-	if (oldValue && [oldValue isEqual:value]) {
-		return;
-	}
+  if (oldValue && [oldValue isEqual:value]) {
+    return;
+  }
 
-	[self willChangeValueForKey:defaultName];
+  [self willChangeValueForKey:defaultName];
 
-	if (value == nil) {
-		if (oldValue) {
-			[self _setObject:nil forKey:defaultName];
-		}
-	} else {
-		[self _setObject:value forKey:defaultName];
-	}
+  if (value == nil) {
+    if (oldValue) {
+      [self _setObject:nil forKey:defaultName];
+    }
+  } else {
+    [self _setObject:value forKey:defaultName];
+  }
 
-	[self didChangeValueForKey:defaultName];
+  [self didChangeValueForKey:defaultName];
 
-	if (postNotification) {
-		[RZNotificationCenter() postNotificationName:TPCPreferencesUserDefaultsDidChangeNotification
-											  object:self
-											userInfo:@{@"changedKey" : defaultName}];
+  if (postNotification) {
+    [RZNotificationCenter()
+        postNotificationName:TPCPreferencesUserDefaultsDidChangeNotification
+                      object:self
+                    userInfo:@{@"changedKey" : defaultName}];
 
-		/* We currently don't need to communicate preferences changes between the
-		 main app and XPC services, but if we do, then we should enable this code. */
+    /* We currently don't need to communicate preferences changes between the
+     main app and XPC services, but if we do, then we should enable this code.
+   */
 #if 0
 		[RZDistributedNotificationCenter() postNotificationName:TPCPreferencesUserDefaultsDidChangeNotification
 														 object:@"TPCPreferencesUserDefaults"
 													   userInfo:@{@"changedKey" : defaultName}];
 #endif
-	}
+  }
 }
 
-- (void)setInteger:(NSInteger)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setInteger:(NSInteger)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setUnsignedInteger:(NSUInteger)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setUnsignedInteger:(NSUInteger)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setShort:(short)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setShort:(short)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setUnsignedShort:(unsigned short)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setUnsignedShort:(unsigned short)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setLong:(long)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setLong:(long)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setUnsignedLong:(unsigned long)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setUnsignedLong:(unsigned long)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setLongLong:(long long)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setLongLong:(long long)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setUnsignedLongLong:(unsigned long long)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setUnsignedLongLong:(unsigned long long)value
+                     forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setFloat:(float)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setFloat:(float)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setDouble:(double)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setDouble:(double)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setBool:(BOOL)value forKey:(NSString *)defaultName
-{
-	[self setObject:@(value) forKey:defaultName];
+- (void)setBool:(BOOL)value forKey:(NSString *)defaultName {
+  [self setObject:@(value) forKey:defaultName];
 }
 
-- (void)setURL:(nullable NSURL *)value forKey:(NSString *)defaultName
-{
-	[self setObject:value forKey:defaultName];
+- (void)setURL:(nullable NSURL *)value forKey:(NSString *)defaultName {
+  [self setObject:value forKey:defaultName];
 }
 
-- (void)removeObjectForKey:(NSString *)defaultName
-{
-	[self setObject:nil forKey:defaultName];
+- (void)removeObjectForKey:(NSString *)defaultName {
+  [self setObject:nil forKey:defaultName];
 }
 
-- (void)registerDefault:(id<NSCopying>)value forKey:(NSString *)defaultName
-{
-	NSParameterAssert(value != nil);
-	NSParameterAssert(defaultName != nil);
+- (void)registerDefault:(id<NSCopying>)value forKey:(NSString *)defaultName {
+  NSParameterAssert(value != nil);
+  NSParameterAssert(defaultName != nil);
 
-	[self registerDefaults:@{defaultName : value}];
+  [self registerDefaults:@{defaultName : value}];
 }
 
-- (NSDictionary<NSString *, id> *)registeredDefaults
-{
-	return [self volatileDomainForName:NSRegistrationDomain];
+- (NSDictionary<NSString *, id> *)registeredDefaults {
+  return [self volatileDomainForName:NSRegistrationDomain];
 }
 
 @end
@@ -227,27 +213,25 @@ NSString *const TPCPreferencesUserDefaultsDidChangeNotification = @"TPCPreferenc
 
 @implementation TPCPreferencesUserDefaultsController
 
-- (instancetype)_initWithSharedDefaults
-{
-	TPCPreferencesUserDefaults *defaults = [TPCPreferencesUserDefaults sharedUserDefaults];
+- (instancetype)_initWithSharedDefaults {
+  TPCPreferencesUserDefaults *defaults =
+      [TPCPreferencesUserDefaults sharedUserDefaults];
 
-	return [super initWithDefaults:defaults initialValues:nil];
+  return [super initWithDefaults:defaults initialValues:nil];
 }
 
-- (instancetype)init
-{
-	return [self _initWithSharedDefaults];
+- (instancetype)init {
+  return [self _initWithSharedDefaults];
 }
 
-- (nullable instancetype)initWithCoder:(NSCoder *)coder
-{
-	return [self _initWithSharedDefaults];
+- (nullable instancetype)initWithCoder:(NSCoder *)coder {
+  return [self _initWithSharedDefaults];
 }
 
 - (instancetype)initWithDefaults:(nullable NSUserDefaults *)defaults
-				   initialValues:(nullable NSDictionary<NSString *, id> *)initialValues
-{
-	return [self _initWithSharedDefaults];
+                   initialValues:
+                       (nullable NSDictionary<NSString *, id> *)initialValues {
+  return [self _initWithSharedDefaults];
 }
 
 @end

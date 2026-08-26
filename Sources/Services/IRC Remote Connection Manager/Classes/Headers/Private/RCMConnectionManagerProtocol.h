@@ -43,11 +43,9 @@ NS_ASSUME_NONNULL_BEGIN
  chain. Otherwise it describes why the chain was not trusted, whether the
  connection then ignored that or the user chose to trust the chain. */
 typedef void (^NS_SWIFT_SENDABLE RCMSecureConnectionInformationCompletionBlock)(
-	NSString *_Nullable policyName,
-	tls_protocol_version_t ptocoolType,
-	tls_ciphersuite_t cipherSuites,
-	NSArray<NSData *> *certificateChain,
-	NSString *_Nullable trustFailureDescription);
+    NSString *_Nullable policyName, tls_protocol_version_t ptocoolType,
+    tls_ciphersuite_t cipherSuites, NSArray<NSData *> *certificateChain,
+    NSString *_Nullable trustFailureDescription);
 
 #pragma mark -
 #pragma mark Server Protocol
@@ -63,7 +61,8 @@ typedef void (^NS_SWIFT_SENDABLE RCMSecureConnectionInformationCompletionBlock)(
 - (void)sendData:(NSData *)data;
 - (void)sendData:(NSData *)data bypassQueue:(BOOL)bypassQueue;
 
-- (void)exportSecureConnectionInformation:(NS_NOESCAPE RCMSecureConnectionInformationCompletionBlock)completionBlock;
+- (void)exportSecureConnectionInformation:
+    (NS_NOESCAPE RCMSecureConnectionInformationCompletionBlock)completionBlock;
 
 - (void)enforceFloodControl;
 
@@ -87,17 +86,22 @@ typedef void (^NS_SWIFT_SENDABLE RCMSecureConnectionInformationCompletionBlock)(
 @protocol RCMConnectionManagerClientProtocol
 @required
 
-- (void)ircConnectionWillConnectToProxy:(NSString *)proxyHost port:(uint16_t)proxyPort;
+- (void)ircConnectionWillConnectToProxy:(NSString *)proxyHost
+                                   port:(uint16_t)proxyPort;
 
-/* host is nil if we are connected to a proxy because we do not have enough context
- at the point this delegate method is called to know where the proxy itself connected. */
+/* host is nil if we are connected to a proxy because we do not have enough
+ context at the point this delegate method is called to know where the proxy
+ itself connected. */
 - (void)ircConnectionDidConnectToHost:(nullable NSString *)host;
-- (void)ircConnectionDidSecureConnectionWithProtocolType:(tls_protocol_version_t)protocolType
-											 cipherSuite:(tls_ciphersuite_t)cipherSuite;
+- (void)ircConnectionDidSecureConnectionWithProtocolType:
+            (tls_protocol_version_t)protocolType
+                                             cipherSuite:
+                                                 (tls_ciphersuite_t)cipherSuite;
 - (void)ircConnectionDidCloseReadStream;
 - (void)ircConnectionDidDisconnectWithError:(nullable NSError *)disconnectError;
 - (void)ircConnectionDidReceiveData:(NSData *)data;
-- (void)ircConnectionRequestInsecureCertificateTrust:(RCMTrustResponse)trustBlock;
+- (void)ircConnectionRequestInsecureCertificateTrust:
+    (RCMTrustResponse)trustBlock;
 - (void)ircConnectionWillSendData:(NSData *)data;
 - (void)ircConnectionDidSendData;
 @end

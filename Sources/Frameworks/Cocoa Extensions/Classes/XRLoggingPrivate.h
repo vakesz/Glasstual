@@ -39,9 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
 os_log_t _Nullable _CSFrameworkInternalLogSubsystem(void);
 
 COCOA_EXTENSIONS_INLINE
-void _LogStackTraceOfTypeSwiftShim(os_log_type_t type, _Nullable os_log_t subsystem)
-{
-	_LogStackTrace(type, subsystem);
+void _LogStackTraceOfTypeSwiftShim(os_log_type_t type,
+                                   _Nullable os_log_t subsystem) {
+  _LogStackTrace(type, subsystem);
 }
 
 NS_ASSUME_NONNULL_END

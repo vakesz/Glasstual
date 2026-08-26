@@ -46,7 +46,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithHostView:(TVCLogView *)hostView;
 
-- (void)_t_evaluateJavaScript:(NSString *)code completionHandler:(void (^_Nullable)(id _Nullable))completionHandler;
+- (void)_t_evaluateJavaScript:(NSString *)code
+            completionHandler:
+                (void (^_Nullable)(id _Nullable))completionHandler;
 
 @property(readonly) TVCLogPolicy *webViewPolicy;
 

@@ -39,14 +39,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface IRCChannelUser ()
-{
-  @protected
-	NSString *_modes;
-	double _incomingWeight;
-	double _outgoingWeight;
-	CFAbsoluteTime _lastWeightFade;
-	NSTimeInterval _creationTime;
+@interface IRCChannelUser () {
+@protected
+  NSString *_modes;
+  double _incomingWeight;
+  double _outgoingWeight;
+  CFAbsoluteTime _lastWeightFade;
+  NSTimeInterval _creationTime;
 }
 
 @end

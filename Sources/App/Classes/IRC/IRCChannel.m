@@ -38,34 +38,35 @@
 
 #include <objc/message.h>
 
-#import "NSObjectHelperPrivate.h"
-#import "TXMasterController.h"
-#import "TXWindowControllerPrivate.h"
-#import "TVCMainWindowPrivate.h"
-#import "TVCMemberListPrivate.h"
-#import "TVCLogControllerPrivate.h"
-#import "TDCSharedProtocolDefinitionsPrivate.h"
-#import "TDCSheetBase.h"
-#import "TPCPreferencesLocal.h"
-#import "TLOFileLoggerPrivate.h"
-#import "TLOInputHistoryPrivate.h"
-#import "TLOLocalization.h"
-#import "IRCClientPrivate.h"
 #import "IRCChannelConfigPrivate.h"
-#import "IRCChannelModePrivate.h"
 #import "IRCChannelMemberListPrivate.h"
+#import "IRCChannelModePrivate.h"
+#import "IRCChannelPrivate.h"
 #import "IRCChannelUserPrivate.h"
+#import "IRCClientPrivate.h"
+#import "IRCDirectChatConnectionPrivate.h"
 #import "IRCISupportInfo.h"
 #import "IRCTreeItemPrivate.h"
 #import "IRCUser.h"
 #import "IRCUserRelationsPrivate.h"
 #import "IRCWorldPrivate.h"
-#import "IRCChannelPrivate.h"
-#import "IRCDirectChatConnectionPrivate.h"
+#import "NSObjectHelperPrivate.h"
+#import "TDCSharedProtocolDefinitionsPrivate.h"
+#import "TDCSheetBase.h"
+#import "TLOFileLoggerPrivate.h"
+#import "TLOInputHistoryPrivate.h"
+#import "TLOLocalization.h"
+#import "TPCPreferencesLocal.h"
+#import "TVCLogControllerPrivate.h"
+#import "TVCMainWindowPrivate.h"
+#import "TVCMemberListPrivate.h"
+#import "TXMasterController.h"
+#import "TXWindowControllerPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConfigurationWasUpdatedNotification";
+NSString *const IRCChannelConfigurationWasUpdatedNotification =
+    @"IRCChannelConfigurationWasUpdatedNotification";
 
 @interface IRCChannel ()
 @property(readonly) BOOL isSelectedChannel;
@@ -73,7 +74,8 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 @property(nonatomic, copy, readwrite) IRCChannelConfig *config;
 @property(nonatomic, assign, readwrite) NSTimeInterval channelJoinTime;
 @property(nonatomic, strong, readwrite, nullable) IRCChannelMode *modeInfo;
-@property(nonatomic, strong, readwrite, nullable) IRCChannelMemberList *memberInfo;
+@property(nonatomic, strong, readwrite, nullable)
+    IRCChannelMemberList *memberInfo;
 @property(nonatomic, strong, nullable) TLOFileLogger *logFile;
 @property(nonatomic, assign, readwrite) NSUInteger logFileSessionCount;
 @end
@@ -82,668 +84,632 @@ NSString *const IRCChannelConfigurationWasUpdatedNotification = @"IRCChannelConf
 
 @synthesize associatedClient = _associatedClient;
 
-- (instancetype)init
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (instancetype)init {
+  [self doesNotRecognizeSelector:_cmd];
 
-	return nil;
+  return nil;
 }
 
-- (instancetype)initWithConfigDictionary:(NSDictionary<NSString *, id> *)dic
-{
-	NSParameterAssert(dic != nil);
+- (instancetype)initWithConfigDictionary:(NSDictionary<NSString *, id> *)dic {
+  NSParameterAssert(dic != nil);
 
-	IRCChannelConfig *config = [[IRCChannelConfig alloc] initWithDictionary:dic];
+  IRCChannelConfig *config = [[IRCChannelConfig alloc] initWithDictionary:dic];
 
-	return [self initWithConfig:config];
+  return [self initWithConfig:config];
 }
 
-- (instancetype)initWithConfig:(IRCChannelConfig *)config
-{
-	if ((self = [super init])) {
-		self.config = config;
+- (instancetype)initWithConfig:(IRCChannelConfig *)config {
+  if ((self = [super init])) {
+    self.config = config;
 
-		[self.config writeSecretKeyToKeychain];
-	}
+    [self.config writeSecretKeyToKeychain];
+  }
 
-	return self;
+  return self;
 }
 
-- (void)updateConfig:(IRCChannelConfig *)config
-{
-	[self updateConfig:config fireChangedNotification:YES updateStoredChannelList:YES];
-}
-
-- (void)updateConfig:(IRCChannelConfig *)config fireChangedNotification:(BOOL)fireChangedNotification
-{
-	[self updateConfig:config fireChangedNotification:fireChangedNotification updateStoredChannelList:YES];
+- (void)updateConfig:(IRCChannelConfig *)config {
+  [self updateConfig:config
+      fireChangedNotification:YES
+      updateStoredChannelList:YES];
 }
 
 - (void)updateConfig:(IRCChannelConfig *)config
-	fireChangedNotification:(BOOL)fireChangedNotification
-	updateStoredChannelList:(BOOL)updateStoredChannelList
-{
-	NSParameterAssert(config != nil);
-
-	IRCChannelConfig *currentConfig = self.config;
-
-	if ([config isEqual:currentConfig]) {
-		return;
-	}
-
-	if (currentConfig.type != config.type || [currentConfig.channelName isEqualToString:config.channelName] == NO ||
-		[currentConfig.uniqueIdentifier isEqualToString:config.uniqueIdentifier] == NO) {
-		LogToConsoleError("Tried to load configuration for incorrect channel");
-
-		return;
-	}
-
-	self.config = config;
-
-	[self.config writeSecretKeyToKeychain];
-
-	if (updateStoredChannelList) {
-		[self.associatedClient updateStoredChannelList];
-	}
-
-	if (fireChangedNotification) {
-		[RZNotificationCenter() postNotificationName:IRCChannelConfigurationWasUpdatedNotification object:self];
-	}
+    fireChangedNotification:(BOOL)fireChangedNotification {
+  [self updateConfig:config
+      fireChangedNotification:fireChangedNotification
+      updateStoredChannelList:YES];
 }
 
-- (NSDictionary<NSString *, id> *)configurationDictionary
-{
-	return [self.config dictionaryValue];
+- (void)updateConfig:(IRCChannelConfig *)config
+    fireChangedNotification:(BOOL)fireChangedNotification
+    updateStoredChannelList:(BOOL)updateStoredChannelList {
+  NSParameterAssert(config != nil);
+
+  IRCChannelConfig *currentConfig = self.config;
+
+  if ([config isEqual:currentConfig]) {
+    return;
+  }
+
+  if (currentConfig.type != config.type ||
+      [currentConfig.channelName isEqualToString:config.channelName] == NO ||
+      [currentConfig.uniqueIdentifier
+          isEqualToString:config.uniqueIdentifier] == NO) {
+    LogToConsoleError("Tried to load configuration for incorrect channel");
+
+    return;
+  }
+
+  self.config = config;
+
+  [self.config writeSecretKeyToKeychain];
+
+  if (updateStoredChannelList) {
+    [self.associatedClient updateStoredChannelList];
+  }
+
+  if (fireChangedNotification) {
+    [RZNotificationCenter()
+        postNotificationName:IRCChannelConfigurationWasUpdatedNotification
+                      object:self];
+  }
 }
 
-- (id)copyWithZone:(nullable NSZone *)zone
-{
-	/* Implement this method to allow channel to be 
-	 used as a dictionary key. */
-
-	return self;
+- (NSDictionary<NSString *, id> *)configurationDictionary {
+  return [self.config dictionaryValue];
 }
 
-- (NSString *)description
-{
-	return [NSString stringWithFormat:@"<IRCChannel [%@]: %@>", self.associatedClient.description, self.name];
+- (id)copyWithZone:(nullable NSZone *)zone {
+  /* Implement this method to allow channel to be
+   used as a dictionary key. */
+
+  return self;
+}
+
+- (NSString *)description {
+  return
+      [NSString stringWithFormat:@"<IRCChannel [%@]: %@>",
+                                 self.associatedClient.description, self.name];
 }
 
 #pragma mark -
 #pragma mark Property Getter
 
-- (NSString *)uniqueIdentifier
-{
-	return self.config.uniqueIdentifier;
+- (NSString *)uniqueIdentifier {
+  return self.config.uniqueIdentifier;
 }
 
-- (NSString *)name
-{
-	return self.config.channelName;
+- (NSString *)name {
+  return self.config.channelName;
 }
 
-- (nullable NSString *)secretKey
-{
-	return self.config.secretKey;
+- (nullable NSString *)secretKey {
+  return self.config.secretKey;
 }
 
-- (BOOL)autoJoin
-{
-	return self.config.autoJoin;
+- (BOOL)autoJoin {
+  return self.config.autoJoin;
 }
 
-- (BOOL)isChannel
-{
-	return (self.config.type == IRCChannelTypeChannel);
+- (BOOL)isChannel {
+  return (self.config.type == IRCChannelTypeChannel);
 }
 
-- (BOOL)isPrivateMessage
-{
-	return (self.config.type == IRCChannelTypePrivateMessage);
+- (BOOL)isPrivateMessage {
+  return (self.config.type == IRCChannelTypePrivateMessage);
 }
 
-- (BOOL)isUtility
-{
-	return (self.config.type == IRCChannelTypeUtility);
+- (BOOL)isUtility {
+  return (self.config.type == IRCChannelTypeUtility);
 }
 
-- (BOOL)isDirectChat
-{
-	return (self.config.type == IRCChannelTypeDirectChat);
+- (BOOL)isDirectChat {
+  return (self.config.type == IRCChannelTypeDirectChat);
 }
 
-- (BOOL)isPrivateMessageForZNCUser
-{
-	if (self.isPrivateMessage == NO) {
-		return NO;
-	}
+- (BOOL)isPrivateMessageForZNCUser {
+  if (self.isPrivateMessage == NO) {
+    return NO;
+  }
 
-	IRCClient *client = self.associatedClient;
+  IRCClient *client = self.associatedClient;
 
-	return [client nicknameIsZNCUser:self.name];
+  return [client nicknameIsZNCUser:self.name];
 }
 
-- (IRCChannelType)type
-{
-	return self.config.type;
+- (IRCChannelType)type {
+  return self.config.type;
 }
 
-- (NSString *)channelTypeString
-{
-	switch (self.config.type) {
-	case IRCChannelTypeChannel: {
-		return @"channel";
-	}
-	case IRCChannelTypePrivateMessage: {
-		return @"query";
-	}
-	case IRCChannelTypeUtility: {
-		return @"utility";
-	}
-	case IRCChannelTypeDirectChat: {
-		return @"direct-chat";
-	}
-	}
+- (NSString *)channelTypeString {
+  switch (self.config.type) {
+  case IRCChannelTypeChannel: {
+    return @"channel";
+  }
+  case IRCChannelTypePrivateMessage: {
+    return @"query";
+  }
+  case IRCChannelTypeUtility: {
+    return @"utility";
+  }
+  case IRCChannelTypeDirectChat: {
+    return @"direct-chat";
+  }
+  }
 }
 
-- (nullable NSURL *)logFilePath
-{
-	NSString *writePath = [TLOFileLogger writePathForItem:self];
+- (nullable NSURL *)logFilePath {
+  NSString *writePath = [TLOFileLogger writePathForItem:self];
 
-	if (writePath == nil) {
-		return nil;
-	}
+  if (writePath == nil) {
+    return nil;
+  }
 
-	return [NSURL fileURLWithPath:writePath];
+  return [NSURL fileURLWithPath:writePath];
 }
 
-- (nullable TVCLogLine *)lastLine
-{
-	return self.viewController.lastLine;
+- (nullable TVCLogLine *)lastLine {
+  return self.viewController.lastLine;
 }
 
 #pragma mark -
 #pragma mark Property Setter
 
-- (void)setAutoJoin:(BOOL)autoJoin
-{
-	if (self.isChannel == NO) {
-		return;
-	}
+- (void)setAutoJoin:(BOOL)autoJoin {
+  if (self.isChannel == NO) {
+    return;
+  }
 
-	if (self.autoJoin == autoJoin) {
-		return;
-	}
+  if (self.autoJoin == autoJoin) {
+    return;
+  }
 
-	IRCChannelConfigMutable *mutableConfig = [self.config mutableCopy];
+  IRCChannelConfigMutable *mutableConfig = [self.config mutableCopy];
 
-	mutableConfig.autoJoin = autoJoin;
+  mutableConfig.autoJoin = autoJoin;
 
-	self.config = mutableConfig;
+  self.config = mutableConfig;
 }
 
-- (void)setName:(NSString *)name
-{
-	NSParameterAssert(name != nil);
+- (void)setName:(NSString *)name {
+  NSParameterAssert(name != nil);
 
-	if (self.isChannel) {
-		return;
-	}
+  if (self.isChannel) {
+    return;
+  }
 
-	if ([self.name isEqualToString:name]) {
-		return;
-	}
+  if ([self.name isEqualToString:name]) {
+    return;
+  }
 
-	IRCChannelConfigMutable *mutableConfig = [self.config mutableCopy];
+  IRCChannelConfigMutable *mutableConfig = [self.config mutableCopy];
 
-	mutableConfig.channelName = name;
+  mutableConfig.channelName = name;
 
-	self.config = mutableConfig;
+  self.config = mutableConfig;
 }
 
-- (void)setTopic:(nullable NSString *)topic
-{
-	if (self->_topic != topic) {
-		self->_topic = [topic copy];
+- (void)setTopic:(nullable NSString *)topic {
+  if (self->_topic != topic) {
+    self->_topic = [topic copy];
 
-		[self.viewController setTopic:self->_topic];
-	}
+    [self.viewController setTopic:self->_topic];
+  }
 }
 
 #pragma mark -
 #pragma mark Utilities
 
-- (void)preferencesChanged
-{
-	if ([TPCPreferences displayPublicMessageCountOnDockBadge] == NO) {
-		if (self.isChannel) {
-			self.dockUnreadCount = 0;
-		}
-	}
+- (void)preferencesChanged {
+  if ([TPCPreferences displayPublicMessageCountOnDockBadge] == NO) {
+    if (self.isChannel) {
+      self.dockUnreadCount = 0;
+    }
+  }
 }
 
 #pragma mark -
 #pragma mark Channel Status
 
-- (void)setStatus:(IRCChannelStatus)status
-{
-	if (self->_status != status) {
-		self->_status = status;
+- (void)setStatus:(IRCChannelStatus)status {
+  if (self->_status != status) {
+    self->_status = status;
 
-		[self performActionOnStatusChange];
-	}
+    [self performActionOnStatusChange];
+  }
 }
 
-- (void)performActionOnStatusChange
-{
-	if (self.statusChangedByAction) {
-		self.statusChangedByAction = NO;
+- (void)performActionOnStatusChange {
+  if (self.statusChangedByAction) {
+    self.statusChangedByAction = NO;
 
-		return;
-	}
+    return;
+  }
 
-	if (self.status == IRCChannelStatusJoined) {
-		[self activate];
-	} else if (self.status == IRCChannelStatusParted) {
-		[self deactivate];
-	}
+  if (self.status == IRCChannelStatusJoined) {
+    [self activate];
+  } else if (self.status == IRCChannelStatusParted) {
+    [self deactivate];
+  }
 }
 
-- (void)resetStatus:(IRCChannelStatus)toStatus
-{
-	if (toStatus == IRCChannelStatusJoining) {
-		return;
-	}
+- (void)resetStatus:(IRCChannelStatus)toStatus {
+  if (toStatus == IRCChannelStatusJoining) {
+    return;
+  }
 
-	self.channelModesReceived = NO;
-	self.channelNamesReceived = NO;
-	self.errorOnLastJoinAttempt = NO;
-	self.sentInitialWhoRequest = NO;
+  self.channelModesReceived = NO;
+  self.channelNamesReceived = NO;
+  self.errorOnLastJoinAttempt = NO;
+  self.sentInitialWhoRequest = NO;
 
-	self.channelJoinTime = 0;
+  self.channelJoinTime = 0;
 
-	self.modeInfo = nil;
+  self.modeInfo = nil;
 
-	self.status = toStatus;
+  self.status = toStatus;
 
-	/* -setStatus: only consumes the flag when the status actually
-	 changes. Clear it here so a no-op transition does not leave it
-	 set for the next real one. */
-	self.statusChangedByAction = NO;
+  /* -setStatus: only consumes the flag when the status actually
+   changes. Clear it here so a no-op transition does not leave it
+   set for the next real one. */
+  self.statusChangedByAction = NO;
 
-	self.topic = nil;
+  self.topic = nil;
 
-	/* Clearing members, instead of just declaring memberInfo nil,
-	 is important so that all users can be properly disassociated
-	 with this channel. There are many relations. */
-	[self clearMembers];
+  /* Clearing members, instead of just declaring memberInfo nil,
+   is important so that all users can be properly disassociated
+   with this channel. There are many relations. */
+  [self clearMembers];
 
-	self.memberInfo = nil;
+  self.memberInfo = nil;
 }
 
-- (void)activate
-{
-	self.statusChangedByAction = YES;
+- (void)activate {
+  self.statusChangedByAction = YES;
 
-	[self resetStatus:IRCChannelStatusJoined];
+  [self resetStatus:IRCChannelStatusJoined];
 
-	IRCClient *client = self.associatedClient;
+  IRCClient *client = self.associatedClient;
 
-	if (self.isUtility == NO) {
-		self.memberInfo = [[IRCChannelMemberList alloc] initWithChannel:self];
+  if (self.isUtility == NO) {
+    self.memberInfo = [[IRCChannelMemberList alloc] initWithChannel:self];
 
-		/* A channel is only assigned by TVCMainWindow when it's switched to.
-		 Because of that we have to assign it here as the user already has
-		 the channel selected, but it was never assigned because the member
-		 list did not exist up to this point. */
-		if (self.isSelectedChannel) {
-			[mainWindowMemberList() assignToChannel:self];
-		}
-	}
+    /* A channel is only assigned by TVCMainWindow when it's switched to.
+     Because of that we have to assign it here as the user already has
+     the channel selected, but it was never assigned because the member
+     list did not exist up to this point. */
+    if (self.isSelectedChannel) {
+      [mainWindowMemberList() assignToChannel:self];
+    }
+  }
 
-	if (self.isChannel) {
-		[client postEventToViewController:@"channelJoined" forChannel:self];
+  if (self.isChannel) {
+    [client postEventToViewController:@"channelJoined" forChannel:self];
 
-		self.modeInfo = [[IRCChannelMode alloc] initWithChannel:self];
-	}
+    self.modeInfo = [[IRCChannelMode alloc] initWithChannel:self];
+  }
 
-	if (self.isPrivateMessage || self.isDirectChat) {
-		NSString *peerNickname = self.name;
+  if (self.isPrivateMessage || self.isDirectChat) {
+    NSString *peerNickname = self.name;
 
-		if (self.isDirectChat) {
-			peerNickname = (self.directChatConnection.peerNickname ?: [self.name substringFromIndex:1]);
-		}
+    if (self.isDirectChat) {
+      peerNickname = (self.directChatConnection.peerNickname
+                          ?: [self.name substringFromIndex:1]);
+    }
 
-		IRCUser *user1 = [self.associatedClient findUserOrCreate:peerNickname];
+    IRCUser *user1 = [self.associatedClient findUserOrCreate:peerNickname];
 
-		[self addUser:user1];
+    [self addUser:user1];
 
-		IRCUser *user2 = [self.associatedClient findUserOrCreate:client.userNickname];
+    IRCUser *user2 =
+        [self.associatedClient findUserOrCreate:client.userNickname];
 
-		[self addUser:user2];
-	}
+    [self addUser:user2];
+  }
 
-	self.channelJoinTime = [NSDate timeIntervalSince1970];
+  self.channelJoinTime = [NSDate timeIntervalSince1970];
 
-	if (self.isChannel || self.isPrivateMessage) {
-		[client noteChannelActivated:self];
-	}
+  if (self.isChannel || self.isPrivateMessage) {
+    [client noteChannelActivated:self];
+  }
 }
 
-- (void)deactivate
-{
-	self.statusChangedByAction = YES;
+- (void)deactivate {
+  self.statusChangedByAction = YES;
 
-	[self resetStatus:IRCChannelStatusParted];
+  [self resetStatus:IRCChannelStatusParted];
 
-	if (self.isChannel) {
-		[self.associatedClient postEventToViewController:@"channelParted" forChannel:self];
-	}
+  if (self.isChannel) {
+    [self.associatedClient postEventToViewController:@"channelParted"
+                                          forChannel:self];
+  }
 }
 
-- (void)prepareForPermanentDestruction
-{
-	self.statusChangedByAction = YES;
+- (void)prepareForPermanentDestruction {
+  self.statusChangedByAction = YES;
 
-	[self resetStatus:IRCChannelStatusTerminated];
+  [self resetStatus:IRCChannelStatusTerminated];
 
-	[self closeDirectChatConnection];
+  [self closeDirectChatConnection];
 
-	[self closeLogFile];
+  [self closeLogFile];
 
-	[self.config destroySecretKeyKeychainItem];
+  [self.config destroySecretKeyKeychainItem];
 
-	NSArray *openWindows = [windowController() windowsFromWindowList:@[
-		@"TDCChannelPropertiesSheet",
-		@"TDCChannelModifyTopicSheet",
-		@"TDCChannelModifyModesSheet",
-		@"TDCChannelBanListSheet"
-	]];
+  NSArray *openWindows = [windowController() windowsFromWindowList:@[
+    @"TDCChannelPropertiesSheet", @"TDCChannelModifyTopicSheet",
+    @"TDCChannelModifyModesSheet", @"TDCChannelBanListSheet"
+  ]];
 
-	for (TDCSheetBase<TDCChannelPrototype> *windowObject in openWindows) {
-		if ([windowObject.channelId isEqualToString:self.uniqueIdentifier]) {
-			[windowObject close];
-		}
-	}
+  for (TDCSheetBase<TDCChannelPrototype> *windowObject in openWindows) {
+    if ([windowObject.channelId isEqualToString:self.uniqueIdentifier]) {
+      [windowObject close];
+    }
+  }
 
-	[[mainWindow() inputHistoryManager] destroy:self];
+  [[mainWindow() inputHistoryManager] destroy:self];
 
-	[self.viewController prepareForPermanentDestruction];
+  [self.viewController prepareForPermanentDestruction];
 }
 
-- (void)prepareForApplicationTermination
-{
-	LogToConsoleTerminationProgress("Preparing channel: <%{public}@>", self.uniqueIdentifier);
+- (void)prepareForApplicationTermination {
+  LogToConsoleTerminationProgress("Preparing channel: <%{public}@>",
+                                  self.uniqueIdentifier);
 
-	self.statusChangedByAction = YES;
+  self.statusChangedByAction = YES;
 
-	LogToConsoleTerminationProgress("[%{public}@] Resetting status to terminated", self.uniqueIdentifier);
+  LogToConsoleTerminationProgress("[%{public}@] Resetting status to terminated",
+                                  self.uniqueIdentifier);
 
-	[self resetStatus:IRCChannelStatusTerminated];
+  [self resetStatus:IRCChannelStatusTerminated];
 
-	LogToConsoleTerminationProgress("[%{public}@] Closing log file", self.uniqueIdentifier);
+  LogToConsoleTerminationProgress("[%{public}@] Closing log file",
+                                  self.uniqueIdentifier);
 
-	[self closeDirectChatConnection];
+  [self closeDirectChatConnection];
 
-	[self closeLogFile];
+  [self closeLogFile];
 
-	if (self.isPrivateMessage) {
-		LogToConsoleTerminationProgress("[%{public}@] Destroying keychain items for private message",
-										self.uniqueIdentifier);
+  if (self.isPrivateMessage) {
+    LogToConsoleTerminationProgress(
+        "[%{public}@] Destroying keychain items for private message",
+        self.uniqueIdentifier);
 
-		[self.config destroySecretKeyKeychainItem];
-	}
+    [self.config destroySecretKeyKeychainItem];
+  }
 
-	LogToConsoleTerminationProgress("[%{public}@] Preparing view controller: <%{public}@>",
-									self.uniqueIdentifier,
-									self.viewController.uniqueIdentifier);
+  LogToConsoleTerminationProgress(
+      "[%{public}@] Preparing view controller: <%{public}@>",
+      self.uniqueIdentifier, self.viewController.uniqueIdentifier);
 
-	[self.viewController prepareForApplicationTermination];
+  [self.viewController prepareForApplicationTermination];
 }
 
 #pragma mark -
 #pragma mark Direct Chat
 
-- (void)closeDirectChatConnection
-{
-	IRCDirectChatConnection *connection = self.directChatConnection;
+- (void)closeDirectChatConnection {
+  IRCDirectChatConnection *connection = self.directChatConnection;
 
-	if (connection == nil) {
-		return;
-	}
+  if (connection == nil) {
+    return;
+  }
 
-	self.directChatConnection = nil;
+  self.directChatConnection = nil;
 
-	[connection close];
+  [connection close];
 }
 
 #pragma mark -
 #pragma mark Log File
 
-- (void)reopenLogFileIfNeeded
-{
-	if ([TPCPreferences logToDiskIsEnabled] && self.isUtility == NO) {
-		if (self.logFile) {
-			[self.logFile reopenIfNeeded];
-		}
-	} else {
-		[self closeLogFile];
-	}
+- (void)reopenLogFileIfNeeded {
+  if ([TPCPreferences logToDiskIsEnabled] && self.isUtility == NO) {
+    if (self.logFile) {
+      [self.logFile reopenIfNeeded];
+    }
+  } else {
+    [self closeLogFile];
+  }
 }
 
-- (void)closeLogFile
-{
-	if (self.logFile == nil) {
-		return;
-	}
+- (void)closeLogFile {
+  if (self.logFile == nil) {
+    return;
+  }
 
-	[self.logFile close];
+  [self.logFile close];
 }
 
-- (void)logFileWriteSessionBegin
-{
-	[self.associatedClient logFileRecordSessionChanged:YES inChannel:self];
+- (void)logFileWriteSessionBegin {
+  [self.associatedClient logFileRecordSessionChanged:YES inChannel:self];
 }
 
-- (void)logFileWriteSessionEnd
-{
-	[self.associatedClient logFileRecordSessionChanged:NO inChannel:self];
+- (void)logFileWriteSessionEnd {
+  [self.associatedClient logFileRecordSessionChanged:NO inChannel:self];
 
-	self.logFileSessionCount = 0;
+  self.logFileSessionCount = 0;
 }
 
 #pragma mark -
 #pragma mark Printing
 
-- (void)writeToLogLineToLogFile:(TVCLogLine *)logLine
-{
-	NSParameterAssert(logLine != nil);
+- (void)writeToLogLineToLogFile:(TVCLogLine *)logLine {
+  NSParameterAssert(logLine != nil);
 
-	if (self.isUtility || [TPCPreferences logToDiskIsEnabled] == NO) {
-		return;
-	}
+  if (self.isUtility || [TPCPreferences logToDiskIsEnabled] == NO) {
+    return;
+  }
 
-	// Perform addition before if statement to avoid infinite loop
-	self.logFileSessionCount += 1;
+  // Perform addition before if statement to avoid infinite loop
+  self.logFileSessionCount += 1;
 
-	if (self.logFileSessionCount == 1) {
-		[self logFileWriteSessionBegin];
-	}
+  if (self.logFileSessionCount == 1) {
+    [self logFileWriteSessionBegin];
+  }
 
-	if (self.logFile == nil) {
-		self.logFile = [[TLOFileLogger alloc] initWithChannel:self];
-	}
+  if (self.logFile == nil) {
+    self.logFile = [[TLOFileLogger alloc] initWithChannel:self];
+  }
 
-	[self.logFile writeLogLine:logLine];
+  [self.logFile writeLogLine:logLine];
+}
+
+- (void)print:(TVCLogLine *)logLine {
+  [self print:logLine completionBlock:nil];
 }
 
 - (void)print:(TVCLogLine *)logLine
-{
-	[self print:logLine completionBlock:nil];
-}
+    completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)
+                        completionBlock {
+  NSParameterAssert(logLine != nil);
 
-- (void)print:(TVCLogLine *)logLine
-	completionBlock:(nullable TVCLogControllerPrintOperationCompletionBlock)completionBlock
-{
-	NSParameterAssert(logLine != nil);
+  [self.viewController print:logLine completionBlock:completionBlock];
 
-	[self.viewController print:logLine completionBlock:completionBlock];
-
-	[self writeToLogLineToLogFile:logLine];
+  [self writeToLogLineToLogFile:logLine];
 }
 
 #pragma mark -
 #pragma mark Member List
 
-- (void)addUser:(IRCUser *)user
-{
-	[self.memberInfo addUser:user];
+- (void)addUser:(IRCUser *)user {
+  [self.memberInfo addUser:user];
+}
+
+- (void)addMember:(IRCChannelUser *)member {
+  [self.memberInfo addMember:member];
 }
 
 - (void)addMember:(IRCChannelUser *)member
-{
-	[self.memberInfo addMember:member];
+    checkForDuplicates:(BOOL)checkForDuplicates {
+  [self.memberInfo addMember:member checkForDuplicates:checkForDuplicates];
 }
 
-- (void)addMember:(IRCChannelUser *)member checkForDuplicates:(BOOL)checkForDuplicates
-{
-	[self.memberInfo addMember:member checkForDuplicates:checkForDuplicates];
+- (void)removeMemberWithNickname:(NSString *)nickname {
+  [self.memberInfo removeMemberWithNickname:nickname];
 }
 
-- (void)removeMemberWithNickname:(NSString *)nickname
-{
-	[self.memberInfo removeMemberWithNickname:nickname];
+- (void)removeMember:(IRCChannelUser *)member {
+  [self.memberInfo removeMember:member];
 }
 
-- (void)removeMember:(IRCChannelUser *)member
-{
-	[self.memberInfo removeMember:member];
-}
-
-- (void)resortMember:(IRCChannelUser *)member
-{
-	[self.memberInfo resortMember:member];
-}
-
-- (void)replaceMember:(IRCChannelUser *)member1 withMember:(IRCChannelUser *)member2
-{
-	[self.memberInfo replaceMember:member1 withMember:member2];
-}
-
-- (void)replaceMember:(IRCChannelUser *)member1 withMember:(IRCChannelUser *)member2 resort:(BOOL)resort
-{
-	[self.memberInfo replaceMember:member1 withMember:member2 resort:resort];
+- (void)resortMember:(IRCChannelUser *)member {
+  [self.memberInfo resortMember:member];
 }
 
 - (void)replaceMember:(IRCChannelUser *)member1
-			  withMember:(IRCChannelUser *)member2
-				  resort:(BOOL)resort
-	replaceInAllChannels:(BOOL)replaceInAllChannels
-{
-	[self.memberInfo replaceMember:member1 withMember:member2 resort:resort replaceInAllChannels:replaceInAllChannels];
+           withMember:(IRCChannelUser *)member2 {
+  [self.memberInfo replaceMember:member1 withMember:member2];
 }
 
-- (void)changeMember:(NSString *)nickname mode:(NSString *)mode value:(BOOL)value
-{
-	[self.memberInfo changeMember:nickname mode:mode value:value];
+- (void)replaceMember:(IRCChannelUser *)member1
+           withMember:(IRCChannelUser *)member2
+               resort:(BOOL)resort {
+  [self.memberInfo replaceMember:member1 withMember:member2 resort:resort];
 }
 
-- (void)clearMembers
-{
-	[self.memberInfo clearMembers];
+- (void)replaceMember:(IRCChannelUser *)member1
+              withMember:(IRCChannelUser *)member2
+                  resort:(BOOL)resort
+    replaceInAllChannels:(BOOL)replaceInAllChannels {
+  [self.memberInfo replaceMember:member1
+                      withMember:member2
+                          resort:resort
+            replaceInAllChannels:replaceInAllChannels];
 }
 
-- (NSUInteger)numberOfMembers
-{
-	return self.memberInfo.numberOfMembers;
+- (void)changeMember:(NSString *)nickname
+                mode:(NSString *)mode
+               value:(BOOL)value {
+  [self.memberInfo changeMember:nickname mode:mode value:value];
 }
 
-- (nullable NSArray<IRCChannelUser *> *)memberList
-{
-	return self.memberInfo.memberList;
+- (void)clearMembers {
+  [self.memberInfo clearMembers];
 }
 
-- (NSData *)pasteboardDataForMembers:(NSArray<IRCChannelUser *> *)members
-{
-	return [self.memberInfo pasteboardDataForMembers:members];
+- (NSUInteger)numberOfMembers {
+  return self.memberInfo.numberOfMembers;
+}
+
+- (nullable NSArray<IRCChannelUser *> *)memberList {
+  return self.memberInfo.memberList;
+}
+
+- (NSData *)pasteboardDataForMembers:(NSArray<IRCChannelUser *> *)members {
+  return [self.memberInfo pasteboardDataForMembers:members];
 }
 
 + (BOOL)readNicknamesFromPasteboardData:(NSData *)pasteboardData
-							  withBlock:(void(NS_NOESCAPE ^)(IRCChannel *channel, NSArray<NSString *> *nicknames))
-											callbackBlock
-{
-	return [IRCChannelMemberList readNicknamesFromPasteboardData:pasteboardData withBlock:callbackBlock];
+                              withBlock:(void(NS_NOESCAPE ^)(
+                                            IRCChannel *channel,
+                                            NSArray<NSString *> *nicknames))
+                                            callbackBlock {
+  return [IRCChannelMemberList readNicknamesFromPasteboardData:pasteboardData
+                                                     withBlock:callbackBlock];
 }
 
 + (BOOL)readMembersFromPasteboardData:(NSData *)pasteboardData
-							withBlock:(void(NS_NOESCAPE ^)(IRCChannel *channel, NSArray<IRCChannelUser *> *members))
-										  callbackBlock
-{
-	return [IRCChannelMemberList readMembersFromPasteboardData:pasteboardData withBlock:callbackBlock];
+                            withBlock:(void(NS_NOESCAPE ^)(
+                                          IRCChannel *channel,
+                                          NSArray<IRCChannelUser *> *members))
+                                          callbackBlock {
+  return [IRCChannelMemberList readMembersFromPasteboardData:pasteboardData
+                                                   withBlock:callbackBlock];
 }
 
-- (BOOL)memberExists:(NSString *)nickname
-{
-	return [self.memberInfo memberExists:nickname];
+- (BOOL)memberExists:(NSString *)nickname {
+  return [self.memberInfo memberExists:nickname];
 }
 
-- (nullable IRCChannelUser *)findMember:(NSString *)nickname
-{
-	return [self.memberInfo findMember:nickname];
+- (nullable IRCChannelUser *)findMember:(NSString *)nickname {
+  return [self.memberInfo findMember:nickname];
 }
 
-- (void)sortMembers
-{
-	[self.memberInfo sortMembers];
+- (void)sortMembers {
+  [self.memberInfo sortMembers];
 }
 
 #pragma mark -
 #pragma mark IRCTreeItem Properties
 
-- (BOOL)isSelectedChannel
-{
-	return (self == mainWindow().selectedItem);
+- (BOOL)isSelectedChannel {
+  return (self == mainWindow().selectedItem);
 }
 
-- (BOOL)isActive
-{
-	return (self.status == IRCChannelStatusJoined);
+- (BOOL)isActive {
+  return (self.status == IRCChannelStatusJoined);
 }
 
-- (BOOL)isClient
-{
-	return NO;
+- (BOOL)isClient {
+  return NO;
 }
 
-- (NSUInteger)numberOfChildren
-{
-	return 0;
+- (NSUInteger)numberOfChildren {
+  return 0;
 }
 
-- (nullable id)childAtIndex:(NSUInteger)index
-{
-	return nil;
+- (nullable id)childAtIndex:(NSUInteger)index {
+  return nil;
 }
 
-- (NSString *)label
-{
-	NSString *customLabel = self.config.label;
+- (NSString *)label {
+  NSString *customLabel = self.config.label;
 
-	if (customLabel.length > 0) {
-		return customLabel;
-	}
+  if (customLabel.length > 0) {
+    return customLabel;
+  }
 
-	return self.name;
+  return self.name;
 }
 
-- (nullable IRCClient *)associatedClient
-{
-	return self->_associatedClient;
+- (nullable IRCClient *)associatedClient {
+  return self->_associatedClient;
 }
 
-- (nullable IRCChannel *)associatedChannel
-{
-	return self;
+- (nullable IRCChannel *)associatedChannel {
+  return self;
 }
 
 @end

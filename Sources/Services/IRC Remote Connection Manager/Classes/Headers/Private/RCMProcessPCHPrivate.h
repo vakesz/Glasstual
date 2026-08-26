@@ -40,9 +40,9 @@
 #import <Security/Security.h>
 
 #import "GlasstualStaticDefinitions.h"
-#import "NSObjectHelperPrivate.h"
-#import "TLOLocalization.h"
-#import "TLOTimer.h"
 #import "IRCConnectionConfig.h"
 #import "IRCConnectionErrors.h"
+#import "NSObjectHelperPrivate.h"
 #import "RCMConnectionManagerProtocol.h"
+#import "TLOLocalization.h"
+#import "TLOTimer.h"

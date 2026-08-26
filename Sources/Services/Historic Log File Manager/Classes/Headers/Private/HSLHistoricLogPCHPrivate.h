@@ -42,6 +42,6 @@
 #import "GlasstualStaticDefinitions.h"
 #import "TVCLogLineXPCPrivate.h"
 
+#import "HLSHistoricLogProcessMainPrivate.h"
 #import "HLSHistoricLogProtocol.h"
 #import "HLSHistoricLogViewContextPrivate.h"
-#import "HLSHistoricLogProcessMainPrivate.h"

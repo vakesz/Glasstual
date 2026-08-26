@@ -32,42 +32,39 @@
 
 @implementation NSTextField (CSTextFieldHelper)
 
-+ (void)load
-{
-	static dispatch_once_t onceToken;
++ (void)load {
+  static dispatch_once_t onceToken;
 
-	dispatch_once(&onceToken, ^{
-		XRExchangeInstanceMethod(@"NSTextField", @"setStringValue:", @"ce_priv_setStringValue:");
-	});
+  dispatch_once(&onceToken, ^{
+    XRExchangeInstanceMethod(@"NSTextField",
+                             @"setStringValue:", @"ce_priv_setStringValue:");
+  });
 }
 
-- (NSString *)trimmedStringValue
-{
-	NSString *value = super.stringValue;
+- (NSString *)trimmedStringValue {
+  NSString *value = super.stringValue;
 
-	return value.trim;
+  return value.trim;
 }
 
-- (NSString *)trimmedFirstTokenStringValue
-{
-	NSString *value = self.trimmedStringValue;
+- (NSString *)trimmedFirstTokenStringValue {
+  NSString *value = self.trimmedStringValue;
 
-	NSInteger spacePosition = [value stringPosition:@" "];
+  NSInteger spacePosition = [value stringPosition:@" "];
 
-	if (spacePosition > 0) {
-		return [value substringToIndex:spacePosition];
-	}
+  if (spacePosition > 0) {
+    return [value substringToIndex:spacePosition];
+  }
 
-	return value;
+  return value;
 }
 
-- (void)ce_priv_setStringValue:(NSString *)stringValue
-{
-	if (stringValue) {
-		[self ce_priv_setStringValue:stringValue];
-	} else {
-		[self ce_priv_setStringValue:@""];
-	}
+- (void)ce_priv_setStringValue:(NSString *)stringValue {
+  if (stringValue) {
+    [self ce_priv_setStringValue:stringValue];
+  } else {
+    [self ce_priv_setStringValue:@""];
+  }
 }
 
 @end
@@ -76,31 +73,26 @@
 
 @implementation NSTextView (CSTextViewHelper)
 
-- (BOOL)isFocused
-{
-	return (self.window.firstResponder == self);
+- (BOOL)isFocused {
+  return (self.window.firstResponder == self);
 }
 
-- (void)focus
-{
-	if (self.focused == NO) {
-		[self.window makeFirstResponder:self];
-	}
+- (void)focus {
+  if (self.focused == NO) {
+    [self.window makeFirstResponder:self];
+  }
 }
 
-- (NSRange)range
-{
-	return NSMakeRange(0, self.stringLength);
+- (NSRange)range {
+  return NSMakeRange(0, self.stringLength);
 }
 
-- (NSUInteger)stringLength
-{
-	return self.string.length;
+- (NSUInteger)stringLength {
+  return self.string.length;
 }
 
-- (nullable NSScrollView *)scrollView
-{
-	return self.enclosingScrollView;
+- (nullable NSScrollView *)scrollView {
+  return self.enclosingScrollView;
 }
 
 @end

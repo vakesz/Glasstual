@@ -41,12 +41,16 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSObject (CSObjectPerformHelper)
 - (void)cancelPerformRequests;
 - (void)cancelPerformRequestsWithSelector:(SEL)aSelector;
-- (void)cancelPerformRequestsWithSelector:(SEL)aSelector object:(nullable id)anArgument;
+- (void)cancelPerformRequestsWithSelector:(SEL)aSelector
+                                   object:(nullable id)anArgument;
 
 // ---
 
-- (void)performSelectorInCommonModes:(SEL)aSelector afterDelay:(NSTimeInterval)delay;
-- (void)performSelectorInCommonModes:(SEL)aSelector withObject:(nullable id)anArgument afterDelay:(NSTimeInterval)delay;
+- (void)performSelectorInCommonModes:(SEL)aSelector
+                          afterDelay:(NSTimeInterval)delay;
+- (void)performSelectorInCommonModes:(SEL)aSelector
+                          withObject:(nullable id)anArgument
+                          afterDelay:(NSTimeInterval)delay;
 
 // ---
 

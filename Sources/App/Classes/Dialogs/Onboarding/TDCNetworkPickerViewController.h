@@ -43,10 +43,12 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol TDCNetworkPickerViewControllerDelegate <NSObject>
 @optional
 /* Sent when the selected network or any of the editable fields change. */
-- (void)networkPickerSelectionDidChange:(TDCNetworkPickerViewController *)sender;
+- (void)networkPickerSelectionDidChange:
+    (TDCNetworkPickerViewController *)sender;
 
 /* Sent when the user double-clicks a network or presses Return in the list. */
-- (void)networkPickerDidConfirmSelection:(TDCNetworkPickerViewController *)sender;
+- (void)networkPickerDidConfirmSelection:
+    (TDCNetworkPickerViewController *)sender;
 @end
 
 /* A searchable list of well known networks with a detail area for the
@@ -57,7 +59,8 @@ NS_ASSUME_NONNULL_BEGIN
  The picker is used by the onboarding window and by the Server Properties
  sheet. It produces an IRCClientConfig through -clientConfig. */
 @interface TDCNetworkPickerViewController : NSViewController
-@property(nonatomic, weak, nullable) id<TDCNetworkPickerViewControllerDelegate> delegate;
+@property(nonatomic, weak, nullable) id<TDCNetworkPickerViewControllerDelegate>
+    delegate;
 
 @property(readonly, strong) IRCNetworkList *networkList;
 
@@ -88,7 +91,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* Selects the network matching the address when one exists. Otherwise the
  custom server row is selected and the fields are filled with the values. */
-- (void)selectServerAddress:(NSString *)serverAddress port:(uint16_t)port secured:(BOOL)secured;
+- (void)selectServerAddress:(NSString *)serverAddress
+                       port:(uint16_t)port
+                    secured:(BOOL)secured;
 
 - (void)clearSelection;
 

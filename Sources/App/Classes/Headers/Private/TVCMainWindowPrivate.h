@@ -48,17 +48,18 @@ NS_ASSUME_NONNULL_BEGIN
 @class TXMenuControllerMainWindowProxy;
 
 typedef NS_OPTIONS(NSUInteger, TVCMainWindowShiftSelectionFlags) {
-	TVCMainWindowShiftSelectionFlagMaintainGrouping = 1 << 0,
-	TVCMainWindowShiftSelectionFlagPerformDeselect = 1 << 1, // deselect previous selection
-	TVCMainWindowShiftSelectionFlagPerformDeselectChildren =
-		1 << 2, // deselect previous selection + children (if group item)
+  TVCMainWindowShiftSelectionFlagMaintainGrouping = 1 << 0,
+  TVCMainWindowShiftSelectionFlagPerformDeselect =
+      1 << 1, // deselect previous selection
+  TVCMainWindowShiftSelectionFlagPerformDeselectChildren =
+      1 << 2, // deselect previous selection + children (if group item)
 };
 
 typedef NS_OPTIONS(NSUInteger, TVCMainWindowMouseLocation) {
-	TVCMainWindowMouseLocationOutsideWindow = 0,
-	TVCMainWindowMouseLocationInsideWindow = 1 << 1,
-	TVCMainWindowMouseLocationInsideWindowTitle = 1 << 2,
-	TVCMainWindowMouseLocationOnTopOfWindowTitleControl = 1 << 3
+  TVCMainWindowMouseLocationOutsideWindow = 0,
+  TVCMainWindowMouseLocationInsideWindow = 1 << 1,
+  TVCMainWindowMouseLocationInsideWindowTitle = 1 << 2,
+  TVCMainWindowMouseLocationOnTopOfWindowTitleControl = 1 << 3
 };
 
 @interface TVCMainWindow ()
@@ -97,11 +98,12 @@ typedef NS_OPTIONS(NSUInteger, TVCMainWindowMouseLocation) {
 - (void)inputText:(id)string asCommand:(IRCRemoteCommand)command;
 
 - (void)selectItemInSelectedItems:(IRCTreeItem *)selectedItem;
-- (void)selectItemInSelectedItems:(IRCTreeItem *)selectedItem refreshChannelView:(BOOL)refreshChannelView;
+- (void)selectItemInSelectedItems:(IRCTreeItem *)selectedItem
+               refreshChannelView:(BOOL)refreshChannelView;
 
 - (void)shiftSelection:(nullable IRCTreeItem *)oldItem
-				toItem:(nullable IRCTreeItem *)newItem
-			   options:(TVCMainWindowShiftSelectionFlags)selectionOptions;
+                toItem:(nullable IRCTreeItem *)newItem
+               options:(TVCMainWindowShiftSelectionFlags)selectionOptions;
 
 - (void)channelViewSelectionChangeTo:(IRCTreeItem *)selectedItem;
 

@@ -40,22 +40,25 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSUInteger, TVCTextViewCaretLocation) {
-	TVCTextViewCaretLocationOnlyLine, // There isn't more than one line
-	TVCTextViewCaretLocationFirstLine,
-	TVCTextViewCaretLocationMiddle,
-	TVCTextViewCaretLocationLastLine,
+  TVCTextViewCaretLocationOnlyLine, // There isn't more than one line
+  TVCTextViewCaretLocationFirstLine,
+  TVCTextViewCaretLocationMiddle,
+  TVCTextViewCaretLocationLastLine,
 };
 
-@interface TVCTextViewWithIRCFormatter : NSTextView <NSTextDelegate, TLOKeyEventHandlerPrototype>
+@interface TVCTextViewWithIRCFormatter
+    : NSTextView <NSTextDelegate, TLOKeyEventHandlerPrototype>
 @property(readonly) TVCTextViewCaretLocation caretLocation;
 
 /* Height of as many whole lines as fit below maximumHeight, plus the
  padding. The padding counts toward the maximum. */
-- (CGFloat)highestHeightBelowHeight:(CGFloat)maximumHeight withPadding:(CGFloat)valuePadding;
+- (CGFloat)highestHeightBelowHeight:(CGFloat)maximumHeight
+                        withPadding:(CGFloat)valuePadding;
 
 /* Visits every laid out line in document order. The character range is
  relative to the document. Return NO from the block to stop. */
-- (void)enumerateLineFragmentsUsingBlock:(BOOL (^)(NSTextLineFragment *lineFragment, NSRange characterRange))block;
+- (void)enumerateLineFragmentsUsingBlock:
+    (BOOL (^)(NSTextLineFragment *lineFragment, NSRange characterRange))block;
 
 @property(readonly) NSRect selectedRect;
 

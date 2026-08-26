@@ -75,7 +75,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSControlStateValue)notificationEnabledForEvent:(TXNotificationType)event;
 - (NSControlStateValue)disabledWhileAwayForEvent:(TXNotificationType)event;
 - (NSControlStateValue)bounceDockIconForEvent:(TXNotificationType)event;
-- (NSControlStateValue)bounceDockIconRepeatedlyForEvent:(TXNotificationType)event;
+- (NSControlStateValue)bounceDockIconRepeatedlyForEvent:
+    (TXNotificationType)event;
 - (NSControlStateValue)speakEvent:(TXNotificationType)event;
 @end
 
@@ -102,11 +103,16 @@ NS_ASSUME_NONNULL_BEGIN
 // NSControlStateValueOn = YES
 // NSControlStateValueOff = NO
 // NSControlStateValueMixed = Reset, use default
-- (void)setNotificationEnabled:(NSControlStateValue)value forEvent:(TXNotificationType)event;
-- (void)setDisabledWhileAway:(NSControlStateValue)value forEvent:(TXNotificationType)event;
-- (void)setBounceDockIcon:(NSControlStateValue)value forEvent:(TXNotificationType)event;
-- (void)setBounceDockIconRepeatedly:(NSControlStateValue)value forEvent:(TXNotificationType)event;
-- (void)setEventIsSpoken:(NSControlStateValue)value forEvent:(TXNotificationType)event;
+- (void)setNotificationEnabled:(NSControlStateValue)value
+                      forEvent:(TXNotificationType)event;
+- (void)setDisabledWhileAway:(NSControlStateValue)value
+                    forEvent:(TXNotificationType)event;
+- (void)setBounceDockIcon:(NSControlStateValue)value
+                 forEvent:(TXNotificationType)event;
+- (void)setBounceDockIconRepeatedly:(NSControlStateValue)value
+                           forEvent:(TXNotificationType)event;
+- (void)setEventIsSpoken:(NSControlStateValue)value
+                forEvent:(TXNotificationType)event;
 @end
 
 NS_ASSUME_NONNULL_END

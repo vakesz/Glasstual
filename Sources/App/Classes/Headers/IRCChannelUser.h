@@ -58,8 +58,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) IRCUserRank rank;  // Highest rank user has
 @property(readonly) IRCUserRank ranks; // All ranks user as a bitmask
 
-@property(readonly, copy) NSString *modes; // List of all user modes, ranked highest to lowest
-@property(readonly, copy) NSString *mark;  // Returns mode symbol for highest rank (-modes)
+@property(readonly, copy)
+    NSString *modes; // List of all user modes, ranked highest to lowest
+@property(readonly, copy)
+    NSString *mark; // Returns mode symbol for highest rank (-modes)
 
 /* Weight used when completing nicknames. */
 /* Accessing totalWeight decays the weight. */
@@ -72,6 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) NSTimeInterval creationTime;
 
 - (instancetype)init NS_UNAVAILABLE;
+- (instancetype)initWithUser:(IRCUser *)user NS_DESIGNATED_INITIALIZER;
 @end
 
 #pragma mark -

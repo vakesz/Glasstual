@@ -45,7 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface TXMenuController ()
 @property(nonatomic, copy, nullable)
-	NSString *pointedNickname; // Takes priority if sender of an action returns nil userInfo value
+    NSString *pointedNickname; // Takes priority if sender of an action returns
+                               // nil userInfo value
 
 - (void)populateNavigationChannelList;
 
@@ -60,14 +61,17 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)memberInChannelViewDoubleClicked:(nullable id)sender;
 - (void)memberInMemberListDoubleClicked:(id)sender;
 
-- (void)memberSendDroppedFiles:(NSArray<NSString *> *)files to:(NSString *)nickname;
+- (void)memberSendDroppedFiles:(NSArray<NSString *> *)files
+                            to:(NSString *)nickname;
 - (void)memberSendDroppedFiles:(NSArray<NSString *> *)files row:(NSUInteger)row;
 - (void)memberSendDroppedFilesToSelectedChannel:
-	(NSArray<NSString *> *)files; // Only works if -selectedChannel is a private message
+    (NSArray<NSString *> *)
+        files; // Only works if -selectedChannel is a private message
 
 - (void)showServerPropertiesSheetForClient:(IRCClient *)client
-							 withSelection:(TDCServerPropertiesSheetSelection)selection
-								   context:(nullable id)context;
+                             withSelection:
+                                 (TDCServerPropertiesSheetSelection)selection
+                                   context:(nullable id)context;
 
 - (void)toggleMuteOnNotificationsShortcutOn:(BOOL)toggleOn;
 - (void)toggleMuteOnNotificationSoundsShortcutOn:(BOOL)toggleOn;

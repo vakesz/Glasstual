@@ -38,30 +38,41 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSUInteger)unsignedIntegerAtIndex:(NSUInteger)n;
 - (double)doubleAtIndex:(NSUInteger)n;
 - (BOOL)containsObjectIgnoringCase:
-	(id)anObject; // Performs comparison using -isEqualIgnoringCase: - ignores objects that don't respond to this.
+    (id)anObject; // Performs comparison using -isEqualIgnoringCase: - ignores
+                  // objects that don't respond to this.
 
-/* -stringArrayControllerObjects returns an NSArray of NSDictionary with single key,
- named "string" which contains any NSString values in original array. */
+/* -stringArrayControllerObjects returns an NSArray of NSDictionary with single
+ key, named "string" which contains any NSString values in original array. */
 @property(copy, readonly) NSArray<NSDictionary *> *stringArrayControllerObjects;
 
 - (NSArray *)arrayByRemovingEmptyValues;
 - (NSArray *)arrayByRemovingEmptyValuesAndUniquing;
 
-- (NSArray *)arrayByRemovingEmptyValues:(BOOL)removeEmptyValues trimming:(BOOL)trimValues uniquing:(BOOL)uniqueValues;
+- (NSArray *)arrayByRemovingEmptyValues:(BOOL)removeEmptyValues
+                               trimming:(BOOL)trimValues
+                               uniquing:(BOOL)uniqueValues;
 
-- (nullable id)objectPassingTest:(BOOL(NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))predicate;
-- (nullable id)objectPassingTest:(BOOL(NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))predicate
-					 withOptions:(NSEnumerationOptions)options;
+- (nullable id)objectPassingTest:
+    (BOOL(NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))predicate;
+- (nullable id)objectPassingTest:(BOOL(NS_NOESCAPE ^)(id object,
+                                                      NSUInteger index,
+                                                      BOOL *stop))predicate
+                     withOptions:(NSEnumerationOptions)options;
 
 - (void)enumerateSubarraysOfSize:(NSUInteger)subarraySize
-					  usingBlock:(void(NS_NOESCAPE ^)(NSArray *objects, BOOL *stop))block;
+                      usingBlock:(void(NS_NOESCAPE ^)(NSArray *objects,
+                                                      BOOL *stop))block;
 - (void)enumerateSubarraysOfSize:(NSUInteger)subarraySize
-					  usingBlock:(void(NS_NOESCAPE ^)(NSArray *objects, BOOL *stop))block
-					 withOptions:(NSEnumerationOptions)options;
+                      usingBlock:(void(NS_NOESCAPE ^)(NSArray *objects,
+                                                      BOOL *stop))block
+                     withOptions:(NSEnumerationOptions)options;
 
-- (NSArray *)arrayByApplyingBlock:(id(NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))block;
-- (NSArray *)arrayByApplyingBlock:(id(NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))block
-					  withOptions:(NSEnumerationOptions)options;
+- (NSArray *)arrayByApplyingBlock:
+    (id(NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))block;
+- (NSArray *)arrayByApplyingBlock:
+                 (id(NS_NOESCAPE ^)(id object, NSUInteger index, BOOL *stop))
+                     block
+                      withOptions:(NSEnumerationOptions)options;
 @end
 
 @interface NSMutableArray (CSMutableArrayHelper)

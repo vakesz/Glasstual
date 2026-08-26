@@ -43,211 +43,190 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Initialization
 
-- (instancetype)init
-{
-	if ((self = [super init])) {
-		return self;
-	}
+- (instancetype)init {
+  if ((self = [super init])) {
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_BEGIN
-- (instancetype)initOnCopy
-{
-	if ((self = [super init])) {
-		return self;
-	}
+- (instancetype)initOnCopy {
+  if ((self = [super init])) {
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 
-- (instancetype)initOnMutate
-{
-	if ((self = [super init])) {
-		return self;
-	}
+- (instancetype)initOnMutate {
+  if ((self = [super init])) {
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 
-- (nullable instancetype)initWithCoder:(NSCoder *)coder
-{
-	NSParameterAssert(coder != nil);
+- (nullable instancetype)initWithCoder:(NSCoder *)coder {
+  NSParameterAssert(coder != nil);
 
-	if ((self = [super init])) {
-		[self populateDefaultsPreflight];
+  if ((self = [super init])) {
+    [self populateDefaultsPreflight];
 
-		if ([self populateWithDecoder:coder] == NO) {
-			return nil;
-		}
+    if ([self populateWithDecoder:coder] == NO) {
+      return nil;
+    }
 
-		[self populateDefaultsPostflight];
+    [self populateDefaultsPostflight];
 
-		[self initializedClassHealthCheck];
+    [self initializedClassHealthCheck];
 
-		return self;
-	}
+    return self;
+  }
 
-	return nil;
+  return nil;
 }
 DESIGNATED_INITIALIZER_EXCEPTION_BODY_END
 
-- (void)encodeWithCoder:(nonnull NSCoder *)coder
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (void)encodeWithCoder:(nonnull NSCoder *)coder {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-- (void)initializedClassHealthCheck
-{
+- (void)initializedClassHealthCheck {
 }
 
-- (void)populateDefaultsPostflight
-{
+- (void)populateDefaultsPostflight {
 }
 
-- (void)populateDefaultsPreflight
-{
+- (void)populateDefaultsPreflight {
 }
 
-- (void)performInitialization
-{
+- (void)performInitialization {
 }
 
-- (BOOL)populateWithDecoder:(NSCoder *)coder
-{
-	return NO;
+- (BOOL)populateWithDecoder:(NSCoder *)coder {
+  return NO;
 }
 
-- (BOOL)isEqual:(id)object
-{
-	if (object == nil) {
-		return NO;
-	}
+- (BOOL)isEqual:(id)object {
+  if (object == nil) {
+    return NO;
+  }
 
-	return (object == self);
+  return (object == self);
 }
 
 #pragma mark -
 #pragma mark Getters
 
-- (__kindof XRPortablePropertyObject *)mutableClass
-{
-	if (self.mutable == NO) {
-		NSAssert(NO,
-				 @"The default implementation of -mutableClass returns `self`. "
-				  "This behavior does not work correctly if this property is not overridden"
-				  "in a class that is immutable because it will return a immutable class."
-				  "Please override -mutableClass property.");
-	}
+- (__kindof XRPortablePropertyObject *)mutableClass {
+  if (self.mutable == NO) {
+    NSAssert(NO, @"The default implementation of -mutableClass returns `self`. "
+                  "This behavior does not work correctly if this property is "
+                  "not overridden"
+                  "in a class that is immutable because it will return a "
+                  "immutable class."
+                  "Please override -mutableClass property.");
+  }
 
-	return self;
+  return self;
 }
 
-- (__kindof XRPortablePropertyObject *)immutableClass
-{
-	if (self.mutable) {
-		NSAssert(NO,
-				 @"The default implementation of -immutableClass returns `self`. "
-				  "This behavior does not work correctly if this property is not overridden"
-				  "in a class that is mutable because it will return a mutable class."
-				  "Please override -immutableClass property.");
-	}
+- (__kindof XRPortablePropertyObject *)immutableClass {
+  if (self.mutable) {
+    NSAssert(
+        NO,
+        @"The default implementation of -immutableClass returns `self`. "
+         "This behavior does not work correctly if this property is not "
+         "overridden"
+         "in a class that is mutable because it will return a mutable class."
+         "Please override -immutableClass property.");
+  }
 
-	return self;
+  return self;
 }
 
-- (BOOL)copyByReference
-{
-	return YES;
+- (BOOL)copyByReference {
+  return YES;
 }
 
-+ (BOOL)isMutable
-{
-	return NO;
++ (BOOL)isMutable {
+  return NO;
 }
 
-- (BOOL)isMutable
-{
-	return ((__kindof XRPortablePropertyObject *)self.class).mutable;
+- (BOOL)isMutable {
+  return ((__kindof XRPortablePropertyObject *)self.class).mutable;
 }
 
-+ (BOOL)supportsSecureCoding
-{
-	return NO;
++ (BOOL)supportsSecureCoding {
+  return NO;
 }
 
 #pragma mark -
 #pragma mark Copying
 
-- (id)copyWithZone:(nullable NSZone *)zone
-{
-	if (self.mutable == NO && self.copyByReference) {
-		return self;
-	}
+- (id)copyWithZone:(nullable NSZone *)zone {
+  if (self.mutable == NO && self.copyByReference) {
+    return self;
+  }
 
-	return [self copyAsMutable:NO];
+  return [self copyAsMutable:NO];
 }
 
-- (id)mutableCopyWithZone:(nullable NSZone *)zone
-{
-	return [self copyAsMutable:YES];
+- (id)mutableCopyWithZone:(nullable NSZone *)zone {
+  return [self copyAsMutable:YES];
 }
 
-- (id)allocForCopyAsMutable:(BOOL)mutableCopy
-{
-	XRPortablePropertyObject *object = ((mutableCopy) ? self.mutableClass : self.immutableClass);
+- (id)allocForCopyAsMutable:(BOOL)mutableCopy {
+  XRPortablePropertyObject *object =
+      ((mutableCopy) ? self.mutableClass : self.immutableClass);
 
-	Class objectClass = [object class];
+  Class objectClass = [object class];
 
-	object = [objectClass alloc];
+  object = [objectClass alloc];
 
-	object.initializedAsCopy = YES;
+  object.initializedAsCopy = YES;
 
-	return object;
+  return object;
 }
 
-- (id)copyAsMutable:(BOOL)mutableCopy
-{
-	return [self copyAsMutable:mutableCopy uniquing:NO];
+- (id)copyAsMutable:(BOOL)mutableCopy {
+  return [self copyAsMutable:mutableCopy uniquing:NO];
 }
 
-- (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing
-{
-	XRPortablePropertyObject *object = [self allocForCopyAsMutable:mutableCopy];
+- (id)copyAsMutable:(BOOL)mutableCopy uniquing:(BOOL)uniquing {
+  XRPortablePropertyObject *object = [self allocForCopyAsMutable:mutableCopy];
 
-	if (uniquing) {
-		[self populateDuringUniqueCopy:object mutableCopy:mutableCopy];
-	} else {
-		[self populateDuringCopy:object mutableCopy:mutableCopy];
-	}
+  if (uniquing) {
+    [self populateDuringUniqueCopy:object mutableCopy:mutableCopy];
+  } else {
+    [self populateDuringCopy:object mutableCopy:mutableCopy];
+  }
 
-	return [object initOnCopy];
+  return [object initOnCopy];
 }
 
-- (id)uniqueCopyAsMutable:(BOOL)mutableCopy
-{
-	return [self copyAsMutable:mutableCopy uniquing:YES];
+- (id)uniqueCopyAsMutable:(BOOL)mutableCopy {
+  return [self copyAsMutable:mutableCopy uniquing:YES];
 }
 
-- (id)uniqueCopy
-{
-	return [self uniqueCopyAsMutable:NO];
+- (id)uniqueCopy {
+  return [self uniqueCopyAsMutable:NO];
 }
 
-- (id)uniqueCopyMutable
-{
-	return [self uniqueCopyAsMutable:YES];
+- (id)uniqueCopyMutable {
+  return [self uniqueCopyAsMutable:YES];
 }
 
-- (void)populateDuringCopy:(__kindof XRPortablePropertyObject *)newObject mutableCopy:(BOOL)mutableCopy
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (void)populateDuringCopy:(__kindof XRPortablePropertyObject *)newObject
+               mutableCopy:(BOOL)mutableCopy {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
-- (void)populateDuringUniqueCopy:(__kindof XRPortablePropertyObject *)newObject mutableCopy:(BOOL)mutableCopy
-{
-	[self doesNotRecognizeSelector:_cmd];
+- (void)populateDuringUniqueCopy:(__kindof XRPortablePropertyObject *)newObject
+                     mutableCopy:(BOOL)mutableCopy {
+  [self doesNotRecognizeSelector:_cmd];
 }
 
 @end

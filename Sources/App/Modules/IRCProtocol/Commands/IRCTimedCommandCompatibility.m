@@ -36,10 +36,9 @@
  *********************************************************************** */
 
 #import "IRCClientPrivate.h"
-#import "IRCTimerCommandPrivate.h"
 #import "IRCTimedCommandCallbackPrivate.h"
+#import "IRCTimerCommandPrivate.h"
 
-void IRCInvokeTimedCommand(IRCClient *client, id timedCommand)
-{
-	[client onTimedCommand:(IRCTimedCommand *)timedCommand];
+void IRCInvokeTimedCommand(IRCClient *client, id timedCommand) {
+  [client onTimedCommand:(IRCTimedCommand *)timedCommand];
 }

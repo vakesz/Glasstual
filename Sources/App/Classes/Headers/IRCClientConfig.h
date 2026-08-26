@@ -91,7 +91,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, copy, nullable) NSData *identityClientSideCertificate;
 @property(readonly, copy, nullable) NSString *awayNickname;
 @property(readonly, copy, nullable)
-	NSString *saslMechanismPreference; // A SASL mechanism name to use over the automatic choice, or nil
+    NSString *saslMechanismPreference; // A SASL mechanism name to use over the
+                                       // automatic choice, or nil
 /* Text sent in reply to a CTCP VERSION request on this connection.
  nil uses the application default (or the global masquerade). */
 @property(readonly, copy, nullable) NSString *ctcpVersionReply;
@@ -103,10 +104,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly, copy, nullable) NSString *proxyUsername;
 @property(readonly) RCMCipherSuiteCollection cipherSuites;
 
-- (instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dic
-			 ignorePrivateMessages:(BOOL)ignorePrivateMessages NS_DESIGNATED_INITIALIZER;
+/* Persistence hooks are overridable so non-keychain configurations, including
+ tests and ephemeral sessions, can control credential storage. */
+- (void)writeNicknamePasswordToKeychain;
+- (void)writeProxyPasswordToKeychain;
 
-+ (instancetype)newConfigByMerging:(IRCClientConfig *)config1 with:(IRCClientConfig *)config2;
+- (instancetype)initWithDictionary:(NSDictionary<NSString *, id> *)dic
+             ignorePrivateMessages:(BOOL)ignorePrivateMessages
+    NS_DESIGNATED_INITIALIZER;
+
++ (instancetype)newConfigByMerging:(IRCClientConfig *)config1
+                              with:(IRCClientConfig *)config2;
 
 + (instancetype)newConfigWithNetwork:(IRCNetwork *)network;
 @end
@@ -122,10 +130,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) BOOL hideAutojoinDelayedWarnings;
 @property(nonatomic, assign, readwrite) BOOL hideNetworkUnavailabilityNotices;
 @property(nonatomic, assign, readwrite) BOOL performDisconnectOnPongTimer;
-@property(nonatomic, assign, readwrite) BOOL performDisconnectOnReachabilityChange;
+@property(nonatomic, assign, readwrite)
+    BOOL performDisconnectOnReachabilityChange;
 @property(nonatomic, assign, readwrite) BOOL performPongTimer;
-@property(nonatomic, assign, readwrite) BOOL saslAuthenticationDisableExternalMechanism;
-@property(nonatomic, assign, readwrite) BOOL sendAuthenticationRequestsToUserServ;
+@property(nonatomic, assign, readwrite)
+    BOOL saslAuthenticationDisableExternalMechanism;
+@property(nonatomic, assign, readwrite)
+    BOOL sendAuthenticationRequestsToUserServ;
 @property(nonatomic, assign, readwrite) BOOL sendWhoCommandRequestsToChannels;
 @property(nonatomic, assign, readwrite) BOOL setInvisibleModeOnConnect;
 @property(nonatomic, assign, readwrite) BOOL runConnectCommandsSilently;
@@ -140,12 +151,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, assign, readwrite) NSStringEncoding fallbackEncoding;
 @property(nonatomic, assign, readwrite) NSStringEncoding primaryEncoding;
 @property(nonatomic, assign, readwrite) NSTimeInterval lastMessageServerTime;
-@property(nonatomic, assign, readwrite) NSUInteger floodControlDelayTimerInterval;
+@property(nonatomic, assign, readwrite)
+    NSUInteger floodControlDelayTimerInterval;
 @property(nonatomic, assign, readwrite) NSUInteger floodControlMaximumMessages;
 @property(nonatomic, assign, readwrite) uint16_t proxyPort;
 @property(nonatomic, copy, readwrite) NSArray<IRCChannelConfig *> *channelList;
-@property(nonatomic, copy, readwrite) NSArray<IRCHighlightMatchCondition *> *highlightList;
-@property(nonatomic, copy, readwrite) NSArray<IRCAddressBookEntry *> *ignoreList;
+@property(nonatomic, copy, readwrite)
+    NSArray<IRCHighlightMatchCondition *> *highlightList;
+@property(nonatomic, copy, readwrite)
+    NSArray<IRCAddressBookEntry *> *ignoreList;
 @property(nonatomic, copy, readwrite) NSArray<NSString *> *alternateNicknames;
 @property(nonatomic, copy, readwrite) NSArray<NSString *> *loginCommands;
 @property(nonatomic, copy, readwrite) NSArray<IRCServer *> *serverList;
@@ -155,9 +169,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, readwrite) NSString *realName;
 @property(nonatomic, copy, readwrite) NSString *sleepModeLeavingComment;
 @property(nonatomic, copy, readwrite) NSString *username;
-@property(nonatomic, copy, readwrite, nullable) NSData *identityClientSideCertificate;
+@property(nonatomic, copy, readwrite, nullable)
+    NSData *identityClientSideCertificate;
 @property(nonatomic, copy, readwrite, nullable) NSString *awayNickname;
-@property(nonatomic, copy, readwrite, nullable) NSString *saslMechanismPreference;
+@property(nonatomic, copy, readwrite, nullable)
+    NSString *saslMechanismPreference;
 @property(nonatomic, copy, readwrite, nullable) NSString *ctcpVersionReply;
 @property(nonatomic, copy, readwrite, nullable) NSString *nicknamePassword;
 @property(nonatomic, copy, readwrite, nullable) NSString *proxyAddress;
