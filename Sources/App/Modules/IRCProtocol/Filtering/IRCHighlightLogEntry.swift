@@ -39,7 +39,22 @@ public class HighlightLogEntry: XRPortablePropertyObject {
 	}
 
 	@objc public var channel: IRCChannel? {
-		NSObject.masterController().world.findChannel(withId: channelId, onClientWithId: clientId)
+		let channelId = channelIdStorage
+		let clientId = clientIdStorage
+
+		if Thread.isMainThread {
+			return MainActor.assumeIsolated {
+				NSObject.masterController().world.findChannel(withId: channelId, onClientWithId: clientId)
+			}
+		}
+
+		nonisolated(unsafe) var resolvedChannel: IRCChannel?
+		XRPerformBlockSynchronouslyOnMainQueue {
+			resolvedChannel = MainActor.assumeIsolated {
+				NSObject.masterController().world.findChannel(withId: channelId, onClientWithId: clientId)
+			}
+		}
+		return resolvedChannel
 	}
 
 	@objc public var channelName: String {

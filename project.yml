@@ -173,7 +173,6 @@ settings:
 
 fileGroups:
   - README.md
-  - Brewfile
 
 # ---------------------------------------------------------------------------
 # Reusable fragments
@@ -391,7 +390,7 @@ targets:
       - path: Sources/Services/Historic Log File Manager/Classes
       - path: Sources/Services/Historic Log File Manager/Resources
       - path: Sources/Shared/Headers
-      - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.m
+      - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
       - path: Sources/Shared/Views/Channel View/TVCLogLineXPC.swift
     dependencies:
       - sdk: CoreData.framework
@@ -446,8 +445,8 @@ targets:
       - path: Sources/Services/Inline Content Loader/Resources/Modules/InlineImageLiveResize.js
         buildPhase: resources
       - path: Sources/Shared/Headers
-      - path: Sources/Shared/Preferences/TPCPreferences.m
-      - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.m
+      - path: Sources/Shared/Preferences/TPCPreferences.swift
+      - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
     dependencies:
       - sdk: ImageIO.framework
       - framework: Sources/Frameworks/Static Libraries/Libraries/GRMustache.framework
@@ -535,10 +534,8 @@ targets:
       - path: Sources/Services/IRC Remote Connection Manager/Classes
       - path: Sources/Services/IRC Remote Connection Manager/Resources/Language Files
       - path: Sources/Shared/Headers
-      - path: Sources/Shared/Helpers/Cocoa (Objective-C)/NSObjectHelper.m
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
-      - path: Sources/Shared/Library/TLOLocalization.m
       - path: Sources/Shared/Library/TLOLocalization.swift
       - path: Sources/Shared/Library/TLOTimer.swift
     dependencies:
@@ -807,64 +804,6 @@ targets:
     sources:
       - path: Sources/App/Classes
       - path: Sources/App/Modules
-        excludes:
-          - "AppKitSupport/TDCFileTransferDialog.swift"
-          - "AppKitSupport/TDCFileTransferDialogSocket.swift"
-          - "AppKitSupport/TDCFileTransferDialogSocketConstants.m"
-          - "AppKitSupport/TDCFileTransferDialogTransferController.swift"
-          - "AppKitSupport/TVCLogLine.swift"
-          - "AppKitSupport/TVCLogLineCompatibility.m"
-          - "AppKitSupport/TVCLogLineConstants.m"
-          - "AppKitSupport/TVCLogView.swift"
-          - "AppKitSupport/TVCLogViewConsoleShim.m"
-          - "AppKitSupport/TVCLogViewConstants.m"
-          - "AppKitSupport/TVCLogViewInternalWK2.swift"
-          - "IRCProtocol/IRCProtocolObjCConstants.m"
-          - "IRCProtocol/Presence/IRCChannel.swift"
-          - "IRCProtocol/Presence/IRCWorld.swift"
-          - "Plugins/**"
-      - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialog.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialogSocket.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialogSocketConstants.m
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TDCFileTransferDialogTransferController.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCLogLine.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCLogView.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/AppKitSupport/TVCLogViewInternalWK2.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/IRCProtocol/Presence/IRCChannel.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/IRCProtocol/Presence/IRCWorld.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/Plugins/THOPluginDispatcher.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/Plugins/THOPluginManager.swift
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/Plugins/THOPluginConcreteObjects.m
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/Plugins/THOPluginConstants.m
-        optional: true
-        buildPhase: none
-      - path: Sources/App/Modules/Plugins/IRCMessagePluginExtension.m
-        optional: true
-        buildPhase: none
       - path: Sources/Shared
       - path: Sources/Services/Inline Content Loader/Classes/Service/ICLPayload.swift
       # Resources -----------------------------------------------------------

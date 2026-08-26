@@ -194,8 +194,8 @@ final class IRCModelMigrationTests: XCTestCase {
 	}
 
 	func testUserPersistentStoreHoldsRelationsAndTimerSlot() {
-		let store = IRCUserPersistentStore()
-		let relations = IRCUserRelations()
+		let store = UserPersistentStore()
+		let relations = UserRelations()
 		store.relations = relations
 		store.presentAwayMessageFor301LastEvent = 12.5
 

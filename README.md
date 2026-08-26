@@ -69,7 +69,7 @@ Glasstual requires Xcode 26 or later on macOS 26 (Tahoe) or later, an Apple Sili
 
 This tree has **no paid-license or trial checks**. Precompiled store builds of Textual from codeux.com are a separate product.
 
-1. Install the development tools: `brew bundle` (this includes XcodeGen).
+1. Install the development tools: `actionlint`, `shellcheck`, `shfmt`, `swiftformat`, `swiftlint` and `xcodegen`.
 2. Set your Apple Developer **Team ID** as `DEVELOPMENT_TEAM` in [`project.yml`](project.yml) and, if you are not building the official fork, `GLASSTUAL_BUNDLE_IDENTIFIER` there too. The defaults are:
    - Bundle ID: `com.vakesz.glasstual`
    - Team ID: `H8W5DK3FN2`
@@ -94,7 +94,6 @@ This tree has **no paid-license or trial checks**. Precompiled store builds of T
 Install the development tools and run the repository-wide checks with:
 
 ```sh
-make setup    # brew bundle
 make test     # unit tests (GlasstualTests, run inside the Debug app)
 make lint     # SwiftLint, SwiftFormat, shellcheck, actionlint and resource validation
 make format   # clang-format, SwiftFormat, shfmt

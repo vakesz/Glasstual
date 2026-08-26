@@ -433,9 +433,29 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 			from: pasteboardData
 		) as? [String: Any],
 			let channelID = payload["channelId"] as? String,
-			let channel = masterController().world.findItem(withId: channelID) as? IRCChannel,
 			let nicknames = payload["nicknames"] as? [String]
 		else {
+			return false
+		}
+
+		let masterController = masterController()
+		let channel: IRCChannel?
+
+		if Thread.isMainThread {
+			channel = MainActor.assumeIsolated {
+				masterController.world.findItem(withId: channelID) as? IRCChannel
+			}
+		} else {
+			nonisolated(unsafe) var resolvedChannel: IRCChannel?
+			XRPerformBlockSynchronouslyOnMainQueue {
+				resolvedChannel = MainActor.assumeIsolated {
+					masterController.world.findItem(withId: channelID) as? IRCChannel
+				}
+			}
+			channel = resolvedChannel
+		}
+
+		guard let channel else {
 			return false
 		}
 

@@ -14,10 +14,10 @@ import AppKit
 
 @objc(TVCDockIcon)
 public final class DockIcon: NSObject {
-	private nonisolated(unsafe) static var cachedHighlightCount: Int = -1
-	private nonisolated(unsafe) static var cachedMessageCount: Int = -1
+	@MainActor private static var cachedHighlightCount: Int = -1
+	@MainActor private static var cachedMessageCount: Int = -1
 
-	@objc public class func updateDockIcon() {
+	@MainActor @objc public class func updateDockIcon() {
 		guard TPCPreferences.displayDockBadge() else {
 			return
 		}
@@ -47,12 +47,12 @@ public final class DockIcon: NSObject {
 		}
 	}
 
-	@objc public class func resetCachedCount() {
+	@MainActor @objc public class func resetCachedCount() {
 		cachedMessageCount = -1
 		cachedHighlightCount = -1
 	}
 
-	@objc public class func drawWithoutCount() {
+	@MainActor @objc public class func drawWithoutCount() {
 		if cachedHighlightCount == 0, cachedMessageCount == 0 {
 			return
 		}
@@ -67,7 +67,7 @@ public final class DockIcon: NSObject {
 	}
 
 	@objc(drawWithHighlightCount:messageCount:)
-	public class func draw(withHighlightCount highlightCount: UInt, messageCount: UInt) {
+	@MainActor public class func draw(withHighlightCount highlightCount: UInt, messageCount: UInt) {
 		if cachedHighlightCount == Int(highlightCount), cachedMessageCount == Int(messageCount) {
 			return
 		}

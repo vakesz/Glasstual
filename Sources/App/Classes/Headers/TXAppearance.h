@@ -85,9 +85,10 @@ typedef NS_ENUM(NSUInteger, TXAppKitAppearanceTarget) {
 @property(readonly, strong) TXAppearancePropertyCollection *properties;
 @end
 
-GLASSTUAL_EXTERN NSNotificationName const
-    TXApplicationAppearanceChangedNotification;
-GLASSTUAL_EXTERN NSNotificationName const TXSystemAppearanceChangedNotification;
+static NSNotificationName const TXApplicationAppearanceChangedNotification =
+    @"TXApplicationAppearanceChangedNotification";
+static NSNotificationName const TXSystemAppearanceChangedNotification =
+    @"TXSystemAppearanceChangedNotification";
 
 NS_ASSUME_NONNULL_END
 

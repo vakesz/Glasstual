@@ -45,15 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 @class IRCChannelConfig, IRCChannelMode, IRCChannelUser, IRCUser;
 @class TVCLogLine;
 
-typedef NS_ENUM(NSUInteger, IRCChannelStatus) {
-  IRCChannelStatusParted = 0,
-  IRCChannelStatusJoining,
-  IRCChannelStatusJoined,
-  IRCChannelStatusTerminated,
-};
-
-GLASSTUAL_EXTERN NSNotificationName const
-    IRCChannelConfigurationWasUpdatedNotification;
+static NSNotificationName const IRCChannelConfigurationWasUpdatedNotification =
+    @"IRCChannelConfigurationWasUpdatedNotification";
 
 @interface IRCChannel : IRCTreeItem <IRCChannelMemberListPrototype>
 @property(readonly, copy) IRCChannelConfig *config;

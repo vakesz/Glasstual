@@ -254,11 +254,16 @@ public final class FileLogger: NSObject {
 	}
 
 	private func writePath(relativeTo sourcePath: String) -> String? {
-		guard let item = channel ?? client else {
+		if let channel {
+			let treeItem = (channel as AnyObject) as! IRCTreeItem
+			return Self.writePath(for: treeItem, relativeTo: sourcePath)
+		}
+
+		guard let client else {
 			return nil
 		}
 
-		return Self.writePath(for: item, relativeTo: sourcePath)
+		return Self.writePath(for: client, relativeTo: sourcePath)
 	}
 
 	private func buildFilePath() -> Bool {

@@ -19,6 +19,7 @@ private let extrasLogger = Logger(
 )
 
 @objc(IRCExtras)
+@MainActor
 public final class Extras: NSObject {
 	// MARK: - Glasstual URL Scheme
 
@@ -477,7 +478,8 @@ public final class Extras: NSObject {
 			NSObject.masterController().world.save()
 
 			if selectFirstChannelAdded, let firstChannelAdded {
-				NSObject.masterController().mainWindow.select(firstChannelAdded)
+				let treeItem = (firstChannelAdded as AnyObject) as! IRCTreeItem
+				NSObject.masterController().mainWindow.select(treeItem)
 			}
 		} else {
 			let baseConfig = IRCClientConfigMutable()
@@ -512,7 +514,7 @@ public final class Extras: NSObject {
 			baseConfig.setValue(channelListConfigs, forKey: "channelList")
 
 			let client = NSObject.masterController().world.createClient(
-				with: baseConfig,
+				with: bridgeClientConfigToObjectiveC(baseConfig),
 				reload: true
 			)
 

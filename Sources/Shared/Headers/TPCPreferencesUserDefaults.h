@@ -35,13 +35,16 @@
  *
  *********************************************************************** */
 
+#include "BuildConfig.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 #define RZUserDefaults() [TPCPreferencesUserDefaults sharedUserDefaults]
 
 /* The user info dictionary of this notification contains the changed key. */
-GLASSTUAL_EXTERN NSNotificationName const
-    TPCPreferencesUserDefaultsDidChangeNotification;
+static NSNotificationName const
+    TPCPreferencesUserDefaultsDidChangeNotification =
+        @"TPCPreferencesUserDefaultsDidChangeNotification";
 
 /* TPCPreferencesUserDefaults subclasses NSUserDefaults to allow Glasstual to
  fire off notifications for changed keys on a per-key basis so that the iCloud

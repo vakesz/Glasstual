@@ -47,40 +47,57 @@ typedef NSString *TVCLogRendererResultsAttribute NS_STRING_ENUM;
 /* Properties to configure the renderer and provide additional
  context so that it can provide the best possible results. */
 /* These properties do not apply to attributed strings */
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-    TVCLogRendererConfigurationRenderLinksAttribute; // BOOL
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-    TVCLogRendererConfigurationLineTypeAttribute; // TVCLogLineType
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-    TVCLogRendererConfigurationMemberTypeAttribute; // TVCLogMemberType
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-    TVCLogRendererConfigurationHighlightKeywordsAttribute; // NSArray<NSString
-                                                           // *>
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-    TVCLogRendererConfigurationExcludedKeywordsAttribute; // NSArray<NSString *>
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-    TVCLogRendererConfigurationDoNotEscapeBodyAttribute; // BOOL
+static TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationRenderLinksAttribute =
+        @"TVCLogRendererConfigurationRenderLinksAttribute"; // BOOL
+static TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationLineTypeAttribute =
+        @"TVCLogRendererConfigurationLineTypeAttribute"; // TVCLogLineType
+static TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationMemberTypeAttribute =
+        @"TVCLogRendererConfigurationMemberTypeAttribute"; // TVCLogMemberType
+static TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationHighlightKeywordsAttribute =
+        @"TVCLogRendererConfigurationHighlightKeywordsAttribute"; // NSArray<NSString
+                                                                  // *>
+static TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationExcludedKeywordsAttribute =
+        @"TVCLogRendererConfigurationExcludedKeywordsAttribute"; // NSArray<NSString
+                                                                 // *>
+static TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationDoNotEscapeBodyAttribute =
+        @"TVCLogRendererConfigurationDoNotEscapeBodyAttribute"; // BOOL
 
 /* These properties apply to attributed strings */
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-    TVCLogRendererConfigurationAttributedStringPreferredFontAttribute; // NSFont
-GLASSTUAL_EXTERN TVCLogRendererConfigurationAttribute const
-    TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute; // NSColor
+static TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationAttributedStringPreferredFontAttribute =
+        @"TVCLogRendererConfigurationAttributedStringPreferredFontAttribute"; // NSFont
+static TVCLogRendererConfigurationAttribute const
+    TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute =
+        @"TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribut"
+        @"e"; // NSColor
 
 /* Properties that are returned in the outputDictionary of a render */
 /* The output dictionary is not guaranteed to contain any key. */
-GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-    TVCLogRendererResultsListOfLinksInBodyAttribute; // NSArray<TLOLinkParserResult
-                                                     // *>
-GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-    TVCLogRendererResultsListOfLinksMappedInBodyAttribute; // NSDictionary<NSString
-                                                           // *, NSString *>
-GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-    TVCLogRendererResultsKeywordMatchFoundAttribute; // BOOL
-GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-    TVCLogRendererResultsListOfUsersFoundAttribute; // NSSet<IRCChannelUser *>
-GLASSTUAL_EXTERN TVCLogRendererResultsAttribute const
-    TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute; // NSString
+static TVCLogRendererResultsAttribute const
+    TVCLogRendererResultsListOfLinksInBodyAttribute =
+        @"TVCLogRendererResultsListOfLinksInBodyAttribute"; // NSArray<TLOLinkParserResult
+                                                            // *>
+static TVCLogRendererResultsAttribute const
+    TVCLogRendererResultsListOfLinksMappedInBodyAttribute =
+        @"TVCLogRendererResultsListOfLinksMappedInBodyAttribute"; // NSDictionary<NSString
+                                                                  // *, NSString
+                                                                  // *>
+static TVCLogRendererResultsAttribute const
+    TVCLogRendererResultsKeywordMatchFoundAttribute =
+        @"TVCLogRendererResultsKeywordMatchFoundAttribute"; // BOOL
+static TVCLogRendererResultsAttribute const
+    TVCLogRendererResultsListOfUsersFoundAttribute =
+        @"TVCLogRendererResultsListOfUsersFoundAttribute"; // NSSet<IRCChannelUser
+                                                           // *>
+static TVCLogRendererResultsAttribute const
+    TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute =
+        @"TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute"; // NSString
 
 @interface TVCLogRenderer : NSObject
 + (NSString *)escapeHTML:(NSString *)html;

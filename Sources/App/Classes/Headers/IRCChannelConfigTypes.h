@@ -45,4 +45,11 @@ typedef NS_ENUM(NSUInteger, IRCChannelType) {
   IRCChannelTypeDirectChat, // DCC CHAT. Never persisted.
 };
 
+typedef NS_ENUM(NSUInteger, IRCChannelStatus) {
+  IRCChannelStatusParted = 0,
+  IRCChannelStatusJoining,
+  IRCChannelStatusJoined,
+  IRCChannelStatusTerminated,
+};
+
 NS_ASSUME_NONNULL_END

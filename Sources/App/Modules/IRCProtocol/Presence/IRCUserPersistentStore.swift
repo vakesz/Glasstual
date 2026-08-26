@@ -12,9 +12,8 @@
 
 import Foundation
 
-@objc(IRCUserPersistentStore)
-public final class UserPersistentStore: NSObject {
-	@objc public var relations: UserRelations?
-	@objc public var presentAwayMessageFor301LastEvent: CFAbsoluteTime = 0
-	@objc public var removeUserTimer: DispatchSource?
+final class UserPersistentStore {
+	var relations: UserRelations?
+	var presentAwayMessageFor301LastEvent: CFAbsoluteTime = 0
+	var removeUserTimer: (any DispatchSourceTimer)?
 }

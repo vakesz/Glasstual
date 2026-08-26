@@ -512,7 +512,10 @@ public final class TDCAlert: NSObject {
 		/* A sheet on the main window is preferred so that the alert is
 		 attached to what it is about. When the main window is hidden, any other
 		 visible window hosts the sheet instead. */
-		var hostWindow: NSWindow? = NSObject.masterController().mainWindow
+		let masterController = NSObject.masterController()
+		var hostWindow: NSWindow? = MainActor.assumeIsolated {
+			masterController.mainWindow
+		}
 
 		if hostWindow?.isVisible == false {
 			hostWindow = nil

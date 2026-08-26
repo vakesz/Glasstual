@@ -13,6 +13,7 @@
 import AppKit
 
 @objc(TDCChannelSpotlightController)
+@MainActor
 public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource, NSTableViewDelegate,
 	NSControlTextEditingDelegate, NSWindowDelegate
 {
@@ -29,9 +30,11 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 	private var mouseEventMonitor: Any?
 
-	override public init() {
+	override public nonisolated init() {
 		super.init()
-		prepareInitialState()
+		MainActor.assumeIsolated {
+			prepareInitialState()
+		}
 	}
 
 	private func prepareInitialState() {
@@ -359,14 +362,22 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		close()
 	}
 
-	override public func close() {
-		saveWindowFrame()
-		window!.close()
+	override public nonisolated func close() {
+		MainActor.preconditionIsolated()
+		nonisolated(unsafe) let controller = self
+		MainActor.assumeIsolated {
+			controller.saveWindowFrame()
+			controller.window!.close()
+		}
 	}
 
-	override public func show() {
-		restoreWindowFrame()
-		window!.makeKeyAndOrderFront(nil)
+	override public nonisolated func show() {
+		MainActor.preconditionIsolated()
+		nonisolated(unsafe) let controller = self
+		MainActor.assumeIsolated {
+			controller.restoreWindowFrame()
+			controller.window!.makeKeyAndOrderFront(nil)
+		}
 	}
 
 	private func restoreWindowFrame() {
@@ -400,7 +411,10 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 	private func updatePredicate() {
 		if TPCPreferences.channelNavigationIsServerSpecific() {
-			let clientId = NSObject.masterController().mainWindow.selectedClient?.uniqueIdentifier ?? ""
+			let masterController = NSObject.masterController()
+			let clientId = MainActor.assumeIsolated {
+				masterController.mainWindow.selectedClient?.uniqueIdentifier ?? ""
+			}
 
 			searchResultsController.filterPredicate = NSPredicate(
 				format: "distance >= 0.5 && clientId LIKE[c] %@",

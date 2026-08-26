@@ -95,7 +95,9 @@ public final class ServerHighlightListSheet: SheetBase {
 			return
 		}
 
-		let viewController = channel.viewController
+		guard let viewController = channel.viewController else {
+			return
+		}
 
 		let channelId = channel.uniqueIdentifier
 		let clientId = clientId
@@ -115,7 +117,8 @@ public final class ServerHighlightListSheet: SheetBase {
 					return
 				}
 
-				NSObject.masterController().mainWindow.select(channel)
+				let treeItem = (channel as AnyObject) as! IRCTreeItem
+				NSObject.masterController().mainWindow.select(treeItem)
 				self?.cancel(nil)
 			}
 		}

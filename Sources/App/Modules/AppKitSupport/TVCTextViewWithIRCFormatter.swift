@@ -156,7 +156,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 		}
 	}
 
-	@objc public var attributedStringValue: NSAttributedString {
+	@objc open var attributedStringValue: NSAttributedString {
 		get { attributedString() }
 		set {
 			undoManager?.removeAllActions()
@@ -165,7 +165,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 		}
 	}
 
-	public func textDidChange(_: Notification) {
+	open func textDidChange(_: Notification) {
 		if stringLength < 1 {
 			resetTypeSetterAttributes()
 		}

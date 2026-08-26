@@ -138,7 +138,7 @@ public final class WindowController: NSObject {
 	}
 
 	@objc(maybeBringWindowForward:)
-	public func maybeBringWindowForward(_ windowDescription: String) -> Bool {
+	@MainActor public func maybeBringWindowForward(_ windowDescription: String) -> Bool {
 		guard let windowObject = window(fromWindowList: windowDescription) as AnyObject? else {
 			return false
 		}
@@ -153,7 +153,7 @@ public final class WindowController: NSObject {
 		return true
 	}
 
-	@objc public func popMainWindowSheetIfExists() {
+	@MainActor @objc public func popMainWindowSheetIfExists() {
 		guard let attachedSheet = NSObject.masterController().mainWindow.attachedSheet else {
 			return
 		}

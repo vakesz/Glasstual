@@ -279,7 +279,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 		NotificationCenter.default.addObserver(
 			self,
 			selector: #selector(underlyingConfigurationChanged(_:)),
-			name: .IRCChannelConfigurationWasUpdated,
+			name: .ircChannelConfigurationWasUpdated,
 			object: channel
 		)
 	}
@@ -287,7 +287,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	private func removeConfigurationDidChangeObserver() {
 		NotificationCenter.default.removeObserver(
 			self,
-			name: .IRCChannelConfigurationWasUpdated,
+			name: .ircChannelConfigurationWasUpdated,
 			object: nil
 		)
 	}

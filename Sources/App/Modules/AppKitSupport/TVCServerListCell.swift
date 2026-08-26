@@ -323,7 +323,7 @@ public class ServerListCell: NSTableCellView {
 		/* The inverted palette only matches the accent fill that is drawn
 		 while the window is active; an inactive selection is grey. */
 		messageCountBadgeImageView.image = messageCountBadge(
-			forCount: treeUnreadCount,
+			forCount: UInt(max(0, treeUnreadCount)),
 			isHighlight: isHighlight,
 			isSelected: isSelected && isWindowActive
 		)

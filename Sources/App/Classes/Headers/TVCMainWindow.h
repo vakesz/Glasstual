@@ -58,18 +58,18 @@ typedef NS_ENUM(NSUInteger, TVCServerListNavigationSelectionType) {
   TVCServerListNavigationSelectionTypeServer,  // Move to next server item
 };
 
-GLASSTUAL_EXTERN NSNotificationName const
-    TVCMainWindowAppearanceChangedNotification;
-GLASSTUAL_EXTERN NSNotificationName const
-    TVCMainWindowRedrawSubviewsNotification;
+static NSNotificationName const TVCMainWindowAppearanceChangedNotification =
+    @"TVCMainWindowAppearanceChangedNotification";
+static NSNotificationName const TVCMainWindowRedrawSubviewsNotification =
+    @"TVCMainWindowRedrawSubviewsNotification";
 
-GLASSTUAL_EXTERN NSNotificationName const
-    TVCMainWindowWillReloadThemeNotification;
-GLASSTUAL_EXTERN NSNotificationName const
-    TVCMainWindowDidReloadThemeNotification;
+static NSNotificationName const TVCMainWindowWillReloadThemeNotification =
+    @"TVCMainWindowWillReloadThemeNotification";
+static NSNotificationName const TVCMainWindowDidReloadThemeNotification =
+    @"TVCMainWindowDidReloadThemeNotification";
 
-GLASSTUAL_EXTERN NSNotificationName const
-    TVCMainWindowSelectionChangedNotification;
+static NSNotificationName const TVCMainWindowSelectionChangedNotification =
+    @"TVCMainWindowSelectionChangedNotification";
 
 @interface TVCMainWindow : NSWindow
 @property(readonly, getter=isDisabled) BOOL disabled;

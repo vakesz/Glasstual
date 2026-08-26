@@ -430,7 +430,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		/* -initWithConfig: moves the account password into the keychain. */
 		let client = world.createClient(with: config.copy() as! IRCClientConfig, reload: true)
 
-		mainWindow.expand(client)
+		mainWindow.expandClient(client)
 		world.save()
 		_ = mainWindow.reloadLoadingScreen()
 

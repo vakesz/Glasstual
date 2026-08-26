@@ -46,7 +46,7 @@
 #import "IRCAddressBookUserTrackingPrivate.h"
 #import "IRCChannelMemberListControllerPrivate.h"
 #import "IRCChannelModePrivate.h"
-#import "IRCChannelPrivate.h"
+/* IRCChannel is Swift (Channel); @testable import exposes its migration API. */
 #import "IRCClientRequestedCommandsPrivate.h"
 #import "IRCColorFormatPrivate.h"
 #import "IRCCommandIndexPrivate.h"
@@ -74,7 +74,8 @@
 #import "TLOSpokenNotificationPrivate.h"
 #import "TVCAutoExpandingTextField.h"
 #import "TVCAutoExpandingTokenField.h"
-#import "TVCMainWindowTextView.h"
+/* TVCMainWindowTextView is Swift; @testable import exposes its migration API.
+ */
 #import "TVCMemberListCellPrivate.h"
 #import "TVCMemberListPrivate.h"
 #import "TVCMemberListUserInfoPopoverPrivate.h"

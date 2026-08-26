@@ -54,7 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
 #define theme() [themeController() theme]
 #define themeSettings() [themeController() settings]
 
-GLASSTUAL_EXTERN NSErrorDomain const TXErrorDomain;
+static NSErrorDomain const TXErrorDomain = @"GlasstualErrorDomain";
 
 @interface TXSharedApplication : NSObject
 + (TXAppearance *)sharedAppearance;

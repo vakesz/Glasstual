@@ -167,7 +167,10 @@ extension NSMenuItem {
 extension NSObject {
 	@objc(isEqualIgnoringCase:)
 	func textual_isEqualIgnoringCase(_ other: Any) -> Bool {
-		isEqual(other)
+		if let left = self as? NSString, let right = other as? NSString {
+			return left.caseInsensitiveCompare(right as String) == .orderedSame
+		}
+		return isEqual(other)
 	}
 
 	@objc(cancelPerformRequests)

@@ -30,22 +30,26 @@ private func sortChannelViewSubviews(
 	_ secondView: NSView,
 	_: UnsafeMutableRawPointer?
 ) -> ComparisonResult {
-	guard let firstView = firstView as? MainWindowChannelViewSubview,
-	      let secondView = secondView as? MainWindowChannelViewSubview
-	else {
+	MainActor.assumeIsolated {
+		guard let firstView = firstView as? MainWindowChannelViewSubview,
+		      let secondView = secondView as? MainWindowChannelViewSubview
+		else {
+			return .orderedSame
+		}
+
+		if firstView.itemIndex < secondView.itemIndex {
+			return .orderedAscending
+		}
+
+		if firstView.itemIndex > secondView.itemIndex {
+			return .orderedDescending
+		}
+
 		return .orderedSame
 	}
-
-	if firstView.itemIndex < secondView.itemIndex {
-		return .orderedAscending
-	}
-
-	if firstView.itemIndex > secondView.itemIndex {
-		return .orderedDescending
-	}
-
-	return .orderedSame
 }
+
+private nonisolated(unsafe) var mainWindowChannelViewLayingOutKVOContext = 0
 
 @objc(TVCMainWindowChannelView)
 public final class MainWindowChannelView: NSSplitView {
@@ -53,10 +57,11 @@ public final class MainWindowChannelView: NSSplitView {
 	private var splitViewDelegate = MainWindowChannelViewDelegate()
 	private var itemIndexSelected = NSNotFound
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
-
-		delegate = splitViewDelegate
+		MainActor.assumeIsolated {
+			delegate = splitViewDelegate
+		}
 	}
 
 	override public func viewDidMoveToWindow() {
@@ -197,11 +202,11 @@ public final class MainWindowChannelView: NSSplitView {
 		mainWindow.channelViewSelectionChange(to: newItem)
 	}
 
-	private func backingView(for item: IRCTreeItem) -> TVCLogView {
+	private func backingView(for item: TreeItem) -> LogView {
 		item.viewController.backingView
 	}
 
-	private func subview(for _: IRCTreeItem) -> MainWindowChannelViewSubview {
+	private func subview(for _: TreeItem) -> MainWindowChannelViewSubview {
 		var splitViewFrame = frame
 		splitViewFrame.origin.x = 0.0
 		splitViewFrame.origin.y = 0.0
@@ -247,8 +252,6 @@ public final class MainWindowChannelView: NSSplitView {
 // MARK: - Overlay View
 
 private final class MainWindowChannelViewSubview: NSView {
-	private static var layingOutViewKVOContext = 0
-
 	var itemIndex: Int = 0
 	var overlayVisible = false
 	private var isObservingBackingView = false
@@ -264,7 +267,7 @@ private final class MainWindowChannelViewSubview: NSView {
 		}
 	}
 
-	var backingView: TVCLogView? {
+	var backingView: LogView? {
 		didSet {
 			if oldValue !== backingView {
 				teardownBackingView(previous: oldValue)
@@ -314,7 +317,7 @@ private final class MainWindowChannelViewSubview: NSView {
 		NSBezierPath.fill(dirtyRect)
 	}
 
-	private func teardownBackingView(previous backingView: TVCLogView?) {
+	private func teardownBackingView(previous backingView: LogView?) {
 		guard let backingView else {
 			return
 		}
@@ -323,7 +326,7 @@ private final class MainWindowChannelViewSubview: NSView {
 			backingView.removeObserver(
 				self,
 				forKeyPath: "layingOutView",
-				context: &Self.layingOutViewKVOContext
+				context: &mainWindowChannelViewLayingOutKVOContext
 			)
 			isObservingBackingView = false
 		}
@@ -348,7 +351,7 @@ private final class MainWindowChannelViewSubview: NSView {
 				self,
 				forKeyPath: "layingOutView",
 				options: .new,
-				context: &Self.layingOutViewKVOContext
+				context: &mainWindowChannelViewLayingOutKVOContext
 			)
 		}
 
@@ -396,13 +399,15 @@ private final class MainWindowChannelViewSubview: NSView {
 		change: [NSKeyValueChangeKey: Any]?,
 		context: UnsafeMutableRawPointer?
 	) {
-		guard context == &Self.layingOutViewKVOContext else {
+		guard context == &mainWindowChannelViewLayingOutKVOContext else {
 			super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
 			return
 		}
 
 		if keyPath == "layingOutView" {
-			toggleOverlayView()
+			MainActor.assumeIsolated {
+				toggleOverlayView()
+			}
 		}
 	}
 

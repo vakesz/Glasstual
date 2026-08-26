@@ -38,7 +38,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-GLASSTUAL_EXTERN NSString *const TVCLogViewCommonUserAgentString;
+static NSString *const TVCLogViewCommonUserAgentString = @"Glasstual/1.0";
 
 @interface TVCLogView : NSObject
 @property(readonly) BOOL hasSelection;

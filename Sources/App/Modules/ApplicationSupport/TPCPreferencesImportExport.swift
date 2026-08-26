@@ -172,9 +172,12 @@ public final class PreferencesImportExport: NSObject {
 		let world = NSObject.masterController().world!
 
 		if let client = world.findClient(withId: clientConfig.uniqueIdentifier) {
-			client.updateConfig(clientConfig)
+			client.updateConfig(bridgeClientConfigToObjectiveC(clientConfig))
 		} else {
-			_ = world.createClient(with: clientConfig, reload: true)
+			_ = world.createClient(
+				with: bridgeClientConfigToObjectiveC(clientConfig),
+				reload: true
+			)
 		}
 	}
 

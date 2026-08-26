@@ -38,19 +38,23 @@
 #import "GlasstualPrivate.h"
 #import "ICLPayload.h"
 #import "ICLPayloadLocalPrivate.h"
+#import "WKWebViewPrivate.h"
 
 // Core IRC types
 #import "IRCAddressBook.h"
 #import "IRCCapability.h"
-#import "IRCChannelPrivate.h"
-/* IRCChannelMemberList is Swift (ChannelMemberList). Keep its declarations
- out of the bridging graph. */
+#import "IRCChannelConfigTypes.h"
+#import "IRCChannelMemberList.h"
+#import "IRCChannelMemberListPrivate.h"
+/* IRCChannel is Swift (Channel). Keep its class declarations out of the
+ bridging graph so Swift exports the canonical Objective-C runtime class. */
 /* IRCChannelUser / IRCChannelUserMutable are Swift (ChannelUser /
  ChannelUserMutable). Import only the shared rank options here. */
 #import "IRCChannelMode.h"
 #import "IRCChannelUserTypes.h"
 #import "IRCClient.h"
-#import "IRCClientConfig.h"
+/* IRCClientConfig / IRCClientConfigMutable are Swift. Their shared connection
+ configuration enums come from IRCConnectionConfig.h below. */
 #import "IRCClientPrivate.h"
 #import "IRCColorFormatPrivate.h"
 #import "IRCCommandIndexPrivate.h"
@@ -63,21 +67,20 @@
 #import "IRCISupportInfoPrivate.h"
 #import "IRCPrefix.h"
 #import "RCMConnectionManagerProtocol.h"
-#import "TDCFileTransferDialogSocketPrivate.h"
+/* TDCFileTransferDialogSocket and its delegate/error types are Swift. Keep
+ their Objective-C declarations out of the bridging graph. */
 #import "TLOLinkParser.h"
 /* IRCMessage / IRCMessageMutable are Swift (Message / MessageMutable).
- Keep IRCMessage.h out of this bridging graph. Plugin category lives in
- THOPluginDispatcherSupport.m for ObjC callers. */
+ Keep IRCMessage.h out of this bridging graph. Plugin concrete objects are
+ implemented by THOPluginDispatcherSupport.swift for Objective-C callers. */
 #import "IRCMessageBatchPrivate.h"
 #import "IRCNetworkList.h"
 #import "IRCSTSPolicy.h"
 #import "IRCServerPrivate.h"
 /* IRCUser / IRCUserMutable are Swift (User / UserMutable). Keep IRCUser.h
  out of this bridging graph. */
-#import "IRCTimedCommandCallbackPrivate.h"
 #import "IRCTreeItemPrivate.h"
 #import "IRCTypingTrackerPrivate.h"
-#import "IRCUserPersistentStorePrivate.h"
 #import "IRCWorld.h"
 #import "IRCWorldPrivate.h"
 
@@ -93,9 +96,11 @@
 #import "TPCPreferencesUserDefaultsMigrationPrivate.h"
 #import "TPCResourceManager.h"
 #import "TPCResourceManagerPrivate.h"
-#import "TPCTheme.h"
-#import "TPCThemeController.h"
-#import "TPCThemeControllerPrivate.h"
+/* TPCTheme / TPCThemeSettings are Swift. Import only their shared enum and
+ value declarations so Swift exports the canonical Objective-C classes. */
+#import "TPCThemeTypes.h"
+/* TPCThemeController is Swift; keep its Objective-C class declarations out of
+ the bridging graph so Swift exports the canonical runtime class. */
 /* TXMasterController is Swift (MasterController). Keep TXMasterController.h
  out of this bridging graph. */
 #import "TLOTimer.h"
@@ -118,8 +123,8 @@
 #import "TVCLogControllerInlineMediaServicePrivate.h"
 #import "TVCLogPolicyPrivate.h"
 #import "TVCLogViewPrivate.h"
-#import "TVCMainWindow.h"
-#import "TVCMainWindowPrivate.h"
+/* TVCMainWindow is implemented in Swift. Keep its class and category
+ declarations out of the bridging graph. */
 
 // Networking and notifications
 #import "OELReachability.h"
@@ -129,7 +134,7 @@
 #import "TDCChannelModifyModesSheetPrivate.h"
 #import "TDCChannelModifyTopicSheetPrivate.h"
 #import "TDCChannelSpotlightSearchResultPrivate.h"
-#import "TDCFileTransferDialogTransferControllerPrivate.h"
+/* TDCFileTransferDialogTransferController is implemented in Swift. */
 #import "TDCFileTransferDialogTypes.h"
 #import "TDCHighlightEntrySheetPrivate.h"
 #import "TDCInputPrompt.h"
@@ -163,11 +168,13 @@
 // Text and presentation
 #import "HLSHistoricLogProtocol.h"
 #import "TVCLogControllerOperationQueuePrivate.h"
-#import "TVCLogControllerPrivate.h"
+/* TVCLogController and its print-operation context are Swift. Keep their
+ Objective-C class declarations out of the bridging graph. */
 #import "TVCLogLine.h"
 #import "TVCLogLinePrivate.h"
 #import "TVCLogLineXPCPrivate.h"
-#import "TVCLogRenderer.h"
+/* TVCLogRenderer is Swift. Its Objective-C compatibility declaration remains
+ available to unmigrated callers without entering Swift's bridging graph. */
 #import "TVCMemberList.h"
 #import "TVCMemberListPrivate.h"
 /* TVCServerList is Swift (ServerList). Keep TVCServerList.h out of this
@@ -175,17 +182,9 @@
 /* TVCServerListCell* are Swift (ServerListCell*). Keep Private out of bridging.
  */
 #import "NSTableVIewHelperPrivate.h"
-#import "TVCLogScriptEventSinkPrivate.h"
 #import "TVCLogViewInternalWK2.h"
 
-/* Minimal stubs for ObjC types whose full private headers subclass
- TDCWindowBase (now Swift). Keep WindowBase.h out of this bridging graph. */
-@interface TDCPreferencesController : NSObject
-+ (void)openProxySettingsInSystemPreferences;
-@end
+/* TDCPreferencesController is Swift. Its compatibility declaration remains
+ available to unmigrated Objective-C callers without entering this bridge. */
 
-@interface TDCFileTransferDialog : NSObject
-- (void)show:(BOOL)makeKeyWindow restorePosition:(BOOL)restorePosition;
-- (nullable TDCFileTransferDialogTransferController *)
-    fileTransferWithUniqueIdentifier:(NSString *)identifier;
-@end
+/* TDCFileTransferDialog is Swift and exports its Objective-C runtime class. */

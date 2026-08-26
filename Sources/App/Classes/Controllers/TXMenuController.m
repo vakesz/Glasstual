@@ -79,6 +79,8 @@
 #import "TVCMemberList.h"
 #import "TXMasterControllerPrivate.h"
 #import "TXMenuControllerPrivate.h"
+#import "TXMenuPresentationPrivate.h"
+#import "TXMenuValidationPolicyPrivate.h"
 #import "TXWindowControllerPrivate.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -199,98 +201,8 @@ NS_ASSUME_NONNULL_BEGIN
   }
 }
 
-+ (NSImageSymbolConfiguration *)menuSymbolConfiguration {
-  return [NSImageSymbolConfiguration
-      configurationWithPointSize:[NSFont systemFontSize]
-                          weight:NSFontWeightRegular
-                           scale:NSImageSymbolScaleMedium];
-}
-
-/* One instance so that a menu passed through more than once (copied
- items end up in the web view's context menu, for example) can tell
- the spacer apart from a real symbol. */
-+ (NSImage *)menuSymbolSpacer {
-  static NSImage *spacer = nil;
-
-  static dispatch_once_t onceToken;
-
-  dispatch_once(&onceToken, ^{
-    NSImageSymbolConfiguration *configuration = [[self menuSymbolConfiguration]
-        configurationByApplyingConfiguration:
-            [NSImageSymbolConfiguration
-                configurationWithPaletteColors:@[ [NSColor clearColor] ]]];
-
-    spacer = [[NSImage imageWithSystemSymbolName:@"circle"
-                        accessibilityDescription:nil]
-        imageWithSymbolConfiguration:configuration];
-
-    spacer.template = NO;
-  });
-
-  return spacer;
-}
-
 - (void)applySymbolsToMenu:(nullable NSMenu *)menu {
-  [self _applySymbolConfiguration:[self.class menuSymbolConfiguration]
-                           toMenu:menu];
-}
-
-- (void)_applySymbolConfiguration:(NSImageSymbolConfiguration *)configuration
-                           toMenu:(nullable NSMenu *)menu {
-  BOOL hasSymbol = NO;
-
-  for (NSMenuItem *item in menu.itemArray) {
-    NSImage *image = item.image;
-
-    /* Symbols assigned in the nib are named after the system symbol;
-     other images (such as the formatting colour swatches) are
-     unnamed and left alone. The image is recreated from the name
-     because a nib-loaded symbol does not reliably accept a new
-     configuration. */
-    NSString *symbolName = image.name;
-
-    NSImage *symbol = nil;
-
-    if (image == [self.class menuSymbolSpacer]) {
-      /* Already padded on an earlier pass; the spacer is a named
-       symbol too and must not be turned into a visible circle. */
-      hasSymbol = YES;
-    } else if (symbolName.length > 0) {
-      symbol = [NSImage imageWithSystemSymbolName:symbolName
-                         accessibilityDescription:item.title];
-    }
-
-    if (symbol != nil) {
-      image = [symbol imageWithSymbolConfiguration:configuration];
-
-      item.image = image;
-
-      hasSymbol = YES;
-    }
-
-    if (item.hasSubmenu) {
-      [self _applySymbolConfiguration:configuration toMenu:item.submenu];
-    }
-  }
-
-  if (hasSymbol == NO) {
-    return;
-  }
-
-  /* AppKit only indents the title of items that have an image, so a menu
-   that mixes items with and without symbols ends up with ragged titles.
-   Items without a symbol get an invisible symbol with the same configuration,
-   which keeps every title in the same column. A blank bitmap is not enough:
-   macOS 26 treats an image that draws nothing as no image at all. */
-  NSImage *spacer = [self.class menuSymbolSpacer];
-
-  for (NSMenuItem *item in menu.itemArray) {
-    if (item.isSeparatorItem || item.image != nil) {
-      continue;
-    }
-
-    item.image = spacer;
-  }
+  [TXMenuPresentation applyToMenu:menu];
 }
 
 - (void)prepareForApplicationTermination {
@@ -323,109 +235,18 @@ NS_ASSUME_NONNULL_BEGIN
     return NO;
   }
 
-  /* Menu validation works in two passes:
-           1. First -_validateMenuItem: is called which performs validation for
-              the individual menu item including hiding it and related items.
-           2. The result is then passed to the logic below which performs more
-              specialized work such as disabling large group of menu items when
-              the trial has expired.
-   */
+  /* Validation works in two passes. The first performs command-specific
+   checks and updates related menu items. Swift owns the second, application-
+   wide pass so focus and launch policy has one directly testable home. */
   BOOL validationResult = [self _validateMenuItem:menuItem];
 
-  if (validationResult == NO) {
-    return NO;
-  }
-
-  NSUInteger tag = menuItem.tag;
-
-  /* The submenus of the main menu are all targets of the menu
-   controller so that we can chose to hide or show some depending
-   on context. For the top most submenus, we have nothing further
-   to do after performing initial validation. */
-  switch (tag) {
-  case MTMainMenuApp:
-  case MTMainMenuFile:
-  case MTMainMenuEdit:
-  case MTMainMenuView:
-  case MTMainMenuServer:
-  case MTMainMenuChannel:
-  case MTMainMenuQuery:
-  case MTMainMenuNavigate:
-  case MTMainMenuWindow:
-  case MTMainMenuHelp: {
-    return YES;
-  }
-  } // switch
-
-  /* When the main window is not the focused window or when we are
-   in a sheet, most items can be disabled which means at this point
-   we will default to disabled and allow the bottom logic to enable
-   only the bare essentials. */
-  BOOL defaultToNoForSheet =
-      (mainWindow().attachedSheet != nil ||
-       (mainWindow().mainWindow == NO && mainWindow().isBeneathMouse == NO));
-
-  if (defaultToNoForSheet) {
-    validationResult = NO;
-  }
-
-  /* If the app has not finished launching,
-   then default everything to disabled. */
-  if (masterController().applicationIsLaunched == NO) {
-    validationResult = NO;
-  }
-
-  /* If certain items are hidden because of a sheet, then enable additional
-   * items. */
-  if (validationResult == NO && defaultToNoForSheet) {
-    switch (tag) {
-    case MTMMAppAboutApp:                         // "About Glasstual"
-    case MTMMAppPreferences:                      // "Settings…"
-    case MTMMHelpAdvancedMenuEnableDeveloperMode: // "Enable Developer Mode"
-    case MTMMHelpAdvancedMenuHiddenPreferences:   // "Hidden Settings…"
-    case MTMMFileDisableAllNotifications:         // "Disable All Notifications"
-    case MTMMFileDisableAllNotificationSounds:    // "Disable All Notification
-                                                  // Sounds"
-    case MTDockMenuDisableAllNotifications:       // "Disable All Notifications"
-    case MTDockMenuDisableAllNotificationSounds:  // "Disable All Notification
-                                                  // Sounds"
-    {
-      validationResult = YES;
-
-      break;
-    }
-    } // switch
-  } // if
-
-  /* These are the bare minimum of menu items that must be enabled
-   at all times because they are essential to the entire application. */
-  /* This list may look incomplete but it isn't. Many menu items,
-   such as Undo, Cut, Copy, Quit, etc. are not a target of the menu
-   controller which means they never pass through this logic. */
-  if (validationResult == NO) {
-    switch (tag) {
-    case MTMMAppAboutApp:                       // "About Glasstual"
-    case MTMMAppQuitApp:                        // "Quit Glasstual & IRC"
-    case MTMMFilePrint:                         // "Print"
-    case MTMMFileCloseWindow:                   // "Close Window"
-    case MTMMEditPaste:                         // "Paste"
-    case MTMMWindowMainWindow:                  // "Main Window"
-    case MTMMHelpAcknowledgements:              // "Acknowledgements"
-    case MTMMHelpAdvancedMenu:                  // "Advanced"
-    case MTMMHelpAdvancedMenuExportPreferences: // "Export Preferences"
-    case MTMMHelpWelcomeWindow:                 // "Welcome to Glasstual…"
-    {
-      validationResult = YES;
-
-      break;
-    }
-    default: {
-      break;
-    }
-    } // switch
-  } // if
-
-  return validationResult;
+  return [TXMenuValidationPolicy
+                     validateTag:menuItem.tag
+           commandSpecificResult:validationResult
+           applicationIsLaunched:masterController().applicationIsLaunched
+      mainWindowHasAttachedSheet:(mainWindow().attachedSheet != nil)
+             mainWindowIsFocused:mainWindow().mainWindow
+        mainWindowIsBeneathMouse:mainWindow().isBeneathMouse];
 }
 
 - (BOOL)_validateMenuItem:(NSMenuItem *)menuItem {
@@ -1378,87 +1199,17 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark -
 #pragma mark Replies and Reactions
 
-static NSString *_Nonnull const _reactionEmoji[] = {@"👍", @"❤️",  @"😂",
-                                                    @"😮", @"😢", @"👎"};
-
 - (NSArray<NSMenuItem *> *)
     messageReplyMenuItemsForMessageIdentifier:(NSString *)messageIdentifier
                                      nickname:(nullable NSString *)nickname
                                       excerpt:(nullable NSString *)excerpt {
   NSParameterAssert(messageIdentifier != nil);
 
-  NSMutableDictionary<NSString *, NSString *> *context =
-      [NSMutableDictionary dictionary];
-
-  context[@"messageIdentifier"] = messageIdentifier;
-
-  if (nickname) {
-    context[@"nickname"] = nickname;
-  }
-
-  if (excerpt) {
-    context[@"excerpt"] = excerpt;
-  }
-
-  NSMenuItem *separator = [NSMenuItem separatorItem];
-
-  separator.tag = MTWKGeneralReplySeparator;
-
-  NSMenuItem *reply =
-      [NSMenuItem menuItemWithTitle:TXTLS(@"TXMenuController[rpl-to]")
-                             target:self
-                             action:@selector(replyToMessage:)];
-
-  reply.tag = MTWKGeneralReply;
-  reply.representedObject = [context copy];
-  reply.image = [NSImage imageWithSystemSymbolName:@"arrowshape.turn.up.left"
-                          accessibilityDescription:reply.title];
-
-  NSMenuItem *react =
-      [[NSMenuItem alloc] initWithTitle:TXTLS(@"TXMenuController[rct-to]")
-                                 action:nil
-                          keyEquivalent:@""];
-
-  react.tag = MTWKGeneralReact;
-  react.image = [NSImage imageWithSystemSymbolName:@"face.smiling"
-                          accessibilityDescription:react.title];
-
-  NSMenu *reactMenu = [[NSMenu alloc] initWithTitle:react.title];
-
-  for (NSUInteger i = 0;
-       i < (sizeof(_reactionEmoji) / sizeof(_reactionEmoji[0])); i++) {
-    NSString *emoji = _reactionEmoji[i];
-
-    NSMenuItem *item =
-        [NSMenuItem menuItemWithTitle:emoji
-                               target:self
-                               action:@selector(reactToMessage:)];
-
-    NSMutableDictionary *itemContext = [context mutableCopy];
-
-    itemContext[@"emoji"] = emoji;
-
-    item.tag = MTWKGeneralReact;
-    item.representedObject = [itemContext copy];
-
-    [reactMenu addItem:item];
-  }
-
-  [reactMenu addItem:[NSMenuItem separatorItem]];
-
-  NSMenuItem *other =
-      [NSMenuItem menuItemWithTitle:TXTLS(@"TXMenuController[rct-ot]")
-                             target:self
-                             action:@selector(reactToMessageWithOtherEmoji:)];
-
-  other.tag = MTWKGeneralReact;
-  other.representedObject = [context copy];
-
-  [reactMenu addItem:other];
-
-  react.submenu = reactMenu;
-
-  return @[ separator, reply, react ];
+  return [TXMenuPresentation
+      messageReplyItemsForMessageIdentifier:messageIdentifier
+                                   nickname:nickname
+                                    excerpt:excerpt
+                                     target:self];
 }
 
 - (void)replyToMessage:(nullable id)sender {
@@ -1913,36 +1664,7 @@ static NSString *_Nonnull const _reactionEmoji[] = {@"👍", @"❤️",  @"😂"
 - (NSMenuItem *)shareMenuItemForItems:(NSArray *)items {
   NSParameterAssert(items != nil);
 
-  NSString *title = TXTLS(@"TXMenuController[shr-m1]");
-
-  NSMenuItem *menuItem = nil;
-
-  if (items.count > 0) {
-    NSSharingServicePicker *picker =
-        [[NSSharingServicePicker alloc] initWithItems:items];
-
-    menuItem = picker.standardShareMenuItem;
-
-    menuItem.title = title;
-
-    /* The item's submenu is populated by the picker, so the
-     picker must live as long as the item does. */
-    menuItem.representedObject = picker;
-  } else {
-    menuItem = [[NSMenuItem alloc] initWithTitle:title
-                                          action:nil
-                                   keyEquivalent:@""];
-
-    menuItem.enabled = NO;
-  }
-
-  NSImage *image = [NSImage imageWithSystemSymbolName:@"square.and.arrow.up"
-                             accessibilityDescription:title];
-
-  menuItem.image =
-      [image imageWithSymbolConfiguration:[self.class menuSymbolConfiguration]];
-
-  return menuItem;
+  return [TXMenuPresentation shareMenuItemForItems:items];
 }
 
 - (void)copyUrl:(nullable id)sender {

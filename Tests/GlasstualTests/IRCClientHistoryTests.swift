@@ -487,7 +487,8 @@ final class IRCClientHistoryTests: XCTestCase {
 	}
 
 	private func index(_ line: TVCLogLine, for channel: IRCChannel) {
-		LogControllerHistoricLogFile.shared().indexLogLine(line, for: channel)
+		let treeItem = (channel as AnyObject) as! IRCTreeItem
+		LogControllerHistoricLogFile.shared().indexLogLine(line, for: treeItem)
 	}
 
 	private func feed(_ lines: [String], to client: GLTTestClient) {

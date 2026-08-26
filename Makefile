@@ -8,13 +8,10 @@ DESTINATION  := platform=macOS,arch=arm64
 DERIVED_DATA ?= DerivedData
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA)
 
-.PHONY: help setup generate build release archive run test lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate build release archive run test lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-setup: ## Install development tools from the Brewfile
-	brew bundle
 
 ensure-xcodegen:
 	@command -v xcodegen >/dev/null 2>&1 || brew install xcodegen
