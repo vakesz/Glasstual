@@ -51,7 +51,7 @@ typealias SecureConnectionInformationReceiver = @Sendable (
 @objc(RCMConnectionManagerServerProtocol)
 protocol RemoteConnectionServerProtocol: AnyObject {
 	@objc(openWithConfig:)
-	func open(with config: Any)
+	func open(with config: IRCConnectionConfig)
 
 	@objc(close)
 	func close()

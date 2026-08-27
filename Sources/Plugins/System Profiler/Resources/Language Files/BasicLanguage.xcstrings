@@ -4,212 +4,506 @@
     "additional-display" : {
       "comment" : "Additional display resolution without a refresh rate for the /screens/ command. Arguments are the display number and resolution. Migrated from legacy key dd1-rp.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "; #%1$lu: %2$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "; #%1$lu: %2$@"
+          }
+        }
+      }
     },
     "additional-display-with-refresh-rate" : {
       "comment" : "Additional display resolution with a refresh rate for the /screens/ command. Arguments are the display number, resolution, and refresh rate. Migrated from legacy key fys-ft.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "; #%1$lu: %2$@ at %3$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "; #%1$lu: %2$@ at %3$@"
+          }
+        }
+      }
     },
     "additional-list-item" : {
       "comment" : "Separator and value for each additional item in a comma-separated list. Migrated from legacy key cmk-ws.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : ", %@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", %@"
+          }
+        }
+      }
     },
     "additional-mounted-drive" : {
       "comment" : "Additional mounted-drive summary for the /diskspace/ command. Arguments are the drive name, total space, and free space. Migrated from legacy key lct-7h.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " — %1$@: Total: %2$@; Free: %3$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " — %1$@: Total: %2$@; Free: %3$@"
+          }
+        }
+      }
     },
     "additional-network-interface" : {
       "comment" : "Additional interface summary for the /netstats/ command. Arguments are the interface name, received bytes, and sent bytes. Migrated from legacy key mjo-o0.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " — [%1$@]: %2$@ in, %3$@ out" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " — [%1$@]: %2$@ in, %3$@ out"
+          }
+        }
+      }
     },
     "all-webkit-processes" : {
       "comment" : "Aggregate WebKit process memory summary for the /memory/ command. Arguments are the process count and memory use. Migrated from legacy key a5u-m1.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002All Processes (WebKit):\u0002 Process count: %1$lu • Memory use: %2$@" } } }
-    },
-    "application-bandwidth-statistics" : {
-      "comment" : "One-line application bandwidth statistics. Arguments are sent command count, received command count, time since last command, inbound byte count, and outbound byte count. Migrated from legacy key rua-9r.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Glasstual has sent \u0002%1$@\u0002 commands since startup with a total of \u0002%2$@\u0002 commands received. The last command received on this connection occurred %3$@ ago. This equals roughly \u0002%4$@ in\u0002 and \u0002%5$@ out\u0002 worth of bandwidth." } } }
-    },
-    "application-memory-usage" : {
-      "comment" : "Application memory summary for the /memory/ command. Arguments are memory use and visible line count. Migrated from legacy key scn-br.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Memory use of Glasstual: %1$@ • Visible lines: %2$@" } } }
-    },
-    "application-runtime-statistics" : {
-      "comment" : "One-line application run-count and runtime summary. Arguments are launch count and total runtime. Migrated from legacy key 6fn-xh.",
-      "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Glasstual has been opened \u0002%1$@\u0002 times with a total runtime of %2$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002All Processes (WebKit):\u0002 Process count: %1$lu • Memory use: %2$@"
+          }
+        }
+      }
     },
     "appearance" : {
       "comment" : "Shared chat and sidebar appearance for the /style/ command. The argument is the appearance name. Migrated from legacy key 614-dj.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002Appearance:\u0002 %@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002Appearance:\u0002 %@"
+          }
+        }
+      }
+    },
+    "application-bandwidth-statistics" : {
+      "comment" : "One-line application bandwidth statistics. Arguments are sent command count, received command count, time since last command, inbound byte count, and outbound byte count. Migrated from legacy key rua-9r.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual has sent \u0002%1$@\u0002 commands since startup with a total of \u0002%2$@\u0002 commands received. The last command received on this connection occurred %3$@ ago. This equals roughly \u0002%4$@ in\u0002 and \u0002%5$@ out\u0002 worth of bandwidth."
+          }
+        }
+      }
+    },
+    "application-memory-usage" : {
+      "comment" : "Application memory summary for the /memory/ command. Arguments are memory use and visible line count. Migrated from legacy key scn-br.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory use of Glasstual: %1$@ • Visible lines: %2$@"
+          }
+        }
+      }
+    },
+    "application-runtime-statistics" : {
+      "comment" : "One-line application run-count and runtime summary. Arguments are launch count and total runtime. Migrated from legacy key 6fn-xh.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glasstual has been opened \u0002%1$@\u0002 times with a total runtime of %2$@"
+          }
+        }
+      }
     },
     "cpu-core-segment" : {
       "comment" : "CPU segment of the /sysinfo/ response without a clock rate. Arguments are the CPU name and core count. Migrated from legacy key ifk-s5.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002CPU:\u0002 %1$@ (%2$lu Cores) \u0002•\u0002" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002CPU:\u0002 %1$@ (%2$lu Cores) \u0002•\u0002"
+          }
+        }
+      }
     },
     "cpu-thread-core-and-clock-segment" : {
       "comment" : "CPU segment of the /sysinfo/ response with thread, core, and clock information. Arguments are the CPU name, thread count, core count, and clock rate. Migrated from legacy key mnc-vx.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002CPU:\u0002 %1$@ (%2$lu Threads, %3$lu Cores) @ %4$@ \u0002•\u0002" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002CPU:\u0002 %1$@ (%2$lu Threads, %3$lu Cores) @ %4$@ \u0002•\u0002"
+          }
+        }
+      }
     },
     "current-style" : {
       "comment" : "Current style summary for the /style/ command. Arguments are the style name, storage location, and appearance description. Migrated from legacy key z37-85.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002Current Style:\u0002 %1$@ (%2$@) \u0002•\u0002 %3$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002Current Style:\u0002 %1$@ (%2$@) \u0002•\u0002 %3$@"
+          }
+        }
+      }
     },
     "dark-appearance" : {
       "comment" : "Name of the dark appearance. Migrated from legacy key 243-yt.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Dark" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark"
+          }
+        }
+      }
     },
     "display-segment" : {
       "comment" : "Display segment of the /sysinfo/ response without a refresh rate. The argument is the display resolution. Migrated from legacy key 22o-rg.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002Display:\u0002 %1$@ \u0002•\u0002" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002Display:\u0002 %1$@ \u0002•\u0002"
+          }
+        }
+      }
     },
     "display-with-refresh-rate-segment" : {
       "comment" : "Display segment of the /sysinfo/ response with a refresh rate. Arguments are the display resolution and refresh rate. Migrated from legacy key b7c-qd.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002Display:\u0002 %1$@ at %2$@ \u0002•\u0002" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002Display:\u0002 %1$@ at %2$@ \u0002•\u0002"
+          }
+        }
+      }
     },
     "first-display" : {
       "comment" : "First display resolution without a refresh rate for the /screens/ command. Arguments are the display number and resolution. Migrated from legacy key 441-8c.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002Display Resolution:\u0002 #%1$lu: %2$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002Display Resolution:\u0002 #%1$lu: %2$@"
+          }
+        }
+      }
     },
     "first-display-with-refresh-rate" : {
       "comment" : "First display resolution with a refresh rate for the /screens/ command. Arguments are the display number, resolution, and refresh rate. Migrated from legacy key vvt-zq.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002Display Resolution:\u0002 #%1$lu: %2$@ at %3$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002Display Resolution:\u0002 #%1$lu: %2$@ at %3$@"
+          }
+        }
+      }
     },
     "first-list-item" : {
       "comment" : "First value in a formatted list. Migrated from legacy key 8nu-89.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        }
+      }
     },
     "first-mounted-drive" : {
       "comment" : "First mounted-drive summary for the /diskspace/ command. Arguments are the drive name, total space, and free space. Migrated from legacy key bvr-wz.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@: Total: %2$@; Free: %3$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: Total: %2$@; Free: %3$@"
+          }
+        }
+      }
     },
     "first-network-interface" : {
       "comment" : "First interface summary for the /netstats/ command. Arguments are the interface name, received bytes, and sent bytes. Migrated from legacy key ca4-25.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " [%1$@]: %2$@ in, %3$@ out" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " [%1$@]: %2$@ in, %3$@ out"
+          }
+        }
+      }
     },
     "gigahertz" : {
       "comment" : "CPU clock rate in gigahertz. The argument is the rate. Migrated from legacy key 3iu-k8.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%.2f GHz" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%.2f GHz"
+          }
+        }
+      }
     },
     "graphics-segment" : {
       "comment" : "Graphics segment of the /sysinfo/ response. The argument is the graphics description. Migrated from legacy key q5v-uq.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002Graphics:\u0002 %@ \u0002•\u0002" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002Graphics:\u0002 %@ \u0002•\u0002"
+          }
+        }
+      }
     },
     "light-appearance" : {
       "comment" : "Name of the light appearance. Migrated from legacy key 890-au.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Light" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light"
+          }
+        }
+      }
     },
     "megahertz" : {
       "comment" : "CPU clock rate in megahertz. The argument is the rate. The legacy source queried whether this unit was really needed. Migrated from legacy key jw7-sg.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%.2f MHz" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%.2f MHz"
+          }
+        }
+      }
     },
     "memory-segment" : {
       "comment" : "Memory segment of the /sysinfo/ response. The argument is the memory size. Migrated from legacy key 1am-io.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002Memory:\u0002 %@ \u0002•\u0002" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002Memory:\u0002 %@ \u0002•\u0002"
+          }
+        }
+      }
     },
     "model-segment" : {
       "comment" : "Model segment of the /sysinfo/ response. The argument is the model name. Migrated from legacy key 7g5-pf.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002Model:\u0002 %@ \u0002•\u0002" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002Model:\u0002 %@ \u0002•\u0002"
+          }
+        }
+      }
     },
     "mounted-drives-heading" : {
       "comment" : "Mounted-drives heading for the /diskspace/ command. The argument is the concatenated drive descriptions. Migrated from legacy key n6i-xd.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002Mounted Drives:\u0002 %@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002Mounted Drives:\u0002 %@"
+          }
+        }
+      }
     },
     "mounted-drives-unavailable" : {
       "comment" : "Error for the /diskspace/ command when no mounted drives can be found. The legacy source asked what the application was running on in this case. Migrated from legacy key ler-a5.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Error: Unable to find any mounted drives." } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error: Unable to find any mounted drives."
+          }
+        }
+      }
     },
     "network-statistics-unavailable" : {
       "comment" : "Error for the /netstats/ command when no network statistics can be found. Migrated from legacy key li1-vn.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Error: Unable to locate any network statistics." } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error: Unable to locate any network statistics."
+          }
+        }
+      }
     },
     "network-traffic-heading" : {
       "comment" : "Network-traffic heading for the /netstats/ command. The argument is the concatenated interface descriptions. Migrated from legacy key 9f8-ej.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002Network Traffic:\u0002%@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002Network Traffic:\u0002%@"
+          }
+        }
+      }
     },
     "operating-system-segment" : {
       "comment" : "Operating-system segment of the /sysinfo/ response. Arguments are the OS name, version, and build. Migrated from legacy key g41-p7.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002OS:\u0002 %1$@ (Version %2$@, Build %3$@)" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002OS:\u0002 %1$@ (Version %2$@, Build %3$@)"
+          }
+        }
+      }
     },
     "preferences-pane-title" : {
       "comment" : "Preferences pane name. Migrated from legacy key dff-13.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "System Information" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Information"
+          }
+        }
+      }
     },
     "screen-refresh-rate" : {
       "comment" : "Screen refresh rate shared by /sysinfo/ and /screens/. The argument is the rate. Migrated from legacy key zpt-sx.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%.0f Hz" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%.0f Hz"
+          }
+        }
+      }
     },
     "separate-appearances" : {
       "comment" : "Separate chat and sidebar appearances for the /style/ command. Arguments are the chat and sidebar appearance names. Migrated from legacy key 843-z4.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002Chat Appearance:\u0002 %1$@ \u0002•\u0002 \u0002Sidebar Appearance:\u0002 %2$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002Chat Appearance:\u0002 %1$@ \u0002•\u0002 \u0002Sidebar Appearance:\u0002 %2$@"
+          }
+        }
+      }
     },
     "space-segment" : {
       "comment" : "Disk-space segment of the /sysinfo/ response. The argument is the disk size. Migrated from legacy key yrc-6l.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002Space:\u0002 %@ \u0002•\u0002" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002Space:\u0002 %@ \u0002•\u0002"
+          }
+        }
+      }
     },
     "system-information-heading" : {
       "comment" : "Heading for the /sysinfo/ command. Migrated from legacy key lxj-ha.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "System Information:" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Information:"
+          }
+        }
+      }
     },
     "system-memory" : {
       "comment" : "One-line system memory summary. Arguments are free memory, used memory, total memory, and a usage meter. Migrated from legacy key cfs-b1.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002System Memory:\u0002 Free: %1$@; Used: %2$@; Total: %3$@; — [%4$@]" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002System Memory:\u0002 Free: %1$@; Used: %2$@; Total: %3$@; — [%4$@]"
+          }
+        }
+      }
     },
     "top-webkit-process" : {
       "comment" : "Top WebKit process memory summary for the /memory/ command. Arguments are the process ID, assigned destination, and memory use. Migrated from legacy key ioy-qc.",
-      "extractionState" : "extracted",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002Top Process (WebKit):\u0002 Process #%1$i, which is assigned to %2$@, is using %3$@ of memory" } } }
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002Top Process (WebKit):\u0002 Process #%1$i, which is assigned to %2$@, is using %3$@ of memory"
+          }
+        }
+      }
     },
     "top-webkit-process-alternative" : {
       "comment" : "Legacy alternative top WebKit process memory summary for the /memory/ command. Arguments are the process ID, assigned destination, and memory use. Migrated from legacy key a00-8n.",
-      "extractionState" : "extracted",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u0002Top Process (WebKit):\u0002 Process #%1$i, which is assigned to %2$@; is using %3$@ of memory" } } }
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\u0002Top Process (WebKit):\u0002 Process #%1$i, which is assigned to %2$@; is using %3$@ of memory"
+          }
+        }
+      }
     },
     "uptime-segment" : {
       "comment" : "Uptime segment of the /sysinfo/ response. The argument is the system uptime. Migrated from legacy key xb6-bh.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : " \u0002Uptime:\u0002 %@ \u0002•\u0002" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " \u0002Uptime:\u0002 %@ \u0002•\u0002"
+          }
+        }
+      }
     },
     "uptimes" : {
       "comment" : "One-line system and application uptime summary. Arguments are the system uptime and Glasstual uptime. Migrated from legacy key v03-jx.",
       "extractionState" : "manual",
-      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "System Uptime: %1$@ \u0002•\u0002 Glasstual Uptime: %2$@" } } }
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Uptime: %1$@ \u0002•\u0002 Glasstual Uptime: %2$@"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
