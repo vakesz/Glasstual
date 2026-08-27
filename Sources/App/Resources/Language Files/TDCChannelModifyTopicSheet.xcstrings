@@ -1,0 +1,90 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "cancel-button" : {
+      "comment" : "Title of the button that dismisses the channel topic sheet without changing the topic.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "change-topic-button" : {
+      "comment" : "Title of the button that submits the edited channel topic.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Topic"
+          }
+        }
+      }
+    },
+    "editor-accessibility-hint" : {
+      "comment" : "Accessibility hint for the channel topic editor.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit the topic. IRC text formatting is preserved."
+          }
+        }
+      }
+    },
+    "maximum-length-message" : {
+      "comment" : "Message below the title of the warning shown when a channel topic exceeds the server limit. Migrated from the legacy key zm4-cr.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you continue typing, the end of your topic may be cut off."
+          }
+        }
+      }
+    },
+    "maximum-length-title" : {
+      "comment" : "Title of the warning shown when the topic is longer than the server limit. The first argument is the network name and the second is the maximum number of characters. Migrated from the legacy key 27l-qx.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have exceeded the maximum topic length defined by %1$@ which is %2$ld characters"
+          }
+        }
+      }
+    },
+    "topic-label" : {
+      "comment" : "Label above the topic editor. The argument is the IRC channel name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Topic for %@:"
+          }
+        }
+      }
+    },
+    "window-title" : {
+      "comment" : "Title of the channel topic sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Topic"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

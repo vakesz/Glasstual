@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "forwarded-message" : {
+      "comment" : "Message forwarded by a chat filter. Arguments are the IRC command and original message. Migrated from legacy key dct-7h.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message(%1$@): %2$@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

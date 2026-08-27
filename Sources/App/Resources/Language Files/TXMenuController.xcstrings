@@ -1,0 +1,78 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "rct-ot" : {
+      "comment" : "Message context menu: replies and reactions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other…"
+          }
+        }
+      }
+    },
+    "rct-ph" : {
+      "comment" : "Message context menu: replies and reactions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emoji"
+          }
+        }
+      }
+    },
+    "rct-sd" : {
+      "comment" : "Message context menu: replies and reactions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        }
+      }
+    },
+    "rct-to" : {
+      "comment" : "Message context menu: replies and reactions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "React"
+          }
+        }
+      }
+    },
+    "rpl-to" : {
+      "comment" : "Message context menu: replies and reactions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply"
+          }
+        }
+      }
+    },
+    "shr-m1" : {
+      "comment" : "Title of the standard Share menu item.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share…"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

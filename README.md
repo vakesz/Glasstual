@@ -10,7 +10,7 @@
 
 Glasstual is a highly customizable app for interacting with Internet Relay Chat (IRC) chatrooms on macOS.
 
-Glasstual can be customized with styles written in CSS, HTML, and JavaScript; plugins written in Objective-C & Swift; and scripts written in AppleScript (plus many other languages).
+Glasstual can be customized with styles written in CSS, HTML, and JavaScript; plugins written in Swift; and scripts written in AppleScript (plus many other languages).
 
 ## Features
 
@@ -24,7 +24,13 @@ Two styles ship with the app and are picked in Settings › Style. **Lines** is 
 
 This fork exists to carry that work forward on **macOS 26 (Tahoe) and later**. It is an independent project: it is not published, endorsed, or supported by Codeux Software, LLC, and it does not offer, replace, or update Codeux's builds of Textual.
 
-Copyright and license notices from Textual and LimeChat are left intact throughout the source tree, including the BSD non-endorsement clause naming Textual. Those notices cover code this project did not write and are deliberately unchanged. See [Licenses](#licenses) below and [Acknowledgements.pdf](Documentation/Acknowledgements.pdf).
+Copyright and license notices from Textual and LimeChat are left intact throughout the source tree, including the BSD non-endorsement clause naming Textual. Those notices cover code this project did not write and are deliberately unchanged. See [Licenses](#licenses) below and [Acknowledgements.pdf](Sources/App/Resources/Documentation/Acknowledgements.pdf).
+
+## Native Swift direction
+
+Glasstual's source tree is Swift-only: it contains no Objective-C or C implementation or header files. The remaining application UI is being migrated feature by feature from AppKit to SwiftUI. AppKit remains temporary interoperability until each feature has a verified SwiftUI replacement.
+
+New and migrated code belongs in domain and feature folders under `Sources/`, including services, bundled plugins, and the source for vendored frameworks. SwiftUI migrations must preserve native menus, commands, keyboard behavior, accessibility, restoration, and plugin contracts before their AppKit implementations are removed. Temporary bridges exist only for code or UI that has not moved yet. Rewrites must retain the original copyright and license notices; [`Sources/Frameworks/PROVENANCE.md`](Sources/Frameworks/PROVENANCE.md) records the vendored framework origins.
 
 ## Screenshots
 
@@ -47,7 +53,7 @@ The conversation shown above was generated on a loopback-only demo network. It d
 
 ## Note Regarding Third-Party Frameworks
 
-The Codeux framework Glasstual builds on (Cocoa Extensions) and the prebuilt static libraries live in `Frameworks/` as vendored sources, not submodules. `Frameworks/PROVENANCE.md` records the upstream commit each one was taken from. A plain clone is enough:
+The Codeux framework Glasstual builds on (Cocoa Extensions) and its source-built Swift libraries live in `Sources/Frameworks/` as vendored sources, not submodules. `Sources/Frameworks/PROVENANCE.md` records each upstream revision. A plain clone is enough:
 
 ```
 git clone https://github.com/vakesz/Glasstual.git
@@ -57,7 +63,7 @@ git clone https://github.com/vakesz/Glasstual.git
 
 **DO NOT change the Code Signing settings through Xcode.** `Glasstual.xcodeproj` is generated from `project.yml` and any change made in the target editor is lost on the next `xcodegen generate`.
 
-**DO** edit the file located at _[Configurations ➜ Signing.xcconfig](Configurations/Signing.xcconfig)_
+**DO** edit `CODE_SIGN_IDENTITY`, `DEVELOPMENT_TEAM`, and related keys in [`project.yml`](project.yml) (`settings.base`). Target Info.plist contents and sandbox entitlements are declared there too; XcodeGen writes those ignored build inputs under `Generated/Xcode/`.
 
 **It is HIGHLY DISCOURAGED to turn off code signing.** Certain features rely on the fact that Glasstual is properly signed and is within a sandboxed environment.
 
@@ -69,8 +75,8 @@ Glasstual requires Xcode 26 or later on macOS 26 (Tahoe) or later, an Apple Sili
 
 This tree has **no paid-license or trial checks**. Precompiled store builds of Textual from codeux.com are a separate product.
 
-1. Install the development tools: `brew bundle` (this includes XcodeGen).
-2. Set your Apple Developer **Team ID** in _[Configurations ➜ Signing.xcconfig](Configurations/Signing.xcconfig)_ and, if you are not building the official fork, `GLASSTUAL_BUNDLE_IDENTIFIER` in _[Configurations ➜ Base.xcconfig](Configurations/Base.xcconfig)_. The defaults are:
+1. Install the development tools: `actionlint`, `shellcheck`, `shfmt`, `swiftformat`, `swiftlint` and `xcodegen`.
+2. Set your Apple Developer **Team ID** as `DEVELOPMENT_TEAM` in [`project.yml`](project.yml) and, if you are not building the official fork, `GLASSTUAL_BUNDLE_IDENTIFIER` there too. The defaults are:
    - Bundle ID: `com.vakesz.glasstual`
    - Team ID: `H8W5DK3FN2`
    - App Group: `group.<Team ID>.<Bundle ID>`
@@ -85,27 +91,35 @@ This tree has **no paid-license or trial checks**. Precompiled store builds of T
    make run              # build and launch
    ```
 
-   `make help` lists every target; they are thin wrappers around `xcodebuild` and the scripts in `Scripts/`.
+   `make help` lists every target; they call `xcodebuild` and the repository tools directly.
 
-   Run and Profile use the `Debug` configuration; Archive uses `Release`. The scheme's pre-action writes the build number from the last git commit date (see [Configurations/README.md](Configurations/README.md)).
+   Run and Profile use the `Debug` configuration; Archive uses `Release`. Versions, target Info.plist files, entitlements, schemes, and build settings are declared in `project.yml`.
 
 ### Code quality
 
 Install the development tools and run the repository-wide checks with:
 
 ```sh
-make setup    # brew bundle
 make test     # unit tests (GlasstualTests, run inside the Debug app)
-make lint     # shellcheck, actionlint, plist/xib validation, format check
-make format   # clang-format, swift-format, shfmt
+make lint     # SwiftLint, SwiftFormat, shellcheck, actionlint and resource validation
+make format   # SwiftFormat and shfmt
 ```
 
 The unit tests live in `Tests/GlasstualTests` and do not use the network.
 
-Formatting and linting intentionally exclude the vendored frameworks under
-`Frameworks/` and `External Libraries`. The `Quality` workflow runs `make lint` (shellcheck, actionlint,
-plist/xib validation and format checks) on every pull request; `Signed Release`
-is run manually to archive, notarize and publish.
+SwiftFormat and SwiftLint check every Swift file under `Sources/` and `Tests/`,
+including vendored framework sources. The repository does not use lint path
+exclusions or a baseline. Fix findings in source; if a rule does not fit the
+project, configure it once in `.swiftlint.yml` with a repository-wide reason.
+`make lint` installs SwiftFormat or SwiftLint with Homebrew when either executable
+is missing. The `Quality` workflow runs the same command on every pull request; `Signed Release`
+is run manually from `master` to archive, notarize, attest and publish. Each
+GitHub Release includes the notarized ZIP, its SHA-256 checksum and generated
+release notes.
+
+`make generate` clears and recreates `Generated/Xcode/`, validates every generated
+Info.plist and entitlement file, and regenerates `Glasstual.xcodeproj`. CI runs
+the same generation command before accepting project configuration changes.
 
 ### Software Updates
 
@@ -132,7 +146,7 @@ through the Mac App Store from the same tree:
 - The direct-download pipeline (`.github/workflows/release.yml`) signs with a
   Developer ID identity. An App Store submission uses the same project with an
   Apple Distribution identity and App Store provisioning profiles (set in
-  `Configurations/Signing.xcconfig` or on the `xcodebuild` command line).
+  `project.yml` or on the `xcodebuild` command line).
 - Textual and LimeChat are BSD-licensed, so selling builds is permitted as
   long as the notices in [Licenses](#licenses) and `Acknowledgements.pdf`
   ship inside the app (they do: Help ▸ Acknowledgements) and the names
@@ -167,7 +181,7 @@ IRCv3 capabilities Glasstual negotiates when the server offers them:
 - `userhost-in-names`
 - ZNC: `znc.in/playback`, `znc.in/self-message`, `znc.in/server-time`, `znc.in/server-time-iso`, `znc.in/tlsinfo`
 
-When the server advertises `WHOX`, channel `WHO` requests use `WHO <channel> %tcuhnfar,152` so the initial member list carries accounts, real names and bot flags. `netsplit` and `netjoin` batches are collapsed into one summary line per channel instead of a QUIT or JOIN per user (hidden along with joins and quits when those are switched off). The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Classes/IRC/IRCCapability.m`.
+When the server advertises `WHOX`, channel `WHO` requests use `WHO <channel> %tcuhnfar,152` so the initial member list carries accounts, real names and bot flags. `netsplit` and `netjoin` batches are collapsed into one summary line per channel instead of a QUIT or JOIN per user (hidden along with joins and quits when those are switched off). The `account` tag is parsed into each message. `CAP LS 302` and `CAP NEW`/`CAP DEL` are supported. The capability table lives in `Sources/App/Modules/IRCProtocol/Negotiation/IRCCapability.swift`.
 
 ## Licenses
 
@@ -207,7 +221,7 @@ SUCH DAMAGE.
 
 ### License for content originating from Textual
 
-Unless stated otherwise by the [Acknowledgements.pdf](Documentation/Acknowledgements.pdf) document, the license presented below shall govern the distribution of and modifications to; the work hosted by this repository.
+Unless stated otherwise by the [Acknowledgements.pdf](Sources/App/Resources/Documentation/Acknowledgements.pdf) document, the license presented below shall govern the distribution of and modifications to; the work hosted by this repository.
 
 <pre>
 Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.

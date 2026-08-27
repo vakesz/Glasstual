@@ -1,0 +1,343 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "nvm-nd": {
+      "comment": "Outgoing transfer progress. Arguments are processed size, total size, speed, and peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ (%3$@/s) sent to %4$@"
+          }
+        }
+      }
+    },
+    "u17-ql": {
+      "comment": "Outgoing transfer progress with estimated time remaining. Arguments are processed size, total size, speed, peer nickname, and remaining time.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ (%3$@/s) sent to %4$@ — %5$@ remaining"
+          }
+        }
+      }
+    },
+    "w3h-p8": {
+      "comment": "Status of a stopped outgoing transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to %@ is stopped. Control click to start."
+          }
+        }
+      }
+    },
+    "j1z-88": {
+      "comment": "Status while mapping the listening port for an outgoing transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to %@: Attempting to map listening port"
+          }
+        }
+      }
+    },
+    "onl-av": {
+      "comment": "Status while determining the local IP address for an outgoing transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to %@: Determining local IP address"
+          }
+        }
+      }
+    },
+    "pcv-kg": {
+      "comment": "Status while initializing an outgoing transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to %@ is initializing"
+          }
+        }
+      }
+    },
+    "ca5-2v": {
+      "comment": "Status when an outgoing transfer is ready and waiting for the peer to accept. This consolidates the identical legacy ca5-2v and cku-24 entries.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to %@ is ready. Waiting for them to accept."
+          }
+        }
+      }
+    },
+    "rx7-xy": {
+      "comment": "Status of a completed outgoing transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer to %@ is complete"
+          }
+        }
+      }
+    },
+    "7dk-lp": {
+      "comment": "Incoming transfer progress. Arguments are processed size, total size, speed, and peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ (%3$@/s) received from %4$@"
+          }
+        }
+      }
+    },
+    "9xn-7j": {
+      "comment": "Incoming transfer progress with estimated time remaining. Arguments are processed size, total size, speed, peer nickname, and remaining time.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ of %2$@ (%3$@/s) received from %4$@ — %5$@ remaining"
+          }
+        }
+      }
+    },
+    "jvh-u7": {
+      "comment": "Status of a stopped incoming transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer from %@ is stopped. Control click to start."
+          }
+        }
+      }
+    },
+    "495-90": {
+      "comment": "Status while mapping the listening port for an incoming transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer from %@: Attempting to map listening port"
+          }
+        }
+      }
+    },
+    "6t1-mb": {
+      "comment": "Status while determining the local IP address for an incoming transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer from %@: Determining local IP address"
+          }
+        }
+      }
+    },
+    "gxq-zu": {
+      "comment": "Status while waiting for the peer to accept resuming an incoming transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer from %@: Waiting for response to resume transfer"
+          }
+        }
+      }
+    },
+    "42z-mg": {
+      "comment": "Status while initializing an incoming transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer from %@ is initializing"
+          }
+        }
+      }
+    },
+    "pip-z6": {
+      "comment": "Status when an incoming transfer is ready. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer from %@ is ready. Control click to start."
+          }
+        }
+      }
+    },
+    "6gu-za": {
+      "comment": "Status of a completed incoming transfer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer from %@ is complete. Control click to open in Finder."
+          }
+        }
+      }
+    },
+    "7nf-fr": {
+      "comment": "Status while connecting to a file-transfer peer. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting to %@"
+          }
+        }
+      }
+    },
+    "fn8-sx": {
+      "comment": "File-transfer error when the connection could not be established. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed. Could not establish connection"
+          }
+        }
+      }
+    },
+    "vxc-sd": {
+      "comment": "File-transfer error when no listening port is available. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed. There is no open port"
+          }
+        }
+      }
+    },
+    "nab-dx": {
+      "comment": "File-transfer error when the source file cannot be opened or read. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed. Could not read source file"
+          }
+        }
+      }
+    },
+    "47s-1s": {
+      "comment": "File-transfer error when the local source IP address cannot be determined. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed. Unknown source IP address"
+          }
+        }
+      }
+    },
+    "0ov-tr": {
+      "comment": "File-transfer error when the peer proposes an invalid resume position. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed. Proposed resume position is bad"
+          }
+        }
+      }
+    },
+    "12p-0v": {
+      "comment": "File-transfer error when the associated IRC connection is offline. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed. You are not connected to IRC"
+          }
+        }
+      }
+    },
+    "79f-s0": {
+      "comment": "File-transfer error when the destination device has no remaining space. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed. No space left on device"
+          }
+        }
+      }
+    },
+    "05g-c8": {
+      "comment": "File-transfer error when writing the destination file fails. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed. File handler threw an exception"
+          }
+        }
+      }
+    },
+    "s79-3a": {
+      "comment": "File-transfer error wrapping an underlying error. Arguments are the peer nickname and error description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer with %@ failed: %@"
+          }
+        }
+      }
+    },
+    "dcm-w7": {
+      "comment": "Message in the folder picker used to choose an incoming file's destination.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select the folder in which this file will be saved"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
+

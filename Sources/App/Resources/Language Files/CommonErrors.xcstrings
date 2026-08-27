@@ -1,0 +1,31 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "internet-port-invalid" : {
+      "comment" : "Validation error for an invalid internet port. Migrated from legacy key l0c-nb.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Please enter a whole number between 1 and 65,535." } } }
+    },
+    "maximum-length" : {
+      "comment" : "Validation error for text exceeding a maximum length. The argument is the maximum character count. Migrated from legacy key 2cb-af.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Maximum length is %ld characters." } } }
+    },
+    "nickname-invalid" : {
+      "comment" : "Validation error for an invalid IRC nickname. Migrated from legacy key och-j5.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Please enter a properly formatted nickname." } } }
+    },
+    "server-address-invalid" : {
+      "comment" : "Validation error for an invalid IRC server address. Migrated from legacy key yyx-l3.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Please enter a properly formatted server address or pick from the list of preconfigured networks." } } }
+    },
+    "single-line-required" : {
+      "comment" : "Validation error for text containing more than one line. Migrated from legacy key gas-v8.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Cannot contain more than one line." } } }
+    }
+  },
+  "version" : "1.0"
+}

@@ -1,0 +1,102 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "0lz-oh" : {
+      "comment" : "Singular nickname-highlight count. The argument is a localized number.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ highlight"
+          }
+        }
+      }
+    },
+    "43s-x4" : {
+      "comment" : "Singular unread-message count. The argument is a localized number.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ unread message"
+          }
+        }
+      }
+    },
+    "c4u-21" : {
+      "comment" : "Plural nickname-highlight count. The argument is a localized number.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ highlights"
+          }
+        }
+      }
+    },
+    "et7-c5" : {
+      "comment" : "Joins two channel status descriptions. The arguments are the first and second descriptions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "jpw-cj" : {
+      "comment" : "Channel name in a spotlight search result.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        }
+      }
+    },
+    "tyv-p6" : {
+      "comment" : "Shown when channel spotlight search has no results.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Results"
+          }
+        }
+      }
+    },
+    "vzj-30" : {
+      "comment" : "Plural unread-message count. The argument is a localized number.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ unread messages"
+          }
+        }
+      }
+    },
+    "z68-5q" : {
+      "comment" : "Network-name suffix in a spotlight search result. The argument is the network name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " on %@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

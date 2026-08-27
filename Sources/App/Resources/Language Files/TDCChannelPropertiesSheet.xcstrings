@@ -1,0 +1,43 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "1nd-7x": {
+      "comment": "Validation error shown when the channel name is not properly formatted.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter a properly formatted channel name."
+          }
+        }
+      }
+    },
+    "mvl-r5": {
+      "comment": "Title of the alert shown when the edited channel configuration changed outside the sheet.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This channel's configuration has changed. Do you want to reload the Channel Properties dialog?"
+          }
+        }
+      }
+    },
+    "qby-hi": {
+      "comment": "Alert body warning that reloading the externally changed channel configuration discards unsaved edits. The original wording is preserved for translation parity.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will loose unsaved changes if you click “Yes”"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
+

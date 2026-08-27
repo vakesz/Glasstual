@@ -1,0 +1,841 @@
+/* *********************************************************************
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
+ * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ * Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *********************************************************************** */
+
+import CocoaExtensions
+import Foundation
+
+@objc public enum IRCISupportInfoListType: UInt, Sendable {
+	case ban = 0
+	case banException = 1
+	case inviteException = 2
+	case quiet = 3
+}
+
+@objc public enum IRCISupportInfoCaseMapping: UInt, Sendable {
+	case rfc1459 = 0
+	case strictRFC1459 = 1
+	case ascii = 2
+}
+
+enum IRCISupportUserModes {
+	static let highestPrefixRank: UInt = 100
+	static let symbolsKey = "modeSymbols"
+	static let charactersKey = "characters"
+}
+
+private let channelUserModeValue = 100
+
+@objc(IRCISupportInfo)
+public class IRCISupportInfo: NSObject {
+	@objc public private(set) weak var client: IRCClient?
+	@objc public internal(set) var serverAddress: String?
+	@objc public private(set) var maximumAwayLength: UInt = 0
+	@objc public private(set) var maximumChannelNameLength: UInt = 0
+	@objc public private(set) var maximumKeyLength: UInt = 0
+	@objc public private(set) var maximumKickLength: UInt = 0
+	@objc public private(set) var maximumNicknameLength: UInt = 0
+	@objc public private(set) var maximumTopicLength: UInt = 0
+	@objc public private(set) var maximumModeCount: UInt = 0
+	@objc public private(set) var maximumLineLength: UInt = 0
+	@objc public private(set) var maximumTargets: UInt = 0
+	@objc public private(set) var maximumSilenceEntries: UInt = 0
+	@objc public private(set) var chatHistoryMaximumLines: UInt = 0
+	@objc public private(set) var silenceSupported = false
+	@objc public private(set) var safeListSupported = false
+	@objc public private(set) var whoxSupported = false
+	@objc public private(set) var utf8Only = false
+	@objc public private(set) var channelNamePrefixes: [String] = ["#"]
+	@objc public private(set) var statusMessageModeSymbols: [String] = []
+	@objc public private(set) var extendedBanTypes: [String] = []
+	@objc public private(set) var extendedListTokens: [String] = []
+	@objc public private(set) var clientTagDenyList: [String] = []
+	@objc public private(set) var channelModes: [String: NSNumber] = [
+		"o": NSNumber(value: channelUserModeValue), "v": NSNumber(value: channelUserModeValue),
+	]
+	@objc public private(set) var channelLimits: [String: NSNumber] = [:]
+	@objc public private(set) var maximumListEntries: [String: NSNumber] = [:]
+	@objc public private(set) var maximumTargetsByCommand: [String: NSNumber] = [:]
+	@objc public private(set) var userModeSymbols: [String: [String]] = [
+		IRCISupportUserModes.symbolsKey: ["o", "v"],
+		IRCISupportUserModes.charactersKey: ["@", "+"],
+	]
+	@objc public private(set) var banExceptionModeSymbol: String?
+	@objc public private(set) var inviteExceptionModeSymbol: String?
+	@objc public private(set) var botModeSymbol: String?
+	@objc public private(set) var callerIDModeSymbol: String?
+	@objc public private(set) var deafModeSymbol: String?
+	@objc public private(set) var extendedBanPrefix: String?
+	@objc public private(set) var networkName: String?
+	@objc public private(set) var networkNameFormatted: String?
+	@objc public private(set) var caseMapping: IRCISupportInfoCaseMapping = .rfc1459
+
+	private var cachedConfiguration: [[String: Any]] = []
+
+	override public init() {
+		client = nil
+		super.init()
+		prepareInitialState()
+	}
+
+	@objc(initWithClient:)
+	public init(client: IRCClient?) {
+		self.client = client
+		super.init()
+		prepareInitialState()
+	}
+
+	@objc public var configurationReceived: Bool {
+		cachedConfiguration.isEmpty == false
+	}
+
+	@objc public var stringValueForLastUpdate: String? {
+		guard let configuration = cachedConfiguration.last else {
+			return nil
+		}
+
+		return stringValue(forConfiguration: configuration)
+	}
+
+	@objc public func reset() {
+		cachedConfiguration = []
+		serverAddress = nil
+		userModeSymbols = [
+			IRCISupportUserModes.symbolsKey: ["o", "v"],
+			IRCISupportUserModes.charactersKey: ["@", "+"],
+		]
+		channelModes = ["o": NSNumber(value: channelUserModeValue), "v": NSNumber(value: channelUserModeValue)]
+
+		for key in Self.resettableSettings() {
+			resetSetting(key)
+		}
+	}
+
+	@objc(resettableSettings)
+	public static func resettableSettings() -> [String] {
+		[
+			"AWAYLEN", "BOT", "CALLERID", "CASEMAPPING", "CHANLIMIT", "CHANNELLEN",
+			"CHANTYPES", "CHATHISTORY", "CLIENTTAGDENY", "DEAF", "ELIST", "EXCEPTS",
+			"EXTBAN", "INVEX", "KEYLEN", "KICKLEN", "LINELEN", "MAXLIST",
+			"MAXTARGETS", "MODES", "NETWORK", "NICKLEN", "SAFELIST", "SILENCE",
+			"STATUSMSG", "TARGMAX", "TOPICLEN", "UTF8ONLY", "WHOX",
+		]
+	}
+
+	@objc(resetSetting:)
+	public func resetSetting(_ key: String) {
+		let normalizedKey = key.uppercased()
+
+		if resetLengthSetting(normalizedKey) {
+			return
+		}
+
+		if resetModeSetting(normalizedKey) {
+			return
+		}
+
+		if resetCollectionSetting(normalizedKey) {
+			return
+		}
+
+		resetFeatureSetting(normalizedKey)
+	}
+
+	private func resetLengthSetting(_ key: String) -> Bool {
+		switch key {
+		case "AWAYLEN":
+			maximumAwayLength = 0
+		case "CHANNELLEN":
+			maximumChannelNameLength = 0
+		case "CHATHISTORY", "DRAFT/CHATHISTORY":
+			chatHistoryMaximumLines = 0
+		case "KEYLEN":
+			maximumKeyLength = 0
+		case "KICKLEN":
+			maximumKickLength = 0
+		case "LINELEN":
+			maximumLineLength = 0
+		case "MAXTARGETS":
+			maximumTargets = 0
+		case "MODES":
+			maximumModeCount = UInt(IRCProtocolLimits.maximumNodesPerModeCommand)
+		case "NICKLEN":
+			maximumNicknameLength = UInt(IRCProtocolLimits.defaultNicknameMaximumLength)
+		case "SILENCE":
+			silenceSupported = false
+			maximumSilenceEntries = 0
+		case "TOPICLEN":
+			maximumTopicLength = 0
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	private func resetModeSetting(_ key: String) -> Bool {
+		switch key {
+		case "BOT":
+			botModeSymbol = nil
+		case "CALLERID":
+			callerIDModeSymbol = nil
+		case "CASEMAPPING":
+			caseMapping = .rfc1459
+		case "CHANTYPES":
+			channelNamePrefixes = ["#"]
+		case "DEAF":
+			deafModeSymbol = nil
+		case "EXCEPTS":
+			banExceptionModeSymbol = nil
+		case "INVEX":
+			inviteExceptionModeSymbol = nil
+		case "STATUSMSG":
+			statusMessageModeSymbols = []
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	private func resetCollectionSetting(_ key: String) -> Bool {
+		switch key {
+		case "CHANLIMIT":
+			channelLimits = [:]
+		case "CLIENTTAGDENY":
+			clientTagDenyList = []
+		case "ELIST":
+			extendedListTokens = []
+		case "EXTBAN":
+			extendedBanPrefix = nil
+			extendedBanTypes = []
+		case "MAXLIST":
+			maximumListEntries = [:]
+		case "NETWORK":
+			networkName = nil
+			networkNameFormatted = nil
+		case "TARGMAX":
+			maximumTargetsByCommand = [:]
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	private func resetFeatureSetting(_ key: String) {
+		switch key {
+		case "SAFELIST":
+			safeListSupported = false
+		case "UTF8ONLY":
+			utf8Only = false
+		case "WHOX":
+			whoxSupported = false
+		default:
+			break
+		}
+	}
+
+	@objc(removeCachedSetting:)
+	public func removeCachedSetting(_ key: String) {
+		var updatedConfiguration: [[String: Any]] = []
+
+		for configuration in cachedConfiguration {
+			var configurationMutable = configuration
+
+			for cachedKey in configuration.keys where cachedKey.caseInsensitiveCompare(key) == .orderedSame {
+				configurationMutable.removeValue(forKey: cachedKey)
+			}
+
+			if configurationMutable.isEmpty == false {
+				updatedConfiguration.append(configurationMutable)
+			}
+		}
+
+		cachedConfiguration = updatedConfiguration
+	}
+
+	@objc(processConfigurationData:)
+	public func processConfigurationData(_ configurationData: String) {
+		let trimmed = configurationData.trimmingCharacters(in: .whitespacesAndNewlines)
+
+		if trimmed.isEmpty {
+			return
+		}
+
+		let client = client
+		var configuration: [String: Any] = [:]
+		let segments = trimmed.components(separatedBy: .whitespaces)
+
+		for segment in segments where segment.isEmpty == false {
+			var segmentKey = segment
+			var segmentValue: String?
+
+			if let equalSignIndex = segment.firstIndex(of: "="), equalSignIndex != segment.startIndex {
+				segmentKey = String(segment[..<equalSignIndex])
+				segmentValue = String(segment[segment.index(after: equalSignIndex)...])
+
+				if segmentValue?.isEmpty == true {
+					segmentValue = nil
+				}
+			}
+
+			if segmentKey.hasPrefix("-"), segmentKey.count > 1 {
+				let negatedKey = String(segmentKey.dropFirst())
+
+				resetSetting(negatedKey)
+				removeCachedSetting(negatedKey)
+				configuration.removeValue(forKey: negatedKey)
+
+				continue
+			}
+
+			if let segmentValue {
+				configuration[segmentKey] = segmentValue
+			} else {
+				configuration[segmentKey] = true
+			}
+
+			if let segmentValue {
+				processValueSegment(segmentKey: segmentKey, segmentValue: segmentValue)
+			}
+
+			processFlagSegment(segmentKey: segmentKey, segmentValue: segmentValue, client: client)
+		}
+
+		if configuration.isEmpty == false {
+			cachedConfiguration.append(configuration)
+		}
+	}
+
+	@objc(channelLimitForChannelNamed:)
+	public func channelLimit(forChannelNamed channel: String) -> UInt {
+		if channel.isEmpty {
+			return 0
+		}
+
+		let prefix = String(channel.prefix(1))
+
+		return channelLimits[prefix]?.uintValue ?? 0
+	}
+
+	@objc(maximumTargetsForCommand:)
+	public func maximumTargets(forCommand command: String) -> UInt {
+		if let limit = maximumTargetsByCommand[command.uppercased()] {
+			return limit.uintValue
+		}
+
+		return maximumTargets
+	}
+
+	@objc(chunkTargets:limit:)
+	public static func chunkTargets(_ targets: [String], limit: UInt) -> [[String]] {
+		ISupportTokenParser.chunkTargets(targets, limit: limit)
+	}
+
+	@objc(maximumListEntriesForModeSymbol:)
+	public func maximumListEntries(forModeSymbol modeSymbol: String) -> UInt {
+		maximumListEntries[modeSymbol]?.uintValue ?? 0
+	}
+
+	@objc(extendedListSupportsToken:)
+	public func extendedListSupportsToken(_ token: String) -> Bool {
+		extendedListTokens.contains(token.uppercased())
+	}
+
+	@objc(isClientTagDenied:)
+	public func isClientTagDenied(_ tagName: String) -> Bool {
+		ISupportTokenParser.isClientTag(tagName, deniedBy: clientTagDenyList)
+	}
+
+	@objc(descriptionForExtendedBanMask:)
+	public func descriptionForExtendedBanMask(_ mask: String) -> String? {
+		if extendedBanTypes.isEmpty {
+			return nil
+		}
+
+		var body = mask
+
+		if let prefix = extendedBanPrefix {
+			if mask.hasPrefix(prefix) == false {
+				return nil
+			}
+
+			body = String(mask.dropFirst(prefix.count))
+		}
+
+		var negated = false
+
+		if extendedBanPrefix != "~", body.hasPrefix("~"), body.count > 1 {
+			negated = true
+			body = String(body.dropFirst())
+		}
+
+		if body.isEmpty {
+			return nil
+		}
+
+		let type = String(body.prefix(1))
+
+		if extendedBanTypes.contains(type) == false {
+			return nil
+		}
+
+		var argument: String?
+
+		if body.count > 2, body[body.index(body.startIndex, offsetBy: 1)] == ":" {
+			argument = String(body.dropFirst(2))
+		} else if body.count > 1 || extendedBanPrefix == nil {
+			return nil
+		}
+
+		let description = Self.localizedDescription(forExtendedBanType: type, argument: argument)
+
+		if negated {
+			return IRCISupportStrings.everyoneExcept(description)
+		}
+
+		return description
+	}
+
+	@objc(localizedDescriptionForExtendedBanType:argument:)
+	public static func localizedDescription(forExtendedBanType type: String, argument: String?) -> String {
+		IRCISupportStrings.extendedBanDescription(type: type, argument: argument)
+	}
+
+	@objc(stringValueForConfiguration:)
+	public func stringValue(forConfiguration configuration: [String: Any]) -> String? {
+		if configuration.isEmpty {
+			return nil
+		}
+
+		var stringValue = ""
+		let sortedKeys =
+			(configuration as NSDictionary).sortedDictionaryKeys as? [String] ?? configuration.keys.sorted()
+
+		for key in sortedKeys {
+			let value = configuration[key]
+
+			if let value = value as? String {
+				stringValue.append("\u{02}\(key)\u{02}=\(value) ")
+			} else {
+				stringValue.append("\u{02}\(key) \u{02}")
+			}
+		}
+
+		return stringValue
+	}
+
+	@objc(parseModes:)
+	public func parseModes(_ modeString: String) -> [ModeInfo] {
+		ModeParser.parse(modeString, channelModes: channelModes)
+	}
+
+	@objc(casefoldString:)
+	public func casefoldString(_ string: String) -> String {
+		ISupportTokenParser.casefold(string, caseMapping: caseMapping.rawValue)
+	}
+
+	@objc(modeHasParameter:whenModeIsSet:)
+	public func modeHasParameter(_ modeSymbol: String, whenModeIsSet: Bool) -> Bool {
+		let modeIndex = (channelModes as NSDictionary).ce_unsignedInteger(forKey: modeSymbol)
+
+		if modeIndex == 1 || modeIndex == 2 || modeIndex == channelUserModeValue {
+			return true
+		}
+
+		if modeIndex == 3 {
+			return whenModeIsSet
+		}
+
+		return false
+	}
+
+	@objc(userPrefixForModeSymbol:)
+	public func userPrefix(forModeSymbol modeSymbol: String) -> String? {
+		guard let modeSymbols = userModeSymbols[IRCISupportUserModes.symbolsKey],
+		      let characters = userModeSymbols[IRCISupportUserModes.charactersKey]
+		else {
+			return nil
+		}
+
+		let modeSymbolIndex = modeSymbols.firstIndex(of: modeSymbol)
+
+		guard let modeSymbolIndex else {
+			return nil
+		}
+
+		return characters[modeSymbolIndex]
+	}
+
+	@objc(modeSymbolIsUserPrefix:)
+	public func modeSymbolIsUserPrefix(_ modeSymbol: String) -> Bool {
+		userPrefix(forModeSymbol: modeSymbol) != nil
+	}
+
+	@objc(modeSymbolForUserPrefix:)
+	public func modeSymbol(forUserPrefix character: String) -> String? {
+		guard let characters = userModeSymbols[IRCISupportUserModes.charactersKey],
+		      let modeSymbols = userModeSymbols[IRCISupportUserModes.symbolsKey]
+		else {
+			return nil
+		}
+
+		let characterIndex = characters.firstIndex(of: character)
+
+		guard let characterIndex else {
+			return nil
+		}
+
+		return modeSymbols[characterIndex]
+	}
+
+	@objc(characterIsUserPrefix:)
+	public func characterIsUserPrefix(_ character: String) -> Bool {
+		modeSymbol(forUserPrefix: character) != nil
+	}
+
+	@objc(rankForUserPrefixWithMode:)
+	public func rankForUserPrefix(withMode modeSymbol: String) -> UInt {
+		guard let modeSymbols = userModeSymbols[IRCISupportUserModes.symbolsKey] else {
+			return 0
+		}
+
+		let modeSymbolIndex = modeSymbols.firstIndex(of: modeSymbol)
+
+		guard let modeSymbolIndex else {
+			return 0
+		}
+
+		return IRCISupportUserModes.highestPrefixRank - UInt(modeSymbolIndex)
+	}
+
+	@objc(extractStatusMessagePrefixFromChannelNamed:)
+	public func extractStatusMessagePrefix(fromChannelNamed channel: String) -> String {
+		extractCharacters(statusMessageModeSymbols, fromChannelNamed: channel)
+	}
+
+	@objc(createModeWithSymbol:)
+	public func createMode(withSymbol modeSymbol: String) -> ModeInfo {
+		ModeInfo(modeSymbol: modeSymbol)
+	}
+
+	@objc(createModeWithSymbol:modeIsSet:modeParameter:)
+	public func createMode(
+		withSymbol modeSymbol: String,
+		modeIsSet: Bool,
+		modeParameter: String?
+	) -> ModeInfo {
+		ModeInfo(modeSymbol: modeSymbol, modeIsSet: modeIsSet, modeParameter: modeParameter)
+	}
+
+	@objc(isListSupported:)
+	public func isListSupported(_ listType: IRCISupportInfoListType) -> Bool {
+		modeSymbol(forList: listType) != nil
+	}
+
+	@objc(modeSymbolForList:)
+	public func modeSymbol(forList listType: IRCISupportInfoListType) -> String? {
+		switch listType {
+		case .ban:
+			return "b"
+		case .banException:
+			return banExceptionModeSymbol
+		case .inviteException:
+			return inviteExceptionModeSymbol
+		case .quiet:
+			if modeSymbolIsUserPrefix("q") {
+				return nil
+			}
+
+			return "q"
+		@unknown default:
+			return nil
+		}
+	}
+
+	@objc(statusMessagePrefixForModeSymbol:)
+	public func statusMessagePrefix(forModeSymbol modeSymbol: String) -> String? {
+		guard let character = userPrefix(forModeSymbol: modeSymbol) else {
+			return nil
+		}
+
+		if statusMessageModeSymbols.contains(character) == false {
+			return nil
+		}
+
+		return character
+	}
+}
+
+private extension IRCISupportInfo {
+	func prepareInitialState() {
+		reset()
+	}
+
+	func processValueSegment(segmentKey: String, segmentValue: String) {
+		let normalizedKey = segmentKey.uppercased()
+
+		if processPositiveLengthValue(normalizedKey, value: segmentValue) {
+			return
+		}
+
+		if processChannelValue(normalizedKey, value: segmentValue) {
+			return
+		}
+
+		processCollectionValue(normalizedKey, value: segmentValue)
+	}
+
+	func processPositiveLengthValue(_ key: String, value: String) -> Bool {
+		guard let parsedValue = positiveInteger(from: value) else {
+			return false
+		}
+
+		switch key {
+		case "AWAYLEN":
+			maximumAwayLength = parsedValue
+		case "CHANNELLEN":
+			maximumChannelNameLength = parsedValue
+		case "CHATHISTORY", "DRAFT/CHATHISTORY":
+			chatHistoryMaximumLines = parsedValue
+		case "KEYLEN":
+			maximumKeyLength = parsedValue
+		case "KICKLEN":
+			maximumKickLength = parsedValue
+		case "LINELEN":
+			maximumLineLength = parsedValue
+		case "MAXTARGETS":
+			maximumTargets = parsedValue
+		case "MODES":
+			maximumModeCount = parsedValue
+		case "NICKLEN":
+			maximumNicknameLength = parsedValue
+		case "TOPICLEN":
+			maximumTopicLength = parsedValue
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	func processChannelValue(_ key: String, value: String) -> Bool {
+		switch key {
+		case "CASEMAPPING":
+			parseCaseMapping(value)
+		case "CHANMODES":
+			channelModes = ISupportTokenParser.channelModes(from: value, merging: channelModes)
+		case "CHANTYPES":
+			updateChannelNamePrefixes(from: value)
+		case "NETWORK":
+			networkName = value
+			networkNameFormatted = IRCISupportStrings.networkName(value)
+		case "PREFIX":
+			parseUserModeSymbols(value)
+		case "STATUSMSG":
+			statusMessageModeSymbols = value.map(String.init)
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	func processCollectionValue(_ key: String, value: String) {
+		switch key {
+		case "CHANLIMIT":
+			channelLimits = ISupportTokenParser.channelLimits(from: value)
+		case "CLIENTTAGDENY":
+			clientTagDenyList = value.components(separatedBy: ",")
+		case "ELIST":
+			extendedListTokens = value.uppercased().map(String.init)
+		case "EXTBAN":
+			let configuration = ISupportTokenParser.extendedBanConfiguration(from: value)
+			extendedBanPrefix = configuration.prefix
+			extendedBanTypes = configuration.types
+		case "MAXLIST":
+			maximumListEntries = ISupportTokenParser.maximumListEntries(from: value)
+		case "TARGMAX":
+			maximumTargetsByCommand = ISupportTokenParser.maximumTargets(from: value)
+		default:
+			break
+		}
+	}
+
+	func positiveInteger(from value: String) -> UInt? {
+		let parsedValue = (value as NSString).integerValue
+		return parsedValue > 0 ? UInt(parsedValue) : nil
+	}
+
+	func updateChannelNamePrefixes(from value: String) {
+		let prefixes = value.map(String.init)
+
+		if prefixes.isEmpty == false {
+			channelNamePrefixes = prefixes
+		}
+	}
+
+	func processFlagSegment(segmentKey: String, segmentValue: String?, client: IRCClient?) {
+		let normalizedKey = segmentKey.uppercased()
+
+		if processModeFlag(normalizedKey, value: segmentValue) {
+			return
+		}
+
+		if processCapabilityFlag(normalizedKey, client: client) {
+			return
+		}
+
+		processAvailabilityFlag(normalizedKey, value: segmentValue)
+	}
+
+	func processModeFlag(_ key: String, value: String?) -> Bool {
+		switch key {
+		case "BOT":
+			if value?.isModeSymbol == true {
+				botModeSymbol = value
+			}
+		case "CALLERID":
+			callerIDModeSymbol = validatedModeSymbol(value, fallback: "g")
+		case "DEAF":
+			deafModeSymbol = validatedModeSymbol(value, fallback: "D")
+		case "EXCEPTS":
+			banExceptionModeSymbol = validatedModeSymbol(value, fallback: "e")
+		case "INVEX":
+			inviteExceptionModeSymbol = validatedModeSymbol(value, fallback: "I")
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	func validatedModeSymbol(_ value: String?, fallback: String) -> String {
+		guard let value, value.isModeSymbol else {
+			return fallback
+		}
+
+		return value
+	}
+
+	func processCapabilityFlag(_ key: String, client: IRCClient?) -> Bool {
+		switch key {
+		case "MONITOR":
+			client?.enableCapability(.monitorCommand)
+		case "NAMESX":
+			enableLegacyCapability(.multiPrefix, command: "PROTOCTL NAMESX", on: client)
+		case "UHNAMES":
+			enableLegacyCapability(.userhostInNames, command: "PROTOCTL UHNAMES", on: client)
+		case "WATCH":
+			client?.enableCapability(.watchCommand)
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	func enableLegacyCapability(
+		_ capability: ClientIRCv3SupportedCapability,
+		command: String,
+		on client: IRCClient?
+	) {
+		guard let client, client.isCapabilityEnabled(capability) == false else {
+			return
+		}
+
+		client.sendLine(command)
+		client.enableCapability(capability)
+	}
+
+	func processAvailabilityFlag(_ key: String, value: String?) {
+		switch key {
+		case "SAFELIST":
+			safeListSupported = true
+		case "SILENCE":
+			silenceSupported = true
+			if let value, let limit = positiveInteger(from: value) {
+				maximumSilenceEntries = limit
+			}
+		case "UTF8ONLY":
+			utf8Only = true
+		case "WHOX":
+			whoxSupported = true
+		default:
+			break
+		}
+	}
+
+	func parseCaseMapping(_ caseMapping: String) {
+		if caseMapping.caseInsensitiveCompare("ascii") == .orderedSame {
+			self.caseMapping = .ascii
+		} else if caseMapping.caseInsensitiveCompare("strict-rfc1459") == .orderedSame {
+			self.caseMapping = .strictRFC1459
+		} else {
+			self.caseMapping = .rfc1459
+		}
+	}
+
+	func parseUserModeSymbols(_ modeString: String) {
+		guard let configuration = ISupportTokenParser.userPrefixConfiguration(from: modeString) else {
+			return
+		}
+
+		userModeSymbols = [
+			IRCISupportUserModes.symbolsKey: configuration.modeSymbols,
+			IRCISupportUserModes.charactersKey: configuration.characters,
+		]
+
+		var updatedChannelModes = channelModes
+
+		for modeSymbol in configuration.modeSymbols {
+			updatedChannelModes[modeSymbol] = NSNumber(value: channelUserModeValue)
+		}
+
+		channelModes = updatedChannelModes
+	}
+
+	func extractCharacters(_ characters: [String], fromChannelNamed channel: String) -> String {
+		if channel.count < 2 {
+			return ""
+		}
+
+		for character in characters where channel.hasPrefix(character) {
+			let nextCharacter = String(channel.dropFirst().prefix(1))
+
+			if channelNamePrefixes.contains(nextCharacter) {
+				return character
+			}
+		}
+
+		return ""
+	}
+}

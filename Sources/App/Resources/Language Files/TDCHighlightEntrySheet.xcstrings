@@ -1,0 +1,102 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "channel-accessibility-hint" : {
+      "comment" : "Accessibility hint for the channel picker in a server highlight rule.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose All Channels to apply this rule everywhere."
+          }
+        }
+      }
+    },
+    "channel-accessibility-label" : {
+      "comment" : "Accessibility label for the channel picker in a server highlight rule. Migrated from the TDCHighlightEntrySheet interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limit Highlight to Channel"
+          }
+        }
+      }
+    },
+    "channel-connector" : {
+      "comment" : "Text between the highlight keyword editor and its channel picker. Migrated from the TDCHighlightEntrySheet interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "in the channel"
+          }
+        }
+      }
+    },
+    "keyword-accessibility-hint" : {
+      "comment" : "Accessibility hint for the keyword field in a server highlight rule.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the word or phrase that controls this highlight rule."
+          }
+        }
+      }
+    },
+    "keyword-accessibility-label" : {
+      "comment" : "Accessibility label for the keyword field in a server highlight rule. Migrated from the TDCHighlightEntrySheet interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight Match Keyword"
+          }
+        }
+      }
+    },
+    "keyword-connector" : {
+      "comment" : "Text between the match behavior picker and keyword field. Migrated from the TDCHighlightEntrySheet interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the keyword"
+          }
+        }
+      }
+    },
+    "match-type-accessibility-label" : {
+      "comment" : "Accessibility label for the Match or Exclude picker in a server highlight rule. Migrated from the TDCHighlightEntrySheet interface file.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight Match Type"
+          }
+        }
+      }
+    },
+    "window-title" : {
+      "comment" : "Title of the sheet used to add or edit a server highlight rule.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight Rule"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

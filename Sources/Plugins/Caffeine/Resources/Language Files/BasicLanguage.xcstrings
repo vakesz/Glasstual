@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "sleep-mode-management" : {
+      "comment" : "Name of the Caffeine preferences pane. Migrated from legacy key xqp-6g.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep Mode Management"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

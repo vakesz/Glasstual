@@ -1,0 +1,978 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "body-connection-successful" : {
+      "comment" : "Notification bubble description for a successful connection. Migrated from legacy key 88k-kl. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection successful"
+          }
+        }
+      }
+    },
+    "body-disconnection-successful" : {
+      "comment" : "Notification bubble description for a successful disconnection. Migrated from legacy key bif-2c. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnection successful"
+          }
+        }
+      }
+    },
+    "body-file-transfer-receive-failed" : {
+      "comment" : "Notification bubble description for a failed incoming file transfer. The argument is the filename. Migrated from legacy key cqq-ci. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        }
+      }
+    },
+    "body-file-transfer-receive-successful" : {
+      "comment" : "Notification bubble description for a successful incoming file transfer. Arguments are the filename and byte count. Migrated from legacy key oqh-pn. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$llu bytes)"
+          }
+        }
+      }
+    },
+    "body-file-transfer-request" : {
+      "comment" : "Notification bubble description for an incoming file-transfer request. Arguments are the filename and byte count. Migrated from legacy key wik-wq. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$llu bytes)"
+          }
+        }
+      }
+    },
+    "body-file-transfer-send-failed" : {
+      "comment" : "Notification bubble description for a failed outgoing file transfer. The argument is the filename. Migrated from legacy key 9r4-cq. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        }
+      }
+    },
+    "body-file-transfer-send-successful" : {
+      "comment" : "Notification bubble description for a successful outgoing file transfer. Arguments are the filename and byte count. Migrated from legacy key fhn-dd. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$llu bytes)"
+          }
+        }
+      }
+    },
+    "body-invited" : {
+      "comment" : "Notification bubble description for a channel invitation. Arguments are the inviter nickname and channel name. Migrated from legacy key xl5-dn. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ invited you to join %2$@"
+          }
+        }
+      }
+    },
+    "body-kicked" : {
+      "comment" : "Notification bubble description for a channel kick. Arguments are the kicker nickname, channel name, and reason. Migrated from legacy key fkt-p3. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ kicked you from %2$@ with reason: %3$@"
+          }
+        }
+      }
+    },
+    "body-user-available" : {
+      "comment" : "Address Book notification description for an available nickname. Migrated from legacy key 97r-0l. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’. Legacy translator context: ‘Address Book spoken text uses the actual notification message for that notification type. It is not defined here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User with nickname “%1$@” is available"
+          }
+        }
+      }
+    },
+    "body-user-disconnected" : {
+      "comment" : "Notification bubble description for a disconnected user. The argument is the nickname. Migrated from legacy key 7ao-n8. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ disconnected"
+          }
+        }
+      }
+    },
+    "body-user-disconnected-with-reason" : {
+      "comment" : "Notification bubble description for a disconnected user with a reason. Arguments are the nickname and reason. Migrated from legacy key ssw-m6. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ disconnected with reason: %2$@"
+          }
+        }
+      }
+    },
+    "body-user-joined" : {
+      "comment" : "Notification bubble description for a user joining a channel. Arguments are the nickname and channel name. Migrated from legacy key yas-us. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ joined %2$@"
+          }
+        }
+      }
+    },
+    "body-user-no-longer-available" : {
+      "comment" : "Address Book notification description for a nickname that is no longer available. Migrated from legacy key rif-9r. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’. Legacy translator context: ‘Address Book spoken text uses the actual notification message for that notification type. It is not defined here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User with nickname “%1$@” is no longer available"
+          }
+        }
+      }
+    },
+    "body-user-now-available" : {
+      "comment" : "Address Book notification description for a nickname that has become available. Migrated from legacy key xk2-1l. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’. Legacy translator context: ‘Address Book spoken text uses the actual notification message for that notification type. It is not defined here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User with nickname “%1$@” is now available"
+          }
+        }
+      }
+    },
+    "body-user-parted" : {
+      "comment" : "Notification bubble description for a user parting a channel. Arguments are the nickname and channel name. Migrated from legacy key bu2-9m. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ parted %2$@"
+          }
+        }
+      }
+    },
+    "body-user-parted-with-reason" : {
+      "comment" : "Notification bubble description for a user parting with a reason. Arguments are the nickname, channel name, and reason. Migrated from legacy key 3ur-i8. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ parted %2$@ with reason: %3$@"
+          }
+        }
+      }
+    },
+    "reply-action-title" : {
+      "comment" : "Notification bubble reply action title. Migrated from legacy key 3t4-kl. Legacy translator context: ‘Notification bubble reply button placeholders’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply"
+          }
+        }
+      }
+    },
+    "reply-placeholder" : {
+      "comment" : "Placeholder for the notification bubble private-message reply field. Migrated from legacy key do4-2e. Legacy translator context: ‘Notification bubble reply button placeholders’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter message to reply to this private message"
+          }
+        }
+      }
+    },
+    "reply-send-button" : {
+      "comment" : "Title of the button that sends a notification bubble reply. Migrated from legacy key bhn-uo. Legacy translator context: ‘Notification bubble reply button placeholders’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Message"
+          }
+        }
+      }
+    },
+    "spoken-by-user" : {
+      "comment" : "Spoken notification component naming a channel-message author. The argument is the nickname. Migrated from legacy key qy9-86. Legacy translator context: ‘Notification spoken text’; ‘Channel messages’; ‘Channel messages are broken up into multiple components so that they can be reassembled based on user preference.’",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " by %@"
+          }
+        }
+      }
+    },
+    "spoken-channel-message" : {
+      "comment" : "Spoken notification label for a channel message. Channel-message spoken text is assembled from localized components according to user preferences. Migrated from legacy key tao-i2. Legacy translator context: ‘Notification spoken text’; ‘Channel messages’; ‘Channel messages are broken up into multiple components so that they can be reassembled based on user preference.’",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Message"
+          }
+        }
+      }
+    },
+    "spoken-channel-notice" : {
+      "comment" : "Spoken notification label for a channel notice. Channel-message spoken text is assembled from localized components according to user preferences. Migrated from legacy key kk4-68. Legacy translator context: ‘Notification spoken text’; ‘Channel messages’; ‘Channel messages are broken up into multiple components so that they can be reassembled based on user preference.’",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Notice"
+          }
+        }
+      }
+    },
+    "spoken-connected" : {
+      "comment" : "Spoken connection notification. The argument is the network name. Migrated from legacy key z4p-yr. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected to %@"
+          }
+        }
+      }
+    },
+    "spoken-disconnected" : {
+      "comment" : "Spoken disconnection notification. The argument is the network name. Migrated from legacy key fd0-f8. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected from %@"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-receive-completed" : {
+      "comment" : "Spoken notification for a completed incoming file transfer. The argument identifies the other user. Migrated from legacy key 4cd-p3. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer from %@ completed"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-receive-failed" : {
+      "comment" : "Spoken notification for a failed incoming file transfer. The argument identifies the other user. Migrated from legacy key mak-bj. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer from %@ failed"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-request" : {
+      "comment" : "Spoken notification for an incoming file-transfer request. The argument identifies the other user. Migrated from legacy key at0-vi. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Received file transfer request from %@"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-send-completed" : {
+      "comment" : "Spoken notification for a completed outgoing file transfer. The argument identifies the other user. Migrated from legacy key 5e4-vg. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer to %@ completed"
+          }
+        }
+      }
+    },
+    "spoken-file-transfer-send-failed" : {
+      "comment" : "Spoken notification for a failed outgoing file transfer. The argument identifies the other user. Migrated from legacy key f0u-32. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File transfer to %@ failed"
+          }
+        }
+      }
+    },
+    "spoken-from-user" : {
+      "comment" : "Spoken notification component naming a private-message author. The argument is the nickname. Migrated from legacy key a7i-pu. Legacy translator context: ‘Notification spoken text’; ‘Channel messages’; ‘Channel messages are broken up into multiple components so that they can be reassembled based on user preference.’",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " from %@"
+          }
+        }
+      }
+    },
+    "spoken-highlight" : {
+      "comment" : "Spoken notification label for a highlight. Channel-message spoken text is assembled from localized components according to user preferences. Migrated from legacy key qld-sa. Legacy translator context: ‘Notification spoken text’; ‘Channel messages’; ‘Channel messages are broken up into multiple components so that they can be reassembled based on user preference.’",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight"
+          }
+        }
+      }
+    },
+    "spoken-in-channel" : {
+      "comment" : "Spoken notification component naming a channel. The argument is the channel name. Migrated from legacy key ke8-17. Legacy translator context: ‘Notification spoken text’; ‘Channel messages’; ‘Channel messages are broken up into multiple components so that they can be reassembled based on user preference.’",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " in %@"
+          }
+        }
+      }
+    },
+    "spoken-in-private-message" : {
+      "comment" : "Spoken notification component for a private-message destination. Migrated from legacy key 6nw-ec. Legacy translator context: ‘Notification spoken text’; ‘Channel messages’; ‘Channel messages are broken up into multiple components so that they can be reassembled based on user preference.’",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " in Private Message"
+          }
+        }
+      }
+    },
+    "spoken-invited" : {
+      "comment" : "Spoken channel-invitation notification. Arguments are the channel name and inviter nickname. Migrated from legacy key l5i-at. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invited to %1$@ by %2$@"
+          }
+        }
+      }
+    },
+    "spoken-kicked" : {
+      "comment" : "Spoken channel-kick notification. Arguments are the channel name and kicker nickname. Migrated from legacy key 5yu-bf. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kicked from %1$@ by %2$@"
+          }
+        }
+      }
+    },
+    "spoken-new-private-message" : {
+      "comment" : "Spoken new-private-message notification. Arguments are the sender nickname and message text. Migrated from legacy key rvb-9l. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Private Message from %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-private-message" : {
+      "comment" : "Spoken private-message notification. Arguments are the sender nickname and message text. Migrated from legacy key 2bu-ep. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Message from %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-private-notice" : {
+      "comment" : "Spoken private-notice notification. Arguments are the sender nickname and message text. Migrated from legacy key 6jl-vh. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Notice from %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "spoken-separator" : {
+      "comment" : "Separator between assembled spoken notification components. Migrated from legacy key g9t-bt. Legacy translator context: ‘Notification spoken text’; ‘Channel messages’; ‘Channel messages are broken up into multiple components so that they can be reassembled based on user preference.’ Legacy inline translator comment: ‘separator’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", "
+          }
+        }
+      }
+    },
+    "spoken-user-disconnected" : {
+      "comment" : "Spoken notification for a disconnected user. The argument is the nickname. This is the disconnect case. Migrated from legacy key sqf-4y. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’. Legacy inline translator comment: ‘disconnect’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ disconnected"
+          }
+        }
+      }
+    },
+    "spoken-user-joined" : {
+      "comment" : "Spoken notification for a user joining a channel. Arguments are the nickname and channel name. Migrated from legacy key bwu-ps. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ joined %2$@"
+          }
+        }
+      }
+    },
+    "spoken-user-parted" : {
+      "comment" : "Spoken notification for a user parting a channel. Arguments are the nickname and channel name. Migrated from legacy key 4aq-hz. Legacy translator context: ‘Notification spoken text’; ‘Other spoken text’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ parted %2$@"
+          }
+        }
+      }
+    },
+    "title-address-book" : {
+      "comment" : "Notification bubble title for an Address Book notification. Migrated from legacy key niq-32. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address Book Notification"
+          }
+        }
+      }
+    },
+    "title-channel-message" : {
+      "comment" : "Notification bubble title for a channel message. The argument is the event title. Migrated from legacy key ep5-de. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Message: %@"
+          }
+        }
+      }
+    },
+    "title-channel-notice" : {
+      "comment" : "Notification bubble title for a channel notice. The argument is the event title. Migrated from legacy key chi-km. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Notice: %@"
+          }
+        }
+      }
+    },
+    "title-connected" : {
+      "comment" : "Notification bubble title for a connection. The argument is the event title. Migrated from legacy key mo1-vn. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected: %@"
+          }
+        }
+      }
+    },
+    "title-disconnected" : {
+      "comment" : "Notification bubble title for a disconnection. The argument is the event title. Migrated from legacy key 7xe-ig. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected: %@"
+          }
+        }
+      }
+    },
+    "title-file-transfer-receive-failed" : {
+      "comment" : "Notification bubble title for a failed incoming file transfer. The argument is the transfer subject. Migrated from legacy key hm4-ze. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Transfer Failed: %@"
+          }
+        }
+      }
+    },
+    "title-file-transfer-receive-successful" : {
+      "comment" : "Notification bubble title for a successful incoming file transfer. The argument is the transfer subject. Migrated from legacy key hc9-7n. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Successful File Transfer: %@"
+          }
+        }
+      }
+    },
+    "title-file-transfer-request" : {
+      "comment" : "Notification bubble title for an incoming file-transfer request. The argument is the transfer subject. Migrated from legacy key nqz-7v. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Transfer Request: %@"
+          }
+        }
+      }
+    },
+    "title-file-transfer-send-failed" : {
+      "comment" : "Notification bubble title for a failed outgoing file transfer. The argument is the transfer subject. Migrated from legacy key het-vh. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Transfer Failed: %@"
+          }
+        }
+      }
+    },
+    "title-file-transfer-send-successful" : {
+      "comment" : "Notification bubble title for a successful outgoing file transfer. The argument is the transfer subject. Migrated from legacy key l5y-sx. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Successful File Transfer: %@"
+          }
+        }
+      }
+    },
+    "title-highlight" : {
+      "comment" : "Notification bubble title for a highlight. The argument is the event title. Migrated from legacy key qka-f3. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight: %@"
+          }
+        }
+      }
+    },
+    "title-invited" : {
+      "comment" : "Notification bubble title for a channel invitation. The argument is the event title. Migrated from legacy key g4s-cq. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invited: %@"
+          }
+        }
+      }
+    },
+    "title-kicked" : {
+      "comment" : "Notification bubble title for a channel kick. The argument is the event title. Migrated from legacy key u30-ia. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kicked: %@"
+          }
+        }
+      }
+    },
+    "title-new-private-message" : {
+      "comment" : "Notification bubble title for a new private message. Migrated from legacy key ltn-hf. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Private Message"
+          }
+        }
+      }
+    },
+    "title-private-message" : {
+      "comment" : "Notification bubble title for a private message. Migrated from legacy key 69i-dy. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Message"
+          }
+        }
+      }
+    },
+    "title-private-notice" : {
+      "comment" : "Notification bubble title for a private notice. Migrated from legacy key 7hn-dg. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Notice"
+          }
+        }
+      }
+    },
+    "title-user-disconnected" : {
+      "comment" : "Notification bubble title for a disconnected user. The argument is the event title. Migrated from legacy key 20x-32. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Disconnected: %@"
+          }
+        }
+      }
+    },
+    "title-user-joined" : {
+      "comment" : "Notification bubble title for a user joining a channel. The argument is the event title. Migrated from legacy key keq-ts. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Joined: %@"
+          }
+        }
+      }
+    },
+    "title-user-parted" : {
+      "comment" : "Notification bubble title for a user parting a channel. The argument is the event title. Migrated from legacy key im4-p0. Legacy translator context: ‘Notification bubble titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Parted: %@"
+          }
+        }
+      }
+    },
+    "type-address-book" : {
+      "comment" : "Notification type title for an Address Book match. Migrated from legacy key kx3-xk. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address Book Notification"
+          }
+        }
+      }
+    },
+    "type-channel-invitation" : {
+      "comment" : "Notification type title for a channel invitation. Migrated from legacy key eiu-8q. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Invitation"
+          }
+        }
+      }
+    },
+    "type-channel-message" : {
+      "comment" : "Notification type title for a channel message. Migrated from legacy key qnz-k4. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Message"
+          }
+        }
+      }
+    },
+    "type-channel-notice" : {
+      "comment" : "Notification type title for a channel notice. Migrated from legacy key vuq-jp. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Notice"
+          }
+        }
+      }
+    },
+    "type-connected" : {
+      "comment" : "Notification type title for connecting. Migrated from legacy key 4lr-ej. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        }
+      }
+    },
+    "type-disconnected" : {
+      "comment" : "Notification type title for disconnecting. Migrated from legacy key wjv-yb. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        }
+      }
+    },
+    "type-file-transfer-receive-failed" : {
+      "comment" : "Notification type title for a failed incoming file transfer. Migrated from legacy key we9-1b. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed File Transfer (Receiving)"
+          }
+        }
+      }
+    },
+    "type-file-transfer-receive-successful" : {
+      "comment" : "Notification type title for a successful incoming file transfer. Migrated from legacy key qle-7v. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Successful File Transfer (Receiving)"
+          }
+        }
+      }
+    },
+    "type-file-transfer-request" : {
+      "comment" : "Notification type title for an incoming file-transfer request. Migrated from legacy key st5-0n. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Transfer Request"
+          }
+        }
+      }
+    },
+    "type-file-transfer-send-failed" : {
+      "comment" : "Notification type title for a failed outgoing file transfer. Migrated from legacy key sc0-1n. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed File Transfer (Sending)"
+          }
+        }
+      }
+    },
+    "type-file-transfer-send-successful" : {
+      "comment" : "Notification type title for a successful outgoing file transfer. Migrated from legacy key 0x2-3h. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Successful File Transfer (Sending)"
+          }
+        }
+      }
+    },
+    "type-highlight" : {
+      "comment" : "Notification type title for a highlight or mention. Migrated from legacy key cs4-x9. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight (Mention)"
+          }
+        }
+      }
+    },
+    "type-kicked" : {
+      "comment" : "Notification type title for being kicked from a channel. Migrated from legacy key 2nk-lg. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kicked from Channel"
+          }
+        }
+      }
+    },
+    "type-new-private-message" : {
+      "comment" : "Notification type title for a new private message. Migrated from legacy key 5yi-gu. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Message (new)"
+          }
+        }
+      }
+    },
+    "type-private-message" : {
+      "comment" : "Notification type title for a private message. Migrated from legacy key 00b-nx. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Message"
+          }
+        }
+      }
+    },
+    "type-private-notice" : {
+      "comment" : "Notification type title for a private notice. Migrated from legacy key nhz-io. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private Notice"
+          }
+        }
+      }
+    },
+    "type-user-disconnected" : {
+      "comment" : "Notification type title for a disconnected user. Migrated from legacy key 0fo-bt. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Disconnected"
+          }
+        }
+      }
+    },
+    "type-user-joined" : {
+      "comment" : "Notification type title for a user joining a channel. Migrated from legacy key 25q-af. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Joined Channel"
+          }
+        }
+      }
+    },
+    "type-user-parted" : {
+      "comment" : "Notification type title for a user parting a channel. Migrated from legacy key k3s-by. Legacy translator context: ‘Notification type titles’.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User Parted Channel"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

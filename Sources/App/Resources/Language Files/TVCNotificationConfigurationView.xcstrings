@@ -1,0 +1,16 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "default-sound" : {
+      "comment" : "Title of the default notification sound option. Migrated from legacy key 0rs-8l.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Default Sound" } } }
+    },
+    "no-sound" : {
+      "comment" : "Title of the option that disables notification sounds. Migrated from legacy key vje-9n.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "No Sound" } } }
+    }
+  },
+  "version" : "1.0"
+}
