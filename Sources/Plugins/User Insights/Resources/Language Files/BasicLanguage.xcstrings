@@ -1,0 +1,167 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "bad-input" : {
+      "comment" : "Message shown for invalid User Insights command input. Migrated from legacy key r6x-ih.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bad input" } }
+      }
+    },
+    "brag-channel-count" : {
+      "comment" : "Opening of the brag response. The argument is the number of channels. Migrated from legacy keys 30l-sx-1 and 30l-sx-2.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "I am in %ld channel while connected to " } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "I am in %ld channels while connected to " } }
+            }
+          }
+        }
+      }
+    },
+    "brag-channel-half-operator-count" : {
+      "comment" : "Brag response fragment. The argument is the number of channel half-operator roles. Migrated from legacy keys 431-yv-1 and 431-yv-2.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%ld halfop, " } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%ld halfops, " } }
+            }
+          }
+        }
+      }
+    },
+    "brag-channel-operator-count" : {
+      "comment" : "Brag response fragment. The argument is the number of channel operator roles. Migrated from legacy keys qne-b5-1 and qne-b5-2.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%ld op, " } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%ld ops, " } }
+            }
+          }
+        }
+      }
+    },
+    "brag-channel-voice-count" : {
+      "comment" : "Brag response fragment. The argument is the number of channel voice roles. Migrated from legacy keys x1m-jp-1 and x1m-jp-2.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "and %ld voice " } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "and %ld voices " } }
+            }
+          }
+        }
+      }
+    },
+    "brag-network-count" : {
+      "comment" : "Brag response fragment. The argument is the number of connected networks. Migrated from legacy keys rks-0t-1 and rks-0t-2.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "%ld network. " } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "%ld networks. " } }
+            }
+          }
+        }
+      }
+    },
+    "brag-no-power" : {
+      "comment" : "Conclusion of the brag response when the local user has no elevated roles. Migrated from legacy key jpi-po.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "I have no power whatsoever." } }
+      }
+    },
+    "brag-operator-count" : {
+      "comment" : "Brag response fragment. The argument is the number of IRC operator connections. Migrated from legacy keys 614-ac-1 and 614-ac-2.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "I have %ld o:line, " } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "I have %ld o:lines, " } }
+            }
+          }
+        }
+      }
+    },
+    "brag-powered-user-count" : {
+      "comment" : "Conclusion of the brag response. The argument is the number of users over whom the local user has power. Migrated from legacy keys ny4-wd-1 and ny4-wd-2.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : { "stringUnit" : { "state" : "translated", "value" : "with power over %ld user." } },
+              "other" : { "stringUnit" : { "state" : "translated", "value" : "with power over %ld unique users." } }
+            }
+          }
+        }
+      }
+    },
+    "clone-count" : {
+      "comment" : "Clone-search summary. Arguments are the clone count and channel name. Migrated from legacy key iaa-5v.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lu clone(s) found in %2$@" } }
+      }
+    },
+    "hostmask-match-count" : {
+      "comment" : "Hostmask-search summary without a query. Arguments are the match count and channel name. Migrated from legacy key nn7-6s.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lu user(s) found in %2$@ with a cached hostmask." } }
+      }
+    },
+    "hostmask-query-match-count" : {
+      "comment" : "Hostmask-search summary with a query. Arguments are the match count, channel name, and query. Migrated from legacy key oq7-mg.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$lu user(s) found in %2$@ with a cached hostmask containing the search string “%3$@”" } }
+      }
+    },
+    "no-clones" : {
+      "comment" : "Message shown when no clones are found. Migrated from legacy key gxq-47.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No clones found" } }
+      }
+    },
+    "no-hostmask-matches" : {
+      "comment" : "Message shown when no cached hostmasks are found. The argument is the channel name. Migrated from legacy key 1ab-27.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No users found in %@ with a cached hostmask." } }
+      }
+    },
+    "no-hostmask-query-matches" : {
+      "comment" : "Message shown when no cached hostmasks match a query. Arguments are the channel name and query. Migrated from legacy key n1j-tp.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No users found in %1$@ with a cached hostmask containing the search string “%2$@”" } }
+      }
+    },
+    "no-users-in-channel" : {
+      "comment" : "Message shown when a channel has no users. The argument is the channel name. Migrated from legacy key 5dx-rs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No users found in %@" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -6,10 +6,10 @@ typealias SupportInfo = Glasstual.IRCISupportInfo
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
 /// #import "GLTTestClient.h"
-/// #import "IRCISupportInfoPrivate.h"
 /// #import "ModeInfo.h"
 @objc
-class IRCISupportInfoTests: XCTestCase {
+@MainActor
+final class IRCISupportInfoTests: XCTestCase {
 	@objc
 	func supportInfoWithConfiguration(_ configuration: String) -> SupportInfo {
 		let client = GLTTestClient()
@@ -24,7 +24,7 @@ class IRCISupportInfoTests: XCTestCase {
 	func testDefaultCaseMappingIsRFC1459() {
 		let supportInfo = supportInfoWithConfiguration("NETWORK=Example")
 
-		XCTAssertEqual(supportInfo.caseMapping, IRCISupportInfoCaseMapping.RFC1459)
+		XCTAssertEqual(supportInfo.caseMapping, IRCISupportInfoCaseMapping.rfc1459)
 		XCTAssertEqual(supportInfo.casefoldString("Nick[]\\~"), "nick{}|^")
 	}
 
@@ -32,7 +32,7 @@ class IRCISupportInfoTests: XCTestCase {
 	func testASCIICaseMappingLeavesBracketsAlone() {
 		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=ascii")
 
-		XCTAssertEqual(supportInfo.caseMapping, IRCISupportInfoCaseMapping.ASCII)
+		XCTAssertEqual(supportInfo.caseMapping, IRCISupportInfoCaseMapping.ascii)
 		XCTAssertEqual(supportInfo.casefoldString("Nick[]\\~"), "nick[]\\~")
 	}
 
@@ -77,8 +77,8 @@ class IRCISupportInfoTests: XCTestCase {
 	func testPrefixIsParsedInRankOrder() {
 		let supportInfo = supportInfoWithConfiguration("PREFIX=(qaohv)~&@%+")
 
-		XCTAssertEqual(supportInfo.userModeSymbols[IRCISupportUserModeSymbolsSymbolsKey], ["q", "a", "o", "h", "v"])
-		XCTAssertEqual(supportInfo.userModeSymbols[IRCISupportUserModeSymbolsCharactersKey], ["~", "&", "@", "%", "+"])
+		XCTAssertEqual(supportInfo.userModeSymbols[IRCISupportUserModes.symbolsKey], ["q", "a", "o", "h", "v"])
+		XCTAssertEqual(supportInfo.userModeSymbols[IRCISupportUserModes.charactersKey], ["~", "&", "@", "%", "+"])
 		XCTAssertEqual(supportInfo.modeSymbol(forUserPrefix: "@"), "o")
 		XCTAssertEqual(supportInfo.userPrefix(forModeSymbol: "v"), "+")
 
@@ -86,7 +86,7 @@ class IRCISupportInfoTests: XCTestCase {
 
 		XCTAssertFalse(supportInfo.characterIsUserPrefix("#"))
 
-		XCTAssertEqual(supportInfo.rankForUserPrefix(withMode: "q"), UInt(IRCISupportInfoHighestUserPrefixRank))
+		XCTAssertEqual(supportInfo.rankForUserPrefix(withMode: "q"), IRCISupportUserModes.highestPrefixRank)
 
 		XCTAssertTrue(supportInfo.rankForUserPrefix(withMode: "v") < supportInfo.rankForUserPrefix(withMode: "o"))
 		/* Prefix modes always take a parameter. */
@@ -195,6 +195,19 @@ class IRCISupportInfoTests: XCTestCase {
 
 		XCTAssertEqual(supportInfo.userPrefix(forModeSymbol: "o"), "@")
 		XCTAssertEqual(supportInfo.userPrefix(forModeSymbol: "v"), "+")
+	}
+
+	@objc
+	func testResettingSilenceClearsSupportAndLimitTogether() {
+		let supportInfo = supportInfoWithConfiguration("SILENCE=25")
+
+		XCTAssertTrue(supportInfo.silenceSupported)
+		XCTAssertEqual(supportInfo.maximumSilenceEntries, 25)
+
+		supportInfo.resetSetting("silence")
+
+		XCTAssertFalse(supportInfo.silenceSupported)
+		XCTAssertEqual(supportInfo.maximumSilenceEntries, 0)
 	}
 }
 

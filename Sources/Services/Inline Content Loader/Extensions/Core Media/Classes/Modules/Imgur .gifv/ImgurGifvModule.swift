@@ -36,17 +36,18 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 
 @objc(ICMImgurGifv)
-final class ImgurGifvModule: ICMInlineGifVideo {
+final class ImgurGifvModule: InlineGifVideoModule {
 	private static let validFileExtensions = ["mp4", "gif", "gifv", "webp"]
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		guard let address = finalAddress(for: url) else { return nil }
 		return super.actionBlock(forAddress: address)
 	}
 
-	private class func finalAddress(for url: URL) -> String? {
+	private static func finalAddress(for url: URL) -> String? {
 		let path = url.path(percentEncoded: true)
 		guard path.count > 1 else { return nil }
 
@@ -58,11 +59,11 @@ final class ImgurGifvModule: ICMInlineGifVideo {
 		return "https://i.imgur.com/\(identifier).mp4"
 	}
 
-	override class var domains: [String]? {
+	override static var domains: [String]? {
 		["i.imgur.com"]
 	}
 
-	override class var contentIsFile: Bool {
+	override static var contentIsFile: Bool {
 		true
 	}
 

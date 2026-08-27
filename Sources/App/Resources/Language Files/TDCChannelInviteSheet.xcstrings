@@ -1,0 +1,90 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "0lg-er" : {
+      "comment" : "Heading above the channel picker. The argument describes the users being invited.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite %@ to:"
+          }
+        }
+      }
+    },
+    "7i1-ds" : {
+      "comment" : "Joins exactly two nicknames. The arguments are the first and second nicknames.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ and %2$@"
+          }
+        }
+      }
+    },
+    "c8p-sb" : {
+      "comment" : "Describes an invitation with three or more users. The argument is the number of users.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%ld users"
+          }
+        }
+      }
+    },
+    "cancel-button" : {
+      "comment" : "Title of the button that closes the invitation sheet without sending an invitation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "channel-picker-label" : {
+      "comment" : "Visible and accessibility label for the channel picker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel to invite users to"
+          }
+        }
+      }
+    },
+    "invite-button" : {
+      "comment" : "Title of the button that sends the invitation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite"
+          }
+        }
+      }
+    },
+    "window-title" : {
+      "comment" : "Title of the channel invitation sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite to Channel"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

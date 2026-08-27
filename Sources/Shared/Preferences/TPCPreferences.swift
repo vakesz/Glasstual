@@ -42,73 +42,60 @@ import Foundation
 public class TextualPreferences: NSObject {}
 
 public extension TextualPreferences {
-	@objc(inlineImagesMaxFilesize)
-	class func textual_inlineImagesMaxFilesize() -> UInt64 {
+	class func inlineImagesMaxFilesize() -> UInt64 {
 		let megabytesByPreference: [UInt: UInt64] = [
 			1: 1, 2: 2, 3: 3, 4: 4, 5: 5,
 			6: 10, 7: 15, 8: 20, 9: 50, 10: 100,
 		]
-		let preference = TPCPreferencesUserDefaults.shared().integer(forKey: "InlineMediaMaximumFilesize")
+		let preference = TextualUserDefaults.shared().integer(forKey: "InlineMediaMaximumFilesize")
 		return (megabytesByPreference[UInt(preference)] ?? 2) * 1_048_576
 	}
 
-	@objc(inlineMediaMaxWidth)
-	class func textual_inlineMediaMaxWidth() -> UInt {
-		UInt(TPCPreferencesUserDefaults.shared().integer(forKey: "InlineMediaScalingWidth"))
+	class func inlineMediaMaxWidth() -> UInt {
+		UInt(TextualUserDefaults.shared().integer(forKey: "InlineMediaScalingWidth"))
 	}
 
-	@objc(inlineMediaMaxHeight)
-	class func textual_inlineMediaMaxHeight() -> UInt {
-		UInt(TPCPreferencesUserDefaults.shared().integer(forKey: "InlineMediaMaximumHeight"))
+	class func inlineMediaMaxHeight() -> UInt {
+		UInt(TextualUserDefaults.shared().integer(forKey: "InlineMediaMaximumHeight"))
 	}
 
-	@objc(setInlineMediaMaxWidth:)
-	class func textual_setInlineMediaMaxWidth(_ value: UInt) {
-		TPCPreferencesUserDefaults.shared().set(Int(value), forKey: "InlineMediaScalingWidth")
+	class func setInlineMediaMaxWidth(_ value: UInt) {
+		TextualUserDefaults.shared().set(Int(value), forKey: "InlineMediaScalingWidth")
 	}
 
-	@objc(setInlineMediaMaxHeight:)
-	class func textual_setInlineMediaMaxHeight(_ value: UInt) {
-		TPCPreferencesUserDefaults.shared().set(Int(value), forKey: "InlineMediaMaximumHeight")
+	class func setInlineMediaMaxHeight(_ value: UInt) {
+		TextualUserDefaults.shared().set(Int(value), forKey: "InlineMediaMaximumHeight")
 	}
 
-	@objc(inlineMediaLimitToBasics)
-	class func textual_inlineMediaLimitToBasics() -> Bool {
-		TPCPreferencesUserDefaults.shared().bool(forKey: "InlineMediaLimitToBasics")
+	class func inlineMediaLimitToBasics() -> Bool {
+		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitToBasics")
 	}
 
-	@objc(setInlineMediaLimitToBasics:)
-	class func textual_setInlineMediaLimitToBasics(_ value: Bool) {
-		TPCPreferencesUserDefaults.shared().set(value, forKey: "InlineMediaLimitToBasics")
+	class func setInlineMediaLimitToBasics(_ value: Bool) {
+		TextualUserDefaults.shared().set(value, forKey: "InlineMediaLimitToBasics")
 	}
 
-	@objc(inlineMediaLimitBasicsToFiles)
-	class func textual_inlineMediaLimitBasicsToFiles() -> Bool {
-		TPCPreferencesUserDefaults.shared().bool(forKey: "InlineMediaLimitBasicsToFiles")
+	class func inlineMediaLimitBasicsToFiles() -> Bool {
+		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitBasicsToFiles")
 	}
 
-	@objc(setInlineMediaLimitBasicsToFiles:)
-	class func textual_setInlineMediaLimitBasicsToFiles(_ value: Bool) {
-		TPCPreferencesUserDefaults.shared().set(value, forKey: "InlineMediaLimitBasicsToFiles")
+	class func setInlineMediaLimitBasicsToFiles(_ value: Bool) {
+		TextualUserDefaults.shared().set(value, forKey: "InlineMediaLimitBasicsToFiles")
 	}
 
-	@objc(inlineMediaLimitInsecureContent)
-	class func textual_inlineMediaLimitInsecureContent() -> Bool {
-		TPCPreferencesUserDefaults.shared().bool(forKey: "InlineMediaLimitInsecureContent")
+	class func inlineMediaLimitInsecureContent() -> Bool {
+		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitInsecureContent")
 	}
 
-	@objc(inlineMediaLimitNaughtyContent)
-	class func textual_inlineMediaLimitNaughtyContent() -> Bool {
-		TPCPreferencesUserDefaults.shared().bool(forKey: "InlineMediaLimitNaughtyContent")
+	class func inlineMediaLimitNaughtyContent() -> Bool {
+		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitNaughtyContent")
 	}
 
-	@objc(inlineMediaLimitUnsafeContent)
-	class func textual_inlineMediaLimitUnsafeContent() -> Bool {
-		TPCPreferencesUserDefaults.shared().bool(forKey: "InlineMediaLimitUnsafeContent")
+	class func inlineMediaLimitUnsafeContent() -> Bool {
+		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitUnsafeContent")
 	}
 
-	@objc(inlineMediaCheckEverything)
-	class func textual_inlineMediaCheckEverything() -> Bool {
-		TPCPreferencesUserDefaults.shared().bool(forKey: "InlineMediaCheckEverything")
+	class func inlineMediaCheckEverything() -> Bool {
+		TextualUserDefaults.shared().bool(forKey: "InlineMediaCheckEverything")
 	}
 }

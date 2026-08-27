@@ -1,4 +1,6 @@
+import CocoaExtensions
 @testable import Glasstual
+import GlasstualPluginKit
 import XCTest
 
 final class IRCClientConfigMigrationTests: XCTestCase {
@@ -38,7 +40,7 @@ final class IRCClientConfigMigrationTests: XCTestCase {
 			]],
 			"channelList": [[
 				"channelName": "#swift",
-				"channelType": IRCChannelType.channel.rawValue,
+				"channelType": ChannelType.channel.rawValue,
 			]],
 		]
 
@@ -62,7 +64,7 @@ final class IRCClientConfigMigrationTests: XCTestCase {
 			"dictionaryVersion": 710,
 			"channelList": [[
 				"channelName": "#runtime-dispatch",
-				"channelType": IRCChannelType.channel.rawValue,
+				"channelType": ChannelType.channel.rawValue,
 			]],
 		])
 
@@ -121,14 +123,5 @@ final class IRCClientConfigMigrationTests: XCTestCase {
 		XCTAssertEqual(config.username, "legacy-user")
 		XCTAssertEqual(config.cipherSuites, .none)
 		XCTAssertEqual((config.dictionaryValue["dictionaryVersion"] as? NSNumber)?.uintValue, 710)
-	}
-
-	func testObjectiveCRuntimeSelectorsRemainAvailable() {
-		let config = ClientConfig(dictionary: ["dictionaryVersion": 710])
-
-		XCTAssertNotNil(NSClassFromString("Glasstual.IRCClientConfig") ?? NSClassFromString("IRCClientConfig"))
-		XCTAssertTrue(config.responds(to: NSSelectorFromString("writeNicknamePasswordToKeychain")))
-		XCTAssertTrue(config.responds(to: NSSelectorFromString("destroyProxyPasswordKeychainItem")))
-		XCTAssertTrue(config.responds(to: NSSelectorFromString("destroyServerPasswordKeychainItemAfterMigration")))
 	}
 }

@@ -5,7 +5,8 @@ import XCTest
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
-class IRCExtrasMigrationTests: XCTestCase {
+@MainActor
+final class IRCExtrasMigrationTests: XCTestCase {
 	func testParseIRCProtocolURIRejectsMalformedSlashCounts() {
 		/* Too few slashes — should no-op without crashing. */
 		XCTAssertNoThrow(IRCExtras.parseIRCProtocolURI("irc:example"))

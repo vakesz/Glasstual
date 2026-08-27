@@ -176,8 +176,8 @@ public final class NicknameCompletionStatus: NSObject {
 
 	private func completionCandidates(searchPatternIsEmpty: Bool) -> [Candidate] {
 		if isCompletingCommand {
-			var commands = IRCCommandIndex.localCommandList().map { $0.lowercased() }
-			let pluginManager = TXSharedApplication.sharedPluginManager()
+			var commands = CommandIndex.localCommandList().map { $0.lowercased() }
+			let pluginManager = SharedApplication.sharedPluginManager()
 
 			commands.append(contentsOf: pluginManager.supportedUserInputCommands)
 			commands.append(contentsOf: pluginManager.supportedAppleScriptCommands)
@@ -209,12 +209,8 @@ public final class NicknameCompletionStatus: NSObject {
 			return []
 		}
 
-		let members = (channel.memberList ?? []).compactMap { member in
-			(member as AnyObject) as? ChannelUser
-		}
-
 		return nicknameCandidates(
-			from: members,
+			from: channel.channelMembers ?? [],
 			client: client,
 			searchPatternIsEmpty: searchPatternIsEmpty
 		)
@@ -319,7 +315,7 @@ public final class NicknameCompletionStatus: NSObject {
 		}
 
 		if isCompletingNickname, searchPatternIsAtStart {
-			let userCompletionSuffix = TPCPreferences.tabCompletionSuffix() ?? ""
+			let userCompletionSuffix = TextualPreferences.tabCompletionSuffix() ?? ""
 
 			if whitespaceAlreadyInPosition {
 				if userCompletionSuffix.unicodeScalars.last.map(whitespace.contains) == true {
@@ -332,7 +328,7 @@ public final class NicknameCompletionStatus: NSObject {
 					newCompletionSuffix = userCompletionSuffix
 				}
 			} else if userCompletionSuffix.isEmpty {
-				if !TPCPreferences.tabCompletionDoNotAppendWhitespace() {
+				if !TextualPreferences.tabCompletionDoNotAppendWhitespace() {
 					newCompletionSuffix = " "
 				}
 			} else {
@@ -424,17 +420,15 @@ public final class NicknameCompletionStatus: NSObject {
 			return false
 		}
 
-		let firstCharacter = (searchPattern as NSString).length > 0 ? (searchPattern as NSString).character(at: 0) : 0
-
-		if searchPatternIsAtStart, firstCharacter == 0x2F {
+		if searchPatternIsAtStart, searchPattern.hasPrefix("/") {
 			isCompletingCommand = true
-			searchPattern = (searchPattern as NSString).substring(from: 1)
+			searchPattern.removeFirst()
 			cachedSearchPatternPrefixCharacter = "/"
-		} else if firstCharacter == 0x40 {
+		} else if searchPattern.hasPrefix("@") {
 			isCompletingNickname = true
-			searchPattern = (searchPattern as NSString).substring(from: 1)
+			searchPattern.removeFirst()
 			cachedSearchPatternPrefixCharacter = "@"
-		} else if firstCharacter == 0x23 {
+		} else if searchPattern.hasPrefix("#") {
 			isCompletingChannelName = true
 		} else {
 			isCompletingNickname = true
@@ -461,7 +455,7 @@ public final class NicknameCompletionStatus: NSObject {
 			completionSuffixRange = NSRange(location: selectedRangeStartPoint, length: 0)
 
 			if isCompletingNickname,
-			   let userCompletionSuffix = TPCPreferences.tabCompletionSuffix(),
+			   let userCompletionSuffix = TextualPreferences.tabCompletionSuffix(),
 			   !userCompletionSuffix.isEmpty
 			{
 				let completionSearchRange = NSRange(
@@ -486,7 +480,7 @@ public final class NicknameCompletionStatus: NSObject {
 			}
 
 			if completionSuffixRange.length == 0,
-			   TPCPreferences.tabCompletionCutForwardToFirstWhitespace(),
+			   TextualPreferences.tabCompletionCutForwardToFirstWhitespace(),
 			   selectedRangeStartPoint < totalTextLength
 			{
 				var foundDelimiter = false

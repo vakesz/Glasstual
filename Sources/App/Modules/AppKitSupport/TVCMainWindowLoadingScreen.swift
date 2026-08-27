@@ -26,9 +26,11 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 		isHidden == false
 	}
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
-		applyWelcomeViewAppearance()
+		MainActor.assumeIsolated {
+			applyWelcomeViewAppearance()
+		}
 	}
 
 	private func applyWelcomeViewAppearance() {
@@ -141,7 +143,7 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 	private func hideView(_ view: NSView, animate: Bool) {
 		enableBackgroundControlsStepOne()
 
-		let phaseTwoBlock = { [weak self] in
+		let phaseTwoBlock: @MainActor @Sendable () -> Void = { [weak self] in
 			guard let self else {
 				return
 			}
@@ -165,7 +167,9 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 			context.duration = 1.0
 			self.animator().alphaValue = 0.0
 		} completionHandler: {
-			phaseTwoBlock()
+			MainActor.assumeIsolated {
+				phaseTwoBlock()
+			}
 		}
 	}
 

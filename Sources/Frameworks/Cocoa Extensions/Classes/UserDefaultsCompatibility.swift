@@ -32,9 +32,9 @@
 
 import AppKit
 
-extension UserDefaults {
+public extension UserDefaults {
 	@objc(setColor:forKey:)
-	func textual_setColor(_ color: NSColor?, forKey key: String) {
+	func setColor(_ color: NSColor?, forKey key: String) {
 		guard let color else {
 			removeObject(forKey: key)
 			return
@@ -48,78 +48,78 @@ extension UserDefaults {
 	}
 
 	@objc(setUnsignedInteger:forKey:)
-	func textual_setUnsignedInteger(_ value: UInt, forKey key: String) {
+	func setUnsignedInteger(_ value: UInt, forKey key: String) {
 		set(NSNumber(value: value), forKey: key)
 	}
 
 	@objc(setShort:forKey:)
-	func textual_setShort(_ value: Int16, forKey key: String) {
+	func setShort(_ value: Int16, forKey key: String) {
 		set(NSNumber(value: value), forKey: key)
 	}
 
 	@objc(setUnsignedShort:forKey:)
-	func textual_setUnsignedShort(_ value: UInt16, forKey key: String) {
+	func setUnsignedShort(_ value: UInt16, forKey key: String) {
 		set(NSNumber(value: value), forKey: key)
 	}
 
 	@objc(setLong:forKey:)
-	func textual_setLong(_ value: Int, forKey key: String) {
+	func setLong(_ value: Int, forKey key: String) {
 		set(NSNumber(value: value), forKey: key)
 	}
 
 	@objc(setUnsignedLong:forKey:)
-	func textual_setUnsignedLong(_ value: UInt, forKey key: String) {
+	func setUnsignedLong(_ value: UInt, forKey key: String) {
 		set(NSNumber(value: value), forKey: key)
 	}
 
 	@objc(setLongLong:forKey:)
-	func textual_setLongLong(_ value: Int64, forKey key: String) {
+	func setLongLong(_ value: Int64, forKey key: String) {
 		set(NSNumber(value: value), forKey: key)
 	}
 
 	@objc(setUnsignedLongLong:forKey:)
-	func textual_setUnsignedLongLong(_ value: UInt64, forKey key: String) {
+	func setUnsignedLongLong(_ value: UInt64, forKey key: String) {
 		set(NSNumber(value: value), forKey: key)
 	}
 
 	@objc(colorForKey:)
-	func textual_color(forKey key: String) -> NSColor? {
+	func color(forKey key: String) -> NSColor? {
 		guard let data = object(forKey: key) as? Data else { return nil }
 		return NSKeyedUnarchiver.textual_legacyCompatUnarchivedObject(ofClass: NSColor.self, from: data) as? NSColor
 	}
 
 	@objc(unsignedIntegerForKey:)
-	func textual_unsignedInteger(forKey key: String) -> UInt {
+	func unsignedInteger(forKey key: String) -> UInt {
 		(object(forKey: key) as? NSNumber)?.uintValue ?? 0
 	}
 
 	@objc(shortForKey:)
-	func textual_short(forKey key: String) -> Int16 {
+	func short(forKey key: String) -> Int16 {
 		(object(forKey: key) as? NSNumber)?.int16Value ?? 0
 	}
 
 	@objc(unsignedShortForKey:)
-	func textual_unsignedShort(forKey key: String) -> UInt16 {
+	func unsignedShort(forKey key: String) -> UInt16 {
 		(object(forKey: key) as? NSNumber)?.uint16Value ?? 0
 	}
 
 	@objc(longForKey:)
-	func textual_long(forKey key: String) -> Int {
+	func long(forKey key: String) -> Int {
 		(object(forKey: key) as? NSNumber)?.intValue ?? 0
 	}
 
 	@objc(unsignedLongForKey:)
-	func textual_unsignedLong(forKey key: String) -> UInt {
+	func unsignedLong(forKey key: String) -> UInt {
 		(object(forKey: key) as? NSNumber)?.uintValue ?? 0
 	}
 
 	@objc(longLongForKey:)
-	func textual_longLong(forKey key: String) -> Int64 {
+	func longLong(forKey key: String) -> Int64 {
 		(object(forKey: key) as? NSNumber)?.int64Value ?? 0
 	}
 
 	@objc(unsignedLongLongForKey:)
-	func textual_unsignedLongLong(forKey key: String) -> UInt64 {
+	func unsignedLongLong(forKey key: String) -> UInt64 {
 		(object(forKey: key) as? NSNumber)?.uint64Value ?? 0
 	}
 }

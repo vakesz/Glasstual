@@ -1,6 +1,7 @@
 /* *********************************************************************
  *
  *         Copyright (c) 2015 - 2018 Codeux Software, LLC
+ *         Copyright (c) 2017, 2018 Codeux Software, LLC
  *     Please see ACKNOWLEDGEMENT for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,10 +48,10 @@ private nonisolated(unsafe) let alphanumericUnderscoreCharacterSet = NSCharacter
 private nonisolated(unsafe) let alphanumericUnderscoreDashCharacterSet = NSCharacterSet(
 	charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
 )
-private nonisolated(unsafe) let alphanumericUnderscoreDashSlashCharacterSet = NSCharacterSet(
+private nonisolated(unsafe) let alphanumericDashSlashSet = NSCharacterSet(
 	charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-/"
 )
-private nonisolated(unsafe) let alphanumericUnderscoreDashPeriodCharacterSet = NSCharacterSet(
+private nonisolated(unsafe) let alphanumericDashPeriodSet = NSCharacterSet(
 	charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-."
 )
 private nonisolated(unsafe) let letterCharacterSet = NSCharacterSet(
@@ -58,49 +59,49 @@ private nonisolated(unsafe) let letterCharacterSet = NSCharacterSet(
 )
 private nonisolated(unsafe) let decimalCharacterSet = NSCharacterSet(charactersIn: "0123456789.")
 
-extension NSCharacterSet {
+public extension NSCharacterSet {
 	@objc(hexadecimalCharacterSet)
-	class var textual_hexadecimalCharacterSet: NSCharacterSet {
+	class var textualHexadecimalCharacterSet: NSCharacterSet {
 		hexadecimalCharacterSet
 	}
 
 	@objc(percentEncodedCharacterSet)
-	class var textual_percentEncodedCharacterSet: NSCharacterSet {
+	class var textualPercentEncodedCharacterSet: NSCharacterSet {
 		percentEncodedCharacterSet
 	}
 
 	@objc(Ato9Underscore)
-	class var textual_alphanumericUnderscoreCharacterSet: NSCharacterSet {
+	class var textualAlphanumericSet: NSCharacterSet {
 		alphanumericUnderscoreCharacterSet
 	}
 
 	@objc(Ato9UnderscoreDash)
-	class var textual_alphanumericUnderscoreDashCharacterSet: NSCharacterSet {
+	class var textualAlphanumericDashSet: NSCharacterSet {
 		alphanumericUnderscoreDashCharacterSet
 	}
 
 	@objc(Ato9UnderscoreDashForwardSlash)
-	class var textual_alphanumericUnderscoreDashSlashCharacterSet: NSCharacterSet {
-		alphanumericUnderscoreDashSlashCharacterSet
+	class var textualAlphanumericDashSlashSet: NSCharacterSet {
+		alphanumericDashSlashSet
 	}
 
 	@objc(Ato9UnderscoreDashPeriod)
-	class var textual_alphanumericUnderscoreDashPeriodCharacterSet: NSCharacterSet {
-		alphanumericUnderscoreDashPeriodCharacterSet
+	class var textualAlphanumericDashPeriodSet: NSCharacterSet {
+		alphanumericDashPeriodSet
 	}
 
 	@objc(AtoZCharacterSet)
-	class var textual_letterCharacterSet: NSCharacterSet {
+	class var textualLetterCharacterSet: NSCharacterSet {
 		letterCharacterSet
 	}
 
 	@objc(ZeroToNineDecimalCharacterSet)
-	class var textual_decimalCharacterSet: NSCharacterSet {
+	class var textualDecimalCharacterSet: NSCharacterSet {
 		decimalCharacterSet
 	}
 }
 
-extension NSCoder {
+public extension NSCoder {
 	@objc(decodeDictionaryForKey:)
 	func textual_decodeDictionary(forKey key: String) -> NSDictionary? {
 		decodeObject(of: NSDictionary.self, forKey: key)
@@ -156,9 +157,9 @@ extension NSCoder {
 	}
 }
 
-extension NSTabView {
+public extension NSTabView {
 	@objc(indexOfSelectedItem)
-	var textual_indexOfSelectedItem: UInt {
+	var textualIndexOfSelectedItem: UInt {
 		guard let selectedTabViewItem else {
 			return UInt.max
 		}
@@ -167,7 +168,7 @@ extension NSTabView {
 	}
 }
 
-extension ByteCountFormatter {
+public extension ByteCountFormatter {
 	@objc(stringFromByteCountWithPaddedDigits:)
 	class func textual_stringFromByteCountWithPaddedDigits(_ byteCount: Int64) -> String? {
 		let formatter = ByteCountFormatter()
@@ -177,30 +178,30 @@ extension ByteCountFormatter {
 	}
 }
 
-extension NSError {
+public extension NSError {
 	private func textual_isError(inDomain domain: String, code: Int) -> Bool {
 		self.domain == domain && self.code == code
 	}
 
 	@objc(isURLSessionCancelError)
-	var textual_isURLSessionCancelError: Bool {
+	var textualIsURLSessionCancelError: Bool {
 		textual_isError(inDomain: NSURLErrorDomain, code: NSURLErrorCancelled)
 	}
 }
 
-extension NSNumber {
+public extension NSNumber {
 	@objc(isBooleanValue)
-	var textual_isBooleanValue: Bool {
+	var textualIsBooleanValue: Bool {
 		CFGetTypeID(self) == CFBooleanGetTypeID()
 	}
 
 	@objc(integerStringValueWithLeadingZero)
-	var textual_integerStringValueWithLeadingZero: String {
+	var textualIntegerStringValueWithLeadingZero: String {
 		String(format: "%02lld", int64Value)
 	}
 }
 
-extension NSDate {
+public extension NSDate {
 	@objc(timeIntervalSince1970)
 	class func textual_timeIntervalSince1970() -> TimeInterval {
 		Date().timeIntervalSince1970
@@ -217,7 +218,7 @@ extension NSDate {
 	}
 }
 
-extension NSWorkspace {
+public extension NSWorkspace {
 	@objc(nameOfApplicationToOpenURL:)
 	func textual_nameOfApplication(toOpen url: URL) -> String? {
 		guard
@@ -232,16 +233,16 @@ extension NSWorkspace {
 	}
 }
 
-extension Bundle {
+public extension Bundle {
 	@objc(displayName)
-	var textual_displayName: String? {
+	var textualDisplayName: String? {
 		object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
 			?? object(forInfoDictionaryKey: kCFBundleNameKey as String) as? String
 	}
 
 	@objc(formattedDisplayNamesForBundles:)
 	class func textual_formattedDisplayNames(for bundles: [Bundle]) -> String {
-		bundles.compactMap(\.textual_displayName).joined(separator: ", ")
+		bundles.compactMap(\.textualDisplayName).joined(separator: ", ")
 	}
 
 	@objc(openInstallationLocationsForBundles:)
@@ -254,14 +255,14 @@ extension Bundle {
 	}
 }
 
-extension NSLayoutConstraint {
-	private var textual_archivedConstantNumber: NSNumber? {
+public extension NSLayoutConstraint {
+	private var textualArchivedConstantNumber: NSNumber? {
 		objc_getAssociatedObject(self, &archivedConstraintConstantKey) as? NSNumber
 	}
 
 	@objc(archivedConstant)
-	var textual_archivedConstant: CGFloat {
-		get { textual_archivedConstantNumber.map { CGFloat(truncating: $0) } ?? 0 }
+	var textualArchivedConstant: CGFloat {
+		get { textualArchivedConstantNumber.map { CGFloat(truncating: $0) } ?? 0 }
 		set {
 			objc_setAssociatedObject(
 				self,
@@ -274,12 +275,12 @@ extension NSLayoutConstraint {
 
 	@objc(archiveConstant)
 	func textual_archiveConstant() {
-		textual_archivedConstant = constant
+		textualArchivedConstant = constant
 	}
 
 	@objc(restoreArchivedConstant)
 	func textual_restoreArchivedConstant() {
-		guard let archivedConstant = textual_archivedConstantNumber else {
+		guard let archivedConstant = textualArchivedConstantNumber else {
 			return
 		}
 
@@ -292,7 +293,7 @@ extension NSLayoutConstraint {
 	}
 }
 
-extension NSIndexSet {
+public extension NSIndexSet {
 	@objc(subsetWithMaximumIndexes:)
 	func textual_subset(withMaximumIndexes maximumNumberOfIndexes: UInt) -> NSIndexSet {
 		precondition(maximumNumberOfIndexes > 0)
@@ -306,6 +307,6 @@ extension NSIndexSet {
 			stop.pointee = ObjCBool(remaining == 0)
 		}
 
-		return limitedIndexes.copy() as! NSIndexSet
+		return NSIndexSet(indexSet: limitedIndexes as IndexSet)
 	}
 }

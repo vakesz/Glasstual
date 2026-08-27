@@ -62,17 +62,19 @@ public final class ChannelSpotlightTextField: NSTextField {
 
 @objc(TDCChannelSpotlightImageView)
 public final class ChannelSpotlightImageView: NSImageView {
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 
-		let symbol = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil)
-		var configuration = NSImage.SymbolConfiguration(pointSize: 20.0, weight: .medium)
-		configuration = configuration.applying(
-			NSImage.SymbolConfiguration(hierarchicalColor: .secondaryLabelColor)
-		)
+		MainActor.assumeIsolated {
+			let symbol = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil)
+			var configuration = NSImage.SymbolConfiguration(pointSize: 20.0, weight: .medium)
+			configuration = configuration.applying(
+				NSImage.SymbolConfiguration(hierarchicalColor: .secondaryLabelColor)
+			)
 
-		image = symbol?.withSymbolConfiguration(configuration)
-		contentTintColor = .secondaryLabelColor
+			image = symbol?.withSymbolConfiguration(configuration)
+			contentTintColor = .secondaryLabelColor
+		}
 	}
 
 	override public var mouseDownCanMoveWindow: Bool {

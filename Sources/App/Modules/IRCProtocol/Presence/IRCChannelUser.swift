@@ -11,10 +11,12 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
+import GlasstualPluginKit
 
 @objc(IRCChannelUser)
-open class ChannelUser: XRPortablePropertyObject, @unchecked Sendable {
+open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 	private let userLock = NSLock()
 	private var userStorage: User?
 
@@ -41,12 +43,12 @@ open class ChannelUser: XRPortablePropertyObject, @unchecked Sendable {
 		return client.supportInfo.userPrefix(forModeSymbol: mode) ?? ""
 	}
 
-	@objc public var rank: IRCUserRank {
+	public var rank: UserRank {
 		rank(forModeSymbol: highestRankedUserMode)
 	}
 
-	@objc public var ranks: IRCUserRank {
-		var result: IRCUserRank = []
+	public var ranks: UserRank {
+		var result: UserRank = []
 
 		for mode in modesStorage {
 			let rank = rank(forModeSymbol: String(mode))
@@ -60,6 +62,18 @@ open class ChannelUser: XRPortablePropertyObject, @unchecked Sendable {
 		}
 
 		return result
+	}
+
+	/// Objective-C compatibility for the legacy `IRCUserRank` return type.
+	@objc(rank)
+	public var objectiveCRankRawValue: UInt {
+		rank.rawValue
+	}
+
+	/// Objective-C compatibility for the legacy `IRCUserRank` bit mask.
+	@objc(ranks)
+	public var objectiveCRanksRawValue: UInt {
+		ranks.rawValue
 	}
 
 	@objc public var isOp: Bool {
@@ -133,7 +147,7 @@ open class ChannelUser: XRPortablePropertyObject, @unchecked Sendable {
 		return threshold > 0 && channelRank >= threshold
 	}
 
-	private func rank(forModeSymbol modeSymbol: String?) -> IRCUserRank {
+	private func rank(forModeSymbol modeSymbol: String?) -> UserRank {
 		switch modeSymbol {
 		case "y", "Y":
 			.irCopByMode
@@ -203,7 +217,7 @@ open class ChannelUser: XRPortablePropertyObject, @unchecked Sendable {
 	}
 
 	func compareRank(to other: ChannelUser) -> ComparisonResult {
-		let favorIRCop = TPCPreferences.memberListSortFavorsServerStaff()
+		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
 
 		if favorIRCop, user.isIRCop, other.user.isIRCop == false {
 			return .orderedAscending
@@ -251,16 +265,16 @@ open class ChannelUser: XRPortablePropertyObject, @unchecked Sendable {
 	}
 
 	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: XRPortablePropertyObject, mutableCopy _: Bool) {
+	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
 		populateCopy(newObject)
 	}
 
 	@objc(populateDuringUniqueCopy:mutableCopy:)
-	override public func populateDuringUniqueCopy(_ newObject: XRPortablePropertyObject, mutableCopy _: Bool) {
+	override public func populateDuringUniqueCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
 		populateCopy(newObject)
 	}
 
-	private func populateCopy(_ newObject: XRPortablePropertyObject) {
+	private func populateCopy(_ newObject: PortablePropertyObject) {
 		guard let object = newObject as? ChannelUser else {
 			return
 		}
@@ -273,8 +287,8 @@ open class ChannelUser: XRPortablePropertyObject, @unchecked Sendable {
 		object.lastWeightFade = lastWeightFade
 	}
 
-	override public var mutableClass: XRPortablePropertyObject {
-		unsafeBitCast(ChannelUserMutable.self, to: XRPortablePropertyObject.self)
+	override public var mutableClass: PortablePropertyObject {
+		unsafeBitCast(ChannelUserMutable.self, to: PortablePropertyObject.self)
 	}
 
 	@objc(associateWithChannel:)
@@ -290,12 +304,12 @@ open class ChannelUser: XRPortablePropertyObject, @unchecked Sendable {
 
 @objc(IRCChannelUserMutable)
 public final class ChannelUserMutable: ChannelUser, @unchecked Sendable {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyObject {
-		unsafeBitCast(ChannelUser.self, to: XRPortablePropertyObject.self)
+	override public var immutableClass: PortablePropertyObject {
+		unsafeBitCast(ChannelUser.self, to: PortablePropertyObject.self)
 	}
 
 	@objc override public var modes: String {

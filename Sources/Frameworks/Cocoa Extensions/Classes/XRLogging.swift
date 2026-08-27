@@ -30,12 +30,12 @@
  *
  *********************************************************************** */
 
-import CocoaExtensions_Private
-import os
+import Foundation
+@_exported import os
 
 /* *********************************************************************
  *
- *         Copyright (c) 2016 - 2020 Codeux Software, LLC
+ *         Copyright (c) 2015 - 2020 Codeux Software, LLC
  *     Please see ACKNOWLEDGEMENT for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,34 +75,47 @@ private enum LegacyLoggingStorage {
 }
 
 @_cdecl("_CSFrameworkInternalLogSubsystem")
-public func frameworkInternalLogSubsystem() -> OSLog {
+public func _CSFrameworkInternalLogSubsystem() -> OSLog {
 	LegacyLoggingStorage.frameworkSubsystem
 }
 
 @_cdecl("_LogToConsoleDefaultSubsystem")
-public func logToConsoleDefaultSubsystem() -> OSLog {
+public func _LogToConsoleDefaultSubsystem() -> OSLog {
 	LegacyLoggingStorage.defaultSubsystem ?? .default
 }
 
 @_cdecl("_LogToConsoleSetDefaultSubsystem")
-public func setLogToConsoleDefaultSubsystem(_ subsystem: OSLog?) {
+public func _LogToConsoleSetDefaultSubsystem(_ subsystem: OSLog?) {
 	LegacyLoggingStorage.defaultSubsystem = subsystem
 	LoggingProxy.defaultSubsystem = subsystem
 }
 
 @_cdecl("_LogToConsoleSetDefaultSubsystemToMainBundle")
-public func setLogToConsoleDefaultSubsystemToMainBundle(_ category: NSString) {
+public func _LogToConsoleSetDefaultSubsystemToMainBundle(_ category: NSString) {
 	let subsystem = OSLog(
 		subsystem: Bundle.main.bundleIdentifier ?? "com.vakesz.glasstual",
 		category: category as String
 	)
 
-	setLogToConsoleDefaultSubsystem(subsystem)
+	_LogToConsoleSetDefaultSubsystem(subsystem)
 }
 
 @_cdecl("_LogToConsoleFormattedStackTrace")
-public func formattedLogToConsoleStackTrace(_ trace: NSArray) -> NSString {
+public func _LogToConsoleFormattedStackTrace(_ trace: NSArray) -> NSString {
 	trace.componentsJoined(by: "\n") as NSString
+}
+
+public func _LogStackTraceOfTypeSwiftShim(_ type: OSLogType, _ subsystem: OSLog?) {
+	let logger: Logger = if let subsystem {
+		Logger(subsystem)
+	} else if let defaultSubsystem = Logging.defaultSubsystem {
+		defaultSubsystem
+	} else {
+		Logger()
+	}
+
+	let stackTrace = _LogToConsoleFormattedStackTrace(Thread.callStackSymbols as NSArray) as String
+	logger.log(level: type, "Stack trace:\n\(stackTrace, privacy: .private)")
 }
 
 public class Logging {
@@ -122,7 +135,7 @@ public class Logging {
 	///
 	@inlinable
 	public static func setDefaultSubsystem(toMainBundleCategory category: String) {
-		_LogToConsoleSetDefaultSubsystemToMainBundle(category)
+		_LogToConsoleSetDefaultSubsystemToMainBundle(category as NSString)
 	}
 
 	///
@@ -136,11 +149,7 @@ public class Logging {
 	///
 	/// Subsystem used by Cocoa Extensions
 	///
-	nonisolated(unsafe) static var frameworkSubsystem: Logger? = {
-		let subsystem = _CSFrameworkInternalLogSubsystem()
-
-		return Logger(subsystem!)
-	}()
+	nonisolated(unsafe) static var frameworkSubsystem: Logger? = Logger(_CSFrameworkInternalLogSubsystem())
 }
 
 ///

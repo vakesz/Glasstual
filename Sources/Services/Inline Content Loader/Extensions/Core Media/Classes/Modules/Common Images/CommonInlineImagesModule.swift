@@ -36,19 +36,20 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 
 @objc(ICMCommonInlineImages)
-final class CommonInlineImagesModule: ICMInlineImage {
+final class CommonInlineImagesModule: InlineImageModule {
 	private static let validFileExtensions = ["jpg", "jpeg", "png", "gif", "tif", "tiff", "svg", "bmp"]
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		guard let address = finalAddress(for: url) else { return nil }
 		return super.actionBlock(forAddress: address)
 	}
 
-	private class func finalAddress(for url: URL) -> String? {
+	private static func finalAddress(for url: URL) -> String? {
 		let host = (url.host(percentEncoded: true) ?? "").lowercased()
-		var path = url.path(percentEncoded: true)
+		let path = url.path(percentEncoded: true)
 		let pathExtension = (path as NSString).pathExtension.lowercased()
 		let hasFileExtension = validFileExtensions.contains(pathExtension)
 
@@ -63,47 +64,77 @@ final class CommonInlineImagesModule: ICMInlineImage {
 
 		let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.percentEncodedQuery
 		let pathAndQuery = query.map { "\(path)?\($0)" } ?? path
+		let resolvers: [(URL, String, String, String, Bool) -> String?] = [
+			dropboxAddress,
+			twitterAddress,
+			googleDriveAddress,
+			instagramAddress,
+			fourChanAddress,
+			hatenaAddress,
+			droplrAddress,
+			nicoVideoAddress,
+			youTubeThumbnailAddress,
+			speedtestAddress,
+			fuelRatsAddress,
+		]
 
+		return resolvers.lazy.compactMap { $0(url, host, path, pathAndQuery, hasFileExtension) }.first
+	}
+
+	private static func dropboxAddress(_: URL, host: String, _: String, pathAndQuery: String,
+	                                   hasExtension: Bool) -> String?
+	{
 		if hostMatches(host, domain: "dropbox.com") {
-			guard pathAndQuery.hasPrefix("/s/"), hasFileExtension else { return nil }
+			guard pathAndQuery.hasPrefix("/s/"), hasExtension else { return nil }
 			return "https://dl.dropboxusercontent.com\(pathAndQuery)"
 		}
+		return nil
+	}
 
+	private static func twitterAddress(_: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if host == "pbs.twimg.com" {
 			guard !path.isEmpty else { return nil }
-			path = path.replacingOccurrences(
+			let normalizedPath = path.replacingOccurrences(
 				of: #"\:(large|medium|orig|small|thumb)$"#,
 				with: "",
 				options: .regularExpression
 			)
-			return "https://pbs.twimg.com\(path):orig"
+			return "https://pbs.twimg.com\(normalizedPath):orig"
 		}
+		return nil
+	}
 
+	private static func googleDriveAddress(_: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if host == "docs.google.com" {
 			guard path.hasPrefix("/file/d/") else { return nil }
 			let components = path.split(separator: "/", omittingEmptySubsequences: false)
-			if components.count == 5, components[4] == "edit" {
+			if components.count == 4 || components.count == 5 && components[4] == "edit" {
 				return "https://docs.google.com/uc?id=\(components[3])"
 			}
-			if components.count == 4 {
-				return "https://docs.google.com/uc?id=\(components[3])"
-			}
-			return nil
 		}
+		return nil
+	}
 
+	private static func instagramAddress(_: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if hostMatches(host, domain: "instagram.com") || hostMatches(host, domain: "instagr.am") {
 			guard path.hasPrefix("/p/") else { return nil }
 			let identifier = String(path.dropFirst(3))
 			guard identifier.isASCIIIdentifier(allowing: "_-") else { return nil }
 			return "https://www.instagram.com/p/\(identifier)/media/?size=l"
 		}
+		return nil
+	}
 
+	private static func fourChanAddress(_ url: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if hostMatches(host, domain: "i.4cdn.org") {
 			guard path.hasSuffix(".webm"), let scheme = url.scheme else { return nil }
 			let filename = (path as NSString).deletingPathExtension
 			return "\(scheme)://\(host)\(filename)s.jpg"
 		}
+		return nil
+	}
 
+	private static func hatenaAddress(_: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if hostMatches(host, domain: "f.hatena.ne.jp") {
 			let components = path.split(separator: "/", omittingEmptySubsequences: false)
 			guard components.count >= 3 else { return nil }
@@ -115,14 +146,20 @@ final class CommonInlineImagesModule: ICMInlineImage {
 			else { return nil }
 			return "https://img.f.hatena.ne.jp/images/fotolife/\(userHead)/\(userID)/\(photoID.prefix(8))/\(photoID).jpg"
 		}
+		return nil
+	}
 
+	private static func droplrAddress(_: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if hostMatches(host, domain: "d.pr") {
 			guard path.hasPrefix("/i/") else { return nil }
 			let identifier = String(path.dropFirst(3))
 			guard identifier.isASCIIIdentifier() else { return nil }
 			return "https://d.pr/i/\(identifier).png"
 		}
+		return nil
+	}
 
+	private static func nicoVideoAddress(_: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if hostMatches(host, domain: "nicovideo.jp") || host == "nico.ms" {
 			let candidate: String? = if host == "nico.ms" {
 				String(path.dropFirst())
@@ -138,9 +175,12 @@ final class CommonInlineImagesModule: ICMInlineImage {
 			let number = Int64(candidate.dropFirst(2)) ?? 0
 			return "https://tn-skr\((number % 4) + 1).smilevideo.jp/smile?i=\(number)"
 		}
+		return nil
+	}
 
+	private static func youTubeThumbnailAddress(_ url: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if hostMatches(host, domain: "youtube.com") || host == "youtu.be" {
-			guard TPCPreferences.inlineMediaLimitBasicsToFiles(), !path.isEmpty else { return nil }
+			guard InlineContentPreferences.current.limitBasicsToFiles, !path.isEmpty else { return nil }
 			let identifier: String? = if host == "youtu.be" {
 				String(path.dropFirst())
 			} else {
@@ -152,7 +192,10 @@ final class CommonInlineImagesModule: ICMInlineImage {
 			guard let identifier, identifier.count >= 11 else { return nil }
 			return "https://i.ytimg.com/vi/\(identifier.prefix(11))/mqdefault.jpg"
 		}
+		return nil
+	}
 
+	private static func speedtestAddress(_: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if hostMatches(host, domain: "speedtest.net") {
 			let components = path.split(separator: "/", omittingEmptySubsequences: false)
 			guard components.count >= 3, components[1] == "result" else { return nil }
@@ -160,22 +203,24 @@ final class CommonInlineImagesModule: ICMInlineImage {
 			guard identifier.isASCIINumeric else { return nil }
 			return "https://www.speedtest.net/result/\(identifier).png"
 		}
+		return nil
+	}
 
+	private static func fuelRatsAddress(_: URL, host: String, path: String, _: String, _: Bool) -> String? {
 		if host == "fuelrats.cloud" {
 			guard path.hasPrefix("/s/") else { return nil }
 			let identifier = String(path.dropFirst(3))
 			guard identifier.isASCIIIdentifier() else { return nil }
 			return "https://fuelrats.cloud/s/\(identifier)/preview"
 		}
-
 		return nil
 	}
 
-	private class func hostMatches(_ host: String, domain: String) -> Bool {
+	private static func hostMatches(_ host: String, domain: String) -> Bool {
 		host == domain || host.hasSuffix(".\(domain)")
 	}
 
-	override class var contentIsFile: Bool {
+	override static var contentIsFile: Bool {
 		true
 	}
 }

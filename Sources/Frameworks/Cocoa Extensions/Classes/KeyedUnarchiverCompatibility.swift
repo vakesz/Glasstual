@@ -31,8 +31,9 @@
  *********************************************************************** */
 
 import Foundation
+import os
 
-extension NSKeyedUnarchiver {
+public extension NSKeyedUnarchiver {
 	@objc(legacyCompatUnarchivedObjectOfClass:fromData:)
 	class func textual_legacyCompatUnarchivedObject(ofClass objectClass: AnyClass, from data: Data) -> Any? {
 		do {

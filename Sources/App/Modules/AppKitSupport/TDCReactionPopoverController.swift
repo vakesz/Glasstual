@@ -38,7 +38,7 @@ public final class ReactionPopoverController: NSViewController, NSPopoverDelegat
 
 		let field = NSTextField(frame: .zero)
 		field.translatesAutoresizingMaskIntoConstraints = false
-		field.placeholderString = LocalizedKey("TXMenuController[rct-ph]")
+		field.placeholderString = MessageMenuStrings.emojiPlaceholder
 		field.font = NSFont.systemFont(ofSize: 16.0)
 		field.alignment = .center
 		field.delegate = self
@@ -46,7 +46,7 @@ public final class ReactionPopoverController: NSViewController, NSPopoverDelegat
 		field.usesSingleLineMode = true
 
 		let send = NSButton(
-			title: LocalizedKey("TXMenuController[rct-sd]"),
+			title: MessageMenuStrings.sendReaction,
 			target: self,
 			action: #selector(send(_:))
 		)

@@ -35,6 +35,9 @@
  *
  *********************************************************************** */
 
+import Foundation
+import os
+
 /** Connection is the object RCMProcessMain drives over XPC. It owns the
  send queue, flood control, and the transport socket.
 
@@ -59,7 +62,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 
 	fileprivate var sendQueue: [Data] = []
 
-	fileprivate lazy var floodControlTimer: TLOTimer = .init(
+	fileprivate lazy var floodControlTimer: TimerImplementation = .init(
 		actionBlock: { [weak self] _ in
 			self?.onFloodControlTimer()
 		}, on: queue
@@ -267,7 +270,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 	// MARK: - Socket Proxy
 
 	@objc(exportSecureConnectionInformation:error:)
-	final func exportSecureConnectionInformation(to receiver: RCMSecureConnectionInformationCompletionBlock) throws {
+	final func exportSecureConnectionInformation(to receiver: SecureConnectionInformationReceiver) throws {
 		/* The receiver block does not escape (NS_NOESCAPE) so the
 		 XPC reply must be produced before this method returns. */
 		try queue.sync {
@@ -279,12 +282,12 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 
 	/// A proxy whose failures are logged. Messages sent through it
 	/// are one way; nothing here waits on the client.
-	fileprivate var remoteObjectProxy: RCMConnectionManagerClientProtocol? {
+	fileprivate var remoteObjectProxy: RemoteConnectionClientProtocol? {
 		let proxy = serviceConnection.remoteObjectProxyWithErrorHandler { error in
 			RCMLog.connection.error("Error communicating with client: \(error.localizedDescription, privacy: .public)")
 		}
 
-		guard let proxy = proxy as? RCMConnectionManagerClientProtocol else {
+		guard let proxy = proxy as? RemoteConnectionClientProtocol else {
 			RCMLog.connection.error("Remote object proxy does not conform to client protocol")
 
 			return nil
@@ -318,7 +321,7 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 			response(false)
 		}
 
-		guard let proxy = proxy as? RCMConnectionManagerClientProtocol else {
+		guard let proxy = proxy as? RemoteConnectionClientProtocol else {
 			response(false)
 
 			return
@@ -363,8 +366,8 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 typealias ConnectionError = Connection.ConnectionError
 
 extension ConnectionError: CustomNSError {
-	/** Error domain and codes are defined in IRCConnectionErrors.h/m */
-	static let errorDomain = ConnectionErrorDomain
+	/** Error domain and codes are shared with the app across the XPC boundary. */
+	static let errorDomain = connectionErrorDomain
 
 	var errorCode: Int {
 		let errorCode: ConnectionErrorCode = switch self {

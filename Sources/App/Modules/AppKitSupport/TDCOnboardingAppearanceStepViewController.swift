@@ -21,11 +21,11 @@ public final class OnboardingAppearanceStepViewController: OnboardingStepViewCon
 	private var appearanceControl: NSSegmentedControl!
 
 	override public var stepTitle: String {
-		LocalizedKey("TDCOnboardingWindow[lf1-tt]")
+		OnboardingStrings.Appearance.title
 	}
 
 	override public var stepSubtitle: String {
-		LocalizedKey("TDCOnboardingWindow[lf1-st]")
+		OnboardingStrings.Appearance.subtitle
 	}
 
 	override public func loadView() {
@@ -34,16 +34,16 @@ public final class OnboardingAppearanceStepViewController: OnboardingStepViewCon
 
 		let bubblesPreview = OnboardingStylePreviewView()
 		bubblesPreview.styleName = "Bubbles"
-		bubblesPreview.styleTitle = LocalizedKey("TDCOnboardingWindow[lf1-bb]")
-		bubblesPreview.styleDescription = LocalizedKey("TDCOnboardingWindow[lf1-bd]")
+		bubblesPreview.styleTitle = OnboardingStrings.Appearance.bubblesTitle
+		bubblesPreview.styleDescription = OnboardingStrings.Appearance.bubblesDescription
 		bubblesPreview.target = self
 		bubblesPreview.action = #selector(previewSelected(_:))
 		bubblesPreview.translatesAutoresizingMaskIntoConstraints = false
 
 		let linesPreview = OnboardingStylePreviewView()
 		linesPreview.styleName = "Lines"
-		linesPreview.styleTitle = LocalizedKey("TDCOnboardingWindow[lf1-ln]")
-		linesPreview.styleDescription = LocalizedKey("TDCOnboardingWindow[lf1-ld]")
+		linesPreview.styleTitle = OnboardingStrings.Appearance.linesTitle
+		linesPreview.styleDescription = OnboardingStrings.Appearance.linesDescription
 		linesPreview.target = self
 		linesPreview.action = #selector(previewSelected(_:))
 		linesPreview.translatesAutoresizingMaskIntoConstraints = false
@@ -53,34 +53,26 @@ public final class OnboardingAppearanceStepViewController: OnboardingStepViewCon
 		previewStack.distribution = .fillEqually
 		previewStack.spacing = 20
 		previewStack.translatesAutoresizingMaskIntoConstraints = false
-		previewStack.setAccessibilityLabel(LocalizedKey("TDCOnboardingWindow[lf1-ax]"))
+		previewStack.setAccessibilityLabel(OnboardingStrings.Appearance.previewAccessibilityLabel)
 
-		let textSizeLabel = NSTextField(labelWithString: LocalizedKey("TDCOnboardingWindow[lf1-fs]"))
+		let textSizeLabel = NSTextField(labelWithString: OnboardingStrings.Appearance.textSizeLabel)
 		textSizeLabel.alignment = .right
 		textSizeLabel.translatesAutoresizingMaskIntoConstraints = false
 
 		let textSizeControl = NSSegmentedControl(
-			labels: [
-				LocalizedKey("TDCOnboardingWindow[lf1-s1]"),
-				LocalizedKey("TDCOnboardingWindow[lf1-s2]"),
-				LocalizedKey("TDCOnboardingWindow[lf1-s3]"),
-			],
+			labels: OnboardingStrings.Appearance.textSizeTitles,
 			trackingMode: .selectOne,
 			target: self,
 			action: #selector(textSizeChanged(_:))
 		)
 		textSizeControl.translatesAutoresizingMaskIntoConstraints = false
 
-		let appearanceLabel = NSTextField(labelWithString: LocalizedKey("TDCOnboardingWindow[lf1-ap]"))
+		let appearanceLabel = NSTextField(labelWithString: OnboardingStrings.Appearance.interfaceStyleLabel)
 		appearanceLabel.alignment = .right
 		appearanceLabel.translatesAutoresizingMaskIntoConstraints = false
 
 		let appearanceControl = NSSegmentedControl(
-			labels: [
-				LocalizedKey("TDCOnboardingWindow[lf1-a1]"),
-				LocalizedKey("TDCOnboardingWindow[lf1-a2]"),
-				LocalizedKey("TDCOnboardingWindow[lf1-a3]"),
-			],
+			labels: OnboardingStrings.Appearance.interfaceStyleTitles,
 			trackingMode: .selectOne,
 			target: self,
 			action: #selector(appearanceChanged(_:))

@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCWorldMigrationTests: XCTestCase {
 	func testInitialWorldIsEmpty() {
 		let world = IRCWorld()
@@ -21,9 +22,9 @@ final class IRCWorldMigrationTests: XCTestCase {
 	func testTrafficCountersAccumulateLengths() {
 		let world = IRCWorld()
 
-		world.noteMessageSent(withLength: 12)
-		world.noteMessageSent(withLength: 7)
-		world.noteMessageReceived(withLength: 31)
+		world.noteMessageSent(length: 12)
+		world.noteMessageSent(length: 7)
+		world.noteMessageReceived(length: 31)
 
 		XCTAssertEqual(world.messagesSent, 2)
 		XCTAssertEqual(world.messagesReceived, 1)

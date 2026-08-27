@@ -4,9 +4,7 @@ import XCTest
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
 /// #import "GLTTestClient.h"
-/// #import "IRCChannelPrivate.h"
 /// #import "IRCMessage.h"
-/// #import "IRCTreeItemPrivate.h"
 /// #import "TVCLogLine.h"
 /** *********************************************************************
  *                  _____         _               _
@@ -45,7 +43,8 @@ import XCTest
  *
  *********************************************************************** */
 @objc
-class IRCLabeledResponseTests: XCTestCase {
+@MainActor
+final class IRCLabeledResponseTests: XCTestCase {
 	private func message(_ line: String, on client: IRCClient) -> Message {
 		Message(line: line, on: client)!
 	}
@@ -58,7 +57,7 @@ class IRCLabeledResponseTests: XCTestCase {
 		return client
 	}
 
-	private func addChannel(named name: String, to client: GLTTestClient) -> IRCChannel {
+	private func addChannel(named name: String, to client: GLTTestClient) -> Channel {
 		client.findChannelOrCreate(name)!
 	}
 

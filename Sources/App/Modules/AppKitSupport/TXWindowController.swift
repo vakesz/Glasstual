@@ -12,6 +12,7 @@
 
 import AppKit
 import os
+import Synchronization
 
 private let windowControllerLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -20,7 +21,12 @@ private let windowControllerLogger = Logger(
 
 @objc(TXWindowController)
 public final class WindowController: NSObject {
-	private var windowObjects: NSMutableDictionary? = NSMutableDictionary()
+	private struct RegistryState: @unchecked Sendable {
+		var windows: [String: AnyObject] = [:]
+		var isTerminated = false
+	}
+
+	private let registry = Mutex(RegistryState())
 
 	override public init() {
 		super.init()
@@ -29,20 +35,19 @@ public final class WindowController: NSObject {
 	@objc public func prepareForApplicationTermination() {
 		windowControllerLogger.debug("Preparing window controller")
 
-		objc_sync_enter(self)
-		defer { objc_sync_exit(self) }
-
-		windowObjects?.removeAllObjects()
-		windowObjects = nil
+		registry.withLock { state in
+			state.windows.removeAll()
+			state.isTerminated = true
+		}
 	}
 
 	@objc(windowDescriptionForWindow:)
-	public class func windowDescription(for window: Any) -> String {
+	public static func windowDescription(for window: Any) -> String {
 		windowDescription(for: window, inRelationTo: nil)
 	}
 
 	@objc(windowDescriptionForWindow:inRelationTo:)
-	public class func windowDescription(for window: Any, inRelationTo relatedObject: Any?) -> String {
+	public static func windowDescription(for window: Any, inRelationTo relatedObject: Any?) -> String {
 		let windowClass = NSStringFromClass(type(of: window as AnyObject))
 
 		guard let relatedObject else {
@@ -65,12 +70,18 @@ public final class WindowController: NSObject {
 
 	@objc(addWindowToWindowList:withDescription:)
 	public func addWindow(toWindowList window: Any, withDescription windowDescription: String) {
-		precondition((window as AnyObject).responds(to: NSSelectorFromString("window")))
+		let windowObject = window as AnyObject
+		precondition(
+			windowObject is NSWindowController || windowObject is WindowBase || windowObject is SheetBase
+		)
 
-		objc_sync_enter(self)
-		defer { objc_sync_exit(self) }
+		registry.withLock { state in
+			guard state.isTerminated == false else {
+				return
+			}
 
-		windowObjects?[windowDescription] = window
+			state.windows[windowDescription] = windowObject
+		}
 	}
 
 	@objc(removeWindowFromWindowList:)
@@ -101,50 +112,34 @@ public final class WindowController: NSObject {
 			return
 		}
 
-		objc_sync_enter(self)
-		defer { objc_sync_exit(self) }
-
-		if windowObjects?[windowDescription] == nil, windowWasString == false {
-			if let key = (windowObjects as NSDictionary?)?.firstKey(for: window) as? String {
-				windowDescription = key
+		registry.withLock { state in
+			if state.windows[windowDescription] == nil, windowWasString == false {
+				let windowObject = window as AnyObject
+				if let matchingEntry = state.windows.first(where: { $0.value === windowObject }) {
+					windowDescription = matchingEntry.key
+				}
 			}
-		}
 
-		windowObjects?.removeObject(forKey: windowDescription)
+			state.windows.removeValue(forKey: windowDescription)
+		}
 	}
 
 	@objc(windowFromWindowList:)
 	public func window(fromWindowList windowDescription: String) -> Any? {
-		objc_sync_enter(self)
-		defer { objc_sync_exit(self) }
-
-		return windowObjects?[windowDescription]
+		registry.withLock { $0.windows[windowDescription] }
 	}
 
 	@objc(windowsFromWindowList:)
 	public func windows(fromWindowList windowDescriptions: [String]) -> [Any] {
-		objc_sync_enter(self)
-		defer { objc_sync_exit(self) }
-
-		var returnedValues: [Any] = []
-
-		for windowDescription in windowDescriptions {
-			if let windowObject = windowObjects?[windowDescription] {
-				returnedValues.append(windowObject)
-			}
+		registry.withLock { state in
+			windowDescriptions.compactMap { state.windows[$0] }
 		}
-
-		return returnedValues
 	}
 
 	@objc(maybeBringWindowForward:)
 	@MainActor public func maybeBringWindowForward(_ windowDescription: String) -> Bool {
-		guard let windowObject = window(fromWindowList: windowDescription) as AnyObject? else {
-			return false
-		}
-
-		guard windowObject.responds(to: NSSelectorFromString("window")),
-		      let window = windowObject.value(forKey: "window") as? NSWindow
+		guard let windowObject = window(fromWindowList: windowDescription) as AnyObject?,
+		      let window = Self.window(for: windowObject)
 		else {
 			return false
 		}
@@ -153,8 +148,22 @@ public final class WindowController: NSObject {
 		return true
 	}
 
+	@MainActor
+	private static func window(for object: AnyObject) -> NSWindow? {
+		switch object {
+		case let windowController as NSWindowController:
+			windowController.window
+		case let windowController as WindowBase:
+			windowController.window
+		case let sheetController as SheetBase:
+			sheetController.window
+		default:
+			nil
+		}
+	}
+
 	@MainActor @objc public func popMainWindowSheetIfExists() {
-		guard let attachedSheet = NSObject.masterController().mainWindow.attachedSheet else {
+		guard let attachedSheet = NSObject.applicationController().mainWindow.attachedSheet else {
 			return
 		}
 

@@ -30,6 +30,8 @@
  *
  *********************************************************************** */
 
+import Foundation
+
 public extension Error {
 	@inlinable
 	var code: Int {

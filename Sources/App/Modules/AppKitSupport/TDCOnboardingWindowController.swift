@@ -73,7 +73,7 @@ private final class OnboardingPageIndicatorView: NSView {
 	}
 
 	override func accessibilityLabel() -> String? {
-		LocalizedKey("TDCOnboardingWindow[ob1-pg]", currentPage + 1, numberOfPages)
+		OnboardingStrings.Window.progress(currentStep: currentPage + 1, totalSteps: numberOfPages)
 	}
 }
 
@@ -104,12 +104,12 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		"TDCOnboardingWindow"
 	}
 
-	@objc public class func shouldPresentOnLaunch() -> Bool {
-		if TPCPreferences.onboardingCompleted() {
+	@objc public static func shouldPresentOnLaunch() -> Bool {
+		if TextualPreferences.onboardingCompleted() {
 			return false
 		}
 
-		return (NSObject.masterController().world?.clientCount ?? 0) == 0
+		return (NSObject.applicationController().world?.clientCount ?? 0) == 0
 	}
 
 	@objc public init() {
@@ -124,8 +124,8 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 	private func prepareInitialState() {
 		let settings = OnboardingSettings()
-		settings.textSize = OnboardingSettings.textSize(forFontSize: TPCPreferences.themeChannelViewFontSize())
-		settings.appearance = TPCPreferences.appearance()
+		settings.textSize = OnboardingSettings.textSize(forFontSize: TextualPreferences.themeChannelViewFontSize())
+		settings.appearance = TextualPreferences.appearance()
 
 		self.settings = settings
 
@@ -144,7 +144,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 			return
 		}
 
-		window.title = LocalizedKey("TDCOnboardingWindow[ob1-wt]")
+		window.title = OnboardingStrings.Window.title
 		window.styleMask.insert(.fullSizeContentView)
 		window.titlebarAppearsTransparent = true
 		window.titleVisibility = .hidden
@@ -154,8 +154,8 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		subtitleTextField.maximumNumberOfLines = 2
 		subtitleTextField.preferredMaxLayoutWidth = 560
 
-		skipButton.title = LocalizedKey("TDCOnboardingWindow[ob1-sk]")
-		backButton.title = LocalizedKey("TDCOnboardingWindow[ob1-bk]")
+		skipButton.title = OnboardingStrings.Window.skipButton
+		backButton.title = OnboardingStrings.Window.backButton
 
 		/* The skip control reads as a link, not a push button, so that the
 		 primary action stays the only prominent button on the page. */
@@ -233,11 +233,13 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 			outgoingView?.animator().alphaValue = 0.0
 			incomingView.animator().alphaValue = 1.0
 		} completionHandler: { [weak self] in
-			outgoingView?.removeFromSuperview()
-			outgoingView?.alphaValue = 1.0
+			Task { @MainActor [weak self] in
+				outgoingView?.removeFromSuperview()
+				outgoingView?.alphaValue = 1.0
 
-			self?.transitioning = false
-			self?.focusStep(incoming)
+				self?.transitioning = false
+				self?.focusStep(incoming)
+			}
 		}
 	}
 
@@ -259,8 +261,8 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 		continueButton.title =
 			isLast
-				? LocalizedKey("TDCOnboardingWindow[ob1-fn]")
-				: LocalizedKey("TDCOnboardingWindow[ob1-ct]")
+				? OnboardingStrings.Window.finishButton
+				: OnboardingStrings.Window.continueButton
 
 		pageIndicator.currentPage = currentStepIndex
 	}
@@ -290,7 +292,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 					with: window,
 					body: errorDescription as String,
 					title: currentStep.stepTitle,
-					defaultButton: LocalizedKey("Prompts[c7s-dq]"),
+					defaultButton: PromptStrings.Action.confirmation,
 					alternateButton: nil,
 					otherButton: nil
 				)
@@ -325,7 +327,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 	// MARK: - Finishing
 
 	private func closeAsCompleted() {
-		TPCPreferences.setOnboardingCompleted(true)
+		TextualPreferences.setOnboardingCompleted(true)
 		close()
 	}
 
@@ -346,24 +348,24 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 	private func applyIdentitySettings() {
 		if settings.nickname.isEmpty == false {
-			TPCPreferencesUserDefaults.shared().set(settings.nickname, forKey: "DefaultIdentity -> Nickname")
+			TextualUserDefaults.shared().set(settings.nickname, forKey: "DefaultIdentity -> Nickname")
 		}
 
 		if settings.realName.isEmpty == false {
-			TPCPreferencesUserDefaults.shared().set(settings.realName, forKey: "DefaultIdentity -> Realname")
+			TextualUserDefaults.shared().set(settings.realName, forKey: "DefaultIdentity -> Realname")
 		}
 	}
 
 	private func applyAppearanceSettings() {
-		var reloadAction: TPCPreferencesReloadAction = []
+		var reloadAction: PreferencesReloadAction = []
 
 		/* The bundled chat styles are looked up by name. When a style is not
 		 shipped in this build the current theme is left alone. */
 		if let themeName = TPCThemeController.buildFilename(settings.styleName, for: .bundle),
-		   TXSharedApplication.sharedThemeController().themeExists(themeName)
+		   SharedApplication.sharedThemeController().themeExists(themeName)
 		{
-			if TPCPreferences.themeName() != themeName {
-				TPCPreferences.setThemeName(themeName)
+			if TextualPreferences.themeName() != themeName {
+				TextualPreferences.setThemeName(themeName)
 				reloadAction.insert(.style)
 			}
 		} else {
@@ -376,26 +378,26 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 		let fontSize = OnboardingSettings.fontSize(for: settings.textSize)
 
-		if TPCPreferences.themeChannelViewFontSize() != fontSize {
-			TPCPreferences.setThemeChannelViewFontSize(fontSize)
+		if TextualPreferences.themeChannelViewFontSize() != fontSize {
+			TextualPreferences.setThemeChannelViewFontSize(fontSize)
 			reloadAction.insert(.style)
 		}
 
-		if TPCPreferences.appearance() != settings.appearance {
-			TPCPreferences.setAppearance(settings.appearance)
+		if TextualPreferences.appearance() != settings.appearance {
+			TextualPreferences.setAppearance(settings.appearance)
 			reloadAction.insert(.appearance)
 		}
 
 		if reloadAction.isEmpty == false {
-			TPCPreferences.performReloadAction(reloadAction)
+			TextualPreferences.performReloadAction(reloadAction)
 		}
 	}
 
 	private func applyNotificationSettings() {
-		TPCPreferences.setNotificationEnabled(settings.notifyOnHighlight, forEvent: .highlight)
-		TPCPreferences.setNotificationEnabled(settings.notifyOnPrivateMessage, forEvent: .privateMessage)
-		TPCPreferences.setNotificationEnabled(settings.notifyOnPrivateMessage, forEvent: .newPrivateMessage)
-		TPCPreferences.setSoundIsMuted(settings.playSounds == false)
+		TextualPreferences.setNotificationEnabled(settings.notifyOnHighlight, for: .highlight)
+		TextualPreferences.setNotificationEnabled(settings.notifyOnPrivateMessage, for: .privateMessage)
+		TextualPreferences.setNotificationEnabled(settings.notifyOnPrivateMessage, for: .newPrivateMessage)
+		TextualPreferences.setSoundIsMuted(settings.playSounds == false)
 	}
 
 	private func createClient() {
@@ -424,11 +426,16 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 		config.channelList = channelList
 
-		let world = NSObject.masterController().world!
-		let mainWindow = NSObject.masterController().mainWindow!
+		let world = NSObject.applicationController().world!
+		let mainWindow = NSObject.applicationController().mainWindow!
 
 		/* -initWithConfig: moves the account password into the keychain. */
-		let client = world.createClient(with: config.copy() as! IRCClientConfig, reload: true)
+		guard let clientConfig = config.copy() as? IRCClientConfig else {
+			assertionFailure("IRCClientConfigMutable.copy() must return IRCClientConfig")
+			return
+		}
+
+		let client = world.createClient(with: clientConfig, reload: true)
 
 		mainWindow.expandClient(client)
 		world.save()
@@ -445,7 +452,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 	public func windowShouldClose(_: NSWindow) -> Bool {
 		/* Closing the window is the same as skipping the rest of the flow. */
-		TPCPreferences.setOnboardingCompleted(true)
+		TextualPreferences.setOnboardingCompleted(true)
 		return true
 	}
 

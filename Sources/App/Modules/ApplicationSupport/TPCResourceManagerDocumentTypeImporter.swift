@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import UniformTypeIdentifiers
 
 private let scriptDocumentTypeName = "Glasstual IRC Client Script"
@@ -18,7 +19,7 @@ private let pluginDocumentTypeName = "Glasstual IRC Client Extension"
 
 @objc(TPCResourceManagerDocumentTypeImporter)
 public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePanelDelegate {
-	override public class var autosavesInPlace: Bool {
+	override public static var autosavesInPlace: Bool {
 		true
 	}
 
@@ -52,7 +53,7 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 			throw CocoaError(.fileReadUnknown)
 		}
 
-		if let scriptType = UTType(filenameExtension: TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod),
+		if let scriptType = UTType(filenameExtension: ResourceDocumentType.scriptFilenameExtension),
 		   contentType.conforms(to: scriptType)
 		{
 			performImportOfScriptFile(url)
@@ -61,7 +62,7 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		}
 
 		if contentType.conforms(to: .bundle),
-		   url.pathExtension == TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod
+		   url.pathExtension == ResourceDocumentType.bundleFilenameExtension
 		{
 			performImportOfPluginFile(url)
 
@@ -78,10 +79,10 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		let filename = url.lastPathComponent
 
 		let performInstall = TDCAlert.modalAlert(
-			withMessage: LocalizedKey("Prompts[6tj-yp]"),
-			title: LocalizedKey("Prompts[xfl-8e]", filename),
-			defaultButton: LocalizedKey("Prompts[mvh-ms]"),
-			alternateButton: LocalizedKey("Prompts[99q-gg]")
+			withMessage: PromptStrings.DocumentImport.documentOpenBody,
+			title: PromptStrings.DocumentImport.documentOpenTitle(filename: filename),
+			defaultButton: PromptStrings.Action.yes,
+			alternateButton: PromptStrings.Action.no
 		)
 
 		guard performInstall, let extensionsURL = PathInfo.customExtensionsURL else {
@@ -97,9 +98,9 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		let filenameWithoutExtension = (filename as NSString).deletingPathExtension
 
 		_ = TDCAlert.modalAlert(
-			withMessage: LocalizedKey("Prompts[k69-q0]"),
-			title: LocalizedKey("Prompts[xek-0t]", filenameWithoutExtension),
-			defaultButton: LocalizedKey("Prompts[c7s-dq]"),
+			withMessage: PromptStrings.DocumentImport.extensionRestartBody,
+			title: PromptStrings.DocumentImport.extensionInstalledTitle(name: filenameWithoutExtension),
+			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil
 		)
 	}
@@ -113,8 +114,8 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 				code: 27984,
 				userInfo: [
 					NSURLErrorKey: url,
-					NSLocalizedDescriptionKey: LocalizedKey("Prompts[m2r-gv]"),
-					NSLocalizedRecoverySuggestionErrorKey: LocalizedKey("Prompts[ztu-nv]"),
+					NSLocalizedDescriptionKey: PromptStrings.DocumentImport.scriptSaveErrorTitle,
+					NSLocalizedRecoverySuggestionErrorKey: PromptStrings.DocumentImport.scriptSaveErrorBody,
 				]
 			)
 		}
@@ -125,10 +126,10 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		let filename = url.lastPathComponent
 
 		let performInstall = TDCAlert.modalAlert(
-			withMessage: LocalizedKey("Prompts[6tj-yp]"),
-			title: LocalizedKey("Prompts[xfl-8e]", filename),
-			defaultButton: LocalizedKey("Prompts[mvh-ms]"),
-			alternateButton: LocalizedKey("Prompts[99q-gg]")
+			withMessage: PromptStrings.DocumentImport.documentOpenBody,
+			title: PromptStrings.DocumentImport.documentOpenTitle(filename: filename),
+			defaultButton: PromptStrings.Action.yes,
+			alternateButton: PromptStrings.Action.no
 		)
 
 		guard performInstall else {
@@ -147,8 +148,8 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		savePanel.delegate = self
 		savePanel.canCreateDirectories = true
 		savePanel.directoryURL = folderRep
-		savePanel.title = LocalizedKey("Prompts[6hx-ni]")
-		savePanel.message = LocalizedKey("Prompts[0bj-ic]", bundleID)
+		savePanel.title = PromptStrings.Action.save
+		savePanel.message = PromptStrings.DocumentImport.scriptSavePanelBody(bundleIdentifier: bundleID)
 		savePanel.nameFieldStringValue = url.lastPathComponent
 		savePanel.showsTagField = false
 
@@ -174,9 +175,9 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		let filenameWithoutExtension = (filename as NSString).deletingPathExtension
 
 		_ = TDCAlert.modalAlert(
-			withMessage: LocalizedKey("Prompts[3ze-xh]", filenameWithoutExtension),
-			title: LocalizedKey("Prompts[4ua-v5]", filenameWithoutExtension),
-			defaultButton: LocalizedKey("Prompts[c7s-dq]"),
+			withMessage: PromptStrings.DocumentImport.scriptCommandBody(name: filenameWithoutExtension),
+			title: PromptStrings.DocumentImport.scriptInstalledTitle(name: filenameWithoutExtension),
+			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil
 		)
 	}
@@ -186,8 +187,7 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 	private func importItem(_ url: URL, into destination: URL) -> Bool {
 		FileManager.default.replaceItem(
 			at: destination,
-			withItemAt: url,
-			options: [.optionsMoveToTrash, .optionsRemoveIfExists]
+			withItemAt: url
 		)
 	}
 }

@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 @objc(TDCServerChannelListDialogEntry)
 public final class ServerChannelListDialogEntry: NSObject {
@@ -22,9 +23,9 @@ public final class ServerChannelListDialogEntry: NSObject {
 
 @objc(TDCServerChannelListDialog)
 @MainActor
-public final class ServerChannelListDialog: WindowBase {
+public final class ServerChannelListDialog: WindowBase, TDCClientPrototype {
 	@objc public private(set) var client: IRCClient!
-	@objc public private(set) var clientId = ""
+	@objc public private(set) var clientId: String?
 	@objc public var contentAlreadyReceived = false
 
 	@IBOutlet private var updateButton: NSButton!
@@ -54,13 +55,7 @@ public final class ServerChannelListDialog: WindowBase {
 	}
 
 	@objc public var serverSideListArguments: String? {
-		var minimumUserCount = 0
-
-		if let minimumUserCountTextField {
-			minimumUserCount = minimumUserCountTextField.integerValue
-		}
-
-		return Self.listArguments(
+		Self.listArguments(
 			forMinimumUserCount: UInt(minimumUserCountTextField?.integerValue ?? 0),
 			pattern: searchTextField.stringValue,
 			supportedTokens: client.supportInfo.extendedListTokens
@@ -68,7 +63,7 @@ public final class ServerChannelListDialog: WindowBase {
 	}
 
 	@objc(listArgumentsForMinimumUserCount:pattern:supportedTokens:)
-	public class func listArguments(
+	public static func listArguments(
 		forMinimumUserCount minimumUserCount: UInt,
 		pattern: String?,
 		supportedTokens: [String]
@@ -79,7 +74,7 @@ public final class ServerChannelListDialog: WindowBase {
 			conditions.append(">\(minimumUserCount - 1)")
 		}
 
-		let trimmedPattern = (pattern as NSString?)?.trim ?? ""
+		let trimmedPattern = pattern?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
 		if trimmedPattern.isEmpty == false, supportedTokens.contains("M") {
 			let invalidCharacters = CharacterSet(charactersIn: ", ")
@@ -134,7 +129,7 @@ public final class ServerChannelListDialog: WindowBase {
 
 		if isWaitingForWrites == false {
 			isWaitingForWrites = true
-			performSelector(inCommonModes: #selector(queuedWritesTimer), with: nil, afterDelay: 1.0)
+			textual_performSelectorInCommonModes(#selector(queuedWritesTimer), with: nil, afterDelay: 1.0)
 		}
 	}
 
@@ -146,7 +141,7 @@ public final class ServerChannelListDialog: WindowBase {
 		channelListTable.sortDescriptors = [
 			NSSortDescriptor(key: "channelMemberCount", ascending: false, selector: #selector(NSNumber.compare(_:))),
 		]
-		networkNameTextField.stringValue = LocalizedKey("TDCServerChannelListDialog[7qf-r0]", client.networkNameAlt)
+		networkNameTextField.stringValue = ServerChannelListStrings.heading(networkName: client.networkNameAlt)
 		prepareMinimumUserCountControls()
 	}
 
@@ -159,7 +154,7 @@ public final class ServerChannelListDialog: WindowBase {
 			return
 		}
 
-		let label = NSTextField(labelWithString: LocalizedKey("TDCServerChannelListDialog[u7e-1s]"))
+		let label = NSTextField(labelWithString: ServerChannelListStrings.minimumUserCountLabel)
 		label.translatesAutoresizingMaskIntoConstraints = false
 
 		let formatter = NumberFormatter()
@@ -173,8 +168,8 @@ public final class ServerChannelListDialog: WindowBase {
 		textField.formatter = formatter
 		textField.placeholderString = "0"
 		textField.alignment = .right
-		textField.toolTip = LocalizedKey("TDCServerChannelListDialog[u7e-2s]")
-		textField.setAccessibilityLabel(LocalizedKey("TDCServerChannelListDialog[u7e-1s]"))
+		textField.toolTip = ServerChannelListStrings.minimumUserCountHint
+		textField.setAccessibilityLabel(ServerChannelListStrings.minimumUserCountLabel)
 
 		contentView.addSubview(label)
 		contentView.addSubview(textField)
@@ -230,7 +225,7 @@ public final class ServerChannelListDialog: WindowBase {
 
 	private func updateDialogTitle() {
 		let arrangedObjects = channelListController.arrangedObjects as? [Any] ?? []
-		window.title = LocalizedKey("TDCServerChannelListDialog[ct4-wh]", formattedNumber(arrangedObjects.count))
+		window.title = ServerChannelListStrings.windowTitle(publicChannelCount: arrangedObjects.count)
 	}
 
 	@IBAction private func onClose(_: Any?) {
@@ -242,7 +237,7 @@ public final class ServerChannelListDialog: WindowBase {
 
 		let selector = NSSelectorFromString("serverChannelListDialogOnUpdate:")
 		if let delegate, delegate.responds(to: selector) {
-			delegate.perform(selector, with: self)
+			_ = delegate.perform(selector, with: self)
 		}
 	}
 
@@ -288,21 +283,21 @@ extension ServerChannelListDialog: NSTableViewDelegate {
 	) -> IndexSet {
 		tableView.selectionIndexes(
 			forProposedSelection: proposedSelectionIndexes,
-			maximumNumberOfSelections: 8
+			maximumCount: 8
 		)
 	}
 }
 
 extension ServerChannelListDialog: NSWindowDelegate {
 	public func windowWillClose(_: Notification) {
-		cancelPerformRequests()
+		textual_cancelPerformRequests()
 		channelListTable.dataSource = nil
 		channelListTable.delegate = nil
 		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
 
 		let selector = NSSelectorFromString("serverChannelDialogWillClose:")
 		if let delegate, delegate.responds(to: selector) {
-			delegate.perform(selector, with: self)
+			_ = delegate.perform(selector, with: self)
 		}
 	}
 }

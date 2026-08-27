@@ -1,0 +1,150 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "channel-key-field-hint" : {
+      "comment" : "Accessibility hint for the text field containing the IRC channel key.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the channel key used by members when joining."
+          }
+        }
+      }
+    },
+    "channel-key-mode" : {
+      "comment" : "Title of the checkbox that enables IRC channel key mode +k. Migrated from the legacy XIB.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password (+k):"
+          }
+        }
+      }
+    },
+    "heading" : {
+      "comment" : "Heading above the editable channel modes. The argument is the IRC channel name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modes for %@"
+          }
+        }
+      }
+    },
+    "invite-only-mode" : {
+      "comment" : "Title of the checkbox for IRC invite-only mode +i. Migrated from the legacy XIB.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite-only channel (+i)"
+          }
+        }
+      }
+    },
+    "moderated-mode" : {
+      "comment" : "Title of the checkbox for IRC moderated mode +m. Migrated from the legacy XIB.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moderated channel (+m)"
+          }
+        }
+      }
+    },
+    "no-external-messages-mode" : {
+      "comment" : "Title of the checkbox for IRC no-external-messages mode +n. Migrated from the legacy XIB.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No external channel messages (+n)"
+          }
+        }
+      }
+    },
+    "operator-topic-mode" : {
+      "comment" : "Title of the checkbox for IRC operator-only topic mode +t. Migrated from the legacy XIB.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only operators can change topic (+t)"
+          }
+        }
+      }
+    },
+    "private-channel-mode" : {
+      "comment" : "Title of the checkbox for IRC private-channel mode +p. Migrated from the legacy XIB.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private channel (+p)"
+          }
+        }
+      }
+    },
+    "secret-channel-mode" : {
+      "comment" : "Title of the checkbox for IRC secret-channel mode +s. Migrated from the legacy XIB.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret channel (+s)"
+          }
+        }
+      }
+    },
+    "user-limit-field-hint" : {
+      "comment" : "Accessibility hint for the numeric channel user-limit field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a maximum from 0 through 99999."
+          }
+        }
+      }
+    },
+    "user-limit-mode" : {
+      "comment" : "Title of the checkbox for IRC channel user-limit mode +l. Migrated from the legacy XIB.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limit number of users (+l):"
+          }
+        }
+      }
+    },
+    "window-title" : {
+      "comment" : "Semantic title of the channel modes sheet. The legacy XIB used the placeholder title Window.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel Modes"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

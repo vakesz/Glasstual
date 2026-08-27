@@ -21,21 +21,21 @@ open class WindowBase: NSObject {
 	@IBOutlet public var okButton: NSButton?
 	@IBOutlet public var cancelButton: NSButton?
 
-	open func show() {
+	@MainActor open func show() {
 		window.makeKeyAndOrderFront(nil)
 	}
 
-	open func close() {
+	@MainActor open func close() {
 		window?.close()
 	}
 
 	@objc(ok:)
-	open func ok(_: Any?) {
+	@MainActor open func ok(_: Any?) {
 		close()
 	}
 
 	@objc(cancel:)
-	open func cancel(_: Any?) {
+	@MainActor open func cancel(_: Any?) {
 		close()
 	}
 }

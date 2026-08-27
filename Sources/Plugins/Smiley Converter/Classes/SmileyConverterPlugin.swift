@@ -36,44 +36,68 @@
  *********************************************************************** */
 
 import AppKit
+import GlasstualPluginKit
+import Synchronization
+
+private struct SmileyConversionSnapshot: Sendable {
+	static let empty = SmileyConversionSnapshot(conversionTable: [:])
+
+	let conversionTable: [String: String]
+	let sortedSmileys: [String]
+
+	init(conversionTable: [String: String]) {
+		self.conversionTable = conversionTable
+		sortedSmileys = conversionTable.keys.sorted(by: >)
+	}
+}
 
 @objc(TPISmileyConverter)
-final class SmileyConverterPlugin: NSObject, THOPluginProtocol, @unchecked Sendable {
+final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRendering, PluginPreferencesProviding,
+	@unchecked Sendable
+{
 	private static let enabledPreference = "Smiley Converter Extension -> Enable Service"
 	private static let extraEmoticonsPreference = "Smiley Converter Extension -> Enable Extra Emoticons"
 
 	@IBOutlet private var preferencesPane: NSView!
 
-	private var conversionTable: [String: String] = [:]
-	private var sortedSmileys: [String] = []
+	private let conversionSnapshot = Mutex(SmileyConversionSnapshot.empty)
+	private var host: PluginHostContext?
 
 	private var bundle: Bundle {
 		Bundle(for: SmileyConverterPlugin.self)
 	}
 
-	private var defaults: TPCPreferencesUserDefaults {
-		TPCPreferencesUserDefaults.shared()
+	private var defaults: UserDefaults {
+		guard let host else {
+			preconditionFailure("The plugin host must load Smiley Converter before it is used")
+		}
+		return host.defaults
 	}
 
-	func pluginLoadedIntoMemory() {
+	func pluginLoaded(using host: PluginHostContext) {
+		self.host = host
 		DispatchQueue.main.syncIfNeeded {
 			self.bundle.loadNibNamed("TPISmileyConverter", owner: self, topLevelObjects: nil)
 		}
-		rebuildConversionTableIfEnabled()
+		rebuildConversionSnapshot()
 	}
 
-	private func rebuildConversionTableIfEnabled() {
-		guard defaults.bool(forKey: Self.enabledPreference) else { return }
-		buildConversionTable()
+	private func rebuildConversionSnapshot() {
+		let newSnapshot = defaults.bool(forKey: Self.enabledPreference)
+			? buildConversionSnapshot()
+			: SmileyConversionSnapshot.empty
+
+		conversionSnapshot.withLock { snapshot in
+			snapshot = newSnapshot
+		}
 	}
 
-	private func buildConversionTable() {
+	private func buildConversionSnapshot() -> SmileyConversionSnapshot {
 		var table = loadConversionTable(named: "conversionTable")
 		if defaults.bool(forKey: Self.extraEmoticonsPreference) {
 			table.merge(loadConversionTable(named: "conversionTable2")) { _, new in new }
 		}
-		conversionTable = table
-		sortedSmileys = table.keys.sorted(by: >)
+		return SmileyConversionSnapshot(conversionTable: table)
 	}
 
 	private func loadConversionTable(named name: String) -> [String: String] {
@@ -94,9 +118,7 @@ final class SmileyConverterPlugin: NSObject, THOPluginProtocol, @unchecked Senda
 	}
 
 	@IBAction private func preferenceChanged(_: Any?) {
-		conversionTable.removeAll()
-		sortedSmileys.removeAll()
-		rebuildConversionTableIfEnabled()
+		rebuildConversionSnapshot()
 	}
 
 	var pluginPreferencesPaneView: NSView {
@@ -104,30 +126,26 @@ final class SmileyConverterPlugin: NSObject, THOPluginProtocol, @unchecked Senda
 	}
 
 	var pluginPreferencesPaneMenuItemName: String {
-		bundle.localizedString(forKey: "3kj-8f", value: nil, table: "BasicLanguage")
+		String(localized: .BasicLanguage.preferencesPaneTitle)
 	}
 
-	func willRenderMessage(
-		_ newMessage: String,
-		for _: TVCLogController,
-		lineType: TVCLogLineType,
-		memberType _: TVCLogLineMemberType
-	) -> String? {
+	func willRenderMessage(_ event: PluginRenderEvent) -> String? {
 		guard defaults.bool(forKey: Self.enabledPreference),
-		      lineType == .action || lineType == .privateMessage
-		else { return newMessage }
-		return convertToEmoji(newMessage)
+		      event.kind == .action || event.kind == .privateMessage
+		else { return event.message }
+		return convertToEmoji(event.message)
 	}
 
 	private func convertToEmoji(_ string: String) -> String {
+		let snapshot = conversionSnapshot.withLock { $0 }
 		let result = NSMutableString(string: string)
-		for smiley in sortedSmileys {
-			replace(smiley, in: result)
+		for smiley in snapshot.sortedSmileys {
+			replace(smiley, in: result, using: snapshot)
 		}
 		return result as String
 	}
 
-	private func replace(_ smiley: String, in string: NSMutableString) {
+	private func replace(_ smiley: String, in string: NSMutableString, using snapshot: SmileyConversionSnapshot) {
 		var searchLocation = 0
 		while searchLocation < string.length {
 			let searchRange = NSRange(location: searchLocation, length: string.length - searchLocation)
@@ -138,7 +156,7 @@ final class SmileyConverterPlugin: NSObject, THOPluginProtocol, @unchecked Senda
 			let rightLocation = NSMaxRange(match)
 			let hasRightBoundary = rightLocation == string.length || string.character(at: rightLocation) == 0x20
 
-			if hasLeftBoundary, hasRightBoundary, let emoji = conversionTable[smiley] {
+			if hasLeftBoundary, hasRightBoundary, let emoji = snapshot.conversionTable[smiley] {
 				string.replaceCharacters(in: match, with: emoji)
 				searchLocation = match.location + (emoji as NSString).length + 1
 			} else {

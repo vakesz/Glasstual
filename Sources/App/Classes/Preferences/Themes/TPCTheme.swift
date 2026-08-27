@@ -36,8 +36,10 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import CoreServices
 import Foundation
+import Mustache
 import os
 
 public extension Notification.Name {
@@ -86,15 +88,13 @@ public final class Theme: NSObject {
 	fileprivate var globalVariety: ThemeVariety!
 	fileprivate var variety: ThemeVariety?
 	private var varieties: [ThemeVariety] = []
-	private nonisolated(unsafe) var templateCache = NSCache<NSString, GRMustacheTemplate>()
-	private nonisolated(unsafe) var defaultTemplateRepository: GRMustacheTemplateRepository!
+	private nonisolated let templateStore = ThemeTemplateStore()
 	private var fileSystemMonitor: XRFileSystemMonitor?
 
 	public private(set) var cssFiles: [URL] = []
 	public private(set) var jsFiles: [URL] = []
 	public private(set) var temporaryCSSFiles: [URL] = []
 	public private(set) var temporaryJSFiles: [URL] = []
-	public private(set) nonisolated(unsafe) var templateRepositories: [GRMustacheTemplateRepository] = []
 	private var settingsStorage: ThemeSettings!
 	public var settings: ThemeSettings {
 		settingsStorage
@@ -128,36 +128,36 @@ public final class Theme: NSObject {
 	}
 
 	public var cssFilePaths: [String] {
-		cssFiles.map(\.path)
+		cssFiles.map { $0.path(percentEncoded: false) }
 	}
 
 	public var jsFilePaths: [String] {
-		jsFiles.map(\.path)
+		jsFiles.map { $0.path(percentEncoded: false) }
 	}
 
 	public var temporaryCSSFilePaths: [String] {
-		temporaryCSSFiles.map(\.path)
+		temporaryCSSFiles.map { $0.path(percentEncoded: false) }
 	}
 
 	public var temporaryJSFilePaths: [String] {
-		temporaryJSFiles.map(\.path)
+		temporaryJSFiles.map { $0.path(percentEncoded: false) }
 	}
 
 	public var applicationTemplateRepositoryPath: String {
-		applicationTemplateRepositoryURL.path
+		applicationTemplateRepositoryURL.path(percentEncoded: false)
 	}
 
 	public func updateAppearance() {
 		_ = chooseBestVariety()
 	}
 
-	@objc(templateWithLineType:)
-	public nonisolated func template(withLineType type: TVCLogLineType) -> GRMustacheTemplate? {
-		guard let typeString = TVCLogLine.string(for: type) else {
+	public nonisolated func template(withLineType type: TVCLogLineType) -> Template? {
+		guard let typeString = LogLine.string(for: type) else {
 			return nil
 		}
 
-		if let template = loadTemplate(named: "Line Types/\(typeString)", logErrors: false) {
+		let lineTypeTemplateName = "\(ThemeResourcePath.lineTypes.rawValue)/\(typeString)"
+		if let template = loadTemplate(named: lineTypeTemplateName, logErrors: false) {
 			return template
 		}
 
@@ -168,8 +168,7 @@ public final class Theme: NSObject {
 		return loadTemplate(named: fallbackName, logErrors: true)
 	}
 
-	@objc(templateWithName:)
-	public nonisolated func template(withName name: String) -> GRMustacheTemplate? {
+	public nonisolated func template(withName name: String) -> Template? {
 		loadTemplate(named: name, logErrors: true)
 	}
 
@@ -209,13 +208,13 @@ public final class Theme: NSObject {
 	}
 
 	private var varietiesURL: URL {
-		originalURL.appendingPathComponent("Varieties", isDirectory: true)
+		originalURL.appending(path: ThemeResourcePath.varieties.rawValue, directoryHint: .isDirectory)
 	}
 
 	private func assignTemporaryURL() {
 		let sourceURL = PathInfo.applicationCachesURL ?? FileManager.default.temporaryDirectory
 		temporaryURL = sourceURL
-			.appendingPathComponent("Cached-Style-Resources", isDirectory: true)
+			.appending(path: ThemeResourcePath.cachedStyleResources.rawValue, directoryHint: .isDirectory)
 			.standardizedFileURL
 	}
 
@@ -286,7 +285,9 @@ public final class Theme: NSObject {
 			return result
 		}
 
-		if url.pathExtension == "css" || url.pathExtension == "js" {
+		if url.pathExtension == ThemeResourceExtension.styleSheet.rawValue ||
+			url.pathExtension == ThemeResourceExtension.javaScript.rawValue
+		{
 			result.insert(.reloadableFileModified)
 		}
 		return result
@@ -325,7 +326,7 @@ public final class Theme: NSObject {
 	}
 
 	private func directoriesAreEqual(_ lhs: URL, _ rhs: URL) -> Bool {
-		lhs.standardizedFileURL.path == rhs.standardizedFileURL.path
+		lhs.standardizedFileURL.path(percentEncoded: false) == rhs.standardizedFileURL.path(percentEncoded: false)
 	}
 
 	private func variety(at url: URL) -> ThemeVariety? {
@@ -373,7 +374,7 @@ public final class Theme: NSObject {
 	}
 
 	private var bestVariety: ThemeVariety? {
-		let wantsDarkAppearance = TXSharedApplication.sharedAppearance().properties.isDarkAppearance
+		let wantsDarkAppearance = SharedApplication.sharedAppearance().properties.isDarkAppearance
 		let globalHasCSS = globalVariety.cssFile != nil
 		let globalHasJS = globalVariety.jsFile != nil
 		var best: ThemeVariety?
@@ -401,11 +402,11 @@ public final class Theme: NSObject {
 
 	private func changeVariety(to newVariety: ThemeVariety?) {
 		let previousVariety = variety
-		templateCache.removeAllObjects()
 		variety = newVariety
-		combineFiles()
+		let repositories = combineFiles()
 		settingsStorage = ThemeSettings(theme: self)
-		assignDefaultTemplateRepository()
+		let fallbackRepository = TemplateRepository(baseURL: applicationTemplateRepositoryURL)
+		templateStore.replaceRepositories(repositories, fallbackRepository: fallbackRepository)
 
 		guard let previousVariety, let newVariety, usable else {
 			return
@@ -416,14 +417,13 @@ public final class Theme: NSObject {
 		NotificationCenter.default.post(name: notification, object: self)
 	}
 
-	private func combineFiles() {
+	private func combineFiles() -> [TemplateRepository] {
 		guard let variety else {
 			cssFiles = []
 			jsFiles = []
 			temporaryCSSFiles = []
 			temporaryJSFiles = []
-			templateRepositories = []
-			return
+			return []
 		}
 
 		let selectedVarieties = variety.isGlobalVariety ? [globalVariety!] : [globalVariety!, variety]
@@ -433,60 +433,40 @@ public final class Theme: NSObject {
 		temporaryJSFiles = jsFiles.map(remapToTemporaryURL)
 
 		let repositoryVarieties = variety.isGlobalVariety ? [globalVariety!] : [variety, globalVariety!]
-		templateRepositories = repositoryVarieties.compactMap(\.templateRepository)
+		return repositoryVarieties.compactMap(\.templateRepository)
 	}
 
 	private func remapToTemporaryURL(_ url: URL) -> URL {
-		let originalPath = originalURL.standardizedFileURL.path
-		let path = url.standardizedFileURL.path
+		let originalPath = originalURL.standardizedFileURL.path(percentEncoded: false)
+		let path = url.standardizedFileURL.path(percentEncoded: false)
 		guard path == originalPath || path.hasPrefix(originalPath + "/") else {
 			return url
 		}
 		let suffix = String(path.dropFirst(originalPath.count).trimmingPrefix("/"))
-		return temporaryURL.appendingPathComponent(suffix).standardizedFileURL
+		return temporaryURL.appending(path: suffix).standardizedFileURL
 	}
 
 	// MARK: Templates
 
 	private nonisolated static let templateLineTypes: [String: String] =
-		TPCResourceManager.dictionary(fromResources: "TemplateLineTypes") as? [String: String] ?? [:]
+		ResourceManager
+			.dictionary(fromResources: ThemeResourcePath.templateLineTypes.rawValue) as? [String: String] ?? [:]
 
 	private var applicationTemplateRepositoryURL: URL {
 		PathInfo.applicationResourcesURL
-			.appendingPathComponent("Style Default Templates", isDirectory: true)
-			.appendingPathComponent("Version \(settings.templateEngineVersion)", isDirectory: true)
+			.appending(path: ThemeResourcePath.defaultTemplates.rawValue, directoryHint: .isDirectory)
+			.appending(path: "Version \(settings.templateEngineVersion)", directoryHint: .isDirectory)
 	}
 
-	private func assignDefaultTemplateRepository() {
-		defaultTemplateRepository = GRMustacheTemplateRepository(baseURL: applicationTemplateRepositoryURL)
-	}
-
-	private nonisolated func loadTemplate(named name: String, logErrors: Bool) -> GRMustacheTemplate? {
-		if let cached = templateCache.object(forKey: name as NSString) {
-			return cached
-		}
-
-		let repositories = templateRepositories + [defaultTemplateRepository].compactMap(\.self)
-		for repository in repositories {
-			do {
-				let template = try repository.templateNamed(name)
-				templateCache.setObject(template, forKey: name as NSString)
-				return template
-			} catch let error as NSError {
-				let templateNotFoundErrorCode = 1
-				if error.code == templateNotFoundErrorCode || error
-					.code == NSFileReadNoSuchFileError
-				{
-					continue
-				}
-				if logErrors {
-					Self.logger.error(
-						"Failed to load template '\(name, privacy: .public)': \(error.localizedDescription, privacy: .public)"
-					)
-				}
+	private nonisolated func loadTemplate(named name: String, logErrors: Bool) -> Template? {
+		templateStore.template(named: name) { error in
+			guard logErrors else {
+				return
 			}
+			Self.logger.error(
+				"Failed to load template '\(name, privacy: .public)': \(error.localizedDescription, privacy: .public)"
+			)
 		}
-		return nil
 	}
 }
 
@@ -497,8 +477,8 @@ private final class ThemeVariety {
 	private(set) var appearance: TPCThemeAppearanceType = .default
 	private(set) var cssFile: URL?
 	private(set) var jsFile: URL?
-	private(set) var settings: [String: Any] = [:]
-	private(set) var templateRepository: GRMustacheTemplateRepository?
+	private(set) var settings = ThemeSettingValues()
+	private(set) var templateRepository: TemplateRepository?
 
 	init(url: URL, isGlobalVariety: Bool = false) {
 		self.url = url.standardizedFileURL
@@ -508,9 +488,9 @@ private final class ThemeVariety {
 
 	func reevaluateFile(at fileURL: URL) -> Bool {
 		switch fileURL.lastPathComponent {
-		case "design.css":
+		case ThemeResourcePath.designStyleSheet.rawValue:
 			updateFileReference(&cssFile, for: fileURL)
-		case "scripts.js":
+		case ThemeResourcePath.scripts.rawValue:
 			updateFileReference(&jsFile, for: fileURL)
 		default:
 			false
@@ -518,22 +498,22 @@ private final class ThemeVariety {
 	}
 
 	private func load() {
-		let cssURL = url.appendingPathComponent("design.css")
+		let cssURL = url.appending(path: ThemeResourcePath.designStyleSheet.rawValue)
 		if FileManager.default.fileExists(at: cssURL) {
 			cssFile = cssURL
 		}
 
-		let jsURL = url.appendingPathComponent("scripts.js")
+		let jsURL = url.appending(path: ThemeResourcePath.scripts.rawValue)
 		if FileManager.default.fileExists(at: jsURL) {
 			jsFile = jsURL
 		}
 
-		templateRepository = GRMustacheTemplateRepository(baseURL: Self.templatesURL(for: url))
+		templateRepository = TemplateRepository(baseURL: Self.templatesURL(for: url))
 		settings = Self.loadSettings(from: Self.settingsURL(for: url))
 
-		switch settings["Appearance"] as? String {
-		case "dark": appearance = .dark
-		case "light": appearance = .light
+		switch settings.value(for: .appearance, as: String.self).flatMap(ThemeAppearanceToken.init(rawValue:)) {
+		case .dark: appearance = .dark
+		case .light: appearance = .light
 		default: appearance = .default
 		}
 	}
@@ -550,28 +530,28 @@ private final class ThemeVariety {
 		return true
 	}
 
-	private static func loadSettings(from url: URL) -> [String: Any] {
+	private static func loadSettings(from url: URL) -> ThemeSettingValues {
 		guard let data = try? Data(contentsOf: url),
 		      let propertyList = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
 		      let settings = propertyList as? [String: Any]
 		else {
 			return [:]
 		}
-		return settings
+		return ThemeSettingValues(rawValues: settings)
 	}
 
 	private static func settingsURL(for url: URL) -> URL {
-		let legacyURL = url.appendingPathComponent("Data/Settings/styleSettings.plist")
+		let legacyURL = url.appending(path: ThemeResourcePath.legacySettings.rawValue)
 		return FileManager.default.fileExists(at: legacyURL)
 			? legacyURL
-			: url.appendingPathComponent("settings.plist")
+			: url.appending(path: ThemeResourcePath.settings.rawValue)
 	}
 
 	private static func templatesURL(for url: URL) -> URL {
-		let legacyURL = url.appendingPathComponent("Data/Templates", isDirectory: true)
+		let legacyURL = url.appending(path: ThemeResourcePath.legacyTemplates.rawValue, directoryHint: .isDirectory)
 		return FileManager.default.fileExists(at: legacyURL)
 			? legacyURL
-			: url.appendingPathComponent("Templates", isDirectory: true)
+			: url.appending(path: ThemeResourcePath.templates.rawValue, directoryHint: .isDirectory)
 	}
 }
 
@@ -583,14 +563,18 @@ public final class ThemeSettings: NSObject {
 		TPCThemeSettingsNewestTemplateEngineVersion
 	)
 	private static let missingStoreNameError = """
-	Empty key-value store name in settings.plist — Set the key "Key-value Store Name" in settings.plist as a string. \
+	Empty key-value store name in settings.plist — Set the key "\(ThemeSettingKey.keyValueStoreName.rawValue)" in \
+	settings.plist as a string. \
 	The current style name is the recommended value.
 	"""
 
 	public private(set) var invertSidebarColors = false
-	public private(set) var js_postHandleEventNotifications = false
-	public private(set) var js_postAppearanceChangesNotification = false
-	public private(set) var js_postPreferencesDidChangesNotifications = false
+	@objc(js_postHandleEventNotifications)
+	public private(set) var postsHandleEventNotifications = false
+	@objc(js_postAppearanceChangesNotification)
+	public private(set) var postsAppearanceChangeNotifications = false
+	@objc(js_postPreferencesDidChangesNotifications)
+	public private(set) var postsPreferenceChangeNotifications = false
 	public private(set) var usesIncompatibleTemplateEngineVersion = true
 	public private(set) var appearance: TPCThemeAppearanceType = .default
 	public private(set) var themeChannelViewFont: NSFont?
@@ -614,7 +598,7 @@ public final class ThemeSettings: NSObject {
 	}
 
 	public var underlyingWindowColorIsDark: Bool {
-		guard let convertedColor = underlyingWindowColor?.usingColorSpace(.deviceRGB) else {
+		guard let convertedColor = underlyingWindowColor?.usingColorSpace(.sRGB) else {
 			return false
 		}
 		return convertedColor.brightnessComponent < 0.5
@@ -667,59 +651,62 @@ public final class ThemeSettings: NSObject {
 		guard let storeName = settingsKeyValueStoreName, !storeName.isEmpty else {
 			return nil
 		}
-		return "Internal Theme Settings Key-value Store -> \(storeName)"
+		return ThemePreferenceNamespace.settingsStore.rawValue + storeName
 	}
 
 	private func loadSettings(for theme: Theme) {
 		var values = theme.globalVariety.settings
 		if let variety = theme.variety, !variety.isGlobalVariety {
-			values.merge(variety.settings) { _, varietyValue in varietyValue }
+			values.merge(variety.settings)
 		}
 
-		themeChannelViewFont = Self.font(forKey: "Override Channel Font", in: values)
-		themeNicknameFormat = Self.nonemptyString(forKey: "Nickname Format", in: values)
-		themeTimestampFormat = Self.nonemptyString(forKey: "Timestamp Format", in: values)
-		invertSidebarColors = values["Force Invert Sidebars"] as? Bool ?? false
-		channelViewOverlayColor = Self.color(forKey: "Channel View Overlay Color", in: values)
-		underlyingWindowColor = Self.color(forKey: "Underlying Window Color", in: values)
-		settingsKeyValueStoreName = Self.nonemptyString(forKey: "Key-value Store Name", in: values)
-		js_postHandleEventNotifications = values["Post Glasstual.handleEvent() Notifications"] as? Bool ?? false
-		js_postAppearanceChangesNotification =
-			values["Post Glasstual.appearanceDidChange() Notifications"] as? Bool ?? false
-		js_postPreferencesDidChangesNotifications =
-			values["Post Glasstual.preferencesDidChange() Notifications"] as? Bool ?? false
+		themeChannelViewFont = Self.font(forKey: .overrideChannelFont, in: values)
+		themeNicknameFormat = Self.nonemptyString(forKey: .nicknameFormat, in: values)
+		themeTimestampFormat = Self.nonemptyString(forKey: .timestampFormat, in: values)
+		invertSidebarColors = values.value(for: .forceInvertSidebars, as: Bool.self) ?? false
+		channelViewOverlayColor = Self.color(forKey: .channelViewOverlayColor, in: values)
+		underlyingWindowColor = Self.color(forKey: .underlyingWindowColor, in: values)
+		settingsKeyValueStoreName = Self.nonemptyString(forKey: .keyValueStoreName, in: values)
+		postsHandleEventNotifications = values.value(for: .postHandleEvent, as: Bool.self) ?? false
+		postsAppearanceChangeNotifications =
+			values.value(for: .postAppearanceChanges, as: Bool.self) ?? false
+		postsPreferenceChangeNotifications =
+			values.value(for: .postPreferenceChanges, as: Bool.self) ?? false
 
-		if let offset = (values["Indentation Offset"] as? NSNumber)?.doubleValue, offset >= 0 {
+		if let offset = values.value(for: .indentationOffset, as: Double.self), offset >= 0 {
 			indentationOffset = offset
 		}
 
 		let varietyAppearance = theme.variety?.appearance ?? .default
 		appearance = varietyAppearance
 		nicknameColorStyle = Self.nicknameColorStyle(
-			from: values["Nickname Color Style"],
+			from: values[.nicknameColorStyle],
 			appearance: varietyAppearance,
 			windowIsDark: underlyingWindowColorIsDark
 		)
 
-		let versions = values["Template Engine Versions"] as? [String: Any] ?? [:]
+		let versions = ThemeTemplateVersionValues(
+			rawValues: values.value(for: .templateEngineVersions, as: [String: Any].self) ?? [:]
+		)
 		let applicationVersion = ApplicationInfo.applicationVersionShort()
-		if let version = Self.compatibleTemplateVersion(versions[applicationVersion]) ??
-			Self.compatibleTemplateVersion(versions["default"])
+		// A theme may target any application version, so this key remains data-driven.
+		if let version = Self.compatibleTemplateVersion(versions.rawValues[applicationVersion]) ??
+			Self.compatibleTemplateVersion(versions[.fallback])
 		{
 			templateEngineVersion = version
 			usesIncompatibleTemplateEngineVersion = false
 		}
 	}
 
-	private static func nonemptyString(forKey key: String, in values: [String: Any]) -> String? {
-		guard let value = values[key] as? String, !value.isEmpty else {
+	private static func nonemptyString(forKey key: ThemeSettingKey, in values: ThemeSettingValues) -> String? {
+		guard let value = values.value(for: key, as: String.self), !value.isEmpty else {
 			return nil
 		}
 		return value
 	}
 
-	private static func color(forKey key: String, in values: [String: Any]) -> NSColor? {
-		guard let value = values[key] as? String else { return nil }
+	private static func color(forKey key: ThemeSettingKey, in values: ThemeSettingValues) -> NSColor? {
+		guard let value = values.value(for: key, as: String.self) else { return nil }
 		let hexadecimalValue = value.hasPrefix("#") ? String(value.dropFirst()) : value
 		guard !hexadecimalValue.isEmpty,
 		      hexadecimalValue.count <= 8,
@@ -733,17 +720,20 @@ public final class ThemeSettings: NSObject {
 			color = color << 8 | 0xFF
 		}
 		return NSColor(
-			deviceRed: CGFloat((color & 0xFF00_0000) >> 24) / 0xFF,
+			srgbRed: CGFloat((color & 0xFF00_0000) >> 24) / 0xFF,
 			green: CGFloat((color & 0x00FF_0000) >> 16) / 0xFF,
 			blue: CGFloat((color & 0x0000_FF00) >> 8) / 0xFF,
 			alpha: CGFloat(color & 0x0000_00FF) / 0xFF
 		)
 	}
 
-	private static func font(forKey key: String, in values: [String: Any]) -> NSFont? {
-		guard let fontValues = values[key] as? [String: Any],
-		      let fontName = fontValues["Font Name"] as? String,
-		      let fontSize = (fontValues["Font Size"] as? NSNumber)?.doubleValue,
+	private static func font(forKey key: ThemeSettingKey, in values: ThemeSettingValues) -> NSFont? {
+		guard let rawFontValues = values.value(for: key, as: [String: Any].self) else {
+			return nil
+		}
+		let fontValues = ThemeFontSettingValues(rawValues: rawFontValues)
+		guard let fontName = fontValues.value(for: .name, as: String.self),
+		      let fontSize = fontValues.value(for: .size, as: Double.self),
 		      fontSize >= 5
 		else {
 			return nil
@@ -756,12 +746,10 @@ public final class ThemeSettings: NSObject {
 		appearance: TPCThemeAppearanceType,
 		windowIsDark: Bool
 	) -> TPCThemeSettingsNicknameColorStyle {
-		if let value = value as? String {
-			if value == "HSL-light" {
-				return .light
-			}
-			if value == "HSL-dark" {
-				return .dark
+		if let value = value as? String, let token = ThemeNicknameColorToken(rawValue: value) {
+			switch token {
+			case .light: return .light
+			case .dark: return .dark
 			}
 		}
 		switch appearance {
@@ -772,8 +760,7 @@ public final class ThemeSettings: NSObject {
 	}
 
 	private static func compatibleTemplateVersion(_ value: Any?) -> UInt? {
-		guard let number = value as? NSNumber else { return nil }
-		let version = number.uintValue
+		guard let version = value as? UInt else { return nil }
 		return templateEngineVersionRange.contains(version) ? version : nil
 	}
 }

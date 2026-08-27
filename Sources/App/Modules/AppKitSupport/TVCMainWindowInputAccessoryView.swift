@@ -106,7 +106,7 @@ public final class MainWindowInputAccessoryView: NSView {
 		let close = NSButton(
 			image: NSImage(
 				systemSymbolName: "xmark.circle.fill",
-				accessibilityDescription: LocalizedKey("TVCMainWindow[rpl-cl]")
+				accessibilityDescription: MainWindowStrings.Reply.cancel
 			)!,
 			target: self,
 			action: #selector(cancelReply(_:))
@@ -115,7 +115,7 @@ public final class MainWindowInputAccessoryView: NSView {
 		close.isBordered = false
 		close.bezelStyle = .accessoryBarAction
 		close.contentTintColor = .secondaryLabelColor
-		close.toolTip = LocalizedKey("TVCMainWindow[rpl-cl]")
+		close.toolTip = MainWindowStrings.Reply.cancel
 		close.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
 
 		banner.addSubview(icon)
@@ -159,8 +159,7 @@ public final class MainWindowInputAccessoryView: NSView {
 	) {
 		replyMessageIdentifier = messageIdentifier
 
-		let who = (nickname?.isEmpty == false) ? nickname! : LocalizedKey("TVCMainWindow[rpl-an]")
-		let prefix = LocalizedKey("TVCMainWindow[rpl-to]", who)
+		let prefix = MainWindowStrings.Reply.target(nickname)
 
 		let text = NSMutableAttributedString(
 			string: prefix,
@@ -250,14 +249,7 @@ public final class MainWindowInputAccessoryView: NSView {
 			return
 		}
 
-		let caption: String = switch nicknames.count {
-		case 1:
-			LocalizedKey("TVCMainWindow[typ-1]", nicknames[0])
-		case 2:
-			LocalizedKey("TVCMainWindow[typ-2]", nicknames[0], nicknames[1])
-		default:
-			LocalizedKey("TVCMainWindow[typ-n]", nicknames.count)
-		}
+		let caption = MainWindowStrings.Typing.caption(for: nicknames)
 
 		typingLabel.stringValue = caption
 		typingRow.toolTip = nicknames.joined(separator: ", ")

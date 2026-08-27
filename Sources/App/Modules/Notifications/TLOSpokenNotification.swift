@@ -13,7 +13,7 @@
 import Foundation
 
 @objc(TLOSpokenNotification)
-public final class SpokenNotification: NSObject {
+public final class SpokenNotification: NSObject, @unchecked Sendable {
 	@objc public private(set) weak var client: IRCClient!
 	@objc public private(set) weak var channel: IRCChannel!
 	@objc public private(set) var nickname: String!
@@ -36,7 +36,7 @@ public final class SpokenNotification: NSObject {
 			client = target as? IRCClient
 		} else {
 			client = target?.associatedClient
-			channel = target as? IRCChannel
+			channel = (target as AnyObject?) as? IRCChannel
 		}
 
 		self.nickname = nickname

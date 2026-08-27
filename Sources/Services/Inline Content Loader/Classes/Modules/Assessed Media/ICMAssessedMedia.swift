@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 
 @objc(ICMAssessedMedia)
 final class AssessedMediaModule: InlineContentModule {
@@ -64,15 +65,15 @@ final class AssessedMediaModule: InlineContentModule {
 		assessor.resume()
 	}
 
-	override class func action(for _: URL) -> Selector? {
-		TPCPreferences.inlineMediaCheckEverything() ? #selector(assessMedia) : nil
+	override static func action(for _: URL) -> Selector? {
+		TextualPreferences.inlineMediaCheckEverything() ? #selector(assessMedia) : nil
 	}
 
-	override class var contentImageOrVideo: Bool {
+	override static var contentImageOrVideo: Bool {
 		true
 	}
 
-	override class var contentIsFile: Bool {
+	override static var contentIsFile: Bool {
 		true
 	}
 }

@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "iis-gr" : {
+      "comment" : "Validation error shown when a server address is not properly formatted.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The value you entered is not a properly formatted server address"
+          }
+        }
+      }
+    },
+    "k0c-3u" : {
+      "comment" : "Intentionally empty recovery suggestion for an invalid server address.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "ox2-od" : {
+      "comment" : "Recovery suggestion for an invalid server port.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a whole number between 1 and 65,535."
+          }
+        }
+      }
+    },
+    "qeb-ip" : {
+      "comment" : "Validation error shown when a server port is not properly formatted.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The value you entered is not a properly formatted server port"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

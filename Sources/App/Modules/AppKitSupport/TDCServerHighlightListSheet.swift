@@ -14,9 +14,9 @@ import AppKit
 
 @objc(TDCServerHighlightListSheet)
 @MainActor
-public final class ServerHighlightListSheet: SheetBase {
+public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype {
 	@objc public private(set) var client: IRCClient!
-	@objc public private(set) var clientId = ""
+	@objc public private(set) var clientId: String?
 
 	@IBOutlet private var headerTitleTextField: NSTextField!
 	@IBOutlet private var highlightListTable: BasicTableView!
@@ -68,7 +68,11 @@ public final class ServerHighlightListSheet: SheetBase {
 			}
 		} else if var entry = newEntry as? HighlightLogEntry {
 			if entry is MutableHighlightLogEntry {
-				entry = entry.copy() as! HighlightLogEntry
+				guard let copiedEntry = entry.copy() as? HighlightLogEntry else {
+					return
+				}
+
+				entry = copiedEntry
 			}
 
 			highlightListController.addObject(entry)
@@ -100,7 +104,9 @@ public final class ServerHighlightListSheet: SheetBase {
 		}
 
 		let channelId = channel.uniqueIdentifier
-		let clientId = clientId
+		guard let clientId else {
+			return
+		}
 
 		viewController.jump(toLine: entryItem.lineNumber) { [weak self] (result: Bool) in
 			guard result else {
@@ -109,7 +115,7 @@ public final class ServerHighlightListSheet: SheetBase {
 
 			DispatchQueue.main.async {
 				guard
-					let channel = NSObject.masterController().world.findChannel(
+					let channel = NSObject.applicationController().world.findChannel(
 						withId: channelId,
 						onClientWithId: clientId
 					)
@@ -117,8 +123,7 @@ public final class ServerHighlightListSheet: SheetBase {
 					return
 				}
 
-				let treeItem = (channel as AnyObject) as! IRCTreeItem
-				NSObject.masterController().mainWindow.select(treeItem)
+				NSObject.applicationController().mainWindow.select(channel)
 				self?.cancel(nil)
 			}
 		}

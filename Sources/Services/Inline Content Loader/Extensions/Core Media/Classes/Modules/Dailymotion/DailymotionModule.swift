@@ -36,9 +36,11 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
+import Mustache
 
 @objc(ICMDailymotion)
-final class DailymotionModule: ICMInlineVideoFoundation {
+final class DailymotionModule: InlineVideoFoundation {
 	private func performAction(forVideo identifier: String) {
 		let attributes: [String: Any] = [
 			"uniqueIdentifier": payload.uniqueIdentifier,
@@ -46,21 +48,21 @@ final class DailymotionModule: ICMInlineVideoFoundation {
 		]
 		guard let template else { return cancel() }
 		do {
-			payload.html = try template.renderObject(attributes)
+			payload.html = try template.render(attributes)
 			finalize()
 		} catch {
 			finalizeWithError(error)
 		}
 	}
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		guard let identifier = videoIdentifier(for: url) else { return nil }
 		return { module in
 			(module as? DailymotionModule)?.performAction(forVideo: identifier)
 		}
 	}
 
-	private class func videoIdentifier(for url: URL) -> String? {
+	private static func videoIdentifier(for url: URL) -> String? {
 		let path = url.path(percentEncoded: true)
 		guard path.hasPrefix("/video/") else { return nil }
 		let identifier = String(path.dropFirst(7).prefix { $0 != "_" })
@@ -68,7 +70,7 @@ final class DailymotionModule: ICMInlineVideoFoundation {
 		return identifier
 	}
 
-	override class var domains: [String]? {
+	override static var domains: [String]? {
 		["dailymotion.com", "www.dailymotion.com", "mobile.dailymotion.com"]
 	}
 

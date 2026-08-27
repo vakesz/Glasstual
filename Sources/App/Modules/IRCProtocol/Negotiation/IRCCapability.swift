@@ -38,21 +38,22 @@
 
 import Foundation
 
+public typealias IRCCapabilityPreferenceGate = @convention(block) () -> Bool
+public typealias IRCCapabilityNegotiationHook = @convention(block) (IRCClient, [String]) -> Bool
+
 @objc(IRCCapability)
 public final class Capability: NSObject {
 	@objc public let name: String
-	@objc public let identifier: ClientIRCv3SupportedCapability
+	public let identifier: ClientIRCv3SupportedCapability
 	@objc public let requestedByDefault: Bool
 	@objc public let preferenceGate: IRCCapabilityPreferenceGate?
 	@objc public let dependencies: [String]
 	@objc public let negotiationHook: IRCCapabilityNegotiationHook?
 
-	@objc(capabilityNamed:identifier:)
 	public static func capability(named name: String, identifier: ClientIRCv3SupportedCapability) -> Capability {
 		capability(named: name, identifier: identifier, requestedByDefault: true)
 	}
 
-	@objc(capabilityNamed:identifier:requestedByDefault:)
 	public static func capability(
 		named name: String,
 		identifier: ClientIRCv3SupportedCapability,
@@ -68,7 +69,6 @@ public final class Capability: NSObject {
 		)
 	}
 
-	@objc(initWithName:identifier:requestedByDefault:preferenceGate:dependencies:negotiationHook:)
 	public init(
 		name: String,
 		identifier: ClientIRCv3SupportedCapability,
@@ -119,7 +119,6 @@ public final class CapabilityRegistry: NSObject {
 		capabilitiesByName[name.lowercased()]
 	}
 
-	@objc(capabilityForIdentifier:)
 	public func capability(for identifier: ClientIRCv3SupportedCapability) -> Capability? {
 		guard identifier.rawValue != 0 else {
 			return nil

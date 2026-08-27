@@ -11,20 +11,22 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import GlasstualPluginKit
 
 @objc(TVCChannelSelectionViewController)
 @MainActor
-public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSource, NSOutlineViewDelegate {
-	@objc public weak var delegate: AnyObject?
-
+public final class ChannelSelectionViewController: NSObject, PluginChannelSelection, NSOutlineViewDataSource,
+	NSOutlineViewDelegate
+{
 	@IBOutlet private var outlineViewScrollView: NSScrollView!
 	@IBOutlet private var outlineViewOutlet: NSOutlineView!
 
 	private weak var attachedView: NSView?
-	private var cachedSelectedClientIdsStorage = NSMutableArray()
-	private var cachedSelectedChannelIdsStorage = NSMutableArray()
+	private var cachedSelectedClientIdsStorage: [String] = []
+	private var cachedSelectedChannelIdsStorage: [String] = []
 	private var cachedClientList: [IRCClient] = []
-	private var cachedChannelList: NSMutableDictionary = [:]
+	private var cachedChannelList: [ObjectIdentifier: [IRCChannel]] = [:]
 	private var expandOutlineViewWorkItem: DispatchWorkItem?
 
 	override public init() {
@@ -97,32 +99,31 @@ public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSo
 
 		if isGroupItem {
 			if isEnablingItem {
-				cachedSelectedClientIdsStorage.add(item.uniqueIdentifier)
+				if cachedSelectedClientIdsStorage.contains(item.uniqueIdentifier) == false {
+					cachedSelectedClientIdsStorage.append(item.uniqueIdentifier)
+				}
 			} else {
-				cachedSelectedClientIdsStorage.remove(item.uniqueIdentifier)
+				cachedSelectedClientIdsStorage.removeAll { $0 == item.uniqueIdentifier }
 			}
 		} else {
 			if isEnablingItem {
-				cachedSelectedChannelIdsStorage.add(item.uniqueIdentifier)
+				if cachedSelectedChannelIdsStorage.contains(item.uniqueIdentifier) == false {
+					cachedSelectedChannelIdsStorage.append(item.uniqueIdentifier)
+				}
 			} else {
-				cachedSelectedChannelIdsStorage.remove(item.uniqueIdentifier)
+				cachedSelectedChannelIdsStorage.removeAll { $0 == item.uniqueIdentifier }
 			}
 		}
 
 		if isGroupItem, isEnablingItem {
-			let childrenItems = outlineViewOutlet.items(fromParentGroup: item) as? [IRCTreeItem] ?? []
+			let childrenItems = outlineViewOutlet.items(inContainingGroupOf: item) as? [IRCTreeItem] ?? []
 
 			for childItem in childrenItems {
-				cachedSelectedChannelIdsStorage.remove(childItem.uniqueIdentifier)
+				cachedSelectedChannelIdsStorage.removeAll { $0 == childItem.uniqueIdentifier }
 			}
 		}
 
 		updateSelectedState(for: item)
-
-		let selector = NSSelectorFromString("channelSelectionControllerSelectionChanged:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
 	}
 
 	private func applySelectedState(to cellView: ChannelSelectionOutlineCellView?, for item: IRCTreeItem) {
@@ -136,7 +137,7 @@ public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSo
 				return
 			}
 
-			if let channels = cachedChannelList[item] as? [IRCChannel] {
+			if let channels = cachedChannelList[ObjectIdentifier(item)] {
 				for channel in channels where cachedSelectedChannelIdsStorage.contains(channel.uniqueIdentifier) {
 					cellView.selectedCheckbox.state = .mixed
 					return
@@ -147,9 +148,9 @@ public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSo
 			return
 		}
 
-		let parentItemInFilter = cachedSelectedClientIdsStorage.contains(
-			item.associatedClient?.uniqueIdentifier as Any
-		)
+		let parentItemInFilter = item.associatedClient.map {
+			cachedSelectedClientIdsStorage.contains($0.uniqueIdentifier)
+		} ?? false
 
 		if parentItemInFilter || cachedSelectedChannelIdsStorage.contains(item.uniqueIdentifier) {
 			cellView.selectedCheckbox.state = .on
@@ -190,33 +191,17 @@ public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSo
 	// MARK: - Properties
 
 	@objc public var selectedClientIds: [String] {
-		get {
-			objc_sync_enter(cachedSelectedClientIdsStorage)
-			defer { objc_sync_exit(cachedSelectedClientIdsStorage) }
-
-			return cachedSelectedClientIdsStorage as? [String] ?? []
-		}
+		get { cachedSelectedClientIdsStorage }
 		set {
-			objc_sync_enter(cachedSelectedClientIdsStorage)
-			defer { objc_sync_exit(cachedSelectedClientIdsStorage) }
-
-			cachedSelectedClientIdsStorage = NSMutableArray(array: newValue)
+			cachedSelectedClientIdsStorage = newValue
 			reloadOutlineView()
 		}
 	}
 
 	@objc public var selectedChannelIds: [String] {
-		get {
-			objc_sync_enter(cachedSelectedChannelIdsStorage)
-			defer { objc_sync_exit(cachedSelectedChannelIdsStorage) }
-
-			return cachedSelectedChannelIdsStorage as? [String] ?? []
-		}
+		get { cachedSelectedChannelIdsStorage }
 		set {
-			objc_sync_enter(cachedSelectedChannelIdsStorage)
-			defer { objc_sync_exit(cachedSelectedChannelIdsStorage) }
-
-			cachedSelectedChannelIdsStorage = NSMutableArray(array: newValue)
+			cachedSelectedChannelIdsStorage = newValue
 			reloadOutlineView()
 		}
 	}
@@ -273,13 +258,13 @@ public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSo
 	}
 
 	private func rebuildCachedChannelList() {
-		let clientList = NSObject.masterController().world.clientList as? [IRCClient] ?? []
-		let channelList = NSMutableDictionary()
+		let clientList = NSObject.applicationController().world.clientList
+		var channelList: [ObjectIdentifier: [IRCChannel]] = [:]
 
 		for client in clientList {
 			var channels: [IRCChannel] = []
 
-			for case let channel as IRCChannel in client.channelList {
+			for channel in client.channelList {
 				if channel.isChannel == false {
 					continue
 				}
@@ -287,7 +272,7 @@ public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSo
 				channels.append(channel)
 			}
 
-			channelList[client] = channels
+			channelList[ObjectIdentifier(client)] = channels
 		}
 
 		cachedClientList = clientList
@@ -296,9 +281,17 @@ public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSo
 
 	// MARK: - Outline View
 
+	private func cachedChannels(for item: Any?) -> [IRCChannel] {
+		guard let client = item as? IRCClient else {
+			return []
+		}
+
+		return cachedChannelList[ObjectIdentifier(client)] ?? []
+	}
+
 	public func outlineView(_: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
 		if let item {
-			return (cachedChannelList[item as Any] as? [Any])?.count ?? 0
+			return cachedChannels(for: item).count
 		}
 
 		return cachedClientList.count
@@ -306,7 +299,7 @@ public final class ChannelSelectionViewController: NSObject, NSOutlineViewDataSo
 
 	public func outlineView(_: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
 		if let item {
-			return (cachedChannelList[item as Any] as? [Any])?[index] as Any
+			return cachedChannels(for: item)[index]
 		}
 
 		return cachedClientList[index]

@@ -8,17 +8,43 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 @objc(IRCHighlightLogEntry)
-public class HighlightLogEntry: XRPortablePropertyObject {
-	fileprivate var lineLoggedStorage: TVCLogLine!
+public class HighlightLogEntry: PortablePropertyObject {
+	fileprivate var lineLoggedStorage: LogLine!
 	fileprivate var clientIdStorage = ""
 	fileprivate var channelIdStorage = ""
 
-	@objc public var lineLogged: TVCLogLine {
+	@objc public var lineLogged: LogLine {
 		lineLoggedStorage
 	}
 
@@ -44,14 +70,14 @@ public class HighlightLogEntry: XRPortablePropertyObject {
 
 		if Thread.isMainThread {
 			return MainActor.assumeIsolated {
-				NSObject.masterController().world.findChannel(withId: channelId, onClientWithId: clientId)
+				NSObject.applicationController().world.findChannel(withId: channelId, onClientWithId: clientId)
 			}
 		}
 
 		nonisolated(unsafe) var resolvedChannel: IRCChannel?
-		XRPerformBlockSynchronouslyOnMainQueue {
+		performSynchronouslyOnMainQueue {
 			resolvedChannel = MainActor.assumeIsolated {
-				NSObject.masterController().world.findChannel(withId: channelId, onClientWithId: clientId)
+				NSObject.applicationController().world.findChannel(withId: channelId, onClientWithId: clientId)
 			}
 		}
 		return resolvedChannel
@@ -62,14 +88,14 @@ public class HighlightLogEntry: XRPortablePropertyObject {
 			return channel.name
 		}
 
-		return LocalizedKey("BasicLanguage[vbl-xi]")
+		return ApplicationStrings.unknownValue
 	}
 
 	@objc public var timeLoggedFormatted: String {
 		let timeInterval = lineLogged.receivedAt.timeIntervalSinceNow
 		let formattedTimeInterval = humanReadableTimeInterval(timeInterval, true, 0) as String? ?? ""
 
-		return LocalizedKey("BasicLanguage[4um-w4]", formattedTimeInterval)
+		return ApplicationStrings.relativeTime(formattedTimeInterval)
 	}
 
 	@objc public var renderedMessage: NSAttributedString {
@@ -81,10 +107,10 @@ public class HighlightLogEntry: XRPortablePropertyObject {
 
 		if logLine.lineType == .action {
 			nicknameBody = logLine.nickname
-			messageBody = TXNotificationHighlightLogStandardActionFormat
+			messageBody = NotificationPayload.highlightActionFormat
 		} else {
 			nicknameBody = logLine.formattedNickname(in: channel)
-			messageBody = TXNotificationHighlightLogStandardMessageFormat
+			messageBody = NotificationPayload.highlightMessageFormat
 		}
 
 		let formatted = String(format: messageBody, nicknameBody ?? "", logLine.messageBody)
@@ -123,7 +149,7 @@ public class HighlightLogEntry: XRPortablePropertyObject {
 	}
 
 	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: XRPortablePropertyObject, mutableCopy _: Bool) {
+	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
 		guard let object = newObject as? HighlightLogEntry else {
 			return
 		}
@@ -133,24 +159,29 @@ public class HighlightLogEntry: XRPortablePropertyObject {
 		object.channelIdStorage = channelIdStorage
 	}
 
-	override public var mutableClass: XRPortablePropertyObject {
-		unsafeBitCast(MutableHighlightLogEntry.self, to: XRPortablePropertyObject.self)
+	override public var mutableClass: PortablePropertyObject {
+		unsafeBitCast(MutableHighlightLogEntry.self, to: PortablePropertyObject.self)
 	}
 }
 
 @objc(IRCHighlightLogEntryMutable)
 public final class MutableHighlightLogEntry: HighlightLogEntry {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyObject {
-		unsafeBitCast(HighlightLogEntry.self, to: XRPortablePropertyObject.self)
+	override public var immutableClass: PortablePropertyObject {
+		unsafeBitCast(HighlightLogEntry.self, to: PortablePropertyObject.self)
 	}
 
-	@objc override public var lineLogged: TVCLogLine {
+	@objc override public var lineLogged: LogLine {
 		get { lineLoggedStorage }
-		set { lineLoggedStorage = newValue.copy() as! TVCLogLine }
+		set {
+			guard let copiedLine = newValue.copy() as? LogLine else {
+				preconditionFailure("LogLine.copy() must return a LogLine")
+			}
+			lineLoggedStorage = copiedLine
+		}
 	}
 
 	@objc override public var clientId: String {

@@ -16,7 +16,7 @@ final class FileTransferControllerMigrationTests: XCTestCase {
 	}
 
 	func testFactorySelectorsRemainAvailableToIRCClient() throws {
-		let metaClass = try XCTUnwrap(object_getClass(TDCFileTransferDialogTransferController.self))
+		let metaClass: AnyClass = try XCTUnwrap(object_getClass(TDCFileTransferDialogTransferController.self))
 		let selectors = [
 			"receiverForClient:nickname:address:port:filename:filesize:token:",
 			"senderForClient:nickname:path:",
@@ -91,5 +91,26 @@ final class FileTransferControllerMigrationTests: XCTestCase {
 				selector
 			)
 		}
+	}
+
+	func testTransferEnumsPreserveLegacyRawValues() {
+		XCTAssertEqual(FileTransferStatus.complete.rawValue, 0)
+		XCTAssertEqual(FileTransferStatus.connecting.rawValue, 1)
+		XCTAssertEqual(FileTransferStatus.fatalError.rawValue, 2)
+		XCTAssertEqual(FileTransferStatus.initializing.rawValue, 3)
+		XCTAssertEqual(FileTransferStatus.isListeningAsReceiver.rawValue, 4)
+		XCTAssertEqual(FileTransferStatus.isListeningAsSender.rawValue, 5)
+		XCTAssertEqual(FileTransferStatus.mappingListeningPort.rawValue, 6)
+		XCTAssertEqual(FileTransferStatus.receiving.rawValue, 7)
+		XCTAssertEqual(FileTransferStatus.recoverableError.rawValue, 8)
+		XCTAssertEqual(FileTransferStatus.sending.rawValue, 9)
+		XCTAssertEqual(FileTransferStatus.stopped.rawValue, 10)
+		XCTAssertEqual(FileTransferStatus.waitingForLocalIPAddress.rawValue, 11)
+		XCTAssertEqual(FileTransferStatus.waitingForReceiverToAccept.rawValue, 12)
+		XCTAssertEqual(FileTransferStatus.waitingForResumeAccept.rawValue, 13)
+
+		XCTAssertEqual(FileTransferSelection.all.rawValue, 0)
+		XCTAssertEqual(FileTransferSelection.sending.rawValue, 1)
+		XCTAssertEqual(FileTransferSelection.receiving.rawValue, 2)
 	}
 }

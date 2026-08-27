@@ -101,8 +101,7 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 		}
 	}
 
-	private var observersRegistered = false
-	private var observedKeyPath: String?
+	private var serverPortObservation: NSKeyValueObservation?
 
 	override public func validateValue(_ ioValue: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey inKey: String)
 		throws
@@ -115,8 +114,8 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 					domain: "GlasstualErrorDomain",
 					code: 71013,
 					userInfo: [
-						NSLocalizedDescriptionKey: LocalizedKey("TDCServerEndpointListSheet[iis-gr]"),
-						NSLocalizedRecoverySuggestionErrorKey: LocalizedKey("TDCServerEndpointListSheet[k0c-3u]"),
+						NSLocalizedDescriptionKey: ServerEndpointStrings.invalidAddressDescription,
+						NSLocalizedRecoverySuggestionErrorKey: ServerEndpointStrings.invalidAddressRecoverySuggestion,
 					]
 				)
 			}
@@ -128,8 +127,8 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 					domain: "GlasstualErrorDomain",
 					code: 71014,
 					userInfo: [
-						NSLocalizedDescriptionKey: LocalizedKey("TDCServerEndpointListSheet[qeb-ip]"),
-						NSLocalizedRecoverySuggestionErrorKey: LocalizedKey("TDCServerEndpointListSheet[ox2-od]"),
+						NSLocalizedDescriptionKey: ServerEndpointStrings.invalidPortDescription,
+						NSLocalizedRecoverySuggestionErrorKey: ServerEndpointStrings.invalidPortRecoverySuggestion,
 					]
 				)
 			}
@@ -151,34 +150,20 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 		willChangeValue(forKey: keyPath)
 		didChangeValue(forKey: keyPath)
 
-		guard let objectValue = objectValue as? MutableServer else {
+		guard keyPath == "serverPort", let objectValue = objectValue as? MutableServer else {
 			return
 		}
 
-		objectValue.addObserver(self, forKeyPath: keyPath, options: .new, context: nil)
-		observersRegistered = true
-		observedKeyPath = keyPath
+		serverPortObservation = objectValue.observe(\.serverPort, options: .new) { [weak self] _, _ in
+			MainActor.assumeIsolated {
+				self?.willChangeValue(forKey: "serverPort")
+				self?.didChangeValue(forKey: "serverPort")
+			}
+		}
 	}
 
 	private func stopObservingObjectValue() {
-		guard observersRegistered, let keyPath = observedKeyPath, let objectValue else {
-			return
-		}
-
-		(objectValue as AnyObject).removeObserver(self, forKeyPath: keyPath)
-		observersRegistered = false
-		observedKeyPath = nil
-	}
-
-	override public func observeValue(
-		forKeyPath keyPath: String?,
-		of _: Any?,
-		change _: [NSKeyValueChangeKey: Any]?,
-		context _: UnsafeMutableRawPointer?
-	) {
-		if keyPath == "serverPort" {
-			willChangeValue(forKey: "serverPort")
-			didChangeValue(forKey: "serverPort")
-		}
+		serverPortObservation?.invalidate()
+		serverPortObservation = nil
 	}
 }

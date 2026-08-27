@@ -1,0 +1,78 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "g4r-t6" : {
+      "comment" : "Heading for the quiet list. The argument is the channel name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quiets in %@"
+          }
+        }
+      }
+    },
+    "gbi-wn" : {
+      "comment" : "Heading for the ban-exception list. The argument is the channel name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ban Exceptions in %@"
+          }
+        }
+      }
+    },
+    "n0f-cn" : {
+      "comment" : "Describes the number of entries in a channel access list. The argument is a localized number.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ entries"
+          }
+        }
+      }
+    },
+    "n0f-mx" : {
+      "comment" : "MAXLIST",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ of %2$@ entries"
+          }
+        }
+      }
+    },
+    "rhc-ke" : {
+      "comment" : "Heading for the ban list. The argument is the channel name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bans in %@"
+          }
+        }
+      }
+    },
+    "ylc-6e" : {
+      "comment" : "Heading for the invite-exception list. The argument is the channel name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite Exceptions in %@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

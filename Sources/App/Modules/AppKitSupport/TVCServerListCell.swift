@@ -12,11 +12,16 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 /* Badge metrics track the sidebar's text size rather than a fixed table. */
 private let unreadBadgeMinimumWidth: CGFloat = 22.0
 private let unreadBadgeHeight: CGFloat = 16.0
 private let unreadBadgeTextPadding: CGFloat = 7.0
+
+private func nativeChannel(from item: IRCTreeItem?) -> IRCChannel? {
+	(item as AnyObject?) as? IRCChannel
+}
 
 private final class ServerListCellDrawingContext: NSObject {
 	var isActive = false
@@ -78,26 +83,27 @@ public class ServerListCell: NSTableCellView {
 
 		if isGroupItem {
 			if isActive {
-				accessibilityDescription = LocalizedKey("Accessibility[bmy-d2]", stringValueNew)
+				accessibilityDescription = AccessibilityStrings.connectedServer(stringValueNew)
 			} else {
-				accessibilityDescription = LocalizedKey("Accessibility[tu4-8u]", stringValueNew)
+				accessibilityDescription = AccessibilityStrings.disconnectedServer(stringValueNew)
 			}
 		} else {
-			let channel = cellItem as! IRCChannel
+			guard let channel = nativeChannel(from: cellItem) else {
+				return
+			}
 
 			if channel.isChannel == false {
-				accessibilityDescription = LocalizedKey("Accessibility[9sn-xp]", stringValueNew)
+				accessibilityDescription = AccessibilityStrings.privateMessageQuery(with: stringValueNew)
 			} else if isActive {
-				accessibilityDescription = LocalizedKey("Accessibility[75f-og]", stringValueNew)
+				accessibilityDescription = AccessibilityStrings.joinedChannel(stringValueNew)
 			} else {
-				accessibilityDescription = LocalizedKey("Accessibility[edc-7o]", stringValueNew)
+				accessibilityDescription = AccessibilityStrings.unjoinedChannel(stringValueNew)
 			}
 
 			/* Unread and highlight counts are part of what the row
 			 communicates visually (the badge), so they are spoken too. */
 			if let unreadDescription = accessibilityUnreadDescription(for: channel) {
-				accessibilityDescription = LocalizedKey(
-					"TDCChannelSpotlightController[et7-c5]",
+				accessibilityDescription = ChannelSpotlightStrings.combined(
 					accessibilityDescription,
 					unreadDescription
 				)
@@ -120,17 +126,7 @@ public class ServerListCell: NSTableCellView {
 			return nil
 		}
 
-		let unreadCountDescription: String = if unreadCount == 1 {
-			LocalizedKey(
-				"TDCChannelSpotlightController[43s-x4]",
-				formattedNumber(Int(unreadCount))
-			)
-		} else {
-			LocalizedKey(
-				"TDCChannelSpotlightController[vzj-30]",
-				formattedNumber(Int(unreadCount))
-			)
-		}
+		let unreadCountDescription = ChannelSpotlightStrings.unreadMessages(Int(unreadCount))
 
 		let nicknameHighlightCount = channel.nicknameHighlightCount
 
@@ -138,20 +134,9 @@ public class ServerListCell: NSTableCellView {
 			return unreadCountDescription
 		}
 
-		let nicknameHighlightCountDescription: String = if nicknameHighlightCount == 1 {
-			LocalizedKey(
-				"TDCChannelSpotlightController[0lz-oh]",
-				formattedNumber(Int(nicknameHighlightCount))
-			)
-		} else {
-			LocalizedKey(
-				"TDCChannelSpotlightController[c4u-21]",
-				formattedNumber(Int(nicknameHighlightCount))
-			)
-		}
+		let nicknameHighlightCountDescription = ChannelSpotlightStrings.highlights(Int(nicknameHighlightCount))
 
-		return LocalizedKey(
-			"TDCChannelSpotlightController[et7-c5]",
+		return ChannelSpotlightStrings.combined(
 			unreadCountDescription,
 			nicknameHighlightCountDescription
 		)
@@ -162,7 +147,9 @@ public class ServerListCell: NSTableCellView {
 		let isActive = drawingContext.isActive
 
 		if isGroupItem == false, let cellItem {
-			let channel = cellItem as! IRCChannel
+			guard let channel = nativeChannel(from: cellItem) else {
+				return
+			}
 
 			var symbolName = "person.fill"
 
@@ -195,7 +182,7 @@ public class ServerListCell: NSTableCellView {
 		var isHighlight = false
 		var isErroneous = false
 
-		if isGroupItem == false, let associatedChannel = cellItem as? IRCChannel {
+		if isGroupItem == false, let associatedChannel = nativeChannel(from: cellItem) {
 			isErroneous = associatedChannel.errorOnLastJoinAttempt
 			isHighlight = associatedChannel.nicknameHighlightCount > 0
 		}
@@ -227,7 +214,7 @@ public class ServerListCell: NSTableCellView {
 			}
 		}
 
-		let stringValueRange = stringValue.range
+		let stringValueRange = NSRange(location: 0, length: stringValue.length)
 		mutableStringValue.addAttribute(.font, value: controlFont, range: stringValueRange)
 		mutableStringValue.addAttribute(.foregroundColor, value: controlColor, range: stringValueRange)
 
@@ -256,7 +243,7 @@ public class ServerListCell: NSTableCellView {
 
 		guard let lockImage = NSImage(
 			systemSymbolName: "lock.fill",
-			accessibilityDescription: LocalizedKey("TVCMainWindow[tb-cs]")
+			accessibilityDescription: MainWindowStrings.Toolbar.connectionSecurity
 		)?.withSymbolConfiguration(symbolConfiguration) else {
 			return nil
 		}
@@ -288,7 +275,7 @@ public class ServerListCell: NSTableCellView {
 		let isWindowActive = drawingContext.isWindowActive
 		let multipleRowsSelected = (serverList?.numberOfSelectedRows ?? 0) > 1
 
-		guard let associatedChannel = cellItem as? IRCChannel else {
+		guard let associatedChannel = nativeChannel(from: cellItem) else {
 			return
 		}
 
@@ -337,7 +324,7 @@ public class ServerListCell: NSTableCellView {
 	}
 
 	private func messageCountBadgeHighlightColorByUser() -> NSColor? {
-		guard let color = TPCPreferencesUserDefaults.shared().color(
+		guard let color = TextualUserDefaults.shared().color(
 			forKey: "Server List Unread Message Count Badge Colors -> Highlight"
 		),
 			color != .clear
@@ -441,7 +428,7 @@ public class ServerListCell: NSTableCellView {
 		drawingContext.isGroupItem = isGroupItem
 		drawingContext.isSelected = serverList.isRowSelected(rowIndex)
 		drawingContext.isSelectedFrontmost = mainWindow?.isItemSelected(cellItem) ?? false
-		drawingContext.isWindowActive = mainWindow?.isActiveForDrawing ?? false
+		drawingContext.isWindowActive = mainWindow?.ceIsActiveForDrawing ?? false
 
 		return drawingContext
 	}
@@ -504,7 +491,7 @@ public class ServerListRowCell: NSTableRowView {
 
 	override public var isSelected: Bool {
 		didSet {
-			if isSelected == false, invalidatingBackgroundForSelection {
+			if isSelected == false, isInvalidatingSelectionBackground {
 				return
 			}
 

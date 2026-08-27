@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -30,7 +31,7 @@ private final class LogControllerHistoricLogViewIndex: NSObject {
 }
 
 @objc(TVCLogControllerHistoricLogFile)
-public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientProtocol, @unchecked Sendable {
+public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProtocol, @unchecked Sendable {
 	private let viewIndexes = NSMutableDictionary()
 	private let processStateLock = NSLock()
 	@objc public private(set) var isSaving = false
@@ -39,12 +40,12 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	private var processLoading = false
 	private var serviceConnection: NSXPCConnection?
 	private var connectionInvalidatedVoluntarily = false
-	private var connectionInvalidatedErrorDialogDisplayed = false
+	private var didShowConnectionError = false
 	private var lastServiceConnectionError: Error?
 	private var terminationCompletionBlock: (() -> Void)?
 
 	@objc(sharedInstance)
-	public class func shared() -> LogControllerHistoricLogFile {
+	public static func shared() -> LogControllerHistoricLogFile {
 		enum Storage {
 			static let instance = LogControllerHistoricLogFile()
 		}
@@ -56,7 +57,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	}
 
 	private var databaseSavePath: String? {
-		TPCPathInfo.groupContainerApplicationCaches
+		PathInfo.groupContainerApplicationCaches
 	}
 
 	private func warmProcessIfNeeded() {
@@ -116,8 +117,11 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 			serviceName: "com.vakesz.glasstual.ScrollbackHistoryManager"
 		)
 
-		let remoteObjectInterface = NSXPCInterface(with: HLSHistoricLogServerProtocol.self)
-		let replyClasses = NSSet(objects: NSArray.self, TVCLogLineXPC.self) as! Set<AnyHashable>
+		let remoteObjectInterface = NSXPCInterface(with: HistoricLogServerProtocol.self)
+		guard let replyClasses = NSSet(objects: NSArray.self, LogLineXPC.self) as? Set<AnyHashable> else {
+			assertionFailure("Unable to bridge the historic-log XPC reply classes")
+			return
+		}
 
 		let fetchSelectors = [
 			"fetchEntriesForView:ascending:fetchLimit:limitToDate:withCompletionBlock:",
@@ -137,18 +141,18 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		}
 
 		serviceConnection.remoteObjectInterface = remoteObjectInterface
-		serviceConnection.exportedInterface = NSXPCInterface(with: HLSHistoricLogClientProtocol.self)
+		serviceConnection.exportedInterface = NSXPCInterface(with: HistoricLogClientProtocol.self)
 		serviceConnection.exportedObject = self
 
 		serviceConnection.interruptionHandler = { [weak self] in
-			XRPerformBlockSynchronouslyOnMainQueue {
+			performSynchronouslyOnMainQueue {
 				self?.interruptionHandler()
 			}
 			historicLogLogger.log("Interruption handler called")
 		}
 
 		serviceConnection.invalidationHandler = { [weak self] in
-			XRPerformBlockSynchronouslyOnMainQueue {
+			performSynchronouslyOnMainQueue {
 				self?.invalidationHandler()
 			}
 			historicLogLogger.log("Invalidation handler called")
@@ -175,21 +179,21 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 			return
 		}
 
-		if connectionInvalidatedErrorDialogDisplayed == false {
-			connectionInvalidatedErrorDialogDisplayed = true
+		if didShowConnectionError == false {
+			didShowConnectionError = true
 		} else {
 			return
 		}
 
 		var lastErrorMessage = lastServiceConnectionError?.localizedDescription ?? ""
 		if lastErrorMessage.isEmpty == false {
-			lastErrorMessage = LocalizedKey("Prompts[nlz-um]", lastErrorMessage)
+			lastErrorMessage = PromptStrings.Logging.lastError(lastErrorMessage)
 		}
 
-		TDCAlert.alert(
+		_ = TDCAlert.alert(
 			withMessage: lastErrorMessage,
-			title: LocalizedKey("Prompts[h99-3q]"),
-			defaultButton: LocalizedKey("Prompts[c7s-dq]"),
+			title: PromptStrings.Logging.scrollbackFailureTitle,
+			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil
 		)
 	}
@@ -213,7 +217,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 
 	@objc
 	public func resetMaximumLineCount() {
-		let maximumLineCount = TPCPreferences.scrollbackSaveLimit()
+		let maximumLineCount = TextualPreferences.scrollbackSaveLimit()
 		remoteObjectProxy()?.setMaximumLineCount(maximumLineCount)
 	}
 
@@ -238,35 +242,31 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		}
 
 		terminationCompletionBlock = nil
-		XRPerformBlockAsynchronouslyOnMainQueue(completionBlock)
+		performAsynchronouslyOnMainQueue(completionBlock)
 	}
 
-	private func remoteObjectProxy() -> HLSHistoricLogServerProtocol? {
+	private func remoteObjectProxy() -> HistoricLogServerProtocol? {
 		remoteObjectProxy(withErrorHandler: nil)
 	}
 
 	private func remoteObjectProxy(
 		withErrorHandler handler: ((Error) -> Void)?
-	) -> HLSHistoricLogServerProtocol? {
+	) -> HistoricLogServerProtocol? {
 		serviceConnection?.remoteObjectProxyWithErrorHandler { [weak self] error in
 			self?.lastServiceConnectionError = error
 			historicLogLogger.error(
 				"Error occurred while communicating with service: \(error.localizedDescription, privacy: .public)"
 			)
 			handler?(error)
-		} as? HLSHistoricLogServerProtocol
+		} as? HistoricLogServerProtocol
 	}
 
-	private func logLines(from xpcObjects: [TVCLogLineXPC], for item: IRCTreeItem) -> [TVCLogLine] {
-		var logLines: [TVCLogLine] = []
+	private func logLines(from xpcObjects: [LogLineXPC], for item: IRCTreeItem) -> [LogLine] {
+		var logLines: [LogLine] = []
 		logLines.reserveCapacity(xpcObjects.count)
 
 		for xpcObject in xpcObjects {
-			let selector = NSSelectorFromString("logLineFromXPCObject:")
-			guard TVCLogLine.responds(to: selector),
-			      let logLine = (TVCLogLine.perform(selector, with: xpcObject)?.takeUnretainedValue()
-			      	as? TVCLogLine)
-			else {
+			guard let logLine = LogLine.logLine(from: xpcObject) else {
 				historicLogLogger.error(
 					"Failed to initialize object \(String(describing: xpcObject), privacy: .public). Corrupt data?"
 				)
@@ -301,7 +301,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		return index
 	}
 
-	private class func fallbackKey(
+	private static func fallbackKey(
 		for date: Date?,
 		nickname: String?,
 		messageBody: String?
@@ -317,7 +317,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	}
 
 	@objc(indexLogLine:forItem:)
-	public func indexLogLine(_ logLine: TVCLogLine, for item: IRCTreeItem) {
+	public func indexLogLine(_ logLine: LogLine, for item: IRCTreeItem) {
 		guard let index = viewIndex(for: item, create: true) else {
 			return
 		}
@@ -421,7 +421,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		ascending: Bool,
 		fetchLimit: UInt,
 		limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLine]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
 	) {
 		warmProcessIfNeeded()
 
@@ -446,7 +446,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		beforeFetchLimit fetchLimitBefore: UInt,
 		afterFetchLimit fetchLimitAfter: UInt,
 		limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLine]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
 	) {
 		warmProcessIfNeeded()
 
@@ -471,7 +471,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		beforeUniqueIdentifier uniqueId: String,
 		fetchLimit: UInt,
 		limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLine]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
 	) {
 		warmProcessIfNeeded()
 
@@ -495,7 +495,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		afterUniqueIdentifier uniqueId: String,
 		fetchLimit: UInt,
 		limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLine]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
 	) {
 		warmProcessIfNeeded()
 
@@ -519,7 +519,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 		afterUniqueIdentifier uniqueIdAfter: String,
 		beforeUniqueIdentifier uniqueIdBefore: String,
 		fetchLimit: UInt,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLine]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLine]) -> Void
 	) {
 		warmProcessIfNeeded()
 
@@ -591,7 +591,7 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 	}
 
 	@objc(writeNewEntryWithLogLine:forItem:)
-	public func writeNewEntry(with logLine: TVCLogLine, for item: IRCTreeItem) {
+	public func writeNewEntry(with logLine: LogLine, for item: IRCTreeItem) {
 		indexLogLine(logLine, for: item)
 		warmProcessIfNeeded()
 
@@ -601,9 +601,9 @@ public final class LogControllerHistoricLogFile: NSObject, HLSHistoricLogClientP
 
 	@objc(willDeleteUniqueIdentifiers:inView:)
 	public func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView viewId: String) {
-		XRPerformBlockSynchronouslyOnMainQueue {
+		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
-				guard let item = NSObject.masterController().world?.findItem(withId: viewId) else {
+				guard let item = NSObject.applicationController().world?.findItem(withId: viewId) else {
 					return
 				}
 

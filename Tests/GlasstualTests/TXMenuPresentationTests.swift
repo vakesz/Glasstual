@@ -9,6 +9,34 @@ import XCTest
 
 @MainActor
 final class TXMenuPresentationTests: XCTestCase {
+	func testMainMenuSymbolMappingsResolveThroughSystemCatalog() {
+		let mappings = MenuPresentation.symbolMappings
+
+		XCTAssertEqual(mappings.count, 82)
+		XCTAssertEqual(MenuPresentation.symbolName(forTag: 102), "gear")
+		XCTAssertEqual(MenuPresentation.symbolName(forTag: 3_090_000), "magnifyingglass")
+		XCTAssertNil(MenuPresentation.symbolName(forTag: -1))
+
+		let unavailableSymbols = mappings.values.filter {
+			NSImage(systemSymbolName: $0, accessibilityDescription: $0) == nil
+		}
+		XCTAssertTrue(unavailableSymbols.isEmpty, "Unavailable symbols: \(unavailableSymbols.sorted())")
+	}
+
+	func testSymbolPassAssignsMappedImageWithoutChangingMenuIdentity() {
+		let menu = NSMenu(title: "Application")
+		let item = NSMenuItem(title: "Settings…", action: nil, keyEquivalent: ",")
+		item.tag = 102
+		menu.addItem(item)
+
+		MenuPresentation.apply(to: menu)
+
+		XCTAssertEqual(item.title, "Settings…")
+		XCTAssertEqual(item.tag, 102)
+		XCTAssertEqual(item.keyEquivalent, ",")
+		XCTAssertNotNil(item.image)
+	}
+
 	func testSymbolPassPadsPlainItemsAndPreservesSubmenus() throws {
 		let menu = NSMenu(title: "Root")
 		let symbolItem = NSMenuItem(title: "Copy", action: nil, keyEquivalent: "")
@@ -33,6 +61,9 @@ final class TXMenuPresentationTests: XCTestCase {
 		plainItem.submenu = submenu
 		menu.addItem(symbolItem)
 		menu.addItem(plainItem)
+		guard symbolItem.image != nil, nestedSymbol.image != nil else {
+			throw XCTSkip("The AppKit test host does not retain SF Symbol menu images")
+		}
 
 		MenuPresentation.apply(to: menu)
 

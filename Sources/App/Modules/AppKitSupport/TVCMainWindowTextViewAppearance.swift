@@ -47,11 +47,11 @@ public final class MainWindowTextViewAppearance: ApplicationAppearance {
 	}
 
 	@objc public func preferredTextViewFontChanged() -> Bool {
-		textViewPreferredFontSize != TPCPreferences.mainTextViewFontSize()
+		textViewPreferredFontSize != TextualPreferences.mainTextViewFontSize()
 	}
 
 	@objc public var textViewPreferredFont: NSFont? {
-		let preferredFontSize = TPCPreferences.mainTextViewFontSize()
+		let preferredFontSize = TextualPreferences.mainTextViewFontSize()
 		textViewPreferredFontSize = preferredFontSize
 
 		/* Sizes track the system text styles so they follow the

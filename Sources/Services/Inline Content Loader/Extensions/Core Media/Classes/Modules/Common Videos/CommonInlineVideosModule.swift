@@ -36,17 +36,18 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 
 @objc(ICMCommonInlineVideos)
-final class CommonInlineVideosModule: ICMInlineVideo {
+final class CommonInlineVideosModule: InlineVideoModule {
 	private static let validFileExtensions = ["mp4", "mov", "m4v", "3gp", "3g2"]
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		guard let address = finalAddress(for: url) else { return nil }
 		return super.actionBlock(forAddress: address)
 	}
 
-	private class func finalAddress(for url: URL) -> String? {
+	private static func finalAddress(for url: URL) -> String? {
 		let path = url.path(percentEncoded: true)
 		let host = url.host(percentEncoded: true) ?? ""
 		let hasFileExtension = validFileExtensions.contains((path as NSString).pathExtension)
@@ -62,7 +63,7 @@ final class CommonInlineVideosModule: ICMInlineVideo {
 		return "https://clips.dropcam.com/\(filename)"
 	}
 
-	override class var contentIsFile: Bool {
+	override static var contentIsFile: Bool {
 		true
 	}
 }

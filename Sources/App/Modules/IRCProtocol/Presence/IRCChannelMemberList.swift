@@ -35,6 +35,8 @@
  *
  *********************************************************************** */
 
+import AppKit
+import CocoaExtensions
 import Foundation
 
 extension IRCChannel: @unchecked Sendable {}
@@ -44,8 +46,85 @@ private struct SynchronousMainActorTransfer<Value>: @unchecked Sendable {
 	let value: Value
 }
 
+/// The member-list operations shared by channels and their backing store.
+///
+/// Objective-C plug-ins continue to see the historic protocol name and
+/// selectors while native code uses this domain name.
+@objc(IRCChannelMemberListPrototype)
+public protocol ChannelMemberListing: AnyObject {
+	@objc(addUser:)
+	func addUser(_ user: User)
+
+	@objc(addMember:)
+	func addMember(_ member: ChannelUser)
+
+	@objc(removeMember:)
+	func removeMember(_ member: ChannelUser)
+
+	@objc(removeMemberWithNickname:)
+	func removeMember(withNickname nickname: String)
+
+	@objc(memberExists:)
+	func memberExists(_ nickname: String) -> Bool
+
+	@objc(findMember:)
+	func findMember(_ nickname: String) -> ChannelUser?
+
+	@objc var numberOfMembers: UInt { get }
+	@objc var memberList: [ChannelUser]? { get }
+
+	@objc(sortMembers)
+	func sortMembers()
+}
+
+@objc(IRCChannelMemberListPrivatePrototype)
+public protocol ChannelMemberListPrivateProtocol: AnyObject {
+	@objc(addMember:checkForDuplicates:)
+	func addMember(_ member: ChannelUser, checkForDuplicates: Bool)
+
+	@objc(replaceMember:withMember:)
+	func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser)
+
+	@objc(replaceMember:withMember:resort:)
+	func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool)
+
+	@objc(replaceMember:withMember:resort:replaceInAllChannels:)
+	func replaceMember(
+		_ oldMember: ChannelUser,
+		with newMember: ChannelUser,
+		resort: Bool,
+		replaceInAllChannels: Bool
+	)
+
+	@objc(changeMember:mode:value:)
+	func changeMember(_ nickname: String, mode: String, value: Bool)
+
+	@objc(resortMember:)
+	func resortMember(_ member: ChannelUser)
+
+	@objc(clearMembers)
+	func clearMembers()
+
+	@objc(pasteboardDataForMembers:)
+	func pasteboardData(for members: [ChannelUser]) -> Data
+
+	@objc(readNicknamesFromPasteboardData:withBlock:)
+	static func readNicknames(
+		from pasteboardData: Data,
+		with callback: (IRCChannel, [String]) -> Void
+	) -> Bool
+
+	@objc(readMembersFromPasteboardData:withBlock:)
+	static func readMembers(
+		from pasteboardData: Data,
+		with callback: (IRCChannel, [ChannelUser]) -> Void
+	) -> Bool
+}
+
 @objc(IRCChannelMemberList)
-public final class ChannelMemberList: NSObject, @unchecked Sendable {
+public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMemberListPrivateProtocol,
+	@unchecked Sendable
+{
 	private static let queueKey = DispatchSpecificKey<UInt8>()
 	private static let modifyQueue: DispatchQueue = {
 		let queue = DispatchQueue(
@@ -102,16 +181,16 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 	}
 
 	@objc(resumeMemberListSerialQueues)
-	public class func resumeSerialQueues() {
+	public static func resumeSerialQueues() {
 		modifyQueue.resume()
 	}
 
 	@objc(suspendMemberListSerialQueues)
-	public class func suspendSerialQueues() {
+	public static func suspendSerialQueues() {
 		modifyQueue.suspend()
 	}
 
-	private class func accessMembers<Result>(_ operation: () -> Result) -> Result {
+	private static func accessMembers<Result>(_ operation: () -> Result) -> Result {
 		if DispatchQueue.getSpecific(key: queueKey) != nil {
 			return operation()
 		}
@@ -173,16 +252,12 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 
 	@objc(addMember:checkForDuplicates:)
 	public func addMember(_ proposedMember: ChannelUser, checkForDuplicates: Bool) {
-		var member = proposedMember
+		let member = immutableMember(proposedMember)
 		let channel = channel
 
 		if checkForDuplicates, let oldMember = member.user.userAssociated(with: channel) {
 			replaceMember(oldMember, with: member)
 			return
-		}
-
-		if member is ChannelUserMutable {
-			member = member.copy() as! ChannelUser
 		}
 
 		member.associate(with: channel)
@@ -227,10 +302,16 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 
 	@objc(resortMember:)
 	public func resortMember(_ proposedMember: ChannelUser) {
-		let member = proposedMember is ChannelUserMutable
-			? proposedMember.copy() as! ChannelUser
-			: proposedMember
+		let member = immutableMember(proposedMember)
 		replaceMember(member, with: member, resort: true)
+	}
+
+	private func immutableMember(_ proposedMember: ChannelUser) -> ChannelUser {
+		guard proposedMember is ChannelUserMutable else { return proposedMember }
+		guard let member = proposedMember.copy() as? ChannelUser else {
+			preconditionFailure("ChannelUserMutable copies must use ChannelUser")
+		}
+		return member
 	}
 
 	private func performReplacement(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool) {
@@ -257,7 +338,7 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 
 		performOnMain {
 			guard let controller = self.controller,
-			      let memberList = self.masterController.mainWindow.memberList
+			      let memberList = self.applicationController.mainWindow.memberList
 			else {
 				return
 			}
@@ -294,9 +375,7 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 		resort: Bool,
 		replaceInAllChannels: Bool
 	) {
-		let newMember = proposedMember is ChannelUserMutable
-			? proposedMember.copy() as! ChannelUser
-			: proposedMember
+		let newMember = immutableMember(proposedMember)
 
 		performReplacement(oldMember, with: newMember, resort: resort)
 
@@ -356,10 +435,10 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 
 		var replaceInAllChannels = false
 		if value, mode == "Y", member.user.isIRCop == false {
-			client.modifyUser(member.user) { user in
+			client.modify(member.user) { user in
 				user.isIRCop = true
 			}
-			replaceInAllChannels = TPCPreferences.memberListSortFavorsServerStaff()
+			replaceInAllChannels = TextualPreferences.memberListSortFavorsServerStaff()
 		}
 
 		replaceMember(
@@ -423,7 +502,7 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 	}
 
 	@objc(readNicknamesFromPasteboardData:withBlock:)
-	public class func readNicknames(
+	public static func readNicknames(
 		from pasteboardData: Data,
 		with callback: (IRCChannel, [String]) -> Void
 	) -> Bool {
@@ -438,18 +517,18 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 			return false
 		}
 
-		let masterController = masterController()
+		let applicationController = applicationController()
 		let channel: IRCChannel?
 
 		if Thread.isMainThread {
 			channel = MainActor.assumeIsolated {
-				masterController.world.findItem(withId: channelID) as? IRCChannel
+				(applicationController.world.findItem(withId: channelID) as AnyObject?) as? IRCChannel
 			}
 		} else {
 			nonisolated(unsafe) var resolvedChannel: IRCChannel?
-			XRPerformBlockSynchronouslyOnMainQueue {
+			performSynchronouslyOnMainQueue {
 				resolvedChannel = MainActor.assumeIsolated {
-					masterController.world.findItem(withId: channelID) as? IRCChannel
+					(applicationController.world.findItem(withId: channelID) as AnyObject?) as? IRCChannel
 				}
 			}
 			channel = resolvedChannel
@@ -464,7 +543,7 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 	}
 
 	@objc(readMembersFromPasteboardData:withBlock:)
-	public class func readMembers(
+	public static func readMembers(
 		from pasteboardData: Data,
 		with callback: (IRCChannel, [ChannelUser]) -> Void
 	) -> Bool {
@@ -497,7 +576,7 @@ public final class ChannelMemberList: NSObject, @unchecked Sendable {
 	}
 
 	private func performOnMain(_ operation: @escaping @MainActor () -> Void) {
-		XRPerformBlockSynchronouslyOnMainQueue {
+		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
 				operation()
 			}

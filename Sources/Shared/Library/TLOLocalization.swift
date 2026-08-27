@@ -5,7 +5,7 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- *    Copyright (c) 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,17 +56,17 @@
 // When the key is assigned in the strings file, it is not prefaced by the table name.
 //
 
-// Performs localization with a special key.
-// swift-format-ignore: AlwaysUseLowerCamelCase
-public func LocalizedKey(
+import Foundation
+
+/// Performs localization with a Glasstual table-and-key identifier.
+public func localizedKey(
 	_ key: String, _ arguments: CVarArg..., table: String = "BasicLanguage", bundle: Bundle = Bundle.main
 ) -> String {
 	localize(string: key, arguments: arguments, table: table, bundle: bundle, specialKey: true)
 }
 
-// Performs localization with an input string.
-// swift-format-ignore: AlwaysUseLowerCamelCase
-public func LocalizedString(
+/// Performs localization with a literal input string.
+public func localizedString(
 	_ string: String, _ arguments: CVarArg..., table: String = "BasicLanguage", bundle: Bundle = Bundle.main
 ) -> String {
 	localize(string: string, arguments: arguments, table: table, bundle: bundle, specialKey: false)
@@ -122,18 +122,5 @@ private extension String {
 		} else {
 			self = bundle.localizedString(forKey: string, value: nil, table: tableName)
 		}
-	}
-}
-
-///
-/// This extension gives TXTLS() and its sister C functions access
-/// to the logic needed to pluck out a localized string.
-/// Those functions will perform argument formatting on their end
-/// given the result because you can't pass arguments from C -> Swift.
-///
-extension NSString {
-	@objc(_swift_localizedKey:bundle:)
-	class func localize(key: String, bundle: Bundle) -> NSString {
-		String(localized: key, table: "BasicLanguage", bundle: bundle, specialKey: true) as NSString
 	}
 }

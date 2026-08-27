@@ -3,7 +3,6 @@ import XCTest
 
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
-/// #import "TLOSCRAMClient.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |

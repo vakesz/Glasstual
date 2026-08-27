@@ -1,8 +1,12 @@
-# Repository Guidance
+# Repository guidance
 
-- Treat `project.yml` as the source of truth. Regenerate `Glasstual.xcodeproj` with `xcodegen generate --spec project.yml`; never edit the generated project by hand.
-- Migrate toward a pure Swift codebase with no `.h`, `.m`, or `.c` implementation files. Keep temporary interoperability code only while an unmigrated consumer requires it.
-- Keep first-party, service, plugin, and vendored source under `Sources/`; preserve every upstream copyright notice, license, and acknowledgement.
-- Apply formatting and linting to the entire source tree. Fix diagnostics at their source instead of adding path exclusions or blanket suppressions.
-- Before handing off code changes, regenerate the project and run the relevant build, tests, and `make lint`; report any boundary that was not exercised.
+- The end state is a native macOS application written entirely in Swift with its application UI implemented in SwiftUI. Migrate every `.h`, `.m`, and `.c` source, including first-party frameworks, services, and bundled plugins. Keep Objective-C and AppKit interoperability only while a named unmigrated consumer or SwiftUI replacement still needs it.
+- Organize Swift by product domain and feature under `Sources/`. Migrate UI feature by feature to SwiftUI, preserving macOS menus, commands, keyboard handling, accessibility, state restoration, and plugin behavior before removing each AppKit implementation. Put shared implementation behind small, domain-named interfaces instead of recreating Objective-C class folders or embedding business logic in views.
+- Model closed domain state with Swift enums, option sets, and value types. Keep external wire, template, persistence, and plugin strings at typed boundary adapters instead of scattering magic strings through application logic.
+- Store user-facing text in feature- or table-namespaced String Catalogs and consume generated, typed `LocalizedStringResource` symbols. Preserve translations, placeholders, translator comments, and attribution; merge keys only when their meaning and formatting contract are identical.
+- Target macOS 26 and newer with current Swift, SwiftUI, and AppKit APIs. Remove compatibility branches below that floor, keep newer availability gates where required, and preserve a native macOS interaction model and accessibility behavior.
+- Treat `project.yml` as the source of truth for targets, schemes, build settings, generated Info.plist files, signing, capabilities, and entitlements. Run `xcodegen generate --spec project.yml` after changing it or adding files. Never edit `Glasstual.xcodeproj` or files under `Generated/Xcode/` by hand.
+- Keep first-party, service, plugin, and vendored source under `Sources/`. Preserve every upstream copyright notice, license, acknowledgement, and provenance record when moving or rewriting code.
+- Run SwiftFormat and SwiftLint across all of `Sources/` and `Tests/`. Fix diagnostics in source or tune a rule with a documented repository-wide reason. Do not add path exclusions, baselines, inline disables, or blanket rule suppressions.
+- Before handing off code changes, regenerate the project and run the relevant build, tests, and `make lint`. Report any runtime, signing, network, or release boundary that was not exercised.
 - Never add Codex attribution or `Co-Authored-By: Codex` trailers to commits.

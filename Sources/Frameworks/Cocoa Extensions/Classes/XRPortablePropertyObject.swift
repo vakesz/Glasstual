@@ -84,7 +84,7 @@ enum PortablePropertyRuntime {
 	}
 }
 
-@objc(XRPortablePropertyObject)
+@objc(PortablePropertyObject)
 @objcMembers
 open class PortablePropertyObject: NSObject, NSCopying, NSMutableCopying, NSSecureCoding,
 	PortablePropertyObjectPrototype
@@ -218,7 +218,9 @@ open class PortablePropertyObject: NSObject, NSCopying, NSMutableCopying, NSSecu
 
 	@objc(copyAsMutable:uniquing:)
 	open dynamic func copy(asMutable mutableCopy: Bool, uniquing: Bool) -> Any {
-		let object = allocForCopy(asMutable: mutableCopy) as! PortablePropertyObject
+		guard let object = allocForCopy(asMutable: mutableCopy) as? PortablePropertyObject else {
+			preconditionFailure("Portable property allocator returned an incompatible object")
+		}
 
 		if uniquing {
 			populateDuringUniqueCopy(object, mutableCopy: mutableCopy)

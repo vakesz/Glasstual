@@ -65,6 +65,30 @@
 import CryptoKit
 import Foundation
 
+public let unicodeReplacementCharacter = "\u{FFFD}"
+
+public struct StringContentType: OptionSet, Sendable {
+	public let rawValue: UInt
+
+	public init(rawValue: UInt) {
+		self.rawValue = rawValue
+	}
+
+	public static let any = Self(rawValue: 1 << 0)
+	public static let wholeNumber = Self(rawValue: 1 << 1)
+	public static let decimalNumber = Self(rawValue: 1 << 2)
+	public static let positiveNumber = Self(rawValue: 1 << 3)
+	public static let negativeNumber = Self(rawValue: 1 << 4)
+	public static let alphabetic = Self(rawValue: 1 << 10)
+
+	public static let anyNumber: Self = [
+		.wholeNumber,
+		.decimalNumber,
+		.positiveNumber,
+		.negativeNumber,
+	]
+}
+
 private enum UTF16StringOperations {
 	static let notFound = -1
 
@@ -187,7 +211,7 @@ public extension NSString {
 	}
 
 	@objc(range)
-	var ce_range: NSRange {
+	var ceRange: NSRange {
 		NSRange(location: 0, length: length)
 	}
 
@@ -290,7 +314,7 @@ public extension NSString {
 	}
 
 	@objc(characterStringBuffer)
-	var ce_characterStringBuffer: [String] {
+	var ceCharacterStringBuffer: [String] {
 		guard length > 0 else {
 			return []
 		}
@@ -308,7 +332,7 @@ public extension NSString {
 	}
 
 	@objc(sha1)
-	var ce_sha1: String? {
+	var ceSha1: String? {
 		guard let data = data(using: String.Encoding.utf8.rawValue) else {
 			return nil
 		}
@@ -316,7 +340,7 @@ public extension NSString {
 	}
 
 	@objc(sha256)
-	var ce_sha256: String? {
+	var ceSha256: String? {
 		guard let data = data(using: String.Encoding.utf8.rawValue) else {
 			return nil
 		}
@@ -324,7 +348,7 @@ public extension NSString {
 	}
 
 	@objc(sha512)
-	var ce_sha512: String? {
+	var ceSha512: String? {
 		guard let data = data(using: String.Encoding.utf8.rawValue) else {
 			return nil
 		}
@@ -378,17 +402,17 @@ public extension NSString {
 	}
 
 	@objc(trim)
-	var ce_trim: NSString {
+	var ceTrim: NSString {
 		trimmingCharacters(in: .whitespacesAndNewlines) as NSString
 	}
 
 	@objc(trimCharacters:)
-	func ce_trim(characters: String) -> NSString {
+	func ceTrim(characters: String) -> NSString {
 		trimmingCharacters(in: CharacterSet(charactersIn: characters)) as NSString
 	}
 
 	@objc(removeAllNewlines)
-	var ce_removeAllNewlines: NSString {
+	var ceRemoveAllNewlines: NSString {
 		UTF16StringOperations.replacingCharacters(in: self, from: .newlines, with: "")
 	}
 
@@ -517,7 +541,7 @@ public extension NSString {
 
 		let searchesBackwards = options.contains(.backwards)
 		var currentPosition = 0
-		for character in (string as NSString).ce_characterStringBuffer {
+		for character in (string as NSString).ceCharacterStringBuffer {
 			let range = range(
 				of: character,
 				options: options,
@@ -542,37 +566,37 @@ public extension NSString {
 	}
 
 	@objc(isIPAddress)
-	var ce_isIPAddress: Bool {
-		ce_isIPv4Address || ce_isIPv6Address
+	var ceIsIPAddress: Bool {
+		ceIsIPv4Address || ceIsIPv6Address
 	}
 
 	@objc(isIPv4Address)
-	var ce_isIPv4Address: Bool {
-		ce_IPv4AddressBytes != nil
+	var ceIsIPv4Address: Bool {
+		ceIPv4AddressBytes != nil
 	}
 
 	@objc(isIPv6Address)
-	var ce_isIPv6Address: Bool {
-		ce_IPv6AddressBytes != nil
+	var ceIsIPv6Address: Bool {
+		ceIPv6AddressBytes != nil
 	}
 
 	@objc(IPv4AddressBytes)
-	var ce_IPv4AddressBytes: Data? {
+	var ceIPv4AddressBytes: Data? {
 		UTF16StringOperations.addressBytes(self, family: AF_INET)
 	}
 
 	@objc(IPv6AddressBytes)
-	var ce_IPv6AddressBytes: Data? {
+	var ceIPv6AddressBytes: Data? {
 		UTF16StringOperations.addressBytes(self, family: AF_INET6)
 	}
 
 	@objc(safeFilename)
-	var ce_safeFilename: NSString {
+	var ceSafeFilename: NSString {
 		guard length > 0 else {
 			return self
 		}
 
-		var result = ce_trim.replacingOccurrences(of: "/", with: "_")
+		var result = ceTrim.replacingOccurrences(of: "/", with: "_")
 		result = result.replacingOccurrences(of: ":", with: "_")
 		if UserDefaults.standard.bool(forKey: "Cocoa Extensions Framework -> Exclude Bars from Safe Filenames") {
 			result = result.replacingOccurrences(of: "|", with: "_")
@@ -590,22 +614,21 @@ public extension NSString {
 	}
 
 	@objc(isPositiveWholeNumber)
-	var ce_isPositiveWholeNumber: Bool {
-		ce_contentsIsOfType([.wholeNumber, .positiveNumber])
+	var ceIsPositiveWholeNumber: Bool {
+		contents(matching: [.wholeNumber, .positiveNumber])
 	}
 
 	@objc(isNumericOnly)
-	var ce_isNumericOnly: Bool {
-		ce_contentsIsOfType([.wholeNumber, .positiveNumber])
+	var ceIsNumericOnly: Bool {
+		contents(matching: [.wholeNumber, .positiveNumber])
 	}
 
 	@objc(isAlphabeticNumericOnly)
-	var ce_isAlphabeticNumericOnly: Bool {
-		ce_contentsIsOfType([.wholeNumber, .positiveNumber, .alphabetic])
+	var ceIsAlphabeticNumericOnly: Bool {
+		contents(matching: [.wholeNumber, .positiveNumber, .alphabetic])
 	}
 
-	@objc(contentsIsOfType:)
-	func ce_contentsIsOfType(_ type: CSStringType) -> Bool {
+	func contents(matching type: StringContentType) -> Bool {
 		guard length > 0 else {
 			return false
 		}
@@ -673,7 +696,7 @@ public extension NSString {
 	@objc(formDataUsingSeparator:)
 	func ce_formData(usingSeparator separator: String) -> [String: String] {
 		ce_formData(usingSeparator: separator) { value in
-			(value as NSString).ce_percentDecodedString ?? value
+			(value as NSString).cePercentDecodedString ?? value
 		}
 	}
 
@@ -702,12 +725,12 @@ public extension NSString {
 	}
 
 	@objc(URLQueryItems)
-	var ce_URLQueryItems: [String: String] {
+	var ceURLQueryItems: [String: String] {
 		ce_formData(usingSeparator: "&")
 	}
 
 	@objc(normalizeSpaces)
-	var ce_normalizeSpaces: NSString {
+	var ceNormalizeSpaces: NSString {
 		guard length > 0 else {
 			return self
 		}
@@ -726,7 +749,7 @@ public extension NSString {
 	}
 
 	@objc(standardizedTildePath)
-	var ce_standardizedTildePath: NSString? {
+	var ceStandardizedTildePath: NSString? {
 		let homeDirectory = FileManager.pathOfHomeDirectoryOutsideSandbox
 		var result = standardizingPath
 		guard result.hasPrefix(homeDirectory) else {
@@ -749,27 +772,27 @@ public extension NSString {
 
 public extension NSString {
 	@objc(percentEncodedStringWithAllowedCharacters:)
-	func ce_percentEncodedString(withAllowedCharacters allowedCharacters: String) -> NSString? {
+	func cePercentEncodedString(withAllowedCharacters allowedCharacters: String) -> NSString? {
 		addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: allowedCharacters)) as NSString?
 	}
 
 	@objc(percentDecodedString)
-	var ce_percentDecodedString: String? {
+	var cePercentDecodedString: String? {
 		removingPercentEncoding
 	}
 
 	@objc(percentEncodedString)
-	var ce_percentEncodedString: String? {
-		addingPercentEncoding(withAllowedCharacters: NSCharacterSet.textual_percentEncodedCharacterSet as CharacterSet)
+	var cePercentEncodedString: String? {
+		addingPercentEncoding(withAllowedCharacters: NSCharacterSet.textualPercentEncodedCharacterSet as CharacterSet)
 	}
 
 	@objc(percentEncodedURLPath)
-	var ce_percentEncodedURLPath: String? {
+	var cePercentEncodedURLPath: String? {
 		addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
 	}
 
 	@objc(percentEncodedURLQuery)
-	var ce_percentEncodedURLQuery: String? {
+	var cePercentEncodedURLQuery: String? {
 		addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
 	}
 
@@ -797,12 +820,12 @@ public extension NSString {
 
 public extension NSAttributedString {
 	@objc(attributes)
-	var ce_attributes: [NSAttributedString.Key: Any] {
+	var ceAttributes: [NSAttributedString.Key: Any] {
 		attributes(at: 0, longestEffectiveRange: nil, in: NSRange(location: 0, length: length))
 	}
 
 	@objc(range)
-	var ce_range: NSRange {
+	var ceRange: NSRange {
 		NSRange(location: 0, length: length)
 	}
 
@@ -830,7 +853,7 @@ public extension NSAttributedString {
 	}
 
 	@objc(splitIntoLines)
-	var ce_splitIntoLines: [NSAttributedString] {
+	var ceSplitIntoLines: [NSAttributedString] {
 		guard length > 0 else {
 			return []
 		}
@@ -912,8 +935,8 @@ public extension NSMutableAttributedString {
 	}
 
 	@objc(trimmedString)
-	var ce_trimmedString: String {
-		(string as NSString).ce_trim as String
+	var ceTrimmedString: String {
+		(string as NSString).ceTrim as String
 	}
 
 	@objc(appendString:)

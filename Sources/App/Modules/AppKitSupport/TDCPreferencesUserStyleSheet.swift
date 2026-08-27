@@ -44,7 +44,7 @@ public final class PreferencesUserStyleSheet: SheetBase {
 	}
 
 	private func loadRules() {
-		var rules = TPCPreferences.themeUserStyleSheetRules()
+		var rules = TextualPreferences.themeUserStyleSheetRules()
 
 		if rules == nil {
 			rules = defaultRules
@@ -55,13 +55,13 @@ public final class PreferencesUserStyleSheet: SheetBase {
 	}
 
 	private func saveRules() {
-		var rules: String? = (rulesTextView.string as NSString).trim
+		var rules: String? = rulesTextView.string.trimmingCharacters(in: .whitespacesAndNewlines)
 
 		if rules?.isEmpty == true || rules == defaultRules {
 			rules = nil
 		}
 
-		TPCPreferences.setThemeUserStyleSheetRules(rules)
+		TextualPreferences.setThemeUserStyleSheetRules(rules)
 
 		let selector = NSSelectorFromString("userStyleSheetRulesChanged:")
 		if let delegate, delegate.responds(to: selector) {
@@ -78,7 +78,7 @@ public final class PreferencesUserStyleSheet: SheetBase {
 	}
 
 	private var defaultRules: String {
-		LocalizedKey("TDCPreferencesUserStyleSheet[q4s-3m]")
+		UserStyleStrings.defaultRules
 	}
 
 	@objc public func windowWillClose(_: Notification) {

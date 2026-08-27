@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import CoreServices
 import Foundation
 import os
@@ -54,6 +55,15 @@ private enum ThemeNamePrefix {
 	static let bundledComplete = "resource:"
 }
 
+private struct PublishedTheme: @unchecked Sendable {
+	let theme: Theme
+	let settings: ThemeSettings
+	let storageLocation: TPCThemeStorageLocation
+	let name: String
+	let originalURL: URL
+	let temporaryURL: URL
+}
+
 @MainActor
 @objc(TPCThemeController)
 @objcMembers
@@ -65,7 +75,8 @@ public final class ThemeController: NSObject {
 
 	private var cachedThemeName = ""
 	public private(set) var cacheToken = ""
-	private var themeStorage: Theme!
+	private nonisolated let themeLock = NSLock()
+	private nonisolated(unsafe) var publishedTheme: PublishedTheme?
 	private var currentCopyOperation: ThemeCopyOperation?
 	private var bundledThemes: [String: Theme] = [:]
 	private var customThemes: [String: Theme] = [:]
@@ -78,30 +89,31 @@ public final class ThemeController: NSObject {
 
 	deinit {
 		themeMonitor?.stopMonitoring()
+		NotificationCenter.default.removeObserver(self)
 	}
 
 	public nonisolated var theme: Theme! {
-		MainActor.assumeIsolated { themeStorage }
+		themeLock.withLock { publishedTheme?.theme }
 	}
 
 	public nonisolated var settings: ThemeSettings {
-		MainActor.assumeIsolated { themeStorage.settings }
+		themeLock.withLock { publishedTheme!.settings }
 	}
 
 	public nonisolated var storageLocation: TPCThemeStorageLocation {
-		MainActor.assumeIsolated { themeStorage.storageLocation }
+		themeLock.withLock { publishedTheme!.storageLocation }
 	}
 
 	public nonisolated var name: String {
-		MainActor.assumeIsolated { themeStorage.name }
+		themeLock.withLock { publishedTheme!.name }
 	}
 
 	public nonisolated var originalURL: URL {
-		MainActor.assumeIsolated { themeStorage.originalURL }
+		themeLock.withLock { publishedTheme!.originalURL }
 	}
 
 	public nonisolated var temporaryURL: URL {
-		MainActor.assumeIsolated { themeStorage.temporaryURL }
+		themeLock.withLock { publishedTheme!.temporaryURL }
 	}
 
 	public nonisolated var originalPath: String {
@@ -163,7 +175,6 @@ public final class ThemeController: NSObject {
 	public nonisolated func prepareForApplicationTermination() {
 		MainActor.assumeIsolated {
 			Self.logger.info("Preparing theme controller")
-			NotificationCenter.default.removeObserver(self)
 			stopMonitoringThemes()
 			removeTemporaryCopyOfTheme()
 		}
@@ -318,8 +329,7 @@ public final class ThemeController: NSObject {
 		let monitor = XRFileSystemMonitor(
 			fileURL: url,
 			context: NSNumber(value: TPCThemeStorageLocation.custom.rawValue)
-		) {
-			[weak self] events in
+		) { [weak self] events in
 			Task { @MainActor [weak self] in
 				self?.react(toMonitoringEvents: events)
 			}
@@ -447,7 +457,7 @@ public final class ThemeController: NSObject {
 		}
 
 		Self.logger.info("Reloading theme because it failed validation")
-		TPCPreferences.performReloadAction(.style)
+		TextualPreferences.performReloadAction(.style)
 		NotificationCenter.default.post(name: .themeListDidChange, object: self)
 		presentIntegrityCompromisedAlert()
 	}
@@ -470,20 +480,20 @@ public final class ThemeController: NSObject {
 		}
 
 		Self.logger.info("Reloading theme because it was deleted")
-		TPCPreferences.performReloadAction(.style)
+		TextualPreferences.performReloadAction(.style)
 		NotificationCenter.default.post(name: .themeListDidChange, object: self)
 	}
 
 	@objc private func themeWasModified(_ notification: Notification) {
 		guard let modifiedTheme = notification.object as? Theme,
 		      modifiedTheme === theme,
-		      TPCPreferences.automaticallyReloadCustomThemesWhenTheyChange()
+		      TextualPreferences.automaticallyReloadCustomThemesWhenTheyChange()
 		else {
 			return
 		}
 
 		Self.logger.info("Reloading theme because it was modified")
-		TPCPreferences.performReloadAction(.style)
+		TextualPreferences.performReloadAction(.style)
 	}
 
 	public func load() {
@@ -492,7 +502,7 @@ public final class ThemeController: NSObject {
 	}
 
 	public func reload() {
-		let themeName = TPCPreferences.themeName()
+		let themeName = TextualPreferences.themeName()
 		guard let nextTheme = theme(named: themeName, createIfNecessary: true) else {
 			preconditionFailure("Missing style resource files: \(themeName)")
 		}
@@ -501,7 +511,15 @@ public final class ThemeController: NSObject {
 			return
 		}
 
-		themeStorage = nextTheme
+		let nextPublishedTheme = PublishedTheme(
+			theme: nextTheme,
+			settings: nextTheme.settings,
+			storageLocation: nextTheme.storageLocation,
+			name: nextTheme.name,
+			originalURL: nextTheme.originalURL,
+			temporaryURL: nextTheme.temporaryURL
+		)
+		themeLock.withLock { publishedTheme = nextPublishedTheme }
 		cachedThemeName = themeName
 		cacheToken = String(UInt32.random(in: 0 ..< 1_000_000))
 		updatePreferences()
@@ -515,9 +533,11 @@ public final class ThemeController: NSObject {
 			return
 		}
 
-		TPCPreferences.setThemeChannelViewFontPreferenceUserConfigurable(settings.themeChannelViewFont == nil)
-		TPCPreferences.setThemeNicknameFormatPreferenceUserConfigurable(settings.themeNicknameFormat?.isEmpty ?? true)
-		TPCPreferences.setThemeTimestampFormatPreferenceUserConfigurable(settings.themeTimestampFormat?.isEmpty ?? true)
+		TextualPreferences.setThemeChannelViewFontPreferenceUserConfigurable(settings.themeChannelViewFont == nil)
+		TextualPreferences
+			.setThemeNicknameFormatPreferenceUserConfigurable(settings.themeNicknameFormat?.isEmpty ?? true)
+		TextualPreferences
+			.setThemeTimestampFormatPreferenceUserConfigurable(settings.themeTimestampFormat?.isEmpty ?? true)
 	}
 
 	public func recreateTemporaryCopyOfThemeIfNecessary() {
@@ -554,17 +574,17 @@ public final class ThemeController: NSObject {
 
 		let suppressionKey = "incompatible_theme_dialog_\((cachedThemeName as NSString).hash)"
 		_ = TDCAlert.alert(
-			withMessage: LocalizedKey("Prompts[76t-pn]"),
-			title: LocalizedKey("Prompts[py0-cr]", name),
-			defaultButton: LocalizedKey("Prompts[2a3-5s]"),
-			alternateButton: LocalizedKey("Prompts[c7s-dq]"),
+			withMessage: PromptStrings.Theme.incompatibleBody,
+			title: PromptStrings.Theme.incompatibleTitle(name: name),
+			defaultButton: PromptStrings.Theme.chooseDifferentStyleButtonTitle,
+			alternateButton: PromptStrings.Action.confirmation,
 			suppressionKey: suppressionKey,
 			suppressionText: nil
 		) { response, _, _ in
 			guard response == .default else {
 				return
 			}
-			NSObject.masterController().menuController?.showStylePreferences(nil)
+			NSObject.applicationController().menuController?.showStylePreferences(nil)
 		}
 	}
 
@@ -577,37 +597,37 @@ public final class ThemeController: NSObject {
 
 		let suppressionKey = "theme_appearance_dialog_\((cachedThemeName as NSString).hash)"
 		_ = TDCAlert.alert(
-			withMessage: LocalizedKey("Prompts[193-6o]"),
-			title: LocalizedKey("Prompts[ezn-rm]", name),
-			defaultButton: LocalizedKey("Prompts[hf0-w3]"),
-			alternateButton: LocalizedKey("Prompts[hv0-79]"),
+			withMessage: PromptStrings.Theme.wantsDarkAppearanceBody,
+			title: PromptStrings.Theme.wantsDarkAppearanceTitle(name: name),
+			defaultButton: PromptStrings.Theme.keepLightButtonTitle,
+			alternateButton: PromptStrings.Theme.switchToDarkButtonTitle,
 			suppressionKey: suppressionKey,
 			suppressionText: nil
 		) { response, _, _ in
 			guard response != .default else {
 				return
 			}
-			TPCPreferences.setAppearance(.dark)
-			TPCPreferences.performReloadAction(.appearance)
+			TextualPreferences.setAppearance(.dark)
+			TextualPreferences.performReloadAction(.appearance)
 		}
 	}
 
 	private func presentIntegrityCompromisedAlert() {
 		_ = TDCAlert.alert(
-			withMessage: LocalizedKey("Prompts[3wd-gj]"),
-			title: LocalizedKey("Prompts[fjw-hj]", name),
-			defaultButton: LocalizedKey("Prompts[c4z-2b]"),
-			alternateButton: LocalizedKey("Prompts[c7s-dq]")
+			withMessage: PromptStrings.Theme.modifiedBody,
+			title: PromptStrings.Theme.modifiedTitle(name: name),
+			defaultButton: PromptStrings.Theme.chooseDifferentStyleButtonTitle,
+			alternateButton: PromptStrings.Action.confirmation
 		) { response, _, _ in
 			guard response == .default else {
 				return
 			}
-			NSObject.masterController().menuController?.showStylePreferences(nil)
+			NSObject.applicationController().menuController?.showStylePreferences(nil)
 		}
 	}
 
 	private func resetPreferencesForPreferredTheme() {
-		_ = resetPreferences(forThemeNamed: TPCPreferences.themeName())
+		_ = resetPreferences(forThemeNamed: TextualPreferences.themeName())
 	}
 
 	private func resetPreferencesForActiveTheme() -> Bool {
@@ -621,22 +641,24 @@ public final class ThemeController: NSObject {
 		}
 
 		if let fontName = result.suggestedFontName {
-			TPCPreferences.setThemeChannelViewFontName(fontName)
+			TextualPreferences.setThemeChannelViewFontName(fontName)
 		}
 		if let themeName = result.suggestedThemeName {
-			TPCPreferences.setThemeName(themeName)
+			TextualPreferences.setThemeName(themeName)
 		}
 		return true
 	}
+}
 
+public extension ThemeController {
 	private func validate(themeName validatedTheme: String) -> ThemeValidationResult {
 		var result = ThemeValidationResult()
-		let fontName = TPCPreferences.themeChannelViewFontName()
+		let fontName = TextualPreferences.themeChannelViewFontName()
 		let fontIsAvailable = NSFont(name: fontName, size: 9) != nil || NSFontManager.shared.availableFonts.contains {
 			$0.compare(fontName, options: .caseInsensitive) == .orderedSame
 		}
 		if fontIsAvailable == false {
-			result.suggestedFontName = TPCPreferences.themeChannelViewFontNameDefault()
+			result.suggestedFontName = TextualPreferences.themeChannelViewFontNameDefault()
 		}
 
 		let themeName = Self.extractThemeName(validatedTheme)
@@ -653,14 +675,14 @@ public final class ThemeController: NSObject {
 
 			let recoverableTheme = remappedTheme ?? validatedTheme
 			if themeExists(recoverableTheme) == false {
-				result.suggestedThemeName = TPCPreferences.themeNameDefault()
+				result.suggestedThemeName = TextualPreferences.themeNameDefault()
 			}
 		} else if themeSource == ThemeNamePrefix.custom, themeExists(validatedTheme) == false {
 			let bundledTheme = themeName.flatMap {
 				Self.buildFilename($0, for: .bundle)
 			}
 			result.suggestedThemeName = bundledTheme.flatMap { themeExists($0) ? $0 : nil }
-				?? TPCPreferences.themeNameDefault()
+				?? TextualPreferences.themeNameDefault()
 		}
 
 		return result
@@ -674,7 +696,7 @@ public final class ThemeController: NSObject {
 	}
 
 	@objc(buildFilename:forStorageLocation:)
-	public static func buildFilename(
+	static func buildFilename(
 		_ name: String,
 		for storageLocation: TPCThemeStorageLocation
 	) -> String? {
@@ -695,12 +717,12 @@ public final class ThemeController: NSObject {
 	}
 
 	@objc(descriptionForStorageLocation:)
-	public static func description(for storageLocation: TPCThemeStorageLocation) -> String? {
+	static func description(for storageLocation: TPCThemeStorageLocation) -> String? {
 		switch storageLocation {
 		case .bundle:
-			LocalizedKey("BasicLanguage[7lm-bq]")
+			ApplicationStrings.builtInTheme
 		case .custom:
-			LocalizedKey("BasicLanguage[bm2-4p]")
+			ApplicationStrings.customTheme
 		case .unknown:
 			nil
 		@unknown default:
@@ -709,7 +731,7 @@ public final class ThemeController: NSObject {
 	}
 
 	@objc(extractThemeSource:)
-	public static func extractThemeSource(_ source: String) -> String? {
+	static func extractThemeSource(_ source: String) -> String? {
 		guard source.hasPrefix(ThemeNamePrefix.customComplete) ||
 			source.hasPrefix(ThemeNamePrefix.bundledComplete)
 		else {
@@ -719,7 +741,7 @@ public final class ThemeController: NSObject {
 	}
 
 	@objc(extractThemeName:)
-	public static func extractThemeName(_ source: String) -> String? {
+	static func extractThemeName(_ source: String) -> String? {
 		guard source.hasPrefix(ThemeNamePrefix.customComplete) ||
 			source.hasPrefix(ThemeNamePrefix.bundledComplete),
 			let separator = source.firstIndex(of: ":")
@@ -732,7 +754,7 @@ public final class ThemeController: NSObject {
 	}
 
 	@objc(storageLocationOfThemeWithName:)
-	public static func storageLocation(ofThemeWithName themeName: String) -> TPCThemeStorageLocation {
+	static func storageLocation(ofThemeWithName themeName: String) -> TPCThemeStorageLocation {
 		if themeName.hasPrefix(ThemeNamePrefix.customComplete) {
 			return .custom
 		}
@@ -743,7 +765,7 @@ public final class ThemeController: NSObject {
 	}
 
 	@objc(copyActiveThemeToDestinationLocation:reloadOnCopy:openOnCopy:)
-	public func copyActiveTheme(
+	func copyActiveTheme(
 		to destinationLocation: TPCThemeStorageLocation,
 		reloadOnCopy: Bool,
 		openOnCopy: Bool
@@ -845,8 +867,8 @@ private final class ThemeCopyOperation {
 		if reloadWhenCopied,
 		   let newThemeName = ThemeController.buildFilename(themeName, for: destinationLocation)
 		{
-			TPCPreferences.setThemeName(newThemeName)
-			TPCPreferences.performReloadAction(.style)
+			TextualPreferences.setThemeName(newThemeName)
+			TextualPreferences.performReloadAction(.style)
 		}
 		invalidate()
 	}

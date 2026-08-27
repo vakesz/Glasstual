@@ -36,10 +36,13 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 import os
 
 @objc(ICLProcessMain)
-final class InlineContentProcess: NSObject, @unchecked Sendable {
+final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineContentProcessHandling,
+	@unchecked Sendable
+{
 	private static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
 		category: "Process"
@@ -79,6 +82,14 @@ final class InlineContentProcess: NSObject, @unchecked Sendable {
 	init(xpcConnection: NSXPCConnection) {
 		serviceConnection = xpcConnection
 		super.init()
+		InlineContentPreferences.install {
+			InlineContentPreferences.Values(
+				maximumImageFileSize: TextualPreferences.inlineImagesMaxFilesize(),
+				maximumHeight: TextualPreferences.inlineMediaMaxHeight(),
+				maximumWidth: TextualPreferences.inlineMediaMaxWidth(),
+				limitBasicsToFiles: TextualPreferences.inlineMediaLimitBasicsToFiles()
+			)
+		}
 	}
 
 	@objc(processURL:withUniqueIdentifier:atLineNumber:index:inView:)
@@ -107,8 +118,12 @@ final class InlineContentProcess: NSObject, @unchecked Sendable {
 			return
 		}
 
-		let mutablePayload = (payload as? InlineContentPayloadMutable)
-			?? payload.mutableCopy() as! InlineContentPayloadMutable
+		guard let mutablePayload = (payload as? InlineContentPayloadMutable)
+			?? payload.mutableCopy() as? InlineContentPayloadMutable
+		else {
+			assertionFailure("Inline content payload did not produce its declared mutable copy type")
+			return
+		}
 		let host = mutablePayload.url.host?.lowercased() ?? ""
 
 		if process(mutablePayload, withModulesFor: host) {
@@ -125,19 +140,19 @@ final class InlineContentProcess: NSObject, @unchecked Sendable {
 	}
 
 	private func process(_ payload: InlineContentPayloadMutable, using moduleType: InlineContentModule.Type) -> Bool {
-		if !moduleType.contentImageOrVideo, TPCPreferences.inlineMediaLimitToBasics() {
+		if !moduleType.contentImageOrVideo, TextualPreferences.inlineMediaLimitToBasics() {
 			return false
 		}
 		if !moduleType.contentIsFile,
-		   TPCPreferences.inlineMediaLimitToBasics(),
-		   TPCPreferences.inlineMediaLimitBasicsToFiles()
+		   TextualPreferences.inlineMediaLimitToBasics(),
+		   TextualPreferences.inlineMediaLimitBasicsToFiles()
 		{
 			return false
 		}
-		if moduleType.contentNotSafeForWork, TPCPreferences.inlineMediaLimitNaughtyContent() {
+		if moduleType.contentNotSafeForWork, TextualPreferences.inlineMediaLimitNaughtyContent() {
 			return false
 		}
-		if moduleType.contentUntrusted, TPCPreferences.inlineMediaLimitUnsafeContent() {
+		if moduleType.contentUntrusted, TextualPreferences.inlineMediaLimitUnsafeContent() {
 			return false
 		}
 
@@ -158,7 +173,11 @@ final class InlineContentProcess: NSObject, @unchecked Sendable {
 	}
 
 	func finalize(module: InlineContentModule, error originalError: NSError?) {
-		let payload = module.payload.copy() as! InlineContentPayload
+		guard let payload = module.payload.copy() as? InlineContentPayload else {
+			assertionFailure("Inline content payload did not produce its declared immutable copy type")
+			release(module)
+			return
+		}
 		release(module)
 
 		let error: NSError? = if payload.html.isEmpty, payload.scriptResources.isEmpty {
@@ -182,11 +201,10 @@ final class InlineContentProcess: NSObject, @unchecked Sendable {
 		}
 
 		guard let remoteObjectProxy else { return }
-		let xpcPayload = unsafeBitCast(payload, to: ICLPayload.self)
 		if let error {
-			remoteObjectProxy.processingPayload(xpcPayload, failedWithError: error)
+			remoteObjectProxy.processingPayload(payload, failedWithError: error)
 		} else {
-			remoteObjectProxy.processingPayloadSucceeded(xpcPayload)
+			remoteObjectProxy.processingPayloadSucceeded(payload)
 		}
 	}
 
@@ -194,7 +212,7 @@ final class InlineContentProcess: NSObject, @unchecked Sendable {
 		release(module)
 	}
 
-	func deferModule(_ module: InlineContentModule, as type: ICLMediaType, performCheck: Bool) {
+	func deferModule(_ module: InlineContentModule, as type: InlineContentMediaType, performCheck: Bool) {
 		switch type {
 		case .image:
 			let image = InlineImageModule(deferredModule: module)
@@ -255,11 +273,11 @@ final class InlineContentProcess: NSObject, @unchecked Sendable {
 		Self.warmLock.withLock {
 			guard !Self.registeredDefaults else { return }
 			Self.registeredDefaults = true
-			TPCPreferencesUserDefaults.shared().register(defaults: defaults)
+			TextualUserDefaults.shared().register(defaults: defaults)
 		}
 	}
 
-	private var remoteObjectProxy: (any ICLInlineContentClientProtocol)? {
-		serviceConnection?.remoteObjectProxy as? any ICLInlineContentClientProtocol
+	private var remoteObjectProxy: (any InlineContentClientProtocol)? {
+		serviceConnection?.remoteObjectProxy as? any InlineContentClientProtocol
 	}
 }

@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 import os
 
 @objc(ICLPluginManager)
@@ -95,7 +96,7 @@ final class InlineContentPluginManager: NSObject, @unchecked Sendable {
 			)
 			return nil
 		}
-		guard principalClass.conforms(to: ICLPluginProtocol.self) else {
+		guard principalClass.conforms(to: InlineContentPlugin.self) else {
 			Self.logger.error(
 				"Failed to load bundle '\(pluginURL.standardizedFileURL.path, privacy: .public)' because its principal class does not conform to ICLPluginProtocol"
 			)
@@ -114,7 +115,7 @@ final class InlineContentPluginManager: NSObject, @unchecked Sendable {
 
 		var modules: [AnyClass] = []
 		for plugin in loadedPlugins {
-			guard let principalClass = plugin.principalClass as? ICLPluginProtocol.Type else { continue }
+			guard let principalClass = plugin.principalClass as? InlineContentPlugin.Type else { continue }
 			modules.append(contentsOf: principalClass.modules)
 		}
 		loadedModules = modules

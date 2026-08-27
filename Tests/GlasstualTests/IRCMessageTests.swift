@@ -44,7 +44,8 @@ import XCTest
  *
  *********************************************************************** */
 @objc
-class IRCMessageTests: XCTestCase {
+@MainActor
+final class IRCMessageTests: XCTestCase {
 	func testParsesPrefixCommandAndTrailingParameter() throws {
 		let message = try XCTUnwrap(Message(line: ":nick!user@host PRIVMSG #channel :hello  world"))
 		XCTAssertEqual(message.command, "PRIVMSG")

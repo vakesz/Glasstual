@@ -2,16 +2,61 @@
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
+
+@objc public enum IRCISupportInfoListType: UInt, Sendable {
+	case ban = 0
+	case banException = 1
+	case inviteException = 2
+	case quiet = 3
+}
+
+@objc public enum IRCISupportInfoCaseMapping: UInt, Sendable {
+	case rfc1459 = 0
+	case strictRFC1459 = 1
+	case ascii = 2
+}
+
+enum IRCISupportUserModes {
+	static let highestPrefixRank: UInt = 100
+	static let symbolsKey = "modeSymbols"
+	static let charactersKey = "characters"
+}
 
 private let channelUserModeValue = 100
 
 @objc(IRCISupportInfo)
 public class IRCISupportInfo: NSObject {
 	@objc public private(set) weak var client: IRCClient?
-	@objc public private(set) var serverAddress: String?
+	@objc public internal(set) var serverAddress: String?
 	@objc public private(set) var maximumAwayLength: UInt = 0
 	@objc public private(set) var maximumChannelNameLength: UInt = 0
 	@objc public private(set) var maximumKeyLength: UInt = 0
@@ -39,8 +84,8 @@ public class IRCISupportInfo: NSObject {
 	@objc public private(set) var maximumListEntries: [String: NSNumber] = [:]
 	@objc public private(set) var maximumTargetsByCommand: [String: NSNumber] = [:]
 	@objc public private(set) var userModeSymbols: [String: [String]] = [
-		IRCISupportUserModeSymbolsSymbolsKey: ["o", "v"],
-		IRCISupportUserModeSymbolsCharactersKey: ["@", "+"],
+		IRCISupportUserModes.symbolsKey: ["o", "v"],
+		IRCISupportUserModes.charactersKey: ["@", "+"],
 	]
 	@objc public private(set) var banExceptionModeSymbol: String?
 	@objc public private(set) var inviteExceptionModeSymbol: String?
@@ -50,7 +95,7 @@ public class IRCISupportInfo: NSObject {
 	@objc public private(set) var extendedBanPrefix: String?
 	@objc public private(set) var networkName: String?
 	@objc public private(set) var networkNameFormatted: String?
-	@objc public private(set) var caseMapping: IRCISupportInfoCaseMapping = .RFC1459
+	@objc public private(set) var caseMapping: IRCISupportInfoCaseMapping = .rfc1459
 
 	private var cachedConfiguration: [[String: Any]] = []
 
@@ -83,8 +128,8 @@ public class IRCISupportInfo: NSObject {
 		cachedConfiguration = []
 		serverAddress = nil
 		userModeSymbols = [
-			IRCISupportUserModeSymbolsSymbolsKey: ["o", "v"],
-			IRCISupportUserModeSymbolsCharactersKey: ["@", "+"],
+			IRCISupportUserModes.symbolsKey: ["o", "v"],
+			IRCISupportUserModes.charactersKey: ["@", "+"],
 		]
 		channelModes = ["o": NSNumber(value: channelUserModeValue), "v": NSNumber(value: channelUserModeValue)]
 
@@ -108,64 +153,107 @@ public class IRCISupportInfo: NSObject {
 	public func resetSetting(_ key: String) {
 		let normalizedKey = key.uppercased()
 
-		switch normalizedKey {
+		if resetLengthSetting(normalizedKey) {
+			return
+		}
+
+		if resetModeSetting(normalizedKey) {
+			return
+		}
+
+		if resetCollectionSetting(normalizedKey) {
+			return
+		}
+
+		resetFeatureSetting(normalizedKey)
+	}
+
+	private func resetLengthSetting(_ key: String) -> Bool {
+		switch key {
 		case "AWAYLEN":
 			maximumAwayLength = 0
-		case "BOT":
-			botModeSymbol = nil
-		case "CALLERID":
-			callerIDModeSymbol = nil
-		case "CASEMAPPING":
-			caseMapping = .RFC1459
-		case "CHANLIMIT":
-			channelLimits = [:]
 		case "CHANNELLEN":
 			maximumChannelNameLength = 0
-		case "CHANTYPES":
-			channelNamePrefixes = ["#"]
 		case "CHATHISTORY", "DRAFT/CHATHISTORY":
 			chatHistoryMaximumLines = 0
-		case "CLIENTTAGDENY":
-			clientTagDenyList = []
-		case "DEAF":
-			deafModeSymbol = nil
-		case "ELIST":
-			extendedListTokens = []
-		case "EXCEPTS":
-			banExceptionModeSymbol = nil
-		case "EXTBAN":
-			extendedBanPrefix = nil
-			extendedBanTypes = []
-		case "INVEX":
-			inviteExceptionModeSymbol = nil
 		case "KEYLEN":
 			maximumKeyLength = 0
 		case "KICKLEN":
 			maximumKickLength = 0
 		case "LINELEN":
 			maximumLineLength = 0
-		case "MAXLIST":
-			maximumListEntries = [:]
 		case "MAXTARGETS":
 			maximumTargets = 0
 		case "MODES":
-			maximumModeCount = 4
-		case "NETWORK":
-			networkName = nil
-			networkNameFormatted = nil
+			maximumModeCount = UInt(IRCProtocolLimits.maximumNodesPerModeCommand)
 		case "NICKLEN":
-			maximumNicknameLength = 31
-		case "SAFELIST":
-			safeListSupported = false
+			maximumNicknameLength = UInt(IRCProtocolLimits.defaultNicknameMaximumLength)
 		case "SILENCE":
 			silenceSupported = false
 			maximumSilenceEntries = 0
-		case "STATUSMSG":
-			statusMessageModeSymbols = []
-		case "TARGMAX":
-			maximumTargetsByCommand = [:]
 		case "TOPICLEN":
 			maximumTopicLength = 0
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	private func resetModeSetting(_ key: String) -> Bool {
+		switch key {
+		case "BOT":
+			botModeSymbol = nil
+		case "CALLERID":
+			callerIDModeSymbol = nil
+		case "CASEMAPPING":
+			caseMapping = .rfc1459
+		case "CHANTYPES":
+			channelNamePrefixes = ["#"]
+		case "DEAF":
+			deafModeSymbol = nil
+		case "EXCEPTS":
+			banExceptionModeSymbol = nil
+		case "INVEX":
+			inviteExceptionModeSymbol = nil
+		case "STATUSMSG":
+			statusMessageModeSymbols = []
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	private func resetCollectionSetting(_ key: String) -> Bool {
+		switch key {
+		case "CHANLIMIT":
+			channelLimits = [:]
+		case "CLIENTTAGDENY":
+			clientTagDenyList = []
+		case "ELIST":
+			extendedListTokens = []
+		case "EXTBAN":
+			extendedBanPrefix = nil
+			extendedBanTypes = []
+		case "MAXLIST":
+			maximumListEntries = [:]
+		case "NETWORK":
+			networkName = nil
+			networkNameFormatted = nil
+		case "TARGMAX":
+			maximumTargetsByCommand = [:]
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	private func resetFeatureSetting(_ key: String) {
+		switch key {
+		case "SAFELIST":
+			safeListSupported = false
 		case "UTF8ONLY":
 			utf8Only = false
 		case "WHOX":
@@ -196,7 +284,7 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(processConfigurationData:)
 	public func processConfigurationData(_ configurationData: String) {
-		var trimmed = configurationData.trimmingCharacters(in: .whitespacesAndNewlines)
+		let trimmed = configurationData.trimmingCharacters(in: .whitespacesAndNewlines)
 
 		if trimmed.isEmpty {
 			return
@@ -210,11 +298,9 @@ public class IRCISupportInfo: NSObject {
 			var segmentKey = segment
 			var segmentValue: String?
 
-			let equalSignPosition = (segment as NSString).stringPosition("=")
-
-			if equalSignPosition > 0 {
-				segmentKey = (segment as NSString).substring(to: equalSignPosition)
-				segmentValue = (segment as NSString).substring(after: UInt(equalSignPosition))
+			if let equalSignIndex = segment.firstIndex(of: "="), equalSignIndex != segment.startIndex {
+				segmentKey = String(segment[..<equalSignIndex])
+				segmentValue = String(segment[segment.index(after: equalSignIndex)...])
 
 				if segmentValue?.isEmpty == true {
 					segmentValue = nil
@@ -255,7 +341,7 @@ public class IRCISupportInfo: NSObject {
 			return 0
 		}
 
-		let prefix = (channel as NSString).stringCharacter(at: 0)
+		let prefix = String(channel.prefix(1))
 
 		return channelLimits[prefix]?.uintValue ?? 0
 	}
@@ -316,7 +402,7 @@ public class IRCISupportInfo: NSObject {
 			return nil
 		}
 
-		let type = (body as NSString).stringCharacter(at: 0)
+		let type = String(body.prefix(1))
 
 		if extendedBanTypes.contains(type) == false {
 			return nil
@@ -333,7 +419,7 @@ public class IRCISupportInfo: NSObject {
 		let description = Self.localizedDescription(forExtendedBanType: type, argument: argument)
 
 		if negated {
-			return LocalizedKey("IRC[6kq-xb]", description)
+			return IRCISupportStrings.everyoneExcept(description)
 		}
 
 		return description
@@ -341,39 +427,7 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(localizedDescriptionForExtendedBanType:argument:)
 	public static func localizedDescription(forExtendedBanType type: String, argument: String?) -> String {
-		let table: [String: String] = [
-			"a": "IRC[2nb-ka]",
-			"c": "IRC[2nb-kc]",
-			"j": "IRC[2nb-kj]",
-			"m": "IRC[2nb-km]",
-			"n": "IRC[2nb-kn]",
-			"o": "IRC[2nb-ko]",
-			"O": "IRC[2nb-ko2]",
-			"q": "IRC[2nb-kq]",
-			"r": "IRC[2nb-kr]",
-			"R": "IRC[2nb-kr2]",
-			"s": "IRC[2nb-ks]",
-			"S": "IRC[2nb-ks2]",
-			"t": "IRC[2nb-kt]",
-			"T": "IRC[2nb-kt2]",
-			"U": "IRC[2nb-ku]",
-			"x": "IRC[2nb-kx]",
-			"z": "IRC[2nb-kz]",
-		]
-
-		if let key = table[type] {
-			if argument == nil {
-				return LocalizedKey("IRC[2nb-kl]", type)
-			}
-
-			return LocalizedKey(key, argument!)
-		}
-
-		if let argument {
-			return LocalizedKey("IRC[2nb-kk]", type, argument)
-		}
-
-		return LocalizedKey("IRC[2nb-kl]", type)
+		IRCISupportStrings.extendedBanDescription(type: type, argument: argument)
 	}
 
 	@objc(stringValueForConfiguration:)
@@ -411,7 +465,7 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(modeHasParameter:whenModeIsSet:)
 	public func modeHasParameter(_ modeSymbol: String, whenModeIsSet: Bool) -> Bool {
-		let modeIndex = (channelModes as NSDictionary).unsignedInteger(forKey: modeSymbol)
+		let modeIndex = (channelModes as NSDictionary).ce_unsignedInteger(forKey: modeSymbol)
 
 		if modeIndex == 1 || modeIndex == 2 || modeIndex == channelUserModeValue {
 			return true
@@ -426,8 +480,8 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(userPrefixForModeSymbol:)
 	public func userPrefix(forModeSymbol modeSymbol: String) -> String? {
-		guard let modeSymbols = userModeSymbols[IRCISupportUserModeSymbolsSymbolsKey],
-		      let characters = userModeSymbols[IRCISupportUserModeSymbolsCharactersKey]
+		guard let modeSymbols = userModeSymbols[IRCISupportUserModes.symbolsKey],
+		      let characters = userModeSymbols[IRCISupportUserModes.charactersKey]
 		else {
 			return nil
 		}
@@ -448,8 +502,8 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(modeSymbolForUserPrefix:)
 	public func modeSymbol(forUserPrefix character: String) -> String? {
-		guard let characters = userModeSymbols[IRCISupportUserModeSymbolsCharactersKey],
-		      let modeSymbols = userModeSymbols[IRCISupportUserModeSymbolsSymbolsKey]
+		guard let characters = userModeSymbols[IRCISupportUserModes.charactersKey],
+		      let modeSymbols = userModeSymbols[IRCISupportUserModes.symbolsKey]
 		else {
 			return nil
 		}
@@ -470,7 +524,7 @@ public class IRCISupportInfo: NSObject {
 
 	@objc(rankForUserPrefixWithMode:)
 	public func rankForUserPrefix(withMode modeSymbol: String) -> UInt {
-		guard let modeSymbols = userModeSymbols[IRCISupportUserModeSymbolsSymbolsKey] else {
+		guard let modeSymbols = userModeSymbols[IRCISupportUserModes.symbolsKey] else {
 			return 0
 		}
 
@@ -480,7 +534,7 @@ public class IRCISupportInfo: NSObject {
 			return 0
 		}
 
-		return UInt(IRCISupportInfoHighestUserPrefixRank) - UInt(modeSymbolIndex)
+		return IRCISupportUserModes.highestPrefixRank - UInt(modeSymbolIndex)
 	}
 
 	@objc(extractStatusMessagePrefixFromChannelNamed:)
@@ -539,188 +593,225 @@ public class IRCISupportInfo: NSObject {
 
 		return character
 	}
+}
 
-	private func prepareInitialState() {
+private extension IRCISupportInfo {
+	func prepareInitialState() {
 		reset()
 	}
 
-	private func processValueSegment(segmentKey: String, segmentValue: String) {
-		if segmentKey.caseInsensitiveCompare("AWAYLEN") == .orderedSame {
-			let awayLength = (segmentValue as NSString).integerValue
+	func processValueSegment(segmentKey: String, segmentValue: String) {
+		let normalizedKey = segmentKey.uppercased()
 
-			if awayLength > 0 {
-				maximumAwayLength = UInt(awayLength)
-			}
-		} else if segmentKey.caseInsensitiveCompare("CASEMAPPING") == .orderedSame {
-			parseCaseMapping(segmentValue)
-		} else if segmentKey.caseInsensitiveCompare("CHANLIMIT") == .orderedSame {
-			channelLimits = ISupportTokenParser.channelLimits(from: segmentValue)
-		} else if segmentKey.caseInsensitiveCompare("CHANMODES") == .orderedSame {
-			channelModes = ISupportTokenParser.channelModes(from: segmentValue, merging: channelModes)
-		} else if segmentKey.caseInsensitiveCompare("CHANNELLEN") == .orderedSame {
-			let channelNameLength = (segmentValue as NSString).integerValue
+		if processPositiveLengthValue(normalizedKey, value: segmentValue) {
+			return
+		}
 
-			if channelNameLength > 0 {
-				maximumChannelNameLength = UInt(channelNameLength)
-			}
-		} else if segmentKey.caseInsensitiveCompare("CHANTYPES") == .orderedSame {
-			let prefixes = segmentValue.characterStringBuffer
+		if processChannelValue(normalizedKey, value: segmentValue) {
+			return
+		}
 
-			if prefixes.isEmpty == false {
-				channelNamePrefixes = prefixes
-			}
-		} else if segmentKey.caseInsensitiveCompare("CHATHISTORY") == .orderedSame
-			|| segmentKey.caseInsensitiveCompare("draft/CHATHISTORY") == .orderedSame
-		{
-			let chatHistoryMaximumLines = (segmentValue as NSString).integerValue
+		processCollectionValue(normalizedKey, value: segmentValue)
+	}
 
-			if chatHistoryMaximumLines > 0 {
-				self.chatHistoryMaximumLines = UInt(chatHistoryMaximumLines)
-			}
-		} else if segmentKey.caseInsensitiveCompare("CLIENTTAGDENY") == .orderedSame {
-			clientTagDenyList = (segmentValue as NSString).split(",") as? [String] ?? []
-		} else if segmentKey.caseInsensitiveCompare("ELIST") == .orderedSame {
-			extendedListTokens = segmentValue.uppercased().characterStringBuffer
-		} else if segmentKey.caseInsensitiveCompare("EXTBAN") == .orderedSame {
-			let configuration = ISupportTokenParser.extendedBanConfiguration(from: segmentValue)
+	func processPositiveLengthValue(_ key: String, value: String) -> Bool {
+		guard let parsedValue = positiveInteger(from: value) else {
+			return false
+		}
+
+		switch key {
+		case "AWAYLEN":
+			maximumAwayLength = parsedValue
+		case "CHANNELLEN":
+			maximumChannelNameLength = parsedValue
+		case "CHATHISTORY", "DRAFT/CHATHISTORY":
+			chatHistoryMaximumLines = parsedValue
+		case "KEYLEN":
+			maximumKeyLength = parsedValue
+		case "KICKLEN":
+			maximumKickLength = parsedValue
+		case "LINELEN":
+			maximumLineLength = parsedValue
+		case "MAXTARGETS":
+			maximumTargets = parsedValue
+		case "MODES":
+			maximumModeCount = parsedValue
+		case "NICKLEN":
+			maximumNicknameLength = parsedValue
+		case "TOPICLEN":
+			maximumTopicLength = parsedValue
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	func processChannelValue(_ key: String, value: String) -> Bool {
+		switch key {
+		case "CASEMAPPING":
+			parseCaseMapping(value)
+		case "CHANMODES":
+			channelModes = ISupportTokenParser.channelModes(from: value, merging: channelModes)
+		case "CHANTYPES":
+			updateChannelNamePrefixes(from: value)
+		case "NETWORK":
+			networkName = value
+			networkNameFormatted = IRCISupportStrings.networkName(value)
+		case "PREFIX":
+			parseUserModeSymbols(value)
+		case "STATUSMSG":
+			statusMessageModeSymbols = value.map(String.init)
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	func processCollectionValue(_ key: String, value: String) {
+		switch key {
+		case "CHANLIMIT":
+			channelLimits = ISupportTokenParser.channelLimits(from: value)
+		case "CLIENTTAGDENY":
+			clientTagDenyList = value.components(separatedBy: ",")
+		case "ELIST":
+			extendedListTokens = value.uppercased().map(String.init)
+		case "EXTBAN":
+			let configuration = ISupportTokenParser.extendedBanConfiguration(from: value)
 			extendedBanPrefix = configuration.prefix
 			extendedBanTypes = configuration.types
-		} else if segmentKey.caseInsensitiveCompare("KEYLEN") == .orderedSame {
-			let maximumKeyLength = (segmentValue as NSString).integerValue
-
-			if maximumKeyLength > 0 {
-				self.maximumKeyLength = UInt(maximumKeyLength)
-			}
-		} else if segmentKey.caseInsensitiveCompare("KICKLEN") == .orderedSame {
-			let maximumKickLength = (segmentValue as NSString).integerValue
-
-			if maximumKickLength > 0 {
-				self.maximumKickLength = UInt(maximumKickLength)
-			}
-		} else if segmentKey.caseInsensitiveCompare("LINELEN") == .orderedSame {
-			let maximumLineLength = (segmentValue as NSString).integerValue
-
-			if maximumLineLength > 0 {
-				self.maximumLineLength = UInt(maximumLineLength)
-			}
-		} else if segmentKey.caseInsensitiveCompare("MAXLIST") == .orderedSame {
-			maximumListEntries = ISupportTokenParser.maximumListEntries(from: segmentValue)
-		} else if segmentKey.caseInsensitiveCompare("MAXTARGETS") == .orderedSame {
-			let maximumTargets = (segmentValue as NSString).integerValue
-
-			if maximumTargets > 0 {
-				self.maximumTargets = UInt(maximumTargets)
-			}
-		} else if segmentKey.caseInsensitiveCompare("MODES") == .orderedSame {
-			let maximumModesCount = (segmentValue as NSString).integerValue
-
-			if maximumModesCount > 0 {
-				maximumModeCount = UInt(maximumModesCount)
-			}
-		} else if segmentKey.caseInsensitiveCompare("NETWORK") == .orderedSame {
-			networkName = segmentValue
-			networkNameFormatted = LocalizedKey("IRC[8hg-7k]", segmentValue)
-		} else if segmentKey.caseInsensitiveCompare("NICKLEN") == .orderedSame {
-			let maximumNicknameLength = (segmentValue as NSString).integerValue
-
-			if maximumNicknameLength > 0 {
-				self.maximumNicknameLength = UInt(maximumNicknameLength)
-			}
-		} else if segmentKey.caseInsensitiveCompare("PREFIX") == .orderedSame {
-			parseUserModeSymbols(segmentValue)
-		} else if segmentKey.caseInsensitiveCompare("STATUSMSG") == .orderedSame {
-			statusMessageModeSymbols = segmentValue.characterStringBuffer
-		} else if segmentKey.caseInsensitiveCompare("TARGMAX") == .orderedSame {
-			maximumTargetsByCommand = ISupportTokenParser.maximumTargets(from: segmentValue)
-		} else if segmentKey.caseInsensitiveCompare("TOPICLEN") == .orderedSame {
-			let maximumTopicLength = (segmentValue as NSString).integerValue
-
-			if maximumTopicLength > 0 {
-				self.maximumTopicLength = UInt(maximumTopicLength)
-			}
+		case "MAXLIST":
+			maximumListEntries = ISupportTokenParser.maximumListEntries(from: value)
+		case "TARGMAX":
+			maximumTargetsByCommand = ISupportTokenParser.maximumTargets(from: value)
+		default:
+			break
 		}
 	}
 
-	private func processFlagSegment(segmentKey: String, segmentValue: String?, client: IRCClient?) {
-		if segmentKey.caseInsensitiveCompare("BOT") == .orderedSame {
-			if segmentValue?.isModeSymbol == true {
-				botModeSymbol = segmentValue
+	func positiveInteger(from value: String) -> UInt? {
+		let parsedValue = (value as NSString).integerValue
+		return parsedValue > 0 ? UInt(parsedValue) : nil
+	}
+
+	func updateChannelNamePrefixes(from value: String) {
+		let prefixes = value.map(String.init)
+
+		if prefixes.isEmpty == false {
+			channelNamePrefixes = prefixes
+		}
+	}
+
+	func processFlagSegment(segmentKey: String, segmentValue: String?, client: IRCClient?) {
+		let normalizedKey = segmentKey.uppercased()
+
+		if processModeFlag(normalizedKey, value: segmentValue) {
+			return
+		}
+
+		if processCapabilityFlag(normalizedKey, client: client) {
+			return
+		}
+
+		processAvailabilityFlag(normalizedKey, value: segmentValue)
+	}
+
+	func processModeFlag(_ key: String, value: String?) -> Bool {
+		switch key {
+		case "BOT":
+			if value?.isModeSymbol == true {
+				botModeSymbol = value
 			}
-		} else if segmentKey.caseInsensitiveCompare("CALLERID") == .orderedSame {
-			if segmentValue?.isModeSymbol == true {
-				callerIDModeSymbol = segmentValue
-			} else {
-				callerIDModeSymbol = "g"
-			}
-		} else if segmentKey.caseInsensitiveCompare("DEAF") == .orderedSame {
-			if segmentValue?.isModeSymbol == true {
-				deafModeSymbol = segmentValue
-			} else {
-				deafModeSymbol = "D"
-			}
-		} else if segmentKey.caseInsensitiveCompare("EXCEPTS") == .orderedSame {
-			if segmentValue?.isModeSymbol == true {
-				banExceptionModeSymbol = segmentValue
-			} else {
-				banExceptionModeSymbol = "e"
-			}
-		} else if segmentKey.caseInsensitiveCompare("INVEX") == .orderedSame {
-			if segmentValue?.isModeSymbol == true {
-				inviteExceptionModeSymbol = segmentValue
-			} else {
-				inviteExceptionModeSymbol = "I"
-			}
-		} else if segmentKey.caseInsensitiveCompare("MONITOR") == .orderedSame {
+		case "CALLERID":
+			callerIDModeSymbol = validatedModeSymbol(value, fallback: "g")
+		case "DEAF":
+			deafModeSymbol = validatedModeSymbol(value, fallback: "D")
+		case "EXCEPTS":
+			banExceptionModeSymbol = validatedModeSymbol(value, fallback: "e")
+		case "INVEX":
+			inviteExceptionModeSymbol = validatedModeSymbol(value, fallback: "I")
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	func validatedModeSymbol(_ value: String?, fallback: String) -> String {
+		guard let value, value.isModeSymbol else {
+			return fallback
+		}
+
+		return value
+	}
+
+	func processCapabilityFlag(_ key: String, client: IRCClient?) -> Bool {
+		switch key {
+		case "MONITOR":
 			client?.enableCapability(.monitorCommand)
-		} else if segmentKey.caseInsensitiveCompare("NAMESX") == .orderedSame {
-			if let client, client.isCapabilityEnabled(.multiPrefix) == false {
-				client.sendLine("PROTOCTL NAMESX")
-				client.enableCapability(.multiPrefix)
-			}
-		} else if segmentKey.caseInsensitiveCompare("SAFELIST") == .orderedSame {
-			safeListSupported = true
-		} else if segmentKey.caseInsensitiveCompare("SILENCE") == .orderedSame {
-			silenceSupported = true
-
-			if let segmentValue {
-				let maximumSilenceEntries = (segmentValue as NSString).integerValue
-
-				if maximumSilenceEntries > 0 {
-					self.maximumSilenceEntries = UInt(maximumSilenceEntries)
-				}
-			}
-		} else if segmentKey.caseInsensitiveCompare("UHNAMES") == .orderedSame {
-			if let client, client.isCapabilityEnabled(.userhostInNames) == false {
-				client.sendLine("PROTOCTL UHNAMES")
-				client.enableCapability(.userhostInNames)
-			}
-		} else if segmentKey.caseInsensitiveCompare("UTF8ONLY") == .orderedSame {
-			utf8Only = true
-		} else if segmentKey.caseInsensitiveCompare("WATCH") == .orderedSame {
+		case "NAMESX":
+			enableLegacyCapability(.multiPrefix, command: "PROTOCTL NAMESX", on: client)
+		case "UHNAMES":
+			enableLegacyCapability(.userhostInNames, command: "PROTOCTL UHNAMES", on: client)
+		case "WATCH":
 			client?.enableCapability(.watchCommand)
-		} else if segmentKey.caseInsensitiveCompare("WHOX") == .orderedSame {
+		default:
+			return false
+		}
+
+		return true
+	}
+
+	func enableLegacyCapability(
+		_ capability: ClientIRCv3SupportedCapability,
+		command: String,
+		on client: IRCClient?
+	) {
+		guard let client, client.isCapabilityEnabled(capability) == false else {
+			return
+		}
+
+		client.sendLine(command)
+		client.enableCapability(capability)
+	}
+
+	func processAvailabilityFlag(_ key: String, value: String?) {
+		switch key {
+		case "SAFELIST":
+			safeListSupported = true
+		case "SILENCE":
+			silenceSupported = true
+			if let value, let limit = positiveInteger(from: value) {
+				maximumSilenceEntries = limit
+			}
+		case "UTF8ONLY":
+			utf8Only = true
+		case "WHOX":
 			whoxSupported = true
+		default:
+			break
 		}
 	}
 
-	private func parseCaseMapping(_ caseMapping: String) {
+	func parseCaseMapping(_ caseMapping: String) {
 		if caseMapping.caseInsensitiveCompare("ascii") == .orderedSame {
-			self.caseMapping = .ASCII
+			self.caseMapping = .ascii
 		} else if caseMapping.caseInsensitiveCompare("strict-rfc1459") == .orderedSame {
 			self.caseMapping = .strictRFC1459
 		} else {
-			self.caseMapping = .RFC1459
+			self.caseMapping = .rfc1459
 		}
 	}
 
-	private func parseUserModeSymbols(_ modeString: String) {
+	func parseUserModeSymbols(_ modeString: String) {
 		guard let configuration = ISupportTokenParser.userPrefixConfiguration(from: modeString) else {
 			return
 		}
 
 		userModeSymbols = [
-			IRCISupportUserModeSymbolsSymbolsKey: configuration.modeSymbols,
-			IRCISupportUserModeSymbolsCharactersKey: configuration.characters,
+			IRCISupportUserModes.symbolsKey: configuration.modeSymbols,
+			IRCISupportUserModes.charactersKey: configuration.characters,
 		]
 
 		var updatedChannelModes = channelModes
@@ -732,13 +823,13 @@ public class IRCISupportInfo: NSObject {
 		channelModes = updatedChannelModes
 	}
 
-	private func extractCharacters(_ characters: [String], fromChannelNamed channel: String) -> String {
+	func extractCharacters(_ characters: [String], fromChannelNamed channel: String) -> String {
 		if channel.count < 2 {
 			return ""
 		}
 
 		for character in characters where channel.hasPrefix(character) {
-			let nextCharacter = (channel as NSString).stringCharacter(at: 1)
+			let nextCharacter = String(channel.dropFirst().prefix(1))
 
 			if channelNamePrefixes.contains(nextCharacter) {
 				return character

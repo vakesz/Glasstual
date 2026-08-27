@@ -36,30 +36,28 @@
  *********************************************************************** */
 
 import Foundation
+import GlasstualPluginKit
 
 @objc(TPIUserInsights)
-final class UserInsightsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable {
-	private var bundle: Bundle {
-		Bundle(for: UserInsightsPlugin.self)
-	}
-
+final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, @unchecked Sendable {
 	var subscribedUserInputCommands: [String] {
 		["clones", "namel", "finduser", "brag"]
 	}
 
-	func userInputCommandInvoked(on client: IRCClient, command commandString: String, messageString: String) {
-		let client = MainActorTransfer(value: client)
+	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
 		Task { @MainActor [weak self] in
-			self?.handleCommand(commandString, message: messageString, client: client.value)
+			self?.handleCommand(invocation)
 		}
 	}
 
 	@MainActor
-	private func handleCommand(_ command: String, message: String, client: IRCClient) {
-		guard let channel = NSObject.masterController().mainWindow.selectedChannel else { return }
+	private func handleCommand(_ invocation: PluginCommandInvocation) {
+		guard let channel = invocation.selectedChannel else { return }
+		let command = invocation.command
+		let client = invocation.client
 
 		if command == "BRAG" {
-			brag(in: channel, client: client)
+			brag(in: channel, client: client, connectedClients: invocation.connectedClients)
 			return
 		}
 		guard channel.isChannel else { return }
@@ -68,18 +66,26 @@ final class UserInsightsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		case "CLONES":
 			findClones(in: channel, client: client)
 		case "NAMEL":
-			listUsers(in: channel, client: client, parameters: message.trimmingCharacters(in: .whitespacesAndNewlines))
+			listUsers(
+				in: channel,
+				client: client,
+				parameters: invocation.message.trimmingCharacters(in: .whitespacesAndNewlines)
+			)
 		case "FINDUSER":
-			findUsers(matching: message.trimmingCharacters(in: .whitespacesAndNewlines), in: channel, client: client)
+			findUsers(
+				matching: invocation.message.trimmingCharacters(in: .whitespacesAndNewlines),
+				in: channel,
+				client: client
+			)
 		default:
 			break
 		}
 	}
 
-	private func listUsers(in channel: IRCChannel, client: IRCClient, parameters: String) {
-		var members = channel.memberList ?? []
+	private func listUsers(in channel: PluginChannel, client: PluginClient, parameters: String) {
+		var members = channel.members
 		guard members.isEmpty == false else {
-			client.printDebugInformation(localized("5dx-rs", channel.name), in: channel)
+			client.printDebug(localized(.BasicLanguage.noUsersInChannel(channel.name)), in: channel)
 			return
 		}
 
@@ -92,36 +98,36 @@ final class UserInsightsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		let result = members.map { member in
 			(displayRank ? member.mark : "") + member.user.nickname
 		}.joined(separator: " ") + " "
-		client.printDebugInformation(result, in: channel)
+		client.printDebug(result, in: channel)
 	}
 
-	private func findUsers(matching query: String, in channel: IRCChannel, client: IRCClient) {
+	private func findUsers(matching query: String, in channel: PluginChannel, client: PluginClient) {
 		let hasQuery = query.isEmpty == false
-		let matches = (channel.memberList ?? []).filter { member in
+		let matches = channel.members.filter { member in
 			guard let hostmask = member.user.hostmask else { return false }
 			return hasQuery == false || hostmask.localizedCaseInsensitiveContains(query)
 		}.sorted { $0.user.nickname.localizedCaseInsensitiveCompare($1.user.nickname) == .orderedAscending }
 
 		guard matches.isEmpty == false else {
 			let message = hasQuery
-				? localized("n1j-tp", channel.name, query)
-				: localized("1ab-27", channel.name)
-			client.printDebugInformation(message, in: channel)
+				? localized(.BasicLanguage.noHostmaskQueryMatches(channel.name, query))
+				: localized(.BasicLanguage.noHostmaskMatches(channel.name))
+			client.printDebug(message, in: channel)
 			return
 		}
 
 		let summary = hasQuery
-			? localized("oq7-mg", UInt(matches.count), channel.name, query)
-			: localized("nn7-6s", UInt(matches.count), channel.name)
-		client.printDebugInformation(summary, in: channel)
+			? localized(.BasicLanguage.hostmaskQueryMatchCount(UInt(matches.count), channel.name, query))
+			: localized(.BasicLanguage.hostmaskMatchCount(UInt(matches.count), channel.name))
+		client.printDebug(summary, in: channel)
 
 		for member in matches {
-			client.printDebugInformation("\(member.user.nickname) -> \(member.user.hostmask ?? "")", in: channel)
+			client.printDebug("\(member.user.nickname) -> \(member.user.hostmask ?? "")", in: channel)
 		}
 	}
 
-	private func findClones(in channel: IRCChannel, client: IRCClient) {
-		let grouped = Dictionary(grouping: (channel.memberList ?? []).compactMap { member -> (String, String)? in
+	private func findClones(in channel: PluginChannel, client: PluginClient) {
+		let grouped = Dictionary(grouping: channel.members.compactMap { member -> (String, String)? in
 			guard let address = member.user.address else { return nil }
 			return (address, member.user.nickname)
 		}, by: \.0)
@@ -131,29 +137,29 @@ final class UserInsightsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		}
 
 		guard clones.isEmpty == false else {
-			client.printDebugInformation(localized("gxq-47"), in: channel)
+			client.printDebug(localized(.BasicLanguage.noClones), in: channel)
 			return
 		}
 
-		client.printDebugInformation(localized("iaa-5v", UInt(clones.count), channel.name), in: channel)
+		client.printDebug(localized(.BasicLanguage.cloneCount(UInt(clones.count), channel.name)), in: channel)
 		for (address, nicknames) in clones.sorted(by: { $0.key < $1.key }) {
-			client.printDebugInformation("*!*@\(address) -> \(nicknames.joined(separator: ", "))", in: channel)
+			client.printDebug("*!*@\(address) -> \(nicknames.joined(separator: ", "))", in: channel)
 		}
 	}
 
-	private func brag(in channel: IRCChannel, client: IRCClient) {
+	private func brag(in channel: PluginChannel, client: PluginClient, connectedClients: [PluginClient]) {
 		var counts = BragCounts()
 
-		for currentClient in NSObject.masterController().world.clientList where currentClient.isConnected {
+		for currentClient in connectedClients where currentClient.isConnected {
 			counts.networks += 1
-			if currentClient.userIsIRCop || currentClient.myself?.isIRCop == true {
+			if currentClient.isIRCop || currentClient.localUser?.isIRCop == true {
 				counts.operators += 1
 			}
 
 			var trackedUsers = Set<String>()
-			for currentChannel in currentClient.channelList where currentChannel.isActive && currentChannel.isChannel {
+			for currentChannel in currentClient.channels where currentChannel.isActive && currentChannel.isChannel {
 				counts.channels += 1
-				guard let localMember = currentChannel.findMember(currentClient.userNickname) else { continue }
+				guard let localMember = currentChannel.member(named: currentClient.userNickname) else { continue }
 				let localRanks = localMember.ranks
 
 				if localRanks.contains(.channelOwner) || localRanks.contains(.superOperator) || localRanks
@@ -166,8 +172,8 @@ final class UserInsightsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 					counts.channelVoices += 1
 				}
 
-				for member in currentChannel.memberList ?? [] where member != localMember {
-					if hasPower(over: member, localRanks: localRanks, localClientIsOperator: currentClient.userIsIRCop),
+				for member in currentChannel.members where member != localMember {
+					if hasPower(over: member, localRanks: localRanks, localClientIsOperator: currentClient.isIRCop),
 					   trackedUsers.insert(member.user.nickname).inserted
 					{
 						counts.powerOverUsers += 1
@@ -176,21 +182,25 @@ final class UserInsightsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 			}
 		}
 
-		var result = pluralized("30l-sx", value: counts.channels)
-		result += pluralized("rks-0t", value: counts.networks)
+		var result = pluralized(.channels, value: counts.channels)
+		result += pluralized(.networks, value: counts.networks)
 		if counts.powerOverUsers == 0 {
-			result += localized("jpi-po")
+			result += localized(.BasicLanguage.bragNoPower)
 		} else {
-			result += pluralized("614-ac", value: counts.operators)
-			result += pluralized("qne-b5", value: counts.channelOperators)
-			result += pluralized("431-yv", value: counts.channelHalfOperators)
-			result += pluralized("x1m-jp", value: counts.channelVoices)
-			result += pluralized("ny4-wd", value: counts.powerOverUsers)
+			result += pluralized(.operators, value: counts.operators)
+			result += pluralized(.channelOperators, value: counts.channelOperators)
+			result += pluralized(.channelHalfOperators, value: counts.channelHalfOperators)
+			result += pluralized(.channelVoices, value: counts.channelVoices)
+			result += pluralized(.poweredUsers, value: counts.powerOverUsers)
 		}
-		client.sendPrivmsg(result, to: channel)
+		client.sendPrivateMessage(result, to: channel)
 	}
 
-	private func hasPower(over member: IRCChannelUser, localRanks: IRCUserRank, localClientIsOperator: Bool) -> Bool {
+	private func hasPower(
+		over member: PluginChannelMember,
+		localRanks: UserRank,
+		localClientIsOperator: Bool
+	) -> Bool {
 		let ranks = member.ranks
 		if localClientIsOperator, member.user.isIRCop == false {
 			return true
@@ -219,13 +229,41 @@ final class UserInsightsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		return false
 	}
 
-	private func pluralized(_ token: String, value: Int) -> String {
-		localized("\(token)-\(value == 1 ? 1 : 2)", value)
+	private func pluralized(_ metric: BragMetric, value: Int) -> String {
+		localized(metric.resource(value: value))
 	}
 
-	private func localized(_ key: String, _ arguments: CVarArg...) -> String {
-		let format = bundle.localizedString(forKey: key, value: nil, table: "BasicLanguage")
-		return arguments.isEmpty ? format : String(format: format, arguments: arguments)
+	private func localized(_ resource: LocalizedStringResource) -> String {
+		String(localized: resource)
+	}
+}
+
+private enum BragMetric {
+	case channelHalfOperators
+	case channelOperators
+	case channelVoices
+	case channels
+	case networks
+	case operators
+	case poweredUsers
+
+	func resource(value: Int) -> LocalizedStringResource {
+		switch self {
+		case .channelHalfOperators:
+			.BasicLanguage.bragChannelHalfOperatorCount(value)
+		case .channelOperators:
+			.BasicLanguage.bragChannelOperatorCount(value)
+		case .channelVoices:
+			.BasicLanguage.bragChannelVoiceCount(value)
+		case .channels:
+			.BasicLanguage.bragChannelCount(value)
+		case .networks:
+			.BasicLanguage.bragNetworkCount(value)
+		case .operators:
+			.BasicLanguage.bragOperatorCount(value)
+		case .poweredUsers:
+			.BasicLanguage.bragPoweredUserCount(value)
+		}
 	}
 }
 
@@ -237,10 +275,4 @@ private struct BragCounts {
 	var channels = 0
 	var networks = 0
 	var powerOverUsers = 0
-}
-
-/// Transfers an application-owned Objective-C object to the main actor, matching
-/// the plug-in callback contract used by the host application.
-private struct MainActorTransfer<Value>: @unchecked Sendable {
-	let value: Value
 }

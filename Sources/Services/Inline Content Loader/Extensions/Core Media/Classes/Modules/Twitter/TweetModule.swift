@@ -36,9 +36,10 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 
 @objc(ICMTweet)
-final class TweetModule: ICMInlineHTML {
+final class TweetModule: InlineHTMLModule {
 	private func loadTweetContents() {
 		var components = URLComponents(string: "https://publish.twitter.com/oembed")
 		components?.queryItems = [
@@ -47,36 +48,36 @@ final class TweetModule: ICMInlineHTML {
 			URLQueryItem(name: "omit_script", value: "true"),
 			URLQueryItem(name: "url", value: payload.address),
 		]
-		guard let url = components?.url else { return notifyUnableToPresent() }
+		guard let url = components?.url else { return notifyUnableToPresentHTML() }
 
-		ICLHelpers.requestJSONObject(
+		_ = InlineContentHelpers.requestJSONObject(
 			"html",
 			ofType: NSString.self,
 			inHierarchy: nil,
 			from: url
 		) { [weak self] object in
 			guard let self, let html = object as? String else {
-				self?.notifyUnableToPresent()
+				self?.notifyUnableToPresentHTML()
 				return
 			}
 			performAction(forHTML: html)
 		}
 	}
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		guard isTweet(url) else { return nil }
 		return { module in
 			(module as? TweetModule)?.loadTweetContents()
 		}
 	}
 
-	private class func isTweet(_ url: URL) -> Bool {
+	private static func isTweet(_ url: URL) -> Bool {
 		let components = url.path(percentEncoded: true).split(separator: "/", omittingEmptySubsequences: true)
 		guard components.count >= 3, components[1] == "status" else { return false }
 		return components[2].allSatisfy { $0.isASCII && $0.isNumber }
 	}
 
-	override class var domains: [String]? {
+	override static var domains: [String]? {
 		[
 			"twitter.com", "www.twitter.com", "mobile.twitter.com",
 			"x.com", "www.x.com", "mobile.x.com",

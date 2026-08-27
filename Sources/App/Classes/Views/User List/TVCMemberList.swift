@@ -36,23 +36,35 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import GlasstualPluginKit
 
 private let memberRowHeight: CGFloat = 28.0
 private let sectionHeaderRowHeight: CGFloat = 22.0
 private let memberViewIdentifier = NSUserInterfaceItemIdentifier("MemberView")
 private let sectionHeaderViewIdentifier = NSUserInterfaceItemIdentifier("HeaderView")
 
+@MainActor
+public protocol MemberListKeyEventDelegate: AnyObject {
+	func memberListKeyDown(_ event: NSEvent)
+}
+
 @objc(TVCMemberListSection)
 public final class MemberListSection: NSObject {
-	@objc public fileprivate(set) var rank: IRCUserRank = .none
+	public fileprivate(set) var rank: UserRank = .none
 	@objc public fileprivate(set) var title = ""
 	@objc public fileprivate(set) var memberRange = NSRange(location: 0, length: 0)
+
+	@objc(rank)
+	public var objectiveCRankRawValue: UInt {
+		rank.rawValue
+	}
 
 	override public init() {
 		super.init()
 	}
 
-	fileprivate init(rank: IRCUserRank, title: String, memberRange: NSRange) {
+	fileprivate init(rank: UserRank, title: String, memberRange: NSRange) {
 		self.rank = rank
 		self.title = title
 		self.memberRange = memberRange
@@ -67,7 +79,7 @@ public final class MemberListSection: NSObject {
 @objc(TVCMemberList)
 public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDelegate {
 	@objc public var isHiddenByUser = false
-	@objc public weak var keyDelegate: AnyObject?
+	public weak var keyDelegate: (any MemberListKeyEventDelegate)?
 
 	@IBOutlet public private(set) var memberListUserInfoPopover: MemberListUserInfoPopover!
 	@IBOutlet public private(set) var contentController: IRCChannelMemberListController!
@@ -287,34 +299,19 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	// MARK: - Sections and row geometry
 
-	private static func sectionRank(for member: ChannelUser) -> IRCUserRank {
-		if member.user.isIRCop, TPCPreferences.memberListSortFavorsServerStaff() {
+	private static func sectionRank(for member: ChannelUser) -> UserRank {
+		if member.user.isIRCop, TextualPreferences.memberListSortFavorsServerStaff() {
 			return .irCopByMode
 		}
 
 		return member.rank
 	}
 
-	private static func title(forSectionRank rank: IRCUserRank) -> String {
-		switch rank {
-		case .irCopByMode:
-			LocalizedKey("TVCMainWindow[mls-sf]")
-		case .channelOwner:
-			LocalizedKey("TVCMainWindow[mls-ow]")
-		case .superOperator:
-			LocalizedKey("TVCMainWindow[mls-ad]")
-		case .normalOperator:
-			LocalizedKey("TVCMainWindow[mls-op]")
-		case .halfOperator:
-			LocalizedKey("TVCMainWindow[mls-ho]")
-		case .voiced:
-			LocalizedKey("TVCMainWindow[mls-vo]")
-		default:
-			LocalizedKey("TVCMainWindow[mls-me]")
-		}
+	private static func title(forSectionRank rank: UserRank) -> String {
+		MainWindowStrings.MemberList.sectionTitle(for: rank)
 	}
 
-	private static func makeSection(rank: IRCUserRank, memberRange: NSRange) -> MemberListSection {
+	private static func makeSection(rank: UserRank, memberRange: NSRange) -> MemberListSection {
 		MemberListSection(rank: rank, title: title(forSectionRank: rank), memberRange: memberRange)
 	}
 
@@ -567,7 +564,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	@objc
 	private func scrollViewBoundsDidChange(_ notification: Notification) {
-		guard TPCPreferences.memberListUpdatesUserInfoPopoverOnScroll() else {
+		guard TextualPreferences.memberListUpdatesUserInfoPopoverOnScroll() else {
 			return
 		}
 		guard notification.object as AnyObject? === scrollViewContentView else {
@@ -615,7 +612,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 			return false
 		}
 
-		NSObject.masterController().menuController?.memberSendDroppedFiles(files, row: UInt(row))
+		NSObject.applicationController().menuController?.memberSendDroppedFiles(files, row: UInt(row))
 		return true
 	}
 
@@ -643,7 +640,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		guard row >= 0 else {
 			return
 		}
-		if skipOcclusionCheck == false, mainWindow?.isOccluded == true {
+		if skipOcclusionCheck == false, mainWindow?.ceIsOccluded == true {
 			return
 		}
 
@@ -658,7 +655,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	@objc(refreshDrawingForChangesToPreference:)
 	public func refreshDrawing(forChangesToPreference preferenceKey: String) {
-		let preferenceRanks: [String: IRCUserRank] = [
+		let preferenceRanks: [String: UserRank] = [
 			"User List Mode Badge Colors -> +y": .irCopByMode,
 			"User List Mode Badge Colors -> +q": .channelOwner,
 			"User List Mode Badge Colors -> +a": .superOperator,
@@ -675,7 +672,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		refreshDrawing(forMembersWithRank: rank, isIRCop: rank == .irCopByMode)
 	}
 
-	private func refreshDrawing(forMembersWithRank rank: IRCUserRank, isIRCop: Bool) {
+	private func refreshDrawing(forMembersWithRank rank: UserRank, isIRCop: Bool) {
 		for (index, member) in members.enumerated() {
 			let matchesRank = isIRCop ? member.user.isIRCop : member.ranks.contains(rank)
 			if matchesRank {
@@ -702,7 +699,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 	}
 
 	private func refreshForAppearanceChange() {
-		invalidateBackgroundForSelection()
+		invalidateSelectionBackground()
 		refreshAllDrawings(skipOcclusionCheck: true)
 		needsDisplay = true
 	}
@@ -749,10 +746,10 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		}
 
 		if selectedRowIndexes.contains(row) == false {
-			selectItem(at: UInt(row))
+			selectItem(at: row)
 		}
 
-		return NSObject.masterController().menuController?.userControlMenu
+		return NSObject.applicationController().menuController?.userControlMenu
 	}
 
 	override public func keyDown(with event: NSEvent) {
@@ -766,7 +763,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		case 123, 124, 116, 121: // left / right / page up / page down
 			break
 		default:
-			_ = keyDelegate.perform(NSSelectorFromString("memberListKeyDown:"), with: event)
+			keyDelegate.memberListKeyDown(event)
 		}
 	}
 }

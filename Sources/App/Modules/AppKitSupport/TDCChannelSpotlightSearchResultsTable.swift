@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 @objc(TDCChannelSpotlightSearchResultCellView)
 public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
@@ -20,6 +21,7 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 	@IBOutlet private var unreadCountDescriptionField: NSTextField!
 
 	private var observedChannel: IRCChannel?
+	private var channelObservations: [NSKeyValueObservation] = []
 
 	override public var wantsLayer: Bool {
 		get { true }
@@ -77,14 +79,16 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 			return NSAttributedString()
 		}
 
-		let paragraphStyle = NSParagraphStyle.default.mutableCopy() as! NSMutableParagraphStyle
+		guard let paragraphStyle = NSParagraphStyle.default.mutableCopy() as? NSMutableParagraphStyle else {
+			return NSAttributedString()
+		}
 		paragraphStyle.lineBreakMode = .byTruncatingTail
 
 		let channelName = channel.name
 		let channelNameFieldFont = channelNameField.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
 
 		let resultString = NSMutableAttributedString(
-			string: LocalizedKey("TDCChannelSpotlightController[jpw-cj]", channelName),
+			string: ChannelSpotlightStrings.channelName(channelName),
 			attributes: [
 				.font: channelNameFieldFont,
 				.paragraphStyle: paragraphStyle,
@@ -92,9 +96,9 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		)
 
 		let searchString = controller.searchString
-		(resultString.string as NSString).enumerateFirstOccurrenceOfCharacters(
-			in: searchString,
-			with: { range, _ in
+		(resultString.string as NSString).ce_enumerateFirstOccurrences(
+			ofCharactersIn: searchString,
+			using: { range, _ in
 				let boldFont = NSFontManager.shared.convert(channelNameFieldFont, toHaveTrait: .boldFontMask)
 				resultString.addAttribute(.font, value: boldFont, range: range)
 			},
@@ -103,7 +107,7 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 
 		let networkName = channel.associatedClient?.networkNameAlt ?? ""
 		resultString.append(
-			NSAttributedString(string: LocalizedKey("TDCChannelSpotlightController[z68-5q]", networkName))
+			NSAttributedString(string: ChannelSpotlightStrings.networkSuffix(networkName))
 		)
 
 		return resultString
@@ -153,33 +157,12 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		}
 
 		let nicknameHighlightCount = channel.nicknameHighlightCount
-		let nicknameHighlightCountDescription: String = if nicknameHighlightCount == 1 {
-			LocalizedKey(
-				"TDCChannelSpotlightController[0lz-oh]",
-				formattedNumber(Int(nicknameHighlightCount)) as String
-			)
-		} else {
-			LocalizedKey(
-				"TDCChannelSpotlightController[c4u-21]",
-				formattedNumber(Int(nicknameHighlightCount)) as String
-			)
-		}
+		let nicknameHighlightCountDescription = ChannelSpotlightStrings.highlights(Int(nicknameHighlightCount))
 
 		let unreadCount = channel.treeUnreadCount
-		let unreadCountDescription: String = if unreadCount == 1 {
-			LocalizedKey(
-				"TDCChannelSpotlightController[43s-x4]",
-				formattedNumber(Int(unreadCount)) as String
-			)
-		} else {
-			LocalizedKey(
-				"TDCChannelSpotlightController[vzj-30]",
-				formattedNumber(Int(unreadCount)) as String
-			)
-		}
+		let unreadCountDescription = ChannelSpotlightStrings.unreadMessages(Int(unreadCount))
 
-		return LocalizedKey(
-			"TDCChannelSpotlightController[et7-c5]",
+		return ChannelSpotlightStrings.combined(
 			nicknameHighlightCountDescription,
 			unreadCountDescription
 		)
@@ -202,14 +185,18 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		let channelName = channel.name
 		let networkName = channel.associatedClient?.networkNameAlt ?? ""
 		let label =
-			LocalizedKey("TDCChannelSpotlightController[jpw-cj]", channelName)
-				+ LocalizedKey("TDCChannelSpotlightController[z68-5q]", networkName)
+			ChannelSpotlightStrings.channelName(channelName)
+				+ ChannelSpotlightStrings.networkSuffix(networkName)
 
-		setAccessibilityLabel(LocalizedKey("TDCChannelSpotlightController[et7-c5]", label, unreadCountDescription))
+		setAccessibilityLabel(ChannelSpotlightStrings.combined(label, unreadCountDescription))
 	}
 
 	private var rowCell: ChannelSpotlightSearchResultRowView {
-		superview as! ChannelSpotlightSearchResultRowView
+		guard let rowCell = superview as? ChannelSpotlightSearchResultRowView else {
+			preconditionFailure("Search-result content must be hosted by its row view")
+		}
+
+		return rowCell
 	}
 
 	private var userInterfaceObjects: ChannelSpotlightAppearance {
@@ -239,10 +226,6 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		stopObservingChannel()
 	}
 
-	deinit {
-		stopObservingChannel()
-	}
-
 	private func updateObservedChannel() {
 		var channel: IRCChannel?
 
@@ -261,42 +244,26 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		}
 
 		observedChannel = channel
-
-		channel.addObserver(
-			self,
-			forKeyPath: "nicknameHighlightCount",
-			options: [.initial, .new],
-			context: nil
-		)
-		channel.addObserver(
-			self,
-			forKeyPath: "treeUnreadCount",
-			options: [.initial, .new],
-			context: nil
-		)
+		channelObservations = [
+			channel.observe(\.nicknameHighlightCount, options: [.initial, .new]) { [weak self] _, _ in
+				MainActor.assumeIsolated {
+					self?.unreadCountDescriptionChanged()
+				}
+			},
+			channel.observe(\.treeUnreadCount, options: [.initial, .new]) { [weak self] _, _ in
+				MainActor.assumeIsolated {
+					self?.unreadCountDescriptionChanged()
+				}
+			},
+		]
 
 		setInitialValues()
 	}
 
 	private func stopObservingChannel() {
-		guard let channel = observedChannel else {
-			return
-		}
-
-		channel.removeObserver(self, forKeyPath: "nicknameHighlightCount")
-		channel.removeObserver(self, forKeyPath: "treeUnreadCount")
+		channelObservations.forEach { $0.invalidate() }
+		channelObservations.removeAll()
 		observedChannel = nil
-	}
-
-	override public func observeValue(
-		forKeyPath keyPath: String?,
-		of _: Any?,
-		change _: [NSKeyValueChangeKey: Any]?,
-		context _: UnsafeMutableRawPointer?
-	) {
-		if keyPath == "nicknameHighlightCount" || keyPath == "treeUnreadCount" {
-			unreadCountDescriptionChanged()
-		}
 	}
 }
 
@@ -320,7 +287,7 @@ public final class ChannelSpotlightSearchResultRowView: NSTableRowView {
 
 	override public var isSelected: Bool {
 		didSet {
-			if isSelected == false, invalidatingBackgroundForSelection {
+			if isSelected == false, isInvalidatingSelectionBackground {
 				return
 			}
 

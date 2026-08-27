@@ -8,12 +8,54 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
+@objc public enum IRCAddressBookEntryType: UInt, Sendable {
+	case ignore = 0
+	case userTracking = 1
+	case mixed = 2
+}
+
+@objc public enum IRCAddressBookUserTrackingStatus: UInt, Sendable {
+	case unknown = 0
+	case signedOff = 1
+	case signedOn = 2
+	case available = 3
+	case notAvailable = 4
+	case away = 5
+	case notAway = 6
+}
+
 @objc(IRCAddressBookEntry)
-public class AddressBookEntry: XRPortablePropertyDict {
+public class AddressBookEntry: PortablePropertyDict {
 	fileprivate var ignoreClientToClientProtocolStorage = false
 	fileprivate var ignoreFileTransferRequestsStorage = false
 	fileprivate var ignoreGeneralEventMessagesStorage = false
@@ -106,7 +148,7 @@ public class AddressBookEntry: XRPortablePropertyDict {
 	}
 
 	@objc(initWithDictionary:)
-	override public required init(dictionary dic: [String: Any]) {
+	public required init(dictionary dic: [String: Any]) {
 		super.init(dictionary: dic)
 	}
 
@@ -174,7 +216,7 @@ public class AddressBookEntry: XRPortablePropertyDict {
 		}
 
 		if uniqueIdentifierStorage.isEmpty {
-			uniqueIdentifierStorage = NSString.withUUID()
+			uniqueIdentifierStorage = UUID().uuidString
 		}
 	}
 
@@ -192,7 +234,7 @@ public class AddressBookEntry: XRPortablePropertyDict {
 		let dictionary = dic as NSDictionary
 
 		var entryTypeValue: UInt = 0
-		dictionary.assignUnsignedInteger(to: &entryTypeValue, forKey: "entryType")
+		dictionary.ce_assignUnsignedInteger(to: &entryTypeValue, forKey: "entryType")
 		entryTypeStorage = IRCAddressBookEntryType(rawValue: entryTypeValue) ?? .ignore
 
 		if entryTypeStorage == .ignore || entryTypeStorage == .mixed {
@@ -249,39 +291,50 @@ public class AddressBookEntry: XRPortablePropertyDict {
 		matcherStorage?.matches(hostmask: hostmask) ?? false
 	}
 
-	override public func dictionaryValue(for target: XRPortablePropertyDictTarget) -> [String: Any] {
+	override public func dictionaryValue(for target: PortablePropertyDictTarget) -> [String: Any] {
 		let dic = NSMutableDictionary()
 
-		dic.maybeSetObject(hostmaskStorage, forKey: "hostmask")
-		dic.maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
+		dic.ce_maybeSetObject(hostmaskStorage, forKey: "hostmask")
+		dic.ce_maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
 
 		if entryTypeStorage == .ignore || entryTypeStorage == .mixed {
-			dic.setBool(ignoreClientToClientProtocolStorage, forKey: "ignoreClientToClientProtocol")
-			dic.setBool(ignoreFileTransferRequestsStorage, forKey: "ignoreFileTransferRequests")
-			dic.setBool(ignoreGeneralEventMessagesStorage, forKey: "ignoreGeneralEventMessages")
-			dic.setBool(ignoreInlineMediaStorage, forKey: "ignoreInlineMedia")
-			dic.setBool(ignoreNoticeMessagesStorage, forKey: "ignoreNoticeMessages")
-			dic.setBool(ignorePrivateMessageHighlightsStorage, forKey: "ignorePrivateMessageHighlights")
-			dic.setBool(ignorePrivateMessagesStorage, forKey: "ignorePrivateMessages")
-			dic.setBool(ignorePublicMessageHighlightsStorage, forKey: "ignorePublicMessageHighlights")
-			dic.setBool(ignorePublicMessagesStorage, forKey: "ignorePublicMessages")
+			dic.ce_setBool(ignoreClientToClientProtocolStorage, forKey: "ignoreClientToClientProtocol")
+			dic.ce_setBool(ignoreFileTransferRequestsStorage, forKey: "ignoreFileTransferRequests")
+			dic.ce_setBool(ignoreGeneralEventMessagesStorage, forKey: "ignoreGeneralEventMessages")
+			dic.ce_setBool(ignoreInlineMediaStorage, forKey: "ignoreInlineMedia")
+			dic.ce_setBool(ignoreNoticeMessagesStorage, forKey: "ignoreNoticeMessages")
+			dic.ce_setBool(ignorePrivateMessageHighlightsStorage, forKey: "ignorePrivateMessageHighlights")
+			dic.ce_setBool(ignorePrivateMessagesStorage, forKey: "ignorePrivateMessages")
+			dic.ce_setBool(ignorePublicMessageHighlightsStorage, forKey: "ignorePublicMessageHighlights")
+			dic.ce_setBool(ignorePublicMessagesStorage, forKey: "ignorePublicMessages")
 		}
 
 		if entryTypeStorage == .userTracking || entryTypeStorage == .mixed {
-			dic.setBool(trackUserActivityStorage, forKey: "trackUserActivity")
+			dic.ce_setBool(trackUserActivityStorage, forKey: "trackUserActivity")
 		}
 
-		dic.setUnsignedInteger(UInt(entryTypeStorage.rawValue), forKey: "entryType")
+		dic.ce_setUnsignedInteger(UInt(entryTypeStorage.rawValue), forKey: "entryType")
 
 		if target == .copy || target == .mutableCopy {
-			return dic as! [String: Any]
+			guard let values = dic as? [String: Any] else {
+				preconditionFailure("Address book dictionaries must use String keys")
+			}
+
+			return values
 		}
 
-		return dic.removingDefaults(defaultsStorage) as! [String: Any]
+		let compacted = dic.ce_dictionaryByRemovingDefaults(defaultsStorage as NSDictionary)
+		guard let values = compacted as? [String: Any] else {
+			preconditionFailure("Address book dictionaries must use String keys")
+		}
+
+		return values
 	}
 
 	override public func copy(asMutable mutableCopy: Bool, uniquing: Bool) -> Any {
-		let config = super.copy(asMutable: mutableCopy, uniquing: false) as! AddressBookEntry
+		guard let config = super.copy(asMutable: mutableCopy, uniquing: false) as? AddressBookEntry else {
+			preconditionFailure("AddressBookEntry copies must preserve their model type")
+		}
 
 		config.defaultsStorage = defaultsStorage
 		config.hostmaskRegularExpressionStorage = hostmaskRegularExpressionStorage
@@ -290,31 +343,31 @@ public class AddressBookEntry: XRPortablePropertyDict {
 		config.parentEntriesStorage = parentEntriesStorage
 
 		if uniquing {
-			config.uniqueIdentifierStorage = NSString.withUUID()
+			config.uniqueIdentifierStorage = UUID().uuidString
 		}
 
 		return config
 	}
 
-	override public var mutableClass: XRPortablePropertyDict {
-		unsafeBitCast(MutableAddressBookEntry.self, to: XRPortablePropertyDict.self)
+	override public var mutableClass: PortablePropertyDict {
+		unsafeBitCast(MutableAddressBookEntry.self, to: PortablePropertyDict.self)
 	}
 
 	private func assignBool(_ key: String, to storage: inout Bool, in dictionary: NSDictionary) {
-		var value = ObjCBool(storage)
-		dictionary.assignBool(to: &value, forKey: key)
-		storage = value.boolValue
+		var value = storage
+		dictionary.ce_assignBool(to: &value, forKey: key)
+		storage = value
 	}
 }
 
 @objc(IRCAddressBookEntryMutable)
 public final class MutableAddressBookEntry: AddressBookEntry {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyDict {
-		unsafeBitCast(AddressBookEntry.self, to: XRPortablePropertyDict.self)
+	override public var immutableClass: PortablePropertyDict {
+		unsafeBitCast(AddressBookEntry.self, to: PortablePropertyDict.self)
 	}
 
 	@objc override public var entryType: IRCAddressBookEntryType {

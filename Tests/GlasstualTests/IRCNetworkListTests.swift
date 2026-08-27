@@ -39,7 +39,7 @@ import XCTest
  *********************************************************************** */
 class IRCNetworkListTests: XCTestCase {
 	func testBundledListParses() {
-		let list = IRCNetworkList()
+		let list = NetworkList()
 
 		XCTAssertGreaterThan(list.listOfNetworks.count, 20)
 
@@ -55,7 +55,7 @@ class IRCNetworkListTests: XCTestCase {
 	}
 
 	func testBundledListIsSortedAlphabetically() {
-		let list = IRCNetworkList()
+		let list = NetworkList()
 		let networks = list.listOfNetworks
 
 		for index in networks.indices.dropFirst() {
@@ -72,7 +72,7 @@ class IRCNetworkListTests: XCTestCase {
 	}
 
 	func testPopularSubsetIsPresentAndOrdered() {
-		let list = IRCNetworkList()
+		let list = NetworkList()
 		let expected = [
 			"Libera.Chat",
 			"HybridIRC",
@@ -99,7 +99,7 @@ class IRCNetworkListTests: XCTestCase {
 	}
 
 	func testDeadNetworksAreGone() {
-		let list = IRCNetworkList()
+		let list = NetworkList()
 		let dead = [
 			"freenode",
 			"PonyChat",
@@ -116,15 +116,15 @@ class IRCNetworkListTests: XCTestCase {
 		]
 
 		for name in dead {
-			XCTAssertNil(list.networkNamed(name), "\(name) should have been removed")
+			XCTAssertNil(list.network(named: name), "\(name) should have been removed")
 		}
 
 		XCTAssertNil(list.network(withServerAddress: "chat.freenode.net"))
 	}
 
 	func testLiberaChatEntry() {
-		let list = IRCNetworkList()
-		guard let libera = list.networkNamed("libera.chat") else {
+		let list = NetworkList()
+		guard let libera = list.network(named: "libera.chat") else {
 			return XCTFail("Missing Libera.Chat")
 		}
 
@@ -146,8 +146,8 @@ class IRCNetworkListTests: XCTestCase {
 	}
 
 	func testHybridIRCEntry() {
-		let list = IRCNetworkList()
-		guard let hybridIRC = list.networkNamed("HybridIRC") else {
+		let list = NetworkList()
+		guard let hybridIRC = list.network(named: "HybridIRC") else {
 			return XCTFail("Missing HybridIRC")
 		}
 
@@ -162,8 +162,8 @@ class IRCNetworkListTests: XCTestCase {
 	}
 
 	func testHungarianDumaNetEntry() {
-		let list = IRCNetworkList()
-		guard let dumaNet = list.networkNamed("DumaNet") else {
+		let list = NetworkList()
+		guard let dumaNet = list.network(named: "DumaNet") else {
 			return XCTFail("Missing DumaNet")
 		}
 
@@ -181,8 +181,8 @@ class IRCNetworkListTests: XCTestCase {
 	}
 
 	func testNetworkWithoutServicesHidesAccountFields() {
-		let list = IRCNetworkList()
-		guard let efnet = list.networkNamed("EFnet") else {
+		let list = NetworkList()
+		guard let efnet = list.network(named: "EFnet") else {
 			return XCTFail("Missing EFnet")
 		}
 
@@ -193,18 +193,18 @@ class IRCNetworkListTests: XCTestCase {
 	}
 
 	func testEntryWithoutAddressIsRejected() {
-		let network = IRCNetwork(dictionary: ["name": "Nowhere"])
+		let network = Network(dictionary: ["name": "Nowhere"])
 
 		XCTAssertNil(network)
 	}
 
 	func testEntryDefaultsPortFromSecurity() {
-		let secured = IRCNetwork(dictionary: [
+		let secured = Network(dictionary: [
 			"name": "A",
 			"serverAddress": "a.example",
 			"prefersSecuredConnection": true,
 		])
-		let plain = IRCNetwork(dictionary: [
+		let plain = Network(dictionary: [
 			"name": "B",
 			"serverAddress": "b.example",
 		])
@@ -219,44 +219,44 @@ class IRCNetworkListTests: XCTestCase {
 	}
 
 	func testRegistrationParsing() {
-		XCTAssertEqual(IRCNetworkList.registration(from: "required"), .required)
-		XCTAssertEqual(IRCNetworkList.registration(from: "Optional"), .optional)
-		XCTAssertEqual(IRCNetworkList.registration(from: "none"), .none)
-		XCTAssertEqual(IRCNetworkList.registration(from: nil), .none)
-		XCTAssertEqual(IRCNetworkList.registration(from: "bogus"), .none)
+		XCTAssertEqual(NetworkList.registration(from: "required"), .required)
+		XCTAssertEqual(NetworkList.registration(from: "Optional"), .optional)
+		XCTAssertEqual(NetworkList.registration(from: "none"), .none)
+		XCTAssertEqual(NetworkList.registration(from: nil), .none)
+		XCTAssertEqual(NetworkList.registration(from: "bogus"), .none)
 	}
 
 	func testAccountFieldsVisibility() {
-		XCTAssertFalse(IRCNetworkList.accountFieldsApply(to:
+		XCTAssertFalse(NetworkList.accountFieldsApply(to:
 			.none,
 			saslSupported: false))
 
-		XCTAssertTrue(IRCNetworkList.accountFieldsApply(to: .none, saslSupported: true))
-		XCTAssertTrue(IRCNetworkList.accountFieldsApply(to:
+		XCTAssertTrue(NetworkList.accountFieldsApply(to: .none, saslSupported: true))
+		XCTAssertTrue(NetworkList.accountFieldsApply(to:
 			.optional,
 			saslSupported: false))
-		XCTAssertTrue(IRCNetworkList.accountFieldsApply(to:
+		XCTAssertTrue(NetworkList.accountFieldsApply(to:
 			.optional,
 			saslSupported: true))
-		XCTAssertTrue(IRCNetworkList.accountFieldsApply(to:
+		XCTAssertTrue(NetworkList.accountFieldsApply(to:
 			.required,
 			saslSupported: false))
-		XCTAssertTrue(IRCNetworkList.accountFieldsApply(to:
+		XCTAssertTrue(NetworkList.accountFieldsApply(to:
 			.required,
 			saslSupported: true))
 	}
 
 	func testOnboardingCompletedFlagRoundTrips() {
-		let original: Bool = TPCPreferences.onboardingCompleted()
+		let original: Bool = TextualPreferences.onboardingCompleted()
 
-		TPCPreferences.setOnboardingCompleted(false)
+		TextualPreferences.setOnboardingCompleted(false)
 
-		XCTAssertFalse(TPCPreferences.onboardingCompleted())
+		XCTAssertFalse(TextualPreferences.onboardingCompleted())
 
-		TPCPreferences.setOnboardingCompleted(true)
+		TextualPreferences.setOnboardingCompleted(true)
 
-		XCTAssertTrue(TPCPreferences.onboardingCompleted())
+		XCTAssertTrue(TextualPreferences.onboardingCompleted())
 
-		TPCPreferences.setOnboardingCompleted(original)
+		TextualPreferences.setOnboardingCompleted(original)
 	}
 }

@@ -36,20 +36,25 @@
  *********************************************************************** */
 
 import AppKit
+import GlasstualPluginKit
 import os
 
 @objc(TPI_Caffeine)
-final class CaffeinePlugin: NSObject, THOPluginProtocol, @unchecked Sendable {
+final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProviding, @unchecked Sendable {
 	private static let preventSleepPreference = "Private Extension Store -> Caffeine Extension -> Prevent Sleep"
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "Extension['\(Bundle(for: CaffeinePlugin.self).object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Caffeine")']"
+	)
 
 	@IBOutlet private var preferencesPane: NSView!
 
 	private var activity: NSObjectProtocol?
-	private var clientObservations: [ObjectIdentifier: NSKeyValueObservation] = [:]
-	private var clientListObserver: NSObjectProtocol?
+	private var connectionObservation: PluginObservation?
+	private var host: PluginHostContext?
 
 	private var shouldPreventSleepWhenConnected: Bool {
-		TPCPreferencesUserDefaults.shared().bool(forKey: Self.preventSleepPreference)
+		host?.defaults.bool(forKey: Self.preventSleepPreference) == true
 	}
 
 	private var bundle: Bundle {
@@ -59,79 +64,49 @@ final class CaffeinePlugin: NSObject, THOPluginProtocol, @unchecked Sendable {
 	private func disableSleep() {
 		guard activity == nil else { return }
 		activity = ProcessInfo.processInfo.beginActivity(options: .userInitiated, reason: "Disable sleep mode")
-		os_log("Disabled sleep mode", log: _THOPluginLoggingSubsystemForBundle(bundle), type: .default)
+		Self.logger.info("Disabled sleep mode")
 	}
 
 	private func enableSleep() {
 		guard let activity else { return }
 		ProcessInfo.processInfo.endActivity(activity)
 		self.activity = nil
-		os_log("Enabled sleep mode", log: _THOPluginLoggingSubsystemForBundle(bundle), type: .default)
+		Self.logger.info("Enabled sleep mode")
 	}
 
-	private func updateSleepState() {
-		let hasConnectedClient = clientObservations.keys.contains { identifier in
-			observedClients.first { ObjectIdentifier($0) == identifier }?.isLoggedIn == true
-		}
-		if hasConnectedClient {
+	private func updateSleepState(hasConnectedClient: Bool) {
+		if shouldPreventSleepWhenConnected, hasConnectedClient {
 			disableSleep()
 		} else {
 			enableSleep()
 		}
 	}
 
-	private var observedClients: [IRCClient] {
-		NSObject.masterController().world.clientList
-	}
-
-	private func rebuildObservedClients() {
-		guard shouldPreventSleepWhenConnected else {
-			clientObservations.removeAll()
-			enableSleep()
-			return
-		}
-
-		let clients = observedClients
-		let currentIdentifiers = Set(clients.map(ObjectIdentifier.init))
-		clientObservations = clientObservations.filter { currentIdentifiers.contains($0.key) }
-
-		for client in clients where clientObservations[ObjectIdentifier(client)] == nil {
-			clientObservations[ObjectIdentifier(client)] = client
-				.observe(\.isLoggedIn, options: [.new]) { [weak self] _, _ in
-					self?.updateSleepState()
-				}
-		}
-
-		updateSleepState()
+	private func refreshSleepState() {
+		updateSleepState(hasConnectedClient: host?.clients.contains(where: \.isLoggedIn) == true)
 	}
 
 	@IBAction private func toggledDisableSleepModeWhileConnected(_: Any?) {
-		rebuildObservedClients()
+		refreshSleepState()
 	}
 
-	func pluginLoadedIntoMemory() {
+	func pluginLoaded(using host: PluginHostContext) {
+		self.host = host
 		bundle.loadNibNamed("TPI_Caffeine", owner: self, topLevelObjects: nil)
-		clientListObserver = NotificationCenter.default.addObserver(
-			forName: .IRCWorldClientListWasModified,
-			object: nil,
-			queue: .main
-		) { [weak self] _ in
-			self?.rebuildObservedClients()
+		connectionObservation = host.observeConnectionState { [weak self] hasConnectedClient in
+			self?.updateSleepState(hasConnectedClient: hasConnectedClient)
 		}
-		rebuildObservedClients()
 	}
 
-	func pluginWillBeUnloadedFromMemory() {
-		if let clientListObserver {
-			NotificationCenter.default.removeObserver(clientListObserver)
-		}
-		clientListObserver = nil
-		clientObservations.removeAll()
+	func pluginWillUnload() {
+		connectionObservation?.cancel()
+		connectionObservation = nil
+		host = nil
 		enableSleep()
 	}
 
 	var pluginPreferencesPaneMenuItemName: String {
-		bundle.localizedString(forKey: "xqp-6g", value: nil, table: "BasicLanguage")
+		String(localized: .BasicLanguage.sleepModeManagement)
 	}
 
 	var pluginPreferencesPaneView: NSView {

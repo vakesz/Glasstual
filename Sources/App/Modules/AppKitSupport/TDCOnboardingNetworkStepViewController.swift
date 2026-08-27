@@ -22,11 +22,11 @@ public final class OnboardingNetworkStepViewController: OnboardingStepViewContro
 	private var channelsPlaceholder: NSTextField!
 
 	override public var stepTitle: String {
-		LocalizedKey("TDCOnboardingWindow[nw1-tt]")
+		OnboardingStrings.FirstNetwork.title
 	}
 
 	override public var stepSubtitle: String {
-		LocalizedKey("TDCOnboardingWindow[nw1-st]")
+		OnboardingStrings.FirstNetwork.subtitle
 	}
 
 	override public var preferredFirstResponder: NSView? {
@@ -44,13 +44,13 @@ public final class OnboardingNetworkStepViewController: OnboardingStepViewContro
 		let pickerView = picker.view
 
 		let connectCheck = NSButton(
-			checkboxWithTitle: LocalizedKey("TDCOnboardingWindow[nw1-cn]"),
+			checkboxWithTitle: OnboardingStrings.FirstNetwork.connectWhenFinished,
 			target: self,
 			action: #selector(connectCheckChanged(_:))
 		)
 		connectCheck.translatesAutoresizingMaskIntoConstraints = false
 
-		let channelsLabel = NSTextField(labelWithString: LocalizedKey("TDCOnboardingWindow[nw1-ch]"))
+		let channelsLabel = NSTextField(labelWithString: OnboardingStrings.FirstNetwork.suggestedChannelsLabel)
 		channelsLabel.translatesAutoresizingMaskIntoConstraints = false
 
 		let channelStack = NSStackView()
@@ -58,7 +58,9 @@ public final class OnboardingNetworkStepViewController: OnboardingStepViewContro
 		channelStack.spacing = 12
 		channelStack.translatesAutoresizingMaskIntoConstraints = false
 
-		let channelsPlaceholder = NSTextField(labelWithString: LocalizedKey("TDCOnboardingWindow[nw1-ep]"))
+		let channelsPlaceholder = NSTextField(
+			labelWithString: OnboardingStrings.FirstNetwork.suggestedChannelsPlaceholder
+		)
 		channelsPlaceholder.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
 		channelsPlaceholder.textColor = .secondaryLabelColor
 		channelsPlaceholder.translatesAutoresizingMaskIntoConstraints = false
@@ -166,7 +168,7 @@ public final class OnboardingNetworkStepViewController: OnboardingStepViewContro
 		var pickerError: NSString?
 		if picker.validateWithError(&pickerError) == false {
 			if let errorDescription {
-				errorDescription.pointee = pickerError ?? LocalizedKey("TDCOnboardingWindow[nw1-er]") as NSString
+				errorDescription.pointee = pickerError ?? OnboardingStrings.FirstNetwork.invalidNetwork as NSString
 			}
 
 			return false

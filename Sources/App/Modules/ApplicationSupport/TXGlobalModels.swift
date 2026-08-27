@@ -8,9 +8,35 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
 import Foundation
+import GlasstualPluginKit
 
 private let isoStandardDateFormatter: DateFormatter = {
 	let dateFormatter = DateFormatter()
@@ -35,7 +61,13 @@ public func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? 
 		return nil
 	}
 
-	return NSString(string: String(cString: outputBuffer))
+	let bytes = outputBuffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
+
+	guard let timestamp = String(bytes: bytes, encoding: .utf8) else {
+		return nil
+	}
+
+	return NSString(string: timestamp)
 }
 
 @_cdecl("TXHumanReadableTimeInterval")
@@ -44,65 +76,11 @@ public func humanReadableTimeInterval(
 	_ shortValue: Bool,
 	_ orderMatrix: UInt
 ) -> NSString? {
-	let units: NSCalendar.Unit = if orderMatrix == 0 {
-		[.year, .month, .day, .hour, .minute, .second]
-	} else {
-		NSCalendar.Unit(rawValue: orderMatrix)
-	}
-
-	let unitList: [NSCalendar.Unit] = [.year, .month, .day, .hour, .minute, .second].filter {
-		units.contains($0)
-	}
-
-	let systemCalendar = Calendar.current
-	let date1 = Date()
-	let date2 = Date(timeIntervalSinceNow: dateInterval)
-
-	let unitComponents = Set(unitList.map { Calendar.Component($0) })
-	let breakdownInfo = systemCalendar.dateComponents(unitComponents, from: date1, to: date2)
-
-	var returnResult: NSMutableString?
-
-	for (index, unit) in unitList.enumerated() {
-		let calendarUnit = Calendar.Component(unit)
-		var unitValue = breakdownInfo.value(for: calendarUnit) ?? 0
-
-		if unitValue == 0 {
-			continue
-		}
-
-		if unitValue < 0 {
-			unitValue *= -1
-		}
-
-		let languageKey = if unitValue == 1 {
-			"BasicLanguage[fko-64-\(unit.rawValue)]"
-		} else {
-			"BasicLanguage[eoq-pr-\(unit.rawValue)]"
-		}
-
-		let localizedUnit = LocalizedKey(languageKey)
-
-		if shortValue {
-			return NSString(format: "%ld %@", unitValue, localizedUnit)
-		}
-
-		if returnResult == nil {
-			returnResult = NSMutableString()
-		}
-
-		if index == unitList.count - 1 {
-			returnResult?.appendFormat("%ld %@", unitValue, localizedUnit)
-		} else {
-			returnResult?.appendFormat("%ld %@, ", unitValue, localizedUnit)
-		}
-	}
-
-	if let returnResult, returnResult.length > 0 {
-		return returnResult.copy() as? NSString
-	}
-
-	return NSString(format: "0 %@", LocalizedKey("BasicLanguage[eoq-pr-128]"))
+	PluginHost.humanReadableTimeInterval(
+		dateInterval,
+		shortValue: shortValue,
+		units: NSCalendar.Unit(rawValue: orderMatrix)
+	) as NSString
 }
 
 @_cdecl("TXFormatDateLongStyle")
@@ -172,26 +150,5 @@ public func randomNumber(_ maximum: UInt32) -> UInt {
 
 @_cdecl("TXFormattedNumber")
 public func formattedNumber(_ number: Int) -> NSString {
-	NumberFormatter.localizedString(from: NSNumber(value: number), number: .decimal) as NSString
-}
-
-private extension Calendar.Component {
-	init(_ unit: NSCalendar.Unit) {
-		switch unit {
-		case .year:
-			self = .year
-		case .month:
-			self = .month
-		case .day:
-			self = .day
-		case .hour:
-			self = .hour
-		case .minute:
-			self = .minute
-		case .second:
-			self = .second
-		default:
-			self = .second
-		}
-	}
+	PluginHost.formattedNumber(number) as NSString
 }

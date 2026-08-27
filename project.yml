@@ -1,9 +1,10 @@
 # Glasstual project specification for XcodeGen.
 #
-# Single source of truth for the Xcode project: targets, schemes, build
-# settings, Info.plist files, and entitlements. Regenerate after editing with:
+# Single source of truth for targets, schemes, build settings, generated
+# Info.plist files, signing, capabilities, and entitlements. Declare those
+# values here rather than editing the generated files. Regenerate with:
 #
-#   xcodegen generate
+#   xcodegen generate --spec project.yml
 #
 # Do not edit Glasstual.xcodeproj by hand.
 
@@ -30,7 +31,6 @@ configs:
 settings:
   base:
     # ---- Product identity -------------------------------------------------
-    GLASSTUAL_PRODUCT_NAME: Glasstual
     GLASSTUAL_BUNDLE_IDENTIFIER: com.vakesz.glasstual
     GLASSTUAL_GROUP_CONTAINER_IDENTIFIER: group.$(DEVELOPMENT_TEAM).$(GLASSTUAL_BUNDLE_IDENTIFIER)
     MARKETING_VERSION: "1.0.4"
@@ -49,26 +49,14 @@ settings:
     GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE: ""
     GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE: ""
 
-    GLASSTUAL_BUILD_HEADERS_DIR: $(BUILT_PRODUCTS_DIR)/GlasstualBuildHeaders
-    HEADER_SEARCH_PATHS:
-      - $(inherited)
-      - '"$(GLASSTUAL_BUILD_HEADERS_DIR)"'
-
     # ---- Platform ---------------------------------------------------------
     SDKROOT: macosx
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     ARCHS: arm64
     ONLY_ACTIVE_ARCH: YES
-    VALID_ARCHS: arm64
 
     # ---- Languages --------------------------------------------------------
-    GCC_C_LANGUAGE_STANDARD: gnu17
-    CLANG_CXX_LANGUAGE_STANDARD: gnu++20
     CLANG_ENABLE_MODULES: YES
-    CLANG_ENABLE_OBJC_ARC: YES
-    CLANG_ENABLE_OBJC_WEAK: YES
-    GCC_ENABLE_OBJC_EXCEPTIONS: YES
-    ENABLE_STRICT_OBJC_MSGSEND: YES
     GCC_NO_COMMON_BLOCKS: YES
     DEFINES_MODULE: YES
 
@@ -80,14 +68,13 @@ settings:
     SWIFT_EMIT_LOC_STRINGS: YES
 
     # ---- Warnings ---------------------------------------------------------
-    WARNING_CFLAGS: -Wall -Wextra -Wno-unused-parameter -Wobjc-circular-container -Winfinite-recursion
+    WARNING_CFLAGS: -Wall -Wextra -Wno-unused-parameter -Winfinite-recursion
     CLANG_WARN_ASSIGN_ENUM: YES
     CLANG_WARN_ATOMIC_IMPLICIT_SEQ_CST: YES
     CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING: YES
     CLANG_WARN_BOOL_CONVERSION: YES
     CLANG_WARN_COMMA: YES
     CLANG_WARN_CONSTANT_CONVERSION: YES
-    CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS: YES
     CLANG_WARN_DOCUMENTATION_COMMENTS: NO
     CLANG_WARN_EMPTY_BODY: YES
     CLANG_WARN_ENUM_CONVERSION: YES
@@ -95,8 +82,6 @@ settings:
     CLANG_WARN_INFINITE_RECURSION: YES
     CLANG_WARN_INT_CONVERSION: YES
     CLANG_WARN_NON_LITERAL_NULL_CONVERSION: YES
-    CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF: YES
-    CLANG_WARN_OBJC_LITERAL_CONVERSION: YES
     CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER: YES
     CLANG_WARN_RANGE_LOOP_ANALYSIS: YES
     CLANG_WARN_SEMICOLON_BEFORE_METHOD_BODY: YES
@@ -110,7 +95,6 @@ settings:
     GCC_WARN_ABOUT_MISSING_NEWLINE: YES
     GCC_WARN_ABOUT_RETURN_TYPE: YES
     GCC_WARN_TYPECHECK_CALLS_TO_PRINTF: YES
-    GCC_WARN_UNDECLARED_SELECTOR: YES
     GCC_WARN_UNINITIALIZED_AUTOS: YES
     GCC_WARN_UNUSED_FUNCTION: YES
     GCC_WARN_UNUSED_LABEL: YES
@@ -136,8 +120,8 @@ settings:
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     GCC_GENERATE_DEBUGGING_SYMBOLS: YES
     GENERATE_INFOPLIST_FILE: NO
-    LOCALIZATION_PREFERS_STRING_CATALOGS: NO
-    STRING_CATALOG_GENERATE_SYMBOLS: NO
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
     REMOVE_HEADERS_FROM_EMBEDDED_BUNDLES: YES
     EXTRACT_APP_INTENTS_METADATA: NO
     ENABLE_DEBUG_DYLIB: NO
@@ -172,6 +156,8 @@ settings:
       CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
 
 fileGroups:
+  - project.yml
+  - Makefile
   - README.md
 
 # ---------------------------------------------------------------------------
@@ -179,37 +165,43 @@ fileGroups:
 # ---------------------------------------------------------------------------
 
 targetTemplates:
-  # Shared dependency on BuildConfig.h generation. Targets add only what differs.
+  # Shared platform and generated version metadata.
   GlasstualTarget:
     platform: macOS
-    dependencies:
-      - target: BuildConfig
-        link: false
-        embed: false
+    info:
+      path: Generated/Xcode/${target_name}-Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+
+  # Shared metadata for loadable and test bundles.
+  GlasstualBundle:
+    templates: [GlasstualTarget]
+    info:
+      properties:
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: BNDL
 
   # Loadable bundles that resolve symbols from their host process at runtime.
   # BUNDLE_LOADER would introduce a dependency cycle (host embeds bundle,
   # bundle links against host), so undefined symbols are looked up dynamically.
   LoadableBundle:
-    templates: [GlasstualTarget]
+    templates: [GlasstualBundle]
     type: bundle
     settings:
       base:
         OTHER_LDFLAGS: -undefined dynamic_lookup
-        GCC_PREFIX_HEADER: ""
-        FRAMEWORK_SEARCH_PATHS:
-          - $(inherited)
-          - '"$(SRCROOT)/Sources/Frameworks/Static Libraries/Libraries"'
 
   # Plugins bundled in Glasstual.app/Contents/Resources/Bundled Extensions.
   GlasstualExtension:
     templates: [LoadableBundle]
+    info:
+      properties:
+        MinimumGlasstualVersion: 8.0.0
     settings:
       base:
-        HEADER_SEARCH_PATHS:
-          - $(inherited)
-          - "$(SRCROOT)/Sources/App/Classes/Headers/**"
-          - "$(SRCROOT)/Sources/Shared/Headers/**"
         LD_RUNPATH_SEARCH_PATHS:
           - $(inherited)
           - "@loader_path/../../../Frameworks"
@@ -223,14 +215,20 @@ targetTemplates:
   GlasstualXPCService:
     templates: [GlasstualTarget]
     type: xpc-service
+    info:
+      properties:
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: XPC!
+        XPCService:
+          ServiceType: Application
+    entitlements:
+      path: Generated/Xcode/${target_name}.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
     settings:
       base:
-        HEADER_SEARCH_PATHS:
-          - $(inherited)
-          - "$(SRCROOT)/Sources/Shared/Headers/**"
-        FRAMEWORK_SEARCH_PATHS:
-          - $(inherited)
-          - '"$(SRCROOT)/Sources/Frameworks/Static Libraries/Libraries"'
         LD_RUNPATH_SEARCH_PATHS:
           - $(inherited)
           - "@loader_path/../../../../Frameworks"
@@ -238,10 +236,17 @@ targetTemplates:
       - target: CocoaExtensions
         embed: false
 
-  # Vendored Codeux frameworks.
+  # Dynamic frameworks embedded by the application or an XPC service.
   GlasstualFramework:
     templates: [GlasstualTarget]
     type: framework
+    info:
+      properties:
+        CFBundleDevelopmentRegion: English
+        CFBundleExecutable: $(EXECUTABLE_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundlePackageType: FMWK
     settings:
       base:
         # Embedded frameworks are signed by the host's CodeSignOnCopy phase.
@@ -251,97 +256,36 @@ targetTemplates:
         SKIP_INSTALL: YES
         DYLIB_INSTALL_NAME_BASE: "@rpath"
         LD_RUNPATH_SEARCH_PATHS: "@loader_path/../Frameworks"
-        GCC_PRECOMPILE_PREFIX_HEADER: YES
-        GCC_SYMBOLS_PRIVATE_EXTERN: NO
+
+  # Swift emits .swiftmodule files directly. These targets have no umbrella
+  # headers, so do not ask Clang to synthesize or verify module maps for them.
+  PureSwiftFramework:
+    templates: [GlasstualFramework]
+    settings:
+      base:
+        DEFINES_MODULE: NO
+        ENABLE_MODULE_VERIFIER: NO
 
 # ---------------------------------------------------------------------------
 # Targets
 # ---------------------------------------------------------------------------
-
-aggregateTargets:
-  # Generates BuildConfig.h from build settings into
-  # $(GLASSTUAL_BUILD_HEADERS_DIR). Everything else depends on this target.
-  BuildConfig:
-    settings:
-      base:
-        CODE_SIGNING_ALLOWED: NO
-        CODE_SIGNING_REQUIRED: NO
-    buildScripts:
-      - name: Generate BuildConfig.h
-        shell: /bin/bash
-        basedOnDependencyAnalysis: false
-        inputFiles:
-          - $(SRCROOT)/project.yml
-        outputFiles:
-          - $(GLASSTUAL_BUILD_HEADERS_DIR)/BuildConfig.h
-        script: |
-          set -euo pipefail
-
-          : "${GLASSTUAL_BUILD_HEADERS_DIR:?must be set by XcodeGen}"
-          mkdir -p "${GLASSTUAL_BUILD_HEADERS_DIR}"
-
-          output="${GLASSTUAL_BUILD_HEADERS_DIR}/BuildConfig.h"
-          candidate="${TEMP_DIR}/BuildConfig.h.tmp"
-
-          {
-            echo "/* Generated by the BuildConfig target declared in project.yml. */"
-            echo
-            echo "#define TXBundleBuildProductName                  @\"${GLASSTUAL_PRODUCT_NAME}\""
-            echo "#define TXBundleBuildProductIdentifier            @\"${GLASSTUAL_BUNDLE_IDENTIFIER}\""
-            echo "#define TXBundleBuildProductIdentifierCString      \"${GLASSTUAL_BUNDLE_IDENTIFIER}\""
-            echo "#define TXBundleBuildGroupContainerIdentifier     @\"${GLASSTUAL_GROUP_CONTAINER_IDENTIFIER}\""
-            echo "#define TXBundleBuildVersion                      @\"${CURRENT_PROJECT_VERSION}\""
-            echo "#define TXBundleBuildVersionShort                 @\"${MARKETING_VERSION}\""
-          } > "${candidate}"
-
-          if cmp -s "${candidate}" "${output}"; then
-            rm -f "${candidate}"
-          else
-            mv -f "${candidate}" "${output}"
-            echo "Wrote ${output}"
-          fi
-
 
 targets:
 
   # ---- Frameworks ---------------------------------------------------------
 
   CocoaExtensions:
-    templates: [GlasstualFramework]
+    templates: [PureSwiftFramework]
     productName: CocoaExtensions
     settings:
       base:
         PRODUCT_NAME: CocoaExtensions
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.CocoaExtensions
-        GCC_PREFIX_HEADER: Sources/Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
-        MODULEMAP_PRIVATE_FILE: Sources/Frameworks/Cocoa Extensions/Classes/module.private.modulemap
     info:
-      path: Generated/Xcode/CocoaExtensions-Info.plist
       properties:
-        CFBundleDevelopmentRegion: English
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: FMWK
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSHumanReadableCopyright: Copyright © 2015 - 2020 Codeux Software, LLC. All rights reserved.
     sources:
       - path: Sources/Frameworks/Cocoa Extensions/Classes
-        excludes:
-          - CocoaExtensionsPrivate.h
-          - XRLoggingPrivate.h
-          - CocoaExtensions_Prefix.pch
-          - module.private.modulemap
-        headerVisibility: public
-      - path: Sources/Frameworks/Cocoa Extensions/Classes/CocoaExtensionsPrivate.h
-        headerVisibility: private
-      - path: Sources/Frameworks/Cocoa Extensions/Classes/XRLoggingPrivate.h
-        headerVisibility: private
-      - path: Sources/Frameworks/Cocoa Extensions/Classes/CocoaExtensions_Prefix.pch
-        buildPhase: none
-      - path: Sources/Frameworks/Cocoa Extensions/Classes/module.private.modulemap
-        buildPhase: none
       - path: Sources/Frameworks/Cocoa Extensions/Resources/Language Files
       - path: Sources/Frameworks/Cocoa Extensions/LICENSE.txt
         buildPhase: resources
@@ -349,8 +293,67 @@ targets:
         buildPhase: resources
     dependencies:
       - sdk: Foundation.framework
-      - sdk: Cocoa.framework
+      - sdk: AppKit.framework
       - sdk: Security.framework
+
+  Mustache:
+    templates: [PureSwiftFramework]
+    productName: Mustache
+    settings:
+      base:
+        PRODUCT_NAME: Mustache
+        PRODUCT_MODULE_NAME: Mustache
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.mustache
+    info:
+      properties:
+        NSHumanReadableCopyright: Copyright © 2024 Gwendal Roué
+    sources:
+      - path: Sources/Frameworks/Static Libraries/GRMustache/Sources
+      - path: Sources/Frameworks/Static Libraries/Documentation/LICENSE-GRMustache-Swift.txt
+        buildPhase: resources
+      - path: Sources/Frameworks/Static Libraries/Documentation/LICENSE-libmustache.txt
+        buildPhase: resources
+    dependencies:
+      - sdk: Foundation.framework
+      - sdk: CoreGraphics.framework
+
+  InlineContentKit:
+    templates: [PureSwiftFramework]
+    productName: InlineContentKit
+    settings:
+      base:
+        PRODUCT_NAME: InlineContentKit
+        PRODUCT_MODULE_NAME: InlineContentKit
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.inline-content-kit
+    info:
+      properties:
+        NSHumanReadableCopyright: Copyright © 2017, 2018 Codeux Software, LLC. All rights reserved.
+    sources:
+      - path: Sources/Frameworks/Inline Content Kit
+    dependencies:
+      - target: CocoaExtensions
+        embed: false
+      - target: Mustache
+        embed: false
+      - sdk: Foundation.framework
+      - sdk: ImageIO.framework
+
+  GlasstualPluginKit:
+    templates: [PureSwiftFramework]
+    productName: GlasstualPluginKit
+    settings:
+      base:
+        PRODUCT_NAME: GlasstualPluginKit
+        PRODUCT_MODULE_NAME: GlasstualPluginKit
+        PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.plugin-kit
+    info:
+      properties:
+        NSHumanReadableCopyright: Copyright © 2010 - 2026 Codeux Software, LLC. All rights reserved.
+    sources:
+      - path: Sources/Frameworks/Plugin Kit
+    dependencies:
+      - sdk: AppKit.framework
+      - sdk: Foundation.framework
 
   # ---- XPC services -------------------------------------------------------
 
@@ -362,35 +365,24 @@ targets:
         REGISTER_APP_GROUPS: YES
         PRODUCT_NAME: Scrollback History Manager
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.ScrollbackHistoryManager
-        GCC_PREFIX_HEADER: Sources/Services/Historic Log File Manager/Classes/Headers/Private/HSLHistoricLogPCHPrivate.h
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Services/Historic Log File Manager/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
       configs:
         Release:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_SCROLLBACK_PROVISIONING_PROFILE)
     info:
-      path: Generated/Xcode/HistoricLogFileManager-Info.plist
       properties:
         CFBundleDisplayName: Scrollback History Manager
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: XPC!
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
         NSHumanReadableCopyright: Copyright © 2016 - 2018 Codeux Software, LLC. All rights reserved.
-        XPCService:
-          ServiceType: Application
     entitlements:
-      path: Generated/Xcode/HistoricLogFileManager.entitlements
       properties:
-        com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
           - "$(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)"
     sources:
       - path: Sources/Services/Historic Log File Manager/Classes
       - path: Sources/Services/Historic Log File Manager/Resources
-      - path: Sources/Shared/Headers
+      - path: Sources/Shared/Application/ApplicationGroup.swift
       - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
+      - path: Sources/Shared/Services/HistoricLogProtocols.swift
       - path: Sources/Shared/Views/Channel View/TVCLogLineXPC.swift
     dependencies:
       - sdk: CoreData.framework
@@ -403,8 +395,6 @@ targets:
         REGISTER_APP_GROUPS: YES
         PRODUCT_NAME: Inline Content Loader
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader
-        GCC_PREFIX_HEADER: Sources/Services/Inline Content Loader/Classes/Headers/Private/ICLProcessPCHPrivate.h
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Services/Inline Content Loader/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
         # The Core Media plugin resolves symbols from this binary at runtime.
         DEAD_CODE_STRIPPING: NO
         GCC_SYMBOLS_PRIVATE_EXTERN: NO
@@ -413,22 +403,12 @@ targets:
         Release:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_INLINE_CONTENT_PROVISIONING_PROFILE)
     info:
-      path: Generated/Xcode/InlineContentLoader-Info.plist
       properties:
         CFBundleDisplayName: Inline Content Loader
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: XPC!
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
         NSHumanReadableCopyright: Copyright © 2017, 2018 Codeux Software, LLC. All rights reserved.
-        XPCService:
-          ServiceType: Application
     entitlements:
-      path: Generated/Xcode/InlineContentLoader.entitlements
       properties:
-        com.apple.security.app-sandbox: true
         com.apple.security.application-groups:
           - "$(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)"
         com.apple.security.network.client: true
@@ -436,7 +416,7 @@ targets:
       - path: Sources/Services/Inline Content Loader/Classes
       - path: Sources/Services/Inline Content Loader/Resources/Modules
         excludes:
-          # Loaded from the bundle root, not from Components (see ICMInlineImage.m).
+          # Loaded from the bundle root, not from Components (see InlineImageModule.swift).
           - InlineImageLiveResize.js
         buildPhase:
           copyFiles:
@@ -444,12 +424,13 @@ targets:
             subpath: Components
       - path: Sources/Services/Inline Content Loader/Resources/Modules/InlineImageLiveResize.js
         buildPhase: resources
-      - path: Sources/Shared/Headers
+      - path: Sources/Shared/Application/ApplicationGroup.swift
       - path: Sources/Shared/Preferences/TPCPreferences.swift
       - path: Sources/Shared/Preferences/TPCPreferencesUserDefaults.swift
+      - path: Sources/Shared/Services/InlineContentProtocols.swift
     dependencies:
       - sdk: ImageIO.framework
-      - framework: Sources/Frameworks/Static Libraries/Libraries/GRMustache.framework
+      - target: Mustache
         embed: false
       - target: InlineContentLoaderCoreMedia
         embed: true
@@ -457,6 +438,9 @@ targets:
         copy:
           destination: resources
           subpath: Extensions
+      - target: InlineContentKit
+        embed: true
+        codeSign: true
 
   InlineContentLoaderCoreMedia:
     templates: [LoadableBundle]
@@ -466,26 +450,13 @@ targets:
         PRODUCT_NAME: Core Media
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.InlineContentLoader.CoreMedia
         WRAPPER_EXTENSION: mediaPlugin
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Services/Inline Content Loader/Extensions/Core Media/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
-        HEADER_SEARCH_PATHS:
-          - $(inherited)
-          - '"$(SRCROOT)/Sources/Services/Inline Content Loader/Classes/Headers/**"'
-          - '"$(SRCROOT)/Sources/Services/Inline Content Loader/Classes/Modules/**"'
-          - "$(SRCROOT)/Sources/Shared/Headers/**"
         LD_RUNPATH_SEARCH_PATHS:
           - $(inherited)
           - "@loader_path/../../../../../../../Frameworks"
         PROVISIONING_PROFILE_SPECIFIER: ""
     info:
-      path: Generated/Xcode/InlineContentLoaderCoreMedia-Info.plist
       properties:
         CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: BNDL
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSHumanReadableCopyright: Copyright © 2017, 2018 Codeux Software, LLC. All rights reserved.
         NSPrincipalClass: ICPCoreMedia
     entitlements:
@@ -499,6 +470,10 @@ targets:
     dependencies:
       - target: CocoaExtensions
         embed: false
+      - target: Mustache
+        embed: false
+      - target: InlineContentKit
+        embed: false
 
   IRCRemoteConnectionManager:
     templates: [GlasstualXPCService]
@@ -507,37 +482,24 @@ targets:
       base:
         PRODUCT_NAME: IRC Connection Host
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.IRCConnectionHost
-        GCC_PREFIX_HEADER: Sources/Services/IRC Remote Connection Manager/Classes/Headers/Private/RCMProcessPCHPrivate.h
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Services/IRC Remote Connection Manager/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
       configs:
         Release:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_IRC_PROVISIONING_PROFILE)
     info:
-      path: Generated/Xcode/IRCRemoteConnectionManager-Info.plist
       properties:
         CFBundleDisplayName: IRC Connection Host
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: XPC!
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSHumanReadableCopyright: Copyright © 2017 - 2020 Codeux Software, LLC. All rights reserved.
-        XPCService:
-          ServiceType: Application
     entitlements:
-      path: Generated/Xcode/IRCRemoteConnectionManager.entitlements
       properties:
-        com.apple.security.app-sandbox: true
         com.apple.security.network.client: true
     sources:
       - path: Sources/Services/IRC Remote Connection Manager/Classes
       - path: Sources/Services/IRC Remote Connection Manager/Resources/Language Files
-      - path: Sources/Shared/Headers
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
       - path: Sources/Shared/Library/TLOLocalization.swift
       - path: Sources/Shared/Library/TLOTimer.swift
+      - path: Sources/Shared/Services/RemoteConnectionProtocols.swift
     dependencies:
       - sdk: Security.framework
       - sdk: SecurityInterface.framework
@@ -552,17 +514,8 @@ targets:
       base:
         PRODUCT_NAME: Caffeine
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.caffeine
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
-      path: Generated/Xcode/Caffeine-Info.plist
       properties:
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: BNDL
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        MinimumGlasstualVersion: 7.2.4
         NSHumanReadableCopyright: Copyright © 2015 - 2020 Codeux Software, LLC. All rights reserved.
         NSPrincipalClass: TPI_Caffeine
     sources:
@@ -570,6 +523,8 @@ targets:
       - path: Sources/Plugins/Caffeine/Resources
     dependencies:
       - target: CocoaExtensions
+        embed: false
+      - target: GlasstualPluginKit
         embed: false
 
   ChatFilter:
@@ -579,18 +534,9 @@ targets:
       base:
         PRODUCT_NAME: Chat Filters
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.chat-filter
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
-      path: Generated/Xcode/ChatFilter-Info.plist
       properties:
         CFBundleDevelopmentRegion: English
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: BNDL
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        MinimumGlasstualVersion: 7.2.4
         NSHumanReadableCopyright: Copyright © 2015 - 2020 Codeux Software, LLC. All rights reserved.
         NSPrincipalClass: TPI_ChatFilterExtension
     sources:
@@ -598,6 +544,8 @@ targets:
       - path: Sources/Plugins/Chat Filter/Resources
     dependencies:
       - target: CocoaExtensions
+        embed: false
+      - target: GlasstualPluginKit
         embed: false
 
   SmileyConverter:
@@ -607,17 +555,8 @@ targets:
       base:
         PRODUCT_NAME: Smiley Converter
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.smiley-converter
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
-      path: Generated/Xcode/SmileyConverter-Info.plist
       properties:
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: BNDL
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        MinimumGlasstualVersion: 7.2.4
         NSHumanReadableCopyright: Copyright © 2013 - 2020 Codeux Software, LLC. All rights reserved.
         NSPrincipalClass: TPISmileyConverter
     sources:
@@ -625,6 +564,8 @@ targets:
       - path: Sources/Plugins/Smiley Converter/Resources
     dependencies:
       - target: CocoaExtensions
+        embed: false
+      - target: GlasstualPluginKit
         embed: false
 
   SystemProfiler:
@@ -634,17 +575,8 @@ targets:
       base:
         PRODUCT_NAME: System Info
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.system-profiler
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/System Profiler/Classes/SystemProfiler.h
     info:
-      path: Generated/Xcode/SystemProfiler-Info.plist
       properties:
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: BNDL
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        MinimumGlasstualVersion: 7.2.4
         NSHumanReadableCopyright: Copyright © 2012 - 2020 Codeux Software, LLC. All rights reserved.
         NSPrincipalClass: TPISystemProfiler
     sources:
@@ -652,6 +584,8 @@ targets:
       - path: Sources/Plugins/System Profiler/Resources
     dependencies:
       - target: CocoaExtensions
+        embed: false
+      - target: GlasstualPluginKit
         embed: false
       - sdk: Metal.framework
 
@@ -662,17 +596,8 @@ targets:
       base:
         PRODUCT_NAME: User Insights
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.user-insights
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
-      path: Generated/Xcode/UserInsights-Info.plist
       properties:
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: BNDL
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        MinimumGlasstualVersion: 7.2.4
         NSHumanReadableCopyright: Copyright © 2013 - 2018 Codeux Software, LLC. All rights reserved.
         NSPrincipalClass: TPIUserInsights
     sources:
@@ -680,6 +605,8 @@ targets:
       - path: Sources/Plugins/User Insights/Resources
     dependencies:
       - target: CocoaExtensions
+        embed: false
+      - target: GlasstualPluginKit
         embed: false
       - sdk: CoreFoundation.framework
 
@@ -690,17 +617,8 @@ targets:
       base:
         PRODUCT_NAME: ZNC Additions
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.znc-additions
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/Plugins/SwiftBridgingHeader.h
     info:
-      path: Generated/Xcode/ZNCAdditions-Info.plist
       properties:
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: BNDL
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        MinimumGlasstualVersion: 7.2.4
         NSHumanReadableCopyright: Copyright © 2011 - 2018 Codeux Software, LLC. All rights reserved.
         NSPrincipalClass: TPI_ZNCAdditions
     sources:
@@ -708,6 +626,8 @@ targets:
       - path: Sources/Plugins/ZNC Additions/Resources
     dependencies:
       - target: CocoaExtensions
+        embed: false
+      - target: GlasstualPluginKit
         embed: false
       - sdk: Security.framework
       - sdk: SecurityInterface.framework
@@ -725,16 +645,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: $(GLASSTUAL_BUNDLE_IDENTIFIER)
         PRODUCT_MODULE_NAME: Glasstual
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        GCC_PREFIX_HEADER: Sources/App/Classes/Headers/Private/GlasstualPrivate.h
-        SWIFT_OBJC_BRIDGING_HEADER: Sources/App/Classes/Headers/Private/SwiftBridgingHeaderPrivate.h
-        HEADER_SEARCH_PATHS:
-          - $(inherited)
-          - "$(SRCROOT)/Sources/App/Classes/Headers/**"
-          - "$(SRCROOT)/Sources/Shared/Headers/**"
-          - "$(SRCROOT)/Sources/App/Classes/Dialogs/Onboarding"
-        FRAMEWORK_SEARCH_PATHS:
-          - $(inherited)
-          - '"$(SRCROOT)/Sources/Frameworks/Static Libraries/Libraries"'
         # Bundled extensions resolve symbols from this binary at runtime.
         DEAD_CODE_STRIPPING: NO
         GCC_SYMBOLS_PRIVATE_EXTERN: NO
@@ -743,7 +653,6 @@ targets:
         Release:
           PROVISIONING_PROFILE_SPECIFIER: $(GLASSTUAL_MAIN_PROVISIONING_PROFILE)
     info:
-      path: Generated/Xcode/Glasstual-Info.plist
       properties:
         CFBundleDisplayName: Glasstual
         CFBundleDocumentTypes:
@@ -765,7 +674,6 @@ targets:
         CFBundleInfoDictionaryVersion: "6.0"
         CFBundleName: $(PRODUCT_NAME)
         CFBundlePackageType: APPL
-        CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleURLTypes:
           - CFBundleTypeRole: Viewer
             CFBundleURLName: Internet Relay Chat
@@ -773,7 +681,7 @@ targets:
               - irc
               - ircs
               - glasstual
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
         ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.social-networking
         LSMinimumSystemVersion: "26.0"
@@ -803,27 +711,23 @@ targets:
         com.apple.security.print: true
     sources:
       - path: Sources/App/Classes
+      - path: Sources/App/Features
       - path: Sources/App/Modules
       - path: Sources/Shared
-      - path: Sources/Services/Inline Content Loader/Classes/Service/ICLPayload.swift
       # Resources -----------------------------------------------------------
       - path: Sources/App/Resources/Images
         excludes:
           - Application/AppIcon.icon
-          - DMG Canvas
       - path: Sources/App/Resources/Images/Application/AppIcon.icon
         type: file
         buildPhase: resources
       - path: Sources/App/Resources/Language Files
       - path: Sources/App/Resources/Property Lists
         excludes:
-          - Application Properties
           - Preferences
       - path: Sources/App/Resources/Property Lists/Preferences
-        buildPhase:
-          copyFiles:
-            destination: resources
-            subpath: Preferences
+        type: folder
+        buildPhase: resources
       - path: Sources/App/Resources/Scripting/Script Files/Bundled Scripts
         type: folder
       - path: Sources/App/Resources/Styling/Bundled Styles
@@ -833,13 +737,9 @@ targets:
       - path: Sources/App/Resources/Styling/Style Default Templates
         type: folder
       - path: Sources/App/Resources/User Interface
-        excludes:
-          - "Appearance/*Template.plist"
-      - path: Documentation/Acknowledgements.pdf
-        buildPhase:
-          copyFiles:
-            destination: resources
-            subpath: Documentation
+      - path: Sources/App/Resources/Documentation
+        type: folder
+        buildPhase: resources
 
     dependencies:
       - sdk: AudioToolbox.framework
@@ -856,7 +756,13 @@ targets:
       - target: CocoaExtensions
         embed: true
         codeSign: true
-      - framework: Sources/Frameworks/Static Libraries/Libraries/GRMustache.framework
+      - target: InlineContentKit
+        embed: true
+        codeSign: true
+      - target: GlasstualPluginKit
+        embed: true
+        codeSign: true
+      - target: Mustache
         embed: true
         codeSign: true
       - target: HistoricLogFileManager
@@ -910,33 +816,16 @@ targets:
   # Unit tests run inside Glasstual.app so that they can use the app's
   # classes directly. Tests never touch the network.
   GlasstualTests:
-    templates: [GlasstualTarget]
+    templates: [GlasstualBundle]
     type: bundle.unit-test
     productName: GlasstualTests
     settings:
       base:
         PRODUCT_NAME: GlasstualTests
-        SWIFT_OBJC_BRIDGING_HEADER: Tests/GlasstualTests/SwiftBridgingHeader.h
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.tests
-        GCC_PREFIX_HEADER: Sources/App/Classes/Headers/Private/GlasstualPrivate.h
-        HEADER_SEARCH_PATHS:
-          - $(inherited)
-          - "$(SRCROOT)/Sources/App/Classes/Headers/**"
-          - "$(SRCROOT)/Sources/Shared/Headers/**"
-          - "$(SRCROOT)/Sources/App/Classes/Dialogs/Onboarding"
-        FRAMEWORK_SEARCH_PATHS:
-          - $(inherited)
-          - '"$(SRCROOT)/Sources/Frameworks/Static Libraries/Libraries"'
     info:
-      path: Generated/Xcode/GlasstualTests-Info.plist
       properties:
         CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
-        CFBundleExecutable: $(EXECUTABLE_NAME)
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleName: $(PRODUCT_NAME)
-        CFBundlePackageType: BNDL
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
     # Sandboxed hosts require the injected bundle to share the host's
     # entitlements.
     entitlements:
@@ -949,6 +838,10 @@ targets:
     dependencies:
       - target: Glasstual
       - target: CocoaExtensions
+        embed: false
+      - target: InlineContentKit
+        embed: false
+      - target: GlasstualPluginKit
         embed: false
 
 # ---------------------------------------------------------------------------
@@ -969,7 +862,7 @@ schemes:
       targets:
         - GlasstualTests
     profile:
-      config: Debug
+      config: Release
     analyze:
       config: Debug
     archive:

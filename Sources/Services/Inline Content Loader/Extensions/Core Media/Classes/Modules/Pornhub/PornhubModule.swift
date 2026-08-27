@@ -36,9 +36,11 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
+import Mustache
 
 @objc(ICMPornhub)
-final class PornhubModule: ICMInlineVideoFoundation {
+final class PornhubModule: InlineVideoFoundation {
 	private func performAction(forVideo identifier: String) {
 		let attributes: [String: Any] = [
 			"uniqueIdentifier": payload.uniqueIdentifier,
@@ -46,21 +48,21 @@ final class PornhubModule: ICMInlineVideoFoundation {
 		]
 		guard let template else { return cancel() }
 		do {
-			payload.html = try template.renderObject(attributes)
+			payload.html = try template.render(attributes)
 			finalize()
 		} catch {
 			finalizeWithError(error)
 		}
 	}
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		guard let identifier = videoIdentifier(for: url) else { return nil }
 		return { module in
 			(module as? PornhubModule)?.performAction(forVideo: identifier)
 		}
 	}
 
-	private class func videoIdentifier(for url: URL) -> String? {
+	private static func videoIdentifier(for url: URL) -> String? {
 		guard url.path(percentEncoded: true).hasPrefix("/view_video.php") else { return nil }
 		let identifier = URLComponents(url: url, resolvingAgainstBaseURL: false)?
 			.queryItems?
@@ -72,11 +74,11 @@ final class PornhubModule: ICMInlineVideoFoundation {
 		return identifier
 	}
 
-	override class var domains: [String]? {
+	override static var domains: [String]? {
 		["pornhub.com", "www.pornhub.com", "pornhubpremium.com", "www.pornhubpremium.com"]
 	}
 
-	override class var contentNotSafeForWork: Bool {
+	override static var contentNotSafeForWork: Bool {
 		true
 	}
 

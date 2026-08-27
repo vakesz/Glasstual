@@ -35,36 +35,59 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
 
-private enum ConnectionDefaults {
-	static let serverPort: UInt16 = 6667
-	static let proxyPort: UInt16 = 1080
-	static let floodDelay: UInt = 2
-	static let floodMaximum: UInt = 6
+/// Raw values are persisted. Values 4 and 7 are retired and must not be reused.
+@objc
+public enum IRCConnectionProxyType: UInt {
+	case none = 0
+	case automatic = 1
+	case socks5 = 5
+	case HTTP = 6
+	case tor = 8
+}
+
+/// Controls which IP address families Network.framework may use.
+@objc
+public enum IRCConnectionAddressType: UInt {
+	case `default` = 0
+	case v4 = 1
+	case v6 = 2
+}
+
+public enum IRCConnectionDefaults {
+	public static let serverPort: UInt16 = 6667
+	public static let proxyPort: UInt16 = 1080
+	public static let floodControlDelayInterval: UInt = 2
+	public static let minimumFloodControlDelayInterval: UInt = 1
+	public static let maximumFloodControlDelayInterval: UInt = 60
+	public static let floodControlMaximumMessages: UInt = 6
+	public static let minimumFloodControlMaximumMessages: UInt = 1
+	public static let maximumFloodControlMaximumMessages: UInt = 60
 }
 
 @objc(IRCConnectionConfig)
 @objcMembers
-open class IRCConnectionConfig: XRPortablePropertyObject {
+open class IRCConnectionConfig: PortablePropertyObject {
 	fileprivate var addressTypeStorage = IRCConnectionAddressType.default
 	fileprivate var prefersModernCiphersStorage = false
 	fileprivate var prefersSecureConnectionStorage = false
 	fileprivate var validatesCertificateChainStorage = false
-	fileprivate var floodDelayStorage = ConnectionDefaults.floodDelay
-	fileprivate var floodMaximumStorage = ConnectionDefaults.floodMaximum
+	fileprivate var floodDelayStorage = IRCConnectionDefaults.floodControlDelayInterval
+	fileprivate var floodMaximumStorage = IRCConnectionDefaults.floodControlMaximumMessages
 	fileprivate var identityCertificateStorage: Data?
 	fileprivate var proxyAddressStorage: String?
 	fileprivate var proxyPasswordStorage: String?
-	fileprivate var proxyPortStorage = ConnectionDefaults.proxyPort
+	fileprivate var proxyPortStorage = IRCConnectionDefaults.proxyPort
 	fileprivate var proxyTypeStorage = IRCConnectionProxyType.none
 	fileprivate var proxyUsernameStorage: String?
 	fileprivate var serverAddressStorage = ""
-	fileprivate var serverPortStorage = ConnectionDefaults.serverPort
+	fileprivate var serverPortStorage = IRCConnectionDefaults.serverPort
 	fileprivate var primaryEncodingStorage: UInt = 0
 	fileprivate var fallbackEncodingStorage: UInt = 0
-	fileprivate var cipherSuitesStorage = RCMCipherSuiteCollection.default
+	fileprivate var cipherSuitesStorage = CipherSuiteCollection.default
 
 	open var addressType: IRCConnectionAddressType {
 		addressTypeStorage
@@ -130,7 +153,7 @@ open class IRCConnectionConfig: XRPortablePropertyObject {
 		fallbackEncodingStorage
 	}
 
-	open var cipherSuites: RCMCipherSuiteCollection {
+	open var cipherSuites: CipherSuiteCollection {
 		cipherSuitesStorage
 	}
 
@@ -146,7 +169,7 @@ open class IRCConnectionConfig: XRPortablePropertyObject {
 		true
 	}
 
-	override open func populate(withDecoder decoder: NSCoder) -> Bool {
+	override open func populate(with decoder: NSCoder) -> Bool {
 		addressTypeStorage = IRCConnectionAddressType(rawValue: decoder.decodeUInt(forKey: "addressType")) ?? .default
 		prefersModernCiphersStorage = decoder.decodeBool(forKey: "connectionPrefersModernCiphersOnly")
 		prefersSecureConnectionStorage = decoder.decodeBool(forKey: "connectionPrefersSecuredConnection")
@@ -166,7 +189,7 @@ open class IRCConnectionConfig: XRPortablePropertyObject {
 		serverPortStorage = UInt16(truncatingIfNeeded: decoder.decodeUInt(forKey: "serverPort"))
 		primaryEncodingStorage = decoder.decodeUInt(forKey: "primaryEncoding")
 		fallbackEncodingStorage = decoder.decodeUInt(forKey: "fallbackEncoding")
-		cipherSuitesStorage = RCMCipherSuiteCollection(rawValue: decoder.decodeUInt(forKey: "cipherSuites")) ?? .default
+		cipherSuitesStorage = CipherSuiteCollection(rawValue: decoder.decodeUInt(forKey: "cipherSuites")) ?? .default
 		applyMissingDefaults()
 		return true
 	}
@@ -224,22 +247,22 @@ open class IRCConnectionConfig: XRPortablePropertyObject {
 		return object
 	}
 
-	override open var mutableClass: XRPortablePropertyObject {
+	override open var mutableClass: PortablePropertyObject {
 		IRCConnectionConfigMutable()
 	}
 
 	private func applyMissingDefaults() {
 		if proxyPortStorage == 0 {
-			proxyPortStorage = ConnectionDefaults.proxyPort
+			proxyPortStorage = IRCConnectionDefaults.proxyPort
 		}
 		if serverPortStorage == 0 {
-			serverPortStorage = ConnectionDefaults.serverPort
+			serverPortStorage = IRCConnectionDefaults.serverPort
 		}
 		if floodDelayStorage == 0 {
-			floodDelayStorage = ConnectionDefaults.floodDelay
+			floodDelayStorage = IRCConnectionDefaults.floodControlDelayInterval
 		}
 		if floodMaximumStorage == 0 {
-			floodMaximumStorage = ConnectionDefaults.floodMaximum
+			floodMaximumStorage = IRCConnectionDefaults.floodControlMaximumMessages
 		}
 	}
 
@@ -335,15 +358,15 @@ public final class IRCConnectionConfigMutable: IRCConnectionConfig {
 		get { fallbackEncodingStorage } set { fallbackEncodingStorage = newValue }
 	}
 
-	override public var cipherSuites: RCMCipherSuiteCollection {
+	override public var cipherSuites: CipherSuiteCollection {
 		get { cipherSuitesStorage } set { cipherSuitesStorage = newValue }
 	}
 
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyObject {
+	override public var immutableClass: PortablePropertyObject {
 		IRCConnectionConfig()
 	}
 }

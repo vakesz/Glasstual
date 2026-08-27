@@ -23,13 +23,13 @@ private let importExportLogger = Logger(
 @MainActor
 public final class PreferencesImportExport: NSObject {
 	@objc(importInWindow:)
-	public class func `import`(in window: NSWindow) {
+	public static func `import`(in window: NSWindow) {
 		TDCAlert.alertSheet(
 			with: window,
-			body: LocalizedKey("Prompts[jsh-1a]"),
-			title: LocalizedKey("Prompts[itb-3x]"),
-			defaultButton: LocalizedKey("Prompts[502-6h]"),
-			alternateButton: LocalizedKey("Prompts[qso-2g]"),
+			body: PromptStrings.ConfigurationTransfer.importBody,
+			title: PromptStrings.ConfigurationTransfer.importTitle,
+			defaultButton: PromptStrings.Action.chooseFile,
+			alternateButton: PromptStrings.Action.cancel,
 			otherButton: nil,
 			completionBlock: { buttonClicked, _, _ in
 				importPreflight(buttonClicked, in: window)
@@ -37,7 +37,7 @@ public final class PreferencesImportExport: NSObject {
 		)
 	}
 
-	private class func importPreflight(_ buttonPressed: TDCAlertResponse, in window: NSWindow) {
+	private static func importPreflight(_ buttonPressed: TDCAlertResponse, in window: NSWindow) {
 		guard buttonPressed == .default else {
 			return
 		}
@@ -60,22 +60,22 @@ public final class PreferencesImportExport: NSObject {
 	}
 
 	@objc(importPostflightBackupPreferences)
-	public class func importPostflightBackupPreferences() -> Bool {
+	public static func importPostflightBackupPreferences() -> Bool {
 		let backupPath = NSHomeDirectory().appending(
-			"/Glasstual-importBackup-\(NSString.withUUID()).plist"
+			"/Glasstual-importBackup-\(UUID().uuidString).plist"
 		)
 
 		return exportPostflight(forPath: backupPath, filterJunk: false)
 	}
 
 	@objc(importPostflight:)
-	public class func importPostflight(_ pathURL: URL) {
+	public static func importPostflight(_ pathURL: URL) {
 		DispatchQueue.main.async {
 			importPostflightOnMain(pathURL)
 		}
 	}
 
-	private class func importPostflightOnMain(_ pathURL: URL) {
+	private static func importPostflightOnMain(_ pathURL: URL) {
 		guard importPostflightBackupPreferences() else {
 			return
 		}
@@ -102,10 +102,10 @@ public final class PreferencesImportExport: NSObject {
 			return
 		}
 
-		let mainWindow = NSObject.masterController().mainWindow!
-		mainWindow.loadingScreen?.showProgressView(withReason: LocalizedKey("TVCMainWindow[5g1-i9]"))
+		let mainWindow = NSObject.applicationController().mainWindow!
+		mainWindow.loadingScreen?.showProgressView(withReason: MainWindowStrings.Loading.preferences)
 
-		NSObject.masterController().world.isImportingConfiguration = true
+		NSObject.applicationController().world.isImportingConfiguration = true
 		mainWindow.serverList?.beginUpdates()
 
 		importContentsOfDictionary(dictionary, reloadPreferences: false)
@@ -116,14 +116,14 @@ public final class PreferencesImportExport: NSObject {
 	}
 
 	@objc(importContentsOfDictionary:)
-	public class func importContentsOfDictionary(_ dictionary: [String: Any]) {
+	public static func importContentsOfDictionary(_ dictionary: [String: Any]) {
 		importContentsOfDictionary(dictionary, reloadPreferences: true)
 	}
 
 	@objc(importContentsOfDictionary:reloadPreferences:)
-	public class func importContentsOfDictionary(_ dictionary: [String: Any], reloadPreferences: Bool) {
+	public static func importContentsOfDictionary(_ dictionary: [String: Any], reloadPreferences: Bool) {
 		for (key, object) in dictionary {
-			guard key is String, isKeyNameSupposedToBeIgnored(key) == false else {
+			guard isKeyNameSupposedToBeIgnored(key) == false else {
 				continue
 			}
 
@@ -131,24 +131,24 @@ public final class PreferencesImportExport: NSObject {
 		}
 
 		if reloadPreferences {
-			TPCPreferences.performReloadAction(forKeys: Array(dictionary.keys))
+			TextualPreferences.performReloadAction(forKeys: Array(dictionary.keys))
 		}
 	}
 
 	@objc(import:withKey:)
-	public class func importValue(_ object: Any, withKey key: String) {
+	public static func importValue(_ object: Any, withKey key: String) {
 		if key == TPCPreferencesThemeNameDefaultsKey {
 			guard let value = object as? String else {
 				return
 			}
 
-			TPCPreferences.setThemeNameWithExistenceCheck(value)
+			TextualPreferences.setThemeNameWithExistenceCheck(value)
 		} else if key == TPCPreferencesThemeFontNameDefaultsKey {
 			guard let value = object as? String else {
 				return
 			}
 
-			TPCPreferences.setThemeChannelViewFontNameWithExistenceCheck(value)
+			TextualPreferences.setThemeChannelViewFontNameWithExistenceCheck(value)
 		} else if key == IRCWorldClientListDefaultsKey {
 			guard let clientList = object as? [Any] else {
 				return
@@ -162,14 +162,14 @@ public final class PreferencesImportExport: NSObject {
 				importClientConfiguration(config)
 			}
 		} else {
-			TPCPreferencesUserDefaults.shared()._migrateObject(object, forKey: key)
+			TextualUserDefaults.shared().migrateObject(object, forKey: key)
 		}
 	}
 
 	@objc(importClientConfiguration:)
-	public class func importClientConfiguration(_ config: [String: Any]) {
+	public static func importClientConfiguration(_ config: [String: Any]) {
 		let clientConfig = IRCClientConfig(dictionary: config)
-		let world = NSObject.masterController().world!
+		let world = NSObject.applicationController().world!
 
 		if let client = world.findClient(withId: clientConfig.uniqueIdentifier) {
 			client.updateConfig(bridgeClientConfigToObjectiveC(clientConfig))
@@ -182,39 +182,39 @@ public final class PreferencesImportExport: NSObject {
 	}
 
 	@objc(importPostflightCleanup:)
-	public class func importPostflightCleanup(_ changedKeys: [String]) {
-		TPCPreferences.performReloadAction(forKeys: changedKeys)
+	public static func importPostflightCleanup(_ changedKeys: [String]) {
+		TextualPreferences.performReloadAction(forKeys: changedKeys)
 
-		let mainWindow = NSObject.masterController().mainWindow!
+		let mainWindow = NSObject.applicationController().mainWindow!
 		mainWindow.serverList?.endUpdates()
-		NSObject.masterController().world.isImportingConfiguration = false
+		NSObject.applicationController().world.isImportingConfiguration = false
 		_ = mainWindow.reloadLoadingScreen()
 	}
 
 	@objc(isKeyNameSupposedToBeIgnored:)
-	public class func isKeyNameSupposedToBeIgnored(_ key: String) -> Bool {
-		TPCPreferencesUserDefaults.keyIsExcludedFromExportImport(key)
+	public static func isKeyNameSupposedToBeIgnored(_ key: String) -> Bool {
+		TextualUserDefaults.keyIsExcludedFromExportImport(key)
 	}
 
 	@objc(exportedPreferencesDictionary)
-	public class func exportedPreferencesDictionary() -> [String: Any] {
+	public static func exportedPreferencesDictionary() -> [String: Any] {
 		exportedPreferencesDictionary(true, filterDefaults: true)
 	}
 
 	@objc(exportedPreferencesDictionary:)
-	public class func exportedPreferencesDictionary(_ filterJunk: Bool) -> [String: Any] {
+	public static func exportedPreferencesDictionary(_ filterJunk: Bool) -> [String: Any] {
 		exportedPreferencesDictionary(filterJunk, filterDefaults: filterJunk)
 	}
 
 	@objc(exportedPreferencesDictionary:filterDefaults:)
-	public class func exportedPreferencesDictionary(_ filterJunk: Bool, filterDefaults: Bool) -> [String: Any] {
+	public static func exportedPreferencesDictionary(_ filterJunk: Bool, filterDefaults: Bool) -> [String: Any] {
 		var keysToStrip: [String] = []
 
 		let argumentsDomain = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
 		keysToStrip.append(contentsOf: argumentsDomain.keys)
 
 		if filterDefaults {
-			let defaultsDomain = TPCPreferences.defaultPreferences()
+			let defaultsDomain = TextualPreferences.defaultPreferences()
 			keysToStrip.append(contentsOf: defaultsDomain.keys)
 		}
 
@@ -223,7 +223,7 @@ public final class PreferencesImportExport: NSObject {
 			keysToStrip.append(contentsOf: globalsDomain.keys)
 		}
 
-		let exportedPreferences = TPCPreferencesUserDefaults.shared().dictionaryRepresentation()
+		let exportedPreferences = TextualUserDefaults.shared().dictionaryRepresentation()
 		var finalDictionary = exportedPreferences
 
 		for key in keysToStrip {
@@ -244,13 +244,13 @@ public final class PreferencesImportExport: NSObject {
 	}
 
 	@objc(exportInWindow:)
-	public class func export(in window: NSWindow) {
+	public static func export(in window: NSWindow) {
 		TDCAlert.alertSheet(
 			with: window,
-			body: LocalizedKey("Prompts[syp-al]"),
-			title: LocalizedKey("Prompts[1fm-up]"),
-			defaultButton: LocalizedKey("Prompts[vun-f0]"),
-			alternateButton: LocalizedKey("Prompts[qso-2g]"),
+			body: PromptStrings.ConfigurationTransfer.exportBody,
+			title: PromptStrings.ConfigurationTransfer.exportTitle,
+			defaultButton: PromptStrings.ConfigurationTransfer.exportButtonTitle,
+			alternateButton: PromptStrings.Action.cancel,
 			otherButton: nil,
 			completionBlock: { buttonClicked, _, _ in
 				exportPreflight(buttonClicked, in: window)
@@ -258,7 +258,7 @@ public final class PreferencesImportExport: NSObject {
 		)
 	}
 
-	private class func exportPreflight(_ buttonPressed: TDCAlertResponse, in window: NSWindow) {
+	private static func exportPreflight(_ buttonPressed: TDCAlertResponse, in window: NSWindow) {
 		guard buttonPressed == .default else {
 			return
 		}
@@ -278,22 +278,22 @@ public final class PreferencesImportExport: NSObject {
 	}
 
 	@objc(exportPostflightForPath:)
-	public class func exportPostflight(forPath path: String) -> Bool {
+	public static func exportPostflight(forPath path: String) -> Bool {
 		exportPostflight(forPath: path, filterJunk: true)
 	}
 
 	@objc(exportPostflightForURL:)
-	public class func exportPostflight(for url: URL) -> Bool {
+	public static func exportPostflight(for url: URL) -> Bool {
 		exportPostflight(for: url, filterJunk: true)
 	}
 
 	@objc(exportPostflightForPath:filterJunk:)
-	public class func exportPostflight(forPath path: String, filterJunk: Bool) -> Bool {
+	public static func exportPostflight(forPath path: String, filterJunk: Bool) -> Bool {
 		exportPostflight(for: URL(fileURLWithPath: path), filterJunk: filterJunk)
 	}
 
 	@objc(exportPostflightForURL:filterJunk:)
-	public class func exportPostflight(for url: URL, filterJunk: Bool) -> Bool {
+	public static func exportPostflight(for url: URL, filterJunk: Bool) -> Bool {
 		let exportedPreferences = exportedPreferencesDictionary(filterJunk)
 
 		let propertyList: Data

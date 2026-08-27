@@ -5,9 +5,8 @@
 
 import CocoaExtensions
 import Foundation
+@testable import Glasstual
 import XCTest
-
-private typealias ObjectIsEmptyFunction = @convention(c) (AnyObject?) -> Bool
 
 @objcMembers
 private final class GlobalModelsLengthFixture: NSObject {
@@ -30,46 +29,43 @@ private final class GlobalModelsSwizzleFixture: NSObject {
 }
 
 final class XRGlobalModelsSwiftMigrationTests: XCTestCase {
-	func testObjectEmptinessPreservesDynamicLengthAndCountSemantics() throws {
-		let implementation = try XCTUnwrap(dlsym(UnsafeMutableRawPointer(bitPattern: -2), "NSObjectIsEmpty"))
-		let objectIsEmpty = unsafeBitCast(implementation, to: ObjectIsEmptyFunction.self)
-
-		XCTAssertTrue(objectIsEmpty(nil))
-		XCTAssertTrue(objectIsEmpty(NSNull()))
-		XCTAssertTrue(objectIsEmpty(GlobalModelsLengthFixture(length: 0)))
-		XCTAssertFalse(objectIsEmpty(GlobalModelsLengthFixture(length: 1)))
-		XCTAssertTrue(objectIsEmpty(NSArray()))
-		XCTAssertFalse(objectIsEmpty(["value"] as NSArray))
-		XCTAssertFalse(objectIsEmpty(NSNumber(value: 0)))
+	func testObjectEmptinessPreservesDynamicLengthAndCountSemantics() {
+		XCTAssertTrue(isObjectEmpty(nil))
+		XCTAssertTrue(isObjectEmpty(NSNull()))
+		XCTAssertTrue(isObjectEmpty(GlobalModelsLengthFixture(length: 0)))
+		XCTAssertFalse(isObjectEmpty(GlobalModelsLengthFixture(length: 1)))
+		XCTAssertTrue(isObjectEmpty(NSArray()))
+		XCTAssertFalse(isObjectEmpty(["value"] as NSArray))
+		XCTAssertFalse(isObjectEmpty(NSNumber(value: 0)))
 	}
 
-	func testScheduledBlockRetainsLegacyCreateResumeAndCancelLifecycle() throws {
+	func testScheduledBlockRetainsCreateResumeAndCancelLifecycle() {
 		let expectation = expectation(description: "Scheduled block executed")
 		let queue = DispatchQueue(label: "com.vakesz.glasstual.tests.global-models")
-		let source = try XCTUnwrap(XRScheduleBlockOnQueue(queue, {
+		let source = scheduleBlock(on: queue, after: 0.01) {
 			expectation.fulfill()
-		}, 0.01, false))
+		}
 
-		XRResumeScheduledBlock(source)
+		source.resume()
 		wait(for: [expectation], timeout: 1)
-		XRCancelScheduledBlock(source)
+		source.cancel()
 		XCTAssertTrue(source.isCancelled)
 	}
 
-	func testInstanceMethodExchangePreservesLegacyRuntimeBehavior() {
+	func testInstanceMethodExchangePreservesRuntimeBehavior() {
 		let fixture = GlobalModelsSwizzleFixture()
 		XCTAssertEqual(fixture.originalValue(), "original")
 
-		XRExchangeInstanceMethod(
-			NSStringFromClass(GlobalModelsSwizzleFixture.self),
-			"originalValue",
-			"replacementValue"
-		)
+		XCTAssertTrue(exchangeInstanceMethods(
+			on: GlobalModelsSwizzleFixture.self,
+			original: #selector(GlobalModelsSwizzleFixture.originalValue),
+			replacement: #selector(GlobalModelsSwizzleFixture.replacementValue)
+		))
 		defer {
-			XRExchangeInstanceMethod(
-				NSStringFromClass(GlobalModelsSwizzleFixture.self),
-				"originalValue",
-				"replacementValue"
+			exchangeInstanceMethods(
+				on: GlobalModelsSwizzleFixture.self,
+				original: #selector(GlobalModelsSwizzleFixture.originalValue),
+				replacement: #selector(GlobalModelsSwizzleFixture.replacementValue)
 			)
 		}
 

@@ -48,24 +48,56 @@ public final class MenuPresentation: NSObject {
 		weight: .regular,
 		scale: .medium
 	)
+	private static let symbolNamesByTag: [Int: String] = [
+		102: "gear", 113: "power", 200: "bell.slash", 201: "speaker.slash",
+		203: "printer", 205: "xmark", 300: "arrow.uturn.backward", 301: "arrow.uturn.forward",
+		303: "scissors", 304: "doc.on.doc", 305: "doc.on.clipboard", 306: "trash",
+		307: "selection.pin.in.out", 400: "bookmark", 403: "envelope.open", 404: "eraser",
+		406: "textformat.size.larger", 407: "textformat.size.smaller",
+		409: "arrow.up.left.and.arrow.down.right", 500: "bolt", 501: "bolt.badge.clock",
+		502: "bolt.slash", 503: "xmark.circle", 505: "list.bullet", 506: "pencil",
+		508: "plus", 509: "plus.square.on.square", 510: "trash", 512: "plus.circle",
+		514: "slider.horizontal.3", 600: "arrow.right.square", 601: "arrow.left.square",
+		603: "plus.circle", 604: "trash", 606: "doc.text", 608: "text.quote",
+		609: "slider.horizontal.3", 611: "hand.raised", 616: "gearshape",
+		712: "arrow.down.to.line", 716: "magnifyingglass", 800: "minus", 801: "plus.rectangle",
+		803: "person.2", 804: "sidebar.left", 812: "macwindow", 813: "person.crop.circle",
+		814: "hand.raised", 815: "doc.text", 816: "exclamationmark.bubble",
+		817: "arrow.up.arrow.down.circle", 900: "info.circle", 907: "questionmark.circle",
+		912: "hand.wave", 1000: "arrow.right.square", 1100: "link", 1200: "pencil",
+		1202: "magnifyingglass", 1203: "book", 1205: "doc.on.doc", 1206: "doc.on.clipboard",
+		1208: "doc.text", 1209: "number", 1300: "plus", 1302: "plus.circle", 1400: "plus",
+		1600: "hand.raised", 1601: "pencil", 1602: "hand.raised.slash", 1604: "envelope",
+		1606: "info.circle", 1607: "bubble.left", 1619: "nosign", 1620: "figure.walk",
+		1621: "nosign", 1623: "arrow.left.arrow.right", 1624: "shield", 1700: "bell.slash",
+		1701: "speaker.slash", 1800: "xmark", 1802: "doc.text", 3_090_000: "magnifyingglass",
+	]
 
 	/// One stable instance lets repeated passes distinguish padding from a
 	/// real symbol. A transparent bitmap is treated as no image on macOS 26.
-	private static let symbolSpacer: NSImage = {
+	private static let symbolSpacer: NSImage? = {
 		let configuration = symbolConfiguration.applying(
 			NSImage.SymbolConfiguration(paletteColors: [.clear])
 		)
-		let image = NSImage(
+		guard let image = NSImage(
 			systemSymbolName: "circle",
 			accessibilityDescription: nil
-		)?.withSymbolConfiguration(configuration)
+		)?.withSymbolConfiguration(configuration) else {
+			return nil
+		}
 
-		precondition(image != nil, "The system circle symbol must be available")
+		image.isTemplate = false
 
-		image?.isTemplate = false
-
-		return image!
+		return image
 	}()
+
+	static func symbolName(forTag tag: Int) -> String? {
+		symbolNamesByTag[tag]
+	}
+
+	static var symbolMappings: [Int: String] {
+		symbolNamesByTag
+	}
 
 	@objc(applyToMenu:)
 	public static func apply(to menu: NSMenu?) {
@@ -88,7 +120,7 @@ public final class MenuPresentation: NSObject {
 		separator.tag = 1210
 
 		let reply = NSMenuItem(
-			title: LocalizedKey("TXMenuController[rpl-to]"),
+			title: MessageMenuStrings.reply,
 			action: #selector(TXMenuController.replyToMessage(_:)),
 			keyEquivalent: ""
 		)
@@ -100,7 +132,7 @@ public final class MenuPresentation: NSObject {
 			accessibilityDescription: reply.title
 		)
 
-		let react = NSMenuItem(title: LocalizedKey("TXMenuController[rct-to]"), action: nil, keyEquivalent: "")
+		let react = NSMenuItem(title: MessageMenuStrings.react, action: nil, keyEquivalent: "")
 		react.tag = 1212
 		react.image = NSImage(systemSymbolName: "face.smiling", accessibilityDescription: react.title)
 
@@ -121,7 +153,7 @@ public final class MenuPresentation: NSObject {
 		reactMenu.addItem(.separator())
 
 		let other = NSMenuItem(
-			title: LocalizedKey("TXMenuController[rct-ot]"),
+			title: MessageMenuStrings.otherReaction,
 			action: #selector(TXMenuController.reactToMessageWithOtherEmoji(_:)),
 			keyEquivalent: ""
 		)
@@ -136,7 +168,7 @@ public final class MenuPresentation: NSObject {
 
 	@objc(shareMenuItemForItems:)
 	public static func shareMenuItem(for items: [Any]) -> NSMenuItem {
-		let title = LocalizedKey("TXMenuController[shr-m1]")
+		let title = MessageMenuStrings.share
 		let menuItem: NSMenuItem
 
 		if items.isEmpty {
@@ -165,17 +197,19 @@ public final class MenuPresentation: NSObject {
 		var hasSymbol = false
 
 		for item in menu.items {
-			let currentImage = item.image
-
-			if currentImage === symbolSpacer {
-				hasSymbol = true
-			} else if let symbolName = currentImage?.name(), symbolName.isEmpty == false,
-			          let symbol = NSImage(
-			          	systemSymbolName: symbolName,
-			          	accessibilityDescription: item.title
-			          )?.withSymbolConfiguration(configuration)
+			if item.image == nil,
+			   let symbolName = symbolName(forTag: item.tag),
+			   let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: item.title)
 			{
 				item.image = symbol
+			}
+
+			let currentImage = item.image
+
+			if let symbolSpacer, currentImage === symbolSpacer {
+				hasSymbol = true
+			} else if let configuredImage = currentImage?.withSymbolConfiguration(configuration) {
+				item.image = configuredImage
 				hasSymbol = true
 			}
 
@@ -185,6 +219,10 @@ public final class MenuPresentation: NSObject {
 		}
 
 		guard hasSymbol else {
+			return
+		}
+
+		guard let symbolSpacer else {
 			return
 		}
 

@@ -12,12 +12,31 @@
 
 import AppKit
 
+@discardableResult
+@MainActor
+func updatePreferredMaxLayoutWidth(of field: NSTextField) -> Bool {
+	guard field.cell?.wraps == true else {
+		return false
+	}
+
+	let width = field.bounds.width
+
+	guard width > 0, field.preferredMaxLayoutWidth != width else {
+		return false
+	}
+
+	field.preferredMaxLayoutWidth = width
+	field.invalidateIntrinsicContentSize()
+
+	return true
+}
+
 @objc(TVCAutoExpandingTextField)
 public final class AutoExpandingTextField: NSTextField {
 	override public func layout() {
 		super.layout()
 
-		TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(self)
+		updatePreferredMaxLayoutWidth(of: self)
 	}
 
 	override public func textDidChange(_ notification: Notification) {
@@ -32,7 +51,7 @@ public final class AutoExpandingTokenField: NSTokenField {
 	override public func layout() {
 		super.layout()
 
-		TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(self)
+		updatePreferredMaxLayoutWidth(of: self)
 	}
 
 	override public func textDidChange(_ notification: Notification) {

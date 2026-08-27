@@ -36,26 +36,27 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 
 @objc(ICMXkcd)
-final class XkcdModule: ICMInlineImage {
+final class XkcdModule: InlineImageModule {
 	private func performAction(forComic identifier: String) {
 		let address = "https://xkcd.com/\(identifier)/info.0.json"
-		ICLHelpers.requestJSONObject(
+		_ = InlineContentHelpers.requestJSONObject(
 			"img",
 			ofType: NSString.self,
 			inHierarchy: nil,
 			fromAddress: address
 		) { [weak self] object in
 			guard let self, let address = object as? String else {
-				self?.notifyUnsafeToLoad()
+				self?.notifyUnsafeToLoadImage()
 				return
 			}
 			performAction(forAddress: address)
 		}
 	}
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		let identifier = url.path(percentEncoded: true).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 		guard !identifier.isEmpty, identifier.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
 		return { module in
@@ -63,11 +64,11 @@ final class XkcdModule: ICMInlineImage {
 		}
 	}
 
-	override class var domains: [String]? {
+	override static var domains: [String]? {
 		["xkcd.com", "www.xkcd.com"]
 	}
 
-	override class var contentIsFile: Bool {
+	override static var contentIsFile: Bool {
 		true
 	}
 

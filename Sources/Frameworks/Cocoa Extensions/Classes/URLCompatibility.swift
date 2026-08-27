@@ -31,8 +31,9 @@
  *********************************************************************** */
 
 import Foundation
+import os
 
-extension NSURL {
+public extension NSURL {
 	@objc(resourceValueForKey:)
 	func textual_resourceValue(forKey key: String) -> Any? {
 		textual_resourceValue(forKey: key, error: nil)
@@ -56,7 +57,7 @@ extension NSURL {
 		let value = textual_resourceValue(forKey: key, error: &error)
 
 		if let error {
-			let displayURL = textual_standardizedTildePath ?? absoluteString ?? ""
+			let displayURL = textualStandardizedTildePath ?? absoluteString ?? ""
 			Logging.frameworkSubsystem?.error(
 				"Resource value [\(key, privacy: .public)] could not be accessed for URL [\(displayURL, privacy: .public)]: \(error.localizedDescription, privacy: .public)"
 			)
@@ -71,7 +72,7 @@ extension NSURL {
 			return try (self as URL).resourceValues(forKeys: Set(keys)).allValues
 		} catch {
 			let keyList = keys.map(\.rawValue).joined(separator: ", ")
-			let displayURL = textual_standardizedTildePath ?? absoluteString ?? ""
+			let displayURL = textualStandardizedTildePath ?? absoluteString ?? ""
 			Logging.frameworkSubsystem?.error(
 				"Resource values [\(keyList, privacy: .public)] could not be accessed for URL [\(displayURL, privacy: .public)]: \(error.localizedDescription, privacy: .public)"
 			)
@@ -80,7 +81,7 @@ extension NSURL {
 	}
 
 	@objc(filesystemRepresentationString)
-	var textual_filesystemRepresentationString: String? {
+	var textualFilesystemRepresentationString: String? {
 		guard isFileURL else { return nil }
 		let representation = fileSystemRepresentation
 		return FileManager.default.string(
@@ -111,13 +112,13 @@ extension NSURL {
 	}
 
 	@objc(standardizedTildePath)
-	var textual_standardizedTildePath: String? {
+	var textualStandardizedTildePath: String? {
 		guard isFileURL, let path else { return nil }
-		return (path as NSString).standardizedTildePath
+		return (path as NSString).ceStandardizedTildePath as String?
 	}
 }
 
-extension NSArray {
+public extension NSArray {
 	@objc(pathsArrayForFileURLs:)
 	class func textual_pathsArray(forFileURLs fileURLs: [URL]) -> [String] {
 		textual_pathsArray(forFileURLs: fileURLs, standardizingPaths: true)

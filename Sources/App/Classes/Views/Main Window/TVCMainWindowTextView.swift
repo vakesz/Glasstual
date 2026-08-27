@@ -36,6 +36,8 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import Combine
 import os
 import QuartzCore
 
@@ -84,9 +86,11 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	private var accessoryHeightConstraint: NSLayoutConstraint?
 	private var accessoryHeight: CGFloat = 0
 	private var observingTyping = false
+	private var typingObservations: Set<AnyCancellable> = []
 	private weak var typingChannel: IRCChannel?
 	private var userInterfaceObjects: MainWindowTextViewAppearance?
 	private var observingUserDefaults = false
+	private var userDefaultsObservation: AnyCancellable?
 
 	override public func awakeFromNib() {
 		super.awakeFromNib()
@@ -214,35 +218,32 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 		observingTyping = observed
 
 		if observed {
-			NotificationCenter.default.addObserver(
-				self,
-				selector: #selector(typingStateDidChange(_:)),
-				name: MainWindowTextViewNotification.typingDidChange,
-				object: nil
-			)
-			NotificationCenter.default.addObserver(
-				self,
-				selector: #selector(selectionDidChange(_:)),
-				name: MainWindowTextViewNotification.selectionDidChange,
-				object: nil
-			)
+			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.typingDidChange)
+				.receive(on: DispatchQueue.main)
+				.sink { [weak self] notification in
+					MainActor.assumeIsolated {
+						self?.typingStateDidChange(notification)
+					}
+				}
+				.store(in: &typingObservations)
+
+			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.selectionDidChange)
+				.receive(on: DispatchQueue.main)
+				.sink { [weak self] notification in
+					MainActor.assumeIsolated {
+						self?.selectionDidChange(notification)
+					}
+				}
+				.store(in: &typingObservations)
 		} else {
-			NotificationCenter.default.removeObserver(
-				self,
-				name: MainWindowTextViewNotification.typingDidChange,
-				object: nil
-			)
-			NotificationCenter.default.removeObserver(
-				self,
-				name: MainWindowTextViewNotification.selectionDidChange,
-				object: nil
-			)
+			typingObservations.forEach { $0.cancel() }
+			typingObservations.removeAll()
 		}
 	}
 
 	@objc private func typingStateDidChange(_ notification: Notification) {
 		guard let channel = notification.userInfo?[MainWindowTextViewNotification.typingChannelKey] as? IRCChannel,
-		      channel === NSObject.masterController().mainWindow.selectedChannel
+		      channel === NSObject.applicationController().mainWindow.selectedChannel
 		else {
 			return
 		}
@@ -251,7 +252,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	@objc private func selectionDidChange(_: Notification) {
-		let selectedChannel = NSObject.masterController().mainWindow.selectedChannel
+		let selectedChannel = NSObject.applicationController().mainWindow.selectedChannel
 
 		if let typingChannel, typingChannel !== selectedChannel {
 			typingChannel.associatedClient?.localUserClearedText(in: typingChannel)
@@ -263,7 +264,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	private func updateTypingRow() {
-		let channel = NSObject.masterController().mainWindow.selectedChannel
+		let channel = NSObject.applicationController().mainWindow.selectedChannel
 		var nicknames: [String] = []
 
 		if let channel, channel.isUtility == false {
@@ -274,7 +275,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	private func noteTextChangedForTyping() {
-		guard let channel = NSObject.masterController().mainWindow.selectedChannel,
+		guard let channel = NSObject.applicationController().mainWindow.selectedChannel,
 		      let client = channel.associatedClient
 		else {
 			return
@@ -299,13 +300,26 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 		}
 
 		observingUserDefaults = observed
-		let defaults = TPCPreferencesUserDefaults.shared()
+		let defaults = TextualUserDefaults.shared()
 
-		for key in observedPreferenceKeys {
-			if observed {
-				defaults.addObserver(self, forKeyPath: key, options: [.initial, .new], context: nil)
-			} else {
-				defaults.removeObserver(self, forKeyPath: key)
+		guard observed else {
+			userDefaultsObservation?.cancel()
+			userDefaultsObservation = nil
+			return
+		}
+
+		observedPreferenceKeys.forEach(applyObservedPreference)
+		userDefaultsObservation = NotificationCenter.default.publisher(
+			for: UserDefaults.didChangeNotification,
+			object: defaults
+		)
+		.receive(on: DispatchQueue.main)
+		.sink { [weak self] _ in
+			MainActor.assumeIsolated {
+				guard let self else {
+					return
+				}
+				observedPreferenceKeys.forEach(self.applyObservedPreference)
 			}
 		}
 	}
@@ -353,7 +367,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	private var defaultSpellingIgnores: [String] {
-		(TPCResourceManager.array(fromResources: "StaticStore", key: "Spelling Ignores") ?? [])
+		(ResourceManager.array(fromResources: "StaticStore", key: "Spelling Ignores") ?? [])
 			.compactMap { $0 as? String }
 	}
 
@@ -388,7 +402,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	@objc public func updateTextDirection() {
-		baseWritingDirection = TPCPreferences.rightToLeftFormatting() ? .rightToLeft : .leftToRight
+		baseWritingDirection = TextualPreferences.rightToLeftFormatting() ? .rightToLeft : .leftToRight
 	}
 
 	override public func textDidChange(_ notification: Notification) {
@@ -461,7 +475,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 		paragraphStyle.lineBreakMode = .byTruncatingTail
 
 		inputPlaceholderAttributedString = NSAttributedString(
-			string: LocalizedKey("TVCMainWindow[8r3-ih]"),
+			string: MainWindowStrings.Conversation.inputPlaceholder,
 			attributes: [
 				.font: preferredFont,
 				.foregroundColor: placeholderTextColor,
@@ -546,81 +560,65 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 
 	// MARK: - NSTextView preferences
 
-	override public func observeValue(
-		forKeyPath keyPath: String?,
-		of object: Any?,
-		change: [NSKeyValueChangeKey: Any]?,
-		context: UnsafeMutableRawPointer?
-	) {
-		guard let keyPath, observedPreferenceKeys.contains(keyPath) else {
-			super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-			return
-		}
-
-		MainActor.assumeIsolated {
-			applyObservedPreference(keyPath)
-		}
-	}
-
 	private func applyObservedPreference(_ keyPath: String) {
 		switch keyPath {
 		case "TextFieldAutomaticSpellCheck":
-			isContinuousSpellCheckingEnabled = TPCPreferences.textFieldAutomaticSpellCheck()
+			isContinuousSpellCheckingEnabled = TextualPreferences.textFieldAutomaticSpellCheck()
 		case "TextFieldAutomaticGrammarCheck":
-			isGrammarCheckingEnabled = TPCPreferences.textFieldAutomaticGrammarCheck()
+			isGrammarCheckingEnabled = TextualPreferences.textFieldAutomaticGrammarCheck()
 		case "TextFieldAutomaticSpellCorrection":
-			isAutomaticSpellingCorrectionEnabled = TPCPreferences.textFieldAutomaticSpellCorrection()
+			isAutomaticSpellingCorrectionEnabled = TextualPreferences.textFieldAutomaticSpellCorrection()
 		case "TextFieldSmartCopyPaste":
-			smartInsertDeleteEnabled = TPCPreferences.textFieldSmartCopyPaste()
+			smartInsertDeleteEnabled = TextualPreferences.textFieldSmartCopyPaste()
 		case "TextFieldSmartQuotes":
-			isAutomaticQuoteSubstitutionEnabled = TPCPreferences.textFieldSmartQuotes()
+			isAutomaticQuoteSubstitutionEnabled = TextualPreferences.textFieldSmartQuotes()
 		case "TextFieldSmartDashes":
-			isAutomaticDashSubstitutionEnabled = TPCPreferences.textFieldSmartDashes()
+			isAutomaticDashSubstitutionEnabled = TextualPreferences.textFieldSmartDashes()
 		case "TextFieldSmartLinks":
-			isAutomaticLinkDetectionEnabled = TPCPreferences.textFieldSmartLinks()
+			isAutomaticLinkDetectionEnabled = TextualPreferences.textFieldSmartLinks()
 		case "TextFieldDataDetectors":
-			isAutomaticDataDetectionEnabled = TPCPreferences.textFieldDataDetectors()
+			isAutomaticDataDetectionEnabled = TextualPreferences.textFieldDataDetectors()
 		case "TextFieldTextReplacement":
-			isAutomaticTextReplacementEnabled = TPCPreferences.textFieldTextReplacement()
+			isAutomaticTextReplacementEnabled = TextualPreferences.textFieldTextReplacement()
 		default:
 			break
 		}
 	}
 
 	override public var isContinuousSpellCheckingEnabled: Bool {
-		didSet { TPCPreferences.setTextFieldAutomaticSpellCheck(isContinuousSpellCheckingEnabled) }
+		didSet { TextualPreferences.setTextFieldAutomaticSpellCheck(isContinuousSpellCheckingEnabled) }
 	}
 
 	override public var isGrammarCheckingEnabled: Bool {
-		didSet { TPCPreferences.setTextFieldAutomaticGrammarCheck(isGrammarCheckingEnabled) }
+		didSet { TextualPreferences.setTextFieldAutomaticGrammarCheck(isGrammarCheckingEnabled) }
 	}
 
 	override public var isAutomaticSpellingCorrectionEnabled: Bool {
-		didSet { TPCPreferences.setTextFieldAutomaticSpellCorrection(isAutomaticSpellingCorrectionEnabled) }
+		didSet { TextualPreferences.setTextFieldAutomaticSpellCorrection(isAutomaticSpellingCorrectionEnabled) }
 	}
 
 	override public var smartInsertDeleteEnabled: Bool {
-		didSet { TPCPreferences.setTextFieldSmartCopyPaste(smartInsertDeleteEnabled) }
+		didSet { TextualPreferences.setTextFieldSmartCopyPaste(smartInsertDeleteEnabled) }
 	}
 
 	override public var isAutomaticQuoteSubstitutionEnabled: Bool {
-		didSet { TPCPreferences.setTextFieldSmartQuotes(isAutomaticQuoteSubstitutionEnabled) }
+		didSet { TextualPreferences.setTextFieldSmartQuotes(isAutomaticQuoteSubstitutionEnabled) }
 	}
 
 	override public var isAutomaticDashSubstitutionEnabled: Bool {
-		didSet { TPCPreferences.setTextFieldSmartDashes(isAutomaticDashSubstitutionEnabled) }
+		didSet { TextualPreferences.setTextFieldSmartDashes(isAutomaticDashSubstitutionEnabled) }
 	}
 
 	override public var isAutomaticLinkDetectionEnabled: Bool {
-		didSet { TPCPreferences.setTextFieldSmartLinks(isAutomaticLinkDetectionEnabled) }
+		didSet { TextualPreferences.setTextFieldSmartLinks(isAutomaticLinkDetectionEnabled) }
 	}
 
 	override public var isAutomaticDataDetectionEnabled: Bool {
-		didSet { TPCPreferences.setTextFieldDataDetectors(isAutomaticDataDetectionEnabled) }
+		didSet { TextualPreferences.setTextFieldDataDetectors(isAutomaticDataDetectionEnabled) }
 	}
 
 	override public var isAutomaticTextReplacementEnabled: Bool {
-		didSet { TPCPreferences.setTextFieldTextReplacement(isAutomaticTextReplacementEnabled) }
+		didSet { TextualPreferences.setTextFieldTextReplacement(isAutomaticTextReplacementEnabled) }
 	}
 }
 

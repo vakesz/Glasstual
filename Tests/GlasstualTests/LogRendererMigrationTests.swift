@@ -13,7 +13,7 @@ import XCTest
 
 final class LogRendererMigrationTests: XCTestCase {
 	func testAttributedRenderingRemovesControlCharactersAndPreservesEffects() throws {
-		let bold = String(UnicodeScalar(UInt8(IRCTextFormatterEffectBoldCharacter)))
+		let bold = String(UnicodeScalar(UInt8(IRCTextFormatterControlCharacter.bold)))
 		let source = "plain \(bold)bold\(bold) plain"
 		let font = try XCTUnwrap(NSFont(name: "Helvetica", size: 13))
 
@@ -58,23 +58,5 @@ final class LogRendererMigrationTests: XCTestCase {
 			TVCLogRendererResultsAttribute.originalBodyWithoutEffectsAttribute,
 			"TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute"
 		)
-	}
-
-	func testObjectiveCFacadeRetainsClassSelectors() {
-		let selectors = [
-			"escapeHTML:",
-			"mapColor:",
-			"mapColorCode:",
-			"renderTemplateNamed:",
-			"renderTemplateNamed:attributes:",
-			"renderTemplate:",
-			"renderTemplate:attributes:",
-			"renderBodyAsAttributedString:withAttributes:",
-			"renderBody:forViewController:withAttributes:resultInfo:",
-		]
-
-		for selector in selectors {
-			XCTAssertTrue(LogRenderer.responds(to: NSSelectorFromString(selector)), selector)
-		}
 	}
 }

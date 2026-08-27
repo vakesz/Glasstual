@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
 
 private enum ListAppearanceColorType: UInt {
@@ -185,7 +186,7 @@ open class ViewAppearance: NSObject {
 				alpha = Self.double(from: components, at: 3)
 			}
 
-			return NSColor.calibratedColor(withRed: red, green: green, blue: blue, alpha: alpha)
+			return NSColor.textual_calibratedColor(red: red, green: green, blue: blue, alpha: alpha)
 
 		case .system:
 			let selector = NSSelectorFromString(colorValue)

@@ -31,17 +31,34 @@
  *********************************************************************** */
 
 import Foundation
-import ObjectiveC.runtime
 
-private typealias UnsignedIntegerGetter = @convention(c) (AnyObject, Selector) -> UInt
-private typealias DoubleGetter = @convention(c) (AnyObject, Selector) -> Double
-private typealias EqualityMethod = @convention(c) (AnyObject, Selector, AnyObject) -> Bool
-private typealias ObjectGetter = @convention(c) (AnyObject, Selector) -> Unmanaged<AnyObject>?
+private let mutableArrayMutationLock = NSRecursiveLock()
 
-private func synchronized<Result>(on object: AnyObject, _ body: () -> Result) -> Result {
-	objc_sync_enter(object)
-	defer { objc_sync_exit(object) }
-	return body()
+private func arraySnapshot(_ array: NSArray) -> [Any] {
+	let snapshot = {
+		guard let snapshot = array.copy() as? NSArray else {
+			return array.map(\.self)
+		}
+		return snapshot.map(\.self)
+	}
+	if array is NSMutableArray {
+		return mutableArrayMutationLock.withLock(snapshot)
+	}
+	return snapshot()
+}
+
+private func arrayObject(at index: Int, in array: NSArray) -> Any {
+	if array is NSMutableArray {
+		return mutableArrayMutationLock.withLock { array.object(at: index) }
+	}
+	return array.object(at: index)
+}
+
+private func arrayCount(_ array: NSArray) -> Int {
+	if array is NSMutableArray {
+		return mutableArrayMutationLock.withLock { array.count }
+	}
+	return array.count
 }
 
 private func indices(count: Int, options: NSEnumerationOptions) -> AnySequence<Int> {
@@ -51,54 +68,40 @@ private func indices(count: Int, options: NSEnumerationOptions) -> AnySequence<I
 	return AnySequence(0 ..< count)
 }
 
-extension NSArray {
+public extension NSArray {
 	@objc(unsignedIntegerAtIndex:)
 	func ce_unsignedInteger(at index: UInt) -> UInt {
-		synchronized(on: self) {
-			let object = object(at: Int(index)) as AnyObject
-			let selector = NSSelectorFromString("unsignedIntegerValue")
-			guard object.responds(to: selector), let implementation = object.method(for: selector) else { return 0 }
-			return unsafeBitCast(implementation, to: UnsignedIntegerGetter.self)(object, selector)
-		}
+		(arrayObject(at: Int(index), in: self) as? NSNumber)?.uintValue ?? 0
 	}
 
 	@objc(doubleAtIndex:)
 	func ce_double(at index: UInt) -> Double {
-		synchronized(on: self) {
-			let object = object(at: Int(index)) as AnyObject
-			let selector = NSSelectorFromString("doubleValue")
-			guard object.responds(to: selector), let implementation = object.method(for: selector) else { return 0 }
-			return unsafeBitCast(implementation, to: DoubleGetter.self)(object, selector)
+		switch arrayObject(at: Int(index), in: self) {
+		case let number as NSNumber:
+			number.doubleValue
+		case let string as NSString:
+			string.doubleValue
+		default:
+			0
 		}
 	}
 
 	@objc(containsObjectIgnoringCase:)
 	func ce_containsObjectIgnoringCase(_ candidate: AnyObject) -> Bool {
-		guard count > 0 else { return false }
-		return synchronized(on: self) {
-			let selector = NSSelectorFromString("isEqualIgnoringCase:")
-			for object in self {
-				let receiver = object as AnyObject
-				guard receiver.responds(to: selector),
-				      let implementation = receiver.method(for: selector) else { continue }
-				if unsafeBitCast(implementation, to: EqualityMethod.self)(receiver, selector, candidate) {
-					return true
-				}
-			}
-			return false
+		arraySnapshot(self).contains { value in
+			guard let object = value as? NSObject else { return false }
+			return object.textual_isEqualIgnoringCase(candidate)
 		}
 	}
 
 	@objc var range: NSRange {
-		NSRange(location: 0, length: count)
+		NSRange(location: 0, length: arrayCount(self))
 	}
 
 	@objc var stringArrayControllerObjects: [NSDictionary] {
-		synchronized(on: self) {
-			compactMap { object in
-				guard let string = object as? String else { return nil }
-				return ["string": string] as NSDictionary
-			}
+		arraySnapshot(self).compactMap { object in
+			guard let string = object as? String else { return nil }
+			return ["string": string] as NSDictionary
 		}
 	}
 
@@ -118,23 +121,23 @@ extension NSArray {
 		trimming trimValues: Bool,
 		uniquing uniqueValues: Bool
 	) -> [Any] {
-		guard count > 0 else { return self as! [Any] }
-		return synchronized(on: self) {
-			var result: [Any] = []
-			result.reserveCapacity(count)
-			for sourceValue in self {
-				let value = trimValues ? Self.ce_trimmedValue(sourceValue) : sourceValue
+		let values = arraySnapshot(self)
+		guard !values.isEmpty else { return [] }
 
-				if removeEmptyValues, Self.ce_isEmpty(value) {
-					continue
-				}
-				if uniqueValues, result.contains(where: { ($0 as AnyObject).isEqual(value) }) {
-					continue
-				}
-				result.append(value)
+		var result: [Any] = []
+		result.reserveCapacity(values.count)
+		for sourceValue in values {
+			let value = trimValues ? Self.ce_trimmedValue(sourceValue) : sourceValue
+
+			if removeEmptyValues, Self.ce_isEmpty(value) {
+				continue
 			}
-			return result
+			if uniqueValues, result.contains(where: { ($0 as AnyObject).isEqual(value) }) {
+				continue
+			}
+			result.append(value)
 		}
+		return result
 	}
 
 	@objc(objectPassingTest:)
@@ -149,20 +152,20 @@ extension NSArray {
 		_ predicate: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Bool,
 		withOptions options: NSEnumerationOptions
 	) -> Any? {
-		guard count > 0 else { return nil }
-		return synchronized(on: self) {
-			var stop = ObjCBool(false)
-			for index in indices(count: count, options: options) {
-				let object = object(at: index)
-				if predicate(object, UInt(index), &stop) {
-					return object
-				}
-				if stop.boolValue {
-					break
-				}
+		let values = arraySnapshot(self)
+		guard !values.isEmpty else { return nil }
+
+		var stop = ObjCBool(false)
+		for index in indices(count: values.count, options: options) {
+			let object = values[index]
+			if predicate(object, UInt(index), &stop) {
+				return object
 			}
-			return nil
+			if stop.boolValue {
+				break
+			}
 		}
+		return nil
 	}
 
 	@objc(enumerateSubarraysOfSize:usingBlock:)
@@ -180,25 +183,24 @@ extension NSArray {
 		withOptions options: NSEnumerationOptions
 	) {
 		precondition(subarraySize > 0)
-		guard count > 0 else { return }
+		let values = arraySnapshot(self)
+		guard !values.isEmpty else { return }
 
-		synchronized(on: self) {
-			var subarray: [Any] = []
-			subarray.reserveCapacity(Int(subarraySize))
-			var stop = ObjCBool(false)
-			for index in indices(count: count, options: options) {
-				subarray.append(object(at: index))
-				if subarray.count == Int(subarraySize) {
-					block(subarray as NSArray, &stop)
-					subarray.removeAll(keepingCapacity: true)
-					if stop.boolValue {
-						return
-					}
+		var subarray: [Any] = []
+		subarray.reserveCapacity(Int(subarraySize))
+		var stop = ObjCBool(false)
+		for index in indices(count: values.count, options: options) {
+			subarray.append(values[index])
+			if subarray.count == Int(subarraySize) {
+				block(subarray as NSArray, &stop)
+				subarray.removeAll(keepingCapacity: true)
+				if stop.boolValue {
+					return
 				}
 			}
-			if !subarray.isEmpty {
-				block(subarray as NSArray, &stop)
-			}
+		}
+		if !subarray.isEmpty {
+			block(subarray as NSArray, &stop)
 		}
 	}
 
@@ -214,19 +216,19 @@ extension NSArray {
 		_ block: (Any, UInt, UnsafeMutablePointer<ObjCBool>) -> Any,
 		withOptions options: NSEnumerationOptions
 	) -> [Any] {
-		guard count > 0 else { return [] }
-		return synchronized(on: self) {
-			var result: [Any] = []
-			result.reserveCapacity(count)
-			var stop = ObjCBool(false)
-			for index in indices(count: count, options: options) {
-				result.append(block(object(at: index), UInt(index), &stop))
-				if stop.boolValue {
-					break
-				}
+		let values = arraySnapshot(self)
+		guard !values.isEmpty else { return [] }
+
+		var result: [Any] = []
+		result.reserveCapacity(values.count)
+		var stop = ObjCBool(false)
+		for index in indices(count: values.count, options: options) {
+			result.append(block(values[index], UInt(index), &stop))
+			if stop.boolValue {
+				break
 			}
-			return result
 		}
+		return result
 	}
 
 	private static func ce_isEmpty(_ value: Any) -> Bool {
@@ -248,51 +250,56 @@ extension NSArray {
 		if let set = value as? NSSet {
 			return set.count == 0
 		}
-
-		let receiver = value as AnyObject
-		for selectorName in ["length", "count"] {
-			let selector = NSSelectorFromString(selectorName)
-			if receiver.responds(to: selector), let implementation = receiver.method(for: selector) {
-				return unsafeBitCast(implementation, to: UnsignedIntegerGetter.self)(receiver, selector) == 0
-			}
+		if let orderedSet = value as? NSOrderedSet {
+			return orderedSet.count == 0
+		}
+		if let indexSet = value as? NSIndexSet {
+			return indexSet.count == 0
+		}
+		if let attributedString = value as? NSAttributedString {
+			return attributedString.length == 0
+		}
+		if let hashTable = value as? NSHashTable<AnyObject> {
+			return hashTable.count == 0
+		}
+		if let mapTable = value as? NSMapTable<AnyObject, AnyObject> {
+			return mapTable.count == 0
+		}
+		if let pointerArray = value as? NSPointerArray {
+			return pointerArray.count == 0
+		}
+		if let collection = value as? any Collection {
+			return collection.isEmpty
 		}
 		return false
 	}
 
 	private static func ce_trimmedValue(_ value: Any) -> Any {
-		let receiver = value as AnyObject
-		let selector = NSSelectorFromString("trim")
-		guard
-			receiver.responds(to: selector),
-			let implementation = receiver.method(for: selector),
-			let result = unsafeBitCast(implementation, to: ObjectGetter.self)(receiver, selector)?.takeUnretainedValue()
-		else {
-			return value
-		}
-		return result
+		guard let string = value as? NSString else { return value }
+		return string.ceTrim
 	}
 }
 
-extension NSMutableArray {
+public extension NSMutableArray {
 	@objc(addObjectWithoutDuplication:)
 	func ce_addObjectWithoutDuplication(_ object: Any) {
-		if !contains(object) {
-			add(object)
+		mutableArrayMutationLock.withLock {
+			if !contains(object) {
+				add(object)
+			}
 		}
 	}
 
 	@objc(performSelectorOnObjectValueAndReplace:)
 	func ce_performSelectorOnObjectValueAndReplace(_ selector: Selector) {
-		guard count > 0 else { return }
-		synchronized(on: self) {
-			for (index, value) in (copy() as! [Any]).enumerated() {
-				let receiver = value as AnyObject
-				guard let implementation = receiver.method(for: selector) else {
+		mutableArrayMutationLock.withLock {
+			guard count > 0 else { return }
+			let values = map(\.self)
+			for (index, value) in values.enumerated() {
+				guard let receiver = value as? NSObject, receiver.responds(to: selector) else {
 					preconditionFailure("Object does not respond to \(NSStringFromSelector(selector))")
 				}
-				guard let replacement = unsafeBitCast(implementation, to: ObjectGetter.self)(receiver, selector)?
-					.takeUnretainedValue()
-				else {
+				guard let replacement = receiver.perform(selector)?.takeUnretainedValue() else {
 					preconditionFailure("Selector \(NSStringFromSelector(selector)) returned nil")
 				}
 				replaceObject(at: index, with: replacement)
@@ -301,8 +308,8 @@ extension NSMutableArray {
 	}
 
 	@objc func shuffle() {
-		guard count > 1 else { return }
-		synchronized(on: self) {
+		mutableArrayMutationLock.withLock {
+			guard count > 1 else { return }
 			for index in stride(from: count - 1, through: 1, by: -1) {
 				exchangeObject(at: index, withObjectAt: Int.random(in: 0 ... index))
 			}
@@ -311,8 +318,10 @@ extension NSMutableArray {
 
 	@objc(moveObjectAtIndex:toIndex:)
 	func ce_moveObject(at fromIndex: UInt, to toIndex: UInt) {
-		let object = object(at: Int(fromIndex))
-		removeObject(at: Int(fromIndex))
-		insert(object, at: Int(fromIndex < toIndex ? toIndex - 1 : toIndex))
+		mutableArrayMutationLock.withLock {
+			let object = object(at: Int(fromIndex))
+			removeObject(at: Int(fromIndex))
+			insert(object, at: Int(fromIndex < toIndex ? toIndex - 1 : toIndex))
+		}
 	}
 }

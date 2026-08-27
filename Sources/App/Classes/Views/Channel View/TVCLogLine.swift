@@ -36,6 +36,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 private enum LogLineArchiveKey {
@@ -69,7 +70,7 @@ private enum LogLineFormat {
 }
 
 @objc(TVCLogLine)
-open class LogLine: XRPortablePropertyObject {
+open class LogLine: PortablePropertyObject {
 	fileprivate var isEncryptedStorage = false
 	fileprivate var isFirstForDayStorage = false
 	fileprivate var nicknameColorStyleOverrideStorage = false
@@ -206,7 +207,7 @@ open class LogLine: XRPortablePropertyObject {
 		return object.copy() as? LogLine
 	}
 
-	override public func populate(withDecoder decoder: NSCoder) -> Bool {
+	override public func populate(with decoder: NSCoder) -> Bool {
 		receivedAtStorage = decoder
 			.decodeObject(of: NSDate.self, forKey: LogLineArchiveKey.receivedAt) as Date? ?? Date()
 
@@ -220,17 +221,17 @@ open class LogLine: XRPortablePropertyObject {
 			forKey: LogLineArchiveKey.highlightKeywords
 		) as? [String]
 
-		rendererAttributesStorage = decoder.decodeDictionary(
+		rendererAttributesStorage = decoder.textual_decodeDictionary(
 			forKey: LogLineArchiveKey.rendererAttributes
 		) as? [String: Any]
 
 		isEncryptedStorage = decoder.decodeBool(forKey: LogLineArchiveKey.isEncrypted)
 		isFirstForDayStorage = decoder.decodeBool(forKey: LogLineArchiveKey.isFirstForDay)
-		commandStorage = decoder.decodeString(forKey: LogLineArchiveKey.command) as String? ?? LogLineFormat
+		commandStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.command) as String? ?? LogLineFormat
 			.defaultCommand
-		messageBodyStorage = decoder.decodeString(forKey: LogLineArchiveKey.messageBody) as String? ?? ""
-		messageIdentifierStorage = decoder.decodeString(forKey: LogLineArchiveKey.messageIdentifier) as String?
-		replyToMessageIdentifierStorage = decoder.decodeString(
+		messageBodyStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.messageBody) as String? ?? ""
+		messageIdentifierStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.messageIdentifier) as String?
+		replyToMessageIdentifierStorage = decoder.textual_decodeString(
 			forKey: LogLineArchiveKey.replyToMessageIdentifier
 		) as String?
 
@@ -239,7 +240,7 @@ open class LogLine: XRPortablePropertyObject {
 			of: reactionClasses,
 			forKey: LogLineArchiveKey.reactions
 		) as? [String: [String]]
-		nicknameStorage = decoder.decodeString(forKey: LogLineArchiveKey.nickname) as String?
+		nicknameStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.nickname) as String?
 		lineTypeStorage = TVCLogLineType(rawValue: UInt(decoder.decodeInteger(forKey: LogLineArchiveKey.lineType))) ??
 			.undefined
 		memberTypeStorage = TVCLogLineMemberType(
@@ -250,7 +251,7 @@ open class LogLine: XRPortablePropertyObject {
 			rawValue: UInt(decoder.decodeInteger(forKey: LogLineArchiveKey.deliveryState))
 		) ?? .none
 		deliveryStateStorage = decodedDeliveryState == .pending ? .none : decodedDeliveryState
-		uniqueIdentifierStorage = decoder.decodeString(forKey: LogLineArchiveKey.uniqueIdentifier) as String?
+		uniqueIdentifierStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.uniqueIdentifier) as String?
 		sessionIdentifierStorage = UInt(decoder.decodeInteger(forKey: LogLineArchiveKey.sessionIdentifier))
 		computeNicknameColorStyle()
 
@@ -371,7 +372,7 @@ open class LogLine: XRPortablePropertyObject {
 		switch type {
 		case .action, .actionNoHighlight:
 			"action"
-		case .CTCP, .ctcpQuery, .ctcpReply:
+		case .ctcp, .ctcpQuery, .ctcpReply:
 			"ctcp"
 		case .dccFileTransfer:
 			"dcc-file-transfer"
@@ -445,12 +446,12 @@ open class LogLine: XRPortablePropertyObject {
 
 	@objc(formattedTimestampWithFormat:)
 	public func formattedTimestamp(with format: String?) -> String {
-		let themeFormat = TXSharedApplication.sharedThemeController().settings.themeTimestampFormat
+		let themeFormat = SharedApplication.sharedThemeController().settings.themeTimestampFormat
 		let selectedFormat = [
 			format,
 			themeFormat,
-			TPCPreferences.themeTimestampFormat(),
-			TPCPreferences.themeTimestampFormatDefault(),
+			TextualPreferences.themeTimestampFormat(),
+			TextualPreferences.themeTimestampFormatDefault(),
 		]
 		.compactMap(\.self)
 		.first { !$0.isEmpty } ?? ""
@@ -527,7 +528,7 @@ open class LogLine: XRPortablePropertyObject {
 	}
 
 	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: XRPortablePropertyObject, mutableCopy _: Bool) {
+	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
 		guard let object = newObject as? LogLine else {
 			return
 		}
@@ -535,8 +536,8 @@ open class LogLine: XRPortablePropertyObject {
 		object.copyStorage(from: self)
 	}
 
-	override public var mutableClass: XRPortablePropertyObject {
-		unsafeBitCast(MutableLogLine.self, to: XRPortablePropertyObject.self)
+	override public var mutableClass: PortablePropertyObject {
+		unsafeBitCast(MutableLogLine.self, to: PortablePropertyObject.self)
 	}
 
 	private func copyStorage(from source: LogLine) {
@@ -568,12 +569,12 @@ open class LogLine: XRPortablePropertyObject {
 
 @objc(TVCLogLineMutable)
 public final class MutableLogLine: LogLine {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyObject {
-		unsafeBitCast(LogLine.self, to: XRPortablePropertyObject.self)
+	override public var immutableClass: PortablePropertyObject {
+		unsafeBitCast(LogLine.self, to: PortablePropertyObject.self)
 	}
 
 	@objc override public var isEncrypted: Bool {

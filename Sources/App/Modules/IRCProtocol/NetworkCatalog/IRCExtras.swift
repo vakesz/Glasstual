@@ -11,7 +11,10 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
+
+public typealias IRCExtras = Extras
 
 private let extrasLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -43,7 +46,7 @@ public final class Extras: NSObject {
 		 unsupervised-scripts-folder			— Open the custom scripts storage location folder
 		 */
 
-		let menuController = NSObject.masterController().menuController
+		let menuController = NSObject.applicationController().menuController
 
 		if action == "acknowledgements" {
 			menuController?.openAcknowledgements(nil)
@@ -90,14 +93,18 @@ public final class Extras: NSObject {
 		precondition(!location.isEmpty)
 
 		/* Basic input clean up. */
-		var locationValue = (location as NSString).percentDecoded ?? location
-		locationValue = (locationValue as NSString).trim
+		let locationValue = (location.removingPercentEncoding ?? location)
+			.trimmingCharacters(in: .whitespacesAndNewlines)
 
 		/* This method extracts the path component of the URL from the input
 		 string before turning the remaining pieces into an NSURL. */
 		/* The URL may contain multiple sections proceeded by the pound sign (#),
 		 which this method treats as channel, but NSURL aren't too friendly about. */
-		let totalSlashCount = (locationValue as NSString).occurrences(ofCharacter: UniChar("/".utf16.first!))
+		let totalSlashCount = locationValue.reduce(into: 0) { count, character in
+			if character == "/" {
+				count += 1
+			}
+		}
 
 		if totalSlashCount < 2 || totalSlashCount > 3 {
 			return
@@ -106,13 +113,9 @@ public final class Extras: NSObject {
 		var serverInfo = locationValue
 		var channelInfo: String?
 
-		if totalSlashCount == 3 {
-			let backwardRange = (locationValue as NSString).range(of: "/", options: .backwards)
-
-			if backwardRange.location != NSNotFound {
-				serverInfo = (locationValue as NSString).substring(to: backwardRange.location)
-				channelInfo = (locationValue as NSString).substring(after: UInt(backwardRange.location))
-			}
+		if totalSlashCount == 3, let separator = locationValue.lastIndex(of: "/") {
+			serverInfo = String(locationValue[..<separator])
+			channelInfo = String(locationValue[locationValue.index(after: separator)...])
 		}
 
 		/* Now that channel information is no longer present in the URL,
@@ -131,7 +134,7 @@ public final class Extras: NSObject {
 		}
 
 		/* Continue normal parsing... */
-		let serverPortValue = UInt16(truncatingIfNeeded: baseURL.port ?? Int(IRCConnectionDefaultServerPort))
+		let serverPortValue = UInt16(truncatingIfNeeded: baseURL.port ?? Int(IRCConnectionDefaults.serverPort))
 		var connectSecurely = false
 
 		if addressScheme == "ircs" {
@@ -150,7 +153,7 @@ public final class Extras: NSObject {
 		let channelList = NSMutableString()
 
 		if let channelInfo {
-			let dataSections = (channelInfo as NSString).split(",")
+			let dataSections = channelInfo.components(separatedBy: ",")
 			let dataSectionsCount = dataSections.count
 
 			for (index, section) in dataSections.enumerated() {
@@ -164,7 +167,7 @@ public final class Extras: NSObject {
 
 				let isLastObject = (index + 1) == dataSectionsCount
 
-				if isLastObject, (section as NSString).isEqual(toStringIgnoringCase: "needssl") {
+				if isLastObject, section.caseInsensitiveCompare("needssl") == .orderedSame {
 					connectSecurely = true
 
 					continue
@@ -241,7 +244,7 @@ public final class Extras: NSObject {
 
 		/* Establish our variables */
 		var serverAddress: String?
-		var serverPort: UInt16 = IRCConnectionDefaultServerPort
+		var serverPort: UInt16 = IRCConnectionDefaults.serverPort
 		var serverPassword: String?
 		var connectSecurely = false
 
@@ -253,35 +256,32 @@ public final class Extras: NSObject {
 		 before a space in a string, then erase the remaining content
 		 of that string so that each call to getToken gives us the next
 		 section of our string. */
-		var tempStore = serverInfoMutable.token
+		var tempStore = serverInfoMutable.ceToken
 
 		/* Secure Socket Layer? */
-		if (tempStore as NSString).isEqual(toStringIgnoringCase: "-SSL")
-			|| (tempStore as NSString).isEqual(toStringIgnoringCase: "-TLS")
+		if tempStore.caseInsensitiveCompare("-SSL") == .orderedSame
+			|| tempStore.caseInsensitiveCompare("-TLS") == .orderedSame
 		{
 			connectSecurely = true
 
 			/* If the SSL define was our first token, we
 			 go to our next token. */
-			tempStore = serverInfoMutable.token
+			tempStore = serverInfoMutable.ceToken
 		}
 
 		/* Server Address */
-		let openingBracketPosition = (tempStore as NSString).stringPosition("[") + 1
-		let closingBracketPosition = (tempStore as NSString).stringPosition("]")
+		let openingBracket = tempStore.firstIndex(of: "[")
+		let closingBracket = tempStore.firstIndex(of: "]")
 
-		let hasOpeningBracket = openingBracketPosition == 1 && openingBracketPosition < closingBracketPosition
-		let hasClosingBracket = closingBracketPosition > 0 && openingBracketPosition < closingBracketPosition
+		if let openingBracket,
+		   let closingBracket,
+		   openingBracket == tempStore.startIndex,
+		   openingBracket < closingBracket
+		{
+			let addressStart = tempStore.index(after: openingBracket)
+			let tempServerAddress = String(tempStore[addressStart ..< closingBracket])
 
-		if hasOpeningBracket, hasClosingBracket {
-			let serverAddressRange = NSRange(
-				location: openingBracketPosition,
-				length: closingBracketPosition - openingBracketPosition
-			)
-
-			let tempServerAddress = (tempStore as NSString).substring(with: serverAddressRange)
-
-			if (tempServerAddress as NSString).isIPv6Address == false {
+			if tempServerAddress.isIPv6Address == false {
 				extrasLogger.error(
 					"Server address was surrounded by square brackets but the enclosed value was not an IPv6 address"
 				)
@@ -291,18 +291,16 @@ public final class Extras: NSObject {
 
 			serverAddress = tempServerAddress
 
-			tempStore = (tempStore as NSString).substring(after: UInt(closingBracketPosition))
-		} else if hasOpeningBracket == false, hasClosingBracket == false {
+			tempStore = String(tempStore[tempStore.index(after: closingBracket)...])
+		} else if openingBracket == nil, closingBracket == nil {
 			/* Our server address did not contain brackets. Does it
 			 contain a colon (:) which means a port is included? */
-			let colonPosition = (tempStore as NSString).stringPosition(":")
-
-			if colonPosition > -1 {
-				serverAddress = (tempStore as NSString).substring(to: colonPosition)
+			if let colonPosition = tempStore.firstIndex(of: ":") {
+				serverAddress = String(tempStore[..<colonPosition])
 
 				/* We cut the server address out of our temporary store,
 				 but left the colon and everything after it, in it. */
-				tempStore = (tempStore as NSString).substring(from: colonPosition)
+				tempStore = String(tempStore[colonPosition...])
 			} else {
 				serverAddress = tempStore
 			}
@@ -325,31 +323,31 @@ public final class Extras: NSObject {
 			return
 		}
 
-		serverAddress = (parsedServerAddress as NSString).lowercased
+		serverAddress = parsedServerAddress.lowercased()
 
 		/* Server Port */
 		var tempServerPort: String?
 
-		if (tempStore as NSString).hasPrefix(":") {
-			tempServerPort = (tempStore as NSString).substring(from: 1)
+		if tempStore.hasPrefix(":") {
+			tempServerPort = String(tempStore.dropFirst())
 		} else if serverInfoMutable.length > 0 {
-			tempServerPort = serverInfoMutable.token
+			tempServerPort = serverInfoMutable.ceToken
 		}
 
 		if var tempServerPort {
-			if (tempServerPort as NSString).hasPrefix("+") {
-				tempServerPort = (tempServerPort as NSString).substring(from: 1)
+			if tempServerPort.hasPrefix("+") {
+				tempServerPort = String(tempServerPort.dropFirst())
 
 				connectSecurely = true
 			}
 
-			if (tempServerPort as NSString).isValidInternetPort == false {
+			guard let parsedPort = UInt16(tempServerPort), parsedPort > 0 else {
 				extrasLogger.error("Invalid internet port")
 
 				return
 			}
 
-			serverPort = UInt16((tempServerPort as NSString).integerValue)
+			serverPort = parsedPort
 		}
 
 		/* Server Password */
@@ -357,7 +355,7 @@ public final class Extras: NSObject {
 		 server address and port, then we are going to treat that as the server
 		 password. Anything after this token will be ignored completely. */
 		if serverInfoMutable.length > 0 {
-			tempStore = serverInfoMutable.token
+			tempStore = serverInfoMutable.ceToken
 
 			serverPassword = tempStore
 		}
@@ -366,52 +364,68 @@ public final class Extras: NSObject {
 		var channelListArray: [String]?
 
 		if let channelList, channelList.isEmpty == false {
-			channelListArray = []
-
-			let dataSections = (channelList as NSString).split(",")
+			var parsedChannels: [String] = []
+			let dataSections = channelList.components(separatedBy: ",")
 
 			for section in dataSections {
-				let channelName = (section as NSString).trim
+				let channelName = section.trimmingCharacters(in: .whitespacesAndNewlines)
 
 				if (channelName as NSString).isChannelName == false {
 					continue
 				}
 
-				if (channelListArray! as NSArray).containsObjectIgnoringCase(channelName) {
+				if parsedChannels.contains(where: {
+					$0.caseInsensitiveCompare(channelName) == .orderedSame
+				}) {
 					continue
 				}
 
-				channelListArray!.append(channelName)
+				parsedChannels.append(channelName)
 			}
+
+			channelListArray = parsedChannels
 		}
 
 		/* Create connection */
 		createConnectionToServer(
-			serverAddress!,
-			serverPort: serverPort,
-			serverPassword: serverPassword,
-			connectSecurely: connectSecurely,
-			channelList: channelListArray,
-			connectWhenCreated: connectWhenCreated,
-			mergeConnectionIfPossible: mergeConnectionIfPossible,
-			selectFirstChannelAdded: selectFirstChannelAdded
+			ConnectionRequest(
+				serverAddress: serverAddress!,
+				serverPort: serverPort,
+				serverPassword: serverPassword,
+				connectSecurely: connectSecurely,
+				channelList: channelListArray,
+				connectWhenCreated: connectWhenCreated,
+				mergeConnectionIfPossible: mergeConnectionIfPossible,
+				selectFirstChannelAdded: selectFirstChannelAdded
+			)
 		)
+	}
+
+	private struct ConnectionRequest {
+		let serverAddress: String
+		let serverPort: UInt16
+		let serverPassword: String?
+		let connectSecurely: Bool
+		let channelList: [String]?
+		let connectWhenCreated: Bool
+		let mergeConnectionIfPossible: Bool
+		let selectFirstChannelAdded: Bool
 	}
 
 	private static var isRunningUnitTests: Bool {
 		ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 	}
 
-	private static func createConnectionToServer(
-		_ serverAddress: String,
-		serverPort: UInt16,
-		serverPassword: String?,
-		connectSecurely: Bool,
-		channelList: [String]?,
-		connectWhenCreated: Bool,
-		mergeConnectionIfPossible: Bool,
-		selectFirstChannelAdded: Bool
-	) {
+	private static func createConnectionToServer(_ request: ConnectionRequest) {
+		let serverAddress = request.serverAddress
+		let serverPort = request.serverPort
+		let serverPassword = request.serverPassword
+		let connectSecurely = request.connectSecurely
+		let channelList = request.channelList
+		let connectWhenCreated = request.connectWhenCreated
+		let mergeConnectionIfPossible = request.mergeConnectionIfPossible
+		let selectFirstChannelAdded = request.selectFirstChannelAdded
+
 		precondition(!serverAddress.isEmpty)
 		precondition(serverPort > 0)
 
@@ -429,34 +443,14 @@ public final class Extras: NSObject {
 		var existingClient: IRCClient?
 
 		if mergeConnectionIfPossible, channelListCount > 0 {
-			existingClient = NSObject.masterController().world.findClient(withServerAddress: serverAddress)
+			existingClient = NSObject.applicationController().world.findClient(withServerAddress: serverAddress)
 		}
 
-		if existingClient != nil {
-			let mergeConnection: Bool
-
-			if channelListCount > 1 {
-				let channelListFormatted = channelList!.joined(separator: ", ")
-
-				mergeConnection = TDCAlert.modalAlert(
-					withMessage: LocalizedKey("Prompts[a9z-9f]", existingClient!.name),
-					title: LocalizedKey("Prompts[pnc-ew]", serverAddress, channelListFormatted),
-					defaultButton: LocalizedKey("Prompts[0hh-sl]"),
-					alternateButton: LocalizedKey("Prompts[sv9-8s]")
-				)
-			} else {
-				mergeConnection = TDCAlert.modalAlert(
-					withMessage: LocalizedKey("Prompts[mx1-qz]", existingClient!.name),
-					title: LocalizedKey("Prompts[3l6-3z]", serverAddress, channelList!.first!),
-					defaultButton: LocalizedKey("Prompts[sl5-rf]"),
-					alternateButton: LocalizedKey("Prompts[xca-5h]")
-				)
-			}
-
-			// YES = default button (create new connection)
-			if mergeConnection == false {
-				existingClient = nil
-			}
+		if let matchedClient = existingClient,
+		   let channelList,
+		   shouldMergeConnection(matchedClient, serverAddress: serverAddress, channelList: channelList) == false
+		{
+			existingClient = nil
 		}
 
 		/* Create new connection or merge into existing */
@@ -475,11 +469,12 @@ public final class Extras: NSObject {
 				}
 			}
 
-			NSObject.masterController().world.save()
+			NSObject.applicationController().world.save()
 
 			if selectFirstChannelAdded, let firstChannelAdded {
-				let treeItem = (firstChannelAdded as AnyObject) as! IRCTreeItem
-				NSObject.masterController().mainWindow.select(treeItem)
+				if let treeItem = (firstChannelAdded as AnyObject) as? IRCTreeItem {
+					NSObject.applicationController().mainWindow.select(treeItem)
+				}
 			}
 		} else {
 			let baseConfig = IRCClientConfigMutable()
@@ -497,7 +492,9 @@ public final class Extras: NSObject {
 				server.serverPassword = serverPassword
 			}
 
-			let serverCopy = server.copy(asMutable: false, uniquing: false) as! Server
+			guard let serverCopy = server.copy(asMutable: false, uniquing: false) as? Server else {
+				preconditionFailure("Server copies must preserve their model type")
+			}
 
 			baseConfig.setValue([serverCopy], forKey: "serverList")
 
@@ -513,12 +510,12 @@ public final class Extras: NSObject {
 
 			baseConfig.setValue(channelListConfigs, forKey: "channelList")
 
-			let client = NSObject.masterController().world.createClient(
+			let client = NSObject.applicationController().world.createClient(
 				with: bridgeClientConfigToObjectiveC(baseConfig),
 				reload: true
 			)
 
-			NSObject.masterController().world.save()
+			NSObject.applicationController().world.save()
 
 			if connectWhenCreated {
 				client.connect()
@@ -528,5 +525,28 @@ public final class Extras: NSObject {
 				client.selectFirstChannelInChannelList()
 			}
 		}
+	}
+
+	private static func shouldMergeConnection(
+		_ client: IRCClient,
+		serverAddress: String,
+		channelList: [String]
+	) -> Bool {
+		let includesMultipleChannels = channelList.count > 1
+		let channelNames = includesMultipleChannels ? channelList.joined(separator: ", ") : channelList[0]
+
+		return TDCAlert.modalAlert(
+			withMessage: PromptStrings.ConnectionLink.existingConnectionBody(
+				name: client.name,
+				includesMultipleChannels: includesMultipleChannels
+			),
+			title: PromptStrings.ConnectionLink.title(
+				serverAddress: serverAddress,
+				channelNames: channelNames,
+				includesMultipleChannels: includesMultipleChannels
+			),
+			defaultButton: PromptStrings.ConnectionLink.useExistingConnectionButtonTitle,
+			alternateButton: PromptStrings.ConnectionLink.createNewConnectionButtonTitle
+		)
 	}
 }

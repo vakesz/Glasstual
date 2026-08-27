@@ -12,12 +12,16 @@
 
 import AppKit
 
+private struct SynchronousMainActorValue<Value>: @unchecked Sendable {
+	let value: Value
+}
+
 @objc(IRCChannelMemberListController)
 @MainActor
 public final class IRCChannelMemberListController: NSArrayController {
 	private weak var memberList: ChannelMemberList?
 
-	@IBOutlet public private(set) var tableView: TVCMemberList!
+	@IBOutlet public private(set) var tableView: MemberList!
 
 	@objc(assignToChannel:)
 	public func assign(to channel: IRCChannel?) {
@@ -44,12 +48,29 @@ public final class IRCChannelMemberListController: NSArrayController {
 		tableView.membersReplaced()
 	}
 
-	override public func insert(_ object: Any, atArrangedObjectIndex index: Int) {
+	override public nonisolated func insert(_ object: Any, atArrangedObjectIndex index: Int) {
+		let controller = SynchronousMainActorValue(value: self)
+		let object = SynchronousMainActorValue(value: object)
+
+		MainActor.assumeIsolated {
+			controller.value.insertOnMain(object.value, atArrangedObjectIndex: index)
+		}
+	}
+
+	private func insertOnMain(_ object: Any, atArrangedObjectIndex index: Int) {
 		super.insert(object, atArrangedObjectIndex: index)
 		tableView.memberInserted(at: UInt(index))
 	}
 
-	override public func remove(atArrangedObjectIndex index: Int) {
+	override public nonisolated func remove(atArrangedObjectIndex index: Int) {
+		let controller = SynchronousMainActorValue(value: self)
+
+		MainActor.assumeIsolated {
+			controller.value.removeOnMain(atArrangedObjectIndex: index)
+		}
+	}
+
+	private func removeOnMain(atArrangedObjectIndex index: Int) {
 		super.remove(atArrangedObjectIndex: index)
 		tableView.memberRemoved(at: UInt(index))
 	}

@@ -4,6 +4,7 @@
  *********************************************************************** */
 
 import CocoaExtensions
+@testable import Glasstual
 import os
 import XCTest
 

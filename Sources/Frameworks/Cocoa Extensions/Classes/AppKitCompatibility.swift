@@ -36,9 +36,9 @@ import ObjectiveC
 
 private nonisolated(unsafe) var menuItemUserInfoKey: UInt8 = 0
 
-extension NSFont {
+public extension NSFont {
 	@objc(convertToItalics)
-	var textual_convertToItalics: NSFont? {
+	var textualConvertToItalics: NSFont? {
 		let manager = NSFontManager.shared
 		let italicFont = manager.convert(self, toHaveTrait: .italicFontMask)
 
@@ -73,20 +73,20 @@ extension NSFont {
 	}
 }
 
-extension NSScreen {
-	private var textual_displayIdentifier: CGDirectDisplayID? {
+public extension NSScreen {
+	private var textualDisplayIdentifier: CGDirectDisplayID? {
 		(deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
 	}
 
 	@objc(runningInHighResolutionMode)
-	var textual_runningInHighResolutionMode: Bool {
+	var textualRunningInHighResolutionMode: Bool {
 		abs(backingScaleFactor - 1) > 0.01
 	}
 
 	@objc(screenResolutionString)
-	var textual_screenResolutionString: String {
+	var textualScreenResolutionString: String {
 		guard
-			let displayIdentifier = textual_displayIdentifier,
+			let displayIdentifier = textualDisplayIdentifier,
 			let displayMode = CGDisplayCopyDisplayMode(displayIdentifier)
 		else {
 			return "\(Int(frame.width)) x \(Int(frame.height))"
@@ -96,13 +96,13 @@ extension NSScreen {
 	}
 
 	@objc(screenRefreshRate)
-	var textual_screenRefreshRate: CGFloat {
+	var textualScreenRefreshRate: CGFloat {
 		if maximumFramesPerSecond > 0 {
 			return CGFloat(maximumFramesPerSecond)
 		}
 
 		guard
-			let displayIdentifier = textual_displayIdentifier,
+			let displayIdentifier = textualDisplayIdentifier,
 			let displayMode = CGDisplayCopyDisplayMode(displayIdentifier)
 		else {
 			return 0
@@ -112,9 +112,9 @@ extension NSScreen {
 	}
 }
 
-extension NSMenuItem {
+public extension NSMenuItem {
 	@objc(userInfo)
-	var textual_userInfo: String? {
+	var textualUserInfo: String? {
 		get { objc_getAssociatedObject(self, &menuItemUserInfoKey) as? String }
 		set {
 			objc_setAssociatedObject(
@@ -134,7 +134,7 @@ extension NSMenuItem {
 			}
 		}
 
-		textual_userInfo = userInfo
+		textualUserInfo = userInfo
 	}
 
 	@objc(menuItemWithTitle:target:action:)
@@ -164,7 +164,7 @@ extension NSMenuItem {
 	}
 }
 
-extension NSObject {
+public extension NSObject {
 	@objc(isEqualIgnoringCase:)
 	func textual_isEqualIgnoringCase(_ other: Any) -> Bool {
 		if let left = self as? NSString, let right = other as? NSString {
@@ -203,7 +203,7 @@ extension NSObject {
 	}
 }
 
-extension NSArrayController {
+public extension NSArrayController {
 	@objc(removeAllArrangedObjects)
 	func textual_removeAllArrangedObjects() {
 		let count = (arrangedObjects as? [Any])?.count ?? 0

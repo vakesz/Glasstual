@@ -4,9 +4,6 @@ import XCTest
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
 /// #import "GLTTestClient.h"
-/// #import "IRCChannelPrivate.h"
-/// #import "IRCTimerCommandPrivate.h"
-/// #import "IRCTreeItemPrivate.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
@@ -44,11 +41,12 @@ import XCTest
  *
  *********************************************************************** */
 @objc
-class IRCTimedCommandTests: XCTestCase {
+@MainActor
+final class IRCTimedCommandTests: XCTestCase {
 	@objc
 	func testInitializationCapturesCommandContextAndUniqueIdentifiers() {
 		let client = GLTTestClient()
-		let channel = IRCChannel(configDictionary: ["channelName": "#chat"])
+		let channel = Channel(configDictionary: ["channelName": "#chat"])
 
 		let first = TimedCommand(command: "WHO #chat", onClient: client, inChannel: channel)
 		let second = TimedCommand(command: "PING", onClient: client)
@@ -87,5 +85,24 @@ class IRCTimedCommandTests: XCTestCase {
 		XCTAssertTrue(command.timerIsActive)
 
 		command.stop()
+	}
+
+	func testClientOwnsTimedCommandsThroughTheSwiftStore() {
+		let client = GLTTestClient()
+		let first = TimedCommand(command: "PING", onClient: client)
+		let second = TimedCommand(command: "WHO #chat", onClient: client)
+
+		client.addTimedCommand(first)
+		client.addTimedCommand(second)
+
+		XCTAssertIdentical(client.timedCommand(withIdentifier: first.identifier), first)
+		XCTAssertEqual(Set(client.listOfTimedCommands().map(\.identifier)), [first.identifier, second.identifier])
+
+		client.removeTimedCommand(first)
+		XCTAssertNil(client.timedCommand(withIdentifier: first.identifier))
+		XCTAssertEqual(client.listOfTimedCommands().map(\.identifier), [second.identifier])
+
+		client.removeTimedCommands()
+		XCTAssertTrue(client.listOfTimedCommands().isEmpty)
 	}
 }

@@ -35,28 +35,28 @@ import Foundation
 @objc(XRRegularExpression)
 public final class RegularExpression: NSObject {
 	@objc(string:isMatchedByRegex:)
-	public class func string(_ haystack: String, isMatchedByRegex needle: String) -> Bool {
+	public static func string(_ haystack: String, isMatchedByRegex needle: String) -> Bool {
 		string(haystack, isMatchedByRegex: needle, withoutCase: false)
 	}
 
 	@objc(string:isMatchedByRegex:withoutCase:)
-	public class func string(_ haystack: String, isMatchedByRegex needle: String, withoutCase caseless: Bool) -> Bool {
+	public static func string(_ haystack: String, isMatchedByRegex needle: String, withoutCase caseless: Bool) -> Bool {
 		makeExpression(needle, caseless: caseless)?.firstMatch(in: haystack, range: haystack.fullRange) != nil
 	}
 
 	@objc(string:rangeOfRegex:)
-	public class func string(_ haystack: String, rangeOfRegex needle: String) -> NSRange {
+	public static func string(_ haystack: String, rangeOfRegex needle: String) -> NSRange {
 		string(haystack, rangeOfRegex: needle, withoutCase: false)
 	}
 
 	@objc(string:rangeOfRegex:withoutCase:)
-	public class func string(_ haystack: String, rangeOfRegex needle: String, withoutCase caseless: Bool) -> NSRange {
+	public static func string(_ haystack: String, rangeOfRegex needle: String, withoutCase caseless: Bool) -> NSRange {
 		makeExpression(needle, caseless: caseless)?.rangeOfFirstMatch(in: haystack, range: haystack.fullRange)
 			?? NSRange(location: NSNotFound, length: 0)
 	}
 
 	@objc(string:replacedByRegex:withString:)
-	public class func string(_ haystack: String, replacedByRegex needle: String, with replacement: String) -> String {
+	public static func string(_ haystack: String, replacedByRegex needle: String, with replacement: String) -> String {
 		makeExpression(needle)?.stringByReplacingMatches(
 			in: haystack,
 			range: haystack.fullRange,
@@ -66,7 +66,7 @@ public final class RegularExpression: NSObject {
 	}
 
 	@objc(matchesInString:withRegex:withoutCase:substringGroups:)
-	public class func matches(
+	public static func matches(
 		in haystack: String,
 		withRegex needle: String,
 		withoutCase caseless: Bool,
@@ -85,7 +85,7 @@ public final class RegularExpression: NSObject {
 	}
 
 	@objc(matches:inString:withRegex:)
-	public class func matchCount(
+	public static func matchCount(
 		_ matches: AutoreleasingUnsafeMutablePointer<NSArray?>?,
 		in haystack: String,
 		withRegex needle: String
@@ -94,7 +94,7 @@ public final class RegularExpression: NSObject {
 	}
 
 	@objc(matches:inString:withRegex:withoutCase:)
-	public class func matchCount(
+	public static func matchCount(
 		_ matches: AutoreleasingUnsafeMutablePointer<NSArray?>?,
 		in haystack: String,
 		withRegex needle: String,
@@ -104,7 +104,7 @@ public final class RegularExpression: NSObject {
 	}
 
 	@objc(matches:inString:withRegex:withoutCase:substringGroups:)
-	public class func matchCount(
+	public static func matchCount(
 		_ matches: AutoreleasingUnsafeMutablePointer<NSArray?>?,
 		in haystack: String,
 		withRegex needle: String,
@@ -121,7 +121,7 @@ public final class RegularExpression: NSObject {
 		return UInt(result.count)
 	}
 
-	private class func makeExpression(_ pattern: String, caseless: Bool = false) -> NSRegularExpression? {
+	private static func makeExpression(_ pattern: String, caseless: Bool = false) -> NSRegularExpression? {
 		try? NSRegularExpression(pattern: pattern, options: caseless ? .caseInsensitive : [])
 	}
 }

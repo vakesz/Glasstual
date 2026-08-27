@@ -64,8 +64,8 @@
 import CryptoKit
 import Foundation
 
-extension NSData {
-	private var textual_data: Data {
+public extension NSData {
+	private var textualData: Data {
 		self as Data
 	}
 
@@ -74,22 +74,22 @@ extension NSData {
 	}
 
 	@objc(range)
-	var textual_range: NSRange {
+	var textualRange: NSRange {
 		NSRange(location: 0, length: length)
 	}
 
 	@objc(sha1)
-	var textual_sha1: String {
-		textual_hexadecimalString(for: Insecure.SHA1.hash(data: textual_data))
+	var textualSha1: String {
+		textual_hexadecimalString(for: Insecure.SHA1.hash(data: textualData))
 	}
 
 	@objc(sha256)
-	var textual_sha256: String {
-		textual_hexadecimalString(for: SHA256.hash(data: textual_data))
+	var textualSha256: String {
+		textual_hexadecimalString(for: SHA256.hash(data: textualData))
 	}
 
 	@objc(sha512)
-	var textual_sha512: String {
-		textual_hexadecimalString(for: SHA512.hash(data: textual_data))
+	var textualSha512: String {
+		textual_hexadecimalString(for: SHA512.hash(data: textualData))
 	}
 }

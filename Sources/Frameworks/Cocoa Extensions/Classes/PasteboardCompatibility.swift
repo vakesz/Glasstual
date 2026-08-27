@@ -63,9 +63,9 @@
 
 import AppKit
 
-extension NSPasteboard {
+public extension NSPasteboard {
 	@objc(stringContent)
-	var textual_stringContent: String? {
+	var textualStringContent: String? {
 		get { string(forType: .string) }
 		set {
 			declareTypes([.string], owner: nil)

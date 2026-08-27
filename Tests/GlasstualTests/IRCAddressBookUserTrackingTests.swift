@@ -4,7 +4,6 @@ import XCTest
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
 /// #import "GLTTestClient.h"
-/// #import "IRCAddressBookUserTrackingPrivate.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
@@ -41,11 +40,12 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-class IRCAddressBookUserTrackingTests: XCTestCase {
+@MainActor
+final class IRCAddressBookUserTrackingTests: XCTestCase {
 	private var tracker: IRCAddressBookUserTrackingContainer!
 
-	override func setUp() {
-		super.setUp()
+	override func setUp() async throws {
+		try await super.setUp()
 		tracker = IRCAddressBookUserTrackingContainer(client: GLTTestClient())
 	}
 
@@ -74,7 +74,7 @@ class IRCAddressBookUserTrackingTests: XCTestCase {
 	func testRemovalUsesCanonicalNicknameInNotification() {
 		tracker.addTrackedUser("Alice")
 		let expectation = expectation(
-			forNotification: .IRCAddressBookUserTrackingRemovedTrackedUser,
+			forNotification: .addressBookTrackingRemovedUser,
 			object: tracker
 		) { notification in
 			notification.userInfo?["nickname"] as? String == "Alice"
@@ -90,7 +90,7 @@ class IRCAddressBookUserTrackingTests: XCTestCase {
 		tracker.addTrackedUser("Alice")
 		tracker.addTrackedUser("Bob")
 		let expectation = expectation(
-			forNotification: .IRCAddressBookUserTrackingRemovedAllTrackedUsers,
+			forNotification: .addressBookTrackingRemovedAllUsers,
 			object: tracker
 		)
 
@@ -98,5 +98,23 @@ class IRCAddressBookUserTrackingTests: XCTestCase {
 
 		wait(for: [expectation], timeout: 1)
 		XCTAssertTrue(tracker.trackedUsers.isEmpty)
+	}
+
+	func testWhoBatchPolicyReturnsNoRangeForAnEmptyChannelList() {
+		XCTAssertNil(UserTrackingWhoBatchPolicy.indexRange(startingAt: 0, channelCount: 0))
+	}
+
+	func testWhoBatchPolicyWrapsAStaleStartIndex() {
+		XCTAssertEqual(
+			UserTrackingWhoBatchPolicy.indexRange(startingAt: 20, channelCount: 3),
+			0 ... 2
+		)
+	}
+
+	func testWhoBatchPolicyPreservesLegacyFiveChannelWindow() {
+		XCTAssertEqual(
+			UserTrackingWhoBatchPolicy.indexRange(startingAt: 2, channelCount: 10),
+			2 ... 6
+		)
 	}
 }

@@ -1,0 +1,132 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "commands-invalid" : {
+      "comment" : "Validation message for an invalid command list. Migrated from legacy key 9ri-sd. Next unused legacy key was 1014.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter a properly formatted list of commands.\n\n• Commands must be a comma (,) separated list.\n• Commands must only contain the characters: a-z, A-Z, 0-9\n• Numerics must be whole numbers that are greater than zero (0) and less than or equal to 999."
+          }
+        }
+      }
+    },
+    "destination-invalid" : {
+      "comment" : "Validation message for an improperly formatted filter destination. Migrated from legacy key 5kd-jt.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter a properly formatted destination.\n\nAccepted characters: a-z, A-Z, 0-9, dashes (-), underscores (_), and spaces."
+          }
+        }
+      }
+    },
+    "destination-too-long" : {
+      "comment" : "Validation message for a filter destination longer than the supported limit. Migrated from legacy key m0u-tw.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter a shorter destination"
+          }
+        }
+      }
+    },
+    "token-channel-name" : {
+      "comment" : "Title of the action token representing a channel name. Migrated from legacy key 90e-tj.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Channel Name" } } }
+    },
+    "token-local-nickname" : {
+      "comment" : "Title of the action token representing the local nickname. Migrated from legacy key tbc-wc.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "My Nickname" } } }
+    },
+    "token-network-name" : {
+      "comment" : "Title of the action token representing a network name. Migrated from legacy key 840-f9.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Network Name" } } }
+    },
+    "token-original-message" : {
+      "comment" : "Title of the action token representing the original message. Migrated from legacy key sch-hi.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Original Message" } } }
+    },
+    "token-parameter-1" : {
+      "comment" : "Title of the action token representing message parameter 1. Migrated from legacy key kph-dc.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Parameter #1" } } }
+    },
+    "token-parameter-2" : {
+      "comment" : "Title of the action token representing message parameter 2. Migrated from legacy key 8bd-nt.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Parameter #2" } } }
+    },
+    "token-parameter-3" : {
+      "comment" : "Title of the action token representing message parameter 3. Migrated from legacy key 4vk-v8.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Parameter #3" } } }
+    },
+    "token-parameter-4" : {
+      "comment" : "Title of the action token representing message parameter 4. Migrated from legacy key kvz-ej.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Parameter #4" } } }
+    },
+    "token-parameter-5" : {
+      "comment" : "Title of the action token representing message parameter 5. Migrated from legacy key 2pa-ju.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Parameter #5" } } }
+    },
+    "token-parameter-6" : {
+      "comment" : "Title of the action token representing message parameter 6. Migrated from legacy key jen-7o.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Parameter #6" } } }
+    },
+    "token-parameter-7" : {
+      "comment" : "Title of the action token representing message parameter 7. Migrated from legacy key t5v-4o.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Parameter #7" } } }
+    },
+    "token-parameter-8" : {
+      "comment" : "Title of the action token representing message parameter 8. Migrated from legacy key vyf-el.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Parameter #8" } } }
+    },
+    "token-parameter-9" : {
+      "comment" : "Title of the action token representing message parameter 9. Migrated from legacy key 0x4-ib.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Parameter #9" } } }
+    },
+    "token-sender-address" : {
+      "comment" : "Title of the action token representing the sender address. Migrated from legacy key xt2-bv.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sender Address" } } }
+    },
+    "token-sender-hostmask" : {
+      "comment" : "Title of the action token representing the sender hostmask. Migrated from legacy key je5-u2.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sender Hostmask" } } }
+    },
+    "token-sender-nickname" : {
+      "comment" : "Title of the action token representing the sender nickname. Migrated from legacy key k82-6i.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sender Nickname" } } }
+    },
+    "token-sender-username" : {
+      "comment" : "Title of the action token representing the sender username. Migrated from legacy key 2sk-ui.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Sender Username" } } }
+    },
+    "token-server-address" : {
+      "comment" : "Title of the action token representing the server address. Migrated from legacy key 9xy-vf.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Server Address" } } }
+    }
+  },
+  "version" : "1.0"
+}

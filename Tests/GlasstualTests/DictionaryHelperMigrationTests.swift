@@ -16,10 +16,26 @@ private typealias MutableDictionarySelectorMethod = @convention(c) (AnyObject, S
 
 final class DictionaryHelperMigrationTests: XCTestCase {
 	func testTypedAccessorsAcceptNumbersAndNumericStrings() throws {
-		let dictionary: NSDictionary = ["enabled": "YES", "count": "42"]
+		let dictionary: NSDictionary = [
+			"double": "4.25",
+			"enabled": "YES",
+			"integer": "42",
+			"longLong": "-9000000000",
+			"short": NSNumber(value: Int16(-12)),
+			"unsignedInteger": NSNumber(value: UInt(123)),
+			"unsignedLongLong": NSNumber(value: UInt64(18_000_000_000)),
+			"unsignedShort": NSNumber(value: UInt16(65000)),
+		]
 
 		XCTAssertTrue(try invokeBool(dictionary, selector: "boolForKey:", key: "enabled"))
-		XCTAssertEqual(try invokeInteger(dictionary, selector: "integerForKey:", key: "count"), 42)
+		XCTAssertEqual(try invokeInteger(dictionary, selector: "integerForKey:", key: "integer"), 42)
+		XCTAssertEqual(dictionary.ce_short(forKey: "short"), -12)
+		XCTAssertEqual(dictionary.ce_unsignedShort(forKey: "unsignedShort"), 65000)
+		XCTAssertEqual(dictionary.ce_unsignedInteger(forKey: "unsignedInteger"), 123)
+		XCTAssertEqual(dictionary.ce_longLong(forKey: "longLong"), -9_000_000_000)
+		XCTAssertEqual(dictionary.ce_unsignedLongLong(forKey: "unsignedLongLong"), 18_000_000_000)
+		XCTAssertEqual(dictionary.ce_double(forKey: "double"), 4.25)
+		XCTAssertEqual(dictionary.ce_unsignedInteger(forKey: "integer", orUseDefault: 17), 17)
 	}
 
 	func testTypedAccessorsUseDefaultsForWrongTypes() throws {
@@ -35,27 +51,60 @@ final class DictionaryHelperMigrationTests: XCTestCase {
 	}
 
 	func testRemovingDefaultsDropsEqualAndEmptyValues() throws {
+		let hashTable = NSHashTable<AnyObject>(options: .strongMemory)
+		let mapTable = NSMapTable<AnyObject, AnyObject>.strongToStrongObjects()
 		let dictionary: NSDictionary = [
+			"attributedString": NSAttributedString(string: ""),
 			"default": "same",
 			"empty": "",
+			"hashTable": hashTable,
+			"indexSet": NSIndexSet(),
 			"kept": "value",
+			"mapTable": mapTable,
+			"orderedSet": NSOrderedSet(),
+			"pointerArray": NSPointerArray.strongObjects(),
 		]
-		let result = try invokeObject(
+		let result = try XCTUnwrap(invokeObject(
 			dictionary,
 			selector: "dictionaryByRemovingDefaults:",
 			argument: ["default": "same"] as NSDictionary
-		) as! NSDictionary
+		) as? NSDictionary)
 
 		XCTAssertEqual(result, ["kept": "value"] as NSDictionary)
 	}
 
+	func testCaseInsensitiveCollectionLookupUsesTypedStringComparison() {
+		let array: NSArray = ["GLASSTUAL", "Textual"]
+		let dictionary: NSDictionary = ["Network": "Libera.Chat"]
+
+		XCTAssertTrue(array.ce_containsObjectIgnoringCase("glasstual" as NSString))
+		XCTAssertEqual(dictionary.ce_keyIgnoringCase("network" as NSString) as? String, "Network")
+	}
+
+	func testArrayValueConversionAndNormalization() {
+		let values: NSArray = [NSNumber(value: UInt(42)), "4.25"]
+		XCTAssertEqual(values.ce_unsignedInteger(at: 0), 42)
+		XCTAssertEqual(values.ce_double(at: 1), 4.25)
+
+		let unnormalized: NSArray = ["  Alpha  ", "", "Alpha", NSArray(), NSNull()]
+		let normalized = unnormalized.ce_arrayByRemovingEmptyValues(true, trimming: true, uniquing: true)
+		XCTAssertEqual(normalized as NSArray, ["Alpha"] as NSArray)
+	}
+
+	func testMutableArrayReplacesObjectValuesUsingSelector() {
+		let array: NSMutableArray = ["MIXED"]
+		array.ce_performSelectorOnObjectValueAndReplace(NSSelectorFromString("lowercaseString"))
+
+		XCTAssertEqual(array, ["mixed"] as NSArray)
+	}
+
 	func testFormDataSupportsStringsNumbersAndNull() throws {
 		let dictionary: NSDictionary = ["query": "hello world", "page": 2, "empty": NSNull()]
-		let result = try invokeObject(
+		let result = try XCTUnwrap(invokeObject(
 			dictionary,
 			selector: "formDataUsingSeparator:",
 			argument: "&" as NSString
-		) as! String
+		) as? String)
 		let fields = Set(result.split(separator: "&").map(String.init))
 
 		XCTAssertEqual(fields, ["query=hello%20world", "page=2", "empty="])
@@ -89,12 +138,51 @@ final class DictionaryHelperMigrationTests: XCTestCase {
 
 	func testAllLegacySelectorsRemainAvailable() {
 		let immutableSelectors = [
-			"boolForKey:",
-			"objectForKey:orUseDefault:",
+			"arrayForKey:",
+			"arrayForKey:orUseDefault:",
+			"assignArrayTo:forKey:",
+			"assignBoolTo:forKey:",
+			"assignDoubleTo:forKey:",
 			"assignObjectTo:forKey:",
-			"keyIgnoringCase:",
+			"assignObjectTo:forKey:performCopy:",
+			"assignStringTo:forKey:",
+			"assignUnsignedIntegerTo:forKey:",
+			"assignUnsignedShortTo:forKey:",
+			"boolForKey:",
+			"boolForKey:orUseDefault:",
+			"containsKey:",
+			"dictionaryByAddingEntries:",
+			"dictionaryByRemovingDefaults:",
 			"dictionaryByRemovingDefaults:allowEmptyValues:",
+			"dictionaryForKey:",
+			"dictionaryForKey:orUseDefault:",
+			"doubleForKey:",
+			"doubleForKey:orUseDefault:",
+			"firstKeyForObject:",
+			"formDataUsingSeparator:",
 			"formDataUsingSeparator:encodingBlock:",
+			"integerForKey:",
+			"integerForKey:orUseDefault:",
+			"keyIgnoringCase:",
+			"longForKey:",
+			"longForKey:orUseDefault:",
+			"longLongForKey:",
+			"longLongForKey:orUseDefault:",
+			"objectForKey:orUseDefault:",
+			"shortForKey:",
+			"shortForKey:orUseDefault:",
+			"sortedDictionaryKeys",
+			"sortedDictionaryKeysReversed",
+			"stringForKey:",
+			"stringForKey:orUseDefault:",
+			"unsignedIntegerForKey:",
+			"unsignedIntegerForKey:orUseDefault:",
+			"unsignedLongForKey:",
+			"unsignedLongForKey:orUseDefault:",
+			"unsignedLongLongForKey:",
+			"unsignedLongLongForKey:orUseDefault:",
+			"unsignedShortForKey:",
+			"unsignedShortForKey:orUseDefault:",
 		]
 		for selector in immutableSelectors {
 			XCTAssertTrue(NSDictionary.instancesRespond(to: NSSelectorFromString(selector)), selector)
@@ -102,11 +190,54 @@ final class DictionaryHelperMigrationTests: XCTestCase {
 
 		let mutableSelectors = [
 			"maybeSetObject:forKey:",
-			"setUnsignedLongLong:forKey:",
 			"performSelectorOnObjectValueAndReplace:",
+			"setBool:forKey:",
+			"setDouble:forKey:",
+			"setFloat:forKey:",
+			"setInteger:forKey:",
+			"setLong:forKey:",
+			"setLongLong:forKey:",
+			"setObjectWithoutOverride:forKey:",
+			"setShort:forKey:",
+			"setUnsignedInteger:forKey:",
+			"setUnsignedLong:forKey:",
+			"setUnsignedLongLong:forKey:",
+			"setUnsignedShort:forKey:",
 		]
 		for selector in mutableSelectors {
 			XCTAssertTrue(NSMutableDictionary.instancesRespond(to: NSSelectorFromString(selector)), selector)
+		}
+	}
+
+	func testAllLegacyArraySelectorsRemainAvailable() {
+		let immutableSelectors = [
+			"arrayByApplyingBlock:",
+			"arrayByApplyingBlock:withOptions:",
+			"arrayByRemovingEmptyValues",
+			"arrayByRemovingEmptyValues:trimming:uniquing:",
+			"arrayByRemovingEmptyValuesAndUniquing",
+			"containsObjectIgnoringCase:",
+			"doubleAtIndex:",
+			"enumerateSubarraysOfSize:usingBlock:",
+			"enumerateSubarraysOfSize:usingBlock:withOptions:",
+			"objectPassingTest:",
+			"objectPassingTest:withOptions:",
+			"range",
+			"stringArrayControllerObjects",
+			"unsignedIntegerAtIndex:",
+		]
+		for selector in immutableSelectors {
+			XCTAssertTrue(NSArray.instancesRespond(to: NSSelectorFromString(selector)), selector)
+		}
+
+		let mutableSelectors = [
+			"addObjectWithoutDuplication:",
+			"moveObjectAtIndex:toIndex:",
+			"performSelectorOnObjectValueAndReplace:",
+			"shuffle",
+		]
+		for selector in mutableSelectors {
+			XCTAssertTrue(NSMutableArray.instancesRespond(to: NSSelectorFromString(selector)), selector)
 		}
 	}
 

@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "7qf-r0" : {
+      "comment" : "Heading for a server channel list. The argument is the network name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel List for “%@”"
+          }
+        }
+      }
+    },
+    "ct4-wh" : {
+      "comment" : "%@ = channel count.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Channel List — %@ Public Channels"
+          }
+        }
+      }
+    },
+    "u7e-1s" : {
+      "comment" : "Label for the minimum channel member count filter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimum users:"
+          }
+        }
+      }
+    },
+    "u7e-2s" : {
+      "comment" : "Help text for the server-side minimum channel member count filter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only list channels with at least this many members. The server applies this filter (ELIST)."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

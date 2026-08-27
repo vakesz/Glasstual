@@ -12,6 +12,15 @@
 
 import AppKit
 
+@objc(TVCErrorMessagePopoverDelegate)
+@MainActor
+public protocol ErrorMessagePopoverDelegate: AnyObject {
+	@objc optional func errorMessagePopoverWillShow(_ popover: ErrorMessagePopover)
+	@objc optional func errorMessagePopoverDidShow(_ popover: ErrorMessagePopover)
+	@objc optional func errorMessagePopoverWillClose(_ popover: ErrorMessagePopover)
+	@objc optional func errorMessagePopoverDidClose(_ popover: ErrorMessagePopover)
+}
+
 private enum Layout {
 	static let messageMaximumWidth = 330.0
 	static let messageHorizontalPadding = 5.0
@@ -30,8 +39,9 @@ private final class ErrorMessagePopoverView: NSPopover {
 }
 
 @objc(TVCErrorMessagePopover)
+@MainActor
 public final class ErrorMessagePopover: NSObject, NSPopoverDelegate {
-	@objc public weak var delegate: TVCErrorMessagePopoverDelegate?
+	@objc public weak var delegate: ErrorMessagePopoverDelegate?
 
 	@objc public private(set) var message: String
 	@objc public private(set) weak var view: NSView?
@@ -50,7 +60,7 @@ public final class ErrorMessagePopover: NSObject, NSPopoverDelegate {
 		super.init()
 	}
 
-	deinit {
+	isolated deinit {
 		close()
 	}
 
@@ -66,7 +76,7 @@ public final class ErrorMessagePopover: NSObject, NSPopoverDelegate {
 
 		let errorImage = NSImage(
 			systemSymbolName: "exclamationmark.circle.fill",
-			accessibilityDescription: LocalizedKey("Accessibility[c4e-rr]")
+			accessibilityDescription: AccessibilityStrings.errorIcon
 		)
 
 		let errorImageConfiguration = NSImage.SymbolConfiguration(pointSize: 16.0, weight: .regular, scale: .large)
@@ -166,30 +176,18 @@ public final class ErrorMessagePopover: NSObject, NSPopoverDelegate {
 	}
 
 	public func popoverWillShow(_: Notification) {
-		let selector = NSSelectorFromString("errorMessagePopoverWillShow:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.errorMessagePopoverWillShow?(self)
 	}
 
 	public func popoverDidShow(_: Notification) {
-		let selector = NSSelectorFromString("errorMessagePopoverDidShow:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.errorMessagePopoverDidShow?(self)
 	}
 
 	public func popoverWillClose(_: Notification) {
-		let selector = NSSelectorFromString("errorMessagePopoverWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.errorMessagePopoverWillClose?(self)
 	}
 
 	public func popoverDidClose(_: Notification) {
-		let selector = NSSelectorFromString("errorMessagePopoverDidClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.errorMessagePopoverDidClose?(self)
 	}
 }

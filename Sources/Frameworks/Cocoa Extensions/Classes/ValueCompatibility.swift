@@ -32,7 +32,7 @@
 
 import Foundation
 
-extension NSValue {
+public extension NSValue {
 	@objc(valueWithPrimitive:withType:)
 	class func textual_value(withPrimitive value: UnsafeMutableRawPointer?,
 	                         withType type: UnsafePointer<CChar>) -> Any

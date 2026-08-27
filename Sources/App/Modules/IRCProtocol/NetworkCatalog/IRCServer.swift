@@ -8,12 +8,38 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 @objc(IRCServer)
-public class Server: XRPortablePropertyDict {
+public class Server: PortablePropertyDict {
 	fileprivate var prefersSecuredConnectionStorage = false
 	fileprivate var serverAddressStorage = ""
 	fileprivate var serverPasswordStorage: String?
@@ -46,11 +72,11 @@ public class Server: XRPortablePropertyDict {
 	@objc public var serverPasswordFromKeychain: String? {
 		let serviceName = "glasstual.server.\(uniqueIdentifierStorage)"
 
-		return XRKeychain.getPasswordFromKeychainItem(
-			"Glasstual (Server Password)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: serviceName
+		return KeychainStore.password(
+			forItem: "Glasstual (Server Password)",
+			kind: "application password",
+			username: nil,
+			service: serviceName
 		)
 	}
 
@@ -59,7 +85,7 @@ public class Server: XRPortablePropertyDict {
 	}
 
 	@objc(initWithDictionary:)
-	override public init(dictionary dic: [String: Any]) {
+	public required init(dictionary dic: [String: Any]) {
 		super.init(dictionary: dic)
 	}
 
@@ -86,7 +112,7 @@ public class Server: XRPortablePropertyDict {
 			return
 		}
 
-		defaultsStorage = ["serverPort": NSNumber(value: IRCConnectionDefaultServerPort)]
+		defaultsStorage = ["serverPort": NSNumber(value: IRCConnectionDefaults.serverPort)]
 	}
 
 	@objc(populateDefaultsPostflight)
@@ -96,7 +122,7 @@ public class Server: XRPortablePropertyDict {
 		}
 
 		if uniqueIdentifierStorage.isEmpty {
-			uniqueIdentifierStorage = NSString.withUUID()
+			uniqueIdentifierStorage = UUID().uuidString
 		}
 	}
 
@@ -105,9 +131,9 @@ public class Server: XRPortablePropertyDict {
 		let defaultsMutable = NSMutableDictionary(dictionary: defaultsStorage)
 		defaultsMutable.addEntries(from: dic)
 
-		var prefersSecured = ObjCBool(false)
-		defaultsMutable.assignBool(to: &prefersSecured, forKey: "prefersSecuredConnection")
-		prefersSecuredConnectionStorage = prefersSecured.boolValue
+		var prefersSecured = false
+		defaultsMutable.ce_assignBool(to: &prefersSecured, forKey: "prefersSecuredConnection")
+		prefersSecuredConnectionStorage = prefersSecured
 
 		if let address = defaultsMutable["serverAddress"] as? String {
 			serverAddressStorage = address
@@ -118,37 +144,43 @@ public class Server: XRPortablePropertyDict {
 		}
 
 		var port: UInt16 = 0
-		defaultsMutable.assignUnsignedShort(to: &port, forKey: "serverPort")
+		defaultsMutable.ce_assignUnsignedShort(to: &port, forKey: "serverPort")
 		serverPortStorage = port
 	}
 
-	override public func dictionaryValue(for _: XRPortablePropertyDictTarget) -> [String: Any] {
+	override public func dictionaryValue(for _: PortablePropertyDictTarget) -> [String: Any] {
 		let dic = NSMutableDictionary()
 
-		dic.setBool(prefersSecuredConnectionStorage, forKey: "prefersSecuredConnection")
-		dic.maybeSetObject(serverAddressStorage, forKey: "serverAddress")
-		dic.maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
-		dic.setUnsignedShort(serverPortStorage, forKey: "serverPort")
+		dic.ce_setBool(prefersSecuredConnectionStorage, forKey: "prefersSecuredConnection")
+		dic.ce_maybeSetObject(serverAddressStorage, forKey: "serverAddress")
+		dic.ce_maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
+		dic.ce_setUnsignedShort(serverPortStorage, forKey: "serverPort")
 
-		return dic as! [String: Any]
+		guard let values = dic as? [String: Any] else {
+			preconditionFailure("Server dictionaries must use String keys")
+		}
+
+		return values
 	}
 
 	override public func copy(asMutable mutableCopy: Bool, uniquing: Bool) -> Any {
-		let copy = super.copy(asMutable: mutableCopy, uniquing: false) as! Server
+		guard let copy = super.copy(asMutable: mutableCopy, uniquing: false) as? Server else {
+			preconditionFailure("Server copies must preserve their model type")
+		}
 
 		copy.defaultsStorage = defaultsStorage
 		copy.serverPasswordStorage = serverPasswordStorage
 		copy.destroyKeychainItemsDuringDealloc = destroyKeychainItemsDuringDealloc
 
 		if uniquing {
-			copy.uniqueIdentifierStorage = NSString.withUUID()
+			copy.uniqueIdentifierStorage = UUID().uuidString
 		}
 
 		return copy
 	}
 
-	override public var mutableClass: XRPortablePropertyDict {
-		unsafeBitCast(MutableServer.self, to: XRPortablePropertyDict.self)
+	override public var mutableClass: PortablePropertyDict {
+		unsafeBitCast(MutableServer.self, to: PortablePropertyDict.self)
 	}
 
 	@objc
@@ -159,12 +191,12 @@ public class Server: XRPortablePropertyDict {
 
 		let serviceName = "glasstual.server.\(uniqueIdentifierStorage)"
 
-		XRKeychain.modifyOrAddItem(
+		KeychainStore.modifyOrAddItem(
 			"Glasstual (Server Password)",
-			withItemKind: "application password",
-			forUsername: nil,
-			withNewPassword: serverPasswordStorage,
-			serviceName: serviceName
+			kind: "application password",
+			username: nil,
+			newPassword: serverPasswordStorage,
+			service: serviceName
 		)
 
 		self.serverPasswordStorage = nil
@@ -174,11 +206,11 @@ public class Server: XRPortablePropertyDict {
 	public func destroyServerPasswordKeychainItem() {
 		let serviceName = "glasstual.server.\(uniqueIdentifierStorage)"
 
-		XRKeychain.deleteItem(
+		KeychainStore.deleteItem(
 			"Glasstual (Server Password)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: serviceName
+			kind: "application password",
+			username: nil,
+			service: serviceName
 		)
 
 		serverPasswordStorage = nil
@@ -187,12 +219,12 @@ public class Server: XRPortablePropertyDict {
 
 @objc(IRCServerMutable)
 public final class MutableServer: Server {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyDict {
-		unsafeBitCast(Server.self, to: XRPortablePropertyDict.self)
+	override public var immutableClass: PortablePropertyDict {
+		unsafeBitCast(Server.self, to: PortablePropertyDict.self)
 	}
 
 	@objc override public var prefersSecuredConnection: Bool {

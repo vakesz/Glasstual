@@ -37,9 +37,11 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import GlasstualPluginKit
 
 @objc(IRCChannelConfig)
-public class ChannelConfig: XRPortablePropertyDict {
+public class ChannelConfig: PortablePropertyDict {
 	fileprivate var autoJoinStorage = true
 	fileprivate var ignoreGeneralEventMessagesStorage = false
 	fileprivate var ignoreHighlightsStorage = false
@@ -47,7 +49,7 @@ public class ChannelConfig: XRPortablePropertyDict {
 	fileprivate var inlineMediaEnabledStorage = false
 	fileprivate var pushNotificationsStorage = true
 	fileprivate var showTreeBadgeCountStorage = true
-	fileprivate var typeStorage = IRCChannelType.channel
+	fileprivate var typeStorage = ChannelType.channel
 	fileprivate var channelNameStorage = ""
 	fileprivate var labelStorage: String?
 	fileprivate var defaultModesStorage: String?
@@ -87,8 +89,15 @@ public class ChannelConfig: XRPortablePropertyDict {
 		showTreeBadgeCountStorage
 	}
 
-	@objc public var type: IRCChannelType {
+	public var type: ChannelType {
 		typeStorage
+	}
+
+	/// Compatibility getter for Objective-C plug-ins that still declare
+	/// `-type` as the legacy `IRCChannelType` enum.
+	@objc(type)
+	public var objectiveCTypeRawValue: UInt {
+		type.rawValue
 	}
 
 	@objc public var channelName: String {
@@ -116,11 +125,11 @@ public class ChannelConfig: XRPortablePropertyDict {
 	}
 
 	@objc public var secretKeyFromKeychain: String? {
-		XRKeychain.getPasswordFromKeychainItem(
-			"Glasstual (Channel JOIN Key)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: secretKeyServiceName
+		KeychainStore.password(
+			forItem: "Glasstual (Channel JOIN Key)",
+			kind: "application password",
+			username: nil,
+			service: secretKeyServiceName
 		)
 	}
 
@@ -137,7 +146,7 @@ public class ChannelConfig: XRPortablePropertyDict {
 	}
 
 	@objc(initWithDictionary:)
-	override public init(dictionary dic: [String: Any]) {
+	public required init(dictionary dic: [String: Any]) {
 		super.init(dictionary: dic)
 	}
 
@@ -167,7 +176,7 @@ public class ChannelConfig: XRPortablePropertyDict {
 
 		defaultsStorage = [
 			"autoJoin": true,
-			"channelType": IRCChannelType.channel.rawValue,
+			"channelType": ChannelType.channel.rawValue,
 			"ignoreGeneralEventMessages": false,
 			"ignoreHighlights": false,
 			"inlineMediaEnabled": false,
@@ -184,7 +193,7 @@ public class ChannelConfig: XRPortablePropertyDict {
 		}
 
 		if uniqueIdentifierStorage.isEmpty {
-			uniqueIdentifierStorage = NSString.withUUID()
+			uniqueIdentifierStorage = UUID().uuidString
 		}
 	}
 
@@ -210,7 +219,7 @@ public class ChannelConfig: XRPortablePropertyDict {
 		}
 
 		if let typeValue = values["channelType"] as? NSNumber,
-		   let type = IRCChannelType(rawValue: typeValue.uintValue)
+		   let type = ChannelType(rawValue: typeValue.uintValue)
 		{
 			typeStorage = type
 		}
@@ -247,33 +256,45 @@ public class ChannelConfig: XRPortablePropertyDict {
 		migrateInlineMediaSettings(from: dic)
 	}
 
-	override public func dictionaryValue(for target: XRPortablePropertyDictTarget) -> [String: Any] {
+	override public func dictionaryValue(for target: PortablePropertyDictTarget) -> [String: Any] {
 		let dic = NSMutableDictionary()
 
-		dic.setBool(pushNotificationsStorage, forKey: "pushNotifications")
-		dic.setBool(showTreeBadgeCountStorage, forKey: "showTreeBadgeCount")
+		dic.ce_setBool(pushNotificationsStorage, forKey: "pushNotifications")
+		dic.ce_setBool(showTreeBadgeCountStorage, forKey: "showTreeBadgeCount")
 
 		if typeStorage == .channel {
-			dic.maybeSetObject(labelStorage, forKey: "label")
-			dic.maybeSetObject(defaultModesStorage, forKey: "defaultMode")
-			dic.maybeSetObject(defaultTopicStorage, forKey: "defaultTopic")
-			dic.maybeSetObject(notifications, forKey: "notifications")
-			dic.setBool(autoJoinStorage, forKey: "autoJoin")
-			dic.setBool(ignoreGeneralEventMessagesStorage, forKey: "ignoreGeneralEventMessages")
-			dic.setBool(ignoreHighlightsStorage, forKey: "ignoreHighlights")
-			dic.setBool(inlineMediaDisabledStorage, forKey: "inlineMediaDisabled")
-			dic.setBool(inlineMediaEnabledStorage, forKey: "inlineMediaEnabled")
+			dic.ce_maybeSetObject(labelStorage, forKey: "label")
+			dic.ce_maybeSetObject(defaultModesStorage, forKey: "defaultMode")
+			dic.ce_maybeSetObject(defaultTopicStorage, forKey: "defaultTopic")
+			dic.ce_maybeSetObject(notifications, forKey: "notifications")
+			dic.ce_setBool(autoJoinStorage, forKey: "autoJoin")
+			dic.ce_setBool(ignoreGeneralEventMessagesStorage, forKey: "ignoreGeneralEventMessages")
+			dic.ce_setBool(ignoreHighlightsStorage, forKey: "ignoreHighlights")
+			dic.ce_setBool(inlineMediaDisabledStorage, forKey: "inlineMediaDisabled")
+			dic.ce_setBool(inlineMediaEnabledStorage, forKey: "inlineMediaEnabled")
 		}
 
-		dic.maybeSetObject(channelNameStorage, forKey: "channelName")
-		dic.maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
-		dic.setUnsignedInteger(UInt(typeStorage.rawValue), forKey: "channelType")
+		dic.ce_maybeSetObject(channelNameStorage, forKey: "channelName")
+		dic.ce_maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
+		dic.ce_setUnsignedInteger(UInt(typeStorage.rawValue), forKey: "channelType")
 
 		if target == .copy || target == .mutableCopy {
-			return dic as! [String: Any]
+			guard let values = dic as? [String: Any] else {
+				preconditionFailure("Channel configuration dictionaries must use String keys")
+			}
+
+			return values
 		}
 
-		return dic.removingDefaults(defaultsStorage, allowEmptyValues: true) as! [String: Any]
+		let compacted = dic.ce_dictionaryByRemovingDefaults(
+			defaultsStorage as NSDictionary,
+			allowEmptyValues: true
+		)
+		guard let values = compacted as? [String: Any] else {
+			preconditionFailure("Channel configuration dictionaries must use String keys")
+		}
+
+		return values
 	}
 
 	override public func isEqual(_ object: Any?) -> Bool {
@@ -294,20 +315,22 @@ public class ChannelConfig: XRPortablePropertyDict {
 	}
 
 	override public func copy(asMutable mutableCopy: Bool, uniquing: Bool) -> Any {
-		let config = super.copy(asMutable: mutableCopy, uniquing: false) as! ChannelConfig
+		guard let config = super.copy(asMutable: mutableCopy, uniquing: false) as? ChannelConfig else {
+			preconditionFailure("ChannelConfig copies must preserve their model type")
+		}
 
 		config.defaultsStorage = defaultsStorage
 		config.secretKeyStorage = secretKeyStorage
 
 		if uniquing {
-			config.uniqueIdentifierStorage = NSString.withUUID()
+			config.uniqueIdentifierStorage = UUID().uuidString
 		}
 
 		return config
 	}
 
-	override public var mutableClass: XRPortablePropertyDict {
-		unsafeBitCast(MutableChannelConfig.self, to: XRPortablePropertyDict.self)
+	override public var mutableClass: PortablePropertyDict {
+		unsafeBitCast(MutableChannelConfig.self, to: PortablePropertyDict.self)
 	}
 
 	@objc public func writeSecretKeyToKeychain() {
@@ -315,23 +338,23 @@ public class ChannelConfig: XRPortablePropertyDict {
 			return
 		}
 
-		XRKeychain.modifyOrAddItem(
+		KeychainStore.modifyOrAddItem(
 			"Glasstual (Channel JOIN Key)",
-			withItemKind: "application password",
-			forUsername: nil,
-			withNewPassword: secretKeyStorage,
-			serviceName: secretKeyServiceName
+			kind: "application password",
+			username: nil,
+			newPassword: secretKeyStorage,
+			service: secretKeyServiceName
 		)
 
 		self.secretKeyStorage = nil
 	}
 
 	@objc public func destroySecretKeyKeychainItem() {
-		XRKeychain.deleteItem(
+		KeychainStore.deleteItem(
 			"Glasstual (Channel JOIN Key)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: secretKeyServiceName
+			kind: "application password",
+			username: nil,
+			service: secretKeyServiceName
 		)
 
 		secretKeyStorage = nil
@@ -339,7 +362,7 @@ public class ChannelConfig: XRPortablePropertyDict {
 
 	@objc(soundForEvent:)
 	public func sound(forEvent event: TXNotificationType) -> String? {
-		guard let key = TPCPreferences.key(forEvent: event, category: "Sound") else {
+		guard let key = TextualPreferences.key(for: event, category: "Sound") else {
 			return nil
 		}
 
@@ -372,7 +395,7 @@ public class ChannelConfig: XRPortablePropertyDict {
 	}
 
 	fileprivate func setSoundStorage(_ value: String?, forEvent event: TXNotificationType) {
-		guard let key = TPCPreferences.key(forEvent: event, category: "Sound") else {
+		guard let key = TextualPreferences.key(for: event, category: "Sound") else {
 			return
 		}
 
@@ -382,7 +405,7 @@ public class ChannelConfig: XRPortablePropertyDict {
 	}
 
 	fileprivate func setState(_ value: NSControl.StateValue, forEvent event: TXNotificationType, category: String) {
-		guard let key = TPCPreferences.key(forEvent: event, category: category) else {
+		guard let key = TextualPreferences.key(for: event, category: category) else {
 			return
 		}
 
@@ -401,7 +424,7 @@ public class ChannelConfig: XRPortablePropertyDict {
 	}
 
 	private func state(for event: TXNotificationType, category: String) -> NSControl.StateValue {
-		guard let key = TPCPreferences.key(forEvent: event, category: category) else {
+		guard let key = TextualPreferences.key(for: event, category: category) else {
 			return .off
 		}
 
@@ -415,9 +438,9 @@ public class ChannelConfig: XRPortablePropertyDict {
 	}
 
 	private func assignBool(_ key: String, to storage: inout Bool, in dictionary: NSDictionary) {
-		var value = ObjCBool(storage)
-		dictionary.assignBool(to: &value, forKey: key)
-		storage = value.boolValue
+		var value = storage
+		dictionary.ce_assignBool(to: &value, forKey: key)
+		storage = value
 	}
 
 	private func migrateInlineMediaSettings(from dictionary: [String: Any]) {
@@ -431,24 +454,35 @@ public class ChannelConfig: XRPortablePropertyDict {
 			return
 		}
 
-		inlineMediaDisabledStorage = TPCPreferences.showInlineMedia()
+		inlineMediaDisabledStorage = TextualPreferences.showInlineMedia()
 		inlineMediaEnabledStorage = !inlineMediaDisabledStorage
 	}
 }
 
 @objc(IRCChannelConfigMutable)
 public final class MutableChannelConfig: ChannelConfig {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyDict {
-		unsafeBitCast(ChannelConfig.self, to: XRPortablePropertyDict.self)
+	override public var immutableClass: PortablePropertyDict {
+		unsafeBitCast(ChannelConfig.self, to: PortablePropertyDict.self)
 	}
 
-	@objc override public var type: IRCChannelType {
+	override public var type: ChannelType {
 		get { typeStorage }
 		set { typeStorage = newValue }
+	}
+
+	/// Compatibility property for Objective-C callers of `-type` and
+	/// `-setType:`. Native callers use the strongly typed property above.
+	@objc(type)
+	override public var objectiveCTypeRawValue: UInt {
+		get { type.rawValue }
+		set {
+			guard let type = ChannelType(rawValue: newValue) else { return }
+			self.type = type
+		}
 	}
 
 	@objc override public var autoJoin: Bool {

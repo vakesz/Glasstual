@@ -36,9 +36,12 @@
  *********************************************************************** */
 
 import AppKit
+import GlasstualPluginKit
 
 @objc(TPISystemProfiler)
-final class SystemProfilerPlugin: NSObject, THOPluginProtocol, @unchecked Sendable {
+final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, PluginPreferencesProviding,
+	@unchecked Sendable
+{
 	private static let defaultPreferences = [
 		"System Profiler Extension -> Feature Disabled -> GPU Model": true,
 		"System Profiler Extension -> Feature Disabled -> Disk Information": true,
@@ -48,66 +51,74 @@ final class SystemProfilerPlugin: NSObject, THOPluginProtocol, @unchecked Sendab
 	]
 
 	@IBOutlet private var preferencePaneView: NSView!
+	private var host: PluginHostContext?
 
 	var pluginPreferencesPaneView: NSView {
 		preferencePaneView
 	}
 
 	var pluginPreferencesPaneMenuItemName: String {
-		SystemProfilerLocalization.string("dff-13")
+		SystemProfilerLocalization.string(.BasicLanguage.preferencesPaneTitle)
 	}
 
 	var subscribedUserInputCommands: [String] {
 		["sysinfo", "memory", "uptime", "netstats", "msgcount", "diskspace", "style", "screens", "runcount", "sysmem"]
 	}
 
-	func pluginLoadedIntoMemory() {
-		TPCPreferencesUserDefaults.shared().register(defaults: Self.defaultPreferences)
+	func pluginLoaded(using host: PluginHostContext) {
+		self.host = host
+		host.defaults.register(defaults: Self.defaultPreferences)
 		DispatchQueue.main.syncIfNeeded {
 			Bundle(for: SystemProfilerPlugin.self).loadNibNamed("TPISystemProfiler", owner: self, topLevelObjects: nil)
 		}
 	}
 
-	func userInputCommandInvoked(on client: IRCClient, command: String, messageString: String) {
-		let client = MainActorTransfer(value: client)
+	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
 		Task { @MainActor [weak self] in
-			self?.handleCommand(command, message: messageString, client: client.value)
+			self?.handleCommand(invocation)
 		}
 	}
 
 	@MainActor
-	private func handleCommand(_ command: String, message: String, client: IRCClient) {
-		guard let channel = NSObject.masterController().mainWindow.selectedChannel else { return }
-		let quiet = message.caseInsensitiveCompare("quiet") == .orderedSame
+	private func handleCommand(_ invocation: PluginCommandInvocation) {
+		guard let channel = invocation.selectedChannel, let host else { return }
+		let command = invocation.command
+		let quiet = invocation.message.caseInsensitiveCompare("quiet") == .orderedSame
+		let metrics = host.applicationMetrics
 
 		if command == "MEMORY" {
-			output(SystemProfileReport.applicationMemoryUsage(), quiet: quiet, client: client, channel: channel)
+			output(
+				SystemProfileReport.applicationMemoryUsage(metrics: metrics),
+				quiet: quiet,
+				client: invocation.client,
+				channel: channel
+			)
 			return
 		}
 
 		let report: String? = switch command {
-		case "SYSINFO": SystemProfileReport.systemInformation()
+		case "SYSINFO": SystemProfileReport.systemInformation(defaults: host.defaults)
 		case "UPTIME": SystemProfileReport.applicationAndSystemUptime()
 		case "NETSTATS": SystemProfileReport.systemNetworkInformation()
-		case "MSGCOUNT": SystemProfileReport.applicationBandwidthStatistics()
+		case "MSGCOUNT": SystemProfileReport.applicationBandwidthStatistics(metrics: metrics)
 		case "DISKSPACE": SystemProfileReport.systemDiskSpaceInformation()
-		case "STYLE": SystemProfileReport.applicationActiveStyle()
+		case "STYLE": SystemProfileReport.applicationActiveStyle(metrics: metrics)
 		case "SCREENS": SystemProfileReport.systemDisplayInformation()
 		case "RUNCOUNT": SystemProfileReport.applicationRuntimeStatistics()
 		case "SYSMEM": SystemProfileReport.systemMemoryInformation()
 		default: nil
 		}
 		if let report {
-			output(report, quiet: quiet, client: client, channel: channel)
+			output(report, quiet: quiet, client: invocation.client, channel: channel)
 		}
 	}
 
-	private func output(_ message: String, quiet: Bool, client: IRCClient, channel: IRCChannel) {
+	private func output(_ message: String, quiet: Bool, client: PluginClient, channel: PluginChannel) {
 		for line in message.components(separatedBy: .newlines) {
 			if quiet {
-				client.printDebugInformation(line, in: channel)
+				client.printDebug(line, in: channel)
 			} else {
-				client.sendPrivmsg(line, to: channel)
+				client.sendPrivateMessage(line, to: channel)
 			}
 		}
 	}
@@ -121,8 +132,4 @@ private extension DispatchQueue {
 			sync(execute: work)
 		}
 	}
-}
-
-private struct MainActorTransfer<Value>: @unchecked Sendable {
-	let value: Value
 }

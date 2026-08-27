@@ -7,8 +7,8 @@ import XCTest
  *********************************************************************** */
 class IRCAddressBookTests: XCTestCase {
 	func testIgnoreEntryTreatsRegularExpressionCharactersLiterally() {
-		let entry = IRCAddressBookEntry
-			.newIgnore(forHostmask: "nick[1]!*@example.com")
+		let entry = AddressBookEntry
+			.newIgnoreEntry(forHostmask: "nick[1]!*@example.com")
 
 		XCTAssertTrue(entry.checkMatch("NICK[1]!user@example.com"))
 		XCTAssertFalse(entry.checkMatch("nick1!user@example.com"))
@@ -16,8 +16,8 @@ class IRCAddressBookTests: XCTestCase {
 	}
 
 	func testIgnoreEntrySupportsIRCWildcardsAndAnchorsTheMatch() {
-		let entry = IRCAddressBookEntry
-			.newIgnore(forHostmask: "n?ck!*@*.example")
+		let entry = AddressBookEntry
+			.newIgnoreEntry(forHostmask: "n?ck!*@*.example")
 
 		XCTAssertTrue(entry.checkMatch("nick!user@irc.example"))
 		XCTAssertFalse(entry.checkMatch("prefix-nick!user@irc.example"))
@@ -25,7 +25,7 @@ class IRCAddressBookTests: XCTestCase {
 	}
 
 	func testUserTrackingEntryDerivesNicknameAndMatchesFullHostmask() {
-		let entry = IRCAddressBookEntryMutable.newUserTracking()
+		let entry = MutableAddressBookEntry.newUserTrackingEntry()
 
 		entry.hostmask = "Alice"
 
@@ -37,7 +37,7 @@ class IRCAddressBookTests: XCTestCase {
 	}
 
 	func testMixedEntryHasNoMatcherState() {
-		let entry = IRCAddressBookEntryMutable.newIgnore()
+		let entry = MutableAddressBookEntry.newIgnoreEntry()
 
 		entry.entryType = .mixed
 

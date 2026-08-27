@@ -51,7 +51,7 @@ public final class SharedApplication: NSObject {
 	}
 
 	@objc
-	public class func sharedAppearance() -> Appearance {
+	public static func sharedAppearance() -> Appearance {
 		once(&appearance) {
 			if Thread.isMainThread {
 				return MainActor.assumeIsolated { Appearance() }
@@ -64,12 +64,12 @@ public final class SharedApplication: NSObject {
 	}
 
 	@objc
-	public class func sharedNetworkReachabilityNotifier() -> Reachability {
+	public static func sharedNetworkReachabilityNotifier() -> Reachability {
 		once(&networkReachabilityNotifier, create: Reachability.reachabilityForInternetConnection)
 	}
 
 	@objc
-	public class func sharedNotificationController() -> NotificationController {
+	public static func sharedNotificationController() -> NotificationController {
 		once(&notificationController) {
 			if Thread.isMainThread {
 				return MainActor.assumeIsolated { NotificationController() }
@@ -82,21 +82,21 @@ public final class SharedApplication: NSObject {
 	}
 
 	@objc
-	public class func sharedPluginManager() -> PluginManager {
+	public static func sharedPluginManager() -> PluginManager {
 		once(&pluginManager, create: PluginManager.init)
 	}
 
 	@objc
-	public class func sharedPrintingQueue() -> LogControllerPrintingOperationQueue {
+	public static func sharedPrintingQueue() -> LogControllerPrintingOperationQueue {
 		once(&printingQueue, create: LogControllerPrintingOperationQueue.init)
 	}
 
 	@objc
-	public class func sharedSpeechSynthesizer() -> SpeechSynthesizer {
+	public static func sharedSpeechSynthesizer() -> SpeechSynthesizer {
 		once(&speechSynthesizer, create: SpeechSynthesizer.init)
 	}
 
-	public class func existingSpeechSynthesizer() -> SpeechSynthesizer? {
+	public static func existingSpeechSynthesizer() -> SpeechSynthesizer? {
 		lock.lock()
 		defer { lock.unlock() }
 
@@ -104,7 +104,7 @@ public final class SharedApplication: NSObject {
 	}
 
 	@objc
-	public class func sharedThemeController() -> TPCThemeController {
+	public static func sharedThemeController() -> TPCThemeController {
 		once(&themeController) {
 			if Thread.isMainThread {
 				return MainActor.assumeIsolated { TPCThemeController() }
@@ -117,31 +117,39 @@ public final class SharedApplication: NSObject {
 	}
 
 	@objc
-	public class func sharedWindowController() -> WindowController {
+	public static func sharedWindowController() -> WindowController {
 		once(&windowController, create: WindowController.init)
 	}
 
 	@objc
-	public class func sharedFileTransferDialog() -> TDCFileTransferDialog {
-		once(&fileTransferDialog, create: TDCFileTransferDialog.init)
+	public static func sharedFileTransferDialog() -> TDCFileTransferDialog {
+		once(&fileTransferDialog) {
+			if Thread.isMainThread {
+				return MainActor.assumeIsolated { TDCFileTransferDialog() }
+			}
+
+			return DispatchQueue.main.sync {
+				MainActor.assumeIsolated { TDCFileTransferDialog() }
+			}
+		}
 	}
 }
 
 public extension NSObject {
-	private nonisolated(unsafe) weak static var globalMasterControllerReference: MasterController?
+	private nonisolated(unsafe) weak static var globalApplicationControllerReference: ApplicationController?
 
-	@objc
-	class func setGlobalMasterControllerClassReference(_ masterController: MasterController) {
-		globalMasterControllerReference = masterController
+	@objc(setGlobalMasterControllerClassReference:)
+	class func setGlobalApplicationControllerReference(_ applicationController: ApplicationController) {
+		globalApplicationControllerReference = applicationController
 	}
 
 	@objc(masterController)
-	var masterController: MasterController {
-		Self.globalMasterControllerReference!
+	var applicationController: ApplicationController {
+		Self.globalApplicationControllerReference!
 	}
 
 	@objc(masterController)
-	class func masterController() -> MasterController {
-		globalMasterControllerReference!
+	class func applicationController() -> ApplicationController {
+		globalApplicationControllerReference!
 	}
 }

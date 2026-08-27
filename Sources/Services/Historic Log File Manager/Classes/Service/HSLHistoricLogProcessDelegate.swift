@@ -40,8 +40,13 @@ import Foundation
 @objc(HSLHistoricLogProcessDelegate)
 final class HistoricLogProcessDelegate: NSObject, NSXPCListenerDelegate {
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-		let exportedInterface = NSXPCInterface(with: HLSHistoricLogServerProtocol.self)
-		let replyClasses = NSSet(objects: NSArray.self, TVCLogLineXPC.self) as! Set<AnyHashable>
+		let exportedInterface = NSXPCInterface(with: HistoricLogServerProtocol.self)
+
+		guard let replyClasses = NSSet(objects: NSArray.self, LogLineXPC.self) as? Set<AnyHashable> else {
+			assertionFailure("Unable to bridge the historic-log XPC reply classes")
+			return false
+		}
+
 		let fetchSelectors = [
 			"fetchEntriesForView:ascending:fetchLimit:limitToDate:withCompletionBlock:",
 			"fetchEntriesForView:withUniqueIdentifier:beforeFetchLimit:afterFetchLimit:limitToDate:withCompletionBlock:",
@@ -60,9 +65,9 @@ final class HistoricLogProcessDelegate: NSObject, NSXPCListenerDelegate {
 		}
 
 		connection.exportedInterface = exportedInterface
-		connection.remoteObjectInterface = NSXPCInterface(with: HLSHistoricLogClientProtocol.self)
+		connection.remoteObjectInterface = NSXPCInterface(with: HistoricLogClientProtocol.self)
 
-		let exportedObject = HLSHistoricLogProcessMain(connection: connection)
+		let exportedObject = HistoricLogProcessMain(connection: connection)
 		connection.exportedObject = exportedObject
 		connection.invalidationHandler = { [weak connection] in
 			exportedObject.connectionInvalidated()

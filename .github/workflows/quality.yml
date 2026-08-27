@@ -23,11 +23,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install development tools
-        run: brew bundle
-
       - name: Lint and check formatting
         run: make lint
 
       - name: Validate Xcode project generation
-        run: make generate
+        run: |
+          make generate
+          git diff --exit-code -- Glasstual.xcodeproj

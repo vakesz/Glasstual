@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import AppKit
+import GlasstualPluginKit
 import ObjectiveC
 import OSLog
 import WebKit
@@ -48,24 +49,28 @@ private let scriptEventLogger = Logger(
 
 @MainActor
 private final class LogScriptEventContext {
-	weak var webView: LogView?
+	let webView: LogView
+	let viewController: LogController
 	let caller: String
 	let arguments: [Any]
 	let completion: (Any?) -> Void
 
-	init(webView: LogView, caller: String, arguments: [Any], completion: @escaping (Any?) -> Void) {
+	init(
+		webView: LogView,
+		viewController: LogController,
+		caller: String,
+		arguments: [Any],
+		completion: @escaping (Any?) -> Void
+	) {
 		self.webView = webView
+		self.viewController = viewController
 		self.caller = caller
 		self.arguments = arguments
 		self.completion = completion
 	}
 
-	var viewController: LogController {
-		webView!.viewController
-	}
-
-	var webViewPolicy: TVCLogPolicy {
-		webView!.webViewPolicy
+	var webViewPolicy: LogPolicy {
+		webView.webViewPolicy
 	}
 
 	var associatedClient: IRCClient {
@@ -105,7 +110,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 		case is NSNull:
 			nil
 		case let string as String:
-			string.gtm_stringByUnescapingFromHTML
+			string.gtmStringByUnescapingFromHTML
 		default:
 			object
 		}
@@ -131,13 +136,17 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 		if let view = candidate as? LogView {
 			resolvedWebView = view
 		} else if let internalView = candidate as? LogViewWebView {
-			resolvedWebView = internalView.t_parentView
+			resolvedWebView = internalView.parentView
 		} else {
 			return
 		}
 
 		guard let resolvedWebView else {
 			scriptEventLogger.fault("Parent log view disappeared while processing \(caller, privacy: .public)")
+			return
+		}
+		guard let viewController = resolvedWebView.viewController else {
+			scriptEventLogger.fault("Log controller disappeared while processing \(caller, privacy: .public)")
 			return
 		}
 
@@ -206,6 +215,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 
 		handler(LogScriptEventContext(
 			webView: resolvedWebView,
+			viewController: viewController,
 			caller: caller,
 			arguments: values,
 			completion: completion
@@ -614,7 +624,9 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 			to: handleSidebarInversionIsEnabled
 		)
 	}
+}
 
+extension TVCLogScriptEventSink {
 	@objc(appearance:inWebView:)
 	private func appearance(_ data: Any, inWebView view: Any) {
 		dispatch(
@@ -692,7 +704,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 
 	private func handleChannelMemberCount(_ context: LogScriptEventContext) {
 		guard let channel = context.associatedChannel, channel.isChannel else {
-			Self.throwJavaScriptException("View is not a channel", caller: context.caller, in: context.webView!)
+			Self.throwJavaScriptException("View is not a channel", caller: context.caller, in: context.webView)
 			return
 		}
 		context.completion(channel.numberOfMembers)
@@ -714,7 +726,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 	}
 
 	private func handleCopySelectionWhenPermitted(_ context: LogScriptEventContext) {
-		guard TPCPreferences.copyOnSelect(), let selection = context.webView?.selection else {
+		guard TextualPreferences.copyOnSelect(), let selection = context.webView.selection else {
 			context.completion(false)
 			return
 		}
@@ -781,7 +793,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 		case "HSL-light": colorStyle = .light
 		default: return fail("Invalid style", context)
 		}
-		context.completion(IRCUserNicknameColorStyleGenerator.hash(for: input, colorStyle: colorStyle))
+		context.completion(UserNicknameColorStyleGenerator.hash(for: input, colorStyle: colorStyle))
 	}
 
 	private func handleNicknameDoubleClicked(_ context: LogScriptEventContext) {
@@ -818,11 +830,12 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 	private func handleNotifyLines(added: Bool, _ context: LogScriptEventContext) {
 		let raw = Self.objectValueToCommon(context.arguments[0])
 		let values: [Any] = (raw as? String).map { [$0] } ?? (raw as? [Any] ?? [])
-		guard values.allSatisfy({ $0 is String }) else { return fail(
+		let stringValues = values.compactMap { $0 as? String }
+		guard stringValues.count == values.count else { return fail(
 			"Line numbers must be a string or an array of strings",
 			context
 		) }
-		let lines = Self.standardizeLineNumbers(values as! [String])
+		let lines = Self.standardizeLineNumbers(stringValues)
 		if added {
 			context.viewController.notifyLinesAdded(toView: lines)
 		} else {
@@ -935,7 +948,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 		guard let methodName = Self.objectValueToCommon(context.arguments[0]) as? String
 		else { context.completion(nil); return }
 		let selector = NSSelectorFromString(methodName)
-		guard let method = class_getClassMethod(TPCPreferences.self, selector) else { fail(
+		guard let method = class_getClassMethod(TextualPreferences.self, selector) else { fail(
 			"Unknown method named: '%@'",
 			context,
 			[methodName]
@@ -962,7 +975,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 		returnType: UnsafePointer<CChar>,
 		context: LogScriptEventContext
 	) -> Any? {
-		let target: AnyClass = TPCPreferences.self
+		let target: AnyClass = TextualPreferences.self
 		switch returnType.pointee {
 		case 64: return unsafeBitCast(implementation, to: (@convention(c) (AnyClass, Selector) -> AnyObject?).self)(
 				target,
@@ -1026,7 +1039,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 	}
 
 	private func handleSendPluginPayload(_ context: LogScriptEventContext) {
-		guard TXSharedApplication.sharedPluginManager().supportsFeature(.webViewJavaScriptPayloads) else { return fail(
+		guard SharedApplication.sharedPluginManager().supportsFeature(.webViewJavaScriptPayloads) else { return fail(
 			"There are no plugins loaded that support JavaScript payloads",
 			context
 		) }
@@ -1056,28 +1069,28 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 	}
 
 	private func handleSetChannelName(_ context: LogScriptEventContext) {
-		context.webView?.contextMenuTarget.channelName = Self.objectValueToCommon(context.arguments[0]) as? String
+		context.webView.contextMenuTarget.channelName = Self.objectValueToCommon(context.arguments[0]) as? String
 	}
 
 	private func handleSetNickname(_ context: LogScriptEventContext) {
-		context.webView?.contextMenuTarget.nickname = Self.objectValueToCommon(context.arguments[0]) as? String
+		context.webView.contextMenuTarget.nickname = Self.objectValueToCommon(context.arguments[0]) as? String
 	}
 
 	private func handleSetLineContext(_ context: LogScriptEventContext) {
 		let value = Self.objectValueToCommon(context.arguments[0]) as? [AnyHashable: Any]
-		let target = context.webView!.contextMenuTarget
+		let target = context.webView.contextMenuTarget
 		target.lineNumber = value?["lineNumber"] as? String; target.lineMessageIdentifier = value?["msgid"] as? String
 		target.lineType = value?["lineType"] as? String; target.lineNickname = value?["nickname"] as? String; target
 			.lineExcerpt = value?["excerpt"] as? String
 	}
 
 	private func handleSetSelection(_ context: LogScriptEventContext) {
-		let value = Self.objectValueToCommon(context.arguments[0]) as? String; context.webView?.selection = value?
+		let value = Self.objectValueToCommon(context.arguments[0]) as? String; context.webView.selection = value?
 			.isEmpty == true ? nil : value
 	}
 
 	private func handleSetURLAddress(_ context: LogScriptEventContext) {
-		context.webView?.contextMenuTarget.anchorURL = Self.objectValueToCommon(context.arguments[0]) as? String
+		context.webView.contextMenuTarget.anchorURL = Self.objectValueToCommon(context.arguments[0]) as? String
 	}
 
 	private func handleSidebarInversionIsEnabled(_ context: LogScriptEventContext) {
@@ -1090,28 +1103,28 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 
 	private func handleStyleSettingsRetrieveValue(_ context: LogScriptEventContext) {
 		let key = Self.objectValueToCommon(context.arguments[0]) as? String ?? ""; var error: NSString?
-		let result = TXSharedApplication.sharedThemeController().settings.styleSettingsRetrieveValue(
+		let result = SharedApplication.sharedThemeController().settings.styleSettingsRetrieveValue(
 			forKey: key,
 			error: &error
 		)
 		if let error {
-			Self.throwJavaScriptException(error as String, caller: context.caller, in: context.webView!)
+			Self.throwJavaScriptException(error as String, caller: context.caller, in: context.webView)
 		}; context.completion(result)
 	}
 
 	private func handleStyleSettingsSetValue(_ context: LogScriptEventContext) {
 		let key = Self.objectValueToCommon(context.arguments[0]) as? String ?? ""; let value = Self
 			.objectValueToCommon(context.arguments[1]); var error: NSString?
-		let result = TXSharedApplication.sharedThemeController().settings.styleSettingsSetValue(
+		let result = SharedApplication.sharedThemeController().settings.styleSettingsSetValue(
 			value,
 			forKey: key,
 			error: &error
 		)
 		if let error {
-			Self.throwJavaScriptException(error as String, caller: context.caller, in: context.webView!)
+			Self.throwJavaScriptException(error as String, caller: context.caller, in: context.webView)
 		}
 		if result {
-			NSObject.masterController().world.evaluateFunction(
+			NSObject.applicationController().world.evaluateFunction(
 				onAllViews: "Glasstual.styleSettingDidChange",
 				arguments: [key]
 			)
@@ -1124,7 +1137,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 	}
 
 	private func handleFinishedLayingOutView(_ context: LogScriptEventContext) {
-		context.webView?.setViewFinishedLayout()
+		context.webView.setViewFinishedLayout()
 	}
 
 	private func fail(_ message: String, _ context: LogScriptEventContext, _ arguments: [CVarArg] = []) {
@@ -1132,6 +1145,6 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 	}
 
 	private static func fail(_ message: String, _ context: LogScriptEventContext, _ arguments: [CVarArg] = []) {
-		throwJavaScriptException(message, caller: context.caller, in: context.webView!, arguments: arguments)
+		throwJavaScriptException(message, caller: context.caller, in: context.webView, arguments: arguments)
 	}
 }

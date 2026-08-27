@@ -3,13 +3,12 @@ import XCTest
 
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
-/// #import "TLOInternetAddressLookupPrivate.h"
 /** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 @objc
-class TLOInternetAddressLookupDelegateSpy: NSObject, TLOInternetAddressLookupDelegate {
+class TLOInternetAddressLookupDelegateSpy: NSObject, InternetAddressLookupDelegate {
 	@objc
 	func internetAddressLookupReturnedAddress(_: String) {}
 
@@ -18,6 +17,7 @@ class TLOInternetAddressLookupDelegateSpy: NSObject, TLOInternetAddressLookupDel
 }
 
 @objc
+@MainActor
 class TLOInternetAddressLookupTests: XCTestCase {
 	@objc
 	func responseWithStatusCode(_ statusCode: Int) -> HTTPURLResponse {
@@ -32,7 +32,7 @@ class TLOInternetAddressLookupTests: XCTestCase {
 	@objc
 	func testAddressParserTrimsAndAcceptsEnabledIPv4() {
 		let data = Data("  203.0.113.42\n".utf8)
-		let address: String! = TLOInternetAddressLookup.address(
+		let address: String! = InternetAddressLookup.address(
 			from: data,
 			response: responseWithStatusCode(200),
 			allowIPv4: true,
@@ -45,7 +45,7 @@ class TLOInternetAddressLookupTests: XCTestCase {
 	@objc
 	func testAddressParserAcceptsEnabledIPv6() {
 		let data = Data("2001:db8::1".utf8)
-		let address: String! = TLOInternetAddressLookup.address(
+		let address: String! = InternetAddressLookup.address(
 			from: data,
 			response: responseWithStatusCode(200),
 			allowIPv4: false,
@@ -61,13 +61,13 @@ class TLOInternetAddressLookupTests: XCTestCase {
 		let IPv4Data = Data("203.0.113.42".utf8)
 		let invalidData = Data("not an address".utf8)
 
-		XCTAssertNil(TLOInternetAddressLookup.address(
+		XCTAssertNil(InternetAddressLookup.address(
 			from: IPv4Data,
 			response: response,
 			allowIPv4: false,
 			allowIPv6: true
 		))
-		XCTAssertNil(TLOInternetAddressLookup.address(
+		XCTAssertNil(InternetAddressLookup.address(
 			from: invalidData,
 			response: response,
 			allowIPv4: true,
@@ -80,13 +80,13 @@ class TLOInternetAddressLookupTests: XCTestCase {
 		let addressData = Data("203.0.113.42".utf8)
 		let oversizedData = Data(count: 1025)
 
-		XCTAssertNil(TLOInternetAddressLookup.address(
+		XCTAssertNil(InternetAddressLookup.address(
 			from: addressData,
 			response: responseWithStatusCode(500),
 			allowIPv4: true,
 			allowIPv6: true
 		))
-		XCTAssertNil(TLOInternetAddressLookup.address(
+		XCTAssertNil(InternetAddressLookup.address(
 			from: oversizedData,
 			response: responseWithStatusCode(200),
 			allowIPv4: true,
@@ -97,9 +97,9 @@ class TLOInternetAddressLookupTests: XCTestCase {
 	@objc
 	func testLookupDefaultsToBothAddressFamilies() {
 		let delegate = TLOInternetAddressLookupDelegateSpy()
-		let lookup: TLOInternetAddressLookup! = TLOInternetAddressLookup(delegate: delegate)
+		let lookup = InternetAddressLookup(delegate: delegate)
 
-		XCTAssertTrue(lookup.iPv4AddressIsValid)
-		XCTAssertTrue(lookup.iPv6AddressIsValid)
+		XCTAssertTrue(lookup.ipv4AddressIsValid)
+		XCTAssertTrue(lookup.ipv6AddressIsValid)
 	}
 }

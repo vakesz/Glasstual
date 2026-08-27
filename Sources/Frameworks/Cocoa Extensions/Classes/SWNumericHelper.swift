@@ -30,6 +30,8 @@
  *
  *********************************************************************** */
 
+import Foundation
+
 public extension Int {
 	@inlinable
 	var isValidInternetPort: Bool {

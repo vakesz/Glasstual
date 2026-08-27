@@ -9,8 +9,34 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -23,7 +49,7 @@ private let userLogger = Logger(
 )
 
 @objc(IRCUser)
-open class User: XRPortablePropertyObject {
+open class User: PortablePropertyObject {
 	fileprivate weak var clientStorage: IRCClient?
 	fileprivate var persistentStore = UserPersistentStore()
 
@@ -110,12 +136,12 @@ open class User: XRPortablePropertyObject {
 			return "\(nickname)!*@*"
 		}
 
-		switch TPCPreferences.banFormat() {
-		case .WHNIN:
+		switch TextualPreferences.banFormat() {
+		case .whnin:
 			return "*!*@\(address)"
-		case .WHAINN:
+		case .whainn:
 			return "*!\(username)@\(address)"
-		case .WHANNI:
+		case .whanni:
 			return "\(nickname)!*@\(address)"
 		case .exact:
 			return "\(nickname)!\(username)@\(address)"
@@ -213,7 +239,7 @@ open class User: XRPortablePropertyObject {
 	}
 
 	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: XRPortablePropertyObject, mutableCopy _: Bool) {
+	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
 		guard let object = newObject as? User else {
 			return
 		}
@@ -230,8 +256,8 @@ open class User: XRPortablePropertyObject {
 		object.isBotStorage = isBotStorage
 	}
 
-	override public var mutableClass: XRPortablePropertyObject {
-		unsafeBitCast(UserMutable.self, to: XRPortablePropertyObject.self)
+	override public var mutableClass: PortablePropertyObject {
+		unsafeBitCast(UserMutable.self, to: PortablePropertyObject.self)
 	}
 
 	// MARK: - Remove-user timer
@@ -309,7 +335,7 @@ open class User: XRPortablePropertyObject {
 	@objc
 	public func relinkRelations() {
 		for relatedUser in relationsInt.relatedUsers {
-			relatedUser.perform(NSSelectorFromString("changeUserToUser:"), with: self)
+			relatedUser.changeUser(to: self)
 		}
 	}
 
@@ -329,12 +355,12 @@ open class User: XRPortablePropertyObject {
 
 @objc(IRCUserMutable)
 public final class UserMutable: User {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyObject {
-		unsafeBitCast(User.self, to: XRPortablePropertyObject.self)
+	override public var immutableClass: PortablePropertyObject {
+		unsafeBitCast(User.self, to: PortablePropertyObject.self)
 	}
 
 	@objc(initWithClient:)

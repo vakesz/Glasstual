@@ -36,9 +36,11 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
+import Mustache
 
 @objc(ICMVimeo)
-final class VimeoModule: ICMInlineVideoFoundation {
+final class VimeoModule: InlineVideoFoundation {
 	private func performAction(forVideo identifier: String) {
 		let attributes: [String: Any] = [
 			"uniqueIdentifier": payload.uniqueIdentifier,
@@ -46,27 +48,27 @@ final class VimeoModule: ICMInlineVideoFoundation {
 		]
 		guard let template else { return cancel() }
 		do {
-			payload.html = try template.renderObject(attributes)
+			payload.html = try template.render(attributes)
 			finalize()
 		} catch {
 			finalizeWithError(error)
 		}
 	}
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		guard let identifier = videoIdentifier(for: url) else { return nil }
 		return { module in
 			(module as? VimeoModule)?.performAction(forVideo: identifier)
 		}
 	}
 
-	private class func videoIdentifier(for url: URL) -> String? {
+	private static func videoIdentifier(for url: URL) -> String? {
 		let identifier = url.path(percentEncoded: true).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 		guard !identifier.isEmpty, identifier.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
 		return identifier
 	}
 
-	override class var domains: [String]? {
+	override static var domains: [String]? {
 		["vimeo.com", "www.vimeo.com"]
 	}
 

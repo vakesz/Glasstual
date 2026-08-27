@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
 
 @objc(TPCPathInfo)
@@ -29,7 +30,7 @@ public final class PathInfo: NSObject {
 	}
 
 	private static var productIdentifier: String {
-		Bundle.main.bundleIdentifier ?? TXBundleBuildProductIdentifier
+		ApplicationInfo.applicationBundleIdentifier()
 	}
 
 	// MARK: - Directory creation
@@ -99,7 +100,7 @@ public final class PathInfo: NSObject {
 	@objc public static var groupContainerURL: URL? {
 		guard
 			var baseURL = fileManager.containerURL(
-				forSecurityApplicationGroupIdentifier: TXBundleBuildGroupContainerIdentifier
+				forSecurityApplicationGroupIdentifier: ApplicationGroup.identifier
 			)
 		else {
 			return nil
@@ -337,7 +338,7 @@ public final class PathInfo: NSObject {
 	}
 
 	@objc public static var userHomeURL: URL {
-		FileManager.urlOfHomeDirectoryOutsideSandbox
+		FileManager.URLOfHomeDirectoryOutsideSandbox
 	}
 
 	@objc public static var userPreferences: String? {
@@ -369,12 +370,12 @@ public final class PathInfo: NSObject {
 		}
 		transcriptLock.unlock()
 
-		TPCPreferencesUserDefaults.shared().set(transcriptFolderURL, forKey: transcriptBookmarkDefaultsKey)
+		TextualUserDefaults.shared().set(transcriptFolderURL, forKey: transcriptBookmarkDefaultsKey)
 		startUsingTranscriptFolderURL()
 	}
 
 	@objc public static func startUsingTranscriptFolderURL() {
-		guard let bookmark = TPCPreferencesUserDefaults.shared().data(forKey: transcriptBookmarkDefaultsKey) else {
+		guard let bookmark = TextualUserDefaults.shared().data(forKey: transcriptBookmarkDefaultsKey) else {
 			return
 		}
 
@@ -428,14 +429,14 @@ public final class PathInfo: NSObject {
 	// MARK: - Helpers
 
 	private static func warnUserAboutStaleTranscriptFolderURL() {
-		guard TPCPreferences.logToDisk() else {
+		guard TextualPreferences.logToDisk() else {
 			return
 		}
 
 		_ = TDCAlert.alert(
-			withMessage: LocalizedKey("Prompts[atn-1c]"),
-			title: LocalizedKey("Prompts[b7o-v4]"),
-			defaultButton: LocalizedKey("Prompts[c7s-dq]"),
+			withMessage: PromptStrings.Logging.staleLocationBody,
+			title: PromptStrings.Logging.staleLocationTitle,
+			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil
 		)
 	}
@@ -445,11 +446,10 @@ public final class PathInfo: NSObject {
 		in domainMask: FileManager.SearchPathDomainMask = .userDomainMask,
 		appending suffix: String? = nil
 	) -> String? {
-		let paths = NSSearchPathForDirectoriesInDomains(directory, domainMask, true)
-
-		guard let firstPath = paths.first else {
+		guard let firstURL = FileManager.default.urls(for: directory, in: domainMask).first else {
 			return nil
 		}
+		let firstPath = firstURL.path
 
 		guard let suffix else {
 			return firstPath
@@ -467,7 +467,7 @@ public final class PathInfo: NSObject {
 	}
 
 	private static func displayPath(for url: URL) -> String {
-		(url as NSURL).standardizedTildePath ?? url.path
+		(url as NSURL).textualStandardizedTildePath ?? url.path
 	}
 
 	private static func applyUIReviewDirectory(toPath basePath: String) -> String {

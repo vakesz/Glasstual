@@ -3,21 +3,21 @@ import XCTest
 
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
-/// #import "TDCPreferencesNotificationConfigurationPrivate.h"
-/// #import "TLONotificationConfigurationPrivate.h"
 /// #import "TPCPreferencesLocal.h"
 /** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 @objc
+@MainActor
 class TLONotificationConfigurationTests: XCTestCase {
 	@objc
 	func testBaseConfigurationPreservesEventAndDisplayName() {
 		let configuration = NotificationConfiguration.configuration(withEventType: .highlight)
+		let displayName = configuration.displayName
 
 		XCTAssertEqual(configuration.eventType, .highlight)
-		XCTAssertFalse(configuration.displayName.isEmpty)
+		XCTAssertFalse(displayName.isEmpty)
 	}
 
 	@objc
@@ -25,28 +25,28 @@ class TLONotificationConfigurationTests: XCTestCase {
 		XCTAssertFalse(NotificationConfiguration.localizedAlertDefaultSoundTitle().isEmpty)
 		XCTAssertFalse(NotificationConfiguration.localizedAlertNoSoundTitle().isEmpty)
 
-		XCTAssertEqual(TLONotificationAlertSound.TXDefaultAlertSoundPreferenceValue.rawValue, "Default")
-		XCTAssertEqual(TLONotificationAlertSound.TXNoAlertSoundPreferenceValue.rawValue, "None")
+		XCTAssertEqual(NotificationAlertSound.defaultPreferenceValue, "Default")
+		XCTAssertEqual(NotificationAlertSound.noSoundPreferenceValue, "None")
 	}
 
 	@objc
 	func testPreferencesConfigurationReadsExistingGlobalValues() {
 		let eventType = TXNotificationType.highlight
 		let configuration = PreferencesNotificationConfiguration.object(withEventType: eventType)
-		let expectedSound = TPCPreferences.sound(forEvent: eventType)
-			?? TLONotificationAlertSound.TXNoAlertSoundPreferenceValue.rawValue
+		let expectedSound = TextualPreferences.sound(for: eventType)
+			?? NotificationAlertSound.noSoundPreferenceValue
 
 		XCTAssertEqual(configuration.eventType, eventType)
 
 		XCTAssertEqual(configuration.alertSound, expectedSound)
 
-		XCTAssertEqual(configuration.pushNotification != 0, TPCPreferences.notificationEnabled(forEvent: eventType))
-		XCTAssertEqual(configuration.speakEvent != 0, TPCPreferences.speakEvent(eventType))
-		XCTAssertEqual(configuration.disabledWhileAway != 0, TPCPreferences.disabledWhileAway(forEvent: eventType))
-		XCTAssertEqual(configuration.bounceDockIcon != 0, TPCPreferences.bounceDockIcon(forEvent: eventType))
+		XCTAssertEqual(configuration.pushNotification != 0, TextualPreferences.notificationEnabled(for: eventType))
+		XCTAssertEqual(configuration.speakEvent != 0, TextualPreferences.speak(eventType))
+		XCTAssertEqual(configuration.disabledWhileAway != 0, TextualPreferences.disabledWhileAway(for: eventType))
+		XCTAssertEqual(configuration.bounceDockIcon != 0, TextualPreferences.bounceDockIcon(for: eventType))
 		XCTAssertEqual(
 			configuration.bounceDockIconRepeatedly != 0,
-			TPCPreferences.bounceDockIconRepeatedly(forEvent: eventType)
+			TextualPreferences.bounceDockIconRepeatedly(for: eventType)
 		)
 	}
 

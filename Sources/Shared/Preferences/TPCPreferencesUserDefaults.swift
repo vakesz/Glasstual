@@ -35,7 +35,12 @@
  *
  *********************************************************************** */
 
-import Foundation
+import AppKit
+import CocoaExtensions
+
+public extension Notification.Name {
+	static let textualUserDefaultsDidChange = Self("TPCPreferencesUserDefaultsDidChangeNotification")
+}
 
 @objc(TPCPreferencesUserDefaults)
 public final class TextualUserDefaults: UserDefaults {
@@ -48,7 +53,7 @@ public final class TextualUserDefaults: UserDefaults {
 			}
 		#endif
 
-		return TXBundleBuildGroupContainerIdentifier
+		return ApplicationGroup.identifier
 	}()
 
 	private nonisolated(unsafe) static let sharedInstance =
@@ -63,7 +68,7 @@ public final class TextualUserDefaults: UserDefaults {
 	}
 
 	@objc(sharedUserDefaults)
-	public class func shared() -> TextualUserDefaults {
+	public static func shared() -> TextualUserDefaults {
 		sharedInstance
 	}
 
@@ -91,48 +96,13 @@ public final class TextualUserDefaults: UserDefaults {
 
 		guard postNotification else { return }
 		NotificationCenter.default.post(
-			name: Notification.Name("TPCPreferencesUserDefaultsDidChangeNotification"),
+			name: .textualUserDefaultsDidChange,
 			object: self,
 			userInfo: ["changedKey": defaultName]
 		)
 	}
 
 	override public func set(_ value: Int, forKey defaultName: String) {
-		set(NSNumber(value: value), forKey: defaultName)
-	}
-
-	@objc(setUnsignedInteger:forKey:)
-	override public func setUnsignedInteger(_ value: UInt, forKey defaultName: String) {
-		set(NSNumber(value: value), forKey: defaultName)
-	}
-
-	@objc(setShort:forKey:)
-	override public func setShort(_ value: Int16, forKey defaultName: String) {
-		set(NSNumber(value: value), forKey: defaultName)
-	}
-
-	@objc(setUnsignedShort:forKey:)
-	override public func setUnsignedShort(_ value: UInt16, forKey defaultName: String) {
-		set(NSNumber(value: value), forKey: defaultName)
-	}
-
-	@objc(setLong:forKey:)
-	override public func setLong(_ value: Int, forKey defaultName: String) {
-		set(NSNumber(value: value), forKey: defaultName)
-	}
-
-	@objc(setUnsignedLong:forKey:)
-	override public func setUnsignedLong(_ value: UInt, forKey defaultName: String) {
-		set(NSNumber(value: value), forKey: defaultName)
-	}
-
-	@objc(setLongLong:forKey:)
-	override public func setLongLong(_ value: Int64, forKey defaultName: String) {
-		set(NSNumber(value: value), forKey: defaultName)
-	}
-
-	@objc(setUnsignedLongLong:forKey:)
-	override public func setUnsignedLongLong(_ value: UInt64, forKey defaultName: String) {
 		set(NSNumber(value: value), forKey: defaultName)
 	}
 

@@ -3,55 +3,60 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CocoaExtensions
 @testable import Glasstual
+import GlasstualPluginKit
 import XCTest
 
+@MainActor
 final class ApplicationSupportMigrationTests: XCTestCase {
 	func testApplicationMetadataMatchesMainBundle() {
 		let bundle = Bundle.main
 
 		XCTAssertEqual(
-			TPCApplicationInfo.applicationName(),
+			ApplicationInfo.applicationName(),
 			bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
 		)
 		XCTAssertEqual(
-			TPCApplicationInfo.applicationVersion(),
+			ApplicationInfo.applicationVersion(),
 			bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
 		)
 		XCTAssertEqual(
-			TPCApplicationInfo.applicationVersionShort(),
+			ApplicationInfo.applicationVersionShort(),
 			bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
 		)
-		XCTAssertEqual(TPCApplicationInfo.applicationBundleIdentifier(), bundle.bundleIdentifier)
+		XCTAssertEqual(ApplicationInfo.applicationBundleIdentifier(), bundle.bundleIdentifier)
 		XCTAssertEqual(
-			TPCApplicationInfo.applicationInfoPlist() as NSDictionary,
+			ApplicationInfo.applicationInfoPlist() as NSDictionary,
 			bundle.infoDictionary as NSDictionary?
 		)
 	}
 
 	func testApplicationRuntimeMetadataIsSane() {
-		XCTAssertGreaterThan(TPCApplicationInfo.applicationProcessID(), 0)
-		XCTAssertGreaterThanOrEqual(TPCApplicationInfo.timeIntervalSinceApplicationLaunch(), 0)
-		XCTAssertEqual(TPCApplicationInfo.applicationBirthday(), 1_279_871_580)
-		XCTAssertFalse(TPCApplicationInfo.applicationNameWithoutVersion().isEmpty)
+		XCTAssertEqual(NSStringFromClass(ApplicationInfo.self), "TPCApplicationInfo")
+		XCTAssertTrue(ApplicationInfo.responds(to: NSSelectorFromString("applicationRunCount")))
+		XCTAssertGreaterThan(ApplicationInfo.applicationProcessID(), 0)
+		XCTAssertGreaterThanOrEqual(ApplicationInfo.timeIntervalSinceApplicationLaunch(), 0)
+		XCTAssertEqual(ApplicationInfo.applicationBirthday(), 1_279_871_580)
+		XCTAssertFalse(ApplicationInfo.applicationNameWithoutVersion().isEmpty)
 	}
 
 	func testPathInfoExposesBundleAndBundledResourceLocations() {
 		let bundle = Bundle.main
 
-		XCTAssertEqual(TPCPathInfo.applicationBundle, bundle.bundlePath)
-		XCTAssertEqual(TPCPathInfo.applicationBundleURL, bundle.bundleURL)
-		XCTAssertEqual(TPCPathInfo.applicationResources, bundle.resourcePath)
-		XCTAssertEqual(TPCPathInfo.applicationResourcesURL, bundle.resourceURL)
-		XCTAssertTrue(TPCPathInfo.bundledExtensions.hasSuffix("Bundled Extensions"))
-		XCTAssertTrue(TPCPathInfo.bundledScripts.hasSuffix("Bundled Scripts"))
-		XCTAssertTrue(TPCPathInfo.bundledThemes.hasSuffix("Bundled Styles"))
-		XCTAssertEqual(TPCPathInfo.systemDiagnosticReports, "/Library/Logs/DiagnosticReports")
-		XCTAssertFalse(TPCPathInfo.userHome.isEmpty)
+		XCTAssertEqual(PathInfo.applicationBundle, bundle.bundlePath)
+		XCTAssertEqual(PathInfo.applicationBundleURL, bundle.bundleURL)
+		XCTAssertEqual(PathInfo.applicationResources, bundle.resourcePath)
+		XCTAssertEqual(PathInfo.applicationResourcesURL, bundle.resourceURL)
+		XCTAssertTrue(PathInfo.bundledExtensions.hasSuffix("Bundled Extensions"))
+		XCTAssertTrue(PathInfo.bundledScripts.hasSuffix("Bundled Scripts"))
+		XCTAssertTrue(PathInfo.bundledThemes.hasSuffix("Bundled Styles"))
+		XCTAssertEqual(PathInfo.systemDiagnosticReports, "/Library/Logs/DiagnosticReports")
+		XCTAssertFalse(PathInfo.userHome.isEmpty)
 	}
 
 	func testPathInfoCreatesTemporaryDirectoryAndExplicitDirectoryHelper() throws {
-		let temporaryPath = TPCPathInfo.applicationTemporary
+		let temporaryPath = PathInfo.applicationTemporary
 		var isDirectory = ObjCBool(false)
 
 		XCTAssertTrue(FileManager.default.fileExists(atPath: temporaryPath, isDirectory: &isDirectory))
@@ -63,7 +68,7 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 
 		XCTAssertFalse(FileManager.default.fileExists(atPath: directory.path))
 
-		TPCPathInfo._createDirectory(at: directory)
+		PathInfo.createDirectory(at: directory)
 
 		XCTAssertTrue(FileManager.default.fileExists(atPath: directory.path))
 		try FileManager.default.removeItem(at: directory)
@@ -71,9 +76,9 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 	}
 
 	func testResourceManagerLoadsKnownPropertyLists() {
-		let networks = TPCResourceManager.dictionary(fromResources: "IRCNetworks", cacheValue: false)
-		let networkList = TPCResourceManager.array(fromResources: "IRCNetworks", cacheValue: false)
-		let staticStore = TPCResourceManager.dictionary(fromResources: "StaticStore")
+		let networks = ResourceManager.dictionary(fromResources: "IRCNetworks", cacheValue: false)
+		let networkList = ResourceManager.array(fromResources: "IRCNetworks", cacheValue: false)
+		let staticStore = ResourceManager.dictionary(fromResources: "StaticStore")
 
 		XCTAssertTrue(networks != nil || networkList != nil)
 		XCTAssertNotNil(staticStore)
@@ -81,70 +86,92 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 	}
 
 	func testResourceManagerCachesAndRejectsWrongTypes() {
-		TPCResourceManager.sharedResourcesCache.removeAllObjects()
+		ResourceManager.sharedResourcesCache.removeAllObjects()
 
-		let first = TPCResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
-		let second = TPCResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
+		let first = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
+		let second = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
 		let cacheKey = "StaticStore.plist / Root Folder / Root Object" as NSString
 
 		XCTAssertNotNil(first)
 		XCTAssertEqual(first as NSDictionary?, second as NSDictionary?)
-		XCTAssertNotNil(TPCResourceManager.sharedResourcesCache.object(forKey: cacheKey))
+		XCTAssertNotNil(ResourceManager.sharedResourcesCache.object(forKey: cacheKey))
 		XCTAssertEqual(
-			TPCResourceManager.sharedResourcesCache.object(forKey: cacheKey) as? NSDictionary,
+			ResourceManager.sharedResourcesCache.object(forKey: cacheKey) as? NSDictionary,
 			first as NSDictionary?
 		)
-		XCTAssertNil(TPCResourceManager.array(fromResources: "StaticStore", cacheValue: false))
-		XCTAssertNil(TPCResourceManager.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false))
+		XCTAssertNil(ResourceManager.array(fromResources: "StaticStore", cacheValue: false))
+		XCTAssertNil(ResourceManager.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false))
 	}
 
 	func testResourceManagerDocumentTypeConstants() {
-		XCTAssertEqual(TPCResourceManagerBundleDocumentTypeExtension, ".bundle")
-		XCTAssertEqual(TPCResourceManagerBundleDocumentTypeExtensionWithoutPeriod, "bundle")
-		XCTAssertEqual(TPCResourceManagerScriptDocumentTypeExtension, ".scpt")
-		XCTAssertEqual(TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod, "scpt")
+		XCTAssertEqual(ResourceDocumentType.bundleFileExtension, ".bundle")
+		XCTAssertEqual(ResourceDocumentType.bundleFilenameExtension, "bundle")
+		XCTAssertEqual(ResourceDocumentType.scriptFileExtension, ".scpt")
+		XCTAssertEqual(ResourceDocumentType.scriptFilenameExtension, "scpt")
+	}
+
+	func testPreferencesReloadActionsPreserveLegacyBitAssignments() {
+		XCTAssertEqual(PreferencesReloadAction.appearance.rawValue, 1 << 0)
+		XCTAssertEqual(PreferencesReloadAction.channelViewArrangement.rawValue, 1 << 1)
+		XCTAssertEqual(PreferencesReloadAction.dockIconBadges.rawValue, 1 << 2)
+		XCTAssertEqual(PreferencesReloadAction.highlightKeywords.rawValue, 1 << 3)
+		XCTAssertEqual(PreferencesReloadAction.highlightLogging.rawValue, 1 << 4)
+		XCTAssertEqual(PreferencesReloadAction.ircCommandCache.rawValue, 1 << 5)
+		XCTAssertEqual(PreferencesReloadAction.inputHistoryScope.rawValue, 1 << 6)
+		XCTAssertEqual(PreferencesReloadAction.logTranscripts.rawValue, 1 << 7)
+		XCTAssertEqual(PreferencesReloadAction.memberList.rawValue, 1 << 9)
+		XCTAssertEqual(PreferencesReloadAction.memberListSortOrder.rawValue, 1 << 10)
+		XCTAssertEqual(PreferencesReloadAction.memberListUserBadges.rawValue, 1 << 11)
+		XCTAssertEqual(PreferencesReloadAction.preferencesChanged.rawValue, 1 << 12)
+		XCTAssertEqual(PreferencesReloadAction.scrollbackSaveLimit.rawValue, 1 << 13)
+		XCTAssertEqual(PreferencesReloadAction.scrollbackVisibleLimit.rawValue, 1 << 14)
+		XCTAssertEqual(PreferencesReloadAction.serverList.rawValue, 1 << 15)
+		XCTAssertEqual(PreferencesReloadAction.serverListUnreadBadges.rawValue, 1 << 16)
+		XCTAssertEqual(PreferencesReloadAction.style.rawValue, 1 << 17)
+		XCTAssertEqual(PreferencesReloadAction.textDirection.rawValue, 1 << 19)
+		XCTAssertEqual(PreferencesReloadAction.textFieldFontSize.rawValue, 1 << 20)
 	}
 
 	func testFileLoggerBuildsConsoleChannelAndQueryPaths() {
 		let client = GLTTestClient()
 		let root = "/tmp/glasstual-logs"
 		let identifier = String(client.uniqueIdentifier.prefix(5))
-		let clientFolder = "\(client.name.safeFilename) (\(identifier))"
+		let clientFolder = "\(String((client.name as NSString).ceSafeFilename)) (\(identifier))"
 
 		let expectedConsole = (root as NSString).appendingPathComponent(
-			"/\(clientFolder)/\(TLOFileLoggerConsoleDirectoryName)/"
+			"/\(clientFolder)/\(TranscriptDirectory.console)/"
 		)
 
-		XCTAssertEqual(TLOFileLogger.writePath(for: client, relativeTo: root), expectedConsole)
+		XCTAssertEqual(FileLogger.writePath(for: client, relativeTo: root), expectedConsole)
 
 		let channel = makeChannel(named: "#chat", type: .channel, client: client)
 		let expectedChannel = (root as NSString).appendingPathComponent(
-			"/\(clientFolder)/\(TLOFileLoggerChannelDirectoryName)/\("#chat".safeFilename)/"
+			"/\(clientFolder)/\(TranscriptDirectory.channel)/\(String(("#chat" as NSString).ceSafeFilename))/"
 		)
 
-		let channelTreeItem = (channel as AnyObject) as! IRCTreeItem
-		XCTAssertEqual(TLOFileLogger.writePath(for: channelTreeItem, relativeTo: root), expectedChannel)
+		let channelTreeItem: TreeItem = channel
+		XCTAssertEqual(FileLogger.writePath(for: channelTreeItem, relativeTo: root), expectedChannel)
 
 		let query = makeChannel(named: "alice", type: .privateMessage, client: client)
 		let expectedQuery = (root as NSString).appendingPathComponent(
-			"/\(clientFolder)/\(TLOFileLoggerPrivateMessageDirectoryName)/\("alice".safeFilename)/"
+			"/\(clientFolder)/\(TranscriptDirectory.privateMessage)/\(String(("alice" as NSString).ceSafeFilename))/"
 		)
 
-		let queryTreeItem = (query as AnyObject) as! IRCTreeItem
-		XCTAssertEqual(TLOFileLogger.writePath(for: queryTreeItem, relativeTo: root), expectedQuery)
+		let queryTreeItem: TreeItem = query
+		XCTAssertEqual(FileLogger.writePath(for: queryTreeItem, relativeTo: root), expectedQuery)
 	}
 
 	func testFileLoggerSkipsUtilityChannelsAndRequiresTranscriptFolder() {
 		let client = GLTTestClient()
 		let utility = makeChannel(named: "Utility", type: .utility, client: client)
 
-		let utilityTreeItem = (utility as AnyObject) as! IRCTreeItem
-		XCTAssertNil(TLOFileLogger.writePath(for: utilityTreeItem, relativeTo: "/tmp/glasstual-logs"))
-		XCTAssertNil(TLOFileLogger.writePath(for: client))
+		let utilityTreeItem: TreeItem = utility
+		XCTAssertNil(FileLogger.writePath(for: utilityTreeItem, relativeTo: "/tmp/glasstual-logs"))
+		XCTAssertNil(FileLogger.writePath(for: client))
 	}
 
 	func testFileLoggerWriteWithoutTranscriptFolderDoesNotOpenFile() {
-		let logger = TLOFileLogger(client: GLTTestClient())
+		let logger = FileLogger(client: GLTTestClient())
 
 		logger.writePlainText("should not write")
 
@@ -164,7 +191,7 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 		try Data().write(to: directory.appendingPathComponent("Tone.aiff"))
 		try Data().write(to: directory.appendingPathComponent("Tone.wav"))
 
-		let sounds = TLOSoundPlayer.soundFiles(atPath: directory.path)
+		let sounds = SoundPlayer.soundFiles(atPath: directory.path)
 
 		XCTAssertEqual(sounds["Ping"], directory.appendingPathComponent("Ping.aiff").path)
 		XCTAssertNotNil(sounds["Tone"])
@@ -172,15 +199,15 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 	}
 
 	func testUniqueSoundListContainsBeepAndIsCaseInsensitivelySorted() {
-		let sounds = TLOSoundPlayer.uniqueListOfSounds()
+		let sounds = SoundPlayer.uniqueListOfSounds()
 		let sortedSounds = sounds.sorted { $0.caseInsensitiveCompare($1) == .orderedAscending }
 
 		XCTAssertTrue(sounds.contains("Beep"))
 		XCTAssertEqual(sounds, sortedSounds)
 	}
 
-	private func makeChannel(named name: String, type: IRCChannelType, client: IRCClient) -> IRCChannel {
-		let channel = IRCChannel(configDictionary: [
+	private func makeChannel(named name: String, type: ChannelType, client: IRCClient) -> Channel {
+		let channel = Channel(configDictionary: [
 			"channelName": name,
 			"channelType": type.rawValue,
 		])

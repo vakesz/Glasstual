@@ -36,25 +36,27 @@
  *********************************************************************** */
 
 @testable import Glasstual
+import Synchronization
 import XCTest
 
+@MainActor
 final class IRCTypingTrackerTests: XCTestCase {
 	private var client: GLTTestClient!
 	private var tracker: IRCTypingTracker!
 
-	override func setUp() {
-		super.setUp()
+	override func setUp() async throws {
+		try await super.setUp()
 
 		client = GLTTestClient()
 		tracker = IRCTypingTracker(client: client)
 	}
 
-	override func tearDown() {
+	override func tearDown() async throws {
 		tracker.removeAll()
 		tracker = nil
 		client = nil
 
-		super.tearDown()
+		try await super.tearDown()
 	}
 
 	func testStateParsing() {
@@ -68,44 +70,50 @@ final class IRCTypingTrackerTests: XCTestCase {
 	func testOrderingCaseFoldingAndNotificationSuppression() {
 		let channel = makeChannel(named: "#chat")
 		let start = Date(timeIntervalSince1970: 1000)
-		var notificationCount = 0
-		var notifiedChannel: IRCChannel?
+		let notificationCount = Mutex(0)
+		let notifiedChannel = Mutex<Channel?>(nil)
 		let token = NotificationCenter.default.addObserver(
 			forName: .IRCTypingTrackerDidChange,
 			object: client,
 			queue: nil
 		) { notification in
-			notificationCount += 1
-			notifiedChannel = notification.userInfo?[IRCTypingTrackerChannelKey] as? IRCChannel
+			notificationCount.withLock { count in
+				count += 1
+			}
+			notifiedChannel.withLock { notifiedChannel in
+				notifiedChannel = notification.userInfo?[IRCTypingTrackerChannelKey] as? Channel
+			}
 		}
 		defer { NotificationCenter.default.removeObserver(token) }
 
-		tracker.note(.active, fromNickname: "Alice", in: channel, at: start)
-		tracker.note(.active, fromNickname: "bob", in: channel, at: start.addingTimeInterval(1))
-		tracker.note(.paused, fromNickname: "ALICE", in: channel, at: start.addingTimeInterval(2))
-		tracker.note(.paused, fromNickname: "alice", in: channel, at: start.addingTimeInterval(3))
+		tracker.noteTypingState(.active, fromNickname: "Alice", in: channel, at: start)
+		tracker.noteTypingState(.active, fromNickname: "bob", in: channel, at: start.addingTimeInterval(1))
+		tracker.noteTypingState(.paused, fromNickname: "ALICE", in: channel, at: start.addingTimeInterval(2))
+		tracker.noteTypingState(.paused, fromNickname: "alice", in: channel, at: start.addingTimeInterval(3))
 
 		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(4)), ["Alice", "bob"])
-		XCTAssertEqual(notificationCount, 3)
-		XCTAssertTrue(notifiedChannel === channel)
+		XCTAssertEqual(notificationCount.withLock { $0 }, 3)
+		XCTAssertTrue(notifiedChannel.withLock { $0 === channel })
 	}
 
 	func testEmptyNicknameIsIgnored() {
 		let channel = makeChannel(named: "#chat")
-		var notificationCount = 0
+		let notificationCount = Mutex(0)
 		let token = NotificationCenter.default.addObserver(
 			forName: .IRCTypingTrackerDidChange,
 			object: client,
 			queue: nil
 		) { _ in
-			notificationCount += 1
+			notificationCount.withLock { count in
+				count += 1
+			}
 		}
 		defer { NotificationCenter.default.removeObserver(token) }
 
-		tracker.note(.active, fromNickname: "", in: channel)
+		tracker.noteTypingState(.active, fromNickname: "", in: channel)
 
 		XCTAssertEqual(tracker.typingNicknames(in: channel), [])
-		XCTAssertEqual(notificationCount, 0)
+		XCTAssertEqual(notificationCount.withLock { $0 }, 0)
 	}
 
 	func testRemoveNicknameAcrossChannels() {
@@ -113,8 +121,8 @@ final class IRCTypingTrackerTests: XCTestCase {
 		let secondChannel = makeChannel(named: "#two")
 		let start = Date()
 
-		tracker.note(.active, fromNickname: "Mara", in: firstChannel, at: start)
-		tracker.note(.paused, fromNickname: "mara", in: secondChannel, at: start)
+		tracker.noteTypingState(.active, fromNickname: "Mara", in: firstChannel, at: start)
+		tracker.noteTypingState(.paused, fromNickname: "mara", in: secondChannel, at: start)
 		tracker.removeNickname("MARA")
 
 		XCTAssertEqual(tracker.typingNicknames(in: firstChannel, at: start), [])
@@ -125,8 +133,8 @@ final class IRCTypingTrackerTests: XCTestCase {
 		let channel = makeChannel(named: "#chat")
 		let start = Date(timeIntervalSince1970: 1000)
 
-		tracker.note(.active, fromNickname: "active", in: channel, at: start)
-		tracker.note(.paused, fromNickname: "paused", in: channel, at: start)
+		tracker.noteTypingState(.active, fromNickname: "active", in: channel, at: start)
+		tracker.noteTypingState(.paused, fromNickname: "paused", in: channel, at: start)
 
 		XCTAssertEqual(
 			tracker.typingNicknames(in: channel, at: start.addingTimeInterval(6)),
@@ -142,8 +150,8 @@ final class IRCTypingTrackerTests: XCTestCase {
 		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start), [])
 	}
 
-	private func makeChannel(named name: String) -> IRCChannel {
-		let channel = IRCChannel(configDictionary: ["channelName": name])
+	private func makeChannel(named name: String) -> Channel {
+		let channel = Channel(configDictionary: ["channelName": name])
 
 		channel.setValue(client, forKey: "associatedClient")
 

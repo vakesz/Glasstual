@@ -11,10 +11,10 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import InlineContentKit
 import os
 import UniformTypeIdentifiers
-
-extension ICLPayload: @unchecked Sendable {}
 
 private let inlineMediaLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -22,11 +22,11 @@ private let inlineMediaLogger = Logger(
 )
 
 @objc(TVCLogControllerInlineMediaService)
-public final class LogControllerInlineMediaService: NSObject, ICLInlineContentClientProtocol, @unchecked Sendable {
+public final class LogControllerInlineMediaService: NSObject, InlineContentClientProtocol, @unchecked Sendable {
 	private var serviceConnection: NSXPCConnection?
 
 	@objc(sharedInstance)
-	public class func shared() -> LogControllerInlineMediaService {
+	public static func shared() -> LogControllerInlineMediaService {
 		enum Storage {
 			static let instance = LogControllerInlineMediaService()
 		}
@@ -55,16 +55,20 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	private func connectToService() {
 		let serviceConnection = NSXPCConnection(serviceName: "com.vakesz.glasstual.InlineContentLoader")
 
-		let remoteObjectInterface = NSXPCInterface(with: ICLInlineContentServerProtocol.self)
+		let remoteObjectInterface = NSXPCInterface(with: InlineContentServerProtocol.self)
+		guard let allowedLocationClasses = NSSet(objects: NSArray.self, NSURL.self) as? Set<AnyHashable> else {
+			preconditionFailure("Unable to configure the inline-media XPC class allowlist")
+		}
+
 		remoteObjectInterface.setClasses(
-			NSSet(objects: NSArray.self, NSURL.self) as! Set<AnyHashable>,
-			for: #selector((any ICLInlineContentServerProtocol).warmServiceByLoadingPlugins(atLocations:)),
+			allowedLocationClasses,
+			for: #selector((any InlineContentServerProtocol).warmServiceByLoadingPlugins(atLocations:)),
 			argumentIndex: 0,
 			ofReply: false
 		)
 
 		serviceConnection.remoteObjectInterface = remoteObjectInterface
-		serviceConnection.exportedInterface = NSXPCInterface(with: ICLInlineContentClientProtocol.self)
+		serviceConnection.exportedInterface = NSXPCInterface(with: InlineContentClientProtocol.self)
 		serviceConnection.exportedObject = self
 
 		serviceConnection.interruptionHandler = { [weak self] in
@@ -105,8 +109,8 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	}
 
 	private func registerDefaults() {
-		let defaults = TPCPreferencesUserDefaults.shared().registeredDefaults
-		remoteObjectProxy?.warmService(byRegisteringDefaults: defaults)
+		let defaults = TextualUserDefaults.shared().registeredDefaults
+		remoteObjectProxy?.warmServiceByRegistering(defaults: defaults)
 	}
 
 	private func registerPlugins() {
@@ -115,25 +119,25 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	}
 
 	private func applicationSupportInlineMediaPluginsURL() -> URL {
-		let sourceURL = TPCPathInfo.groupContainerApplicationSupportURL!
+		let sourceURL = PathInfo.groupContainerApplicationSupportURL!
 		let baseURL = sourceURL.appendingPathComponent("Inline Media Modules/", isDirectory: true)
-		TPCPathInfo._createDirectory(at: baseURL)
+		PathInfo.createDirectory(at: baseURL)
 		return baseURL
 	}
 
-	private var remoteObjectProxy: ICLInlineContentServerProtocol? {
+	private var remoteObjectProxy: InlineContentServerProtocol? {
 		remoteObjectProxyWithErrorHandler(nil)
 	}
 
 	private func remoteObjectProxyWithErrorHandler(
 		_ handler: ((NSError) -> Void)?
-	) -> ICLInlineContentServerProtocol? {
+	) -> InlineContentServerProtocol? {
 		serviceConnection?.remoteObjectProxyWithErrorHandler { error in
 			inlineMediaLogger.error(
 				"Error occurred while communicating with service: \(error.localizedDescription, privacy: .public)"
 			)
 			handler?(error as NSError)
-		} as? ICLInlineContentServerProtocol
+		} as? InlineContentServerProtocol
 	}
 
 	@objc(processAddress:withUniqueIdentifier:atLineNumber:index:forItem:)
@@ -174,7 +178,7 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	) {
 		warmProcessIfNeeded()
 
-		remoteObjectProxy?.processURL(
+		remoteObjectProxy?.process(
 			url,
 			withUniqueIdentifier: uniqueIdentifier,
 			atLineNumber: lineNumber,
@@ -188,9 +192,9 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	}
 
 	@objc(processingPayloadSucceeded:)
-	public func processingPayloadSucceeded(_ payload: ICLPayload) {
+	public func processingPayloadSucceeded(_ payload: InlineContentPayload) {
 		performOnMain {
-			guard let item = NSObject.masterController().world.findItem(withId: payload.viewIdentifier) else {
+			guard let item = NSObject.applicationController().world.findItem(withId: payload.viewIdentifier) else {
 				return
 			}
 
@@ -199,10 +203,10 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	}
 
 	@objc(processingPayload:failedWithError:)
-	public func processingPayload(_ payload: ICLPayload, failedWithError error: Error) {
+	public func processingPayload(_ payload: InlineContentPayload, failedWithError error: Error) {
 		let error = error as NSError
 		performOnMain {
-			guard let item = NSObject.masterController().world.findItem(withId: payload.viewIdentifier) else {
+			guard let item = NSObject.applicationController().world.findItem(withId: payload.viewIdentifier) else {
 				return
 			}
 
@@ -210,12 +214,12 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 		}
 	}
 
-	private func processingPayloadSucceeded(_ payload: ICLPayload, forItem item: IRCTreeItem) {
+	private func processingPayloadSucceeded(_ payload: InlineContentPayload, forItem item: IRCTreeItem) {
 		(item.viewController as AnyObject as? LogController)?.processingInlineMediaPayloadSucceeded(payload)
 	}
 
 	private func processingPayload(
-		_ payload: ICLPayload,
+		_ payload: InlineContentPayload,
 		forItem item: IRCTreeItem,
 		failedWithError error: NSError
 	) {
@@ -226,8 +230,8 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	}
 
 	@objc(askPermissionToEnableInlineMediaWithCompletionBlock:)
-	public class func askPermissionToEnableInlineMedia(completionBlock: @escaping @Sendable (Bool) -> Void) {
-		XRPerformBlockSynchronouslyOnMainQueue {
+	public static func askPermissionToEnableInlineMedia(completionBlock: @escaping @Sendable (Bool) -> Void) {
+		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
 				askPermissionToEnableInlineMediaOnMain(completionBlock: completionBlock)
 			}
@@ -235,10 +239,10 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	}
 
 	@MainActor
-	private class func askPermissionToEnableInlineMediaOnMain(
+	private static func askPermissionToEnableInlineMediaOnMain(
 		completionBlock: @escaping @Sendable (Bool) -> Void
 	) {
-		let clientList = NSObject.masterController().world.clientList as? [IRCClient] ?? []
+		let clientList = NSObject.applicationController().world.clientList
 		let presentDialog = clientList.contains { client in
 			client.config.proxyType != .none
 		}
@@ -250,7 +254,7 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 
 		var window = NSApp.keyWindow
 		if window == nil {
-			window = NSObject.masterController().mainWindow
+			window = NSObject.applicationController().mainWindow
 		}
 
 		guard let window else {
@@ -262,17 +266,17 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	}
 
 	@MainActor
-	private class func presentInlineMediaPermissionAlert(
+	private static func presentInlineMediaPermissionAlert(
 		for window: NSWindow,
 		completionBlock: @escaping @Sendable (Bool) -> Void
 	) {
 		let alert = NSAlert()
 		alert.alertStyle = .warning
-		alert.messageText = LocalizedKey("Prompts[82q-zi]")
-		alert.informativeText = LocalizedKey("Prompts[vcq-sz]")
-		alert.addButton(withTitle: LocalizedKey("Prompts[xkj-nw]"))
-		alert.addButton(withTitle: LocalizedKey("Prompts[qso-2g]"))
-		alert.addButton(withTitle: LocalizedKey("Prompts[x3e-ur]"))
+		alert.messageText = PromptStrings.InlineMedia.title
+		alert.informativeText = PromptStrings.InlineMedia.body
+		alert.addButton(withTitle: PromptStrings.InlineMedia.turnOnButtonTitle)
+		alert.addButton(withTitle: PromptStrings.Action.cancel)
+		alert.addButton(withTitle: PromptStrings.InlineMedia.openSystemSettingsButtonTitle)
 
 		alert.beginSheetModal(for: window) { response in
 			if response == .alertThirdButtonReturn {
@@ -290,7 +294,7 @@ public final class LogControllerInlineMediaService: NSObject, ICLInlineContentCl
 	}
 
 	private func performOnMain(_ operation: @escaping @MainActor () -> Void) {
-		XRPerformBlockSynchronouslyOnMainQueue {
+		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
 				operation()
 			}

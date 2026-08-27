@@ -36,7 +36,9 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
+import GlasstualPluginKit
 import os
 
 public extension Notification.Name {
@@ -59,7 +61,7 @@ private struct ChannelMainActorTransfer<Value>: @unchecked Sendable {
 }
 
 @objc(IRCChannel)
-open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberListPrivatePrototype {
+open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProtocol {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "IRCChannel"
@@ -81,7 +83,7 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 		}
 	}
 
-	@objc public var status: IRCChannelStatus = .parted {
+	public var status: ChannelStatus = .parted {
 		didSet {
 			guard status != oldValue else {
 				return
@@ -91,13 +93,20 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 		}
 	}
 
+	/// Compatibility getter for Objective-C plug-ins that still declare the
+	/// historic `IRCChannelStatus` enum in their bridging header.
+	@objc(status)
+	public var objectiveCStatusRawValue: UInt {
+		status.rawValue
+	}
+
 	@objc public var directChatConnection: DirectChatConnection?
 	@objc public var sentInitialWhoRequest = false
 	@objc public var channelModesReceived = false
 	@objc public var channelNamesReceived = false
 	@objc public var errorOnLastJoinAttempt = false
 	@objc public private(set) var channelJoinTime: TimeInterval = 0
-	@objc public private(set) var modeInfo: ChannelMode?
+	@objc public private(set) var modeInfo: ChannelModeState?
 	@objc public private(set) var memberInfo: ChannelMemberList?
 	@objc public private(set) var logFileSessionCount: UInt = 0
 
@@ -107,19 +116,11 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 	/// The Objective-C declarations remain visible until their consumers are
 	/// migrated. Both values refer to this same Objective-C runtime object.
 	private var legacyChannel: IRCChannel {
-		(self as AnyObject) as! IRCChannel
+		self
 	}
 
 	private var legacyTreeItem: IRCTreeItem {
-		(self as AnyObject) as! IRCTreeItem
-	}
-
-	private func swiftMember(_ member: IRCChannelUser) -> ChannelUser {
-		(member as AnyObject) as! ChannelUser
-	}
-
-	private func legacyMember(_ member: ChannelUser) -> IRCChannelUser {
-		(member as AnyObject) as! IRCChannelUser
+		self
 	}
 
 	@available(*, unavailable)
@@ -261,8 +262,15 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 		isPrivateMessage && associatedClient?.nicknameIsZNCUser(name) == true
 	}
 
-	@objc public var type: IRCChannelType {
+	public var type: ChannelType {
 		config.type
+	}
+
+	/// Compatibility getter for Objective-C plug-ins that still declare the
+	/// historic `IRCChannelType` enum in their bridging header.
+	@objc(type)
+	public var objectiveCTypeRawValue: UInt {
+		type.rawValue
 	}
 
 	@objc public var channelTypeString: String {
@@ -288,16 +296,12 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 		return URL(fileURLWithPath: writePath)
 	}
 
-	@objc public var lastLine: TVCLogLine? {
-		guard let line = viewController?.lastLine else {
-			return nil
-		}
-
-		return (line as AnyObject) as? TVCLogLine
+	@objc public var lastLine: LogLine? {
+		(viewController as AnyObject as? LogController)?.lastLine()
 	}
 
 	@objc public func preferencesChanged() {
-		if TPCPreferences.displayPublicMessageCountOnDockBadge() == false, isChannel {
+		if TextualPreferences.displayPublicMessageCountOnDockBadge() == false, isChannel {
 			dockUnreadCount = 0
 		}
 	}
@@ -318,8 +322,7 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 		}
 	}
 
-	@objc(resetStatus:)
-	public func resetStatus(_ newStatus: IRCChannelStatus) {
+	public func resetStatus(_ newStatus: ChannelStatus) {
 		guard newStatus != .joining else {
 			return
 		}
@@ -337,6 +340,12 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 		memberInfo = nil
 	}
 
+	@objc(resetStatus:)
+	public func resetStatusFromObjectiveC(_ rawValue: UInt) {
+		guard let status = ChannelStatus(rawValue: rawValue) else { return }
+		resetStatus(status)
+	}
+
 	@objc open func activate() {
 		statusChangedByAction = true
 		resetStatus(.joined)
@@ -351,14 +360,16 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 			if isSelectedChannel {
 				let channel = legacyChannel
 				MainActor.assumeIsolated {
-					NSObject.masterController().mainWindow.memberList?.assign(to: channel)
+					guard let mainWindow = NSObject.applicationController().mainWindow else { return }
+					mainWindow.memberList?.assign(to: channel)
+					mainWindow.updateMemberListVisibilityForSelection()
 				}
 			}
 		}
 
 		if isChannel {
 			client.postEvent(toViewController: "channelJoined", for: legacyChannel)
-			modeInfo = ChannelMode(channel: legacyChannel)
+			modeInfo = ChannelModeState(channel: legacyChannel)
 		}
 
 		if isPrivateMessage || isDirectChat {
@@ -368,8 +379,8 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 				name
 			}
 
-			add(client.findUserOrCreate(peerNickname))
-			add(client.findUserOrCreate(client.userNickname))
+			addUser(client.findUserOrCreate(peerNickname))
+			addUser(client.findUserOrCreate(client.userNickname))
 		}
 
 		channelJoinTime = Date().timeIntervalSince1970
@@ -388,7 +399,7 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 		}
 	}
 
-	@objc public func prepareForPermanentDestruction() {
+	@MainActor @objc public func prepareForPermanentDestruction() {
 		statusChangedByAction = true
 		resetStatus(.terminated)
 		closeDirectChatConnection()
@@ -401,9 +412,9 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 			"TDCChannelModifyModesSheet",
 			"TDCChannelBanListSheet",
 		]
-		let windows = TXSharedApplication.sharedWindowController().windows(fromWindowList: descriptions)
+		let windows = SharedApplication.sharedWindowController().windows(fromWindowList: descriptions)
 
-		for case let window as TDCSheetBase in windows {
+		for case let window as SheetBase in windows {
 			guard let channelWindow = window as? TDCChannelPrototype,
 			      channelWindow.channelId == self.uniqueIdentifier
 			else {
@@ -415,9 +426,9 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 
 		let treeItem = ChannelMainActorTransfer(value: legacyTreeItem)
 		MainActor.assumeIsolated {
-			NSObject.masterController().mainWindow.inputHistoryManager().destroy(treeItem.value)
+			NSObject.applicationController().mainWindow.inputHistoryManager().destroy(treeItem.value)
 		}
-		viewController?.perform(NSSelectorFromString("prepareForPermanentDestruction"))
+		viewController?.prepareForPermanentDestruction()
 	}
 
 	@objc public func prepareForApplicationTermination() {
@@ -434,7 +445,7 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 
 		let viewIdentifier = viewController?.uniqueIdentifier ?? ""
 		Self.terminationLogger.debug("Preparing view controller: <\(viewIdentifier, privacy: .public)>")
-		viewController?.perform(NSSelectorFromString("prepareForApplicationTermination"))
+		viewController?.prepareForApplicationTermination()
 	}
 
 	@objc public func closeDirectChatConnection() {
@@ -447,7 +458,7 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 	}
 
 	@objc public func reopenLogFileIfNeeded() {
-		if TPCPreferences.logToDiskIsEnabled(), isUtility == false {
+		if TextualPreferences.logToDiskIsEnabled(), isUtility == false {
 			logFile?.reopenIfNeeded()
 		} else {
 			closeLogFile()
@@ -468,8 +479,8 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 	}
 
 	@objc(writeToLogLineToLogFile:)
-	public func writeToLogFile(_ logLine: TVCLogLine) {
-		guard isUtility == false, TPCPreferences.logToDiskIsEnabled() else {
+	public func writeToLogFile(_ logLine: LogLine) {
+		guard isUtility == false, TextualPreferences.logToDiskIsEnabled() else {
 			return
 		}
 
@@ -487,13 +498,13 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 	}
 
 	@objc(print:)
-	public func print(_ logLine: TVCLogLine) {
+	public func print(_ logLine: LogLine) {
 		print(logLine, completionBlock: nil)
 	}
 
 	@objc(print:completionBlock:)
 	public func print(
-		_ logLine: TVCLogLine,
+		_ logLine: LogLine,
 		completionBlock: LogControllerPrintOperationCompletion?
 	) {
 		viewController?.print(logLine, completionBlock: completionBlock)
@@ -501,18 +512,18 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 	}
 
 	@objc(addUser:)
-	public func add(_ user: User) {
+	public func addUser(_ user: User) {
 		memberInfo?.addUser(user)
 	}
 
 	@objc(addMember:)
-	public func addMember(_ member: IRCChannelUser) {
-		memberInfo?.addMember(swiftMember(member))
+	public func addMember(_ member: ChannelUser) {
+		memberInfo?.addMember(member)
 	}
 
 	@objc(addMember:checkForDuplicates:)
-	public func addMember(_ member: IRCChannelUser, checkForDuplicates: Bool) {
-		memberInfo?.addMember(swiftMember(member), checkForDuplicates: checkForDuplicates)
+	public func addMember(_ member: ChannelUser, checkForDuplicates: Bool) {
+		memberInfo?.addMember(member, checkForDuplicates: checkForDuplicates)
 	}
 
 	@objc(removeMemberWithNickname:)
@@ -521,35 +532,35 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 	}
 
 	@objc(removeMember:)
-	public func removeMember(_ member: IRCChannelUser) {
-		memberInfo?.removeMember(swiftMember(member))
+	public func removeMember(_ member: ChannelUser) {
+		memberInfo?.removeMember(member)
 	}
 
 	@objc(resortMember:)
-	public func resortMember(_ member: IRCChannelUser) {
-		memberInfo?.resortMember(swiftMember(member))
+	public func resortMember(_ member: ChannelUser) {
+		memberInfo?.resortMember(member)
 	}
 
 	@objc(replaceMember:withMember:)
-	public func replaceMember(_ oldMember: IRCChannelUser, withMember newMember: IRCChannelUser) {
-		memberInfo?.replaceMember(swiftMember(oldMember), with: swiftMember(newMember))
+	public func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser) {
+		memberInfo?.replaceMember(oldMember, with: newMember)
 	}
 
 	@objc(replaceMember:withMember:resort:)
-	public func replaceMember(_ oldMember: IRCChannelUser, withMember newMember: IRCChannelUser, resort: Bool) {
-		memberInfo?.replaceMember(swiftMember(oldMember), with: swiftMember(newMember), resort: resort)
+	public func replaceMember(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool) {
+		memberInfo?.replaceMember(oldMember, with: newMember, resort: resort)
 	}
 
 	@objc(replaceMember:withMember:resort:replaceInAllChannels:)
 	public func replaceMember(
-		_ oldMember: IRCChannelUser,
-		withMember newMember: IRCChannelUser,
+		_ oldMember: ChannelUser,
+		with newMember: ChannelUser,
 		resort: Bool,
 		replaceInAllChannels: Bool
 	) {
 		memberInfo?.replaceMember(
-			swiftMember(oldMember),
-			with: swiftMember(newMember),
+			oldMember,
+			with: newMember,
 			resort: resort,
 			replaceInAllChannels: replaceInAllChannels
 		)
@@ -568,18 +579,22 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 		memberInfo?.numberOfMembers ?? 0
 	}
 
-	@objc open var memberList: [IRCChannelUser]? {
-		memberInfo?.memberList?.map(legacyMember)
+	@objc open var memberList: [ChannelUser]? {
+		memberInfo?.memberList
+	}
+
+	open var channelMembers: [ChannelUser]? {
+		memberList
 	}
 
 	@objc(pasteboardDataForMembers:)
-	public func pasteboardData(forMembers members: [IRCChannelUser]) -> Data {
-		memberInfo?.pasteboardData(for: members.map(swiftMember)) ?? Data()
+	public func pasteboardData(for members: [ChannelUser]) -> Data {
+		memberInfo?.pasteboardData(for: members) ?? Data()
 	}
 
 	@objc(readNicknamesFromPasteboardData:withBlock:)
 	public class func readNicknames(
-		fromPasteboardData pasteboardData: Data,
+		from pasteboardData: Data,
 		with callback: (IRCChannel, [String]) -> Void
 	) -> Bool {
 		ChannelMemberList.readNicknames(from: pasteboardData, with: callback)
@@ -587,12 +602,10 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 
 	@objc(readMembersFromPasteboardData:withBlock:)
 	public class func readMembers(
-		fromPasteboardData pasteboardData: Data,
-		with callback: (IRCChannel, [IRCChannelUser]) -> Void
+		from pasteboardData: Data,
+		with callback: (IRCChannel, [ChannelUser]) -> Void
 	) -> Bool {
-		ChannelMemberList.readMembers(from: pasteboardData) { channel, members in
-			callback(channel, members.map { ($0 as AnyObject) as! IRCChannelUser })
-		}
+		ChannelMemberList.readMembers(from: pasteboardData, with: callback)
 	}
 
 	@objc(memberExists:)
@@ -601,8 +614,8 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 	}
 
 	@objc(findMember:)
-	open func findMember(_ nickname: String) -> IRCChannelUser? {
-		memberInfo?.findMember(nickname).map(legacyMember)
+	open func findMember(_ nickname: String) -> ChannelUser? {
+		memberInfo?.findMember(nickname)
 	}
 
 	@objc public func sortMembers() {
@@ -612,7 +625,7 @@ open class Channel: TreeItem, IRCChannelMemberListPrototype, IRCChannelMemberLis
 	private var isSelectedChannel: Bool {
 		let channel = ChannelMainActorTransfer(value: self)
 		return MainActor.assumeIsolated {
-			channel.value === NSObject.masterController().mainWindow.selectedItem
+			channel.value === NSObject.applicationController().mainWindow.selectedItem
 		}
 	}
 

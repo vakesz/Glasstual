@@ -1,10 +1,12 @@
-# Static libraries for Glasstual
+# Vendored templating source for Glasstual
 
-This directory carries the prebuilt third-party libraries that the app links.
+This directory originated as a collection of prebuilt static libraries. Its
+remaining dependency is now built from Swift source as part of the XcodeGen
+project.
 
 | Library | Version | Source | Used by |
 | --- | --- | --- | --- |
-| [GRMustache](https://github.com/groue/GRMustache) | af9d138f6fc1d985a2c4089ad19b791a02827908 | built from `Source/GRMustache/GRMustache.xcodeproj` | Glasstual (templating engine) |
+| [GRMustache.swift](https://github.com/groue/GRMustache.swift) | 7.0.0 (`4e3449141ce03cb1510f4752a26751bb9fbff9c2`) | `GRMustache/Sources` | Glasstual theme and inline-content templates |
 
 libgpg-error, libgcrypt and libotr, together with the Encryption Kit framework
 that linked them, were removed on 2026-08-22 (LGPL 2.1; see
@@ -12,17 +14,20 @@ that linked them, were removed on 2026-08-22 (LGPL 2.1; see
 
 ## GRMustache
 
-1. Check out the source code from GitHub.
-2. Open `src/GRMustache.xcodeproj`, set the project to "GRMustache7-MacOS", and set build to "Any Mac".
-3. Go to Project Info and set the Deployment Target to macOS 10.12.
-4. Close the Xcode project.
-5. Open Terminal, cd to the directory for GRMustache, and run `make lib/libGRMustache7-MacOS.a`.
-6. Copy `lib/libGRMustache7-MacOS.a` to `Source/GRMustache/Libraries/libmustache.a` in this repo.
-7. If you are building a different version of GRMustache, you will need to copy over the headers to `Source/GRMustache/Headers` and ensure that there have been no substantial changes.
-8. Open `Sources/GRMustache/GRMustache.xcodeproj` in this repo.
-9. Build the GRMustache wrapper.
-10. Copy the `GRMustache.framework` build product to the `Libraries` directory in this repo.
+`GRMustache/Sources` contains the source-built Swift module. The former
+Objective-C headers, `libmustache.a`, and `GRMustache.framework` bundle are no
+longer part of the repository. XcodeGen defines the module target and its
+consumers; no checked-in project or prebuilt wrapper needs updating.
+
+The port retains the legacy standard-library functions used by Glasstual and
+third-party themes. See `GRMustache/PROVENANCE.md` for the exact upstream source,
+local compatibility changes, and verification scope.
 
 ## Licensing
 
-See the `Documentation` directory.
+Both upstream eras remain acknowledged:
+
+- `Documentation/LICENSE-GRMustache-Swift.txt` covers the Swift implementation.
+- `Documentation/LICENSE-libmustache.txt` preserves the license shipped with
+  the former Objective-C implementation and covers the compatibility behavior
+  carried forward from it.

@@ -35,17 +35,15 @@ import ObjectiveC
 
 private nonisolated(unsafe) var invalidatingSelectionBackgroundKey: UInt8 = 0
 
-extension NSTableView {
-	@objc(selectItemAtIndex:)
-	func textual_selectItem(at index: UInt) {
-		selectRowIndexes(IndexSet(integer: Int(index)), byExtendingSelection: false)
-		scrollRowToVisible(Int(index))
+public extension NSTableView {
+	func selectItem(at index: Int) {
+		selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+		scrollRowToVisible(index)
 	}
 
-	@objc(invalidateBackgroundForSelection)
-	func textual_invalidateBackgroundForSelection() {
-		textual_invalidatingBackgroundForSelection = true
-		defer { textual_invalidatingBackgroundForSelection = false }
+	func invalidateSelectionBackground() {
+		isInvalidatingSelectionBackground = true
+		defer { isInvalidatingSelectionBackground = false }
 
 		let selectedRows = selectedRowIndexes
 		let previouslyAllowedEmptySelection = allowsEmptySelection
@@ -55,8 +53,7 @@ extension NSTableView {
 		allowsEmptySelection = previouslyAllowedEmptySelection
 	}
 
-	@objc(invalidatingBackgroundForSelection)
-	var textual_invalidatingBackgroundForSelection: Bool {
+	var isInvalidatingSelectionBackground: Bool {
 		get {
 			(objc_getAssociatedObject(self, &invalidatingSelectionBackgroundKey) as? NSNumber)?.boolValue ?? false
 		}
@@ -70,66 +67,57 @@ extension NSTableView {
 		}
 	}
 
-	@objc(rowBeneathMouse)
-	var textual_rowBeneathMouse: Int {
+	var rowBeneathMouse: Int {
 		guard let window else { return -1 }
 		return row(at: convert(window.mouseLocationOutsideOfEventStream, from: nil))
 	}
 
-	@objc(selectionIndexesForProposedSelection:maximumNumberOfSelections:)
-	func textual_selectionIndexes(
+	func selectionIndexes(
 		forProposedSelection proposedSelection: IndexSet,
-		maximumNumberOfSelections maximum: UInt
+		maximumCount: Int
 	) -> IndexSet {
-		precondition(maximum > 0)
-		guard proposedSelection.count > maximum else { return proposedSelection }
-		guard numberOfSelectedRows != maximum else { return selectedRowIndexes }
-		return IndexSet(proposedSelection.prefix(Int(maximum)))
+		precondition(maximumCount > 0)
+		guard proposedSelection.count > maximumCount else { return proposedSelection }
+		guard numberOfSelectedRows != maximumCount else { return selectedRowIndexes }
+		return IndexSet(proposedSelection.prefix(maximumCount))
 	}
 
-	@objc(selectRowIndexes:byExtendingSelection:scrollToSelection:)
-	func textual_selectRowIndexes(_ indexes: IndexSet, byExtendingSelection extend: Bool, scrollToSelection: Bool) {
+	func selectRowIndexes(_ indexes: IndexSet, byExtendingSelection extend: Bool, scrollingToSelection: Bool) {
 		selectRowIndexes(indexes, byExtendingSelection: extend)
-		if scrollToSelection, let firstIndex = indexes.first {
+		if scrollingToSelection, let firstIndex = indexes.first {
 			scrollRowToVisible(firstIndex)
 		}
 	}
 }
 
-extension NSTableRowView {
-	@objc(invalidatingBackgroundForSelection)
-	var textual_invalidatingBackgroundForSelection: Bool {
-		(superview as? NSTableView)?.textual_invalidatingBackgroundForSelection ?? false
+public extension NSTableRowView {
+	var isInvalidatingSelectionBackground: Bool {
+		(superview as? NSTableView)?.isInvalidatingSelectionBackground ?? false
 	}
 }
 
-extension NSOutlineView {
-	@objc(selectedObjects)
-	var textual_selectedObjects: [Any] {
+public extension NSOutlineView {
+	var selectedItems: [Any] {
 		selectedRowIndexes.compactMap { item(atRow: $0) }
 	}
 
-	@objc(isGroupItem:)
-	func textual_isGroupItem(_ item: Any) -> Bool {
+	func isGroupItem(_ item: Any) -> Bool {
 		level(forItem: item) == 0
 	}
 
-	@objc(groupItems)
-	var textual_groupItems: [Any] {
+	var groupItems: [Any] {
 		(0 ..< numberOfRows).compactMap { row in
 			level(forRow: row) == 0 ? item(atRow: row) : nil
 		}
 	}
 
-	@objc(itemsFromParentGroup:)
-	func textual_itemsFromParentGroup(_ item: Any) -> [Any]? {
-		textual_items(inGroup: item)
+	func items(inContainingGroupOf item: Any) -> [Any]? {
+		items(inGroup: item)
 	}
 
-	@objc(itemsInGroup:)
-	func textual_items(inGroup candidate: Any) -> [Any]? {
+	func items(inGroup candidate: Any) -> [Any]? {
 		let groupItem: Any
-		if textual_isGroupItem(candidate) {
+		if isGroupItem(candidate) {
 			groupItem = candidate
 		} else if let parent = parent(forItem: candidate) {
 			groupItem = parent
@@ -148,9 +136,8 @@ extension NSOutlineView {
 		}
 	}
 
-	@objc(indexesOfItemsInGroup:)
-	func textual_indexesOfItems(inGroup groupItem: Any) -> IndexSet? {
-		guard let items = textual_items(inGroup: groupItem),
+	func indexesOfItems(inGroup groupItem: Any) -> IndexSet? {
+		guard let items = items(inGroup: groupItem),
 		      let first = items.first,
 		      let last = items.last
 		else {

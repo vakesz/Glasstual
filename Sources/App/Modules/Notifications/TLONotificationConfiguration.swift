@@ -12,6 +12,11 @@
 
 import AppKit
 
+public enum NotificationAlertSound {
+	public static let defaultPreferenceValue = "Default"
+	public static let noSoundPreferenceValue = "None"
+}
+
 @objc(TLONotificationConfiguration)
 public class NotificationConfiguration: NSObject {
 	@objc public private(set) var eventType: TXNotificationType
@@ -34,51 +39,57 @@ public class NotificationConfiguration: NSObject {
 	}
 
 	@objc public static func localizedAlertDefaultSoundTitle() -> String {
-		LocalizedKey("TVCNotificationConfigurationView[0rs-8l]")
+		NotificationSoundStrings.defaultSound
 	}
 
 	@objc public static func localizedAlertNoSoundTitle() -> String {
-		LocalizedKey("TVCNotificationConfigurationView[vje-9n]")
+		NotificationSoundStrings.noSound
 	}
 
-	@objc public var displayName: String {
-		TXSharedApplication.sharedNotificationController().title(forEvent: eventType)
+	@MainActor @objc public var displayName: String {
+		SharedApplication.sharedNotificationController().title(forEvent: eventType)
 	}
 
-	@objc public var alertSound: String? {
+	@objc public dynamic var alertSound: String? {
 		get { abstractValue(for: "alertSound") }
-		set { doesNotRecognizeSelector(NSSelectorFromString("setAlertSound:")) }
+		set { rejectAbstractSetter(newValue, selectorName: "setAlertSound:") }
 	}
 
-	@objc public var speakEvent: UInt {
+	@objc public dynamic var speakEvent: UInt {
 		get { abstractValue(for: "speakEvent") }
-		set { doesNotRecognizeSelector(NSSelectorFromString("setSpeakEvent:")) }
+		set { rejectAbstractSetter(newValue, selectorName: "setSpeakEvent:") }
 	}
 
-	@objc public var pushNotification: UInt {
+	@objc public dynamic var pushNotification: UInt {
 		get { abstractValue(for: "pushNotification") }
-		set { doesNotRecognizeSelector(NSSelectorFromString("setPushNotification:")) }
+		set { rejectAbstractSetter(newValue, selectorName: "setPushNotification:") }
 	}
 
-	@objc public var disabledWhileAway: UInt {
+	@objc public dynamic var disabledWhileAway: UInt {
 		get { abstractValue(for: "disabledWhileAway") }
-		set { doesNotRecognizeSelector(NSSelectorFromString("setDisabledWhileAway:")) }
+		set { rejectAbstractSetter(newValue, selectorName: "setDisabledWhileAway:") }
 	}
 
-	@objc public var bounceDockIcon: UInt {
+	@objc public dynamic var bounceDockIcon: UInt {
 		get { abstractValue(for: "bounceDockIcon") }
-		set { doesNotRecognizeSelector(NSSelectorFromString("setBounceDockIcon:")) }
+		set { rejectAbstractSetter(newValue, selectorName: "setBounceDockIcon:") }
 	}
 
-	@objc public var bounceDockIconRepeatedly: UInt {
+	@objc public dynamic var bounceDockIconRepeatedly: UInt {
 		get { abstractValue(for: "bounceDockIconRepeatedly") }
-		set { doesNotRecognizeSelector(NSSelectorFromString("setBounceDockIconRepeatedly:")) }
+		set { rejectAbstractSetter(newValue, selectorName: "setBounceDockIconRepeatedly:") }
 	}
 
 	private func abstractValue<Value>(for selectorName: String) -> Value {
 		doesNotRecognizeSelector(NSSelectorFromString(selectorName))
 
 		fatalError("Unreachable after doesNotRecognizeSelector")
+	}
+
+	private func rejectAbstractSetter(_ value: some Any, selectorName: String) {
+		withExtendedLifetime(value) {
+			doesNotRecognizeSelector(NSSelectorFromString(selectorName))
+		}
 	}
 }
 
@@ -91,40 +102,40 @@ public final class PreferencesNotificationConfiguration: NotificationConfigurati
 
 	override public var alertSound: String? {
 		get {
-			TPCPreferences.sound(forEvent: eventType)
-				?? TLONotificationAlertSound.TXNoAlertSoundPreferenceValue.rawValue
+			TextualPreferences.sound(for: eventType)
+				?? NotificationAlertSound.noSoundPreferenceValue
 		}
-		set { TPCPreferences.setSound(newValue, forEvent: eventType) }
+		set { TextualPreferences.setSound(newValue, for: eventType) }
 	}
 
 	override public var pushNotification: UInt {
-		get { TPCPreferences.notificationEnabled(forEvent: eventType) ? 1 : 0 }
-		set { TPCPreferences.setNotificationEnabled(newValue != 0, forEvent: eventType) }
+		get { TextualPreferences.notificationEnabled(for: eventType) ? 1 : 0 }
+		set { TextualPreferences.setNotificationEnabled(newValue != 0, for: eventType) }
 	}
 
 	override public var speakEvent: UInt {
-		get { TPCPreferences.speakEvent(eventType) ? 1 : 0 }
-		set { TPCPreferences.setEventIsSpoken(newValue != 0, forEvent: eventType) }
+		get { TextualPreferences.speak(eventType) ? 1 : 0 }
+		set { TextualPreferences.setEventIsSpoken(newValue != 0, for: eventType) }
 	}
 
 	override public var disabledWhileAway: UInt {
-		get { TPCPreferences.disabledWhileAway(forEvent: eventType) ? 1 : 0 }
-		set { TPCPreferences.setDisabledWhileAway(newValue != 0, forEvent: eventType) }
+		get { TextualPreferences.disabledWhileAway(for: eventType) ? 1 : 0 }
+		set { TextualPreferences.setDisabledWhileAway(newValue != 0, for: eventType) }
 	}
 
 	override public var bounceDockIcon: UInt {
-		get { TPCPreferences.bounceDockIcon(forEvent: eventType) ? 1 : 0 }
-		set { TPCPreferences.setBounceDockIcon(newValue != 0, forEvent: eventType) }
+		get { TextualPreferences.bounceDockIcon(for: eventType) ? 1 : 0 }
+		set { TextualPreferences.setBounceDockIcon(newValue != 0, for: eventType) }
 	}
 
 	override public var bounceDockIconRepeatedly: UInt {
-		get { TPCPreferences.bounceDockIconRepeatedly(forEvent: eventType) ? 1 : 0 }
-		set { TPCPreferences.setBounceDockIconRepeatedly(newValue != 0, forEvent: eventType) }
+		get { TextualPreferences.bounceDockIconRepeatedly(for: eventType) ? 1 : 0 }
+		set { TextualPreferences.setBounceDockIconRepeatedly(newValue != 0, for: eventType) }
 	}
 }
 
 @objc(TDCChannelPropertiesNotificationConfiguration)
-public final class ChannelPropertiesNotificationConfiguration: NotificationConfiguration {
+public final class ChannelNotificationConfiguration: NotificationConfiguration {
 	private weak var sheet: ChannelPropertiesSheet?
 
 	public required init(eventType: TXNotificationType) {

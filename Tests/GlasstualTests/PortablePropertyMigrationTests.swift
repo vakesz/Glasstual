@@ -5,6 +5,7 @@
 
 import CocoaExtensions
 import Foundation
+@testable import Glasstual
 import XCTest
 
 private final class ImmutablePortableDictionaryFixture: PortablePropertyDict {
@@ -39,7 +40,7 @@ private final class MutablePortableDictionaryFixture: PortablePropertyDict {
 	private(set) var observedCopyState = false
 	private(set) var value = 0
 
-	override class var isMutable: Bool {
+	override static var isMutable: Bool {
 		true
 	}
 

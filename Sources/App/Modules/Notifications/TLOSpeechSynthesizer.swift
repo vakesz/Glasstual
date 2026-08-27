@@ -13,27 +13,23 @@
 import Foundation
 
 @objc(TLOSpeechSynthesizer)
-public final class SpeechSynthesizer: NSObject, TLOSpeechSynthesizerEngineDelegate {
+public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate {
 	private let lock = NSRecursiveLock()
-	private let engine: TLOSpeechSynthesizerEngine
+	private let engine: SpeechSynthesizerEngine
 	private var pendingItems: [Any] = []
 	private var stopped = false
 
 	override public convenience init() {
-		self.init(engine: TLOAVSpeechSynthesizerEngine())
+		self.init(engine: AVSpeechSynthesizerEngine())
 	}
 
 	@objc(initWithEngine:)
-	public init(engine: TLOSpeechSynthesizerEngine) {
+	public init(engine: SpeechSynthesizerEngine) {
 		self.engine = engine
 
 		super.init()
 
 		engine.delegate = self
-	}
-
-	deinit {
-		engine.delegate = nil
 	}
 
 	@objc public var isStopped: Bool {

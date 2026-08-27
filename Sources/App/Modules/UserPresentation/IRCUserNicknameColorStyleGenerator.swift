@@ -12,6 +12,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import CryptoKit
 import os
 
@@ -38,12 +39,12 @@ public final class UserNicknameColorStyleGenerator: NSObject {
 		if let override = nicknameColorStyleOverride(forKey: normalizedString) {
 			isOverride?.pointee = true
 
-			return override.hexadecimalValue
+			return override.textualHexadecimalValue
 		}
 
 		isOverride?.pointee = false
 
-		let colorStyle = TXSharedApplication.sharedThemeController().settings.nicknameColorStyle
+		let colorStyle = SharedApplication.sharedThemeController().settings.nicknameColorStyle
 		let hash = hash(for: normalizedString, colorStyle: colorStyle)
 
 		return nicknameColorStyle(forHash: hash, colorStyle: colorStyle)
@@ -172,7 +173,7 @@ public final class UserNicknameColorStyleGenerator: NSObject {
 		}
 	}
 
-	private static var userDefaults: TPCPreferencesUserDefaults {
-		TPCPreferencesUserDefaults.shared()
+	private static var userDefaults: TextualUserDefaults {
+		TextualUserDefaults.shared()
 	}
 }

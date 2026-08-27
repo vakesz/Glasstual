@@ -1,6 +1,0 @@
-
-#ifdef __OBJC__
-
-#import "CocoaExtensionsPrivate.h"
-
-#endif

@@ -8,12 +8,38 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 @objc(IRCHighlightMatchCondition)
-public class HighlightMatchCondition: XRPortablePropertyDict {
+public class HighlightMatchCondition: PortablePropertyDict {
 	fileprivate var matchIsExcludedStorage = false
 	fileprivate var matchChannelIdStorage: String?
 	fileprivate var matchKeywordStorage = ""
@@ -40,7 +66,7 @@ public class HighlightMatchCondition: XRPortablePropertyDict {
 	}
 
 	@objc(initWithDictionary:)
-	override public init(dictionary dic: [String: Any]) {
+	public required init(dictionary dic: [String: Any]) {
 		super.init(dictionary: dic)
 	}
 
@@ -61,9 +87,9 @@ public class HighlightMatchCondition: XRPortablePropertyDict {
 	override public func populateDictionaryValues(_ dic: [String: Any]) {
 		let dictionary = dic as NSDictionary
 
-		var excluded = ObjCBool(false)
-		dictionary.assignBool(to: &excluded, forKey: "matchIsExcluded")
-		matchIsExcludedStorage = excluded.boolValue
+		var excluded = false
+		dictionary.ce_assignBool(to: &excluded, forKey: "matchIsExcluded")
+		matchIsExcludedStorage = excluded
 
 		if let channelId = dictionary["matchChannelID"] as? String {
 			matchChannelIdStorage = channelId
@@ -81,42 +107,48 @@ public class HighlightMatchCondition: XRPortablePropertyDict {
 	@objc(populateDefaultsPostflight)
 	override public func populateDefaultsPostflight() {
 		if uniqueIdentifierStorage.isEmpty {
-			uniqueIdentifierStorage = NSString.withUUID()
+			uniqueIdentifierStorage = UUID().uuidString
 		}
 	}
 
-	override public func dictionaryValue(for _: XRPortablePropertyDictTarget) -> [String: Any] {
+	override public func dictionaryValue(for _: PortablePropertyDictTarget) -> [String: Any] {
 		let dic = NSMutableDictionary()
 
-		dic.maybeSetObject(matchChannelIdStorage, forKey: "matchChannelID")
-		dic.maybeSetObject(matchKeywordStorage, forKey: "matchKeyword")
-		dic.maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
-		dic.setBool(matchIsExcludedStorage, forKey: "matchIsExcluded")
+		dic.ce_maybeSetObject(matchChannelIdStorage, forKey: "matchChannelID")
+		dic.ce_maybeSetObject(matchKeywordStorage, forKey: "matchKeyword")
+		dic.ce_maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
+		dic.ce_setBool(matchIsExcludedStorage, forKey: "matchIsExcluded")
 
-		return dic as! [String: Any]
+		guard let values = dic as? [String: Any] else {
+			preconditionFailure("Highlight condition dictionaries must use String keys")
+		}
+
+		return values
 	}
 
 	override public func uniqueCopy(asMutable mutableCopy: Bool) -> Any {
-		let object = super.uniqueCopy(asMutable: mutableCopy) as! HighlightMatchCondition
+		guard let object = super.uniqueCopy(asMutable: mutableCopy) as? HighlightMatchCondition else {
+			preconditionFailure("HighlightMatchCondition copies must preserve their model type")
+		}
 
-		object.uniqueIdentifierStorage = NSString.withUUID()
+		object.uniqueIdentifierStorage = UUID().uuidString
 
 		return object
 	}
 
-	override public var mutableClass: XRPortablePropertyDict {
-		unsafeBitCast(MutableHighlightMatchCondition.self, to: XRPortablePropertyDict.self)
+	override public var mutableClass: PortablePropertyDict {
+		unsafeBitCast(MutableHighlightMatchCondition.self, to: PortablePropertyDict.self)
 	}
 }
 
 @objc(IRCHighlightMatchConditionMutable)
 public final class MutableHighlightMatchCondition: HighlightMatchCondition {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyDict {
-		unsafeBitCast(HighlightMatchCondition.self, to: XRPortablePropertyDict.self)
+	override public var immutableClass: PortablePropertyDict {
+		unsafeBitCast(HighlightMatchCondition.self, to: PortablePropertyDict.self)
 	}
 
 	@objc override public var matchIsExcluded: Bool {

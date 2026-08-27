@@ -7,6 +7,7 @@
  *
  * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2020 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +37,7 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 
 final class GLTTestClientConfig: IRCClientConfig, @unchecked Sendable {
@@ -59,15 +61,15 @@ final class GLTTestClient: IRCClient, @unchecked Sendable {
 	let printedLines = NSMutableArray()
 	var forwardsProcessedMessages = false
 
-	convenience init() {
+	@MainActor convenience init() {
 		self.init(configDictionary: [:])
 	}
 
-	convenience init(configDictionary dictionary: [String: Any]) {
+	@MainActor convenience init(configDictionary dictionary: [String: Any]) {
 		self.init(configDictionary: dictionary, nicknamePassword: nil)
 	}
 
-	convenience init(
+	@MainActor convenience init(
 		configDictionary dictionary: [String: Any],
 		nicknamePassword: String?
 	) {
@@ -78,10 +80,13 @@ final class GLTTestClient: IRCClient, @unchecked Sendable {
 		config.testNicknamePassword = nicknamePassword
 
 		self.init(config: config)
+		linePrintObserver = { [weak self] request in
+			self?.recordPrintedLine(request)
+		}
 	}
 
-	static func testChannelUser(nickname: String, on client: IRCClient) -> IRCChannelUser {
-		IRCChannelUser(user: IRCUser(nickname: nickname, on: client))
+	static func testChannelUser(nickname: String, on client: IRCClient) -> ChannelUser {
+		ChannelUser(user: User(nickname: nickname, on: client))
 	}
 
 	func markAsLoggedIn() {
@@ -108,26 +113,15 @@ final class GLTTestClient: IRCClient, @unchecked Sendable {
 		}
 	}
 
-	override func print(
-		_ messageBody: String,
-		by nickname: String?,
-		in channel: IRCChannel?,
-		as lineType: TVCLogLineType,
-		command: String?,
-		receivedAt _: Date,
-		isEncrypted _: Bool,
-		escapeMessage _: Bool,
-		referenceMessage _: Message?,
-		completionBlock _: TVCLogControllerPrintOperationCompletionBlock?
-	) {
+	private func recordPrintedLine(_ request: IRCLinePrintRequest) {
 		var line: [String: Any] = [
-			"messageBody": messageBody,
-			"lineType": NSNumber(value: lineType.rawValue),
+			"messageBody": request.messageBody,
+			"lineType": NSNumber(value: request.lineType.rawValue),
 		]
 
-		line["command"] = command
-		line["channel"] = channel
-		line["nickname"] = nickname
+		line["command"] = request.command
+		line["channel"] = request.channel
+		line["nickname"] = request.nickname
 
 		printedLines.add(line)
 	}

@@ -258,7 +258,7 @@ public extension NSString {
 	}
 
 	@objc(trimAndGetFirstToken)
-	var ce_trimAndGetFirstToken: String {
+	var ceTrimAndGetFirstToken: String {
 		let trimmed = trimmingCharacters(in: .whitespacesAndNewlines) as NSString
 		return StringTokenizer.whitespaceToken(in: trimmed)?.value ?? ""
 	}
@@ -266,7 +266,7 @@ public extension NSString {
 
 public extension NSMutableString {
 	@objc(getTokenInsideQuotes)
-	var ce_tokenInsideQuotes: String {
+	var ceTokenInsideQuotes: String {
 		guard let scan = StringTokenizer.quoteToken(in: self, rawOptions: 0) else {
 			return ""
 		}
@@ -276,7 +276,7 @@ public extension NSMutableString {
 	}
 
 	@objc(getToken)
-	var ce_token: String {
+	var ceToken: String {
 		guard let token = StringTokenizer.whitespaceToken(in: self) else {
 			return ""
 		}
@@ -285,13 +285,13 @@ public extension NSMutableString {
 	}
 
 	@objc(lowercaseGetToken)
-	var ce_lowercaseToken: String {
-		ce_token.lowercased()
+	var ceLowercaseToken: String {
+		ceToken.lowercased()
 	}
 
 	@objc(uppercaseGetToken)
-	var ce_uppercaseToken: String {
-		ce_token.uppercased()
+	var ceUppercaseToken: String {
+		ceToken.uppercased()
 	}
 }
 
@@ -322,28 +322,28 @@ public extension NSAttributedString {
 
 public extension NSMutableAttributedString {
 	@objc(getTokenAsString)
-	var ce_tokenAsString: String {
+	var ceTokenAsString: String {
 		consumeWhitespaceToken(asAttributedString: false) as? String ?? ""
 	}
 
 	@objc(lowercaseGetToken)
-	var ce_lowercaseToken: String {
-		ce_tokenAsString.lowercased()
+	var ceLowercaseToken: String {
+		ceTokenAsString.lowercased()
 	}
 
 	@objc(uppercaseGetToken)
-	var ce_uppercaseToken: String {
-		ce_tokenAsString.uppercased()
+	var ceUppercaseToken: String {
+		ceTokenAsString.uppercased()
 	}
 
 	@objc(getToken)
-	var ce_token: NSAttributedString {
+	var ceToken: NSAttributedString {
 		consumeWhitespaceToken(asAttributedString: true) as? NSAttributedString
 			?? NSAttributedString(string: "")
 	}
 
 	@objc(getTokenInsideQuotes)
-	var ce_tokenInsideQuotes: NSAttributedString {
+	var ceTokenInsideQuotes: NSAttributedString {
 		guard let scan = StringTokenizer.quoteToken(in: string as NSString, rawOptions: 0) else {
 			return NSAttributedString(string: "")
 		}
