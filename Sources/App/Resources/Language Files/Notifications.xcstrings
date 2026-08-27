@@ -39,24 +39,24 @@
     },
     "body-file-transfer-receive-successful" : {
       "comment" : "Notification bubble description for a successful incoming file transfer. Arguments are the filename and byte count. Migrated from legacy key oqh-pn. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ (%2$qi bytes)"
+            "value" : "%1$@ (%2$llu bytes)"
           }
         }
       }
     },
     "body-file-transfer-request" : {
       "comment" : "Notification bubble description for an incoming file-transfer request. Arguments are the filename and byte count. Migrated from legacy key wik-wq. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ (%2$qi bytes)"
+            "value" : "%1$@ (%2$llu bytes)"
           }
         }
       }
@@ -75,12 +75,12 @@
     },
     "body-file-transfer-send-successful" : {
       "comment" : "Notification bubble description for a successful outgoing file transfer. Arguments are the filename and byte count. Migrated from legacy key fhn-dd. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ (%2$qi bytes)"
+            "value" : "%1$@ (%2$llu bytes)"
           }
         }
       }
