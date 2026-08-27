@@ -1,0 +1,918 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "-9800" : {
+      "comment" : "Reason for errSSLProtocol.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generic protocol error"
+          }
+        }
+      }
+    },
+    "-9801" : {
+      "comment" : "Reason for errSSLNegotiation.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cipher suite negotiation failure"
+          }
+        }
+      }
+    },
+    "-9802" : {
+      "comment" : "Reason for errSSLFatalAlert.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fatal alert"
+          }
+        }
+      }
+    },
+    "-9803" : {
+      "comment" : "Reason for errSSLWouldBlock.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I/O would block"
+          }
+        }
+      }
+    },
+    "-9804" : {
+      "comment" : "Reason for errSSLSessionNotFound.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attempt to restore an unknown session"
+          }
+        }
+      }
+    },
+    "-9805" : {
+      "comment" : "Reason for errSSLClosedGraceful.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection was closed gracefully"
+          }
+        }
+      }
+    },
+    "-9806" : {
+      "comment" : "Reason for errSSLClosedAbort.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection was closed as a result of an error"
+          }
+        }
+      }
+    },
+    "-9807" : {
+      "comment" : "Reason for errSSLXCertChainInvalid.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid certificate chain"
+          }
+        }
+      }
+    },
+    "-9808" : {
+      "comment" : "Reason for errSSLBadCert.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid certificate format"
+          }
+        }
+      }
+    },
+    "-9809" : {
+      "comment" : "Reason for errSSLCrypto.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Underlying cryptographic error"
+          }
+        }
+      }
+    },
+    "-9810" : {
+      "comment" : "Reason for errSSLInternal.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internal error"
+          }
+        }
+      }
+    },
+    "-9811" : {
+      "comment" : "Reason for errSSLModuleAttach.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Module attach failure"
+          }
+        }
+      }
+    },
+    "-9812" : {
+      "comment" : "Reason for errSSLUnknownRootCert.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid certificate chain with an untrusted root"
+          }
+        }
+      }
+    },
+    "-9813" : {
+      "comment" : "Reason for errSSLNoRootCert.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No root certificate for the certificate chain"
+          }
+        }
+      }
+    },
+    "-9814" : {
+      "comment" : "Reason for errSSLCertExpired.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain has an expired certificate"
+          }
+        }
+      }
+    },
+    "-9815" : {
+      "comment" : "Reason for errSSLCertNotYetValid.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate chain has a certificate that is not yet valid"
+          }
+        }
+      }
+    },
+    "-9816" : {
+      "comment" : "Reason for errSSLClosedNoNotify.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server closed session with no notification"
+          }
+        }
+      }
+    },
+    "-9817" : {
+      "comment" : "Reason for errSSLBufferOverflow.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insufficient buffer provided"
+          }
+        }
+      }
+    },
+    "-9818" : {
+      "comment" : "Reason for errSSLBadCipherSuite.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Improperly configured cipher suite"
+          }
+        }
+      }
+    },
+    "-9819" : {
+      "comment" : "Reason for errSSLPeerUnexpectedMsg.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unexpected message received"
+          }
+        }
+      }
+    },
+    "-9820" : {
+      "comment" : "Reason for errSSLPeerBadRecordMac.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad MAC"
+          }
+        }
+      }
+    },
+    "-9821" : {
+      "comment" : "Reason for errSSLPeerDecryptionFail.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decryption failed"
+          }
+        }
+      }
+    },
+    "-9822" : {
+      "comment" : "Reason for errSSLPeerRecordOverflow.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record overflow"
+          }
+        }
+      }
+    },
+    "-9823" : {
+      "comment" : "Reason for errSSLPeerDecompressFail.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decompression failure"
+          }
+        }
+      }
+    },
+    "-9824" : {
+      "comment" : "Reason for errSSLPeerHandshakeFail.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handshake failure"
+          }
+        }
+      }
+    },
+    "-9825" : {
+      "comment" : "Reason for errSSLPeerBadCert.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad certificate"
+          }
+        }
+      }
+    },
+    "-9826" : {
+      "comment" : "Reason for errSSLPeerUnsupportedCert.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid or unsupported certificate format"
+          }
+        }
+      }
+    },
+    "-9827" : {
+      "comment" : "Reason for errSSLPeerCertRevoked.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate revoked"
+          }
+        }
+      }
+    },
+    "-9828" : {
+      "comment" : "Reason for errSSLPeerCertExpired.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate expired"
+          }
+        }
+      }
+    },
+    "-9829" : {
+      "comment" : "Reason for errSSLPeerCertUnknown.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown certificate"
+          }
+        }
+      }
+    },
+    "-9830" : {
+      "comment" : "Reason for errSSLIllegalParam.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Illegal parameter"
+          }
+        }
+      }
+    },
+    "-9831" : {
+      "comment" : "Reason for errSSLPeerUnknownCA.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown certificate authority"
+          }
+        }
+      }
+    },
+    "-9832" : {
+      "comment" : "Reason for errSSLPeerAccessDenied.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access denied"
+          }
+        }
+      }
+    },
+    "-9833" : {
+      "comment" : "Reason for errSSLPeerDecodeError.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decoding error"
+          }
+        }
+      }
+    },
+    "-9834" : {
+      "comment" : "Reason for errSSLPeerDecryptError.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decryption error"
+          }
+        }
+      }
+    },
+    "-9835" : {
+      "comment" : "Reason for errSSLPeerExportRestriction.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export restriction"
+          }
+        }
+      }
+    },
+    "-9836" : {
+      "comment" : "Reason for errSSLPeerProtocolVersion.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid protocol version"
+          }
+        }
+      }
+    },
+    "-9837" : {
+      "comment" : "Reason for errSSLPeerInsufficientSecurity.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insufficient security"
+          }
+        }
+      }
+    },
+    "-9838" : {
+      "comment" : "Reason for errSSLPeerInternalError.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internal error"
+          }
+        }
+      }
+    },
+    "-9839" : {
+      "comment" : "Reason for errSSLPeerUserCancelled.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User canceled"
+          }
+        }
+      }
+    },
+    "-9840" : {
+      "comment" : "Reason for errSSLPeerNoRenegotiation.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renegotiation is not allowed"
+          }
+        }
+      }
+    },
+    "-9841" : {
+      "comment" : "Reason for errSSLPeerAuthCompleted.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peer certificate is valid or was ignored if verification is disabled"
+          }
+        }
+      }
+    },
+    "-9842" : {
+      "comment" : "Reason for errSSLClientCertRequested.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server has requested a client-side certificate"
+          }
+        }
+      }
+    },
+    "-9843" : {
+      "comment" : "Reason for errSSLHostNameMismatch.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host mismatch"
+          }
+        }
+      }
+    },
+    "-9844" : {
+      "comment" : "Reason for errSSLConnectionRefused.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peer dropped connection before responding"
+          }
+        }
+      }
+    },
+    "-9845" : {
+      "comment" : "Reason for errSSLDecryptionFail.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decryption failure"
+          }
+        }
+      }
+    },
+    "-9846" : {
+      "comment" : "Reason for errSSLBadRecordMac.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad MAC"
+          }
+        }
+      }
+    },
+    "-9847" : {
+      "comment" : "Reason for errSSLRecordOverflow.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record overflow"
+          }
+        }
+      }
+    },
+    "-9848" : {
+      "comment" : "Reason for errSSLBadConfiguration.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration error"
+          }
+        }
+      }
+    },
+    "-9849" : {
+      "comment" : "Reason for errSSLUnexpectedRecord.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unexpected (skipped) record in DTLS"
+          }
+        }
+      }
+    },
+    "-9850" : {
+      "comment" : "Reason for errSSLWeakPeerEphemeralDHKey.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server has a weak ephemeral Diffie-Hellman public key"
+          }
+        }
+      }
+    },
+    "-9851" : {
+      "comment" : "Reason for errSSLClientHelloReceived.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hello received"
+          }
+        }
+      }
+    },
+    "-9852" : {
+      "comment" : "Reason for errSSLTransportReset.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Socket shutdown (e.g. TCP RST or FIN)"
+          }
+        }
+      }
+    },
+    "-9853" : {
+      "comment" : "Reason for errSSLNetworkTimeout.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network timeout"
+          }
+        }
+      }
+    },
+    "-9854" : {
+      "comment" : "Reason for errSSLConfigurationFailed.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration failed"
+          }
+        }
+      }
+    },
+    "-9855" : {
+      "comment" : "Reason for errSSLUnsupportedExtension.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported extension"
+          }
+        }
+      }
+    },
+    "-9856" : {
+      "comment" : "Reason for errSSLUnexpectedMessage.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peer rejected unexpected message"
+          }
+        }
+      }
+    },
+    "-9857" : {
+      "comment" : "Reason for errSSLDecompressFail.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decompression failed"
+          }
+        }
+      }
+    },
+    "-9858" : {
+      "comment" : "Reason for errSSLHandshakeFail.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handshake failed"
+          }
+        }
+      }
+    },
+    "-9859" : {
+      "comment" : "Reason for errSSLDecodeError.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decode failed"
+          }
+        }
+      }
+    },
+    "-9860" : {
+      "comment" : "Reason for errSSLInappropriateFallback.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inappropriate fallback"
+          }
+        }
+      }
+    },
+    "-9861" : {
+      "comment" : "Reason for errSSLMissingExtension.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing extension"
+          }
+        }
+      }
+    },
+    "-9862" : {
+      "comment" : "Reason for errSSLBadCertificateStatusResponse.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bad OCSP response"
+          }
+        }
+      }
+    },
+    "-9863" : {
+      "comment" : "Reason for errSSLCertificateRequired.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificate required"
+          }
+        }
+      }
+    },
+    "-9864" : {
+      "comment" : "Reason for errSSLUnknownPSKIdentity.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown PSK identity"
+          }
+        }
+      }
+    },
+    "-9865" : {
+      "comment" : "Reason for errSSLUnrecognizedName.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown or unrecognized name"
+          }
+        }
+      }
+    },
+    "-9880" : {
+      "comment" : "Reason for errSSLATSViolation.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation"
+          }
+        }
+      }
+    },
+    "-9881" : {
+      "comment" : "Reason for errSSLATSMinimumVersionViolation.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: minimum protocol version is not ATS compliant"
+          }
+        }
+      }
+    },
+    "-9882" : {
+      "comment" : "Reason for errSSLATSCiphersuiteViolation.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: selected ciphersuite is not ATS compliant"
+          }
+        }
+      }
+    },
+    "-9883" : {
+      "comment" : "Reason for errSSLATSMinimumKeySizeViolation.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: peer key size is not ATS compliant"
+          }
+        }
+      }
+    },
+    "-9884" : {
+      "comment" : "Reason for errSSLATSLeafCertificateHashAlgorithmViolation.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: peer leaf certificate hash algorithm is not ATS compliant"
+          }
+        }
+      }
+    },
+    "-9885" : {
+      "comment" : "Reason for errSSLATSCertificateHashAlgorithmViolation.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: peer certificate hash algorithm is not ATS compliant"
+          }
+        }
+      }
+    },
+    "-9886" : {
+      "comment" : "Reason for errSSLATSCertificateTrustViolation.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATS violation: peer certificate is not issued by trusted peer"
+          }
+        }
+      }
+    },
+    "-9890" : {
+      "comment" : "Reason for errSSLEarlyDataRejected.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Early application data rejected by peer"
+          }
+        }
+      }
+    },
+    "-9999" : {
+      "comment" : "Reason for errSSLUnknownError, which is defined by this library rather than Secure Transport.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        }
+      }
+    },
+    "error-description" : {
+      "comment" : "Complete Secure Transport error description. Arguments are the localized reason and numeric OSStatus code. Migrated from legacy key heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secure Transport Error: %1$@ (%2$ld)"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

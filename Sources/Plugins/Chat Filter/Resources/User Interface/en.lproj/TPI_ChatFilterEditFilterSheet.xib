@@ -10,7 +10,7 @@
             <connections>
                 <outlet property="cancelButton" destination="dLf-X5-R1o" id="fzG-QP-wnn"/>
                 <outlet property="contentViewTabView" destination="T01-Nx-QhV" id="Ele-u7-gVH"/>
-                <outlet property="filterActionFloodControlIntervalTextField" destination="jAQ-A0-0fz" id="YzK-Du-rLx"/>
+                <outlet property="actionFloodIntervalField" destination="jAQ-A0-0fz" id="YzK-Du-rLx"/>
                 <outlet property="filterActionTokenChannelName" destination="xNC-RA-OVo" id="Ond-3l-FcE"/>
                 <outlet property="filterActionTokenField" destination="wGy-N2-oQL" id="iLb-xy-pZz"/>
                 <outlet property="filterActionTokenLocalNickname" destination="Dbl-MS-g0g" id="bfG-TE-h5U"/>
@@ -632,12 +632,12 @@ Gw
                                         <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="fJz-XV-6oT">
                                             <rect key="frame" x="20" y="209" width="503" height="5"/>
                                         </box>
-                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="qe2-po-Vne" customClass="TVCValidatedTextField">
+                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="qe2-po-Vne" customClass="TPI_ChatFilterValidatedTextField">
                                             <rect key="frame" x="51" y="113" width="444" height="56"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="56" id="iMP-AJ-ctu"/>
                                             </constraints>
-                                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="INVITE, 001, 002, 003, …" id="xLg-Zy-ggt" customClass="TVCValidatedTextFieldCell">
+                                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="INVITE, 001, 002, 003, …" id="xLg-Zy-ggt" customClass="TPI_ChatFilterValidatedTextFieldCell">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -980,12 +980,12 @@ This information is for your records and does not alter the behavior of the filt
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="muN-88-pns" customClass="TVCValidatedTextField">
+                                        <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="muN-88-pns" customClass="TPI_ChatFilterValidatedTextField">
                                             <rect key="frame" x="145" y="363" width="302" height="22"/>
                                             <constraints>
                                                 <constraint firstAttribute="height" constant="22" id="f6r-Lf-gam"/>
                                             </constraints>
-                                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" id="Vqv-i7-xCm" customClass="TVCValidatedTextFieldCell">
+                                            <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" id="Vqv-i7-xCm" customClass="TPI_ChatFilterValidatedTextFieldCell">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

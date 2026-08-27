@@ -1,0 +1,714 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "0kn-s5": {
+      "comment": "Migrated from legacy key 0kn-s5. Member privilege description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operator"
+          }
+        }
+      }
+    },
+    "0nn-te": {
+      "comment": "Migrated from legacy key 0nn-te. Member privilege description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Half-op"
+          }
+        }
+      }
+    },
+    "4yo-mk": {
+      "comment": "Migrated from legacy key 4yo-mk. Current-session marker.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current Session"
+          }
+        }
+      }
+    },
+    "5g1-i9": {
+      "comment": "Migrated from legacy key 5g1-i9. Main-window loading status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importing preferences…"
+          }
+        }
+      }
+    },
+    "8r3-ih": {
+      "comment": "Migrated from legacy key 8r3-ih. Main message input placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send message…"
+          }
+        }
+      }
+    },
+    "acc-in": {
+      "comment": "Migrated from legacy key acc-in. Member account-status description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logged in as %@"
+          }
+        }
+      }
+    },
+    "acc-nl": {
+      "comment": "Migrated from legacy key acc-nl. Member account-status description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not logged in"
+          }
+        }
+      }
+    },
+    "b0t-ac": {
+      "comment": "Migrated from legacy key b0t-ac. Member bot-status description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User is a bot"
+          }
+        }
+      }
+    },
+    "b0t-lb": {
+      "comment": "Migrated from legacy key b0t-lb. Member list caption shown after a bot's nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bot"
+          }
+        }
+      }
+    },
+    "d85-9n": {
+      "comment": "Migrated from legacy key d85-9n. Fallback shown when member information is unavailable.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Information Not Available"
+          }
+        }
+      }
+    },
+    "dcc-ch": {
+      "comment": "Migrated from legacy key dcc-ch. Direct-chat channel description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct chat"
+          }
+        }
+      }
+    },
+    "dki-bg": {
+      "comment": "Migrated from legacy key dki-bg. Dock icon badge shown when the count exceeds what fits in the badge.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@+"
+          }
+        }
+      }
+    },
+    "gi6-wf": {
+      "comment": "Migrated from legacy key gi6-wf. Member away-status description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User is not away"
+          }
+        }
+      }
+    },
+    "hin-um": {
+      "comment": "Migrated from legacy key hin-um. Caption of the scrollback mark. Styles may show it next to the mark.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unread messages"
+          }
+        }
+      }
+    },
+    "i8t-vb": {
+      "comment": "Migrated from legacy key i8t-vb. Member privilege description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Staff Member (IRC Operator)"
+          }
+        }
+      }
+    },
+    "ib-ad": {
+      "comment": "Migrated from legacy key ib-ad. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Server or Channel"
+          }
+        }
+      }
+    },
+    "ib-m1": {
+      "comment": "Migrated from legacy key ib-m1. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark All As Read"
+          }
+        }
+      }
+    },
+    "ib-m2": {
+      "comment": "Migrated from legacy key ib-m2. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable All Notifications"
+          }
+        }
+      }
+    },
+    "ib-m3": {
+      "comment": "Migrated from legacy key ib-m3. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address Book…"
+          }
+        }
+      }
+    },
+    "ib-m4": {
+      "comment": "Migrated from legacy key ib-m4. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File Transfers…"
+          }
+        }
+      }
+    },
+    "ib-m5": {
+      "comment": "Migrated from legacy key ib-m5. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Member List"
+          }
+        }
+      }
+    },
+    "ib-mo": {
+      "comment": "Migrated from legacy key ib-mo. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
+          }
+        }
+      }
+    },
+    "ib-sf": {
+      "comment": "Migrated from legacy key ib-sf. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Channels"
+          }
+        }
+      }
+    },
+    "ib-st": {
+      "comment": "Migrated from legacy key ib-st. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings…"
+          }
+        }
+      }
+    },
+    "iph-a9": {
+      "comment": "Migrated from legacy key iph-a9. Main-window loading status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading configuration…"
+          }
+        }
+      }
+    },
+    "jkr-ed": {
+      "comment": "Migrated from legacy key jkr-ed. Member away-status description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User is away"
+          }
+        }
+      }
+    },
+    "mls-ad": {
+      "comment": "Migrated from legacy key mls-ad. Member list section headers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admins"
+          }
+        }
+      }
+    },
+    "mls-ho": {
+      "comment": "Migrated from legacy key mls-ho. Member list section headers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Half-Operators"
+          }
+        }
+      }
+    },
+    "mls-me": {
+      "comment": "Migrated from legacy key mls-me. Member list section headers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Members"
+          }
+        }
+      }
+    },
+    "mls-op": {
+      "comment": "Migrated from legacy key mls-op. Member list section headers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operators"
+          }
+        }
+      }
+    },
+    "mls-ow": {
+      "comment": "Migrated from legacy key mls-ow. Member list section headers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Owners"
+          }
+        }
+      }
+    },
+    "mls-sf": {
+      "comment": "Migrated from legacy key mls-sf. Member list section headers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Staff"
+          }
+        }
+      }
+    },
+    "mls-vo": {
+      "comment": "Migrated from legacy key mls-vo. Member list section headers.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voiced"
+          }
+        }
+      }
+    },
+    "mnu-hml": {
+      "comment": "Migrated from legacy key mnu-hml. Dynamic View/Window menu titles.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Member List"
+          }
+        }
+      }
+    },
+    "mnu-hsl": {
+      "comment": "Migrated from legacy key mnu-hsl. Dynamic View/Window menu titles.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Server List"
+          }
+        }
+      }
+    },
+    "mnu-sml": {
+      "comment": "Migrated from legacy key mnu-sml. Dynamic View/Window menu titles.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Member List"
+          }
+        }
+      }
+    },
+    "mnu-ssl": {
+      "comment": "Migrated from legacy key mnu-ssl. Dynamic View/Window menu titles.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Server List"
+          }
+        }
+      }
+    },
+    "nxz-l9": {
+      "comment": "Migrated from legacy key nxz-l9. Suffix appended to an away nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (away)"
+          }
+        }
+      }
+    },
+    "p1z-sc": {
+      "comment": "Migrated from legacy key p1z-sc. Member privilege description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Owner"
+          }
+        }
+      }
+    },
+    "rpl-an": {
+      "comment": "Migrated from legacy key rpl-an. Input bar: reply banner and typing row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a message"
+          }
+        }
+      }
+    },
+    "rpl-cl": {
+      "comment": "Migrated from legacy key rpl-cl. Input bar: reply banner and typing row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Reply"
+          }
+        }
+      }
+    },
+    "rpl-to": {
+      "comment": "Migrated from legacy key rpl-to. Input bar: reply banner and typing row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replying to %@"
+          }
+        }
+      }
+    },
+    "som-zo": {
+      "comment": "Migrated from legacy key som-zo. Member privilege description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Super Admin"
+          }
+        }
+      }
+    },
+    "st-cn": {
+      "comment": "Migrated from legacy key st-cn. Main-window connection status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting"
+          }
+        }
+      }
+    },
+    "st-dc": {
+      "comment": "Migrated from legacy key st-dc. Main-window connection status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected"
+          }
+        }
+      }
+    },
+    "st-dq": {
+      "comment": "Migrated from legacy key st-dq. Main-window connection status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnecting"
+          }
+        }
+      }
+    },
+    "st-lo": {
+      "comment": "Migrated from legacy key st-lo. Main-window connection status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logging on"
+          }
+        }
+      }
+    },
+    "st-rc": {
+      "comment": "Migrated from legacy key st-rc. Main-window connection status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnecting"
+          }
+        }
+      }
+    },
+    "st-uc": {
+      "comment": "Migrated from legacy key st-uc. Main-window connection status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ users"
+          }
+        }
+      }
+    },
+    "st-wr": {
+      "comment": "Migrated from legacy key st-wr. Main-window connection status.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting to reconnect"
+          }
+        }
+      }
+    },
+    "tb-cs": {
+      "comment": "Migrated from legacy key tb-cs. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection Security"
+          }
+        }
+      }
+    },
+    "tb-ml": {
+      "comment": "Migrated from legacy key tb-ml. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toggle Member List"
+          }
+        }
+      }
+    },
+    "tb-sl": {
+      "comment": "Migrated from legacy key tb-sl. Toolbar & input bar accessibility.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toggle Server List"
+          }
+        }
+      }
+    },
+    "tjj-z2": {
+      "comment": "Migrated from legacy key tjj-z2. Member privilege description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Privileges"
+          }
+        }
+      }
+    },
+    "typ-1": {
+      "comment": "Migrated from legacy key typ-1. Input bar: reply banner and typing row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is typing…"
+          }
+        }
+      }
+    },
+    "typ-2": {
+      "comment": "Migrated from legacy key typ-2. Input bar: reply banner and typing row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ and %@ are typing…"
+          }
+        }
+      }
+    },
+    "typ-n": {
+      "comment": "Migrated from legacy key typ-n. Input bar: reply banner and typing row.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ people are typing…"
+          }
+        }
+      }
+    },
+    "vi3-23": {
+      "comment": "Migrated from legacy key vi3-23. Empty channel-topic placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(No Topic)"
+          }
+        }
+      }
+    },
+    "ya1-sk": {
+      "comment": "Migrated from legacy key ya1-sk. Member privilege description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -1,0 +1,69 @@
+reporter: xcode
+
+# SwiftLint receives Sources and Tests explicitly from the Makefile. Keep this
+# file free of path exclusions, baselines, and broad disabled-rule lists so
+# migrated and vendored Swift code is checked by the same policy.
+
+# SwiftFormat owns brace placement and trailing commas. SwiftLint's versions
+# conflict with the checked-in formatter for nested multiline collections, so
+# keep those two purely syntactic rules in one tool.
+disabled_rules:
+  - opening_brace
+  - trailing_comma
+
+cyclomatic_complexity:
+  # Migrated protocol parsers still contain large command switches. These
+  # limits keep them visible while making further growth an error.
+  warning: 20
+  error: 30
+
+file_length:
+  warning: 1200
+  error: 2000
+  ignore_comment_only_lines: true
+
+function_body_length:
+  warning: 100
+  error: 200
+
+function_parameter_count:
+  # AppKit responder callbacks and typed plugin events fix the arity of a few
+  # boundary adapters. Ten keeps those interfaces readable without
+  # forcing call-site dictionaries or untyped argument bags.
+  warning: 10
+  error: 12
+
+identifier_name:
+  max_length:
+    # Nib outlets and protocol-state properties should describe their role
+    # without project-specific abbreviations.
+    warning: 64
+    error: 72
+  min_length:
+    warning: 2
+    error: 1
+  excluded:
+    # Conventional collection indexes and geometry coordinates.
+    - i
+    - j
+    - x
+    - y
+
+type_name:
+  max_length:
+    # Feature-scoped controller names are intentionally explicit while AppKit
+    # runtime names remain part of nib loading and plugin discovery.
+    warning: 50
+    error: 60
+
+line_length:
+  warning: 140
+  error: 180
+  ignores_comments: true
+  ignores_urls: true
+  ignores_function_declarations: true
+  ignores_interpolated_strings: true
+
+type_body_length:
+  warning: 600
+  error: 1200

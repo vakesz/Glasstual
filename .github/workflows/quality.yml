@@ -20,9 +20,13 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install linters
-        run: brew install actionlint shellcheck shfmt
+        with:
+          persist-credentials: false
 
       - name: Lint and check formatting
         run: make lint
+
+      - name: Validate Xcode project generation
+        run: |
+          make generate
+          git diff --exit-code -- Glasstual.xcodeproj

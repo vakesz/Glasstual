@@ -1,0 +1,36 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "connection-timed-out" : {
+      "comment" : "Error shown when an IRC connection attempt exceeds its timeout. Migrated from legacy key Connection timed out.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Connection timed out" } } }
+    },
+    "dns-error" : {
+      "comment" : "DNS connection error. Arguments are the DNS error reason and numeric error code. Migrated from legacy key DNS Error: %@ (%ld).",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "DNS Error: %1$@ (%2$ld)" } } }
+    },
+    "peer-line-too-long" : {
+      "comment" : "Error shown when an IRC peer sends a line exceeding the supported buffer limit. Migrated from legacy key Peer sent a line that is too long.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Peer sent a line that is too long" } } }
+    },
+    "posix-error" : {
+      "comment" : "POSIX connection error. Arguments are the POSIX error reason and numeric error code. Migrated from legacy key POSIX Error: %@ (%ld).",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "POSIX Error: %1$@ (%2$ld)" } } }
+    },
+    "proxy-address-missing" : {
+      "comment" : "Error shown when a configured IRC proxy has no address. Migrated from legacy key Proxy address is missing.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Proxy address is missing" } } }
+    },
+    "unsupported-proxy-type" : {
+      "comment" : "Error shown for an IRC proxy type unsupported by the connection service. Migrated from legacy key Unsupported proxy type.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Unsupported proxy type" } } }
+    }
+  },
+  "version" : "1.0"
+}

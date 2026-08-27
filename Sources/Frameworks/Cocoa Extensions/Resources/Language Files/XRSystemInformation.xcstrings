@@ -1,0 +1,56 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "generic-mac" : {
+      "comment" : "Fallback model family name for an unidentified Mac. Migrated from legacy key Mac.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mac" } } }
+    },
+    "imac" : {
+      "comment" : "Model family name for an iMac. Migrated from legacy key iMac.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "iMac" } } }
+    },
+    "macbook" : {
+      "comment" : "Model family name for a MacBook. Migrated from legacy key MacBook.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "MacBook" } } }
+    },
+    "macbook-air" : {
+      "comment" : "Model family name for a MacBook Air. Migrated from legacy key MacBook Air.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "MacBook Air" } } }
+    },
+    "macbook-pro" : {
+      "comment" : "Model family name for a MacBook Pro. Migrated from legacy key MacBook Pro.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "MacBook Pro" } } }
+    },
+    "mac-mini" : {
+      "comment" : "Model family name for a Mac mini. Migrated from legacy key Mac Mini.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mac Mini" } } }
+    },
+    "mac-pro" : {
+      "comment" : "Model family name for a Mac Pro. Migrated from legacy key Mac Pro.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Mac Pro" } } }
+    },
+    "operating-system-macos" : {
+      "comment" : "Generic macOS operating system name. Migrated from legacy key macOS.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "macOS" } } }
+    },
+    "operating-system-tahoe" : {
+      "comment" : "macOS 26 Tahoe operating system name. Migrated from legacy key macOS Tahoe.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "macOS Tahoe" } } }
+    },
+    "xserve" : {
+      "comment" : "Model family name for an Xserve. Migrated from legacy key Xserve.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Xserve" } } }
+    }
+  },
+  "version" : "1.0"
+}

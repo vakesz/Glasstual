@@ -1,0 +1,46 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "channel-joined" : {
+      "comment" : "Accessibility description for a joined channel. The argument is the channel name. Migrated from legacy key 75f-og.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Channel %@, Channel Joined" } } }
+    },
+    "channel-not-joined" : {
+      "comment" : "Accessibility description for a channel that has not been joined. The argument is the channel name. Migrated from legacy key edc-7o.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Channel %@, Channel Not Joined" } } }
+    },
+    "connection-connected" : {
+      "comment" : "Accessibility description for a connected server. The argument is the connection name. Migrated from legacy key bmy-d2.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Connection %@, Connected" } } }
+    },
+    "connection-disconnected" : {
+      "comment" : "Accessibility description for a disconnected server. The argument is the connection name. Migrated from legacy key tu4-8u.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Connection %@, Disconnected" } } }
+    },
+    "error-icon" : {
+      "comment" : "Error icon in validation popover. Migrated from legacy key c4e-rr.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Error" } } }
+    },
+    "main-window" : {
+      "comment" : "Main window title description. Migrated from legacy key k79-1a.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Main Window" } } }
+    },
+    "query-with-user" : {
+      "comment" : "Accessibility description for a private-message query. The argument is the user's nickname. Migrated from legacy key 9sn-xp.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Query with User %@" } } }
+    },
+    "user-in-user-list" : {
+      "comment" : "Accessibility description for a user-list row. The argument is the user's nickname. Migrated from legacy key alq-6s.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "User %@ in User List" } } }
+    }
+  },
+  "version" : "1.0"
+}

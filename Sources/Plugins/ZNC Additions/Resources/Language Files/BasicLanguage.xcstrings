@@ -1,0 +1,66 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "certificate-conversion-error" : {
+      "comment" : "Error shown when ZNC certificate information cannot be converted for display. Migrated from legacy key wco-zv.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An error occurred while converting certificate information to a friendlier format"
+          }
+        }
+      }
+    },
+    "close-button" : {
+      "comment" : "Title of the button that closes the certificate information panel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "detach-confirmation" : {
+      "comment" : "Confirmation shown after detaching a channel. The argument is the channel name. Migrated from legacy key 0fr-kb.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The \u0002detach\u0002 command has been sent for the channel \u0002%@\u0002. Automatic join on connect for this channel has been disabled as well. Use the command \u0002attach\u0002 at any time to be returned to this channel and have automatic join turned back on."
+          }
+        }
+      }
+    },
+    "no-information-available" : {
+      "comment" : "Message shown when ZNC has no certificate information. Migrated from legacy key moh-hg.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No information is available"
+          }
+        }
+      }
+    },
+    "znc-connection-required" : {
+      "comment" : "Message shown when a ZNC-only command is used on another server. Migrated from legacy key xex-nl.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This command is not available because you aren't connected to ZNC"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

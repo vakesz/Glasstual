@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "preferences-pane-title" : {
+      "comment" : "Name of the Smiley Converter preferences pane. Migrated from legacy key 3kj-8f.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smiley Converter"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

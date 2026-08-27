@@ -1,0 +1,30 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "maximum-key-length-message" : {
+      "comment" : "Message below the warning title when an IRC channel key exceeds the server limit. Deduplicates the legacy TDCChannelModifyModesSheet key lir-ra and TDCChannelPropertiesSheet key op4-gg.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you continue typing, the end of your secret key may be cut off."
+          }
+        }
+      }
+    },
+    "maximum-key-length-title" : {
+      "comment" : "Warning title when an IRC channel key exceeds the server limit. The first argument is the network name and the second is the maximum number of characters. Deduplicates the legacy TDCChannelModifyModesSheet key 7m9-39 and TDCChannelPropertiesSheet key zf2-r7.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have exceeded the secret key length defined by %1$@ which is %2$ld characters"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

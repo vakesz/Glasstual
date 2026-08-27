@@ -1,5 +1,5 @@
 {
-  // Indentation comes from .editorconfig; formatters follow Scripts/format.sh.
+  // Indentation comes from .editorconfig; formatters are invoked by the Makefile.
   "editor.formatOnSave": true,
   "editor.rulers": [120],
   "files.trimTrailingWhitespace": true,
@@ -9,7 +9,6 @@
     "*.m": "objective-c",
     "*.mm": "objective-cpp",
     "*.pch": "objective-c",
-    "*.xcconfig": "ini",
     "*.strings": "ini",
     "*.plist": "xml",
     "*.xib": "xml",
@@ -26,7 +25,7 @@
   "search.exclude": {
     "**/DerivedData": true,
     "**/build": true,
-    "**/Frameworks/Static Libraries/Libraries": true
+    "**/Sources/Frameworks/Static Libraries/Libraries": true
   },
   "[objective-c]": {
     "editor.defaultFormatter": "xaver.clang-format"
@@ -58,11 +57,7 @@
   "clang-format.executable": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-format",
   "clang-format.style": "file",
   "clang-format.fallbackStyle": "LLVM",
-  "clangd.arguments": [
-    "--compile-commands-dir=${workspaceFolder}",
-    "--header-insertion=never",
-    "--background-index"
-  ],
+  "clangd.arguments": ["--header-insertion=never", "--background-index"],
   "swift.autoGenerateLaunchConfigurations": false,
   "swift.disableAutoResolve": true,
   "shellformat.flag": "-i 0 -ci -sr",
