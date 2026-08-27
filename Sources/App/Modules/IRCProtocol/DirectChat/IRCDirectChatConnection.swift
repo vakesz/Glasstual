@@ -11,6 +11,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -95,7 +96,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 	}
 
 	@objc(connectionToPeer:address:port:onClient:delegate:)
-	public class func connection(
+	public static func connection(
 		toPeer nickname: String,
 		address hostAddress: String,
 		port hostPort: UInt16,
@@ -112,7 +113,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 	}
 
 	@objc(listeningConnectionForPeer:token:onClient:delegate:)
-	public class func listeningConnection(
+	public static func listeningConnection(
 		forPeer nickname: String,
 		token transferToken: String?,
 		onClient client: IRCClient,
@@ -159,14 +160,14 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		connection.connect(
 			toHost: hostAddress,
 			port: hostPort,
-			viaInterface: TPCPreferences.fileTransferIPAddressInterfaceName(),
+			viaInterface: TextualPreferences.fileTransferIPAddressInterfaceName(),
 			timeout: connectTimeout
 		)
 	}
 
 	private func openListener() {
-		let portRangeStart = TPCPreferences.fileTransferPortRangeStart()
-		let portRangeEnd = TPCPreferences.fileTransferPortRangeEnd()
+		let portRangeStart = TextualPreferences.fileTransferPortRangeStart()
+		let portRangeEnd = TextualPreferences.fileTransferPortRangeEnd()
 
 		if portRangeStart == 0 || portRangeStart > portRangeEnd {
 			close(

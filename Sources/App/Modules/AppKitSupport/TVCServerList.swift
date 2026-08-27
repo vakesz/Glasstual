@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
 
 private let serverListLogger = Logger(
@@ -108,7 +109,7 @@ public final class ServerList: NSOutlineView {
 		let rowIndex: Int
 
 		if let parentItem {
-			let childrenItems = items(fromParentGroup: parentItem) ?? []
+			let childrenItems = items(inContainingGroupOf: parentItem) ?? []
 			rowIndex = (childrenItems as NSArray).index(of: object)
 		} else {
 			rowIndex = (groupItems as NSArray).index(of: object)
@@ -180,7 +181,7 @@ public final class ServerList: NSOutlineView {
 			return
 		}
 
-		if skipOcclusionCheck == false, mainWindow?.isOccluded == true {
+		if skipOcclusionCheck == false, mainWindow?.ceIsOccluded == true {
 			return
 		}
 
@@ -250,7 +251,7 @@ public final class ServerList: NSOutlineView {
 			return
 		}
 
-		if skipOcclusionCheck == false, mainWindow?.isOccluded == true {
+		if skipOcclusionCheck == false, mainWindow?.ceIsOccluded == true {
 			return
 		}
 
@@ -269,14 +270,14 @@ public final class ServerList: NSOutlineView {
 
 	@objc
 	override public func applicationAppearanceChanged() {
-		invalidateBackgroundForSelection()
+		invalidateSelectionBackground()
 		refreshAllDrawings(true)
 		needsDisplay = true
 	}
 
 	@objc
 	override public func systemAppearanceChanged() {
-		invalidateBackgroundForSelection()
+		invalidateSelectionBackground()
 		refreshAllDrawings(true)
 		needsDisplay = true
 	}
@@ -320,14 +321,14 @@ public final class ServerList: NSOutlineView {
 	// MARK: - Events
 
 	override public func menu(for _: NSEvent) -> NSMenu? {
-		let rowBeneathMouse = rowBeneathMouse
+		let clickedRow = rowBeneathMouse
 
-		if rowBeneathMouse >= 0 {
-			if rowBeneathMouse != selectedRow || numberOfSelectedRows > 1 {
-				selectItem(at: UInt(rowBeneathMouse))
+		if clickedRow >= 0 {
+			if clickedRow != selectedRow || numberOfSelectedRows > 1 {
+				selectItem(at: clickedRow)
 			}
 		} else {
-			return NSObject.masterController().menuController?.serverListNoSelectionMenu
+			return NSObject.applicationController().menuController?.serverListNoSelectionMenu
 		}
 
 		return menu

@@ -37,31 +37,15 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import Combine
 
-private nonisolated(unsafe) let preferences = TPCPreferencesUserDefaults.shared()
+private nonisolated(unsafe) let preferences = TextualUserDefaults.shared()
 private nonisolated(unsafe) var excludeKeywords: [String]?
 private nonisolated(unsafe) var matchKeywords: [String]?
-private nonisolated(unsafe) var keywordObserver: KeywordDefaultsObserver?
+private nonisolated(unsafe) var keywordDefaultsObservation: AnyCancellable?
 
-private final class KeywordDefaultsObserver: NSObject {
-	override func observeValue(
-		forKeyPath keyPath: String?,
-		of object: Any?,
-		change: [NSKeyValueChangeKey: Any]?,
-		context: UnsafeMutableRawPointer?
-	) {
-		switch keyPath {
-		case "Highlight List -> Primary Matches":
-			TPCPreferences.local_loadMatchKeywords()
-		case "Highlight List -> Excluded Matches":
-			TPCPreferences.local_loadExcludeKeywords()
-		default:
-			super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-		}
-	}
-}
-
-public extension TPCPreferences {
+public extension TextualPreferences {
 	private class func bool(_ key: String) -> Bool {
 		preferences.bool(forKey: key)
 	}
@@ -82,362 +66,367 @@ public extension TPCPreferences {
 		preferences.set(value, forKey: key)
 	}
 
-	@objc(_defaultNicknamePrefix)
-	class func local_defaultNicknamePrefix() -> String {
-		local_defaultPreferences()["DefaultIdentity -> Nickname"] as! String
+	private class func defaultString(_ key: String) -> String {
+		guard let value = defaultPreferences()[key] as? String else {
+			preconditionFailure("Missing string default for preference key: \(key)")
+		}
+		return value
 	}
 
-	@objc(_populateDefaultNickname)
-	class func local_populateDefaultNickname() {
-		let nickname = "\(local_defaultNicknamePrefix())\(randomNumber(100))"
+	class func defaultNicknamePrefix() -> String {
+		defaultString("DefaultIdentity -> Nickname")
+	}
+
+	class func populateDefaultNickname() {
+		let nickname = "\(defaultNicknamePrefix())\(randomNumber(100))"
 		preferences.register(defaults: ["DefaultIdentity -> Nickname": nickname])
 	}
 
-	@objc(defaultNickname) class func local_defaultNickname() -> String {
+	class func defaultNickname() -> String {
 		string("DefaultIdentity -> Nickname")!
 	}
 
-	@objc(defaultAwayNickname) class func local_defaultAwayNickname()
+	class func defaultAwayNickname()
 		-> String?
 	{
 		string("DefaultIdentity -> AwayNickname")
 	}
 
-	@objc(defaultUsername) class func local_defaultUsername() -> String {
+	class func defaultUsername() -> String {
 		string("DefaultIdentity -> Username")!
 	}
 
-	@objc(defaultRealName) class func local_defaultRealName() -> String {
+	class func defaultRealName() -> String {
 		string("DefaultIdentity -> Realname")!
 	}
 
-	@objc(autojoinMaximumChannelJoins) class func local_autojoinMaximumChannelJoins()
+	class func autojoinMaximumChannelJoins()
 		-> UInt
 	{
 		uint("AutojoinMaximumChannelJoinCount")
 	}
 
-	@objc(autojoinDelayBetweenChannelJoins) class func local_autojoinDelayBetweenChannelJoins()
+	class func autojoinDelayBetweenChannelJoins()
 		-> TimeInterval
 	{
 		double("AutojoinDelayBetweenChannelJoins")
 	}
 
-	@objc(autojoinDelayAfterIdentification) class func local_autojoinDelayAfterIdentification()
+	class func autojoinDelayAfterIdentification()
 		-> TimeInterval
 	{
 		double("AutojoinDelayAfterIdentification")
 	}
 
-	@objc(defaultKickMessage) class func local_defaultKickMessage()
+	class func defaultKickMessage()
 		-> String
 	{
 		string("ChannelOperatorDefaultLocalization -> Kick Reason")!
 	}
 
-	@objc(IRCopDefaultKillMessage) class func local_IRCopDefaultKillMessage()
+	class func irCopDefaultKillMessage()
 		-> String
 	{
 		string("IRCopDefaultLocalizaiton -> Kill Reason")!
 	}
 
-	@objc(IRCopDefaultGlineMessage) class func local_IRCopDefaultGlineMessage()
+	class func irCopDefaultGlineMessage()
 		-> String
 	{
 		string("IRCopDefaultLocalizaiton -> G:Line Reason")!
 	}
 
-	@objc(IRCopDefaultShunMessage) class func local_IRCopDefaultShunMessage()
+	class func irCopDefaultShunMessage()
 		-> String
 	{
 		string("IRCopDefaultLocalizaiton -> Shun Reason")!
 	}
 
-	@objc(masqueradeCTCPVersion) class func local_masqueradeCTCPVersion()
+	class func masqueradeCTCPVersion()
 		-> String?
 	{
 		string("ApplicationCTCPVersionMasquerade")
 	}
 
-	@objc(channelNavigationIsServerSpecific) class func local_channelNavigationIsServerSpecific()
+	class func channelNavigationIsServerSpecific()
 		-> Bool
 	{
 		bool("ChannelNavigationIsServerSpecific")
 	}
 
-	@objc(setAwayOnScreenSleep) class func local_setAwayOnScreenSleep() -> Bool {
+	class func setAwayOnScreenSleep() -> Bool {
 		bool("SetAwayOnScreenSleep")
 	}
 
-	@objc(disconnectOnSleep) class func local_disconnectOnSleep() -> Bool {
+	class func disconnectOnSleep() -> Bool {
 		bool("AutomaticallyDisconnectForSleepMode")
 	}
 
-	@objc(disableSidebarTranslucency) class func local_disableSidebarTranslucency()
+	class func disableSidebarTranslucency()
 		-> Bool
 	{
 		bool("DisableSidebarTranslucency")
 	}
 
-	@objc(logHighlights) class func local_logHighlights() -> Bool {
+	class func logHighlights() -> Bool {
 		bool("LogHighlights")
 	}
 
-	@objc(clearAllConnections) class func local_clearAllConnections()
+	class func clearAllConnections()
 		-> Bool
 	{
 		bool("ApplyCommandToAllConnections -> clearall")
 	}
 
-	@objc(enableEchoMessageCapability) class func local_enableEchoMessageCapability() -> Bool {
+	class func enableEchoMessageCapability() -> Bool {
 		false
 	}
 
-	@objc(displayServerMOTD) class func local_displayServerMOTD()
+	class func displayServerMOTD()
 		-> Bool
 	{
 		bool("DisplayServerMessageOfTheDayOnConnect")
 	}
 
-	@objc(copyOnSelect) class func local_copyOnSelect() -> Bool {
+	class func copyOnSelect() -> Bool {
 		bool("CopyTextSelectionOnMouseUp")
 	}
 
-	@objc(replyToCTCPRequests) class func local_replyToCTCPRequests()
+	class func replyToCTCPRequests()
 		-> Bool
 	{
 		bool("ReplyUnignoredExternalCTCPRequests")
 	}
 
-	@objc(autoAddScrollbackMark) class func local_autoAddScrollbackMark()
+	class func autoAddScrollbackMark()
 		-> Bool
 	{
 		bool("AutomaticallyAddScrollbackMarker")
 	}
 
-	@objc(removeAllFormatting) class func local_removeAllFormatting() -> Bool {
+	class func removeAllFormatting() -> Bool {
 		bool("RemoveIRCTextFormatting")
 	}
 
-	@objc(automaticallyDetectHighlightSpam) class func local_automaticallyDetectHighlightSpam()
+	class func automaticallyDetectHighlightSpam()
 		-> Bool
 	{
 		bool("AutomaticallyDetectHighlightSpam")
 	}
 
-	@objc(disableNicknameColorHashing) class func local_disableNicknameColorHashing()
+	class func disableNicknameColorHashing()
 		-> Bool
 	{
 		bool("DisableRemoteNicknameColorHashing")
 	}
 
-	@objc(conversationTrackingIncludesUserModeSymbol) class func local_conversationTrackingIncludesUserModeSymbol()
+	class func conversationTrackingIncludesUserModeSymbol()
 		-> Bool
 	{
 		bool("ConversationTrackingIncludesUserModeSymbol")
 	}
 
-	@objc(rightToLeftFormatting) class func local_rightToLeftFormatting() -> Bool {
+	class func rightToLeftFormatting() -> Bool {
 		bool("RightToLeftTextFormatting")
 	}
 
-	@objc(displayDockBadge) class func local_displayDockBadge() -> Bool {
+	class func displayDockBadge() -> Bool {
 		bool("DisplayDockBadges")
 	}
 
-	@objc(amsgAllConnections) class func local_amsgAllConnections()
+	class func amsgAllConnections()
 		-> Bool
 	{
 		bool("ApplyCommandToAllConnections -> amsg")
 	}
 
-	@objc(awayAllConnections) class func local_awayAllConnections()
+	class func awayAllConnections()
 		-> Bool
 	{
 		bool("ApplyCommandToAllConnections -> away")
 	}
 
-	@objc(giveFocusOnMessageCommand) class func local_giveFocusOnMessageCommand()
+	class func giveFocusOnMessageCommand()
 		-> Bool
 	{
 		bool("FocusSelectionOnMessageCommandExecution")
 	}
 
-	@objc(memberListSortFavorsServerStaff) class func local_memberListSortFavorsServerStaff()
+	class func memberListSortFavorsServerStaff()
 		-> Bool
 	{
 		bool("MemberListSortFavorsServerStaff")
 	}
 
-	@objc(memberListUpdatesUserInfoPopoverOnScroll) class func local_memberListUpdatesUserInfoPopoverOnScroll()
+	class func memberListUpdatesUserInfoPopoverOnScroll()
 		-> Bool
 	{
 		bool("MemberListUpdatesUserInfoPopoverOnScroll")
 	}
 
-	@objc(memberListDisplayNoModeSymbol) class func local_memberListDisplayNoModeSymbol()
+	class func memberListDisplayNoModeSymbol()
 		-> Bool
 	{
 		bool("DisplayUserListNoModeSymbol")
 	}
 
-	@objc(postNotificationsWhileInFocus) class func local_postNotificationsWhileInFocus()
+	class func postNotificationsWhileInFocus()
 		-> Bool
 	{
 		bool("PostNotificationsWhileInFocus")
 	}
 
-	@objc(automaticallyFilterUnicodeTextSpam) class func local_automaticallyFilterUnicodeTextSpam()
+	class func automaticallyFilterUnicodeTextSpam()
 		-> Bool
 	{
 		bool("AutomaticallyFilterUnicodeTextSpam")
 	}
 
-	@objc(nickAllConnections) class func local_nickAllConnections()
+	class func nickAllConnections()
 		-> Bool
 	{
 		bool("ApplyCommandToAllConnections -> nick")
 	}
 
-	@objc(confirmQuit) class func local_confirmQuit() -> Bool {
+	class func confirmQuit() -> Bool {
 		bool("ConfirmApplicationQuit")
 	}
 
-	@objc(rememberServerListQueryStates) class func local_rememberServerListQueryStates()
+	class func rememberServerListQueryStates()
 		-> Bool
 	{
 		bool("ServerListRetainsQueriesBetweenRestarts")
 	}
 
-	@objc(rejoinOnKick) class func local_rejoinOnKick() -> Bool {
+	class func rejoinOnKick() -> Bool {
 		bool("RejoinChannelOnLocalKick")
 	}
 
-	@objc(reloadScrollbackOnLaunch) class func local_reloadScrollbackOnLaunch()
+	class func reloadScrollbackOnLaunch()
 		-> Bool
 	{
 		bool("ReloadScrollbackOnLaunch")
 	}
 
-	@objc(autoJoinOnInvite) class func local_autoJoinOnInvite() -> Bool {
+	class func autoJoinOnInvite() -> Bool {
 		bool("AutojoinChannelOnInvite")
 	}
 
-	@objc(connectOnDoubleclick) class func local_connectOnDoubleclick()
+	class func connectOnDoubleclick()
 		-> Bool
 	{
 		bool("ServerListDoubleClickConnectServer")
 	}
 
-	@objc(disconnectOnDoubleclick) class func local_disconnectOnDoubleclick()
+	class func disconnectOnDoubleclick()
 		-> Bool
 	{
 		bool("ServerListDoubleClickDisconnectServer")
 	}
 
-	@objc(joinOnDoubleclick) class func local_joinOnDoubleclick() -> Bool {
+	class func joinOnDoubleclick() -> Bool {
 		bool("ServerListDoubleClickJoinChannel")
 	}
 
-	@objc(leaveOnDoubleclick) class func local_leaveOnDoubleclick() -> Bool {
+	class func leaveOnDoubleclick() -> Bool {
 		bool("ServerListDoubleClickLeaveChannel")
 	}
 
-	@objc(logToDisk) class func local_logToDisk() -> Bool {
+	class func logToDisk() -> Bool {
 		bool("LogTranscript")
 	}
 
-	@objc(setLogToDisk:) class func local_setLogToDisk(_ value: Bool) {
+	class func setLogToDisk(_ value: Bool) {
 		set(value, "LogTranscript")
 	}
 
-	@objc(logToDiskIsEnabled) class func local_logToDiskIsEnabled() -> Bool {
+	class func logToDiskIsEnabled() -> Bool {
 		bool("LogTranscript") && PathInfo.transcriptFolderURL != nil
 	}
 
-	@objc(openBrowserInBackground) class func local_openBrowserInBackground()
+	class func openBrowserInBackground()
 		-> Bool
 	{
 		bool("OpenClickedLinksInBackgroundBrowser")
 	}
 
-	@objc(sendTypingNotifications) class func local_sendTypingNotifications() -> Bool {
+	class func sendTypingNotifications() -> Bool {
 		bool("SendTypingNotifications")
 	}
 
-	@objc(showDateChanges) class func local_showDateChanges() -> Bool {
+	class func showDateChanges() -> Bool {
 		bool("DisplayEventInLogView -> Date Changes")
 	}
 
-	@objc(setShowInlineMedia:) class func local_setShowInlineMedia(_ value: Bool) {
+	class func setShowInlineMedia(_ value: Bool) {
 		set(
 			value,
 			"DisplayEventInLogView -> Inline Media"
 		)
 	}
 
-	@objc(showInlineMedia) class func local_showInlineMedia() -> Bool {
+	class func showInlineMedia() -> Bool {
 		bool("DisplayEventInLogView -> Inline Media")
 	}
 
-	@objc(showJoinLeave) class func local_showJoinLeave() -> Bool {
+	class func showJoinLeave() -> Bool {
 		bool("DisplayEventInLogView -> Join, Part, Quit")
 	}
 
-	@objc(commandReturnSendsMessageAsAction) class func local_commandReturnSendsMessageAsAction()
+	class func commandReturnSendsMessageAsAction()
 		-> Bool
 	{
 		bool("CommandReturnSendsMessageAsAction")
 	}
 
-	@objc(controlEnterSendsMessage) class func local_controlEnterSendsMessage()
+	class func controlEnterSendsMessage()
 		-> Bool
 	{
 		bool("ControlEnterSendsMessage")
 	}
 
-	@objc(displayPublicMessageCountOnDockBadge) class func local_displayPublicMessageCountOnDockBadge()
+	class func displayPublicMessageCountOnDockBadge()
 		-> Bool
 	{
 		bool("DisplayPublicMessageCountInDockBadge")
 	}
 
-	@objc(setHighlightCurrentNickname:) class func local_setHighlightCurrentNickname(_ value: Bool) {
+	class func setHighlightCurrentNickname(_ value: Bool) {
 		set(
 			value,
 			"TrackNicknameHighlightsOfLocalUser"
 		)
 	}
 
-	@objc(highlightCurrentNickname) class func local_highlightCurrentNickname()
+	class func highlightCurrentNickname()
 		-> Bool
 	{
 		bool("TrackNicknameHighlightsOfLocalUser")
 	}
 
-	@objc(inputHistoryIsChannelSpecific) class func local_inputHistoryIsChannelSpecific()
+	class func inputHistoryIsChannelSpecific()
 		-> Bool
 	{
 		bool("SaveInputHistoryPerSelection")
 	}
 
-	@objc(swipeMinimumLength) class func local_swipeMinimumLength() -> CGFloat {
+	class func swipeMinimumLength() -> CGFloat {
 		double("SwipeMinimumLength")
 	}
 
-	@objc(trackUserAwayStatusMaximumChannelSize) class func local_trackUserAwayStatusMaximumChannelSize()
+	class func trackUserAwayStatusMaximumChannelSize()
 		-> UInt
 	{
 		uint("TrackUserAwayStatusMaximumChannelSize")
 	}
 
-	@objc(tabKeyAction) class func local_tabKeyAction()
+	class func tabKeyAction()
 		-> TXTabKeyAction
 	{
 		TXTabKeyAction(rawValue: uint("Keyboard -> Tab Key Action")) ?? .nicknameComplete
 	}
 
-	@objc(highlightMatchingMethod) class func local_highlightMatchingMethod()
+	class func highlightMatchingMethod()
 		-> TXNicknameHighlightMatchType
 	{
 		TXNicknameHighlightMatchType(
@@ -446,134 +435,134 @@ public extension TPCPreferences {
 			.partial
 	}
 
-	@objc(userDoubleClickOption) class func local_userDoubleClickOption()
+	class func userDoubleClickOption()
 		-> TXUserDoubleClickAction
 	{
 		TXUserDoubleClickAction(rawValue: uint("UserListDoubleClickAction")) ?? .whois
 	}
 
-	@objc(locationToSendNotices) class func local_locationToSendNotices()
+	class func locationToSendNotices()
 		-> TXNoticeSendLocation
 	{
 		TXNoticeSendLocation(rawValue: uint("DestinationOfNonserverNotices")) ??
 			.serverConsole
 	}
 
-	@objc(setLocationToSendNotices:) class func local_setLocationToSendNotices(_ value: TXNoticeSendLocation) {
+	class func setLocationToSendNotices(_ value: TXNoticeSendLocation) {
 		preferences.setUnsignedInteger(
 			value.rawValue,
 			forKey: "DestinationOfNonserverNotices"
 		)
 	}
 
-	@objc(commandWKeyAction) class func local_commandWKeyAction()
+	class func commandWKeyAction()
 		-> TXCommandWKeyAction
 	{
 		TXCommandWKeyAction(rawValue: uint("Keyboard -> Command+W Key Action")) ??
 			.closeWindow
 	}
 
-	@objc(banFormat) class func local_banFormat()
+	class func banFormat()
 		-> TXHostmaskBanFormat
 	{
 		TXHostmaskBanFormat(rawValue: uint("DefaultBanCommandHostmaskFormat")) ?? TXHostmaskBanFormat(rawValue: 0)!
 	}
 
-	@objc(mainTextViewFontSize) class func local_mainTextViewFontSize()
+	class func mainTextViewFontSize()
 		-> TVCMainWindowTextViewFontSize
 	{
 		TVCMainWindowTextViewFontSize(rawValue: uint("Main Input Text Field -> Font Size")) ?? .normal
 	}
 
-	@objc(focusMainTextViewOnSelectionChange) class func local_focusMainTextViewOnSelectionChange()
+	class func focusMainTextViewOnSelectionChange()
 		-> Bool
 	{
 		bool("Main Input Text Field -> Focus When Changing Views")
 	}
 
-	@objc(preferModernCiphers) class func local_preferModernCiphers() -> Bool {
+	class func preferModernCiphers() -> Bool {
 		bool("PreferModernCiphers")
 	}
 
-	@objc(appNapEnabled) class func local_appNapEnabled() -> Bool {
+	class func appNapEnabled() -> Bool {
 		!UserDefaults.standard
 			.bool(forKey: "NSAppSleepDisabled")
 	}
 
-	@objc(setAppNapEnabled:) class func local_setAppNapEnabled(_ value: Bool) {
+	class func setAppNapEnabled(_ value: Bool) {
 		UserDefaults.standard.set(
 			!value,
 			forKey: "NSAppSleepDisabled"
 		)
 	}
 
-	@objc(setDeveloperModeEnabled:) class func local_setDeveloperModeEnabled(_ value: Bool) {
+	class func setDeveloperModeEnabled(_ value: Bool) {
 		set(
 			value,
 			"GlasstualDeveloperEnvironment"
 		)
 	}
 
-	@objc(developerModeEnabled) class func local_developerModeEnabled() -> Bool {
+	class func developerModeEnabled() -> Bool {
 		bool("GlasstualDeveloperEnvironment")
 	}
 
-	@objc(setOnboardingCompleted:) class func local_setOnboardingCompleted(_ value: Bool) {
+	class func setOnboardingCompleted(_ value: Bool) {
 		set(
 			value,
 			"Onboarding -> Completed"
 		)
 	}
 
-	@objc(onboardingCompleted) class func local_onboardingCompleted() -> Bool {
+	class func onboardingCompleted() -> Bool {
 		bool("Onboarding -> Completed")
 	}
 
-	@objc(setAppearance:) class func local_setAppearance(_ value: TXPreferredAppearance) {
+	class func setAppearance(_ value: TXPreferredAppearance) {
 		preferences.setUnsignedInteger(
 			value.rawValue,
 			forKey: "Appearance"
 		)
 	}
 
-	@objc(appearance) class func local_appearance()
+	class func appearance()
 		-> TXPreferredAppearance
 	{
 		TXPreferredAppearance(rawValue: uint("Appearance")) ?? .inherited
 	}
 
-	@objc(themeNameDefault) class func local_themeNameDefault()
+	class func themeNameDefault()
 		-> String
 	{
-		local_defaultPreferences()[TPCPreferencesThemeNameDefaultsKey] as! String
+		defaultString(TPCPreferencesThemeNameDefaultsKey)
 	}
 
-	@objc(themeName) class func local_themeName() -> String {
+	class func themeName() -> String {
 		string(TPCPreferencesThemeNameDefaultsKey)!
 	}
 
-	@objc(setThemeName:) class func local_setThemeName(_ value: String) {
+	class func setThemeName(_ value: String) {
 		set(
 			value,
 			TPCPreferencesThemeNameDefaultsKey
 		); preferences.removeObject(forKey: TPCPreferencesThemeNameMissingLocallyDefaultsKey)
 	}
 
-	@objc(setThemeNameWithExistenceCheck:) class func local_setThemeNameWithExistenceCheck(_ value: String) {
+	class func setThemeNameWithExistenceCheck(_ value: String) {
 		let themeExists: Bool = if Thread.isMainThread {
 			MainActor.assumeIsolated {
-				TXSharedApplication.sharedThemeController().themeExists(value)
+				SharedApplication.sharedThemeController().themeExists(value)
 			}
 		} else {
 			DispatchQueue.main.sync {
 				MainActor.assumeIsolated {
-					TXSharedApplication.sharedThemeController().themeExists(value)
+					SharedApplication.sharedThemeController().themeExists(value)
 				}
 			}
 		}
 
 		if themeExists {
-			local_setThemeName(value)
+			setThemeName(value)
 		} else {
 			set(
 				true,
@@ -582,30 +571,30 @@ public extension TPCPreferences {
 		}
 	}
 
-	@objc(themeChannelViewFontNameDefault) class func local_themeChannelViewFontNameDefault()
+	class func themeChannelViewFontNameDefault()
 		-> String
 	{
-		local_defaultPreferences()[TPCPreferencesThemeFontNameDefaultsKey] as! String
+		defaultString(TPCPreferencesThemeFontNameDefaultsKey)
 	}
 
-	@objc(themeChannelViewFontName) class func local_themeChannelViewFontName()
+	class func themeChannelViewFontName()
 		-> String
 	{
 		string(TPCPreferencesThemeFontNameDefaultsKey)!
 	}
 
-	@objc(setThemeChannelViewFontName:) class func local_setThemeChannelViewFontName(_ value: String) {
+	class func setThemeChannelViewFontName(_ value: String) {
 		set(
 			value,
 			TPCPreferencesThemeFontNameDefaultsKey
 		); preferences.removeObject(forKey: TPCPreferencesThemeFontNameMissingLocallyDefaultsKey)
 	}
 
-	@objc(setThemeChannelViewFontNameWithExistenceCheck:) class func local_setThemeChannelViewFontNameWithExistenceCheck(
+	class func setThemeChannelViewFontNameWithExistenceCheck(
 		_ value: String
 	) {
-		if NSFont.fontIsAvailable(value) {
-			local_setThemeChannelViewFontName(value)
+		if NSFont.textual_fontIsAvailable(value) {
+			setThemeChannelViewFontName(value)
 		} else {
 			set(
 				true,
@@ -614,172 +603,162 @@ public extension TPCPreferences {
 		}
 	}
 
-	@objc(themeChannelViewFontSize) class func local_themeChannelViewFontSize()
+	class func themeChannelViewFontSize()
 		-> CGFloat
 	{
 		double(TPCPreferencesThemeFontSizeDefaultsKey)
 	}
 
-	@objc(setThemeChannelViewFontSize:) class func local_setThemeChannelViewFontSize(_ value: CGFloat) {
+	class func setThemeChannelViewFontSize(_ value: CGFloat) {
 		preferences.set(
 			value,
 			forKey: TPCPreferencesThemeFontSizeDefaultsKey
 		)
 	}
 
-	@objc(themeChannelViewFont) class func local_themeChannelViewFont() -> NSFont? {
+	class func themeChannelViewFont() -> NSFont? {
 		NSFont(
-			name: local_themeChannelViewFontName(),
-			size: local_themeChannelViewFontSize()
+			name: themeChannelViewFontName(),
+			size: themeChannelViewFontSize()
 		)
 	}
 
-	@objc(
-		themeChannelViewFontPreferenceUserConfigurable
-	) class func local_themeChannelViewFontPreferenceUserConfigurable()
+	class func themeChannelViewFontPreferenceUserConfigurable()
 		-> Bool
 	{
 		bool("Theme -> Channel Font Preference Enabled")
 	}
 
-	@objc(
-		setThemeChannelViewFontPreferenceUserConfigurable:
-	) class func local_setThemeChannelViewFontPreferenceUserConfigurable(_ value: Bool) {
+	class func setThemeChannelViewFontPreferenceUserConfigurable(_ value: Bool) {
 		preferences.registerDefault(
 			value as NSNumber,
 			forKey: "Theme -> Channel Font Preference Enabled"
 		)
 	}
 
-	@objc(themeNicknameFormatDefault) class func local_themeNicknameFormatDefault()
+	class func themeNicknameFormatDefault()
 		-> String
 	{
-		local_defaultPreferences()["Theme -> Nickname Format"] as! String
+		defaultString("Theme -> Nickname Format")
 	}
 
-	@objc(themeNicknameFormat) class func local_themeNicknameFormat() -> String {
+	class func themeNicknameFormat() -> String {
 		string("Theme -> Nickname Format")!
 	}
 
-	@objc(themeNicknameFormatPreferenceUserConfigurable) class func local_themeNicknameFormatPreferenceUserConfigurable(
+	class func themeNicknameFormatPreferenceUserConfigurable(
 	)
 		-> Bool
 	{
 		bool("Theme -> Nickname Format Preference Enabled")
 	}
 
-	@objc(
-		setThemeNicknameFormatPreferenceUserConfigurable:
-	) class func local_setThemeNicknameFormatPreferenceUserConfigurable(_ value: Bool) {
+	class func setThemeNicknameFormatPreferenceUserConfigurable(_ value: Bool) {
 		preferences.registerDefault(
 			value as NSNumber,
 			forKey: "Theme -> Nickname Format Preference Enabled"
 		)
 	}
 
-	@objc(themeTimestampFormatDefault) class func local_themeTimestampFormatDefault()
+	class func themeTimestampFormatDefault()
 		-> String
 	{
-		local_defaultPreferences()["Theme -> Timestamp Format"] as! String
+		defaultString("Theme -> Timestamp Format")
 	}
 
-	@objc(themeTimestampFormat) class func local_themeTimestampFormat()
+	class func themeTimestampFormat()
 		-> String
 	{
 		string("Theme -> Timestamp Format")!
 	}
 
-	@objc(
-		themeTimestampFormatPreferenceUserConfigurable
-	) class func local_themeTimestampFormatPreferenceUserConfigurable()
+	class func themeTimestampFormatPreferenceUserConfigurable()
 		-> Bool
 	{
 		bool("Theme -> Timestamp Format Preference Enabled")
 	}
 
-	@objc(
-		setThemeTimestampFormatPreferenceUserConfigurable:
-	) class func local_setThemeTimestampFormatPreferenceUserConfigurable(_ value: Bool) {
+	class func setThemeTimestampFormatPreferenceUserConfigurable(_ value: Bool) {
 		preferences.registerDefault(
 			value as NSNumber,
 			forKey: "Theme -> Timestamp Format Preference Enabled"
 		)
 	}
 
-	@objc(themeUserStyleSheetRules) class func local_themeUserStyleSheetRules()
+	class func themeUserStyleSheetRules()
 		-> String?
 	{
 		string("Theme -> User Style Sheet Rules")
 	}
 
-	@objc(setThemeUserStyleSheetRules:) class func local_setThemeUserStyleSheetRules(_ value: String?) {
+	class func setThemeUserStyleSheetRules(_ value: String?) {
 		set(
 			value,
 			"Theme -> User Style Sheet Rules"
 		)
 	}
 
-	@objc(automaticallyReloadCustomThemesWhenTheyChange) class func local_automaticallyReloadCustomThemesWhenTheyChange(
+	class func automaticallyReloadCustomThemesWhenTheyChange(
 	)
 		-> Bool
 	{
 		bool("AutomaticallyReloadCustomThemesWhenTheyChange")
 	}
 
-	@objc(webKit2ProcessPoolSizeLimited) class func local_webKit2ProcessPoolSizeLimited()
+	class func webKit2ProcessPoolSizeLimited()
 		-> Bool
 	{
 		bool("WebViewProcessPoolSizeIsLimited")
 	}
 
-	@objc(webKit2PreviewLinks) class func local_webKit2PreviewLinks() -> Bool {
+	class func webKit2PreviewLinks() -> Bool {
 		bool("WebViewPreviewLinks")
 	}
 
-	@objc(themeChannelViewUsesCustomScrollers) class func local_themeChannelViewUsesCustomScrollers()
+	class func themeChannelViewUsesCustomScrollers()
 		-> Bool
 	{
 		!bool("WebViewDoNotUsesCustomScrollers")
 	}
 
-	@objc(channelViewArrangement) class func local_channelViewArrangement()
+	class func channelViewArrangement()
 		-> TXChannelViewArrangement
 	{
 		TXChannelViewArrangement(rawValue: uint("ChannelViewArrangement")) ?? .horizontal
 	}
 
-	@objc(tabCompletionSuffix) class func local_tabCompletionSuffix()
+	class func tabCompletionSuffix()
 		-> String?
 	{
 		string("Keyboard -> Tab Key Completion Suffix")
 	}
 
-	@objc(setTabCompletionSuffix:) class func local_setTabCompletionSuffix(_ value: String) {
+	class func setTabCompletionSuffix(_ value: String) {
 		set(
 			value,
 			"Keyboard -> Tab Key Completion Suffix"
 		)
 	}
 
-	@objc(tabCompletionDoNotAppendWhitespace) class func local_tabCompletionDoNotAppendWhitespace()
+	class func tabCompletionDoNotAppendWhitespace()
 		-> Bool
 	{
 		bool("Tab Completion -> Do Not Use Whitespace for Missing Completion Suffix")
 	}
 
-	@objc(tabCompletionCutForwardToFirstWhitespace) class func local_tabCompletionCutForwardToFirstWhitespace()
+	class func tabCompletionCutForwardToFirstWhitespace()
 		-> Bool
 	{
 		bool("Tab Completion -> Completion Suffix Cut Forward Until Space")
 	}
 
-	@objc(fileTransferRequestReplyAction) class func local_fileTransferRequestReplyAction()
+	class func fileTransferRequestReplyAction()
 		-> TXFileTransferRequestReply
 	{
 		TXFileTransferRequestReply(rawValue: uint("File Transfers -> File Transfer Request Reply Action")) ?? .ignore
 	}
 
-	@objc(fileTransferIPAddressDetectionMethod) class func local_fileTransferIPAddressDetectionMethod()
+	class func fileTransferIPAddressDetectionMethod()
 		-> TXFileTransferIPAddressMethodDetection
 	{
 		TXFileTransferIPAddressMethodDetection(
@@ -788,88 +767,87 @@ public extension TPCPreferences {
 			.routerOnly
 	}
 
-	@objc(fileTransferRequestsAreReversed) class func local_fileTransferRequestsAreReversed()
+	class func fileTransferRequestsAreReversed()
 		-> Bool
 	{
 		bool("File Transfers -> File Transfer Requests Use Reverse DCC")
 	}
 
-	@objc(fileTransfersPreventIdleSystemSleep) class func local_fileTransfersPreventIdleSystemSleep()
+	class func fileTransfersPreventIdleSystemSleep()
 		-> Bool
 	{
 		bool("File Transfers -> Idle System Sleep Prevented During File Transfer")
 	}
 
-	@objc(fileTransferPortRangeStart) class func local_fileTransferPortRangeStart() -> UInt16 {
+	class func fileTransferPortRangeStart() -> UInt16 {
 		preferences
 			.unsignedShort(forKey: "File Transfers -> File Transfer Port Range Start")
 	}
 
-	@objc(setFileTransferPortRangeStart:) class func local_setFileTransferPortRangeStart(_ value: UInt16) {
+	class func setFileTransferPortRangeStart(_ value: UInt16) {
 		preferences.setUnsignedShort(
 			value,
 			forKey: "File Transfers -> File Transfer Port Range Start"
 		)
 	}
 
-	@objc(fileTransferPortRangeEnd) class func local_fileTransferPortRangeEnd() -> UInt16 {
+	class func fileTransferPortRangeEnd() -> UInt16 {
 		preferences
 			.unsignedShort(forKey: "File Transfers -> File Transfer Port Range End")
 	}
 
-	@objc(setFileTransferPortRangeEnd:) class func local_setFileTransferPortRangeEnd(_ value: UInt16) {
+	class func setFileTransferPortRangeEnd(_ value: UInt16) {
 		preferences.setUnsignedShort(
 			value,
 			forKey: "File Transfers -> File Transfer Port Range End"
 		)
 	}
 
-	@objc(fileTransferManuallyEnteredIPAddress) class func local_fileTransferManuallyEnteredIPAddress()
+	class func fileTransferManuallyEnteredIPAddress()
 		-> String?
 	{
 		string("File Transfers -> File Transfer Manually Entered IP Address")
 	}
 
-	@objc(fileTransferIPAddressInterfaceName) class func local_fileTransferIPAddressInterfaceName()
+	class func fileTransferIPAddressInterfaceName()
 		-> String?
 	{
 		string("File Transfers -> File Transfer IP Address Interface Name")
 	}
 
-	@objc(scrollbackSaveLimit) class func local_scrollbackSaveLimit() -> UInt {
+	class func scrollbackSaveLimit() -> UInt {
 		uint("ScrollbackMaximumSavedLineCount")
 	}
 
-	@objc(setScrollbackSaveLimit:) class func local_setScrollbackSaveLimit(_ value: UInt) {
+	class func setScrollbackSaveLimit(_ value: UInt) {
 		preferences.setUnsignedInteger(
 			value,
 			forKey: "ScrollbackMaximumSavedLineCount"
 		)
 	}
 
-	@objc(scrollbackVisibleLimit) class func local_scrollbackVisibleLimit()
+	class func scrollbackVisibleLimit()
 		-> UInt
 	{
 		uint("ScrollbackMaximumVisibleLineCount")
 	}
 
-	@objc(setScrollbackVisibleLimit:) class func local_setScrollbackVisibleLimit(_ value: UInt) {
+	class func setScrollbackVisibleLimit(_ value: UInt) {
 		preferences.setUnsignedInteger(
 			value,
 			forKey: "ScrollbackMaximumVisibleLineCount"
 		)
 	}
 
-	@objc(soundIsMuted) class func local_soundIsMuted() -> Bool {
+	class func soundIsMuted() -> Bool {
 		bool("Notification Sound Is Muted")
 	}
 
-	@objc(setSoundIsMuted:) class func local_setSoundIsMuted(_ value: Bool) {
+	class func setSoundIsMuted(_ value: Bool) {
 		set(value, "Notification Sound Is Muted")
 	}
 
-	@objc(keyForEvent:category:)
-	class func local_key(for event: TXNotificationType, category: String) -> String? {
+	class func key(for event: TXNotificationType, category: String) -> String? {
 		let prefix: String
 
 		switch event {
@@ -898,15 +876,15 @@ public extension TPCPreferences {
 		return prefix + category
 	}
 
-	@objc(soundForEvent:) class func local_sound(for event: TXNotificationType) -> String? {
-		local_key(
+	class func sound(for event: TXNotificationType) -> String? {
+		key(
 			for: event,
 			category: "Sound"
 		).flatMap(string)
 	}
 
-	@objc(setSound:forEvent:) class func local_setSound(_ value: String?, for event: TXNotificationType) {
-		if let key = local_key(
+	class func setSound(_ value: String?, for event: TXNotificationType) {
+		if let key = key(
 			for: event,
 			category: "Sound"
 		) {
@@ -914,53 +892,54 @@ public extension TPCPreferences {
 		}
 	}
 
-	@objc(notificationEnabledForEvent:) class func local_notificationEnabled(for event: TXNotificationType)
+	class func notificationEnabled(for event: TXNotificationType)
 		-> Bool
 	{
-		local_key(
+		key(
 			for: event,
 			category: "Enabled"
 		).map(bool) ?? false
 	}
 
-	@objc(setNotificationEnabled:forEvent:) class func local_setNotificationEnabled(
+	class func setNotificationEnabled(
 		_ value: Bool,
 		for event: TXNotificationType
 	) {
-		if let key = local_key(for: event, category: "Enabled") {
+		if let key = key(for: event, category: "Enabled") {
 			set(value, key)
 		}
 	}
 
-	@objc(disabledWhileAwayForEvent:) class func local_disabledWhileAway(for event: TXNotificationType)
+	class func disabledWhileAway(for event: TXNotificationType)
 		-> Bool
 	{
-		local_key(
+		key(
 			for: event,
 			category: "Disable While Away"
 		).map(bool) ?? false
 	}
 
-	@objc(setDisabledWhileAway:forEvent:) class func local_setDisabledWhileAway(
+	class func setDisabledWhileAway(
 		_ value: Bool,
 		for event: TXNotificationType
 	) {
-		if let key = local_key(for: event, category: "Disable While Away") {
+		if let key = key(for: event, category: "Disable While Away") {
 			set(value, key)
 		}
 	}
 
-	@objc(bounceDockIconForEvent:) class func local_bounceDockIcon(for event: TXNotificationType) -> Bool {
-		local_key(
+	class func bounceDockIcon(for event: TXNotificationType) -> Bool {
+		key(
 			for: event,
 			category: "Bounce Dock Icon"
 		).map(bool) ?? false
 	}
 
-	@objc(setBounceDockIcon:forEvent:) class func local_setBounceDockIcon(_ value: Bool,
-	                                                                      for event: TXNotificationType)
-	{
-		if let key = local_key(
+	class func setBounceDockIcon(
+		_ value: Bool,
+		for event: TXNotificationType
+	) {
+		if let key = key(
 			for: event,
 			category: "Bounce Dock Icon"
 		) {
@@ -968,33 +947,33 @@ public extension TPCPreferences {
 		}
 	}
 
-	@objc(bounceDockIconRepeatedlyForEvent:) class func local_bounceDockIconRepeatedly(for event: TXNotificationType)
+	class func bounceDockIconRepeatedly(for event: TXNotificationType)
 		-> Bool
 	{
-		local_key(
+		key(
 			for: event,
 			category: "Bounce Dock Icon Repeatedly"
 		).map(bool) ?? false
 	}
 
-	@objc(setBounceDockIconRepeatedly:forEvent:) class func local_setBounceDockIconRepeatedly(
+	class func setBounceDockIconRepeatedly(
 		_ value: Bool,
 		for event: TXNotificationType
 	) {
-		if let key = local_key(for: event, category: "Bounce Dock Icon Repeatedly") {
+		if let key = key(for: event, category: "Bounce Dock Icon Repeatedly") {
 			set(value, key)
 		}
 	}
 
-	@objc(speakEvent:) class func local_speak(_ event: TXNotificationType) -> Bool {
-		local_key(
+	class func speak(_ event: TXNotificationType) -> Bool {
+		key(
 			for: event,
 			category: "Speak"
 		).map(bool) ?? false
 	}
 
-	@objc(setEventIsSpoken:forEvent:) class func local_setEventIsSpoken(_ value: Bool, for event: TXNotificationType) {
-		if let key = local_key(
+	class func setEventIsSpoken(_ value: Bool, for event: TXNotificationType) {
+		if let key = key(
 			for: event,
 			category: "Speak"
 		) {
@@ -1002,53 +981,53 @@ public extension TPCPreferences {
 		}
 	}
 
-	@objc(onlySpeakEventsForSelection) class func local_onlySpeakEventsForSelection()
+	class func onlySpeakEventsForSelection()
 		-> Bool
 	{
 		bool("OnlySpeakNotificationsForSelection")
 	}
 
-	@objc(setOnlySpeakEventsForSelection:) class func local_setOnlySpeakEventsForSelection(_ value: Bool) {
+	class func setOnlySpeakEventsForSelection(_ value: Bool) {
 		set(
 			value,
 			"OnlySpeakNotificationsForSelection"
 		)
 	}
 
-	@objc(channelMessageSpeakChannelName) class func local_channelMessageSpeakChannelName() -> Bool {
-		bool(local_key(
+	class func channelMessageSpeakChannelName() -> Bool {
+		bool(key(
 			for: .channelMessage,
 			category: "Speak Channel Name"
 		)!)
 	}
 
-	@objc(setChannelMessageSpeakChannelName:) class func local_setChannelMessageSpeakChannelName(_ value: Bool) {
+	class func setChannelMessageSpeakChannelName(_ value: Bool) {
 		set(
 			value,
-			local_key(for: .channelMessage, category: "Speak Channel Name")!
+			key(for: .channelMessage, category: "Speak Channel Name")!
 		)
 	}
 
-	@objc(channelMessageSpeakNickname) class func local_channelMessageSpeakNickname() -> Bool {
-		bool(local_key(
+	class func channelMessageSpeakNickname() -> Bool {
+		bool(key(
 			for: .channelMessage,
 			category: "Speak Nickname"
 		)!)
 	}
 
-	@objc(setChannelMessageSpeakNickname:) class func local_setChannelMessageSpeakNickname(_ value: Bool) {
+	class func setChannelMessageSpeakNickname(_ value: Bool) {
 		set(
 			value,
-			local_key(for: .channelMessage, category: "Speak Nickname")!
+			key(for: .channelMessage, category: "Speak Nickname")!
 		)
 	}
 
-	@objc(clientList) class func local_clientList() -> [[String: Any]]? {
+	class func clientList() -> [[String: Any]]? {
 		preferences
 			.object(forKey: IRCWorldClientListDefaultsKey) as? [[String: Any]]
 	}
 
-	@objc(setClientList:) class func local_setClientList(_ value: [[String: Any]]?) {
+	class func setClientList(_ value: [[String: Any]]?) {
 		set(
 			value,
 			IRCWorldClientListDefaultsKey
@@ -1067,11 +1046,11 @@ public extension TPCPreferences {
 		excludeKeywords = loadKeywords(for: "Highlight List -> Excluded Matches")
 	}
 
-	@objc(_loadExcludeKeywords) class func local_loadExcludeKeywords() {
+	class func loadExcludeKeywords() {
 		excludeKeywords = loadKeywords(for: "Highlight List -> Excluded Matches")
 	}
 
-	@objc(_loadMatchKeywords) class func local_loadMatchKeywords() {
+	class func loadMatchKeywords() {
 		matchKeywords = loadKeywords(for: "Highlight List -> Primary Matches")
 	}
 
@@ -1080,179 +1059,173 @@ public extension TPCPreferences {
 		set(strings.map { ["string": $0] }, key)
 	}
 
-	@objc(_cleanUpKeywords:) class func local_cleanUpKeywords(_ key: String) {
+	class func cleanUpKeywords(_ key: String) {
 		cleanKeywords(for: key)
 	}
 
-	@objc(cleanUpHighlightKeywords) class func local_cleanUpHighlightKeywords() {
+	class func cleanUpHighlightKeywords() {
 		cleanKeywords(for: "Highlight List -> Primary Matches")
 		cleanKeywords(for: "Highlight List -> Excluded Matches")
 	}
 
-	@objc(highlightMatchKeywords) class func local_highlightMatchKeywords() -> [String]? {
+	class func highlightMatchKeywords() -> [String]? {
 		matchKeywords
 	}
 
-	@objc(highlightExcludeKeywords) class func local_highlightExcludeKeywords() -> [String]? {
+	class func highlightExcludeKeywords() -> [String]? {
 		excludeKeywords
 	}
 
-	@objc(registerWebKit2DynamicDefaults) class func local_registerWebKit2DynamicDefaults() {
+	class func registerWebKit2DynamicDefaults() {
 		UserDefaults.standard.set(false, forKey: "__WebInspectorPageGroupLevel1__.WebKit2InspectorStartsAttached")
 	}
 
-	@objc(registerPreferencesDictionaryVersion) class func local_registerPreferencesDictionaryVersion() {
+	class func registerPreferencesDictionaryVersion() {
 		guard uint("TPCPreferencesDictionaryVersion") < TPCPreferencesDictionaryVersion else { return }
 		preferences.setUnsignedInteger(TPCPreferencesDictionaryVersion, forKey: "TPCPreferencesDictionaryVersion")
 	}
 
-	@objc(defaultPreferences) class func local_defaultPreferences() -> [String: Any] {
+	class func defaultPreferences() -> [String: Any] {
 		preferences
 			.volatileDomain(forName: UserDefaults.registrationDomain)
 	}
 
-	@objc(registerDynamicDefaults) class func local_registerDynamicDefaults() {
-		local_populateDefaultNickname()
-		local_registerWebKit2DynamicDefaults()
-		local_registerPreferencesDictionaryVersion()
+	class func registerDynamicDefaults() {
+		populateDefaultNickname()
+		registerWebKit2DynamicDefaults()
+		registerPreferencesDictionaryVersion()
 	}
 
-	@objc(registerDefaults) class func local_registerDefaults() {
-		let local = TPCResourceManager.dictionary(
+	class func registerDefaults() {
+		let local = ResourceManager.dictionary(
 			fromResources: "RegisteredUserDefaults",
 			inDirectory: "Preferences"
 		) ?? [:]
 		UserDefaults.standard.register(defaults: local)
-		let container = TPCResourceManager.dictionary(
+		let container = ResourceManager.dictionary(
 			fromResources: "RegisteredUserDefaultsInContainer",
 			inDirectory: "Preferences"
 		) ?? [:]
 		preferences.register(defaults: container)
-		local_registerDynamicDefaults()
+		registerDynamicDefaults()
 	}
 
-	@objc(initPreferences) class func local_initPreferences() {
+	class func initPreferences() {
 		ApplicationInfo.incrementApplicationRunCount()
-		local_registerDefaults()
+		registerDefaults()
 		PathInfo.startUsingTranscriptFolderURL()
-		let observer = KeywordDefaultsObserver()
-		preferences.addObserver(
-			observer,
-			forKeyPath: "Highlight List -> Excluded Matches",
-			options: .new,
-			context: nil
+		keywordDefaultsObservation = NotificationCenter.default.publisher(
+			for: UserDefaults.didChangeNotification,
+			object: preferences
 		)
-		preferences.addObserver(
-			observer,
-			forKeyPath: "Highlight List -> Primary Matches",
-			options: .new,
-			context: nil
-		)
-		keywordObserver = observer
+		.sink { _ in
+			loadMatchKeywords()
+			loadExcludeKeywords()
+		}
 		reloadHighlightKeywords()
 	}
 
-	@objc(textFieldAutomaticSpellCheck) class func local_textFieldAutomaticSpellCheck()
+	class func textFieldAutomaticSpellCheck()
 		-> Bool
 	{
 		bool("TextFieldAutomaticSpellCheck")
 	}
 
-	@objc(setTextFieldAutomaticSpellCheck:) class func local_setTextFieldAutomaticSpellCheck(_ value: Bool) {
+	class func setTextFieldAutomaticSpellCheck(_ value: Bool) {
 		set(
 			value,
 			"TextFieldAutomaticSpellCheck"
 		)
 	}
 
-	@objc(textFieldAutomaticGrammarCheck) class func local_textFieldAutomaticGrammarCheck()
+	class func textFieldAutomaticGrammarCheck()
 		-> Bool
 	{
 		bool("TextFieldAutomaticGrammarCheck")
 	}
 
-	@objc(setTextFieldAutomaticGrammarCheck:) class func local_setTextFieldAutomaticGrammarCheck(_ value: Bool) {
+	class func setTextFieldAutomaticGrammarCheck(_ value: Bool) {
 		set(
 			value,
 			"TextFieldAutomaticGrammarCheck"
 		)
 	}
 
-	@objc(textFieldAutomaticSpellCorrection) class func local_textFieldAutomaticSpellCorrection()
+	class func textFieldAutomaticSpellCorrection()
 		-> Bool
 	{
 		bool("TextFieldAutomaticSpellCorrection")
 	}
 
-	@objc(setTextFieldAutomaticSpellCorrection:) class func local_setTextFieldAutomaticSpellCorrection(_ value: Bool) {
+	class func setTextFieldAutomaticSpellCorrection(_ value: Bool) {
 		set(
 			value,
 			"TextFieldAutomaticSpellCorrection"
 		)
 	}
 
-	@objc(textFieldSmartCopyPaste) class func local_textFieldSmartCopyPaste() -> Bool {
+	class func textFieldSmartCopyPaste() -> Bool {
 		bool("TextFieldSmartCopyPaste")
 	}
 
-	@objc(setTextFieldSmartCopyPaste:) class func local_setTextFieldSmartCopyPaste(_ value: Bool) {
+	class func setTextFieldSmartCopyPaste(_ value: Bool) {
 		set(
 			value,
 			"TextFieldSmartCopyPaste"
 		)
 	}
 
-	@objc(textFieldSmartQuotes) class func local_textFieldSmartQuotes() -> Bool {
+	class func textFieldSmartQuotes() -> Bool {
 		bool("TextFieldSmartQuotes")
 	}
 
-	@objc(setTextFieldSmartQuotes:) class func local_setTextFieldSmartQuotes(_ value: Bool) {
+	class func setTextFieldSmartQuotes(_ value: Bool) {
 		set(
 			value,
 			"TextFieldSmartQuotes"
 		)
 	}
 
-	@objc(textFieldSmartDashes) class func local_textFieldSmartDashes() -> Bool {
+	class func textFieldSmartDashes() -> Bool {
 		bool("TextFieldSmartDashes")
 	}
 
-	@objc(setTextFieldSmartDashes:) class func local_setTextFieldSmartDashes(_ value: Bool) {
+	class func setTextFieldSmartDashes(_ value: Bool) {
 		set(
 			value,
 			"TextFieldSmartDashes"
 		)
 	}
 
-	@objc(textFieldSmartLinks) class func local_textFieldSmartLinks() -> Bool {
+	class func textFieldSmartLinks() -> Bool {
 		bool("TextFieldSmartLinks")
 	}
 
-	@objc(setTextFieldSmartLinks:) class func local_setTextFieldSmartLinks(_ value: Bool) {
+	class func setTextFieldSmartLinks(_ value: Bool) {
 		set(
 			value,
 			"TextFieldSmartLinks"
 		)
 	}
 
-	@objc(textFieldDataDetectors) class func local_textFieldDataDetectors() -> Bool {
+	class func textFieldDataDetectors() -> Bool {
 		bool("TextFieldDataDetectors")
 	}
 
-	@objc(setTextFieldDataDetectors:) class func local_setTextFieldDataDetectors(_ value: Bool) {
+	class func setTextFieldDataDetectors(_ value: Bool) {
 		set(
 			value,
 			"TextFieldDataDetectors"
 		)
 	}
 
-	@objc(textFieldTextReplacement) class func local_textFieldTextReplacement()
+	class func textFieldTextReplacement()
 		-> Bool
 	{
 		bool("TextFieldTextReplacement")
 	}
 
-	@objc(setTextFieldTextReplacement:) class func local_setTextFieldTextReplacement(_ value: Bool) {
+	class func setTextFieldTextReplacement(_ value: Bool) {
 		set(
 			value,
 			"TextFieldTextReplacement"

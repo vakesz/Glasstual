@@ -36,28 +36,40 @@
  *********************************************************************** */
 
 import AppKit
+import GlasstualPluginKit
 
 private enum ChatFilterEditSection: Int {
 	case general, channels, events, sender, notes, advanced
 }
 
+@MainActor
+protocol ChatFilterEditSheetDelegate: AnyObject {
+	func chatFilterEditSheet(_ sheet: ChatFilterEditSheet, accepted filter: ChatFilter)
+	func chatFilterEditSheetWillClose(_ sheet: ChatFilterEditSheet)
+}
+
 @objc(TPI_ChatFilterEditFilterSheet)
 @objcMembers
 @MainActor
-final class ChatFilterEditSheet: TDCSheetBase {
+final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	private var filter: MutableChatFilter
 	private var autoCompletedTokens: [String] = []
+	weak var delegate: (any ChatFilterEditSheetDelegate)?
+	weak var window: NSWindow?
 
+	@IBOutlet private var sheet: NSWindow!
+	@IBOutlet private var okButton: NSButton!
+	@IBOutlet private var cancelButton: NSButton!
 	@IBOutlet private var contentViewTabView: NSTabView!
 	@IBOutlet private var filterAgeLimitTextField: NSTextField!
 	@IBOutlet private var filterMatchTextField: NSTextField!
 	@IBOutlet private var filterSenderMatchTextField: NSTextField!
 	@IBOutlet private var filterTitleTextField: NSTextField!
 	@IBOutlet private var filterNotesTextField: NSTextField!
-	@IBOutlet private var filterActionFloodControlIntervalTextField: NSTextField!
-	@IBOutlet private var filterEventNumericTextField: TVCValidatedTextField!
-	@IBOutlet private var filterForwardToDestinationTextField: TVCValidatedTextField!
-	@IBOutlet private var filterActionTokenField: TVCAutoExpandingTokenField!
+	@IBOutlet private var actionFloodIntervalField: NSTextField!
+	@IBOutlet private var filterEventNumericTextField: ChatFilterValidatedTextField!
+	@IBOutlet private var filterForwardToDestinationTextField: ChatFilterValidatedTextField!
+	@IBOutlet private var filterActionTokenField: NSTokenField!
 	@IBOutlet private var filterActionTokenChannelName: NSTokenField!
 	@IBOutlet private var filterActionTokenLocalNickname: NSTokenField!
 	@IBOutlet private var filterActionTokenNetworkName: NSTokenField!
@@ -90,7 +102,7 @@ final class ChatFilterEditSheet: TDCSheetBase {
 	@IBOutlet private var filterEventChannelModeReceivedCheck: NSButton!
 	@IBOutlet private var filterEventChannelModeChangedCheck: NSButton!
 	@IBOutlet private var filterLimitedToMyselfCheck: NSButton!
-	@IBOutlet private var filterLimitToSelectionOutlineView: TVCChannelSelectionViewController!
+	@IBOutlet private var filterLimitToSelectionOutlineView: NSObject!
 
 	dynamic var filterIgnoreOperatorsCheckEnabled = true
 	dynamic var filterIgnoreOperatorsCheckValue: Bool {
@@ -101,7 +113,7 @@ final class ChatFilterEditSheet: TDCSheetBase {
 	@objc(initWithFilter:)
 	init(filter: ChatFilter?) {
 		self.filter = filter?.mutableCopy() as? MutableChatFilter ?? MutableChatFilter()
-		super.init(window: nil)
+		super.init()
 		prepareInitialState()
 	}
 
@@ -117,11 +129,12 @@ final class ChatFilterEditSheet: TDCSheetBase {
 		loadFilter()
 		updateUIState()
 		toggleOkButton()
-		filterLimitToSelectionOutlineView.attach(to: filterLimitedToSelectionHostView)
+		channelSelection.attach(to: filterLimitedToSelectionHostView)
 	}
 
 	func start() {
-		startSheet()
+		guard let window else { return }
+		window.beginSheet(sheet)
 	}
 
 	private func loadFilter() {
@@ -129,7 +142,7 @@ final class ChatFilterEditSheet: TDCSheetBase {
 		setTokens(filter.filterAction, in: filterActionTokenField)
 		filterAgeLimitComparatorButton.selectItem(withTag: Int(filter.filterAgeComparator))
 		filterAgeLimitTextField.integerValue = Int(filter.filterAgeLimit)
-		filterActionFloodControlIntervalTextField.integerValue = Int(filter.filterActionFloodControlInterval)
+		actionFloodIntervalField.integerValue = Int(filter.filterActionFloodControlInterval)
 		filterTitleTextField.stringValue = filter.filterTitle
 		filterNotesTextField.stringValue = filter.filterNotes
 		filterSenderMatchTextField.stringValue = filter.filterSenderMatch
@@ -143,8 +156,8 @@ final class ChatFilterEditSheet: TDCSheetBase {
 			button.state = state(filter.isEventTypeEnabled(event))
 		}
 		filterEventNumericTextField.stringValue = filter.filterEventsNumerics.joined(separator: ", ")
-		filterLimitToSelectionOutlineView.selectedClientIds = filter.filterLimitedToClientsIDs
-		filterLimitToSelectionOutlineView.selectedChannelIds = filter.filterLimitedToChannelsIDs
+		channelSelection.selectedClientIds = filter.filterLimitedToClientsIDs
+		channelSelection.selectedChannelIds = filter.filterLimitedToChannelsIDs
 	}
 
 	private func saveFilter() {
@@ -152,7 +165,7 @@ final class ChatFilterEditSheet: TDCSheetBase {
 		filter.filterAction = stringValue(for: filterActionTokenField)
 		filter.filterAgeComparator = UInt(filterAgeLimitComparatorButton.selectedTag())
 		filter.filterAgeLimit = UInt(max(0, filterAgeLimitTextField.integerValue))
-		filter.filterActionFloodControlInterval = UInt(max(0, filterActionFloodControlIntervalTextField.integerValue))
+		filter.filterActionFloodControlInterval = UInt(max(0, actionFloodIntervalField.integerValue))
 		filter.filterTitle = filterTitleTextField.stringValue
 		filter.filterNotes = filterNotesTextField.stringValue
 		filter.filterSenderMatch = filterSenderMatchTextField.stringValue
@@ -163,8 +176,8 @@ final class ChatFilterEditSheet: TDCSheetBase {
 		filter.filterLimitedToMyself = filterLimitedToMyselfCheck.state == .on
 		filter.filterEvents = compileEvents().rawValue
 		filter.filterEventsNumerics = compileNumerics() ?? []
-		filter.filterLimitedToClientsIDs = filterLimitToSelectionOutlineView.selectedClientIds
-		filter.filterLimitedToChannelsIDs = filterLimitToSelectionOutlineView.selectedChannelIds
+		filter.filterLimitedToClientsIDs = channelSelection.selectedClientIds
+		filter.filterLimitedToChannelsIDs = channelSelection.selectedChannelIds
 	}
 
 	private var eventButtons: [(NSButton, ChatFilterEvent)] {
@@ -182,6 +195,14 @@ final class ChatFilterEditSheet: TDCSheetBase {
 			(filterEventChannelModeReceivedCheck, .channelModeReceived),
 			(filterEventChannelModeChangedCheck, .channelModeChanged),
 		]
+	}
+
+	private var channelSelection: any PluginChannelSelection {
+		guard let selection = filterLimitToSelectionOutlineView as? any PluginChannelSelection else {
+			preconditionFailure("Glasstual did not provide its channel-selection view controller")
+		}
+
+		return selection
 	}
 
 	private func compileEvents() -> ChatFilterEvent {
@@ -214,14 +235,13 @@ final class ChatFilterEditSheet: TDCSheetBase {
 		return result
 	}
 
-	override func ok(_ sender: Any?) {
+	@IBAction func ok(_: Any?) {
 		guard validate() else { return }
 		saveFilter()
-		let selector = NSSelectorFromString("chatFilterEditFilterSheet:onOk:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self, with: filter.copy())
+		if let immutableFilter = filter.copy() as? ChatFilter {
+			delegate?.chatFilterEditSheet(self, accepted: immutableFilter)
 		}
-		super.ok(sender)
+		endSheet()
 	}
 
 	private func validate() -> Bool {
@@ -229,7 +249,7 @@ final class ChatFilterEditSheet: TDCSheetBase {
 			validate(filterForwardToDestinationTextField, section: .advanced)
 	}
 
-	private func validate(_ field: TVCValidatedTextField, section: ChatFilterEditSection) -> Bool {
+	private func validate(_ field: ChatFilterValidatedTextField, section: ChatFilterEditSection) -> Bool {
 		guard !field.valueIsValid else { return true }
 		contentViewTabView.selectTabViewItem(at: section.rawValue)
 		DispatchQueue.main.async { field.showValidationErrorPopover() }
@@ -237,11 +257,16 @@ final class ChatFilterEditSheet: TDCSheetBase {
 	}
 
 	func windowWillClose(_: Notification) {
-		NotificationCenter.default.removeObserver(self)
-		let selector = NSSelectorFromString("chatFilterEditFilterSheetWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.chatFilterEditSheetWillClose(self)
+	}
+
+	@IBAction func cancel(_: Any?) {
+		endSheet()
+	}
+
+	private func endSheet() {
+		(sheet.sheetParent ?? window)?.endSheet(sheet)
+		sheet.close()
 	}
 
 	private func populateTokenFields() {
@@ -343,10 +368,6 @@ final class ChatFilterEditSheet: TDCSheetBase {
 		toggleOkButton()
 	}
 
-	func validatedTextFieldTextDidChange(_: Any?) {
-		toggleOkButton()
-	}
-
 	private func toggleOkButton() {
 		let hasOutcome = filterIgnoreContentCheck.state == .on ||
 			!filterForwardToDestinationTextField.stringValue.isEmpty || !filterActionTokenField.stringValue.isEmpty
@@ -355,23 +376,24 @@ final class ChatFilterEditSheet: TDCSheetBase {
 
 	private func setupTextFieldRules() {
 		for field in [filterForwardToDestinationTextField, filterEventNumericTextField] {
-			field?.textDidChangeCallback = self
+			field?.valueDidChange = { [weak self] _ in
+				self?.toggleOkButton()
+			}
 			field?.performValidationWhenEmpty = false
 			field?.stringValueIsInvalidOnEmpty = false
 			field?.stringValueUsesOnlyFirstToken = false
 		}
 		filterForwardToDestinationTextField.stringValueIsTrimmed = true
-		filterForwardToDestinationTextField.validationBlock = { [weak self] value in
-			guard let self else { return nil }
+		filterForwardToDestinationTextField.validationBlock = { value in
 			if value.count > 125 {
-				return localized("m0u-tw")
+				return String(localized: .TPIChatFilterEditFilterSheet.destinationTooLong)
 			}
 			let allowed = value.allSatisfy { $0.isLetter || $0.isNumber || "-_ ".contains($0) }
-			return allowed ? nil : localized("5kd-jt")
+			return allowed ? nil : String(localized: .TPIChatFilterEditFilterSheet.destinationInvalid)
 		}
 		filterEventNumericTextField.validationBlock = { [weak self] _ in
 			guard let self else { return nil }
-			return compileNumerics() == nil ? localized("9ri-sd") : nil
+			return compileNumerics() == nil ? String(localized: .TPIChatFilterEditFilterSheet.commandsInvalid) : nil
 		}
 	}
 
@@ -429,10 +451,6 @@ final class ChatFilterEditSheet: TDCSheetBase {
 	private func state(_ value: Bool) -> NSControl.StateValue {
 		value ? .on : .off
 	}
-
-	private func localized(_ key: String) -> String {
-		Bundle(for: Self.self).localizedString(forKey: key, value: key, table: "TPI_ChatFilterEditFilterSheet")
-	}
 }
 
 @objc(TPI_ChatFilterFilterActionToken)
@@ -465,9 +483,26 @@ private final class ChatFilterActionToken: NSObject {
 	]
 
 	static var titles: [String] {
-		let keys = ["90e-tj", "tbc-wc", "840-f9", "sch-hi", "k82-6i", "2sk-ui", "xt2-bv", "je5-u2",
-		            "9xy-vf", "kph-dc", "8bd-nt", "4vk-v8", "kvz-ej", "2pa-ju", "jen-7o", "t5v-4o", "vyf-el", "0x4-ib"]
-		let bundle = Bundle(for: ChatFilterEditSheet.self)
-		return keys.map { bundle.localizedString(forKey: $0, value: $0, table: "TPI_ChatFilterEditFilterSheet") }
+		let resources: [LocalizedStringResource] = [
+			.TPIChatFilterEditFilterSheet.tokenChannelName,
+			.TPIChatFilterEditFilterSheet.tokenLocalNickname,
+			.TPIChatFilterEditFilterSheet.tokenNetworkName,
+			.TPIChatFilterEditFilterSheet.tokenOriginalMessage,
+			.TPIChatFilterEditFilterSheet.tokenSenderNickname,
+			.TPIChatFilterEditFilterSheet.tokenSenderUsername,
+			.TPIChatFilterEditFilterSheet.tokenSenderAddress,
+			.TPIChatFilterEditFilterSheet.tokenSenderHostmask,
+			.TPIChatFilterEditFilterSheet.tokenServerAddress,
+			.TPIChatFilterEditFilterSheet.tokenParameter1,
+			.TPIChatFilterEditFilterSheet.tokenParameter2,
+			.TPIChatFilterEditFilterSheet.tokenParameter3,
+			.TPIChatFilterEditFilterSheet.tokenParameter4,
+			.TPIChatFilterEditFilterSheet.tokenParameter5,
+			.TPIChatFilterEditFilterSheet.tokenParameter6,
+			.TPIChatFilterEditFilterSheet.tokenParameter7,
+			.TPIChatFilterEditFilterSheet.tokenParameter8,
+			.TPIChatFilterEditFilterSheet.tokenParameter9,
+		]
+		return resources.map { String(localized: $0) }
 	}
 }

@@ -32,7 +32,7 @@
 
 import AppKit
 
-extension NSColor {
+public extension NSColor {
 	@objc(calibratedColorWithRed:green:blue:alpha:)
 	class func textual_calibratedColor(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) -> NSColor {
 		NSColor(
@@ -49,7 +49,7 @@ extension NSColor {
 	}
 
 	@objc(hexadecimalValue)
-	var textual_hexadecimalValue: String {
+	var textualHexadecimalValue: String {
 		let components = if colorSpace.colorSpaceModel == .gray {
 			RGBComponents(red: whiteComponent, green: whiteComponent, blue: whiteComponent)
 		} else {

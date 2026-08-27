@@ -37,7 +37,8 @@ import Security
 @objc(XRKeychain)
 public final class KeychainStore: NSObject {
 	@objc(deleteKeychainItem:withItemKind:forUsername:serviceName:)
-	public class func deleteItem(_ name: String, kind: String, username: String?, service: String) -> Bool {
+	@discardableResult
+	public static func deleteItem(_ name: String, kind: String, username: String?, service: String) -> Bool {
 		let status = SecItemDelete(protectedQuery(
 			name: name,
 			kind: kind,
@@ -49,7 +50,8 @@ public final class KeychainStore: NSObject {
 	}
 
 	@objc(modifyOrAddKeychainItem:withItemKind:forUsername:withNewPassword:serviceName:)
-	public class func modifyOrAddItem(
+	@discardableResult
+	public static func modifyOrAddItem(
 		_ name: String,
 		kind: String,
 		username: String?,
@@ -73,7 +75,8 @@ public final class KeychainStore: NSObject {
 	}
 
 	@objc(addKeychainItem:withItemKind:forUsername:withPassword:serviceName:)
-	public class func addItem(
+	@discardableResult
+	public static func addItem(
 		_ name: String,
 		kind: String,
 		username: String?,
@@ -91,12 +94,12 @@ public final class KeychainStore: NSObject {
 	}
 
 	@objc(getPasswordFromKeychainItem:withItemKind:forUsername:serviceName:)
-	public class func password(forItem name: String, kind: String, username: String?, service: String) -> String? {
+	public static func password(forItem name: String, kind: String, username: String?, service: String) -> String? {
 		password(forItem: name, kind: kind, username: username, service: service, status: nil)
 	}
 
 	@objc(getPasswordFromKeychainItem:withItemKind:forUsername:serviceName:returnedStatusCode:)
-	public class func password(
+	public static func password(
 		forItem name: String,
 		kind: String,
 		username: String?,
@@ -113,7 +116,7 @@ public final class KeychainStore: NSObject {
 		return password
 	}
 
-	private class func baseQuery(name: String, kind: String, username: String?, service: String) -> [CFString: Any] {
+	private static func baseQuery(name: String, kind: String, username: String?, service: String) -> [CFString: Any] {
 		var query: [CFString: Any] = [
 			kSecClass: kind == "internet password" ? kSecClassInternetPassword : kSecClassGenericPassword,
 			kSecAttrLabel: name,
@@ -126,15 +129,17 @@ public final class KeychainStore: NSObject {
 		return query
 	}
 
-	private class func protectedQuery(name: String, kind: String, username: String?,
-	                                  service: String) -> [CFString: Any]
+	private static func protectedQuery(name: String, kind: String, username: String?,
+	                                   service: String) -> [CFString: Any]
 	{
 		var query = baseQuery(name: name, kind: kind, username: username, service: service)
 		query[kSecUseDataProtectionKeychain] = true
 		return query
 	}
 
-	private class func legacyQuery(name: String, kind: String, username: String?, service: String) -> [CFString: Any]? {
+	private static func legacyQuery(name: String, kind: String, username: String?,
+	                                service: String) -> [CFString: Any]?
+	{
 		var keychain: SecKeychain?
 		typealias CopyDefaultKeychain = @convention(c) (UnsafeMutablePointer<SecKeychain?>?) -> OSStatus
 		guard let symbol = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "SecKeychainCopyDefault") else { return nil }
@@ -145,13 +150,13 @@ public final class KeychainStore: NSObject {
 		return query
 	}
 
-	private class func deleteLegacyItem(name: String, kind: String, username: String?, service: String) -> Bool {
+	private static func deleteLegacyItem(name: String, kind: String, username: String?, service: String) -> Bool {
 		guard let query = legacyQuery(name: name, kind: kind, username: username, service: service)
 		else { return false }
 		return SecItemDelete(query as CFDictionary) == errSecSuccess
 	}
 
-	private class func password(matching query: inout [CFString: Any], status: inout OSStatus) -> String? {
+	private static func password(matching query: inout [CFString: Any], status: inout OSStatus) -> String? {
 		query[kSecMatchLimit] = kSecMatchLimitOne
 		query[kSecReturnData] = true
 		var result: CFTypeRef?
@@ -160,7 +165,7 @@ public final class KeychainStore: NSObject {
 		return String(data: data, encoding: .utf8)
 	}
 
-	private class func migrateLegacyItem(
+	private static func migrateLegacyItem(
 		name: String,
 		kind: String,
 		username: String?,

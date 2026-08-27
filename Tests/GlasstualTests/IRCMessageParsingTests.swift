@@ -41,7 +41,7 @@ import XCTest
 class IRCMessageParsingTests: XCTestCase {
 	@objc
 	func testMessageTagsDecodeEscapesAndMetadata() {
-		let parsed: IRCParsedMessageTags! = IRCMessageTagParser
+		let parsed: ParsedMessageTags! = MessageTagParser
 			.parsedTags(fromSection: "msgid=abc;account=alice;a=b\\:c\\sd\\\\e\\r\\n;flag")
 
 		XCTAssertEqual(parsed.tags["a"], "b;c d\\e\r\n")
@@ -52,7 +52,7 @@ class IRCMessageParsingTests: XCTestCase {
 
 	@objc
 	func testMessageTagsPreserveLastDuplicateAndUnknownEscapeRules() {
-		let parsed: IRCParsedMessageTags! = IRCMessageTagParser
+		let parsed: ParsedMessageTags! = MessageTagParser
 			.parsedTags(fromSection: "a=first;;a=second;b=x\\qy;c=end\\")
 
 		XCTAssertEqual(parsed.tags["a"], "second")
@@ -65,7 +65,7 @@ class IRCMessageParsingTests: XCTestCase {
 
 	@objc
 	func testSenderPrefixUsesFirstBangAndLastAtSign() {
-		let parsed: IRCParsedSenderPrefix! = IRCSenderPrefixParser.parsedPrefix(from: "nick!user!name@cloak@host")
+		let parsed: ParsedSenderPrefix! = SenderPrefixParser.parsedPrefix(from: "nick!user!name@cloak@host")
 
 		XCTAssertEqual(parsed.nickname, "nick")
 		XCTAssertEqual(parsed.username, "user!name@cloak")
@@ -74,7 +74,7 @@ class IRCMessageParsingTests: XCTestCase {
 
 	@objc
 	func testSenderPrefixRejectsMissingOrReversedSeparators() {
-		XCTAssertNil(IRCSenderPrefixParser.parsedPrefix(from: "irc.example.net"))
-		XCTAssertNil(IRCSenderPrefixParser.parsedPrefix(from: "nick@host!user"))
+		XCTAssertNil(SenderPrefixParser.parsedPrefix(from: "irc.example.net"))
+		XCTAssertNil(SenderPrefixParser.parsedPrefix(from: "nick@host!user"))
 	}
 }

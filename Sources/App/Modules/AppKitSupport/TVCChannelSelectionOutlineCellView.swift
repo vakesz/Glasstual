@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 @objc(TVCChannelSelectionOutlineCellView)
 public final class ChannelSelectionOutlineCellView: NSTableCellView {

@@ -12,6 +12,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import UniformTypeIdentifiers
 
 private let filenameFieldWithProgressBarYCord: CGFloat = 4
@@ -39,7 +40,7 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 		let totalFilesize = totalFilesize
 
 		filesizeTextField.stringValue =
-			ByteCountFormatter.stringFromByteCount(withPaddedDigits: Int64(totalFilesize)) ?? ""
+			ByteCountFormatter.textual_stringFromByteCountWithPaddedDigits(Int64(totalFilesize)) ?? ""
 
 		progressIndicator.doubleValue = 0
 		progressIndicator.minValue = 0
@@ -72,7 +73,7 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 		if Thread.isMainThread {
 			reloadStatusInformationOnMain()
 		} else {
-			XRPerformBlockAsynchronouslyOnMainQueue { [weak self] in
+			performAsynchronouslyOnMainQueue { [weak self] in
 				self?.reloadStatusInformationOnMain()
 			}
 		}
@@ -124,173 +125,59 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 			}
 		}
 
+		reloadStatusText(processedFilesize: processedFilesize)
+		updateClearButton()
+	}
+
+	private func reloadStatusText(processedFilesize: UInt64) {
 		switch transferStatus {
-		case .stopped:
-			if isReceiving {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[jvh-u7]",
-					peerNickname
-				)
-			} else {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[w3h-p8]",
-					peerNickname
-				)
-			}
-
-		case .mappingListeningPort:
-			if isReceiving {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[495-90]",
-					peerNickname
-				)
-			} else {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[j1z-88]",
-					peerNickname
-				)
-			}
-
-		case .waitingForLocalIPAddress:
-			if isReceiving {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[6t1-mb]",
-					peerNickname
-				)
-			} else {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[onl-av]",
-					peerNickname
-				)
-			}
-
-		case .initializing:
-			if isReceiving {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[42z-mg]",
-					peerNickname
-				)
-			} else {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[pcv-kg]",
-					peerNickname
-				)
-			}
-
-		case .isListeningAsSender:
-			transferProgressTextField.stringValue = LocalizedKey(
-				"TDCFileTransferDialog[ca5-2v]",
-				peerNickname
-			)
-
-		case .isListeningAsReceiver:
-			transferProgressTextField.stringValue = LocalizedKey(
-				"TDCFileTransferDialog[pip-z6]",
-				peerNickname
-			)
-
 		case .fatalError, .recoverableError:
 			transferProgressTextField.stringValue = errorMessageDescription ?? ""
-
-		case .complete:
-			if isReceiving {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[6gu-za]",
-					peerNickname
-				)
-			} else {
-				transferProgressTextField.stringValue = LocalizedKey(
-					"TDCFileTransferDialog[rx7-xy]",
-					peerNickname
-				)
-			}
-
 		case .sending, .receiving:
-			var timeRemainingString: String?
-
-			let currentSpeed = currentSpeed
-			let totalFilesize = totalFilesize
-
-			/* The peer may send more than it announced. Never let the
-			 unsigned subtraction wrap into a multi-century estimate. */
-			if currentSpeed > 0, processedFilesize < totalFilesize {
-				let timeRemaining = TimeInterval((totalFilesize - processedFilesize) / currentSpeed)
-
-				if timeRemaining > 0 {
-					let units = NSCalendar.Unit([.day, .hour, .minute, .second]).rawValue
-					timeRemainingString = humanReadableTimeInterval(timeRemaining, true, units) as String?
-				}
-			}
-
-			let totalFilesizeString = filesizeTextField.stringValue
-			let currentSpeedString =
-				ByteCountFormatter.stringFromByteCount(withPaddedDigits: Int64(currentSpeed)) ?? ""
-			let processedFilesizeString =
-				ByteCountFormatter.stringFromByteCount(withPaddedDigits: Int64(processedFilesize)) ?? ""
-
-			let statusString: String = if isReceiving {
-				if let timeRemainingString {
-					LocalizedKey(
-						"TDCFileTransferDialog[9xn-7j]",
-						processedFilesizeString,
-						totalFilesizeString,
-						currentSpeedString,
-						peerNickname,
-						timeRemainingString
-					)
-				} else {
-					LocalizedKey(
-						"TDCFileTransferDialog[7dk-lp]",
-						processedFilesizeString,
-						totalFilesizeString,
-						currentSpeedString,
-						peerNickname
-					)
-				}
-			} else if let timeRemainingString {
-				LocalizedKey(
-					"TDCFileTransferDialog[u17-ql]",
-					processedFilesizeString,
-					totalFilesizeString,
-					currentSpeedString,
-					peerNickname,
-					timeRemainingString
-				)
-			} else {
-				LocalizedKey(
-					"TDCFileTransferDialog[nvm-nd]",
-					processedFilesizeString,
-					totalFilesizeString,
-					currentSpeedString,
-					peerNickname
-				)
-			}
-
-			transferProgressTextField.stringValue = statusString
-
-		case .connecting:
-			transferProgressTextField.stringValue = LocalizedKey(
-				"TDCFileTransferDialog[7nf-fr]",
-				peerNickname
-			)
-
-		case .waitingForReceiverToAccept:
-			transferProgressTextField.stringValue = LocalizedKey(
-				"TDCFileTransferDialog[cku-24]",
-				peerNickname
-			)
-
-		case .waitingForResumeAccept:
-			transferProgressTextField.stringValue = LocalizedKey(
-				"TDCFileTransferDialog[gxq-zu]",
-				peerNickname
-			)
-
-		@unknown default:
-			break
+			transferProgressTextField.stringValue = activeTransferStatus(processedFilesize: processedFilesize)
+		default:
+			transferProgressTextField.stringValue = FileTransferStrings.status(
+				transferStatus,
+				direction: transferDirection,
+				peerNickname: peerNickname
+			) ?? ""
 		}
+	}
 
-		updateClearButton()
+	private func activeTransferStatus(processedFilesize: UInt64) -> String {
+		let currentSpeed = currentSpeed
+		let totalFilesize = totalFilesize
+		let timeRemainingString: String? = if currentSpeed > 0, processedFilesize < totalFilesize {
+			timeRemainingDescription(
+				for: TimeInterval((totalFilesize - processedFilesize) / currentSpeed)
+			)
+		} else {
+			nil
+		}
+		let totalFilesizeString = filesizeTextField.stringValue
+		let currentSpeedString = ByteCountFormatter
+			.textual_stringFromByteCountWithPaddedDigits(Int64(currentSpeed)) ?? ""
+		let processedFilesizeString = ByteCountFormatter
+			.textual_stringFromByteCountWithPaddedDigits(Int64(processedFilesize)) ?? ""
+
+		return FileTransferStrings.progress(
+			direction: transferDirection,
+			processedSize: processedFilesizeString,
+			totalSize: totalFilesizeString,
+			speed: currentSpeedString,
+			peerNickname: peerNickname,
+			timeRemaining: timeRemainingString
+		)
+	}
+
+	private var transferDirection: FileTransferDirection {
+		isReceiving ? .incoming : .outgoing
+	}
+
+	private func timeRemainingDescription(for interval: TimeInterval) -> String? {
+		guard interval > 0 else { return nil }
+		let units = NSCalendar.Unit([.day, .hour, .minute, .second]).rawValue
+		return humanReadableTimeInterval(interval, true, units) as String?
 	}
 
 	@objc
@@ -307,7 +194,7 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 		objectValue as? TDCFileTransferDialogTransferController
 	}
 
-	private var transferStatus: TDCFileTransferDialogTransferStatus {
+	private var transferStatus: FileTransferStatus {
 		cellItem?.transferStatus ?? .stopped
 	}
 

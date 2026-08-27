@@ -37,6 +37,20 @@
 
 import Foundation
 
+public typealias IRCTypingTracker = TypingTracker
+
+@objc public enum IRCTypingState: UInt {
+	case done
+	case active
+	case paused
+}
+
+public extension Notification.Name {
+	static let IRCTypingTrackerDidChange = Self("IRCTypingTrackerDidChangeNotification")
+}
+
+public let IRCTypingTrackerChannelKey = "channel"
+
 private final class TypingEntry {
 	let nickname: String
 	let sequence: UInt

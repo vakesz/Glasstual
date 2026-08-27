@@ -89,9 +89,9 @@ final class LogLineXPC: NSObject, NSSecureCoding, @unchecked Sendable {
 
 	required init?(coder: NSCoder) {
 		guard
-			let data = coder.decodeData(forKey: CodingKey.data),
-			let uniqueIdentifier = coder.decodeString(forKey: CodingKey.uniqueIdentifier),
-			let viewIdentifier = coder.decodeString(forKey: CodingKey.viewIdentifier)
+			let data = coder.decodeObject(of: NSData.self, forKey: CodingKey.data) as Data?,
+			let uniqueIdentifier = coder.decodeObject(of: NSString.self, forKey: CodingKey.uniqueIdentifier) as String?,
+			let viewIdentifier = coder.decodeObject(of: NSString.self, forKey: CodingKey.viewIdentifier) as String?
 		else {
 			return nil
 		}

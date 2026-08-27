@@ -46,8 +46,8 @@ private let processDelegateLogger = Logger(
 @objc(RCMProcessDelegate)
 final class RemoteConnectionProcessDelegate: NSObject, NSXPCListenerDelegate {
 	func listener(_: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
-		connection.exportedInterface = NSXPCInterface(with: RCMConnectionManagerServerProtocol.self)
-		connection.remoteObjectInterface = NSXPCInterface(with: RCMConnectionManagerClientProtocol.self)
+		connection.exportedInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
+		connection.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
 
 		let exportedObject = RemoteConnectionProcess(xpcConnection: connection)
 		connection.exportedObject = exportedObject

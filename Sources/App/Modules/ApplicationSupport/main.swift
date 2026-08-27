@@ -6,9 +6,9 @@
 import AppKit
 
 #if !DEBUG
-	if TXApplication.checkForOtherCopiesOfGlasstualRunning() == false {
+	if Application.shouldContinueLaunching() == false {
 		exit(EXIT_SUCCESS)
 	}
 #endif
 
-NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)
+_ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)

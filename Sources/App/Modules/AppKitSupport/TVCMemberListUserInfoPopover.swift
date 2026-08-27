@@ -24,10 +24,12 @@ public final class MemberListUserInfoPopover: NSPopover {
 	@IBOutlet public var privilegesField: NSTextField!
 	@IBOutlet public var awayStatusField: NSTextField!
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 
-		behavior = .transient
+		MainActor.assumeIsolated {
+			behavior = .transient
+		}
 	}
 
 	override public func mouseDown(with _: NSEvent) {

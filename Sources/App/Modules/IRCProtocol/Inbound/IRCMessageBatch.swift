@@ -37,6 +37,9 @@
 
 import Foundation
 
+public typealias IRCMessageBatchMessageContainer = MessageBatchContainer
+public typealias IRCMessageBatchMessage = MessageBatch
+
 @objc(IRCMessageBatchMessageContainer)
 public final class MessageBatchContainer: NSObject {
 	private let lock = NSLock()

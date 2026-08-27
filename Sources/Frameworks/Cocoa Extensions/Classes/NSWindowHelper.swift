@@ -41,17 +41,17 @@ private enum WindowStateStorage {
 
 public extension NSWindow {
 	@objc(isOccluded)
-	var ce_isOccluded: Bool {
+	var ceIsOccluded: Bool {
 		!occlusionState.contains(.visible)
 	}
 
 	@objc(isInactive)
-	var ce_isInactive: Bool {
+	var ceIsInactive: Bool {
 		!isKeyWindow && !isMainWindow
 	}
 
 	@objc(isActiveForDrawing)
-	var ce_isActiveForDrawing: Bool {
+	var ceIsActiveForDrawing: Bool {
 		if styleMask.contains(.fullScreen) {
 			return true
 		}
@@ -78,22 +78,22 @@ public extension NSWindow {
 	}
 
 	@objc(isBeneathMouse)
-	var ce_isBeneathMouse: Bool {
-		Self.ce_windowBeneathMouse === self
+	var ceIsBeneathMouse: Bool {
+		Self.ceWindowBeneathMouse === self
 	}
 
 	@objc(runningInHighResolutionMode)
-	var ce_runningInHighResolutionMode: Bool {
+	var ceRunningInHighResolutionMode: Bool {
 		(screen?.backingScaleFactor ?? 1) > 1
 	}
 
 	@objc(isInFullscreenMode)
-	var ce_isInFullscreenMode: Bool {
+	var ceIsInFullscreenMode: Bool {
 		styleMask.contains(.fullScreen)
 	}
 
 	@objc(deepestWindow)
-	var ce_deepestWindow: NSWindow {
+	var ceDeepestWindow: NSWindow {
 		var deepestWindow = self
 		while let attachedSheet = deepestWindow.attachedSheet {
 			deepestWindow = attachedSheet
@@ -102,7 +102,7 @@ public extension NSWindow {
 	}
 
 	@objc(titlebarFrame)
-	var ce_titlebarFrame: NSRect {
+	var ceTitlebarFrame: NSRect {
 		guard let contentView else {
 			return .zero
 		}
@@ -125,11 +125,11 @@ public extension NSWindow {
 
 	@objc(saveSizeAsDefault)
 	func ce_saveSizeAsDefault() {
-		ce_defaultSize = frame.size
+		ceDefaultSize = frame.size
 	}
 
 	@objc(defaultSize)
-	var ce_defaultSize: NSSize {
+	var ceDefaultSize: NSSize {
 		get {
 			guard let value = objc_getAssociatedObject(
 				self,
@@ -151,7 +151,7 @@ public extension NSWindow {
 
 	@objc(restoreDefaultSizeAndDisplay:)
 	func ce_restoreDefaultSize(display: Bool) {
-		let defaultSize = ce_defaultSize
+		let defaultSize = ceDefaultSize
 		guard defaultSize != .zero else {
 			return
 		}
@@ -167,7 +167,7 @@ public extension NSWindow {
 		setFrame(defaultFrame, display: display)
 	}
 
-	private static var ce_windowBeneathMouse: NSWindow? {
+	private static var ceWindowBeneathMouse: NSWindow? {
 		let mouseLocation = NSEvent.mouseLocation
 		return NSApp.orderedWindows.first { window in
 			NSMouseInRect(mouseLocation, window.frame, false)

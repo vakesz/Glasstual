@@ -37,16 +37,18 @@
 
 import Foundation
 
-@objc(IRCSTSPolicyStore)
-@MainActor
-public final class STSPolicyStore: NSObject {
-	private static let defaultsKey = "IRC -> STS Policies"
+public typealias IRCSTSPolicyStore = STSPolicyStore
 
+public let IRCSTSPolicyStoreDefaultsKey = "IRC -> STS Policies"
+
+@objc(IRCSTSPolicyStore)
+public final class STSPolicyStore: NSObject, @unchecked Sendable {
 	private let userDefaults: UserDefaults?
+	private let lock = NSRecursiveLock()
 	private var policies: [String: STSPolicy] = [:]
 
 	@objc(sharedStore)
-	public static let shared = STSPolicyStore(userDefaults: TPCPreferencesUserDefaults.shared())
+	public static let shared = STSPolicyStore(userDefaults: TextualUserDefaults.shared())
 
 	@objc(initWithUserDefaults:)
 	public init(userDefaults: UserDefaults?) {
@@ -59,38 +61,43 @@ public final class STSPolicyStore: NSObject {
 
 	@objc(policyForHost:)
 	public func policy(forHost host: String) -> STSPolicy? {
-		let key = key(forHost: host)
+		lock.withLock {
+			let key = key(forHost: host)
 
-		guard let policy = policies[key] else {
-			return nil
+			guard let policy = policies[key] else {
+				return nil
+			}
+
+			if policy.isExpired {
+				policies.removeValue(forKey: key)
+				save()
+
+				return nil
+			}
+
+			return policy
 		}
-
-		if policy.isExpired {
-			policies.removeValue(forKey: key)
-			save()
-
-			return nil
-		}
-
-		return policy
 	}
 
 	@objc(setPolicy:forHost:)
 	public func setPolicy(_ policy: STSPolicy, forHost host: String) {
-		policies[key(forHost: host)] = policy
-
-		save()
+		lock.withLock {
+			policies[key(forHost: host)] = policy
+			save()
+		}
 	}
 
 	@objc(removePolicyForHost:)
 	public func removePolicy(forHost host: String) {
-		let key = key(forHost: host)
+		lock.withLock {
+			let key = key(forHost: host)
 
-		guard policies.removeValue(forKey: key) != nil else {
-			return
+			guard policies.removeValue(forKey: key) != nil else {
+				return
+			}
+
+			save()
 		}
-
-		save()
 	}
 
 	@objc(applyPolicyForHost:toPort:secured:)
@@ -159,20 +166,22 @@ public final class STSPolicyStore: NSObject {
 	}
 
 	private func load() {
-		guard let stored = userDefaults?.dictionary(forKey: Self.defaultsKey) else {
-			return
-		}
-
-		for (host, value) in stored {
-			guard
-				let dictionary = value as? [String: Any],
-				let policy = STSPolicy(dictionary: dictionary),
-				policy.isExpired == false
-			else {
-				continue
+		lock.withLock {
+			guard let stored = userDefaults?.dictionary(forKey: IRCSTSPolicyStoreDefaultsKey) else {
+				return
 			}
 
-			policies[key(forHost: host)] = policy
+			for (host, value) in stored {
+				guard
+					let dictionary = value as? [String: Any],
+					let policy = STSPolicy(dictionary: dictionary),
+					policy.isExpired == false
+				else {
+					continue
+				}
+
+				policies[key(forHost: host)] = policy
+			}
 		}
 	}
 
@@ -183,6 +192,6 @@ public final class STSPolicyStore: NSObject {
 
 		let stored = policies.mapValues(\.dictionaryValue)
 
-		userDefaults.set(stored, forKey: Self.defaultsKey)
+		userDefaults.set(stored, forKey: IRCSTSPolicyStoreDefaultsKey)
 	}
 }

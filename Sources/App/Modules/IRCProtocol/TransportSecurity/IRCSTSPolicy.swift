@@ -37,6 +37,16 @@
 
 import Foundation
 
+public typealias IRCSTSCapabilityValues = STSCapabilityValues
+public typealias IRCSTSPolicy = STSPolicy
+
+@objc public enum IRCSTSPolicyAction: UInt {
+	case none
+	case upgrade
+	case stored
+	case cleared
+}
+
 @objc(IRCSTSPolicy)
 public final class STSPolicy: NSObject {
 	@objc public let port: UInt16

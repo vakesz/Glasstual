@@ -36,6 +36,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 /// Pure transformations used by `IRCClient` at the wire and presentation
@@ -189,7 +190,7 @@ public final class ClientWireUtilities: NSObject {
 
 	@objc(escapedDCCFilename:)
 	public static func escapedDCCFilename(_ filename: String) -> String {
-		var escaped = filename.safeFilename
+		var escaped = (filename as NSString).ceSafeFilename as String
 
 		guard escaped.contains(" ") else {
 			return escaped
@@ -202,7 +203,7 @@ public final class ClientWireUtilities: NSObject {
 
 	@objc(wireDCCAddress:)
 	public static func wireDCCAddress(_ address: String) -> String? {
-		if (address as NSString).isIPv6Address {
+		if address.isIPv6Address {
 			return address
 		}
 
@@ -264,6 +265,9 @@ public final class ClientWireUtilities: NSObject {
 
 		let shown = allNicknames.prefix(Int(limit)).joined(separator: ", ")
 
-		return LocalizedKey("IRC[ns3-mr]", shown, UInt(allNicknames.count - Int(limit)))
+		return IRCInboundStrings.History.abbreviatedNicknames(
+			shown,
+			remaining: UInt(allNicknames.count - Int(limit))
+		)
 	}
 }

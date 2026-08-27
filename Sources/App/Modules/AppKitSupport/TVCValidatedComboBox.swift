@@ -8,9 +8,35 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 @objc(TVCValidatedComboBox)
 @MainActor
@@ -40,9 +66,9 @@ public final class ValidatedComboBox: NSComboBox {
 		var processedValue = stringValue
 
 		if stringValueUsesOnlyFirstToken {
-			processedValue = (processedValue as NSString).trimAndGetFirstToken
+			processedValue = (processedValue as NSString).ceTrimAndGetFirstToken
 		} else if stringValueIsTrimmed {
-			processedValue = (processedValue as NSString).trim
+			processedValue = (processedValue as NSString).ceTrim as String
 		}
 
 		if processedValue.isEmpty {
@@ -70,31 +96,33 @@ public final class ValidatedComboBox: NSComboBox {
 		cachedValidValue
 	}
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 
-		cachedValidValue = false
+		MainActor.assumeIsolated {
+			cachedValidValue = false
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(comboBoxSelectionDidChange(_:)),
-			name: NSComboBox.selectionDidChangeNotification,
-			object: self
-		)
+			NotificationCenter.default.addObserver(
+				self,
+				selector: #selector(comboBoxSelectionDidChange(_:)),
+				name: NSComboBox.selectionDidChangeNotification,
+				object: self
+			)
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(comboBoxWillPopUp(_:)),
-			name: NSComboBox.willPopUpNotification,
-			object: self
-		)
+			NotificationCenter.default.addObserver(
+				self,
+				selector: #selector(comboBoxWillPopUp(_:)),
+				name: NSComboBox.willPopUpNotification,
+				object: self
+			)
 
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(comboBoxWillDismiss(_:)),
-			name: NSComboBox.willDismissNotification,
-			object: self
-		)
+			NotificationCenter.default.addObserver(
+				self,
+				selector: #selector(comboBoxWillDismiss(_:)),
+				name: NSComboBox.willDismissNotification,
+				object: self
+			)
+		}
 	}
 
 	deinit {
@@ -175,7 +203,7 @@ public final class ValidatedComboBox: NSComboBox {
 		} else if performValidationWhenEmpty {
 			errorDescription = validationBlock?(stringToValidate)
 		} else if stringValueIsInvalidOnEmpty {
-			errorDescription = LocalizedKey("BasicLanguage[fo8-1h]")
+			errorDescription = ApplicationStrings.requiredField
 		}
 
 		validationPerformed = true
@@ -251,7 +279,7 @@ public final class ValidatedComboBox: NSComboBox {
 		let selector = NSSelectorFromString("validatedTextFieldTextDidChange:")
 
 		if textDidChangeCallback.responds(to: selector) {
-			textDidChangeCallback.perform(selector, with: self)
+			_ = textDidChangeCallback.perform(selector, with: self)
 		}
 	}
 }

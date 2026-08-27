@@ -37,7 +37,9 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
+import Security
 import SecurityInterface
 
 private let connectionLogger = Logger(
@@ -46,25 +48,45 @@ private let connectionLogger = Logger(
 )
 
 /** NSXPC transports the response block across its private queue. The wrapper is
- immutable, and the callback is invoked only by RCMTrustPanel on the main thread. */
-private final class TrustResponse: @unchecked Sendable {
-	let callback: RCMTrustResponse
+ immutable, and the callback is invoked only by TrustPanelPresenter on the main thread. */
+private final class TrustResponseBox: @unchecked Sendable {
+	let callback: TrustDecisionHandler
 
-	init(_ callback: @escaping RCMTrustResponse) {
+	init(_ callback: @escaping TrustDecisionHandler) {
 		self.callback = callback
 	}
 }
 
 /** Security.framework does not annotate SecTrust as Sendable. Ownership is
- transferred unchanged to RCMTrustPanel and the value is not touched again. */
+ transferred unchanged to TrustPanelPresenter and the value is not touched again. */
 private struct TrustReference: @unchecked Sendable {
 	let value: SecTrust
+}
+
+public protocol ConnectionDelegate: AnyObject {
+	func ircConnection(_ sender: Connection, willConnectToProxy proxyHost: String, port proxyPort: UInt16)
+
+	func ircConnectionDidConnect(_ sender: Connection)
+
+	func ircConnectionDidSecureConnection(
+		_ sender: Connection,
+		withProtocolType protocolType: tls_protocol_version_t,
+		cipherSuite: tls_ciphersuite_t
+	)
+
+	func ircConnectionDidCloseReadStream(_ sender: Connection)
+
+	func ircConnection(_ sender: Connection, didDisconnectWithError disconnectError: Error?)
+
+	func ircConnection(_ sender: Connection, didReceiveData data: String)
+
+	func ircConnection(_ sender: Connection, willSendData data: String)
 }
 
 /** IRCClient calls this type on the main thread. NSXPC callbacks immediately
  transfer mutable application state to the main queue before touching it. */
 @objc(IRCConnection)
-public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @unchecked Sendable {
+public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchecked Sendable {
 	@objc public private(set) weak var client: IRCClient!
 	@objc public private(set) var config: IRCConnectionConfig
 	@objc public private(set) var isConnected = false
@@ -89,9 +111,12 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 
 	@objc(initWithConfig:onClient:)
 	public init(config: IRCConnectionConfig, onClient client: IRCClient) {
+		guard let configCopy = config.copy() as? IRCConnectionConfig else {
+			preconditionFailure("IRCConnectionConfig.copy() returned an unexpected type")
+		}
 		self.client = client
-		self.config = config.copy() as! IRCConnectionConfig
-		uniqueIdentifier = NSString.withUUID()
+		self.config = configCopy
+		uniqueIdentifier = UUID().uuidString
 		super.init()
 	}
 
@@ -121,8 +146,8 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 	private func warmProcess() {
 		connectionLogger.debug("Warming IRC connection service")
 		let connection = NSXPCConnection(serviceName: "com.vakesz.glasstual.IRCConnectionHost")
-		connection.remoteObjectInterface = NSXPCInterface(with: RCMConnectionManagerServerProtocol.self)
-		connection.exportedInterface = NSXPCInterface(with: RCMConnectionManagerClientProtocol.self)
+		connection.remoteObjectInterface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)
+		connection.exportedInterface = NSXPCInterface(with: RemoteConnectionClientProtocol.self)
 		connection.exportedObject = self
 		connection.interruptionHandler = { [weak self] in
 			self?.interruptionHandler()
@@ -141,15 +166,15 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 	}
 
 	private func invalidationHandler() {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+		performSynchronouslyOnMainQueue { [weak self] in
 			guard let self else { return }
 			serviceConnection = nil
 
 			if isConnecting || isConnected, connectionInvalidatedVoluntarily == false {
 				let error = NSError(
-					domain: ConnectionErrorDomain,
+					domain: connectionErrorDomain,
 					code: Int(ConnectionErrorCode.other.rawValue),
-					userInfo: [NSLocalizedDescriptionKey: LocalizedKey("IRC[vdy-jk]")]
+					userInfo: [NSLocalizedDescriptionKey: IRCConnectionStrings.serviceClosedUnexpectedly]
 				)
 				didDisconnect(with: error)
 			}
@@ -160,11 +185,11 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 
 	private func remoteObjectProxy(
 		errorHandler: ((Error) -> Void)? = nil
-	) -> RCMConnectionManagerServerProtocol? {
+	) -> RemoteConnectionServerProtocol? {
 		serviceConnection?.remoteObjectProxyWithErrorHandler { error in
 			connectionLogger.error("IRC connection service error: \(error.localizedDescription, privacy: .public)")
 			errorHandler?(error)
-		} as? RCMConnectionManagerServerProtocol
+		} as? RemoteConnectionServerProtocol
 	}
 
 	@objc public func open() {
@@ -173,7 +198,7 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 		isConnecting = true
 		remoteObjectProxy()?.open(with: config)
 
-		if TPCPreferences.appNapEnabled() == false {
+		if TextualPreferences.appNapEnabled() == false {
 			remoteObjectProxy()?.disableAppNap()
 		}
 
@@ -198,61 +223,73 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 
 	@objc public func openSecuredConnectionCertificateModal() {
 		exportSecureConnectionInformation { policyName, protocolType, cipherSuite, certificateChain, failure in
-			guard let policyName,
-			      let trust = RCMSecureTransport.trust(
-			      	fromCertificateChain: certificateChain,
-			      	withPolicyName: policyName
-			      ),
-			      let protocolDescription = RCMSecureTransport.description(forProtocolType: protocolType),
-			      let cipherDescription = RCMSecureTransport.description(forCipherSuite: cipherSuite)
+			guard
+				let policyName,
+				let trust = SecureTransportSupport.trust(
+					fromCertificateChain: certificateChain,
+					policyName: policyName
+				),
+				let protocolDescription = SecureTransportSupport.description(forProtocolType: protocolType),
+				let cipherDescription = SecureTransportSupport.description(forCipherSuite: cipherSuite)
 			else { return }
 
-			let summaryKey = RCMSecureTransport.isCipherSuiteDeprecated(cipherSuite) ? "Prompts[8ou-pu]" : "Prompts[2jq-t5]"
-			let summary = LocalizedKey(summaryKey, protocolDescription, cipherDescription)
-			var body = LocalizedKey("Prompts[iun-45]", policyName, summary)
+			let cipherStatus: PromptCipherStatus = SecureTransportSupport.isCipherSuiteDeprecated(cipherSuite)
+				? .deprecated
+				: .current
+			let summary = PromptStrings.TransportSecurity.cipherSummary(
+				policyName: protocolDescription,
+				cipherSuite: cipherDescription,
+				status: cipherStatus
+			)
+			var body = PromptStrings.TransportSecurity.certificateSummary(
+				policyName: policyName,
+				cipherSummary: summary
+			)
 			let trustReference = TrustReference(value: trust)
 			if let failure {
-				body += LocalizedKey("Prompts[k3t-vq]", failure)
+				body += PromptStrings.TransportSecurity.trustFailure(failure)
 			}
 
-			XRPerformBlockSynchronouslyOnMainQueue {
+			performSynchronouslyOnMainQueue {
 				MainActor.assumeIsolated {
-					_ = RCMTrustPanel.present(
-						inWindow: NSApp.keyWindow,
+					_ = TrustPanelPresenter.present(
+						in: NSApp.keyWindow,
 						body: body,
-						title: LocalizedKey("Prompts[sfx-xx]", policyName),
-						defaultButton: LocalizedKey("Prompts[aqw-q1]"),
+						title: PromptStrings.TransportSecurity.encryptedConnectionTitle(policyName: policyName),
+						defaultButton: PromptStrings.Action.close,
 						alternateButton: nil,
-						trustRef: trustReference.value
+						trust: trustReference.value
 					) { _, _, _ in }
 				}
 			}
 		}
 	}
 
-	private func openInsecureCertificateTrustPanel(_ response: @escaping RCMTrustResponse) {
+	private func openInsecureCertificateTrustPanel(_ response: @escaping TrustDecisionHandler) {
 		guard trustPanel == nil else { return }
-		let response = TrustResponse(response)
+		let response = TrustResponseBox(response)
 
 		exportSecureConnectionInformation { [weak self] policyName, _, _, certificateChain, _ in
-			guard let self, let policyName,
-			      let trust = RCMSecureTransport.trust(
-			      	fromCertificateChain: certificateChain,
-			      	withPolicyName: policyName
-			      )
+			guard
+				let self,
+				let policyName,
+				let trust = SecureTransportSupport.trust(
+					fromCertificateChain: certificateChain,
+					policyName: policyName
+				)
 			else { return }
 			let trustReference = TrustReference(value: trust)
 
-			XRPerformBlockSynchronouslyOnMainQueue {
+			performSynchronouslyOnMainQueue {
 				MainActor.assumeIsolated {
-					trustPanel = RCMTrustPanel.present(
-						inWindow: nil,
-						body: LocalizedKey("Prompts[85z-qw]", policyName),
-						title: LocalizedKey("Prompts[m8b-58]", policyName),
-						defaultButton: LocalizedKey("Prompts[zjw-bd]"),
-						alternateButton: LocalizedKey("Prompts[qso-2g]"),
-						trustRef: trustReference.value,
-						completionBlock: { [weak self] _, trusted, _ in
+					trustPanel = TrustPanelPresenter.present(
+						in: nil,
+						body: PromptStrings.TransportSecurity.certificateFailureBody(serverName: policyName),
+						title: PromptStrings.TransportSecurity.certificateFailureTitle(serverName: policyName),
+						defaultButton: PromptStrings.TransportSecurity.invalidCertificateContinueButtonTitle,
+						alternateButton: PromptStrings.Action.cancel,
+						trust: trustReference.value,
+						completion: { [weak self] _, trusted, _ in
 							MainActor.assumeIsolated {
 								guard let self else { return }
 								self.trustPanel = nil
@@ -263,7 +300,7 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 								response.callback(trusted)
 							}
 						},
-						contextInfo: nil
+						context: nil
 					)
 				}
 			}
@@ -274,7 +311,7 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 		guard let trustPanel else { return }
 		trustPanelDoNotInvokeCompletionBlock = true
 
-		XRPerformBlockSynchronouslyOnMainQueue {
+		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
 				if let parent = trustPanel.sheetParent {
 					parent.endSheet(trustPanel, returnCode: .cancel)
@@ -293,7 +330,7 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 		}
 	}
 
-	private func exportSecureConnectionInformation(_ receiver: @escaping RCMSecureConnectionInformationCompletionBlock) {
+	private func exportSecureConnectionInformation(_ receiver: @escaping SecureConnectionInformationReceiver) {
 		remoteObjectProxy()?.exportSecureConnectionInformation(receiver)
 	}
 
@@ -326,19 +363,23 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 	}
 
 	public func ircConnectionWillConnect(toProxy proxyHost: String, port proxyPort: UInt16) {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+		performSynchronouslyOnMainQueue { [weak self] in
 			guard let self else { return }
-			client.ircConnection(self, willConnectToProxy: proxyHost, port: proxyPort)
+			MainActor.assumeIsolated {
+				client.ircConnection(self, willConnectToProxy: proxyHost, port: proxyPort)
+			}
 		}
 	}
 
 	public func ircConnectionDidConnect(toHost host: String?) {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+		performSynchronouslyOnMainQueue { [weak self] in
 			guard let self else { return }
 			connectedAddress = host
 			isConnecting = false
 			isConnected = true
-			client.ircConnectionDidConnect(self)
+			MainActor.assumeIsolated {
+				client.ircConnectionDidConnect(self)
+			}
 		}
 	}
 
@@ -346,24 +387,32 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 		withProtocolType protocolType: tls_protocol_version_t,
 		cipherSuite: tls_ciphersuite_t
 	) {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+		performSynchronouslyOnMainQueue { [weak self] in
 			guard let self else { return }
 			isSecured = true
 			isConnectedWithClientSideCertificate = config.identityClientSideCertificate != nil
-			client.ircConnectionDidSecureConnection(self, withProtocolType: protocolType, cipherSuite: cipherSuite)
+			MainActor.assumeIsolated {
+				client.ircConnectionDidSecureConnection(
+					self,
+					withProtocolType: protocolType,
+					cipherSuite: cipherSuite
+				)
+			}
 		}
 	}
 
 	public func ircConnectionDidCloseReadStream() {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+		performSynchronouslyOnMainQueue { [weak self] in
 			guard let self else { return }
 			EOFReceived = true
-			client.ircConnectionDidCloseReadStream(self)
+			MainActor.assumeIsolated {
+				client.ircConnectionDidCloseReadStream(self)
+			}
 		}
 	}
 
 	public func ircConnectionDidDisconnectWithError(_ disconnectError: Error?) {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+		performSynchronouslyOnMainQueue { [weak self] in
 			guard let self else { return }
 			connectionInvalidatedVoluntarily = true
 			invalidateProcess()
@@ -372,10 +421,12 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 	}
 
 	private func didDisconnect(with error: Error?) {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+		performSynchronouslyOnMainQueue { [weak self] in
 			guard let self else { return }
 			closeInsecureCertificateTrustPanel()
-			client.ircConnection(self, didDisconnectWithError: error)
+			MainActor.assumeIsolated {
+				client.ircConnection(self, didDisconnectWithError: error)
+			}
 		}
 	}
 
@@ -384,21 +435,23 @@ public final class Connection: NSObject, RCMConnectionManagerClientProtocol, @un
 		client.ircConnection(self, didReceiveData: string)
 	}
 
-	public func ircConnectionRequestInsecureCertificateTrust(_ trustBlock: @escaping RCMTrustResponse) {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+	public func ircConnectionRequestInsecureCertificateTrust(_ trustBlock: @escaping TrustDecisionHandler) {
+		performSynchronouslyOnMainQueue { [weak self] in
 			self?.openInsecureCertificateTrustPanel(trustBlock)
 		}
 	}
 
 	public func ircConnectionWillSend(_ data: Data) {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+		performSynchronouslyOnMainQueue { [weak self] in
 			guard let self, let string = convertFromCommonEncoding(data) else { return }
-			client.ircConnection(self, willSendData: string)
+			MainActor.assumeIsolated {
+				client.ircConnection(self, willSendData: string)
+			}
 		}
 	}
 
 	public func ircConnectionDidSendData() {
-		XRPerformBlockSynchronouslyOnMainQueue { [weak self] in
+		performSynchronouslyOnMainQueue { [weak self] in
 			self?.isSending = false
 		}
 	}

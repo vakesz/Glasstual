@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 @objc(TDCChannelSpotlightController)
 @MainActor
@@ -29,6 +30,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 	@IBOutlet private var searchResultsController: NSArrayController!
 
 	private var mouseEventMonitor: Any?
+	private lazy var notifications = NotificationSubscriptions()
 
 	override public nonisolated init() {
 		super.init()
@@ -50,38 +52,22 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 			NSSortDescriptor(key: "distance", ascending: false, selector: #selector(NSNumber.compare(_:))),
 		]
 
-		let center = NotificationCenter.default
-
-		center.addObserver(
-			self,
-			selector: #selector(applicationAppearanceChanged(_:)),
-			name: NSNotification.Name("TXApplicationAppearanceChangedNotification"),
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(channelListChanged(_:)),
-			name: NSNotification.Name("IRCClientChannelListWasModifiedNotification"),
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(clientListChanged(_:)),
-			name: NSNotification.Name("IRCWorldClientListWasModifiedNotification"),
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(mainWindowSelectionChanged(_:)),
-			name: NSNotification.Name("TVCMainWindowSelectionChangedNotification"),
-			object: nil
-		)
-		center.addObserver(
-			self,
-			selector: #selector(preferencesChanged(_:)),
-			name: NSNotification.Name("TPCPreferencesUserDefaultsDidChangeNotification"),
-			object: nil
-		)
+		notifications.observe(NSNotification.Name("TXApplicationAppearanceChangedNotification")) { [weak self] _ in
+			self?.applicationAppearanceChanged()
+		}
+		notifications.observe(NSNotification.Name("IRCClientChannelListWasModifiedNotification")) { [weak self] _ in
+			self?.channelListChanged()
+		}
+		notifications.observe(NSNotification.Name("IRCWorldClientListWasModifiedNotification")) { [weak self] _ in
+			self?.clientListChanged()
+		}
+		notifications.observe(NSNotification.Name("TVCMainWindowSelectionChangedNotification")) { [weak self] _ in
+			self?.mainWindowSelectionChanged()
+		}
+		notifications
+			.observe(.textualUserDefaultsDidChange) { [weak self] notification in
+				self?.preferencesChanged(notification)
+			}
 
 		populateArrayController()
 
@@ -91,8 +77,8 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 		applicationAppearanceChanged()
 
-		noResultsLabelLeadingConstraint.archiveConstant()
-		searchResultsViewHeightConstraint.archiveConstant()
+		noResultsLabelLeadingConstraint.textual_archiveConstant()
+		searchResultsViewHeightConstraint.textual_archiveConstant()
 
 		updatePredicate()
 	}
@@ -174,10 +160,6 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 	// MARK: - Appearance
 
-	@objc private func applicationAppearanceChanged(_: Notification) {
-		applicationAppearanceChanged()
-	}
-
 	private func applicationAppearanceChanged() {
 		guard let panel = window as? ChannelSpotlightPanel,
 		      let appearance = ChannelSpotlightAppearance(window: panel)
@@ -213,27 +195,27 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 		if searchString.isEmpty {
 			noResultsLabel.stringValue = ""
-			noResultsLabelLeadingConstraint.zeroOutConstant()
-			searchResultsViewHeightConstraint.zeroOutConstant()
+			noResultsLabelLeadingConstraint.textual_zeroOutConstant()
+			searchResultsViewHeightConstraint.textual_zeroOutConstant()
 			return
 		}
 
 		if searchResultsCount == 0 {
-			noResultsLabel.stringValue = LocalizedKey("TDCChannelSpotlightController[tyv-p6]")
-			noResultsLabelLeadingConstraint.restoreArchivedConstant()
-			searchResultsViewHeightConstraint.zeroOutConstant()
+			noResultsLabel.stringValue = ChannelSpotlightStrings.noResults
+			noResultsLabelLeadingConstraint.textual_restoreArchivedConstant()
+			searchResultsViewHeightConstraint.textual_zeroOutConstant()
 			return
 		}
 
 		noResultsLabel.stringValue = ""
-		noResultsLabelLeadingConstraint.zeroOutConstant()
-		searchResultsViewHeightConstraint.restoreArchivedConstant()
+		noResultsLabelLeadingConstraint.textual_zeroOutConstant()
+		searchResultsViewHeightConstraint.textual_restoreArchivedConstant()
 
 		selectFirstSearchResultIfNecessary()
 	}
 
 	private func updateSearchResultsSelection() {
-		searchResultsTable.invalidateBackgroundForSelection()
+		searchResultsTable.invalidateSelectionBackground()
 	}
 
 	// MARK: - Events
@@ -283,7 +265,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		// Wrap around table when we reach the top or bottom
 		if event.keyCode == 126 || event.keyCode == 116 { // up
 			if selectedRow == 0 {
-				searchResultsTable.selectItem(at: searchResultsCount - 1)
+				searchResultsTable.selectItem(at: Int(searchResultsCount - 1))
 				return nil
 			}
 		} else if event.keyCode == 125 || event.keyCode == 121 { // down
@@ -362,28 +344,20 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		close()
 	}
 
-	override public nonisolated func close() {
-		MainActor.preconditionIsolated()
-		nonisolated(unsafe) let controller = self
-		MainActor.assumeIsolated {
-			controller.saveWindowFrame()
-			controller.window!.close()
-		}
+	@MainActor override public func close() {
+		saveWindowFrame()
+		window!.close()
 	}
 
-	override public nonisolated func show() {
-		MainActor.preconditionIsolated()
-		nonisolated(unsafe) let controller = self
-		MainActor.assumeIsolated {
-			controller.restoreWindowFrame()
-			controller.window!.makeKeyAndOrderFront(nil)
-		}
+	@MainActor override public func show() {
+		restoreWindowFrame()
+		window!.makeKeyAndOrderFront(nil)
 	}
 
 	private func restoreWindowFrame() {
 		let window = window!
 
-		window.saveSizeAsDefault()
+		window.ce_saveSizeAsDefault()
 		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
 	}
 
@@ -397,7 +371,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		/* We call -restoreDefaultSizeAndDisplay: before saving
 		 the frame because the window wont register the changes
 		 to the constants in -resetSearch until next layout pass. */
-		window.restoreDefaultSizeAndDisplay(false)
+		window.ce_restoreDefaultSize(display: false)
 		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
 	}
 
@@ -410,10 +384,10 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 	// MARK: - Search Results
 
 	private func updatePredicate() {
-		if TPCPreferences.channelNavigationIsServerSpecific() {
-			let masterController = NSObject.masterController()
+		if TextualPreferences.channelNavigationIsServerSpecific() {
+			let applicationController = NSObject.applicationController()
 			let clientId = MainActor.assumeIsolated {
-				masterController.mainWindow.selectedClient?.uniqueIdentifier ?? ""
+				applicationController.mainWindow.selectedClient?.uniqueIdentifier ?? ""
 			}
 
 			searchResultsController.filterPredicate = NSPredicate(
@@ -472,10 +446,10 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		let searchString = searchField.stringValue
 		var searchResults: [ChannelSpotlightSearchResult] = []
 
-		let clientList = NSObject.masterController().world.clientList as? [IRCClient] ?? []
+		let clientList = NSObject.applicationController().world.clientList
 
 		for client in clientList {
-			let channelList = client.channelList as? [IRCChannel] ?? []
+			let channelList = client.channelList
 
 			for channel in channelList {
 				let searchResult = searchResult(for: channel)
@@ -484,7 +458,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 			}
 		}
 
-		searchResultsController.removeAllArrangedObjects()
+		searchResultsController.textual_removeAllArrangedObjects()
 		searchResultsController.add(contentsOf: searchResults)
 		searchResultsController.filterPredicate = filterPredicate
 	}
@@ -505,7 +479,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 	// MARK: - Notifications
 
-	@objc private func mainWindowSelectionChanged(_: Notification) {
+	private func mainWindowSelectionChanged() {
 		/* Predicate is updated when selection changes because predicate may be configured
 		 to be per-server. This could be made more efficient by checking if it is server
 		 specific and comparing the selected client identifier to what is in predicate.
@@ -513,7 +487,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		updatePredicate()
 	}
 
-	@objc private func preferencesChanged(_ notification: Notification) {
+	private func preferencesChanged(_ notification: Notification) {
 		let changedKey = notification.userInfo?["changedKey"] as? String
 
 		if changedKey == "ChannelNavigationIsServerSpecific" {
@@ -521,12 +495,12 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 		}
 	}
 
-	@objc private func clientListChanged(_: Any?) {
+	private func clientListChanged() {
 		populateArrayController()
 		updateControlsState()
 	}
 
-	@objc private func channelListChanged(_: Any?) {
+	private func channelListChanged() {
 		populateArrayController()
 		updateControlsState()
 	}
@@ -544,7 +518,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 		mouseEventMonitor = nil
 
-		NotificationCenter.default.removeObserver(self)
+		notifications.cancelAll()
 
 		let selector = NSSelectorFromString("channelSpotlightControllerWillClose:")
 

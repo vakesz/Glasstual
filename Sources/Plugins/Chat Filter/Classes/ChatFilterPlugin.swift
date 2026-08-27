@@ -36,9 +36,11 @@
  *********************************************************************** */
 
 import AppKit
+import GlasstualPluginKit
 
 @objc(TPI_ChatFilterExtension)
-final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource, NSTableViewDelegate,
+final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHandling, PluginPreferencesProviding,
+	PluginTextEventHandling, ChatFilterEditSheetDelegate, NSTableViewDataSource, NSTableViewDelegate,
 	@unchecked Sendable
 {
 	private static let defaultsKey = "Glasstual Chat Filter Extension -> Filters"
@@ -49,7 +51,7 @@ final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource
 	@IBOutlet private var filterAddButton: NSButton!
 	@IBOutlet private var filterRemoveButton: NSButton!
 	@IBOutlet private var filterEditButton: NSButton!
-	@IBOutlet private var filterTable: TVCBasicTableView!
+	@IBOutlet private var filterTable: NSTableView!
 	@IBOutlet var filterArrayController: NSArrayController!
 
 	@objc private dynamic var atleastOneFilterExists = false
@@ -58,51 +60,38 @@ final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource
 	private var engine: ChatFilterEngine?
 	private var defaultsObserver: NSObjectProtocol?
 	private var isSaving = false
+	private var host: PluginHostContext?
 
 	private var bundle: Bundle {
 		Bundle(for: Self.self)
 	}
 
-	private var defaults: TPCPreferencesUserDefaults {
-		.shared()
+	private var defaults: UserDefaults {
+		guard let host else {
+			preconditionFailure("The plugin host must load Chat Filters before it is used")
+		}
+		return host.defaults
 	}
 
 	@objc override init() {
 		super.init()
 	}
 
-	func receivedCommand(
-		_ command: String,
-		withText text: String?,
-		authoredBy author: IRCPrefix,
-		destinedFor destination: IRCChannel?,
-		on client: IRCClient,
-		receivedAt: Date,
-		referenceMessage: IRCMessage?
-	) -> Bool {
-		engine?.receivedCommand(command, text: text, author: author, destination: destination, client: client,
-		                        receivedAt: receivedAt, referenceMessage: referenceMessage) ?? true
+	func receivedCommand(_ event: PluginIncomingCommandEvent) -> Bool {
+		engine?.receivedCommand(event) ?? true
 	}
 
-	func receivedText(
-		_ text: String,
-		authoredBy author: IRCPrefix,
-		destinedFor destination: IRCChannel?,
-		as lineType: TVCLogLineType,
-		on client: IRCClient,
-		receivedAt: Date,
-		wasEncrypted: Bool
-	) -> Bool {
-		engine?.receivedText(text, author: author, destination: destination, lineType: lineType, client: client,
-		                     receivedAt: receivedAt, wasEncrypted: wasEncrypted) ?? true
+	func receivedText(_ event: PluginTextEvent) -> Bool {
+		engine?.receivedText(event) ?? true
 	}
 
-	func pluginLoadedIntoMemory() {
+	func pluginLoaded(using host: PluginHostContext) {
+		self.host = host
 		DispatchQueue.main.syncIfNeeded {
 			self.bundle.loadNibNamed("TPI_ChatFilterExtension", owner: self, topLevelObjects: nil)
 		}
 		activeChatFilterIndex = -1
-		engine = ChatFilterEngine(parentObject: self)
+		engine = ChatFilterEngine(parentObject: self, host: host)
 		loadFilters()
 		defaultsObserver = NotificationCenter.default.addObserver(
 			forName: UserDefaults.didChangeNotification,
@@ -113,12 +102,13 @@ final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource
 		}
 	}
 
-	func pluginWillBeUnloadedFromMemory() {
+	func pluginWillUnload() {
 		if let defaultsObserver {
 			NotificationCenter.default.removeObserver(defaultsObserver)
 		}
 		defaultsObserver = nil
 		engine = nil
+		host = nil
 	}
 
 	var pluginPreferencesPaneView: NSView {
@@ -126,7 +116,7 @@ final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource
 	}
 
 	var pluginPreferencesPaneMenuItemName: String {
-		localized("jq1-6r")
+		String(localized: .TPIChatFilterExtension.preferencesPaneTitle)
 	}
 
 	override nonisolated func awakeFromNib() {
@@ -176,11 +166,11 @@ final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource
 	}
 
 	@IBAction private func filterRemove(_: Any?) {
-		guard TDCAlert.modalAlert(
-			withMessage: localized("dj6-fn"),
-			title: localized("c0k-xj"),
-			defaultButton: localized("jvu-m7"),
-			alternateButton: localized("p5s-ff")
+		guard ChatFilterAlert.confirm(
+			message: String(localized: .TPIChatFilterExtension.deleteFilterMessage),
+			title: String(localized: .TPIChatFilterExtension.deleteFilterTitle),
+			defaultButton: String(localized: .TPIChatFilterExtension.yesButton),
+			alternateButton: String(localized: .TPIChatFilterExtension.noButton)
 		), filterTable.selectedRow >= 0 else { return }
 		filterArrayController.remove(atArrangedObjectIndex: filterTable.selectedRow)
 		saveFilters()
@@ -202,9 +192,13 @@ final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource
 		activeEditSheet = sheet
 	}
 
-	@objc(chatFilterEditFilterSheet:onOk:)
-	func editSheet(_: ChatFilterEditSheet, accepted filter: ChatFilter) {
-		let immutable = filter is MutableChatFilter ? filter.copy() as! ChatFilter : filter
+	@MainActor
+	func chatFilterEditSheet(_: ChatFilterEditSheet, accepted filter: ChatFilter) {
+		let immutable: ChatFilter = if filter is MutableChatFilter, let immutableCopy = filter.copy() as? ChatFilter {
+			immutableCopy
+		} else {
+			filter
+		}
 		if activeChatFilterIndex < 0 {
 			filterArrayController.addObject(immutable)
 		} else {
@@ -215,8 +209,8 @@ final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource
 		engine?.reloadFilterActionPerforms()
 	}
 
-	@objc(chatFilterEditFilterSheetWillClose:)
-	func editSheetWillClose(_: ChatFilterEditSheet) {
+	@MainActor
+	func chatFilterEditSheetWillClose(_: ChatFilterEditSheet) {
 		activeChatFilterIndex = -1
 		activeEditSheet = nil
 	}
@@ -249,14 +243,17 @@ final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource
 		panel.canChooseDirectories = false
 		panel.canChooseFiles = true
 		panel.resolvesAliases = true
-		panel.message = localized("i9c-s3")
-		panel.prompt = localized("2tc-m7")
+		panel.message = String(localized: .TPIChatFilterExtension.importPanelMessage)
+		panel.prompt = String(localized: .TPIChatFilterExtension.selectButton)
 		panel.beginSheetModal(for: window) { [weak self] response in
 			guard response == .OK, let self, let url = panel.url else { return }
 			panel.orderOut(nil)
 			guard let filter = ChatFilter(contentsOf: url) else {
-				_ = TDCAlert.modalAlert(withMessage: "", title: localized("eqr-7t"),
-				                        defaultButton: localized("ybz-7i"), alternateButton: nil)
+				ChatFilterAlert.inform(
+					message: "",
+					title: String(localized: .TPIChatFilterExtension.unreadableConfigurationTitle),
+					dismissButton: String(localized: .TPIChatFilterExtension.okButton)
+				)
 				return
 			}
 			editFilter(filter, at: -1)
@@ -298,10 +295,6 @@ final class ChatFilterPlugin: NSObject, THOPluginProtocol, NSTableViewDataSource
 		filterArrayController.insert(filter, atArrangedObjectIndex: destination)
 		saveFilters()
 		return true
-	}
-
-	private func localized(_ key: String) -> String {
-		bundle.localizedString(forKey: key, value: key, table: "TPI_ChatFilterExtension")
 	}
 }
 

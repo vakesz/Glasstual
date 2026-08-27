@@ -5,12 +5,14 @@
  *                   | |  __/>  <| |_| |_| | (_| | |
  *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
  *
+ * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import WebKit
 
 private enum WebKit2MenuItemTag {
@@ -19,8 +21,14 @@ private enum WebKit2MenuItemTag {
 	static let searchWithGoogle = 21
 }
 
+private struct WebKitMenuItems {
+	var inspect: NSMenuItem?
+	var lookup: NSMenuItem?
+	var search: NSMenuItem?
+}
+
 @objc(TVCLogPolicyTarget)
-public final class TVCLogPolicyTarget: NSObject {
+public final class LogPolicyTarget: NSObject {
 	@objc public var anchorURL: String?
 	@objc public var channelName: String?
 	@objc public var nickname: String?
@@ -33,9 +41,9 @@ public final class TVCLogPolicyTarget: NSObject {
 
 @objc(TVCLogPolicy)
 @MainActor
-public final class TVCLogPolicy: NSObject {
+public final class LogPolicy: NSObject {
 	@objc(displayContextMenuInWebView:)
-	public func displayContextMenu(in webView: TVCLogView) {
+	public func displayContextMenu(in webView: LogView) {
 		let contextMenu = constructContextMenu(for: webView, withDefaultMenuItems: [])
 
 		let webViewBacking = webView.webView
@@ -65,32 +73,32 @@ public final class TVCLogPolicy: NSObject {
 	}
 
 	@objc(channelNameDoubleClickedInWebView:)
-	public func channelNameDoubleClicked(in webView: TVCLogView) {
+	public func channelNameDoubleClicked(in webView: LogView) {
 		guard let channelName = webView.takeContextMenuTarget().channelName else {
 			return
 		}
 
-		NSObject.masterController().menuController?.joinChannelClicked(channelName)
+		NSObject.applicationController().menuController?.joinChannelClicked(channelName)
 	}
 
 	@objc(nicknameDoubleClickedInWebView:)
-	public func nicknameDoubleClicked(in webView: TVCLogView) {
+	public func nicknameDoubleClicked(in webView: LogView) {
 		guard let nickname = webView.takeContextMenuTarget().nickname else {
 			return
 		}
 
-		NSObject.masterController().menuController?.pointedNickname = nickname
-		NSObject.masterController().menuController?.memberInChannelViewDoubleClicked(nil)
+		NSObject.applicationController().menuController?.pointedNickname = nickname
+		NSObject.applicationController().menuController?.memberInChannelViewDoubleClicked(nil)
 	}
 
 	@objc public func topicBarDoubleClicked() {
-		NSObject.masterController().menuController?.showChannelModifyTopicSheet(nil)
+		NSObject.applicationController().menuController?.showChannelModifyTopicSheet(nil)
 	}
 
 	@objc(webView2:logView:didReceiveAuthenticationChallenge:completionHandler:)
 	public func webView2(
 		_: WKWebView,
-		logView _: TVCLogView,
+		logView _: LogView,
 		didReceive challenge: URLAuthenticationChallenge,
 		completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
 	) {
@@ -104,7 +112,7 @@ public final class TVCLogPolicy: NSObject {
 	@objc(webView2:logView:decidePolicyForNavigationAction:decisionHandler:)
 	public func webView2(
 		_: WKWebView,
-		logView _: TVCLogView,
+		logView _: LogView,
 		decidePolicyFor navigationAction: WKNavigationAction,
 		decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
 	) {
@@ -124,13 +132,13 @@ public final class TVCLogPolicy: NSObject {
 	@objc(webView2:logView:contextMenuWithDefaultMenu:)
 	public func webView2(
 		_: WKWebView,
-		logView: TVCLogView,
+		logView: LogView,
 		contextMenuWithDefaultMenu defaultMenu: NSMenu
 	) -> NSMenu {
 		constructContextMenu(for: logView, withDefaultMenuItems: defaultMenu.items)
 	}
 
-	private func constructContextMenu(for webView: TVCLogView, withDefaultMenuItems defaultMenuItems: [NSMenuItem])
+	private func constructContextMenu(for webView: LogView, withDefaultMenuItems defaultMenuItems: [NSMenuItem])
 		-> NSMenu
 	{
 		let contextMenu = NSMenu(title: "Context Menu")
@@ -140,153 +148,133 @@ public final class TVCLogPolicy: NSObject {
 			contextMenu.addItem(menuItem)
 		}
 
-		NSObject.masterController().menuController?.applySymbols(to: contextMenu)
+		NSObject.applicationController().menuController?.applySymbols(to: contextMenu)
 
 		return contextMenu
 	}
 
 	private func constructContextMenuItems(
-		for webView: TVCLogView,
+		for webView: LogView,
 		defaultMenuItems: [NSMenuItem]
 	) -> [NSMenuItem] {
-		let viewController = webView.viewController
 		let target = webView.takeContextMenuTarget()
-		let anchorURL = target.anchorURL
-		let nickname = target.nickname
-		let channelName = target.channelName
-		var menuItems: [NSMenuItem] = []
-
-		if let anchorURL {
-			let urlMenu = NSObject.masterController().menuController?.channelViewURLMenu
-
-			for item in urlMenu?.items ?? [] {
-				guard let newItem = item.copy() as? NSMenuItem else {
-					continue
-				}
-
-				newItem.setUserInfo(anchorURL, recursively: true)
-				menuItems.append(newItem)
-			}
-
-			let shareURL = URL(string: anchorURL)
-			let shareItems = shareURL.map { [$0] } ?? []
-
-			menuItems.append(.separator())
-			if let shareItem = NSObject.masterController().menuController?.shareMenuItem(forItems: shareItems) {
-				menuItems.append(shareItem)
-			}
-		} else if let nickname {
-			if viewController?.associatedChannel == nil || viewController?.associatedChannel?.isUtility == true {
-				menuItems.append(
-					NSMenuItem(
-						title: LocalizedKey("BasicLanguage[7kc-mo]"),
-						action: nil,
-						keyEquivalent: ""
-					)
-				)
-			} else {
-				let memberMenu = NSObject.masterController().menuController?.userControlMenu
-
-				for item in memberMenu?.items ?? [] {
-					guard let newItem = item.copy() as? NSMenuItem else {
-						continue
-					}
-
-					newItem.setUserInfo(nickname, recursively: true)
-					menuItems.append(newItem)
-				}
-
-				let swiftTarget = (target as AnyObject) as! TVCLogPolicyTarget
-				menuItems.append(contentsOf: messageMenuItems(for: swiftTarget, in: webView))
-			}
-		} else if let channelName {
-			let chanMenu = NSObject.masterController().menuController?.channelViewChannelNameMenu
-
-			for item in chanMenu?.items ?? [] {
-				guard let newItem = item.copy() as? NSMenuItem else {
-					continue
-				}
-
-				newItem.setUserInfo(channelName, recursively: true)
-				menuItems.append(newItem)
-			}
-		} else {
-			let menu = NSObject.masterController().menuController?.channelViewGeneralMenu
-
-			var inspectElementItem: NSMenuItem?
-			var lookupInDictionaryItem: NSMenuItem?
-			var searchWithGoogleItem: NSMenuItem?
-
-			for item in defaultMenuItems {
-				switch item.tag {
-				case WebKit2MenuItemTag.lookupInDictionary:
-					lookupInDictionaryItem = item.copy() as? NSMenuItem
-				case WebKit2MenuItemTag.inspectElement:
-					inspectElementItem = item.copy() as? NSMenuItem
-				case WebKit2MenuItemTag.searchWithGoogle:
-					searchWithGoogleItem = item.copy() as? NSMenuItem
-				default:
-					break
-				}
-			}
-
-			for item in menu?.items ?? [] {
-				guard let newItem = item.copy() as? NSMenuItem else {
-					continue
-				}
-
-				if newItem.tag == 1202, let searchWithGoogleItem {
-					menuItems.append(searchWithGoogleItem)
-					continue
-				}
-
-				if newItem.tag == 1203, let lookupInDictionaryItem {
-					menuItems.append(lookupInDictionaryItem)
-					continue
-				}
-
-				menuItems.append(newItem)
-			}
-
-			let swiftTarget = (target as AnyObject) as! TVCLogPolicyTarget
-			menuItems.append(contentsOf: messageMenuItems(for: swiftTarget, in: webView))
-
-			if TPCPreferences.developerModeEnabled() {
-				let menuController = NSObject.masterController().menuController
-				menuItems.append(.separator())
-				menuItems.append(
-					developerMenuItem(
-						title: LocalizedKey("BasicLanguage[6cw-ni]"),
-						action: #selector(TXMenuController.copyLogAsHtml(_:)),
-						target: menuController
-					)
-				)
-				menuItems.append(
-					developerMenuItem(
-						title: LocalizedKey("BasicLanguage[ngd-ms]"),
-						action: #selector(TXMenuController.forceReloadTheme(_:)),
-						target: menuController
-					)
-				)
-
-				if let inspectElementItem {
-					menuItems.append(inspectElementItem)
-				} else {
-					menuItems.append(
-						developerMenuItem(
-							title: LocalizedKey("BasicLanguage[tfj-m9]"),
-							action: #selector(TXMenuController.openWebInspector(_:)),
-							target: menuController
-						)
-					)
-				}
-			}
+		if let anchorURL = target.anchorURL {
+			return linkMenuItems(for: anchorURL)
 		}
+		if let nickname = target.nickname {
+			return nicknameMenuItems(for: nickname, target: target, in: webView)
+		}
+		if let channelName = target.channelName {
+			return copiedMenuItems(
+				from: NSObject.applicationController().menuController?.channelViewChannelNameMenu,
+				userInfo: channelName
+			)
+		}
+		return generalMenuItems(target: target, in: webView, defaultMenuItems: defaultMenuItems)
+	}
 
+	private func linkMenuItems(for address: String) -> [NSMenuItem] {
+		var menuItems = copiedMenuItems(
+			from: NSObject.applicationController().menuController?.channelViewURLMenu,
+			userInfo: address
+		)
+		menuItems.append(.separator())
+		let shareItems = URL(string: address).map { [$0] } ?? []
+		if let shareItem = NSObject.applicationController().menuController?.shareMenuItem(forItems: shareItems) {
+			menuItems.append(shareItem)
+		}
 		return menuItems
 	}
 
-	private func messageMenuItems(for target: TVCLogPolicyTarget, in webView: TVCLogView) -> [NSMenuItem] {
+	private func nicknameMenuItems(
+		for nickname: String,
+		target: LogPolicyTarget,
+		in webView: LogView
+	) -> [NSMenuItem] {
+		guard let channel = webView.viewController?.associatedChannel, channel.isUtility == false else {
+			return [NSMenuItem(title: ApplicationStrings.noActionsAvailable, action: nil, keyEquivalent: "")]
+		}
+		var menuItems = copiedMenuItems(
+			from: NSObject.applicationController().menuController?.userControlMenu,
+			userInfo: nickname
+		)
+		menuItems.append(contentsOf: messageMenuItems(for: target, in: webView))
+		return menuItems
+	}
+
+	private func copiedMenuItems(from menu: NSMenu?, userInfo: String) -> [NSMenuItem] {
+		menu?.items.compactMap { item in
+			guard let copy = item.copy() as? NSMenuItem else {
+				return nil
+			}
+			copy.textual_setUserInfo(userInfo, recursively: true)
+			return copy
+		} ?? []
+	}
+
+	private func generalMenuItems(
+		target: LogPolicyTarget,
+		in webView: LogView,
+		defaultMenuItems: [NSMenuItem]
+	) -> [NSMenuItem] {
+		let webKitItems = webKitMenuItems(from: defaultMenuItems)
+		let menu = NSObject.applicationController().menuController?.channelViewGeneralMenu
+		var menuItems = menu?.items.compactMap { item -> NSMenuItem? in
+			guard let copy = item.copy() as? NSMenuItem else {
+				return nil
+			}
+			if copy.tag == 1202, let search = webKitItems.search {
+				return search
+			}
+			if copy.tag == 1203, let lookup = webKitItems.lookup {
+				return lookup
+			}
+			return copy
+		} ?? []
+		menuItems.append(contentsOf: messageMenuItems(for: target, in: webView))
+		if TextualPreferences.developerModeEnabled() {
+			menuItems.append(contentsOf: developerMenuItems(inspectElementItem: webKitItems.inspect))
+		}
+		return menuItems
+	}
+
+	private func webKitMenuItems(from items: [NSMenuItem]) -> WebKitMenuItems {
+		var result = WebKitMenuItems()
+		for item in items {
+			switch item.tag {
+			case WebKit2MenuItemTag.lookupInDictionary: result.lookup = item.copy() as? NSMenuItem
+			case WebKit2MenuItemTag.inspectElement: result.inspect = item.copy() as? NSMenuItem
+			case WebKit2MenuItemTag.searchWithGoogle: result.search = item.copy() as? NSMenuItem
+			default: break
+			}
+		}
+		return result
+	}
+
+	private func developerMenuItems(inspectElementItem: NSMenuItem?) -> [NSMenuItem] {
+		let menuController = NSObject.applicationController().menuController
+		let inspectItem = inspectElementItem ?? developerMenuItem(
+			title: ApplicationStrings.openWebInspector,
+			action: #selector(TXMenuController.openWebInspector(_:)),
+			target: menuController
+		)
+		return [
+			.separator(),
+			developerMenuItem(
+				title: ApplicationStrings.copyLogAsHTML,
+				action: #selector(TXMenuController.copyLogAsHtml(_:)),
+				target: menuController
+			),
+			developerMenuItem(
+				title: ApplicationStrings.forceReloadStyle,
+				action: #selector(TXMenuController.forceReloadTheme(_:)),
+				target: menuController
+			),
+			inspectItem,
+		]
+	}
+
+	private func messageMenuItems(for target: LogPolicyTarget, in webView: LogView) -> [NSMenuItem] {
 		guard
 			let messageIdentifier = target.lineMessageIdentifier,
 			messageIdentifier.isEmpty == false,
@@ -298,7 +286,7 @@ public final class TVCLogPolicy: NSObject {
 			return []
 		}
 
-		return NSObject.masterController().menuController?.messageReplyMenuItems(
+		return NSObject.applicationController().menuController?.messageReplyMenuItems(
 			forMessageIdentifier: messageIdentifier,
 			nickname: target.lineNickname,
 			excerpt: target.lineExcerpt
@@ -306,7 +294,7 @@ public final class TVCLogPolicy: NSObject {
 	}
 
 	@objc public func openWebpage(_ webpageURL: URL) {
-		var openInBackground = TPCPreferences.openBrowserInBackground()
+		var openInBackground = TextualPreferences.openBrowserInBackground()
 
 		let keyboardKeys = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
 		if keyboardKeys.contains(.command) {
@@ -319,13 +307,13 @@ public final class TVCLogPolicy: NSObject {
 			return
 		}
 
-		let applicationName = NSWorkspace.shared.nameOfApplication(toOpen: webpageURL) ?? ""
+		let applicationName = NSWorkspace.shared.textual_nameOfApplication(toOpen: webpageURL) ?? ""
 
 		let openLink = TDCAlert.modalAlert(
-			withMessage: LocalizedKey("Prompts[5oq-vv]", webpageURL.absoluteString),
-			title: LocalizedKey("Prompts[2ul-cl]", applicationName),
-			defaultButton: LocalizedKey("Prompts[mvh-ms]"),
-			alternateButton: LocalizedKey("Prompts[99q-gg]"),
+			withMessage: PromptStrings.ExternalApplication.body(url: webpageURL.absoluteString),
+			title: PromptStrings.ExternalApplication.title(applicationName: applicationName),
+			defaultButton: PromptStrings.Action.yes,
+			alternateButton: PromptStrings.Action.no,
 			suppressionKey: "open_non_http_url_warning",
 			suppressionText: nil
 		)

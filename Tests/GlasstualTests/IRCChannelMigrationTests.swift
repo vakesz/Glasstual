@@ -1,4 +1,5 @@
 @testable import Glasstual
+import GlasstualPluginKit
 import XCTest
 
 final class IRCChannelMigrationTests: XCTestCase {
@@ -30,7 +31,7 @@ final class IRCChannelMigrationTests: XCTestCase {
 		let originalIdentifier = channel.uniqueIdentifier
 		let replacement = ChannelConfig(dictionary: [
 			"channelName": "#two",
-			"channelType": IRCChannelType.channel.rawValue,
+			"channelType": ChannelType.channel.rawValue,
 		])
 
 		channel.updateConfig(replacement)
@@ -48,21 +49,11 @@ final class IRCChannelMigrationTests: XCTestCase {
 		XCTAssertFalse(channel.isActive)
 	}
 
-	func testObjectiveCRuntimeInterfaceRemainsAvailable() {
-		let channel = makeChannel(type: .channel)
-
-		XCTAssertTrue(channel.responds(to: #selector(IRCChannel.init(configDictionary:))))
-		XCTAssertTrue(channel.responds(to: #selector(IRCChannel.updateConfig(_:))))
-		XCTAssertTrue(channel.responds(to: #selector(IRCChannel.resetStatus(_:))))
-		XCTAssertTrue(channel.responds(to: #selector(IRCChannel.activate)))
-		XCTAssertTrue(channel.responds(to: #selector(IRCChannel.deactivate)))
-	}
-
 	private func makeChannel(
 		name: String = "#channel",
-		type: IRCChannelType
-	) -> IRCChannel {
-		IRCChannel(configDictionary: [
+		type: ChannelType
+	) -> Channel {
+		Channel(configDictionary: [
 			"channelName": name,
 			"channelType": type.rawValue,
 		])

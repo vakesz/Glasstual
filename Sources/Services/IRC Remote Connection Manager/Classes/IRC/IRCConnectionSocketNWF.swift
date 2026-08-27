@@ -35,7 +35,10 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
+import Foundation
 import Network
+import Security
 
 /** ConnectionSocketNWF is the Network.framework transport.
  See ConnectionSocket for the queue confinement rules; every method
@@ -86,14 +89,14 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		if config.cipherSuites == .none {
 			sec_protocol_options_append_tls_ciphersuite_group(secOptions, .default)
 		} else {
-			RCMSecureTransport.appendCipherSuites(
-				in: config.cipherSuites,
+			SecureTransportSupport.appendCipherSuites(
+				inCollection: config.cipherSuites,
 				includeDeprecated: config.connectionPrefersModernCiphersOnly == false,
 				to: secOptions
 			)
 		}
 
-		sec_protocol_options_set_min_tls_protocol_version(secOptions, RCMSecureTransport.minimumProtocolType)
+		sec_protocol_options_set_min_tls_protocol_version(secOptions, SecureTransportSupport.minimumProtocolType)
 
 		sec_protocol_options_set_verify_block(
 			secOptions,
@@ -217,7 +220,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 			"Connection \(connectionIdentifier, privacy: .public) timed out after \(timeout, privacy: .public) seconds"
 		)
 
-		let errorMessage = LocalizedString("Connection timed out", table: "ConnectionErrors")
+		let errorMessage = String(localized: .ConnectionErrors.connectionTimedOut)
 
 		close(with: errorMessage)
 	}
@@ -254,7 +257,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		case .socks5, .HTTP, .tor:
 			guard let endpoint = proxyEndpoint else {
 				throw ConnectionError.other(
-					message: LocalizedString("Proxy address is missing", table: "ConnectionErrors")
+					message: String(localized: .ConnectionErrors.proxyAddressMissing)
 				)
 			}
 
@@ -288,7 +291,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 			parameters.preferNoProxies = false
 		@unknown default:
 			throw ConnectionError.other(
-				message: LocalizedString("Unsupported proxy type", table: "ConnectionErrors")
+				message: String(localized: .ConnectionErrors.unsupportedProxyType)
 			)
 		}
 	}
@@ -341,7 +344,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 				"Connection \(connectionIdentifier, privacy: .public) buffered \(bufferedByteCount, privacy: .public) bytes without a newline"
 			)
 
-			let errorMessage = LocalizedString("Peer sent a line that is too long", table: "ConnectionErrors")
+			let errorMessage = String(localized: .ConnectionErrors.peerLineTooLong)
 
 			close(with: errorMessage)
 		}
@@ -562,7 +565,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		var certificateChain: [Data]?
 
 		accessTLSTrustRef { trustRef in
-			certificateChain = RCMSecureTransport.certificates(in: trustRef)
+			certificateChain = SecureTransportSupport.certificates(in: trustRef)
 		}
 
 		return certificateChain
@@ -572,7 +575,7 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 		var policyName: String?
 
 		accessTLSTrustRef { trustRef in
-			policyName = RCMSecureTransport.policyName(in: trustRef)
+			policyName = SecureTransportSupport.policyName(in: trustRef)
 
 			if policyName == nil {
 				/*
@@ -646,77 +649,49 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 }
 
 private extension ConnectionError {
+	static let dnsErrorReasons: [Int: String] = [
+		kDNSServiceErr_NoError: "No error",
+		kDNSServiceErr_NoSuchName: "No such name",
+		kDNSServiceErr_NoMemory: "No memory",
+		kDNSServiceErr_BadParam: "Bad parameter",
+		kDNSServiceErr_BadReference: "Bad reference",
+		kDNSServiceErr_BadState: "Bad state",
+		kDNSServiceErr_BadFlags: "Bad flags",
+		kDNSServiceErr_Unsupported: "Unsupported",
+		kDNSServiceErr_NotInitialized: "Not initialized",
+		kDNSServiceErr_AlreadyRegistered: "Already registered",
+		kDNSServiceErr_NameConflict: "Name conflict",
+		kDNSServiceErr_Invalid: "Invalid",
+		kDNSServiceErr_Firewall: "Firewall",
+		kDNSServiceErr_Incompatible: "Incompatible",
+		kDNSServiceErr_BadInterfaceIndex: "Bad interface index",
+		kDNSServiceErr_Refused: "Refused",
+		kDNSServiceErr_NoSuchRecord: "No such record",
+		kDNSServiceErr_NoAuth: "No authentication",
+		kDNSServiceErr_NoSuchKey: "No such key",
+		kDNSServiceErr_NATTraversal: "NAT traversal",
+		kDNSServiceErr_DoubleNAT: "Double NAT",
+		kDNSServiceErr_BadTime: "Bad time",
+		kDNSServiceErr_BadSig: "Bad signature",
+		kDNSServiceErr_BadKey: "Bad key",
+		kDNSServiceErr_Transient: "Transient",
+		kDNSServiceErr_ServiceNotRunning: "Service not running",
+		kDNSServiceErr_NATPortMappingUnsupported: "NAT port mapping unsupported",
+		kDNSServiceErr_NATPortMappingDisabled: "NAT port mapping disabled",
+		kDNSServiceErr_NoRouter: "No router",
+		kDNSServiceErr_PollingMode: "Polling mode",
+		kDNSServiceErr_Timeout: "Timeout",
+	]
+
 	init(nwDNSError: DNSServiceErrorType) {
 		let errorCode = Int(nwDNSError)
+		let errorReason = Self.dnsErrorReasons[errorCode] ?? "Unknown"
 
-		let errorReason = switch errorCode {
-		case kDNSServiceErr_NoError:
-			"No error"
-		case kDNSServiceErr_NoSuchName:
-			"No such name"
-		case kDNSServiceErr_NoMemory:
-			"No memory"
-		case kDNSServiceErr_BadParam:
-			"Bad parameter"
-		case kDNSServiceErr_BadReference:
-			"Bad reference"
-		case kDNSServiceErr_BadState:
-			"Bad state"
-		case kDNSServiceErr_BadFlags:
-			"Bad flags"
-		case kDNSServiceErr_Unsupported:
-			"Unsupported"
-		case kDNSServiceErr_NotInitialized:
-			"Not initialized"
-		case kDNSServiceErr_AlreadyRegistered:
-			"Already registered"
-		case kDNSServiceErr_NameConflict:
-			"Name conflict"
-		case kDNSServiceErr_Invalid:
-			"Invalid"
-		case kDNSServiceErr_Firewall:
-			"Firewall"
-		case kDNSServiceErr_Incompatible: /* client library incompatible with daemon */
-			"Incompatible"
-		case kDNSServiceErr_BadInterfaceIndex:
-			"Bad interface index"
-		case kDNSServiceErr_Refused:
-			"Refused"
-		case kDNSServiceErr_NoSuchRecord:
-			"No such record"
-		case kDNSServiceErr_NoAuth:
-			"No authentication"
-		case kDNSServiceErr_NoSuchKey:
-			"No such key"
-		case kDNSServiceErr_NATTraversal:
-			"NAT traversal"
-		case kDNSServiceErr_DoubleNAT:
-			"Double NAT"
-		case kDNSServiceErr_BadTime: /* Codes up to here existed in Tiger */
-			"Bad time"
-		case kDNSServiceErr_BadSig:
-			"Bad signature"
-		case kDNSServiceErr_BadKey:
-			"Bad key"
-		case kDNSServiceErr_Transient:
-			"Transient"
-		case kDNSServiceErr_ServiceNotRunning: /* Background daemon not running */
-			"Service not running"
-		case kDNSServiceErr_NATPortMappingUnsupported: /* NAT doesn't support PCP, NAT-PMP or UPnP */
-			"NAT port mapping unsupported"
-		case kDNSServiceErr_NATPortMappingDisabled: /* NAT supports PCP, NAT-PMP or UPnP, but it's disabled by the administrator */
-			"NAT port mapping disabled"
-		case kDNSServiceErr_NoRouter: /* No router currently configured (probably no network connectivity) */
-			"No router"
-		case kDNSServiceErr_PollingMode:
-			"Polling mode"
-		case kDNSServiceErr_Timeout:
-			"Timeout"
-		default:
-			"Unknown"
-		}
-
-		let errorMessage = LocalizedString("DNS Error: %@ (%ld)", errorReason, errorCode, table: "ConnectionErrors")
+		let errorMessage = ConnectionErrorLocalization.formatted(
+			.ConnectionErrors.dnsError(errorReason, errorCode),
+			errorReason,
+			errorCode
+		)
 
 		let nsError = NSError(
 			domain: "NWErrorDomainDNS",
@@ -736,7 +711,11 @@ private extension ConnectionError {
 			"Unknown"
 		}
 
-		let errorMessage = LocalizedString("POSIX Error: %@ (%ld)", errorReason, errorCode, table: "ConnectionErrors")
+		let errorMessage = ConnectionErrorLocalization.formatted(
+			.ConnectionErrors.posixError(errorReason, errorCode),
+			errorReason,
+			errorCode
+		)
 
 		let nsError = NSError(
 			domain: "NWErrorDomainPOSIX",
@@ -753,3 +732,13 @@ private extension ConnectionError {
 		self.init(tlsError: errorCode)
 	}
 }
+
+private enum ConnectionErrorLocalization {
+	static func formatted(_ resource: LocalizedStringResource, _ arguments: CVarArg...) -> String {
+		let bundle = Bundle(for: ConnectionErrorLocalizationBundleToken.self)
+		let format = bundle.localizedString(forKey: resource.key, value: nil, table: resource.table)
+		return String(format: format, arguments: arguments)
+	}
+}
+
+private final class ConnectionErrorLocalizationBundleToken {}

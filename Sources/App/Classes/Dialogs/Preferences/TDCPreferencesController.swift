@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 @objc(TDCPreferencesControllerSelection)
 public enum PreferencesControllerSelection: UInt {
@@ -50,238 +51,6 @@ public enum PreferencesControllerSelection: UInt {
 public protocol PreferencesControllerDelegate: AnyObject {
 	@objc(preferencesDialogWillClose:)
 	func preferencesDialogWillClose(_ sender: PreferencesController)
-}
-
-private enum PreferencesLayout {
-	static let sidebarMinimumWidth = 200.0
-	static let sidebarMaximumWidth = 260.0
-	static let sidebarPreferredWidth = 215.0
-	static let paneContentInset = 20.0
-	static let windowMinimumWidth = 980.0
-	static let windowMinimumHeight = 600.0
-}
-
-private enum PreferencesIdentifiers {
-	static let selectedPaneDefaultsKey = "TDCPreferencesController -> Selected Pane"
-	static let toolbarBack = NSToolbarItem.Identifier("TDCPreferencesControllerBack")
-	static let toolbarForward = NSToolbarItem.Identifier("TDCPreferencesControllerForward")
-	static let paneCell = NSUserInterfaceItemIdentifier("TDCPreferencesControllerPaneCell")
-	static let groupCell = NSUserInterfaceItemIdentifier("TDCPreferencesControllerGroupCell")
-}
-
-private final class PreferencesSidebarItem: NSObject {
-	let identifier: String?
-	let title: String
-	let symbolName: String?
-	let children: [PreferencesSidebarItem]?
-
-	init(
-		identifier: String? = nil,
-		title: String,
-		symbolName: String? = nil,
-		children: [PreferencesSidebarItem]? = nil
-	) {
-		self.identifier = identifier
-		self.title = title
-		self.symbolName = symbolName
-		self.children = children
-	}
-
-	var isGroup: Bool {
-		children != nil
-	}
-}
-
-private final class PreferencesPaneContainerView: NSView {
-	override var isFlipped: Bool {
-		true
-	}
-}
-
-struct PreferencesPaneDescriptor: Equatable {
-	let identifier: String
-	let symbolName: String
-	let contentViewKey: String
-	let group: String
-}
-
-enum PreferencesPaneCatalog {
-	static let mainGroup = "main"
-	static let addonsGroup = "addons"
-	static let advancedGroup = "advanced"
-
-	static let panes = [
-		PreferencesPaneDescriptor(
-			identifier: "general",
-			symbolName: "gearshape",
-			contentViewKey: "contentViewGeneral",
-			group: mainGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "behavior",
-			symbolName: "slider.horizontal.3",
-			contentViewKey: "contentViewBehavior",
-			group: mainGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "notifications",
-			symbolName: "bell",
-			contentViewKey: "contentViewNotifications",
-			group: mainGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "highlights",
-			symbolName: "text.magnifyingglass",
-			contentViewKey: "contentViewHighlights",
-			group: mainGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "interface",
-			symbolName: "macwindow",
-			contentViewKey: "contentViewInterface",
-			group: mainGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "style",
-			symbolName: "paintbrush",
-			contentViewKey: "contentViewStyle",
-			group: mainGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "controls",
-			symbolName: "keyboard",
-			contentViewKey: "contentViewControls",
-			group: mainGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "addons",
-			symbolName: "puzzlepiece.extension",
-			contentViewKey: "contentViewInstalledAddons",
-			group: addonsGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "channelManagement",
-			symbolName: "person.2",
-			contentViewKey: "contentViewChannelManagement",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "commandScope",
-			symbolName: "terminal",
-			contentViewKey: "contentViewCommandScope",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "compatibility",
-			symbolName: "wrench.and.screwdriver",
-			contentViewKey: "contentViewCompatibility",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "floodControl",
-			symbolName: "timer",
-			contentViewKey: "contentViewFloodControl",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "incomingData",
-			symbolName: "arrow.down.circle",
-			contentViewKey: "contentViewIncomingData",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "fileTransfers",
-			symbolName: "arrow.down.app",
-			contentViewKey: "contentViewFileTransfers",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "inlineMedia",
-			symbolName: "photo",
-			contentViewKey: "contentViewInlineMedia",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "logLocation",
-			symbolName: "folder",
-			contentViewKey: "contentViewLogLocation",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "defaultIdentity",
-			symbolName: "person.crop.circle",
-			contentViewKey: "contentViewDefaultIdentity",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "defaultIRCopMessages",
-			symbolName: "shield",
-			contentViewKey: "contentViewDefaultIRCopMessages",
-			group: advancedGroup
-		),
-		PreferencesPaneDescriptor(
-			identifier: "hidden",
-			symbolName: "eye.slash",
-			contentViewKey: "contentViewHiddenPreferences",
-			group: advancedGroup
-		),
-	]
-
-	static func descriptor(for identifier: String) -> PreferencesPaneDescriptor? {
-		panes.first { $0.identifier == identifier }
-	}
-
-	static func pluginIdentifier(at index: Int) -> String {
-		"plugin-\(index)"
-	}
-
-	static func pluginIndex(from identifier: String) -> Int? {
-		guard identifier.hasPrefix("plugin-") else { return nil }
-		return Int(identifier.dropFirst(7))
-	}
-}
-
-enum PreferencesValueValidation {
-	static let scrollbackSaveRange = 100 ... 50000
-	static let scrollbackVisibleRange = 100 ... 15000
-	static let inlineMediaWidthRange = 40 ... 2000
-	static let inlineMediaHeightRange = 0 ... 6000
-	static let fileTransferPortRange = 1024 ... 65535
-
-	static func clamped(_ value: Int, to range: ClosedRange<Int>, allowingZero: Bool = false) -> Int {
-		if allowingZero, value == 0 {
-			return 0
-		}
-		return min(max(value, range.lowerBound), range.upperBound)
-	}
-}
-
-@objc(TXColorUnarchiveFromDataTransformer)
-private final class ColorUnarchiveFromDataTransformer: NSSecureUnarchiveFromDataTransformer {
-	override class func transformedValueClass() -> AnyClass {
-		NSColor.self
-	}
-
-	override class func allowsReverseTransformation() -> Bool {
-		true
-	}
-
-	override class var allowedTopLevelClasses: [AnyClass] {
-		super.allowedTopLevelClasses + [NSColor.self]
-	}
-
-	override func transformedValue(_ value: Any?) -> Any? {
-		if let color = value as? NSColor {
-			return color
-		}
-		guard let data = value as? Data else { return nil }
-		return NSKeyedUnarchiver.legacyCompatUnarchivedObject(of: NSColor.self, from: data)
-	}
-
-	override func reverseTransformedValue(_ value: Any?) -> Any? {
-		guard let color = value as? NSColor else { return nil }
-		return try? NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true)
-	}
 }
 
 @objc(TDCPreferencesController)
@@ -339,12 +108,13 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	private var paneHistoryIndex = 0
 	private var navigatingPaneHistory = false
 	private var updatingSidebarSelection = false
-	private var reloadingTheme = false
+	@objc private dynamic var reloadingTheme = false
 	private var reloadingThemeBySelection = false
 	private var fontPanelIsOwned = false
 	private var previousFontManagerAction: Selector?
 	private var userStyleSheet: PreferencesUserStyleSheet?
 	private var nibTopLevelObjects: [Any] = []
+	private lazy var notifications = NotificationSubscriptions()
 
 	override public init() {
 		super.init()
@@ -354,6 +124,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	private func prepareInitialState() {
+		_ = ColorUnarchiveFromDataTransformer.register
 		var objects: NSArray?
 		Bundle.main.loadNibNamed("TDCPreferences", owner: self, topLevelObjects: &objects)
 		nibTopLevelObjects = objects as? [Any] ?? []
@@ -381,24 +152,15 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 			ascending: true,
 			selector: #selector(NSString.caseInsensitiveCompare(_:))
 		)]
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(onThemeListDidChange(_:)),
-			name: .themeListDidChange,
-			object: nil
-		)
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(onThemeWillReload(_:)),
-			name: .TVCMainWindowWillReloadTheme,
-			object: nil
-		)
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(onThemeReloadComplete(_:)),
-			name: .TVCMainWindowDidReloadTheme,
-			object: nil
-		)
+		notifications.observe(.themeListDidChange) { [weak self] notification in
+			self?.onThemeListDidChange(notification)
+		}
+		notifications.observe(.TVCMainWindowWillReloadTheme) { [weak self] notification in
+			self?.onThemeWillReload(notification)
+		}
+		notifications.observe(.TVCMainWindowDidReloadTheme) { [weak self] notification in
+			self?.onThemeReloadComplete(notification)
+		}
 		contentViewGeneral.layoutSubtreeIfNeeded()
 		installAccessibilityLabels()
 		installSettingsShell()
@@ -421,6 +183,41 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		}
 	}
 
+	override public func validateValue(
+		_ ioValue: AutoreleasingUnsafeMutablePointer<AnyObject?>,
+		forKey key: String
+	) throws {
+		guard let string = ioValue.pointee as? String else { return }
+		var value = (string as NSString).integerValue
+		switch key {
+		case "scrollbackSaveLimit":
+			value = PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.scrollbackSaveRange)
+		case "scrollbackVisibleLimit":
+			value = PreferencesValueValidation.clamped(
+				value,
+				to: PreferencesValueValidation.scrollbackVisibleRange,
+				allowingZero: true
+			)
+		case "inlineMediaMaxWidth":
+			value = PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.inlineMediaWidthRange)
+		case "inlineMediaMaxHeight":
+			value = PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.inlineMediaHeightRange)
+		case "fileTransferPortRangeStart":
+			value = min(
+				PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.fileTransferPortRange),
+				Int(TextualPreferences.fileTransferPortRangeEnd())
+			)
+		case "fileTransferPortRangeEnd":
+			value = max(
+				PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.fileTransferPortRange),
+				Int(TextualPreferences.fileTransferPortRangeStart())
+			)
+		default:
+			return
+		}
+		ioValue.pointee = String(value) as NSString
+	}
+
 	override public nonisolated func show() {
 		MainActor.assumeIsolated {
 			show(.default)
@@ -429,12 +226,13 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	@objc(show:)
 	public func show(_ selection: PreferencesControllerSelection) {
-		var identifier = switch selection {
-		case .notifications: "notifications"
-		case .style: "style"
-		case .hiddenPreferences: "hidden"
-		case .default: "general"
+		let requestedPane: PreferencesPaneIdentifier = switch selection {
+		case .notifications: .notifications
+		case .style: .style
+		case .hiddenPreferences: .hidden
+		case .default: .general
 		}
+		var identifier = requestedPane.rawValue
 		if selection == .default,
 		   let remembered = UserDefaults.standard.string(forKey: PreferencesIdentifiers.selectedPaneDefaultsKey),
 		   viewForSettingsPaneIdentifier(remembered) != nil
@@ -444,28 +242,47 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		selectPane(withIdentifier: identifier)
 		super.show()
 	}
+}
 
+// MARK: - Settings navigation
+
+extension PreferencesController {
 	@objc(settingsSidebarCatalog)
 	public func settingsSidebarCatalog() -> [[String: String]] {
-		var items: [[String: String]] = []
+		settingsSidebarEntries().map { entry in
+			[
+				"id": entry.identifier,
+				"title": entry.title,
+				"symbol": entry.symbolName,
+				"group": entry.group.rawValue,
+			]
+		}
+	}
+
+	private func settingsSidebarEntries() -> [PreferencesSidebarEntry] {
+		var items: [PreferencesSidebarEntry] = []
 		for pane in PreferencesPaneCatalog.panes {
-			items.append([
-				"id": pane.identifier,
-				"title": LocalizedKey("TDCPreferencesController[sb-\(pane.identifier)]"),
-				"symbol": pane.symbolName,
-				"group": pane.group,
-			])
-			guard pane.group == PreferencesPaneCatalog.addonsGroup else { continue }
-			for (index, plugin) in TXSharedApplication.sharedPluginManager().pluginsWithPreferencePanes.enumerated() {
-				let title = plugin.pluginPreferencesPaneMenuItemTitle?.isEmpty == false
-					? plugin.pluginPreferencesPaneMenuItemTitle!
-					: LocalizedKey("TDCPreferencesController[sb-plugin]")
-				items.append([
-					"id": PreferencesPaneCatalog.pluginIdentifier(at: index),
-					"title": title,
-					"symbol": "puzzlepiece.extension",
-					"group": PreferencesPaneCatalog.addonsGroup,
-				])
+			items.append(PreferencesSidebarEntry(
+				identifier: pane.identifier.rawValue,
+				title: PreferencesStrings.paneTitle(pane.identifier),
+				symbolName: pane.symbolName,
+				group: pane.group
+			))
+			guard pane.group == .addOns else { continue }
+			for (index, plugin) in SharedApplication.sharedPluginManager().pluginsWithPreferencePanes.enumerated() {
+				let title: String = if let suppliedTitle = plugin.pluginPreferencesPaneMenuItemTitle,
+				                       !suppliedTitle.isEmpty
+				{
+					suppliedTitle
+				} else {
+					PreferencesStrings.addOnPaneTitle
+				}
+				items.append(PreferencesSidebarEntry(
+					identifier: PreferencesPaneCatalog.pluginIdentifier(at: index),
+					title: title,
+					symbolName: "puzzlepiece.extension",
+					group: .addOns
+				))
 			}
 		}
 		return items
@@ -474,7 +291,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	@objc(viewForSettingsPaneIdentifier:)
 	public func viewForSettingsPaneIdentifier(_ identifier: String) -> NSView? {
 		if let pluginIndex = PreferencesPaneCatalog.pluginIndex(from: identifier) {
-			let plugins = TXSharedApplication.sharedPluginManager().pluginsWithPreferencePanes
+			let plugins = SharedApplication.sharedPluginManager().pluginsWithPreferencePanes
 			guard plugins.indices.contains(pluginIndex) else { return nil }
 			return plugins[pluginIndex].pluginPreferencesPaneView
 		}
@@ -529,26 +346,28 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		var paneItems: [PreferencesSidebarItem] = []
 		var addonItems: [PreferencesSidebarItem] = []
 		var advancedItems: [PreferencesSidebarItem] = []
-		for entry in settingsSidebarCatalog() {
-			guard let identifier = entry["id"], let title = entry["title"],
-			      let symbol = entry["symbol"] else { continue }
-			let item = PreferencesSidebarItem(identifier: identifier, title: title, symbolName: symbol)
+		for entry in settingsSidebarEntries() {
+			let item = PreferencesSidebarItem(
+				identifier: entry.identifier,
+				title: entry.title,
+				symbolName: entry.symbolName
+			)
 			paneItems.append(item)
-			switch entry["group"] {
-			case PreferencesPaneCatalog.addonsGroup: addonItems.append(item)
-			case PreferencesPaneCatalog.advancedGroup: advancedItems.append(item)
-			default: rootItems.append(item)
+			switch entry.group {
+			case .addOns: addonItems.append(item)
+			case .advanced: advancedItems.append(item)
+			case .main: rootItems.append(item)
 			}
 		}
 		if !addonItems.isEmpty {
 			rootItems.append(PreferencesSidebarItem(
-				title: LocalizedKey("TDCPreferencesController[sb-gr-ad]"),
+				title: PreferencesStrings.addOnsGroupTitle,
 				children: addonItems
 			))
 		}
 		if !advancedItems.isEmpty {
 			rootItems.append(PreferencesSidebarItem(
-				title: LocalizedKey("TDCPreferencesController[sb-gr-av]"),
+				title: PreferencesStrings.advancedGroupTitle,
 				children: advancedItems
 			))
 		}
@@ -567,7 +386,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		outlineView.allowsMultipleSelection = false
 		outlineView.autoresizesOutlineColumn = false
 		outlineView.focusRingType = .none
-		outlineView.setAccessibilityLabel(LocalizedKey("TDCPreferencesController[sb-tt]"))
+		outlineView.setAccessibilityLabel(PreferencesStrings.accessibilityTitle)
 		let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("pane"))
 		column.resizingMask = NSTableColumn.ResizingOptions.autoresizingMask
 		outlineView.addTableColumn(column)
@@ -616,10 +435,9 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	private var versionFooterString: String {
 		let info = Bundle.main.infoDictionary ?? [:]
-		return LocalizedKey(
-			"TDCPreferencesController[sb-vers]",
-			info["CFBundleShortVersionString"] as? String ?? "",
-			info["CFBundleVersion"] as? String ?? ""
+		return PreferencesStrings.version(
+			marketingVersion: info["CFBundleShortVersionString"] as? String ?? "",
+			build: info["CFBundleVersion"] as? String ?? ""
 		)
 	}
 
@@ -789,11 +607,11 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		switch identifier {
 		case PreferencesIdentifiers.toolbarBack:
 			symbolName = "chevron.left"
-			label = LocalizedKey("TDCPreferencesController[tb-back]")
+			label = PreferencesStrings.backButtonTitle
 			action = #selector(navigateBack(_:))
 		case PreferencesIdentifiers.toolbarForward:
 			symbolName = "chevron.right"
-			label = LocalizedKey("TDCPreferencesController[tb-forward]")
+			label = PreferencesStrings.forwardButtonTitle
 			action = #selector(navigateForward(_:))
 		default: return nil
 		}
@@ -822,19 +640,20 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	public func outlineView(_: NSOutlineView,
 	                        isItemExpandable item: Any) -> Bool
 	{
-		(item as! PreferencesSidebarItem).isGroup
+		(item as? PreferencesSidebarItem)?.isGroup ?? false
 	}
 
 	public func outlineView(_: NSOutlineView,
 	                        isGroupItem item: Any) -> Bool
 	{
-		(item as! PreferencesSidebarItem).isGroup
+		(item as? PreferencesSidebarItem)?.isGroup ?? false
 	}
 
 	public func outlineView(_: NSOutlineView,
 	                        shouldSelectItem item: Any) -> Bool
 	{
-		!(item as! PreferencesSidebarItem).isGroup
+		guard let sidebarItem = item as? PreferencesSidebarItem else { return false }
+		return !sidebarItem.isGroup
 	}
 
 	public func outlineView(_: NSOutlineView, shouldShowOutlineCellForItem _: Any) -> Bool {
@@ -846,7 +665,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	public func outlineView(_ outlineView: NSOutlineView, viewFor _: NSTableColumn?, item: Any) -> NSView? {
-		let sidebarItem = item as! PreferencesSidebarItem
+		guard let sidebarItem = item as? PreferencesSidebarItem else { return nil }
 		let identifier = sidebarItem.isGroup ? PreferencesIdentifiers.groupCell : PreferencesIdentifiers.paneCell
 		let cell = outlineView.makeView(withIdentifier: identifier, owner: self) as? NSTableCellView
 			?? makeSidebarCellView(identifier: identifier, hasImageView: !sidebarItem.isGroup)
@@ -900,19 +719,19 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	private func installAccessibilityLabels() {
-		let themeLabel = LocalizedKey("TDCPreferencesController[ax-theme]")
+		let themeLabel = PreferencesStrings.styleAccessibilityLabel
 		themeSelectionButton.toolTip = themeLabel
 		themeSelectionButton.setAccessibilityLabel(themeLabel)
-		let transcriptLabel = LocalizedKey("TDCPreferencesController[ax-transcript-folder]")
+		let transcriptLabel = PreferencesStrings.transcriptFolderAccessibilityLabel
 		transcriptFolderButton.toolTip = transcriptLabel
 		transcriptFolderButton.setAccessibilityLabel(transcriptLabel)
-		let downloadLabel = LocalizedKey("TDCPreferencesController[ax-download-folder]")
+		let downloadLabel = PreferencesStrings.downloadDestinationAccessibilityLabel
 		fileTransferDownloadDestinationButton.toolTip = downloadLabel
 		fileTransferDownloadDestinationButton.setAccessibilityLabel(downloadLabel)
 	}
 
 	private func restoreWindowFrame() {
-		window.saveSizeAsDefault()
+		window.ce_saveSizeAsDefault()
 		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
 		if window.frame.width < PreferencesLayout.windowMinimumWidth || window.frame.height < PreferencesLayout
 			.windowMinimumHeight
@@ -923,171 +742,143 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	private func saveWindowFrame() {
-		window.restoreDefaultSizeAndDisplay(false)
+		window.ce_restoreDefaultSize(display: false)
 		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
 	}
+}
 
-	@objc public dynamic var installedScripts: [NSDictionary] {
-		let pluginManager = TXSharedApplication.sharedPluginManager()
+// MARK: - Bindings
+
+public extension PreferencesController {
+	@objc dynamic var installedScripts: [NSDictionary] {
+		let pluginManager = SharedApplication.sharedPluginManager()
 		let scripts = pluginManager.supportedAppleScriptCommands + pluginManager.supportedUserInputCommands
 		return (scripts as NSArray).stringArrayControllerObjects.map { $0 as NSDictionary }
 	}
 
-	@objc public dynamic var scrollbackSaveLimit: String {
-		get { String(TPCPreferences.scrollbackSaveLimit()) }
-		set { TPCPreferences.setScrollbackSaveLimit(UInt((newValue as NSString).integerValue)) }
+	@objc dynamic var scrollbackSaveLimit: String {
+		get { String(TextualPreferences.scrollbackSaveLimit()) }
+		set { TextualPreferences.setScrollbackSaveLimit(UInt((newValue as NSString).integerValue)) }
 	}
 
-	@objc public dynamic var scrollbackVisibleLimit: String {
-		get { String(TPCPreferences.scrollbackVisibleLimit()) }
-		set { TPCPreferences.setScrollbackVisibleLimit(UInt((newValue as NSString).integerValue)) }
+	@objc dynamic var scrollbackVisibleLimit: String {
+		get { String(TextualPreferences.scrollbackVisibleLimit()) }
+		set { TextualPreferences.setScrollbackVisibleLimit(UInt((newValue as NSString).integerValue)) }
 	}
 
-	@objc public dynamic var completionSuffix: String {
-		get { TPCPreferences.tabCompletionSuffix() ?? "" }
-		set { TPCPreferences.setTabCompletionSuffix(newValue) }
+	@objc dynamic var completionSuffix: String {
+		get { TextualPreferences.tabCompletionSuffix() ?? "" }
+		set { TextualPreferences.setTabCompletionSuffix(newValue) }
 	}
 
-	@objc public dynamic var inlineMediaMaxWidth: String {
-		get { String(TPCPreferences.inlineMediaMaxWidth()) }
-		set { TextualPreferences.textual_setInlineMediaMaxWidth(UInt((newValue as NSString).integerValue)) }
+	@objc dynamic var inlineMediaMaxWidth: String {
+		get { String(TextualPreferences.inlineMediaMaxWidth()) }
+		set { TextualPreferences.setInlineMediaMaxWidth(UInt((newValue as NSString).integerValue)) }
 	}
 
-	@objc public dynamic var inlineMediaMaxHeight: String {
-		get { String(TPCPreferences.inlineMediaMaxHeight()) }
-		set { TextualPreferences.textual_setInlineMediaMaxHeight(UInt((newValue as NSString).integerValue)) }
+	@objc dynamic var inlineMediaMaxHeight: String {
+		get { String(TextualPreferences.inlineMediaMaxHeight()) }
+		set { TextualPreferences.setInlineMediaMaxHeight(UInt((newValue as NSString).integerValue)) }
 	}
 
-	@objc public dynamic var themeChannelViewFontName: String {
-		get { TPCPreferences.themeChannelViewFont()?.displayName ?? "" }
-		set {}
+	@objc dynamic var themeChannelViewFontName: String {
+		TextualPreferences.themeChannelViewFont()?.displayName ?? ""
 	}
 
-	@objc public dynamic var themeChannelViewFontSize: CGFloat {
-		get { TPCPreferences.themeChannelViewFontSize() }
-		set {}
+	@objc dynamic var themeChannelViewFontSize: CGFloat {
+		TextualPreferences.themeChannelViewFontSize()
 	}
 
-	@objc public dynamic var fileTransferPortRangeStart: String {
-		get { String(TPCPreferences.fileTransferPortRangeStart()) }
-		set { TPCPreferences.setFileTransferPortRangeStart(UInt16((newValue as NSString).integerValue)) }
+	@objc dynamic var fileTransferPortRangeStart: String {
+		get { String(TextualPreferences.fileTransferPortRangeStart()) }
+		set { TextualPreferences.setFileTransferPortRangeStart(UInt16((newValue as NSString).integerValue)) }
 	}
 
-	@objc public dynamic var fileTransferPortRangeEnd: String {
-		get { String(TPCPreferences.fileTransferPortRangeEnd()) }
-		set { TPCPreferences.setFileTransferPortRangeEnd(UInt16((newValue as NSString).integerValue)) }
+	@objc dynamic var fileTransferPortRangeEnd: String {
+		get { String(TextualPreferences.fileTransferPortRangeEnd()) }
+		set { TextualPreferences.setFileTransferPortRangeEnd(UInt16((newValue as NSString).integerValue)) }
 	}
 
-	@objc public dynamic var highlightCurrentNickname: Bool {
+	@objc dynamic var highlightCurrentNickname: Bool {
 		get {
-			TPCPreferences.highlightMatchingMethod() != .regularExpression && TPCPreferences.highlightCurrentNickname()
+			TextualPreferences.highlightMatchingMethod() != .regularExpression && TextualPreferences
+				.highlightCurrentNickname()
 		}
-		set { TPCPreferences.setHighlightCurrentNickname(newValue) }
+		set { TextualPreferences.setHighlightCurrentNickname(newValue) }
 	}
 
-	@objc public dynamic var appNapEnabled: Bool {
-		get { TPCPreferences.appNapEnabled() }
-		set { TPCPreferences.setAppNapEnabled(newValue) }
+	@objc dynamic var appNapEnabled: Bool {
+		get { TextualPreferences.appNapEnabled() }
+		set { TextualPreferences.setAppNapEnabled(newValue) }
 	}
 
-	@objc public dynamic var onlySpeakEventsForSelection: Bool {
-		get { TPCPreferences.onlySpeakEventsForSelection() }
+	@objc dynamic var onlySpeakEventsForSelection: Bool {
+		get { TextualPreferences.onlySpeakEventsForSelection() }
 		set {
-			TPCPreferences.setOnlySpeakEventsForSelection(newValue)
+			TextualPreferences.setOnlySpeakEventsForSelection(newValue)
 			willChangeValue(forKey: "channelMessageSpeakChannelName")
 			didChangeValue(forKey: "channelMessageSpeakChannelName")
 		}
 	}
 
-	@objc public dynamic var channelMessageSpeakChannelName: Bool {
-		get { !TPCPreferences.onlySpeakEventsForSelection() && TPCPreferences.channelMessageSpeakChannelName() }
-		set { TPCPreferences.setChannelMessageSpeakChannelName(newValue) }
+	@objc dynamic var channelMessageSpeakChannelName: Bool {
+		get { !TextualPreferences.onlySpeakEventsForSelection() && TextualPreferences.channelMessageSpeakChannelName() }
+		set { TextualPreferences.setChannelMessageSpeakChannelName(newValue) }
 	}
 
-	@objc public dynamic var channelMessageSpeakNickname: Bool {
-		get { TPCPreferences.channelMessageSpeakNickname() }
-		set { TPCPreferences.setChannelMessageSpeakNickname(newValue) }
+	@objc dynamic var channelMessageSpeakNickname: Bool {
+		get { TextualPreferences.channelMessageSpeakNickname() }
+		set { TextualPreferences.setChannelMessageSpeakNickname(newValue) }
 	}
 
-	@objc public dynamic var serverListUnreadCountBadgeHighlightColor: NSColor {
+	@objc dynamic var serverListUnreadCountBadgeHighlightColor: NSColor {
 		get {
-			TPCPreferencesUserDefaults.shared()
+			TextualUserDefaults.shared()
 				.color(forKey: "Server List Unread Message Count Badge Colors -> Highlight") ?? .clear
 		}
-		set { TPCPreferencesUserDefaults.shared().setColor(
+		set { TextualUserDefaults.shared().setColor(
 			newValue == .clear ? nil : newValue,
 			forKey: "Server List Unread Message Count Badge Colors -> Highlight"
 		) }
 	}
 
-	@objc public dynamic var userListNoModeColor: NSColor {
-		get { TPCPreferencesUserDefaults.shared().color(forKey: "User List Mode Badge Colors -> no mode") ?? .clear }
-		set { TPCPreferencesUserDefaults.shared().setColor(
+	@objc dynamic var userListNoModeColor: NSColor {
+		get { TextualUserDefaults.shared().color(forKey: "User List Mode Badge Colors -> no mode") ?? .clear }
+		set { TextualUserDefaults.shared().setColor(
 			newValue == .clear ? nil : newValue,
 			forKey: "User List Mode Badge Colors -> no mode"
 		) }
 	}
 
-	@objc public dynamic var logTranscript: Bool {
-		get { TPCPreferences.logToDisk() }
-		set { TPCPreferences.setLogToDisk(newValue) }
+	@objc dynamic var logTranscript: Bool {
+		get { TextualPreferences.logToDisk() }
+		set { TextualPreferences.setLogToDisk(newValue) }
 	}
 
-	@objc public dynamic var inlineMediaLimitToBasics: Bool {
-		get { TPCPreferences.inlineMediaLimitToBasics() }
+	@objc dynamic var inlineMediaLimitToBasics: Bool {
+		get { TextualPreferences.inlineMediaLimitToBasics() }
 		set {
-			TextualPreferences.textual_setInlineMediaLimitToBasics(newValue)
+			TextualPreferences.setInlineMediaLimitToBasics(newValue)
 			willChangeValue(forKey: "inlineMediaLimitBasicsToFiles")
 			didChangeValue(forKey: "inlineMediaLimitBasicsToFiles")
 		}
 	}
 
-	@objc public dynamic var inlineMediaLimitBasicsToFiles: Bool {
-		get { TPCPreferences.inlineMediaLimitToBasics() && TPCPreferences.inlineMediaLimitBasicsToFiles() }
-		set { TextualPreferences.textual_setInlineMediaLimitBasicsToFiles(newValue) }
+	@objc dynamic var inlineMediaLimitBasicsToFiles: Bool {
+		get { TextualPreferences.inlineMediaLimitToBasics() && TextualPreferences.inlineMediaLimitBasicsToFiles() }
+		set { TextualPreferences.setInlineMediaLimitBasicsToFiles(newValue) }
 	}
+}
 
-	override public func validateValue(
-		_ ioValue: AutoreleasingUnsafeMutablePointer<AnyObject?>,
-		forKey key: String
-	) throws {
-		guard let string = ioValue.pointee as? String else { return }
-		var value = (string as NSString).integerValue
-		switch key {
-		case "scrollbackSaveLimit":
-			value = PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.scrollbackSaveRange)
-		case "scrollbackVisibleLimit":
-			value = PreferencesValueValidation.clamped(
-				value,
-				to: PreferencesValueValidation.scrollbackVisibleRange,
-				allowingZero: true
-			)
-		case "inlineMediaMaxWidth":
-			value = PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.inlineMediaWidthRange)
-		case "inlineMediaMaxHeight":
-			value = PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.inlineMediaHeightRange)
-		case "fileTransferPortRangeStart":
-			value = min(
-				PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.fileTransferPortRange),
-				Int(TPCPreferences.fileTransferPortRangeEnd())
-			)
-		case "fileTransferPortRangeEnd":
-			value = max(
-				PreferencesValueValidation.clamped(value, to: PreferencesValueValidation.fileTransferPortRange),
-				Int(TPCPreferences.fileTransferPortRangeStart())
-			)
-		default:
-			return
-		}
-		ioValue.pointee = String(value) as NSString
-	}
+// MARK: - Preference actions
 
+extension PreferencesController {
 	private func updateFileTransferDownloadDestinationFolder() {
-		let path = TXSharedApplication.sharedFileTransferDialog().downloadDestinationURL
+		let path = SharedApplication.sharedFileTransferDialog().downloadDestinationURL
 		guard let item = fileTransferDownloadDestinationButton.item(at: 0) else { return }
 		guard let path else {
 			item.image = nil
-			item.title = LocalizedKey("TDCPreferencesController[721-ie]")
+			item.title = PreferencesStrings.noDownloadDestination
 			return
 		}
 		let icon = NSWorkspace.shared.icon(forFile: path.path)
@@ -1098,7 +889,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	@IBAction @objc(onFileTransferDownloadDestinationFolderChanged:)
 	private func onFileTransferDownloadDestinationFolderChanged(_: Any?) {
-		let transferController = TXSharedApplication.sharedFileTransferDialog()
+		let transferController = SharedApplication.sharedFileTransferDialog()
 		switch fileTransferDownloadDestinationButton.selectedTag() {
 		case 2:
 			chooseFolder(with: fileTransferDownloadDestinationButton) { [weak self] bookmark in
@@ -1120,7 +911,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		panel.canChooseFiles = false
 		panel.canCreateDirectories = true
 		panel.resolvesAliases = true
-		panel.prompt = LocalizedKey("Prompts[xne-79]")
+		panel.prompt = PromptStrings.Action.select
 		panel.beginSheetModal(for: window) { response in
 			popupButton.selectItem(at: 0)
 			guard response == .OK, let path = panel.url else { return }
@@ -1138,11 +929,11 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	private func updateTranscriptFolder() {
-		let path = TPCPathInfo.transcriptFolderURL
+		let path = PathInfo.transcriptFolderURL
 		guard let item = transcriptFolderButton.item(at: 0) else { return }
 		guard let path else {
 			item.image = nil
-			item.title = LocalizedKey("TDCPreferencesController[70s-c6]")
+			item.title = PreferencesStrings.noTranscriptFolder
 			return
 		}
 		let icon = NSWorkspace.shared.icon(forFile: path.path)
@@ -1166,14 +957,14 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	private func setTranscriptFolderURL(_ bookmark: Data?) {
-		TPCPathInfo.setTranscriptFolderURL(bookmark)
-		TPCPreferences.performReloadAction(.logTranscripts)
+		PathInfo.setTranscriptFolderURL(bookmark)
+		TextualPreferences.performReloadAction(.logTranscripts)
 		updateTranscriptFolder()
 	}
 
 	private func updateThemeSelection() {
 		themeSelectionButton.removeAllItems()
-		let controller = TXSharedApplication.sharedThemeController()
+		let controller = SharedApplication.sharedThemeController()
 		let currentThemeName = controller.name
 		let currentStorageLocation = controller.storageLocation
 		var bundledItems: [NSMenuItem] = []
@@ -1216,36 +1007,36 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		      let newStorageLocation = TPCThemeStorageLocation(rawValue: locationNumber.uintValue)
 		else { return }
 		guard let newTheme = TPCThemeController.buildFilename(newThemeName, for: newStorageLocation) else { return }
-		guard TPCPreferences.themeName() != newTheme else { return }
-		TPCPreferences.setThemeName(newTheme)
+		guard TextualPreferences.themeName() != newTheme else { return }
+		TextualPreferences.setThemeName(newTheme)
 		reloadingThemeBySelection = true
 		onChangedTheme(nil)
 	}
 
 	private func onChangedThemeSelectionReloadComplete(_: Notification) {
-		var forcedValues: [String] = []
-		if !TPCPreferences
+		var forcedValues: [PreferencesThemeOverride] = []
+		if !TextualPreferences
 			.themeNicknameFormatPreferenceUserConfigurable()
 		{
-			forcedValues.append(LocalizedKey("TDCPreferencesController[77t-de]"))
+			forcedValues.append(.nicknameFormat)
 		}
-		if !TPCPreferences
+		if !TextualPreferences
 			.themeTimestampFormatPreferenceUserConfigurable()
 		{
-			forcedValues.append(LocalizedKey("TDCPreferencesController[ddh-hr]"))
+			forcedValues.append(.timestampFormat)
 		}
-		if !TPCPreferences
+		if !TextualPreferences
 			.themeChannelViewFontPreferenceUserConfigurable()
 		{
-			forcedValues.append(LocalizedKey("TDCPreferencesController[we8-i8]"))
+			forcedValues.append(.channelViewFont)
 		}
 		guard !forcedValues.isEmpty else { return }
-		let themeName = TPCThemeController.extractThemeName(TPCPreferences.themeName()) ?? ""
+		let themeName = TPCThemeController.extractThemeName(TextualPreferences.themeName()) ?? ""
 		TDCAlert.alertSheet(
 			with: window,
-			body: LocalizedKey("TDCPreferencesController[q4o-2f]", themeName, forcedValues.joined(separator: "\n")),
-			title: LocalizedKey("TDCPreferencesController[uc0-z7]"),
-			defaultButton: LocalizedKey("Prompts[c7s-dq]"),
+			body: PreferencesStrings.preferredSelectionBody(styleName: themeName, overrides: forcedValues),
+			title: PreferencesStrings.preferredSelectionTitle,
+			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil,
 			otherButton: nil,
 			suppressionKey: "theme_override_info",
@@ -1256,7 +1047,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	@IBAction @objc(onSelectNewFont:)
 	private func onSelectNewFont(_: Any?) {
-		guard let currentFont = TPCPreferences.themeChannelViewFont() else { return }
+		guard let currentFont = TextualPreferences.themeChannelViewFont() else { return }
 		NSFontManager.shared.setSelectedFont(currentFont, isMultiple: false)
 		NSFontManager.shared.orderFrontFontPanel(self)
 		if !fontPanelIsOwned {
@@ -1277,12 +1068,12 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	@objc private func onChangedChannelViewFont(_ sender: NSFontManager) {
-		guard let currentFont = TPCPreferences.themeChannelViewFont() else { return }
+		guard let currentFont = TextualPreferences.themeChannelViewFont() else { return }
 		let newFont = sender.convert(currentFont)
 		willChangeValue(forKey: "themeChannelViewFontName")
 		willChangeValue(forKey: "themeChannelViewFontSize")
-		TPCPreferences.setThemeChannelViewFontName(newFont.fontName)
-		TPCPreferences.setThemeChannelViewFontSize(newFont.pointSize)
+		TextualPreferences.setThemeChannelViewFontName(newFont.fontName)
+		TextualPreferences.setThemeChannelViewFontSize(newFont.pointSize)
 		didChangeValue(forKey: "themeChannelViewFontName")
 		didChangeValue(forKey: "themeChannelViewFontSize")
 		onChangedTheme(nil)
@@ -1307,7 +1098,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	private func updateForwardNoticeToMatrix() {
-		let location = TPCPreferences.locationToSendNotices()
+		let location = TextualPreferences.locationToSendNotices()
 		forwardNoticeToServerConsoleButton.state = location == .serverConsole ? .on : .off
 		forwardNoticeToSelectedChannelButton.state = location == .selectedChannel ? .on : .off
 		forwardNoticeToQueryButton.state = location == .query ? .on : .off
@@ -1317,7 +1108,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	private func onChangedForwardNoticeTo(_ sender: Any?) {
 		guard let control = sender as? NSControl,
 		      let location = TXNoticeSendLocation(rawValue: UInt(control.tag)) else { return }
-		TPCPreferences.setLocationToSendNotices(location)
+		TextualPreferences.setLocationToSendNotices(location)
 	}
 
 	@IBAction @objc(onChangedDisableNicknameColorHashing:)
@@ -1329,7 +1120,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	private func onChangedHighlightType(_: Any?) {
 		willChangeValue(forKey: "highlightCurrentNickname")
 		didChangeValue(forKey: "highlightCurrentNickname")
-		highlightNicknameButton.isEnabled = TPCPreferences.highlightMatchingMethod() != .regularExpression
+		highlightNicknameButton.isEnabled = TextualPreferences.highlightMatchingMethod() != .regularExpression
 	}
 
 	private func editTableView(_ tableView: NSTableView) {
@@ -1365,21 +1156,21 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	private func updateInlineMediaEnabled() {
-		inlineMediaEnabledButton.state = TPCPreferences.showInlineMedia() ? .on : .off
+		inlineMediaEnabledButton.state = TextualPreferences.showInlineMedia() ? .on : .off
 	}
 
 	@IBAction @objc(onChangedInlineMediaOption:)
 	private func onChangedInlineMediaOption(_: Any?) {
 		guard inlineMediaEnabledButton.state != .off else {
-			TPCPreferences.setShowInlineMedia(false)
+			TextualPreferences.setShowInlineMedia(false)
 			onChangedTheme(nil)
 			return
 		}
-		TVCLogControllerInlineMediaService.askPermissionToEnableInlineMedia { [weak self] granted in
+		LogControllerInlineMediaService.askPermissionToEnableInlineMedia { [weak self] granted in
 			Task { @MainActor [weak self] in
 				guard let self else { return }
 				if granted {
-					TPCPreferences.setShowInlineMedia(true)
+					TextualPreferences.setShowInlineMedia(true)
 					onChangedTheme(nil)
 				} else {
 					inlineMediaEnabledButton.state = .off
@@ -1390,7 +1181,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	@IBAction @objc(onResetUserListModeColorsToDefaults:)
 	private func onResetUserListModeColorsToDefaults(_: Any?) {
-		let defaults = TPCPreferencesUserDefaults.shared()
+		let defaults = TextualUserDefaults.shared()
 		for item in ["+y", "+q", "+a", "+o", "+h", "+v", "no mode"] {
 			defaults.removeObject(forKey: "User List Mode Badge Colors -> \(item)")
 		}
@@ -1400,7 +1191,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	@IBAction @objc(onResetServerListUnreadBadgeColorsToDefault:)
 	private func onResetServerListUnreadBadgeColorsToDefault(_ sender: Any?) {
 		willChangeValue(forKey: "serverListUnreadCountBadgeHighlightColor")
-		TPCPreferencesUserDefaults.shared()
+		TextualUserDefaults.shared()
 			.removeObject(forKey: "Server List Unread Message Count Badge Colors -> Highlight")
 		didChangeValue(forKey: "serverListUnreadCountBadgeHighlightColor")
 		onChangedServerListUnreadBadgeColor(sender)
@@ -1408,17 +1199,17 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	@IBAction @objc(onChangedInputHistoryScheme:)
 	private func onChangedInputHistoryScheme(_: Any?) {
-		TPCPreferences.performReloadAction(.inputHistoryScope)
+		TextualPreferences.performReloadAction(.inputHistoryScope)
 	}
 
 	@IBAction @objc(onChangedAppearance:)
 	private func onChangedAppearance(_: Any?) {
-		TPCPreferences.performReloadAction(.appearance)
+		TextualPreferences.performReloadAction(.appearance)
 	}
 
 	@IBAction @objc(onChangedTheme:)
 	private func onChangedTheme(_: Any?) {
-		TPCPreferences.performReloadAction([.style, .textDirection])
+		TextualPreferences.performReloadAction([.style, .textDirection])
 	}
 
 	@objc private func onThemeWillReload(_: Notification) {
@@ -1435,7 +1226,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	@IBAction @objc(onChangedChannelViewArrangement:)
 	private func onChangedChannelViewArrangement(_: Any?) {
-		TPCPreferences.performReloadAction(.channelViewArrangement)
+		TextualPreferences.performReloadAction(.channelViewArrangement)
 	}
 
 	@IBAction @objc(onChangedUserListModeColor:)
@@ -1447,51 +1238,51 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 			4: "User List Mode Badge Colors -> no mode",
 		]
 		guard let control = sender as? NSControl, let preferenceKey = preferenceMap[control.tag] else {
-			TPCPreferences.performReloadAction([.memberListUserBadges, .memberList])
+			TextualPreferences.performReloadAction([.memberListUserBadges, .memberList])
 			return
 		}
-		TPCPreferences.performReloadAction(.memberListUserBadges, forKey: preferenceKey)
+		TextualPreferences.performReloadAction(.memberListUserBadges, forKey: preferenceKey)
 	}
 
 	@IBAction @objc(onChangedMainInputTextViewFontSize:)
 	private func onChangedMainInputTextViewFontSize(_: Any?) {
-		TPCPreferences.performReloadAction(.textFieldFontSize)
+		TextualPreferences.performReloadAction(.textFieldFontSize)
 	}
 
 	@IBAction @objc(onFileTransferIPAddressDetectionMethodChanged:)
 	private func onFileTransferIPAddressDetectionMethodChanged(_: Any?) {
-		fileTransferManuallyEnteredIPAddressTextField.isEnabled = TPCPreferences
+		fileTransferManuallyEnteredIPAddressTextField.isEnabled = TextualPreferences
 			.fileTransferIPAddressDetectionMethod() == .manual
 	}
 
 	@IBAction @objc(onChangedHighlightLogging:)
 	private func onChangedHighlightLogging(_: Any?) {
-		TPCPreferences.performReloadAction(.highlightLogging)
+		TextualPreferences.performReloadAction(.highlightLogging)
 	}
 
 	@IBAction @objc(onChangedUserListModeSortOrder:)
 	private func onChangedUserListModeSortOrder(_: Any?) {
-		TPCPreferences.performReloadAction(.memberListSortOrder)
+		TextualPreferences.performReloadAction(.memberListSortOrder)
 	}
 
 	@IBAction @objc(onChangedServerListUnreadBadgeColor:)
 	private func onChangedServerListUnreadBadgeColor(_: Any?) {
-		TPCPreferences.performReloadAction(.serverListUnreadBadges)
+		TextualPreferences.performReloadAction(.serverListUnreadBadges)
 	}
 
 	@IBAction @objc(onChangedScrollbackSaveLimit:)
 	private func onChangedScrollbackSaveLimit(_: Any?) {
-		TPCPreferences.performReloadAction(.scrollbackSaveLimit)
+		TextualPreferences.performReloadAction(.scrollbackSaveLimit)
 	}
 
 	@IBAction @objc(onChangedScrollbackVisibleLimit:)
 	private func onChangedScrollbackVisibleLimit(_: Any?) {
-		TPCPreferences.performReloadAction(.scrollbackVisibleLimit)
+		TextualPreferences.performReloadAction(.scrollbackVisibleLimit)
 	}
 
 	@IBAction @objc(onOpenPathToScripts:)
 	private func onOpenPathToScripts(_: Any?) {
-		if let url = TPCPathInfo.groupContainerApplicationSupportURL {
+		if let url = PathInfo.groupContainerApplicationSupportURL {
 			NSWorkspace.shared.open(url)
 		}
 	}
@@ -1501,9 +1292,9 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		PluginManager.resetApprovals()
 		TDCAlert.alertSheet(
 			with: window,
-			body: LocalizedKey("Prompts[h7m-2q]"),
-			title: LocalizedKey("Prompts[zp3-7r]"),
-			defaultButton: LocalizedKey("Prompts[u5k-9n]"),
+			body: PromptStrings.Plugin.resetApprovalsBody,
+			title: PromptStrings.Plugin.resetApprovalsTitle,
+			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil,
 			otherButton: nil
 		)
@@ -1517,7 +1308,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 			onModifyUserStyleSheetRules(nil)
 		case .other:
 			originalAlert.window.orderOut(nil)
-			TXSharedApplication.sharedThemeController().copyActiveTheme(
+			SharedApplication.sharedThemeController().copyActiveTheme(
 				to: .custom,
 				reloadOnCopy: true,
 				openOnCopy: true
@@ -1528,17 +1319,17 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	@IBAction @objc(onOpenPathToTheme:)
 	private func onOpenPathToTheme(_: Any?) {
-		guard TXSharedApplication.sharedThemeController().isBundledTheme else {
+		guard SharedApplication.sharedThemeController().isBundledTheme else {
 			openPathToTheme()
 			return
 		}
 		TDCAlert.alertSheet(
 			with: window,
-			body: LocalizedKey("TDCPreferencesController[ojj-ap]"),
-			title: LocalizedKey("TDCPreferencesController[5jv-aw]"),
-			defaultButton: LocalizedKey("TDCPreferencesController[6ws-av]"),
-			alternateButton: LocalizedKey("TDCPreferencesController[aib-iy]"),
-			otherButton: LocalizedKey("TDCPreferencesController[dj8-1t]")
+			body: PreferencesStrings.styleModificationBody,
+			title: PreferencesStrings.styleModificationTitle,
+			defaultButton: PreferencesStrings.viewStyleFilesButtonTitle,
+			alternateButton: PreferencesStrings.editStyleButtonTitle,
+			otherButton: PreferencesStrings.createStyleCopyButtonTitle
 		) { [weak self] response, _, underlyingAlert in
 			guard let self, let alert = underlyingAlert as? NSAlert else { return }
 			openPathToThemesCallback(response, originalAlert: alert)
@@ -1546,7 +1337,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	private func openPathToTheme() {
-		NSWorkspace.shared.open(TXSharedApplication.sharedThemeController().originalURL)
+		NSWorkspace.shared.open(SharedApplication.sharedThemeController().originalURL)
 	}
 
 	@objc private func onThemeListDidChange(_: Notification) {
@@ -1554,7 +1345,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 	}
 
 	@objc public func windowWillClose(_: Notification) {
-		NotificationCenter.default.removeObserver(self)
+		notifications.cancelAll()
 		releaseFontPanel()
 		saveWindowFrame()
 		(delegate as? PreferencesControllerDelegate)?.preferencesDialogWillClose(self)

@@ -37,6 +37,12 @@
 
 import Foundation
 
+@objc public enum IRCNetworkRegistration: UInt, Sendable {
+	case none = 0
+	case optional = 1
+	case required = 2
+}
+
 @objc(IRCNetworkList)
 public final class NetworkList: NSObject {
 	private static let popularNetworkNames = [

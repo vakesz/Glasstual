@@ -4,5 +4,3 @@
 --maxwidth 120
 --wraparguments preserve
 --wrapcollections preserve
---exclude DerivedData
---exclude build

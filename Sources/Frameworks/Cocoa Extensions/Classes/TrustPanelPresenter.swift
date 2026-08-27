@@ -34,12 +34,13 @@ import AppKit
 import Security
 import SecurityInterface
 
+public typealias TrustDecisionHandler = (Bool) -> Void
 public typealias TrustPanelCompletion = (SecTrust, Bool, Any?) -> Void
 
 @objc(RCMTrustPanel)
 public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 	@objc(presentTrustPanelInWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:)
-	public class func present(
+	public static func present(
 		in window: NSWindow?,
 		body: String,
 		title: String,
@@ -61,7 +62,7 @@ public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 	}
 
 	@objc(presentTrustPanelInWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:contextInfo:)
-	public class func present(
+	public static func present(
 		in window: NSWindow?,
 		body: String,
 		title: String,
@@ -105,7 +106,7 @@ public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 		}
 	}
 
-	@objc private class func trustPanelDidEnd(
+	@objc private static func trustPanelDidEnd(
 		_: NSWindow,
 		returnCode: Int,
 		contextInfo: UnsafeMutableRawPointer

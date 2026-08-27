@@ -8,9 +8,35 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 private let textViewWidthPadding: CGFloat = 1.0
 private let textViewHeightPadding: CGFloat = 2.0
@@ -24,7 +50,7 @@ public enum TVCTextViewCaretLocation: UInt {
 }
 
 @objc(TVCTextViewWithIRCFormatter)
-open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEventHandlerPrototype {
+open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
 	/* Nib-loaded via ObjC subclass (MainWindowTextView); keep this class
 	 off @MainActor so -initWithCoder: from NSClassSwapper does not trip
 	 isolation traps. KeyEventHandler is MainActor — hop explicitly. */
@@ -79,7 +105,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 
 		delegate = self
 
-		if TPCPreferences.rightToLeftFormatting() {
+		if TextualPreferences.rightToLeftFormatting() {
 			baseWritingDirection = .rightToLeft
 		} else {
 			baseWritingDirection = .leftToRight
@@ -111,6 +137,22 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 	@objc(registerSelector:characters:modifiers:)
 	public func register(_ selector: Selector, characters characterRange: NSRange, modifiers: UInt) {
 		keyEventHandler.register(selector, characters: characterRange, modifiers: modifiers)
+	}
+
+	public func register(
+		key: KeyCode,
+		modifiers: NSEvent.ModifierFlags = [],
+		perform action: @escaping KeyEventHandler.Action
+	) {
+		keyEventHandler.register(key: key, modifiers: modifiers, perform: action)
+	}
+
+	public func register(
+		character: Character,
+		modifiers: NSEvent.ModifierFlags = [],
+		perform action: @escaping KeyEventHandler.Action
+	) {
+		keyEventHandler.register(character: character, modifiers: modifiers, perform: action)
 	}
 
 	@objc(performedCustomKeyboardEvent:)
@@ -207,7 +249,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 	}
 
 	private func modifyTypingAttributes(_ typingAttributes: [NSAttributedString.Key: Any]) {
-		var typingAttributesMutable = self.typingAttributes ?? [:]
+		var typingAttributesMutable = self.typingAttributes
 		typingAttributesMutable.merge(typingAttributes) { _, new in new }
 		self.typingAttributes = typingAttributesMutable
 	}
@@ -321,9 +363,9 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 	}
 
 	@objc public var caretLocation: TVCTextViewCaretLocation {
-		let stringLength = stringLength
+		let currentStringLength = stringLength
 
-		if stringLength == 0 {
+		if currentStringLength == 0 {
 			return .onlyLine
 		}
 
@@ -342,7 +384,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, TLOKeyEvent
 		 first line is excluded. */
 		let inFirstLine = selectedRange.location < NSMaxRange(firstLineRange)
 		let inLastLine =
-			NSMaxRange(selectedRange) == stringLength
+			NSMaxRange(selectedRange) == currentStringLength
 				|| selectedRange.location >= lastLineRange.location
 
 		if inFirstLine, inLastLine {

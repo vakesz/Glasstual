@@ -32,7 +32,7 @@
 
 import Foundation
 
-@objc(XRPortablePropertyDictTarget)
+@objc(PortablePropertyDictTarget)
 public enum PortablePropertyDictTarget: UInt {
 	case `default`
 	case copy
@@ -48,7 +48,7 @@ public protocol PortablePropertyDictPrototype: NSObjectProtocol {
 	func dictionaryValue(for target: PortablePropertyDictTarget) -> [String: Any]
 }
 
-@objc(XRPortablePropertyDict)
+@objc(PortablePropertyDict)
 @objcMembers
 open class PortablePropertyDict: PortablePropertyObject, PortablePropertyDictPrototype {
 	override public init() {

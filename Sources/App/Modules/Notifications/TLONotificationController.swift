@@ -12,8 +12,18 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
 import UserNotifications
+
+enum NotificationPayload {
+	static let clientIdentifierKey = "clientId"
+	static let channelIdentifierKey = "channelId"
+	static let standardNicknameFormat = "%@ %@"
+	static let actionNicknameFormat = "• %@: %@"
+	static let highlightActionFormat = "• %@: %@"
+	static let highlightMessageFormat = "%@ %@"
+}
 
 private let fileTransferCategoryIdentifier = "TXNotificationCategoryIdentifierFileTransfer"
 private let fileTransferAcceptActionIdentifier = "TXNotificationActionIdentifierFileTransferAccept"
@@ -52,7 +62,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 		/* On a first launch the onboarding window explains the permission
 		 before asking for it, so the request is left to that flow. */
-		if TPCPreferences.onboardingCompleted() {
+		if TextualPreferences.onboardingCompleted() {
 			UNUserNotificationCenter.current().requestAuthorization(
 				options: [.alert, .providesAppNotificationSettings]
 			) { granted, error in
@@ -72,7 +82,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	private var categoriesToRegister: Set<UNNotificationCategory> {
 		let fileTransferAcceptAction = UNNotificationAction(
 			identifier: fileTransferAcceptActionIdentifier,
-			title: LocalizedKey("Prompts[qpv-go]"),
+			title: PromptStrings.Action.accept,
 			options: []
 		)
 
@@ -85,10 +95,10 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 		let privateMessageReplyAction = UNTextInputNotificationAction(
 			identifier: privateMessageReplyActionIdentifier,
-			title: LocalizedKey("Notifications[3t4-kl]"),
+			title: NotificationStrings.replyActionTitle,
 			options: [],
-			textInputButtonTitle: LocalizedKey("Notifications[bhn-uo]"),
-			textInputPlaceholder: LocalizedKey("Notifications[do4-2e]")
+			textInputButtonTitle: NotificationStrings.replySendButtonTitle,
+			textInputPlaceholder: NotificationStrings.replyPlaceholder
 		)
 
 		let privateMessageCategory = UNNotificationCategory(
@@ -107,7 +117,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	@objc
 	private func mainWindowSelectionChanged(_: Notification) {
-		guard let mainWindow = NSObject.masterController().mainWindow,
+		guard let mainWindow = NSObject.applicationController().mainWindow,
 		      let client = mainWindow.selectedClient
 		else {
 			return
@@ -118,48 +128,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	@objc(titleForEvent:)
 	public func title(forEvent event: TXNotificationType) -> String {
-		switch event {
-		case .addressBookMatch:
-			return LocalizedKey("Notifications[kx3-xk]")
-		case .channelMessage:
-			return LocalizedKey("Notifications[qnz-k4]")
-		case .channelNotice:
-			return LocalizedKey("Notifications[vuq-jp]")
-		case .connect:
-			return LocalizedKey("Notifications[4lr-ej]")
-		case .disconnect:
-			return LocalizedKey("Notifications[wjv-yb]")
-		case .invite:
-			return LocalizedKey("Notifications[eiu-8q]")
-		case .kick:
-			return LocalizedKey("Notifications[2nk-lg]")
-		case .newPrivateMessage:
-			return LocalizedKey("Notifications[5yi-gu]")
-		case .privateMessage:
-			return LocalizedKey("Notifications[00b-nx]")
-		case .privateNotice:
-			return LocalizedKey("Notifications[nhz-io]")
-		case .highlight:
-			return LocalizedKey("Notifications[cs4-x9]")
-		case .fileTransferSendSuccessful:
-			return LocalizedKey("Notifications[0x2-3h]")
-		case .fileTransferReceiveSuccessful:
-			return LocalizedKey("Notifications[qle-7v]")
-		case .fileTransferSendFailed:
-			return LocalizedKey("Notifications[sc0-1n]")
-		case .fileTransferReceiveFailed:
-			return LocalizedKey("Notifications[we9-1b]")
-		case .fileTransferReceiveRequested:
-			return LocalizedKey("Notifications[st5-0n]")
-		case .userJoined:
-			return LocalizedKey("Notifications[25q-af]")
-		case .userParted:
-			return LocalizedKey("Notifications[k3s-by]")
-		case .userDisconnected:
-			return LocalizedKey("Notifications[0fo-bt]")
-		@unknown default:
-			return ""
-		}
+		NotificationStrings.eventTypeTitle(for: event)
 	}
 
 	@objc(notify:title:description:userInfo:)
@@ -169,55 +138,13 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		description eventDescription: String?,
 		userInfo eventContext: [String: Any]?
 	) {
-		var title = eventTitle
-		var body = eventDescription
+		var (title, body) = notificationContent(
+			for: eventType,
+			title: eventTitle,
+			body: eventDescription
+		)
 
-		switch eventType {
-		case .highlight:
-			title = LocalizedKey("Notifications[qka-f3]", title ?? "")
-		case .newPrivateMessage:
-			title = LocalizedKey("Notifications[ltn-hf]")
-		case .channelMessage:
-			title = LocalizedKey("Notifications[ep5-de]", title ?? "")
-		case .channelNotice:
-			title = LocalizedKey("Notifications[chi-km]", title ?? "")
-		case .privateMessage:
-			title = LocalizedKey("Notifications[69i-dy]")
-		case .privateNotice:
-			title = LocalizedKey("Notifications[7hn-dg]")
-		case .kick:
-			title = LocalizedKey("Notifications[u30-ia]", title ?? "")
-		case .invite:
-			title = LocalizedKey("Notifications[g4s-cq]", title ?? "")
-		case .connect:
-			title = LocalizedKey("Notifications[mo1-vn]", title ?? "")
-			body = LocalizedKey("Notifications[88k-kl]")
-		case .disconnect:
-			title = LocalizedKey("Notifications[7xe-ig]", title ?? "")
-			body = LocalizedKey("Notifications[bif-2c]")
-		case .addressBookMatch:
-			title = LocalizedKey("Notifications[niq-32]")
-		case .fileTransferSendSuccessful:
-			title = LocalizedKey("Notifications[l5y-sx]", title ?? "")
-		case .fileTransferReceiveSuccessful:
-			title = LocalizedKey("Notifications[hc9-7n]", title ?? "")
-		case .fileTransferSendFailed:
-			title = LocalizedKey("Notifications[het-vh]", title ?? "")
-		case .fileTransferReceiveFailed:
-			title = LocalizedKey("Notifications[hm4-ze]", title ?? "")
-		case .fileTransferReceiveRequested:
-			title = LocalizedKey("Notifications[nqz-7v]", title ?? "")
-		case .userJoined:
-			title = LocalizedKey("Notifications[keq-ts]", title ?? "")
-		case .userParted:
-			title = LocalizedKey("Notifications[im4-p0]", title ?? "")
-		case .userDisconnected:
-			title = LocalizedKey("Notifications[20x-32]", title ?? "")
-		@unknown default:
-			break
-		}
-
-		if TPCPreferences.removeAllFormatting() == false, let currentBody = body {
+		if TextualPreferences.removeAllFormatting() == false, let currentBody = body {
 			body = (currentBody as NSString).stripIRCEffects
 		}
 
@@ -230,8 +157,8 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			nil
 		}
 
-		let clientId = eventContext?[TXNotificationUserInfoClientIdentifierKey] as? String
-		let channelId = eventContext?[TXNotificationUserInfoChannelIdentifierKey] as? String
+		let clientId = eventContext?[NotificationPayload.clientIdentifierKey] as? String
+		let channelId = eventContext?[NotificationPayload.channelIdentifierKey] as? String
 		let threadIdentifier = Self.threadIdentifier(forClient: clientId, channel: channelId)
 
 		scheduleNotification(
@@ -244,8 +171,19 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 	}
 
+	private func notificationContent(
+		for eventType: TXNotificationType,
+		title eventTitle: String?,
+		body eventBody: String?
+	) -> (title: String?, body: String?) {
+		(
+			NotificationStrings.deliveredTitle(for: eventType, subject: eventTitle),
+			NotificationStrings.deliveredBody(for: eventType, fallback: eventBody)
+		)
+	}
+
 	@objc(threadIdentifierForClient:channel:)
-	public class func threadIdentifier(forClient clientIdentifier: String?, channel channelIdentifier: String?)
+	public static func threadIdentifier(forClient clientIdentifier: String?, channel channelIdentifier: String?)
 		-> String?
 	{
 		guard let clientIdentifier else {
@@ -315,11 +253,11 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 		let userInfo: [String: Any] = if let channelId {
 			[
-				TXNotificationUserInfoClientIdentifierKey: clientId,
-				TXNotificationUserInfoChannelIdentifierKey: channelId,
+				NotificationPayload.clientIdentifierKey: clientId,
+				NotificationPayload.channelIdentifierKey: channelId,
 			]
 		} else {
-			[TXNotificationUserInfoClientIdentifierKey: clientId]
+			[NotificationPayload.clientIdentifierKey: clientId]
 		}
 
 		scheduleNotification(
@@ -370,7 +308,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	}
 
 	@objc(notificationIdentifierWithTitle:message:threadIdentifier:)
-	public class func notificationIdentifier(
+	public static func notificationIdentifier(
 		title: String,
 		message: String,
 		threadIdentifier: String?
@@ -407,7 +345,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		openSettingsFor _: UNNotification?
 	) {
 		Task { @MainActor in
-			NSObject.masterController().menuController?.showNotificationPreferences(nil)
+			NSObject.applicationController().menuController?.showNotificationPreferences(nil)
 		}
 	}
 
@@ -428,9 +366,9 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		let message = (response as? UNTextInputNotificationResponse)?.userText
 		let userInfo = response.notification.request.content.userInfo
 
-		let clientId = userInfo[TXNotificationUserInfoClientIdentifierKey] as? String
-		let channelId = userInfo[TXNotificationUserInfoChannelIdentifierKey] as? String
-		let fileTransferNotificationType = (userInfo as NSDictionary).integer(
+		let clientId = userInfo[NotificationPayload.clientIdentifierKey] as? String
+		let channelId = userInfo[NotificationPayload.channelIdentifierKey] as? String
+		let fileTransferNotificationType = (userInfo as NSDictionary).ce_integer(
 			forKey: "fileTransferNotificationType"
 		)
 		let fileTransferUniqueIdentifier = userInfo["fileTransferUniqueIdentifier"] as? String
@@ -500,13 +438,13 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 	}
 
 	@objc(userInfo:isInScopeOfClientIdentifier:channelIdentifier:)
-	public nonisolated class func isNotification(
+	public nonisolated static func isNotification(
 		userInfo: [AnyHashable: Any],
 		inScopeOfClientIdentifier clientIdentifier: String,
 		channelIdentifier: String?
 	) -> Bool {
-		let clientIdRight = userInfo[TXNotificationUserInfoClientIdentifierKey] as? String
-		let channelIdRight = userInfo[TXNotificationUserInfoChannelIdentifierKey] as? String
+		let clientIdRight = userInfo[NotificationPayload.clientIdentifierKey] as? String
+		let channelIdRight = userInfo[NotificationPayload.channelIdentifierKey] as? String
 
 		/* Equality of nil is valid so both channel IDs can be absent. */
 		return clientIdentifier == clientIdRight && channelIdentifier == channelIdRight
@@ -544,13 +482,13 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		}
 
 		if keyMainWindow {
-			NSObject.masterController().mainWindow.makeKeyAndOrderFront(nil)
+			NSObject.applicationController().mainWindow.makeKeyAndOrderFront(nil)
 		}
 
 		/* Handle file transfer notifications allowing the user to start a
 		 file transfer directly through the notification's action button. */
 		if isFileTransferAction {
-			TXSharedApplication.sharedFileTransferDialog().show(true, restorePosition: false)
+			SharedApplication.sharedFileTransferDialog().show(true, restorePosition: false)
 
 			guard fileTransferNotificationType == TXNotificationType.fileTransferReceiveRequested.rawValue else {
 				return
@@ -561,7 +499,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			}
 
 			guard
-				let fileTransfer = TXSharedApplication.sharedFileTransferDialog()
+				let fileTransfer = SharedApplication.sharedFileTransferDialog()
 				.fileTransfer(withUniqueIdentifier: fileTransferUniqueIdentifier)
 			else {
 				return
@@ -581,7 +519,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			return
 		}
 
-		let world = NSObject.masterController().world!
+		let world = NSObject.applicationController().world!
 
 		let channel: IRCChannel?
 		let client: IRCClient?
@@ -595,10 +533,10 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		}
 
 		if let channel {
-			let treeItem = (channel as AnyObject) as! IRCTreeItem
-			NSObject.masterController().mainWindow.select(treeItem)
+			let treeItem: TreeItem = channel
+			NSObject.applicationController().mainWindow.select(treeItem)
 		} else if let client {
-			NSObject.masterController().mainWindow.select(client)
+			NSObject.applicationController().mainWindow.select(client)
 		}
 
 		guard let channel else {
@@ -609,7 +547,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			return
 		}
 
-		let treeItem = (channel as AnyObject) as! IRCTreeItem
+		let treeItem: TreeItem = channel
 		channel.associatedClient?.inputText(message, destination: treeItem)
 	}
 
@@ -621,7 +559,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			return channelValue
 		}
 
-		return TPCPreferences.sound(forEvent: event)
+		return TextualPreferences.sound(for: event)
 	}
 
 	@objc(speakEvent:inChannel:)
@@ -634,7 +572,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			}
 		}
 
-		return TPCPreferences.speakEvent(event)
+		return TextualPreferences.speak(event)
 	}
 
 	@objc(notificationEnabledForEvent:inChannel:)
@@ -647,7 +585,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			}
 		}
 
-		return TPCPreferences.notificationEnabled(forEvent: event)
+		return TextualPreferences.notificationEnabled(for: event)
 	}
 
 	@objc(disabledWhileAwayForEvent:inChannel:)
@@ -660,7 +598,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			}
 		}
 
-		return TPCPreferences.disabledWhileAway(forEvent: event)
+		return TextualPreferences.disabledWhileAway(for: event)
 	}
 
 	@objc(bounceDockIconForEvent:inChannel:)
@@ -673,7 +611,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			}
 		}
 
-		return TPCPreferences.bounceDockIcon(forEvent: event)
+		return TextualPreferences.bounceDockIcon(for: event)
 	}
 
 	@objc(bounceDockIconRepeatedlyForEvent:inChannel:)
@@ -686,6 +624,6 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			}
 		}
 
-		return TPCPreferences.bounceDockIconRepeatedly(forEvent: event)
+		return TextualPreferences.bounceDockIconRepeatedly(for: event)
 	}
 }

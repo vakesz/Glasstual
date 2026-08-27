@@ -37,7 +37,21 @@
  *********************************************************************** */
 
 import AppKit
+import GlasstualPluginKit
 import os
+
+public typealias IRCWorld = World
+public let IRCWorldClientListDefaultsKey = "World Controller Client Configurations"
+
+extension World {
+	func destroy(_ client: IRCClient) {
+		destroyClient(client)
+	}
+
+	func destroy(_ channel: IRCChannel, reload: Bool = true) {
+		destroyChannel(channel, reload: reload)
+	}
+}
 
 private enum WorldTiming {
 	static let autoConnectDelay: UInt = 1
@@ -45,25 +59,19 @@ private enum WorldTiming {
 	static let savePeriodicallyThreshold: CFAbsoluteTime = 300
 }
 
-private extension Notification.Name {
+extension Notification.Name {
 	static let ircWorldClientListWasModified = Notification.Name("IRCWorldClientListWasModifiedNotification")
 	static let ircWorldDateHasChanged = Notification.Name("IRCWorldDateHasChangedNotification")
-}
-
-private extension NSObject {
-	func invokeWorldLifecycleSelector(_ selector: Selector) {
-		guard responds(to: selector) else {
-			return
-		}
-
-		typealias Implementation = @convention(c) (AnyObject, Selector) -> Void
-		let implementation = unsafeBitCast(method(for: selector), to: Implementation.self)
-		implementation(self, selector)
-	}
+	static let ircWorldWillDestroyClient = Notification.Name("IRCWorldWillDestroyClientNotification")
+	static let ircWorldWillDestroyChannel = Notification.Name("IRCWorldWillDestroyChannelNotification")
 }
 
 private func legacyTreeItem(for channel: IRCChannel) -> IRCTreeItem {
-	(channel as AnyObject) as! IRCTreeItem
+	channel
+}
+
+private func nativeChannel(from item: IRCTreeItem?) -> IRCChannel? {
+	(item as AnyObject?) as? IRCChannel
 }
 
 @MainActor
@@ -82,6 +90,7 @@ public final class World: NSObject {
 	private var savePeriodicallyLastSave = CFAbsoluteTimeGetCurrent()
 	private var lastDateHasChangedDate: Date?
 	private nonisolated(unsafe) var midnightTimer: Timer?
+	private let notifications = NotificationSubscriptions()
 
 	@objc public var isImportingConfiguration = false
 
@@ -127,17 +136,11 @@ public final class World: NSObject {
 	@objc public func setupConfiguration() {
 		isImportingConfiguration = true
 
-		let serverList = masterController.mainWindow.serverList!
+		let serverList = applicationController.mainWindow.serverList!
 		serverList.beginUpdates()
 
-		for dictionary in TPCPreferences.clientList() ?? [] {
-			let stringDictionary = dictionary.reduce(into: [String: Any]()) { result, entry in
-				guard let key = entry.key as? String else {
-					return
-				}
-				result[key] = entry.value
-			}
-			let config = IRCClientConfig(dictionary: stringDictionary)
+		for dictionary in TextualPreferences.clientList() ?? [] {
+			let config = IRCClientConfig(dictionary: dictionary)
 			_ = createClient(with: config, reload: true)
 		}
 
@@ -149,25 +152,16 @@ public final class World: NSObject {
 	private func setupOtherServices() {
 		setupMidnightTimer()
 
-		let notifications = NotificationCenter.default
-		notifications.addObserver(
-			self,
-			selector: #selector(dateChanged(_:)),
-			name: NSNotification.Name.NSSystemClockDidChange,
-			object: nil
-		)
-		notifications.addObserver(
-			self,
-			selector: #selector(userDefaultsDidChange(_:)),
-			name: .TPCPreferencesUserDefaultsDidChange,
-			object: nil
-		)
-		notifications.addObserver(
-			self,
-			selector: #selector(mainWindowAppearanceChanged(_:)),
-			name: .TVCMainWindowAppearanceChanged,
-			object: nil
-		)
+		notifications.observe(.NSSystemClockDidChange) { [weak self] notification in
+			self?.dateChanged(notification)
+		}
+		notifications
+			.observe(.textualUserDefaultsDidChange) { [weak self] notification in
+				self?.userDefaultsDidChange(notification)
+			}
+		notifications.observe(.TVCMainWindowAppearanceChanged) { [weak self] notification in
+			self?.mainWindowAppearanceChanged(notification)
+		}
 	}
 
 	private var clientConfigurations: [[String: Any]] {
@@ -175,7 +169,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func save() {
-		TPCPreferences.setClientList(clientConfigurations)
+		TextualPreferences.setClientList(clientConfigurations)
 	}
 
 	@objc public func savePeriodically() {
@@ -189,15 +183,15 @@ public final class World: NSObject {
 	}
 
 	@objc public func prepareForApplicationTermination() {
-		NotificationCenter.default.removeObserver(self)
+		notifications.cancelAll()
 
 		for client in clientList {
-			client.invokeWorldLifecycleSelector(NSSelectorFromString("prepareForApplicationTermination"))
+			client.prepareForApplicationTermination()
 		}
 	}
 
 	@objc private func userDefaultsDidChange(_: Notification) {
-		guard TXSharedApplication.sharedThemeController().settings.js_postPreferencesDidChangesNotifications else {
+		guard SharedApplication.sharedThemeController().settings.postsPreferenceChangeNotifications else {
 			return
 		}
 		guard preferencesDidChangeTimerIsActive == false else {
@@ -219,7 +213,7 @@ public final class World: NSObject {
 	}
 
 	@objc private func mainWindowAppearanceChanged(_: Notification) {
-		guard TXSharedApplication.sharedThemeController().settings.js_postAppearanceChangesNotification else {
+		guard SharedApplication.sharedThemeController().settings.postsAppearanceChangeNotifications else {
 			return
 		}
 
@@ -227,7 +221,7 @@ public final class World: NSObject {
 	}
 
 	private func informAllViewsMainWindowAppearanceChanged() {
-		let appearance = masterController.mainWindow.userInterfaceObjects
+		let appearance = applicationController.mainWindow.userInterfaceObjects
 		evaluateFunction(
 			onAllViews: "Glasstual.appearanceDidChange",
 			arguments: [appearance.shortAppearanceDescription],
@@ -242,7 +236,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func autoConnect(afterWakeup afterWakeUp: Bool) {
-		guard masterController.ghostModeIsOn == false || afterWakeUp else {
+		guard applicationController.ghostModeIsOn == false || afterWakeUp else {
 			return
 		}
 
@@ -264,7 +258,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func prepareForSleep() {
-		guard TPCPreferences.disconnectOnSleep() else {
+		guard TextualPreferences.disconnectOnSleep() else {
 			return
 		}
 
@@ -275,7 +269,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func prepareForScreenSleep() {
-		guard TPCPreferences.setAwayOnScreenSleep() else {
+		guard TextualPreferences.setAwayOnScreenSleep() else {
 			return
 		}
 
@@ -285,7 +279,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func wakeFromScreenSleep() {
-		guard TPCPreferences.setAwayOnScreenSleep() else {
+		guard TextualPreferences.setAwayOnScreenSleep() else {
 			return
 		}
 
@@ -301,10 +295,10 @@ public final class World: NSObject {
 	}
 
 	@objc public func preferencesChanged() {
-		masterController.menuController?.invokeWorldLifecycleSelector(NSSelectorFromString("preferencesChanged"))
+		applicationController.menuController?.preferencesChanged()
 
 		for client in clientList {
-			client.invokeWorldLifecycleSelector(NSSelectorFromString("preferencesChanged"))
+			client.preferencesChanged()
 		}
 	}
 
@@ -424,7 +418,7 @@ public final class World: NSObject {
 
 	@objc(findChannelWithId:onClientWithId:)
 	public func findChannel(withId channelId: String, onClientWithId _: String) -> IRCChannel? {
-		findItem(withId: channelId) as? IRCChannel
+		nativeChannel(from: findItem(withId: channelId))
 	}
 
 	@objc(findItemWithPasteboardString:)
@@ -455,7 +449,7 @@ public final class World: NSObject {
 
 	@objc(evaluateFunctionOnAllViews:arguments:onQueue:)
 	public func evaluateFunction(onAllViews function: String, arguments: [Any]?, onQueue: Bool) {
-		guard masterController.applicationIsTerminating == false else {
+		guard applicationController.applicationIsTerminating == false else {
 			return
 		}
 
@@ -487,16 +481,16 @@ public final class World: NSObject {
 			clients.append(client)
 
 			if reload, let index = clients.firstIndex(where: { $0 === client }) {
-				masterController.mainWindow.serverList?.addItem(toList: UInt(index), inParent: nil)
+				applicationController.mainWindow.serverList?.addItem(toList: UInt(index), inParent: nil)
 			}
 
 			if clients.count == 1 {
-				masterController.mainWindow.select(client)
+				applicationController.mainWindow.select(client)
 			}
 		}
 
-		_ = masterController.mainWindow.reloadLoadingScreen()
-		masterController.menuController?.populateNavigationChannelList()
+		_ = applicationController.mainWindow.reloadLoadingScreen()
+		applicationController.menuController?.populateNavigationChannelList()
 		postClientListWasModifiedNotification()
 
 		return client
@@ -517,7 +511,7 @@ public final class World: NSObject {
 	) -> IRCChannel {
 		let swiftChannel = Channel(config: config)
 		swiftChannel.associatedClient = client
-		let channel = (swiftChannel as AnyObject) as! IRCChannel
+		let channel = swiftChannel
 		swiftChannel.viewController = createViewController(client: client, channel: channel)
 
 		if add {
@@ -525,12 +519,12 @@ public final class World: NSObject {
 		}
 
 		if reload, let index = client.channelList.firstIndex(where: { $0 === channel }) {
-			masterController.mainWindow.serverList?.addItem(toList: UInt(index), inParent: client)
+			applicationController.mainWindow.serverList?.addItem(toList: UInt(index), inParent: client)
 		}
 
 		if adjust {
-			masterController.mainWindow.adjustSelection()
-			masterController.menuController?.populateNavigationChannelList()
+			applicationController.mainWindow.adjustSelection()
+			applicationController.menuController?.populateNavigationChannelList()
 		}
 
 		return channel
@@ -541,11 +535,10 @@ public final class World: NSObject {
 		createPrivateMessage(nickname, on: client, as: .privateMessage)
 	}
 
-	@objc(createPrivateMessage:onClient:asType:)
 	public func createPrivateMessage(
 		_ nickname: String,
 		on client: IRCClient,
-		as type: IRCChannelType
+		as type: ChannelType
 	) -> IRCChannel {
 		precondition(type == .privateMessage || type == .utility || type == .directChat)
 
@@ -561,19 +554,31 @@ public final class World: NSObject {
 		return channel
 	}
 
+	@objc(createPrivateMessage:onClient:asType:)
+	public func createPrivateMessageFromObjectiveC(
+		_ nickname: String,
+		on client: IRCClient,
+		asType rawValue: UInt
+	) -> IRCChannel {
+		guard let type = ChannelType(rawValue: rawValue) else {
+			preconditionFailure("Unknown channel type raw value: \(rawValue)")
+		}
+		return createPrivateMessage(nickname, on: client, as: type)
+	}
+
 	private func createViewController(client: IRCClient, channel: IRCChannel?) -> LogController {
 		if let channel {
-			return LogController(channel: channel, in: masterController.mainWindow)
+			return LogController(channel: channel, in: applicationController.mainWindow)
 		}
 
-		return LogController(client: client, in: masterController.mainWindow)
+		return LogController(client: client, in: applicationController.mainWindow)
 	}
 
 	private func selectOtherBeforeDestroy(_ target: IRCTreeItem) {
 		if target.isClient {
-			masterController.mainWindow.deselectGroup(target)
+			applicationController.mainWindow.deselectGroup(target)
 		} else {
-			masterController.mainWindow.deselect(target)
+			applicationController.mainWindow.deselect(target)
 		}
 	}
 
@@ -591,20 +596,20 @@ public final class World: NSObject {
 		}
 
 		NotificationCenter.default.post(
-			name: Notification.Name("IRCWorldWillDestroyClientNotification"),
+			name: .ircWorldWillDestroyClient,
 			object: client
 		)
 		selectOtherBeforeDestroy(client)
-		client.invokeWorldLifecycleSelector(NSSelectorFromString("prepareForPermanentDestruction"))
-		masterController.mainWindow.serverList?.removeItem(fromList: client)
+		client.prepareForPermanentDestruction()
+		applicationController.mainWindow.serverList?.removeItem(fromList: client)
 
 		clientsLock.withLock {
 			clients.removeAll { $0 === client }
 		}
 
 		postClientListWasModifiedNotification()
-		_ = masterController.mainWindow.reloadLoadingScreen()
-		masterController.menuController?.populateNavigationChannelList()
+		_ = applicationController.mainWindow.reloadLoadingScreen()
+		applicationController.menuController?.populateNavigationChannelList()
 	}
 
 	@objc(destroyChannel:)
@@ -620,7 +625,7 @@ public final class World: NSObject {
 	@objc(destroyChannel:reload:part:)
 	public func destroyChannel(_ channel: IRCChannel, reload: Bool, part partChannel: Bool) {
 		NotificationCenter.default.post(
-			name: Notification.Name("IRCWorldWillDestroyChannelNotification"),
+			name: .ircWorldWillDestroyChannel,
 			object: channel
 		)
 
@@ -633,16 +638,16 @@ public final class World: NSObject {
 			selectOtherBeforeDestroy(legacyTreeItem(for: channel))
 		}
 
-		channel.invokeWorldLifecycleSelector(NSSelectorFromString("prepareForPermanentDestruction"))
+		channel.prepareForPermanentDestruction()
 		if client.lastSelectedChannel === channel {
-			client.setValue(nil, forKey: "lastSelectedChannel")
+			client.lastSelectedChannel = nil
 		}
 
 		if reload {
-			masterController.mainWindow.serverList?.removeItem(fromList: channel)
+			applicationController.mainWindow.serverList?.removeItem(fromList: channel)
 			client.remove(channel)
-			masterController.mainWindow.adjustSelection()
-			masterController.menuController?.populateNavigationChannelList()
+			applicationController.mainWindow.adjustSelection()
+			applicationController.menuController?.populateNavigationChannelList()
 		}
 	}
 }

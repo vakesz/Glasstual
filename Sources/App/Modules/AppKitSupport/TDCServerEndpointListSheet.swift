@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 private let endpointEntryTableDragToken = NSPasteboard.PasteboardType(
 	"com.vakesz.glasstual.server-endpoint-list.table-row"
@@ -40,7 +41,9 @@ public final class ServerEndpointListSheet: SheetBase {
 			.initial,
 			.new,
 		]) { [weak self] _, _ in
-			self?.updateEntryActionsSegmentedControlEnabledState()
+			Task { @MainActor [weak self] in
+				self?.updateEntryActionsSegmentedControlEnabledState()
+			}
 		}
 	}
 
@@ -62,7 +65,12 @@ public final class ServerEndpointListSheet: SheetBase {
 				continue
 			}
 
-			serverListOut.append(server.copy() as! Server)
+			guard let server = server.copy() as? Server else {
+				assertionFailure("MutableServer.copy() must return Server")
+				continue
+			}
+
+			serverListOut.append(server)
 		}
 
 		let selector = NSSelectorFromString("serverEndpointListSheet:onOk:")
@@ -154,7 +162,7 @@ extension ServerEndpointListSheet: NSTableViewDataSource, NSTableViewDelegate {
 			return false
 		}
 
-		entryTableController.moveObject(atArrangedObjectIndex: UInt(draggedRowIndex), to: UInt(row))
+		entryTableController.textual_moveObject(atArrangedObjectIndex: UInt(draggedRowIndex), to: UInt(row))
 		return true
 	}
 }

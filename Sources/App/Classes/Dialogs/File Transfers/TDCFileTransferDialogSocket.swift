@@ -74,6 +74,23 @@ public typealias TDCFileTransferDialogSocketDelegate = FileTransferDialogSocketD
 public typealias TDCFileTransferDialogSocket = FileTransferDialogSocket
 
 /**
+ A sendable handle for a dispatch work item whose only cross-queue operation is
+ cancellation. `DispatchWorkItem.cancel()` is thread-safe, while the work item
+ itself has not adopted `Sendable`.
+ */
+private final class FileTransferTimeout: @unchecked Sendable {
+	let workItem: DispatchWorkItem
+
+	init(workItem: DispatchWorkItem) {
+		self.workItem = workItem
+	}
+
+	func cancel() {
+		workItem.cancel()
+	}
+}
+
+/**
  A queue-confined Network.framework wrapper used by DCC file transfers.
 
  Every mutable network object belongs to `socketQueue`. The two flags read by
@@ -83,6 +100,8 @@ public typealias TDCFileTransferDialogSocket = FileTransferDialogSocket
  */
 @objc(TDCFileTransferDialogSocket)
 public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
+	private typealias ReceiveCompletion = @Sendable (Data?, NWConnection.ContentContext?, Bool, NWError?) -> Void
+
 	private static let maximumReadLength = 64 * 1024
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -137,8 +156,12 @@ public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
 			return
 		}
 
+		/* Dispatch work-item cancellation is thread-safe. Cancel before hopping
+		 to the socket queue so the sendable cleanup closure only captures
+		 Network.framework values. */
+		timeoutWorkItem?.cancel()
+
 		socketQueue.async {
-			timeoutWorkItem?.cancel()
 			listener?.cancel()
 			connection?.cancel()
 		}
@@ -504,7 +527,11 @@ public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
 				continue
 			}
 
-			let hostAddress = String(cString: host)
+			let hostBytes = host.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }
+
+			guard let hostAddress = String(bytes: hostBytes, encoding: .utf8) else {
+				continue
+			}
 
 			if family == AF_INET, ipv4Address == nil {
 				ipv4Address = hostAddress
@@ -583,14 +610,23 @@ public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
 				return
 			}
 
-			connection.receive(minimumIncompleteLength: 1, maximumLength: Self.maximumReadLength) {
-				[weak self, weak connection] content, _, isComplete, error in
-				guard let self, let connection, self.connection === connection else {
+			let connectionIdentity = ObjectIdentifier(connection)
+			let receiveCompletion: ReceiveCompletion = { [weak self] content, _, isComplete, error in
+				guard let self,
+				      let activeConnection = self.connection,
+				      ObjectIdentifier(activeConnection) == connectionIdentity
+				else {
 					return
 				}
 
 				didReceive(content: content, isComplete: isComplete, error: error)
 			}
+
+			connection.receive(
+				minimumIncompleteLength: 1,
+				maximumLength: Self.maximumReadLength,
+				completion: receiveCompletion
+			)
 		}
 	}
 
@@ -632,24 +668,24 @@ public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
 				return
 			}
 
-			let timeoutWorkItem: DispatchWorkItem? = if timeout > 0 {
-				DispatchWorkItem { [weak self, weak connection] in
+			let timeoutHandle: FileTransferTimeout? = if timeout > 0 {
+				FileTransferTimeout(workItem: DispatchWorkItem { [weak self, weak connection] in
 					guard let self, let connection, self.connection === connection else {
 						return
 					}
 
 					fail(with: Self.error(withCode: .writeTimeout, description: "Write operation timed out"))
-				}
+				})
 			} else {
 				nil
 			}
 
-			if let timeoutWorkItem {
-				socketQueue.asyncAfter(deadline: .now() + timeout, execute: timeoutWorkItem)
+			if let timeoutHandle {
+				socketQueue.asyncAfter(deadline: .now() + timeout, execute: timeoutHandle.workItem)
 			}
 
 			connection.send(content: data, completion: .contentProcessed { [weak self, weak connection] error in
-				timeoutWorkItem?.cancel()
+				timeoutHandle?.cancel()
 
 				guard let self,
 				      let connection,

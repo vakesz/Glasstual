@@ -39,61 +39,61 @@ import XCTest
  *********************************************************************** */
 class IRCClientRequestedCommandsTests: XCTestCase {
 	func testVisibleRequestIsReportedUntilClosed() {
-		let requests = IRCClientRequestedCommands()
+		let requests = ClientRequestedCommands()
 
-		XCTAssertFalse(requests.inVisibleIsonRequest)
+		XCTAssertFalse(requests.visibleIsonRequest)
 
 		requests.recordIsonRequestOpenedAsVisible()
 
-		XCTAssertTrue(requests.inVisibleIsonRequest)
+		XCTAssertTrue(requests.visibleIsonRequest)
 
 		requests.recordIsonRequestClosed()
 
-		XCTAssertFalse(requests.inVisibleIsonRequest)
+		XCTAssertFalse(requests.visibleIsonRequest)
 	}
 
 	func testRequestsWithSameCommandCloseInInsertionOrder() {
-		let requests = IRCClientRequestedCommands()
+		let requests = ClientRequestedCommands()
 
 		requests.recordWhoRequestOpened()
 		requests.recordWhoRequestOpenedAsVisible()
 
-		XCTAssertFalse(requests.inVisibleWhoRequest)
+		XCTAssertFalse(requests.visibleWhoRequest)
 
 		requests.recordWhoRequestClosed()
 
-		XCTAssertTrue(requests.inVisibleWhoRequest)
+		XCTAssertTrue(requests.visibleWhoRequest)
 
 		requests.recordWhoRequestClosed()
 
-		XCTAssertFalse(requests.inVisibleWhoRequest)
+		XCTAssertFalse(requests.visibleWhoRequest)
 	}
 
 	func testIsonAndWhoRequestsAreIndependent() {
-		let requests = IRCClientRequestedCommands()
+		let requests = ClientRequestedCommands()
 
 		requests.recordIsonRequestOpenedAsVisible()
 		requests.recordWhoRequestOpened()
 
-		XCTAssertTrue(requests.inVisibleIsonRequest)
+		XCTAssertTrue(requests.visibleIsonRequest)
 
-		XCTAssertFalse(requests.inVisibleWhoRequest)
+		XCTAssertFalse(requests.visibleWhoRequest)
 
 		requests.recordIsonRequestClosed()
 
-		XCTAssertFalse(requests.inVisibleIsonRequest)
-		XCTAssertFalse(requests.inVisibleWhoRequest)
+		XCTAssertFalse(requests.visibleIsonRequest)
+		XCTAssertFalse(requests.visibleWhoRequest)
 	}
 
 	func testRemoveCommandsClearsEveryRequest() {
-		let requests = IRCClientRequestedCommands()
+		let requests = ClientRequestedCommands()
 
 		requests.recordIsonRequestOpenedAsVisible()
 		requests.recordWhoRequestOpenedAsVisible()
-		requests.remove()
+		requests.removeCommands()
 
-		XCTAssertFalse(requests.inVisibleIsonRequest)
-		XCTAssertFalse(requests.inVisibleWhoRequest)
+		XCTAssertFalse(requests.visibleIsonRequest)
+		XCTAssertFalse(requests.visibleWhoRequest)
 
 		/* Closing a command that is not open remains a no-op. */
 		requests.recordIsonRequestClosed()

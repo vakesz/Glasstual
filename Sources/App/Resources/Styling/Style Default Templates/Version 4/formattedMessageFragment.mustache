@@ -18,10 +18,11 @@ formatting that may be open for the previous fragment. }}
 				color: {{fragmentForegroundColor}};
 			{{/fragmentForegroundColorIsSet}}
 
-			{{#fragmentBackgroundColorIsSet}}
-				background-color: {{fragmentBackgroundColor}};
-			{{/fragmentBackgroundColorIsSet}}
-		"
+		{{#fragmentBackgroundColorIsSet}}
+			background-color: {{fragmentBackgroundColor}};
+		{{/fragmentBackgroundColorIsSet}}
+	"
+	{{/fragmentTextColorUsesStyleTag}}
 	{{^fragmentTextColorUsesStyleTag}}
 		{{#fragmentForegroundColorIsSet}}
 			data-foreground-color="{{fragmentForegroundColor}}"

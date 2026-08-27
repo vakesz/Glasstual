@@ -39,7 +39,7 @@ public final class SoundPlayer: NSObject {
 
 	@objc(playAlertSound:)
 	public static func playAlertSound(_ name: String) {
-		if name == TLONotificationAlertSound.TXNoAlertSoundPreferenceValue.rawValue {
+		if name == NotificationAlertSound.noSoundPreferenceValue {
 			return
 		}
 
@@ -87,11 +87,11 @@ public final class SoundPlayer: NSObject {
 	}
 
 	private static func soundFiles(in domain: FileManager.SearchPathDomainMask) -> [String: String]? {
-		guard let library = NSSearchPathForDirectoriesInDomains(.libraryDirectory, domain, true).first else {
+		guard let libraryURL = FileManager.default.urls(for: .libraryDirectory, in: domain).first else {
 			return nil
 		}
 
-		return soundFiles(atPath: (library as NSString).appendingPathComponent("Sounds"))
+		return soundFiles(atPath: libraryURL.appending(path: "Sounds", directoryHint: .isDirectory).path)
 	}
 
 	private static func alertSound(named name: String) -> SystemSoundID {

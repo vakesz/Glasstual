@@ -106,41 +106,43 @@ public final class UnicodeHelper: NSObject {
 	]
 
 	@objc(isPrivate:)
-	public class func isPrivate(_ c: unichar) -> Bool {
-		c >= 0xE000 && c <= 0xF8FF
+	public static func isPrivate(_ character: unichar) -> Bool {
+		character >= 0xE000 && character <= 0xF8FF
 	}
 
 	@objc(isIdeographic:)
-	public class func isIdeographic(_ c: unichar) -> Bool {
-		(c >= 0x2E80 && c <= 0x9FFF) || (c >= 0xA000 && c <= 0xA4CF) || (c >= 0xF900 && c <= 0xFAFF)
-			|| (c >= 0xFE30 && c <= 0xFE4F) || (c >= 0xFF00 && c <= 0xFFEF)
+	public static func isIdeographic(_ character: unichar) -> Bool {
+		(character >= 0x2E80 && character <= 0x9FFF) || (character >= 0xA000 && character <= 0xA4CF)
+			|| (character >= 0xF900 && character <= 0xFAFF) || (character >= 0xFE30 && character <= 0xFE4F)
+			|| (character >= 0xFF00 && character <= 0xFFEF)
 	}
 
 	@objc(isIdeographicOrPrivate:)
-	public class func isIdeographicOrPrivate(_ c: unichar) -> Bool {
-		(c >= 0x2E80 && c <= 0x9FFF) || (c >= 0xA000 && c <= 0xA4CF) || (c >= 0xE000 && c <= 0xFAFF)
-			|| (c >= 0xFE30 && c <= 0xFE4F) || (c >= 0xFF00 && c <= 0xFFEF)
+	public static func isIdeographicOrPrivate(_ character: unichar) -> Bool {
+		(character >= 0x2E80 && character <= 0x9FFF) || (character >= 0xA000 && character <= 0xA4CF)
+			|| (character >= 0xE000 && character <= 0xFAFF) || (character >= 0xFE30 && character <= 0xFE4F)
+			|| (character >= 0xFF00 && character <= 0xFFEF)
 	}
 
 	@objc(isAlphabeticalCodePoint:)
-	public class func isAlphabeticalCodePoint(_ c: Int) -> Bool {
-		if c <= 0x7F {
-			return (c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A)
+	public static func isAlphabeticalCodePoint(_ codePoint: Int) -> Bool {
+		if codePoint <= 0x7F {
+			return (codePoint >= 0x41 && codePoint <= 0x5A) || (codePoint >= 0x61 && codePoint <= 0x7A)
 		}
 
-		let table: [UInt]? = if c >= 0xAA, c <= 0x2EE {
+		let table: [UInt]? = if codePoint >= 0xAA, codePoint <= 0x2EE {
 			table1
-		} else if c >= 0x37A, c <= 0xF8B {
+		} else if codePoint >= 0x37A, codePoint <= 0xF8B {
 			table2
-		} else if c >= 0x1000, c <= 0x1FFC {
+		} else if codePoint >= 0x1000, codePoint <= 0x1FFC {
 			table3
-		} else if c >= 0x2071, c <= 0x2DDE {
+		} else if codePoint >= 0x2071, codePoint <= 0x2DDE {
 			table4
-		} else if c >= 0xA000, c <= 0xA873 {
+		} else if codePoint >= 0xA000, codePoint <= 0xA873 {
 			table5
-		} else if c >= 0xFB00, c <= 0xFF5A {
+		} else if codePoint >= 0xFB00, codePoint <= 0xFF5A {
 			table6
-		} else if c >= 0x10000, c <= 0x1D7CB {
+		} else if codePoint >= 0x10000, codePoint <= 0x1D7CB {
 			othersTable
 		} else {
 			nil
@@ -159,11 +161,11 @@ public final class UnicodeHelper: NSObject {
 			let start = Int(table[1 + center * 2])
 			let end = Int(table[1 + center * 2 + 1])
 
-			if start <= c, c <= end {
+			if start <= codePoint, codePoint <= end {
 				return true
 			}
 
-			if c < start {
+			if codePoint < start {
 				right = center
 			} else {
 				left = center + 1

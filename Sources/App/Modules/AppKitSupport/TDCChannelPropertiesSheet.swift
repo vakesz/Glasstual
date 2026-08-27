@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 private enum ChannelPropertiesSheetSelection: Int {
 	case general = 0
@@ -20,7 +21,7 @@ private enum ChannelPropertiesSheetSelection: Int {
 
 @objc(TDCChannelPropertiesSheet)
 @MainActor
-public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelegate {
+public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelegate, TDCChannelPrototype {
 	@objc public private(set) var client: IRCClient?
 	@objc public private(set) var channel: IRCChannel?
 	@objc public private(set) var clientId: String?
@@ -42,7 +43,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	@IBOutlet private var ignoreHighlightsCheck: NSButton!
 	@IBOutlet private var ignoreGeneralEventMessagesCheck: NSButton!
 	@IBOutlet private var contentViewTabView: NSSegmentedControl!
-	@IBOutlet private var channelNameTextField: TVCValidatedTextField!
+	@IBOutlet private var channelNameTextField: ValidatedTextField!
 	@IBOutlet private var labelTextField: NSTextField!
 	@IBOutlet private var defaultModesTextField: NSTextField!
 	@IBOutlet private var defaultTopicTextField: NSTextField!
@@ -121,7 +122,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 
 		channelNameTextField.validationBlock = { currentValue in
 			if (currentValue as NSString).isChannelName == false {
-				return LocalizedKey("TDCChannelPropertiesSheet[1nd-7x]")
+				return ChannelPropertiesStrings.invalidChannelName
 			}
 
 			return nil
@@ -136,21 +137,21 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 
 		var notifications: [Any] = []
 		notifications.append(
-			ChannelPropertiesNotificationConfiguration(eventType: .highlight, in: self)
+			ChannelNotificationConfiguration(eventType: .highlight, in: self)
 		)
 		notifications.append(" ")
 		notifications.append(
-			ChannelPropertiesNotificationConfiguration(eventType: .channelMessage, in: self)
+			ChannelNotificationConfiguration(eventType: .channelMessage, in: self)
 		)
 		notifications.append(
-			ChannelPropertiesNotificationConfiguration(eventType: .channelNotice, in: self)
+			ChannelNotificationConfiguration(eventType: .channelNotice, in: self)
 		)
 		notifications.append(" ")
 		notifications.append(
-			ChannelPropertiesNotificationConfiguration(eventType: .userJoined, in: self)
+			ChannelNotificationConfiguration(eventType: .userJoined, in: self)
 		)
 		notifications.append(
-			ChannelPropertiesNotificationConfiguration(eventType: .userParted, in: self)
+			ChannelNotificationConfiguration(eventType: .userParted, in: self)
 		)
 
 		notificationsController.notifications = notifications
@@ -256,16 +257,15 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 
 		TDCAlert.alertSheet(
 			with: sheet,
-			body: LocalizedKey("TDCChannelPropertiesSheet[op4-gg]"),
-			title: LocalizedKey(
-				"TDCChannelPropertiesSheet[zf2-r7]",
-				client.networkNameAlt,
-				maximumKeyLength
+			body: ChannelValidationStrings.maximumKeyLengthMessage,
+			title: ChannelValidationStrings.maximumKeyLengthTitle(
+				networkName: client.networkNameAlt,
+				maximumLength: Int(clamping: maximumKeyLength)
 			),
-			defaultButton: LocalizedKey("Prompts[c7s-dq]"),
+			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil,
 			otherButton: nil,
-			suppressionKey: "maximum_secret_key_length",
+			suppressionKey: ChannelValidationSuppressionKey.maximumSecretKeyLength.rawValue,
 			suppressionText: nil,
 			completionBlock: nil
 		)
@@ -304,10 +304,10 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 
 		TDCAlert.alertSheet(
 			with: window,
-			body: LocalizedKey("TDCChannelPropertiesSheet[qby-hi]"),
-			title: LocalizedKey("TDCChannelPropertiesSheet[mvl-r5]"),
-			defaultButton: LocalizedKey("Prompts[mvh-ms]"),
-			alternateButton: LocalizedKey("Prompts[99q-gg]"),
+			body: ChannelPropertiesStrings.unsavedChangesWarning,
+			title: ChannelPropertiesStrings.configurationChangedTitle,
+			defaultButton: PromptStrings.Action.yes,
+			alternateButton: PromptStrings.Action.no,
 			otherButton: nil
 		) { [weak self] buttonClicked, _, _ in
 			guard let self, buttonClicked == .default else {
@@ -329,7 +329,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 		}
 
 		LogControllerInlineMediaService.askPermissionToEnableInlineMedia { [weak self] granted in
-			XRPerformBlockAsynchronouslyOnMainQueue {
+			Task { @MainActor [weak self] in
 				if granted == false {
 					self?.enableInlineMediaCheck.state = .off
 				}
@@ -381,7 +381,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	}
 
 	private func okOrError(
-		for textField: TVCValidatedTextField,
+		for textField: ValidatedTextField,
 		in selection: ChannelPropertiesSheetSelection
 	) -> Bool {
 		if textField.valueIsValid {
@@ -390,7 +390,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 
 		navigateToSelection(selection)
 
-		XRPerformBlockAsynchronouslyOnMainQueue {
+		performAsynchronouslyOnMainQueue {
 			textField.showValidationErrorPopover()
 		}
 

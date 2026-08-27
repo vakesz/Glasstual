@@ -8,11 +8,37 @@
  * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Textual, "Codeux Software, LLC", nor the
+ *    names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
-@objc public enum TDCAlertResponse: UInt {
+@objc public enum TDCAlertResponse: UInt, Sendable {
 	case `default` = 1000
 	case alternate = 1001
 	case other = 1002
@@ -32,7 +58,7 @@ public final class TDCAlert: NSObject {
 	// MARK: - Modal Alerts (Panel)
 
 	@objc(modalAlertWithMessage:title:defaultButton:alternateButton:)
-	public class func modalAlert(
+	public static func modalAlert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -51,7 +77,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(modalAlertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:)
-	public class func modalAlert(
+	public static func modalAlert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -72,7 +98,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(modalAlertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:accessoryView:)
-	public class func modalAlert(
+	public static func modalAlert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -94,7 +120,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(modalAlertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:suppressionResponse:)
-	public class func modalAlert(
+	public static func modalAlert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -118,7 +144,7 @@ public final class TDCAlert: NSObject {
 	@objc(
 		modalAlertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:accessoryView:suppressionResponse:
 	)
-	public class func modalAlert(
+	public static func modalAlert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -144,7 +170,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(modalAlertWithMessage:title:defaultButton:alternateButton:otherButton:)
-	public class func modalAlert(
+	public static func modalAlert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -167,7 +193,7 @@ public final class TDCAlert: NSObject {
 	@objc(
 		modalAlertWithMessage:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:accessoryView:suppressionResponse:
 	)
-	public class func modalAlert(
+	public static func modalAlert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -181,7 +207,7 @@ public final class TDCAlert: NSObject {
 		if Thread.isMainThread == false {
 			nonisolated(unsafe) var result: TDCAlertResponse = .alternate
 
-			XRPerformBlockSynchronouslyOnMainQueue {
+			performSynchronouslyOnMainQueue {
 				result = modalAlert(
 					withMessage: bodyText,
 					title: titleText,
@@ -198,61 +224,68 @@ public final class TDCAlert: NSObject {
 			return result
 		}
 
-		var suppressKey = suppressKey
-		var suppressText = suppressText
+		let result: (response: TDCAlertResponse, suppression: Bool?) = MainActor.assumeIsolated {
+			var suppressKey = suppressKey
+			var suppressText = suppressText
 
-		if let key = suppressKey {
-			suppressKey = suppressionKey(withBase: key)
+			if let key = suppressKey {
+				suppressKey = suppressionKey(withBase: key)
 
-			if UserDefaults.standard.bool(forKey: suppressKey!) {
-				return .default
+				if UserDefaults.standard.bool(forKey: suppressKey!) {
+					return (.default, nil)
+				}
 			}
+
+			if suppressKey != nil, suppressText == nil || suppressText?.isEmpty == true {
+				suppressText = PromptStrings.Alert.doNotShowAgain
+			}
+
+			let alert = NSAlert()
+			alert.messageText = titleText
+			alert.informativeText = bodyText
+			alert.addButton(withTitle: buttonDefault)
+
+			if let buttonAlternate {
+				alert.addButton(withTitle: buttonAlternate)
+			}
+
+			if let buttonOther {
+				alert.addButton(withTitle: buttonOther)
+			}
+
+			if suppressKey != nil || suppressText != nil {
+				alert.showsSuppressionButton = true
+				alert.suppressionButton?.title = suppressText ?? ""
+			}
+
+			if let accessoryView {
+				alert.accessoryView = accessoryView
+			}
+
+			let returnCode = alert.runModal()
+			let response = convertResponse(from: returnCode)
+
+			let suppressed = recordSuppression(
+				for: alert.suppressionButton,
+				withKey: suppressKey
+			)
+
+			return (response, suppressed)
 		}
 
-		if suppressKey != nil, suppressText == nil || suppressText?.isEmpty == true {
-			suppressText = LocalizedKey("Prompts[68u-z9]")
+		if let suppressionResponse, let suppression = result.suppression {
+			suppressionResponse.pointee = ObjCBool(suppression)
 		}
 
-		let alert = NSAlert()
-		alert.messageText = titleText
-		alert.informativeText = bodyText
-		alert.addButton(withTitle: buttonDefault)
-
-		if let buttonAlternate {
-			alert.addButton(withTitle: buttonAlternate)
-		}
-
-		if let buttonOther {
-			alert.addButton(withTitle: buttonOther)
-		}
-
-		if suppressKey != nil || suppressText != nil {
-			alert.showsSuppressionButton = true
-			alert.suppressionButton?.title = suppressText ?? ""
-		}
-
-		if let accessoryView {
-			alert.accessoryView = accessoryView
-		}
-
-		let returnCode = alert.runModal()
-		let response = convertResponse(from: returnCode)
-
-		finalizeAlert(
-			alert,
-			with: response,
-			completionBlock: nil,
-			suppressionKey: suppressKey,
-			suppressionResponse: suppressionResponse
-		)
-
-		return response
+		return result.response
 	}
+}
 
-	// MARK: - Non-blocking Alerts (Panel)
+// MARK: - Non-blocking Alerts (Panel)
 
+public extension TDCAlert {
 	@objc(alertWithMessage:title:defaultButton:alternateButton:)
-	public class func alert(
+	static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -272,7 +305,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(alertWithMessage:title:defaultButton:alternateButton:otherButton:)
-	public class func alert(
+	static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -293,7 +326,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(alertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:)
-	public class func alert(
+	static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -315,7 +348,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(alertWithMessage:title:defaultButton:alternateButton:completionBlock:)
-	public class func alert(
+	static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -336,7 +369,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(alertWithMessage:title:defaultButton:alternateButton:otherButton:completionBlock:)
-	public class func alert(
+	static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -358,7 +391,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(alertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:completionBlock:)
-	public class func alert(
+	static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -383,7 +416,7 @@ public final class TDCAlert: NSObject {
 	@objc(
 		alertWithMessage:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:completionBlock:
 	)
-	public class func alert(
+	static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -409,7 +442,7 @@ public final class TDCAlert: NSObject {
 	@objc(
 		alertWithMessage:title:defaultButton:alternateButton:suppressionKey:suppressionText:accessoryView:completionBlock:
 	)
-	public class func alert(
+	static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -435,7 +468,7 @@ public final class TDCAlert: NSObject {
 	@objc(
 		alertWithMessage:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:accessoryView:completionBlock:
 	)
-	public class func alert(
+	static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -449,7 +482,7 @@ public final class TDCAlert: NSObject {
 		if Thread.isMainThread == false {
 			nonisolated(unsafe) var result: NSAlert?
 
-			XRPerformBlockSynchronouslyOnMainQueue {
+			performSynchronouslyOnMainQueue {
 				result = alert(
 					withMessage: bodyText,
 					title: titleText,
@@ -466,89 +499,94 @@ public final class TDCAlert: NSObject {
 			return result
 		}
 
-		var suppressKey = suppressKey
-		var suppressText = suppressText
-
-		if let key = suppressKey {
-			suppressKey = suppressionKey(withBase: key)
-
-			if UserDefaults.standard.bool(forKey: suppressKey!) {
-				completionBlock?(.default, true, nil)
-				return nil
-			}
-		}
-
-		if suppressKey != nil, suppressText == nil || suppressText?.isEmpty == true {
-			suppressText = LocalizedKey("Prompts[68u-z9]")
-		}
-
-		let alert = NSAlert()
-		alert.alertStyle = .informational
-		alert.messageText = titleText
-		alert.informativeText = bodyText
-		alert.addButton(withTitle: buttonDefault)
-
-		if let buttonAlternate {
-			alert.addButton(withTitle: buttonAlternate)
-		}
-
-		if let buttonOther {
-			alert.addButton(withTitle: buttonOther)
-		}
-
-		if suppressKey != nil || suppressText != nil {
-			alert.showsSuppressionButton = true
-			alert.suppressionButton?.title = suppressText ?? ""
-		}
-
-		if let accessoryView {
-			alert.accessoryView = accessoryView
-		}
-
 		let context = AlertContext()
-		context.suppressionKey = suppressKey
 		context.completionBlock = completionBlock
 
-		/* A sheet on the main window is preferred so that the alert is
-		 attached to what it is about. When the main window is hidden, any other
-		 visible window hosts the sheet instead. */
-		let masterController = NSObject.masterController()
-		var hostWindow: NSWindow? = MainActor.assumeIsolated {
-			masterController.mainWindow
-		}
+		return MainActor.assumeIsolated { () -> NSAlert? in
+			var suppressKey = suppressKey
+			var suppressText = suppressText
 
-		if hostWindow?.isVisible == false {
-			hostWindow = nil
+			if let key = suppressKey {
+				suppressKey = suppressionKey(withBase: key)
 
-			for window in NSApp.orderedWindows {
-				if window.isVisible, window.attachedSheet == nil, (window is NSPanel) == false {
-					hostWindow = window
-					break
+				if UserDefaults.standard.bool(forKey: suppressKey!) {
+					context.completionBlock?(.default, true, nil)
+					return nil
 				}
 			}
-		}
 
-		if let hostWindow {
-			alert.beginSheetModal(for: hostWindow) { returnCode in
-				alertSheetResponseCallback(alert, returnCode: returnCode, contextInfo: context)
+			if suppressKey != nil, suppressText == nil || suppressText?.isEmpty == true {
+				suppressText = PromptStrings.Alert.doNotShowAgain
 			}
-		} else {
-			/* Last resort: during launch and migration no window exists yet
-			 that could host a sheet, so the alert has to run application
-			 modal. Return to the caller before blocking so that this method
-			 stays non-blocking regardless of how the alert is presented. */
-			XRPerformBlockAsynchronouslyOnMainQueue {
-				alertSheetResponseCallback(alert, returnCode: alert.runModal(), contextInfo: context)
-			}
-		}
 
-		return alert
+			let alert = NSAlert()
+			alert.alertStyle = .informational
+			alert.messageText = titleText
+			alert.informativeText = bodyText
+			alert.addButton(withTitle: buttonDefault)
+
+			if let buttonAlternate {
+				alert.addButton(withTitle: buttonAlternate)
+			}
+
+			if let buttonOther {
+				alert.addButton(withTitle: buttonOther)
+			}
+
+			if suppressKey != nil || suppressText != nil {
+				alert.showsSuppressionButton = true
+				alert.suppressionButton?.title = suppressText ?? ""
+			}
+
+			if let accessoryView {
+				alert.accessoryView = accessoryView
+			}
+
+			context.suppressionKey = suppressKey
+
+			/* A sheet on the main window is preferred so that the alert is
+			 attached to what it is about. When the main window is hidden, any other
+			 visible window hosts the sheet instead. */
+			let applicationController = NSObject.applicationController()
+			var hostWindow: NSWindow? = MainActor.assumeIsolated {
+				applicationController.mainWindow
+			}
+
+			if hostWindow?.isVisible == false {
+				hostWindow = nil
+
+				for window in NSApp.orderedWindows {
+					if window.isVisible, window.attachedSheet == nil, (window is NSPanel) == false {
+						hostWindow = window
+						break
+					}
+				}
+			}
+
+			if let hostWindow {
+				alert.beginSheetModal(for: hostWindow) { returnCode in
+					alertSheetResponseCallback(alert, returnCode: returnCode, contextInfo: context)
+				}
+			} else {
+				/* Last resort: during launch and migration no window exists yet
+				 that could host a sheet, so the alert has to run application
+				 modal. Return to the caller before blocking so that this method
+				 stays non-blocking regardless of how the alert is presented. */
+				performAsynchronouslyOnMainQueue {
+					alertSheetResponseCallback(alert, returnCode: alert.runModal(), contextInfo: context)
+				}
+			}
+
+			return alert
+		}
 	}
+}
 
-	// MARK: - Non-blocking Alerts (Sheet)
+// MARK: - Non-blocking Alerts (Sheet)
 
+public extension TDCAlert {
 	@objc(alertSheetWithWindow:body:title:defaultButton:alternateButton:otherButton:)
-	public class func alertSheet(
+	static func alertSheet(
 		with window: NSWindow,
 		body bodyText: String,
 		title titleText: String,
@@ -571,7 +609,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(alertSheetWithWindow:body:title:defaultButton:alternateButton:otherButton:completionBlock:)
-	public class func alertSheet(
+	static func alertSheet(
 		with window: NSWindow,
 		body bodyText: String,
 		title titleText: String,
@@ -595,7 +633,7 @@ public final class TDCAlert: NSObject {
 	}
 
 	@objc(alertSheetWithWindow:body:title:defaultButton:alternateButton:otherButton:accessoryView:completionBlock:)
-	public class func alertSheet(
+	static func alertSheet(
 		with window: NSWindow,
 		body bodyText: String,
 		title titleText: String,
@@ -622,7 +660,7 @@ public final class TDCAlert: NSObject {
 	@objc(
 		alertSheetWithWindow:body:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:completionBlock:
 	)
-	public class func alertSheet(
+	static func alertSheet(
 		with window: NSWindow,
 		body bodyText: String,
 		title titleText: String,
@@ -650,7 +688,7 @@ public final class TDCAlert: NSObject {
 	@objc(
 		alertSheetWithWindow:body:title:defaultButton:alternateButton:otherButton:suppressionKey:suppressionText:accessoryView:completionBlock:
 	)
-	public class func alertSheet(
+	static func alertSheet(
 		with window: NSWindow,
 		body bodyText: String,
 		title titleText: String,
@@ -663,7 +701,7 @@ public final class TDCAlert: NSObject {
 		completionBlock: TDCAlertCompletionBlock?
 	) {
 		if Thread.isMainThread == false {
-			XRPerformBlockSynchronouslyOnMainQueue {
+			performSynchronouslyOnMainQueue {
 				alertSheet(
 					with: window,
 					body: bodyText,
@@ -681,58 +719,63 @@ public final class TDCAlert: NSObject {
 			return
 		}
 
-		var suppressKey = suppressKey
-		var suppressText = suppressText
-
-		if let key = suppressKey {
-			suppressKey = suppressionKey(withBase: key)
-
-			if UserDefaults.standard.bool(forKey: suppressKey!) {
-				completionBlock?(.default, true, nil)
-				return
-			}
-		}
-
-		if suppressKey != nil, suppressText == nil || suppressText?.isEmpty == true {
-			suppressText = LocalizedKey("Prompts[68u-z9]")
-		}
-
-		let alert = NSAlert()
-		alert.alertStyle = .informational
-		alert.messageText = titleText
-		alert.informativeText = bodyText
-		alert.addButton(withTitle: buttonDefault)
-
-		if let buttonAlternate {
-			alert.addButton(withTitle: buttonAlternate)
-		}
-
-		if let buttonOther {
-			alert.addButton(withTitle: buttonOther)
-		}
-
-		if suppressKey != nil || suppressText != nil {
-			alert.showsSuppressionButton = true
-			alert.suppressionButton?.title = suppressText ?? ""
-		}
-
-		if let accessoryView {
-			alert.accessoryView = accessoryView
-		}
-
 		let context = AlertContext()
-		context.suppressionKey = suppressKey
 		context.completionBlock = completionBlock
 
-		alert.beginSheetModal(for: window) { returnCode in
-			alertSheetResponseCallback(alert, returnCode: returnCode, contextInfo: context)
+		MainActor.assumeIsolated {
+			var suppressKey = suppressKey
+			var suppressText = suppressText
+
+			if let key = suppressKey {
+				suppressKey = suppressionKey(withBase: key)
+
+				if UserDefaults.standard.bool(forKey: suppressKey!) {
+					context.completionBlock?(.default, true, nil)
+					return
+				}
+			}
+
+			if suppressKey != nil, suppressText == nil || suppressText?.isEmpty == true {
+				suppressText = PromptStrings.Alert.doNotShowAgain
+			}
+
+			let alert = NSAlert()
+			alert.alertStyle = .informational
+			alert.messageText = titleText
+			alert.informativeText = bodyText
+			alert.addButton(withTitle: buttonDefault)
+
+			if let buttonAlternate {
+				alert.addButton(withTitle: buttonAlternate)
+			}
+
+			if let buttonOther {
+				alert.addButton(withTitle: buttonOther)
+			}
+
+			if suppressKey != nil || suppressText != nil {
+				alert.showsSuppressionButton = true
+				alert.suppressionButton?.title = suppressText ?? ""
+			}
+
+			if let accessoryView {
+				alert.accessoryView = accessoryView
+			}
+
+			context.suppressionKey = suppressKey
+
+			alert.beginSheetModal(for: window) { returnCode in
+				alertSheetResponseCallback(alert, returnCode: returnCode, contextInfo: context)
+			}
 		}
 	}
+}
 
-	// MARK: - Utilities
+// MARK: - Utilities
 
+extension TDCAlert {
 	@objc(suppressionKeyWithBase:)
-	public class func suppressionKey(withBase base: String) -> String {
+	public static func suppressionKey(withBase base: String) -> String {
 		if base.hasPrefix(suppressionPrefix) {
 			return base
 		}
@@ -740,7 +783,8 @@ public final class TDCAlert: NSObject {
 		return suppressionPrefix + base
 	}
 
-	private class func alertSheetResponseCallback(
+	@MainActor
+	private static func alertSheetResponseCallback(
 		_ alert: NSAlert,
 		returnCode: NSApplication.ModalResponse,
 		contextInfo context: AlertContext
@@ -749,31 +793,27 @@ public final class TDCAlert: NSObject {
 			alert,
 			with: convertResponse(from: returnCode),
 			completionBlock: context.completionBlock,
-			suppressionKey: context.suppressionKey,
-			suppressionResponse: nil
+			suppressionKey: context.suppressionKey
 		)
 	}
 
-	private class func finalizeAlert(
+	@MainActor
+	private static func finalizeAlert(
 		_ underlyingAlert: NSAlert?,
 		with response: TDCAlertResponse,
 		completionBlock: TDCAlertCompletionBlock?,
-		suppressionKey: String?,
-		suppressionResponse: UnsafeMutablePointer<ObjCBool>?
+		suppressionKey: String?
 	) {
 		let suppressed = recordSuppression(
 			for: underlyingAlert?.suppressionButton,
 			withKey: suppressionKey
 		)
 
-		if let suppressionResponse {
-			suppressionResponse.pointee = ObjCBool(suppressed)
-		}
-
 		completionBlock?(response, suppressed, underlyingAlert)
 	}
 
-	private class func recordSuppression(for suppressionButton: NSButton?, withKey suppressionKey: String?) -> Bool {
+	@MainActor
+	private static func recordSuppression(for suppressionButton: NSButton?, withKey suppressionKey: String?) -> Bool {
 		if suppressionButton == nil, suppressionKey == nil {
 			return false
 		}
@@ -787,7 +827,7 @@ public final class TDCAlert: NSObject {
 		return suppressed
 	}
 
-	private class func convertResponse(from response: NSApplication.ModalResponse) -> TDCAlertResponse {
+	private static func convertResponse(from response: NSApplication.ModalResponse) -> TDCAlertResponse {
 		switch response {
 		case .alertSecondButtonReturn:
 			.alternate

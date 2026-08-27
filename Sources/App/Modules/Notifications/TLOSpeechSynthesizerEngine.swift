@@ -6,11 +6,33 @@
 import AVFoundation
 import Foundation
 
+@objc(TLOSpeechSynthesizerEngineDelegate)
+public protocol SpeechSynthesizerEngineDelegate: AnyObject {
+	func speechSynthesizerEngineDidCompleteUtterance()
+}
+
+@objc(TLOSpeechSynthesizerEngine)
+public protocol SpeechSynthesizerEngine: AnyObject {
+	var delegate: SpeechSynthesizerEngineDelegate? { get set }
+	var isSpeaking: Bool { get }
+
+	func speakText(_ text: String)
+	func stopSpeakingImmediately()
+}
+
 @objc(TLOAVSpeechSynthesizerEngine)
-public final class AVSpeechSynthesizerEngine: NSObject, TLOSpeechSynthesizerEngine, AVSpeechSynthesizerDelegate {
-	@objc public weak var delegate: TLOSpeechSynthesizerEngineDelegate?
+public final class AVSpeechSynthesizerEngine: NSObject, @unchecked Sendable, SpeechSynthesizerEngine,
+	AVSpeechSynthesizerDelegate
+{
+	private let lock = NSRecursiveLock()
+	private weak var delegateStorage: SpeechSynthesizerEngineDelegate?
 
 	private let speechSynthesizer = AVSpeechSynthesizer()
+
+	@objc public var delegate: SpeechSynthesizerEngineDelegate? {
+		get { lock.withLock { delegateStorage } }
+		set { lock.withLock { delegateStorage = newValue } }
+	}
 
 	override public init() {
 		super.init()
@@ -23,19 +45,23 @@ public final class AVSpeechSynthesizerEngine: NSObject, TLOSpeechSynthesizerEngi
 	}
 
 	@objc public var isSpeaking: Bool {
-		speechSynthesizer.isSpeaking
+		lock.withLock { speechSynthesizer.isSpeaking }
 	}
 
 	@objc(speakText:)
 	public func speakText(_ text: String) {
-		let utterance = AVSpeechUtterance(string: text)
-		utterance.rate = AVSpeechUtteranceDefaultSpeechRate
+		lock.withLock {
+			let utterance = AVSpeechUtterance(string: text)
+			utterance.rate = AVSpeechUtteranceDefaultSpeechRate
 
-		speechSynthesizer.speak(utterance)
+			speechSynthesizer.speak(utterance)
+		}
 	}
 
 	@objc public func stopSpeakingImmediately() {
-		speechSynthesizer.stopSpeaking(at: .immediate)
+		_ = lock.withLock {
+			speechSynthesizer.stopSpeaking(at: .immediate)
+		}
 	}
 
 	public func speechSynthesizer(_: AVSpeechSynthesizer, didFinish _: AVSpeechUtterance) {
@@ -48,7 +74,12 @@ public final class AVSpeechSynthesizerEngine: NSObject, TLOSpeechSynthesizerEngi
 
 	private func notifyCompletionOnMainQueue() {
 		DispatchQueue.main.async { [weak self] in
-			self?.delegate?.speechSynthesizerEngineDidCompleteUtterance()
+			guard let self else {
+				return
+			}
+
+			let delegate = lock.withLock { delegateStorage }
+			delegate?.speechSynthesizerEngineDidCompleteUtterance()
 		}
 	}
 }

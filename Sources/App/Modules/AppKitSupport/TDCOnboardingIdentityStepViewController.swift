@@ -20,11 +20,11 @@ public final class OnboardingIdentityStepViewController: OnboardingStepViewContr
 	private var alternateNicknameField: ValidatedTextField!
 
 	override public var stepTitle: String {
-		LocalizedKey("TDCOnboardingWindow[id1-tt]")
+		OnboardingStrings.Identity.title
 	}
 
 	override public var stepSubtitle: String {
-		LocalizedKey("TDCOnboardingWindow[id1-st]")
+		OnboardingStrings.Identity.subtitle
 	}
 
 	override public var skippable: Bool {
@@ -46,45 +46,47 @@ public final class OnboardingIdentityStepViewController: OnboardingStepViewContr
 		let view = makeContentView()
 		self.view = view
 
-		let nicknameLabel = makeLabel(LocalizedKey("TDCOnboardingWindow[id1-nk]"))
+		let nicknameLabel = makeLabel(OnboardingStrings.Identity.nicknameLabel)
 
 		let nicknameField = ValidatedTextField()
-		nicknameField.placeholderString = LocalizedKey("TDCOnboardingWindow[id1-np]")
+		nicknameField.placeholderString = OnboardingStrings.Identity.nicknamePlaceholder
 		nicknameField.stringValueIsInvalidOnEmpty = true
 		nicknameField.stringValueIsTrimmed = true
 		nicknameField.stringValueUsesOnlyFirstToken = true
 		nicknameField.translatesAutoresizingMaskIntoConstraints = false
 		nicknameField.validationBlock = { currentValue in
 			if (currentValue as NSString).isHostmaskNickname == false {
-				return LocalizedKey("CommonErrors[och-j5]")
+				return CommonValidationStrings.invalidNickname
 			}
 
 			return nil
 		}
 
-		let realNameLabel = makeLabel(LocalizedKey("TDCOnboardingWindow[id1-rn]"))
+		let realNameLabel = makeLabel(OnboardingStrings.Identity.realNameLabel)
 
 		let realNameField = NSTextField(string: "")
-		realNameField.placeholderString = LocalizedKey("TDCOnboardingWindow[id1-rp]")
+		realNameField.placeholderString = OnboardingStrings.Identity.realNamePlaceholder
 		realNameField.translatesAutoresizingMaskIntoConstraints = false
 
-		let alternateLabel = makeLabel(LocalizedKey("TDCOnboardingWindow[id1-an]"))
+		let alternateLabel = makeLabel(OnboardingStrings.Identity.alternateNicknameLabel)
 
 		let alternateField = ValidatedTextField()
-		alternateField.placeholderString = LocalizedKey("TDCOnboardingWindow[id1-ap]")
+		alternateField.placeholderString = OnboardingStrings.Identity.optionalPlaceholder
 		alternateField.stringValueIsInvalidOnEmpty = false
 		alternateField.stringValueIsTrimmed = true
 		alternateField.stringValueUsesOnlyFirstToken = true
 		alternateField.translatesAutoresizingMaskIntoConstraints = false
 		alternateField.validationBlock = { currentValue in
 			if currentValue.isEmpty == false, (currentValue as NSString).isHostmaskNickname == false {
-				return LocalizedKey("CommonErrors[och-j5]")
+				return CommonValidationStrings.invalidNickname
 			}
 
 			return nil
 		}
 
-		let alternateHelp = NSTextField(wrappingLabelWithString: LocalizedKey("TDCOnboardingWindow[id1-ah]"))
+		let alternateHelp = NSTextField(
+			wrappingLabelWithString: OnboardingStrings.Identity.alternateNicknameHelp
+		)
 		alternateHelp.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
 		alternateHelp.textColor = .secondaryLabelColor
 		alternateHelp.translatesAutoresizingMaskIntoConstraints = false
@@ -140,11 +142,11 @@ public final class OnboardingIdentityStepViewController: OnboardingStepViewContr
 
 	override public func stepWillAppear() {
 		if settings.nickname.isEmpty {
-			settings.nickname = TPCPreferences.defaultNickname()
+			settings.nickname = TextualPreferences.defaultNickname()
 		}
 
 		if settings.realName.isEmpty {
-			settings.realName = TPCPreferences.defaultRealName()
+			settings.realName = TextualPreferences.defaultRealName()
 		}
 
 		nicknameField.stringValue = settings.nickname
@@ -178,7 +180,7 @@ public final class OnboardingIdentityStepViewController: OnboardingStepViewContr
 		}
 
 		settings.nickname = nicknameField.value
-		settings.realName = (realNameField.stringValue as NSString).trim
+		settings.realName = realNameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
 
 		let alternate = alternateNicknameField.value
 		settings.alternateNickname = alternate.isEmpty ? nil : alternate

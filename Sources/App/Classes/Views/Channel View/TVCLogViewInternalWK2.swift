@@ -36,6 +36,7 @@
  *********************************************************************** */
 
 import AppKit
+import ObjectiveC
 import os
 import WebKit
 
@@ -43,6 +44,31 @@ private let logViewWebKitLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogViewWebKit"
 )
+
+@MainActor
+private enum WebKitStyleResourceAccess {
+	private typealias BooleanSetter = @convention(c) (AnyObject, Selector, Bool) -> Void
+
+	static func allowFileResources(in configuration: WKWebViewConfiguration) {
+		invoke(
+			selector: NSSelectorFromString("_setAllowUniversalAccessFromFileURLs:"),
+			on: configuration
+		)
+		invoke(
+			selector: NSSelectorFromString("_setAllowFileAccessFromFileURLs:"),
+			on: configuration.preferences
+		)
+	}
+
+	private static func invoke(selector: Selector, on object: AnyObject) {
+		guard let method = class_getInstanceMethod(type(of: object), selector) else {
+			preconditionFailure("Required WebKit style-resource selector is unavailable: \(selector)")
+		}
+
+		let setter = unsafeBitCast(method_getImplementation(method), to: BooleanSetter.self)
+		setter(object, selector, true)
+	}
+}
 
 @objc(TVCLogViewInternalWK2)
 @MainActor
@@ -94,7 +120,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		]
 
 		static let scriptSink = TVCLogScriptEventSink(webView: nil)
-		static let policy = TVCLogPolicy()
+		static let policy = LogPolicy()
 		static let configuration: WKWebViewConfiguration = {
 			let configuration = WKWebViewConfiguration()
 
@@ -102,8 +128,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 			 their own resources through other file URLs. WebKit treats every
 			 file URL as a separate origin. These private flags remain isolated
 			 here until the theme loader adopts a custom URL scheme handler. */
-			configuration._allowUniversalAccessFromFileURLs = true
-			configuration.preferences._allowFileAccessFromFileURLs = true
+			WebKitStyleResourceAccess.allowFileResources(in: configuration)
 
 			let contentController = WKUserContentController()
 			for name in messageHandlerNames {
@@ -114,9 +139,9 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		}()
 	}
 
-	@objc weak var t_parentView: LogView?
-	@objc var t_viewIsLoading = false
-	@objc var t_viewIsNavigating = false
+	@objc(t_parentView) weak var parentView: LogView?
+	@objc(t_viewIsLoading) var viewIsLoading = false
+	@objc(t_viewIsNavigating) var viewIsNavigating = false
 
 	private var loadingObservation: NSKeyValueObservation?
 
@@ -136,13 +161,13 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	}
 
 	func attach(to hostView: LogView) {
-		t_parentView = hostView
+		parentView = hostView
 		allowsBackForwardNavigationGestures = false
 		allowsMagnification = false
 		translatesAutoresizingMaskIntoConstraints = false
-		allowsLinkPreview = TPCPreferences.webKit2PreviewLinks()
+		allowsLinkPreview = TextualPreferences.webKit2PreviewLinks()
 		underPageBackgroundColor = .clear
-		customUserAgent = "Glasstual/1.0"
+		customUserAgent = LogView.commonUserAgent
 		isInspectable = true
 		navigationDelegate = self
 		uiDelegate = self
@@ -152,7 +177,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		loadingObservation?.invalidate()
 	}
 
-	@objc var webViewPolicy: TVCLogPolicy {
+	@objc var webViewPolicy: LogPolicy {
 		SharedResources.policy
 	}
 
@@ -172,14 +197,14 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	}
 
 	override func keyDown(with event: NSEvent) {
-		if t_parentView?.keyDown(event, in: self) == true {
+		if parentView?.keyDown(event, in: self) == true {
 			return
 		}
 		super.keyDown(with: event)
 	}
 
 	override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-		t_parentView?.performDragOperation(sender) ?? false
+		parentView?.performDragOperation(sender) ?? false
 	}
 
 	@objc static func emptyCaches() {
@@ -215,7 +240,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 				guard let self else {
 					return
 				}
-				self.t_viewIsLoading = change.newValue ?? self.isLoading
+				self.viewIsLoading = change.newValue ?? self.isLoading
 				self.maybeInformDelegateWebViewFinishedLoading()
 			}
 		}
@@ -227,11 +252,11 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	}
 
 	private func maybeInformDelegateWebViewFinishedLoading() {
-		guard t_viewIsLoading == false, t_viewIsNavigating == false else {
+		guard viewIsLoading == false, viewIsNavigating == false else {
 			return
 		}
 		stopObservingLoading()
-		t_parentView?.perform(
+		parentView?.perform(
 			#selector(LogView.informDelegateWebViewFinishedLoading),
 			with: nil,
 			afterDelay: 1.2,
@@ -258,7 +283,7 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		let lineNumber = nsError.userInfo["WKJavaScriptExceptionLineNumber"] as? NSNumber
 		let errorMessage = nsError.userInfo["WKJavaScriptExceptionMessage"] as? String
 		let sourceURL = nsError.userInfo["WKJavaScriptExceptionSourceURL"] as? URL
-		let channelName = t_parentView?.viewController.associatedChannel?.name ?? "Server Console"
+		let channelName = parentView?.viewController?.associatedChannel?.name ?? "Server Console"
 
 		guard let lineNumber, let errorMessage, let sourceURL else {
 			logViewWebKitLogger.error(
@@ -276,10 +301,10 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		precondition(webView === self)
 		let viewDescription = description
 		logViewWebKitLogger.error("WebView content process terminated. Reloading \(viewDescription, privacy: .public)")
-		t_viewIsLoading = false
-		t_viewIsNavigating = false
+		viewIsLoading = false
+		viewIsNavigating = false
 		stopObservingLoading()
-		t_parentView?.informDelegateWebViewClosedUnexpectedly()
+		parentView?.informDelegateWebViewClosedUnexpectedly()
 	}
 
 	func webView(
@@ -288,9 +313,14 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void
 	) {
 		precondition(webView === self)
+		guard let parentView else {
+			decisionHandler(.cancel)
+			return
+		}
+
 		SharedResources.policy.webView2(
 			webView,
-			logView: objcParent,
+			logView: parentView,
 			decidePolicyFor: navigationAction,
 			decisionHandler: decisionHandler
 		)
@@ -302,9 +332,14 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		completionHandler: @escaping @MainActor (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
 	) {
 		precondition(webView === self)
+		guard let parentView else {
+			completionHandler(.performDefaultHandling, nil)
+			return
+		}
+
 		SharedResources.policy.webView2(
 			webView,
-			logView: objcParent,
+			logView: parentView,
 			didReceive: challenge,
 			completionHandler: completionHandler
 		)
@@ -312,12 +347,12 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 
 	func webView(_ webView: WKWebView, didStartProvisionalNavigation _: WKNavigation!) {
 		precondition(webView === self)
-		t_viewIsNavigating = true
+		viewIsNavigating = true
 	}
 
 	func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
 		precondition(webView === self)
-		t_viewIsNavigating = false
+		viewIsNavigating = false
 		maybeInformDelegateWebViewFinishedLoading()
 	}
 
@@ -328,14 +363,14 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 	@objc(_webView:contextMenu:forElement:)
 	func webView(_ webView: WKWebView, contextMenu menu: NSMenu, forElement _: Any) -> NSMenu {
 		precondition(webView === self)
+		guard let parentView else {
+			return menu
+		}
+
 		return SharedResources.policy.webView2(
 			webView,
-			logView: objcParent,
+			logView: parentView,
 			contextMenuWithDefaultMenu: menu
 		)
-	}
-
-	private var objcParent: TVCLogView {
-		unsafeBitCast(t_parentView!, to: TVCLogView.self)
 	}
 }

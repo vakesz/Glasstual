@@ -5,9 +5,6 @@ import XCTest
 /// #import <XCTest/XCTest.h>
 /// #import "GLTTestClient.h"
 /// #import "ChannelModePrivate.h"
-/// #import "IRCChannelPrivate.h"
-/// #import "IRCISupportInfoPrivate.h"
-/// #import "IRCTreeItemPrivate.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
@@ -45,16 +42,21 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-class ChannelModeTests: XCTestCase {
+@MainActor
+final class ChannelModeTests: XCTestCase {
 	private var client: GLTTestClient!
 
-	private func channelMode(currentModes modeString: String) -> ChannelMode {
+	func testAggregateStatePreservesObjectiveCRuntimeName() {
+		XCTAssertEqual(NSStringFromClass(ChannelModeState.self), "IRCChannelMode")
+	}
+
+	private func channelMode(currentModes modeString: String) -> ChannelModeState {
 		client = GLTTestClient()
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 
 		let channel = client.findChannelOrCreate("#chat")!
-		let channelMode = ChannelMode(channel: channel)
-		channelMode.updateModes(modeString)
+		let channelMode = ChannelModeState(channel: channel)
+		_ = channelMode.updateModes(modeString)
 		return channelMode
 	}
 

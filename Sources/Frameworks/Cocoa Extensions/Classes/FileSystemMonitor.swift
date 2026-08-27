@@ -170,10 +170,10 @@ public final class XRFileSystemMonitor: NSObject, @unchecked Sendable {
 	}
 }
 
-private let fileSystemMonitorCallback: FSEventStreamCallback = {
-	_, info, eventCount, eventPaths, eventFlags, eventIdentifiers in
-	guard let info else { return }
-	let monitor = Unmanaged<XRFileSystemMonitor>.fromOpaque(info).takeUnretainedValue()
-	let paths = unsafeBitCast(eventPaths, to: NSArray.self)
-	monitor.receive(paths: paths, flags: eventFlags, identifiers: eventIdentifiers, count: eventCount)
-}
+private let fileSystemMonitorCallback: FSEventStreamCallback =
+	{ _, info, eventCount, eventPaths, eventFlags, eventIdentifiers in
+		guard let info else { return }
+		let monitor = Unmanaged<XRFileSystemMonitor>.fromOpaque(info).takeUnretainedValue()
+		let paths = unsafeBitCast(eventPaths, to: NSArray.self)
+		monitor.receive(paths: paths, flags: eventFlags, identifiers: eventIdentifiers, count: eventCount)
+	}

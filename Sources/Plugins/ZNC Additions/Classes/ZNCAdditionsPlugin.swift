@@ -36,15 +36,15 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import GlasstualPluginKit
 import Security
 import SecurityInterface
 
 @objc(TPI_ZNCAdditions)
-final class ZNCAdditionsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable {
-	private var bundle: Bundle {
-		Bundle(for: ZNCAdditionsPlugin.self)
-	}
-
+final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, PluginServerInputHandling,
+	PluginServerMessageIntercepting, @unchecked Sendable
+{
 	var subscribedUserInputCommands: [String] {
 		["detach", "attach", "znccert"]
 	}
@@ -53,46 +53,50 @@ final class ZNCAdditionsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		["privmsg"]
 	}
 
-	func didReceiveServerInput(_ input: THOPluginDidReceiveServerInputConcreteObject, on client: IRCClient) {
+	func didReceiveServerInput(_ input: PluginServerInput, client: PluginClient) {
 		guard client.isConnectedToZNC,
 		      client.nickname(input.senderNickname, isZNCUser: "status"),
 		      input.messageSequence.hasPrefix("Disconnected from IRC")
 		else { return }
 
-		let client = MainActorTransfer(value: client)
 		performSynchronouslyOnMainActor {
-			self.handleIRCSideDisconnect(client.value)
+			self.handleIRCSideDisconnect(client)
 		}
 	}
 
-	func userInputCommandInvoked(on client: IRCClient, command: String, messageString: String) {
-		let client = MainActorTransfer(value: client)
+	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
 		Task { @MainActor [weak self] in
-			self?.handleUserCommand(command, message: messageString, client: client.value)
+			self?.handleUserCommand(invocation)
 		}
 	}
 
 	@MainActor
-	private func handleUserCommand(_ command: String, message: String, client: IRCClient) {
+	private func handleUserCommand(_ invocation: PluginCommandInvocation) {
+		let client = invocation.client
 		guard client.isConnectedToZNC else {
-			client.printDebugInformation(localized("xex-nl"))
+			client.printDebug(String(localized: .BasicLanguage.zncConnectionRequired))
 			return
 		}
 
-		switch command.uppercased() {
+		switch invocation.command.uppercased() {
 		case "ZNCCERT":
 			showCertificateChain(for: client)
 		case "DETACH", "ATTACH":
-			updateAttachment(command: command.uppercased(), message: message, client: client)
+			updateAttachment(
+				command: invocation.command.uppercased(),
+				message: invocation.message,
+				client: client,
+				selectedChannel: invocation.selectedChannel
+			)
 		default:
 			break
 		}
 	}
 
 	@MainActor
-	private func showCertificateChain(for client: IRCClient) {
-		guard let certificateData = client.zncBouncerCertificateChainData else {
-			client.printDebugInformation(localized("moh-hg"))
+	private func showCertificateChain(for client: PluginClient) {
+		guard let certificateData = client.zncCertificateChainData else {
+			client.printDebug(String(localized: .BasicLanguage.noInformationAvailable))
 			return
 		}
 
@@ -114,12 +118,12 @@ final class ZNCAdditionsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		)
 
 		guard status == errSecSuccess, let certificates = importedItems as? [SecCertificate] else {
-			client.printDebugInformation(localized("wco-zv"))
+			client.printDebug(String(localized: .BasicLanguage.certificateConversionError))
 			return
 		}
 
 		let panel = SFCertificateTrustPanel()
-		panel.setDefaultButtonTitle(NSLocalizedString("Prompts[aqw-q1]", comment: ""))
+		panel.setDefaultButtonTitle(String(localized: .BasicLanguage.closeButton))
 		panel.setAlternateButtonTitle(nil)
 		panel.beginSheet(
 			for: NSApp.mainWindow,
@@ -132,25 +136,28 @@ final class ZNCAdditionsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 	}
 
 	@MainActor
-	private func updateAttachment(command: String, message: String, client: IRCClient) {
+	private func updateAttachment(
+		command: String,
+		message: String,
+		client: PluginClient,
+		selectedChannel: PluginChannel?
+	) {
 		let channelName = message.trimmingCharacters(in: .whitespacesAndNewlines)
-		let channel = client.stringIsChannelName(channelName)
-			? client.findChannel(channelName)
-			: NSObject.masterController().mainWindow.selectedChannel
+		let channel = client.isChannelName(channelName) ? client.channel(named: channelName) : selectedChannel
 		guard let channel else { return }
 
 		let isAttach = command == "ATTACH"
 		channel.autoJoin = isAttach
 		if isAttach {
-			client.joinUnlistedChannel(channel.name)
+			client.joinChannel(named: channel.name)
 		} else {
 			client.sendLine("\(command) \(channel.name)")
-			client.printDebugInformation(localized("0fr-kb", channel.name), in: channel)
+			client.printDebug(String(localized: .BasicLanguage.detachConfirmation(channel.name)), in: channel)
 		}
 	}
 
-	func interceptServerInput(_ input: IRCMessage, for client: IRCClient) -> IRCMessage? {
-		guard input.paramsCount == 2, client.isConnectedToZNC, input.command == "PRIVMSG" else { return input }
+	func interceptServerInput(_ input: PluginServerMessage, client: PluginClient) -> PluginServerMessage? {
+		guard input.parameters.count == 2, client.isConnectedToZNC, input.command == "PRIVMSG" else { return input }
 		let sender = input.sender.nickname
 		if client.nickname(sender, isZNCUser: "buffextras") {
 			return interceptBufferExtras(input, client: client)
@@ -161,12 +168,9 @@ final class ZNCAdditionsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		return input
 	}
 
-	private func interceptPlayback(_ input: IRCMessage, client: IRCClient) -> IRCMessage? {
-		let playbackCapability = ClientIRCv3SupportedCapability(
-			rawValue: UInt(ClientIRCv3SupportedCapabilityZNCPlaybackModule)
-		)
-		guard client.isCapabilityEnabled(playbackCapability) else { return input }
-		let message = input.param(at: 1)
+	private func interceptPlayback(_ input: PluginServerMessage, client: PluginClient) -> PluginServerMessage? {
+		guard client.isCapabilityEnabled(rawValue: PluginHost.zncPlaybackCapabilityRawValue) else { return input }
+		let message = input.parameters[1]
 		if message.hasPrefix("The playback buffer for ["),
 		   message.contains("] channels matching ["),
 		   message.hasSuffix("] has been cleared.")
@@ -176,21 +180,21 @@ final class ZNCAdditionsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		return input
 	}
 
-	private func interceptBufferExtras(_ input: IRCMessage, client: IRCClient) -> IRCMessage? {
-		var parameters = input.params
-		let message = NSMutableString(string: (parameters[1] as NSString).normalizeSpaces)
-		let hostmask = message.token
+	private func interceptBufferExtras(_ input: PluginServerMessage, client: PluginClient) -> PluginServerMessage? {
+		var parameters = input.parameters
+		let message = NSMutableString(string: (parameters[1] as NSString).ceNormalizeSpaces)
+		let hostmask = message.ceToken
 		guard hostmask.isEmpty == false else { return input }
 
-		let sender = input.sender.mutableCopy() as! IRCPrefixMutable
-		var nickname: NSString?
-		var username: NSString?
-		var address: NSString?
-		if (hostmask as NSString).hostmaskComponents(&nickname, username: &username, address: &address, on: client) {
-			guard nickname as String? != client.userNickname else { return nil }
-			sender.nickname = nickname as String? ?? ""
-			sender.username = username as String?
-			sender.address = address as String?
+		var sender = input.sender
+		if let components = IRCHostmask(
+			parsing: hostmask,
+			maximumNicknameLength: Int(client.maximumNicknameLength)
+		) {
+			guard components.nickname != client.userNickname else { return nil }
+			sender.nickname = components.nickname
+			sender.username = components.username
+			sender.address = components.address
 			sender.isServer = false
 		} else {
 			sender.nickname = hostmask
@@ -198,7 +202,7 @@ final class ZNCAdditionsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		}
 		sender.hostmask = hostmask
 
-		let mutableInput = input.mutableCopy() as! IRCMessageMutable
+		let mutableInput = input.copy()
 		let body = message as String
 		if body == "joined" {
 			mutableInput.command = "JOIN"
@@ -232,7 +236,7 @@ final class ZNCAdditionsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 		}
 
 		mutableInput.isPrintOnlyMessage = true
-		mutableInput.params = parameters
+		mutableInput.parameters = parameters
 		mutableInput.sender = sender
 		return mutableInput
 	}
@@ -249,16 +253,11 @@ final class ZNCAdditionsPlugin: NSObject, THOPluginProtocol, @unchecked Sendable
 	}
 
 	@MainActor
-	private func handleIRCSideDisconnect(_ client: IRCClient) {
-		for channel in client.channelList where channel.isActive && channel.name.hasPrefix("~#") == false {
+	private func handleIRCSideDisconnect(_ client: PluginClient) {
+		for channel in client.channels where channel.isActive && channel.name.hasPrefix("~#") == false {
 			channel.deactivate()
 		}
-		NSObject.masterController().mainWindow.reloadTreeGroup(client)
-	}
-
-	private func localized(_ key: String, _ arguments: CVarArg...) -> String {
-		let format = bundle.localizedString(forKey: key, value: nil, table: "BasicLanguage")
-		return arguments.isEmpty ? format : String(format: format, arguments: arguments)
+		client.refreshSidebar()
 	}
 }
 
@@ -274,8 +273,4 @@ private func performSynchronouslyOnMainActor(_ work: @MainActor @Sendable () -> 
 			}
 		}
 	}
-}
-
-private struct MainActorTransfer<Value>: @unchecked Sendable {
-	let value: Value
 }

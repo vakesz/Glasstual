@@ -12,8 +12,15 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import Darwin
 import os
+
+enum TranscriptDirectory {
+	static let console = "Console"
+	static let channel = "Channels"
+	static let privateMessage = "Queries"
+}
 
 /// Transcript file logger. Callers use the main queue for writes; the idle
 /// timer also fires on the main queue so open/close never races with writing.
@@ -32,7 +39,7 @@ public final class FileLogger: NSObject {
 	private nonisolated(unsafe) static var openFileHandleCount = 0
 	private nonisolated(unsafe) static var noSpaceAlertVisible = false
 	private nonisolated(unsafe) static var lastNoSpaceFailTime: TimeInterval = 0
-	private nonisolated(unsafe) static var sharedIdleTimer: TLOTimer?
+	private nonisolated(unsafe) static var sharedIdleTimer: TimerImplementation?
 
 	private weak var client: IRCClient?
 	private weak var channel: IRCChannel?
@@ -69,11 +76,11 @@ public final class FileLogger: NSObject {
 	// MARK: - Plain Text API
 
 	@objc(writeLogLine:)
-	public func writeLogLine(_ logLine: TVCLogLine) {
+	public func writeLogLine(_ logLine: LogLine) {
 		let stringToWrite: String = if let channel {
 			logLine.renderedBodyForTranscriptLog(in: channel)
 		} else {
-			logLine.renderedBodyForTranscriptLog()
+			logLine.renderedBodyForTranscriptLog
 		}
 
 		writePlainText(stringToWrite)
@@ -255,7 +262,9 @@ public final class FileLogger: NSObject {
 
 	private func writePath(relativeTo sourcePath: String) -> String? {
 		if let channel {
-			let treeItem = (channel as AnyObject) as! IRCTreeItem
+			guard let treeItem = (channel as AnyObject) as? IRCTreeItem else {
+				return nil
+			}
 			return Self.writePath(for: treeItem, relativeTo: sourcePath)
 		}
 
@@ -292,27 +301,27 @@ public final class FileLogger: NSObject {
 
 		let identifier = client.uniqueIdentifier as NSString
 		let clientIdentifier = identifier.substring(to: min(5, identifier.length))
-		let clientName = "\(client.name) (\(clientIdentifier))".safeFilename
+		let clientName = String(("\(client.name) (\(clientIdentifier))" as NSString).ceSafeFilename)
 
 		guard let channel else {
-			return "/\(clientName)/\(TLOFileLoggerConsoleDirectoryName)/"
+			return "/\(clientName)/\(TranscriptDirectory.console)/"
 		}
 
-		let channelName = channel.name.safeFilename
+		let channelName = String((channel.name as NSString).ceSafeFilename)
 
 		if channel.isChannel {
-			return "/\(clientName)/\(TLOFileLoggerChannelDirectoryName)/\(channelName)/"
+			return "/\(clientName)/\(TranscriptDirectory.channel)/\(channelName)/"
 		}
 
 		if channel.isPrivateMessage || channel.isDirectChat {
-			return "/\(clientName)/\(TLOFileLoggerPrivateMessageDirectoryName)/\(channelName)/"
+			return "/\(clientName)/\(TranscriptDirectory.privateMessage)/\(channelName)/"
 		}
 
 		return nil
 	}
 
 	private static func displayPath(for url: URL) -> String {
-		(url as NSURL).standardizedTildePath ?? url.path
+		(url as NSURL).textualStandardizedTildePath ?? url.path
 	}
 
 	// MARK: - Idle Timer
@@ -325,12 +334,12 @@ public final class FileLogger: NSObject {
 		return (Date().timeIntervalSince1970 - lastWriteTime) > Self.fileHandleIdleLimit
 	}
 
-	private static var idleTimer: TLOTimer {
+	private static var idleTimer: TimerImplementation {
 		if let sharedIdleTimer {
 			return sharedIdleTimer
 		}
 
-		let timer = TLOTimer(
+		let timer = TimerImplementation(
 			actionBlock: { _ in
 				idleTimerFired()
 			}, on: DispatchQueue.main
@@ -447,9 +456,9 @@ public final class FileLogger: NSObject {
 		Self.noSpaceAlertVisible = true
 
 		_ = TDCAlert.alert(
-			withMessage: LocalizedKey("Prompts[v9e-jy]"),
-			title: LocalizedKey("Prompts[bi7-ah]"),
-			defaultButton: LocalizedKey("Prompts[c7s-dq]"),
+			withMessage: PromptStrings.Logging.resumeAfterLowStorageBody,
+			title: PromptStrings.Logging.disabledForLowStorageTitle,
+			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil
 		) { _, _, _ in
 			Self.noSpaceAlertVisible = false

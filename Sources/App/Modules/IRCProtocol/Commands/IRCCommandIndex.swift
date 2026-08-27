@@ -53,7 +53,7 @@ public final class CommandIndex: NSObject {
 
 	@objc(localCommandList)
 	public static func localCommandList() -> [String] {
-		storage.localCommandList(developerModeEnabled: TPCPreferences.developerModeEnabled())
+		storage.localCommandList(developerModeEnabled: TextualPreferences.developerModeEnabled())
 	}
 
 	@objc(indexOfRemoteCommand:)
@@ -66,7 +66,7 @@ public final class CommandIndex: NSObject {
 		storage.index(
 			of: command,
 			isLocal: true,
-			developerModeEnabled: TPCPreferences.developerModeEnabled()
+			developerModeEnabled: TextualPreferences.developerModeEnabled()
 		)
 	}
 

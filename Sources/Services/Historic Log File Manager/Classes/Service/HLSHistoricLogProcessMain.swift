@@ -40,7 +40,7 @@ import Foundation
 import os
 
 @objc(HLSHistoricLogProcessMain)
-final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unchecked Sendable {
+final class HistoricLogProcessMain: NSObject, HistoricLogServerProtocol, @unchecked Sendable {
 	private final class CallbackBox<Callback>: @unchecked Sendable {
 		let callback: Callback
 
@@ -86,13 +86,13 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 	}
 
 	private func resetDatabaseFilename() -> String {
-		let filename = "logControllerHistoricLog_\(NSString.withUUID()).sqlite"
-		TPCPreferencesUserDefaults.shared().set(filename, forKey: Database.filenameKey)
+		let filename = "logControllerHistoricLog_\(UUID().uuidString).sqlite"
+		TextualUserDefaults.shared().set(filename, forKey: Database.filenameKey)
 		return filename
 	}
 
 	private func databaseSaveFilename() -> String {
-		TPCPreferencesUserDefaults.shared().string(forKey: Database.filenameKey) ?? resetDatabaseFilename()
+		TextualUserDefaults.shared().string(forKey: Database.filenameKey) ?? resetDatabaseFilename()
 	}
 
 	private func setDatabasePath(in directory: String) {
@@ -207,7 +207,7 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		beforeUniqueIdentifier uniqueIdentifier: String,
 		fetchLimit: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
 	) {
 		fetchEntries(
 			forView: viewIdentifier,
@@ -224,7 +224,7 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		afterUniqueIdentifier uniqueIdentifier: String,
 		fetchLimit: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
 	) {
 		fetchEntries(
 			forView: viewIdentifier,
@@ -242,14 +242,14 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		beforeFetchLimit fetchLimitBefore: UInt,
 		afterFetchLimit fetchLimitAfter: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
 	) {
 		guard let viewContext = context(forView: viewIdentifier) else {
 			completionBlock([])
 			return
 		}
 
-		let entries: [TVCLogLineXPC] = viewContext.performAndWait {
+		let entries: [LogLineXPC] = viewContext.performAndWait {
 			let entryIdentifier = identifier(
 				in: viewContext,
 				forUniqueIdentifier: uniqueIdentifier,
@@ -278,14 +278,14 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		afterUniqueIdentifier uniqueIdentifierAfter: String,
 		beforeUniqueIdentifier uniqueIdentifierBefore: String,
 		fetchLimit: UInt,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
 	) {
 		guard let viewContext = context(forView: viewIdentifier) else {
 			completionBlock([])
 			return
 		}
 
-		let entries: [TVCLogLineXPC] = viewContext.performAndWait {
+		let entries: [LogLineXPC] = viewContext.performAndWait {
 			let first = identifier(in: viewContext, forUniqueIdentifier: uniqueIdentifierAfter, performOnQueue: false)
 			let second = identifier(in: viewContext, forUniqueIdentifier: uniqueIdentifierBefore, performOnQueue: false)
 			guard first != UInt.max, second != UInt.max else {
@@ -310,7 +310,7 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		fetchType: UniqueIdentifierFetchType,
 		fetchLimit: UInt,
 		limitToDate: Date?,
-		completionBlock: @escaping ([TVCLogLineXPC]) -> Void
+		completionBlock: @escaping ([LogLineXPC]) -> Void
 	) {
 		precondition(fetchLimit > 0)
 		guard let viewContext = context(forView: viewIdentifier) else {
@@ -318,7 +318,7 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 			return
 		}
 
-		let entries: [TVCLogLineXPC] = viewContext.performAndWait {
+		let entries: [LogLineXPC] = viewContext.performAndWait {
 			let entryIdentifier = identifier(
 				in: viewContext,
 				forUniqueIdentifier: uniqueIdentifier,
@@ -355,13 +355,13 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		ascending: Bool,
 		fetchLimit: UInt,
 		limitTo limitToDate: Date?,
-		withCompletionBlock completionBlock: @escaping ([TVCLogLineXPC]) -> Void
+		withCompletionBlock completionBlock: @escaping ([LogLineXPC]) -> Void
 	) {
 		guard let viewContext = context(forView: viewIdentifier) else {
 			completionBlock([])
 			return
 		}
-		let entries: [TVCLogLineXPC] = viewContext.performAndWait {
+		let entries: [LogLineXPC] = viewContext.performAndWait {
 			fetchEntries(
 				in: viewContext,
 				ascending: ascending,
@@ -379,7 +379,7 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		lowestEntryIdentifier: UInt = 0,
 		highestEntryIdentifier: UInt = UInt(Int.max),
 		limitToDate: Date?
-	) -> [TVCLogLineXPC] {
+	) -> [LogLineXPC] {
 		guard let request = fetchRequest(
 			forView: viewContext.viewIdentifier,
 			ascending: ascending,
@@ -394,14 +394,14 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 			let objects = try viewContext.fetch(request)
 			Self.logger
 				.debug("\(objects.count) results fetched for view \(viewContext.viewIdentifier, privacy: .public)")
-			return objects.map { TVCLogLineXPC(managedObject: $0) }
+			return objects.map { LogLineXPC(managedObject: $0) }
 		} catch {
 			Self.logger.error("Error occurred fetching objects: \(error.localizedDescription, privacy: .public)")
 			return []
 		}
 	}
 
-	func writeLogLine(_ logLine: TVCLogLineXPC) {
+	func writeLogLine(_ logLine: LogLineXPC) {
 		let viewIdentifier = logLine.viewIdentifier
 		let data = logLine.data
 		let uniqueIdentifier = logLine.uniqueIdentifier
@@ -522,7 +522,9 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		}
 		serviceConnection = nil
 	}
+}
 
+extension HistoricLogProcessMain {
 	private func cancelResize(in viewContext: HistoricLogViewContext) {
 		(viewContext.resizeTimer as? DispatchSourceTimer)?.cancel()
 		viewContext.resizeTimer = nil
@@ -588,7 +590,11 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		quickSave(viewContext)
 		parentContext.performAndWait { quickSave(parentContext) }
 
-		let identifierRequest = fetchRequest.copy() as! NSFetchRequest<NSDictionary>
+		guard let identifierRequest = fetchRequest.copy() as? NSFetchRequest<NSDictionary> else {
+			assertionFailure("Unable to copy the historic-log identifier fetch request")
+			return 0
+		}
+
 		identifierRequest.resultType = .dictionaryResultType
 		identifierRequest.propertiesToFetch = ["logLineUniqueIdentifier"]
 		identifierRequest.includesPendingChanges = false
@@ -605,7 +611,11 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		let uniqueIdentifiers = identifierRows.compactMap { $0["logLineUniqueIdentifier"] as? String }
 		guard !uniqueIdentifiers.isEmpty else { return 0 }
 
-		let deleteFetchRequest = fetchRequest.copy() as! NSFetchRequest<NSFetchRequestResult>
+		guard let deleteFetchRequest = fetchRequest.copy() as? NSFetchRequest<NSFetchRequestResult> else {
+			assertionFailure("Unable to copy the historic-log deletion fetch request")
+			return 0
+		}
+
 		deleteFetchRequest.resultType = .managedObjectResultType
 		deleteFetchRequest.includesPendingChanges = false
 		deleteFetchRequest.sortDescriptors = nil
@@ -733,8 +743,8 @@ final class HistoricLogProcessMain: NSObject, HLSHistoricLogServerProtocol, @unc
 		return performOnQueue ? viewContext.performAndWait(work) : work()
 	}
 
-	private func remoteObjectProxy() -> HLSHistoricLogClientProtocol? {
-		serviceConnection?.remoteObjectProxy as? HLSHistoricLogClientProtocol
+	private func remoteObjectProxy() -> HistoricLogClientProtocol? {
+		serviceConnection?.remoteObjectProxy as? HistoricLogClientProtocol
 	}
 
 	private func saturatedAdd(_ lhs: UInt, _ rhs: UInt) -> UInt {

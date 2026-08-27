@@ -36,9 +36,11 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
+import Mustache
 
 @objc(ICMYouTube)
-final class YouTubeModule: ICMInlineVideoFoundation {
+final class YouTubeModule: InlineVideoFoundation {
 	private func performAction(forVideo identifier: String) {
 		let attributes: [String: Any] = [
 			"uniqueIdentifier": payload.uniqueIdentifier,
@@ -47,14 +49,14 @@ final class YouTubeModule: ICMInlineVideoFoundation {
 		]
 		guard let template else { return cancel() }
 		do {
-			payload.html = try template.renderObject(attributes)
+			payload.html = try template.render(attributes)
 			finalize()
 		} catch {
 			finalizeWithError(error)
 		}
 	}
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		guard let video = video(for: url) else { return nil }
 		return { module in
 			guard let module = module as? YouTubeModule else { return }
@@ -63,7 +65,7 @@ final class YouTubeModule: ICMInlineVideoFoundation {
 		}
 	}
 
-	private class func video(for url: URL) -> (identifier: String, startTime: TimeInterval)? {
+	private static func video(for url: URL) -> (identifier: String, startTime: TimeInterval)? {
 		let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
 		var identifier: String?
 
@@ -82,7 +84,7 @@ final class YouTubeModule: ICMInlineVideoFoundation {
 		return (identifier, startTime)
 	}
 
-	override class var domains: [String]? {
+	override static var domains: [String]? {
 		["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"]
 	}
 

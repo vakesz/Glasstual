@@ -35,10 +35,12 @@
  *
  *********************************************************************** */
 
+import AppKit
+
 @objc(TLOpenLink)
 public class OpenLink: NSObject {
 	@objc(open:inBackground:)
-	public static func open(url: URL, inBackground: Bool = TPCPreferences.openBrowserInBackground()) {
+	public static func open(url: URL, inBackground: Bool = TextualPreferences.openBrowserInBackground()) {
 		/* Links come from other people. Opening a file: URL would launch
 		 whatever is at that path with the user's privileges. */
 		if url.isFileURL {
@@ -60,7 +62,7 @@ public class OpenLink: NSObject {
 	}
 
 	@objc(openWithString:inBackground:)
-	public static func open(string: String, inBackground: Bool = TPCPreferences.openBrowserInBackground()) {
+	public static func open(string: String, inBackground: Bool = TextualPreferences.openBrowserInBackground()) {
 		guard let urlToOpen = URL(string: string) else {
 			return
 		}

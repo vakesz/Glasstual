@@ -1,0 +1,42 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "change-button" : {
+      "comment" : "Title of the button that submits a nickname change. It is also used as the sheet title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Nickname"
+          }
+        }
+      }
+    },
+    "current-nickname-label" : {
+      "comment" : "Label before the current nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current nickname:"
+          }
+        }
+      }
+    },
+    "new-nickname-label" : {
+      "comment" : "Label before the field used to enter a new nickname.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New nickname:"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

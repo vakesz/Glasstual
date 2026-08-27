@@ -59,13 +59,16 @@ final class AppKitSupportMigrationTests: XCTestCase {
 	}
 
 	func testAutoExpandingFieldsTrackTheirLayoutWidth() {
-		let textField = TVCAutoExpandingTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 20))
+		XCTAssertNotNil(NSClassFromString("TVCAutoExpandingTextField"))
+		XCTAssertNotNil(NSClassFromString("TVCAutoExpandingTokenField"))
+
+		let textField = AutoExpandingTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 20))
 		textField.cell?.wraps = true
 		textField.layout()
 
 		XCTAssertEqual(textField.preferredMaxLayoutWidth, 240)
 
-		let tokenField = TVCAutoExpandingTokenField(frame: NSRect(x: 0, y: 0, width: 180, height: 20))
+		let tokenField = AutoExpandingTokenField(frame: NSRect(x: 0, y: 0, width: 180, height: 20))
 		tokenField.cell?.wraps = true
 		tokenField.layout()
 
@@ -76,8 +79,70 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 20))
 		field.cell?.wraps = false
 
-		XCTAssertFalse(TVCAutoExpandingFieldUpdatePreferredMaxLayoutWidth(field))
+		XCTAssertFalse(updatePreferredMaxLayoutWidth(of: field))
 		XCTAssertEqual(field.preferredMaxLayoutWidth, 0)
+	}
+
+	func testNativeInputAndValidationControlsPreserveRuntimeContracts() {
+		XCTAssertEqual(NSStringFromClass(TDCAlert.self), "TDCAlert")
+		XCTAssertEqual(TDCAlertResponse.default.rawValue, 1000)
+		XCTAssertEqual(TDCAlertResponse.alternate.rawValue, 1001)
+		XCTAssertEqual(TDCAlertResponse.other.rawValue, 1002)
+		XCTAssertTrue(
+			TDCAlert.responds(
+				to: NSSelectorFromString("modalAlertWithMessage:title:defaultButton:alternateButton:")
+			)
+		)
+
+		XCTAssertNotNil(NSClassFromString("TDCInputPrompt"))
+		XCTAssertTrue(
+			InputPrompt.responds(
+				to: NSSelectorFromString(
+					"promptWithMessage:title:defaultButton:alternateButton:prefillString:completionBlock:"
+				)
+			)
+		)
+
+		let textField = ValidatedTextField(string: "  #swift  ")
+		textField.stringValueIsTrimmed = true
+		XCTAssertEqual(textField.value, "#swift")
+		XCTAssertEqual(NSStringFromClass(type(of: textField)), "TVCValidatedTextField")
+
+		let comboBox = ValidatedComboBox()
+		comboBox.stringValue = "  libera  "
+		comboBox.stringValueIsTrimmed = true
+		XCTAssertEqual(comboBox.value, "libera")
+		XCTAssertEqual(NSStringFromClass(type(of: comboBox)), "TVCValidatedComboBox")
+		XCTAssertNotNil(NSClassFromString("TVCValidatedComboBoxCell"))
+		XCTAssertEqual(NSStringFromClass(TextViewWithIRCFormatter.self), "TVCTextViewWithIRCFormatter")
+		XCTAssertEqual(NSStringFromClass(BasicTableView.self), "TVCBasicTableView")
+		XCTAssertEqual(TVCTextViewCaretLocation.onlyLine.rawValue, 0)
+		XCTAssertEqual(TVCTextViewCaretLocation.firstLine.rawValue, 1)
+		XCTAssertEqual(TVCTextViewCaretLocation.middle.rawValue, 2)
+		XCTAssertEqual(TVCTextViewCaretLocation.lastLine.rawValue, 3)
+	}
+
+	func testPreviouslySuppressedAlertReturnsWithoutPresentingOrMutatingTheResponsePointer() {
+		let baseKey = "AppKitSupportMigrationTests.\(UUID().uuidString)"
+		let defaultsKey = TDCAlert.suppressionKey(withBase: baseKey)
+		var suppressionResponse = ObjCBool(false)
+		UserDefaults.standard.set(true, forKey: defaultsKey)
+		defer { UserDefaults.standard.removeObject(forKey: defaultsKey) }
+
+		let response = TDCAlert.modalAlert(
+			withMessage: "This alert must remain suppressed.",
+			title: "Suppressed",
+			defaultButton: "OK",
+			alternateButton: nil,
+			otherButton: nil,
+			suppressionKey: baseKey,
+			suppressionText: nil,
+			accessoryView: nil,
+			suppressionResponse: &suppressionResponse
+		)
+
+		XCTAssertEqual(response, .default)
+		XCTAssertFalse(suppressionResponse.boolValue)
 	}
 
 	func testPreferencesControllerLoadsWindowFromNib() {
@@ -87,7 +152,7 @@ final class AppKitSupportMigrationTests: XCTestCase {
 	}
 
 	func testMemberInfoPopoverUsesTransientBehavior() {
-		let popover = TVCMemberListUserInfoPopover()
+		let popover = MemberListUserInfoPopover()
 
 		popover.awakeFromNib()
 
@@ -97,7 +162,7 @@ final class AppKitSupportMigrationTests: XCTestCase {
 	func testChannelModifyTopicSheetLoadsFromNib() {
 		let client = GLTTestClient()
 		let channel = makeChannel(named: "#chat", client: client)
-		let sheet = TDCChannelModifyTopicSheet(channel: channel)
+		let sheet = ChannelModifyTopicSheet(channel: channel)
 
 		XCTAssertTrue(sheet.client === client)
 		XCTAssertTrue(sheet.channel === channel)
@@ -105,8 +170,31 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertNotNil(sheet.sheet)
 	}
 
+	func testMigratedDialogRuntimeNamesRemainAvailable() {
+		let runtimeClassNames = [
+			"TDCAddressBookSheet",
+			"TDCChannelBanListSheet",
+			"TDCChannelModifyModesSheet",
+			"TDCHighlightEntrySheet",
+			"TDCPreferencesUserStyleSheet",
+			"TDCServerHighlightListSheet",
+		]
+
+		for runtimeClassName in runtimeClassNames {
+			XCTAssertNotNil(NSClassFromString(runtimeClassName), runtimeClassName)
+		}
+
+		XCTAssertEqual(ChannelBanListEntryType.ban.rawValue, IRCISupportInfoListType.ban.rawValue)
+		XCTAssertEqual(ChannelBanListEntryType.banException.rawValue, IRCISupportInfoListType.banException.rawValue)
+		XCTAssertEqual(
+			ChannelBanListEntryType.inviteException.rawValue,
+			IRCISupportInfoListType.inviteException.rawValue
+		)
+		XCTAssertEqual(ChannelBanListEntryType.quiet.rawValue, IRCISupportInfoListType.quiet.rawValue)
+	}
+
 	func testOnboardingStylePreviewViewExposesRadioButtonAccessibility() {
-		let view = TDCOnboardingStylePreviewView()
+		let view = OnboardingStylePreviewView()
 		view.styleTitle = "Bubbles"
 
 		XCTAssertTrue(view.isAccessibilityElement())
@@ -114,15 +202,15 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertEqual(view.accessibilityLabel(), "Bubbles")
 		XCTAssertEqual(view.accessibilityValue() as? Bool, false)
 
-		view.isSelected = true
+		view.selected = true
 
 		XCTAssertEqual(view.accessibilityValue() as? Bool, true)
 	}
 
 	func testSpokenNotificationResolvesClientTarget() {
 		let client = GLTTestClient()
-		let notification = TLOSpokenNotification(
-			notification: .connect,
+		let notification = SpokenNotification(
+			notificationType: .connect,
 			lineType: .notice,
 			target: client,
 			nickname: "alice",
@@ -140,10 +228,10 @@ final class AppKitSupportMigrationTests: XCTestCase {
 	func testSpokenNotificationResolvesChannelAndItsClient() {
 		let client = GLTTestClient()
 		let channel = makeChannel(named: "#chat", client: client)
-		let notification = TLOSpokenNotification(
-			notification: .channelMessage,
+		let notification = SpokenNotification(
+			notificationType: .channelMessage,
 			lineType: .privateMessage,
-			target: (channel as AnyObject) as! IRCTreeItem,
+			target: channel,
 			nickname: "alice",
 			text: "hello"
 		)
@@ -160,16 +248,16 @@ final class AppKitSupportMigrationTests: XCTestCase {
 	}
 
 	func testUnicodeHelperClassifiesCodePoints() {
-		XCTAssertTrue(THOUnicodeHelper.isAlphabeticalCodePoint(Int(Unicode.Scalar("A").value)))
-		XCTAssertTrue(THOUnicodeHelper.isAlphabeticalCodePoint(Int(Unicode.Scalar("z").value)))
-		XCTAssertFalse(THOUnicodeHelper.isAlphabeticalCodePoint(Int(Unicode.Scalar("1").value)))
-		XCTAssertTrue(THOUnicodeHelper.isPrivate(0xE010))
-		XCTAssertTrue(THOUnicodeHelper.isIdeographic(0x4E00))
-		XCTAssertTrue(THOUnicodeHelper.isIdeographicOrPrivate(0xE010))
+		XCTAssertTrue(UnicodeHelper.isAlphabeticalCodePoint(Int(Unicode.Scalar("A").value)))
+		XCTAssertTrue(UnicodeHelper.isAlphabeticalCodePoint(Int(Unicode.Scalar("z").value)))
+		XCTAssertFalse(UnicodeHelper.isAlphabeticalCodePoint(Int(Unicode.Scalar("1").value)))
+		XCTAssertTrue(UnicodeHelper.isPrivate(0xE010))
+		XCTAssertTrue(UnicodeHelper.isIdeographic(0x4E00))
+		XCTAssertTrue(UnicodeHelper.isIdeographicOrPrivate(0xE010))
 	}
 
-	private func makeChannel(named name: String, client: IRCClient) -> IRCChannel {
-		let channel = IRCChannel(configDictionary: ["channelName": name])
+	private func makeChannel(named name: String, client: IRCClient) -> Channel {
+		let channel = Channel(configDictionary: ["channelName": name])
 
 		channel.setValue(client, forKey: "associatedClient")
 

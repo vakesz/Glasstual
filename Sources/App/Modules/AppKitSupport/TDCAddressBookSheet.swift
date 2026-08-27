@@ -31,8 +31,8 @@ public final class AddressBookSheet: SheetBase {
 	@IBOutlet private var trackUserActivityCheck: NSButton!
 	@IBOutlet private var ignoreEntrySaveButton: NSButton!
 	@IBOutlet private var userTrackingEntrySaveButton: NSButton!
-	@IBOutlet private var ignoreEntryHostmaskTextField: TVCValidatedTextField!
-	@IBOutlet private var userTrackingEntryNicknameTextField: TVCValidatedTextField!
+	@IBOutlet private var ignoreEntryHostmaskTextField: ValidatedTextField!
+	@IBOutlet private var userTrackingEntryNicknameTextField: ValidatedTextField!
 	@IBOutlet private var ignoreEntryView: NSWindow!
 	@IBOutlet private var userTrackingEntryView: NSWindow!
 
@@ -69,7 +69,7 @@ public final class AddressBookSheet: SheetBase {
 			let valueWithoutWildcard = currentValue.replacingOccurrences(of: "*", with: "-")
 
 			if (valueWithoutWildcard as NSString).isHostmask == false {
-				return LocalizedKey("TDCAddressBookSheet[csu-bv]")
+				return AddressBookStrings.invalidIgnoreMask
 			}
 
 			return nil
@@ -79,7 +79,7 @@ public final class AddressBookSheet: SheetBase {
 		userTrackingEntryNicknameTextField.stringValueUsesOnlyFirstToken = true
 		userTrackingEntryNicknameTextField.validationBlock = { currentValue in
 			if (currentValue as NSString).isHostmaskNickname == false {
-				return LocalizedKey("CommonErrors[och-j5]")
+				return CommonValidationStrings.invalidNickname
 			}
 
 			return nil

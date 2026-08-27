@@ -11,7 +11,54 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
+
+@objc
+public enum IRCTextFormatterEffectType: Int, Sendable {
+	case none
+	case bold
+	case italic
+	case monospace
+	case strikethrough
+	case underline
+	case foregroundColor
+	case backgroundColor
+	case spoiler
+}
+
+public struct IRCTextFormatterAttributeName: RawRepresentable, Hashable, Sendable {
+	public let rawValue: String
+
+	public init(rawValue: String) {
+		self.rawValue = rawValue
+	}
+
+	public static let boldAttributeName = Self(rawValue: "IRCTextFormatterBoldAttributeName")
+	public static let italicAttributeName = Self(rawValue: "IRCTextFormatterItalicAttributeName")
+	public static let monospaceAttributeName = Self(rawValue: "IRCTextFormatterMonospaceAttributeName")
+	public static let strikethroughAttributeName = Self(rawValue: "IRCTextFormatterStrikethroughAttributeName")
+	public static let underlineAttributeName = Self(rawValue: "IRCTextFormatterUnderlineAttributeName")
+	public static let foregroundColorAttributeName = Self(rawValue: "IRCTextFormatterForegroundColorAttributeName")
+	public static let backgroundColorAttributeName = Self(rawValue: "IRCTextFormatterBackgroundColorAttributeName")
+	public static let spoilerAttributeName = Self(rawValue: "IRCTextFormatterSpoilerAttributeName")
+}
+
+public enum IRCTextFormatterControlCharacter {
+	public static let colorDigit = 0x03
+	public static let colorHex = 0x04
+	public static let bold = 0x02
+	public static let italic = 0x1D
+	public static let legacyItalic = 0x16
+	public static let monospace = 0x11
+	public static let strikethrough = 0x1E
+	public static let underline = 0x1F
+	public static let terminator = 0x0F
+}
+
+public enum IRCTextFormatterColor {
+	public static let maximumPaletteIndex = 98
+}
 
 private let truncationPRIVMSGCommandConstant = 9
 private let truncationACTIONCommandConstant = 17
@@ -41,6 +88,39 @@ private func attributeName(_ name: IRCTextFormatterAttributeName) -> String {
 	name.rawValue
 }
 
+private func formatterColorIsValid(_ value: Any?) -> Bool {
+	if let colorCode = (value as? NSNumber)?.intValue {
+		return (0 ... IRCTextFormatterColor.maximumPaletteIndex).contains(colorCode)
+	}
+	return value is NSColor
+}
+
+private func formatterEffectIsSet(
+	_ effect: IRCTextFormatterEffectType,
+	in attributes: NSDictionary
+) -> Bool {
+	switch effect {
+	case .none:
+		false
+	case .bold:
+		attributes.ce_bool(forKey: attributeName(.boldAttributeName))
+	case .italic:
+		attributes.ce_bool(forKey: attributeName(.italicAttributeName))
+	case .monospace:
+		attributes.ce_bool(forKey: attributeName(.monospaceAttributeName))
+	case .strikethrough:
+		attributes.ce_bool(forKey: attributeName(.strikethroughAttributeName))
+	case .underline:
+		attributes.ce_bool(forKey: attributeName(.underlineAttributeName))
+	case .foregroundColor:
+		formatterColorIsValid(attributes[attributeName(.foregroundColorAttributeName)])
+	case .backgroundColor:
+		formatterColorIsValid(attributes[attributeName(.backgroundColorAttributeName)])
+	case .spoiler:
+		attributes.ce_bool(forKey: attributeName(.spoilerAttributeName))
+	}
+}
+
 private func monospaceFontMatching(_ baseFont: NSFont?) -> NSFont {
 	let pointSize = baseFont?.pointSize ?? 0
 	let monospaceFont = NSFont.monospacedSystemFont(ofSize: pointSize, weight: .regular)
@@ -68,12 +148,12 @@ public final class TextFormatterEffect: NSObject {
 	}
 
 	@objc(effectWithType:)
-	public class func effect(with type: IRCTextFormatterEffectType) -> TextFormatterEffect? {
+	public static func effect(with type: IRCTextFormatterEffectType) -> TextFormatterEffect? {
 		self.init(effect: type, withValue: nil)
 	}
 
 	@objc(effectWithType:withValue:)
-	public class func effect(with type: IRCTextFormatterEffectType, withValue value: Any?) -> TextFormatterEffect? {
+	public static func effect(with type: IRCTextFormatterEffectType, withValue value: Any?) -> TextFormatterEffect? {
 		self.init(effect: type, withValue: value)
 	}
 
@@ -100,27 +180,27 @@ public final class TextFormatterEffect: NSObject {
 		case .none:
 			break
 		case .bold:
-			controlCharacter = unichar(IRCTextFormatterEffectBoldCharacter)
+			controlCharacter = unichar(IRCTextFormatterControlCharacter.bold)
 			valueLength = 2
 		case .italic:
-			controlCharacter = unichar(IRCTextFormatterEffectItalicCharacter)
+			controlCharacter = unichar(IRCTextFormatterControlCharacter.italic)
 			valueLength = 2
 		case .monospace:
-			controlCharacter = unichar(IRCTextFormatterEffectMonospaceCharacter)
+			controlCharacter = unichar(IRCTextFormatterControlCharacter.monospace)
 			valueLength = 2
 		case .strikethrough:
-			controlCharacter = unichar(IRCTextFormatterEffectStrikethroughCharacter)
+			controlCharacter = unichar(IRCTextFormatterControlCharacter.strikethrough)
 			valueLength = 2
 		case .underline:
-			controlCharacter = unichar(IRCTextFormatterEffectUnderlineCharacter)
+			controlCharacter = unichar(IRCTextFormatterControlCharacter.underline)
 			valueLength = 2
 		case .foregroundColor, .backgroundColor:
 			if let color = value as? NSColor {
-				controlCharacter = unichar(IRCTextFormatterEffectColorAsHexCharacter)
-				valueOut = String((color.hexadecimalValue as NSString).substring(from: 1))
+				controlCharacter = unichar(IRCTextFormatterControlCharacter.colorHex)
+				valueOut = String((color.textualHexadecimalValue as NSString).substring(from: 1))
 			} else if let number = value as? NSNumber {
-				controlCharacter = unichar(IRCTextFormatterEffectColorAsDigitCharacter)
-				valueOut = number.integerStringValueWithLeadingZero
+				controlCharacter = unichar(IRCTextFormatterControlCharacter.colorDigit)
+				valueOut = number.textualIntegerStringValueWithLeadingZero
 			}
 
 			guard let resolvedValue = valueOut else {
@@ -180,7 +260,7 @@ public final class TextFormatterEffects: NSObject {
 	}
 
 	@objc(effectsInAttributes:)
-	public class func effects(in attributes: [String: Any]) -> TextFormatterEffects {
+	public static func effects(in attributes: [String: Any]) -> TextFormatterEffects {
 		TextFormatterEffects(attributes: attributes)
 	}
 
@@ -220,7 +300,7 @@ public final class TextFormatterEffects: NSObject {
 		let dictionary = attributes as NSDictionary
 
 		func appendBooleanEffect(_ type: IRCTextFormatterEffectType, key: IRCTextFormatterAttributeName) {
-			guard dictionary.bool(forKey: attributeName(key)), let effect = TextFormatterEffect(effect: type) else {
+			guard dictionary.ce_bool(forKey: attributeName(key)), let effect = TextFormatterEffect(effect: type) else {
 				return
 			}
 
@@ -383,8 +463,9 @@ public extension NSAttributedString {
 	@objc var stringFormattedForIRC: String {
 		let string = string as NSString
 		let result = NSMutableString()
+		let fullRange = NSRange(location: 0, length: length)
 
-		enumerateAttributes(in: range, options: []) { attributes, effectiveRange, _ in
+		enumerateAttributes(in: fullRange, options: []) { attributes, effectiveRange, _ in
 			let formatters = TextFormatterEffects.effects(in: stringKeyedAttributes(attributes))
 
 			formatters.appendToStart(of: result)
@@ -401,92 +482,9 @@ public extension NSAttributedString {
 
 		enumerateAttributes(in: limitRange, options: []) { attributes, _, stop in
 			let dictionary = stringKeyedAttributes(attributes) as NSDictionary
-
-			func markFound() {
+			if formatterEffectIsSet(effect, in: dictionary) {
 				returnValue = true
 				stop.pointee = true
-			}
-
-			switch effect {
-			case .none:
-				break
-			case .bold:
-				guard dictionary.bool(forKey: attributeName(IRCTextFormatterAttributeName.boldAttributeName)) else {
-					return
-				}
-
-				markFound()
-			case .italic:
-				guard dictionary.bool(forKey: attributeName(IRCTextFormatterAttributeName.italicAttributeName)) else {
-					return
-				}
-
-				markFound()
-			case .monospace:
-				guard dictionary.bool(forKey: attributeName(IRCTextFormatterAttributeName.monospaceAttributeName))
-				else {
-					return
-				}
-
-				markFound()
-			case .underline:
-				guard dictionary.bool(forKey: attributeName(IRCTextFormatterAttributeName.underlineAttributeName))
-				else {
-					return
-				}
-
-				markFound()
-			case .strikethrough:
-				guard dictionary.bool(forKey: attributeName(IRCTextFormatterAttributeName.strikethroughAttributeName))
-				else {
-					return
-				}
-
-				markFound()
-			case .foregroundColor:
-				guard
-					let foregroundColor = dictionary[
-						attributeName(IRCTextFormatterAttributeName.foregroundColorAttributeName)
-					]
-				else {
-					return
-				}
-
-				if let colorCode = (foregroundColor as? NSNumber)?.intValue {
-					guard colorCode >= 0, colorCode <= colorHighestDigit else {
-						return
-					}
-				} else if (foregroundColor is NSColor) == false {
-					return
-				}
-
-				markFound()
-			case .backgroundColor:
-				guard
-					let backgroundColor = dictionary[
-						attributeName(IRCTextFormatterAttributeName.backgroundColorAttributeName)
-					]
-				else {
-					return
-				}
-
-				if let colorCode = (backgroundColor as? NSNumber)?.intValue {
-					guard colorCode >= 0, colorCode <= colorHighestDigit else {
-						return
-					}
-				} else if (backgroundColor is NSColor) == false {
-					return
-				}
-
-				markFound()
-			case .spoiler:
-				guard dictionary.bool(forKey: attributeName(IRCTextFormatterAttributeName.spoilerAttributeName)) else {
-					return
-				}
-
-				markFound()
-			@unknown default:
-				break
 			}
 		}
 
@@ -495,6 +493,100 @@ public extension NSAttributedString {
 }
 
 public extension NSMutableAttributedString {
+	private func addIRCFontTrait(
+		_ trait: NSFontTraitMask,
+		formatterAttribute: IRCTextFormatterAttributeName,
+		baseFont: NSFont?,
+		range: NSRange
+	) {
+		guard let baseFont else {
+			return
+		}
+
+		let font = if baseFont.textual_fontTraitIsSet(trait) {
+			baseFont
+		} else {
+			NSFontManager.shared.convert(baseFont, toHaveTrait: trait)
+		}
+
+		addAttribute(formatterKey(formatterAttribute), value: true, range: range)
+		addAttribute(.font, value: font, range: range)
+	}
+
+	private func addIRCColor(
+		_ value: Any?,
+		formatterAttribute: IRCTextFormatterAttributeName,
+		appKitAttribute: NSAttributedString.Key,
+		range: NSRange
+	) {
+		if let colorCode = (value as? NSNumber)?.intValue,
+		   (0 ... colorHighestDigit).contains(colorCode)
+		{
+			addAttribute(formatterKey(formatterAttribute), value: colorCode, range: range)
+			addAttribute(appKitAttribute, value: TVCLogRenderer.mapColorCode(UInt(colorCode)), range: range)
+		} else if let color = value as? NSColor {
+			addAttribute(formatterKey(formatterAttribute), value: color, range: range)
+			addAttribute(appKitAttribute, value: color, range: range)
+		}
+	}
+
+	private func applyIRCFormatterAttribute(
+		_ effect: IRCTextFormatterEffectType,
+		value: Any?,
+		attributes: [NSAttributedString.Key: Any],
+		range: NSRange
+	) {
+		let baseFont = attributes[.font] as? NSFont
+
+		switch effect {
+		case .none:
+			break
+		case .bold:
+			addIRCFontTrait(
+				.boldFontMask,
+				formatterAttribute: .boldAttributeName,
+				baseFont: baseFont,
+				range: range
+			)
+		case .italic:
+			addIRCFontTrait(
+				.italicFontMask,
+				formatterAttribute: .italicAttributeName,
+				baseFont: baseFont,
+				range: range
+			)
+		case .monospace:
+			addAttribute(formatterKey(.monospaceAttributeName), value: true, range: range)
+			addAttribute(.font, value: monospaceFontMatching(baseFont), range: range)
+		case .underline:
+			addAttribute(formatterKey(.underlineAttributeName), value: true, range: range)
+			addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+		case .strikethrough:
+			addAttribute(formatterKey(.strikethroughAttributeName), value: true, range: range)
+			addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+		case .foregroundColor:
+			addIRCColor(
+				value,
+				formatterAttribute: .foregroundColorAttributeName,
+				appKitAttribute: .foregroundColor,
+				range: range
+			)
+		case .backgroundColor:
+			addIRCColor(
+				value,
+				formatterAttribute: .backgroundColorAttributeName,
+				appKitAttribute: .backgroundColor,
+				range: range
+			)
+		case .spoiler:
+			if let value {
+				addAttribute(formatterKey(.spoilerAttributeName), value: value, range: range)
+			}
+		@unknown default:
+			break
+		}
+	}
+
 	@objc(stringFormattedForChannel:onClient:withLineType:)
 	func stringFormatted(
 		forChannel channelName: String,
@@ -521,123 +613,7 @@ public extension NSMutableAttributedString {
 		range limitRange: NSRange
 	) {
 		enumerateAttributes(in: limitRange, options: .reverse) { attributes, effectiveRange, _ in
-			var baseFont = attributes[.font] as? NSFont
-
-			switch effect {
-			case .none:
-				break
-			case .bold:
-				if let currentFont = baseFont, currentFont.fontTraitSet(.boldFontMask) == false {
-					baseFont = NSFontManager.shared.convert(currentFont, toHaveTrait: .boldFontMask)
-				}
-
-				if let baseFont {
-					addAttribute(
-						formatterKey(IRCTextFormatterAttributeName.boldAttributeName), value: true,
-						range: effectiveRange
-					)
-					addAttribute(.font, value: baseFont, range: effectiveRange)
-				}
-			case .italic:
-				if let currentFont = baseFont, currentFont.fontTraitSet(.italicFontMask) == false {
-					baseFont = NSFontManager.shared.convert(currentFont, toHaveTrait: .italicFontMask)
-				}
-
-				if let baseFont {
-					addAttribute(
-						formatterKey(IRCTextFormatterAttributeName.italicAttributeName), value: true,
-						range: effectiveRange
-					)
-					addAttribute(.font, value: baseFont, range: effectiveRange)
-				}
-			case .monospace:
-				let monospaceFont = monospaceFontMatching(baseFont)
-
-				addAttribute(
-					formatterKey(IRCTextFormatterAttributeName.monospaceAttributeName), value: true,
-					range: effectiveRange
-				)
-				addAttribute(.font, value: monospaceFont, range: effectiveRange)
-			case .underline:
-				addAttribute(
-					formatterKey(IRCTextFormatterAttributeName.underlineAttributeName), value: true,
-					range: effectiveRange
-				)
-				addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: effectiveRange)
-			case .strikethrough:
-				addAttribute(
-					formatterKey(IRCTextFormatterAttributeName.strikethroughAttributeName),
-					value: true,
-					range: effectiveRange
-				)
-				addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: effectiveRange)
-			case .foregroundColor:
-				guard let value else {
-					break
-				}
-
-				if let number = value as? NSNumber {
-					let colorCode = number.intValue
-
-					if colorCode >= 0, colorCode <= colorHighestDigit {
-						addAttribute(
-							formatterKey(IRCTextFormatterAttributeName.foregroundColorAttributeName),
-							value: colorCode,
-							range: effectiveRange
-						)
-						addAttribute(
-							.foregroundColor,
-							value: TVCLogRenderer.mapColorCode(UInt(colorCode)),
-							range: effectiveRange
-						)
-					}
-				} else if let color = value as? NSColor {
-					addAttribute(
-						formatterKey(IRCTextFormatterAttributeName.foregroundColorAttributeName),
-						value: color,
-						range: effectiveRange
-					)
-					addAttribute(.foregroundColor, value: color, range: effectiveRange)
-				}
-			case .backgroundColor:
-				guard let value else {
-					break
-				}
-
-				if let number = value as? NSNumber {
-					let colorCode = number.intValue
-
-					if colorCode >= 0, colorCode <= colorHighestDigit {
-						addAttribute(
-							formatterKey(IRCTextFormatterAttributeName.backgroundColorAttributeName),
-							value: colorCode,
-							range: effectiveRange
-						)
-						addAttribute(
-							.backgroundColor,
-							value: TVCLogRenderer.mapColorCode(UInt(colorCode)),
-							range: effectiveRange
-						)
-					}
-				} else if let color = value as? NSColor {
-					addAttribute(
-						formatterKey(IRCTextFormatterAttributeName.backgroundColorAttributeName),
-						value: color,
-						range: effectiveRange
-					)
-					addAttribute(.backgroundColor, value: color, range: effectiveRange)
-				}
-			case .spoiler:
-				if let value {
-					addAttribute(
-						formatterKey(IRCTextFormatterAttributeName.spoilerAttributeName),
-						value: value,
-						range: effectiveRange
-					)
-				}
-			@unknown default:
-				break
-			}
+			applyIRCFormatterAttribute(effect, value: value, attributes: attributes, range: effectiveRange)
 		}
 	}
 
@@ -652,7 +628,7 @@ public extension NSMutableAttributedString {
 			case .none:
 				break
 			case .bold:
-				if baseFont.fontTraitSet(.boldFontMask) {
+				if baseFont.textual_fontTraitIsSet(.boldFontMask) {
 					baseFont = NSFontManager.shared.convert(baseFont, toNotHaveTrait: .boldFontMask)
 
 					addAttribute(.font, value: baseFont, range: effectiveRange)
@@ -661,7 +637,7 @@ public extension NSMutableAttributedString {
 					)
 				}
 			case .italic:
-				if baseFont.fontTraitSet(.italicFontMask) {
+				if baseFont.textual_fontTraitIsSet(.italicFontMask) {
 					baseFont = NSFontManager.shared.convert(baseFont, toNotHaveTrait: .italicFontMask)
 
 					addAttribute(.font, value: baseFont, range: effectiveRange)

@@ -3,9 +3,7 @@ import XCTest
 
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
-/// #import "TLONotificationControllerPrivate.h"
 /// #import "TPCPreferencesLocal.h"
-/// #import "TXSharedApplicationPrivate.h"
 /** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
@@ -72,10 +70,10 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 
 	@objc
 	func testUserInfoScopeMatchingTreatsNilChannelsAsEqual() {
-		let clientOnly: [AnyHashable: Any] = [TXNotificationUserInfoClientIdentifierKey: "c1"]
+		let clientOnly: [AnyHashable: Any] = [NotificationPayload.clientIdentifierKey: "c1"]
 		let withChannel: [AnyHashable: Any] = [
-			TXNotificationUserInfoClientIdentifierKey: "c1",
-			TXNotificationUserInfoChannelIdentifierKey: "ch1",
+			NotificationPayload.clientIdentifierKey: "c1",
+			NotificationPayload.channelIdentifierKey: "ch1",
 		]
 
 		XCTAssertTrue(NotificationController.isNotification(
@@ -105,12 +103,12 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 
 	@objc
 	func testPublicFormatConstantsRemainStable() {
-		XCTAssertEqual(TXNotificationUserInfoClientIdentifierKey, "clientId")
-		XCTAssertEqual(TXNotificationUserInfoChannelIdentifierKey, "channelId")
-		XCTAssertEqual(TXNotificationDialogStandardNicknameFormat, "%@ %@")
-		XCTAssertEqual(TXNotificationDialogActionNicknameFormat, "• %@: %@")
-		XCTAssertEqual(TXNotificationHighlightLogStandardActionFormat, "• %@: %@")
-		XCTAssertEqual(TXNotificationHighlightLogStandardMessageFormat, "%@ %@")
+		XCTAssertEqual(NotificationPayload.clientIdentifierKey, "clientId")
+		XCTAssertEqual(NotificationPayload.channelIdentifierKey, "channelId")
+		XCTAssertEqual(NotificationPayload.standardNicknameFormat, "%@ %@")
+		XCTAssertEqual(NotificationPayload.actionNicknameFormat, "• %@: %@")
+		XCTAssertEqual(NotificationPayload.highlightActionFormat, "• %@: %@")
+		XCTAssertEqual(NotificationPayload.highlightMessageFormat, "%@ %@")
 	}
 
 	@objc
@@ -118,24 +116,24 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 		let controller = controller()
 		let eventType = TXNotificationType.highlight
 
-		XCTAssertEqual(controller.sound(forEvent: eventType, in: nil), TPCPreferences.sound(forEvent: eventType))
+		XCTAssertEqual(controller.sound(forEvent: eventType, in: nil), TextualPreferences.sound(for: eventType))
 
-		XCTAssertEqual(controller.speakEvent(eventType, in: nil), TPCPreferences.speakEvent(eventType))
+		XCTAssertEqual(controller.speakEvent(eventType, in: nil), TextualPreferences.speak(eventType))
 		XCTAssertEqual(
 			controller.notificationEnabled(forEvent: eventType, in: nil),
-			TPCPreferences.notificationEnabled(forEvent: eventType)
+			TextualPreferences.notificationEnabled(for: eventType)
 		)
 		XCTAssertEqual(
 			controller.disabledWhileAway(forEvent: eventType, in: nil),
-			TPCPreferences.disabledWhileAway(forEvent: eventType)
+			TextualPreferences.disabledWhileAway(for: eventType)
 		)
 		XCTAssertEqual(
 			controller.bounceDockIcon(forEvent: eventType, in: nil),
-			TPCPreferences.bounceDockIcon(forEvent: eventType)
+			TextualPreferences.bounceDockIcon(for: eventType)
 		)
 		XCTAssertEqual(
 			controller.bounceDockIconRepeatedly(forEvent: eventType, in: nil),
-			TPCPreferences.bounceDockIconRepeatedly(forEvent: eventType)
+			TextualPreferences.bounceDockIconRepeatedly(for: eventType)
 		)
 	}
 

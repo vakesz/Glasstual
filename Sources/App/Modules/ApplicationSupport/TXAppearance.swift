@@ -13,16 +13,17 @@
 import AppKit
 import os
 
-private enum AppearanceKVOContext {
-	nonisolated(unsafe) static var token = 0
-}
-
 private let appearanceDefaultName = "Tahoe"
 
 private let appearanceTerminationLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "Termination"
 )
+
+public extension Notification.Name {
+	static let applicationAppearanceChanged = Notification.Name("TXApplicationAppearanceChangedNotification")
+	static let systemAppearanceChanged = Notification.Name("TXSystemAppearanceChangedNotification")
+}
 
 @objc(TXAppearancePropertyCollection)
 public final class AppearancePropertyCollection: NSObject, TXAppearanceProperties {
@@ -47,15 +48,15 @@ public final class AppearancePropertyCollection: NSObject, TXAppearancePropertie
 		isDarkAppearance ? "dark" : "light"
 	}
 
-	@objc public class func systemWideDarkModeEnabled() -> Bool {
+	@MainActor @objc public static func systemWideDarkModeEnabled() -> Bool {
 		NSApp.effectiveAppearance.bestMatch(from: [NSAppearance.Name.darkAqua]) != nil
 	}
 
-	@objc public class func appKitDarkAppearance() -> NSAppearance? {
+	@objc public static func appKitDarkAppearance() -> NSAppearance? {
 		NSAppearance(named: .darkAqua)
 	}
 
-	@objc public class func appKitLightAppearance() -> NSAppearance? {
+	@objc public static func appKitLightAppearance() -> NSAppearance? {
 		NSAppearance(named: .aqua)
 	}
 }
@@ -66,7 +67,7 @@ public final class Appearance: NSObject {
 	@objc public private(set) var properties: AppearancePropertyCollection!
 
 	private var isApplyingAppearance = false
-	private var isObservingAppearance = false
+	private var effectiveAppearanceObservation: NSKeyValueObservation?
 
 	override public init() {
 		super.init()
@@ -89,8 +90,14 @@ public final class Appearance: NSObject {
 			object: nil
 		)
 
-		NSApp.addObserver(self, forKeyPath: "effectiveAppearance", options: .new, context: &AppearanceKVOContext.token)
-		isObservingAppearance = true
+		effectiveAppearanceObservation = NSApp.observe(\.effectiveAppearance, options: .new) { [weak self] _, _ in
+			MainActor.assumeIsolated {
+				guard let self, self.isApplyingAppearance == false else {
+					return
+				}
+				self.applicationAppearanceChanged()
+			}
+		}
 	}
 
 	@objc public func prepareForApplicationTermination() {
@@ -99,33 +106,13 @@ public final class Appearance: NSObject {
 	}
 
 	private func removeObservers() {
-		guard isObservingAppearance else {
+		guard let effectiveAppearanceObservation else {
 			return
 		}
 
-		isObservingAppearance = false
+		self.effectiveAppearanceObservation = nil
 		NSWorkspace.shared.notificationCenter.removeObserver(self)
-		NSApp.removeObserver(self, forKeyPath: "effectiveAppearance", context: &AppearanceKVOContext.token)
-	}
-
-	override public func observeValue(
-		forKeyPath keyPath: String?,
-		of object: Any?,
-		change: [NSKeyValueChangeKey: Any]?,
-		context: UnsafeMutableRawPointer?
-	) {
-		guard context == &AppearanceKVOContext.token else {
-			super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-			return
-		}
-
-		if isApplyingAppearance {
-			return
-		}
-
-		if keyPath == "effectiveAppearance" {
-			applicationAppearanceChanged()
-		}
+		effectiveAppearanceObservation.invalidate()
 	}
 
 	private func applicationAppearanceChanged() {
@@ -144,7 +131,7 @@ public final class Appearance: NSObject {
 
 	private func updateAppearanceBySystemChange(_ systemChanged: Bool) {
 		var appearanceType: TXAppearanceType = .light
-		let preferredAppearance = TPCPreferences.appearance()
+		let preferredAppearance = TextualPreferences.appearance()
 
 		switch preferredAppearance {
 		case .inherited:
@@ -222,14 +209,14 @@ public final class Appearance: NSObject {
 
 	private func notifyApplicationAppearanceChanged() {
 		NotificationCenter.default.post(
-			name: NSNotification.Name("TXApplicationAppearanceChangedNotification"),
+			name: .applicationAppearanceChanged,
 			object: self
 		)
 	}
 
 	private func notifySystemAppearanceChanged() {
 		NotificationCenter.default.post(
-			name: NSNotification.Name("TXSystemAppearanceChangedNotification"),
+			name: .systemAppearanceChanged,
 			object: self
 		)
 	}

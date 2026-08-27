@@ -1,0 +1,2646 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "026-qv": {
+      "comment": "/setcolor/ command. Migrated from legacy key 026-qv; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This command cannot be used unless the checkbox labeled “Disable nickname colors” is unchecked in the \u0002Style\u0002 section of \u0002Preferences\u0002."
+          }
+        }
+      }
+    },
+    "0gn-cb": {
+      "comment": "/defaults/ command. Migrated from legacy key 0gn-cb; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disabled Feature: %@"
+          }
+        }
+      }
+    },
+    "0jp-93": {
+      "comment": "/lagcheck/ command. Migrated from legacy key 0jp-93; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you plugged into the server?"
+          }
+        }
+      }
+    },
+    "0r1-5l": {
+      "comment": "Generic messages. Migrated from legacy key 0r1-5l; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual has prevented you from banning yourself on %@"
+          }
+        }
+      }
+    },
+    "11i-ev": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 11i-ev; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You cannot send private messages to %@. Anything that you send to them will be ignored until you are added to their list of recognized users."
+          }
+        }
+      }
+    },
+    "190-f2": {
+      "comment": "/mute/ command. Migrated from legacy key 190-f2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound is no longer muted"
+          }
+        }
+      }
+    },
+    "1dz-jb": {
+      "comment": "/defaults/ command. Migrated from legacy key 1dz-jb; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid Syntax. Type “/defaults help” for more information."
+          }
+        }
+      }
+    },
+    "1oo-3b": {
+      "comment": "/topic/ command errors. Migrated from legacy key 1oo-3b; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have exceeded the maximum topic length for %1$@ which is %2$ld characters. The end of your topic may have been cut off."
+          }
+        }
+      }
+    },
+    "24r-8c": {
+      "comment": "/weights/ command. Migrated from legacy key 24r-8c; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002: Sent: %2$.2f, Receive: %3$.2f, \u0002Total: %4$.2f\u0002"
+          }
+        }
+      }
+    },
+    "2mc-h0": {
+      "comment": "Script errors. Migrated from legacy key 2mc-h0; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Script Execution Failure (%1$@: %2$@): %3$@"
+          }
+        }
+      }
+    },
+    "2nb-ka": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-ka; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Users logged in to account “%@”"
+          }
+        }
+      }
+    },
+    "2nb-kc": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kc; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Users in channel %@"
+          }
+        }
+      }
+    },
+    "2nb-kj": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kj; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Users banned from channel %@"
+          }
+        }
+      }
+    },
+    "2nb-kk": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kk; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extended ban of type “%1$@”: %2$@"
+          }
+        }
+      }
+    },
+    "2nb-kl": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kl; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extended ban of type “%@”"
+          }
+        }
+      }
+    },
+    "2nb-km": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-km; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muted: %@"
+          }
+        }
+      }
+    },
+    "2nb-kn": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kn; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nick changes blocked for %@"
+          }
+        }
+      }
+    },
+    "2nb-ko": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-ko; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operators matching %@"
+          }
+        }
+      }
+    },
+    "2nb-ko2": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-ko2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operators of class %@"
+          }
+        }
+      }
+    },
+    "2nb-kq": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kq; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quieted: %@"
+          }
+        }
+      }
+    },
+    "2nb-kr": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kr; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Users whose real name matches “%@”"
+          }
+        }
+      }
+    },
+    "2nb-kr2": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kr2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registered users matching %@"
+          }
+        }
+      }
+    },
+    "2nb-ks": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-ks; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Users connected to server %@"
+          }
+        }
+      }
+    },
+    "2nb-ks2": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-ks2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Users in security group %@"
+          }
+        }
+      }
+    },
+    "2nb-kt": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kt; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expires after %@"
+          }
+        }
+      }
+    },
+    "2nb-kt2": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kt2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text matching “%@”"
+          }
+        }
+      }
+    },
+    "2nb-ku": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-ku; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unregistered users matching %@"
+          }
+        }
+      }
+    },
+    "2nb-kx": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kx; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Users matching hostmask and real name “%@”"
+          }
+        }
+      }
+    },
+    "2nb-kz": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 2nb-kz; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Users with certificate fingerprint %@"
+          }
+        }
+      }
+    },
+    "327-pv": {
+      "comment": "/timer/ command. Migrated from legacy key 327-pv; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer interval must be a whole number that is grater than zero (0). Type “/timer help” for more information."
+          }
+        }
+      }
+    },
+    "32c-87": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 32c-87; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ had userhost %2$@@%3$@ and real name “%4$@”"
+          }
+        }
+      }
+    },
+    "3oa-mv": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 3oa-mv; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is connected from %2$@ (%3$@)"
+          }
+        }
+      }
+    },
+    "3s6-e6": {
+      "comment": "Network not available messages. Migrated from legacy key 3s6-e6; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delaying auto connect for %lu seconds"
+          }
+        }
+      }
+    },
+    "3yj-in": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 3yj-in; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@) tried to send you a private message, but it was ignored due to \u0002umode +g\u0002. Perform “/accept %1$@” to allow this user to communicate with you."
+          }
+        }
+      }
+    },
+    "3yo-gw": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 3yo-gw; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message(%1$d): %2$@"
+          }
+        }
+      }
+    },
+    "41y-p2": {
+      "comment": "/away/ command. Migrated from legacy key 41y-p2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have exceeded the maximum away message length for %1$@ which is %2$ld characters. The end of your away message may have been cut off."
+          }
+        }
+      }
+    },
+    "4n6-2x": {
+      "comment": "/timer/ command. Migrated from legacy key 4n6-2x; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002ID:\u0002 %1$@ • \u0002Status:\u0002 %2$@ • \u0002Interval:\u0002 %3$@ • \u0002Next Fire:\u0002 %4$@ • \u0002Command:\u0002 “%5$@“"
+          }
+        }
+      }
+    },
+    "4oc-p2": {
+      "comment": "/lagcheck/ command. Migrated from legacy key 4oc-p2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Very slow"
+          }
+        }
+      }
+    },
+    "4vt-ow": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 4vt-ow; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection to host established"
+          }
+        }
+      }
+    },
+    "53b-dm": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 53b-dm; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 (%2$@@%3$@) left IRC"
+          }
+        }
+      }
+    },
+    "54l-h7": {
+      "comment": "/msg/ command errors. Migrated from legacy key 54l-h7; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot send operator message because the mode \u0002+o\u0002 is not supported by this server."
+          }
+        }
+      }
+    },
+    "58g-m9": {
+      "comment": "/lagcheck/ command. Migrated from legacy key 58g-m9; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeah, okay…"
+          }
+        }
+      }
+    },
+    "59a-ir": {
+      "comment": "/kick/ command. Migrated from legacy key 59a-ir; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have exceeded the maximum kick message length for %1$@ which is %2$ld characters. The end of your kick message may have been cut off."
+          }
+        }
+      }
+    },
+    "5bf-jp": {
+      "comment": "/lagcheck/ command. Migrated from legacy key 5bf-jp; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received lag check reply from %1$@. Time elapsed: %2$1.0f milliseconds. (Rating: %3$@)"
+          }
+        }
+      }
+    },
+    "5h5-sl": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 5h5-sl; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server closed read stream"
+          }
+        }
+      }
+    },
+    "5i4-qq": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 5i4-qq; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnecting to proxy to rebuild internal state…"
+          }
+        }
+      }
+    },
+    "5ix-zn": {
+      "comment": "/ignore/ command. Migrated from legacy key 5ix-zn; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An ignore already exists that matches \u0002%@\u0002. To modify this ignore, open the \u0002Address Book\u0002 using the keyboard shortcut \u0002Control 3\u0002."
+          }
+        }
+      }
+    },
+    "5ke-18": {
+      "comment": "/defaults/ command. Migrated from legacy key 5ke-18; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enabled Feature: %@"
+          }
+        }
+      }
+    },
+    "5rf-mj": {
+      "comment": "/mute/ command. Migrated from legacy key 5rf-mj; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound is not muted"
+          }
+        }
+      }
+    },
+    "5wa-lb": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 5wa-lb; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no capabilities that are enabled"
+          }
+        }
+      }
+    },
+    "6bh-br": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 6bh-br; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are now an IRC Operator on %@"
+          }
+        }
+      }
+    },
+    "6hn-o6": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 6hn-o6; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ signed on at %2$@ and has been idle for %3$@"
+          }
+        }
+      }
+    },
+    "6kq-xb": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key 6kq-xb; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone except: %@"
+          }
+        }
+      }
+    },
+    "6o8-eu": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 6o8-eu; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002-CTCP-\u0002 %1$@ from %2$@"
+          }
+        }
+      }
+    },
+    "6r0-il": {
+      "comment": "/timer/ command. Migrated from legacy key 6r0-il; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“/timer <seconds> <repeat> <command>“\n\n\u0002<seconds>\u0002 is the interval of the timer.\nThe interval must be a \u0002whole number that is greater than zero (0)\u0002.\n\n\u0002<repeat>\u0002 is the repeat count for the timer.\n• To perform the timer only once, use one (1) as the repeat count.\n• To repeat the timer until manually stopped, use zero (0) as the repeat count.\n• To repeat the timer X number of times, use that number as the repeat count.\n\n\u0002<command>\u0002 is the command to perform when the timer fires.\n\u0002Example:\u0002 “msg #glasstual-testing Hey everyone!”\n\u0002Scope:\u0002 The channel or query that is selected when a timer is added is used as the target for commands that do not take a channel name as an argument.\n\n\u0002Example #1:\u0002 “/timer 10 1 <command>” — perform command one time, after ten seconds.\n\u0002Example #2:\u0002 “/timer 10 20 <command>” — perform command twenty times, once every ten seconds.\n\u0002Example #3:\u0002 “/timer 10 0 <command>” — perform command every ten seconds until the heat death of the universe."
+          }
+        }
+      }
+    },
+    "6rj-2r": {
+      "comment": "Generic messages. Migrated from legacy key 6rj-2r; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to send data to server. Not connected."
+          }
+        }
+      }
+    },
+    "6ts-oi": {
+      "comment": "/timer/ command. Migrated from legacy key 6ts-oi; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is %ld timer:"
+          }
+        }
+      }
+    },
+    "7nm-7v": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 7nm-7v; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Topic is \u0002%@\u0002"
+          }
+        }
+      }
+    },
+    "7p9-rs": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 7p9-rs; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The following capabilities are currently enabled: %@"
+          }
+        }
+      }
+    },
+    "808-bs": {
+      "comment": "/timer/ command. Migrated from legacy key 808-bs; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All timers removed"
+          }
+        }
+      }
+    },
+    "8bk-mx": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 8bk-mx; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 left the query by disconnecting from IRC"
+          }
+        }
+      }
+    },
+    "8dy-6f": {
+      "comment": "/setcolor/ command. Migrated from legacy key 8dy-6f; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot set color for “%@“ because that does not appear to be a valid nickname."
+          }
+        }
+      }
+    },
+    "8fo-ss": {
+      "comment": "/lagcheck/ command. Migrated from legacy key 8fo-ss; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slow"
+          }
+        }
+      }
+    },
+    "8hg-7k": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 8hg-7k; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ IRC Network"
+          }
+        }
+      }
+    },
+    "8tq-g6": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 8tq-g6; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Website is \u0002%@\u0002"
+          }
+        }
+      }
+    },
+    "9aj-bd": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 9aj-bd; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 kicked \u0002%2$@\u0002 from the channel (%3$@)"
+          }
+        }
+      }
+    },
+    "9b4-10": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key 9b4-10; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected"
+          }
+        }
+      }
+    },
+    "ags-s8": {
+      "comment": "File transfer server console messages. Migrated from legacy key ags-s8; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trying file transfer to %1$@, %2$@ (%3$qi bytes)"
+          }
+        }
+      }
+    },
+    "aox-zz": {
+      "comment": "/timer/ command. Migrated from legacy key aox-zz; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "---------------------------------------"
+          }
+        }
+      }
+    },
+    "atq-93": {
+      "comment": "Common command errors. Migrated from legacy key atq-93; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid syntax: “%@“"
+          }
+        }
+      }
+    },
+    "ax0-mt": {
+      "comment": "Script errors. Migrated from legacy key ax0-mt; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Script Execution Failure: %@"
+          }
+        }
+      }
+    },
+    "ax6-n9": {
+      "comment": "/timer/ command. Migrated from legacy key ax6-n9; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer with identifier “%@“ is already stopped"
+          }
+        }
+      }
+    },
+    "b8p-44": {
+      "comment": "/myversion/ command. Migrated from legacy key b8p-44; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " as classic binary on an %@ Mac."
+          }
+        }
+      }
+    },
+    "bg3-h2": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key bg3-h2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002-CTCP-\u0002 %1$@ from %2$@ was ignored"
+          }
+        }
+      }
+    },
+    "bhz-9e": {
+      "comment": "/timer/ command. Migrated from legacy key bhz-9e; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        }
+      }
+    },
+    "bkk-lo": {
+      "comment": "/defaults/ command. Migrated from legacy key bkk-lo; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The \u0002defaults\u0002 command can be used to toggle very specific, rarely used features.\n\nUsage:\n\t“/defaults enable <token>” — Enables the feature defined by \u0002<token>\u0002\n\t“/defaults disable <token>” — Disables the feature defined by \u0002<token>\u0002\n\nSurround \u0002<token>\u0002 with double quotes (\") if it contains a space."
+          }
+        }
+      }
+    },
+    "bps-la": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key bps-la; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.0f minutes have elapsed since last response from this connection. Disconnecting due to timeout."
+          }
+        }
+      }
+    },
+    "bx2-n1": {
+      "comment": "/timer/ command. Migrated from legacy key bx2-n1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“/timer stop <identifier>“\n\nStop the timer assigned to \u0002<identifier>\u0002.\n\nThe identifier for a timer can be found using “/timer list”"
+          }
+        }
+      }
+    },
+    "c04-d0-1": {
+      "comment": "Ban list. Migrated from legacy key c04-d0-1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban in %1$@: %2$@ set by %3$@ on %4$@"
+          }
+        }
+      }
+    },
+    "c04-d0-2": {
+      "comment": "Ban list. Migrated from legacy key c04-d0-2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban in %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "c1h-fq": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key c1h-fq; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is away (%2$@)"
+          }
+        }
+      }
+    },
+    "ccb-ur": {
+      "comment": "/myversion/ command. Migrated from legacy key ccb-ur; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ (Build %3$@)%4$@%5$@"
+          }
+        }
+      }
+    },
+    "ccs-1a": {
+      "comment": "Generic messages. Migrated from legacy key ccs-1a; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect command sent to %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "cdu-ed": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key cdu-ed; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ was connected to %2$@ on %3$@"
+          }
+        }
+      }
+    },
+    "d3c-9b": {
+      "comment": "Script errors. Migrated from legacy key d3c-9b; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The command \u0002%@\u0002 is defined by a plugin and a script. Ignoring command because of inability to determine priority."
+          }
+        }
+      }
+    },
+    "d5d-uy": {
+      "comment": "Log file session headers. Migrated from legacy key d5d-uy; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "------------- End Session -------------"
+          }
+        }
+      }
+    },
+    "d7y-pv": {
+      "comment": "/defaults/ command. Migrated from legacy key d7y-pv; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot disable the feature “%@” because it is not supported"
+          }
+        }
+      }
+    },
+    "dcc-c1": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-c1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wants to start a direct chat"
+          }
+        }
+      }
+    },
+    "dcc-c6": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-c6; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined direct chat request from %@"
+          }
+        }
+      }
+    },
+    "dcc-c7": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-c7; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting to %1$@ for a direct chat (%2$@ port %3$hu)…"
+          }
+        }
+      }
+    },
+    "dcc-c8": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-c8; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offering a direct chat to %@…"
+          }
+        }
+      }
+    },
+    "dcc-c9": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-c9; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The direct chat is not connected."
+          }
+        }
+      }
+    },
+    "dcc-ca": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-ca; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not determine an address to offer %@ for the direct chat."
+          }
+        }
+      }
+    },
+    "dcc-cb": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-cb; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for %1$@ to connect on port %2$hu…"
+          }
+        }
+      }
+    },
+    "dcc-cc": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-cc; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct chat with %@ established"
+          }
+        }
+      }
+    },
+    "dcc-cd": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-cd; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct chat with %1$@ closed: %2$@"
+          }
+        }
+      }
+    },
+    "dcc-ce": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-ce; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct chat with %@ closed"
+          }
+        }
+      }
+    },
+    "dcc-s1": {
+      "comment": "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-s1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file at %@ could not be offered for transfer."
+          }
+        }
+      }
+    },
+    "dgp-d4": {
+      "comment": "/timer/ command. Migrated from legacy key dgp-d4; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer with identifier “%@“ can't be restarted. Add a new timer."
+          }
+        }
+      }
+    },
+    "dje-41": {
+      "comment": "/weights/ command. Migrated from legacy key dje-41; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No weights"
+          }
+        }
+      }
+    },
+    "drg-b7": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key drg-b7; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected for Sleep Mode"
+          }
+        }
+      }
+    },
+    "dri-l7": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key dri-l7; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002-%1$@ CTCP-\u0002 %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "dwi-d1": {
+      "comment": "/mode/ command. Migrated from legacy key dwi-d1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The mode \u0002+%@\u0002 is not supported on this server"
+          }
+        }
+      }
+    },
+    "en6-mw": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key en6-mw; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop fingering me pervert!"
+          }
+        }
+      }
+    },
+    "eud-kc": {
+      "comment": "/timer/ command. Migrated from legacy key eud-kc; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer repeat count must be a whole number that is grater than or equal to zero (0). Type “/timer help” for more information."
+          }
+        }
+      }
+    },
+    "ex4-f8": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key ex4-f8; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection secured using %@"
+          }
+        }
+      }
+    },
+    "fxw-5s": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key fxw-5s; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is now known as \u0002%2$@\u0002"
+          }
+        }
+      }
+    },
+    "g01-qn": {
+      "comment": "Common command errors. Migrated from legacy key g01-qn; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This command can only be used with a channel."
+          }
+        }
+      }
+    },
+    "g1u-os": {
+      "comment": "/myversion/ command. Migrated from legacy key g1u-os; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Silicon"
+          }
+        }
+      }
+    },
+    "gzo-54": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key gzo-54; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.0f minutes have elapsed since last response from this connection. It's possible the connection is timing out."
+          }
+        }
+      }
+    },
+    "h19-n2": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key h19-n2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is connected on %2$@ (%3$@)"
+          }
+        }
+      }
+    },
+    "hc1-ah": {
+      "comment": "Chat history (chathistory CAP). Migrated from legacy key hc1-ah; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server does not support chat history."
+          }
+        }
+      }
+    },
+    "hs0-up": {
+      "comment": "/timer/ command. Migrated from legacy key hs0-up; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer with identifier “%@“ stopped"
+          }
+        }
+      }
+    },
+    "i2d-x5": {
+      "comment": "/timer/ command. Migrated from legacy key i2d-x5; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“/timer remove <identifier>“\n\nRemove the timer assigned to \u0002<identifier>\u0002.\n\nTo remove all timers, pass “all” as \u0002<identifier>\u0002.\n\nThe identifier for a timer can be found using “/timer list”"
+          }
+        }
+      }
+    },
+    "iaa-0u": {
+      "comment": "Specific IRC related, app-specific errors. Migrated from legacy key iaa-0u; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no servers configured to connect to."
+          }
+        }
+      }
+    },
+    "ik6-dl": {
+      "comment": "Raw mode messages. Migrated from legacy key ik6-dl; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⍅ Server traffic will be output to this window until it is closed by control clicking (right clicking) it. ⍆"
+          }
+        }
+      }
+    },
+    "inv-nt": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key inv-nt; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 invited \u0002%2$@\u0002 to join %3$@"
+          }
+        }
+      }
+    },
+    "ipj-34": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key ipj-34; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, your user modes are \u0002%@\u0002"
+          }
+        }
+      }
+    },
+    "isx-fi": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key isx-fi; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected from server because the Internet is not reachable"
+          }
+        }
+      }
+    },
+    "jer-ju": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key jer-ju; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CLIENTINFO DCC FINGER PING TIME USERINFO VERSION"
+          }
+        }
+      }
+    },
+    "jj9-94": {
+      "comment": "/timer/ command. Migrated from legacy key jj9-94; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invalid Syntax. Type “/timer help” for more information."
+          }
+        }
+      }
+    },
+    "js3-9v": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key js3-9v; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot use nickname “%@“ — Trying another…"
+          }
+        }
+      }
+    },
+    "jzg-g8": {
+      "comment": "/ignore/ command. Migrated from legacy key jzg-g8; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed ignore that matches \u0002%1$@\u0002 with pattern: %2$@"
+          }
+        }
+      }
+    },
+    "k2e-cb": {
+      "comment": "Standard replies (FAIL, WARN, NOTE). Migrated from legacy key k2e-cb; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NOTE %1$@/%2$@: %3$@"
+          }
+        }
+      }
+    },
+    "khw-4y": {
+      "comment": "/monitor/ command errors. Migrated from legacy key khw-4y; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please use the \u0002Address Book\u0002 to add or remove tracked users. Open the \u0002Address Book\u0002 using the keyboard shortcut \u0002Control 3\u0002."
+          }
+        }
+      }
+    },
+    "ky3-36": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key ky3-36; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retrying…"
+          }
+        }
+      }
+    },
+    "l21-p7": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key l21-p7; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection to host at [%@] established"
+          }
+        }
+      }
+    },
+    "lbl-to": {
+      "comment": "Labeled response. Migrated from legacy key lbl-to; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server did not acknowledge this message."
+          }
+        }
+      }
+    },
+    "lql-8i": {
+      "comment": "Large messages warning. Migrated from legacy key lql-8i; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to send this message?"
+          }
+        }
+      }
+    },
+    "m2v-sb": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key m2v-sb; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silence list entry: %@"
+          }
+        }
+      }
+    },
+    "m2v-sc": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key m2v-sc; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End of silence list"
+          }
+        }
+      }
+    },
+    "m2v-sd": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key m2v-sd; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server does not advertise support for the SILENCE command."
+          }
+        }
+      }
+    },
+    "m2v-se": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key m2v-se; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is a bot"
+          }
+        }
+      }
+    },
+    "m6o-z1": {
+      "comment": "Common command errors. Migrated from legacy key m6o-z1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This command can only be used with a query."
+          }
+        }
+      }
+    },
+    "mic-qe": {
+      "comment": "/lagcheck/ command. Migrated from legacy key mic-qe; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not bad"
+          }
+        }
+      }
+    },
+    "mqg-wi": {
+      "comment": "/lagcheck/ command. Migrated from legacy key mqg-wi; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Okay"
+          }
+        }
+      }
+    },
+    "ni5-cy": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key ni5-cy; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting using SOCKS5 proxy [%1$@] on port %2$hu"
+          }
+        }
+      }
+    },
+    "nkr-kf": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key nkr-kf; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 (%2$@@%3$@) left the channel"
+          }
+        }
+      }
+    },
+    "ns1-sp": {
+      "comment": "Netsplit and netjoin summaries. %3$lu = number of users, %4$@ = nickname list. Migrated from legacy key ns1-sp; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netsplit between \u0002%1$@\u0002 and \u0002%2$@\u0002: %3$lu users left (%4$@)"
+          }
+        }
+      }
+    },
+    "ns2-jn": {
+      "comment": "Netsplit and netjoin summaries. %3$lu = number of users, %4$@ = nickname list. Migrated from legacy key ns2-jn; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netjoin between \u0002%1$@\u0002 and \u0002%2$@\u0002: %3$lu users rejoined (%4$@)"
+          }
+        }
+      }
+    },
+    "ns3-mr": {
+      "comment": "Netsplit and netjoin summaries. %3$lu = number of users, %4$@ = nickname list. Migrated from legacy key ns3-mr; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, … and %2$lu more"
+          }
+        }
+      }
+    },
+    "o26-ae": {
+      "comment": "/timer/ command. Migrated from legacy key o26-ae; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Limit"
+          }
+        }
+      }
+    },
+    "o77-ls": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key o77-ls; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting to [%1$@] on port %2$hu"
+          }
+        }
+      }
+    },
+    "obp-ww": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key obp-ww; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mode is \u0002%@\u0002"
+          }
+        }
+      }
+    },
+    "oby-av": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key oby-av; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting using HTTP proxy [%1$@] on port %2$hu"
+          }
+        }
+      }
+    },
+    "onk-l5": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key onk-l5; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is in %2$@"
+          }
+        }
+      }
+    },
+    "ov2-ci-1": {
+      "comment": "Ban exception list. Migrated from legacy key ov2-ci-1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban exception in %1$@: %2$@ set by %3$@ on %4$@"
+          }
+        }
+      }
+    },
+    "ov2-ci-2": {
+      "comment": "Ban exception list. Migrated from legacy key ov2-ci-2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ban exception in %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "ozy-6i": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key ozy-6i; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "p4r-6n": {
+      "comment": "Standard replies (FAIL, WARN, NOTE). Migrated from legacy key p4r-6n; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FAIL %1$@/%2$@: %3$@"
+          }
+        }
+      }
+    },
+    "p6l-o4": {
+      "comment": "/timer/ command. Migrated from legacy key p6l-o4; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer identifier is not properly formatted. Type “/timer list“ for a list of timers."
+          }
+        }
+      }
+    },
+    "p7s-is": {
+      "comment": "/timer/ command. Migrated from legacy key p7s-is; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer with identifier “%@“ removed"
+          }
+        }
+      }
+    },
+    "pc4-67": {
+      "comment": "/defaults/ command. Migrated from legacy key pc4-67; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot enable the feature “%@” because it is not supported"
+          }
+        }
+      }
+    },
+    "plg-lr": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key plg-lr; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ has userhost %2$@@%3$@ and real name “%4$@”"
+          }
+        }
+      }
+    },
+    "pqj-1y": {
+      "comment": "/myversion/ command. Migrated from legacy key pqj-1y; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I am using %@"
+          }
+        }
+      }
+    },
+    "pqk-5k": {
+      "comment": "/timer/ command. Migrated from legacy key pqk-5k; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no timers"
+          }
+        }
+      }
+    },
+    "pxa-ox": {
+      "comment": "Common command errors. Migrated from legacy key pxa-ox; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot find channel named “%@“"
+          }
+        }
+      }
+    },
+    "py2-qh-1": {
+      "comment": "Invite exception list. Migrated from legacy key py2-qh-1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite Exception in %1$@: %2$@ set by %3$@ on %4$@"
+          }
+        }
+      }
+    },
+    "py2-qh-2": {
+      "comment": "Invite exception list. Migrated from legacy key py2-qh-2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invite Exception in %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "q0q-ch": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key q0q-ch; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 joined the query by connecting to IRC"
+          }
+        }
+      }
+    },
+    "q1m-1e": {
+      "comment": "/timer/ command. Migrated from legacy key q1m-1e; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are %ld timers:"
+          }
+        }
+      }
+    },
+    "qb7-mi": {
+      "comment": "/timer/ command. Migrated from legacy key qb7-mi; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer with identifier “%@“ restarted"
+          }
+        }
+      }
+    },
+    "qoh-kt": {
+      "comment": "/lagcheck/ command. Migrated from legacy key qoh-kt; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for response from lag check…"
+          }
+        }
+      }
+    },
+    "qq2-66": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key qq2-66; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 changed the topic to \u0002%2$@\u0002"
+          }
+        }
+      }
+    },
+    "qrg-ua": {
+      "comment": "Log file session headers. Migrated from legacy key qrg-ua; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "------------- Begin Session -------------"
+          }
+        }
+      }
+    },
+    "qw4-t3": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key qw4-t3; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@!%2$@@%3$@ invited you to join %4$@"
+          }
+        }
+      }
+    },
+    "r27-tv": {
+      "comment": "/timer/ command. Migrated from legacy key r27-tv; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“/timer restart <identifier>“\n\nRestart the timer assigned to \u0002<identifier>\u0002.\n\nThe identifier for a timer can be found using “/timer list”\n\nWhen restarting a timer, the iteration count is reset\nwhich means a timer that is setup to repeat X number\nof times will start over from the beginning."
+          }
+        }
+      }
+    },
+    "r5h-fj": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key r5h-fj; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Joining channels has been delayed because because you haven't identified. Perform “/autojoin” to join channels without identifying."
+          }
+        }
+      }
+    },
+    "ret-20": {
+      "comment": "/ignore/ command. Migrated from legacy key ret-20; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added ignore that matches \u0002%1$@\u0002 with pattern: %2$@"
+          }
+        }
+      }
+    },
+    "rr6-yo": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key rr6-yo; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're now known as \u0002%@\u0002"
+          }
+        }
+      }
+    },
+    "sdn-yr": {
+      "comment": "/mute/ command. Migrated from legacy key sdn-yr; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound is already muted"
+          }
+        }
+      }
+    },
+    "set-nm": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key set-nm; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server does not support changing the real name (setname)"
+          }
+        }
+      }
+    },
+    "snf-45": {
+      "comment": "File transfer server console messages. Migrated from legacy key snf-45; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received file transfer request from %1$@, %2$@ (%3$qi bytes)"
+          }
+        }
+      }
+    },
+    "sts-p1": {
+      "comment": "Strict Transport Security (STS). Migrated from legacy key sts-p1; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Strict Transport Security policy is in effect for this host. Using TLS on port %hu."
+          }
+        }
+      }
+    },
+    "sts-p2": {
+      "comment": "Strict Transport Security (STS). Migrated from legacy key sts-p2; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server offers Strict Transport Security. Reconnecting with TLS on port %hu."
+          }
+        }
+      }
+    },
+    "sts-p3": {
+      "comment": "Strict Transport Security (STS). Migrated from legacy key sts-p3; compatibility key retained.",
+      "extractionState": "extracted",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stored a Strict Transport Security policy for this host: TLS on port %hu."
+          }
+        }
+      }
+    },
+    "sts-p4": {
+      "comment": "Strict Transport Security (STS). Migrated from legacy key sts-p4; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server withdrew its Strict Transport Security policy for this host."
+          }
+        }
+      }
+    },
+    "sts-sc1": {
+      "comment": "SASL SCRAM. Migrated from legacy key sts-sc1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SASL SCRAM authentication failed: the server sent a malformed message."
+          }
+        }
+      }
+    },
+    "sts-sc2": {
+      "comment": "SASL SCRAM. Migrated from legacy key sts-sc2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SASL SCRAM authentication failed: %@"
+          }
+        }
+      }
+    },
+    "sxf-qx": {
+      "comment": "Common command errors. Migrated from legacy key sxf-qx; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This command cannot be used within this window."
+          }
+        }
+      }
+    },
+    "tok-st": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key tok-st; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "u48-aa": {
+      "comment": "/mute/ command. Migrated from legacy key u48-aa; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound has been muted"
+          }
+        }
+      }
+    },
+    "u4c-7i": {
+      "comment": "Large messages warning. Migrated from legacy key u4c-7i; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message that you are sending is very large which means it will be split up into multiple messages. Sending too many messages at once is often considered disruptive and may result in a ban."
+          }
+        }
+      }
+    },
+    "u51-nn": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key u51-nn; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@%2$@"
+          }
+        }
+      }
+    },
+    "u5z-az-1": {
+      "comment": "Quiet list. Migrated from legacy key u5z-az-1; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet in %1$@: %2$@ set by %3$@ on %4$@"
+          }
+        }
+      }
+    },
+    "u5z-az-2": {
+      "comment": "Quiet list. Migrated from legacy key u5z-az-2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet in %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "ut8-7s": {
+      "comment": "/lagcheck/ command. Migrated from legacy key ut8-7s; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs work"
+          }
+        }
+      }
+    },
+    "uw0-v2": {
+      "comment": "/timer/ command. Migrated from legacy key uw0-v2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002ID:\u0002 %1$@ • \u0002Status:\u0002 %2$@ • \u0002Interval:\u0002 %3$@ • \u0002Next Fire:\u0002 %4$@ • \u0002Repeat:\u0002 Yes • \u0002Repeat Limit:\u0002 %5$@ • \u0002Iteration:\u0002 %6$ld • \u0002Command:\u0002 “%7$@“"
+          }
+        }
+      }
+    },
+    "uyz-4r": {
+      "comment": "Cipher suite information. Migrated from legacy key uyz-4r; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 with the cipher suite: \u0002%2$@\u0002"
+          }
+        }
+      }
+    },
+    "v5d-ix": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key v5d-ix; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 sets mode \u0002%2$@\u0002"
+          }
+        }
+      }
+    },
+    "v9x-18": {
+      "comment": "/tage/ command. Migrated from legacy key v9x-18; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002Time Since First Commit:\u0002 %@"
+          }
+        }
+      }
+    },
+    "vdy-jk": {
+      "comment": "XPC errors. Migrated from legacy key vdy-jk; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection service closed unexpectedly"
+          }
+        }
+      }
+    },
+    "vrx-1f": {
+      "comment": "/ignore/ command. Migrated from legacy key vrx-1f; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot remove ignore for \u0002%@\u0002 because Glasstual isn't sure which to remove. More than one ignore exists that matches this user. To remove a specific ignore, open the \u0002Address Book\u0002 using the keyboard shortcut \u0002Control 3\u0002."
+          }
+        }
+      }
+    },
+    "vy7-pk": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key vy7-pk; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002-%1$@ CTCP-\u0002 %2$@ (%3$1.5f sec)"
+          }
+        }
+      }
+    },
+    "vzu-u7": {
+      "comment": "Version info. Migrated from legacy key vzu-u7; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ IRC Client: https://github.com/vakesz/Glasstual — v%2$@"
+          }
+        }
+      }
+    },
+    "vzu-xh": {
+      "comment": "/timer/ command. Migrated from legacy key vzu-xh; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timer with identifier “%@“ does not exist. Type “/timer list“ for a list of timers."
+          }
+        }
+      }
+    },
+    "w05-ph": {
+      "comment": "Address type migration warning. Migrated from legacy key w05-ph; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u00034\u0002Please take notice:\u0002\u0003 The preference labeled “Prefer IPv4”, which you had enabled, no longer exists. \u0002IPv6 has been disabled for this connection\u0002 to offer you similar behavior. See the \u0002Network Socket\u0002 section of \u0002Server Properties\u0002 to change which protocols are enabled (IPv4 and/or IPv6)."
+          }
+        }
+      }
+    },
+    "w7c-lm": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key w7c-lm; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Joining %1$@ would exceed the limit of %2$lu channels with the prefix “%3$@” on this server. The server may refuse the join."
+          }
+        }
+      }
+    },
+    "wcl-po": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key wcl-po; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected for server redirect"
+          }
+        }
+      }
+    },
+    "wk4-rv": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key wk4-rv; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inviting %1$@ to join %2$@"
+          }
+        }
+      }
+    },
+    "wu0-jp": {
+      "comment": "/ignore/ command. Migrated from legacy key wu0-jp; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ignores could be found that matches \u0002%@\u0002"
+          }
+        }
+      }
+    },
+    "ww4-sn": {
+      "comment": "/timer/ command. Migrated from legacy key ww4-sn; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopped"
+          }
+        }
+      }
+    },
+    "x1n-ve": {
+      "comment": "/timer/ command. Migrated from legacy key x1n-ve; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“/timer list“\n\nList timers"
+          }
+        }
+      }
+    },
+    "x69-rz": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key x69-rz; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ was connected from %2$@ (%3$@)"
+          }
+        }
+      }
+    },
+    "xkq-rt": {
+      "comment": "/timer/ command. Migrated from legacy key xkq-rt; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The timer command can be used to perform a command after a specific amount of time and optionally repeat it.\n\nTo learn more, type:\n\t“/timer help <topic>“\n\nAvailable topics: ADD, REMOVE, LIST, STOP, RESTART"
+          }
+        }
+      }
+    },
+    "xog-in": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key xog-in; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Be back later"
+          }
+        }
+      }
+    },
+    "xwj-xy": {
+      "comment": "Cipher suite information. Migrated from legacy key xwj-xy; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 with the cipher suite: \u0002%2$@\u0002 \u00034\u0002(deprecated)\u0002\u0003"
+          }
+        }
+      }
+    },
+    "xxb-y2": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key xxb-y2; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnecting…"
+          }
+        }
+      }
+    },
+    "y3h-ud": {
+      "comment": "ISUPPORT driven messages. Migrated from legacy key y3h-ud; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This server only accepts UTF-8. The configured encoding is ignored for this connection."
+          }
+        }
+      }
+    },
+    "y3w-la": {
+      "comment": "File transfer server console messages. Migrated from legacy key y3w-la; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual has received a DCC request from %@ that could not be processed."
+          }
+        }
+      }
+    },
+    "y7s-3e": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key y7s-3e; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set by \u0002%1$@\u0002 on %2$@"
+          }
+        }
+      }
+    },
+    "y7t-zk": {
+      "comment": "Standard replies (FAIL, WARN, NOTE). Migrated from legacy key y7t-zk; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WARN %1$@/%2$@: %3$@"
+          }
+        }
+      }
+    },
+    "yem-td": {
+      "comment": "Hidden command responses messages. Migrated from legacy key yem-td; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⍅ Command responses which are normally hidden will be output to this window until it is closed by control clicking (right clicking) it. ⍆"
+          }
+        }
+      }
+    },
+    "yym-8y": {
+      "comment": "/lagcheck/ command. Migrated from legacy key yym-8y; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pretty good"
+          }
+        }
+      }
+    },
+    "z2r-sd": {
+      "comment": "Common command errors. Migrated from legacy key z2r-sd; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages cannot be sent to this window."
+          }
+        }
+      }
+    },
+    "zef-q9": {
+      "comment": "Common command errors. Migrated from legacy key zef-q9; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One or more arguments are not properly formatted for this command."
+          }
+        }
+      }
+    },
+    "ziu-p9": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key ziu-p9; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u0002%1$@\u0002 (%2$@@%3$@) joined the channel"
+          }
+        }
+      }
+    },
+    "zro-bg": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key zro-bg; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected from server because of an untrusted certificate"
+          }
+        }
+      }
+    },
+    "zud-u3": {
+      "comment": "/weights/ command. Migrated from legacy key zud-u3; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname completion weights for %@:"
+          }
+        }
+      }
+    },
+    "zzj-2h": {
+      "comment": "Miscellaneous messages related to IRC events. Migrated from legacy key zzj-2h; compatibility key retained.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attempting to rejoin channel in three seconds"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

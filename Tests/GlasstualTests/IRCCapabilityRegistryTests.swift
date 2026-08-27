@@ -43,6 +43,12 @@ import XCTest
  *********************************************************************** */
 @objc
 class CapabilityRegistryTests: XCTestCase {
+	func testNativeCapabilityTypesPreserveObjectiveCRuntimeNames() {
+		XCTAssertNotNil(NSClassFromString("IRCCapability"))
+		XCTAssertNotNil(NSClassFromString("IRCCapabilityRegistry"))
+		XCTAssertTrue(CapabilityRegistry.responds(to: NSSelectorFromString("parseCapabilityList:")))
+	}
+
 	@objc
 	func registryWithGateAllowed(_ gateAllowed: Bool) -> CapabilityRegistry {
 		let tags: Capability! = Capability.capability(

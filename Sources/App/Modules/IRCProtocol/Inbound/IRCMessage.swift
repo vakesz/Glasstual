@@ -11,10 +11,12 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
+import GlasstualPluginKit
 
 @objc(IRCMessage)
-open class Message: XRPortablePropertyObject {
+open class Message: PortablePropertyObject {
 	fileprivate var isHistoricStorage = false
 	fileprivate var isEventOnlyMessageStorage = false
 	fileprivate var isPrintOnlyMessageStorage = false
@@ -185,7 +187,7 @@ open class Message: XRPortablePropertyObject {
 	}
 
 	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: XRPortablePropertyObject, mutableCopy _: Bool) {
+	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
 		guard let object = newObject as? Message else {
 			return
 		}
@@ -205,8 +207,8 @@ open class Message: XRPortablePropertyObject {
 		object.parentBatchMessageStorage = parentBatchMessageStorage
 	}
 
-	override public var mutableClass: XRPortablePropertyObject {
-		unsafeBitCast(MessageMutable.self, to: XRPortablePropertyObject.self)
+	override public var mutableClass: PortablePropertyObject {
+		unsafeBitCast(MessageMutable.self, to: PortablePropertyObject.self)
 	}
 
 	// MARK: - Line Parser
@@ -230,7 +232,11 @@ open class Message: XRPortablePropertyObject {
 			sender.nickname = serverAddress
 			sender.hostmask = serverAddress
 			sender.isServer = true
-			senderStorage = sender.copy() as! Prefix
+			guard let immutableSender = sender.copy() as? Prefix else {
+				assertionFailure("Mutable prefixes must produce immutable Prefix copies")
+				return false
+			}
+			senderStorage = immutableSender
 		}
 
 		commandStorage = parsed.command
@@ -306,12 +312,15 @@ open class Message: XRPortablePropertyObject {
 			sender.isServer = true
 		}
 
-		senderStorage = sender.copy() as! Prefix
+		guard let immutableSender = sender.copy() as? Prefix else {
+			assertionFailure("Mutable prefixes must produce immutable Prefix copies")
+			return
+		}
+		senderStorage = immutableSender
 	}
 
-	@objc
-	public func didReceiveServerInputConcreteObject() -> THOPluginDidReceiveServerInputConcreteObject {
-		let messageObject = THOPluginDidReceiveServerInputConcreteObject()
+	public func didReceiveServerInputConcreteObject() -> PluginServerInput {
+		let messageObject = PluginServerInput()
 
 		messageObject.senderIsServer = senderIsServer
 		messageObject.senderNickname = senderNickname ?? ""
@@ -320,7 +329,6 @@ open class Message: XRPortablePropertyObject {
 		messageObject.senderHostmask = senderHostmask ?? ""
 		messageObject.receivedAt = receivedAt
 		messageObject.messageParameters = params
-		messageObject.messageParamaters = params
 		messageObject.messageSequence = sequence
 		messageObject.messageCommand = command
 		messageObject.messageCommandNumeric = commandNumeric
@@ -331,12 +339,12 @@ open class Message: XRPortablePropertyObject {
 
 @objc(IRCMessageMutable)
 public final class MessageMutable: Message {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyObject {
-		unsafeBitCast(Message.self, to: XRPortablePropertyObject.self)
+	override public var immutableClass: PortablePropertyObject {
+		unsafeBitCast(Message.self, to: PortablePropertyObject.self)
 	}
 
 	@objc override public var batchToken: String? {

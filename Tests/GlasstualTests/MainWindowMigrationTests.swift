@@ -9,6 +9,62 @@ import XCTest
 
 @MainActor
 final class MainWindowMigrationTests: XCTestCase {
+	func testMainWindowStateStoreUsesVisibleDefaults() throws {
+		let suiteName = "MainWindowMigrationTests.\(UUID().uuidString)"
+		let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+
+		XCTAssertEqual(
+			MainWindowStateStore(defaults: defaults).loadLayout(),
+			MainWindowLayoutState(isServerListVisible: true, isMemberListVisible: true)
+		)
+	}
+
+	func testMainWindowStateStoreRoundTripsTypedState() throws {
+		let suiteName = "MainWindowMigrationTests.\(UUID().uuidString)"
+		let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let store = MainWindowStateStore(defaults: defaults)
+		let layout = MainWindowLayoutState(isServerListVisible: false, isMemberListVisible: true)
+
+		store.saveLayout(layout)
+		store.saveSelection(itemIdentifiers: ["server", "channel"])
+
+		XCTAssertEqual(store.loadLayout(), layout)
+		XCTAssertEqual(store.loadSelectionItemIdentifiers(), ["server", "channel"])
+	}
+
+	func testMemberListVisibilityRequiresAnActiveServerSession() {
+		XCTAssertFalse(
+			MainWindowMemberListVisibilityPolicy.shouldExpand(
+				isChannel: true,
+				isLoggedIn: false,
+				isHiddenByUser: false
+			)
+		)
+		XCTAssertTrue(
+			MainWindowMemberListVisibilityPolicy.shouldExpand(
+				isChannel: true,
+				isLoggedIn: true,
+				isHiddenByUser: false
+			)
+		)
+		XCTAssertFalse(
+			MainWindowMemberListVisibilityPolicy.shouldExpand(
+				isChannel: false,
+				isLoggedIn: true,
+				isHiddenByUser: false
+			)
+		)
+		XCTAssertFalse(
+			MainWindowMemberListVisibilityPolicy.shouldExpand(
+				isChannel: true,
+				isLoggedIn: true,
+				isHiddenByUser: true
+			)
+		)
+	}
+
 	func testObjectiveCRuntimeNameRemainsStableForNibLoading() {
 		XCTAssertEqual(NSStringFromClass(MainWindow.self), "TVCMainWindow")
 	}

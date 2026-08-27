@@ -20,6 +20,7 @@ private final class WindowBaseSpy: NSWindow {
 	}
 }
 
+@MainActor
 final class WindowBaseMigrationTests: XCTestCase {
 	func testWindowBaseForwardsWindowLifecycleActions() {
 		let window = WindowBaseSpy()

@@ -4,7 +4,6 @@ import XCTest
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
 /// #import "IRCMessage.h"
-/// #import "IRCMessageBatchPrivate.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
@@ -56,7 +55,10 @@ class IRCMessageBatchTests: XCTestCase {
 	func testContainerQueuesAndDequeuesBatchesByToken() {
 		let container = MessageBatchContainer()
 		let batch = batchWithToken("history-1")
-		let message = Message(line: ":nick!user@host PRIVMSG #channel :hello")
+		guard let message = Message(line: ":nick!user@host PRIVMSG #channel :hello") else {
+			XCTFail("Expected a valid IRC message")
+			return
+		}
 
 		batch.queueEntry(message)
 
@@ -78,8 +80,13 @@ class IRCMessageBatchTests: XCTestCase {
 	func testBatchAcceptsMessagesAndNestedBatchesOnly() {
 		let parent = batchWithToken("parent")
 		let child = batchWithToken("child")
-		let first = Message(line: "PING :first")
-		let second = Message(line: "PING :second")
+		guard
+			let first = Message(line: "PING :first"),
+			let second = Message(line: "PING :second")
+		else {
+			XCTFail("Expected valid IRC messages")
+			return
+		}
 
 		child.parentBatchMessage = parent
 
@@ -107,7 +114,10 @@ class IRCMessageBatchTests: XCTestCase {
 	func testContainerIgnoresNonBatchEntriesAndDequeueAllKeepsBatchContents() {
 		let container = MessageBatchContainer()
 		let batch = batchWithToken("batch")
-		let message = Message(line: "PING :token")
+		guard let message = Message(line: "PING :token") else {
+			XCTFail("Expected a valid IRC message")
+			return
+		}
 
 		batch.queueEntry(message)
 

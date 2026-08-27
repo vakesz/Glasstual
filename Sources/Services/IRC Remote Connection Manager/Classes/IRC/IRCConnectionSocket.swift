@@ -35,8 +35,11 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
+import Foundation
 import Network
 import os
+import Security
 
 /** Logging for the connection classes. `Logger` is Sendable which keeps
  these usable from queue-confined code under strict concurrency. */
@@ -116,7 +119,7 @@ class ConnectionSocket: @unchecked Sendable {
 		alternateDisconnectError = nil
 	}
 
-	func tlsVerify(_ trust: SecTrust, response: @escaping RCMTrustResponse) {
+	func tlsVerify(_ trust: SecTrust, response: @escaping TrustDecisionHandler) {
 		var error: CFError?
 
 		/* The evaluation always runs, even when the connection is configured
@@ -196,9 +199,8 @@ class ConnectionSocket: @unchecked Sendable {
 		else {
 			return nil
 		}
-
-		/* The CFGetTypeID check above guarantees this forced cast succeeds. */
-		let certificateRef = certificateObject as! SecCertificate
+		// Security exposes the typed certificate through a CFTypeRef result.
+		let certificateRef = unsafeDowncast(certificateObject, to: SecCertificate.self)
 
 		/* ====================================== */
 
@@ -228,22 +230,23 @@ extension ConnectionError {
 	}
 
 	init?(tlsError error: Error) {
-		if RCMSecureTransport.isTLSError(error) == false {
+		let nsError = error as NSError
+		if SecureTransportSupport.isTLSError(nsError) == false {
 			return nil
 		}
 
-		self.init(tlsError: (error as NSError).code)
+		self.init(tlsError: nsError.code)
 	}
 
 	/// init(tlsError:) returns .unableToSecure("Unknown") for out of range error codes
 	init(tlsError errorCode: Int) {
-		if let certError = RCMSecureTransport.description(forBadCertificateErrorCode: errorCode) {
+		if let certError = SecureTransportSupport.description(forBadCertificateErrorCode: errorCode) {
 			self = .badCertificate(failureReason: certError)
 
 			return
 		}
 
-		let tlsError = RCMSecureTransport.description(forErrorCode: errorCode)
+		let tlsError = SecureTransportSupport.description(forErrorCode: errorCode)
 
 		self = .unableToSecure(failureReason: tlsError)
 	}
@@ -288,7 +291,7 @@ protocol ConnectionSocketProtocol {
 	/// Logic for providing upstream with information
 	/// about the secured connection including policy name,
 	/// protocol version, cipher suite, and certificates.
-	func exportSecureConnectionInformation(to receiver: RCMSecureConnectionInformationCompletionBlock) throws
+	func exportSecureConnectionInformation(to receiver: SecureConnectionInformationReceiver) throws
 
 	/// TLS Information
 	var tlsNegotiatedProtocol: tls_protocol_version_t? { get }
@@ -314,12 +317,12 @@ extension ConnectionSocketProtocol where Self: ConnectionSocket {
 		close()
 	}
 
-	func exportSecureConnectionInformation(to receiver: RCMSecureConnectionInformationCompletionBlock) throws {
+	func exportSecureConnectionInformation(to receiver: SecureConnectionInformationReceiver) throws {
 		let policyName = tlsPolicyName
 
-		let protocolType = tlsNegotiatedProtocol ?? tls_protocol_version_unknown
+		let protocolType = tlsNegotiatedProtocol ?? tlsProtocolVersionUnknown
 
-		let cipherSuite = tlsNegotiatedCipherSuite ?? tls_ciphersuite_unknown
+		let cipherSuite = tlsNegotiatedCipherSuite ?? tlsCipherSuiteUnknown
 
 		let certificateChain = tlsCertificateChainData ?? []
 

@@ -28,14 +28,14 @@ private final class NetworkPickerRow: NSObject {
 	var title: String?
 	var network: Network?
 
-	class func groupRow(title: String) -> NetworkPickerRow {
+	static func groupRow(title: String) -> NetworkPickerRow {
 		let row = NetworkPickerRow()
 		row.kind = .group
 		row.title = title
 		return row
 	}
 
-	class func networkRow(_ network: Network) -> NetworkPickerRow {
+	static func networkRow(_ network: Network) -> NetworkPickerRow {
 		let row = NetworkPickerRow()
 		row.kind = .network
 		row.network = network
@@ -43,10 +43,10 @@ private final class NetworkPickerRow: NSObject {
 		return row
 	}
 
-	class func customRow() -> NetworkPickerRow {
+	static func customRow() -> NetworkPickerRow {
 		let row = NetworkPickerRow()
 		row.kind = .custom
-		row.title = LocalizedKey("TDCOnboardingWindow[np1-cs]")
+		row.title = OnboardingStrings.NetworkPicker.customServerTitle
 		return row
 	}
 }
@@ -84,7 +84,7 @@ private final class NetworkPickerCellView: NSTableCellView {
 		let lockImageView = NSImageView(
 			image: NSImage(
 				systemSymbolName: "lock.fill",
-				accessibilityDescription: LocalizedKey("TDCOnboardingWindow[np1-lk]")
+				accessibilityDescription: OnboardingStrings.NetworkPicker.secureConnectionAccessibilityLabel
 			)!
 		)
 		lockImageView.contentTintColor = .secondaryLabelColor
@@ -131,18 +131,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	private var searchField: NSSearchField!
 	private var scrollView: NSScrollView!
 	private var tableView: NSTableView!
-	private var detailView: NSView!
-	private var detailTitleField: NSTextField!
-	private var registrationBadge: NSTextField!
-	private var serverAddressField: NSTextField!
-	private var serverPortField: NSTextField!
-	private var securedCheck: NSButton!
-	private var accountBox: NSBox!
-	private var accountNameField: NSTextField!
-	private var accountPasswordField: NSSecureTextField!
-	private var saslCheck: NSButton!
-	private var registrationNoteField: NSTextField!
-	private var websiteButton: NSButton!
+	private var detailView: NetworkPickerDetailView!
 	private var accountNameEdited = false
 	private var defaultNicknameStorage: String?
 
@@ -151,8 +140,8 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		set {
 			defaultNicknameStorage = newValue
 
-			if accountNameEdited == false, accountNameField != nil {
-				accountNameField.stringValue = newValue ?? ""
+			if accountNameEdited == false, let detailView {
+				detailView.updateDefaultNickname(newValue)
 			}
 		}
 	}
@@ -177,12 +166,12 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		buildListViews()
 		buildDetailViews()
 		reloadRows()
-		updateDetailView()
+		populateDetailFromSelection()
 	}
 
 	private func buildListViews() {
 		let searchField = NSSearchField()
-		searchField.placeholderString = LocalizedKey("TDCOnboardingWindow[np1-sp]")
+		searchField.placeholderString = OnboardingStrings.NetworkPicker.searchPlaceholder
 		searchField.delegate = self
 		searchField.sendsSearchStringImmediately = true
 		searchField.translatesAutoresizingMaskIntoConstraints = false
@@ -206,7 +195,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		tableView.delegate = self
 		tableView.target = self
 		tableView.doubleAction = #selector(tableViewDoubleClicked(_:))
-		tableView.setAccessibilityLabel(LocalizedKey("TDCOnboardingWindow[np1-ax]"))
+		tableView.setAccessibilityLabel(OnboardingStrings.NetworkPicker.accessibilityLabel)
 
 		let scrollView = NSScrollView()
 		scrollView.documentView = tableView
@@ -233,173 +222,13 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		self.tableView = tableView
 	}
 
-	private func makeLabel(_ title: String) -> NSTextField {
-		let label = NSTextField(labelWithString: title)
-		label.alignment = .right
-		label.translatesAutoresizingMaskIntoConstraints = false
-		return label
-	}
-
 	private func buildDetailViews() {
-		let detailView = NSView()
-		detailView.translatesAutoresizingMaskIntoConstraints = false
-
-		let titleField = NSTextField(labelWithString: "")
-		titleField.font = NSFont.boldSystemFont(ofSize: NSFont.systemFontSize)
-		titleField.lineBreakMode = .byTruncatingTail
-		titleField.translatesAutoresizingMaskIntoConstraints = false
-
-		let badge = NSTextField(labelWithString: LocalizedKey("TDCOnboardingWindow[np1-rq]"))
-		badge.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
-		badge.textColor = .systemOrange
-		badge.wantsLayer = true
-		badge.layer?.cornerRadius = 4
-		badge.layer?.borderWidth = 1
-		badge.layer?.borderColor = NSColor.systemOrange.cgColor
-		badge.alignment = .center
-		badge.translatesAutoresizingMaskIntoConstraints = false
-		badge.isHidden = true
-
-		let addressLabel = makeLabel(LocalizedKey("TDCOnboardingWindow[np1-sv]"))
-
-		let addressField = NSTextField(string: "")
-		addressField.placeholderString = LocalizedKey("TDCOnboardingWindow[np1-sh]")
-		addressField.delegate = self
-		addressField.translatesAutoresizingMaskIntoConstraints = false
-
-		let portLabel = makeLabel(LocalizedKey("TDCOnboardingWindow[np1-pt]"))
-
-		let portField = NSTextField(string: "")
-		portField.placeholderString = LocalizedKey("TDCOnboardingWindow[np1-pp]")
-		portField.delegate = self
-		portField.alignment = .right
-		portField.translatesAutoresizingMaskIntoConstraints = false
-
-		let portFormatter = NumberFormatter()
-		portFormatter.numberStyle = .none
-		portFormatter.minimum = 1
-		portFormatter.maximum = 65535
-		portFormatter.allowsFloats = false
-		portFormatter.usesGroupingSeparator = false
-		portField.formatter = portFormatter
-
-		let securedCheck = NSButton(
-			checkboxWithTitle: LocalizedKey("TDCOnboardingWindow[np1-tl]"),
-			target: self,
-			action: #selector(fieldChanged(_:))
+		let detailView = NetworkPickerDetailView(
+			fieldDelegate: self,
+			actionTarget: self,
+			fieldChangedAction: #selector(fieldChanged(_:)),
+			openWebsiteAction: #selector(openWebsite(_:))
 		)
-		securedCheck.translatesAutoresizingMaskIntoConstraints = false
-
-		let accountBox = NSBox()
-		accountBox.title = LocalizedKey("TDCOnboardingWindow[np1-ac]")
-		accountBox.titlePosition = .atTop
-		accountBox.translatesAutoresizingMaskIntoConstraints = false
-
-		let accountNameLabel = makeLabel(LocalizedKey("TDCOnboardingWindow[np1-an]"))
-
-		let accountNameField = NSTextField(string: "")
-		accountNameField.delegate = self
-		accountNameField.translatesAutoresizingMaskIntoConstraints = false
-
-		let passwordLabel = makeLabel(LocalizedKey("TDCOnboardingWindow[np1-pw]"))
-
-		let passwordField = NSSecureTextField()
-		passwordField.delegate = self
-		passwordField.translatesAutoresizingMaskIntoConstraints = false
-
-		let saslCheck = NSButton(
-			checkboxWithTitle: LocalizedKey("TDCOnboardingWindow[np1-sa]"),
-			target: self,
-			action: #selector(fieldChanged(_:))
-		)
-		saslCheck.translatesAutoresizingMaskIntoConstraints = false
-
-		let noteField = NSTextField(wrappingLabelWithString: "")
-		noteField.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
-		noteField.textColor = .secondaryLabelColor
-		noteField.isSelectable = true
-		noteField.translatesAutoresizingMaskIntoConstraints = false
-		noteField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-
-		let websiteButton = NSButton(title: "", target: self, action: #selector(openWebsite(_:)))
-		websiteButton.isBordered = false
-		websiteButton.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
-		websiteButton.contentTintColor = .linkColor
-		websiteButton.translatesAutoresizingMaskIntoConstraints = false
-
-		guard let accountContent = accountBox.contentView else {
-			return
-		}
-
-		accountContent.addSubview(accountNameLabel)
-		accountContent.addSubview(accountNameField)
-		accountContent.addSubview(passwordLabel)
-		accountContent.addSubview(passwordField)
-		accountContent.addSubview(saslCheck)
-		accountContent.addSubview(noteField)
-		accountContent.addSubview(websiteButton)
-
-		NSLayoutConstraint.activate([
-			accountNameLabel.topAnchor.constraint(equalTo: accountContent.topAnchor, constant: 8),
-			accountNameLabel.leadingAnchor.constraint(equalTo: accountContent.leadingAnchor, constant: 8),
-			accountNameLabel.widthAnchor.constraint(equalToConstant: 110),
-			accountNameField.leadingAnchor.constraint(equalTo: accountNameLabel.trailingAnchor, constant: 8),
-			accountNameField.trailingAnchor.constraint(equalTo: accountContent.trailingAnchor, constant: -8),
-			accountNameField.firstBaselineAnchor.constraint(equalTo: accountNameLabel.firstBaselineAnchor),
-			passwordLabel.topAnchor.constraint(equalTo: accountNameField.bottomAnchor, constant: 8),
-			passwordLabel.trailingAnchor.constraint(equalTo: accountNameLabel.trailingAnchor),
-			passwordLabel.widthAnchor.constraint(equalTo: accountNameLabel.widthAnchor),
-			passwordField.leadingAnchor.constraint(equalTo: accountNameField.leadingAnchor),
-			passwordField.trailingAnchor.constraint(equalTo: accountNameField.trailingAnchor),
-			passwordField.firstBaselineAnchor.constraint(equalTo: passwordLabel.firstBaselineAnchor),
-			saslCheck.topAnchor.constraint(equalTo: passwordField.bottomAnchor, constant: 8),
-			saslCheck.leadingAnchor.constraint(equalTo: accountNameField.leadingAnchor),
-			noteField.topAnchor.constraint(equalTo: saslCheck.bottomAnchor, constant: 6),
-			noteField.leadingAnchor.constraint(equalTo: accountNameField.leadingAnchor),
-			noteField.trailingAnchor.constraint(equalTo: accountNameField.trailingAnchor),
-			websiteButton.topAnchor.constraint(equalTo: noteField.bottomAnchor, constant: 2),
-			websiteButton.leadingAnchor.constraint(equalTo: accountNameField.leadingAnchor),
-			websiteButton.bottomAnchor.constraint(equalTo: accountContent.bottomAnchor, constant: -6),
-		])
-
-		detailView.addSubview(titleField)
-		detailView.addSubview(badge)
-		detailView.addSubview(addressLabel)
-		detailView.addSubview(addressField)
-		detailView.addSubview(portLabel)
-		detailView.addSubview(portField)
-		detailView.addSubview(securedCheck)
-		detailView.addSubview(accountBox)
-
-		NSLayoutConstraint.activate([
-			titleField.topAnchor.constraint(equalTo: detailView.topAnchor),
-			titleField.leadingAnchor.constraint(equalTo: detailView.leadingAnchor),
-			badge.leadingAnchor.constraint(equalTo: titleField.trailingAnchor, constant: 8),
-			badge.centerYAnchor.constraint(equalTo: titleField.centerYAnchor),
-			badge.trailingAnchor.constraint(lessThanOrEqualTo: detailView.trailingAnchor),
-			addressLabel.topAnchor.constraint(equalTo: titleField.bottomAnchor, constant: 10),
-			addressLabel.leadingAnchor.constraint(equalTo: detailView.leadingAnchor),
-			addressLabel.widthAnchor.constraint(equalToConstant: 122),
-			addressField.leadingAnchor.constraint(equalTo: addressLabel.trailingAnchor, constant: 8),
-			addressField.firstBaselineAnchor.constraint(equalTo: addressLabel.firstBaselineAnchor),
-			portLabel.leadingAnchor.constraint(equalTo: addressField.trailingAnchor, constant: 12),
-			portLabel.firstBaselineAnchor.constraint(equalTo: addressLabel.firstBaselineAnchor),
-			portField.leadingAnchor.constraint(equalTo: portLabel.trailingAnchor, constant: 8),
-			portField.widthAnchor.constraint(equalToConstant: 64),
-			portField.trailingAnchor.constraint(equalTo: detailView.trailingAnchor),
-			portField.firstBaselineAnchor.constraint(equalTo: addressLabel.firstBaselineAnchor),
-			securedCheck.topAnchor.constraint(equalTo: addressField.bottomAnchor, constant: 8),
-			securedCheck.leadingAnchor.constraint(equalTo: addressField.leadingAnchor),
-			accountBox.topAnchor.constraint(equalTo: securedCheck.bottomAnchor, constant: 8),
-			accountBox.leadingAnchor.constraint(equalTo: detailView.leadingAnchor),
-			accountBox.trailingAnchor.constraint(equalTo: detailView.trailingAnchor),
-			accountBox.bottomAnchor.constraint(lessThanOrEqualTo: detailView.bottomAnchor),
-		])
-
-		NSLayoutConstraint.activate([
-			badge.widthAnchor.constraint(equalToConstant: badge.intrinsicContentSize.width + 12),
-			badge.heightAnchor.constraint(equalToConstant: badge.intrinsicContentSize.height + 2),
-		])
 
 		view.addSubview(detailView)
 
@@ -411,42 +240,31 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		])
 
 		self.detailView = detailView
-		detailTitleField = titleField
-		registrationBadge = badge
-		serverAddressField = addressField
-		serverPortField = portField
-		self.securedCheck = securedCheck
-		self.accountBox = accountBox
-		self.accountNameField = accountNameField
-		accountPasswordField = passwordField
-		self.saslCheck = saslCheck
-		registrationNoteField = noteField
-		self.websiteButton = websiteButton
 	}
 
 	// MARK: - Rows
 
 	private func reloadRows() {
-		let query = (searchField.stringValue as NSString).trim
+		let query = searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
 		var rows: [NetworkPickerRow] = []
 
 		if query.isEmpty {
-			rows.append(NetworkPickerRow.groupRow(title: LocalizedKey("TDCOnboardingWindow[np1-gp]")))
+			rows.append(NetworkPickerRow.groupRow(title: OnboardingStrings.NetworkPicker.popularGroup))
 
 			for network in networkList.popularNetworks {
 				rows.append(NetworkPickerRow.networkRow(network))
 			}
 
-			rows.append(NetworkPickerRow.groupRow(title: LocalizedKey("TDCOnboardingWindow[np1-ga]")))
+			rows.append(NetworkPickerRow.groupRow(title: OnboardingStrings.NetworkPicker.allNetworksGroup))
 
 			for network in networkList.listOfNetworks {
 				rows.append(NetworkPickerRow.networkRow(network))
 			}
 		} else {
 			for network in networkList.listOfNetworks {
-				if (network.networkName as NSString).containsIgnoringCase(query)
-					|| (network.serverAddress as NSString).containsIgnoringCase(query)
-					|| (network.networkDescription as NSString).containsIgnoringCase(query)
+				if network.networkName.localizedCaseInsensitiveContains(query)
+					|| network.serverAddress.localizedCaseInsensitiveContains(query)
+					|| network.networkDescription.localizedCaseInsensitiveContains(query)
 				{
 					rows.append(NetworkPickerRow.networkRow(network))
 				}
@@ -510,14 +328,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		accountNameEdited = false
 
 		populateDetailFromSelection()
-
-		serverAddressField.stringValue = serverAddress
-
-		if port > 0 {
-			serverPortField.integerValue = Int(port)
-		}
-
-		securedCheck.state = secured ? .on : .off
+		detailView.displayCustomServer(address: serverAddress, port: port, secured: secured)
 
 		restoreSelectionInTable()
 		informDelegateSelectionChanged()
@@ -568,49 +379,11 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	}
 
 	private func populateDetailFromSelection() {
-		if let network = selectedNetwork {
-			detailTitleField.stringValue = network.networkName
-			serverAddressField.stringValue = network.serverAddress
-			serverPortField.integerValue = Int(network.serverPort)
-			securedCheck.state = network.prefersSecuredConnection ? .on : .off
-			saslCheck.state = network.saslSupported ? .on : .off
-			saslCheck.isEnabled = network.saslSupported
-			registrationNoteField.stringValue = network.registrationNote ?? ""
-			registrationBadge.isHidden = network.registration != .required
-
-			if let website = network.website, website.isEmpty == false {
-				websiteButton.title = website
-				websiteButton.isHidden = false
-			} else {
-				websiteButton.title = ""
-				websiteButton.isHidden = true
-			}
-		} else {
-			detailTitleField.stringValue = LocalizedKey("TDCOnboardingWindow[np1-cs]")
-			serverAddressField.stringValue = ""
-			serverPortField.stringValue = LocalizedKey("TDCOnboardingWindow[np1-pp]")
-			securedCheck.state = .on
-			saslCheck.state = .on
-			saslCheck.isEnabled = true
-			registrationNoteField.stringValue = ""
-			registrationBadge.isHidden = true
-			websiteButton.title = ""
-			websiteButton.isHidden = true
-		}
-
-		accountNameField.stringValue = defaultNickname ?? ""
-		accountPasswordField.stringValue = ""
-
-		updateDetailView()
-	}
-
-	private func updateDetailView() {
-		detailView.isHidden = hasSelection == false
-
-		let network = selectedNetwork
-		/* A custom server may have services; the group stays available. */
-		let showAccount = network == nil || network?.accountFieldsApply == true
-		accountBox.isHidden = showAccount == false
+		detailView.display(
+			network: selectedNetwork,
+			customServerSelected: customServerSelected,
+			defaultNickname: defaultNickname
+		)
 	}
 
 	private func informDelegateSelectionChanged() {
@@ -623,45 +396,27 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	// MARK: - Values
 
 	@objc public var serverAddress: String {
-		(serverAddressField.stringValue as NSString).trim.lowercased()
+		detailView.serverAddress
 	}
 
 	@objc public var serverPort: UInt16 {
-		let port = serverPortField.integerValue
-
-		if port <= 0 || port > Int(UInt16.max) {
-			return 0
-		}
-
-		return UInt16(port)
+		detailView.serverPort
 	}
 
 	@objc public var prefersSecuredConnection: Bool {
-		securedCheck.state == .on
+		detailView.prefersSecuredConnection
 	}
 
 	@objc public var accountName: String {
-		if accountBox.isHidden {
-			return ""
-		}
-
-		return (accountNameField.stringValue as NSString).trim
+		detailView.accountName
 	}
 
 	@objc public var accountPassword: String {
-		if accountBox.isHidden {
-			return ""
-		}
-
-		return accountPasswordField.stringValue
+		detailView.accountPassword
 	}
 
 	@objc public var usesSASL: Bool {
-		if accountBox.isHidden {
-			return false
-		}
-
-		return saslCheck.state == .on && accountPassword.isEmpty == false
+		detailView.usesSASL
 	}
 
 	@objc public var suggestedChannels: [String] {
@@ -672,7 +427,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	public func validateWithError(_ errorDescription: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
 		if hasSelection == false {
 			if let errorDescription {
-				errorDescription.pointee = LocalizedKey("TDCOnboardingWindow[np1-e1]") as NSString
+				errorDescription.pointee = OnboardingStrings.NetworkPicker.missingServer as NSString
 			}
 
 			return false
@@ -680,7 +435,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 
 		if (serverAddress as NSString).isValidInternetAddress == false {
 			if let errorDescription {
-				errorDescription.pointee = LocalizedKey("CommonErrors[yyx-l3]") as NSString
+				errorDescription.pointee = CommonValidationStrings.invalidServerAddress as NSString
 			}
 
 			return false
@@ -688,7 +443,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 
 		if serverPort == 0 {
 			if let errorDescription {
-				errorDescription.pointee = LocalizedKey("TDCOnboardingWindow[np1-e2]") as NSString
+				errorDescription.pointee = OnboardingStrings.NetworkPicker.invalidPort as NSString
 			}
 
 			return false
@@ -710,12 +465,15 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 			config.connectionName = serverAddress
 		}
 
-		let server = IRCServerMutable()
+		let server = MutableServer()
 		server.serverAddress = serverAddress
 		server.serverPort = serverPort
 		server.prefersSecuredConnection = prefersSecuredConnection
 
-		config.serverList = [server.copy() as! Server]
+		guard let immutableServer = server.copy() as? Server else {
+			preconditionFailure("MutableServer.copy() must return Server")
+		}
+		config.serverList = [immutableServer]
 
 		let password = accountPassword
 
@@ -778,7 +536,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 			return
 		}
 
-		if object === accountNameField {
+		if detailView.ownsAccountNameField(object) {
 			accountNameEdited = true
 		}
 
@@ -900,7 +658,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 			cell?.toolTip = network.serverAddress
 		} else {
 			cell?.textField?.stringValue = rowObject.title ?? ""
-			cell?.descriptionField.stringValue = LocalizedKey("TDCOnboardingWindow[np1-cd]")
+			cell?.descriptionField.stringValue = OnboardingStrings.NetworkPicker.customServerDescription
 			cell?.lockImageView.isHidden = true
 			cell?.toolTip = nil
 		}

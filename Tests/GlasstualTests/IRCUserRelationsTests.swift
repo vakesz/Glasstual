@@ -3,32 +3,35 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CocoaExtensions
 @testable import Glasstual
+import GlasstualPluginKit
 import XCTest
 
+@MainActor
 final class IRCUserRelationsTests: XCTestCase {
 	private var client: GLTTestClient!
-	private var relations: IRCUserRelations!
+	private var relations: UserRelations!
 
-	override func setUp() {
-		super.setUp()
+	override func setUp() async throws {
+		try await super.setUp()
 
 		client = GLTTestClient()
-		relations = IRCUserRelations()
+		relations = UserRelations()
 	}
 
-	override func tearDown() {
+	override func tearDown() async throws {
 		relations = nil
 		client = nil
 
-		super.tearDown()
+		try await super.tearDown()
 	}
 
 	func testAssociatingAndDisassociatingChannelMember() {
 		let channel = makeChannel(named: "#chat")
 		let member = makeMember(named: "alice")
 
-		relations.associateUser(member, with: channel)
+		relations.associate(member, with: channel)
 
 		XCTAssertEqual(relations.numberOfRelations, 1)
 		XCTAssertEqual(relations.relatedChannels, [channel])
@@ -46,16 +49,16 @@ final class IRCUserRelationsTests: XCTestCase {
 		let first = makeMember(named: "alice")
 		let second = makeMember(named: "bob")
 
-		relations.associateUser(first, with: channel)
-		relations.associateUser(second, with: channel)
+		relations.associate(first, with: channel)
+		relations.associate(second, with: channel)
 
 		XCTAssertEqual(relations.numberOfRelations, 1)
 		XCTAssertTrue(relations.userAssociated(with: channel) === second)
 	}
 
 	func testEnumerationUsesSnapshotAndHonorsStop() {
-		relations.associateUser(makeMember(named: "alice"), with: makeChannel(named: "#one"))
-		relations.associateUser(makeMember(named: "bob"), with: makeChannel(named: "#two"))
+		relations.associate(makeMember(named: "alice"), with: makeChannel(named: "#one"))
+		relations.associate(makeMember(named: "bob"), with: makeChannel(named: "#two"))
 
 		var visitedCount = 0
 
@@ -71,22 +74,22 @@ final class IRCUserRelationsTests: XCTestCase {
 		let privateMessage = makeChannel(named: "alice", type: .privateMessage)
 		let member = makeMember(named: "alice")
 
-		relations.associateUser(member, with: privateMessage)
+		relations.associate(member, with: privateMessage)
 
 		XCTAssertEqual(relations.numberOfRelations, 0)
 		XCTAssertNil(relations.userAssociated(with: privateMessage))
 	}
 
 	func testChannelUserCopiesPreserveIdentityModesAndConversationWeights() throws {
-		let user = IRCUser(nickname: "alice", on: client)
-		let member = IRCChannelUserMutable(user: user)
+		let user = User(nickname: "alice", on: client)
+		let member = ChannelUserMutable(user: user)
 
 		member.modes = "ov"
 		member.perform(NSSelectorFromString("incomingConversation"))
 		member.perform(NSSelectorFromString("outgoingConversation"))
 
-		let copy = try XCTUnwrap(member.copy() as? IRCChannelUser)
-		let uniqueMutableCopy = try XCTUnwrap(member.uniqueCopyMutable() as? IRCChannelUserMutable)
+		let copy = try XCTUnwrap(member.copy() as? ChannelUser)
+		let uniqueMutableCopy = try XCTUnwrap(member.uniqueCopyMutable() as? ChannelUserMutable)
 
 		XCTAssertTrue(copy.user === user)
 		XCTAssertEqual(copy.modes, "ov")
@@ -102,7 +105,7 @@ final class IRCUserRelationsTests: XCTestCase {
 
 	func testChannelMemberListAddsSortsAndRemovesMembers() {
 		let channel = makeChannel(named: "#chat")
-		let memberList = IRCChannelMemberList(channel: channel)
+		let memberList = ChannelMemberList(channel: channel)
 		let bob = makeMember(named: "bob")
 		let alice = makeMember(named: "alice")
 
@@ -121,10 +124,10 @@ final class IRCUserRelationsTests: XCTestCase {
 
 	func testChannelMemberListDuplicateCheckReplacesExistingRelation() {
 		let channel = makeChannel(named: "#chat")
-		let memberList = IRCChannelMemberList(channel: channel)
-		let user = IRCUser(nickname: "alice", on: client)
-		let original = IRCChannelUser(user: user)
-		let replacement = IRCChannelUser(user: user)
+		let memberList = ChannelMemberList(channel: channel)
+		let user = User(nickname: "alice", on: client)
+		let original = ChannelUser(user: user)
+		let replacement = ChannelUser(user: user)
 
 		memberList.addMember(original)
 		memberList.addMember(replacement, checkForDuplicates: true)
@@ -134,8 +137,8 @@ final class IRCUserRelationsTests: XCTestCase {
 		XCTAssertTrue(user.userAssociated(with: channel) === replacement)
 	}
 
-	private func makeChannel(named name: String, type: IRCChannelType = .channel) -> IRCChannel {
-		let channel = IRCChannel(configDictionary: [
+	private func makeChannel(named name: String, type: ChannelType = .channel) -> Channel {
+		let channel = Channel(configDictionary: [
 			"channelName": name,
 			"channelType": type.rawValue,
 		])
@@ -145,7 +148,7 @@ final class IRCUserRelationsTests: XCTestCase {
 		return channel
 	}
 
-	private func makeMember(named nickname: String) -> IRCChannelUser {
-		IRCChannelUser(user: IRCUser(nickname: nickname, on: client))
+	private func makeMember(named nickname: String) -> ChannelUser {
+		ChannelUser(user: User(nickname: nickname, on: client))
 	}
 }

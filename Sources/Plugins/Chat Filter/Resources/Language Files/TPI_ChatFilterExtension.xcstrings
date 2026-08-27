@@ -1,0 +1,150 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "action-log-user" : {
+      "comment" : "Log message for a filter action without a channel. Arguments are the filter title and user nickname. Migrated from legacy key yla-he.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performing action defined by the filter “%1$@“ against the user “%2$@“"
+          }
+        }
+      }
+    },
+    "action-log-user-in-channel" : {
+      "comment" : "Log message for a filter action in a channel. Arguments are the filter title, user nickname, and channel name. Migrated from legacy key jcm-xj.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performing action defined by the filter “%1$@“ against the user “%2$@“ in the channel “%3$@“"
+          }
+        }
+      }
+    },
+    "delete-filter-message" : {
+      "comment" : "Message explaining that deleting a chat filter cannot be undone. Migrated from legacy key dj6-fn.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is no undo and all data related to this filter will be erased."
+          }
+        }
+      }
+    },
+    "delete-filter-title" : {
+      "comment" : "Title of the confirmation alert shown before deleting a chat filter. Migrated from legacy key c0k-xj.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure that you want to delete this filter?"
+          }
+        }
+      }
+    },
+    "filter-description" : {
+      "comment" : "Description of a chat filter. The argument is the filter title. Migrated from legacy key dka-bx.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter “%@“"
+          }
+        }
+      }
+    },
+    "import-panel-message" : {
+      "comment" : "Message shown by the filter configuration import panel. Migrated from legacy key i9c-s3.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select filter configuration file to import"
+          }
+        }
+      }
+    },
+    "no-button" : {
+      "comment" : "Title of the negative confirmation button. Migrated from legacy key p5s-ff.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No"
+          }
+        }
+      }
+    },
+    "ok-button" : {
+      "comment" : "Title of the button dismissing the unreadable configuration alert. Migrated from legacy key ybz-7i.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "preferences-pane-title" : {
+      "comment" : "Name of the Chat Filter preferences pane. Migrated from legacy key jq1-6r.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat Filter"
+          }
+        }
+      }
+    },
+    "select-button" : {
+      "comment" : "Title of the filter configuration import panel confirmation button. Migrated from legacy key 2tc-m7.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select"
+          }
+        }
+      }
+    },
+    "unreadable-configuration-title" : {
+      "comment" : "Title of the alert shown when an imported filter configuration cannot be read. Migrated from legacy key eqr-7t.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration file is in format that cannot be read"
+          }
+        }
+      }
+    },
+    "yes-button" : {
+      "comment" : "Title of the affirmative confirmation button. Migrated from legacy key jvu-m7.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

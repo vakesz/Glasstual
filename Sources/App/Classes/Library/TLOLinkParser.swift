@@ -167,10 +167,10 @@ public class LinkParser: NSObject {
 	@objc
 	public static let bannedLineTypes =
 		[
-			TVCLogLine.string(for: .mode),
-			TVCLogLine.string(for: .join),
-			TVCLogLine.string(for: .nick),
-			TVCLogLine.string(for: .invite),
+			LogLine.string(for: .mode),
+			LogLine.string(for: .join),
+			LogLine.string(for: .nick),
+			LogLine.string(for: .invite),
 		].compactMap(\.self)
 
 	// MARK: - Configuration

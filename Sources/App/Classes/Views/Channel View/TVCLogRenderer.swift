@@ -37,36 +37,45 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import Foundation
+import Mustache
 
 public typealias TVCLogRendererConfigurationAttribute = String
 public typealias TVCLogRendererResultsAttribute = String
 public typealias TVCLogRenderer = LogRenderer
 
 public extension String {
-	static let renderLinksAttribute = "TVCLogRendererConfigurationRenderLinksAttribute"
-	static let lineTypeAttribute = "TVCLogRendererConfigurationLineTypeAttribute"
-	static let memberTypeAttribute = "TVCLogRendererConfigurationMemberTypeAttribute"
-	static let highlightKeywordsAttribute = "TVCLogRendererConfigurationHighlightKeywordsAttribute"
-	static let excludedKeywordsAttribute = "TVCLogRendererConfigurationExcludedKeywordsAttribute"
-	static let doNotEscapeBodyAttribute = "TVCLogRendererConfigurationDoNotEscapeBodyAttribute"
-	static let attributedStringPreferredFontAttribute =
-		"TVCLogRendererConfigurationAttributedStringPreferredFontAttribute"
-	static let attributedStringPreferredFontColorAttribute =
-		"TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute"
+	static let renderLinksAttribute = LogRendererConfigurationKey.renderLinks.rawValue
+	static let lineTypeAttribute = LogRendererConfigurationKey.lineType.rawValue
+	static let memberTypeAttribute = LogRendererConfigurationKey.memberType.rawValue
+	static let highlightKeywordsAttribute = LogRendererConfigurationKey.highlightKeywords.rawValue
+	static let excludedKeywordsAttribute = LogRendererConfigurationKey.excludedKeywords.rawValue
+	static let doNotEscapeBodyAttribute = LogRendererConfigurationKey.doNotEscapeBody.rawValue
+	static let attributedStringPreferredFontAttribute = LogRendererConfigurationKey.preferredFont.rawValue
+	static let attributedStringPreferredFontColorAttribute = LogRendererConfigurationKey.preferredFontColor.rawValue
 
-	static let listOfLinksInBodyAttribute = "TVCLogRendererResultsListOfLinksInBodyAttribute"
-	static let listOfLinksMappedInBodyAttribute = "TVCLogRendererResultsListOfLinksMappedInBodyAttribute"
-	static let keywordMatchFoundAttribute = "TVCLogRendererResultsKeywordMatchFoundAttribute"
-	static let listOfUsersFoundAttribute = "TVCLogRendererResultsListOfUsersFoundAttribute"
-	static let originalBodyWithoutEffectsAttribute = "TVCLogRendererResultsOriginalBodyWithoutEffectsAttribute"
-
-	init(rawValue: String) {
-		self = rawValue
-	}
+	static let listOfLinksInBodyAttribute = LogRendererResultKey.links.rawValue
+	static let listOfLinksMappedInBodyAttribute = LogRendererResultKey.mappedLinks.rawValue
+	static let keywordMatchFoundAttribute = LogRendererResultKey.keywordMatchFound.rawValue
+	static let listOfUsersFoundAttribute = LogRendererResultKey.users.rawValue
+	static let originalBodyWithoutEffectsAttribute = LogRendererResultKey.bodyWithoutEffects.rawValue
 }
 
 private enum RendererFormatting {
+	struct Toggle {
+		let attribute: NSAttributedString.Key
+		let activeToken: ThemeTemplateAttribute
+		let openedToken: ThemeTemplateAttribute
+		let closedAtStartToken: ThemeTemplateAttribute
+		let closedAtEndToken: ThemeTemplateAttribute
+	}
+
+	struct ColorTokens {
+		let color: ThemeTemplateAttribute
+		let isSet: ThemeTemplateAttribute
+	}
+
 	static let foregroundColor = NSAttributedString.Key("TVCLogRendererFormattingForegroundColorAttribute")
 	static let backgroundColor = NSAttributedString.Key("TVCLogRendererFormattingBackgroundColorAttribute")
 	static let bold = NSAttributedString.Key("TVCLogRendererFormattingBoldTextAttribute")
@@ -79,13 +88,52 @@ private enum RendererFormatting {
 	static let keywordHighlight = NSAttributedString.Key("TVCLogRendererFormattingKeywordHighlightAttribute")
 	static let url = NSAttributedString.Key("TVCLogRendererFormattingURLAttribute")
 
-	static let toggles: [(NSAttributedString.Key, String)] = [
-		(bold, "fragmentIsBold"),
-		(italic, "fragmentIsItalicized"),
-		(monospace, "fragmentIsMonospace"),
-		(strikethrough, "fragmentIsStruckthrough"),
-		(underline, "fragmentIsUnderlined"),
+	static let toggles = [
+		Toggle(
+			attribute: bold,
+			activeToken: .fragmentIsBold,
+			openedToken: .fragmentIsBoldOpened,
+			closedAtStartToken: .fragmentIsBoldClosedAtStart,
+			closedAtEndToken: .fragmentIsBoldClosedAtEnd
+		),
+		Toggle(
+			attribute: italic,
+			activeToken: .fragmentIsItalicized,
+			openedToken: .fragmentIsItalicizedOpened,
+			closedAtStartToken: .fragmentIsItalicizedClosedAtStart,
+			closedAtEndToken: .fragmentIsItalicizedClosedAtEnd
+		),
+		Toggle(
+			attribute: monospace,
+			activeToken: .fragmentIsMonospace,
+			openedToken: .fragmentIsMonospaceOpened,
+			closedAtStartToken: .fragmentIsMonospaceClosedAtStart,
+			closedAtEndToken: .fragmentIsMonospaceClosedAtEnd
+		),
+		Toggle(
+			attribute: strikethrough,
+			activeToken: .fragmentIsStruckthrough,
+			openedToken: .fragmentIsStruckthroughOpened,
+			closedAtStartToken: .fragmentIsStruckthroughClosedAtStart,
+			closedAtEndToken: .fragmentIsStruckthroughClosedAtEnd
+		),
+		Toggle(
+			attribute: underline,
+			activeToken: .fragmentIsUnderlined,
+			openedToken: .fragmentIsUnderlinedOpened,
+			closedAtStartToken: .fragmentIsUnderlinedClosedAtStart,
+			closedAtEndToken: .fragmentIsUnderlinedClosedAtEnd
+		),
 	]
+
+	static let foregroundColorTokens = ColorTokens(
+		color: .fragmentForegroundColor,
+		isSet: .fragmentForegroundColorIsSet
+	)
+	static let backgroundColorTokens = ColorTokens(
+		color: .fragmentBackgroundColor,
+		isSet: .fragmentBackgroundColorIsSet
+	)
 }
 
 @objc(TVCLogRenderer)
@@ -93,8 +141,8 @@ public final class LogRenderer: NSObject {
 	private var body = ""
 	private var bodyWithAttributes = NSMutableAttributedString()
 	private var openAttributes: [NSAttributedString.Key: Any] = [:]
-	private var rendererAttributes: [String: Any] = [:]
-	private var output: [String: Any] = [:]
+	private var rendererAttributes = LogRendererConfiguration()
+	private var output = LogRendererResults()
 	private weak var viewController: LogController?
 	private var lineType = TVCLogLineType.undefined
 	private var memberType = TVCLogLineMemberType.normal
@@ -146,18 +194,19 @@ public final class LogRenderer: NSObject {
 			}
 
 			switch character {
-			case UniChar(IRCTextFormatterEffectBoldCharacter):
+			case UniChar(IRCTextFormatterControlCharacter.bold):
 				toggle(RendererFormatting.bold)
-			case UniChar(IRCTextFormatterEffectItalicCharacter), UniChar(IRCTextFormatterEffectItalicCharacterOld):
+			case UniChar(IRCTextFormatterControlCharacter.italic),
+			     UniChar(IRCTextFormatterControlCharacter.legacyItalic):
 				toggle(RendererFormatting.italic)
-			case UniChar(IRCTextFormatterEffectMonospaceCharacter):
+			case UniChar(IRCTextFormatterControlCharacter.monospace):
 				toggle(RendererFormatting.monospace)
-			case UniChar(IRCTextFormatterEffectStrikethroughCharacter):
+			case UniChar(IRCTextFormatterControlCharacter.strikethrough):
 				toggle(RendererFormatting.strikethrough)
-			case UniChar(IRCTextFormatterEffectUnderlineCharacter):
+			case UniChar(IRCTextFormatterControlCharacter.underline):
 				toggle(RendererFormatting.underline)
-			case UniChar(IRCTextFormatterEffectColorAsDigitCharacter),
-			     UniChar(IRCTextFormatterEffectColorAsHexCharacter):
+			case UniChar(IRCTextFormatterControlCharacter.colorDigit),
+			     UniChar(IRCTextFormatterControlCharacter.colorHex):
 				var foreground: AnyObject?
 				var background: AnyObject?
 				let consumed = Int((attributedBody.string as NSString).colorComponents(
@@ -176,7 +225,7 @@ public final class LogRenderer: NSObject {
 				attributedBody.deleteCharacters(in: NSRange(location: position, length: safeConsumed))
 				removedCount += safeConsumed
 				index += safeConsumed - 1
-			case UniChar(IRCTextFormatterTerminatingCharacter):
+			case UniChar(IRCTextFormatterControlCharacter.terminator):
 				attributedBody.setAttributes(
 					[:],
 					range: NSRange(location: position, length: attributedBody.length - position)
@@ -191,7 +240,7 @@ public final class LogRenderer: NSObject {
 		attributedBody.endEditing()
 		body = attributedBody.string
 		bodyWithAttributes = attributedBody
-		output[.originalBodyWithoutEffectsAttribute] = body
+		output[.bodyWithoutEffects] = body
 	}
 
 	private func applyColor(
@@ -226,24 +275,24 @@ public final class LogRenderer: NSObject {
 	}
 
 	private func stripDangerousUnicodeCharacters() {
-		guard TPCPreferences.automaticallyFilterUnicodeTextSpam() else {
+		guard TextualPreferences.automaticallyFilterUnicodeTextSpam() else {
 			return
 		}
 		let filteredTypes: Set<TVCLogLineType> = [
-			.action, .CTCP, .ctcpQuery, .ctcpReply, .dccFileTransfer, .notice, .privateMessage, .topic,
+			.action, .ctcp, .ctcpQuery, .ctcpReply, .dccFileTransfer, .notice, .privateMessage, .topic,
 		]
 		guard filteredTypes.contains(lineType) else {
 			return
 		}
 		body = body.replacingOccurrences(
 			of: "([\\p{InCombining_Diacritical_Marks}]{3,})",
-			with: CS_UnicodeReplacementCharacter,
+			with: unicodeReplacementCharacter,
 			options: .regularExpression
 		)
 	}
 
 	private func buildListOfLinks() {
-		guard boolAttribute(.renderLinksAttribute) else {
+		guard boolAttribute(.renderLinks) else {
 			return
 		}
 		let links = LinkParser.locateLinks(in: body)
@@ -252,22 +301,22 @@ public final class LogRenderer: NSObject {
 			bodyWithAttributes.addAttribute(RendererFormatting.url, value: link, range: link.range)
 			mapped[link.stringValue, default: link.uniqueIdentifier] = mapped[link.stringValue] ?? link.uniqueIdentifier
 		}
-		output[.listOfLinksInBodyAttribute] = links
-		output[.listOfLinksMappedInBodyAttribute] = mapped
+		output[.links] = links
+		output[.mappedLinks] = mapped
 	}
 
 	private func matchKeywords() {
 		guard isRenderingPrivateMessage, memberType == .normal else {
 			return
 		}
-		let highlighted = rendererAttributes[.highlightKeywordsAttribute] as? [String] ?? []
+		let highlighted = rendererAttributes.value(for: .highlightKeywords, as: [String].self) ?? []
 		guard highlighted.isEmpty == false else {
-			output[.keywordMatchFoundAttribute] = false
+			output[.keywordMatchFound] = false
 			return
 		}
-		let excluded = rendererAttributes[.excludedKeywordsAttribute] as? [String] ?? []
+		let excluded = rendererAttributes.value(for: .excludedKeywords, as: [String].self) ?? []
 		let excludedRanges = excluded.flatMap { ranges(of: $0, options: .caseInsensitive) }
-		let matchMethod = TPCPreferences.highlightMatchingMethod()
+		let matchMethod = TextualPreferences.highlightMatchingMethod()
 		var found = false
 		for keyword in highlighted where found == false {
 			let matches: [NSRange] = if matchMethod == .regularExpression {
@@ -292,7 +341,7 @@ public final class LogRenderer: NSObject {
 				break
 			}
 		}
-		output[.keywordMatchFoundAttribute] = found
+		output[.keywordMatchFound] = found
 	}
 
 	private func findAllChannelNames() {
@@ -314,14 +363,14 @@ public final class LogRenderer: NSObject {
 			return
 		}
 		guard body.isEmpty == false else {
-			output[.listOfUsersFoundAttribute] = Set<IRCChannelUser>()
+			output[.users] = Set<ChannelUser>()
 			return
 		}
 		guard let users = viewController?.associatedChannel?.memberList else {
-			output[.listOfUsersFoundAttribute] = Set<IRCChannelUser>()
+			output[.users] = Set<ChannelUser>()
 			return
 		}
-		var foundUsers = Set<IRCChannelUser>()
+		var foundUsers = Set<ChannelUser>()
 		var nicknameCount = 0
 		var nicknameLength = 0
 		for user in users {
@@ -344,13 +393,13 @@ public final class LogRenderer: NSObject {
 				}
 			}
 		}
-		if TPCPreferences.automaticallyDetectHighlightSpam() {
+		if TextualPreferences.automaticallyDetectHighlightSpam() {
 			let nicknamePercent = Double(nicknameLength) / Double((body as NSString).length) * 100
 			if nicknamePercent > 75, nicknameCount > 10 || nicknamePercent > 50, nicknameCount > 20 {
-				output[.keywordMatchFoundAttribute] = false
+				output[.keywordMatchFound] = false
 			}
 		}
-		output[.listOfUsersFoundAttribute] = foundUsers
+		output[.users] = foundUsers
 	}
 
 	private func ranges(of searchString: String, options: NSString.CompareOptions) -> [NSRange] {
@@ -432,31 +481,31 @@ public final class LogRenderer: NSObject {
 	) -> String? {
 		let sourceNSString = source as NSString
 		let fragment = sourceNSString.substring(with: range)
-		var tokens: [String: Any] = [:]
+		var tokens: ThemeTemplateAttributes = [:]
 		var html: String?
 
 		if let link = attributes[RendererFormatting.url] as? LinkParserResult {
 			if viewController?.inlineMediaEnabledForView == true,
-			   let mapped = output[.listOfLinksMappedInBodyAttribute] as? [String: String],
+			   let mapped = output.value(for: .mappedLinks, as: [String: String].self),
 			   let identifier = mapped[link.stringValue]
 			{
-				tokens["anchorInlineMediaAvailable"] = true
-				tokens["anchorInlineMediaUniqueID"] = identifier
+				tokens[.anchorInlineMediaAvailable] = true
+				tokens[.anchorInlineMediaUniqueID] = identifier
 			}
-			tokens["anchorLocation"] = link.stringValue
-			tokens["anchorTitle"] = Self.escapeString(fragment)
-			html = Self.renderTemplateNamed("renderedStandardAnchorLinkResource", attributes: tokens)
+			tokens[.anchorLocation] = link.stringValue
+			tokens[.anchorTitle] = Self.escapeString(fragment)
+			html = Self.renderTemplateNamed(.renderedStandardAnchorLinkResource, attributes: tokens)
 		} else if attributes[RendererFormatting.channelName] != nil {
-			tokens["channelName"] = Self.escapeString(fragment)
-			html = Self.renderTemplateNamed("renderedChannelNameLinkResource", attributes: tokens)
+			tokens[.channelName] = Self.escapeString(fragment)
+			html = Self.renderTemplateNamed(.renderedChannelNameLinkResource, attributes: tokens)
 		} else if attributes[RendererFormatting.conversationTracking] != nil {
-			if TPCPreferences.disableNicknameColorHashing() {
-				tokens["inlineNicknameMatchFound"] = false
+			if TextualPreferences.disableNicknameColorHashing() {
+				tokens[.inlineNicknameMatchFound] = false
 			} else if let member = viewController?.associatedChannel?.findMember(fragment) {
 				let nickname = member.user.nickname
 				if nickname.count > 1 {
 					var modeSymbol = ""
-					if TPCPreferences.conversationTrackingIncludesUserModeSymbol() {
+					if TextualPreferences.conversationTrackingIncludesUserModeSymbol() {
 						let mark = member.mark
 						if range.location == 0 || sourceNSString.substring(with: NSRange(
 							location: range.location - 1,
@@ -465,32 +514,32 @@ public final class LogRenderer: NSObject {
 							modeSymbol = mark
 						}
 					}
-					tokens["inlineNicknameMatchFound"] = true
-					tokens["inlineNicknameColorStyle"] = UserNicknameColorStyleGenerator
+					tokens[.inlineNicknameMatchFound] = true
+					tokens[.inlineNicknameColorStyle] = UserNicknameColorStyleGenerator
 						.nicknameColorStyle(for: nickname)
-					tokens["inlineNicknameUserModeSymbol"] = modeSymbol
+					tokens[.inlineNicknameUserModeSymbol] = modeSymbol
 				}
 			}
 			html = Self.escapeString(fragment)
 		}
 
-		tokens["messageFragmentEscaped"] = escapeBody
+		tokens[.messageFragmentEscaped] = escapeBody
 		if html == nil {
 			html = escapeBody ? Self.escapeString(fragment) : fragment
 		}
 
-		for (attribute, tokenName) in RendererFormatting.toggles {
-			if attributes[attribute] != nil {
-				tokens[tokenName] = true
-				if openAttributes[attribute] == nil {
-					openAttributes[attribute] = true
-					tokens["\(tokenName)Opened"] = true
+		for toggle in RendererFormatting.toggles {
+			if attributes[toggle.attribute] != nil {
+				tokens[toggle.activeToken] = true
+				if openAttributes[toggle.attribute] == nil {
+					openAttributes[toggle.attribute] = true
+					tokens[toggle.openedToken] = true
 				}
 				if isLast {
-					tokens["\(tokenName)ClosedAtEnd"] = true
+					tokens[toggle.closedAtEndToken] = true
 				}
-			} else if openAttributes.removeValue(forKey: attribute) != nil {
-				tokens["\(tokenName)ClosedAtStart"] = true
+			} else if openAttributes.removeValue(forKey: toggle.attribute) != nil {
+				tokens[toggle.closedAtStartToken] = true
 			}
 		}
 
@@ -505,13 +554,13 @@ public final class LogRenderer: NSObject {
 			}
 			html = htmlValue
 		}
-		tokens["messageFragment"] = html ?? ""
-		return Self.renderTemplateNamed("formattedMessageFragment", attributes: tokens)
+		tokens[.messageFragment] = html ?? ""
+		return Self.renderTemplateNamed(.formattedMessageFragment, attributes: tokens)
 	}
 
 	private func applyHTMLColors(
 		_ attributes: [NSAttributedString.Key: Any],
-		tokens: inout [String: Any],
+		tokens: inout ThemeTemplateAttributes,
 		isFirst: Bool,
 		isLast: Bool
 	) {
@@ -526,8 +575,8 @@ public final class LogRenderer: NSObject {
 			if valuesEqual(foregroundNew, foregroundOld), valuesEqual(backgroundNew, backgroundOld) {
 				setNewColors = false
 			} else {
-				tokens["fragmentTextColorClosedAtStart"] = isFirst == false
-				tokens["fragmentTextColorClosedAtEnd"] = isLast
+				tokens[.fragmentTextColorClosedAtStart] = isFirst == false
+				tokens[.fragmentTextColorClosedAtEnd] = isLast
 			}
 			if foregroundOld != nil, foregroundNew == nil {
 				openAttributes.removeValue(forKey: RendererFormatting.foregroundColor)
@@ -537,7 +586,11 @@ public final class LogRenderer: NSObject {
 			}
 		}
 
-		func apply(_ value: Any?, key: NSAttributedString.Key, prefix: String) -> String? {
+		func apply(
+			_ value: Any?,
+			key: NSAttributedString.Key,
+			colorTokens: RendererFormatting.ColorTokens
+		) -> String? {
 			guard setNewColors, let value else {
 				return nil
 			}
@@ -545,19 +598,27 @@ public final class LogRenderer: NSObject {
 			guard let mapped = Self.stringValue(forColor: value) else {
 				return nil
 			}
-			tokens["fragmentTextColorOpened"] = true
-			tokens["fragment\(prefix)Color"] = mapped.value
-			tokens["fragment\(prefix)ColorIsSet"] = true
-			tokens["fragmentTextColorUsesStyleTag"] = mapped.usesStyleTag
-			tokens["fragmentTextColorIsSet"] = true
+			tokens[.fragmentTextColorOpened] = true
+			tokens[colorTokens.color] = mapped.value
+			tokens[colorTokens.isSet] = true
+			tokens[.fragmentTextColorUsesStyleTag] = mapped.usesStyleTag
+			tokens[.fragmentTextColorIsSet] = true
 			return mapped.value
 		}
-		foreground = apply(foregroundNew, key: RendererFormatting.foregroundColor, prefix: "Foreground")
+		foreground = apply(
+			foregroundNew,
+			key: RendererFormatting.foregroundColor,
+			colorTokens: RendererFormatting.foregroundColorTokens
+		)
 		if let foreground {
-			tokens["fragmentTextColor"] = foreground
+			tokens[.fragmentTextColor] = foreground
 		}
-		background = apply(backgroundNew, key: RendererFormatting.backgroundColor, prefix: "Background")
-		tokens["fragmentIsSpoiler"] = isRenderingPrivateMessageOrNotice && setNewColors && foreground != nil &&
+		background = apply(
+			backgroundNew,
+			key: RendererFormatting.backgroundColor,
+			colorTokens: RendererFormatting.backgroundColorTokens
+		)
+		tokens[.fragmentIsSpoiler] = isRenderingPrivateMessageOrNotice && setNewColors && foreground != nil &&
 			foreground == background
 	}
 
@@ -570,7 +631,7 @@ public final class LogRenderer: NSObject {
 	}
 
 	private func renderAttributedBody() -> NSAttributedString {
-		let result = bodyWithAttributes.mutableCopy() as! NSMutableAttributedString
+		let result = NSMutableAttributedString(attributedString: bodyWithAttributes)
 		bodyWithAttributes.enumerateAttributes(
 			in: NSRange(location: 0, length: bodyWithAttributes.length),
 			options: []
@@ -582,8 +643,8 @@ public final class LogRenderer: NSObject {
 
 	private func appKitAttributes(from attributes: [NSAttributedString.Key: Any]) -> [NSAttributedString.Key: Any] {
 		var result: [NSAttributedString.Key: Any] = [:]
-		let defaultFont = rendererAttributes[.attributedStringPreferredFontAttribute] as? NSFont
-		let defaultColor = rendererAttributes[.attributedStringPreferredFontColorAttribute] as? NSColor
+		let defaultFont = rendererAttributes.value(for: .preferredFont, as: NSFont.self)
+		let defaultColor = rendererAttributes.value(for: .preferredFontColor, as: NSColor.self)
 		var font = defaultFont
 		if attributes[RendererFormatting.monospace] != nil, let current = font {
 			font = NSFontManager.shared.convert(current, toFamily: "Menlo")
@@ -595,7 +656,7 @@ public final class LogRenderer: NSObject {
 		}
 		if attributes[RendererFormatting.italic] != nil, let current = font {
 			let converted = NSFontManager.shared.convert(current, toHaveTrait: .italicFontMask)
-			font = converted.fontTraitSet(.italicFontMask) ? converted : italicFallback(for: converted)
+			font = converted.textual_fontTraitIsSet(.italicFontMask) ? converted : italicFallback(for: converted)
 			result[NSAttributedString.Key(IRCTextFormatterAttributeName.italicAttributeName.rawValue)] = true
 		}
 		result[.font] = font
@@ -631,12 +692,14 @@ public final class LogRenderer: NSObject {
 		return NSFont(descriptor: font.fontDescriptor, textTransform: transform) ?? font
 	}
 
-	private func boolAttribute(_ key: String) -> Bool {
+	private func boolAttribute(_ key: LogRendererConfigurationKey) -> Bool {
 		(rendererAttributes[key] as? NSNumber)?.boolValue ?? (rendererAttributes[key] as? Bool ?? false)
 	}
+}
 
+public extension LogRenderer {
 	@objc(renderBody:forViewController:withAttributes:resultInfo:)
-	public static func renderBody(
+	static func renderBody(
 		_ body: String,
 		forViewController legacyViewController: TVCLogController,
 		withAttributes input: [String: Any],
@@ -645,21 +708,25 @@ public final class LogRenderer: NSObject {
 		guard body.isEmpty == false else {
 			return ""
 		}
+		let configuration = LogRendererConfiguration(rawValues: input)
 		let renderer = LogRenderer()
-		let controller = unsafeBitCast(legacyViewController, to: LogController.self)
+		let controller = legacyViewController
 		renderer
-			.lineType = TVCLogLineType(rawValue: (input[.lineTypeAttribute] as? NSNumber)?.uintValue ?? 0) ?? .undefined
+			.lineType = TVCLogLineType(
+				rawValue: configuration.value(for: .lineType, as: UInt.self) ?? 0
+			) ?? .undefined
 		renderer
-			.memberType = TVCLogLineMemberType(rawValue: (input[.memberTypeAttribute] as? NSNumber)?
-				.uintValue ?? 0) ?? .normal
+			.memberType = TVCLogLineMemberType(
+				rawValue: configuration.value(for: .memberType, as: UInt.self) ?? 0
+			) ?? .normal
 		renderer.body = PluginDispatcher.willRenderMessage(
 			body,
 			forViewController: controller,
 			lineType: renderer.lineType,
 			memberType: renderer.memberType
 		)
-		renderer.escapeBody = (input[.doNotEscapeBodyAttribute] as? NSNumber)?.boolValue != true
-		renderer.rendererAttributes = input
+		renderer.escapeBody = (configuration[.doNotEscapeBody] as? NSNumber)?.boolValue != true
+		renderer.rendererAttributes = configuration
 		renderer.viewController = controller
 		renderer.stripDangerousUnicodeCharacters()
 		renderer.buildEffectsDictionary()
@@ -667,61 +734,77 @@ public final class LogRenderer: NSObject {
 		renderer.matchKeywords()
 		renderer.findAllChannelNames()
 		renderer.scanBodyForChannelMembers()
-		resultInfo?.pointee = renderer.output as NSDictionary
+		resultInfo?.pointee = renderer.output.rawValues as NSDictionary
 		return renderer.renderHTML()
 	}
 
 	@objc(renderBodyAsAttributedString:withAttributes:)
-	public static func renderBody(
+	static func renderBody(
 		asAttributedString body: String,
 		withAttributes input: [String: Any]
 	) -> NSAttributedString {
 		guard body.isEmpty == false else {
 			return NSAttributedString(string: "")
 		}
-		precondition(input[.attributedStringPreferredFontAttribute] != nil)
+		let configuration = LogRendererConfiguration(rawValues: input)
+		precondition(configuration[.preferredFont] != nil)
 		let renderer = LogRenderer()
 		renderer.body = body
 		renderer
-			.lineType = TVCLogLineType(rawValue: (input[.lineTypeAttribute] as? NSNumber)?.uintValue ?? 0) ?? .undefined
+			.lineType = TVCLogLineType(
+				rawValue: configuration.value(for: .lineType, as: UInt.self) ?? 0
+			) ?? .undefined
 		renderer
-			.memberType = TVCLogLineMemberType(rawValue: (input[.memberTypeAttribute] as? NSNumber)?
-				.uintValue ?? 0) ?? .normal
-		renderer.rendererAttributes = input
+			.memberType = TVCLogLineMemberType(
+				rawValue: configuration.value(for: .memberType, as: UInt.self) ?? 0
+			) ?? .normal
+		renderer.rendererAttributes = configuration
 		renderer.stripDangerousUnicodeCharacters()
 		renderer.buildEffectsDictionary()
 		return renderer.renderAttributedBody()
 	}
 
 	@objc(renderTemplateNamed:)
-	public static func renderTemplateNamed(_ name: String) -> String? {
+	static func renderTemplateNamed(_ name: String) -> String? {
 		renderTemplateNamed(name, attributes: nil)
 	}
 
 	@objc(renderTemplateNamed:attributes:)
-	public static func renderTemplateNamed(_ name: String, attributes: [String: Any]?) -> String? {
+	static func renderTemplateNamed(_ name: String, attributes: [String: Any]?) -> String? {
 		guard let template = SharedApplication.sharedThemeController().theme?.template(withName: name) else {
 			return nil
 		}
 		return renderTemplate(template, attributes: attributes)
 	}
 
-	@objc(renderTemplate:)
-	public static func renderTemplate(_ template: GRMustacheTemplate) -> String? {
+	internal static func renderTemplateNamed(
+		_ name: ThemeTemplateName,
+		attributes: ThemeTemplateAttributes = [:]
+	) -> String? {
+		guard let template = SharedApplication.sharedThemeController().theme?.template(withName: name.rawValue) else {
+			return nil
+		}
+		return renderTemplate(template, attributes: attributes)
+	}
+
+	static func renderTemplate(_ template: Template) -> String? {
 		renderTemplate(template, attributes: nil)
 	}
 
-	@objc(renderTemplate:attributes:)
-	public static func renderTemplate(_ template: GRMustacheTemplate, attributes: [String: Any]?) -> String? {
-		guard let rendered = try? template.renderObject(attributes) else {
+	static func renderTemplate(_ template: Template, attributes: [String: Any]?) -> String? {
+		guard let rendered = try? template.render(attributes) else {
 			return nil
 		}
 		return rendered.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
 	}
 
+	internal static func renderTemplate(_ template: Template, attributes: ThemeTemplateAttributes) -> String? {
+		renderTemplate(template, attributes: attributes.rawValues)
+	}
+
 	@objc(escapeHTML:)
-	public static func escapeHTML(_ html: String) -> String {
-		(html as NSString).gtm_stringByEscapingForHTML ?? ""
+	static func escapeHTML(_ html: String) -> String {
+		(html as NSString).gtmStringByEscapingForHTML ?? ""
 	}
 
 	private static func escapeString(_ string: String) -> String {
@@ -732,7 +815,7 @@ public final class LogRenderer: NSObject {
 
 	private static func stringValue(forColor color: Any) -> (value: String, usesStyleTag: Bool)? {
 		if let color = color as? NSColor {
-			return (color.hexadecimalValue, true)
+			return (color.textualHexadecimalValue, true)
 		}
 		if let color = color as? NSNumber {
 			return (color.stringValue, false)
@@ -741,7 +824,7 @@ public final class LogRenderer: NSObject {
 	}
 
 	@objc(mapColor:)
-	public static func mapColor(_ color: Any) -> NSColor? {
+	static func mapColor(_ color: Any) -> NSColor? {
 		if let color = color as? NSColor {
 			return color
 		}
@@ -752,8 +835,8 @@ public final class LogRenderer: NSObject {
 	}
 
 	@objc(mapColorCode:)
-	public static func mapColorCode(_ colorCode: UInt) -> NSColor {
-		precondition(colorCode <= IRCTextFormatterEffectColorHighestDigit)
+	static func mapColorCode(_ colorCode: UInt) -> NSColor {
+		precondition(colorCode <= IRCTextFormatterColor.maximumPaletteIndex)
 		return NSColor.formatterColors[Int(colorCode)]
 	}
 }

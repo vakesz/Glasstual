@@ -48,7 +48,7 @@ final class LogScriptEventSinkMigrationTests: XCTestCase {
 	}
 
 	func testLocalizationFormatsArgumentsAfterLookup() {
-		XCTAssertEqual(LocalizedString("Hello, %@", "Glasstual"), "Hello, Glasstual")
-		XCTAssertEqual(LocalizedString("Count: %ld", 3), "Count: 3")
+		XCTAssertEqual(localizedString("Hello, %@", "Glasstual"), "Hello, Glasstual")
+		XCTAssertEqual(localizedString("Count: %ld", 3), "Count: 3")
 	}
 }

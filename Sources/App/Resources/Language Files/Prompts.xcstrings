@@ -1,0 +1,1170 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "q5h-xx": {
+      "comment": "Migrated from legacy key q5h-xx. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        }
+      }
+    },
+    "193-6o": {
+      "comment": "Migrated from legacy key 193-6o. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you want to keep Glasstual's light appearance or switch to dark mode?"
+          }
+        }
+      }
+    },
+    "324-5d": {
+      "comment": "Migrated from legacy key 324-5d. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind Me Next Launch"
+          }
+        }
+      }
+    },
+    "7gr-e4": {
+      "comment": "Migrated from legacy key 7gr-e4. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set User vHost"
+          }
+        }
+      }
+    },
+    "r9x-3m": {
+      "comment": "Migrated from legacy key r9x-3m. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don’t Load"
+          }
+        }
+      }
+    },
+    "3ze-xh": {
+      "comment": "Migrated from legacy key 3ze-xh. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type “/%@” into the main input text field to perform this script."
+          }
+        }
+      }
+    },
+    "dcc-c2": {
+      "comment": "Migrated from legacy key dcc-c2. Direct chat (DCC CHAT) request.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wants to start a direct chat with you. A direct chat is a connection between the two of you that does not go through the IRC server, so the other person will learn your IP address."
+          }
+        }
+      }
+    },
+    "atn-1c": {
+      "comment": "Migrated from legacy key atn-1c. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navigate to Preferences ➜ Advanced ➜ Log Location to repair this preference"
+          }
+        }
+      }
+    },
+    "dcc-c5": {
+      "comment": "Migrated from legacy key dcc-c5. Direct chat (DCC CHAT) request.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decline"
+          }
+        }
+      }
+    },
+    "t8y-4p": {
+      "comment": "Migrated from legacy key t8y-4p. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugins installed outside of Glasstual must be signed with a valid Developer ID or Apple-issued certificate. The listed addons are unsigned, ad-hoc signed, or their signature is damaged, so they were not loaded.\n\nContact the developer of each addon for a signed copy."
+          }
+        }
+      }
+    },
+    "qy4-5o": {
+      "comment": "Migrated from legacy key qy4-5o. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caches, custom addons, custom styles, preferences, and scrollback history.\n\nWould you like to clear up disk space by removing this content from the old location?"
+          }
+        }
+      }
+    },
+    "6hx-ni": {
+      "comment": "Migrated from legacy key 6hx-ni. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "1bf-k0": {
+      "comment": "Migrated from legacy key 1bf-k0. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit"
+          }
+        }
+      }
+    },
+    "3l6-3z": {
+      "comment": "Migrated from legacy key 3l6-3z. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have clicked a link that will connect you to “%1$@“ and join the channel %2$@"
+          }
+        }
+      }
+    },
+    "mvh-ms": {
+      "comment": "Migrated from legacy key mvh-ms. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        }
+      }
+    },
+    "76t-pn": {
+      "comment": "Migrated from legacy key 76t-pn. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some features will not work correctly with this style selected."
+          }
+        }
+      }
+    },
+    "pnc-ew": {
+      "comment": "Migrated from legacy key pnc-ew. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have clicked a link that will connect you to “%1$@“ and join the channels: %2$@"
+          }
+        }
+      }
+    },
+    "x3e-ur": {
+      "comment": "Migrated from legacy key x3e-ur. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        }
+      }
+    },
+    "fjw-hj": {
+      "comment": "Migrated from legacy key fjw-hj. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The style named “%@” has been modified in such a way that it can no longer be used"
+          }
+        }
+      }
+    },
+    "xca-5h": {
+      "comment": "Migrated from legacy key xca-5h. Action title for creating a new connection. Consolidates the identical legacy sv9-8s entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create New Connection"
+          }
+        }
+      }
+    },
+    "2ul-cl": {
+      "comment": "Migrated from legacy key 2ul-cl. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have clicked on a link that will open the application “%@”"
+          }
+        }
+      }
+    },
+    "85z-qw": {
+      "comment": "Migrated from legacy key 85z-qw. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The certificate for this server is invalid. You might be connecting to a server that is pretending to be “%@”, which could put your confidential information at risk. Would you like to connect to the server anyway?"
+          }
+        }
+      }
+    },
+    "zjw-bd": {
+      "comment": "Migrated from legacy key zjw-bd. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        }
+      }
+    },
+    "4ua-v5": {
+      "comment": "Migrated from legacy key 4ua-v5. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The script named “%@” has been successfully installed"
+          }
+        }
+      }
+    },
+    "h7m-2q": {
+      "comment": "Migrated from legacy key h7m-2q. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual will ask again before loading each plugin the next time it launches."
+          }
+        }
+      }
+    },
+    "xkj-nw": {
+      "comment": "Migrated from legacy key xkj-nw. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn On"
+          }
+        }
+      }
+    },
+    "0ik-o9": {
+      "comment": "Migrated from legacy key 0ik-o9. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Files"
+          }
+        }
+      }
+    },
+    "3wd-gj": {
+      "comment": "Migrated from legacy key 3wd-gj. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This usually occurs when one or more critical files have been moved or deleted."
+          }
+        }
+      }
+    },
+    "b7o-v4": {
+      "comment": "Migrated from legacy key b7o-v4. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual is unable to access the folder that's configured for your log location because the resource is 'stale'"
+          }
+        }
+      }
+    },
+    "xek-0t": {
+      "comment": "Migrated from legacy key xek-0t. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The extension named “%@” has been successfully installed"
+          }
+        }
+      }
+    },
+    "c7s-dq": {
+      "comment": "Migrated from legacy key c7s-dq. Generic acknowledgement button title. Consolidates the identical legacy u5k-9n entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "2a3-5s": {
+      "comment": "Migrated from legacy key 2a3-5s. Action title for choosing another style. Consolidates the identical legacy c4z-2b entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Different Style"
+          }
+        }
+      }
+    },
+    "ihy-mz": {
+      "comment": "Migrated from legacy key ihy-mz. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@“"
+          }
+        }
+      }
+    },
+    "2jq-t5": {
+      "comment": "Migrated from legacy key 2jq-t5. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ with the cipher suite: %2$@"
+          }
+        }
+      }
+    },
+    "pq7-2k": {
+      "comment": "Migrated from legacy key pq7-2k. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load the plugin “%@”?"
+          }
+        }
+      }
+    },
+    "v9e-jy": {
+      "comment": "Migrated from legacy key v9e-jy. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logging will resume when there is free space available."
+          }
+        }
+      }
+    },
+    "m8b-58": {
+      "comment": "Migrated from legacy key m8b-58. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual can’t verify the identity of the server “%@”"
+          }
+        }
+      }
+    },
+    "82q-zi": {
+      "comment": "Migrated from legacy key 82q-zi. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you wish to enable inline media?"
+          }
+        }
+      }
+    },
+    "sfx-xx": {
+      "comment": "Migrated from legacy key sfx-xx. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual is using an encrypted connection to “%@“"
+          }
+        }
+      }
+    },
+    "dcc-c3": {
+      "comment": "Migrated from legacy key dcc-c3. Direct chat (DCC CHAT) request.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct chat request from %@"
+          }
+        }
+      }
+    },
+    "m2r-gv": {
+      "comment": "Migrated from legacy key m2r-gv. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A script cannot be saved here"
+          }
+        }
+      }
+    },
+    "f05-hu": {
+      "comment": "Migrated from legacy key f05-hu. Intentionally empty informative text for the no-logs-found alert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    "bi7-ah": {
+      "comment": "Migrated from legacy key bi7-ah. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logging has been disabled because there is not enough space on your Mac"
+          }
+        }
+      }
+    },
+    "77u-vp": {
+      "comment": "Migrated from legacy key 77u-vp. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitting will disconnect you from any server that you are connected to until you restart Glasstual."
+          }
+        }
+      }
+    },
+    "hv0-79": {
+      "comment": "Migrated from legacy key hv0-79. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paint It Black"
+          }
+        }
+      }
+    },
+    "516-ms": {
+      "comment": "Migrated from legacy key 516-ms. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no undo and all data related to this channel, except for logs, will be erased."
+          }
+        }
+      }
+    },
+    "aqw-q1": {
+      "comment": "Migrated from legacy key aqw-q1. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        }
+      }
+    },
+    "jsh-1a": {
+      "comment": "Migrated from legacy key jsh-1a. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please note that the following items cannot be imported: custom addons, file transfer download location, log location, and passwords."
+          }
+        }
+      }
+    },
+    "61s-jc": {
+      "comment": "Migrated from legacy key 61s-jc. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no undo and all data related to this query, except for logs, will be erased."
+          }
+        }
+      }
+    },
+    "akr-eh": {
+      "comment": "Migrated from legacy key akr-eh. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter some text to search for"
+          }
+        }
+      }
+    },
+    "q3t-45": {
+      "comment": "Migrated from legacy key q3t-45. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I would like to remove the old content"
+          }
+        }
+      }
+    },
+    "j6c-1v": {
+      "comment": "Migrated from legacy key j6c-1v. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual refused to load these addons: %@"
+          }
+        }
+      }
+    },
+    "d2w-4o": {
+      "comment": "Migrated from legacy key d2w-4o. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The keyboard shortcut ⌘G can be used to continue to the next search result. ⌘⇧G can be used to return to the previous search result."
+          }
+        }
+      }
+    },
+    "0bj-ic": {
+      "comment": "Migrated from legacy key 0bj-ic. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To install this script, save it inside the folder:\n[home folder] ➜ Library ➜ Application Scripts ➜ %@\n\nCreate this folder if it does not exist."
+          }
+        }
+      }
+    },
+    "vun-f0": {
+      "comment": "Migrated from legacy key vun-f0. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save File"
+          }
+        }
+      }
+    },
+    "iun-45": {
+      "comment": "Migrated from legacy key iun-45. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encryption with a digital certificate keeps information private as it’s sent to or from the server “%1$@“\n\nInformation encrypted using: %2$@"
+          }
+        }
+      }
+    },
+    "vcq-sz": {
+      "comment": "Migrated from legacy key vcq-sz. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inline media does not use the proxy you may have configured for connecting to IRC. Your IP address will be leaked without configuring a system-wide proxy. If you wish to configure a proxy before continuing, click the “Open System Settings” button."
+          }
+        }
+      }
+    },
+    "itb-3x": {
+      "comment": "Migrated from legacy key itb-3x. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action will overwrite your configuration with the contents of a file you choose"
+          }
+        }
+      }
+    },
+    "0kz-wd": {
+      "comment": "Migrated from legacy key 0kz-wd. Confirmation title for deleting the selected connection or channel. Consolidates the identical legacy i8o-7z entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do you want to delete the selection?"
+          }
+        }
+      }
+    },
+    "kx4-q8": {
+      "comment": "Migrated from legacy key kx4-q8. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to continue?"
+          }
+        }
+      }
+    },
+    "502-6h": {
+      "comment": "Migrated from legacy key 502-6h. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose File"
+          }
+        }
+      }
+    },
+    "45a-df": {
+      "comment": "Migrated from legacy key 45a-df. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please contact the developer of each addon to receive information on updating.\n\nIf you are the developer of one of these addons: In the Info.plist file of your project, set the value of the property “MinimumGlasstualVersion” to “%@“, then rebuild to check for any errors."
+          }
+        }
+      }
+    },
+    "hcb-3i": {
+      "comment": "Migrated from legacy key hcb-3i. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferences may become corrupted if you have more than one copy of Glasstual open"
+          }
+        }
+      }
+    },
+    "hf0-w3": {
+      "comment": "Migrated from legacy key hf0-w3. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep It Light"
+          }
+        }
+      }
+    },
+    "kig-m1": {
+      "comment": "Migrated from legacy key kig-m1. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable WebKit2 or upgrade to a newer version of macOS."
+          }
+        }
+      }
+    },
+    "w2d-5h": {
+      "comment": "Migrated from legacy key w2d-5h. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load"
+          }
+        }
+      }
+    },
+    "a9z-9f": {
+      "comment": "Migrated from legacy key a9z-9f. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection named “%1$@“ is already configured to connect to this server address.\n\nDo you want to add these channels to that connection or would you rather create a new connection?"
+          }
+        }
+      }
+    },
+    "2mx-jf": {
+      "comment": "Migrated from legacy key 2mx-jf. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter desired vHost (e.g. “apple.vhost”)"
+          }
+        }
+      }
+    },
+    "68u-z9": {
+      "comment": "Migrated from legacy key 68u-z9. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do not show this message again"
+          }
+        }
+      }
+    },
+    "xne-79": {
+      "comment": "Migrated from legacy key xne-79. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select"
+          }
+        }
+      }
+    },
+    "py0-cr": {
+      "comment": "Migrated from legacy key py0-cr. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The style named “%@” is not designed to work with this version of Glasstual"
+          }
+        }
+      }
+    },
+    "1fm-up": {
+      "comment": "Migrated from legacy key 1fm-up. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action will save a copy of your configuration to a location of your choice"
+          }
+        }
+      }
+    },
+    "zp3-7r": {
+      "comment": "Migrated from legacy key zp3-7r. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugin approvals have been reset"
+          }
+        }
+      }
+    },
+    "ezn-rm": {
+      "comment": "Migrated from legacy key ezn-rm. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The style named “%@” wants to enable dark mode but styles are no longer allowed to change that preference"
+          }
+        }
+      }
+    },
+    "xfl-8e": {
+      "comment": "Migrated from legacy key xfl-8e. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to open the file named “%@” with Glasstual?"
+          }
+        }
+      }
+    },
+    "mx1-qz": {
+      "comment": "Migrated from legacy key mx1-qz. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The connection named “%1$@“ is already configured to connect to this server address.\n\nDo you want to add this channel to that connection or would you rather create a new connection?"
+          }
+        }
+      }
+    },
+    "ios-na": {
+      "comment": "Migrated from legacy key ios-na. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual has copied the following content to a new location your Mac:"
+          }
+        }
+      }
+    },
+    "nlz-um": {
+      "comment": "Migrated from legacy key nlz-um. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last known error message: %@"
+          }
+        }
+      }
+    },
+    "k55-19": {
+      "comment": "Migrated from legacy key k55-19. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No logs were found"
+          }
+        }
+      }
+    },
+    "d22-76": {
+      "comment": "Migrated from legacy key d22-76. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A query named “%@“ already exists. Do you want to delete this query?"
+          }
+        }
+      }
+    },
+    "qso-2g": {
+      "comment": "Migrated from legacy key qso-2g. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "6tj-yp": {
+      "comment": "Migrated from legacy key 6tj-yp. Intentionally empty informative text for the document-open confirmation.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    "ztu-nv": {
+      "comment": "Migrated from legacy key ztu-nv. Intentionally empty recovery suggestion for a script-installation error.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    "b4n-8z": {
+      "comment": "Migrated from legacy key b4n-8z. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The plugin “%1$@” has not been loaded before.\n\nBundle identifier: %2$@\nTeam ID: %3$@\nLocation: %4$@\n\nPlugins run with the same access as Glasstual itself. Only load plugins from developers you trust. This choice is remembered until the plugin is signed by a different Team ID or the approvals are reset in Settings > Addons."
+          }
+        }
+      }
+    },
+    "99q-gg": {
+      "comment": "Migrated from legacy key 99q-gg. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        }
+      }
+    },
+    "k3t-vq": {
+      "comment": "Migrated from legacy key k3t-vq. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\n\nThe certificate was not trusted by the system: %@"
+          }
+        }
+      }
+    },
+    "ujw-64": {
+      "comment": "Migrated from legacy key ujw-64. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The “Inspect Element” feature of WebKit2 cannot be accessed on this version of macOS."
+          }
+        }
+      }
+    },
+    "h99-3q": {
+      "comment": "Migrated from legacy key h99-3q. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The process responsible for managing scrollback is not working correctly. Please report this problem at https://github.com/vakesz/Glasstual/issues"
+          }
+        }
+      }
+    },
+    "k69-q0": {
+      "comment": "Migrated from legacy key k69-q0. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart Glasstual to load this extension."
+          }
+        }
+      }
+    },
+    "6vj-2p": {
+      "comment": "Migrated from legacy key 6vj-2p. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to quit Glasstual?"
+          }
+        }
+      }
+    },
+    "8ou-pu": {
+      "comment": "Migrated from legacy key 8ou-pu. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ with the cipher suite: %2$@ (deprecated)"
+          }
+        }
+      }
+    },
+    "af6-45": {
+      "comment": "Migrated from legacy key af6-45. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The version of Glasstual that you are using is no longer compatible with these addons: %@"
+          }
+        }
+      }
+    },
+    "sl5-rf": {
+      "comment": "Migrated from legacy key sl5-rf. Action title for using an existing connection. Consolidates the identical legacy 0hh-sl entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Existing Connection"
+          }
+        }
+      }
+    },
+    "qpv-go": {
+      "comment": "Migrated from legacy key qpv-go. Action title for accepting an incoming file transfer or direct chat (DCC CHAT) request. Consolidates the identical legacy dcc-c4 entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept"
+          }
+        }
+      }
+    },
+    "syp-al": {
+      "comment": "Migrated from legacy key syp-al. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please note that the following items cannot be exported: custom addons, file transfer download location, log location, and passwords."
+          }
+        }
+      }
+    },
+    "etl-ss": {
+      "comment": "Migrated from legacy key etl-ss. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no undo and all data related to this server, except for logs, will be erased."
+          }
+        }
+      }
+    },
+    "5oq-vv": {
+      "comment": "Migrated from legacy key 5oq-vv. Preserve the original English wording and printf placeholder contract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure you want to open “%@” with this application?"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -39,6 +39,7 @@
 import AppKit
 import Foundation
 import os
+import WebKit
 
 private let logViewLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -117,11 +118,13 @@ enum LogViewJavaScript {
 @objc(TVCLogView)
 @MainActor
 public final class LogView: NSObject {
-	@objc public weak var viewController: LogController!
-	@objc public var contextMenuTarget = TVCLogPolicyTarget()
+	static let commonUserAgent = "Glasstual/1.0"
+
+	@objc public weak var viewController: LogController?
+	@objc public var contextMenuTarget = LogPolicyTarget()
 	@objc public var selection: String?
 	@objc public var viewingBottom = false
-	@objc public private(set) var isLayingOutView = false
+	@objc public private(set) dynamic var isLayingOutView = false
 
 	private let backingView: LogViewWebView
 
@@ -150,12 +153,12 @@ public final class LogView: NSObject {
 		backingView
 	}
 
-	@objc public var webViewPolicy: TVCLogPolicy {
+	@objc public var webViewPolicy: LogPolicy {
 		backingView.webViewPolicy
 	}
 
-	@objc public func takeContextMenuTarget() -> TVCLogPolicyTarget {
-		defer { contextMenuTarget = TVCLogPolicyTarget() }
+	@objc public func takeContextMenuTarget() -> LogPolicyTarget {
+		defer { contextMenuTarget = LogPolicyTarget() }
 		return contextMenuTarget
 	}
 
@@ -185,6 +188,10 @@ public final class LogView: NSObject {
 
 	@objc(keyDown:inView:)
 	public func keyDown(_ event: NSEvent, in _: NSView) -> Bool {
+		guard let viewController else {
+			return false
+		}
+
 		let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 		if modifiers.isDisjoint(with: [.command, .option, .control]) {
 			viewController.logViewWebViewKeyDown(event)
@@ -194,7 +201,11 @@ public final class LogView: NSObject {
 	}
 
 	@objc public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-		guard let fileURL = NSURL(from: sender.draggingPasteboard) as URL?, fileURL.isFileURL else {
+		guard
+			let viewController,
+			let fileURL = NSURL(from: sender.draggingPasteboard) as URL?,
+			fileURL.isFileURL
+		else {
 			return false
 		}
 		viewController.logViewWebViewReceivedDrop(withFile: fileURL.path)
@@ -202,6 +213,10 @@ public final class LogView: NSObject {
 	}
 
 	@objc public func informDelegateWebViewFinishedLoading() {
+		guard let viewController else {
+			return
+		}
+
 		let viewDescription = description
 		logViewLogger.debug("View finished loading: \(viewDescription, privacy: .public)")
 		evaluateJavaScript(
@@ -214,7 +229,7 @@ public final class LogView: NSObject {
 	}
 
 	@objc public func informDelegateWebViewClosedUnexpectedly() {
-		viewController.logViewWebViewClosedUnexpectedly()
+		viewController?.logViewWebViewClosedUnexpectedly()
 	}
 
 	@objc public func setViewFinishedLayout() {
@@ -226,10 +241,10 @@ public final class LogView: NSObject {
 	}
 
 	private func recreateTemporaryCopyOfThemeIfNecessary() {
-		if NSObject.masterController().mainWindow.reloadingTheme() {
+		if NSObject.applicationController().mainWindow.reloadingTheme() {
 			return
 		}
-		if TPCApplicationInfo.timeIntervalSinceApplicationLaunch() < 120 {
+		if ApplicationInfo.timeIntervalSinceApplicationLaunch() < 120 {
 			return
 		}
 		SharedApplication.sharedThemeController().recreateTemporaryCopyOfThemeIfNecessary()
@@ -254,6 +269,11 @@ public final class LogView: NSObject {
 	}
 
 	@objc public func stopLoading() {
+		NSObject.cancelPreviousPerformRequests(
+			withTarget: self,
+			selector: #selector(informDelegateWebViewFinishedLoading),
+			object: nil
+		)
 		backingView.stopLoading()
 	}
 

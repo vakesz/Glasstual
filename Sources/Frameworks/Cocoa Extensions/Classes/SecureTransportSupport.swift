@@ -65,25 +65,24 @@
 import Foundation
 import Security
 
-public let tls_protocol_version_unknown = tls_protocol_version_t(rawValue: 0)!
-public let tls_ciphersuite_unknown = tls_ciphersuite_t(rawValue: 0)!
+public let tlsProtocolVersionUnknown = tls_protocol_version_t(rawValue: 0)!
+public let tlsCipherSuiteUnknown = tls_ciphersuite_t(rawValue: 0)!
 
-private enum CipherCollection: UInt {
+@objc
+public enum CipherSuiteCollection: UInt, Sendable {
 	case `default` = 0
 	case mozilla2015 = 1
 	case mozilla2017 = 2
 	case none = 100
 }
 
-@objc(RCMSecureTransport)
-public final class SecureTransportSupport: NSObject {
-	@objc public class var minimumProtocolType: UInt16 {
-		0x0303
+public enum SecureTransportSupport {
+	public static var minimumProtocolType: tls_protocol_version_t {
+		.TLSv12
 	}
 
-	@objc(descriptionForProtocolType:)
-	public class func description(forProtocol type: UInt16) -> String? {
-		switch type {
+	public static func description(forProtocolType type: tls_protocol_version_t) -> String? {
+		switch type.rawValue {
 		case 0x0303: "Transport Layer Security (TLS), version 1.2"
 		case 0x0304: "Transport Layer Security (TLS), version 1.3"
 		case 0xFEFD: "Datagram Transport Layer Security (DTLS), version 1.2"
@@ -91,38 +90,34 @@ public final class SecureTransportSupport: NSObject {
 		}
 	}
 
-	@objc(descriptionForCipherSuite:)
-	public class func description(forCipherSuite suite: UInt16) -> String? {
+	public static func description(forCipherSuite suite: tls_ciphersuite_t) -> String? {
 		description(forCipherSuite: suite, withProtocol: false)
 	}
 
-	@objc(descriptionForCipherSuite:withProtocol:)
-	public class func description(forCipherSuite suite: UInt16, withProtocol: Bool) -> String? {
-		guard let name = cipherNames[suite] else { return "Unknown" }
-		return withProtocol && (0x1301 ... 0x1303).contains(suite) ? "\(name) (TLS 1.3)" : name
+	public static func description(forCipherSuite suite: tls_ciphersuite_t, withProtocol: Bool) -> String? {
+		guard let name = cipherNames[suite.rawValue] else { return "Unknown" }
+		return withProtocol && (0x1301 ... 0x1303).contains(suite.rawValue) ? "\(name) (TLS 1.3)" : name
 	}
 
-	@objc(isCipherSuiteDeprecated:)
-	public class func isCipherSuiteDeprecated(_ suite: UInt16) -> Bool {
-		deprecatedSuites.contains(suite)
+	public static func isCipherSuiteDeprecated(_ suite: tls_ciphersuite_t) -> Bool {
+		deprecatedSuites.contains(suite.rawValue)
 	}
 
-	@objc(descriptionsForCipherListCollection:)
-	public class func descriptions(forCipherListCollection collection: UInt) -> [String] {
+	public static func descriptions(forCipherListCollection collection: CipherSuiteCollection) -> [String] {
 		descriptions(forCipherListCollection: collection, withProtocol: false)
 	}
 
-	@objc(descriptionsForCipherListCollection:withProtocol:)
-	public class func descriptions(forCipherListCollection collection: UInt, withProtocol: Bool) -> [String] {
+	public static func descriptions(forCipherListCollection collection: CipherSuiteCollection,
+	                                withProtocol: Bool) -> [String]
+	{
 		cipherSuites(inCollection: collection).map { description(
-			forCipherSuite: $0.uint16Value,
+			forCipherSuite: tls_ciphersuite_t(rawValue: $0.uint16Value)!,
 			withProtocol: withProtocol
 		) ?? "Unknown" }
 	}
 
-	@objc(cipherSuitesInCollection:)
-	public class func cipherSuites(inCollection collection: UInt) -> [NSNumber] {
-		let suites: [UInt16] = switch CipherCollection(rawValue: collection) ?? .default {
+	public static func cipherSuites(inCollection collection: CipherSuiteCollection) -> [NSNumber] {
+		let suites: [UInt16] = switch collection {
 		case .none:
 			[]
 		case .mozilla2015:
@@ -133,8 +128,9 @@ public final class SecureTransportSupport: NSObject {
 		return suites.map(NSNumber.init(value:))
 	}
 
-	@objc(cipherSuitesInCollection:includeDeprecated:)
-	public class func cipherSuites(inCollection collection: UInt, includeDeprecated: Bool) -> [NSNumber] {
+	public static func cipherSuites(inCollection collection: CipherSuiteCollection,
+	                                includeDeprecated: Bool) -> [NSNumber]
+	{
 		guard includeDeprecated else { return cipherSuites(inCollection: collection) }
 		var suites = cipherSuites(inCollection: collection).map(\.uint16Value)
 		suites.append(contentsOf: [0x009F, 0x009E])
@@ -142,9 +138,8 @@ public final class SecureTransportSupport: NSObject {
 		return suites.map(NSNumber.init(value:))
 	}
 
-	@objc(appendCipherSuitesInCollection:includeDeprecated:toOptions:)
-	public class func appendCipherSuites(
-		inCollection collection: UInt,
+	public static func appendCipherSuites(
+		inCollection collection: CipherSuiteCollection,
 		includeDeprecated: Bool,
 		to options: sec_protocol_options_t
 	) {
@@ -155,33 +150,23 @@ public final class SecureTransportSupport: NSObject {
 		}
 	}
 
-	@objc(isTLSError:)
-	public class func isTLSError(_ error: NSError) -> Bool {
+	public static func isTLSError(_ error: NSError) -> Bool {
 		error.domain == "kCFStreamErrorDomainSSL"
 	}
 
-	@objc(descriptionForErrorCode:)
-	public class func description(forErrorCode originalCode: Int) -> String {
-		let code = (-9890 ... -9800).contains(originalCode) && !(-9889 ... -9886).contains(originalCode)
-			? originalCode : -9999
-		let bundle = Bundle(for: self)
-		let heading = bundle.localizedString(forKey: "heading", value: nil, table: "SecureTransportErrorCodes")
-		let reason = bundle.localizedString(forKey: String(code), value: nil, table: "SecureTransportErrorCodes")
-		return String(format: heading, reason, code)
+	public static func description(forErrorCode originalCode: Int) -> String {
+		SecureTransportErrorLocalization.description(for: SecureTransportErrorCode(normalizing: originalCode))
 	}
 
-	@objc(descriptionForBadCertificateErrorCode:)
-	public class func description(forBadCertificateErrorCode code: Int) -> String? {
+	public static func description(forBadCertificateErrorCode code: Int) -> String? {
 		isBadCertificateErrorCode(code) ? description(forErrorCode: code) : nil
 	}
 
-	@objc(isBadCertificateErrorCode:)
-	public class func isBadCertificateErrorCode(_ code: Int) -> Bool {
+	public static func isBadCertificateErrorCode(_ code: Int) -> Bool {
 		badCertificateErrors.contains(code)
 	}
 
-	@objc(trustFromCertificateChain:withPolicyName:)
-	public class func trust(fromCertificateChain chain: [Data], policyName: String) -> SecTrust? {
+	public static func trust(fromCertificateChain chain: [Data], policyName: String) -> SecTrust? {
 		let certificates = chain.compactMap { SecCertificateCreateWithData(nil, $0 as CFData) }
 		guard certificates.isEmpty == false else { return nil }
 		let policy = SecPolicyCreateSSL(true, policyName as CFString)
@@ -191,14 +176,12 @@ public final class SecureTransportSupport: NSObject {
 		return trust
 	}
 
-	@objc(certificatesInTrust:)
-	public class func certificates(in trust: SecTrust) -> [Data]? {
+	public static func certificates(in trust: SecTrust) -> [Data]? {
 		guard let certificates = SecTrustCopyCertificateChain(trust) as? [SecCertificate] else { return nil }
 		return certificates.map { SecCertificateCopyData($0) as Data }
 	}
 
-	@objc(policyNameInTrust:)
-	public class func policyName(in trust: SecTrust) -> String? {
+	public static func policyName(in trust: SecTrust) -> String? {
 		var policies: CFArray?
 		guard SecTrustCopyPolicies(trust, &policies) == errSecSuccess,
 		      let policies = policies as? [SecPolicy]
@@ -250,3 +233,33 @@ public final class SecureTransportSupport: NSObject {
 		-9813, -9816, -9826, -9830, -9831, -9843,
 	]
 }
+
+private struct SecureTransportErrorCode: Sendable {
+	let value: Int
+
+	init(normalizing originalValue: Int) {
+		value = (-9890 ... -9800).contains(originalValue) && !(-9889 ... -9886).contains(originalValue)
+			? originalValue
+			: -9999
+	}
+
+	var localizationKey: String {
+		String(value)
+	}
+}
+
+private enum SecureTransportErrorLocalization {
+	static func description(for code: SecureTransportErrorCode) -> String {
+		let bundle = Bundle(for: SecureTransportLocalizationBundleToken.self)
+		let reason = bundle.localizedString(
+			forKey: code.localizationKey,
+			value: nil,
+			table: "SecureTransportErrorCodes"
+		)
+		let resource = LocalizedStringResource.SecureTransportErrorCodes.errorDescription(reason, code.value)
+		let format = bundle.localizedString(forKey: resource.key, value: nil, table: resource.table)
+		return String(format: format, reason, code.value)
+	}
+}
+
+private final class SecureTransportLocalizationBundleToken {}

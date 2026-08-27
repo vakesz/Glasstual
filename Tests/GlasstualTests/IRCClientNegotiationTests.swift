@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientNegotiationTests: XCTestCase {
 	func testCapabilityListContinuationDefersRequests() {
 		let client = GLTTestClient()
@@ -158,7 +159,7 @@ final class IRCClientNegotiationTests: XCTestCase {
 
 	func testSASLMechsRetryMovesToNextMechanism() {
 		let client = makeClient(configuration: ["nickname": "me"], nicknamePassword: "secret")
-		client.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"])
+		_ = client.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"])
 
 		XCTAssertEqual(client.saslMechanism, "SCRAM-SHA-256")
 		XCTAssertTrue(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]))
@@ -297,8 +298,12 @@ final class IRCClientNegotiationTests: XCTestCase {
 	}
 
 	private func makeClient(configuration: NSDictionary, nicknamePassword: String) -> GLTTestClient {
-		GLTTestClient(
-			configDictionary: configuration as! [String: Any],
+		guard let configuration = configuration as? [String: Any] else {
+			preconditionFailure("Test configuration must bridge to a Swift dictionary")
+		}
+
+		return GLTTestClient(
+			configDictionary: configuration,
 			nicknamePassword: nicknamePassword
 		)
 	}
@@ -324,7 +329,7 @@ final class IRCClientNegotiationTests: XCTestCase {
 		on client: GLTTestClient,
 		body: String,
 		type: TVCLogLineType,
-		channel: IRCChannel?,
+		channel: Channel?,
 		file: StaticString = #filePath,
 		line: UInt = #line
 	) {
@@ -334,7 +339,7 @@ final class IRCClientNegotiationTests: XCTestCase {
 		XCTAssertEqual((printed?["lineType"] as? NSNumber)?.uintValue, type.rawValue, file: file, line: line)
 
 		if let channel {
-			XCTAssertTrue(printed?["channel"] as? IRCChannel === channel, file: file, line: line)
+			XCTAssertTrue(printed?["channel"] as? Channel === channel, file: file, line: line)
 		} else {
 			XCTAssertNil(printed?["channel"], file: file, line: line)
 		}

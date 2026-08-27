@@ -36,7 +36,9 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
+import GlasstualPluginKit
 import os
 
 private enum ClientConfigDefaults {
@@ -53,8 +55,16 @@ private enum ClientConfigDefaults {
 	static let maximumFloodMessages: UInt = 60
 }
 
+private func checkedModel<Model>(_ value: Any, as _: Model.Type) -> Model {
+	guard let model = value as? Model else {
+		preconditionFailure("Expected a \(Model.self) copy, received \(Swift.type(of: value))")
+	}
+
+	return model
+}
+
 @objc(IRCClientConfig)
-open class ClientConfig: XRPortablePropertyDict {
+open class ClientConfig: PortablePropertyDict {
 	fileprivate var autoConnectStorage = false
 	fileprivate var autoReconnectStorage = false
 	fileprivate var autoSleepModeDisconnectStorage = true
@@ -63,11 +73,11 @@ open class ClientConfig: XRPortablePropertyDict {
 	fileprivate var hideAutojoinDelayedWarningsStorage = false
 	fileprivate var hideNetworkUnavailabilityNoticesStorage = false
 	fileprivate var performDisconnectOnPongTimerStorage = false
-	fileprivate var performDisconnectOnReachabilityChangeStorage = true
+	fileprivate var disconnectOnReachabilityChangeStorage = true
 	fileprivate var performPongTimerStorage = true
 	fileprivate var prefersSecuredConnectionStorage = false
-	fileprivate var saslAuthenticationDisableExternalMechanismStorage = false
-	fileprivate var sendAuthenticationRequestsToUserServStorage = false
+	fileprivate var disableSASLExternalStorage = false
+	fileprivate var authenticateWithUserServStorage = false
 	fileprivate var sendWhoCommandRequestsToChannelsStorage = true
 	fileprivate var setInvisibleModeOnConnectStorage = false
 	fileprivate var runConnectCommandsSilentlyStorage = true
@@ -106,7 +116,7 @@ open class ClientConfig: XRPortablePropertyDict {
 	fileprivate var proxyAddressStorage: String?
 	fileprivate var proxyPasswordStorage: String?
 	fileprivate var proxyUsernameStorage: String?
-	fileprivate var cipherSuitesStorage = RCMCipherSuiteCollection.default
+	fileprivate var cipherSuitesStorage = CipherSuiteCollection.default
 
 	private var nicknamePasswordKeychainCache: String?
 	private var nicknamePasswordKeychainCacheIsValid = false
@@ -145,7 +155,7 @@ open class ClientConfig: XRPortablePropertyDict {
 	}
 
 	@objc public var performDisconnectOnReachabilityChange: Bool {
-		performDisconnectOnReachabilityChangeStorage
+		disconnectOnReachabilityChangeStorage
 	}
 
 	@objc public var performPongTimer: Bool {
@@ -153,11 +163,11 @@ open class ClientConfig: XRPortablePropertyDict {
 	}
 
 	@objc public var saslAuthenticationDisableExternalMechanism: Bool {
-		saslAuthenticationDisableExternalMechanismStorage
+		disableSASLExternalStorage
 	}
 
 	@objc public var sendAuthenticationRequestsToUserServ: Bool {
-		sendAuthenticationRequestsToUserServStorage
+		authenticateWithUserServStorage
 	}
 
 	@objc public var sendWhoCommandRequestsToChannels: Bool {
@@ -304,7 +314,7 @@ open class ClientConfig: XRPortablePropertyDict {
 		proxyUsernameStorage
 	}
 
-	@objc public var cipherSuites: RCMCipherSuiteCollection {
+	@objc public var cipherSuites: CipherSuiteCollection {
 		cipherSuitesStorage
 	}
 
@@ -328,11 +338,11 @@ open class ClientConfig: XRPortablePropertyDict {
 	}
 
 	@objc public var nicknamePasswordFromKeychain: String? {
-		XRKeychain.getPasswordFromKeychainItem(
-			"Glasstual (NickServ)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: "glasstual.nickserv.\(uniqueIdentifierStorage)"
+		KeychainStore.password(
+			forItem: "Glasstual (NickServ)",
+			kind: "application password",
+			username: nil,
+			service: "glasstual.nickserv.\(uniqueIdentifierStorage)"
 		)
 	}
 
@@ -341,11 +351,11 @@ open class ClientConfig: XRPortablePropertyDict {
 	}
 
 	@objc public var proxyPasswordFromKeychain: String? {
-		XRKeychain.getPasswordFromKeychainItem(
-			"Glasstual (Proxy Server Password)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: "glasstual.proxy-server.\(uniqueIdentifierStorage)"
+		KeychainStore.password(
+			forItem: "Glasstual (Proxy Server Password)",
+			kind: "application password",
+			username: nil,
+			service: "glasstual.proxy-server.\(uniqueIdentifierStorage)"
 		)
 	}
 
@@ -359,7 +369,7 @@ open class ClientConfig: XRPortablePropertyDict {
 	}
 
 	@objc(initWithDictionary:)
-	override public init(dictionary: [String: Any]) {
+	public required init(dictionary: [String: Any]) {
 		super.init()
 		initialize(with: dictionary, ignorePrivateMessages: false)
 	}
@@ -376,7 +386,7 @@ open class ClientConfig: XRPortablePropertyDict {
 
 	@objc(newConfigByMerging:with:)
 	public class func newConfigByMerging(_ first: ClientConfig, with second: ClientConfig) -> Self {
-		let merged = first.mutableCopy() as! MutableClientConfig
+		let merged = checkedModel(first.mutableCopy(), as: MutableClientConfig.self)
 		merged.populateDictionaryValues(
 			second.dictionaryValue,
 			ignorePrivateMessages: false,
@@ -392,7 +402,7 @@ open class ClientConfig: XRPortablePropertyDict {
 	}
 
 	@objc(newConfigWithNetwork:)
-	public class func newConfig(with network: IRCNetwork) -> Self {
+	public class func newConfig(with network: Network) -> Self {
 		let config = MutableClientConfig()
 		config.connectionName = network.networkName
 
@@ -400,7 +410,7 @@ open class ClientConfig: XRPortablePropertyDict {
 		server.serverAddress = network.serverAddress
 		server.serverPort = network.serverPort
 		server.prefersSecuredConnection = network.prefersSecuredConnection
-		config.serverList = [server.copy() as! Server]
+		config.serverList = [checkedModel(server.copy(), as: Server.self)]
 
 		if isMutable {
 			return unsafeDowncast(config, to: Self.self)
@@ -435,14 +445,14 @@ open class ClientConfig: XRPortablePropertyDict {
 			"autoSleepModeDisconnect": true,
 			"autojoinWaitsForNickServ": false,
 			"cachedLastServerTimeCapabilityReceivedAtTimestamp": 0,
-			"cipherSuites": RCMCipherSuiteCollection.default.rawValue,
-			"connectionName": LocalizedKey("BasicLanguage[vfu-c0]"),
+			"cipherSuites": CipherSuiteCollection.default.rawValue,
+			"connectionName": ApplicationStrings.untitledConnection,
 			"fallbackEncoding": String.Encoding.isoLatin1.rawValue,
 			"floodControlDelayTimerInterval": ClientConfigDefaults.floodDelay,
 			"floodControlMaximumMessages": ClientConfigDefaults.floodMaximum,
 			"hideAutojoinDelayedWarnings": false,
 			"hideNetworkUnavailabilityNotices": false,
-			"normalLeavingComment": LocalizedKey("BasicLanguage[1dd-0f]"),
+			"normalLeavingComment": ApplicationStrings.defaultQuitMessage,
 			"performDisconnectOnPongTimer": false,
 			"performDisconnectOnReachabilityChange": true,
 			"performPongTimer": true,
@@ -457,7 +467,7 @@ open class ClientConfig: XRPortablePropertyDict {
 			"setInvisibleModeOnConnect": false,
 			"runConnectCommandsSilently": true,
 			"sidebarItemExpanded": true,
-			"sleepModeLeavingComment": LocalizedKey("BasicLanguage[qi7-5y]"),
+			"sleepModeLeavingComment": ApplicationStrings.sleepQuitMessage,
 			"validateServerCertificateChain": true,
 			"zncIgnoreConfiguredAutojoin": false,
 			"zncIgnorePlaybackNotifications": true,
@@ -473,19 +483,19 @@ open class ClientConfig: XRPortablePropertyDict {
 		}
 
 		if uniqueIdentifierStorage.isEmpty {
-			uniqueIdentifierStorage = NSString.withUUID()
+			uniqueIdentifierStorage = UUID().uuidString
 		}
 		if nicknameStorage.isEmpty {
-			nicknameStorage = TPCPreferences.defaultNickname()
+			nicknameStorage = TextualPreferences.defaultNickname()
 		}
 		if awayNicknameStorage == nil {
-			awayNicknameStorage = TPCPreferences.defaultAwayNickname()
+			awayNicknameStorage = TextualPreferences.defaultAwayNickname()
 		}
 		if usernameStorage.isEmpty {
-			usernameStorage = TPCPreferences.defaultUsername()
+			usernameStorage = TextualPreferences.defaultUsername()
 		}
 		if realNameStorage.isEmpty {
-			realNameStorage = TPCPreferences.defaultRealName()
+			realNameStorage = TextualPreferences.defaultRealName()
 		}
 		modifyFloodControlDefaults()
 	}
@@ -519,18 +529,29 @@ open class ClientConfig: XRPortablePropertyDict {
 	}
 
 	override public func copy(asMutable mutableCopy: Bool, uniquing: Bool) -> Any {
-		let config = super.copy(asMutable: mutableCopy, uniquing: false) as! ClientConfig
+		let config = checkedModel(
+			super.copy(asMutable: mutableCopy, uniquing: false),
+			as: ClientConfig.self
+		)
 		config.nicknamePasswordStorage = nicknamePasswordStorage
 		config.proxyPasswordStorage = proxyPasswordStorage
 		config.defaultsStorage = defaultsStorage
 		config.migratedServerPasswordPendingDestroy = migratedServerPasswordPendingDestroy
 
 		if uniquing {
-			config.channelListStorage = channelListStorage.map { $0.uniqueCopy() as! ChannelConfig }
-			config.highlightListStorage = highlightListStorage.map { $0.uniqueCopy() as! HighlightMatchCondition }
-			config.ignoreListStorage = ignoreListStorage.map { $0.uniqueCopy() as! AddressBookEntry }
-			config.serverListStorage = serverListStorage.map { $0.uniqueCopy() as! Server }
-			config.uniqueIdentifierStorage = NSString.withUUID()
+			config.channelListStorage = channelListStorage.map {
+				checkedModel($0.uniqueCopy(), as: ChannelConfig.self)
+			}
+			config.highlightListStorage = highlightListStorage.map {
+				checkedModel($0.uniqueCopy(), as: HighlightMatchCondition.self)
+			}
+			config.ignoreListStorage = ignoreListStorage.map {
+				checkedModel($0.uniqueCopy(), as: AddressBookEntry.self)
+			}
+			config.serverListStorage = serverListStorage.map {
+				checkedModel($0.uniqueCopy(), as: Server.self)
+			}
+			config.uniqueIdentifierStorage = UUID().uuidString
 		} else {
 			config.channelListStorage = channelListStorage
 			config.highlightListStorage = highlightListStorage
@@ -541,27 +562,27 @@ open class ClientConfig: XRPortablePropertyDict {
 		return config
 	}
 
-	override public var mutableClass: XRPortablePropertyDict {
-		unsafeBitCast(MutableClientConfig.self, to: XRPortablePropertyDict.self)
+	override public var mutableClass: PortablePropertyDict {
+		unsafeBitCast(MutableClientConfig.self, to: PortablePropertyDict.self)
 	}
 
-	override public func dictionaryValue(for target: XRPortablePropertyDictTarget) -> [String: Any] {
+	override public func dictionaryValue(for target: PortablePropertyDictTarget) -> [String: Any] {
 		let dictionary = NSMutableDictionary()
-		dictionary.setUnsignedInteger(dictionaryVersionStorage, forKey: "dictionaryVersion")
-		dictionary.maybeSetObject(alternateNicknamesStorage, forKey: "alternateNicknames")
-		dictionary.maybeSetObject(awayNicknameStorage, forKey: "awayNickname")
-		dictionary.maybeSetObject(saslMechanismPreferenceStorage, forKey: "saslMechanismPreference")
-		dictionary.maybeSetObject(connectionNameStorage, forKey: "connectionName")
-		dictionary.maybeSetObject(ctcpVersionReplyStorage, forKey: "ctcpVersionReply")
-		dictionary.maybeSetObject(loginCommandsStorage, forKey: "onConnectCommands")
-		dictionary.maybeSetObject(nicknameStorage, forKey: "nickname")
-		dictionary.maybeSetObject(normalLeavingCommentStorage, forKey: "normalLeavingComment")
-		dictionary.maybeSetObject(proxyAddressStorage, forKey: "proxyAddress")
-		dictionary.maybeSetObject(proxyUsernameStorage, forKey: "proxyUsername")
-		dictionary.maybeSetObject(realNameStorage, forKey: "realName")
-		dictionary.maybeSetObject(sleepModeLeavingCommentStorage, forKey: "sleepModeLeavingComment")
-		dictionary.maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
-		dictionary.maybeSetObject(usernameStorage, forKey: "username")
+		dictionary.ce_setUnsignedInteger(dictionaryVersionStorage, forKey: "dictionaryVersion")
+		dictionary.ce_maybeSetObject(alternateNicknamesStorage, forKey: "alternateNicknames")
+		dictionary.ce_maybeSetObject(awayNicknameStorage, forKey: "awayNickname")
+		dictionary.ce_maybeSetObject(saslMechanismPreferenceStorage, forKey: "saslMechanismPreference")
+		dictionary.ce_maybeSetObject(connectionNameStorage, forKey: "connectionName")
+		dictionary.ce_maybeSetObject(ctcpVersionReplyStorage, forKey: "ctcpVersionReply")
+		dictionary.ce_maybeSetObject(loginCommandsStorage, forKey: "onConnectCommands")
+		dictionary.ce_maybeSetObject(nicknameStorage, forKey: "nickname")
+		dictionary.ce_maybeSetObject(normalLeavingCommentStorage, forKey: "normalLeavingComment")
+		dictionary.ce_maybeSetObject(proxyAddressStorage, forKey: "proxyAddress")
+		dictionary.ce_maybeSetObject(proxyUsernameStorage, forKey: "proxyUsername")
+		dictionary.ce_maybeSetObject(realNameStorage, forKey: "realName")
+		dictionary.ce_maybeSetObject(sleepModeLeavingCommentStorage, forKey: "sleepModeLeavingComment")
+		dictionary.ce_maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
+		dictionary.ce_maybeSetObject(usernameStorage, forKey: "username")
 
 		let boolValues: [String: Bool] = [
 			"autoConnect": autoConnectStorage,
@@ -571,10 +592,10 @@ open class ClientConfig: XRPortablePropertyDict {
 			"hideAutojoinDelayedWarnings": hideAutojoinDelayedWarningsStorage,
 			"hideNetworkUnavailabilityNotices": hideNetworkUnavailabilityNoticesStorage,
 			"performDisconnectOnPongTimer": performDisconnectOnPongTimerStorage,
-			"performDisconnectOnReachabilityChange": performDisconnectOnReachabilityChangeStorage,
+			"performDisconnectOnReachabilityChange": disconnectOnReachabilityChangeStorage,
 			"performPongTimer": performPongTimerStorage,
-			"saslAuthenticationDisableExternalMechanism": saslAuthenticationDisableExternalMechanismStorage,
-			"sendAuthenticationRequestsToUserServ": sendAuthenticationRequestsToUserServStorage,
+			"saslAuthenticationDisableExternalMechanism": disableSASLExternalStorage,
+			"sendAuthenticationRequestsToUserServ": authenticateWithUserServStorage,
 			"sendWhoCommandRequestsToChannels": sendWhoCommandRequestsToChannelsStorage,
 			"setInvisibleModeOnConnect": setInvisibleModeOnConnectStorage,
 			"runConnectCommandsSilently": runConnectCommandsSilentlyStorage,
@@ -585,29 +606,39 @@ open class ClientConfig: XRPortablePropertyDict {
 			"zncOnlyPlaybackLatest": zncOnlyPlaybackLatestStorage,
 		]
 		for (key, value) in boolValues {
-			dictionary.setBool(value, forKey: key)
+			dictionary.ce_setBool(value, forKey: key)
 		}
 
-		dictionary.setUnsignedInteger(addressTypeStorage.rawValue, forKey: "addressType")
-		dictionary.setUnsignedInteger(cipherSuitesStorage.rawValue, forKey: "cipherSuites")
-		dictionary.setUnsignedInteger(fallbackEncodingStorage, forKey: "fallbackEncoding")
-		dictionary.setUnsignedInteger(floodControlDelayTimerIntervalStorage, forKey: "floodControlDelayTimerInterval")
-		dictionary.setUnsignedInteger(floodControlMaximumMessagesStorage, forKey: "floodControlMaximumMessages")
-		dictionary.setUnsignedInteger(primaryEncodingStorage, forKey: "primaryEncoding")
-		dictionary.setUnsignedInteger(proxyTypeStorage.rawValue, forKey: "proxyType")
-		dictionary.setUnsignedShort(proxyPortStorage, forKey: "proxyPort")
-		dictionary.maybeSetObject(identityClientSideCertificateStorage, forKey: "identityClientSideCertificate")
-		dictionary.setBool(sidebarItemExpandedStorage, forKey: "sidebarItemExpanded")
-		dictionary.setDouble(lastMessageServerTimeStorage, forKey: "cachedLastServerTimeCapabilityReceivedAtTimestamp")
+		dictionary.ce_setUnsignedInteger(addressTypeStorage.rawValue, forKey: "addressType")
+		dictionary.ce_setUnsignedInteger(cipherSuitesStorage.rawValue, forKey: "cipherSuites")
+		dictionary.ce_setUnsignedInteger(fallbackEncodingStorage, forKey: "fallbackEncoding")
+		dictionary.ce_setUnsignedInteger(
+			floodControlDelayTimerIntervalStorage,
+			forKey: "floodControlDelayTimerInterval"
+		)
+		dictionary.ce_setUnsignedInteger(floodControlMaximumMessagesStorage, forKey: "floodControlMaximumMessages")
+		dictionary.ce_setUnsignedInteger(primaryEncodingStorage, forKey: "primaryEncoding")
+		dictionary.ce_setUnsignedInteger(proxyTypeStorage.rawValue, forKey: "proxyType")
+		dictionary.ce_setUnsignedShort(proxyPortStorage, forKey: "proxyPort")
+		dictionary.ce_maybeSetObject(identityClientSideCertificateStorage, forKey: "identityClientSideCertificate")
+		dictionary.ce_setBool(sidebarItemExpandedStorage, forKey: "sidebarItemExpanded")
+		dictionary.ce_setDouble(
+			lastMessageServerTimeStorage,
+			forKey: "cachedLastServerTimeCapabilityReceivedAtTimestamp"
+		)
 
-		dictionary.setBool(connectionPrefersIPv4Storage, forKey: "connectionPrefersIPv4")
-		dictionary.setBool(cipherSuitesStorage != .none, forKey: "connectionPrefersModernCiphers")
-		dictionary.maybeSetObject(legacyServerAddress, forKey: "serverAddress")
-		dictionary.setBool(legacyPrefersSecuredConnection, forKey: "prefersSecuredConnection")
-		dictionary.setUnsignedShort(legacyServerPort, forKey: "serverPort")
+		dictionary.ce_setBool(connectionPrefersIPv4Storage, forKey: "connectionPrefersIPv4")
+		dictionary.ce_setBool(cipherSuitesStorage != .none, forKey: "connectionPrefersModernCiphers")
+		dictionary.ce_maybeSetObject(legacyServerAddress, forKey: "serverAddress")
+		dictionary.ce_setBool(legacyPrefersSecuredConnection, forKey: "prefersSecuredConnection")
+		dictionary.ce_setUnsignedShort(legacyServerPort, forKey: "serverPort")
 
 		if target == .copy || target == .mutableCopy {
-			return dictionary as! [String: Any]
+			guard let values = dictionary as? [String: Any] else {
+				preconditionFailure("Client configuration dictionaries must use String keys")
+			}
+
+			return values
 		}
 
 		setSerialized(channelListStorage, on: dictionary, key: "channelList")
@@ -615,18 +646,26 @@ open class ClientConfig: XRPortablePropertyDict {
 		setSerialized(ignoreListStorage, on: dictionary, key: "ignoreList")
 		setSerialized(serverListStorage, on: dictionary, key: "serverList")
 
-		return dictionary.removingDefaults(defaultsStorage, allowEmptyValues: true) as! [String: Any]
+		let compacted = dictionary.ce_dictionaryByRemovingDefaults(
+			defaultsStorage as NSDictionary,
+			allowEmptyValues: true
+		)
+		guard let values = compacted as? [String: Any] else {
+			preconditionFailure("Client configuration dictionaries must use String keys")
+		}
+
+		return values
 	}
 
 	@objc open func writeNicknamePasswordToKeychain() {
 		guard let nicknamePasswordStorage else { return }
 
-		XRKeychain.modifyOrAddItem(
+		KeychainStore.modifyOrAddItem(
 			"Glasstual (NickServ)",
-			withItemKind: "application password",
-			forUsername: nil,
-			withNewPassword: nicknamePasswordStorage,
-			serviceName: "glasstual.nickserv.\(uniqueIdentifierStorage)"
+			kind: "application password",
+			username: nil,
+			newPassword: nicknamePasswordStorage,
+			service: "glasstual.nickserv.\(uniqueIdentifierStorage)"
 		)
 		self.nicknamePasswordStorage = nil
 		invalidateNicknamePasswordKeychainCache()
@@ -635,33 +674,33 @@ open class ClientConfig: XRPortablePropertyDict {
 	@objc open func writeProxyPasswordToKeychain() {
 		guard let proxyPasswordStorage else { return }
 
-		XRKeychain.modifyOrAddItem(
+		KeychainStore.modifyOrAddItem(
 			"Glasstual (Proxy Server Password)",
-			withItemKind: "application password",
-			forUsername: nil,
-			withNewPassword: proxyPasswordStorage,
-			serviceName: "glasstual.proxy-server.\(uniqueIdentifierStorage)"
+			kind: "application password",
+			username: nil,
+			newPassword: proxyPasswordStorage,
+			service: "glasstual.proxy-server.\(uniqueIdentifierStorage)"
 		)
 		self.proxyPasswordStorage = nil
 	}
 
 	@objc public func destroyNicknamePasswordKeychainItem() {
-		XRKeychain.deleteItem(
+		KeychainStore.deleteItem(
 			"Glasstual (NickServ)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: "glasstual.nickserv.\(uniqueIdentifierStorage)"
+			kind: "application password",
+			username: nil,
+			service: "glasstual.nickserv.\(uniqueIdentifierStorage)"
 		)
 		nicknamePasswordStorage = nil
 		invalidateNicknamePasswordKeychainCache()
 	}
 
 	@objc public func destroyProxyPasswordKeychainItem() {
-		XRKeychain.deleteItem(
+		KeychainStore.deleteItem(
 			"Glasstual (Proxy Server Password)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: "glasstual.proxy-server.\(uniqueIdentifierStorage)"
+			kind: "application password",
+			username: nil,
+			service: "glasstual.proxy-server.\(uniqueIdentifierStorage)"
 		)
 		proxyPasswordStorage = nil
 	}
@@ -669,14 +708,16 @@ open class ClientConfig: XRPortablePropertyDict {
 	@objc public func destroyServerPasswordKeychainItemAfterMigration() {
 		guard migratedServerPasswordPendingDestroy else { return }
 		migratedServerPasswordPendingDestroy = false
-		XRKeychain.deleteItem(
+		KeychainStore.deleteItem(
 			"Glasstual (Server Password)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: "glasstual.server.\(uniqueIdentifierStorage)"
+			kind: "application password",
+			username: nil,
+			service: "glasstual.server.\(uniqueIdentifierStorage)"
 		)
 	}
+}
 
+extension ClientConfig {
 	private var legacyServerAddress: String? {
 		serverListStorage.first?.serverAddress ?? legacyServerAddressStorage
 	}
@@ -732,7 +773,7 @@ open class ClientConfig: XRPortablePropertyDict {
 		usernameStorage = values["username"] as? String ?? usernameStorage
 
 		addressTypeStorage = IRCConnectionAddressType(rawValue: uintValue(values["addressType"])) ?? addressTypeStorage
-		cipherSuitesStorage = RCMCipherSuiteCollection(rawValue: uintValue(values["cipherSuites"])) ??
+		cipherSuitesStorage = CipherSuiteCollection(rawValue: uintValue(values["cipherSuites"])) ??
 			cipherSuitesStorage
 		fallbackEncodingStorage = uintValue(values["fallbackEncoding"], fallback: fallbackEncodingStorage)
 		floodControlDelayTimerIntervalStorage = uintValue(
@@ -802,22 +843,22 @@ open class ClientConfig: XRPortablePropertyDict {
 			values["performDisconnectOnPongTimer"],
 			fallback: performDisconnectOnPongTimerStorage
 		)
-		performDisconnectOnReachabilityChangeStorage = boolValue(
+		disconnectOnReachabilityChangeStorage = boolValue(
 			values["performDisconnectOnReachabilityChange"],
-			fallback: performDisconnectOnReachabilityChangeStorage
+			fallback: disconnectOnReachabilityChangeStorage
 		)
 		performPongTimerStorage = boolValue(values["performPongTimer"], fallback: performPongTimerStorage)
 		prefersSecuredConnectionStorage = boolValue(
 			values["prefersSecuredConnection"],
 			fallback: prefersSecuredConnectionStorage
 		)
-		saslAuthenticationDisableExternalMechanismStorage = boolValue(
+		disableSASLExternalStorage = boolValue(
 			values["saslAuthenticationDisableExternalMechanism"],
-			fallback: saslAuthenticationDisableExternalMechanismStorage
+			fallback: disableSASLExternalStorage
 		)
-		sendAuthenticationRequestsToUserServStorage = boolValue(
+		authenticateWithUserServStorage = boolValue(
 			values["sendAuthenticationRequestsToUserServ"],
-			fallback: sendAuthenticationRequestsToUserServStorage
+			fallback: authenticateWithUserServStorage
 		)
 		sendWhoCommandRequestsToChannelsStorage = boolValue(
 			values["sendWhoCommandRequestsToChannels"],
@@ -963,11 +1004,11 @@ open class ClientConfig: XRPortablePropertyDict {
 			return
 		}
 
-		let password = XRKeychain.getPasswordFromKeychainItem(
-			"Glasstual (Server Password)",
-			withItemKind: "application password",
-			forUsername: nil,
-			serviceName: "glasstual.server.\(uniqueIdentifierStorage)"
+		let password = KeychainStore.password(
+			forItem: "Glasstual (Server Password)",
+			kind: "application password",
+			username: nil,
+			service: "glasstual.server.\(uniqueIdentifierStorage)"
 		)
 		let server = MutableServer()
 		server.serverAddress = address
@@ -975,7 +1016,7 @@ open class ClientConfig: XRPortablePropertyDict {
 		server.serverPassword = password
 		server.prefersSecuredConnection = boolValue(values["prefersSecuredConnection"])
 		server.writeServerPasswordToKeychain()
-		serverListStorage = [server.copy() as! Server]
+		serverListStorage = [checkedModel(server.copy(), as: Server.self)]
 		migratedServerPasswordPendingDestroy = true
 	}
 
@@ -999,7 +1040,7 @@ open class ClientConfig: XRPortablePropertyDict {
 	}
 
 	private func setSerialized(
-		_ values: [some XRPortablePropertyDict],
+		_ values: [some PortablePropertyDict],
 		on dictionary: NSMutableDictionary,
 		key: String
 	) {
@@ -1032,12 +1073,12 @@ open class ClientConfig: XRPortablePropertyDict {
 
 @objc(IRCClientConfigMutable)
 public final class MutableClientConfig: ClientConfig {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 
-	override public var immutableClass: XRPortablePropertyDict {
-		unsafeBitCast(ClientConfig.self, to: XRPortablePropertyDict.self)
+	override public var immutableClass: PortablePropertyDict {
+		unsafeBitCast(ClientConfig.self, to: PortablePropertyDict.self)
 	}
 
 	@objc override public var autoConnect: Bool {
@@ -1069,8 +1110,8 @@ public final class MutableClientConfig: ClientConfig {
 	}
 
 	@objc override public var performDisconnectOnReachabilityChange: Bool {
-		get { performDisconnectOnReachabilityChangeStorage } set {
-			performDisconnectOnReachabilityChangeStorage = newValue
+		get { disconnectOnReachabilityChangeStorage } set {
+			disconnectOnReachabilityChangeStorage = newValue
 		}
 	}
 
@@ -1079,14 +1120,14 @@ public final class MutableClientConfig: ClientConfig {
 	}
 
 	@objc override public var saslAuthenticationDisableExternalMechanism: Bool {
-		get { saslAuthenticationDisableExternalMechanismStorage } set {
-			saslAuthenticationDisableExternalMechanismStorage = newValue
+		get { disableSASLExternalStorage } set {
+			disableSASLExternalStorage = newValue
 		}
 	}
 
 	@objc override public var sendAuthenticationRequestsToUserServ: Bool {
-		get { sendAuthenticationRequestsToUserServStorage } set {
-			sendAuthenticationRequestsToUserServStorage = newValue
+		get { authenticateWithUserServStorage } set {
+			authenticateWithUserServStorage = newValue
 		}
 	}
 
@@ -1238,7 +1279,7 @@ public final class MutableClientConfig: ClientConfig {
 		get { proxyUsernameStorage } set { proxyUsernameStorage = newValue }
 	}
 
-	@objc override public var cipherSuites: RCMCipherSuiteCollection {
+	@objc override public var cipherSuites: CipherSuiteCollection {
 		get { cipherSuitesStorage } set { cipherSuitesStorage = newValue }
 	}
 

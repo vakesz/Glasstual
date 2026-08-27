@@ -39,6 +39,8 @@
 import Foundation
 import ObjectiveC
 
+public typealias IRCTreeItem = TreeItem
+
 private nonisolated(unsafe) var dockUnreadCountKey: UInt8 = 0
 private nonisolated(unsafe) var nicknameHighlightCountKey: UInt8 = 0
 private nonisolated(unsafe) var treeUnreadCountKey: UInt8 = 0
@@ -96,17 +98,17 @@ open class TreeItem: NSObject {
 		set { setInteger(newValue, forKey: &dockUnreadCountKey) }
 	}
 
-	@objc public var nicknameHighlightCount: Int {
+	@objc public dynamic var nicknameHighlightCount: Int {
 		get { integer(forKey: &nicknameHighlightCountKey) }
 		set { setInteger(newValue, forKey: &nicknameHighlightCountKey) }
 	}
 
-	@objc public var treeUnreadCount: Int {
+	@objc public dynamic var treeUnreadCount: Int {
 		get { integer(forKey: &treeUnreadCountKey) }
 		set { setInteger(newValue, forKey: &treeUnreadCountKey) }
 	}
 
-	@objc public var associatedClient: IRCClient! {
+	@objc open var associatedClient: IRCClient! {
 		get { (objc_getAssociatedObject(self, &associatedClientKey) as? WeakObjectBox)?.value as? IRCClient }
 		set {
 			objc_setAssociatedObject(

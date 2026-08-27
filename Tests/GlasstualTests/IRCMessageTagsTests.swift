@@ -39,15 +39,16 @@
 import XCTest
 
 /// IRCv3 typing notifications, replies, and reactions.
+@MainActor
 final class IRCMessageTagsTests: XCTestCase {
 	override func setUp() {
 		super.setUp()
 
-		TPCPreferencesUserDefaults.shared().set(true, forKey: "SendTypingNotifications")
+		TextualUserDefaults.shared().set(true, forKey: "SendTypingNotifications")
 	}
 
 	override func tearDown() {
-		TPCPreferencesUserDefaults.shared().set(true, forKey: "SendTypingNotifications")
+		TextualUserDefaults.shared().set(true, forKey: "SendTypingNotifications")
 
 		super.tearDown()
 	}
@@ -142,7 +143,7 @@ final class IRCMessageTagsTests: XCTestCase {
 	}
 
 	func testTypingRespectsPreference() {
-		TPCPreferencesUserDefaults.shared().set(false, forKey: "SendTypingNotifications")
+		TextualUserDefaults.shared().set(false, forKey: "SendTypingNotifications")
 		let client = makeMessageTagsClient()
 		let channel = addChannel(named: "#chat", to: client)
 
@@ -151,14 +152,14 @@ final class IRCMessageTagsTests: XCTestCase {
 		XCTAssertEqual(client.sentLines.count, 0)
 	}
 
-	func testTypingStateExpires() {
+	func testTypingStateExpires() throws {
 		let client = makeMessageTagsClient()
 		let channel = addChannel(named: "#chat", to: client)
-		let tracker = client.typingTracker
+		let tracker = try XCTUnwrap(client.typingTracker)
 		let start = Date()
 
-		tracker.note(.active, fromNickname: "mara", in: channel, at: start)
-		tracker.note(.paused, fromNickname: "jonas", in: channel, at: start)
+		tracker.noteTypingState(.active, fromNickname: "mara", in: channel, at: start)
+		tracker.noteTypingState(.paused, fromNickname: "jonas", in: channel, at: start)
 
 		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(5)), ["mara", "jonas"])
 		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(7)), ["jonas"])
@@ -169,18 +170,19 @@ final class IRCMessageTagsTests: XCTestCase {
 		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start), [])
 	}
 
-	func testTypingDoneRemovesEntryAndTagMessageFeedsTracker() {
+	func testTypingDoneRemovesEntryAndTagMessageFeedsTracker() throws {
 		let client = makeMessageTagsClient()
 		let channel = addChannel(named: "#chat", to: client)
+		let tracker = try XCTUnwrap(client.typingTracker)
 
 		client.receiveTagMessage(message("@+typing=active :mara!u@h TAGMSG #chat", on: client))
-		XCTAssertEqual(client.typingTracker.typingNicknames(in: channel), ["mara"])
+		XCTAssertEqual(tracker.typingNicknames(in: channel), ["mara"])
 
 		client.receiveTagMessage(message("@+typing=done :mara!u@h TAGMSG #chat", on: client))
-		XCTAssertEqual(client.typingTracker.typingNicknames(in: channel), [])
+		XCTAssertEqual(tracker.typingNicknames(in: channel), [])
 
 		client.receiveTagMessage(message("@+typing=active :me!u@h TAGMSG #chat", on: client))
-		XCTAssertEqual(client.typingTracker.typingNicknames(in: channel), [])
+		XCTAssertEqual(tracker.typingNicknames(in: channel), [])
 	}
 
 	func testReplyTagIsSentOnFirstLineOnly() {
@@ -277,7 +279,10 @@ final class IRCMessageTagsTests: XCTestCase {
 			"nickname": "me",
 			"username": "me",
 		]
-		let client = GLTTestClient(configDictionary: configuration as! [String: Any])
+		guard let configuration = configuration as? [String: Any] else {
+			preconditionFailure("Test configuration must bridge to a Swift dictionary")
+		}
+		let client = GLTTestClient(configDictionary: configuration)
 
 		client.enableCapability(.messageTags)
 		client.markAsLoggedIn()
@@ -285,7 +290,7 @@ final class IRCMessageTagsTests: XCTestCase {
 		return client
 	}
 
-	private func addChannel(named name: String, to client: GLTTestClient) -> IRCChannel {
+	private func addChannel(named name: String, to client: GLTTestClient) -> Channel {
 		let channel = client.findChannelOrCreate(name)!
 
 		channel.activate()

@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
 
@@ -18,21 +19,20 @@ private let logControllerOperationQueueLogger = Logger(
 	category: "LogControllerOperationQueue"
 )
 
-private enum LogControllerPrintingOperationQueueKVOContext {
-	nonisolated(unsafe) static var token = 0
-}
-
 private func pendingOperationsKey(for viewController: LogController) -> String {
 	viewController.uniqueIdentifier
 }
 
+public typealias LogControllerPrintingBlock = (Operation) -> Void
+
 @objc(TVCLogControllerPrintingOperation)
 private final class LogControllerPrintingOperation: Operation, @unchecked Sendable {
-	@objc var executionBlock: TVCLogControllerPrintingBlock?
+	@objc var executionBlock: LogControllerPrintingBlock?
 	@objc weak var viewController: LogController?
 	@objc var pendingOperationsKey = ""
 	@objc var standalone = false
 	@objc var requiresExplicitFinish = false
+	var finishedObservation: NSKeyValueObservation?
 	private let stateLock = NSLock()
 	private var operationExecuting = false
 	private var operationFinished = false
@@ -45,11 +45,11 @@ private final class LogControllerPrintingOperation: Operation, @unchecked Sendab
 		requiresExplicitFinish
 	}
 
-	override var isExecuting: Bool {
+	@objc override dynamic var isExecuting: Bool {
 		requiresExplicitFinish ? operationExecuting : super.isExecuting
 	}
 
-	override var isFinished: Bool {
+	@objc override dynamic var isFinished: Bool {
 		requiresExplicitFinish ? operationFinished : super.isFinished
 	}
 
@@ -113,6 +113,15 @@ private final class LogControllerPrintingOperation: Operation, @unchecked Sendab
 		executionBlock?(self)
 	}
 
+	func observeCompletion(_ handler: @escaping @Sendable (LogControllerPrintingOperation) -> Void) {
+		finishedObservation = observe(\.isFinished, options: .new) { [weak self] _, change in
+			guard change.newValue == true, let self else {
+				return
+			}
+			handler(self)
+		}
+	}
+
 	override var isReady: Bool {
 		if dependencies.count < 1 || standalone {
 			let viewController = viewController
@@ -143,7 +152,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 
 	@objc(enqueueMessageBlock:for:)
 	public func enqueueMessageBlock(
-		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
+		_ callbackBlock: @escaping LogControllerPrintingBlock,
 		for viewController: LogController
 	) {
 		enqueueMessageBlock(callbackBlock, for: viewController, isStandalone: false)
@@ -151,7 +160,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 
 	@objc(enqueueMessageBlock:for:isStandalone:)
 	public func enqueueMessageBlock(
-		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
+		_ callbackBlock: @escaping LogControllerPrintingBlock,
 		for viewController: LogController,
 		isStandalone: Bool
 	) {
@@ -165,7 +174,7 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 
 	@objc(enqueueAsynchronousMessageBlock:for:isStandalone:)
 	public func enqueueAsynchronousMessageBlock(
-		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
+		_ callbackBlock: @escaping LogControllerPrintingBlock,
 		for viewController: LogController,
 		isStandalone: Bool
 	) {
@@ -178,23 +187,23 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 	}
 
 	private func enqueueMessageBlock(
-		_ callbackBlock: @escaping TVCLogControllerPrintingBlock,
+		_ callbackBlock: @escaping LogControllerPrintingBlock,
 		for viewController: LogController,
 		isStandalone: Bool,
 		requiresExplicitFinish: Bool
 	) {
-		let masterController = NSObject.masterController()
+		let applicationController = NSObject.applicationController()
 		let applicationIsTerminating: Bool
 
 		if Thread.isMainThread {
 			applicationIsTerminating = MainActor.assumeIsolated {
-				masterController.applicationIsTerminating
+				applicationController.applicationIsTerminating
 			}
 		} else {
 			nonisolated(unsafe) var terminating = false
-			XRPerformBlockSynchronouslyOnMainQueue {
+			performSynchronouslyOnMainQueue {
 				terminating = MainActor.assumeIsolated {
-					masterController.applicationIsTerminating
+					applicationController.applicationIsTerminating
 				}
 			}
 			applicationIsTerminating = terminating
@@ -259,12 +268,9 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 			operation.addDependency(operationDependency)
 		}
 
-		operation.addObserver(
-			self,
-			forKeyPath: "isFinished",
-			options: .new,
-			context: &LogControllerPrintingOperationQueueKVOContext.token
-		)
+		operation.observeCompletion { [weak self] completedOperation in
+			self?.removePendingOperation(completedOperation)
+		}
 
 		addOperation(operation)
 	}
@@ -298,11 +304,8 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 			operation.removeDependency(operationDependency)
 		}
 
-		operation.removeObserver(
-			self,
-			forKeyPath: "isFinished",
-			context: &LogControllerPrintingOperationQueueKVOContext.token
-		)
+		operation.finishedObservation?.invalidate()
+		operation.finishedObservation = nil
 	}
 
 	@objc(cancelOperationsForViewController:)
@@ -334,22 +337,6 @@ public final class LogControllerPrintingOperationQueue: OperationQueue, @uncheck
 
 			operation.willChangeValue(forKey: "isReady")
 			operation.didChangeValue(forKey: "isReady")
-		}
-	}
-
-	override public func observeValue(
-		forKeyPath keyPath: String?,
-		of object: Any?,
-		change: [NSKeyValueChangeKey: Any]?,
-		context: UnsafeMutableRawPointer?
-	) {
-		guard context == &LogControllerPrintingOperationQueueKVOContext.token else {
-			super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-			return
-		}
-
-		if keyPath == "isFinished", let operation = object as? LogControllerPrintingOperation {
-			removePendingOperation(operation)
 		}
 	}
 }

@@ -37,7 +37,7 @@ public final class OnboardingSettings: NSObject {
 	@objc public var channelsToJoin: [String] = []
 
 	@objc(fontSizeForTextSize:)
-	public class func fontSize(for textSize: TDCOnboardingTextSize) -> CGFloat {
+	public static func fontSize(for textSize: TDCOnboardingTextSize) -> CGFloat {
 		switch textSize {
 		case .small:
 			11.0
@@ -49,7 +49,7 @@ public final class OnboardingSettings: NSObject {
 	}
 
 	@objc(textSizeForFontSize:)
-	public class func textSize(forFontSize fontSize: CGFloat) -> TDCOnboardingTextSize {
+	public static func textSize(forFontSize fontSize: CGFloat) -> TDCOnboardingTextSize {
 		if fontSize < 12.0 {
 			return .small
 		}

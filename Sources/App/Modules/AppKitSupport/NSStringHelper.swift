@@ -12,9 +12,20 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import GlasstualPluginKit
 
 private func isBase10Numeric(_ character: unichar) -> Bool {
 	character >= 0x30 && character <= 0x39
+}
+
+private func maximumHostmaskNicknameLength(on client: IRCClient?) -> Int {
+	guard let client, client.isConnectedToZNC == false, client.supportInfo.configurationReceived else {
+		return 50
+	}
+
+	let configuredMaximum = Int(client.supportInfo.maximumNicknameLength)
+	return configuredMaximum > 0 ? configuredMaximum : 50
 }
 
 public extension NSString {
@@ -24,16 +35,16 @@ public extension NSString {
 			return false
 		}
 
-		if isIPAddress || isEqual(to: "localhost") {
+		if (self as String).isIPAddress || isEqual(to: "localhost") {
 			return true
 		}
 
-		return onlyContainsCharacters(from: NSCharacterSet.ato9UnderscoreDashPeriod as CharacterSet)
+		return ce_onlyContainsCharacters(from: NSCharacterSet.textualAlphanumericDashPeriodSet as CharacterSet)
 	}
 
 	@objc(isValidInternetPort)
 	var isValidInternetPort: Bool {
-		guard isNumericOnly else {
+		guard ceIsNumericOnly else {
 			return false
 		}
 
@@ -42,7 +53,7 @@ public extension NSString {
 	}
 
 	@objc var stringByAppendingIRCFormattingStop: String {
-		(self as String) + String(utf16CodeUnits: [UniChar(IRCTextFormatterTerminatingCharacter)], count: 1)
+		(self as String) + String(utf16CodeUnits: [UniChar(IRCTextFormatterControlCharacter.terminator)], count: 1)
 	}
 
 	@objc(hostmaskComponents:username:address:)
@@ -61,39 +72,16 @@ public extension NSString {
 		address: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		on client: IRCClient?
 	) -> Bool {
-		guard length > 0 else {
+		guard let components = IRCHostmask(
+			parsing: self as String,
+			maximumNicknameLength: maximumHostmaskNicknameLength(on: client)
+		) else {
 			return false
 		}
 
-		let bang1pos = range(of: "!", options: .literal)
-		let bang2pos = range(of: "@", options: [.literal, .backwards])
-
-		guard bang1pos.location != NSNotFound,
-		      bang2pos.location != NSNotFound,
-		      bang2pos.location > bang1pos.location
-		else {
-			return false
-		}
-
-		let nicknameInt = substring(to: bang1pos.location) as NSString
-		let usernameInt = substring(
-			with: NSRange(
-				location: bang1pos.location + 1,
-				length: bang2pos.location - (bang1pos.location + 1)
-			)
-		) as NSString
-		let addressInt = substring(after: UInt(bang2pos.location)) as NSString
-
-		guard nicknameInt.isHostmaskNickname(on: client),
-		      usernameInt.isHostmaskUsername(on: client),
-		      addressInt.isHostmaskAddress(on: client)
-		else {
-			return false
-		}
-
-		nickname?.pointee = nicknameInt
-		username?.pointee = usernameInt
-		address?.pointee = addressInt
+		nickname?.pointee = components.nickname as NSString
+		username?.pointee = components.username as NSString
+		address?.pointee = components.address as NSString
 
 		return true
 	}
@@ -110,7 +98,7 @@ public extension NSString {
 
 	@objc(isHostmaskAddressOn:)
 	func isHostmaskAddress(on _: IRCClient?) -> Bool {
-		length > 0 && containsCharacters("\u{021}\u{040}\u{000}\u{020}\u{00d}\u{00a}") == false
+		IRCHostmask.isValidAddress(self as String)
 	}
 
 	@objc(isHostmaskUsername)
@@ -120,9 +108,7 @@ public extension NSString {
 
 	@objc(isHostmaskUsernameOn:)
 	func isHostmaskUsername(on _: IRCClient?) -> Bool {
-		length > 0
-			&& length <= 40
-			&& containsCharacters("\u{000}\u{020}\u{00d}\u{00a}") == false
+		IRCHostmask.isValidUsername(self as String)
 	}
 
 	@objc(isHostmaskNickname)
@@ -132,28 +118,10 @@ public extension NSString {
 
 	@objc(isHostmaskNicknameOn:)
 	func isHostmaskNickname(on client: IRCClient?) -> Bool {
-		var maximumLength: UInt = 50
-
-		if let client {
-			if client.supportInfo.configurationReceived {
-				maximumLength = client.supportInfo.maximumNicknameLength
-			} else {
-				maximumLength = 0
-			}
-
-			if client.isConnectedToZNC {
-				maximumLength = 0
-			}
-		}
-
-		if maximumLength == 0 {
-			maximumLength = 50
-		}
-
-		return (isEqual(to: "*") == false)
-			&& length > 0
-			&& length <= Int(maximumLength)
-			&& containsCharacters("\u{021}\u{040}\u{000}\u{020}\u{00d}\u{00a}") == false
+		IRCHostmask.isValidNickname(
+			self as String,
+			maximumLength: maximumHostmaskNicknameLength(on: client)
+		)
 	}
 
 	@objc(isChannelNameOn:)
@@ -162,18 +130,11 @@ public extension NSString {
 			return false
 		}
 
-		let channelNamePrefixes = client.supportInfo.channelNamePrefixes as? [String] ?? []
+		let channelNamePrefixes = client.supportInfo.channelNamePrefixes
+		let channelName = self as String
+		let firstCharacter = String(channelName.prefix(1))
 
-		if length == 1 {
-			let character = stringCharacter(at: 0) ?? ""
-			return channelNamePrefixes.contains(character)
-		}
-
-		let character1 = stringCharacter(at: 0) ?? ""
-		let character2 = stringCharacter(at: 1) ?? ""
-		let isPartyline = (character1 == "~" && character2 == "#")
-
-		return isPartyline || channelNamePrefixes.contains(character1)
+		return channelName.hasPrefix("~#") || channelNamePrefixes.contains(firstCharacter)
 	}
 
 	@objc(isChannelName)
@@ -182,8 +143,9 @@ public extension NSString {
 			return false
 		}
 
-		let c = character(at: 0)
-		return c == 0x23 || c == 0x26 || c == 0x2B || c == 0x21 || c == 0x7E || c == 0x3F
+		let firstCharacter = character(at: 0)
+		return firstCharacter == 0x23 || firstCharacter == 0x26 || firstCharacter == 0x2B
+			|| firstCharacter == 0x21 || firstCharacter == 0x7E || firstCharacter == 0x3F
 	}
 
 	@objc var channelNameWithoutBang: String? {
@@ -204,8 +166,8 @@ public extension NSString {
 			return self as String
 		}
 
-		let channelNamePrefixes = client.supportInfo.channelNamePrefixes as? [String] ?? []
-		let character = stringCharacter(at: 0) ?? ""
+		let channelNamePrefixes = client.supportInfo.channelNamePrefixes
+		let character = String((self as String).prefix(1))
 
 		if channelNamePrefixes.contains(character) {
 			return substring(from: 1)
@@ -251,7 +213,7 @@ public extension NSString {
 		preferredFontColor: NSColor?,
 		honorFormattingPreference formattingPreference: Bool
 	) -> NSAttributedString? {
-		if formattingPreference, TPCPreferences.removeAllFormatting() {
+		if formattingPreference, TextualPreferences.removeAllFormatting() {
 			return NSAttributedString(string: stripIRCEffects)
 		}
 
@@ -279,51 +241,7 @@ public extension NSString {
 	}
 
 	@objc var stripIRCEffects: String {
-		let stringLength = length
-
-		guard stringLength > 0 else {
-			return self as String
-		}
-
-		var inputBuffer = [UniChar](repeating: 0, count: stringLength)
-		var outputBuffer = [UniChar](repeating: 0, count: stringLength)
-
-		getCharacters(&inputBuffer, range: range)
-
-		var currentPosition = 0
-		var i = 0
-
-		while i < stringLength {
-			let character = inputBuffer[i]
-
-			switch character {
-			case UniChar(IRCTextFormatterEffectBoldCharacter),
-			     UniChar(IRCTextFormatterEffectItalicCharacter),
-			     UniChar(IRCTextFormatterEffectItalicCharacterOld),
-			     UniChar(IRCTextFormatterEffectMonospaceCharacter),
-			     UniChar(IRCTextFormatterEffectStrikethroughCharacter),
-			     UniChar(IRCTextFormatterEffectUnderlineCharacter),
-			     UniChar(IRCTextFormatterTerminatingCharacter):
-				break
-			case UniChar(IRCTextFormatterEffectColorAsDigitCharacter),
-			     UniChar(IRCTextFormatterEffectColorAsHexCharacter):
-				i += Int(
-					colorComponents(
-						ofCharacter: character,
-						startingAt: UInt(i),
-						foregroundColor: nil,
-						backgroundColor: nil
-					)
-				) - 1
-			default:
-				outputBuffer[currentPosition] = character
-				currentPosition += 1
-			}
-
-			i += 1
-		}
-
-		return NSString(characters: outputBuffer, length: currentPosition) as String
+		IRCFormatting.removingControlCodes(from: self as String)
 	}
 
 	@objc(colorComponentsOfCharacter:startingAt:foregroundColor:backgroundColor:)
@@ -333,7 +251,7 @@ public extension NSString {
 		foregroundColor: AutoreleasingUnsafeMutablePointer<AnyObject?>?,
 		backgroundColor: AutoreleasingUnsafeMutablePointer<AnyObject?>?
 	) -> UInt {
-		if character == UniChar(IRCTextFormatterEffectColorAsDigitCharacter) {
+		if character == UniChar(IRCTextFormatterControlCharacter.colorDigit) {
 			var foregroundNumber: NSNumber?
 			var backgroundNumber: NSNumber?
 
@@ -353,7 +271,7 @@ public extension NSString {
 			return consumed
 		}
 
-		if character == UniChar(IRCTextFormatterEffectColorAsHexCharacter) {
+		if character == UniChar(IRCTextFormatterControlCharacter.colorHex) {
 			var foregroundNSColor: NSColor?
 			var backgroundNSColor: NSColor?
 
@@ -397,11 +315,11 @@ public extension NSString {
 			}
 
 			if let mForegroundColor {
-				foregroundColor = NSColor(hexadecimalValue: mForegroundColor.uppercased())
+				foregroundColor = NSColor.textual_color(hexadecimalValue: mForegroundColor.uppercased())
 			}
 
 			if let mBackgroundColor {
-				backgroundColor = NSColor(hexadecimalValue: mBackgroundColor.uppercased())
+				backgroundColor = NSColor.textual_color(hexadecimalValue: mBackgroundColor.uppercased())
 			}
 
 			return UInt(currentPosition - Int(rangeStart))
@@ -413,7 +331,9 @@ public extension NSString {
 
 		let foregroundCandidate = substring(with: NSRange(location: currentPosition, length: 6)) as NSString
 
-		if foregroundCandidate.onlyContainsCharacters(from: NSCharacterSet.hexadecimal as CharacterSet) {
+		if foregroundCandidate
+			.ce_onlyContainsCharacters(from: NSCharacterSet.textualHexadecimalCharacterSet as CharacterSet)
+		{
 			mForegroundColor = foregroundCandidate as String
 			currentPosition += 6
 		} else {
@@ -424,9 +344,9 @@ public extension NSString {
 			return finish()
 		}
 
-		let a = character(at: currentPosition)
+		let separator = character(at: currentPosition)
 
-		guard a == 0x2C else {
+		guard separator == 0x2C else {
 			return finish()
 		}
 
@@ -439,7 +359,9 @@ public extension NSString {
 
 		let backgroundCandidate = substring(with: NSRange(location: currentPosition, length: 6)) as NSString
 
-		if backgroundCandidate.onlyContainsCharacters(from: NSCharacterSet.hexadecimal as CharacterSet) {
+		if backgroundCandidate
+			.ce_onlyContainsCharacters(from: NSCharacterSet.textualHexadecimalCharacterSet as CharacterSet)
+		{
 			mBackgroundColor = backgroundCandidate as String
 			currentPosition += 6
 		}
@@ -468,13 +390,13 @@ public extension NSString {
 			}
 
 			if mForegroundColor != NSNotFound,
-			   mForegroundColor <= Int(IRCTextFormatterEffectColorHighestDigit)
+			   mForegroundColor <= Int(IRCTextFormatterColor.maximumPaletteIndex)
 			{
 				foregroundColor = NSNumber(value: mForegroundColor)
 			}
 
 			if mBackgroundColor != NSNotFound,
-			   mBackgroundColor <= Int(IRCTextFormatterEffectColorHighestDigit)
+			   mBackgroundColor <= Int(IRCTextFormatterColor.maximumPaletteIndex)
 			{
 				backgroundColor = NSNumber(value: mBackgroundColor)
 			}
@@ -486,23 +408,23 @@ public extension NSString {
 			return finish()
 		}
 
-		let a = character(at: currentPosition)
+		let firstForegroundDigit = character(at: currentPosition)
 
-		guard isBase10Numeric(a) else {
+		guard isBase10Numeric(firstForegroundDigit) else {
 			return finish()
 		}
 
-		mForegroundColor = Int(a - 0x30)
+		mForegroundColor = Int(firstForegroundDigit - 0x30)
 		currentPosition += 1
 
 		guard currentPosition < selfLength else {
 			return finish()
 		}
 
-		let b = character(at: currentPosition)
+		let secondForegroundDigit = character(at: currentPosition)
 
-		if isBase10Numeric(b) {
-			mForegroundColor = mForegroundColor * 10 + Int(b - 0x30)
+		if isBase10Numeric(secondForegroundDigit) {
+			mForegroundColor = mForegroundColor * 10 + Int(secondForegroundDigit - 0x30)
 			currentPosition += 1
 		}
 
@@ -510,9 +432,9 @@ public extension NSString {
 			return finish()
 		}
 
-		let c = character(at: currentPosition)
+		let separator = character(at: currentPosition)
 
-		guard c == 0x2C else {
+		guard separator == 0x2C else {
 			return finish()
 		}
 
@@ -523,26 +445,26 @@ public extension NSString {
 			return finish()
 		}
 
-		let d = character(at: currentPosition)
+		let firstBackgroundDigit = character(at: currentPosition)
 
-		guard isBase10Numeric(d) else {
+		guard isBase10Numeric(firstBackgroundDigit) else {
 			return finish()
 		}
 
-		mBackgroundColor = Int(d - 0x30)
+		mBackgroundColor = Int(firstBackgroundDigit - 0x30)
 		currentPosition += 1
 
 		guard currentPosition < selfLength else {
 			return finish()
 		}
 
-		let e = character(at: currentPosition)
+		let secondBackgroundDigit = character(at: currentPosition)
 
-		guard isBase10Numeric(e) else {
+		guard isBase10Numeric(secondBackgroundDigit) else {
 			return finish()
 		}
 
-		mBackgroundColor = mBackgroundColor * 10 + Int(e - 0x30)
+		mBackgroundColor = mBackgroundColor * 10 + Int(secondBackgroundDigit - 0x30)
 		currentPosition += 1
 
 		return finish()
@@ -559,7 +481,7 @@ public extension NSString {
 		}
 
 		let encodedString = selfData.base64EncodedString(options: []) as NSString
-		return encodedString.split(withMaximumLength: lineLength) as? [String] ?? [encodedString as String]
+		return encodedString.ce_split(maximumLength: lineLength)
 	}
 
 	@objc(padNicknameWithCharacter:maximumLength:)
@@ -600,16 +522,12 @@ public extension NSString {
 			return self as String
 		}
 
-		let bob = NSMutableString(string: self as String)
-		let fullRange = bob.range
-
-		bob.replaceOccurrences(of: "\\", with: "\\\\", options: [], range: fullRange)
-		bob.replaceOccurrences(of: ";", with: "\\:", options: [], range: bob.range)
-		bob.replaceOccurrences(of: " ", with: "\\s", options: [], range: bob.range)
-		bob.replaceOccurrences(of: "\r", with: "\\r", options: [], range: bob.range)
-		bob.replaceOccurrences(of: "\n", with: "\\n", options: [], range: bob.range)
-
-		return bob as String
+		return (self as String)
+			.replacingOccurrences(of: "\\", with: "\\\\")
+			.replacingOccurrences(of: ";", with: "\\:")
+			.replacingOccurrences(of: " ", with: "\\s")
+			.replacingOccurrences(of: "\r", with: "\\r")
+			.replacingOccurrences(of: "\n", with: "\\n")
 	}
 
 	@objc var decodedMessageTagString: String {
@@ -676,6 +594,6 @@ public extension NSString {
 			return false
 		}
 
-		return NSCharacterSet.atoZ.contains(scalar)
+		return (NSCharacterSet.textualLetterCharacterSet as CharacterSet).contains(scalar)
 	}
 }

@@ -13,12 +13,13 @@
 import AppKit
 
 @objc(TVCErrorMessagePopoverController)
+@MainActor
 public final class ErrorMessagePopoverController: NSObject {
-	private var visiblePopover: TVCErrorMessagePopover?
+	private var visiblePopover: ErrorMessagePopover?
 
-	private nonisolated(unsafe) static var sharedInstance = ErrorMessagePopoverController()
+	private static let sharedInstance = ErrorMessagePopoverController()
 
-	@objc public class func sharedController() -> ErrorMessagePopoverController {
+	@objc public static func sharedController() -> ErrorMessagePopoverController {
 		sharedInstance
 	}
 
@@ -33,7 +34,7 @@ public final class ErrorMessagePopoverController: NSObject {
 				popover.close()
 			}
 
-			popover = TVCErrorMessagePopover(message: message, relativeTo: view)
+			popover = ErrorMessagePopover(message: message, relativeTo: view)
 		}
 
 		if let popover {

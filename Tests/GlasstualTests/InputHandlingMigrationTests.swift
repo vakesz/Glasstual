@@ -4,16 +4,6 @@ import XCTest
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
 /// #import "GLTTestClient.h"
-/// #import "IRCChannelPrivate.h"
-/// #import "IRCChannelUserPrivate.h"
-/// #import "IRCUser.h"
-/// #import "TLOInputHistoryPrivate.h"
-/// #import "TLOKeyEventHandler.h"
-/// #import "TLONicknameCompletionStatusPrivate.h"
-/// #import "IRCCommandIndexPrivate.h"
-/// #import "TPCPreferencesUserDefaults.h"
-/// #import "TVCMainWindow.h"
-/// #import "TVCMainWindowTextView.h"
 /** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
@@ -34,14 +24,14 @@ class GLTKeyEventTarget: NSObject {
 private final class GLTCompletionWindow: NicknameCompletionWindow {
 	var inputTextField: MainWindowTextView!
 	var selectedClient: IRCClient?
-	var selectedChannel: IRCChannel?
+	var selectedChannel: Channel?
 }
 
 @objc
-class GLTCompletionChannel: IRCChannel {
-	@objc var testMembers: [IRCChannelUser] = []
+class GLTCompletionChannel: Channel, @unchecked Sendable {
+	@objc var testMembers: [ChannelUser] = []
 
-	override var memberList: [IRCChannelUser]? {
+	override var channelMembers: [ChannelUser]? {
 		testMembers
 	}
 }
@@ -62,7 +52,7 @@ class InputHandlingMigrationTests: XCTestCase {
 			backing: .buffered,
 			defer: false
 		)
-		let history = TLOInputHistory(window: window)
+		let history = InputHistory(window: window)
 
 		history.add(NSAttributedString(string: "first"))
 		history.add(NSAttributedString(string: "second"))
@@ -79,7 +69,7 @@ class InputHandlingMigrationTests: XCTestCase {
 	@objc
 	func testKeyEventHandlerDispatchesRegisteredKeyCode() {
 		let target = GLTKeyEventTarget()
-		let handler = TLOKeyEventHandler(target: target)
+		let handler = KeyEventHandler(target: target)
 		let event = keyEventWithCharacters("a", modifiers: .command, keyCode: 42)
 
 		handler.register(
@@ -97,7 +87,7 @@ class InputHandlingMigrationTests: XCTestCase {
 	@objc
 	func testKeyEventHandlerFallsBackToCaseInsensitiveCharacter() throws {
 		let target = GLTKeyEventTarget()
-		let handler = TLOKeyEventHandler(target: target)
+		let handler = KeyEventHandler(target: target)
 		let event = keyEventWithCharacters("A", modifiers: [], keyCode: 42)
 
 		try handler.register(
@@ -112,16 +102,34 @@ class InputHandlingMigrationTests: XCTestCase {
 	@objc
 	func testKeyEventHandlerReturnsNoForUnregisteredEvent() {
 		let target = GLTKeyEventTarget()
-		let handler = TLOKeyEventHandler(target: target)
+		let handler = KeyEventHandler(target: target)
 		let event = keyEventWithCharacters("z", modifiers: [], keyCode: 6)
 
 		XCTAssertFalse(handler.processKeyEvent(event))
 		XCTAssertEqual(target.invocationCount, 0)
 	}
 
+	func testKeyEventHandlerDispatchesTypedShortcutAction() {
+		let handler = KeyEventHandler(target: GLTKeyEventTarget())
+		let event = keyEventWithCharacters("\u{1b}", modifiers: .command, keyCode: KeyCode.escape.rawValue)
+		var receivedEvent: NSEvent?
+		handler.register(key: .escape, modifiers: .command) { receivedEvent = $0 }
+
+		XCTAssertTrue(handler.processKeyEvent(event))
+		XCTAssertEqual(receivedEvent, event)
+	}
+
+	func testInputHandlingRetainsNibAndSelectorCompatibility() {
+		XCTAssertNotNil(NSClassFromString("TLOKeyEventHandler"))
+		XCTAssertTrue(KeyEventHandler.instancesRespond(to: NSSelectorFromString("processKeyEvent:")))
+		XCTAssertTrue(KeyEventHandler.instancesRespond(to: NSSelectorFromString("setKeyHandlerTarget:")))
+		XCTAssertNotNil(NSClassFromString("TLONicknameCompletionStatus"))
+		XCTAssertTrue(NicknameCompletionStatus.instancesRespond(to: NSSelectorFromString("completeNickname:")))
+	}
+
 	@objc
 	func testNicknameCompletionCompletesLocalCommandAndPreservesCommandPrefix() {
-		IRCCommandIndex.populateCommandIndex()
+		CommandIndex.populateCommandIndex()
 
 		let hostWindow = NSWindow(
 			contentRect: NSRect(x: 0, y: 0, width: 400, height: 100),
@@ -145,7 +153,7 @@ class InputHandlingMigrationTests: XCTestCase {
 
 	@objc
 	func testNicknameCompletionUsesChannelMembersAndConfiguredSuffix() {
-		let defaults = TPCPreferencesUserDefaults.shared()
+		let defaults = TextualUserDefaults.shared()
 		let preferenceKey = "Keyboard -> Tab Key Completion Suffix"
 		let originalSuffix = defaults.object(forKey: preferenceKey)
 

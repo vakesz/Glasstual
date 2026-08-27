@@ -1,0 +1,30 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "status-message" : {
+      "comment" : "Status shown beside the indeterminate progress indicator.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please wait a moment while this task is completed…"
+          }
+        }
+      }
+    },
+    "window-title" : {
+      "comment" : "Title of the progress sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task in Progress"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

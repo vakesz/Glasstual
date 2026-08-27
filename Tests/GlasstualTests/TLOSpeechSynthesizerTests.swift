@@ -3,10 +3,11 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+@testable import Glasstual
 import XCTest
 
-private final class SpeechSynthesizerEngineSpy: NSObject, TLOSpeechSynthesizerEngine {
-	weak var delegate: TLOSpeechSynthesizerEngineDelegate?
+private final class SpeechSynthesizerEngineSpy: NSObject, SpeechSynthesizerEngine {
+	weak var delegate: SpeechSynthesizerEngineDelegate?
 	private(set) var isSpeaking = false
 	private(set) var stopCount = 0
 	private(set) var spokenTexts: [String] = []
@@ -31,10 +32,31 @@ private final class SpeechSynthesizerEngineSpy: NSObject, TLOSpeechSynthesizerEn
 	}
 }
 
+private final class SpeechSynthesizerEngineDelegateSpy: NSObject, SpeechSynthesizerEngineDelegate {
+	func speechSynthesizerEngineDidCompleteUtterance() {}
+}
+
+@MainActor
 final class TLOSpeechSynthesizerTests: XCTestCase {
+	func testAVSpeechEngineKeepsItsDelegateWeak() {
+		let engine = AVSpeechSynthesizerEngine()
+		weak var weakDelegate: SpeechSynthesizerEngineDelegateSpy?
+
+		autoreleasepool {
+			let delegate = SpeechSynthesizerEngineDelegateSpy()
+			weakDelegate = delegate
+			engine.delegate = delegate
+
+			XCTAssertTrue(engine.delegate === delegate)
+		}
+
+		XCTAssertNil(weakDelegate)
+		XCTAssertNil(engine.delegate)
+	}
+
 	func testQueuedTextStartsInOrderAsUtterancesComplete() {
 		let engine = SpeechSynthesizerEngineSpy()
-		let synthesizer = TLOSpeechSynthesizer(engine: engine)
+		let synthesizer = SpeechSynthesizer(engine: engine)
 
 		synthesizer.speak("first")
 		synthesizer.speak("second")
@@ -50,7 +72,7 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 
 	func testStoppingRejectsNewItemsAndStopsCurrentUtterance() {
 		let engine = SpeechSynthesizerEngineSpy()
-		let synthesizer = TLOSpeechSynthesizer(engine: engine)
+		let synthesizer = SpeechSynthesizer(engine: engine)
 
 		synthesizer.speak("active")
 		synthesizer.isStopped = true
@@ -63,7 +85,7 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 
 	func testClearQueueLeavesCurrentUtteranceAlone() {
 		let engine = SpeechSynthesizerEngineSpy()
-		let synthesizer = TLOSpeechSynthesizer(engine: engine)
+		let synthesizer = SpeechSynthesizer(engine: engine)
 
 		synthesizer.speak("active")
 		synthesizer.speak("queued")
@@ -78,18 +100,18 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		let engine = SpeechSynthesizerEngineSpy()
 		engine.simulateActiveUtterance()
 
-		let synthesizer = TLOSpeechSynthesizer(engine: engine)
+		let synthesizer = SpeechSynthesizer(engine: engine)
 		let firstClient = GLTTestClient()
 		let secondClient = GLTTestClient()
-		let firstNotification = TLOSpokenNotification(
-			notification: .connect,
+		let firstNotification = SpokenNotification(
+			notificationType: .connect,
 			lineType: .notice,
 			target: firstClient,
 			nickname: "first",
 			text: "one"
 		)
-		let secondNotification = TLOSpokenNotification(
-			notification: .connect,
+		let secondNotification = SpokenNotification(
+			notificationType: .connect,
 			lineType: .notice,
 			target: secondClient,
 			nickname: "second",
@@ -112,7 +134,7 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		let engine = SpeechSynthesizerEngineSpy()
 		engine.simulateActiveUtterance()
 
-		let synthesizer = TLOSpeechSynthesizer(engine: engine)
+		let synthesizer = SpeechSynthesizer(engine: engine)
 
 		synthesizer.speak(42)
 		synthesizer.speak("valid")

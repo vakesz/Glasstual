@@ -51,18 +51,18 @@ public final class SystemInformation: NSObject {
 	}()
 
 	@objc(systemIsSleeping)
-	public class var systemIsSleeping: Bool {
+	public static var systemIsSleeping: Bool {
 		_ = sleepObservers
 		return sleepStateLock.withLock { sleeping }
 	}
 
 	@objc(systemBuildVersion)
-	public class var systemBuildVersion: String? {
+	public static var systemBuildVersion: String? {
 		SystemVersion.shared.productBuildVersion
 	}
 
 	@objc(systemStandardVersion)
-	public class var systemStandardVersion: String {
+	public static var systemStandardVersion: String {
 		let version = ProcessInfo.processInfo.operatingSystemVersion
 		if version.patchVersion == 0 {
 			return "\(version.majorVersion).\(version.minorVersion)"
@@ -71,40 +71,71 @@ public final class SystemInformation: NSObject {
 	}
 
 	@objc(systemOperatingSystemName)
-	public class var systemOperatingSystemName: String {
-		let key = ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 26 ? "macOS Tahoe" : "macOS"
-		return localizedString(key)
+	public static var systemOperatingSystemName: String {
+		if ProcessInfo.processInfo.operatingSystemVersion.majorVersion == 26 {
+			return String(localized: .XRSystemInformation.operatingSystemTahoe)
+		}
+		return String(localized: .XRSystemInformation.operatingSystemMacos)
 	}
 
 	@available(*, deprecated, message: "Return value is not reliable on new Macs. No alternative available.")
 	@objc(systemModelName)
-	public class var systemModelName: String? {
+	public static var systemModelName: String? {
 		guard let token = systemModelToken?.lowercased(), !token.isEmpty else { return nil }
-
-		let names = [
-			"macbookpro": "MacBook Pro",
-			"macbookair": "MacBook Air",
-			"macbook": "MacBook",
-			"macpro": "Mac Pro",
-			"macmini": "Mac Mini",
-			"imac": "iMac",
-			"xserve": "Xserve",
-		]
-
-		let name = names.first(where: { token.hasPrefix($0.key) })?.value ?? "Mac"
-		return localizedString(name)
+		return SystemModelFamily(token: token).localizedName
 	}
 
-	private class var systemModelToken: String? {
+	private static var systemModelToken: String? {
 		var buffer = [CChar](repeating: 0, count: 256)
 		var size = buffer.count
 		guard sysctlbyname("hw.model", &buffer, &size, nil, 0) == 0 else { return nil }
 		let bytes = buffer.prefix { $0 != 0 }.map(UInt8.init(bitPattern:))
 		return String(bytes: bytes, encoding: .utf8)
 	}
+}
 
-	private class func localizedString(_ key: String) -> String {
-		NSLocalizedString(key, tableName: "XRSystemInformation", bundle: Bundle(for: self), comment: "")
+private enum SystemModelFamily {
+	case genericMac
+	case iMac
+	case macBook
+	case macBookAir
+	case macBookPro
+	case macMini
+	case macPro
+	case xserve
+
+	init(token: String) {
+		self = if token.hasPrefix("macbookpro") {
+			.macBookPro
+		} else if token.hasPrefix("macbookair") {
+			.macBookAir
+		} else if token.hasPrefix("macbook") {
+			.macBook
+		} else if token.hasPrefix("macpro") {
+			.macPro
+		} else if token.hasPrefix("macmini") {
+			.macMini
+		} else if token.hasPrefix("imac") {
+			.iMac
+		} else if token.hasPrefix("xserve") {
+			.xserve
+		} else {
+			.genericMac
+		}
+	}
+
+	var localizedName: String {
+		let resource: LocalizedStringResource = switch self {
+		case .genericMac: .XRSystemInformation.genericMac
+		case .iMac: .XRSystemInformation.imac
+		case .macBook: .XRSystemInformation.macbook
+		case .macBookAir: .XRSystemInformation.macbookAir
+		case .macBookPro: .XRSystemInformation.macbookPro
+		case .macMini: .XRSystemInformation.macMini
+		case .macPro: .XRSystemInformation.macPro
+		case .xserve: .XRSystemInformation.xserve
+		}
+		return String(localized: resource)
 	}
 }
 

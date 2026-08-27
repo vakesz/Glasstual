@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 @objc(TVCValidatedTextField)
 public final class ValidatedTextField: NSTextField {
@@ -30,9 +31,9 @@ public final class ValidatedTextField: NSTextField {
 		var processedValue = super.stringValue
 
 		if stringValueUsesOnlyFirstToken {
-			processedValue = (processedValue as NSString).trimAndGetFirstToken
+			processedValue = (processedValue as NSString).ceTrimAndGetFirstToken
 		} else if stringValueIsTrimmed {
-			processedValue = (processedValue as NSString).trim
+			processedValue = (processedValue as NSString).ceTrim as String
 		}
 
 		if processedValue.isEmpty {
@@ -60,13 +61,17 @@ public final class ValidatedTextField: NSTextField {
 		cachedValidValue
 	}
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
-		cachedValidValue = false
+		MainActor.assumeIsolated {
+			cachedValidValue = false
+		}
 	}
 
 	deinit {
-		closeValidationErrorPopover()
+		MainActor.assumeIsolated {
+			closeValidationErrorPopover()
+		}
 	}
 
 	override public var stringValue: String {
@@ -107,7 +112,7 @@ public final class ValidatedTextField: NSTextField {
 		} else if performValidationWhenEmpty {
 			errorDescription = validationBlock?(stringToValidate)
 		} else if stringValueIsInvalidOnEmpty {
-			errorDescription = LocalizedKey("BasicLanguage[fo8-1h]")
+			errorDescription = ApplicationStrings.requiredField
 		}
 
 		validationPerformed = true
@@ -164,7 +169,7 @@ public final class ValidatedTextField: NSTextField {
 		let selector = NSSelectorFromString("validatedTextFieldTextDidChange:")
 
 		if textDidChangeCallback.responds(to: selector) {
-			textDidChangeCallback.perform(selector, with: self)
+			_ = textDidChangeCallback.perform(selector, with: self)
 		}
 	}
 }

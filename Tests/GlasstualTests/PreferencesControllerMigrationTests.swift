@@ -35,7 +35,7 @@ final class PreferencesControllerMigrationTests: XCTestCase {
 			XCTAssertTrue(PreferencesController.instancesRespond(to: NSSelectorFromString(selector)), selector)
 		}
 
-		let metaClass = try? XCTUnwrap(object_getClass(PreferencesController.self))
+		let metaClass: AnyClass? = try? XCTUnwrap(object_getClass(PreferencesController.self))
 		XCTAssertTrue(metaClass.map { class_respondsToSelector(
 			$0,
 			NSSelectorFromString("openProxySettingsInSystemPreferences")
@@ -44,13 +44,14 @@ final class PreferencesControllerMigrationTests: XCTestCase {
 
 	func testPaneCatalogKeepsEveryBuiltInPaneAndCompatibilityEntry() {
 		XCTAssertEqual(PreferencesPaneCatalog.panes.count, 19)
-		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "general")?.group, PreferencesPaneCatalog.mainGroup)
-		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "addons")?.group, PreferencesPaneCatalog.addonsGroup)
+		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "general")?.group, .main)
+		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "addons")?.group, .addOns)
 		XCTAssertEqual(
 			PreferencesPaneCatalog.descriptor(for: "compatibility")?.contentViewKey,
 			"contentViewCompatibility"
 		)
-		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "hidden")?.group, PreferencesPaneCatalog.advancedGroup)
+		XCTAssertEqual(PreferencesPaneCatalog.descriptor(for: "hidden")?.group, .advanced)
+		XCTAssertEqual(Set(PreferencesPaneCatalog.panes.map(\.identifier)), Set(PreferencesPaneIdentifier.allCases))
 	}
 
 	func testPluginIdentifiersRoundTripAndRejectMalformedValues() {

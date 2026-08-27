@@ -48,7 +48,7 @@ public final class TimedCommand: NSObject {
 	@objc public let channelId: String?
 	@objc public let command: String
 
-	private var timer: TLOTimer!
+	private var timer: TimerImplementation!
 	private var startedBefore = false
 
 	@available(*, unavailable)
@@ -70,7 +70,7 @@ public final class TimedCommand: NSObject {
 
 		super.init()
 
-		timer = TLOTimer(actionBlock: { [weak self, weak client] _ in
+		timer = TimerImplementation(actionBlock: { [weak self, weak client] _ in
 			guard let self, let client else {
 				return
 			}

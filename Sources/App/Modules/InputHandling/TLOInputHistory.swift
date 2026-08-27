@@ -131,15 +131,14 @@ public final class InputHistory: NSObject {
 
 	@objc(destroy:)
 	public func destroy(_ treeItem: IRCTreeItem) {
-		guard TPCPreferences.inputHistoryIsChannelSpecific() else {
+		guard TextualPreferences.inputHistoryIsChannelSpecific() else {
 			return
 		}
 
 		withLock {
 			if let client = treeItem as? IRCClient {
 				for channel in client.channelList {
-					let channelTreeItem = (channel as AnyObject) as! IRCTreeItem
-					destroy(channelTreeItem)
+					destroy(channel)
 				}
 			}
 
@@ -155,7 +154,7 @@ public final class InputHistory: NSObject {
 	@objc(moveFocusTo:)
 	@MainActor
 	public func moveFocus(to treeItem: IRCTreeItem) {
-		guard TPCPreferences.inputHistoryIsChannelSpecific(),
+		guard TextualPreferences.inputHistoryIsChannelSpecific(),
 		      let textView = window?.inputTextField as? TextViewWithIRCFormatter
 		else {
 			return
@@ -176,8 +175,8 @@ public final class InputHistory: NSObject {
 
 	@MainActor @objc public func noteInputHistoryObjectScopeDidChange() {
 		withLock {
-			if TPCPreferences.inputHistoryIsChannelSpecific() {
-				for client in NSObject.masterController().world.clientList {
+			if TextualPreferences.inputHistoryIsChannelSpecific() {
+				for client in NSObject.applicationController().world.clientList {
 					applyGlobalHistory(to: client.uniqueIdentifier)
 
 					for channel in client.channelList {
@@ -220,7 +219,7 @@ public final class InputHistory: NSObject {
 
 	private func currentObjectForFocusedTreeView() -> InputHistoryObject? {
 		withLock {
-			let currentObjectKey: String? = if TPCPreferences.inputHistoryIsChannelSpecific() {
+			let currentObjectKey: String? = if TextualPreferences.inputHistoryIsChannelSpecific() {
 				currentTreeItem
 			} else {
 				inputHistoryGlobalObjectKey

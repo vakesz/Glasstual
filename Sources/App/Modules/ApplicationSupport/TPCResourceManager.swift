@@ -10,8 +10,16 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
+
+public enum ResourceDocumentType {
+	public static let bundleFileExtension = ".bundle"
+	public static let bundleFilenameExtension = "bundle"
+	public static let scriptFileExtension = ".scpt"
+	public static let scriptFilenameExtension = "scpt"
+}
 
 @objc(TPCResourceManager)
 public final class ResourceManager: NSObject {
@@ -248,6 +256,6 @@ public final class ResourceManager: NSObject {
 	}
 
 	private static func displayPath(for url: URL) -> String {
-		(url as NSURL).standardizedTildePath ?? url.path
+		(url as NSURL).textualStandardizedTildePath ?? url.path
 	}
 }

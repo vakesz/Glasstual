@@ -75,20 +75,6 @@ final class TPCThemeMigrationTests: XCTestCase {
 		XCTAssertTrue(settings.usesIncompatibleTemplateEngineVersion)
 	}
 
-	func testObjectiveCRuntimeSelectorsRemainAvailable() throws {
-		let fixture = try makeThemeFixture(settings: [
-			"Template Engine Versions": ["default": TPCThemeSettingsNewestTemplateEngineVersion],
-		])
-		defer { try? FileManager.default.removeItem(at: fixture) }
-
-		let theme = TPCTheme(url: fixture, inStorageLocation: .custom)
-
-		XCTAssertTrue(theme.responds(to: NSSelectorFromString("templateWithLineType:")))
-		XCTAssertTrue(theme.responds(to: NSSelectorFromString("templateWithName:")))
-		XCTAssertTrue(theme.settings.responds(to: NSSelectorFromString("styleSettingsRetrieveValueForKey:error:")))
-		XCTAssertTrue(theme.settings.responds(to: NSSelectorFromString("styleSettingsSetValue:forKey:error:")))
-	}
-
 	func testThemeControllerParsesCanonicalThemeNames() {
 		XCTAssertEqual(TPCThemeController.extractThemeSource("resource:Default"), "resource")
 		XCTAssertEqual(TPCThemeController.extractThemeName("resource:Default"), "Default")
@@ -113,14 +99,19 @@ final class TPCThemeMigrationTests: XCTestCase {
 		XCTAssertNil(TPCThemeController.buildFilename("", for: .bundle))
 	}
 
-	func testThemeControllerObjectiveCRuntimeSurfaceRemainsAvailable() {
-		XCTAssertNotNil(NSClassFromString("TPCThemeController"))
-
-		let controllerClass: AnyClass = TPCThemeController.self
-		XCTAssertTrue(controllerClass.responds(to: NSSelectorFromString("buildFilename:forStorageLocation:")))
-		XCTAssertTrue(controllerClass.responds(to: NSSelectorFromString("extractThemeSource:")))
-		XCTAssertTrue(controllerClass.responds(to: NSSelectorFromString("extractThemeName:")))
-		XCTAssertTrue(controllerClass.responds(to: NSSelectorFromString("storageLocationOfThemeWithName:")))
+	func testPublishedThemeCanBeReadFromRenderingQueue() {
+		let renderingQueue = OperationQueue()
+		renderingQueue.maxConcurrentOperationCount = 1
+		renderingQueue.addOperation {
+			let controller = SharedApplication.sharedThemeController()
+			XCTAssertNotNil(controller.theme)
+			XCTAssertFalse(controller.name.isEmpty)
+			XCTAssertTrue(controller.originalURL.isFileURL)
+			XCTAssertTrue(controller.temporaryURL.isFileURL)
+			XCTAssertNotEqual(controller.storageLocation, .unknown)
+			_ = controller.settings
+		}
+		renderingQueue.waitUntilAllOperationsAreFinished()
 	}
 
 	private func makeThemeFixture(settings: [String: Any]) throws -> URL {

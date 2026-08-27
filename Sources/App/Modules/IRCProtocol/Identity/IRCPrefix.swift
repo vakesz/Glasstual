@@ -36,10 +36,11 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 @objc(IRCPrefix)
-public class Prefix: XRPortablePropertyObject {
+public class Prefix: PortablePropertyObject {
 	fileprivate var serverStorage = false
 	fileprivate var hostmaskStorage = ""
 	fileprivate var nicknameStorage = ""
@@ -139,7 +140,7 @@ public class Prefix: XRPortablePropertyObject {
 
 @objc(IRCPrefixMutable)
 public final class MutablePrefix: Prefix {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 

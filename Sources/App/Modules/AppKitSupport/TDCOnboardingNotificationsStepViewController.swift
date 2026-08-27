@@ -29,11 +29,11 @@ public final class OnboardingNotificationsStepViewController: OnboardingStepView
 	private var permissionImageView: NSImageView!
 
 	override public var stepTitle: String {
-		LocalizedKey("TDCOnboardingWindow[nt1-tt]")
+		OnboardingStrings.Notifications.title
 	}
 
 	override public var stepSubtitle: String {
-		LocalizedKey("TDCOnboardingWindow[nt1-st]")
+		OnboardingStrings.Notifications.subtitle
 	}
 
 	override public func loadView() {
@@ -41,19 +41,19 @@ public final class OnboardingNotificationsStepViewController: OnboardingStepView
 		self.view = view
 
 		let highlightCheck = NSButton(
-			checkboxWithTitle: LocalizedKey("TDCOnboardingWindow[nt1-hl]"),
+			checkboxWithTitle: OnboardingStrings.Notifications.mentionCheckbox,
 			target: self,
 			action: #selector(checkboxChanged(_:))
 		)
 
 		let privateMessageCheck = NSButton(
-			checkboxWithTitle: LocalizedKey("TDCOnboardingWindow[nt1-pm]"),
+			checkboxWithTitle: OnboardingStrings.Notifications.privateMessageCheckbox,
 			target: self,
 			action: #selector(checkboxChanged(_:))
 		)
 
 		let soundsCheck = NSButton(
-			checkboxWithTitle: LocalizedKey("TDCOnboardingWindow[nt1-sn]"),
+			checkboxWithTitle: OnboardingStrings.Notifications.soundCheckbox,
 			target: self,
 			action: #selector(checkboxChanged(_:))
 		)
@@ -70,7 +70,9 @@ public final class OnboardingNotificationsStepViewController: OnboardingStepView
 		permissionImageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 22, weight: .regular)
 		permissionImageView.translatesAutoresizingMaskIntoConstraints = false
 
-		let permissionField = NSTextField(wrappingLabelWithString: LocalizedKey("TDCOnboardingWindow[nt1-pr]"))
+		let permissionField = NSTextField(
+			wrappingLabelWithString: OnboardingStrings.Notifications.permissionExplanation
+		)
 		permissionField.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
 		permissionField.textColor = .secondaryLabelColor
 		permissionField.translatesAutoresizingMaskIntoConstraints = false
@@ -120,11 +122,11 @@ public final class OnboardingNotificationsStepViewController: OnboardingStepView
 		UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
 			let message: String = switch settings.authorizationStatus {
 			case .authorized, .provisional:
-				LocalizedKey("TDCOnboardingWindow[nt1-pd]")
+				OnboardingStrings.Notifications.permissionGranted
 			case .denied:
-				LocalizedKey("TDCOnboardingWindow[nt1-pn]")
+				OnboardingStrings.Notifications.permissionDenied
 			default:
-				LocalizedKey("TDCOnboardingWindow[nt1-pr]")
+				OnboardingStrings.Notifications.permissionExplanation
 			}
 
 			DispatchQueue.main.async {

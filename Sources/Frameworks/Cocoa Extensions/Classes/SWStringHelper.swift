@@ -30,6 +30,8 @@
  *
  *********************************************************************** */
 
+import Foundation
+
 public extension String {
 	func substring(with nsrange: NSRange) -> Substring? {
 		guard let range = Range(nsrange, in: self) else {

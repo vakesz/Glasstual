@@ -36,17 +36,19 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientHistoryTests: XCTestCase {
 	private static let joinLeavePreferenceKey = "DisplayEventInLogView -> Join, Part, Quit"
 	private var previousJoinLeavePreference: Any?
 	private var changedJoinLeavePreference = false
 
-	override func tearDown() {
+	override func tearDown() async throws {
 		if changedJoinLeavePreference {
-			let defaults = TPCPreferencesUserDefaults.shared()
+			let defaults = TextualUserDefaults.shared()
 
 			if let previousJoinLeavePreference {
 				defaults.set(previousJoinLeavePreference, forKey: Self.joinLeavePreferenceKey)
@@ -58,7 +60,7 @@ final class IRCClientHistoryTests: XCTestCase {
 		previousJoinLeavePreference = nil
 		changedJoinLeavePreference = false
 
-		super.tearDown()
+		try await super.tearDown()
 	}
 
 	func testChatHistoryIsRequestedOnlyWithItsDependencies() {
@@ -394,7 +396,7 @@ final class IRCClientHistoryTests: XCTestCase {
 			"Netsplit between \u{2}irc.hub\u{2} and \u{2}irc.leaf\u{2}: 2 users left (alice, bob)"
 		)
 		XCTAssertEqual((newLines.first?["lineType"] as? NSNumber)?.uintValue, TVCLogLineType.quit.rawValue)
-		XCTAssertTrue(newLines.first?["channel"] as? IRCChannel === channel)
+		XCTAssertTrue(newLines.first?["channel"] as? Channel === channel)
 
 		linesBefore = client.printedLines.count
 		feed([
@@ -452,7 +454,7 @@ final class IRCClientHistoryTests: XCTestCase {
 	}
 
 	private func makeNetsplitClient(showingJoinsAndQuits showJoinLeave: Bool) -> GLTTestClient {
-		let defaults = TPCPreferencesUserDefaults.shared()
+		let defaults = TextualUserDefaults.shared()
 		previousJoinLeavePreference = defaults.object(forKey: Self.joinLeavePreferenceKey)
 		changedJoinLeavePreference = true
 
@@ -465,7 +467,7 @@ final class IRCClientHistoryTests: XCTestCase {
 		return client
 	}
 
-	private func makeChannel(named name: String, on client: GLTTestClient) -> IRCChannel {
+	private func makeChannel(named name: String, on client: GLTTestClient) -> Channel {
 		client.findChannelOrCreate(name)!
 	}
 
@@ -474,8 +476,8 @@ final class IRCClientHistoryTests: XCTestCase {
 		nickname: String,
 		text: String,
 		date: Date
-	) -> TVCLogLine {
-		let line = TVCLogLineMutable()
+	) -> LogLine {
+		let line = MutableLogLine()
 		line.command = "privmsg"
 		line.lineType = .privateMessage
 		line.messageIdentifier = messageIdentifier
@@ -483,12 +485,15 @@ final class IRCClientHistoryTests: XCTestCase {
 		line.messageBody = text
 		line.receivedAt = date
 
-		return line.copy() as! TVCLogLine
+		guard let copiedLine = line.copy() as? LogLine else {
+			preconditionFailure("Log-line copies must preserve their model type")
+		}
+
+		return copiedLine
 	}
 
-	private func index(_ line: TVCLogLine, for channel: IRCChannel) {
-		let treeItem = (channel as AnyObject) as! IRCTreeItem
-		LogControllerHistoricLogFile.shared().indexLogLine(line, for: treeItem)
+	private func index(_ line: LogLine, for channel: Channel) {
+		LogControllerHistoricLogFile.shared().indexLogLine(line, for: channel)
 	}
 
 	private func feed(_ lines: [String], to client: GLTTestClient) {

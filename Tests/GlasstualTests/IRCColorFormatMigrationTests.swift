@@ -4,53 +4,55 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+@testable import Glasstual
 import XCTest
 
 @MainActor
 final class IRCColorFormatMigrationTests: XCTestCase {
 	func testBooleanEffectsUseMatchingOpenAndCloseCharacters() throws {
-		let bold = try XCTUnwrap(IRCTextFormatterEffect(type: .bold))
-		let italic = try XCTUnwrap(IRCTextFormatterEffect(type: .italic))
-		let monospace = try XCTUnwrap(IRCTextFormatterEffect(type: .monospace))
-		let strike = try XCTUnwrap(IRCTextFormatterEffect(type: .strikethrough))
-		let underline = try XCTUnwrap(IRCTextFormatterEffect(type: .underline))
+		let bold = try XCTUnwrap(TextFormatterEffect(effect: .bold))
+		let italic = try XCTUnwrap(TextFormatterEffect(effect: .italic))
+		let monospace = try XCTUnwrap(TextFormatterEffect(effect: .monospace))
+		let strike = try XCTUnwrap(TextFormatterEffect(effect: .strikethrough))
+		let underline = try XCTUnwrap(TextFormatterEffect(effect: .underline))
 
-		XCTAssertEqual(bold.controlCharacter, unichar(IRCTextFormatterEffectBoldCharacter))
-		XCTAssertEqual(italic.controlCharacter, unichar(IRCTextFormatterEffectItalicCharacter))
-		XCTAssertEqual(monospace.controlCharacter, unichar(IRCTextFormatterEffectMonospaceCharacter))
-		XCTAssertEqual(strike.controlCharacter, unichar(IRCTextFormatterEffectStrikethroughCharacter))
-		XCTAssertEqual(underline.controlCharacter, unichar(IRCTextFormatterEffectUnderlineCharacter))
+		XCTAssertEqual(bold.controlCharacter, unichar(IRCTextFormatterControlCharacter.bold))
+		XCTAssertEqual(italic.controlCharacter, unichar(IRCTextFormatterControlCharacter.italic))
+		XCTAssertEqual(monospace.controlCharacter, unichar(IRCTextFormatterControlCharacter.monospace))
+		XCTAssertEqual(strike.controlCharacter, unichar(IRCTextFormatterControlCharacter.strikethrough))
+		XCTAssertEqual(underline.controlCharacter, unichar(IRCTextFormatterControlCharacter.underline))
 		XCTAssertEqual(bold.length, 2)
 		XCTAssertNil(bold.value)
 
 		let buffer = NSMutableString()
-		bold.append(toStartOf: buffer)
+		bold.appendToStart(of: buffer)
 		buffer.append("x")
-		bold.append(toEndOf: buffer)
+		bold.appendToEnd(of: buffer)
 
 		XCTAssertEqual(buffer.length, 3)
-		XCTAssertEqual(controlCharacter(at: 0, in: buffer as String), unichar(IRCTextFormatterEffectBoldCharacter))
-		XCTAssertEqual(controlCharacter(at: 2, in: buffer as String), unichar(IRCTextFormatterEffectBoldCharacter))
+		XCTAssertEqual(controlCharacter(at: 0, in: buffer as String), unichar(IRCTextFormatterControlCharacter.bold))
+		XCTAssertEqual(controlCharacter(at: 2, in: buffer as String), unichar(IRCTextFormatterControlCharacter.bold))
 	}
 
 	func testSpoilerIsAnAliasAndDoesNotCreateAnEffect() {
-		XCTAssertNil(IRCTextFormatterEffect(type: .spoiler))
-		XCTAssertNil(IRCTextFormatterEffect(type: .spoiler, withValue: true))
+		XCTAssertNil(TextFormatterEffect(effect: .spoiler))
+		XCTAssertNil(TextFormatterEffect(effect: .spoiler, withValue: true))
 	}
 
 	func testDigitAndHexColorsEncodeValuesAndBackgroundNeedsMatchingForeground() throws {
 		let digitForeground = try XCTUnwrap(
-			IRCTextFormatterEffect(type: .foregroundColor, withValue: 4)
+			TextFormatterEffect(effect: .foregroundColor, withValue: 4)
 		)
 		let hexForeground = try XCTUnwrap(
-			IRCTextFormatterEffect(type: .foregroundColor, withValue: NSColor.red)
+			TextFormatterEffect(effect: .foregroundColor, withValue: NSColor.red)
 		)
-		let backgroundOnly = IRCTextFormatterEffect(type: .backgroundColor, withValue: 4)
+		let backgroundOnly = TextFormatterEffect(effect: .backgroundColor, withValue: 4)
 
-		XCTAssertEqual(digitForeground.controlCharacter, unichar(IRCTextFormatterEffectColorAsDigitCharacter))
+		XCTAssertEqual(digitForeground.controlCharacter, unichar(IRCTextFormatterControlCharacter.colorDigit))
 		XCTAssertEqual(digitForeground.value, "04")
 		XCTAssertEqual(digitForeground.length, 4)
-		XCTAssertEqual(hexForeground.controlCharacter, unichar(IRCTextFormatterEffectColorAsHexCharacter))
+		XCTAssertEqual(hexForeground.controlCharacter, unichar(IRCTextFormatterControlCharacter.colorHex))
 		XCTAssertEqual(hexForeground.value?.count, 6)
 		XCTAssertNotNil(backgroundOnly)
 
@@ -58,7 +60,7 @@ final class IRCColorFormatMigrationTests: XCTestCase {
 			IRCTextFormatterAttributeName.foregroundColorAttributeName.rawValue: 4,
 			IRCTextFormatterAttributeName.backgroundColorAttributeName.rawValue: 14,
 		]
-		let matching = IRCTextFormatterEffects(inAttributes: digitPair)
+		let matching = TextFormatterEffects(attributes: digitPair)
 
 		XCTAssertEqual(matching.effects.count, 2)
 		XCTAssertEqual(matching.maximumLength, 7)
@@ -67,7 +69,7 @@ final class IRCColorFormatMigrationTests: XCTestCase {
 			IRCTextFormatterAttributeName.foregroundColorAttributeName.rawValue: 4,
 			IRCTextFormatterAttributeName.backgroundColorAttributeName.rawValue: NSColor.blue,
 		]
-		let onlyForeground = IRCTextFormatterEffects(inAttributes: mismatched)
+		let onlyForeground = TextFormatterEffects(attributes: mismatched)
 
 		XCTAssertEqual(onlyForeground.effects.count, 1)
 
@@ -75,7 +77,7 @@ final class IRCColorFormatMigrationTests: XCTestCase {
 			IRCTextFormatterAttributeName.backgroundColorAttributeName.rawValue: 4,
 		]
 
-		XCTAssertTrue(IRCTextFormatterEffects(inAttributes: backgroundAlone).effects.isEmpty)
+		XCTAssertTrue(TextFormatterEffects(attributes: backgroundAlone).effects.isEmpty)
 	}
 
 	func testStringFormattedForIRCWrapsSegmentsWithControlCharacters() {
@@ -83,18 +85,18 @@ final class IRCColorFormatMigrationTests: XCTestCase {
 			string: "hello",
 			attributes: [.font: NSFont.systemFont(ofSize: 13)]
 		)
-		string.setIRCFormatterAttribute(.bold, value: true, range: string.range)
-		string.setIRCFormatterAttribute(.italic, value: true, range: string.range)
+		string.setIRCFormatterAttribute(.bold, value: true, range: string.ceRange)
+		string.setIRCFormatterAttribute(.italic, value: true, range: string.ceRange)
 
 		let formatted = string.stringFormattedForIRC
 
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .bold, range: string.range))
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .italic, range: string.range))
-		XCTAssertEqual(controlCharacter(at: 0, in: formatted), unichar(IRCTextFormatterEffectBoldCharacter))
-		XCTAssertEqual(controlCharacter(at: 1, in: formatted), unichar(IRCTextFormatterEffectItalicCharacter))
+		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .bold, range: string.ceRange))
+		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .italic, range: string.ceRange))
+		XCTAssertEqual(controlCharacter(at: 0, in: formatted), unichar(IRCTextFormatterControlCharacter.bold))
+		XCTAssertEqual(controlCharacter(at: 1, in: formatted), unichar(IRCTextFormatterControlCharacter.italic))
 		XCTAssertEqual((formatted as NSString).substring(with: NSRange(location: 2, length: 5)), "hello")
-		XCTAssertEqual(controlCharacter(at: 7, in: formatted), unichar(IRCTextFormatterEffectItalicCharacter))
-		XCTAssertEqual(controlCharacter(at: 8, in: formatted), unichar(IRCTextFormatterEffectBoldCharacter))
+		XCTAssertEqual(controlCharacter(at: 7, in: formatted), unichar(IRCTextFormatterControlCharacter.italic))
+		XCTAssertEqual(controlCharacter(at: 8, in: formatted), unichar(IRCTextFormatterControlCharacter.bold))
 	}
 
 	func testColorAttributeSetRequiresValidCodesAndNSColorIsAccepted() {
@@ -103,14 +105,14 @@ final class IRCColorFormatMigrationTests: XCTestCase {
 			attributes: [.font: NSFont.systemFont(ofSize: 13)]
 		)
 
-		string.setIRCFormatterAttribute(.foregroundColor, value: 99, range: string.range)
-		XCTAssertFalse(string.ircFormatterAttributeSet(inRange: .foregroundColor, range: string.range))
+		string.setIRCFormatterAttribute(.foregroundColor, value: 99, range: string.ceRange)
+		XCTAssertFalse(string.ircFormatterAttributeSet(inRange: .foregroundColor, range: string.ceRange))
 
-		string.setIRCFormatterAttribute(.foregroundColor, value: 12, range: string.range)
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .foregroundColor, range: string.range))
+		string.setIRCFormatterAttribute(.foregroundColor, value: 12, range: string.ceRange)
+		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .foregroundColor, range: string.ceRange))
 
-		string.setIRCFormatterAttribute(.backgroundColor, value: NSColor.black, range: string.range)
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .backgroundColor, range: string.range))
+		string.setIRCFormatterAttribute(.backgroundColor, value: NSColor.black, range: string.ceRange)
+		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .backgroundColor, range: string.ceRange))
 	}
 
 	func testRemovingBoldClearsFormatterAndTrait() {
@@ -118,12 +120,12 @@ final class IRCColorFormatMigrationTests: XCTestCase {
 			string: "bold",
 			attributes: [.font: NSFont.systemFont(ofSize: 13)]
 		)
-		string.setIRCFormatterAttribute(.bold, value: true, range: string.range)
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .bold, range: string.range))
+		string.setIRCFormatterAttribute(.bold, value: true, range: string.ceRange)
+		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .bold, range: string.ceRange))
 
-		string.removeIRCFormatterAttribute(.bold, range: string.range)
+		string.removeIRCFormatterAttribute(.bold, range: string.ceRange)
 
-		XCTAssertFalse(string.ircFormatterAttributeSet(inRange: .bold, range: string.range))
+		XCTAssertFalse(string.ircFormatterAttributeSet(inRange: .bold, range: string.ceRange))
 	}
 
 	func testWrapHelperDeletesBackToWhitespaceInsideMaxDistance() {

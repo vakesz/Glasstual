@@ -37,6 +37,23 @@
 
 import Foundation
 
+public typealias IRCAddressBookUserTrackingContainer = AddressBookUserTrackingContainer
+
+public extension Notification.Name {
+	static let addressBookTrackingStatusChanged = Self(
+		"IRCAddressBookUserTrackingStatusChangedNotification"
+	)
+	static let addressBookTrackingAddedUser = Self(
+		"IRCAddressBookUserTrackingAddedTrackedUserNotification"
+	)
+	static let addressBookTrackingRemovedUser = Self(
+		"IRCAddressBookUserTrackingRemovedTrackedUserNotification"
+	)
+	static let addressBookTrackingRemovedAllUsers = Self(
+		"IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification"
+	)
+}
+
 @objc(IRCAddressBookUserTrackingContainer)
 public final class AddressBookUserTrackingContainer: NSObject {
 	@objc public private(set) weak var client: IRCClient?
@@ -73,7 +90,7 @@ public final class AddressBookUserTrackingContainer: NSObject {
 	}
 
 	@objc(statusOfEntry:)
-	public func status(of addressBookEntry: IRCAddressBookEntry) -> IRCAddressBookUserTrackingStatus {
+	public func status(of addressBookEntry: AddressBookEntry) -> IRCAddressBookUserTrackingStatus {
 		guard let nickname = addressBookEntry.trackingNickname else {
 			return .unknown
 		}
@@ -100,7 +117,7 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		}
 
 		if added {
-			postNotification(named: "IRCAddressBookUserTrackingAddedTrackedUserNotification", nickname: nickname)
+			postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
 		}
 	}
 
@@ -110,7 +127,7 @@ public final class AddressBookUserTrackingContainer: NSObject {
 			availabilityByNickname[nickname] = false
 		}
 
-		postNotification(named: "IRCAddressBookUserTrackingAddedTrackedUserNotification", nickname: nickname)
+		postNotification(named: .addressBookTrackingAddedUser, nickname: nickname)
 	}
 
 	@objc(removeTrackedUser:)
@@ -125,10 +142,7 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		}
 
 		if let removedNickname {
-			postNotification(
-				named: "IRCAddressBookUserTrackingRemovedTrackedUserNotification",
-				nickname: removedNickname
-			)
+			postNotification(named: .addressBookTrackingRemovedUser, nickname: removedNickname)
 		}
 	}
 
@@ -138,7 +152,7 @@ public final class AddressBookUserTrackingContainer: NSObject {
 			availabilityByNickname.removeValue(forKey: nickname)
 		}
 
-		postNotification(named: "IRCAddressBookUserTrackingRemovedTrackedUserNotification", nickname: nickname)
+		postNotification(named: .addressBookTrackingRemovedUser, nickname: nickname)
 	}
 
 	@objc public func clearTrackedUsers() {
@@ -147,7 +161,7 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		}
 
 		NotificationCenter.default.post(
-			name: Notification.Name("IRCAddressBookUserTrackingRemovedAllTrackedUsersNotification"),
+			name: .addressBookTrackingRemovedAllUsers,
 			object: self
 		)
 	}
@@ -183,7 +197,7 @@ public final class AddressBookUserTrackingContainer: NSObject {
 
 		if shouldNotify {
 			NotificationCenter.default.post(
-				name: Notification.Name("IRCAddressBookUserTrackingStatusChangedNotification"),
+				name: .addressBookTrackingStatusChanged,
 				object: self,
 				userInfo: ["nickname": nickname, "status": NSNumber(value: newStatus.rawValue)]
 			)
@@ -196,9 +210,9 @@ public final class AddressBookUserTrackingContainer: NSObject {
 		}
 	}
 
-	private func postNotification(named name: String, nickname: String) {
+	private func postNotification(named name: Notification.Name, nickname: String) {
 		NotificationCenter.default.post(
-			name: Notification.Name(name),
+			name: name,
 			object: self,
 			userInfo: ["nickname": nickname]
 		)

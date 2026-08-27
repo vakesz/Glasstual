@@ -11,6 +11,8 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import GlasstualPluginKit
 
 /* Avatars draw white initials, so the tint is kept dark and saturated
  enough for that to stay legible whatever the nickname colour style. */
@@ -42,7 +44,7 @@ private func avatarColor(forNickname nickname: String) -> NSColor {
 	var color: NSColor?
 
 	if style.hasPrefix("#") {
-		color = NSColor(hexadecimalValue: style)
+		color = NSColor.textual_color(hexadecimalValue: style)
 	} else if let match = style.wholeMatch(of: /hsl\((\d+),(\d+)%\,(\d+)%\)/) {
 		color = avatarColorFromHSL(
 			hue: CGFloat(Int(match.1) ?? 0) / 360.0,
@@ -57,15 +59,15 @@ private func avatarColor(forNickname nickname: String) -> NSColor {
 
 	color = color.usingColorSpace(.sRGB) ?? color
 
-	var h: CGFloat = 0
-	var s: CGFloat = 0
-	var b: CGFloat = 0
-	color.getHue(&h, saturation: &s, brightness: &b, alpha: nil)
+	var hue: CGFloat = 0
+	var saturation: CGFloat = 0
+	var brightness: CGFloat = 0
+	color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: nil)
 
-	b = min(b, avatarMaximumBrightness)
-	s = max(s, avatarMinimumSaturation)
+	brightness = min(brightness, avatarMaximumBrightness)
+	saturation = max(saturation, avatarMinimumSaturation)
 
-	return NSColor(hue: h, saturation: s, brightness: b, alpha: 1.0)
+	return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: 1.0)
 }
 
 /** The first letter or digit of the nickname. Leading punctuation such
@@ -123,7 +125,7 @@ private func makeAvatarImage(initial: String, color: NSColor, size: CGFloat) -> 
 }
 
 private func userModeColor(defaultsKey: String) -> NSColor? {
-	guard let color = TPCPreferencesUserDefaults.shared().color(forKey: defaultsKey),
+	guard let color = TextualUserDefaults.shared().color(forKey: defaultsKey),
 	      color != .clear
 	else {
 		return nil
@@ -132,7 +134,7 @@ private func userModeColor(defaultsKey: String) -> NSColor? {
 	return color
 }
 
-private func color(for rank: IRCUserRank) -> NSColor? {
+private func color(for rank: UserRank) -> NSColor? {
 	switch rank {
 	case .irCopByMode:
 		userModeColor(defaultsKey: "User List Mode Badge Colors -> +y")
@@ -151,7 +153,7 @@ private func color(for rank: IRCUserRank) -> NSColor? {
 	}
 }
 
-private func symbolName(for rank: IRCUserRank) -> String? {
+private func symbolName(for rank: UserRank) -> String? {
 	switch rank {
 	case .irCopByMode:
 		"checkmark.shield.fill"
@@ -193,13 +195,13 @@ public final class MemberListCell: NSTableCellView {
 	}
 
 	@objc(avatarImageForNickname:size:)
-	public class func avatarImage(forNickname nickname: String, size: CGFloat) -> NSImage {
+	public static func avatarImage(forNickname nickname: String, size: CGFloat) -> NSImage {
 		let color = avatarColor(forNickname: nickname)
 		let initial = avatarInitial(forNickname: nickname)
 
 		/* The colour is part of the key because it follows the theme's
 		 nickname colour style and the user's per-nickname overrides. */
-		let key = String(format: "%.0f|%@|%@", size, color.hexadecimalValue, initial) as NSString
+		let key = String(format: "%.0f|%@|%@", size, color.textualHexadecimalValue, initial) as NSString
 
 		if let image = avatarCache.object(forKey: key) {
 			return image
@@ -235,19 +237,19 @@ public final class MemberListCell: NSTableCellView {
 
 		/* The accessibility description carries mode and away state as
 		 well as the nickname, so it is rebuilt on every pass. */
-		var accessibilityDescription = LocalizedKey("Accessibility[alq-6s]", nickname)
+		var accessibilityDescription = AccessibilityStrings.userListEntry(for: nickname)
 		accessibilityDescription += ", \(Self.privilegesDescription(for: cellItem))"
 
 		if cellItem.user.isAway {
-			accessibilityDescription += ", \(LocalizedKey("TVCMainWindow[jkr-ed]"))"
+			accessibilityDescription += ", \(MainWindowStrings.MemberList.userIsAway)"
 		}
 
 		if cellItem.user.isBot {
-			accessibilityDescription += ", \(LocalizedKey("TVCMainWindow[b0t-ac]"))"
+			accessibilityDescription += ", \(MainWindowStrings.MemberList.userIsBot)"
 		}
 
 		if let account = cellItem.user.account, account.isEmpty == false {
-			accessibilityDescription += ", \(LocalizedKey("TVCMainWindow[acc-in]", account))"
+			accessibilityDescription += ", \(MainWindowStrings.MemberList.loggedIn(account: account))"
 		}
 
 		cellTextField.cell?.setAccessibilityValueDescription(accessibilityDescription)
@@ -255,38 +257,14 @@ public final class MemberListCell: NSTableCellView {
 	}
 
 	@objc(privilegesDescriptionForUser:)
-	public class func privilegesDescription(for cellItem: ChannelUser) -> String {
+	public static func privilegesDescription(for cellItem: ChannelUser) -> String {
 		var userRank = cellItem.rank
 
 		if cellItem.user.isIRCop {
 			userRank = .irCopByMode
 		}
 
-		if userRank == .irCopByMode {
-			return LocalizedKey("TVCMainWindow[i8t-vb]")
-		}
-
-		if userRank == .channelOwner {
-			return LocalizedKey("TVCMainWindow[p1z-sc]")
-		}
-
-		if userRank == .superOperator {
-			return LocalizedKey("TVCMainWindow[som-zo]")
-		}
-
-		if userRank == .normalOperator {
-			return LocalizedKey("TVCMainWindow[0kn-s5]")
-		}
-
-		if userRank == .halfOperator {
-			return LocalizedKey("TVCMainWindow[0nn-te]")
-		}
-
-		if userRank == .voiced {
-			return LocalizedKey("TVCMainWindow[ya1-sk]")
-		}
-
-		return LocalizedKey("TVCMainWindow[tjj-z2]")
+		return MainWindowStrings.MemberList.privilegeDescription(for: userRank)
 	}
 
 	private func attributedTextFieldValue() -> NSAttributedString {
@@ -309,7 +287,7 @@ public final class MemberListCell: NSTableCellView {
 		 small caption after the nickname. */
 		if cellItem.user.isBot {
 			let captionFont = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
-			let caption = "  \(LocalizedKey("TVCMainWindow[b0t-lb]"))"
+			let caption = "  \(MainWindowStrings.MemberList.botCaption)"
 			let captionValue = NSAttributedString(
 				string: caption,
 				attributes: [
@@ -345,9 +323,9 @@ public final class MemberListCell: NSTableCellView {
 			return
 		}
 
-		var userRank: IRCUserRank = .none
+		var userRank: UserRank = .none
 
-		if TPCPreferences.memberListSortFavorsServerStaff(), cellItem.user.isIRCop {
+		if TextualPreferences.memberListSortFavorsServerStaff(), cellItem.user.isIRCop {
 			userRank = .irCopByMode
 		}
 
@@ -407,15 +385,15 @@ public final class MemberListCell: NSTableCellView {
 
 		var hostmaskUsername = cellItem.user.username ?? ""
 		if hostmaskUsername.isEmpty {
-			hostmaskUsername = LocalizedKey("TVCMainWindow[d85-9n]")
+			hostmaskUsername = MainWindowStrings.MemberList.informationUnavailable
 		}
 		userInfoPopover.usernameField.stringValue = hostmaskUsername
 
-		let stripIRCFormatting = TPCPreferences.removeAllFormatting()
+		let stripIRCFormatting = TextualPreferences.removeAllFormatting()
 
 		var hostmaskAddress = cellItem.user.address ?? ""
 		if hostmaskAddress.isEmpty {
-			hostmaskAddress = LocalizedKey("TVCMainWindow[d85-9n]")
+			hostmaskAddress = MainWindowStrings.MemberList.informationUnavailable
 		}
 
 		if stripIRCFormatting {
@@ -432,7 +410,7 @@ public final class MemberListCell: NSTableCellView {
 
 		var realName = cellItem.user.realName ?? ""
 		if realName.isEmpty {
-			realName = LocalizedKey("TVCMainWindow[d85-9n]")
+			realName = MainWindowStrings.MemberList.informationUnavailable
 		}
 
 		if stripIRCFormatting {
@@ -450,18 +428,18 @@ public final class MemberListCell: NSTableCellView {
 		if let account = cellItem.user.account, account.isEmpty == false {
 			userInfoPopover.accountField.stringValue = account
 		} else {
-			userInfoPopover.accountField.stringValue = LocalizedKey("TVCMainWindow[acc-nl]")
+			userInfoPopover.accountField.stringValue = MainWindowStrings.MemberList.notLoggedIn
 		}
 
 		if cellItem.user.isAway {
-			userInfoPopover.awayStatusField.stringValue = LocalizedKey("TVCMainWindow[jkr-ed]")
+			userInfoPopover.awayStatusField.stringValue = MainWindowStrings.MemberList.userIsAway
 		} else {
-			userInfoPopover.awayStatusField.stringValue = LocalizedKey("TVCMainWindow[gi6-wf]")
+			userInfoPopover.awayStatusField.stringValue = MainWindowStrings.MemberList.userIsNotAway
 		}
 
 		var privileges = Self.privilegesDescription(for: cellItem)
 		if cellItem.user.isBot {
-			privileges = "\(privileges) (\(LocalizedKey("TVCMainWindow[b0t-lb]")))"
+			privileges = "\(privileges) (\(MainWindowStrings.MemberList.botCaption))"
 		}
 		userInfoPopover.privilegesField.stringValue = privileges
 
@@ -501,7 +479,7 @@ public final class MemberListCell: NSTableCellView {
 
 		let rowIndex = memberList.row(for: self)
 		drawingContext.isSelected = memberList.isRowSelected(rowIndex)
-		drawingContext.isWindowActive = mainWindow?.isActiveForDrawing ?? false
+		drawingContext.isWindowActive = mainWindow?.ceIsActiveForDrawing ?? false
 		return drawingContext
 	}
 }
@@ -512,7 +490,7 @@ public final class MemberListCell: NSTableCellView {
 public final class MemberListHeaderCell: NSTableCellView {
 	override public var objectValue: Any? {
 		didSet {
-			guard let section = objectValue as? TVCMemberListSection else {
+			guard let section = objectValue as? MemberListSection else {
 				return
 			}
 
@@ -552,7 +530,7 @@ public final class MemberListRowCell: NSTableRowView {
 
 	override public var isSelected: Bool {
 		didSet {
-			if isSelected == false, invalidatingBackgroundForSelection {
+			if isSelected == false, isInvalidatingSelectionBackground {
 				return
 			}
 

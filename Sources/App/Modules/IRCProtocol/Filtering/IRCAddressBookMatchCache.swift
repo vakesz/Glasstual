@@ -37,6 +37,8 @@
 
 import Foundation
 
+public typealias IRCAddressBookMatchCache = AddressBookMatchCache
+
 @objc(IRCAddressBookMatchCache)
 public final class AddressBookMatchCache: NSObject {
 	@objc public private(set) weak var client: IRCClient?
@@ -130,6 +132,10 @@ public final class AddressBookMatchCache: NSObject {
 		mixedEntry.ignoreInlineMedia = entries.contains { $0.ignoreInlineMedia }
 		mixedEntry.trackUserActivity = entries.contains { $0.trackUserActivity }
 
-		return mixedEntry.copy() as! AddressBookEntry
+		guard let copiedEntry = mixedEntry.copy() as? AddressBookEntry else {
+			preconditionFailure("Address-book entry copies must preserve their model type")
+		}
+
+		return copiedEntry
 	}
 }

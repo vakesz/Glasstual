@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "acknowledgements-button" : {
+      "comment" : "Title of the button that opens third-party acknowledgements.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acknowledgements"
+          }
+        }
+      }
+    },
+    "icon-accessibility" : {
+      "comment" : "Accessibility label for the application icon. The argument is the application name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ application icon"
+          }
+        }
+      }
+    },
+    "upstream-attribution" : {
+      "comment" : "Short attribution shown below the application version.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fork of Textual for macOS 26+"
+          }
+        }
+      }
+    },
+    "zjd-al" : {
+      "comment" : "Application name followed by its short version. The arguments are the application name and version.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ %@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

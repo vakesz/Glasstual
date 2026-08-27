@@ -12,8 +12,11 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
+import GlasstualPluginKit
 import os
 import Security
+import Synchronization
 
 private enum PluginApprovalState: UInt {
 	case unknown = 0
@@ -50,6 +53,82 @@ private final class PluginApprovalTransfer: @unchecked Sendable {
 	}
 }
 
+private final class PluginLoadResult: Sendable {
+	let plugin = Mutex<PluginItem?>(nil)
+}
+
+/// An immutable view of every plugin capability published to the rest of the app.
+/// Plugin discovery builds this value off the main actor after every plugin has
+/// completed its main-actor lifecycle setup, then replaces it as one transaction.
+private struct PluginRegistrySnapshot: Sendable {
+	static let notLoaded = Self()
+
+	let pluginsLoaded: Bool
+	let loadedPlugins: [PluginItem]?
+	let supportedFeatures: PluginSupportedFeature
+	let outputSuppressionRules: [PluginOutputSuppressionRule]
+	let supportedUserInputCommands: [String]
+	let supportedServerInputCommands: [String]
+	let pluginsWithPreferencePanes: [PluginItem]
+
+	private init() {
+		pluginsLoaded = false
+		loadedPlugins = nil
+		supportedFeatures = []
+		outputSuppressionRules = []
+		supportedUserInputCommands = []
+		supportedServerInputCommands = []
+		pluginsWithPreferencePanes = []
+	}
+
+	init(loadedPlugins: [PluginItem]) {
+		var supportedFeatures: PluginSupportedFeature = []
+		var outputSuppressionRules: [PluginOutputSuppressionRule] = []
+		var userInputCommands = Set<String>()
+		var serverInputCommands = Set<String>()
+		var pluginsWithPreferencePanes: [PluginItem] = []
+
+		for plugin in loadedPlugins {
+			supportedFeatures.formUnion(plugin.supportedFeatures)
+
+			if plugin.supportsFeature(.outputSuppressionRules),
+			   let rules = plugin.outputSuppressionRules
+			{
+				outputSuppressionRules.append(contentsOf: rules)
+			}
+
+			if plugin.supportsFeature(.subscribedUserInputCommands),
+			   let commands = plugin.supportedUserInputCommands
+			{
+				userInputCommands.formUnion(commands)
+			}
+
+			if plugin.supportsFeature(.subscribedServerInputCommands),
+			   let commands = plugin.supportedServerInputCommands
+			{
+				serverInputCommands.formUnion(commands)
+			}
+
+			if plugin.supportsFeature(.preferencePane) {
+				pluginsWithPreferencePanes.append(plugin)
+			}
+		}
+
+		pluginsWithPreferencePanes.sort {
+			($0.pluginPreferencesPaneMenuItemTitle ?? "")
+				.compare($1.pluginPreferencesPaneMenuItemTitle ?? "") == .orderedAscending
+		}
+
+		pluginsLoaded = true
+		self.loadedPlugins = loadedPlugins
+		self.supportedFeatures = supportedFeatures
+		self.outputSuppressionRules = outputSuppressionRules
+		supportedUserInputCommands = userInputCommands.sorted()
+		supportedServerInputCommands = serverInputCommands.sorted()
+		self.pluginsWithPreferencePanes = pluginsWithPreferencePanes
+	}
+}
+
 @objc(THOPluginManager)
 public final class PluginManager: NSObject {
 	private static let logger = Logger(
@@ -61,146 +140,89 @@ public final class PluginManager: NSObject {
 	private static let approvalTeamIdentifierKey = "teamIdentifier"
 	private static let approvalDateKey = "approvedDate"
 	private static let approvalApprovedKey = "approved"
+	static let finishedLoadingNotification = Notification.Name(
+		"THOPluginManagerFinishedLoadingPluginsNotification"
+	)
 
-	@objc public private(set) var pluginsLoaded = false
-	@objc public private(set) var loadedPlugins: [PluginItem]?
+	@objc public var pluginsLoaded: Bool {
+		registry.withLock { $0.pluginsLoaded }
+	}
+
+	@objc public var loadedPlugins: [PluginItem]? {
+		registry.withLock { $0.loadedPlugins }
+	}
 
 	private var obsoleteBundles: [Bundle]?
 	private var rejectedBundles: [Bundle]?
-	private var supportedFeatures: THOPluginItemSupportedFeature = []
+	private let registry = Mutex(PluginRegistrySnapshot.notLoaded)
 
 	private var didScheduleLoad = false
 	private var didScheduleUnload = false
-
-	private var cachedOutputSuppressionRules: [THOPluginOutputSuppressionRule]?
-	private var cachedUserInputCommands: [String]?
-	private var cachedServerInputCommands: [String]?
-	private var cachedPluginsWithPreferencePanes: [PluginItem]?
+	private let schedulingLock = NSLock()
 
 	// MARK: - Retain & Release
 
 	@objc
 	public func loadPlugins() {
-		objc_sync_enter(self)
-		defer { objc_sync_exit(self) }
+		let shouldSchedule = schedulingLock.withLock {
+			guard didScheduleLoad == false else {
+				return false
+			}
 
-		guard didScheduleLoad == false else {
+			didScheduleLoad = true
+			return true
+		}
+
+		guard shouldSchedule else {
 			return
 		}
 
-		didScheduleLoad = true
-
-		XRPerformBlockAsynchronouslyOnQueue(PluginDispatcher.dispatchQueue()) { [weak self] in
+		performAsynchronously(on: PluginDispatcher.dispatchQueue()) { [weak self] in
 			self?.loadPluginsInternal()
 		}
 	}
 
 	@objc
 	public func unloadPlugins() {
-		objc_sync_enter(self)
-		defer { objc_sync_exit(self) }
+		let shouldSchedule = schedulingLock.withLock {
+			guard didScheduleUnload == false else {
+				return false
+			}
 
-		guard didScheduleUnload == false else {
+			didScheduleUnload = true
+			return true
+		}
+
+		guard shouldSchedule else {
 			return
 		}
 
-		didScheduleUnload = true
-
-		XRPerformBlockAsynchronouslyOnQueue(PluginDispatcher.dispatchQueue()) { [weak self] in
+		performAsynchronously(on: PluginDispatcher.dispatchQueue()) { [weak self] in
 			self?.unloadPluginsInternal()
 		}
 	}
 
 	private func loadPluginsInternal() {
 		var loadedPlugins: [PluginItem] = []
-		var bundlesToLoad: [String] = []
-		var seenBundles: [String] = []
+		var seenBundleIdentifiers = Set<String>()
 		var obsoleteBundles: [Bundle] = []
 		var rejectedBundles: [Bundle] = []
 		var pendingApprovals: [PluginPendingApproval] = []
 
-		var pathsToLoad: [String] = [PathInfo.bundledExtensions]
-		if let customExtensions = PathInfo.customExtensions {
-			pathsToLoad.append(customExtensions)
-		}
-
-		for path in pathsToLoad {
-			guard let pathFiles = try? FileManager.default.contentsOfDirectory(atPath: path) else {
+		for bundle in discoveredPluginBundles() {
+			guard let bundleIdentifier = bundle.bundleIdentifier else {
 				continue
 			}
 
-			for file in pathFiles {
-				guard file.hasSuffix(TPCResourceManagerBundleDocumentTypeExtension) else {
-					continue
-				}
-
-				bundlesToLoad.append((path as NSString).appendingPathComponent(file))
-			}
-		}
-
-		for bundlePath in bundlesToLoad {
-			guard let bundle = Bundle(path: bundlePath),
-			      let bundleIdentifier = bundle.bundleIdentifier
-			else {
-				continue
-			}
-
-			if seenBundles.contains(bundleIdentifier) {
+			guard seenBundleIdentifiers.insert(bundleIdentifier).inserted else {
 				Self.logger.info(
 					"Skipping the bundle at “\(bundle.bundlePath, privacy: .public)“ because a bundle with the identifier “\(bundleIdentifier, privacy: .public)“ was already found at an earlier location"
 				)
 				continue
 			}
 
-			seenBundles.append(bundleIdentifier)
-
-			let infoDictionary = bundle.infoDictionary
-			guard let comparisonVersion = infoDictionary?["MinimumGlasstualVersion"] as? String else {
+			guard supportsCurrentPluginProtocol(bundle) else {
 				obsoleteBundles.append(bundle)
-
-				NSLog(" ---------------------------- ERROR ---------------------------- ")
-				NSLog("                                                                 ")
-				NSLog("  Glasstual has failed to load the bundle at the following path    ")
-				NSLog("  which did not specify a minimum version:                       ")
-				NSLog("                                                                 ")
-				NSLog("     Bundle Path: %@", bundle.bundlePath)
-				NSLog("                                                                 ")
-				NSLog("  Please add a key-value pair in the bundle's Info.plist file    ")
-				NSLog("  with the key name as \"MinimumGlasstualVersion\"                 ")
-				NSLog("                                                                 ")
-				NSLog("  For example, to support this version and later:                ")
-				NSLog("                                                                 ")
-				NSLog("     <key>MinimumGlasstualVersion</key>                            ")
-				NSLog("     <string>%@</string>", THOPluginProtocolCompatibilityMinimumVersion)
-				NSLog("                                                                 ")
-				NSLog(" --------------------------------------------------------------- ")
-
-				continue
-			}
-
-			let comparisonResult = comparisonVersion.compare(
-				THOPluginProtocolCompatibilityMinimumVersion,
-				options: .numeric
-			)
-
-			if comparisonResult == .orderedAscending {
-				obsoleteBundles.append(bundle)
-
-				NSLog(" ---------------------------- ERROR ---------------------------- ")
-				NSLog("                                                                 ")
-				NSLog("  Glasstual has failed to load the bundle at the following path    ")
-				NSLog("  because the specified minimum version is out of range:         ")
-				NSLog("                                                                 ")
-				NSLog("     Bundle Path: %@", bundle.bundlePath)
-				NSLog("                                                                 ")
-				NSLog("     Minimum version specified by bundle: %@", comparisonVersion)
-				NSLog(
-					"     Version used by Glasstual for comparison: %@",
-					THOPluginProtocolCompatibilityMinimumVersion
-				)
-				NSLog("                                                                 ")
-				NSLog(" --------------------------------------------------------------- ")
-
 				continue
 			}
 
@@ -264,7 +286,7 @@ public final class PluginManager: NSObject {
 			loadedPlugins: NSMutableArray(array: loadedPlugins)
 		)
 
-		XRPerformBlockAsynchronouslyOnMainQueue {
+		performAsynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
 				approvalTransfer.manager?.promptForPendingApprovals(
 					approvalTransfer.pendingApprovals,
@@ -275,23 +297,78 @@ public final class PluginManager: NSObject {
 		}
 	}
 
-	private func loadBundleAsPlugin(_ bundle: Bundle) -> PluginItem? {
-		let plugin = PluginItem()
-
-		guard plugin.loadBundle(bundle) else {
-			return nil
+	private func discoveredPluginBundles() -> [Bundle] {
+		var searchPaths = [PathInfo.bundledExtensions]
+		if let customExtensions = PathInfo.customExtensions {
+			searchPaths.append(customExtensions)
 		}
 
-		updateSupportedFeaturesProperty(with: plugin)
+		return searchPaths.flatMap { path -> [Bundle] in
+			guard let filenames = try? FileManager.default.contentsOfDirectory(atPath: path) else {
+				return []
+			}
+
+			return filenames.compactMap { filename in
+				guard filename.hasSuffix(ResourceDocumentType.bundleFileExtension) else {
+					return nil
+				}
+
+				let bundleURL = URL(fileURLWithPath: path, isDirectory: true)
+					.appendingPathComponent(filename, isDirectory: true)
+
+				return Bundle(url: bundleURL)
+			}
+		}
+	}
+
+	private func supportsCurrentPluginProtocol(_ bundle: Bundle) -> Bool {
+		guard let minimumVersion = bundle.infoDictionary?["MinimumGlasstualVersion"] as? String else {
+			Self.logger.error(
+				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because it does not declare MinimumGlasstualVersion; the current minimum is \(PluginCompatibility.minimumHostVersion, privacy: .public)"
+			)
+			return false
+		}
+
+		guard minimumVersion.compare(
+			PluginCompatibility.minimumHostVersion,
+			options: .numeric
+		) != .orderedAscending else {
+			Self.logger.error(
+				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because its minimum Glasstual version \(minimumVersion, privacy: .public) is older than the supported plugin protocol \(PluginCompatibility.minimumHostVersion, privacy: .public)"
+			)
+			return false
+		}
+
+		return true
+	}
+
+	private func loadBundleAsPlugin(_ bundle: Bundle) -> PluginItem? {
+		let result = PluginLoadResult()
+
+		performSynchronouslyOnMainQueue {
+			MainActor.assumeIsolated {
+				let plugin = PluginItem()
+
+				guard plugin.loadBundle(bundle, host: PluginHostAdapter.makeContext()) else {
+					return
+				}
+
+				result.plugin.withLock { $0 = plugin }
+			}
+		}
+
+		guard let plugin = result.plugin.withLock({ $0 }) else {
+			return nil
+		}
 
 		return plugin
 	}
 
 	private func finishLoading(with loadedPlugins: [PluginItem]) {
-		self.loadedPlugins = loadedPlugins
-		pluginsLoaded = true
+		let snapshot = PluginRegistrySnapshot(loadedPlugins: loadedPlugins)
+		registry.withLock { $0 = snapshot }
 
-		XRPerformBlockAsynchronouslyOnMainQueue { [weak self] in
+		performAsynchronouslyOnMainQueue { [weak self] in
 			guard let self else {
 				return
 			}
@@ -300,20 +377,30 @@ public final class PluginManager: NSObject {
 			checkForObsoleteBundles()
 
 			NotificationCenter.default.post(
-				name: Notification.Name("THOPluginManagerFinishedLoadingPluginsNotification"),
+				name: Self.finishedLoadingNotification,
 				object: self
 			)
 		}
 	}
 
 	private func unloadPluginsInternal() {
-		for plugin in loadedPlugins ?? [] {
-			plugin.unloadBundle()
+		let plugins = registry.withLock { snapshot in
+			let plugins = snapshot.loadedPlugins ?? []
+			snapshot = .notLoaded
+			return plugins
 		}
 
-		loadedPlugins = nil
+		performSynchronouslyOnMainQueue {
+			MainActor.assumeIsolated {
+				for plugin in plugins {
+					plugin.unloadBundle()
+				}
+			}
+		}
 	}
+}
 
+extension PluginManager {
 	// MARK: - Signature Validation
 
 	private func isBundledExtension(_ bundle: Bundle) -> Bool {
@@ -323,15 +410,21 @@ public final class PluginManager: NSObject {
 		return bundlePath.hasPrefix(applicationPath + "/")
 	}
 
-	private nonisolated(unsafe) static let applicationTeamIdentifier: String? = {
+	private nonisolated static let applicationTeamIdentifier: String? = {
 		var code: SecCode?
 		guard SecCodeCopySelf(SecCSFlags(rawValue: 0), &code) == errSecSuccess, let code else {
+			return nil
+		}
+		var staticCode: SecStaticCode?
+		guard SecCodeCopyStaticCode(code, SecCSFlags(rawValue: 0), &staticCode) == errSecSuccess,
+		      let staticCode
+		else {
 			return nil
 		}
 
 		var signingInformation: CFDictionary?
 		let status = SecCodeCopySigningInformation(
-			code as! SecStaticCode,
+			staticCode,
 			SecCSFlags(rawValue: kSecCSSigningInformation),
 			&signingInformation
 		)
@@ -407,12 +500,12 @@ public final class PluginManager: NSObject {
 			&signingInformation
 		)
 
-		if status != errSecSuccess || signingInformation == nil {
+		guard status == errSecSuccess, let signingInformation else {
 			error?.pointee = Self.error(withStatus: status)
 			return false
 		}
 
-		let information = signingInformation as! NSDictionary
+		let information = signingInformation as NSDictionary
 		let team = information[kSecCodeInfoTeamIdentifier as String] as? String
 
 		guard let team, team.isEmpty == false else {
@@ -473,11 +566,13 @@ public final class PluginManager: NSObject {
 
 		return true
 	}
+}
 
+extension PluginManager {
 	// MARK: - Approvals
 
 	private static var approvals: [String: [String: Any]] {
-		TPCPreferencesUserDefaults.shared().dictionary(forKey: approvalsDefaultsKey)
+		TextualUserDefaults.shared().dictionary(forKey: approvalsDefaultsKey)
 			as? [String: [String: Any]] ?? [:]
 	}
 
@@ -517,12 +612,12 @@ public final class PluginManager: NSObject {
 			Self.approvalApprovedKey: approved,
 		]
 
-		TPCPreferencesUserDefaults.shared().set(approvals, forKey: Self.approvalsDefaultsKey)
+		TextualUserDefaults.shared().set(approvals, forKey: Self.approvalsDefaultsKey)
 	}
 
 	@objc
-	public class func resetApprovals() {
-		TPCPreferencesUserDefaults.shared().removeObject(forKey: approvalsDefaultsKey)
+	public static func resetApprovals() {
+		TextualUserDefaults.shared().removeObject(forKey: approvalsDefaultsKey)
 	}
 
 	@MainActor
@@ -534,7 +629,7 @@ public final class PluginManager: NSObject {
 		if index >= pendingApprovals.count {
 			let plugins = loadedPlugins.compactMap { $0 as? PluginItem }
 
-			XRPerformBlockAsynchronouslyOnQueue(PluginDispatcher.dispatchQueue()) { [weak self] in
+			performAsynchronously(on: PluginDispatcher.dispatchQueue()) { [weak self] in
 				self?.finishLoading(with: plugins)
 			}
 
@@ -546,28 +641,27 @@ public final class PluginManager: NSObject {
 		let bundleIdentifier = bundle.bundleIdentifier ?? ""
 		let teamIdentifier = pending.teamIdentifier
 
-		var displayName = bundle.displayName ?? ""
+		var displayName = bundle.textualDisplayName ?? ""
 		if displayName.isEmpty {
 			displayName = (bundle.bundlePath as NSString).lastPathComponent
 		}
 
-		let tildePath = (bundle.bundleURL as NSURL).standardizedTildePath ?? bundle.bundlePath
-		guard let window = NSObject.masterController().mainWindow else {
+		let tildePath = (bundle.bundleURL as NSURL).textualStandardizedTildePath ?? bundle.bundlePath
+		guard let window = NSObject.applicationController().mainWindow else {
 			return
 		}
 
 		TDCAlert.alertSheet(
 			with: window,
-			body: LocalizedKey(
-				"Prompts[b4n-8z]",
-				displayName,
-				bundleIdentifier,
-				teamIdentifier,
-				tildePath
+			body: PromptStrings.Plugin.loadApprovalBody(
+				displayName: displayName,
+				bundleIdentifier: bundleIdentifier,
+				teamIdentifier: teamIdentifier,
+				location: tildePath
 			),
-			title: LocalizedKey("Prompts[pq7-2k]", displayName),
-			defaultButton: LocalizedKey("Prompts[r9x-3m]"),
-			alternateButton: LocalizedKey("Prompts[w2d-5h]"),
+			title: PromptStrings.Plugin.loadApprovalTitle(displayName: displayName),
+			defaultButton: PromptStrings.Plugin.loadDeniedButtonTitle,
+			alternateButton: PromptStrings.Plugin.loadButtonTitle,
 			otherButton: nil
 		) { [weak self] buttonClicked, _, _ in
 			guard let self else {
@@ -582,7 +676,7 @@ public final class PluginManager: NSObject {
 				teamIdentifier: teamIdentifier
 			)
 
-			XRPerformBlockAsynchronouslyOnQueue(PluginDispatcher.dispatchQueue()) {
+			performAsynchronously(on: PluginDispatcher.dispatchQueue()) {
 				if approved {
 					if let plugin = self.loadBundleAsPlugin(bundle) {
 						loadedPlugins.add(plugin)
@@ -593,7 +687,7 @@ public final class PluginManager: NSObject {
 					)
 				}
 
-				XRPerformBlockAsynchronouslyOnMainQueue {
+				performAsynchronouslyOnMainQueue {
 					MainActor.assumeIsolated {
 						self.promptForPendingApprovals(
 							pendingApprovals,
@@ -627,13 +721,15 @@ public final class PluginManager: NSObject {
 		self.rejectedBundles = nil
 
 		_ = TDCAlert.alert(
-			withMessage: LocalizedKey("Prompts[t8y-4p]"),
-			title: LocalizedKey("Prompts[j6c-1v]", bundlesName),
-			defaultButton: LocalizedKey("Prompts[u5k-9n]"),
+			withMessage: PromptStrings.Plugin.unsignedBody,
+			title: PromptStrings.Plugin.unsignedTitle(pluginNames: bundlesName),
+			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil
 		)
 	}
+}
 
+extension PluginManager {
 	// MARK: - AppleScript Support
 
 	@objc public var supportedAppleScriptCommands: [String] {
@@ -673,7 +769,7 @@ public final class PluginManager: NSObject {
 				let executable = FileManager.default.isExecutableFile(atPath: filePath)
 
 				if executable == false,
-				   fileExtension != TPCResourceManagerScriptDocumentTypeExtensionWithoutPeriod
+				   fileExtension != ResourceDocumentType.scriptFilenameExtension
 				{
 					Self.logger.info(
 						"WARNING: File “\(file, privacy: .public)“ found in unsupervised script folder but it isn't AppleScript or an executable. It will be ignored."
@@ -704,7 +800,7 @@ public final class PluginManager: NSObject {
 	}
 
 	private var listOfForbiddenCommandNames: [String] {
-		TPCResourceManager.array(fromResources: "StaticStore", key: "THOPluginManager List of Forbidden Commands")
+		ResourceManager.array(fromResources: "StaticStore", key: "THOPluginManager List of Forbidden Commands")
 			as? [String] ?? []
 	}
 
@@ -719,17 +815,16 @@ public final class PluginManager: NSObject {
 	}
 
 	private func presentObsoleteBundlesAlert(for thirdPartyBundles: [Bundle]) {
-		let bundlesName = Bundle.formattedDisplayNames(for: thirdPartyBundles)
+		let bundlesName = Bundle.textual_formattedDisplayNames(for: thirdPartyBundles)
 
 		_ = TDCAlert.alert(
-			withMessage: LocalizedKey(
-				"Prompts[45a-df]",
-				THOPluginProtocolCompatibilityMinimumVersion
+			withMessage: PromptStrings.Plugin.incompatibleBody(
+				minimumVersion: PluginCompatibility.minimumHostVersion
 			),
-			title: LocalizedKey("Prompts[af6-45]", bundlesName),
-			defaultButton: LocalizedKey("Prompts[324-5d]"),
+			title: PromptStrings.Plugin.incompatibleTitle(pluginNames: bundlesName),
+			defaultButton: PromptStrings.Plugin.incompatibleReminderButtonTitle,
 			alternateButton: nil,
-			otherButton: LocalizedKey("Prompts[0ik-o9]"),
+			otherButton: PromptStrings.Plugin.viewFilesButtonTitle,
 			suppressionKey: nil,
 			suppressionText: nil
 		) { [weak self] buttonClicked, _, _ in
@@ -737,7 +832,7 @@ public final class PluginManager: NSObject {
 				return
 			}
 
-			Bundle.openInstallationLocations(for: thirdPartyBundles)
+			Bundle.textual_openInstallationLocations(for: thirdPartyBundles)
 			self?.presentObsoleteBundlesAlert(for: thirdPartyBundles)
 		}
 	}
@@ -769,142 +864,28 @@ public final class PluginManager: NSObject {
 			isExtension?.pointee = true
 		}
 	}
+}
 
+public extension PluginManager {
 	// MARK: - Extension Information
 
-	private func updateSupportedFeaturesProperty(with plugin: PluginItem) {
-		let features: [THOPluginItemSupportedFeature] = [
-			.didReceiveCommandEvent,
-			.didReceivePlainTextMessageEvent,
-			.newMessagePostedEvent,
-			.outputSuppressionRules,
-			.preferencePane,
-			.serverInputDataInterception,
-			.subscribedServerInputCommands,
-			.subscribedUserInputCommands,
-			.userInputDataInterception,
-			.webViewJavaScriptPayloads,
-			.willRenderMessageEvent,
-		]
-
-		for feature in features {
-			if plugin.supportsFeature(feature), supportsFeature(feature) == false {
-				supportedFeatures.insert(feature)
-			}
-		}
+	func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {
+		registry.withLock { $0.supportedFeatures.contains(feature) }
 	}
 
-	@objc(supportsFeature:)
-	public func supportsFeature(_ feature: THOPluginItemSupportedFeature) -> Bool {
-		supportedFeatures.contains(feature)
+	var pluginOutputSuppressionRules: [PluginOutputSuppressionRule] {
+		registry.withLock { $0.outputSuppressionRules }
 	}
 
-	@objc public var pluginOutputSuppressionRules: [THOPluginOutputSuppressionRule] {
-		guard pluginsLoaded else {
-			return []
-		}
-
-		if let cachedOutputSuppressionRules {
-			return cachedOutputSuppressionRules
-		}
-
-		var allRules: [THOPluginOutputSuppressionRule] = []
-
-		for plugin in loadedPlugins ?? [] {
-			guard plugin.supportsFeature(.outputSuppressionRules),
-			      let rules = plugin.outputSuppressionRules
-			else {
-				continue
-			}
-
-			allRules.append(contentsOf: rules)
-		}
-
-		cachedOutputSuppressionRules = allRules
-		return allRules
+	@objc var supportedUserInputCommands: [String] {
+		registry.withLock { $0.supportedUserInputCommands }
 	}
 
-	@objc public var supportedUserInputCommands: [String] {
-		guard pluginsLoaded else {
-			return []
-		}
-
-		if let cachedUserInputCommands {
-			return cachedUserInputCommands
-		}
-
-		var allCommands: [String] = []
-
-		for plugin in loadedPlugins ?? [] {
-			guard plugin.supportsFeature(.subscribedUserInputCommands),
-			      let commands = plugin.supportedUserInputCommands
-			else {
-				continue
-			}
-
-			for command in commands where allCommands.contains(command) == false {
-				allCommands.append(command)
-			}
-		}
-
-		allCommands.sort()
-		cachedUserInputCommands = allCommands
-		return allCommands
+	@objc var supportedServerInputCommands: [String] {
+		registry.withLock { $0.supportedServerInputCommands }
 	}
 
-	@objc public var supportedServerInputCommands: [String] {
-		guard pluginsLoaded else {
-			return []
-		}
-
-		if let cachedServerInputCommands {
-			return cachedServerInputCommands
-		}
-
-		var allCommands: [String] = []
-
-		for plugin in loadedPlugins ?? [] {
-			guard plugin.supportsFeature(.subscribedServerInputCommands),
-			      let commands = plugin.supportedServerInputCommands
-			else {
-				continue
-			}
-
-			for command in commands where allCommands.contains(command) == false {
-				allCommands.append(command)
-			}
-		}
-
-		allCommands.sort()
-		cachedServerInputCommands = allCommands
-		return allCommands
-	}
-
-	@objc public var pluginsWithPreferencePanes: [PluginItem] {
-		guard pluginsLoaded else {
-			return []
-		}
-
-		if let cachedPluginsWithPreferencePanes {
-			return cachedPluginsWithPreferencePanes
-		}
-
-		var allExtensions: [PluginItem] = []
-
-		for plugin in loadedPlugins ?? [] {
-			guard plugin.supportsFeature(.preferencePane) else {
-				continue
-			}
-
-			allExtensions.append(plugin)
-		}
-
-		allExtensions.sort {
-			($0.pluginPreferencesPaneMenuItemTitle ?? "")
-				.compare($1.pluginPreferencesPaneMenuItemTitle ?? "") == .orderedAscending
-		}
-
-		cachedPluginsWithPreferencePanes = allExtensions
-		return allExtensions
+	@objc var pluginsWithPreferencePanes: [PluginItem] {
+		registry.withLock { $0.pluginsWithPreferencePanes }
 	}
 }

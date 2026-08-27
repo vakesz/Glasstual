@@ -205,12 +205,8 @@ public final class OnboardingStylePreviewView: NSView {
 		}
 	}
 
-	private var sampleMessages: [[String]] {
-		[
-			[LocalizedKey("TDCOnboardingWindow[lf1-n1]"), LocalizedKey("TDCOnboardingWindow[lf1-m1]")],
-			[LocalizedKey("TDCOnboardingWindow[lf1-n2]"), LocalizedKey("TDCOnboardingWindow[lf1-m2]")],
-			[LocalizedKey("TDCOnboardingWindow[lf1-n3]"), LocalizedKey("TDCOnboardingWindow[lf1-m3]")],
-		]
+	private var sampleMessages: [OnboardingAppearancePreviewMessage] {
+		OnboardingStrings.Appearance.previewMessages
 	}
 
 	private func rebuildMessages() {
@@ -230,8 +226,18 @@ public final class OnboardingStylePreviewView: NSView {
 			let outgoing = index == messages.count - 1
 			let row =
 				bubbles
-					? bubbleRow(nickname: message[0], text: message[1], outgoing: outgoing, fontSize: messageFontSize)
-					: lineRow(nickname: message[0], text: message[1], outgoing: outgoing, fontSize: messageFontSize)
+					? bubbleRow(
+						nickname: message.nickname,
+						text: message.message,
+						outgoing: outgoing,
+						fontSize: messageFontSize
+					)
+					: lineRow(
+						nickname: message.nickname,
+						text: message.message,
+						outgoing: outgoing,
+						fontSize: messageFontSize
+					)
 
 			messageStack.addArrangedSubview(row)
 		}
@@ -293,7 +299,7 @@ public final class OnboardingStylePreviewView: NSView {
 		let row = NSView()
 		row.translatesAutoresizingMaskIntoConstraints = false
 
-		let timeField = NSTextField(labelWithString: LocalizedKey("TDCOnboardingWindow[lf1-tm]"))
+		let timeField = NSTextField(labelWithString: OnboardingStrings.Appearance.previewTime)
 		timeField.font = NSFont.monospacedDigitSystemFont(ofSize: fontSize - 2, weight: .regular)
 		timeField.textColor = .tertiaryLabelColor
 		timeField.translatesAutoresizingMaskIntoConstraints = false

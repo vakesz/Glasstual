@@ -22,17 +22,17 @@ private struct HTMLEscapeMap {
 
 extension NSString {
 	@objc(gtm_stringByEscapingForHTML)
-	public var gtm_stringByEscapingForHTML: String? {
+	public var gtmStringByEscapingForHTML: String? {
 		stringByEscapingHTML(using: Self.unicodeHTMLEscapeMap, escapeUnicode: false)
 	}
 
 	@objc(gtm_stringByEscapingForAsciiHTML)
-	public var gtm_stringByEscapingForAsciiHTML: String {
+	public var gtmStringByEscapingForAsciiHTML: String {
 		stringByEscapingHTML(using: Self.asciiHTMLEscapeMap, escapeUnicode: true) ?? (self as String)
 	}
 
 	@objc(gtm_stringByUnescapingFromHTML)
-	public var gtm_stringByUnescapingFromHTML: String {
+	public var gtmStringByUnescapingFromHTML: String {
 		var range = NSRange(location: 0, length: length)
 		var subrange = self.range(of: "&", options: .backwards, range: range)
 

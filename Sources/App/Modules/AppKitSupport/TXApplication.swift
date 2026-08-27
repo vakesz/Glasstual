@@ -14,7 +14,8 @@ import AppKit
 
 @objc(TXApplication)
 public final class Application: NSApplication {
-	@objc public class func checkForOtherCopiesOfGlasstualRunning() -> Bool {
+	@objc(checkForOtherCopiesOfGlasstualRunning)
+	public static func shouldContinueLaunching() -> Bool {
 		let ourProcessIdentifier = ProcessInfo.processInfo.processIdentifier
 
 		guard let ourIdentifier = Bundle.main.bundleIdentifier else {
@@ -31,10 +32,10 @@ public final class Application: NSApplication {
 			}
 
 			return TDCAlert.modalAlert(
-				withMessage: LocalizedKey("Prompts[kx4-q8]"),
-				title: LocalizedKey("Prompts[hcb-3i]"),
-				defaultButton: LocalizedKey("Prompts[mvh-ms]"),
-				alternateButton: LocalizedKey("Prompts[99q-gg]")
+				withMessage: PromptStrings.Application.continueWithAnotherInstanceBody,
+				title: PromptStrings.Application.continueWithAnotherInstanceTitle,
+				defaultButton: PromptStrings.Action.yes,
+				alternateButton: PromptStrings.Action.no
 			)
 		}
 

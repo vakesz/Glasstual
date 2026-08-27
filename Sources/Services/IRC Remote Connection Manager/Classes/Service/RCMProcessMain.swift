@@ -35,10 +35,11 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 @objc(RCMProcessMain)
-final class RemoteConnectionProcess: NSObject, RCMConnectionManagerServerProtocol {
+final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	private var connection: Connection?
 	private var serviceConnection: NSXPCConnection?
 
@@ -89,7 +90,7 @@ final class RemoteConnectionProcess: NSObject, RCMConnectionManagerServerProtoco
 		requireConnection().send(data, bypassQueue: bypassQueue)
 	}
 
-	func exportSecureConnectionInformation(_ completionBlock: RCMSecureConnectionInformationCompletionBlock) {
+	func exportSecureConnectionInformation(_ completionBlock: SecureConnectionInformationReceiver) {
 		do {
 			try requireConnection().exportSecureConnectionInformation(to: completionBlock)
 		} catch {

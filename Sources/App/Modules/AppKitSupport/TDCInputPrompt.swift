@@ -16,7 +16,7 @@ import AppKit
 @MainActor
 public final class InputPrompt: NSObject {
 	@objc(alertWithMessage:title:defaultButton:alternateButton:prefillString:textField:)
-	public class func alert(
+	public static func alert(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,
@@ -78,7 +78,7 @@ public final class InputPrompt: NSObject {
 	}
 
 	@objc(promptWithMessage:title:defaultButton:alternateButton:prefillString:completionBlock:)
-	public class func prompt(
+	public static func prompt(
 		withMessage bodyText: String,
 		title titleText: String,
 		defaultButton buttonDefault: String,

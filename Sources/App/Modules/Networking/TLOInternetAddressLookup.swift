@@ -10,8 +10,15 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 import os
+
+@objc(TLOInternetAddressLookupDelegate)
+public protocol InternetAddressLookupDelegate: AnyObject {
+	func internetAddressLookupReturnedAddress(_ address: String)
+	func internetAddressLookupFailed()
+}
 
 @objc(TLOInternetAddressLookup)
 @MainActor
@@ -31,7 +38,7 @@ public final class InternetAddressLookup: NSObject {
 	@objc(IPv4AddressIsValid) public var ipv4AddressIsValid = true
 	@objc(IPv6AddressIsValid) public var ipv6AddressIsValid = true
 
-	private weak var requestDelegate: TLOInternetAddressLookupDelegate?
+	private weak var requestDelegate: InternetAddressLookupDelegate?
 	private var session: URLSession?
 	private var connection: URLSessionDataTask?
 	private var address: String?
@@ -42,7 +49,7 @@ public final class InternetAddressLookup: NSObject {
 	}
 
 	@objc(initWithDelegate:)
-	public init(delegate: TLOInternetAddressLookupDelegate) {
+	public init(delegate: InternetAddressLookupDelegate) {
 		requestDelegate = delegate
 
 		super.init()
@@ -91,11 +98,9 @@ public final class InternetAddressLookup: NSObject {
 			return nil
 		}
 
-		let bridgedAddress = address as NSString
-
 		guard
-			(allowIPv4 && bridgedAddress.isIPv4Address)
-			|| (allowIPv6 && bridgedAddress.isIPv6Address)
+			(allowIPv4 && address.isIPv4Address)
+			|| (allowIPv6 && address.isIPv6Address)
 		else {
 			return nil
 		}
@@ -104,7 +109,7 @@ public final class InternetAddressLookup: NSObject {
 	}
 
 	private var addressSourceURL: URL {
-		if TPCPreferences.fileTransferIPAddressDetectionMethod() == .routerAndThirdParty {
+		if TextualPreferences.fileTransferIPAddressDetectionMethod() == .routerAndThirdParty {
 			return Self.thirdPartySourceURLs.randomElement()!
 		}
 

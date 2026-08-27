@@ -119,7 +119,7 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 		error = 0
 	}
 
-	public class func findPublicAddress() -> String? {
+	public static func findPublicAddress() -> String? {
 		let mapper = XRPortMapper(port: 0)
 		mapper.mapTCP = false
 		guard mapper.open() else { return nil }
@@ -131,11 +131,11 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 		return address
 	}
 
-	@objc public class var localAddress: String? {
+	public static var localAddress: String? {
 		string(from: rawLocalAddress)
 	}
 
-	@objc public class var localAddressIsPrivate: Bool {
+	public static var localAddressIsPrivate: Bool {
 		let address = UInt32(bigEndian: rawLocalAddress)
 		let ranges: [(UInt32, UInt32)] = [
 			(0xFF00_0000, 0x0000_0000), (0xFF00_0000, 0x0A00_0000),
@@ -166,7 +166,7 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 		publicPort = 0
 	}
 
-	private class var rawLocalAddress: UInt32 {
+	private static var rawLocalAddress: UInt32 {
 		var interfaces: UnsafeMutablePointer<ifaddrs>?
 		guard getifaddrs(&interfaces) == 0 else { return 0 }
 		defer { freeifaddrs(interfaces) }
@@ -183,7 +183,7 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 		return 0
 	}
 
-	private class func string(from address: UInt32) -> String? {
+	private static func string(from address: UInt32) -> String? {
 		guard address != 0 else { return nil }
 		var address = in_addr(s_addr: address)
 		var buffer = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
@@ -193,12 +193,12 @@ public final class XRPortMapper: NSObject, @unchecked Sendable {
 	}
 }
 
-private let portMapperCallback: DNSServiceNATPortMappingReply = {
-	_, _, _, errorCode, publicAddress, _, _, publicPort, _, context in
-	guard let context else { return }
-	Unmanaged<XRPortMapper>.fromOpaque(context).takeUnretainedValue().update(
-		error: errorCode,
-		address: publicAddress,
-		port: publicPort
-	)
-}
+private let portMapperCallback: DNSServiceNATPortMappingReply =
+	{ _, _, _, errorCode, publicAddress, _, _, publicPort, _, context in
+		guard let context else { return }
+		Unmanaged<XRPortMapper>.fromOpaque(context).takeUnretainedValue().update(
+			error: errorCode,
+			address: publicAddress,
+			port: publicPort
+		)
+	}

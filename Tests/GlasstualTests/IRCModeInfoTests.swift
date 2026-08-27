@@ -1,10 +1,10 @@
+import CocoaExtensions
 @testable import Glasstual
 import XCTest
 
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
 /// #import "GLTTestClient.h"
-/// #import "IRCISupportInfoPrivate.h"
 /// #import "ModeInfo.h"
 /** *********************************************************************
  *                  _____         _               _
@@ -42,7 +42,8 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-class ModeInfoTests: XCTestCase {
+@MainActor
+final class ModeInfoTests: XCTestCase {
 	func testConvenienceInitializers() {
 		let unset = ModeInfo(modeSymbol: "n")
 		let set = ModeInfo(modeSymbol: "t", modeIsSet: true)

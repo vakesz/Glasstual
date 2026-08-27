@@ -1,0 +1,499 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "70s-c6": {
+      "comment": "Placeholder when no transcript log folder is selected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Log Location Selected"
+          }
+        }
+      }
+    },
+    "721-ie": {
+      "comment": "Placeholder when no file-transfer download folder is selected.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Location Selected"
+          }
+        }
+      }
+    },
+    "5jv-aw": {
+      "comment": "Title of the alert shown before opening a bundled style's source files.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you opening this style because you are interested in modifying it?"
+          }
+        }
+      }
+    },
+    "ojj-ap": {
+      "comment": "Body of the alert explaining how to customize a bundled style without editing its source files.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It’s possible to modify the appearance of this style without editing its source files.\n\nClick “Edit Style” to add your own style sheet rules. This feature can also be found in the Developers section of Preferences."
+          }
+        }
+      }
+    },
+    "aib-iy": {
+      "comment": "Button that opens the user's style override for editing.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Style"
+          }
+        }
+      }
+    },
+    "dj8-1t": {
+      "comment": "Button that creates an editable copy of a bundled style.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create Copy"
+          }
+        }
+      }
+    },
+    "6ws-av": {
+      "comment": "Button that opens a bundled style's source files.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Files"
+          }
+        }
+      }
+    },
+    "uc0-z7": {
+      "comment": "Title of the alert describing preferences overridden by the selected style.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferred Selection"
+          }
+        }
+      }
+    },
+    "q4o-2f": {
+      "comment": "Alert body describing preferences overridden by a style. Arguments are the style name and a newline-separated preference list.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The style named “%1$@” has chosen to override the following preferences with ones that it prefers for the best viewing experience:\n\n%2$@"
+          }
+        }
+      }
+    },
+    "77t-de": {
+      "comment": "List item naming the nickname format preference overridden by a style.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Nickname Format"
+          }
+        }
+      }
+    },
+    "ddh-hr": {
+      "comment": "List item naming the timestamp format preference overridden by a style.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Timestamp Format"
+          }
+        }
+      }
+    },
+    "we8-i8": {
+      "comment": "List item naming the channel-view font preference overridden by a style.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "• Channel View Font"
+          }
+        }
+      }
+    },
+    "sb-tt": {
+      "comment": "Accessibility label for the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "sb-gr-ad": {
+      "comment": "Title of the Add-ons group in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add-ons"
+          }
+        }
+      }
+    },
+    "sb-gr-av": {
+      "comment": "Title of the Advanced group in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        }
+      }
+    },
+    "sb-general": {
+      "comment": "Title of the General pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        }
+      }
+    },
+    "sb-behavior": {
+      "comment": "Title of the Behavior pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behavior"
+          }
+        }
+      }
+    },
+    "sb-notifications": {
+      "comment": "Title of the Notifications pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        }
+      }
+    },
+    "sb-highlights": {
+      "comment": "Title of the Highlights pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlights"
+          }
+        }
+      }
+    },
+    "sb-interface": {
+      "comment": "Title of the Interface pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interface"
+          }
+        }
+      }
+    },
+    "sb-style": {
+      "comment": "Title of the Style pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style"
+          }
+        }
+      }
+    },
+    "sb-controls": {
+      "comment": "Title of the Controls pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controls"
+          }
+        }
+      }
+    },
+    "sb-addons": {
+      "comment": "Title of the installed Add-ons pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed Add-ons"
+          }
+        }
+      }
+    },
+    "sb-channelManagement": {
+      "comment": "Title of the Channel Management pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel Management"
+          }
+        }
+      }
+    },
+    "sb-commandScope": {
+      "comment": "Title of the Command Scope pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command Scope"
+          }
+        }
+      }
+    },
+    "sb-compatibility": {
+      "comment": "Title of the Compatibility pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compatibility"
+          }
+        }
+      }
+    },
+    "sb-floodControl": {
+      "comment": "Title of the Flood Control pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flood Control"
+          }
+        }
+      }
+    },
+    "sb-incomingData": {
+      "comment": "Title of the Incoming Data pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incoming Data"
+          }
+        }
+      }
+    },
+    "sb-fileTransfers": {
+      "comment": "Title of the File Transfers pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File Transfers"
+          }
+        }
+      }
+    },
+    "sb-inlineMedia": {
+      "comment": "Title of the Inline Media pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inline Media"
+          }
+        }
+      }
+    },
+    "sb-logLocation": {
+      "comment": "Title of the Log Location pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log Location"
+          }
+        }
+      }
+    },
+    "sb-defaultIdentity": {
+      "comment": "Title of the Default Identity pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default Identity"
+          }
+        }
+      }
+    },
+    "sb-defaultIRCopMessages": {
+      "comment": "Title of the IRC operator messages pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRCop Messages"
+          }
+        }
+      }
+    },
+    "sb-hidden": {
+      "comment": "Title of the Hidden pane in the Settings sidebar.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden"
+          }
+        }
+      }
+    },
+    "sb-plugin": {
+      "comment": "Fallback title for an add-on supplied Settings pane.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add-on"
+          }
+        }
+      }
+    },
+    "sb-vers": {
+      "comment": "Settings sidebar footer. Arguments are the marketing version and build number.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "tb-back": {
+      "comment": "Label for the Settings toolbar back item.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        }
+      }
+    },
+    "tb-forward": {
+      "comment": "Label for the Settings toolbar forward item.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward"
+          }
+        }
+      }
+    },
+    "ax-theme": {
+      "comment": "Accessibility label for the style selection control.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Style"
+          }
+        }
+      }
+    },
+    "ax-transcript-folder": {
+      "comment": "Accessibility label for the transcript folder selection control.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcript Folder"
+          }
+        }
+      }
+    },
+    "ax-download-folder": {
+      "comment": "Accessibility label for the file-transfer download destination control.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download Destination"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
+

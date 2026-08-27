@@ -17,7 +17,7 @@ extension CapabilityRegistry {
 
 	private static var defaultCapabilities: [Capability] {
 		let echoMessageGate: IRCCapabilityPreferenceGate = {
-			TPCPreferences.enableEchoMessageCapability()
+			TextualPreferences.enableEchoMessageCapability()
 		}
 
 		let saslHook: IRCCapabilityNegotiationHook = { client, mechanisms in

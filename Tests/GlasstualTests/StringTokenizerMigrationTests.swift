@@ -5,6 +5,7 @@
 
 import CocoaExtensions
 import Foundation
+@testable import Glasstual
 import XCTest
 
 final class StringTokenizerMigrationTests: XCTestCase {
@@ -27,11 +28,11 @@ final class StringTokenizerMigrationTests: XCTestCase {
 
 	func testMutableStringConsumesWhitespaceAndQuotedTokens() {
 		let command = NSMutableString(string: "PRIVMSG   #swift")
-		XCTAssertEqual(command.ce_uppercaseToken, "PRIVMSG")
+		XCTAssertEqual(command.ceUppercaseToken, "PRIVMSG")
 		XCTAssertEqual(command, "#swift")
 
 		let quoted = NSMutableString(string: #""one\" two"   tail"#)
-		XCTAssertEqual(quoted.ce_tokenInsideQuotes, #"one" two"#)
+		XCTAssertEqual(quoted.ceTokenInsideQuotes, #"one" two"#)
 		XCTAssertEqual(quoted, "tail")
 	}
 
@@ -45,7 +46,7 @@ final class StringTokenizerMigrationTests: XCTestCase {
 		XCTAssertEqual(token, "one two")
 
 		let invalid = NSMutableString(string: #""value"suffix"#)
-		XCTAssertEqual(invalid.ce_tokenInsideQuotes, "")
+		XCTAssertEqual(invalid.ceTokenInsideQuotes, "")
 		XCTAssertEqual(invalid, #""value"suffix"#)
 	}
 
@@ -56,7 +57,7 @@ final class StringTokenizerMigrationTests: XCTestCase {
 			attributes: [marker: "preserved"]
 		)
 
-		let token = source.ce_token
+		let token = source.ceToken
 
 		XCTAssertEqual(token.string, "JOIN")
 		XCTAssertEqual(try XCTUnwrap(token.attribute(marker, at: 0, effectiveRange: nil) as? String), "preserved")

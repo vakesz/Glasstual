@@ -36,9 +36,10 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 
 @objc(ICMGyazo)
-final class GyazoModule: ICLInlineContentModule {
+final class GyazoModule: InlineContentModule {
 	private var contentIdentifier = ""
 
 	private func loadContent() {
@@ -46,7 +47,7 @@ final class GyazoModule: ICLInlineContentModule {
 		components?.queryItems = [URLQueryItem(name: "url", value: payload.address)]
 		guard let url = components?.url else { return cancel() }
 
-		ICLHelpers.requestJSONData(from: url) { [weak self] success, data in
+		_ = InlineContentHelpers.requestJSONData(from: url) { [weak self] success, data in
 			guard let self, success, let data else {
 				self?.cancel()
 				return
@@ -60,23 +61,23 @@ final class GyazoModule: ICLInlineContentModule {
 
 		switch type {
 		case "photo":
-			guard let address = data["url"] as? String, let url = ICLHelpers.url(with: address) else {
+			guard let address = data["url"] as? String, let url = InlineContentHelpers.url(with: address) else {
 				return cancel()
 			}
 			payload.urlToInline = url
-			self.defer(as: .image)
+			deferContent(as: .image)
 		case "video":
-			guard let url = ICLHelpers.url(with: "https://i.gyazo.com/\(contentIdentifier).mp4") else {
+			guard let url = InlineContentHelpers.url(with: "https://i.gyazo.com/\(contentIdentifier).mp4") else {
 				return cancel()
 			}
 			payload.urlToInline = url
-			self.defer(as: .videoGif)
+			deferContent(as: .videoGif)
 		default:
 			cancel()
 		}
 	}
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		let path = url.path(percentEncoded: true)
 		guard path.count == 33 else { return nil }
 		let identifier = String(path.dropFirst())
@@ -88,15 +89,15 @@ final class GyazoModule: ICLInlineContentModule {
 		}
 	}
 
-	override class var domains: [String]? {
+	override static var domains: [String]? {
 		["gyazo.com", "www.gyazo.com"]
 	}
 
-	override class var contentImageOrVideo: Bool {
+	override static var contentImageOrVideo: Bool {
 		true
 	}
 
-	override class var contentIsFile: Bool {
+	override static var contentIsFile: Bool {
 		true
 	}
 

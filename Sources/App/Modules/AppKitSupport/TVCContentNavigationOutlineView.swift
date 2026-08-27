@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 @objc(TVCContentNavigationOutlineViewItem)
 public final class ContentNavigationOutlineViewItem: NSObject {
@@ -115,12 +116,12 @@ public final class ContentNavigationOutlineView: NSOutlineView {
 	public func navigateToItem(withIdentifier identifier: UInt) {
 		for groupItem in groupItems as? [ContentNavigationOutlineViewItem] ?? [] {
 			if groupItem.identifier == identifier {
-				selectItem(at: UInt(row(forItem: groupItem)))
+				selectItem(at: row(forItem: groupItem))
 				return
 			}
 
 			for childItem in groupItem.children ?? [] where childItem.identifier == identifier {
-				selectItem(at: UInt(row(forItem: childItem)))
+				selectItem(at: row(forItem: childItem))
 				return
 			}
 		}
@@ -197,7 +198,7 @@ extension ContentNavigationOutlineView: NSOutlineViewDelegate {
 		let childIndex = row(forItem: lastSelection)
 
 		if childIndex >= 0 {
-			selectItem(at: UInt(childIndex))
+			selectItem(at: childIndex)
 		}
 	}
 

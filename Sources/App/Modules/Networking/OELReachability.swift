@@ -60,7 +60,7 @@ public final class Reachability: NSObject, @unchecked Sendable {
 	}
 
 	@objc(reachabilityForInternetConnection)
-	public class func reachabilityForInternetConnection() -> Reachability {
+	public static func reachabilityForInternetConnection() -> Reachability {
 		Reachability()
 	}
 
@@ -121,7 +121,7 @@ public final class Reachability: NSObject, @unchecked Sendable {
 	}
 
 	@objc(evaluatePathChange:currentlyReachable:receivedInitialPath:)
-	public class func evaluatePathChange(
+	public static func evaluatePathChange(
 		reachable: Bool,
 		currentlyReachable: UnsafeMutablePointer<ObjCBool>,
 		receivedInitialPath: UnsafeMutablePointer<ObjCBool>

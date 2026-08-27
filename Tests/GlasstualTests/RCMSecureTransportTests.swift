@@ -1,3 +1,4 @@
+import CocoaExtensions
 @testable import Glasstual
 import XCTest
 
@@ -6,7 +7,7 @@ class RCMSecureTransportTests: XCTestCase {
 	@objc
 	func testCompatibilityCipherListIncludesDeprecatedSuites() {
 		let cipherSuites = SecureTransportSupport.cipherSuites(
-			inCollection: 0,
+			inCollection: .default,
 			includeDeprecated: true
 		)
 		let dheIndex = cipherSuites.firstIndex(of: NSNumber(value: TLS_DHE_RSA_WITH_AES_256_GCM_SHA384))
@@ -20,7 +21,7 @@ class RCMSecureTransportTests: XCTestCase {
 	@objc
 	func testModernCipherListExcludesDeprecatedSuites() {
 		let cipherSuites = SecureTransportSupport.cipherSuites(
-			inCollection: 0,
+			inCollection: .default,
 			includeDeprecated: false
 		)
 

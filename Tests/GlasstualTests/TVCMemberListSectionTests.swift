@@ -37,19 +37,20 @@
  *********************************************************************** */
 
 import AppKit
+@testable import Glasstual
 import XCTest
 
 @MainActor
 final class TVCMemberListSectionTests: XCTestCase {
 	private var client: GLTTestClient!
-	private var memberList: TVCMemberList!
+	private var memberList: MemberList!
 	private var controller: IRCChannelMemberListController!
 
-	override func setUp() {
-		super.setUp()
+	override func setUp() async throws {
+		try await super.setUp()
 
 		client = GLTTestClient()
-		memberList = TVCMemberList(frame: NSRect(x: 0, y: 0, width: 150, height: 400))
+		memberList = MemberList(frame: NSRect(x: 0, y: 0, width: 150, height: 400))
 		memberList.addTableColumn(NSTableColumn(identifier: NSUserInterfaceItemIdentifier("member")))
 		memberList.awakeFromNib()
 
@@ -59,12 +60,12 @@ final class TVCMemberListSectionTests: XCTestCase {
 		controller.replaceContents([])
 	}
 
-	override func tearDown() {
+	override func tearDown() async throws {
 		controller = nil
 		memberList = nil
 		client = nil
 
-		super.tearDown()
+		try await super.tearDown()
 	}
 
 	func testSingleRankIsAFlatList() {
@@ -78,6 +79,11 @@ final class TVCMemberListSectionTests: XCTestCase {
 
 	func testObjectiveCRuntimeContractIsPreserved() {
 		XCTAssertEqual(NSStringFromClass(type(of: memberList)), "TVCMemberList")
+		XCTAssertEqual(NSStringFromClass(MemberListSection.self), "TVCMemberListSection")
+		XCTAssertEqual(NSStringFromClass(MemberListCell.self), "TVCMemberListCell")
+		XCTAssertEqual(NSStringFromClass(MemberListHeaderCell.self), "TVCMemberListHeaderCell")
+		XCTAssertEqual(NSStringFromClass(MemberListRowCell.self), "TVCMemberListRowCell")
+		XCTAssertEqual(NSStringFromClass(MemberListUserInfoPopover.self), "TVCMemberListUserInfoPopover")
 
 		let selectors = [
 			"assignToChannel:",
@@ -129,7 +135,7 @@ final class TVCMemberListSectionTests: XCTestCase {
 
 		for member in [alice, carol, dave] {
 			let row = memberList.row(forItem: member)
-			let item = memberList.item(atRow: row) as? IRCChannelUser
+			let item = memberList.item(atRow: row) as? ChannelUser
 
 			XCTAssertTrue(item === member)
 		}
@@ -190,7 +196,7 @@ final class TVCMemberListSectionTests: XCTestCase {
 	}
 
 	func testMemberCellUsesSingleLineTailTruncation() {
-		let cell = TVCMemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
+		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
 		let nicknameField = NSTextField(labelWithString: "")
 		cell.setValue(nicknameField, forKey: "cellTextField")
 		cell.awakeFromNib()
@@ -201,7 +207,7 @@ final class TVCMemberListSectionTests: XCTestCase {
 	}
 
 	func testMemberCellCollapsesUnusedStatusImage() {
-		let cell = TVCMemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
+		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
 		let statusImageView = NSImageView()
 		let statusWidthConstraint = statusImageView.widthAnchor.constraint(equalToConstant: 16)
 		cell.setValue(statusImageView, forKey: "statusImageView")
@@ -225,24 +231,28 @@ final class TVCMemberListSectionTests: XCTestCase {
 					memberList,
 					objectValueFor: nil,
 					row: row
-				) as? TVCMemberListSection
+				) as? MemberListSection
 
 				return section.map { "[\($0.title)]" }
 			}
 
-			return (memberList.item(atRow: row) as? IRCChannelUser)?.user.nickname
+			return (memberList.item(atRow: row) as? ChannelUser)?.user.nickname
 		}
 	}
 
-	private func makeMember(named nickname: String, modes: String = "") -> IRCChannelUser {
-		let user = IRCUser(nickname: nickname, on: client)
-		let member = IRCChannelUserMutable(user: user)
+	private func makeMember(named nickname: String, modes: String = "") -> ChannelUser {
+		let user = User(nickname: nickname, on: client)
+		let member = ChannelUserMutable(user: user)
 		member.modes = modes
 
-		return member.copy() as! IRCChannelUser
+		guard let copiedMember = member.copy() as? ChannelUser else {
+			preconditionFailure("Channel member copies must preserve their model type")
+		}
+
+		return copiedMember
 	}
 
-	private func insert(_ member: IRCChannelUser, at index: Int) {
+	private func insert(_ member: ChannelUser, at index: Int) {
 		controller.insert(member, atArrangedObjectIndex: index)
 	}
 }

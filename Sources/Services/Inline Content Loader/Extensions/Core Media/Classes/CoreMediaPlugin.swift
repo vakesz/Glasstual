@@ -36,10 +36,11 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 
 @objc(ICPCoreMedia)
-final class CoreMediaPlugin: NSObject, ICLPluginProtocol {
-	@objc class var modules: [AnyClass] {
+final class CoreMediaPlugin: NSObject, InlineContentPlugin {
+	@objc static var modules: [AnyClass] {
 		[
 			DailymotionModule.self,
 			GyazoModule.self,

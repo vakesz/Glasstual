@@ -36,26 +36,27 @@
  *********************************************************************** */
 
 import Foundation
+import InlineContentKit
 
 @objc(ICMStreamable)
-final class StreamableModule: ICMInlineVideo {
+final class StreamableModule: InlineVideoModule {
 	private func performAction(forVideo identifier: String) {
 		let address = "https://api.streamable.com/videos/\(identifier)"
-		ICLHelpers.requestJSONObject(
+		_ = InlineContentHelpers.requestJSONObject(
 			"url",
 			ofType: NSString.self,
 			inHierarchy: ["files", "mp4"],
 			fromAddress: address
 		) { [weak self] object in
 			guard let self, let address = object as? String else {
-				self?.notifyUnsafeToLoad()
+				self?.notifyUnsafeToLoadVideo()
 				return
 			}
 			performAction(forAddress: address)
 		}
 	}
 
-	override class func actionBlock(for url: URL) -> ICLInlineContentModuleActionBlock? {
+	override static func actionBlock(for url: URL) -> InlineContentModuleActionBlock? {
 		let identifier = url.path(percentEncoded: true).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
 		guard !identifier.isEmpty,
 		      identifier.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) })
@@ -65,11 +66,11 @@ final class StreamableModule: ICMInlineVideo {
 		}
 	}
 
-	override class var domains: [String]? {
+	override static var domains: [String]? {
 		["streamable.com", "www.streamable.com"]
 	}
 
-	override class var contentIsFile: Bool {
+	override static var contentIsFile: Bool {
 		true
 	}
 

@@ -36,10 +36,11 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 
 @objc(IRCModeInfo)
-public class ModeInfo: XRPortablePropertyObject {
+public class ModeInfo: PortablePropertyObject {
 	fileprivate var isSetStorage: Bool
 	fileprivate var symbolStorage: String
 	fileprivate var parameterStorage: String?
@@ -155,7 +156,7 @@ public class ModeInfo: XRPortablePropertyObject {
 
 @objc(IRCModeInfoMutable)
 public final class MutableModeInfo: ModeInfo {
-	override public class var isMutable: Bool {
+	override public static var isMutable: Bool {
 		true
 	}
 

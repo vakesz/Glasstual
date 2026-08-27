@@ -3,13 +3,37 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import CocoaExtensions
 @testable import Glasstual
-import ObjectiveC.runtime
 import XCTest
 
 final class TPCPreferencesLocalMigrationTests: XCTestCase {
+	func testCompatibilityNumericSetterPostsPreferenceNotification() {
+		let defaults = TextualUserDefaults.shared()
+		let key = "TPCPreferencesLocalMigrationTests.\(UUID().uuidString)"
+		let notificationExpectation = expectation(description: "Preference change notification")
+		let center = NotificationCenter.default
+		let token = center.addObserver(
+			forName: .textualUserDefaultsDidChange,
+			object: defaults,
+			queue: nil
+		) { notification in
+			XCTAssertEqual(notification.userInfo?["changedKey"] as? String, key)
+			notificationExpectation.fulfill()
+		}
+		defer {
+			center.removeObserver(token)
+			defaults.removeObject(forKey: key)
+		}
+
+		defaults.setUnsignedInteger(42, forKey: key)
+
+		wait(for: [notificationExpectation], timeout: 1)
+		XCTAssertEqual(defaults.unsignedInteger(forKey: key), 42)
+	}
+
 	func testScalarSettersKeepTheirEstablishedDefaultsKeys() {
-		let defaults = TPCPreferencesUserDefaults.shared()
+		let defaults = TextualUserDefaults.shared()
 		let soundKey = "Notification Sound Is Muted"
 		let oldSound = defaults.object(forKey: soundKey)
 		let oldPort = defaults.object(forKey: "File Transfers -> File Transfer Port Range Start")
@@ -18,8 +42,8 @@ final class TPCPreferencesLocalMigrationTests: XCTestCase {
 			defaults.set(oldPort, forKey: "File Transfers -> File Transfer Port Range Start")
 		}
 
-		TPCPreferences.setSoundIsMuted(true)
-		TPCPreferences.setFileTransferPortRangeStart(51234)
+		TextualPreferences.setSoundIsMuted(true)
+		TextualPreferences.setFileTransferPortRangeStart(51234)
 
 		XCTAssertTrue(defaults.bool(forKey: soundKey))
 		XCTAssertEqual(
@@ -30,33 +54,12 @@ final class TPCPreferencesLocalMigrationTests: XCTestCase {
 
 	func testNotificationKeyMappingPreservesStoredSchema() {
 		XCTAssertEqual(
-			TPCPreferences.key(forEvent: .channelMessage, category: "Sound"),
+			TextualPreferences.key(for: .channelMessage, category: "Sound"),
 			"NotificationType -> Public Message -> Sound"
 		)
 		XCTAssertEqual(
-			TPCPreferences.key(forEvent: .fileTransferReceiveSuccessful, category: "Enabled"),
+			TextualPreferences.key(for: .fileTransferReceiveSuccessful, category: "Enabled"),
 			"NotificationType -> Successful File Transfer (Receiving) -> Enabled"
 		)
-	}
-
-	func testObjectiveCPreferenceSelectorsRemainAvailable() throws {
-		let metaClass = try XCTUnwrap(object_getClass(TPCPreferences.self))
-		let selectors = [
-			"defaultNickname",
-			"setLogToDisk:",
-			"setThemeNameWithExistenceCheck:",
-			"setSound:forEvent:",
-			"setNotificationEnabled:forEvent:",
-			"cleanUpHighlightKeywords",
-			"initPreferences",
-			"setTextFieldSmartLinks:",
-		]
-
-		for selectorName in selectors {
-			XCTAssertTrue(
-				class_respondsToSelector(metaClass, NSSelectorFromString(selectorName)),
-				"Missing Objective-C class selector \(selectorName)"
-			)
-		}
 	}
 }

@@ -37,11 +37,6 @@ import os
 private typealias ObjectiveCCountImplementation = @convention(c) (AnyObject, Selector) -> UInt
 
 private enum GlobalModelSupport {
-	static let defaultQueuePriority = 0
-	static let highQueuePriority = 2
-	static let lowQueuePriority = -2
-	static let backgroundQueuePriority = Int(Int16.min)
-
 	static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.frameworks.CocoaExtensions",
 		category: "Framework"
@@ -66,7 +61,7 @@ private enum GlobalModelSupport {
 		block: @escaping @convention(block) () -> Void,
 		delay: TimeInterval,
 		repeats: Bool
-	) -> DispatchSourceTimer? {
+	) -> DispatchSourceTimer {
 		precondition(delay >= 0, "Delay must not be negative")
 
 		let timer = DispatchSource.makeTimerSource(queue: queue)
@@ -85,8 +80,38 @@ private enum GlobalModelSupport {
 	}
 }
 
-@_cdecl("NSObjectIsEmpty")
-public func cocoaExtensionsObjectIsEmpty(_ object: AnyObject?) -> Bool {
+public func performSynchronously(
+	on queue: DispatchQueue,
+	_ block: @convention(block) () -> Void
+) {
+	queue.sync {
+		autoreleasepool(invoking: block)
+	}
+}
+
+public func performAsynchronously(
+	on queue: DispatchQueue,
+	_ block: @escaping @convention(block) () -> Void
+) {
+	let workItem = DispatchWorkItem {
+		autoreleasepool(invoking: block)
+	}
+	queue.async(execute: workItem)
+}
+
+public func performSynchronouslyOnMainQueue(_ block: @convention(block) () -> Void) {
+	if Thread.isMainThread {
+		autoreleasepool(invoking: block)
+	} else {
+		performSynchronously(on: .main, block)
+	}
+}
+
+public func performAsynchronouslyOnMainQueue(_ block: @escaping @convention(block) () -> Void) {
+	performAsynchronously(on: .main, block)
+}
+
+public func isObjectEmpty(_ object: AnyObject?) -> Bool {
 	guard let object else {
 		return true
 	}
@@ -102,79 +127,32 @@ public func cocoaExtensionsObjectIsEmpty(_ object: AnyObject?) -> Bool {
 	return object is NSNull
 }
 
-@_cdecl("XRScheduleBlockOnGlobalQueue")
-public func cocoaExtensionsScheduleBlockOnGlobalQueue(
-	_ block: @escaping @convention(block) () -> Void,
-	_ delay: TimeInterval
-) -> AnyObject? {
-	cocoaExtensionsScheduleBlockOnGlobalQueueWithPriority(
-		block,
-		delay,
-		GlobalModelSupport.defaultQueuePriority
-	)
+public func scheduleBlock(
+	on queue: DispatchQueue,
+	after delay: TimeInterval,
+	repeating: Bool = false,
+	execute block: @escaping @convention(block) () -> Void
+) -> DispatchSourceTimer {
+	GlobalModelSupport.timer(on: queue, block: block, delay: delay, repeats: repeating)
 }
 
-@_cdecl("XRScheduleBlockOnGlobalQueueWithPriority")
-public func cocoaExtensionsScheduleBlockOnGlobalQueueWithPriority(
-	_ block: @escaping @convention(block) () -> Void,
-	_ delay: TimeInterval,
-	_ priority: Int
-) -> AnyObject? {
-	let queue = DispatchQueue.global(qos: qualityOfService(for: priority))
-
-	return GlobalModelSupport.timer(on: queue, block: block, delay: delay, repeats: false)
-}
-
-@_cdecl("XRScheduleBlockOnMainQueue")
-public func cocoaExtensionsScheduleBlockOnMainQueue(
-	_ block: @escaping @convention(block) () -> Void,
-	_ delay: TimeInterval
-) -> AnyObject? {
-	GlobalModelSupport.timer(on: .main, block: block, delay: delay, repeats: false)
-}
-
-@_cdecl("XRScheduleBlockOnQueue")
-public func cocoaExtensionsScheduleBlockOnQueue(
-	_ queue: DispatchQueue,
-	_ block: @escaping @convention(block) () -> Void,
-	_ delay: TimeInterval,
-	_ repeatTimer: Bool
-) -> AnyObject? {
-	GlobalModelSupport.timer(on: queue, block: block, delay: delay, repeats: repeatTimer)
-}
-
-@_cdecl("XRResumeScheduledBlock")
-public func cocoaExtensionsResumeScheduledBlock(_ blockSource: AnyObject) {
-	(blockSource as? DispatchSourceTimer)?.resume()
-}
-
-@_cdecl("XRCancelScheduledBlock")
-public func cocoaExtensionsCancelScheduledBlock(_ blockSource: AnyObject) {
-	(blockSource as? DispatchSourceTimer)?.cancel()
-}
-
-@_cdecl("XRExchangeInstanceMethod")
-public func cocoaExtensionsExchangeInstanceMethod(
-	_ className: NSString,
-	_ originalMethod: NSString,
-	_ replacementMethod: NSString
-) {
-	guard let objectClass = NSClassFromString(className as String) else {
-		GlobalModelSupport.logger.error("Cannot swizzle class \(className, privacy: .public): class not found")
-		return
-	}
-
-	let originalSelector = NSSelectorFromString(originalMethod as String)
-	let replacementSelector = NSSelectorFromString(replacementMethod as String)
-
+@discardableResult
+public func exchangeInstanceMethods(
+	on objectClass: AnyClass,
+	original originalSelector: Selector,
+	replacement replacementSelector: Selector
+) -> Bool {
 	guard
 		let original = class_getInstanceMethod(objectClass, originalSelector),
 		let replacement = class_getInstanceMethod(objectClass, replacementSelector)
 	else {
+		let className = NSStringFromClass(objectClass)
+		let originalMethod = NSStringFromSelector(originalSelector)
+		let replacementMethod = NSStringFromSelector(replacementSelector)
 		GlobalModelSupport.logger.error(
 			"Cannot swizzle -[\(className, privacy: .public) \(originalMethod, privacy: .public)] with \(replacementMethod, privacy: .public): method not found"
 		)
-		return
+		return false
 	}
 
 	let methodAdded = class_addMethod(
@@ -194,17 +172,6 @@ public func cocoaExtensionsExchangeInstanceMethod(
 	} else {
 		method_exchangeImplementations(original, replacement)
 	}
-}
 
-private func qualityOfService(for priority: Int) -> DispatchQoS.QoSClass {
-	switch priority {
-	case GlobalModelSupport.highQueuePriority:
-		.userInitiated
-	case GlobalModelSupport.lowQueuePriority:
-		.utility
-	case GlobalModelSupport.backgroundQueuePriority:
-		.background
-	default:
-		.default
-	}
+	return true
 }

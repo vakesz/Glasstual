@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 
 /** The delegate lives in an object of its own rather than on the split view.
  AppKit answers -respondsToSelector: for toggleSidebar: on any NSSplitView by
@@ -49,8 +50,6 @@ private func sortChannelViewSubviews(
 	}
 }
 
-private nonisolated(unsafe) var mainWindowChannelViewLayingOutKVOContext = 0
-
 @objc(TVCMainWindowChannelView)
 public final class MainWindowChannelView: NSSplitView {
 	/* -[NSSplitView delegate] is weak, so the delegate is owned here. */
@@ -72,7 +71,7 @@ public final class MainWindowChannelView: NSSplitView {
 		 the same window does not leave duplicate observers behind. */
 		NotificationCenter.default.removeObserver(
 			self,
-			name: .TPCThemeAppearanceChanged,
+			name: .themeAppearanceChanged,
 			object: nil
 		)
 
@@ -83,7 +82,7 @@ public final class MainWindowChannelView: NSSplitView {
 		NotificationCenter.default.addObserver(
 			self,
 			selector: #selector(themeAppearanceChanged(_:)),
-			name: .TPCThemeAppearanceChanged,
+			name: .themeAppearanceChanged,
 			object: nil
 		)
 	}
@@ -186,13 +185,20 @@ public final class MainWindowChannelView: NSSplitView {
 		let selectedItems = mainWindow.selectedItems
 		let currentSubviews = subviews
 
-		if itemIndexSelected != NSNotFound {
-			let oldItemView = currentSubviews[itemIndexSelected] as! MainWindowChannelViewSubview
+		if currentSubviews.indices.contains(itemIndexSelected),
+		   let oldItemView = currentSubviews[itemIndexSelected] as? MainWindowChannelViewSubview
+		{
 			oldItemView.isSelected = false
 			oldItemView.toggleOverlayView()
 		}
 
-		let newItemView = currentSubviews[itemIndex] as! MainWindowChannelViewSubview
+		guard currentSubviews.indices.contains(itemIndex),
+		      selectedItems.indices.contains(itemIndex),
+		      let newItemView = currentSubviews[itemIndex] as? MainWindowChannelViewSubview
+		else {
+			return
+		}
+
 		newItemView.isSelected = true
 		newItemView.toggleOverlayView()
 
@@ -202,11 +208,11 @@ public final class MainWindowChannelView: NSSplitView {
 		mainWindow.channelViewSelectionChange(to: newItem)
 	}
 
-	private func backingView(for item: TreeItem) -> LogView {
+	private func backingView(for item: IRCTreeItem) -> LogView {
 		item.viewController.backingView
 	}
 
-	private func subview(for _: TreeItem) -> MainWindowChannelViewSubview {
+	private func subview(for _: IRCTreeItem) -> MainWindowChannelViewSubview {
 		var splitViewFrame = frame
 		splitViewFrame.origin.x = 0.0
 		splitViewFrame.origin.y = 0.0
@@ -231,7 +237,7 @@ public final class MainWindowChannelView: NSSplitView {
 
 	@objc
 	public func updateArrangement() {
-		let arrangement = TPCPreferences.channelViewArrangement()
+		let arrangement = TextualPreferences.channelViewArrangement()
 		isVertical = (arrangement == .vertical)
 	}
 
@@ -254,7 +260,7 @@ public final class MainWindowChannelView: NSSplitView {
 private final class MainWindowChannelViewSubview: NSView {
 	var itemIndex: Int = 0
 	var overlayVisible = false
-	private var isObservingBackingView = false
+	private var backingViewLayoutObservation: NSKeyValueObservation?
 	var uniqueIdentifier = ""
 	weak var parentView: MainWindowChannelView?
 	private var overlayView: MainWindowChannelViewSubviewOverlayView?
@@ -307,7 +313,7 @@ private final class MainWindowChannelViewSubview: NSView {
 		 last lines of the view. Nothing painted the strip that leaves behind, so it
 		 showed the window's own background. Fill it with the style's window color
 		 to make it continuous with the message area above it. */
-		var backgroundColor = TXSharedApplication.sharedThemeController().settings.underlyingWindowColor
+		var backgroundColor = SharedApplication.sharedThemeController().settings.underlyingWindowColor
 
 		if backgroundColor == nil {
 			backgroundColor = .textBackgroundColor
@@ -322,14 +328,8 @@ private final class MainWindowChannelViewSubview: NSView {
 			return
 		}
 
-		if isObservingBackingView {
-			backingView.removeObserver(
-				self,
-				forKeyPath: "layingOutView",
-				context: &mainWindowChannelViewLayingOutKVOContext
-			)
-			isObservingBackingView = false
-		}
+		backingViewLayoutObservation?.invalidate()
+		backingViewLayoutObservation = nil
 
 		/* Removing the web view from its superview also removes the
 		 constraints that -setupWebView activated between it and us. */
@@ -346,13 +346,11 @@ private final class MainWindowChannelViewSubview: NSView {
 		}
 
 		if backingViewIsLoading {
-			isObservingBackingView = true
-			backingView.addObserver(
-				self,
-				forKeyPath: "layingOutView",
-				options: .new,
-				context: &mainWindowChannelViewLayingOutKVOContext
-			)
+			backingViewLayoutObservation = backingView.observe(\.isLayingOutView, options: [.new]) { [weak self] _, _ in
+				MainActor.assumeIsolated {
+					self?.toggleOverlayView()
+				}
+			}
 		}
 
 		let webView = backingView.webView
@@ -391,24 +389,6 @@ private final class MainWindowChannelViewSubview: NSView {
 			minimumWidth,
 			minimumHeight,
 		])
-	}
-
-	override func observeValue(
-		forKeyPath keyPath: String?,
-		of object: Any?,
-		change: [NSKeyValueChangeKey: Any]?,
-		context: UnsafeMutableRawPointer?
-	) {
-		guard context == &mainWindowChannelViewLayingOutKVOContext else {
-			super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-			return
-		}
-
-		if keyPath == "layingOutView" {
-			MainActor.assumeIsolated {
-				toggleOverlayView()
-			}
-		}
 	}
 
 	private func constructOverlayView() {
@@ -509,9 +489,9 @@ private final class MainWindowChannelViewSubviewOverlayView: NSView {
 		}
 
 		var backgroundColor: NSColor? = if subview.backingViewIsLoading {
-			TXSharedApplication.sharedThemeController().settings.underlyingWindowColor
+			SharedApplication.sharedThemeController().settings.underlyingWindowColor
 		} else {
-			TXSharedApplication.sharedThemeController().settings.channelViewOverlayColor
+			SharedApplication.sharedThemeController().settings.channelViewOverlayColor
 		}
 
 		if backgroundColor == nil {
@@ -529,7 +509,7 @@ private final class MainWindowChannelViewSubviewOverlayView: NSView {
 
 		let appearance = mainWindow.userInterfaceObjects
 
-		if mainWindow.isActiveForDrawing {
+		if mainWindow.ceIsActiveForDrawing {
 			return appearance.channelViewOverlayDefaultBackgroundColorActiveWindow
 				?? .textBackgroundColor
 		}

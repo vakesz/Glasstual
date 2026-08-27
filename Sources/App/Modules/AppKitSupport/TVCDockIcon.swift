@@ -17,12 +17,12 @@ public final class DockIcon: NSObject {
 	@MainActor private static var cachedHighlightCount: Int = -1
 	@MainActor private static var cachedMessageCount: Int = -1
 
-	@MainActor @objc public class func updateDockIcon() {
-		guard TPCPreferences.displayDockBadge() else {
+	@MainActor @objc public static func updateDockIcon() {
+		guard TextualPreferences.displayDockBadge() else {
 			return
 		}
 
-		guard let world = NSObject.masterController().world else {
+		guard let world = NSObject.applicationController().world else {
 			// World is not yet initialized (e.g. called during early nib wake-up).
 			return
 		}
@@ -30,8 +30,8 @@ public final class DockIcon: NSObject {
 		var highlightCount: UInt = 0
 		var messageCount: UInt = 0
 
-		for client in world.clientList as? [IRCClient] ?? [] {
-			for channel in client.channelList as? [IRCChannel] ?? [] {
+		for client in world.clientList {
+			for channel in client.channelList {
 				if channel.config.pushNotifications {
 					messageCount += UInt(channel.dockUnreadCount)
 				}
@@ -47,12 +47,12 @@ public final class DockIcon: NSObject {
 		}
 	}
 
-	@MainActor @objc public class func resetCachedCount() {
+	@MainActor @objc public static func resetCachedCount() {
 		cachedMessageCount = -1
 		cachedHighlightCount = -1
 	}
 
-	@MainActor @objc public class func drawWithoutCount() {
+	@MainActor @objc public static func drawWithoutCount() {
 		if cachedHighlightCount == 0, cachedMessageCount == 0 {
 			return
 		}
@@ -67,7 +67,7 @@ public final class DockIcon: NSObject {
 	}
 
 	@objc(drawWithHighlightCount:messageCount:)
-	@MainActor public class func draw(withHighlightCount highlightCount: UInt, messageCount: UInt) {
+	@MainActor public static func draw(withHighlightCount highlightCount: UInt, messageCount: UInt) {
 		if cachedHighlightCount == Int(highlightCount), cachedMessageCount == Int(messageCount) {
 			return
 		}
@@ -102,9 +102,9 @@ public final class DockIcon: NSObject {
 	}
 
 	@objc(badgeStringForCount:)
-	public class func badgeString(forCount count: UInt) -> String {
+	public static func badgeString(forCount count: UInt) -> String {
 		if count > 9999 {
-			return LocalizedKey("TVCMainWindow[dki-bg]", formattedNumber(9999))
+			return MainWindowStrings.Dock.overflowBadge(maximum: formattedNumber(9999) as String)
 		}
 
 		return formattedNumber(Int(count)) as String

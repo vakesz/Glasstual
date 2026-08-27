@@ -1,3 +1,4 @@
+import CocoaExtensions
 @testable import Glasstual
 import XCTest
 
@@ -39,7 +40,7 @@ import XCTest
  *********************************************************************** */
 class IRCPrefixTests: XCTestCase {
 	func testDefaultsAreNonnullableEmptyStrings() {
-		let prefix = IRCPrefix()
+		let prefix = Prefix()
 
 		XCTAssertFalse(prefix.isServer)
 
@@ -51,7 +52,7 @@ class IRCPrefixTests: XCTestCase {
 	}
 
 	func testMutableCopyCanChangeWithoutChangingOriginal() throws {
-		var source = IRCPrefixMutable()
+		let source = MutablePrefix()
 
 		source.isServer = true
 		source.nickname = "nick"
@@ -59,8 +60,8 @@ class IRCPrefixTests: XCTestCase {
 		source.address = "host"
 		source.hostmask = "nick!user@host"
 
-		let immutable = try XCTUnwrap(source.copy() as? IRCPrefix)
-		let changed = try XCTUnwrap(immutable.mutableCopy() as? IRCPrefixMutable)
+		let immutable = try XCTUnwrap(source.copy() as? Prefix)
+		let changed = try XCTUnwrap(immutable.mutableCopy() as? MutablePrefix)
 
 		changed.nickname = "other"
 
@@ -78,14 +79,14 @@ class IRCPrefixTests: XCTestCase {
 	}
 
 	func testUniqueCopyEntryPointsPreserveValuesAndRequestedMutability() throws {
-		var source = IRCPrefixMutable()
+		let source = MutablePrefix()
 
 		source.nickname = "nick"
 		source.hostmask = "nick!user@host"
 
-		let immutable = try XCTUnwrap(source.copy() as? IRCPrefix)
-		let unique = try XCTUnwrap(immutable.uniqueCopy() as? IRCPrefix)
-		let uniqueMutable = try XCTUnwrap(immutable.uniqueCopyMutable() as? IRCPrefixMutable)
+		let immutable = try XCTUnwrap(source.copy() as? Prefix)
+		let unique = try XCTUnwrap(immutable.uniqueCopy() as? Prefix)
+		let uniqueMutable = try XCTUnwrap(immutable.uniqueCopyMutable() as? MutablePrefix)
 
 		XCTAssertFalse(unique === immutable)
 
@@ -99,24 +100,24 @@ class IRCPrefixTests: XCTestCase {
 	}
 
 	func testImmutableCopyReturnsSameObject() throws {
-		var mutable = IRCPrefixMutable()
+		let mutable = MutablePrefix()
 
 		mutable.nickname = "nick"
 
-		let immutable = try XCTUnwrap(mutable.copy() as? IRCPrefix)
+		let immutable = try XCTUnwrap(mutable.copy() as? Prefix)
 
-		XCTAssertEqual(immutable.copy() as? IRCPrefix, immutable)
+		XCTAssertEqual(immutable.copy() as? Prefix, immutable)
 	}
 
 	func testEqualityAndHashUseAllFields() throws {
-		var first = IRCPrefixMutable()
+		let first = MutablePrefix()
 
 		first.nickname = "nick"
 		first.username = "user"
 		first.address = "host"
 		first.hostmask = "nick!user@host"
 
-		let second = try XCTUnwrap(first.mutableCopy() as? IRCPrefixMutable)
+		let second = try XCTUnwrap(first.mutableCopy() as? MutablePrefix)
 
 		XCTAssertEqual(first, second)
 

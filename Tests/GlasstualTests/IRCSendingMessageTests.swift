@@ -1,11 +1,7 @@
 @testable import Glasstual
 import XCTest
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "IRCMessage.h"
-/// #import "IRCSendingMessage.h"
-/// #import "NSStringHelper.h"
+/// Migrated from the Objective-C IRCSendingMessage test suite.
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
@@ -44,6 +40,13 @@ import XCTest
  *
  *********************************************************************** */
 class IRCSendingMessageTests: XCTestCase {
+	func testNativeBuilderPreservesObjectiveCRuntimeContract() {
+		XCTAssertNotNil(NSClassFromString("IRCSendingMessage"))
+		XCTAssertTrue(SendingMessage.responds(to: NSSelectorFromString("stringWithCommand:arguments:")))
+		XCTAssertTrue(SendingMessage.responds(to: NSSelectorFromString("stringWithCommand:arguments:tags:")))
+		XCTAssertTrue(SendingMessage.responds(to: NSSelectorFromString("stringWithMessageTags:")))
+	}
+
 	func testCommandWithoutTagsIsUnchanged() {
 		XCTAssertEqual(
 			SendingMessage.string(command: "privmsg", arguments: ["#c", "hello world"], tags: nil),

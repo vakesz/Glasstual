@@ -11,6 +11,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import os
 
 private let alertSoundsDefaultSoundIndex = 0
@@ -20,6 +21,16 @@ private let notificationConfigurationLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "NotificationConfiguration"
 )
+
+private final class NotificationObservation: @unchecked Sendable {
+	let keyPath: String?
+	let object: AnyObject?
+
+	init(keyPath: String?, object: Any?) {
+		self.keyPath = keyPath
+		self.object = object as AnyObject?
+	}
+}
 
 @objc(TVCNotificationConfigurationViewController)
 @MainActor
@@ -60,6 +71,7 @@ public final class NotificationConfigurationViewController: NSObject {
 	}
 
 	private var activeAlertPropertyChangedByUser = false
+	private var activeAlertObservations: [NSKeyValueObservation] = []
 	private var alertSounds: [Any] = []
 
 	override public init() {
@@ -117,7 +129,7 @@ public final class NotificationConfigurationViewController: NSObject {
 
 		if alertSound == nil {
 			alertSoundChoiceButton.selectItem(at: alertSoundsDefaultSoundIndex)
-		} else if alertSound == TLONotificationAlertSound.TXNoAlertSoundPreferenceValue.rawValue {
+		} else if alertSound == NotificationAlertSound.noSoundPreferenceValue {
 			alertSoundChoiceButton.selectItem(at: alertSoundsNoSoundIndex)
 		} else if let soundIndex = alertSounds.firstIndex(where: { ($0 as? String) == alertSound }) {
 			alertSoundChoiceButton.selectItem(at: soundIndex)
@@ -218,7 +230,7 @@ public final class NotificationConfigurationViewController: NSObject {
 		if alertSound == NotificationConfiguration.localizedAlertDefaultSoundTitle() {
 			alertSound = nil
 		} else if alertSound == NotificationConfiguration.localizedAlertNoSoundTitle() {
-			alertSound = TLONotificationAlertSound.TXNoAlertSoundPreferenceValue.rawValue
+			alertSound = NotificationAlertSound.noSoundPreferenceValue
 		}
 
 		if let alertSound {
@@ -233,52 +245,47 @@ public final class NotificationConfigurationViewController: NSObject {
 			return
 		}
 
-		for keyPath in [
-			"alertSound",
-			"speakEvent",
-			"pushNotification",
-			"disabledWhileAway",
-			"bounceDockIcon",
-			"bounceDockIconRepeatedly",
-		] {
-			activeAlert.addObserver(self, forKeyPath: keyPath, options: .new, context: nil)
+		activeAlertObservations = [
+			observe(\.alertSound, named: "alertSound", on: activeAlert),
+			observe(\.speakEvent, named: "speakEvent", on: activeAlert),
+			observe(\.pushNotification, named: "pushNotification", on: activeAlert),
+			observe(\.disabledWhileAway, named: "disabledWhileAway", on: activeAlert),
+			observe(\.bounceDockIcon, named: "bounceDockIcon", on: activeAlert),
+			observe(\.bounceDockIconRepeatedly, named: "bounceDockIconRepeatedly", on: activeAlert),
+		]
+	}
+
+	private func stopObservingActiveAlert(_: NotificationConfiguration?) {
+		activeAlertObservations.forEach { $0.invalidate() }
+		activeAlertObservations.removeAll()
+	}
+
+	private func observe(
+		_ keyPath: KeyPath<NotificationConfiguration, some Any>,
+		named name: String,
+		on alert: NotificationConfiguration
+	) -> NSKeyValueObservation {
+		alert.observe(keyPath, options: .new) { [weak self] object, _ in
+			let observation = NotificationObservation(keyPath: name, object: object)
+			Task { @MainActor [weak self] in
+				self?.handle(observation)
+			}
 		}
 	}
 
-	private func stopObservingActiveAlert(_ alert: NotificationConfiguration?) {
-		guard let alert else {
+	private func handle(_ observation: NotificationObservation) {
+		guard observation.object === activeAlert else {
+			return
+		}
+		if activeAlertPropertyChangedByUser {
+			activeAlertPropertyChangedByUser = false
 			return
 		}
 
-		for keyPath in [
-			"alertSound",
-			"speakEvent",
-			"pushNotification",
-			"disabledWhileAway",
-			"bounceDockIcon",
-			"bounceDockIconRepeatedly",
-		] {
-			alert.removeObserver(self, forKeyPath: keyPath)
-		}
-	}
-
-	override public func observeValue(
-		forKeyPath keyPath: String?,
-		of object: Any?,
-		change _: [NSKeyValueChangeKey: Any]?,
-		context _: UnsafeMutableRawPointer?
-	) {
-		if object as AnyObject? === activeAlert {
-			if activeAlertPropertyChangedByUser {
-				activeAlertPropertyChangedByUser = false
-				return
-			}
-
-			notificationConfigurationLogger.debug(
-				"Reloading user interface because key \(keyPath ?? "nil", privacy: .public) changed remotely"
-			)
-			reload()
-		}
+		notificationConfigurationLogger.debug(
+			"Reloading user interface because key \(observation.keyPath ?? "nil", privacy: .public) changed remotely"
+		)
+		reload()
 	}
 
 	private func updateAvailableSounds() {

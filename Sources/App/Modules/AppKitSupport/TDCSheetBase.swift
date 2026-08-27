@@ -63,12 +63,12 @@ open class SheetBase: NSObject {
 	}
 
 	@objc(okOrErrorForTextField:)
-	public func okOrError(for textField: TVCValidatedTextField) -> Bool {
+	public func okOrError(for textField: ValidatedTextField) -> Bool {
 		textField.showValidationErrorPopover() == false
 	}
 
 	@objc(okOrErrorForComboBox:)
-	public func okOrError(for comboBox: TVCValidatedComboBox) -> Bool {
+	public func okOrError(for comboBox: ValidatedComboBox) -> Bool {
 		comboBox.showValidationErrorPopover() == false
 	}
 

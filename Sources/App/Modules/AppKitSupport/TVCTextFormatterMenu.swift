@@ -25,9 +25,11 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 
 	private var observingColorPanel = false
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
-		generateColorList()
+		MainActor.assumeIsolated {
+			generateColorList()
+		}
 	}
 
 	private var textField: TextViewWithIRCFormatter? {
@@ -138,10 +140,10 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		/* While we could technically load this from a file; we don't need to.
 		 That just adds extra space to the app when we already need to have an
 		 array of colors in the binary. */
-		let colorList = NSColorList(name: LocalizedKey("iwp-cg"))
+		let colorList = NSColorList(name: ApplicationStrings.ircColors)
 
 		for (index, color) in NSColor.formatterColors.enumerated() {
-			colorList.setColor(color, forKey: LocalizedKey("ham-vk", index))
+			colorList.setColor(color, forKey: ApplicationStrings.ircColor(at: index))
 		}
 
 		NSColorPanel.shared.attachColorList(colorList)
@@ -227,7 +229,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		withValue value: Any?,
 		to mutableString: NSMutableAttributedString
 	) {
-		applyEffect(formatterEffect, withValue: value, inRange: mutableString.range, to: mutableString)
+		let fullRange = NSRange(location: 0, length: mutableString.length)
+		applyEffect(formatterEffect, withValue: value, inRange: fullRange, to: mutableString)
 	}
 
 	private func applyEffect(

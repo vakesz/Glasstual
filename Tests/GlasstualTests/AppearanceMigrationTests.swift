@@ -4,6 +4,7 @@
  *********************************************************************** */
 
 import AppKit
+@testable import Glasstual
 import XCTest
 
 private final class AppearanceSpyView: NSView {

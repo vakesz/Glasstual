@@ -40,6 +40,7 @@
 import XCTest
 
 /// IRCv3 identity extensions, WHOX, and pre-away negotiation.
+@MainActor
 final class IRCClientUserIdentityTests: XCTestCase {
 	func testAccountNotifyUpdatesAccount() {
 		let client = makeClient(named: "me")
@@ -152,7 +153,7 @@ final class IRCClientUserIdentityTests: XCTestCase {
 
 		XCTAssertEqual(client.printedLines.count, 1)
 		let printed = printedLine(at: 0, on: client)
-		XCTAssertTrue(printed?["channel"] as? IRCChannel === channel)
+		XCTAssertTrue(printed?["channel"] as? Channel === channel)
 		XCTAssertEqual((printed?["lineType"] as? NSNumber)?.uintValue, TVCLogLineType.invite.rawValue)
 
 		let body = printed?["messageBody"] as? String
@@ -232,7 +233,7 @@ final class IRCClientUserIdentityTests: XCTestCase {
 		let channel = joinChannel("#chat", on: client)
 		let existing = addUser(named: "alice", to: channel, on: client)
 
-		client.modifyUser(existing) { mutableUser in
+		client.modify(existing) { mutableUser in
 			mutableUser.account = "kept"
 		}
 
@@ -297,11 +298,14 @@ final class IRCClientUserIdentityTests: XCTestCase {
 
 	private func makeClient(named nickname: String) -> GLTTestClient {
 		let configuration: NSDictionary = ["nickname": nickname, "username": nickname]
-		return GLTTestClient(configDictionary: configuration as! [String: Any])
+		guard let configuration = configuration as? [String: Any] else {
+			preconditionFailure("Test configuration must bridge to a Swift dictionary")
+		}
+		return GLTTestClient(configDictionary: configuration)
 	}
 
 	@discardableResult
-	private func joinChannel(_ name: String, on client: GLTTestClient) -> IRCChannel {
+	private func joinChannel(_ name: String, on client: GLTTestClient) -> Channel {
 		let channel = client.findChannelOrCreate(name)!
 		channel.activate()
 
@@ -309,9 +313,9 @@ final class IRCClientUserIdentityTests: XCTestCase {
 	}
 
 	@discardableResult
-	private func addUser(named nickname: String, to channel: IRCChannel, on client: GLTTestClient) -> IRCUser {
+	private func addUser(named nickname: String, to channel: Channel, on client: GLTTestClient) -> User {
 		let user = client.findUserOrCreate(nickname)
-		channel.addMember(IRCChannelUser(user: user))
+		channel.addMember(ChannelUser(user: user))
 
 		return user
 	}

@@ -4,8 +4,6 @@ import XCTest
 /// Preprocessor directives found in file:
 /// #import <XCTest/XCTest.h>
 /// #import "GLTTestClient.h"
-/// #import "IRCAddressBook.h"
-/// #import "IRCAddressBookMatchCachePrivate.h"
 /** *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
@@ -42,7 +40,8 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-class IRCAddressBookMatchCacheTests: XCTestCase {
+@MainActor
+final class IRCAddressBookMatchCacheTests: XCTestCase {
 	private var client: GLTTestClient!
 
 	private func cache(ignoreList: [[String: AnyObject]]) -> IRCAddressBookMatchCache {
