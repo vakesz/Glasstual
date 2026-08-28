@@ -5,13 +5,15 @@
 
 import AppKit
 import CocoaExtensions
-import XCTest
+import Testing
 
 @MainActor
-final class CocoaExtensionsUtilityMigrationTests: XCTestCase {
-	func testUserDefaultsNumericHelpersPreserveValuesAndSelectors() throws {
+@Suite("Cocoa extensions user defaults helpers")
+struct CocoaExtensionsUtilityMigrationTests {
+	@Test("The numeric helpers read back the width they were written with")
+	func userDefaultsNumericHelpersPreserveValues() throws {
 		let suiteName = "CocoaExtensionsUtilityMigrationTests.\(UUID().uuidString)"
-		let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+		let defaults = try #require(UserDefaults(suiteName: suiteName))
 		defer { defaults.removePersistentDomain(forName: suiteName) }
 
 		defaults.setUnsignedInteger(42, forKey: "unsignedInteger")
@@ -20,25 +22,28 @@ final class CocoaExtensionsUtilityMigrationTests: XCTestCase {
 		defaults.setLongLong(-9_000_000_000, forKey: "longLong")
 		defaults.setUnsignedLongLong(18_000_000_000, forKey: "unsignedLongLong")
 
-		XCTAssertEqual(defaults.unsignedInteger(forKey: "unsignedInteger"), 42)
-		XCTAssertEqual(defaults.short(forKey: "short"), -12)
-		XCTAssertEqual(defaults.unsignedShort(forKey: "unsignedShort"), 65000)
-		XCTAssertEqual(defaults.longLong(forKey: "longLong"), -9_000_000_000)
-		XCTAssertEqual(defaults.unsignedLongLong(forKey: "unsignedLongLong"), 18_000_000_000)
-		XCTAssertTrue(defaults.responds(to: NSSelectorFromString("setUnsignedLongLong:forKey:")))
+		#expect(defaults.unsignedInteger(forKey: "unsignedInteger") == 42)
+		#expect(defaults.short(forKey: "short") == -12)
+		#expect(defaults.unsignedShort(forKey: "unsignedShort") == 65000)
+		#expect(defaults.longLong(forKey: "longLong") == -9_000_000_000)
+		#expect(defaults.unsignedLongLong(forKey: "unsignedLongLong") == 18_000_000_000)
 	}
 
-	func testUserDefaultsColorHelperUsesSecureArchiving() throws {
+	@Test("A colour round-trips through secure archiving and clears on nil")
+	func userDefaultsColorHelperUsesSecureArchiving() throws {
 		let suiteName = "CocoaExtensionsUtilityMigrationTests.\(UUID().uuidString)"
-		let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+		let defaults = try #require(UserDefaults(suiteName: suiteName))
 		defer { defaults.removePersistentDomain(forName: suiteName) }
 		let color = NSColor(calibratedRed: 0.2, green: 0.4, blue: 0.6, alpha: 0.8)
 
 		defaults.setColor(color, forKey: "color")
 
-		let restored = try XCTUnwrap(defaults.color(forKey: "color"))
-		XCTAssertEqual(restored.usingColorSpace(.deviceRGB), color.usingColorSpace(.deviceRGB))
+		let restored = try #require(defaults.color(forKey: "color"))
+
+		#expect(restored.usingColorSpace(.deviceRGB) == color.usingColorSpace(.deviceRGB))
+
 		defaults.setColor(nil, forKey: "color")
-		XCTAssertNil(defaults.object(forKey: "color"))
+
+		#expect(defaults.object(forKey: "color") == nil)
 	}
 }

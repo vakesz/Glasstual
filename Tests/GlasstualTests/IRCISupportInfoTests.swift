@@ -1,198 +1,3 @@
-@testable import Glasstual
-import XCTest
-
-typealias SupportInfo = Glasstual.IRCISupportInfo
-
-@MainActor
-final class IRCISupportInfoTests: XCTestCase {
-	func supportInfoWithConfiguration(_ configuration: String) -> SupportInfo {
-		let client = GLTTestClient()
-		let supportInfo = SupportInfo(client: client)
-
-		supportInfo.processConfigurationData(configuration)
-
-		return supportInfo
-	}
-
-	func testDefaultCaseMappingIsRFC1459() {
-		let supportInfo = supportInfoWithConfiguration("NETWORK=Example")
-
-		XCTAssertEqual(supportInfo.caseMapping, IRCISupportInfoCaseMapping.rfc1459)
-		XCTAssertEqual(supportInfo.casefoldString("Nick[]\\~"), "nick{}|^")
-	}
-
-	func testASCIICaseMappingLeavesBracketsAlone() {
-		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=ascii")
-
-		XCTAssertEqual(supportInfo.caseMapping, IRCISupportInfoCaseMapping.ascii)
-		XCTAssertEqual(supportInfo.casefoldString("Nick[]\\~"), "nick[]\\~")
-	}
-
-	func testStrictRFC1459DoesNotFoldTilde() {
-		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=strict-rfc1459")
-
-		XCTAssertEqual(supportInfo.caseMapping, IRCISupportInfoCaseMapping.strictRFC1459)
-		XCTAssertEqual(supportInfo.casefoldString("A[]\\~"), "a{}|~")
-	}
-
-	func testNonASCIICharactersAreNotFolded() {
-		let rfc = supportInfoWithConfiguration("CASEMAPPING=rfc1459")
-		let ascii = supportInfoWithConfiguration("CASEMAPPING=ascii")
-
-		XCTAssertEqual(rfc.casefoldString("ÄbÇ"), "ÄbÇ")
-		XCTAssertEqual(rfc.casefoldString("ÄB[Ç]"), "Äb{Ç}")
-		XCTAssertEqual(ascii.casefoldString("ÄbÇ"), "ÄbÇ")
-		XCTAssertEqual(ascii.casefoldString("ŞİRİN"), "Şİrİn")
-	}
-
-	func testChannelModesAreParsedIntoParameterClasses() {
-		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst")
-
-		XCTAssertEqual(supportInfo.channelModeKinds["b"], .list)
-		XCTAssertEqual(supportInfo.channelModeKinds["k"], .setting)
-		XCTAssertEqual(supportInfo.channelModeKinds["l"], .settingWhenSet)
-		XCTAssertEqual(supportInfo.channelModeKinds["t"], .flag)
-
-		XCTAssertTrue(supportInfo.modeHasParameter("b", whenModeIsSet: true))
-		XCTAssertTrue(supportInfo.modeHasParameter("b", whenModeIsSet: false))
-		XCTAssertTrue(supportInfo.modeHasParameter("k", whenModeIsSet: false))
-		XCTAssertTrue(supportInfo.modeHasParameter("l", whenModeIsSet: true))
-
-		XCTAssertFalse(supportInfo.modeHasParameter("l", whenModeIsSet: false))
-		XCTAssertFalse(supportInfo.modeHasParameter("t", whenModeIsSet: true))
-	}
-
-	func testPrefixIsParsedInRankOrder() {
-		let supportInfo = supportInfoWithConfiguration("PREFIX=(qaohv)~&@%+")
-
-		XCTAssertEqual(supportInfo.userModePrefixPairs.map(\.modeSymbol), ["q", "a", "o", "h", "v"])
-		XCTAssertEqual(supportInfo.userModePrefixPairs.map(\.character), ["~", "&", "@", "%", "+"])
-		XCTAssertEqual(supportInfo.modeSymbol(forUserPrefix: "@"), "o")
-		XCTAssertEqual(supportInfo.userPrefix(forModeSymbol: "v"), "+")
-
-		XCTAssertTrue(supportInfo.characterIsUserPrefix("%"))
-
-		XCTAssertFalse(supportInfo.characterIsUserPrefix("#"))
-
-		XCTAssertEqual(supportInfo.rankForUserPrefix(withMode: "q"), IRCISupportUserModes.highestPrefixRank)
-
-		XCTAssertTrue(supportInfo.rankForUserPrefix(withMode: "v") < supportInfo.rankForUserPrefix(withMode: "o"))
-		/* Prefix modes always take a parameter. */
-		XCTAssertTrue(supportInfo.modeHasParameter("o", whenModeIsSet: false))
-	}
-
-	func testParseModesUsesChannelModeClasses() {
-		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
-		let modes = supportInfo.parseModes("+nt-k+l secret 10")
-
-		XCTAssertEqual(modes.count, 4)
-
-		XCTAssertEqual(modes[0].modeSymbol, "n")
-
-		XCTAssertTrue(modes[0].modeIsSet)
-
-		XCTAssertEqual(modes[2].modeSymbol, "k")
-
-		XCTAssertFalse(modes[2].modeIsSet)
-
-		XCTAssertEqual(modes[2].modeParameter, "secret")
-		XCTAssertEqual(modes[3].modeSymbol, "l")
-		XCTAssertEqual(modes[3].modeParameter, "10")
-	}
-
-	func testParseModesDoesNotConsumeParameterWhenUnsetModeDoesNotRequireOne() {
-		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
-		let modes = supportInfo.parseModes("-l leftover +t")
-
-		XCTAssertEqual(modes.count, 2)
-
-		XCTAssertEqual(modes[0].modeSymbol, "l")
-
-		XCTAssertFalse(modes[0].modeIsSet)
-
-		XCTAssertNil(modes[0].modeParameter)
-
-		XCTAssertEqual(modes[1].modeSymbol, "t")
-
-		XCTAssertTrue(modes[1].modeIsSet)
-	}
-
-	func testParseModesAllowsMissingRequiredParameter() {
-		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
-		let modes = supportInfo.parseModes("+k")
-
-		XCTAssertEqual(modes.count, 1)
-
-		XCTAssertEqual(modes[0].modeSymbol, "k")
-
-		XCTAssertTrue(modes[0].modeIsSet)
-
-		XCTAssertNil(modes[0].modeParameter)
-	}
-
-	func testLimitTokensAndTargetChunking() {
-		let supportInfo =
-			supportInfoWithConfiguration("CHANLIMIT=#&:50,+: TARGMAX=privmsg:4,JOIN: MAXTARGETS=3 MAXLIST=beI:60")
-
-		XCTAssertEqual(supportInfo.channelLimit(forChannelNamed: "#chat"), 50)
-		XCTAssertEqual(supportInfo.channelLimit(forChannelNamed: "&local"), 50)
-		XCTAssertEqual(supportInfo.channelLimit(forChannelNamed: "+modeless"), 0)
-		XCTAssertEqual(supportInfo.maximumTargets(forCommand: "PRIVMSG"), 4)
-		XCTAssertEqual(supportInfo.maximumTargets(forCommand: "notice"), 3)
-		XCTAssertEqual(supportInfo.maximumTargets(forCommand: "join"), 0)
-		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("b")), 60)
-		XCTAssertEqual(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("I")), 60)
-
-		let targets = ["a", "b", "c", "d", "e"]
-
-		XCTAssertEqual(SupportInfo.chunkTargets(targets, limit: 2), [["a", "b"], ["c", "d"], ["e"]])
-
-		let conservativeChunks = SupportInfo.chunkTargets(["a", "b"], limit: 0)
-
-		XCTAssertEqual(conservativeChunks, [["a"], ["b"]])
-	}
-
-	func testClientTagDenyAllowsExceptionsToWildcard() {
-		let supportInfo = supportInfoWithConfiguration("CLIENTTAGDENY=*,-draft/typing,-example/allowed")
-
-		XCTAssertTrue(supportInfo.isClientTagDenied("example/other"))
-		XCTAssertFalse(supportInfo.isClientTagDenied("DRAFT/TYPING"))
-		XCTAssertFalse(supportInfo.isClientTagDenied("example/allowed"))
-	}
-
-	func testExtendedBanTokenSeparatesPrefixAndTypes() {
-		let supportInfo = supportInfoWithConfiguration("EXTBAN=$,ac")
-
-		XCTAssertEqual(supportInfo.extendedBanPrefix, "$")
-		XCTAssertEqual(supportInfo.extendedBanTypes, ["a", "c"])
-
-		XCTAssertNotNil(supportInfo.descriptionForExtendedBanMask("$a:account"))
-
-		XCTAssertNil(supportInfo.descriptionForExtendedBanMask("$q:quiet"))
-	}
-
-	func testMalformedPrefixDoesNotReplaceDefaults() {
-		let supportInfo = supportInfoWithConfiguration("PREFIX=invalid")
-
-		XCTAssertEqual(supportInfo.userPrefix(forModeSymbol: "o"), "@")
-		XCTAssertEqual(supportInfo.userPrefix(forModeSymbol: "v"), "+")
-	}
-
-	func testResettingSilenceClearsSupportAndLimitTogether() {
-		let supportInfo = supportInfoWithConfiguration("SILENCE=25")
-
-		XCTAssertTrue(supportInfo.silenceSupported)
-		XCTAssertEqual(supportInfo.maximumSilenceEntries, 25)
-
-		supportInfo.resetSetting("silence")
-
-		XCTAssertFalse(supportInfo.silenceSupported)
-		XCTAssertEqual(supportInfo.maximumSilenceEntries, 0)
-	}
-}
-
-// MARK: - GLTTestAccess
-
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
@@ -230,3 +35,212 @@ final class IRCISupportInfoTests: XCTestCase {
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+
+import Foundation
+@testable import Glasstual
+import Testing
+
+typealias SupportInfo = Glasstual.IRCISupportInfo
+
+@MainActor
+@Suite("ISUPPORT parsing")
+struct IRCISupportInfoTests {
+	@Test("A server that says nothing about case mapping gets RFC 1459")
+	func defaultCaseMappingIsRFC1459() {
+		let supportInfo = supportInfoWithConfiguration("NETWORK=Example")
+
+		#expect(supportInfo.caseMapping == IRCISupportInfoCaseMapping.rfc1459)
+		#expect(supportInfo.casefoldString("Nick[]\\~") == "nick{}|^")
+	}
+
+	@Test("ASCII case mapping leaves the bracket characters alone")
+	func asciiCaseMappingLeavesBracketsAlone() {
+		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=ascii")
+
+		#expect(supportInfo.caseMapping == IRCISupportInfoCaseMapping.ascii)
+		#expect(supportInfo.casefoldString("Nick[]\\~") == "nick[]\\~")
+	}
+
+	@Test("Strict RFC 1459 folds the brackets but not the tilde")
+	func strictRFC1459DoesNotFoldTilde() {
+		let supportInfo = supportInfoWithConfiguration("CASEMAPPING=strict-rfc1459")
+
+		#expect(supportInfo.caseMapping == IRCISupportInfoCaseMapping.strictRFC1459)
+		#expect(supportInfo.casefoldString("A[]\\~") == "a{}|~")
+	}
+
+	@Test("Case folding is ASCII only, so accented letters keep their case")
+	func nonASCIICharactersAreNotFolded() {
+		let rfc = supportInfoWithConfiguration("CASEMAPPING=rfc1459")
+		let ascii = supportInfoWithConfiguration("CASEMAPPING=ascii")
+
+		#expect(rfc.casefoldString("ÄbÇ") == "ÄbÇ")
+		#expect(rfc.casefoldString("ÄB[Ç]") == "Äb{Ç}")
+		#expect(ascii.casefoldString("ÄbÇ") == "ÄbÇ")
+		#expect(ascii.casefoldString("ŞİRİN") == "Şİrİn")
+	}
+
+	@Test("CHANMODES sorts the modes by when they take a parameter")
+	func channelModesAreParsedIntoParameterClasses() {
+		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst")
+
+		#expect(supportInfo.channelModeKinds["b"] == .list)
+		#expect(supportInfo.channelModeKinds["k"] == .setting)
+		#expect(supportInfo.channelModeKinds["l"] == .settingWhenSet)
+		#expect(supportInfo.channelModeKinds["t"] == .flag)
+
+		#expect(supportInfo.modeHasParameter("b", whenModeIsSet: true))
+		#expect(supportInfo.modeHasParameter("b", whenModeIsSet: false))
+		#expect(supportInfo.modeHasParameter("k", whenModeIsSet: false))
+		#expect(supportInfo.modeHasParameter("l", whenModeIsSet: true))
+
+		#expect(supportInfo.modeHasParameter("l", whenModeIsSet: false) == false)
+		#expect(supportInfo.modeHasParameter("t", whenModeIsSet: true) == false)
+	}
+
+	@Test("PREFIX is read in rank order, highest first")
+	func prefixIsParsedInRankOrder() {
+		let supportInfo = supportInfoWithConfiguration("PREFIX=(qaohv)~&@%+")
+
+		#expect(supportInfo.userModePrefixPairs.map(\.modeSymbol) == ["q", "a", "o", "h", "v"])
+		#expect(supportInfo.userModePrefixPairs.map(\.character) == ["~", "&", "@", "%", "+"])
+		#expect(supportInfo.modeSymbol(forUserPrefix: "@") == "o")
+		#expect(supportInfo.userPrefix(forModeSymbol: "v") == "+")
+
+		#expect(supportInfo.characterIsUserPrefix("%"))
+
+		#expect(supportInfo.characterIsUserPrefix("#") == false)
+
+		#expect(supportInfo.rankForUserPrefix(withMode: "q") == IRCISupportUserModes.highestPrefixRank)
+
+		#expect(supportInfo.rankForUserPrefix(withMode: "v") < supportInfo.rankForUserPrefix(withMode: "o"))
+		/* Prefix modes always take a parameter. */
+		#expect(supportInfo.modeHasParameter("o", whenModeIsSet: false))
+	}
+
+	@Test("Parsing a mode string consumes a parameter for each mode that takes one")
+	func parseModesUsesChannelModeClasses() {
+		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
+		let modes = supportInfo.parseModes("+nt-k+l secret 10")
+
+		#expect(modes.count == 4)
+
+		#expect(modes[0].modeSymbol == "n")
+
+		#expect(modes[0].modeIsSet)
+
+		#expect(modes[2].modeSymbol == "k")
+
+		#expect(modes[2].modeIsSet == false)
+
+		#expect(modes[2].modeParameter == "secret")
+		#expect(modes[3].modeSymbol == "l")
+		#expect(modes[3].modeParameter == "10")
+	}
+
+	@Test("Unsetting a mode that needs no parameter leaves the next word for the next mode")
+	func parseModesDoesNotConsumeParameterWhenUnsetModeDoesNotRequireOne() {
+		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
+		let modes = supportInfo.parseModes("-l leftover +t")
+
+		#expect(modes.count == 2)
+
+		#expect(modes[0].modeSymbol == "l")
+
+		#expect(modes[0].modeIsSet == false)
+
+		#expect(modes[0].modeParameter == nil)
+
+		#expect(modes[1].modeSymbol == "t")
+
+		#expect(modes[1].modeIsSet)
+	}
+
+	@Test("A mode whose parameter never arrived is still reported")
+	func parseModesAllowsMissingRequiredParameter() {
+		let supportInfo = supportInfoWithConfiguration("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
+		let modes = supportInfo.parseModes("+k")
+
+		#expect(modes.count == 1)
+
+		#expect(modes[0].modeSymbol == "k")
+
+		#expect(modes[0].modeIsSet)
+
+		#expect(modes[0].modeParameter == nil)
+	}
+
+	@Test("The limit tokens set the channel, target and list ceilings, and chunking respects them")
+	func limitTokensAndTargetChunking() {
+		let supportInfo =
+			supportInfoWithConfiguration("CHANLIMIT=#&:50,+: TARGMAX=privmsg:4,JOIN: MAXTARGETS=3 MAXLIST=beI:60")
+
+		#expect(supportInfo.channelLimit(forChannelNamed: "#chat") == 50)
+		#expect(supportInfo.channelLimit(forChannelNamed: "&local") == 50)
+		#expect(supportInfo.channelLimit(forChannelNamed: "+modeless") == 0)
+		#expect(supportInfo.maximumTargets(forCommand: "PRIVMSG") == 4)
+		#expect(supportInfo.maximumTargets(forCommand: "notice") == 3)
+		#expect(supportInfo.maximumTargets(forCommand: "join") == 0)
+		#expect(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("b")) == 60)
+		#expect(supportInfo.maximumListEntries(forModeSymbol: ChannelModeSymbol("I")) == 60)
+
+		let targets = ["a", "b", "c", "d", "e"]
+
+		#expect(SupportInfo.chunkTargets(targets, limit: 2) == [["a", "b"], ["c", "d"], ["e"]])
+
+		let conservativeChunks = SupportInfo.chunkTargets(["a", "b"], limit: 0)
+
+		#expect(conservativeChunks == [["a"], ["b"]])
+	}
+
+	@Test("A wildcard client tag denial can still name its exceptions")
+	func clientTagDenyAllowsExceptionsToWildcard() {
+		let supportInfo = supportInfoWithConfiguration("CLIENTTAGDENY=*,-draft/typing,-example/allowed")
+
+		#expect(supportInfo.isClientTagDenied("example/other"))
+		#expect(supportInfo.isClientTagDenied("DRAFT/TYPING") == false)
+		#expect(supportInfo.isClientTagDenied("example/allowed") == false)
+	}
+
+	@Test("EXTBAN splits into its prefix and the types the server offers")
+	func extendedBanTokenSeparatesPrefixAndTypes() {
+		let supportInfo = supportInfoWithConfiguration("EXTBAN=$,ac")
+
+		#expect(supportInfo.extendedBanPrefix == "$")
+		#expect(supportInfo.extendedBanTypes == ["a", "c"])
+
+		#expect(supportInfo.descriptionForExtendedBanMask("$a:account") != nil)
+
+		#expect(supportInfo.descriptionForExtendedBanMask("$q:quiet") == nil)
+	}
+
+	@Test("A PREFIX token that cannot be read leaves the defaults standing")
+	func malformedPrefixDoesNotReplaceDefaults() {
+		let supportInfo = supportInfoWithConfiguration("PREFIX=invalid")
+
+		#expect(supportInfo.userPrefix(forModeSymbol: "o") == "@")
+		#expect(supportInfo.userPrefix(forModeSymbol: "v") == "+")
+	}
+
+	@Test("Resetting SILENCE clears both the support flag and the limit")
+	func resettingSilenceClearsSupportAndLimitTogether() {
+		let supportInfo = supportInfoWithConfiguration("SILENCE=25")
+
+		#expect(supportInfo.silenceSupported)
+		#expect(supportInfo.maximumSilenceEntries == 25)
+
+		supportInfo.resetSetting("silence")
+
+		#expect(supportInfo.silenceSupported == false)
+		#expect(supportInfo.maximumSilenceEntries == 0)
+	}
+
+	private func supportInfoWithConfiguration(_ configuration: String) -> SupportInfo {
+		let client = GLTTestClient()
+		let supportInfo = SupportInfo(client: client)
+
+		supportInfo.processConfigurationData(configuration)
+
+		return supportInfo
+	}
+}

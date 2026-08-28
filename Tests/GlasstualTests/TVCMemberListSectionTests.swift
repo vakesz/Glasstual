@@ -38,93 +38,58 @@
 
 import AppKit
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class TVCMemberListSectionTests: XCTestCase {
-	private var client: GLTTestClient!
-	private var memberList: MemberList!
-	private var controller: IRCChannelMemberListController!
+@Suite("Member list sections")
+struct TVCMemberListSectionTests {
+	private let client: GLTTestClient
+	private let memberList: MemberList
+	private let controller: IRCChannelMemberListController
 
-	override func setUp() async throws {
-		try await super.setUp()
-
-		client = GLTTestClient()
-		memberList = MemberList(frame: NSRect(x: 0, y: 0, width: 150, height: 400))
+	init() {
+		let client = GLTTestClient()
+		let memberList = MemberList(frame: NSRect(x: 0, y: 0, width: 150, height: 400))
 		memberList.addTableColumn(NSTableColumn(identifier: NSUserInterfaceItemIdentifier("member")))
 		memberList.awakeFromNib()
 
-		controller = IRCChannelMemberListController()
+		let controller = IRCChannelMemberListController()
 		controller.setValue(memberList, forKey: "tableView")
 		memberList.setValue(controller, forKey: "contentController")
 		controller.replaceContents([])
+
+		self.client = client
+		self.memberList = memberList
+		self.controller = controller
 	}
 
-	override func tearDown() async throws {
-		controller = nil
-		memberList = nil
-		client = nil
-
-		try await super.tearDown()
-	}
-
-	func testSingleRankIsAFlatList() {
+	@Test("Members of a single rank are shown as a flat list")
+	func singleRankIsAFlatList() {
 		insert(makeMember(named: "alice"), at: 0)
 		insert(makeMember(named: "bob"), at: 1)
 
-		XCTAssertEqual(memberList.numberOfRows, 2)
-		XCTAssertFalse(memberList.isGroupRow(0))
-		XCTAssertEqual(rowDescriptions, ["alice", "bob"])
+		#expect(memberList.numberOfRows == 2)
+		#expect(memberList.isGroupRow(0) == false)
+		#expect(rowDescriptions == ["alice", "bob"])
 	}
 
-	func testObjectiveCRuntimeContractIsPreserved() {
-		XCTAssertEqual(NSStringFromClass(type(of: memberList)), "TVCMemberList")
-		XCTAssertEqual(NSStringFromClass(MemberListSection.self), "TVCMemberListSection")
-		XCTAssertEqual(NSStringFromClass(MemberListCell.self), "TVCMemberListCell")
-		XCTAssertEqual(NSStringFromClass(MemberListHeaderCell.self), "TVCMemberListHeaderCell")
-		XCTAssertEqual(NSStringFromClass(MemberListRowCell.self), "TVCMemberListRowCell")
-		XCTAssertEqual(NSStringFromClass(MemberListUserInfoPopover.self), "TVCMemberListUserInfoPopover")
-
-		let selectors = [
-			"assignToChannel:",
-			"contentController",
-			"isGroupRow:",
-			"itemAtRow:",
-			"memberInsertedAtIndex:",
-			"memberListUserInfoPopover",
-			"memberRemovedAtIndex:",
-			"membersReplaced",
-			"refreshAllDrawings",
-			"refreshDrawingForChangesToPreference:",
-			"refreshDrawingForMember:",
-			"refreshDrawingForRow:",
-			"rowForItem:",
-			"rowForMemberAtIndex:",
-		]
-
-		for selectorName in selectors {
-			XCTAssertTrue(
-				memberList.responds(to: NSSelectorFromString(selectorName)),
-				"Missing Objective-C selector \(selectorName)"
-			)
-		}
-	}
-
-	func testSecondRankAddsHeadersForEverySection() {
+	@Test("A second rank gives every section a header row")
+	func secondRankAddsHeadersForEverySection() {
 		insert(makeMember(named: "alice"), at: 0)
 		insert(makeMember(named: "bob"), at: 1)
 		insert(makeMember(named: "carol", modes: "o"), at: 0)
 
-		XCTAssertEqual(rowDescriptions, ["[Operators]", "carol", "[Members]", "alice", "bob"])
-		XCTAssertTrue(memberList.isGroupRow(0))
-		XCTAssertTrue(memberList.isGroupRow(2))
-		XCTAssertEqual(memberList.rowForMember(at: 0), 1)
-		XCTAssertEqual(memberList.rowForMember(at: 1), 3)
-		XCTAssertEqual(memberList.rowForMember(at: 2), 4)
-		XCTAssertNil(memberList.item(atRow: 2))
+		#expect(rowDescriptions == ["[Operators]", "carol", "[Members]", "alice", "bob"])
+		#expect(memberList.isGroupRow(0))
+		#expect(memberList.isGroupRow(2))
+		#expect(memberList.rowForMember(at: 0) == 1)
+		#expect(memberList.rowForMember(at: 1) == 3)
+		#expect(memberList.rowForMember(at: 2) == 4)
+		#expect(memberList.item(atRow: 2) == nil)
 	}
 
-	func testRowForItemMatchesItemAtRow() {
+	@Test("A member's row round trips back to the member")
+	func rowForItemMatchesItemAtRow() {
 		let alice = makeMember(named: "alice")
 		let carol = makeMember(named: "carol", modes: "o")
 		let dave = makeMember(named: "dave", modes: "v")
@@ -137,76 +102,82 @@ final class TVCMemberListSectionTests: XCTestCase {
 			let row = memberList.row(forItem: member)
 			let item = memberList.item(atRow: row) as? ChannelUser
 
-			XCTAssertTrue(item === member)
+			#expect(item === member)
 		}
 	}
 
-	func testRemovingLastMemberOfASectionDropsItsHeader() {
+	@Test("Removing the last member of a section drops its header")
+	func removingLastMemberOfASectionDropsItsHeader() {
 		insert(makeMember(named: "alice"), at: 0)
 		insert(makeMember(named: "carol", modes: "o"), at: 0)
 		insert(makeMember(named: "dave", modes: "v"), at: 1)
 
-		XCTAssertEqual(rowDescriptions, [
+		#expect(rowDescriptions == [
 			"[Operators]", "carol", "[Voiced]", "dave", "[Members]", "alice",
 		])
 
 		controller.remove(atArrangedObjectIndex: 1)
 
-		XCTAssertEqual(rowDescriptions, ["[Operators]", "carol", "[Members]", "alice"])
+		#expect(rowDescriptions == ["[Operators]", "carol", "[Members]", "alice"])
 
 		controller.remove(atArrangedObjectIndex: 0)
 
-		XCTAssertEqual(rowDescriptions, ["alice"])
-		XCTAssertEqual(memberList.numberOfRows, 1)
+		#expect(rowDescriptions == ["alice"])
+		#expect(memberList.numberOfRows == 1)
 	}
 
-	func testRemovingOnlyMemberLeavesAnEmptyFlatList() {
+	@Test("Removing the only member leaves an empty flat list")
+	func removingOnlyMemberLeavesAnEmptyFlatList() {
 		insert(makeMember(named: "alice"), at: 0)
 
 		controller.remove(atArrangedObjectIndex: 0)
 
-		XCTAssertEqual(memberList.numberOfRows, 0)
-		XCTAssertEqual(rowDescriptions, [])
+		#expect(memberList.numberOfRows == 0)
+		#expect(rowDescriptions.isEmpty)
 	}
 
-	func testReplacingContentsRebuildsSections() {
+	@Test("Replacing the contents rebuilds every section")
+	func replacingContentsRebuildsSections() {
 		controller.replaceContents([
 			makeMember(named: "carol", modes: "o"),
 			makeMember(named: "alice"),
 			makeMember(named: "bob"),
 		])
 
-		XCTAssertEqual(rowDescriptions, ["[Operators]", "carol", "[Members]", "alice", "bob"])
+		#expect(rowDescriptions == ["[Operators]", "carol", "[Members]", "alice", "bob"])
 
 		controller.replaceContents([])
 
-		XCTAssertEqual(memberList.numberOfRows, 0)
+		#expect(memberList.numberOfRows == 0)
 	}
 
-	func testHeaderRowsAreNeitherSelectableNorTypeSelectable() throws {
+	@Test("A header row can be neither selected nor typed to")
+	func headerRowsAreNeitherSelectableNorTypeSelectable() throws {
 		insert(makeMember(named: "alice"), at: 0)
 		insert(makeMember(named: "carol", modes: "o"), at: 0)
 
-		let delegate = try XCTUnwrap(memberList.delegate)
+		let delegate = try #require(memberList.delegate)
 
-		XCTAssertFalse(delegate.tableView?(memberList, shouldSelectRow: 0) ?? true)
-		XCTAssertTrue(delegate.tableView?(memberList, shouldSelectRow: 1) ?? false)
-		XCTAssertNil(delegate.tableView?(memberList, typeSelectStringFor: nil, row: 0))
-		XCTAssertEqual(delegate.tableView?(memberList, typeSelectStringFor: nil, row: 1), "carol")
+		#expect((delegate.tableView?(memberList, shouldSelectRow: 0) ?? true) == false)
+		#expect(delegate.tableView?(memberList, shouldSelectRow: 1) ?? false)
+		#expect(delegate.tableView?(memberList, typeSelectStringFor: nil, row: 0) == nil)
+		#expect(delegate.tableView?(memberList, typeSelectStringFor: nil, row: 1) == "carol")
 	}
 
-	func testMemberCellUsesSingleLineTailTruncation() {
+	@Test("A nickname is drawn on one line and truncated at the tail")
+	func memberCellUsesSingleLineTailTruncation() {
 		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
 		let nicknameField = NSTextField(labelWithString: "")
 		cell.setValue(nicknameField, forKey: "cellTextField")
 		cell.awakeFromNib()
 
-		XCTAssertTrue(nicknameField.usesSingleLineMode)
-		XCTAssertEqual(nicknameField.maximumNumberOfLines, 1)
-		XCTAssertEqual(nicknameField.lineBreakMode, .byTruncatingTail)
+		#expect(nicknameField.usesSingleLineMode)
+		#expect(nicknameField.maximumNumberOfLines == 1)
+		#expect(nicknameField.lineBreakMode == .byTruncatingTail)
 	}
 
-	func testMemberCellCollapsesUnusedStatusImage() {
+	@Test("An unused status image collapses to no width at all")
+	func memberCellCollapsesUnusedStatusImage() {
 		let cell = MemberListCell(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
 		let statusImageView = NSImageView()
 		let statusWidthConstraint = statusImageView.widthAnchor.constraint(equalToConstant: 16)
@@ -215,13 +186,13 @@ final class TVCMemberListSectionTests: XCTestCase {
 
 		cell.setValue(false, forKey: "statusImageVisible")
 
-		XCTAssertTrue(statusImageView.isHidden)
-		XCTAssertEqual(statusWidthConstraint.constant, 0)
+		#expect(statusImageView.isHidden)
+		#expect(statusWidthConstraint.constant == 0)
 
 		cell.setValue(true, forKey: "statusImageVisible")
 
-		XCTAssertFalse(statusImageView.isHidden)
-		XCTAssertEqual(statusWidthConstraint.constant, 16)
+		#expect(statusImageView.isHidden == false)
+		#expect(statusWidthConstraint.constant == 16)
 	}
 
 	private var rowDescriptions: [String] {

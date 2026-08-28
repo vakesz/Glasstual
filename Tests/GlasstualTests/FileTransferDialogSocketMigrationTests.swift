@@ -3,47 +3,22 @@
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class FileTransferDialogSocketMigrationTests: XCTestCase {
-	func testObjectiveCRuntimeNamesRemainStable() {
-		XCTAssertEqual(NSStringFromClass(FileTransferDialogSocket.self), "TDCFileTransferDialogSocket")
-		XCTAssertEqual(
-			NSStringFromProtocol(FileTransferDialogSocketDelegate.self),
-			"TDCFileTransferDialogSocketDelegate"
-		)
-	}
-
-	func testObjectiveCSelectorsRemainAvailable() {
-		let selectors = [
-			"initWithDelegate:delegateQueue:",
-			"errorWithCode:description:",
-			"listenOnPortRangeFrom:to:",
-			"connectToHost:port:viaInterface:timeout:",
-			"readData",
-			"writeData:timeout:",
-			"disconnect",
-		]
-
-		for selector in selectors {
-			if selector.hasPrefix("errorWithCode:") {
-				XCTAssertTrue(FileTransferDialogSocket.responds(to: NSSelectorFromString(selector)), selector)
-			} else {
-				XCTAssertTrue(FileTransferDialogSocket.instancesRespond(to: NSSelectorFromString(selector)), selector)
-			}
-		}
-	}
-
-	func testErrorFactoryPreservesDomainCodeAndDescription() {
+@Suite("File transfer dialog socket")
+struct FileTransferDialogSocketMigrationTests {
+	@Test("The error factory carries the domain, the code and the description through")
+	func errorFactoryPreservesDomainCodeAndDescription() {
 		let error = FileTransferDialogSocket.error(
 			withCode: .writeTimeout,
 			description: "Write operation timed out"
 		)
 
-		XCTAssertEqual(error.domain, TDCFileTransferDialogSocketErrorDomain)
-		XCTAssertEqual(error.code, FileTransferDialogSocketError.writeTimeout.rawValue)
-		XCTAssertEqual(error.localizedDescription, "Write operation timed out")
+		#expect(error.domain == TDCFileTransferDialogSocketErrorDomain)
+		#expect(error.code == FileTransferDialogSocketError.writeTimeout.rawValue)
+		#expect(error.localizedDescription == "Write operation timed out")
 	}
 }

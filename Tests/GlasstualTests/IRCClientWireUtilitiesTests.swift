@@ -37,99 +37,102 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class IRCClientWireUtilitiesTests: XCTestCase {
-	func testModeChangesAreBatchedAtServerLimit() {
-		XCTAssertEqual(
+@Suite("Client wire utilities")
+struct IRCClientWireUtilitiesTests {
+	@Test("Mode changes are split into batches no larger than the server's limit")
+	func modeChangesAreBatchedAtServerLimit() {
+		#expect(
 			ClientWireUtilities.compileModeChanges(
 				symbol: "b",
 				isSet: true,
 				parameters: ["one", "", "two", "three", "four"],
 				maximumModes: 3
-			),
-			["+bbb one two three", "+b four"]
+			) == ["+bbb one two three", "+b four"]
 		)
 
-		XCTAssertEqual(
+		#expect(
 			ClientWireUtilities.compileModeChanges(
 				symbol: "o",
 				isSet: false,
 				parameters: ["alice", "bob"],
 				maximumModes: 4
-			),
-			["-oo alice bob"]
+			) == ["-oo alice bob"]
 		)
 	}
 
-	func testServiceCredentialsAreRedactedWithoutChangingSpacing() {
-		XCTAssertEqual(
-			ClientWireUtilities.redactedServiceMessage("IDENTIFY hunter2", sentTo: "NickServ"),
-			"IDENTIFY ••••••"
+	@Test("A credential sent to services is redacted without changing its spacing")
+	func serviceCredentialsAreRedactedWithoutChangingSpacing() {
+		#expect(
+			ClientWireUtilities.redactedServiceMessage("IDENTIFY hunter2", sentTo: "NickServ")
+				== "IDENTIFY ••••••"
 		)
-		XCTAssertEqual(
-			ClientWireUtilities.redactedServiceMessage("SET PASSWORD old  new", sentTo: "Q@CServe.quakenet.org"),
-			"SET PASSWORD ••••••  ••••••"
+		#expect(
+			ClientWireUtilities.redactedServiceMessage("SET PASSWORD old  new", sentTo: "Q@CServe.quakenet.org")
+				== "SET PASSWORD ••••••  ••••••"
 		)
-		XCTAssertEqual(
-			ClientWireUtilities.redactedServiceMessage("SET EMAIL me@example.com", sentTo: "NickServ"),
-			"SET EMAIL me@example.com"
+		#expect(
+			ClientWireUtilities.redactedServiceMessage("SET EMAIL me@example.com", sentTo: "NickServ")
+				== "SET EMAIL me@example.com"
 		)
-		XCTAssertEqual(
-			ClientWireUtilities.redactedServiceMessage("IDENTIFY hunter2", sentTo: "friend"),
-			"IDENTIFY hunter2"
-		)
-	}
-
-	func testNicknameFormattingPreservesMarkersAndUTF16Padding() {
-		XCTAssertEqual(
-			ClientWireUtilities.formatNickname("alice", modeSymbol: "@", format: "[%@%8n] %%"),
-			"[@alice   ] %"
-		)
-		XCTAssertEqual(
-			ClientWireUtilities.formatNickname("🦊", modeSymbol: "", format: "%3n"),
-			"🦊 "
-		)
-		XCTAssertEqual(
-			ClientWireUtilities.formatNickname("bob", modeSymbol: "+", format: "%-5n%@"),
-			"  bob+"
+		#expect(
+			ClientWireUtilities.redactedServiceMessage("IDENTIFY hunter2", sentTo: "friend")
+				== "IDENTIFY hunter2"
 		)
 	}
 
-	func testDCCWireRepresentationsRoundTripIPv4AndPreserveIPv6() {
-		XCTAssertEqual(ClientWireUtilities.wireDCCAddress("192.168.1.10"), "3232235786")
-		XCTAssertEqual(ClientWireUtilities.displayDCCAddress("3232235786"), "192.168.1.10")
-		XCTAssertEqual(ClientWireUtilities.wireDCCAddress("2001:db8::1"), "2001:db8::1")
-		XCTAssertEqual(ClientWireUtilities.displayDCCAddress("2001:db8::1"), "2001:db8::1")
-		XCTAssertNil(ClientWireUtilities.wireDCCAddress("not-an-address"))
-	}
-
-	func testDCCFilenameEscapingMatchesWireGrammar() {
-		XCTAssertEqual(ClientWireUtilities.escapedDCCFilename("report.txt"), "report.txt")
-		XCTAssertEqual(ClientWireUtilities.escapedDCCFilename("a/b file.txt"), "\"a_b file.txt\"")
-		XCTAssertEqual(ClientWireUtilities.escapedDCCFilename("say \"hi\".txt"), "\"say \\\"hi\\\".txt\"")
-	}
-
-	func testChatHistoryCommandsUseExplicitSelectorAndLimit() {
-		XCTAssertEqual(
-			ClientWireUtilities.chatHistoryLatestCommand(target: "#swift", selector: "*", limit: 100),
-			"CHATHISTORY LATEST #swift * 100"
+	@Test("Nickname formatting keeps the mode marker and pads in UTF-16 units")
+	func nicknameFormattingPreservesMarkersAndUTF16Padding() {
+		#expect(
+			ClientWireUtilities.formatNickname("alice", modeSymbol: "@", format: "[%@%8n] %%")
+				== "[@alice   ] %"
 		)
-		XCTAssertEqual(
+		#expect(
+			ClientWireUtilities.formatNickname("🦊", modeSymbol: "", format: "%3n") == "🦊 "
+		)
+		#expect(
+			ClientWireUtilities.formatNickname("bob", modeSymbol: "+", format: "%-5n%@") == "  bob+"
+		)
+	}
+
+	@Test("A DCC address round trips as an IPv4 integer and passes IPv6 through")
+	func dccWireRepresentationsRoundTripIPv4AndPreserveIPv6() {
+		#expect(ClientWireUtilities.wireDCCAddress("192.168.1.10") == "3232235786")
+		#expect(ClientWireUtilities.displayDCCAddress("3232235786") == "192.168.1.10")
+		#expect(ClientWireUtilities.wireDCCAddress("2001:db8::1") == "2001:db8::1")
+		#expect(ClientWireUtilities.displayDCCAddress("2001:db8::1") == "2001:db8::1")
+		#expect(ClientWireUtilities.wireDCCAddress("not-an-address") == nil)
+	}
+
+	@Test("A DCC filename is quoted and escaped to match the wire grammar")
+	func dccFilenameEscapingMatchesWireGrammar() {
+		#expect(ClientWireUtilities.escapedDCCFilename("report.txt") == "report.txt")
+		#expect(ClientWireUtilities.escapedDCCFilename("a/b file.txt") == "\"a_b file.txt\"")
+		#expect(ClientWireUtilities.escapedDCCFilename("say \"hi\".txt") == "\"say \\\"hi\\\".txt\"")
+	}
+
+	@Test("Chat history commands name their selector and limit explicitly")
+	func chatHistoryCommandsUseExplicitSelectorAndLimit() {
+		#expect(
+			ClientWireUtilities.chatHistoryLatestCommand(target: "#swift", selector: "*", limit: 100)
+				== "CHATHISTORY LATEST #swift * 100"
+		)
+		#expect(
 			ClientWireUtilities.chatHistoryBeforeCommand(
 				target: "#swift",
 				selector: "timestamp=2026-08-26T12:00:00.000Z",
 				limit: 50
-			),
-			"CHATHISTORY BEFORE #swift timestamp=2026-08-26T12:00:00.000Z 50"
+			) == "CHATHISTORY BEFORE #swift timestamp=2026-08-26T12:00:00.000Z 50"
 		)
 	}
 
-	func testShortNetsplitNicknameListsRetainOrder() {
-		XCTAssertEqual(
-			ClientWireUtilities.netsplitNicknameList(["alice", "bob", "carol"], limit: 10),
-			"alice, bob, carol"
+	@Test("A netsplit nickname list under the limit keeps its order")
+	func shortNetsplitNicknameListsRetainOrder() {
+		#expect(
+			ClientWireUtilities.netsplitNicknameList(["alice", "bob", "carol"], limit: 10)
+				== "alice, bob, carol"
 		)
 	}
 }

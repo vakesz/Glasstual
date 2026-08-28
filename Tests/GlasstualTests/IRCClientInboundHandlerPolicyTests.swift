@@ -37,65 +37,76 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class IRCClientInboundHandlerPolicyTests: XCTestCase {
-	func testPrivmsgAndNoticeClassification() {
+@Suite("Inbound handler policy")
+struct IRCClientInboundHandlerPolicyTests {
+	@Test("A CTCP wrapper decides whether a PRIVMSG or NOTICE is text, an action or a reply")
+	func privmsgAndNoticeClassification() {
 		let plain = IRCInboundTextPolicy.classify(command: "PRIVMSG", payload: "hello")
-		XCTAssertEqual(plain.text, "hello")
-		XCTAssertEqual(plain.lineType, .privateMessage)
+
+		#expect(plain.text == "hello")
+		#expect(plain.lineType == .privateMessage)
 
 		let action = IRCInboundTextPolicy.classify(command: "PRIVMSG", payload: "\u{1}ACTION waves\u{1}")
-		XCTAssertEqual(action.text, "waves")
-		XCTAssertEqual(action.lineType, .action)
+
+		#expect(action.text == "waves")
+		#expect(action.lineType == .action)
 
 		let reply = IRCInboundTextPolicy.classify(command: "NOTICE", payload: "\u{1}PING 42\u{1}")
-		XCTAssertEqual(reply.text, "PING 42")
-		XCTAssertEqual(reply.lineType, .ctcpReply)
+
+		#expect(reply.text == "PING 42")
+		#expect(reply.lineType == .ctcpReply)
 	}
 
-	func testCTCPParsingAndLagRatings() {
+	@Test("A CTCP command is upper-cased, an empty payload is rejected, and lag is rated")
+	func ctcpParsingAndLagRatings() {
 		let parsed = IRCCTCPPolicy.commandAndArguments(from: "ping 123")
-		XCTAssertEqual(parsed?.command, "PING")
-		XCTAssertEqual(parsed?.arguments, "123")
-		XCTAssertNil(IRCCTCPPolicy.commandAndArguments(from: ""))
-		XCTAssertEqual(IRCCTCPLagRating(milliseconds: 10), .excellent)
-		XCTAssertEqual(IRCCTCPLagRating(milliseconds: 301), .verySlow)
+
+		#expect(parsed?.command == "PING")
+		#expect(parsed?.arguments == "123")
+		#expect(IRCCTCPPolicy.commandAndArguments(from: "") == nil)
+		#expect(IRCCTCPLagRating(milliseconds: 10) == .excellent)
+		#expect(IRCCTCPLagRating(milliseconds: 301) == .verySlow)
 	}
 
-	func testIdentityAndClientTagNormalization() {
-		XCTAssertNil(IRCIdentityPolicy.account(fromWireValue: "*"))
-		XCTAssertNil(IRCIdentityPolicy.account(fromWireValue: "0"))
-		XCTAssertEqual(IRCIdentityPolicy.account(fromWireValue: "alice"), "alice")
-		XCTAssertEqual(
-			IRCIdentityPolicy.clientTags(from: ["+typing": "active", "msgid": "1"]),
-			["typing": "active"]
+	@Test("A placeholder account is read as no account, and only client tags survive")
+	func identityAndClientTagNormalization() {
+		#expect(IRCIdentityPolicy.account(fromWireValue: "*") == nil)
+		#expect(IRCIdentityPolicy.account(fromWireValue: "0") == nil)
+		#expect(IRCIdentityPolicy.account(fromWireValue: "alice") == "alice")
+		#expect(
+			IRCIdentityPolicy.clientTags(from: ["+typing": "active", "msgid": "1"]) == ["typing": "active"]
 		)
 	}
 
-	func testEventEligibilityPolicies() {
-		XCTAssertTrue(IRCMembershipEventPolicy.shouldPrint(
+	@Test("Membership, reconnect and certificate events keep their eligibility rules")
+	func eventEligibilityPolicies() {
+		#expect(IRCMembershipEventPolicy.shouldPrint(
 			isLocalUser: true, showJoinLeave: false, channelIgnoresEvents: true, addressBookIgnoresEvents: true
 		))
-		XCTAssertFalse(IRCMembershipEventPolicy.shouldPrint(
+		#expect(IRCMembershipEventPolicy.shouldPrint(
 			isLocalUser: false, showJoinLeave: true, channelIgnoresEvents: false, addressBookIgnoresEvents: true
-		))
-		XCTAssertTrue(IRCInboundEventPolicy.cancelsReconnect(
+		) == false)
+		#expect(IRCInboundEventPolicy.cancelsReconnect(
 			forError: "Closing Link: user (Max SendQ exceeded)"
 		))
-		XCTAssertTrue(IRCInboundEventPolicy.acceptsCertificateChunk(String(repeating: "a", count: 65)))
-		XCTAssertFalse(IRCInboundEventPolicy.acceptsCertificateChunk(String(repeating: "a", count: 66)))
+		#expect(IRCInboundEventPolicy.acceptsCertificateChunk(String(repeating: "a", count: 65)))
+		#expect(IRCInboundEventPolicy.acceptsCertificateChunk(String(repeating: "a", count: 66)) == false)
 	}
 
-	func testChanServChannelNoticeRemovesDestinationPrefix() throws {
-		let notice = try XCTUnwrap(IRCServiceNoticePolicy.channelNotice(from: "[#swift] Welcome back"))
-		XCTAssertEqual(notice.channelName, "#swift")
-		XCTAssertEqual(notice.text, "Welcome back")
-		XCTAssertNil(IRCServiceNoticePolicy.channelNotice(from: "Welcome back"))
+	@Test("A ChanServ notice addressed to a channel loses its destination prefix")
+	func chanServChannelNoticeRemovesDestinationPrefix() throws {
+		let notice = try #require(IRCServiceNoticePolicy.channelNotice(from: "[#swift] Welcome back"))
+
+		#expect(notice.channelName == "#swift")
+		#expect(notice.text == "Welcome back")
+		#expect(IRCServiceNoticePolicy.channelNotice(from: "Welcome back") == nil)
 	}
 
-	func testNickServIdentificationActionsMatchLegacyRoutes() {
+	@Test("NickServ notices route to the identification the network expects")
+	func nickServIdentificationActionsMatchLegacyRoutes() {
 		let dalNet = IRCServiceNoticePolicy.nickServAction(
 			for: "This nickname is registered",
 			context: .init(
@@ -108,10 +119,8 @@ final class IRCClientInboundHandlerPolicyTests: XCTestCase {
 				successfulIdentificationTokens: []
 			)
 		)
-		XCTAssertEqual(
-			dalNet,
-			.sendIdentification(target: "NickServ@services.dal.net", text: "IDENTIFY secret")
-		)
+
+		#expect(dalNet == .sendIdentification(target: "NickServ@services.dal.net", text: "IDENTIFY secret"))
 
 		let userServ = IRCServiceNoticePolicy.nickServAction(
 			for: "identify yourself",
@@ -125,7 +134,8 @@ final class IRCClientInboundHandlerPolicyTests: XCTestCase {
 				successfulIdentificationTokens: []
 			)
 		)
-		XCTAssertEqual(userServ, .sendIdentification(target: "userserv", text: "login alice secret"))
+
+		#expect(userServ == .sendIdentification(target: "userserv", text: "login alice secret"))
 
 		let success = IRCServiceNoticePolicy.nickServAction(
 			for: "You are now identified",
@@ -139,6 +149,7 @@ final class IRCClientInboundHandlerPolicyTests: XCTestCase {
 				successfulIdentificationTokens: ["now identified"]
 			)
 		)
-		XCTAssertEqual(success, .identificationSucceeded)
+
+		#expect(success == .identificationSucceeded)
 	}
 }

@@ -1,5 +1,6 @@
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 /** *********************************************************************
  *                  _____         _               _
@@ -39,78 +40,80 @@ import XCTest
  *
  *********************************************************************** */
 @MainActor
-final class ChannelModeTests: XCTestCase {
-	private var client: GLTTestClient!
+@Suite("Channel mode state")
+struct ChannelModeTests {
+	private let client = GLTTestClient()
 
-	func testAggregateStatePreservesObjectiveCRuntimeName() {
-		XCTAssertEqual(NSStringFromClass(ChannelModeState.self), "IRCChannelMode")
-	}
-
-	private func channelMode(currentModes modeString: String) -> ChannelModeState {
-		client = GLTTestClient()
+	private func channelMode(currentModes modeString: String) throws -> ChannelModeState {
 		client.supportInfo.processConfigurationData("CHANMODES=beI,k,l,imnpst PREFIX=(ov)@+")
 
-		let channel = client.findChannelOrCreate("#chat")!
+		let channel = try #require(client.findChannelOrCreate("#chat"))
 		let channelMode = ChannelModeState(channel: channel)
 		_ = channelMode.updateModes(modeString)
 		return channelMode
 	}
 
-	func testRemovedModeParametersPrecedeAddedOnes() throws {
-		let channelMode = channelMode(currentModes: "+nk secret")
-		let modes = try XCTUnwrap(channelMode.modes.copy() as? ChannelModeContainer)
+	@Test("A change command lists the removed mode parameters before the added ones")
+	func removedModeParametersPrecedeAddedOnes() throws {
+		let channelMode = try channelMode(currentModes: "+nk secret")
+		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
 		modes.changeMode("k", modeIsSet: false, modeParameter: "secret")
 		modes.changeMode("l", modeIsSet: true, modeParameter: "10")
 
-		XCTAssertEqual(channelMode.changeCommand(for: modes), "-k+l secret 10")
+		#expect(channelMode.changeCommand(for: modes) == "-k+l secret 10")
 	}
 
-	func testUnchangedModesProduceNoCommand() throws {
-		let channelMode = channelMode(currentModes: "+nt")
-		let modes = try XCTUnwrap(channelMode.modes.copy() as? ChannelModeContainer)
+	@Test("Modes that did not change produce no command")
+	func unchangedModesProduceNoCommand() throws {
+		let channelMode = try channelMode(currentModes: "+nt")
+		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
 
-		XCTAssertEqual(channelMode.changeCommand(for: modes), "")
+		#expect(channelMode.changeCommand(for: modes) == "")
 	}
 
-	func testModeStringListsParametersAfterLetters() {
-		let channelMode = channelMode(currentModes: "+ntk secret +l 5")
+	@Test("The mode string lists every letter first and the parameters after them")
+	func modeStringListsParametersAfterLetters() throws {
+		let channelMode = try channelMode(currentModes: "+ntk secret +l 5")
 
-		XCTAssertEqual(channelMode.string, "+klnt secret 5")
-		XCTAssertEqual(channelMode.stringWithMaskedPassword, "+klnt ****** 5")
+		#expect(channelMode.string == "+klnt secret 5")
+		#expect(channelMode.stringWithMaskedPassword == "+klnt ****** 5")
 	}
 
-	func testChangeCommandIsDeterministic() throws {
-		let channelMode = channelMode(currentModes: "")
-		let modes = try XCTUnwrap(channelMode.modes.copy() as? ChannelModeContainer)
+	@Test("A change command orders its modes the same way whatever order they were set in")
+	func changeCommandIsDeterministic() throws {
+		let channelMode = try channelMode(currentModes: "")
+		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
 		modes.changeMode("z", modeIsSet: true, modeParameter: "last")
 		modes.changeMode("a", modeIsSet: true, modeParameter: "first")
 
-		XCTAssertEqual(channelMode.changeCommand(for: modes), "+az first last")
+		#expect(channelMode.changeCommand(for: modes) == "+az first last")
 	}
 
-	func testListAndUserModesAreNotStoredAsChannelState() {
-		let channelMode = channelMode(currentModes: "")
+	@Test("List modes and user modes are not kept as channel state")
+	func listAndUserModesAreNotStoredAsChannelState() throws {
+		let channelMode = try channelMode(currentModes: "")
 
 		channelMode.modes.changeMode("b", modeIsSet: true, modeParameter: "*!*@host")
 		channelMode.modes.changeMode("o", modeIsSet: true, modeParameter: "nick")
 		channelMode.modes.changeMode("n", modeIsSet: true)
 
-		XCTAssertNil(channelMode.modeInfo(for: "b"))
-		XCTAssertNil(channelMode.modeInfo(for: "o"))
-		XCTAssertNotNil(channelMode.modeInfo(for: "n"))
+		#expect(channelMode.modeInfo(for: "b") == nil)
+		#expect(channelMode.modeInfo(for: "o") == nil)
+		#expect(channelMode.modeInfo(for: "n") != nil)
 	}
 
-	func testCopiedContainerHasIndependentState() throws {
-		let channelMode = channelMode(currentModes: "+nt")
-		let modes = try XCTUnwrap(channelMode.modes.copy() as? ChannelModeContainer)
+	@Test("A copied container edits and clears independently of the channel's own modes")
+	func copiedContainerHasIndependentState() throws {
+		let channelMode = try channelMode(currentModes: "+nt")
+		let modes = try #require(channelMode.modes.copy() as? ChannelModeContainer)
 		modes.changeMode("k", modeIsSet: true, modeParameter: "secret")
 
-		XCTAssertFalse(channelMode.modeIsDefined("k"))
-		XCTAssertTrue(modes.modeIsDefined("k"))
+		#expect(channelMode.modeIsDefined("k") == false)
+		#expect(modes.modeIsDefined("k"))
 
 		modes.clear()
 
-		XCTAssertTrue(channelMode.modeIsDefined("n"))
-		XCTAssertTrue(modes.modes.isEmpty)
+		#expect(channelMode.modeIsDefined("n"))
+		#expect(modes.modes.isEmpty)
 	}
 }

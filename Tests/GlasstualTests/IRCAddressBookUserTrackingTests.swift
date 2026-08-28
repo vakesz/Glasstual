@@ -1,7 +1,4 @@
-@testable import Glasstual
-import XCTest
-
-/** *********************************************************************
+/* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -37,81 +34,101 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@MainActor
-final class IRCAddressBookUserTrackingTests: XCTestCase {
-	private var tracker: IRCAddressBookUserTrackingContainer!
 
-	override func setUp() async throws {
-		try await super.setUp()
+import Foundation
+@testable import Glasstual
+import Testing
+
+@MainActor
+@Suite("Address book user tracking")
+struct IRCAddressBookUserTrackingTests {
+	private let tracker: IRCAddressBookUserTrackingContainer
+
+	init() {
 		tracker = IRCAddressBookUserTrackingContainer(client: GLTTestClient())
 	}
 
-	func testTrackingIsCaseInsensitiveAndPreservesOriginalNickname() {
+	@Test("Tracking matches without regard to case but keeps the nickname as added")
+	func trackingIsCaseInsensitiveAndPreservesOriginalNickname() {
 		tracker.addTrackedUser("Alice")
 		tracker.addTrackedUser("ALICE")
 
-		XCTAssertEqual(tracker.trackedUsers.count, 1)
-		XCTAssertNotNil(tracker.trackedUsers["Alice"])
-		XCTAssertEqual(tracker.status(ofUser: "alice"), .notAvailable)
+		#expect(tracker.trackedUsers.count == 1)
+		#expect(tracker.trackedUsers["Alice"] != nil)
+		#expect(tracker.status(ofUser: "alice") == .notAvailable)
 
 		tracker.status(ofTrackedNickname: "aLiCe", changedTo: .available)
 
-		XCTAssertEqual(tracker.status(ofUser: "ALICE"), .available)
-		XCTAssertEqual(tracker.trackedUsers["Alice"], true)
+		#expect(tracker.status(ofUser: "ALICE") == .available)
+		#expect(tracker.trackedUsers["Alice"] == true)
 	}
 
-	func testSignedOnAddsUnknownUserButSignedOffDoesNot() {
+	@Test("Signing on adds an untracked user but signing off does not")
+	func signedOnAddsUnknownUserButSignedOffDoesNot() {
 		tracker.status(ofTrackedNickname: "new-user", changedTo: .signedOn)
 		tracker.status(ofTrackedNickname: "absent", changedTo: .signedOff)
 
-		XCTAssertEqual(tracker.status(ofUser: "NEW-USER"), .available)
-		XCTAssertEqual(tracker.status(ofUser: "absent"), .unknown)
+		#expect(tracker.status(ofUser: "NEW-USER") == .available)
+		#expect(tracker.status(ofUser: "absent") == .unknown)
 	}
 
-	func testRemovalUsesCanonicalNicknameInNotification() {
+	@Test("Removal announces the nickname as tracked, not the spelling passed in")
+	func removalUsesCanonicalNicknameInNotification() async {
 		tracker.addTrackedUser("Alice")
-		let expectation = expectation(
-			forNotification: .addressBookTrackingRemovedUser,
-			object: tracker
-		) { notification in
-			notification.userInfo?["nickname"] as? String == "Alice"
+		let center = NotificationCenter.default
+
+		await confirmation("The removal notification is posted") { removed in
+			let token = center.addObserver(
+				forName: .addressBookTrackingRemovedUser,
+				object: tracker,
+				queue: nil
+			) { notification in
+				#expect(notification.userInfo?["nickname"] as? String == "Alice")
+				removed()
+			}
+			defer { center.removeObserver(token) }
+
+			tracker.removeTrackedUser("ALICE")
 		}
 
-		tracker.removeTrackedUser("ALICE")
-
-		wait(for: [expectation], timeout: 1)
-		XCTAssertTrue(tracker.trackedUsers.isEmpty)
+		#expect(tracker.trackedUsers.isEmpty)
 	}
 
-	func testClearPostsNotificationAndRemovesAllUsers() {
+	@Test("Clearing announces itself and leaves nobody tracked")
+	func clearPostsNotificationAndRemovesAllUsers() async {
 		tracker.addTrackedUser("Alice")
 		tracker.addTrackedUser("Bob")
-		let expectation = expectation(
-			forNotification: .addressBookTrackingRemovedAllUsers,
-			object: tracker
-		)
+		let center = NotificationCenter.default
 
-		tracker.clearTrackedUsers()
+		await confirmation("The cleared notification is posted") { cleared in
+			let token = center.addObserver(
+				forName: .addressBookTrackingRemovedAllUsers,
+				object: tracker,
+				queue: nil
+			) { _ in
+				cleared()
+			}
+			defer { center.removeObserver(token) }
 
-		wait(for: [expectation], timeout: 1)
-		XCTAssertTrue(tracker.trackedUsers.isEmpty)
+			tracker.clearTrackedUsers()
+		}
+
+		#expect(tracker.trackedUsers.isEmpty)
 	}
 
-	func testWhoBatchPolicyReturnsNoRangeForAnEmptyChannelList() {
-		XCTAssertNil(UserTrackingWhoBatchPolicy.indexRange(startingAt: 0, channelCount: 0))
+	@Test("A client with no channels has no WHO batch to send")
+	func whoBatchPolicyReturnsNoRangeForAnEmptyChannelList() {
+		#expect(UserTrackingWhoBatchPolicy.indexRange(startingAt: 0, channelCount: 0) == nil)
 	}
 
-	func testWhoBatchPolicyWrapsAStaleStartIndex() {
-		XCTAssertEqual(
-			UserTrackingWhoBatchPolicy.indexRange(startingAt: 20, channelCount: 3),
-			0 ... 2
-		)
+	@Test("A start index that no longer names a channel wraps to the first one")
+	func whoBatchPolicyWrapsAStaleStartIndex() {
+		#expect(UserTrackingWhoBatchPolicy.indexRange(startingAt: 20, channelCount: 3) == 0 ... 2)
 	}
 
-	func testWhoBatchPolicyPreservesLegacyFiveChannelWindow() {
-		XCTAssertEqual(
-			UserTrackingWhoBatchPolicy.indexRange(startingAt: 2, channelCount: 10),
-			2 ... 6
-		)
+	/// The legacy scheduler walks the starting channel plus four more.
+	@Test("A WHO batch spans five channels from the start index")
+	func whoBatchPolicyPreservesLegacyFiveChannelWindow() {
+		#expect(UserTrackingWhoBatchPolicy.indexRange(startingAt: 2, channelCount: 10) == 2 ... 6)
 	}
 }

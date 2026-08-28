@@ -35,218 +35,238 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 /// IRCv3 typing notifications, replies, and reactions.
 @MainActor
-final class IRCMessageTagsTests: XCTestCase {
+@Suite("IRCv3 message tags", .serialized)
+final class IRCMessageTagsTests {
 	private nonisolated static let typingPreferenceKey = "SendTypingNotifications"
-	private var originalTypingPreference: Any?
+	private let originalTypingPreference: Bool?
 
-	override func setUp() async throws {
-		try await super.setUp()
-
+	init() {
 		let defaults = TextualUserDefaults.shared()
 		originalTypingPreference = defaults
-			.persistentDomain(forName: ApplicationGroup.identifier)?[Self.typingPreferenceKey]
+			.persistentDomain(forName: ApplicationGroup.identifier)?[Self.typingPreferenceKey] as? Bool
 		defaults.set(true, forKey: Self.typingPreferenceKey)
 	}
 
-	override func tearDown() async throws {
+	deinit {
 		let defaults = TextualUserDefaults.shared()
 		if let originalTypingPreference {
 			defaults.set(originalTypingPreference, forKey: Self.typingPreferenceKey)
 		} else {
 			defaults.removeObject(forKey: Self.typingPreferenceKey)
 		}
-
-		try await super.tearDown()
 	}
 
-	func testTypingActiveIsThrottledToEveryThreeSeconds() {
+	@Test("An active typing tag is sent at most once every three seconds")
+	func typingActiveIsThrottledToEveryThreeSeconds() throws {
 		let client = makeMessageTagsClient()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 		let start = Date()
 
 		client.noteLocalUserTyping("h", in: channel, at: start)
 		client.noteLocalUserTyping("he", in: channel, at: start.addingTimeInterval(1))
 		client.noteLocalUserTyping("hel", in: channel, at: start.addingTimeInterval(2.9))
 
-		XCTAssertEqual(sentLines(of: client), ["@+typing=active TAGMSG #chat"])
+		#expect(sentLines(of: client) == ["@+typing=active TAGMSG #chat"])
 
 		client.noteLocalUserTyping("hell", in: channel, at: start.addingTimeInterval(3))
 
-		XCTAssertEqual(client.sentLines.count, 2)
-		XCTAssertEqual(sentLines(of: client).last, "@+typing=active TAGMSG #chat")
+		#expect(client.sentLines.count == 2)
+		#expect(sentLines(of: client).last == "@+typing=active TAGMSG #chat")
 	}
 
-	func testTypingPausedAfterIdleThenActiveAgain() {
+	@Test("Typing pauses when the timer fires and goes active again on the next keystroke")
+	func typingPausedAfterIdleThenActiveAgain() throws {
 		let client = makeMessageTagsClient()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 		let start = Date()
 
 		client.noteLocalUserTyping("h", in: channel, at: start)
 		client.typingPauseTimerFired(channel)
 
-		XCTAssertEqual(sentLines(of: client), [
+		#expect(sentLines(of: client) == [
 			"@+typing=active TAGMSG #chat",
 			"@+typing=paused TAGMSG #chat",
 		])
 
 		client.noteLocalUserTyping("he", in: channel, at: start.addingTimeInterval(0.5))
 
-		XCTAssertEqual(sentLines(of: client).last, "@+typing=active TAGMSG #chat")
-		XCTAssertEqual(client.sentLines.count, 3)
+		#expect(sentLines(of: client).last == "@+typing=active TAGMSG #chat")
+		#expect(client.sentLines.count == 3)
 	}
 
-	func testTypingDoneWhenTextClearedOrSent() {
+	@Test("Typing is done once the text is cleared or sent, and is not repeated")
+	func typingDoneWhenTextClearedOrSent() throws {
 		let client = makeMessageTagsClient()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 
 		client.noteLocalUserTyping("h", in: channel, at: Date())
 		client.noteLocalUserTyping("", in: channel, at: Date())
 
-		XCTAssertEqual(sentLines(of: client), [
+		#expect(sentLines(of: client) == [
 			"@+typing=active TAGMSG #chat",
 			"@+typing=done TAGMSG #chat",
 		])
 
 		client.noteLocalUserTyping("", in: channel, at: Date())
-		XCTAssertEqual(client.sentLines.count, 2)
+
+		#expect(client.sentLines.count == 2)
 
 		client.noteLocalUserTyping("x", in: channel, at: Date())
 		client.localUserSentMessage(in: channel)
 
-		XCTAssertEqual(sentLines(of: client).last, "@+typing=done TAGMSG #chat")
-		XCTAssertEqual(client.sentLines.count, 4)
+		#expect(sentLines(of: client).last == "@+typing=done TAGMSG #chat")
+		#expect(client.sentLines.count == 4)
 	}
 
-	func testTypingIsNotSentForCommands() {
+	@Test("A line that starts a command is not reported as typing")
+	func typingIsNotSentForCommands() throws {
 		let client = makeMessageTagsClient()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 
 		client.noteLocalUserTyping("/", in: channel, at: Date())
 		client.noteLocalUserTyping("/me", in: channel, at: Date())
-		XCTAssertEqual(client.sentLines.count, 0)
+
+		#expect(client.sentLines.count == 0)
 
 		client.noteLocalUserTyping("h", in: channel, at: Date())
 		client.noteLocalUserTyping("/h", in: channel, at: Date())
 
-		XCTAssertEqual(sentLines(of: client), [
+		#expect(sentLines(of: client) == [
 			"@+typing=active TAGMSG #chat",
 			"@+typing=done TAGMSG #chat",
 		])
 	}
 
-	func testTypingIsNotSentWithoutMessageTagsOrToConsole() {
+	@Test("Typing needs message-tags, and the console is never a typing target")
+	func typingIsNotSentWithoutMessageTagsOrToConsole() throws {
 		let client = GLTTestClient()
 		client.markAsLoggedIn()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 
 		client.noteLocalUserTyping("h", in: channel, at: Date())
 		client.noteLocalUserTyping("h", in: nil, at: Date())
-		XCTAssertEqual(client.sentLines.count, 0)
+
+		#expect(client.sentLines.count == 0)
 
 		let tagged = makeMessageTagsClient()
 		tagged.noteLocalUserTyping("h", in: nil, at: Date())
-		XCTAssertEqual(tagged.sentLines.count, 0)
+
+		#expect(tagged.sentLines.count == 0)
 	}
 
-	func testTypingRespectsPreference() {
-		TextualUserDefaults.shared().set(false, forKey: "SendTypingNotifications")
+	@Test("Nothing is sent while the typing notification preference is off")
+	func typingRespectsPreference() throws {
+		TextualUserDefaults.shared().set(false, forKey: Self.typingPreferenceKey)
 		let client = makeMessageTagsClient()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 
 		client.noteLocalUserTyping("h", in: channel, at: Date())
 
-		XCTAssertEqual(client.sentLines.count, 0)
+		#expect(client.sentLines.count == 0)
 	}
 
-	func testTypingStateExpires() throws {
+	@Test("A remote typing state ages out of the tracker")
+	func typingStateExpires() throws {
 		let client = makeMessageTagsClient()
-		let channel = addChannel(named: "#chat", to: client)
-		let tracker = try XCTUnwrap(client.typingTracker)
+		let channel = try addChannel(named: "#chat", to: client)
+		let tracker = try #require(client.typingTracker)
 		let start = Date()
 
 		tracker.noteTypingState(.active, fromNickname: "mara", in: channel, at: start)
 		tracker.noteTypingState(.paused, fromNickname: "jonas", in: channel, at: start)
 
-		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(5)), ["mara", "jonas"])
-		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(7)), ["jonas"])
-		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(31)), [])
+		#expect(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(5)) == ["mara", "jonas"])
+		#expect(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(7)) == ["jonas"])
+		#expect(tracker.typingNicknames(in: channel, at: start.addingTimeInterval(31)) == [])
 
 		tracker.expireEntries(at: start.addingTimeInterval(31))
 
-		XCTAssertEqual(tracker.typingNicknames(in: channel, at: start), [])
+		#expect(tracker.typingNicknames(in: channel, at: start) == [])
 	}
 
-	func testTypingDoneRemovesEntryAndTagMessageFeedsTracker() throws {
+	@Test("A received TAGMSG feeds the tracker, and the local user is never tracked")
+	func typingDoneRemovesEntryAndTagMessageFeedsTracker() throws {
 		let client = makeMessageTagsClient()
-		let channel = addChannel(named: "#chat", to: client)
-		let tracker = try XCTUnwrap(client.typingTracker)
+		let channel = try addChannel(named: "#chat", to: client)
+		let tracker = try #require(client.typingTracker)
 
-		client.receiveTagMessage(message("@+typing=active :mara!u@h TAGMSG #chat", on: client))
-		XCTAssertEqual(tracker.typingNicknames(in: channel), ["mara"])
+		try client.receiveTagMessage(message("@+typing=active :mara!u@h TAGMSG #chat", on: client))
 
-		client.receiveTagMessage(message("@+typing=done :mara!u@h TAGMSG #chat", on: client))
-		XCTAssertEqual(tracker.typingNicknames(in: channel), [])
+		#expect(tracker.typingNicknames(in: channel) == ["mara"])
 
-		client.receiveTagMessage(message("@+typing=active :me!u@h TAGMSG #chat", on: client))
-		XCTAssertEqual(tracker.typingNicknames(in: channel), [])
+		try client.receiveTagMessage(message("@+typing=done :mara!u@h TAGMSG #chat", on: client))
+
+		#expect(tracker.typingNicknames(in: channel) == [])
+
+		try client.receiveTagMessage(message("@+typing=active :me!u@h TAGMSG #chat", on: client))
+
+		#expect(tracker.typingNicknames(in: channel) == [])
 	}
 
-	func testReplyTagIsSentOnFirstLineOnly() {
+	@Test("A reply tag rides the first line of a multi-line message only")
+	func replyTagIsSentOnFirstLineOnly() throws {
 		let client = makeMessageTagsClient()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 		client.nextMessageReplyIdentifier = "abc123"
 
 		client.sendText(NSAttributedString(string: "first\nsecond"), as: .privmsg, to: channel)
 
 		let privateMessages = sentLines(of: client).filter { $0.contains("PRIVMSG") }
 
-		XCTAssertEqual(privateMessages, [
+		#expect(privateMessages == [
 			"@+draft/reply=abc123 PRIVMSG #chat :first",
 			"PRIVMSG #chat :second",
 		])
-		XCTAssertNil(client.nextMessageReplyIdentifier)
+		#expect(client.nextMessageReplyIdentifier == nil)
+
 		let firstPrinted = client.printedLines.firstObject as? [String: Any]
-		XCTAssertEqual(firstPrinted?["messageBody"] as? String, "first")
+
+		#expect(firstPrinted?["messageBody"] as? String == "first")
 
 		client.sendText(NSAttributedString(string: "third"), as: .privmsg, to: channel)
 
-		XCTAssertEqual(sentLines(of: client).last, "PRIVMSG #chat :third")
+		#expect(sentLines(of: client).last == "PRIVMSG #chat :third")
 	}
 
-	func testReplyTagIsDroppedWithoutMessageTags() {
+	@Test("Without message-tags the reply tag is dropped from the wire")
+	func replyTagIsDroppedWithoutMessageTags() throws {
 		let client = GLTTestClient()
 		client.markAsLoggedIn()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 		client.nextMessageReplyIdentifier = "abc123"
 
 		client.sendText(NSAttributedString(string: "hello"), as: .privmsg, to: channel)
 
-		XCTAssertEqual(sentLines(of: client).last, "PRIVMSG #chat :hello")
+		#expect(sentLines(of: client).last == "PRIVMSG #chat :hello")
 	}
 
-	func testReactionSendsTagMessage() {
+	@Test("A reaction is sent as a TAGMSG carrying the react and reply tags")
+	func reactionSendsTagMessage() throws {
 		let client = makeMessageTagsClient()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 
-		XCTAssertTrue(client.sendReaction("👍", toMessageIdentifier: "abc123", in: channel))
-		XCTAssertEqual(sentLines(of: client), ["@+draft/react=👍;+draft/reply=abc123 TAGMSG #chat"])
+		#expect(client.sendReaction("👍", toMessageIdentifier: "abc123", in: channel))
+		#expect(sentLines(of: client) == ["@+draft/react=👍;+draft/reply=abc123 TAGMSG #chat"])
 	}
 
-	func testReactionRequiresMessageTags() {
+	@Test("A reaction is refused when the server has no message-tags")
+	func reactionRequiresMessageTags() throws {
 		let client = GLTTestClient()
 		client.markAsLoggedIn()
-		let channel = addChannel(named: "#chat", to: client)
+		let channel = try addChannel(named: "#chat", to: client)
 
-		XCTAssertFalse(client.sendReaction("👍", toMessageIdentifier: "abc123", in: channel))
-		XCTAssertEqual(client.sentLines.count, 0)
+		#expect(client.sendReaction("👍", toMessageIdentifier: "abc123", in: channel) == false)
+		#expect(client.sentLines.count == 0)
 	}
 
-	func testTagMessageEventShape() {
+	@Test("The TAGMSG event carries the sender, the tags and who sent it")
+	func tagMessageEventShape() {
 		let client = makeMessageTagsClient()
 		let date = Date(timeIntervalSince1970: 1_700_000_000)
 		let tags = ["draft/react": "👍", "draft/reply": "abc123"]
@@ -269,7 +289,7 @@ final class IRCMessageTagsTests: XCTestCase {
 			"account": "mara",
 		]
 
-		XCTAssertEqual(event as NSDictionary, expected)
+		#expect(event as NSDictionary == expected)
 
 		let own = client.tagMessageEvent(
 			withClientTags: tags,
@@ -280,9 +300,9 @@ final class IRCMessageTagsTests: XCTestCase {
 			account: nil
 		)
 
-		XCTAssertEqual(own["fromLocalUser"] as? Bool, true)
-		XCTAssertNil(own["msgid"])
-		XCTAssertNil(own["account"])
+		#expect(own["fromLocalUser"] as? Bool == true)
+		#expect(own["msgid"] == nil)
+		#expect(own["account"] == nil)
 	}
 
 	private func makeMessageTagsClient() -> GLTTestClient {
@@ -301,16 +321,16 @@ final class IRCMessageTagsTests: XCTestCase {
 		return client
 	}
 
-	private func addChannel(named name: String, to client: GLTTestClient) -> Channel {
-		let channel = client.findChannelOrCreate(name)!
+	private func addChannel(named name: String, to client: GLTTestClient) throws -> Channel {
+		let channel = try #require(client.findChannelOrCreate(name))
 
 		channel.activate()
 
 		return channel
 	}
 
-	private func message(_ line: String, on client: IRCClient) -> Message {
-		Message(line: line, on: client)!
+	private func message(_ line: String, on client: IRCClient) throws -> Message {
+		try #require(Message(line: line, on: client))
 	}
 
 	private func sentLines(of client: GLTTestClient) -> [String] {

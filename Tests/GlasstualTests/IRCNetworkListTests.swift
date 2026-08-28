@@ -1,5 +1,6 @@
+import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 /** *********************************************************************
  *                  _____         _               _
@@ -38,24 +39,23 @@ import XCTest
  *
  *********************************************************************** */
 @MainActor
-class IRCNetworkListTests: XCTestCase {
-	func testBundledListParses() {
+@Suite("Bundled network list", .serialized)
+struct IRCNetworkListTests {
+	@Test("Every bundled entry parses with a name, an address and a port")
+	func bundledListParses() {
 		let list = NetworkList()
 
-		XCTAssertGreaterThan(list.listOfNetworks.count, 20)
+		#expect(list.listOfNetworks.count > 20)
 
 		for network in list.listOfNetworks {
-			XCTAssertFalse(network.networkName.isEmpty)
-			XCTAssertFalse(network.serverAddress.isEmpty, "\(network.networkName) has no address")
-
-			XCTAssertNotEqual(network.serverPort, 0, "\(network.networkName) has no port")
-
-			XCTAssertNotNil(network.networkDescription)
-			XCTAssertNotNil(network.suggestedChannels)
+			#expect(network.networkName.isEmpty == false)
+			#expect(network.serverAddress.isEmpty == false, "\(network.networkName) has no address")
+			#expect(network.serverPort != 0, "\(network.networkName) has no port")
 		}
 	}
 
-	func testBundledListIsSortedAlphabetically() {
+	@Test("The bundled list is sorted alphabetically, ignoring case")
+	func bundledListIsSortedAlphabetically() {
 		let list = NetworkList()
 		let networks = list.listOfNetworks
 
@@ -64,15 +64,15 @@ class IRCNetworkListTests: XCTestCase {
 			let current = networks[index]
 			let result = previous.networkName.caseInsensitiveCompare(current.networkName)
 
-			XCTAssertNotEqual(
-				result,
-				.orderedDescending,
+			#expect(
+				result != .orderedDescending,
 				"\(previous.networkName) sorts after \(current.networkName)"
 			)
 		}
 	}
 
-	func testPopularSubsetIsPresentAndOrdered() {
+	@Test("The popular subset is drawn from the full list and keeps its curated order")
+	func popularSubsetIsPresentAndOrdered() {
 		let list = NetworkList()
 		let expected = [
 			"Libera.Chat",
@@ -93,113 +93,95 @@ class IRCNetworkListTests: XCTestCase {
 
 		for network in list.popularNetworks {
 			actual.append(network.networkName)
-			XCTAssertTrue(list.listOfNetworks.contains(network))
+			#expect(list.listOfNetworks.contains(network))
 		}
 
-		XCTAssertEqual(actual, expected)
+		#expect(actual == expected)
 	}
 
-	func testDeadNetworksAreGone() {
+	@Test("A network that has shut down is no longer offered", arguments: [
+		"freenode",
+		"PonyChat",
+		"IdleChat",
+		"GeeksIRC",
+		"NixtrixIRC",
+		"Mozor",
+		"Thinkstack",
+		"StormBit",
+		"Snyde",
+		"Mibbit",
+		"Ewnix",
+		"TinyCrab",
+	])
+	func deadNetworksAreGone(_ name: String) {
+		#expect(NetworkList().network(named: name) == nil, "\(name) should have been removed")
+	}
+
+	@Test("The address of a network that has shut down no longer resolves")
+	func deadNetworkAddressesAreGone() {
+		#expect(NetworkList().network(withServerAddress: "chat.freenode.net") == nil)
+	}
+
+	@Test("Libera.Chat is offered secured, with SASL and an address lookup that ignores case")
+	func liberaChatEntry() throws {
 		let list = NetworkList()
-		let dead = [
-			"freenode",
-			"PonyChat",
-			"IdleChat",
-			"GeeksIRC",
-			"NixtrixIRC",
-			"Mozor",
-			"Thinkstack",
-			"StormBit",
-			"Snyde",
-			"Mibbit",
-			"Ewnix",
-			"TinyCrab",
-		]
+		let libera = try #require(list.network(named: "libera.chat"), "Missing Libera.Chat")
 
-		for name in dead {
-			XCTAssertNil(list.network(named: name), "\(name) should have been removed")
-		}
-
-		XCTAssertNil(list.network(withServerAddress: "chat.freenode.net"))
+		#expect(libera.serverAddress == "irc.libera.chat")
+		#expect(libera.serverPort == 6697)
+		#expect(libera.prefersSecuredConnection)
+		#expect(libera.saslSupported)
+		#expect(libera.registration == .optional)
+		#expect(libera.registrationNote != nil)
+		#expect(libera.website != nil)
+		#expect(libera.accountFieldsApply)
+		#expect(list.network(withServerAddress: "IRC.LIBERA.CHAT") == libera)
 	}
 
-	func testLiberaChatEntry() {
+	@Test("HybridIRC is offered secured and with SASL")
+	func hybridIRCEntry() throws {
 		let list = NetworkList()
-		guard let libera = list.network(named: "libera.chat") else {
-			return XCTFail("Missing Libera.Chat")
-		}
+		let hybridIRC = try #require(list.network(named: "HybridIRC"), "Missing HybridIRC")
 
-		XCTAssertEqual(libera.serverAddress, "irc.libera.chat")
-
-		XCTAssertEqual(libera.serverPort, 6697)
-
-		XCTAssertTrue(libera.prefersSecuredConnection)
-		XCTAssertTrue(libera.saslSupported)
-
-		XCTAssertEqual(libera.registration, .optional)
-
-		XCTAssertNotNil(libera.registrationNote)
-		XCTAssertNotNil(libera.website)
-
-		XCTAssertTrue(libera.accountFieldsApply)
-
-		XCTAssertEqual(list.network(withServerAddress: "IRC.LIBERA.CHAT"), libera)
+		#expect(hybridIRC.serverAddress == "irc.hybridirc.com")
+		#expect(hybridIRC.serverPort == 6697)
+		#expect(hybridIRC.prefersSecuredConnection)
+		#expect(hybridIRC.saslSupported)
+		#expect(hybridIRC.registration == .optional)
 	}
 
-	func testHybridIRCEntry() {
+	@Test("DumaNet is offered secured, without SASL, and suggests its help channel")
+	func hungarianDumaNetEntry() throws {
 		let list = NetworkList()
-		guard let hybridIRC = list.network(named: "HybridIRC") else {
-			return XCTFail("Missing HybridIRC")
-		}
+		let dumaNet = try #require(list.network(named: "DumaNet"), "Missing DumaNet")
 
-		XCTAssertEqual(hybridIRC.serverAddress, "irc.hybridirc.com")
-
-		XCTAssertEqual(hybridIRC.serverPort, 6697)
-
-		XCTAssertTrue(hybridIRC.prefersSecuredConnection)
-		XCTAssertTrue(hybridIRC.saslSupported)
-
-		XCTAssertEqual(hybridIRC.registration, .optional)
+		#expect(dumaNet.serverAddress == "dumanet.hu")
+		#expect(dumaNet.serverPort == 6697)
+		#expect(dumaNet.prefersSecuredConnection)
+		#expect(dumaNet.saslSupported == false)
+		#expect(dumaNet.registration == .optional)
+		#expect(dumaNet.suggestedChannels.contains("#help"))
 	}
 
-	func testHungarianDumaNetEntry() {
+	@Test("A network with no services at all hides the account fields")
+	func networkWithoutServicesHidesAccountFields() throws {
 		let list = NetworkList()
-		guard let dumaNet = list.network(named: "DumaNet") else {
-			return XCTFail("Missing DumaNet")
-		}
+		let efnet = try #require(list.network(named: "EFnet"), "Missing EFnet")
 
-		XCTAssertEqual(dumaNet.serverAddress, "dumanet.hu")
-
-		XCTAssertEqual(dumaNet.serverPort, 6697)
-
-		XCTAssertTrue(dumaNet.prefersSecuredConnection)
-
-		XCTAssertFalse(dumaNet.saslSupported)
-
-		XCTAssertEqual(dumaNet.registration, .optional)
-
-		XCTAssertTrue(dumaNet.suggestedChannels.contains("#help"))
+		#expect(efnet.registration == .none)
+		#expect(efnet.saslSupported == false)
+		#expect(efnet.accountFieldsApply == false)
 	}
 
-	func testNetworkWithoutServicesHidesAccountFields() {
-		let list = NetworkList()
-		guard let efnet = list.network(named: "EFnet") else {
-			return XCTFail("Missing EFnet")
-		}
-
-		XCTAssertEqual(efnet.registration, .none)
-
-		XCTAssertFalse(efnet.saslSupported)
-		XCTAssertFalse(efnet.accountFieldsApply)
-	}
-
-	func testEntryWithoutAddressIsRejected() {
+	@Test("An entry without a server address is not a network")
+	func entryWithoutAddressIsRejected() {
 		let network = Network(dictionary: ["name": "Nowhere"])
 
-		XCTAssertNil(network)
+		#expect(network == nil)
 	}
 
-	func testEntryDefaultsPortFromSecurity() {
+	@Test("An entry without a port takes the port its security setting implies")
+	func entryDefaultsPortFromSecurity() {
 		let secured = Network(dictionary: [
 			"name": "A",
 			"serverAddress": "a.example",
@@ -210,53 +192,54 @@ class IRCNetworkListTests: XCTestCase {
 			"serverAddress": "b.example",
 		])
 
-		XCTAssertEqual(secured?.serverPort, 6697)
-		XCTAssertEqual(plain?.serverPort, 6667)
-
-		XCTAssertEqual(plain?.networkDescription, "")
-		XCTAssertEqual(plain?.suggestedChannels, [])
-
-		XCTAssertNil(plain?.registrationNote)
+		#expect(secured?.serverPort == 6697)
+		#expect(plain?.serverPort == 6667)
+		#expect(plain?.networkDescription == "")
+		#expect(plain?.suggestedChannels == [])
+		#expect(plain?.registrationNote == nil)
 	}
 
-	func testRegistrationParsing() {
-		XCTAssertEqual(NetworkList.registration(from: "required"), .required)
-		XCTAssertEqual(NetworkList.registration(from: "Optional"), .optional)
-		XCTAssertEqual(NetworkList.registration(from: "none"), .none)
-		XCTAssertEqual(NetworkList.registration(from: nil), .none)
-		XCTAssertEqual(NetworkList.registration(from: "bogus"), .none)
+	@Test("A registration string maps to its case, and anything else means none", arguments: [
+		("required", IRCNetworkRegistration.required),
+		("Optional", .optional),
+		("none", .none),
+		(nil, .none),
+		("bogus", .none),
+	] as [(String?, IRCNetworkRegistration)])
+	func registrationParsing(_ string: String?, _ expected: IRCNetworkRegistration) {
+		#expect(NetworkList.registration(from: string) == expected)
 	}
 
-	func testAccountFieldsVisibility() {
-		XCTAssertFalse(NetworkList.accountFieldsApply(to:
-			.none,
-			saslSupported: false))
-
-		XCTAssertTrue(NetworkList.accountFieldsApply(to: .none, saslSupported: true))
-		XCTAssertTrue(NetworkList.accountFieldsApply(to:
-			.optional,
-			saslSupported: false))
-		XCTAssertTrue(NetworkList.accountFieldsApply(to:
-			.optional,
-			saslSupported: true))
-		XCTAssertTrue(NetworkList.accountFieldsApply(to:
-			.required,
-			saslSupported: false))
-		XCTAssertTrue(NetworkList.accountFieldsApply(to:
-			.required,
-			saslSupported: true))
+	@Test("A network with neither services nor SASL hides the account fields")
+	func accountFieldsAreHiddenWithoutServices() {
+		#expect(NetworkList.accountFieldsApply(to: .none, saslSupported: false) == false)
 	}
 
-	func testOnboardingCompletedFlagRoundTrips() {
+	@Test("Services or SASL alone is enough to show the account fields", arguments: [
+		(IRCNetworkRegistration.none, true),
+		(.optional, false),
+		(.optional, true),
+		(.required, false),
+		(.required, true),
+	])
+	func accountFieldsAreShownWithServicesOrSASL(
+		_ registration: IRCNetworkRegistration,
+		_ saslSupported: Bool
+	) {
+		#expect(NetworkList.accountFieldsApply(to: registration, saslSupported: saslSupported))
+	}
+
+	@Test("The onboarding flag round trips through the preference store")
+	func onboardingCompletedFlagRoundTrips() {
 		let original: Bool = TextualPreferences.onboardingCompleted()
 
 		TextualPreferences.setOnboardingCompleted(false)
 
-		XCTAssertFalse(TextualPreferences.onboardingCompleted())
+		#expect(TextualPreferences.onboardingCompleted() == false)
 
 		TextualPreferences.setOnboardingCompleted(true)
 
-		XCTAssertTrue(TextualPreferences.onboardingCompleted())
+		#expect(TextualPreferences.onboardingCompleted())
 
 		TextualPreferences.setOnboardingCompleted(original)
 	}
