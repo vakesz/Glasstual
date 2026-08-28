@@ -3,10 +3,9 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \\ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_
+ *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
  *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2019 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,58 +37,39 @@
 
 import Foundation
 
-@objc(IRCModeParser)
-public final class ModeParser: NSObject {
-	@available(*, unavailable)
-	override public init() {
-		fatalError("ModeParser is a static namespace")
-	}
+/// The strings that identify a particular server or bouncer on the wire.
+///
+/// IRC has no handshake that names the software on the other end, so
+/// recognising one means matching a string it sends. Those strings are
+/// gathered here rather than repeated at each site that tests for one.
+nonisolated enum IRCServerQuirks {
+	/// ZNC, the bouncer Glasstual has specific support for.
+	enum ZNC {
+		/// The server name ZNC introduces itself with.
+		static let serverName = "irc.znc.in"
 
-	public static func parse(
-		_ modeString: String,
-		channelModeKinds: [Character: ChannelModeKind]
-	) -> [ModeInfo] {
-		let tokens = modeString.split(whereSeparator: { $0.isWhitespace }).map(String.init)
-		var tokenIndex = 0
-		var modeIsSet = false
-		var modes: [ModeInfo] = []
+		/// The sender ZNC puts on its own out-of-band messages.
+		static let messageSender = "znc.in"
 
-		while tokenIndex < tokens.count {
-			let token = tokens[tokenIndex]
-			tokenIndex += 1
+		/// ZNC exposes each of its modules as a user whose nickname carries
+		/// this prefix.
+		static let modulePrefix = "*"
 
-			guard token.first == "+" || token.first == "-" else {
-				continue
-			}
+		static let playbackModule = "playback"
+		static let certificateInfoModule = "tlsinfo"
 
-			modeIsSet = (token.first == "+")
+		static let playbackBatchType = "znc.in/playback"
+		static let certificateInfoBatchType = "znc.in/tlsinfo"
 
-			for character in token.dropFirst() {
-				switch character {
-				case "+":
-					modeIsSet = true
-				case "-":
-					modeIsSet = false
-				default:
-					let policy = channelModeKinds[character]?.parameterPolicy ?? .never
-					var modeParameter: String?
+		/// The command that asks the `tlsinfo` module for the peer chain.
+		static let sendCertificateChainCommand = "send-data"
 
-					if policy.requiresParameter(whenModeIsSet: modeIsSet), tokenIndex < tokens.count {
-						modeParameter = tokens[tokenIndex]
-						tokenIndex += 1
-					}
-
-					modes.append(
-						ModeInfo(
-							modeSymbol: String(character),
-							modeIsSet: modeIsSet,
-							modeParameter: modeParameter
-						)
-					)
-				}
-			}
+		static func nickname(forModuleNamed module: String) -> String {
+			"\(modulePrefix)\(module)"
 		}
-
-		return modes
 	}
+
+	/// The IRCv3 `chathistory` batch, which is not vendor-specific but is
+	/// matched by name in the same places the ZNC batches are.
+	static let chatHistoryBatchType = "chathistory"
 }

@@ -80,6 +80,11 @@ public nonisolated struct ClientIRCv3SupportedCapability: OptionSet, Hashable, S
 	public static let chatHistory = Self(rawValue: 1 << 19)
 	public static let readMarker = Self(rawValue: 1 << 20)
 	public static let labeledResponse = Self(rawValue: 1 << 21)
+	/// `sasl`, as opposed to the mechanism-specific SASL bits.
+	public static let saslGeneric = Self(rawValue: 1 << 22)
+	public static let zncServerTime = Self(rawValue: 1 << 25)
+	public static let zncServerTimeISO = Self(rawValue: 1 << 26)
+	public static let zncPlaybackModule = Self(rawValue: 1 << 27)
 	public static let accountNotify = Self(rawValue: 1 << 28)
 	public static let extendedJoin = Self(rawValue: 1 << 29)
 	public static let accountTag = Self(rawValue: 1 << 30)

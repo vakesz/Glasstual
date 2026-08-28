@@ -3,10 +3,9 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \\ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_
+ *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
  *
- * Copyright (c) 2008 - 2010 Satoshi Nakagawa <psychs AT limechat DOT net>
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2019 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,58 +37,64 @@
 
 import Foundation
 
-@objc(IRCModeParser)
-public final class ModeParser: NSObject {
-	@available(*, unavailable)
-	override public init() {
-		fatalError("ModeParser is a static namespace")
+/// When a channel mode carries a parameter on the wire.
+public nonisolated enum ModeParameterPolicy: Sendable, Equatable {
+	case always
+	case onlyWhenSet
+	case never
+
+	public func requiresParameter(whenModeIsSet modeIsSet: Bool) -> Bool {
+		switch self {
+		case .always:
+			true
+		case .onlyWhenSet:
+			modeIsSet
+		case .never:
+			false
+		}
+	}
+}
+
+/// The class a channel mode belongs to.
+///
+/// ISUPPORT `CHANMODES` lists four comma-separated groups in a fixed order and
+/// the group decides whether the mode takes a parameter; `PREFIX` adds a fifth
+/// kind of its own. The parser used to store the group as its one-based index
+/// with 100 standing in for a prefix mode, and every reader had to know that
+/// 1, 2 and 100 mean "parameterised", 3 means "only when set" and 4 means
+/// "never".
+public nonisolated enum ChannelModeKind: Sendable, Equatable, CaseIterable {
+	/// CHANMODES group A: a list mode such as `b`, always parameterised.
+	case list
+	/// Group B: a setting that is parameterised in both directions, like `k`.
+	case setting
+	/// Group C: a setting parameterised only when it is set, like `l`.
+	case settingWhenSet
+	/// Group D: a plain flag such as `t`, never parameterised.
+	case flag
+	/// A mode advertised through `PREFIX`, parameterised by the nickname it
+	/// applies to.
+	case userPrefix
+
+	/// The group at `index` in a `CHANMODES` token, or `nil` past group D.
+	public init?(chanModesGroupIndex index: Int) {
+		switch index {
+		case 0: self = .list
+		case 1: self = .setting
+		case 2: self = .settingWhenSet
+		case 3: self = .flag
+		default: return nil
+		}
 	}
 
-	public static func parse(
-		_ modeString: String,
-		channelModeKinds: [Character: ChannelModeKind]
-	) -> [ModeInfo] {
-		let tokens = modeString.split(whereSeparator: { $0.isWhitespace }).map(String.init)
-		var tokenIndex = 0
-		var modeIsSet = false
-		var modes: [ModeInfo] = []
-
-		while tokenIndex < tokens.count {
-			let token = tokens[tokenIndex]
-			tokenIndex += 1
-
-			guard token.first == "+" || token.first == "-" else {
-				continue
-			}
-
-			modeIsSet = (token.first == "+")
-
-			for character in token.dropFirst() {
-				switch character {
-				case "+":
-					modeIsSet = true
-				case "-":
-					modeIsSet = false
-				default:
-					let policy = channelModeKinds[character]?.parameterPolicy ?? .never
-					var modeParameter: String?
-
-					if policy.requiresParameter(whenModeIsSet: modeIsSet), tokenIndex < tokens.count {
-						modeParameter = tokens[tokenIndex]
-						tokenIndex += 1
-					}
-
-					modes.append(
-						ModeInfo(
-							modeSymbol: String(character),
-							modeIsSet: modeIsSet,
-							modeParameter: modeParameter
-						)
-					)
-				}
-			}
+	public var parameterPolicy: ModeParameterPolicy {
+		switch self {
+		case .list, .setting, .userPrefix:
+			.always
+		case .settingWhenSet:
+			.onlyWhenSet
+		case .flag:
+			.never
 		}
-
-		return modes
 	}
 }

@@ -217,9 +217,9 @@ private extension IRCClient {
 		}
 		batchMessages.queueEntry(batch)
 
-		if batch.batchType == "znc.in/playback" {
+		if batch.batchType == IRCServerQuirks.ZNC.playbackBatchType {
 			zncBouncerIsPlayingBackHistory = isConnectedToZNC
-		} else if batch.batchType == "znc.in/tlsinfo" {
+		} else if batch.batchType == IRCServerQuirks.ZNC.certificateInfoBatchType {
 			zncBouncerIsSendingCertificateInfo = isConnectedToZNC
 			if message.batchToken == nil {
 				zncBouncerCertificateChainDataMutable = ""
@@ -246,9 +246,9 @@ private extension IRCClient {
 			recursivelyProcessBatchMessage(batch)
 		}
 
-		if batch.batchType == "znc.in/playback" {
+		if batch.batchType == IRCServerQuirks.ZNC.playbackBatchType {
 			zncBouncerIsPlayingBackHistory = false
-		} else if batch.batchType == "znc.in/tlsinfo" {
+		} else if batch.batchType == IRCServerQuirks.ZNC.certificateInfoBatchType {
 			zncBouncerIsSendingCertificateInfo = false
 		}
 	}

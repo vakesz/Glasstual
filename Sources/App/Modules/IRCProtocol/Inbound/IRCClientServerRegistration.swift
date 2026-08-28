@@ -116,7 +116,10 @@ public extension IRCClient {
 		isPerformingConnectCommands = false
 
 		if isCapabilityEnabled(.zncCertInfoModule) {
-			sendCommand("send-data", toZNCModuleNamed: "tlsinfo")
+			sendCommand(
+				IRCServerQuirks.ZNC.sendCertificateChainCommand,
+				toZNCModuleNamed: IRCServerQuirks.ZNC.certificateInfoModule
+			)
 		}
 		requestPlayback()
 

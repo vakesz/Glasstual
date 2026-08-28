@@ -196,7 +196,7 @@ public extension IRCClient {
 		guard message.params.count == 2,
 		      zncBouncerIsSendingCertificateInfo,
 		      message.senderIsServer,
-		      message.senderNickname == "znc.in",
+		      message.senderNickname == IRCServerQuirks.ZNC.messageSender,
 		      IRCInboundEventPolicy.acceptsCertificateChunk(message.sequence),
 		      let chainData = zncBouncerCertificateChainDataMutable,
 		      (chainData as NSString).length < IRCInboundEventPolicy.maximumCertificateChainLength
