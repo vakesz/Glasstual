@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import Foundation
+import GlasstualPluginKit
 
 /** Who sent a message: either a user (nickname!username@address) or the server
  itself. A plain value — callers that need to change a field copy and assign. */
@@ -59,5 +60,45 @@ public nonisolated struct Prefix: Hashable, Sendable {
 		self.address = address
 		self.hostmask = hostmask
 		self.isServer = isServer
+	}
+
+	/** The user a prefix names, or `nil` when the prefix is a server name.
+
+	 RFC 2812 2.3.1 writes the prefix as
+
+	     prefix = servername / ( nickname [ [ "!" user ] "@" host ] )
+
+	 so the `!user` half is optional: `nick@host` names a user just as
+	 `nick!user@host` does, and only a prefix with no `@` at all is a server
+	 name. Reading `nick@host` as a server put the whole string in the
+	 nickname and filed the message in the console. */
+	public static func user(parsing prefix: String, maximumNicknameLength: Int) -> Prefix? {
+		if let hostmask = IRCHostmask(parsing: prefix, maximumNicknameLength: maximumNicknameLength) {
+			return Prefix(
+				nickname: hostmask.nickname,
+				username: hostmask.username,
+				address: hostmask.address,
+				hostmask: prefix
+			)
+		}
+
+		guard let separator = prefix.firstIndex(of: "@") else {
+			return nil
+		}
+
+		let nickname = String(prefix[..<separator])
+		let address = String(prefix[prefix.index(after: separator)...])
+
+		/* A "!" before the "@" makes this the fully qualified form, which
+		 `IRCHostmask` has already refused; taking the nickname from it anyway
+		 would accept a prefix whose username half is unusable. */
+		guard nickname.contains("!") == false,
+		      IRCHostmask.isValidNickname(nickname, maximumLength: maximumNicknameLength),
+		      IRCHostmask.isValidAddress(address)
+		else {
+			return nil
+		}
+
+		return Prefix(nickname: nickname, address: address, hostmask: prefix)
 	}
 }
