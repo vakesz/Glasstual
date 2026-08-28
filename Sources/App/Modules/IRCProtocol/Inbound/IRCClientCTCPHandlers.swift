@@ -41,17 +41,23 @@ import os
 
 enum IRCCTCPPolicy {
 	static func commandAndArguments(from text: String) -> (command: String, arguments: String)? {
-		let parts = text.split(maxSplits: 1, whereSeparator: { $0.isWhitespace })
-		guard let command = parts.first, !command.isEmpty else { return nil }
-		return (command.uppercased(), parts.count > 1 ? String(parts[1]) : "")
+		// CTCP tokens are separated by SPACE (0x20), not by Unicode whitespace.
+		let parts = text.unicodeScalars.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: false)
+		guard let command = parts.first, command.isEmpty == false else { return nil }
+		return (String(command).uppercased(), parts.count > 1 ? String(parts[1]) : "")
 	}
 
 	static func formData(_ text: String) -> [String: String] {
-		Dictionary(uniqueKeysWithValues: text.split(separator: "&").compactMap { field in
-			let pair = field.split(separator: "=", maxSplits: 1)
-			guard pair.count == 2 else { return nil }
-			return (String(pair[0]), String(pair[1]))
-		})
+		// The text is server-controlled and may repeat a key, so duplicates
+		// must merge rather than trap. The first occurrence wins.
+		Dictionary(
+			text.split(separator: "&").compactMap { field -> (String, String)? in
+				let pair = field.split(separator: "=", maxSplits: 1)
+				guard pair.count == 2 else { return nil }
+				return (String(pair[0]), String(pair[1]))
+			},
+			uniquingKeysWith: { first, _ in first }
+		)
 	}
 }
 

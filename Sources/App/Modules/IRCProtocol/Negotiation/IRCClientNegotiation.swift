@@ -39,6 +39,11 @@
 import Foundation
 
 enum ClientNegotiationUtilities {
+	/// Ceiling on the reassembled `AUTHENTICATE` payload. Every mechanism the
+	/// client supports fits in a fraction of this; without it a server can
+	/// grow the buffer 400 characters at a time forever.
+	static let maximumSASLPayloadLength = 16384
+
 	static func supportedSASLMechanisms(
 		hasClientCertificate: Bool,
 		externalMechanismDisabled: Bool,
@@ -476,6 +481,13 @@ extension IRCClient {
 			saslIncomingPayload = NSMutableString()
 		}
 
+		let accumulated = (saslIncomingPayload?.length ?? 0) + (chunk as NSString).length
+
+		guard accumulated <= ClientNegotiationUtilities.maximumSASLPayloadLength else {
+			abortSASLNegotiation(reason: IRCTransportSecurityStrings.saslPayloadTooLarge)
+			return
+		}
+
 		saslIncomingPayload?.append(chunk)
 
 		guard chunk.count != 400 else {
@@ -519,16 +531,28 @@ extension IRCClient {
 			return
 		}
 
-		do {
-			if saslScramClient.state == .sentClientFinal {
+		if saslScramClient.state == .sentClientFinal {
+			do {
 				try saslScramClient.verifyServerFinalMessage(message)
 				sendCapabilityAuthenticate("+")
-			} else {
-				let final = try saslScramClient.clientFinalMessage(forServerFirstMessage: message)
-				sendSASLPayloadInChunks(final)
+			} catch {
+				abortSASLNegotiation(reason: IRCTransportSecurityStrings.scramFailure(error.localizedDescription))
 			}
-		} catch {
-			abortSASLNegotiation(reason: IRCTransportSecurityStrings.scramFailure(error.localizedDescription))
+
+			return
+		}
+
+		// The key derivation is deliberately expensive, so it runs off the
+		// main actor; the client object itself stays main-actor bound.
+		Task { @MainActor [weak self] in
+			guard let self else { return }
+
+			do {
+				let final = try await saslScramClient.clientFinalMessage(forServerFirstMessage: message)
+				sendSASLPayloadInChunks(final)
+			} catch {
+				abortSASLNegotiation(reason: IRCTransportSecurityStrings.scramFailure(error.localizedDescription))
+			}
 		}
 	}
 
@@ -536,6 +560,27 @@ extension IRCClient {
 		for chunk in ClientNegotiationUtilities.saslWireChunks(for: payload) {
 			sendCapabilityAuthenticate(chunk)
 		}
+	}
+
+	/// SCRAM only buys mutual authentication if the client verified the
+	/// server's final message. A server that jumps straight to 900/903
+	/// without one has proved nothing, so its success must not be believed.
+	@MainActor func scramMutualAuthenticationIsSatisfied() -> Bool {
+		guard let saslMechanism,
+		      saslMechanism.caseInsensitiveCompare(SCRAMClient.mechanismName) == .orderedSame
+		else {
+			return true
+		}
+
+		return saslScramClient?.state == .authenticated
+	}
+
+	/// Ends SASL after a success numeric that the SCRAM exchange did not back up.
+	@MainActor func abortUnverifiedSASLSuccess() {
+		abortSASLNegotiation(reason: IRCTransportSecurityStrings.scramServerSignatureMissing)
+		setCapabilityDisabled(.isInSASLNegotiation)
+		setCapabilityDisabled(.isIdentifiedWithSASL)
+		resumeQueuedCapabilityNegotiation()
 	}
 
 	@MainActor private func abortSASLNegotiation(reason: String) {

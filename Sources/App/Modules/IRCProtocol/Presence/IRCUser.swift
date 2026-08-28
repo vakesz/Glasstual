@@ -72,8 +72,11 @@ open class User: PortablePropertyObject {
 		return relations
 	}
 
-	@objc public var client: IRCClient {
-		clientStorage!
+	/// `nil` once the client has been torn down. Users routinely outlive
+	/// their client through the shared persistent store and the removal
+	/// timer, so this must not be force-unwrapped.
+	@objc public var client: IRCClient? {
+		clientStorage
 	}
 
 	@objc public var nickname: String {

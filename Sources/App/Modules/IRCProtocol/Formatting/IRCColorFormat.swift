@@ -208,9 +208,9 @@ public final class TextFormatterEffect: NSObject {
 			}
 
 			if type == .foregroundColor {
-				valueLength = UInt(resolvedValue.utf16.count) + 2
+				valueLength = UInt(resolvedValue.utf8.count) + 2
 			} else {
-				valueLength = UInt(resolvedValue.utf16.count) + 1
+				valueLength = UInt(resolvedValue.utf8.count) + 1
 			}
 		default:
 			return false
@@ -333,6 +333,14 @@ public final class TextFormatterEffects: NSObject {
 	}
 }
 
+/// Byte count of `string` on the wire. The 512-byte IRC line limit is a byte
+/// budget, so UTF-16 code units must not be counted against it.
+private func wireByteCount(_ string: String, encoding: UInt) -> Int {
+	let count = (string as NSString).lengthOfBytes(using: encoding)
+
+	return count > 0 ? count : string.utf8.count
+}
+
 public extension NSAttributedString {
 	@objc(stringFormattedForChannel:onClient:withLineType:effectiveRange:)
 	func stringFormatted(
@@ -341,10 +349,12 @@ public extension NSAttributedString {
 		with lineType: TVCLogLineType,
 		effectiveRange: NSRangePointer?
 	) -> String {
+		let encoding = String.Encoding(rawValue: client.effectivePrimaryEncoding)
+
 		var minimumLength: UInt = 1
 
 		if let userHostmask = client.userHostmask {
-			minimumLength += UInt(userHostmask.utf16.count)
+			minimumLength += UInt(wireByteCount(userHostmask, encoding: encoding.rawValue))
 		} else {
 			minimumLength += UInt(truncationHostmaskConstant)
 		}
@@ -360,7 +370,7 @@ public extension NSAttributedString {
 			preconditionFailure("Line type not supported")
 		}
 
-		minimumLength += UInt(channelName.utf16.count)
+		minimumLength += UInt(wireByteCount(channelName, encoding: encoding.rawValue))
 		minimumLength += 2
 		minimumLength += 2
 
@@ -373,10 +383,10 @@ public extension NSAttributedString {
 
 		let string = string as NSString
 		let result = NSMutableString()
-		let encoding = String.Encoding(rawValue: client.effectivePrimaryEncoding)
 
 		var resultLength = minimumLength
 		var deletionLength: UInt = 0
+		var consumedAnyCharacter = false
 		var limitRange = NSRange(location: 0, length: string.length)
 
 		while limitRange.length > 0 {
@@ -415,13 +425,22 @@ public extension NSAttributedString {
 				resultLength += UInt(characterSize)
 
 				if resultLength > maximumLength {
-					let indexDifference = result.wrapIRCTextFormatterResult(
-						with: UInt(segmentRange.location),
-						maxDistance: UInt(truncationWrapMaxDistance)
-					)
+					if consumedAnyCharacter {
+						let indexDifference = result.wrapIRCTextFormatterResult(
+							with: UInt(segmentRange.location),
+							maxDistance: UInt(truncationWrapMaxDistance)
+						)
 
-					if indexDifference != UInt(bitPattern: NSNotFound) {
-						deletionLength -= UInt(indexDifference)
+						if indexDifference != UInt(bitPattern: NSNotFound), deletionLength >= indexDifference {
+							deletionLength -= indexDifference
+						}
+					} else {
+						// A server-assigned hostmask plus a long channel name
+						// can push the minimum length past the maximum. Consume
+						// the character anyway: the callers loop until the
+						// string is empty, and consuming nothing never ends.
+						deletionLength += UInt(characterRange.length)
+						result.append(character)
 					}
 
 					breakLoopAfterAppend = true
@@ -429,6 +448,7 @@ public extension NSAttributedString {
 					break
 				}
 
+				consumedAnyCharacter = true
 				deletionLength += UInt(characterRange.length)
 				i += characterRange.length
 				result.append(character)
@@ -684,11 +704,25 @@ public extension NSMutableAttributedString {
 public extension NSMutableString {
 	@objc(wrapIRCTextFormatterResultWith:maxDistance:)
 	func wrapIRCTextFormatterResult(with minimumIndex: UInt, maxDistance: UInt) -> UInt {
-		precondition(maxDistance > 0)
-
 		let selfLength = length
-		let searchIndex = Int(bitPattern: UInt(selfLength) &- 1 &- maxDistance)
-		let searchRange = NSRange(location: searchIndex, length: Int(maxDistance))
+		let distance = Int(clamping: maxDistance)
+
+		// The window is the tail of the string. Computing its start in
+		// unsigned arithmetic underflowed whenever the result was shorter
+		// than the distance, producing a large-negative NSRange location and
+		// an uncatchable NSRangeException.
+		guard distance > 0, selfLength > 0 else {
+			return UInt(bitPattern: NSNotFound)
+		}
+
+		let searchStart = max(0, selfLength - 1 - distance)
+		let searchLength = min(distance, selfLength - searchStart)
+
+		guard searchLength > 0 else {
+			return UInt(bitPattern: NSNotFound)
+		}
+
+		let searchRange = NSRange(location: searchStart, length: searchLength)
 		let spaceRange = rangeOfCharacter(
 			from: .whitespaces,
 			options: .backwards,
