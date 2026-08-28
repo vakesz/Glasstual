@@ -42,7 +42,7 @@ final class ServerNicknameChangeModel {
 	}
 
 	var normalizedNickname: String {
-		(proposedNickname as NSString).ceTrimAndGetFirstToken
+		proposedNickname.firstToken
 	}
 
 	@discardableResult

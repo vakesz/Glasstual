@@ -95,9 +95,9 @@ extension IRCClient {
 			}
 			targetName = targetChannel.name
 		} else {
-			targetName = arguments.ceTokenAsString
+			targetName = arguments.nextTokenAsString()
 		}
-		let subcommand = arguments.ceTokenAsString.uppercased()
+		let subcommand = arguments.nextTokenAsString().uppercased()
 		guard requireArguments(subcommand, for: parsed.command) else { return true }
 		if command == "ctcpreply" {
 			sendCTCPReply(targetName, command: subcommand, text: arguments.string)
@@ -118,13 +118,13 @@ extension IRCClient {
 		guard supportedCommands.contains(command) else { return false }
 		guard isLoggedIn else { return true }
 		let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-		var nickname = arguments.ceTokenAsString
+		var nickname = arguments.nextTokenAsString()
 		let channelName: String
 		let channel: IRCChannel?
 		if stringIsChannelName(nickname) {
 			channelName = nickname
 			channel = findChannel(channelName)
-			nickname = arguments.ceTokenAsString
+			nickname = arguments.nextTokenAsString()
 		} else if let targetChannel, targetChannel.isChannel {
 			channelName = targetChannel.name
 			channel = targetChannel
@@ -195,7 +195,7 @@ extension IRCClient {
 		}
 		let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
 		let channelName = stringIsChannelName(arguments.string)
-			? arguments.ceTokenAsString
+			? arguments.nextTokenAsString()
 			: (targetChannel?.isChannel == true ? targetChannel?.name : nil)
 		guard let channelName else {
 			printDebugInformation(IRCCommandStrings.channelRequired)
@@ -229,7 +229,7 @@ extension IRCClient {
 				}
 				channelName = targetChannel.name
 			} else {
-				let requestedChannelName = arguments.ceTokenAsString
+				let requestedChannelName = arguments.nextTokenAsString()
 				guard requireArguments(requestedChannelName, for: parsed.command) else { return true }
 				channelName = stringIsChannelNameOrZero(requestedChannelName)
 					? requestedChannelName
@@ -240,7 +240,7 @@ extension IRCClient {
 			guard isLoggedIn else { return true }
 			guard requireDeveloperMode() else { return true }
 			let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let requestedCount = Int(arguments.ceTokenAsString) ?? 1
+			let requestedCount = Int(arguments.nextTokenAsString()) ?? 1
 			// Bounded so that a typo cannot turn into a self-inflicted flood.
 			let maximumCount = 20
 			let count = min(max(1, requestedCount), maximumCount)
@@ -259,7 +259,7 @@ extension IRCClient {
 			guard isLoggedIn else { return true }
 			let mutableArguments = NSMutableAttributedString(attributedString: parsed.arguments)
 			let explicitChannel = stringIsChannelName(mutableArguments.string)
-				? mutableArguments.ceTokenAsString
+				? mutableArguments.nextTokenAsString()
 				: nil
 			if explicitChannel == nil, let targetChannel, targetChannel.isChannel == false {
 				AppController.shared.world.destroy(targetChannel)
@@ -280,7 +280,7 @@ extension IRCClient {
 		guard parsed.command.caseInsensitiveCompare("goto") == .orderedSame else { return false }
 		guard let mainWindow = AppController.shared.mainWindow else { return true }
 		let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-		let needle = arguments.ceTokenAsString
+		let needle = arguments.nextTokenAsString()
 		guard requireArguments(needle, for: parsed.command) else { return true }
 		var bestMatch = mainWindow.selectedItem
 		var bestScore: CGFloat = 0
@@ -319,7 +319,7 @@ extension IRCClient {
 			}
 		case "close", "remove":
 			let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let channelName = arguments.ceTokenAsString
+			let channelName = arguments.nextTokenAsString()
 			if channelName.isEmpty {
 				if let targetChannel {
 					AppController.shared.world.destroy(targetChannel)
@@ -341,7 +341,7 @@ extension IRCClient {
 				return true
 			}
 			let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let nickname = arguments.ceTokenAsString.lowercased()
+			let nickname = arguments.nextTokenAsString().lowercased()
 			guard requireArguments(nickname, for: parsed.command) else { return true }
 			guard stringIsNickname(nickname) else {
 				printDebugInformation(IRCCommandStrings.invalidNicknameForColor(nickname))
@@ -388,7 +388,7 @@ extension IRCClient {
 		let usesSelectedTarget = modeString.isEmpty || modeString.hasPrefix("+") || modeString.hasPrefix("-")
 		let channelName = usesSelectedTarget
 			? (targetChannel?.isChannel == true ? targetChannel?.name : nil)
-			: arguments.ceTokenAsString
+			: arguments.nextTokenAsString()
 		guard let channelName else {
 			printInvalidSyntaxMessage(for: parsed.command)
 			return true
@@ -405,7 +405,7 @@ extension IRCClient {
 			return true
 		}
 		let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-		let nickname = arguments.ceTokenAsString
+		let nickname = arguments.nextTokenAsString()
 		guard requireArguments(nickname, for: parsed.command) else { return true }
 		guard stringIsNickname(nickname) else {
 			printDebugInformation(IRCCommandStrings.invalidArguments)
@@ -437,7 +437,7 @@ extension IRCClient {
 		switch parsed.command.lowercased() {
 		case "query":
 			let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let nickname = arguments.ceTokenAsString
+			let nickname = arguments.nextTokenAsString()
 			guard requireArguments(nickname, for: parsed.command) else { return true }
 			guard stringIsNickname(nickname) else {
 				printDebugInformation(IRCCommandStrings.invalidArguments)
@@ -454,7 +454,7 @@ extension IRCClient {
 			guard isLoggedIn else { return true }
 			let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
 			let channelName = stringIsChannelName(arguments.string)
-				? arguments.ceTokenAsString
+				? arguments.nextTokenAsString()
 				: (targetChannel?.isChannel == true ? targetChannel?.name : nil)
 			guard let channelName else { return true }
 			let topic = arguments.stringFormattedForIRC

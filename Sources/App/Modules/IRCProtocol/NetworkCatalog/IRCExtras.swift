@@ -309,14 +309,14 @@ public final class Extras: NSObject {
 		var connectSecurely = false
 
 		/* Begin parsing */
-		let serverInfoMutable = NSMutableString(string: serverInfo)
+		var serverInfoTokens = CommandTokenizer(serverInfo)
 
 		/* Get our first token. A token is everything before the first
 		 occurrence of a space character. getToken will get everything
 		 before a space in a string, then erase the remaining content
 		 of that string so that each call to getToken gives us the next
 		 section of our string. */
-		var tempStore = serverInfoMutable.ceToken
+		var tempStore = serverInfoTokens.nextToken()
 
 		/* Secure Socket Layer? */
 		if tempStore.caseInsensitiveCompare("-SSL") == .orderedSame
@@ -326,7 +326,7 @@ public final class Extras: NSObject {
 
 			/* If the SSL define was our first token, we
 			 go to our next token. */
-			tempStore = serverInfoMutable.ceToken
+			tempStore = serverInfoTokens.nextToken()
 		}
 
 		/* Server Address */
@@ -390,8 +390,8 @@ public final class Extras: NSObject {
 
 		if tempStore.hasPrefix(":") {
 			tempServerPort = String(tempStore.dropFirst())
-		} else if serverInfoMutable.length > 0 {
-			tempServerPort = serverInfoMutable.ceToken
+		} else if !serverInfoTokens.remainder.isEmpty {
+			tempServerPort = serverInfoTokens.nextToken()
 		}
 
 		if var tempServerPort {
@@ -414,8 +414,8 @@ public final class Extras: NSObject {
 		/* If our base is still not empty after taking out the token for the
 		 server address and port, then we are going to treat that as the server
 		 password. Anything after this token will be ignored completely. */
-		if serverInfoMutable.length > 0 {
-			tempStore = serverInfoMutable.ceToken
+		if !serverInfoTokens.remainder.isEmpty {
+			tempStore = serverInfoTokens.nextToken()
 
 			serverPassword = tempStore
 		}

@@ -436,7 +436,7 @@ public final class MenuActionCoordinator: NSObject {
 			alternateButton: PromptStrings.Action.cancel,
 			prefillString: nil
 		) { response, input in
-			let vhost = (input as NSString).ceTrimAndGetFirstToken
+			let vhost = input.firstToken
 			guard response == .alertFirstButtonReturn, vhost.isEmpty == false else { return }
 			for nickname in nicknames {
 				client.sendCommand(

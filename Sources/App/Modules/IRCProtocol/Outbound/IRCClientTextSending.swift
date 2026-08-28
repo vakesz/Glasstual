@@ -151,7 +151,7 @@ public extension IRCClient {
 		{
 			targetName = targetChannel.name
 		} else {
-			targetName = arguments.ceTokenAsString
+			targetName = arguments.nextTokenAsString()
 		}
 		guard requireArguments(targetName, for: parsed.command) else { return true }
 

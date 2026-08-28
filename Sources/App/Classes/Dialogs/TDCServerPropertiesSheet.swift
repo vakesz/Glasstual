@@ -503,7 +503,7 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 		config.proxyAddress = Self.nilIfEmpty(proxyAddressTextField.lowercaseValue)
 		config.proxyPort = UInt16(clamping: proxyPortTextField.integerValue)
 		config.proxyUsername = Self.nilIfEmpty(
-			(proxyUsernameTextField.stringValue as NSString).ceTrimAndGetFirstToken
+			proxyUsernameTextField.stringValue.firstToken
 		)
 		config.proxyPassword = Self.nilIfEmpty(
 			proxyPasswordTextField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
