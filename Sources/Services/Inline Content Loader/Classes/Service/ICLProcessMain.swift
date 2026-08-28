@@ -138,7 +138,7 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 
 	@objc(processPayload:)
 	func process(_ payload: InlineContentPayload) {
-		guard let scheme = payload.url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
+		guard TextualPreferences.permitsInlineMedia(at: payload.url) else {
 			return
 		}
 

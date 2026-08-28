@@ -56,8 +56,6 @@ final class InlineContentPluginManager: NSObject, @unchecked Sendable {
 		category: "Plugins"
 	)
 
-	private static let bundledPlugins: [any InlineContentPlugin.Type] = [CoreMediaPlugin.self]
-
 	private var pluginsLoaded = false
 	private var loadedModules: [AnyClass] = []
 
@@ -68,7 +66,7 @@ final class InlineContentPluginManager: NSObject, @unchecked Sendable {
 		}
 		pluginsLoaded = true
 
-		loadedModules = Self.bundledPlugins.flatMap { $0.modules }
+		loadedModules = CoreMediaPlugin.modules
 	}
 
 	@objc var modules: [AnyClass] {

@@ -59,9 +59,20 @@ public nonisolated extension Preferences {
 		public static let limitUnsafeContent = PreferenceKey("InlineMediaLimitUnsafeContent", default: true)
 		public static let checkEverything = PreferenceKey("InlineMediaCheckEverything", default: false)
 
+		/** Whether inline media may be fetched from a cleartext `http` URL.
+
+		 The app's Info.plist keeps `NSAllowsArbitraryLoadsInWebContent` on so
+		 that the channel log can render the http-only images and video that
+		 make up a good share of what gets posted to IRC. That switch is
+		 all-or-nothing and cannot be changed at runtime, so this preference is
+		 the gate: the inline-content service refuses an http URL when it is
+		 off, and the log view never sees one. On by default, so nothing that
+		 worked before stops working. */
+		public static let allowsCleartextHTTP = PreferenceKey("InlineMediaAllowsCleartextHTTP", default: true)
+
 		public static let all: [any AnyPreferenceKey] = [
 			maximumFilesize, scalingWidth, maximumHeight, limitToBasics, limitBasicsToFiles,
-			limitNaughtyContent, limitUnsafeContent, checkEverything,
+			limitNaughtyContent, limitUnsafeContent, checkEverything, allowsCleartextHTTP,
 		]
 	}
 }
@@ -118,5 +129,21 @@ public extension TextualPreferences {
 
 	class func inlineMediaCheckEverything() -> Bool {
 		Preferences.InlineMedia.checkEverything.value
+	}
+
+	class func inlineMediaAllowsCleartextHTTP() -> Bool {
+		Preferences.InlineMedia.allowsCleartextHTTP.value
+	}
+
+	/// Whether inline media may be loaded from `url`.
+	///
+	/// Only `http` and `https` are ever inlined; `http` additionally depends on
+	/// ``Preferences/InlineMedia/allowsCleartextHTTP``.
+	class func permitsInlineMedia(at url: URL) -> Bool {
+		switch url.scheme?.lowercased() {
+		case "https": true
+		case "http": Preferences.InlineMedia.allowsCleartextHTTP.value
+		default: false
+		}
 	}
 }

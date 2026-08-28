@@ -34,7 +34,12 @@ settings:
     GLASSTUAL_BUNDLE_IDENTIFIER: com.vakesz.glasstual
     GLASSTUAL_GROUP_CONTAINER_IDENTIFIER: group.$(DEVELOPMENT_TEAM).$(GLASSTUAL_BUNDLE_IDENTIFIER)
     MARKETING_VERSION: "1.0.4"
-    CURRENT_PROJECT_VERSION: "260823.16"
+    # CFBundleVersion is what LaunchServices and updaters compare, so it has to
+    # move every release. The release workflow overrides MARKETING_VERSION on
+    # the xcodebuild line and refuses to run for a tag that already exists, so
+    # deriving the build version from it makes every release distinct without
+    # the workflow having to pass a second value.
+    CURRENT_PROJECT_VERSION: $(MARKETING_VERSION)
 
     # ---- Signing ----------------------------------------------------------
     # Local Automatic / Apple Development. CI overrides identity, style,
@@ -234,7 +239,7 @@ targetTemplates:
     type: framework
     info:
       properties:
-        CFBundleDevelopmentRegion: English
+        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
         CFBundleName: $(PRODUCT_NAME)
@@ -269,10 +274,13 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.CocoaExtensions
     info:
       properties:
-        NSHumanReadableCopyright: Copyright © 2015 - 2020 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2015 - 2020 Codeux Software, LLC and respective contributors.
     sources:
       - path: Sources/Frameworks/Cocoa Extensions/Classes
       - path: Sources/Frameworks/Cocoa Extensions/Resources/Language Files
+        excludes:
+          # Notes for whoever edits the catalogues; not a shipped resource.
+          - LocalizationCatalogNotices.md
       - path: Sources/Frameworks/Cocoa Extensions/LICENSE.txt
         buildPhase: resources
       - path: Sources/Frameworks/Cocoa Extensions/ACKNOWLEDGEMENT.txt
@@ -313,7 +321,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.inline-content-kit
     info:
       properties:
-        NSHumanReadableCopyright: Copyright © 2017, 2018 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2017, 2018 Codeux Software, LLC and respective contributors.
     sources:
       - path: Sources/Frameworks/Inline Content Kit
     dependencies:
@@ -334,7 +342,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.frameworks.plugin-kit
     info:
       properties:
-        NSHumanReadableCopyright: Copyright © 2010 - 2026 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2010 - 2026 Codeux Software, LLC and respective contributors.
     sources:
       - path: Sources/Frameworks/Plugin Kit
     dependencies:
@@ -358,7 +366,7 @@ targets:
       properties:
         CFBundleDisplayName: Scrollback History Manager
         GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
-        NSHumanReadableCopyright: Copyright © 2016 - 2018 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2016 - 2018 Codeux Software, LLC and respective contributors.
     entitlements:
       properties:
         com.apple.security.application-groups:
@@ -388,7 +396,7 @@ targets:
       properties:
         CFBundleDisplayName: Inline Content Loader
         GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
-        NSHumanReadableCopyright: Copyright © 2017, 2018 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2017, 2018 Codeux Software, LLC and respective contributors.
     entitlements:
       properties:
         com.apple.security.application-groups:
@@ -412,6 +420,8 @@ targets:
             destination: resources
             subpath: Components
       - path: Sources/Services/Inline Content Loader/Resources/Modules/InlineImageLiveResize.js
+        buildPhase: resources
+      - path: Sources/Services/Inline Content Loader/Resources/PrivacyInfo.xcprivacy
         buildPhase: resources
       - path: Sources/Shared/Application/ApplicationGroup.swift
       - path: Sources/Shared/Preferences/PreferenceKey.swift
@@ -441,7 +451,7 @@ targets:
     info:
       properties:
         CFBundleDisplayName: IRC Connection Host
-        NSHumanReadableCopyright: Copyright © 2017 - 2020 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2017 - 2020 Codeux Software, LLC and respective contributors.
     entitlements:
       properties:
         # The client-side certificate is stored by the app under its own access
@@ -452,6 +462,9 @@ targets:
     sources:
       - path: Sources/Services/IRC Remote Connection Manager/Classes
       - path: Sources/Services/IRC Remote Connection Manager/Resources/Language Files
+        excludes:
+          # Notes for whoever edits the catalogues; not a shipped resource.
+          - LocalizationCatalogNotices.md
       - path: Sources/Shared/IRC/IRCConnectionConfig.swift
       - path: Sources/Shared/IRC/IRCConnectionErrors.swift
       - path: Sources/Shared/Services/RemoteConnectionProtocols.swift
@@ -472,7 +485,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.caffeine
     info:
       properties:
-        NSHumanReadableCopyright: Copyright © 2015 - 2020 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2015 - 2020 Codeux Software, LLC and respective contributors.
         NSPrincipalClass: TPI_Caffeine
     sources:
       - path: Sources/Plugins/Caffeine/Classes
@@ -492,8 +505,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.chat-filter
     info:
       properties:
-        CFBundleDevelopmentRegion: English
-        NSHumanReadableCopyright: Copyright © 2015 - 2020 Codeux Software, LLC. All rights reserved.
+        CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2015 - 2020 Codeux Software, LLC and respective contributors.
         NSPrincipalClass: TPI_ChatFilterExtension
     sources:
       - path: Sources/Plugins/Chat Filter/Classes
@@ -513,7 +526,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.smiley-converter
     info:
       properties:
-        NSHumanReadableCopyright: Copyright © 2013 - 2020 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2013 - 2020 Codeux Software, LLC and respective contributors.
         NSPrincipalClass: TPISmileyConverter
     sources:
       - path: Sources/Plugins/Smiley Converter/Classes
@@ -533,7 +546,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.system-profiler
     info:
       properties:
-        NSHumanReadableCopyright: Copyright © 2012 - 2020 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2012 - 2020 Codeux Software, LLC and respective contributors.
         NSPrincipalClass: TPISystemProfiler
     sources:
       - path: Sources/Plugins/System Profiler/Classes
@@ -554,7 +567,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.user-insights
     info:
       properties:
-        NSHumanReadableCopyright: Copyright © 2013 - 2018 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2013 - 2018 Codeux Software, LLC and respective contributors.
         NSPrincipalClass: TPIUserInsights
     sources:
       - path: Sources/Plugins/User Insights/Classes
@@ -575,7 +588,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.vakesz.glasstual.extensions.znc-additions
     info:
       properties:
-        NSHumanReadableCopyright: Copyright © 2011 - 2018 Codeux Software, LLC. All rights reserved.
+        NSHumanReadableCopyright: Part of Glasstual, an independent fork of Textual. Copyright © 2011 - 2018 Codeux Software, LLC and respective contributors.
         NSPrincipalClass: TPI_ZNCAdditions
     sources:
       - path: Sources/Plugins/ZNC Additions/Classes
@@ -617,11 +630,14 @@ targets:
             LSItemContentTypes:
               - com.apple.applescript.script
             NSDocumentClass: TPCResourceManagerDocumentTypeImporter
+          # com.apple.bundle claimed every .bundle, .app and .framework on the
+          # system. The importer only ever accepts a `.bundle` directory, so
+          # declare that narrower type and claim it instead.
           - CFBundleTypeName: Glasstual IRC Client Extension
             CFBundleTypeRole: Viewer
             LSHandlerRank: Alternate
             LSItemContentTypes:
-              - com.apple.bundle
+              - com.vakesz.glasstual.extension
             NSDocumentClass: TPCResourceManagerDocumentTypeImporter
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIconName: AppIcon
@@ -639,14 +655,26 @@ targets:
         GlasstualApplicationGroupIdentifier: $(GLASSTUAL_GROUP_CONTAINER_IDENTIFIER)
         ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.social-networking
-        LSMinimumSystemVersion: "26.0"
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        # The channel log renders inline images and video from whatever host an
+        # IRC peer names, and plenty of those are still http-only. ATS stays
+        # relaxed for web content so those keep loading; the runtime gate is
+        # `InlineMediaAllowsCleartextHTTP`, which the inline-content service
+        # consults before it will fetch or embed an http URL.
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInWebContent: true
         NSAppleEventsUsageDescription: $(PRODUCT_NAME) runs user scripts that can control other applications.
-        NSAppleScriptEnabled: true
         NSHumanReadableCopyright: Glasstual is an independent fork of Textual, continuing it on macOS 26 and later. Copyright © 2010 - 2026 Codeux Software, LLC and respective contributors.
         NSMainNibFile: TXCMainMenu
         NSPrincipalClass: TXApplication
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.vakesz.glasstual.extension
+            UTTypeDescription: Glasstual IRC Client Extension
+            UTTypeConformsTo:
+              - com.apple.bundle
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - bundle
     # Debug and Release use the same sandbox. Library validation stays on
     # (Mac App Store): only Apple-signed or same-Team-ID bundles load.
     entitlements:
@@ -670,9 +698,6 @@ targets:
       - path: Sources/App/Modules
       - path: Sources/Shared
       # Resources -----------------------------------------------------------
-      - path: Sources/App/Resources/Images
-        excludes:
-          - Application/AppIcon.icon
       - path: Sources/App/Resources/Images/Application/AppIcon.icon
         type: file
         buildPhase: resources
