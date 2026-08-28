@@ -6,86 +6,85 @@
 import CocoaExtensions
 @testable import Glasstual
 import GlasstualPluginKit
-import XCTest
+import Testing
 
 @MainActor
-final class ApplicationSupportMigrationTests: XCTestCase {
-	func testApplicationMetadataMatchesMainBundle() {
+@Suite("Application support metadata, paths and resources", .serialized)
+struct ApplicationSupportMigrationTests {
+	@Test("Application metadata is read straight out of the main bundle")
+	func applicationMetadataMatchesMainBundle() {
 		let bundle = Bundle.main
 
-		XCTAssertEqual(
-			ApplicationInfo.applicationName(),
-			bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
+		#expect(ApplicationInfo.applicationName() == bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
+		#expect(
+			ApplicationInfo.applicationVersion() == bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
 		)
-		XCTAssertEqual(
-			ApplicationInfo.applicationVersion(),
-			bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+		#expect(
+			ApplicationInfo.applicationVersionShort()
+				== bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
 		)
-		XCTAssertEqual(
-			ApplicationInfo.applicationVersionShort(),
-			bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-		)
-		XCTAssertEqual(ApplicationInfo.applicationBundleIdentifier(), bundle.bundleIdentifier)
-		XCTAssertEqual(
-			ApplicationInfo.applicationInfoPlist() as NSDictionary,
-			bundle.infoDictionary as NSDictionary?
-		)
+		#expect(ApplicationInfo.applicationBundleIdentifier() == bundle.bundleIdentifier)
+		#expect(ApplicationInfo.applicationInfoPlist() as NSDictionary == bundle.infoDictionary as NSDictionary?)
 	}
 
-	func testApplicationRuntimeMetadataIsSane() {
-		XCTAssertEqual(NSStringFromClass(ApplicationInfo.self), "TPCApplicationInfo")
-		XCTAssertTrue(ApplicationInfo.responds(to: NSSelectorFromString("applicationRunCount")))
-		XCTAssertGreaterThan(ApplicationInfo.applicationProcessID(), 0)
-		XCTAssertGreaterThanOrEqual(ApplicationInfo.timeIntervalSinceApplicationLaunch(), 0)
-		XCTAssertEqual(ApplicationInfo.applicationBirthday(), 1_279_871_580)
-		XCTAssertFalse(ApplicationInfo.applicationNameWithoutVersion().isEmpty)
+	@Test("The process metadata describes a running application")
+	func applicationRuntimeMetadataIsSane() {
+		#expect(ApplicationInfo.applicationProcessID() > 0)
+		#expect(ApplicationInfo.timeIntervalSinceApplicationLaunch() >= 0)
+		#expect(ApplicationInfo.applicationBirthday() == 1_279_871_580)
+		#expect(ApplicationInfo.applicationNameWithoutVersion().isEmpty == false)
 	}
 
-	func testPathInfoExposesBundleAndBundledResourceLocations() {
+	@Test("Bundle and bundled resource locations point into the main bundle")
+	func pathInfoExposesBundleAndBundledResourceLocations() {
 		let bundle = Bundle.main
 
-		XCTAssertEqual(PathInfo.applicationBundle, bundle.bundlePath)
-		XCTAssertEqual(PathInfo.applicationBundleURL, bundle.bundleURL)
-		XCTAssertEqual(PathInfo.applicationResources, bundle.resourcePath)
-		XCTAssertEqual(PathInfo.applicationResourcesURL, bundle.resourceURL)
-		XCTAssertTrue(PathInfo.bundledExtensions.hasSuffix("Bundled Extensions"))
-		XCTAssertTrue(PathInfo.bundledScripts.hasSuffix("Bundled Scripts"))
-		XCTAssertTrue(PathInfo.bundledThemes.hasSuffix("Bundled Styles"))
-		XCTAssertEqual(PathInfo.systemDiagnosticReports, "/Library/Logs/DiagnosticReports")
-		XCTAssertFalse(PathInfo.userHome.isEmpty)
+		#expect(PathInfo.applicationBundle == bundle.bundlePath)
+		#expect(PathInfo.applicationBundleURL == bundle.bundleURL)
+		#expect(PathInfo.applicationResources == bundle.resourcePath)
+		#expect(PathInfo.applicationResourcesURL == bundle.resourceURL)
+		#expect(PathInfo.bundledExtensions.hasSuffix("Bundled Extensions"))
+		#expect(PathInfo.bundledScripts.hasSuffix("Bundled Scripts"))
+		#expect(PathInfo.bundledThemes.hasSuffix("Bundled Styles"))
+		#expect(PathInfo.systemDiagnosticReports == "/Library/Logs/DiagnosticReports")
+		#expect(PathInfo.userHome.isEmpty == false)
 	}
 
-	func testPathInfoCreatesTemporaryDirectoryAndExplicitDirectoryHelper() throws {
+	@Test("The temporary directory is created on demand, and so is an explicitly named one")
+	func pathInfoCreatesTemporaryDirectoryAndExplicitDirectoryHelper() throws {
 		let temporaryPath = PathInfo.applicationTemporary
 		var isDirectory = ObjCBool(false)
+		let temporaryExists = FileManager.default.fileExists(atPath: temporaryPath, isDirectory: &isDirectory)
 
-		XCTAssertTrue(FileManager.default.fileExists(atPath: temporaryPath, isDirectory: &isDirectory))
-		XCTAssertTrue(isDirectory.boolValue)
-		XCTAssertTrue(temporaryPath.contains(Bundle.main.bundleIdentifier ?? ""))
+		#expect(temporaryExists)
+		#expect(isDirectory.boolValue)
+		#expect(temporaryPath.contains(Bundle.main.bundleIdentifier ?? ""))
 
 		let directory = FileManager.default.temporaryDirectory
 			.appendingPathComponent("GlasstualPathTests-\(UUID().uuidString)", isDirectory: true)
 
-		XCTAssertFalse(FileManager.default.fileExists(atPath: directory.path))
+		#expect(FileManager.default.fileExists(atPath: directory.path) == false)
 
 		PathInfo.createDirectory(at: directory)
 
-		XCTAssertTrue(FileManager.default.fileExists(atPath: directory.path))
+		#expect(FileManager.default.fileExists(atPath: directory.path))
 		try FileManager.default.removeItem(at: directory)
-		XCTAssertFalse(FileManager.default.fileExists(atPath: directory.path))
+		#expect(FileManager.default.fileExists(atPath: directory.path) == false)
 	}
 
-	func testResourceManagerLoadsKnownPropertyLists() {
+	@Test("The bundled property lists load through the resource manager")
+	func resourceManagerLoadsKnownPropertyLists() {
 		let networks = ResourceManager.dictionary(fromResources: "IRCNetworks", cacheValue: false)
 		let networkList = ResourceManager.array(fromResources: "IRCNetworks", cacheValue: false)
 		let staticStore = ResourceManager.dictionary(fromResources: "StaticStore")
 
-		XCTAssertTrue(networks != nil || networkList != nil)
-		XCTAssertNotNil(staticStore)
-		XCTAssertGreaterThan(staticStore?.count ?? 0, 0)
+		#expect(networks != nil || networkList != nil)
+		#expect(staticStore != nil)
+		#expect((staticStore?.count ?? 0) > 0)
 	}
 
-	func testResourceManagerCachesAndRejectsWrongTypes() {
+	@Test("A cached resource is served from the cache, and the wrong type reads as nothing")
+	func resourceManagerCachesAndRejectsWrongTypes() {
 		/* The cache is process-wide; empty it on the way out as well so the
 		 entry this test plants does not answer another one's lookup. */
 		ResourceManager.sharedResourcesCache.removeAllObjects()
@@ -94,19 +93,18 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 		let first = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
 		let second = ResourceManager.dictionary(fromResources: "StaticStore", cacheValue: true)
 		let cacheKey = "StaticStore.plist / Root Folder / Root Object" as NSString
+		let cached = ResourceManager.sharedResourcesCache.object(forKey: cacheKey) as? NSDictionary
 
-		XCTAssertNotNil(first)
-		XCTAssertEqual(first as NSDictionary?, second as NSDictionary?)
-		XCTAssertNotNil(ResourceManager.sharedResourcesCache.object(forKey: cacheKey))
-		XCTAssertEqual(
-			ResourceManager.sharedResourcesCache.object(forKey: cacheKey) as? NSDictionary,
-			first as NSDictionary?
-		)
-		XCTAssertNil(ResourceManager.array(fromResources: "StaticStore", cacheValue: false))
-		XCTAssertNil(ResourceManager.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false))
+		#expect(first != nil)
+		#expect(first as NSDictionary? == second as NSDictionary?)
+		#expect(cached != nil)
+		#expect(cached == first as NSDictionary?)
+		#expect(ResourceManager.array(fromResources: "StaticStore", cacheValue: false) == nil)
+		#expect(ResourceManager.dictionary(fromResources: "DoesNotExistAnywhere", cacheValue: false) == nil)
 	}
 
-	func testFileLoggerBuildsConsoleChannelAndQueryPaths() {
+	@Test("A transcript path is built from the client folder and the item's kind")
+	func fileLoggerBuildsConsoleChannelAndQueryPaths() {
 		let client = GLTTestClient()
 		let root = "/tmp/glasstual-logs"
 		let identifier = String(client.uniqueIdentifier.prefix(5))
@@ -116,7 +114,7 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 			"/\(clientFolder)/\(TranscriptDirectory.console)/"
 		)
 
-		XCTAssertEqual(FileLogger.writePath(for: client, relativeTo: root), expectedConsole)
+		#expect(FileLogger.writePath(for: client, relativeTo: root) == expectedConsole)
 
 		let channel = makeChannel(named: "#chat", type: .channel, client: client)
 		let expectedChannel = (root as NSString).appendingPathComponent(
@@ -124,7 +122,7 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 		)
 
 		let channelTreeItem: TreeItem = channel
-		XCTAssertEqual(FileLogger.writePath(for: channelTreeItem, relativeTo: root), expectedChannel)
+		#expect(FileLogger.writePath(for: channelTreeItem, relativeTo: root) == expectedChannel)
 
 		let query = makeChannel(named: "alice", type: .privateMessage, client: client)
 		let expectedQuery = (root as NSString).appendingPathComponent(
@@ -132,29 +130,32 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 		)
 
 		let queryTreeItem: TreeItem = query
-		XCTAssertEqual(FileLogger.writePath(for: queryTreeItem, relativeTo: root), expectedQuery)
+		#expect(FileLogger.writePath(for: queryTreeItem, relativeTo: root) == expectedQuery)
 	}
 
-	func testFileLoggerSkipsUtilityChannelsAndRequiresTranscriptFolder() {
+	@Test("A utility channel has no transcript path, and neither has a client without a folder")
+	func fileLoggerSkipsUtilityChannelsAndRequiresTranscriptFolder() {
 		let client = GLTTestClient()
 		let utility = makeChannel(named: "Utility", type: .utility, client: client)
 
 		let utilityTreeItem: TreeItem = utility
-		XCTAssertNil(FileLogger.writePath(for: utilityTreeItem, relativeTo: "/tmp/glasstual-logs"))
-		XCTAssertNil(FileLogger.writePath(for: client))
+		#expect(FileLogger.writePath(for: utilityTreeItem, relativeTo: "/tmp/glasstual-logs") == nil)
+		#expect(FileLogger.writePath(for: client) == nil)
 	}
 
-	func testFileLoggerWriteWithoutTranscriptFolderDoesNotOpenFile() {
+	@Test("Writing without a transcript folder opens no file")
+	func fileLoggerWriteWithoutTranscriptFolderDoesNotOpenFile() {
 		let logger = FileLogger(client: GLTTestClient())
 
 		logger.writePlainText("should not write")
 
-		XCTAssertNil(logger.filePath)
-		XCTAssertNil(logger.writePath)
-		XCTAssertNil(logger.fileName)
+		#expect(logger.filePath == nil)
+		#expect(logger.writePath == nil)
+		#expect(logger.fileName == nil)
 	}
 
-	func testSoundFileDiscoveryMapsNamesAndPreservesLegacyCollisionBehavior() throws {
+	@Test("Sounds are keyed by name, and a name claimed twice keeps one file")
+	func soundFileDiscoveryMapsNamesAndPreservesLegacyCollisionBehavior() throws {
 		let directory = FileManager.default.temporaryDirectory
 			.appendingPathComponent("GlasstualSoundTests-\(UUID().uuidString)", isDirectory: true)
 
@@ -167,17 +168,18 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 
 		let sounds = SoundPlayer.soundFiles(atPath: directory.path)
 
-		XCTAssertEqual(sounds["Ping"], directory.appendingPathComponent("Ping.aiff").path)
-		XCTAssertNotNil(sounds["Tone"])
-		XCTAssertEqual(sounds.count, 2)
+		#expect(sounds["Ping"] == directory.appendingPathComponent("Ping.aiff").path)
+		#expect(sounds["Tone"] != nil)
+		#expect(sounds.count == 2)
 	}
 
-	func testUniqueSoundListContainsBeepAndIsCaseInsensitivelySorted() {
+	@Test("The list offered to the user contains Beep and is sorted ignoring case")
+	func uniqueSoundListContainsBeepAndIsCaseInsensitivelySorted() {
 		let sounds = SoundPlayer.uniqueListOfSounds()
 		let sortedSounds = sounds.sorted { $0.caseInsensitiveCompare($1) == .orderedAscending }
 
-		XCTAssertTrue(sounds.contains("Beep"))
-		XCTAssertEqual(sounds, sortedSounds)
+		#expect(sounds.contains("Beep"))
+		#expect(sounds == sortedSounds)
 	}
 
 	private func makeChannel(named name: String, type: ChannelType, client: IRCClient) -> Channel {

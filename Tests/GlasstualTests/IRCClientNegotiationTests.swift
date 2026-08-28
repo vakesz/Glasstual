@@ -37,138 +37,148 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class IRCClientNegotiationTests: XCTestCase {
-	func testCapabilityListContinuationDefersRequests() {
+@Suite("Client capability negotiation")
+struct IRCClientNegotiationTests {
+	@Test("A continued capability listing is not answered until the last line arrives")
+	func capabilityListContinuationDefersRequests() throws {
 		let client = GLTTestClient()
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS * :multi-prefix sasl=PLAIN,EXTERNAL",
 			on: client
 		))
 
-		XCTAssertEqual(client.sentCapabilityCommands.count, 0)
-		XCTAssertEqual(client.pendingCapabilityRequests.count, 0)
+		#expect(client.sentCapabilityCommands.count == 0)
+		#expect(client.pendingCapabilityRequests.count == 0)
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :server-time message-tags example.com/vendor",
 			on: client
 		))
 
-		XCTAssertEqual(capabilityCommands(of: client), ["REQ message-tags"])
-		XCTAssertEqual(client.pendingCapabilityRequests, ["multi-prefix", "server-time"])
+		#expect(capabilityCommands(of: client) == ["REQ message-tags"])
+		#expect(client.pendingCapabilityRequests == ["multi-prefix", "server-time"])
 	}
 
-	func testAcknowledgementEnablesCapabilityAndContinuesNegotiation() {
+	@Test("An acknowledgement enables the capability and asks for the next one")
+	func acknowledgementEnablesCapabilityAndContinuesNegotiation() throws {
 		let client = GLTTestClient()
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :multi-prefix server-time",
 			on: client
 		))
-		XCTAssertEqual(capabilityCommands(of: client), ["REQ multi-prefix"])
+		#expect(capabilityCommands(of: client) == ["REQ multi-prefix"])
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :multi-prefix",
 			on: client
 		))
 
-		XCTAssertTrue(client.isCapabilityEnabled(.multiPrefix))
-		XCTAssertFalse(client.isCapabilityEnabled(.serverTime))
-		XCTAssertEqual(capabilityCommands(of: client), ["REQ multi-prefix", "REQ server-time"])
+		#expect(client.isCapabilityEnabled(.multiPrefix))
+		#expect(client.isCapabilityEnabled(.serverTime) == false)
+		#expect(capabilityCommands(of: client) == ["REQ multi-prefix", "REQ server-time"])
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me NAK :server-time",
 			on: client
 		))
 
-		XCTAssertFalse(client.isCapabilityEnabled(.serverTime))
-		XCTAssertEqual(capabilityCommands(of: client).last, "END")
-		XCTAssertEqual(client.enabledCapabilitiesStringValue, "multi-prefix")
+		#expect(client.isCapabilityEnabled(.serverTime) == false)
+		#expect(capabilityCommands(of: client).last == "END")
+		#expect(client.enabledCapabilitiesStringValue == "multi-prefix")
 	}
 
-	func testVendorServerTimeEnablesGenericBit() {
+	@Test("A vendor spelling of server-time enables the generic capability")
+	func vendorServerTimeEnablesGenericBit() throws {
 		let client = GLTTestClient()
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :znc.in/server-time-iso",
 			on: client
 		))
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :znc.in/server-time-iso",
 			on: client
 		))
 
-		XCTAssertTrue(client.isCapabilityEnabled(.serverTime))
+		#expect(client.isCapabilityEnabled(.serverTime))
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me DEL :znc.in/server-time-iso",
 			on: client
 		))
 
-		XCTAssertFalse(client.isCapabilityEnabled(.serverTime))
+		#expect(client.isCapabilityEnabled(.serverTime) == false)
 	}
 
-	func testSASLIsRequestedWhenPasswordIsConfigured() {
+	@Test("SASL is requested when the client has a password to send")
+	func saslIsRequestedWhenPasswordIsConfigured() throws {
 		let client = makeClient(
 			configuration: ["nickname": "me", "username": "me"],
 			nicknamePassword: "secret"
 		)
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=PLAIN,EXTERNAL",
 			on: client
 		))
-		XCTAssertEqual(capabilityCommands(of: client), ["REQ sasl"])
+		#expect(capabilityCommands(of: client) == ["REQ sasl"])
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP me ACK :sasl",
 			on: client
 		))
 
-		XCTAssertTrue(client.isCapabilityEnabled(.isInSASLNegotiation))
-		XCTAssertEqual(capabilityCommands(of: client), ["REQ sasl"])
+		#expect(client.isCapabilityEnabled(.isInSASLNegotiation))
+		#expect(capabilityCommands(of: client) == ["REQ sasl"])
 	}
 
-	func testSASLIsSkippedWhenOnlyUnsupportedMechanismsAreOffered() {
+	@Test("Negotiation ends when the server offers no mechanism the client speaks")
+	func saslIsSkippedWhenOnlyUnsupportedMechanismsAreOffered() throws {
 		let client = makeClient(configuration: [:], nicknamePassword: "secret")
 
-		client.receiveCapabilityOrAuthenticationRequest(message(
+		try client.receiveCapabilityOrAuthenticationRequest(message(
 			":irc.example.net CAP * LS :sasl=SCRAM-SHA-512,GSSAPI",
 			on: client
 		))
 
-		XCTAssertEqual(capabilityCommands(of: client), ["END"])
+		#expect(capabilityCommands(of: client) == ["END"])
 	}
 
-	func testSCRAMIsPreferredOverPlain() {
+	@Test("SCRAM is preferred over PLAIN when both are offered")
+	func scramIsPreferredOverPlain() {
 		let client = makeClient(configuration: ["nickname": "me"], nicknamePassword: "secret")
 
-		XCTAssertTrue(client.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"]))
-		XCTAssertEqual(client.saslMechanism, "SCRAM-SHA-256")
+		#expect(client.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"]))
+		#expect(client.saslMechanism == "SCRAM-SHA-256")
 	}
 
-	func testPlainIsChosenWhenSCRAMIsNotOffered() {
+	@Test("PLAIN is chosen when SCRAM is not offered")
+	func plainIsChosenWhenSCRAMIsNotOffered() {
 		let client = makeClient(configuration: ["nickname": "me"], nicknamePassword: "secret")
 
-		XCTAssertTrue(client.selectSASLMechanism(fromOffered: ["PLAIN"]))
-		XCTAssertEqual(client.saslMechanism, "PLAIN")
+		#expect(client.selectSASLMechanism(fromOffered: ["PLAIN"]))
+		#expect(client.saslMechanism == "PLAIN")
 	}
 
-	func testSASLMechsRetryMovesToNextMechanism() {
+	@Test("A retry moves to the next mechanism and never repeats one")
+	func saslMechsRetryMovesToNextMechanism() {
 		let client = makeClient(configuration: ["nickname": "me"], nicknamePassword: "secret")
 		_ = client.selectSASLMechanism(fromOffered: ["PLAIN", "SCRAM-SHA-256"])
 
-		XCTAssertEqual(client.saslMechanism, "SCRAM-SHA-256")
-		XCTAssertTrue(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]))
-		XCTAssertEqual(client.saslMechanism, "PLAIN")
-		XCTAssertTrue(client.saslTriedMechanisms.contains("SCRAM-SHA-256"))
-		XCTAssertFalse(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]))
+		#expect(client.saslMechanism == "SCRAM-SHA-256")
+		#expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]))
+		#expect(client.saslMechanism == "PLAIN")
+		#expect(client.saslTriedMechanisms.contains("SCRAM-SHA-256"))
+		#expect(client.retrySASLNegotiation(withMechanisms: ["PLAIN"]) == false)
 	}
 
-	func testNestedBatchesAreReplayedInOrder() {
+	@Test("Nested batches are replayed in the order the server sent them")
+	func nestedBatchesAreReplayedInOrder() throws {
 		let client = GLTTestClient()
 		client.enableCapability(.batch)
 		let lines = [
@@ -183,7 +193,7 @@ final class IRCClientNegotiationTests: XCTestCase {
 		]
 
 		for line in lines {
-			let parsedMessage = message(line, on: client)
+			let parsedMessage = try message(line, on: client)
 
 			if client.filterBatchCommandIncomingData(parsedMessage) {
 				continue
@@ -200,29 +210,33 @@ final class IRCClientNegotiationTests: XCTestCase {
 			($0 as? Message)?.sequence
 		}
 
-		XCTAssertEqual(bodies, ["one", "two", "three", "four"])
+		#expect(bodies == ["one", "two", "three", "four"])
 	}
 
-	func testMessagesOutsideAnOpenBatchAreNotQueued() {
+	@Test("A message tagged with an unknown batch is delivered rather than queued")
+	func messagesOutsideAnOpenBatchAreNotQueued() throws {
 		let client = GLTTestClient()
 		client.enableCapability(.batch)
 
-		XCTAssertFalse(client.filterBatchCommandIncomingData(message(
+		let filtered = try client.filterBatchCommandIncomingData(message(
 			"@batch=unknown :a!u@h PRIVMSG #c :hi",
 			on: client
-		)))
+		))
+
+		#expect(filtered == false)
 	}
 
-	func testStandardRepliesArePrintedToConsoleOrChannel() throws {
+	@Test("A standard reply is printed to the channel it names, or to the console")
+	func standardRepliesArePrintedToConsoleOrChannel() throws {
 		let client = GLTTestClient()
 
-		client.receiveStandardReply(message(
+		try client.receiveStandardReply(message(
 			":irc.example.net FAIL BOX BOXES_INVALID STACK CLOCKWISE :Given boxes are not supported",
 			on: client
 		))
 
-		XCTAssertEqual(client.printedLines.count, 1)
-		assertPrintedLine(
+		#expect(client.printedLines.count == 1)
+		try expectPrintedLine(
 			at: 0,
 			on: client,
 			body: "FAIL BOX/BOXES_INVALID: Given boxes are not supported",
@@ -230,11 +244,11 @@ final class IRCClientNegotiationTests: XCTestCase {
 			channel: nil
 		)
 
-		client.receiveStandardReply(message(
+		try client.receiveStandardReply(message(
 			":irc.example.net NOTE * OPER_MESSAGE :The message",
 			on: client
 		))
-		assertPrintedLine(
+		try expectPrintedLine(
 			at: 1,
 			on: client,
 			body: "NOTE */OPER_MESSAGE: The message",
@@ -242,12 +256,12 @@ final class IRCClientNegotiationTests: XCTestCase {
 			channel: nil
 		)
 
-		let channel = try XCTUnwrap(client.findChannelOrCreate("#chat"))
-		client.receiveStandardReply(message(
+		let channel = try #require(client.findChannelOrCreate("#chat"))
+		try client.receiveStandardReply(message(
 			":irc.example.net WARN REHASH CERTS_EXPIRED #chat :Certificate has expired",
 			on: client
 		))
-		assertPrintedLine(
+		try expectPrintedLine(
 			at: 2,
 			on: client,
 			body: "WARN REHASH/CERTS_EXPIRED: Certificate has expired",
@@ -255,46 +269,52 @@ final class IRCClientNegotiationTests: XCTestCase {
 			channel: channel
 		)
 
-		client.receiveStandardReply(message(
+		try client.receiveStandardReply(message(
 			":irc.example.net WARN REHASH CERTS_EXPIRED #other :Certificate has expired",
 			on: client
 		))
-		XCTAssertNil(printedLine(at: 3, on: client)?["channel"])
+
+		let unmatched = try #require(printedLine(at: 3, on: client))
+
+		#expect(unmatched["channel"] == nil)
 	}
 
-	func testTagMessageIsOnlySentWithMessageTagsEnabled() {
+	@Test("A tag message is only sent once message tags are negotiated")
+	func tagMessageIsOnlySentWithMessageTagsEnabled() {
 		let client = GLTTestClient()
 		let typing = ["+typing": "active"]
 
-		XCTAssertFalse(client.sendTagMessage(typing, toTarget: "#c"))
-		XCTAssertEqual(client.sentLines.count, 0)
+		#expect(client.sendTagMessage(typing, toTarget: "#c") == false)
+		#expect(client.sentLines.count == 0)
 
 		client.enableCapability(.messageTags)
 
-		XCTAssertTrue(client.sendTagMessage(typing, toTarget: "#c"))
-		XCTAssertEqual(sentLines(of: client), ["@+typing=active TAGMSG #c"])
-		XCTAssertFalse(client.sendTagMessage([:], toTarget: "#c"))
+		#expect(client.sendTagMessage(typing, toTarget: "#c"))
+		#expect(sentLines(of: client) == ["@+typing=active TAGMSG #c"])
+		#expect(client.sendTagMessage([:], toTarget: "#c") == false)
 	}
 
-	func testTagsAreDroppedFromCommandsWithoutMessageTags() {
+	@Test("Tags are dropped from a command until message tags are negotiated")
+	func tagsAreDroppedFromCommandsWithoutMessageTags() {
 		let client = GLTTestClient()
 
 		client.sendCommand("PRIVMSG", arguments: ["#c", "hello"], tags: ["+draft/reply": "abc"])
-		XCTAssertEqual(sentLines(of: client), ["PRIVMSG #c :hello"])
+		#expect(sentLines(of: client) == ["PRIVMSG #c :hello"])
 
 		client.enableCapability(.messageTags)
 		client.sendCommand("PRIVMSG", arguments: ["#c", "hello"], tags: ["+draft/reply": "abc"])
 
-		XCTAssertEqual(sentLines(of: client).last, "@+draft/reply=abc PRIVMSG #c :hello")
+		#expect(sentLines(of: client).last == "@+draft/reply=abc PRIVMSG #c :hello")
 	}
 
-	func testReceivedTagMessageWithoutClientTagsIsIgnored() {
+	@Test("A received tag message carrying no client-only tag prints nothing")
+	func receivedTagMessageWithoutClientTagsIsIgnored() throws {
 		let client = GLTTestClient()
 
-		client.receiveTagMessage(message("@msgid=1 :a!u@h TAGMSG #c", on: client))
-		client.receiveTagMessage(message("@+typing=active;msgid=2 :a!u@h TAGMSG #c", on: client))
+		try client.receiveTagMessage(message("@msgid=1 :a!u@h TAGMSG #c", on: client))
+		try client.receiveTagMessage(message("@+typing=active;msgid=2 :a!u@h TAGMSG #c", on: client))
 
-		XCTAssertEqual(client.printedLines.count, 0)
+		#expect(client.printedLines.count == 0)
 	}
 
 	private func makeClient(configuration: NSDictionary, nicknamePassword: String) -> GLTTestClient {
@@ -308,8 +328,8 @@ final class IRCClientNegotiationTests: XCTestCase {
 		)
 	}
 
-	private func message(_ line: String, on client: IRCClient) -> Message {
-		Message(line: line, on: client)!
+	private func message(_ line: String, on client: IRCClient) throws -> Message {
+		try #require(Message(line: line, on: client))
 	}
 
 	private func capabilityCommands(of client: GLTTestClient) -> [String] {
@@ -324,24 +344,18 @@ final class IRCClientNegotiationTests: XCTestCase {
 		client.printedLines[index] as? [String: Any]
 	}
 
-	private func assertPrintedLine(
+	private func expectPrintedLine(
 		at index: Int,
 		on client: GLTTestClient,
 		body: String,
 		type: TVCLogLineType,
 		channel: Channel?,
-		file: StaticString = #filePath,
-		line: UInt = #line
-	) {
-		let printed = printedLine(at: index, on: client)
+		sourceLocation: SourceLocation = #_sourceLocation
+	) throws {
+		let printed = try #require(printedLine(at: index, on: client), sourceLocation: sourceLocation)
 
-		XCTAssertEqual(printed?["messageBody"] as? String, body, file: file, line: line)
-		XCTAssertEqual((printed?["lineType"] as? NSNumber)?.uintValue, type.rawValue, file: file, line: line)
-
-		if let channel {
-			XCTAssertTrue(printed?["channel"] as? Channel === channel, file: file, line: line)
-		} else {
-			XCTAssertNil(printed?["channel"], file: file, line: line)
-		}
+		#expect(printed["messageBody"] as? String == body, sourceLocation: sourceLocation)
+		#expect((printed["lineType"] as? NSNumber)?.uintValue == type.rawValue, sourceLocation: sourceLocation)
+		#expect(printed["channel"] as? Channel === channel, sourceLocation: sourceLocation)
 	}
 }

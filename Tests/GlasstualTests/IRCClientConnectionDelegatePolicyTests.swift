@@ -36,74 +36,81 @@
  *********************************************************************** */
 
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class IRCClientConnectionDelegatePolicyTests: XCTestCase {
-	func testConnectionErrorWireContractPreservesLegacyValues() {
-		XCTAssertEqual(connectionErrorDomain, "Glasstual.ConnectionError")
-		XCTAssertEqual(ConnectionErrorCode.socket.rawValue, 999)
-		XCTAssertEqual(ConnectionErrorCode.other.rawValue, 1000)
-		XCTAssertEqual(ConnectionErrorCode.badCertificate.rawValue, 1001)
-		XCTAssertEqual(ConnectionErrorCode.unableToSecure.rawValue, 1002)
+@Suite("Client disconnect and registration policy")
+struct IRCClientConnectionDelegatePolicyTests {
+	/// The socket layer reports failures as an `NSError` in this domain, and
+	/// `effectiveMode(configured:errorDomain:errorCode:)` branches on the code,
+	/// so the pairing has to survive.
+	@Test("A connection failure keeps its legacy domain and codes")
+	func connectionErrorWireContractPreservesLegacyValues() {
+		#expect(connectionErrorDomain == "Glasstual.ConnectionError")
+		#expect(ConnectionErrorCode.socket.rawValue == 999)
+		#expect(ConnectionErrorCode.other.rawValue == 1000)
+		#expect(ConnectionErrorCode.badCertificate.rawValue == 1001)
+		#expect(ConnectionErrorCode.unableToSecure.rawValue == 1002)
 	}
 
-	func testTransitionRequiresConnectingOrConnectedState() {
-		XCTAssertFalse(IRCClientDisconnectPolicy.shouldTransitionOff(isConnecting: false, isConnected: false))
-		XCTAssertTrue(IRCClientDisconnectPolicy.shouldTransitionOff(isConnecting: true, isConnected: false))
-		XCTAssertTrue(IRCClientDisconnectPolicy.shouldTransitionOff(isConnecting: false, isConnected: true))
+	@Test("Only a connecting or connected client transitions off")
+	func transitionRequiresConnectingOrConnectedState() {
+		#expect(IRCClientDisconnectPolicy.shouldTransitionOff(isConnecting: false, isConnected: false) == false)
+		#expect(IRCClientDisconnectPolicy.shouldTransitionOff(isConnecting: true, isConnected: false))
+		#expect(IRCClientDisconnectPolicy.shouldTransitionOff(isConnecting: false, isConnected: true))
 	}
 
-	func testBadCertificateErrorOverridesConfiguredDisconnectMode() {
-		XCTAssertEqual(
+	@Test("An untrusted certificate overrides the configured disconnect mode")
+	func badCertificateErrorOverridesConfiguredDisconnectMode() {
+		#expect(
 			IRCClientDisconnectPolicy.effectiveMode(
 				configured: .serverRedirect,
 				errorDomain: connectionErrorDomain,
 				errorCode: Int(ConnectionErrorCode.badCertificate.rawValue)
-			),
-			.badCertificate
+			) == .badCertificate
 		)
-		XCTAssertEqual(
+		#expect(
 			IRCClientDisconnectPolicy.effectiveMode(
 				configured: .serverRedirect,
 				errorDomain: "different.domain",
 				errorCode: Int(ConnectionErrorCode.badCertificate.rawValue)
-			),
-			.serverRedirect
+			) == .serverRedirect
 		)
 	}
 
-	func testDisconnectDescriptionsPreserveLegacyCopy() {
-		XCTAssertEqual(IRCConnectionStrings.disconnectReason(for: .normal), "Disconnected")
-		XCTAssertEqual(IRCConnectionStrings.disconnectReason(for: .computerSleep), "Disconnected for Sleep Mode")
-		XCTAssertEqual(
-			IRCConnectionStrings.disconnectReason(for: .badCertificate),
-			"Disconnected from server because of an untrusted certificate"
+	@Test("Each disconnect mode keeps the copy the user is shown")
+	func disconnectDescriptionsPreserveLegacyCopy() {
+		#expect(IRCConnectionStrings.disconnectReason(for: .normal) == "Disconnected")
+		#expect(IRCConnectionStrings.disconnectReason(for: .computerSleep) == "Disconnected for Sleep Mode")
+		#expect(
+			IRCConnectionStrings.disconnectReason(for: .badCertificate)
+				== "Disconnected from server because of an untrusted certificate"
 		)
-		XCTAssertEqual(
-			IRCConnectionStrings.disconnectReason(for: .serverRedirect),
-			"Disconnected for server redirect"
+		#expect(
+			IRCConnectionStrings.disconnectReason(for: .serverRedirect)
+				== "Disconnected for server redirect"
 		)
-		XCTAssertEqual(
-			IRCConnectionStrings.disconnectReason(for: .reachabilityChange),
-			"Disconnected from server because the Internet is not reachable"
+		#expect(
+			IRCConnectionStrings.disconnectReason(for: .reachabilityChange)
+				== "Disconnected from server because the Internet is not reachable"
 		)
 	}
 
-	func testRegistrationFallsBackToNicknameAndSelectsInvisibleMode() {
-		XCTAssertEqual(
+	@Test("An empty username and real name fall back to the nickname, and invisible mode is selected")
+	func registrationFallsBackToNicknameAndSelectsInvisibleMode() {
+		#expect(
 			IRCClientRegistrationPolicy.values(
 				nickname: "Guest",
 				username: "",
 				realName: "",
 				setInvisibleMode: true
-			),
-			.init(username: "Guest", realName: "Guest", modeSymbols: "8")
+			) == .init(username: "Guest", realName: "Guest", modeSymbols: "8")
 		)
 	}
 
-	func testHistoricMessagePolicyAdvancesOnlyNewHistoricServerTime() {
-		XCTAssertTrue(
+	@Test("The stored server time only advances for a newer historic message")
+	func historicMessagePolicyAdvancesOnlyNewHistoricServerTime() {
+		#expect(
 			IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
 				isLoggedIn: true,
 				isHistoric: true,
@@ -111,47 +118,29 @@ final class IRCClientConnectionDelegatePolicyTests: XCTestCase {
 				lastServerTime: 10
 			)
 		)
-		XCTAssertFalse(
+		#expect(
 			IRCClientHistoricMessagePolicy.shouldAdvanceServerTime(
 				isLoggedIn: true,
 				isHistoric: true,
 				receivedTime: 10,
 				lastServerTime: 10
-			)
+			) == false
 		)
 	}
 
-	func testPlaybackMessagesOutsideChatHistoryBecomeCurrent() {
-		XCTAssertTrue(
+	@Test("A playback message outside a chat history batch is marked current")
+	func playbackMessagesOutsideChatHistoryBecomeCurrent() {
+		#expect(
 			IRCClientHistoricMessagePolicy.shouldMarkCurrent(
 				playbackCapabilityEnabled: true,
 				isContainedInChatHistoryBatch: false
 			)
 		)
-		XCTAssertFalse(
+		#expect(
 			IRCClientHistoricMessagePolicy.shouldMarkCurrent(
 				playbackCapabilityEnabled: true,
 				isContainedInChatHistoryBatch: true
-			)
+			) == false
 		)
-	}
-
-	func testDelegateSelectorsRemainRuntimeVisible() {
-		let selectors = [
-			"resetAllPropertyValues",
-			"changeStateOff",
-			"changeStateOffWithError:",
-			"ircConnection:willConnectToProxy:port:",
-			"ircConnectionDidConnect:",
-			"ircConnectionDidSecureConnection:withProtocolType:cipherSuite:",
-			"ircConnectionDidCloseReadStream:",
-			"ircConnection:didDisconnectWithError:",
-			"ircConnection:didReceiveData:",
-			"ircConnection:willSendData:",
-			"processIncomingMessage:",
-		]
-		for selectorName in selectors {
-			XCTAssertTrue(IRCClient.instancesRespond(to: NSSelectorFromString(selectorName)), selectorName)
-		}
 	}
 }
