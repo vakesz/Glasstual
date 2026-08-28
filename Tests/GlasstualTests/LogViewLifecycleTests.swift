@@ -5,11 +5,13 @@
 
 import AppKit
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class LogViewLifecycleTests: XCTestCase {
-	func testLateWebViewFinishedLoadingIsIgnoredAfterWeakClientDeallocation() throws {
+@Suite("Log view lifecycle")
+struct LogViewLifecycleTests {
+	@Test("A web view that finishes loading after its client has gone is ignored")
+	func lateWebViewFinishedLoadingIsIgnoredAfterWeakClientDeallocation() throws {
 		var client: IRCClient? = IRCClient(config: ClientConfig())
 		let window = TVCMainWindow(
 			contentRect: .zero,
@@ -18,23 +20,24 @@ final class LogViewLifecycleTests: XCTestCase {
 			defer: false
 		)
 		let controller = try LogController(
-			client: XCTUnwrap(client),
+			client: #require(client),
 			in: window
 		)
-		let logView = try XCTUnwrap(controller.backingView)
+		let logView = try #require(controller.backingView)
 		weak let weakClient = client
 
 		client = nil
 
-		XCTAssertNil(weakClient)
-		XCTAssertFalse(controller.viewIsLoaded)
+		#expect(weakClient == nil)
+		#expect(controller.viewIsLoaded == false)
 
 		logView.informDelegateWebViewFinishedLoading()
 
-		XCTAssertFalse(controller.viewIsLoaded)
+		#expect(controller.viewIsLoaded == false)
 	}
 
-	func testLateWebViewCallbacksAreIgnoredAfterControllerDeallocation() throws {
+	@Test("A web view that calls back after its controller has gone is ignored")
+	func lateWebViewCallbacksAreIgnoredAfterControllerDeallocation() throws {
 		let client = IRCClient(config: ClientConfig())
 		let window = TVCMainWindow(
 			contentRect: .zero,
@@ -43,13 +46,13 @@ final class LogViewLifecycleTests: XCTestCase {
 			defer: false
 		)
 		var controller: LogController? = LogController(client: client, in: window)
-		let logView = try XCTUnwrap(controller?.backingView)
+		let logView = try #require(controller?.backingView)
 		weak let weakController = controller
 
 		controller = nil
 
-		XCTAssertNil(weakController)
-		XCTAssertNil(logView.viewController)
+		#expect(weakController == nil)
+		#expect(logView.viewController == nil)
 
 		logView.informDelegateWebViewFinishedLoading()
 		logView.informDelegateWebViewClosedUnexpectedly()

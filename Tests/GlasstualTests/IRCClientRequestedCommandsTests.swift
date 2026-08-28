@@ -1,7 +1,4 @@
-@testable import Glasstual
-import XCTest
-
-/** *********************************************************************
+/*  *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -37,67 +34,78 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+
+@testable import Glasstual
+import Testing
+
 @MainActor
-class IRCClientRequestedCommandsTests: XCTestCase {
-	func testVisibleRequestIsReportedUntilClosed() {
+@Suite("Requested command bookkeeping")
+struct IRCClientRequestedCommandsTests {
+	@Test("A visible ISON request stays visible until it is closed")
+	func visibleRequestIsReportedUntilClosed() {
 		let requests = ClientRequestedCommands()
 
-		XCTAssertFalse(requests.visibleIsonRequest)
+		#expect(requests.visibleIsonRequest == false)
 
 		requests.recordIsonRequestOpenedAsVisible()
 
-		XCTAssertTrue(requests.visibleIsonRequest)
+		#expect(requests.visibleIsonRequest)
 
 		requests.recordIsonRequestClosed()
 
-		XCTAssertFalse(requests.visibleIsonRequest)
+		#expect(requests.visibleIsonRequest == false)
 	}
 
-	func testRequestsWithSameCommandCloseInInsertionOrder() {
+	@Test("Requests for the same command are closed in insertion order")
+	func requestsWithSameCommandCloseInInsertionOrder() {
 		let requests = ClientRequestedCommands()
 
 		requests.recordWhoRequestOpened()
 		requests.recordWhoRequestOpenedAsVisible()
 
-		XCTAssertFalse(requests.visibleWhoRequest)
+		#expect(requests.visibleWhoRequest == false)
 
 		requests.recordWhoRequestClosed()
 
-		XCTAssertTrue(requests.visibleWhoRequest)
+		#expect(requests.visibleWhoRequest)
 
 		requests.recordWhoRequestClosed()
 
-		XCTAssertFalse(requests.visibleWhoRequest)
+		#expect(requests.visibleWhoRequest == false)
 	}
 
-	func testIsonAndWhoRequestsAreIndependent() {
+	@Test("ISON and WHO requests are tracked independently")
+	func isonAndWhoRequestsAreIndependent() {
 		let requests = ClientRequestedCommands()
 
 		requests.recordIsonRequestOpenedAsVisible()
 		requests.recordWhoRequestOpened()
 
-		XCTAssertTrue(requests.visibleIsonRequest)
-
-		XCTAssertFalse(requests.visibleWhoRequest)
+		#expect(requests.visibleIsonRequest)
+		#expect(requests.visibleWhoRequest == false)
 
 		requests.recordIsonRequestClosed()
 
-		XCTAssertFalse(requests.visibleIsonRequest)
-		XCTAssertFalse(requests.visibleWhoRequest)
+		#expect(requests.visibleIsonRequest == false)
+		#expect(requests.visibleWhoRequest == false)
 	}
 
-	func testRemoveCommandsClearsEveryRequest() {
+	@Test("Removing the commands clears every request and closing again is a no-op")
+	func removeCommandsClearsEveryRequest() {
 		let requests = ClientRequestedCommands()
 
 		requests.recordIsonRequestOpenedAsVisible()
 		requests.recordWhoRequestOpenedAsVisible()
 		requests.removeCommands()
 
-		XCTAssertFalse(requests.visibleIsonRequest)
-		XCTAssertFalse(requests.visibleWhoRequest)
+		#expect(requests.visibleIsonRequest == false)
+		#expect(requests.visibleWhoRequest == false)
 
 		/* Closing a command that is not open remains a no-op. */
 		requests.recordIsonRequestClosed()
 		requests.recordWhoRequestClosed()
+
+		#expect(requests.visibleIsonRequest == false)
+		#expect(requests.visibleWhoRequest == false)
 	}
 }

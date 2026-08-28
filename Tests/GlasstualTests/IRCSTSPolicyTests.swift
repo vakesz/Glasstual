@@ -1,7 +1,4 @@
-@testable import Glasstual
-import XCTest
-
-/** *********************************************************************
+/*  *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -37,77 +34,84 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+
+import Foundation
+@testable import Glasstual
+import Testing
+
 @MainActor
-class STSPolicyTests: XCTestCase {
-	func store() -> STSPolicyStore {
-		/* A nil user defaults store keeps everything in memory. */
+@Suite("Strict transport security policy", .serialized)
+struct STSPolicyTests {
+	/** A nil user defaults store keeps everything in memory. */
+	private func makeStore() -> STSPolicyStore {
 		STSPolicyStore(userDefaults: nil)
 	}
 
-	func testParseFullCapabilityValues() throws {
-		let values = try XCTUnwrap(STSCapabilityValues.values(fromCapabilityValues: [
+	@Test("Every capability value the specification defines is read")
+	func parseFullCapabilityValues() throws {
+		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: [
 			"port=6697",
 			"duration=300",
 			"preload",
 		]))
 
-		XCTAssertEqual(values.port, 6697)
-
-		XCTAssertTrue(values.hasDuration)
-
-		XCTAssertEqual(values.duration, 300)
-
-		XCTAssertTrue(values.preload)
+		#expect(values.port == 6697)
+		#expect(values.hasDuration)
+		#expect(values.duration == 300)
+		#expect(values.preload)
 	}
 
-	func testParseDurationOnly() throws {
-		let values = try XCTUnwrap(STSCapabilityValues.values(fromCapabilityValues: ["duration=0"]))
+	@Test("A duration on its own leaves the other values at their defaults")
+	func parseDurationOnly() throws {
+		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: ["duration=0"]))
 
-		XCTAssertEqual(values.port, 0)
-
-		XCTAssertTrue(values.hasDuration)
-
-		XCTAssertEqual(values.duration, 0)
-
-		XCTAssertFalse(values.preload)
+		#expect(values.port == 0)
+		#expect(values.hasDuration)
+		#expect(values.duration == 0)
+		#expect(values.preload == false)
 	}
 
-	func testParseRejectsInvalidPortAndUnknownKeys() throws {
+	@Test("An unparsable port is zero, and a value made only of unknown keys is nothing")
+	func parseRejectsInvalidPortAndUnknownKeys() throws {
 		/* "port" is a key the parser knows, so the value survives even when the
 		 port itself does not parse. */
-		let values = try XCTUnwrap(STSCapabilityValues.values(fromCapabilityValues: [
+		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: [
 			"port=notaport",
 			"port=99999",
 		]))
 
-		XCTAssertEqual(values.port, 0)
+		#expect(values.port == 0)
 
-		XCTAssertNil(STSCapabilityValues.values(fromCapabilityValues: []))
-		XCTAssertNil(STSCapabilityValues.values(fromCapabilityValues: ["vendor=thing"]))
+		#expect(STSCapabilityValues.values(fromCapabilityValues: []) == nil)
+		#expect(STSCapabilityValues.values(fromCapabilityValues: ["vendor=thing"]) == nil)
 	}
 
-	func testStoreAndRetrievePolicy() throws {
-		let store = store()
+	@Test("A stored policy is found again under any casing of its host")
+	func storeAndRetrievePolicy() throws {
+		let store = makeStore()
 		let policy = STSPolicy(port: 6697, expiresAt: Date(timeIntervalSinceNow: 300), preload: false)
 
 		store.setPolicy(policy, forHost: "irc.example.net")
 
-		let stored = try XCTUnwrap(store.policy(forHost: "IRC.EXAMPLE.NET")) // Case insensitive
+		let stored = try #require(store.policy(forHost: "IRC.EXAMPLE.NET")) // Case insensitive
 
-		XCTAssertEqual(stored.port, 6697)
+		#expect(stored.port == 6697)
 	}
 
-	func testExpiredPolicyIsForgotten() {
-		let store = store()
+	@Test("A policy past its expiry is no longer reported")
+	func expiredPolicyIsForgotten() {
+		let store = makeStore()
 		let policy = STSPolicy(port: 6697, expiresAt: Date(timeIntervalSinceNow: -1), preload: false)
 
 		store.setPolicy(policy, forHost: "irc.example.net")
-		XCTAssertNil(store.policy(forHost: "irc.example.net"))
+
+		#expect(store.policy(forHost: "irc.example.net") == nil)
 	}
 
-	func testPolicyPersistsAndReloadsFromUserDefaults() throws {
-		let suiteName = "\(className).\(UUID().uuidString)"
-		let userDefaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+	@Test("A policy written to user defaults is read back by a fresh store")
+	func policyPersistsAndReloadsFromUserDefaults() throws {
+		let suiteName = "STSPolicyTests.\(UUID().uuidString)"
+		let userDefaults = try #require(UserDefaults(suiteName: suiteName))
 		defer { userDefaults.removePersistentDomain(forName: suiteName) }
 
 		let store = STSPolicyStore(userDefaults: userDefaults)
@@ -115,40 +119,43 @@ class STSPolicyTests: XCTestCase {
 
 		store.setPolicy(policy, forHost: "IRC.EXAMPLE.NET")
 
-		let storedDictionary = try XCTUnwrap(userDefaults.dictionary(forKey: IRCSTSPolicyStoreDefaultsKey))
+		let storedDictionary = try #require(userDefaults.dictionary(forKey: IRCSTSPolicyStoreDefaultsKey))
 
-		XCTAssertNotNil(storedDictionary["irc.example.net"])
+		#expect(storedDictionary["irc.example.net"] != nil)
 
 		let reloadedStore = STSPolicyStore(userDefaults: userDefaults)
-		let reloadedPolicy = try XCTUnwrap(reloadedStore.policy(forHost: "irc.example.net"))
+		let reloadedPolicy = try #require(reloadedStore.policy(forHost: "irc.example.net"))
 
-		XCTAssertEqual(reloadedPolicy.port, 6697)
-		XCTAssertTrue(reloadedPolicy.preload)
+		#expect(reloadedPolicy.port == 6697)
+		#expect(reloadedPolicy.preload)
 	}
 
-	func testApplyPolicyForcesSecuredConnectionOnPolicyPort() throws {
-		let store = store()
+	@Test("A host under policy is forced onto the policy's port")
+	func applyPolicyForcesSecuredConnectionOnPolicyPort() throws {
+		let store = makeStore()
 
 		store.setPolicy(
 			STSPolicy(port: 6697, expiresAt: Date(timeIntervalSinceNow: 300), preload: false),
 			forHost: "irc.example.net"
 		)
 
-		let enforced = try XCTUnwrap(store.enforcedEndpoint(forHost: "irc.example.net"))
+		let enforced = try #require(store.enforcedEndpoint(forHost: "irc.example.net"))
 
-		XCTAssertEqual(enforced.port, 6697)
+		#expect(enforced.port == 6697)
 	}
 
-	func testApplyPolicyNeverDowngrades() {
-		let store = store()
+	@Test("A host with no policy is left with the endpoint the caller had")
+	func applyPolicyNeverDowngrades() {
+		let store = makeStore()
 
 		/* No policy: nothing to enforce, so the caller keeps what it had. */
-		XCTAssertNil(store.enforcedEndpoint(forHost: "irc.example.net"))
+		#expect(store.enforcedEndpoint(forHost: "irc.example.net") == nil)
 	}
 
-	func testPlaintextConnectionWithPortDecidesUpgrade() throws {
-		let store = store()
-		let values = try XCTUnwrap(STSCapabilityValues.values(fromCapabilityValues: [
+	@Test("An advertised port on a plaintext connection upgrades without being stored")
+	func plaintextConnectionWithPortDecidesUpgrade() throws {
+		let store = makeStore()
+		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: [
 			"port=6697",
 			"duration=300",
 		]))
@@ -160,14 +167,15 @@ class STSPolicyTests: XCTestCase {
 			certificateChainValidated: false
 		)
 
-		XCTAssertEqual(action, .upgrade(port: 6697))
+		#expect(action == .upgrade(port: 6697))
 		/* Nothing is stored from an insecure connection. */
-		XCTAssertNil(store.policy(forHost: "irc.example.net"))
+		#expect(store.policy(forHost: "irc.example.net") == nil)
 	}
 
-	func testSecuredConnectionStoresPolicy() throws {
-		let store = store()
-		let values = try XCTUnwrap(STSCapabilityValues.values(fromCapabilityValues: ["duration=300"]))
+	@Test("A validated secure connection stores the policy on the port it connected to")
+	func securedConnectionStoresPolicy() throws {
+		let store = makeStore()
+		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: ["duration=300"]))
 		let action: IRCSTSPolicyAction = store.applyCapabilityValues(
 			values,
 			forHost: "irc.example.net",
@@ -176,22 +184,23 @@ class STSPolicyTests: XCTestCase {
 			certificateChainValidated: true
 		)
 
-		XCTAssertEqual(action, .stored(port: 6697))
+		#expect(action == .stored(port: 6697))
 
-		let policy = try XCTUnwrap(store.policy(forHost: "irc.example.net"))
+		let policy = try #require(store.policy(forHost: "irc.example.net"))
 
-		XCTAssertEqual(policy.port, 6697) // The connected port when none advertised
+		#expect(policy.port == 6697) // The connected port when none advertised
 	}
 
-	func testSecuredConnectionWithZeroDurationClearsPolicy() throws {
-		let store = store()
+	@Test("A zero duration over a secure connection withdraws the stored policy")
+	func securedConnectionWithZeroDurationClearsPolicy() throws {
+		let store = makeStore()
 
 		store.setPolicy(
 			STSPolicy(port: 6697, expiresAt: Date(timeIntervalSinceNow: 300), preload: false),
 			forHost: "irc.example.net"
 		)
 
-		let values = try XCTUnwrap(STSCapabilityValues.values(fromCapabilityValues: ["duration=0"]))
+		let values = try #require(STSCapabilityValues.values(fromCapabilityValues: ["duration=0"]))
 		let action: IRCSTSPolicyAction = store.applyCapabilityValues(
 			values,
 			forHost: "irc.example.net",
@@ -200,7 +209,7 @@ class STSPolicyTests: XCTestCase {
 			certificateChainValidated: true
 		)
 
-		XCTAssertEqual(action, .cleared)
-		XCTAssertNil(store.policy(forHost: "irc.example.net"))
+		#expect(action == .cleared)
+		#expect(store.policy(forHost: "irc.example.net") == nil)
 	}
 }
