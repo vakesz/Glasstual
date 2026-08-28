@@ -37,150 +37,67 @@
 
 import CocoaExtensions
 import Foundation
-import os
 
-private nonisolated let highlightConditionLogger = Logger(
-	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-	category: "IRCHighlightMatchCondition"
-)
+/** One keyword a connection watches for, optionally scoped to one channel.
 
-@objc(IRCHighlightMatchCondition)
-public nonisolated class HighlightMatchCondition: PortablePropertyDict {
-	fileprivate var matchIsExcludedStorage = false
-	fileprivate var matchChannelIdStorage: String?
-	fileprivate var matchKeywordStorage = ""
-	fileprivate var uniqueIdentifierStorage = ""
+ A condition with no keyword can never match. Persisted lists are filtered on
+ load rather than rejected, so a hand-edited property list drops the broken
+ entry instead of aborting the app. */
+public nonisolated struct HighlightMatchCondition: Codable, Sendable, Equatable, Hashable {
+	public var uniqueIdentifier: String
+	public var matchKeyword: String
+	public var matchChannelId: String?
+	public var matchIsExcluded: Bool
 
-	@objc public var uniqueIdentifier: String {
-		uniqueIdentifierStorage
+	public init(
+		uniqueIdentifier: String = UUID().uuidString,
+		matchKeyword: String = "",
+		matchChannelId: String? = nil,
+		matchIsExcluded: Bool = false
+	) {
+		self.uniqueIdentifier = uniqueIdentifier
+		self.matchKeyword = matchKeyword
+		self.matchChannelId = matchChannelId
+		self.matchIsExcluded = matchIsExcluded
 	}
 
-	@objc public var matchKeyword: String {
-		matchKeywordStorage
+	private enum CodingKeys: String, CodingKey {
+		case uniqueIdentifier
+		case matchKeyword
+		// Spelled with a capitalised ID on disk since the Objective-C original.
+		case matchChannelId = "matchChannelID"
+		case matchIsExcluded
 	}
 
-	@objc public var matchChannelId: String? {
-		matchChannelIdStorage
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+
+		let identifier = container.decode(String.self, forKey: .uniqueIdentifier, aliases: [], default: "")
+		uniqueIdentifier = identifier.isEmpty ? UUID().uuidString : identifier
+		matchKeyword = container.decode(String.self, forKey: .matchKeyword, aliases: [], default: "")
+		matchChannelId = container.decodeOptional(String.self, forKey: .matchChannelId)
+		matchIsExcluded = container.decode(Bool.self, forKey: .matchIsExcluded, aliases: [], default: false)
 	}
 
-	@objc public var matchIsExcluded: Bool {
-		matchIsExcludedStorage
+	public func encode(to encoder: any Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+
+		try container.encodeIfPresent(matchChannelId, forKey: .matchChannelId)
+		try container.encode(matchKeyword, forKey: .matchKeyword)
+		try container.encode(uniqueIdentifier, forKey: .uniqueIdentifier)
+		try container.encode(matchIsExcluded, forKey: .matchIsExcluded)
 	}
 
-	override public init() {
-		super.init(dictionary: [:])
+	/// `true` when the condition carries everything a match needs.
+	public var isWellFormed: Bool {
+		matchKeyword.isEmpty == false
 	}
 
-	@objc(initWithDictionary:)
-	public required init(dictionary dic: [String: Any]) {
-		super.init(dictionary: dic)
-	}
+	/// A copy under a fresh identity.
+	public func uniqueCopy() -> HighlightMatchCondition {
+		var copy = self
+		copy.uniqueIdentifier = UUID().uuidString
 
-	public required init?(coder _: NSCoder) {
-		nil
-	}
-
-	/// `true` when the persisted dictionary carried everything the entry
-	/// needs. A hand-edited or truncated plist must be skipped on load, not
-	/// abort the process.
-	@objc public var isWellFormed: Bool {
-		matchKeywordStorage.isEmpty == false
-	}
-
-	@objc(initializedClassHealthCheck)
-	override public func initializedClassHealthCheck() {
-		if isMutable || initializedAsCopy {
-			return
-		}
-
-		// The Objective-C original used NSParameterAssert, which compiles out
-		// in release; a `precondition` here turned a malformed plist into an
-		// abort with no recovery path. Callers check `isWellFormed` instead.
-		if isWellFormed == false {
-			highlightConditionLogger.error("Loaded a highlight condition with no match keyword")
-		}
-	}
-
-	@objc(populateDictionaryValues:)
-	override public func populateDictionaryValues(_ dic: [String: Any]) {
-		let dictionary = dic as NSDictionary
-
-		var excluded = false
-		dictionary.ce_assignBool(to: &excluded, forKey: "matchIsExcluded")
-		matchIsExcludedStorage = excluded
-
-		if let channelId = dictionary["matchChannelID"] as? String {
-			matchChannelIdStorage = channelId
-		}
-
-		if let keyword = dictionary["matchKeyword"] as? String {
-			matchKeywordStorage = keyword
-		}
-
-		if let identifier = dictionary["uniqueIdentifier"] as? String {
-			uniqueIdentifierStorage = identifier
-		}
-	}
-
-	@objc(populateDefaultsPostflight)
-	override public func populateDefaultsPostflight() {
-		if uniqueIdentifierStorage.isEmpty {
-			uniqueIdentifierStorage = UUID().uuidString
-		}
-	}
-
-	override public func dictionaryValue(for _: PortablePropertyDictTarget) -> [String: Any] {
-		let dic = NSMutableDictionary()
-
-		dic.ce_maybeSetObject(matchChannelIdStorage, forKey: "matchChannelID")
-		dic.ce_maybeSetObject(matchKeywordStorage, forKey: "matchKeyword")
-		dic.ce_maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
-		dic.ce_setBool(matchIsExcludedStorage, forKey: "matchIsExcluded")
-
-		guard let values = dic as? [String: Any] else {
-			preconditionFailure("Highlight condition dictionaries must use String keys")
-		}
-
-		return values
-	}
-
-	override public func uniqueCopy(asMutable mutableCopy: Bool) -> Any {
-		guard let object = super.uniqueCopy(asMutable: mutableCopy) as? HighlightMatchCondition else {
-			preconditionFailure("HighlightMatchCondition copies must preserve their model type")
-		}
-
-		object.uniqueIdentifierStorage = UUID().uuidString
-
-		return object
-	}
-
-	override public var mutableClass: PortablePropertyDict {
-		unsafeBitCast(MutableHighlightMatchCondition.self, to: PortablePropertyDict.self)
-	}
-}
-
-@objc(IRCHighlightMatchConditionMutable)
-public final nonisolated class MutableHighlightMatchCondition: HighlightMatchCondition {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	override public var immutableClass: PortablePropertyDict {
-		unsafeBitCast(HighlightMatchCondition.self, to: PortablePropertyDict.self)
-	}
-
-	@objc override public var matchIsExcluded: Bool {
-		get { matchIsExcludedStorage }
-		set { matchIsExcludedStorage = newValue }
-	}
-
-	@objc override public var matchChannelId: String? {
-		get { matchChannelIdStorage }
-		set { matchChannelIdStorage = newValue }
-	}
-
-	@objc override public var matchKeyword: String {
-		get { matchKeywordStorage }
-		set { matchKeywordStorage = newValue }
+		return copy
 	}
 }

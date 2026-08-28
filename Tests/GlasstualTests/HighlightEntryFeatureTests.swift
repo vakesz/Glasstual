@@ -34,12 +34,12 @@ final class HighlightEntryFeatureTests: XCTestCase {
 	}
 
 	func testModelCopiesConfigurationAndPreservesKnownChannelSelection() {
-		let source = HighlightMatchCondition(dictionary: [
-			"matchChannelID": "channel-a",
-			"matchIsExcluded": true,
-			"matchKeyword": " original ",
-			"uniqueIdentifier": "highlight-a",
-		])
+		let source = HighlightMatchCondition(
+			uniqueIdentifier: "highlight-a",
+			matchKeyword: " original ",
+			matchChannelId: "channel-a",
+			matchIsExcluded: true
+		)
 		let model = HighlightEntryModel(
 			configuration: source,
 			channels: [
@@ -67,10 +67,7 @@ final class HighlightEntryFeatureTests: XCTestCase {
 	}
 
 	func testMissingAndInvalidChannelSelectionsFallBackToAllChannels() {
-		let source = HighlightMatchCondition(dictionary: [
-			"matchChannelID": "removed-channel",
-			"matchKeyword": "ping",
-		])
+		let source = HighlightMatchCondition(matchKeyword: "ping", matchChannelId: "removed-channel")
 		let model = HighlightEntryModel(
 			configuration: source,
 			channels: [HighlightEntryChannel(id: "channel-a", name: "#swift")]
@@ -113,10 +110,7 @@ final class HighlightEntryFeatureTests: XCTestCase {
 	}
 
 	func testAdapterHostsSwiftUIAndUsesTypedDelegateCallbacks() throws {
-		let source = HighlightMatchCondition(dictionary: [
-			"matchKeyword": "ping",
-			"uniqueIdentifier": "highlight-a",
-		])
+		let source = HighlightMatchCondition(uniqueIdentifier: "highlight-a", matchKeyword: "ping")
 		let channel = ChannelConfig(dictionary: [
 			"channelName": "#swift",
 			"uniqueIdentifier": "channel-a",
@@ -127,7 +121,6 @@ final class HighlightEntryFeatureTests: XCTestCase {
 		adapter.delegate = delegate
 
 		XCTAssertEqual(NSStringFromClass(HighlightEntrySheet.self), "TDCHighlightEntrySheet")
-		XCTAssertNotNil(NSProtocolFromString("TDCHighlightEntrySheetDelegate"))
 		XCTAssertNil(Bundle.main.path(forResource: "TDCHighlightEntrySheet", ofType: "nib"))
 		XCTAssertTrue(adapter.sheet.delegate === adapter)
 		XCTAssertTrue(adapter.sheet.contentViewController is NSHostingController<HighlightEntryView>)

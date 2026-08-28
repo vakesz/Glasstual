@@ -105,19 +105,19 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertEqual(config.notificationEnabled(forEvent: event), .mixed)
 	}
 
-	func testHighlightMatchConditionRoundTripsDictionaryAndDefaults() {
-		let condition = HighlightMatchCondition(dictionary: [
+	func testHighlightMatchConditionRoundTripsDictionaryAndDefaults() throws {
+		let condition = try XCTUnwrap(PropertyListModel.decode(HighlightMatchCondition.self, from: [
 			"matchKeyword": "alert",
 			"matchChannelID": "chan-1",
 			"matchIsExcluded": true,
-		])
+		]))
 
 		XCTAssertEqual(condition.matchKeyword, "alert")
 		XCTAssertEqual(condition.matchChannelId, "chan-1")
 		XCTAssertTrue(condition.matchIsExcluded)
 		XCTAssertFalse(condition.uniqueIdentifier.isEmpty)
 
-		let dictionary = condition.dictionaryValue
+		let dictionary = PropertyListModel.encode(condition)
 
 		XCTAssertEqual(dictionary["matchKeyword"] as? String, "alert")
 		XCTAssertEqual(dictionary["matchChannelID"] as? String, "chan-1")
@@ -125,18 +125,18 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertEqual(dictionary["uniqueIdentifier"] as? String, condition.uniqueIdentifier)
 	}
 
-	func testHighlightMatchConditionMutableCopyAndUniqueCopy() throws {
-		let original = HighlightMatchCondition(dictionary: ["matchKeyword": "ping"])
-		let mutableCopy = try XCTUnwrap(original.mutableCopy() as? MutableHighlightMatchCondition)
-		mutableCopy.matchKeyword = "pong"
-		mutableCopy.matchIsExcluded = true
+	func testHighlightMatchConditionEditsAndUniqueCopyAreIndependent() {
+		let original = HighlightMatchCondition(matchKeyword: "ping")
+		var edited = original
+		edited.matchKeyword = "pong"
+		edited.matchIsExcluded = true
 
 		XCTAssertEqual(original.matchKeyword, "ping")
 		XCTAssertFalse(original.matchIsExcluded)
-		XCTAssertEqual(mutableCopy.matchKeyword, "pong")
-		XCTAssertTrue(mutableCopy.matchIsExcluded)
+		XCTAssertEqual(edited.matchKeyword, "pong")
+		XCTAssertTrue(edited.matchIsExcluded)
 
-		let unique = try XCTUnwrap(original.uniqueCopy() as? HighlightMatchCondition)
+		let unique = original.uniqueCopy()
 
 		XCTAssertEqual(unique.matchKeyword, "ping")
 		XCTAssertNotEqual(unique.uniqueIdentifier, original.uniqueIdentifier)

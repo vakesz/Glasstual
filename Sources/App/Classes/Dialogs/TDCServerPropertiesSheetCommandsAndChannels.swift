@@ -198,7 +198,6 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 		highlightSheet = controller
 	}
 
-	@objc(highlightEntrySheet:onOk:)
 	public func highlightEntrySheet(_: HighlightEntrySheet, didSave config: HighlightMatchCondition) {
 		if let index = highlightList.firstIndex(where: { $0.uniqueIdentifier == config.uniqueIdentifier }) {
 			highlightListArrayController.textual_replaceObject(atArrangedObjectIndex: UInt(index), with: config)
@@ -207,7 +206,6 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 		}
 	}
 
-	@objc(highlightEntrySheetWillClose:)
 	public func highlightEntrySheetDidClose(_: HighlightEntrySheet) {
 		highlightSheet = nil
 	}

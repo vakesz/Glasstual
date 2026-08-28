@@ -39,13 +39,11 @@
 import AppKit
 import SwiftUI
 
-@objc(TDCHighlightEntrySheetDelegate)
+/// The highlight condition is a value type, so this protocol is dispatched in
+/// Swift rather than through the delegate's Objective-C selector table.
 @MainActor
-public protocol HighlightEntrySheetDelegate: NSObjectProtocol {
-	@objc(highlightEntrySheet:onOk:)
+public protocol HighlightEntrySheetDelegate: AnyObject {
 	func highlightEntrySheet(_ sender: HighlightEntrySheet, didSave configuration: HighlightMatchCondition)
-
-	@objc(highlightEntrySheetWillClose:)
 	func highlightEntrySheetDidClose(_ sender: HighlightEntrySheet)
 }
 
@@ -121,7 +119,7 @@ public final class HighlightEntrySheet: SheetBase, NSWindowDelegate {
 			return
 		}
 
-		(delegate as? HighlightEntrySheetDelegate)?.highlightEntrySheet(
+		(delegate as? any HighlightEntrySheetDelegate)?.highlightEntrySheet(
 			self,
 			didSave: model.configurationForSubmission()
 		)
@@ -130,6 +128,6 @@ public final class HighlightEntrySheet: SheetBase, NSWindowDelegate {
 	}
 
 	public func windowWillClose(_: Notification) {
-		(delegate as? HighlightEntrySheetDelegate)?.highlightEntrySheetDidClose(self)
+		(delegate as? any HighlightEntrySheetDelegate)?.highlightEntrySheetDidClose(self)
 	}
 }

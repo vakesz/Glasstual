@@ -46,7 +46,7 @@ struct IRCHighlightHealthCheckTests {
 	/// release; `precondition` turned a hand-edited plist into a crash.
 	@Test
 	func aConditionMissingItsKeywordLoadsAndIsFlagged() {
-		let condition = HighlightMatchCondition(dictionary: ["matchIsExcluded": true])
+		let condition = HighlightMatchCondition(matchIsExcluded: true)
 
 		#expect(condition.isWellFormed == false)
 		#expect(condition.matchKeyword.isEmpty)
@@ -54,7 +54,7 @@ struct IRCHighlightHealthCheckTests {
 
 	@Test
 	func aCompleteConditionIsWellFormed() {
-		let condition = HighlightMatchCondition(dictionary: ["matchKeyword": "hello"])
+		let condition = HighlightMatchCondition(matchKeyword: "hello")
 
 		#expect(condition.isWellFormed)
 		#expect(condition.matchKeyword == "hello")
