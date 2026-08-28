@@ -70,19 +70,17 @@ public final class ContentNavigationOutlineView: NSOutlineView {
 	@objc public var contentViewPreferredWidth: UInt = 0
 	@objc public var contentViewPreferredHeight: UInt = 0
 
-	private var navigationTreeMatrixStorage = NSArray()
-
-	@objc public var navigationTreeMatrix: [ContentNavigationOutlineViewItem] {
-		get {
-			navigationTreeMatrixStorage as? [ContentNavigationOutlineViewItem] ?? []
-		}
-		set {
-			let newArray = newValue as NSArray
-			guard newArray !== navigationTreeMatrixStorage else {
+	/** The guard used to compare `newValue as NSArray` against a stored
+	 NSArray. Bridging makes a fresh object every time, so it never matched and
+	 the view reset on every assignment. Element identity is the real test. */
+	public var navigationTreeMatrix: [ContentNavigationOutlineViewItem] = [] {
+		didSet {
+			guard navigationTreeMatrix.count != oldValue.count
+				|| zip(navigationTreeMatrix, oldValue).contains(where: { $0 !== $1 })
+			else {
 				return
 			}
 
-			navigationTreeMatrixStorage = newArray
 			resetOutlineView()
 		}
 	}

@@ -28,7 +28,7 @@ final class ApplicationInfrastructureMigrationTests: XCTestCase {
 		XCTAssertTrue(Application.responds(to: NSSelectorFromString("checkForOtherCopiesOfGlasstualRunning")))
 	}
 
-	/* Custom key-down handling used to be looked up by selector and called
+	/** Custom key-down handling used to be looked up by selector and called
 	 through a bit-cast IMP. It is a Swift protocol now, so the contract is that
 	 the classes offered the event conform to it. */
 	func testCustomKeyboardEventRespondersConformToTheProtocol() {
