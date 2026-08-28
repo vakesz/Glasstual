@@ -104,11 +104,10 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 STS upgrade, server redirect). A single slot meant whichever installed last silently
 	 replaced the others; every registered action now runs. */
 	var disconnectCallbacks: [() -> Void] = []
-	/** Migrating these delays from -performSelector:afterDelay: to asyncAfter left them
-	 uncancellable; the work items exist so that a reconnect within the delay window
-	 does not have a stale block act on the new session. */
-	var pendingDisconnectWorkItem: DispatchWorkItem?
-	var pendingConnectionWorkItem: DispatchWorkItem?
+	/** Both delays are cancellable so that a reconnect inside the delay window
+	 cannot have a stale block act on the new session. */
+	var pendingDisconnectTask: Task<Void, Never>?
+	var pendingConnectionTask: Task<Void, Never>?
 	@objc public dynamic var connectType: IRCClientConnectMode = .normal
 	@objc public dynamic var disconnectType: IRCClientDisconnectMode = .normal
 	public var capabilities: ClientIRCv3SupportedCapability = []
@@ -156,14 +155,14 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	var collapsedNetsplitBatch: Any?
 	@objc public dynamic var isConnectedToZNC = false
 	var successfulConnects: UInt = 0
-	var isonTimer: TimerImplementation!
-	var whoTimer: TimerImplementation!
-	var autojoinTimer: TimerImplementation!
-	var autojoinNextJoinTimer: TimerImplementation!
-	var autojoinDelayedWarningTimer: TimerImplementation!
-	var pongTimer: TimerImplementation!
-	var reconnectTimer: TimerImplementation!
-	var retryTimer: TimerImplementation!
+	var isonTimer: ClientTimer!
+	var whoTimer: ClientTimer!
+	var autojoinTimer: ClientTimer!
+	var autojoinNextJoinTimer: ClientTimer!
+	var autojoinDelayedWarningTimer: ClientTimer!
+	var pongTimer: ClientTimer!
+	var reconnectTimer: ClientTimer!
+	var retryTimer: ClientTimer!
 	var autojoinDelayedWarningCount: UInt = 0
 	var channelsToAutojoin: [IRCChannel]?
 	var requestedCommands: ClientRequestedCommands!
@@ -188,7 +187,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	/// The newest read marker sent per channel, keyed by channel identifier.
 	var readMarkerSentDates: [String: Date] = [:]
 	var readMarkerPendingChannels: [IRCChannel] = []
-	var readMarkerTimer: TimerImplementation!
+	var readMarkerTimer: ClientTimer!
 	/// Nicknames seen in the netsplit batch being collapsed, per channel
 	/// identifier, in the order they arrived.
 	var collapsedNetsplitNicknames: [String: [String]]?
@@ -316,12 +315,10 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		)
 	}
 
-	private func makeTimer(_ action: @MainActor @escaping (IRCClient) -> Void) -> TimerImplementation {
-		TimerImplementation.timer { [weak self] _ in
-			Task { @MainActor [weak self] in
-				guard let self else { return }
-				action(self)
-			}
+	private func makeTimer(_ action: @MainActor @escaping (IRCClient) -> Void) -> ClientTimer {
+		ClientTimer { [weak self] _ in
+			guard let self else { return }
+			action(self)
 		}
 	}
 

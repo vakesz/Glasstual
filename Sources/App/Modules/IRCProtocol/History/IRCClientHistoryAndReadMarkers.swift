@@ -248,7 +248,7 @@ public extension IRCClient {
 		      )
 		else { return }
 		readMarkerPendingChannels.append(channel)
-		if !readMarkerTimer.timerIsActive {
+		if !readMarkerTimer.isActive {
 			readMarkerTimer.start(IRCChatHistoryPolicy.readMarkerDebounceInterval)
 		}
 	}
