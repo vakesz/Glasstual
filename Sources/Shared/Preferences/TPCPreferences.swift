@@ -41,57 +41,82 @@ import Foundation
 @objc(TPCPreferences)
 public class TextualPreferences: NSObject {}
 
+public nonisolated extension Preferences {
+	/** Inline media: what is fetched, how large it may be, and how far it is
+	 scaled.
+
+	 Declared beside the shared defaults class rather than with the rest of the
+	 catalogue because the inline-content XPC service compiles this file and
+	 reads the same declarations, instead of keeping a second copy of the key
+	 names. */
+	nonisolated enum InlineMedia {
+		public static let maximumFilesize = PreferenceKey("InlineMediaMaximumFilesize", default: UInt(2))
+		public static let scalingWidth = PreferenceKey("InlineMediaScalingWidth", default: UInt(300))
+		public static let maximumHeight = PreferenceKey("InlineMediaMaximumHeight", default: UInt(0))
+		public static let limitToBasics = PreferenceKey("InlineMediaLimitToBasics", default: false)
+		public static let limitBasicsToFiles = PreferenceKey("InlineMediaLimitBasicsToFiles", default: false)
+		public static let limitNaughtyContent = PreferenceKey("InlineMediaLimitNaughtyContent", default: true)
+		public static let limitUnsafeContent = PreferenceKey("InlineMediaLimitUnsafeContent", default: true)
+		public static let checkEverything = PreferenceKey("InlineMediaCheckEverything", default: false)
+
+		public static let all: [any AnyPreferenceKey] = [
+			maximumFilesize, scalingWidth, maximumHeight, limitToBasics, limitBasicsToFiles,
+			limitNaughtyContent, limitUnsafeContent, checkEverything,
+		]
+	}
+}
+
 public extension TextualPreferences {
 	class func inlineImagesMaxFilesize() -> UInt64 {
 		let megabytesByPreference: [UInt: UInt64] = [
 			1: 1, 2: 2, 3: 3, 4: 4, 5: 5,
 			6: 10, 7: 15, 8: 20, 9: 50, 10: 100,
 		]
-		let preference = TextualUserDefaults.shared().integer(forKey: "InlineMediaMaximumFilesize")
-		return (megabytesByPreference[UInt(preference)] ?? 2) * 1_048_576
+
+		return (megabytesByPreference[Preferences.InlineMedia.maximumFilesize.value] ?? 2) * 1_048_576
 	}
 
 	class func inlineMediaMaxWidth() -> UInt {
-		UInt(TextualUserDefaults.shared().integer(forKey: "InlineMediaScalingWidth"))
+		Preferences.InlineMedia.scalingWidth.value
 	}
 
 	class func inlineMediaMaxHeight() -> UInt {
-		UInt(TextualUserDefaults.shared().integer(forKey: "InlineMediaMaximumHeight"))
+		Preferences.InlineMedia.maximumHeight.value
 	}
 
 	class func setInlineMediaMaxWidth(_ value: UInt) {
-		TextualUserDefaults.shared().set(Int(value), forKey: "InlineMediaScalingWidth")
+		Preferences.InlineMedia.scalingWidth.value = value
 	}
 
 	class func setInlineMediaMaxHeight(_ value: UInt) {
-		TextualUserDefaults.shared().set(Int(value), forKey: "InlineMediaMaximumHeight")
+		Preferences.InlineMedia.maximumHeight.value = value
 	}
 
 	class func inlineMediaLimitToBasics() -> Bool {
-		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitToBasics")
+		Preferences.InlineMedia.limitToBasics.value
 	}
 
 	class func setInlineMediaLimitToBasics(_ value: Bool) {
-		TextualUserDefaults.shared().set(value, forKey: "InlineMediaLimitToBasics")
+		Preferences.InlineMedia.limitToBasics.value = value
 	}
 
 	class func inlineMediaLimitBasicsToFiles() -> Bool {
-		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitBasicsToFiles")
+		Preferences.InlineMedia.limitBasicsToFiles.value
 	}
 
 	class func setInlineMediaLimitBasicsToFiles(_ value: Bool) {
-		TextualUserDefaults.shared().set(value, forKey: "InlineMediaLimitBasicsToFiles")
+		Preferences.InlineMedia.limitBasicsToFiles.value = value
 	}
 
 	class func inlineMediaLimitNaughtyContent() -> Bool {
-		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitNaughtyContent")
+		Preferences.InlineMedia.limitNaughtyContent.value
 	}
 
 	class func inlineMediaLimitUnsafeContent() -> Bool {
-		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitUnsafeContent")
+		Preferences.InlineMedia.limitUnsafeContent.value
 	}
 
 	class func inlineMediaCheckEverything() -> Bool {
-		TextualUserDefaults.shared().bool(forKey: "InlineMediaCheckEverything")
+		Preferences.InlineMedia.checkEverything.value
 	}
 }

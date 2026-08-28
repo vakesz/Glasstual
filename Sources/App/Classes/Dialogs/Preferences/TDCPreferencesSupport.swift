@@ -49,7 +49,6 @@ enum PreferencesLayout {
 }
 
 enum PreferencesIdentifiers {
-	static let selectedPaneDefaultsKey = "TDCPreferencesController -> Selected Pane"
 	static let toolbarBack = NSToolbarItem.Identifier("TDCPreferencesControllerBack")
 	static let toolbarForward = NSToolbarItem.Identifier("TDCPreferencesControllerForward")
 	static let paneCell = NSUserInterfaceItemIdentifier("TDCPreferencesControllerPaneCell")

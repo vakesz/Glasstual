@@ -503,7 +503,7 @@ public final class LogController: NSObject {
 			notifyViewFinishedLoadingHistory()
 			return
 		}
-		if UserDefaults.standard.bool(forKey: "Optimizations -> Load History Lazily"), !viewIsVisible {
+		if TextualPreferences.loadHistoryLazily(), !viewIsVisible {
 			return
 		}
 

@@ -40,7 +40,7 @@ import AppKit
 import CocoaExtensions
 
 enum MenuWindowPolicy {
-	static let alertSuppressionPrefix = "Text Input Prompt Suppression -> "
+	static let alertSuppressionPrefix = Preferences.Families.alertSuppression.pattern
 
 	static func nextAppearance(current: TXPreferredAppearance, systemIsDark: Bool) -> TXPreferredAppearance {
 		switch current {

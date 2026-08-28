@@ -125,7 +125,7 @@ public extension TextualPreferences {
 			reloadAction.insert(.memberListUserBadges)
 		}
 
-		if keys.contains("Server List Unread Message Count Badge Colors -> Highlight") {
+		if keys.contains(Preferences.Badges.serverListUnreadHighlight.name) {
 			reloadAction.insert(.serverListUnreadBadges)
 		}
 
@@ -352,14 +352,7 @@ public extension TextualPreferences {
 	}
 
 	private class var memberListReloadKeys: Set<String> {
-		[
-			"DisplayUserListNoModeSymbol",
-			"User List Mode Badge Colors -> +y",
-			"User List Mode Badge Colors -> +q",
-			"User List Mode Badge Colors -> +a",
-			"User List Mode Badge Colors -> +o",
-			"User List Mode Badge Colors -> +h",
-			"User List Mode Badge Colors -> +v",
-		]
+		Set(UserListModeBadge.allCases.map(\.preferenceKey.name))
+			.union([Preferences.Appearance.memberListNoModeSymbol.name])
 	}
 }

@@ -662,17 +662,17 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	@objc(refreshDrawingForChangesToPreference:)
 	public func refreshDrawing(forChangesToPreference preferenceKey: String) {
-		let preferenceRanks: [String: UserRank] = [
-			"User List Mode Badge Colors -> +y": .irCopByMode,
-			"User List Mode Badge Colors -> +q": .channelOwner,
-			"User List Mode Badge Colors -> +a": .superOperator,
-			"User List Mode Badge Colors -> +o": .normalOperator,
-			"User List Mode Badge Colors -> +h": .halfOperator,
-			"User List Mode Badge Colors -> +v": .voiced,
-		]
-
-		guard let rank = preferenceRanks[preferenceKey] else {
+		guard let badge = UserListModeBadge.badge(forPreferenceKeyNamed: preferenceKey) else {
 			return
+		}
+
+		let rank: UserRank = switch badge {
+		case .ircOperator: .irCopByMode
+		case .channelOwner: .channelOwner
+		case .superOperator: .superOperator
+		case .normalOperator: .normalOperator
+		case .halfOperator: .halfOperator
+		case .voiced: .voiced
 		}
 
 		refreshDrawing(forMembersWithRank: rank, isIRCop: rank == .irCopByMode)

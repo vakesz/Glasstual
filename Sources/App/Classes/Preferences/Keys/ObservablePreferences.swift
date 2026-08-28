@@ -3,9 +3,9 @@
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \\ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\\___/_/\\_\\__|\\__,_|\\__,_|_|
+ *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
  *
- * Copyright (c) 2010 - 2026 Codeux Software, LLC & respective contributors.
+ * Copyright (c) 2010 - 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,34 +35,58 @@
  *
  *********************************************************************** */
 
+import Combine
 import Foundation
+import Observation
+import SwiftUI
 
-/** These three questions used to be answered by loading a plist and comparing the
- name against every entry with a per-entry comparator. They are now answered by
- the key declarations, which is the same data without the second copy. */
-public extension TextualUserDefaults {
-	@objc(keyIsExcludedFromExportImport:)
-	class func keyIsExcludedFromExportImport(_ defaultName: String) -> Bool {
-		Preferences.isExcludedFromExport(defaultName)
-	}
+/** A main-actor observable face on the typed key store, for the SwiftUI sheets.
 
-	@objc(keyAppearsInMasterList:)
-	class func keyAppearsInPreferenceCatalog(_ defaultName: String) -> Bool {
-		Preferences.isCatalogued(defaultName)
-	}
+ The keys are values rather than properties of an object, so there is nothing
+ for `@Observable` to track per setting. What is tracked instead is one
+ revision counter that every read touches and every defaults change bumps: a
+ view that reads any preference through this store is re-evaluated when any
+ preference changes. That is coarse, and right for a settings sheet, where the
+ alternative — 170 published properties — buys precision nothing needs. */
+@MainActor
+@Observable
+public final class ObservablePreferences {
+	public static let shared = ObservablePreferences()
 
-	@objc(keyIsExcludedFromContainer:)
-	class func keyIsExcludedFromContainer(_ defaultName: String) -> Bool {
-		Preferences.storage(for: defaultName) == .standard
-	}
+	/// Touched by every read and bumped by every change. Private because it is
+	/// the mechanism, not part of the interface.
+	private var revision: UInt = 0
 
-	@objc(_migrateObject:forKey:)
-	func migrateObject(_ value: Any?, forKey defaultName: String) {
-		guard Self.keyIsExcludedFromContainer(defaultName) else {
-			setObjectWithoutNotification(value, forKey: defaultName)
-			return
+	@ObservationIgnored
+	private var observation: AnyCancellable?
+
+	private init() {
+		observation = NotificationCenter.default.publisher(
+			for: UserDefaults.didChangeNotification,
+			object: TextualUserDefaults.shared()
+		)
+		.receive(on: DispatchQueue.main)
+		.sink { [weak self] _ in
+			/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
+			 publisher above delivers on the main queue. */
+			MainActor.assumeIsolated {
+				self?.revision &+= 1
+			}
 		}
+	}
 
-		UserDefaults.standard.set(value, forKey: defaultName)
+	public subscript<Value>(key: PreferenceKey<Value>) -> Value {
+		get {
+			_ = revision
+			return key.value
+		}
+		set { key.value = newValue }
+	}
+
+	public func binding<Value>(for key: PreferenceKey<Value>) -> Binding<Value> {
+		Binding(
+			get: { self[key] },
+			set: { self[key] = $0 }
+		)
 	}
 }

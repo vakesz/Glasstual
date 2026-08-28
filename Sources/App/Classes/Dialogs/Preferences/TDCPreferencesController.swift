@@ -233,7 +233,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		}
 		var identifier = requestedPane.rawValue
 		if selection == .default,
-		   let remembered = UserDefaults.standard.string(forKey: PreferencesIdentifiers.selectedPaneDefaultsKey),
+		   let remembered = Preferences.Internals.selectedPreferencePane.storedValue,
 		   viewForSettingsPaneIdentifier(remembered) != nil
 		{
 			identifier = remembered
@@ -523,7 +523,7 @@ extension PreferencesController {
 		window.title = item.title
 		syncSidebarSelection(to: item)
 		recordPaneInHistory(identifier)
-		UserDefaults.standard.set(identifier, forKey: PreferencesIdentifiers.selectedPaneDefaultsKey)
+		Preferences.Internals.selectedPreferencePane.value = identifier
 	}
 
 	private func syncSidebarSelection(to item: PreferencesSidebarItem) {
@@ -832,14 +832,13 @@ public extension PreferencesController {
 	}
 
 	@objc dynamic var serverListUnreadCountBadgeHighlightColor: NSColor {
-		get {
-			TextualUserDefaults.shared()
-				.color(forKey: "Server List Unread Message Count Badge Colors -> Highlight") ?? .clear
+		get { TextualUserDefaults.shared().storedColor(for: Preferences.Badges.serverListUnreadHighlight) ?? .clear }
+		set {
+			TextualUserDefaults.shared().setColor(
+				newValue == .clear ? nil : newValue,
+				for: Preferences.Badges.serverListUnreadHighlight
+			)
 		}
-		set { TextualUserDefaults.shared().setColor(
-			newValue == .clear ? nil : newValue,
-			forKey: "Server List Unread Message Count Badge Colors -> Highlight"
-		) }
 	}
 
 	@objc dynamic var logTranscript: Bool {
@@ -1177,9 +1176,8 @@ extension PreferencesController {
 
 	@IBAction @objc(onResetUserListModeColorsToDefaults:)
 	private func onResetUserListModeColorsToDefaults(_: Any?) {
-		let defaults = TextualUserDefaults.shared()
-		for item in ["+y", "+q", "+a", "+o", "+h", "+v"] {
-			defaults.removeObject(forKey: "User List Mode Badge Colors -> \(item)")
+		for badge in UserListModeBadge.allCases {
+			badge.preferenceKey.reset()
 		}
 		onChangedUserListModeColor(nil)
 	}
@@ -1187,8 +1185,7 @@ extension PreferencesController {
 	@IBAction @objc(onResetServerListUnreadBadgeColorsToDefault:)
 	private func onResetServerListUnreadBadgeColorsToDefault(_ sender: Any?) {
 		willChangeValue(forKey: "serverListUnreadCountBadgeHighlightColor")
-		TextualUserDefaults.shared()
-			.removeObject(forKey: "Server List Unread Message Count Badge Colors -> Highlight")
+		Preferences.Badges.serverListUnreadHighlight.reset()
 		didChangeValue(forKey: "serverListUnreadCountBadgeHighlightColor")
 		onChangedServerListUnreadBadgeColor(sender)
 	}
@@ -1227,16 +1224,14 @@ extension PreferencesController {
 
 	@IBAction @objc(onChangedUserListModeColor:)
 	private func onChangedUserListModeColor(_ sender: Any?) {
-		let preferenceMap = [
-			10: "User List Mode Badge Colors -> +y", 9: "User List Mode Badge Colors -> +q",
-			8: "User List Mode Badge Colors -> +a", 7: "User List Mode Badge Colors -> +o",
-			6: "User List Mode Badge Colors -> +h", 5: "User List Mode Badge Colors -> +v",
-		]
-		guard let control = sender as? NSControl, let preferenceKey = preferenceMap[control.tag] else {
+		guard let control = sender as? NSControl,
+		      let badge = UserListModeBadge.badge(forPreferencesTag: control.tag)
+		else {
 			TextualPreferences.performReloadAction([.memberListUserBadges, .memberList])
 			return
 		}
-		TextualPreferences.performReloadAction(.memberListUserBadges, forKey: preferenceKey)
+
+		TextualPreferences.performReloadAction(.memberListUserBadges, forKey: badge.preferenceKey.name)
 	}
 
 	@IBAction @objc(onChangedMainInputTextViewFontSize:)

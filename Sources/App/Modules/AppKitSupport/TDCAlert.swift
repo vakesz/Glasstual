@@ -53,7 +53,7 @@ private final class AlertContext: NSObject {
 
 @objc(TDCAlert)
 public final class TDCAlert: NSObject {
-	private static let suppressionPrefix = "Text Input Prompt Suppression -> "
+	private static let suppressionPrefix = Preferences.Families.alertSuppression.pattern
 
 	// MARK: - Modal Alerts (Panel)
 
@@ -734,7 +734,14 @@ extension TDCAlert {
 	}
 
 	static func isSuppressed(fullKey: String) -> Bool {
-		UserDefaults.standard.bool(forKey: fullKey)
+		suppressionFlag(fullKey).value
+	}
+
+	/** The suppression family is catalogued as a container key, but the flags
+	 used to be written to `.standard`, so an imported "do not ask again" never
+	 took effect and the two stores disagreed about what had been suppressed. */
+	private static func suppressionFlag(_ fullKey: String) -> PreferenceKey<Bool> {
+		PreferenceKey(fullKey, default: false, traits: [.unregistered, .uncatalogued])
 	}
 
 	@objc(suppressionKeyWithBase:)
@@ -784,7 +791,7 @@ extension TDCAlert {
 		let suppressed = suppressionButton?.state == .on
 
 		if suppressed, let suppressionKey {
-			UserDefaults.standard.set(true, forKey: suppressionKey)
+			suppressionFlag(suppressionKey).value = true
 		}
 
 		return suppressed
