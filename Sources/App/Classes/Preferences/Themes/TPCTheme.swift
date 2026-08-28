@@ -211,10 +211,16 @@ public final class Theme: NSObject {
 		originalURL.appending(path: ThemeResourcePath.varieties.rawValue, directoryHint: .isDirectory)
 	}
 
+	/** One directory per theme. Every theme used to share the same cache folder, so
+	 two themes with same-named resources overwrote each other's temporary copies. */
 	private func assignTemporaryURL() {
 		let sourceURL = PathInfo.applicationCachesURL ?? FileManager.default.temporaryDirectory
+		let scope = storageLocation == .bundle ? "resource" : "user"
+
 		temporaryURL = sourceURL
 			.appending(path: ThemeResourcePath.cachedStyleResources.rawValue, directoryHint: .isDirectory)
+			.appending(path: scope, directoryHint: .isDirectory)
+			.appending(path: name, directoryHint: .isDirectory)
 			.standardizedFileURL
 	}
 
@@ -559,9 +565,9 @@ private final class ThemeVariety {
 @objc(TPCThemeSettings)
 @objcMembers
 public final class ThemeSettings: NSObject {
-	private static let templateEngineVersionRange = UInt(TPCThemeSettingsNewestTemplateEngineVersion) ... UInt(
-		TPCThemeSettingsNewestTemplateEngineVersion
-	)
+	/** Only the newest engine version is supported. This was written as a range
+	 whose bounds were the same constant; equality says the same thing plainly. */
+	private static let supportedTemplateEngineVersion = UInt(TPCThemeSettingsNewestTemplateEngineVersion)
 	private static let missingStoreNameError = """
 	Empty key-value store name in settings.plist — Set the key "\(ThemeSettingKey.keyValueStoreName.rawValue)" in \
 	settings.plist as a string. \
@@ -767,6 +773,6 @@ public final class ThemeSettings: NSObject {
 
 	private static func compatibleTemplateVersion(_ value: Any?) -> UInt? {
 		guard let version = value as? UInt else { return nil }
-		return templateEngineVersionRange.contains(version) ? version : nil
+		return version == supportedTemplateEngineVersion ? version : nil
 	}
 }

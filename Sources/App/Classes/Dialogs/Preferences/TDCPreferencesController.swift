@@ -56,7 +56,7 @@ public protocol PreferencesControllerDelegate: AnyObject {
 @objc(TDCPreferencesController)
 @MainActor
 public final class PreferencesController: WindowBase, NSOutlineViewDataSource, NSOutlineViewDelegate, NSToolbarDelegate,
-	NSToolbarItemValidation, @unchecked Sendable
+	NSToolbarItemValidation
 {
 	@IBOutlet private var excludeKeywordsArrayController: NSArrayController!
 	@IBOutlet private var highlightKeywordsArrayController: NSArrayController!
@@ -118,9 +118,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	override public init() {
 		super.init()
-		MainActor.assumeIsolated {
-			prepareInitialState()
-		}
+		prepareInitialState()
 	}
 
 	private func prepareInitialState() {
@@ -221,10 +219,8 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		ioValue.pointee = String(value) as NSString
 	}
 
-	override public nonisolated func show() {
-		MainActor.assumeIsolated {
-			show(.default)
-		}
+	override public func show() {
+		show(.default)
 	}
 
 	@objc(show:)
