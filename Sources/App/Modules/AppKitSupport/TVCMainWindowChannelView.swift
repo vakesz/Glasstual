@@ -54,7 +54,7 @@ private nonisolated func sortChannelViewSubviews(
 }
 
 @objc(TVCMainWindowChannelView)
-public final class MainWindowChannelView: NSSplitView {
+public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 	/* -[NSSplitView delegate] is weak, so the delegate is owned here. */
 	private var splitViewDelegate = MainWindowChannelViewDelegate()
 	private var itemIndexSelected = NSNotFound
@@ -255,10 +255,6 @@ public final class MainWindowChannelView: NSSplitView {
 
 	/// Primary, secondary and tertiary mouse buttons.
 	fileprivate static let allMouseButtonsMask = 0x1 | 0x2 | 0x4
-
-	override public var needsDisplayWhenApplicationAppearanceChanges: Bool {
-		true
-	}
 }
 
 // MARK: - Overlay View

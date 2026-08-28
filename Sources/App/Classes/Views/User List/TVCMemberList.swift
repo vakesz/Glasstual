@@ -77,7 +77,7 @@ public final nonisolated class MemberListSection: NSObject {
 }
 
 @objc(TVCMemberList)
-public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDelegate {
+public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDelegate, AppearanceObserving {
 	@objc public var isHiddenByUser = false
 	public weak var keyDelegate: (any MemberListKeyEventDelegate)?
 
@@ -695,13 +695,11 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		true
 	}
 
-	@objc
-	override public func applicationAppearanceChanged() {
+	public func applicationAppearanceChanged() {
 		refreshForAppearanceChange()
 	}
 
-	@objc
-	override public func systemAppearanceChanged() {
+	public func systemAppearanceChanged() {
 		refreshForAppearanceChange()
 	}
 

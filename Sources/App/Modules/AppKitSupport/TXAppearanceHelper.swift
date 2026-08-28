@@ -12,53 +12,46 @@
 
 import AppKit
 
+/// A view that reacts to the application's or the system's appearance
+/// changing. Views that do not conform are still walked through so that their
+/// subviews are reached.
+///
+/// This used to be eight `@objc` members on an extension of `NSView`, which
+/// every view in the application advertised and subclasses overrode through
+/// the runtime.
+@MainActor
+public protocol AppearanceObserving: NSView {
+	/// The application's own light/dark setting changed.
+	func applicationAppearanceChanged()
+	/// The system's appearance changed while the application follows it.
+	func systemAppearanceChanged()
+}
+
+public extension AppearanceObserving {
+	func applicationAppearanceChanged() {
+		needsDisplay = true
+	}
+
+	func systemAppearanceChanged() {
+		needsDisplay = true
+	}
+}
+
 public extension NSView {
-	@objc var needsDisplayWhenApplicationAppearanceChanges: Bool {
-		false
-	}
-
-	@objc var needsDisplayWhenSystemAppearanceChanges: Bool {
-		false
-	}
-
-	@objc var sendApplicationAppearanceChangedToSubviews: Bool {
-		true
-	}
-
-	@objc var sendSystemAppearanceChangedToSubviews: Bool {
-		true
-	}
-
-	@objc func applicationAppearanceChanged() {
-		if needsDisplayWhenApplicationAppearanceChanges {
-			needsDisplay = true
-		}
-	}
-
-	@objc func systemAppearanceChanged() {
-		if needsDisplayWhenSystemAppearanceChanges {
-			needsDisplay = true
-		}
-	}
-
-	@objc func notifyApplicationAppearanceChanged() {
-		applicationAppearanceChanged()
-
-		guard sendApplicationAppearanceChangedToSubviews else {
-			return
-		}
+	/// Tells this view and every view beneath it that the application's
+	/// appearance changed.
+	func notifyApplicationAppearanceChanged() {
+		(self as? any AppearanceObserving)?.applicationAppearanceChanged()
 
 		for view in subviews {
 			view.notifyApplicationAppearanceChanged()
 		}
 	}
 
-	@objc func notifySystemAppearanceChanged() {
-		systemAppearanceChanged()
-
-		guard sendSystemAppearanceChangedToSubviews else {
-			return
-		}
+	/// Tells this view and every view beneath it that the system's appearance
+	/// changed.
+	func notifySystemAppearanceChanged() {
+		(self as? any AppearanceObserving)?.systemAppearanceChanged()
 
 		for view in subviews {
 			view.notifySystemAppearanceChanged()
@@ -67,7 +60,7 @@ public extension NSView {
 }
 
 public extension NSWindow {
-	@objc func notifyApplicationAppearanceChanged() {
+	func notifyApplicationAppearanceChanged() {
 		contentView?.superview?.notifyApplicationAppearanceChanged()
 
 		for viewController in titlebarAccessoryViewControllers {
@@ -75,7 +68,7 @@ public extension NSWindow {
 		}
 	}
 
-	@objc func notifySystemAppearanceChanged() {
+	func notifySystemAppearanceChanged() {
 		contentView?.superview?.notifySystemAppearanceChanged()
 
 		for viewController in titlebarAccessoryViewControllers {

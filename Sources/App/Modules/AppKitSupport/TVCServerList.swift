@@ -26,7 +26,7 @@ public protocol TVCServerListDelegate: NSObjectProtocol {
 }
 
 @objc(TVCServerList)
-public final class ServerList: NSOutlineView {
+public final class ServerList: NSOutlineView, AppearanceObserving {
 	@objc public weak var keyDelegate: TVCServerListDelegate?
 
 	override public func viewDidMoveToWindow() {
@@ -264,15 +264,13 @@ public final class ServerList: NSOutlineView {
 		true
 	}
 
-	@objc
-	override public func applicationAppearanceChanged() {
+	public func applicationAppearanceChanged() {
 		invalidateSelectionBackground()
 		refreshAllDrawings(true)
 		needsDisplay = true
 	}
 
-	@objc
-	override public func systemAppearanceChanged() {
+	public func systemAppearanceChanged() {
 		invalidateSelectionBackground()
 		refreshAllDrawings(true)
 		needsDisplay = true

@@ -431,14 +431,6 @@ public class ServerListCell: NSTableCellView {
 
 		return drawingContext
 	}
-
-	override public var needsDisplayWhenApplicationAppearanceChanges: Bool {
-		false
-	}
-
-	override public var needsDisplayWhenSystemAppearanceChanges: Bool {
-		false
-	}
 }
 
 @objc(TVCServerListCellGroupItem)
