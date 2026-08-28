@@ -39,6 +39,13 @@ import Foundation
 import InlineContentKit
 import os
 
+/// The registry of inline-content modules the service can run.
+///
+/// Modules used to arrive from `.mediaPlugin` bundles discovered under the
+/// service's `Extensions` directory. Nothing outside this repository could
+/// supply one, and the indirection required the service binary to export every
+/// symbol so that a loaded bundle could resolve them, so the only plugin —
+/// Core Media — is now linked into the service and registered here directly.
 @objc(ICLPluginManager)
 final class InlineContentPluginManager: NSObject, @unchecked Sendable {
 	@objc(sharedPluginManager)
@@ -49,75 +56,22 @@ final class InlineContentPluginManager: NSObject, @unchecked Sendable {
 		category: "Plugins"
 	)
 
+	private static let bundledPlugins: [any InlineContentPlugin.Type] = [CoreMediaPlugin.self]
+
 	private var pluginsLoaded = false
-	private var loadedPlugins: [Bundle] = []
 	private var loadedModules: [AnyClass] = []
 
 	@objc func loadBundledPlugins() {
-		precondition(!pluginsLoaded, "Plugins already loaded")
-		defer { pluginsLoaded = true }
-
-		guard let pluginsURL = Bundle.main.url(forResource: "Extensions", withExtension: nil) else {
-			Self.logger.error("The bundled Extensions directory is missing")
+		guard !pluginsLoaded else {
+			Self.logger.error("Plugins are already loaded")
 			return
 		}
+		pluginsLoaded = true
 
-		loadedPlugins = loadPlugins(at: pluginsURL)
-		populateModules()
+		loadedModules = Self.bundledPlugins.flatMap { $0.modules }
 	}
 
 	@objc var modules: [AnyClass] {
 		loadedModules
-	}
-
-	private func loadPlugins(at directoryURL: URL) -> [Bundle] {
-		let contents: [URL]
-		do {
-			contents = try FileManager.default.contentsOfDirectory(
-				at: directoryURL,
-				includingPropertiesForKeys: nil,
-				options: [.skipsHiddenFiles]
-			)
-		} catch {
-			Self.logger.error("Failed to list plugins: \(error.localizedDescription, privacy: .public)")
-			return []
-		}
-
-		return contents
-			.filter { $0.pathExtension == "mediaPlugin" }
-			.compactMap(loadPlugin)
-	}
-
-	private func loadPlugin(at pluginURL: URL) -> Bundle? {
-		guard let bundle = Bundle(url: pluginURL) else { return nil }
-		guard let principalClass = bundle.principalClass else {
-			Self.logger.error(
-				"Failed to load bundle '\(pluginURL.standardizedFileURL.path, privacy: .public)' because its principal class is missing"
-			)
-			return nil
-		}
-		guard principalClass.conforms(to: InlineContentPlugin.self) else {
-			Self.logger.error(
-				"Failed to load bundle '\(pluginURL.standardizedFileURL.path, privacy: .public)' because its principal class does not conform to ICLPluginProtocol"
-			)
-			return nil
-		}
-
-		return bundle
-	}
-
-	private func populateModules() {
-		if loadedPlugins.isEmpty {
-			Self.logger.info("No plugins to load modules from")
-			loadedModules = []
-			return
-		}
-
-		var modules: [AnyClass] = []
-		for plugin in loadedPlugins {
-			guard let principalClass = plugin.principalClass as? InlineContentPlugin.Type else { continue }
-			modules.append(contentsOf: principalClass.modules)
-		}
-		loadedModules = modules
 	}
 }
