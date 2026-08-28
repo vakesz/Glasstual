@@ -110,9 +110,10 @@ public final class PreferencesImportExport: NSObject {
 
 		importContentsOfDictionary(dictionary, reloadPreferences: false)
 
-		DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-			importPostflightCleanup(Array(dictionary.keys))
-		}
+		// The import runs to completion synchronously, so the cleanup follows it
+		// directly rather than after a fixed delay that was either too long or,
+		// for a large configuration, too short.
+		importPostflightCleanup(Array(dictionary.keys))
 	}
 
 	@objc(importContentsOfDictionary:)
@@ -208,39 +209,55 @@ public final class PreferencesImportExport: NSObject {
 
 	@objc(exportedPreferencesDictionary:filterDefaults:)
 	public static func exportedPreferencesDictionary(_ filterJunk: Bool, filterDefaults: Bool) -> [String: Any] {
+		var finalDictionary = TextualUserDefaults.shared().dictionaryRepresentation()
+
 		var keysToStrip: [String] = []
 
 		let argumentsDomain = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
 		keysToStrip.append(contentsOf: argumentsDomain.keys)
-
-		if filterDefaults {
-			let defaultsDomain = TextualPreferences.defaultPreferences()
-			keysToStrip.append(contentsOf: defaultsDomain.keys)
-		}
 
 		if filterJunk {
 			let globalsDomain = UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain) ?? [:]
 			keysToStrip.append(contentsOf: globalsDomain.keys)
 		}
 
-		let exportedPreferences = TextualUserDefaults.shared().dictionaryRepresentation()
-		var finalDictionary = exportedPreferences
+		if filterDefaults {
+			// Filter by value, not by name. Stripping every key that merely has
+			// a registered default drops the settings the user actually chose,
+			// which is most of them.
+			let registeredDefaults = TextualPreferences.defaultPreferences()
+			keysToStrip.append(contentsOf: finalDictionary.keys.filter { key in
+				guard let registered = registeredDefaults[key] else {
+					return false
+				}
+
+				return valueMatchesDefault(finalDictionary[key], registered)
+			})
+		}
 
 		for key in keysToStrip {
 			finalDictionary.removeValue(forKey: key)
 		}
 
 		if filterJunk {
-			let keysToStrip2 = finalDictionary.keys.filter { key in
+			let ignoredKeys = finalDictionary.keys.filter { key in
 				isKeyNameSupposedToBeIgnored(key)
 			}
 
-			for key in keysToStrip2 {
+			for key in ignoredKeys {
 				finalDictionary.removeValue(forKey: key)
 			}
 		}
 
 		return finalDictionary
+	}
+
+	static func valueMatchesDefault(_ value: Any?, _ registeredDefault: Any) -> Bool {
+		guard let value else {
+			return false
+		}
+
+		return (value as AnyObject).isEqual(registeredDefault)
 	}
 
 	@objc(exportInWindow:)
