@@ -16,68 +16,68 @@ import GlasstualPluginKit
 nonisolated enum MainWindowStrings {
 	nonisolated enum MemberList {
 		static var userIsAway: String {
-			String(localized: .TVCMainWindow.jkrEd)
+			String(localized: .TVCMainWindow.userIsAway)
 		}
 
 		static var userIsNotAway: String {
-			String(localized: .TVCMainWindow.gi6Wf)
+			String(localized: .TVCMainWindow.userIsNotAway)
 		}
 
 		static var userIsBot: String {
-			String(localized: .TVCMainWindow.b0TAc)
+			String(localized: .TVCMainWindow.userIsABot)
 		}
 
 		static var botCaption: String {
-			String(localized: .TVCMainWindow.b0TLb)
+			String(localized: .TVCMainWindow.memberListCaptionShownBot)
 		}
 
 		static var informationUnavailable: String {
-			String(localized: .TVCMainWindow.d859N)
+			String(localized: .TVCMainWindow.informationNotAvailable)
 		}
 
 		static var notLoggedIn: String {
-			String(localized: .TVCMainWindow.accNl)
+			String(localized: .TVCMainWindow.notLogged)
 		}
 
 		static func loggedIn(account: String) -> String {
-			String(localized: .TVCMainWindow.accIn(account))
+			String(localized: .TVCMainWindow.memberAccountStatusDescriptionLogged(account))
 		}
 
 		static func privilegeDescription(for rank: UserRank) -> String {
 			switch rank {
 			case .irCopByMode:
-				String(localized: .TVCMainWindow.i8TVb)
+				String(localized: .TVCMainWindow.serverStaffMemberIrcOperator)
 			case .channelOwner:
-				String(localized: .TVCMainWindow.p1ZSc)
+				String(localized: .TVCMainWindow.channelOwner)
 			case .superOperator:
-				String(localized: .TVCMainWindow.somZo)
+				String(localized: .TVCMainWindow.superAdmin)
 			case .normalOperator:
-				String(localized: .TVCMainWindow._0KnS5)
+				String(localized: .TVCMainWindow.memberPrivilegeDescriptionOperator)
 			case .halfOperator:
-				String(localized: .TVCMainWindow._0NnTe)
+				String(localized: .TVCMainWindow.halfOp)
 			case .voiced:
-				String(localized: .TVCMainWindow.ya1Sk)
+				String(localized: .TVCMainWindow.memberPrivilegeDescriptionVoice)
 			default:
-				String(localized: .TVCMainWindow.tjjZ2)
+				String(localized: .TVCMainWindow.noPrivileges)
 			}
 		}
 
 		static func sectionTitle(for rank: UserRank) -> String {
 			switch rank {
 			case .irCopByMode:
-				String(localized: .TVCMainWindow.mlsSf)
+				String(localized: .TVCMainWindow.serverStaff)
 			case .channelOwner:
-				String(localized: .TVCMainWindow.mlsOw)
+				String(localized: .TVCMainWindow.memberListSectionHeadersOwners)
 			case .superOperator:
-				String(localized: .TVCMainWindow.mlsAd)
+				String(localized: .TVCMainWindow.memberListSectionHeadersAdmins)
 			case .normalOperator:
-				String(localized: .TVCMainWindow.mlsOp)
+				String(localized: .TVCMainWindow.memberListSectionHeadersOperators)
 			case .halfOperator:
-				String(localized: .TVCMainWindow.mlsHo)
+				String(localized: .TVCMainWindow.halfOperators)
 			case .voiced:
-				String(localized: .TVCMainWindow.mlsVo)
+				String(localized: .TVCMainWindow.memberListSectionHeadersVoiced)
 			default:
-				String(localized: .TVCMainWindow.mlsMe)
+				String(localized: .TVCMainWindow.memberListSectionHeadersMembers)
 			}
 		}
 	}
@@ -93,145 +93,145 @@ nonisolated enum MainWindowStrings {
 		var title: String {
 			switch self {
 			case .disconnected:
-				String(localized: .TVCMainWindow.stDc)
+				String(localized: .TVCMainWindow.mainWindowConnectionStatusDisconnected)
 			case .waitingToReconnect:
-				String(localized: .TVCMainWindow.stWr)
+				String(localized: .TVCMainWindow.waitingToReconnect)
 			case .connecting:
-				String(localized: .TVCMainWindow.stCn)
+				String(localized: .TVCMainWindow.mainWindowConnectionStatusConnecting)
 			case .reconnecting:
-				String(localized: .TVCMainWindow.stRc)
+				String(localized: .TVCMainWindow.mainWindowConnectionStatusReconnecting)
 			case .loggingOn:
-				String(localized: .TVCMainWindow.stLo)
+				String(localized: .TVCMainWindow.mainWindowConnectionStatusLogging)
 			case .disconnecting:
-				String(localized: .TVCMainWindow.stDq)
+				String(localized: .TVCMainWindow.mainWindowConnectionStatusDisconnecting)
 			}
 		}
 	}
 
 	nonisolated enum Loading {
 		static var configuration: String {
-			String(localized: .TVCMainWindow.iphA9)
+			String(localized: .TVCMainWindow.loadingConfiguration)
 		}
 
 		static var preferences: String {
-			String(localized: .TVCMainWindow._5G1I9)
+			String(localized: .TVCMainWindow.importingPreferences)
 		}
 	}
 
 	nonisolated enum Conversation {
 		static var directChat: String {
-			String(localized: .TVCMainWindow.dccCh)
+			String(localized: .TVCMainWindow.directChat)
 		}
 
 		static var inputPlaceholder: String {
-			String(localized: .TVCMainWindow._8R3Ih)
+			String(localized: .TVCMainWindow.sendMessage)
 		}
 
 		static var awayNicknameSuffix: String {
-			String(localized: .TVCMainWindow.nxzL9)
+			String(localized: .TVCMainWindow.suffixAppendedAway)
 		}
 
 		static var currentSession: String {
-			String(localized: .TVCMainWindow._4YoMk)
+			String(localized: .TVCMainWindow.currentSession)
 		}
 
 		static var noTopic: String {
-			String(localized: .TVCMainWindow.vi323)
+			String(localized: .TVCMainWindow.noTopic)
 		}
 
 		static var unreadMessages: String {
-			String(localized: .TVCMainWindow.hinUm)
+			String(localized: .TVCMainWindow.unreadMessages)
 		}
 
 		static func userCount(_ formattedCount: String) -> String {
-			String(localized: .TVCMainWindow.stUc(formattedCount))
+			String(localized: .TVCMainWindow.mainWindowConnectionStatusUsers(formattedCount))
 		}
 	}
 
 	nonisolated enum Toolbar {
 		static var connectionSecurity: String {
-			String(localized: .TVCMainWindow.tbCs)
+			String(localized: .TVCMainWindow.connectionSecurity)
 		}
 
 		static var toggleServerList: String {
-			String(localized: .TVCMainWindow.tbSl)
+			String(localized: .TVCMainWindow.toggleServerList)
 		}
 
 		static var toggleMemberList: String {
-			String(localized: .TVCMainWindow.tbMl)
+			String(localized: .TVCMainWindow.toggleMemberList)
 		}
 	}
 
 	nonisolated enum InputBar {
 		static var addServerOrChannel: String {
-			String(localized: .TVCMainWindow.ibAd)
+			String(localized: .TVCMainWindow.addServerOrChannel)
 		}
 
 		static var searchChannels: String {
-			String(localized: .TVCMainWindow.ibSf)
+			String(localized: .TVCMainWindow.searchChannels)
 		}
 
 		static var settings: String {
-			String(localized: .TVCMainWindow.ibSt)
+			String(localized: .TVCMainWindow.toolbarInputBarAccessibilitySettings)
 		}
 
 		static var more: String {
-			String(localized: .TVCMainWindow.ibMo)
+			String(localized: .TVCMainWindow.toolbarInputBarAccessibilityMore)
 		}
 
 		static var markAllAsRead: String {
-			String(localized: .TVCMainWindow.ibM1)
+			String(localized: .TVCMainWindow.markAllAsRead)
 		}
 
 		static var disableAllNotifications: String {
-			String(localized: .TVCMainWindow.ibM2)
+			String(localized: .TVCMainWindow.disableAllNotifications)
 		}
 
 		static var addressBook: String {
-			String(localized: .TVCMainWindow.ibM3)
+			String(localized: .TVCMainWindow.addressBook)
 		}
 
 		static var fileTransfers: String {
-			String(localized: .TVCMainWindow.ibM4)
+			String(localized: .TVCMainWindow.fileTransfers)
 		}
 
 		static var hideMemberList: String {
-			String(localized: .TVCMainWindow.ibM5)
+			String(localized: .TVCMainWindow.hideMemberList)
 		}
 	}
 
 	nonisolated enum Menu {
 		static func serverList(isVisible: Bool) -> String {
 			isVisible
-				? String(localized: .TVCMainWindow.mnuHsl)
-				: String(localized: .TVCMainWindow.mnuSsl)
+				? String(localized: .TVCMainWindow.hideServerList)
+				: String(localized: .TVCMainWindow.showServerList)
 		}
 
 		static func memberList(isVisible: Bool) -> String {
 			isVisible
-				? String(localized: .TVCMainWindow.mnuHml)
-				: String(localized: .TVCMainWindow.mnuSml)
+				? String(localized: .TVCMainWindow.dynamicViewWindowMenuHideMemberList)
+				: String(localized: .TVCMainWindow.showMemberList)
 		}
 	}
 
 	nonisolated enum Dock {
 		static func overflowBadge(maximum: String) -> String {
-			String(localized: .TVCMainWindow.dkiBg(maximum))
+			String(localized: .TVCMainWindow.dockIconBadgeShown(maximum))
 		}
 	}
 
 	nonisolated enum Reply {
 		static var anonymousMessage: String {
-			String(localized: .TVCMainWindow.rplAn)
+			String(localized: .TVCMainWindow.inputBarReplyBannerMessage)
 		}
 
 		static var cancel: String {
-			String(localized: .TVCMainWindow.rplCl)
+			String(localized: .TVCMainWindow.cancelReply)
 		}
 
 		static func target(_ nickname: String?) -> String {
 			let recipient = nickname.flatMap { $0.isEmpty ? nil : $0 } ?? anonymousMessage
-			return String(localized: .TVCMainWindow.rplTo(recipient))
+			return String(localized: .TVCMainWindow.inputBarReplyBannerReplying(recipient))
 		}
 	}
 
@@ -241,11 +241,11 @@ nonisolated enum MainWindowStrings {
 
 			switch nicknames.count {
 			case 1:
-				return String(localized: .TVCMainWindow.typ1(nicknames[0]))
+				return String(localized: .TVCMainWindow.isTyping(nicknames[0]))
 			case 2:
-				return String(localized: .TVCMainWindow.typ2(nicknames[0], nicknames[1]))
+				return String(localized: .TVCMainWindow.areTyping(nicknames[0], nicknames[1]))
 			default:
-				return String(localized: .TVCMainWindow.typN(String(nicknames.count)))
+				return String(localized: .TVCMainWindow.peopleAreTyping(String(nicknames.count)))
 			}
 		}
 	}

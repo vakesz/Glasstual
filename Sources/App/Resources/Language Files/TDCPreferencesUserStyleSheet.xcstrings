@@ -1,8 +1,8 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "q4s-3m" : {
-      "comment" : "Default custom stylesheet shown to advanced users. Preserve its formatting because it is inserted into the editor verbatim.",
+    "warning-this-is-designed-for-advanced" : {
+      "comment" : "Default custom stylesheet shown to advanced users. Preserve its formatting because it is inserted into the editor verbatim. Legacy key: q4s-3m.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

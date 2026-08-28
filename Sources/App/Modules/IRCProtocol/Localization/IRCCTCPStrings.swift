@@ -32,47 +32,47 @@ enum IRCCTCPLagRating: Sendable {
 
 nonisolated enum IRCCTCPStrings {
 	static var clientInfoReply: String {
-		String(localized: .IRC.jerJu)
+		String(localized: .IRC.clientinfoDccFingerPingTimeUserinfo)
 	}
 
 	static var fingerReply: String {
-		String(localized: .IRC.en6Mw)
+		String(localized: .IRC.stopFingeringMePervert)
 	}
 
 	static func ignored(command: String, sender: String) -> String {
-		String(localized: .IRC.bg3H2(command, sender))
+		String(localized: .IRC.ctcpFromWasIgnored(command, sender))
 	}
 
 	static func query(command: String, sender: String) -> String {
-		String(localized: .IRC._6O8Eu(command, sender))
+		String(localized: .IRC.miscellaneousMessagesRelatedCtcp(command, sender))
 	}
 
 	static func version(applicationName: String, shortVersion: String) -> String {
-		String(localized: .IRC.vzuU7(applicationName, shortVersion))
+		String(localized: .IRC.ircClientV(applicationName, shortVersion))
 	}
 
 	static func lagRating(_ rating: IRCCTCPLagRating) -> String {
 		switch rating {
-		case .excellent: String(localized: .IRC._58GM9)
-		case .suspiciouslyFast: String(localized: .IRC._0Jp93)
-		case .veryGood: String(localized: .IRC.yym8Y)
-		case .good: String(localized: .IRC.micQe)
-		case .acceptable: String(localized: .IRC.mqgWi)
-		case .needsWork: String(localized: .IRC.ut87S)
-		case .slow: String(localized: .IRC._8FoSs)
-		case .verySlow: String(localized: .IRC._4OcP2)
+		case .excellent: String(localized: .IRC.yeahOkay)
+		case .suspiciouslyFast: String(localized: .IRC.areYouPluggedIntoTheServer)
+		case .veryGood: String(localized: .IRC.prettyGood)
+		case .good: String(localized: .IRC.notBad)
+		case .acceptable: String(localized: .IRC.lagcheckCommandOkay)
+		case .needsWork: String(localized: .IRC.needsWork)
+		case .slow: String(localized: .IRC.lagcheckCommandSlow)
+		case .verySlow: String(localized: .IRC.verySlow)
 		}
 	}
 
 	static func lagCheckReply(server: String, milliseconds: Double, rating: String) -> String {
-		String(localized: .IRC._5BfJp(server, Float(milliseconds), rating))
+		String(localized: .IRC.receivedLagCheckReplyFromTime(server, Float(milliseconds), rating))
 	}
 
 	static func timedReply(sender: String, command: String, seconds: Double) -> String {
-		String(localized: .IRC.vy7Pk(sender, command, Float(seconds)))
+		String(localized: .IRC.ctcpSec(sender, command, Float(seconds)))
 	}
 
 	static func reply(sender: String, command: String, arguments: String) -> String {
-		String(localized: .IRC.driL7(sender, command, arguments))
+		String(localized: .IRC.ctcp(sender, command, arguments))
 	}
 }

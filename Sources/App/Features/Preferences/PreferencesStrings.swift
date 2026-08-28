@@ -20,115 +20,115 @@ enum PreferencesThemeOverride: Sendable {
 
 nonisolated enum PreferencesStrings {
 	static var accessibilityTitle: String {
-		String(localized: .TDCPreferencesController.sbTt)
+		String(localized: .TDCPreferencesController.accessibilityLabelSettings)
 	}
 
 	static var addOnPaneTitle: String {
-		String(localized: .TDCPreferencesController.sbPlugin)
+		String(localized: .TDCPreferencesController.fallbackTitleAdd)
 	}
 
 	static var addOnsGroupTitle: String {
-		String(localized: .TDCPreferencesController.sbGrAd)
+		String(localized: .TDCPreferencesController.addOns)
 	}
 
 	static var advancedGroupTitle: String {
-		String(localized: .TDCPreferencesController.sbGrAv)
+		String(localized: .TDCPreferencesController.titleOfTheAdvanced)
 	}
 
 	static var backButtonTitle: String {
-		String(localized: .TDCPreferencesController.tbBack)
+		String(localized: .TDCPreferencesController.labelForTheSettingsBack)
 	}
 
 	static var createStyleCopyButtonTitle: String {
-		String(localized: .TDCPreferencesController.dj81T)
+		String(localized: .TDCPreferencesController.createCopy)
 	}
 
 	static var downloadDestinationAccessibilityLabel: String {
-		String(localized: .TDCPreferencesController.axDownloadFolder)
+		String(localized: .TDCPreferencesController.downloadDestination)
 	}
 
 	static var editStyleButtonTitle: String {
-		String(localized: .TDCPreferencesController.aibIy)
+		String(localized: .TDCPreferencesController.editStyle)
 	}
 
 	static var forwardButtonTitle: String {
-		String(localized: .TDCPreferencesController.tbForward)
+		String(localized: .TDCPreferencesController.labelForTheSettingsForward)
 	}
 
 	static var noDownloadDestination: String {
-		String(localized: .TDCPreferencesController._721Ie)
+		String(localized: .TDCPreferencesController.noLocationSelected)
 	}
 
 	static var noTranscriptFolder: String {
-		String(localized: .TDCPreferencesController._70SC6)
+		String(localized: .TDCPreferencesController.noLogLocationSelected)
 	}
 
 	static var preferredSelectionTitle: String {
-		String(localized: .TDCPreferencesController.uc0Z7)
+		String(localized: .TDCPreferencesController.preferredSelection)
 	}
 
 	static var styleAccessibilityLabel: String {
-		String(localized: .TDCPreferencesController.axTheme)
+		String(localized: .TDCPreferencesController.accessibilityLabelStyle)
 	}
 
 	static var styleModificationBody: String {
-		String(localized: .TDCPreferencesController.ojjAp)
+		String(localized: .TDCPreferencesController.itsPossibleToModifyTheAppearance)
 	}
 
 	static var styleModificationTitle: String {
-		String(localized: .TDCPreferencesController._5JvAw)
+		String(localized: .TDCPreferencesController.areYouOpeningThisStyleBecause)
 	}
 
 	static var transcriptFolderAccessibilityLabel: String {
-		String(localized: .TDCPreferencesController.axTranscriptFolder)
+		String(localized: .TDCPreferencesController.transcriptFolder)
 	}
 
 	static var viewStyleFilesButtonTitle: String {
-		String(localized: .TDCPreferencesController._6WsAv)
+		String(localized: .TDCPreferencesController.viewFiles)
 	}
 
 	static func paneTitle(_ identifier: PreferencesPaneIdentifier) -> String {
 		let resource = switch identifier {
-		case .addOns: LocalizedStringResource.TDCPreferencesController.sbAddons
-		case .behavior: LocalizedStringResource.TDCPreferencesController.sbBehavior
-		case .channelManagement: LocalizedStringResource.TDCPreferencesController.sbChannelManagement
-		case .commandScope: LocalizedStringResource.TDCPreferencesController.sbCommandScope
-		case .compatibility: LocalizedStringResource.TDCPreferencesController.sbCompatibility
-		case .controls: LocalizedStringResource.TDCPreferencesController.sbControls
-		case .defaultIRCopMessages: LocalizedStringResource.TDCPreferencesController.sbDefaultIRCopMessages
-		case .defaultIdentity: LocalizedStringResource.TDCPreferencesController.sbDefaultIdentity
-		case .fileTransfers: LocalizedStringResource.TDCPreferencesController.sbFileTransfers
-		case .floodControl: LocalizedStringResource.TDCPreferencesController.sbFloodControl
-		case .general: LocalizedStringResource.TDCPreferencesController.sbGeneral
-		case .hidden: LocalizedStringResource.TDCPreferencesController.sbHidden
-		case .highlights: LocalizedStringResource.TDCPreferencesController.sbHighlights
-		case .incomingData: LocalizedStringResource.TDCPreferencesController.sbIncomingData
-		case .inlineMedia: LocalizedStringResource.TDCPreferencesController.sbInlineMedia
-		case .interface: LocalizedStringResource.TDCPreferencesController.sbInterface
-		case .logLocation: LocalizedStringResource.TDCPreferencesController.sbLogLocation
-		case .notifications: LocalizedStringResource.TDCPreferencesController.sbNotifications
-		case .style: LocalizedStringResource.TDCPreferencesController.sbStyle
+		case .addOns: LocalizedStringResource.TDCPreferencesController.installedAddOns
+		case .behavior: LocalizedStringResource.TDCPreferencesController.titleOfTheBehavior
+		case .channelManagement: LocalizedStringResource.TDCPreferencesController.channelManagement
+		case .commandScope: LocalizedStringResource.TDCPreferencesController.commandScope
+		case .compatibility: LocalizedStringResource.TDCPreferencesController.titleOfTheCompatibility
+		case .controls: LocalizedStringResource.TDCPreferencesController.titleOfTheControls
+		case .defaultIRCopMessages: LocalizedStringResource.TDCPreferencesController.ircopMessages
+		case .defaultIdentity: LocalizedStringResource.TDCPreferencesController.defaultIdentity
+		case .fileTransfers: LocalizedStringResource.TDCPreferencesController.fileTransfers
+		case .floodControl: LocalizedStringResource.TDCPreferencesController.floodControl
+		case .general: LocalizedStringResource.TDCPreferencesController.titleOfTheGeneral
+		case .hidden: LocalizedStringResource.TDCPreferencesController.titleOfTheHidden
+		case .highlights: LocalizedStringResource.TDCPreferencesController.titleOfTheHighlights
+		case .incomingData: LocalizedStringResource.TDCPreferencesController.incomingData
+		case .inlineMedia: LocalizedStringResource.TDCPreferencesController.inlineMedia
+		case .interface: LocalizedStringResource.TDCPreferencesController.titleOfTheInterface
+		case .logLocation: LocalizedStringResource.TDCPreferencesController.logLocation
+		case .notifications: LocalizedStringResource.TDCPreferencesController.titleOfTheNotifications
+		case .style: LocalizedStringResource.TDCPreferencesController.titleOfTheStyle
 		}
 		return String(localized: resource)
 	}
 
 	static func preferredSelectionBody(styleName: String, overrides: [PreferencesThemeOverride]) -> String {
 		let overrideList = overrides.map(overrideTitle).joined(separator: "\n")
-		return String(localized: .TDCPreferencesController.q4O2F(styleName, overrideList))
+		return String(localized: .TDCPreferencesController.styleNamedHasChosenToOverride(styleName, overrideList))
 	}
 
 	static func version(marketingVersion: String, build: String) -> String {
-		String(localized: .TDCPreferencesController.sbVers(marketingVersion, build))
+		String(localized: .TDCPreferencesController.settingsSidebarFooterArgumentsVersion(marketingVersion, build))
 	}
 
 	private static func overrideTitle(_ override: PreferencesThemeOverride) -> String {
 		switch override {
 		case .channelViewFont:
-			String(localized: .TDCPreferencesController.we8I8)
+			String(localized: .TDCPreferencesController.channelViewFont)
 		case .nicknameFormat:
-			String(localized: .TDCPreferencesController._77TDe)
+			String(localized: .TDCPreferencesController.nicknameFormat)
 		case .timestampFormat:
-			String(localized: .TDCPreferencesController.ddhHr)
+			String(localized: .TDCPreferencesController.timestampFormat)
 		}
 	}
 }

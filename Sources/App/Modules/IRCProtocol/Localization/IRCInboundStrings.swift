@@ -41,29 +41,29 @@ import Foundation
 nonisolated enum IRCInboundStrings {
 	nonisolated enum StandardReply {
 		static func failure(command: String, code: String, description: String) -> String {
-			String(localized: .IRC.p4R6N(command, code, description))
+			String(localized: .IRC.standardRepliesFailWarn(command, code, description))
 		}
 
 		static func warning(command: String, code: String, description: String) -> String {
-			String(localized: .IRC.y7TZk(command, code, description))
+			String(localized: .IRC.warn(command, code, description))
 		}
 
 		static func note(command: String, code: String, description: String) -> String {
-			String(localized: .IRC.k2ECb(command, code, description))
+			String(localized: .IRC.standardRepliesFailWarnNote(command, code, description))
 		}
 	}
 
 	nonisolated enum ChannelEvent {
 		static func modeChanged(sender: String, mode: String) -> String {
-			String(localized: .IRC.v5DIx(sender, mode))
+			String(localized: .IRC.setsMode(sender, mode))
 		}
 
 		static func topicChanged(sender: String, topic: String) -> String {
-			String(localized: .IRC.qq266(sender, topic))
+			String(localized: .IRC.changedTheTopic(sender, topic))
 		}
 
 		static func invitation(sender: String, invitee: String, channelName: String) -> String {
-			String(localized: .IRC.invNt(sender, invitee, channelName))
+			String(localized: .IRC.invitedToJoin(sender, invitee, channelName))
 		}
 
 		static func invitation(
@@ -72,69 +72,69 @@ nonisolated enum IRCInboundStrings {
 			address: String,
 			channelName: String
 		) -> String {
-			String(localized: .IRC.qw4T3(sender, username, address, channelName))
+			String(localized: .IRC.invitedYouToJoin(sender, username, address, channelName))
 		}
 
 		static func mode(_ mode: String) -> String {
-			String(localized: .IRC.obpWw(mode))
+			String(localized: .IRC.miscellaneousMessagesRelatedMode(mode))
 		}
 
 		static func topic(_ topic: String) -> String {
-			String(localized: .IRC._7Nm7V(topic))
+			String(localized: .IRC.miscellaneousMessagesRelatedTopic(topic))
 		}
 
 		static func topicSet(by nickname: String, date: String) -> String {
-			String(localized: .IRC.y7S3E(nickname, date))
+			String(localized: .IRC.miscellaneousMessagesRelatedSet(nickname, date))
 		}
 
 		static func inviting(_ nickname: String, to channelName: String) -> String {
-			String(localized: .IRC.wk4Rv(nickname, channelName))
+			String(localized: .IRC.invitingToJoin(nickname, channelName))
 		}
 	}
 
 	nonisolated enum Membership {
 		static func joinedQuery(nickname: String) -> String {
-			String(localized: .IRC.q0QCh(nickname))
+			String(localized: .IRC.joinedTheQueryByConnecting(nickname))
 		}
 
 		static func joinedChannel(nickname: String, username: String, address: String) -> String {
-			String(localized: .IRC.ziuP9(nickname, username, address))
+			String(localized: .IRC.joinedTheChannel(nickname, username, address))
 		}
 
 		static func partedChannel(nickname: String, username: String, address: String) -> String {
-			String(localized: .IRC.nkrKf(nickname, username, address))
+			String(localized: .IRC.leftTheChannel(nickname, username, address))
 		}
 
 		static func eventWithReason(_ event: String, reason: String) -> String {
-			String(localized: .IRC.ozy6I(event, reason))
+			String(localized: .IRC.miscellaneousMessagesRelated(event, reason))
 		}
 
 		static var rejoinScheduled: String {
-			String(localized: .IRC.zzj2H)
+			String(localized: .IRC.attemptingToRejoinChannelInThree)
 		}
 
 		static func kicked(sender: String, target: String, reason: String) -> String {
-			String(localized: .IRC._9AjBd(sender, target, reason))
+			String(localized: .IRC.kickedFromTheChannel(sender, target, reason))
 		}
 
 		static func quit(nickname: String, username: String, address: String) -> String {
-			String(localized: .IRC._53BDm(nickname, username, address))
+			String(localized: .IRC.leftIrc(nickname, username, address))
 		}
 
 		static func eventWithComment(_ event: String, comment: String) -> String {
-			String(localized: .IRC.tokSt(event, comment))
+			String(localized: .IRC.miscellaneousMessagesRelatedToIrcEvents(event, comment))
 		}
 
 		static func leftQuery(nickname: String) -> String {
-			String(localized: .IRC._8BkMx(nickname))
+			String(localized: .IRC.leftTheQueryByDisconnecting(nickname))
 		}
 
 		static func localNicknameChanged(to nickname: String) -> String {
-			String(localized: .IRC.rr6Yo(nickname))
+			String(localized: .IRC.youreNowKnown(nickname))
 		}
 
 		static func nicknameChanged(from oldNickname: String, to newNickname: String) -> String {
-			String(localized: .IRC.fxw5S(oldNickname, newNickname))
+			String(localized: .IRC.isNowKnown(oldNickname, newNickname))
 		}
 	}
 }
@@ -146,47 +146,47 @@ extension IRCInboundStrings {
 		}
 
 		static var endOfSilenceList: String {
-			String(localized: .IRC.m2VSc)
+			String(localized: .IRC.endOfSilenceList)
 		}
 
 		static var utf8EncodingRequired: String {
-			String(localized: .IRC.y3HUd)
+			String(localized: .IRC.thisServerOnlyAcceptsUtf8)
 		}
 
 		static func supportUpdate(previous: String, explanation: String) -> String {
-			String(localized: .IRC.u51Nn(previous, explanation))
+			String(localized: .IRC.miscellaneousMessagesRelated2(previous, explanation))
 		}
 
 		static func userModes(nickname: String, modes: String) -> String {
-			String(localized: .IRC.ipj34(nickname, modes))
+			String(localized: .IRC.yourUserModes(nickname, modes))
 		}
 
 		static func away(nickname: String, message: String) -> String {
-			String(localized: .IRC.c1HFq(nickname, message))
+			String(localized: .IRC.isAway(nickname, message))
 		}
 
 		static func silenceEntry(_ entry: String) -> String {
-			String(localized: .IRC.m2VSb(entry))
+			String(localized: .IRC.silenceListEntry(entry))
 		}
 
 		static func operatorStatus(networkName: String) -> String {
-			String(localized: .IRC._6BhBr(networkName))
+			String(localized: .IRC.youAreNowAnIrcOperator(networkName))
 		}
 
 		static func website(_ website: String) -> String {
-			String(localized: .IRC._8TqG6(website))
+			String(localized: .IRC.miscellaneousMessagesRelatedWebsite(website))
 		}
 
 		static func cannotMessageUnrecognizedUser(_ nickname: String) -> String {
-			String(localized: .IRC._11IEv(nickname))
+			String(localized: .IRC.youCannotSendPrivateMessages(nickname))
 		}
 
 		static func privateMessageBlocked(nickname: String, account: String) -> String {
-			String(localized: .IRC._3YjIn(nickname, account))
+			String(localized: .IRC.triedToSendYouAPrivate(nickname, account))
 		}
 
 		static func nicknameUnavailable(_ nickname: String) -> String {
-			String(localized: .IRC.js39V(nickname))
+			String(localized: .IRC.cannotUseNicknameTryingAnother(nickname))
 		}
 	}
 
@@ -198,30 +198,30 @@ extension IRCInboundStrings {
 			isHistorical: Bool
 		) -> String {
 			if isHistorical {
-				return String(localized: .IRC.x69Rz(nickname, address, realName))
+				return String(localized: .IRC.miscellaneousMessagesRelatedWasConnected(nickname, address, realName))
 			}
 
-			return String(localized: .IRC._3OaMv(nickname, address, realName))
+			return String(localized: .IRC.isConnected(nickname, address, realName))
 		}
 
 		static func channels(nickname: String, channels: String) -> String {
-			String(localized: .IRC.onkL5(nickname, channels))
+			String(localized: .IRC.miscellaneousMessagesRelatedIs(nickname, channels))
 		}
 
 		static func bot(nickname: String) -> String {
-			String(localized: .IRC.m2VSe(nickname))
+			String(localized: .IRC.isABot(nickname))
 		}
 
 		static func connectedAt(nickname: String, server: String, date: String) -> String {
-			String(localized: .IRC.cduEd(nickname, server, date))
+			String(localized: .IRC.wasConnected(nickname, server, date))
 		}
 
 		static func server(nickname: String, server: String, information: String) -> String {
-			String(localized: .IRC.h19N2(nickname, server, information))
+			String(localized: .IRC.miscellaneousMessagesRelatedIsConnected(nickname, server, information))
 		}
 
 		static func signOnAndIdle(nickname: String, connected: String, idle: String) -> String {
-			String(localized: .IRC._6HnO6(nickname, connected, idle))
+			String(localized: .IRC.signedOnAtAndHasBeen(nickname, connected, idle))
 		}
 
 		static func userhost(
@@ -232,10 +232,10 @@ extension IRCInboundStrings {
 			isHistorical: Bool
 		) -> String {
 			if isHistorical {
-				return String(localized: .IRC._32C87(nickname, username, address, realName))
+				return String(localized: .IRC.hadUserhostAndRealName(nickname, username, address, realName))
 			}
 
-			return String(localized: .IRC.plgLr(nickname, username, address, realName))
+			return String(localized: .IRC.hasUserhostAndRealName(nickname, username, address, realName))
 		}
 	}
 
@@ -246,7 +246,7 @@ extension IRCInboundStrings {
 			userCount: UInt,
 			nicknames: String
 		) -> String {
-			String(localized: .IRC.ns1Sp(firstServer, secondServer, userCount, nicknames))
+			String(localized: .IRC.netsplitBetweenAndUsersLeft(firstServer, secondServer, userCount, nicknames))
 		}
 
 		static func netjoin(
@@ -255,11 +255,11 @@ extension IRCInboundStrings {
 			userCount: UInt,
 			nicknames: String
 		) -> String {
-			String(localized: .IRC.ns2Jn(firstServer, secondServer, userCount, nicknames))
+			String(localized: .IRC.netjoinBetweenAndUsersRejoined(firstServer, secondServer, userCount, nicknames))
 		}
 
 		static func abbreviatedNicknames(_ shown: String, remaining: UInt) -> String {
-			String(localized: .IRC.ns3Mr(shown, remaining))
+			String(localized: .IRC.netsplitAndNetjoinSummariesMore(shown, remaining))
 		}
 	}
 }
@@ -290,17 +290,17 @@ nonisolated enum IRCChannelAccessListStrings {
 	) -> String {
 		if let setBy, let date {
 			switch kind {
-			case .ban: String(localized: .IRC.c04D01(channelName, mask, setBy, date))
-			case .inviteException: String(localized: .IRC.py2Qh1(channelName, mask, setBy, date))
-			case .banException: String(localized: .IRC.ov2Ci1(channelName, mask, setBy, date))
-			case .quiet: String(localized: .IRC.u5ZAz1(channelName, mask, setBy, date))
+			case .ban: String(localized: .IRC.banInSet(channelName, mask, setBy, date))
+			case .inviteException: String(localized: .IRC.inviteExceptionInSet(channelName, mask, setBy, date))
+			case .banException: String(localized: .IRC.banExceptionInSet(channelName, mask, setBy, date))
+			case .quiet: String(localized: .IRC.quietInSet(channelName, mask, setBy, date))
 			}
 		} else {
 			switch kind {
-			case .ban: String(localized: .IRC.c04D02(channelName, mask))
-			case .inviteException: String(localized: .IRC.py2Qh2(channelName, mask))
-			case .banException: String(localized: .IRC.ov2Ci2(channelName, mask))
-			case .quiet: String(localized: .IRC.u5ZAz2(channelName, mask))
+			case .ban: String(localized: .IRC.banList(channelName, mask))
+			case .inviteException: String(localized: .IRC.inviteException(channelName, mask))
+			case .banException: String(localized: .IRC.banException(channelName, mask))
+			case .quiet: String(localized: .IRC.quietList(channelName, mask))
 			}
 		}
 	}

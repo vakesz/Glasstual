@@ -14,6 +14,6 @@ import Foundation
 
 nonisolated enum AddressBookStrings {
 	static var invalidIgnoreMask: String {
-		String(localized: .TDCAddressBookSheet.csuBv)
+		String(localized: .TDCAddressBookSheet.pleaseEnterAProperlyFormattedIgnore)
 	}
 }

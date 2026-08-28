@@ -16,90 +16,90 @@ import Foundation
 /// `BasicLanguage` table.
 nonisolated enum ApplicationStrings {
 	static var unknownValue: String {
-		String(localized: .BasicLanguage.vblXi)
+		String(localized: .BasicLanguage.unknownValuePlaceholder)
 	}
 
 	static var defaultQuitMessage: String {
-		String(localized: .BasicLanguage._1Dd0F)
+		String(localized: .BasicLanguage.glasstualIrcClient)
 	}
 
 	static var untitledConnection: String {
-		String(localized: .BasicLanguage.vfuC0)
+		String(localized: .BasicLanguage.untitledConnection)
 	}
 
 	static var sleepQuitMessage: String {
-		String(localized: .BasicLanguage.qi75Y)
+		String(localized: .BasicLanguage.myMacHasGoneToSleep)
 	}
 
 	static var closeQuery: String {
-		String(localized: .BasicLanguage.hriL0)
+		String(localized: .BasicLanguage.closeQuery)
 	}
 
 	static var closeWindow: String {
-		String(localized: .BasicLanguage._1F6Bg)
+		String(localized: .BasicLanguage.closeWindow)
 	}
 
 	static var leaveChannel: String {
-		String(localized: .BasicLanguage._5Td3F)
+		String(localized: .BasicLanguage.leaveChannel)
 	}
 
 	static var quitApplication: String {
-		String(localized: .BasicLanguage.x97Ro)
+		String(localized: .BasicLanguage.quitGlasstual)
 	}
 
 	static func disconnect(from networkName: String) -> String {
-		String(localized: .BasicLanguage.w3AJe(networkName))
+		String(localized: .BasicLanguage.disconnectMenuTitle(networkName))
 	}
 
 	static var copyLogAsHTML: String {
-		String(localized: .BasicLanguage._6CwNi)
+		String(localized: .BasicLanguage.copyLogAsHtml)
 	}
 
 	static var forceReloadStyle: String {
-		String(localized: .BasicLanguage.ngdMs)
+		String(localized: .BasicLanguage.forceReloadStyle)
 	}
 
 	static var openWebInspector: String {
-		String(localized: .BasicLanguage.tfjM9)
+		String(localized: .BasicLanguage.openWebInspector)
 	}
 
 	static var lookUpInDictionary: String {
-		String(localized: .BasicLanguage.o5L4S)
+		String(localized: .BasicLanguage.lookUpInDictionary)
 	}
 
 	static func lookUpInDictionary(_ selection: String) -> String {
-		String(localized: .BasicLanguage.zxsYy(selection))
+		String(localized: .BasicLanguage.lookUp(selection))
 	}
 
 	static func search(with providerName: String) -> String {
-		String(localized: .BasicLanguage._1LlH9(providerName))
+		String(localized: .BasicLanguage.searchProviderMenuTitle(providerName))
 	}
 
 	static var noActionsAvailable: String {
-		String(localized: .BasicLanguage._7KcMo)
+		String(localized: .BasicLanguage.noActionsAvailable)
 	}
 
 	static var builtInTheme: String {
-		String(localized: .BasicLanguage._7LmBq)
+		String(localized: .BasicLanguage.builtInThemeGroup)
 	}
 
 	static var customTheme: String {
-		String(localized: .BasicLanguage.bm24P)
+		String(localized: .BasicLanguage.customThemeGroupTitle)
 	}
 
 	static var requiredField: String {
-		String(localized: .BasicLanguage.fo81H)
+		String(localized: .BasicLanguage.fillOutThisField)
 	}
 
 	static var ircColors: String {
-		String(localized: .BasicLanguage.iwpCg)
+		String(localized: .BasicLanguage.ircColors)
 	}
 
 	static func ircColor(at index: Int) -> String {
-		String(localized: .BasicLanguage.hamVk(index))
+		String(localized: .BasicLanguage.ircColorListEntry(index))
 	}
 
 	static func relativeTime(_ duration: String) -> String {
-		String(localized: .BasicLanguage._4UmW4(duration))
+		String(localized: .BasicLanguage.relativeDateSuffixAgo(duration))
 	}
 }

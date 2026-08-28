@@ -31,14 +31,14 @@ nonisolated enum ChannelInviteStrings {
 	}
 
 	static func inviteeCount(_ count: Int) -> String {
-		String(localized: .TDCChannelInviteSheet.c8PSb(count))
+		String(localized: .TDCChannelInviteSheet.describesAnInvitationUsers(count))
 	}
 
 	static func inviteePair(_ firstNickname: String, _ secondNickname: String) -> String {
-		String(localized: .TDCChannelInviteSheet._7I1Ds(firstNickname, secondNickname))
+		String(localized: .TDCChannelInviteSheet.joinsExactlyTwoNicknames(firstNickname, secondNickname))
 	}
 
 	static func invitationTitle(inviteeDescription: String) -> String {
-		String(localized: .TDCChannelInviteSheet._0LgEr(inviteeDescription))
+		String(localized: .TDCChannelInviteSheet.headingAboveTheChannelInvite(inviteeDescription))
 	}
 }

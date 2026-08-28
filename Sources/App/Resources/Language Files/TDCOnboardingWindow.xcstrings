@@ -1,392 +1,8 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "id1-ah": {
-      "comment": "Migrated from legacy key id1-ah. Step: Welcome and identity.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Used when your nickname is already taken. Optional."
-          }
-        }
-      }
-    },
-    "id1-an": {
-      "comment": "Migrated from legacy key id1-an. Step: Welcome and identity.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alternate nickname:"
-          }
-        }
-      }
-    },
-    "id1-ap": {
-      "comment": "Migrated from legacy key id1-ap. Step: Welcome and identity.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional"
-          }
-        }
-      }
-    },
-    "id1-nk": {
-      "comment": "Migrated from legacy key id1-nk. Step: Welcome and identity.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nickname:"
-          }
-        }
-      }
-    },
-    "id1-np": {
-      "comment": "Migrated from legacy key id1-np. Step: Welcome and identity.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nickname"
-          }
-        }
-      }
-    },
-    "id1-rn": {
-      "comment": "Migrated from legacy key id1-rn. Step: Welcome and identity.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Real name:"
-          }
-        }
-      }
-    },
-    "id1-rp": {
-      "comment": "Migrated from legacy key id1-rp. Step: Welcome and identity.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your name, or anything you like"
-          }
-        }
-      }
-    },
-    "id1-st": {
-      "comment": "Migrated from legacy key id1-st. Step: Welcome and identity.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glasstual is an IRC client built for the Mac. Start by choosing how others will see you."
-          }
-        }
-      }
-    },
-    "id1-tt": {
-      "comment": "Migrated from legacy key id1-tt. Step: Welcome and identity.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Welcome to Glasstual"
-          }
-        }
-      }
-    },
-    "lf1-a1": {
-      "comment": "Migrated from legacy key lf1-a1. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "System"
-          }
-        }
-      }
-    },
-    "lf1-a2": {
-      "comment": "Migrated from legacy key lf1-a2. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Light"
-          }
-        }
-      }
-    },
-    "lf1-a3": {
-      "comment": "Migrated from legacy key lf1-a3. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dark"
-          }
-        }
-      }
-    },
-    "lf1-ap": {
-      "comment": "Migrated from legacy key lf1-ap. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Appearance:"
-          }
-        }
-      }
-    },
-    "lf1-ax": {
-      "comment": "Migrated from legacy key lf1-ax. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chat style"
-          }
-        }
-      }
-    },
-    "lf1-bb": {
-      "comment": "Migrated from legacy key lf1-bb. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bubbles"
-          }
-        }
-      }
-    },
-    "lf1-bd": {
-      "comment": "Migrated from legacy key lf1-bd. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Messages in rounded bubbles"
-          }
-        }
-      }
-    },
-    "lf1-fs": {
-      "comment": "Migrated from legacy key lf1-fs. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Text size:"
-          }
-        }
-      }
-    },
-    "lf1-ld": {
-      "comment": "Migrated from legacy key lf1-ld. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Classic line-by-line view"
-          }
-        }
-      }
-    },
-    "lf1-ln": {
-      "comment": "Migrated from legacy key lf1-ln. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lines"
-          }
-        }
-      }
-    },
-    "lf1-m1": {
-      "comment": "Migrated from legacy key lf1-m1. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Good morning everyone"
-          }
-        }
-      }
-    },
-    "lf1-m2": {
-      "comment": "Migrated from legacy key lf1-m2. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Morning! Anyone tried the new build?"
-          }
-        }
-      }
-    },
-    "lf1-m3": {
-      "comment": "Migrated from legacy key lf1-m3. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yes, it works well so far."
-          }
-        }
-      }
-    },
-    "lf1-n1": {
-      "comment": "Migrated from legacy key lf1-n1. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "alice"
-          }
-        }
-      }
-    },
-    "lf1-n2": {
-      "comment": "Migrated from legacy key lf1-n2. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bob"
-          }
-        }
-      }
-    },
-    "lf1-n3": {
-      "comment": "Migrated from legacy key lf1-n3. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "you"
-          }
-        }
-      }
-    },
-    "lf1-s1": {
-      "comment": "Migrated from legacy key lf1-s1. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Small"
-          }
-        }
-      }
-    },
-    "lf1-s2": {
-      "comment": "Migrated from legacy key lf1-s2. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Medium"
-          }
-        }
-      }
-    },
-    "lf1-s3": {
-      "comment": "Migrated from legacy key lf1-s3. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Large"
-          }
-        }
-      }
-    },
-    "lf1-st": {
-      "comment": "Migrated from legacy key lf1-st. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose how conversations are displayed. You can change this later in Settings."
-          }
-        }
-      }
-    },
-    "lf1-tm": {
-      "comment": "Migrated from legacy key lf1-tm. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "09:41"
-          }
-        }
-      }
-    },
-    "lf1-tt": {
-      "comment": "Migrated from legacy key lf1-tt. Step: Look and feel.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Look and Feel"
-          }
-        }
-      }
-    },
-    "np1-ac": {
-      "comment": "Migrated from legacy key np1-ac. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Account"
-          }
-        }
-      }
-    },
-    "np1-an": {
-      "comment": "Migrated from legacy key np1-an. Network picker.",
+    "account-name": {
+      "comment": "Network picker. Legacy key: np1-an.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -397,68 +13,8 @@
         }
       }
     },
-    "np1-ax": {
-      "comment": "Migrated from legacy key np1-ax. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Networks"
-          }
-        }
-      }
-    },
-    "np1-cd": {
-      "comment": "Migrated from legacy key np1-cd. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connect to any IRC server by address"
-          }
-        }
-      }
-    },
-    "np1-cs": {
-      "comment": "Migrated from legacy key np1-cs. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Custom Server…"
-          }
-        }
-      }
-    },
-    "np1-e1": {
-      "comment": "Migrated from legacy key np1-e1. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose a network or enter a server address."
-          }
-        }
-      }
-    },
-    "np1-e2": {
-      "comment": "Migrated from legacy key np1-e2. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter a port between 1 and 65535."
-          }
-        }
-      }
-    },
-    "np1-ga": {
-      "comment": "Migrated from legacy key np1-ga. Network picker.",
+    "all-networks": {
+      "comment": "Network picker. Legacy key: np1-ga.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -469,260 +25,44 @@
         }
       }
     },
-    "np1-gp": {
-      "comment": "Migrated from legacy key np1-gp. Network picker.",
+    "alternate-nickname": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-an.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Popular"
+            "value": "Alternate nickname:"
           }
         }
       }
     },
-    "np1-lk": {
-      "comment": "Migrated from legacy key np1-lk. Network picker.",
+    "chat-style": {
+      "comment": "Step: Look and feel. Legacy key: lf1-ax.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Secure connection"
+            "value": "Chat style"
           }
         }
       }
     },
-    "np1-pp": {
-      "comment": "Migrated from legacy key np1-pp. Network picker.",
+    "choose-a-network-or-enter": {
+      "comment": "Network picker. Legacy key: np1-e1.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "6697"
+            "value": "Choose a network or enter a server address."
           }
         }
       }
     },
-    "np1-pt": {
-      "comment": "Migrated from legacy key np1-pt. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Port:"
-          }
-        }
-      }
-    },
-    "np1-pw": {
-      "comment": "Migrated from legacy key np1-pw. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Password:"
-          }
-        }
-      }
-    },
-    "np1-rq": {
-      "comment": "Migrated from legacy key np1-rq. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Registration required"
-          }
-        }
-      }
-    },
-    "np1-sa": {
-      "comment": "Migrated from legacy key np1-sa. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in with SASL"
-          }
-        }
-      }
-    },
-    "np1-sh": {
-      "comment": "Migrated from legacy key np1-sh. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "irc.example.org"
-          }
-        }
-      }
-    },
-    "np1-sp": {
-      "comment": "Migrated from legacy key np1-sp. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search networks"
-          }
-        }
-      }
-    },
-    "np1-sv": {
-      "comment": "Migrated from legacy key np1-sv. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Server address:"
-          }
-        }
-      }
-    },
-    "np1-tl": {
-      "comment": "Migrated from legacy key np1-tl. Network picker.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use SSL/TLS"
-          }
-        }
-      }
-    },
-    "nt1-hl": {
-      "comment": "Migrated from legacy key nt1-hl. Step: Notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notify me when someone mentions me"
-          }
-        }
-      }
-    },
-    "nt1-pd": {
-      "comment": "Migrated from legacy key nt1-pd. Step: Notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notifications are allowed for Glasstual."
-          }
-        }
-      }
-    },
-    "nt1-pm": {
-      "comment": "Migrated from legacy key nt1-pm. Step: Notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notify me about private messages"
-          }
-        }
-      }
-    },
-    "nt1-pn": {
-      "comment": "Migrated from legacy key nt1-pn. Step: Notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notifications are turned off for Glasstual in System Settings."
-          }
-        }
-      }
-    },
-    "nt1-pr": {
-      "comment": "Migrated from legacy key nt1-pr. Step: Notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glasstual will ask macOS for permission to show notifications when you continue. You can change this at any time in System Settings."
-          }
-        }
-      }
-    },
-    "nt1-sn": {
-      "comment": "Migrated from legacy key nt1-sn. Step: Notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play sounds"
-          }
-        }
-      }
-    },
-    "nt1-st": {
-      "comment": "Migrated from legacy key nt1-st. Step: Notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose what Glasstual should tell you about while you are busy with something else."
-          }
-        }
-      }
-    },
-    "nt1-tt": {
-      "comment": "Migrated from legacy key nt1-tt. Step: Notifications.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notifications"
-          }
-        }
-      }
-    },
-    "nw1-ch": {
-      "comment": "Migrated from legacy key nw1-ch. Step: First network.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suggested channels:"
-          }
-        }
-      }
-    },
-    "nw1-cn": {
-      "comment": "Migrated from legacy key nw1-cn. Step: First network.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connect when finished"
-          }
-        }
-      }
-    },
-    "nw1-ep": {
-      "comment": "Migrated from legacy key nw1-ep. Step: First network.",
+    "choose-a-network-to-see-suggested": {
+      "comment": "Step: First network. Legacy key: nw1-ep.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -733,20 +73,308 @@
         }
       }
     },
-    "nw1-er": {
-      "comment": "Migrated from legacy key nw1-er. Step: First network.",
+    "choose-how-conversations-are-displayed": {
+      "comment": "Step: Look and feel. Legacy key: lf1-st.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please check the network details."
+            "value": "Choose how conversations are displayed. You can change this later in Settings."
           }
         }
       }
     },
-    "nw1-st": {
-      "comment": "Migrated from legacy key nw1-st. Step: First network.",
+    "choose-what-glasstual-should-tell": {
+      "comment": "Step: Notifications. Legacy key: nt1-st.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose what Glasstual should tell you about while you are busy with something else."
+          }
+        }
+      }
+    },
+    "classic-line-by-line-view": {
+      "comment": "Step: Look and feel. Legacy key: lf1-ld.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classic line-by-line view"
+          }
+        }
+      }
+    },
+    "connect-to-any-irc-server": {
+      "comment": "Network picker. Legacy key: np1-cd.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to any IRC server by address"
+          }
+        }
+      }
+    },
+    "connect-when-finished": {
+      "comment": "Step: First network. Legacy key: nw1-cn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect when finished"
+          }
+        }
+      }
+    },
+    "custom-server": {
+      "comment": "Network picker. Legacy key: np1-cs.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom Server…"
+          }
+        }
+      }
+    },
+    "enter-a-port-between-1": {
+      "comment": "Network picker. Legacy key: np1-e2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a port between 1 and 65535."
+          }
+        }
+      }
+    },
+    "glasstual-is-an-irc-client-built": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-st.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual is an IRC client built for the Mac. Start by choosing how others will see you."
+          }
+        }
+      }
+    },
+    "glasstual-will-ask-macos-for-permission": {
+      "comment": "Step: Notifications. Legacy key: nt1-pr.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glasstual will ask macOS for permission to show notifications when you continue. You can change this at any time in System Settings."
+          }
+        }
+      }
+    },
+    "good-morning-everyone": {
+      "comment": "Step: Look and feel. Legacy key: lf1-m1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good morning everyone"
+          }
+        }
+      }
+    },
+    "irc-example-org": {
+      "comment": "Network picker. Legacy key: np1-sh.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "irc.example.org"
+          }
+        }
+      }
+    },
+    "look-and-feel": {
+      "comment": "Step: Look and feel. Legacy key: lf1-tt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look and Feel"
+          }
+        }
+      }
+    },
+    "messages-in-rounded-bubbles": {
+      "comment": "Step: Look and feel. Legacy key: lf1-bd.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages in rounded bubbles"
+          }
+        }
+      }
+    },
+    "morning-anyone-tried-the-new-build": {
+      "comment": "Step: Look and feel. Legacy key: lf1-m2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning! Anyone tried the new build?"
+          }
+        }
+      }
+    },
+    "network-picker": {
+      "comment": "Network picker. Legacy key: np1-pp.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6697"
+          }
+        }
+      }
+    },
+    "network-picker-account": {
+      "comment": "Network picker. Legacy key: np1-ac.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        }
+      }
+    },
+    "network-picker-networks": {
+      "comment": "Network picker. Legacy key: np1-ax.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Networks"
+          }
+        }
+      }
+    },
+    "network-picker-password": {
+      "comment": "Network picker. Legacy key: np1-pw.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password:"
+          }
+        }
+      }
+    },
+    "network-picker-popular": {
+      "comment": "Network picker. Legacy key: np1-gp.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Popular"
+          }
+        }
+      }
+    },
+    "network-picker-port": {
+      "comment": "Network picker. Legacy key: np1-pt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port:"
+          }
+        }
+      }
+    },
+    "nickname": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-np.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
+          }
+        }
+      }
+    },
+    "notifications-are-allowed-for-glasstual": {
+      "comment": "Step: Notifications. Legacy key: nt1-pd.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are allowed for Glasstual."
+          }
+        }
+      }
+    },
+    "notifications-are-turned-off-for-glasstual": {
+      "comment": "Step: Notifications. Legacy key: nt1-pn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are turned off for Glasstual in System Settings."
+          }
+        }
+      }
+    },
+    "notify-me-about-private-messages": {
+      "comment": "Step: Notifications. Legacy key: nt1-pm.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify me about private messages"
+          }
+        }
+      }
+    },
+    "notify-me-when-someone-mentions-me": {
+      "comment": "Step: Notifications. Legacy key: nt1-hl.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify me when someone mentions me"
+          }
+        }
+      }
+    },
+    "pick-a-network-to-join": {
+      "comment": "Step: First network. Legacy key: nw1-st.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -757,20 +385,356 @@
         }
       }
     },
-    "nw1-tt": {
-      "comment": "Migrated from legacy key nw1-tt. Step: First network.",
+    "play-sounds": {
+      "comment": "Step: Notifications. Legacy key: nt1-sn.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your First Network"
+            "value": "Play sounds"
           }
         }
       }
     },
-    "ob1-bk": {
-      "comment": "Migrated from legacy key ob1-bk. Window chrome.",
+    "please-check-the-network-details": {
+      "comment": "Step: First network. Legacy key: nw1-er.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please check the network details."
+          }
+        }
+      }
+    },
+    "real-name": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-rn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real name:"
+          }
+        }
+      }
+    },
+    "registration-required": {
+      "comment": "Network picker. Legacy key: np1-rq.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registration required"
+          }
+        }
+      }
+    },
+    "search-networks": {
+      "comment": "Network picker. Legacy key: np1-sp.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search networks"
+          }
+        }
+      }
+    },
+    "secure-connection": {
+      "comment": "Network picker. Legacy key: np1-lk.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secure connection"
+          }
+        }
+      }
+    },
+    "server-address": {
+      "comment": "Network picker. Legacy key: np1-sv.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server address:"
+          }
+        }
+      }
+    },
+    "sign-in-with-sasl": {
+      "comment": "Network picker. Legacy key: np1-sa.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with SASL"
+          }
+        }
+      }
+    },
+    "step-look-and-feel": {
+      "comment": "Step: Look and feel. Legacy key: lf1-tm.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "09:41"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-alice": {
+      "comment": "Step: Look and feel. Legacy key: lf1-n1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "alice"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-appearance": {
+      "comment": "Step: Look and feel. Legacy key: lf1-ap.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance:"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-bob": {
+      "comment": "Step: Look and feel. Legacy key: lf1-n2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bob"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-bubbles": {
+      "comment": "Step: Look and feel. Legacy key: lf1-bb.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bubbles"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-dark": {
+      "comment": "Step: Look and feel. Legacy key: lf1-a3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-large": {
+      "comment": "Step: Look and feel. Legacy key: lf1-s3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-light": {
+      "comment": "Step: Look and feel. Legacy key: lf1-a2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-lines": {
+      "comment": "Step: Look and feel. Legacy key: lf1-ln.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-medium": {
+      "comment": "Step: Look and feel. Legacy key: lf1-s2.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-small": {
+      "comment": "Step: Look and feel. Legacy key: lf1-s1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-system": {
+      "comment": "Step: Look and feel. Legacy key: lf1-a1.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "step-look-and-feel-you": {
+      "comment": "Step: Look and feel. Legacy key: lf1-n3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you"
+          }
+        }
+      }
+    },
+    "step-notifications": {
+      "comment": "Step: Notifications. Legacy key: nt1-tt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        }
+      }
+    },
+    "step-welcome-and-identity-nickname": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-nk.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname:"
+          }
+        }
+      }
+    },
+    "step-welcome-and-identity-optional": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-ap.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        }
+      }
+    },
+    "suggested-channels": {
+      "comment": "Step: First network. Legacy key: nw1-ch.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested channels:"
+          }
+        }
+      }
+    },
+    "text-size": {
+      "comment": "Step: Look and feel. Legacy key: lf1-fs.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text size:"
+          }
+        }
+      }
+    },
+    "use-ssl-tls": {
+      "comment": "Network picker. Legacy key: np1-tl.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use SSL/TLS"
+          }
+        }
+      }
+    },
+    "used-when-your-nickname-is-already": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-ah.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used when your nickname is already taken. Optional."
+          }
+        }
+      }
+    },
+    "welcome-to-glasstual": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-tt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Glasstual"
+          }
+        }
+      }
+    },
+    "window-chrome-back": {
+      "comment": "Window chrome. Legacy key: ob1-bk.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -781,8 +745,8 @@
         }
       }
     },
-    "ob1-ct": {
-      "comment": "Migrated from legacy key ob1-ct. Window chrome.",
+    "window-chrome-continue": {
+      "comment": "Window chrome. Legacy key: ob1-ct.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -793,8 +757,8 @@
         }
       }
     },
-    "ob1-fn": {
-      "comment": "Migrated from legacy key ob1-fn. Window chrome.",
+    "window-chrome-finish": {
+      "comment": "Window chrome. Legacy key: ob1-fn.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -805,20 +769,8 @@
         }
       }
     },
-    "ob1-pg": {
-      "comment": "Migrated from legacy key ob1-pg. Window chrome.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Step %1$ld of %2$ld"
-          }
-        }
-      }
-    },
-    "ob1-sk": {
-      "comment": "Migrated from legacy key ob1-sk. Window chrome.",
+    "window-chrome-skip": {
+      "comment": "Window chrome. Legacy key: ob1-sk.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -829,14 +781,62 @@
         }
       }
     },
-    "ob1-wt": {
-      "comment": "Migrated from legacy key ob1-wt. Window chrome.",
+    "window-chrome-step": {
+      "comment": "Window chrome. Legacy key: ob1-pg.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Step %1$ld of %2$ld"
+          }
+        }
+      }
+    },
+    "window-chrome-welcome-to-glasstual": {
+      "comment": "Window chrome. Legacy key: ob1-wt.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Welcome to Glasstual"
+          }
+        }
+      }
+    },
+    "yes-it-works-well-so-far": {
+      "comment": "Step: Look and feel. Legacy key: lf1-m3.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, it works well so far."
+          }
+        }
+      }
+    },
+    "your-first-network": {
+      "comment": "Step: First network. Legacy key: nw1-tt.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your First Network"
+          }
+        }
+      }
+    },
+    "your-name-or-anything-you-like": {
+      "comment": "Step: Welcome and identity. Legacy key: id1-rp.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your name, or anything you like"
           }
         }
       }
