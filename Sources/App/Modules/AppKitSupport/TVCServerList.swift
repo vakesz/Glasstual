@@ -100,24 +100,33 @@ public final class ServerList: NSOutlineView {
 
 	@objc(removeItemFromList:)
 	public func removeItem(fromList object: Any) {
-		if row(forItem: object) < 0 {
-			serverListLogger.error("Object does not exist on outline view")
-			return
-		}
-
-		let parentItem = parent(forItem: object)
+		/* Indexes come from the model rather than the view: row(forItem:),
+		 parent(forItem:) and items(inContainingGroupOf:) only know about rows
+		 that are currently displayed, so removing a channel from a collapsed
+		 server used to bail out and leave the view out of step. */
+		let parentItem: Any?
 		let rowIndex: Int
 
-		if let parentItem {
-			let childrenItems = items(inContainingGroupOf: parentItem) ?? []
-			rowIndex = (childrenItems as NSArray).index(of: object)
-		} else {
-			rowIndex = (groupItems as NSArray).index(of: object)
-		}
+		if let channel = object as? IRCChannel {
+			guard let client = channel.associatedClient,
+			      let index = client.channelList.firstIndex(where: { $0 === channel })
+			else {
+				serverListLogger.error("Object is not a child of its parent item")
+				return
+			}
 
-		if rowIndex == NSNotFound {
-			serverListLogger.error("Object is not a child of its parent item")
-			return
+			parentItem = client
+			rowIndex = index
+		} else {
+			let index = (groupItems as NSArray).index(of: object)
+
+			guard index != NSNotFound else {
+				serverListLogger.error("Object does not exist on outline view")
+				return
+			}
+
+			parentItem = nil
+			rowIndex = index
 		}
 
 		removeItems(
@@ -128,19 +137,6 @@ public final class ServerList: NSOutlineView {
 
 		if let parentItem {
 			reloadItem(parentItem)
-		}
-	}
-
-	override public func moveItem(
-		at fromIndex: Int,
-		inParent oldParent: Any?,
-		to toIndex: Int,
-		inParent newParent: Any?
-	) {
-		if fromIndex < toIndex {
-			super.moveItem(at: fromIndex, inParent: oldParent, to: toIndex - 1, inParent: newParent)
-		} else {
-			super.moveItem(at: fromIndex, inParent: oldParent, to: toIndex, inParent: newParent)
 		}
 	}
 
@@ -353,7 +349,11 @@ public final class ServerList: NSOutlineView {
 	}
 
 	override public func keyDown(with event: NSEvent) {
-		guard keyDelegate != nil else {
+		/* With no delegate the list must still respond to the keyboard, so
+		 unhandled keys go to super rather than being swallowed. */
+		guard let keyDelegate else {
+			super.keyDown(with: event)
+
 			return
 		}
 
@@ -366,7 +366,7 @@ public final class ServerList: NSOutlineView {
 			break
 
 		default:
-			keyDelegate?.serverListKeyDown(event)
+			keyDelegate.serverListKeyDown(event)
 		}
 	}
 }

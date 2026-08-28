@@ -753,7 +753,11 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 	}
 
 	override public func keyDown(with event: NSEvent) {
+		/* With no delegate the list must still respond to the keyboard, so
+		 unhandled keys go to super rather than being swallowed. */
 		guard let keyDelegate else {
+			super.keyDown(with: event)
+
 			return
 		}
 
