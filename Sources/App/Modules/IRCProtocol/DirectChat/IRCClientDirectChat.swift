@@ -169,7 +169,7 @@ public extension IRCClient {
 
 		print(IRCDirectChatStrings.incomingRequest(sender: sender), by: nil, in: nil,
 		      as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue)
-		guard let window = AppController.shared.mainWindow else { return }
+		guard let window = output?.alertPresentationWindow else { return }
 		TDCAlert.alertSheet(
 			with: window,
 			body: PromptStrings.DirectChat.body(sender: sender),
@@ -224,7 +224,7 @@ public extension IRCClient {
 			in: channel
 		)
 		if let treeItem = legacyDirectChatTreeItem(for: channel) {
-			AppController.shared.mainWindow.select(treeItem)
+			output?.selectItem(treeItem)
 		}
 		connection.open()
 	}
@@ -238,7 +238,7 @@ public extension IRCClient {
 		channel.directChatConnection = connection
 		printDebugInformation(IRCDirectChatStrings.offering(to: nickname), in: channel)
 		if let treeItem = legacyDirectChatTreeItem(for: channel) {
-			AppController.shared.mainWindow.select(treeItem)
+			output?.selectItem(treeItem)
 		}
 		connection.open()
 	}

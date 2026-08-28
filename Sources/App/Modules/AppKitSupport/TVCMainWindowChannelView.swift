@@ -214,8 +214,8 @@ public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 		mainWindow.channelViewSelectionChange(to: newItem)
 	}
 
-	private func backingView(for item: IRCTreeItem) -> LogView {
-		item.viewController.backingView
+	private func backingView(for item: IRCTreeItem) -> LogView? {
+		item.logController?.backingView
 	}
 
 	private func subview(for _: IRCTreeItem) -> MainWindowChannelViewSubview {

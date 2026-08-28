@@ -74,8 +74,8 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 			return
 		}
 		channel.activate()
-		AppController.shared.mainWindow.reloadTreeItem(channel)
-		AppController.shared.mainWindow.updateTitle(for: channel)
+		output?.reloadTreeItem(channel)
+		output?.updateTitle(for: channel)
 		printDebugInformation(IRCDirectChatStrings.established(nickname: connection.peerNickname), in: channel)
 	}
 
@@ -105,7 +105,7 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 		if channel.isActive {
 			channel.deactivate()
 		}
-		AppController.shared.mainWindow.reloadTreeItem(channel)
-		AppController.shared.mainWindow.updateTitle(for: channel)
+		output?.reloadTreeItem(channel)
+		output?.updateTitle(for: channel)
 	}
 }

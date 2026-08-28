@@ -375,7 +375,7 @@ public final nonisolated class LogControllerPrintingOperationQueue: OperationQue
 
 	@MainActor
 	public func cancelOperations(for client: IRCClient) {
-		guard let viewController = client.viewController else {
+		guard let viewController = client.logController else {
 			return
 		}
 		cancelOperations(for: viewController)
@@ -383,7 +383,10 @@ public final nonisolated class LogControllerPrintingOperationQueue: OperationQue
 
 	@MainActor
 	public func cancelOperations(for channel: IRCChannel) {
-		cancelOperations(for: channel.viewController)
+		guard let viewController = channel.logController else {
+			return
+		}
+		cancelOperations(for: viewController)
 	}
 
 	/// Republishes the readiness of every operation waiting on `viewController`

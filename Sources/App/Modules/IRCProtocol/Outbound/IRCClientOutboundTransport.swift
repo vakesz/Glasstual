@@ -47,7 +47,7 @@ public extension IRCClient {
 		}
 
 		socket?.sendLine(line)
-		AppController.shared.world?.noteMessageSent(length: UInt(line.count))
+		world?.noteMessageSent(length: UInt(line.count))
 	}
 
 	@objc(send:arguments:)

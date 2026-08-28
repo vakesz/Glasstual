@@ -41,7 +41,7 @@ import Foundation
 public extension IRCClient {
 	@objc(reopenLogFileIfNeeded)
 	func reopenLogFileIfNeeded() {
-		if TextualPreferences.logToDiskIsEnabled() {
+		if environment.preferences.logToDiskIsEnabled {
 			logFile?.reopenIfNeeded()
 		} else {
 			closeClientLogFile()
@@ -91,7 +91,7 @@ public extension IRCClient {
 
 	@MainActor
 	private func writeClientLogLine(_ logLine: LogLine) {
-		guard TextualPreferences.logToDiskIsEnabled() else { return }
+		guard environment.preferences.logToDiskIsEnabled else { return }
 
 		beginClientLogSession()
 

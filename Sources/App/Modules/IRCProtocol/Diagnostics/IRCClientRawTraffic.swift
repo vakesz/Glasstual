@@ -49,14 +49,14 @@ public extension IRCClient {
 		guard let treeItem = (query as AnyObject) as? IRCTreeItem else {
 			preconditionFailure("IRCChannel must bridge to its Objective-C tree item")
 		}
-		AppController.shared.mainWindow.select(treeItem)
+		output?.selectItem(treeItem)
 		rawDataLog(IRCDiagnosticStrings.rawTrafficNotice)
 	}
 
 	@objc(destroyRawDataLogQuery)
 	func destroyRawDataLogQuery() {
 		guard !isTerminating, let query = rawDataLogQuery else { return }
-		AppController.shared.world.destroy(query)
+		world?.destroy(query)
 	}
 
 	@objc(rawDataLog:)

@@ -88,9 +88,16 @@ open class TreeItem: NSObject {
 		didSet { associatedClientDidChange() }
 	}
 
-	/// Strong, as it was when this lived in an associated object: the tree item
-	/// is the view controller's owner.
-	@objc public var viewController: LogController!
+	/** Weak: the window's log controller registry owns the view this item is
+	 drawn into and installs itself here. An item with no window — a client
+	 built by a test, an item being torn down — simply has none. */
+	weak var presentation: (any TreeItemPresentation)?
+
+	/// The preference snapshot of the client this item belongs to. An item whose
+	/// client has already gone reads the declared defaults rather than the store.
+	var clientPreferences: ClientPreferences {
+		associatedClient?.environment.preferences ?? ClientPreferences()
+	}
 
 	@objc public var isUnread: Bool {
 		treeUnreadCount > 0

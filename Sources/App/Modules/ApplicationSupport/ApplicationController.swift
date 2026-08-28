@@ -142,6 +142,25 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		world = IRCWorld()
 	}
 
+	/** Hands the IRC layer the window, the menus and this controller, and makes
+	 both of the first two observers of the world. Everything the connection code
+	 used to reach for through `AppController.shared` arrives this way. */
+	func installClientServices() {
+		let services = ClientEnvironment.shared.services
+		services.output = mainWindowStorage
+		services.menu = menuControllerStorage
+		services.applicationState = self
+		services.world = worldStorage
+
+		if let mainWindowStorage {
+			worldStorage?.addObserver(mainWindowStorage)
+		}
+
+		if let menuControllerStorage {
+			worldStorage?.addObserver(menuControllerStorage)
+		}
+	}
+
 	@objc
 	public func applicationWakeStepTwo() {
 		CommandIndex.populateCommandIndex()
@@ -560,5 +579,13 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	@objc
 	private func computerWillPowerOff() {
 		terminateGracefully()
+	}
+}
+
+/// The application state the IRC layer branches on, behind a seam so that the
+/// connection code does not name the application controller.
+extension ApplicationController: ClientApplicationState {
+	func noteClientDidFinishTerminating() {
+		terminatingClientCount -= 1
 	}
 }

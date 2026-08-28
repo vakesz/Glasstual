@@ -280,10 +280,10 @@ public extension IRCClient {
 			} else if sender.caseInsensitiveCompare("NickServ") == .orderedSame {
 				processNickServNotice(text, from: message)
 			}
-			if TextualPreferences.locationToSendNotices() == .selectedChannel {
-				query = AppController.shared.mainWindow.selectedChannel(on: self)
+			if environment.preferences.locationToSendNotices == .selectedChannel {
+				query = output?.selectedChannel(on: self)
 			}
-			if query == nil, TextualPreferences.locationToSendNotices() == .query {
+			if query == nil, environment.preferences.locationToSendNotices == .query {
 				query = findChannelOrCreate(isSelfMessage ? target : sender, as: .privateMessage)
 			}
 		} else if query == nil {
@@ -324,7 +324,7 @@ public extension IRCClient {
 		if !isNotice, let query, !query.isActive {
 			query.activate()
 			if let item = (query as AnyObject) as? IRCTreeItem {
-				AppController.shared.mainWindow.reloadTreeItem(item)
+				output?.reloadTreeItem(item)
 			}
 		}
 	}
@@ -369,7 +369,7 @@ public extension IRCClient {
 		}
 
 		serverHasNickServ = true
-		let comparableText = TextualPreferences.removeAllFormatting() ? text : (text as NSString).stripIRCEffects
+		let comparableText = environment.preferences.removeAllFormatting ? text : (text as NSString).stripIRCEffects
 		let action = IRCServiceNoticePolicy.nickServAction(
 			for: comparableText,
 			context: .init(

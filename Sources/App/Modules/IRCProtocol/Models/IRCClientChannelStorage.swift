@@ -52,7 +52,7 @@ public extension IRCClient {
 		guard let firstChannel = channelList.first,
 		      let treeItem = (firstChannel as AnyObject) as? IRCTreeItem
 		else { return }
-		AppController.shared.mainWindow.select(treeItem)
+		output?.selectItem(treeItem)
 	}
 
 	@objc(addChannel:)

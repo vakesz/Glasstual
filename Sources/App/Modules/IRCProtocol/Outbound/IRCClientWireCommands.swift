@@ -103,7 +103,7 @@ public extension IRCClient {
 	@objc(kick:inChannel:)
 	func kick(_ nickname: String, in channel: IRCChannel) {
 		guard isLoggedIn, channel.isChannel, channel.isActive, nickname.isEmpty == false else { return }
-		send("KICK", arguments: [channel.name, nickname, TextualPreferences.defaultKickMessage()])
+		send("KICK", arguments: [channel.name, nickname, environment.preferences.defaultKickMessage])
 	}
 
 	@objc(requestModesForChannel:)

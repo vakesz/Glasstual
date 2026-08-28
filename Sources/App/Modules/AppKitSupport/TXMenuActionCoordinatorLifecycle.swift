@@ -142,7 +142,7 @@ public extension MenuActionCoordinator {
 
 	@objc(selectedViewController)
 	func objcSelectedViewController() -> LogController? {
-		selectedChannel?.viewController ?? selectedClient?.viewController
+		selectedChannel?.logController ?? selectedClient?.logController
 	}
 
 	@objc(selectedViewControllerBackingView)
