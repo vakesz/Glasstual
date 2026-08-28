@@ -273,6 +273,7 @@
 		482F3000E472C2BE86379B65 /* QuickLookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 072A8B2252E5A95A485B5E78 /* QuickLookUI.framework */; };
 		4894E72E1999868B97709706 /* IRCClientDCCPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B5B3ACB88BC66DEA764F596 /* IRCClientDCCPolicyTests.swift */; };
 		48A6265D713331E068C5D385 /* TemplateToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25CA535280BCE2CCFEA0B59B /* TemplateToken.swift */; };
+		48D8668EFE4A46C93473E0CE /* userhost-split.json in Resources */ = {isa = PBXBuildFile; fileRef = E9AEBA869F2C63336B6E9BBA /* userhost-split.json */; };
 		48FD74867EAA6EBB34B72142 /* InlineContentKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = BC36FC699375B0F38AE0F6AC /* InlineContentKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		498AE48DC425D3F74950EE4F /* IRCClientWireUtilitiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F64EFF946320A9AA8A56FA7 /* IRCClientWireUtilitiesTests.swift */; };
 		4A8054DB21B5F3BB9C993546 /* NicknameColorFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FFCB2697318AFDBCA45A0A0 /* NicknameColorFeatureTests.swift */; };
@@ -289,6 +290,7 @@
 		4D2CC4CD08B7624E26133CE5 /* MainWindowLoadingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D9E409D38838C152FFB640 /* MainWindowLoadingScreen.swift */; };
 		4DCCFF11B369C6E652D94BBC /* TemplateRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AA16FF15B8A5D3FEBFAFE3E /* TemplateRepository.swift */; };
 		4DD207100D847D6F5E744B3E /* IRCHostmaskGlobTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA63C805AF20F5FF9DC747 /* IRCHostmaskGlobTests.swift */; };
+		4DDDD6C61FA2A132134C44B3 /* IRCSpecParserCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B05823BFF201C101176F16 /* IRCSpecParserCorpusTests.swift */; };
 		4E021EF78FC3F69AFD786A25 /* IRCLabeledResponseRetirementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D544929B3F1620347D7AC1E4 /* IRCLabeledResponseRetirementTests.swift */; };
 		4E5ECBEFF2044E44BB36CD79 /* IRCClientHistoryAndReadMarkers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9F34E99AD58F2E26CA49DA /* IRCClientHistoryAndReadMarkers.swift */; };
 		4EC4B841B2CB8C565D691CDE /* InlineContentURLPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 302924725389D19E73F4CEB3 /* InlineContentURLPolicyTests.swift */; };
@@ -779,6 +781,7 @@
 		D700E8BEFB6FC3A42D0994C2 /* LogViewLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B57AE1DD55E1D5E3ADDC9F /* LogViewLifecycleTests.swift */; };
 		D715D4F3680DC2440A450357 /* IRCClientTypingNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69FD1AD7884A6FA7BAAFE6CD /* IRCClientTypingNotifications.swift */; };
 		D7268F230C1DA790A2EACD64 /* IRCClientNegotiationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7ABC3762AB276A169D6B9E /* IRCClientNegotiationTests.swift */; };
+		D736239B3202E6B3AFA1020D /* msg-join.json in Resources */ = {isa = PBXBuildFile; fileRef = F90D591FCED2163FAE95FA28 /* msg-join.json */; };
 		D739358A8875C82066954D4D /* KeychainItemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D65DEFCE9B4803207126D0 /* KeychainItemTests.swift */; };
 		D784614D2FE56AD6EBECEA49 /* ResourceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8A51EFD7395F8EFD506AEB /* ResourceManager.swift */; };
 		D7DBFAA707113E1A064394C1 /* ChannelValidationStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532D207DB9EB403921952CF1 /* ChannelValidationStrings.swift */; };
@@ -798,6 +801,8 @@
 		DC434F07F43BD9299F2418E5 /* ChannelTopicContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F011AD5FF84C5A0AA1C744 /* ChannelTopicContent.swift */; };
 		DD49FA3E90F9F1AA56B3E081 /* HTMLEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FA5DCD3F6101C57A8B56B41 /* HTMLEntities.swift */; };
 		DD7A6FACB0E4A07C0D9061E9 /* IRCAddressBookEntryMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0BF705AB0BD5D6374DA9A8 /* IRCAddressBookEntryMatcher.swift */; };
+		DE91CBBDF92500D8EB85B6F5 /* msg-split.json in Resources */ = {isa = PBXBuildFile; fileRef = 8A791780CCE6274542D33126 /* msg-split.json */; };
+		DF066CB410EF230A08290934 /* mask-match.json in Resources */ = {isa = PBXBuildFile; fileRef = 727A3DB90EE87F0D509B6E08 /* mask-match.json */; };
 		DFBBC1878AE9EF074E3269D1 /* IRCUserNicknameColorStyleGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BBC8E57E6060621D8D5794F /* IRCUserNicknameColorStyleGenerator.swift */; };
 		DFD5F562876A32242945E395 /* TDCOnboardingWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F15F931066A064FFC1A812E2 /* TDCOnboardingWindow.xib */; };
 		E01457FC0C40BDCBA72D7FA4 /* IRCColorFormatMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8DAB6E1FB302763BD7B7A8 /* IRCColorFormatMigrationTests.swift */; };
@@ -902,6 +907,7 @@
 		FB6FFDAA49A64CF97FF1BE34 /* ImgurGifvModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54D94F808879BB7077B8963 /* ImgurGifvModule.swift */; };
 		FB7A5419E0E1B0055A839C3E /* TDCChannelPropertiesSheet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C617A65A3BBB6D53EC32C8C8 /* TDCChannelPropertiesSheet.xcstrings */; };
 		FB8D0089BBE669CFBCC71C0F /* IRCClientConfigMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09AC444D38772880D816687F /* IRCClientConfigMigrationTests.swift */; };
+		FC0B5D8C7C981953953392BB /* validate-hostname.json in Resources */ = {isa = PBXBuildFile; fileRef = 0ABEDF4B0F6FAF37F1ADC4AA /* validate-hostname.json */; };
 		FC66AC315CD9281389E9CAE6 /* XkcdModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACB6D62D6844B47FD9EF804C /* XkcdModule.swift */; };
 		FC91668A3F4267CB7E82E34B /* DailymotionModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A738BAC9AC5631A14CE4E4 /* DailymotionModule.swift */; };
 		FCA0D00BEE01A806781FD12B /* ServerPropertiesSheetIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA0A253AE226DADEB282F28 /* ServerPropertiesSheetIdentity.swift */; };
@@ -1288,6 +1294,7 @@
 		09AC444D38772880D816687F /* IRCClientConfigMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientConfigMigrationTests.swift; sourceTree = "<group>"; };
 		09BC0C1D790966218EA761DF /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		0A3F41F0B4ABD3916D3D68D4 /* TDCAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCAlert.swift; sourceTree = "<group>"; };
+		0ABEDF4B0F6FAF37F1ADC4AA /* validate-hostname.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "validate-hostname.json"; sourceTree = "<group>"; };
 		0B41DE00FBAC33E4099BF05B /* ChannelModesContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelModesContent.swift; sourceTree = "<group>"; };
 		0B69DD9DF091AD8AF1F46B38 /* IRCServiceNoticeOriginTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCServiceNoticeOriginTests.swift; sourceTree = "<group>"; };
 		0BC04A37537536CC23E3EF16 /* LogViewSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewSchemeHandler.swift; sourceTree = "<group>"; };
@@ -1656,6 +1663,7 @@
 		72325A1867462E55E0277A02 /* MenuCommandValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuCommandValidation.swift; sourceTree = "<group>"; };
 		723F9497D2D400F3465712B0 /* TweetModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TweetModule.swift; sourceTree = "<group>"; };
 		727667BEBCFB79BC2CC9B8F8 /* IRCClientIdentityAndTags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientIdentityAndTags.swift; sourceTree = "<group>"; };
+		727A3DB90EE87F0D509B6E08 /* mask-match.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "mask-match.json"; sourceTree = "<group>"; };
 		728C35DA7CF95706DDC49F41 /* IRCClientModeChanges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientModeChanges.swift; sourceTree = "<group>"; };
 		72A01D9C1204E2BD0F36B28E /* CommandTokenizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandTokenizerTests.swift; sourceTree = "<group>"; };
 		72C50DEF589EF7357CC25F70 /* IRCUserNicknameColorStyleGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCUserNicknameColorStyleGeneratorTests.swift; sourceTree = "<group>"; };
@@ -1725,6 +1733,7 @@
 		898193E38B174877772493AF /* FileTransferController+Socket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferController+Socket.swift"; sourceTree = "<group>"; };
 		89C822E81CF0BF5F6BE7F34D /* MainWindowStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowStrings.swift; sourceTree = "<group>"; };
 		8A20D5EE0BFD0C6720995669 /* IRCChannelModeKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannelModeKind.swift; sourceTree = "<group>"; };
+		8A791780CCE6274542D33126 /* msg-split.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "msg-split.json"; sourceTree = "<group>"; };
 		8A8A51EFD7395F8EFD506AEB /* ResourceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceManager.swift; sourceTree = "<group>"; };
 		8B081AFCCB10B1A8686AC053 /* ChannelModifyTopicSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelModifyTopicSheet.swift; sourceTree = "<group>"; };
 		8B8B9A291B6DAE41527EA3ED /* TLOInternetAddressLookupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLOInternetAddressLookupTests.swift; sourceTree = "<group>"; };
@@ -1796,6 +1805,7 @@
 		A0CE6B83581E1943552F53D5 /* IRCCTCPStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCCTCPStrings.swift; sourceTree = "<group>"; };
 		A1200C553ED36D2E3EC92861 /* IRCClientTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientTimer.swift; sourceTree = "<group>"; };
 		A144F3FB5FFD970BF54BC63D /* ServerNicknameChangeStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerNicknameChangeStrings.swift; sourceTree = "<group>"; };
+		A1B05823BFF201C101176F16 /* IRCSpecParserCorpusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSpecParserCorpusTests.swift; sourceTree = "<group>"; };
 		A1C73D74B77A7A8956488D2A /* InlineResourceHostPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineResourceHostPolicyTests.swift; sourceTree = "<group>"; };
 		A1F3EFF680048B277C0EADED /* InlineHTMLModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineHTMLModule.swift; sourceTree = "<group>"; };
 		A1F4B943DCA02C237A657FFD /* ThemeTemplateStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTemplateStoreTests.swift; sourceTree = "<group>"; };
@@ -2020,6 +2030,7 @@
 		E8E3AF9E95CC11D69C55394B /* IRCConnectionStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCConnectionStrings.swift; sourceTree = "<group>"; };
 		E8EC8656478763F53BB8EBCE /* InlineImageModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineImageModule.swift; sourceTree = "<group>"; };
 		E95C4CC45373549323ED6089 /* TableCompatibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableCompatibility.swift; sourceTree = "<group>"; };
+		E9AEBA869F2C63336B6E9BBA /* userhost-split.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "userhost-split.json"; sourceTree = "<group>"; };
 		EAF977D1F851FE25883F02A9 /* IRCAddressBookCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCAddressBookCodableTests.swift; sourceTree = "<group>"; };
 		EAFF5360ED3FE287ECBEAE95 /* IRCJoinBatchingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCJoinBatchingTests.swift; sourceTree = "<group>"; };
 		EB2971A07CD39FFCE2A0EB08 /* ICMDailymotion.mustache */ = {isa = PBXFileReference; path = ICMDailymotion.mustache; sourceTree = "<group>"; };
@@ -2069,6 +2080,7 @@
 		F71B753AD445CDEF38D08330 /* ObservablePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservablePreferences.swift; sourceTree = "<group>"; };
 		F7857CB5E6EF7C5C4379683C /* LocalizedByteCount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedByteCount.swift; sourceTree = "<group>"; };
 		F84C1D3583E8E7B99F9EB905 /* ApplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationController.swift; sourceTree = "<group>"; };
+		F90D591FCED2163FAE95FA28 /* msg-join.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "msg-join.json"; sourceTree = "<group>"; };
 		F932179DE1806A45D4750461 /* IRCSendingMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSendingMessage.swift; sourceTree = "<group>"; };
 		F95389C50EBA365FC8DDE295 /* InternetAddressLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternetAddressLookup.swift; sourceTree = "<group>"; };
 		F95D679EA3B026CCC53975F6 /* ChannelValidation.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = ChannelValidation.xcstrings; sourceTree = "<group>"; };
@@ -3235,6 +3247,18 @@
 			path = "Inline Content Kit";
 			sourceTree = "<group>";
 		};
+		87AAE15148439E2DAD6F60CC /* parser-tests */ = {
+			isa = PBXGroup;
+			children = (
+				727A3DB90EE87F0D509B6E08 /* mask-match.json */,
+				F90D591FCED2163FAE95FA28 /* msg-join.json */,
+				8A791780CCE6274542D33126 /* msg-split.json */,
+				E9AEBA869F2C63336B6E9BBA /* userhost-split.json */,
+				0ABEDF4B0F6FAF37F1ADC4AA /* validate-hostname.json */,
+			);
+			path = "parser-tests";
+			sourceTree = "<group>";
+		};
 		8A8B083CCBB7542D0607D371 /* Twitter */ = {
 			isa = PBXGroup;
 			children = (
@@ -3764,6 +3788,7 @@
 				D0C16D05DD48A6A51DC6AC54 /* IRCServerCodableTests.swift */,
 				0B69DD9DF091AD8AF1F46B38 /* IRCServiceNoticeOriginTests.swift */,
 				8FB826DBC21BC7EBDBD6F928 /* IRCServiceValueTests.swift */,
+				A1B05823BFF201C101176F16 /* IRCSpecParserCorpusTests.swift */,
 				DE35CB6EEB91C3BBF831E9C3 /* IRCStringCatalogMigrationTests.swift */,
 				70E6813EE66A96C5CE2B2C14 /* IRCSTSPolicyTests.swift */,
 				E08D553A76C98C8654C53B1B /* IRCTimedCommandTests.swift */,
@@ -3869,6 +3894,14 @@
 				951FF3A46556E90FE1D87CC4 /* NicknameColorView.swift */,
 			);
 			path = MemberList;
+			sourceTree = "<group>";
+		};
+		B532712538E7BE220ED7F925 /* Corpora */ = {
+			isa = PBXGroup;
+			children = (
+				EF2BEC8ABC9CAE03B7A8C71D /* IRCSpec */,
+			);
+			path = Corpora;
 			sourceTree = "<group>";
 		};
 		B5FB047EE071600EFDA3E794 /* Resources */ = {
@@ -4149,6 +4182,7 @@
 		DC546961B7A43EBE3B15085B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				B532712538E7BE220ED7F925 /* Corpora */,
 				B39183880A8C62027C54230D /* GlasstualTests */,
 			);
 			path = Tests;
@@ -4269,6 +4303,14 @@
 				26A7864102BBC2896DAD7251 /* main.swift */,
 			);
 			path = Service;
+			sourceTree = "<group>";
+		};
+		EF2BEC8ABC9CAE03B7A8C71D /* IRCSpec */ = {
+			isa = PBXGroup;
+			children = (
+				87AAE15148439E2DAD6F60CC /* parser-tests */,
+			);
+			path = IRCSpec;
 			sourceTree = "<group>";
 		};
 		F1EDF25B21BB21DCC8C9D604 /* Modules */ = {
@@ -4503,6 +4545,7 @@
 			buildConfigurationList = 8C8B07027BBCFA5F11C1EAD7 /* Build configuration list for PBXNativeTarget "GlasstualTests" */;
 			buildPhases = (
 				3CD054028EFCF8FFC2085183 /* Sources */,
+				BD4FD8A4D3A98A96CE837EF6 /* Resources */,
 				FC59CCB2C0D475AF2EB90F9C /* Frameworks */,
 			);
 			buildRules = (
@@ -4951,6 +4994,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BD4FD8A4D3A98A96CE837EF6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DF066CB410EF230A08290934 /* mask-match.json in Resources */,
+				D736239B3202E6B3AFA1020D /* msg-join.json in Resources */,
+				DE91CBBDF92500D8EB85B6F5 /* msg-split.json in Resources */,
+				48D8668EFE4A46C93473E0CE /* userhost-split.json in Resources */,
+				FC0B5D8C7C981953953392BB /* validate-hostname.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E2972B000C3E9A08C0CB9A2A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -5133,6 +5188,7 @@
 				76528ACA0315BFAA56B26D02 /* IRCServerCodableTests.swift in Sources */,
 				D4ED7027014FD22F944A8125 /* IRCServiceNoticeOriginTests.swift in Sources */,
 				61959C28A8C7D4DCED48142F /* IRCServiceValueTests.swift in Sources */,
+				4DDDD6C61FA2A132134C44B3 /* IRCSpecParserCorpusTests.swift in Sources */,
 				0F7A701D9D2D3256A18728E9 /* IRCStringCatalogMigrationTests.swift in Sources */,
 				198C7787E91B63EAA6FE9CE5 /* IRCTimedCommandTests.swift in Sources */,
 				915C46E11D8F1BB97CD91AFD /* IRCTypingTrackerTests.swift in Sources */,
