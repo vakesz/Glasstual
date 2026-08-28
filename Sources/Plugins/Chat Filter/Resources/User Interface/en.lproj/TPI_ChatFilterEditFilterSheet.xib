@@ -1017,6 +1017,7 @@ This information is for your records and does not alter the behavior of the filt
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
                                                     <connections>
+                                                        <outlet property="delegate" destination="-2" id="aGe-Dl-gT1"/>
                                                         <outlet property="formatter" destination="vGQ-Aw-wDg" id="fgR-HD-NFG"/>
                                                     </connections>
                                                 </textField>
@@ -1100,7 +1101,7 @@ This information is for your records and does not alter the behavior of the filt
             <point key="canvasLocation" x="-485.5" y="182"/>
         </window>
         <customObject id="TdM-lk-raw" customClass="TVCChannelSelectionViewController"/>
-        <numberFormatter formatterBehavior="default10_4" localizesFormat="NO" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="0" maximumIntegerDigits="42" id="vGQ-Aw-wDg" customClass="TPI_NumberOnlyTextFieldFormatter">
+        <numberFormatter formatterBehavior="default10_4" localizesFormat="NO" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="0" maximumIntegerDigits="42" id="vGQ-Aw-wDg">
             <real key="minimum" value="0.0"/>
             <real key="maximum" value="1296000"/>
         </numberFormatter>

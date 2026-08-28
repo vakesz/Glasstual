@@ -41,7 +41,7 @@ struct InlineMediaCleartextPolicyTests {
 	func allowsSecureURLs(_ string: String) throws {
 		let url = try #require(URL(string: string))
 
-		try withCleartextAllowed(false) {
+		withCleartextAllowed(false) {
 			#expect(TextualPreferences.permitsInlineMedia(at: url))
 		}
 	}
@@ -53,10 +53,10 @@ struct InlineMediaCleartextPolicyTests {
 	func gatesCleartextURLs(_ string: String) throws {
 		let url = try #require(URL(string: string))
 
-		try withCleartextAllowed(true) {
+		withCleartextAllowed(true) {
 			#expect(TextualPreferences.permitsInlineMedia(at: url))
 		}
-		try withCleartextAllowed(false) {
+		withCleartextAllowed(false) {
 			#expect(TextualPreferences.permitsInlineMedia(at: url) == false)
 		}
 	}
@@ -73,7 +73,7 @@ struct InlineMediaCleartextPolicyTests {
 	func refusesOtherSchemes(_ string: String) throws {
 		let url = try #require(URL(string: string))
 
-		try withCleartextAllowed(true) {
+		withCleartextAllowed(true) {
 			#expect(TextualPreferences.permitsInlineMedia(at: url) == false)
 		}
 	}

@@ -39,8 +39,8 @@ import XCTest
  *********************************************************************** */
 @MainActor
 class IRCCommandIndexTests: XCTestCase {
-	override static func setUp() {
-		super.setUp()
+	override func setUp() async throws {
+		try await super.setUp()
 		CommandIndex.populateCommandIndex()
 	}
 

@@ -26,7 +26,7 @@ private let fileTransferAcceptActionIdentifier = "TXNotificationActionIdentifier
 private let privateMessageCategoryIdentifier = "TXNotificationCategoryIdentifierPrivateMessage"
 private let privateMessageReplyActionIdentifier = "TXNotificationActionIdentifierPrivateMessageReply"
 
-private let notificationControllerLogger = Logger(
+private nonisolated let notificationControllerLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "NotificationController"
 )
