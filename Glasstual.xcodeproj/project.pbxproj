@@ -697,6 +697,7 @@
 		C8C21F6C22119C59B051C8A1 /* TLOFileLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = E763D4B4F3F9E94E90D4C6D3 /* TLOFileLogger.swift */; };
 		C8D7D4C4B1287EEA2D2BB559 /* Mustache.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9434510058F918F7B0BF1724 /* Mustache.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C8F3ADD58129DB82421A8633 /* IRCClientNumericErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEE87EBF4EB8AEA464CA618B /* IRCClientNumericErrors.swift */; };
+		C956A19646BAB24B65A5E77A /* EmptyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F4C5535443690CAF660799 /* EmptyValue.swift */; };
 		C9BAAC7567A8124344AB3A8D /* LICENSE-GRMustache-Swift.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2E2DD8EB9D77A80CEA01B473 /* LICENSE-GRMustache-Swift.txt */; };
 		C9E610237C0C7D74DF36329D /* PluginRuntimeMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35D2C55EF33D1BA88FCA206 /* PluginRuntimeMigrationTests.swift */; };
 		CA6A9E329056B55DF78489B2 /* HSLHistoricLogProcessDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68E1C532678519AA5906FFF9 /* HSLHistoricLogProcessDelegate.swift */; };
@@ -1605,6 +1606,7 @@
 		69860DD098B89E30F7950005 /* TDCFileTransferDialogTableCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCFileTransferDialogTableCell.swift; sourceTree = "<group>"; };
 		6993FCBA9E995BD9EAB8C2C1 /* IRCClientOutputSuppression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientOutputSuppression.swift; sourceTree = "<group>"; };
 		69AD4B988B9E169DC7772248 /* LogControllerStorageModel (model 3).xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "LogControllerStorageModel (model 3).xcdatamodel"; sourceTree = "<group>"; };
+		69F4C5535443690CAF660799 /* EmptyValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyValue.swift; sourceTree = "<group>"; };
 		6AA16FF15B8A5D3FEBFAFE3E /* TemplateRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateRepository.swift; sourceTree = "<group>"; };
 		6B17C185AD99905A9CD250F0 /* HistoricLogProtocolMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoricLogProtocolMigrationTests.swift; sourceTree = "<group>"; };
 		6B1B09FE17F744FE3A4D1404 /* User Insights.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "User Insights.bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3058,6 +3060,7 @@
 				81EBE007B9AD9C7B314DA684 /* ColorCompatibility.swift */,
 				75E55F8E71C46596A0FE1679 /* CommandTokenizer.swift */,
 				95A21C2256FE6899141C678F /* DataCompatibility.swift */,
+				69F4C5535443690CAF660799 /* EmptyValue.swift */,
 				DA154EC0C340C43ED429EA84 /* FileManagerCompatibility.swift */,
 				64A53CFA1C62F35CAAFDFC53 /* FileSystemMonitor.swift */,
 				3A44DE3542E30E0C0F094AFB /* FoundationCompatibility.swift */,
@@ -5381,6 +5384,7 @@
 				44F961FC6BF3AF87083E116A /* ColorCompatibility.swift in Sources */,
 				D404155C6FA93DF4584D1082 /* CommandTokenizer.swift in Sources */,
 				E0B955272E31A41A46744BB0 /* DataCompatibility.swift in Sources */,
+				C956A19646BAB24B65A5E77A /* EmptyValue.swift in Sources */,
 				D06AC5DF2A9029C1CBB0AC20 /* FileManagerCompatibility.swift in Sources */,
 				BAA7DD43AACCE90295AB60D2 /* FileSystemMonitor.swift in Sources */,
 				C17DDB9611BF18A284B18C9B /* FoundationCompatibility.swift in Sources */,
