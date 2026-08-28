@@ -303,8 +303,10 @@ final class ConnectionSocketNWF: ConnectionSocket, ConnectionSocketProtocol, @un
 			return
 		}
 
+		/* A minimum of zero lets the receive complete with neither content nor error,
+		 which the completion handler treats as a fatal condition. */
 		connection?.receive(
-			minimumIncompleteLength: 0,
+			minimumIncompleteLength: 1,
 			maximumLength: maximumDataLength,
 			completion: { [weak self] content, contentContext, isComplete, error in
 				self?.readCompletionHandler(content, contentContext, isComplete, error)

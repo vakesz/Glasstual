@@ -104,6 +104,7 @@ open class InlineImageModule: InlineImageFoundation {
 	@objc(performActionForURL:bypassImageCheck:)
 	public func performAction(for url: URL, bypassImageCheck: Bool) {
 		precondition(imageCheck == nil, "Module already initialized")
+		guard !url.isFileURL else { return cancel() }
 		payload.urlToInline = url
 		performAction(withImageCheck: !bypassImageCheck)
 	}
@@ -120,10 +121,7 @@ open class InlineImageModule: InlineImageFoundation {
 	}
 
 	private func performImageCheck() {
-		let assessor = MediaAssessor(
-			url: payload.urlToInline,
-			expectedType: .image
-		) { [weak self] _, error in
+		let completion: (MediaAssessment?, NSError?) -> Void = { [weak self] _, error in
 			guard let self else { return }
 
 			if let error {
@@ -134,6 +132,14 @@ open class InlineImageModule: InlineImageFoundation {
 			}
 
 			imageCheck = nil
+		}
+
+		guard let assessor = MediaAssessor(
+			url: payload.urlToInline,
+			expectedType: .image,
+			completion: completion
+		) else {
+			return cancel()
 		}
 
 		imageCheck = assessor

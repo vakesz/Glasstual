@@ -89,7 +89,7 @@ public final class World: NSObject {
 	private var preferencesDidChangeTimerIsActive = false
 	private var savePeriodicallyLastSave = CFAbsoluteTimeGetCurrent()
 	private var lastDateHasChangedDate: Date?
-	private nonisolated(unsafe) var midnightTimer: Timer?
+	private var midnightTimer: Timer?
 	private let notifications = NotificationSubscriptions()
 
 	@objc public var isImportingConfiguration = false
@@ -124,11 +124,6 @@ public final class World: NSObject {
 
 	@objc public nonisolated var bandwidthOut: UInt64 {
 		trafficLock.withLock { bandwidthOutStorage }
-	}
-
-	deinit {
-		NSObject.cancelPreviousPerformRequests(withTarget: self)
-		midnightTimer?.invalidate()
 	}
 
 	// MARK: - Configuration
@@ -184,6 +179,12 @@ public final class World: NSObject {
 
 	@objc public func prepareForApplicationTermination() {
 		notifications.cancelAll()
+
+		/* Timer.invalidate() must run on the thread that scheduled the timer. deinit is
+		 nonisolated and can run anywhere, and a pending timer retains its target, so
+		 deinit could never have reached this anyway. */
+		midnightTimer?.invalidate()
+		midnightTimer = nil
 
 		for client in clientList {
 			client.prepareForApplicationTermination()
@@ -586,7 +587,7 @@ public final class World: NSObject {
 	@objc(destroyClient:)
 	public func destroyClient(_ client: IRCClient) {
 		if client.isConnecting || client.isConnected {
-			client.disconnectCallback = { [weak self, weak client] in
+			client.addDisconnectCallback { [weak self, weak client] in
 				guard let client else {
 					return
 				}
@@ -630,7 +631,10 @@ public final class World: NSObject {
 			object: channel
 		)
 
-		let client = channel.associatedClient!
+		guard let client = channel.associatedClient else {
+			return
+		}
+
 		if partChannel {
 			client.part(channel)
 		}

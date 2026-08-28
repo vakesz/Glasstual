@@ -85,7 +85,7 @@ public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 		return performSynchronouslyOnMain {
 			let (window, body, title, defaultButton, alternateButton, trust, completion, context) = input.value
 			let callback = TrustPanelContext(
-				trust: Unmanaged.passUnretained(trust),
+				trust: trust,
 				completion: completion,
 				context: context
 			)
@@ -112,18 +112,17 @@ public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 		contextInfo: UnsafeMutableRawPointer
 	) {
 		let context = Unmanaged<TrustPanelContext>.fromOpaque(contextInfo).takeRetainedValue()
-		let trust = context.trust.takeUnretainedValue()
-		context.completion(trust, returnCode == NSApplication.ModalResponse.OK.rawValue, context.context)
-		context.trust.release()
+		context.completion(context.trust, returnCode == NSApplication.ModalResponse.OK.rawValue, context.context)
 	}
 }
 
 private final class TrustPanelContext: NSObject {
-	let trust: Unmanaged<SecTrust>
+	/* SecTrust is ARC-managed in Swift; holding it strongly keeps the retain balanced. */
+	let trust: SecTrust
 	let completion: TrustPanelCompletion
 	let context: Any?
 
-	init(trust: Unmanaged<SecTrust>, completion: @escaping TrustPanelCompletion, context: Any?) {
+	init(trust: SecTrust, completion: @escaping TrustPanelCompletion, context: Any?) {
 		self.trust = trust
 		self.completion = completion
 		self.context = context

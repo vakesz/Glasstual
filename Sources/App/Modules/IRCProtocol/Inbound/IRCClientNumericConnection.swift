@@ -126,10 +126,15 @@ extension IRCClient {
 			disconnect()
 			return
 		}
-		disconnectCallback = { [weak self] in self?.connect() }
+		/* Assign the overrides inside the callback so the redirect stays atomic: if
+		 disconnect() finds nothing to close, nothing is left half-applied. */
+		addDisconnectCallback { [weak self] in
+			guard let self else { return }
+			temporaryServerAddressOverride = serverAddress
+			temporaryServerPortOverride = port
+			connect()
+		}
 		disconnect()
-		temporaryServerAddressOverride = serverAddress
-		temporaryServerPortOverride = port
 	}
 
 	private func handleUserModeNumeric(_ message: Message) {

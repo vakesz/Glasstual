@@ -106,7 +106,7 @@ public extension IRCClient {
 	@objc(logFileWriteSessionBegin)
 	func logFileWriteSessionBegin() {
 		IRCClientLogFileMainActorBridge.sync { [self] in
-			recordLogSessionChange(true, in: nil)
+			beginClientLogSession()
 		}
 	}
 
@@ -120,18 +120,17 @@ public extension IRCClient {
 	@MainActor
 	private func closeClientLogFile() {
 		logFile?.close()
+		/* Leaving the handle in place made the lazy re-creation below unreachable, so
+		 every later write went to a closed logger. */
+		logFile = nil
 	}
 
 	@MainActor
 	private func writeClientLogLine(_ logLine: LogLine) {
 		guard TextualPreferences.logToDiskIsEnabled() else { return }
 
-		// Increment first so the session banner recursively written below does
-		// not try to begin another session.
-		logFileSessionCount += 1
-		if logFileSessionCount == 1 {
-			recordLogSessionChange(true, in: nil)
-		}
+		beginClientLogSession()
+
 		if logFile == nil {
 			logFile = FileLogger(client: self)
 		}
@@ -155,8 +154,19 @@ public extension IRCClient {
 	}
 
 	@MainActor
+	private func beginClientLogSession() {
+		guard logFileSessionIsOpen == false else { return }
+
+		/* Set before writing: the banner itself goes through writeClientLogLine. */
+		logFileSessionIsOpen = true
+		recordLogSessionChange(true, in: nil)
+	}
+
+	@MainActor
 	private func finishClientLogSession() {
+		guard logFileSessionIsOpen else { return }
+
 		recordLogSessionChange(false, in: nil)
-		logFileSessionCount = 0
+		logFileSessionIsOpen = false
 	}
 }

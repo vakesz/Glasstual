@@ -257,7 +257,7 @@ public extension IRCClient {
 				temporaryServerAddressOverride = serverAddress
 			}
 			if isConnecting || isConnected {
-				disconnectCallback = { [weak self] in self?.connect() }
+				addDisconnectCallback { [weak self] in self?.connect() }
 				quit()
 			} else {
 				connect()
