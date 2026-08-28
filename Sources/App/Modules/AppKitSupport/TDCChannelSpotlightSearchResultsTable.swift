@@ -321,7 +321,7 @@ public final class ChannelSpotlightSearchResultRowView: NSTableRowView {
 		return childCellStorage
 	}
 
-	@objc public var userInterfaceObjects: ChannelSpotlightAppearance {
+	public var userInterfaceObjects: ChannelSpotlightAppearance {
 		controller.userInterfaceObjects
 	}
 }

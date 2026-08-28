@@ -18,7 +18,7 @@ import CocoaExtensions
 public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource, NSTableViewDelegate,
 	NSControlTextEditingDelegate, NSWindowDelegate
 {
-	@objc public private(set) var userInterfaceObjects: ChannelSpotlightAppearance!
+	public private(set) var userInterfaceObjects: ChannelSpotlightAppearance!
 
 	@IBOutlet private var visualEffectView: NSVisualEffectView!
 	@IBOutlet private var noResultsLabel: NSTextField!
@@ -160,7 +160,7 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 
 	private func applicationAppearanceChanged() {
 		guard let panel = window as? ChannelSpotlightPanel,
-		      let appearance = ChannelSpotlightAppearance(window: panel)
+		      let appearance = ChannelSpotlightAppearance()
 		else {
 			return
 		}

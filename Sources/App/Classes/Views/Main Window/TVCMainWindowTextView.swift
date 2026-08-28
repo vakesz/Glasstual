@@ -472,12 +472,12 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	private func updateTextBoxCachedPreferredFontSize() {
 		guard let appearance = userInterfaceObjects,
 		      appearance.preferredTextViewFontChanged() || inputPlaceholderAttributedString == nil,
-		      let preferredFont = appearance.textViewPreferredFont,
 		      let placeholderTextColor = appearance.textViewPlaceholderTextColor
 		else {
 			return
 		}
 
+		let preferredFont = appearance.makeTextViewPreferredFont()
 		self.preferredFont = preferredFont
 
 		let paragraphStyle = NSMutableParagraphStyle()

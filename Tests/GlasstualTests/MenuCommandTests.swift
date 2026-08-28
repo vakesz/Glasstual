@@ -36,7 +36,7 @@ struct MenuCommandTests {
 
 	@Test("The nib carries the commands the application's own code looks up")
 	func mainMenuContainsExpectedCommands() throws {
-		let found = Set(try Self.mainMenuNibTags().compactMap { MenuCommand(rawValue: $0.tag) })
+		let found = try Set(Self.mainMenuNibTags().compactMap { MenuCommand(rawValue: $0.tag) })
 
 		// A sample from each validation group, so a renumbered nib is caught.
 		let expected: [MenuCommand] = [

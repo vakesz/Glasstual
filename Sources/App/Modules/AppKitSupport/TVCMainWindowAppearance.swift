@@ -12,39 +12,39 @@
 
 import AppKit
 
-@objc(TVCMainWindowAppearance)
-public final class MainWindowAppearance: ApplicationAppearance {
-	@objc public private(set) var textView: MainWindowTextViewAppearance!
-	@objc public private(set) var defaultWindowSize: NSSize = .zero
-	@objc public private(set) var channelViewOverlayDefaultBackgroundColorActiveWindow: NSColor?
-	@objc public private(set) var channelViewOverlayDefaultBackgroundColorInactiveWindow: NSColor?
+/// The shape of `TVCMainWindowAppearance.plist`.
+struct MainWindowAppearanceSchema: Decodable, Sendable {
+	let defaultWindowSize: AppearanceSize
+	let channelViewOverlayDefaultBackgroundColor: AppearanceStatefulColor?
+}
 
-	@objc(initWithWindow:)
-	public init?(window mainWindow: TVCMainWindow) {
-		guard let appearanceLocation = Bundle.main.url(
-			forResource: "TVCMainWindowAppearance",
-			withExtension: "plist"
+public final class MainWindowAppearance: ApplicationAppearance {
+	public private(set) var textView: MainWindowTextViewAppearance
+	public private(set) var defaultWindowSize: NSSize = .zero
+	public private(set) var channelViewOverlayDefaultBackgroundColorActiveWindow: NSColor?
+	public private(set) var channelViewOverlayDefaultBackgroundColorInactiveWindow: NSColor?
+
+	@MainActor
+	public init?() {
+		guard let textView = MainWindowTextViewAppearance() else {
+			return nil
+		}
+		self.textView = textView
+
+		super.init(applicationProperties: Self.currentApplicationProperties)
+
+		guard let schema = AppearanceSchema.load(
+			MainWindowAppearanceSchema.self,
+			resource: "TVCMainWindowAppearance",
+			appearanceName: appearanceName
 		) else {
 			return nil
 		}
 
-		super.init(appearanceAt: appearanceLocation)
-
-		defaultWindowSize = size(forKey: "defaultWindowSize")
-		channelViewOverlayDefaultBackgroundColorActiveWindow = color(
-			forKey: "channelViewOverlayDefaultBackgroundColor",
-			forActiveWindow: true
-		)
-		channelViewOverlayDefaultBackgroundColorInactiveWindow = color(
-			forKey: "channelViewOverlayDefaultBackgroundColor",
-			forActiveWindow: false
-		)
-
-		guard let textView = MainWindowTextViewAppearance(window: mainWindow) else {
-			return nil
-		}
-
-		self.textView = textView
-		flushAppearanceProperties()
+		defaultWindowSize = schema.defaultWindowSize.size
+		channelViewOverlayDefaultBackgroundColorActiveWindow =
+			schema.channelViewOverlayDefaultBackgroundColor?.color(forActiveWindow: true)
+		channelViewOverlayDefaultBackgroundColorInactiveWindow =
+			schema.channelViewOverlayDefaultBackgroundColor?.color(forActiveWindow: false)
 	}
 }

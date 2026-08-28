@@ -12,45 +12,59 @@
 
 import AppKit
 
-@objc(TVCMainWindowTextViewAppearance)
-public final class MainWindowTextViewAppearance: ApplicationAppearance {
-	@objc public private(set) var textViewInset: NSSize = .zero
-	@objc public private(set) var textViewTextColor: NSColor?
-	@objc public private(set) var textViewPlaceholderTextColor: NSColor?
-	@objc public private(set) var textViewPreferredFontSize: TVCMainWindowTextViewFontSize = .normal
-	@objc public private(set) var backgroundViewContentBorderPadding: CGFloat = 0
+/// The shape of `TVCMainWindowTextViewAppearance.plist`.
+struct MainWindowTextViewAppearanceSchema: Decodable, Sendable {
+	struct TextView: Decodable, Sendable {
+		let inset: AppearanceSize
+		let normalTextColor: AppearanceColor?
+		let placeholderTextColor: AppearanceColor?
+	}
 
-	@objc(initWithWindow:)
-	public init?(window _: TVCMainWindow) {
-		guard let appearanceLocation = Bundle.main.url(
-			forResource: "TVCMainWindowTextViewAppearance",
-			withExtension: "plist"
+	struct BackgroundView: Decodable, Sendable {
+		let contentBorderPadding: Double
+	}
+
+	let textView: TextView
+	let backgroundView: BackgroundView
+
+	private enum CodingKeys: String, CodingKey {
+		case textView = "Text View"
+		case backgroundView = "Background View"
+	}
+}
+
+public final class MainWindowTextViewAppearance: ApplicationAppearance {
+	public private(set) var textViewInset: NSSize = .zero
+	public private(set) var textViewTextColor: NSColor?
+	public private(set) var textViewPlaceholderTextColor: NSColor?
+	public private(set) var textViewPreferredFontSize: TVCMainWindowTextViewFontSize = .normal
+	public private(set) var backgroundViewContentBorderPadding: CGFloat = 0
+
+	@MainActor
+	public init?() {
+		super.init(applicationProperties: Self.currentApplicationProperties)
+
+		guard let schema = AppearanceSchema.load(
+			MainWindowTextViewAppearanceSchema.self,
+			resource: "TVCMainWindowTextViewAppearance",
+			appearanceName: appearanceName
 		) else {
 			return nil
 		}
 
-		super.init(appearanceAt: appearanceLocation)
-
-		guard let properties = appearanceProperties else {
-			return nil
-		}
-
-		let textView = properties["Text View"] as? [String: Any] ?? [:]
-		textViewInset = size(inGroup: textView, withKey: "inset")
-		textViewTextColor = color(inGroup: textView, withKey: "normalTextColor")
-		textViewPlaceholderTextColor = color(inGroup: textView, withKey: "placeholderTextColor")
-
-		let backgroundView = properties["Background View"] as? [String: Any] ?? [:]
-		backgroundViewContentBorderPadding = measurement(inGroup: backgroundView, withKey: "contentBorderPadding")
-
-		flushAppearanceProperties()
+		textViewInset = schema.textView.inset.size
+		textViewTextColor = schema.textView.normalTextColor?.color
+		textViewPlaceholderTextColor = schema.textView.placeholderTextColor?.color
+		backgroundViewContentBorderPadding = schema.backgroundView.contentBorderPadding
 	}
 
-	@objc public func preferredTextViewFontChanged() -> Bool {
+	public func preferredTextViewFontChanged() -> Bool {
 		textViewPreferredFontSize != TextualPreferences.mainTextViewFontSize()
 	}
 
-	@objc public var textViewPreferredFont: NSFont? {
+	/// Records the size it resolved, so `preferredTextViewFontChanged()` can
+	/// tell whether the preference moved since the font was last handed out.
+	public func makeTextViewPreferredFont() -> NSFont {
 		let preferredFontSize = TextualPreferences.mainTextViewFontSize()
 		textViewPreferredFontSize = preferredFontSize
 

@@ -580,6 +580,7 @@
 		A312C9885250898A79E8298E /* IRCClientShellPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E659171982E7EFDBBBD3BC /* IRCClientShellPolicyTests.swift */; };
 		A3A127B996559437743523F7 /* NumberOnlyTextFieldFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2C910E1A61CDEDF0E724AA8 /* NumberOnlyTextFieldFormatter.swift */; };
 		A40F1ADFC4162FCAEFB5173B /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
+		A42E7CCECBBB2F8A3AA3A2E1 /* AppearanceSchemaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8382FEF5CB2BA1DFE6AFA598 /* AppearanceSchemaTests.swift */; };
 		A45A133CE16387A81F2FC697 /* InlineContentProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15FD5C15A34C8A9E0E32A9A6 /* InlineContentProtocols.swift */; };
 		A4F46539CAA005EFCF91BA58 /* TLOLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3A78EF221FEB22C976EDD0 /* TLOLinkParser.swift */; };
 		A506690F49EEE1B9DAF2721E /* RCMSecureTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6BDFD87F97AA87B49FCC888 /* RCMSecureTransportTests.swift */; };
@@ -1719,6 +1720,7 @@
 		832C1F97BF4FF62066D76CA8 /* AccessibilityStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityStrings.swift; sourceTree = "<group>"; };
 		832F9A40FD8028FC582DB8A6 /* ChannelInviteSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelInviteSheet.swift; sourceTree = "<group>"; };
 		835009718CDC311C2EC4A49D /* ChannelModesContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelModesContent.swift; sourceTree = "<group>"; };
+		8382FEF5CB2BA1DFE6AFA598 /* AppearanceSchemaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSchemaTests.swift; sourceTree = "<group>"; };
 		83D181E9BFDCCF1B6555D8F6 /* IRCClientLifecyclePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientLifecyclePolicyTests.swift; sourceTree = "<group>"; };
 		84B57AE1DD55E1D5E3ADDC9F /* LogViewLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewLifecycleTests.swift; sourceTree = "<group>"; };
 		84DC2D901E4827C1A28F838D /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -3667,6 +3669,7 @@
 			children = (
 				45BD3A7083CBCCE0DA2C8E31 /* AboutFeatureTests.swift */,
 				674E8A0995007A2CEBD014BA /* AppearanceMigrationTests.swift */,
+				8382FEF5CB2BA1DFE6AFA598 /* AppearanceSchemaTests.swift */,
 				1771146410DA6A76C6B9B6E7 /* AppKitSupportMigrationTests.swift */,
 				43C60986D7A4E9E0C432E1DD /* ApplicationInfrastructureMigrationTests.swift */,
 				E6CE5CF5090C4705513DD365 /* ApplicationLayerIsolationTests.swift */,
@@ -5199,6 +5202,7 @@
 				AACD89457B4E84B16887BD4B /* AboutFeatureTests.swift in Sources */,
 				F86F10BF0087C1CC8705F56A /* AppKitSupportMigrationTests.swift in Sources */,
 				2A6B08F33945A1F6929278B2 /* AppearanceMigrationTests.swift in Sources */,
+				A42E7CCECBBB2F8A3AA3A2E1 /* AppearanceSchemaTests.swift in Sources */,
 				FD418F55F65D8FD536FBBEDF /* ApplicationInfrastructureMigrationTests.swift in Sources */,
 				92E3BB4725AE935299D2912F /* ApplicationLayerIsolationTests.swift in Sources */,
 				43E57914E2EF5C057AB74DDF /* ApplicationStringsTests.swift in Sources */,
