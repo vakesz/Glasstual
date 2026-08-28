@@ -31,9 +31,6 @@
  *********************************************************************** */
 
 import AppKit
-import ObjectiveC
-
-private nonisolated(unsafe) var invalidatingSelectionBackgroundKey: UInt8 = 0
 
 public extension NSTableView {
 	func selectItem(at index: Int) {
@@ -41,35 +38,30 @@ public extension NSTableView {
 		scrollRowToVisible(index)
 	}
 
+	/// Redraws the visible rows so their selection background is rebuilt, for
+	/// instance after the appearance changed.
+	///
+	/// This used to deselect everything and reselect it, which fired
+	/// `tableViewSelectionDidChange:` twice with an empty selection in
+	/// between -- in the main window's channel list that is a channel switch --
+	/// and it needed an associated-object flag that every delegate had to
+	/// remember to check. Marking the row views for display does the same job
+	/// without touching the selection.
 	func invalidateSelectionBackground() {
-		isInvalidatingSelectionBackground = true
-		defer { isInvalidatingSelectionBackground = false }
-
-		let selectedRows = selectedRowIndexes
-		let previouslyAllowedEmptySelection = allowsEmptySelection
-		allowsEmptySelection = true
-		deselectAll(nil)
-		selectRowIndexes(selectedRows, byExtendingSelection: false)
-		allowsEmptySelection = previouslyAllowedEmptySelection
-	}
-
-	var isInvalidatingSelectionBackground: Bool {
-		get {
-			(objc_getAssociatedObject(self, &invalidatingSelectionBackgroundKey) as? NSNumber)?.boolValue ?? false
-		}
-		set {
-			objc_setAssociatedObject(
-				self,
-				&invalidatingSelectionBackgroundKey,
-				newValue ? NSNumber(value: true) : nil,
-				.OBJC_ASSOCIATION_COPY_NONATOMIC
-			)
+		enumerateAvailableRowViews { rowView, _ in
+			rowView.needsDisplay = true
 		}
 	}
 
-	var rowBeneathMouse: Int {
-		guard let window else { return -1 }
-		return row(at: convert(window.mouseLocationOutsideOfEventStream, from: nil))
+	/// The row under the pointer, or `nil` when the pointer is outside every
+	/// row or the view is not in a window.
+	var rowBeneathMouse: Int? {
+		guard let window else {
+			return nil
+		}
+
+		let row = row(at: convert(window.mouseLocationOutsideOfEventStream, from: nil))
+		return row >= 0 ? row : nil
 	}
 
 	func selectionIndexes(
@@ -87,12 +79,6 @@ public extension NSTableView {
 		if scrollingToSelection, let firstIndex = indexes.first {
 			scrollRowToVisible(firstIndex)
 		}
-	}
-}
-
-public extension NSTableRowView {
-	var isInvalidatingSelectionBackground: Bool {
-		(superview as? NSTableView)?.isInvalidatingSelectionBackground ?? false
 	}
 }
 

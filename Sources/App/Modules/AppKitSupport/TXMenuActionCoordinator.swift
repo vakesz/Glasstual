@@ -183,7 +183,7 @@ public final class MenuActionCoordinator: NSObject {
 		case .modifyIgnore:
 			modifyIgnore(sender: sender)
 		case .memberListDoubleClick:
-			guard mainWindow.memberList.rowBeneathMouse >= 0 else { return }
+			guard mainWindow.memberList.rowBeneathMouse != nil else { return }
 			performDoubleClick(sender: sender)
 		case .channelViewDoubleClick:
 			performDoubleClick(sender: sender)

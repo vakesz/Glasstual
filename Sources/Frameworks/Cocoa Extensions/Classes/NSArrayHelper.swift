@@ -94,7 +94,7 @@ public extension NSArray {
 		}
 	}
 
-	@objc var range: NSRange {
+	var range: NSRange {
 		NSRange(location: 0, length: arrayCount(self))
 	}
 
@@ -307,7 +307,7 @@ public extension NSMutableArray {
 		}
 	}
 
-	@objc func shuffle() {
+	func shuffle() {
 		mutableArrayMutationLock.withLock {
 			guard count > 1 else { return }
 			for index in stride(from: count - 1, through: 1, by: -1) {

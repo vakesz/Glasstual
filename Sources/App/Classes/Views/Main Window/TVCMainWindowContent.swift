@@ -1077,9 +1077,6 @@ public extension MainWindow {
 
 	func selectionShouldChange(in outlineView: NSOutlineView) -> Bool {
 		guard let serverList = outlineView as? ServerList else { return true }
-		if serverList.isInvalidatingSelectionBackground {
-			return true
-		}
 		if isKeyWindow == false {
 			return false
 		}
@@ -1090,8 +1087,7 @@ public extension MainWindow {
 		if modifiers.contains(.command) || modifiers.contains(.shift) {
 			return true
 		}
-		let row = outlineView.rowBeneathMouse
-		guard row >= 0, outlineView.isRowSelected(row),
+		guard let row = outlineView.rowBeneathMouse, outlineView.isRowSelected(row),
 		      let item = outlineView.item(atRow: row) as? IRCTreeItem else { return true }
 		selectItemInSelectedItems(item)
 		return false
@@ -1113,7 +1109,6 @@ public extension MainWindow {
 
 	private func serverListSelectionDidChange(for changedList: ServerList?) {
 		let list = changedList ?? serverList!
-		guard list.isInvalidatingSelectionBackground == false else { return }
 		if ignoreNextOutlineViewSelectionChange {
 			ignoreNextOutlineViewSelectionChange = false; return
 		}
@@ -1121,8 +1116,7 @@ public extension MainWindow {
 		let rows = list.selectedRowIndexes
 		var focusedItem: IRCTreeItem?
 		if NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command {
-			let row = list.rowBeneathMouse
-			if row >= 0, rows.contains(row) {
+			if let row = list.rowBeneathMouse, rows.contains(row) {
 				focusedItem = list.item(atRow: row) as? IRCTreeItem
 			}
 		}

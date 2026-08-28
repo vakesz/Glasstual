@@ -317,9 +317,7 @@ public final class ServerList: NSOutlineView {
 	// MARK: - Events
 
 	override public func menu(for _: NSEvent) -> NSMenu? {
-		let clickedRow = rowBeneathMouse
-
-		if clickedRow >= 0 {
+		if let clickedRow = rowBeneathMouse {
 			if clickedRow != selectedRow || numberOfSelectedRows > 1 {
 				selectItem(at: clickedRow)
 			}
