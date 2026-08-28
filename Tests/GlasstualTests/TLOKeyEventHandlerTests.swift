@@ -16,11 +16,15 @@ import Testing
 
 @MainActor
 struct TLOKeyEventHandlerTests {
-	private func keyEvent(code: UInt16, characters: String) -> NSEvent? {
+	private func keyEvent(
+		code: UInt16,
+		characters: String,
+		modifiers: NSEvent.ModifierFlags = []
+	) -> NSEvent? {
 		NSEvent.keyEvent(
 			with: .keyDown,
 			location: .zero,
-			modifierFlags: [],
+			modifierFlags: modifiers,
 			timestamp: 0,
 			windowNumber: 0,
 			context: nil,
@@ -34,36 +38,77 @@ struct TLOKeyEventHandlerTests {
 	/// Key code 0 is `kVK_ANSI_A`; registering it used to abort the process.
 	@Test("Key code zero can be registered and dispatched")
 	func keyCodeZeroIsAcceptedAndDispatched() throws {
-		let target = KeyEventRecorder()
-		let handler = KeyEventHandler(target: target)
+		let handler = KeyEventHandler()
+		var firedCount = 0
 
-		handler.register(#selector(KeyEventRecorder.handleKey(_:)), key: 0, modifiers: 0)
+		handler.register(key: .keyA) { _ in firedCount += 1 }
 
 		let event = try #require(keyEvent(code: 0, characters: "a"))
 
 		#expect(handler.processKeyEvent(event))
-		#expect(target.firedCount == 1)
+		#expect(firedCount == 1)
 	}
 
 	@Test("An unregistered key code is not consumed")
 	func unregisteredKeyIsNotConsumed() throws {
-		let target = KeyEventRecorder()
-		let handler = KeyEventHandler(target: target)
+		let handler = KeyEventHandler()
+		var firedCount = 0
 
-		handler.register(#selector(KeyEventRecorder.handleKey(_:)), key: 0, modifiers: 0)
+		handler.register(key: .keyA) { _ in firedCount += 1 }
 
 		let event = try #require(keyEvent(code: 0x31, characters: "\u{f701}"))
 
 		#expect(handler.processKeyEvent(event) == false)
-		#expect(target.firedCount == 0)
+		#expect(firedCount == 0)
 	}
-}
 
-private final class KeyEventRecorder: NSObject {
-	private(set) var firedCount = 0
+	/// Registration is keyed by the exact modifier set, so the same key with
+	/// different modifiers is a different shortcut.
+	@Test("Modifiers are part of the shortcut")
+	func modifiersDistinguishShortcuts() throws {
+		let handler = KeyEventHandler()
+		var plain = 0
+		var commanded = 0
 
-	@objc
-	func handleKey(_: NSEvent) {
-		firedCount += 1
+		handler.register(key: .escape) { _ in plain += 1 }
+		handler.register(key: .escape, modifiers: .command) { _ in commanded += 1 }
+
+		let plainEvent = try #require(keyEvent(code: KeyCode.escape.rawValue, characters: "\u{1b}"))
+		let commandEvent = try #require(
+			keyEvent(code: KeyCode.escape.rawValue, characters: "\u{1b}", modifiers: .command)
+		)
+
+		#expect(handler.processKeyEvent(plainEvent))
+		#expect(handler.processKeyEvent(commandEvent))
+		#expect(plain == 1)
+		#expect(commanded == 1)
+	}
+
+	@Test("A character shortcut matches regardless of case")
+	func characterShortcutIsCaseInsensitive() throws {
+		let handler = KeyEventHandler()
+		var firedCount = 0
+
+		handler.register(character: "a") { _ in firedCount += 1 }
+
+		let event = try #require(keyEvent(code: 42, characters: "A"))
+
+		#expect(handler.processKeyEvent(event))
+		#expect(firedCount == 1)
+	}
+
+	@Test("The handler hands the event it matched to the action")
+	func actionReceivesTheEvent() throws {
+		let handler = KeyEventHandler()
+		var receivedEvent: NSEvent?
+
+		handler.register(key: .escape, modifiers: .command) { receivedEvent = $0 }
+
+		let event = try #require(
+			keyEvent(code: KeyCode.escape.rawValue, characters: "\u{1b}", modifiers: .command)
+		)
+
+		#expect(handler.processKeyEvent(event))
+		#expect(receivedEvent == event)
 	}
 }

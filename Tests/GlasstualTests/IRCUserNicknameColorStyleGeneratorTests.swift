@@ -10,7 +10,7 @@ import XCTest
 class IRCUserNicknameColorStyleGeneratorTests: XCTestCase {
 	@objc
 	func testHashRemainsCompatibleWithLegacyMD5ByteOrder() {
-		let hash = UserNicknameColorStyleGenerator.hash(for: "alice", colorStyle: .light)
+		let hash = UserNicknameColorStyleGenerator.hash(for: "alice")
 
 		XCTAssertEqual(hash.uint32Value, 2_746_080_018)
 	}

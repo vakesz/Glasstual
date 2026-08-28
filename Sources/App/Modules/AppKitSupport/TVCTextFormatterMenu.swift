@@ -13,8 +13,24 @@
 
 import AppKit
 
-private let formattingMenuRainbowColorMenuItemTag = 299
-private let formattingMenuHexColorMenuItemTag = 300
+/// The IRC formatting menu in `TVCMainWindow.xib` carries its own tag
+/// vocabulary, unrelated to `MenuCommand`'s: items 0…15 are colour palette
+/// indices and the rest are the commands below.
+public enum TextFormatterCommand: Int, CaseIterable, Sendable {
+	case bold = 100
+	case italics = 101
+	case monospace = 102
+	case spoiler = 103
+	case strikethrough = 104
+	case underline = 105
+	case colorSeparator = 106
+	case foregroundColorSet = 107
+	case foregroundColorMissing = 108
+	case backgroundColorSet = 109
+	case backgroundColorMissing = 110
+	case rainbowColor = 299
+	case hexColor = 300
+}
 
 @objc(TVCTextViewIRCFormattingMenu)
 @MainActor
@@ -52,8 +68,8 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			return false
 		}
 
-		switch item.tag {
-		case 100: // Bold
+		switch TextFormatterCommand(rawValue: item.tag) {
+		case .bold:
 			let boldText = textIsBold
 			item.state = boldText ? .on : .off
 			item.action =
@@ -62,7 +78,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 					: #selector(insertBoldCharIntoTextBox(_:))
 			return true
 
-		case 101: // Italics
+		case .italics:
 			let italicText = textIsItalicized
 			item.state = italicText ? .on : .off
 			item.action =
@@ -71,7 +87,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 					: #selector(insertItalicCharIntoTextBox(_:))
 			return true
 
-		case 102: // Monospace
+		case .monospace:
 			let monospaceText = textIsMonospace
 			item.state = monospaceText ? .on : .off
 			item.action =
@@ -80,7 +96,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 					: #selector(insertMonospaceCharIntoTextBox(_:))
 			return true
 
-		case 103: // Spoiler
+		case .spoiler:
 			let spoilerText = textHasSpoiler
 			item.state = spoilerText ? .on : .off
 			item.action =
@@ -89,7 +105,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 					: #selector(insertSpoilerCharIntoTextBox(_:))
 			return true
 
-		case 104: // Strikethrough
+		case .strikethrough:
 			let struckthroughText = textIsStruckthrough
 			item.state = struckthroughText ? .on : .off
 			item.action =
@@ -98,7 +114,7 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 					: #selector(insertStrikethroughCharIntoTextBox(_:))
 			return true
 
-		case 105: // Underline
+		case .underline:
 			let underlineText = textIsUnderlined
 			item.state = underlineText ? .on : .off
 			item.action =
@@ -107,25 +123,25 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 					: #selector(insertUnderlineCharIntoTextBox(_:))
 			return true
 
-		case 108: // Foreground Color Missing
+		case .foregroundColorMissing:
 			item.isHidden = textHasForegroundColor
 			return true
 
-		case 107: // Foreground Color Set
+		case .foregroundColorSet:
 			item.isHidden = textHasForegroundColor == false
 			/* Do not enable menu item when there is spoiler */
 			return textHasSpoiler == false
 
-		case 110: // Background Color Missing
+		case .backgroundColorMissing:
 			item.isHidden = textHasBackgroundColor
 			/* Require foreground color before background color can be set */
 			return textHasForegroundColor
 
-		case 109: // Background Color Set
+		case .backgroundColorSet:
 			item.isHidden = textHasBackgroundColor == false
 			return textHasSpoiler == false
 
-		default:
+		case .colorSeparator, .rainbowColor, .hexColor, nil:
 			break
 		}
 
@@ -319,12 +335,12 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			return
 		}
 
-		if sender.tag == formattingMenuRainbowColorMenuItemTag {
+		if TextFormatterCommand(rawValue: sender.tag) == .rainbowColor {
 			insertRainbowColorCharInfoTextBox(asForegroundColor: true)
 			return
 		}
 
-		if sender.tag == formattingMenuHexColorMenuItemTag {
+		if TextFormatterCommand(rawValue: sender.tag) == .hexColor {
 			presentColorPanel(
 				with: #selector(foregroundColorPanelColorChanged(_:)),
 				initialColor: .formatterWhiteColor
@@ -349,12 +365,12 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 			return
 		}
 
-		if sender.tag == formattingMenuRainbowColorMenuItemTag {
+		if TextFormatterCommand(rawValue: sender.tag) == .rainbowColor {
 			insertRainbowColorCharInfoTextBox(asForegroundColor: false)
 			return
 		}
 
-		if sender.tag == formattingMenuHexColorMenuItemTag {
+		if TextFormatterCommand(rawValue: sender.tag) == .hexColor {
 			presentColorPanel(
 				with: #selector(backgroundColorPanelColorChanged(_:)),
 				initialColor: .formatterBlackColor
@@ -389,29 +405,22 @@ public final class TextViewIRCFormattingMenu: NSObject, NSMenuItemValidation {
 		var rainbowArrayIndex = 0
 		let colorCodes: [UInt] = [4, 7, 8, 3, 12, 2, 6]
 
-		for charCountIndex in 0 ..< mutableStringCopy.length {
-			if rainbowArrayIndex > 6 {
-				rainbowArrayIndex = 0
-			}
+		/* Coloured by composed character sequence, not by UTF-16 unit: a
+		 surrogate pair or a combining sequence used to be split across two
+		 colour codes, which broke the character. */
+		mutableStringCopy.string.enumerateSubstrings(
+			in: mutableStringCopy.string.startIndex ..< mutableStringCopy.string.endIndex,
+			options: .byComposedCharacterSequences
+		) { [self] _, substringRange, _, _ in
+			let currentColorCode = colorCodes[rainbowArrayIndex % colorCodes.count]
+			let currentCharacterRange = NSRange(substringRange, in: mutableStringCopy.string)
 
-			let currentColorCode = colorCodes[rainbowArrayIndex]
-			let currentCharacterRange = NSRange(location: charCountIndex, length: 1)
-
-			if asForegroundColor {
-				applyEffect(
-					.foregroundColor,
-					withValue: NSNumber(value: currentColorCode),
-					inRange: currentCharacterRange,
-					to: mutableStringCopy
-				)
-			} else {
-				applyEffect(
-					.backgroundColor,
-					withValue: NSNumber(value: currentColorCode),
-					inRange: currentCharacterRange,
-					to: mutableStringCopy
-				)
-			}
+			applyEffect(
+				asForegroundColor ? .foregroundColor : .backgroundColor,
+				withValue: NSNumber(value: currentColorCode),
+				inRange: currentCharacterRange,
+				to: mutableStringCopy
+			)
 
 			rainbowArrayIndex += 1
 		}

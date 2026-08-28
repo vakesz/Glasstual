@@ -133,12 +133,12 @@ public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidat
 
 	@objc(selectedMembers:)
 	public func selectedMembers(_ sender: Any) -> [ChannelUser] {
-		actionCoordinator.selectedMembers(for: sender, returnNicknames: false).compactMap { $0 as? ChannelUser }
+		actionCoordinator.selectedMembers(for: sender)
 	}
 
 	@objc(selectedMembersNicknames:)
 	public func selectedMembersNicknames(_ sender: Any) -> [String] {
-		actionCoordinator.selectedMembers(for: sender, returnNicknames: true).compactMap { $0 as? String }
+		actionCoordinator.selectedNicknames(for: sender)
 	}
 
 	@objc(deselectMembers:)

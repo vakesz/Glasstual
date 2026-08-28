@@ -24,33 +24,34 @@ final class TXMenuActionCoordinatorTests: XCTestCase {
 		)
 	}
 
-	func testNavigationTagsMapToExistingResponderSelectors() {
-		let mappings: [(Int, String)] = [
-			(MenuNavigationTag.nextServer, "selectNextServer:"),
-			(MenuNavigationTag.previousServer, "selectPreviousServer:"),
-			(MenuNavigationTag.nextActiveServer, "selectNextActiveServer:"),
-			(MenuNavigationTag.previousActiveServer, "selectPreviousActiveServer:"),
-			(MenuNavigationTag.nextChannel, "selectNextChannel:"),
-			(MenuNavigationTag.previousChannel, "selectPreviousChannel:"),
-			(MenuNavigationTag.nextActiveChannel, "selectNextActiveChannel:"),
-			(MenuNavigationTag.previousActiveChannel, "selectPreviousActiveChannel:"),
-			(MenuNavigationTag.nextUnreadChannel, "selectNextUnreadChannel:"),
-			(MenuNavigationTag.previousUnreadChannel, "selectPreviousUnreadChannel:"),
-			(MenuNavigationTag.moveBackward, "selectPreviousWindow:"),
-			(MenuNavigationTag.moveForward, "selectNextWindow:"),
-			(MenuNavigationTag.previousSelection, "selectPreviousSelection:"),
+	func testNavigationTagsMapToNavigationActions() {
+		let mappings: [(Int, MenuNavigationAction)] = [
+			(MenuNavigationTag.nextServer, .nextServer),
+			(MenuNavigationTag.previousServer, .previousServer),
+			(MenuNavigationTag.nextActiveServer, .nextActiveServer),
+			(MenuNavigationTag.previousActiveServer, .previousActiveServer),
+			(MenuNavigationTag.nextChannel, .nextChannel),
+			(MenuNavigationTag.previousChannel, .previousChannel),
+			(MenuNavigationTag.nextActiveChannel, .nextActiveChannel),
+			(MenuNavigationTag.previousActiveChannel, .previousActiveChannel),
+			(MenuNavigationTag.nextUnreadChannel, .nextUnreadChannel),
+			(MenuNavigationTag.previousUnreadChannel, .previousUnreadChannel),
+			(MenuNavigationTag.moveBackward, .moveBackward),
+			(MenuNavigationTag.moveForward, .moveForward),
+			(MenuNavigationTag.previousSelection, .previousSelection),
 		]
 
-		for (tag, selectorName) in mappings {
-			XCTAssertEqual(
-				MenuActionCoordinator.navigationSelector(for: tag),
-				NSSelectorFromString(selectorName)
-			)
+		for (tag, action) in mappings {
+			XCTAssertEqual(MenuActionCoordinator.navigationAction(for: tag), action)
 		}
+
+		/* Every action has to be reachable from a tag, or a menu item exists
+		 that nothing can invoke. */
+		XCTAssertEqual(Set(mappings.map(\.1).map(String.init(describing:))).count, MenuNavigationAction.allCases.count)
 	}
 
 	func testNavigationIgnoresUnrelatedTags() {
-		XCTAssertNil(MenuActionCoordinator.navigationSelector(for: 100))
+		XCTAssertNil(MenuActionCoordinator.navigationAction(for: 100))
 	}
 
 	func testMenuClosePolicyPreservesClickTimeSelectionUntilActionRuns() {
@@ -130,9 +131,7 @@ final class TXMenuActionCoordinatorTests: XCTestCase {
 			"serverNicknameDidAccept:nickname:",
 			"dialogDidClose:",
 			"preferencesDialogDidClose:",
-			"messageReplyItemsForMessageIdentifier:nickname:excerpt:",
 			"shareMenuItemForItems:",
-			"selectedMembersForSender:returnNicknames:",
 			"deselectMembersForSender:",
 			"performMemberAction:sender:",
 			"sendDroppedFilesToSelectedChannel:",
@@ -254,7 +253,6 @@ final class TXMenuActionCoordinatorTests: XCTestCase {
 			"channelInviteSheet:onSelectChannel:",
 			"channelModifyTopicSheet:onOk:",
 			"channelModifyModesSheet:onOk:",
-			"channelSpotlightController:selectChannel:",
 			"serverChangeNicknameSheet:didInputNickname:",
 			"preferencesDialogWillClose:",
 		]
@@ -265,6 +263,12 @@ final class TXMenuActionCoordinatorTests: XCTestCase {
 				"Missing nib or delegate selector: \(selectorName)"
 			)
 		}
+
+		/* The dialog callbacks that no longer travel through the runtime are
+		 Swift protocols; conformance is the contract that replaced them. */
+		XCTAssertTrue((TXMenuController.self as Any.Type) is any ChannelSpotlightControllerDelegate.Type)
+		XCTAssertTrue((TXMenuController.self as Any.Type) is any OnboardingWindowControllerDelegate.Type)
+		XCTAssertTrue((TXMenuController.self as Any.Type) is any ServerHighlightListSheetDelegate.Type)
 
 		XCTAssertTrue(
 			NSClassFromString("TXMenuControllerMainWindowProxy") === TXMenuControllerMainWindowProxy.self

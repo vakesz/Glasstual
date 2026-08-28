@@ -154,29 +154,14 @@ public final class OnboardingIdentityStepViewController: OnboardingStepViewContr
 		alternateNicknameField.stringValue = settings.alternateNickname ?? ""
 	}
 
-	@objc(commitWithError:)
-	override public func commit(errorDescription: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+	override public func commit() throws {
 		nicknameField.performValidation()
 		alternateNicknameField.performValidation()
 
-		if nicknameField.valueIsValid == false {
-			_ = nicknameField.showValidationErrorPopover()
+		for field in [nicknameField, alternateNicknameField] where field?.valueIsValid == false {
+			_ = field?.showValidationErrorPopover()
 
-			if let errorDescription {
-				errorDescription.pointee = nicknameField.lastValidationErrorDescription as NSString?
-			}
-
-			return false
-		}
-
-		if alternateNicknameField.valueIsValid == false {
-			_ = alternateNicknameField.showValidationErrorPopover()
-
-			if let errorDescription {
-				errorDescription.pointee = alternateNicknameField.lastValidationErrorDescription as NSString?
-			}
-
-			return false
+			throw OnboardingStepError(field?.lastValidationErrorDescription ?? "")
 		}
 
 		settings.nickname = nicknameField.value
@@ -184,7 +169,5 @@ public final class OnboardingIdentityStepViewController: OnboardingStepViewContr
 
 		let alternate = alternateNicknameField.value
 		settings.alternateNickname = alternate.isEmpty ? nil : alternate
-
-		return true
 	}
 }

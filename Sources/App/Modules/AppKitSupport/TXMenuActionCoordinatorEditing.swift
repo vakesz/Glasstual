@@ -52,7 +52,7 @@ public extension MenuActionCoordinator {
 		case .showFindPrompt:
 			showFindPrompt(sender)
 		case .copy:
-			forwardResponderAction(NSSelectorFromString("copy:"), sender: sender)
+			forwardResponderAction(#selector(NSText.copy(_:)), sender: sender)
 		case .paste:
 			paste(sender)
 		case .print:
@@ -104,7 +104,7 @@ public extension MenuActionCoordinator {
 			textField.paste(sender)
 			return
 		}
-		forwardResponderAction(NSSelectorFromString("paste:"), sender: sender)
+		forwardResponderAction(#selector(NSText.paste(_:)), sender: sender)
 	}
 
 	private func printContent(_ sender: Any?) {
@@ -112,7 +112,7 @@ public extension MenuActionCoordinator {
 			objcSelectedViewControllerBackingView()?.printContent()
 			return
 		}
-		forwardResponderAction(NSSelectorFromString("print:"), sender: sender)
+		forwardResponderAction(#selector(NSView.printView(_:)), sender: sender)
 	}
 
 	private func forwardResponderAction(_ selector: Selector, sender: Any?) {

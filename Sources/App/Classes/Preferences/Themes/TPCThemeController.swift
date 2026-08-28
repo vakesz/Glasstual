@@ -614,15 +614,15 @@ public final class ThemeController: NSObject {
 		// identity across releases, so a change to it silently resurrected the
 		// alert and orphaned the key the user had already suppressed.
 		let suppressionKey = "incompatible_theme_dialog_\(cachedThemeName)"
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.Theme.incompatibleBody,
 			title: PromptStrings.Theme.incompatibleTitle(name: name),
 			defaultButton: PromptStrings.Theme.chooseDifferentStyleButtonTitle,
 			alternateButton: PromptStrings.Action.confirmation,
 			suppressionKey: suppressionKey,
 			suppressionText: nil
-		) { response, _, _ in
-			guard response == .default else {
+		) { outcome in
+			guard outcome.response == .default else {
 				return
 			}
 			AppController.shared.menuController?.showStylePreferences(nil)
@@ -637,15 +637,15 @@ public final class ThemeController: NSObject {
 		}
 
 		let suppressionKey = "theme_appearance_dialog_\(cachedThemeName)"
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.Theme.wantsDarkAppearanceBody,
 			title: PromptStrings.Theme.wantsDarkAppearanceTitle(name: name),
 			defaultButton: PromptStrings.Theme.keepLightButtonTitle,
 			alternateButton: PromptStrings.Theme.switchToDarkButtonTitle,
 			suppressionKey: suppressionKey,
 			suppressionText: nil
-		) { response, _, _ in
-			guard response != .default else {
+		) { outcome in
+			guard outcome.response != .default else {
 				return
 			}
 			TextualPreferences.setAppearance(.dark)
@@ -654,13 +654,13 @@ public final class ThemeController: NSObject {
 	}
 
 	private func presentIntegrityCompromisedAlert() {
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.Theme.modifiedBody,
 			title: PromptStrings.Theme.modifiedTitle(name: name),
 			defaultButton: PromptStrings.Theme.chooseDifferentStyleButtonTitle,
 			alternateButton: PromptStrings.Action.confirmation
-		) { response, _, _ in
-			guard response == .default else {
+		) { outcome in
+			guard outcome.response == .default else {
 				return
 			}
 			AppController.shared.menuController?.showStylePreferences(nil)

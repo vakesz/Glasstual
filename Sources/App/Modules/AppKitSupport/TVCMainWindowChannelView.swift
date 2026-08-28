@@ -54,7 +54,7 @@ private nonisolated func sortChannelViewSubviews(
 }
 
 @objc(TVCMainWindowChannelView)
-public final class MainWindowChannelView: NSSplitView {
+public final class MainWindowChannelView: NSSplitView, AppearanceObserving {
 	/* -[NSSplitView delegate] is weak, so the delegate is owned here. */
 	private var splitViewDelegate = MainWindowChannelViewDelegate()
 	private var itemIndexSelected = NSNotFound
@@ -249,16 +249,12 @@ public final class MainWindowChannelView: NSSplitView {
 
 	@objc
 	private func themeAppearanceChanged(_: Notification) {
-		updateVibrancy()
-	}
-
-	private func updateVibrancy() {
+		/* Clearing the appearance lets the view inherit the window's. */
 		appearance = nil
 	}
 
-	override public var needsDisplayWhenApplicationAppearanceChanges: Bool {
-		true
-	}
+	/// Primary, secondary and tertiary mouse buttons.
+	fileprivate static let allMouseButtonsMask = 0x1 | 0x2 | 0x4
 }
 
 // MARK: - Overlay View
@@ -408,7 +404,7 @@ private final class MainWindowChannelViewSubview: NSView {
 		 Primary button events are not delayed so that the click is not
 		 held back from the view while the recognizer decides. */
 		let clickRecognizer = NSClickGestureRecognizer(target: self, action: #selector(overlayViewClicked(_:)))
-		clickRecognizer.buttonMask = 0x1 | 0x2 | 0x4 // left, right, other
+		clickRecognizer.buttonMask = MainWindowChannelView.allMouseButtonsMask
 		clickRecognizer.numberOfClicksRequired = 1
 		clickRecognizer.delaysPrimaryMouseButtonEvents = false
 		overlayView.addGestureRecognizer(clickRecognizer)

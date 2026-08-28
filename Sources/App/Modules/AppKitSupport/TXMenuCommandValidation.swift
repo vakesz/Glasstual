@@ -40,93 +40,6 @@ import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 
-private enum CommandMenuTag {
-	static let mainChannel = 6
-	static let mainQuery = 7
-	static let closeWindow = 205
-	static let paste = 305
-	static let markScrollback = 400
-	static let scrollbackMarker = 401
-	static let markAllRead = 403
-	static let clearScrollback = 404
-	static let increaseFont = 406
-	static let decreaseFont = 407
-	static let connect = 500
-	static let connectWithoutProxy = 501
-	static let disconnect = 502
-	static let cancelReconnect = 503
-	static let channelList = 505
-	static let changeNickname = 506
-	static let duplicateServer = 509
-	static let deleteServer = 510
-	static let addChannelToServer = 512
-	static let serverProperties = 514
-	static let joinChannel = 600
-	static let leaveChannel = 601
-	static let leaveChannelSeparator = 602
-	static let addChannel = 603
-	static let viewChannelLogs = 606
-	static let modifyTopic = 608
-	static let modes = 609
-	static let bans = 611
-	static let banExceptions = 612
-	static let inviteExceptions = 613
-	static let quiets = 614
-	static let nextHighlight = 708
-	static let previousHighlight = 709
-	static let jumpToCurrentSession = 711
-	static let jumpToPresent = 712
-	static let toggleMemberList = 803
-	static let toggleServerList = 804
-	static let toggleAppearance = 805
-	static let toggleAppearanceSeparator = 806
-	static let sortChannelList = 807
-	static let sortChannelListSeparator = 808
-	static let centerWindow = 809
-	static let resetWindow = 810
-	static let resetWindowSeparator = 811
-	static let mainWindow = 812
-	static let addressBook = 813
-	static let ignoreList = 814
-	static let viewLogs = 815
-	static let highlightList = 816
-	static let webChangeNickname = 1200
-	static let webSearch = 1202
-	static let webDictionary = 1203
-	static let webCopy = 1205
-	static let webPaste = 1206
-	static let webPasteSeparator = 1207
-	static let webQueryLogs = 1208
-	static let webChannelMenu = 1209
-	static let webReply = 1211
-	static let webReact = 1212
-	static let segmentedAddChannel = 1302
-	static let addIgnore = 1600
-	static let modifyIgnore = 1601
-	static let removeIgnore = 1602
-	static let inviteTo = 1604
-	static let whois = 1606
-	static let privateMessage = 1607
-	static let giveOp = 1609
-	static let giveHalfop = 1610
-	static let giveVoice = 1611
-	static let allModesGiven = 1612
-	static let allModesGivenSeparator = 1613
-	static let takeOp = 1614
-	static let takeHalfop = 1615
-	static let takeVoice = 1616
-	static let allModesTaken = 1617
-	static let allModesTakenSeparator = 1618
-	static let ban = 1619
-	static let kick = 1620
-	static let kickban = 1621
-	static let kickbanSeparator = 1622
-	static let ctcp = 1623
-	static let ircOperator = 1624
-	static let changeColor = 1625
-	static let developerMode = 9_100_000
-}
-
 @MainActor
 extension MenuActionCoordinator {
 	private var selectedViewController: LogController? {
@@ -134,7 +47,7 @@ extension MenuActionCoordinator {
 			return controller
 		}
 
-		return (selectedClient?.viewController as AnyObject?) as? LogController
+		return selectedClient?.viewController
 	}
 
 	private var selectedBackingView: LogView? {
@@ -147,7 +60,7 @@ extension MenuActionCoordinator {
 		guard appController.applicationIsTerminating == false else { return false }
 
 		return MenuValidationPolicy.validate(
-			tag: menuItem.tag,
+			command: menuItem.command,
 			commandSpecificResult: validateCommand(menuItem),
 			applicationIsLaunched: appController.applicationIsLaunched,
 			mainWindowHasAttachedSheet: mainWindow.attachedSheet != nil,
@@ -157,18 +70,18 @@ extension MenuActionCoordinator {
 	}
 
 	private func validateCommand(_ item: NSMenuItem) -> Bool {
-		switch item.tag {
-		case 500 ... 599:
+		switch item.command?.validationGroup {
+		case .server:
 			validateServerCommand(item)
-		case 600 ... 699:
+		case .channel:
 			validateChannelCommand(item)
-		case 800 ... 899:
+		case .window:
 			validateWindowCommand(item)
-		case 1200 ... 1299:
+		case .web:
 			validateWebCommand(item)
-		case 1600 ... 1699:
+		case .member:
 			validateMemberCommand(item)
-		default:
+		case .general, nil:
 			validateGeneralCommand(item)
 		}
 	}
@@ -177,38 +90,38 @@ extension MenuActionCoordinator {
 		let client = selectedClient
 		let channel = selectedChannel
 
-		switch item.tag {
-		case CommandMenuTag.mainChannel:
+		switch item.command {
+		case .channelMenu:
 			let visible = channel?.isChannel == true
 			item.isHidden = visible == false
 			item.submenu = visible ? menuController?.mainMenuChannelMenu : nil
 			return true
-		case CommandMenuTag.mainQuery:
+		case .queryMenu:
 			let visible = channel.map { $0.isPrivateMessage || $0.isUtility || $0.isDirectChat } == true
 			item.isHidden = visible == false
 			item.submenu = visible ? menuController?.mainMenuQueryMenu : nil
 			return true
-		case CommandMenuTag.closeWindow:
+		case .closeWindow:
 			return validateCloseWindow(item, client: client, channel: channel)
-		case CommandMenuTag.paste:
+		case .paste:
 			return validatePaste()
-		case CommandMenuTag.markScrollback, CommandMenuTag.scrollbackMarker,
-		     CommandMenuTag.markAllRead, CommandMenuTag.clearScrollback,
-		     CommandMenuTag.increaseFont, CommandMenuTag.decreaseFont,
-		     CommandMenuTag.jumpToCurrentSession, CommandMenuTag.jumpToPresent:
+		case .markScrollback, .scrollbackMarker,
+		     .markAllRead, .clearScrollback,
+		     .increaseFont, .decreaseFont,
+		     .jumpToCurrentSession, .jumpToPresent:
 			return selectedViewController != nil
-		case CommandMenuTag.nextHighlight, CommandMenuTag.previousHighlight:
+		case .nextHighlight, .previousHighlight:
 			return selectedViewController?.highlightAvailable(
-				item.tag == CommandMenuTag.previousHighlight
+				item.command == .previousHighlight
 			) == true
-		case CommandMenuTag.segmentedAddChannel:
+		case .segmentedAddChannel:
 			return client != nil
-		case 1802:
+		case .queryLogs:
 			let isQuery = channel?.isPrivateMessage == true
 			item.isHidden = isQuery == false
-			item.menu?.item(withTag: 1801)?.isHidden = isQuery == false
+			item.menu?.item(for: .closeQuerySeparator)?.isHidden = isQuery == false
 			return TextualPreferences.logToDiskIsEnabled()
-		case CommandMenuTag.developerMode:
+		case .developerMode:
 			item.state = TextualPreferences.developerModeEnabled() ? .on : .off
 			return true
 		default:
@@ -219,8 +132,8 @@ extension MenuActionCoordinator {
 	private func validateServerCommand(_ item: NSMenuItem) -> Bool {
 		let client = selectedClient
 
-		switch item.tag {
-		case CommandMenuTag.connect:
+		switch item.command {
+		case .connect:
 			guard let client else {
 				item.isHidden = false
 				return false
@@ -228,7 +141,7 @@ extension MenuActionCoordinator {
 			let connected = client.isConnected || client.isConnecting
 			item.isHidden = connected
 			return connected == false && client.isQuitting == false
-		case CommandMenuTag.connectWithoutProxy:
+		case .connectWithoutProxy:
 			let flags = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
 			guard flags == .shift, let client else {
 				item.isHidden = true
@@ -237,22 +150,22 @@ extension MenuActionCoordinator {
 			let unavailable = client.isConnected || client.isConnecting || client.config.proxyType == .none
 			item.isHidden = unavailable
 			return unavailable == false && client.isQuitting == false
-		case CommandMenuTag.disconnect:
+		case .disconnect:
 			let connected = client.map { $0.isConnected || $0.isConnecting } == true
 			item.isHidden = connected == false
 			return connected
-		case CommandMenuTag.cancelReconnect:
+		case .cancelReconnect:
 			let reconnecting = client?.isReconnecting == true
 			item.isHidden = reconnecting == false
 			return reconnecting
-		case CommandMenuTag.channelList:
+		case .channelList:
 			return client?.isLoggedIn == true
-		case CommandMenuTag.changeNickname:
+		case .changeNickname:
 			return client?.isConnected == true
-		case CommandMenuTag.duplicateServer, CommandMenuTag.addChannelToServer,
-		     CommandMenuTag.serverProperties:
+		case .duplicateServer, .addChannelToServer,
+		     .serverProperties:
 			return client != nil
-		case CommandMenuTag.deleteServer:
+		case .deleteServer:
 			return client.map { $0.isConnecting == false && $0.isConnected == false } == true
 		default:
 			return true
@@ -263,29 +176,29 @@ extension MenuActionCoordinator {
 		let client = selectedClient
 		let channel = selectedChannel
 
-		switch item.tag {
-		case CommandMenuTag.joinChannel:
+		switch item.command {
+		case .joinChannel:
 			item.isHidden = client?.isLoggedIn != true || channel?.isActive == true
 			return true
-		case CommandMenuTag.leaveChannel:
+		case .leaveChannel:
 			item.isHidden = client?.isLoggedIn != true || channel?.isActive != true
-			let joinHidden = item.menu?.item(withTag: CommandMenuTag.joinChannel)?.isHidden == true
-			item.menu?.item(withTag: CommandMenuTag.leaveChannelSeparator)?.isHidden =
+			let joinHidden = item.menu?.item(for: .joinChannel)?.isHidden == true
+			item.menu?.item(for: .leaveChannelSeparator)?.isHidden =
 				item.isHidden && joinHidden
 			return true
-		case CommandMenuTag.addChannel:
+		case .addChannel:
 			return client != nil
-		case CommandMenuTag.viewChannelLogs:
+		case .viewChannelLogs:
 			return TextualPreferences.logToDiskIsEnabled()
-		case CommandMenuTag.modifyTopic, CommandMenuTag.modes, CommandMenuTag.bans:
+		case .modifyTopic, .modes, .bans:
 			return client?.isLoggedIn == true && channel?.isActive == true
-		case CommandMenuTag.banExceptions:
+		case .banExceptions:
 			item.isHidden = client?.supportInfo.isListSupported(.banException) != true
 			return client?.isLoggedIn == true && channel?.isActive == true
-		case CommandMenuTag.inviteExceptions:
+		case .inviteExceptions:
 			item.isHidden = client?.supportInfo.isListSupported(.inviteException) != true
 			return client?.isLoggedIn == true && channel?.isActive == true
-		case CommandMenuTag.quiets:
+		case .quiets:
 			item.isHidden = client?.supportInfo.isListSupported(.quiet) != true
 			return client?.isLoggedIn == true && channel?.isActive == true
 		default:
@@ -297,27 +210,27 @@ extension MenuActionCoordinator {
 		let client = selectedClient
 		let channel = selectedChannel
 
-		switch item.tag {
-		case CommandMenuTag.toggleServerList, CommandMenuTag.sortChannelList,
-		     CommandMenuTag.centerWindow, CommandMenuTag.resetWindow:
+		switch item.command {
+		case .toggleServerList, .sortChannelList,
+		     .centerWindow, .resetWindow:
 			return validateMainWindowCommand(item)
-		case CommandMenuTag.mainWindow:
+		case .mainWindow:
 			item.isHidden = mainWindow.isMainWindow
 			return mainWindow.isDisabled == false
-		case CommandMenuTag.toggleMemberList:
+		case .toggleMemberList:
 			item.isHidden = mainWindow.isMainWindow == false
 			item.title = MainWindowStrings.Menu.memberList(isVisible: mainWindow.isMemberListVisible)
 			return channel?.isChannel == true && client?.isLoggedIn == true
-		case CommandMenuTag.toggleAppearance:
+		case .toggleAppearance:
 			item.isHidden = mainWindow.isMainWindow == false
-			item.menu?.item(withTag: CommandMenuTag.toggleAppearanceSeparator)?.isHidden = item.isHidden
+			item.menu?.item(for: .toggleAppearanceSeparator)?.isHidden = item.isHidden
 			return true
-		case CommandMenuTag.addressBook, CommandMenuTag.ignoreList:
+		case .addressBook, .ignoreList:
 			item.isHidden = mainWindow.isMainWindow == false
 			return client != nil
-		case CommandMenuTag.viewLogs:
+		case .viewLogs:
 			return TextualPreferences.logToDiskIsEnabled()
-		case CommandMenuTag.highlightList:
+		case .highlightList:
 			item.isHidden = mainWindow.isMainWindow == false
 			return client != nil && TextualPreferences.logHighlights()
 		default:
@@ -329,29 +242,29 @@ extension MenuActionCoordinator {
 		let client = selectedClient
 		let channel = selectedChannel
 
-		switch item.tag {
-		case CommandMenuTag.webChangeNickname:
+		switch item.command {
+		case .webChangeNickname:
 			return client?.isConnected == true
-		case CommandMenuTag.webSearch:
+		case .webSearch:
 			guard let webView = selectedBackingView else { return false }
 			item.title = ApplicationStrings.search(with: searchProviderName)
 			return webView.hasSelection
-		case CommandMenuTag.webDictionary:
+		case .webDictionary:
 			return validateDictionaryLookup(item)
-		case CommandMenuTag.webCopy:
+		case .webCopy:
 			return selectedBackingView?.hasSelection == true
-		case CommandMenuTag.webPaste:
+		case .webPaste:
 			return validatePaste()
-		case CommandMenuTag.webQueryLogs:
+		case .webQueryLogs:
 			item.isHidden = channel?.isPrivateMessage != true
 			return TextualPreferences.logToDiskIsEnabled()
-		case CommandMenuTag.webChannelMenu:
+		case .webChannelMenu:
 			item.isHidden = channel?.isChannel != true
-			let queryLogsHidden = item.menu?.item(withTag: CommandMenuTag.webQueryLogs)?.isHidden == true
-			item.menu?.item(withTag: CommandMenuTag.webPasteSeparator)?.isHidden =
+			let queryLogsHidden = item.menu?.item(for: .webQueryLogs)?.isHidden == true
+			item.menu?.item(for: .webPasteSeparator)?.isHidden =
 				item.isHidden && queryLogsHidden
 			return true
-		case CommandMenuTag.webReply, CommandMenuTag.webReact:
+		case .webReply, .webReact:
 			return client != nil
 				&& channel?.isUtility == false
 				&& client?.isCapabilityEnabled(.messageTags) == true
@@ -364,35 +277,35 @@ extension MenuActionCoordinator {
 		let client = selectedClient
 		let channel = selectedChannel
 
-		switch item.tag {
-		case CommandMenuTag.addIgnore:
+		switch item.command {
+		case .addIgnore:
 			return validateAddIgnore(item, client: client, channel: channel)
-		case CommandMenuTag.modifyIgnore, CommandMenuTag.removeIgnore:
+		case .modifyIgnore, .removeIgnore:
 			return true
-		case CommandMenuTag.inviteTo:
+		case .inviteTo:
 			guard let client, client.isLoggedIn, channel?.isUtility == false else { return false }
 			return client.channelList.contains { $0 !== channel && $0.isChannel }
-		case CommandMenuTag.whois, CommandMenuTag.ctcp:
+		case .whois, .ctcp:
 			return client?.isLoggedIn == true && channel?.isUtility == false
-		case CommandMenuTag.privateMessage:
+		case .privateMessage:
 			item.isHidden = channel?.isChannel != true
 			return client?.isLoggedIn == true && channel?.isUtility == false
-		case CommandMenuTag.changeColor:
+		case .changeColor:
 			item.isHidden = channel?.isChannel != true
 			return channel?.isChannel == true
-		case CommandMenuTag.giveOp, CommandMenuTag.giveHalfop, CommandMenuTag.giveVoice,
-		     CommandMenuTag.takeOp, CommandMenuTag.takeHalfop, CommandMenuTag.takeVoice:
+		case .giveOp, .giveHalfop, .giveVoice,
+		     .takeOp, .takeHalfop, .takeVoice:
 			return client?.isLoggedIn == true && channel?.isActive == true
-		case CommandMenuTag.allModesGiven:
+		case .allModesGiven:
 			return false
-		case CommandMenuTag.allModesTaken:
+		case .allModesTaken:
 			return validateModeVisibility(item, client: client, channel: channel)
-		case CommandMenuTag.ban, CommandMenuTag.kick, CommandMenuTag.kickban:
+		case .ban, .kick, .kickban:
 			let isChannel = channel?.isChannel == true
 			item.isHidden = isChannel == false
-			item.menu?.item(withTag: CommandMenuTag.kickbanSeparator)?.isHidden = isChannel == false
+			item.menu?.item(for: .kickbanSeparator)?.isHidden = isChannel == false
 			return client?.isLoggedIn == true && isChannel && channel?.isActive == true
-		case CommandMenuTag.ircOperator:
+		case .ircOperator:
 			item.isHidden = client?.userIsIRCop != true
 			return client?.isLoggedIn == true && channel?.isUtility == false
 		default:
@@ -439,13 +352,13 @@ extension MenuActionCoordinator {
 		let isMain = mainWindow.isMainWindow
 		item.isHidden = isMain == false
 
-		switch item.tag {
-		case CommandMenuTag.toggleServerList:
+		switch item.command {
+		case .toggleServerList:
 			item.title = MainWindowStrings.Menu.serverList(isVisible: mainWindow.isServerListVisible)
-		case CommandMenuTag.sortChannelList:
-			item.menu?.item(withTag: CommandMenuTag.sortChannelListSeparator)?.isHidden = isMain == false
-		case CommandMenuTag.resetWindow:
-			item.menu?.item(withTag: CommandMenuTag.resetWindowSeparator)?.isHidden = isMain == false
+		case .sortChannelList:
+			item.menu?.item(for: .sortChannelListSeparator)?.isHidden = isMain == false
+		case .resetWindow:
+			item.menu?.item(for: .resetWindowSeparator)?.isHidden = isMain == false
 		default:
 			break
 		}
@@ -453,8 +366,8 @@ extension MenuActionCoordinator {
 	}
 
 	private func validateAddIgnore(_ item: NSMenuItem, client: IRCClient?, channel: IRCChannel?) -> Bool {
-		let modify = item.menu?.item(withTag: CommandMenuTag.modifyIgnore)
-		let remove = item.menu?.item(withTag: CommandMenuTag.removeIgnore)
+		let modify = item.menu?.item(for: .modifyIgnore)
+		let remove = item.menu?.item(for: .removeIgnore)
 
 		guard channel?.isUtility == false else {
 			modify?.isHidden = true
@@ -463,7 +376,7 @@ extension MenuActionCoordinator {
 			return false
 		}
 
-		let members = selectedMembers(for: item, returnNicknames: false) as? [ChannelUser] ?? []
+		let members = selectedMembers(for: item)
 		guard members.count == 1, let hostmask = members.first?.user.hostmask, let client else {
 			modify?.isHidden = true
 			remove?.isHidden = true
@@ -479,34 +392,35 @@ extension MenuActionCoordinator {
 	}
 
 	private func validateModeVisibility(_ item: NSMenuItem, client: IRCClient?, channel: IRCChannel?) -> Bool {
-		func hide(_ tag: Int, _ hidden: Bool) {
-			item.menu?.item(withTag: tag)?.isHidden = hidden
+		func hide(_ command: MenuCommand, _ hidden: Bool) {
+			item.menu?.item(for: command)?.isHidden = hidden
 		}
 
 		guard channel?.isChannel == true else {
-			for tag in [
-				CommandMenuTag.giveOp, CommandMenuTag.giveHalfop, CommandMenuTag.giveVoice,
-				CommandMenuTag.takeOp, CommandMenuTag.takeHalfop, CommandMenuTag.takeVoice,
-				CommandMenuTag.allModesGiven, CommandMenuTag.allModesGivenSeparator,
-				CommandMenuTag.allModesTaken, CommandMenuTag.allModesTakenSeparator,
+			for command in [
+				MenuCommand.giveOp, .giveHalfop, .giveVoice,
+				.takeOp, .takeHalfop, .takeVoice,
+				.allModesGiven, .allModesGivenSeparator,
+				.allModesTaken, .allModesTakenSeparator,
 			] {
-				hide(tag, true)
+				hide(command, true)
 			}
 			return false
 		}
 
-		hide(CommandMenuTag.allModesGivenSeparator, false)
-		hide(CommandMenuTag.allModesTakenSeparator, false)
-		let members = selectedMembers(for: item, returnNicknames: false) as? [ChannelUser] ?? []
+		hide(.allModesGivenSeparator, false)
+		hide(.allModesTakenSeparator, false)
+		let members = selectedMembers(for: item)
 
 		guard members.count == 1, let user = members.first else {
-			for tag in [CommandMenuTag.giveOp, CommandMenuTag.giveHalfop, CommandMenuTag.giveVoice,
-			            CommandMenuTag.takeOp, CommandMenuTag.takeHalfop, CommandMenuTag.takeVoice]
-			{
-				hide(tag, false)
+			for command in [
+				MenuCommand.giveOp, .giveHalfop, .giveVoice,
+				.takeOp, .takeHalfop, .takeVoice,
+			] {
+				hide(command, false)
 			}
-			hide(CommandMenuTag.allModesGiven, true)
-			hide(CommandMenuTag.allModesTaken, true)
+			hide(.allModesGiven, true)
+			hide(.allModesTaken, true)
 			return false
 		}
 
@@ -515,17 +429,17 @@ extension MenuActionCoordinator {
 		let supportsHalfOp = client?.supportInfo.modeSymbolIsUserPrefix("h") == true
 		let hasHalfOp = supportsHalfOp && user.ranks.contains(.halfOperator)
 
-		hide(CommandMenuTag.giveOp, hasOp)
-		hide(CommandMenuTag.takeOp, hasOp == false)
-		hide(CommandMenuTag.giveVoice, hasVoice)
-		hide(CommandMenuTag.takeVoice, hasVoice == false)
-		hide(CommandMenuTag.giveHalfop, supportsHalfOp == false || hasHalfOp)
-		hide(CommandMenuTag.takeHalfop, supportsHalfOp == false || hasHalfOp == false)
+		hide(.giveOp, hasOp)
+		hide(.takeOp, hasOp == false)
+		hide(.giveVoice, hasVoice)
+		hide(.takeVoice, hasVoice == false)
+		hide(.giveHalfop, supportsHalfOp == false || hasHalfOp)
+		hide(.takeHalfop, supportsHalfOp == false || hasHalfOp == false)
 		hide(
-			CommandMenuTag.allModesGiven,
+			.allModesGiven,
 			hasOp == false || hasVoice == false || (supportsHalfOp && hasHalfOp == false)
 		)
-		hide(CommandMenuTag.allModesTaken, hasOp || hasHalfOp || hasVoice)
+		hide(.allModesTaken, hasOp || hasHalfOp || hasVoice)
 		return false
 	}
 

@@ -13,21 +13,14 @@
 import AppKit
 
 public extension NSWindow {
-	@objc func changeFrameToMin() {
-		changeFrame(toMinAndDisplay: true, animate: false)
-	}
-
-	@objc(changeFrameToMinAndDisplay:)
 	func changeFrame(toMinAndDisplay display: Bool) {
 		changeFrame(toMinAndDisplay: display, animate: false)
 	}
 
-	@objc(changeFrameToMinAndDisplay:animate:)
 	func changeFrame(toMinAndDisplay display: Bool, animate: Bool) {
 		changeFrame(to: contentMinSize, display: display, animate: animate)
 	}
 
-	@objc(changeFrameTo:display:animate:)
 	func changeFrame(to minSize: NSSize, display: Bool, animate: Bool) {
 		let oldFrame = frame
 		var newFrame = oldFrame
@@ -41,25 +34,16 @@ public extension NSWindow {
 
 		setFrame(newFrame, display: display, animate: animate)
 	}
-
-	@objc(replaceContentView:)
-	func replaceContentView(_ withView: NSView) {
-		contentView = nil
-		changeFrame(to: withView.frame.size, display: false, animate: false)
-		contentView = withView
-	}
 }
 
 public extension NSView {
-	@objc var mainWindow: TVCMainWindow? {
-		guard let window, window.isMember(of: TVCMainWindow.self) else {
-			return nil
-		}
-
-		return window as? TVCMainWindow
+	/** The exact-class check this used to make rejected a subclass for no
+	 reason, and the cast that followed it was then redundant. */
+	var mainWindow: TVCMainWindow? {
+		window as? TVCMainWindow
 	}
 
-	@objc func addConstraintsToSuperviewToHugEdges() {
+	func addConstraintsToSuperviewToHugEdges() {
 		guard let superview else {
 			return
 		}
@@ -106,49 +90,23 @@ public extension NSView {
 		superview.addConstraints(constraints)
 	}
 
-	@objc func addConstraintsToSuperviewToEqualDimensions() {
-		guard let superview else {
-			return
-		}
-
-		var constraints: [NSLayoutConstraint] = []
-
-		constraints.append(
-			contentsOf: NSLayoutConstraint.constraints(
-				withVisualFormat: "H:|-0-[self(0@550)]-0-|",
-				options: .directionLeadingToTrailing,
-				metrics: nil,
-				views: ["self": self]
-			)
-		)
-
-		constraints.append(
-			contentsOf: NSLayoutConstraint.constraints(
-				withVisualFormat: "V:|-0-[self(0@550)]-0-|",
-				options: .directionLeadingToTrailing,
-				metrics: nil,
-				views: ["self": self]
-			)
-		)
-
-		superview.addConstraints(constraints)
-	}
-
-	@objc(replaceFirstSubview:)
+	/** Hugging the edges already pins all four of them. Adding the VFL
+	 dimension constraints on top pinned the same edges a second time and
+	 brought a zero-size constraint at priority 550 with them, so every pane
+	 swap doubled the constraint count. */
 	func replaceFirstSubview(_ withSubview: NSView) {
 		subviews.first?.removeFromSuperviewWithoutNeedingDisplay()
 		addSubview(withSubview)
 		withSubview.addConstraintsToSuperviewToHugEdges()
-		withSubview.addConstraintsToSuperviewToEqualDimensions()
 	}
 }
 
 public extension NSCell {
-	@objc var window: NSWindow? {
+	var window: NSWindow? {
 		controlView?.window
 	}
 
-	@objc var mainWindow: TVCMainWindow? {
+	var mainWindow: TVCMainWindow? {
 		controlView?.mainWindow
 	}
 }

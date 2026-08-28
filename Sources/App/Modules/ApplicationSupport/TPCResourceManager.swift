@@ -30,9 +30,9 @@ public final nonisolated class ResourceManager: NSObject {
 
 	/* ISOLATION-EXCEPTION: `NSCache` is documented as thread-safe but is not
 	 `Sendable`, and this is a `let` bound once. */
-	private nonisolated(unsafe) static let resourcesCache = NSCache<AnyObject, AnyObject>()
+	private nonisolated(unsafe) static let resourcesCache = NSCache<NSString, AnyObject>()
 
-	@objc public static var sharedResourcesCache: NSCache<AnyObject, AnyObject> {
+	public static var sharedResourcesCache: NSCache<NSString, AnyObject> {
 		resourcesCache
 	}
 
@@ -55,145 +55,62 @@ public final nonisolated class ResourceManager: NSObject {
 		try? fileManager.createSymbolicLink(atPath: destinationPath, withDestinationPath: sourcePath)
 	}
 
-	// MARK: - Dictionaries
+	// MARK: - Loading
 
-	@objc(dictionaryFromResources:)
-	public static func dictionary(fromResources name: String) -> [String: Any]? {
-		dictionary(fromResources: name, inDirectory: nil, key: nil, cacheValue: true)
-	}
-
-	@objc(dictionaryFromResources:cacheValue:)
-	public static func dictionary(fromResources name: String, cacheValue: Bool) -> [String: Any]? {
-		dictionary(fromResources: name, inDirectory: nil, key: nil, cacheValue: cacheValue)
-	}
-
-	@objc(dictionaryFromResources:inDirectory:)
-	public static func dictionary(fromResources name: String, inDirectory subpath: String?) -> [String: Any]? {
-		dictionary(fromResources: name, inDirectory: subpath, key: nil, cacheValue: true)
-	}
-
-	@objc(dictionaryFromResources:inDirectory:cacheValue:)
-	public static func dictionary(
+	/// Reads `name`.plist from the bundle and returns `key`'s value, or the
+	/// whole property list when `key` is nil, as `Value`.
+	///
+	/// This replaced sixteen overloads that existed only to spell out these
+	/// defaults for Objective-C, and a `kindOf: AnyClass` runtime check.
+	public static func load<Value>(
+		_: Value.Type = Value.self,
 		fromResources name: String,
-		inDirectory subpath: String?,
-		cacheValue: Bool
-	) -> [String: Any]? {
-		dictionary(fromResources: name, inDirectory: subpath, key: nil, cacheValue: cacheValue)
-	}
-
-	@objc(dictionaryFromResources:key:)
-	public static func dictionary(fromResources name: String, key: String?) -> [String: Any]? {
-		dictionary(fromResources: name, inDirectory: nil, key: key, cacheValue: true)
-	}
-
-	@objc(dictionaryFromResources:key:cacheValue:)
-	public static func dictionary(fromResources name: String, key: String?, cacheValue: Bool) -> [String: Any]? {
-		dictionary(fromResources: name, inDirectory: nil, key: key, cacheValue: cacheValue)
-	}
-
-	@objc(dictionaryFromResources:inDirectory:key:)
-	public static func dictionary(
-		fromResources name: String,
-		inDirectory subpath: String?,
-		key: String?
-	) -> [String: Any]? {
-		dictionary(fromResources: name, inDirectory: subpath, key: key, cacheValue: true)
-	}
-
-	@objc(dictionaryFromResources:inDirectory:key:cacheValue:)
-	public static func dictionary(
-		fromResources name: String,
-		inDirectory subpath: String?,
-		key: String?,
-		cacheValue: Bool
-	) -> [String: Any]? {
-		object(fromResources: name, inDirectory: subpath, key: key, kindOf: NSDictionary.self, cacheValue: cacheValue)
-			as? [String: Any]
-	}
-
-	// MARK: - Arrays
-
-	@objc(arrayFromResources:)
-	public static func array(fromResources name: String) -> [Any]? {
-		array(fromResources: name, inDirectory: nil, key: nil, cacheValue: true)
-	}
-
-	@objc(arrayFromResources:cacheValue:)
-	public static func array(fromResources name: String, cacheValue: Bool) -> [Any]? {
-		array(fromResources: name, inDirectory: nil, key: nil, cacheValue: cacheValue)
-	}
-
-	@objc(arrayFromResources:inDirectory:)
-	public static func array(fromResources name: String, inDirectory subpath: String?) -> [Any]? {
-		array(fromResources: name, inDirectory: subpath, key: nil, cacheValue: true)
-	}
-
-	@objc(arrayFromResources:inDirectory:cacheValue:)
-	public static func array(fromResources name: String, inDirectory subpath: String?, cacheValue: Bool) -> [Any]? {
-		array(fromResources: name, inDirectory: subpath, key: nil, cacheValue: cacheValue)
-	}
-
-	@objc(arrayFromResources:key:)
-	public static func array(fromResources name: String, key: String?) -> [Any]? {
-		array(fromResources: name, inDirectory: nil, key: key, cacheValue: true)
-	}
-
-	@objc(arrayFromResources:key:cacheValue:)
-	public static func array(fromResources name: String, key: String?, cacheValue: Bool) -> [Any]? {
-		array(fromResources: name, inDirectory: nil, key: key, cacheValue: cacheValue)
-	}
-
-	@objc(arrayFromResources:inDirectory:key:)
-	public static func array(fromResources name: String, inDirectory subpath: String?, key: String?) -> [Any]? {
-		array(fromResources: name, inDirectory: subpath, key: key, cacheValue: true)
-	}
-
-	@objc(arrayFromResources:inDirectory:key:cacheValue:)
-	public static func array(
-		fromResources name: String,
-		inDirectory subpath: String?,
-		key: String?,
-		cacheValue: Bool
-	) -> [Any]? {
-		object(fromResources: name, inDirectory: subpath, key: key, kindOf: NSArray.self, cacheValue: cacheValue)
-			as? [Any]
-	}
-
-	// MARK: - Generic object loading
-
-	@objc(objectFromResources:inDirectory:key:kindOf:cacheValue:)
-	public static func object(
-		fromResources name: String,
-		inDirectory subpath: String?,
-		key: String?,
-		kindOf type: AnyClass,
-		cacheValue: Bool
-	) -> Any? {
-		if cacheValue == false {
-			return loadObject(fromResources: name, inDirectory: subpath, key: key, kindOf: type)
+		inDirectory subpath: String? = nil,
+		key: String? = nil,
+		cacheValue: Bool = true
+	) -> Value? {
+		guard cacheValue else {
+			return loadObject(fromResources: name, inDirectory: subpath, key: key)
 		}
 
 		let cacheKey = cacheKey(name: name, subpath: subpath, key: key) as NSString
 
 		if let cachedValue = resourcesCache.object(forKey: cacheKey) {
-			return cachedValue
+			return cachedValue as? Value
 		}
 
-		guard let loadedValue = loadObject(fromResources: name, inDirectory: subpath, key: key, kindOf: type) else {
+		guard let loadedValue: Value = loadObject(fromResources: name, inDirectory: subpath, key: key) else {
 			return nil
 		}
 
-		resourcesCache.setObject(loadedValue as AnyObject, forKey: cacheKey as AnyObject)
+		resourcesCache.setObject(loadedValue as AnyObject, forKey: cacheKey)
 
 		return loadedValue
 	}
 
-	private static func loadObject(
+	public static func dictionary(
+		fromResources name: String,
+		inDirectory subpath: String? = nil,
+		key: String? = nil,
+		cacheValue: Bool = true
+	) -> [String: Any]? {
+		load(fromResources: name, inDirectory: subpath, key: key, cacheValue: cacheValue)
+	}
+
+	public static func array(
+		fromResources name: String,
+		inDirectory subpath: String? = nil,
+		key: String? = nil,
+		cacheValue: Bool = true
+	) -> [Any]? {
+		load(fromResources: name, inDirectory: subpath, key: key, cacheValue: cacheValue)
+	}
+
+	private static func loadObject<Value>(
 		fromResources name: String,
 		inDirectory subpath: String?,
-		key: String?,
-		kindOf type: AnyClass
-	) -> Any? {
+		key: String?
+	) -> Value? {
 		guard let resourceURL = Bundle.main.url(forResource: name, withExtension: "plist", subdirectory: subpath) else {
 			logger.error(
 				"Resource '\(name, privacy: .public)' in subpath '\(subpath ?? "<No subpath>", privacy: .public)' was not found."
@@ -242,15 +159,15 @@ public final nonisolated class ResourceManager: NSObject {
 			objectValue = propertyList
 		}
 
-		guard let objectValue, (objectValue as AnyObject).isKind(of: type) else {
+		guard let typedValue = objectValue as? Value else {
 			logger.error(
-				"Contents of key '\(key ?? "<Root Object>", privacy: .public)' in resource '\(Self.displayPath(for: resourceURL), privacy: .public)' is not kind of class: \(NSStringFromClass(type), privacy: .public)"
+				"Contents of key '\(key ?? "<Root Object>", privacy: .public)' in resource '\(Self.displayPath(for: resourceURL), privacy: .public)' is not a \(String(describing: Value.self), privacy: .public)"
 			)
 
 			return nil
 		}
 
-		return objectValue
+		return typedValue
 	}
 
 	private static func cacheKey(name: String, subpath: String?, key: String?) -> String {

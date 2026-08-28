@@ -77,25 +77,24 @@ public extension MenuActionCoordinator {
 		MenuPresentation.shareMenuItem(for: items)
 	}
 
-	private func messageContext(from sender: Any?) -> [String: String]? {
-		(sender as? NSMenuItem)?.representedObject as? [String: String]
+	private func messageContext(from sender: Any?) -> MessageMenuContext? {
+		(sender as? NSMenuItem)?.representedObject as? MessageMenuContext
 	}
 
 	private func reply(to sender: Any?) {
 		guard let context = messageContext(from: sender),
-		      let identifier = context["messageIdentifier"],
-		      identifier.isEmpty == false
+		      context.messageIdentifier.isEmpty == false
 		else { return }
 		mainWindow.inputTextField?.beginReply(
-			toMessageIdentifier: identifier,
-			nickname: context["nickname"],
-			excerpt: context["excerpt"]
+			toMessageIdentifier: context.messageIdentifier,
+			nickname: context.nickname,
+			excerpt: context.excerpt
 		)
 	}
 
 	private func react(to sender: Any?) {
 		guard let context = messageContext(from: sender) else { return }
-		sendReaction(context["emoji"], messageIdentifier: context["messageIdentifier"])
+		sendReaction(context.emoji, messageIdentifier: context.messageIdentifier)
 	}
 
 	private func sendReaction(_ emoji: String?, messageIdentifier: String?) {
@@ -108,7 +107,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private func reactWithOtherEmoji(to sender: Any?) {
-		guard let identifier = messageContext(from: sender)?["messageIdentifier"],
+		guard let identifier = messageContext(from: sender)?.messageIdentifier,
 		      identifier.isEmpty == false,
 		      let anchorView = objcSelectedViewControllerBackingView()?.webView,
 		      let window = anchorView.window
@@ -125,7 +124,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private func showWebInspectorUnavailableAlert() {
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.WebInspector.unavailableBody,
 			title: PromptStrings.WebInspector.unavailableTitle,
 			defaultButton: PromptStrings.Action.confirmation,

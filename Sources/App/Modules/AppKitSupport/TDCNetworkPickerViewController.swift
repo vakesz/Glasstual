@@ -12,42 +12,40 @@
 
 import AppKit
 
-private enum NetworkPickerRowKind: UInt {
-	case group = 0
-	case network
-	case custom
-}
-
 private let networkCellIdentifier = NSUserInterfaceItemIdentifier("NetworkCell")
 private let groupCellIdentifier = NSUserInterfaceItemIdentifier("GroupCell")
 
 // MARK: - Row Model
 
-private final class NetworkPickerRow: NSObject {
-	var kind: NetworkPickerRowKind = .group
-	var title: String?
-	var network: Network?
+/// One row of the network picker. This used to be a mutable class with a kind
+/// tag and three optional fields, so a network row without a network, or a
+/// group row carrying one, was expressible.
+private enum NetworkPickerRow {
+	case group(title: String)
+	case network(Network)
+	case custom
 
-	static func groupRow(title: String) -> NetworkPickerRow {
-		let row = NetworkPickerRow()
-		row.kind = .group
-		row.title = title
-		return row
+	var isGroup: Bool {
+		if case .group = self {
+			return true
+		}
+		return false
 	}
 
-	static func networkRow(_ network: Network) -> NetworkPickerRow {
-		let row = NetworkPickerRow()
-		row.kind = .network
-		row.network = network
-		row.title = network.networkName
-		return row
+	var network: Network? {
+		if case let .network(network) = self {
+			return network
+		}
+		return nil
 	}
 
-	static func customRow() -> NetworkPickerRow {
-		let row = NetworkPickerRow()
-		row.kind = .custom
-		row.title = OnboardingStrings.NetworkPicker.customServerTitle
-		return row
+	@MainActor
+	var title: String {
+		switch self {
+		case let .group(title): title
+		case let .network(network): network.networkName
+		case .custom: OnboardingStrings.NetworkPicker.customServerTitle
+		}
 	}
 }
 
@@ -116,12 +114,19 @@ private final class NetworkPickerCellView: NSTableCellView {
 
 // MARK: - Picker
 
+/// What `NetworkPickerViewController` reports back.
+@MainActor
+public protocol NetworkPickerViewControllerDelegate: AnyObject {
+	func networkPickerSelectionDidChange(_ sender: NetworkPickerViewController)
+	func networkPickerDidConfirmSelection(_ sender: NetworkPickerViewController)
+}
+
 @objc(TDCNetworkPickerViewController)
 @MainActor
 public final class NetworkPickerViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate,
 	NSSearchFieldDelegate, NSTextFieldDelegate
 {
-	@objc public weak var delegate: AnyObject?
+	public weak var delegate: (any NetworkPickerViewControllerDelegate)?
 
 	@objc public private(set) var networkList: NetworkList
 	@objc public private(set) var selectedNetwork: Network?
@@ -249,16 +254,16 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		var rows: [NetworkPickerRow] = []
 
 		if query.isEmpty {
-			rows.append(NetworkPickerRow.groupRow(title: OnboardingStrings.NetworkPicker.popularGroup))
+			rows.append(.group(title: OnboardingStrings.NetworkPicker.popularGroup))
 
 			for network in networkList.popularNetworks {
-				rows.append(NetworkPickerRow.networkRow(network))
+				rows.append(.network(network))
 			}
 
-			rows.append(NetworkPickerRow.groupRow(title: OnboardingStrings.NetworkPicker.allNetworksGroup))
+			rows.append(.group(title: OnboardingStrings.NetworkPicker.allNetworksGroup))
 
 			for network in networkList.listOfNetworks {
-				rows.append(NetworkPickerRow.networkRow(network))
+				rows.append(.network(network))
 			}
 		} else {
 			for network in networkList.listOfNetworks {
@@ -266,12 +271,12 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 					|| network.serverAddress.localizedCaseInsensitiveContains(query)
 					|| network.networkDescription.localizedCaseInsensitiveContains(query)
 				{
-					rows.append(NetworkPickerRow.networkRow(network))
+					rows.append(.network(network))
 				}
 			}
 		}
 
-		rows.append(NetworkPickerRow.customRow())
+		rows.append(.custom)
 
 		self.rows = rows
 		tableView.reloadData()
@@ -284,7 +289,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		if customServerSelected {
 			rowToSelect = rows.count - 1
 		} else if let selectedNetwork {
-			if let index = rows.firstIndex(where: { $0.kind == .network && $0.network === selectedNetwork }) {
+			if let index = rows.firstIndex(where: { $0.network === selectedNetwork }) {
 				rowToSelect = index
 			}
 		}
@@ -349,15 +354,13 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 			selectedNetwork = nil
 			customServerSelected = false
 		} else {
-			let row = rows[index]
-
-			switch row.kind {
-			case .network:
-				if row.network === selectedNetwork {
+			switch rows[index] {
+			case let .network(network):
+				if network === selectedNetwork {
 					return
 				}
 
-				selectedNetwork = row.network
+				selectedNetwork = network
 				customServerSelected = false
 
 			case .custom:
@@ -387,10 +390,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	}
 
 	private func informDelegateSelectionChanged() {
-		let selector = NSSelectorFromString("networkPickerSelectionDidChange:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.networkPickerSelectionDidChange(self)
 	}
 
 	// MARK: - Values
@@ -423,37 +423,24 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		selectedNetwork?.suggestedChannels ?? []
 	}
 
-	@objc(validateWithError:)
-	public func validateWithError(_ errorDescription: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+	/// Throws the message describing what is wrong with the current selection.
+	/// This used to report through a `Bool` and an `NSString` out-parameter.
+	public func validate() throws {
 		if hasSelection == false {
-			if let errorDescription {
-				errorDescription.pointee = OnboardingStrings.NetworkPicker.missingServer as NSString
-			}
-
-			return false
+			throw OnboardingStepError(OnboardingStrings.NetworkPicker.missingServer)
 		}
 
 		if (serverAddress as NSString).isValidInternetAddress == false {
-			if let errorDescription {
-				errorDescription.pointee = CommonValidationStrings.invalidServerAddress as NSString
-			}
-
-			return false
+			throw OnboardingStepError(CommonValidationStrings.invalidServerAddress)
 		}
 
 		if serverPort == 0 {
-			if let errorDescription {
-				errorDescription.pointee = OnboardingStrings.NetworkPicker.invalidPort as NSString
-			}
-
-			return false
+			throw OnboardingStepError(OnboardingStrings.NetworkPicker.invalidPort)
 		}
-
-		return true
 	}
 
 	public func clientConfig() -> ClientConfig? {
-		if validateWithError(nil) == false {
+		guard (try? validate()) != nil else {
 			return nil
 		}
 
@@ -516,10 +503,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 			return
 		}
 
-		let selector = NSSelectorFromString("networkPickerDidConfirmSelection:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.networkPickerDidConfirmSelection(self)
 	}
 
 	// MARK: - Text Field Delegate
@@ -578,7 +562,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		var next = row + delta
 
 		while next >= 0, next < count {
-			if rows[next].kind == .group {
+			if rows[next].isGroup {
 				next += delta
 				continue
 			}
@@ -596,15 +580,15 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	}
 
 	public func tableView(_: NSTableView, isGroupRow row: Int) -> Bool {
-		rows[row].kind == .group
+		rows[row].isGroup
 	}
 
 	public func tableView(_: NSTableView, shouldSelectRow row: Int) -> Bool {
-		rows[row].kind != .group
+		rows[row].isGroup == false
 	}
 
 	public func tableView(_: NSTableView, heightOfRow row: Int) -> CGFloat {
-		rows[row].kind == .group ? 22 : 38
+		rows[row].isGroup ? 22 : 38
 	}
 
 	public func tableView(
@@ -614,7 +598,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 	) -> NSView? {
 		let rowObject = rows[row]
 
-		if rowObject.kind == .group {
+		if rowObject.isGroup {
 			var cell = tableView.makeView(withIdentifier: groupCellIdentifier, owner: self) as? NSTableCellView
 
 			if cell == nil {
@@ -637,7 +621,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 				cell = newCell
 			}
 
-			cell?.textField?.stringValue = rowObject.title ?? ""
+			cell?.textField?.stringValue = rowObject.title
 			return cell
 		}
 
@@ -655,7 +639,7 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 			cell?.lockImageView.isHidden = network.prefersSecuredConnection == false
 			cell?.toolTip = network.serverAddress
 		} else {
-			cell?.textField?.stringValue = rowObject.title ?? ""
+			cell?.textField?.stringValue = rowObject.title
 			cell?.descriptionField.stringValue = OnboardingStrings.NetworkPicker.customServerDescription
 			cell?.lockImageView.isHidden = true
 			cell?.toolTip = nil

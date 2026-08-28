@@ -8,19 +8,6 @@ import XCTest
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
-@objc
-@MainActor
-class GLTKeyEventTarget: NSObject {
-	@objc var invocationCount: UInt = 0
-	@objc var lastEvent: NSEvent?
-
-	@objc
-	func handleKeyEvent(_ event: NSEvent) {
-		invocationCount += 1
-		lastEvent = event
-	}
-}
-
 @MainActor
 private final class GLTCompletionWindow: NicknameCompletionWindow {
 	var inputTextField: MainWindowTextView!
@@ -75,51 +62,48 @@ class InputHandlingMigrationTests: XCTestCase {
 		XCTAssertEqual(history.down(NSAttributedString(string: "second"))?.string, "")
 	}
 
-	@objc
+	/** Key event handlers are registered with closures now; the selector-based
+	 registration and its NSObject target requirement are gone. */
 	func testKeyEventHandlerDispatchesRegisteredKeyCode() {
-		let target = GLTKeyEventTarget()
-		let handler = KeyEventHandler(target: target)
+		let handler = KeyEventHandler()
 		let event = keyEventWithCharacters("a", modifiers: .command, keyCode: 42)
+		var invocationCount = 0
+		var lastEvent: NSEvent?
 
-		handler.register(
-			#selector(GLTKeyEventTarget.handleKeyEvent(_:)),
-			key: 42,
-			modifiers: NSEvent.ModifierFlags.command.rawValue
-		)
+		handler.register(character: "a", modifiers: .command) { event in
+			invocationCount += 1
+			lastEvent = event
+		}
 
 		XCTAssertTrue(handler.processKeyEvent(event))
-
-		XCTAssertEqual(target.invocationCount, 1)
-		XCTAssertEqual(target.lastEvent, event)
+		XCTAssertEqual(invocationCount, 1)
+		XCTAssertEqual(lastEvent, event)
 	}
 
-	@objc
-	func testKeyEventHandlerFallsBackToCaseInsensitiveCharacter() throws {
-		let target = GLTKeyEventTarget()
-		let handler = KeyEventHandler(target: target)
+	func testKeyEventHandlerFallsBackToCaseInsensitiveCharacter() {
+		let handler = KeyEventHandler()
 		let event = keyEventWithCharacters("A", modifiers: [], keyCode: 42)
+		var invocationCount = 0
 
-		try handler.register(
-			#selector(GLTKeyEventTarget.handleKeyEvent(_:)),
-			character: UInt16(XCTUnwrap(Character("a").asciiValue)),
-			modifiers: 0
-		)
+		handler.register(character: "a") { _ in invocationCount += 1 }
+
 		XCTAssertTrue(handler.processKeyEvent(event))
-		XCTAssertEqual(target.invocationCount, 1)
+		XCTAssertEqual(invocationCount, 1)
 	}
 
-	@objc
 	func testKeyEventHandlerReturnsNoForUnregisteredEvent() {
-		let target = GLTKeyEventTarget()
-		let handler = KeyEventHandler(target: target)
+		let handler = KeyEventHandler()
 		let event = keyEventWithCharacters("z", modifiers: [], keyCode: 6)
+		var invocationCount = 0
+
+		handler.register(character: "a") { _ in invocationCount += 1 }
 
 		XCTAssertFalse(handler.processKeyEvent(event))
-		XCTAssertEqual(target.invocationCount, 0)
+		XCTAssertEqual(invocationCount, 0)
 	}
 
 	func testKeyEventHandlerDispatchesTypedShortcutAction() {
-		let handler = KeyEventHandler(target: GLTKeyEventTarget())
+		let handler = KeyEventHandler()
 		let event = keyEventWithCharacters("\u{1b}", modifiers: .command, keyCode: KeyCode.escape.rawValue)
 		var receivedEvent: NSEvent?
 		handler.register(key: .escape, modifiers: .command) { receivedEvent = $0 }
@@ -129,9 +113,6 @@ class InputHandlingMigrationTests: XCTestCase {
 	}
 
 	func testInputHandlingRetainsNibAndSelectorCompatibility() {
-		XCTAssertNotNil(NSClassFromString("TLOKeyEventHandler"))
-		XCTAssertTrue(KeyEventHandler.instancesRespond(to: NSSelectorFromString("processKeyEvent:")))
-		XCTAssertTrue(KeyEventHandler.instancesRespond(to: NSSelectorFromString("setKeyHandlerTarget:")))
 		XCTAssertNotNil(NSClassFromString("TLONicknameCompletionStatus"))
 		XCTAssertTrue(NicknameCompletionStatus.instancesRespond(to: NSSelectorFromString("completeNickname:")))
 	}

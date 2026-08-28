@@ -26,7 +26,7 @@ public protocol TVCServerListDelegate: NSObjectProtocol {
 }
 
 @objc(TVCServerList)
-public final class ServerList: NSOutlineView {
+public final class ServerList: NSOutlineView, AppearanceObserving {
 	@objc public weak var keyDelegate: TVCServerListDelegate?
 
 	override public func viewDidMoveToWindow() {
@@ -264,15 +264,13 @@ public final class ServerList: NSOutlineView {
 		true
 	}
 
-	@objc
-	override public func applicationAppearanceChanged() {
+	public func applicationAppearanceChanged() {
 		invalidateSelectionBackground()
 		refreshAllDrawings(true)
 		needsDisplay = true
 	}
 
-	@objc
-	override public func systemAppearanceChanged() {
+	public func systemAppearanceChanged() {
 		invalidateSelectionBackground()
 		refreshAllDrawings(true)
 		needsDisplay = true
@@ -355,12 +353,12 @@ public final class ServerList: NSOutlineView {
 			return
 		}
 
-		switch event.keyCode {
-		case 125, 126: // down / up arrow
+		switch KeyCode(rawValue: event.keyCode) {
+		case .downArrow, .upArrow:
 			/* Let the outline view move the selection, as the member list does. */
 			super.keyDown(with: event)
 
-		case 123, 124, 116, 121: // left / right / page up / page down
+		case .leftArrow, .rightArrow, .pageUp, .pageDown:
 			break
 
 		default:

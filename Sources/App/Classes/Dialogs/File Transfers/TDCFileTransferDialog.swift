@@ -144,24 +144,7 @@ public final class FileTransferDialog: WindowBase,
 		show(true, restorePosition: true)
 	}
 
-	/* ISOLATION-EXCEPTION: QuickLookUI declares the `QLPreviewPanelController`
-	 methods on `NSObject` as nonisolated, so these overrides cannot be isolated.
-	 QuickLook drives the panel from the main thread. */
-	@objc override public nonisolated func acceptsPreviewPanelControl(_: QLPreviewPanel) -> Bool {
-		true
-	}
-
-	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
-	@objc override public nonisolated func beginPreviewPanelControl(_ panel: QLPreviewPanel) {
-		MainActor.assumeIsolated {
-			beginPreviewPanelControlOnMainActor(panel)
-		}
-	}
-
-	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
-	@objc override public nonisolated func endPreviewPanelControl(_ panel: QLPreviewPanel) {
-		MainActor.assumeIsolated {
-			endPreviewPanelControlOnMainActor(panel)
-		}
-	}
+	/* Quick Look walks the responder chain from the first responder, so the
+	 window's overrides above answer first and forward here; a second set of
+	 overrides on the dialog was never reached. */
 }

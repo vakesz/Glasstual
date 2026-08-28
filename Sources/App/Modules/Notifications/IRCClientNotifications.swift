@@ -207,8 +207,8 @@ public extension IRCClient {
 
 	@MainActor
 	private func isSelected(_ channel: IRCChannel?) -> Bool {
-		guard let treeItem = (channel as AnyObject?) as? IRCTreeItem else { return false }
-		return AppController.shared.mainWindow?.isItemSelected(treeItem) ?? false
+		guard let channel else { return false }
+		return AppController.shared.mainWindow?.isItemSelected(channel) ?? false
 	}
 
 	@objc func clearEventsToSpeak() {
@@ -224,7 +224,7 @@ public extension IRCClient {
 		text: String?
 	) {
 		let resolvedTarget = target ?? self
-		let channel = (resolvedTarget as AnyObject) as? IRCChannel
+		let channel = resolvedTarget as? IRCChannel
 		guard SharedApplication.sharedNotificationController().speakEvent(event, in: channel) else { return }
 		var notification = SpokenNotification(
 			notificationType: event,
@@ -343,8 +343,7 @@ public extension IRCClient {
 			if !onlySpeak, let soundName = controller.sound(forEvent: event, in: target) {
 				SoundPlayer.playAlertSound(soundName)
 			}
-			let speechTarget = (target as AnyObject?) as? IRCTreeItem
-			speakEvent(event, lineType: lineType, target: speechTarget, nickname: nickname, text: text)
+			speakEvent(event, lineType: lineType, target: target, nickname: nickname, text: text)
 		}
 
 		guard !onlySpeak else { return true }

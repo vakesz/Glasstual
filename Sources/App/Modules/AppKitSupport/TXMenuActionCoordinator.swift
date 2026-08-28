@@ -65,6 +65,23 @@ enum MenuMemberCommand {
 	}
 }
 
+/// One of the main window's navigation commands.
+enum MenuNavigationAction: Sendable, CaseIterable {
+	case nextServer
+	case previousServer
+	case nextActiveServer
+	case previousActiveServer
+	case nextChannel
+	case previousChannel
+	case nextActiveChannel
+	case previousActiveChannel
+	case nextUnreadChannel
+	case previousUnreadChannel
+	case moveBackward
+	case moveForward
+	case previousSelection
+}
+
 enum MenuNavigationTag {
 	static let nextServer = 7_000_000
 	static let previousServer = 7_000_001
@@ -118,10 +135,77 @@ public final class MenuActionCoordinator: NSObject {
 		SharedApplication.sharedFileTransferDialog()
 	}
 
-	@objc(selectedMembersForSender:returnNicknames:)
-	public func selectedMembers(for sender: Any, returnNicknames: Bool) -> [Any] {
+	/// The members a member-list command applies to: the one the menu was
+	/// opened on, or the current selection.
+	///
+	/// This used to be one `-> [Any]` switched on a `returnNicknames` flag,
+	/// with every caller casting the result back.
+	public func selectedMembers(for sender: Any) -> [ChannelUser] {
+		guard let pointedNickname = pointedNickname(for: sender) else {
+			return selectedMemberListMembers()
+		}
+
+		guard let channel = selectedChannel else {
+			return []
+		}
+
+		return channel.findMember(pointedNickname).map { [$0] } ?? []
+	}
+
+	public func selectedNicknames(for sender: Any) -> [String] {
+		guard let pointedNickname = pointedNickname(for: sender) else {
+			return selectedMemberListMembers().map(\.user.nickname)
+		}
+
+		return [pointedNickname]
+	}
+
+	/// The nickname the command was aimed at, if it was aimed at one: either
+	/// the menu item's own, or the one the log view recorded. `nil` means "use
+	/// the member list's selection".
+	private func pointedNickname(for sender: Any) -> String? {
 		guard let controller = menuController,
 		      let client = selectedClient,
+		      let channel = selectedChannel,
+		      client.isLoggedIn,
+		      channel.isActive
+		else {
+			return nil
+		}
+
+		if let menuItem = sender as? NSMenuItem {
+			return menuItem.textualUserInfo
+		}
+
+		return controller.pointedNickname
+	}
+
+	var windowController: WindowController {
+		SharedApplication.sharedWindowController()
+	}
+
+	/// Attaches a dialog to the menu controller and the main window, starts it,
+	/// and puts it in the window list. Every dialog the menu opens goes through
+	/// here, so none of them can forget one of the three steps.
+	func present<Dialog: AnyObject>(_ dialog: Dialog, start: (Dialog) -> Void) {
+		(dialog as? SheetBase)?.delegate = menuController
+		(dialog as? SheetBase)?.window = mainWindow
+		(dialog as? WindowBase)?.delegate = menuController
+		if let onboarding = dialog as? OnboardingWindowController {
+			onboarding.delegate = menuController
+		}
+		start(dialog)
+		windowController.addWindow(toWindowList: dialog)
+	}
+
+	/// The world the menu acts on. It is set once the application has finished
+	/// launching, which is before any menu command can run.
+	var world: IRCWorld? {
+		AppController.shared.world
+	}
+
+	private func selectedMemberListMembers() -> [ChannelUser] {
+		guard let client = selectedClient,
 		      let channel = selectedChannel,
 		      client.isLoggedIn,
 		      channel.isActive
@@ -129,24 +213,8 @@ public final class MenuActionCoordinator: NSObject {
 			return []
 		}
 
-		let pointedNickname: String? = if let menuItem = sender as? NSMenuItem {
-			menuItem.textualUserInfo
-		} else {
-			controller.pointedNickname
-		}
-
-		if let pointedNickname {
-			if returnNicknames {
-				return [pointedNickname]
-			}
-			return channel.findMember(pointedNickname).map { [$0] } ?? []
-		}
-
 		return mainWindow.memberList.selectedRowIndexes.compactMap { row in
-			guard let member = mainWindow.memberList.item(atRow: row) as? ChannelUser else {
-				return nil
-			}
-			return returnNicknames ? member.user.nickname : member
+			mainWindow.memberList.item(atRow: row) as? ChannelUser
 		}
 	}
 
@@ -162,14 +230,6 @@ public final class MenuActionCoordinator: NSObject {
 			return
 		}
 		mainWindow.memberList.deselectAll(sender)
-	}
-
-	private func nicknames(for sender: Any) -> [String] {
-		selectedMembers(for: sender, returnNicknames: true) as? [String] ?? []
-	}
-
-	private func members(for sender: Any) -> [ChannelUser] {
-		selectedMembers(for: sender, returnNicknames: false) as? [ChannelUser] ?? []
 	}
 
 	@objc(performMemberAction:sender:)
@@ -267,7 +327,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func performIgnore(sender: Any, remove: Bool) {
 		guard let client = selectedClient, let channel = selectedChannel,
-		      let nickname = nicknames(for: sender).first
+		      let nickname = selectedNicknames(for: sender).first
 		else { return }
 		deselectMembers(for: sender)
 		let command = remove ? MenuMemberCommand.unignore(nickname) : MenuMemberCommand.ignore(nickname)
@@ -276,7 +336,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func modifyIgnore(sender: Any) {
 		guard let client = selectedClient else { return }
-		let selectedMembers = members(for: sender)
+		let selectedMembers = selectedMembers(for: sender)
 		deselectMembers(for: sender)
 		guard selectedMembers.count == 1,
 		      let hostmask = selectedMembers.first?.user.hostmask
@@ -312,7 +372,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func insertNicknames(sender: Any) {
 		guard selectedClient != nil, selectedChannel != nil else { return }
-		let nicknames = nicknames(for: sender)
+		let nicknames = selectedNicknames(for: sender)
 		guard nicknames.isEmpty == false else { return }
 		deselectMembers(for: sender)
 
@@ -343,7 +403,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func changeColorForSelectedMember(sender: Any) {
 		guard selectedClient != nil, selectedChannel != nil,
-		      let nickname = nicknames(for: sender).first
+		      let nickname = selectedNicknames(for: sender).first
 		else { return }
 
 		showNicknameColorSheet(for: nickname)
@@ -351,7 +411,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func performForNicknames(sender: Any, action: (IRCClient, String) -> Void) {
 		guard let client = selectedClient, selectedChannel != nil else { return }
-		for nickname in nicknames(for: sender) {
+		for nickname in selectedNicknames(for: sender) {
 			action(client, nickname)
 		}
 		deselectMembers(for: sender)
@@ -359,10 +419,9 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func startPrivateMessages(sender: Any) {
 		guard let client = selectedClient, selectedChannel != nil else { return }
-		for nickname in nicknames(for: sender) {
+		for nickname in selectedNicknames(for: sender) {
 			guard let query = client.findChannelOrCreate(nickname, isPrivateMessage: true) else { continue }
-			guard let treeItem = (query as AnyObject) as? IRCTreeItem else { continue }
-			mainWindow.select(treeItem)
+			mainWindow.select(query)
 		}
 		deselectMembers(for: sender)
 	}
@@ -375,7 +434,7 @@ public final class MenuActionCoordinator: NSObject {
 		guard let client = selectedClient, let channel = selectedChannel,
 		      client.isLoggedIn, channel.isChannel
 		else { return }
-		let nicknames = nicknames(for: sender)
+		let nicknames = selectedNicknames(for: sender)
 		deselectMembers(for: sender)
 		client.sendCommand(
 			MenuMemberCommand.mode(command, nicknames: nicknames),
@@ -391,7 +450,7 @@ public final class MenuActionCoordinator: NSObject {
 		guard let client = selectedClient, let channel = selectedChannel,
 		      client.isLoggedIn, channel.isChannel
 		else { return }
-		for nickname in nicknames(for: sender) {
+		for nickname in selectedNicknames(for: sender) {
 			action(client, channel, nickname)
 		}
 		deselectMembers(for: sender)
@@ -399,7 +458,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func performOperatorCommand(_ command: String, reason: String, sender: Any) {
 		guard let client = selectedClient, selectedChannel != nil, client.isLoggedIn else { return }
-		for nickname in nicknames(for: sender) {
+		for nickname in selectedNicknames(for: sender) {
 			client.sendCommand(MenuMemberCommand.operatorCommand(command, nickname: nickname, reason: reason))
 		}
 		deselectMembers(for: sender)
@@ -407,7 +466,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func performGline(sender: Any) {
 		guard let client = selectedClient, let channel = selectedChannel, client.isLoggedIn else { return }
-		for nickname in nicknames(for: sender) {
+		for nickname in selectedNicknames(for: sender) {
 			if client.nicknameIsMyself(nickname) {
 				client.printDebugInformation(
 					IRCCommandStrings.preventedSelfBan(serverAddress: client.serverAddress ?? ""),
@@ -426,7 +485,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func showSetVhostPrompt(sender: Any) {
 		guard let client = selectedClient, selectedChannel != nil, client.isLoggedIn else { return }
-		let nicknames = nicknames(for: sender)
+		let nicknames = selectedNicknames(for: sender)
 		guard nicknames.isEmpty == false else { return }
 		deselectMembers(for: sender)
 		InputPrompt.prompt(
@@ -450,7 +509,7 @@ public final class MenuActionCoordinator: NSObject {
 
 	private func showFilePicker(sender: Any) {
 		guard let client = selectedClient, selectedChannel != nil, client.isLoggedIn else { return }
-		let nicknames = nicknames(for: sender)
+		let nicknames = selectedNicknames(for: sender)
 		guard nicknames.isEmpty == false else { return }
 		deselectMembers(for: sender)
 		let panel = NSOpenPanel()
@@ -541,16 +600,14 @@ public final class MenuActionCoordinator: NSObject {
 			for channel in client.channelList {
 				let item = NSMenuItem(
 					title: channel.name,
-					action: NSSelectorFromString("_navigateToChannelInNavigationList:"),
+					action: #selector(TXMenuController.navigateToChannelInNavigationList(_:)),
 					keyEquivalent: channelCount < 10 ? String((channelCount + 1) % 10) : ""
 				)
 				item.target = menuController
 				if channelCount < 10 {
 					item.keyEquivalentModifierMask = .command
 				}
-				if let treeItem = (channel as AnyObject) as? IRCTreeItem {
-					item.textualUserInfo = AppController.shared.world.pasteboardString(for: treeItem)
-				}
+				item.textualUserInfo = AppController.shared.world.pasteboardString(for: channel)
 				submenu.addItem(item)
 				channelCount += 1
 			}
@@ -568,36 +625,56 @@ public final class MenuActionCoordinator: NSObject {
 
 	@objc(performNavigationAction:)
 	public func performNavigationAction(_ sender: Any?) {
-		guard selectedClient != nil, let menuItem = sender as? NSMenuItem,
-		      let selector = Self.navigationSelector(for: menuItem.tag)
+		guard selectedClient != nil,
+		      let menuItem = sender as? NSMenuItem,
+		      let action = Self.navigationAction(for: menuItem.tag)
 		else { return }
-		mainWindow.perform(selector, with: sender)
+		perform(action)
 	}
 
-	static func navigationSelector(for tag: Int) -> Selector? {
-		let selectorName: String? = switch tag {
-		case MenuNavigationTag.nextServer: "selectNextServer:"
-		case MenuNavigationTag.previousServer: "selectPreviousServer:"
-		case MenuNavigationTag.nextActiveServer: "selectNextActiveServer:"
-		case MenuNavigationTag.previousActiveServer: "selectPreviousActiveServer:"
-		case MenuNavigationTag.nextChannel: "selectNextChannel:"
-		case MenuNavigationTag.previousChannel: "selectPreviousChannel:"
-		case MenuNavigationTag.nextActiveChannel: "selectNextActiveChannel:"
-		case MenuNavigationTag.previousActiveChannel: "selectPreviousActiveChannel:"
-		case MenuNavigationTag.nextUnreadChannel: "selectNextUnreadChannel:"
-		case MenuNavigationTag.previousUnreadChannel: "selectPreviousUnreadChannel:"
-		case MenuNavigationTag.moveBackward: "selectPreviousWindow:"
-		case MenuNavigationTag.moveForward: "selectNextWindow:"
-		case MenuNavigationTag.previousSelection: "selectPreviousSelection:"
+	/// The menu items used to be dispatched by selector string onto the main
+	/// window, whose handlers are declared `(NSEvent)` and were handed an
+	/// `NSMenuItem`. They are called directly now, with no event.
+	static func navigationAction(for tag: Int) -> MenuNavigationAction? {
+		switch tag {
+		case MenuNavigationTag.nextServer: .nextServer
+		case MenuNavigationTag.previousServer: .previousServer
+		case MenuNavigationTag.nextActiveServer: .nextActiveServer
+		case MenuNavigationTag.previousActiveServer: .previousActiveServer
+		case MenuNavigationTag.nextChannel: .nextChannel
+		case MenuNavigationTag.previousChannel: .previousChannel
+		case MenuNavigationTag.nextActiveChannel: .nextActiveChannel
+		case MenuNavigationTag.previousActiveChannel: .previousActiveChannel
+		case MenuNavigationTag.nextUnreadChannel: .nextUnreadChannel
+		case MenuNavigationTag.previousUnreadChannel: .previousUnreadChannel
+		case MenuNavigationTag.moveBackward: .moveBackward
+		case MenuNavigationTag.moveForward: .moveForward
+		case MenuNavigationTag.previousSelection: .previousSelection
 		default: nil
 		}
-		return selectorName.map(NSSelectorFromString)
+	}
+
+	private func perform(_ action: MenuNavigationAction) {
+		switch action {
+		case .nextServer: mainWindow.selectNextServer(nil)
+		case .previousServer: mainWindow.selectPreviousServer(nil)
+		case .nextActiveServer: mainWindow.selectNextActiveServer(nil)
+		case .previousActiveServer: mainWindow.selectPreviousActiveServer(nil)
+		case .nextChannel: mainWindow.selectNextChannel(nil)
+		case .previousChannel: mainWindow.selectPreviousChannel(nil)
+		case .nextActiveChannel: mainWindow.selectNextActiveChannel(nil)
+		case .previousActiveChannel: mainWindow.selectPreviousActiveChannel(nil)
+		case .nextUnreadChannel: mainWindow.selectNextUnreadChannel(nil)
+		case .previousUnreadChannel: mainWindow.selectPreviousUnreadChannel(nil)
+		case .moveBackward: mainWindow.selectPreviousWindow(nil)
+		case .moveForward: mainWindow.selectNextWindow(nil)
+		case .previousSelection: mainWindow.selectPreviousSelection(nil)
+		}
 	}
 
 	@objc(moveHighlightOrScrollbackForTag:)
 	public func moveHighlightOrScrollback(forTag tag: Int) {
-		guard let legacyController = selectedChannel?.viewController ?? selectedClient?.viewController else { return }
-		guard let controller = (legacyController as AnyObject) as? LogController else { return }
+		guard let controller = selectedChannel?.viewController ?? selectedClient?.viewController else { return }
 		switch tag {
 		case MenuNavigationTag.nextHighlight: controller.nextHighlight()
 		case MenuNavigationTag.previousHighlight: controller.previousHighlight()

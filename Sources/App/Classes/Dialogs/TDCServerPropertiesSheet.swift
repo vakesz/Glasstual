@@ -389,8 +389,8 @@ public final class ServerPropertiesSheet: SheetBase, NSControlTextEditingDelegat
 			defaultButton: PromptStrings.Action.yes,
 			alternateButton: PromptStrings.Action.no,
 			otherButton: nil
-		) { [weak self] response, _, _ in
-			guard response == .default, let self else { return }
+		) { [weak self] outcome in
+			guard outcome.response == .default, let self else { return }
 			close()
 			client.updateStoredConfiguration()
 			config = client.config

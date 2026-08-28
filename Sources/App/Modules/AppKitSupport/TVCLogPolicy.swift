@@ -241,10 +241,10 @@ public final class LogPolicy: NSObject {
 			guard let copy = item.copy() as? NSMenuItem else {
 				return nil
 			}
-			if copy.tag == 1202, let search = webKitItems.search {
+			if copy.command == .webSearch, let search = webKitItems.search {
 				return search
 			}
-			if copy.tag == 1203, let lookup = webKitItems.lookup {
+			if copy.command == .webDictionary, let lookup = webKitItems.lookup {
 				return lookup
 			}
 			return copy
@@ -292,12 +292,19 @@ public final class LogPolicy: NSObject {
 		]
 	}
 
+	/** Spelled through LogLine's own mapping rather than as literals, so a
+	 renamed line type is a compile error rather than a reply menu that
+	 quietly stops appearing. */
+	private static let replyableLineTypes: Set<String> = Set(
+		[TVCLogLineType.privateMessage, .action, .notice].compactMap(LogLine.string(for:))
+	)
+
 	private func messageMenuItems(for target: LogPolicyTarget, in webView: LogView) -> [NSMenuItem] {
 		guard
 			let messageIdentifier = target.lineMessageIdentifier,
 			messageIdentifier.isEmpty == false,
 			let lineType = target.lineType,
-			lineType == "privmsg" || lineType == "action" || lineType == "notice",
+			Self.replyableLineTypes.contains(lineType),
 			let channel = webView.viewController?.associatedChannel,
 			channel.isUtility == false
 		else {

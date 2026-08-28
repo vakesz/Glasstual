@@ -334,8 +334,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			defaultButton: PromptStrings.Application.quitButtonTitle,
 			alternateButton: PromptStrings.Action.cancel,
 			otherButton: nil
-		) { [weak self] buttonClicked, _, _ in
-			let result = buttonClicked == .default
+		) { [weak self] outcome in
+			let result = outcome.response == .default
 
 			Self.terminationLogger.debug("Perform termination: \(result)")
 

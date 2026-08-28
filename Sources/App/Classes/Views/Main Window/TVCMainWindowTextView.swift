@@ -71,7 +71,7 @@ private let observedPreferenceKeys = [
 ]
 
 @objc(TVCMainWindowTextView)
-public final class MainWindowTextView: TextViewWithIRCFormatter {
+public final class MainWindowTextView: TextViewWithIRCFormatter, AppearanceObserving {
 	/** NSTextView has a private accessor named placeholderAttributedString.
 	 AppKit may call it, so this property deliberately has another name. */
 	private var inputPlaceholderAttributedString: NSAttributedString?
@@ -345,8 +345,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 		contentView?.needsDisplay = true
 	}
 
-	@objc
-	override public func applicationAppearanceChanged() {
+	public func applicationAppearanceChanged() {
 		guard let appearance = mainWindow?.userInterfaceObjects.textView else {
 			return
 		}
@@ -472,12 +471,12 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	private func updateTextBoxCachedPreferredFontSize() {
 		guard let appearance = userInterfaceObjects,
 		      appearance.preferredTextViewFontChanged() || inputPlaceholderAttributedString == nil,
-		      let preferredFont = appearance.textViewPreferredFont,
 		      let placeholderTextColor = appearance.textViewPlaceholderTextColor
 		else {
 			return
 		}
 
+		let preferredFont = appearance.makeTextViewPreferredFont()
 		self.preferredFont = preferredFont
 
 		let paragraphStyle = NSMutableParagraphStyle()

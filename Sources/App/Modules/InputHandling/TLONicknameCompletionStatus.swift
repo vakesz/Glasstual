@@ -22,6 +22,15 @@ protocol NicknameCompletionWindow: AnyObject {
 
 extension MainWindow: NicknameCompletionWindow {}
 
+/// What the current completion attempt is completing. The three states used to
+/// be three booleans set in one if/else chain and cleared together, so an
+/// inconsistent combination was expressible.
+enum CompletionKind: Sendable {
+	case nickname
+	case channelName
+	case command
+}
+
 @objc(TLONicknameCompletionStatus)
 @MainActor
 public final class NicknameCompletionStatus: NSObject {
@@ -43,9 +52,7 @@ public final class NicknameCompletionStatus: NSObject {
 	private var rangeOfCompletionSuffix = NSRange(location: 0, length: 0)
 	private var selectionIndexOfLastCompletion = NSNotFound
 	private var completionIsMovingForward = false
-	private var isCompletingChannelName = false
-	private var isCompletingCommand = false
-	private var isCompletingNickname = false
+	private var completionKind: CompletionKind?
 	private var searchPatternIsAtStart = false
 	private var completionCacheIsConstructed = false
 
@@ -134,13 +141,13 @@ public final class NicknameCompletionStatus: NSObject {
 	private func performCompletionStepOne() -> Bool {
 		let searchPatternIsEmpty = cachedSearchPattern?.isEmpty != false
 
-		guard !searchPatternIsEmpty || isCompletingNickname else {
+		guard !searchPatternIsEmpty || completionKind == .nickname else {
 			return false
 		}
 
 		var candidates = completionCandidates(searchPatternIsEmpty: searchPatternIsEmpty)
 
-		if isCompletingChannelName || isCompletingCommand {
+		if completionKind == .channelName || completionKind == .command {
 			candidates = candidates.map {
 				Candidate(displayValue: $0.displayValue, comparisonValue: $0.displayValue.lowercased())
 			}
@@ -174,7 +181,7 @@ public final class NicknameCompletionStatus: NSObject {
 	}
 
 	private func completionCandidates(searchPatternIsEmpty: Bool) -> [Candidate] {
-		if isCompletingCommand {
+		if completionKind == .command {
 			var commands = CommandIndex.localCommandList().map { $0.lowercased() }
 			let pluginManager = SharedApplication.sharedPluginManager()
 
@@ -189,7 +196,7 @@ public final class NicknameCompletionStatus: NSObject {
 			return []
 		}
 
-		if isCompletingChannelName {
+		if completionKind == .channelName {
 			let selectedChannel = window?.selectedChannel
 			var names: [String] = []
 
@@ -204,7 +211,7 @@ public final class NicknameCompletionStatus: NSObject {
 			return names.map { Candidate(displayValue: $0, comparisonValue: $0) }
 		}
 
-		guard isCompletingNickname, let channel = window?.selectedChannel else {
+		guard completionKind == .nickname, let channel = window?.selectedChannel else {
 			return []
 		}
 
@@ -344,7 +351,7 @@ public final class NicknameCompletionStatus: NSObject {
 			}
 		}
 
-		if isCompletingNickname, searchPatternIsAtStart {
+		if completionKind == .nickname, searchPatternIsAtStart {
 			let userCompletionSuffix = TextualPreferences.tabCompletionSuffix() ?? ""
 
 			if whitespaceAlreadyInPosition {
@@ -451,17 +458,17 @@ public final class NicknameCompletionStatus: NSObject {
 		}
 
 		if searchPatternIsAtStart, searchPattern.hasPrefix("/") {
-			isCompletingCommand = true
+			completionKind = .command
 			searchPattern.removeFirst()
 			cachedSearchPatternPrefixCharacter = "/"
 		} else if searchPattern.hasPrefix("@") {
-			isCompletingNickname = true
+			completionKind = .nickname
 			searchPattern.removeFirst()
 			cachedSearchPatternPrefixCharacter = "@"
 		} else if searchPattern.hasPrefix("#") {
-			isCompletingChannelName = true
+			completionKind = .channelName
 		} else {
-			isCompletingNickname = true
+			completionKind = .nickname
 		}
 
 		cachedSearchPattern = searchPattern
@@ -484,7 +491,7 @@ public final class NicknameCompletionStatus: NSObject {
 		} else {
 			completionSuffixRange = NSRange(location: selectedRangeStartPoint, length: 0)
 
-			if isCompletingNickname,
+			if completionKind == .nickname,
 			   let userCompletionSuffix = TextualPreferences.tabCompletionSuffix(),
 			   !userCompletionSuffix.isEmpty
 			{
@@ -561,9 +568,7 @@ public final class NicknameCompletionStatus: NSObject {
 		rangeOfCompletionSuffix = NSRange(location: 0, length: 0)
 		rangeOfSearchPattern = NSRange(location: 0, length: 0)
 		completionCacheIsConstructed = false
-		isCompletingChannelName = false
-		isCompletingCommand = false
-		isCompletingNickname = false
+		completionKind = nil
 		searchPatternIsAtStart = false
 	}
 }

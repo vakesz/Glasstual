@@ -37,17 +37,17 @@
 
 import AppKit
 
-@objc public enum TXAppearanceType: UInt, Sendable {
+public enum TXAppearanceType: UInt, Sendable {
 	case light
 	case dark
 }
 
-@objc public enum TXAppKitAppearanceTarget: UInt, Sendable {
+public enum TXAppKitAppearanceTarget: UInt, Sendable {
 	case window
 	case none
 }
 
-@objc public protocol TXAppearanceProperties: AnyObject {
+public protocol TXAppearanceProperties {
 	var appearanceName: String { get }
 	var appearanceType: TXAppearanceType { get }
 	var shortAppearanceDescription: String { get }

@@ -479,14 +479,11 @@ extension TVCLogScriptEventSink {
 	}
 
 	private func handleChannelNameDoubleClicked(_ context: LogScriptEventContext) {
-		context.webViewPolicy.perform(
-			NSSelectorFromString("channelNameDoubleClickedInWebView:"),
-			with: context.webView
-		)
+		context.webViewPolicy.channelNameDoubleClicked(in: context.webView)
 	}
 
 	private func handleDisplayContextMenu(_ context: LogScriptEventContext) {
-		context.webViewPolicy.perform(NSSelectorFromString("displayContextMenuInWebView:"), with: context.webView)
+		context.webViewPolicy.displayContextMenu(in: context.webView)
 	}
 
 	private func handleCopySelectionWhenPermitted(_ context: LogScriptEventContext) {
@@ -550,21 +547,17 @@ extension TVCLogScriptEventSink {
 
 	private func handleNicknameColorStyleHash(_ context: LogScriptEventContext) {
 		let input = Self.objectValueToCommon(context.arguments[0]) as? String ?? ""
+		/* The style does not take part in the hash, but an unknown one is still
+		 rejected: it means the style sheet and the application disagree. */
 		let style = Self.objectValueToCommon(context.arguments[1]) as? String
-		let colorStyle: TPCThemeSettingsNicknameColorStyle
-		switch style {
-		case "HSL-dark": colorStyle = .dark
-		case "HSL-light": colorStyle = .light
-		default: return fail("Invalid style", context)
+		guard style == "HSL-dark" || style == "HSL-light" else {
+			return fail("Invalid style", context)
 		}
-		context.completion(UserNicknameColorStyleGenerator.hash(for: input, colorStyle: colorStyle))
+		context.completion(UserNicknameColorStyleGenerator.hash(for: input))
 	}
 
 	private func handleNicknameDoubleClicked(_ context: LogScriptEventContext) {
-		context.webViewPolicy.perform(
-			NSSelectorFromString("nicknameDoubleClickedInWebView:"),
-			with: context.webView
-		)
+		context.webViewPolicy.nicknameDoubleClicked(in: context.webView)
 	}
 
 	private func handleNotifyJumpToLineCallback(_ context: LogScriptEventContext) {

@@ -56,7 +56,7 @@ public protocol PreferencesControllerDelegate: AnyObject {
 @objc(TDCPreferencesController)
 @MainActor
 public final class PreferencesController: WindowBase, NSOutlineViewDataSource, NSOutlineViewDelegate, NSToolbarDelegate,
-	NSToolbarItemValidation
+	NSToolbarItemValidation, PreferencesUserStyleSheetDelegate
 {
 	@IBOutlet private var excludeKeywordsArrayController: NSArrayController!
 	@IBOutlet private var highlightKeywordsArrayController: NSArrayController!
@@ -179,8 +179,8 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 			.fileTransferSendFailed, .fileTransferReceiveFailed,
 		]
 		notificationController.notifications = eventTypes.map { eventType in
-			guard let eventType else { return " " }
-			return PreferencesNotificationConfiguration.object(withEventType: eventType)
+			guard let eventType else { return .separator }
+			return .configuration(PreferencesNotificationConfiguration(eventType: eventType))
 		}
 	}
 
@@ -294,8 +294,36 @@ extension PreferencesController {
 			guard plugins.indices.contains(pluginIndex) else { return nil }
 			return plugins[pluginIndex].pluginPreferencesPaneView
 		}
-		guard let pane = PreferencesPaneCatalog.descriptor(for: identifier) else { return nil }
-		return value(forKey: pane.contentViewKey) as? NSView
+		guard let pane = PreferencesPaneIdentifier(rawValue: identifier) else { return nil }
+		return contentView(for: pane)
+	}
+
+	/** Panes used to be resolved with `value(forKey:)` against 19 outlet names
+	 spelled as strings, so renaming an outlet broke a pane at runtime. The
+	 switch is exhaustive over the identifiers, so a new pane without a view is
+	 a compile error. */
+	private func contentView(for pane: PreferencesPaneIdentifier) -> NSView? {
+		switch pane {
+		case .addOns: contentViewInstalledAddons
+		case .behavior: contentViewBehavior
+		case .channelManagement: contentViewChannelManagement
+		case .commandScope: contentViewCommandScope
+		case .compatibility: contentViewCompatibility
+		case .controls: contentViewControls
+		case .defaultIRCopMessages: contentViewDefaultIRCopMessages
+		case .defaultIdentity: contentViewDefaultIdentity
+		case .fileTransfers: contentViewFileTransfers
+		case .floodControl: contentViewFloodControl
+		case .general: contentViewGeneral
+		case .hidden: contentViewHiddenPreferences
+		case .highlights: contentViewHighlights
+		case .incomingData: contentViewIncomingData
+		case .inlineMedia: contentViewInlineMedia
+		case .interface: contentViewInterface
+		case .logLocation: contentViewLogLocation
+		case .notifications: contentViewNotifications
+		case .style: contentViewStyle
+		}
 	}
 
 	private func sidebarItem(for identifier: String) -> PreferencesSidebarItem? {
@@ -731,7 +759,7 @@ extension PreferencesController {
 
 	private func restoreWindowFrame() {
 		window.ce_saveSizeAsDefault()
-		window.perform(NSSelectorFromString("restoreWindowStateForClass:"), with: type(of: self))
+		window.ce_restoreState(for: Self.self)
 		if window.frame.width < PreferencesLayout.windowMinimumWidth || window.frame.height < PreferencesLayout
 			.windowMinimumHeight
 		{
@@ -743,7 +771,7 @@ extension PreferencesController {
 	private func saveWindowFrame() {
 		// Do not restore the nib's size first: that is the frame that would be
 		// written out, and the user's own size would never be remembered.
-		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
+		window.ce_saveState(for: Self.self)
 	}
 }
 
@@ -1082,13 +1110,11 @@ extension PreferencesController {
 		userStyleSheet = sheet
 	}
 
-	@objc(userStyleSheetRulesChanged:)
-	private func userStyleSheetRulesChanged(_: PreferencesUserStyleSheet) {
+	public func userStyleSheetRulesChanged(_: PreferencesUserStyleSheet) {
 		onChangedTheme(nil)
 	}
 
-	@objc(userStyleSheetWillClose:)
-	private func userStyleSheetWillClose(_: PreferencesUserStyleSheet) {
+	public func userStyleSheetWillClose(_: PreferencesUserStyleSheet) {
 		userStyleSheet = nil
 	}
 
@@ -1277,20 +1303,18 @@ extension PreferencesController {
 		}
 	}
 
-	private func openPathToThemesCallback(_ returnCode: TDCAlertResponse, originalAlert: NSAlert) {
+	private func openPathToThemesCallback(_ returnCode: TDCAlertResponse) {
 		switch returnCode {
 		case .default:
 			openPathToTheme()
 		case .alternate:
 			onModifyUserStyleSheetRules(nil)
 		case .other:
-			originalAlert.window.orderOut(nil)
 			SharedApplication.sharedThemeController().copyActiveTheme(
 				to: .custom,
 				reloadOnCopy: true,
 				openOnCopy: true
 			)
-		@unknown default: break
 		}
 	}
 
@@ -1307,9 +1331,8 @@ extension PreferencesController {
 			defaultButton: PreferencesStrings.viewStyleFilesButtonTitle,
 			alternateButton: PreferencesStrings.editStyleButtonTitle,
 			otherButton: PreferencesStrings.createStyleCopyButtonTitle
-		) { [weak self] response, _, underlyingAlert in
-			guard let self, let alert = underlyingAlert as? NSAlert else { return }
-			openPathToThemesCallback(response, originalAlert: alert)
+		) { [weak self] outcome in
+			self?.openPathToThemesCallback(outcome.response)
 		}
 	}
 

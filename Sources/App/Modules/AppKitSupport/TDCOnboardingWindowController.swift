@@ -79,10 +79,16 @@ private final class OnboardingPageIndicatorView: NSView {
 
 // MARK: - Window Controller
 
+/// What `OnboardingWindowController` reports back.
+@MainActor
+public protocol OnboardingWindowControllerDelegate: AnyObject {
+	func onboardingWindowControllerWillClose(_ sender: OnboardingWindowController)
+}
+
 @objc(TDCOnboardingWindowController)
 @MainActor
 public final class OnboardingWindowController: NSWindowController, NSWindowDelegate {
-	@objc public weak var delegate: AnyObject?
+	public weak var delegate: (any OnboardingWindowControllerDelegate)?
 
 	@IBOutlet private var iconImageView: NSImageView!
 	@IBOutlet private var titleTextField: NSTextField!
@@ -288,12 +294,15 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		/* Commit any field still being edited. */
 		window?.makeFirstResponder(nil)
 
-		var errorDescription: NSString?
-		if currentStep.commit(errorDescription: &errorDescription) == false {
-			if let errorDescription, errorDescription.length > 0, let window {
+		do {
+			try currentStep.commit()
+		} catch {
+			let message = (error as? OnboardingStepError)?.message ?? error.localizedDescription
+
+			if message.isEmpty == false, let window {
 				TDCAlert.alertSheet(
 					with: window,
-					body: errorDescription as String,
+					body: message,
 					title: currentStep.stepTitle,
 					defaultButton: PromptStrings.Action.confirmation,
 					alternateButton: nil,
@@ -454,9 +463,6 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 	}
 
 	public func windowWillClose(_: Notification) {
-		let selector = NSSelectorFromString("onboardingWindowControllerWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		delegate?.onboardingWindowControllerWillClose(self)
 	}
 }

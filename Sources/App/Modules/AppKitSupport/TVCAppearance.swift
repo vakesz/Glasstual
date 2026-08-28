@@ -14,285 +14,252 @@ import AppKit
 import CocoaExtensions
 import os
 
-private enum ListAppearanceColorType: UInt {
-	case calibratedWhite = 1
-	case rgb = 2
-	case system = 3
-}
+/// A colour as spelled in the appearance property lists: `{ type = 1|2|3;
+/// value = "…"; }`. The `type` picks how `value` is read.
+public enum AppearanceColor: Decodable, Equatable, Sendable {
+	/// `type = 1` — one or two whitespace-separated components: white, alpha.
+	case calibratedWhite(white: Double, alpha: Double)
+	/// `type = 2` — three or four whitespace-separated components: r, g, b, alpha.
+	case calibratedRGB(red: Double, green: Double, blue: Double, alpha: Double)
+	/// `type = 3` — the name of a semantic `NSColor` class property.
+	case system(name: String)
 
-@objc(TVCAppearance)
-open class ViewAppearance: NSObject {
-	private static let logger = Logger(
-		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
-		category: "ViewAppearance"
-	)
-
-	@objc public private(set) var appearanceProperties: [String: Any]?
-
-	@available(*, unavailable)
-	override public init() {
-		fatalError("init() is unavailable; use init(appearanceNamed:at:)")
+	private enum CodingKeys: String, CodingKey {
+		case type
+		case value
 	}
 
-	@objc(initWithAppearanceNamed:atURL:)
-	public init?(appearanceNamed appearanceName: String, at appearanceLocation: URL) {
-		super.init()
-
-		guard loadAppearanceNamed(appearanceName, at: appearanceLocation) else {
-			return nil
-		}
+	private enum Kind: UInt, Decodable {
+		case calibratedWhite = 1
+		case rgb = 2
+		case system = 3
 	}
 
-	private func loadAppearanceNamed(_ appearanceName: String, at appearanceLocation: URL) -> Bool {
-		guard let appearances = NSDictionary(contentsOf: appearanceLocation) as? [String: Any],
-		      let appearance = appearances[appearanceName] as? [String: Any]
-		else {
-			return false
-		}
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+		let kind = try container.decode(Kind.self, forKey: .type)
+		let value = try container.decode(String.self, forKey: .value)
 
-		appearanceProperties = appearance
-		return true
-	}
-
-	@objc
-	open func flushAppearanceProperties() {
-		appearanceProperties = nil
-	}
-
-	// MARK: - Utilities
-
-	private func value(inGroup group: [String: Any], withKey key: String, expectedType: AnyClass) -> Any? {
-		guard let referenceObject = group[key],
-		      (referenceObject as AnyObject).isKind(of: expectedType)
-		else {
-			return nil
-		}
-
-		return referenceObject
-	}
-
-	private func statefulValue(
-		_ referenceObject: [String: Any],
-		forActiveWindow: Bool,
-		expectedType: AnyClass
-	) -> Any? {
-		let stateKey = forActiveWindow ? "activeWindow" : "inactiveWindow"
-
-		guard let stateValue = referenceObject[stateKey],
-		      (stateValue as AnyObject).isKind(of: expectedType)
-		else {
-			return nil
-		}
-
-		return stateValue
-	}
-
-	private func statefulDictionary(
-		_ referenceObject: [String: Any],
-		forActiveWindow: Bool
-	) -> [String: Any]? {
-		if referenceObject["activeWindow"] == nil, referenceObject["inactiveWindow"] == nil {
-			return referenceObject
-		}
-
-		return statefulValue(referenceObject, forActiveWindow: forActiveWindow, expectedType: NSDictionary.self)
-			as? [String: Any]
-	}
-
-	// MARK: - Color
-
-	@objc(colorForKey:)
-	open func color(forKey key: String) -> NSColor? {
-		guard let group = appearanceProperties else {
-			return nil
-		}
-
-		return color(inGroup: group, withKey: key)
-	}
-
-	@objc(colorInGroup:withKey:)
-	open func color(inGroup group: [String: Any], withKey key: String) -> NSColor? {
-		guard let colorProperties = value(inGroup: group, withKey: key, expectedType: NSDictionary.self)
-			as? [String: Any]
-		else {
-			return nil
-		}
-
-		return color(withProperties: colorProperties)
-	}
-
-	@objc(colorForKey:forActiveWindow:)
-	open func color(forKey key: String, forActiveWindow: Bool) -> NSColor? {
-		guard let group = appearanceProperties else {
-			return nil
-		}
-
-		return color(inGroup: group, withKey: key, forActiveWindow: forActiveWindow)
-	}
-
-	@objc(colorInGroup:withKey:forActiveWindow:)
-	open func color(inGroup group: [String: Any], withKey key: String, forActiveWindow: Bool) -> NSColor? {
-		guard let referenceObject = value(inGroup: group, withKey: key, expectedType: NSDictionary.self)
-			as? [String: Any]
-		else {
-			return nil
-		}
-
-		guard let colorProperties = statefulDictionary(referenceObject, forActiveWindow: forActiveWindow) else {
-			return nil
-		}
-
-		return color(withProperties: colorProperties)
-	}
-
-	private func color(withProperties colorProperties: [String: Any]) -> NSColor? {
-		guard let colorValue = colorProperties["value"] as? String else {
-			return nil
-		}
-
-		let colorTypeRaw = (colorProperties["type"] as? NSNumber)?.uintValue ?? 0
-		let colorType = ListAppearanceColorType(rawValue: colorTypeRaw)
-
-		switch colorType {
+		switch kind {
 		case .calibratedWhite:
-			let components = colorValue.components(separatedBy: .whitespaces)
-
-			guard components.isEmpty == false else {
-				return nil
+			let components = Self.components(of: value) ?? []
+			guard let white = components.first else {
+				throw DecodingError.dataCorruptedError(
+					forKey: .value,
+					in: container,
+					debugDescription: "A calibrated-white colour needs at least one component"
+				)
 			}
-
-			let white = Self.double(from: components, at: 0)
-			var alpha = 1.0
-
-			if components.count == 2 {
-				alpha = Self.double(from: components, at: 1)
-			}
-
-			return NSColor(calibratedWhite: white, alpha: alpha)
+			self = .calibratedWhite(white: white, alpha: components.count > 1 ? components[1] : 1)
 
 		case .rgb:
-			let components = colorValue.components(separatedBy: .whitespaces)
-
+			let components = Self.components(of: value) ?? []
 			guard components.count >= 3 else {
-				return nil
+				throw DecodingError.dataCorruptedError(
+					forKey: .value,
+					in: container,
+					debugDescription: "An RGB colour needs at least three components"
+				)
 			}
-
-			let red = Self.double(from: components, at: 0)
-			let green = Self.double(from: components, at: 1)
-			let blue = Self.double(from: components, at: 2)
-			var alpha = 1.0
-
-			if components.count == 4 {
-				alpha = Self.double(from: components, at: 3)
-			}
-
-			return NSColor.textual_calibratedColor(red: red, green: green, blue: blue, alpha: alpha)
+			self = .calibratedRGB(
+				red: components[0],
+				green: components[1],
+				blue: components[2],
+				alpha: components.count > 3 ? components[3] : 1
+			)
 
 		case .system:
-			let selector = NSSelectorFromString(colorValue)
-
-			guard NSColor.responds(to: selector) else {
-				Self.logger.error("Missing color: \(colorValue, privacy: .public)")
-				return nil
-			}
-
-			return NSColor.perform(selector)?.takeUnretainedValue() as? NSColor
-
-		case nil:
-			return nil
+			self = .system(name: value)
 		}
 	}
 
-	private static func double(from components: [String], at index: Int) -> Double {
-		Double(components[index]) ?? 0
+	/// `nil` only for a `system` colour naming something AppKit does not have;
+	/// that used to be an `NSSelectorFromString` + `perform` away from calling
+	/// an arbitrary zero-argument method on `NSColor`.
+	public var color: NSColor? {
+		switch self {
+		case let .calibratedWhite(white, alpha):
+			NSColor(calibratedWhite: white, alpha: alpha)
+		case let .calibratedRGB(red, green, blue, alpha):
+			NSColor.textual_calibratedColor(red: red, green: green, blue: blue, alpha: alpha)
+		case let .system(name):
+			Self.systemColors[name]
+		}
 	}
 
-	// MARK: - Size
+	/// The semantic colours the shipped appearance plists are allowed to name.
+	/// A table rather than a runtime lookup, so an unknown name is a missing
+	/// entry here instead of a selector sent to `NSColor`.
+	public static let systemColors: [String: NSColor] = [
+		"alternateSelectedControlTextColor": .alternateSelectedControlTextColor,
+		"controlAccentColor": .controlAccentColor,
+		"controlBackgroundColor": .controlBackgroundColor,
+		"controlColor": .controlColor,
+		"controlTextColor": .controlTextColor,
+		"disabledControlTextColor": .disabledControlTextColor,
+		"gridColor": .gridColor,
+		"headerTextColor": .headerTextColor,
+		"labelColor": .labelColor,
+		"linkColor": .linkColor,
+		"placeholderTextColor": .placeholderTextColor,
+		"quaternaryLabelColor": .quaternaryLabelColor,
+		"secondaryLabelColor": .secondaryLabelColor,
+		"selectedContentBackgroundColor": .selectedContentBackgroundColor,
+		"selectedControlColor": .selectedControlColor,
+		"selectedControlTextColor": .selectedControlTextColor,
+		"selectedMenuItemTextColor": .selectedMenuItemTextColor,
+		"selectedTextBackgroundColor": .selectedTextBackgroundColor,
+		"selectedTextColor": .selectedTextColor,
+		"separatorColor": .separatorColor,
+		"shadowColor": .shadowColor,
+		"tertiaryLabelColor": .tertiaryLabelColor,
+		"textBackgroundColor": .textBackgroundColor,
+		"textColor": .textColor,
+		"underPageBackgroundColor": .underPageBackgroundColor,
+		"unemphasizedSelectedContentBackgroundColor": .unemphasizedSelectedContentBackgroundColor,
+		"unemphasizedSelectedTextBackgroundColor": .unemphasizedSelectedTextBackgroundColor,
+		"unemphasizedSelectedTextColor": .unemphasizedSelectedTextColor,
+		"windowBackgroundColor": .windowBackgroundColor,
+		"windowFrameTextColor": .windowFrameTextColor,
+	]
 
-	@objc(sizeForKey:)
-	open func size(forKey key: String) -> NSSize {
-		guard let group = appearanceProperties else {
-			return .zero
-		}
-
-		return size(inGroup: group, withKey: key)
-	}
-
-	@objc(sizeInGroup:withKey:)
-	open func size(inGroup group: [String: Any], withKey key: String) -> NSSize {
-		guard let referenceObject = value(inGroup: group, withKey: key, expectedType: NSDictionary.self)
-			as? [String: Any]
-		else {
-			return .zero
-		}
-
-		let width = (referenceObject["width"] as? NSNumber)?.doubleValue ?? 0
-		let height = (referenceObject["height"] as? NSNumber)?.doubleValue ?? 0
-
-		return NSSize(width: width, height: height)
-	}
-
-	// MARK: - Measurement
-
-	@objc(measurementForKey:)
-	open func measurement(forKey key: String) -> CGFloat {
-		guard let group = appearanceProperties else {
-			return 0
-		}
-
-		return measurement(inGroup: group, withKey: key)
-	}
-
-	@objc(measurementInGroup:withKey:)
-	open func measurement(inGroup group: [String: Any], withKey key: String) -> CGFloat {
-		guard let referenceObject = value(inGroup: group, withKey: key, expectedType: NSNumber.self) as? NSNumber
-		else {
-			return 0
-		}
-
-		return CGFloat(referenceObject.doubleValue)
+	/// `nil` when any token is not a number, so a typo in a plist fails the
+	/// decode instead of silently becoming a zero component.
+	private static func components(of value: String) -> [Double]? {
+		let tokens = value.split(whereSeparator: \.isWhitespace)
+		let numbers = tokens.compactMap { Double($0) }
+		return numbers.count == tokens.count ? numbers : nil
 	}
 }
 
-@objc(TVCApplicationAppearance)
-open class ApplicationAppearance: ViewAppearance, TXAppearanceProperties {
+/// A colour that may differ between an active and an inactive window. A plist
+/// entry either states one colour or the `activeWindow`/`inactiveWindow` pair.
+public enum AppearanceStatefulColor: Decodable, Equatable, Sendable {
+	case constant(AppearanceColor)
+	case stateful(active: AppearanceColor, inactive: AppearanceColor)
+
+	private enum CodingKeys: String, CodingKey {
+		case activeWindow
+		case inactiveWindow
+	}
+
+	public init(from decoder: any Decoder) throws {
+		if let container = try? decoder.container(keyedBy: CodingKeys.self),
+		   container.contains(.activeWindow) || container.contains(.inactiveWindow)
+		{
+			let active = try container.decode(AppearanceColor.self, forKey: .activeWindow)
+			let inactive = try container.decode(AppearanceColor.self, forKey: .inactiveWindow)
+			self = .stateful(active: active, inactive: inactive)
+			return
+		}
+
+		self = try .constant(AppearanceColor(from: decoder))
+	}
+
+	public func color(forActiveWindow isActive: Bool) -> NSColor? {
+		switch self {
+		case let .constant(color):
+			color.color
+		case let .stateful(active, inactive):
+			isActive ? active.color : inactive.color
+		}
+	}
+}
+
+/// `{ width = …; height = …; }` as it appears in the appearance plists.
+public struct AppearanceSize: Decodable, Equatable, Sendable {
+	public let width: Double
+	public let height: Double
+
+	public var size: NSSize {
+		NSSize(width: width, height: height)
+	}
+}
+
+/// Reads one appearance property list. The file is a dictionary of appearance
+/// name (`Tahoe`) to that appearance's schema, so the loader picks the entry
+/// matching the application's current appearance.
+public enum AppearanceSchema {
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "AppearanceSchema"
+	)
+
+	/// Decodes `resource`.plist from the main bundle, returning the schema for
+	/// `appearanceName`, or `nil` when the resource, the appearance entry or the
+	/// schema itself does not decode.
+	public static func load<Schema: Decodable>(
+		_: Schema.Type = Schema.self,
+		resource: String,
+		appearanceName: String
+	) -> Schema? {
+		guard let url = Bundle.main.url(forResource: resource, withExtension: "plist") else {
+			logger.error("Missing appearance resource: \(resource, privacy: .public)")
+			return nil
+		}
+
+		return load(resource: url, appearanceName: appearanceName)
+	}
+
+	public static func load<Schema: Decodable>(
+		_: Schema.Type = Schema.self,
+		resource url: URL,
+		appearanceName: String
+	) -> Schema? {
+		do {
+			let data = try Data(contentsOf: url)
+			let appearances = try PropertyListDecoder().decode([String: Schema].self, from: data)
+
+			guard let schema = appearances[appearanceName] else {
+				logger.error("Missing appearance '\(appearanceName, privacy: .public)' in \(url.lastPathComponent)")
+				return nil
+			}
+
+			return schema
+		} catch {
+			logger.error("Unreadable appearance \(url.lastPathComponent): \(error, privacy: .public)")
+			return nil
+		}
+	}
+}
+
+/// Base class for the three appearance objects loaded from a property list.
+/// It carries the application-wide appearance snapshot the subclasses need to
+/// pick their entry out of the file.
+open class ApplicationAppearance: TXAppearanceProperties {
 	private let applicationProperties: AppearancePropertyCollection
 
-	@objc(initWithAppearanceNamed:atURL:)
-	override public init?(appearanceNamed _: String, at _: URL) {
-		assertionFailure("Use -initWithAppearanceAtURL: instead")
-		return nil
+	public init(applicationProperties: AppearancePropertyCollection) {
+		self.applicationProperties = applicationProperties
 	}
 
-	@objc(initWithAppearanceAtURL:)
+	/// The appearance snapshot the application is drawing in right now.
 	@MainActor
-	public init?(appearanceAt appearanceLocation: URL) {
-		applicationProperties = SharedApplication.sharedAppearance().properties
-
-		super.init(appearanceNamed: applicationProperties.appearanceName, at: appearanceLocation)
+	public static var currentApplicationProperties: AppearancePropertyCollection {
+		SharedApplication.sharedAppearance().properties
 	}
 
-	@objc public var appearanceName: String {
+	public var appearanceName: String {
 		applicationProperties.appearanceName
 	}
 
-	@objc public var appearanceType: TXAppearanceType {
+	public var appearanceType: TXAppearanceType {
 		applicationProperties.appearanceType
 	}
 
-	@objc public var shortAppearanceDescription: String {
+	public var shortAppearanceDescription: String {
 		applicationProperties.shortAppearanceDescription
 	}
 
-	@objc public var isDarkAppearance: Bool {
+	public var isDarkAppearance: Bool {
 		applicationProperties.isDarkAppearance
 	}
 
-	@objc public var appKitAppearanceTarget: TXAppKitAppearanceTarget {
+	public var appKitAppearanceTarget: TXAppKitAppearanceTarget {
 		applicationProperties.appKitAppearanceTarget
 	}
 
-	@objc public var appKitAppearance: NSAppearance? {
+	public var appKitAppearance: NSAppearance? {
 		applicationProperties.appKitAppearance
 	}
 }

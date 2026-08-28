@@ -12,8 +12,15 @@
 
 import AppKit
 
+/// Handles a key-down event before AppKit's own dispatch gets it. The key
+/// window and its first responder are each offered the event in turn.
+@MainActor
+public protocol CustomKeyboardEventResponder: AnyObject {
+	func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool
+}
+
 @objc(TXApplication)
-public final class Application: NSApplication {
+public final class Application: NSApplication, CustomKeyboardEventResponder {
 	@objc(checkForOtherCopiesOfGlasstualRunning)
 	public static func shouldContinueLaunching() -> Bool {
 		let ourProcessIdentifier = ProcessInfo.processInfo.processIdentifier
@@ -50,7 +57,6 @@ public final class Application: NSApplication {
 		super.sendEvent(event)
 	}
 
-	@objc(performedCustomKeyboardEvent:)
 	public func performedCustomKeyboardEvent(_ event: NSEvent) -> Bool {
 		guard event.type == .keyDown else {
 			return false
@@ -67,25 +73,11 @@ public final class Application: NSApplication {
 		return false
 	}
 
-	@objc(sendCustomKeyboardEvent:toObject:)
 	public func sendCustomKeyboardEvent(_ event: NSEvent, to object: AnyObject?) -> Bool {
-		guard let object else {
+		guard let responder = object as? any CustomKeyboardEventResponder else {
 			return false
 		}
 
-		let selector = NSSelectorFromString("performedCustomKeyboardEvent:")
-
-		guard object.responds(to: selector) else {
-			return false
-		}
-
-		guard let method = object.method(for: selector) else {
-			return false
-		}
-
-		typealias Handler = @convention(c) (AnyObject, Selector, NSEvent) -> Bool
-		let handler = unsafeBitCast(method, to: Handler.self)
-
-		return handler(object, selector, event)
+		return responder.performedCustomKeyboardEvent(event)
 	}
 }

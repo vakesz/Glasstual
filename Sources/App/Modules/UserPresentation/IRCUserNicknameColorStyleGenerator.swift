@@ -16,45 +16,113 @@ import CocoaExtensions
 import CryptoKit
 import os
 
-@objc(IRCUserNicknameColorStyleGenerator)
-public final nonisolated class UserNicknameColorStyleGenerator: NSObject {
+/// A pinned nickname colour, as it is written to the defaults store: sRGB
+/// components a plist editor can read, rather than an `NSKeyedArchiver` blob.
+public nonisolated struct NicknameColorComponents: Codable, Equatable, Sendable {
+	public var red: Double
+	public var green: Double
+	public var blue: Double
+	public var alpha: Double
+
+	/// `nil` for a catalog or pattern colour, which has no components to ask
+	/// for without raising an uncatchable exception.
+	public init?(_ color: NSColor) {
+		guard let color = color.usingColorSpace(.sRGB) else {
+			return nil
+		}
+
+		red = color.redComponent
+		green = color.greenComponent
+		blue = color.blueComponent
+		alpha = color.alphaComponent
+	}
+
+	public init(red: Double, green: Double, blue: Double, alpha: Double) {
+		self.red = red
+		self.green = green
+		self.blue = blue
+		self.alpha = alpha
+	}
+
+	private enum StoredKey {
+		static let red = "red"
+		static let green = "green"
+		static let blue = "blue"
+		static let alpha = "alpha"
+	}
+
+	/// Reads back the plist dictionary `storedValue` writes.
+	public init?(stored value: Any) {
+		guard let dictionary = value as? [String: Double],
+		      let red = dictionary[StoredKey.red],
+		      let green = dictionary[StoredKey.green],
+		      let blue = dictionary[StoredKey.blue]
+		else {
+			return nil
+		}
+
+		self.init(
+			red: red,
+			green: green,
+			blue: blue,
+			alpha: dictionary[StoredKey.alpha] ?? 1
+		)
+	}
+
+	public var storedValue: [String: Double] {
+		[
+			StoredKey.red: red,
+			StoredKey.green: green,
+			StoredKey.blue: blue,
+			StoredKey.alpha: alpha,
+		]
+	}
+
+	public var color: NSColor {
+		NSColor(srgbRed: red, green: green, blue: blue, alpha: alpha)
+	}
+}
+
+/// The colour a nickname is drawn in, and whether the user pinned it.
+public nonisolated struct NicknameColorStyle: Equatable, Sendable {
+	/// A CSS `hsl(...)` string, or the hexadecimal value of a pinned colour.
+	public let style: String
+	public let isOverride: Bool
+}
+
+public nonisolated enum UserNicknameColorStyleGenerator {
 	private static let overridesDefaultsKey = "Nickname Color Style Overrides (v2)"
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "NicknameColorStyle"
 	)
 
-	@objc(nicknameColorStyleForString:)
 	public static func nicknameColorStyle(for inputString: String) -> String {
-		nicknameColorStyle(for: inputString, isOverride: nil)
+		colorStyle(for: inputString).style
 	}
 
-	@objc(nicknameColorStyleForString:isOverride:)
-	public static func nicknameColorStyle(
-		for inputString: String,
-		isOverride: UnsafeMutablePointer<ObjCBool>?
-	) -> String {
+	/// The colour for `inputString`, and whether it came from a pinned
+	/// override. The pair used to be a return value plus an `ObjCBool`
+	/// out-parameter.
+	public static func colorStyle(for inputString: String) -> NicknameColorStyle {
 		let normalizedString = inputString.lowercased()
 
 		if let override = nicknameColorStyleOverride(forKey: normalizedString) {
-			isOverride?.pointee = true
-
-			return override.textualHexadecimalValue
+			return NicknameColorStyle(style: override.textualHexadecimalValue, isOverride: true)
 		}
 
-		isOverride?.pointee = false
-
 		let colorStyle = ThemeController.activeSnapshot?.nicknameColorStyle ?? .default
-		let hash = hash(for: normalizedString, colorStyle: colorStyle)
+		let hash = hash(for: normalizedString)
 
-		return nicknameColorStyle(forHash: hash, colorStyle: colorStyle)
+		return NicknameColorStyle(
+			style: nicknameColorStyle(forHash: hash, colorStyle: colorStyle),
+			isOverride: false
+		)
 	}
 
-	@objc(hashForString:colorStyle:)
-	public static func hash(
-		for inputString: String,
-		colorStyle _: TPCThemeSettingsNicknameColorStyle
-	) -> NSNumber {
+	/// The theme's colour style does not take part in the hash; the parameter
+	/// this used to declare was ignored.
+	public static func hash(for inputString: String) -> NSNumber {
 		let digest = Insecure.MD5.hash(data: Data("a-\(inputString)".utf8))
 		let value = digest.withUnsafeBytes { bytes in
 			bytes.loadUnaligned(as: UInt32.self)
@@ -63,7 +131,6 @@ public final nonisolated class UserNicknameColorStyleGenerator: NSObject {
 		return NSNumber(value: value)
 	}
 
-	@objc(nicknameColorStyleForHash:colorStyle:)
 	public static func nicknameColorStyle(
 		forHash stringHash: NSNumber,
 		colorStyle: TPCThemeSettingsNicknameColorStyle
@@ -119,12 +186,19 @@ public final nonisolated class UserNicknameColorStyleGenerator: NSObject {
 		return "hsl(\(hue),\(saturation)%,\(lightness)%)"
 	}
 
-	@objc(nicknameColorStyleOverrideForKey:)
+	/// Overrides are stored as their sRGB components. Values written by earlier
+	/// builds are `NSKeyedArchiver` blobs and are still read, so a user's pinned
+	/// colours survive the format change; the next edit rewrites them.
 	public static func nicknameColorStyleOverride(forKey styleKey: String) -> NSColor? {
-		guard
-			let overrides = userDefaults.dictionary(forKey: overridesDefaultsKey),
-			let colorData = overrides[styleKey] as? Data
-		else {
+		guard let overrides = userDefaults.dictionary(forKey: overridesDefaultsKey) else {
+			return nil
+		}
+
+		if let stored = overrides[styleKey], let components = NicknameColorComponents(stored: stored) {
+			return components.color
+		}
+
+		guard let colorData = overrides[styleKey] as? Data else {
 			return nil
 		}
 
@@ -132,14 +206,13 @@ public final nonisolated class UserNicknameColorStyleGenerator: NSObject {
 			return try NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: colorData)
 		} catch {
 			logger.error(
-				"Failed to decode nickname color for \(styleKey, privacy: .private): \(error.localizedDescription, privacy: .public)"
+				"Failed to decode archived nickname color for \(styleKey, privacy: .private): \(error.localizedDescription, privacy: .public)"
 			)
 
 			return nil
 		}
 	}
 
-	@objc(setNicknameColorStyleOverride:forKey:)
 	public static func setNicknameColorStyleOverride(_ styleValue: NSColor?, forKey styleKey: String) {
 		let existingOverrides = userDefaults.dictionary(forKey: overridesDefaultsKey)
 
@@ -150,18 +223,13 @@ public final nonisolated class UserNicknameColorStyleGenerator: NSObject {
 		var overrides = existingOverrides ?? [:]
 
 		if let styleValue {
-			do {
-				overrides[styleKey] = try NSKeyedArchiver.archivedData(
-					withRootObject: styleValue,
-					requiringSecureCoding: true
-				)
-			} catch {
-				logger.error(
-					"Failed to encode nickname color for \(styleKey, privacy: .private): \(error.localizedDescription, privacy: .public)"
-				)
+			guard let components = NicknameColorComponents(styleValue) else {
+				logger.error("Could not convert a nickname colour to sRGB for storage")
 
 				return
 			}
+
+			overrides[styleKey] = components.storedValue
 		} else {
 			overrides.removeValue(forKey: styleKey)
 		}

@@ -12,43 +12,56 @@
 
 import AppKit
 
-@objc public enum TDCOnboardingTextSize: UInt {
+public enum TDCOnboardingTextSize: UInt, CaseIterable, Sendable {
 	case small = 0
 	case medium
 	case large
 }
 
-@objc(TDCOnboardingSettings)
-public final class OnboardingSettings: NSObject {
-	@objc public var nickname = ""
-	@objc public var realName = ""
-	@objc public var alternateNickname: String?
+/// Why a step refused to commit. The message is shown to the user as-is.
+public struct OnboardingStepError: Error {
+	public let message: String
 
-	@objc public var styleName = "Bubbles"
-	@objc public var textSize: TDCOnboardingTextSize = .medium
-	@objc public var appearance: TXPreferredAppearance = .inherited
+	public init(_ message: String) {
+		self.message = message
+	}
+}
 
-	@objc public var notifyOnHighlight = true
-	@objc public var notifyOnPrivateMessage = true
-	@objc public var playSounds = true
+/// What the onboarding flow has collected so far. The steps share one instance
+/// and each writes its own part of it, so it stays a reference type.
+@MainActor
+public final class OnboardingSettings {
+	public var nickname = ""
+	public var realName = ""
+	public var alternateNickname: String?
+
+	public var styleName = "Bubbles"
+	public var textSize: TDCOnboardingTextSize = .medium
+	public var appearance: TXPreferredAppearance = .inherited
+
+	public var notifyOnHighlight = true
+	public var notifyOnPrivateMessage = true
+	public var playSounds = true
 
 	public var clientConfig: ClientConfig?
-	@objc public var connectWhenFinished = true
-	@objc public var channelsToJoin: [String] = []
+	public var connectWhenFinished = true
+	public var channelsToJoin: [String] = []
 
-	@objc(fontSizeForTextSize:)
+	public init() {}
+
+	/// Exhaustive, so a new text size is a compile error rather than silently
+	/// rendering at the medium size.
 	public static func fontSize(for textSize: TDCOnboardingTextSize) -> CGFloat {
 		switch textSize {
 		case .small:
 			11.0
+		case .medium:
+			13.0
 		case .large:
 			15.0
-		default:
-			13.0
 		}
 	}
 
-	@objc(textSizeForFontSize:)
 	public static func textSize(forFontSize fontSize: CGFloat) -> TDCOnboardingTextSize {
 		if fontSize < 12.0 {
 			return .small
@@ -67,7 +80,7 @@ public final class OnboardingSettings: NSObject {
 @objc(TDCOnboardingStepViewController)
 @MainActor
 open class OnboardingStepViewController: NSViewController {
-	@objc public var settings: OnboardingSettings
+	public var settings: OnboardingSettings
 
 	@objc open var stepTitle: String {
 		""
@@ -85,7 +98,6 @@ open class OnboardingStepViewController: NSViewController {
 		nil
 	}
 
-	@objc(initWithSettings:)
 	public init(settings: OnboardingSettings) {
 		self.settings = settings
 		super.init(nibName: nil, bundle: nil)
@@ -98,10 +110,10 @@ open class OnboardingStepViewController: NSViewController {
 
 	@objc open func stepWillAppear() {}
 
-	@objc(commitWithError:)
-	open func commit(errorDescription _: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
-		true
-	}
+	/// Writes the step's answers into `settings`. Throwing rejects the step and
+	/// shows the thrown message; it used to be a `Bool` plus an `NSString`
+	/// out-parameter.
+	open func commit() throws {}
 
 	@objc open func makeContentView() -> NSView {
 		let view = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 380))
