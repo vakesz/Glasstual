@@ -417,8 +417,9 @@ public final class World: NSObject {
 	}
 
 	@objc(findChannelWithId:onClientWithId:)
-	public func findChannel(withId channelId: String, onClientWithId _: String) -> IRCChannel? {
-		nativeChannel(from: findItem(withId: channelId))
+	public func findChannel(withId channelId: String, onClientWithId clientId: String) -> IRCChannel? {
+		guard let client = findClient(withId: clientId) else { return nil }
+		return client.channelList.first { $0.uniqueIdentifier == channelId }
 	}
 
 	@objc(findItemWithPasteboardString:)
