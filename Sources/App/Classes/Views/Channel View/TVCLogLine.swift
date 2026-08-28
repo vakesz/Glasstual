@@ -544,12 +544,9 @@ open nonisolated class LogLine: PortablePropertyObject {
 			return
 		}
 
-		var isOverride = ObjCBool(false)
-		nicknameColorStyleStorage = UserNicknameColorStyleGenerator.nicknameColorStyle(
-			for: nicknameStorage,
-			isOverride: &isOverride
-		)
-		nicknameColorStyleOverrideStorage = isOverride.boolValue
+		let colorStyle = UserNicknameColorStyleGenerator.colorStyle(for: nicknameStorage)
+		nicknameColorStyleStorage = colorStyle.style
+		nicknameColorStyleOverrideStorage = colorStyle.isOverride
 	}
 
 	@objc(populateDuringCopy:mutableCopy:)
