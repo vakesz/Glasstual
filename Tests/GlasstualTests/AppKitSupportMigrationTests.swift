@@ -84,15 +84,11 @@ final class AppKitSupportMigrationTests: XCTestCase {
 	}
 
 	func testNativeInputAndValidationControlsPreserveRuntimeContracts() {
-		XCTAssertEqual(NSStringFromClass(TDCAlert.self), "TDCAlert")
+		/* TDCAlert's Objective-C surface is gone; its response values are still
+		 the AppKit modal-response constants the panel returns. */
 		XCTAssertEqual(TDCAlertResponse.default.rawValue, 1000)
 		XCTAssertEqual(TDCAlertResponse.alternate.rawValue, 1001)
 		XCTAssertEqual(TDCAlertResponse.other.rawValue, 1002)
-		XCTAssertTrue(
-			TDCAlert.responds(
-				to: NSSelectorFromString("modalAlertWithMessage:title:defaultButton:alternateButton:")
-			)
-		)
 
 		XCTAssertNotNil(NSClassFromString("TDCInputPrompt"))
 		XCTAssertTrue(

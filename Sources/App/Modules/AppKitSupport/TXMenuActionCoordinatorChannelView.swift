@@ -124,7 +124,7 @@ public extension MenuActionCoordinator {
 	}
 
 	private func showWebInspectorUnavailableAlert() {
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.WebInspector.unavailableBody,
 			title: PromptStrings.WebInspector.unavailableTitle,
 			defaultButton: PromptStrings.Action.confirmation,

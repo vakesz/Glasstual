@@ -305,8 +305,8 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 			defaultButton: PromptStrings.Action.yes,
 			alternateButton: PromptStrings.Action.no,
 			otherButton: nil
-		) { [weak self] buttonClicked, _, _ in
-			guard let self, buttonClicked == .default else {
+		) { [weak self] outcome in
+			guard let self, outcome.response == .default else {
 				return
 			}
 

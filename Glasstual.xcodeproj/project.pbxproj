@@ -531,6 +531,7 @@
 		96F43F4B03438345FFFB8827 /* MainWindowTextViewMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B083E2856EBA447DB280C3 /* MainWindowTextViewMigrationTests.swift */; };
 		9755DC47DC9C01123FAB8B3C /* HighlightEntryFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DDECF1C473231C5B408226 /* HighlightEntryFeatureTests.swift */; };
 		97695D24161C77070D871B2F /* IRCConnectionConfigEnvelopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC6D2D43EBDB6FC948096BCD /* IRCConnectionConfigEnvelopeTests.swift */; };
+		976A5B80AF8BE5A072D5618A /* TDCAlertRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA8AFB201414F1E54CB75FA /* TDCAlertRequestTests.swift */; };
 		976A663ED785BDB026A9A3B5 /* IRCChannelModeQueryPurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59960A5AFD4CF73B8ED47813 /* IRCChannelModeQueryPurityTests.swift */; };
 		9779A7DB38D779252DE26175 /* AddressBookStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CFBB65E79F35DBFE7BD0ECD /* AddressBookStrings.swift */; };
 		978645816495E033E20FB59E /* IRCISupportTokenParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC15F2EDB588B4244528518 /* IRCISupportTokenParser.swift */; };
@@ -1845,6 +1846,7 @@
 		AD1B79F4F203F14952AD75BF /* TVCContentNavigationOutlineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVCContentNavigationOutlineView.swift; sourceTree = "<group>"; };
 		AD682ADEDE460F3B0F602F11 /* Makefile */ = {isa = PBXFileReference; path = Makefile; sourceTree = "<group>"; };
 		AD7EF156E869462B38DC5E05 /* IRCUserRelations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCUserRelations.swift; sourceTree = "<group>"; };
+		ADA8AFB201414F1E54CB75FA /* TDCAlertRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCAlertRequestTests.swift; sourceTree = "<group>"; };
 		AEA6D1805635D2BD4B5CA341 /* IRCClientCommandUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientCommandUtilities.swift; sourceTree = "<group>"; };
 		AEFFC24E83C97115A8BF1447 /* TXMenuActionCoordinatorEditing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TXMenuActionCoordinatorEditing.swift; sourceTree = "<group>"; };
 		AF659AF17C8CFBFC595178E3 /* TVCValidatedTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVCValidatedTextField.swift; sourceTree = "<group>"; };
@@ -3832,6 +3834,7 @@
 				92755B8FE13E90BE855A0C76 /* StringCatalogStructureTests.swift */,
 				5E5AF6AC3463FEA94BE17AA1 /* StringHelperTests.swift */,
 				5C136DC22778D3ECC22A53BE /* STSPolicyTrustTests.swift */,
+				ADA8AFB201414F1E54CB75FA /* TDCAlertRequestTests.swift */,
 				6E7C5ADCBB4E5A3EA9245087 /* ThemePresentationSchemaTests.swift */,
 				A1F4B943DCA02C237A657FFD /* ThemeTemplateStoreTests.swift */,
 				8B8B9A291B6DAE41527EA3ED /* TLOInternetAddressLookupTests.swift */,
@@ -5372,6 +5375,7 @@
 				6BFDAC20B3FEA74E384C922B /* StreamableModule.swift in Sources */,
 				EA24AF9200F3895B5474D314 /* StringCatalogStructureTests.swift in Sources */,
 				C0000E19A228B4DAAC71DAB4 /* StringHelperTests.swift in Sources */,
+				976A5B80AF8BE5A072D5618A /* TDCAlertRequestTests.swift in Sources */,
 				A9C07B7C28A644184EB39BE5 /* TLOInternetAddressLookupTests.swift in Sources */,
 				61880265A8320130EC290AF1 /* TLOKeyEventHandlerTests.swift in Sources */,
 				0A3D0AC3A9750C6111680379 /* TLOLinkParserCorpusTests.swift in Sources */,

@@ -457,7 +457,7 @@ public final nonisolated class PathInfo: NSObject {
 
 		/* Bookmark resolution runs outside the main actor, the alert on it. */
 		Task { @MainActor in
-			_ = TDCAlert.alert(
+			TDCAlert.alert(
 				withMessage: PromptStrings.Logging.staleLocationBody,
 				title: PromptStrings.Logging.staleLocationTitle,
 				defaultButton: PromptStrings.Action.confirmation,

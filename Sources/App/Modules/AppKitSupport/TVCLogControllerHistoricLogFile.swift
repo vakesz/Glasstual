@@ -193,7 +193,7 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 			lastErrorMessage = PromptStrings.Logging.lastError(lastErrorMessage)
 		}
 
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: lastErrorMessage,
 			title: PromptStrings.Logging.scrollbackFailureTitle,
 			defaultButton: PromptStrings.Action.confirmation,
