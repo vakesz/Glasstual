@@ -252,9 +252,12 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 	}
 
 	@objc private func channelListChanged(_: Any?) {
+		/* Cancel before reloading, not after: the reload is what schedules the
+		 expand through outlineView(_:didAdd:forRow:), and cancelling
+		 afterwards leaves the tree collapsed. */
+		expandOutlineViewItemsCancelTimer()
 		rebuildCachedChannelList()
 		reloadOutlineView()
-		expandOutlineViewItemsCancelTimer()
 	}
 
 	private func rebuildCachedChannelList() {

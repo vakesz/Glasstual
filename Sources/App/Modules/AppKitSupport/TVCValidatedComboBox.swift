@@ -160,13 +160,17 @@ public final class ValidatedComboBox: NSComboBox {
 		}
 	}
 
-	override public func textDidChange(_: Notification) {
+	override public func textDidChange(_ notification: Notification) {
+		super.textDidChange(notification)
+
 		DispatchQueue.main.async { [weak self] in
 			self?.recalculateSelection()
 		}
 	}
 
 	override public func viewWillMove(toWindow newWindow: NSWindow?) {
+		super.viewWillMove(toWindow: newWindow)
+
 		if newWindow == nil {
 			closeValidationErrorPopover()
 		}
