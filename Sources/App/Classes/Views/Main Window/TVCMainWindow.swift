@@ -413,7 +413,7 @@ private extension MainWindow {
 		let searchButton = sidebarFooterButton(
 			symbolName: "magnifyingglass",
 			title: MainWindowStrings.InputBar.searchChannels,
-			action: NSSelectorFromString("showChannelSpotlightWindow:")
+			action: #selector(TXMenuController.showChannelSpotlightWindow(_:))
 		)
 		let settingsButton = sidebarFooterButton(
 			symbolName: "ellipsis.circle",
@@ -503,33 +503,71 @@ private extension MainWindow {
 	@objc func presentSidebarMoreMenu(_ sender: Any?) {
 		guard let anchor = sender as? NSView else { return }
 		let menu = NSMenu()
-		func item(_ title: String, _ symbol: String, _ action: String, _ tag: Int) -> NSMenuItem {
-			let item = NSMenuItem(title: title, action: NSSelectorFromString(action), keyEquivalent: "")
+		func item(
+			_ title: String,
+			_ symbol: String,
+			_ action: Selector,
+			_ command: MenuCommand
+		) -> NSMenuItem {
+			let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
 			item.target = menuController
-			item.tag = tag
+			item.command = command
 			item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)
 			return item
 		}
-		menu.addItem(item(MainWindowStrings.InputBar.markAllAsRead, "checkmark.circle", "markAllAsRead:", 403))
+		menu.addItem(
+			item(
+				MainWindowStrings.InputBar.markAllAsRead,
+				"checkmark.circle",
+				#selector(TXMenuController.markAllAsRead(_:)),
+				.markAllRead
+			)
+		)
 		menu.addItem(
 			item(
 				MainWindowStrings.InputBar.disableAllNotifications,
 				"bell.slash",
-				"toggleMuteOnNotifications:",
-				200
+				#selector(TXMenuController.toggleMuteOnNotifications(_:)),
+				.disableNotifications
 			)
 		)
 		menu.addItem(.separator())
-		menu.addItem(item(MainWindowStrings.InputBar.addressBook, "person.crop.circle", "showAddressBook:", 813))
 		menu.addItem(
-			item(MainWindowStrings.InputBar.fileTransfers, "arrow.down.circle", "showFileTransfersWindow:", 817)
+			item(
+				MainWindowStrings.InputBar.addressBook,
+				"person.crop.circle",
+				#selector(TXMenuController.showAddressBook(_:)),
+				.addressBook
+			)
+		)
+		menu.addItem(
+			item(
+				MainWindowStrings.InputBar.fileTransfers,
+				"arrow.down.circle",
+				#selector(TXMenuController.showFileTransfersWindow(_:)),
+				.fileTransfers
+			)
 		)
 		menu.addItem(.separator())
 		menu.addItem(
-			item(MainWindowStrings.InputBar.hideMemberList, "sidebar.right", "toggleMemberListVisibility:", 803)
+			item(
+				MainWindowStrings.InputBar.hideMemberList,
+				"sidebar.right",
+				#selector(TXMenuController.toggleMemberListVisibility(_:)),
+				.toggleMemberList
+			)
 		)
-		menu.addItem(.separator())
-		menu.addItem(item(MainWindowStrings.InputBar.settings, "gear", "showPreferencesWindow:", 102))
+		menu.addItem(
+			.separator()
+		)
+		menu.addItem(
+			item(
+				MainWindowStrings.InputBar.settings,
+				"gear",
+				#selector(TXMenuController.showPreferencesWindow(_:)),
+				.settings
+			)
+		)
 		menuController.applySymbols(to: menu)
 		menu.popUp(positioning: nil, at: NSPoint(x: 0, y: anchor.bounds.height), in: anchor)
 	}
@@ -750,13 +788,13 @@ private extension MainWindow {
 		}
 
 		guard let formatterMenu = formattingMenu.formatterMenu?.submenu else { return }
-		if let monospaceItem = formatterMenu.item(withTag: 102) {
+		if let monospaceItem = formatterMenu.item(withTag: TextFormatterCommand.monospace.rawValue) {
 			monospaceItem.attributedTitle = NSAttributedString(
 				string: monospaceItem.title,
 				attributes: [.font: NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)]
 			)
 		}
-		if let spoilerItem = formatterMenu.item(withTag: 103) {
+		if let spoilerItem = formatterMenu.item(withTag: TextFormatterCommand.spoiler.rawValue) {
 			spoilerItem.attributedTitle = NSAttributedString(
 				string: spoilerItem.title,
 				attributes: [
@@ -769,7 +807,7 @@ private extension MainWindow {
 	}
 
 	static func formattingMenuImage(forColorTag tag: Int) -> NSImage? {
-		if tag == 299 {
+		if TextFormatterCommand(rawValue: tag) == .rainbowColor {
 			return NSImage(systemSymbolName: "rainbow", accessibilityDescription: nil)
 		}
 		let colors = NSColor.formatterColors

@@ -13,8 +13,8 @@ final class TXMenuPresentationTests: XCTestCase {
 		let mappings = MenuPresentation.symbolMappings
 
 		XCTAssertEqual(mappings.count, 82)
-		XCTAssertEqual(MenuPresentation.symbolName(forTag: 102), "gear")
-		XCTAssertEqual(MenuPresentation.symbolName(forTag: 3_090_000), "magnifyingglass")
+		XCTAssertEqual(MenuCommand.settings.symbolName, "gear")
+		XCTAssertEqual(MenuCommand.findText.symbolName, "magnifyingglass")
 		XCTAssertNil(MenuPresentation.symbolName(forTag: -1))
 
 		let unavailableSymbols = mappings.values.filter {
@@ -88,7 +88,7 @@ final class TXMenuPresentationTests: XCTestCase {
 		XCTAssertEqual(items[1].action, #selector(MenuTarget.replyToMessage(_:)))
 		XCTAssertTrue(items[1].target === target)
 		XCTAssertEqual(
-			(items[1].representedObject as? [String: String])?["messageIdentifier"],
+			(items[1].representedObject as? MessageMenuContext)?.messageIdentifier,
 			"message-42"
 		)
 
@@ -96,7 +96,7 @@ final class TXMenuPresentationTests: XCTestCase {
 		XCTAssertEqual(reactionItems.count, 8)
 		XCTAssertEqual(reactionItems[0].action, #selector(MenuTarget.reactToMessage(_:)))
 		XCTAssertEqual(
-			(reactionItems[0].representedObject as? [String: String])?["emoji"],
+			(reactionItems[0].representedObject as? MessageMenuContext)?.emoji,
 			"👍"
 		)
 		XCTAssertEqual(
