@@ -4,47 +4,42 @@
  *********************************************************************** */
 
 import CocoaExtensions
+import Foundation
 @testable import Glasstual
 import GlasstualPluginKit
-import XCTest
+import Testing
 
 @MainActor
-final class IRCUserRelationsTests: XCTestCase {
-	private var client: GLTTestClient!
-	private var relations: UserRelations!
+@Suite("User relations")
+struct IRCUserRelationsTests {
+	private let client: GLTTestClient
+	private let relations: UserRelations
 
-	override func setUp() async throws {
-		try await super.setUp()
-
+	init() {
 		client = GLTTestClient()
 		relations = UserRelations()
 	}
 
-	override func tearDown() async throws {
-		relations = nil
-		client = nil
-
-		try await super.tearDown()
-	}
-
-	func testAssociatingAndDisassociatingChannelMember() {
+	@Test("A member is associated with a channel and dropped again by channel")
+	func associatingAndDisassociatingChannelMember() {
 		let channel = makeChannel(named: "#chat")
 		let member = makeMember(named: "alice")
 
 		relations.associate(member, with: channel)
 
-		XCTAssertEqual(relations.numberOfRelations, 1)
-		XCTAssertEqual(relations.relatedChannels, [channel])
-		XCTAssertEqual(relations.relatedUsers, [member])
-		XCTAssertTrue(relations.userAssociated(with: channel) === member)
+		#expect(relations.numberOfRelations == 1)
+		#expect(relations.relatedChannels == [channel])
+		#expect(relations.relatedUsers == [member])
+		#expect(relations.userAssociated(with: channel) === member)
 
 		relations.disassociateUser(with: channel)
 
-		XCTAssertEqual(relations.numberOfRelations, 0)
-		XCTAssertNil(relations.userAssociated(with: channel))
+		#expect(relations.numberOfRelations == 0)
+		#expect(relations.userAssociated(with: channel) == nil)
 	}
 
-	func testReplacingRelationForSameChannel() {
+	@Test("A second association for the same channel replaces the first")
+	func replacingRelationForSameChannel() {
 		let channel = makeChannel(named: "#chat")
 		let first = makeMember(named: "alice")
 		let second = makeMember(named: "bob")
@@ -52,11 +47,12 @@ final class IRCUserRelationsTests: XCTestCase {
 		relations.associate(first, with: channel)
 		relations.associate(second, with: channel)
 
-		XCTAssertEqual(relations.numberOfRelations, 1)
-		XCTAssertTrue(relations.userAssociated(with: channel) === second)
+		#expect(relations.numberOfRelations == 1)
+		#expect(relations.userAssociated(with: channel) === second)
 	}
 
-	func testEnumerationUsesSnapshotAndHonorsStop() {
+	@Test("Enumeration walks a snapshot and stops when the visitor asks it to")
+	func enumerationUsesSnapshotAndHonorsStop() {
 		relations.associate(makeMember(named: "alice"), with: makeChannel(named: "#one"))
 		relations.associate(makeMember(named: "bob"), with: makeChannel(named: "#two"))
 
@@ -67,20 +63,22 @@ final class IRCUserRelationsTests: XCTestCase {
 			stop.pointee = true
 		}
 
-		XCTAssertEqual(visitedCount, 1)
+		#expect(visitedCount == 1)
 	}
 
-	func testPrivateMessageChannelsAreNotStored() {
+	@Test("A private message is not a channel, so nothing is stored for it")
+	func privateMessageChannelsAreNotStored() {
 		let privateMessage = makeChannel(named: "alice", type: .privateMessage)
 		let member = makeMember(named: "alice")
 
 		relations.associate(member, with: privateMessage)
 
-		XCTAssertEqual(relations.numberOfRelations, 0)
-		XCTAssertNil(relations.userAssociated(with: privateMessage))
+		#expect(relations.numberOfRelations == 0)
+		#expect(relations.userAssociated(with: privateMessage) == nil)
 	}
 
-	func testChannelUserCopiesPreserveIdentityModesAndConversationWeights() {
+	@Test("A copied member shares its user but carries its own modes and weights")
+	func channelUserCopiesPreserveIdentityModesAndConversationWeights() {
 		let user = User(nickname: "alice", on: client)
 		let member = ChannelUser(user: user)
 
@@ -90,20 +88,21 @@ final class IRCUserRelationsTests: XCTestCase {
 
 		let copy = member.duplicate()
 
-		XCTAssertFalse(copy === member)
-		XCTAssertTrue(copy.user === user)
-		XCTAssertEqual(copy.modes, "ov")
-		XCTAssertEqual(copy.ranks, [.normalOperator, .voiced])
-		XCTAssertEqual(copy.incomingWeight, 100)
-		XCTAssertEqual(copy.outgoingWeight, 20)
-		XCTAssertEqual(copy.creationTime, member.creationTime)
+		#expect(copy !== member)
+		#expect(copy.user === user)
+		#expect(copy.modes == "ov")
+		#expect(copy.ranks == [.normalOperator, .voiced])
+		#expect(copy.incomingWeight == 100)
+		#expect(copy.outgoingWeight == 20)
+		#expect(copy.creationTime == member.creationTime)
 
 		copy.modes = "o"
 
-		XCTAssertEqual(member.modes, "ov")
+		#expect(member.modes == "ov")
 	}
 
-	func testChannelMemberListAddsSortsAndRemovesMembers() {
+	@Test("A member list keeps itself sorted and clears the relation on removal")
+	func channelMemberListAddsSortsAndRemovesMembers() {
 		let channel = makeChannel(named: "#chat")
 		let memberList = ChannelMemberList(channel: channel)
 		let bob = makeMember(named: "bob")
@@ -112,17 +111,18 @@ final class IRCUserRelationsTests: XCTestCase {
 		memberList.addMember(bob)
 		memberList.addMember(alice)
 
-		XCTAssertEqual(memberList.numberOfMembers, 2)
-		XCTAssertEqual(memberList.memberList.map(\.user.nickname), ["alice", "bob"])
+		#expect(memberList.numberOfMembers == 2)
+		#expect(memberList.memberList.map(\.user.nickname) == ["alice", "bob"])
 
 		memberList.removeMember(alice)
 
-		XCTAssertEqual(memberList.numberOfMembers, 1)
-		XCTAssertEqual(memberList.memberList, [bob])
-		XCTAssertNil(alice.user.userAssociated(with: channel))
+		#expect(memberList.numberOfMembers == 1)
+		#expect(memberList.memberList == [bob])
+		#expect(alice.user.userAssociated(with: channel) == nil)
 	}
 
-	func testChannelMemberListDuplicateCheckReplacesExistingRelation() {
+	@Test("Adding a duplicate member replaces the relation the first one held")
+	func channelMemberListDuplicateCheckReplacesExistingRelation() {
 		let channel = makeChannel(named: "#chat")
 		let memberList = ChannelMemberList(channel: channel)
 		let user = User(nickname: "alice", on: client)
@@ -132,9 +132,9 @@ final class IRCUserRelationsTests: XCTestCase {
 		memberList.addMember(original)
 		memberList.addMember(replacement, checkForDuplicates: true)
 
-		XCTAssertEqual(memberList.numberOfMembers, 1)
-		XCTAssertTrue(memberList.memberList.first === replacement)
-		XCTAssertTrue(user.userAssociated(with: channel) === replacement)
+		#expect(memberList.numberOfMembers == 1)
+		#expect(memberList.memberList.first === replacement)
+		#expect(user.userAssociated(with: channel) === replacement)
 	}
 
 	private func makeChannel(named name: String, type: ChannelType = .channel) -> Channel {
