@@ -47,11 +47,16 @@ enum IRCCTCPPolicy {
 	}
 
 	static func formData(_ text: String) -> [String: String] {
-		Dictionary(uniqueKeysWithValues: text.split(separator: "&").compactMap { field in
-			let pair = field.split(separator: "=", maxSplits: 1)
-			guard pair.count == 2 else { return nil }
-			return (String(pair[0]), String(pair[1]))
-		})
+		// The text is server-controlled and may repeat a key, so duplicates
+		// must merge rather than trap. The first occurrence wins.
+		Dictionary(
+			text.split(separator: "&").compactMap { field -> (String, String)? in
+				let pair = field.split(separator: "=", maxSplits: 1)
+				guard pair.count == 2 else { return nil }
+				return (String(pair[0]), String(pair[1]))
+			},
+			uniquingKeysWith: { first, _ in first }
+		)
 	}
 }
 
