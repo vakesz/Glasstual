@@ -53,6 +53,12 @@ enum CTCPPayload {
 			payload = payload.replacingOccurrences(of: "\r", with: " ")
 			payload = payload.replacingOccurrences(of: "\n", with: " ")
 		}
+		/* modern.ircdocs.horse defines no way to quote a delimiter inside a
+		 CTCP message, so one carried in the text ends the frame at the
+		 receiver: everything after it is silently dropped and what follows can
+		 be read as a second extended message. Removing it is the only way to
+		 send the text the user actually wrote. */
+		payload = payload.replacingOccurrences(of: delimiter, with: "")
 		return "\(delimiter)\(payload)\(delimiter)"
 	}
 
