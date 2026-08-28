@@ -39,6 +39,8 @@ import CocoaExtensions
 import Foundation
 
 @objc(ICLMediaAssessment)
+/* ISOLATION-EXCEPTION: an NSSecureCoding transport object, copied across the
+ XPC boundary rather than shared. See `InlineContentPayload`. */
 open class MediaAssessment: PortablePropertyObject, @unchecked Sendable {
 	fileprivate var urlStorage = URL(string: "about:blank")!
 	fileprivate var typeStorage = InlineContentMediaType.unknown
@@ -119,6 +121,7 @@ open class MediaAssessment: PortablePropertyObject, @unchecked Sendable {
 }
 
 @objc(ICLMediaAssessmentMutable)
+/* ISOLATION-EXCEPTION: see `MediaAssessment`. */
 public final class MediaAssessmentMutable: MediaAssessment, @unchecked Sendable {
 	override public static var isMutable: Bool {
 		true

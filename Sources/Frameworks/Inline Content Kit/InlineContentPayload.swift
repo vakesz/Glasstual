@@ -43,6 +43,10 @@ import os
 public let inlineContentErrorDomain = "ICLInlineContentErrorDomain"
 
 @objc(ICLPayload)
+/* ISOLATION-EXCEPTION: an NSSecureCoding transport object. It crosses the XPC
+ boundary between the app and the inline-content service, where NSXPCConnection
+ owns the copy on each side, and the mutable subclass is only ever edited by the
+ module that created it. */
 open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
 	fileprivate static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
@@ -278,6 +282,7 @@ open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
 }
 
 @objc(ICLPayloadMutable)
+/* ISOLATION-EXCEPTION: see `InlineContentPayload`. */
 public final class InlineContentPayloadMutable: InlineContentPayload, @unchecked Sendable {
 	override public static var isMutable: Bool {
 		true

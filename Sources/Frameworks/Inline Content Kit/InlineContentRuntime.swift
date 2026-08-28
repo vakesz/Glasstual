@@ -36,9 +36,10 @@
  *********************************************************************** */
 
 import Foundation
+import Synchronization
 
 @objc(ICLMediaType)
-public enum InlineContentMediaType: UInt {
+public enum InlineContentMediaType: UInt, Sendable {
 	case unknown = 0
 	case image
 	case video
@@ -73,20 +74,17 @@ public enum InlineContentPreferences {
 		}
 	}
 
-	private struct Provider: @unchecked Sendable {
-		let load: () -> Values
-	}
-
-	private static let lock = NSLock()
-	private nonisolated(unsafe) static var provider = Provider {
+	private static let provider = Mutex<@Sendable () -> Values>({
 		Values(maximumImageFileSize: 2 * 1_048_576, maximumHeight: 0, maximumWidth: 0, limitBasicsToFiles: false)
-	}
+	})
 
-	public static func install(_ load: @escaping () -> Values) {
-		lock.withLock { provider = Provider(load: load) }
+	/// The host installs its own reader once, at start-up.
+	public static func install(_ load: @escaping @Sendable () -> Values) {
+		provider.withLock { $0 = load }
 	}
 
 	public static var current: Values {
-		lock.withLock { provider }.load()
+		let load = provider.withLock { $0 }
+		return load()
 	}
 }
