@@ -296,6 +296,7 @@
 		4DD207100D847D6F5E744B3E /* IRCHostmaskGlobTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA63C805AF20F5FF9DC747 /* IRCHostmaskGlobTests.swift */; };
 		4DDDD6C61FA2A132134C44B3 /* IRCSpecParserCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B05823BFF201C101176F16 /* IRCSpecParserCorpusTests.swift */; };
 		4E021EF78FC3F69AFD786A25 /* IRCLabeledResponseRetirementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D544929B3F1620347D7AC1E4 /* IRCLabeledResponseRetirementTests.swift */; };
+		4E465EE48DA92CDF59C35D70 /* IRCSpecTransportSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF2904432BD6121EBB29A3B /* IRCSpecTransportSecurityTests.swift */; };
 		4E5ECBEFF2044E44BB36CD79 /* IRCClientHistoryAndReadMarkers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9F34E99AD58F2E26CA49DA /* IRCClientHistoryAndReadMarkers.swift */; };
 		4EC4B841B2CB8C565D691CDE /* InlineContentURLPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 302924725389D19E73F4CEB3 /* InlineContentURLPolicyTests.swift */; };
 		4F47C98A609A8DF344465A5A /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77BCE721458EE56217D040E2 /* Logger.swift */; };
@@ -695,6 +696,7 @@
 		BC6AFF313BB219F22900076A /* NSTextFieldHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2890CB13CA61A65A05477FA0 /* NSTextFieldHelper.swift */; };
 		BC6C1332BA83F6BFEFBEE32C /* IRCChannelMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4ED98A209950D7DEC952EB4 /* IRCChannelMigrationTests.swift */; };
 		BCEB3EA25FB269D70119B966 /* NicknameColorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4D8328EC15B661C5D0B115 /* NicknameColorSheet.swift */; };
+		BCEF374D72B4DA4BFD77C722 /* IRCSpecWhoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF684A1F200FEDB5CEEBF16 /* IRCSpecWhoTests.swift */; };
 		BD172521173DB1A0294838ED /* NibRuntimeNameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 615B194532F9D4D233FDF44A /* NibRuntimeNameTests.swift */; };
 		BDC28E5DA749CD0017495222 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530C3878C2EDE7F7AF4C6E45 /* CoreFoundation.framework */; };
 		BDEBC84BFD1E4D1C047281D1 /* MainWindowStateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54043C42F374FB467E732323 /* MainWindowStateStore.swift */; };
@@ -1921,6 +1923,7 @@
 		BEE75B9972E35A7D3CD2385B /* NSDictionaryHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSDictionaryHelper.swift; sourceTree = "<group>"; };
 		BEF1614B776C5992DEFDC126 /* URLEscapeHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLEscapeHelper.swift; sourceTree = "<group>"; };
 		BFB501D3F16D7355583620ED /* LogRendererSafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogRendererSafetyTests.swift; sourceTree = "<group>"; };
+		BFF684A1F200FEDB5CEEBF16 /* IRCSpecWhoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSpecWhoTests.swift; sourceTree = "<group>"; };
 		C03EA54C21195FD36F096CA5 /* TDCProgressIndicatorSheet.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = TDCProgressIndicatorSheet.xcstrings; sourceTree = "<group>"; };
 		C0A738BAC9AC5631A14CE4E4 /* DailymotionModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailymotionModule.swift; sourceTree = "<group>"; };
 		C0D3444AEC2A7A14EDD9378B /* ICMInlineImage.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = ICMInlineImage.js; sourceTree = "<group>"; };
@@ -2059,6 +2062,7 @@
 		EBE4457D9126CBE7FD7065C8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/TDCAddressBookSheet.xib; sourceTree = "<group>"; };
 		EC484ADF5A097D38A2A11B38 /* NetworkPickerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkPickerDetailView.swift; sourceTree = "<group>"; };
 		ECBAC7DA0FE75617C8D7555D /* PromptStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptStrings.swift; sourceTree = "<group>"; };
+		ECF2904432BD6121EBB29A3B /* IRCSpecTransportSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCSpecTransportSecurityTests.swift; sourceTree = "<group>"; };
 		ED2A465B4D4C31E21F679671 /* IRCAddressBook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCAddressBook.swift; sourceTree = "<group>"; };
 		EDA0A253AE226DADEB282F28 /* ServerPropertiesSheetIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerPropertiesSheetIdentity.swift; sourceTree = "<group>"; };
 		EDCA16F810EE48FBB19C5AF3 /* IRCClientRequestedCommandsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientRequestedCommandsTests.swift; sourceTree = "<group>"; };
@@ -3819,6 +3823,8 @@
 				8CD0DD47DF620419A20F8305 /* IRCSpecNumericsTests.swift */,
 				50D2EA3C8240B46BE82F8A15 /* IRCSpecOutboundLimitsTests.swift */,
 				A1B05823BFF201C101176F16 /* IRCSpecParserCorpusTests.swift */,
+				ECF2904432BD6121EBB29A3B /* IRCSpecTransportSecurityTests.swift */,
+				BFF684A1F200FEDB5CEEBF16 /* IRCSpecWhoTests.swift */,
 				DE35CB6EEB91C3BBF831E9C3 /* IRCStringCatalogMigrationTests.swift */,
 				70E6813EE66A96C5CE2B2C14 /* IRCSTSPolicyTests.swift */,
 				E08D553A76C98C8654C53B1B /* IRCTimedCommandTests.swift */,
@@ -5229,6 +5235,8 @@
 				5AD3D3989B87E151A9220845 /* IRCSpecNumericsTests.swift in Sources */,
 				146F6EBAC244440CCA7A4D41 /* IRCSpecOutboundLimitsTests.swift in Sources */,
 				4DDDD6C61FA2A132134C44B3 /* IRCSpecParserCorpusTests.swift in Sources */,
+				4E465EE48DA92CDF59C35D70 /* IRCSpecTransportSecurityTests.swift in Sources */,
+				BCEF374D72B4DA4BFD77C722 /* IRCSpecWhoTests.swift in Sources */,
 				0F7A701D9D2D3256A18728E9 /* IRCStringCatalogMigrationTests.swift in Sources */,
 				198C7787E91B63EAA6FE9CE5 /* IRCTimedCommandTests.swift in Sources */,
 				915C46E11D8F1BB97CD91AFD /* IRCTypingTrackerTests.swift in Sources */,
