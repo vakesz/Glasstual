@@ -15,6 +15,7 @@ import Foundation
 import Testing
 
 @Suite("Main window state store suite")
+@MainActor
 struct MainWindowStateStoreSuiteTests {
 	private static let keys = [
 		"Window -> Main Window -> Server List is Visible",

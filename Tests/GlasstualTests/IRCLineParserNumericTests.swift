@@ -40,6 +40,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+@MainActor
 struct IRCLineParserNumericTests {
 	/// `Int32(numeric)` trapped on the error path for an oversized numeric,
 	/// and the numeric itself came from a saturating `integerValue`.

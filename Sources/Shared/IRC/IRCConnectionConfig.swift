@@ -41,7 +41,7 @@ import os
 
 /// Raw values are persisted. Values 4 and 7 are retired and must not be reused.
 @objc
-public enum IRCConnectionProxyType: UInt {
+public nonisolated enum IRCConnectionProxyType: UInt {
 	case none = 0
 	case automatic = 1
 	case socks5 = 5
@@ -51,13 +51,13 @@ public enum IRCConnectionProxyType: UInt {
 
 /// Controls which IP address families Network.framework may use.
 @objc
-public enum IRCConnectionAddressType: UInt {
+public nonisolated enum IRCConnectionAddressType: UInt {
 	case `default` = 0
 	case v4 = 1
 	case v6 = 2
 }
 
-public enum IRCConnectionDefaults {
+public nonisolated enum IRCConnectionDefaults {
 	public static let serverPort: UInt16 = 6667
 	public static let proxyPort: UInt16 = 1080
 	public static let floodControlDelayInterval: UInt = 2
@@ -70,7 +70,7 @@ public enum IRCConnectionDefaults {
 
 @objc(IRCConnectionConfig)
 @objcMembers
-open class IRCConnectionConfig: PortablePropertyObject {
+open nonisolated class IRCConnectionConfig: PortablePropertyObject {
 	fileprivate var addressTypeStorage = IRCConnectionAddressType.default
 	fileprivate var prefersModernCiphersStorage = false
 	fileprivate var prefersSecureConnectionStorage = false
@@ -277,7 +277,7 @@ open class IRCConnectionConfig: PortablePropertyObject {
 	}
 }
 
-private extension NSCoder {
+private nonisolated extension NSCoder {
 	func decodeUInt(forKey key: String) -> UInt {
 		decodeObject(of: NSNumber.self, forKey: key)?.uintValue ?? 0
 	}
@@ -285,7 +285,7 @@ private extension NSCoder {
 
 @objc(IRCConnectionConfigMutable)
 @objcMembers
-public final class IRCConnectionConfigMutable: IRCConnectionConfig {
+public final nonisolated class IRCConnectionConfigMutable: IRCConnectionConfig {
 	public required init() {
 		super.init()
 	}

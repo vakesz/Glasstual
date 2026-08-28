@@ -41,7 +41,7 @@ import CocoaExtensions
 import GlasstualPluginKit
 
 @objc(IRCChannelConfig)
-public class ChannelConfig: PortablePropertyDict {
+public nonisolated class ChannelConfig: PortablePropertyDict {
 	fileprivate var autoJoinStorage = true
 	fileprivate var ignoreGeneralEventMessagesStorage = false
 	fileprivate var ignoreHighlightsStorage = false
@@ -464,7 +464,7 @@ public class ChannelConfig: PortablePropertyDict {
 }
 
 @objc(IRCChannelConfigMutable)
-public final class MutableChannelConfig: ChannelConfig {
+public final nonisolated class MutableChannelConfig: ChannelConfig {
 	override public static var isMutable: Bool {
 		true
 	}

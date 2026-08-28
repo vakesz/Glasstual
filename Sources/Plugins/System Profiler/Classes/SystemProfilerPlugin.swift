@@ -39,7 +39,8 @@ import AppKit
 import GlasstualPluginKit
 
 @objc(TPISystemProfiler)
-final class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, PluginPreferencesProviding,
+final nonisolated class SystemProfilerPlugin: NSObject, GlasstualPlugin, PluginCommandHandling,
+	PluginPreferencesProviding,
 	@unchecked Sendable
 {
 	private static let defaultPreferences = [

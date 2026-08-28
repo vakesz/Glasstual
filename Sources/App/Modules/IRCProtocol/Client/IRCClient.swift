@@ -41,6 +41,7 @@
  under the three-clause BSD license reproduced in Acknowledgements.pdf. */
 
 import Foundation
+import Synchronization
 
 public extension Notification.Name {
 	static let IRCClientConfigurationWasUpdated = Self("IRCClientConfigurationWasUpdatedNotification")
@@ -54,18 +55,31 @@ public extension Notification.Name {
 }
 
 @objc(IRCClient)
-open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
+open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	#if DEBUG
 		var linePrintObserver: ((IRCLinePrintRequest) -> Void)?
 	#endif
 
-	@objc public dynamic var config: IRCClientConfig
+	@objc public dynamic var config: IRCClientConfig {
+		didSet { refreshDescription() }
+	}
+
 	@objc public dynamic lazy var supportInfo = IRCISupportInfo(client: self)
+	/** The ISUPPORT prefix and case-mapping values, republished by `supportInfo`
+	 whenever they change. Channel members rank, compare and mark themselves on
+	 the printing queue and must not read the live table for them. */
+	nonisolated let userPrefixes = Mutex(IRCUserPrefixTable())
 	@objc public dynamic var cachedHighlights: [HighlightLogEntry] = []
 	@objc public dynamic var server: Server?
 	@objc public dynamic var isConnecting = false
-	@objc public dynamic var isConnected = false
-	@objc public dynamic var isLoggedIn = false
+	@objc public dynamic var isConnected = false {
+		didSet { refreshDescription() }
+	}
+
+	@objc public dynamic var isLoggedIn = false {
+		didSet { refreshDescription() }
+	}
+
 	@objc public dynamic var isQuitting = false
 	@objc dynamic var isDisconnecting = false
 	@objc public dynamic var userIsAway = false
@@ -90,27 +104,28 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	 STS upgrade, server redirect). A single slot meant whichever installed last silently
 	 replaced the others; every registered action now runs. */
 	var disconnectCallbacks: [() -> Void] = []
-	/** Migrating these delays from -performSelector:afterDelay: to asyncAfter left them
-	 uncancellable; the work items exist so that a reconnect within the delay window
-	 does not have a stale block act on the new session. */
-	var pendingDisconnectWorkItem: DispatchWorkItem?
-	var pendingConnectionWorkItem: DispatchWorkItem?
+	/** Both delays are cancellable so that a reconnect inside the delay window
+	 cannot have a stale block act on the new session. */
+	var pendingDisconnectTask: Task<Void, Never>?
+	var pendingConnectionTask: Task<Void, Never>?
 	@objc public dynamic var connectType: IRCClientConnectMode = .normal
 	@objc public dynamic var disconnectType: IRCClientDisconnectMode = .normal
 	public var capabilities: ClientIRCv3SupportedCapability = []
 	@objc dynamic var socket: Connection?
 	var capabilityNegotiationIsPaused = false
-	let pendingCapabilityRequestsMutable = NSMutableArray()
-	let enabledCapabilityNames = NSMutableOrderedSet()
-	let offeredCapabilities = NSMutableDictionary()
+	/// Capability names still waiting to be sent, in the order they were queued.
+	var pendingCapabilityRequests: [String] = []
+	/// Capability names the server acknowledged, in the order they arrived.
+	var enabledCapabilityNames: [String] = []
+	var offeredCapabilities: [String: [String]] = [:]
 	/// Lowercased capability name to the exact spelling the server advertised.
-	let offeredCapabilityNames = NSMutableDictionary()
+	var offeredCapabilityNames: [String: String] = [:]
 	var lastAwayMessage: String?
 	var saslOfferedMechanisms: [String]?
 	var saslScramClient: SCRAMClient?
-	var saslIncomingPayload: NSMutableString?
+	var saslIncomingPayload: String?
 	var saslMechanism: String?
-	let saslTriedMechanisms = NSMutableArray()
+	var saslTriedMechanisms: [String] = []
 	var temporaryServerAddressOverride: String?
 	var temporaryServerPortOverride: UInt16 = 0
 	var performedSTSUpgrade = false
@@ -134,22 +149,22 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	var lastServerSelected = UInt(NSNotFound)
 	var tryingNicknameNumber: UInt = 0
 	var tryingNicknameSentNickname: String?
-	let channelListPrivate = NSMutableArray()
+	var channelListPrivate: [IRCChannel] = []
 	@objc public dynamic weak var lastSelectedChannel: IRCChannel?
 	var addressBookMatchCache: AddressBookMatchCache!
 	var collapsedNetsplitBatch: Any?
 	@objc public dynamic var isConnectedToZNC = false
 	var successfulConnects: UInt = 0
-	var isonTimer: TimerImplementation!
-	var whoTimer: TimerImplementation!
-	var autojoinTimer: TimerImplementation!
-	var autojoinNextJoinTimer: TimerImplementation!
-	var autojoinDelayedWarningTimer: TimerImplementation!
-	var pongTimer: TimerImplementation!
-	var reconnectTimer: TimerImplementation!
-	var retryTimer: TimerImplementation!
+	var isonTimer: ClientTimer!
+	var whoTimer: ClientTimer!
+	var autojoinTimer: ClientTimer!
+	var autojoinNextJoinTimer: ClientTimer!
+	var autojoinDelayedWarningTimer: ClientTimer!
+	var pongTimer: ClientTimer!
+	var reconnectTimer: ClientTimer!
+	var retryTimer: ClientTimer!
 	var autojoinDelayedWarningCount: UInt = 0
-	var channelsToAutojoin: NSMutableArray?
+	var channelsToAutojoin: [IRCChannel]?
 	var requestedCommands: ClientRequestedCommands!
 	var rawDataLogQuery: IRCChannel?
 	var hiddenCommandResponsesQuery: IRCChannel?
@@ -163,23 +178,36 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	 counter cannot express this: writing the banner is itself a write. */
 	@objc public dynamic var logFileSessionIsOpen = false
 	var chatHistoryPrependChannel: IRCChannel?
-	var chatHistoryPrependedLines: NSMutableArray?
+	var chatHistoryPrependedLines: [LogLine]?
 	var batchMessages: MessageBatchContainer!
-	let chatHistoryFailedTargets = NSMutableSet()
-	let chatHistoryPendingBeforeTargets = NSMutableSet()
-	let readMarkerSentDates = NSMutableDictionary()
-	let readMarkerPendingChannels = NSMutableSet()
-	var readMarkerTimer: TimerImplementation!
-	var collapsedNetsplitNicknames: NSMutableDictionary?
-	let pendingDeliveries = NSMutableDictionary()
-	let labelForBatchToken = NSMutableDictionary()
+	/// Casefolded targets whose history request the server refused.
+	var chatHistoryFailedTargets: Set<String> = []
+	/// Casefolded targets with a history request in flight.
+	var chatHistoryPendingBeforeTargets: Set<String> = []
+	/// The newest read marker sent per channel, keyed by channel identifier.
+	var readMarkerSentDates: [String: Date] = [:]
+	var readMarkerPendingChannels: [IRCChannel] = []
+	var readMarkerTimer: ClientTimer!
+	/// Nicknames seen in the netsplit batch being collapsed, per channel
+	/// identifier, in the order they arrived.
+	var collapsedNetsplitNicknames: [String: [String]]?
+	var pendingDeliveries: [String: LabeledDelivery] = [:]
+	var labelForBatchToken: [String: String] = [:]
 	var labelCounter: UInt = 0
 	var zncBouncerIsSendingCertificateInfo = false
 	var zncBouncerIsPlayingBackHistory = false
-	var zncBouncerCertificateChainDataMutable: NSMutableString?
-	let typingStateSent = NSMutableDictionary()
-	let typingActiveSentAt = NSMutableDictionary()
+	var zncBouncerCertificateChainDataMutable: String?
+	/// The typing state last sent to the server, keyed by channel identifier.
+	var typingStateSent: [String: TypingState] = [:]
+	/// When `.active` was last sent, keyed by channel identifier.
+	var typingActiveSentAt: [String: Date] = [:]
+	/// The pending "paused" notification per channel, keyed by identifier.
+	var typingPauseTasks: [String: Task<Void, Never>] = [:]
 	var trackedUsers: AddressBookUserTrackingContainer!
+	/// Users the client has seen, keyed by their casefolded nickname.
+	var usersByNickname: [String: User] = [:]
+	/// Timed commands the user scheduled, keyed by their identifier.
+	var timedCommandsByIdentifier: [String: TimedCommand] = [:]
 
 	@available(*, unavailable, message: "Use init(config:) or init(configDictionary:)")
 	override public init() {
@@ -199,7 +227,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 		prepareInitialState()
 	}
 
-	deinit {
+	isolated deinit {
 		NotificationCenter.default.removeObserver(self)
 		[
 			autojoinTimer, autojoinNextJoinTimer, autojoinDelayedWarningTimer,
@@ -208,8 +236,19 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 		NSObject.cancelPreviousPerformRequests(withTarget: self)
 	}
 
-	override public var description: String {
-		"<IRCClient [\(networkNameAlt)]: \(serverAddress ?? "(null)")>"
+	/** `NSObject.description` is nonisolated, so it cannot read the main-actor
+	 configuration and support info the text is built from. The text is published
+	 here instead whenever one of the values it names changes. */
+	private let descriptionSnapshot = Mutex("<IRCClient>")
+
+	override public nonisolated var description: String {
+		descriptionSnapshot.withLock { $0 }
+	}
+
+	/// Republishes the text `description` returns.
+	func refreshDescription() {
+		let text = "<IRCClient [\(networkNameAlt)]: \(serverAddress ?? "(null)")>"
+		descriptionSnapshot.withLock { $0 = text }
 	}
 
 	override public var uniqueIdentifier: String {
@@ -256,6 +295,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 		trackedUsers = AddressBookUserTrackingContainer(client: self)
 		requestedCommands = ClientRequestedCommands()
 		lastMessageServerTime = config.lastMessageServerTime
+		refreshDescription()
 
 		autojoinTimer = makeTimer { $0.onAutojoinTimer() }
 		autojoinNextJoinTimer = makeTimer { $0.onAutojoinNextJoinTimer() }
@@ -275,12 +315,10 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 		)
 	}
 
-	private func makeTimer(_ action: @MainActor @escaping (IRCClient) -> Void) -> TimerImplementation {
-		TimerImplementation.timer { [weak self] _ in
-			Task { @MainActor [weak self] in
-				guard let self else { return }
-				action(self)
-			}
+	private func makeTimer(_ action: @MainActor @escaping (IRCClient) -> Void) -> ClientTimer {
+		ClientTimer { [weak self] _ in
+			guard let self else { return }
+			action(self)
 		}
 	}
 

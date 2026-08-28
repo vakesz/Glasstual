@@ -39,7 +39,7 @@
 import CocoaExtensions
 import Foundation
 
-private enum LogLineArchiveKey {
+private nonisolated enum LogLineArchiveKey {
 	static let command = "command"
 	static let deliveryState = "deliveryState"
 	static let excludeKeywords = "excludeKeywords"
@@ -59,7 +59,7 @@ private enum LogLineArchiveKey {
 	static let uniqueIdentifier = "uniqueIdentifier"
 }
 
-private enum LogLineFormat {
+private nonisolated enum LogLineFormat {
 	static let actionNickname = "%@ "
 	static let defaultCommand = "-100"
 	static let loggerActionNickname = "\u{2022} %n:"
@@ -70,7 +70,7 @@ private enum LogLineFormat {
 }
 
 @objc(TVCLogLine)
-open class LogLine: PortablePropertyObject {
+open nonisolated class LogLine: PortablePropertyObject {
 	fileprivate var isEncryptedStorage = false
 	fileprivate var isFirstForDayStorage = false
 	fileprivate var nicknameColorStyleOverrideStorage = false
@@ -337,6 +337,7 @@ open class LogLine: PortablePropertyObject {
 	}
 
 	@objc(xpcObjectForTreeItem:)
+	@MainActor
 	func xpcObject(for treeItem: IRCTreeItem) -> LogLineXPC {
 		guard let data = try? NSKeyedArchiver.archivedData(
 			withRootObject: self,
@@ -460,40 +461,63 @@ open class LogLine: PortablePropertyObject {
 		return Glasstual.formattedTimestamp(receivedAtStorage as NSDate, selectedFormat as NSString) as String? ?? ""
 	}
 
-	@objc public var formattedNickname: String {
+	@objc @MainActor public var formattedNickname: String {
 		formattedNickname(in: nil) ?? ""
 	}
 
 	@objc(formattedNicknameInChannel:)
+	@MainActor
 	public func formattedNickname(in channel: IRCChannel?) -> String? {
 		formattedNickname(in: channel, with: nil)
 	}
 
 	@objc(formattedNicknameInChannel:withFormat:)
+	@MainActor
 	public func formattedNickname(in channel: IRCChannel?, with format: String?) -> String? {
 		guard let nicknameStorage else {
 			return nil
 		}
 
-		if format == nil {
-			switch lineTypeStorage {
-			case .action:
-				return String(format: LogLineFormat.actionNickname, nicknameStorage)
-			case .notice:
-				return String(format: LogLineFormat.noticeNickname, nicknameStorage)
-			default:
-				break
-			}
+		if format == nil, let decorated = decoratedNicknameForLineType(nicknameStorage) {
+			return decorated
 		}
 
 		return channel?.associatedClient?.formatNickname(nicknameStorage, in: channel, withFormat: format)
 	}
 
-	@objc public var renderedBodyForTranscriptLog: String {
+	/** The same text as `formattedNickname(in:with:)` but from values the caller
+	 already resolved, so that rendering can format the sender off the main actor.
+	 `modeSymbol` is the sender's mark in the channel, empty outside one. */
+	public func formattedNickname(modeSymbol: String, format: String) -> String? {
+		guard let nicknameStorage else {
+			return nil
+		}
+
+		if let decorated = decoratedNicknameForLineType(nicknameStorage) {
+			return decorated
+		}
+
+		return ClientWireUtilities.formatNickname(nicknameStorage, modeSymbol: modeSymbol, format: format)
+	}
+
+	/// Actions and notices carry their own decoration instead of the theme format.
+	private func decoratedNicknameForLineType(_ nickname: String) -> String? {
+		switch lineTypeStorage {
+		case .action:
+			String(format: LogLineFormat.actionNickname, nickname)
+		case .notice:
+			String(format: LogLineFormat.noticeNickname, nickname)
+		default:
+			nil
+		}
+	}
+
+	@objc @MainActor public var renderedBodyForTranscriptLog: String {
 		renderedBodyForTranscriptLog(in: nil)
 	}
 
 	@objc(renderedBodyForTranscriptLogInChannel:)
+	@MainActor
 	public func renderedBodyForTranscriptLog(in channel: IRCChannel?) -> String {
 		var components = [formattedTimestamp(with: LogLineFormat.loggerClock)]
 
@@ -569,7 +593,7 @@ open class LogLine: PortablePropertyObject {
 }
 
 @objc(TVCLogLineMutable)
-public final class MutableLogLine: LogLine {
+public final nonisolated class MutableLogLine: LogLine {
 	override public static var isMutable: Bool {
 		true
 	}
@@ -657,7 +681,7 @@ public final class MutableLogLine: LogLine {
 	}
 }
 
-private extension TVCLogLineType {
+private nonisolated extension TVCLogLineType {
 	var hasNicknameColor: Bool {
 		switch self {
 		case .privateMessage, .privateMessageNoHighlight, .action, .actionNoHighlight:

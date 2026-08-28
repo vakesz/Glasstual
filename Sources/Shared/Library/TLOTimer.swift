@@ -39,7 +39,7 @@
 import Foundation
 
 @objc(TLOTimer)
-final class TimerImplementation: NSObject, @unchecked Sendable {
+final nonisolated class TimerImplementation: NSObject, @unchecked Sendable {
 	private final class ActionBox: @unchecked Sendable {
 		let action: (AnyObject) -> Void
 

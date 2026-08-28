@@ -11,7 +11,7 @@ extension CapabilityRegistry {
 		defaultRegistryStorage
 	}
 
-	private nonisolated(unsafe) static var defaultRegistryStorage: CapabilityRegistry = .init(
+	private static let defaultRegistryStorage = CapabilityRegistry(
 		capabilities: defaultCapabilities
 	)
 

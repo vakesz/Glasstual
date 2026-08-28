@@ -38,49 +38,31 @@
 
 import Foundation
 
-private enum RawTrafficMainActorBridge {
-	static func sync(_ operation: @escaping @MainActor @Sendable () -> Void) {
-		if Thread.isMainThread {
-			MainActor.assumeIsolated(operation)
-		} else {
-			DispatchQueue.main.sync {
-				MainActor.assumeIsolated(operation)
-			}
-		}
-	}
-}
-
 public extension IRCClient {
 	@objc(createRawDataLogQuery)
 	func createRawDataLogQuery() {
-		RawTrafficMainActorBridge.sync { [self] in
-			guard !isTerminating, rawDataLogQuery == nil,
-			      let query = findChannelOrCreate("Server Traffic", isUtility: true)
-			else { return }
+		guard !isTerminating, rawDataLogQuery == nil,
+		      let query = findChannelOrCreate("Server Traffic", isUtility: true)
+		else { return }
 
-			rawDataLogQuery = query
-			guard let treeItem = (query as AnyObject) as? IRCTreeItem else {
-				preconditionFailure("IRCChannel must bridge to its Objective-C tree item")
-			}
-			NSObject.applicationController().mainWindow.select(treeItem)
-			rawDataLog(IRCDiagnosticStrings.rawTrafficNotice)
+		rawDataLogQuery = query
+		guard let treeItem = (query as AnyObject) as? IRCTreeItem else {
+			preconditionFailure("IRCChannel must bridge to its Objective-C tree item")
 		}
+		NSObject.applicationController().mainWindow.select(treeItem)
+		rawDataLog(IRCDiagnosticStrings.rawTrafficNotice)
 	}
 
 	@objc(destroyRawDataLogQuery)
 	func destroyRawDataLogQuery() {
-		RawTrafficMainActorBridge.sync { [self] in
-			guard !isTerminating, let query = rawDataLogQuery else { return }
-			NSObject.applicationController().world.destroy(query)
-		}
+		guard !isTerminating, let query = rawDataLogQuery else { return }
+		NSObject.applicationController().world.destroy(query)
 	}
 
 	@objc(rawDataLog:)
 	func rawDataLog(_ data: String) {
-		RawTrafficMainActorBridge.sync { [self, data] in
-			guard !isTerminating else { return }
-			printDebugInformation(data, in: rawDataLogQuery)
-		}
+		guard !isTerminating else { return }
+		printDebugInformation(data, in: rawDataLogQuery)
 	}
 
 	@objc(rawDataLogOutgoingTraffic:)

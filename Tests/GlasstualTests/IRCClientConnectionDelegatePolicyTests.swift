@@ -38,6 +38,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientConnectionDelegatePolicyTests: XCTestCase {
 	func testConnectionErrorWireContractPreservesLegacyValues() {
 		XCTAssertEqual(connectionErrorDomain, "Glasstual.ConnectionError")

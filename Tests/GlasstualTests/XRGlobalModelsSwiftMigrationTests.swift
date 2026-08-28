@@ -28,6 +28,7 @@ private final class GlobalModelsSwizzleFixture: NSObject {
 	}
 }
 
+@MainActor
 final class XRGlobalModelsSwiftMigrationTests: XCTestCase {
 	func testObjectEmptinessPreservesDynamicLengthAndCountSemantics() {
 		XCTAssertTrue(isObjectEmpty(nil))

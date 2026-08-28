@@ -31,6 +31,7 @@
 
 import CocoaExtensions
 import Foundation
+import Synchronization
 
 @objc public enum IRCISupportInfoListType: UInt, Sendable {
 	case ban = 0
@@ -39,19 +40,58 @@ import Foundation
 	case quiet = 3
 }
 
-@objc public enum IRCISupportInfoCaseMapping: UInt, Sendable {
+@objc public nonisolated enum IRCISupportInfoCaseMapping: UInt, Sendable {
 	case rfc1459 = 0
 	case strictRFC1459 = 1
 	case ascii = 2
 }
 
-enum IRCISupportUserModes {
+nonisolated enum IRCISupportUserModes {
 	static let highestPrefixRank: UInt = 100
 	static let symbolsKey = "modeSymbols"
 	static let charactersKey = "characters"
 }
 
-private let channelUserModeValue = 100
+private nonisolated let channelUserModeValue = 100
+
+/** The ISUPPORT values a channel member needs in order to rank and mark itself.
+ Members are ranked, compared and rendered off the main actor, so the client
+ republishes these as a value rather than exposing the live table. */
+nonisolated struct IRCUserPrefixTable: Sendable {
+	/// Mode symbols in the order the server ranked them, highest first.
+	var modeSymbols = ["o", "v"]
+	/// The prefix character for the mode symbol at the same index.
+	var prefixCharacters = ["@", "+"]
+	var caseMapping = IRCISupportInfoCaseMapping.rfc1459
+
+	func userPrefix(forModeSymbol modeSymbol: String) -> String? {
+		guard let index = modeSymbols.firstIndex(of: modeSymbol),
+		      index < prefixCharacters.count
+		else {
+			return nil
+		}
+
+		return prefixCharacters[index]
+	}
+
+	func rank(forModeSymbol modeSymbol: String) -> UInt {
+		guard let index = modeSymbols.firstIndex(of: modeSymbol) else {
+			return 0
+		}
+
+		// A server may advertise more prefix modes than the rank ceiling; the
+		// lowest-ranked ones all collapse to rank 1 rather than underflowing.
+		guard UInt(index) < IRCISupportUserModes.highestPrefixRank else {
+			return 1
+		}
+
+		return IRCISupportUserModes.highestPrefixRank - UInt(index)
+	}
+
+	func casefold(_ string: String) -> String {
+		ISupportTokenParser.casefold(string, caseMapping: caseMapping.rawValue)
+	}
+}
 
 @objc(IRCISupportInfo)
 public class IRCISupportInfo: NSObject {
@@ -89,7 +129,9 @@ public class IRCISupportInfo: NSObject {
 	/// dictionary form below is kept for the Objective-C facing surface.
 	private(set) var userModePrefixPairs: [(modeSymbol: String, character: String)] = [
 		(modeSymbol: "o", character: "@"), (modeSymbol: "v", character: "+"),
-	]
+	] {
+		didSet { publishUserPrefixTable() }
+	}
 
 	@objc public var userModeSymbols: [String: [String]] {
 		[
@@ -106,7 +148,19 @@ public class IRCISupportInfo: NSObject {
 	@objc public private(set) var extendedBanPrefix: String?
 	@objc public private(set) var networkName: String?
 	@objc public private(set) var networkNameFormatted: String?
-	@objc public private(set) var caseMapping: IRCISupportInfoCaseMapping = .rfc1459
+	@objc public private(set) var caseMapping: IRCISupportInfoCaseMapping = .rfc1459 {
+		didSet { publishUserPrefixTable() }
+	}
+
+	/// Republishes the values channel members read off the main actor.
+	private func publishUserPrefixTable() {
+		let table = IRCUserPrefixTable(
+			modeSymbols: userModePrefixPairs.map(\.modeSymbol),
+			prefixCharacters: userModePrefixPairs.map(\.character),
+			caseMapping: caseMapping
+		)
+		client?.userPrefixes.withLock { $0 = table }
+	}
 
 	private var cachedConfiguration: [[String: Any]] = []
 

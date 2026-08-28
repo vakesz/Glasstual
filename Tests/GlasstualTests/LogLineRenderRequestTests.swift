@@ -47,11 +47,16 @@ private struct StubLogLineRenderer: LogLineRendering {
 	var keywordMatchFound = false
 	var templateIsMissing = false
 
-	func renderBody(_ body: String, attributes: [String: Any], results: inout [String: Any]) -> String {
+	func renderBody(
+		_ body: String,
+		attributes: [String: Any],
+		members: [ChannelUser],
+		results: inout [String: Any]
+	) -> String {
 		results[LogRendererResultKey.keywordMatchFound.rawValue] = NSNumber(value: keywordMatchFound)
 		results[LogRendererResultKey.bodyWithoutEffects.rawValue] = body
 		let renderLinks = (attributes[LogRendererConfigurationKey.renderLinks.rawValue] as? Bool) ?? false
-		return "body(\(body),links=\(renderLinks))"
+		return "body(\(body),links=\(renderLinks),members=\(members.count))"
 	}
 
 	func renderTemplate(for lineType: TVCLogLineType, attributes: ThemeTemplateAttributes) -> String? {
@@ -88,6 +93,7 @@ private func makeLogLine(
 }
 
 @Suite("Log line render request")
+@MainActor
 struct LogLineRenderRequestTests {
 	@Test("A rendered line carries its snapshot of main-actor state into the HTML")
 	func renderCarriesContextIntoResult() throws {
@@ -113,7 +119,7 @@ struct LogLineRenderRequestTests {
 			+ "|highlight=false"
 			+ "|media=true"
 			+ "|session=true"
-			+ "|message=body(hello,links=true)>")
+			+ "|message=body(hello,links=true,members=0)>")
 	}
 
 	@Test("A keyword match is reported as a highlight")
@@ -165,6 +171,7 @@ struct LogLineRenderRequestTests {
 }
 
 @Suite("Log line render context reactions")
+@MainActor
 struct LogLineRenderContextReactionTests {
 	@Test("A line with no reactions anywhere has none")
 	func noReactions() {

@@ -8,6 +8,7 @@ import Foundation
 import Testing
 
 @Suite("JOIN batching")
+@MainActor
 struct IRCJoinBatchingTests {
 	private func targets(_ names: [String], key: String? = nil) -> [IRCJoinBatching.Target] {
 		names.map { IRCJoinBatching.Target(name: $0, key: key) }
@@ -105,8 +106,8 @@ struct IRCJoinBatchingTests {
 	}
 }
 
-@MainActor
 @Suite("JOIN command emission")
+@MainActor
 struct IRCClientJoinCommandTests {
 	@Test("Many autojoin channels go out as several JOIN lines")
 	func splitsAcrossLines() throws {

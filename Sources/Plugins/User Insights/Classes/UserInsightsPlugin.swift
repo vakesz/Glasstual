@@ -39,7 +39,7 @@ import Foundation
 import GlasstualPluginKit
 
 @objc(TPIUserInsights)
-final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, @unchecked Sendable {
+final nonisolated class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, @unchecked Sendable {
 	var subscribedUserInputCommands: [String] {
 		["clones", "namel", "finduser", "brag"]
 	}
@@ -238,7 +238,7 @@ final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 	}
 }
 
-private enum BragMetric {
+private nonisolated enum BragMetric {
 	case channelHalfOperators
 	case channelOperators
 	case channelVoices

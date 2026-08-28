@@ -38,6 +38,13 @@
 
 import Foundation
 
+/// The `+typing` states the client tells the server about.
+nonisolated enum TypingState: String, Sendable {
+	case active
+	case paused
+	case done
+}
+
 enum OutboundTypingPolicy {
 	static let activeInterval: TimeInterval = 3
 	static let pausedDelay: TimeInterval = 5
@@ -46,8 +53,8 @@ enum OutboundTypingPolicy {
 		text.isEmpty || text.hasPrefix("/") || notificationsEnabled == false
 	}
 
-	static func shouldSendActive(previousState: String?, lastSentAt: Date?, now: Date) -> Bool {
-		guard previousState == "active", let lastSentAt else { return true }
+	static func shouldSendActive(previousState: TypingState?, lastSentAt: Date?, now: Date) -> Bool {
+		guard previousState == .active, let lastSentAt else { return true }
 		return now.timeIntervalSince(lastSentAt) >= activeInterval
 	}
 }
@@ -78,36 +85,50 @@ public extension IRCClient {
 		}
 
 		let key = channel.uniqueIdentifier
-		let previousState = typingStateSent[key] as? String
-		let lastSentAt = typingActiveSentAt[key] as? Date
 
-		if OutboundTypingPolicy.shouldSendActive(previousState: previousState, lastSentAt: lastSentAt, now: date),
-		   sendTagMessage(["+typing": "active"], toTarget: channel.name)
-		{
+		if OutboundTypingPolicy.shouldSendActive(
+			previousState: typingStateSent[key],
+			lastSentAt: typingActiveSentAt[key],
+			now: date
+		), sendTagMessage(["+typing": TypingState.active.rawValue], toTarget: channel.name) {
 			typingActiveSentAt[key] = date
-			typingStateSent[key] = "active"
+			typingStateSent[key] = .active
 		}
 
-		NSObject.cancelPreviousPerformRequests(
-			withTarget: self,
-			selector: #selector(typingPauseTimerFired(_:)),
-			object: channel
-		)
-		perform(#selector(typingPauseTimerFired(_:)), with: channel, afterDelay: OutboundTypingPolicy.pausedDelay)
+		scheduleTypingPause(for: channel)
+	}
+
+	/// Replaces the pending "paused" notification for `channel`.
+	private func scheduleTypingPause(for channel: IRCChannel) {
+		let key = channel.uniqueIdentifier
+		cancelTypingPause(forKey: key)
+
+		typingPauseTasks[key] = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(OutboundTypingPolicy.pausedDelay))
+
+			guard Task.isCancelled == false, let self else { return }
+
+			typingPauseTasks.removeValue(forKey: key)
+			typingPauseTimerFired(channel)
+		}
+	}
+
+	private func cancelTypingPause(forKey key: String) {
+		typingPauseTasks.removeValue(forKey: key)?.cancel()
 	}
 
 	@objc(typingPauseTimerFired:)
 	func typingPauseTimerFired(_ channel: IRCChannel) {
 		let key = channel.uniqueIdentifier
-		guard typingStateSent[key] as? String == "active" else { return }
+		guard typingStateSent[key] == .active else { return }
 
 		guard typingNotificationsAvailable(for: channel) else {
-			typingStateSent.removeObject(forKey: key)
+			typingStateSent.removeValue(forKey: key)
 			return
 		}
 
-		if sendTagMessage(["+typing": "paused"], toTarget: channel.name) {
-			typingStateSent[key] = "paused"
+		if sendTagMessage(["+typing": TypingState.paused.rawValue], toTarget: channel.name) {
+			typingStateSent[key] = .paused
 		}
 	}
 
@@ -116,18 +137,14 @@ public extension IRCClient {
 		guard let channel else { return }
 		let key = channel.uniqueIdentifier
 
-		NSObject.cancelPreviousPerformRequests(
-			withTarget: self,
-			selector: #selector(typingPauseTimerFired(_:)),
-			object: channel
-		)
+		cancelTypingPause(forKey: key)
 
 		guard typingStateSent[key] != nil else { return }
-		typingStateSent.removeObject(forKey: key)
-		typingActiveSentAt.removeObject(forKey: key)
+		typingStateSent.removeValue(forKey: key)
+		typingActiveSentAt.removeValue(forKey: key)
 
 		if typingNotificationsAvailable(for: channel) {
-			_ = sendTagMessage(["+typing": "done"], toTarget: channel.name)
+			_ = sendTagMessage(["+typing": TypingState.done.rawValue], toTarget: channel.name)
 		}
 	}
 

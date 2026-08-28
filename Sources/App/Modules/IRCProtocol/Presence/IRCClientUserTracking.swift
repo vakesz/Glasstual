@@ -131,13 +131,13 @@ extension IRCClient {
 	}
 
 	@objc func startISONTimer() {
-		guard isonTimer.timerIsActive == false else { return }
-		isonTimer.start(30, onRepeat: true)
+		guard isonTimer.isActive == false else { return }
+		isonTimer.start(30, repeats: true)
 		startWhoTimer()
 	}
 
 	@objc func stopISONTimer() {
-		guard isonTimer.timerIsActive else { return }
+		guard isonTimer.isActive else { return }
 		isonTimer.stop()
 		stopWhoTimer()
 	}
@@ -151,12 +151,12 @@ extension IRCClient {
 	}
 
 	@objc func startWhoTimer() {
-		guard whoTimer.timerIsActive == false else { return }
-		whoTimer.start(120, onRepeat: true)
+		guard whoTimer.isActive == false else { return }
+		whoTimer.start(120, repeats: true)
 	}
 
 	@objc func stopWhoTimer() {
-		guard whoTimer.timerIsActive else { return }
+		guard whoTimer.isActive else { return }
 		whoTimer.stop()
 	}
 

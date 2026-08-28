@@ -199,9 +199,9 @@ public extension IRCClient {
 		      message.senderNickname == "znc.in",
 		      IRCInboundEventPolicy.acceptsCertificateChunk(message.sequence),
 		      let chainData = zncBouncerCertificateChainDataMutable,
-		      chainData.length < IRCInboundEventPolicy.maximumCertificateChainLength
+		      (chainData as NSString).length < IRCInboundEventPolicy.maximumCertificateChainLength
 		else { return }
-		chainData.appendFormat("%@\n", message.sequence)
+		zncBouncerCertificateChainDataMutable = chainData + "\(message.sequence)\n"
 	}
 
 	@objc(receiveChangeHost:)

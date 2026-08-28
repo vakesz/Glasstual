@@ -40,6 +40,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+@MainActor
 struct IRCHostmaskGlobTests {
 	private func matcher(_ hostmask: String) -> AddressBookEntryMatcher {
 		AddressBookEntryMatcher(entryType: .ignore, hostmask: hostmask)

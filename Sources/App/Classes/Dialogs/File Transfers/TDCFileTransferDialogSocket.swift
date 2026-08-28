@@ -42,7 +42,7 @@ import Network
 import os
 import Synchronization
 
-public let TDCFileTransferDialogSocketErrorDomain = "TDCFileTransferDialogSocketErrorDomain"
+public nonisolated let TDCFileTransferDialogSocketErrorDomain = "TDCFileTransferDialogSocketErrorDomain"
 
 @objc(TDCFileTransferDialogSocketError)
 public enum FileTransferDialogSocketError: Int, Error {
@@ -56,7 +56,7 @@ public enum FileTransferDialogSocketError: Int, Error {
 public typealias TDCFileTransferDialogSocketError = FileTransferDialogSocketError
 
 @objc(TDCFileTransferDialogSocketDelegate)
-public protocol FileTransferDialogSocketDelegate: AnyObject {
+public nonisolated protocol FileTransferDialogSocketDelegate: AnyObject {
 	@objc optional func socket(_ socket: FileTransferDialogSocket, didStartListeningOnPort port: UInt16)
 	@objc optional func socket(_ socket: FileTransferDialogSocket, didFailToListenWithError error: Error)
 	@objc optional func socket(
@@ -78,7 +78,7 @@ public typealias TDCFileTransferDialogSocket = FileTransferDialogSocket
  cancellation. `DispatchWorkItem.cancel()` is thread-safe, while the work item
  itself has not adopted `Sendable`.
  */
-private final class FileTransferTimeout: @unchecked Sendable {
+private final nonisolated class FileTransferTimeout: @unchecked Sendable {
 	let workItem: DispatchWorkItem
 
 	init(workItem: DispatchWorkItem) {
@@ -99,7 +99,7 @@ private final class FileTransferTimeout: @unchecked Sendable {
  queue confinement to Swift's type system.
  */
 @objc(TDCFileTransferDialogSocket)
-public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
+public final nonisolated class FileTransferDialogSocket: NSObject, @unchecked Sendable {
 	private typealias ReceiveCompletion = @Sendable (Data?, NWConnection.ContentContext?, Bool, NWError?) -> Void
 
 	private static let maximumReadLength = 64 * 1024

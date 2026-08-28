@@ -40,15 +40,14 @@ import Foundation
 
 @objc(IRCTimedCommand)
 public final class TimedCommand: NSObject {
-	private static let identifierLock = NSLock()
-	private nonisolated(unsafe) static var lastIdentifier = 0
+	private static var lastIdentifier = 0
 
 	@objc public let identifier: String
 	@objc public let clientId: String
 	@objc public let channelId: String?
 	@objc public let command: String
 
-	private var timer: TimerImplementation!
+	private var timer: ClientTimer!
 	private var startedBefore = false
 
 	@available(*, unavailable)
@@ -70,16 +69,16 @@ public final class TimedCommand: NSObject {
 
 		super.init()
 
-		timer = TimerImplementation(actionBlock: { [weak self, weak client] _ in
+		timer = ClientTimer { [weak self, weak client] _ in
 			guard let self, let client else {
 				return
 			}
 
-			_ = client.perform(NSSelectorFromString("onTimedCommand:"), with: self)
-		})
+			client.onTimedCommand(self)
+		}
 	}
 
-	deinit {
+	isolated deinit {
 		timer.stop()
 	}
 
@@ -95,7 +94,7 @@ public final class TimedCommand: NSObject {
 
 	@objc(start:onRepeat:iterations:)
 	public func start(_ interval: TimeInterval, onRepeat repeatTimer: Bool, iterations: UInt) {
-		timer.start(interval, onRepeat: repeatTimer, iterations: iterations)
+		timer.start(interval, repeats: repeatTimer, iterations: iterations)
 		startedBefore = true
 	}
 
@@ -112,8 +111,9 @@ public final class TimedCommand: NSObject {
 		return true
 	}
 
-	@objc public var startTime: TimeInterval {
-		timer.startTime
+	/// How long the timer has been running its current interval.
+	public var elapsed: TimeInterval {
+		timerInterval - timeRemaining
 	}
 
 	@objc public var timeRemaining: TimeInterval {
@@ -125,11 +125,11 @@ public final class TimedCommand: NSObject {
 	}
 
 	@objc public var timerIsActive: Bool {
-		timer.timerIsActive
+		timer.isActive
 	}
 
 	@objc public var repeatTimer: Bool {
-		timer.repeatTimer
+		timer.repeats
 	}
 
 	@objc public var iterations: UInt {
@@ -141,9 +141,6 @@ public final class TimedCommand: NSObject {
 	}
 
 	private static func nextIdentifier() -> String {
-		identifierLock.lock()
-		defer { identifierLock.unlock() }
-
 		lastIdentifier += 1
 		return String(lastIdentifier)
 	}

@@ -39,6 +39,7 @@ import Foundation
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class RemoteConnectionProtocolTests: XCTestCase {
 	func testOpenAllowsIRCConnectionConfigPayload() {
 		let interface = NSXPCInterface(with: RemoteConnectionServerProtocol.self)

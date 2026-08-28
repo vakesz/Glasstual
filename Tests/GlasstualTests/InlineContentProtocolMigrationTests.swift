@@ -7,6 +7,7 @@
 import InlineContentKit
 import XCTest
 
+@MainActor
 final class InlineContentProtocolMigrationTests: XCTestCase {
 	func testXPCProtocolRuntimeNamesRemainStable() {
 		XCTAssertEqual(NSStringFromProtocol(InlineContentServerProtocol.self), "ICLInlineContentServerProtocol")

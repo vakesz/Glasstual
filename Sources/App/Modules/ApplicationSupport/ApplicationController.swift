@@ -489,9 +489,6 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 			world.save()
 		}
 
-		Self.terminationLogger.debug("Suspending member list dispatch queue")
-		ChannelMemberList.suspendSerialQueues()
-
 		Self.terminationLogger.debug("Unloading plugins")
 		SharedApplication.sharedPluginManager().unloadPlugins()
 

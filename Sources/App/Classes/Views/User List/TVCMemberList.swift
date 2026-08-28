@@ -50,7 +50,7 @@ public protocol MemberListKeyEventDelegate: AnyObject {
 }
 
 @objc(TVCMemberListSection)
-public final class MemberListSection: NSObject {
+public final nonisolated class MemberListSection: NSObject {
 	public fileprivate(set) var rank: UserRank = .none
 	@objc public fileprivate(set) var title = ""
 	@objc public fileprivate(set) var memberRange = NSRange(location: 0, length: 0)
@@ -99,7 +99,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		sections.count > 1
 	}
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 
 		MainActor.assumeIsolated {

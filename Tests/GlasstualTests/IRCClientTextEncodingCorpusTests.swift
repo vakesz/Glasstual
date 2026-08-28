@@ -44,6 +44,7 @@ import Testing
 /// The policy tries the configured primary encoding, then the configured
 /// fallback, then a last resort that never fails: lossy ASCII when encoding
 /// and ISO Latin-1 when decoding.
+@MainActor
 struct IRCClientTextEncodingCorpusTests {
 	private static func policy(
 		primary: String.Encoding,
@@ -59,7 +60,7 @@ struct IRCClientTextEncodingCorpusTests {
 
 	// MARK: - Encoding
 
-	struct EncodeCase: Sendable {
+	nonisolated struct EncodeCase: Sendable {
 		let primary: String.Encoding
 		let fallback: String.Encoding
 		let text: String
@@ -73,7 +74,7 @@ struct IRCClientTextEncodingCorpusTests {
 		}
 	}
 
-	static let encodeCases: [EncodeCase] = [
+	nonisolated static let encodeCases: [EncodeCase] = [
 		/* The primary encoding is used whenever it can represent the text. */
 		EncodeCase(primary: .utf8, fallback: .isoLatin1, "hello", [104, 101, 108, 108, 111]),
 		EncodeCase(primary: .utf8, fallback: .isoLatin1, "h\u{00E9}llo", [104, 195, 169, 108, 108, 111]),
@@ -110,7 +111,7 @@ struct IRCClientTextEncodingCorpusTests {
 
 	// MARK: - Decoding
 
-	struct DecodeCase: Sendable {
+	nonisolated struct DecodeCase: Sendable {
 		let primary: String.Encoding
 		let fallback: String.Encoding
 		let bytes: [UInt8]
@@ -124,7 +125,7 @@ struct IRCClientTextEncodingCorpusTests {
 		}
 	}
 
-	static let decodeCases: [DecodeCase] = [
+	nonisolated static let decodeCases: [DecodeCase] = [
 		DecodeCase(primary: .utf8, fallback: .isoLatin1, [104, 105], "hi"),
 		/* Valid UTF-8 is decoded by the primary encoding. */
 		DecodeCase(primary: .utf8, fallback: .isoLatin1, [0xC3, 0xA9], "\u{00E9}"),

@@ -8,6 +8,7 @@ import Foundation
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCStringCatalogMigrationTests: XCTestCase {
 	func testCatalogRetainsAllLegacyKeysAndExactValueDigest() throws {
 		let catalog = try loadCatalog()

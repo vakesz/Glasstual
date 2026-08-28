@@ -16,6 +16,7 @@ import Security
 import Testing
 
 @Suite("Keychain store", .serialized)
+@MainActor
 struct KeychainStoreTests {
 	private static let kind = "application password"
 	private static let service = "com.vakesz.glasstual.tests.keychain"

@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class FileTransferDialogSocketMigrationTests: XCTestCase {
 	func testObjectiveCRuntimeNamesRemainStable() {
 		XCTAssertEqual(NSStringFromClass(FileTransferDialogSocket.self), "TDCFileTransferDialogSocket")

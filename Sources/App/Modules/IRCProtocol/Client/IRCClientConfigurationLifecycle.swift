@@ -154,7 +154,7 @@ public extension IRCClient {
 	}
 
 	@objc(updateStoredChannelList)
-	nonisolated func updateStoredChannelList() {
+	func updateStoredChannelList() {
 		guard let mutableConfig = config.mutableCopy() as? MutableClientConfig else { return }
 
 		mutableConfig.channelList = IRCClientConfigurationPolicy.storedChannelConfigurations(

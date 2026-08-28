@@ -8,7 +8,7 @@ import Foundation
 /// Compatibility keys whose historical length modifiers are not supported by
 /// Xcode's generated String Catalog symbols. Callers expose typed parameters;
 /// only this catalog boundary performs C-style formatting.
-enum IRCLegacyFormat: String {
+nonisolated enum IRCLegacyFormat: String {
 	case fileTransferAttempt = "ags-s8"
 	case directChatConnect = "dcc-c7"
 	case directChatWait = "dcc-cb"

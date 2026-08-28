@@ -39,7 +39,7 @@ import CocoaExtensions
 import Foundation
 
 @objc(IRCServer)
-public class Server: PortablePropertyDict {
+public nonisolated class Server: PortablePropertyDict {
 	fileprivate var prefersSecuredConnectionStorage = false
 	fileprivate var serverAddressStorage = ""
 	fileprivate var serverPasswordStorage: String?
@@ -220,7 +220,7 @@ public class Server: PortablePropertyDict {
 }
 
 @objc(IRCServerMutable)
-public final class MutableServer: Server {
+public final nonisolated class MutableServer: Server {
 	override public static var isMutable: Bool {
 		true
 	}

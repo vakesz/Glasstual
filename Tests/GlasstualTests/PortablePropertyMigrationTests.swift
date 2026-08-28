@@ -68,6 +68,7 @@ private final class MutablePortableDictionaryFixture: PortablePropertyDict {
 	}
 }
 
+@MainActor
 final class PortablePropertyMigrationTests: XCTestCase {
 	func testImmutableCopyRetainsReferenceIdentity() {
 		let object = ImmutablePortableDictionaryFixture(dictionary: ["value": 42])

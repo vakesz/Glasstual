@@ -42,6 +42,8 @@ public typealias IRCSTSPolicyStore = STSPolicyStore
 public let IRCSTSPolicyStoreDefaultsKey = "IRC -> STS Policies"
 
 @objc(IRCSTSPolicyStore)
+/* ISOLATION-EXCEPTION: policies are read while a connection is being set up on
+ whichever queue reaches the store first; every access goes through its lock. */
 public final class STSPolicyStore: NSObject, @unchecked Sendable {
 	private let userDefaults: UserDefaults?
 	private let lock = NSRecursiveLock()

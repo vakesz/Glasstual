@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCLinePresentationPolicyTests: XCTestCase {
 	func testNoHighlightTypesNormalizeAfterSkippingKeywordMatching() {
 		XCTAssertFalse(IRCLinePresentationPolicy.allowsHighlightMatching(

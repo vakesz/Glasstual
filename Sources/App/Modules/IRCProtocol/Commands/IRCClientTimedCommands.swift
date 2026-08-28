@@ -37,53 +37,8 @@
  *********************************************************************** */
 
 import Foundation
-import ObjectiveC
-
-private final class ClientTimedCommandStore: @unchecked Sendable {
-	private let lock = NSLock()
-	private var commands: [String: TimedCommand] = [:]
-
-	func command(withIdentifier identifier: String) -> TimedCommand? {
-		lock.withLock { commands[identifier] }
-	}
-
-	func allCommands() -> [TimedCommand] {
-		lock.withLock { Array(commands.values) }
-	}
-
-	func insert(_ command: TimedCommand) {
-		lock.withLock { commands[command.identifier] = command }
-	}
-
-	func remove(_ command: TimedCommand) {
-		_ = lock.withLock { commands.removeValue(forKey: command.identifier) }
-	}
-
-	func removeAll() {
-		lock.withLock { commands.removeAll(keepingCapacity: false) }
-	}
-}
-
-private nonisolated(unsafe) var timedCommandStoreKey: UInt8 = 0
 
 extension IRCClient {
-	private var timedCommandStore: ClientTimedCommandStore {
-		if let store = objc_getAssociatedObject(self, &timedCommandStoreKey) as? ClientTimedCommandStore {
-			return store
-		}
-
-		objc_sync_enter(self)
-		defer { objc_sync_exit(self) }
-
-		if let store = objc_getAssociatedObject(self, &timedCommandStoreKey) as? ClientTimedCommandStore {
-			return store
-		}
-
-		let store = ClientTimedCommandStore()
-		objc_setAssociatedObject(self, &timedCommandStoreKey, store, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-		return store
-	}
-
 	@objc(descriptionForTimedCommand:)
 	func description(for timedCommand: TimedCommand) -> String {
 		let timerInterval = humanReadableTimeInterval(timedCommand.timerInterval, false, 0) as String? ?? ""
@@ -117,27 +72,27 @@ extension IRCClient {
 
 	@objc(timedCommandWithIdentifier:)
 	func timedCommand(withIdentifier identifier: String) -> TimedCommand? {
-		timedCommandStore.command(withIdentifier: identifier)
+		timedCommandsByIdentifier[identifier]
 	}
 
 	@objc(listOfTimedCommands)
 	func listOfTimedCommands() -> [TimedCommand] {
-		timedCommandStore.allCommands()
+		Array(timedCommandsByIdentifier.values)
 	}
 
 	@objc(addTimedCommand:)
 	func addTimedCommand(_ timedCommand: TimedCommand) {
-		timedCommandStore.insert(timedCommand)
+		timedCommandsByIdentifier[timedCommand.identifier] = timedCommand
 	}
 
 	@objc(removeTimedCommands)
 	func removeTimedCommands() {
-		timedCommandStore.removeAll()
+		timedCommandsByIdentifier.removeAll()
 	}
 
 	@objc(removeTimedCommand:)
 	func removeTimedCommand(_ timedCommand: TimedCommand) {
-		timedCommandStore.remove(timedCommand)
+		timedCommandsByIdentifier.removeValue(forKey: timedCommand.identifier)
 	}
 
 	@objc(stopTimedCommand:)

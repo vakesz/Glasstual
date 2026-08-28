@@ -39,7 +39,7 @@
 import Foundation
 
 let TPCThemeSettingsDisabledIndentationOffset = -99
-let TPCThemeSettingsNewestTemplateEngineVersion = 4
+nonisolated let TPCThemeSettingsNewestTemplateEngineVersion = 4
 
 @objc public enum TPCThemeAppearanceType: UInt, Sendable {
 	case `default`

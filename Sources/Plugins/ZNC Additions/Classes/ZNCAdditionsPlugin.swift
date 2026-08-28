@@ -42,7 +42,7 @@ import Security
 import SecurityInterface
 
 @objc(TPI_ZNCAdditions)
-final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, PluginServerInputHandling,
+final nonisolated class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, PluginServerInputHandling,
 	PluginServerMessageIntercepting, @unchecked Sendable
 {
 	var subscribedUserInputCommands: [String] {
@@ -268,7 +268,7 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 	}
 }
 
-private func performSynchronouslyOnMainActor(_ work: @MainActor @Sendable () -> Void) {
+private nonisolated func performSynchronouslyOnMainActor(_ work: @MainActor @Sendable () -> Void) {
 	if Thread.isMainThread {
 		MainActor.assumeIsolated {
 			work()

@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientBouncerPlaybackTests: XCTestCase {
 	func testPlaybackStartsFromBeginningWithoutAnEligibleTimestamp() {
 		XCTAssertEqual(

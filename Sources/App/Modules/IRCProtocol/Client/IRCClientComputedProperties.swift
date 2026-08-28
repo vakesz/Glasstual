@@ -39,11 +39,6 @@
 import Foundation
 
 public extension IRCClient {
-	@objc(copyWithZone:)
-	func copy(with _: NSZone?) -> Any {
-		self
-	}
-
 	@objc var networkName: String? {
 		supportInfo.networkNameFormatted
 	}
@@ -61,7 +56,7 @@ public extension IRCClient {
 	}
 
 	@objc var isReconnecting: Bool {
-		reconnectTimer.timerIsActive
+		reconnectTimer.isActive
 	}
 
 	@objc var isSecured: Bool {
@@ -73,6 +68,6 @@ public extension IRCClient {
 		      zncBouncerIsSendingCertificateInfo == false,
 		      let certificateData = zncBouncerCertificateChainDataMutable
 		else { return nil }
-		return certificateData.data(using: String.Encoding.ascii.rawValue)
+		return certificateData.data(using: .ascii)
 	}
 }

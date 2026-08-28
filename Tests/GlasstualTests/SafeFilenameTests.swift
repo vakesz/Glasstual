@@ -5,6 +5,7 @@ import Testing
 /// `ceSafeFilename` turns a name a remote peer chose over DCC into a single
 /// path component.
 @Suite("Safe filename")
+@MainActor
 struct SafeFilenameTests {
 	private func sanitized(_ value: String) -> String {
 		String((value as NSString).ceSafeFilename)

@@ -70,15 +70,13 @@ public extension IRCClient {
 		saslOfferedMechanisms = nil
 		saslScramClient = nil
 		saslIncomingPayload = nil
-		saslTriedMechanisms.removeAllObjects()
-		pendingDeliveries.removeAllObjects()
-		labelForBatchToken.removeAllObjects()
-		enabledCapabilityNames.removeAllObjects()
-		offeredCapabilities.removeAllObjects()
-		offeredCapabilityNames.removeAllObjects()
-		objc_sync_enter(pendingCapabilityRequestsMutable)
-		pendingCapabilityRequestsMutable.removeAllObjects()
-		objc_sync_exit(pendingCapabilityRequestsMutable)
+		saslTriedMechanisms.removeAll()
+		pendingDeliveries.removeAll()
+		labelForBatchToken.removeAll()
+		enabledCapabilityNames.removeAll()
+		offeredCapabilities.removeAll()
+		offeredCapabilityNames.removeAll()
+		pendingCapabilityRequests.removeAll()
 	}
 
 	@objc(receivePing:)

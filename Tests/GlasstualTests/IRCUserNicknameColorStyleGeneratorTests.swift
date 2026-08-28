@@ -6,6 +6,7 @@ import XCTest
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 @objc
+@MainActor
 class IRCUserNicknameColorStyleGeneratorTests: XCTestCase {
 	@objc
 	func testHashRemainsCompatibleWithLegacyMD5ByteOrder() {

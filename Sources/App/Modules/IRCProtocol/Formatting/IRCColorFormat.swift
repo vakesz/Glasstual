@@ -27,7 +27,7 @@ public enum IRCTextFormatterEffectType: Int, Sendable {
 	case spoiler
 }
 
-public struct IRCTextFormatterAttributeName: RawRepresentable, Hashable, Sendable {
+public nonisolated struct IRCTextFormatterAttributeName: RawRepresentable, Hashable, Sendable {
 	public let rawValue: String
 
 	public init(rawValue: String) {
@@ -44,7 +44,7 @@ public struct IRCTextFormatterAttributeName: RawRepresentable, Hashable, Sendabl
 	public static let spoilerAttributeName = Self(rawValue: "IRCTextFormatterSpoilerAttributeName")
 }
 
-public enum IRCTextFormatterControlCharacter {
+public nonisolated enum IRCTextFormatterControlCharacter {
 	public static let colorDigit = 0x03
 	public static let colorHex = 0x04
 	public static let bold = 0x02
@@ -56,7 +56,7 @@ public enum IRCTextFormatterControlCharacter {
 	public static let terminator = 0x0F
 }
 
-public enum IRCTextFormatterColor {
+public nonisolated enum IRCTextFormatterColor {
 	public static let maximumPaletteIndex = 98
 }
 
@@ -701,7 +701,7 @@ public extension NSMutableAttributedString {
 	}
 }
 
-public extension NSMutableString {
+public nonisolated extension NSMutableString {
 	@objc(wrapIRCTextFormatterResultWith:maxDistance:)
 	func wrapIRCTextFormatterResult(with minimumIndex: UInt, maxDistance: UInt) -> UInt {
 		let selfLength = length

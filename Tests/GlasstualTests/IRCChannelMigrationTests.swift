@@ -2,6 +2,7 @@
 import GlasstualPluginKit
 import XCTest
 
+@MainActor
 final class IRCChannelMigrationTests: XCTestCase {
 	func testChannelKindsExposeStableRendererNames() {
 		XCTAssertEqual(makeChannel(type: .channel).channelTypeString, "channel")

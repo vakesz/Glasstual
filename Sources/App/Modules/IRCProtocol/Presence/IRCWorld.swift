@@ -41,7 +41,7 @@ import GlasstualPluginKit
 import os
 
 public typealias IRCWorld = World
-public let IRCWorldClientListDefaultsKey = "World Controller Client Configurations"
+public nonisolated let IRCWorldClientListDefaultsKey = "World Controller Client Configurations"
 
 extension World {
 	func destroy(_ client: IRCClient) {
@@ -80,16 +80,17 @@ public final class World: NSObject {
 	private let clientsLock = NSRecursiveLock()
 	private var clients: [IRCClient] = []
 
-	private nonisolated let trafficLock = NSLock()
-	private nonisolated(unsafe) var messagesSentStorage: UInt = 0
-	private nonisolated(unsafe) var messagesReceivedStorage: UInt = 0
-	private nonisolated(unsafe) var bandwidthInStorage: UInt64 = 0
-	private nonisolated(unsafe) var bandwidthOutStorage: UInt64 = 0
+	@objc public private(set) var messagesSent: UInt = 0
+	@objc public private(set) var messagesReceived: UInt = 0
+	@objc public private(set) var bandwidthIn: UInt64 = 0
+	@objc public private(set) var bandwidthOut: UInt64 = 0
 
-	private var preferencesDidChangeTimerIsActive = false
+	/// Pending debounce of the preference-change broadcast, if any.
+	private var preferencesDidChangeTask: Task<Void, Never>?
 	private var savePeriodicallyLastSave = CFAbsoluteTimeGetCurrent()
 	private var lastDateHasChangedDate: Date?
-	private var midnightTimer: Timer?
+	/// Waits for the next local midnight so views can redraw their date rules.
+	private var midnightTask: Task<Void, Never>?
 	private let notifications = NotificationSubscriptions()
 
 	@objc public var isImportingConfiguration = false
@@ -108,22 +109,6 @@ public final class World: NSObject {
 
 	@objc public var clientCount: UInt {
 		clientsLock.withLock { UInt(clients.count) }
-	}
-
-	@objc public nonisolated var messagesSent: UInt {
-		trafficLock.withLock { messagesSentStorage }
-	}
-
-	@objc public nonisolated var messagesReceived: UInt {
-		trafficLock.withLock { messagesReceivedStorage }
-	}
-
-	@objc public nonisolated var bandwidthIn: UInt64 {
-		trafficLock.withLock { bandwidthInStorage }
-	}
-
-	@objc public nonisolated var bandwidthOut: UInt64 {
-		trafficLock.withLock { bandwidthOutStorage }
 	}
 
 	// MARK: - Configuration
@@ -180,11 +165,10 @@ public final class World: NSObject {
 	@objc public func prepareForApplicationTermination() {
 		notifications.cancelAll()
 
-		/* Timer.invalidate() must run on the thread that scheduled the timer. deinit is
-		 nonisolated and can run anywhere, and a pending timer retains its target, so
-		 deinit could never have reached this anyway. */
-		midnightTimer?.invalidate()
-		midnightTimer = nil
+		midnightTask?.cancel()
+		midnightTask = nil
+		preferencesDidChangeTask?.cancel()
+		preferencesDidChangeTask = nil
 
 		for client in clientList {
 			client.prepareForApplicationTermination()
@@ -195,22 +179,19 @@ public final class World: NSObject {
 		guard SharedApplication.sharedThemeController().settings.postsPreferenceChangeNotifications else {
 			return
 		}
-		guard preferencesDidChangeTimerIsActive == false else {
+		/* Preferences change in bursts as a pane is edited; tell the views once. */
+		guard preferencesDidChangeTask == nil else {
 			return
 		}
 
-		preferencesDidChangeTimerIsActive = true
-		perform(
-			#selector(informAllViewsUserDefaultsDidChange),
-			with: nil,
-			afterDelay: 1,
-			inModes: [.common]
-		)
-	}
+		preferencesDidChangeTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(1))
 
-	@objc private func informAllViewsUserDefaultsDidChange() {
-		preferencesDidChangeTimerIsActive = false
-		evaluateFunction(onAllViews: "Glasstual.preferencesDidChange", arguments: nil, onQueue: true)
+			guard Task.isCancelled == false, let self else { return }
+
+			preferencesDidChangeTask = nil
+			evaluateFunction(onAllViews: "Glasstual.preferencesDidChange", arguments: nil, onQueue: true)
+		}
 	}
 
 	@objc private func mainWindowAppearanceChanged(_: Notification) {
@@ -317,18 +298,16 @@ public final class World: NSObject {
 			return
 		}
 
-		midnightTimer?.invalidate()
-		let timer = Timer(
-			fireAt: nextMidnight,
-			interval: 0,
-			target: self,
-			selector: #selector(dateChanged(_:)),
-			userInfo: nil,
-			repeats: false
-		)
-		timer.tolerance = 0
-		RunLoop.main.add(timer, forMode: .default)
-		midnightTimer = timer
+		midnightTask?.cancel()
+		let secondsUntilMidnight = max(0, nextMidnight.timeIntervalSinceNow)
+		midnightTask = Task { [weak self] in
+			try? await Task.sleep(for: .seconds(secondsUntilMidnight))
+
+			guard Task.isCancelled == false, let self else { return }
+
+			midnightTask = nil
+			dateChanged(nil)
+		}
 
 		if let lastDateHasChangedDate, calendar.isDate(lastDateHasChangedDate, inSameDayAs: lastMidnight) {
 			return
@@ -358,19 +337,15 @@ public final class World: NSObject {
 	// MARK: - Traffic counters
 
 	@objc(noteMessageSentWithLength:)
-	public nonisolated func noteMessageSent(length: UInt) {
-		trafficLock.withLock {
-			messagesSentStorage &+= 1
-			bandwidthOutStorage &+= UInt64(length)
-		}
+	public func noteMessageSent(length: UInt) {
+		messagesSent &+= 1
+		bandwidthOut &+= UInt64(length)
 	}
 
 	@objc(noteMessageReceivedWithLength:)
-	public nonisolated func noteMessageReceived(length: UInt) {
-		trafficLock.withLock {
-			messagesReceivedStorage &+= 1
-			bandwidthInStorage &+= UInt64(length)
-		}
+	public func noteMessageReceived(length: UInt) {
+		messagesReceived &+= 1
+		bandwidthIn &+= UInt64(length)
 	}
 
 	// MARK: - Tree items

@@ -26,7 +26,7 @@ private final class MainWindowChannelViewDelegate: NSObject, NSSplitViewDelegate
 	}
 }
 
-private func sortChannelViewSubviews(
+private nonisolated func sortChannelViewSubviews(
 	_ firstView: NSView,
 	_ secondView: NSView,
 	_: UnsafeMutableRawPointer?

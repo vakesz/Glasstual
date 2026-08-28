@@ -39,13 +39,13 @@ import AppKit
 import CocoaExtensions
 import os
 
-private let highlightLogEntryLogger = Logger(
+private nonisolated let highlightLogEntryLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCHighlightLogEntry"
 )
 
 @objc(IRCHighlightLogEntry)
-public class HighlightLogEntry: PortablePropertyObject {
+public nonisolated class HighlightLogEntry: PortablePropertyObject {
 	fileprivate var lineLoggedStorage: LogLine!
 	fileprivate var clientIdStorage = ""
 	fileprivate var channelIdStorage = ""
@@ -70,26 +70,14 @@ public class HighlightLogEntry: PortablePropertyObject {
 		lineLogged.uniqueIdentifier
 	}
 
-	@objc public var channel: IRCChannel? {
-		let channelId = channelIdStorage
-		let clientId = clientIdStorage
-
-		if Thread.isMainThread {
-			return MainActor.assumeIsolated {
-				NSObject.applicationController().world.findChannel(withId: channelId, onClientWithId: clientId)
-			}
-		}
-
-		nonisolated(unsafe) var resolvedChannel: IRCChannel?
-		performSynchronouslyOnMainQueue {
-			resolvedChannel = MainActor.assumeIsolated {
-				NSObject.applicationController().world.findChannel(withId: channelId, onClientWithId: clientId)
-			}
-		}
-		return resolvedChannel
+	@objc @MainActor public var channel: IRCChannel? {
+		NSObject.applicationController().world.findChannel(
+			withId: channelIdStorage,
+			onClientWithId: clientIdStorage
+		)
 	}
 
-	@objc public var channelName: String {
+	@objc @MainActor public var channelName: String {
 		if let channel {
 			return channel.name
 		}
@@ -104,7 +92,7 @@ public class HighlightLogEntry: PortablePropertyObject {
 		return ApplicationStrings.relativeTime(formattedTimeInterval)
 	}
 
-	@objc public var renderedMessage: NSAttributedString {
+	@objc @MainActor public var renderedMessage: NSAttributedString {
 		let logLine = lineLogged
 		let channel = channel
 
@@ -127,12 +115,10 @@ public class HighlightLogEntry: PortablePropertyObject {
 		) ?? NSAttributedString(string: formatted)
 	}
 
+	/** `NSObject.description` is nonisolated, so it cannot resolve the channel or
+	 format the line against it; the identifiers name the entry instead. */
 	override public var description: String {
-		guard let channel else {
-			return super.description
-		}
-
-		return lineLogged.renderedBodyForTranscriptLog(in: channel)
+		"<IRCHighlightLogEntry [\(channelIdStorage)]: \(lineNumber)>"
 	}
 
 	override public init() {
@@ -178,7 +164,7 @@ public class HighlightLogEntry: PortablePropertyObject {
 }
 
 @objc(IRCHighlightLogEntryMutable)
-public final class MutableHighlightLogEntry: HighlightLogEntry {
+public final nonisolated class MutableHighlightLogEntry: HighlightLogEntry {
 	override public static var isMutable: Bool {
 		true
 	}

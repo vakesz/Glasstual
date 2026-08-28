@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientInboundHandlerPolicyTests: XCTestCase {
 	func testPrivmsgAndNoticeClassification() {
 		let plain = IRCInboundTextPolicy.classify(command: "PRIVMSG", payload: "hello")

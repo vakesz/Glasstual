@@ -12,7 +12,7 @@
 
 import Foundation
 
-enum ServerEndpointStrings {
+nonisolated enum ServerEndpointStrings {
 	static var invalidAddressDescription: String {
 		String(localized: .TDCServerEndpointListSheet.iisGr)
 	}

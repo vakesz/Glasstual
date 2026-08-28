@@ -55,18 +55,18 @@ public extension IRCClient {
 	@objc(replayNetsplitBatch:)
 	func replayNetsplitBatch(_ batchMessage: MessageBatch) {
 		collapsedNetsplitBatch = batchMessage
-		collapsedNetsplitNicknames = NSMutableDictionary()
+		collapsedNetsplitNicknames = [:]
 		recursivelyProcessBatchMessage(batchMessage)
 
-		let recordedNicknames = collapsedNetsplitNicknames?.copy() as? NSDictionary
+		let recordedNicknames = collapsedNetsplitNicknames
 		collapsedNetsplitBatch = nil
 		collapsedNetsplitNicknames = nil
 
 		let isNetsplit = batchMessage.batchType == "netsplit"
 		let (firstServer, secondServer) = IRCNetsplitSummaryPolicy.servers(from: batchMessage.batchParameters)
 		for channel in channelList {
-			guard let nicknames = recordedNicknames?[channel.uniqueIdentifier] as? NSOrderedSet,
-			      nicknames.count > 0,
+			guard let nicknames = recordedNicknames?[channel.uniqueIdentifier],
+			      nicknames.isEmpty == false,
 			      TextualPreferences.showJoinLeave(),
 			      !channel.config.ignoreGeneralEventMessages
 			else { continue }
@@ -97,8 +97,7 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(netsplitNicknameListForNicknames:)
-	class func netsplitNicknameList(for nicknames: NSOrderedSet) -> String {
+	class func netsplitNicknameList(for nicknames: [String]) -> String {
 		ClientWireUtilities.netsplitNicknameList(nicknames, limit: IRCNetsplitSummaryPolicy.nicknameLimit)
 	}
 
@@ -112,14 +111,11 @@ public extension IRCClient {
 		else { return false }
 
 		let identifier = channel.uniqueIdentifier
-		let nicknames: NSMutableOrderedSet
-		if let existing = collapsedNetsplitNicknames?.object(forKey: identifier) as? NSMutableOrderedSet {
-			nicknames = existing
-		} else {
-			nicknames = NSMutableOrderedSet()
-			collapsedNetsplitNicknames?.setObject(nicknames, forKey: identifier as NSString)
+		var nicknames = collapsedNetsplitNicknames?[identifier] ?? []
+		if nicknames.contains(nickname) == false {
+			nicknames.append(nickname)
 		}
-		nicknames.add(nickname)
+		collapsedNetsplitNicknames?[identifier] = nicknames
 		return true
 	}
 }

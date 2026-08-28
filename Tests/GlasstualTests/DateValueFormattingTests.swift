@@ -8,6 +8,7 @@ import Foundation
 import Testing
 
 @Suite("Date value formatting")
+@MainActor
 struct DateValueFormattingTests {
 	@Test("A Date is formatted")
 	func formatsDate() {

@@ -17,7 +17,7 @@ import CryptoKit
 import os
 
 @objc(IRCUserNicknameColorStyleGenerator)
-public final class UserNicknameColorStyleGenerator: NSObject {
+public final nonisolated class UserNicknameColorStyleGenerator: NSObject {
 	private static let overridesDefaultsKey = "Nickname Color Style Overrides (v2)"
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",

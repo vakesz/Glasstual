@@ -15,6 +15,7 @@ import AppKit
 import Testing
 
 @Suite("Script execution support")
+@MainActor
 struct ScriptExecutionSupportTests {
 	private static let subroutineNameKeyword = AEKeyword(0x736E_616D)
 

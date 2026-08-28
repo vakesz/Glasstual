@@ -483,8 +483,9 @@ final class ChatFilterEditSheet: NSObject, NSWindowDelegate {
 	}
 }
 
+/// An immutable token value handed to `NSTokenField`; no actor isolation needed.
 @objc(TPI_ChatFilterFilterActionToken)
-private final class ChatFilterActionToken: NSObject {
+private final nonisolated class ChatFilterActionToken: NSObject {
 	let token: String
 	init(token: String) {
 		self.token = token
