@@ -98,7 +98,7 @@ extension IRCClient {
 			for: pending.map { IRCJoinBatching.Target(name: $0.name, key: $0.secretKey) },
 			maximumLineLength: Int(supportInfo.maximumLineLength),
 			maximumTargets: supportInfo.maximumTargets(forCommand: "JOIN"),
-			channelLimits: supportInfo.channelLimits.mapValues(\.uintValue)
+			channelLimits: supportInfo.channelLimits
 		)
 		for batch in batches {
 			var arguments = [batch.channels.joined(separator: ",")]

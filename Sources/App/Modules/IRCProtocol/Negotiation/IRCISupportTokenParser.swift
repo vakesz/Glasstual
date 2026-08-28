@@ -68,49 +68,56 @@ public final nonisolated class ISupportTokenParser: NSObject {
 		fatalError("ISupportTokenParser is a static namespace")
 	}
 
-	@objc(channelLimitsFromToken:)
-	public static func channelLimits(from token: String) -> [String: NSNumber] {
-		var limits: [String: NSNumber] = [:]
+	/// `CHANLIMIT`, keyed by the channel prefix each limit applies to.
+	public static func channelLimits(from token: String) -> [Character: UInt] {
+		var limits: [Character: UInt] = [:]
 
 		for (keys, value) in colonSeparatedEntries(in: token) {
-			let limit = max((value as NSString).integerValue, 0)
+			let limit = nonNegativeInteger(value)
 
 			for prefix in keys {
-				limits[String(prefix)] = NSNumber(value: limit)
+				limits[prefix] = limit
 			}
 		}
 
 		return limits
 	}
 
-	@objc(maximumTargetsFromToken:)
-	public static func maximumTargets(from token: String) -> [String: NSNumber] {
-		var limits: [String: NSNumber] = [:]
+	/// `TARGMAX`, keyed by the uppercased command name.
+	public static func maximumTargets(from token: String) -> [String: UInt] {
+		var limits: [String: UInt] = [:]
 
 		for (command, value) in colonSeparatedEntries(in: token) {
-			limits[command.uppercased()] = NSNumber(value: max((value as NSString).integerValue, 0))
+			limits[command.uppercased()] = nonNegativeInteger(value)
 		}
 
 		return limits
 	}
 
-	@objc(maximumListEntriesFromToken:)
-	public static func maximumListEntries(from token: String) -> [String: NSNumber] {
-		var limits: [String: NSNumber] = [:]
+	/// `MAXLIST`, keyed by the list mode each limit applies to. An entry with no
+	/// positive limit says nothing and is left out.
+	public static func maximumListEntries(from token: String) -> [Character: UInt] {
+		var limits: [Character: UInt] = [:]
 
 		for (modeSymbols, value) in colonSeparatedEntries(in: token) {
-			let limit = (value as NSString).integerValue
+			let limit = nonNegativeInteger(value)
 
 			guard limit > 0 else {
 				continue
 			}
 
 			for modeSymbol in modeSymbols {
-				limits[String(modeSymbol)] = NSNumber(value: limit)
+				limits[modeSymbol] = limit
 			}
 		}
 
 		return limits
+	}
+
+	/// A token's value as a count. A server that sends something that is not a
+	/// number is saying nothing, which is zero.
+	private static func nonNegativeInteger(_ value: String) -> UInt {
+		UInt(value) ?? 0
 	}
 
 	@objc(extendedBanConfigurationFromToken:)

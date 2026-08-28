@@ -136,9 +136,12 @@ public class IRCISupportInfo: NSObject {
 	/// What class the server put each channel mode in, and therefore whether
 	/// the mode carries a parameter.
 	public private(set) var channelModeKinds: [Character: ChannelModeKind] = defaultChannelModeKinds
-	@objc public private(set) var channelLimits: [String: NSNumber] = [:]
-	@objc public private(set) var maximumListEntries: [String: NSNumber] = [:]
-	@objc public private(set) var maximumTargetsByCommand: [String: NSNumber] = [:]
+	/// `CHANLIMIT`, keyed by channel prefix.
+	public private(set) var channelLimits: [Character: UInt] = [:]
+	/// `MAXLIST`, keyed by list mode.
+	public private(set) var maximumListEntries: [Character: UInt] = [:]
+	/// `TARGMAX`, keyed by uppercased command name.
+	public private(set) var maximumTargetsByCommand: [String: UInt] = [:]
 	/// Mode symbol / prefix character pairs from ISUPPORT `PREFIX=`, stored as
 	/// pairs so the two halves can never disagree in length.
 	private(set) var userModePrefixPairs = defaultUserModePrefixPairs {
@@ -404,15 +407,17 @@ public class IRCISupportInfo: NSObject {
 			return 0
 		}
 
-		let prefix = String(channel.prefix(1))
+		guard let prefix = channel.first else {
+			return 0
+		}
 
-		return channelLimits[prefix]?.uintValue ?? 0
+		return channelLimits[prefix] ?? 0
 	}
 
 	@objc(maximumTargetsForCommand:)
 	public func maximumTargets(forCommand command: String) -> UInt {
 		if let limit = maximumTargetsByCommand[command.uppercased()] {
-			return limit.uintValue
+			return limit
 		}
 
 		return maximumTargets
@@ -423,9 +428,8 @@ public class IRCISupportInfo: NSObject {
 		ISupportTokenParser.chunkTargets(targets, limit: limit)
 	}
 
-	@objc(maximumListEntriesForModeSymbol:)
-	public func maximumListEntries(forModeSymbol modeSymbol: String) -> UInt {
-		maximumListEntries[modeSymbol]?.uintValue ?? 0
+	public func maximumListEntries(forModeSymbol modeSymbol: ChannelModeSymbol) -> UInt {
+		maximumListEntries[modeSymbol.character] ?? 0
 	}
 
 	@objc(extendedListSupportsToken:)
