@@ -60,16 +60,6 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 		let serviceConnection = NSXPCConnection(serviceName: "com.vakesz.glasstual.InlineContentLoader")
 
 		let remoteObjectInterface = NSXPCInterface(with: InlineContentServerProtocol.self)
-		guard let allowedLocationClasses = NSSet(objects: NSArray.self, NSURL.self) as? Set<AnyHashable> else {
-			preconditionFailure("Unable to configure the inline-media XPC class allowlist")
-		}
-
-		remoteObjectInterface.setClasses(
-			allowedLocationClasses,
-			for: #selector((any InlineContentServerProtocol).warmServiceByLoadingPlugins(atLocations:)),
-			argumentIndex: 0,
-			ofReply: false
-		)
 
 		serviceConnection.remoteObjectInterface = remoteObjectInterface
 		serviceConnection.exportedInterface = NSXPCInterface(with: InlineContentClientProtocol.self)
@@ -113,20 +103,11 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 	}
 
 	private func registerDefaults() {
-		let defaults = TextualUserDefaults.shared().registeredDefaults
-		remoteObjectProxy?.warmServiceByRegistering(defaults: defaults)
+		remoteObjectProxy?.warmService(with: .current())
 	}
 
 	private func registerPlugins() {
-		let pluginLocations = [applicationSupportInlineMediaPluginsURL()]
-		remoteObjectProxy?.warmServiceByLoadingPlugins(atLocations: pluginLocations)
-	}
-
-	private func applicationSupportInlineMediaPluginsURL() -> URL {
-		let sourceURL = PathInfo.groupContainerApplicationSupportURL!
-		let baseURL = sourceURL.appendingPathComponent("Inline Media Modules/", isDirectory: true)
-		PathInfo.createDirectory(at: baseURL)
-		return baseURL
+		remoteObjectProxy?.warmServiceByLoadingPlugins()
 	}
 
 	private var remoteObjectProxy: InlineContentServerProtocol? {
