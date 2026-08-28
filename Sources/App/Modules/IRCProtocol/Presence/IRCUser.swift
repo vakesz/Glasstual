@@ -164,15 +164,23 @@ open nonisolated class User: PortablePropertyObject {
 		nicknameStorage.uppercased()
 	}
 
-	@objc public var presentAwayMessageFor301: Bool {
+	/// Whether the RPL_AWAY (301) reply for this user should be shown, taking
+	/// the slot when it is.
+	///
+	/// A server repeats 301 for every message sent to an away user, so it is
+	/// rate limited. Asking is what opens the next window, which is why this
+	/// is a method: it used to read as a property and quietly moved the clock
+	/// on every access.
+	@objc public func claimAwayMessagePresentation() -> Bool {
 		let now = CFAbsoluteTimeGetCurrent()
 
-		if (persistentStore.presentAwayMessageFor301LastEvent + presentAwayMessageFor301Threshold) < now {
-			persistentStore.presentAwayMessageFor301LastEvent = now
-			return true
+		guard (persistentStore.presentAwayMessageFor301LastEvent + presentAwayMessageFor301Threshold) < now else {
+			return false
 		}
 
-		return false
+		persistentStore.presentAwayMessageFor301LastEvent = now
+
+		return true
 	}
 
 	@objc @MainActor public var relations: [IRCChannel: ChannelUser] {

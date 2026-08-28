@@ -74,10 +74,8 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 			return
 		}
 		channel.activate()
-		if let treeItem = legacyTreeItem(for: channel) {
-			AppController.shared.mainWindow.reloadTreeItem(treeItem)
-			AppController.shared.mainWindow.updateTitle(for: treeItem)
-		}
+		AppController.shared.mainWindow.reloadTreeItem(channel)
+		AppController.shared.mainWindow.updateTitle(for: channel)
 		printDebugInformation(IRCDirectChatStrings.established(nickname: connection.peerNickname), in: channel)
 	}
 
@@ -107,13 +105,7 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 		if channel.isActive {
 			channel.deactivate()
 		}
-		if let treeItem = legacyTreeItem(for: channel) {
-			AppController.shared.mainWindow.reloadTreeItem(treeItem)
-			AppController.shared.mainWindow.updateTitle(for: treeItem)
-		}
-	}
-
-	private func legacyTreeItem(for channel: IRCChannel) -> IRCTreeItem? {
-		(channel as AnyObject) as? IRCTreeItem
+		AppController.shared.mainWindow.reloadTreeItem(channel)
+		AppController.shared.mainWindow.updateTitle(for: channel)
 	}
 }

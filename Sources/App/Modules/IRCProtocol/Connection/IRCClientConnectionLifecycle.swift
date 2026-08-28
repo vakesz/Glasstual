@@ -80,14 +80,12 @@ public extension IRCClient {
 		temporaryServerAddressOverride = nil
 		temporaryServerPortOverride = 0
 
-		var stsPort = serverPort
-		var stsSecured = ObjCBool(prefersSecuredConnection)
-		if STSPolicyStore.shared.applyPolicy(forHost: serverAddress, toPort: &stsPort, secured: &stsSecured) {
-			if stsPort != serverPort || stsSecured.boolValue != prefersSecuredConnection {
-				printDebugInformation(toConsole: IRCTransportSecurityStrings.enforcedPolicy(port: stsPort))
+		if let enforced = STSPolicyStore.shared.enforcedEndpoint(forHost: serverAddress) {
+			if enforced.port != serverPort || prefersSecuredConnection == false {
+				printDebugInformation(toConsole: IRCTransportSecurityStrings.enforcedPolicy(port: enforced.port))
 			}
-			serverPort = stsPort
-			prefersSecuredConnection = stsSecured.boolValue
+			serverPort = enforced.port
+			prefersSecuredConnection = true
 		}
 		if forceSecuredConnectionOnNextConnect {
 			forceSecuredConnectionOnNextConnect = false

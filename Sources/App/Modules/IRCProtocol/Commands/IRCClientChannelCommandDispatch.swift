@@ -305,7 +305,7 @@ extension IRCClient {
 			for channel in client.channelList {
 				let score = channel.name.matchScore(against: needle, lengthPenaltyWeight: 0.1)
 				guard score > bestScore else { continue }
-				bestMatch = commandTreeItem(for: channel)
+				bestMatch = channel
 				bestScore = score
 			}
 		}
@@ -450,9 +450,8 @@ extension IRCClient {
 		}
 		targetChannel.name = nickname
 		if let mainWindow = AppController.shared.mainWindow {
-			let treeItem = commandTreeItem(for: targetChannel)
-			mainWindow.reloadTreeItem(treeItem)
-			mainWindow.updateTitle(for: treeItem)
+			mainWindow.reloadTreeItem(targetChannel)
+			mainWindow.updateTitle(for: targetChannel)
 		}
 		return true
 	}
@@ -485,7 +484,7 @@ extension IRCClient {
 		guard let query = findChannelOrCreate(nickname, isPrivateMessage: true),
 		      let mainWindow = AppController.shared.mainWindow
 		else { return }
-		mainWindow.select(commandTreeItem(for: query))
+		mainWindow.select(query)
 		if arguments.isEmpty == false {
 			sendText(arguments.attributedRest, as: .privmsg, to: query)
 		}
@@ -510,12 +509,5 @@ extension IRCClient {
 			)
 		}
 		send("TOPIC", arguments: [channelName, truncatedTopic])
-	}
-
-	private func commandTreeItem(for channel: IRCChannel) -> IRCTreeItem {
-		guard let treeItem = (channel as AnyObject) as? IRCTreeItem else {
-			preconditionFailure("IRCChannel must bridge to its Objective-C tree item")
-		}
-		return treeItem
 	}
 }

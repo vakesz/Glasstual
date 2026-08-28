@@ -117,10 +117,6 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		self
 	}
 
-	private var legacyTreeItem: IRCTreeItem {
-		self
-	}
-
 	@available(*, unavailable)
 	override public init() {
 		fatalError("Use init(config:)")
@@ -294,7 +290,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	@objc public var logFilePath: URL? {
-		guard let writePath = FileLogger.writePath(for: legacyTreeItem) else {
+		guard let writePath = FileLogger.writePath(for: self) else {
 			return nil
 		}
 
@@ -425,7 +421,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			window.close()
 		}
 
-		AppController.shared.mainWindow.inputHistoryManager().destroy(legacyTreeItem)
+		AppController.shared.mainWindow.inputHistoryManager().destroy(self)
 		viewController?.prepareForPermanentDestruction()
 	}
 

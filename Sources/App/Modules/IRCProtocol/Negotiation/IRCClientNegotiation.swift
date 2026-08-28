@@ -268,18 +268,16 @@ extension IRCClient {
 		}
 
 		let connectedPort = socket?.config.serverPort ?? 0
-		var upgradePort: UInt16 = 0
 		let action = STSPolicyStore.shared.applyCapabilityValues(
 			parsed,
 			forHost: host,
 			connectedPort: connectedPort,
 			secured: isSecured,
-			certificateChainValidated: socket?.isSecuredWithValidatedCertificate ?? false,
-			upgradePort: &upgradePort
+			certificateChainValidated: socket?.isSecuredWithValidatedCertificate ?? false
 		)
 
 		switch action {
-		case .upgrade:
+		case let .upgrade(upgradePort):
 			guard performedSTSUpgrade == false, upgradePort > 0 else {
 				return
 			}
@@ -296,14 +294,11 @@ extension IRCClient {
 			}
 
 			disconnect()
-		case .stored:
-			let policyPort = STSPolicyStore.shared.policy(forHost: host)?.port ?? connectedPort
+		case let .stored(policyPort):
 			printDebugInformation(toConsole: IRCTransportSecurityStrings.storedPolicy(port: policyPort))
 		case .cleared:
 			printDebugInformation(toConsole: IRCTransportSecurityStrings.policyWithdrawn)
 		case .none:
-			break
-		@unknown default:
 			break
 		}
 	}

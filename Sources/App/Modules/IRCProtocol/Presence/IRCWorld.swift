@@ -67,10 +67,6 @@ extension Notification.Name {
 	static let ircWorldWillDestroyChannel = Notification.Name("IRCWorldWillDestroyChannelNotification")
 }
 
-private func legacyTreeItem(for channel: IRCChannel) -> IRCTreeItem {
-	channel
-}
-
 private func nativeChannel(from item: IRCTreeItem?) -> IRCChannel? {
 	(item as AnyObject?) as? IRCChannel
 }
@@ -365,7 +361,7 @@ public final class World: NSObject {
 			}
 
 			for channel in client.channelList where identifiers.contains(channel.uniqueIdentifier) {
-				items.append(legacyTreeItem(for: channel))
+				items.append(channel)
 			}
 		}
 
@@ -384,7 +380,7 @@ public final class World: NSObject {
 			}
 
 			if let channel = client.channelList.first(where: { $0.uniqueIdentifier == itemId }) {
-				return legacyTreeItem(for: channel)
+				return channel
 			}
 		}
 
@@ -613,7 +609,7 @@ public final class World: NSObject {
 		}
 
 		if reload {
-			selectOtherBeforeDestroy(legacyTreeItem(for: channel))
+			selectOtherBeforeDestroy(channel)
 		}
 
 		channel.prepareForPermanentDestruction()
