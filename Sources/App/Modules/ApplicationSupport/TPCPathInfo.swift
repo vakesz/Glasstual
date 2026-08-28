@@ -25,6 +25,13 @@ public final nonisolated class PathInfo: NSObject {
 	private static let transcriptBookmarkDefaultsKey = "LogTranscriptDestinationSecurityBookmark_5"
 	private static let transcriptFolderURLStorage = Mutex<URL?>(nil)
 
+	/** Directories this process has already created. Several of the path
+	 accessors below are read on hot paths — the transcript folder is asked for
+	 on every log line — and each one used to hit `fileExists` before answering.
+	 The set is checked instead; a directory removed underneath a running
+	 application is not a case any of these callers recover from anyway. */
+	private static let ensuredDirectories = Mutex<Set<URL>>([])
+
 	private static var fileManager: FileManager {
 		.default
 	}
@@ -42,6 +49,14 @@ public final nonisolated class PathInfo: NSObject {
 
 	@objc(_createDirectoryAtURL:)
 	public static func createDirectory(at directoryURL: URL) {
+		let alreadyEnsured = ensuredDirectories.withLock { ensured in
+			ensured.insert(directoryURL).inserted == false
+		}
+
+		if alreadyEnsured {
+			return
+		}
+
 		if fileManager.fileExists(at: directoryURL) {
 			return
 		}
