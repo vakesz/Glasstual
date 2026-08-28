@@ -40,157 +40,157 @@ import Foundation
 
 nonisolated enum IRCConnectionStrings {
 	static var noConfiguredServers: String {
-		String(localized: .IRC.iaa0U)
+		String(localized: .IRC.thereAreNoServersConfigured)
 	}
 
 	static var reconnecting: String {
-		String(localized: .IRC.xxbY2)
+		String(localized: .IRC.miscellaneousMessagesRelatedReconnecting)
 	}
 
 	static var retrying: String {
-		String(localized: .IRC.ky336)
+		String(localized: .IRC.miscellaneousMessagesRelatedRetrying)
 	}
 
 	static var legacyIPv4PreferenceNotice: String {
-		String(localized: .IRC.w05Ph)
+		String(localized: .IRC.pleaseTakeNoticeThePreferenceLabeled)
 	}
 
 	static var defaultAwayMessage: String {
-		String(localized: .IRC.xogIn)
+		String(localized: .IRC.beBackLater)
 	}
 
 	static var serviceClosedUnexpectedly: String {
-		String(localized: .IRC.vdyJk)
+		String(localized: .IRC.connectionServiceClosedUnexpectedly)
 	}
 
 	static var serverClosedReadStream: String {
-		String(localized: .IRC._5H5Sl)
+		String(localized: .IRC.serverClosedReadStream)
 	}
 
 	static var hostConnectionEstablished: String {
-		String(localized: .IRC._4VtOw)
+		String(localized: .IRC.connectionToHostEstablished)
 	}
 
 	static var autojoinDelayedForIdentification: String {
-		String(localized: .IRC.r5HFj)
+		String(localized: .IRC.joiningChannelsHasBeenDelayedBecause)
 	}
 
 	static var reconnectingToProxy: String {
-		String(localized: .IRC._5I4Qq)
+		String(localized: .IRC.reconnectingToProxyToRebuildInternal)
 	}
 
 	static var labeledResponseNotAcknowledged: String {
-		String(localized: .IRC.lblTo)
+		String(localized: .IRC.serverDidNotAcknowledgeThisMessage)
 	}
 
 	static func disconnectReason(for mode: IRCClientDisconnectMode) -> String {
 		switch mode {
-		case .normal: String(localized: .IRC._9B410)
-		case .computerSleep: String(localized: .IRC.drgB7)
-		case .badCertificate: String(localized: .IRC.zroBg)
-		case .serverRedirect: String(localized: .IRC.wclPo)
-		case .reachabilityChange: String(localized: .IRC.isxFi)
-		@unknown default: String(localized: .IRC._9B410)
+		case .normal: String(localized: .IRC.miscellaneousMessagesRelatedDisconnected)
+		case .computerSleep: String(localized: .IRC.disconnectedForSleepMode)
+		case .badCertificate: String(localized: .IRC.disconnectedFromServerBecause)
+		case .serverRedirect: String(localized: .IRC.disconnectedForServerRedirect)
+		case .reachabilityChange: String(localized: .IRC.disconnectedFromServerBecauseTheInternet)
+		@unknown default: String(localized: .IRC.miscellaneousMessagesRelatedDisconnected)
 		}
 	}
 
 	static func socksProxy(host: String, port: UInt16) -> String {
-		String(localized: .IRC.ni5Cy(host, UInt(port)))
+		String(localized: .IRC.connectingUsingSocks5ProxyOnPort(host, UInt(port)))
 	}
 
 	static func httpProxy(host: String, port: UInt16) -> String {
-		String(localized: .IRC.obyAv(host, UInt(port)))
+		String(localized: .IRC.connectingUsingHttpProxyOnPort(host, UInt(port)))
 	}
 
 	static func cipherSuite(protocolName: String, cipherName: String, deprecated: Bool) -> String {
 		if deprecated {
-			return String(localized: .IRC.xwjXy(protocolName, cipherName))
+			return String(localized: .IRC.withTheCipherSuite4Deprecated(protocolName, cipherName))
 		}
 
-		return String(localized: .IRC.uyz4R(protocolName, cipherName))
+		return String(localized: .IRC.withTheCipherSuite(protocolName, cipherName))
 	}
 
 	static func secured(using description: String) -> String {
-		String(localized: .IRC.ex4F8(description))
+		String(localized: .IRC.connectionSecuredUsing(description))
 	}
 
 	static func hostConnectionEstablished(address: String) -> String {
-		String(localized: .IRC.l21P7(address))
+		String(localized: .IRC.connectionToHostAtEstablished(address))
 	}
 
 	static func connecting(host: String, port: UInt16) -> String {
-		String(localized: .IRC.o77Ls(host, UInt(port)))
+		String(localized: .IRC.connectingToOnPort(host, UInt(port)))
 	}
 
 	static func delayedAutoConnect(seconds: UInt) -> String {
-		String(localized: .IRC._3S6E6(seconds))
+		String(localized: .IRC.delayingAutoConnectForSeconds(seconds))
 	}
 
 	static func timeout(minutes: Double) -> String {
-		String(localized: .IRC.bpsLa(Float(minutes)))
+		String(localized: .IRC.minutesHaveElapsedSinceLastResponse(Float(minutes)))
 	}
 
 	static func possibleTimeout(minutes: Double) -> String {
-		String(localized: .IRC.gzo54(Float(minutes)))
+		String(localized: .IRC.minutesHaveElapsedSinceLastResponseFromThis(Float(minutes)))
 	}
 }
 
 nonisolated enum IRCTransportSecurityStrings {
 	static var policyWithdrawn: String {
-		String(localized: .IRC.stsP4)
+		String(localized: .IRC.serverWithdrewItsStrictTransportSecurity)
 	}
 
 	static var malformedSCRAMMessage: String {
-		String(localized: .IRC.stsSc1)
+		String(localized: .IRC.saslScramAuthenticationFailedTheServer)
 	}
 
 	static func enforcedPolicy(port: UInt16) -> String {
-		String(localized: .IRC.stsP1(UInt(port)))
+		String(localized: .IRC.strictTransportSecurityPolicy(UInt(port)))
 	}
 
 	static func offeredPolicy(port: UInt16) -> String {
-		String(localized: .IRC.stsP2(UInt(port)))
+		String(localized: .IRC.serverOffersStrictTransportSecurityReconnecting(UInt(port)))
 	}
 
 	static func storedPolicy(port: UInt16) -> String {
-		String(localized: .IRC.stsP3(UInt(port)))
+		String(localized: .IRC.storedAStrictTransportSecurityPolicy(UInt(port)))
 	}
 
 	static func scramFailure(_ description: String) -> String {
-		String(localized: .IRC.stsSc2(description))
+		String(localized: .IRC.saslScramAuthenticationFailed(description))
 	}
 
 	static var scramServerSignatureMissing: String {
-		String(localized: .IRC.stsSc3)
+		String(localized: .IRC.saslScramAuthenticationFailedTheServerDidNot)
 	}
 
 	static var saslPayloadTooLarge: String {
-		String(localized: .IRC.stsSc4)
+		String(localized: .IRC.saslAuthenticationFailedTheServerSent)
 	}
 }
 
 nonisolated enum IRCTransportStrings {
 	static var notConnected: String {
-		String(localized: .IRC._6Rj2R)
+		String(localized: .IRC.failedToSendDataToServer)
 	}
 
 	static var messagesUnavailableInWindow: String {
-		String(localized: .IRC.z2RSd)
+		String(localized: .IRC.messagesCannotBeSent)
 	}
 
 	static var confirmLargeMessage: String {
-		String(localized: .IRC.lql8I)
+		String(localized: .IRC.areYouSureYouWant)
 	}
 
 	static var largeMessageWarning: String {
-		String(localized: .IRC.u4C7I)
+		String(localized: .IRC.messageThatYouAreSending)
 	}
 
 	static var operatorMessageUnsupported: String {
-		String(localized: .IRC._54LH7)
+		String(localized: .IRC.cannotSendOperatorMessageBecause)
 	}
 
 	static func connectCommand(target: String, redactedMessage: String) -> String {
-		String(localized: .IRC.ccs1A(target, redactedMessage))
+		String(localized: .IRC.connectCommandSent(target, redactedMessage))
 	}
 }

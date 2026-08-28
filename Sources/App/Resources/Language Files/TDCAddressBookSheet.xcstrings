@@ -1,8 +1,8 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "csu-bv" : {
-      "comment" : "Validation error shown when an ignore mask is not properly formatted.",
+    "please-enter-a-properly-formatted-ignore" : {
+      "comment" : "Validation error shown when an ignore mask is not properly formatted. Legacy key: csu-bv.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

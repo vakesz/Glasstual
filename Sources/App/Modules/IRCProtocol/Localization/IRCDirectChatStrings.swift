@@ -40,60 +40,60 @@ import Foundation
 
 nonisolated enum IRCDirectChatStrings {
 	static var notConnected: String {
-		String(localized: .IRC.dccC9)
+		String(localized: .IRC.directChatIsNotConnected)
 	}
 
 	static func fileCouldNotBeOffered(path: String) -> String {
-		String(localized: .IRC.dccS1(path))
+		String(localized: .IRC.fileAtCouldNotBeOffered(path))
 	}
 
 	static func incomingRequest(sender: String) -> String {
-		String(localized: .IRC.dccC1(sender))
+		String(localized: .IRC.wantsToStartADirectChat(sender))
 	}
 
 	static func declined(sender: String) -> String {
-		String(localized: .IRC.dccC6(sender))
+		String(localized: .IRC.declinedDirectChatRequest(sender))
 	}
 
 	static func connecting(nickname: String, address: String, port: UInt16) -> String {
-		String(localized: .IRC.dccC7(nickname, address, UInt(port)))
+		String(localized: .IRC.connectingToForADirectChat(nickname, address, UInt(port)))
 	}
 
 	static func offering(to nickname: String) -> String {
-		String(localized: .IRC.dccC8(nickname))
+		String(localized: .IRC.offeringADirectChat(nickname))
 	}
 
 	static func unprocessableRequest(sender: String) -> String {
-		String(localized: .IRC.y3WLa(sender))
+		String(localized: .IRC.glasstualHasReceivedADccRequest(sender))
 	}
 
 	static func addressUnavailable(nickname: String) -> String {
-		String(localized: .IRC.dccCa(nickname))
+		String(localized: .IRC.couldNotDetermineAnAddress(nickname))
 	}
 
 	static func waitingForConnection(nickname: String, port: UInt16) -> String {
-		String(localized: .IRC.dccCb(nickname, UInt(port)))
+		String(localized: .IRC.waitingForToConnectOnPort(nickname, UInt(port)))
 	}
 
 	static func established(nickname: String) -> String {
-		String(localized: .IRC.dccCc(nickname))
+		String(localized: .IRC.directChatWithEstablished(nickname))
 	}
 
 	static func closed(nickname: String, error: String?) -> String {
 		if let error {
-			return String(localized: .IRC.dccCd(nickname, error))
+			return String(localized: .IRC.directChatWithClosed(nickname, error))
 		}
 
-		return String(localized: .IRC.dccCe(nickname))
+		return String(localized: .IRC.directChatDccChatWithClosed(nickname))
 	}
 }
 
 nonisolated enum IRCFileTransferStrings {
 	static func request(nickname: String, filename: String, byteCount: UInt64) -> String {
-		String(localized: .IRC.snf45(nickname, filename, LocalizedByteCount.formatted(byteCount)))
+		String(localized: .IRC.receivedFileTransferRequest(nickname, filename, LocalizedByteCount.formatted(byteCount)))
 	}
 
 	static func attempt(nickname: String, filename: String, byteCount: UInt64) -> String {
-		String(localized: .IRC.agsS8(nickname, filename, LocalizedByteCount.formatted(byteCount)))
+		String(localized: .IRC.tryingFileTransfer(nickname, filename, LocalizedByteCount.formatted(byteCount)))
 	}
 }

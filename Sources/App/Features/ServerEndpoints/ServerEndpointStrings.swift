@@ -14,18 +14,18 @@ import Foundation
 
 nonisolated enum ServerEndpointStrings {
 	static var invalidAddressDescription: String {
-		String(localized: .TDCServerEndpointListSheet.iisGr)
+		String(localized: .TDCServerEndpointListSheet.valueYouEnteredIsNot)
 	}
 
 	static var invalidAddressRecoverySuggestion: String {
-		String(localized: .TDCServerEndpointListSheet.k0C3U)
+		String(localized: .TDCServerEndpointListSheet.intentionallyEmptyRecoverySuggestion)
 	}
 
 	static var invalidPortDescription: String {
-		String(localized: .TDCServerEndpointListSheet.qebIp)
+		String(localized: .TDCServerEndpointListSheet.valueYouEnteredIsNotAProperlyFormattedServer)
 	}
 
 	static var invalidPortRecoverySuggestion: String {
-		String(localized: .TDCServerEndpointListSheet.ox2Od)
+		String(localized: .TDCServerEndpointListSheet.enterAWholeNumberBetween1)
 	}
 }

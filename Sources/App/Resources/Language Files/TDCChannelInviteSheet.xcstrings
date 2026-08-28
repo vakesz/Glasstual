@@ -1,42 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "0lg-er" : {
-      "comment" : "Heading above the channel picker. The argument describes the users being invited.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invite %@ to:"
-          }
-        }
-      }
-    },
-    "7i1-ds" : {
-      "comment" : "Joins exactly two nicknames. The arguments are the first and second nicknames.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ and %2$@"
-          }
-        }
-      }
-    },
-    "c8p-sb" : {
-      "comment" : "Describes an invitation with three or more users. The argument is the number of users.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%ld users"
-          }
-        }
-      }
-    },
     "cancel-button" : {
       "comment" : "Title of the button that closes the invitation sheet without sending an invitation.",
       "extractionState" : "manual",
@@ -61,6 +25,30 @@
         }
       }
     },
+    "describes-an-invitation-users" : {
+      "comment" : "Describes an invitation with three or more users. The argument is the number of users. Legacy key: c8p-sb.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%ld users"
+          }
+        }
+      }
+    },
+    "heading-above-the-channel-invite" : {
+      "comment" : "Heading above the channel picker. The argument describes the users being invited. Legacy key: 0lg-er.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite %@ to:"
+          }
+        }
+      }
+    },
     "invite-button" : {
       "comment" : "Title of the button that sends the invitation.",
       "extractionState" : "manual",
@@ -69,6 +57,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invite"
+          }
+        }
+      }
+    },
+    "joins-exactly-two-nicknames" : {
+      "comment" : "Joins exactly two nicknames. The arguments are the first and second nicknames. Legacy key: 7i1-ds.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ and %2$@"
           }
         }
       }
