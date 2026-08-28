@@ -136,11 +136,10 @@ public extension IRCClient {
 			remaining: pendingChannels.count,
 			configuredMaximum: TextualPreferences.autojoinMaximumChannelJoins()
 		)
-		let channels = pendingChannels.prefix(count).compactMap { $0 as? IRCChannel }
-		joinChannels(channels)
+		joinChannels(Array(pendingChannels.prefix(count)))
 
 		if count < pendingChannels.count {
-			pendingChannels.removeObjects(in: NSRange(location: 0, length: count))
+			channelsToAutojoin = Array(pendingChannels.dropFirst(count))
 		} else {
 			isAutojoining = false
 			isAutojoined = true
@@ -185,7 +184,7 @@ public extension IRCClient {
 		}
 
 		isAutojoining = true
-		channelsToAutojoin = NSMutableArray(array: channels)
+		channelsToAutojoin = channels
 		startAutojoinTimer()
 	}
 }

@@ -37,7 +37,6 @@
  *********************************************************************** */
 
 import Foundation
-import ObjectiveC
 
 enum IRCClientChannelStoragePolicy {
 	static func insertionIndex(isChannel: Bool, existingKinds: [Bool]) -> Int {
@@ -58,72 +57,51 @@ public extension IRCClient {
 
 	@objc(addChannel:)
 	func add(_ channel: IRCChannel) {
-		withChannelStorageLock {
-			guard channelListPrivate.contains(channel) == false else { return }
-			let index = IRCClientChannelStoragePolicy.insertionIndex(
-				isChannel: channel.isChannel,
-				existingKinds: channelStorageSnapshot.map(\.isChannel)
-			)
-			channelListPrivate.insert(channel, at: index)
-			updateStoredChannelList()
-		}
+		guard channelListPrivate.contains(channel) == false else { return }
+		let index = IRCClientChannelStoragePolicy.insertionIndex(
+			isChannel: channel.isChannel,
+			existingKinds: channelListPrivate.map(\.isChannel)
+		)
+		channelListPrivate.insert(channel, at: index)
+		updateStoredChannelList()
 	}
 
 	@objc(addChannel:atPosition:)
 	func add(_ channel: IRCChannel, atPosition position: UInt) {
-		withChannelStorageLock {
-			guard channelListPrivate.contains(channel) == false else { return }
-			channelListPrivate.insert(channel, at: Int(position))
-			updateStoredChannelList()
-		}
+		guard channelListPrivate.contains(channel) == false else { return }
+		channelListPrivate.insert(channel, at: Int(position))
+		updateStoredChannelList()
 	}
 
 	@objc(removeChannel:)
 	func remove(_ channel: IRCChannel) {
-		withChannelStorageLock {
-			channelListPrivate.removeObject(identicalTo: channel)
-			updateStoredChannelList()
-		}
+		channelListPrivate.removeAll { $0 === channel }
+		updateStoredChannelList()
 	}
 
 	@objc(indexOfChannel:)
 	func index(of channel: IRCChannel) -> UInt {
-		withChannelStorageLock {
-			let index = channelListPrivate.index(of: channel)
-			return index == NSNotFound ? UInt(NSNotFound) : UInt(index)
+		guard let index = channelListPrivate.firstIndex(of: channel) else {
+			return UInt(NSNotFound)
 		}
+		return UInt(index)
 	}
 
 	@objc var channelCount: UInt {
-		withChannelStorageLock { UInt(channelListPrivate.count) }
+		UInt(channelListPrivate.count)
 	}
 
 	@objc var channelList: [IRCChannel] {
-		get { withChannelStorageLock { channelStorageSnapshot } }
+		get { channelListPrivate }
 		set {
-			withChannelStorageLock {
-				channelListPrivate.removeAllObjects()
-				channelListPrivate.addObjects(from: newValue)
-				updateStoredChannelList()
-			}
+			channelListPrivate = newValue
+			updateStoredChannelList()
 		}
 	}
 
 	@objc(channelAtIndex:)
 	func channel(at index: UInt) -> IRCChannel? {
-		withChannelStorageLock { () -> IRCChannel? in
-			guard index < channelListPrivate.count else { return nil }
-			return channelListPrivate.object(at: Int(index)) as? IRCChannel
-		}
-	}
-
-	private var channelStorageSnapshot: [IRCChannel] {
-		channelListPrivate.compactMap { $0 as? IRCChannel }
-	}
-
-	private func withChannelStorageLock<Result>(_ operation: () -> Result) -> Result {
-		objc_sync_enter(channelListPrivate)
-		defer { objc_sync_exit(channelListPrivate) }
-		return operation()
+		guard index < channelListPrivate.count else { return nil }
+		return channelListPrivate[Int(index)]
 	}
 }

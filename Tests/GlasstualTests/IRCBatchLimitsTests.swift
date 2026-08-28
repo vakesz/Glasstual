@@ -68,11 +68,6 @@ struct IRCBatchLimitsTests {
 		#expect(batch.queuedEntries.count == MessageBatch.maximumQueuedEntries)
 	}
 
-	@Test
-	func batchQueueStillRejectsUnsupportedEntryTypes() {
-		#expect(closedBatch(token: "t").queueEntry("not a message") == false)
-	}
-
 	/// `depth` was declared and then ignored, so nested batches recursed
 	/// without bound.
 	@Test
@@ -143,7 +138,7 @@ struct IRCClientSASLPayloadLimitTests {
 			client.receiveCapabilityOrAuthenticationRequest(message)
 		}
 
-		#expect(client.saslIncomingPayload?.length == chunksBeforeOverflow * 400)
+		#expect(client.saslIncomingPayload?.count == chunksBeforeOverflow * 400)
 
 		let overflow = try #require(Message(line: "AUTHENTICATE \(chunk)", on: client))
 		client.receiveCapabilityOrAuthenticationRequest(overflow)

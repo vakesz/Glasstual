@@ -19,12 +19,12 @@ final class IRCClientOutboundPolicyTests: XCTestCase {
 		let now = Date(timeIntervalSince1970: 100)
 		XCTAssertTrue(OutboundTypingPolicy.shouldSendActive(previousState: nil, lastSentAt: nil, now: now))
 		XCTAssertFalse(OutboundTypingPolicy.shouldSendActive(
-			previousState: "active",
+			previousState: .active,
 			lastSentAt: now.addingTimeInterval(-(OutboundTypingPolicy.activeInterval - 0.01)),
 			now: now
 		))
 		XCTAssertTrue(OutboundTypingPolicy.shouldSendActive(
-			previousState: "active",
+			previousState: .active,
 			lastSentAt: now.addingTimeInterval(-OutboundTypingPolicy.activeInterval),
 			now: now
 		))
