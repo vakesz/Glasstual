@@ -726,6 +726,7 @@ targets:
       - path: Sources/App/Features
       - path: Sources/App/Localization
       - path: Sources/App/Modules
+      - path: Sources/App/Preferences
       - path: Sources/App/Protocol
       - path: Sources/App/UI
       - path: Sources/Shared
