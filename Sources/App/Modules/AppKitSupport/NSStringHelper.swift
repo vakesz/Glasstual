@@ -42,7 +42,7 @@ public nonisolated extension NSString {
 			return true
 		}
 
-		return ce_onlyContainsCharacters(from: NSCharacterSet.textualAlphanumericDashPeriodSet as CharacterSet)
+		return ce_onlyContainsCharacters(from: CharacterSet.textualAlphanumericDashPeriod)
 	}
 
 	@objc(isValidInternetPort)
@@ -358,7 +358,7 @@ public nonisolated extension NSString {
 		let foregroundCandidate = substring(with: NSRange(location: currentPosition, length: 6)) as NSString
 
 		if foregroundCandidate
-			.ce_onlyContainsCharacters(from: NSCharacterSet.textualHexadecimalCharacterSet as CharacterSet)
+			.ce_onlyContainsCharacters(from: CharacterSet.textualHexadecimal)
 		{
 			mForegroundColor = foregroundCandidate as String
 			currentPosition += 6
@@ -386,7 +386,7 @@ public nonisolated extension NSString {
 		let backgroundCandidate = substring(with: NSRange(location: currentPosition, length: 6)) as NSString
 
 		if backgroundCandidate
-			.ce_onlyContainsCharacters(from: NSCharacterSet.textualHexadecimalCharacterSet as CharacterSet)
+			.ce_onlyContainsCharacters(from: CharacterSet.textualHexadecimal)
 		{
 			mBackgroundColor = backgroundCandidate as String
 			currentPosition += 6
@@ -620,6 +620,6 @@ public nonisolated extension NSString {
 			return false
 		}
 
-		return (NSCharacterSet.textualLetterCharacterSet as CharacterSet).contains(scalar)
+		return (CharacterSet.textualLetter).contains(scalar)
 	}
 }

@@ -823,7 +823,7 @@ public extension NSString {
 
 	@objc(percentEncodedString)
 	var cePercentEncodedString: String? {
-		addingPercentEncoding(withAllowedCharacters: NSCharacterSet.textualPercentEncodedCharacterSet as CharacterSet)
+		addingPercentEncoding(withAllowedCharacters: CharacterSet.textualPercentEncoded)
 	}
 
 	@objc(percentEncodedURLPath)

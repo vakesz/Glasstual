@@ -40,7 +40,7 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 		let totalFilesize = totalFilesize
 
 		filesizeTextField.stringValue =
-			ByteCountFormatter.textual_stringFromByteCountWithPaddedDigits(Int64(totalFilesize)) ?? ""
+			Int64(totalFilesize).textualPaddedByteCountDescription
 
 		progressIndicator.doubleValue = 0
 		progressIndicator.minValue = 0
@@ -142,10 +142,8 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 			nil
 		}
 		let totalFilesizeString = filesizeTextField.stringValue
-		let currentSpeedString = ByteCountFormatter
-			.textual_stringFromByteCountWithPaddedDigits(Int64(currentSpeed)) ?? ""
-		let processedFilesizeString = ByteCountFormatter
-			.textual_stringFromByteCountWithPaddedDigits(Int64(processedFilesize)) ?? ""
+		let currentSpeedString = Int64(currentSpeed).textualPaddedByteCountDescription
+		let processedFilesizeString = Int64(processedFilesize).textualPaddedByteCountDescription
 
 		return FileTransferStrings.progress(
 			direction: transferDirection,
