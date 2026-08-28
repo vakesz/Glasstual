@@ -648,12 +648,6 @@ extension IRCClient {
 	private func capabilityTokens(_ string: String) -> [String] {
 		string.components(separatedBy: .whitespaces).filter { $0.isEmpty == false }
 	}
-
-	private func synchronized<T>(_ lock: AnyObject, operation: () -> T) -> T {
-		objc_sync_enter(lock)
-		defer { objc_sync_exit(lock) }
-		return operation()
-	}
 }
 
 private extension String {
