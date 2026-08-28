@@ -1,13 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "bad-input" : {
-      "comment" : "Message shown for invalid User Insights command input. Migrated from legacy key r6x-ih.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Bad input" } }
-      }
-    },
     "brag-channel-count" : {
       "comment" : "Opening of the brag response. The argument is the number of channels. Migrated from legacy keys 30l-sx-1 and 30l-sx-2.",
       "extractionState" : "manual",
