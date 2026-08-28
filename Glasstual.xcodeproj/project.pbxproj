@@ -406,6 +406,7 @@
 		6D3FD2087F5E5F9E01520633 /* TLOSCRAMClientHardeningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16417CC05DC41A363447FE95 /* TLOSCRAMClientHardeningTests.swift */; };
 		6D4C72CBDAFFC3DAABE6A89B /* TXAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAC8C67C5503147F21190AD7 /* TXAppearance.swift */; };
 		6D8FA89E6EBEB3921425ABE2 /* IRCMessageBatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9E85B806B1714219F250FD /* IRCMessageBatch.swift */; };
+		6DBA103561D6781A0A1B84C6 /* GLTClientEnvironmentFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BDA120D5196FA9A80CC3B18 /* GLTClientEnvironmentFixture.swift */; };
 		6DC426E8DF7767A4E56EB705 /* IRCClientInboundHandlerPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B50613D3731F7F0B3482154 /* IRCClientInboundHandlerPolicyTests.swift */; };
 		6E25518BAB0DE9D8CFFCB393 /* ServerPropertiesSheetValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F244B1130EBAE97E39077F8E /* ServerPropertiesSheetValueTests.swift */; };
 		6ED4421860F9EB916D08FC68 /* IRCClientInviteAutoJoinTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B0F145E9AABB8024C78FD9 /* IRCClientInviteAutoJoinTests.swift */; };
@@ -1776,6 +1777,7 @@
 		89C822E81CF0BF5F6BE7F34D /* MainWindowStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowStrings.swift; sourceTree = "<group>"; };
 		8A7E6A0AD468F2ADDF8D5FC7 /* TVCMemberListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVCMemberListCell.swift; sourceTree = "<group>"; };
 		8B8B9A291B6DAE41527EA3ED /* TLOInternetAddressLookupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLOInternetAddressLookupTests.swift; sourceTree = "<group>"; };
+		8BDA120D5196FA9A80CC3B18 /* GLTClientEnvironmentFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GLTClientEnvironmentFixture.swift; sourceTree = "<group>"; };
 		8BE9A33B40A10164CA9FBEC5 /* IRCClientWHOReplies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientWHOReplies.swift; sourceTree = "<group>"; };
 		8C0E38D92316242FF7A724AC /* IRCModelMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCModelMigrationTests.swift; sourceTree = "<group>"; };
 		8C1C1E9F3CCB5899CAFD0827 /* LogLineRenderRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLineRenderRequestTests.swift; sourceTree = "<group>"; };
@@ -3746,6 +3748,7 @@
 				BBFF3B8F0B683FB060FE413F /* FileTransferDialogSocketMigrationTests.swift */,
 				4A1081B512E57233D9384A35 /* FileTransferScopeTests.swift */,
 				A61347040EB79CA9A9B6DB1A /* FrameworkUtilityHelperTests.swift */,
+				8BDA120D5196FA9A80CC3B18 /* GLTClientEnvironmentFixture.swift */,
 				887B6DBBC6D0F3D5AFAC6D5D /* GLTTestClient.swift */,
 				71DDECF1C473231C5B408226 /* HighlightEntryFeatureTests.swift */,
 				6B17C185AD99905A9CD250F0 /* HistoricLogProtocolMigrationTests.swift */,
@@ -5299,6 +5302,7 @@
 				C349935BD2425C205B4C9E92 /* FileTransferDialogSocketMigrationTests.swift in Sources */,
 				F304124FC78B0B55B3F2035F /* FileTransferScopeTests.swift in Sources */,
 				837CF606CE154F9F630F1E3A /* FrameworkUtilityHelperTests.swift in Sources */,
+				6DBA103561D6781A0A1B84C6 /* GLTClientEnvironmentFixture.swift in Sources */,
 				F439A1D8929258C993FE6E1B /* GLTTestClient.swift in Sources */,
 				C877A5F1592819269B4BF561 /* GyazoModule.swift in Sources */,
 				E33CDA4DDEE3BB46F98D19B7 /* HTMLEntityTests.swift in Sources */,
