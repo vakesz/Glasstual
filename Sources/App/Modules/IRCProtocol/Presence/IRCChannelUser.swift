@@ -30,7 +30,7 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 		userLock.withLock { userStorage! }
 	}
 
-	private var client: IRCClient {
+	private var client: IRCClient? {
 		user.client
 	}
 
@@ -40,7 +40,7 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 
 	@objc public var mark: String {
 		let mode = highestRankedUserMode
-		return client.supportInfo.userPrefix(forModeSymbol: mode) ?? ""
+		return client?.supportInfo.userPrefix(forModeSymbol: mode) ?? ""
 	}
 
 	public var rank: UserRank {
@@ -133,11 +133,14 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 	}
 
 	private var channelRank: UInt {
-		client.supportInfo.rankForUserPrefix(withMode: highestRankedUserMode)
+		client?.supportInfo.rankForUserPrefix(withMode: highestRankedUserMode) ?? 0
 	}
 
 	private func hasRank(of modeSymbol: String, orHigher fallbackModeSymbol: String?) -> Bool {
-		let supportInfo = client.supportInfo
+		guard let supportInfo = client?.supportInfo else {
+			return false
+		}
+
 		var threshold = supportInfo.rankForUserPrefix(withMode: modeSymbol)
 
 		if threshold == 0, let fallbackModeSymbol {
@@ -235,7 +238,10 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 			return .orderedDescending
 		}
 
-		let supportInfo = client.supportInfo
+		guard let supportInfo = client?.supportInfo else {
+			return user.nickname.compare(other.user.nickname)
+		}
+
 		let localNickname = supportInfo.casefoldString(user.nickname)
 		let remoteNickname = supportInfo.casefoldString(other.user.nickname)
 
