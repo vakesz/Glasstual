@@ -23,6 +23,7 @@ import Foundation
 @MainActor
 final class NotificationSubscriptions {
 	private var cancellables: Set<AnyCancellable> = []
+	private var observerTokens: [(NotificationCenter, NSObjectProtocol)] = []
 
 	func observe(
 		_ name: Notification.Name,
@@ -30,31 +31,44 @@ final class NotificationSubscriptions {
 		center: NotificationCenter = .default,
 		using handler: @escaping @MainActor (Notification) -> Void
 	) {
+		/* Delivered on a later main-queue turn: a handler that ran inside the post
+		 that triggered it (a UserDefaults write, for example) would re-enter the
+		 poster, and posts can come from any thread. */
 		center.publisher(for: name, object: object)
+			.receive(on: DispatchQueue.main)
 			.sink { notification in
-				/* NSWorkspace's sleep and power-off notifications are synchronous
-				 contracts — the system expects the work to be finished by the time the
-				 notification returns — so deliver directly when already on the main
-				 actor rather than always deferring to a later runloop turn. */
-				if Thread.isMainThread {
-					MainActor.assumeIsolated {
-						handler(notification)
-					}
-
-					return
-				}
-
-				performAsynchronouslyOnMainQueue {
-					MainActor.assumeIsolated {
-						handler(notification)
-					}
-				}
+				handler(notification)
 			}
 			.store(in: &cancellables)
+	}
+
+	/// Runs `handler` inline on the posting thread, before the post returns.
+	///
+	/// Only for notifications that are synchronous contracts and are posted on the
+	/// main thread — NSWorkspace's sleep and power-off notifications — where the
+	/// system expects the work to be finished by the time the post returns.
+	func observeSynchronously(
+		_ name: Notification.Name,
+		center: NotificationCenter = .default,
+		using handler: @escaping @MainActor () -> Void
+	) {
+		let token = center.addObserver(forName: name, object: nil, queue: nil) { _ in
+			MainActor.assumeIsolated {
+				handler()
+			}
+		}
+
+		observerTokens.append((center, token))
 	}
 
 	func cancelAll() {
 		cancellables.forEach { $0.cancel() }
 		cancellables.removeAll()
+
+		for (center, token) in observerTokens {
+			center.removeObserver(token)
+		}
+
+		observerTokens.removeAll()
 	}
 }
