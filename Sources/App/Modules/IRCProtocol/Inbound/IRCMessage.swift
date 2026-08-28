@@ -299,19 +299,10 @@ open nonisolated class Message: PortablePropertyObject {
 		let sender = MutablePrefix()
 		sender.hostmask = senderInfo
 
-		var nickname: NSString?
-		var username: NSString?
-		var address: NSString?
-
-		if (senderInfo as NSString).hostmaskComponents(
-			&nickname,
-			username: &username,
-			address: &address,
-			on: client
-		) {
-			sender.nickname = nickname as String? ?? ""
-			sender.username = username as String?
-			sender.address = address as String?
+		if let components = (senderInfo as NSString).hostmask(on: client) {
+			sender.nickname = components.nickname
+			sender.username = components.username
+			sender.address = components.address
 		} else {
 			sender.nickname = senderInfo
 			sender.isServer = true

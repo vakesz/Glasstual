@@ -70,7 +70,7 @@ public extension NSCoder {
 public extension Int64 {
 	/// A file-style byte count with a zero-padded fraction, e.g. "1.20 MB".
 	var textualPaddedByteCountDescription: String {
-		formatted(.byteCount(style: .file).sign(strategy: .never))
+		formatted(.byteCount(style: .file))
 	}
 }
 

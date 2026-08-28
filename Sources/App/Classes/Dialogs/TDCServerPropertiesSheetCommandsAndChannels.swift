@@ -56,7 +56,7 @@ extension ServerPropertiesSheet: HighlightEntrySheetDelegate {
 	func populateEncodings() {
 		primaryEncodingButton.removeAllItems()
 		fallbackEncodingButton.removeAllItems()
-		encodingList = NSString.ce_supportedStringEncodingsWithTitle(false)
+		encodingList = String.Encoding.supportedEncodingsByTitle(favoringUTF8: false)
 		var names = (encodingList as NSDictionary).sortedDictionaryKeys as? [String] ?? []
 		let utf8Title = String.localizedName(of: .utf8)
 		names.removeAll { $0 == utf8Title }

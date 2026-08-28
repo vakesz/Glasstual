@@ -221,7 +221,7 @@ public extension IRCClient {
 			return
 		}
 
-		let lines = text.ceSplitIntoLines
+		let lines = text.splitIntoLines
 		let shouldWarn = lines.count > 4 || text.length > 2040
 		if shouldWarn, shouldContinuePotentialFlood() == false {
 			return
@@ -234,7 +234,7 @@ public extension IRCClient {
 
 			if destination.isClient {
 				if isPrefixed {
-					line = line.ce_attributedSubstring(from: 1)
+					line = line.attributedSubstring(fromIndex: 1)
 				}
 				sendCommand(line)
 				continue
@@ -246,10 +246,10 @@ public extension IRCClient {
 			}
 
 			if isPrefixed, source.hasPrefix("//") == false, line.length > 1 {
-				sendCommand(line.ce_attributedSubstring(from: 1))
+				sendCommand(line.attributedSubstring(fromIndex: 1))
 			} else {
 				if isPrefixed, line.length > 1 {
-					line = line.ce_attributedSubstring(from: 1)
+					line = line.attributedSubstring(fromIndex: 1)
 				}
 				sendText(line, as: command, to: channel)
 			}
@@ -277,7 +277,7 @@ public extension IRCClient {
 			replyIdentifier = nil
 		}
 
-		for line in text.ceSplitIntoLines {
+		for line in text.splitIntoLines {
 			let mutableLine = NSMutableAttributedString(attributedString: line)
 			while mutableLine.length > 0 {
 				let lengthBeforeFormatting = mutableLine.length
@@ -344,7 +344,7 @@ public extension IRCClient {
 			let groupChannels = Array(groupedChannels[groupOffset ..< groupOffset + targetGroup.count])
 			groupOffset += targetGroup.count
 			let targetList = targetGroup.joined(separator: ",")
-			for line in text.ceSplitIntoLines {
+			for line in text.splitIntoLines {
 				let mutableLine = NSMutableAttributedString(attributedString: line)
 				while mutableLine.length > 0 {
 					let lengthBeforeFormatting = mutableLine.length

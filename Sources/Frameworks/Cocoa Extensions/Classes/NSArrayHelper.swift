@@ -276,7 +276,7 @@ public extension NSArray {
 
 	private static func ce_trimmedValue(_ value: Any) -> Any {
 		guard let string = value as? NSString else { return value }
-		return string.ceTrim
+		return string.trimmingCharacters(in: .whitespacesAndNewlines) as NSString
 	}
 }
 

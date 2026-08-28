@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import Foundation
+import GlasstualPluginKit
 
 private let whoxResponseToken = "152"
 
@@ -231,20 +232,15 @@ extension IRCClient {
 			nameStart = rawName.index(after: nameStart)
 		}
 		let hostmask = String(rawName[nameStart...])
-		var parsedNickname: NSString?
-		var parsedUsername: NSString?
-		var parsedAddress: NSString?
-		let parsed = (hostmask as NSString).hostmaskComponents(
-			&parsedNickname, username: &parsedUsername, address: &parsedAddress, on: self
-		)
-		let nickname = parsed ? (parsedNickname as String? ?? hostmask) : hostmask
+		let parsed = (hostmask as NSString).hostmask(on: self)
+		let nickname = parsed?.nickname ?? hostmask
 		let user: User
 		if let existing = findUser(nickname) {
 			user = existing
 		} else {
 			let mutable = UserMutable(nickname: nickname, on: self)
-			mutable.username = parsedUsername as String?
-			mutable.address = parsedAddress as String?
+			mutable.username = parsed?.username
+			mutable.address = parsed?.address
 			user = addAndReturn(mutable)
 		}
 		let mutableMember: ChannelUserMutable

@@ -64,7 +64,7 @@ enum DCCFileTransferRequestParser {
 		let section3 = input.ceToken
 		let section4 = input.ceToken
 		let section5 = input.ceToken
-		let filename = String(filenameToken.ceTrim.ceSafeFilename)
+		let filename = filenameToken.trimmingCharacters(in: .whitespacesAndNewlines).safeFilename
 
 		if command == "SEND" {
 			let token = normalizedToken(section5)

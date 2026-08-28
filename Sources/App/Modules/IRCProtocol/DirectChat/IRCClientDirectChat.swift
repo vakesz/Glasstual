@@ -250,7 +250,7 @@ public extension IRCClient {
 		}
 		let isAction = command == .privmsgAction
 		let lineType: TVCLogLineType = isAction ? .action : .privateMessage
-		for line in string.ceSplitIntoLines {
+		for line in string.splitIntoLines {
 			let remainder = NSMutableAttributedString(attributedString: line)
 			while remainder.length > 0 {
 				let lengthBeforeFormatting = remainder.length

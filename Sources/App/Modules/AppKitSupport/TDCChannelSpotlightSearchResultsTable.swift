@@ -96,14 +96,18 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		)
 
 		let searchString = controller.searchString
-		(resultString.string as NSString).ce_enumerateFirstOccurrences(
+		let matchedRanges = resultString.string.rangesOfFirstOccurrences(
 			ofCharactersIn: searchString,
-			using: { range, _ in
-				let boldFont = NSFontManager.shared.convert(channelNameFieldFont, toHaveTrait: .boldFontMask)
-				resultString.addAttribute(.font, value: boldFont, range: range)
-			},
 			options: .caseInsensitive
 		)
+
+		if !matchedRanges.isEmpty {
+			let boldFont = NSFontManager.shared.convert(channelNameFieldFont, toHaveTrait: .boldFontMask)
+
+			for range in matchedRanges {
+				resultString.addAttribute(.font, value: boldFont, range: range)
+			}
+		}
 
 		let networkName = channel.associatedClient?.networkNameAlt ?? ""
 		resultString.append(

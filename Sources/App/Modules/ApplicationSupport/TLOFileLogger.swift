@@ -296,13 +296,13 @@ public final class FileLogger: NSObject {
 
 		let identifier = client.uniqueIdentifier as NSString
 		let clientIdentifier = identifier.substring(to: min(5, identifier.length))
-		let clientName = String(("\(client.name) (\(clientIdentifier))" as NSString).ceSafeFilename)
+		let clientName = "\(client.name) (\(clientIdentifier))".safeFilename
 
 		guard let channel else {
 			return "/\(clientName)/\(TranscriptDirectory.console)/"
 		}
 
-		let channelName = String((channel.name as NSString).ceSafeFilename)
+		let channelName = channel.name.safeFilename
 
 		if channel.isChannel {
 			return "/\(clientName)/\(TranscriptDirectory.channel)/\(channelName)/"
@@ -316,7 +316,7 @@ public final class FileLogger: NSObject {
 	}
 
 	private static func displayPath(for url: URL) -> String {
-		(url as NSURL).textualStandardizedTildePath ?? url.path
+		url.standardizedTildePath ?? url.path
 	}
 
 	// MARK: - Idle Sweep

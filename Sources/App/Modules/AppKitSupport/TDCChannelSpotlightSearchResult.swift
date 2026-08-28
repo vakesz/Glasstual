@@ -82,8 +82,8 @@ public final class ChannelSpotlightSearchResult: NSObject {
 			return
 		}
 
-		let distanceValue = (channel.name as NSString).ce_compare(
-			with: searchString,
+		let distanceValue = channel.name.matchScore(
+			against: searchString,
 			lengthPenaltyWeight: 1.0
 		)
 

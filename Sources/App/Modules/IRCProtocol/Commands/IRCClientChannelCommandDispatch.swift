@@ -286,7 +286,7 @@ extension IRCClient {
 		var bestScore: CGFloat = 0
 		for client in AppController.shared.world.clientList {
 			for channel in client.channelList {
-				let score = (channel.name as NSString).ce_compare(with: needle, lengthPenaltyWeight: 0.1)
+				let score = channel.name.matchScore(against: needle, lengthPenaltyWeight: 0.1)
 				guard score > bestScore else { continue }
 				bestMatch = commandTreeItem(for: channel)
 				bestScore = score
