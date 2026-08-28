@@ -8,9 +8,9 @@
 		<key>serverAddress</key>
 		<string>irc.2600.net</string>
 		<key>serverPort</key>
-		<integer>6667</integer>
+		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
-		<false/>
+		<true/>
 		<key>description</key>
 		<string>Network of the 2600 hacker community.</string>
 		<key>website</key>
@@ -364,9 +364,9 @@
 		<key>serverAddress</key>
 		<string>irc.geekshed.net</string>
 		<key>serverPort</key>
-		<integer>6667</integer>
+		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
-		<false/>
+		<true/>
 		<key>description</key>
 		<string>Tech community network.</string>
 		<key>website</key>
@@ -532,9 +532,9 @@
 		<key>serverAddress</key>
 		<string>irc.ircnet.com</string>
 		<key>serverPort</key>
-		<integer>6667</integer>
+		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
-		<false/>
+		<true/>
 		<key>description</key>
 		<string>Large European network. No services; nicknames are not registered.</string>
 		<key>website</key>
@@ -700,9 +700,9 @@
 		<key>serverAddress</key>
 		<string>irc.slashnet.org</string>
 		<key>serverPort</key>
-		<integer>6667</integer>
+		<integer>6697</integer>
 		<key>prefersSecuredConnection</key>
-		<false/>
+		<true/>
 		<key>description</key>
 		<string>General chat network.</string>
 		<key>website</key>

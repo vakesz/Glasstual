@@ -18,20 +18,27 @@
 				<string>CA92.1</string>
 			</array>
 		</dict>
+		<!-- C617.1 covers the app's own container (log files, theme caches).
+		     DDA9.1 covers file transfers: the DCC dialog stats files the user
+		     picked or the folder they granted access to. -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>C617.1</string>
+				<string>DDA9.1</string>
 			</array>
 		</dict>
+		<!-- Reached through the in-process System Info extension, which reports
+		     free space to the person using the app rather than checking whether
+		     a write will fit, so 85F4.1 rather than E174.1. -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
-				<string>E174.1</string>
+				<string>85F4.1</string>
 			</array>
 		</dict>
 		<dict>

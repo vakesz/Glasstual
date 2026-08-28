@@ -116,6 +116,8 @@
 	<integer>0</integer>
 	<key>IRCopDefaultLocalizaiton -&gt; Shun Reason</key>
 	<integer>0</integer>
+	<key>InlineMediaAllowsCleartextHTTP</key>
+	<integer>0</integer>
 	<key>InlineMediaCheckEverything</key>
 	<integer>0</integer>
 	<key>InlineMediaLimitBasicsToFiles</key>
