@@ -109,8 +109,10 @@ public extension TXMenuController {
 		actionCoordinator.showServerProperties(for: client, selection: selection, context: context)
 	}
 
-	@objc(memberChangeColor:)
-	func memberChangeColor(_ nickname: String) {
+	/** Named for its argument so that the member-list menu can own the plain
+	 memberChangeColor: selector. */
+	@objc(showNicknameColorSheetForNickname:)
+	func showNicknameColorSheet(forNickname nickname: String) {
 		actionCoordinator.showNicknameColorSheet(for: nickname)
 	}
 

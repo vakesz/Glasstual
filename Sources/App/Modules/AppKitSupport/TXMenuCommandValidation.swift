@@ -123,6 +123,7 @@ private enum CommandMenuTag {
 	static let kickbanSeparator = 1622
 	static let ctcp = 1623
 	static let ircOperator = 1624
+	static let changeColor = 1625
 	static let developerMode = 9_100_000
 }
 
@@ -376,6 +377,9 @@ extension MenuActionCoordinator {
 		case CommandMenuTag.privateMessage:
 			item.isHidden = channel?.isChannel != true
 			return client?.isLoggedIn == true && channel?.isUtility == false
+		case CommandMenuTag.changeColor:
+			item.isHidden = channel?.isChannel != true
+			return channel?.isChannel == true
 		case CommandMenuTag.giveOp, CommandMenuTag.giveHalfop, CommandMenuTag.giveVoice,
 		     CommandMenuTag.takeOp, CommandMenuTag.takeHalfop, CommandMenuTag.takeVoice:
 			return client?.isLoggedIn == true && channel?.isActive == true
