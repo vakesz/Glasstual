@@ -68,7 +68,7 @@ struct ServerPropertiesSheetValueTests {
 
 	@Test("The advanced encodings preference is read from the shared container")
 	func advancedEncodingsKeyLivesInTheContainer() {
-		let key = ServerPropertiesSheet.advancedEncodingsKey
+		let key = Preferences.Internals.includeAdvancedEncodings.name
 		let container = TextualUserDefaults.shared()
 		let original = container.object(forKey: key)
 		defer {

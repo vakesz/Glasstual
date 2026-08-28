@@ -37,7 +37,7 @@
 
 import Foundation
 
-/* These three questions used to be answered by loading a plist and comparing the
+/** These three questions used to be answered by loading a plist and comparing the
  name against every entry with a per-entry comparator. They are now answered by
  the key declarations, which is the same data without the second copy. */
 public extension TextualUserDefaults {

@@ -80,13 +80,13 @@ struct PreferenceCatalogTests {
 	// MARK: - Generated resources
 
 	enum Catalogue: String, CaseIterable, Sendable {
-		case masterList = "PreferenceKeyMasterList"
+		case keyCatalog = "PreferenceKeyMasterList"
 		case excludedFromContainer = "KeysExcludedFromContainer"
 		case excludedFromExport = "KeysExcludedFromExport"
 
 		var generated: [String: Any] {
 			switch self {
-			case .masterList: Preferences.GeneratedResources.masterList
+			case .keyCatalog: Preferences.GeneratedResources.keyCatalog
 			case .excludedFromContainer: Preferences.GeneratedResources.keysExcludedFromContainer
 			case .excludedFromExport: Preferences.GeneratedResources.keysExcludedFromExport
 			}

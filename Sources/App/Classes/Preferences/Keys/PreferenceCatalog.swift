@@ -146,7 +146,7 @@ public nonisolated extension Preferences {
 	/// files have: name to comparator for the catalogues, name to value for the
 	/// registration domains.
 	nonisolated enum GeneratedResources {
-		public static var masterList: [String: Any] {
+		public static var keyCatalog: [String: Any] {
 			catalogue { $0.isCatalogued } families: { $0.isCatalogued }
 		}
 

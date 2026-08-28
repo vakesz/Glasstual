@@ -122,14 +122,18 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertEqual(TVCTextViewCaretLocation.lastLine.rawValue, 3)
 	}
 
+	/// The suppression family is catalogued as a container key, so the flags are
+	/// stored there rather than in UserDefaults.standard, which is what makes an
+	/// imported "do not ask again" take effect.
 	func testAlertSuppressionDecisionFollowsTheStoredPreference() {
 		let baseKey = "AppKitSupportMigrationTests.\(UUID().uuidString)"
 		let defaultsKey = TDCAlert.suppressionKey(withBase: baseKey)
-		defer { UserDefaults.standard.removeObject(forKey: defaultsKey) }
+		let defaults = TextualUserDefaults.shared()
+		defer { defaults.removeObject(forKey: defaultsKey) }
 
 		XCTAssertFalse(TDCAlert.isSuppressed(baseKey: baseKey))
 
-		UserDefaults.standard.set(true, forKey: defaultsKey)
+		defaults.set(true, forKey: defaultsKey)
 
 		XCTAssertTrue(TDCAlert.isSuppressed(baseKey: baseKey))
 	}

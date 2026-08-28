@@ -618,7 +618,6 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 			break
 		}
 	}
-
 }
 
 @objc(TVCMainWindowTextViewContentView)
