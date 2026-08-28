@@ -5,6 +5,7 @@ import Testing
 /// the cautious answer, so forgetting to override costs a gated module rather
 /// than an ungated injection point.
 @Suite("Inline content module trust")
+@MainActor
 struct InlineContentModuleTrustTests {
 	@Test("The base class defaults to untrusted and not safe for work")
 	func baseDefaultsAreCautious() {

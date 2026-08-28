@@ -42,6 +42,7 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+@MainActor
 class TVCLogLineTests: XCTestCase {
 	func testMessageIdentifierSurvivesArchivingAndCopying() throws {
 		let line = MutableLogLine()

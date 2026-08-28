@@ -7,6 +7,7 @@ import AppKit
 import CocoaExtensions
 import XCTest
 
+@MainActor
 final class CocoaExtensionsUtilityMigrationTests: XCTestCase {
 	func testUserDefaultsNumericHelpersPreserveValuesAndSelectors() throws {
 		let suiteName = "CocoaExtensionsUtilityMigrationTests.\(UUID().uuidString)"

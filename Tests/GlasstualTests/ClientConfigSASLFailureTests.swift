@@ -19,6 +19,7 @@ import Testing
 /// the client completes registration unauthenticated on 904, 905 or 906, which
 /// many networks treat as a security failure.
 @Suite("Disconnect on SASL failure")
+@MainActor
 struct ClientConfigSASLFailureTests {
 	private static let key = "disconnectOnSASLFailure"
 

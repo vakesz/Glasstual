@@ -106,6 +106,7 @@ struct IRCBatchLimitsTests {
 	}
 }
 
+@MainActor
 struct IRCMessageTagLimitTests {
 	/// IRCv3 caps the tag section at 8191 bytes.
 	@Test

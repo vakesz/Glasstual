@@ -3,6 +3,7 @@ import CocoaExtensions
 import GlasstualPluginKit
 import XCTest
 
+@MainActor
 final class IRCClientConfigMigrationTests: XCTestCase {
 	func testDefaultsMatchPersistedConfigurationContract() {
 		let config = ClientConfig(dictionary: ["dictionaryVersion": 710])

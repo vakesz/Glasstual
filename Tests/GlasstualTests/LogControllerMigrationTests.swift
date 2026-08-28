@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class LogControllerTests: XCTestCase {
 	func testFinishedLoadingNotificationRetainsHistoricName() {
 		XCTAssertEqual(

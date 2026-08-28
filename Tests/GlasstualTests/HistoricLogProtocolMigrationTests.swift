@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class HistoricLogProtocolMigrationTests: XCTestCase {
 	func testXPCProtocolRuntimeNamesRemainStable() {
 		XCTAssertEqual(NSStringFromProtocol(HistoricLogServerProtocol.self), "HLSHistoricLogServerProtocol")

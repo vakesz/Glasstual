@@ -39,7 +39,7 @@ import AppKit
 import GlasstualPluginKit
 import Synchronization
 
-private struct SmileyConversionSnapshot: Sendable {
+private nonisolated struct SmileyConversionSnapshot: Sendable {
 	static let empty = SmileyConversionSnapshot(conversionTable: [:])
 
 	let conversionTable: [String: String]
@@ -52,7 +52,8 @@ private struct SmileyConversionSnapshot: Sendable {
 }
 
 @objc(TPISmileyConverter)
-final class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRendering, PluginPreferencesProviding,
+final nonisolated class SmileyConverterPlugin: NSObject, GlasstualPlugin, PluginMessageRendering,
+	PluginPreferencesProviding,
 	@unchecked Sendable
 {
 	private static let enabledPreference = "Smiley Converter Extension -> Enable Service"

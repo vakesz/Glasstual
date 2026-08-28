@@ -117,6 +117,9 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 			nickname: "second",
 			text: "two"
 		)
+		/* The producer formats a notification before queueing it. */
+		firstNotification.spokenText = "one"
+		secondNotification.spokenText = "two"
 
 		synthesizer.speak(firstNotification)
 		synthesizer.speak(secondNotification)

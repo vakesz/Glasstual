@@ -5,6 +5,7 @@ import Testing
 /// renderer's attribute dictionary. Renumbering a case silently reinterprets
 /// every historic entry, so the numbers are pinned here as well as in source.
 @Suite("Log line enumeration raw values")
+@MainActor
 struct LogLineTypeRawValueTests {
 	@Test("Line type numbers are stable", arguments: [
 		(TVCLogLineType.undefined, UInt(0)),

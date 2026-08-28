@@ -3,6 +3,7 @@ import CocoaExtensions
 import XCTest
 
 @objc
+@MainActor
 class RCMSecureTransportTests: XCTestCase {
 	@objc
 	func testCompatibilityCipherListIncludesDeprecatedSuites() {

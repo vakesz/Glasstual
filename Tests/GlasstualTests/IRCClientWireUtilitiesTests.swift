@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientWireUtilitiesTests: XCTestCase {
 	func testModeChangesAreBatchedAtServerLimit() {
 		XCTAssertEqual(

@@ -39,6 +39,7 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+@MainActor
 class IRCSendingMessageTests: XCTestCase {
 	func testNativeBuilderPreservesObjectiveCRuntimeContract() {
 		XCTAssertNotNil(NSClassFromString("IRCSendingMessage"))

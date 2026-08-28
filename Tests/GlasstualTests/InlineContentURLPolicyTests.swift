@@ -5,6 +5,7 @@ import Testing
 /// The URL a module resolves ends up in a `src` attribute in the log view, so
 /// it is filtered rather than trusted.
 @Suite("Inline content URL policy")
+@MainActor
 struct InlineContentURLPolicyTests {
 	@Test("HTTP addresses resolve")
 	func webAddressesResolve() {

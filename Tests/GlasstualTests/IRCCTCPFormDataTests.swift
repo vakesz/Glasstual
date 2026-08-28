@@ -39,6 +39,7 @@
 @testable import Glasstual
 import Testing
 
+@MainActor
 struct IRCCTCPFormDataTests {
 	/// A hostile server controls the LAGCHECK payload; repeating a key used
 	/// to abort the process through `Dictionary(uniqueKeysWithValues:)`.

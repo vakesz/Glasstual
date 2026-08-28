@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientOutboundPolicyTests: XCTestCase {
 	func testTypingFinishesForEmptyCommandsAndDisabledNotifications() {
 		XCTAssertTrue(OutboundTypingPolicy.shouldFinish(text: "", notificationsEnabled: true))

@@ -7,6 +7,7 @@ import CocoaExtensions
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class TPCPreferencesLocalMigrationTests: XCTestCase {
 	func testCompatibilityNumericSetterPostsPreferenceNotification() {
 		let defaults = TextualUserDefaults.shared()

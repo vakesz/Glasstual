@@ -40,7 +40,7 @@ import CocoaExtensions
 import GlasstualPluginKit
 
 @objc(TPI_ChatFilterLogic)
-final class ChatFilterEngine: NSObject, @unchecked Sendable {
+final nonisolated class ChatFilterEngine: NSObject, @unchecked Sendable {
 	private weak var parentObject: NSObject?
 	private let host: PluginHostContext
 	private var lastActionDates: [String: TimeInterval] = [:]

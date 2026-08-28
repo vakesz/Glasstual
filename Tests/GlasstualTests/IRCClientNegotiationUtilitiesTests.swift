@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientNegotiationUtilitiesTests: XCTestCase {
 	func testSupportedMechanismsRespectCredentialsCertificateAndPreference() {
 		XCTAssertEqual(

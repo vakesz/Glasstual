@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class ThemePresentationSchemaTests: XCTestCase {
 	func testRendererConfigurationSchemaRetainsExternalKeys() {
 		let expected = [
@@ -50,6 +51,7 @@ final class ThemePresentationSchemaTests: XCTestCase {
 			"TVCLogRendererConfigurationDoNotEscapeBodyAttribute",
 			"TVCLogRendererConfigurationAttributedStringPreferredFontAttribute",
 			"TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute",
+			"TVCLogRendererConfigurationInlineMediaEnabledAttribute",
 		]
 
 		XCTAssertEqual(LogRendererConfigurationKey.allCases.map(\.rawValue), expected)

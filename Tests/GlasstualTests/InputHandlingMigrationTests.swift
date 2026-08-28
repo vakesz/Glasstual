@@ -9,6 +9,7 @@ import XCTest
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 @objc
+@MainActor
 class GLTKeyEventTarget: NSObject {
 	@objc var invocationCount: UInt = 0
 	@objc var lastEvent: NSEvent?
@@ -28,6 +29,7 @@ private final class GLTCompletionWindow: NicknameCompletionWindow {
 }
 
 @objc
+@MainActor
 class GLTCompletionChannel: Channel, @unchecked Sendable {
 	@objc var testMembers: [ChannelUser] = []
 
