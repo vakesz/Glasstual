@@ -280,22 +280,21 @@ public extension IRCClient {
 		}
 	}
 
-	@objc(enumerateServers:)
-	func enumerateServers(_ body: (Server, UInt, UnsafeMutablePointer<ObjCBool>) -> Void) {
-		(config.serverList as NSArray).enumerateObjects { object, index, stop in
-			guard let server = object as? Server else { return }
-			body(server, UInt(index), stop)
-		}
-	}
-
 	@objc(writeServerPasswordsToKeychain)
 	func writeServerPasswordsToKeychain() {
-		config.serverList.forEach { $0.writeServerPasswordToKeychain() }
+		guard let mutableConfig = config.mutableCopy() as? MutableClientConfig else { return }
+
+		mutableConfig.serverList = mutableConfig.serverList.map { server in
+			var server = server
+			server.writeServerPasswordToKeychain()
+			return server
+		}
+		config = mutableConfig
 	}
 
 	@objc(destroyServerPasswordsKeychainItems)
 	func destroyServerPasswordsKeychainItems() {
-		config.serverList.forEach { $0.destroyServerPasswordKeychainItem() }
+		config.serverList.forEach { $0.keychainItem.delete() }
 	}
 
 	private func reconcileChannels(with configurations: [ChannelConfig]) {
@@ -331,19 +330,22 @@ public extension IRCClient {
 	}
 
 	private func reconcileServers(from oldServers: [Server], to newServers: [Server]) {
+		/* An endpoint the user removed no longer has anywhere to keep its
+		 password, so the keychain item goes with it. The endpoint the client is
+		 connected to right now keeps its secret until the connection ends. */
 		let newIdentifiers = Set(newServers.map(\.uniqueIdentifier))
 		for oldServer in oldServers where newIdentifiers.contains(oldServer.uniqueIdentifier) == false {
 			if oldServer.uniqueIdentifier == server?.uniqueIdentifier {
-				server?.destroyKeychainItemsDuringDealloc = true
+				retiredServerKeychainItems.insert(oldServer.keychainItem)
 			} else {
-				oldServer.destroyServerPasswordKeychainItem()
+				oldServer.keychainItem.delete()
 			}
 		}
 
 		if newServers.isEmpty {
 			lastServerSelected = UInt(NSNotFound)
 		} else {
-			newServers.forEach { $0.writeServerPasswordToKeychain() }
+			writeServerPasswordsToKeychain()
 		}
 	}
 }

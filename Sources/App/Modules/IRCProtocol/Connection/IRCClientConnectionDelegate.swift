@@ -118,6 +118,8 @@ public extension IRCClient {
 		timeoutWarningShownToUser = false
 		lastWhoRequestChannelListIndex = 0
 		server = nil
+		retiredServerKeychainItems.forEach { $0.delete() }
+		retiredServerKeychainItems.removeAll()
 		userHostmask = nil
 		setValue(nil, forKey: "userNickname")
 		tryingNicknameNumber = 0

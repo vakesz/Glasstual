@@ -142,12 +142,12 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertNotEqual(unique.uniqueIdentifier, original.uniqueIdentifier)
 	}
 
-	func testServerDefaultsAndDictionaryRoundTrip() {
-		let server = Server(dictionary: [
+	func testServerDefaultsAndDictionaryRoundTrip() throws {
+		let server = try XCTUnwrap(PropertyListModel.decode(Server.self, from: [
 			"serverAddress": "irc.example.test",
 			"serverPort": 6697,
 			"prefersSecuredConnection": true,
-		])
+		]))
 
 		XCTAssertEqual(server.serverAddress, "irc.example.test")
 		XCTAssertEqual(server.serverPort, 6697)
@@ -160,19 +160,16 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertEqual(empty.serverAddress, "")
 	}
 
-	func testServerMutablePasswordAndUniqueCopy() throws {
-		let mutable = MutableServer()
-		mutable.serverAddress = "chat.example.test"
-		mutable.serverPort = 6667
-		mutable.serverPassword = "s3cret"
-		mutable.prefersSecuredConnection = false
+	func testServerPasswordAndUniqueCopy() {
+		var server = Server(serverAddress: "chat.example.test", serverPort: 6667)
+		server.serverPassword = "s3cret"
 
-		XCTAssertEqual(mutable.serverPassword, "s3cret")
+		XCTAssertEqual(server.serverPassword, "s3cret")
 
-		let unique = try XCTUnwrap(mutable.uniqueCopy() as? Server)
+		let unique = server.uniqueCopy()
 
 		XCTAssertEqual(unique.serverAddress, "chat.example.test")
-		XCTAssertNotEqual(unique.uniqueIdentifier, mutable.uniqueIdentifier)
+		XCTAssertNotEqual(unique.uniqueIdentifier, server.uniqueIdentifier)
 		XCTAssertEqual(unique.serverPassword, "s3cret")
 	}
 

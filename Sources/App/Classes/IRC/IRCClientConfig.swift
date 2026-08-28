@@ -265,7 +265,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 		loginCommandsStorage
 	}
 
-	@objc public var serverList: [Server] {
+	public var serverList: [Server] {
 		serverListStorage
 	}
 
@@ -403,11 +403,13 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 		let config = MutableClientConfig()
 		config.connectionName = network.networkName
 
-		let server = MutableServer()
-		server.serverAddress = network.serverAddress
-		server.serverPort = network.serverPort
-		server.prefersSecuredConnection = network.prefersSecuredConnection
-		config.serverList = [checkedModel(server.copy(), as: Server.self)]
+		config.serverList = [
+			Server(
+				serverAddress: network.serverAddress,
+				serverPort: network.serverPort,
+				prefersSecuredConnection: network.prefersSecuredConnection
+			),
+		]
 
 		if isMutable {
 			return unsafeDowncast(config, to: Self.self)
@@ -554,9 +556,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 			config.ignoreListStorage = ignoreListStorage.map {
 				checkedModel($0.uniqueCopy(), as: AddressBookEntry.self)
 			}
-			config.serverListStorage = serverListStorage.map {
-				checkedModel($0.uniqueCopy(), as: Server.self)
-			}
+			config.serverListStorage = serverListStorage.map { $0.uniqueCopy() }
 			config.uniqueIdentifierStorage = UUID().uuidString
 		} else {
 			config.channelListStorage = channelListStorage
@@ -651,7 +651,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 		setSerialized(channelListStorage, on: dictionary, key: "channelList")
 		setSerialized(highlightListStorage, on: dictionary, key: "highlightList")
 		setSerialized(ignoreListStorage, on: dictionary, key: "ignoreList")
-		setSerialized(serverListStorage, on: dictionary, key: "serverList")
+		setEncoded(serverListStorage, on: dictionary, key: "serverList")
 
 		let compacted = dictionary.ce_dictionaryByRemovingDefaults(
 			defaultsStorage as NSDictionary,
@@ -787,7 +787,9 @@ nonisolated extension ClientConfig {
 		highlightListStorage = dictionaries(values["highlightList"])
 			.map(HighlightMatchCondition.init(dictionary:))
 			.filter(\.isWellFormed)
-		serverListStorage = dictionaries(values["serverList"]).map(Server.init(dictionary:))
+		serverListStorage = dictionaries(values["serverList"]).compactMap {
+			PropertyListModel.decode(Server.self, from: $0)
+		}
 
 		guard dictionaryVersionStorage != ClientConfigDefaults.dictionaryVersion else {
 			return
@@ -992,14 +994,14 @@ nonisolated extension ClientConfig {
 			return
 		}
 
-		let password = KeychainItem.serverPassword(uniqueIdentifierStorage).password
-		let server = MutableServer()
-		server.serverAddress = address
-		server.serverPort = port
-		server.serverPassword = password
-		server.prefersSecuredConnection = boolValue(values["prefersSecuredConnection"])
+		var server = Server(
+			serverAddress: address,
+			serverPort: port,
+			prefersSecuredConnection: boolValue(values["prefersSecuredConnection"]),
+			pendingServerPassword: KeychainItem.serverPassword(uniqueIdentifierStorage).password
+		)
 		server.writeServerPasswordToKeychain()
-		serverListStorage = [checkedModel(server.copy(), as: Server.self)]
+		serverListStorage = [server]
 		migratedServerPasswordPendingDestroy = true
 	}
 
@@ -1028,6 +1030,17 @@ nonisolated extension ClientConfig {
 		key: String
 	) {
 		let serialized = values.map(\.dictionaryValue)
+		if serialized.isEmpty == false {
+			dictionary[key] = serialized
+		}
+	}
+
+	private func setEncoded(
+		_ values: [some Encodable],
+		on dictionary: NSMutableDictionary,
+		key: String
+	) {
+		let serialized = values.map { PropertyListModel.encode($0) }
 		if serialized.isEmpty == false {
 			dictionary[key] = serialized
 		}
@@ -1214,7 +1227,7 @@ public final nonisolated class MutableClientConfig: ClientConfig {
 		get { loginCommandsStorage } set { loginCommandsStorage = newValue }
 	}
 
-	@objc override public var serverList: [Server] {
+	override public var serverList: [Server] {
 		get { serverListStorage } set { serverListStorage = newValue }
 	}
 

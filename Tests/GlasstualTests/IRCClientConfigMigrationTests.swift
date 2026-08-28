@@ -83,9 +83,7 @@ final class IRCClientConfigMigrationTests: XCTestCase {
 		config.nicknamePassword = "nick-password"
 		config.proxyPassword = "proxy-password"
 
-		let server = MutableServer()
-		server.serverAddress = "irc.example.test"
-		let serverCopy = try XCTUnwrap(server.copy() as? Server)
+		let serverCopy = Server(serverAddress: "irc.example.test")
 		config.serverList = [serverCopy]
 
 		let channel = MutableChannelConfig()

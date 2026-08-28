@@ -17,6 +17,14 @@ private let endpointEntryTableDragToken = NSPasteboard.PasteboardType(
 	"com.vakesz.glasstual.server-endpoint-list.table-row"
 )
 
+/// What `ServerEndpointListSheet` reports back. The endpoints are values, so
+/// they cannot travel through `NSObject.perform(_:with:with:)`.
+@MainActor
+public protocol ServerEndpointListSheetDelegate: AnyObject {
+	func serverEndpointListSheet(_ sender: ServerEndpointListSheet, onOk serverList: [Server])
+	func serverEndpointListSheetWillClose(_ sender: ServerEndpointListSheet)
+}
+
 @objc(TDCServerEndpointListSheet)
 @MainActor
 public final class ServerEndpointListSheet: SheetBase {
@@ -47,10 +55,13 @@ public final class ServerEndpointListSheet: SheetBase {
 		}
 	}
 
-	@objc(startWithServerList:)
+	private var endpointDelegate: (any ServerEndpointListSheetDelegate)? {
+		delegate as? any ServerEndpointListSheetDelegate
+	}
+
 	public func start(with serverList: [Server]) {
 		for server in serverList {
-			entryTableController.addObject(server.mutableCopy())
+			entryTableController.addObject(ServerEndpointListEntry(server: server))
 		}
 
 		startSheet()
@@ -58,25 +69,11 @@ public final class ServerEndpointListSheet: SheetBase {
 
 	@IBAction override public func ok(_ sender: Any?) {
 		let serverListIn = entryTableController.arrangedObjects as? [Any] ?? []
-		var serverListOut: [Server] = []
+		let serverListOut = serverListIn
+			.compactMap { ($0 as? ServerEndpointListEntry)?.server }
+			.filter { $0.serverAddress.isEmpty == false }
 
-		for case let server as MutableServer in serverListIn {
-			if server.serverAddress.isEmpty {
-				continue
-			}
-
-			guard let server = server.copy() as? Server else {
-				assertionFailure("MutableServer.copy() must return Server")
-				continue
-			}
-
-			serverListOut.append(server)
-		}
-
-		let selector = NSSelectorFromString("serverEndpointListSheet:onOk:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self, with: serverListOut)
-		}
+		endpointDelegate?.serverEndpointListSheet(self, onOk: serverListOut)
 
 		super.ok(sender)
 	}
@@ -97,8 +94,7 @@ public final class ServerEndpointListSheet: SheetBase {
 	}
 
 	private func addEntry() {
-		let newEntry = MutableServer()
-		entryTableController.addObject(newEntry)
+		entryTableController.addObject(ServerEndpointListEntry(server: Server()))
 
 		DispatchQueue.main.async { [weak self] in
 			guard let self else {
@@ -120,10 +116,7 @@ public final class ServerEndpointListSheet: SheetBase {
 		canRemoveObservation?.invalidate()
 		canRemoveObservation = nil
 
-		let selector = NSSelectorFromString("serverEndpointListSheetWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		endpointDelegate?.serverEndpointListSheetWillClose(self)
 	}
 }
 
