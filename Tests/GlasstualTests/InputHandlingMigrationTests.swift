@@ -15,7 +15,7 @@ private final class GLTCompletionWindow: NicknameCompletionWindow {
 }
 
 @MainActor
-class GLTCompletionChannel: Channel, @unchecked Sendable {
+class GLTCompletionChannel: Channel {
 	var testMembers: [ChannelUser] = []
 
 	override var channelMembers: [ChannelUser] {

@@ -45,7 +45,7 @@ import Foundation
 /// opening a socket. Tests opt into real incoming-message handling when they
 /// need to exercise the production state machine.
 @MainActor
-final class GLTTestClient: IRCClient, @unchecked Sendable {
+final class GLTTestClient: IRCClient {
 	let sentCapabilityCommands = NSMutableArray()
 	let sentLines = NSMutableArray()
 	let processedMessages = NSMutableArray()
