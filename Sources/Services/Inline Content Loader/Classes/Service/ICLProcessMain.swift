@@ -1,9 +1,9 @@
 /* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
- *                   | |/ _ \\ \/ / __| | | |/ _` | |
+ *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2017, 2018 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -138,7 +138,7 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 
 	@objc(processPayload:)
 	func process(_ payload: InlineContentPayload) {
-		guard let scheme = payload.url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
+		guard TextualPreferences.permitsInlineMedia(at: payload.url) else {
 			return
 		}
 

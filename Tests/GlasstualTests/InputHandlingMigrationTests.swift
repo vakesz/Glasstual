@@ -1,9 +1,6 @@
 @testable import Glasstual
 import XCTest
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "GLTTestClient.h"
 /** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
@@ -15,20 +12,17 @@ private final class GLTCompletionWindow: NicknameCompletionWindow {
 	var selectedChannel: Channel?
 }
 
-@objc
 @MainActor
 class GLTCompletionChannel: Channel, @unchecked Sendable {
-	@objc var testMembers: [ChannelUser] = []
+	var testMembers: [ChannelUser] = []
 
 	override var channelMembers: [ChannelUser] {
 		testMembers
 	}
 }
 
-@objc
 @MainActor
 class InputHandlingMigrationTests: XCTestCase {
-	@objc
 	func testInputHistoryNavigatesEntriesAndSkipsConsecutiveDuplicates() {
 		let defaults = TextualUserDefaults.shared()
 		let preferenceKey = "SaveInputHistoryPerSelection"
@@ -117,7 +111,6 @@ class InputHandlingMigrationTests: XCTestCase {
 		XCTAssertTrue(NicknameCompletionStatus.instancesRespond(to: NSSelectorFromString("completeNickname:")))
 	}
 
-	@objc
 	func testNicknameCompletionCompletesLocalCommandAndPreservesCommandPrefix() {
 		CommandIndex.populateCommandIndex()
 
@@ -141,7 +134,6 @@ class InputHandlingMigrationTests: XCTestCase {
 		XCTAssertEqual(textField.selectedRange.location, 6)
 	}
 
-	@objc
 	func testNicknameCompletionUsesChannelMembersAndConfiguredSuffix() {
 		let defaults = TextualUserDefaults.shared()
 		let preferenceKey = "Keyboard -> Tab Key Completion Suffix"
@@ -158,7 +150,7 @@ class InputHandlingMigrationTests: XCTestCase {
 
 		let client = GLTTestClient()
 		let member = GLTTestClient.testChannelUser(nickname: "Alice", on: client)
-		let channel: GLTCompletionChannel! = GLTCompletionChannel(config: ChannelConfig(channelName: "#chat"))
+		let channel = GLTCompletionChannel(config: ChannelConfig(channelName: "#chat"))
 
 		channel.testMembers = [member]
 
@@ -183,7 +175,6 @@ class InputHandlingMigrationTests: XCTestCase {
 		XCTAssertEqual(textField.string, "Alice: ")
 	}
 
-	@objc
 	func keyEventWithCharacters(_ characters: String, modifiers: NSEvent.ModifierFlags,
 	                            keyCode: UInt16) -> NSEvent
 	{

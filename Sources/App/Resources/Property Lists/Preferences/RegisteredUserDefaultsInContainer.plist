@@ -96,6 +96,8 @@
 	<string>Your behavior is not conducive to the desired environment.</string>
 	<key>IRCopDefaultLocalizaiton -&gt; Shun Reason</key>
 	<string>1d Shunned.</string>
+	<key>InlineMediaAllowsCleartextHTTP</key>
+	<true/>
 	<key>InlineMediaCheckEverything</key>
 	<false/>
 	<key>InlineMediaLimitToBasics</key>

@@ -6,7 +6,7 @@ import XCTest
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
  *                   | |  __/>  <| |_| |_| | (_| | |
- *                   |_|\___/_/\_\\__|\__,_|\__,_|_|
+ *                   |_|\___/_/\_\__|\__,_|\__,_|_|
  *
  * Copyright (c) 2010 - 2019 Codeux Software, LLC & respective contributors.
  *       Please see Acknowledgements.pdf for additional information.
@@ -37,16 +37,13 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
-@objc
 @MainActor
 class IRCCommandIndexTests: XCTestCase {
-	@objc
 	override static func setUp() {
 		super.setUp()
 		CommandIndex.populateCommandIndex()
 	}
 
-	@objc
 	func testCommandIndexesAreCaseInsensitive() {
 		XCTAssertEqual(CommandIndex.index(ofRemoteCommand: "privmsg"), 1035)
 		XCTAssertEqual(CommandIndex.index(ofRemoteCommand: "PRIVMSG"), 1035)
@@ -54,27 +51,24 @@ class IRCCommandIndexTests: XCTestCase {
 		XCTAssertEqual(CommandIndex.index(ofLocalCommand: "JOIN"), 5032)
 	}
 
-	@objc
 	func testUnknownCommandsReturnNotFound() {
 		XCTAssertEqual(CommandIndex.index(ofRemoteCommand: "not-a-command"), UInt(NSNotFound))
 		XCTAssertEqual(CommandIndex.index(ofLocalCommand: "not-a-command"), UInt(NSNotFound))
 		XCTAssertEqual(CommandIndex.colonPosition(forRemoteCommand: "not-a-command"), UInt(NSNotFound))
 	}
 
-	@objc
 	func testOutgoingColonPositionsComeFromRemoteCommandMetadata() {
 		XCTAssertEqual(CommandIndex.colonPosition(forRemoteCommand: "PRIVMSG"), 1)
 		XCTAssertEqual(CommandIndex.colonPosition(forRemoteCommand: "FAIL"), 2)
 		XCTAssertEqual(CommandIndex.colonPosition(forRemoteCommand: "PASS"), UInt(NSNotFound))
 	}
 
-	@objc
 	func testLocalCommandSyntaxAndCompletionList() {
 		XCTAssertEqual(CommandIndex.syntax(forLocalCommand: "away"), "AWAY [comment]")
 		XCTAssertEqual(CommandIndex.syntax(forLocalCommand: "back"), "BACK")
 		XCTAssertNil(CommandIndex.syntax(forLocalCommand: "not-a-command"))
 
-		let commands: [String]! = CommandIndex.localCommandList()
+		let commands = CommandIndex.localCommandList()
 
 		XCTAssertTrue(commands.contains("JOIN"))
 		XCTAssertFalse(commands.contains("Reserved Information"))

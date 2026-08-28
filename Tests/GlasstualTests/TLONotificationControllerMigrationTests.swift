@@ -1,22 +1,16 @@
 @testable import Glasstual
 import XCTest
 
-/// Preprocessor directives found in file:
-/// #import <XCTest/XCTest.h>
-/// #import "TPCPreferencesLocal.h"
 /** *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 @MainActor
-@objc
 class TLONotificationControllerMigrationTests: XCTestCase {
-	@objc
 	func controller() -> NotificationController {
 		SharedApplication.sharedNotificationController()
 	}
 
-	@objc
 	func testTitleForEventReturnsLocalizedNonEmptyStrings() {
 		let controller = controller()
 
@@ -26,7 +20,6 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 		XCTAssertFalse(controller.title(forEvent: .userJoined).isEmpty)
 	}
 
-	@objc
 	func testThreadIdentifierCombinesClientAndChannel() {
 		XCTAssertNil(NotificationController.threadIdentifier(forClient: nil, channel: "chan"))
 		XCTAssertEqual(NotificationController.threadIdentifier(forClient: "client-a", channel: nil), "client-a")
@@ -36,12 +29,11 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 		)
 	}
 
-	@objc
 	func testNotificationIdentifierUsesStableNSStringHashLayout() {
 		let title = "Hello"
 		let message = "World"
 		let thread = "client-channel"
-		let expected: String! = String(
+		let expected = String(
 			format: "TXNotification-%@-%ld-%ld",
 			thread,
 			(title as NSString).hash,
@@ -55,7 +47,7 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 
 		XCTAssertEqual(actual, expected)
 
-		let noThreadExpected: String! = String(
+		let noThreadExpected = String(
 			format: "TXNotification-%@-%ld-%ld",
 			"<No Thread>",
 			(title as NSString).hash,
@@ -68,7 +60,6 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 		)
 	}
 
-	@objc
 	func testUserInfoScopeMatchingTreatsNilChannelsAsEqual() {
 		let clientOnly: [AnyHashable: Any] = [NotificationPayload.clientIdentifierKey: "c1"]
 		let withChannel: [AnyHashable: Any] = [
@@ -101,13 +92,11 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 		))
 	}
 
-	@objc
 	func testPublicFormatConstantsRemainStable() {
 		XCTAssertEqual(NotificationPayload.clientIdentifierKey, "clientId")
 		XCTAssertEqual(NotificationPayload.channelIdentifierKey, "channelId")
 	}
 
-	@objc
 	func testPreferenceLookupsWithNilChannelMatchGlobalPreferences() {
 		let controller = controller()
 		let eventType = TXNotificationType.highlight
@@ -133,7 +122,6 @@ class TLONotificationControllerMigrationTests: XCTestCase {
 		)
 	}
 
-	@objc
 	func testAreNotificationsDisabledToggle() {
 		let controller = controller()
 		let original: Bool = controller.areNotificationsDisabled
