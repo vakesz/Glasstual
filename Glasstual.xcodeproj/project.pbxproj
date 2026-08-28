@@ -67,7 +67,6 @@
 		13F3525E7A19CA725406D467 /* BasicLanguage.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A2FB5C1EFDCB15CEEA896AA5 /* BasicLanguage.xcstrings */; };
 		13F476679682FCFD96AA90E2 /* TLOSpokenNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD860FB284B5DBD95969E6C0 /* TLOSpokenNotification.swift */; };
 		144A003D331035789F10D5B8 /* ServerPropertiesSheetMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34282F9B03FCA36C2A770B80 /* ServerPropertiesSheetMigrationTests.swift */; };
-		15A488ABD4FD1052A2BCE2C5 /* GTMEncodeHTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF4B3ECDDF492EAAAFFA787 /* GTMEncodeHTML.swift */; };
 		15A75D409337B86E8F11D149 /* Style Default Templates in Resources */ = {isa = PBXBuildFile; fileRef = 672522A95D7C66A773F8BA7F /* Style Default Templates */; };
 		15D4B8AB1ABF7BE6B17D30EE /* IRCTreeItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D03B8CB0441DB47B79F08E /* IRCTreeItem.swift */; };
 		15E6F726F2AD82934357B9B9 /* TVCTextFormatterMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B6BAFC41EF1205DE50887A1 /* TVCTextFormatterMenu.swift */; };
@@ -191,6 +190,7 @@
 		35629707062588AC0AB97AD1 /* PluginManagerRegistryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD7976B48644C9033535F1B /* PluginManagerRegistryTests.swift */; };
 		35C69A7E874E4A277FE8850B /* PluginHostSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = E154CE41A3D4B3FCEE123F7E /* PluginHostSnapshot.swift */; };
 		36E5E1DE67BC7D8840396A31 /* FeatureLocalizationMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D651F712EB34342D2C1EA7 /* FeatureLocalizationMigrationTests.swift */; };
+		36E7636AB19CED96D653D521 /* HTMLEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8C9226711BC1A8462E9C07 /* HTMLEntities.swift */; };
 		36F0981D7A685AC32322D30A /* TXMenuActionCoordinatorDialogCallbacks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45581BE4B2938ABE7944DA92 /* TXMenuActionCoordinatorDialogCallbacks.swift */; };
 		3709BC388299AD2B49192109 /* TVCNotificationConfigurationView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 88D51E27866842E251439E74 /* TVCNotificationConfigurationView.xib */; };
 		3732BD44D07714E862282D87 /* StandardLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F6415733439ACFD49DBECC /* StandardLibrary.swift */; };
@@ -505,7 +505,6 @@
 		9306F4EB502D0722719A6EB8 /* ScriptExecutionSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCAE31AA9B1E7F8D1076A91F /* ScriptExecutionSupportTests.swift */; };
 		934E9FB3CEFB32ECDE70BE58 /* Localizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA3DC2396F4A88DBE631727 /* Localizer.swift */; };
 		93542EADFBDF77731CFFA684 /* ICMDailymotion.mustache in Resources */ = {isa = PBXBuildFile; fileRef = EB2971A07CD39FFCE2A0EB08 /* ICMDailymotion.mustache */; };
-		935F75A5E2A994650AC19B59 /* THOUnicodeHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28AEE097C63AD72FB048303E /* THOUnicodeHelper.swift */; };
 		93E2BC98C4236F8AFF135648 /* TDCChannelBanListSheet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 133298C9987F880C41CC27E2 /* TDCChannelBanListSheet.xcstrings */; };
 		94346D6BC16AD102D2E2752A /* TVCMainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = FC865400ECEDFC67F45205D7 /* TVCMainWindow.xib */; };
 		94FA234D059ADE3A597218D1 /* IRCClientLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACD68436FCDFE260E2EF5763 /* IRCClientLogFile.swift */; };
@@ -712,6 +711,7 @@
 		CCC0A731DE59A753FB27AAAE /* TDCServerPropertiesSheetCommandsAndChannels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F97B1E3CC0B7BCCE8702DC /* TDCServerPropertiesSheetCommandsAndChannels.swift */; };
 		CD2A11FAADF69751785EC88A /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B586F0E6CAB57502BAF81EE3 /* Security.framework */; };
 		CD2ADB8F333DA3D2AD99E8AA /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E3D4C006E0D9995C7EEE8EE /* Template.swift */; };
+		CD4B901289A3F4F699FF8739 /* UnicodeHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05AB3130D881BEE940784544 /* UnicodeHelper.swift */; };
 		CDA083511ED8B8F6A3C5D77C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E54876E58FD02CA70788D1A0 /* AudioToolbox.framework */; };
 		CE0DC905BAC98C3699590D9D /* IRCMessageTagsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C5A45481279C2AD898206F1 /* IRCMessageTagsTests.swift */; };
 		CE74A82D0749A997F7A465EF /* InlineHTMLModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1F3EFF680048B277C0EADED /* InlineHTMLModule.swift */; };
@@ -773,6 +773,7 @@
 		E2E897E43A1507FF23608613 /* GlasstualPluginKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26CEBB2889F146B2FFA4C8B0 /* GlasstualPluginKit.framework */; };
 		E33A3411DDBEAD87AA88A139 /* SmileyConverterPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 296D964BB711DC1331225D86 /* SmileyConverterPlugin.swift */; };
 		E33CC9C1F6D7DFF675963A38 /* TDCAddressBookSheet.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 2A255C1F62CE49A2377A67CC /* TDCAddressBookSheet.xcstrings */; };
+		E33CDA4DDEE3BB46F98D19B7 /* HTMLEntityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28E902D44CBF3530FF46A92 /* HTMLEntityTests.swift */; };
 		E3A2B6FAB1D5C12781126CC7 /* PluginContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63EAC2CEF82815836B838F3 /* PluginContracts.swift */; };
 		E3D7BEB4515C3C0DFDB9FA10 /* OnboardingStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 777C5A5103FA2C0EAB2BF7BE /* OnboardingStrings.swift */; };
 		E49A7881610601CD43AAA7D2 /* ChannelInviteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45F6173E2F31EEBD1A3470D8 /* ChannelInviteView.swift */; };
@@ -1263,6 +1264,7 @@
 		04CED68EDDEFB4C9BBF12FC2 /* ExpressionInvocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressionInvocation.swift; sourceTree = "<group>"; };
 		05379A6D98A350FBF31C6814 /* ServerNicknameChangeFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerNicknameChangeFeatureTests.swift; sourceTree = "<group>"; };
 		059C59AD4BD535ECA2F64252 /* TDCFileTransferDialogTransferController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCFileTransferDialogTransferController.swift; sourceTree = "<group>"; };
+		05AB3130D881BEE940784544 /* UnicodeHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnicodeHelper.swift; sourceTree = "<group>"; };
 		05DDA61743BCE9A598A7D55C /* BasicLanguage.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = BasicLanguage.xcstrings; sourceTree = "<group>"; };
 		061B053A8B68AEB5BD5740AB /* IRCMessageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCMessageTests.swift; sourceTree = "<group>"; };
 		0661B0ADDB86CFC6D643E121 /* IRCChannelConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCChannelConfig.swift; sourceTree = "<group>"; };
@@ -1385,7 +1387,6 @@
 		282AF87B98C474FA0AFAD20C /* TDCFileTransferDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCFileTransferDialog.swift; sourceTree = "<group>"; };
 		2839DA2AE8BFAEDBC043ECFE /* Bundled Styles */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "Bundled Styles"; path = "Sources/App/Resources/Styling/Bundled Styles"; sourceTree = SOURCE_ROOT; };
 		2890CB13CA61A65A05477FA0 /* NSTextFieldHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSTextFieldHelper.swift; sourceTree = "<group>"; };
-		28AEE097C63AD72FB048303E /* THOUnicodeHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = THOUnicodeHelper.swift; sourceTree = "<group>"; };
 		2953B8D91667801C88504374 /* IRCClientScriptExecution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientScriptExecution.swift; sourceTree = "<group>"; };
 		296D964BB711DC1331225D86 /* SmileyConverterPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmileyConverterPlugin.swift; sourceTree = "<group>"; };
 		2978AA08DBF024820205D918 /* LegacyStandardLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyStandardLibrary.swift; sourceTree = "<group>"; };
@@ -1609,6 +1610,7 @@
 		6B1B09FE17F744FE3A4D1404 /* User Insights.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "User Insights.bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B28FAE1BE8581EBBB690DE4 /* Formatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		6B2D5D2ED9CEEC799534B7D1 /* ZNC Additions.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ZNC Additions.bundle"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B8C9226711BC1A8462E9C07 /* HTMLEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLEntities.swift; sourceTree = "<group>"; };
 		6BD3188D60216E1959A2CDFC /* FileTransferController+Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferController+Connection.swift"; sourceTree = "<group>"; };
 		6BD72DD834627F638A0A9915 /* IRCModeInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCModeInfoTests.swift; sourceTree = "<group>"; };
 		6D3E8C3A2F6628D835DD6835 /* ProgressIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressIndicatorView.swift; sourceTree = "<group>"; };
@@ -1958,6 +1960,7 @@
 		E141F9567FA98469DBB8623B /* IRCDirectChatConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCDirectChatConnection.swift; sourceTree = "<group>"; };
 		E154CE41A3D4B3FCEE123F7E /* PluginHostSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginHostSnapshot.swift; sourceTree = "<group>"; };
 		E1D2BF3F7BD061F7D65E4937 /* IRCClientWireUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientWireUtilities.swift; sourceTree = "<group>"; };
+		E28E902D44CBF3530FF46A92 /* HTMLEntityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLEntityTests.swift; sourceTree = "<group>"; };
 		E2C910E1A61CDEDF0E724AA8 /* NumberOnlyTextFieldFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberOnlyTextFieldFormatter.swift; sourceTree = "<group>"; };
 		E301BCD9B73663E8A8B61D8D /* MainWindowMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowMigrationTests.swift; sourceTree = "<group>"; };
 		E32C828BD0D5DAC173B42B33 /* FileTransferController+Presentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileTransferController+Presentation.swift"; sourceTree = "<group>"; };
@@ -2036,7 +2039,6 @@
 		FBA6F0666B3270943133C641 /* MacintoshModels.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = MacintoshModels.plist; sourceTree = "<group>"; };
 		FBCEDF1ED1761B49939B7344 /* AboutDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutDialog.swift; sourceTree = "<group>"; };
 		FBE4BFDC1366C7F6F838F57B /* IRCClientConnectionDelegatePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCClientConnectionDelegatePolicyTests.swift; sourceTree = "<group>"; };
-		FBF4B3ECDDF492EAAAFFA787 /* GTMEncodeHTML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GTMEncodeHTML.swift; sourceTree = "<group>"; };
 		FC0569F9CB6294BD3119EDB8 /* IRCAddressBookTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCAddressBookTests.swift; sourceTree = "<group>"; };
 		FC907F93D92D55069E34F9A2 /* IRCLineParserNumericTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCLineParserNumericTests.swift; sourceTree = "<group>"; };
 		FC987CE18B1BA961DF3CD2B9 /* TDCPreferencesUserStyleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCPreferencesUserStyleSheet.swift; sourceTree = "<group>"; };
@@ -3626,6 +3628,7 @@
 				887B6DBBC6D0F3D5AFAC6D5D /* GLTTestClient.swift */,
 				71DDECF1C473231C5B408226 /* HighlightEntryFeatureTests.swift */,
 				6B17C185AD99905A9CD250F0 /* HistoricLogProtocolMigrationTests.swift */,
+				E28E902D44CBF3530FF46A92 /* HTMLEntityTests.swift */,
 				8602952DE02223FB3FA7F718 /* InlineContentModuleTrustTests.swift */,
 				FF742813931E4B2CC6A7614B /* InlineContentProtocolMigrationTests.swift */,
 				302924725389D19E73F4CEB3 /* InlineContentURLPolicyTests.swift */,
@@ -4203,7 +4206,7 @@
 		ED846FFCB1BF9803A2DD4DE3 /* AppKitSupport */ = {
 			isa = PBXGroup;
 			children = (
-				FBF4B3ECDDF492EAAAFFA787 /* GTMEncodeHTML.swift */,
+				6B8C9226711BC1A8462E9C07 /* HTMLEntities.swift */,
 				7B481BE2C809FB8A41DA6519 /* IRCChannelMemberListController.swift */,
 				C27A539663A8D1F739BDCE5C /* IRCClientDialogPresentation.swift */,
 				0E312CD53017D15AA6BD72D2 /* NetworkPickerDetailView.swift */,
@@ -4246,7 +4249,6 @@
 				F9885E994FAF87EA42A2D6B4 /* THOPluginItem.swift */,
 				5B53E4A75C1D4CA01274C357 /* THOPluginItemLogging.swift */,
 				363C2EBAAA040EE240128F61 /* THOPluginManager.swift */,
-				28AEE097C63AD72FB048303E /* THOUnicodeHelper.swift */,
 				D48C6A868D4E1A2E7FA142DE /* TVCAppearance.swift */,
 				B3083EFED5E6E2EB9DD43473 /* TVCAutoExpandingField.swift */,
 				AC7509A6529D1F9883911D73 /* TVCBasicTableView.swift */,
@@ -4294,6 +4296,7 @@
 				5E78600657DBEA6BECED5869 /* TXMenuPresentation.swift */,
 				87F54A61A2F61842FD41A965 /* TXMenuValidationPolicy.swift */,
 				F58A88535A43C1B28455A55B /* TXWindowController.swift */,
+				05AB3130D881BEE940784544 /* UnicodeHelper.swift */,
 			);
 			path = AppKitSupport;
 			sourceTree = "<group>";
@@ -5146,6 +5149,7 @@
 				837CF606CE154F9F630F1E3A /* FrameworkUtilityHelperTests.swift in Sources */,
 				F439A1D8929258C993FE6E1B /* GLTTestClient.swift in Sources */,
 				C877A5F1592819269B4BF561 /* GyazoModule.swift in Sources */,
+				E33CDA4DDEE3BB46F98D19B7 /* HTMLEntityTests.swift in Sources */,
 				9755DC47DC9C01123FAB8B3C /* HighlightEntryFeatureTests.swift in Sources */,
 				72B9564D0D3B7146EF5EAE5A /* HistoricLogProtocolMigrationTests.swift in Sources */,
 				B47DB07F2ADBC206225A56DD /* IRCAddressBookMatchCacheTests.swift in Sources */,
@@ -5512,7 +5516,7 @@
 				CAD79E83C0DC32737C4874BF /* FileTransferDialog+Table.swift in Sources */,
 				8E24188638A81675C4CBE48C /* FileTransferDialog+Transfers.swift in Sources */,
 				7B00DDFA9F144D40416C4563 /* FileTransferStrings.swift in Sources */,
-				15A488ABD4FD1052A2BCE2C5 /* GTMEncodeHTML.swift in Sources */,
+				36E7636AB19CED96D653D521 /* HTMLEntities.swift in Sources */,
 				4E4BD6BBDA9F51D3F84A1C82 /* HighlightEntryContent.swift in Sources */,
 				E0C7DA5B4B8E44522572CA2A /* HighlightEntryModel.swift in Sources */,
 				084531D6AD22CE89AE113751 /* HighlightEntrySelection.swift in Sources */,
@@ -5732,7 +5736,6 @@
 				562AEB55D9DEAC8A685354B2 /* THOPluginItem.swift in Sources */,
 				5F8AB297E2FCDA1E1EF4285A /* THOPluginItemLogging.swift in Sources */,
 				02FB0409E9B306481E4AAB0B /* THOPluginManager.swift in Sources */,
-				935F75A5E2A994650AC19B59 /* THOUnicodeHelper.swift in Sources */,
 				C8C21F6C22119C59B051C8A1 /* TLOFileLogger.swift in Sources */,
 				17BF7C85CDD18FFF657A96AD /* TLOInputHistory.swift in Sources */,
 				2D6EFE3F5CD5B03759692DDE /* TLOInternetAddressLookup.swift in Sources */,
@@ -5826,6 +5829,7 @@
 				BFE2CDDC8B98BF701234E92D /* ThemePresentationSchema.swift in Sources */,
 				65506223111162FEFF309A1D /* ThemeTemplateStore.swift in Sources */,
 				1917B060DF8FD4DC991B2DD7 /* ThemeTypes.swift in Sources */,
+				CD4B901289A3F4F699FF8739 /* UnicodeHelper.swift in Sources */,
 				68A6BBA7F278FC122F90E305 /* UserStyleStrings.swift in Sources */,
 				1F1181DF142B268AFCEDA2EB /* main.swift in Sources */,
 			);
