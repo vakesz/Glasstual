@@ -38,48 +38,23 @@
 
 import Foundation
 
-private enum ThemeEventMainActorBridge {
-	static func sync(_ operation: @escaping @MainActor @Sendable () -> Void) {
-		if Thread.isMainThread {
-			MainActor.assumeIsolated(operation)
-		} else {
-			DispatchQueue.main.sync {
-				MainActor.assumeIsolated(operation)
-			}
-		}
-	}
-}
-
-/// The caller stays blocked during this handoff, and the item is dereferenced
-/// only by the main-actor operation.
-private struct ThemeEventItemReference: @unchecked Sendable {
-	let value: AnyObject
-}
-
 public extension IRCClient {
 	@objc(postEventToViewController:)
 	func postEvent(toViewController eventToken: String) {
-		ThemeEventMainActorBridge.sync { [self, eventToken] in
-			postThemeEvent(eventToken, to: self)
-			for channel in channelList {
-				postThemeEvent(eventToken, to: channel)
-			}
+		postThemeEvent(eventToken, to: self)
+		for channel in channelList {
+			postThemeEvent(eventToken, to: channel)
 		}
 	}
 
 	@objc(postEventToViewController:forChannel:)
 	func postEvent(toViewController eventToken: String, for channel: IRCChannel) {
-		ThemeEventMainActorBridge.sync { [self, eventToken, channel] in
-			postThemeEvent(eventToken, to: channel)
-		}
+		postThemeEvent(eventToken, to: channel)
 	}
 
 	@objc(postEventToViewController:forItem:)
 	func postEvent(toViewController eventToken: String, forItem item: AnyObject) {
-		let itemReference = ThemeEventItemReference(value: item)
-		ThemeEventMainActorBridge.sync { [self, eventToken, itemReference] in
-			postThemeEvent(eventToken, to: itemReference.value)
-		}
+		postThemeEvent(eventToken, to: item)
 	}
 
 	@MainActor

@@ -57,10 +57,6 @@ private enum ChannelStatusChange {
 	static let configurationNotification = Notification.Name.ircChannelConfigurationWasUpdated
 }
 
-private struct ChannelMainActorTransfer<Value>: @unchecked Sendable {
-	let value: Value
-}
-
 @objc(IRCChannel)
 open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProtocol {
 	private static let logger = Logger(
@@ -212,6 +208,10 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 	override open nonisolated var description: String {
 		descriptionSnapshot.withLock { $0 }
+	}
+
+	override func associatedClientDidChange() {
+		refreshDescription()
 	}
 
 	/// Republishes the text `description` returns.
@@ -385,13 +385,9 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		if isUtility == false {
 			memberInfo = ChannelMemberList(channel: legacyChannel)
 
-			if isSelectedChannel {
-				let channel = legacyChannel
-				MainActor.assumeIsolated {
-					guard let mainWindow = NSObject.applicationController().mainWindow else { return }
-					mainWindow.memberList?.assign(to: channel)
-					mainWindow.updateMemberListVisibilityForSelection()
-				}
+			if isSelectedChannel, let mainWindow = NSObject.applicationController().mainWindow {
+				mainWindow.memberList?.assign(to: legacyChannel)
+				mainWindow.updateMemberListVisibilityForSelection()
 			}
 		}
 
@@ -452,10 +448,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			window.close()
 		}
 
-		let treeItem = ChannelMainActorTransfer(value: legacyTreeItem)
-		MainActor.assumeIsolated {
-			NSObject.applicationController().mainWindow.inputHistoryManager().destroy(treeItem.value)
-		}
+		NSObject.applicationController().mainWindow.inputHistoryManager().destroy(legacyTreeItem)
 		viewController?.prepareForPermanentDestruction()
 	}
 
@@ -659,10 +652,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	private var isSelectedChannel: Bool {
-		let channel = ChannelMainActorTransfer(value: self)
-		return MainActor.assumeIsolated {
-			channel.value === NSObject.applicationController().mainWindow.selectedItem
-		}
+		self === NSObject.applicationController().mainWindow.selectedItem
 	}
 
 	override open var isActive: Bool {

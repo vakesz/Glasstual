@@ -37,23 +37,8 @@
  *********************************************************************** */
 
 import Foundation
-import ObjectiveC
 
 public typealias IRCTreeItem = TreeItem
-
-private nonisolated(unsafe) var dockUnreadCountKey: UInt8 = 0
-private nonisolated(unsafe) var nicknameHighlightCountKey: UInt8 = 0
-private nonisolated(unsafe) var treeUnreadCountKey: UInt8 = 0
-private nonisolated(unsafe) var associatedClientKey: UInt8 = 0
-private nonisolated(unsafe) var viewControllerKey: UInt8 = 0
-
-private final class WeakObjectBox: NSObject {
-	weak var value: AnyObject?
-
-	init(_ value: AnyObject?) {
-		self.value = value
-	}
-}
 
 @objc(IRCTreeItem)
 open class TreeItem: NSObject {
@@ -93,57 +78,34 @@ open class TreeItem: NSObject {
 		0
 	}
 
-	@objc public var dockUnreadCount: Int {
-		get { integer(forKey: &dockUnreadCountKey) }
-		set { setInteger(newValue, forKey: &dockUnreadCountKey) }
+	@objc public var dockUnreadCount = 0
+	@objc public dynamic var nicknameHighlightCount = 0
+	@objc public dynamic var treeUnreadCount = 0
+
+	/** Weak: the world owns its clients, and an item routinely outlives the
+	 client that made it while teardown finishes. */
+	@objc open weak var associatedClient: IRCClient! {
+		didSet { associatedClientDidChange() }
 	}
 
-	@objc public dynamic var nicknameHighlightCount: Int {
-		get { integer(forKey: &nicknameHighlightCountKey) }
-		set { setInteger(newValue, forKey: &nicknameHighlightCountKey) }
-	}
-
-	@objc public dynamic var treeUnreadCount: Int {
-		get { integer(forKey: &treeUnreadCountKey) }
-		set { setInteger(newValue, forKey: &treeUnreadCountKey) }
-	}
-
-	@objc open var associatedClient: IRCClient! {
-		get { (objc_getAssociatedObject(self, &associatedClientKey) as? WeakObjectBox)?.value as? IRCClient }
-		set {
-			objc_setAssociatedObject(
-				self,
-				&associatedClientKey,
-				WeakObjectBox(newValue),
-				.OBJC_ASSOCIATION_RETAIN_NONATOMIC
-			)
-		}
-	}
-
-	@objc public var viewController: LogController! {
-		get { objc_getAssociatedObject(self, &viewControllerKey) as? LogController }
-		set { objc_setAssociatedObject(self, &viewControllerKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
-	}
+	/// Strong, as it was when this lived in an associated object: the tree item
+	/// is the view controller's owner.
+	@objc public var viewController: LogController!
 
 	@objc public var isUnread: Bool {
-		integer(forKey: &treeUnreadCountKey) > 0
+		treeUnreadCount > 0
 	}
 
 	@objc public func resetState() {
-		setInteger(0, forKey: &dockUnreadCountKey)
-		setInteger(0, forKey: &nicknameHighlightCountKey)
-		setInteger(0, forKey: &treeUnreadCountKey)
+		dockUnreadCount = 0
+		nicknameHighlightCount = 0
+		treeUnreadCount = 0
 	}
 
 	@objc(childAtIndex:) open func child(at _: Int) -> TreeItem? {
 		nil
 	}
 
-	private func integer(forKey key: UnsafeRawPointer) -> Int {
-		(objc_getAssociatedObject(self, key) as? NSNumber)?.intValue ?? 0
-	}
-
-	private func setInteger(_ value: Int, forKey key: UnsafeRawPointer) {
-		objc_setAssociatedObject(self, key, NSNumber(value: value), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-	}
+	/// Overridden by items whose `description` names the client they belong to.
+	func associatedClientDidChange() {}
 }

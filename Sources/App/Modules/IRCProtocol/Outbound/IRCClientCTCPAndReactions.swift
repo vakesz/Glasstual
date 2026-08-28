@@ -49,18 +49,6 @@ enum CTCPPayload {
 	}
 }
 
-private enum OutboundMainQueue {
-	static func sync(_ operation: @escaping @MainActor @Sendable () -> Void) {
-		if Thread.isMainThread {
-			MainActor.assumeIsolated(operation)
-		} else {
-			DispatchQueue.main.sync {
-				MainActor.assumeIsolated(operation)
-			}
-		}
-	}
-}
-
 public extension IRCClient {
 	@MainActor
 	@objc(sendReaction:toMessageIdentifier:inChannel:)
@@ -92,23 +80,17 @@ public extension IRCClient {
 
 	@objc(sendPrivmsg:toChannel:)
 	func sendPrivmsg(_ message: String, to channel: IRCChannel) {
-		OutboundMainQueue.sync { [self] in
-			sendText(NSAttributedString(string: message), as: .privmsg, to: channel)
-		}
+		sendText(NSAttributedString(string: message), as: .privmsg, to: channel)
 	}
 
 	@objc(sendAction:toChannel:)
 	func sendAction(_ message: String, to channel: IRCChannel) {
-		OutboundMainQueue.sync { [self] in
-			sendText(NSAttributedString(string: message), as: .privmsgAction, to: channel)
-		}
+		sendText(NSAttributedString(string: message), as: .privmsgAction, to: channel)
 	}
 
 	@objc(sendNotice:toChannel:)
 	func sendNotice(_ message: String, to channel: IRCChannel) {
-		OutboundMainQueue.sync { [self] in
-			sendText(NSAttributedString(string: message), as: .notice, to: channel)
-		}
+		sendText(NSAttributedString(string: message), as: .notice, to: channel)
 	}
 
 	@objc(sendPrivmsgToSelectedChannel:)

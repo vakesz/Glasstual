@@ -386,13 +386,9 @@ public extension IRCClient {
 	}
 
 	private func shouldContinuePotentialFlood() -> Bool {
-		if Thread.isMainThread {
-			return MainActor.assumeIsolated { potentialFloodAlert() }
-		}
-		return DispatchQueue.main.sync { MainActor.assumeIsolated { potentialFloodAlert() } }
+		potentialFloodAlert()
 	}
 
-	@MainActor
 	private func potentialFloodAlert() -> Bool {
 		TDCAlert.modalAlert(
 			withMessage: IRCTransportStrings.confirmLargeMessage,

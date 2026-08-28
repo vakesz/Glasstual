@@ -71,23 +71,21 @@ public extension IRCClient {
 			return channel
 		}
 
-		return MainActor.assumeIsolated {
-			guard let world = NSObject.applicationController().world else { return nil }
+		guard let world = NSObject.applicationController().world else { return nil }
 
-			if type == .channel {
-				let channel = world.createChannel(
-					with: ChannelConfig.seed(withName: name),
-					on: self,
-					add: true,
-					adjust: true,
-					reload: true
-				)
-				world.savePeriodically()
-				return channel
-			}
-
-			return world.createPrivateMessage(name, on: self, as: type)
+		if type == .channel {
+			let channel = world.createChannel(
+				with: ChannelConfig.seed(withName: name),
+				on: self,
+				add: true,
+				adjust: true,
+				reload: true
+			)
+			world.savePeriodically()
+			return channel
 		}
+
+		return world.createPrivateMessage(name, on: self, as: type)
 	}
 
 	@objc(findChannelOrCreate:asType:)

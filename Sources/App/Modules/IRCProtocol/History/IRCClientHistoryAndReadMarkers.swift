@@ -64,20 +64,6 @@ enum IRCChatHistoryPolicy {
 	}
 }
 
-private enum HistoryMainActorBridge {
-	static func sync(_ operation: @escaping @MainActor @Sendable () -> Void) {
-		if Thread.isMainThread {
-			MainActor.assumeIsolated(operation)
-		} else {
-			DispatchQueue.main.sync { MainActor.assumeIsolated(operation) }
-		}
-	}
-}
-
-private struct HistoryChannelReference: @unchecked Sendable {
-	let value: IRCChannel
-}
-
 public extension IRCClient {
 	@objc(resetChatHistoryState)
 	func resetChatHistoryState() {
@@ -213,10 +199,7 @@ public extension IRCClient {
 		chatHistoryPrependChannel = nil
 		chatHistoryPrependedLines = nil
 		guard let channel, !lines.isEmpty else { return }
-		let channelReference = HistoryChannelReference(value: channel)
-		HistoryMainActorBridge.sync { [channelReference, lines] in
-			channelReference.value.viewController?.prependHistoricLogLines(lines)
-		}
+		channel.viewController?.prependHistoricLogLines(lines)
 	}
 
 	@objc(noteChatHistoryFailure:)
@@ -306,10 +289,7 @@ public extension IRCClient {
 
 	@objc(applyReadMarkerDate:toChannel:)
 	func applyReadMarker(_ date: Date, to channel: IRCChannel) {
-		let channelReference = HistoryChannelReference(value: channel)
-		HistoryMainActorBridge.sync { [self, channelReference, date] in
-			applyReadMarkerOnMainActor(date, to: channelReference.value)
-		}
+		applyReadMarkerOnMainActor(date, to: channel)
 	}
 }
 
