@@ -165,6 +165,15 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 	/// The exact set of handler names `WKUserContentController` must register.
 	static let registeredMessageNames: [String] = ScriptMessage.allCases.map(\.rawValue)
 
+	/** Cases with nothing bound in the handler table.
+
+	 The table is a dictionary rather than a `switch` because forty cases
+	 exceed the project's cyclomatic-complexity limit, so completeness is
+	 asserted by a test instead of by the compiler. */
+	static var messagesWithoutHandlers: [ScriptMessage] {
+		ScriptMessage.allCases.filter { handlers[$0] == nil }
+	}
+
 	func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
 		guard let scriptMessage = ScriptMessage(rawValue: message.name) else {
 			scriptEventLogger.error(

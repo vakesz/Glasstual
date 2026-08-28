@@ -319,13 +319,22 @@ public final class LogRenderer: NSObject {
 		guard filteredTypes.contains(lineType) else {
 			return
 		}
+		body = Self.strippingDangerousUnicodeCharacters(body)
+	}
+
+	/** Collapses runs of three or more stacked combining marks — "Zalgo" text,
+	 which paints over neighbouring lines — into one replacement character.
+
+	 Returns `text` unchanged if the pattern failed to compile, which is why
+	 `RendererPatterns` logs that case: a silent no-op filter looks exactly
+	 like a working one. */
+	static func strippingDangerousUnicodeCharacters(_ text: String) -> String {
 		guard let expression = RendererPatterns.combiningMarks else {
-			return
+			return text
 		}
-		let source = body as NSString
-		body = expression.stringByReplacingMatches(
-			in: body,
-			range: NSRange(location: 0, length: source.length),
+		return expression.stringByReplacingMatches(
+			in: text,
+			range: NSRange(location: 0, length: (text as NSString).length),
 			withTemplate: unicodeReplacementCharacter
 		)
 	}
