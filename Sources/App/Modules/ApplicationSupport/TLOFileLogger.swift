@@ -117,18 +117,6 @@ public final class FileLogger: NSObject {
 
 	// MARK: - File Handle Management
 
-	@objc public func reset() {
-		guard let fileHandle else {
-			return
-		}
-
-		do {
-			try fileHandle.truncate(atOffset: 0)
-		} catch {
-			Self.logger.error("Failed to truncate log file: \(error.localizedDescription, privacy: .public)")
-		}
-	}
-
 	@objc public func close() {
 		closeHandle(removeObserver: true)
 	}

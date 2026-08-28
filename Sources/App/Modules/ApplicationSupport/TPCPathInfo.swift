@@ -363,18 +363,30 @@ public final class PathInfo: NSObject {
 	}
 
 	@objc public static func setTranscriptFolderURL(_ transcriptFolderURL: Data?) {
-		transcriptLock.lock()
-		if let storedTranscriptFolderURL {
-			storedTranscriptFolderURL.stopAccessingSecurityScopedResource()
-			self.storedTranscriptFolderURL = nil
-		}
-		transcriptLock.unlock()
+		stopUsingTranscriptFolderURL()
 
 		TextualUserDefaults.shared().set(transcriptFolderURL, forKey: transcriptBookmarkDefaultsKey)
 		startUsingTranscriptFolderURL()
 	}
 
 	@objc public static func startUsingTranscriptFolderURL() {
+		startUsingTranscriptFolderURL(refreshingStaleBookmark: true)
+	}
+
+	@objc public static func stopUsingTranscriptFolderURL() {
+		transcriptLock.lock()
+		let existingURL = storedTranscriptFolderURL
+		storedTranscriptFolderURL = nil
+		transcriptLock.unlock()
+
+		existingURL?.stopAccessingSecurityScopedResource()
+	}
+
+	private static func startUsingTranscriptFolderURL(refreshingStaleBookmark: Bool) {
+		/* Security-scoped access is reference counted, so any previous access has to be
+		 released before a new one is taken; launch plus a preference reload both call in. */
+		stopUsingTranscriptFolderURL()
+
 		guard let bookmark = TextualUserDefaults.shared().data(forKey: transcriptBookmarkDefaultsKey) else {
 			return
 		}
@@ -397,6 +409,13 @@ public final class PathInfo: NSObject {
 		}
 
 		if resolvedBookmarkIsStale {
+			/* A refreshed bookmark that also resolves stale must not recurse. */
+			guard refreshingStaleBookmark else {
+				warnUserAboutStaleTranscriptFolderURL()
+
+				return
+			}
+
 			var newBookmark: Data?
 
 			if resolvedBookmark.startAccessingSecurityScopedResource() {
@@ -408,11 +427,21 @@ public final class PathInfo: NSObject {
 				resolvedBookmark.stopAccessingSecurityScopedResource()
 			}
 
-			if let newBookmark {
-				setTranscriptFolderURL(newBookmark)
-			} else {
+			guard let newBookmark else {
 				warnUserAboutStaleTranscriptFolderURL()
+
+				return
 			}
+
+			TextualUserDefaults.shared().set(newBookmark, forKey: transcriptBookmarkDefaultsKey)
+			startUsingTranscriptFolderURL(refreshingStaleBookmark: false)
+
+			return
+		}
+
+		/* Record the URL only once access succeeded so that a later stop stays balanced. */
+		guard resolvedBookmark.startAccessingSecurityScopedResource() else {
+			logger.error("Failed to access bookmark")
 
 			return
 		}
@@ -420,10 +449,6 @@ public final class PathInfo: NSObject {
 		transcriptLock.lock()
 		storedTranscriptFolderURL = resolvedBookmark
 		transcriptLock.unlock()
-
-		if resolvedBookmark.startAccessingSecurityScopedResource() == false {
-			logger.error("Failed to access bookmark")
-		}
 	}
 
 	// MARK: - Helpers

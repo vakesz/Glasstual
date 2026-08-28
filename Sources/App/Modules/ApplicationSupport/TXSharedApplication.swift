@@ -27,39 +27,33 @@ public final class SharedApplication: NSObject {
 	private nonisolated(unsafe) static var windowController: WindowController?
 	private nonisolated(unsafe) static var fileTransferDialog: TDCFileTransferDialog?
 
+	/** The lock is held across `create()` so that two callers cannot both build the
+	 value. Callers whose value must be built on the main actor hop there *before*
+	 calling this, so the lock is never held across a main-queue wait. */
 	private static func once<T: AnyObject>(
 		_ storage: inout T?,
 		create: () -> T
 	) -> T {
 		lock.lock()
+		defer { lock.unlock() }
+
 		if let existing = storage {
-			lock.unlock()
 			return existing
 		}
-		lock.unlock()
 
 		let created = create()
-
-		lock.lock()
-		if let existing = storage {
-			lock.unlock()
-			return existing
-		}
 		storage = created
-		lock.unlock()
 		return created
 	}
 
 	@objc
 	public static func sharedAppearance() -> Appearance {
-		once(&appearance) {
-			if Thread.isMainThread {
-				return MainActor.assumeIsolated { Appearance() }
-			}
+		guard Thread.isMainThread else {
+			return DispatchQueue.main.sync { sharedAppearance() }
+		}
 
-			return DispatchQueue.main.sync {
-				MainActor.assumeIsolated { Appearance() }
-			}
+		return once(&appearance) {
+			MainActor.assumeIsolated { Appearance() }
 		}
 	}
 
@@ -70,14 +64,12 @@ public final class SharedApplication: NSObject {
 
 	@objc
 	public static func sharedNotificationController() -> NotificationController {
-		once(&notificationController) {
-			if Thread.isMainThread {
-				return MainActor.assumeIsolated { NotificationController() }
-			}
+		guard Thread.isMainThread else {
+			return DispatchQueue.main.sync { sharedNotificationController() }
+		}
 
-			return DispatchQueue.main.sync {
-				MainActor.assumeIsolated { NotificationController() }
-			}
+		return once(&notificationController) {
+			MainActor.assumeIsolated { NotificationController() }
 		}
 	}
 
@@ -105,14 +97,12 @@ public final class SharedApplication: NSObject {
 
 	@objc
 	public static func sharedThemeController() -> TPCThemeController {
-		once(&themeController) {
-			if Thread.isMainThread {
-				return MainActor.assumeIsolated { TPCThemeController() }
-			}
+		guard Thread.isMainThread else {
+			return DispatchQueue.main.sync { sharedThemeController() }
+		}
 
-			return DispatchQueue.main.sync {
-				MainActor.assumeIsolated { TPCThemeController() }
-			}
+		return once(&themeController) {
+			MainActor.assumeIsolated { TPCThemeController() }
 		}
 	}
 
@@ -123,14 +113,12 @@ public final class SharedApplication: NSObject {
 
 	@objc
 	public static func sharedFileTransferDialog() -> TDCFileTransferDialog {
-		once(&fileTransferDialog) {
-			if Thread.isMainThread {
-				return MainActor.assumeIsolated { TDCFileTransferDialog() }
-			}
+		guard Thread.isMainThread else {
+			return DispatchQueue.main.sync { sharedFileTransferDialog() }
+		}
 
-			return DispatchQueue.main.sync {
-				MainActor.assumeIsolated { TDCFileTransferDialog() }
-			}
+		return once(&fileTransferDialog) {
+			MainActor.assumeIsolated { TDCFileTransferDialog() }
 		}
 	}
 }

@@ -40,6 +40,10 @@ private let notificationControllerLogger = Logger(
 public final class NotificationController: NSObject, UNUserNotificationCenterDelegate {
 	@objc public var areNotificationsDisabled = false
 
+	/** The title/message hash is not unique on its own: repeating the same message in
+	 the same channel would otherwise replace the earlier notification. */
+	private var notificationSequenceNumber: UInt64 = 0
+
 	override public init() {
 		super.init()
 
@@ -300,9 +304,18 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		 same identifier. That's not a bad behavior. Just not one we want. */
 		/* Glasstual will format the identifier as such:
 		 TXNotification[-<clientID>[-<channelId>]]-<eventTitle hash>-<eventDescription hash> */
-		let identifier =
-			notificationIdentifier
-				?? Self.notificationIdentifier(title: title, message: message, threadIdentifier: threadIdentifier)
+		let identifier: String
+		if let notificationIdentifier {
+			identifier = notificationIdentifier
+		} else {
+			notificationSequenceNumber &+= 1
+			let scope = Self.notificationIdentifier(
+				title: title,
+				message: message,
+				threadIdentifier: threadIdentifier
+			)
+			identifier = "\(scope)-\(notificationSequenceNumber)"
+		}
 
 		scheduleNotification(content: content, identifier: identifier)
 	}

@@ -52,14 +52,21 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 	}
 
 	@objc public func speak(_ object: Any) {
-		withLock {
+		let queued = withLock { () -> Bool in
 			guard !stopped else {
-				return
+				return false
 			}
 
 			pendingItems.append(object)
-			speakNextItemLocked()
+
+			return true
 		}
+
+		guard queued else {
+			return
+		}
+
+		speakNextItem()
 	}
 
 	@objc public func clearQueue() {
@@ -96,18 +103,25 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 	}
 
 	@objc public func speechSynthesizerEngineDidCompleteUtterance() {
-		withLock {
-			speakNextItemLocked()
-		}
+		speakNextItem()
 	}
 
-	private func speakNextItemLocked() {
-		guard !stopped, !engine.isSpeaking else {
-			return
-		}
+	/** Formatting a notification blocks on the main queue, so it must run with the lock
+	 released: otherwise a main-thread caller of any locked method deadlocks. */
+	private func speakNextItem() {
+		while true {
+			let nextItem: Any? = withLock {
+				guard !stopped, !engine.isSpeaking, !pendingItems.isEmpty else {
+					return nil
+				}
 
-		while !pendingItems.isEmpty {
-			let nextItem = pendingItems.removeFirst()
+				return pendingItems.removeFirst()
+			}
+
+			guard let nextItem else {
+				return
+			}
+
 			let text: String? = if let notification = nextItem as? SpokenNotification {
 				notification.client?.formatNotification(toSpeak: notification)
 			} else {
@@ -118,7 +132,13 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 				continue
 			}
 
-			engine.speakText(text)
+			withLock {
+				guard !stopped, !engine.isSpeaking else {
+					return
+				}
+
+				engine.speakText(text)
+			}
 
 			return
 		}
