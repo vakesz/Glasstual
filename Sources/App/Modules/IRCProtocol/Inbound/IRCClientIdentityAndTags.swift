@@ -123,12 +123,21 @@ public extension IRCClient {
 			nil
 		}
 
-		if let typing = clientTags["typing"], let channel, sender != userNickname {
+		// Typing state expires against the local clock, so it is stamped with
+		// the local clock too: message.receivedAt carries the server's
+		// server-time tag, and any skew there makes indicators vanish
+		// instantly or linger forever. Replayed history must not resurrect a
+		// typing indicator at all.
+		if let typing = clientTags["typing"],
+		   let channel,
+		   sender != userNickname,
+		   message.isHistoric == false
+		{
 			typingTracker.noteTypingState(
 				IRCTypingTracker.state(forTagValue: typing),
 				fromNickname: sender,
 				in: channel,
-				at: message.receivedAt
+				at: Date()
 			)
 		}
 
