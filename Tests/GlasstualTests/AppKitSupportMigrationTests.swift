@@ -206,8 +206,8 @@ final class AppKitSupportMigrationTests: XCTestCase {
 			text: "connected"
 		)
 
-		XCTAssertTrue(notification.client === client)
-		XCTAssertNil(notification.channel)
+		XCTAssertEqual(notification.clientIdentifier, client.uniqueIdentifier)
+		XCTAssertNil(notification.channelIdentifier)
 		XCTAssertEqual(notification.notificationType, .connect)
 		XCTAssertEqual(notification.lineType, .notice)
 		XCTAssertEqual(notification.nickname, "alice")
@@ -225,8 +225,8 @@ final class AppKitSupportMigrationTests: XCTestCase {
 			text: "hello"
 		)
 
-		XCTAssertTrue(notification.client === client)
-		XCTAssertTrue(notification.channel === channel)
+		XCTAssertEqual(notification.clientIdentifier, client.uniqueIdentifier)
+		XCTAssertEqual(notification.channelIdentifier, channel.uniqueIdentifier)
 	}
 
 	func testFormatterColorsIncludeCanonicalIRCPalette() {

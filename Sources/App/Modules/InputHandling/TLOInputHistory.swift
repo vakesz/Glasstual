@@ -16,8 +16,8 @@ import Foundation
 private let inputHistoryMaximumCount = 100
 private let inputHistoryGlobalObjectKey = "TLOInputHistoryDefaultObject"
 
+@MainActor
 private final class InputHistoryObject {
-	private let lock = NSRecursiveLock()
 	private var historyBuffer: [NSAttributedString] = []
 	private var historyBufferPosition = 0
 	var lastHistoryItem: NSAttributedString?
@@ -27,62 +27,54 @@ private final class InputHistoryObject {
 			return
 		}
 
-		withLock {
-			if historyBuffer.last?.string != string.string {
-				addToBuffer(string)
-			}
-
-			historyBufferPosition = historyBuffer.count
+		if historyBuffer.last?.string != string.string {
+			addToBuffer(string)
 		}
+
+		historyBufferPosition = historyBuffer.count
 	}
 
 	func up(_ string: NSAttributedString) -> NSAttributedString? {
-		withLock {
-			if string.length > 0, entryAtBufferPosition()?.string != string.string {
-				addToBuffer(string)
-			}
-
-			historyBufferPosition -= 1
-
-			if historyBufferPosition < 0 {
-				historyBufferPosition = 0
-			} else if historyBuffer.indices.contains(historyBufferPosition) {
-				return historyBuffer[historyBufferPosition]
-			}
-
-			return nil
+		if string.length > 0, entryAtBufferPosition()?.string != string.string {
+			addToBuffer(string)
 		}
+
+		historyBufferPosition -= 1
+
+		if historyBufferPosition < 0 {
+			historyBufferPosition = 0
+		} else if historyBuffer.indices.contains(historyBufferPosition) {
+			return historyBuffer[historyBufferPosition]
+		}
+
+		return nil
 	}
 
 	func down(_ string: NSAttributedString) -> NSAttributedString? {
-		withLock {
-			guard string.length > 0 else {
-				historyBufferPosition = historyBuffer.count
+		guard string.length > 0 else {
+			historyBufferPosition = historyBuffer.count
 
-				return nil
-			}
-
-			if entryAtBufferPosition()?.string != string.string {
-				addToBuffer(string)
-
-				return NSAttributedString(string: "")
-			}
-
-			historyBufferPosition += 1
-
-			return entryAtBufferPosition() ?? NSAttributedString(string: "")
+			return nil
 		}
+
+		if entryAtBufferPosition()?.string != string.string {
+			addToBuffer(string)
+
+			return NSAttributedString(string: "")
+		}
+
+		historyBufferPosition += 1
+
+		return entryAtBufferPosition() ?? NSAttributedString(string: "")
 	}
 
 	func copied() -> InputHistoryObject {
-		withLock {
-			let copy = InputHistoryObject()
-			copy.historyBuffer = historyBuffer
-			copy.historyBufferPosition = historyBufferPosition
-			copy.lastHistoryItem = lastHistoryItem.map(NSAttributedString.init(attributedString:))
+		let copy = InputHistoryObject()
+		copy.historyBuffer = historyBuffer
+		copy.historyBufferPosition = historyBufferPosition
+		copy.lastHistoryItem = lastHistoryItem.map(NSAttributedString.init(attributedString:))
 
-			return copy
-		}
+		return copy
 	}
 
 	private func addToBuffer(_ string: NSAttributedString) {
@@ -100,19 +92,13 @@ private final class InputHistoryObject {
 
 		return historyBuffer[historyBufferPosition]
 	}
-
-	@discardableResult
-	private func withLock<Result>(_ operation: () -> Result) -> Result {
-		lock.lock()
-		defer { lock.unlock() }
-
-		return operation()
-	}
 }
 
+/** The input history follows the focused view, so it lives where the text field
+ does: on the main actor. That is what makes the plain stored state safe. */
 @objc(TLOInputHistory)
+@MainActor
 public final class InputHistory: NSObject {
-	private let lock = NSRecursiveLock()
 	private weak var window: TVCMainWindow?
 	private var historyObjects: [String: InputHistoryObject] = [:]
 	private var currentTreeItem: String?
@@ -135,24 +121,21 @@ public final class InputHistory: NSObject {
 			return
 		}
 
-		withLock {
-			if let client = treeItem as? IRCClient {
-				for channel in client.channelList {
-					destroy(channel)
-				}
+		if let client = treeItem as? IRCClient {
+			for channel in client.channelList {
+				destroy(channel)
 			}
+		}
 
-			let itemIdentifier = treeItem.uniqueIdentifier
-			historyObjects.removeValue(forKey: itemIdentifier)
+		let itemIdentifier = treeItem.uniqueIdentifier
+		historyObjects.removeValue(forKey: itemIdentifier)
 
-			if currentTreeItem == itemIdentifier {
-				currentTreeItem = nil
-			}
+		if currentTreeItem == itemIdentifier {
+			currentTreeItem = nil
 		}
 	}
 
 	@objc(moveFocusTo:)
-	@MainActor
 	public func moveFocus(to treeItem: IRCTreeItem) {
 		guard TextualPreferences.inputHistoryIsChannelSpecific(),
 		      let textView = window?.inputTextField as? TextViewWithIRCFormatter
@@ -173,22 +156,20 @@ public final class InputHistory: NSObject {
 		}
 	}
 
-	@MainActor @objc public func noteInputHistoryObjectScopeDidChange() {
-		withLock {
-			if TextualPreferences.inputHistoryIsChannelSpecific() {
-				for client in AppController.shared.world.clientList {
-					applyGlobalHistory(to: client.uniqueIdentifier)
+	@objc public func noteInputHistoryObjectScopeDidChange() {
+		if TextualPreferences.inputHistoryIsChannelSpecific() {
+			for client in AppController.shared.world.clientList {
+				applyGlobalHistory(to: client.uniqueIdentifier)
 
-					for channel in client.channelList {
-						applyGlobalHistory(to: channel.uniqueIdentifier)
-					}
+				for channel in client.channelList {
+					applyGlobalHistory(to: channel.uniqueIdentifier)
 				}
-
-				historyObjects.removeValue(forKey: inputHistoryGlobalObjectKey)
-			} else {
-				historyObjects.removeAll()
-				currentTreeItem = nil
 			}
+
+			historyObjects.removeValue(forKey: inputHistoryGlobalObjectKey)
+		} else {
+			historyObjects.removeAll()
+			currentTreeItem = nil
 		}
 	}
 
@@ -218,33 +199,23 @@ public final class InputHistory: NSObject {
 	}
 
 	private func currentObjectForFocusedTreeView() -> InputHistoryObject? {
-		withLock {
-			let currentObjectKey: String? = if TextualPreferences.inputHistoryIsChannelSpecific() {
-				currentTreeItem
-			} else {
-				inputHistoryGlobalObjectKey
-			}
+		let currentObjectKey: String? = if TextualPreferences.inputHistoryIsChannelSpecific() {
+			currentTreeItem
+		} else {
+			inputHistoryGlobalObjectKey
+		}
 
-			guard let currentObjectKey else {
-				return nil
-			}
+		guard let currentObjectKey else {
+			return nil
+		}
 
-			if let currentObject = historyObjects[currentObjectKey] {
-				return currentObject
-			}
-
-			let currentObject = InputHistoryObject()
-			historyObjects[currentObjectKey] = currentObject
-
+		if let currentObject = historyObjects[currentObjectKey] {
 			return currentObject
 		}
-	}
 
-	@discardableResult
-	private func withLock<Result>(_ operation: () -> Result) -> Result {
-		lock.lock()
-		defer { lock.unlock() }
+		let currentObject = InputHistoryObject()
+		historyObjects[currentObjectKey] = currentObject
 
-		return operation()
+		return currentObject
 	}
 }

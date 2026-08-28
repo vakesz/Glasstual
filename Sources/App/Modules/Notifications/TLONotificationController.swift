@@ -353,28 +353,24 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	// MARK: - Notification Center Delegate
 
-	public nonisolated func userNotificationCenter(
+	public func userNotificationCenter(
 		_: UNUserNotificationCenter,
 		openSettingsFor _: UNNotification?
 	) {
-		Task { @MainActor in
-			AppController.shared.menuController?.showNotificationPreferences(nil)
-		}
+		AppController.shared.menuController?.showNotificationPreferences(nil)
 	}
 
-	public nonisolated func userNotificationCenter(
+	public func userNotificationCenter(
 		_: UNUserNotificationCenter,
-		willPresent _: UNNotification,
-		withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-	) {
-		completionHandler([.list, .banner])
+		willPresent _: UNNotification
+	) async -> UNNotificationPresentationOptions {
+		[.list, .banner]
 	}
 
-	public nonisolated func userNotificationCenter(
+	public func userNotificationCenter(
 		_: UNUserNotificationCenter,
-		didReceive response: UNNotificationResponse,
-		withCompletionHandler completionHandler: @escaping () -> Void
-	) {
+		didReceive response: UNNotificationResponse
+	) async {
 		let actionIdentifier = response.actionIdentifier
 		let message = (response as? UNTextInputNotificationResponse)?.userText
 		let userInfo = response.notification.request.content.userInfo
@@ -386,20 +382,14 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 		let fileTransferUniqueIdentifier = userInfo["fileTransferUniqueIdentifier"] as? String
 
-		nonisolated(unsafe) let completion = completionHandler
-
-		Task { @MainActor in
-			self.notificationResponseReceived(
-				actionIdentifier: actionIdentifier,
-				clientId: clientId,
-				channelId: channelId,
-				fileTransferNotificationType: fileTransferNotificationType,
-				fileTransferUniqueIdentifier: fileTransferUniqueIdentifier,
-				withReplyMessage: message
-			)
-
-			completion()
-		}
+		notificationResponseReceived(
+			actionIdentifier: actionIdentifier,
+			clientId: clientId,
+			channelId: channelId,
+			fileTransferNotificationType: fileTransferNotificationType,
+			fileTransferUniqueIdentifier: fileTransferUniqueIdentifier,
+			withReplyMessage: message
+		)
 	}
 
 	@objc(dismissNotificationsForChannel:onClient:)
