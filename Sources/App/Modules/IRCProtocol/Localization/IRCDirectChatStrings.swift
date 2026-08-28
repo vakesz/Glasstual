@@ -56,7 +56,7 @@ nonisolated enum IRCDirectChatStrings {
 	}
 
 	static func connecting(nickname: String, address: String, port: UInt16) -> String {
-		String(localized: .IRC.connectingToForADirectChat(nickname, address, UInt(port)))
+		String(localized: .IRC.connectingToForADirectChat(nickname, address, String(port)))
 	}
 
 	static func offering(to nickname: String) -> String {
@@ -72,7 +72,7 @@ nonisolated enum IRCDirectChatStrings {
 	}
 
 	static func waitingForConnection(nickname: String, port: UInt16) -> String {
-		String(localized: .IRC.waitingForToConnectOnPort(nickname, UInt(port)))
+		String(localized: .IRC.waitingForToConnectOnPort(nickname, String(port)))
 	}
 
 	static func established(nickname: String) -> String {
