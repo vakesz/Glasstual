@@ -136,7 +136,7 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 		let client = GLTTestClient()
 		let root = "/tmp/glasstual-logs"
 		let identifier = String(client.uniqueIdentifier.prefix(5))
-		let clientFolder = "\(String((client.name as NSString).ceSafeFilename)) (\(identifier))"
+		let clientFolder = "\(client.name.safeFilename) (\(identifier))"
 
 		let expectedConsole = (root as NSString).appendingPathComponent(
 			"/\(clientFolder)/\(TranscriptDirectory.console)/"
@@ -146,7 +146,7 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 
 		let channel = makeChannel(named: "#chat", type: .channel, client: client)
 		let expectedChannel = (root as NSString).appendingPathComponent(
-			"/\(clientFolder)/\(TranscriptDirectory.channel)/\(String(("#chat" as NSString).ceSafeFilename))/"
+			"/\(clientFolder)/\(TranscriptDirectory.channel)/\("#chat".safeFilename)/"
 		)
 
 		let channelTreeItem: TreeItem = channel
@@ -154,7 +154,7 @@ final class ApplicationSupportMigrationTests: XCTestCase {
 
 		let query = makeChannel(named: "alice", type: .privateMessage, client: client)
 		let expectedQuery = (root as NSString).appendingPathComponent(
-			"/\(clientFolder)/\(TranscriptDirectory.privateMessage)/\(String(("alice" as NSString).ceSafeFilename))/"
+			"/\(clientFolder)/\(TranscriptDirectory.privateMessage)/\("alice".safeFilename)/"
 		)
 
 		let queryTreeItem: TreeItem = query

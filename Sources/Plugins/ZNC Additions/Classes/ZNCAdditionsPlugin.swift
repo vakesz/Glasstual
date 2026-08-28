@@ -175,7 +175,7 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 
 	private func interceptBufferExtras(_ input: PluginServerMessage, client: PluginClient) -> PluginServerMessage? {
 		var parameters = input.parameters
-		let message = NSMutableString(string: (parameters[1] as NSString).ceNormalizeSpaces)
+		let message = NSMutableString(string: parameters[1].normalizingSpaces)
 		let hostmask = message.ceToken
 		guard hostmask.isEmpty == false else { return input }
 

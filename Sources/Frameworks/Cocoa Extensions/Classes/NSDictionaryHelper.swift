@@ -488,7 +488,7 @@ public extension NSDictionary {
 	@objc(formDataUsingSeparator:)
 	func ce_formData(usingSeparator separator: String) -> String {
 		ce_formData(usingSeparator: separator) { value in
-			(value as NSString).cePercentEncodedString ?? value
+			value.percentEncoded ?? value
 		}
 	}
 

@@ -33,7 +33,7 @@ public final class ValidatedTextField: NSTextField {
 		if stringValueUsesOnlyFirstToken {
 			processedValue = (processedValue as NSString).ceTrimAndGetFirstToken
 		} else if stringValueIsTrimmed {
-			processedValue = (processedValue as NSString).ceTrim as String
+			processedValue = processedValue.trimmingCharacters(in: .whitespacesAndNewlines)
 		}
 
 		if processedValue.isEmpty {

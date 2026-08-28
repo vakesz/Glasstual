@@ -116,7 +116,7 @@ extension InlineContentPayload {
 			do {
 				try fileManager.copyItem(atPath: resourcePath, toPath: destinationPath)
 			} catch {
-				let tildePath = (resourcePath as NSString).ceStandardizedTildePath as String? ?? resourcePath
+				let tildePath = resourcePath.standardizedTildePath
 				payloadLogger.error(
 					"Copy operation for '\(tildePath, privacy: .public)' failed with error: \(error.localizedDescription, privacy: .public)"
 				)
