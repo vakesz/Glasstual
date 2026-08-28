@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+import Foundation
 @testable import Glasstual
 import Testing
 

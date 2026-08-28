@@ -55,7 +55,7 @@ struct IRCMessageBatchTests {
 		#expect(container.queuedEntry(withBatchToken: "history-1") === batch)
 
 		#expect(container.queuedEntries["history-1"] === batch)
-		#expect(batch.queuedEntries.first?.object === message)
+		#expect(batch.queuedEntries.first?.object as? Message === message)
 
 		container.dequeueEntry(withBatchToken: "history-1")
 
@@ -79,17 +79,17 @@ struct IRCMessageBatchTests {
 		parent.queueEntry(second)
 
 		#expect(parent.queuedEntries.count == 4)
-		#expect(parent.queuedEntries[0].object === first)
-		#expect(parent.queuedEntries[1].object === first)
-		#expect(parent.queuedEntries[2].object === child)
-		#expect(parent.queuedEntries[3].object === second)
+		#expect(parent.queuedEntries[0].object as? Message === first)
+		#expect(parent.queuedEntries[1].object as? Message === first)
+		#expect(parent.queuedEntries[2].object as? MessageBatch === child)
+		#expect(parent.queuedEntries[3].object as? Message === second)
 
 		#expect(child.parentBatchMessage === parent)
 
 		parent.dequeueEntry(first)
 		parent.dequeueEntry(child)
 
-		#expect(parent.queuedEntries.first?.object === second)
+		#expect(parent.queuedEntries.first?.object as? Message === second)
 	}
 
 	@Test("Emptying the container leaves the batches it held with their contents")
@@ -105,7 +105,7 @@ struct IRCMessageBatchTests {
 
 		#expect(container.queuedEntries.count == 0)
 
-		#expect(batch.queuedEntries.first?.object === message)
+		#expect(batch.queuedEntries.first?.object as? Message === message)
 	}
 
 	private func batchWithToken(_ token: String) -> MessageBatch {
