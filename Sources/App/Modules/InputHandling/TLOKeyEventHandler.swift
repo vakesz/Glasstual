@@ -150,7 +150,7 @@ public final class KeyEventHandler: NSObject {
 	}
 
 	private func register(keyCode: UInt16, modifiers: UInt, perform action: @escaping DispatchAction) {
-		precondition(keyCode != 0)
+		/* Zero is kVK_ANSI_A, a real key, so it must not be rejected here. */
 		codeHandlerMap[modifiers, default: [:]][keyCode] = action
 	}
 

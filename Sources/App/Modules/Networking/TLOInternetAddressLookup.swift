@@ -42,6 +42,9 @@ public final class InternetAddressLookup: NSObject {
 	private var session: URLSession?
 	private var connection: URLSessionDataTask?
 	private var address: String?
+	/** Identifies the lookup a completion belongs to so that a cancelled or superseded
+	 request cannot report back to the delegate. */
+	private var lookupGeneration: UInt64 = 0
 
 	@available(*, unavailable)
 	override public init() {
@@ -56,7 +59,12 @@ public final class InternetAddressLookup: NSObject {
 	}
 
 	@objc public func performLookup() {
-		precondition(connection == nil, "A lookup is already in progress")
+		/* A second request while one is in flight restarts rather than aborting the app;
+		 two concurrent DCC offers can reach this. */
+		cancelLookup()
+
+		lookupGeneration &+= 1
+		let generation = lookupGeneration
 
 		let configuration = URLSessionConfiguration.ephemeral
 		configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
@@ -69,13 +77,16 @@ public final class InternetAddressLookup: NSObject {
 		self.session = session
 		connection = session.dataTask(with: sourceURL) { [weak self] data, response, error in
 			Task { @MainActor [weak self] in
-				self?.completeLookup(data: data, response: response, error: error)
+				self?.completeLookup(generation: generation, data: data, response: response, error: error)
 			}
 		}
 		connection?.resume()
 	}
 
 	@objc public func cancelLookup() {
+		/* Retiring the generation stops the in-flight completion from reporting a
+		 cancellation to the delegate as a lookup failure. */
+		lookupGeneration &+= 1
 		teardownConnection()
 	}
 
@@ -116,7 +127,9 @@ public final class InternetAddressLookup: NSObject {
 		return Self.firstPartySourceURL
 	}
 
-	private func completeLookup(data: Data?, response: URLResponse?, error: Error?) {
+	private func completeLookup(generation: UInt64, data: Data?, response: URLResponse?, error: Error?) {
+		guard generation == lookupGeneration else { return }
+
 		if let error {
 			Self.logger.error("Lookup failed: \(error.localizedDescription, privacy: .public)")
 		} else {

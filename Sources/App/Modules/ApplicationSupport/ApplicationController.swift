@@ -486,6 +486,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 
 		SharedApplication.sharedWindowController().prepareForApplicationTermination()
 		SharedApplication.sharedThemeController().prepareForApplicationTermination()
+		SoundPlayer.prepareForApplicationTermination()
 
 		Self.terminationLogger.debug("Saving running internal")
 		ApplicationInfo.saveTimeIntervalSinceApplicationInstall()

@@ -10,6 +10,7 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Combine
 import Foundation
 
@@ -30,10 +31,23 @@ final class NotificationSubscriptions {
 		using handler: @escaping @MainActor (Notification) -> Void
 	) {
 		center.publisher(for: name, object: object)
-			.receive(on: DispatchQueue.main)
 			.sink { notification in
-				MainActor.assumeIsolated {
-					handler(notification)
+				/* NSWorkspace's sleep and power-off notifications are synchronous
+				 contracts — the system expects the work to be finished by the time the
+				 notification returns — so deliver directly when already on the main
+				 actor rather than always deferring to a later runloop turn. */
+				if Thread.isMainThread {
+					MainActor.assumeIsolated {
+						handler(notification)
+					}
+
+					return
+				}
+
+				performAsynchronouslyOnMainQueue {
+					MainActor.assumeIsolated {
+						handler(notification)
+					}
 				}
 			}
 			.store(in: &cancellables)
