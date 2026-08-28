@@ -1157,7 +1157,7 @@ public extension LogController {
 		if channelFont.fontName.hasPrefix(".") {
 			tokens[.userConfiguredFontName] = "-apple-system, BlinkMacSystemFont, system-ui, sans-serif"
 		} else {
-			tokens[.userConfiguredFontName] = "\"\(channelFont.fontName)\""
+			tokens[.userConfiguredFontName] = LogViewContentPolicy.cssStringLiteral(channelFont.fontName)
 		}
 		tokens[.userConfiguredFontSize] = channelFont.pointSize * (72.0 / 96.0)
 		let indentOffset = settings.indentationOffset

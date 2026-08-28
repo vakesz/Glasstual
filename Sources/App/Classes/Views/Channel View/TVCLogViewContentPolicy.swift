@@ -167,6 +167,32 @@ public enum LogViewContentPolicy {
 	/** `</style` closes the element wherever it appears, so a user style sheet
 	 containing it escapes into HTML. It is never valid CSS, so it is replaced
 	 by a comment rather than rejected. */
+	/// A CSS string literal for a user-supplied value such as a font family name.
+	///
+	/// The value is rendered unescaped into the theme's `<style>` block, so a name
+	/// containing `"` or `</style>` would otherwise break out of the literal.
+	public static func cssStringLiteral(_ value: String) -> String {
+		var escaped = ""
+		escaped.reserveCapacity(value.utf8.count + 2)
+		for scalar in value.unicodeScalars {
+			switch scalar {
+			case "\\", "\"":
+				escaped.append("\\")
+				escaped.unicodeScalars.append(scalar)
+			case "<", ">":
+				/* Neither is meaningful in a font name; dropping them keeps
+				 `</style>` out of the block without an escape sequence. */
+				continue
+			default:
+				if scalar.properties.generalCategory == .control {
+					continue
+				}
+				escaped.unicodeScalars.append(scalar)
+			}
+		}
+		return "\"\(escaped)\""
+	}
+
 	public static func sanitizedStyleSheetText(_ text: String?) -> String? {
 		guard let text else {
 			return nil

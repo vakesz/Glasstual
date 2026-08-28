@@ -128,4 +128,13 @@ struct LogViewContentPolicyTests {
 		#expect(LogViewContentPolicy.sanitizedStyleSheetText("body { color: red; }") == "body { color: red; }")
 		#expect(LogViewContentPolicy.sanitizedStyleSheetText(nil) == nil)
 	}
+
+	@Test("Font names become safe CSS string literals")
+	func fontNamesAreEscaped() {
+		#expect(LogViewContentPolicy.cssStringLiteral("Helvetica Neue") == "\"Helvetica Neue\"")
+		#expect(LogViewContentPolicy.cssStringLiteral("Bad\"Name") == "\"Bad\\\"Name\"")
+		#expect(LogViewContentPolicy.cssStringLiteral("A\\B") == "\"A\\\\B\"")
+		#expect(LogViewContentPolicy.cssStringLiteral("x</style>").contains("<") == false)
+		#expect(LogViewContentPolicy.cssStringLiteral("line\nbreak") == "\"linebreak\"")
+	}
 }
