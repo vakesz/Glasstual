@@ -118,12 +118,12 @@ public final class NotificationConfigurationViewController: NSObject {
 			return
 		}
 
-		alertSpeakEventButton.state = NSControl.StateValue(rawValue: Int(alert.speakEvent))
-		alertBounceDockIconButton.state = NSControl.StateValue(rawValue: Int(alert.bounceDockIcon))
+		alertSpeakEventButton.state = alert.speakEvent
+		alertBounceDockIconButton.state = alert.bounceDockIcon
 		alertBounceDockIconRepeatedlyButton.isEnabled = alertBounceDockIconButton.state != .off
-		alertBounceDockIconRepeatedlyButton.state = NSControl.StateValue(rawValue: Int(alert.bounceDockIconRepeatedly))
-		alertDisableWhileAwayButton.state = NSControl.StateValue(rawValue: Int(alert.disabledWhileAway))
-		alertPushNotificationButton.state = NSControl.StateValue(rawValue: Int(alert.pushNotification))
+		alertBounceDockIconRepeatedlyButton.state = alert.bounceDockIconRepeatedly
+		alertDisableWhileAwayButton.state = alert.disabledWhileAway
+		alertPushNotificationButton.state = alert.pushNotification
 
 		let alertSound = alert.alertSound
 
@@ -191,35 +191,42 @@ public final class NotificationConfigurationViewController: NSObject {
 	}
 
 	@IBAction private func onChangedAlertType(_: Any?) {
+		// selectedTag() is -1 when nothing is selected, e.g. after the menu is
+		// emptied by resetControls().
 		let alertTag = alertTypeChoiceButton.selectedTag()
+		guard notifications.indices.contains(alertTag) else {
+			notificationConfigurationLogger.debug("No notification is selected; nothing to reload")
+			activeAlert = nil
+			return
+		}
 		activeAlert = notifications[alertTag] as? NotificationConfiguration
 		reload()
 	}
 
 	@IBAction private func onChangedAlertPushNotification(_: Any?) {
 		activeAlertPropertyChangedByUser = true
-		activeAlert?.pushNotification = UInt(alertPushNotificationButton.state.rawValue)
+		activeAlert?.pushNotification = alertPushNotificationButton.state
 	}
 
 	@IBAction private func onChangedAlertSpoken(_: Any?) {
 		activeAlertPropertyChangedByUser = true
-		activeAlert?.speakEvent = UInt(alertSpeakEventButton.state.rawValue)
+		activeAlert?.speakEvent = alertSpeakEventButton.state
 	}
 
 	@IBAction private func onChangedAlertDisableWhileAway(_: Any?) {
 		activeAlertPropertyChangedByUser = true
-		activeAlert?.disabledWhileAway = UInt(alertDisableWhileAwayButton.state.rawValue)
+		activeAlert?.disabledWhileAway = alertDisableWhileAwayButton.state
 	}
 
 	@IBAction private func onChangedAlertBounceDockIcon(_: Any?) {
 		activeAlertPropertyChangedByUser = true
-		activeAlert?.bounceDockIcon = UInt(alertBounceDockIconButton.state.rawValue)
+		activeAlert?.bounceDockIcon = alertBounceDockIconButton.state
 		alertBounceDockIconRepeatedlyButton.isEnabled = alertBounceDockIconButton.state == .on
 	}
 
 	@IBAction private func onChangedAlertBounceDockIconRepeatedly(_: Any?) {
 		activeAlertPropertyChangedByUser = true
-		activeAlert?.bounceDockIconRepeatedly = UInt(alertBounceDockIconRepeatedlyButton.state.rawValue)
+		activeAlert?.bounceDockIconRepeatedly = alertBounceDockIconRepeatedlyButton.state
 	}
 
 	@IBAction private func onChangedAlertSound(_: Any?) {
