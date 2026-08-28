@@ -32,7 +32,7 @@ public final class OnboardingSettings: NSObject {
 	@objc public var notifyOnPrivateMessage = true
 	@objc public var playSounds = true
 
-	@objc public var clientConfig: IRCClientConfigMutable?
+	public var clientConfig: ClientConfig?
 	@objc public var connectWhenFinished = true
 	@objc public var channelsToJoin: [String] = []
 

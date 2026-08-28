@@ -155,12 +155,10 @@ public extension TXMenuController {
 		dialogDidClose(sender)
 	}
 
-	@objc(serverPropertiesSheet:onOk:)
 	func serverPropertiesSheet(_ sender: ServerPropertiesSheet, onOk config: IRCClientConfig) {
 		actionCoordinator.serverPropertiesDidAccept(sender, config: config)
 	}
 
-	@objc(serverPropertiesSheetWillClose:)
 	func serverPropertiesSheetWillClose(_ sender: ServerPropertiesSheet) {
 		dialogDidClose(sender)
 	}
@@ -236,7 +234,7 @@ public extension TXMenuController {
 
 extension TXMenuController: AboutDialogDelegate, ChannelInviteSheetDelegate, ChannelModifyTopicSheetDelegate,
 	ChannelModifyModesSheetDelegate, ChannelPropertiesSheetDelegate, NicknameColorSheetDelegate,
-	ServerChangeNicknameSheetDelegate
+	ServerChangeNicknameSheetDelegate, ServerPropertiesSheetDelegate
 {}
 
 @MainActor

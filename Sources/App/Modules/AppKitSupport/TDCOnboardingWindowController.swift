@@ -404,7 +404,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 	}
 
 	private func createClient() {
-		guard let config = settings.clientConfig else {
+		guard var config = settings.clientConfig else {
 			return
 		}
 
@@ -420,14 +420,7 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 		config.autoConnect = settings.connectWhenFinished
 
-		var channelList: [ChannelConfig] = []
-		channelList.reserveCapacity(settings.channelsToJoin.count)
-
-		for channelName in settings.channelsToJoin {
-			channelList.append(ChannelConfig.seed(withName: channelName))
-		}
-
-		config.channelList = channelList
+		config.channelList = settings.channelsToJoin.map(ChannelConfig.seed(withName:))
 
 		/* Onboarding runs at launch, exactly when these are least likely to exist. */
 		guard
@@ -438,13 +431,8 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 			return
 		}
 
-		/* -initWithConfig: moves the account password into the keychain. */
-		guard let clientConfig = config.copy() as? IRCClientConfig else {
-			assertionFailure("IRCClientConfigMutable.copy() must return IRCClientConfig")
-			return
-		}
-
-		let client = world.createClient(with: clientConfig, reload: true)
+		/* IRCClient.init(config:) moves the account password into the keychain. */
+		let client = world.createClient(with: config, reload: true)
 
 		mainWindow.expandClient(client)
 		world.save()

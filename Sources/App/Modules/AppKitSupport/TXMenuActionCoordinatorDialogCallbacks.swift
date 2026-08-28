@@ -60,7 +60,6 @@ public extension MenuActionCoordinator {
 		}
 	}
 
-	@objc(serverPropertiesDidAccept:config:)
 	func serverPropertiesDidAccept(_ sender: ServerPropertiesSheet, config: IRCClientConfig) {
 		let world = AppController.shared.world!
 		guard let client = sender.client else {

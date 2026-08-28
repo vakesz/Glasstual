@@ -37,6 +37,7 @@
  *********************************************************************** */
 
 import AppKit
+import CocoaExtensions
 import GlasstualPluginKit
 import os
 
@@ -120,7 +121,10 @@ public final class World: NSObject {
 		serverList.beginUpdates()
 
 		for dictionary in TextualPreferences.clientList() ?? [] {
-			let config = IRCClientConfig(dictionary: dictionary)
+			guard let config = PropertyListModel.decode(ClientConfig.self, from: dictionary) else {
+				continue
+			}
+
 			_ = createClient(with: config, reload: true)
 		}
 
@@ -441,12 +445,10 @@ public final class World: NSObject {
 
 	// MARK: - Factory
 
-	@objc(createClientWithConfig:)
 	public func createClient(with config: IRCClientConfig) -> IRCClient {
 		createClient(with: config, reload: true)
 	}
 
-	@objc(createClientWithConfig:reload:)
 	public func createClient(with config: IRCClientConfig, reload: Bool) -> IRCClient {
 		let client = IRCClient(config: config)
 		client.setValue(createViewController(client: client, channel: nil), forKey: "viewController")

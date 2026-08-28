@@ -33,6 +33,7 @@ final class ServerPropertiesSheetMigrationTests: XCTestCase {
 		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any HighlightEntrySheetDelegate.Type))
 		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any AddressBookSheetDelegate.Type))
 		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any ChannelPropertiesSheetDelegate.Type))
+		XCTAssertTrue((TXMenuController.self as Any.Type) is (any ServerPropertiesSheetDelegate.Type))
 	}
 
 	func testNibActionSelectorsRemainAvailable() {

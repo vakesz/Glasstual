@@ -42,7 +42,7 @@ import XCTest
 final class IRCClientShellPolicyTests: XCTestCase {
 	@MainActor
 	func testNativeClassPreservesRuntimeIdentityAndInitialState() {
-		let client = IRCClient(configDictionary: [:])
+		let client = IRCClient(config: ClientConfig())
 
 		XCTAssertEqual(NSStringFromClass(type(of: client)), "IRCClient")
 		XCTAssertTrue(client.isClient)

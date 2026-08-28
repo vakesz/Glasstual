@@ -452,12 +452,12 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		return true
 	}
 
-	@objc public func clientConfig() -> IRCClientConfigMutable? {
+	public func clientConfig() -> ClientConfig? {
 		if validateWithError(nil) == false {
 			return nil
 		}
 
-		let config = IRCClientConfigMutable()
+		var config = ClientConfig()
 
 		if let network = selectedNetwork {
 			config.connectionName = network.networkName
