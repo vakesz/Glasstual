@@ -21,7 +21,7 @@ public final class ChannelSelectionOutlineCellView: NSTableCellView {
 
 	@objc
 	public func prepareInitialState() {
-		guard let outlineView = parentController?.outlineView(), let cellItem else {
+		guard let outlineView = parentController?.outlineView, let cellItem else {
 			return
 		}
 

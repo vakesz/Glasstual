@@ -20,7 +20,9 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 	NSOutlineViewDelegate
 {
 	@IBOutlet private var outlineViewScrollView: NSScrollView!
-	@IBOutlet private var outlineViewOutlet: NSOutlineView!
+	/// Name must match the outlet connection in TVCChannelSelectionView.xib;
+	/// the nib sets it through setValue(_:forKey:).
+	@IBOutlet public private(set) var outlineView: NSOutlineView!
 
 	private weak var attachedView: NSView?
 	private var cachedSelectedClientIdsStorage: [String] = []
@@ -73,18 +75,14 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 		)
 	}
 
-	@objc public func outlineView() -> NSOutlineView {
-		outlineViewOutlet
-	}
-
 	private func item(from cellView: ChannelSelectionOutlineCellView) -> IRCTreeItem? {
-		let row = outlineViewOutlet.row(for: cellView)
+		let row = outlineView.row(for: cellView)
 
 		if row < 0 {
 			return nil
 		}
 
-		return outlineViewOutlet.item(atRow: row) as? IRCTreeItem
+		return outlineView.item(atRow: row) as? IRCTreeItem
 	}
 
 	@objc(selectionCheckboxClickedInCell:)
@@ -93,7 +91,7 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 			return
 		}
 
-		let isGroupItem = outlineViewOutlet.isGroupItem(item)
+		let isGroupItem = outlineView.isGroupItem(item)
 		let checkboxState = clickedCell.selectedCheckbox.state
 		let isEnablingItem = checkboxState == .on || checkboxState == .mixed
 
@@ -116,7 +114,7 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 		}
 
 		if isGroupItem, isEnablingItem {
-			let childrenItems = outlineViewOutlet.items(inContainingGroupOf: item) as? [IRCTreeItem] ?? []
+			let childrenItems = outlineView.items(inContainingGroupOf: item) as? [IRCTreeItem] ?? []
 
 			for childItem in childrenItems {
 				cachedSelectedChannelIdsStorage.removeAll { $0 == childItem.uniqueIdentifier }
@@ -165,11 +163,11 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 		guard let parentItem: IRCTreeItem = item.isClient ? item : item.associatedClient else {
 			return
 		}
-		let childrenItems = outlineViewOutlet.items(inGroup: parentItem) as? [IRCTreeItem] ?? []
+		let childrenItems = outlineView.items(inGroup: parentItem) as? [IRCTreeItem] ?? []
 
 		for childItem in childrenItems {
-			let childItemRow = outlineViewOutlet.row(forItem: childItem)
-			let childItemView = outlineViewOutlet.view(
+			let childItemRow = outlineView.row(forItem: childItem)
+			let childItemView = outlineView.view(
 				atColumn: 0,
 				row: childItemRow,
 				makeIfNecessary: false
@@ -178,8 +176,8 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 			applySelectedState(to: childItemView, for: childItem)
 		}
 
-		let parentItemRow = outlineViewOutlet.row(forItem: parentItem)
-		let parentItemView = outlineViewOutlet.view(
+		let parentItemRow = outlineView.row(forItem: parentItem)
+		let parentItemView = outlineView.view(
 			atColumn: 0,
 			row: parentItemRow,
 			makeIfNecessary: false
@@ -225,7 +223,7 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 	}
 
 	private func reloadOutlineView() {
-		outlineViewOutlet.reloadData()
+		outlineView.reloadData()
 	}
 
 	private func expandOutlineViewItemsCancelTimer() {
@@ -243,7 +241,7 @@ public final class ChannelSelectionViewController: NSObject, PluginChannelSelect
 				return
 			}
 
-			outlineViewOutlet.expandItem(nil, expandChildren: true)
+			outlineView.expandItem(nil, expandChildren: true)
 			expandOutlineViewWorkItem = nil
 		}
 
