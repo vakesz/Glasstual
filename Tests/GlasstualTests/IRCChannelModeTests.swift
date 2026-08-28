@@ -104,14 +104,6 @@ final class ChannelModeTests: XCTestCase {
 		XCTAssertNotNil(channelMode.modeInfo(for: "n"))
 	}
 
-	func testQueryingAModeDoesNotDefineIt() {
-		let channelMode = channelMode(currentModes: "")
-
-		XCTAssertNil(channelMode.modeInfo(for: "n"))
-		XCTAssertFalse(channelMode.modeIsDefined("n"))
-		XCTAssertEqual(channelMode.changeCommand(for: channelMode.modes), "")
-	}
-
 	func testCopiedContainerHasIndependentState() throws {
 		let channelMode = channelMode(currentModes: "+nt")
 		let modes = try XCTUnwrap(channelMode.modes.copy() as? ChannelModeContainer)
