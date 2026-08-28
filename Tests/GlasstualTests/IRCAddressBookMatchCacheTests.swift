@@ -1,7 +1,4 @@
-@testable import Glasstual
-import XCTest
-
-/** *********************************************************************
+/* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -37,30 +34,32 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+
+import Foundation
+@testable import Glasstual
+import Testing
+
 @MainActor
-final class IRCAddressBookMatchCacheTests: XCTestCase {
-	private var client: GLTTestClient!
-
-	private func cache(ignoreList: [[String: AnyObject]]) -> IRCAddressBookMatchCache {
-		client = GLTTestClient(configDictionary: ["ignoreList": ignoreList])
-		return IRCAddressBookMatchCache(client: client)
-	}
-
-	func testSingleMatchingEntryIsReturned() throws {
-		let cache = cache(ignoreList: [[
+@Suite("Address book match cache")
+struct IRCAddressBookMatchCacheTests {
+	@Test("One matching entry is returned with the flags it was configured with")
+	func singleMatchingEntryIsReturned() throws {
+		let client = makeClient(ignoreList: [[
 			"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
 			"hostmask": "nick!*@example.com" as NSString,
 			"ignorePrivateMessages": true as NSNumber,
 		]])
-		let match = try XCTUnwrap(cache.findAddressBookEntry(forHostmask: "Nick!user@example.com"))
+		let cache = IRCAddressBookMatchCache(client: client)
+		let match = try #require(cache.findAddressBookEntry(forHostmask: "Nick!user@example.com"))
 
-		XCTAssertEqual(match.entryType, .ignore)
-		XCTAssertTrue(match.ignorePrivateMessages)
-		XCTAssertEqual(cache.findIgnores(forHostmask: "Nick!user@example.com").count, 1)
+		#expect(match.entryType == .ignore)
+		#expect(match.ignorePrivateMessages)
+		#expect(cache.findIgnores(forHostmask: "Nick!user@example.com").count == 1)
 	}
 
-	func testMultipleMatchesAreMerged() throws {
-		let cache = cache(ignoreList: [
+	@Test("Entries that match the same hostmask are merged into one mixed entry")
+	func multipleMatchesAreMerged() throws {
+		let client = makeClient(ignoreList: [
 			[
 				"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
 				"hostmask": "*!user@example.com" as NSString,
@@ -72,28 +71,37 @@ final class IRCAddressBookMatchCacheTests: XCTestCase {
 				"ignorePublicMessages": true as NSNumber,
 			],
 		])
+		let cache = IRCAddressBookMatchCache(client: client)
 		let hostmask = "nick!user@example.com"
-		let match = try XCTUnwrap(cache.findAddressBookEntry(forHostmask: hostmask))
+		let match = try #require(cache.findAddressBookEntry(forHostmask: hostmask))
 
-		XCTAssertEqual(match.entryType, .mixed)
-		XCTAssertEqual(match.parentEntries?.count, 2)
-		XCTAssertTrue(match.ignorePrivateMessages)
-		XCTAssertTrue(match.ignorePublicMessages)
-		XCTAssertEqual(cache.findIgnores(forHostmask: hostmask).count, 2)
-		XCTAssertEqual(match, cache.findAddressBookEntry(forHostmask: hostmask))
+		#expect(match.entryType == .mixed)
+		#expect(match.parentEntries?.count == 2)
+		#expect(match.ignorePrivateMessages)
+		#expect(match.ignorePublicMessages)
+		#expect(cache.findIgnores(forHostmask: hostmask).count == 2)
+		#expect(match == cache.findAddressBookEntry(forHostmask: hostmask))
 	}
 
-	func testAbsentMatchReturnsNilAndNoIgnores() {
-		let cache = cache(ignoreList: [[
+	@Test("A hostmask nothing matches yields no entry and no ignores")
+	func absentMatchReturnsNilAndNoIgnores() {
+		let client = makeClient(ignoreList: [[
 			"entryType": IRCAddressBookEntryType.ignore.rawValue as NSNumber,
 			"hostmask": "nick!*@example.com" as NSString,
 		]])
+		let cache = IRCAddressBookMatchCache(client: client)
 		let hostmask = "someone!user@elsewhere.test"
 
-		XCTAssertNil(cache.findAddressBookEntry(forHostmask: hostmask))
-		XCTAssertTrue(cache.findIgnores(forHostmask: hostmask).isEmpty)
+		#expect(cache.findAddressBookEntry(forHostmask: hostmask) == nil)
+		#expect(cache.findIgnores(forHostmask: hostmask).isEmpty)
 
 		cache.clearCachedMatches(forHostmask: hostmask)
 		cache.clearCachedMatches()
+	}
+
+	/// The cache holds its client weakly, so every test keeps the client it
+	/// was built from alive for the length of the test.
+	private func makeClient(ignoreList: [[String: AnyObject]]) -> GLTTestClient {
+		GLTTestClient(configDictionary: ["ignoreList": ignoreList])
 	}
 }

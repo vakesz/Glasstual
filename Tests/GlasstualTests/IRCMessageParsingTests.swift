@@ -1,7 +1,4 @@
-@testable import Glasstual
-import XCTest
-
-/** *********************************************************************
+/* *********************************************************************
  *                  _____         _               _
  *                 |_   _|____  _| |_ _   _  __ _| |
  *                   | |/ _ \ \/ / __| | | |/ _` | |
@@ -37,27 +34,34 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+
+@testable import Glasstual
+import Testing
+
 @MainActor
-class IRCMessageParsingTests: XCTestCase {
-	func testMessageTagsDecodeEscapesAndMetadata() {
+@Suite("Message tag parsing")
+struct IRCMessageParsingTests {
+	@Test("Escapes are resolved and the known tags are lifted out")
+	func messageTagsDecodeEscapesAndMetadata() {
 		let parsed = MessageTagParser
 			.parsedTags(fromSection: "msgid=abc;account=alice;a=b\\:c\\sd\\\\e\\r\\n;flag")
 
-		XCTAssertEqual(parsed.tags["a"], "b;c d\\e\r\n")
-		XCTAssertEqual(parsed.tags["flag"], "")
-		XCTAssertEqual(parsed.messageIdentifier, "abc")
-		XCTAssertEqual(parsed.senderAccount, "alice")
+		#expect(parsed.tags["a"] == "b;c d\\e\r\n")
+		#expect(parsed.tags["flag"] == "")
+		#expect(parsed.messageIdentifier == "abc")
+		#expect(parsed.senderAccount == "alice")
 	}
 
-	func testMessageTagsPreserveLastDuplicateAndUnknownEscapeRules() {
+	@Test("The last spelling of a duplicated tag wins and an unknown escape drops its backslash")
+	func messageTagsPreserveLastDuplicateAndUnknownEscapeRules() {
 		let parsed = MessageTagParser
 			.parsedTags(fromSection: "a=first;;a=second;b=x\\qy;c=end\\")
 
-		XCTAssertEqual(parsed.tags["a"], "second")
-		XCTAssertEqual(parsed.tags["b"], "xqy")
-		XCTAssertEqual(parsed.tags["c"], "end")
+		#expect(parsed.tags["a"] == "second")
+		#expect(parsed.tags["b"] == "xqy")
+		#expect(parsed.tags["c"] == "end")
 
-		XCTAssertNil(parsed.messageIdentifier)
-		XCTAssertNil(parsed.senderAccount)
+		#expect(parsed.messageIdentifier == nil)
+		#expect(parsed.senderAccount == nil)
 	}
 }
