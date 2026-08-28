@@ -59,15 +59,15 @@ private let mainWindowTextViewLogger = Logger(
 )
 
 private let observedPreferenceKeys = [
-	"TextFieldAutomaticSpellCheck",
-	"TextFieldAutomaticGrammarCheck",
-	"TextFieldAutomaticSpellCorrection",
-	"TextFieldSmartCopyPaste",
-	"TextFieldSmartQuotes",
-	"TextFieldSmartDashes",
-	"TextFieldSmartLinks",
-	"TextFieldDataDetectors",
-	"TextFieldTextReplacement",
+	Preferences.Input.automaticSpellCheck.name,
+	Preferences.Input.automaticGrammarCheck.name,
+	Preferences.Input.automaticSpellCorrection.name,
+	Preferences.Input.smartCopyPaste.name,
+	Preferences.Input.smartQuotes.name,
+	Preferences.Input.smartDashes.name,
+	Preferences.Input.smartLinks.name,
+	Preferences.Input.dataDetectors.name,
+	Preferences.Input.textReplacement.name,
 ]
 
 @objc(TVCMainWindowTextView)
@@ -590,66 +590,35 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 
 	// MARK: - NSTextView preferences
 
+	/** Preferences drive these nine properties, never the other way round. Each
+	 one used to write itself back from a `didSet`, and `UserDefaults.set` posts
+	 its notification unconditionally, so any single preference change produced
+	 nine writes, each of which produced another notification. */
 	private func applyObservedPreference(_ keyPath: String) {
 		switch keyPath {
-		case "TextFieldAutomaticSpellCheck":
+		case Preferences.Input.automaticSpellCheck.name:
 			isContinuousSpellCheckingEnabled = TextualPreferences.textFieldAutomaticSpellCheck()
-		case "TextFieldAutomaticGrammarCheck":
+		case Preferences.Input.automaticGrammarCheck.name:
 			isGrammarCheckingEnabled = TextualPreferences.textFieldAutomaticGrammarCheck()
-		case "TextFieldAutomaticSpellCorrection":
+		case Preferences.Input.automaticSpellCorrection.name:
 			isAutomaticSpellingCorrectionEnabled = TextualPreferences.textFieldAutomaticSpellCorrection()
-		case "TextFieldSmartCopyPaste":
+		case Preferences.Input.smartCopyPaste.name:
 			smartInsertDeleteEnabled = TextualPreferences.textFieldSmartCopyPaste()
-		case "TextFieldSmartQuotes":
+		case Preferences.Input.smartQuotes.name:
 			isAutomaticQuoteSubstitutionEnabled = TextualPreferences.textFieldSmartQuotes()
-		case "TextFieldSmartDashes":
+		case Preferences.Input.smartDashes.name:
 			isAutomaticDashSubstitutionEnabled = TextualPreferences.textFieldSmartDashes()
-		case "TextFieldSmartLinks":
+		case Preferences.Input.smartLinks.name:
 			isAutomaticLinkDetectionEnabled = TextualPreferences.textFieldSmartLinks()
-		case "TextFieldDataDetectors":
+		case Preferences.Input.dataDetectors.name:
 			isAutomaticDataDetectionEnabled = TextualPreferences.textFieldDataDetectors()
-		case "TextFieldTextReplacement":
+		case Preferences.Input.textReplacement.name:
 			isAutomaticTextReplacementEnabled = TextualPreferences.textFieldTextReplacement()
 		default:
 			break
 		}
 	}
 
-	override public var isContinuousSpellCheckingEnabled: Bool {
-		didSet { TextualPreferences.setTextFieldAutomaticSpellCheck(isContinuousSpellCheckingEnabled) }
-	}
-
-	override public var isGrammarCheckingEnabled: Bool {
-		didSet { TextualPreferences.setTextFieldAutomaticGrammarCheck(isGrammarCheckingEnabled) }
-	}
-
-	override public var isAutomaticSpellingCorrectionEnabled: Bool {
-		didSet { TextualPreferences.setTextFieldAutomaticSpellCorrection(isAutomaticSpellingCorrectionEnabled) }
-	}
-
-	override public var smartInsertDeleteEnabled: Bool {
-		didSet { TextualPreferences.setTextFieldSmartCopyPaste(smartInsertDeleteEnabled) }
-	}
-
-	override public var isAutomaticQuoteSubstitutionEnabled: Bool {
-		didSet { TextualPreferences.setTextFieldSmartQuotes(isAutomaticQuoteSubstitutionEnabled) }
-	}
-
-	override public var isAutomaticDashSubstitutionEnabled: Bool {
-		didSet { TextualPreferences.setTextFieldSmartDashes(isAutomaticDashSubstitutionEnabled) }
-	}
-
-	override public var isAutomaticLinkDetectionEnabled: Bool {
-		didSet { TextualPreferences.setTextFieldSmartLinks(isAutomaticLinkDetectionEnabled) }
-	}
-
-	override public var isAutomaticDataDetectionEnabled: Bool {
-		didSet { TextualPreferences.setTextFieldDataDetectors(isAutomaticDataDetectionEnabled) }
-	}
-
-	override public var isAutomaticTextReplacementEnabled: Bool {
-		didSet { TextualPreferences.setTextFieldTextReplacement(isAutomaticTextReplacementEnabled) }
-	}
 }
 
 @objc(TVCMainWindowTextViewContentView)

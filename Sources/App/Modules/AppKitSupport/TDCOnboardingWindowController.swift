@@ -351,11 +351,11 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 
 	private func applyIdentitySettings() {
 		if settings.nickname.isEmpty == false {
-			TextualUserDefaults.shared().set(settings.nickname, forKey: "DefaultIdentity -> Nickname")
+			TextualPreferences.setDefaultNickname(settings.nickname)
 		}
 
 		if settings.realName.isEmpty == false {
-			TextualUserDefaults.shared().set(settings.realName, forKey: "DefaultIdentity -> Realname")
+			TextualPreferences.setDefaultRealName(settings.realName)
 		}
 	}
 
