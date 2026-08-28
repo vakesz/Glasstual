@@ -5,7 +5,7 @@
 
 import Foundation
 @testable import Glasstual
-@_spi(Host) import GlasstualPluginKit
+import GlasstualPluginKit
 import XCTest
 
 @MainActor
@@ -39,6 +39,8 @@ final class PluginKitMigrationTests: XCTestCase {
 			clients: { [client] },
 			selectedChannel: { channel },
 			metrics: { metrics },
+			applicationSnapshot: { nil },
+			themeSnapshot: { nil },
 			observeConnectionState: { handler in
 				handler(true)
 				return PluginObservation(cancellation: {})
@@ -109,26 +111,6 @@ final class PluginKitMigrationTests: XCTestCase {
 		XCTAssertEqual(handler.authorNickname, "alice")
 	}
 
-	func testServerMessageCopyCanBeInterceptedWithoutMutatingOriginal() {
-		let original = PluginServerMessage(
-			sender: PluginSender(
-				nickname: "server",
-				username: nil,
-				address: nil,
-				hostmask: "server",
-				isServer: true
-			),
-			command: "NOTICE",
-			parameters: ["hello"],
-			isPrintOnlyMessage: false
-		)
-		let intercepted = original.copy()
-		intercepted.command = "PRIVMSG"
-
-		XCTAssertEqual(original.command, "NOTICE")
-		XCTAssertEqual(intercepted.command, "PRIVMSG")
-	}
-
 	func testSwiftNativeCompatibilityFloorIsVersionEight() {
 		XCTAssertEqual(PluginCompatibility.minimumHostVersion, "8.0.0")
 	}
@@ -173,6 +155,7 @@ final class PluginKitMigrationTests: XCTestCase {
 	}
 }
 
+@MainActor
 private final class CommandHandlerFixture: PluginCommandHandling {
 	private(set) var client: PluginClient?
 	private(set) var command: String?
@@ -191,6 +174,7 @@ private final class CommandHandlerFixture: PluginCommandHandling {
 	}
 }
 
+@MainActor
 private final class TextHandlerFixture: PluginTextEventHandling {
 	private(set) var destination: PluginChannel?
 	private(set) var kind: PluginMessageKind?
@@ -204,9 +188,9 @@ private final class TextHandlerFixture: PluginTextEventHandling {
 	}
 }
 
+@MainActor
 private func makePluginChannel() -> PluginChannel {
 	PluginChannel(
-		hostObject: NSObject(),
 		identifier: "channel-id",
 		name: "#glasstual",
 		type: .channel,
@@ -218,9 +202,9 @@ private func makePluginChannel() -> PluginChannel {
 	)
 }
 
+@MainActor
 private func makePluginClient(channel: PluginChannel) -> PluginClient {
 	PluginClient(
-		hostObject: NSObject(),
 		identifier: "client-id",
 		userNickname: "tester",
 		networkName: "Test Network",

@@ -66,28 +66,4 @@ final class CompatibilityHeaderMigrationTests: XCTestCase {
 		XCTAssertNil(IRCHostmask(parsing: "nick!user name@example.test"))
 		XCTAssertNil(IRCHostmask(parsing: "long-nickname!user@example.test", maximumNicknameLength: 4))
 	}
-
-	func testPluginHostResolvesContextualNicknameLengthThroughOpaqueClient() {
-		let client = PluginHostClientFixture()
-		client.supportInfo.maximumNicknameLength = 64
-
-		XCTAssertEqual(PluginHost.maximumNicknameLength(on: client), 64)
-
-		client.isConnectedToZNC = true
-		XCTAssertEqual(PluginHost.maximumNicknameLength(on: client), 50)
-
-		client.isConnectedToZNC = false
-		client.supportInfo.configurationReceived = false
-		XCTAssertEqual(PluginHost.maximumNicknameLength(on: client), 50)
-	}
-}
-
-private final class PluginHostClientFixture: NSObject {
-	@objc dynamic var isConnectedToZNC = false
-	@objc dynamic let supportInfo = PluginHostSupportInfoFixture()
-}
-
-private final class PluginHostSupportInfoFixture: NSObject {
-	@objc dynamic var configurationReceived = true
-	@objc dynamic var maximumNicknameLength: UInt = 50
 }

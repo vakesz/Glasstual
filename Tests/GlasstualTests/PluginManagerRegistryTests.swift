@@ -41,7 +41,7 @@ final class PluginManagerRegistryTests: XCTestCase {
 		for bundle in bundles {
 			let bundleIdentifier = try XCTUnwrap(bundle.bundleIdentifier)
 			let plugin = try XCTUnwrap(
-				loadedPlugins.first { $0.bundle?.bundleIdentifier == bundleIdentifier },
+				loadedPlugins.first { $0.bundle.bundleIdentifier == bundleIdentifier },
 				"Bundled plugin did not finish loading: \(bundle.bundlePath)"
 			)
 			let expectedPrincipalClass: AnyClass = try XCTUnwrap(bundle.principalClass)

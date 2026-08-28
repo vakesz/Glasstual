@@ -37,7 +37,9 @@
 
 import Foundation
 
-public final class PluginServerInput: @unchecked Sendable {
+/// Mutable per-line state the host fills in from the parsed message and hands
+/// to one plugin at a time. Nonisolated because the parser that fills it in is.
+public final nonisolated class PluginServerInput {
 	public var senderIsServer = false
 	public var senderNickname = ""
 	public var senderUsername: String?

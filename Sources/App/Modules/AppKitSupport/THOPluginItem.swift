@@ -13,6 +13,7 @@
 import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
+import os
 
 public nonisolated struct PluginSupportedFeature: OptionSet, Sendable {
 	public let rawValue: UInt
@@ -34,111 +35,144 @@ public nonisolated struct PluginSupportedFeature: OptionSet, Sendable {
 	public static let willRenderMessageEvent = Self(rawValue: 1 << 12)
 }
 
+/// One successfully loaded plugin bundle and everything the host learned about
+/// it while loading.
+///
+/// The value is immutable: `load(_:host:)` is the only way to make one, and it
+/// either returns a fully populated item or `nil`. Nothing observes a
+/// half-configured plugin.
 @objc(THOPluginItem)
-public final nonisolated class PluginItem: NSObject, @unchecked Sendable {
-	@objc public private(set) var bundle: Bundle?
-	@objc public private(set) var primaryClass: AnyObject?
-	public private(set) var supportedFeatures: PluginSupportedFeature = []
-	@objc public private(set) var supportedUserInputCommands: [String]?
-	@objc public private(set) var supportedServerInputCommands: [String]?
-	public private(set) var outputSuppressionRules: [PluginOutputSuppressionRule]?
-	@objc public private(set) var pluginPreferencesPaneMenuItemTitle: String?
-	@objc public private(set) var pluginPreferencesPaneView: NSView?
+public final nonisolated class PluginItem: NSObject {
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "PluginItem"
+	)
 
+	@objc public let bundle: Bundle
+	@objc public let primaryClass: AnyObject
+	public let supportedFeatures: PluginSupportedFeature
+	@objc public let supportedUserInputCommands: [String]
+	@objc public let supportedServerInputCommands: [String]
+	public let outputSuppressionRules: [PluginOutputSuppressionRule]
+	@objc public let pluginPreferencesPaneMenuItemTitle: String?
+	@objc public let pluginPreferencesPaneView: NSView?
+
+	private init(
+		bundle: Bundle,
+		primaryClass: AnyObject,
+		supportedFeatures: PluginSupportedFeature,
+		supportedUserInputCommands: [String],
+		supportedServerInputCommands: [String],
+		outputSuppressionRules: [PluginOutputSuppressionRule],
+		pluginPreferencesPaneMenuItemTitle: String?,
+		pluginPreferencesPaneView: NSView?
+	) {
+		self.bundle = bundle
+		self.primaryClass = primaryClass
+		self.supportedFeatures = supportedFeatures
+		self.supportedUserInputCommands = supportedUserInputCommands
+		self.supportedServerInputCommands = supportedServerInputCommands
+		self.outputSuppressionRules = outputSuppressionRules
+		self.pluginPreferencesPaneMenuItemTitle = pluginPreferencesPaneMenuItemTitle
+		self.pluginPreferencesPaneView = pluginPreferencesPaneView
+	}
+
+	/// Instantiates `bundle`'s principal class and runs its load callback.
+	/// Returns `nil`, having logged why, when the bundle is not a plugin.
 	@MainActor
-	@discardableResult
-	public func loadBundle(_ bundle: Bundle, host: PluginHostContext) -> Bool {
+	public static func load(_ bundle: Bundle, host: PluginHostContext) -> PluginItem? {
 		guard let principalClassType = bundle.principalClass as? NSObject.Type else {
-			return false
+			logger.error(
+				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because its principal class is missing or is not an Objective-C class"
+			)
+			return nil
 		}
 
-		let primaryClass = principalClassType.init()
-		guard let plugin = primaryClass as? any GlasstualPlugin else {
-			return false
+		guard let plugin = principalClassType.init() as? any GlasstualPlugin else {
+			logger.error(
+				"Refusing to load the bundle at “\(bundle.bundlePath, privacy: .public)“ because its principal class does not conform to GlasstualPlugin"
+			)
+			return nil
 		}
+
 		plugin.pluginLoaded(using: host)
 
-		var supportedFeatures = detectedFeatures(of: plugin)
+		var features = detectedFeatures(of: plugin)
 
-		if configureOutputSuppressionRules(from: plugin) {
-			supportedFeatures.insert(.outputSuppressionRules)
+		let suppressionRules = (plugin as? any PluginOutputSuppressionProviding)?
+			.pluginOutputSuppressionRules ?? []
+		if suppressionRules.isEmpty == false {
+			features.insert(.outputSuppressionRules)
 		}
 
-		if configurePreferencePane(from: plugin) {
-			supportedFeatures.insert(.preferencePane)
+		let preferencePane = preferencePane(of: plugin, in: bundle)
+		if preferencePane != nil {
+			features.insert(.preferencePane)
 		}
 
-		if let commandPlugin = plugin as? any PluginCommandHandling {
-			let commands = normalizedCommands(commandPlugin.subscribedUserInputCommands)
-			supportedUserInputCommands = commands
-			if commands.isEmpty == false {
-				supportedFeatures.insert(.subscribedUserInputCommands)
-			}
+		let userInputCommands = normalizedCommands(
+			(plugin as? any PluginCommandHandling)?.subscribedUserInputCommands ?? []
+		)
+		if userInputCommands.isEmpty == false {
+			features.insert(.subscribedUserInputCommands)
 		}
 
-		if let inputPlugin = plugin as? any PluginServerInputHandling {
-			let commands = normalizedCommands(inputPlugin.subscribedServerInputCommands)
-			supportedServerInputCommands = commands
-			if commands.isEmpty == false {
-				supportedFeatures.insert(.subscribedServerInputCommands)
-			}
+		let serverInputCommands = normalizedCommands(
+			(plugin as? any PluginServerInputHandling)?.subscribedServerInputCommands ?? []
+		)
+		if serverInputCommands.isEmpty == false {
+			features.insert(.subscribedServerInputCommands)
 		}
 
-		self.bundle = bundle
-		self.supportedFeatures = supportedFeatures
-		self.primaryClass = primaryClass
-
-		return true
+		return PluginItem(
+			bundle: bundle,
+			primaryClass: plugin,
+			supportedFeatures: features,
+			supportedUserInputCommands: userInputCommands,
+			supportedServerInputCommands: serverInputCommands,
+			outputSuppressionRules: suppressionRules,
+			pluginPreferencesPaneMenuItemTitle: preferencePane?.title,
+			pluginPreferencesPaneView: preferencePane?.view
+		)
 	}
 
 	@MainActor
 	@objc
 	public func unloadBundle() {
-		guard let primaryClass else {
-			return
-		}
-
 		(primaryClass as? any GlasstualPlugin)?.pluginWillUnload()
-
-		self.primaryClass = nil
-		bundle = nil
 	}
 
 	public func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {
 		supportedFeatures.contains(feature)
 	}
 
-	private func configureOutputSuppressionRules(from plugin: any GlasstualPlugin) -> Bool {
-		guard let provider = plugin as? any PluginOutputSuppressionProviding,
-		      provider.pluginOutputSuppressionRules.isEmpty == false
-		else {
-			return false
-		}
-
-		outputSuppressionRules = provider.pluginOutputSuppressionRules
-		return true
-	}
-
 	@MainActor
-	private func configurePreferencePane(from plugin: any GlasstualPlugin) -> Bool {
+	private static func preferencePane(
+		of plugin: any GlasstualPlugin,
+		in bundle: Bundle
+	) -> (title: String, view: NSView)? {
 		guard let provider = plugin as? any PluginPreferencesProviding,
 		      provider.pluginPreferencesPaneMenuItemName.isEmpty == false
 		else {
-			return false
+			return nil
 		}
 
-		let itemView = provider.pluginPreferencesPaneView
+		guard let view = provider.pluginPreferencesPaneView else {
+			logger.error(
+				"The plugin at “\(bundle.bundlePath, privacy: .public)“ names a preferences pane but supplied no view; its interface file most likely failed to load"
+			)
+			return nil
+		}
 
-		pluginPreferencesPaneMenuItemTitle = provider.pluginPreferencesPaneMenuItemName
-		pluginPreferencesPaneView = itemView
-		return true
+		return (provider.pluginPreferencesPaneMenuItemName, view)
 	}
 
-	private func normalizedCommands(_ commands: [String]) -> [String] {
+	private static func normalizedCommands(_ commands: [String]) -> [String] {
 		commands.filter { $0.isEmpty == false }.map { $0.lowercased() }
 	}
 
-	private func detectedFeatures(of plugin: any GlasstualPlugin) -> PluginSupportedFeature {
+	@MainActor
+	private static func detectedFeatures(of plugin: any GlasstualPlugin) -> PluginSupportedFeature {
 		var features: PluginSupportedFeature = []
 		if plugin is any PluginPostedMessageHandling {
 			features.insert(.newMessagePostedEvent)

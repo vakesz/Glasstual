@@ -765,13 +765,13 @@ extension TVCLogScriptEventSink {
 			"Length of payload label is 0",
 			context
 		) }
-		let payload = PluginJavaScriptPayload(); payload.payloadLabel = label; payload.payloadContents = Self
-			.objectValueToCommon(context.arguments[1])
-		PluginDispatcher.perform(
-			NSSelectorFromString("didReceiveJavaScriptPayload:fromViewController:"),
-			with: payload,
-			with: context.viewController
-		)
+		let payload = PluginJavaScriptPayload()
+		payload.payloadLabel = label
+		payload.payloadContents = Self.objectValueToCommon(context.arguments[1])
+		/* Called directly: the dispatcher's method is not exposed to the
+		 Objective-C runtime, so the selector this used to `perform` did not
+		 exist. */
+		PluginDispatcher.didReceiveJavaScriptPayload(payload, fromViewController: context.viewController)
 	}
 
 	private func handleServerAddress(_ context: LogScriptEventContext) {
