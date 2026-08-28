@@ -47,6 +47,12 @@ private let logViewWebKitLogger = Logger(
 @objc(TVCLogViewInternalWK2)
 @MainActor
 final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
+	/** One configuration, one user content controller, one script sink and one
+	 policy for every channel, on purpose. The sink resolves the sender from
+	 `message.webView`, so it needs no per-view registration, and because no
+	 view owns a handler the usual advice to remove handlers in `deinit` does
+	 not apply here. The cost is one process pool and one website data store
+	 shared by every log view. */
 	@MainActor
 	private enum SharedResources {
 		static let messageHandlerNames = [
