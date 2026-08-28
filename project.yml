@@ -722,10 +722,8 @@ targets:
         com.apple.security.print: true
     sources:
       - path: Sources/App/Application
-      - path: Sources/App/Classes
       - path: Sources/App/Features
       - path: Sources/App/Localization
-      - path: Sources/App/Modules
       - path: Sources/App/Preferences
       - path: Sources/App/Protocol
       - path: Sources/App/UI
