@@ -807,12 +807,12 @@
     },
     "ags-s8" : {
       "comment" : "File transfer server console messages. Migrated from legacy key ags-s8; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trying file transfer to %1$@, %2$@ (%3$qi bytes)"
+            "value" : "Trying file transfer to %1$@, %2$@ (%3$@)"
           }
         }
       }
@@ -1071,12 +1071,12 @@
     },
     "dcc-c7" : {
       "comment" : "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-c7; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting to %1$@ for a direct chat (%2$@ port %3$hu)…"
+            "value" : "Connecting to %1$@ for a direct chat (%2$@ port %3$lu)…"
           }
         }
       }
@@ -1119,12 +1119,12 @@
     },
     "dcc-cb" : {
       "comment" : "Direct chat (DCC CHAT) messages. Migrated from legacy key dcc-cb; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Waiting for %1$@ to connect on port %2$hu…"
+            "value" : "Waiting for %1$@ to connect on port %2$lu…"
           }
         }
       }
@@ -1647,12 +1647,12 @@
     },
     "ni5-cy" : {
       "comment" : "Miscellaneous messages related to IRC events. Migrated from legacy key ni5-cy; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting using SOCKS5 proxy [%1$@] on port %2$hu"
+            "value" : "Connecting using SOCKS5 proxy [%1$@] on port %2$lu"
           }
         }
       }
@@ -1719,12 +1719,12 @@
     },
     "o77-ls" : {
       "comment" : "Miscellaneous messages related to IRC events. Migrated from legacy key o77-ls; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting to [%1$@] on port %2$hu"
+            "value" : "Connecting to [%1$@] on port %2$lu"
           }
         }
       }
@@ -1743,12 +1743,12 @@
     },
     "oby-av" : {
       "comment" : "Miscellaneous messages related to IRC events. Migrated from legacy key oby-av; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connecting using HTTP proxy [%1$@] on port %2$hu"
+            "value" : "Connecting using HTTP proxy [%1$@] on port %2$lu"
           }
         }
       }
@@ -2091,48 +2091,48 @@
     },
     "snf-45" : {
       "comment" : "File transfer server console messages. Migrated from legacy key snf-45; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Received file transfer request from %1$@, %2$@ (%3$qi bytes)"
+            "value" : "Received file transfer request from %1$@, %2$@ (%3$@)"
           }
         }
       }
     },
     "sts-p1" : {
       "comment" : "Strict Transport Security (STS). Migrated from legacy key sts-p1; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A Strict Transport Security policy is in effect for this host. Using TLS on port %hu."
+            "value" : "A Strict Transport Security policy is in effect for this host. Using TLS on port %lu."
           }
         }
       }
     },
     "sts-p2" : {
       "comment" : "Strict Transport Security (STS). Migrated from legacy key sts-p2; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The server offers Strict Transport Security. Reconnecting with TLS on port %hu."
+            "value" : "The server offers Strict Transport Security. Reconnecting with TLS on port %lu."
           }
         }
       }
     },
     "sts-p3" : {
       "comment" : "Strict Transport Security (STS). Migrated from legacy key sts-p3; compatibility key retained.",
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stored a Strict Transport Security policy for this host: TLS on port %hu."
+            "value" : "Stored a Strict Transport Security policy for this host: TLS on port %lu."
           }
         }
       }

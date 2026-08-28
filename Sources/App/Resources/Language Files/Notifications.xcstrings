@@ -1,6 +1,11 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "body-action-with-nickname" : {
+      "comment" : "Notification body for an action message. The arguments are the nickname and the message text.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "\u2022 %1$@: %2$@" } } }
+    },
     "body-connection-successful" : {
       "comment" : "Notification bubble description for a successful connection. Migrated from legacy key 88k-kl. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’.",
       "extractionState" : "manual",
@@ -44,7 +49,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ (%2$llu bytes)"
+            "value" : "%1$@ (%2$@)"
           }
         }
       }
@@ -56,7 +61,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ (%2$llu bytes)"
+            "value" : "%1$@ (%2$@)"
           }
         }
       }
@@ -80,7 +85,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ (%2$llu bytes)"
+            "value" : "%1$@ (%2$@)"
           }
         }
       }
@@ -108,6 +113,11 @@
           }
         }
       }
+    },
+    "body-message-with-nickname" : {
+      "comment" : "Notification body for a message. The arguments are the formatted nickname and the message text.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ %2$@" } } }
     },
     "body-user-available" : {
       "comment" : "Address Book notification description for an available nickname. Migrated from legacy key 97r-0l. Legacy translator context: ‘Notification bubble descriptions. These are only notifications that require localization. Many notifications just send the raw message received so they are not localized here’. Legacy translator context: ‘Address Book spoken text uses the actual notification message for that notification type. It is not defined here’.",

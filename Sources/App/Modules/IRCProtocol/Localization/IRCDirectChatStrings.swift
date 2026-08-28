@@ -56,7 +56,7 @@ nonisolated enum IRCDirectChatStrings {
 	}
 
 	static func connecting(nickname: String, address: String, port: UInt16) -> String {
-		IRCLegacyFormat.directChatConnect.format(nickname, address, port)
+		String(localized: .IRC.dccC7(nickname, address, UInt(port)))
 	}
 
 	static func offering(to nickname: String) -> String {
@@ -72,7 +72,7 @@ nonisolated enum IRCDirectChatStrings {
 	}
 
 	static func waitingForConnection(nickname: String, port: UInt16) -> String {
-		IRCLegacyFormat.directChatWait.format(nickname, port)
+		String(localized: .IRC.dccCb(nickname, UInt(port)))
 	}
 
 	static func established(nickname: String) -> String {
@@ -90,10 +90,10 @@ nonisolated enum IRCDirectChatStrings {
 
 nonisolated enum IRCFileTransferStrings {
 	static func request(nickname: String, filename: String, byteCount: UInt64) -> String {
-		IRCLegacyFormat.fileTransferRequest.format(nickname, filename, byteCount)
+		String(localized: .IRC.snf45(nickname, filename, LocalizedByteCount.formatted(byteCount)))
 	}
 
 	static func attempt(nickname: String, filename: String, byteCount: UInt64) -> String {
-		IRCLegacyFormat.fileTransferAttempt.format(nickname, filename, byteCount)
+		String(localized: .IRC.agsS8(nickname, filename, LocalizedByteCount.formatted(byteCount)))
 	}
 }

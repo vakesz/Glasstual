@@ -109,6 +109,11 @@
         }
       }
     },
+    "bundled-theme" : {
+      "comment" : "Storage location of a theme that ships with the application.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Built-in" } } }
+    },
     "cpu-core-segment" : {
       "comment" : "CPU segment of the /sysinfo/ response without a clock rate. Arguments are the CPU name and core count. Migrated from legacy key ifk-s5.",
       "extractionState" : "manual",
@@ -132,6 +137,11 @@
           }
         }
       }
+    },
+    "custom-theme" : {
+      "comment" : "Storage location of a theme the user installed themselves.",
+      "extractionState" : "manual",
+      "localizations" : { "en" : { "stringUnit" : { "state" : "translated", "value" : "Custom" } } }
     },
     "dark-appearance" : {
       "comment" : "Name of the dark appearance. Migrated from legacy key 243-yt.",
