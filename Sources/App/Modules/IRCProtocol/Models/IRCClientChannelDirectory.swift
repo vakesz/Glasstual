@@ -48,7 +48,32 @@ public extension IRCClient {
 
 	@objc(findChannel:)
 	func findChannel(_ name: String) -> IRCChannel? {
-		findChannel(name, in: channelList)
+		let foldedName = casefoldNickname(name)
+
+		// A hit is only trusted while it still folds to the name asked for: a
+		// rename or a new CASEMAPPING can invalidate the mirror between builds.
+		if let channel = channelsByFoldedName[foldedName], casefoldNickname(channel.name) == foldedName {
+			return channel
+		}
+
+		return channelList.first { casefoldNickname($0.name) == foldedName }
+	}
+
+	/// Rebuilds the casefolded mirror of the channel list. Earlier channels win
+	/// a collision, matching the order the linear scan used to return.
+	internal func rebuildChannelIndex() {
+		var index: [String: IRCChannel] = [:]
+		index.reserveCapacity(channelList.count)
+
+		for channel in channelList {
+			let foldedName = casefoldNickname(channel.name)
+
+			if index[foldedName] == nil {
+				index[foldedName] = channel
+			}
+		}
+
+		channelsByFoldedName = index
 	}
 
 	@objc(findChannelOrCreate:)

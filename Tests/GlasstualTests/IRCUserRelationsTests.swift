@@ -113,7 +113,7 @@ final class IRCUserRelationsTests: XCTestCase {
 		memberList.addMember(alice)
 
 		XCTAssertEqual(memberList.numberOfMembers, 2)
-		XCTAssertEqual(memberList.memberList?.map(\.user.nickname), ["alice", "bob"])
+		XCTAssertEqual(memberList.memberList.map(\.user.nickname), ["alice", "bob"])
 
 		memberList.removeMember(alice)
 
@@ -133,7 +133,7 @@ final class IRCUserRelationsTests: XCTestCase {
 		memberList.addMember(replacement, checkForDuplicates: true)
 
 		XCTAssertEqual(memberList.numberOfMembers, 1)
-		XCTAssertTrue(memberList.memberList?.first === replacement)
+		XCTAssertTrue(memberList.memberList.first === replacement)
 		XCTAssertTrue(user.userAssociated(with: channel) === replacement)
 	}
 

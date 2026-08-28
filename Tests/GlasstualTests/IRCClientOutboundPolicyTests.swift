@@ -48,23 +48,24 @@ final class IRCClientOutboundPolicyTests: XCTestCase {
 		let parsed = try XCTUnwrap(ParsedUserCommand(input))
 
 		XCTAssertEqual(parsed.command, "MSG")
-		XCTAssertEqual(parsed.arguments.string, "nickname hello")
+		XCTAssertEqual(parsed.arguments.rest, "nickname hello")
 		XCTAssertEqual(
-			parsed.arguments.attribute(.init("OutboundPolicyTest"), at: 9, effectiveRange: nil) as? Bool,
+			parsed.arguments.attributedRest
+				.attribute(.init("OutboundPolicyTest"), at: 9, effectiveRange: nil) as? Bool,
 			true
 		)
 	}
 
 	func testMessageCommandPolicyPreservesSecretAndOperatorAliases() throws {
 		let secretMessage = try XCTUnwrap(
-			OutboundMessageCommandPolicy(command: "smsg", silentlyConnecting: false)
+			OutboundMessageCommandPolicy(command: .smsg, silentlyConnecting: false)
 		)
 		XCTAssertEqual(secretMessage.remoteCommand, .privmsg)
 		XCTAssertTrue(secretMessage.isSecretMessage)
 		XCTAssertFalse(secretMessage.isOperatorMessage)
 
 		let operatorNotice = try XCTUnwrap(
-			OutboundMessageCommandPolicy(command: "onotice", silentlyConnecting: false)
+			OutboundMessageCommandPolicy(command: .onotice, silentlyConnecting: false)
 		)
 		XCTAssertEqual(operatorNotice.remoteCommand, .notice)
 		XCTAssertFalse(operatorNotice.isSecretMessage)
@@ -73,10 +74,10 @@ final class IRCClientOutboundPolicyTests: XCTestCase {
 
 	func testSilentConnectOnlyMakesMessageAliasesSecret() throws {
 		let message = try XCTUnwrap(
-			OutboundMessageCommandPolicy(command: "msg", silentlyConnecting: true)
+			OutboundMessageCommandPolicy(command: .msg, silentlyConnecting: true)
 		)
 		let action = try XCTUnwrap(
-			OutboundMessageCommandPolicy(command: "me", silentlyConnecting: true)
+			OutboundMessageCommandPolicy(command: .me, silentlyConnecting: true)
 		)
 		XCTAssertTrue(message.isSecretMessage)
 		XCTAssertFalse(action.isSecretMessage)

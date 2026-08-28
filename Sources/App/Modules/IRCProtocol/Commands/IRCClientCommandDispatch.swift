@@ -458,7 +458,7 @@ public extension IRCClient {
 		}
 		printDebugInformation(IRCCommandStrings.nicknameWeights(channelName: targetChannel.name))
 		var hasWeights = false
-		for member in targetChannel.memberList ?? [] {
+		for member in targetChannel.memberList {
 			let incomingWeight = member.incomingWeight
 			let outgoingWeight = member.outgoingWeight
 			let combinedWeight = incomingWeight + outgoingWeight

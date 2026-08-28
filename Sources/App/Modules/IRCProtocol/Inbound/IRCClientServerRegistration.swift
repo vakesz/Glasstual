@@ -137,7 +137,7 @@ public extension IRCClient {
 			performAutoJoin(initiatedByUser: false)
 		} else if isConnectedToZNC {
 			textual_performSelectorInCommonModes(
-				NSSelectorFromString("performAutoJoin"),
+				#selector(performAutoJoin as () -> Void),
 				with: nil,
 				afterDelay: 3
 			)

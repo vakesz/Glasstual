@@ -81,11 +81,11 @@ final class IRCBridgeContractMigrationTests: XCTestCase {
 		XCTAssertEqual(voicedMember.compareRank(to: operatorMember), .orderedDescending)
 	}
 
-	func testInactiveChannelKeepsMemberListNil() {
+	func testInactiveChannelHasNoMembers() {
 		let channel = Channel(config: ChannelConfig(channelName: "#inactive"))
 
 		XCTAssertNil(channel.memberInfo)
-		XCTAssertNil(channel.memberList)
+		XCTAssertTrue(channel.memberList.isEmpty)
 		XCTAssertNil(channel.findMember("nobody"))
 		XCTAssertEqual(channel.numberOfMembers, 0)
 	}

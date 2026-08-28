@@ -53,10 +53,6 @@ public extension Notification.Name {
 /// the runtime name below.
 public typealias IRCChannel = Channel
 
-private enum ChannelStatusChange {
-	static let configurationNotification = Notification.Name.ircChannelConfigurationWasUpdated
-}
-
 @objc(IRCChannel)
 open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProtocol {
 	private static let logger = Logger(
@@ -177,7 +173,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 		if fireChangedNotification {
 			NotificationCenter.default.post(
-				name: ChannelStatusChange.configurationNotification,
+				name: .ircChannelConfigurationWasUpdated,
 				object: self
 			)
 		}
@@ -230,7 +226,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			// here: it refuses a configuration whose channelName differs.
 			associatedClient?.updateStoredChannelList()
 			NotificationCenter.default.post(
-				name: ChannelStatusChange.configurationNotification,
+				name: .ircChannelConfigurationWasUpdated,
 				object: self
 			)
 		}
@@ -589,11 +585,14 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		memberInfo?.numberOfMembers ?? 0
 	}
 
-	@objc open var memberList: [ChannelUser]? {
-		memberInfo?.memberList
+	/// Empty rather than absent when the channel has no member list yet: a
+	/// channel nobody has joined has no members, which is not a different
+	/// answer from "no members".
+	@objc open var memberList: [ChannelUser] {
+		memberInfo?.memberList ?? []
 	}
 
-	open var channelMembers: [ChannelUser]? {
+	open var channelMembers: [ChannelUser] {
 		memberList
 	}
 

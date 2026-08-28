@@ -64,7 +64,7 @@ public protocol ChannelMemberListing: AnyObject {
 	func findMember(_ nickname: String) -> ChannelUser?
 
 	@objc var numberOfMembers: UInt { get }
-	@objc var memberList: [ChannelUser]? { get }
+	@objc var memberList: [ChannelUser] { get }
 
 	@objc(sortMembers)
 	func sortMembers()
@@ -149,7 +149,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 
 	@objc(assignController:)
 	public func assign(_ controller: IRCChannelMemberListController?) {
-		controller?.replaceContents(memberList ?? [])
+		controller?.replaceContents(memberList)
 		self.controller = controller
 	}
 
@@ -418,7 +418,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			$0.compareRank(to: $1, favoringServerStaff: favorIRCop) == .orderedAscending
 		}
 
-		controller?.replaceContents(memberList ?? [])
+		controller?.replaceContents(memberList)
 	}
 
 	@objc
@@ -441,7 +441,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		UInt(memberContainer.count)
 	}
 
-	@objc public var memberList: [ChannelUser]? {
+	@objc public var memberList: [ChannelUser] {
 		memberContainer
 	}
 

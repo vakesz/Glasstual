@@ -39,10 +39,6 @@
 import Foundation
 
 enum IRCNumericReplyPolicy {
-	static func isError(_ numeric: UInt) -> Bool {
-		numeric > 400 && numeric < 597 && numeric != IRCNumeric.nomotd.rawValue
-	}
-
 	static func requiresSpecialFiltering(_ numeric: UInt) -> Bool {
 		[
 			IRCNumeric.umodeis.rawValue, IRCNumeric.channelmodeis.rawValue, IRCNumeric.topic.rawValue,
@@ -56,7 +52,7 @@ public extension IRCClient {
 	@objc(receiveNumericReply:)
 	func receiveNumericReply(_ message: Message) {
 		let numeric = message.commandNumeric
-		if IRCNumericReplyPolicy.isError(numeric) {
+		if IRCNumeric.isErrorReply(numeric) {
 			receiveErrorNumericReply(message)
 			return
 		}
