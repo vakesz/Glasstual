@@ -164,7 +164,7 @@ public extension IRCClient {
 	@objc(onRetryTimer)
 	func onRetryTimer() {
 		guard isConnected else { return }
-		disconnectCallback = { [weak self] in
+		addDisconnectCallback { [weak self] in
 			self?.connect(.retry)
 		}
 		disconnect()

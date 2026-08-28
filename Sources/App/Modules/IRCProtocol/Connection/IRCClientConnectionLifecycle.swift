@@ -175,7 +175,7 @@ public extension IRCClient {
 
 	@objc(disconnect)
 	func disconnect() {
-		NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(disconnect), object: nil)
+		cancelDelayedDisconnect()
 		guard isConnecting || isConnected, let socket else { return }
 		isDisconnecting = true
 		NotificationCenter.default.post(name: .IRCClientWillDisconnect, object: self)
@@ -205,7 +205,24 @@ public extension IRCClient {
 			return
 		}
 		send("QUIT", arguments: [comment])
-		DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in self?.disconnect() }
+
+		/* Held so that a reconnect inside the two-second window cannot have this stale
+		 block tear down the *new* session. */
+		let workItem = DispatchWorkItem { [weak self] in self?.disconnect() }
+		pendingDisconnectWorkItem = workItem
+		DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: workItem)
+	}
+
+	@objc(cancelDelayedDisconnect)
+	func cancelDelayedDisconnect() {
+		pendingDisconnectWorkItem?.cancel()
+		pendingDisconnectWorkItem = nil
+	}
+
+	@objc(cancelScheduledConnection)
+	func cancelScheduledConnection() {
+		pendingConnectionWorkItem?.cancel()
+		pendingConnectionWorkItem = nil
 	}
 
 	@objc(cancelReconnect)
@@ -262,10 +279,15 @@ public extension IRCClient {
 	}
 
 	private func scheduleConnection(after delay: UInt, action: @escaping @MainActor () -> Void) {
+		cancelScheduledConnection()
+
 		guard delay > 0 else {
 			action()
 			return
 		}
-		DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Int(delay)), execute: action)
+
+		let workItem = DispatchWorkItem { MainActor.assumeIsolated { action() } }
+		pendingConnectionWorkItem = workItem
+		DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Int(delay)), execute: workItem)
 	}
 }

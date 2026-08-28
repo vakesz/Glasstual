@@ -80,31 +80,25 @@ final class IRCLabeledResponseTests: XCTestCase {
 		XCTAssertEqual(try client.deliveryState(forLabel: XCTUnwrap(label)), .pending)
 	}
 
-	func testEchoWithLabelMarksDelivered() {
-		assertResolution(
-			line: "@label=g1;msgid=abc123 :me!u@h PRIVMSG #chat :hello",
-			expectedState: .delivered
-		)
+	func testEchoWithLabelIsConsumed() {
+		assertResolution(line: "@label=g1;msgid=abc123 :me!u@h PRIVMSG #chat :hello")
 	}
 
-	func testFailWithLabelMarksFailed() {
-		assertResolution(
-			line: "@label=g1 FAIL PRIVMSG ACCOUNT_REQUIRED_TO_MESSAGE :You must be registered",
-			expectedState: .failed
-		)
+	func testFailWithLabelIsConsumed() {
+		assertResolution(line: "@label=g1 FAIL PRIVMSG ACCOUNT_REQUIRED_TO_MESSAGE :You must be registered")
 	}
 
-	func testAckWithLabelMarksDelivered() {
-		assertResolution(line: "@label=g1 ACK", expectedState: .delivered)
+	func testAckWithLabelIsConsumed() {
+		assertResolution(line: "@label=g1 ACK")
 	}
 
-	func testTimeoutMarksFailed() throws {
+	func testTimeoutRetiresDelivery() throws {
 		let client = clientWithLabeledResponse()
 		let label = try XCTUnwrap(client.registerPendingDelivery(for: addChannel(named: "#chat", to: client)))
 
 		client.timeoutDelivery(withLabel: label)
 
-		XCTAssertEqual(client.deliveryState(forLabel: label), .failed)
+		XCTAssertEqual(client.deliveryState(forLabel: label), .none)
 	}
 
 	func testUnknownLabelIsNotConsumed() {
@@ -114,12 +108,13 @@ final class IRCLabeledResponseTests: XCTestCase {
 		XCTAssertFalse(client.resolveLabeledResponse(for: echo))
 	}
 
-	private func assertResolution(line: String, expectedState: TVCLogLineDeliveryState) {
+	/// A resolved delivery is retired, so the label no longer matches anything.
+	private func assertResolution(line: String) {
 		let client = clientWithLabeledResponse()
 		let label = client.registerPendingDelivery(for: addChannel(named: "#chat", to: client))!
 		let response = message(line, on: client)
 
 		XCTAssertTrue(client.resolveLabeledResponse(for: response))
-		XCTAssertEqual(client.deliveryState(forLabel: label), expectedState)
+		XCTAssertEqual(client.deliveryState(forLabel: label), .none)
 	}
 }

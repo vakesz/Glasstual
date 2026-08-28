@@ -86,7 +86,15 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	}
 
 	@objc public dynamic var preAwayUserNickname: String?
-	var disconnectCallback: (() -> Void)?
+	/** Several features install a post-disconnect action (reconnect, destroy-after-quit,
+	 STS upgrade, server redirect). A single slot meant whichever installed last silently
+	 replaced the others; every registered action now runs. */
+	var disconnectCallbacks: [() -> Void] = []
+	/** Migrating these delays from -performSelector:afterDelay: to asyncAfter left them
+	 uncancellable; the work items exist so that a reconnect within the delay window
+	 does not have a stale block act on the new session. */
+	var pendingDisconnectWorkItem: DispatchWorkItem?
+	var pendingConnectionWorkItem: DispatchWorkItem?
 	@objc public dynamic var connectType: IRCClientConnectMode = .normal
 	@objc public dynamic var disconnectType: IRCClientDisconnectMode = .normal
 	public var capabilities: ClientIRCv3SupportedCapability = []
@@ -269,6 +277,21 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 				guard let self else { return }
 				action(self)
 			}
+		}
+	}
+
+	/// Registers an action to run once the current connection has finished closing.
+	func addDisconnectCallback(_ callback: @escaping () -> Void) {
+		disconnectCallbacks.append(callback)
+	}
+
+	/// Runs and clears every registered post-disconnect action.
+	func invokeDisconnectCallbacks() {
+		let callbacks = disconnectCallbacks
+		disconnectCallbacks.removeAll()
+
+		for callback in callbacks {
+			callback()
 		}
 	}
 
