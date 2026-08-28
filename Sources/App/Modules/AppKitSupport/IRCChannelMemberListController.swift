@@ -12,7 +12,10 @@
 
 import AppKit
 
-private nonisolated struct SynchronousMainActorValue<Value>: @unchecked Sendable {
+/* ISOLATION-EXCEPTION: the nonisolated overrides below have to carry the
+ controller and the inserted object (typed `Any` by `NSArrayController`) across
+ the main-actor assumption. Neither value leaves the main actor. */
+private nonisolated struct UncheckedMainActorValue<Value>: @unchecked Sendable {
 	let value: Value
 }
 
@@ -58,9 +61,12 @@ public final class IRCChannelMemberListController: NSArrayController {
 		tableView.membersReplaced()
 	}
 
+	/* ISOLATION-EXCEPTION: `NSArrayController`'s mutation methods are declared
+	 nonisolated, so the overrides cannot be isolated. The controller is bound to a
+	 table view and only ever driven from the main actor. */
 	override public nonisolated func insert(_ object: Any, atArrangedObjectIndex index: Int) {
-		let controller = SynchronousMainActorValue(value: self)
-		let object = SynchronousMainActorValue(value: object)
+		let controller = UncheckedMainActorValue(value: self)
+		let object = UncheckedMainActorValue(value: object)
 
 		MainActor.assumeIsolated {
 			controller.value.insertOnMain(object.value, atArrangedObjectIndex: index)
@@ -72,8 +78,9 @@ public final class IRCChannelMemberListController: NSArrayController {
 		tableView.memberInserted(at: UInt(index))
 	}
 
+	/* ISOLATION-EXCEPTION: see `insert(_:atArrangedObjectIndex:)` above. */
 	override public nonisolated func remove(atArrangedObjectIndex index: Int) {
-		let controller = SynchronousMainActorValue(value: self)
+		let controller = UncheckedMainActorValue(value: self)
 
 		MainActor.assumeIsolated {
 			controller.value.removeOnMain(atArrangedObjectIndex: index)

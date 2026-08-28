@@ -23,6 +23,8 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 		true
 	}
 
+	/* ISOLATION-EXCEPTION: `NSDocument.read(from:ofType:)` is declared nonisolated,
+	 so the override cannot be isolated. AppKit opens documents on the main thread. */
 	override public nonisolated func read(from url: URL, ofType typeName: String) throws {
 		try MainActor.assumeIsolated {
 			try performRead(from: url, ofType: typeName)

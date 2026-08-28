@@ -67,19 +67,6 @@ public final class FileTransferDialogTableCell: NSTableCellView {
 
 	@objc
 	public func reloadStatusInformation() {
-		/* Called from the transfer controller's socket dispatch queue.
-		 The hop to the main queue is asynchronous so that the socket
-		 queue never blocks on the main thread. */
-		if Thread.isMainThread {
-			reloadStatusInformationOnMain()
-		} else {
-			performAsynchronouslyOnMainQueue { [weak self] in
-				self?.reloadStatusInformationOnMain()
-			}
-		}
-	}
-
-	private func reloadStatusInformationOnMain() {
 		let transferStatus = transferStatus
 
 		let transferIsStopped =

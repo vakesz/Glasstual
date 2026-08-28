@@ -27,10 +27,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	@objc public private(set) var clientId: String?
 	@objc public private(set) var channelId: String?
 
-	/** Accessed from NotificationConfiguration outside the main-actor
-	 isolation domain that SheetBase inherits. Config mutations stay on
-	 the main thread in practice (sheet UI). */
-	@objc public nonisolated(unsafe) var config: MutableChannelConfig!
+	@objc public var config: MutableChannelConfig!
 
 	private var secretKeyLengthAlertDisplayed = false
 	private var navigationTree: [[Any]] = []

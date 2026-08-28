@@ -30,6 +30,9 @@ private final class LogControllerHistoricLogViewIndex: NSObject {
 	var oldestDate: Date?
 }
 
+/* ISOLATION-EXCEPTION: `HistoricLogClientProtocol` is an XPC protocol whose
+ callbacks arrive on the connection's queue, so this type cannot be isolated. Its
+ mutable state is guarded by `processStateLock`. Owned by the XPC-service task. */
 @objc(TVCLogControllerHistoricLogFile)
 public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProtocol, @unchecked Sendable {
 	private let viewIndexes = NSMutableDictionary()

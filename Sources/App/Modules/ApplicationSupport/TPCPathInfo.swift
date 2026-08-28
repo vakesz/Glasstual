@@ -13,6 +13,7 @@
 import AppKit
 import CocoaExtensions
 import os
+import Synchronization
 
 @objc(TPCPathInfo)
 public final nonisolated class PathInfo: NSObject {
@@ -22,8 +23,7 @@ public final nonisolated class PathInfo: NSObject {
 	)
 
 	private static let transcriptBookmarkDefaultsKey = "LogTranscriptDestinationSecurityBookmark_5"
-	private static let transcriptLock = NSLock()
-	private nonisolated(unsafe) static var storedTranscriptFolderURL: URL?
+	private static let transcriptFolderURLStorage = Mutex<URL?>(nil)
 
 	private static var fileManager: FileManager {
 		.default
@@ -356,10 +356,7 @@ public final nonisolated class PathInfo: NSObject {
 	}
 
 	@objc public static var transcriptFolderURL: URL? {
-		transcriptLock.lock()
-		defer { transcriptLock.unlock() }
-
-		return storedTranscriptFolderURL
+		transcriptFolderURLStorage.withLock { $0 }
 	}
 
 	@objc public static func setTranscriptFolderURL(_ transcriptFolderURL: Data?) {
@@ -374,10 +371,12 @@ public final nonisolated class PathInfo: NSObject {
 	}
 
 	@objc public static func stopUsingTranscriptFolderURL() {
-		transcriptLock.lock()
-		let existingURL = storedTranscriptFolderURL
-		storedTranscriptFolderURL = nil
-		transcriptLock.unlock()
+		let existingURL = transcriptFolderURLStorage.withLock { url -> URL? in
+			let existing = url
+			url = nil
+
+			return existing
+		}
 
 		existingURL?.stopAccessingSecurityScopedResource()
 	}
@@ -446,9 +445,7 @@ public final nonisolated class PathInfo: NSObject {
 			return
 		}
 
-		transcriptLock.lock()
-		storedTranscriptFolderURL = resolvedBookmark
-		transcriptLock.unlock()
+		transcriptFolderURLStorage.withLock { $0 = resolvedBookmark }
 	}
 
 	// MARK: - Helpers

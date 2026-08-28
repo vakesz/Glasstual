@@ -246,11 +246,15 @@ public final class ChannelSpotlightSearchResultCellView: NSTableCellView {
 		observedChannel = channel
 		channelObservations = [
 			channel.observe(\.nicknameHighlightCount, options: [.initial, .new]) { [weak self] _, _ in
+				/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
+				 nonisolated. The observed counts are only mutated on the main actor. */
 				MainActor.assumeIsolated {
 					self?.unreadCountDescriptionChanged()
 				}
 			},
 			channel.observe(\.treeUnreadCount, options: [.initial, .new]) { [weak self] _, _ in
+				/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
+				 nonisolated. The observed counts are only mutated on the main actor. */
 				MainActor.assumeIsolated {
 					self?.unreadCountDescriptionChanged()
 				}

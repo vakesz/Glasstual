@@ -21,6 +21,10 @@ private let inlineMediaLogger = Logger(
 	category: "InlineMediaService"
 )
 
+/* ISOLATION-EXCEPTION: `InlineContentClientProtocol` is an XPC protocol whose
+ callbacks arrive on the connection's queue, so this type cannot be isolated.
+ Everything it touches on the way in hops to the main actor below. Owned by the
+ XPC-service task. */
 @objc(TVCLogControllerInlineMediaService)
 public final class LogControllerInlineMediaService: NSObject, InlineContentClientProtocol, @unchecked Sendable {
 	private var serviceConnection: NSXPCConnection?
@@ -233,6 +237,9 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 
 	@objc(askPermissionToEnableInlineMediaWithCompletionBlock:)
 	public static func askPermissionToEnableInlineMedia(completionBlock: @escaping @Sendable (Bool) -> Void) {
+		/* ISOLATION-EXCEPTION: reached from the XPC callback queue; the alert has to
+		 be raised on the main thread and callers expect it to have been presented
+		 by the time this returns. */
 		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
 				askPermissionToEnableInlineMediaOnMain(completionBlock: completionBlock)
@@ -295,6 +302,8 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 		}
 	}
 
+	/* ISOLATION-EXCEPTION: the XPC callbacks below are nonisolated and their
+	 results must land before the service's reply returns. */
 	private func performOnMain(_ operation: @escaping @MainActor () -> Void) {
 		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
