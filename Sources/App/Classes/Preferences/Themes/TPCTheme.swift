@@ -579,12 +579,12 @@ public final class ThemeSettings: NSObject {
 	public private(set) var appearance: TPCThemeAppearanceType = .default
 	public private(set) var themeChannelViewFont: NSFont?
 	public private(set) var themeNicknameFormat: String?
-	public private(set) nonisolated(unsafe) var themeTimestampFormat: String?
+	public private(set) var themeTimestampFormat: String?
 	public private(set) var settingsKeyValueStoreName: String?
 	public private(set) var channelViewOverlayColor: NSColor?
 	public private(set) var underlyingWindowColor: NSColor?
 	public private(set) var indentationOffset = Double(TPCThemeSettingsDisabledIndentationOffset)
-	public private(set) nonisolated(unsafe) var nicknameColorStyle: TPCThemeSettingsNicknameColorStyle = .default
+	public private(set) var nicknameColorStyle: TPCThemeSettingsNicknameColorStyle = .default
 	public private(set) var templateEngineVersion = UInt(TPCThemeSettingsNewestTemplateEngineVersion)
 
 	@available(*, unavailable)

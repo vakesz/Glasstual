@@ -84,7 +84,7 @@ public final class LogPolicy: NSObject {
 			return
 		}
 
-		NSObject.applicationController().menuController?.joinChannelClicked(channelName)
+		AppController.shared.menuController?.joinChannelClicked(channelName)
 	}
 
 	@objc(nicknameDoubleClickedInWebView:)
@@ -93,12 +93,12 @@ public final class LogPolicy: NSObject {
 			return
 		}
 
-		NSObject.applicationController().menuController?.pointedNickname = nickname
-		NSObject.applicationController().menuController?.memberInChannelViewDoubleClicked(nil)
+		AppController.shared.menuController?.pointedNickname = nickname
+		AppController.shared.menuController?.memberInChannelViewDoubleClicked(nil)
 	}
 
 	@objc public func topicBarDoubleClicked() {
-		NSObject.applicationController().menuController?.showChannelModifyTopicSheet(nil)
+		AppController.shared.menuController?.showChannelModifyTopicSheet(nil)
 	}
 
 	@objc(webView2:logView:didReceiveAuthenticationChallenge:completionHandler:)
@@ -166,7 +166,7 @@ public final class LogPolicy: NSObject {
 			contextMenu.addItem(menuItem)
 		}
 
-		NSObject.applicationController().menuController?.applySymbols(to: contextMenu)
+		AppController.shared.menuController?.applySymbols(to: contextMenu)
 
 		return contextMenu
 	}
@@ -184,7 +184,7 @@ public final class LogPolicy: NSObject {
 		}
 		if let channelName = target.channelName {
 			return copiedMenuItems(
-				from: NSObject.applicationController().menuController?.channelViewChannelNameMenu,
+				from: AppController.shared.menuController?.channelViewChannelNameMenu,
 				userInfo: channelName
 			)
 		}
@@ -193,12 +193,12 @@ public final class LogPolicy: NSObject {
 
 	private func linkMenuItems(for address: String) -> [NSMenuItem] {
 		var menuItems = copiedMenuItems(
-			from: NSObject.applicationController().menuController?.channelViewURLMenu,
+			from: AppController.shared.menuController?.channelViewURLMenu,
 			userInfo: address
 		)
 		menuItems.append(.separator())
 		let shareItems = URL(string: address).map { [$0] } ?? []
-		if let shareItem = NSObject.applicationController().menuController?.shareMenuItem(forItems: shareItems) {
+		if let shareItem = AppController.shared.menuController?.shareMenuItem(forItems: shareItems) {
 			menuItems.append(shareItem)
 		}
 		return menuItems
@@ -213,7 +213,7 @@ public final class LogPolicy: NSObject {
 			return [NSMenuItem(title: ApplicationStrings.noActionsAvailable, action: nil, keyEquivalent: "")]
 		}
 		var menuItems = copiedMenuItems(
-			from: NSObject.applicationController().menuController?.userControlMenu,
+			from: AppController.shared.menuController?.userControlMenu,
 			userInfo: nickname
 		)
 		menuItems.append(contentsOf: messageMenuItems(for: target, in: webView))
@@ -236,7 +236,7 @@ public final class LogPolicy: NSObject {
 		defaultMenuItems: [NSMenuItem]
 	) -> [NSMenuItem] {
 		let webKitItems = webKitMenuItems(from: defaultMenuItems)
-		let menu = NSObject.applicationController().menuController?.channelViewGeneralMenu
+		let menu = AppController.shared.menuController?.channelViewGeneralMenu
 		var menuItems = menu?.items.compactMap { item -> NSMenuItem? in
 			guard let copy = item.copy() as? NSMenuItem else {
 				return nil
@@ -270,7 +270,7 @@ public final class LogPolicy: NSObject {
 	}
 
 	private func developerMenuItems(inspectElementItem: NSMenuItem?) -> [NSMenuItem] {
-		let menuController = NSObject.applicationController().menuController
+		let menuController = AppController.shared.menuController
 		let inspectItem = inspectElementItem ?? developerMenuItem(
 			title: ApplicationStrings.openWebInspector,
 			action: #selector(TXMenuController.openWebInspector(_:)),
@@ -304,7 +304,7 @@ public final class LogPolicy: NSObject {
 			return []
 		}
 
-		return NSObject.applicationController().menuController?.messageReplyMenuItems(
+		return AppController.shared.menuController?.messageReplyMenuItems(
 			forMessageIdentifier: messageIdentifier,
 			nickname: target.lineNickname,
 			excerpt: target.lineExcerpt

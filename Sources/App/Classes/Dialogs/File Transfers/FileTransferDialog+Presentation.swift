@@ -118,7 +118,7 @@ extension FileTransferDialog {
 			items = []
 		}
 
-		guard let shareItem = NSObject.applicationController().menuController?.shareMenuItem(forItems: items) else {
+		guard let shareItem = AppController.shared.menuController?.shareMenuItem(forItems: items) else {
 			return
 		}
 		shareItem.tag = FileTransferDialogConstants.shareMenuTag

@@ -41,6 +41,7 @@ import CocoaExtensions
 import CoreServices
 import Foundation
 import os
+import Synchronization
 
 public typealias TPCThemeController = ThemeController
 
@@ -55,7 +56,24 @@ private enum ThemeNamePrefix {
 	static let bundledComplete = "resource:"
 }
 
-private struct PublishedTheme: @unchecked Sendable {
+/** The parts of the active theme that code outside the main actor reads.
+
+ `Theme` and `ThemeSettings` are main-actor classes, so they cannot be handed
+ out from a background thread. Message rendering only needs these few values,
+ so the controller republishes them as a value type whenever the theme changes. */
+public struct ThemeSnapshot: Sendable {
+	/** Safe to carry here because `Theme` is main-actor isolated (hence `Sendable`)
+	 and the members the renderer reaches for are `nonisolated`. */
+	public let theme: Theme
+	public let storageLocation: TPCThemeStorageLocation
+	public let name: String
+	public let originalURL: URL
+	public let temporaryURL: URL
+	public let nicknameColorStyle: TPCThemeSettingsNicknameColorStyle
+	public let timestampFormat: String?
+}
+
+private struct PublishedTheme {
 	let theme: Theme
 	let settings: ThemeSettings
 	let storageLocation: TPCThemeStorageLocation
@@ -75,8 +93,11 @@ public final class ThemeController: NSObject {
 
 	private var cachedThemeName = ""
 	public private(set) var cacheToken = ""
-	private nonisolated let themeLock = NSLock()
-	private nonisolated(unsafe) var publishedTheme: PublishedTheme?
+	private var publishedTheme: PublishedTheme?
+
+	/** Static because the controller is a singleton and the readers are outside the
+	 main actor, where the main-actor accessor is unreachable. */
+	private nonisolated static let snapshotStorage = Mutex<ThemeSnapshot?>(nil)
 	private var currentCopyOperation: ThemeCopyOperation?
 	private var bundledThemes: [String: Theme] = [:]
 	private var customThemes: [String: Theme] = [:]
@@ -92,40 +113,45 @@ public final class ThemeController: NSObject {
 		NotificationCenter.default.removeObserver(self)
 	}
 
-	public nonisolated var theme: Theme! {
-		themeLock.withLock { publishedTheme?.theme }
+	/** The active theme's off-main-actor readable values. Nil until `reload()`. */
+	public nonisolated static var activeSnapshot: ThemeSnapshot? {
+		snapshotStorage.withLock { $0 }
 	}
 
-	public nonisolated var settings: ThemeSettings {
-		themeLock.withLock { publishedTheme!.settings }
+	public var theme: Theme! {
+		publishedTheme?.theme
 	}
 
-	public nonisolated var storageLocation: TPCThemeStorageLocation {
-		themeLock.withLock { publishedTheme!.storageLocation }
+	public var settings: ThemeSettings! {
+		publishedTheme?.settings
 	}
 
-	public nonisolated var name: String {
-		themeLock.withLock { publishedTheme!.name }
+	public var storageLocation: TPCThemeStorageLocation {
+		publishedTheme?.storageLocation ?? .bundle
 	}
 
-	public nonisolated var originalURL: URL {
-		themeLock.withLock { publishedTheme!.originalURL }
+	public var name: String {
+		publishedTheme?.name ?? ""
 	}
 
-	public nonisolated var temporaryURL: URL {
-		themeLock.withLock { publishedTheme!.temporaryURL }
+	public var originalURL: URL! {
+		publishedTheme?.originalURL
 	}
 
-	public nonisolated var originalPath: String {
-		originalURL.path
+	public var temporaryURL: URL! {
+		publishedTheme?.temporaryURL
 	}
 
-	public nonisolated var temporaryPath: String {
-		temporaryURL.path
+	public var originalPath: String {
+		publishedTheme?.originalURL.path ?? ""
+	}
+
+	public var temporaryPath: String {
+		publishedTheme?.temporaryURL.path ?? ""
 	}
 
 	@objc(isBundledTheme)
-	public nonisolated var isBundledTheme: Bool {
+	public var isBundledTheme: Bool {
 		storageLocation == .bundle
 	}
 
@@ -504,14 +530,17 @@ public final class ThemeController: NSObject {
 	public func reload() {
 		let themeName = TextualPreferences.themeName()
 		guard let nextTheme = theme(named: themeName, createIfNecessary: true) else {
-			preconditionFailure("Missing style resource files: \(themeName)")
+			/* A missing style is recoverable: keep showing whatever is already
+			 loaded rather than killing the app mid-session. */
+			Self.logger.error("Missing style resource files: \(themeName, privacy: .public)")
+			return
 		}
 
 		guard nextTheme !== theme else {
 			return
 		}
 
-		let nextPublishedTheme = PublishedTheme(
+		publishedTheme = PublishedTheme(
 			theme: nextTheme,
 			settings: nextTheme.settings,
 			storageLocation: nextTheme.storageLocation,
@@ -519,13 +548,27 @@ public final class ThemeController: NSObject {
 			originalURL: nextTheme.originalURL,
 			temporaryURL: nextTheme.temporaryURL
 		)
-		themeLock.withLock { publishedTheme = nextPublishedTheme }
+		publishSnapshot(for: nextTheme)
 		cachedThemeName = themeName
 		cacheToken = String(UInt32.random(in: 0 ..< 1_000_000))
 		updatePreferences()
 		createTemporaryCopyOfTheme()
 		presentCompatibilityAlert()
 		presentInvertSidebarColorsAlert()
+	}
+
+	private func publishSnapshot(for theme: Theme) {
+		let snapshot = ThemeSnapshot(
+			theme: theme,
+			storageLocation: theme.storageLocation,
+			name: theme.name,
+			originalURL: theme.originalURL,
+			temporaryURL: theme.temporaryURL,
+			nicknameColorStyle: theme.settings.nicknameColorStyle,
+			timestampFormat: theme.settings.themeTimestampFormat
+		)
+
+		Self.snapshotStorage.withLock { $0 = snapshot }
 	}
 
 	private func updatePreferences() {
@@ -584,7 +627,7 @@ public final class ThemeController: NSObject {
 			guard response == .default else {
 				return
 			}
-			NSObject.applicationController().menuController?.showStylePreferences(nil)
+			AppController.shared.menuController?.showStylePreferences(nil)
 		}
 	}
 
@@ -622,7 +665,7 @@ public final class ThemeController: NSObject {
 			guard response == .default else {
 				return
 			}
-			NSObject.applicationController().menuController?.showStylePreferences(nil)
+			AppController.shared.menuController?.showStylePreferences(nil)
 		}
 	}
 
@@ -770,7 +813,12 @@ public extension ThemeController {
 		reloadOnCopy: Bool,
 		openOnCopy: Bool
 	) {
-		precondition(currentCopyOperation == nil, "A theme copy operation is already in progress")
+		/* The copy runs asynchronously, so a second click on "Create a copy of this
+		 style" lands here while the first is still in flight. Ignore it. */
+		guard currentCopyOperation == nil else {
+			Self.logger.info("Ignoring theme copy request: one is already in progress")
+			return
+		}
 
 		guard storageLocation != destinationLocation else {
 			Self.logger.error("Tried to copy the active theme to its current storage location")

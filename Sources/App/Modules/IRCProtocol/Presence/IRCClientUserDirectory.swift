@@ -179,7 +179,7 @@ extension IRCClient {
 		} else {
 			user.markAsReturned()
 		}
-		NSObject.applicationController().mainWindow?.updateDrawingForUserInUserList(user)
+		AppController.shared.mainWindow?.updateDrawingForUserInUserList(user)
 	}
 
 	@objc func resetAwayStatusForUsers() {

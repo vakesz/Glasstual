@@ -22,7 +22,7 @@ public final class DockIcon: NSObject {
 			return
 		}
 
-		guard let world = NSObject.applicationController().world else {
+		guard let world = AppController.shared.world else {
 			// World is not yet initialized (e.g. called during early nib wake-up).
 			return
 		}

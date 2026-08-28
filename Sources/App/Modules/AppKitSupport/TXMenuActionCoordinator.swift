@@ -103,7 +103,7 @@ public final class MenuActionCoordinator: NSObject {
 	}
 
 	var mainWindow: TVCMainWindow {
-		NSObject.applicationController().mainWindow
+		AppController.shared.mainWindow
 	}
 
 	var selectedClient: IRCClient? {
@@ -518,7 +518,7 @@ public final class MenuActionCoordinator: NSObject {
 	@objc(navigateToTreeItemWithIdentifier:)
 	public func navigateToTreeItem(withIdentifier identifier: String) {
 		guard identifier.count == 36,
-		      let item = NSObject.applicationController().world.findItem(withId: identifier)
+		      let item = AppController.shared.world.findItem(withId: identifier)
 		else { return }
 		navigateToTreeItem(item)
 	}
@@ -533,7 +533,7 @@ public final class MenuActionCoordinator: NSObject {
 		guard let menu = menuController?.mainMenuNavigationChannelListMenu else { return }
 		menu.removeAllItems()
 		var channelCount = 0
-		for client in NSObject.applicationController().world.clientList {
+		for client in AppController.shared.world.clientList {
 			let submenu = NSMenu()
 			let clientItem = NSMenuItem()
 			clientItem.title = client.name
@@ -549,7 +549,7 @@ public final class MenuActionCoordinator: NSObject {
 					item.keyEquivalentModifierMask = .command
 				}
 				if let treeItem = (channel as AnyObject) as? IRCTreeItem {
-					item.textualUserInfo = NSObject.applicationController().world.pasteboardString(for: treeItem)
+					item.textualUserInfo = AppController.shared.world.pasteboardString(for: treeItem)
 				}
 				submenu.addItem(item)
 				channelCount += 1
@@ -561,7 +561,7 @@ public final class MenuActionCoordinator: NSObject {
 	@objc(navigateToChannelInNavigationList:)
 	public func navigateToChannelInNavigationList(_ sender: NSMenuItem) {
 		guard let pasteboardString = sender.textualUserInfo,
-		      let item = NSObject.applicationController().world.findItem(withPasteboardString: pasteboardString)
+		      let item = AppController.shared.world.findItem(withPasteboardString: pasteboardString)
 		else { return }
 		mainWindow.select(item)
 	}

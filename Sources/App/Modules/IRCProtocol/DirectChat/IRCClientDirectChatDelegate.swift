@@ -75,8 +75,8 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 		}
 		channel.activate()
 		if let treeItem = legacyTreeItem(for: channel) {
-			NSObject.applicationController().mainWindow.reloadTreeItem(treeItem)
-			NSObject.applicationController().mainWindow.updateTitle(for: treeItem)
+			AppController.shared.mainWindow.reloadTreeItem(treeItem)
+			AppController.shared.mainWindow.updateTitle(for: treeItem)
 		}
 		printDebugInformation(IRCDirectChatStrings.established(nickname: connection.peerNickname), in: channel)
 	}
@@ -108,8 +108,8 @@ extension IRCClient: IRCDirectChatConnectionDelegate {
 			channel.deactivate()
 		}
 		if let treeItem = legacyTreeItem(for: channel) {
-			NSObject.applicationController().mainWindow.reloadTreeItem(treeItem)
-			NSObject.applicationController().mainWindow.updateTitle(for: treeItem)
+			AppController.shared.mainWindow.reloadTreeItem(treeItem)
+			AppController.shared.mainWindow.updateTitle(for: treeItem)
 		}
 	}
 

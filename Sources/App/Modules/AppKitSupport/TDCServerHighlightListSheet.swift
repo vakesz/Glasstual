@@ -115,7 +115,7 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype {
 
 			DispatchQueue.main.async {
 				guard
-					let channel = NSObject.applicationController().world.findChannel(
+					let channel = AppController.shared.world.findChannel(
 						withId: channelId,
 						onClientWithId: clientId
 					)
@@ -123,7 +123,7 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype {
 					return
 				}
 
-				NSObject.applicationController().mainWindow.select(channel)
+				AppController.shared.mainWindow.select(channel)
 				self?.cancel(nil)
 			}
 		}

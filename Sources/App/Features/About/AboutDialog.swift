@@ -110,7 +110,7 @@ public final class AboutDialog: WindowBase, NSWindowDelegate, @unchecked Sendabl
 	}
 
 	@IBAction public func displayAcknowledgements(_ sender: Any?) {
-		NSObject.applicationController().menuController?.openAcknowledgements(sender)
+		AppController.shared.menuController?.openAcknowledgements(sender)
 	}
 
 	@objc public func windowWillClose(_: Notification) {

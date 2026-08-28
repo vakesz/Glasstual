@@ -11,159 +11,104 @@
  *********************************************************************** */
 
 import Foundation
-import os
 
+/** The process-wide singletons. Every one of these owns AppKit state, so the
+ whole store is main-actor isolated: `static let` gives lazy, once-only creation
+ without a lock, and the isolation removes the main-queue hops the Objective-C
+ translation needed to reach it from background threads. */
 @objc(TXSharedApplication)
-public final nonisolated class SharedApplication: NSObject {
-	/** Recursive: a singleton's initializer may legitimately ask for another singleton
-	 on the same thread (the theme controller reads the appearance while loading). */
-	private static let lock = NSRecursiveLock()
+@MainActor
+public final class SharedApplication: NSObject {
+	private static let appearance = Appearance()
+	private static let networkReachabilityNotifier = Reachability.reachabilityForInternetConnection()
+	private static let notificationController = NotificationController()
+	private static let printingQueue = LogControllerPrintingOperationQueue()
+	private static let themeController = TPCThemeController()
+	private static let windowController = WindowController()
+	private static let fileTransferDialog = TDCFileTransferDialog()
 
-	private nonisolated(unsafe) static var appearance: Appearance?
-	private nonisolated(unsafe) static var networkReachabilityNotifier: Reachability?
-	private nonisolated(unsafe) static var notificationController: NotificationController?
-	private nonisolated(unsafe) static var pluginManager: PluginManager?
-	private nonisolated(unsafe) static var printingQueue: LogControllerPrintingOperationQueue?
-	private nonisolated(unsafe) static var speechSynthesizer: SpeechSynthesizer?
-	private nonisolated(unsafe) static var themeController: TPCThemeController?
-	private nonisolated(unsafe) static var windowController: WindowController?
-	private nonisolated(unsafe) static var fileTransferDialog: TDCFileTransferDialog?
-
-	/** The lock is held across `create()` so that two callers cannot both build the
-	 value. Callers whose value must be built on the main actor hop there *before*
-	 calling this, so the lock is never held across a main-queue wait. */
-	private static func once<T: AnyObject>(
-		_ storage: inout T?,
-		create: () -> T
-	) -> T {
-		lock.lock()
-		defer { lock.unlock() }
-
-		if let existing = storage {
-			return existing
-		}
-
-		let created = create()
-		storage = created
-		return created
-	}
+	/** An optional rather than a `static let` because callers ask whether speech
+	 was ever used (to stop it) without wanting to start the engine. */
+	private static var speechSynthesizerStorage: SpeechSynthesizer?
 
 	@objc
 	public static func sharedAppearance() -> Appearance {
-		/* Reading an already-created value must not hop to the main queue: callers on
-		 other threads reach these accessors while the main thread is blocked. */
-		if let existing = lock.withLock({ appearance }) {
-			return existing
-		}
-
-		guard Thread.isMainThread else {
-			return DispatchQueue.main.sync { sharedAppearance() }
-		}
-
-		return once(&appearance) {
-			MainActor.assumeIsolated { Appearance() }
-		}
+		appearance
 	}
 
 	@objc
 	public static func sharedNetworkReachabilityNotifier() -> Reachability {
-		once(&networkReachabilityNotifier, create: Reachability.reachabilityForInternetConnection)
+		networkReachabilityNotifier
 	}
 
 	@objc
 	public static func sharedNotificationController() -> NotificationController {
-		/* Reading an already-created value must not hop to the main queue: callers on
-		 other threads reach these accessors while the main thread is blocked. */
-		if let existing = lock.withLock({ notificationController }) {
-			return existing
-		}
-
-		guard Thread.isMainThread else {
-			return DispatchQueue.main.sync { sharedNotificationController() }
-		}
-
-		return once(&notificationController) {
-			MainActor.assumeIsolated { NotificationController() }
-		}
+		notificationController
 	}
 
+	/* ISOLATION-EXCEPTION: plugin dispatch runs on the IRC threads, so this
+	 singleton has to stay reachable without the main actor, but `PluginManager`
+	 is not yet `Sendable` (its load/unload scheduling flags are plain vars behind
+	 an `NSLock`). Owned by the plugin-layer task; drop the annotation once
+	 `PluginManager` conforms. */
+	private nonisolated(unsafe) static let pluginManager = PluginManager()
+
 	@objc
-	public static func sharedPluginManager() -> PluginManager {
-		once(&pluginManager, create: PluginManager.init)
+	public nonisolated static func sharedPluginManager() -> PluginManager {
+		pluginManager
 	}
 
 	@objc
 	public static func sharedPrintingQueue() -> LogControllerPrintingOperationQueue {
-		once(&printingQueue, create: LogControllerPrintingOperationQueue.init)
+		printingQueue
 	}
 
 	@objc
 	public static func sharedSpeechSynthesizer() -> SpeechSynthesizer {
-		once(&speechSynthesizer, create: SpeechSynthesizer.init)
+		if let existing = speechSynthesizerStorage {
+			return existing
+		}
+
+		let created = SpeechSynthesizer()
+		speechSynthesizerStorage = created
+		return created
 	}
 
 	public static func existingSpeechSynthesizer() -> SpeechSynthesizer? {
-		lock.lock()
-		defer { lock.unlock() }
-
-		return speechSynthesizer
+		speechSynthesizerStorage
 	}
 
 	@objc
 	public static func sharedThemeController() -> TPCThemeController {
-		/* Reading an already-created value must not hop to the main queue: callers on
-		 other threads reach these accessors while the main thread is blocked. */
-		if let existing = lock.withLock({ themeController }) {
-			return existing
-		}
-
-		guard Thread.isMainThread else {
-			return DispatchQueue.main.sync { sharedThemeController() }
-		}
-
-		return once(&themeController) {
-			MainActor.assumeIsolated { TPCThemeController() }
-		}
+		themeController
 	}
 
 	@objc
 	public static func sharedWindowController() -> WindowController {
-		once(&windowController, create: WindowController.init)
+		windowController
 	}
 
 	@objc
 	public static func sharedFileTransferDialog() -> TDCFileTransferDialog {
-		/* Reading an already-created value must not hop to the main queue: callers on
-		 other threads reach these accessors while the main thread is blocked. */
-		if let existing = lock.withLock({ fileTransferDialog }) {
-			return existing
-		}
-
-		guard Thread.isMainThread else {
-			return DispatchQueue.main.sync { sharedFileTransferDialog() }
-		}
-
-		return once(&fileTransferDialog) {
-			MainActor.assumeIsolated { TDCFileTransferDialog() }
-		}
+		fileTransferDialog
 	}
 }
 
-public extension NSObject {
-	private nonisolated(unsafe) weak static var globalApplicationControllerReference: ApplicationController?
+/** The running `ApplicationController`.
 
-	@objc(setGlobalMasterControllerClassReference:)
-	class func setGlobalApplicationControllerReference(_ applicationController: ApplicationController) {
-		globalApplicationControllerReference = applicationController
+ This replaces the `NSObject` category the Objective-C code used to reach the
+ controller from anywhere. `shared` is implicitly unwrapped because the app's UI
+ and IRC layers only run while a controller exists; use `current` in code that
+ can also run before the main nib wakes or during teardown. */
+@MainActor
+public enum AppController {
+	public private(set) weak static var current: ApplicationController?
+
+	public static var shared: ApplicationController! {
+		current
 	}
 
-	@objc(masterController)
-	var applicationController: ApplicationController {
-		Self.globalApplicationControllerReference!
-	}
-
-	@objc(masterController)
-	class func applicationController() -> ApplicationController {
-		globalApplicationControllerReference!
+	static func setCurrent(_ controller: ApplicationController) {
+		current = controller
 	}
 }

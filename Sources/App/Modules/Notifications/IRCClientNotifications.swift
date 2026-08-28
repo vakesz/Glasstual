@@ -206,7 +206,7 @@ public extension IRCClient {
 	@MainActor
 	private func isSelected(_ channel: IRCChannel?) -> Bool {
 		guard let treeItem = (channel as AnyObject?) as? IRCTreeItem else { return false }
-		return NSObject.applicationController().mainWindow?.isItemSelected(treeItem) ?? false
+		return AppController.shared.mainWindow?.isItemSelected(treeItem) ?? false
 	}
 
 	@objc func clearEventsToSpeak() {
@@ -323,7 +323,7 @@ public extension IRCClient {
 
 		guard !controller.areNotificationsDisabled else { return true }
 
-		let mainWindowIsFocused = NSObject.applicationController().mainWindow?.ceIsInactive == false
+		let mainWindowIsFocused = AppController.shared.mainWindow?.ceIsInactive == false
 		let postWhileFocused = TextualPreferences.postNotificationsWhileInFocus()
 		let targetIsSelected = isSelected(target)
 		let onlySpeak = IRCNotificationPolicy.shouldOnlySpeak(

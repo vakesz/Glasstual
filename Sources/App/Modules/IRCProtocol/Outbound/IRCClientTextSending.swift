@@ -208,7 +208,7 @@ public extension IRCClient {
 	@objc(inputText:asCommand:)
 	@MainActor
 	func inputText(_ input: Any, as command: IRCRemoteCommand) {
-		guard let destination = NSObject.applicationController().mainWindow.selectedItem else { return }
+		guard let destination = AppController.shared.mainWindow.selectedItem else { return }
 		inputText(input, as: command, destination: destination)
 	}
 
@@ -451,7 +451,7 @@ public extension IRCClient {
 		let destinationName = explicitPrefix.isEmpty ? rawDestination : String(rawDestination.dropFirst())
 		var channel = findChannel(destinationName)
 		if invocation.isSecretMessage == false, channel == nil, stringIsNickname(destinationName) {
-			channel = NSObject.applicationController().world.createPrivateMessage(destinationName, on: self)
+			channel = AppController.shared.world.createPrivateMessage(destinationName, on: self)
 		}
 
 		let destinationIsChannel = channel?.isChannel == true ||
@@ -515,6 +515,6 @@ public extension IRCClient {
 		guard let channel,
 		      let treeItem = (channel as AnyObject) as? IRCTreeItem
 		else { return }
-		NSObject.applicationController().mainWindow.select(treeItem)
+		AppController.shared.mainWindow.select(treeItem)
 	}
 }

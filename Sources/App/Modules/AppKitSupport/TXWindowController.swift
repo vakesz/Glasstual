@@ -163,7 +163,7 @@ public final nonisolated class WindowController: NSObject {
 	}
 
 	@MainActor @objc public func popMainWindowSheetIfExists() {
-		guard let attachedSheet = NSObject.applicationController().mainWindow.attachedSheet else {
+		guard let attachedSheet = AppController.shared.mainWindow.attachedSheet else {
 			return
 		}
 

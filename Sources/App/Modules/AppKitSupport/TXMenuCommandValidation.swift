@@ -143,7 +143,7 @@ extension MenuActionCoordinator {
 
 	@objc(validateMenuItem:)
 	public func validate(_ menuItem: NSMenuItem) -> Bool {
-		let appController = NSObject.applicationController()
+		let appController: ApplicationController = AppController.shared
 		guard appController.applicationIsTerminating == false else { return false }
 
 		return MenuValidationPolicy.validate(

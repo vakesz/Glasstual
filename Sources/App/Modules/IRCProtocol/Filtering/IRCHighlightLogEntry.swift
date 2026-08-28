@@ -71,7 +71,7 @@ public nonisolated class HighlightLogEntry: PortablePropertyObject {
 	}
 
 	@objc @MainActor public var channel: IRCChannel? {
-		NSObject.applicationController().world.findChannel(
+		AppController.shared.world.findChannel(
 			withId: channelIdStorage,
 			onClientWithId: clientIdStorage
 		)

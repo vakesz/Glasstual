@@ -553,7 +553,7 @@ public extension TDCAlert {
 			/* A sheet on the main window is preferred so that the alert is
 			 attached to what it is about. When the main window is hidden, any other
 			 visible window hosts the sheet instead. */
-			let applicationController = NSObject.applicationController()
+			let applicationController: ApplicationController = AppController.shared
 			var hostWindow: NSWindow? = MainActor.assumeIsolated {
 				applicationController.mainWindow
 			}

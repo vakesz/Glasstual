@@ -885,7 +885,7 @@ public extension LogRenderer {
 
 	@objc(renderTemplateNamed:attributes:)
 	nonisolated static func renderTemplateNamed(_ name: String, attributes: [String: Any]?) -> String? {
-		guard let template = SharedApplication.sharedThemeController().theme?.template(withName: name) else {
+		guard let template = ThemeController.activeSnapshot?.theme.template(withName: name) else {
 			return nil
 		}
 		return renderTemplate(template, attributes: attributes)
@@ -895,7 +895,7 @@ public extension LogRenderer {
 		_ name: ThemeTemplateName,
 		attributes: ThemeTemplateAttributes = [:]
 	) -> String? {
-		guard let template = SharedApplication.sharedThemeController().theme?.template(withName: name.rawValue) else {
+		guard let template = ThemeController.activeSnapshot?.theme.template(withName: name.rawValue) else {
 			return nil
 		}
 		return renderTemplate(template, attributes: attributes)

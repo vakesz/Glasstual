@@ -99,7 +99,7 @@ public extension IRCClient {
 		isConnecting = true
 		stopReconnectTimer()
 		reconnectEnabled = true
-		NSObject.applicationController().mainWindow.updateTitle(for: self)
+		AppController.shared.mainWindow.updateTitle(for: self)
 		if mode == .reconnect {
 			printDebugInformation(toConsole: IRCConnectionStrings.reconnecting)
 		} else if mode == .retry {
@@ -235,7 +235,7 @@ public extension IRCClient {
 		reconnectEnabled = false
 		reconnectEnabledBecauseOfSleepMode = false
 		stopReconnectTimer()
-		NSObject.applicationController().mainWindow.updateTitle(for: self)
+		AppController.shared.mainWindow.updateTitle(for: self)
 	}
 
 	@objc(toggleAwayStatusWithComment:)

@@ -341,7 +341,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		guard oldValue != newValue else { return }
 		configurationIsStale = true
 		Task { @MainActor in
-			NSObject.applicationController().world.savePeriodically()
+			AppController.shared.world.savePeriodically()
 		}
 	}
 }
