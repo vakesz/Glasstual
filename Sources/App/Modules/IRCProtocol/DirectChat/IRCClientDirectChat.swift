@@ -172,9 +172,9 @@ public extension IRCClient {
 			defaultButton: PromptStrings.DirectChat.acceptButtonTitle,
 			alternateButton: PromptStrings.DirectChat.declineButtonTitle,
 			otherButton: nil,
-			completionBlock: { [weak self] response, _, _ in
+			completionBlock: { [weak self] outcome in
 				guard let self else { return }
-				guard response == .default else {
+				guard outcome.response == .default else {
 					print(IRCDirectChatStrings.declined(sender: sender), by: nil, in: nil,
 					      as: .dccFileTransfer, command: TVCLogLineDefaultCommandValue)
 					return

@@ -433,12 +433,12 @@ public final class FileLogger: NSObject {
 		Self.lastNoSpaceFailTime = currentTime
 		Self.noSpaceAlertVisible = true
 
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.Logging.resumeAfterLowStorageBody,
 			title: PromptStrings.Logging.disabledForLowStorageTitle,
 			defaultButton: PromptStrings.Action.confirmation,
 			alternateButton: nil
-		) { _, _, _ in
+		) { _ in
 			Self.noSpaceAlertVisible = false
 		}
 	}

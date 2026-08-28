@@ -1277,20 +1277,18 @@ extension PreferencesController {
 		}
 	}
 
-	private func openPathToThemesCallback(_ returnCode: TDCAlertResponse, originalAlert: NSAlert) {
+	private func openPathToThemesCallback(_ returnCode: TDCAlertResponse) {
 		switch returnCode {
 		case .default:
 			openPathToTheme()
 		case .alternate:
 			onModifyUserStyleSheetRules(nil)
 		case .other:
-			originalAlert.window.orderOut(nil)
 			SharedApplication.sharedThemeController().copyActiveTheme(
 				to: .custom,
 				reloadOnCopy: true,
 				openOnCopy: true
 			)
-		@unknown default: break
 		}
 	}
 
@@ -1307,9 +1305,8 @@ extension PreferencesController {
 			defaultButton: PreferencesStrings.viewStyleFilesButtonTitle,
 			alternateButton: PreferencesStrings.editStyleButtonTitle,
 			otherButton: PreferencesStrings.createStyleCopyButtonTitle
-		) { [weak self] response, _, underlyingAlert in
-			guard let self, let alert = underlyingAlert as? NSAlert else { return }
-			openPathToThemesCallback(response, originalAlert: alert)
+		) { [weak self] outcome in
+			self?.openPathToThemesCallback(outcome.response)
 		}
 	}
 

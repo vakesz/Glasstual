@@ -32,8 +32,8 @@ public final class PreferencesImportExport: NSObject {
 			defaultButton: PromptStrings.Action.chooseFile,
 			alternateButton: PromptStrings.Action.cancel,
 			otherButton: nil,
-			completionBlock: { buttonClicked, _, _ in
-				importPreflight(buttonClicked, in: window)
+			completionBlock: { outcome in
+				importPreflight(outcome.response, in: window)
 			}
 		)
 	}
@@ -298,8 +298,8 @@ public final class PreferencesImportExport: NSObject {
 			defaultButton: PromptStrings.ConfigurationTransfer.exportButtonTitle,
 			alternateButton: PromptStrings.Action.cancel,
 			otherButton: nil,
-			completionBlock: { buttonClicked, _, _ in
-				exportPreflight(buttonClicked, in: window)
+			completionBlock: { outcome in
+				exportPreflight(outcome.response, in: window)
 			}
 		)
 	}

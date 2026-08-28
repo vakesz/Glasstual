@@ -141,15 +141,15 @@ public extension MenuActionCoordinator {
 		      client.isConnected == false
 		else { return }
 		let world = world
-		let completion: TDCAlertCompletionBlock = { response, _, _ in
-			guard response == .default,
+		let completion: TDCAlertCompletionBlock = { outcome in
+			guard outcome.response == .default,
 			      client.isConnecting == false,
 			      client.isConnected == false
 			else { return }
 			world.destroy(client)
 			world.save()
 		}
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.Deletion.warning(for: .server),
 			title: PromptStrings.Deletion.confirmationTitle,
 			defaultButton: PromptStrings.Action.yes,
@@ -194,12 +194,12 @@ public extension MenuActionCoordinator {
 			return
 		}
 		let world = world
-		let completion: TDCAlertCompletionBlock = { response, _, _ in
-			guard response == .default else { return }
+		let completion: TDCAlertCompletionBlock = { outcome in
+			guard outcome.response == .default else { return }
 			world.destroy(channel)
 			world.save()
 		}
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.Deletion.warning(for: .channel),
 			title: PromptStrings.Deletion.confirmationTitle,
 			defaultButton: PromptStrings.Action.yes,

@@ -183,7 +183,7 @@ extension ServerPropertiesSheet {
 		var result: CFTypeRef?
 		let status = SecItemCopyMatching(query as CFDictionary, &result)
 		guard status == errSecSuccess, let identities = result as? [SecIdentity], !identities.isEmpty else {
-			_ = TDCAlert.alert(
+			TDCAlert.alert(
 				withMessage: ServerPropertiesStrings.Certificate.noneAvailableExplanation,
 				title: ServerPropertiesStrings.Certificate.noneAvailableTitle,
 				defaultButton: PromptStrings.Action.confirmation,

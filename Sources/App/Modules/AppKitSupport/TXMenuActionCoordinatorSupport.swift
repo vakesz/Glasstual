@@ -60,7 +60,7 @@ public extension MenuActionCoordinator {
 			NSWorkspace.shared.open(url)
 			return
 		}
-		_ = TDCAlert.alert(
+		TDCAlert.alert(
 			withMessage: PromptStrings.Logging.emptyAlertBody,
 			title: PromptStrings.Logging.noLogsTitle,
 			defaultButton: PromptStrings.Action.confirmation,
