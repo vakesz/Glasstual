@@ -48,6 +48,6 @@ struct InlineResourceHostPolicyTests {
 	/// `Glasstual.permittedResourceHosts` in `corePrivate.js`.
 	@Test("Only hosts the app ships a module for are listed")
 	func theListStaysSmall() {
-		#expect(InlineResourceHostPolicy.permittedHosts == ["platform.twitter.com"])
+		#expect(LogViewContentPolicy.permittedScriptOrigins == ["https://platform.twitter.com"])
 	}
 }

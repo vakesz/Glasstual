@@ -55,26 +55,18 @@ private let payloadLogger = Logger(
  host. The log view runs from a `file://` document with the native `app`
  bridge attached, so whoever serves that script owns the bridge.
 
- Task P2W introduces a wider `LogViewContentPolicy`; if both land, fold this
- host set into it. */
+ The host set lives with the log view's Content-Security-Policy in
+ `LogViewContentPolicy.permittedScriptOrigins`, so the Swift-side filter and the
+ policy the page enforces can never disagree. */
 enum InlineResourceHostPolicy {
-	/// Hosts that may serve a remote script or stylesheet, over HTTPS only.
-	static let permittedHosts: Set<String> = [
-		/* TweetModule embeds Twitter's own widget bootstrap. */
-		"platform.twitter.com",
-	]
-
 	static func permits(_ url: URL) -> Bool {
 		if url.isFileURL {
 			return true
 		}
-		guard url.scheme?.lowercased() == "https" else {
+		guard url.scheme?.lowercased() == "https", let host = url.host()?.lowercased() else {
 			return false
 		}
-		guard let host = url.host()?.lowercased() else {
-			return false
-		}
-		return permittedHosts.contains(host)
+		return LogViewContentPolicy.permittedScriptOrigins.contains("https://\(host)")
 	}
 }
 
