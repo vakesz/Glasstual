@@ -275,15 +275,18 @@ enum PluginHostAdapter {
 	}
 
 	private static func makeApplicationMetrics() -> PluginApplicationMetrics {
-		let application = AppController.shared
-		let world = application.world
-		let mainWindow = application.mainWindow
+		let application: ApplicationController? = AppController.shared
+		let world = application?.world
+		let mainWindow = application?.mainWindow
 		let lastMessageReceived = mainWindow?.selectedClient.map {
 			Date.timeIntervalSinceReferenceDate - $0.lastMessageReceived
 		} ?? 0
-		let visibleLineCount = (world?.clientList ?? []).reduce(0) { total, client in
-			total + Int(client.viewController.numberOfLines)
-				+ client.channelList.reduce(0) { $0 + Int($1.viewController.numberOfLines) }
+		var visibleLineCount = 0
+		for client in world?.clientList ?? [] {
+			visibleLineCount += Int(client.viewController.numberOfLines)
+			for channel in client.channelList {
+				visibleLineCount += Int(channel.viewController.numberOfLines)
+			}
 		}
 
 		return PluginApplicationMetrics(
