@@ -55,21 +55,27 @@ public protocol PreferencesControllerDelegate: AnyObject {
 
 /** The Settings window: an AppKit shell around one SwiftUI content view.
 
- The shell owns the window, its frame autosave, the toolbar, which pane is
- selected, and everything that needs a window to present — the font panel, the
- folder choosers, the style sheet editor and the alerts. The panes themselves
- are SwiftUI and reach back through `PreferencesPaneActionHandler`. */
+ The shell owns the window, its toolbar of sections, which section and pane are
+ shown, the frame it is restored to, and everything that needs a window to
+ present — the font panel, the folder choosers, the style sheet editor and the
+ alerts. The panes themselves are SwiftUI and reach back through
+ `PreferencesPaneActionHandler`. */
 @objc(TDCPreferencesController)
 @MainActor
-public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolbarItemValidation,
-	NSWindowDelegate, PreferencesUserStyleSheetDelegate
+public final class PreferencesController: WindowBase, NSToolbarDelegate, NSWindowDelegate,
+	PreferencesUserStyleSheetDelegate
 {
+	private static let toolbarItemPrefix = "TDCPreferencesControllerSection."
+
 	let model = PreferencesPaneModel()
 
-	private var paneHistory: [String] = []
-	private var paneHistoryIndex = 0
-	private var navigatingPaneHistory = false
+	private var contentController: NSHostingController<PreferencesRootView>!
 	private var reloadingThemeBySelection = false
+
+	/// Which pane each section was left on, so coming back to a section comes
+	/// back to the segment the user was reading.
+	private var lastPaneBySection: [PreferencesSectionIdentifier: String] = [:]
+
 	var fontPanelIsOwned = false
 	var previousFontManagerAction: Selector?
 	var userStyleSheet: PreferencesUserStyleSheet?
@@ -82,10 +88,9 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 
 	private func prepareInitialState() {
 		model.actions = self
-		model.entries = Self.sidebarEntries()
-		model.versionFooter = Self.versionFooterString
-		model.onSelectionChange = { [weak self] identifier in
-			self?.paneSelectionChanged(to: identifier)
+		model.sections = Self.sections()
+		model.onPaneChange = { [weak self] identifier in
+			self?.paneChanged(to: identifier, animate: true)
 		}
 		model.refreshAll()
 		installWindow()
@@ -108,14 +113,15 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 
 	private func installWindow() {
 		let hostingController = NSHostingController(rootView: PreferencesRootView(model: model))
-		let hostedWindow = NSWindow(
+		contentController = hostingController
+		let hostedWindow = PreferencesWindow(
 			contentRect: NSRect(
 				x: 0,
 				y: 0,
-				width: PreferencesLayout.windowDefaultWidth,
-				height: PreferencesLayout.windowDefaultHeight
+				width: PreferencesLayout.windowWidth,
+				height: PreferencesLayout.windowMinimumHeight
 			),
-			styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+			styleMask: [.titled, .closable],
 			backing: .buffered,
 			defer: false
 		)
@@ -124,18 +130,13 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 		hostedWindow.isReleasedWhenClosed = false
 		hostedWindow.isRestorable = false
 		hostedWindow.tabbingMode = .disallowed
-		hostedWindow.toolbarStyle = .unified
-		hostedWindow.titlebarSeparatorStyle = .automatic
+		hostedWindow.toolbarStyle = .preference
 		hostedWindow.preventsApplicationTerminationWhenModal = false
 		hostedWindow.autorecalculatesKeyViewLoop = true
 		hostedWindow.title = PreferencesStrings.accessibilityTitle
-		hostedWindow.minSize = NSSize(
-			width: PreferencesLayout.windowMinimumWidth,
-			height: PreferencesLayout.windowMinimumHeight
-		)
 		window = hostedWindow
 		installToolbar()
-		restoreWindowFrame()
+		window.ce_restoreState(for: Self.self)
 	}
 
 	private func installToolbar() {
@@ -143,22 +144,33 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 		toolbar.delegate = self
 		toolbar.allowsUserCustomization = false
 		toolbar.autosavesConfiguration = false
-		toolbar.displayMode = .iconOnly
+		toolbar.displayMode = .iconAndLabel
 		window.toolbar = toolbar
 	}
 
-	private func restoreWindowFrame() {
-		window.ce_saveSizeAsDefault()
-		window.ce_restoreState(for: Self.self)
-		if window.frame.width < PreferencesLayout.windowMinimumWidth
-			|| window.frame.height < PreferencesLayout.windowMinimumHeight
-		{
-			window.setContentSize(NSSize(
-				width: PreferencesLayout.windowDefaultWidth,
-				height: PreferencesLayout.windowDefaultHeight
-			))
-			window.center()
-		}
+	/** Grows or shrinks the window to the pane that is showing, keeping its
+	 top-left corner and its width, the way a settings window behaves. */
+	private func resizeToFitContent(animate: Bool) {
+		guard let window, let contentView = window.contentView else { return }
+		contentView.layoutSubtreeIfNeeded()
+		let screen = window.screen ?? NSScreen.main
+		let available = screen.map { Double($0.visibleFrame.height) }
+			?? PreferencesLayout.windowMinimumHeight
+		let height = min(
+			max(contentController.view.fittingSize.height, PreferencesLayout.windowMinimumHeight),
+			available - PreferencesLayout.windowScreenInset
+		)
+		let current = window.contentRect(forFrameRect: window.frame)
+		guard abs(current.height - height) > 0.5
+			|| abs(current.width - PreferencesLayout.windowWidth) > 0.5
+		else { return }
+		let content = NSRect(
+			x: current.minX,
+			y: current.maxY - height,
+			width: PreferencesLayout.windowWidth,
+			height: height
+		)
+		window.setFrame(window.frameRect(forContentRect: content), display: true, animate: animate)
 	}
 
 	override public func show() {
@@ -180,30 +192,74 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 		{
 			identifier = remembered
 		}
-		selectPane(withIdentifier: identifier)
+		selectPane(withIdentifier: identifier, animate: false)
 		super.show()
 	}
 
-	// MARK: - Sidebar
+	// MARK: - Sections
 
-	/** The catalogue's panes, with one entry appended to the add-on group for
-	 every plugin that supplies a preference pane. */
-	static func sidebarEntries() -> [PreferencesSidebarEntry] {
-		var items: [PreferencesSidebarEntry] = []
-		for pane in PreferencesPaneCatalog.panes {
-			items.append(PreferencesSidebarEntry(
-				identifier: pane.identifier.rawValue,
-				title: PreferencesStrings.paneTitle(pane.identifier),
-				symbolName: pane.symbolName,
-				group: pane.group
-			))
-			guard pane.group == .addOns else { continue }
-			items.append(contentsOf: pluginSidebarEntries())
+	/** The toolbar's sections: one for each main pane, one gathering the add-on
+	 panes the plugins supply, and one gathering the advanced panes. */
+	static func sections() -> [PreferencesSection] {
+		PreferencesSectionIdentifier.allCases.map { identifier in
+			PreferencesSection(
+				identifier: identifier,
+				title: sectionTitle(identifier),
+				subPages: subPages(in: identifier)
+			)
 		}
-		return items
 	}
 
-	private static func pluginSidebarEntries() -> [PreferencesSidebarEntry] {
+	private static func sectionTitle(_ identifier: PreferencesSectionIdentifier) -> String {
+		if let pane = identifier.pane {
+			return PreferencesStrings.paneTitle(pane)
+		}
+		return identifier == .addOns
+			? PreferencesStrings.addOnsGroupTitle
+			: PreferencesStrings.advancedGroupTitle
+	}
+
+	private static func subPages(in section: PreferencesSectionIdentifier) -> [PreferencesSubPage] {
+		if let pane = section.pane {
+			return [subPage(for: entry(for: pane))]
+		}
+		if section == .addOns {
+			return ([entry(for: .addOns)] + pluginEntries()).map(subPage(for:))
+		}
+		return PreferencesAdvancedGroup.allCases.map { group in
+			PreferencesSubPage(
+				identifier: group.identifier,
+				title: advancedGroupTitle(group),
+				panes: group.panes.map(entry(for:))
+			)
+		}
+	}
+
+	private static func subPage(for pane: PreferencesPaneEntry) -> PreferencesSubPage {
+		PreferencesSubPage(identifier: pane.identifier, title: pane.title, panes: [pane])
+	}
+
+	private static func advancedGroupTitle(_ group: PreferencesAdvancedGroup) -> String {
+		switch group {
+		case .connection: PreferencesAdvancedStrings.connection
+		case .channels: PreferencesAdvancedStrings.channels
+		case .identity: PreferencesAdvancedStrings.identity
+		case .media: PreferencesAdvancedStrings.media
+		case .system: PreferencesAdvancedStrings.system
+		}
+	}
+
+	private static func entry(for pane: PreferencesPaneIdentifier) -> PreferencesPaneEntry {
+		let descriptor = PreferencesPaneCatalog.descriptor(for: pane.rawValue)
+		return PreferencesPaneEntry(
+			identifier: pane.rawValue,
+			title: PreferencesStrings.paneTitle(pane),
+			symbolName: descriptor?.symbolName ?? "gearshape",
+			group: descriptor?.group ?? .main
+		)
+	}
+
+	private static func pluginEntries() -> [PreferencesPaneEntry] {
 		SharedApplication.sharedPluginManager().pluginsWithPreferencePanes.enumerated()
 			.map { index, plugin in
 				let title: String = if let suppliedTitle = plugin.pluginPreferencesPaneMenuItemTitle,
@@ -213,7 +269,7 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 				} else {
 					PreferencesStrings.addOnPaneTitle
 				}
-				return PreferencesSidebarEntry(
+				return PreferencesPaneEntry(
 					identifier: PreferencesPaneCatalog.pluginIdentifier(at: index),
 					title: title,
 					symbolName: "puzzlepiece.extension",
@@ -222,41 +278,45 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 			}
 	}
 
-	/** Whether an identifier still names something the sidebar can show. A
-	 remembered plugin pane disappears with the plugin, so the check is not
-	 only over the enumeration. */
+	/** Whether an identifier still names a pane the window can show. A remembered
+	 plugin pane disappears with the plugin, so the check is not only over the
+	 enumeration. */
 	static func paneExists(_ identifier: String) -> Bool {
 		if let index = PreferencesPaneCatalog.pluginIndex(from: identifier) {
 			return SharedApplication.sharedPluginManager().pluginsWithPreferencePanes.indices
 				.contains(index)
 		}
-		return PreferencesPaneIdentifier(rawValue: identifier) != nil
-	}
-
-	private static var versionFooterString: String {
-		let info = Bundle.main.infoDictionary ?? [:]
-		return PreferencesStrings.version(
-			marketingVersion: info["CFBundleShortVersionString"] as? String ?? "",
-			build: info["CFBundleVersion"] as? String ?? ""
-		)
-	}
-
-	// MARK: - Pane selection
-
-	private func selectPane(withIdentifier identifier: String) {
-		guard Self.paneExists(identifier) else { return }
-		guard model.selectedPaneIdentifier != identifier else {
-			paneSelectionChanged(to: identifier)
-			return
+		if PreferencesPaneIdentifier(rawValue: identifier) != nil {
+			return true
 		}
-		model.selectedPaneIdentifier = identifier
+		return PreferencesAdvancedGroup.allCases.contains { $0.identifier == identifier }
 	}
 
-	private func paneSelectionChanged(to identifier: String) {
-		window?.title = model.entries.first { $0.identifier == identifier }?.title
-			?? PreferencesStrings.accessibilityTitle
+	// MARK: - Selection
+
+	/** Shows whichever sub-page holds `identifier`, which may name a sub-page or
+	 one of the panes inside it — a value stored before the advanced panes were
+	 grouped still finds its way home. */
+	private func selectPane(withIdentifier identifier: String, animate: Bool) {
+		guard let section = model.sections.first(where: { section in
+			section.subPages.contains { $0.contains(identifier) }
+		}),
+			let subPage = section.subPages.first(where: { $0.contains(identifier) })
+		else { return }
+		model.selectedSection = section.identifier
+		window?.toolbar?.selectedItemIdentifier = Self.toolbarIdentifier(for: section.identifier)
+		window?.title = section.title
+		if model.selectedPane == subPage.identifier {
+			// The model's observer will not fire, so finish the switch here.
+			paneChanged(to: subPage.identifier, animate: animate)
+		} else {
+			model.selectedPane = subPage.identifier
+		}
+	}
+
+	private func paneChanged(to identifier: String, animate: Bool) {
+		lastPaneBySection[model.selectedSection] = identifier
 		Preferences.Internals.selectedPreferencePane.value = identifier
-		recordPaneInHistory(identifier)
 		// The two panes whose content is read from outside the key store are
 		// refreshed as they are opened rather than polled.
 		if identifier == PreferencesPaneIdentifier.style.rawValue {
@@ -265,67 +325,43 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 		} else if identifier == PreferencesPaneIdentifier.addOns.rawValue {
 			model.refreshAddOnCommands()
 		}
-	}
-
-	private func recordPaneInHistory(_ identifier: String) {
-		guard navigatingPaneHistory == false else { return }
-		if paneHistory.isEmpty == false, paneHistoryIndex + 1 < paneHistory.count {
-			paneHistory.removeSubrange((paneHistoryIndex + 1) ..< paneHistory.count)
-		}
-		paneHistory.append(identifier)
-		paneHistoryIndex = paneHistory.count - 1
-		window?.toolbar?.validateVisibleItems()
-	}
-
-	private var canNavigateBack: Bool {
-		paneHistoryIndex > 0
-	}
-
-	private var canNavigateForward: Bool {
-		paneHistoryIndex + 1 < paneHistory.count
-	}
-
-	private func navigate(toHistoryIndex index: Int) {
-		guard paneHistory.indices.contains(index) else { return }
-		paneHistoryIndex = index
-		navigatingPaneHistory = true
-		selectPane(withIdentifier: paneHistory[index])
-		navigatingPaneHistory = false
-		window?.toolbar?.validateVisibleItems()
-	}
-
-	@objc private func navigateBack(_: Any?) {
-		if canNavigateBack {
-			navigate(toHistoryIndex: paneHistoryIndex - 1)
+		// The hosted view has not laid the new pane out yet.
+		DispatchQueue.main.async { [weak self] in
+			self?.resizeToFitContent(animate: animate)
 		}
 	}
 
-	@objc private func navigateForward(_: Any?) {
-		if canNavigateForward {
-			navigate(toHistoryIndex: paneHistoryIndex + 1)
-		}
+	@objc private func selectSection(_ sender: NSToolbarItem) {
+		let raw = sender.itemIdentifier.rawValue.dropFirst(Self.toolbarItemPrefix.count)
+		guard let identifier = PreferencesSectionIdentifier(rawValue: String(raw)),
+		      let section = model.sections.first(where: { $0.identifier == identifier }),
+		      let pane = lastPaneBySection[identifier] ?? section.subPages.first?.identifier
+		else { return }
+		selectPane(withIdentifier: pane, animate: true)
 	}
 
 	// MARK: - Toolbar
 
-	public func validateToolbarItem(_ item: NSToolbarItem) -> Bool {
-		switch item.itemIdentifier {
-		case PreferencesIdentifiers.toolbarBack: canNavigateBack
-		case PreferencesIdentifiers.toolbarForward: canNavigateForward
-		default: true
-		}
+	private static func toolbarIdentifier(
+		for section: PreferencesSectionIdentifier
+	) -> NSToolbarItem.Identifier {
+		NSToolbarItem.Identifier(toolbarItemPrefix + section.rawValue)
+	}
+
+	private var sectionItemIdentifiers: [NSToolbarItem.Identifier] {
+		model.sections.map { Self.toolbarIdentifier(for: $0.identifier) }
 	}
 
 	public func toolbarAllowedItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-		[
-			PreferencesIdentifiers.toolbarBack,
-			PreferencesIdentifiers.toolbarForward,
-			.flexibleSpace,
-		]
+		sectionItemIdentifiers
 	}
 
 	public func toolbarDefaultItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-		[PreferencesIdentifiers.toolbarBack, PreferencesIdentifiers.toolbarForward]
+		sectionItemIdentifiers
+	}
+
+	public func toolbarSelectableItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
+		sectionItemIdentifiers
 	}
 
 	public func toolbar(
@@ -333,29 +369,22 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 		itemForItemIdentifier identifier: NSToolbarItem.Identifier,
 		willBeInsertedIntoToolbar _: Bool
 	) -> NSToolbarItem? {
-		let symbolName: String
-		let label: String
-		let action: Selector
-		switch identifier {
-		case PreferencesIdentifiers.toolbarBack:
-			symbolName = "chevron.left"
-			label = PreferencesStrings.backButtonTitle
-			action = #selector(navigateBack(_:))
-		case PreferencesIdentifiers.toolbarForward:
-			symbolName = "chevron.right"
-			label = PreferencesStrings.forwardButtonTitle
-			action = #selector(navigateForward(_:))
-		default: return nil
-		}
+		let raw = identifier.rawValue.dropFirst(Self.toolbarItemPrefix.count)
+		guard let sectionIdentifier = PreferencesSectionIdentifier(rawValue: String(raw)),
+		      let section = model.sections.first(where: { $0.identifier == sectionIdentifier })
+		else { return nil }
 		let item = NSToolbarItem(itemIdentifier: identifier)
-		item.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: label)
-		item.label = label
-		item.paletteLabel = label
-		item.toolTip = label
-		item.isBordered = true
-		item.isNavigational = true
+		item.image = NSImage(
+			systemSymbolName: section.symbolName,
+			accessibilityDescription: section.title
+		)
+		item.label = section.title
+		item.paletteLabel = section.title
+		item.toolTip = section.title
 		item.target = self
-		item.action = action
+		item.action = #selector(selectSection(_:))
+		/* The label is what VoiceOver reads for a toolbar item; the image's
+		 accessibility description above covers the icon on its own. */
 		return item
 	}
 
@@ -414,8 +443,8 @@ public final class PreferencesController: WindowBase, NSToolbarDelegate, NSToolb
 	@objc public func windowWillClose(_: Notification) {
 		notifications.cancelAll()
 		releaseFontPanel()
-		// The window keeps whatever size the user gave it: nothing resets the
-		// frame before it is written out.
+		// The window keeps wherever the user put it: nothing moves the frame
+		// before it is written out.
 		window.ce_saveState(for: Self.self)
 		(delegate as? PreferencesControllerDelegate)?.preferencesDialogWillClose(self)
 	}

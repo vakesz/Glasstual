@@ -109,6 +109,66 @@
         }
       }
     },
+    "advanced-channels": {
+      "comment": "Title of the Advanced sub-page holding the channel-related panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channels"
+          }
+        }
+      }
+    },
+    "advanced-connection": {
+      "comment": "Title of the Advanced sub-page holding the connection-related panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection"
+          }
+        }
+      }
+    },
+    "advanced-identity": {
+      "comment": "Title of the Advanced sub-page holding the default identity panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identity"
+          }
+        }
+      }
+    },
+    "advanced-media": {
+      "comment": "Title of the Advanced sub-page holding the file transfer and inline media panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media"
+          }
+        }
+      }
+    },
+    "advanced-system": {
+      "comment": "Title of the Advanced sub-page holding the log location and hidden panes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
     "are-you-opening-this-style-because": {
       "comment": "Title of the alert shown before opening a bundled style's source files. Legacy key: 5jv-aw.",
       "extractionState": "manual",

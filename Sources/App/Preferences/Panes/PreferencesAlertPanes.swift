@@ -209,33 +209,45 @@ struct PreferencesIncomingDataPane: View {
 
 	var body: some View {
 		PreferencesPaneLayout {
-			Section {
+			PreferencesIncomingDataSections(model: model)
+		}
+	}
+}
+
+/// The pane as one form section, for the Advanced group that gathers it with
+/// its neighbours.
+struct PreferencesIncomingDataSections: View {
+	let model: PreferencesPaneModel
+
+	var body: some View {
+		Section {
+			PreferencesToggle(
+				title: PreferencesIncomingDataStrings.replyCtcp,
+				isOn: model.preferences.binding(for: Preferences.Messages.replyToCTCPRequests)
+			)
+			VStack(alignment: .leading, spacing: 4) {
 				PreferencesToggle(
-					title: PreferencesIncomingDataStrings.replyCtcp,
-					isOn: model.preferences.binding(for: Preferences.Messages.replyToCTCPRequests)
+					title: PreferencesIncomingDataStrings.highlightSpam,
+					isOn: model.preferences.binding(for: Preferences.Messages.detectHighlightSpam)
 				)
-				VStack(alignment: .leading, spacing: 4) {
-					PreferencesToggle(
-						title: PreferencesIncomingDataStrings.highlightSpam,
-						isOn: model.preferences.binding(for: Preferences.Messages.detectHighlightSpam)
-					)
-					PreferencesNote(PreferencesIncomingDataStrings.highlightSpamNote)
-				}
-				VStack(alignment: .leading, spacing: 4) {
-					PreferencesToggle(
-						title: PreferencesIncomingDataStrings.removeFormatting,
-						isOn: model.preferences.binding(for: Preferences.Messages.removeAllFormatting)
-					)
-					PreferencesNote(PreferencesIncomingDataStrings.removeFormattingNote)
-				}
-				VStack(alignment: .leading, spacing: 4) {
-					PreferencesToggle(
-						title: PreferencesIncomingDataStrings.unicodeSpam,
-						isOn: model.preferences.binding(for: Preferences.Messages.filterUnicodeTextSpam)
-					)
-					PreferencesNote(PreferencesIncomingDataStrings.unicodeSpamNote)
-				}
+				PreferencesNote(PreferencesIncomingDataStrings.highlightSpamNote)
 			}
+			VStack(alignment: .leading, spacing: 4) {
+				PreferencesToggle(
+					title: PreferencesIncomingDataStrings.removeFormatting,
+					isOn: model.preferences.binding(for: Preferences.Messages.removeAllFormatting)
+				)
+				PreferencesNote(PreferencesIncomingDataStrings.removeFormattingNote)
+			}
+			VStack(alignment: .leading, spacing: 4) {
+				PreferencesToggle(
+					title: PreferencesIncomingDataStrings.unicodeSpam,
+					isOn: model.preferences.binding(for: Preferences.Messages.filterUnicodeTextSpam)
+				)
+				PreferencesNote(PreferencesIncomingDataStrings.unicodeSpamNote)
+			}
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.incomingData))
 		}
 	}
 }
@@ -243,36 +255,45 @@ struct PreferencesIncomingDataPane: View {
 struct PreferencesFloodControlPane: View {
 	let model: PreferencesPaneModel
 
+	var body: some View {
+		PreferencesPaneLayout {
+			PreferencesFloodControlSections(model: model)
+		}
+	}
+}
+
+/// The pane as one form section, for the Advanced group that gathers it with
+/// its neighbours.
+struct PreferencesFloodControlSections: View {
 	/* The nib's sliders only stopped on tick marks; the step keeps that. */
 	private static let delayStep = 0.5
 	private static let channelSizeStep = 40.0
 	private static let channelSizeMaximum = 2000.0
 
-	var body: some View {
-		PreferencesPaneLayout {
-			Section {
-				delaySlider(
-					label: PreferencesFloodControlStrings.joinDelayLabel,
-					note: PreferencesFloodControlStrings.joinDelayNote,
-					value: model.preferences.sliderBinding(
-						for: Preferences.Connection.autojoinDelayBetweenChannelJoins
-					),
-					range: 0.5 ... 10.0
-				)
-				delaySlider(
-					label: PreferencesFloodControlStrings.identifyDelayLabel,
-					note: PreferencesFloodControlStrings.identifyDelayNote,
-					value: model.preferences.sliderBinding(
-						for: Preferences.Connection.autojoinDelayAfterIdentification
-					),
-					range: 0.0 ... 10.0
-				)
-				PreferencesNote(PreferencesFloodControlStrings.note)
-			}
+	let model: PreferencesPaneModel
 
-			Section {
-				channelSizeSlider
-			}
+	var body: some View {
+		Section {
+			delaySlider(
+				label: PreferencesFloodControlStrings.joinDelayLabel,
+				note: PreferencesFloodControlStrings.joinDelayNote,
+				value: model.preferences.sliderBinding(
+					for: Preferences.Connection.autojoinDelayBetweenChannelJoins
+				),
+				range: 0.5 ... 10.0
+			)
+			delaySlider(
+				label: PreferencesFloodControlStrings.identifyDelayLabel,
+				note: PreferencesFloodControlStrings.identifyDelayNote,
+				value: model.preferences.sliderBinding(
+					for: Preferences.Connection.autojoinDelayAfterIdentification
+				),
+				range: 0.0 ... 10.0
+			)
+			PreferencesNote(PreferencesFloodControlStrings.note)
+			channelSizeSlider
+		} header: {
+			Text(verbatim: PreferencesStrings.paneTitle(.floodControl))
 		}
 	}
 

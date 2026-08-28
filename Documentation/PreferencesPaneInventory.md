@@ -9,8 +9,35 @@ Bindings written `-2.…` in the nib went through a `@objc dynamic` shim on
 `PreferencesController`; the shim's underlying key is listed.
 
 The 19 panes come from `PreferencesPaneCatalog.panes`. Add-on panes contributed
-by plugins are appended to the Add-ons group at runtime and carry no controls of
-their own.
+by plugins are appended to the Add-ons section at runtime and carry no controls
+of their own.
+
+## Toolbar sections and sub-pages
+
+The window has one toolbar item per section. A section with several sub-pages
+shows a picker above the form — segmented while its labels fit across the fixed
+window width, a pop-up otherwise.
+
+| Toolbar section | Symbol | Sub-page | Panes it draws |
+| --- | --- | --- | --- |
+| General | `gearshape` | — | General |
+| Behavior | `slider.horizontal.3` | — | Behavior |
+| Notifications | `bell` | — | Notifications |
+| Highlights | `text.magnifyingglass` | — | Highlights |
+| Interface | `macwindow` | — | Interface |
+| Style | `paintbrush` | — | Style |
+| Controls | `keyboard` | — | Controls |
+| Add-ons | `puzzlepiece.extension` | Installed Add-ons | Installed Add-ons |
+| Add-ons | | one per plugin | that plugin's own AppKit view |
+| Advanced | `gearshape.2` | Connection | Compatibility, Flood Control, Incoming Data |
+| Advanced | | Channels | Channel Management, Command Scope |
+| Advanced | | Identity | Default Identity, Default IRCop Messages |
+| Advanced | | Media | File Transfers, Inline Media |
+| Advanced | | System | Log Location, Hidden |
+
+The Add-ons picker is a pop-up rather than a segmented row: plugin titles are
+supplied by the plugins, and the five installed ones already need more width
+than the window has.
 
 ## General (`general`)
 

@@ -35,10 +35,6 @@ nonisolated enum PreferencesStrings {
 		String(localized: .TDCPreferencesController.titleOfTheAdvanced)
 	}
 
-	static var backButtonTitle: String {
-		String(localized: .TDCPreferencesController.labelForTheSettingsBack)
-	}
-
 	static var createStyleCopyButtonTitle: String {
 		String(localized: .TDCPreferencesController.createCopy)
 	}
@@ -49,10 +45,6 @@ nonisolated enum PreferencesStrings {
 
 	static var editStyleButtonTitle: String {
 		String(localized: .TDCPreferencesController.editStyle)
-	}
-
-	static var forwardButtonTitle: String {
-		String(localized: .TDCPreferencesController.labelForTheSettingsForward)
 	}
 
 	static var noDownloadDestination: String {
@@ -115,10 +107,6 @@ nonisolated enum PreferencesStrings {
 	static func preferredSelectionBody(styleName: String, overrides: [PreferencesThemeOverride]) -> String {
 		let overrideList = overrides.map(overrideTitle).joined(separator: "\n")
 		return String(localized: .TDCPreferencesController.styleNamedHasChosenToOverride(styleName, overrideList))
-	}
-
-	static func version(marketingVersion: String, build: String) -> String {
-		String(localized: .TDCPreferencesController.settingsSidebarFooterArgumentsVersion(marketingVersion, build))
 	}
 
 	private static func overrideTitle(_ override: PreferencesThemeOverride) -> String {

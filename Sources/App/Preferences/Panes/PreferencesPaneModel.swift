@@ -61,27 +61,30 @@ final class PreferencesPaneModel {
 	/// disabled until it finishes.
 	var isReloadingTheme = false
 
-	/// The sidebar, in the order the catalogue declares it, with the add-on
-	/// panes plugins contribute already folded in.
-	var entries: [PreferencesSidebarEntry] = []
+	/// The toolbar's sections, with the panes each one shows.
+	var sections: [PreferencesSection] = []
 
-	var versionFooter = ""
+	/// Which toolbar item is selected. The shell writes it; the view reads it.
+	var selectedSection: PreferencesSectionIdentifier = .general
 
-	/** Which pane the detail column shows.
+	/** Which pane of the selected section is shown.
 
-	 The list writes it, and the shell answers by retitling the window,
-	 remembering the choice and recording it for the back and forward buttons —
-	 which is why the reaction is a callback rather than something the view
-	 does. */
-	var selectedPaneIdentifier: String? {
+	 A section with one pane sets it along with the section; a section with
+	 several has a segmented picker bound to it. The shell answers a change by
+	 remembering the choice and resizing the window to the new pane. */
+	var selectedPane: String = PreferencesPaneIdentifier.general.rawValue {
 		didSet {
-			guard let selectedPaneIdentifier, selectedPaneIdentifier != oldValue else { return }
-			onSelectionChange?(selectedPaneIdentifier)
+			guard selectedPane != oldValue else { return }
+			onPaneChange?(selectedPane)
 		}
 	}
 
 	@ObservationIgnored
-	var onSelectionChange: ((String) -> Void)?
+	var onPaneChange: ((String) -> Void)?
+
+	var currentSection: PreferencesSection? {
+		sections.first { $0.identifier == selectedSection }
+	}
 
 	var themes: [PreferencesThemeChoice] = []
 	var selectedTheme: PreferencesThemeChoice?
