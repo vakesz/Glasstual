@@ -156,27 +156,17 @@ public final class OnboardingNetworkStepViewController: OnboardingStepViewContro
 
 	// MARK: - Commit
 
-	@objc(commitWithError:)
-	override public func commit(errorDescription: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+	override public func commit() throws {
 		if picker.hasSelection == false {
 			/* Nothing picked means no network; the flow still finishes. */
 			settings.clientConfig = nil
 			settings.channelsToJoin = []
-			return true
+			return
 		}
 
-		var pickerError: NSString?
-		if picker.validateWithError(&pickerError) == false {
-			if let errorDescription {
-				errorDescription.pointee = pickerError ?? OnboardingStrings.FirstNetwork.invalidNetwork as NSString
-			}
-
-			return false
-		}
+		try picker.validate()
 
 		settings.clientConfig = picker.clientConfig()
 		channelCheckChanged(nil)
-
-		return true
 	}
 }

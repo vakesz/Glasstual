@@ -376,7 +376,7 @@ extension MenuActionCoordinator {
 			return false
 		}
 
-		let members = selectedMembers(for: item, returnNicknames: false) as? [ChannelUser] ?? []
+		let members = selectedMembers(for: item)
 		guard members.count == 1, let hostmask = members.first?.user.hostmask, let client else {
 			modify?.isHidden = true
 			remove?.isHidden = true
@@ -410,7 +410,7 @@ extension MenuActionCoordinator {
 
 		hide(.allModesGivenSeparator, false)
 		hide(.allModesTakenSeparator, false)
-		let members = selectedMembers(for: item, returnNicknames: false) as? [ChannelUser] ?? []
+		let members = selectedMembers(for: item)
 
 		guard members.count == 1, let user = members.first else {
 			for command in [

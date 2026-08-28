@@ -73,14 +73,6 @@ public extension MenuActionCoordinator {
 		}
 	}
 
-	private var world: IRCWorld {
-		AppController.shared.world
-	}
-
-	private var windowController: WindowController {
-		SharedApplication.sharedWindowController()
-	}
-
 	private func connect(bypassingProxy: Bool) {
 		guard let client = selectedClient,
 		      MenuServerActionPolicy.canConnect(
@@ -116,15 +108,11 @@ public extension MenuActionCoordinator {
 
 	private func addServer() {
 		windowController.popMainWindowSheetIfExists()
-		let sheet = ServerPropertiesSheet(client: nil)
-		sheet.delegate = menuController
-		sheet.window = mainWindow
-		sheet.start(withSelection: 0, context: nil)
-		windowController.addWindow(toWindowList: sheet)
+		present(ServerPropertiesSheet(client: nil)) { $0.start(withSelection: 0, context: nil) }
 	}
 
 	private func duplicateServer() {
-		guard let client = selectedClient else { return }
+		guard let client = selectedClient, let world else { return }
 
 		var config = client.config.uniqueCopy()
 		config.connectionName += "_"
@@ -137,10 +125,10 @@ public extension MenuActionCoordinator {
 
 	private func deleteServer() {
 		guard let client = selectedClient,
+		      let world,
 		      client.isConnecting == false,
 		      client.isConnected == false
 		else { return }
-		let world = world
 		let completion: TDCAlertCompletionBlock = { outcome in
 			guard outcome.response == .default,
 			      client.isConnecting == false,
@@ -172,28 +160,23 @@ public extension MenuActionCoordinator {
 			guard client.isLoggedIn, channel.isActive else { return }
 			client.part(channel)
 		} else {
-			world.destroy(channel)
+			world?.destroy(channel)
 		}
 	}
 
 	private func addChannel() {
 		windowController.popMainWindowSheetIfExists()
 		guard let client = selectedClient else { return }
-		let sheet = ChannelPropertiesSheet(client: client)
-		sheet.delegate = menuController
-		sheet.window = mainWindow
-		sheet.start()
-		windowController.addWindow(toWindowList: sheet)
+		present(ChannelPropertiesSheet(client: client)) { $0.start() }
 	}
 
 	private func deleteChannel() {
-		guard let channel = selectedChannel else { return }
+		guard let channel = selectedChannel, let world else { return }
 		if channel.isChannel == false {
 			world.destroy(channel)
 			world.save()
 			return
 		}
-		let world = world
 		let completion: TDCAlertCompletionBlock = { outcome in
 			guard outcome.response == .default else { return }
 			world.destroy(channel)

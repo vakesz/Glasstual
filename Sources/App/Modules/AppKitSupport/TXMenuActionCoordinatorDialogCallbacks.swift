@@ -42,7 +42,7 @@ import AppKit
 public extension MenuActionCoordinator {
 	func channelPropertiesDidAccept(_ sender: ChannelPropertiesSheet, config: ChannelConfig) {
 		guard let client = sender.client else { return }
-		let world = AppController.shared.world!
+		guard let world else { return }
 		guard let channel = sender.channel else {
 			_ = world.createChannel(with: config, on: client)
 			mainWindow.expandClient(client)
@@ -61,7 +61,7 @@ public extension MenuActionCoordinator {
 	}
 
 	func serverPropertiesDidAccept(_ sender: ServerPropertiesSheet, config: IRCClientConfig) {
-		let world = AppController.shared.world!
+		guard let world else { return }
 		guard let client = sender.client else {
 			let client = world.createClient(with: config, reload: true)
 			mainWindow.expandClient(client)

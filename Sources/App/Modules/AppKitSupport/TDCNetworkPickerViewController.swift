@@ -427,37 +427,24 @@ public final class NetworkPickerViewController: NSViewController, NSTableViewDat
 		selectedNetwork?.suggestedChannels ?? []
 	}
 
-	@objc(validateWithError:)
-	public func validateWithError(_ errorDescription: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+	/// Throws the message describing what is wrong with the current selection.
+	/// This used to report through a `Bool` and an `NSString` out-parameter.
+	public func validate() throws {
 		if hasSelection == false {
-			if let errorDescription {
-				errorDescription.pointee = OnboardingStrings.NetworkPicker.missingServer as NSString
-			}
-
-			return false
+			throw OnboardingStepError(OnboardingStrings.NetworkPicker.missingServer)
 		}
 
 		if (serverAddress as NSString).isValidInternetAddress == false {
-			if let errorDescription {
-				errorDescription.pointee = CommonValidationStrings.invalidServerAddress as NSString
-			}
-
-			return false
+			throw OnboardingStepError(CommonValidationStrings.invalidServerAddress)
 		}
 
 		if serverPort == 0 {
-			if let errorDescription {
-				errorDescription.pointee = OnboardingStrings.NetworkPicker.invalidPort as NSString
-			}
-
-			return false
+			throw OnboardingStepError(OnboardingStrings.NetworkPicker.invalidPort)
 		}
-
-		return true
 	}
 
 	public func clientConfig() -> ClientConfig? {
-		if validateWithError(nil) == false {
+		guard (try? validate()) != nil else {
 			return nil
 		}
 

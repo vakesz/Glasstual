@@ -294,12 +294,15 @@ public final class OnboardingWindowController: NSWindowController, NSWindowDeleg
 		/* Commit any field still being edited. */
 		window?.makeFirstResponder(nil)
 
-		var errorDescription: NSString?
-		if currentStep.commit(errorDescription: &errorDescription) == false {
-			if let errorDescription, errorDescription.length > 0, let window {
+		do {
+			try currentStep.commit()
+		} catch {
+			let message = (error as? OnboardingStepError)?.message ?? error.localizedDescription
+
+			if message.isEmpty == false, let window {
 				TDCAlert.alertSheet(
 					with: window,
-					body: errorDescription as String,
+					body: message,
 					title: currentStep.stepTitle,
 					defaultButton: PromptStrings.Action.confirmation,
 					alternateButton: nil,

@@ -141,8 +141,7 @@ public final class OnboardingNotificationsStepViewController: OnboardingStepView
 		settings.playSounds = soundsCheck.state == .on
 	}
 
-	@objc(commitWithError:)
-	override public func commit(errorDescription _: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+	override public func commit() throws {
 		checkboxChanged(highlightCheck)
 
 		/* The system prompt appears once; later calls return the stored answer. */
@@ -155,7 +154,5 @@ public final class OnboardingNotificationsStepViewController: OnboardingStepView
 				)
 			}
 		}
-
-		return true
 	}
 }
