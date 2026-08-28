@@ -16,7 +16,7 @@ import InlineContentKit
 import os
 import UniformTypeIdentifiers
 
-private let inlineMediaLogger = Logger(
+private nonisolated let inlineMediaLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "InlineMediaService"
 )
@@ -26,7 +26,9 @@ private let inlineMediaLogger = Logger(
  Everything it touches on the way in hops to the main actor below. Owned by the
  XPC-service task. */
 @objc(TVCLogControllerInlineMediaService)
-public final class LogControllerInlineMediaService: NSObject, InlineContentClientProtocol, @unchecked Sendable {
+public final nonisolated class LogControllerInlineMediaService: NSObject, InlineContentClientProtocol,
+	@unchecked Sendable
+{
 	private var serviceConnection: NSXPCConnection?
 
 	@objc(sharedInstance)
@@ -126,6 +128,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 	}
 
 	@objc(processAddress:withUniqueIdentifier:atLineNumber:index:forItem:)
+	@MainActor
 	public func processAddress(
 		_ address: String,
 		withUniqueIdentifier uniqueIdentifier: String,
@@ -154,6 +157,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 	}
 
 	@objc(processURL:withUniqueIdentifier:atLineNumber:index:forItem:)
+	@MainActor
 	public func processURL(
 		_ url: URL,
 		withUniqueIdentifier uniqueIdentifier: String,

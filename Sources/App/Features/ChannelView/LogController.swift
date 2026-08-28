@@ -250,14 +250,14 @@ public final class LogController: NSObject {
 		guard let associatedItem else {
 			return
 		}
-		LogControllerHistoricLogFile.shared().forgetItem(associatedItem)
+		LogControllerHistoricLogFile.shared().forgetView(associatedItem.uniqueIdentifier)
 	}
 
 	private func historicLogResetChannel() {
 		guard let associatedItem else {
 			return
 		}
-		LogControllerHistoricLogFile.shared().resetData(for: associatedItem)
+		LogControllerHistoricLogFile.shared().resetData(forView: associatedItem.uniqueIdentifier)
 	}
 
 	private func closeHistoricLog() {
@@ -526,7 +526,7 @@ public final class LogController: NSObject {
 			}
 			let renderer = ThemeLogLineRenderer(viewController: self)
 			LogControllerHistoricLogFile.shared().fetchEntries(
-				for: associatedItem,
+				forView: associatedItem.uniqueIdentifier,
 				ascending: false,
 				fetchLimit: 100,
 				limitToDate: limitDate
@@ -825,7 +825,7 @@ public extension LogController {
 			}
 			if after {
 				historicLog.fetchEntries(
-					for: associatedItem,
+					forView: associatedItem.uniqueIdentifier,
 					afterUniqueIdentifier: lineNumber,
 					fetchLimit: maximumNumberOfLines,
 					limitToDate: nil,
@@ -833,7 +833,7 @@ public extension LogController {
 				)
 			} else {
 				historicLog.fetchEntries(
-					for: associatedItem,
+					forView: associatedItem.uniqueIdentifier,
 					beforeUniqueIdentifier: lineNumber,
 					fetchLimit: maximumNumberOfLines,
 					limitToDate: nil
@@ -871,7 +871,7 @@ public extension LogController {
 			}
 			let renderer = ThemeLogLineRenderer(viewController: self)
 			LogControllerHistoricLogFile.shared().fetchEntries(
-				for: associatedItem,
+				forView: associatedItem.uniqueIdentifier,
 				afterUniqueIdentifier: lineNumberAfter,
 				beforeUniqueIdentifier: lineNumberBefore,
 				fetchLimit: maximumNumberOfLines
@@ -904,7 +904,7 @@ public extension LogController {
 			}
 			let renderer = ThemeLogLineRenderer(viewController: self)
 			LogControllerHistoricLogFile.shared().fetchEntries(
-				for: associatedItem,
+				forView: associatedItem.uniqueIdentifier,
 				withUniqueIdentifier: lineNumber,
 				beforeFetchLimit: numberOfLinesBefore,
 				afterFetchLimit: numberOfLinesAfter,
@@ -983,7 +983,7 @@ public extension LogController {
 			return
 		}
 		for logLine in logLines {
-			LogControllerHistoricLogFile.shared().indexLogLine(logLine, for: associatedItem)
+			LogControllerHistoricLogFile.shared().indexLogLine(logLine, forView: associatedItem.uniqueIdentifier)
 		}
 		noteOldestLineCandidate(logLines.first)
 		let context = makeRenderContext()
@@ -1074,7 +1074,7 @@ public extension LogController {
 		if result.processesInlineMedia {
 			processInlineMedia(result.links, atLineNumber: lineNumber)
 		}
-		LogControllerHistoricLogFile.shared().writeNewEntry(with: logLine, for: associatedItem)
+		LogControllerHistoricLogFile.shared().writeNewEntry(with: logLine, forView: associatedItem.uniqueIdentifier)
 		for user in result.users {
 			if logLine.memberType == .localUser {
 				user.outgoingConversation()

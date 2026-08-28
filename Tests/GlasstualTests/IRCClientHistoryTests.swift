@@ -51,7 +51,7 @@ final class IRCClientHistoryTests: XCTestCase {
 
 	override func tearDown() async throws {
 		for item in indexedItems {
-			LogControllerHistoricLogFile.shared().forgetItem(item)
+			LogControllerHistoricLogFile.shared().forgetView(item.uniqueIdentifier)
 		}
 		indexedItems = []
 
@@ -498,7 +498,7 @@ final class IRCClientHistoryTests: XCTestCase {
 
 	private func index(_ line: LogLine, for channel: Channel) {
 		indexedItems.append(channel)
-		LogControllerHistoricLogFile.shared().indexLogLine(line, for: channel)
+		LogControllerHistoricLogFile.shared().indexLogLine(line, forView: channel.uniqueIdentifier)
 	}
 
 	private func feed(_ lines: [String], to client: GLTTestClient) {
