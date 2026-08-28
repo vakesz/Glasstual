@@ -41,8 +41,9 @@ import os
 
 enum IRCInboundEventPolicy {
 	static func cancelsReconnect(forError message: String) -> Bool {
-		guard message.hasPrefix("Closing Link:") else { return false }
-		return message.hasSuffix("(Excess Flood)") || message.hasSuffix("(Max SendQ exceeded)")
+		guard message.hasPrefix(IRCServerQuirks.LinkClosed.prefix) else { return false }
+		return message.hasSuffix(IRCServerQuirks.LinkClosed.excessFlood)
+			|| message.hasSuffix(IRCServerQuirks.LinkClosed.sendQueueExceeded)
 	}
 
 	static func acceptsCertificateChunk(_ data: String) -> Bool {

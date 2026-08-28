@@ -340,7 +340,9 @@ public extension IRCClient {
 			print(text, by: sender, in: query, as: lineType, command: message.command,
 			      receivedAt: message.receivedAt, isEncrypted: false, referenceMessage: message)
 		}
-		if sender.hasSuffix(".proxy"), text == "Connected to server" {
+		if sender.hasSuffix(IRCServerQuirks.Proxy.nicknameSuffix),
+		   text == IRCServerQuirks.Proxy.connectedMessage
+		{
 			addDisconnectCallback { [weak self] in
 				self?.printDebugInformation(toConsole: IRCConnectionStrings.reconnectingToProxy)
 				self?.connect(.reconnect)

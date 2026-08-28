@@ -72,4 +72,28 @@ nonisolated enum IRCServerQuirks {
 	/// The IRCv3 `chathistory` batch, which is not vendor-specific but is
 	/// matched by name in the same places the ZNC batches are.
 	static let chatHistoryBatchType = "chathistory"
+
+	/// Twitch speaks a dialect of IRC that omits much of what the client
+	/// expects, and the only way to know is the address.
+	static let twitchAddressSuffix = ".twitch.tv"
+
+	/// A bouncer or proxy announcing that the far side came up. The sender name
+	/// and the text are both conventions, not protocol, and the text is
+	/// English.
+	enum Proxy {
+		static let nicknameSuffix = ".proxy"
+		static let connectedMessage = "Connected to server"
+	}
+
+	/// The server-side reasons for an ERROR that means "do not reconnect".
+	/// These are English strings that servers happen to agree on.
+	enum LinkClosed {
+		static let prefix = "Closing Link:"
+		static let excessFlood = "(Excess Flood)"
+		static let sendQueueExceeded = "(Max SendQ exceeded)"
+	}
+
+	/// The WHOX token the client tags its own WHO requests with, so it can
+	/// recognise the replies to them.
+	static let whoxResponseToken = "152"
 }

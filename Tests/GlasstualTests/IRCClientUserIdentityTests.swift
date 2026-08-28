@@ -277,7 +277,7 @@ final class IRCClientUserIdentityTests: XCTestCase {
 		client.setValue(false, forKey: "isLoggedIn")
 		client.connectType = .reconnect
 		client.enableCapability(.preAway)
-		client.sendNextCapability()
+		client.sendNextQueuedCapability()
 
 		XCTAssertEqual(sentLines(of: client), ["AWAY :brb"])
 		XCTAssertEqual(capabilityCommands(of: client), ["END"])
@@ -290,7 +290,7 @@ final class IRCClientUserIdentityTests: XCTestCase {
 		client.sentLines.removeAllObjects()
 		client.setValue(false, forKey: "isLoggedIn")
 		client.connectType = .reconnect
-		client.sendNextCapability()
+		client.sendNextQueuedCapability()
 
 		XCTAssertEqual(client.sentLines.count, 0)
 		XCTAssertEqual(capabilityCommands(of: client), ["END"])
