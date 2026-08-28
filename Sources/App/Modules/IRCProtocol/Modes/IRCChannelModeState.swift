@@ -63,7 +63,6 @@ public final class ChannelModeState: NSObject {
 		super.init()
 	}
 
-	@objc(updateModes:)
 	public func updateModes(_ modeString: String) -> [ModeInfo] {
 		guard let client else {
 			return []
@@ -99,7 +98,7 @@ public final class ChannelModeState: NSObject {
 				continue
 			}
 
-			if let modeOld = modesSetOld[modeSymbol], mode.isEqual(modeOld) {
+			if let modeOld = modesSetOld[modeSymbol], mode == modeOld {
 				continue
 			}
 
@@ -141,7 +140,6 @@ public final class ChannelModeState: NSObject {
 		modes.modeIsDefined(modeSymbol)
 	}
 
-	@objc(modeInfoFor:)
 	public func modeInfo(for modeSymbol: String) -> ModeInfo? {
 		modes.modeInfo(for: modeSymbol)
 	}
@@ -206,7 +204,7 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 		modeObjectsLock.unlock()
 	}
 
-	@objc public var modes: [String: ModeInfo] {
+	public var modes: [String: ModeInfo] {
 		modeObjectsLock.lock()
 		let modes = modeObjects
 		modeObjectsLock.unlock()
@@ -243,7 +241,6 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 
 	/** A pure lookup. Materialising a placeholder here made `changeCommand(for:)`
 	 emit `-mode` for modes the channel never had. */
-	@objc(modeInfoFor:)
 	public func modeInfo(for modeSymbol: String) -> ModeInfo? {
 		modeObjectsLock.lock()
 		defer { modeObjectsLock.unlock() }
@@ -251,7 +248,6 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 		return modeObjects[modeSymbol]
 	}
 
-	@objc(applyModes:)
 	public func apply(_ modes: [ModeInfo]) {
 		for mode in modes {
 			changeMode(mode.modeSymbol, modeIsSet: mode.modeIsSet, modeParameter: mode.modeParameter)
