@@ -53,7 +53,9 @@ owner.
 ## Move log
 
 Every path below moved with `git mv`, so `git log --follow` still works. No file
-contents changed.
+contents changed. Files that were already in their feature directory
+(`Features/About`, `Features/MainWindow` and the other feature-named string
+files) are not listed because they did not move.
 
 | Old path | New path |
 | --- | --- |
@@ -74,12 +76,7 @@ contents changed.
 | `Sources/App/Modules/ApplicationSupport/TXSharedApplication.swift` | `Sources/App/Application/SharedApplication.swift` |
 | `Sources/App/Modules/AppKitSupport/TXWindowController.swift` | `Sources/App/Application/WindowController.swift` |
 | `Sources/App/Modules/ApplicationSupport/main.swift` | `Sources/App/Application/main.swift` |
-| `Sources/App/Features/About/AboutContent.swift` | `Sources/App/Features/About/AboutContent.swift` |
-| `Sources/App/Features/About/AboutDialog.swift` | `Sources/App/Features/About/AboutDialog.swift` |
-| `Sources/App/Features/About/AboutStrings.swift` | `Sources/App/Features/About/AboutStrings.swift` |
-| `Sources/App/Features/About/AboutView.swift` | `Sources/App/Features/About/AboutView.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCAddressBookSheet.swift` | `Sources/App/Features/AddressBook/AddressBookSheet.swift` |
-| `Sources/App/Features/AddressBook/AddressBookStrings.swift` | `Sources/App/Features/AddressBook/AddressBookStrings.swift` |
 | `Sources/App/Features/ChannelAccessList/ChannelAccessListStrings.swift` | `Sources/App/Features/ChannelProperties/ChannelAccessListStrings.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCChannelBanListSheet.swift` | `Sources/App/Features/ChannelProperties/ChannelBanListSheet.swift` |
 | `Sources/App/Features/ChannelInvite/ChannelInviteContent.swift` | `Sources/App/Features/ChannelProperties/ChannelInviteContent.swift` |
@@ -87,7 +84,6 @@ contents changed.
 | `Sources/App/Features/ChannelInvite/ChannelInviteStrings.swift` | `Sources/App/Features/ChannelProperties/ChannelInviteStrings.swift` |
 | `Sources/App/Features/ChannelInvite/ChannelInviteView.swift` | `Sources/App/Features/ChannelProperties/ChannelInviteView.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCChannelPropertiesSheet.swift` | `Sources/App/Features/ChannelProperties/ChannelPropertiesSheet.swift` |
-| `Sources/App/Features/ChannelProperties/ChannelPropertiesStrings.swift` | `Sources/App/Features/ChannelProperties/ChannelPropertiesStrings.swift` |
 | `Sources/App/Features/ChannelValidation/ChannelValidationPolicy.swift` | `Sources/App/Features/ChannelProperties/ChannelValidationPolicy.swift` |
 | `Sources/App/Features/ChannelValidation/ChannelValidationStrings.swift` | `Sources/App/Features/ChannelProperties/ChannelValidationStrings.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCNotificationConfigurationViewController.swift` | `Sources/App/Features/ChannelProperties/NotificationConfigurationViewController.swift` |
@@ -96,7 +92,6 @@ contents changed.
 | `Sources/App/Modules/AppKitSupport/TDCChannelSpotlightControls.swift` | `Sources/App/Features/ChannelSpotlight/ChannelSpotlightControls.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCChannelSpotlightSearchResult.swift` | `Sources/App/Features/ChannelSpotlight/ChannelSpotlightSearchResult.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCChannelSpotlightSearchResultsTable.swift` | `Sources/App/Features/ChannelSpotlight/ChannelSpotlightSearchResultsTable.swift` |
-| `Sources/App/Features/ChannelSpotlight/ChannelSpotlightStrings.swift` | `Sources/App/Features/ChannelSpotlight/ChannelSpotlightStrings.swift` |
 | `Sources/App/Features/ChannelModes/ChannelMode.swift` | `Sources/App/Features/ChannelView/ChannelMode.swift` |
 | `Sources/App/Features/ChannelModes/ChannelModesContent.swift` | `Sources/App/Features/ChannelView/ChannelModesContent.swift` |
 | `Sources/App/Features/ChannelModes/ChannelModesModel.swift` | `Sources/App/Features/ChannelView/ChannelModesModel.swift` |
@@ -141,7 +136,6 @@ contents changed.
 | `Sources/App/Classes/Dialogs/File Transfers/TDCFileTransferDialog.swift` | `Sources/App/Features/FileTransfer/FileTransferDialog.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/TDCFileTransferDialogSocket.swift` | `Sources/App/Features/FileTransfer/FileTransferDialogSocket.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCFileTransferDialogTableCell.swift` | `Sources/App/Features/FileTransfer/FileTransferDialogTableCell.swift` |
-| `Sources/App/Features/FileTransfer/FileTransferStrings.swift` | `Sources/App/Features/FileTransfer/FileTransferStrings.swift` |
 | `Sources/App/Modules/Networking/TLOInternetAddressLookup.swift` | `Sources/App/Features/FileTransfer/InternetAddressLookup.swift` |
 | `Sources/App/Classes/Dialogs/File Transfers/TDCFileTransferDialogTransferController.swift` | `Sources/App/Features/FileTransfer/TDCFileTransferDialogTransferController.swift` |
 | `Sources/App/Modules/InputHandling/TLOInputHistory.swift` | `Sources/App/Features/MainWindow/InputHistory.swift` |
@@ -152,8 +146,6 @@ contents changed.
 | `Sources/App/Classes/Views/Main Window/TVCMainWindowContent.swift` | `Sources/App/Features/MainWindow/MainWindowContent.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCMainWindowInputAccessoryView.swift` | `Sources/App/Features/MainWindow/MainWindowInputAccessoryView.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCMainWindowLoadingScreen.swift` | `Sources/App/Features/MainWindow/MainWindowLoadingScreen.swift` |
-| `Sources/App/Features/MainWindow/MainWindowStateStore.swift` | `Sources/App/Features/MainWindow/MainWindowStateStore.swift` |
-| `Sources/App/Features/MainWindow/MainWindowStrings.swift` | `Sources/App/Features/MainWindow/MainWindowStrings.swift` |
 | `Sources/App/Classes/Views/Main Window/TVCMainWindowTextView.swift` | `Sources/App/Features/MainWindow/MainWindowTextView.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCMainWindowTextViewAppearance.swift` | `Sources/App/Features/MainWindow/MainWindowTextViewAppearance.swift` |
 | `Sources/App/Classes/Views/Main Window/TVCMainWindowWorldSeams.swift` | `Sources/App/Features/MainWindow/MainWindowWorldSeams.swift` |
@@ -204,7 +196,6 @@ contents changed.
 | `Sources/App/Modules/AppKitSupport/TDCOnboardingNetworkStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingNetworkStepViewController.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCOnboardingNotificationsStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingNotificationsStepViewController.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCOnboardingStepViewController.swift` | `Sources/App/Features/Onboarding/OnboardingStepViewController.swift` |
-| `Sources/App/Features/Onboarding/OnboardingStrings.swift` | `Sources/App/Features/Onboarding/OnboardingStrings.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCOnboardingStylePreviewView.swift` | `Sources/App/Features/Onboarding/OnboardingStylePreviewView.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCOnboardingWindowController.swift` | `Sources/App/Features/Onboarding/OnboardingWindowController.swift` |
 | `Sources/App/Modules/AppKitSupport/THOPluginDispatcher.swift` | `Sources/App/Features/Plugins/PluginDispatcher.swift` |
@@ -220,7 +211,6 @@ contents changed.
 | `Sources/App/Features/ProgressIndicator/ProgressIndicatorView.swift` | `Sources/App/Features/Progress/ProgressIndicatorView.swift` |
 | `Sources/App/Modules/AppKitSupport/IRCClientDialogPresentation.swift` | `Sources/App/Features/ServerChannelList/IRCClientDialogPresentation.swift` |
 | `Sources/App/Modules/AppKitSupport/TDCServerChannelListDialog.swift` | `Sources/App/Features/ServerChannelList/ServerChannelListDialog.swift` |
-| `Sources/App/Features/ServerChannelList/ServerChannelListStrings.swift` | `Sources/App/Features/ServerChannelList/ServerChannelListStrings.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCChannelSelectionOutlineCellView.swift` | `Sources/App/Features/ServerList/ChannelSelectionOutlineCellView.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCChannelSelectionViewController.swift` | `Sources/App/Features/ServerList/ChannelSelectionViewController.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCContentNavigationOutlineView.swift` | `Sources/App/Features/ServerList/ContentNavigationOutlineView.swift` |
@@ -249,8 +239,6 @@ contents changed.
 | `Sources/App/Classes/Dialogs/TDCServerPropertiesSheetIdentity.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesSheetIdentity.swift` |
 | `Sources/App/Classes/Dialogs/TDCServerPropertiesSheetProxyAndTLS.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesSheetProxyAndTLS.swift` |
 | `Sources/App/Classes/Dialogs/TDCServerPropertiesSheetValidation.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesSheetValidation.swift` |
-| `Sources/App/Features/ServerProperties/ServerPropertiesStrings.swift` | `Sources/App/Features/ServerProperties/ServerPropertiesStrings.swift` |
-| `Sources/App/Features/Validation/CommonValidationStrings.swift` | `Sources/App/Features/Validation/CommonValidationStrings.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCValidatedComboBox.swift` | `Sources/App/Features/Validation/ValidatedComboBox.swift` |
 | `Sources/App/Modules/AppKitSupport/TVCValidatedTextField.swift` | `Sources/App/Features/Validation/ValidatedTextField.swift` |
 | `Sources/App/Features/Accessibility/AccessibilityStrings.swift` | `Sources/App/Localization/AccessibilityStrings.swift` |
