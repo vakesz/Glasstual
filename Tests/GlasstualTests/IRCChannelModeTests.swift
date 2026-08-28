@@ -95,9 +95,21 @@ final class ChannelModeTests: XCTestCase {
 	func testListAndUserModesAreNotStoredAsChannelState() {
 		let channelMode = channelMode(currentModes: "")
 
+		channelMode.modes.changeMode("b", modeIsSet: true, modeParameter: "*!*@host")
+		channelMode.modes.changeMode("o", modeIsSet: true, modeParameter: "nick")
+		channelMode.modes.changeMode("n", modeIsSet: true)
+
 		XCTAssertNil(channelMode.modeInfo(for: "b"))
 		XCTAssertNil(channelMode.modeInfo(for: "o"))
 		XCTAssertNotNil(channelMode.modeInfo(for: "n"))
+	}
+
+	func testQueryingAModeDoesNotDefineIt() {
+		let channelMode = channelMode(currentModes: "")
+
+		XCTAssertNil(channelMode.modeInfo(for: "n"))
+		XCTAssertFalse(channelMode.modeIsDefined("n"))
+		XCTAssertEqual(channelMode.changeCommand(for: channelMode.modes), "")
 	}
 
 	func testCopiedContainerHasIndependentState() throws {

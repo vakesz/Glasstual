@@ -52,8 +52,11 @@ public final class SendingMessage: NSObject {
 		let colonPosition = CommandIndex.colonPosition(forRemoteCommand: command)
 
 		for (index, argument) in arguments.enumerated() {
+			/* Skip only this argument. Breaking here dropped every argument after an
+			 empty one, so e.g. KILL with an empty reason lost the reason *and* anything
+			 that followed it. */
 			guard argument.isEmpty == false else {
-				break
+				continue
 			}
 
 			line.append(" ")

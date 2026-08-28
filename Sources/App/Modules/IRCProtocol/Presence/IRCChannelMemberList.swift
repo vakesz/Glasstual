@@ -140,12 +140,14 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	private var controller: IRCChannelMemberListController?
 	private var memberContainer: [ChannelUser] = []
 
-	private var client: IRCClient {
-		clientStorage!
+	/* Both are weak: a member list can outlive its owners during teardown, and
+	 force-unwrapping them turned that into a crash. */
+	private var client: IRCClient? {
+		clientStorage
 	}
 
-	private var channel: IRCChannel {
-		channelStorage!
+	private var channel: IRCChannel? {
+		channelStorage
 	}
 
 	@available(*, unavailable)
@@ -201,10 +203,12 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	private func sortedIndex(for member: ChannelUser) -> Int {
 		var lowerBound = 0
 		var upperBound = memberContainer.count
+		/* Read once rather than on every comparison. */
+		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
 
 		while lowerBound < upperBound {
 			let index = lowerBound + (upperBound - lowerBound) / 2
-			let comparison = memberContainer[index].compareRank(to: member)
+			let comparison = memberContainer[index].compareRank(to: member, favoringServerStaff: favorIRCop)
 
 			if comparison == .orderedAscending {
 				lowerBound = index + 1
@@ -253,7 +257,10 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	@objc(addMember:checkForDuplicates:)
 	public func addMember(_ proposedMember: ChannelUser, checkForDuplicates: Bool) {
 		let member = immutableMember(proposedMember)
-		let channel = channel
+
+		guard let channel else {
+			return
+		}
 
 		if checkForDuplicates, let oldMember = member.user.userAssociated(with: channel) {
 			replaceMember(oldMember, with: member)
@@ -273,7 +280,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 
 		performOnMain {
 			self.controller?.insert(member, atArrangedObjectIndex: sortedIndex)
-			self.client.postEvent(toViewController: "channelMemberAdded", for: channel)
+			self.client?.postEvent(toViewController: "channelMemberAdded", for: channel)
 		}
 	}
 
@@ -286,7 +293,10 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 
 	@objc(removeMember:)
 	public func removeMember(_ member: ChannelUser) {
-		let channel = channel
+		guard let channel else {
+			return
+		}
+
 		member.disassociate(with: channel)
 		let sortedIndex = Self.accessMembers { removeStoredMember(member) }
 
@@ -296,7 +306,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 
 		performOnMain {
 			self.controller?.remove(atArrangedObjectIndex: sortedIndex)
-			self.client.postEvent(toViewController: "channelMemberRemoved", for: channel)
+			self.client?.postEvent(toViewController: "channelMemberRemoved", for: channel)
 		}
 	}
 
@@ -315,7 +325,9 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	}
 
 	private func performReplacement(_ oldMember: ChannelUser, with newMember: ChannelUser, resort: Bool) {
-		let channel = channel
+		guard let channel else {
+			return
+		}
 
 		if oldMember !== newMember {
 			oldMember.disassociate(with: channel)
@@ -396,7 +408,8 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	public func changeMember(_ nickname: String, mode: String, value: Bool) {
 		precondition(mode.count == 1)
 
-		guard let member = findMember(nickname),
+		guard let client,
+		      let member = findMember(nickname),
 		      let mutableMember = member.mutableCopy() as? ChannelUserMutable
 		else {
 			return
@@ -451,8 +464,13 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 
 	@objc
 	public func sortMembers() {
+		/* Snapshot the preference so the comparator stays pure for the whole sort. */
+		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
+
 		Self.accessMembers {
-			memberContainer.sort { $0.compareRank(to: $1) == .orderedAscending }
+			memberContainer.sort {
+				$0.compareRank(to: $1, favoringServerStaff: favorIRCop) == .orderedAscending
+			}
 		}
 
 		performOnMain {
@@ -467,7 +485,9 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		Self.accessMembers {
 			willChangeValue(forKey: "numberOfMembers")
 			willChangeValue(forKey: "memberList")
-			memberContainer.forEach { $0.disassociate(with: channel) }
+			if let channel {
+				memberContainer.forEach { $0.disassociate(with: channel) }
+			}
 			memberContainer.removeAll()
 			didChangeValue(forKey: "numberOfMembers")
 			didChangeValue(forKey: "memberList")
@@ -489,7 +509,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 	@objc(pasteboardDataForMembers:)
 	public func pasteboardData(for members: [ChannelUser]) -> Data {
 		let payload: [String: Any] = [
-			"channelId": channel.uniqueIdentifier,
+			"channelId": channel?.uniqueIdentifier ?? "",
 			"nicknames": members.map(\.user.nickname),
 		]
 
@@ -565,7 +585,9 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 
 	@objc(findMember:)
 	public func findMember(_ nickname: String) -> ChannelUser? {
-		guard let legacyUser = client.findUser(nickname),
+		guard let client,
+		      let channel,
+		      let legacyUser = client.findUser(nickname),
 		      let user = (legacyUser as AnyObject) as? User,
 		      let member = user.userAssociated(with: channel)
 		else {
