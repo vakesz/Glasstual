@@ -13,7 +13,7 @@ import XCTest
 final class IRCModelMigrationTests: XCTestCase {
 	func testConnectionInitialStateAndConfigIsolation() {
 		let client = GLTTestClient()
-		let sourceConfig = Glasstual.IRCConnectionConfigMutable()
+		var sourceConfig = Glasstual.IRCConnectionConfig()
 		sourceConfig.serverAddress = "irc.example.test"
 
 		let connection = Connection(config: sourceConfig, onClient: client)
