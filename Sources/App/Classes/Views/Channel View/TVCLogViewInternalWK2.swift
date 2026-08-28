@@ -36,7 +36,6 @@
  *********************************************************************** */
 
 import AppKit
-import ObjectiveC
 import os
 import WebKit
 
@@ -45,34 +44,15 @@ private let logViewWebKitLogger = Logger(
 	category: "LogViewWebKit"
 )
 
-@MainActor
-private enum WebKitStyleResourceAccess {
-	private typealias BooleanSetter = @convention(c) (AnyObject, Selector, Bool) -> Void
-
-	static func allowFileResources(in configuration: WKWebViewConfiguration) {
-		invoke(
-			selector: NSSelectorFromString("_setAllowUniversalAccessFromFileURLs:"),
-			on: configuration
-		)
-		invoke(
-			selector: NSSelectorFromString("_setAllowFileAccessFromFileURLs:"),
-			on: configuration.preferences
-		)
-	}
-
-	private static func invoke(selector: Selector, on object: AnyObject) {
-		guard let method = class_getInstanceMethod(type(of: object), selector) else {
-			preconditionFailure("Required WebKit style-resource selector is unavailable: \(selector)")
-		}
-
-		let setter = unsafeBitCast(method_getImplementation(method), to: BooleanSetter.self)
-		setter(object, selector, true)
-	}
-}
-
 @objc(TVCLogViewInternalWK2)
 @MainActor
 final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
+	/** One configuration, one user content controller, one script sink and one
+	 policy for every channel, on purpose. The sink resolves the sender from
+	 `message.webView`, so it needs no per-view registration, and because no
+	 view owns a handler the usual advice to remove handlers in `deinit` does
+	 not apply here. The cost is one process pool and one website data store
+	 shared by every log view. */
 	@MainActor
 	private enum SharedResources {
 		/** Owned by the sink so a registered name without a handler cannot
@@ -85,11 +65,13 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		static let configuration: WKWebViewConfiguration = {
 			let configuration = WKWebViewConfiguration()
 
-			/* Styles load from file URLs and reference scripts, images, and
-			 their own resources through other file URLs. WebKit treats every
-			 file URL as a separate origin. These private flags remain isolated
-			 here until the theme loader adopts a custom URL scheme handler. */
-			WebKitStyleResourceAccess.allowFileResources(in: configuration)
+			/* The document and every theme resource it references are served
+			 by one scheme handler, so the page has a single origin and no
+			 file-system read access. */
+			configuration.setURLSchemeHandler(
+				LogViewThemeSchemeHandler.shared,
+				forURLScheme: LogViewContentPolicy.themeScheme
+			)
 
 			let contentController = WKUserContentController()
 			for name in messageHandlerNames {
@@ -146,14 +128,10 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		SharedResources.policy
 	}
 
-	override func loadFileURL(_ URL: URL, allowingReadAccessTo readAccessURL: URL) -> WKNavigation? {
+	@discardableResult
+	override func load(_ request: URLRequest) -> WKNavigation? {
 		startObservingLoading()
-		return super.loadFileURL(URL, allowingReadAccessTo: readAccessURL)
-	}
-
-	override func loadHTMLString(_ string: String, baseURL: URL?) -> WKNavigation? {
-		startObservingLoading()
-		return super.loadHTMLString(string, baseURL: baseURL)
+		return super.load(request)
 	}
 
 	override func stopLoading() {
@@ -243,6 +221,23 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 				self?.logJavaScriptError(error)
 			}
 			completionHandler?(result is NSNull ? nil : result)
+		}
+	}
+
+	/** Runs `body` with `arguments` bound by name. WebKit converts the values,
+	 which removes every hand-written escape from the bridge. */
+	func call(_ body: String, arguments: [String: Any]) async throws -> Any? {
+		do {
+			let result = try await callAsyncJavaScript(
+				body,
+				arguments: arguments,
+				in: nil,
+				contentWorld: .page
+			)
+			return result is NSNull ? nil : result
+		} catch {
+			logJavaScriptError(error)
+			throw error
 		}
 	}
 

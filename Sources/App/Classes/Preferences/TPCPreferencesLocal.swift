@@ -685,10 +685,12 @@ public extension TextualPreferences {
 		)
 	}
 
+	/** The rules are interpolated into a `<style>` element in the log view, so
+	 the one sequence that would escape that element is neutralised here. */
 	class func themeUserStyleSheetRules()
 		-> String?
 	{
-		string("Theme -> User Style Sheet Rules")
+		LogViewContentPolicy.sanitizedStyleSheetText(string("Theme -> User Style Sheet Rules"))
 	}
 
 	class func setThemeUserStyleSheetRules(_ value: String?) {

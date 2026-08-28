@@ -47,12 +47,82 @@ private let logViewLogger = Logger(
 )
 
 enum LogViewJavaScript {
-	static func escape(_ string: String) -> String {
-		string
-			.replacingOccurrences(of: "\\", with: "\\\\")
-			.replacingOccurrences(of: "\"", with: "\\\"")
-			.replacingOccurrences(of: "\r", with: "\\r")
-			.replacingOccurrences(of: "\n", with: "\\n")
+	/** Argument names bound by `callAsyncJavaScript`. */
+	static func argumentName(at index: Int) -> String {
+		"a\(index)"
+	}
+
+	/** A dotted path of JavaScript identifiers. Call sites are compile-time
+	 constants, but the body is still a script, so the shape is checked rather
+	 than assumed. */
+	static func isValidFunctionPath(_ function: String) -> Bool {
+		let segments = function.split(separator: ".", omittingEmptySubsequences: false)
+		guard segments.isEmpty == false else {
+			return false
+		}
+		return segments.allSatisfy { segment in
+			guard let first = segment.first else {
+				return false
+			}
+			guard first.isLetter || first == "_" || first == "$" else {
+				return false
+			}
+			return segment.allSatisfy { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "$" }
+		}
+	}
+
+	/** The body `callAsyncJavaScript` runs for a call to `function`. Argument
+	 values never appear in it. */
+	static func functionBody(_ function: String, argumentCount: Int) -> String? {
+		guard isValidFunctionPath(function), argumentCount >= 0 else {
+			return nil
+		}
+		let names = (0 ..< argumentCount).map(argumentName(at:))
+		return "return \(function)(\(names.joined(separator: ",")));"
+	}
+
+	/** Reduces a bridged argument to the types `callAsyncJavaScript` converts.
+	 Anything else becomes `null` rather than being passed through, because an
+	 unsupported value makes the whole call throw. */
+	static func sanitize(_ value: Any) -> Any {
+		switch value {
+		case let url as URL:
+			url.absoluteString
+		case let string as String:
+			string
+		case let number as NSNumber:
+			number
+		case let array as [Any]:
+			array.map(sanitize)
+		case let dictionary as [AnyHashable: Any]:
+			sanitize(dictionary)
+		default:
+			NSNull()
+		}
+	}
+
+	static func sanitize(_ dictionary: [AnyHashable: Any]) -> [String: Any] {
+		var result: [String: Any] = [:]
+		for (key, value) in dictionary {
+			guard let key = key as? String else {
+				logViewLogger
+					.debug(
+						"Ignoring non-string JavaScript dictionary key: \(String(describing: type(of: key)), privacy: .public)"
+					)
+				continue
+			}
+			result[key] = sanitize(value)
+		}
+		return result
+	}
+
+	/** Binds `arguments` to the names `functionBody` generates. */
+	static func namedArguments(_ arguments: [Any]?) -> [String: Any] {
+		var result: [String: Any] = [:]
+		for (index, value) in (arguments ?? []).enumerated() {
+			result[argumentName(at: index)] = sanitize(value)
+		}
+		return result
 	}
 
 	static func describe(_ result: Any) -> String {
@@ -74,45 +144,6 @@ enum LogViewJavaScript {
 			return "undefined"
 		}
 	}
-
-	static func compile(_ value: Any) -> String {
-		if let url = value as? URL {
-			return "\"\(escape(url.absoluteString))\""
-		}
-
-		switch value {
-		case let string as String:
-			return "\"\(escape(string))\""
-		case let number as NSNumber:
-			if CFGetTypeID(number) == CFBooleanGetTypeID() {
-				return number.boolValue ? "true" : "false"
-			}
-			return number.stringValue
-		case let array as [Any]:
-			return "[\(array.map(compile).joined(separator: ","))]"
-		case let dictionary as [AnyHashable: Any]:
-			let entries = dictionary.compactMap { key, value -> String? in
-				guard let key = key as? String else {
-					logViewLogger
-						.debug(
-							"Ignoring non-string JavaScript dictionary key: \(String(describing: type(of: key)), privacy: .public)"
-						)
-					return nil
-				}
-				return "\"\(escape(key))\":\(compile(value))"
-			}
-			return "{\(entries.joined(separator: ", "))}"
-		case is NSNull:
-			return "null"
-		default:
-			return "undefined"
-		}
-	}
-
-	static func functionCall(_ function: String, arguments: [Any]?) -> String {
-		let compiledArguments = arguments?.map(compile).joined(separator: ",") ?? ""
-		return "\(function)(\(compiledArguments));\n"
-	}
 }
 
 @objc(TVCLogView)
@@ -127,6 +158,11 @@ public final class LogView: NSObject {
 
 	private let backingView: LogViewWebView
 
+	/** Fixed for the lifetime of the view, so reloads replace this view's
+	 document instead of adding another one. */
+	private let documentIdentifier = UUID().uuidString
+	private var loadedDocumentURL: URL?
+
 	@available(*, unavailable, message: "Use init(viewController:)")
 	override public init() {
 		fatalError("Use init(viewController:)")
@@ -138,6 +174,15 @@ public final class LogView: NSObject {
 		backingView = LogViewWebView()
 		super.init()
 		backingView.attach(to: self)
+	}
+
+	deinit {
+		guard let loadedDocumentURL else {
+			return
+		}
+		Task { @MainActor in
+			LogViewThemeSchemeHandler.shared.unregisterDocument(at: loadedDocumentURL)
+		}
 	}
 
 	@objc public var hasSelection: Bool {
@@ -249,22 +294,28 @@ public final class LogView: NSObject {
 		SharedApplication.sharedThemeController().recreateTemporaryCopyOfThemeIfNecessary()
 	}
 
+	/** The document is served from memory by `LogViewThemeSchemeHandler` under
+	 a URL inside `baseURL`, so relative references still resolve against the
+	 theme while nothing is written to disk. */
 	@objc public func loadHTMLString(_ string: String, baseURL: URL) {
 		isLayingOutView = true
 		recreateTemporaryCopyOfThemeIfNecessary()
 
-		let filename = "\(UUID().uuidString).html"
-		let fileURL = baseURL.appendingPathComponent(filename)
-		do {
-			try string.write(to: fileURL, atomically: false, encoding: .utf8)
-		} catch {
-			logViewLogger.error("Failed to write temporary file: \(error.localizedDescription, privacy: .public)")
+		let handler = LogViewThemeSchemeHandler.shared
+		handler.removeStaleRenderedDocuments(in: baseURL)
+
+		guard let documentURL = handler.documentURL(forViewIdentifier: documentIdentifier, in: baseURL) else {
+			logViewLogger.error("Failed to derive a document URL inside the theme directory")
 			return
 		}
-		_ = backingView.loadFileURL(
-			fileURL,
-			allowingReadAccessTo: SharedApplication.sharedThemeController().temporaryURL
-		)
+
+		if let loadedDocumentURL, loadedDocumentURL != documentURL {
+			handler.unregisterDocument(at: loadedDocumentURL)
+		}
+		loadedDocumentURL = documentURL
+		handler.registerDocument(string, at: documentURL)
+
+		backingView.load(URLRequest(url: documentURL))
 	}
 
 	@objc public func stopLoading() {
@@ -296,8 +347,15 @@ public final class LogView: NSObject {
 		LogViewJavaScript.describe(result)
 	}
 
-	@objc public static func escapeJavaScriptString(_ string: String) -> String {
-		LogViewJavaScript.escape(string)
+	/** Calls `function` in the page with `arguments` bound by name. WebKit
+	 converts the values, so nothing is escaped into a script by hand. */
+	public func evaluate<T>(_ function: String, arguments: [Any]? = nil) async throws -> T? {
+		guard let body = LogViewJavaScript.functionBody(function, argumentCount: arguments?.count ?? 0) else {
+			logViewLogger.error("Refused an unusable JavaScript function name: \(function, privacy: .public)")
+			return nil
+		}
+		let result = try await backingView.call(body, arguments: LogViewJavaScript.namedArguments(arguments))
+		return result as? T
 	}
 
 	@objc public func evaluateFunction(_ function: String) {
@@ -315,10 +373,13 @@ public final class LogView: NSObject {
 		withArguments arguments: [Any]?,
 		completionHandler: ((Any?) -> Void)?
 	) {
-		evaluateJavaScript(
-			LogViewJavaScript.functionCall(function, arguments: arguments),
-			completionHandler: completionHandler
-		)
+		Task { @MainActor [weak self] in
+			guard let self else {
+				return
+			}
+			let result: Any? = try? await evaluate(function, arguments: arguments)
+			completionHandler?(result)
+		}
 	}
 
 	@objc(booleanByEvaluatingFunction:completionHandler:)
@@ -391,10 +452,5 @@ public final class LogView: NSObject {
 	@objc(logToJavaScriptConsole:)
 	public func logToJavaScriptConsole(_ message: String) {
 		evaluateFunction("console.log", withArguments: [message])
-	}
-
-	@objc(compiledFunctionCall:withArguments:)
-	public func compiledFunctionCall(_ function: String, withArguments arguments: [Any]?) -> String {
-		LogViewJavaScript.functionCall(function, arguments: arguments)
 	}
 }
