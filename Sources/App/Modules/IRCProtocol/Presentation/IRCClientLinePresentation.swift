@@ -376,18 +376,16 @@ public extension IRCClient {
 	}
 
 	@objc(printDebugInformation:asCommand:escapeMessage:)
-	func printDebugInformation(_ message: String, asCommand _: String, escapeMessage _: Bool) {
+	func printDebugInformation(_ message: String, asCommand command: String, escapeMessage: Bool) {
 		let channel = IRCClientPrintMainActorBridge.sync { [self] in
 			IRCPrintChannelReference(value: NSObject.applicationController().mainWindow.selectedChannel(on: self))
 		}.value
 
-		// Preserve the legacy selector's established routing: this overload
-		// always uses the default command and escapes the message.
 		printDebugInformation(
 			message,
 			in: channel,
-			asCommand: TVCLogLineDefaultCommandValue,
-			escapeMessage: true
+			asCommand: command,
+			escapeMessage: escapeMessage
 		)
 	}
 
