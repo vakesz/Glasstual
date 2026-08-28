@@ -41,8 +41,7 @@ import AppKit
 /// Owns the visual policy for AppKit menu symbols. Keeping this policy in one
 /// place prevents nib menus and menus assembled at runtime from drifting.
 @MainActor
-@objc(TXMenuPresentation)
-public final class MenuPresentation: NSObject {
+public enum MenuPresentation {
 	private static let symbolConfiguration = NSImage.SymbolConfiguration(
 		pointSize: NSFont.systemFontSize,
 		weight: .regular,
@@ -74,7 +73,6 @@ public final class MenuPresentation: NSObject {
 		MenuCommand.symbolNames
 	}
 
-	@objc(applyToMenu:)
 	public static func apply(to menu: NSMenu?) {
 		apply(symbolConfiguration, to: menu)
 	}
@@ -141,7 +139,6 @@ public final class MenuPresentation: NSObject {
 		return [separator, reply, react]
 	}
 
-	@objc(shareMenuItemForItems:)
 	public static func shareMenuItem(for items: [Any]) -> NSMenuItem {
 		let title = MessageMenuStrings.share
 		let menuItem: NSMenuItem

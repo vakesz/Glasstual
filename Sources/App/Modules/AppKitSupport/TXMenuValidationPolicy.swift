@@ -41,8 +41,7 @@ import Foundation
 /// Applies the application-wide part of menu validation after the selected
 /// command has passed its command-specific checks.
 @MainActor
-@objc(TXMenuValidationPolicy)
-public final class MenuValidationPolicy: NSObject {
+public enum MenuValidationPolicy {
 	public static func validate(
 		tag: Int,
 		commandSpecificResult: Bool,
