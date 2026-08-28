@@ -24,6 +24,9 @@ public final class MemberListUserInfoPopover: NSPopover {
 	@IBOutlet public var privilegesField: NSTextField!
 	@IBOutlet public var awayStatusField: NSTextField!
 
+	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
+	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
+	 only, which is what makes the assumption safe. */
 	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 

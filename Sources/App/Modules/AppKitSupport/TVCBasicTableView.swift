@@ -43,14 +43,16 @@ import CocoaExtensions
 public class BasicTableView: NSTableView {
 	@objc public weak var pasteboardDelegate: AnyObject?
 
-	override public nonisolated func responds(to aSelector: Selector!) -> Bool {
-		if aSelector == #selector(copy(_:)) {
-			return MainActor.assumeIsolated {
-				pasteboardDelegate?.responds(to: #selector(copy(_:))) == true
-			}
+	/** Whether Copy is available depends on the pasteboard delegate. Answering that
+	 through validation rather than by overriding `responds(to:)` keeps the decision
+	 on the main actor: the runtime calls `responds(to:)` from contexts this class
+	 does not control. */
+	override public func validateUserInterfaceItem(_ item: NSValidatedUserInterfaceItem) -> Bool {
+		guard item.action == #selector(copy(_:)) else {
+			return true
 		}
 
-		return super.responds(to: aSelector)
+		return pasteboardDelegate?.responds(to: #selector(copy(_:))) == true
 	}
 
 	@objc public func copy(_ sender: Any?) {

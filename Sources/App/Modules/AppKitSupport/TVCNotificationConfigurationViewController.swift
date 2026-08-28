@@ -79,10 +79,10 @@ public final class NotificationConfigurationViewController: NSObject {
 		prepareInitialState()
 	}
 
-	deinit {
-		MainActor.assumeIsolated {
-			stopObservingActiveAlert(activeAlert)
-		}
+	/** Isolated so the teardown runs on the main actor whichever thread drops the
+	 last reference. */
+	isolated deinit {
+		stopObservingActiveAlert(activeAlert)
 	}
 
 	@objc public func attachToView(_ view: NSView) {

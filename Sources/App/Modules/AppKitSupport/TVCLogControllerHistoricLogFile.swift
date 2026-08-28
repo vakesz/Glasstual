@@ -601,15 +601,15 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 
 	@objc(willDeleteUniqueIdentifiers:inView:)
 	public func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView viewId: String) {
-		performSynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				guard let item = AppController.shared.world?.findItem(withId: viewId) else {
-					return
-				}
-
-				(item.viewController as AnyObject as? LogController)?
-					.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
+		/* The XPC service does not wait on this, so hop asynchronously rather than
+		 blocking its queue on the main thread. */
+		Task { @MainActor in
+			guard let item = AppController.shared.world?.findItem(withId: viewId) else {
+				return
 			}
+
+			(item.viewController as AnyObject as? LogController)?
+				.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
 		}
 	}
 }

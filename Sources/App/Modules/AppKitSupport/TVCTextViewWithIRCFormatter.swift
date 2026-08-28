@@ -51,9 +51,6 @@ public enum TVCTextViewCaretLocation: UInt {
 
 @objc(TVCTextViewWithIRCFormatter)
 open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
-	/* Nib-loaded via ObjC subclass (MainWindowTextView); keep this class
-	 off @MainActor so -initWithCoder: from NSClassSwapper does not trip
-	 isolation traps. KeyEventHandler is MainActor — hop explicitly. */
 	private var keyEventHandler: KeyEventHandler!
 	private var preferredFontStorage: NSFont = .systemFont(ofSize: NSFont.systemFontSize)
 	private var preferredFontColorStorage: NSColor = .textColor
@@ -99,9 +96,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate {
 	}
 
 	private func prepareInitialState() {
-		MainActor.assumeIsolated {
-			keyEventHandler = KeyEventHandler(target: self)
-		}
+		keyEventHandler = KeyEventHandler(target: self)
 
 		delegate = self
 
