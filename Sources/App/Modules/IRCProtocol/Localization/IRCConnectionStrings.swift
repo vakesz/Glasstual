@@ -163,6 +163,10 @@ enum IRCTransportSecurityStrings {
 	static var scramServerSignatureMissing: String {
 		String(localized: .IRC.stsSc3)
 	}
+
+	static var saslPayloadTooLarge: String {
+		String(localized: .IRC.stsSc4)
+	}
 }
 
 enum IRCTransportStrings {

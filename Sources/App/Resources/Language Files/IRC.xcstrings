@@ -2161,6 +2161,18 @@
         }
       }
     },
+    "sts-sc4" : {
+      "comment" : "SASL. Shown when the server sends an oversized AUTHENTICATE payload.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL authentication failed: the server sent an oversized payload."
+          }
+        }
+      }
+    },
     "sxf-qx" : {
       "comment" : "Common command errors. Migrated from legacy key sxf-qx; compatibility key retained.",
       "extractionState" : "manual",
