@@ -66,15 +66,7 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype {
 			for entry in entries {
 				addEntry(entry)
 			}
-		} else if var entry = newEntry as? HighlightLogEntry {
-			if entry is MutableHighlightLogEntry {
-				guard let copiedEntry = entry.copy() as? HighlightLogEntry else {
-					return
-				}
-
-				entry = copiedEntry
-			}
-
+		} else if let entry = newEntry as? HighlightLogEntry {
 			highlightListController.addObject(entry)
 		}
 	}
