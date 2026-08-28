@@ -95,7 +95,7 @@ public extension IRCClient {
 		if postReceivedMessage(message, withText: nil, destinedFor: channel),
 		   IRCMembershipEventPolicy.shouldPrint(
 		   	isLocalUser: isLocalUser,
-		   	showJoinLeave: TextualPreferences.showJoinLeave(),
+		   	showJoinLeave: environment.preferences.showJoinLeave,
 		   	channelIgnoresEvents: channel.config.ignoreGeneralEventMessages,
 		   	addressBookIgnoresEvents: ignore?.ignoreGeneralEventMessages ?? false
 		   )
@@ -144,7 +144,7 @@ public extension IRCClient {
 		if postReceivedMessage(message, withText: comment, destinedFor: channel),
 		   IRCMembershipEventPolicy.shouldPrint(
 		   	isLocalUser: isLocalUser,
-		   	showJoinLeave: TextualPreferences.showJoinLeave(),
+		   	showJoinLeave: environment.preferences.showJoinLeave,
 		   	channelIgnoresEvents: channel.config.ignoreGeneralEventMessages,
 		   	addressBookIgnoresEvents: ignore?.ignoreGeneralEventMessages ?? false
 		   )
@@ -181,7 +181,7 @@ public extension IRCClient {
 				channel.deactivate()
 				reloadTreeItem(channel)
 				_ = notifyEvent(.kick, lineType: .kick, target: channel, nickname: sender, text: comment)
-				if TextualPreferences.rejoinOnKick(), !channel.errorOnLastJoinAttempt {
+				if environment.preferences.rejoinOnKick, !channel.errorOnLastJoinAttempt {
 					printDebugInformation(IRCInboundStrings.Membership.rejoinScheduled, in: channel)
 					NSObject.cancelPreviousPerformRequests(
 						withTarget: self, selector: #selector(joinKickedChannel(_:)), object: channel
@@ -196,7 +196,7 @@ public extension IRCClient {
 		if postReceivedMessage(message, withText: comment, destinedFor: channel),
 		   IRCMembershipEventPolicy.shouldPrint(
 		   	isLocalUser: isLocalUser,
-		   	showJoinLeave: TextualPreferences.showJoinLeave(),
+		   	showJoinLeave: environment.preferences.showJoinLeave,
 		   	channelIgnoresEvents: channel.config.ignoreGeneralEventMessages,
 		   	addressBookIgnoresEvents: ignore?.ignoreGeneralEventMessages ?? false
 		   )
@@ -259,7 +259,7 @@ public extension IRCClient {
 				let canPrint = postReceivedMessage(message, withText: comment, destinedFor: channel) &&
 					IRCMembershipEventPolicy.shouldPrint(
 						isLocalUser: isLocalUser,
-						showJoinLeave: TextualPreferences.showJoinLeave(),
+						showJoinLeave: environment.preferences.showJoinLeave,
 						channelIgnoresEvents: channel.config.ignoreGeneralEventMessages,
 						addressBookIgnoresEvents: ignore?.ignoreGeneralEventMessages ?? false
 					)
@@ -350,7 +350,7 @@ public extension IRCClient {
 				guard postReceivedMessage(message, withText: newNickname, destinedFor: channel),
 				      IRCMembershipEventPolicy.shouldPrint(
 				      	isLocalUser: isLocalUser,
-				      	showJoinLeave: TextualPreferences.showJoinLeave(),
+				      	showJoinLeave: environment.preferences.showJoinLeave,
 				      	channelIgnoresEvents: channel.config.ignoreGeneralEventMessages,
 				      	addressBookIgnoresEvents: oldIgnore?.ignoreGeneralEventMessages ?? false
 				      )
@@ -370,12 +370,12 @@ public extension IRCClient {
 
 	private func reloadTreeItem(_ item: AnyObject) {
 		guard let legacyItem = item as? IRCTreeItem else { return }
-		AppController.shared.mainWindow.reloadTreeItem(legacyItem)
+		output?.reloadTreeItem(legacyItem)
 	}
 
 	private func updateTitle(_ item: AnyObject) {
 		guard let legacyItem = item as? IRCTreeItem else { return }
-		AppController.shared.mainWindow.updateTitle(for: legacyItem)
+		output?.updateTitle(for: legacyItem)
 	}
 
 	private func updateTrackingStatus(for entry: AddressBookEntry, message: Message) {

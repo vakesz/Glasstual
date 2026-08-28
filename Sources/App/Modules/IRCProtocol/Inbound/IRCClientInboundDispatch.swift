@@ -77,10 +77,10 @@ private extension IRCClient {
 	func processIncomingDataOnMainActor(_ data: String) {
 		guard isConnected, !isTerminating else { return }
 		lastMessageReceived = Date().timeIntervalSince1970
-		AppController.shared.world.noteMessageReceived(length: UInt(data.utf16.count))
+		world?.noteMessageReceived(length: UInt(data.utf16.count))
 		rawDataLogIncomingTraffic(data)
 
-		let normalizedData = TextualPreferences.removeAllFormatting() ? (data as NSString).stripIRCEffects : data
+		let normalizedData = environment.preferences.removeAllFormatting ? (data as NSString).stripIRCEffects : data
 		guard var message = Message(line: normalizedData, on: self),
 		      let interceptedMessage = PluginDispatcher.interceptServerInput(message, for: self)
 		else { return }

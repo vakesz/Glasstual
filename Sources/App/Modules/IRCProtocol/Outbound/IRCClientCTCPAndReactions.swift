@@ -121,7 +121,7 @@ public extension IRCClient {
 	@objc(sendPrivmsgToSelectedChannel:)
 	@MainActor
 	func sendPrivmsgToSelectedChannel(_ message: String) {
-		guard let channel = AppController.shared.mainWindow.selectedChannel(on: self) else { return }
+		guard let channel = output?.selectedChannel(on: self) else { return }
 		sendPrivmsg(message, to: channel)
 	}
 

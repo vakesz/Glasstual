@@ -90,7 +90,7 @@ enum IRCOutputSuppressionPolicy {
 public extension IRCClient {
 	@objc(outputRuleMatchedInMessage:inChannel:)
 	func outputRuleMatched(in message: String, channel: IRCChannel?) -> Bool {
-		let comparableMessage: String = if TextualPreferences.removeAllFormatting() {
+		let comparableMessage: String = if environment.preferences.removeAllFormatting {
 			message
 		} else {
 			(message as NSString).stripIRCEffects

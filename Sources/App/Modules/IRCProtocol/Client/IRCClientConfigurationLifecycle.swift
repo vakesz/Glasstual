@@ -105,11 +105,10 @@ public extension IRCClient {
 			reloadServerListItems()
 		}
 
-		let controller: ApplicationController = AppController.shared
-		controller.menuController?.populateNavigationChannelList()
+		world?.noteNavigationListDidChange()
 		writePasswordsToKeychain()
 		destroyServerPasswordKeychainItemAfterMigration()
-		controller.mainWindow?.updateTitle(for: self)
+		output?.updateTitle(for: self)
 		clearAddressBookCache()
 		populateISONTrackedUsersList()
 		NotificationCenter.default.post(name: .IRCClientConfigurationWasUpdated, object: self)
@@ -117,16 +116,7 @@ public extension IRCClient {
 
 	@objc(reloadServerListItems)
 	func reloadServerListItems() {
-		guard let mainWindow = AppController.shared.mainWindow,
-		      let serverList = mainWindow.serverList
-		else { return }
-
-		mainWindow.ignoreOutlineViewSelectionChanges = true
-		serverList.beginUpdates()
-		serverList.reloadItem(self, reloadChildren: true)
-		serverList.endUpdates()
-		mainWindow.adjustSelection()
-		mainWindow.ignoreOutlineViewSelectionChanges = false
+		output?.reloadServerListItems(for: self)
 	}
 
 	@objc(writePasswordsToKeychain)
@@ -163,7 +153,7 @@ public extension IRCClient {
 		rebuildChannelIndex()
 		config.channelList = IRCClientConfigurationPolicy.storedChannelConfigurations(
 			from: channelList,
-			rememberQueries: TextualPreferences.rememberServerListQueryStates()
+			rememberQueries: environment.preferences.rememberServerListQueryStates
 		)
 		NotificationCenter.default.post(name: .IRCClientChannelListWasModified, object: self)
 	}
@@ -214,13 +204,13 @@ public extension IRCClient {
 			"[\(clientIdentifier, privacy: .public)] Preparing channels: \(channels.count, privacy: .public)"
 		)
 		channels.forEach { $0.prepareForApplicationTermination() }
-		let viewIdentifier = viewController.uniqueIdentifier
+		let viewIdentifier = presentation?.presentationIdentifier ?? ""
 		clientTerminationLogger.info(
 			"[\(clientIdentifier, privacy: .public)] Preparing view controller: <\(viewIdentifier, privacy: .public)>"
 		)
-		((viewController as AnyObject) as? LogController)?.prepareForApplicationTermination()
+		presentation?.prepareForApplicationTermination()
 		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Decrementing client count")
-		AppController.shared.terminatingClientCount -= 1
+		environment.services.applicationState?.noteClientDidFinishTerminating()
 	}
 
 	@objc(prepareForPermanentDestruction)
@@ -236,8 +226,8 @@ public extension IRCClient {
 		config.destroyProxyPasswordKeychainItem()
 		destroyServerPasswordsKeychainItems()
 		channelList.forEach { $0.prepareForPermanentDestruction() }
-		AppController.shared.mainWindow.inputHistoryManager().destroy(self)
-		((viewController as AnyObject) as? LogController)?.prepareForPermanentDestruction()
+		output?.destroyInputHistory(for: self)
+		presentation?.prepareForPermanentDestruction()
 	}
 
 	@objc(closeDialogs)
@@ -291,7 +281,7 @@ public extension IRCClient {
 		var remainingChannels = channelList
 		var updatedChannels: [IRCChannel] = []
 		var insertedNames = Set<String>()
-		guard let world = AppController.shared.world else { return }
+		guard let world else { return }
 
 		for channelConfig in configurations where insertedNames.insert(channelConfig.channelName).inserted {
 			if let channel = findChannel(channelConfig.channelName, in: remainingChannels) {

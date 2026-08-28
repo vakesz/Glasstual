@@ -62,7 +62,7 @@ public extension IRCClient {
 	@objc(startAutojoinTimer)
 	func startAutojoinTimer() {
 		guard !autojoinTimer.isActive else { return }
-		let interval = TextualPreferences.autojoinDelayAfterIdentification()
+		let interval = environment.preferences.autojoinDelayAfterIdentification
 		guard interval > 0 else {
 			onAutojoinTimer()
 			return
@@ -105,7 +105,7 @@ public extension IRCClient {
 		autojoinDelayedWarningCount += 1
 		let text = IRCConnectionStrings.autojoinDelayedForIdentification
 		printDebugInformation(toConsole: text)
-		if let channel = AppController.shared.mainWindow.selectedChannel(on: self) {
+		if let channel = output?.selectedChannel(on: self) {
 			printDebugInformation(text, in: channel)
 		}
 	}
@@ -113,7 +113,7 @@ public extension IRCClient {
 	@objc(startAutojoinNextJoinTimer)
 	func startAutojoinNextJoinTimer() {
 		guard !autojoinNextJoinTimer.isActive else { return }
-		autojoinNextJoinTimer.start(TextualPreferences.autojoinDelayBetweenChannelJoins(), repeats: true)
+		autojoinNextJoinTimer.start(environment.preferences.autojoinDelayBetweenChannelJoins, repeats: true)
 		onAutojoinNextJoinTimer()
 	}
 
@@ -134,7 +134,7 @@ public extension IRCClient {
 		guard isAutojoining, let pendingChannels = channelsToAutojoin else { return }
 		let count = IRCClientAutojoinPolicy.nextBatchCount(
 			remaining: pendingChannels.count,
-			configuredMaximum: TextualPreferences.autojoinMaximumChannelJoins()
+			configuredMaximum: environment.preferences.autojoinMaximumChannelJoins
 		)
 		joinChannels(Array(pendingChannels.prefix(count)))
 

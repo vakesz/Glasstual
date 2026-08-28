@@ -146,3 +146,18 @@ public final class TXMenuController: NSObject, NSMenuDelegate, NSMenuItemValidat
 		actionCoordinator.deselectMembers(for: sender)
 	}
 }
+
+/** The menus the connection tree feeds. The world tells the controller when the
+ shape of that tree changed rather than being called into. */
+extension TXMenuController: WorldObserver {
+	func worldNavigationListDidChange(_: IRCWorld) {
+		populateNavigationChannelList()
+	}
+
+	func worldPreferencesDidChange(_: IRCWorld) {
+		preferencesChanged()
+	}
+}
+
+/// The sheets the IRC layer raises. Every requirement already existed.
+extension TXMenuController: ClientMenuPresenting {}

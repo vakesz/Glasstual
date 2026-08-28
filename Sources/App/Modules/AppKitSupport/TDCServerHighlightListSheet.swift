@@ -97,7 +97,7 @@ public final class ServerHighlightListSheet: SheetBase, TDCClientPrototype, Tabl
 			return
 		}
 
-		guard let viewController = channel.viewController else {
+		guard let viewController = channel.logController else {
 			return
 		}
 

@@ -169,7 +169,7 @@ extension IRCClient {
 				channel.deactivate()
 			}
 			if let treeItem = (channel as AnyObject) as? IRCTreeItem {
-				AppController.shared.mainWindow.reloadTreeItem(treeItem)
+				output?.reloadTreeItem(treeItem)
 			}
 		}
 	}
@@ -269,7 +269,7 @@ extension IRCClient {
 				sendTopic(to: defaultTopic, in: channel)
 			}
 		}
-		AppController.shared.mainWindow.updateTitle(for: channel)
+		output?.updateTitle(for: channel)
 	}
 
 	private func handleListNumeric(_ message: Message) {

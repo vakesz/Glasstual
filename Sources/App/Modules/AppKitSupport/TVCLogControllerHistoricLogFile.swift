@@ -593,7 +593,7 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 				return
 			}
 
-			item.viewController?
+			item.logController?
 				.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
 		}
 	}

@@ -126,11 +126,11 @@ extension IRCClient {
 	}
 
 	@objc var monitorAwayStatus: Bool {
-		isCapabilityEnabled(.awayNotify) || TextualPreferences.trackUserAwayStatusMaximumChannelSize() > 0
+		isCapabilityEnabled(.awayNotify) || environment.preferences.trackUserAwayStatusMaximumChannelSize > 0
 	}
 
 	@objc public var lastLine: LogLine? {
-		(viewController as AnyObject as? LogController)?.lastLine()
+		presentation?.lastPrintedLine()
 	}
 
 	@objc(messageIsFromMyself:)

@@ -201,7 +201,7 @@ public extension IRCClient {
 		chatHistoryPrependChannel = nil
 		chatHistoryPrependedLines = nil
 		guard let channel, !lines.isEmpty else { return }
-		channel.viewController?.prependHistoricLogLines(lines)
+		channel.presentation?.prependHistoricLogLines(lines)
 	}
 
 	@objc(noteChatHistoryFailure:)
@@ -302,21 +302,18 @@ private extension IRCClient {
 		if newestDate.map({ $0 > date }) != true {
 			if channel.isUnread || channel.nicknameHighlightCount > 0 {
 				channel.resetState()
-				if let item = legacyTreeItem(channel),
-				   let window = (AppController.shared.mainWindow as AnyObject?) as? MainWindow
-				{
-					window.serverList.refreshMessageCount(forItem: item)
+				if let item = legacyTreeItem(channel) {
+					output?.refreshMessageCount(for: item)
 				}
 				DockIcon.updateDockIcon()
 			}
 			return
 		}
 
-		guard let item = legacyTreeItem(channel),
-		      let window = (AppController.shared.mainWindow as AnyObject?) as? MainWindow,
-		      !window.isItemVisible(item) || !window.isKeyWindow
+		guard let item = legacyTreeItem(channel), let output,
+		      !output.isItemVisible(item) || !output.windowIsKey
 		else { return }
-		channel.viewController?.mark(at: date)
+		channel.presentation?.mark(at: date)
 	}
 
 	func legacyTreeItem(_ channel: IRCChannel) -> IRCTreeItem? {

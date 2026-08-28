@@ -85,7 +85,7 @@ public extension IRCClient {
 			receiveCTCPLagCheckQuery(message, text: parsed.arguments)
 			return
 		}
-		guard TextualPreferences.replyToCTCPRequests() else {
+		guard environment.preferences.replyToCTCPRequests else {
 			printDebugInformation(toConsole: IRCCTCPStrings.ignored(command: parsed.command, sender: sender))
 			return
 		}
@@ -114,7 +114,8 @@ public extension IRCClient {
 		case "USERINFO":
 			sendCTCPReply(sender, command: parsed.command, text: config.realName)
 		case "VERSION":
-			let masquerade = config.ctcpVersionReply?.nonEmpty ?? TextualPreferences.masqueradeCTCPVersion()?.nonEmpty
+			let masquerade = config.ctcpVersionReply?.nonEmpty ?? environment.preferences.masqueradeCTCPVersion?
+				.nonEmpty
 			let version = masquerade ?? IRCCTCPStrings.version(
 				applicationName: ApplicationInfo.applicationNameWithoutVersion(),
 				shortVersion: ApplicationInfo.applicationVersionShort()
@@ -163,8 +164,8 @@ public extension IRCClient {
 	}
 
 	private func noticePrintTarget() -> IRCChannel? {
-		guard TextualPreferences.locationToSendNotices() == .selectedChannel else { return nil }
-		return AppController.shared.mainWindow.selectedChannel(on: self)
+		guard environment.preferences.locationToSendNotices == .selectedChannel else { return nil }
+		return output?.selectedChannel(on: self)
 	}
 }
 

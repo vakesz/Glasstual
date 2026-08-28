@@ -106,7 +106,7 @@ public final nonisolated class User: NSObject {
 			return "\(nickname)!*@*"
 		}
 
-		switch TextualPreferences.banFormat() {
+		switch client?.environment.preferences.banFormat ?? ClientPreferences().banFormat {
 		case .whnin:
 			return "*!*@\(address)"
 		case .whainn:

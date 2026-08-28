@@ -91,6 +91,12 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		state == .connected
 	}
 
+	/// The owning client's preference snapshot, or the declared defaults once
+	/// that client has gone.
+	private var preferences: ClientPreferences {
+		client?.environment.preferences ?? ClientPreferences()
+	}
+
 	@available(*, unavailable)
 	override public init() {
 		fatalError("Use factory methods")
@@ -182,14 +188,14 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		connection.connect(
 			toHost: hostAddress,
 			port: hostPort,
-			viaInterface: TextualPreferences.fileTransferIPAddressInterfaceName(),
+			viaInterface: preferences.fileTransferIPAddressInterfaceName,
 			timeout: connectTimeout
 		)
 	}
 
 	private func openListener() {
-		let portRangeStart = TextualPreferences.fileTransferPortRangeStart()
-		let portRangeEnd = TextualPreferences.fileTransferPortRangeEnd()
+		let portRangeStart = preferences.fileTransferPortRangeStart
+		let portRangeEnd = preferences.fileTransferPortRangeEnd
 
 		if portRangeStart == 0 || portRangeStart > portRangeEnd {
 			close(

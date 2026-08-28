@@ -172,9 +172,9 @@ public extension IRCClient {
 		endLoggingSessions()
 		resetAllPropertyValues()
 
-		if !terminating, let mainWindow = AppController.shared.mainWindow {
-			mainWindow.reloadTreeGroup(self)
-			mainWindow.updateTitle(for: self)
+		if !terminating, let output {
+			output.reloadTreeGroup(self)
+			output.updateTitle(for: self)
 		}
 	}
 
@@ -227,7 +227,7 @@ public extension IRCClient {
 		isConnected = true
 		userNickname = config.nickname
 		tryingNicknameSentNickname = config.nickname
-		AppController.shared.mainWindow?.updateTitle(for: self)
+		output?.updateTitle(for: self)
 		NotificationCenter.default.post(name: .IRCClientDidConnect, object: self)
 
 		let registration = IRCClientRegistrationPolicy.values(
@@ -298,7 +298,7 @@ private extension IRCClient {
 		}
 
 		printDebugInformation(toConsole: disconnectMessage)
-		viewController.mark()
+		presentation?.mark()
 		if isConnected {
 			_ = notifyEvent(.disconnect, lineType: .debug)
 		}
