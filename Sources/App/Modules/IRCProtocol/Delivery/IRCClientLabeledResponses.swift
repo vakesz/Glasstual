@@ -163,6 +163,9 @@ public extension IRCClient {
 			delivery.state = state
 			delivery.timeoutWorkItem?.cancel()
 			delivery.timeoutWorkItem = nil
+			/* Without this the table grows by one entry per outgoing message for the
+			 whole session, and a server reusing a stale label would keep matching it. */
+			pendingDeliveries.removeObject(forKey: label)
 			guard let lineNumber = delivery.lineNumber else { return }
 
 			let arguments: [Any] = [
@@ -186,6 +189,8 @@ public extension IRCClient {
 		}
 	}
 
+	/// The state of a delivery still awaiting a response. Resolved deliveries are
+	/// removed, so a resolved or unknown label reports `.none`.
 	@objc(deliveryStateForLabel:)
 	func deliveryState(forLabel label: String) -> TVCLogLineDeliveryState {
 		LabeledResponseMainActorBridge.sync { [self] in
@@ -209,7 +214,16 @@ private extension IRCClient {
 		if label?.isEmpty ?? true, let batchToken = message.batchToken, !batchToken.isEmpty {
 			label = labelForBatchToken.object(forKey: batchToken) as? String
 		}
-		guard let label, !label.isEmpty, pendingDeliveries[label] != nil else { return false }
+		guard
+			let label,
+			!label.isEmpty,
+			let delivery = nativeDelivery(pendingDeliveries[label]),
+			!delivery.resolved
+		else {
+			/* An unknown or already-resolved label must not consume the message: the
+			 inbound dispatcher drops anything this reports as handled. */
+			return false
+		}
 
 		switch IRCLabeledResponsePolicy.responseKind(command: command, commandNumeric: message.commandNumeric) {
 		case .failure:

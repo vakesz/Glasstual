@@ -42,6 +42,9 @@ import Foundation
 final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	private var connection: Connection?
 	private var serviceConnection: NSXPCConnection?
+	/** `ProcessInfo.disableSuddenTermination()` is a counter. The host process is shared by
+	 every connection, so an unbalanced disable would permanently pin the whole service. */
+	private var suddenTerminationDisableCount = 0
 
 	@available(*, unavailable)
 	override init() {
@@ -60,10 +63,14 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 		connection = nil
 		activeConnection?.close()
 		serviceConnection = nil
+		balanceSuddenTermination()
 	}
 
 	func open(with config: IRCConnectionConfig) {
-		precondition(connection == nil, "Method invoked with connection already open")
+		guard connection == nil else {
+			RCMLog.connection.error("Cannot open a connection that is already open")
+			return
+		}
 
 		guard let serviceConnection else {
 			RCMLog.connection.error("Cannot open a connection after the client connection ended")
@@ -76,31 +83,38 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	}
 
 	func close() {
-		requireConnection().close()
+		requireConnection(#function)?.close()
 	}
 
 	func send(_ data: Data) {
-		requireConnection().send(data)
+		requireConnection(#function)?.send(data)
 	}
 
 	func send(_ data: Data, bypassQueue: Bool) {
-		requireConnection().send(data, bypassQueue: bypassQueue)
+		requireConnection(#function)?.send(data, bypassQueue: bypassQueue)
 	}
 
 	func exportSecureConnectionInformation(_ completionBlock: SecureConnectionInformationReceiver) {
+		/* The caller blocks on this reply, so it has to be invoked on every path. */
+		guard let connection = requireConnection(#function) else {
+			completionBlock(nil, tlsProtocolVersionUnknown, tlsCipherSuiteUnknown, [], nil)
+			return
+		}
+
 		do {
-			try requireConnection().exportSecureConnectionInformation(to: completionBlock)
+			try connection.exportSecureConnectionInformation(to: completionBlock)
 		} catch {
 			RCMLog.connection.error("Unable to export secure connection information: \(error.localizedDescription)")
+			completionBlock(nil, tlsProtocolVersionUnknown, tlsCipherSuiteUnknown, [], error.localizedDescription)
 		}
 	}
 
 	func enforceFloodControl() {
-		requireConnection().enforceFloodControl()
+		requireConnection(#function)?.enforceFloodControl()
 	}
 
 	func clearSendQueue() {
-		requireConnection().clearSendQueue()
+		requireConnection(#function)?.clearSendQueue()
 	}
 
 	func enableAppNap() {
@@ -112,16 +126,28 @@ final class RemoteConnectionProcess: NSObject, RemoteConnectionServerProtocol {
 	}
 
 	func enableSuddenTermination() {
+		guard suddenTerminationDisableCount > 0 else { return }
+		suddenTerminationDisableCount -= 1
 		ProcessInfo.processInfo.enableSuddenTermination()
 	}
 
 	func disableSuddenTermination() {
+		suddenTerminationDisableCount += 1
 		ProcessInfo.processInfo.disableSuddenTermination()
 	}
 
-	private func requireConnection() -> Connection {
+	private func balanceSuddenTermination() {
+		while suddenTerminationDisableCount > 0 {
+			enableSuddenTermination()
+		}
+	}
+
+	/** The service process is shared by every connection, so an unexpected call has to be
+	 rejected rather than aborted — a trap here would drop every other server as well. */
+	private func requireConnection(_ caller: String) -> Connection? {
 		guard let connection else {
-			preconditionFailure("Method invoked without performing setup first")
+			RCMLog.connection.error("\(caller, privacy: .public) invoked without performing setup first")
+			return nil
 		}
 
 		return connection

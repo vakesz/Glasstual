@@ -341,7 +341,7 @@ public extension IRCClient {
 			      receivedAt: message.receivedAt, isEncrypted: false, referenceMessage: message)
 		}
 		if sender.hasSuffix(".proxy"), text == "Connected to server" {
-			disconnectCallback = { [weak self] in
+			addDisconnectCallback { [weak self] in
 				self?.printDebugInformation(toConsole: IRCConnectionStrings.reconnectingToProxy)
 				self?.connect(.reconnect)
 			}

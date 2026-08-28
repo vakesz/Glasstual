@@ -95,6 +95,10 @@ final class ChannelModeTests: XCTestCase {
 	func testListAndUserModesAreNotStoredAsChannelState() {
 		let channelMode = channelMode(currentModes: "")
 
+		channelMode.modes.changeMode("b", modeIsSet: true, modeParameter: "*!*@host")
+		channelMode.modes.changeMode("o", modeIsSet: true, modeParameter: "nick")
+		channelMode.modes.changeMode("n", modeIsSet: true)
+
 		XCTAssertNil(channelMode.modeInfo(for: "b"))
 		XCTAssertNil(channelMode.modeInfo(for: "o"))
 		XCTAssertNotNil(channelMode.modeInfo(for: "n"))

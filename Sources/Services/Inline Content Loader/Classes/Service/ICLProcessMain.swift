@@ -51,22 +51,41 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 	private nonisolated(unsafe) static var loadedPlugins = false
 	private nonisolated(unsafe) static var registeredDefaults = false
 
-	private var serviceConnection: NSXPCConnection?
+	private let stateLock = NSLock()
+	private var serviceConnectionStorage: NSXPCConnection?
 	private let moduleReferencesLock = NSLock()
 	private var moduleReferences = Set<InlineContentModule>()
+	private var modulesByDomainStorage: [String: [InlineContentModule.Type]]?
 
-	private lazy var modulesByDomain: [String: [InlineContentModule.Type]] = {
-		var mappedModules: [String: [InlineContentModule.Type]] = [:]
+	/** Cleared from the invalidation handler while module callbacks still read it. */
+	private var serviceConnection: NSXPCConnection? {
+		get { stateLock.withLock { serviceConnectionStorage } }
+		set { stateLock.withLock { serviceConnectionStorage = newValue } }
+	}
 
-		for module in moduleClasses {
-			let domains = module.domains
-			for domain in domains?.isEmpty == false ? domains! : ["*"] {
-				mappedModules[domain, default: []].append(module)
+	/** `process(_:)` is a concurrent XPC entry point and Swift's `lazy` is not thread
+	 safe, so the table is memoised behind a lock instead. Bundled modules are only
+	 registered once the service has been warmed, so this cannot be built in `init`. */
+	private var modulesByDomain: [String: [InlineContentModule.Type]] {
+		stateLock.withLock {
+			if let modulesByDomainStorage {
+				return modulesByDomainStorage
 			}
-		}
 
-		return mappedModules
-	}()
+			var mappedModules: [String: [InlineContentModule.Type]] = [:]
+
+			for module in moduleClasses {
+				let domains = module.domains
+				for domain in domains?.isEmpty == false ? domains! : ["*"] {
+					/* Lookups use a lowercased host, so the keys must match. */
+					mappedModules[domain.lowercased(), default: []].append(module)
+				}
+			}
+
+			modulesByDomainStorage = mappedModules
+			return mappedModules
+		}
+	}
 
 	private var moduleClasses: [InlineContentModule.Type] {
 		let pluginModules = InlineContentPluginManager.shared.modules.compactMap { $0 as? InlineContentModule.Type }
@@ -80,7 +99,7 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 
 	@objc(initWithXPCConnection:)
 	init(xpcConnection: NSXPCConnection) {
-		serviceConnection = xpcConnection
+		serviceConnectionStorage = xpcConnection
 		super.init()
 		InlineContentPreferences.install {
 			InlineContentPreferences.Values(
@@ -100,7 +119,12 @@ final class InlineContentProcess: NSObject, InlineContentServerProtocol, InlineC
 		index: UInt,
 		inView viewIdentifier: String
 	) {
-		precondition(!url.isFileURL)
+		/* Links come from IRC messages; a `file:` URL must not abort the shared service. */
+		guard !url.isFileURL else {
+			Self.logger.error("Refusing to process a file URL")
+			return
+		}
+
 		let payload = InlineContentPayloadMutable(
 			url: url,
 			withUniqueIdentifier: uniqueIdentifier,

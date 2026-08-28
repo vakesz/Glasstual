@@ -16,6 +16,9 @@ import Foundation
 import os
 
 private let connectTimeout: TimeInterval = 30.0
+/** A listener whose peer never dials in would otherwise hold a mapped router port for
+ the lifetime of the application. */
+private let listenTimeout: TimeInterval = 300.0
 private let writeTimeout: TimeInterval = 30.0
 private let maximumLineLength = 1024 * 16
 
@@ -60,15 +63,28 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 	@objc public private(set) weak var client: IRCClient?
 	@objc public private(set) weak var delegate: IRCDirectChatConnectionDelegate?
 	@objc public private(set) var peerNickname: String
-	@objc public private(set) var hostAddress: String?
+	/** Only the connecting variant has an address; the listening variant learns its
+	 port from the socket. Modelling it this way removes the unreachable dead-end
+	 `openConnection()` used to hit when the address was nil. */
+	private enum Role {
+		case listening
+		case connecting(address: String)
+	}
+
+	@objc public var hostAddress: String? {
+		guard case let .connecting(address) = role else { return nil }
+		return address
+	}
+
 	@objc public private(set) var hostPort: UInt16 = 0
 	@objc public private(set) var transferToken: String?
 	@objc public private(set) var state: IRCDirectChatConnectionState = .idle
 
-	private var isListener = false
+	private let role: Role
 	private var listeningServer: TDCFileTransferDialogSocket?
 	private var connection: TDCFileTransferDialogSocket?
 	private var portMapping: XRPortMapper?
+	private var listenTimeoutWorkItem: DispatchWorkItem?
 	private var lineBuffer = NSMutableData()
 
 	@objc public var isConnected: Bool {
@@ -82,10 +98,12 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 
 	private init(
 		peer nickname: String,
+		role: Role,
 		onClient client: IRCClient,
 		delegate: IRCDirectChatConnectionDelegate
 	) {
 		peerNickname = nickname
+		self.role = role
 		self.client = client
 		self.delegate = delegate
 		super.init()
@@ -105,10 +123,13 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 	) -> DirectChatConnection {
 		precondition(hostPort != 0)
 
-		let object = DirectChatConnection(peer: nickname, onClient: client, delegate: delegate)
-		object.hostAddress = hostAddress
+		let object = DirectChatConnection(
+			peer: nickname,
+			role: .connecting(address: hostAddress),
+			onClient: client,
+			delegate: delegate
+		)
 		object.hostPort = hostPort
-		object.isListener = false
 		return object
 	}
 
@@ -119,13 +140,17 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		onClient client: IRCClient,
 		delegate: IRCDirectChatConnectionDelegate
 	) -> DirectChatConnection {
-		let object = DirectChatConnection(peer: nickname, onClient: client, delegate: delegate)
+		let object = DirectChatConnection(
+			peer: nickname,
+			role: .listening,
+			onClient: client,
+			delegate: delegate
+		)
 
 		if let transferToken, transferToken.isEmpty == false {
 			object.transferToken = transferToken
 		}
 
-		object.isListener = true
 		return object
 	}
 
@@ -137,14 +162,15 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 			return
 		}
 
-		if isListener {
+		switch role {
+		case .listening:
 			openListener()
-		} else {
-			openConnection()
+		case let .connecting(address):
+			openConnection(to: address)
 		}
 	}
 
-	private func openConnection() {
+	private func openConnection(to hostAddress: String) {
 		state = .connecting
 
 		let connection = TDCFileTransferDialogSocket(
@@ -152,10 +178,6 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 			delegateQueue: DispatchQueue.main
 		)
 		self.connection = connection
-
-		guard let hostAddress else {
-			return
-		}
 
 		connection.connect(
 			toHost: hostAddress,
@@ -187,6 +209,30 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		)
 		self.listeningServer = listeningServer
 		listeningServer.listenOnPortRange(from: portRangeStart, to: portRangeEnd)
+		startListenTimeout()
+	}
+
+	private func startListenTimeout() {
+		cancelListenTimeout()
+
+		let workItem = DispatchWorkItem { [weak self] in
+			guard let self, state == .listening else { return }
+
+			close(
+				with: TDCFileTransferDialogSocket.error(
+					withCode: .connectTimeout,
+					description: "The peer did not connect before the offer expired"
+				)
+			)
+		}
+
+		listenTimeoutWorkItem = workItem
+		DispatchQueue.main.asyncAfter(deadline: .now() + listenTimeout, execute: workItem)
+	}
+
+	private func cancelListenTimeout() {
+		listenTimeoutWorkItem?.cancel()
+		listenTimeoutWorkItem = nil
 	}
 
 	@objc
@@ -211,6 +257,8 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 	}
 
 	private func tearDownSockets() {
+		cancelListenTimeout()
+
 		if let portMapping {
 			NotificationCenter.default.removeObserver(
 				self,

@@ -115,6 +115,9 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 
 	private var serviceConnection: NSXPCConnection?
 	private var trustPanel: SFCertificateTrustPanel?
+	/** `trustPanel` is only assigned once the asynchronous certificate export lands, so it
+	 cannot gate re-entry on its own. This latch is set synchronously on the main queue. */
+	private var trustPanelIsPresenting = false
 	private var trustPanelDoNotInvokeCompletionBlock = false
 	private var connectionInvalidatedVoluntarily = false
 
@@ -281,7 +284,12 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 	}
 
 	private func openInsecureCertificateTrustPanel(_ response: @escaping TrustDecisionHandler) {
-		guard trustPanel == nil else { return }
+		guard trustPanelIsPresenting == false else {
+			/* The connection host blocks its handshake until this reply arrives. */
+			response(false)
+			return
+		}
+		trustPanelIsPresenting = true
 
 		/* Reaching this panel means the chain did not validate. Whatever the
 		 user answers, this connection is no longer one whose certificate the
@@ -299,7 +307,13 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 					fromCertificateChain: certificateChain,
 					policyName: policyName
 				)
-			else { return }
+			else {
+				performSynchronouslyOnMainQueue {
+					self?.trustPanelIsPresenting = false
+				}
+				response.callback(false)
+				return
+			}
 			let trustReference = TrustReference(value: trust)
 
 			performSynchronouslyOnMainQueue {
@@ -313,8 +327,12 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 						trust: trustReference.value,
 						completion: { [weak self] _, trusted, _ in
 							MainActor.assumeIsolated {
-								guard let self else { return }
+								guard let self else {
+									response.callback(false)
+									return
+								}
 								self.trustPanel = nil
+								self.trustPanelIsPresenting = false
 								if self.trustPanelDoNotInvokeCompletionBlock {
 									self.trustPanelDoNotInvokeCompletionBlock = false
 									return
@@ -347,6 +365,7 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 
 				trustPanel.orderOut(nil)
 				trustPanelDoNotInvokeCompletionBlock = false
+				trustPanelIsPresenting = false
 				self.trustPanel = nil
 			}
 		}
@@ -453,8 +472,14 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 	}
 
 	public func ircConnectionDidReceive(_ data: Data) {
-		guard let string = convertFromCommonEncoding(data) else { return }
-		client.ircConnection(self, didReceiveData: string)
+		/* Decoding reads client.config and client.supportInfo, and the client's state is
+		 only safe to touch on the main queue, so hop first like the sibling callbacks. */
+		performSynchronouslyOnMainQueue { [weak self] in
+			guard let self, let string = convertFromCommonEncoding(data) else { return }
+			MainActor.assumeIsolated {
+				client.ircConnection(self, didReceiveData: string)
+			}
+		}
 	}
 
 	public func ircConnectionRequestInsecureCertificateTrust(_ trustBlock: @escaping TrustDecisionHandler) {

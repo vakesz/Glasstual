@@ -81,8 +81,10 @@ public final class Reachability: NSObject, @unchecked Sendable {
 		let monitor = NWPathMonitor()
 		self.monitor = monitor
 
-		/* The first update of the new monitor describes current state. */
-		receivedInitialPath = false
+		/* `receivedInitialPath` is deliberately seeded only once per object lifetime.
+		 Resetting it here made every restart — the notifier is stopped on sleep and
+		 started again on wake — discard the first update, so a connectivity change
+		 across the sleep was never reported. */
 
 		monitor.pathUpdateHandler = { [weak self] path in
 			let reachable = path.status == .satisfied

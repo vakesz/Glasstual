@@ -84,9 +84,11 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 		hasRank(of: "h", orHigher: "o")
 	}
 
+	/** Pure by design. Decaying from a getter mutated the values a sort was ordering
+	 by, which breaks the strict weak ordering `sort` requires; call
+	 `decayConversation()` once before sorting instead. */
 	@objc public var totalWeight: Double {
-		decayConversation()
-		return incomingWeightStorage + outgoingWeightStorage
+		incomingWeightStorage + outgoingWeightStorage
 	}
 
 	@objc public var incomingWeight: Double {
@@ -184,7 +186,10 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 		incomingWeightStorage += incomingWeightStorage.rounded() == 0 ? 4 : 1
 	}
 
-	private func decayConversation() {
+	/// Applies time decay to the conversation weights. Call once before ordering by
+	/// `totalWeight`, never from inside a comparator.
+	@objc
+	public func decayConversation() {
 		let now = CFAbsoluteTimeGetCurrent()
 		let minutes = (now - lastWeightFade) / 60
 
@@ -220,8 +225,12 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 	}
 
 	func compareRank(to other: ChannelUser) -> ComparisonResult {
-		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
+		compareRank(to: other, favoringServerStaff: TextualPreferences.memberListSortFavorsServerStaff())
+	}
 
+	/// Pure comparator. The preference is passed in so that a sort reads it once
+	/// rather than once per comparison.
+	func compareRank(to other: ChannelUser, favoringServerStaff favorIRCop: Bool) -> ComparisonResult {
 		if favorIRCop, user.isIRCop, other.user.isIRCop == false {
 			return .orderedAscending
 		}
@@ -249,12 +258,14 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 	}
 
 	@objc public class var channelRankComparator: Comparator {
-		{ first, second in
+		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
+
+		return { first, second in
 			guard let first = first as? ChannelUser, let second = second as? ChannelUser else {
 				return .orderedSame
 			}
 
-			return first.compareRank(to: second)
+			return first.compareRank(to: second, favoringServerStaff: favorIRCop)
 		}
 	}
 
@@ -268,6 +279,15 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 		}
 
 		return self === other || user === other.user && modesStorage == other.modesStorage
+	}
+
+	/** `isEqual` compares values, so `hash` has to as well: inheriting the identity
+	 hash makes equal-but-distinct members behave incorrectly in sets and dictionaries. */
+	override public var hash: Int {
+		var hasher = Hasher()
+		hasher.combine(ObjectIdentifier(user))
+		hasher.combine(modesStorage)
+		return hasher.finalize()
 	}
 
 	@objc(populateDuringCopy:mutableCopy:)

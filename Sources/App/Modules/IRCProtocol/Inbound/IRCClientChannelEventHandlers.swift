@@ -186,7 +186,7 @@ public extension IRCClient {
 	func receiveError(_ message: Message) {
 		let text = message.sequence
 		if IRCInboundEventPolicy.cancelsReconnect(forError: text) {
-			disconnectCallback = { [weak self] in self?.cancelReconnect() }
+			addDisconnectCallback { [weak self] in self?.cancelReconnect() }
 		}
 		printError(text, asCommand: message.command)
 	}

@@ -194,10 +194,6 @@ open class User: PortablePropertyObject {
 		nil
 	}
 
-	deinit {
-		cancelRemoveUserTimer()
-	}
-
 	private func createNewPersistentStoreObject() {
 		persistentStore = UserPersistentStore()
 		persistentStore.relations = UserRelations()
@@ -239,6 +235,22 @@ open class User: PortablePropertyObject {
 			&& isAwayStorage == other.isAwayStorage
 			&& isIRCopStorage == other.isIRCopStorage
 			&& isBotStorage == other.isBotStorage
+	}
+
+	/** `isEqual` compares values, so `hash` has to as well: inheriting the identity
+	 hash makes equal-but-distinct users behave incorrectly in sets and dictionaries. */
+	override public var hash: Int {
+		var hasher = Hasher()
+		hasher.combine(clientStorage.map(ObjectIdentifier.init))
+		hasher.combine(nicknameStorage)
+		hasher.combine(usernameStorage)
+		hasher.combine(addressStorage)
+		hasher.combine(realNameStorage)
+		hasher.combine(accountStorage)
+		hasher.combine(isAwayStorage)
+		hasher.combine(isIRCopStorage)
+		hasher.combine(isBotStorage)
+		return hasher.finalize()
 	}
 
 	@objc(populateDuringCopy:mutableCopy:)

@@ -108,7 +108,9 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	@objc public private(set) var channelJoinTime: TimeInterval = 0
 	@objc public private(set) var modeInfo: ChannelModeState?
 	@objc public private(set) var memberInfo: ChannelMemberList?
-	@objc public private(set) var logFileSessionCount: UInt = 0
+	/** Whether a logging session banner has been written and not yet closed. A line
+	 counter cannot express this: writing the banner is itself a write. */
+	@objc public private(set) var logFileSessionIsOpen = false
 
 	private var logFile: FileLogger?
 	private var statusChangedByAction = false
@@ -477,15 +479,24 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 	@objc public func closeLogFile() {
 		logFile?.close()
+		/* Leaving the handle in place made the lazy re-creation below unreachable, so
+		 every later write went to a closed logger. */
+		logFile = nil
 	}
 
 	@objc public func logFileWriteSessionBegin() {
+		guard logFileSessionIsOpen == false else { return }
+
+		/* Set before writing: the banner is written through writeToLogFile. */
+		logFileSessionIsOpen = true
 		associatedClient?.logFileRecordSessionChanged(true, in: legacyChannel)
 	}
 
 	@objc public func logFileWriteSessionEnd() {
+		guard logFileSessionIsOpen else { return }
+
 		associatedClient?.logFileRecordSessionChanged(false, in: legacyChannel)
-		logFileSessionCount = 0
+		logFileSessionIsOpen = false
 	}
 
 	@objc(writeToLogLineToLogFile:)
@@ -494,11 +505,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			return
 		}
 
-		logFileSessionCount += 1
-
-		if logFileSessionCount == 1 {
-			logFileWriteSessionBegin()
-		}
+		logFileWriteSessionBegin()
 
 		if logFile == nil {
 			logFile = FileLogger(channel: legacyChannel)

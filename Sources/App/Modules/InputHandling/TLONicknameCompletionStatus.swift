@@ -249,6 +249,12 @@ public final class NicknameCompletionStatus: NSObject {
 		let sortedMembers: [ChannelUser]
 		let priorityMember: ChannelUser?
 
+		/* Decay once, up front: doing it inside the comparator mutated the values the
+		 sort was ordering by. */
+		for member in members {
+			member.decayConversation()
+		}
+
 		if searchPatternIsEmpty {
 			/* With no search pattern the list reads alphabetically and only
 			 the single most highly weighted user is lifted to the top — and

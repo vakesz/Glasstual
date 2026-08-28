@@ -149,7 +149,8 @@ public extension IRCClient {
 		stopISONTimer()
 		stopPongTimer()
 		stopRetryTimer()
-		NSObject.cancelPreviousPerformRequests(withTarget: self)
+		cancelDelayedDisconnect()
+		cancelScheduledConnection()
 
 		if !terminating, reconnectEnabled {
 			startReconnectTimer()
@@ -243,8 +244,7 @@ public extension IRCClient {
 	func ircConnection(_ sender: Connection, didDisconnectWithError disconnectError: Error?) {
 		precondition(sender === socket)
 		changeStateOff(withError: disconnectError)
-		disconnectCallback?()
-		disconnectCallback = nil
+		invokeDisconnectCallbacks()
 		NotificationCenter.default.post(name: .ircClientDidDisconnect, object: self)
 	}
 

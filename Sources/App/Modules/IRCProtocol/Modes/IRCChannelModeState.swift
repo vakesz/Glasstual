@@ -65,7 +65,11 @@ public final class ChannelModeState: NSObject {
 
 	@objc(updateModes:)
 	public func updateModes(_ modeString: String) -> [ModeInfo] {
-		let parsedModes = client!.supportInfo.parseModes(modeString)
+		guard let client else {
+			return []
+		}
+
+		let parsedModes = client.supportInfo.parseModes(modeString)
 
 		modes.apply(parsedModes)
 
@@ -190,7 +194,7 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 	private let modeObjectsLock = NSLock()
 	private var modeObjects: [String: ModeInfo] = [:]
 
-	public init(client: IRCClient) {
+	public init(client: IRCClient?) {
 		self.client = client
 		super.init()
 	}
@@ -237,24 +241,14 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 		modes[modeSymbol] != nil
 	}
 
+	/** A pure lookup. Materialising a placeholder here made `changeCommand(for:)`
+	 emit `-mode` for modes the channel never had. */
 	@objc(modeInfoFor:)
 	public func modeInfo(for modeSymbol: String) -> ModeInfo? {
 		modeObjectsLock.lock()
 		defer { modeObjectsLock.unlock() }
 
-		if let mode = modeObjects[modeSymbol] {
-			return mode
-		}
-
-		guard modeIsPermitted(modeSymbol) else {
-			return nil
-		}
-
-		let mode = ModeInfo(modeSymbol: modeSymbol)
-
-		modeObjects[modeSymbol] = mode
-
-		return mode
+		return modeObjects[modeSymbol]
 	}
 
 	@objc(applyModes:)
@@ -271,21 +265,11 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 
 	@objc(changeMode:modeIsSet:modeParameter:)
 	public func changeMode(_ modeSymbol: String, modeIsSet: Bool, modeParameter: String?) {
-		guard let mode = modeInfo(for: modeSymbol) else {
+		guard modeIsPermitted(modeSymbol) else {
 			return
 		}
 
-		guard let modeMutable = mode.mutableCopy() as? MutableModeInfo else {
-			preconditionFailure("ModeInfo mutable copies must use MutableModeInfo")
-		}
-
-		modeMutable.modeSymbol = modeSymbol
-		modeMutable.modeIsSet = modeIsSet
-		modeMutable.modeParameter = modeParameter
-
-		guard let modeUpdated = modeMutable.copy() as? ModeInfo else {
-			preconditionFailure("MutableModeInfo copies must use ModeInfo")
-		}
+		let modeUpdated = ModeInfo(modeSymbol: modeSymbol, modeIsSet: modeIsSet, modeParameter: modeParameter)
 
 		modeObjectsLock.lock()
 		modeObjects[modeSymbol] = modeUpdated
@@ -293,7 +277,7 @@ public final class ChannelModeContainer: NSObject, NSCopying {
 	}
 
 	public func copy(with _: NSZone? = nil) -> Any {
-		let object = ChannelModeContainer(client: client!)
+		let object = ChannelModeContainer(client: client)
 
 		modeObjectsLock.lock()
 		let snapshot = modeObjects
