@@ -95,7 +95,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	private var observingUserDefaults = false
 	private var userDefaultsObservation: AnyCancellable?
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 
 		MainActor.assumeIsolated {

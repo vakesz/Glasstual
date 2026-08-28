@@ -53,7 +53,7 @@ import Foundation
 }
 
 /// Opaque capability identifiers used by the client's negotiated-capability registry.
-public struct ClientIRCv3SupportedCapability: OptionSet, Hashable, Sendable {
+public nonisolated struct ClientIRCv3SupportedCapability: OptionSet, Hashable, Sendable {
 	public let rawValue: UInt
 
 	public init(rawValue: UInt) {

@@ -20,7 +20,7 @@ private struct HTMLEscapeMap {
 	let code: UInt16
 }
 
-extension NSString {
+nonisolated extension NSString {
 	@objc(gtm_stringByEscapingForHTML)
 	public var gtmStringByEscapingForHTML: String? {
 		stringByEscapingHTML(using: Self.unicodeHTMLEscapeMap, escapeUnicode: false)

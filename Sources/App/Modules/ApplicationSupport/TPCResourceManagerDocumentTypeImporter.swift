@@ -19,11 +19,11 @@ private let pluginDocumentTypeName = "Glasstual IRC Client Extension"
 
 @objc(TPCResourceManagerDocumentTypeImporter)
 public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePanelDelegate {
-	override public static var autosavesInPlace: Bool {
+	override public nonisolated static var autosavesInPlace: Bool {
 		true
 	}
 
-	override public func read(from url: URL, ofType typeName: String) throws {
+	override public nonisolated func read(from url: URL, ofType typeName: String) throws {
 		try MainActor.assumeIsolated {
 			try performRead(from: url, ofType: typeName)
 		}

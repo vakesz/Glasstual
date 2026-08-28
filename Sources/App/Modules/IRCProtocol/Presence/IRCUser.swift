@@ -40,8 +40,8 @@ import CocoaExtensions
 import Foundation
 import os
 
-private let removeUserTimerInterval: TimeInterval = 60 * 5
-private let presentAwayMessageFor301Threshold: CFAbsoluteTime = 300.0
+private nonisolated let removeUserTimerInterval: TimeInterval = 60 * 5
+private nonisolated let presentAwayMessageFor301Threshold: CFAbsoluteTime = 300.0
 
 private let userLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -49,7 +49,7 @@ private let userLogger = Logger(
 )
 
 @objc(IRCUser)
-open class User: PortablePropertyObject {
+open nonisolated class User: PortablePropertyObject {
 	fileprivate weak var clientStorage: IRCClient?
 	fileprivate var persistentStore = UserPersistentStore()
 
@@ -62,6 +62,9 @@ open class User: PortablePropertyObject {
 	fileprivate var isIRCopStorage = false
 	fileprivate var isBotStorage = false
 
+	/** The relation map is keyed by channel and reads the channel's kind, so it
+	 and everything that reaches it live on the main actor. */
+	@MainActor
 	private var relationsInt: UserRelations {
 		if let relations = persistentStore.relations {
 			return relations
@@ -172,7 +175,7 @@ open class User: PortablePropertyObject {
 		return false
 	}
 
-	@objc public var relations: [IRCChannel: ChannelUser] {
+	@objc @MainActor public var relations: [IRCChannel: ChannelUser] {
 		relationsInt.relations
 	}
 
@@ -182,6 +185,7 @@ open class User: PortablePropertyObject {
 	}
 
 	@objc(initWithNickname:onClient:)
+	@MainActor
 	public init(nickname: String, on client: IRCClient) {
 		super.init()
 
@@ -194,6 +198,7 @@ open class User: PortablePropertyObject {
 		nil
 	}
 
+	@MainActor
 	private func createNewPersistentStoreObject() {
 		persistentStore = UserPersistentStore()
 		persistentStore.relations = UserRelations()
@@ -285,6 +290,7 @@ open class User: PortablePropertyObject {
 		removeUserTimer.setEventHandler(handler: removeUserTimerBlockToFire())
 	}
 
+	@MainActor
 	private func toggleRemoveUserTimer() {
 		if relationsInt.numberOfRelations > 0 {
 			cancelRemoveUserTimer()
@@ -317,37 +323,45 @@ open class User: PortablePropertyObject {
 
 	private func removeUserTimerBlockToFire() -> () -> Void {
 		weak let client = clientStorage
-		weak let user = self
+		let nickname = nicknameStorage
 
+		/* The timer fires off the main actor and a user is not `Sendable`, so the
+		 handler carries the nickname and looks the user up again on the way in. */
 		return {
-			guard let strongUser = user else {
-				return
-			}
+			Task { @MainActor [weak client] in
+				guard let client, let user = client.findUser(nickname) else {
+					return
+				}
 
-			client?.remove(strongUser)
+				client.remove(user)
+			}
 		}
 	}
 
 	// MARK: - Relations
 
 	@objc(associateUser:withChannel:)
+	@MainActor
 	public func associate(_ user: ChannelUser, with channel: IRCChannel) {
 		relationsInt.associate(user, with: channel)
 		toggleRemoveUserTimer()
 	}
 
 	@objc(disassociateUserWithChannel:)
+	@MainActor
 	public func disassociateUser(with channel: IRCChannel) {
 		relationsInt.disassociateUser(with: channel)
 		toggleRemoveUserTimer()
 	}
 
 	@objc(userAssociatedWithChannel:)
+	@MainActor
 	public func userAssociated(with channel: IRCChannel) -> ChannelUser? {
 		relationsInt.userAssociated(with: channel)
 	}
 
 	@objc
+	@MainActor
 	public func relinkRelations() {
 		for relatedUser in relationsInt.relatedUsers {
 			relatedUser.changeUser(to: self)
@@ -355,12 +369,14 @@ open class User: PortablePropertyObject {
 	}
 
 	@objc
+	@MainActor
 	public func becamePrimaryUser() {
 		updateRemoveUserTimerBlockToFire()
 		relinkRelations()
 	}
 
 	@objc(enumerateRelations:)
+	@MainActor
 	public func enumerateRelations(
 		_ block: (IRCChannel, ChannelUser, UnsafeMutablePointer<ObjCBool>) -> Void
 	) {
@@ -369,7 +385,7 @@ open class User: PortablePropertyObject {
 }
 
 @objc(IRCUserMutable)
-public final class UserMutable: User {
+public final nonisolated class UserMutable: User {
 	override public static var isMutable: Bool {
 		true
 	}

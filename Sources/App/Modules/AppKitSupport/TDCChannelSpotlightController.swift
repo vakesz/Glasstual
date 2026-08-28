@@ -32,11 +32,9 @@ public final class ChannelSpotlightController: WindowBase, NSTableViewDataSource
 	private var mouseEventMonitor: Any?
 	private lazy var notifications = NotificationSubscriptions()
 
-	override public nonisolated init() {
+	override public init() {
 		super.init()
-		MainActor.assumeIsolated {
-			prepareInitialState()
-		}
+		prepareInitialState()
 	}
 
 	private func prepareInitialState() {

@@ -15,7 +15,7 @@ import Foundation
 import GlasstualPluginKit
 
 @objc(THOPluginDispatcher)
-public final class PluginDispatcher: NSObject {
+public final nonisolated class PluginDispatcher: NSObject {
 	private nonisolated(unsafe) static let didPostNewMessageObjectCache =
 		NSCache<NSString, THOPluginDidPostNewMessageConcreteObject>()
 

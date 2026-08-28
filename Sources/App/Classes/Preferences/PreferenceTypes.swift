@@ -38,12 +38,12 @@
 
 import Foundation
 
-let TPCPreferencesThemeNameDefaultsKey = "Theme -> Name"
-let TPCPreferencesThemeFontNameDefaultsKey = "Theme -> Font Name"
-let TPCPreferencesThemeFontSizeDefaultsKey = "Theme -> Font Size"
-let TPCPreferencesThemeNameMissingLocallyDefaultsKey = "Theme -> Name -> Did Not Exist During Last Sync"
-let TPCPreferencesThemeFontNameMissingLocallyDefaultsKey = "Theme -> Font Name -> Did Not Exist During Last Sync"
-let TPCPreferencesDictionaryVersion: UInt = 602
+nonisolated let TPCPreferencesThemeNameDefaultsKey = "Theme -> Name"
+nonisolated let TPCPreferencesThemeFontNameDefaultsKey = "Theme -> Font Name"
+nonisolated let TPCPreferencesThemeFontSizeDefaultsKey = "Theme -> Font Size"
+nonisolated let TPCPreferencesThemeNameMissingLocallyDefaultsKey = "Theme -> Name -> Did Not Exist During Last Sync"
+nonisolated let TPCPreferencesThemeFontNameMissingLocallyDefaultsKey = "Theme -> Font Name -> Did Not Exist During Last Sync"
+nonisolated let TPCPreferencesDictionaryVersion: UInt = 602
 
 @objc public enum TXNicknameHighlightMatchType: UInt, Sendable {
 	case partial

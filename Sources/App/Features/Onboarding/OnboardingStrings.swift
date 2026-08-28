@@ -17,7 +17,7 @@ struct OnboardingAppearancePreviewMessage: Equatable {
 	let message: String
 }
 
-enum OnboardingTextSize: CaseIterable {
+nonisolated enum OnboardingTextSize: CaseIterable {
 	case small
 	case medium
 	case large
@@ -34,7 +34,7 @@ enum OnboardingTextSize: CaseIterable {
 	}
 }
 
-enum OnboardingInterfaceStyle: CaseIterable {
+nonisolated enum OnboardingInterfaceStyle: CaseIterable {
 	case system
 	case light
 	case dark
@@ -51,8 +51,8 @@ enum OnboardingInterfaceStyle: CaseIterable {
 	}
 }
 
-enum OnboardingStrings {
-	enum Window {
+nonisolated enum OnboardingStrings {
+	nonisolated enum Window {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.ob1Wt)
 		}
@@ -78,7 +78,7 @@ enum OnboardingStrings {
 		}
 	}
 
-	enum Identity {
+	nonisolated enum Identity {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.id1Tt)
 		}
@@ -116,7 +116,7 @@ enum OnboardingStrings {
 		}
 	}
 
-	enum Appearance {
+	nonisolated enum Appearance {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.lf1Tt)
 		}
@@ -183,7 +183,7 @@ enum OnboardingStrings {
 		}
 	}
 
-	enum Notifications {
+	nonisolated enum Notifications {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.nt1Tt)
 		}
@@ -217,7 +217,7 @@ enum OnboardingStrings {
 		}
 	}
 
-	enum FirstNetwork {
+	nonisolated enum FirstNetwork {
 		static var title: String {
 			String(localized: .TDCOnboardingWindow.nw1Tt)
 		}
@@ -243,7 +243,7 @@ enum OnboardingStrings {
 		}
 	}
 
-	enum NetworkPicker {
+	nonisolated enum NetworkPicker {
 		static var searchPlaceholder: String {
 			String(localized: .TDCOnboardingWindow.np1Sp)
 		}

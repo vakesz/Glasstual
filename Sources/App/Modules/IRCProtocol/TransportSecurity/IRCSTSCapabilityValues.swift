@@ -38,7 +38,7 @@
 import Foundation
 
 @objc(IRCSTSCapabilityValues)
-public final class STSCapabilityValues: NSObject {
+public final nonisolated class STSCapabilityValues: NSObject {
 	@objc public private(set) var port: UInt16 = 0
 	@objc public private(set) var hasDuration = false
 	@objc public private(set) var duration: TimeInterval = 0

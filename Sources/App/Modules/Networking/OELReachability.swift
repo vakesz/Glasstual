@@ -45,7 +45,7 @@ enum ReachabilityPathEvent: Int {
 }
 
 @objc(OELReachability)
-public final class Reachability: NSObject, @unchecked Sendable {
+public final nonisolated class Reachability: NSObject, @unchecked Sendable {
 	@objc public var reachableBlock: ((Reachability) -> Void)?
 	@objc public var unreachableBlock: ((Reachability) -> Void)?
 

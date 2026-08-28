@@ -37,8 +37,9 @@
 
 import AppKit
 
+/// A stateless formatter; AppKit calls its overrides without actor isolation.
 @objc(TPI_NumberOnlyTextFieldFormatter)
-final class NumberOnlyTextFieldFormatter: NumberFormatter, @unchecked Sendable {
+final nonisolated class NumberOnlyTextFieldFormatter: NumberFormatter, @unchecked Sendable {
 	override func isPartialStringValid(
 		_ partialString: String,
 		newEditingString _: AutoreleasingUnsafeMutablePointer<NSString?>?,

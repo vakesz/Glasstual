@@ -69,7 +69,7 @@ public final class FileLogger: NSObject {
 		super.init()
 	}
 
-	deinit {
+	isolated deinit {
 		closeHandleForDeallocation()
 	}
 

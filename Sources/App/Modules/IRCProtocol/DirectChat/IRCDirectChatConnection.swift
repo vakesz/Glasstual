@@ -109,7 +109,7 @@ public final class DirectChatConnection: NSObject, TDCFileTransferDialogSocketDe
 		super.init()
 	}
 
-	deinit {
+	isolated deinit {
 		tearDownSockets()
 	}
 

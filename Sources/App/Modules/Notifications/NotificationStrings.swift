@@ -44,7 +44,7 @@ private enum NotificationFileTransferByteCountBody: String {
 	case sendSuccessful = "body-file-transfer-send-successful"
 }
 
-enum NotificationStrings {
+nonisolated enum NotificationStrings {
 	static var replyActionTitle: String {
 		String(localized: .Notifications.replyActionTitle)
 	}
@@ -154,7 +154,7 @@ enum NotificationStrings {
 		}
 	}
 
-	enum Spoken {
+	nonisolated enum Spoken {
 		static var channelMessage: String {
 			String(localized: .Notifications.spokenChannelMessage)
 		}
@@ -257,7 +257,7 @@ enum NotificationStrings {
 		}
 	}
 
-	enum Membership {
+	nonisolated enum Membership {
 		static func kicked(by nickname: String, from channelName: String, reason: String) -> String {
 			String(localized: .Notifications.bodyKicked(nickname, channelName, reason))
 		}
@@ -287,7 +287,7 @@ enum NotificationStrings {
 		}
 	}
 
-	enum Availability {
+	nonisolated enum Availability {
 		static func message(
 			for status: IRCAddressBookUserTrackingStatus,
 			nickname: String
@@ -305,7 +305,7 @@ enum NotificationStrings {
 		}
 	}
 
-	enum FileTransfer {
+	nonisolated enum FileTransfer {
 		static func description(
 			for event: TXNotificationType,
 			filename: String,
@@ -343,7 +343,7 @@ enum NotificationStrings {
 	}
 }
 
-enum NotificationSoundStrings {
+nonisolated enum NotificationSoundStrings {
 	static var defaultSound: String {
 		String(localized: .TVCNotificationConfigurationView.defaultSound)
 	}

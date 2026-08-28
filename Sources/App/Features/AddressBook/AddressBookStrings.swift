@@ -12,7 +12,7 @@
 
 import Foundation
 
-enum AddressBookStrings {
+nonisolated enum AddressBookStrings {
 	static var invalidIgnoreMask: String {
 		String(localized: .TDCAddressBookSheet.csuBv)
 	}

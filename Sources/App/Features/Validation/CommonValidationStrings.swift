@@ -37,7 +37,7 @@
 
 import Foundation
 
-enum CommonValidationStrings {
+nonisolated enum CommonValidationStrings {
 	static var invalidInternetPort: String {
 		String(localized: .CommonErrors.internetPortInvalid)
 	}

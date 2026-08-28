@@ -12,7 +12,7 @@
 
 import Foundation
 
-enum ChannelModesStrings {
+nonisolated enum ChannelModesStrings {
 	static var channelKeyFieldHint: String {
 		String(localized: .TDCChannelModifyModesSheet.channelKeyFieldHint)
 	}

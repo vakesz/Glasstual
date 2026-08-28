@@ -39,13 +39,6 @@ import AppKit
 import CocoaExtensions
 import Foundation
 
-extension IRCChannel: @unchecked Sendable {}
-extension IRCClient: @unchecked Sendable {}
-
-private struct SynchronousMainActorTransfer<Value>: @unchecked Sendable {
-	let value: Value
-}
-
 /// The member-list operations shared by channels and their backing store.
 ///
 /// Objective-C plug-ins continue to see the historic protocol name and
@@ -122,19 +115,7 @@ public protocol ChannelMemberListPrivateProtocol: AnyObject {
 }
 
 @objc(IRCChannelMemberList)
-public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMemberListPrivateProtocol,
-	@unchecked Sendable
-{
-	private static let queueKey = DispatchSpecificKey<UInt8>()
-	private static let modifyQueue: DispatchQueue = {
-		let queue = DispatchQueue(
-			label: "IRCChannel.modifyMemberListSerialQueue",
-			qos: .default
-		)
-		queue.setSpecific(key: queueKey, value: 1)
-		return queue
-	}()
-
+public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMemberListPrivateProtocol {
 	private weak var clientStorage: IRCClient?
 	private weak var channelStorage: IRCChannel?
 	private var controller: IRCChannelMemberListController?
@@ -162,42 +143,14 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		super.init()
 	}
 
-	deinit {
-		unassignController()
+	isolated deinit {
+		controller?.assign(to: nil)
 	}
 
 	@objc(assignController:)
 	public func assign(_ controller: IRCChannelMemberListController?) {
-		let controller = SynchronousMainActorTransfer(value: controller)
-
-		performOnMain {
-			controller.value?.replaceContents(self.memberList ?? [])
-			self.controller = controller.value
-		}
-	}
-
-	private func unassignController() {
-		performOnMain {
-			self.controller?.assign(to: nil)
-		}
-	}
-
-	@objc(resumeMemberListSerialQueues)
-	public static func resumeSerialQueues() {
-		modifyQueue.resume()
-	}
-
-	@objc(suspendMemberListSerialQueues)
-	public static func suspendSerialQueues() {
-		modifyQueue.suspend()
-	}
-
-	private static func accessMembers<Result>(_ operation: () -> Result) -> Result {
-		if DispatchQueue.getSpecific(key: queueKey) != nil {
-			return operation()
-		}
-
-		return modifyQueue.sync(execute: operation)
+		controller?.replaceContents(memberList ?? [])
+		self.controller = controller
 	}
 
 	private func sortedIndex(for member: ChannelUser) -> Int {
@@ -270,7 +223,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		member.associate(with: channel)
 		willChangeValue(forKey: "numberOfMembers")
 		willChangeValue(forKey: "memberList")
-		let sortedIndex = Self.accessMembers { sortedInsert(member) }
+		let sortedIndex = sortedInsert(member)
 		didChangeValue(forKey: "numberOfMembers")
 		didChangeValue(forKey: "memberList")
 
@@ -278,10 +231,8 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return
 		}
 
-		performOnMain {
-			self.controller?.insert(member, atArrangedObjectIndex: sortedIndex)
-			self.client?.postEvent(toViewController: "channelMemberAdded", for: channel)
-		}
+		controller?.insert(member, atArrangedObjectIndex: sortedIndex)
+		client?.postEvent(toViewController: "channelMemberAdded", for: channel)
 	}
 
 	@objc(removeMemberWithNickname:)
@@ -298,16 +249,14 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		member.disassociate(with: channel)
-		let sortedIndex = Self.accessMembers { removeStoredMember(member) }
+		let sortedIndex = removeStoredMember(member)
 
 		guard let sortedIndex, channel.isChannel else {
 			return
 		}
 
-		performOnMain {
-			self.controller?.remove(atArrangedObjectIndex: sortedIndex)
-			self.client?.postEvent(toViewController: "channelMemberRemoved", for: channel)
-		}
+		controller?.remove(atArrangedObjectIndex: sortedIndex)
+		client?.postEvent(toViewController: "channelMemberRemoved", for: channel)
 	}
 
 	@objc(resortMember:)
@@ -335,39 +284,37 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		var oldIndex: Int?
-		let newIndex = Self.accessMembers { () -> Int? in
-			if resort {
+		let newIndex: Int? = if resort {
+			{
 				oldIndex = removeStoredMember(oldMember)
 				return sortedInsert(newMember)
-			}
-
-			return replaceStoredMember(oldMember, with: newMember)
+			}()
+		} else {
+			replaceStoredMember(oldMember, with: newMember)
 		}
 
 		guard let newIndex, channel.isChannel else {
 			return
 		}
 
-		performOnMain {
-			guard let controller = self.controller,
-			      let memberList = self.applicationController.mainWindow.memberList
-			else {
-				return
-			}
-
-			memberList.beginUpdates()
-
-			if resort {
-				if let oldIndex {
-					controller.remove(atArrangedObjectIndex: oldIndex)
-				}
-				controller.insert(newMember, atArrangedObjectIndex: newIndex)
-			} else {
-				memberList.refreshDrawing(forRow: memberList.rowForMember(at: newIndex))
-			}
-
-			memberList.endUpdates()
+		guard let controller,
+		      let memberList = applicationController.mainWindow.memberList
+		else {
+			return
 		}
+
+		memberList.beginUpdates()
+
+		if resort {
+			if let oldIndex {
+				controller.remove(atArrangedObjectIndex: oldIndex)
+			}
+			controller.insert(newMember, atArrangedObjectIndex: newIndex)
+		} else {
+			memberList.refreshDrawing(forRow: memberList.rowForMember(at: newIndex))
+		}
+
+		memberList.endUpdates()
 	}
 
 	@objc(replaceMember:withMember:)
@@ -467,43 +414,35 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		/* Snapshot the preference so the comparator stays pure for the whole sort. */
 		let favorIRCop = TextualPreferences.memberListSortFavorsServerStaff()
 
-		Self.accessMembers {
-			memberContainer.sort {
-				$0.compareRank(to: $1, favoringServerStaff: favorIRCop) == .orderedAscending
-			}
+		memberContainer.sort {
+			$0.compareRank(to: $1, favoringServerStaff: favorIRCop) == .orderedAscending
 		}
 
-		performOnMain {
-			self.controller?.replaceContents(self.memberList ?? [])
-		}
+		controller?.replaceContents(memberList ?? [])
 	}
 
 	@objc
 	public func clearMembers() {
 		let channel = channel
 
-		Self.accessMembers {
-			willChangeValue(forKey: "numberOfMembers")
-			willChangeValue(forKey: "memberList")
-			if let channel {
-				memberContainer.forEach { $0.disassociate(with: channel) }
-			}
-			memberContainer.removeAll()
-			didChangeValue(forKey: "numberOfMembers")
-			didChangeValue(forKey: "memberList")
+		willChangeValue(forKey: "numberOfMembers")
+		willChangeValue(forKey: "memberList")
+		if let channel {
+			memberContainer.forEach { $0.disassociate(with: channel) }
 		}
+		memberContainer.removeAll()
+		didChangeValue(forKey: "numberOfMembers")
+		didChangeValue(forKey: "memberList")
 
-		performOnMain {
-			self.controller?.replaceContents([])
-		}
+		controller?.replaceContents([])
 	}
 
 	@objc public var numberOfMembers: UInt {
-		Self.accessMembers { UInt(memberContainer.count) }
+		UInt(memberContainer.count)
 	}
 
 	@objc public var memberList: [ChannelUser]? {
-		Self.accessMembers { memberContainer }
+		memberContainer
 	}
 
 	@objc(pasteboardDataForMembers:)
@@ -595,13 +534,5 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		return member
-	}
-
-	private func performOnMain(_ operation: @escaping @MainActor () -> Void) {
-		performSynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				operation()
-			}
-		}
 	}
 }

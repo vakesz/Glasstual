@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum ApplicationGroup {
+nonisolated enum ApplicationGroup {
 	private static let infoKey = "GlasstualApplicationGroupIdentifier"
 
 	static let identifier: String = {

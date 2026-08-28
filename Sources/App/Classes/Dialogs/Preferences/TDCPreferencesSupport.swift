@@ -260,7 +260,7 @@ enum PreferencesPaneCatalog {
 	}
 }
 
-enum PreferencesValueValidation {
+nonisolated enum PreferencesValueValidation {
 	static let scrollbackSaveRange = 100 ... 50000
 	static let scrollbackVisibleRange = 100 ... 15000
 	static let inlineMediaWidthRange = 40 ... 2000
@@ -276,7 +276,7 @@ enum PreferencesValueValidation {
 }
 
 @objc(TXColorUnarchiveFromDataTransformer)
-final class ColorUnarchiveFromDataTransformer: NSSecureUnarchiveFromDataTransformer {
+final nonisolated class ColorUnarchiveFromDataTransformer: NSSecureUnarchiveFromDataTransformer {
 	static let register: Void = {
 		ValueTransformer.setValueTransformer(
 			ColorUnarchiveFromDataTransformer(),

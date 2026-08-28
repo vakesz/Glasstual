@@ -39,7 +39,7 @@ import AppKit
 import CocoaExtensions
 
 @objc(TPCApplicationInfo)
-public final class ApplicationInfo: NSObject {
+public final nonisolated class ApplicationInfo: NSObject {
 	private static let runtimeDefaultsKey = "TXRunTime"
 	private static let runCountDefaultsKey = "TXRunCount"
 
@@ -105,7 +105,7 @@ public final class ApplicationInfo: NSObject {
 		userDefaults.unsignedInteger(forKey: runCountDefaultsKey)
 	}
 
-	@objc public static func incrementApplicationRunCount() {
+	@objc public nonisolated static func incrementApplicationRunCount() {
 		userDefaults.setUnsignedInteger(applicationRunCount() + 1, forKey: runCountDefaultsKey)
 	}
 

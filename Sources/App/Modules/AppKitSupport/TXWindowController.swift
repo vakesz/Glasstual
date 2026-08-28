@@ -14,13 +14,13 @@ import AppKit
 import os
 import Synchronization
 
-private let windowControllerLogger = Logger(
+private nonisolated let windowControllerLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "WindowController"
 )
 
 @objc(TXWindowController)
-public final class WindowController: NSObject {
+public final nonisolated class WindowController: NSObject {
 	private struct RegistryState: @unchecked Sendable {
 		var windows: [String: AnyObject] = [:]
 		var isTerminated = false

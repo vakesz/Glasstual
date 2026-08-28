@@ -48,7 +48,7 @@ public typealias IRCSTSPolicy = STSPolicy
 }
 
 @objc(IRCSTSPolicy)
-public final class STSPolicy: NSObject {
+public final nonisolated class STSPolicy: NSObject {
 	@objc public let port: UInt16
 	@objc public let expiresAt: Date
 	@objc public let preload: Bool

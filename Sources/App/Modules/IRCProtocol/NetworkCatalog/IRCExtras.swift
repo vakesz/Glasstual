@@ -16,7 +16,7 @@ import os
 
 public typealias IRCExtras = Extras
 
-private let extrasLogger = Logger(
+private nonisolated let extrasLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCExtras"
 )

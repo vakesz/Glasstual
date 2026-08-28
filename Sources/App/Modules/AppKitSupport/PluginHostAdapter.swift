@@ -38,7 +38,7 @@
 import AppKit
 @_spi(Host) import GlasstualPluginKit
 
-private enum PluginHostMainActorBridge {
+private nonisolated enum PluginHostMainActorBridge {
 	static func sync<Result: Sendable>(
 		_ operation: @escaping @MainActor @Sendable () -> Result
 	) -> Result {
@@ -54,7 +54,7 @@ private enum PluginHostMainActorBridge {
 
 /// Carries host objects and callbacks through a synchronous main-actor handoff.
 /// The caller remains blocked, so the wrapped value is never accessed concurrently.
-private struct PluginHostTransfer<Value>: @unchecked Sendable {
+private nonisolated struct PluginHostTransfer<Value>: @unchecked Sendable {
 	let value: Value
 }
 
@@ -69,7 +69,7 @@ private typealias PluginMessagePrinter = (
 	@escaping (PluginPrintResult) -> Void
 ) -> Void
 
-enum PluginHostAdapter {
+nonisolated enum PluginHostAdapter {
 	static func makeContext() -> PluginHostContext {
 		PluginHostMainActorBridge.sync {
 			makeContextOnMainActor()

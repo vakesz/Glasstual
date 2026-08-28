@@ -13,7 +13,7 @@
 
 import Foundation
 
-enum ChannelInviteStrings {
+nonisolated enum ChannelInviteStrings {
 	static var cancelButtonTitle: String {
 		String(localized: .TDCChannelInviteSheet.cancelButton)
 	}

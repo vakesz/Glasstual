@@ -103,7 +103,10 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 
 	private var serverPortObservation: NSKeyValueObservation?
 
-	override public func validateValue(_ ioValue: AutoreleasingUnsafeMutablePointer<AnyObject?>, forKey inKey: String)
+	override public nonisolated func validateValue(
+		_ ioValue: AutoreleasingUnsafeMutablePointer<AnyObject?>,
+		forKey inKey: String
+	)
 		throws
 	{
 		if inKey == "serverAddress" {

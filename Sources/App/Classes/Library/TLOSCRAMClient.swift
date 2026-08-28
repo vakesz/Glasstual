@@ -63,7 +63,7 @@ public enum SCRAMClientErrorCode: Int {
 /// Channel binding is not offered (`n,,`). Passwords are used as typed;
 /// SASLprep is not applied, which matches what IRC servers do.
 @objc(TLOSCRAMClient)
-public final class SCRAMClient: NSObject {
+public final nonisolated class SCRAMClient: NSObject {
 	@objc(TLOSCRAMClientState)
 	public enum State: Int {
 		case initial

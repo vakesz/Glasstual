@@ -45,7 +45,7 @@ import Synchronization
 /// resolves recursive partials. Repository lookup and compilation must therefore
 /// remain one transaction: exposing that temporary tree to another rendering
 /// queue causes `RenderingEngine` to trap when it reads the missing content type.
-final class ThemeTemplateStore: Sendable {
+final nonisolated class ThemeTemplateStore: Sendable {
 	/// Mustache's reference types predate Swift concurrency. Every reference in
 	/// this state is created, replaced, and used only while `state` is locked.
 	private struct State: @unchecked Sendable {

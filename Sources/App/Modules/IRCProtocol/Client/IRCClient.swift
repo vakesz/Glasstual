@@ -41,6 +41,7 @@
  under the three-clause BSD license reproduced in Acknowledgements.pdf. */
 
 import Foundation
+import Synchronization
 
 public extension Notification.Name {
 	static let IRCClientConfigurationWasUpdated = Self("IRCClientConfigurationWasUpdatedNotification")
@@ -59,13 +60,26 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 		var linePrintObserver: ((IRCLinePrintRequest) -> Void)?
 	#endif
 
-	@objc public dynamic var config: IRCClientConfig
+	@objc public dynamic var config: IRCClientConfig {
+		didSet { refreshDescription() }
+	}
+
 	@objc public dynamic lazy var supportInfo = IRCISupportInfo(client: self)
+	/** The ISUPPORT prefix and case-mapping values, republished by `supportInfo`
+	 whenever they change. Channel members rank, compare and mark themselves on
+	 the printing queue and must not read the live table for them. */
+	nonisolated let userPrefixes = Mutex(IRCUserPrefixTable())
 	@objc public dynamic var cachedHighlights: [HighlightLogEntry] = []
 	@objc public dynamic var server: Server?
 	@objc public dynamic var isConnecting = false
-	@objc public dynamic var isConnected = false
-	@objc public dynamic var isLoggedIn = false
+	@objc public dynamic var isConnected = false {
+		didSet { refreshDescription() }
+	}
+
+	@objc public dynamic var isLoggedIn = false {
+		didSet { refreshDescription() }
+	}
+
 	@objc public dynamic var isQuitting = false
 	@objc dynamic var isDisconnecting = false
 	@objc public dynamic var userIsAway = false
@@ -199,7 +213,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 		prepareInitialState()
 	}
 
-	deinit {
+	isolated deinit {
 		NotificationCenter.default.removeObserver(self)
 		[
 			autojoinTimer, autojoinNextJoinTimer, autojoinDelayedWarningTimer,
@@ -208,8 +222,19 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 		NSObject.cancelPreviousPerformRequests(withTarget: self)
 	}
 
-	override public var description: String {
-		"<IRCClient [\(networkNameAlt)]: \(serverAddress ?? "(null)")>"
+	/** `NSObject.description` is nonisolated, so it cannot read the main-actor
+	 configuration and support info the text is built from. The text is published
+	 here instead whenever one of the values it names changes. */
+	private let descriptionSnapshot = Mutex("<IRCClient>")
+
+	override public nonisolated var description: String {
+		descriptionSnapshot.withLock { $0 }
+	}
+
+	/// Republishes the text `description` returns.
+	func refreshDescription() {
+		let text = "<IRCClient [\(networkNameAlt)]: \(serverAddress ?? "(null)")>"
+		descriptionSnapshot.withLock { $0 = text }
 	}
 
 	override public var uniqueIdentifier: String {
@@ -256,6 +281,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 		trackedUsers = AddressBookUserTrackingContainer(client: self)
 		requestedCommands = ClientRequestedCommands()
 		lastMessageServerTime = config.lastMessageServerTime
+		refreshDescription()
 
 		autojoinTimer = makeTimer { $0.onAutojoinTimer() }
 		autojoinNextJoinTimer = makeTimer { $0.onAutojoinNextJoinTimer() }

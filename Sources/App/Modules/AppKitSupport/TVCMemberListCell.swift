@@ -184,7 +184,7 @@ public final class MemberListCell: NSTableCellView {
 		return cache
 	}()
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 
 		MainActor.assumeIsolated {

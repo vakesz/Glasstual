@@ -14,7 +14,7 @@ import Foundation
 import os
 
 @objc(TXSharedApplication)
-public final class SharedApplication: NSObject {
+public final nonisolated class SharedApplication: NSObject {
 	/** Recursive: a singleton's initializer may legitimately ask for another singleton
 	 on the same thread (the theme controller reads the appearance while loading). */
 	private static let lock = NSRecursiveLock()
