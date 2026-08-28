@@ -182,6 +182,8 @@ final class LogViewWebView: WKWebView, WKNavigationDelegate, WKUIDelegate {
 		 the initial callback reports isLoading == false and would declare the
 		 view finished against a blank page. */
 		loadingObservation = observe(\.isLoading, options: [.new]) { [weak self] _, change in
+			/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
+			 nonisolated. WebKit posts load state on the main thread. */
 			MainActor.assumeIsolated {
 				guard let self else {
 					return

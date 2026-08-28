@@ -107,7 +107,7 @@ public extension IRCClient {
 			reloadServerListItems()
 		}
 
-		let controller = NSObject.applicationController()
+		let controller: ApplicationController = AppController.shared
 		controller.menuController?.populateNavigationChannelList()
 		writePasswordsToKeychain()
 		destroyServerPasswordKeychainItemAfterMigration()
@@ -119,7 +119,7 @@ public extension IRCClient {
 
 	@objc(reloadServerListItems)
 	func reloadServerListItems() {
-		guard let mainWindow = NSObject.applicationController().mainWindow,
+		guard let mainWindow = AppController.shared.mainWindow,
 		      let serverList = mainWindow.serverList
 		else { return }
 
@@ -218,7 +218,7 @@ public extension IRCClient {
 		)
 		((viewController as AnyObject) as? LogController)?.prepareForApplicationTermination()
 		clientTerminationLogger.info("[\(clientIdentifier, privacy: .public)] Decrementing client count")
-		NSObject.applicationController().terminatingClientCount -= 1
+		AppController.shared.terminatingClientCount -= 1
 	}
 
 	@objc(prepareForPermanentDestruction)
@@ -234,7 +234,7 @@ public extension IRCClient {
 		config.destroyProxyPasswordKeychainItem()
 		destroyServerPasswordsKeychainItems()
 		channelList.forEach { $0.prepareForPermanentDestruction() }
-		NSObject.applicationController().mainWindow.inputHistoryManager().destroy(self)
+		AppController.shared.mainWindow.inputHistoryManager().destroy(self)
 		((viewController as AnyObject) as? LogController)?.prepareForPermanentDestruction()
 	}
 
@@ -302,7 +302,7 @@ public extension IRCClient {
 		var remainingChannels = channelList
 		var updatedChannels: [IRCChannel] = []
 		var insertedNames = Set<String>()
-		guard let world = NSObject.applicationController().world else { return }
+		guard let world = AppController.shared.world else { return }
 
 		for channelConfig in configurations where insertedNames.insert(channelConfig.channelName).inserted {
 			if let channel = findChannel(channelConfig.channelName, in: remainingChannels) {

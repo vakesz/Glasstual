@@ -55,7 +55,7 @@ enum FileTransferDialogConstants {
 	static let shareMenuTag = 3008
 	static let revealMenuTag = 3006
 	static let bookmarkKey = "File Transfers -> File Transfer Download Folder Bookmark"
-	static let maintenanceInterval: TimeInterval = 1
+	static let maintenanceInterval: Duration = .seconds(1)
 }
 
 let fileTransferDialogLogger = Logger(
@@ -65,12 +65,16 @@ let fileTransferDialogLogger = Logger(
 
 @objc(TDCFileTransferDialogWindow)
 public final class FileTransferDialogWindow: NSWindow {
+	/* ISOLATION-EXCEPTION: QuickLookUI declares the `QLPreviewPanelController`
+	 methods on `NSObject` as nonisolated, so these overrides cannot be isolated.
+	 QuickLook drives the panel from the main thread. */
 	override public nonisolated func acceptsPreviewPanelControl(_: QLPreviewPanel!) -> Bool {
 		MainActor.assumeIsolated {
 			delegate is FileTransferDialog
 		}
 	}
 
+	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
 	override public nonisolated func beginPreviewPanelControl(_ panel: QLPreviewPanel!) {
 		guard let panel else { return }
 
@@ -79,6 +83,7 @@ public final class FileTransferDialogWindow: NSWindow {
 		}
 	}
 
+	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
 	override public nonisolated func endPreviewPanelControl(_ panel: QLPreviewPanel!) {
 		guard let panel else { return }
 
@@ -97,8 +102,7 @@ public final class FileTransferDialog: WindowBase,
 	NSWindowDelegate,
 	QLPreviewPanelDataSource,
 	QLPreviewPanelDelegate,
-	InternetAddressLookupDelegate,
-	@unchecked Sendable
+	InternetAddressLookupDelegate
 {
 	@IBOutlet var clearButton: NSButton!
 	@IBOutlet var navigationControl: NSSegmentedControl!
@@ -106,7 +110,7 @@ public final class FileTransferDialog: WindowBase,
 	@IBOutlet var fileTransfersController: NSArrayController!
 
 	var ipAddressRequest: InternetAddressLookup?
-	var maintenanceTimer: TimerImplementation?
+	var maintenanceTask: Task<Void, Never>?
 	var downloadDestinationURLPrivate: URL?
 	var keyDownEventMonitor: Any?
 	var previewItems: [URL] = []
@@ -116,9 +120,7 @@ public final class FileTransferDialog: WindowBase,
 
 	override public init() {
 		super.init()
-		MainActor.assumeIsolated {
-			prepareInitialState()
-		}
+		prepareInitialState()
 	}
 
 	private func prepareInitialState() {
@@ -127,12 +129,6 @@ public final class FileTransferDialog: WindowBase,
 		prepareTableMenu()
 		installKeyDownEventMonitor()
 
-		maintenanceTimer = TimerImplementation.timer(actionBlock: { [weak self] _ in
-			MainActor.assumeIsolated {
-				self?.onMaintenanceTimer()
-			}
-		}, onQueue: .main)
-
 		notifications.observe(.ircWorldWillDestroyClient) { [weak self] notification in
 			self?.clientWillBeDestroyed(notification)
 		}
@@ -140,26 +136,29 @@ public final class FileTransferDialog: WindowBase,
 
 	isolated deinit {
 		notifications.cancelAll()
-		maintenanceTimer?.stop()
+		maintenanceTask?.cancel()
 		removeKeyDownEventMonitor()
 	}
 
 	override public func show() {
-		MainActor.assumeIsolated {
-			show(true, restorePosition: true)
-		}
+		show(true, restorePosition: true)
 	}
 
+	/* ISOLATION-EXCEPTION: QuickLookUI declares the `QLPreviewPanelController`
+	 methods on `NSObject` as nonisolated, so these overrides cannot be isolated.
+	 QuickLook drives the panel from the main thread. */
 	@objc override public nonisolated func acceptsPreviewPanelControl(_: QLPreviewPanel) -> Bool {
 		true
 	}
 
+	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
 	@objc override public nonisolated func beginPreviewPanelControl(_ panel: QLPreviewPanel) {
 		MainActor.assumeIsolated {
 			beginPreviewPanelControlOnMainActor(panel)
 		}
 	}
 
+	/* ISOLATION-EXCEPTION: see `acceptsPreviewPanelControl(_:)` above. */
 	@objc override public nonisolated func endPreviewPanelControl(_ panel: QLPreviewPanel) {
 		MainActor.assumeIsolated {
 			endPreviewPanelControlOnMainActor(panel)

@@ -448,7 +448,7 @@ open nonisolated class LogLine: PortablePropertyObject {
 
 	@objc(formattedTimestampWithFormat:)
 	public func formattedTimestamp(with format: String?) -> String {
-		let themeFormat = SharedApplication.sharedThemeController().settings.themeTimestampFormat
+		let themeFormat = ThemeController.activeSnapshot?.timestampFormat
 		let selectedFormat = [
 			format,
 			themeFormat,

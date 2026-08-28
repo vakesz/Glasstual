@@ -15,6 +15,7 @@ import Foundation
 import os
 
 @objc(TLOInternetAddressLookupDelegate)
+@MainActor
 public protocol InternetAddressLookupDelegate: AnyObject {
 	func internetAddressLookupReturnedAddress(_ address: String)
 	func internetAddressLookupFailed()
@@ -40,7 +41,7 @@ public final class InternetAddressLookup: NSObject {
 
 	private weak var requestDelegate: InternetAddressLookupDelegate?
 	private var session: URLSession?
-	private var connection: URLSessionDataTask?
+	private var lookupTask: Task<Void, Never>?
 	private var address: String?
 	/** Identifies the lookup a completion belongs to so that a cancelled or superseded
 	 request cannot report back to the delegate. */
@@ -75,12 +76,15 @@ public final class InternetAddressLookup: NSObject {
 		let sourceURL = addressSourceURL
 
 		self.session = session
-		connection = session.dataTask(with: sourceURL) { [weak self] data, response, error in
-			Task { @MainActor [weak self] in
-				self?.completeLookup(generation: generation, data: data, response: response, error: error)
+		lookupTask = Task { [weak self] in
+			do {
+				let (data, response) = try await session.data(from: sourceURL)
+
+				self?.completeLookup(generation: generation, data: data, response: response, error: nil)
+			} catch {
+				self?.completeLookup(generation: generation, data: nil, response: nil, error: error)
 			}
 		}
-		connection?.resume()
 	}
 
 	@objc public func cancelLookup() {
@@ -147,8 +151,8 @@ public final class InternetAddressLookup: NSObject {
 	}
 
 	private func teardownConnection() {
-		connection?.cancel()
-		connection = nil
+		lookupTask?.cancel()
+		lookupTask = nil
 
 		session?.invalidateAndCancel()
 		session = nil

@@ -172,7 +172,7 @@ public extension TextualPreferences {
 		for reloadAction: PreferencesReloadAction,
 		changedKey key: String?
 	) -> Bool {
-		let appController = NSObject.applicationController()
+		let appController: ApplicationController = AppController.shared
 		// Reachable during preference import and during theme validation at
 		// launch, both of which can run before the main window exists.
 		guard let mainWindow = appController.mainWindow else {
@@ -228,7 +228,7 @@ public extension TextualPreferences {
 	}
 
 	private class func reloadMemberOrderingAndHighlights(for reloadAction: PreferencesReloadAction) {
-		let appController = NSObject.applicationController()
+		let appController: ApplicationController = AppController.shared
 		let memberList = appController.mainWindow?.memberList
 
 		var didReloadMemberListSortOrder = false
@@ -266,7 +266,7 @@ public extension TextualPreferences {
 		for reloadAction: PreferencesReloadAction,
 		didReloadActiveStyle: Bool
 	) {
-		let appController = NSObject.applicationController()
+		let appController: ApplicationController = AppController.shared
 		guard let mainWindow = appController.mainWindow else {
 			preferencesReloadLogger.debug("No main window to reload input and storage for")
 			return
@@ -324,7 +324,7 @@ public extension TextualPreferences {
 
 	private class func notifyPreferenceObservers(for reloadAction: PreferencesReloadAction) {
 		if reloadAction.contains(.preferencesChanged) {
-			let appController = NSObject.applicationController()
+			let appController: ApplicationController = AppController.shared
 			guard let mainWindow = appController.mainWindow else { return }
 
 			appController.world.preferencesChanged()

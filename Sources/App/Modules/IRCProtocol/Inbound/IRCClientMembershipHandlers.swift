@@ -370,12 +370,12 @@ public extension IRCClient {
 
 	private func reloadTreeItem(_ item: AnyObject) {
 		guard let legacyItem = item as? IRCTreeItem else { return }
-		NSObject.applicationController().mainWindow.reloadTreeItem(legacyItem)
+		AppController.shared.mainWindow.reloadTreeItem(legacyItem)
 	}
 
 	private func updateTitle(_ item: AnyObject) {
 		guard let legacyItem = item as? IRCTreeItem else { return }
-		NSObject.applicationController().mainWindow.updateTitle(for: legacyItem)
+		AppController.shared.mainWindow.updateTitle(for: legacyItem)
 	}
 
 	private func updateTrackingStatus(for entry: AddressBookEntry, message: Message) {

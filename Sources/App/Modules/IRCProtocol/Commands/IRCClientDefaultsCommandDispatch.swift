@@ -78,7 +78,7 @@ extension IRCClient {
 			)
 			return true
 		}
-		for client in NSObject.applicationController().world.clientList where client === self || appliesToAll {
+		for client in AppController.shared.world.clientList where client === self || appliesToAll {
 			guard let mutableConfig = client.config.mutableCopy() as? IRCClientConfigMutable else { continue }
 			feature.set(enablesFeature, on: mutableConfig)
 			client.updateConfig(mutableConfig)
@@ -86,7 +86,7 @@ extension IRCClient {
 				IRCCommandStrings.Defaults.featureChanged(featureName, enabled: enablesFeature)
 			)
 		}
-		NSObject.applicationController().world.save()
+		AppController.shared.world.save()
 		return true
 	}
 }

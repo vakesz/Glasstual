@@ -150,7 +150,7 @@ nonisolated struct ThemeLogLineRenderer: LogLineRendering {
 	func renderTemplate(for lineType: TVCLogLineType, attributes: ThemeTemplateAttributes) -> String? {
 		/* A theme reload nils the active theme out from under the printing
 		 queue. Skip the line instead of trapping on it. */
-		guard let theme = SharedApplication.sharedThemeController().theme,
+		guard let theme = ThemeController.activeSnapshot?.theme,
 		      let template = theme.template(withLineType: lineType)
 		else {
 			return nil

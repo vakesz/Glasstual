@@ -81,7 +81,7 @@ public extension IRCClient {
 		}
 		guard shouldPrint else { return }
 		if inWhoisResponse, message.params.count > 2 {
-			printUnknownReply(message, in: NSObject.applicationController().mainWindow.selectedChannel(on: self))
+			printUnknownReply(message, in: AppController.shared.mainWindow.selectedChannel(on: self))
 		} else {
 			printUnknownReply(message)
 		}

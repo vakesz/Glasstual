@@ -79,7 +79,7 @@ extension IRCClient {
 		case IRCNumeric.endofsilelist.rawValue:
 			if shouldPrint {
 				printDebugInformation(IRCInboundStrings.Numeric.endOfSilenceList,
-				                      in: NSObject.applicationController().mainWindow.selectedChannel(on: self),
+				                      in: AppController.shared.mainWindow.selectedChannel(on: self),
 				                      asCommand: message.command)
 			}
 		case IRCNumeric.unaway.rawValue, IRCNumeric.nowaway.rawValue:
@@ -153,7 +153,7 @@ extension IRCClient {
 	private func handleAwayNumeric(_ message: Message, shouldPrint: Bool) {
 		guard message.params.count == 3 else { return }
 		let nickname = message.params[1]
-		let channel = findChannel(nickname) ?? NSObject.applicationController().mainWindow.selectedChannel(on: self)
+		let channel = findChannel(nickname) ?? AppController.shared.mainWindow.selectedChannel(on: self)
 		if let user = findUser(nickname) {
 			if monitorAwayStatus {
 				user.markAsAway()
@@ -181,14 +181,14 @@ extension IRCClient {
 		}
 		guard shouldPrint, !entry.isEmpty else { return }
 		printDebugInformation(IRCInboundStrings.Numeric.silenceEntry(entry.joined(separator: " ")),
-		                      in: NSObject.applicationController().mainWindow.selectedChannel(on: self),
+		                      in: AppController.shared.mainWindow.selectedChannel(on: self),
 		                      asCommand: message.command)
 	}
 
 	private func handleOwnAwayNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
 		let away = numeric == IRCNumeric.nowaway.rawValue
 		userIsAway = away
-		NSObject.applicationController().mainWindow.updateTitle()
+		AppController.shared.mainWindow.updateTitle()
 		if shouldPrint {
 			printReply(message)
 		}

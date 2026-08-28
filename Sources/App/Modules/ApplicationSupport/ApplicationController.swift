@@ -34,7 +34,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		category: "Termination"
 	)
 
-	private nonisolated(unsafe) static var awakeFromNibCalled = false
+	private static var awakeFromNibCalled = false
 
 	private var worldStorage: IRCWorld!
 	private var mainWindowStorage: TVCMainWindow!
@@ -87,7 +87,7 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	override public init() {
 		super.init()
 
-		NSObject.setGlobalApplicationControllerReference(self)
+		AppController.setCurrent(self)
 		prepareInitialState()
 	}
 
@@ -111,6 +111,9 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 		#endif
 	}
 
+	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
+	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
+	 only, which is what makes the assumption safe. */
 	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 

@@ -116,7 +116,7 @@ public final class World: NSObject {
 	@objc public func setupConfiguration() {
 		isImportingConfiguration = true
 
-		let serverList = applicationController.mainWindow.serverList!
+		let serverList = AppController.shared.mainWindow.serverList!
 		serverList.beginUpdates()
 
 		for dictionary in TextualPreferences.clientList() ?? [] {
@@ -203,7 +203,7 @@ public final class World: NSObject {
 	}
 
 	private func informAllViewsMainWindowAppearanceChanged() {
-		let appearance = applicationController.mainWindow.userInterfaceObjects
+		let appearance = AppController.shared.mainWindow.userInterfaceObjects
 		evaluateFunction(
 			onAllViews: "Glasstual.appearanceDidChange",
 			arguments: [appearance.shortAppearanceDescription],
@@ -218,7 +218,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func autoConnect(afterWakeup afterWakeUp: Bool) {
-		guard applicationController.ghostModeIsOn == false || afterWakeUp else {
+		guard AppController.shared.ghostModeIsOn == false || afterWakeUp else {
 			return
 		}
 
@@ -277,7 +277,7 @@ public final class World: NSObject {
 	}
 
 	@objc public func preferencesChanged() {
-		applicationController.menuController?.preferencesChanged()
+		AppController.shared.menuController?.preferencesChanged()
 
 		for client in clientList {
 			client.preferencesChanged()
@@ -426,7 +426,7 @@ public final class World: NSObject {
 
 	@objc(evaluateFunctionOnAllViews:arguments:onQueue:)
 	public func evaluateFunction(onAllViews function: String, arguments: [Any]?, onQueue: Bool) {
-		guard applicationController.applicationIsTerminating == false else {
+		guard AppController.shared.applicationIsTerminating == false else {
 			return
 		}
 
@@ -458,16 +458,16 @@ public final class World: NSObject {
 			clients.append(client)
 
 			if reload, let index = clients.firstIndex(where: { $0 === client }) {
-				applicationController.mainWindow.serverList?.addItem(toList: UInt(index), inParent: nil)
+				AppController.shared.mainWindow.serverList?.addItem(toList: UInt(index), inParent: nil)
 			}
 
 			if clients.count == 1 {
-				applicationController.mainWindow.select(client)
+				AppController.shared.mainWindow.select(client)
 			}
 		}
 
-		_ = applicationController.mainWindow.reloadLoadingScreen()
-		applicationController.menuController?.populateNavigationChannelList()
+		_ = AppController.shared.mainWindow.reloadLoadingScreen()
+		AppController.shared.menuController?.populateNavigationChannelList()
 		postClientListWasModifiedNotification()
 
 		return client
@@ -496,12 +496,12 @@ public final class World: NSObject {
 		}
 
 		if reload, let index = client.channelList.firstIndex(where: { $0 === channel }) {
-			applicationController.mainWindow.serverList?.addItem(toList: UInt(index), inParent: client)
+			AppController.shared.mainWindow.serverList?.addItem(toList: UInt(index), inParent: client)
 		}
 
 		if adjust {
-			applicationController.mainWindow.adjustSelection()
-			applicationController.menuController?.populateNavigationChannelList()
+			AppController.shared.mainWindow.adjustSelection()
+			AppController.shared.menuController?.populateNavigationChannelList()
 		}
 
 		return channel
@@ -545,17 +545,17 @@ public final class World: NSObject {
 
 	private func createViewController(client: IRCClient, channel: IRCChannel?) -> LogController {
 		if let channel {
-			return LogController(channel: channel, in: applicationController.mainWindow)
+			return LogController(channel: channel, in: AppController.shared.mainWindow)
 		}
 
-		return LogController(client: client, in: applicationController.mainWindow)
+		return LogController(client: client, in: AppController.shared.mainWindow)
 	}
 
 	private func selectOtherBeforeDestroy(_ target: IRCTreeItem) {
 		if target.isClient {
-			applicationController.mainWindow.deselectGroup(target)
+			AppController.shared.mainWindow.deselectGroup(target)
 		} else {
-			applicationController.mainWindow.deselect(target)
+			AppController.shared.mainWindow.deselect(target)
 		}
 	}
 
@@ -578,15 +578,15 @@ public final class World: NSObject {
 		)
 		selectOtherBeforeDestroy(client)
 		client.prepareForPermanentDestruction()
-		applicationController.mainWindow.serverList?.removeItem(fromList: client)
+		AppController.shared.mainWindow.serverList?.removeItem(fromList: client)
 
 		clientsLock.withLock {
 			clients.removeAll { $0 === client }
 		}
 
 		postClientListWasModifiedNotification()
-		_ = applicationController.mainWindow.reloadLoadingScreen()
-		applicationController.menuController?.populateNavigationChannelList()
+		_ = AppController.shared.mainWindow.reloadLoadingScreen()
+		AppController.shared.menuController?.populateNavigationChannelList()
 	}
 
 	@objc(destroyChannel:)
@@ -624,10 +624,10 @@ public final class World: NSObject {
 		}
 
 		if reload {
-			applicationController.mainWindow.serverList?.removeItem(fromList: channel)
+			AppController.shared.mainWindow.serverList?.removeItem(fromList: channel)
 			client.remove(channel)
-			applicationController.mainWindow.adjustSelection()
-			applicationController.menuController?.populateNavigationChannelList()
+			AppController.shared.mainWindow.adjustSelection()
+			AppController.shared.menuController?.populateNavigationChannelList()
 		}
 	}
 }

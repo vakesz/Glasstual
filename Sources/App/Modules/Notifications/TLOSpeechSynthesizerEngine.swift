@@ -7,12 +7,14 @@ import AVFoundation
 import Foundation
 
 @objc(TLOSpeechSynthesizerEngineDelegate)
-public nonisolated protocol SpeechSynthesizerEngineDelegate: AnyObject {
+@MainActor
+public protocol SpeechSynthesizerEngineDelegate: AnyObject {
 	func speechSynthesizerEngineDidCompleteUtterance()
 }
 
 @objc(TLOSpeechSynthesizerEngine)
-public nonisolated protocol SpeechSynthesizerEngine: AnyObject {
+@MainActor
+public protocol SpeechSynthesizerEngine: AnyObject {
 	var delegate: SpeechSynthesizerEngineDelegate? { get set }
 	var isSpeaking: Bool { get }
 
@@ -20,19 +22,14 @@ public nonisolated protocol SpeechSynthesizerEngine: AnyObject {
 	func stopSpeakingImmediately()
 }
 
+/** `AVSpeechSynthesizer` is main-thread affine, so the engine is too: that is
+ what replaces the recursive lock the translation wrapped every call in. */
 @objc(TLOAVSpeechSynthesizerEngine)
-public final nonisolated class AVSpeechSynthesizerEngine: NSObject, @unchecked Sendable, SpeechSynthesizerEngine,
-	AVSpeechSynthesizerDelegate
-{
-	private let lock = NSRecursiveLock()
-	private weak var delegateStorage: SpeechSynthesizerEngineDelegate?
+@MainActor
+public final class AVSpeechSynthesizerEngine: NSObject, SpeechSynthesizerEngine, AVSpeechSynthesizerDelegate {
+	public weak var delegate: SpeechSynthesizerEngineDelegate?
 
 	private let speechSynthesizer = AVSpeechSynthesizer()
-
-	@objc public var delegate: SpeechSynthesizerEngineDelegate? {
-		get { lock.withLock { delegateStorage } }
-		set { lock.withLock { delegateStorage = newValue } }
-	}
 
 	override public init() {
 		super.init()
@@ -40,46 +37,37 @@ public final nonisolated class AVSpeechSynthesizerEngine: NSObject, @unchecked S
 		speechSynthesizer.delegate = self
 	}
 
-	deinit {
+	isolated deinit {
 		speechSynthesizer.delegate = nil
 	}
 
 	@objc public var isSpeaking: Bool {
-		lock.withLock { speechSynthesizer.isSpeaking }
+		speechSynthesizer.isSpeaking
 	}
 
 	@objc(speakText:)
 	public func speakText(_ text: String) {
-		lock.withLock {
-			let utterance = AVSpeechUtterance(string: text)
-			utterance.rate = AVSpeechUtteranceDefaultSpeechRate
+		let utterance = AVSpeechUtterance(string: text)
+		utterance.rate = AVSpeechUtteranceDefaultSpeechRate
 
-			speechSynthesizer.speak(utterance)
-		}
+		speechSynthesizer.speak(utterance)
 	}
 
 	@objc public func stopSpeakingImmediately() {
-		_ = lock.withLock {
-			speechSynthesizer.stopSpeaking(at: .immediate)
-		}
+		_ = speechSynthesizer.stopSpeaking(at: .immediate)
 	}
 
-	public func speechSynthesizer(_: AVSpeechSynthesizer, didFinish _: AVSpeechUtterance) {
-		notifyCompletionOnMainQueue()
+	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, didFinish _: AVSpeechUtterance) {
+		notifyCompletion()
 	}
 
-	public func speechSynthesizer(_: AVSpeechSynthesizer, didCancel _: AVSpeechUtterance) {
-		notifyCompletionOnMainQueue()
+	public nonisolated func speechSynthesizer(_: AVSpeechSynthesizer, didCancel _: AVSpeechUtterance) {
+		notifyCompletion()
 	}
 
-	private func notifyCompletionOnMainQueue() {
-		DispatchQueue.main.async { [weak self] in
-			guard let self else {
-				return
-			}
-
-			let delegate = lock.withLock { delegateStorage }
-			delegate?.speechSynthesizerEngineDidCompleteUtterance()
+	private nonisolated func notifyCompletion() {
+		Task { @MainActor [weak self] in
+			self?.delegate?.speechSynthesizerEngineDidCompleteUtterance()
 		}
 	}
 }

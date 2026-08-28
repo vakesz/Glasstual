@@ -164,7 +164,7 @@ public extension IRCClient {
 
 	private func noticePrintTarget() -> IRCChannel? {
 		guard TextualPreferences.locationToSendNotices() == .selectedChannel else { return nil }
-		return NSObject.applicationController().mainWindow.selectedChannel(on: self)
+		return AppController.shared.mainWindow.selectedChannel(on: self)
 	}
 }
 

@@ -24,16 +24,6 @@ final class ApplicationInfrastructureMigrationTests: XCTestCase {
 		XCTAssertNotNil(NSClassFromString("TXWindowController"))
 	}
 
-	func testApplicationControllerKeepsLegacyObjectiveCSelectors() {
-		let selector = NSSelectorFromString("masterController")
-
-		XCTAssertTrue(NSObject.instancesRespond(to: selector))
-		XCTAssertTrue(NSObject.responds(to: selector))
-		XCTAssertTrue(
-			NSObject.responds(to: NSSelectorFromString("setGlobalMasterControllerClassReference:"))
-		)
-	}
-
 	func testApplicationResponderSelectorsRemainAvailable() {
 		XCTAssertTrue(Application.responds(to: NSSelectorFromString("checkForOtherCopiesOfGlasstualRunning")))
 		XCTAssertTrue(Application.instancesRespond(to: NSSelectorFromString("performedCustomKeyboardEvent:")))

@@ -158,6 +158,8 @@ public final class ServerEndpointListSheetTableCellView: NSTableCellView {
 		}
 
 		serverPortObservation = objectValue.observe(\.serverPort, options: .new) { [weak self] _, _ in
+			/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
+			 nonisolated. AppKit posts these changes on the main thread. */
 			MainActor.assumeIsolated {
 				self?.willChangeValue(forKey: "serverPort")
 				self?.didChangeValue(forKey: "serverPort")

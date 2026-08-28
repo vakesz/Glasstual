@@ -105,7 +105,7 @@ public extension IRCClient {
 		autojoinDelayedWarningCount += 1
 		let text = IRCConnectionStrings.autojoinDelayedForIdentification
 		printDebugInformation(toConsole: text)
-		if let channel = NSObject.applicationController().mainWindow.selectedChannel(on: self) {
+		if let channel = AppController.shared.mainWindow.selectedChannel(on: self) {
 			printDebugInformation(text, in: channel)
 		}
 	}

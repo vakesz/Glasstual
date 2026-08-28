@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 private final class SpeechSynthesizerEngineSpy: NSObject, SpeechSynthesizerEngine {
 	weak var delegate: SpeechSynthesizerEngineDelegate?
 	private(set) var isSpeaking = false
@@ -32,6 +33,7 @@ private final class SpeechSynthesizerEngineSpy: NSObject, SpeechSynthesizerEngin
 	}
 }
 
+@MainActor
 private final class SpeechSynthesizerEngineDelegateSpy: NSObject, SpeechSynthesizerEngineDelegate {
 	func speechSynthesizerEngineDidCompleteUtterance() {}
 }
@@ -58,8 +60,8 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		let engine = SpeechSynthesizerEngineSpy()
 		let synthesizer = SpeechSynthesizer(engine: engine)
 
-		synthesizer.speak("first")
-		synthesizer.speak("second")
+		synthesizer.speak(text: "first")
+		synthesizer.speak(text: "second")
 
 		XCTAssertEqual(engine.spokenTexts, ["first"])
 		XCTAssertEqual(synthesizer.pendingItemCount, 1)
@@ -74,9 +76,9 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		let engine = SpeechSynthesizerEngineSpy()
 		let synthesizer = SpeechSynthesizer(engine: engine)
 
-		synthesizer.speak("active")
+		synthesizer.speak(text: "active")
 		synthesizer.isStopped = true
-		synthesizer.speak("ignored")
+		synthesizer.speak(text: "ignored")
 
 		XCTAssertEqual(engine.stopCount, 1)
 		XCTAssertEqual(engine.spokenTexts, ["active"])
@@ -87,8 +89,8 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		let engine = SpeechSynthesizerEngineSpy()
 		let synthesizer = SpeechSynthesizer(engine: engine)
 
-		synthesizer.speak("active")
-		synthesizer.speak("queued")
+		synthesizer.speak(text: "active")
+		synthesizer.speak(text: "queued")
 		synthesizer.clearQueue()
 
 		XCTAssertTrue(engine.isSpeaking)
@@ -103,14 +105,14 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		let synthesizer = SpeechSynthesizer(engine: engine)
 		let firstClient = GLTTestClient()
 		let secondClient = GLTTestClient()
-		let firstNotification = SpokenNotification(
+		var firstNotification = SpokenNotification(
 			notificationType: .connect,
 			lineType: .notice,
 			target: firstClient,
 			nickname: "first",
 			text: "one"
 		)
-		let secondNotification = SpokenNotification(
+		var secondNotification = SpokenNotification(
 			notificationType: .connect,
 			lineType: .notice,
 			target: secondClient,
@@ -121,9 +123,9 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		firstNotification.spokenText = "one"
 		secondNotification.spokenText = "two"
 
-		synthesizer.speak(firstNotification)
-		synthesizer.speak(secondNotification)
-		synthesizer.speak("plain text")
+		synthesizer.speak(.notification(firstNotification))
+		synthesizer.speak(.notification(secondNotification))
+		synthesizer.speak(text: "plain text")
 		synthesizer.clearQueue(for: firstClient)
 
 		XCTAssertEqual(synthesizer.pendingItemCount, 2)
@@ -133,14 +135,21 @@ final class TLOSpeechSynthesizerTests: XCTestCase {
 		XCTAssertEqual(synthesizer.pendingItemCount, 1)
 	}
 
-	func testUnsupportedQueueItemDoesNotBlockFollowingText() {
+	func testNotificationWithoutSpokenTextDoesNotBlockFollowingText() {
 		let engine = SpeechSynthesizerEngineSpy()
 		engine.simulateActiveUtterance()
 
 		let synthesizer = SpeechSynthesizer(engine: engine)
+		let unformatted = SpokenNotification(
+			notificationType: .connect,
+			lineType: .notice,
+			target: GLTTestClient(),
+			nickname: "nobody",
+			text: "unformatted"
+		)
 
-		synthesizer.speak(42)
-		synthesizer.speak("valid")
+		synthesizer.speak(.notification(unformatted))
+		synthesizer.speak(text: "valid")
 
 		engine.completeCurrentUtterance()
 

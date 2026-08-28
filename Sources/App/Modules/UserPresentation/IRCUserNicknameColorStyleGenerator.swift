@@ -44,7 +44,7 @@ public final nonisolated class UserNicknameColorStyleGenerator: NSObject {
 
 		isOverride?.pointee = false
 
-		let colorStyle = SharedApplication.sharedThemeController().settings.nicknameColorStyle
+		let colorStyle = ThemeController.activeSnapshot?.nicknameColorStyle ?? .default
 		let hash = hash(for: normalizedString, colorStyle: colorStyle)
 
 		return nicknameColorStyle(forHash: hash, colorStyle: colorStyle)

@@ -303,7 +303,7 @@ private extension IRCClient {
 			if channel.isUnread || channel.nicknameHighlightCount > 0 {
 				channel.resetState()
 				if let item = legacyTreeItem(channel),
-				   let window = (NSObject.applicationController().mainWindow as AnyObject?) as? MainWindow
+				   let window = (AppController.shared.mainWindow as AnyObject?) as? MainWindow
 				{
 					window.serverList.refreshMessageCount(forItem: item)
 				}
@@ -313,7 +313,7 @@ private extension IRCClient {
 		}
 
 		guard let item = legacyTreeItem(channel),
-		      let window = (NSObject.applicationController().mainWindow as AnyObject?) as? MainWindow,
+		      let window = (AppController.shared.mainWindow as AnyObject?) as? MainWindow,
 		      !window.isItemVisible(item) || !window.isKeyWindow
 		else { return }
 		channel.viewController?.mark(at: date)

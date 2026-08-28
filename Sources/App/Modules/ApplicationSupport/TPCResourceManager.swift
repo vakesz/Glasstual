@@ -28,6 +28,8 @@ public final nonisolated class ResourceManager: NSObject {
 		category: "ResourceManager"
 	)
 
+	/* ISOLATION-EXCEPTION: `NSCache` is documented as thread-safe but is not
+	 `Sendable`, and this is a `let` bound once. */
 	private nonisolated(unsafe) static let resourcesCache = NSCache<AnyObject, AnyObject>()
 
 	@objc public static var sharedResourcesCache: NSCache<AnyObject, AnyObject> {

@@ -22,9 +22,14 @@ enum TranscriptDirectory {
 	static let privateMessage = "Queries"
 }
 
-/// Transcript file logger. Callers use the main queue for writes; the idle
-/// timer also fires on the main queue so open/close never races with writing.
+private struct WeakLogger {
+	weak var logger: FileLogger?
+}
+
+/// Transcript file logger. Main-actor isolated so that opening, writing and the
+/// idle sweep that closes a stale handle can never race with each other.
 @objc(TLOFileLogger)
+@MainActor
 public final class FileLogger: NSObject {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
@@ -32,14 +37,16 @@ public final class FileLogger: NSObject {
 	)
 
 	private static let noSpaceLeftOnDeviceAlertInterval: TimeInterval = 300
-	private static let fileHandleIdleLimit: TimeInterval = 1200
-	private static let idleTimerInterval: TimeInterval = 600
-	private static let idleTimerNotification = Notification.Name("TLOFileLoggerIdleTimerNotification")
+	private nonisolated static let fileHandleIdleLimit: TimeInterval = 1200
+	private static let idleSweepInterval: Duration = .seconds(600)
 
-	private nonisolated(unsafe) static var openFileHandleCount = 0
-	private nonisolated(unsafe) static var noSpaceAlertVisible = false
-	private nonisolated(unsafe) static var lastNoSpaceFailTime: TimeInterval = 0
-	private nonisolated(unsafe) static var sharedIdleTimer: TimerImplementation?
+	/** Weak so a logger that is released without closing drops out of the sweep
+	 instead of keeping it running forever, which an unbalanced open/close count
+	 used to do. */
+	private static var openLoggers: [WeakLogger] = []
+	private static var idleSweepTask: Task<Void, Never>?
+	private static var noSpaceAlertVisible = false
+	private static var lastNoSpaceFailTime: TimeInterval = 0
 
 	private weak var client: IRCClient?
 	private weak var channel: IRCChannel?
@@ -148,7 +155,7 @@ public final class FileLogger: NSObject {
 		dateOpened = nil
 
 		if removeObserver {
-			removeIdleTimerObserver()
+			unregisterFromIdleSweep()
 		}
 	}
 
@@ -217,7 +224,7 @@ public final class FileLogger: NSObject {
 		fileHandle = openedHandle
 		dateOpened = Date()
 
-		addIdleTimerObserver()
+		registerForIdleSweep()
 	}
 
 	// MARK: - Paths
@@ -312,63 +319,60 @@ public final class FileLogger: NSObject {
 		(url as NSURL).textualStandardizedTildePath ?? url.path
 	}
 
-	// MARK: - Idle Timer
+	// MARK: - Idle Sweep
 
 	private var fileHandleIdle: Bool {
+		Self.fileHandleIsIdle(lastWriteTime: lastWriteTime, at: Date().timeIntervalSince1970)
+	}
+
+	/// A handle that has never been written to is not idle; one that has is idle
+	/// once nothing has been written to it for `fileHandleIdleLimit` seconds.
+	nonisolated static func fileHandleIsIdle(lastWriteTime: TimeInterval, at now: TimeInterval) -> Bool {
 		guard lastWriteTime > 0 else {
 			return false
 		}
 
-		return (Date().timeIntervalSince1970 - lastWriteTime) > Self.fileHandleIdleLimit
+		return (now - lastWriteTime) > fileHandleIdleLimit
 	}
 
-	private static var idleTimer: TimerImplementation {
-		if let sharedIdleTimer {
-			return sharedIdleTimer
+	private static func startIdleSweep() {
+		guard idleSweepTask == nil else {
+			return
 		}
 
-		let timer = TimerImplementation(
-			actionBlock: { _ in
-				idleTimerFired()
-			}, on: DispatchQueue.main
-		)
+		idleSweepTask = Task { @MainActor in
+			while Task.isCancelled == false {
+				try? await Task.sleep(for: idleSweepInterval)
 
-		sharedIdleTimer = timer
+				guard Task.isCancelled == false else {
+					return
+				}
 
-		return timer
+				sweepIdleLoggers()
+			}
+		}
 	}
 
-	private static func idleTimerFired() {
-		if openFileHandleCount == 0 {
-			stopIdleTimer()
+	private static func stopIdleSweep() {
+		idleSweepTask?.cancel()
+		idleSweepTask = nil
+	}
+
+	private static func sweepIdleLoggers() {
+		openLoggers.removeAll { $0.logger == nil }
+
+		guard openLoggers.isEmpty == false else {
+			stopIdleSweep()
 
 			return
 		}
 
-		NotificationCenter.default.post(name: idleTimerNotification, object: nil)
-	}
-
-	private static func startIdleTimer() {
-		let idleTimer = idleTimer
-
-		guard idleTimer.timerIsActive == false else {
-			return
+		for entry in openLoggers {
+			entry.logger?.closeIfIdle()
 		}
-
-		idleTimer.start(idleTimerInterval, onRepeat: true)
 	}
 
-	private static func stopIdleTimer() {
-		let idleTimer = idleTimer
-
-		guard idleTimer.timerIsActive else {
-			return
-		}
-
-		idleTimer.stop()
-	}
-
-	@objc private func idleTimerDidFire(_: Notification) {
+	private func closeIfIdle() {
 		guard fileHandleIdle else {
 			return
 		}
@@ -378,33 +382,19 @@ public final class FileLogger: NSObject {
 		close()
 	}
 
-	private func updateIdleTimer() {
-		if Self.openFileHandleCount == 0 {
-			Self.stopIdleTimer()
-		} else {
-			Self.startIdleTimer()
+	private func registerForIdleSweep() {
+		Self.openLoggers.removeAll { $0.logger == nil || $0.logger === self }
+		Self.openLoggers.append(WeakLogger(logger: self))
+
+		Self.startIdleSweep()
+	}
+
+	private func unregisterFromIdleSweep() {
+		Self.openLoggers.removeAll { $0.logger == nil || $0.logger === self }
+
+		if Self.openLoggers.isEmpty {
+			Self.stopIdleSweep()
 		}
-	}
-
-	private func addIdleTimerObserver() {
-		Self.openFileHandleCount += 1
-
-		NotificationCenter.default.addObserver(
-			self,
-			selector: #selector(idleTimerDidFire(_:)),
-			name: Self.idleTimerNotification,
-			object: nil
-		)
-
-		updateIdleTimer()
-	}
-
-	private func removeIdleTimerObserver() {
-		Self.openFileHandleCount -= 1
-
-		NotificationCenter.default.removeObserver(self, name: Self.idleTimerNotification, object: nil)
-
-		updateIdleTimer()
 	}
 
 	// MARK: - Disk Space

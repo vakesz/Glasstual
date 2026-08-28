@@ -181,6 +181,6 @@ extension IRCClient {
 		guard let selection,
 		      let treeItem = (selection as AnyObject) as? IRCTreeItem
 		else { return }
-		NSObject.applicationController().mainWindow.select(treeItem)
+		AppController.shared.mainWindow.select(treeItem)
 	}
 }

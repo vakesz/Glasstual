@@ -324,7 +324,7 @@ public final class ServerList: NSOutlineView {
 				selectItem(at: clickedRow)
 			}
 		} else {
-			return NSObject.applicationController().menuController?.serverListNoSelectionMenu
+			return AppController.shared.menuController?.serverListNoSelectionMenu
 		}
 
 		return menu

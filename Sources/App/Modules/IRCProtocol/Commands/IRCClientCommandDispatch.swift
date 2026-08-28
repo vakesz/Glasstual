@@ -316,7 +316,7 @@ public extension IRCClient {
 				printDebugInformation(IRCCommandStrings.soundAlreadyMuted)
 			} else {
 				printDebugInformation(IRCCommandStrings.soundMuted)
-				NSObject.applicationController().menuController?.toggleMuteOnNotificationSoundsShortcut(on: true)
+				AppController.shared.menuController?.toggleMuteOnNotificationSoundsShortcut(on: true)
 			}
 
 		case "unmute":
@@ -324,7 +324,7 @@ public extension IRCClient {
 				printDebugInformation(IRCCommandStrings.soundNotMuted)
 			} else {
 				printDebugInformation(IRCCommandStrings.soundUnmuted)
-				NSObject.applicationController().menuController?.toggleMuteOnNotificationSoundsShortcut(on: false)
+				AppController.shared.menuController?.toggleMuteOnNotificationSoundsShortcut(on: false)
 			}
 
 		case "notifybubble":
@@ -348,7 +348,7 @@ public extension IRCClient {
 
 		case "notifyspeak":
 			guard requireArguments(arguments, for: parsed.command) else { return true }
-			SharedApplication.sharedSpeechSynthesizer().speak(arguments)
+			SharedApplication.sharedSpeechSynthesizer().speak(text: arguments)
 
 		case "quit":
 			guard isConnected else { return true }
@@ -519,7 +519,7 @@ public extension IRCClient {
 			"time": Date().timeIntervalSince1970,
 		]
 		if command == "mylag",
-		   let channel = NSObject.applicationController().mainWindow.selectedChannel(on: self)
+		   let channel = AppController.shared.mainWindow.selectedChannel(on: self)
 		{
 			context["channel"] = channel.name
 		}
@@ -550,7 +550,7 @@ public extension IRCClient {
 	}
 
 	private func currentClients() -> [IRCClient] {
-		NSObject.applicationController().world.clientList
+		AppController.shared.world.clientList
 	}
 
 	private func resolvedTargetChannel(
@@ -561,7 +561,7 @@ public extension IRCClient {
 		if let targetChannelName {
 			return findChannel(targetChannelName)
 		}
-		guard let mainWindow = NSObject.applicationController().mainWindow,
+		guard let mainWindow = AppController.shared.mainWindow,
 		      mainWindow.selectedClient === self
 		else {
 			return nil

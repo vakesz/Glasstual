@@ -55,7 +55,7 @@ public extension IRCClient {
 		guard let treeItem = (query as AnyObject) as? IRCTreeItem else {
 			preconditionFailure("IRCChannel must bridge to its Objective-C tree item")
 		}
-		NSObject.applicationController().mainWindow.select(treeItem)
+		AppController.shared.mainWindow.select(treeItem)
 		printDebugInformation(IRCDiagnosticStrings.hiddenCommandResponsesNotice, in: query)
 	}
 
