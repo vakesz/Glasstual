@@ -11,8 +11,6 @@ import XCTest
 private typealias DictionaryBoolGetter = @convention(c) (AnyObject, Selector, AnyObject) -> Bool
 private typealias DictionaryIntegerGetter = @convention(c) (AnyObject, Selector, AnyObject) -> Int
 private typealias DictionaryObjectMethod = @convention(c) (AnyObject, Selector, AnyObject) -> Unmanaged<AnyObject>
-private typealias MutableDictionaryBoolSetter = @convention(c) (AnyObject, Selector, Bool, AnyObject) -> Void
-private typealias MutableDictionarySelectorMethod = @convention(c) (AnyObject, Selector, Selector) -> Void
 
 @MainActor
 final class DictionaryHelperMigrationTests: XCTestCase {
@@ -92,13 +90,6 @@ final class DictionaryHelperMigrationTests: XCTestCase {
 		XCTAssertEqual(normalized as NSArray, ["Alpha"] as NSArray)
 	}
 
-	func testMutableArrayReplacesObjectValuesUsingSelector() {
-		let array: NSMutableArray = ["MIXED"]
-		array.ce_performSelectorOnObjectValueAndReplace(NSSelectorFromString("lowercaseString"))
-
-		XCTAssertEqual(array, ["mixed"] as NSArray)
-	}
-
 	func testFormDataSupportsStringsNumbersAndNull() throws {
 		let dictionary: NSDictionary = ["query": "hello world", "page": 2, "empty": NSNull()]
 		let result = try XCTUnwrap(invokeObject(
@@ -111,47 +102,12 @@ final class DictionaryHelperMigrationTests: XCTestCase {
 		XCTAssertEqual(fields, ["query=hello%20world", "page=2", "empty="])
 	}
 
-	func testMutableNumericSetterRetainsObjectiveCABI() throws {
-		let dictionary = NSMutableDictionary()
-		let setSelector = NSSelectorFromString("setBool:forKey:")
-		let setImplementation = try XCTUnwrap(dictionary.method(for: setSelector))
-		unsafeBitCast(setImplementation, to: MutableDictionaryBoolSetter.self)(
-			dictionary,
-			setSelector,
-			true,
-			"enabled" as NSString
-		)
-		XCTAssertEqual(dictionary["enabled"] as? Bool, true)
-	}
-
-	func testMutableDictionaryReplacesObjectValuesUsingSelector() throws {
-		let dictionary: NSMutableDictionary = ["word": "MIXED"]
-		let replaceSelector = NSSelectorFromString("performSelectorOnObjectValueAndReplace:")
-		let replaceImplementation = try XCTUnwrap(dictionary.method(for: replaceSelector))
-		unsafeBitCast(replaceImplementation, to: MutableDictionarySelectorMethod.self)(
-			dictionary,
-			replaceSelector,
-			NSSelectorFromString("lowercaseString")
-		)
-
-		XCTAssertEqual(dictionary["word"] as? String, "mixed")
-	}
-
 	func testAllLegacySelectorsRemainAvailable() {
 		let immutableSelectors = [
 			"arrayForKey:",
 			"arrayForKey:orUseDefault:",
-			"assignArrayTo:forKey:",
-			"assignBoolTo:forKey:",
-			"assignDoubleTo:forKey:",
-			"assignObjectTo:forKey:",
-			"assignObjectTo:forKey:performCopy:",
-			"assignStringTo:forKey:",
-			"assignUnsignedIntegerTo:forKey:",
-			"assignUnsignedShortTo:forKey:",
 			"boolForKey:",
 			"boolForKey:orUseDefault:",
-			"containsKey:",
 			"dictionaryByAddingEntries:",
 			"dictionaryByRemovingDefaults:",
 			"dictionaryByRemovingDefaults:allowEmptyValues:",
@@ -188,26 +144,6 @@ final class DictionaryHelperMigrationTests: XCTestCase {
 		for selector in immutableSelectors {
 			XCTAssertTrue(NSDictionary.instancesRespond(to: NSSelectorFromString(selector)), selector)
 		}
-
-		let mutableSelectors = [
-			"maybeSetObject:forKey:",
-			"performSelectorOnObjectValueAndReplace:",
-			"setBool:forKey:",
-			"setDouble:forKey:",
-			"setFloat:forKey:",
-			"setInteger:forKey:",
-			"setLong:forKey:",
-			"setLongLong:forKey:",
-			"setObjectWithoutOverride:forKey:",
-			"setShort:forKey:",
-			"setUnsignedInteger:forKey:",
-			"setUnsignedLong:forKey:",
-			"setUnsignedLongLong:forKey:",
-			"setUnsignedShort:forKey:",
-		]
-		for selector in mutableSelectors {
-			XCTAssertTrue(NSMutableDictionary.instancesRespond(to: NSSelectorFromString(selector)), selector)
-		}
 	}
 
 	func testAllLegacyArraySelectorsRemainAvailable() {
@@ -229,16 +165,6 @@ final class DictionaryHelperMigrationTests: XCTestCase {
 		]
 		for selector in immutableSelectors {
 			XCTAssertTrue(NSArray.instancesRespond(to: NSSelectorFromString(selector)), selector)
-		}
-
-		let mutableSelectors = [
-			"addObjectWithoutDuplication:",
-			"moveObjectAtIndex:toIndex:",
-			"performSelectorOnObjectValueAndReplace:",
-			"shuffle",
-		]
-		for selector in mutableSelectors {
-			XCTAssertTrue(NSMutableArray.instancesRespond(to: NSSelectorFromString(selector)), selector)
 		}
 	}
 

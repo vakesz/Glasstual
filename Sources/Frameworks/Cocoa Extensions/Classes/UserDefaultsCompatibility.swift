@@ -85,7 +85,7 @@ public extension UserDefaults {
 	@objc(colorForKey:)
 	func color(forKey key: String) -> NSColor? {
 		guard let data = object(forKey: key) as? Data else { return nil }
-		return NSKeyedUnarchiver.textual_legacyCompatUnarchivedObject(ofClass: NSColor.self, from: data) as? NSColor
+		return try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data)
 	}
 
 	@objc(unsignedIntegerForKey:)
