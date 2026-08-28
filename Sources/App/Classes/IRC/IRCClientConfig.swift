@@ -253,7 +253,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 		highlightListStorage
 	}
 
-	@objc public var ignoreList: [AddressBookEntry] {
+	public var ignoreList: [AddressBookEntry] {
 		ignoreListStorage
 	}
 
@@ -551,9 +551,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 				checkedModel($0.uniqueCopy(), as: ChannelConfig.self)
 			}
 			config.highlightListStorage = highlightListStorage.map { $0.uniqueCopy() }
-			config.ignoreListStorage = ignoreListStorage.map {
-				checkedModel($0.uniqueCopy(), as: AddressBookEntry.self)
-			}
+			config.ignoreListStorage = ignoreListStorage.map { $0.uniqueCopy() }
 			config.serverListStorage = serverListStorage.map { $0.uniqueCopy() }
 			config.uniqueIdentifierStorage = UUID().uuidString
 		} else {
@@ -648,7 +646,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 
 		setSerialized(channelListStorage, on: dictionary, key: "channelList")
 		setEncoded(highlightListStorage, on: dictionary, key: "highlightList")
-		setSerialized(ignoreListStorage, on: dictionary, key: "ignoreList")
+		setEncoded(ignoreListStorage, on: dictionary, key: "ignoreList")
 		setEncoded(serverListStorage, on: dictionary, key: "serverList")
 
 		let compacted = dictionary.ce_dictionaryByRemovingDefaults(
@@ -779,7 +777,9 @@ nonisolated extension ClientConfig {
 			let config = ChannelConfig(dictionary: entry)
 			return ignorePrivateMessages && config.type == .privateMessage ? nil : config
 		}
-		ignoreListStorage = dictionaries(values["ignoreList"]).map(AddressBookEntry.init(dictionary:))
+		ignoreListStorage = dictionaries(values["ignoreList"]).compactMap {
+			PropertyListModel.decode(AddressBookEntry.self, from: $0)
+		}
 		// A persisted entry missing its keyword can never match; skip it
 		// rather than carrying a half-built condition through the app.
 		highlightListStorage = dictionaries(values["highlightList"])
@@ -1213,7 +1213,7 @@ public final nonisolated class MutableClientConfig: ClientConfig {
 		get { highlightListStorage } set { highlightListStorage = newValue }
 	}
 
-	@objc override public var ignoreList: [AddressBookEntry] {
+	override public var ignoreList: [AddressBookEntry] {
 		get { ignoreListStorage } set { ignoreListStorage = newValue }
 	}
 

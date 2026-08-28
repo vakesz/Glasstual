@@ -519,6 +519,7 @@
 		9588F86F2AB85D643F353F0C /* SwiftStandardLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24153EC3BFD24424F219A7C /* SwiftStandardLibrary.swift */; };
 		95A93D6B522F38252C16D6D2 /* IRCISupportStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5817B3EF848513202E41EFD2 /* IRCISupportStrings.swift */; };
 		95CE1A395430F94C80BB93E4 /* CocoaExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E240E5A8B948125AF0D34C7 /* CocoaExtensions.framework */; };
+		95F3B0C7E563AF3F4CA92E9A /* IRCAddressBookCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAF977D1F851FE25883F02A9 /* IRCAddressBookCodableTests.swift */; };
 		968C40A2AECF028610AE7FF0 /* TVCAutoExpandingField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3083EFED5E6E2EB9DD43473 /* TVCAutoExpandingField.swift */; };
 		96F43F4B03438345FFFB8827 /* MainWindowTextViewMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B083E2856EBA447DB280C3 /* MainWindowTextViewMigrationTests.swift */; };
 		9755DC47DC9C01123FAB8B3C /* HighlightEntryFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DDECF1C473231C5B408226 /* HighlightEntryFeatureTests.swift */; };
@@ -2001,6 +2002,7 @@
 		E95C4CC45373549323ED6089 /* TableCompatibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableCompatibility.swift; sourceTree = "<group>"; };
 		EA47D975CFC37848C1FC3924 /* ProgressIndicatorContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressIndicatorContent.swift; sourceTree = "<group>"; };
 		EAB5226FB6D9DBDE2F4A142F /* TDCOnboardingAppearanceStepViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCOnboardingAppearanceStepViewController.swift; sourceTree = "<group>"; };
+		EAF977D1F851FE25883F02A9 /* IRCAddressBookCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCAddressBookCodableTests.swift; sourceTree = "<group>"; };
 		EAFF5360ED3FE287ECBEAE95 /* IRCJoinBatchingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IRCJoinBatchingTests.swift; sourceTree = "<group>"; };
 		EB176491D352473C89A0159C /* TDCOnboardingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDCOnboardingWindowController.swift; sourceTree = "<group>"; };
 		EB2971A07CD39FFCE2A0EB08 /* ICMDailymotion.mustache */ = {isa = PBXFileReference; path = ICMDailymotion.mustache; sourceTree = "<group>"; };
@@ -3647,6 +3649,7 @@
 				0C1BE238EF18988445B22978 /* InlineMediaModuleCorpusTests.swift */,
 				A1C73D74B77A7A8956488D2A /* InlineResourceHostPolicyTests.swift */,
 				6EE0D45228DFB6C19EF65F84 /* InputHandlingMigrationTests.swift */,
+				EAF977D1F851FE25883F02A9 /* IRCAddressBookCodableTests.swift */,
 				57FDE1391457FF9FE727D0A5 /* IRCAddressBookMatchCacheTests.swift */,
 				FC0569F9CB6294BD3119EDB8 /* IRCAddressBookTests.swift */,
 				E34CA2903CF5283CD65A27F0 /* IRCAddressBookUserTrackingTests.swift */,
@@ -5168,6 +5171,7 @@
 				C877A5F1592819269B4BF561 /* GyazoModule.swift in Sources */,
 				9755DC47DC9C01123FAB8B3C /* HighlightEntryFeatureTests.swift in Sources */,
 				72B9564D0D3B7146EF5EAE5A /* HistoricLogProtocolMigrationTests.swift in Sources */,
+				95F3B0C7E563AF3F4CA92E9A /* IRCAddressBookCodableTests.swift in Sources */,
 				B47DB07F2ADBC206225A56DD /* IRCAddressBookMatchCacheTests.swift in Sources */,
 				1370A786F30441457CAD9A20 /* IRCAddressBookTests.swift in Sources */,
 				40B094B32F753826DEC3B96C /* IRCAddressBookUserTrackingTests.swift in Sources */,

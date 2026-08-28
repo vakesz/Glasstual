@@ -19,8 +19,6 @@ final class ServerPropertiesSheetMigrationTests: XCTestCase {
 			"startWithSelection:context:",
 			"channelPropertiesSheet:onOk:",
 			"channelPropertiesSheetWillClose:",
-			"addressBookSheet:onOk:",
-			"addressBookSheetWillClose:",
 			"windowWillClose:",
 		]
 
@@ -35,6 +33,7 @@ final class ServerPropertiesSheetMigrationTests: XCTestCase {
 	func testValueReportingSheetDelegatesAreTyped() {
 		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any ServerEndpointListSheetDelegate.Type))
 		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any HighlightEntrySheetDelegate.Type))
+		XCTAssertTrue((ServerPropertiesSheet.self as Any.Type) is (any AddressBookSheetDelegate.Type))
 	}
 
 	func testNibActionSelectorsRemainAvailable() {

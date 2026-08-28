@@ -43,26 +43,31 @@ public typealias IRCAddressBookMatchCache = AddressBookMatchCache
 public final class AddressBookMatchCache: NSObject {
 	@objc public private(set) weak var client: IRCClient?
 
-	private let matches = NSCache<NSString, AnyObject>()
+	/** Hostmask to the rule that matched it, or to `nil` when nothing did.
+	 The entry is a value type now, so this is a plain dictionary trimmed at a
+	 fixed size rather than an `NSCache`. */
+	private var matches: [String: AddressBookEntry?] = [:]
+	private var matchOrder: [String] = []
+	private static let matchLimit = 100
 
 	@objc(initWithClient:)
 	public init(client: IRCClient) {
 		self.client = client
-		matches.countLimit = 100
 
 		super.init()
 	}
 
 	@objc public func clearCachedMatches() {
-		matches.removeAllObjects()
+		matches.removeAll()
+		matchOrder.removeAll()
 	}
 
 	@objc(clearCachedMatchesForHostmask:)
 	public func clearCachedMatches(forHostmask hostmask: String) {
-		matches.removeObject(forKey: hostmask as NSString)
+		matches.removeValue(forKey: hostmask)
+		matchOrder.removeAll { $0 == hostmask }
 	}
 
-	@objc(findIgnoresForHostmask:)
 	public func findIgnores(forHostmask hostmask: String) -> [AddressBookEntry] {
 		guard let match = findAddressBookEntry(forHostmask: hostmask) else {
 			return []
@@ -79,17 +84,19 @@ public final class AddressBookMatchCache: NSObject {
 		return match.parentEntries?.filter { $0.entryType == .ignore } ?? []
 	}
 
-	@objc(findAddressBookEntryForHostmask:)
 	public func findAddressBookEntry(forHostmask hostmask: String) -> AddressBookEntry? {
-		let cacheKey = hostmask as NSString
-
-		if let cached = matches.object(forKey: cacheKey) {
-			return cached is NSNull ? nil : cached as? AddressBookEntry
+		if let cached = matches[hostmask] {
+			return cached
 		}
 
 		let match = uncachedMatch(forHostmask: hostmask)
 
-		matches.setObject(match ?? NSNull(), forKey: cacheKey)
+		matches[hostmask] = match
+		matchOrder.append(hostmask)
+
+		if matchOrder.count > Self.matchLimit {
+			matches.removeValue(forKey: matchOrder.removeFirst())
+		}
 
 		return match
 	}
@@ -117,9 +124,8 @@ public final class AddressBookMatchCache: NSObject {
 	}
 
 	private func mergedEntry(from entries: [AddressBookEntry]) -> AddressBookEntry {
-		let mixedEntry = MutableAddressBookEntry()
+		var mixedEntry = AddressBookEntry(entryType: .mixed)
 
-		mixedEntry.entryType = .mixed
 		mixedEntry.parentEntries = entries
 		mixedEntry.ignoreClientToClientProtocol = entries.contains { $0.ignoreClientToClientProtocol }
 		mixedEntry.ignoreGeneralEventMessages = entries.contains { $0.ignoreGeneralEventMessages }
@@ -132,10 +138,6 @@ public final class AddressBookMatchCache: NSObject {
 		mixedEntry.ignoreInlineMedia = entries.contains { $0.ignoreInlineMedia }
 		mixedEntry.trackUserActivity = entries.contains { $0.trackUserActivity }
 
-		guard let copiedEntry = mixedEntry.copy() as? AddressBookEntry else {
-			preconditionFailure("Address-book entry copies must preserve their model type")
-		}
-
-		return copiedEntry
+		return mixedEntry
 	}
 }

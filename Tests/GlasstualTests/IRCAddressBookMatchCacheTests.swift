@@ -83,7 +83,7 @@ final class IRCAddressBookMatchCacheTests: XCTestCase {
 		XCTAssertTrue(match.ignorePrivateMessages)
 		XCTAssertTrue(match.ignorePublicMessages)
 		XCTAssertEqual(cache.findIgnores(forHostmask: hostmask).count, 2)
-		XCTAssertTrue(match === cache.findAddressBookEntry(forHostmask: hostmask))
+		XCTAssertEqual(match, cache.findAddressBookEntry(forHostmask: hostmask))
 	}
 
 	func testAbsentMatchReturnsNilAndNoIgnores() {

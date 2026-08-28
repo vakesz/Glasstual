@@ -26,7 +26,7 @@ class IRCAddressBookTests: XCTestCase {
 	}
 
 	func testUserTrackingEntryDerivesNicknameAndMatchesFullHostmask() {
-		let entry = MutableAddressBookEntry.newUserTrackingEntry()
+		var entry = AddressBookEntry.newUserTrackingEntry()
 
 		entry.hostmask = "Alice"
 
@@ -38,7 +38,7 @@ class IRCAddressBookTests: XCTestCase {
 	}
 
 	func testMixedEntryHasNoMatcherState() {
-		let entry = MutableAddressBookEntry.newIgnoreEntry()
+		var entry = AddressBookEntry.newIgnoreEntry()
 
 		entry.entryType = .mixed
 

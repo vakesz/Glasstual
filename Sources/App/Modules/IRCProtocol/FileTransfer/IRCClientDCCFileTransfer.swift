@@ -167,7 +167,6 @@ public extension IRCClient {
 		)
 	}
 
-	@objc(receivedDCCQuery:text:ignoreInfo:)
 	func receivedDCCQuery(_ message: Message, text: String, ignoreInfo: AddressBookEntry?) {
 		guard isLoggedIn, ignoreInfo?.ignoreFileTransferRequests != true,
 		      let target = message.params.first, nicknameIsMyself(target),
