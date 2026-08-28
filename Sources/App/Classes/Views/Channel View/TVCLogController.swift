@@ -1145,8 +1145,8 @@ public extension LogController {
 		let appearance = attachedWindow.userInterfaceObjects
 		tokens[.appearanceDescription] = appearance.shortAppearanceDescription
 		tokens[.sidebarInversionIsEnabled] = appearance.isDarkAppearance
-		tokens[.userConfiguredTextEncoding] = NSString
-			.ce_charsetRepresentation(from: associatedClient.config.primaryEncoding)
+		tokens[.userConfiguredTextEncoding] = String.Encoding
+			.ianaCharsetName(forRawValue: associatedClient.config.primaryEncoding)
 		tokens[.userStyleSheetRules] = TextualPreferences.themeUserStyleSheetRules()
 		tokens[.usesCustomScrollers] = usesCustomScrollers()
 		if let channel = associatedChannel {

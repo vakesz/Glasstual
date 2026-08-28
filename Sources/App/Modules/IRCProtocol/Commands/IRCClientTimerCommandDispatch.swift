@@ -48,16 +48,16 @@ extension IRCClient {
 			printDebugInformation(IRCTimerStrings.invalidSyntax)
 			return true
 		}
-		let action = arguments.ceTokenAsString.lowercased()
+		let action = arguments.nextTokenAsString().lowercased()
 		switch action {
 		case "help":
-			showTimerHelp(topic: arguments.ceTokenAsString)
+			showTimerHelp(topic: arguments.nextTokenAsString())
 		case "stop":
-			stopTimer(identifier: arguments.ceTokenAsString)
+			stopTimer(identifier: arguments.nextTokenAsString())
 		case "restart":
-			restartTimer(identifier: arguments.ceTokenAsString)
+			restartTimer(identifier: arguments.nextTokenAsString())
 		case "remove":
-			removeTimer(identifier: arguments.ceTokenAsString)
+			removeTimer(identifier: arguments.nextTokenAsString())
 		case "list":
 			listTimers()
 		default:
@@ -138,7 +138,7 @@ extension IRCClient {
 			printDebugInformation(IRCTimerStrings.invalidInterval)
 			return
 		}
-		let repeatToken = arguments.ceTokenAsString
+		let repeatToken = arguments.nextTokenAsString()
 		let explicitRepeat = Int(repeatToken)
 		let repeatCount: Int
 		let command: String

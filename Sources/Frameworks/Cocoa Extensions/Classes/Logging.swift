@@ -32,6 +32,7 @@
 
 import Foundation
 @_exported import os
+import Synchronization
 
 /* *********************************************************************
  *
@@ -65,109 +66,40 @@ import Foundation
  *
  *********************************************************************** */
 
-private enum LegacyLoggingStorage {
-	static let frameworkSubsystem = OSLog(
+public enum Logging {
+	/// The logger the app or service installs during start-up.
+	///
+	/// It lives in a `Mutex` rather than a `nonisolated(unsafe) var`: it is
+	/// written once from the launch path and read from every thread
+	/// afterwards, and the lock is what makes that safe rather than a promise.
+	private static let defaultSubsystemStorage = Mutex<Logger?>(nil)
+
+	/// The installed subsystem, or the process default when start-up has not
+	/// installed one yet.
+	public static var defaultSubsystem: Logger {
+		defaultSubsystemStorage.withLock { $0 ?? Logger() }
+	}
+
+	/// Subsystem used by Cocoa Extensions itself.
+	static let frameworkSubsystem: Logger? = Logger(
 		subsystem: "com.vakesz.glasstual.frameworks.CocoaExtensions",
 		category: "Framework"
 	)
 
-	nonisolated(unsafe) static var defaultSubsystem: OSLog?
-}
-
-@_cdecl("_CSFrameworkInternalLogSubsystem")
-public func _CSFrameworkInternalLogSubsystem() -> OSLog {
-	LegacyLoggingStorage.frameworkSubsystem
-}
-
-@_cdecl("_LogToConsoleDefaultSubsystem")
-public func _LogToConsoleDefaultSubsystem() -> OSLog {
-	LegacyLoggingStorage.defaultSubsystem ?? .default
-}
-
-@_cdecl("_LogToConsoleSetDefaultSubsystem")
-public func _LogToConsoleSetDefaultSubsystem(_ subsystem: OSLog?) {
-	LegacyLoggingStorage.defaultSubsystem = subsystem
-	LoggingProxy.defaultSubsystem = subsystem
-}
-
-@_cdecl("_LogToConsoleSetDefaultSubsystemToMainBundle")
-public func _LogToConsoleSetDefaultSubsystemToMainBundle(_ category: NSString) {
-	let subsystem = OSLog(
-		subsystem: Bundle.main.bundleIdentifier ?? "com.vakesz.glasstual",
-		category: category as String
-	)
-
-	_LogToConsoleSetDefaultSubsystem(subsystem)
-}
-
-@_cdecl("_LogToConsoleFormattedStackTrace")
-public func _LogToConsoleFormattedStackTrace(_ trace: NSArray) -> NSString {
-	trace.componentsJoined(by: "\n") as NSString
-}
-
-public func _LogStackTraceOfTypeSwiftShim(_ type: OSLogType, _ subsystem: OSLog?) {
-	let logger: Logger = if let subsystem {
-		Logger(subsystem)
-	} else if let defaultSubsystem = Logging.defaultSubsystem {
-		defaultSubsystem
-	} else {
-		Logger()
-	}
-
-	let stackTrace = _LogToConsoleFormattedStackTrace(Thread.callStackSymbols as NSArray) as String
-	logger.log(level: type, "Stack trace:\n\(stackTrace, privacy: .private)")
-}
-
-public class Logging {
-	///
-	/// Logger used for logging
-	///
-	/// Generally speaking, app or service will have set this
-	/// very early on during initialization so while it is possible
-	/// for it to be nil, it is very unlikely. Assume it's not.
-	///
-	/// Set once during process start-up and read-only afterwards.
-	public nonisolated(unsafe) static var defaultSubsystem: Logger?
-
-	///
-	/// Set default subsystem to identifier of main bundle
-	/// with category.
-	///
-	@inlinable
+	/// Directs subsequent logging at the main bundle's identifier under
+	/// `category`. Call once, during start-up.
 	public static func setDefaultSubsystem(toMainBundleCategory category: String) {
-		_LogToConsoleSetDefaultSubsystemToMainBundle(category as NSString)
+		let logger = Logger(
+			subsystem: Bundle.main.bundleIdentifier ?? "com.vakesz.glasstual",
+			category: category
+		)
+
+		defaultSubsystemStorage.withLock { $0 = logger }
 	}
 
-	///
-	/// Log stack trace of type in optional subsystem
-	///
-	@inlinable
-	public static func logStackTrace(ofType type: OSLogType = .default, inSubsystem subsystem: OSLog? = nil) {
-		_LogStackTraceOfTypeSwiftShim(type, subsystem)
-	}
-
-	///
-	/// Subsystem used by Cocoa Extensions
-	///
-	nonisolated(unsafe) static var frameworkSubsystem: Logger? = Logger(_CSFrameworkInternalLogSubsystem())
-}
-
-///
-/// Proxy class for C API for setting logging subsystem
-///
-@objc(XRLoggingProxy)
-class LoggingProxy: NSObject {
-	@objc
-	static var defaultSubsystem: OSLog? {
-		get {
-			fatalError("Access default logging subsystem through C API")
-		}
-		set {
-			if let newValue {
-				Logging.defaultSubsystem = Logger(newValue)
-			} else {
-				Logging.defaultSubsystem = Logger() // Default
-			}
-		}
+	/// Logs the current call stack at `type`.
+	public static func logStackTrace(ofType type: OSLogType = .default) {
+		let stackTrace = Thread.callStackSymbols.joined(separator: "\n")
+		defaultSubsystem.log(level: type, "Stack trace:\n\(stackTrace, privacy: .private)")
 	}
 }

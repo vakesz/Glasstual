@@ -42,76 +42,41 @@ public nonisolated extension NSString {
 			return true
 		}
 
-		return ce_onlyContainsCharacters(from: NSCharacterSet.textualAlphanumericDashPeriodSet as CharacterSet)
+		return (self as String).onlyContainsCharacters(from: .textualAlphanumericDashPeriod)
 	}
 
 	@objc(isValidInternetPort)
 	var isValidInternetPort: Bool {
-		guard ceIsNumericOnly else {
+		guard let value = Int(self as String) else {
 			return false
 		}
 
-		let value = integerValue
-		return value > 0 && value <= 65535
+		return value.isValidInternetPort
 	}
 
 	@objc var stringByAppendingIRCFormattingStop: String {
 		(self as String) + String(utf16CodeUnits: [UniChar(IRCTextFormatterControlCharacter.terminator)], count: 1)
 	}
 
-	@objc(hostmaskComponents:username:address:)
-	func hostmaskComponents(
-		_ nickname: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		username: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		address: AutoreleasingUnsafeMutablePointer<NSString?>?
-	) -> Bool {
-		hostmaskComponents(
-			nickname,
-			username: username,
-			address: address,
-			maximumNicknameLength: defaultHostmaskNicknameLength
-		)
+	/// The receiver parsed as `nickname!username@address`, or `nil` when it is
+	/// not a hostmask. Nickname length is bounded by the protocol default.
+	var hostmask: IRCHostmask? {
+		IRCHostmask(parsing: self as String, maximumNicknameLength: defaultHostmaskNicknameLength)
 	}
 
-	@objc(hostmaskComponents:username:address:onClient:)
+	/// The receiver parsed as a hostmask, bounding the nickname by whatever
+	/// length `client` advertised in its ISUPPORT.
 	@MainActor
-	func hostmaskComponents(
-		_ nickname: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		username: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		address: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		on client: IRCClient?
-	) -> Bool {
-		hostmaskComponents(
-			nickname,
-			username: username,
-			address: address,
+	func hostmask(on client: IRCClient?) -> IRCHostmask? {
+		IRCHostmask(
+			parsing: self as String,
 			maximumNicknameLength: maximumHostmaskNicknameLength(on: client)
 		)
 	}
 
-	private func hostmaskComponents(
-		_ nickname: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		username: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		address: AutoreleasingUnsafeMutablePointer<NSString?>?,
-		maximumNicknameLength: Int
-	) -> Bool {
-		guard let components = IRCHostmask(
-			parsing: self as String,
-			maximumNicknameLength: maximumNicknameLength
-		) else {
-			return false
-		}
-
-		nickname?.pointee = components.nickname as NSString
-		username?.pointee = components.username as NSString
-		address?.pointee = components.address as NSString
-
-		return true
-	}
-
 	@objc(isHostmask)
 	var isHostmask: Bool {
-		hostmaskComponents(nil, username: nil, address: nil)
+		hostmask != nil
 	}
 
 	@objc(isHostmaskAddress)
@@ -203,30 +168,15 @@ public nonisolated extension NSString {
 	}
 
 	@objc var nicknameFromHostmask: String? {
-		var nickname: NSString?
-		if hostmaskComponents(&nickname, username: nil, address: nil) {
-			return nickname as String?
-		}
-
-		return self as String
+		hostmask?.nickname ?? (self as String)
 	}
 
 	@objc var usernameFromHostmask: String? {
-		var username: NSString?
-		if hostmaskComponents(nil, username: &username, address: nil) {
-			return username as String?
-		}
-
-		return nil
+		hostmask?.username
 	}
 
 	@objc var addressFromHostmask: String? {
-		var address: NSString?
-		if hostmaskComponents(nil, username: nil, address: &address) {
-			return address as String?
-		}
-
-		return nil
+		hostmask?.address
 	}
 
 	@objc var stringWithValidURIScheme: String? {
@@ -355,12 +305,10 @@ public nonisolated extension NSString {
 			return finish()
 		}
 
-		let foregroundCandidate = substring(with: NSRange(location: currentPosition, length: 6)) as NSString
+		let foregroundCandidate = substring(with: NSRange(location: currentPosition, length: 6))
 
-		if foregroundCandidate
-			.ce_onlyContainsCharacters(from: NSCharacterSet.textualHexadecimalCharacterSet as CharacterSet)
-		{
-			mForegroundColor = foregroundCandidate as String
+		if foregroundCandidate.onlyContainsCharacters(from: .textualHexadecimal) {
+			mForegroundColor = foregroundCandidate
 			currentPosition += 6
 		} else {
 			return finish()
@@ -383,12 +331,10 @@ public nonisolated extension NSString {
 			return finish()
 		}
 
-		let backgroundCandidate = substring(with: NSRange(location: currentPosition, length: 6)) as NSString
+		let backgroundCandidate = substring(with: NSRange(location: currentPosition, length: 6))
 
-		if backgroundCandidate
-			.ce_onlyContainsCharacters(from: NSCharacterSet.textualHexadecimalCharacterSet as CharacterSet)
-		{
-			mBackgroundColor = backgroundCandidate as String
+		if backgroundCandidate.onlyContainsCharacters(from: .textualHexadecimal) {
+			mBackgroundColor = backgroundCandidate
 			currentPosition += 6
 		}
 
@@ -502,12 +448,16 @@ public nonisolated extension NSString {
 			return [self as String]
 		}
 
-		guard let selfData = data(using: String.Encoding.utf8.rawValue) else {
+		guard let selfData = data(using: String.Encoding.utf8.rawValue), lineLength > 0 else {
 			return [self as String]
 		}
 
-		let encodedString = selfData.base64EncodedString(options: []) as NSString
-		return encodedString.ce_split(maximumLength: lineLength)
+		/* Base64 output is pure ASCII, so chunking it by character count and by
+		 byte count are the same thing and neither can split a character. */
+		let encodedString = selfData.base64EncodedString(options: [])
+		return stride(from: 0, to: encodedString.count, by: Int(lineLength)).map { offset in
+			String(encodedString.dropFirst(offset).prefix(Int(lineLength)))
+		}
 	}
 
 	@objc(padNicknameWithCharacter:maximumLength:)
@@ -620,6 +570,6 @@ public nonisolated extension NSString {
 			return false
 		}
 
-		return (NSCharacterSet.textualLetterCharacterSet as CharacterSet).contains(scalar)
+		return CharacterSet.textualLetter.contains(scalar)
 	}
 }

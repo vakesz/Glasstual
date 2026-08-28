@@ -240,15 +240,6 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertEqual(NSColor.formatterLightGrayColor, NSColor.formatterColors[15])
 	}
 
-	func testUnicodeHelperClassifiesCodePoints() {
-		XCTAssertTrue(UnicodeHelper.isAlphabeticalCodePoint(Int(Unicode.Scalar("A").value)))
-		XCTAssertTrue(UnicodeHelper.isAlphabeticalCodePoint(Int(Unicode.Scalar("z").value)))
-		XCTAssertFalse(UnicodeHelper.isAlphabeticalCodePoint(Int(Unicode.Scalar("1").value)))
-		XCTAssertTrue(UnicodeHelper.isPrivate(0xE010))
-		XCTAssertTrue(UnicodeHelper.isIdeographic(0x4E00))
-		XCTAssertTrue(UnicodeHelper.isIdeographicOrPrivate(0xE010))
-	}
-
 	private func makeChannel(named name: String, client: IRCClient) -> Channel {
 		let channel = Channel(configDictionary: ["channelName": name])
 

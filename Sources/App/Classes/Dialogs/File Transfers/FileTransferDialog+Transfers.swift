@@ -74,7 +74,7 @@ extension FileTransferDialog {
 
 		/* The peer echoes back the name we sent it, which crossed the wire in
 		 its sanitised form, so compare the sanitised forms. */
-		let ourFilename = String((transfer.filename as NSString).ceSafeFilename)
+		let ourFilename = transfer.filename.safeFilename
 
 		return ourFilename.caseInsensitiveCompare(filename) == .orderedSame
 	}

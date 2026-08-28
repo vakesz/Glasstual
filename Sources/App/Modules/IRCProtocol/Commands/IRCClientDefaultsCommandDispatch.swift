@@ -57,15 +57,15 @@ extension IRCClient {
 			printDebugInformation(IRCCommandStrings.Defaults.invalidSyntax)
 			return true
 		}
-		let action = arguments.ceTokenAsString.lowercased()
+		let action = arguments.nextTokenAsString().lowercased()
 		if action == "help" {
 			printDebugInformation(multiline: IRCCommandStrings.Defaults.help)
 			return true
 		}
-		var featureName = arguments.ceTokenInsideQuotes.string
+		var featureName = arguments.nextQuotedTokenAsString()
 		let appliesToAll = featureName == "-a"
 		if appliesToAll {
-			featureName = arguments.ceTokenInsideQuotes.string
+			featureName = arguments.nextQuotedTokenAsString()
 		}
 		guard featureName.isEmpty == false else {
 			printDebugInformation(IRCCommandStrings.Defaults.invalidSyntax)

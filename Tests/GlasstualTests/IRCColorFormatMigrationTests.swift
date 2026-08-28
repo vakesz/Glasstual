@@ -85,13 +85,19 @@ final class IRCColorFormatMigrationTests: XCTestCase {
 			string: "hello",
 			attributes: [.font: NSFont.systemFont(ofSize: 13)]
 		)
-		string.setIRCFormatterAttribute(.bold, value: true, range: string.ceRange)
-		string.setIRCFormatterAttribute(.italic, value: true, range: string.ceRange)
+		string.setIRCFormatterAttribute(.bold, value: true, range: NSRange(location: 0, length: string.length))
+		string.setIRCFormatterAttribute(.italic, value: true, range: NSRange(location: 0, length: string.length))
 
 		let formatted = string.stringFormattedForIRC
 
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .bold, range: string.ceRange))
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .italic, range: string.ceRange))
+		XCTAssertTrue(string.ircFormatterAttributeSet(
+			inRange: .bold,
+			range: NSRange(location: 0, length: string.length)
+		))
+		XCTAssertTrue(string.ircFormatterAttributeSet(
+			inRange: .italic,
+			range: NSRange(location: 0, length: string.length)
+		))
 		XCTAssertEqual(controlCharacter(at: 0, in: formatted), unichar(IRCTextFormatterControlCharacter.bold))
 		XCTAssertEqual(controlCharacter(at: 1, in: formatted), unichar(IRCTextFormatterControlCharacter.italic))
 		XCTAssertEqual((formatted as NSString).substring(with: NSRange(location: 2, length: 5)), "hello")
@@ -105,14 +111,27 @@ final class IRCColorFormatMigrationTests: XCTestCase {
 			attributes: [.font: NSFont.systemFont(ofSize: 13)]
 		)
 
-		string.setIRCFormatterAttribute(.foregroundColor, value: 99, range: string.ceRange)
-		XCTAssertFalse(string.ircFormatterAttributeSet(inRange: .foregroundColor, range: string.ceRange))
+		string.setIRCFormatterAttribute(.foregroundColor, value: 99, range: NSRange(location: 0, length: string.length))
+		XCTAssertFalse(string.ircFormatterAttributeSet(
+			inRange: .foregroundColor,
+			range: NSRange(location: 0, length: string.length)
+		))
 
-		string.setIRCFormatterAttribute(.foregroundColor, value: 12, range: string.ceRange)
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .foregroundColor, range: string.ceRange))
+		string.setIRCFormatterAttribute(.foregroundColor, value: 12, range: NSRange(location: 0, length: string.length))
+		XCTAssertTrue(string.ircFormatterAttributeSet(
+			inRange: .foregroundColor,
+			range: NSRange(location: 0, length: string.length)
+		))
 
-		string.setIRCFormatterAttribute(.backgroundColor, value: NSColor.black, range: string.ceRange)
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .backgroundColor, range: string.ceRange))
+		string.setIRCFormatterAttribute(
+			.backgroundColor,
+			value: NSColor.black,
+			range: NSRange(location: 0, length: string.length)
+		)
+		XCTAssertTrue(string.ircFormatterAttributeSet(
+			inRange: .backgroundColor,
+			range: NSRange(location: 0, length: string.length)
+		))
 	}
 
 	func testRemovingBoldClearsFormatterAndTrait() {
@@ -120,12 +139,18 @@ final class IRCColorFormatMigrationTests: XCTestCase {
 			string: "bold",
 			attributes: [.font: NSFont.systemFont(ofSize: 13)]
 		)
-		string.setIRCFormatterAttribute(.bold, value: true, range: string.ceRange)
-		XCTAssertTrue(string.ircFormatterAttributeSet(inRange: .bold, range: string.ceRange))
+		string.setIRCFormatterAttribute(.bold, value: true, range: NSRange(location: 0, length: string.length))
+		XCTAssertTrue(string.ircFormatterAttributeSet(
+			inRange: .bold,
+			range: NSRange(location: 0, length: string.length)
+		))
 
-		string.removeIRCFormatterAttribute(.bold, range: string.ceRange)
+		string.removeIRCFormatterAttribute(.bold, range: NSRange(location: 0, length: string.length))
 
-		XCTAssertFalse(string.ircFormatterAttributeSet(inRange: .bold, range: string.ceRange))
+		XCTAssertFalse(string.ircFormatterAttributeSet(
+			inRange: .bold,
+			range: NSRange(location: 0, length: string.length)
+		))
 	}
 
 	func testWrapHelperDeletesBackToWhitespaceInsideMaxDistance() {

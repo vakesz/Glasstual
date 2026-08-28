@@ -258,6 +258,6 @@ public final nonisolated class ResourceManager: NSObject {
 	}
 
 	private static func displayPath(for url: URL) -> String {
-		(url as NSURL).textualStandardizedTildePath ?? url.path
+		url.standardizedTildePath ?? url.path
 	}
 }

@@ -94,7 +94,7 @@ public extension NSArray {
 		}
 	}
 
-	@objc var range: NSRange {
+	var range: NSRange {
 		NSRange(location: 0, length: arrayCount(self))
 	}
 
@@ -129,7 +129,7 @@ public extension NSArray {
 		for sourceValue in values {
 			let value = trimValues ? Self.ce_trimmedValue(sourceValue) : sourceValue
 
-			if removeEmptyValues, Self.ce_isEmpty(value) {
+			if removeEmptyValues, isEmptyValue(value) {
 				continue
 			}
 			if uniqueValues, result.contains(where: { ($0 as AnyObject).isEqual(value) }) {
@@ -231,52 +231,9 @@ public extension NSArray {
 		return result
 	}
 
-	private static func ce_isEmpty(_ value: Any) -> Bool {
-		if value is NSNull {
-			return true
-		}
-		if let string = value as? String {
-			return string.isEmpty
-		}
-		if let data = value as? Data {
-			return data.isEmpty
-		}
-		if let array = value as? NSArray {
-			return array.count == 0
-		}
-		if let dictionary = value as? NSDictionary {
-			return dictionary.count == 0
-		}
-		if let set = value as? NSSet {
-			return set.count == 0
-		}
-		if let orderedSet = value as? NSOrderedSet {
-			return orderedSet.count == 0
-		}
-		if let indexSet = value as? NSIndexSet {
-			return indexSet.count == 0
-		}
-		if let attributedString = value as? NSAttributedString {
-			return attributedString.length == 0
-		}
-		if let hashTable = value as? NSHashTable<AnyObject> {
-			return hashTable.count == 0
-		}
-		if let mapTable = value as? NSMapTable<AnyObject, AnyObject> {
-			return mapTable.count == 0
-		}
-		if let pointerArray = value as? NSPointerArray {
-			return pointerArray.count == 0
-		}
-		if let collection = value as? any Collection {
-			return collection.isEmpty
-		}
-		return false
-	}
-
 	private static func ce_trimmedValue(_ value: Any) -> Any {
 		guard let string = value as? NSString else { return value }
-		return string.ceTrim
+		return string.trimmingCharacters(in: .whitespacesAndNewlines) as NSString
 	}
 }
 
@@ -307,7 +264,7 @@ public extension NSMutableArray {
 		}
 	}
 
-	@objc func shuffle() {
+	func shuffle() {
 		mutableArrayMutationLock.withLock {
 			guard count > 1 else { return }
 			for index in stride(from: count - 1, through: 1, by: -1) {

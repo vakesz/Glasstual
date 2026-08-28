@@ -492,7 +492,7 @@ public final nonisolated class PathInfo: NSObject {
 	}
 
 	private static func displayPath(for url: URL) -> String {
-		(url as NSURL).textualStandardizedTildePath ?? url.path
+		url.standardizedTildePath ?? url.path
 	}
 
 	private static func applyUIReviewDirectory(toPath basePath: String) -> String {

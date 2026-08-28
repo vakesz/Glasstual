@@ -1,6 +1,6 @@
 /* *********************************************************************
  *
- *         Copyright (c) 2015 - 2018 Codeux Software, LLC
+ *         Copyright (c) 2015 - 2020 Codeux Software, LLC
  *     Please see ACKNOWLEDGEMENT for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,36 +32,46 @@
 
 import Foundation
 
-public extension NSValue {
-	@objc(valueWithPrimitive:withType:)
-	class func textual_value(withPrimitive value: UnsafeMutableRawPointer?,
-	                         withType type: UnsafePointer<CChar>) -> Any
-	{
-		let pointerValue = UInt(bitPattern: value)
-
-		switch UnicodeScalar(UInt8(bitPattern: type.pointee)) {
-		case "@":
-			guard let value else { return NSNull() }
-			return Unmanaged<AnyObject>.fromOpaque(value).takeUnretainedValue()
-		case "s": return NSNumber(value: Int16(truncatingIfNeeded: pointerValue))
-		case "S": return NSNumber(value: UInt16(truncatingIfNeeded: pointerValue))
-		case "i": return NSNumber(value: Int32(truncatingIfNeeded: pointerValue))
-		case "I": return NSNumber(value: UInt32(truncatingIfNeeded: pointerValue))
-		case "l": return NSNumber(value: Int(truncatingIfNeeded: pointerValue))
-		case "L": return NSNumber(value: UInt(truncatingIfNeeded: pointerValue))
-		case "q": return NSNumber(value: Int64(truncatingIfNeeded: pointerValue))
-		case "Q": return NSNumber(value: UInt64(truncatingIfNeeded: pointerValue))
-		case "f": return NSNumber(value: value?.load(as: Float.self) ?? 0)
-		case "d": return NSNumber(value: value?.load(as: Double.self) ?? 0)
-		case "C": return NSNumber(value: UInt8(truncatingIfNeeded: pointerValue))
-		case "c":
-			if pointerValue == 0 || pointerValue == 1 {
-				return NSNumber(value: pointerValue == 1)
-			}
-			return NSNumber(value: Int8(truncatingIfNeeded: pointerValue))
-		default:
-			guard let value else { return NSNull() }
-			return NSValue(bytes: value, objCType: type)
-		}
+/// Whether a plist-shaped value read out of a dictionary or an array counts as
+/// empty, for the helpers that strip empty entries before writing preferences.
+///
+/// `NSNull` is empty because that is how a missing value survives a plist round
+/// trip. A value of a type with no notion of emptiness -- a number, a date -- is
+/// not empty.
+///
+/// The three copies of this cascade that used to live in `NSDictionaryHelper`,
+/// `NSArrayHelper` and `XRGlobalModels` had drifted only in their names.
+func isEmptyValue(_ value: Any) -> Bool {
+	switch value {
+	case is NSNull:
+		true
+	case let string as String:
+		string.isEmpty
+	case let data as Data:
+		data.isEmpty
+	case let array as NSArray:
+		array.count == 0
+	case let dictionary as NSDictionary:
+		dictionary.count == 0
+	case let set as NSSet:
+		set.count == 0
+	case let orderedSet as NSOrderedSet:
+		/* Listed explicitly: NSOrderedSet, unlike the three above, has no Swift
+		 Collection bridge to fall through to. */
+		orderedSet.count == 0
+	case let indexSet as NSIndexSet:
+		indexSet.count == 0
+	case let attributedString as NSAttributedString:
+		attributedString.length == 0
+	case let hashTable as NSHashTable<AnyObject>:
+		hashTable.count == 0
+	case let mapTable as NSMapTable<AnyObject, AnyObject>:
+		mapTable.count == 0
+	case let pointerArray as NSPointerArray:
+		pointerArray.count == 0
+	case let collection as any Collection:
+		collection.isEmpty
+	default:
+		false
 	}
 }
