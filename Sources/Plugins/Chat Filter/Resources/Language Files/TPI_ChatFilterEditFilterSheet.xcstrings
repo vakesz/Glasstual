@@ -37,6 +37,18 @@
         }
       }
     },
+    "regular-expression-invalid" : {
+      "comment" : "Validation message for a filter match field that is not a valid regular expression. The argument is the reason compilation failed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter a valid regular expression.\n\n%@"
+          }
+        }
+      }
+    },
     "token-channel-name" : {
       "comment" : "Title of the action token representing a channel name. Migrated from legacy key 90e-tj.",
       "extractionState" : "manual",

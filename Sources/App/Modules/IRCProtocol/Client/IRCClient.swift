@@ -95,6 +95,8 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate, NSCopying {
 	let pendingCapabilityRequestsMutable = NSMutableArray()
 	let enabledCapabilityNames = NSMutableOrderedSet()
 	let offeredCapabilities = NSMutableDictionary()
+	/// Lowercased capability name to the exact spelling the server advertised.
+	let offeredCapabilityNames = NSMutableDictionary()
 	var lastAwayMessage: String?
 	var saslOfferedMechanisms: [String]?
 	var saslScramClient: SCRAMClient?
