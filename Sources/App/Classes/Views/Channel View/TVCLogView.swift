@@ -123,7 +123,6 @@ public final class LogView: NSObject {
 	@objc public weak var viewController: LogController?
 	@objc public var contextMenuTarget = LogPolicyTarget()
 	@objc public var selection: String?
-	@objc public var viewingBottom = false
 	@objc public private(set) dynamic var isLayingOutView = false
 
 	private let backingView: LogViewWebView

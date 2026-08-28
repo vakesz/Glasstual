@@ -528,7 +528,7 @@ public extension LogController {
 		evaluateFunctionNow("_MessageBuffer.setBufferLimit", arguments: [TextualPreferences.scrollbackVisibleLimit()])
 	}
 
-	func notifyJumpToLine(_ lineNumber: String, successful: Bool, scrolledToBottom _: Bool) {
+	func notifyJumpToLine(_ lineNumber: String, successful: Bool) {
 		let callback = callbackLock.withLock { jumpToLineCallbacks.removeValue(forKey: lineNumber) }
 		callback?(successful)
 	}
