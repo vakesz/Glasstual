@@ -45,8 +45,6 @@ final class InlineContentProtocolMigrationTests: XCTestCase {
 			(InlineContentPayload.self, "ICLPayload"),
 			(InlineContentPayloadMutable.self, "ICLPayloadMutable"),
 			(InlineContentModule.self, "ICLInlineContentModule"),
-			(MediaAssessment.self, "ICLMediaAssessment"),
-			(MediaAssessmentMutable.self, "ICLMediaAssessmentMutable"),
 			(MediaAssessor.self, "ICLMediaAssessor"),
 			(InlineHTMLFoundation.self, "ICMInlineHTMLFoundation"),
 			(InlineHTMLModule.self, "ICMInlineHTML"),

@@ -300,7 +300,7 @@ final nonisolated class ColorUnarchiveFromDataTransformer: NSSecureUnarchiveFrom
 			return color
 		}
 		guard let data = value as? Data else { return nil }
-		return NSKeyedUnarchiver.textual_legacyCompatUnarchivedObject(ofClass: NSColor.self, from: data)
+		return try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data)
 	}
 
 	override func reverseTransformedValue(_ value: Any?) -> Any? {

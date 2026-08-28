@@ -88,7 +88,6 @@ final class Connection: NSObject, ConnectionSocketDelegate, @unchecked Sendable 
 
 	// MARK: - Initialization
 
-	@objc(initWithConfig:onConnection:)
 	init(with config: IRCConnectionConfig, on connection: NSXPCConnection) {
 		self.config = config
 

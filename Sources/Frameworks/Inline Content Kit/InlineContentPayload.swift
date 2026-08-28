@@ -46,8 +46,12 @@ public let inlineContentErrorDomain = "ICLInlineContentErrorDomain"
 /* ISOLATION-EXCEPTION: an NSSecureCoding transport object. It crosses the XPC
  boundary between the app and the inline-content service, where NSXPCConnection
  owns the copy on each side, and the mutable subclass is only ever edited by the
- module that created it. */
-open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
+ module that created it.
+
+ It stays a class pair rather than becoming a value: `InlineContentModule` is an
+ open class whose subclasses edit `payload` in place while they run, and the
+ `@objc` inline-content protocol names this type. */
+open class InlineContentPayload: NSObject, NSSecureCoding, @unchecked Sendable {
 	fileprivate static let logger = Logger(
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
 		category: "Payload"
@@ -167,14 +171,18 @@ open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
 	}
 
 	public required init?(coder: NSCoder) {
-		super.init(coder: coder)
+		super.init()
+
+		guard populate(with: coder) else {
+			return nil
+		}
 	}
 
-	override public class var supportsSecureCoding: Bool {
+	public class var supportsSecureCoding: Bool {
 		true
 	}
 
-	override public func populate(with decoder: NSCoder) -> Bool {
+	private func populate(with decoder: NSCoder) -> Bool {
 		guard
 			let url = decoder.decodeObject(of: NSURL.self, forKey: "url") as URL?,
 			let lineNumber = decoder.decodeObject(of: NSString.self, forKey: "lineNumber") as String?,
@@ -201,7 +209,7 @@ open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
 		return true
 	}
 
-	override public func encode(with coder: NSCoder) {
+	public func encode(with coder: NSCoder) {
 		coder.encode(NSNumber(value: contentLengthStorage), forKey: "contentLength")
 		coder.encode(contentSizeStorage, forKey: "contentSize")
 		coder.encode(styleResourcesStorage, forKey: "styleResources")
@@ -218,18 +226,18 @@ open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
 		coder.encode(classAttributeStorage, forKey: "classAttribute")
 	}
 
-	override public func copy(asMutable mutableCopy: Bool, uniquing _: Bool) -> Any {
-		let copy: InlineContentPayload = if mutableCopy {
-			InlineContentPayloadMutable()
-		} else {
-			InlineContentPayload()
-		}
+	override public func copy() -> Any {
+		let copy = InlineContentPayload()
 		copy.copyValues(from: self)
+
 		return copy
 	}
 
-	override public var mutableClass: PortablePropertyObject {
-		unsafeBitCast(InlineContentPayloadMutable.self, to: PortablePropertyObject.self)
+	override public func mutableCopy() -> Any {
+		let copy = InlineContentPayloadMutable()
+		copy.copyValues(from: self)
+
+		return copy
 	}
 
 	private var defaultEntrypointContext: [String: Any] {
@@ -284,14 +292,6 @@ open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
 @objc(ICLPayloadMutable)
 /* ISOLATION-EXCEPTION: see `InlineContentPayload`. */
 public final class InlineContentPayloadMutable: InlineContentPayload, @unchecked Sendable {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	override public var immutableClass: PortablePropertyObject {
-		unsafeBitCast(InlineContentPayload.self, to: PortablePropertyObject.self)
-	}
-
 	@objc override public var urlToInline: URL {
 		get { urlToInlineStorage }
 		set {

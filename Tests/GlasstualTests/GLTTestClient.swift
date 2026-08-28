@@ -37,19 +37,9 @@
  *
  *********************************************************************** */
 
+import CocoaExtensions
 import Foundation
 @testable import Glasstual
-
-final nonisolated class GLTTestClientConfig: IRCClientConfig, @unchecked Sendable {
-	var testNicknamePassword: String?
-
-	override var nicknamePassword: String? {
-		testNicknamePassword
-	}
-
-	override func writeNicknamePasswordToKeychain() {}
-	override func writeProxyPasswordToKeychain() {}
-}
 
 /// An IRC client double that records network and presentation output without
 /// opening a socket. Tests opt into real incoming-message handling when they
@@ -70,17 +60,16 @@ final class GLTTestClient: IRCClient, @unchecked Sendable {
 		self.init(configDictionary: dictionary, nicknamePassword: nil)
 	}
 
+	/** The password is applied after construction so that
+	 `IRCClient.init(config:)` finds nothing pending and writes nothing: reads
+	 come back from the pending value and never reach the real keychain. */
 	@MainActor convenience init(
 		configDictionary dictionary: [String: Any],
 		nicknamePassword: String?
 	) {
-		let config = GLTTestClientConfig(
-			dictionary: dictionary,
-			ignorePrivateMessages: false
-		)
-		config.testNicknamePassword = nicknamePassword
+		self.init(config: PropertyListModel.decode(ClientConfig.self, from: dictionary) ?? ClientConfig())
 
-		self.init(config: config)
+		config.pendingNicknamePassword = nicknamePassword
 		linePrintObserver = { [weak self] request in
 			self?.recordPrintedLine(request)
 		}

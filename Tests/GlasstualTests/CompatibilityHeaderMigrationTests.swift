@@ -18,7 +18,7 @@ final class CompatibilityHeaderMigrationTests: XCTestCase {
 		XCTAssertNil(channel.defaultModes)
 		XCTAssertNil(channel.defaultTopic)
 
-		let clientConfig = ClientConfig(dictionary: ["dictionaryVersion": 710])
+		let clientConfig = ClientConfig()
 		XCTAssertFalse(clientConfig.connectionName.isEmpty)
 		XCTAssertFalse(clientConfig.nickname.isEmpty)
 		XCTAssertNotNil(clientConfig.channelList)

@@ -38,7 +38,7 @@
 import CocoaExtensions
 import Foundation
 
-@objc public enum IRCAddressBookEntryType: UInt, Sendable {
+@objc public enum IRCAddressBookEntryType: UInt, Sendable, Codable {
 	case ignore = 0
 	case userTracking = 1
 	case mixed = 2
@@ -54,394 +54,267 @@ import Foundation
 	case notAway = 6
 }
 
-@objc(IRCAddressBookEntry)
-public nonisolated class AddressBookEntry: PortablePropertyDict {
-	fileprivate var ignoreClientToClientProtocolStorage = false
-	fileprivate var ignoreFileTransferRequestsStorage = false
-	fileprivate var ignoreGeneralEventMessagesStorage = false
-	fileprivate var ignoreInlineMediaStorage = false
-	fileprivate var ignoreNoticeMessagesStorage = false
-	fileprivate var ignorePrivateMessageHighlightsStorage = false
-	fileprivate var ignorePrivateMessagesStorage = false
-	fileprivate var ignorePublicMessageHighlightsStorage = false
-	fileprivate var ignorePublicMessagesStorage = false
-	fileprivate var trackUserActivityStorage = false
-	fileprivate var entryTypeStorage: IRCAddressBookEntryType = .ignore
-	fileprivate var hostmaskStorage = ""
-	fileprivate var hostmaskRegularExpressionStorage = ""
-	fileprivate var matcherStorage: AddressBookEntryMatcher?
-	fileprivate var trackingNicknameStorage: String?
-	fileprivate var parentEntriesStorage: [AddressBookEntry]?
-	fileprivate var uniqueIdentifierStorage = ""
-	fileprivate var defaultsStorage: [String: Any] = [:]
+/** One address-book rule: a hostmask, what to suppress from whoever matches it,
+ and whether to watch them come and go.
 
-	@objc public var entryType: IRCAddressBookEntryType {
-		entryTypeStorage
+ A rule loaded from disk carries only the settings its `entryType` uses, and the
+ compiled hostmask matcher is rebuilt whenever the type or the mask changes. */
+public nonisolated struct AddressBookEntry: Codable, Equatable {
+	public var uniqueIdentifier: String
+
+	public var entryType: IRCAddressBookEntryType {
+		didSet { rebuildCache() }
 	}
 
-	@objc public var uniqueIdentifier: String {
-		uniqueIdentifierStorage
+	public var hostmask: String {
+		didSet { rebuildCache() }
 	}
 
-	@objc public var hostmask: String {
-		hostmaskStorage
+	public var ignoreClientToClientProtocol = false
+	public var ignoreFileTransferRequests = false
+	public var ignoreGeneralEventMessages = false
+	public var ignoreInlineMedia = false
+	public var ignoreNoticeMessages = false
+	public var ignorePrivateMessageHighlights = false
+	public var ignorePrivateMessages = false
+	public var ignorePublicMessageHighlights = false
+	public var ignorePublicMessages = false
+	public var trackUserActivity = false
+
+	/** The rules a `.mixed` entry was merged from. Never persisted: a merged
+	 entry only exists in the match cache. */
+	public var parentEntries: [AddressBookEntry]?
+
+	private var matcher: AddressBookEntryMatcher
+
+	public init(
+		uniqueIdentifier: String = UUID().uuidString,
+		entryType: IRCAddressBookEntryType = .ignore,
+		hostmask: String = ""
+	) {
+		self.uniqueIdentifier = uniqueIdentifier
+		self.entryType = entryType
+		self.hostmask = hostmask
+		matcher = AddressBookEntryMatcher(entryType: entryType, hostmask: hostmask)
 	}
 
-	@objc public var hostmaskRegularExpression: String {
-		hostmaskRegularExpressionStorage
+	private enum CodingKeys: String, CodingKey {
+		case uniqueIdentifier
+		case entryType
+		case hostmask
+		case ignoreClientToClientProtocol
+		case ignoreFileTransferRequests
+		case ignoreGeneralEventMessages
+		case ignoreInlineMedia
+		case ignoreNoticeMessages
+		case ignorePrivateMessageHighlights
+		case ignorePrivateMessages
+		case ignorePublicMessageHighlights
+		case ignorePublicMessages
+		case trackUserActivity
+
+		// Spellings written by releases before the settings were renamed.
+		case ignoreCTCP
+		case ignoreJPQE
+		case ignoreNotices
+		case ignorePMHighlights
+		case ignorePrivateMsg
+		case ignoreHighlights
+		case ignorePublicMsg
+		case notifyJoins
 	}
 
-	@objc public var trackingNickname: String? {
-		trackingNicknameStorage
+	public init(from decoder: any Decoder) throws {
+		let container = try decoder.container(keyedBy: CodingKeys.self)
+
+		let identifier = container.decode(String.self, forKey: .uniqueIdentifier, aliases: [], default: "")
+		uniqueIdentifier = identifier.isEmpty ? UUID().uuidString : identifier
+		hostmask = container.decode(String.self, forKey: .hostmask, aliases: [], default: "")
+
+		let rawEntryType = container.decode(UInt.self, forKey: .entryType, aliases: [], default: 0)
+		let entryType = IRCAddressBookEntryType(rawValue: rawEntryType) ?? .ignore
+		self.entryType = entryType
+		matcher = AddressBookEntryMatcher(entryType: entryType, hostmask: hostmask)
+
+		if entryType == .ignore || entryType == .mixed {
+			decodeIgnoreSettings(from: container)
+		}
+
+		if entryType == .userTracking || entryType == .mixed {
+			trackUserActivity = container.decode(
+				Bool.self,
+				forKey: .trackUserActivity,
+				aliases: [.notifyJoins],
+				default: false
+			)
+		}
 	}
 
-	@objc public var ignoreClientToClientProtocol: Bool {
-		ignoreClientToClientProtocolStorage
+	private mutating func decodeIgnoreSettings(from container: KeyedDecodingContainer<CodingKeys>) {
+		ignoreClientToClientProtocol = container.decode(
+			Bool.self,
+			forKey: .ignoreClientToClientProtocol,
+			aliases: [.ignoreCTCP],
+			default: false
+		)
+		ignoreFileTransferRequests = container.decode(
+			Bool.self,
+			forKey: .ignoreFileTransferRequests,
+			aliases: [],
+			default: false
+		)
+		ignoreGeneralEventMessages = container.decode(
+			Bool.self,
+			forKey: .ignoreGeneralEventMessages,
+			aliases: [.ignoreJPQE],
+			default: false
+		)
+		ignoreInlineMedia = container.decode(Bool.self, forKey: .ignoreInlineMedia, aliases: [], default: false)
+		ignoreNoticeMessages = container.decode(
+			Bool.self,
+			forKey: .ignoreNoticeMessages,
+			aliases: [.ignoreNotices],
+			default: false
+		)
+		ignorePrivateMessageHighlights = container.decode(
+			Bool.self,
+			forKey: .ignorePrivateMessageHighlights,
+			aliases: [.ignorePMHighlights],
+			default: false
+		)
+		ignorePrivateMessages = container.decode(
+			Bool.self,
+			forKey: .ignorePrivateMessages,
+			aliases: [.ignorePrivateMsg],
+			default: false
+		)
+		ignorePublicMessageHighlights = container.decode(
+			Bool.self,
+			forKey: .ignorePublicMessageHighlights,
+			aliases: [.ignoreHighlights],
+			default: false
+		)
+		ignorePublicMessages = container.decode(
+			Bool.self,
+			forKey: .ignorePublicMessages,
+			aliases: [.ignorePublicMsg],
+			default: false
+		)
 	}
 
-	@objc public var ignoreGeneralEventMessages: Bool {
-		ignoreGeneralEventMessagesStorage
+	/** Writes the canonical keys only, and only those that differ from the
+	 default. Earlier releases compacted the dictionary the same way, so a
+	 stored entry re-encodes to exactly what is already on disk. */
+	public func encode(to encoder: any Encoder) throws {
+		var container = encoder.container(keyedBy: CodingKeys.self)
+
+		if hostmask.isEmpty == false {
+			try container.encode(hostmask, forKey: .hostmask)
+		}
+
+		if uniqueIdentifier.isEmpty == false {
+			try container.encode(uniqueIdentifier, forKey: .uniqueIdentifier)
+		}
+
+		if entryType == .ignore || entryType == .mixed {
+			try encodeIgnoreSettings(into: &container)
+		}
+
+		if entryType == .userTracking || entryType == .mixed, trackUserActivity {
+			try container.encode(true, forKey: .trackUserActivity)
+		}
+
+		if entryType != .ignore {
+			try container.encode(entryType.rawValue, forKey: .entryType)
+		}
 	}
 
-	@objc public var ignoreNoticeMessages: Bool {
-		ignoreNoticeMessagesStorage
-	}
-
-	@objc public var ignorePrivateMessageHighlights: Bool {
-		ignorePrivateMessageHighlightsStorage
-	}
-
-	@objc public var ignorePrivateMessages: Bool {
-		ignorePrivateMessagesStorage
-	}
-
-	@objc public var ignorePublicMessageHighlights: Bool {
-		ignorePublicMessageHighlightsStorage
-	}
-
-	@objc public var ignorePublicMessages: Bool {
-		ignorePublicMessagesStorage
-	}
-
-	@objc public var ignoreFileTransferRequests: Bool {
-		ignoreFileTransferRequestsStorage
-	}
-
-	@objc public var ignoreInlineMedia: Bool {
-		ignoreInlineMediaStorage
-	}
-
-	@objc public var ignoreMessagesContainingMatch: Bool {
-		false
-	}
-
-	@objc public var trackUserActivity: Bool {
-		trackUserActivityStorage
-	}
-
-	@objc public var parentEntries: [AddressBookEntry]? {
-		parentEntriesStorage
-	}
-
-	override public init() {
-		super.init(dictionary: [:])
-	}
-
-	@objc(initWithDictionary:)
-	public required init(dictionary dic: [String: Any]) {
-		super.init(dictionary: dic)
-	}
-
-	public required init?(coder _: NSCoder) {
-		nil
-	}
-
-	@objc public class func newIgnoreEntry() -> Self {
-		newIgnoreEntry(forHostmask: nil)
-	}
-
-	@objc(newIgnoreEntryForHostmask:)
-	public class func newIgnoreEntry(forHostmask hostmask: String?) -> Self {
-		let dic: [String: Any] = [
-			"hostmask": hostmask ?? "",
-			"entryType": NSNumber(value: IRCAddressBookEntryType.ignore.rawValue),
-			"ignoreClientToClientProtocol": true,
-			"ignoreFileTransferRequests": true,
-			"ignoreGeneralEventMessages": true,
-			"ignoreInlineMedia": true,
-			"ignoreNoticeMessages": true,
-			"ignorePrivateMessageHighlights": true,
-			"ignorePrivateMessages": true,
-			"ignorePublicMessageHighlights": true,
-			"ignorePublicMessages": true,
+	private func encodeIgnoreSettings(into container: inout KeyedEncodingContainer<CodingKeys>) throws {
+		let settings: [(Bool, CodingKeys)] = [
+			(ignoreClientToClientProtocol, .ignoreClientToClientProtocol),
+			(ignoreFileTransferRequests, .ignoreFileTransferRequests),
+			(ignoreGeneralEventMessages, .ignoreGeneralEventMessages),
+			(ignoreInlineMedia, .ignoreInlineMedia),
+			(ignoreNoticeMessages, .ignoreNoticeMessages),
+			(ignorePrivateMessageHighlights, .ignorePrivateMessageHighlights),
+			(ignorePrivateMessages, .ignorePrivateMessages),
+			(ignorePublicMessageHighlights, .ignorePublicMessageHighlights),
+			(ignorePublicMessages, .ignorePublicMessages),
 		]
 
-		return self.init(dictionary: dic)
-	}
-
-	@objc public class func newUserTrackingEntry() -> Self {
-		let dic: [String: Any] = [
-			"entryType": NSNumber(value: IRCAddressBookEntryType.userTracking.rawValue),
-			"trackUserActivity": true,
-		]
-
-		return self.init(dictionary: dic)
-	}
-
-	@objc(populateDefaultsPreflight)
-	override public func populateDefaultsPreflight() {
-		if initializedAsCopy {
-			return
-		}
-
-		defaultsStorage = [
-			"entryType": NSNumber(value: IRCAddressBookEntryType.ignore.rawValue),
-			"ignoreClientToClientProtocol": false,
-			"ignoreFileTransferRequests": false,
-			"ignoreGeneralEventMessages": false,
-			"ignoreInlineMedia": false,
-			"ignoreNoticeMessages": false,
-			"ignorePrivateMessageHighlights": false,
-			"ignorePrivateMessages": false,
-			"ignorePublicMessageHighlights": false,
-			"ignorePublicMessages": false,
-			"trackUserActivity": false,
-		]
-	}
-
-	@objc(populateDefaultsPostflight)
-	override public func populateDefaultsPostflight() {
-		if initializedAsCopy {
-			return
-		}
-
-		if uniqueIdentifierStorage.isEmpty {
-			uniqueIdentifierStorage = UUID().uuidString
+		for (value, key) in settings where value {
+			try container.encode(true, forKey: key)
 		}
 	}
 
-	@objc(initializedClassHealthCheck)
-	override public func initializedClassHealthCheck() {
-		if initializedAsCopy {
-			return
-		}
-
-		rebuildCache()
-	}
-
-	@objc(populateDictionaryValues:)
-	override public func populateDictionaryValues(_ dic: [String: Any]) {
-		let dictionary = dic as NSDictionary
-
-		var entryTypeValue: UInt = 0
-		dictionary.ce_assignUnsignedInteger(to: &entryTypeValue, forKey: "entryType")
-		entryTypeStorage = IRCAddressBookEntryType(rawValue: entryTypeValue) ?? .ignore
-
-		if entryTypeStorage == .ignore || entryTypeStorage == .mixed {
-			assignBool("ignoreClientToClientProtocol", to: &ignoreClientToClientProtocolStorage, in: dictionary)
-			assignBool("ignoreFileTransferRequests", to: &ignoreFileTransferRequestsStorage, in: dictionary)
-			assignBool("ignoreGeneralEventMessages", to: &ignoreGeneralEventMessagesStorage, in: dictionary)
-			assignBool("ignoreInlineMedia", to: &ignoreInlineMediaStorage, in: dictionary)
-			assignBool("ignoreNoticeMessages", to: &ignoreNoticeMessagesStorage, in: dictionary)
-			assignBool("ignorePrivateMessageHighlights", to: &ignorePrivateMessageHighlightsStorage, in: dictionary)
-			assignBool("ignorePrivateMessages", to: &ignorePrivateMessagesStorage, in: dictionary)
-			assignBool("ignorePublicMessageHighlights", to: &ignorePublicMessageHighlightsStorage, in: dictionary)
-			assignBool("ignorePublicMessages", to: &ignorePublicMessagesStorage, in: dictionary)
-
-			assignBool("ignoreCTCP", to: &ignoreClientToClientProtocolStorage, in: dictionary)
-			assignBool("ignoreJPQE", to: &ignoreGeneralEventMessagesStorage, in: dictionary)
-			assignBool("ignoreNotices", to: &ignoreNoticeMessagesStorage, in: dictionary)
-			assignBool("ignorePMHighlights", to: &ignorePrivateMessageHighlightsStorage, in: dictionary)
-			assignBool("ignorePrivateMsg", to: &ignorePrivateMessagesStorage, in: dictionary)
-			assignBool("ignoreHighlights", to: &ignorePublicMessageHighlightsStorage, in: dictionary)
-			assignBool("ignorePublicMsg", to: &ignorePublicMessagesStorage, in: dictionary)
-		}
-
-		if entryTypeStorage == .userTracking || entryTypeStorage == .mixed {
-			assignBool("trackUserActivity", to: &trackUserActivityStorage, in: dictionary)
-			assignBool("notifyJoins", to: &trackUserActivityStorage, in: dictionary)
-		}
-
-		if let hostmask = dictionary["hostmask"] as? String {
-			hostmaskStorage = hostmask
-		}
-
-		if let identifier = dictionary["uniqueIdentifier"] as? String {
-			uniqueIdentifierStorage = identifier
-		}
-	}
-
-	@objc public func rebuildCache() {
-		rebuildHostmaskRegularExpression()
-		rebuildTrackingNickname()
-	}
-
-	@objc public func rebuildHostmaskRegularExpression() {
-		let matcher = AddressBookEntryMatcher(entryType: entryTypeStorage, hostmask: hostmaskStorage)
-		matcherStorage = matcher
-		hostmaskRegularExpressionStorage = matcher.regularExpressionPattern
-	}
-
-	@objc public func rebuildTrackingNickname() {
-		trackingNicknameStorage = matcherStorage?.trackingNickname
-	}
-
-	@objc(checkMatch:)
-	public func checkMatch(_ hostmask: String) -> Bool {
-		matcherStorage?.matches(hostmask: hostmask) ?? false
-	}
-
-	override public func dictionaryValue(for target: PortablePropertyDictTarget) -> [String: Any] {
-		let dic = NSMutableDictionary()
-
-		dic.ce_maybeSetObject(hostmaskStorage, forKey: "hostmask")
-		dic.ce_maybeSetObject(uniqueIdentifierStorage, forKey: "uniqueIdentifier")
-
-		if entryTypeStorage == .ignore || entryTypeStorage == .mixed {
-			dic.ce_setBool(ignoreClientToClientProtocolStorage, forKey: "ignoreClientToClientProtocol")
-			dic.ce_setBool(ignoreFileTransferRequestsStorage, forKey: "ignoreFileTransferRequests")
-			dic.ce_setBool(ignoreGeneralEventMessagesStorage, forKey: "ignoreGeneralEventMessages")
-			dic.ce_setBool(ignoreInlineMediaStorage, forKey: "ignoreInlineMedia")
-			dic.ce_setBool(ignoreNoticeMessagesStorage, forKey: "ignoreNoticeMessages")
-			dic.ce_setBool(ignorePrivateMessageHighlightsStorage, forKey: "ignorePrivateMessageHighlights")
-			dic.ce_setBool(ignorePrivateMessagesStorage, forKey: "ignorePrivateMessages")
-			dic.ce_setBool(ignorePublicMessageHighlightsStorage, forKey: "ignorePublicMessageHighlights")
-			dic.ce_setBool(ignorePublicMessagesStorage, forKey: "ignorePublicMessages")
-		}
-
-		if entryTypeStorage == .userTracking || entryTypeStorage == .mixed {
-			dic.ce_setBool(trackUserActivityStorage, forKey: "trackUserActivity")
-		}
-
-		dic.ce_setUnsignedInteger(UInt(entryTypeStorage.rawValue), forKey: "entryType")
-
-		if target == .copy || target == .mutableCopy {
-			guard let values = dic as? [String: Any] else {
-				preconditionFailure("Address book dictionaries must use String keys")
-			}
-
-			return values
-		}
-
-		let compacted = dic.ce_dictionaryByRemovingDefaults(defaultsStorage as NSDictionary)
-		guard let values = compacted as? [String: Any] else {
-			preconditionFailure("Address book dictionaries must use String keys")
-		}
-
-		return values
-	}
-
-	override public func copy(asMutable mutableCopy: Bool, uniquing: Bool) -> Any {
-		guard let config = super.copy(asMutable: mutableCopy, uniquing: false) as? AddressBookEntry else {
-			preconditionFailure("AddressBookEntry copies must preserve their model type")
-		}
-
-		config.defaultsStorage = defaultsStorage
-		config.hostmaskRegularExpressionStorage = hostmaskRegularExpressionStorage
-		config.matcherStorage = matcherStorage
-		config.trackingNicknameStorage = trackingNicknameStorage
-		config.parentEntriesStorage = parentEntriesStorage
-
-		if uniquing {
-			config.uniqueIdentifierStorage = UUID().uuidString
-		}
-
-		return config
-	}
-
-	override public var mutableClass: PortablePropertyDict {
-		unsafeBitCast(MutableAddressBookEntry.self, to: PortablePropertyDict.self)
-	}
-
-	private func assignBool(_ key: String, to storage: inout Bool, in dictionary: NSDictionary) {
-		var value = storage
-		dictionary.ce_assignBool(to: &value, forKey: key)
-		storage = value
+	public static func == (lhs: Self, rhs: Self) -> Bool {
+		lhs.uniqueIdentifier == rhs.uniqueIdentifier
+			&& lhs.entryType == rhs.entryType
+			&& lhs.hostmask == rhs.hostmask
+			&& lhs.ignoreClientToClientProtocol == rhs.ignoreClientToClientProtocol
+			&& lhs.ignoreFileTransferRequests == rhs.ignoreFileTransferRequests
+			&& lhs.ignoreGeneralEventMessages == rhs.ignoreGeneralEventMessages
+			&& lhs.ignoreInlineMedia == rhs.ignoreInlineMedia
+			&& lhs.ignoreNoticeMessages == rhs.ignoreNoticeMessages
+			&& lhs.ignorePrivateMessageHighlights == rhs.ignorePrivateMessageHighlights
+			&& lhs.ignorePrivateMessages == rhs.ignorePrivateMessages
+			&& lhs.ignorePublicMessageHighlights == rhs.ignorePublicMessageHighlights
+			&& lhs.ignorePublicMessages == rhs.ignorePublicMessages
+			&& lhs.trackUserActivity == rhs.trackUserActivity
 	}
 }
 
-@objc(IRCAddressBookEntryMutable)
-public final nonisolated class MutableAddressBookEntry: AddressBookEntry {
-	override public static var isMutable: Bool {
-		true
+public nonisolated extension AddressBookEntry {
+	/// An entry that suppresses everything from `hostmask`.
+	static func newIgnoreEntry(forHostmask hostmask: String? = nil) -> AddressBookEntry {
+		var entry = AddressBookEntry(entryType: .ignore, hostmask: hostmask ?? "")
+		entry.ignoreClientToClientProtocol = true
+		entry.ignoreFileTransferRequests = true
+		entry.ignoreGeneralEventMessages = true
+		entry.ignoreInlineMedia = true
+		entry.ignoreNoticeMessages = true
+		entry.ignorePrivateMessageHighlights = true
+		entry.ignorePrivateMessages = true
+		entry.ignorePublicMessageHighlights = true
+		entry.ignorePublicMessages = true
+
+		return entry
 	}
 
-	override public var immutableClass: PortablePropertyDict {
-		unsafeBitCast(AddressBookEntry.self, to: PortablePropertyDict.self)
+	/// An entry that only watches whoever matches it come and go.
+	static func newUserTrackingEntry() -> AddressBookEntry {
+		var entry = AddressBookEntry(entryType: .userTracking)
+		entry.trackUserActivity = true
+
+		return entry
 	}
 
-	@objc override public var entryType: IRCAddressBookEntryType {
-		get { entryTypeStorage }
-		set {
-			if entryTypeStorage != newValue {
-				entryTypeStorage = newValue
-				rebuildCache()
-			}
-		}
+	var hostmaskRegularExpression: String {
+		matcher.regularExpressionPattern
 	}
 
-	@objc override public var hostmask: String {
-		get { hostmaskStorage }
-		set {
-			if hostmaskStorage != newValue {
-				hostmaskStorage = newValue
-				rebuildCache()
-			}
-		}
+	var trackingNickname: String? {
+		matcher.trackingNickname
 	}
 
-	@objc override public var ignoreClientToClientProtocol: Bool {
-		get { ignoreClientToClientProtocolStorage }
-		set { ignoreClientToClientProtocolStorage = newValue }
+	/// Always `false`; kept because callers still ask.
+	var ignoreMessagesContainingMatch: Bool {
+		false
 	}
 
-	@objc override public var ignoreFileTransferRequests: Bool {
-		get { ignoreFileTransferRequestsStorage }
-		set { ignoreFileTransferRequestsStorage = newValue }
+	func checkMatch(_ hostmask: String) -> Bool {
+		matcher.matches(hostmask: hostmask)
 	}
 
-	@objc override public var ignoreGeneralEventMessages: Bool {
-		get { ignoreGeneralEventMessagesStorage }
-		set { ignoreGeneralEventMessagesStorage = newValue }
+	/// A copy under a fresh identity.
+	func uniqueCopy() -> AddressBookEntry {
+		var copy = self
+		copy.uniqueIdentifier = UUID().uuidString
+
+		return copy
 	}
 
-	@objc override public var ignoreInlineMedia: Bool {
-		get { ignoreInlineMediaStorage }
-		set { ignoreInlineMediaStorage = newValue }
-	}
-
-	@objc override public var ignoreNoticeMessages: Bool {
-		get { ignoreNoticeMessagesStorage }
-		set { ignoreNoticeMessagesStorage = newValue }
-	}
-
-	@objc override public var ignorePrivateMessageHighlights: Bool {
-		get { ignorePrivateMessageHighlightsStorage }
-		set { ignorePrivateMessageHighlightsStorage = newValue }
-	}
-
-	@objc override public var ignorePrivateMessages: Bool {
-		get { ignorePrivateMessagesStorage }
-		set { ignorePrivateMessagesStorage = newValue }
-	}
-
-	@objc override public var ignorePublicMessageHighlights: Bool {
-		get { ignorePublicMessageHighlightsStorage }
-		set { ignorePublicMessageHighlightsStorage = newValue }
-	}
-
-	@objc override public var ignorePublicMessages: Bool {
-		get { ignorePublicMessagesStorage }
-		set { ignorePublicMessagesStorage = newValue }
-	}
-
-	@objc override public var trackUserActivity: Bool {
-		get { trackUserActivityStorage }
-		set { trackUserActivityStorage = newValue }
-	}
-
-	@objc override public var parentEntries: [AddressBookEntry]? {
-		get { parentEntriesStorage }
-		set { parentEntriesStorage = newValue }
+	private mutating func rebuildCache() {
+		matcher = AddressBookEntryMatcher(entryType: entryType, hostmask: hostmask)
 	}
 }

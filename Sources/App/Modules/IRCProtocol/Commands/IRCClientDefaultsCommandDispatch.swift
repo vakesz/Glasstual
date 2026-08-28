@@ -38,7 +38,7 @@ private enum ClientDefaultFeature: String {
 	case disablesAutomaticSASLExternal = "Disable Automatic SASL EXTERNAL Response"
 	case sendsWhoRequestsToChannels = "Send WHO Command Requests to Channels"
 
-	func set(_ enabled: Bool, on config: IRCClientConfigMutable) {
+	func set(_ enabled: Bool, on config: inout ClientConfig) {
 		switch self {
 		case .ignoresBouncerUserNotifications: config.zncIgnoreUserNotifications = enabled
 		case .sendsAuthenticationRequestsToUserServ: config.sendAuthenticationRequestsToUserServ = enabled
@@ -79,8 +79,8 @@ extension IRCClient {
 			return true
 		}
 		for client in AppController.shared.world.clientList where client === self || appliesToAll {
-			guard let mutableConfig = client.config.mutableCopy() as? IRCClientConfigMutable else { continue }
-			feature.set(enablesFeature, on: mutableConfig)
+			var mutableConfig = client.config
+			feature.set(enablesFeature, on: &mutableConfig)
 			client.updateConfig(mutableConfig)
 			client.printDebugInformation(
 				IRCCommandStrings.Defaults.featureChanged(featureName, enabled: enablesFeature)

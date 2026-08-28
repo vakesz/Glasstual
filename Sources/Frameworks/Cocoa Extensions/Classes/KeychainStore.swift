@@ -33,11 +33,94 @@
 import Foundation
 import Security
 
-@objc(XRKeychain)
-public final class KeychainStore: NSObject {
-	@objc(deleteKeychainItem:withItemKind:forUsername:serviceName:)
+/// The keychain class an item lives in. `descriptionAttribute` is written to
+/// `kSecAttrDescription` and so forms part of an item's identity: the strings
+/// below must keep matching what earlier releases wrote.
+public enum KeychainItemClass: Sendable {
+	case applicationPassword
+	case internetPassword
+
+	public var descriptionAttribute: String {
+		switch self {
+		case .applicationPassword: "application password"
+		case .internetPassword: "internet password"
+		}
+	}
+
+	var secClass: CFString {
+		switch self {
+		case .applicationPassword: kSecClassGenericPassword
+		case .internetPassword: kSecClassInternetPassword
+		}
+	}
+}
+
+/// One of the four secrets Glasstual keeps out of its property lists, named by
+/// the model that owns it rather than by the label and service-name strings it
+/// expands to. Every secret is scoped to the owning model's `uniqueIdentifier`,
+/// which is what the associated value carries.
+public enum KeychainItem: Sendable, Equatable, Hashable {
+	case nicknamePassword(String)
+	case proxyPassword(String)
+	case serverPassword(String)
+	case channelSecretKey(String)
+
+	/// `kSecAttrLabel`. This is what Keychain Access shows the user.
+	public var label: String {
+		switch self {
+		case .nicknamePassword: "Glasstual (NickServ)"
+		case .proxyPassword: "Glasstual (Proxy Server Password)"
+		case .serverPassword: "Glasstual (Server Password)"
+		case .channelSecretKey: "Glasstual (Channel JOIN Key)"
+		}
+	}
+
+	/// `kSecAttrService`. The prefix names the kind of secret; the suffix is the
+	/// owning model's unique identifier.
+	public var service: String {
+		switch self {
+		case let .nicknamePassword(identifier): "glasstual.nickserv.\(identifier)"
+		case let .proxyPassword(identifier): "glasstual.proxy-server.\(identifier)"
+		case let .serverPassword(identifier): "glasstual.server.\(identifier)"
+		case let .channelSecretKey(identifier): "glasstual.cjoinkey.\(identifier)"
+		}
+	}
+
+	public var itemClass: KeychainItemClass {
+		.applicationPassword
+	}
+
+	/// The stored secret, or `nil` when the item is absent or unreadable.
+	public var password: String? {
+		KeychainStore.password(forItem: label, kind: itemClass, username: nil, service: service)
+	}
+
+	/// Writes `password`, creating the item when it does not exist yet.
 	@discardableResult
-	public static func deleteItem(_ name: String, kind: String, username: String?, service: String) -> Bool {
+	public func write(_ password: String) -> Bool {
+		KeychainStore.modifyOrAddItem(
+			label,
+			kind: itemClass,
+			username: nil,
+			newPassword: password,
+			service: service
+		)
+	}
+
+	@discardableResult
+	public func delete() -> Bool {
+		KeychainStore.deleteItem(label, kind: itemClass, username: nil, service: service)
+	}
+}
+
+public enum KeychainStore {
+	@discardableResult
+	public static func deleteItem(
+		_ name: String,
+		kind: KeychainItemClass,
+		username: String?,
+		service: String
+	) -> Bool {
 		let status = SecItemDelete(protectedQuery(
 			name: name,
 			kind: kind,
@@ -47,11 +130,10 @@ public final class KeychainStore: NSObject {
 		return status == errSecSuccess
 	}
 
-	@objc(modifyOrAddKeychainItem:withItemKind:forUsername:withNewPassword:serviceName:)
 	@discardableResult
 	public static func modifyOrAddItem(
 		_ name: String,
-		kind: String,
+		kind: KeychainItemClass,
 		username: String?,
 		newPassword: String?,
 		service: String
@@ -72,11 +154,10 @@ public final class KeychainStore: NSObject {
 		return status == errSecSuccess
 	}
 
-	@objc(addKeychainItem:withItemKind:forUsername:withPassword:serviceName:)
 	@discardableResult
 	public static func addItem(
 		_ name: String,
-		kind: String,
+		kind: KeychainItemClass,
 		username: String?,
 		password: String,
 		service: String
@@ -87,15 +168,18 @@ public final class KeychainStore: NSObject {
 		return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
 	}
 
-	@objc(getPasswordFromKeychainItem:withItemKind:forUsername:serviceName:)
-	public static func password(forItem name: String, kind: String, username: String?, service: String) -> String? {
+	public static func password(
+		forItem name: String,
+		kind: KeychainItemClass,
+		username: String?,
+		service: String
+	) -> String? {
 		password(forItem: name, kind: kind, username: username, service: service, status: nil)
 	}
 
-	@objc(getPasswordFromKeychainItem:withItemKind:forUsername:serviceName:returnedStatusCode:)
 	public static func password(
 		forItem name: String,
-		kind: String,
+		kind: KeychainItemClass,
 		username: String?,
 		service: String,
 		status statusPointer: UnsafeMutablePointer<OSStatus>?
@@ -107,13 +191,16 @@ public final class KeychainStore: NSObject {
 		return password
 	}
 
-	private static func protectedQuery(name: String, kind: String, username: String?,
-	                                   service: String) -> [CFString: Any]
-	{
+	private static func protectedQuery(
+		name: String,
+		kind: KeychainItemClass,
+		username: String?,
+		service: String
+	) -> [CFString: Any] {
 		var query: [CFString: Any] = [
-			kSecClass: kind == "internet password" ? kSecClassInternetPassword : kSecClassGenericPassword,
+			kSecClass: kind.secClass,
 			kSecAttrLabel: name,
-			kSecAttrDescription: kind,
+			kSecAttrDescription: kind.descriptionAttribute,
 			kSecAttrService: service,
 			kSecUseDataProtectionKeychain: true,
 		]

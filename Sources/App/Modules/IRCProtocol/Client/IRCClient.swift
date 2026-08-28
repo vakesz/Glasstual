@@ -40,6 +40,7 @@
  Copyright © 2000 - 2012 the Colloquy IRC Client. Redistribution is permitted
  under the three-clause BSD license reproduced in Acknowledgements.pdf. */
 
+import CocoaExtensions
 import Foundation
 import Synchronization
 
@@ -60,7 +61,7 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		var linePrintObserver: ((IRCLinePrintRequest) -> Void)?
 	#endif
 
-	@objc public dynamic var config: IRCClientConfig {
+	public var config: IRCClientConfig {
 		didSet { refreshDescription() }
 	}
 
@@ -70,7 +71,12 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 	 the printing queue and must not read the live table for them. */
 	nonisolated let userPrefixes = Mutex(IRCUserPrefixTable())
 	@objc public dynamic var cachedHighlights: [HighlightLogEntry] = []
-	@objc public dynamic var server: Server?
+	/// The endpoint this connection selected, while it lasts.
+	public var server: Server?
+	/** Keychain items belonging to endpoints the user deleted while the client
+	 was still connected to one of them. They are removed once the connection
+	 ends, so the live connection keeps its password until then. */
+	var retiredServerKeychainItems: Set<KeychainItem> = []
 	@objc public dynamic var isConnecting = false
 	@objc public dynamic var isConnected = false {
 		didSet { refreshDescription() }
@@ -214,12 +220,6 @@ open class IRCClient: TreeItem, @MainActor ConnectionDelegate {
 		fatalError("Unavailable")
 	}
 
-	@objc(initWithConfigDictionary:)
-	@MainActor public convenience init(configDictionary: [String: Any]) {
-		self.init(config: IRCClientConfig(dictionary: configDictionary))
-	}
-
-	@objc(initWithConfig:)
 	@MainActor public init(config: IRCClientConfig) {
 		self.config = config
 		super.init()

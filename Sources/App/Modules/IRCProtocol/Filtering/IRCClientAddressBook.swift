@@ -56,12 +56,10 @@ enum IRCAddressBookLookupPolicy {
 }
 
 public extension IRCClient {
-	@objc(findIgnoresForHostmask:)
 	func findIgnores(forHostmask hostmask: String) -> [AddressBookEntry] {
 		addressBookMatchCache.findIgnores(forHostmask: hostmask)
 	}
 
-	@objc(findUserTrackingAddressBookEntryForHostmask:)
 	internal func findUserTrackingAddressBookEntry(forHostmask hostmask: String) -> AddressBookEntry? {
 		guard let nickname = IRCAddressBookLookupPolicy.nickname(fromHostmask: hostmask) else {
 			return nil
@@ -69,14 +67,12 @@ public extension IRCClient {
 		return findUserTrackingAddressBookEntry(forNickname: nickname)
 	}
 
-	@objc(findUserTrackingAddressBookEntryForNickname:)
 	internal func findUserTrackingAddressBookEntry(forNickname nickname: String) -> AddressBookEntry? {
 		findAddressBookEntry(
 			forHostmask: IRCAddressBookLookupPolicy.trackingHostmask(forNickname: nickname)
 		)
 	}
 
-	@objc(findAddressBookEntryForHostmask:)
 	internal func findAddressBookEntry(forHostmask hostmask: String) -> AddressBookEntry? {
 		addressBookMatchCache.findAddressBookEntry(forHostmask: hostmask)
 	}

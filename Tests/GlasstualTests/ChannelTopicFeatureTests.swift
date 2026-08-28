@@ -118,7 +118,7 @@ final class ChannelTopicFeatureTests: XCTestCase {
 
 	func testAdapterPreservesIdentityFormattedTopicAndTypedDelegateCallbacks() {
 		let client = GLTTestClient()
-		let channel = Channel(configDictionary: ["channelName": "#swift"])
+		let channel = Channel(config: ChannelConfig(channelName: "#swift"))
 		channel.setValue(client, forKey: "associatedClient")
 		channel.topic = "first\n\u{02}bold"
 

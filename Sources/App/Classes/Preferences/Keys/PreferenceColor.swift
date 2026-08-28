@@ -78,10 +78,7 @@ public nonisolated struct PreferenceColor: PreferenceValue {
 
 	public static func preferenceValue(from object: Any) -> PreferenceColor? {
 		guard let data = object as? Data,
-		      let color = NSKeyedUnarchiver.textual_legacyCompatUnarchivedObject(
-		      	ofClass: NSColor.self,
-		      	from: data
-		      ) as? NSColor
+		      let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data)
 		else {
 			return nil
 		}

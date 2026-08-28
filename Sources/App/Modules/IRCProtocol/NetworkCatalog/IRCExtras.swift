@@ -533,43 +533,25 @@ public final class Extras: NSObject {
 				}
 			}
 		} else {
-			let baseConfig = IRCClientConfigMutable()
+			var baseConfig = ClientConfig()
 
 			baseConfig.connectionName = serverAddress
 
-			let server = MutableServer()
-
-			server.serverAddress = serverAddress
-			server.serverPort = serverPort
-
-			server.prefersSecuredConnection = connectSecurely
+			var server = Server(
+				serverAddress: serverAddress,
+				serverPort: serverPort,
+				prefersSecuredConnection: connectSecurely
+			)
 
 			if let serverPassword {
 				server.serverPassword = serverPassword
 			}
 
-			guard let serverCopy = server.copy(asMutable: false, uniquing: false) as? Server else {
-				preconditionFailure("Server copies must preserve their model type")
-			}
+			baseConfig.serverList = [server]
 
-			baseConfig.setValue([serverCopy], forKey: "serverList")
+			baseConfig.channelList = (channelList ?? []).map(ChannelConfig.seed(withName:))
 
-			var channelListConfigs = [Any]()
-
-			channelListConfigs.reserveCapacity(channelListCount)
-
-			for channelName in channelList ?? [] {
-				let channelConfig = ChannelConfig.seed(withName: channelName)
-
-				channelListConfigs.append(channelConfig)
-			}
-
-			baseConfig.setValue(channelListConfigs, forKey: "channelList")
-
-			let client = AppController.shared.world.createClient(
-				with: bridgeClientConfigToObjectiveC(baseConfig),
-				reload: true
-			)
+			let client = AppController.shared.world.createClient(with: baseConfig, reload: true)
 
 			AppController.shared.world.save()
 

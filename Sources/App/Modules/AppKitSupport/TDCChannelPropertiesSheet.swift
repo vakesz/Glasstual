@@ -19,6 +19,14 @@ private enum ChannelPropertiesSheetSelection: Int {
 	case notifications = 2
 }
 
+/// What `ChannelPropertiesSheet` reports back. The configuration is a value
+/// type, so it cannot travel through `perform(_:with:with:)`.
+@MainActor
+public protocol ChannelPropertiesSheetDelegate: AnyObject {
+	func channelPropertiesSheet(_ sender: ChannelPropertiesSheet, onOk config: ChannelConfig)
+	func channelPropertiesSheetWillClose(_ sender: ChannelPropertiesSheet)
+}
+
 @objc(TDCChannelPropertiesSheet)
 @MainActor
 public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelegate, TDCChannelPrototype {
@@ -27,7 +35,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	@objc public private(set) var clientId: String?
 	@objc public private(set) var channelId: String?
 
-	@objc public var config: MutableChannelConfig!
+	public var config: ChannelConfig
 
 	private var secretKeyLengthAlertDisplayed = false
 	private var navigationTree: [[Any]] = []
@@ -52,53 +60,44 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 	@IBOutlet private var contentViewNotificationsHost: NSView!
 	@IBOutlet private var notificationsController: NotificationConfigurationViewController!
 
-	@objc(initWithClient:)
 	public convenience init(client: IRCClient) {
 		self.init(config: nil, onClient: client)
 	}
 
-	@objc(initWithClientId:)
 	public convenience init(clientId: String) {
 		self.init(config: nil, onClientWithId: clientId)
 	}
 
-	@objc(initWithChannel:)
 	public init(channel: IRCChannel) {
+		config = channel.config
+
 		super.init(window: nil)
 
 		client = channel.associatedClient
 		clientId = channel.associatedClient?.uniqueIdentifier
 		self.channel = channel
 		channelId = channel.uniqueIdentifier
-		config = channel.config.mutableCopy() as? MutableChannelConfig ?? MutableChannelConfig()
 
 		prepareInitialState()
 		loadConfig()
 	}
 
-	@objc(initWithConfig:)
 	public convenience init(config: ChannelConfig?) {
 		self.init(config: config, onClientWithId: nil)
 	}
 
-	@objc(initWithConfig:onClient:)
 	public init(config: ChannelConfig?, onClient client: IRCClient?) {
+		self.config = config ?? ChannelConfig()
+
 		super.init(window: nil)
 
 		self.client = client
 		clientId = client?.uniqueIdentifier
 
-		if let config {
-			self.config = config.mutableCopy() as? MutableChannelConfig ?? MutableChannelConfig()
-		} else {
-			self.config = MutableChannelConfig()
-		}
-
 		prepareInitialState()
 		loadConfig()
 	}
 
-	@objc(initWithConfig:onClientWithId:)
 	public convenience init(config: ChannelConfig?, onClientWithId clientId: String?) {
 		self.init(config: config, onClient: nil)
 		self.clientId = clientId
@@ -314,7 +313,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 			/* Reload in place. Closing and re-opening the same window in one turn made
 			 AppKit reject the second beginSheet (endSheet is asynchronous), and cancel()
 			 had already torn down the configuration observer. */
-			config = channel.config.mutableCopy() as? MutableChannelConfig ?? MutableChannelConfig()
+			config = channel.config
 			loadConfig()
 			reloadNotificationsController()
 		}
@@ -366,10 +365,7 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 		config.inlineMediaDisabled = (disableInlineMediaCheck.state == .on)
 		config.inlineMediaEnabled = (enableInlineMediaCheck.state == .on)
 
-		let selector = NSSelectorFromString("channelPropertiesSheet:onOk:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self, with: config.copy())
-		}
+		(delegate as? any ChannelPropertiesSheetDelegate)?.channelPropertiesSheet(self, onOk: config)
 
 		super.ok(nil)
 	}
@@ -400,9 +396,6 @@ public final class ChannelPropertiesSheet: SheetBase, NSControlTextEditingDelega
 		removeConfigurationDidChangeObserver()
 		sheet.makeFirstResponder(nil)
 
-		let selector = NSSelectorFromString("channelPropertiesSheetWillClose:")
-		if let delegate, delegate.responds(to: selector) {
-			_ = delegate.perform(selector, with: self)
-		}
+		(delegate as? any ChannelPropertiesSheetDelegate)?.channelPropertiesSheetWillClose(self)
 	}
 }

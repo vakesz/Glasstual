@@ -13,7 +13,7 @@ import XCTest
 final class IRCModelMigrationTests: XCTestCase {
 	func testConnectionInitialStateAndConfigIsolation() {
 		let client = GLTTestClient()
-		let sourceConfig = Glasstual.IRCConnectionConfigMutable()
+		var sourceConfig = Glasstual.IRCConnectionConfig()
 		sourceConfig.serverAddress = "irc.example.test"
 
 		let connection = Connection(config: sourceConfig, onClient: client)
@@ -45,7 +45,7 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertNil(connection.connectedAddress)
 	}
 
-	func testChannelConfigDefaultsAndLegacyKeys() {
+	func testChannelConfigDefaultsAndLegacyKeys() throws {
 		let defaults = ChannelConfig.seed(withName: "#general")
 
 		XCTAssertTrue(defaults.autoJoin)
@@ -55,13 +55,13 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertEqual(defaults.channelName, "#general")
 		XCTAssertFalse(defaults.uniqueIdentifier.isEmpty)
 
-		let legacy = ChannelConfig(dictionary: [
+		let legacy = try XCTUnwrap(PropertyListModel.decode(ChannelConfig.self, from: [
 			"channelName": "#legacy",
 			"joinOnConnect": false,
 			"ignoreJPQActivity": true,
 			"enableNotifications": false,
 			"enableTreeBadgeCountDrawing": false,
-		])
+		]))
 
 		XCTAssertFalse(legacy.autoJoin)
 		XCTAssertTrue(legacy.ignoreGeneralEventMessages)
@@ -69,28 +69,27 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertFalse(legacy.showTreeBadgeCount)
 	}
 
-	func testChannelConfigMutableAndUniqueCopiesPreserveValues() throws {
-		let mutable = MutableChannelConfig()
-		mutable.channelName = "#swift"
-		mutable.label = "Swift migration"
-		mutable.defaultModes = "+nt"
-		mutable.secretKey = "join-key"
+	func testChannelConfigCopiesAndUniqueCopiesPreserveValues() {
+		var config = ChannelConfig(channelName: "#swift")
+		config.label = "Swift migration"
+		config.defaultModes = "+nt"
+		config.secretKey = "join-key"
 
-		let copy = try XCTUnwrap(mutable.copy() as? ChannelConfig)
-		let unique = try XCTUnwrap(mutable.uniqueCopyMutable() as? MutableChannelConfig)
+		let copy = config
+		let unique = config.uniqueCopy()
 
 		XCTAssertEqual(copy.channelName, "#swift")
 		XCTAssertEqual(copy.label, "Swift migration")
 		XCTAssertEqual(copy.defaultModes, "+nt")
 		XCTAssertEqual(copy.secretKey, "join-key")
-		XCTAssertEqual(copy.uniqueIdentifier, mutable.uniqueIdentifier)
+		XCTAssertEqual(copy.uniqueIdentifier, config.uniqueIdentifier)
 		XCTAssertEqual(unique.channelName, "#swift")
 		XCTAssertEqual(unique.secretKey, "join-key")
-		XCTAssertNotEqual(unique.uniqueIdentifier, mutable.uniqueIdentifier)
+		XCTAssertNotEqual(unique.uniqueIdentifier, config.uniqueIdentifier)
 	}
 
 	func testChannelConfigNotificationOverridesUseThreeStateSemantics() {
-		let config = MutableChannelConfig()
+		var config = ChannelConfig()
 		let event = TXNotificationType.highlight
 
 		XCTAssertEqual(config.notificationEnabled(forEvent: event), .mixed)
@@ -105,19 +104,19 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertEqual(config.notificationEnabled(forEvent: event), .mixed)
 	}
 
-	func testHighlightMatchConditionRoundTripsDictionaryAndDefaults() {
-		let condition = HighlightMatchCondition(dictionary: [
+	func testHighlightMatchConditionRoundTripsDictionaryAndDefaults() throws {
+		let condition = try XCTUnwrap(PropertyListModel.decode(HighlightMatchCondition.self, from: [
 			"matchKeyword": "alert",
 			"matchChannelID": "chan-1",
 			"matchIsExcluded": true,
-		])
+		]))
 
 		XCTAssertEqual(condition.matchKeyword, "alert")
 		XCTAssertEqual(condition.matchChannelId, "chan-1")
 		XCTAssertTrue(condition.matchIsExcluded)
 		XCTAssertFalse(condition.uniqueIdentifier.isEmpty)
 
-		let dictionary = condition.dictionaryValue
+		let dictionary = PropertyListModel.encode(condition)
 
 		XCTAssertEqual(dictionary["matchKeyword"] as? String, "alert")
 		XCTAssertEqual(dictionary["matchChannelID"] as? String, "chan-1")
@@ -125,29 +124,29 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertEqual(dictionary["uniqueIdentifier"] as? String, condition.uniqueIdentifier)
 	}
 
-	func testHighlightMatchConditionMutableCopyAndUniqueCopy() throws {
-		let original = HighlightMatchCondition(dictionary: ["matchKeyword": "ping"])
-		let mutableCopy = try XCTUnwrap(original.mutableCopy() as? MutableHighlightMatchCondition)
-		mutableCopy.matchKeyword = "pong"
-		mutableCopy.matchIsExcluded = true
+	func testHighlightMatchConditionEditsAndUniqueCopyAreIndependent() {
+		let original = HighlightMatchCondition(matchKeyword: "ping")
+		var edited = original
+		edited.matchKeyword = "pong"
+		edited.matchIsExcluded = true
 
 		XCTAssertEqual(original.matchKeyword, "ping")
 		XCTAssertFalse(original.matchIsExcluded)
-		XCTAssertEqual(mutableCopy.matchKeyword, "pong")
-		XCTAssertTrue(mutableCopy.matchIsExcluded)
+		XCTAssertEqual(edited.matchKeyword, "pong")
+		XCTAssertTrue(edited.matchIsExcluded)
 
-		let unique = try XCTUnwrap(original.uniqueCopy() as? HighlightMatchCondition)
+		let unique = original.uniqueCopy()
 
 		XCTAssertEqual(unique.matchKeyword, "ping")
 		XCTAssertNotEqual(unique.uniqueIdentifier, original.uniqueIdentifier)
 	}
 
-	func testServerDefaultsAndDictionaryRoundTrip() {
-		let server = Server(dictionary: [
+	func testServerDefaultsAndDictionaryRoundTrip() throws {
+		let server = try XCTUnwrap(PropertyListModel.decode(Server.self, from: [
 			"serverAddress": "irc.example.test",
 			"serverPort": 6697,
 			"prefersSecuredConnection": true,
-		])
+		]))
 
 		XCTAssertEqual(server.serverAddress, "irc.example.test")
 		XCTAssertEqual(server.serverPort, 6697)
@@ -160,33 +159,27 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertEqual(empty.serverAddress, "")
 	}
 
-	func testServerMutablePasswordAndUniqueCopy() throws {
-		let mutable = MutableServer()
-		mutable.serverAddress = "chat.example.test"
-		mutable.serverPort = 6667
-		mutable.serverPassword = "s3cret"
-		mutable.prefersSecuredConnection = false
+	func testServerPasswordAndUniqueCopy() {
+		var server = Server(serverAddress: "chat.example.test", serverPort: 6667)
+		server.serverPassword = "s3cret"
 
-		XCTAssertEqual(mutable.serverPassword, "s3cret")
+		XCTAssertEqual(server.serverPassword, "s3cret")
 
-		let unique = try XCTUnwrap(mutable.uniqueCopy() as? Server)
+		let unique = server.uniqueCopy()
 
 		XCTAssertEqual(unique.serverAddress, "chat.example.test")
-		XCTAssertNotEqual(unique.uniqueIdentifier, mutable.uniqueIdentifier)
+		XCTAssertNotEqual(unique.uniqueIdentifier, server.uniqueIdentifier)
 		XCTAssertEqual(unique.serverPassword, "s3cret")
 	}
 
-	func testHighlightLogEntryMutableStoresLineClientAndChannel() {
+	func testHighlightLogEntryStoresLineClientAndChannel() {
 		let line = MutableLogLine()
 		line.messageBody = "hello world"
 		line.nickname = "alice"
 		line.lineType = .privateMessage
 		line.receivedAt = Date(timeIntervalSince1970: 1_700_000_000)
 
-		let entry = MutableHighlightLogEntry()
-		entry.lineLogged = line
-		entry.clientId = "client-a"
-		entry.channelId = "channel-b"
+		let entry = HighlightLogEntry(lineLogged: line, clientId: "client-a", channelId: "channel-b")
 
 		XCTAssertEqual(entry.clientId, "client-a")
 		XCTAssertEqual(entry.channelId, "channel-b")

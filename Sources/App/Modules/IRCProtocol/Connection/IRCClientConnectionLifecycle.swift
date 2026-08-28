@@ -111,7 +111,7 @@ public extension IRCClient {
 		printDebugInformation(toConsole: IRCConnectionStrings.connecting(host: serverAddress, port: serverPort))
 		NotificationCenter.default.post(name: .IRCClientWillConnect, object: self)
 
-		let socketConfig = IRCConnectionConfigMutable()
+		var socketConfig = IRCConnectionConfig()
 		socketConfig.addressType = config.addressType
 		socketConfig.serverAddress = serverAddress
 		socketConfig.serverPort = serverPort
