@@ -13,6 +13,7 @@
 
 import AppKit
 import CocoaExtensions
+import os
 import WebKit
 
 private enum WebKit2MenuItemTag {
@@ -42,6 +43,11 @@ public final class LogPolicyTarget: NSObject {
 @objc(TVCLogPolicy)
 @MainActor
 public final class LogPolicy: NSObject {
+	private nonisolated static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "LogPolicy"
+	)
+
 	@objc(displayContextMenuInWebView:)
 	public func displayContextMenu(in webView: LogView) {
 		let contextMenu = constructContextMenu(for: webView, withDefaultMenuItems: [])
@@ -124,9 +130,21 @@ public final class LogPolicy: NSObject {
 			}
 
 			openWebpage(actionURL)
-		} else {
-			decisionHandler(.allow)
+			return
 		}
+
+		/* A missing target frame means a new window, which the log view never
+		 opens, so it is held to the main frame's rules. */
+		let inMainFrame = navigationAction.targetFrame?.isMainFrame ?? true
+		let actionURL = navigationAction.request.url
+		guard LogViewContentPolicy.permitsNavigation(to: actionURL, inMainFrame: inMainFrame) else {
+			let address = actionURL?.absoluteString ?? "(no address)"
+			Self.logger.error("Cancelled a navigation out of the log view: \(address, privacy: .public)")
+			decisionHandler(.cancel)
+			return
+		}
+
+		decisionHandler(.allow)
 	}
 
 	@objc(webView2:logView:contextMenuWithDefaultMenu:)
