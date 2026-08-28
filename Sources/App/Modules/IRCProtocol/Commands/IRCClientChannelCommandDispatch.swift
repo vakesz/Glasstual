@@ -237,9 +237,13 @@ extension IRCClient {
 			joinUnlistedChannelsAndSelectBestMatch(channelName, passwords: arguments.string)
 		case "join_random":
 			guard isLoggedIn else { return true }
+			guard requireDeveloperMode() else { return true }
 			let arguments = NSMutableAttributedString(attributedString: parsed.arguments)
 			let requestedCount = Int(arguments.ceTokenAsString) ?? 1
-			for _ in 0 ..< max(1, requestedCount) {
+			// Bounded so that a typo cannot turn into a self-inflicted flood.
+			let maximumCount = 20
+			let count = min(max(1, requestedCount), maximumCount)
+			for _ in 0 ..< count {
 				send("JOIN", arguments: ["#debug-channel-\(randomNumber(9_999_999))"])
 			}
 		case "cycle", "hop", "rejoin":
@@ -342,7 +346,7 @@ extension IRCClient {
 				printDebugInformation(IRCCommandStrings.invalidNicknameForColor(nickname))
 				return true
 			}
-			NSObject.applicationController().menuController?.memberChangeColor(nickname)
+			NSObject.applicationController().menuController?.showNicknameColorSheet(forNickname: nickname)
 		default:
 			return false
 		}
