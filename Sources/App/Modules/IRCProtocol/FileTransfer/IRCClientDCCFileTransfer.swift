@@ -285,7 +285,12 @@ public extension IRCClient {
 		switch request {
 		case let .send(filename, address, port, filesize, token):
 			if let token {
-				let transfer = fileTransferController.fileTransferSender(matchingToken: token)
+				let transfer = fileTransferController.fileTransferSender(
+					matchingToken: token,
+					client: self,
+					peerNickname: sender,
+					filename: filename
+				)
 				if port == 0 {
 					guard transfer == nil else {
 						printInvalidDCCRequest(from: sender)
@@ -305,18 +310,28 @@ public extension IRCClient {
 				return
 			}
 			receivedDCCSend(sender, filename: filename, address: address, port: port, filesize: filesize, token: nil)
-		case let .resume(_, port, position, token):
-			guard let transfer = matchingFileTransfer(port: port, token: token),
-			      transfer.transferStatus == .waitingForReceiverToAccept || transfer
-			      .transferStatus == .isListeningAsSender
+		case let .resume(filename, port, position, token):
+			guard let transfer = matchingFileTransfer(
+				port: port,
+				token: token,
+				sender: sender,
+				filename: filename
+			),
+				transfer.transferStatus == .waitingForReceiverToAccept || transfer
+				.transferStatus == .isListeningAsSender
 			else {
 				printInvalidDCCRequest(from: sender)
 				return
 			}
 			transfer.didReceiveResumeRequest(position)
-		case let .accept(_, port, position, token):
-			guard let transfer = matchingFileTransfer(port: port, token: token),
-			      transfer.transferStatus == .waitingForResumeAccept
+		case let .accept(filename, port, position, token):
+			guard let transfer = matchingFileTransfer(
+				port: port,
+				token: token,
+				sender: sender,
+				filename: filename
+			),
+				transfer.transferStatus == .waitingForResumeAccept
 			else {
 				printInvalidDCCRequest(from: sender)
 				return
@@ -327,13 +342,25 @@ public extension IRCClient {
 
 	private func matchingFileTransfer(
 		port: UInt16,
-		token: String?
+		token: String?,
+		sender: String,
+		filename: String
 	) -> TDCFileTransferDialogTransferController? {
 		if let token, port == 0 {
-			return fileTransferController.fileTransferSender(matchingToken: token)
+			return fileTransferController.fileTransferSender(
+				matchingToken: token,
+				client: self,
+				peerNickname: sender,
+				filename: filename
+			)
 		}
 		if token == nil, port > 0 {
-			return fileTransferController.fileTransfer(matchingPort: port)
+			return fileTransferController.fileTransfer(
+				matchingPort: port,
+				client: self,
+				peerNickname: sender,
+				filename: filename
+			)
 		}
 		return nil
 	}

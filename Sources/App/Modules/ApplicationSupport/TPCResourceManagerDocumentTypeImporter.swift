@@ -108,7 +108,9 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 	// MARK: - Custom Script Files
 
 	public func panel(_: Any, validate url: URL) throws {
-		guard let scriptsPath = PathInfo.customScripts, url.path.hasPrefix(scriptsPath) else {
+		guard let scriptsPath = PathInfo.customScripts,
+		      Self.url(url, isContainedIn: URL(fileURLWithPath: scriptsPath))
+		else {
 			throw NSError(
 				domain: "GlasstualErrorDomain",
 				code: 27984,
@@ -119,6 +121,21 @@ public final class ResourceManagerDocumentTypeImporter: NSDocument, NSOpenSavePa
 				]
 			)
 		}
+	}
+
+	/// Whether `url` names something inside `directory`.
+	///
+	/// A string prefix test is not containment: it accepts a sibling whose name
+	/// merely starts with the directory's, such as `…/Application Scripts-evil`.
+	private static func url(_ url: URL, isContainedIn directory: URL) -> Bool {
+		let components = url.standardizedFileURL.resolvingSymlinksInPath().pathComponents
+		let directoryComponents = directory.standardizedFileURL.resolvingSymlinksInPath().pathComponents
+
+		guard components.count > directoryComponents.count else {
+			return false
+		}
+
+		return Array(components.prefix(directoryComponents.count)) == directoryComponents
 	}
 
 	@MainActor

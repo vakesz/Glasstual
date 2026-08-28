@@ -40,6 +40,16 @@ import Mustache
 
 @objc(ICMInlineVideoFoundation)
 open class InlineVideoFoundation: InlineContentModule {
+	/** Renders through the framework's own template into an escaped attribute,
+	 and carries no adult content of its own. */
+	override open class var contentUntrusted: Bool {
+		false
+	}
+
+	override open class var contentNotSafeForWork: Bool {
+		false
+	}
+
 	@objc public var videoAutoplayEnabled = false
 	@objc public var videoControlsEnabled = true
 	@objc public var videoLoopEnabled = false

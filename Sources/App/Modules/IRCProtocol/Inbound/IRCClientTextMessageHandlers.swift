@@ -91,6 +91,38 @@ enum IRCServiceNoticePolicy {
 		let successfulIdentificationTokens: [String]
 	}
 
+	/// Whether a `NickServ` notice plausibly came from network services.
+	///
+	/// The reply to one of these carries the account password. Nothing stops
+	/// an ordinary user from holding the nickname `NickServ` on a network
+	/// without nickname protection, so the sender has to look like a service
+	/// before anything is sent back.
+	static func noticeIsFromServices(
+		senderIsServer: Bool,
+		senderAddress: String?,
+		serverAddress: String?
+	) -> Bool {
+		if senderIsServer {
+			return true
+		}
+
+		guard let address = senderAddress?.lowercased(), address.isEmpty == false else {
+			return false
+		}
+
+		if address == "services." || address.hasPrefix("services.") || address.contains(".services.") {
+			return true
+		}
+
+		/* Some networks host services under the network's own domain, as in
+		 NickServ!service@dal.net against irc.dal.net. */
+		guard let serverAddress = serverAddress?.lowercased(), serverAddress.isEmpty == false else {
+			return false
+		}
+
+		return address == serverAddress || serverAddress.hasSuffix("." + address)
+	}
+
 	static func channelNotice(from text: String) -> ChannelNotice? {
 		guard text.hasPrefix("["), let space = text.firstIndex(of: " ") else { return nil }
 		let head = text[..<space]
@@ -248,7 +280,7 @@ public extension IRCClient {
 			if sender.caseInsensitiveCompare("ChanServ") == .orderedSame {
 				(query, deliveredText) = channelServiceNoticeDestination(current: query, text: text)
 			} else if sender.caseInsensitiveCompare("NickServ") == .orderedSame {
-				processNickServNotice(text)
+				processNickServNotice(text, from: message)
 			}
 			if TextualPreferences.locationToSendNotices() == .selectedChannel {
 				query = NSObject.applicationController().mainWindow.selectedChannel(on: self)
@@ -327,7 +359,15 @@ public extension IRCClient {
 		return (channel, notice.text)
 	}
 
-	private func processNickServNotice(_ text: String) {
+	private func processNickServNotice(_ text: String, from message: Message) {
+		guard IRCServiceNoticePolicy.noticeIsFromServices(
+			senderIsServer: message.senderIsServer,
+			senderAddress: message.senderAddress,
+			serverAddress: serverAddress
+		) else {
+			return
+		}
+
 		serverHasNickServ = true
 		let comparableText = TextualPreferences.removeAllFormatting() ? text : (text as NSString).stripIRCEffects
 		let action = IRCServiceNoticePolicy.nickServAction(

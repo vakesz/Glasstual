@@ -75,7 +75,9 @@ private final class MediaAssessorRequest: @unchecked Sendable {
 
 private struct MediaAssessorState: @unchecked Sendable {
 	let assessment: MediaAssessment
-	let performExtendedValidation: Bool
+	/// Whether the body has to be fetched, either to measure the image or to
+	/// count bytes the server declined to declare.
+	let shouldDownloadBody: Bool
 }
 
 @objc(ICLMediaAssessor)
@@ -84,11 +86,15 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		subsystem: "com.vakesz.glasstual.InlineContentLoader",
 		category: "MediaAssessor"
 	)
+	/** SVG is deliberately absent: it is an active content type, and the only
+	 thing keeping it inert today is that the template happens to render
+	 through `<img src>`. */
 	private static let validImageContentTypes: Set<String> = [
-		"image/gif", "image/jpeg", "image/png", "image/svg+xml", "image/tiff", "image/x-ms-bmp",
+		"image/avif", "image/gif", "image/heic", "image/heif", "image/jpeg",
+		"image/png", "image/tiff", "image/webp", "image/x-ms-bmp",
 	]
 	private static let validVideoContentTypes: Set<String> = [
-		"video/3gpp", "video/3gpp2", "video/mp4", "video/quicktime", "video/x-m4v",
+		"video/3gpp", "video/3gpp2", "video/mp4", "video/quicktime", "video/webm", "video/x-m4v",
 	]
 
 	private var configuration: MediaAssessorConfiguration?
@@ -167,6 +173,8 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		sessionConfiguration.requestCachePolicy = .reloadIgnoringLocalCacheData
 		sessionConfiguration.httpShouldSetCookies = false
 		sessionConfiguration.httpCookieAcceptPolicy = .never
+		sessionConfiguration.timeoutIntervalForRequest = InlineContentNetworkLimits.requestTimeout
+		sessionConfiguration.timeoutIntervalForResource = InlineContentNetworkLimits.resourceTimeout
 
 		let request = MediaAssessorRequest()
 		let session = URLSession(
@@ -257,12 +265,21 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 			throw makeError("Unexpected media type", code: .unexpectedType)
 		}
 
-		var performExtendedValidation = false
+		var shouldDownloadBody = false
 		if mediaType == .image, let limits {
-			guard contentLength <= limits.imageMaximumFilesize else {
-				throw makeError("Content-Length exceeds maximum allowed", code: .contentLengthExceeded)
+			if responseLength == NSURLSessionTransferSizeUnknown {
+				/* Without a Content-Length the only way to hold the server to
+				 the file-size cap is to stream the body and count. */
+				shouldDownloadBody = limits.imageMaximumFilesize > 0
+			} else {
+				guard contentLength <= limits.imageMaximumFilesize else {
+					throw makeError("Content-Length exceeds maximum allowed", code: .contentLengthExceeded)
+				}
 			}
-			performExtendedValidation = limits.imageMaximumHeight > 0
+
+			/* The height cap is optional; the width cap is not, and neither can
+			 be applied without the pixels. */
+			shouldDownloadBody = shouldDownloadBody || limits.imageMaximumHeight > 0
 		}
 
 		let assessment = MediaAssessmentMutable(
@@ -273,7 +290,7 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		assessment.contentLength = contentLength
 		return MediaAssessorState(
 			assessment: assessment,
-			performExtendedValidation: performExtendedValidation
+			shouldDownloadBody: shouldDownloadBody
 		)
 	}
 
@@ -291,7 +308,7 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		do {
 			let state = try readHeaders(from: response)
 			self.state = state
-			completionHandler(state.performExtendedValidation ? .becomeDownload : .cancel)
+			completionHandler(state.shouldDownloadBody ? .becomeDownload : .cancel)
 		} catch {
 			request?.alternateError = error as NSError
 			completionHandler(.cancel)
@@ -411,7 +428,9 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		if width > limits.imageMaximumWidth {
 			throw makeError("Image validation: Maximum width exceeded", code: .maximumWidthExceeded)
 		}
-		if height > limits.imageMaximumHeight {
+
+		/* A height cap of zero means the user did not ask for one. */
+		if limits.imageMaximumHeight > 0, height > limits.imageMaximumHeight {
 			throw makeError("Image validation: Maximum height exceeded", code: .maximumHeightExceeded)
 		}
 	}

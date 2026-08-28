@@ -116,12 +116,19 @@ public final class STSPolicyStore: NSObject, @unchecked Sendable {
 		return true
 	}
 
-	@objc(applyCapabilityValues:forHost:connectedPort:secured:upgradePort:)
+	/// The longest an advertised policy is allowed to last.
+	///
+	/// `duration` is otherwise unbounded, so a server that once spoke for a
+	/// host could pin it effectively forever.
+	public static let maximumPolicyDuration: TimeInterval = 365 * 24 * 60 * 60
+
+	@objc(applyCapabilityValues:forHost:connectedPort:secured:certificateChainValidated:upgradePort:)
 	public func applyCapabilityValues(
 		_ values: STSCapabilityValues,
 		forHost host: String,
 		connectedPort: UInt16,
 		secured: Bool,
+		certificateChainValidated: Bool,
 		upgradePort: UnsafeMutablePointer<UInt16>?
 	) -> IRCSTSPolicyAction {
 		if secured == false {
@@ -132,6 +139,13 @@ public final class STSPolicyStore: NSObject, @unchecked Sendable {
 			upgradePort?.pointee = values.port
 
 			return .upgrade
+		}
+
+		/* IRCv3 requires a policy offered over a connection whose certificate
+		 did not validate to be ignored. Otherwise anyone who can present a
+		 certificate the user clicks through once gets to pin the host. */
+		guard certificateChainValidated else {
+			return .none
 		}
 
 		guard values.hasDuration else {
@@ -152,7 +166,7 @@ public final class STSPolicyStore: NSObject, @unchecked Sendable {
 
 		let policy = STSPolicy(
 			port: policyPort,
-			expiresAt: Date(timeIntervalSinceNow: values.duration),
+			expiresAt: Date(timeIntervalSinceNow: min(values.duration, Self.maximumPolicyDuration)),
 			preload: values.preload
 		)
 

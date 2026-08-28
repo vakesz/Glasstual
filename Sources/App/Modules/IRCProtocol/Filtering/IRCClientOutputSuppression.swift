@@ -81,7 +81,8 @@ enum IRCOutputSuppressionPolicy {
 		rules: [IRCOutputSuppressionRule]
 	) -> Bool {
 		rules.contains { rule in
-			RegularExpression.string(message, isMatchedByRegex: rule.pattern) && rule.applies(to: destination)
+			/* The destination check is free; the regex is not. */
+			rule.applies(to: destination) && RegularExpression.string(message, isMatchedByRegex: rule.pattern)
 		}
 	}
 }

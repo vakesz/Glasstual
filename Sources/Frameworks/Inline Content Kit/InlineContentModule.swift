@@ -107,12 +107,19 @@ open class InlineContentModule: NSObject {
 		false
 	}
 
+	/// Whether the module puts markup it did not build itself into the log view.
+	///
+	/// Defaults to the cautious answer: a module that never says otherwise is
+	/// treated as untrusted, so forgetting to declare it costs a gated module
+	/// rather than an ungated injection point.
 	@objc open class var contentUntrusted: Bool {
-		false
+		true
 	}
 
+	/// Whether the module's content should be withheld when the user has asked
+	/// for adult content to be limited. Defaults to the cautious answer.
 	@objc open class var contentNotSafeForWork: Bool {
-		false
+		true
 	}
 
 	@objc open var styleResources: [URL]? {

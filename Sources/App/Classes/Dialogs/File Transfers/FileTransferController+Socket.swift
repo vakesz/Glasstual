@@ -67,6 +67,14 @@ public extension TDCFileTransferDialogTransferController {
 			connection.disconnect()
 			return
 		}
+		guard acceptedConnectionIsFromPeer(connection) else {
+			connection.disconnect()
+			return
+		}
+
+		/* One listener serves one transfer. Leaving the port open past the
+		 first accept only gives somebody else a window to reach it. */
+		socket.stopListening()
 
 		listeningServerConnectedClient = connection
 		transferStatus = isReversed ? .receiving : .sending
@@ -78,6 +86,28 @@ public extension TDCFileTransferDialogTransferController {
 		} else {
 			sendPendingFileData()
 		}
+	}
+
+	/// Whether an inbound connection came from the peer this transfer was
+	/// negotiated with.
+	///
+	/// Only a reverse DCC gives us the peer's address up front: for a plain
+	/// `DCC SEND` we listen and the remote end announces itself by connecting,
+	/// so there is nothing to compare against and the connection is allowed.
+	private func acceptedConnectionIsFromPeer(_ connection: TDCFileTransferDialogSocket) -> Bool {
+		guard !hostAddress.isEmpty else {
+			return true
+		}
+
+		guard let remoteHost = connection.remoteHost, remoteHost == hostAddress else {
+			fileTransferLogger.error(
+				"Rejected DCC connection from an address other than the one the transfer was offered from"
+			)
+
+			return false
+		}
+
+		return true
 	}
 
 	func socketDidConnect(_ socket: TDCFileTransferDialogSocket) {
@@ -116,6 +146,13 @@ public extension TDCFileTransferDialogTransferController {
 		dispatchPrecondition(condition: .onQueue(.main))
 		guard socket === readSocket, !isSender, let fileHandle else { return }
 
+		/* A peer that sends more than it advertised would otherwise overshoot
+		 the announced size by up to one read buffer. Keep only what was
+		 promised and fail the transfer on the excess. */
+		let remaining = totalFilesize > processedFilesize ? totalFilesize - processedFilesize : 0
+		let overshot = UInt64(data.count) > remaining
+		let data = overshot ? data.prefix(Int(remaining)) : data
+
 		currentRecord += UInt64(data.count)
 		processedFilesize += UInt64(data.count)
 
@@ -137,6 +174,12 @@ public extension TDCFileTransferDialogTransferController {
 		}
 
 		readSocket?.write(acknowledgement(for: processedFilesize), timeout: -1)
+
+		if overshot {
+			fileTransferLogger.error("Peer sent more data than the transfer announced")
+			close(with: .oversizedTransfer)
+			return
+		}
 
 		if processedFilesize < totalFilesize {
 			readSocket?.readData()

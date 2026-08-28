@@ -44,6 +44,10 @@ open class InlineHTMLFoundation: InlineContentModule {
 		true
 	}
 
+	override open class var contentNotSafeForWork: Bool {
+		false
+	}
+
 	override open var styleResources: [URL]? {
 		[Self.componentURL(named: "ICMInlineHTML", extension: "css")].compactMap(\.self)
 	}

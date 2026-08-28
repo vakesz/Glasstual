@@ -114,6 +114,7 @@ public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
 	private let socketQueue: DispatchQueue
 	private let invalidated = Mutex(false)
 	private let connected = Mutex(false)
+	private let remoteHostAddress = Mutex<String?>(nil)
 
 	private var listener: NWListener?
 	private var connection: NWConnection?
@@ -129,6 +130,15 @@ public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
 
 	@objc public var isConnected: Bool {
 		connected.withLock { $0 }
+	}
+
+	/// The address of the peer on the other end of this connection, if known.
+	///
+	/// IPv4-mapped IPv6 addresses are reduced to their IPv4 form and interface
+	/// zone identifiers are stripped so the value can be compared against an
+	/// address that arrived over the wire.
+	@objc public var remoteHost: String? {
+		remoteHostAddress.withLock { $0 }
 	}
 
 	@objc(initWithDelegate:delegateQueue:)
@@ -278,6 +288,18 @@ public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
 		}
 	}
 
+	/// Stops accepting new connections without disturbing the connection that
+	/// was already accepted.
+	///
+	/// A DCC listener serves exactly one transfer, so leaving the port open
+	/// after the peer arrives only gives a third party a window to race it.
+	@objc public func stopListening() {
+		socketQueue.async { [self] in
+			listener?.cancel()
+			listener = nil
+		}
+	}
+
 	private func listenOnNextPort() {
 		guard closed == false, isInvalidated == false else {
 			return
@@ -422,11 +444,49 @@ public final class FileTransferDialogSocket: NSObject, @unchecked Sendable {
 	// MARK: - Connecting
 
 	private func adopt(connection: NWConnection, acceptedBy listener: FileTransferDialogSocket) {
+		let host = Self.host(of: connection.endpoint)
+
 		socketQueue.async { [self] in
 			parentListener = listener
 			outboundConnection = false
+			remoteHostAddress.withLock { $0 = host }
 			start(connection: connection)
 		}
+	}
+
+	private static func host(of endpoint: NWEndpoint) -> String? {
+		guard case let .hostPort(host, _) = endpoint else {
+			return nil
+		}
+
+		switch host {
+		case let .ipv4(address):
+			return normalized(address.debugDescription)
+		case let .ipv6(address):
+			return normalized(address.debugDescription)
+		case let .name(name, _):
+			return name
+		@unknown default:
+			return nil
+		}
+	}
+
+	private static func normalized(_ address: String) -> String {
+		/* `IPv6Address` renders an interface zone as a `%en0` suffix, and a
+		 dual-stack listener reports IPv4 peers in the `::ffff:` mapped form. */
+		var address = address
+
+		if let zone = address.firstIndex(of: "%") {
+			address = String(address[address.startIndex ..< zone])
+		}
+
+		let mappedPrefix = "::ffff:"
+
+		if address.lowercased().hasPrefix(mappedPrefix) {
+			address = String(address.dropFirst(mappedPrefix.count))
+		}
+
+		return address
 	}
 
 	@objc(connectToHost:port:viaInterface:timeout:)
