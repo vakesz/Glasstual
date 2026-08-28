@@ -54,7 +54,7 @@ final class IRCBridgeContractMigrationTests: XCTestCase {
 	}
 
 	func testUserRankBitsAndSetAlgebraRemainStable() {
-		XCTAssertEqual(UserRank.none.rawValue, 1 << 0)
+		XCTAssertEqual(UserRank.none.rawValue, 0)
 		XCTAssertEqual(UserRank.irCopByMode.rawValue, 1 << 1)
 		XCTAssertEqual(UserRank.channelOwner.rawValue, 1 << 2)
 		XCTAssertEqual(UserRank.superOperator.rawValue, 1 << 3)

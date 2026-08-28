@@ -1282,19 +1282,6 @@ extension PreferencesController {
 		}
 	}
 
-	@IBAction @objc(onResetPluginApprovals:)
-	private func onResetPluginApprovals(_: Any?) {
-		PluginManager.resetApprovals()
-		TDCAlert.alertSheet(
-			with: window,
-			body: PromptStrings.Plugin.resetApprovalsBody,
-			title: PromptStrings.Plugin.resetApprovalsTitle,
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil,
-			otherButton: nil
-		)
-	}
-
 	private func openPathToThemesCallback(_ returnCode: TDCAlertResponse, originalAlert: NSAlert) {
 		switch returnCode {
 		case .default:

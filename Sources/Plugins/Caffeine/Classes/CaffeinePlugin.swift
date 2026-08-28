@@ -40,14 +40,14 @@ import GlasstualPluginKit
 import os
 
 @objc(TPI_Caffeine)
-final nonisolated class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProviding, @unchecked Sendable {
+final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProviding {
 	private static let preventSleepPreference = "Private Extension Store -> Caffeine Extension -> Prevent Sleep"
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "Extension['\(Bundle(for: CaffeinePlugin.self).object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Caffeine")']"
 	)
 
-	@IBOutlet private var preferencesPane: NSView!
+	@IBOutlet private var preferencesPane: NSView?
 
 	private var activity: NSObjectProtocol?
 	private var connectionObservation: PluginObservation?
@@ -92,7 +92,9 @@ final nonisolated class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPrefere
 
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
-		bundle.loadNibNamed("TPI_Caffeine", owner: self, topLevelObjects: nil)
+		if bundle.loadNibNamed("TPI_Caffeine", owner: self, topLevelObjects: nil) == false {
+			Self.logger.error("Failed to load TPI_Caffeine.xib; the preferences pane is unavailable")
+		}
 		connectionObservation = host.observeConnectionState { [weak self] hasConnectedClient in
 			self?.updateSleepState(hasConnectedClient: hasConnectedClient)
 		}
@@ -109,7 +111,7 @@ final nonisolated class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPrefere
 		String(localized: .BasicLanguage.sleepModeManagement)
 	}
 
-	var pluginPreferencesPaneView: NSView {
+	var pluginPreferencesPaneView: NSView? {
 		preferencesPane
 	}
 }

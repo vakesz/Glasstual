@@ -27,7 +27,7 @@ final class PreferencesControllerMigrationTests: XCTestCase {
 			"onChangedUserListModeColor:", "onChangedUserListModeSortOrder:",
 			"onFileTransferDownloadDestinationFolderChanged:",
 			"onFileTransferIPAddressDetectionMethodChanged:", "onModifyUserStyleSheetRules:",
-			"onOpenPathToScripts:", "onOpenPathToTheme:", "onResetPluginApprovals:",
+			"onOpenPathToScripts:", "onOpenPathToTheme:",
 			"onResetServerListUnreadBadgeColorsToDefault:",
 			"onResetUserListModeColorsToDefaults:", "onSelectNewFont:",
 		]

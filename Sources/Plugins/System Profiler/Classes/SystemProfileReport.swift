@@ -43,8 +43,8 @@ import Metal
 
 @MainActor
 enum SystemProfileReport {
-	static func applicationActiveStyle(metrics: PluginApplicationMetrics) -> String {
-		guard let snapshot = PluginHost.themeSnapshot() else {
+	static func applicationActiveStyle(metrics: PluginApplicationMetrics, host: PluginHostContext) -> String {
+		guard let snapshot = host.themeSnapshot else {
 			return ""
 		}
 
@@ -57,14 +57,14 @@ enum SystemProfileReport {
 			""
 		}
 		let sidebar = SystemProfileInformation.sidebarAppearance(usesDarkAppearance: metrics.usesDarkSidebar)
-		let theme = SystemProfileInformation.themeAppearance()
+		let theme = SystemProfileInformation.themeAppearance(host: host)
 		let appearance = sidebar == theme
 			? SystemProfilerLocalization.string(.BasicLanguage.appearance(sidebar))
 			: SystemProfilerLocalization.string(.BasicLanguage.separateAppearances(theme, sidebar))
 		return SystemProfilerLocalization.string(.BasicLanguage.currentStyle(snapshot.name, storage, appearance))
 	}
 
-	static func applicationAndSystemUptime() -> String {
+	static func applicationAndSystemUptime(host: PluginHostContext) -> String {
 		let units: NSCalendar.Unit = [.day, .hour, .minute, .second]
 		let system = PluginHost.humanReadableTimeInterval(
 			ProcessInfo.processInfo.systemUptime,
@@ -72,7 +72,7 @@ enum SystemProfileReport {
 			units: units
 		)
 		let application = PluginHost.humanReadableTimeInterval(
-			PluginHost.applicationSnapshot()?.timeIntervalSinceLaunch ?? 0,
+			host.applicationSnapshot?.timeIntervalSinceLaunch ?? 0,
 			shortValue: false,
 			units: units
 		)
@@ -100,8 +100,8 @@ enum SystemProfileReport {
 		)
 	}
 
-	static func applicationRuntimeStatistics() -> String {
-		guard let snapshot = PluginHost.applicationSnapshot() else {
+	static func applicationRuntimeStatistics(host: PluginHostContext) -> String {
+		guard let snapshot = host.applicationSnapshot else {
 			return ""
 		}
 
@@ -348,8 +348,8 @@ enum SystemProfileInformation {
 		)
 	}
 
-	@MainActor static func themeAppearance() -> String {
-		let appearance = PluginHost.themeSnapshot()?.resolvedAppearance
+	@MainActor static func themeAppearance(host: PluginHostContext) -> String {
+		let appearance = host.themeSnapshot?.resolvedAppearance
 		return SystemProfilerLocalization.string(
 			appearance == .dark ? .BasicLanguage.darkAppearance : .BasicLanguage.lightAppearance
 		)

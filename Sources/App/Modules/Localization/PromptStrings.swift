@@ -303,22 +303,6 @@ nonisolated enum PromptStrings {
 			String(localized: .Prompts._3245D)
 		}
 
-		static var loadButtonTitle: String {
-			String(localized: .Prompts.w2D5H)
-		}
-
-		static var loadDeniedButtonTitle: String {
-			String(localized: .Prompts.r9X3M)
-		}
-
-		static var resetApprovalsBody: String {
-			String(localized: .Prompts.h7M2Q)
-		}
-
-		static var resetApprovalsTitle: String {
-			String(localized: .Prompts.zp37R)
-		}
-
 		static var unsignedBody: String {
 			String(localized: .Prompts.t8Y4P)
 		}
@@ -333,19 +317,6 @@ nonisolated enum PromptStrings {
 
 		static func incompatibleTitle(pluginNames: String) -> String {
 			String(localized: .Prompts.af645(pluginNames))
-		}
-
-		static func loadApprovalBody(
-			displayName: String,
-			bundleIdentifier: String,
-			teamIdentifier: String,
-			location: String
-		) -> String {
-			String(localized: .Prompts.b4N8Z(displayName, bundleIdentifier, teamIdentifier, location))
-		}
-
-		static func loadApprovalTitle(displayName: String) -> String {
-			String(localized: .Prompts.pq72K(displayName))
 		}
 
 		static func unsignedTitle(pluginNames: String) -> String {

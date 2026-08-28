@@ -61,8 +61,10 @@ public struct UserRank: OptionSet, Hashable, Sendable {
 		self.rawValue = rawValue
 	}
 
-	/// The historic wire and plug-in contract represents no rank with bit zero.
-	public static let none = UserRank(rawValue: 1 << 0)
+	/// No rank at all. An option set already spells that as the empty set, so
+	/// `.none` no longer occupies a bit of its own and never has to be masked
+	/// out of a union.
+	public static let none = UserRank([])
 	public static let irCopByMode = UserRank(rawValue: 1 << 1)
 	public static let channelOwner = UserRank(rawValue: 1 << 2)
 	public static let superOperator = UserRank(rawValue: 1 << 3)

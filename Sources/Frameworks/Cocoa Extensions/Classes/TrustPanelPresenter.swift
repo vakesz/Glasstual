@@ -37,8 +37,13 @@ import SecurityInterface
 public typealias TrustDecisionHandler = (Bool) -> Void
 public typealias TrustPanelCompletion = (SecTrust, Bool, Any?) -> Void
 
+/// Presents the system's certificate trust sheet.
+///
+/// Main actor throughout: it drives an AppKit sheet, and every caller is
+/// already there.
+@MainActor
 @objc(RCMTrustPanel)
-public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
+public final class TrustPanelPresenter: NSObject {
 	@objc(presentTrustPanelInWindow:body:title:defaultButton:alternateButton:trustRef:completionBlock:)
 	public static func present(
 		in window: NSWindow?,
@@ -72,38 +77,25 @@ public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 		completion: @escaping TrustPanelCompletion,
 		context: Any?
 	) -> SFCertificateTrustPanel {
-		let input = UnsafeTransfer(value: (
-			window,
-			body,
-			title,
-			defaultButton,
-			alternateButton,
-			trust,
-			completion,
-			context
-		))
-		return performSynchronouslyOnMain {
-			let (window, body, title, defaultButton, alternateButton, trust, completion, context) = input.value
-			let callback = TrustPanelContext(
-				trust: trust,
-				completion: completion,
-				context: context
-			)
-			let callbackPointer = Unmanaged.passRetained(callback).toOpaque()
-			let panel = SFCertificateTrustPanel()
-			panel.setDefaultButtonTitle(defaultButton)
-			panel.setAlternateButtonTitle(alternateButton)
-			panel.setInformativeText(body)
-			panel.beginSheet(
-				for: window,
-				modalDelegate: self,
-				didEnd: #selector(trustPanelDidEnd(_:returnCode:contextInfo:)),
-				contextInfo: callbackPointer,
-				trust: trust,
-				message: title
-			)
-			return panel
-		}
+		let callback = TrustPanelContext(
+			trust: trust,
+			completion: completion,
+			context: context
+		)
+		let callbackPointer = Unmanaged.passRetained(callback).toOpaque()
+		let panel = SFCertificateTrustPanel()
+		panel.setDefaultButtonTitle(defaultButton)
+		panel.setAlternateButtonTitle(alternateButton)
+		panel.setInformativeText(body)
+		panel.beginSheet(
+			for: window,
+			modalDelegate: self,
+			didEnd: #selector(trustPanelDidEnd(_:returnCode:contextInfo:)),
+			contextInfo: callbackPointer,
+			trust: trust,
+			message: title
+		)
+		return panel
 	}
 
 	@objc private static func trustPanelDidEnd(
@@ -116,6 +108,7 @@ public final class TrustPanelPresenter: NSObject, @unchecked Sendable {
 	}
 }
 
+@MainActor
 private final class TrustPanelContext: NSObject {
 	/* SecTrust is ARC-managed in Swift; holding it strongly keeps the retain balanced. */
 	let trust: SecTrust
@@ -126,25 +119,5 @@ private final class TrustPanelContext: NSObject {
 		self.trust = trust
 		self.completion = completion
 		self.context = context
-	}
-}
-
-private func performSynchronouslyOnMain<Result>(_ work: @escaping @MainActor () -> Result) -> Result {
-	let workBox = UnsafeTransfer(value: work)
-	let resultBox = UnsafeTransfer<Result?>(value: nil)
-	if Thread.isMainThread {
-		MainActor.assumeIsolated { resultBox.value = workBox.value() }
-	} else {
-		DispatchQueue.main.sync {
-			MainActor.assumeIsolated { resultBox.value = workBox.value() }
-		}
-	}
-	return resultBox.value!
-}
-
-private final class UnsafeTransfer<Value>: @unchecked Sendable {
-	var value: Value
-	init(value: Value) {
-		self.value = value
 	}
 }
