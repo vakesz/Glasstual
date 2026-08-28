@@ -47,6 +47,7 @@ struct IRCClientUserIdentityTests {
 	@Test("ACCOUNT names, then unnames, a user we already know about")
 	func accountNotifyUpdatesAccount() throws {
 		let client = makeClient(named: "me")
+		client.enableCapability(.accountNotify)
 		let channel = try joinChannel("#chat", on: client)
 		addUser(named: "alice", to: channel, on: client)
 
@@ -129,6 +130,7 @@ struct IRCClientUserIdentityTests {
 	@Test("SETNAME renames the user it came from")
 	func setNameUpdatesRealName() throws {
 		let client = makeClient(named: "me")
+		client.enableCapability(.setName)
 		let channel = try joinChannel("#chat", on: client)
 		addUser(named: "alice", to: channel, on: client)
 
