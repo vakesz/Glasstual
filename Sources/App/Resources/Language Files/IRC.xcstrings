@@ -2149,6 +2149,18 @@
         }
       }
     },
+    "sts-sc3" : {
+      "comment" : "SASL SCRAM. Shown when the server reports success without proving it knows the password.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL SCRAM authentication failed: the server did not prove that it knows the password."
+          }
+        }
+      }
+    },
     "sxf-qx" : {
       "comment" : "Common command errors. Migrated from legacy key sxf-qx; compatibility key retained.",
       "extractionState" : "manual",

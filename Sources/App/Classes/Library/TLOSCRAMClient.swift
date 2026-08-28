@@ -50,6 +50,7 @@ public enum SCRAMClientErrorCode: Int {
 	case serverRejected
 	case serverSignatureMismatch
 	case keyDerivationFailed
+	case iterationCountTooHigh
 }
 
 /// Client side of SASL SCRAM-SHA-256 (RFC 5802, RFC 7677).
@@ -79,6 +80,11 @@ public final class SCRAMClient: NSObject {
 
 	private static let gs2Header = "n,,"
 	private static let minimumIterationCount = 4096
+
+	/// Upper bound on the server supplied `i=`. PBKDF2 is deliberately
+	/// expensive, so an unbounded count is a denial of service; 600000 is
+	/// well above what any deployed IRC server asks for.
+	private static let maximumIterationCount = 600_000
 
 	@objc public private(set) var state: State = .initial
 
@@ -120,6 +126,51 @@ public final class SCRAMClient: NSObject {
 	/// count below the RFC 7677 minimum.
 	@objc(clientFinalMessageForServerFirstMessage:error:)
 	public func clientFinalMessage(forServerFirstMessage serverFirst: String) throws -> String {
+		let challenge = try parseServerFirstMessage(serverFirst)
+
+		guard let saltedPassword = SCRAMClient.pbkdf2(
+			password: password,
+			salt: challenge.salt,
+			iterations: challenge.iterations
+		) else {
+			throw fail(.keyDerivationFailed, "PBKDF2 failed")
+		}
+
+		return completeClientFinalMessage(
+			serverFirst: serverFirst,
+			challenge: challenge,
+			saltedPassword: saltedPassword
+		)
+	}
+
+	/// Same exchange step as `clientFinalMessage(forServerFirstMessage:)`,
+	/// but the PBKDF2 derivation runs off the caller's actor so a large
+	/// server supplied iteration count cannot block the main thread.
+	public func clientFinalMessage(forServerFirstMessage serverFirst: String) async throws -> String {
+		let challenge = try parseServerFirstMessage(serverFirst)
+
+		guard let saltedPassword = await SCRAMClient.pbkdf2Offloaded(
+			password: password,
+			salt: challenge.salt,
+			iterations: challenge.iterations
+		) else {
+			throw fail(.keyDerivationFailed, "PBKDF2 failed")
+		}
+
+		return completeClientFinalMessage(
+			serverFirst: serverFirst,
+			challenge: challenge,
+			saltedPassword: saltedPassword
+		)
+	}
+
+	private struct ServerFirstChallenge {
+		let combinedNonce: String
+		let salt: Data
+		let iterations: Int
+	}
+
+	private func parseServerFirstMessage(_ serverFirst: String) throws -> ServerFirstChallenge {
 		guard state == .sentClientFirst else {
 			throw fail(.invalidState, "SCRAM exchange is not waiting for the server's first message")
 		}
@@ -147,16 +198,24 @@ public final class SCRAMClient: NSObject {
 			throw fail(.iterationCountTooLow, "Server asked for \(iterations) iterations")
 		}
 
-		guard let saltedPassword = SCRAMClient.pbkdf2(password: password, salt: salt, iterations: iterations) else {
-			throw fail(.keyDerivationFailed, "PBKDF2 failed")
+		guard iterations <= SCRAMClient.maximumIterationCount else {
+			throw fail(.iterationCountTooHigh, "Server asked for \(iterations) iterations")
 		}
 
+		return ServerFirstChallenge(combinedNonce: combinedNonce, salt: salt, iterations: iterations)
+	}
+
+	private func completeClientFinalMessage(
+		serverFirst: String,
+		challenge: ServerFirstChallenge,
+		saltedPassword: Data
+	) -> String {
 		let clientKey = SCRAMClient.hmac(key: saltedPassword, message: Data("Client Key".utf8))
 		let storedKey = Data(SHA256.hash(data: clientKey))
 		let serverKey = SCRAMClient.hmac(key: saltedPassword, message: Data("Server Key".utf8))
 
 		let channelBinding = Data(SCRAMClient.gs2Header.utf8).base64EncodedString()
-		let clientFinalWithoutProof = "c=\(channelBinding),r=\(combinedNonce)"
+		let clientFinalWithoutProof = "c=\(channelBinding),r=\(challenge.combinedNonce)"
 
 		let authMessage = [clientFirstMessageBare, serverFirst, clientFinalWithoutProof].joined(separator: ",")
 		let authMessageData = Data(authMessage.utf8)
@@ -267,8 +326,18 @@ public final class SCRAMClient: NSObject {
 		Data(HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: key)))
 	}
 
+	/// `pbkdf2(password:salt:iterations:)` on a background executor.
+	@concurrent
+	static func pbkdf2Offloaded(password: String, salt: Data, iterations: Int) async -> Data? {
+		pbkdf2(password: password, salt: salt, iterations: iterations)
+	}
+
 	/// PBKDF2-HMAC-SHA256 producing a 32 byte key.
 	static func pbkdf2(password: String, salt: Data, iterations: Int) -> Data? {
+		guard let roundCount = UInt32(exactly: iterations) else {
+			return nil
+		}
+
 		let passwordBytes = password.utf8.map { CChar(bitPattern: $0) }
 		let saltBytes = [UInt8](salt)
 
@@ -282,7 +351,7 @@ public final class SCRAMClient: NSObject {
 				saltBytes,
 				saltBytes.count,
 				CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256),
-				UInt32(iterations),
+				roundCount,
 				&derived,
 				derived.count
 			)

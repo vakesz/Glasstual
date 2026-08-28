@@ -111,6 +111,10 @@ extension IRCClient {
 		case IRCNumeric.umodegmsg.rawValue: handleUserModeMessageNumeric(message, shouldPrint: shouldPrint)
 		case IRCNumeric.loggedin.rawValue:
 			guard message.params.count == 4 else { return true }
+			guard scramMutualAuthenticationIsSatisfied() else {
+				abortUnverifiedSASLSuccess()
+				return true
+			}
 			setCapabilityEnabled(.isIdentifiedWithSASL)
 			if shouldPrint {
 				printNumericSequence(message, startingAt: 3)
@@ -213,6 +217,10 @@ extension IRCClient {
 			}
 		}
 		guard capabilityIsEnabled(.isInSASLNegotiation) else { return }
+		if numeric == IRCNumeric.saslsuccess.rawValue, scramMutualAuthenticationIsSatisfied() == false {
+			abortUnverifiedSASLSuccess()
+			return
+		}
 		setCapabilityDisabled(.isInSASLNegotiation)
 		saslScramClient = nil
 		saslIncomingPayload = nil
