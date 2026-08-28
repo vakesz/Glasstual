@@ -721,9 +721,12 @@ targets:
         com.apple.security.network.server: true
         com.apple.security.print: true
     sources:
-      - path: Sources/App/Classes
+      - path: Sources/App/Application
       - path: Sources/App/Features
-      - path: Sources/App/Modules
+      - path: Sources/App/Localization
+      - path: Sources/App/Preferences
+      - path: Sources/App/Protocol
+      - path: Sources/App/UI
       - path: Sources/Shared
       # Resources -----------------------------------------------------------
       - path: Sources/App/Resources/Images

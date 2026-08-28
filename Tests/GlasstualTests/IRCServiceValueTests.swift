@@ -118,7 +118,7 @@ struct InlineContentServicePreferencesTests {
 /// find by searching for the constant.
 @MainActor
 struct IRCProtocolNotificationNameTests {
-	private static let moduleDirectory = "Sources/App/Modules/IRCProtocol"
+	private static let moduleDirectory = "Sources/App/Protocol"
 
 	private static func moduleSources() -> [URL]? {
 		var directory = URL(fileURLWithPath: #filePath)
