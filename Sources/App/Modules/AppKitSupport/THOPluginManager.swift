@@ -647,7 +647,7 @@ nonisolated extension PluginManager {
 		}
 
 		let tildePath = (bundle.bundleURL as NSURL).textualStandardizedTildePath ?? bundle.bundlePath
-		guard let window = NSObject.applicationController().mainWindow else {
+		guard let window = AppController.shared.mainWindow else {
 			return
 		}
 

@@ -121,7 +121,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	@objc
 	private func mainWindowSelectionChanged(_: Notification) {
-		guard let mainWindow = NSObject.applicationController().mainWindow,
+		guard let mainWindow = AppController.shared.mainWindow,
 		      let client = mainWindow.selectedClient
 		else {
 			return
@@ -353,28 +353,24 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 	// MARK: - Notification Center Delegate
 
-	public nonisolated func userNotificationCenter(
+	public func userNotificationCenter(
 		_: UNUserNotificationCenter,
 		openSettingsFor _: UNNotification?
 	) {
-		Task { @MainActor in
-			NSObject.applicationController().menuController?.showNotificationPreferences(nil)
-		}
+		AppController.shared.menuController?.showNotificationPreferences(nil)
 	}
 
-	public nonisolated func userNotificationCenter(
+	public func userNotificationCenter(
 		_: UNUserNotificationCenter,
-		willPresent _: UNNotification,
-		withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-	) {
-		completionHandler([.list, .banner])
+		willPresent _: UNNotification
+	) async -> UNNotificationPresentationOptions {
+		[.list, .banner]
 	}
 
-	public nonisolated func userNotificationCenter(
+	public func userNotificationCenter(
 		_: UNUserNotificationCenter,
-		didReceive response: UNNotificationResponse,
-		withCompletionHandler completionHandler: @escaping () -> Void
-	) {
+		didReceive response: UNNotificationResponse
+	) async {
 		let actionIdentifier = response.actionIdentifier
 		let message = (response as? UNTextInputNotificationResponse)?.userText
 		let userInfo = response.notification.request.content.userInfo
@@ -386,20 +382,14 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		)
 		let fileTransferUniqueIdentifier = userInfo["fileTransferUniqueIdentifier"] as? String
 
-		nonisolated(unsafe) let completion = completionHandler
-
-		Task { @MainActor in
-			self.notificationResponseReceived(
-				actionIdentifier: actionIdentifier,
-				clientId: clientId,
-				channelId: channelId,
-				fileTransferNotificationType: fileTransferNotificationType,
-				fileTransferUniqueIdentifier: fileTransferUniqueIdentifier,
-				withReplyMessage: message
-			)
-
-			completion()
-		}
+		notificationResponseReceived(
+			actionIdentifier: actionIdentifier,
+			clientId: clientId,
+			channelId: channelId,
+			fileTransferNotificationType: fileTransferNotificationType,
+			fileTransferUniqueIdentifier: fileTransferUniqueIdentifier,
+			withReplyMessage: message
+		)
 	}
 
 	@objc(dismissNotificationsForChannel:onClient:)
@@ -495,7 +485,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 		}
 
 		if keyMainWindow {
-			NSObject.applicationController().mainWindow.makeKeyAndOrderFront(nil)
+			AppController.shared.mainWindow.makeKeyAndOrderFront(nil)
 		}
 
 		/* Handle file transfer notifications allowing the user to start a
@@ -532,7 +522,7 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 			return
 		}
 
-		let world = NSObject.applicationController().world!
+		let world = AppController.shared.world!
 
 		let channel: IRCChannel?
 		let client: IRCClient?
@@ -547,9 +537,9 @@ public final class NotificationController: NSObject, UNUserNotificationCenterDel
 
 		if let channel {
 			let treeItem: TreeItem = channel
-			NSObject.applicationController().mainWindow.select(treeItem)
+			AppController.shared.mainWindow.select(treeItem)
 		} else if let client {
-			NSObject.applicationController().mainWindow.select(client)
+			AppController.shared.mainWindow.select(client)
 		}
 
 		guard let channel else {

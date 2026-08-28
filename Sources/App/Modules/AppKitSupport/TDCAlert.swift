@@ -46,7 +46,7 @@ import CocoaExtensions
 
 public typealias TDCAlertCompletionBlock = (TDCAlertResponse, Bool, Any?) -> Void
 
-private final class AlertContext: NSObject, @unchecked Sendable {
+private final class AlertContext: NSObject {
 	var suppressionKey: String?
 	var completionBlock: TDCAlertCompletionBlock?
 }
@@ -204,27 +204,7 @@ public final class TDCAlert: NSObject {
 		accessoryView: NSView?,
 		suppressionResponse: UnsafeMutablePointer<ObjCBool>?
 	) -> TDCAlertResponse {
-		if Thread.isMainThread == false {
-			nonisolated(unsafe) var result: TDCAlertResponse = .alternate
-
-			performSynchronouslyOnMainQueue {
-				result = modalAlert(
-					withMessage: bodyText,
-					title: titleText,
-					defaultButton: buttonDefault,
-					alternateButton: buttonAlternate,
-					otherButton: buttonOther,
-					suppressionKey: suppressKey,
-					suppressionText: suppressText,
-					accessoryView: accessoryView,
-					suppressionResponse: suppressionResponse
-				)
-			}
-
-			return result
-		}
-
-		let result: (response: TDCAlertResponse, suppression: Bool?) = MainActor.assumeIsolated {
+		func present() -> (response: TDCAlertResponse, suppression: Bool?) {
 			var suppressKey = suppressKey
 			var suppressText = suppressText
 
@@ -276,6 +256,8 @@ public final class TDCAlert: NSObject {
 
 			return (response, suppressed)
 		}
+
+		let result = present()
 
 		if let suppressionResponse, let suppression = result.suppression {
 			suppressionResponse.pointee = ObjCBool(suppression)
@@ -483,30 +465,10 @@ public extension TDCAlert {
 		accessoryView: NSView?,
 		completionBlock: TDCAlertCompletionBlock?
 	) -> NSAlert? {
-		if Thread.isMainThread == false {
-			nonisolated(unsafe) var result: NSAlert?
-
-			performSynchronouslyOnMainQueue {
-				result = alert(
-					withMessage: bodyText,
-					title: titleText,
-					defaultButton: buttonDefault,
-					alternateButton: buttonAlternate,
-					otherButton: buttonOther,
-					suppressionKey: suppressKey,
-					suppressionText: suppressText,
-					accessoryView: accessoryView,
-					completionBlock: completionBlock
-				)
-			}
-
-			return result
-		}
-
 		let context = AlertContext()
 		context.completionBlock = completionBlock
 
-		return MainActor.assumeIsolated { () -> NSAlert? in
+		func present() -> NSAlert? {
 			var suppressKey = suppressKey
 			var suppressText = suppressText
 
@@ -553,10 +515,8 @@ public extension TDCAlert {
 			/* A sheet on the main window is preferred so that the alert is
 			 attached to what it is about. When the main window is hidden, any other
 			 visible window hosts the sheet instead. */
-			let applicationController = NSObject.applicationController()
-			var hostWindow: NSWindow? = MainActor.assumeIsolated {
-				applicationController.mainWindow
-			}
+			let applicationController: ApplicationController = AppController.shared
+			var hostWindow: NSWindow? = AppController.shared.mainWindow
 
 			if hostWindow?.isVisible == false {
 				hostWindow = nil
@@ -585,6 +545,8 @@ public extension TDCAlert {
 
 			return alert
 		}
+
+		return present()
 	}
 }
 
@@ -706,29 +668,10 @@ public extension TDCAlert {
 		accessoryView: NSView?,
 		completionBlock: TDCAlertCompletionBlock?
 	) {
-		if Thread.isMainThread == false {
-			performSynchronouslyOnMainQueue {
-				alertSheet(
-					with: window,
-					body: bodyText,
-					title: titleText,
-					defaultButton: buttonDefault,
-					alternateButton: buttonAlternate,
-					otherButton: buttonOther,
-					suppressionKey: suppressKey,
-					suppressionText: suppressText,
-					accessoryView: accessoryView,
-					completionBlock: completionBlock
-				)
-			}
-
-			return
-		}
-
 		let context = AlertContext()
 		context.completionBlock = completionBlock
 
-		MainActor.assumeIsolated {
+		func present() {
 			var suppressKey = suppressKey
 			var suppressText = suppressText
 
@@ -776,6 +719,8 @@ public extension TDCAlert {
 				alertSheetResponseCallback(alert, returnCode: returnCode, contextInfo: context)
 			}
 		}
+
+		present()
 	}
 }
 

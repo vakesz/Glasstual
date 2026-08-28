@@ -181,6 +181,9 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 		updateAppearance()
 	}
 
+	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
+	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
+	 only, which is what makes the assumption safe. */
 	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 		MainActor.assumeIsolated {
@@ -191,7 +194,7 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	}
 
 	private func finishAwakeningFromNib() {
-		let controller = NSObject.applicationController()
+		let controller: ApplicationController = AppController.shared
 		controller.applicationWakeStepOne()
 
 		delegate = self
@@ -219,11 +222,11 @@ public final class MainWindow: NSWindow, NSWindowDelegate, NSWindowRestoration, 
 	}
 
 	var world: IRCWorld {
-		NSObject.applicationController().world
+		AppController.shared.world
 	}
 
 	var menuController: TXMenuController {
-		guard let menuController = NSObject.applicationController().menuController else {
+		guard let menuController = AppController.shared.menuController else {
 			preconditionFailure("Menu controller is unavailable while the main window is loading")
 		}
 		return menuController
@@ -608,7 +611,7 @@ extension MainWindow {
 		state _: NSCoder,
 		completionHandler: @escaping (NSWindow?, (any Error)?) -> Void
 	) {
-		completionHandler(NSObject.applicationController().mainWindow, nil)
+		completionHandler(AppController.shared.mainWindow, nil)
 	}
 
 	override public func encodeRestorableState(with coder: NSCoder) {
@@ -618,7 +621,7 @@ extension MainWindow {
 
 	override public func restoreState(with coder: NSCoder) {
 		super.restoreState(with: coder)
-		guard let world = NSObject.applicationController().world else { return }
+		guard let world = AppController.shared.world else { return }
 		let classes: [AnyClass] = [NSArray.self, NSString.self]
 		guard let identifiers = coder
 			.decodeObject(of: classes, forKey: MainWindowConstants.restorableSelectionKey) as? [String],
@@ -634,14 +637,14 @@ extension MainWindow {
 
 public extension MainWindow {
 	private func reloadMainWindowFrameOnScreenChange() {
-		guard NSObject.applicationController().applicationIsTerminating == false else { return }
+		guard AppController.shared.applicationIsTerminating == false else { return }
 		DockIcon.resetCachedCount()
 		DockIcon.updateDockIcon()
 		updateAppearance()
 	}
 
 	private func resetSelectedItemState() {
-		guard NSObject.applicationController().applicationIsTerminating == false else { return }
+		guard AppController.shared.applicationIsTerminating == false else { return }
 		if let selectedItem {
 			selectedItem.resetState()
 			noteItemWasViewed(selectedItem)

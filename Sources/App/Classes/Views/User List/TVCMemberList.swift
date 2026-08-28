@@ -87,7 +87,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 	private var sections: [MemberListSection] = []
 	private var userPopoverTrackingArea: NSTrackingArea?
 	private var userPopoverMouseIsInView = false
-	private var userPopoverTimer: Timer?
+	private var userPopoverTask: Task<Void, Never>?
 	private var userPopoverLastKnownLocalPoint = NSPoint.zero
 	private var lastRowShownUserInfoPopover = -1
 
@@ -99,6 +99,9 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		sections.count > 1
 	}
 
+	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
+	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
+	 only, which is what makes the assumption safe. */
 	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 
@@ -490,8 +493,8 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	@objc
 	private func destroyUserInfoPopover() {
-		userPopoverTimer?.invalidate()
-		userPopoverTimer = nil
+		userPopoverTask?.cancel()
+		userPopoverTask = nil
 
 		lastRowShownUserInfoPopover = -1
 		userPopoverMouseIsInView = false
@@ -505,14 +508,18 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 	override public func mouseEntered(with _: NSEvent) {
 		userPopoverMouseIsInView = true
 
-		guard userPopoverTimer == nil else {
+		guard userPopoverTask == nil else {
 			return
 		}
 
-		userPopoverTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-			MainActor.assumeIsolated {
-				self?.popDelayedUserInfoExpansionFrame()
+		userPopoverTask = Task { @MainActor [weak self] in
+			try? await Task.sleep(for: .seconds(1))
+
+			guard Task.isCancelled == false else {
+				return
 			}
+
+			self?.popDelayedUserInfoExpansionFrame()
 		}
 	}
 
@@ -531,7 +538,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 		guard Accessibility.isVoiceOverEnabled == false else {
 			return
 		}
-		guard ignoringTimer || userPopoverTimer == nil else {
+		guard ignoringTimer || userPopoverTask == nil else {
 			return
 		}
 		guard window?.isKeyWindow == true else {
@@ -549,7 +556,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 
 	@objc
 	private func popDelayedUserInfoExpansionFrame() {
-		userPopoverTimer = nil
+		userPopoverTask = nil
 
 		if userPopoverMouseIsInView {
 			popUserInfoExpansionFrame(at: userPopoverLastKnownLocalPoint, ignoringTimer: true)
@@ -612,7 +619,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 			return false
 		}
 
-		NSObject.applicationController().menuController?.memberSendDroppedFiles(files, row: UInt(row))
+		AppController.shared.menuController?.memberSendDroppedFiles(files, row: UInt(row))
 		return true
 	}
 
@@ -748,7 +755,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 			selectItem(at: row)
 		}
 
-		return NSObject.applicationController().menuController?.userControlMenu
+		return AppController.shared.menuController?.userControlMenu
 	}
 
 	override public func keyDown(with event: NSEvent) {

@@ -46,7 +46,7 @@ public final class Extras: NSObject {
 		 unsupervised-scripts-folder			— Open the custom scripts storage location folder
 		 */
 
-		let menuController = NSObject.applicationController().menuController
+		let menuController = AppController.shared.menuController
 
 		if action == "acknowledgements" {
 			menuController?.openAcknowledgements(nil)
@@ -499,7 +499,7 @@ public final class Extras: NSObject {
 		var existingClient: IRCClient?
 
 		if mergeConnectionIfPossible, channelListCount > 0 {
-			existingClient = NSObject.applicationController().world.findClient(withServerAddress: serverAddress)
+			existingClient = AppController.shared.world.findClient(withServerAddress: serverAddress)
 		}
 
 		if let matchedClient = existingClient,
@@ -525,11 +525,11 @@ public final class Extras: NSObject {
 				}
 			}
 
-			NSObject.applicationController().world.save()
+			AppController.shared.world.save()
 
 			if selectFirstChannelAdded, let firstChannelAdded {
 				if let treeItem = (firstChannelAdded as AnyObject) as? IRCTreeItem {
-					NSObject.applicationController().mainWindow.select(treeItem)
+					AppController.shared.mainWindow.select(treeItem)
 				}
 			}
 		} else {
@@ -566,12 +566,12 @@ public final class Extras: NSObject {
 
 			baseConfig.setValue(channelListConfigs, forKey: "channelList")
 
-			let client = NSObject.applicationController().world.createClient(
+			let client = AppController.shared.world.createClient(
 				with: bridgeClientConfigToObjectiveC(baseConfig),
 				reload: true
 			)
 
-			NSObject.applicationController().world.save()
+			AppController.shared.world.save()
 
 			if connectWhenCreated {
 				client.connect()

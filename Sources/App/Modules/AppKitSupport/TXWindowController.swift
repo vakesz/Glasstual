@@ -12,21 +12,19 @@
 
 import AppKit
 import os
-import Synchronization
 
 private nonisolated let windowControllerLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "WindowController"
 )
 
+/** The registry holds AppKit window controllers, so it lives on the main actor:
+ that is what makes `removeAll()` safe to run during termination. */
 @objc(TXWindowController)
-public final nonisolated class WindowController: NSObject {
-	private struct RegistryState: @unchecked Sendable {
-		var windows: [String: AnyObject] = [:]
-		var isTerminated = false
-	}
-
-	private let registry = Mutex(RegistryState())
+@MainActor
+public final class WindowController: NSObject {
+	private var windows: [String: AnyObject] = [:]
+	private var isTerminated = false
 
 	override public init() {
 		super.init()
@@ -35,19 +33,17 @@ public final nonisolated class WindowController: NSObject {
 	@objc public func prepareForApplicationTermination() {
 		windowControllerLogger.debug("Preparing window controller")
 
-		registry.withLock { state in
-			state.windows.removeAll()
-			state.isTerminated = true
-		}
+		windows.removeAll()
+		isTerminated = true
 	}
 
 	@objc(windowDescriptionForWindow:)
-	public static func windowDescription(for window: Any) -> String {
+	public nonisolated static func windowDescription(for window: Any) -> String {
 		windowDescription(for: window, inRelationTo: nil)
 	}
 
 	@objc(windowDescriptionForWindow:inRelationTo:)
-	public static func windowDescription(for window: Any, inRelationTo relatedObject: Any?) -> String {
+	public nonisolated static func windowDescription(for window: Any, inRelationTo relatedObject: Any?) -> String {
 		let windowClass = NSStringFromClass(type(of: window as AnyObject))
 
 		guard let relatedObject else {
@@ -75,13 +71,11 @@ public final nonisolated class WindowController: NSObject {
 			windowObject is NSWindowController || windowObject is WindowBase || windowObject is SheetBase
 		)
 
-		registry.withLock { state in
-			guard state.isTerminated == false else {
-				return
-			}
-
-			state.windows[windowDescription] = windowObject
+		guard isTerminated == false else {
+			return
 		}
+
+		windows[windowDescription] = windowObject
 	}
 
 	@objc(removeWindowFromWindowList:)
@@ -112,32 +106,28 @@ public final nonisolated class WindowController: NSObject {
 			return
 		}
 
-		registry.withLock { state in
-			if state.windows[windowDescription] == nil, windowWasString == false {
-				let windowObject = window as AnyObject
-				if let matchingEntry = state.windows.first(where: { $0.value === windowObject }) {
-					windowDescription = matchingEntry.key
-				}
+		if windows[windowDescription] == nil, windowWasString == false {
+			let windowObject = window as AnyObject
+			if let matchingEntry = windows.first(where: { $0.value === windowObject }) {
+				windowDescription = matchingEntry.key
 			}
-
-			state.windows.removeValue(forKey: windowDescription)
 		}
+
+		windows.removeValue(forKey: windowDescription)
 	}
 
 	@objc(windowFromWindowList:)
 	public func window(fromWindowList windowDescription: String) -> Any? {
-		registry.withLock { $0.windows[windowDescription] }
+		windows[windowDescription]
 	}
 
 	@objc(windowsFromWindowList:)
 	public func windows(fromWindowList windowDescriptions: [String]) -> [Any] {
-		registry.withLock { state in
-			windowDescriptions.compactMap { state.windows[$0] }
-		}
+		windowDescriptions.compactMap { windows[$0] }
 	}
 
 	@objc(maybeBringWindowForward:)
-	@MainActor public func maybeBringWindowForward(_ windowDescription: String) -> Bool {
+	public func maybeBringWindowForward(_ windowDescription: String) -> Bool {
 		guard let windowObject = window(fromWindowList: windowDescription) as AnyObject?,
 		      let window = Self.window(for: windowObject)
 		else {
@@ -148,7 +138,6 @@ public final nonisolated class WindowController: NSObject {
 		return true
 	}
 
-	@MainActor
 	private static func window(for object: AnyObject) -> NSWindow? {
 		switch object {
 		case let windowController as NSWindowController:
@@ -162,8 +151,8 @@ public final nonisolated class WindowController: NSObject {
 		}
 	}
 
-	@MainActor @objc public func popMainWindowSheetIfExists() {
-		guard let attachedSheet = NSObject.applicationController().mainWindow.attachedSheet else {
+	@objc public func popMainWindowSheetIfExists() {
+		guard let attachedSheet = AppController.shared.mainWindow.attachedSheet else {
 			return
 		}
 

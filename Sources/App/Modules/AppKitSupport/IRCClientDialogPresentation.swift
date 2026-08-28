@@ -65,7 +65,7 @@ extension IRCClient {
 		let windowController = SharedApplication.sharedWindowController()
 		windowController.popMainWindowSheetIfExists()
 
-		guard let mainWindow = NSObject.applicationController().mainWindow,
+		guard let mainWindow = AppController.shared.mainWindow,
 		      let channel = mainWindow.selectedChannel,
 		      let sheet = ChannelBanListSheet(entryType: entryType, inChannel: channel)
 		else { return }

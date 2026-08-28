@@ -244,6 +244,6 @@ extension TXMenuController: AboutDialogDelegate, ChannelInviteSheetDelegate, Cha
 @objc(TXMenuControllerMainWindowProxy)
 public final class TXMenuControllerMainWindowProxy: NSObject {
 	@IBAction public func showOnboardingWindow(_ sender: Any?) {
-		NSObject.applicationController().menuController?.showOnboardingWindow(sender)
+		AppController.shared.menuController?.showOnboardingWindow(sender)
 	}
 }

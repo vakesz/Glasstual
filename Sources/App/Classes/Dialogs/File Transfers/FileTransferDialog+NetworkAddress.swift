@@ -83,16 +83,12 @@ public extension FileTransferDialog {
 		ipAddressRequest = request
 	}
 
-	nonisolated func internetAddressLookupReturnedAddress(_ address: String) {
-		MainActor.assumeIsolated {
-			completeIPAddressLookup(with: address)
-		}
+	func internetAddressLookupReturnedAddress(_ address: String) {
+		completeIPAddressLookup(with: address)
 	}
 
-	nonisolated func internetAddressLookupFailed() {
-		MainActor.assumeIsolated {
-			completeFailedIPAddressLookup()
-		}
+	func internetAddressLookupFailed() {
+		completeFailedIPAddressLookup()
 	}
 
 	private func flushIPAddressCompletionBlocks(with address: String?) {

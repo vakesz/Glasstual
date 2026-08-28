@@ -102,10 +102,10 @@ public final class PreferencesImportExport: NSObject {
 			return
 		}
 
-		let mainWindow = NSObject.applicationController().mainWindow!
+		let mainWindow = AppController.shared.mainWindow!
 		mainWindow.loadingScreen?.showProgressView(withReason: MainWindowStrings.Loading.preferences)
 
-		NSObject.applicationController().world.isImportingConfiguration = true
+		AppController.shared.world.isImportingConfiguration = true
 		mainWindow.serverList?.beginUpdates()
 
 		importContentsOfDictionary(dictionary, reloadPreferences: false)
@@ -170,7 +170,7 @@ public final class PreferencesImportExport: NSObject {
 	@objc(importClientConfiguration:)
 	public static func importClientConfiguration(_ config: [String: Any]) {
 		let clientConfig = IRCClientConfig(dictionary: config)
-		let world = NSObject.applicationController().world!
+		let world = AppController.shared.world!
 
 		if let client = world.findClient(withId: clientConfig.uniqueIdentifier) {
 			client.updateConfig(bridgeClientConfigToObjectiveC(clientConfig))
@@ -186,9 +186,9 @@ public final class PreferencesImportExport: NSObject {
 	public static func importPostflightCleanup(_ changedKeys: [String]) {
 		TextualPreferences.performReloadAction(forKeys: changedKeys)
 
-		let mainWindow = NSObject.applicationController().mainWindow!
+		let mainWindow = AppController.shared.mainWindow!
 		mainWindow.serverList?.endUpdates()
-		NSObject.applicationController().world.isImportingConfiguration = false
+		AppController.shared.world.isImportingConfiguration = false
 		_ = mainWindow.reloadLoadingScreen()
 	}
 

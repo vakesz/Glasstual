@@ -285,7 +285,7 @@ public final class LogView: NSObject {
 	}
 
 	private func recreateTemporaryCopyOfThemeIfNecessary() {
-		if NSObject.applicationController().mainWindow.reloadingTheme() {
+		if AppController.shared.mainWindow.reloadingTheme() {
 			return
 		}
 		if ApplicationInfo.timeIntervalSinceApplicationLaunch() < 120 {

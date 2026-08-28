@@ -41,7 +41,7 @@ import Foundation
 @MainActor
 extension IRCClient {
 	func handleWhoisNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) -> Bool {
-		let selectedChannel = NSObject.applicationController().mainWindow.selectedChannel(on: self)
+		let selectedChannel = AppController.shared.mainWindow.selectedChannel(on: self)
 		switch numeric {
 		case IRCNumeric.whoisbot.rawValue:
 			handleWhoisBot(message, shouldPrint: shouldPrint, channel: selectedChannel)

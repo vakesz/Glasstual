@@ -842,7 +842,7 @@ extension TVCLogScriptEventSink {
 			Self.throwJavaScriptException(error as String, caller: context.caller, in: context.webView)
 		}
 		if result {
-			NSObject.applicationController().world.evaluateFunction(
+			AppController.shared.world.evaluateFunction(
 				onAllViews: "Glasstual.styleSettingDidChange",
 				arguments: [key]
 			)

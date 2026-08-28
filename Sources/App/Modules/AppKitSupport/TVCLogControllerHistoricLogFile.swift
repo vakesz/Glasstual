@@ -30,6 +30,9 @@ private final class LogControllerHistoricLogViewIndex: NSObject {
 	var oldestDate: Date?
 }
 
+/* ISOLATION-EXCEPTION: `HistoricLogClientProtocol` is an XPC protocol whose
+ callbacks arrive on the connection's queue, so this type cannot be isolated. Its
+ mutable state is guarded by `processStateLock`. Owned by the XPC-service task. */
 @objc(TVCLogControllerHistoricLogFile)
 public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProtocol, @unchecked Sendable {
 	private let viewIndexes = NSMutableDictionary()
@@ -601,15 +604,15 @@ public final class LogControllerHistoricLogFile: NSObject, HistoricLogClientProt
 
 	@objc(willDeleteUniqueIdentifiers:inView:)
 	public func willDeleteUniqueIdentifiers(_ uniqueIdentifiers: [String], inView viewId: String) {
-		performSynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				guard let item = NSObject.applicationController().world?.findItem(withId: viewId) else {
-					return
-				}
-
-				(item.viewController as AnyObject as? LogController)?
-					.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
+		/* The XPC service does not wait on this, so hop asynchronously rather than
+		 blocking its queue on the main thread. */
+		Task { @MainActor in
+			guard let item = AppController.shared.world?.findItem(withId: viewId) else {
+				return
 			}
+
+			(item.viewController as AnyObject as? LogController)?
+				.notifyHistoricLogWillDeleteLines(uniqueIdentifiers)
 		}
 	}
 }

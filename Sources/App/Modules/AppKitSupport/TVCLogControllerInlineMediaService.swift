@@ -21,6 +21,10 @@ private let inlineMediaLogger = Logger(
 	category: "InlineMediaService"
 )
 
+/* ISOLATION-EXCEPTION: `InlineContentClientProtocol` is an XPC protocol whose
+ callbacks arrive on the connection's queue, so this type cannot be isolated.
+ Everything it touches on the way in hops to the main actor below. Owned by the
+ XPC-service task. */
 @objc(TVCLogControllerInlineMediaService)
 public final class LogControllerInlineMediaService: NSObject, InlineContentClientProtocol, @unchecked Sendable {
 	private var serviceConnection: NSXPCConnection?
@@ -194,7 +198,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 	@objc(processingPayloadSucceeded:)
 	public func processingPayloadSucceeded(_ payload: InlineContentPayload) {
 		performOnMain {
-			guard let item = NSObject.applicationController().world.findItem(withId: payload.viewIdentifier) else {
+			guard let item = AppController.shared.world.findItem(withId: payload.viewIdentifier) else {
 				return
 			}
 
@@ -206,7 +210,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 	public func processingPayload(_ payload: InlineContentPayload, failedWithError error: Error) {
 		let error = error as NSError
 		performOnMain {
-			guard let item = NSObject.applicationController().world.findItem(withId: payload.viewIdentifier) else {
+			guard let item = AppController.shared.world.findItem(withId: payload.viewIdentifier) else {
 				return
 			}
 
@@ -233,6 +237,9 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 
 	@objc(askPermissionToEnableInlineMediaWithCompletionBlock:)
 	public static func askPermissionToEnableInlineMedia(completionBlock: @escaping @Sendable (Bool) -> Void) {
+		/* ISOLATION-EXCEPTION: reached from the XPC callback queue; the alert has to
+		 be raised on the main thread and callers expect it to have been presented
+		 by the time this returns. */
 		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {
 				askPermissionToEnableInlineMediaOnMain(completionBlock: completionBlock)
@@ -244,7 +251,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 	private static func askPermissionToEnableInlineMediaOnMain(
 		completionBlock: @escaping @Sendable (Bool) -> Void
 	) {
-		let clientList = NSObject.applicationController().world.clientList
+		let clientList = AppController.shared.world.clientList
 		let presentDialog = clientList.contains { client in
 			client.config.proxyType != .none
 		}
@@ -256,7 +263,7 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 
 		var window = NSApp.keyWindow
 		if window == nil {
-			window = NSObject.applicationController().mainWindow
+			window = AppController.shared.mainWindow
 		}
 
 		guard let window else {
@@ -295,6 +302,8 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 		}
 	}
 
+	/* ISOLATION-EXCEPTION: the XPC callbacks below are nonisolated and their
+	 results must land before the service's reply returns. */
 	private func performOnMain(_ operation: @escaping @MainActor () -> Void) {
 		performSynchronouslyOnMainQueue {
 			MainActor.assumeIsolated {

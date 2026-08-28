@@ -74,10 +74,10 @@ public final class Appearance: NSObject {
 		prepareInitialState()
 	}
 
-	deinit {
-		MainActor.assumeIsolated {
-			removeObservers()
-		}
+	/** Isolated so the teardown below runs on the main actor no matter which thread
+	 drops the last reference. */
+	isolated deinit {
+		removeObservers()
 	}
 
 	private func prepareInitialState() {
@@ -91,6 +91,9 @@ public final class Appearance: NSObject {
 		)
 
 		effectiveAppearanceObservation = NSApp.observe(\.effectiveAppearance, options: .new) { [weak self] _, _ in
+			/* ISOLATION-EXCEPTION: `NSKeyValueObservation`'s change handler is
+			 declared nonisolated. AppKit posts `effectiveAppearance` changes on the
+			 main thread, which is what makes the assumption hold. */
 			MainActor.assumeIsolated {
 				guard let self, self.isApplyingAppearance == false else {
 					return
@@ -105,14 +108,13 @@ public final class Appearance: NSObject {
 		removeObservers()
 	}
 
+	/** Two independent registrations, so they get torn down independently: an
+	 already-invalidated KVO token used to skip the workspace observer too. */
 	private func removeObservers() {
-		guard let effectiveAppearanceObservation else {
-			return
-		}
-
-		self.effectiveAppearanceObservation = nil
 		NSWorkspace.shared.notificationCenter.removeObserver(self)
-		effectiveAppearanceObservation.invalidate()
+
+		effectiveAppearanceObservation?.invalidate()
+		effectiveAppearanceObservation = nil
 	}
 
 	private func applicationAppearanceChanged() {

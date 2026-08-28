@@ -12,11 +12,15 @@
 
 import Foundation
 
+/** The synthesizer drives an `AVSpeechSynthesizer` and is fed from the IRC
+ notification path, both of which end up on the main actor. Isolating the whole
+ type removes the recursive lock that used to be held across a synchronous
+ main-queue hop while formatting a notification. */
 @objc(TLOSpeechSynthesizer)
-public final nonisolated class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate {
-	private let lock = NSRecursiveLock()
+@MainActor
+public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate {
 	private let engine: SpeechSynthesizerEngine
-	private var pendingItems: [Any] = []
+	private var pendingItems: [SpeechItem] = []
 	private var stopped = false
 
 	override public convenience init() {
@@ -34,121 +38,74 @@ public final nonisolated class SpeechSynthesizer: NSObject, SpeechSynthesizerEng
 
 	@objc public var isStopped: Bool {
 		get {
-			withLock { stopped }
+			stopped
 		}
 		set {
-			withLock {
-				guard stopped != newValue else {
-					return
-				}
+			guard stopped != newValue else {
+				return
+			}
 
-				stopped = newValue
+			stopped = newValue
 
-				if stopped, engine.isSpeaking {
-					engine.stopSpeakingImmediately()
-				}
+			if stopped, engine.isSpeaking {
+				engine.stopSpeakingImmediately()
 			}
 		}
 	}
 
-	@objc public func speak(_ object: Any) {
-		let queued = withLock { () -> Bool in
-			guard !stopped else {
-				return false
-			}
-
-			pendingItems.append(object)
-
-			return true
-		}
-
-		guard queued else {
+	public func speak(_ item: SpeechItem) {
+		guard !stopped else {
 			return
 		}
+
+		pendingItems.append(item)
 
 		speakNextItem()
 	}
 
+	@objc(speakText:)
+	public func speak(text: String) {
+		speak(.text(text))
+	}
+
 	@objc public func clearQueue() {
-		withLock {
-			pendingItems.removeAll()
-		}
+		pendingItems.removeAll()
 	}
 
 	@objc(clearQueueForClient:)
 	public func clearQueue(for client: IRCClient) {
-		withLock {
-			pendingItems.removeAll { item in
-				guard let notification = item as? SpokenNotification else {
-					return false
-				}
+		let clientIdentifier = client.uniqueIdentifier
 
-				return notification.client === client
-			}
-		}
+		pendingItems.removeAll { $0.belongs(to: clientIdentifier) }
 	}
 
 	@objc public func stopSpeakingAndMoveForward() {
-		withLock {
-			guard engine.isSpeaking else {
-				return
-			}
-
-			engine.stopSpeakingImmediately()
+		guard engine.isSpeaking else {
+			return
 		}
+
+		engine.stopSpeakingImmediately()
 	}
 
 	@objc public var pendingItemCount: UInt {
-		withLock { UInt(pendingItems.count) }
+		UInt(pendingItems.count)
 	}
 
-	@objc public func speechSynthesizerEngineDidCompleteUtterance() {
+	public func speechSynthesizerEngineDidCompleteUtterance() {
 		speakNextItem()
 	}
 
-	/** Formatting a notification blocks on the main queue, so it must run with the lock
-	 released: otherwise a main-thread caller of any locked method deadlocks. */
 	private func speakNextItem() {
-		while true {
-			let nextItem: Any? = withLock {
-				guard !stopped, !engine.isSpeaking, !pendingItems.isEmpty else {
-					return nil
-				}
+		while !stopped, !engine.isSpeaking, !pendingItems.isEmpty {
+			let nextItem = pendingItems.removeFirst()
 
-				return pendingItems.removeFirst()
-			}
-
-			guard let nextItem else {
-				return
-			}
-
-			let text: String? = if let notification = nextItem as? SpokenNotification {
-				notification.spokenText
-			} else {
-				nextItem as? String
-			}
-
-			guard let text else {
+			guard let text = nextItem.spokenText else {
 				continue
 			}
 
-			withLock {
-				guard !stopped, !engine.isSpeaking else {
-					return
-				}
-
-				engine.speakText(text)
-			}
+			engine.speakText(text)
 
 			return
 		}
-	}
-
-	@discardableResult
-	private func withLock<Result>(_ operation: () -> Result) -> Result {
-		lock.lock()
-		defer { lock.unlock() }
-
-		return operation()
 	}
 }

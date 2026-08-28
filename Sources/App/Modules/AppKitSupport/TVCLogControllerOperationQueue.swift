@@ -40,6 +40,9 @@ private struct LogControllerPrintingOperationState {
 	var viewIsLoaded = false
 }
 
+/* ISOLATION-EXCEPTION: `Operation` runs on whichever thread the queue picks, so
+ this cannot be isolated. Its mutable state lives behind `stateLock`, and its KVO
+ posts happen outside that lock. */
 @objc(TVCLogControllerPrintingOperation)
 public final nonisolated class LogControllerPrintingOperation: Operation, @unchecked Sendable {
 	var executionBlock: LogControllerPrintingBlock?
@@ -202,6 +205,8 @@ public final nonisolated class LogControllerPrintingOperation: Operation, @unche
 	}
 }
 
+/* ISOLATION-EXCEPTION: an `OperationQueue` subclass is reached from the threads
+ running its operations. Its bookkeeping is behind `pendingOperationsLock`. */
 @objc(TVCLogControllerPrintingOperationQueue)
 public final nonisolated class LogControllerPrintingOperationQueue: OperationQueue, @unchecked Sendable {
 	/* objc_sync was recursive. Keep that behavior while using a stable lock
@@ -266,7 +271,7 @@ public final nonisolated class LogControllerPrintingOperationQueue: OperationQue
 		isStandalone: Bool,
 		requiresExplicitFinish: Bool
 	) {
-		guard NSObject.applicationController().applicationIsTerminating == false else {
+		guard AppController.shared.applicationIsTerminating == false else {
 			return
 		}
 

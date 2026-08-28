@@ -385,7 +385,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		if isUtility == false {
 			memberInfo = ChannelMemberList(channel: legacyChannel)
 
-			if isSelectedChannel, let mainWindow = NSObject.applicationController().mainWindow {
+			if isSelectedChannel, let mainWindow = AppController.shared.mainWindow {
 				mainWindow.memberList?.assign(to: legacyChannel)
 				mainWindow.updateMemberListVisibilityForSelection()
 			}
@@ -448,7 +448,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			window.close()
 		}
 
-		NSObject.applicationController().mainWindow.inputHistoryManager().destroy(legacyTreeItem)
+		AppController.shared.mainWindow.inputHistoryManager().destroy(legacyTreeItem)
 		viewController?.prepareForPermanentDestruction()
 	}
 
@@ -652,7 +652,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	private var isSelectedChannel: Bool {
-		self === NSObject.applicationController().mainWindow.selectedItem
+		self === AppController.shared.mainWindow.selectedItem
 	}
 
 	override open var isActive: Bool {

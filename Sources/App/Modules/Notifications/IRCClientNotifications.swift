@@ -41,13 +41,15 @@ import CocoaExtensions
 import Foundation
 
 public extension IRCClient {
-	private func formatSpokenNotification(_ notification: SpokenNotification) -> String? {
+	private func formatSpokenNotification(
+		_ event: TXNotificationType,
+		channel: IRCChannel?,
+		nickname: String?,
+		text rawText: String?
+	) -> String? {
 		guard !isTerminating else { return nil }
 
-		let event = notification.notificationType
-		let channel = notification.channel
-		let nickname = notification.nickname
-		let text = normalizedSpeechText(notification.text)
+		let text = normalizedSpeechText(rawText)
 
 		switch event {
 		case .highlight:
@@ -206,7 +208,7 @@ public extension IRCClient {
 	@MainActor
 	private func isSelected(_ channel: IRCChannel?) -> Bool {
 		guard let treeItem = (channel as AnyObject?) as? IRCTreeItem else { return false }
-		return NSObject.applicationController().mainWindow?.isItemSelected(treeItem) ?? false
+		return AppController.shared.mainWindow?.isItemSelected(treeItem) ?? false
 	}
 
 	@objc func clearEventsToSpeak() {
@@ -224,7 +226,7 @@ public extension IRCClient {
 		let resolvedTarget = target ?? self
 		let channel = (resolvedTarget as AnyObject) as? IRCChannel
 		guard SharedApplication.sharedNotificationController().speakEvent(event, in: channel) else { return }
-		let notification = SpokenNotification(
+		var notification = SpokenNotification(
 			notificationType: event,
 			lineType: lineType,
 			target: resolvedTarget,
@@ -233,8 +235,13 @@ public extension IRCClient {
 		)
 		/* Formatting reads the client and the channel, so it happens here rather
 		 than on the synthesizer's queue. */
-		notification.spokenText = formatSpokenNotification(notification)
-		SharedApplication.sharedSpeechSynthesizer().speak(notification)
+		notification.spokenText = formatSpokenNotification(
+			event,
+			channel: channel,
+			nickname: nickname,
+			text: text
+		)
+		SharedApplication.sharedSpeechSynthesizer().speak(.notification(notification))
 	}
 
 	@objc(notifyText:lineType:target:nickname:text:)
@@ -323,7 +330,7 @@ public extension IRCClient {
 
 		guard !controller.areNotificationsDisabled else { return true }
 
-		let mainWindowIsFocused = NSObject.applicationController().mainWindow?.ceIsInactive == false
+		let mainWindowIsFocused = AppController.shared.mainWindow?.ceIsInactive == false
 		let postWhileFocused = TextualPreferences.postNotificationsWhileInFocus()
 		let targetIsSelected = isSelected(target)
 		let onlySpeak = IRCNotificationPolicy.shouldOnlySpeak(

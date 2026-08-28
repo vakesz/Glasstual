@@ -298,7 +298,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 		}
 
 		guard let controller,
-		      let memberList = applicationController.mainWindow.memberList
+		      let memberList = AppController.shared.mainWindow.memberList
 		else {
 			return
 		}
@@ -476,7 +476,7 @@ public final class ChannelMemberList: NSObject, ChannelMemberListing, ChannelMem
 			return false
 		}
 
-		let world = applicationController().world
+		let world = AppController.shared.world
 		let channel = (world?.findItem(withId: channelID) as AnyObject?) as? IRCChannel
 
 		guard let channel else {

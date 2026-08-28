@@ -56,7 +56,7 @@ public protocol PreferencesControllerDelegate: AnyObject {
 @objc(TDCPreferencesController)
 @MainActor
 public final class PreferencesController: WindowBase, NSOutlineViewDataSource, NSOutlineViewDelegate, NSToolbarDelegate,
-	NSToolbarItemValidation, @unchecked Sendable
+	NSToolbarItemValidation
 {
 	@IBOutlet private var excludeKeywordsArrayController: NSArrayController!
 	@IBOutlet private var highlightKeywordsArrayController: NSArrayController!
@@ -118,9 +118,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 
 	override public init() {
 		super.init()
-		MainActor.assumeIsolated {
-			prepareInitialState()
-		}
+		prepareInitialState()
 	}
 
 	private func prepareInitialState() {
@@ -130,6 +128,9 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		nibTopLevelObjects = objects as? [Any] ?? []
 	}
 
+	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
+	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
+	 only, which is what makes the assumption safe. */
 	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 		MainActor.assumeIsolated {
@@ -218,10 +219,8 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		ioValue.pointee = String(value) as NSString
 	}
 
-	override public nonisolated func show() {
-		MainActor.assumeIsolated {
-			show(.default)
-		}
+	override public func show() {
+		show(.default)
 	}
 
 	@objc(show:)

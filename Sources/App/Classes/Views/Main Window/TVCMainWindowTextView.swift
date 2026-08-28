@@ -95,6 +95,9 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	private var observingUserDefaults = false
 	private var userDefaultsObservation: AnyCancellable?
 
+	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
+	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
+	 only, which is what makes the assumption safe. */
 	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 
@@ -224,6 +227,8 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.typingDidChange)
 				.receive(on: DispatchQueue.main)
 				.sink { [weak self] notification in
+					/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
+					 publisher above delivers on the main queue. */
 					MainActor.assumeIsolated {
 						self?.typingStateDidChange(notification)
 					}
@@ -233,6 +238,8 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 			NotificationCenter.default.publisher(for: MainWindowTextViewNotification.selectionDidChange)
 				.receive(on: DispatchQueue.main)
 				.sink { [weak self] notification in
+					/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
+					 publisher above delivers on the main queue. */
 					MainActor.assumeIsolated {
 						self?.selectionDidChange(notification)
 					}
@@ -246,7 +253,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 
 	@objc private func typingStateDidChange(_ notification: Notification) {
 		guard let channel = notification.userInfo?[MainWindowTextViewNotification.typingChannelKey] as? IRCChannel,
-		      channel === NSObject.applicationController().mainWindow.selectedChannel
+		      channel === AppController.shared.mainWindow.selectedChannel
 		else {
 			return
 		}
@@ -255,7 +262,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	@objc private func selectionDidChange(_: Notification) {
-		let selectedChannel = NSObject.applicationController().mainWindow.selectedChannel
+		let selectedChannel = AppController.shared.mainWindow.selectedChannel
 
 		if let typingChannel, typingChannel !== selectedChannel {
 			typingChannel.associatedClient?.localUserClearedText(in: typingChannel)
@@ -267,7 +274,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	private func updateTypingRow() {
-		let channel = NSObject.applicationController().mainWindow.selectedChannel
+		let channel = AppController.shared.mainWindow.selectedChannel
 		var nicknames: [String] = []
 
 		if let channel, channel.isUtility == false {
@@ -278,7 +285,7 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 	}
 
 	private func noteTextChangedForTyping() {
-		guard let channel = NSObject.applicationController().mainWindow.selectedChannel,
+		guard let channel = AppController.shared.mainWindow.selectedChannel,
 		      let client = channel.associatedClient
 		else {
 			return
@@ -291,10 +298,9 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 
 	override public func viewDidMoveToWindow() {
 		super.viewDidMoveToWindow()
-		MainActor.assumeIsolated {
-			setUserDefaultsObserved(window != nil)
-			setTypingObserved(window != nil)
-		}
+
+		setUserDefaultsObserved(window != nil)
+		setTypingObserved(window != nil)
 	}
 
 	private func setUserDefaultsObserved(_ observed: Bool) {
@@ -318,6 +324,8 @@ public final class MainWindowTextView: TextViewWithIRCFormatter {
 		)
 		.receive(on: DispatchQueue.main)
 		.sink { [weak self] _ in
+			/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The publisher
+			 above delivers on the main queue. */
 			MainActor.assumeIsolated {
 				guard let self else {
 					return

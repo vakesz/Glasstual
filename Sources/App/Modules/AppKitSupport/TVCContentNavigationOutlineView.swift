@@ -101,6 +101,9 @@ public final class ContentNavigationOutlineView: NSOutlineView {
 		return parent(forItem: lastSelection) as? ContentNavigationOutlineViewItem
 	}
 
+	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
+	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
+	 only, which is what makes the assumption safe. */
 	override public nonisolated func awakeFromNib() {
 		MainActor.assumeIsolated {
 			super.awakeFromNib()

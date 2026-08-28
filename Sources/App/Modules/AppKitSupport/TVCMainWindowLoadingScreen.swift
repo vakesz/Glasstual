@@ -26,6 +26,9 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 		isHidden == false
 	}
 
+	/* ISOLATION-EXCEPTION: `NSObject.awakeFromNib()` is declared nonisolated, so the
+	 override cannot be main-actor isolated. AppKit decodes nibs on the main thread
+	 only, which is what makes the assumption safe. */
 	override public nonisolated func awakeFromNib() {
 		super.awakeFromNib()
 		MainActor.assumeIsolated {
@@ -167,6 +170,8 @@ public final class MainWindowLoadingScreenView: NSVisualEffectView {
 			context.duration = 1.0
 			self.animator().alphaValue = 0.0
 		} completionHandler: {
+			/* ISOLATION-EXCEPTION: `NSAnimationContext`'s completion handler is
+			 nonisolated. AppKit runs it on the main thread. */
 			MainActor.assumeIsolated {
 				phaseTwoBlock()
 			}

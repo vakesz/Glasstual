@@ -120,7 +120,7 @@ public extension IRCClient {
 		}
 		requestPlayback()
 
-		let mainWindow = NSObject.applicationController().mainWindow
+		let mainWindow = AppController.shared.mainWindow
 		for channel in channelList where channel.isPrivateMessage {
 			channel.activate()
 			if let treeItem = (channel as AnyObject) as? IRCTreeItem {
