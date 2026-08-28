@@ -230,7 +230,14 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		} else if let captures = captures(in: body, pattern: #"^set mode: ([^\s]+)( .*)?$"#) {
 			mutableInput.command = "MODE"
 			parameters.remove(at: 1)
-			parameters.append(captures.joined())
+			/* The mode string and each of its arguments are separate IRC
+			 parameters. Joining them made "+ov nick1 nick2" one parameter,
+			 which the MODE handler cannot read. */
+			parameters.append(captures[0])
+			parameters.append(contentsOf: captures[1]
+				.trimmingCharacters(in: .whitespaces)
+				.components(separatedBy: " ")
+				.filter { $0.isEmpty == false })
 		} else if body.hasPrefix("changed the topic to: ") {
 			return nil
 		}
