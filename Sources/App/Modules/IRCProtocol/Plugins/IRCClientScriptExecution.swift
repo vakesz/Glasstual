@@ -29,7 +29,7 @@
  * SUCH DAMAGE.
  *********************************************************************** */
 
-import AppKit
+import Foundation
 import os
 
 private let scriptExecutionLogger = Logger(

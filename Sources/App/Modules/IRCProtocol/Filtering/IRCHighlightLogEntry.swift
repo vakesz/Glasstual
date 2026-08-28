@@ -35,6 +35,7 @@
  *
  *********************************************************************** */
 
+// AppKit: the highlight's attributed text is built with a system font.
 import AppKit
 import CocoaExtensions
 import os

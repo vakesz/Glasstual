@@ -36,7 +36,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import Foundation
 
 enum IRCChatHistoryPolicy {

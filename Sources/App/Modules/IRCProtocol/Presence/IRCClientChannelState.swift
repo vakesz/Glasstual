@@ -36,7 +36,7 @@
  *
  *********************************************************************** */
 
-import AppKit
+import Foundation
 
 enum ChannelUnreadPolicy {
 	static func incrementsDockUnreadCount(isChannel: Bool, displaysPublicMessageCount: Bool) -> Bool {

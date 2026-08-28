@@ -10,8 +10,11 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+
+// AppKit: the Glasstual URL scheme opens folders through NSWorkspace.
+import AppKit
+import Foundation
 import os
 
 public typealias IRCExtras = Extras

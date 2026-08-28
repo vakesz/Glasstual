@@ -10,8 +10,11 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
+
+// AppKit: IRC formatting is applied to attributed strings as fonts and colours.
+import AppKit
+import Foundation
 import os
 
 @objc

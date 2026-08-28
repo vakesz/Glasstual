@@ -35,7 +35,6 @@
  *
  *********************************************************************** */
 
-import AppKit
 import CocoaExtensions
 import Foundation
 
