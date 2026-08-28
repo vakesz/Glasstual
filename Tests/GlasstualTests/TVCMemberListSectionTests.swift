@@ -240,7 +240,7 @@ final class TVCMemberListSectionTests: XCTestCase {
 		}
 	}
 
-	private func makeMember(named nickname: String, modes: String = "") -> ChannelUser {
+	private func makeMember(named nickname: String, modes: ChannelModeSymbolSet = "") -> ChannelUser {
 		let user = User(nickname: nickname, on: client)
 		let member = ChannelUserMutable(user: user)
 		member.modes = modes

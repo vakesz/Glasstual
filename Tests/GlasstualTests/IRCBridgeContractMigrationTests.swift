@@ -90,7 +90,11 @@ final class IRCBridgeContractMigrationTests: XCTestCase {
 		XCTAssertEqual(channel.numberOfMembers, 0)
 	}
 
-	private func mutableMember(named nickname: String, modes: String, on client: IRCClient) -> ChannelUserMutable {
+	private func mutableMember(
+		named nickname: String,
+		modes: ChannelModeSymbolSet,
+		on client: IRCClient
+	) -> ChannelUserMutable {
 		let member = ChannelUserMutable(user: User(nickname: nickname, on: client))
 		member.modes = modes
 		return member

@@ -24,7 +24,7 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 	private let userLock = NSLock()
 	private var userStorage: User?
 
-	fileprivate var modesStorage = ""
+	fileprivate var modesStorage = ChannelModeSymbolSet()
 	private var incomingWeightStorage = 0.0
 	private var outgoingWeightStorage = 0.0
 	private var lastWeightFade = CFAbsoluteTimeGetCurrent()
@@ -45,23 +45,27 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 		client?.userPrefixes.withLock { $0 } ?? IRCUserPrefixTable()
 	}
 
-	@objc open var modes: String {
+	open var modes: ChannelModeSymbolSet {
 		modesStorage
 	}
 
 	@objc public var mark: String {
-		prefixes.userPrefix(forModeSymbol: highestRankedUserMode) ?? ""
+		guard let highest = modesStorage.highest else {
+			return ""
+		}
+
+		return prefixes.userPrefix(forModeSymbol: String(highest.character)) ?? ""
 	}
 
 	public var rank: UserRank {
-		rank(forModeSymbol: highestRankedUserMode)
+		rank(forModeSymbol: modesStorage.highest.map { String($0.character) })
 	}
 
 	public var ranks: UserRank {
 		var result: UserRank = []
 
 		for mode in modesStorage {
-			let rank = rank(forModeSymbol: String(mode))
+			let rank = rank(forModeSymbol: String(mode.character))
 			if rank != .none {
 				result.insert(rank)
 			}
@@ -113,10 +117,6 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 		creationTimeStorage
 	}
 
-	private var highestRankedUserMode: String {
-		modesStorage.first.map(String.init) ?? ""
-	}
-
 	@available(*, unavailable)
 	override public init() {
 		fatalError("init() is unavailable; use init(user:)")
@@ -139,13 +139,16 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 		}
 	}
 
-	@objc(userModesContainsMode:)
-	public func userModesContains(_ mode: String) -> Bool {
+	public func userModesContains(_ mode: ChannelModeSymbol) -> Bool {
 		modesStorage.contains(mode)
 	}
 
 	private var channelRank: UInt {
-		prefixes.rank(forModeSymbol: highestRankedUserMode)
+		guard let highest = modesStorage.highest else {
+			return 0
+		}
+
+		return prefixes.rank(forModeSymbol: String(highest.character))
 	}
 
 	private func hasRank(of modeSymbol: String, orHigher fallbackModeSymbol: String?) -> Bool {
@@ -345,7 +348,7 @@ public final nonisolated class ChannelUserMutable: ChannelUser, @unchecked Senda
 		unsafeBitCast(ChannelUser.self, to: PortablePropertyObject.self)
 	}
 
-	@objc override public var modes: String {
+	override public var modes: ChannelModeSymbolSet {
 		get { modesStorage }
 		set { modesStorage = newValue }
 	}
