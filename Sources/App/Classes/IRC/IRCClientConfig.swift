@@ -539,6 +539,14 @@ open class ClientConfig: PortablePropertyDict {
 		config.migratedServerPasswordPendingDestroy = migratedServerPasswordPendingDestroy
 
 		if uniquing {
+			/* Keychain items are keyed on uniqueIdentifier and the storage
+			 fields are normally nil because the secrets were already flushed.
+			 Read them back under the *old* identifier here so that the copy
+			 carries them and writes them under its own identifier when it is
+			 next saved; otherwise the duplicate silently loses its passwords. */
+			config.nicknamePasswordStorage = nicknamePasswordStorage ?? nicknamePasswordFromKeychain
+			config.proxyPasswordStorage = proxyPasswordStorage ?? proxyPasswordFromKeychain
+
 			config.channelListStorage = channelListStorage.map {
 				checkedModel($0.uniqueCopy(), as: ChannelConfig.self)
 			}
