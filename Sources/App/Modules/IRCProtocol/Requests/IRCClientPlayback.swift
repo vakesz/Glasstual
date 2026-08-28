@@ -56,7 +56,7 @@ enum PlaybackRequestPolicy {
 extension IRCClient {
 	@objc(playbackClearChannel:)
 	func clearPlayback(for channel: IRCChannel) {
-		guard capabilityIsEnabled(.playback) else { return }
+		guard isCapabilityEnabled(.playback) else { return }
 		guard channel.isPrivateMessage, channel.isPrivateMessageForZNCUser == false else { return }
 
 		let command = "clear \(channel.name)"
@@ -68,12 +68,12 @@ extension IRCClient {
 	}
 
 	@objc func requestPlayback() {
-		guard capabilityIsEnabled(.playback) else { return }
+		guard isCapabilityEnabled(.playback) else { return }
 
 		/* chathistory is requested per target as channels are joined and only
 		 fetches what the local scrollback lacks. It wins over a bouncer replaying
 		 everything. */
-		guard capabilityIsEnabled(.chatHistory) == false else { return }
+		guard isCapabilityEnabled(.chatHistory) == false else { return }
 
 		let command = PlaybackRequestPolicy.command(
 			successfulConnects: successfulConnects,

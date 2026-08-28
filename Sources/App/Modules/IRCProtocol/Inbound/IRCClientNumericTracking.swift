@@ -115,7 +115,7 @@ extension IRCClient {
 				abortUnverifiedSASLSuccess()
 				return true
 			}
-			setCapabilityEnabled(.isIdentifiedWithSASL)
+			enableCapability(.isIdentifiedWithSASL)
 			if shouldPrint {
 				printNumericSequence(message, startingAt: 3)
 			}
@@ -199,12 +199,12 @@ extension IRCClient {
 		if shouldPrint {
 			printErrorReply(message)
 		}
-		guard capabilityIsEnabled(.isInSASLNegotiation) else { return }
+		guard isCapabilityEnabled(.isInSASLNegotiation) else { return }
 		let mechanisms = message.params.count >= 2
 			? message.params[1].components(separatedBy: CharacterSet(charactersIn: ", ")).filter { !$0.isEmpty }
 			: []
-		guard !retrySASL(withMechanisms: mechanisms) else { return }
-		setCapabilityDisabled(.isInSASLNegotiation)
+		guard !retrySASLNegotiation(withMechanisms: mechanisms) else { return }
+		disableCapability(.isInSASLNegotiation)
 		resumeQueuedCapabilityNegotiation()
 	}
 
@@ -224,12 +224,12 @@ extension IRCClient {
 				printErrorReply(message)
 			}
 		}
-		guard capabilityIsEnabled(.isInSASLNegotiation) else { return }
+		guard isCapabilityEnabled(.isInSASLNegotiation) else { return }
 		if numeric == IRCNumeric.saslsuccess.rawValue, scramMutualAuthenticationIsSatisfied() == false {
 			abortUnverifiedSASLSuccess()
 			return
 		}
-		setCapabilityDisabled(.isInSASLNegotiation)
+		disableCapability(.isInSASLNegotiation)
 		saslScramClient = nil
 		saslIncomingPayload = nil
 		if Self.saslFailureNumerics.contains(numeric), config.disconnectOnSASLFailure {

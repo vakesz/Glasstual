@@ -104,7 +104,7 @@ public extension IRCClient {
 			ignoresBouncerUsers: config.zncIgnoreUserNotifications,
 			channelIsBouncerUser: channelIsBouncerUser,
 			ignoresPlayback: config.zncIgnorePlaybackNotifications,
-			supportsBatch: capabilityIsEnabled(.batch),
+			supportsBatch: isCapabilityEnabled(.batch),
 			batchType: message.parentBatchMessage?.batchType,
 			isHistoric: message.isHistoric
 		)

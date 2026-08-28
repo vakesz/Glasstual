@@ -59,7 +59,12 @@ struct DCCChatOffer: Equatable {
 enum DCCChatPolicy {
 	static func parseOffer(_ source: String) -> DCCChatOffer? {
 		var input = CommandTokenizer(source)
-		guard input.nextUppercaseToken() == "CHAT", input.nextUppercaseToken() == "CHAT" else { return nil }
+		/* A DCC CHAT offer names the DCC subcommand and then the chat protocol,
+		 both spelled "CHAT". The two reads look identical because the tokens
+		 are. */
+		let dccSubcommand = input.nextUppercaseToken()
+		let chatProtocol = input.nextUppercaseToken()
+		guard dccSubcommand == "CHAT", chatProtocol == "CHAT" else { return nil }
 		let address = ClientWireUtilities.displayDCCAddress(input.nextToken())
 		let portText = input.nextToken()
 		let rawToken = input.nextToken()

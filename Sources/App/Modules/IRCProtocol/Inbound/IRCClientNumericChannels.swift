@@ -39,8 +39,6 @@
 import Foundation
 import GlasstualPluginKit
 
-private let whoxResponseToken = "152"
-
 @MainActor
 extension IRCClient {
 	func handleChannelNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) -> Bool {
@@ -196,7 +194,7 @@ extension IRCClient {
 
 	private func handleWHOXNumeric(_ message: Message, shouldPrint: Bool) {
 		guard message.params.count >= 9 else { return }
-		guard message.params[1] == whoxResponseToken, !requestedCommands.visibleWhoRequest else {
+		guard message.params[1] == IRCServerQuirks.whoxResponseToken, !requestedCommands.visibleWhoRequest else {
 			if shouldPrint {
 				printReplyToHiddenCommandResponsesQuery(message)
 			}

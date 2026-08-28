@@ -47,8 +47,8 @@ enum IRCBatchPolicy {
 			return nil
 		}
 		let token = String(reference.dropFirst())
-		let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_ -"))
-		guard token.unicodeScalars.allSatisfy({ allowed.contains($0) && $0 != " " }) else { return nil }
+		let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
+		guard token.unicodeScalars.allSatisfy(allowed.contains) else { return nil }
 		return (token, modifier == "+")
 	}
 
