@@ -244,16 +244,28 @@ public final class World: NSObject {
 	/// Re-reads the defaults store and republishes the snapshot to every client.
 	func refreshEnvironmentPreferences() {
 		let preferences = ClientPreferences.current()
-		guard preferences != environment.preferences else {
+		guard applyPreferences(preferences) else {
 			return
 		}
 
-		environment.preferences = preferences
 		ClientEnvironment.shared.preferences = preferences
+	}
+
+	/// Republishes `preferences` to this world and every client it made.
+	/// Returns whether anything changed.
+	@discardableResult
+	func applyPreferences(_ preferences: ClientPreferences) -> Bool {
+		guard preferences != environment.preferences else {
+			return false
+		}
+
+		environment.preferences = preferences
 
 		for client in clientList {
 			client.environment.preferences = preferences
 		}
+
+		return true
 	}
 
 	@objc private func mainWindowAppearanceChanged(_: Notification) {
