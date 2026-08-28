@@ -209,7 +209,7 @@ final class TVCLogScriptEventSink: NSObject, WKScriptMessageHandler {
 		case is NSNull:
 			nil
 		case let string as String:
-			string.gtmStringByUnescapingFromHTML
+			string.unescapingFromHTML
 		default:
 			object
 		}

@@ -920,7 +920,7 @@ public extension LogRenderer {
 
 	@objc(escapeHTML:)
 	nonisolated static func escapeHTML(_ html: String) -> String {
-		(html as NSString).gtmStringByEscapingForHTML ?? ""
+		html.escapingForHTML
 	}
 
 	private nonisolated static func escapeString(_ string: String) -> String {
