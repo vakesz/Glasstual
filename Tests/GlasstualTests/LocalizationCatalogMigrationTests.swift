@@ -5,37 +5,36 @@
 
 import Foundation
 @testable import Glasstual
-import XCTest
+import Testing
 
 @MainActor
-final class LocalizationCatalogMigrationTests: XCTestCase {
-	func testTypedBoundariesResolveMigratedCatalogValues() {
-		XCTAssertEqual(AccessibilityStrings.userListEntry(for: "Alice"), "User Alice in User List")
-		XCTAssertEqual(AccessibilityStrings.mainWindow, "Main Window")
-		XCTAssertEqual(CommonValidationStrings.invalidNickname, "Please enter a properly formatted nickname.")
-		XCTAssertEqual(CommonValidationStrings.maximumLength(390), "Maximum length is 390 characters.")
-		XCTAssertEqual(NotificationStrings.eventTypeTitle(for: .invite), "Channel Invitation")
-		XCTAssertEqual(
-			NotificationStrings.deliveredTitle(for: .highlight, subject: "#textual"),
-			"Highlight: #textual"
+@Suite("Localization catalog boundaries")
+struct LocalizationCatalogMigrationTests {
+	@Test("Every typed boundary resolves the value the migrated catalog holds")
+	func typedBoundariesResolveMigratedCatalogValues() {
+		#expect(AccessibilityStrings.userListEntry(for: "Alice") == "User Alice in User List")
+		#expect(AccessibilityStrings.mainWindow == "Main Window")
+		#expect(CommonValidationStrings.invalidNickname == "Please enter a properly formatted nickname.")
+		#expect(CommonValidationStrings.maximumLength(390) == "Maximum length is 390 characters.")
+		#expect(NotificationStrings.eventTypeTitle(for: .invite) == "Channel Invitation")
+		#expect(
+			NotificationStrings.deliveredTitle(for: .highlight, subject: "#textual") == "Highlight: #textual"
 		)
-		XCTAssertEqual(
+		#expect(
 			NotificationStrings.Membership.parted(
 				nickname: "Alice",
 				channelName: "#textual",
 				reason: "Leaving"
-			),
-			"Alice parted #textual with reason: Leaving"
+			) == "Alice parted #textual with reason: Leaving"
 		)
-		XCTAssertEqual(
+		#expect(
 			NotificationStrings.FileTransfer.description(
 				for: .fileTransferReceiveSuccessful,
 				filename: "archive.zip",
 				byteCount: 1024
-			),
-			"archive.zip (1 kB)"
+			) == "archive.zip (1 kB)"
 		)
-		XCTAssertEqual(NotificationSoundStrings.defaultSound, "Default Sound")
-		XCTAssertEqual(NotificationSoundStrings.noSound, "No Sound")
+		#expect(NotificationSoundStrings.defaultSound == "Default Sound")
+		#expect(NotificationSoundStrings.noSound == "No Sound")
 	}
 }
