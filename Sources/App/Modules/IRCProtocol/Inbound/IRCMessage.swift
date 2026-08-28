@@ -19,8 +19,8 @@ import GlasstualPluginKit
 
  A message is a reference type because it is passed down a long handler chain
  and because it points back at the `MessageBatch` that contains it. Handlers
- treat it as read-only; the two places that need a changed message call
- `modified(_:)`, which never touches the receiver. */
+ treat it as read-only; the two places that need a changed message start from
+ `duplicate()`, which never touches the receiver. */
 @objc(IRCMessage)
 public final nonisolated class Message: NSObject {
 	public internal(set) var sender = Prefix()
@@ -105,15 +105,10 @@ public final nonisolated class Message: NSObject {
 		super.init()
 	}
 
-	/** Returns an independent copy of this message with `changes` applied. The
-	 receiver is left untouched, which is what the retired mutable subclass was
-	 for. */
-	public func modified(_ changes: (Message) -> Void) -> Message {
-		let copy = Message(copying: self)
-
-		changes(copy)
-
-		return copy
+	/// An editable copy. Handlers treat the message they are given as read-only,
+	/// so a rewrite starts here rather than by editing the original.
+	public func duplicate() -> Message {
+		Message(copying: self)
 	}
 
 	public func param(at index: UInt) -> String {
