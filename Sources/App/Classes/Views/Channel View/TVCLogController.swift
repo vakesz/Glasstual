@@ -284,8 +284,10 @@ public final class LogController: NSObject {
 	}
 
 	public func prepareForApplicationTermination() {
-		// swiftformat:disable:next redundantSelf
-		logControllerLogger.log("Preparing view controller: \(self.uniqueIdentifier, privacy: .public)")
+		/* Bound to a local because the log message is an autoclosure, where
+		 `self.` would be required and SwiftFormat would strip it. */
+		let identifier = uniqueIdentifier
+		logControllerLogger.log("Preparing view controller: \(identifier, privacy: .public)")
 		prepareForTermination(true)
 	}
 

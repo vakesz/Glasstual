@@ -6,10 +6,11 @@ SCHEME       := Glasstual
 CONFIG       ?= Debug
 DESTINATION  := platform=macOS,arch=arm64
 DERIVED_DATA ?= DerivedData
+RESULT_BUNDLE ?= build/Glasstual.xcresult
 GENERATED_XCODE_DIR := Generated/Xcode
 XCODEBUILD   := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED_DATA)
 
-.PHONY: help generate validate-generated-metadata build release archive run test lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
+.PHONY: help generate validate-generated-metadata build release archive run test coverage lint format format-check ensure-xcodegen ensure-formatters ensure-linters clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[1m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -47,33 +48,35 @@ archive: generate ## Create a Release archive in build/
 run: build ## Build and launch the Debug app
 	open "$(DERIVED_DATA)/Build/Products/$(CONFIG)/Glasstual.app"
 
+# The scheme's test action sets gatherCoverageData, so the run always measures
+# coverage; -resultBundlePath is what keeps the measurement afterwards. Read it
+# with `make coverage`, or open the bundle in Xcode.
 test: generate ## Run the unit tests (GlasstualTests) inside the Debug app
-	$(XCODEBUILD) -configuration Debug test
+	rm -rf "$(RESULT_BUNDLE)"
+	$(XCODEBUILD) -configuration Debug -resultBundlePath "$(RESULT_BUNDLE)" test
+
+coverage: ## Print the line coverage of the last `make test` run
+	xcrun xccov view --report --only-targets "$(RESULT_BUNDLE)"
 
 ensure-formatters:
 	@command -v swiftformat >/dev/null 2>&1 || brew install swiftformat
-	@command -v shfmt >/dev/null 2>&1 || brew install shfmt
 
 ensure-linters: ensure-formatters
 	@command -v swiftlint >/dev/null 2>&1 || brew install swiftlint
-	@command -v shellcheck >/dev/null 2>&1 || brew install shellcheck
 	@command -v actionlint >/dev/null 2>&1 || brew install actionlint
 
 lint: ensure-linters format-check ## Run whole-tree linters and format checks
 	swiftlint lint --strict --no-cache --config .swiftlint.yml Sources Tests
-	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shellcheck "$${files[@]}"; fi
 	actionlint
-	@git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ] && [ "$${file##*/}" != distribution.plist ]; then plutil -lint "$$file" >/dev/null; fi; done
-	@git ls-files --cached --others --exclude-standard -z -- '*.xib' '*.xcscheme' '*.xcworkspacedata' 'distribution.plist' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then xmllint --noout "$$file"; fi; done
+	@git ls-files --cached --others --exclude-standard -z -- '*.entitlements' '*.plist' '*.strings' '*.xcprivacy' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then plutil -lint "$$file" >/dev/null; fi; done
+	@git ls-files --cached --others --exclude-standard -z -- '*.xib' '*.xcscheme' '*.xcworkspacedata' | while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then xmllint --noout "$$file"; fi; done
 	git diff --check
 
-format: ensure-formatters ## Format Swift and shell sources in place
+format: ensure-formatters ## Format Swift sources in place
 	swiftformat --cache ignore Sources Tests
-	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -w -i 0 -ci -sr "$${files[@]}"; fi
 
 format-check: ensure-formatters ## Verify formatting without changing files
 	swiftformat --lint --cache ignore Sources Tests
-	@files=(); while IFS= read -r -d '' file; do if [ -f "$$file" ] && [ ! -L "$$file" ]; then files+=("$$file"); fi; done < <(git ls-files --cached --others --exclude-standard -z -- '*.sh'); if [ "$${#files[@]}" -gt 0 ]; then shfmt -d -i 0 -ci -sr "$${files[@]}"; fi
 
 clean: ## Remove build products and ignored generated metadata
 	rm -rf "$(DERIVED_DATA)" build "Build Results" .tmp "$(GENERATED_XCODE_DIR)"
