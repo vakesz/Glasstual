@@ -6,22 +6,25 @@
 import Foundation
 @testable import Glasstual
 import GlasstualPluginKit
-import XCTest
+import Testing
 
 @MainActor
-final class PluginKitMigrationTests: XCTestCase {
-	func testServerInputIsAPlainSwiftValueContainer() {
+@Suite("Plugin Kit contracts")
+struct PluginKitMigrationTests {
+	@Test("Server input is a plain container the host fills in")
+	func serverInputIsAPlainSwiftValueContainer() {
 		let input = PluginServerInput()
 		input.senderNickname = "alice"
 		input.messageCommand = "PRIVMSG"
 		input.messageParameters = ["#glasstual", "hello"]
 
-		XCTAssertEqual(input.senderNickname, "alice")
-		XCTAssertEqual(input.messageCommand, "PRIVMSG")
-		XCTAssertEqual(input.messageParameters, ["#glasstual", "hello"])
+		#expect(input.senderNickname == "alice")
+		#expect(input.messageCommand == "PRIVMSG")
+		#expect(input.messageParameters == ["#glasstual", "hello"])
 	}
 
-	func testHostContextExposesOnlyTypedPluginModels() {
+	@Test("The host context hands a plugin typed models and a cancellable observation")
+	func hostContextExposesOnlyTypedPluginModels() {
 		let channel = makePluginChannel()
 		let client = makePluginClient(channel: channel)
 		let metrics = PluginApplicationMetrics(
@@ -50,21 +53,23 @@ final class PluginKitMigrationTests: XCTestCase {
 
 		let observation = host.observeConnectionState { observedConnection = $0 }
 
-		XCTAssertEqual(host.clients, [client])
-		XCTAssertEqual(host.selectedChannel, channel)
-		XCTAssertEqual(host.applicationMetrics, metrics)
-		XCTAssertTrue(host.removesIRCFormatting)
-		XCTAssertTrue(observedConnection)
+		#expect(host.clients == [client])
+		#expect(host.selectedChannel == channel)
+		#expect(host.applicationMetrics == metrics)
+		#expect(host.removesIRCFormatting)
+		#expect(observedConnection)
 		observation.cancel()
 	}
 
-	func testChannelSelectionUsesTypedPluginBoundary() {
+	@Test("Channel selection is offered to plugins through the typed boundary")
+	func channelSelectionUsesTypedPluginBoundary() {
 		let selectionControllerType: any PluginChannelSelection.Type = ChannelSelectionViewController.self
 
-		XCTAssertTrue(selectionControllerType == ChannelSelectionViewController.self)
+		#expect(selectionControllerType == ChannelSelectionViewController.self)
 	}
 
-	func testNativeCommandContractCarriesTypedContext() {
+	@Test("A command invocation carries the client, text and selected channel to its handler")
+	func nativeCommandContractCarriesTypedContext() {
 		let channel = makePluginChannel()
 		let client = makePluginClient(channel: channel)
 		let invocation = PluginCommandInvocation(
@@ -78,14 +83,14 @@ final class PluginKitMigrationTests: XCTestCase {
 
 		handler.userInputCommandInvoked(invocation)
 
-		XCTAssertEqual(handler.client, client)
-		XCTAssertEqual(handler.command, "BRAG")
-		XCTAssertEqual(handler.message, "now")
-		XCTAssertEqual(handler.selectedChannel, channel)
+		#expect(handler.client == client)
+		#expect(handler.command == "BRAG")
+		#expect(handler.message == "now")
+		#expect(handler.selectedChannel == channel)
 	}
 
-	@MainActor
-	func testNativeTextContractPreservesDomainValues() {
+	@Test("A text event carries its destination, kind and author to its handler")
+	func nativeTextContractPreservesDomainValues() {
 		let channel = makePluginChannel()
 		let client = makePluginClient(channel: channel)
 		let handler = TextHandlerFixture()
@@ -105,17 +110,21 @@ final class PluginKitMigrationTests: XCTestCase {
 			wasEncrypted: true
 		)
 
-		XCTAssertTrue(handler.receivedText(event))
-		XCTAssertEqual(handler.destination, channel)
-		XCTAssertEqual(handler.kind, .privateMessage)
-		XCTAssertEqual(handler.authorNickname, "alice")
+		#expect(handler.receivedText(event))
+		#expect(handler.destination == channel)
+		#expect(handler.kind == .privateMessage)
+		#expect(handler.authorNickname == "alice")
 	}
 
-	func testSwiftNativeCompatibilityFloorIsVersionEight() {
-		XCTAssertEqual(PluginCompatibility.minimumHostVersion, "8.0.0")
+	/// A bundle declaring an older minimum is refused, so the floor is part of
+	/// the contract a third-party plugin is built against.
+	@Test("The compatibility floor for a plugin bundle is version eight")
+	func swiftNativeCompatibilityFloorIsVersionEight() {
+		#expect(PluginCompatibility.minimumHostVersion == "8.0.0")
 	}
 
-	func testHumanReadableTimeIntervalUsesNativeLocalizedComponents() {
+	@Test("A spelled-out interval matches the platform's own components format")
+	func humanReadableTimeIntervalUsesNativeLocalizedComponents() {
 		let startDate = Date()
 		let endDate = startDate.addingTimeInterval(61)
 		let expected = Date.ComponentsFormatStyle(
@@ -124,22 +133,18 @@ final class PluginKitMigrationTests: XCTestCase {
 			fields: [.minute, .second]
 		).format(startDate ..< endDate)
 
-		XCTAssertEqual(
-			PluginHost.humanReadableTimeInterval(61, shortValue: false, units: [.minute, .second]),
-			expected
-		)
+		#expect(PluginHost.humanReadableTimeInterval(61, shortValue: false, units: [.minute, .second]) == expected)
 	}
 
-	func testFormattedNumberUsesTheCurrentLocale() {
+	@Test("A formatted number follows the current locale")
+	func formattedNumberUsesTheCurrentLocale() {
 		let value = 1_234_567
 
-		XCTAssertEqual(
-			PluginHost.formattedNumber(value),
-			value.formatted(.number.locale(.autoupdatingCurrent))
-		)
+		#expect(PluginHost.formattedNumber(value) == value.formatted(.number.locale(.autoupdatingCurrent)))
 	}
 
-	func testShortHumanReadableTimeIntervalUsesLargestNonzeroComponent() {
+	@Test("A short interval is spelled with its largest non-zero component alone")
+	func shortHumanReadableTimeIntervalUsesLargestNonzeroComponent() {
 		let startDate = Date()
 		let endDate = startDate.addingTimeInterval(3661)
 		let expected = Date.ComponentsFormatStyle(
@@ -148,10 +153,7 @@ final class PluginKitMigrationTests: XCTestCase {
 			fields: [.hour]
 		).format(startDate ..< endDate)
 
-		XCTAssertEqual(
-			PluginHost.humanReadableTimeInterval(3661, shortValue: true),
-			expected
-		)
+		#expect(PluginHost.humanReadableTimeInterval(3661, shortValue: true) == expected)
 	}
 }
 
