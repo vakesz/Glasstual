@@ -45,6 +45,7 @@ import Testing
 /// from the URL alone, whether it can render the address (`actionBlock(for:)`).
 /// Only the static matching is exercised here — no module is instantiated and
 /// no network request is made.
+@MainActor
 struct InlineMediaModuleCorpusTests {
 	struct URLCase: Sendable {
 		let address: String
@@ -108,7 +109,7 @@ struct InlineMediaModuleCorpusTests {
 
 	// MARK: - YouTube
 
-	static let youTubeCases: [URLCase] = [
+	nonisolated static let youTubeCases: [URLCase] = [
 		URLCase("https://www.youtube.com/watch?v=dQw4w9WgXcQ", true),
 		URLCase("https://m.youtube.com/watch?v=dQw4w9WgXcQ", true),
 		URLCase("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30", true),

@@ -40,7 +40,7 @@ import GlasstualPluginKit
 import os
 
 @objc(TPI_Caffeine)
-final class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProviding, @unchecked Sendable {
+final nonisolated class CaffeinePlugin: NSObject, GlasstualPlugin, PluginPreferencesProviding, @unchecked Sendable {
 	private static let preventSleepPreference = "Private Extension Store -> Caffeine Extension -> Prevent Sleep"
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",

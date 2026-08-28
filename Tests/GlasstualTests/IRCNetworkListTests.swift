@@ -37,6 +37,7 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+@MainActor
 class IRCNetworkListTests: XCTestCase {
 	func testBundledListParses() {
 		let list = NetworkList()

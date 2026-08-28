@@ -37,6 +37,7 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+@MainActor
 class IRCClientRequestedCommandsTests: XCTestCase {
 	func testVisibleRequestIsReportedUntilClosed() {
 		let requests = ClientRequestedCommands()

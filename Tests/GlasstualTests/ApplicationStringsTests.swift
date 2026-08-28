@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class ApplicationStringsTests: XCTestCase {
 	func testSemanticAccessorsResolveBasicLanguageCatalog() {
 		XCTAssertEqual(ApplicationStrings.unknownValue, "Unknown")

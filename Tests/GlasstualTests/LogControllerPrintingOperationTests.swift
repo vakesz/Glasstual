@@ -71,6 +71,7 @@ private func makeOperation(explicitFinish: Bool, standalone: Bool = true) -> Log
 }
 
 @Suite("Log controller printing operation")
+@MainActor
 struct LogControllerPrintingOperationTests {
 	@Test("A fresh operation is pending and neither executing nor finished")
 	func freshOperationIsPending() {

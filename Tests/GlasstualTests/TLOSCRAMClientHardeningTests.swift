@@ -40,6 +40,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+@MainActor
 struct TLOSCRAMClientHardeningTests {
 	private static let nonce = "rOprNGfwEbeRWgbNEkqO"
 	private static let combinedNonce = "rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0"

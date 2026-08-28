@@ -41,6 +41,7 @@ import XCTest
  *
  *********************************************************************** */
 @objc
+@MainActor
 class IRCMessageBatchTests: XCTestCase {
 	@objc
 	func batchWithToken(_ token: String) -> MessageBatch {

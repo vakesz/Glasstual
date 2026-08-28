@@ -41,6 +41,7 @@ import Testing
 
 /// Behaviour corpus for numeric reply classification, the nickname retry
 /// ladder, and the WHOX request/response token.
+@MainActor
 struct IRCNumericReplyCorpusTests {
 	struct NumericCase: Sendable {
 		let numeric: UInt
@@ -54,7 +55,7 @@ struct IRCNumericReplyCorpusTests {
 
 	/// Errors are the 401-596 band, with RPL_NOMOTD carved out because servers
 	/// send it as an ordinary reply.
-	static let classificationCases: [NumericCase] = [
+	nonisolated static let classificationCases: [NumericCase] = [
 		NumericCase(1, isError: false),
 		NumericCase(5, isError: false),
 		NumericCase(315, isError: false),

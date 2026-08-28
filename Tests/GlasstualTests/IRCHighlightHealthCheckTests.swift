@@ -40,6 +40,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+@MainActor
 struct IRCHighlightHealthCheckTests {
 	/// The Objective-C original used NSParameterAssert, which compiles out in
 	/// release; `precondition` turned a hand-edited plist into a crash.

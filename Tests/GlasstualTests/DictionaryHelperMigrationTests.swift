@@ -14,6 +14,7 @@ private typealias DictionaryObjectMethod = @convention(c) (AnyObject, Selector, 
 private typealias MutableDictionaryBoolSetter = @convention(c) (AnyObject, Selector, Bool, AnyObject) -> Void
 private typealias MutableDictionarySelectorMethod = @convention(c) (AnyObject, Selector, Selector) -> Void
 
+@MainActor
 final class DictionaryHelperMigrationTests: XCTestCase {
 	func testTypedAccessorsAcceptNumbersAndNumericStrings() throws {
 		let dictionary: NSDictionary = [

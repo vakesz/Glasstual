@@ -40,6 +40,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+@MainActor
 struct IRCClientDCCAddressTests {
 	/// `UInt64(address) ?? UInt64.max` fabricated 255.255.255.255 for an
 	/// overflowing digit string and silently dropped the high bits of
@@ -79,6 +80,7 @@ struct IRCClientDCCAddressTests {
 	}
 }
 
+@MainActor
 struct IRCClientNicknameFormatPaddingTests {
 	/// `scanInt()` yields Int.min for this format, and `abs(Int.min)` traps.
 	@Test

@@ -8,6 +8,7 @@ import Foundation
 @_spi(Host) import GlasstualPluginKit
 import XCTest
 
+@MainActor
 final class PluginKitMigrationTests: XCTestCase {
 	func testServerInputIsAPlainSwiftValueContainer() {
 		let input = PluginServerInput()

@@ -44,6 +44,7 @@ import Testing
 /// Cases marked `.disabled` describe the behaviour the parser is meant to have.
 /// They fail today and are expected to be enabled by the Phase 1 fix that
 /// narrows token splitting to `0x20`.
+@MainActor
 struct IRCLineParserCorpusTests {
 	struct LineCase: Sendable {
 		let line: String
@@ -84,7 +85,7 @@ struct IRCLineParserCorpusTests {
 
 	// MARK: - Structure
 
-	static let wellFormedLines: [LineCase] = [
+	nonisolated static let wellFormedLines: [LineCase] = [
 		LineCase("PING :12345", command: "PING", parameters: ["12345"]),
 		LineCase("PING", command: "PING"),
 		LineCase(
@@ -170,7 +171,7 @@ struct IRCLineParserCorpusTests {
 
 	/// Parameters are separated by `0x20` and by nothing else. Everything below
 	/// splits or merges tokens incorrectly today.
-	static let splittingLines: [LineCase] = [
+	nonisolated static let splittingLines: [LineCase] = [
 		/* U+00A0 NO-BREAK SPACE is a channel-name character, not a separator. */
 		LineCase(
 			":nick!user@host PRIVMSG #ch\u{00A0}an :hi",
@@ -204,7 +205,7 @@ struct IRCLineParserCorpusTests {
 
 	// MARK: - Message tags
 
-	static let tagCases: [TagCase] = [
+	nonisolated static let tagCases: [TagCase] = [
 		TagCase("msgid=abc", "msgid", "abc"),
 		TagCase("account=alice", "account", "alice"),
 		/* A tag with no "=" is present with an empty value. */

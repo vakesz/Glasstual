@@ -42,6 +42,7 @@ import XCTest
  *
  *********************************************************************** */
 @objc
+@MainActor
 class CapabilityRegistryTests: XCTestCase {
 	func testNativeCapabilityTypesPreserveObjectiveCRuntimeNames() {
 		XCTAssertNotNil(NSClassFromString("IRCCapability"))

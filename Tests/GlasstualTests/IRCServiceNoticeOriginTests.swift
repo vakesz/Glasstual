@@ -4,6 +4,7 @@ import Testing
 /// Replying to a `NickServ` notice sends the account password, so the notice
 /// has to look like it came from network services first.
 @Suite("Service notice origin")
+@MainActor
 struct IRCServiceNoticeOriginTests {
 	private func isFromServices(
 		senderIsServer: Bool = false,

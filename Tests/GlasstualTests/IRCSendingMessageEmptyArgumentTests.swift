@@ -14,6 +14,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+@MainActor
 struct IRCSendingMessageEmptyArgumentTests {
 	@Test("An empty argument does not truncate the arguments that follow it")
 	func emptyArgumentDoesNotTruncateTheLine() {

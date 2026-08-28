@@ -38,6 +38,7 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+@MainActor
 class IRCPrefixTests: XCTestCase {
 	func testDefaultsAreNonnullableEmptyStrings() {
 		let prefix = Prefix()

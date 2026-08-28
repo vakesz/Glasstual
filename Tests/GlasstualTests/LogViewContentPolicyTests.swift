@@ -10,6 +10,7 @@ import Testing
 /// The log view runs third-party style code, so the set of origins it can
 /// reach is a security boundary rather than a convenience.
 @Suite("Log view content policy")
+@MainActor
 struct LogViewContentPolicyTests {
 	@Test("The bundled base layout declares exactly the policy the Swift side sends")
 	func baseLayoutDeclaresTheSamePolicy() throws {

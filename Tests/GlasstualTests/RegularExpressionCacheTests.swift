@@ -5,6 +5,7 @@ import Testing
 /// User- and plugin-supplied patterns are evaluated once per incoming message,
 /// so the compiled expression is cached. Caching must not change the answers.
 @Suite("Regular expression cache")
+@MainActor
 struct RegularExpressionCacheTests {
 	@Test("Repeated evaluation of the same pattern is stable")
 	func repeatedEvaluationIsStable() {

@@ -701,7 +701,7 @@ public extension NSMutableAttributedString {
 	}
 }
 
-public extension NSMutableString {
+public nonisolated extension NSMutableString {
 	@objc(wrapIRCTextFormatterResultWith:maxDistance:)
 	func wrapIRCTextFormatterResult(with minimumIndex: UInt, maxDistance: UInt) -> UInt {
 		let selfLength = length

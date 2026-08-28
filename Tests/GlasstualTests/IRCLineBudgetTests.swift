@@ -40,6 +40,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+@MainActor
 struct IRCTextWrapBoundsTests {
 	/// The search window start was computed in unsigned arithmetic, so a
 	/// result shorter than the distance underflowed into a large-negative
@@ -112,6 +113,7 @@ struct IRCLineSplittingProgressTests {
 	}
 }
 
+@MainActor
 struct IRCWireLengthBudgetTests {
 	/// AWAYLEN, KICKLEN and TOPICLEN are byte budgets; an emoji is two UTF-16
 	/// code units but four UTF-8 bytes.

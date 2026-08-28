@@ -7,6 +7,7 @@
 import ObjectiveC.runtime
 import XCTest
 
+@MainActor
 final class FileTransferControllerMigrationTests: XCTestCase {
 	func testObjectiveCRuntimeNameRemainsStableForBindingsAndIRCClient() {
 		XCTAssertEqual(

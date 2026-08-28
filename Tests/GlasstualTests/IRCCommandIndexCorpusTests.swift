@@ -44,6 +44,7 @@ import Testing
 /// The property lists and the `IRCLocalCommand` / `IRCRemoteCommand` enums are
 /// two copies of the same table. These tests pin them to each other so a
 /// command added to one is not forgotten in the other.
+@MainActor
 struct IRCCommandIndexCorpusTests {
 	private static let reservedKey = "Reserved Information"
 
@@ -191,7 +192,7 @@ struct IRCCommandIndexCorpusTests {
 
 	/// The colon marks the start of the trailing parameter. `notApplicable`
 	/// stands for commands that never take one.
-	static let colonCases: [ColonCase] = [
+	nonisolated static let colonCases: [ColonCase] = [
 		ColonCase("PRIVMSG", 1),
 		ColonCase("NOTICE", 1),
 		ColonCase("PART", 1),

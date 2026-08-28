@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientLifecyclePolicyTests: XCTestCase {
 	func testAutojoinBatchHonorsConfiguredMaximum() {
 		XCTAssertEqual(IRCClientAutojoinPolicy.nextBatchCount(remaining: 9, configuredMaximum: 3), 3)

@@ -39,7 +39,8 @@ import AppKit
 import GlasstualPluginKit
 
 @objc(TPI_ChatFilterExtension)
-final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHandling, PluginPreferencesProviding,
+final nonisolated class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHandling,
+	PluginPreferencesProviding,
 	PluginTextEventHandling, ChatFilterEditSheetDelegate, NSTableViewDataSource, NSTableViewDelegate,
 	@unchecked Sendable
 {
@@ -157,14 +158,17 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		atleastOneFilterExists = !filters.isEmpty
 	}
 
+	@MainActor
 	@IBAction private func filterTableDoubleClicked(_ sender: Any?) {
 		filterEdit(sender)
 	}
 
+	@MainActor
 	@IBAction private func filterAdd(_: Any?) {
 		editFilter(nil, at: -1)
 	}
 
+	@MainActor
 	@IBAction private func filterRemove(_: Any?) {
 		guard ChatFilterAlert.confirm(
 			message: String(localized: .TPIChatFilterExtension.deleteFilterMessage),
@@ -176,6 +180,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		saveFilters()
 	}
 
+	@MainActor
 	@IBAction private func filterEdit(_: Any?) {
 		let row = filterTable.selectedRow
 		guard filters.indices.contains(row) else { return }
@@ -215,6 +220,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		activeEditSheet = nil
 	}
 
+	@MainActor
 	@IBAction private func filterDuplicate(_: Any?) {
 		let row = filterTable.selectedRow
 		guard filters.indices.contains(row), let copy = filters[row].mutableCopy() as? MutableChatFilter else { return }
@@ -222,6 +228,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		editFilter(copy.copy() as? ChatFilter, at: -1)
 	}
 
+	@MainActor
 	@IBAction private func filterExport(_: Any?) {
 		let row = filterTable.selectedRow
 		guard filters.indices.contains(row), let window = NSApp.keyWindow else { return }
@@ -236,6 +243,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		}
 	}
 
+	@MainActor
 	@IBAction private func filterImport(_: Any?) {
 		guard let window = NSApp.keyWindow else { return }
 		let panel = NSOpenPanel()
@@ -260,6 +268,7 @@ final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHa
 		}
 	}
 
+	@MainActor
 	@IBAction private func presentFilterAddMenu(_ sender: Any?) {
 		guard let view = sender as? NSView else { return }
 		filterAddMenu.popUp(positioning: nil, at: .zero, in: view)

@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientEncodingFilteringTests: XCTestCase {
 	func testUTF8OnlyOverridesConfiguredEncodings() {
 		let policy = IRCTextEncodingPolicy(

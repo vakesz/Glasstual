@@ -4,6 +4,7 @@ import Testing
 /// `TLOpenLink` hands a remote peer's URL to `NSWorkspace`, so the allowlist
 /// that decides what becomes clickable also decides what may be launched.
 @Suite("Link scheme policy")
+@MainActor
 struct LinkSchemePolicyTests {
 	@Test("Web schemes are permitted", arguments: ["http", "https", "HTTP", "HTTPS"])
 	func webSchemesArePermitted(scheme: String) {

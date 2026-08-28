@@ -40,6 +40,7 @@ import Foundation
 @testable import Glasstual
 import Testing
 
+@MainActor
 struct IRCWireTokenisationTests {
 	/// U+00A0 is whitespace to Foundation but a perfectly ordinary parameter
 	/// character on the wire.

@@ -40,6 +40,7 @@ import Foundation
 import GlasstualPluginKit
 import Testing
 
+@MainActor
 struct IRCHostmaskSeparatorTests {
 	/// Searching backwards for "@" let a server craft a prefix that parsed
 	/// with a different address than the operator's rule expected.
