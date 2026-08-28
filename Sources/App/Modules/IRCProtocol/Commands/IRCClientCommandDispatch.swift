@@ -348,7 +348,7 @@ public extension IRCClient {
 
 		case "notifyspeak":
 			guard requireArguments(arguments, for: parsed.command) else { return true }
-			SharedApplication.sharedSpeechSynthesizer().speak(arguments)
+			SharedApplication.sharedSpeechSynthesizer().speak(text: arguments)
 
 		case "quit":
 			guard isConnected else { return true }

@@ -44,14 +44,21 @@ enum ReachabilityPathEvent: Int {
 	case becameUnreachable = 2
 }
 
+/** Reachability changes drive `IRCWorld`, which lives on the main actor, so the
+ notifier does too: no lock, no queue hop, no `@unchecked Sendable`. */
 @objc(OELReachability)
-public final nonisolated class Reachability: NSObject, @unchecked Sendable {
+@MainActor
+public final class Reachability: NSObject {
 	@objc public var reachableBlock: ((Reachability) -> Void)?
 	@objc public var unreachableBlock: ((Reachability) -> Void)?
 
-	private var monitor: NWPathMonitor?
-	private let monitorQueue = DispatchQueue(label: "com.vakesz.glasstual.reachability")
+	private var monitorTask: Task<Void, Never>?
 	private var currentlyReachable = false
+
+	/** Seeded once per object lifetime. Resetting it in `startNotifier()` made
+	 every restart — the notifier is stopped on sleep and started again on wake —
+	 discard the first update, so a connectivity change across the sleep was
+	 never reported. */
 	private var receivedInitialPath = false
 
 	@objc(isReachable)
@@ -64,7 +71,7 @@ public final nonisolated class Reachability: NSObject, @unchecked Sendable {
 		Reachability()
 	}
 
-	deinit {
+	isolated deinit {
 		stopNotifier()
 
 		reachableBlock = nil
@@ -76,33 +83,25 @@ public final nonisolated class Reachability: NSObject, @unchecked Sendable {
 	public func startNotifier() -> Bool {
 		/* A path monitor is single use: once cancelled it never delivers
 		 another update. Create a fresh one for every start. */
-		monitor?.cancel()
+		monitorTask?.cancel()
 
-		let monitor = NWPathMonitor()
-		self.monitor = monitor
+		monitorTask = Task { [weak self] in
+			for await path in NWPathMonitor() {
+				guard let self else {
+					return
+				}
 
-		/* `receivedInitialPath` is deliberately seeded only once per object lifetime.
-		 Resetting it here made every restart — the notifier is stopped on sleep and
-		 started again on wake — discard the first update, so a connectivity change
-		 across the sleep was never reported. */
-
-		monitor.pathUpdateHandler = { [weak self] path in
-			let reachable = path.status == .satisfied
-
-			DispatchQueue.main.async {
-				self?.pathChanged(reachable: reachable)
+				pathChanged(reachable: path.status == .satisfied)
 			}
 		}
-
-		monitor.start(queue: monitorQueue)
 
 		return true
 	}
 
 	@objc
 	public func stopNotifier() {
-		monitor?.cancel()
-		monitor = nil
+		monitorTask?.cancel()
+		monitorTask = nil
 	}
 
 	private func pathChanged(reachable: Bool) {
@@ -123,7 +122,7 @@ public final nonisolated class Reachability: NSObject, @unchecked Sendable {
 	}
 
 	@objc(evaluatePathChange:currentlyReachable:receivedInitialPath:)
-	public static func evaluatePathChange(
+	public nonisolated static func evaluatePathChange(
 		reachable: Bool,
 		currentlyReachable: UnsafeMutablePointer<ObjCBool>,
 		receivedInitialPath: UnsafeMutablePointer<ObjCBool>
@@ -143,7 +142,7 @@ public final nonisolated class Reachability: NSObject, @unchecked Sendable {
 		return event.rawValue
 	}
 
-	static func evaluatePathChange(
+	nonisolated static func evaluatePathChange(
 		reachable: Bool,
 		currentlyReachable: inout Bool,
 		receivedInitialPath: inout Bool
