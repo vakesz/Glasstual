@@ -120,8 +120,6 @@
 	<integer>0</integer>
 	<key>InlineMediaLimitBasicsToFiles</key>
 	<integer>0</integer>
-	<key>InlineMediaLimitInsecureContent</key>
-	<integer>0</integer>
 	<key>InlineMediaLimitNaughtyContent</key>
 	<integer>0</integer>
 	<key>InlineMediaLimitUnsafeContent</key>
@@ -311,8 +309,6 @@
 	<key>User List Mode Badge Colors -&gt; +v</key>
 	<integer>0</integer>
 	<key>User List Mode Badge Colors -&gt; +y</key>
-	<integer>0</integer>
-	<key>User List Mode Badge Colors -&gt; no mode</key>
 	<integer>0</integer>
 	<key>UserListDoubleClickAction</key>
 	<integer>0</integer>

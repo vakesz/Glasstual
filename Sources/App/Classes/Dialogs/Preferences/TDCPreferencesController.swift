@@ -742,7 +742,8 @@ extension PreferencesController {
 	}
 
 	private func saveWindowFrame() {
-		window.ce_restoreDefaultSize(display: false)
+		// Do not restore the nib's size first: that is the frame that would be
+		// written out, and the user's own size would never be remembered.
 		window.perform(NSSelectorFromString("saveWindowStateForClass:"), with: type(of: self))
 	}
 }
@@ -839,14 +840,6 @@ public extension PreferencesController {
 		set { TextualUserDefaults.shared().setColor(
 			newValue == .clear ? nil : newValue,
 			forKey: "Server List Unread Message Count Badge Colors -> Highlight"
-		) }
-	}
-
-	@objc dynamic var userListNoModeColor: NSColor {
-		get { TextualUserDefaults.shared().color(forKey: "User List Mode Badge Colors -> no mode") ?? .clear }
-		set { TextualUserDefaults.shared().setColor(
-			newValue == .clear ? nil : newValue,
-			forKey: "User List Mode Badge Colors -> no mode"
 		) }
 	}
 
@@ -1060,7 +1053,11 @@ extension PreferencesController {
 	private func releaseFontPanel() {
 		guard fontPanelIsOwned else { return }
 		fontPanelIsOwned = false
-		NSFontManager.shared.setValue(previousFontManagerAction, forKey: "action")
+		// KVC for a SEL-typed property wants an NSValue, not a bridged Swift
+		// Selector; the property is directly assignable.
+		if let previousFontManagerAction {
+			NSFontManager.shared.action = previousFontManagerAction
+		}
 		previousFontManagerAction = nil
 		if NSFontPanel.sharedFontPanelExists {
 			NSFontPanel.shared.orderOut(self)
@@ -1182,7 +1179,7 @@ extension PreferencesController {
 	@IBAction @objc(onResetUserListModeColorsToDefaults:)
 	private func onResetUserListModeColorsToDefaults(_: Any?) {
 		let defaults = TextualUserDefaults.shared()
-		for item in ["+y", "+q", "+a", "+o", "+h", "+v", "no mode"] {
+		for item in ["+y", "+q", "+a", "+o", "+h", "+v"] {
 			defaults.removeObject(forKey: "User List Mode Badge Colors -> \(item)")
 		}
 		onChangedUserListModeColor(nil)
@@ -1235,7 +1232,6 @@ extension PreferencesController {
 			10: "User List Mode Badge Colors -> +y", 9: "User List Mode Badge Colors -> +q",
 			8: "User List Mode Badge Colors -> +a", 7: "User List Mode Badge Colors -> +o",
 			6: "User List Mode Badge Colors -> +h", 5: "User List Mode Badge Colors -> +v",
-			4: "User List Mode Badge Colors -> no mode",
 		]
 		guard let control = sender as? NSControl, let preferenceKey = preferenceMap[control.tag] else {
 			TextualPreferences.performReloadAction([.memberListUserBadges, .memberList])

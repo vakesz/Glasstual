@@ -13,23 +13,27 @@ final class IRCStringCatalogMigrationTests: XCTestCase {
 		let catalog = try loadCatalog()
 		XCTAssertEqual(catalog.sourceLanguage, "en")
 		XCTAssertEqual(catalog.version, "1.0")
-		// 220 keys carried over from the Objective-C .strings files, plus the
-		// keys added since. Only the migrated ones carry the legacy comment.
-		XCTAssertEqual(catalog.strings.count, 221)
 
-		let canonicalValues = catalog.strings.keys.sorted().map { key in
-			let entry = catalog.strings[key]!
-			if entry.comment.contains("Migrated from legacy key") {
-				XCTAssertTrue(entry.comment.contains("Migrated from legacy key \(key)"), key)
-			}
+		// Keys added after the migration are allowed; the guarantee is that every
+		// key carried over from the legacy tables is still here, unchanged.
+		let legacyKeys = catalog.strings.filter { key, entry in
+			entry.comment.contains("Migrated from legacy key \(key)")
+		}.keys.sorted()
+		XCTAssertEqual(legacyKeys.count, 220)
+
+		for (key, entry) in catalog.strings {
 			XCTAssertEqual(entry.localizations["en"]?.stringUnit.state, "translated", key)
+		}
+
+		let canonicalValues = legacyKeys.map { key in
+			let entry = catalog.strings[key]!
 
 			return key + "\u{1F}" + (entry.localizations["en"]?.stringUnit.value ?? "")
 		}.joined(separator: "\u{1E}")
 		let digest = SHA256.hash(data: Data(canonicalValues.utf8))
 		XCTAssertEqual(
 			digest.map { String(format: "%02x", $0) }.joined(),
-			"c651062af8cfc2297c09b1371caa53ed37812f73bca4c2289f353e77b9944120"
+			"8c1298260a2cc6eb83172cbcbe2d2ba9409746d077d37fbfb28a54d13c6c43a5"
 		)
 	}
 

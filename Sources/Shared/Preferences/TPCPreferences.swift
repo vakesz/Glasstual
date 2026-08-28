@@ -83,10 +83,6 @@ public extension TextualPreferences {
 		TextualUserDefaults.shared().set(value, forKey: "InlineMediaLimitBasicsToFiles")
 	}
 
-	class func inlineMediaLimitInsecureContent() -> Bool {
-		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitInsecureContent")
-	}
-
 	class func inlineMediaLimitNaughtyContent() -> Bool {
 		TextualUserDefaults.shared().bool(forKey: "InlineMediaLimitNaughtyContent")
 	}

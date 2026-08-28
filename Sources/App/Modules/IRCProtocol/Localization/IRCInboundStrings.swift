@@ -141,6 +141,10 @@ enum IRCInboundStrings {
 
 extension IRCInboundStrings {
 	enum Numeric {
+		static var saslAuthenticationFailedDisconnecting: String {
+			String(localized: .IRC.saslAuthenticationFailedDisconnecting)
+		}
+
 		static var endOfSilenceList: String {
 			String(localized: .IRC.m2VSc)
 		}
