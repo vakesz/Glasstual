@@ -492,6 +492,10 @@ targets:
         NSHumanReadableCopyright: Copyright © 2017 - 2020 Codeux Software, LLC. All rights reserved.
     entitlements:
       properties:
+        # The client-side certificate is stored by the app under its own access
+        # group; without this the service's SecItemCopyMatching cannot see it.
+        keychain-access-groups:
+          - "$(AppIdentifierPrefix)$(GLASSTUAL_BUNDLE_IDENTIFIER)"
         com.apple.security.network.client: true
     sources:
       - path: Sources/Services/IRC Remote Connection Manager/Classes
