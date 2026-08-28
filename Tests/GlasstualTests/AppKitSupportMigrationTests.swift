@@ -110,8 +110,8 @@ struct AppKitSupportMigrationTests {
 		#expect(TDCAlert.isSuppressed(baseKey: baseKey))
 	}
 
-	@Test("The preferences controller finds and loads its window from its nib")
-	func preferencesControllerLoadsWindowFromNib() {
+	@Test("The Settings window is built in code")
+	func preferencesControllerBuildsItsWindow() {
 		let controller = PreferencesController()
 
 		#expect(controller.value(forKey: "window") != nil)

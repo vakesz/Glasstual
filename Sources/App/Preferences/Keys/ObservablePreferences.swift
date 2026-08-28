@@ -58,20 +58,25 @@ public final class ObservablePreferences {
 	private var revision: UInt = 0
 
 	@ObservationIgnored
-	private var observation: AnyCancellable?
+	private var observations: [AnyCancellable] = []
 
 	private init() {
-		observation = NotificationCenter.default.publisher(
-			for: UserDefaults.didChangeNotification,
-			object: TextualUserDefaults.shared()
-		)
-		.receive(on: DispatchQueue.main)
-		.sink { [weak self] _ in
-			/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated. The
-			 publisher above delivers on the main queue. */
-			MainActor.assumeIsolated {
-				self?.revision &+= 1
-			}
+		/* Two notifications, because the store posts one and the system posts
+		 the other: `TextualUserDefaults` announces its own writes, while
+		 `UserDefaults.didChangeNotification` covers a value another process — an
+		 XPC service, a plugin — wrote into the same suite. */
+		for name in [UserDefaults.didChangeNotification, .textualUserDefaultsDidChange] {
+			observations.append(
+				NotificationCenter.default.publisher(for: name, object: TextualUserDefaults.shared())
+					.receive(on: DispatchQueue.main)
+					.sink { [weak self] _ in
+						/* ISOLATION-EXCEPTION: Combine's sink closure is nonisolated.
+						 The publisher above delivers on the main queue. */
+						MainActor.assumeIsolated {
+							self?.invalidate()
+						}
+					}
+			)
 		}
 	}
 
@@ -80,7 +85,27 @@ public final class ObservablePreferences {
 			_ = revision
 			return key.value
 		}
-		set { key.value = newValue }
+		set {
+			key.value = newValue
+			/* The store drops a write that matches what is already stored, so it
+			 posts nothing; a view that pushed the value still has to be told
+			 that its read is stale. */
+			invalidate()
+		}
+	}
+
+	/// `nil` while nothing has been written — for the settings whose unset state
+	/// means something, such as a colour well that follows the appearance until
+	/// the user picks a colour.
+	public subscript<Value>(stored key: PreferenceKey<Value>) -> Value? {
+		get {
+			_ = revision
+			return key.storedValue
+		}
+		set {
+			key.storedValue = newValue
+			invalidate()
+		}
 	}
 
 	public func binding<Value>(for key: PreferenceKey<Value>) -> Binding<Value> {
@@ -88,5 +113,33 @@ public final class ObservablePreferences {
 			get: { self[key] },
 			set: { self[key] = $0 }
 		)
+	}
+
+	/// A binding that runs `didSet` after the write — for the controls whose
+	/// change also has to reload part of the interface.
+	public func binding<Value>(
+		for key: PreferenceKey<Value>,
+		didSet: @escaping (Value) -> Void
+	) -> Binding<Value> {
+		Binding(
+			get: { self[key] },
+			set: { newValue in
+				self[key] = newValue
+				didSet(newValue)
+			}
+		)
+	}
+
+	/// Restores a key to its declared default.
+	public func reset(_ key: some AnyPreferenceKey) {
+		key.reset()
+		invalidate()
+	}
+
+	/// Marks every reading view stale. Public because the panes' AppKit shell
+	/// writes some values (a folder bookmark, the channel font) outside the key
+	/// store's own notifications.
+	public func invalidate() {
+		revision &+= 1
 	}
 }

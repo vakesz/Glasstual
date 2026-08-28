@@ -116,7 +116,10 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 
 	// MARK: - Keyboard Shortcuts
 
-	public func register(
+	/* `final`: these are never overridden, and a vtable entry for a parameter
+	 type carrying an actor annotation is mangled inconsistently between this
+	 file and a subclass's metadata, which broke the link. */
+	public final func register(
 		key: KeyCode,
 		modifiers: NSEvent.ModifierFlags = [],
 		perform action: @escaping KeyEventHandler.Action
@@ -124,7 +127,7 @@ open class TextViewWithIRCFormatter: NSTextView, NSTextViewDelegate, CustomKeybo
 		keyEventHandler.register(key: key, modifiers: modifiers, perform: action)
 	}
 
-	public func register(
+	public final func register(
 		character: Character,
 		modifiers: NSEvent.ModifierFlags = [],
 		perform action: @escaping KeyEventHandler.Action

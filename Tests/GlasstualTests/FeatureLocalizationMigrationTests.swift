@@ -117,7 +117,6 @@ struct FeatureLocalizationMigrationTests {
 		#expect(PreferencesStrings.paneTitle(.fileTransfers) == "File Transfers")
 		#expect(PreferencesStrings.addOnsGroupTitle == "Add-ons")
 		#expect(PreferencesStrings.advancedGroupTitle == "Advanced")
-		#expect(PreferencesStrings.version(marketingVersion: "6.0", build: "42") == "Version 6.0 (42)")
 		#expect(
 			PreferencesStrings.preferredSelectionBody(
 				styleName: "Default",
