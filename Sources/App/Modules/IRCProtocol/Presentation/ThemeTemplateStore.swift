@@ -48,6 +48,8 @@ import Synchronization
 final nonisolated class ThemeTemplateStore: Sendable {
 	/// Mustache's reference types predate Swift concurrency. Every reference in
 	/// this state is created, replaced, and used only while `state` is locked.
+	/* ISOLATION-EXCEPTION: `TemplateRepository` comes from GRMustache and is not
+	 `Sendable`. The state only ever leaves this type inside its `Mutex`. */
 	private struct State: @unchecked Sendable {
 		let cache = NSCache<NSString, Template>()
 		var repositories: [TemplateRepository]

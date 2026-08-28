@@ -40,8 +40,7 @@ import Foundation
 
 @objc(IRCTimedCommand)
 public final class TimedCommand: NSObject {
-	private static let identifierLock = NSLock()
-	private nonisolated(unsafe) static var lastIdentifier = 0
+	private static var lastIdentifier = 0
 
 	@objc public let identifier: String
 	@objc public let clientId: String
@@ -142,9 +141,6 @@ public final class TimedCommand: NSObject {
 	}
 
 	private static func nextIdentifier() -> String {
-		identifierLock.lock()
-		defer { identifierLock.unlock() }
-
 		lastIdentifier += 1
 		return String(lastIdentifier)
 	}

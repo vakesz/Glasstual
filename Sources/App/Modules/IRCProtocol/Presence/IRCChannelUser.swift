@@ -17,6 +17,9 @@ import GlasstualPluginKit
 import Synchronization
 
 @objc(IRCChannelUser)
+/* ISOLATION-EXCEPTION: A member is an `NSCoding`/`NSCopying` model whose base
+ class is nonisolated, and the renderer collects members off the main actor
+ while it marks up nicknames. Its one mutable field is behind `userLock`. */
 open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 	private let userLock = NSLock()
 	private var userStorage: User?
@@ -331,6 +334,7 @@ open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable 
 	}
 }
 
+/// ISOLATION-EXCEPTION: as `ChannelUser`, whose storage it shares.
 @objc(IRCChannelUserMutable)
 public final nonisolated class ChannelUserMutable: ChannelUser, @unchecked Sendable {
 	override public static var isMutable: Bool {

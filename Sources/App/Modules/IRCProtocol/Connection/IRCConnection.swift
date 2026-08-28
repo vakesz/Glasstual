@@ -47,8 +47,10 @@ private nonisolated let connectionLogger = Logger(
 	category: "IRCConnection"
 )
 
-/** NSXPC transports the response block across its private queue. The wrapper is
- immutable, and the callback is invoked only by TrustPanelPresenter on the main thread. */
+/** ISOLATION-EXCEPTION: `TrustDecisionHandler` is a plain closure that NSXPC
+ hands over on its own queue and the handshake blocks until it is answered, so
+ it cannot be made `Sendable` or awaited. The box is immutable and the callback
+ is invoked once, from the trust panel on the main actor. */
 private final nonisolated class TrustResponseBox: @unchecked Sendable {
 	let callback: TrustDecisionHandler
 
@@ -57,8 +59,9 @@ private final nonisolated class TrustResponseBox: @unchecked Sendable {
 	}
 }
 
-/** Security.framework does not annotate SecTrust as Sendable. Ownership is
- transferred unchanged to TrustPanelPresenter and the value is not touched again. */
+/** ISOLATION-EXCEPTION: Security.framework does not annotate `SecTrust` as
+ `Sendable`. Ownership passes to the trust panel unchanged and the value is not
+ touched again on this side. */
 private nonisolated struct TrustReference: @unchecked Sendable {
 	let value: SecTrust
 }

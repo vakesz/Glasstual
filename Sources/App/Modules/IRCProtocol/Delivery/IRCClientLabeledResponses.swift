@@ -69,7 +69,7 @@ enum IRCLabeledResponsePolicy {
 }
 
 @objc(IRCLabeledDelivery)
-final class LabeledDelivery: NSObject, @unchecked Sendable {
+final class LabeledDelivery: NSObject {
 	@objc var label = ""
 	@objc weak var channel: IRCChannel?
 	@objc var lineNumber: String?
