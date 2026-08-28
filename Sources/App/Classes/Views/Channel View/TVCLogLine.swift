@@ -69,130 +69,105 @@ private nonisolated enum LogLineFormat {
 	static let noticeNickname = "-%@-"
 }
 
+/** One printed line: what the renderer draws and what the historic log stores.
+
+ Still a class, and still `NSSecureCoding`, because the archive on disk records
+ `TVCLogLine` as its root object and has to keep decoding. The setters are
+ `internal` so that only the module that builds a line can edit it; a printed
+ line is handed to `TVCLogController` as a snapshot. */
 @objc(TVCLogLine)
-open nonisolated class LogLine: PortablePropertyObject {
-	fileprivate var isEncryptedStorage = false
-	fileprivate var isFirstForDayStorage = false
-	fileprivate var nicknameColorStyleOverrideStorage = false
-	fileprivate var excludeKeywordsStorage: [String]?
-	fileprivate var highlightKeywordsStorage: [String]?
-	fileprivate var rendererAttributesStorage: [String: Any]?
-	fileprivate var receivedAtStorage = Date()
-	fileprivate var commandStorage = LogLineFormat.defaultCommand
-	fileprivate var messageBodyStorage = ""
-	fileprivate var messageIdentifierStorage: String?
-	fileprivate var replyToMessageIdentifierStorage: String?
-	fileprivate var reactionsStorage: [String: [String]]?
-	fileprivate var nicknameStorage: String?
-	fileprivate var nicknameColorStyleStorage: String?
-	fileprivate var memberTypeStorage: TVCLogLineMemberType = .normal
-	fileprivate var deliveryStateStorage: TVCLogLineDeliveryState = .none
-	fileprivate var lineTypeStorage: TVCLogLineType = .undefined
-	fileprivate var sessionIdentifierStorage: UInt = 0
-	fileprivate var uniqueIdentifierStorage: String?
+public final nonisolated class LogLine: NSObject, NSSecureCoding {
+	@objc public internal(set) var isEncrypted = false
+	@objc public internal(set) var isFirstForDay = false
+	@objc public internal(set) var receivedAt = Date()
+	@objc public internal(set) var messageBody = ""
+	@objc public internal(set) var command = LogLineFormat.defaultCommand
+	@objc public internal(set) var messageIdentifier: String?
+	@objc public internal(set) var replyToMessageIdentifier: String?
+	@objc public internal(set) var reactions: [String: [String]]?
+	@objc public internal(set) var lineType: TVCLogLineType = .undefined
+	@objc public internal(set) var memberType: TVCLogLineMemberType = .normal
+	@objc public internal(set) var deliveryState: TVCLogLineDeliveryState = .none
+	@objc public internal(set) var highlightKeywords: [String]?
+	@objc public internal(set) var excludeKeywords: [String]?
+	@objc public internal(set) var rendererAttributes: [String: Any]?
 
-	@objc public var isEncrypted: Bool {
-		isEncryptedStorage
+	/// Setting a nickname recomputes the colour style, which is derived from it.
+	@objc public internal(set) var nickname: String? {
+		didSet { computeNicknameColorStyle() }
 	}
 
-	@objc public var isFirstForDay: Bool {
-		isFirstForDayStorage
-	}
+	private var nicknameColorStyleStorage: String?
+	private var uniqueIdentifierStorage: String?
 
-	@objc public var receivedAt: Date {
-		receivedAtStorage
-	}
+	@objc public private(set) var nicknameColorStyleOverride = false
+	@objc public private(set) var sessionIdentifier: UInt = 0
 
 	@objc public var nicknameColorStyle: String {
 		nicknameColorStyleStorage ?? ""
-	}
-
-	@objc public var nicknameColorStyleOverride: Bool {
-		nicknameColorStyleOverrideStorage
-	}
-
-	@objc public var nickname: String? {
-		nicknameStorage
-	}
-
-	@objc public var messageBody: String {
-		messageBodyStorage
-	}
-
-	@objc public var command: String {
-		commandStorage
 	}
 
 	@objc public var uniqueIdentifier: String {
 		uniqueIdentifierStorage ?? ""
 	}
 
-	@objc public var messageIdentifier: String? {
-		messageIdentifierStorage
-	}
-
-	@objc public var replyToMessageIdentifier: String? {
-		replyToMessageIdentifierStorage
-	}
-
-	@objc public var reactions: [String: [String]]? {
-		reactionsStorage
-	}
-
-	@objc public var lineType: TVCLogLineType {
-		lineTypeStorage
-	}
-
-	@objc public var memberType: TVCLogLineMemberType {
-		memberTypeStorage
-	}
-
-	@objc public var deliveryState: TVCLogLineDeliveryState {
-		deliveryStateStorage
-	}
-
-	@objc public var highlightKeywords: [String]? {
-		highlightKeywordsStorage
-	}
-
-	@objc public var excludeKeywords: [String]? {
-		excludeKeywordsStorage
-	}
-
-	@objc public var rendererAttributes: [String: Any]? {
-		rendererAttributesStorage
-	}
-
-	@objc public var sessionIdentifier: UInt {
-		sessionIdentifierStorage
-	}
-
 	override public init() {
 		super.init()
+
 		populateDefaultsPostflight()
 	}
 
-	@objc(initWithData:)
 	public convenience init?(data: Data) {
 		guard let decoded = try? NSKeyedUnarchiver.unarchivedObject(ofClass: LogLine.self, from: data) else {
 			return nil
 		}
 
-		self.init()
-		copyStorage(from: decoded)
+		self.init(copying: decoded)
 	}
 
 	public required init?(coder: NSCoder) {
-		super.init(coder: coder)
+		super.init()
+
+		populate(with: coder)
+		populateDefaultsPostflight()
+	}
+
+	private init(copying source: LogLine) {
+		uniqueIdentifierStorage = source.uniqueIdentifierStorage
+		isEncrypted = source.isEncrypted
+		isFirstForDay = source.isFirstForDay
+		excludeKeywords = source.excludeKeywords
+		highlightKeywords = source.highlightKeywords
+		rendererAttributes = source.rendererAttributes
+		receivedAt = source.receivedAt
+		command = source.command
+		messageBody = source.messageBody
+		messageIdentifier = source.messageIdentifier
+		replyToMessageIdentifier = source.replyToMessageIdentifier
+		reactions = source.reactions
+		nickname = source.nickname
+		nicknameColorStyleStorage = source.nicknameColorStyleStorage
+		nicknameColorStyleOverride = source.nicknameColorStyleOverride
+		lineType = source.lineType
+		memberType = source.memberType
+		deliveryState = source.deliveryState
+		sessionIdentifier = source.sessionIdentifier
+
+		super.init()
+	}
+
+	/// An independent copy. `TVCLogController` takes one so that a line it has
+	/// already queued for rendering cannot change underneath it.
+	public func duplicate() -> LogLine {
+		LogLine(copying: self)
 	}
 
 	@objc(logLineWithData:)
-	public class func logLine(with data: Data) -> LogLine? {
+	public static func logLine(with data: Data) -> LogLine? {
 		LogLine(data: data)
 	}
 
-	@objc(logLineFromXPCObject:)
-	class func logLine(from xpcObject: LogLineXPC) -> LogLine? {
+	static func logLine(from xpcObject: LogLineXPC) -> LogLine? {
 		guard let object = try? NSKeyedUnarchiver.unarchivedObject(
 			ofClass: LogLine.self,
 			from: xpcObject.data
@@ -204,139 +179,133 @@ open nonisolated class LogLine: PortablePropertyObject {
 			object.uniqueIdentifierStorage = xpcObject.uniqueIdentifier
 		}
 
-		return object.copy() as? LogLine
+		return object
 	}
 
-	override public func populate(with decoder: NSCoder) -> Bool {
-		receivedAtStorage = decoder
+	private func populate(with decoder: NSCoder) {
+		receivedAt = decoder
 			.decodeObject(of: NSDate.self, forKey: LogLineArchiveKey.receivedAt) as Date? ?? Date()
 
 		let stringArrayClasses: [AnyClass] = [NSArray.self, NSString.self]
-		excludeKeywordsStorage = decoder.decodeObject(
+		excludeKeywords = decoder.decodeObject(
 			of: stringArrayClasses,
 			forKey: LogLineArchiveKey.excludeKeywords
 		) as? [String]
-		highlightKeywordsStorage = decoder.decodeObject(
+		highlightKeywords = decoder.decodeObject(
 			of: stringArrayClasses,
 			forKey: LogLineArchiveKey.highlightKeywords
 		) as? [String]
 
-		rendererAttributesStorage = decoder.textual_decodeDictionary(
+		rendererAttributes = decoder.textual_decodeDictionary(
 			forKey: LogLineArchiveKey.rendererAttributes
 		) as? [String: Any]
 
-		isEncryptedStorage = decoder.decodeBool(forKey: LogLineArchiveKey.isEncrypted)
-		isFirstForDayStorage = decoder.decodeBool(forKey: LogLineArchiveKey.isFirstForDay)
-		commandStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.command) as String? ?? LogLineFormat
+		isEncrypted = decoder.decodeBool(forKey: LogLineArchiveKey.isEncrypted)
+		isFirstForDay = decoder.decodeBool(forKey: LogLineArchiveKey.isFirstForDay)
+		command = decoder.textual_decodeString(forKey: LogLineArchiveKey.command) as String? ?? LogLineFormat
 			.defaultCommand
-		messageBodyStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.messageBody) as String? ?? ""
-		messageIdentifierStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.messageIdentifier) as String?
-		replyToMessageIdentifierStorage = decoder.textual_decodeString(
+		messageBody = decoder.textual_decodeString(forKey: LogLineArchiveKey.messageBody) as String? ?? ""
+		messageIdentifier = decoder.textual_decodeString(forKey: LogLineArchiveKey.messageIdentifier) as String?
+		replyToMessageIdentifier = decoder.textual_decodeString(
 			forKey: LogLineArchiveKey.replyToMessageIdentifier
 		) as String?
 
 		let reactionClasses: [AnyClass] = [NSDictionary.self, NSArray.self, NSString.self]
-		reactionsStorage = decoder.decodeObject(
+		reactions = decoder.decodeObject(
 			of: reactionClasses,
 			forKey: LogLineArchiveKey.reactions
 		) as? [String: [String]]
-		nicknameStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.nickname) as String?
-		lineTypeStorage = TVCLogLineType(rawValue: UInt(decoder.decodeInteger(forKey: LogLineArchiveKey.lineType))) ??
+		nickname = decoder.textual_decodeString(forKey: LogLineArchiveKey.nickname) as String?
+		lineType = TVCLogLineType(rawValue: UInt(decoder.decodeInteger(forKey: LogLineArchiveKey.lineType))) ??
 			.undefined
-		memberTypeStorage = TVCLogLineMemberType(
+		memberType = TVCLogLineMemberType(
 			rawValue: UInt(decoder.decodeInteger(forKey: LogLineArchiveKey.memberType))
 		) ?? .normal
 
 		let decodedDeliveryState = TVCLogLineDeliveryState(
 			rawValue: UInt(decoder.decodeInteger(forKey: LogLineArchiveKey.deliveryState))
 		) ?? .none
-		deliveryStateStorage = decodedDeliveryState == .pending ? .none : decodedDeliveryState
+		deliveryState = decodedDeliveryState == .pending ? .none : decodedDeliveryState
 		uniqueIdentifierStorage = decoder.textual_decodeString(forKey: LogLineArchiveKey.uniqueIdentifier) as String?
-		sessionIdentifierStorage = UInt(decoder.decodeInteger(forKey: LogLineArchiveKey.sessionIdentifier))
+		sessionIdentifier = UInt(decoder.decodeInteger(forKey: LogLineArchiveKey.sessionIdentifier))
 		computeNicknameColorStyle()
-
-		return true
 	}
 
-	@objc(populateDefaultsPostflight)
-	override public func populateDefaultsPostflight() {
+	private func populateDefaultsPostflight() {
 		populateDefaultUniqueIdentifier()
 		populateDefaultSessionIdentifier()
 
-		switch lineTypeStorage {
+		switch lineType {
 		case .actionNoHighlight:
-			lineTypeStorage = .action
-			highlightKeywordsStorage = nil
+			lineType = .action
+			highlightKeywords = nil
 		case .privateMessageNoHighlight:
-			lineTypeStorage = .privateMessage
-			highlightKeywordsStorage = nil
+			lineType = .privateMessage
+			highlightKeywords = nil
 		default:
 			break
 		}
 	}
 
-	@objc(populateDefaultUniqueIdentifier)
 	public func populateDefaultUniqueIdentifier() {
 		if uniqueIdentifierStorage == nil {
 			uniqueIdentifierStorage = Self.newUniqueIdentifier()
 		}
 	}
 
-	@objc(populateDefaultSessionIdentifier)
 	public func populateDefaultSessionIdentifier() {
-		if sessionIdentifierStorage == 0 {
-			sessionIdentifierStorage = Self.currentSessionIdentifier()
+		if sessionIdentifier == 0 {
+			sessionIdentifier = Self.currentSessionIdentifier()
 		}
 	}
 
-	override public func encode(with coder: NSCoder) {
-		coder.encode(commandStorage as NSString, forKey: LogLineArchiveKey.command)
-		coder.encode(messageBodyStorage as NSString, forKey: LogLineArchiveKey.messageBody)
-		if let excludeKeywordsStorage {
-			coder.encode(excludeKeywordsStorage, forKey: LogLineArchiveKey.excludeKeywords)
+	public func encode(with coder: NSCoder) {
+		coder.encode(command as NSString, forKey: LogLineArchiveKey.command)
+		coder.encode(messageBody as NSString, forKey: LogLineArchiveKey.messageBody)
+		if let excludeKeywords {
+			coder.encode(excludeKeywords, forKey: LogLineArchiveKey.excludeKeywords)
 		}
-		if let highlightKeywordsStorage {
-			coder.encode(highlightKeywordsStorage, forKey: LogLineArchiveKey.highlightKeywords)
+		if let highlightKeywords {
+			coder.encode(highlightKeywords, forKey: LogLineArchiveKey.highlightKeywords)
 		}
-		if let rendererAttributesStorage {
-			coder.encode(rendererAttributesStorage, forKey: LogLineArchiveKey.rendererAttributes)
+		if let rendererAttributes {
+			coder.encode(rendererAttributes, forKey: LogLineArchiveKey.rendererAttributes)
 		}
-		if let messageIdentifierStorage {
-			coder.encode(messageIdentifierStorage as NSString, forKey: LogLineArchiveKey.messageIdentifier)
+		if let messageIdentifier {
+			coder.encode(messageIdentifier as NSString, forKey: LogLineArchiveKey.messageIdentifier)
 		}
-		if let replyToMessageIdentifierStorage {
+		if let replyToMessageIdentifier {
 			coder.encode(
-				replyToMessageIdentifierStorage as NSString,
+				replyToMessageIdentifier as NSString,
 				forKey: LogLineArchiveKey.replyToMessageIdentifier
 			)
 		}
-		if let reactionsStorage {
-			coder.encode(reactionsStorage, forKey: LogLineArchiveKey.reactions)
+		if let reactions {
+			coder.encode(reactions, forKey: LogLineArchiveKey.reactions)
 		}
-		if let nicknameStorage {
-			coder.encode(nicknameStorage as NSString, forKey: LogLineArchiveKey.nickname)
+		if let nickname {
+			coder.encode(nickname as NSString, forKey: LogLineArchiveKey.nickname)
 		}
-		coder.encode(isEncryptedStorage, forKey: LogLineArchiveKey.isEncrypted)
-		coder.encode(isFirstForDayStorage, forKey: LogLineArchiveKey.isFirstForDay)
-		coder.encode(receivedAtStorage, forKey: LogLineArchiveKey.receivedAt)
-		coder.encode(Int(lineTypeStorage.rawValue), forKey: LogLineArchiveKey.lineType)
-		coder.encode(Int(memberTypeStorage.rawValue), forKey: LogLineArchiveKey.memberType)
+		coder.encode(isEncrypted, forKey: LogLineArchiveKey.isEncrypted)
+		coder.encode(isFirstForDay, forKey: LogLineArchiveKey.isFirstForDay)
+		coder.encode(receivedAt, forKey: LogLineArchiveKey.receivedAt)
+		coder.encode(Int(lineType.rawValue), forKey: LogLineArchiveKey.lineType)
+		coder.encode(Int(memberType.rawValue), forKey: LogLineArchiveKey.memberType)
 
-		if deliveryStateStorage != .none {
-			coder.encode(Int(deliveryStateStorage.rawValue), forKey: LogLineArchiveKey.deliveryState)
+		if deliveryState != .none {
+			coder.encode(Int(deliveryState.rawValue), forKey: LogLineArchiveKey.deliveryState)
 		}
 
 		if let uniqueIdentifierStorage {
 			coder.encode(uniqueIdentifierStorage as NSString, forKey: LogLineArchiveKey.uniqueIdentifier)
 		}
-		coder.encode(Int(sessionIdentifierStorage), forKey: LogLineArchiveKey.sessionIdentifier)
+		coder.encode(Int(sessionIdentifier), forKey: LogLineArchiveKey.sessionIdentifier)
 	}
 
-	override public class var supportsSecureCoding: Bool {
+	public static var supportsSecureCoding: Bool {
 		true
 	}
 
-	@objc(xpcObjectForTreeItem:)
 	@MainActor
 	func xpcObject(for treeItem: IRCTreeItem) -> LogLineXPC {
 		guard let data = try? NSKeyedArchiver.archivedData(
@@ -355,22 +324,19 @@ open nonisolated class LogLine: PortablePropertyObject {
 		)
 	}
 
-	@objc(newUniqueIdentifier)
-	public class func newUniqueIdentifier() -> String {
+	public static func newUniqueIdentifier() -> String {
 		String(UUID().uuidString.dropFirst(19))
 	}
 
-	@objc(currentSessionIdentifier)
-	public class func currentSessionIdentifier() -> UInt {
+	public static func currentSessionIdentifier() -> UInt {
 		Session.identifier
 	}
 
 	@objc public var fromCurrentSession: Bool {
-		sessionIdentifierStorage == Self.currentSessionIdentifier()
+		sessionIdentifier == Self.currentSessionIdentifier()
 	}
 
-	@objc(stringForLineType:)
-	public class func string(for type: TVCLogLineType) -> String? {
+	public static func string(for type: TVCLogLineType) -> String? {
 		switch type {
 		case .action, .actionNoHighlight:
 			"action"
@@ -411,21 +377,19 @@ open nonisolated class LogLine: PortablePropertyObject {
 		}
 	}
 
-	@objc(stringForMemberType:)
-	public class func string(for type: TVCLogLineMemberType) -> String {
+	public static func string(for type: TVCLogLineMemberType) -> String {
 		type == .localUser ? "myself" : "normal"
 	}
 
 	@objc public var lineTypeString: String? {
-		Self.string(for: lineTypeStorage)
+		Self.string(for: lineType)
 	}
 
 	@objc public var memberTypeString: String {
-		Self.string(for: memberTypeStorage)
+		Self.string(for: memberType)
 	}
 
-	@objc(stringForDeliveryState:)
-	public class func string(for state: TVCLogLineDeliveryState) -> String? {
+	public static func string(for state: TVCLogLineDeliveryState) -> String? {
 		switch state {
 		case .pending:
 			"pending"
@@ -439,14 +403,13 @@ open nonisolated class LogLine: PortablePropertyObject {
 	}
 
 	@objc public var deliveryStateString: String? {
-		Self.string(for: deliveryStateStorage)
+		Self.string(for: deliveryState)
 	}
 
 	@objc public var formattedTimestamp: String {
 		formattedTimestamp(with: nil)
 	}
 
-	@objc(formattedTimestampWithFormat:)
 	public func formattedTimestamp(with format: String?) -> String {
 		let themeFormat = ThemeController.activeSnapshot?.timestampFormat
 		let selectedFormat = [
@@ -458,51 +421,49 @@ open nonisolated class LogLine: PortablePropertyObject {
 		.compactMap(\.self)
 		.first { !$0.isEmpty } ?? ""
 
-		return Glasstual.formattedTimestamp(receivedAtStorage as NSDate, selectedFormat as NSString) as String? ?? ""
+		return Glasstual.formattedTimestamp(receivedAt as NSDate, selectedFormat as NSString) as String? ?? ""
 	}
 
 	@objc @MainActor public var formattedNickname: String {
 		formattedNickname(in: nil) ?? ""
 	}
 
-	@objc(formattedNicknameInChannel:)
 	@MainActor
 	public func formattedNickname(in channel: IRCChannel?) -> String? {
 		formattedNickname(in: channel, with: nil)
 	}
 
-	@objc(formattedNicknameInChannel:withFormat:)
 	@MainActor
 	public func formattedNickname(in channel: IRCChannel?, with format: String?) -> String? {
-		guard let nicknameStorage else {
+		guard let nickname else {
 			return nil
 		}
 
-		if format == nil, let decorated = decoratedNicknameForLineType(nicknameStorage) {
+		if format == nil, let decorated = decoratedNicknameForLineType(nickname) {
 			return decorated
 		}
 
-		return channel?.associatedClient?.formatNickname(nicknameStorage, in: channel, withFormat: format)
+		return channel?.associatedClient?.formatNickname(nickname, in: channel, withFormat: format)
 	}
 
 	/** The same text as `formattedNickname(in:with:)` but from values the caller
 	 already resolved, so that rendering can format the sender off the main actor.
 	 `modeSymbol` is the sender's mark in the channel, empty outside one. */
 	public func formattedNickname(modeSymbol: String, format: String) -> String? {
-		guard let nicknameStorage else {
+		guard let nickname else {
 			return nil
 		}
 
-		if let decorated = decoratedNicknameForLineType(nicknameStorage) {
+		if let decorated = decoratedNicknameForLineType(nickname) {
 			return decorated
 		}
 
-		return ClientWireUtilities.formatNickname(nicknameStorage, modeSymbol: modeSymbol, format: format)
+		return ClientWireUtilities.formatNickname(nickname, modeSymbol: modeSymbol, format: format)
 	}
 
 	/// Actions and notices carry their own decoration instead of the theme format.
 	private func decoratedNicknameForLineType(_ nickname: String) -> String? {
-		switch lineTypeStorage {
+		switch lineType {
 		case .action:
 			String(format: LogLineFormat.actionNickname, nickname)
 		case .notice:
@@ -516,12 +477,11 @@ open nonisolated class LogLine: PortablePropertyObject {
 		renderedBodyForTranscriptLog(in: nil)
 	}
 
-	@objc(renderedBodyForTranscriptLogInChannel:)
 	@MainActor
 	public func renderedBodyForTranscriptLog(in channel: IRCChannel?) -> String {
 		var components = [formattedTimestamp(with: LogLineFormat.loggerClock)]
 
-		let nicknameFormat = switch lineTypeStorage {
+		let nicknameFormat = switch lineType {
 		case .action: LogLineFormat.loggerActionNickname
 		case .notice: LogLineFormat.loggerNoticeNickname
 		default: LogLineFormat.loggerUndefinedNickname
@@ -531,150 +491,25 @@ open nonisolated class LogLine: PortablePropertyObject {
 			components.append(formattedNickname)
 		}
 
-		components.append(messageBodyStorage)
+		components.append(messageBody)
 
 		return (components.joined(separator: " ") as NSString).stripIRCEffects
 	}
 
-	@objc(computeNicknameColorStyle)
 	public func computeNicknameColorStyle() {
-		guard let nicknameStorage, lineTypeStorage.hasNicknameColor else {
+		guard let nickname, lineType.hasNicknameColor else {
 			nicknameColorStyleStorage = nil
-			nicknameColorStyleOverrideStorage = false
+			nicknameColorStyleOverride = false
 			return
 		}
 
-		let colorStyle = UserNicknameColorStyleGenerator.colorStyle(for: nicknameStorage)
+		let colorStyle = UserNicknameColorStyleGenerator.colorStyle(for: nickname)
 		nicknameColorStyleStorage = colorStyle.style
-		nicknameColorStyleOverrideStorage = colorStyle.isOverride
-	}
-
-	@objc(populateDuringCopy:mutableCopy:)
-	override public func populateDuringCopy(_ newObject: PortablePropertyObject, mutableCopy _: Bool) {
-		guard let object = newObject as? LogLine else {
-			return
-		}
-
-		object.copyStorage(from: self)
-	}
-
-	override public var mutableClass: PortablePropertyObject {
-		unsafeBitCast(MutableLogLine.self, to: PortablePropertyObject.self)
-	}
-
-	private func copyStorage(from source: LogLine) {
-		uniqueIdentifierStorage = source.uniqueIdentifierStorage
-		isEncryptedStorage = source.isEncryptedStorage
-		isFirstForDayStorage = source.isFirstForDayStorage
-		excludeKeywordsStorage = source.excludeKeywordsStorage
-		highlightKeywordsStorage = source.highlightKeywordsStorage
-		rendererAttributesStorage = source.rendererAttributesStorage
-		receivedAtStorage = source.receivedAtStorage
-		commandStorage = source.commandStorage
-		messageBodyStorage = source.messageBodyStorage
-		messageIdentifierStorage = source.messageIdentifierStorage
-		replyToMessageIdentifierStorage = source.replyToMessageIdentifierStorage
-		reactionsStorage = source.reactionsStorage
-		nicknameStorage = source.nicknameStorage
-		nicknameColorStyleStorage = source.nicknameColorStyleStorage
-		nicknameColorStyleOverrideStorage = source.nicknameColorStyleOverrideStorage
-		lineTypeStorage = source.lineTypeStorage
-		memberTypeStorage = source.memberTypeStorage
-		deliveryStateStorage = source.deliveryStateStorage
-		sessionIdentifierStorage = source.sessionIdentifierStorage
+		nicknameColorStyleOverride = colorStyle.isOverride
 	}
 
 	private enum Session {
 		static let identifier = UInt(UInt32.random(in: 0 ..< 999_999))
-	}
-}
-
-@objc(TVCLogLineMutable)
-public final nonisolated class MutableLogLine: LogLine {
-	override public static var isMutable: Bool {
-		true
-	}
-
-	override public var immutableClass: PortablePropertyObject {
-		unsafeBitCast(LogLine.self, to: PortablePropertyObject.self)
-	}
-
-	@objc override public var isEncrypted: Bool {
-		get { isEncryptedStorage }
-		set { isEncryptedStorage = newValue }
-	}
-
-	@objc override public var isFirstForDay: Bool {
-		get { isFirstForDayStorage }
-		set { isFirstForDayStorage = newValue }
-	}
-
-	@objc override public var receivedAt: Date {
-		get { receivedAtStorage }
-		set { receivedAtStorage = newValue }
-	}
-
-	@objc override public var nickname: String? {
-		get { nicknameStorage }
-		set {
-			nicknameStorage = newValue
-			computeNicknameColorStyle()
-		}
-	}
-
-	@objc override public var messageBody: String {
-		get { messageBodyStorage }
-		set { messageBodyStorage = newValue }
-	}
-
-	@objc override public var command: String {
-		get { commandStorage }
-		set { commandStorage = newValue }
-	}
-
-	@objc override public var messageIdentifier: String? {
-		get { messageIdentifierStorage }
-		set { messageIdentifierStorage = newValue }
-	}
-
-	@objc override public var replyToMessageIdentifier: String? {
-		get { replyToMessageIdentifierStorage }
-		set { replyToMessageIdentifierStorage = newValue }
-	}
-
-	@objc override public var reactions: [String: [String]]? {
-		get { reactionsStorage }
-		set { reactionsStorage = newValue }
-	}
-
-	@objc override public var lineType: TVCLogLineType {
-		get { lineTypeStorage }
-		set { lineTypeStorage = newValue }
-	}
-
-	@objc override public var memberType: TVCLogLineMemberType {
-		get { memberTypeStorage }
-		set { memberTypeStorage = newValue }
-	}
-
-	@objc override public var deliveryState: TVCLogLineDeliveryState {
-		get { deliveryStateStorage }
-		set { deliveryStateStorage = newValue }
-	}
-
-	@objc override public var highlightKeywords: [String]? {
-		get { highlightKeywordsStorage }
-		set { highlightKeywordsStorage = newValue }
-	}
-
-	@objc override public var excludeKeywords: [String]? {
-		get { excludeKeywordsStorage }
-		set { excludeKeywordsStorage = newValue }
-	}
-
-	@objc override public var rendererAttributes: [String: Any]? {
-		get { rendererAttributesStorage }
-		set { rendererAttributesStorage = newValue }
 	}
 }
 

@@ -1019,16 +1019,9 @@ public extension LogController {
 		guard !terminating else {
 			return
 		}
-		let logLine: LogLine
-		if inputLogLine is MutableLogLine {
-			guard let immutableLogLine = inputLogLine.copy() as? LogLine else {
-				assertionFailure("MutableLogLine.copy() must return LogLine")
-				return
-			}
-			logLine = immutableLogLine
-		} else {
-			logLine = inputLogLine
-		}
+		/* A snapshot: the caller still holds the line it handed over, and rendering
+		 continues off the main actor after this returns. */
+		let logLine = inputLogLine.duplicate()
 		lastLineStorage = logLine
 		noteOldestLineCandidate(logLine)
 		let request = LogLineRenderRequest(logLine: logLine, context: makeRenderContext())
