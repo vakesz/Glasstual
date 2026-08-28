@@ -42,7 +42,7 @@ import Foundation
 import GlasstualPluginKit
 import os
 
-private let logLineRenderingLogger = Logger(
+private nonisolated let logLineRenderingLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogLineRendering"
 )
@@ -50,15 +50,27 @@ private let logLineRenderingLogger = Logger(
 /// The main-actor state that every line rendered by one printing operation
 /// needs. Captured on the main actor before the operation is enqueued so that
 /// rendering never reaches back into the controller for it.
-struct LogLineRenderContext {
-	var channel: IRCChannel?
+nonisolated struct LogLineRenderContext {
 	var networkName = ""
 	var styleAbsolutePath = ""
 	var inlineMediaEnabled = false
+	/// Whether the view belongs to a channel rather than a query or a console.
+	var isChannel = false
+	/// The nickname format the theme and the preferences resolve to.
+	var nicknameFormat = ""
+	/** The channel's members as of when the operation was enqueued. Rendering
+	 marks up nicknames and formats the sender from these instead of reaching
+	 back into the main-actor channel. */
+	var members: [ChannelUser] = []
 	/// Line number that carries the "current session" marker, if any.
 	var sessionIndicatorLineNumber: String?
 	/// Reactions received during this session, keyed by message identifier.
 	var sessionReactions: [String: [String: [String]]] = [:]
+
+	/// The member of `members` named `nickname`, compared the way IRC compares them.
+	func member(named nickname: String) -> ChannelUser? {
+		members.first { $0.user.nickname.caseInsensitiveCompare(nickname) == .orderedSame }
+	}
 
 	/// Merges the reactions archived with the line and those seen this session.
 	func reactions(for logLine: LogLine) -> [String: [String]]? {
@@ -83,13 +95,13 @@ struct LogLineRenderContext {
 }
 
 /// One log line together with the context it is rendered in.
-struct LogLineRenderRequest {
+nonisolated struct LogLineRenderRequest {
 	var logLine: LogLine
 	var context: LogLineRenderContext
 }
 
 /// Everything the main actor needs in order to apply a rendered log line.
-struct LogLineRenderResult {
+nonisolated struct LogLineRenderResult {
 	var lineNumber: String
 	var html: String
 	var timestamp: TimeInterval
@@ -103,21 +115,32 @@ struct LogLineRenderResult {
 /// The two pieces of rendering that need a live theme and the renderer's view
 /// context. Injected so that the request-to-result round trip can be exercised
 /// without either of them.
-protocol LogLineRendering {
-	func renderBody(_ body: String, attributes: [String: Any], results: inout [String: Any]) -> String
+nonisolated protocol LogLineRendering {
+	func renderBody(
+		_ body: String,
+		attributes: [String: Any],
+		members: [ChannelUser],
+		results: inout [String: Any]
+	) -> String
 	func renderTemplate(for lineType: TVCLogLineType, attributes: ThemeTemplateAttributes) -> String?
 }
 
 /// Renders through `TVCLogRenderer` and the theme that is active right now.
-struct ThemeLogLineRenderer: LogLineRendering {
+nonisolated struct ThemeLogLineRenderer: LogLineRendering {
 	let viewController: LogController
 
-	func renderBody(_ body: String, attributes: [String: Any], results: inout [String: Any]) -> String {
+	func renderBody(
+		_ body: String,
+		attributes: [String: Any],
+		members: [ChannelUser],
+		results: inout [String: Any]
+	) -> String {
 		var rendererResults: NSDictionary?
 		let rendered = TVCLogRenderer.renderBody(
 			body,
 			forViewController: viewController,
 			withAttributes: attributes,
+			members: members,
 			resultInfo: &rendererResults
 		)
 		results = rendererResults as? [String: Any] ?? [:]
@@ -173,11 +196,13 @@ extension LogController {
 		rendererAttributes[.renderLinks] = renderLinks
 		rendererAttributes[.lineType] = lineType.rawValue
 		rendererAttributes[.memberType] = logLine.memberType.rawValue
+		rendererAttributes[.inlineMediaEnabled] = request.context.inlineMediaEnabled
 
 		var rawResults: [String: Any] = [:]
 		let renderedBody = renderer.renderBody(
 			logLine.messageBody,
 			attributes: rendererAttributes.rawValues,
+			members: request.context.members,
 			results: &rawResults
 		)
 		let results = LogRendererResults(rawValues: rawResults)
@@ -245,7 +270,7 @@ extension LogController {
 			.lineRenderTime: Date().timeIntervalSince1970,
 			.configuredServerName: context.networkName,
 		]
-		attributes.merge(nicknameAttributes(for: logLine, in: context.channel))
+		attributes.merge(nicknameAttributes(for: logLine, in: context))
 		if let messageIdentifier = logLine.messageIdentifier, !messageIdentifier.isEmpty {
 			attributes[.messageIdentifier] = messageIdentifier
 		}
@@ -277,9 +302,16 @@ extension LogController {
 
 	private nonisolated static func nicknameAttributes(
 		for logLine: LogLine,
-		in channel: IRCChannel?
+		in context: LogLineRenderContext
 	) -> ThemeTemplateAttributes {
-		let nickname = logLine.formattedNickname(in: channel)?
+		/* The mode symbol and the format are the only main-actor inputs nickname
+		 formatting has, and both travel in the context, so this stays off-main. */
+		let modeSymbol = if context.isChannel, let sender = logLine.nickname {
+			context.member(named: sender)?.mark ?? ""
+		} else {
+			""
+		}
+		let nickname = logLine.formattedNickname(modeSymbol: modeSymbol, format: context.nicknameFormat)?
 			.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 		guard nickname.isEmpty == false else {
 			return [.isNicknameAvailable: false]

@@ -40,7 +40,7 @@ import CocoaExtensions
 import Foundation
 
 @objc(IRCModeInfo)
-public class ModeInfo: PortablePropertyObject {
+public nonisolated class ModeInfo: PortablePropertyObject {
 	fileprivate var isSetStorage: Bool
 	fileprivate var symbolStorage: String
 	fileprivate var parameterStorage: String?
@@ -137,6 +137,7 @@ public class ModeInfo: PortablePropertyObject {
 	}
 
 	@objc(isModeForChangingMemberModeOn:)
+	@MainActor
 	public func isModeForChangingMemberMode(on client: IRCClient) -> Bool {
 		guard modeParameter?.isEmpty == false else {
 			return false
@@ -155,7 +156,7 @@ public class ModeInfo: PortablePropertyObject {
 }
 
 @objc(IRCModeInfoMutable)
-public final class MutableModeInfo: ModeInfo {
+public final nonisolated class MutableModeInfo: ModeInfo {
 	override public static var isMutable: Bool {
 		true
 	}

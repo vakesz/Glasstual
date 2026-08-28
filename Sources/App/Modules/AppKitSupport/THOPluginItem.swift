@@ -14,7 +14,7 @@ import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 
-public struct PluginSupportedFeature: OptionSet, Sendable {
+public nonisolated struct PluginSupportedFeature: OptionSet, Sendable {
 	public let rawValue: UInt
 
 	public init(rawValue: UInt) {
@@ -35,7 +35,7 @@ public struct PluginSupportedFeature: OptionSet, Sendable {
 }
 
 @objc(THOPluginItem)
-public final class PluginItem: NSObject, @unchecked Sendable {
+public final nonisolated class PluginItem: NSObject, @unchecked Sendable {
 	@objc public private(set) var bundle: Bundle?
 	@objc public private(set) var primaryClass: AnyObject?
 	public private(set) var supportedFeatures: PluginSupportedFeature = []

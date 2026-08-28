@@ -24,8 +24,8 @@ enum PromptCipherStatus: Sendable {
 }
 
 /// Semantic access to the application-wide prompts retained in `Prompts.xcstrings`.
-enum PromptStrings {
-	enum Action {
+nonisolated enum PromptStrings {
+	nonisolated enum Action {
 		static var accept: String {
 			String(localized: .Prompts.qpvGo)
 		}
@@ -71,13 +71,13 @@ enum PromptStrings {
 		}
 	}
 
-	enum Alert {
+	nonisolated enum Alert {
 		static var doNotShowAgain: String {
 			String(localized: .Prompts._68UZ9)
 		}
 	}
 
-	enum Application {
+	nonisolated enum Application {
 		static var continueWithAnotherInstanceBody: String {
 			String(localized: .Prompts.kx4Q8)
 		}
@@ -99,7 +99,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum ConfigurationTransfer {
+	nonisolated enum ConfigurationTransfer {
 		static var exportBody: String {
 			String(localized: .Prompts.sypAl)
 		}
@@ -121,7 +121,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum ConnectionLink {
+	nonisolated enum ConnectionLink {
 		static var createNewConnectionButtonTitle: String {
 			String(localized: .Prompts.xca5H)
 		}
@@ -145,7 +145,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum DataMigration {
+	nonisolated enum DataMigration {
 		static var copiedContentTitle: String {
 			String(localized: .Prompts.iosNa)
 		}
@@ -159,7 +159,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum Deletion {
+	nonisolated enum Deletion {
 		static var confirmationTitle: String {
 			String(localized: .Prompts._0KzWd)
 		}
@@ -180,7 +180,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum DirectChat {
+	nonisolated enum DirectChat {
 		static var acceptButtonTitle: String {
 			Action.accept
 		}
@@ -198,7 +198,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum DocumentImport {
+	nonisolated enum DocumentImport {
 		static var documentOpenBody: String {
 			String(localized: .Prompts._6TjYp)
 		}
@@ -236,7 +236,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum ExternalApplication {
+	nonisolated enum ExternalApplication {
 		static func body(url: String) -> String {
 			String(localized: .Prompts._5OqVv(url))
 		}
@@ -246,7 +246,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum InlineMedia {
+	nonisolated enum InlineMedia {
 		static var body: String {
 			String(localized: .Prompts.vcqSz)
 		}
@@ -264,7 +264,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum Logging {
+	nonisolated enum Logging {
 		static var disabledForLowStorageTitle: String {
 			String(localized: .Prompts.bi7Ah)
 		}
@@ -298,7 +298,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum Plugin {
+	nonisolated enum Plugin {
 		static var incompatibleReminderButtonTitle: String {
 			String(localized: .Prompts._3245D)
 		}
@@ -353,7 +353,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum TextSearch {
+	nonisolated enum TextSearch {
 		static var body: String {
 			String(localized: .Prompts.d2W4O)
 		}
@@ -367,7 +367,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum Theme {
+	nonisolated enum Theme {
 		static var chooseDifferentStyleButtonTitle: String {
 			String(localized: .Prompts._2A35S)
 		}
@@ -405,7 +405,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum TransportSecurity {
+	nonisolated enum TransportSecurity {
 		static var invalidCertificateContinueButtonTitle: String {
 			Action.continueAction
 		}
@@ -451,7 +451,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum VirtualHost {
+	nonisolated enum VirtualHost {
 		static var body: String {
 			String(localized: .Prompts._2MxJf)
 		}
@@ -461,7 +461,7 @@ enum PromptStrings {
 		}
 	}
 
-	enum WebInspector {
+	nonisolated enum WebInspector {
 		static var unavailableBody: String {
 			String(localized: .Prompts.kigM1)
 		}

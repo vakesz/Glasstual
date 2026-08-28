@@ -13,7 +13,7 @@
 import Foundation
 
 @objc(TLOSpeechSynthesizer)
-public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate {
+public final nonisolated class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate {
 	private let lock = NSRecursiveLock()
 	private let engine: SpeechSynthesizerEngine
 	private var pendingItems: [Any] = []
@@ -123,7 +123,7 @@ public final class SpeechSynthesizer: NSObject, SpeechSynthesizerEngineDelegate 
 			}
 
 			let text: String? = if let notification = nextItem as? SpokenNotification {
-				notification.client?.formatNotification(toSpeak: notification)
+				notification.spokenText
 			} else {
 				nextItem as? String
 			}

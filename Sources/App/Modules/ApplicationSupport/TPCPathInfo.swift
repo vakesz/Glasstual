@@ -15,7 +15,7 @@ import CocoaExtensions
 import os
 
 @objc(TPCPathInfo)
-public final class PathInfo: NSObject {
+public final nonisolated class PathInfo: NSObject {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PathInfo"
@@ -458,12 +458,15 @@ public final class PathInfo: NSObject {
 			return
 		}
 
-		_ = TDCAlert.alert(
-			withMessage: PromptStrings.Logging.staleLocationBody,
-			title: PromptStrings.Logging.staleLocationTitle,
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil
-		)
+		/* Bookmark resolution runs outside the main actor, the alert on it. */
+		Task { @MainActor in
+			_ = TDCAlert.alert(
+				withMessage: PromptStrings.Logging.staleLocationBody,
+				title: PromptStrings.Logging.staleLocationTitle,
+				defaultButton: PromptStrings.Action.confirmation,
+				alternateButton: nil
+			)
+		}
 	}
 
 	private static func firstSearchPath(

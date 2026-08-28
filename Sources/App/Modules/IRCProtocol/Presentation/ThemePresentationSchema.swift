@@ -38,7 +38,7 @@
 
 import Foundation
 
-struct StringSchemaValues<SchemaKey: Hashable & RawRepresentable>: ExpressibleByDictionaryLiteral
+nonisolated struct StringSchemaValues<SchemaKey: Hashable & RawRepresentable>: ExpressibleByDictionaryLiteral
 	where SchemaKey.RawValue == String
 {
 	private(set) var rawValues: [String: Any]
@@ -81,6 +81,7 @@ enum LogRendererConfigurationKey: String, CaseIterable, Sendable {
 	case doNotEscapeBody = "TVCLogRendererConfigurationDoNotEscapeBodyAttribute"
 	case preferredFont = "TVCLogRendererConfigurationAttributedStringPreferredFontAttribute"
 	case preferredFontColor = "TVCLogRendererConfigurationAttributedStringPreferredFontColorAttribute"
+	case inlineMediaEnabled = "TVCLogRendererConfigurationInlineMediaEnabledAttribute"
 }
 
 enum LogRendererResultKey: String, CaseIterable, Sendable {

@@ -54,7 +54,7 @@ public extension Notification.Name {
 
 public typealias LogControllerPrintOperationCompletion = (LogControllerPrintOperationContext) -> Void
 
-private let logControllerLogger = Logger(
+private nonisolated let logControllerLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogController"
 )
@@ -62,7 +62,7 @@ private let logControllerLogger = Logger(
 /// Carries legacy AppKit and Objective-C values across the controller's
 /// explicit hops between the main actor and the printing queue. The values are
 /// only ever touched at one end of a hop at a time.
-private final class LogControllerMainActorTransfer<Value>: @unchecked Sendable {
+private final nonisolated class LogControllerMainActorTransfer<Value>: @unchecked Sendable {
 	let value: Value
 
 	init(value: Value) {
@@ -83,6 +83,9 @@ private typealias LogControllerMainActorWork = LogControllerMainActorTransfer<@M
 private struct LogControllerSharedState {
 	weak var client: IRCClient?
 	weak var channel: IRCChannel?
+	/// The item's identifier, which never changes once the controller is attached.
+	var uniqueIdentifier = ""
+
 	var lastLine: LogControllerMainActorTransfer<LogLine>?
 	var oldestLine: LogControllerMainActorTransfer<LogLine>?
 }
@@ -157,10 +160,10 @@ public final class LogController: NSObject {
 	}
 
 	public nonisolated var uniqueIdentifier: String {
-		associatedItem?.uniqueIdentifier ?? ""
+		sharedState.withLock { $0.uniqueIdentifier }
 	}
 
-	private nonisolated var baseURL: URL {
+	private var baseURL: URL {
 		SharedApplication.sharedThemeController().temporaryURL
 	}
 
@@ -172,7 +175,7 @@ public final class LogController: NSObject {
 		UInt(max(activeLineCount, 0))
 	}
 
-	public nonisolated var inlineMediaEnabledForView: Bool {
+	public var inlineMediaEnabledForView: Bool {
 		guard let channel = associatedChannel else {
 			return false
 		}
@@ -204,7 +207,10 @@ public final class LogController: NSObject {
 
 	@objc(initWithClient:inWindow:)
 	public init(client: IRCClient, in window: TVCMainWindow) {
-		sharedState.withLock { $0.client = client }
+		sharedState.withLock {
+			$0.client = client
+			$0.uniqueIdentifier = client.uniqueIdentifier
+		}
 		attachedWindow = window
 		super.init()
 		setUp()
@@ -215,6 +221,7 @@ public final class LogController: NSObject {
 		sharedState.withLock {
 			$0.client = channel.associatedClient
 			$0.channel = channel
+			$0.uniqueIdentifier = channel.uniqueIdentifier
 		}
 		attachedWindow = window
 		super.init()
@@ -319,14 +326,24 @@ public final class LogController: NSObject {
 
 	/// Snapshot of the main-actor state that rendering needs.
 	private func makeRenderContext() -> LogLineRenderContext {
-		LogLineRenderContext(
-			channel: associatedChannel,
+		let channel = associatedChannel
+		return LogLineRenderContext(
 			networkName: associatedClient?.networkNameAlt ?? "",
 			styleAbsolutePath: baseURL.path(percentEncoded: false),
 			inlineMediaEnabled: inlineMediaEnabledForView,
+			isChannel: channel?.isChannel == true,
+			nicknameFormat: Self.resolvedNicknameFormat(),
+			members: channel?.memberList ?? [],
 			sessionIndicatorLineNumber: newestLineNumberFromPreviousSession,
 			sessionReactions: reactionsByMessageIdentifier
 		)
+	}
+
+	/// The nickname format the active theme and the preferences resolve to.
+	private static func resolvedNicknameFormat() -> String {
+		let themeFormat = SharedApplication.sharedThemeController().settings.themeNicknameFormat
+		let resolved = themeFormat ?? TextualPreferences.themeNicknameFormat()
+		return resolved.isEmpty ? TextualPreferences.themeNicknameFormatDefault() : resolved
 	}
 
 	public func evaluateFunction(_ function: String, withArguments arguments: [Any]?) {
@@ -389,6 +406,7 @@ public final class LogController: NSObject {
 				topicString,
 				forViewController: legacyController,
 				withAttributes: attributes.rawValues,
+				members: [],
 				resultInfo: nil
 			)
 			return LogControllerMainActorTransfer(value: { [weak self] in
@@ -565,7 +583,7 @@ public extension LogController {
 		reloadingTheme = false
 	}
 
-	private nonisolated func dateIndicator(with date: Date) -> String {
+	private func dateIndicator(with date: Date) -> String {
 		formatDate(date, .long, .none, false) ?? ""
 	}
 

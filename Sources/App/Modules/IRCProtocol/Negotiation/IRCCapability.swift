@@ -42,7 +42,7 @@ public typealias IRCCapabilityPreferenceGate = @convention(block) () -> Bool
 public typealias IRCCapabilityNegotiationHook = @convention(block) (IRCClient, [String]) -> Bool
 
 @objc(IRCCapability)
-public final class Capability: NSObject {
+public final nonisolated class Capability: NSObject {
 	@objc public let name: String
 	public let identifier: ClientIRCv3SupportedCapability
 	@objc public let requestedByDefault: Bool
@@ -99,7 +99,7 @@ public final class Capability: NSObject {
 }
 
 @objc(IRCCapabilityRegistry)
-public final class CapabilityRegistry: NSObject {
+public final nonisolated class CapabilityRegistry: NSObject {
 	@objc public let capabilities: [Capability]
 
 	private let capabilitiesByName: [String: Capability]

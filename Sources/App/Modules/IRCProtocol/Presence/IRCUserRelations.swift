@@ -13,6 +13,7 @@
 import Foundation
 
 @objc(IRCUserRelations)
+@MainActor
 public final class UserRelations: NSObject {
 	private let lock = NSLock()
 	private var storage: [IRCChannel: ChannelUser] = [:]

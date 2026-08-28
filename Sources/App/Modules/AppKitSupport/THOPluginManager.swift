@@ -18,13 +18,13 @@ import os
 import Security
 import Synchronization
 
-private enum PluginApprovalState: UInt {
+private nonisolated enum PluginApprovalState: UInt {
 	case unknown = 0
 	case approved
 	case declined
 }
 
-private final class PluginPendingApproval: NSObject {
+private final nonisolated class PluginPendingApproval: NSObject {
 	let bundle: Bundle
 	let teamIdentifier: String
 
@@ -37,7 +37,7 @@ private final class PluginPendingApproval: NSObject {
 /// Carries the approval workflow across the plugin queue and the main actor.
 /// Access remains serialized by those queues; the envelope prevents Swift from
 /// treating its legacy Objective-C collection as independently transferable.
-private final class PluginApprovalTransfer: @unchecked Sendable {
+private final nonisolated class PluginApprovalTransfer: @unchecked Sendable {
 	weak var manager: PluginManager?
 	let pendingApprovals: [PluginPendingApproval]
 	let loadedPlugins: NSMutableArray
@@ -60,7 +60,7 @@ private final class PluginLoadResult: Sendable {
 /// An immutable view of every plugin capability published to the rest of the app.
 /// Plugin discovery builds this value off the main actor after every plugin has
 /// completed its main-actor lifecycle setup, then replaces it as one transaction.
-private struct PluginRegistrySnapshot: Sendable {
+private nonisolated struct PluginRegistrySnapshot: Sendable {
 	static let notLoaded = Self()
 
 	let pluginsLoaded: Bool
@@ -130,7 +130,7 @@ private struct PluginRegistrySnapshot: Sendable {
 }
 
 @objc(THOPluginManager)
-public final class PluginManager: NSObject {
+public final nonisolated class PluginManager: NSObject {
 	private static let logger = Logger(
 		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 		category: "PluginManager"
@@ -400,7 +400,7 @@ public final class PluginManager: NSObject {
 	}
 }
 
-extension PluginManager {
+nonisolated extension PluginManager {
 	// MARK: - Signature Validation
 
 	private func isBundledExtension(_ bundle: Bundle) -> Bool {
@@ -568,7 +568,7 @@ extension PluginManager {
 	}
 }
 
-extension PluginManager {
+nonisolated extension PluginManager {
 	// MARK: - Approvals
 
 	private static var approvals: [String: [String: Any]] {
@@ -720,16 +720,18 @@ extension PluginManager {
 
 		self.rejectedBundles = nil
 
-		_ = TDCAlert.alert(
-			withMessage: PromptStrings.Plugin.unsignedBody,
-			title: PromptStrings.Plugin.unsignedTitle(pluginNames: bundlesName),
-			defaultButton: PromptStrings.Action.confirmation,
-			alternateButton: nil
-		)
+		Task { @MainActor in
+			_ = TDCAlert.alert(
+				withMessage: PromptStrings.Plugin.unsignedBody,
+				title: PromptStrings.Plugin.unsignedTitle(pluginNames: bundlesName),
+				defaultButton: PromptStrings.Action.confirmation,
+				alternateButton: nil
+			)
+		}
 	}
 }
 
-extension PluginManager {
+nonisolated extension PluginManager {
 	// MARK: - AppleScript Support
 
 	@objc public var supportedAppleScriptCommands: [String] {
@@ -811,29 +813,33 @@ extension PluginManager {
 			return
 		}
 
-		presentObsoleteBundlesAlert(for: obsoleteBundles)
+		Self.presentObsoleteBundlesAlert(for: obsoleteBundles)
 	}
 
-	private func presentObsoleteBundlesAlert(for thirdPartyBundles: [Bundle]) {
+	/** Static so that the alert never carries the manager across actors: the
+	 manager is not `Sendable` and the alert needs nothing from it. */
+	private static func presentObsoleteBundlesAlert(for thirdPartyBundles: [Bundle]) {
 		let bundlesName = Bundle.textual_formattedDisplayNames(for: thirdPartyBundles)
 
-		_ = TDCAlert.alert(
-			withMessage: PromptStrings.Plugin.incompatibleBody(
-				minimumVersion: PluginCompatibility.minimumHostVersion
-			),
-			title: PromptStrings.Plugin.incompatibleTitle(pluginNames: bundlesName),
-			defaultButton: PromptStrings.Plugin.incompatibleReminderButtonTitle,
-			alternateButton: nil,
-			otherButton: PromptStrings.Plugin.viewFilesButtonTitle,
-			suppressionKey: nil,
-			suppressionText: nil
-		) { [weak self] buttonClicked, _, _ in
-			guard buttonClicked == .other else {
-				return
-			}
+		Task { @MainActor in
+			_ = TDCAlert.alert(
+				withMessage: PromptStrings.Plugin.incompatibleBody(
+					minimumVersion: PluginCompatibility.minimumHostVersion
+				),
+				title: PromptStrings.Plugin.incompatibleTitle(pluginNames: bundlesName),
+				defaultButton: PromptStrings.Plugin.incompatibleReminderButtonTitle,
+				alternateButton: nil,
+				otherButton: PromptStrings.Plugin.viewFilesButtonTitle,
+				suppressionKey: nil,
+				suppressionText: nil
+			) { buttonClicked, _, _ in
+				guard buttonClicked == .other else {
+					return
+				}
 
-			Bundle.textual_openInstallationLocations(for: thirdPartyBundles)
-			self?.presentObsoleteBundlesAlert(for: thirdPartyBundles)
+				Bundle.textual_openInstallationLocations(for: thirdPartyBundles)
+				presentObsoleteBundlesAlert(for: thirdPartyBundles)
+			}
 		}
 	}
 
@@ -866,7 +872,7 @@ extension PluginManager {
 	}
 }
 
-public extension PluginManager {
+public nonisolated extension PluginManager {
 	// MARK: - Extension Information
 
 	func supportsFeature(_ feature: PluginSupportedFeature) -> Bool {

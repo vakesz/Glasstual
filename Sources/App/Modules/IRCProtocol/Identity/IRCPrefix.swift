@@ -40,7 +40,7 @@ import CocoaExtensions
 import Foundation
 
 @objc(IRCPrefix)
-public class Prefix: PortablePropertyObject {
+public nonisolated class Prefix: PortablePropertyObject {
 	fileprivate var serverStorage = false
 	fileprivate var hostmaskStorage = ""
 	fileprivate var nicknameStorage = ""
@@ -139,7 +139,7 @@ public class Prefix: PortablePropertyObject {
 }
 
 @objc(IRCPrefixMutable)
-public final class MutablePrefix: Prefix {
+public final nonisolated class MutablePrefix: Prefix {
 	override public static var isMutable: Bool {
 		true
 	}

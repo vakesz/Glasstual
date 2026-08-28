@@ -16,7 +16,7 @@ import Foundation
 import GlasstualPluginKit
 
 @objc(IRCMessage)
-open class Message: PortablePropertyObject {
+open nonisolated class Message: PortablePropertyObject {
 	fileprivate var isHistoricStorage = false
 	fileprivate var isEventOnlyMessageStorage = false
 	fileprivate var isPrintOnlyMessageStorage = false
@@ -121,11 +121,13 @@ open class Message: PortablePropertyObject {
 	}
 
 	@objc(initWithLine:)
+	@MainActor
 	public convenience init?(line: String) {
 		self.init(line: line, on: nil)
 	}
 
 	@objc(initWithLine:onClient:)
+	@MainActor
 	public init?(line: String, on client: IRCClient?) {
 		super.init()
 
@@ -215,6 +217,7 @@ open class Message: PortablePropertyObject {
 
 	@objc(parseLine:forClient:)
 	@discardableResult
+	@MainActor
 	public func parseLine(_ line: String, for client: IRCClient?) -> Bool {
 		guard let parsed = LineParser.parsedLine(fromLine: line) else {
 			return false
@@ -247,6 +250,7 @@ open class Message: PortablePropertyObject {
 	}
 
 	@objc(parseExtensions:forClient:)
+	@MainActor
 	public func parseExtensions(_ extensionInfo: String, for client: IRCClient?) {
 		let parsedTags = MessageTagParser.parsedTags(fromSection: extensionInfo)
 
@@ -290,6 +294,7 @@ open class Message: PortablePropertyObject {
 	}
 
 	@objc(parseSender:forClient:)
+	@MainActor
 	public func parseSender(_ senderInfo: String, for client: IRCClient?) {
 		let sender = MutablePrefix()
 		sender.hostmask = senderInfo
@@ -338,7 +343,7 @@ open class Message: PortablePropertyObject {
 }
 
 @objc(IRCMessageMutable)
-public final class MessageMutable: Message {
+public final nonisolated class MessageMutable: Message {
 	override public static var isMutable: Bool {
 		true
 	}

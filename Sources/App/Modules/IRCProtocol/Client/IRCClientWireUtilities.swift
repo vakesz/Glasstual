@@ -43,7 +43,7 @@ import Foundation
 /// seams. Keeping these transformations independent of connection state makes
 /// protocol output deterministic and directly testable.
 @objc(IRCClientWireUtilities)
-public final class ClientWireUtilities: NSObject {
+public final nonisolated class ClientWireUtilities: NSObject {
 	private static let credentialMask = "••••••"
 
 	/// Ceiling on `%<width>n` style padding in the nickname format. The width

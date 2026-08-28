@@ -38,7 +38,7 @@
 import Foundation
 import GlasstualPluginKit
 
-private let isoStandardDateFormatter: DateFormatter = {
+private nonisolated let isoStandardDateFormatter: DateFormatter = {
 	let dateFormatter = DateFormatter()
 	dateFormatter.locale = Locale(identifier: "en_US_POSIX")
 	dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
@@ -47,7 +47,7 @@ private let isoStandardDateFormatter: DateFormatter = {
 }()
 
 @_cdecl("TXFormattedTimestamp")
-public func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? {
+public nonisolated func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? {
 	var global = time_t(date.timeIntervalSince1970)
 	var localTime = tm()
 
@@ -71,7 +71,7 @@ public func formattedTimestamp(_ date: NSDate, _ format: NSString) -> NSString? 
 }
 
 @_cdecl("TXHumanReadableTimeInterval")
-public func humanReadableTimeInterval(
+public nonisolated func humanReadableTimeInterval(
 	_ dateInterval: TimeInterval,
 	_ shortValue: Bool,
 	_ orderMatrix: UInt
@@ -84,16 +84,16 @@ public func humanReadableTimeInterval(
 }
 
 @_cdecl("TXFormatDateLongStyle")
-public func formatDateLongStyle(_ dateObject: AnyObject, _ relativeOutput: Bool) -> NSString? {
+public nonisolated func formatDateLongStyle(_ dateObject: AnyObject, _ relativeOutput: Bool) -> NSString? {
 	formatDateValue(dateObject, .long, .long, relativeOutput) as NSString?
 }
 
-public func formatDateLongStyle(_ dateObject: Any, _ relativeOutput: Bool) -> String? {
+public nonisolated func formatDateLongStyle(_ dateObject: Any, _ relativeOutput: Bool) -> String? {
 	formatDateValue(dateObject, .long, .long, relativeOutput)
 }
 
 @_cdecl("TXFormatDate")
-public func formatDate(
+public nonisolated func formatDate(
 	_ dateObject: AnyObject,
 	_ dateStyle: DateFormatter.Style,
 	_ timeStyle: DateFormatter.Style,
@@ -102,7 +102,7 @@ public func formatDate(
 	formatDateValue(dateObject, dateStyle, timeStyle, relativeOutput) as NSString?
 }
 
-public func formatDate(
+public nonisolated func formatDate(
 	_ dateObject: Any,
 	_ dateStyle: DateFormatter.Style,
 	_ timeStyle: DateFormatter.Style,
@@ -111,7 +111,7 @@ public func formatDate(
 	formatDateValue(dateObject, dateStyle, timeStyle, relativeOutput)
 }
 
-private func formatDateValue(
+private nonisolated func formatDateValue(
 	_ dateObject: Any,
 	_ dateStyle: DateFormatter.Style,
 	_ timeStyle: DateFormatter.Style,
@@ -147,7 +147,7 @@ private func formatDateValue(
 /// Parses the date representations servers actually send: an ISO 8601
 /// timestamp, or a Unix epoch in seconds. Anything else is left to the caller,
 /// which normally falls back to showing the server's text verbatim.
-private func parseDateValue(_ string: String) -> Date? {
+private nonisolated func parseDateValue(_ string: String) -> Date? {
 	let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
 
 	if let date = isoStandardDateFormatter.date(from: trimmed) {
@@ -162,16 +162,16 @@ private func parseDateValue(_ string: String) -> Date? {
 }
 
 @_cdecl("TXSharedISOStandardDateFormatter")
-public func sharedISOStandardDateFormatter() -> DateFormatter {
+public nonisolated func sharedISOStandardDateFormatter() -> DateFormatter {
 	isoStandardDateFormatter
 }
 
 @_cdecl("TXRandomNumber")
-public func randomNumber(_ maximum: UInt32) -> UInt {
+public nonisolated func randomNumber(_ maximum: UInt32) -> UInt {
 	UInt(UInt32.random(in: 0 ..< maximum))
 }
 
 @_cdecl("TXFormattedNumber")
-public func formattedNumber(_ number: Int) -> NSString {
+public nonisolated func formattedNumber(_ number: Int) -> NSString {
 	PluginHost.formattedNumber(number) as NSString
 }

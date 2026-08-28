@@ -38,7 +38,7 @@
 import Foundation
 
 @objc(IRCISupportPrefixConfiguration)
-public final class ISupportPrefixConfiguration: NSObject {
+public final nonisolated class ISupportPrefixConfiguration: NSObject {
 	@objc public let modeSymbols: [String]
 	@objc public let characters: [String]
 
@@ -50,7 +50,7 @@ public final class ISupportPrefixConfiguration: NSObject {
 }
 
 @objc(IRCISupportExtendedBanConfiguration)
-public final class ISupportExtendedBanConfiguration: NSObject {
+public final nonisolated class ISupportExtendedBanConfiguration: NSObject {
 	@objc public let prefix: String?
 	@objc public let types: [String]
 
@@ -62,7 +62,7 @@ public final class ISupportExtendedBanConfiguration: NSObject {
 }
 
 @objc(IRCISupportTokenParser)
-public final class ISupportTokenParser: NSObject {
+public final nonisolated class ISupportTokenParser: NSObject {
 	private static let userModeParameterClass = 100
 
 	@available(*, unavailable)

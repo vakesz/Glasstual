@@ -57,53 +57,22 @@ enum IRCClientHistoricMessagePolicy {
 	}
 }
 
-private final class IRCInboundContext: @unchecked Sendable {
-	let client: IRCClient
-	let message: Message
-
-	init(client: IRCClient, message: Message) {
-		self.client = client
-		self.message = message
-	}
-}
-
-private final class IRCInboundDataContext: @unchecked Sendable {
-	let client: IRCClient
-	let connection: Connection
-	let data: String
-
-	init(client: IRCClient, connection: Connection, data: String) {
-		self.client = client
-		self.connection = connection
-		self.data = data
-	}
-}
-
 public extension IRCClient {
 	@objc(ircConnection:didReceiveData:)
-	nonisolated func ircConnection(_ sender: Connection, didReceiveData data: String) {
+	func ircConnection(_ sender: Connection, didReceiveData data: String) {
 		guard !data.isEmpty else { return }
-		let context = IRCInboundDataContext(client: self, connection: sender, data: data)
-		performSynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				precondition(context.connection === context.client.socket)
-				context.client.processIncomingDataOnMainActor(context.data)
-			}
-		}
+		/* The connection delivers its callbacks on the main actor in wire order,
+		 so a line can only ever arrive for the socket the client still owns. */
+		guard sender === socket else { return }
+		processIncomingDataOnMainActor(data)
 	}
 
 	@objc(processIncomingMessage:)
-	nonisolated func processIncomingMessage(_ message: Message) {
-		let context = IRCInboundContext(client: self, message: message)
-		performSynchronouslyOnMainQueue {
-			MainActor.assumeIsolated {
-				context.client.processIncomingMessageOnMainActor(context.message)
-			}
-		}
+	func processIncomingMessage(_ message: Message) {
+		processIncomingMessageOnMainActor(message)
 	}
 }
 
-@MainActor
 private extension IRCClient {
 	func processIncomingDataOnMainActor(_ data: String) {
 		guard isConnected, !isTerminating else { return }

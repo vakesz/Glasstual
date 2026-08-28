@@ -42,7 +42,7 @@ import Foundation
 /// This is the object exposed to plugins through `THOPluginDidPostNewMessageConcreteObject`
 /// and attached to rendered text as `TVCLogRendererFormattingURLAttribute`.
 @objc(TLOLinkParserResult)
-public final class LinkParserResult: NSObject {
+public final nonisolated class LinkParserResult: NSObject {
 	/// Random identifier that is unique to this result.
 	@objc public let uniqueIdentifier: String
 
@@ -68,7 +68,7 @@ public final class LinkParserResult: NSObject {
 }
 
 @objc(TLOLinkParser)
-public class LinkParser: NSObject {
+public nonisolated class LinkParser: NSObject {
 	/// Locates hyperlinks in `string`.
 	///
 	/// Results are sorted by location and never overlap.

@@ -30,7 +30,7 @@ enum FileTransferFailure: Equatable, Sendable {
 	case underlying(String)
 }
 
-enum FileTransferStrings {
+nonisolated enum FileTransferStrings {
 	static var destinationPickerMessage: String {
 		String(localized: .TDCFileTransferDialog.dcmW7)
 	}

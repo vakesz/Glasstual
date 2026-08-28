@@ -46,7 +46,7 @@ public typealias TVCLogRendererConfigurationAttribute = String
 public typealias TVCLogRendererResultsAttribute = String
 public typealias TVCLogRenderer = LogRenderer
 
-public extension String {
+public nonisolated extension String {
 	static let renderLinksAttribute = LogRendererConfigurationKey.renderLinks.rawValue
 	static let lineTypeAttribute = LogRendererConfigurationKey.lineType.rawValue
 	static let memberTypeAttribute = LogRendererConfigurationKey.memberType.rawValue
@@ -63,7 +63,7 @@ public extension String {
 	static let originalBodyWithoutEffectsAttribute = LogRendererResultKey.bodyWithoutEffects.rawValue
 }
 
-private let rendererLogger = Logger(
+private nonisolated let rendererLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogRenderer"
 )
@@ -80,7 +80,7 @@ private let rendererLogger = Logger(
  rejects ("Unicode block property is not currently supported"), and `Regex`
  matches grapheme clusters by default, which would stop the combining marks
  from being seen individually at all. */
-private enum RendererPatterns {
+private nonisolated enum RendererPatterns {
 	/// Three or more stacked combining marks — "Zalgo" text.
 	static let combiningMarks = compile("[\\p{InCombining_Diacritical_Marks}]{3,}")
 
@@ -97,7 +97,7 @@ private enum RendererPatterns {
 	}
 }
 
-private enum RendererFormatting {
+private nonisolated enum RendererFormatting {
 	struct Toggle {
 		let attribute: NSAttributedString.Key
 		let activeToken: ThemeTemplateAttribute
@@ -172,13 +172,16 @@ private enum RendererFormatting {
 }
 
 @objc(TVCLogRenderer)
-public final class LogRenderer: NSObject {
+public final nonisolated class LogRenderer: NSObject {
 	private var body = ""
 	private var bodyWithAttributes = NSMutableAttributedString()
 	private var openAttributes: [NSAttributedString.Key: Any] = [:]
 	private var rendererAttributes = LogRendererConfiguration()
 	private var output = LogRendererResults()
 	private weak var viewController: LogController?
+	/** The channel's members as of when the printing operation was enqueued.
+	 The renderer runs off the main actor and must not read the live channel. */
+	private var members: [ChannelUser] = []
 	private var lineType = TVCLogLineType.undefined
 	private var memberType = TVCLogLineMemberType.normal
 	private var escapeBody = true
@@ -409,6 +412,11 @@ public final class LogRenderer: NSObject {
 		}
 	}
 
+	/// The member named `nickname` in the snapshot, compared the way IRC compares them.
+	private func member(named nickname: String) -> ChannelUser? {
+		members.first { $0.user.nickname.caseInsensitiveCompare(nickname) == .orderedSame }
+	}
+
 	private func scanBodyForChannelMembers() {
 		guard isRenderingPrivateMessage else {
 			return
@@ -417,7 +425,8 @@ public final class LogRenderer: NSObject {
 			output[.users] = Set<ChannelUser>()
 			return
 		}
-		guard let users = viewController?.associatedChannel?.memberList else {
+		let users = members
+		guard users.isEmpty == false else {
 			output[.users] = Set<ChannelUser>()
 			return
 		}
@@ -589,7 +598,7 @@ public final class LogRenderer: NSObject {
 		if let link = attributes[RendererFormatting.url] as? LinkParserResult,
 		   Self.isRenderableAnchorLocation(link.stringValue)
 		{
-			if viewController?.inlineMediaEnabledForView == true,
+			if rendererAttributes.value(for: .inlineMediaEnabled, as: Bool.self) == true,
 			   let mapped = output.value(for: .mappedLinks, as: [String: String].self),
 			   let identifier = mapped[link.stringValue]
 			{
@@ -605,7 +614,7 @@ public final class LogRenderer: NSObject {
 		} else if attributes[RendererFormatting.conversationTracking] != nil {
 			if TextualPreferences.disableNicknameColorHashing() {
 				tokens[.inlineNicknameMatchFound] = false
-			} else if let member = viewController?.associatedChannel?.findMember(fragment) {
+			} else if let member = member(named: fragment) {
 				let nickname = member.user.nickname
 				if nickname.count > 1 {
 					var modeSymbol = ""
@@ -802,11 +811,11 @@ public final class LogRenderer: NSObject {
 }
 
 public extension LogRenderer {
-	@objc(renderBody:forViewController:withAttributes:resultInfo:)
-	static func renderBody(
+	nonisolated static func renderBody(
 		_ body: String,
 		forViewController legacyViewController: TVCLogController,
 		withAttributes input: [String: Any],
+		members: [ChannelUser],
 		resultInfo: AutoreleasingUnsafeMutablePointer<NSDictionary?>?
 	) -> String {
 		guard body.isEmpty == false else {
@@ -832,6 +841,7 @@ public extension LogRenderer {
 		renderer.escapeBody = (configuration[.doNotEscapeBody] as? NSNumber)?.boolValue != true
 		renderer.rendererAttributes = configuration
 		renderer.viewController = controller
+		renderer.members = members
 		renderer.stripDangerousUnicodeCharacters()
 		renderer.buildEffectsDictionary()
 		renderer.buildListOfLinks()
@@ -843,7 +853,7 @@ public extension LogRenderer {
 	}
 
 	@objc(renderBodyAsAttributedString:withAttributes:)
-	static func renderBody(
+	nonisolated static func renderBody(
 		asAttributedString body: String,
 		withAttributes input: [String: Any]
 	) -> NSAttributedString {
@@ -869,19 +879,19 @@ public extension LogRenderer {
 	}
 
 	@objc(renderTemplateNamed:)
-	static func renderTemplateNamed(_ name: String) -> String? {
+	nonisolated static func renderTemplateNamed(_ name: String) -> String? {
 		renderTemplateNamed(name, attributes: nil)
 	}
 
 	@objc(renderTemplateNamed:attributes:)
-	static func renderTemplateNamed(_ name: String, attributes: [String: Any]?) -> String? {
+	nonisolated static func renderTemplateNamed(_ name: String, attributes: [String: Any]?) -> String? {
 		guard let template = SharedApplication.sharedThemeController().theme?.template(withName: name) else {
 			return nil
 		}
 		return renderTemplate(template, attributes: attributes)
 	}
 
-	internal static func renderTemplateNamed(
+	internal nonisolated static func renderTemplateNamed(
 		_ name: ThemeTemplateName,
 		attributes: ThemeTemplateAttributes = [:]
 	) -> String? {
@@ -891,33 +901,35 @@ public extension LogRenderer {
 		return renderTemplate(template, attributes: attributes)
 	}
 
-	static func renderTemplate(_ template: Template) -> String? {
+	nonisolated static func renderTemplate(_ template: Template) -> String? {
 		renderTemplate(template, attributes: nil)
 	}
 
-	static func renderTemplate(_ template: Template, attributes: [String: Any]?) -> String? {
+	nonisolated static func renderTemplate(_ template: Template, attributes: [String: Any]?) -> String? {
 		guard let rendered = try? template.render(attributes) else {
 			return nil
 		}
 		return rendered.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\r", with: "")
 	}
 
-	internal static func renderTemplate(_ template: Template, attributes: ThemeTemplateAttributes) -> String? {
+	internal nonisolated static func renderTemplate(_ template: Template,
+	                                                attributes: ThemeTemplateAttributes) -> String?
+	{
 		renderTemplate(template, attributes: attributes.rawValues)
 	}
 
 	@objc(escapeHTML:)
-	static func escapeHTML(_ html: String) -> String {
+	nonisolated static func escapeHTML(_ html: String) -> String {
 		(html as NSString).gtmStringByEscapingForHTML ?? ""
 	}
 
-	private static func escapeString(_ string: String) -> String {
+	private nonisolated static func escapeString(_ string: String) -> String {
 		escapeHTML(string)
 			.replacingOccurrences(of: "\t", with: "&nbsp;&nbsp;&nbsp;&nbsp;")
 			.replacingOccurrences(of: "  ", with: "&nbsp;&nbsp;")
 	}
 
-	private static func stringValue(forColor color: Any) -> (value: String, usesStyleTag: Bool)? {
+	private nonisolated static func stringValue(forColor color: Any) -> (value: String, usesStyleTag: Bool)? {
 		if let color = color as? NSColor {
 			return (color.textualHexadecimalValue, true)
 		}
@@ -928,7 +940,7 @@ public extension LogRenderer {
 	}
 
 	@objc(mapColor:)
-	static func mapColor(_ color: Any) -> NSColor? {
+	nonisolated static func mapColor(_ color: Any) -> NSColor? {
 		if let color = color as? NSColor {
 			return color
 		}
@@ -939,7 +951,7 @@ public extension LogRenderer {
 	}
 
 	@objc(mapColorCode:)
-	static func mapColorCode(_ colorCode: UInt) -> NSColor {
+	nonisolated static func mapColorCode(_ colorCode: UInt) -> NSColor {
 		precondition(colorCode <= IRCTextFormatterColor.maximumPaletteIndex)
 		return NSColor.formatterColors[Int(colorCode)]
 	}

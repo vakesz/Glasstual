@@ -14,9 +14,10 @@
 import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
+import Synchronization
 
 @objc(IRCChannelUser)
-open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
+open nonisolated class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 	private let userLock = NSLock()
 	private var userStorage: User?
 
@@ -34,13 +35,19 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 		user.client
 	}
 
+	/** Ranking and marks come from the client's published ISUPPORT values rather
+	 than its live support table: members are ranked and rendered off the main
+	 actor. Absent a client the IRC defaults apply. */
+	private var prefixes: IRCUserPrefixTable {
+		client?.userPrefixes.withLock { $0 } ?? IRCUserPrefixTable()
+	}
+
 	@objc open var modes: String {
 		modesStorage
 	}
 
 	@objc public var mark: String {
-		let mode = highestRankedUserMode
-		return client?.supportInfo.userPrefix(forModeSymbol: mode) ?? ""
+		prefixes.userPrefix(forModeSymbol: highestRankedUserMode) ?? ""
 	}
 
 	public var rank: UserRank {
@@ -135,18 +142,15 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 	}
 
 	private var channelRank: UInt {
-		client?.supportInfo.rankForUserPrefix(withMode: highestRankedUserMode) ?? 0
+		prefixes.rank(forModeSymbol: highestRankedUserMode)
 	}
 
 	private func hasRank(of modeSymbol: String, orHigher fallbackModeSymbol: String?) -> Bool {
-		guard let supportInfo = client?.supportInfo else {
-			return false
-		}
-
-		var threshold = supportInfo.rankForUserPrefix(withMode: modeSymbol)
+		let prefixes = prefixes
+		var threshold = prefixes.rank(forModeSymbol: modeSymbol)
 
 		if threshold == 0, let fallbackModeSymbol {
-			threshold = supportInfo.rankForUserPrefix(withMode: fallbackModeSymbol)
+			threshold = prefixes.rank(forModeSymbol: fallbackModeSymbol)
 		}
 
 		return threshold > 0 && channelRank >= threshold
@@ -247,12 +251,9 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 			return .orderedDescending
 		}
 
-		guard let supportInfo = client?.supportInfo else {
-			return user.nickname.compare(other.user.nickname)
-		}
-
-		let localNickname = supportInfo.casefoldString(user.nickname)
-		let remoteNickname = supportInfo.casefoldString(other.user.nickname)
+		let prefixes = prefixes
+		let localNickname = prefixes.casefold(user.nickname)
+		let remoteNickname = prefixes.casefold(other.user.nickname)
 
 		return localNickname.compare(remoteNickname)
 	}
@@ -318,18 +319,20 @@ open class ChannelUser: PortablePropertyObject, @unchecked Sendable {
 	}
 
 	@objc(associateWithChannel:)
+	@MainActor
 	public func associate(with channel: IRCChannel) {
 		user.associate(self, with: channel)
 	}
 
 	@objc(disassociateWithChannel:)
+	@MainActor
 	public func disassociate(with channel: IRCChannel) {
 		user.disassociateUser(with: channel)
 	}
 }
 
 @objc(IRCChannelUserMutable)
-public final class ChannelUserMutable: ChannelUser, @unchecked Sendable {
+public final nonisolated class ChannelUserMutable: ChannelUser, @unchecked Sendable {
 	override public static var isMutable: Bool {
 		true
 	}

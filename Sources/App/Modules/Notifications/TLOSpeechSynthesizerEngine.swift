@@ -7,12 +7,12 @@ import AVFoundation
 import Foundation
 
 @objc(TLOSpeechSynthesizerEngineDelegate)
-public protocol SpeechSynthesizerEngineDelegate: AnyObject {
+public nonisolated protocol SpeechSynthesizerEngineDelegate: AnyObject {
 	func speechSynthesizerEngineDidCompleteUtterance()
 }
 
 @objc(TLOSpeechSynthesizerEngine)
-public protocol SpeechSynthesizerEngine: AnyObject {
+public nonisolated protocol SpeechSynthesizerEngine: AnyObject {
 	var delegate: SpeechSynthesizerEngineDelegate? { get set }
 	var isSpeaking: Bool { get }
 
@@ -21,7 +21,7 @@ public protocol SpeechSynthesizerEngine: AnyObject {
 }
 
 @objc(TLOAVSpeechSynthesizerEngine)
-public final class AVSpeechSynthesizerEngine: NSObject, @unchecked Sendable, SpeechSynthesizerEngine,
+public final nonisolated class AVSpeechSynthesizerEngine: NSObject, @unchecked Sendable, SpeechSynthesizerEngine,
 	AVSpeechSynthesizerDelegate
 {
 	private let lock = NSRecursiveLock()
