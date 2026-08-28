@@ -2,6 +2,10 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset={{userConfiguredTextEncoding}}">
 
+		{{! Kept identical to LogViewContentPolicy.contentSecurityPolicy, which
+		the scheme handler also sends as a header. Change both together. }}
+		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' glasstual-theme: https://platform.twitter.com; style-src 'unsafe-inline' glasstual-theme:; img-src glasstual-theme: https: http: data: blob:; media-src glasstual-theme: https: http: data: blob:; font-src glasstual-theme: data:; connect-src glasstual-theme: https:; frame-src https:; base-uri 'none'; form-action 'none'">
+
 		{{#activeStyleCSSFiles}}
 		<link rel="stylesheet" type="text/css" href="{{.}}?{{cacheToken}}" charset="UTF-8">
 		{{/activeStyleCSSFiles}}
