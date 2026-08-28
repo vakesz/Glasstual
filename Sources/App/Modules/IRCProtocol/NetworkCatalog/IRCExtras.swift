@@ -88,9 +88,12 @@ public final class Extras: NSObject {
 		parseIRCProtocolURI(location, withDescriptor: nil)
 	}
 
-	@objc(parseIRCProtocolURI:withDescriptor:)
-	public static func parseIRCProtocolURI(_ location: String, withDescriptor _: NSAppleEventDescriptor?) {
-		precondition(!location.isEmpty)
+	/// Parses an `irc:`/`ircs:` URI into the server-info string and channel list
+	/// that `createConnectionToServer` understands. Pure; no side effects.
+	nonisolated static func intent(forIRCProtocolURI location: String) -> URIIntent? {
+		guard !location.isEmpty else {
+			return nil
+		}
 
 		/* Basic input clean up. */
 		let locationValue = (location.removingPercentEncoding ?? location)
@@ -107,7 +110,7 @@ public final class Extras: NSObject {
 		}
 
 		if totalSlashCount < 2 || totalSlashCount > 3 {
-			return
+			return nil
 		}
 
 		var serverInfo = locationValue
@@ -124,13 +127,11 @@ public final class Extras: NSObject {
 		      let addressScheme = baseURL.scheme,
 		      let serverAddress = baseURL.host
 		else {
-			return
+			return nil
 		}
 
 		if addressScheme == "glasstual" {
-			performSpecialActionForGlasstualScheme(serverAddress, source: locationValue)
-
-			return
+			return .glasstualAction(host: serverAddress, source: locationValue)
 		}
 
 		/* Continue normal parsing... */
@@ -206,13 +207,48 @@ public final class Extras: NSObject {
 		}
 
 		/* A URL is consider untrusted and will not auto connect */
-		createConnectionToServer(
-			resultValue,
-			channelList: channelList.length > 0 ? channelList as String : nil,
-			connectWhenCreated: false,
-			mergeConnectionIfPossible: true,
-			selectFirstChannelAdded: false
-		)
+		return .connect(URIConnectionIntent(
+			serverInfo: resultValue,
+			channelList: channelList.length > 0 ? channelList as String : nil
+		))
+	}
+
+	/// The connection half of `intent(forIRCProtocolURI:)`; `nil` for
+	/// `glasstual:` actions and malformed input.
+	nonisolated static func connectionIntent(forIRCProtocolURI location: String) -> URIConnectionIntent? {
+		guard case let .connect(intent) = intent(forIRCProtocolURI: location) else {
+			return nil
+		}
+
+		return intent
+	}
+
+	enum URIIntent: Equatable {
+		case connect(URIConnectionIntent)
+		case glasstualAction(host: String, source: String)
+	}
+
+	struct URIConnectionIntent: Equatable {
+		let serverInfo: String
+		let channelList: String?
+	}
+
+	@objc(parseIRCProtocolURI:withDescriptor:)
+	public static func parseIRCProtocolURI(_ location: String, withDescriptor _: NSAppleEventDescriptor?) {
+		switch intent(forIRCProtocolURI: location) {
+		case let .glasstualAction(host, source):
+			performSpecialActionForGlasstualScheme(host, source: source)
+		case let .connect(intent):
+			createConnectionToServer(
+				intent.serverInfo,
+				channelList: intent.channelList,
+				connectWhenCreated: false,
+				mergeConnectionIfPossible: true,
+				selectFirstChannelAdded: false
+			)
+		case nil:
+			break
+		}
 	}
 
 	// MARK: - Connection Creation
@@ -240,7 +276,31 @@ public final class Extras: NSObject {
 		mergeConnectionIfPossible: Bool,
 		selectFirstChannelAdded: Bool
 	) {
-		precondition(!serverInfo.isEmpty)
+		guard let request = connectionRequest(
+			parsing: serverInfo,
+			channelList: channelList,
+			connectWhenCreated: connectWhenCreated,
+			mergeConnectionIfPossible: mergeConnectionIfPossible,
+			selectFirstChannelAdded: selectFirstChannelAdded
+		) else {
+			return
+		}
+
+		createConnectionToServer(request)
+	}
+
+	/// Parses the `[-SSL] host[:port] [password]` server-info form into a
+	/// connection request. Pure; no side effects.
+	nonisolated static func connectionRequest(
+		parsing serverInfo: String,
+		channelList: String?,
+		connectWhenCreated: Bool,
+		mergeConnectionIfPossible: Bool,
+		selectFirstChannelAdded: Bool
+	) -> ConnectionRequest? {
+		guard !serverInfo.isEmpty else {
+			return nil
+		}
 
 		/* Establish our variables */
 		var serverAddress: String?
@@ -286,7 +346,7 @@ public final class Extras: NSObject {
 					"Server address was surrounded by square brackets but the enclosed value was not an IPv6 address"
 				)
 
-				return
+				return nil
 			}
 
 			serverAddress = tempServerAddress
@@ -312,7 +372,7 @@ public final class Extras: NSObject {
 			 as an IPv4 address so any colon will be considered
 			 for port use only. */
 
-			return
+			return nil
 		}
 
 		guard let parsedServerAddress = serverAddress,
@@ -320,7 +380,7 @@ public final class Extras: NSObject {
 		else {
 			extrasLogger.error("Invalid internet address")
 
-			return
+			return nil
 		}
 
 		serverAddress = parsedServerAddress.lowercased()
@@ -344,7 +404,7 @@ public final class Extras: NSObject {
 			guard let parsedPort = UInt16(tempServerPort), parsedPort > 0 else {
 				extrasLogger.error("Invalid internet port")
 
-				return
+				return nil
 			}
 
 			serverPort = parsedPort
@@ -360,48 +420,54 @@ public final class Extras: NSObject {
 			serverPassword = tempStore
 		}
 
-		/* Convert channel list string into array of configurations */
-		var channelListArray: [String]?
-
-		if let channelList, channelList.isEmpty == false {
-			var parsedChannels: [String] = []
-			let dataSections = channelList.components(separatedBy: ",")
-
-			for section in dataSections {
-				let channelName = section.trimmingCharacters(in: .whitespacesAndNewlines)
-
-				if (channelName as NSString).isChannelName == false {
-					continue
-				}
-
-				if parsedChannels.contains(where: {
-					$0.caseInsensitiveCompare(channelName) == .orderedSame
-				}) {
-					continue
-				}
-
-				parsedChannels.append(channelName)
-			}
-
-			channelListArray = parsedChannels
-		}
+		let channelListArray = parseChannelList(channelList)
 
 		/* Create connection */
-		createConnectionToServer(
-			ConnectionRequest(
-				serverAddress: serverAddress!,
-				serverPort: serverPort,
-				serverPassword: serverPassword,
-				connectSecurely: connectSecurely,
-				channelList: channelListArray,
-				connectWhenCreated: connectWhenCreated,
-				mergeConnectionIfPossible: mergeConnectionIfPossible,
-				selectFirstChannelAdded: selectFirstChannelAdded
-			)
+		guard let serverAddress else {
+			return nil
+		}
+
+		return ConnectionRequest(
+			serverAddress: serverAddress,
+			serverPort: serverPort,
+			serverPassword: serverPassword,
+			connectSecurely: connectSecurely,
+			channelList: channelListArray,
+			connectWhenCreated: connectWhenCreated,
+			mergeConnectionIfPossible: mergeConnectionIfPossible,
+			selectFirstChannelAdded: selectFirstChannelAdded
 		)
 	}
 
-	private struct ConnectionRequest {
+	/// Splits a comma-separated channel list, dropping non-channel names and
+	/// case-insensitive duplicates. `nil` when there is nothing to join.
+	nonisolated static func parseChannelList(_ channelList: String?) -> [String]? {
+		guard let channelList, channelList.isEmpty == false else {
+			return nil
+		}
+
+		var parsedChannels: [String] = []
+
+		for section in channelList.components(separatedBy: ",") {
+			let channelName = section.trimmingCharacters(in: .whitespacesAndNewlines)
+
+			if (channelName as NSString).isChannelName == false {
+				continue
+			}
+
+			if parsedChannels.contains(where: {
+				$0.caseInsensitiveCompare(channelName) == .orderedSame
+			}) {
+				continue
+			}
+
+			parsedChannels.append(channelName)
+		}
+
+		return parsedChannels
+	}
+
+	struct ConnectionRequest: Equatable {
 		let serverAddress: String
 		let serverPort: UInt16
 		let serverPassword: String?
@@ -410,10 +476,6 @@ public final class Extras: NSObject {
 		let connectWhenCreated: Bool
 		let mergeConnectionIfPossible: Bool
 		let selectFirstChannelAdded: Bool
-	}
-
-	private static var isRunningUnitTests: Bool {
-		ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 	}
 
 	private static func createConnectionToServer(_ request: ConnectionRequest) {
@@ -428,12 +490,6 @@ public final class Extras: NSObject {
 
 		precondition(!serverAddress.isEmpty)
 		precondition(serverPort > 0)
-
-		/* Unit tests load into Glasstual.app (TEST_HOST). Never mutate the
-		 live connection list or present merge prompts from that context. */
-		if isRunningUnitTests {
-			return
-		}
 
 		let channelListCount = channelList?.count ?? 0
 

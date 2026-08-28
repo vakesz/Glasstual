@@ -122,27 +122,16 @@ final class AppKitSupportMigrationTests: XCTestCase {
 		XCTAssertEqual(TVCTextViewCaretLocation.lastLine.rawValue, 3)
 	}
 
-	func testPreviouslySuppressedAlertReturnsWithoutPresentingOrMutatingTheResponsePointer() {
+	func testAlertSuppressionDecisionFollowsTheStoredPreference() {
 		let baseKey = "AppKitSupportMigrationTests.\(UUID().uuidString)"
 		let defaultsKey = TDCAlert.suppressionKey(withBase: baseKey)
-		var suppressionResponse = ObjCBool(false)
-		UserDefaults.standard.set(true, forKey: defaultsKey)
 		defer { UserDefaults.standard.removeObject(forKey: defaultsKey) }
 
-		let response = TDCAlert.modalAlert(
-			withMessage: "This alert must remain suppressed.",
-			title: "Suppressed",
-			defaultButton: "OK",
-			alternateButton: nil,
-			otherButton: nil,
-			suppressionKey: baseKey,
-			suppressionText: nil,
-			accessoryView: nil,
-			suppressionResponse: &suppressionResponse
-		)
+		XCTAssertFalse(TDCAlert.isSuppressed(baseKey: baseKey))
 
-		XCTAssertEqual(response, .default)
-		XCTAssertFalse(suppressionResponse.boolValue)
+		UserDefaults.standard.set(true, forKey: defaultsKey)
+
+		XCTAssertTrue(TDCAlert.isSuppressed(baseKey: baseKey))
 	}
 
 	func testPreferencesControllerLoadsWindowFromNib() {
