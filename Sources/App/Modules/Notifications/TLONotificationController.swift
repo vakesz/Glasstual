@@ -19,10 +19,6 @@ import UserNotifications
 nonisolated enum NotificationPayload {
 	static let clientIdentifierKey = "clientId"
 	static let channelIdentifierKey = "channelId"
-	static let standardNicknameFormat = "%@ %@"
-	static let actionNicknameFormat = "• %@: %@"
-	static let highlightActionFormat = "• %@: %@"
-	static let highlightMessageFormat = "%@ %@"
 }
 
 private let fileTransferCategoryIdentifier = "TXNotificationCategoryIdentifierFileTransfer"

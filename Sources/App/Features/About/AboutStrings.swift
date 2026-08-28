@@ -26,6 +26,6 @@ nonisolated enum AboutStrings {
 	}
 
 	static func versionDescription(applicationName: String, version: String) -> String {
-		String(localized: .TDCAboutDialog.zjdAl(applicationName, version))
+		String(localized: .TDCAboutDialog.applicationNameFollowed(applicationName, version))
 	}
 }

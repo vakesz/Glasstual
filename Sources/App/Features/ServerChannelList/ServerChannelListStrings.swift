@@ -14,22 +14,18 @@ import Foundation
 
 nonisolated enum ServerChannelListStrings {
 	static var minimumUserCountLabel: String {
-		String(localized: .TDCServerChannelListDialog.u7E1S)
+		String(localized: .TDCServerChannelListDialog.minimumUsers)
 	}
 
 	static var minimumUserCountHint: String {
-		String(localized: .TDCServerChannelListDialog.u7E2S)
+		String(localized: .TDCServerChannelListDialog.onlyListChannelsWithAtLeast)
 	}
 
 	static func heading(networkName: String) -> String {
-		String(localized: .TDCServerChannelListDialog._7QfR0(networkName))
+		String(localized: .TDCServerChannelListDialog.channelList(networkName))
 	}
 
 	static func windowTitle(publicChannelCount: Int) -> String {
-		String(
-			localized: .TDCServerChannelListDialog.ct4Wh(
-				formattedNumber(publicChannelCount) as String
-			)
-		)
+		String(localized: .TDCServerChannelListDialog.publicChannelCount(publicChannelCount))
 	}
 }

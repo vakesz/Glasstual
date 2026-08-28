@@ -32,31 +32,31 @@ enum FileTransferFailure: Equatable, Sendable {
 
 nonisolated enum FileTransferStrings {
 	static var destinationPickerMessage: String {
-		String(localized: .TDCFileTransferDialog.dcmW7)
+		String(localized: .TDCFileTransferDialog.selectTheFolderInWhich)
 	}
 
 	static func failure(_ failure: FileTransferFailure, peerNickname: String) -> String {
 		let resource = switch failure {
 		case .connectionUnavailable:
-			LocalizedStringResource.TDCFileTransferDialog.fn8Sx(peerNickname)
+			LocalizedStringResource.TDCFileTransferDialog.transferWithFailedCouldNotEstablish(peerNickname)
 		case .fileHandlerFailed:
-			LocalizedStringResource.TDCFileTransferDialog._05GC8(peerNickname)
+			LocalizedStringResource.TDCFileTransferDialog.transferWithFailedFileHandlerThrew(peerNickname)
 		case .invalidResumePosition:
-			LocalizedStringResource.TDCFileTransferDialog._0OvTr(peerNickname)
+			LocalizedStringResource.TDCFileTransferDialog.transferWithFailedProposedResumePosition(peerNickname)
 		case .noListeningPort:
-			LocalizedStringResource.TDCFileTransferDialog.vxcSd(peerNickname)
+			LocalizedStringResource.TDCFileTransferDialog.transferWithFailedThereIsNo(peerNickname)
 		case .notConnectedToIRC:
-			LocalizedStringResource.TDCFileTransferDialog._12P0V(peerNickname)
+			LocalizedStringResource.TDCFileTransferDialog.transferWithFailedYouAreNot(peerNickname)
 		case .oversizedTransfer:
-			LocalizedStringResource.TDCFileTransferDialog.dccOvr(peerNickname)
+			LocalizedStringResource.TDCFileTransferDialog.transferFromFailedBecauseTheSender(peerNickname)
 		case .sourceFileUnreadable:
-			LocalizedStringResource.TDCFileTransferDialog.nabDx(peerNickname)
+			LocalizedStringResource.TDCFileTransferDialog.transferWithFailedCouldNotRead(peerNickname)
 		case .sourceIPAddressUnknown:
-			LocalizedStringResource.TDCFileTransferDialog._47S1S(peerNickname)
+			LocalizedStringResource.TDCFileTransferDialog.transferWithFailedUnknownSourceIp(peerNickname)
 		case .storageFull:
-			LocalizedStringResource.TDCFileTransferDialog._79FS0(peerNickname)
+			LocalizedStringResource.TDCFileTransferDialog.transferWithFailedNoSpaceLeft(peerNickname)
 		case let .underlying(description):
-			LocalizedStringResource.TDCFileTransferDialog.s793A(peerNickname, description)
+			LocalizedStringResource.TDCFileTransferDialog.transferWithFailed(peerNickname, description)
 		}
 		return String(localized: resource)
 	}
@@ -68,33 +68,33 @@ nonisolated enum FileTransferStrings {
 	) -> String? {
 		let resource: LocalizedStringResource? = switch (status, direction) {
 		case (.stopped, .incoming):
-			.TDCFileTransferDialog.jvhU7(peerNickname)
+			.TDCFileTransferDialog.transferFromIsStoppedControlClick(peerNickname)
 		case (.stopped, .outgoing):
-			.TDCFileTransferDialog.w3HP8(peerNickname)
+			.TDCFileTransferDialog.transferToIsStoppedControlClick(peerNickname)
 		case (.mappingListeningPort, .incoming):
-			.TDCFileTransferDialog._49590(peerNickname)
+			.TDCFileTransferDialog.transferFromAttemptingToMapListening(peerNickname)
 		case (.mappingListeningPort, .outgoing):
-			.TDCFileTransferDialog.j1Z88(peerNickname)
+			.TDCFileTransferDialog.transferToAttemptingToMapListening(peerNickname)
 		case (.waitingForLocalIPAddress, .incoming):
-			.TDCFileTransferDialog._6T1Mb(peerNickname)
+			.TDCFileTransferDialog.transferFromDeterminingLocalIpAddress(peerNickname)
 		case (.waitingForLocalIPAddress, .outgoing):
-			.TDCFileTransferDialog.onlAv(peerNickname)
+			.TDCFileTransferDialog.transferToDeterminingLocalIpAddress(peerNickname)
 		case (.initializing, .incoming):
-			.TDCFileTransferDialog._42ZMg(peerNickname)
+			.TDCFileTransferDialog.transferFromIsInitializing(peerNickname)
 		case (.initializing, .outgoing):
-			.TDCFileTransferDialog.pcvKg(peerNickname)
+			.TDCFileTransferDialog.transferToIsInitializing(peerNickname)
 		case (.isListeningAsSender, _), (.waitingForReceiverToAccept, _):
-			.TDCFileTransferDialog.ca52V(peerNickname)
+			.TDCFileTransferDialog.transferToIsReadyWaiting(peerNickname)
 		case (.isListeningAsReceiver, _):
-			.TDCFileTransferDialog.pipZ6(peerNickname)
+			.TDCFileTransferDialog.transferFromIsReadyControlClick(peerNickname)
 		case (.complete, .incoming):
-			.TDCFileTransferDialog._6GuZa(peerNickname)
+			.TDCFileTransferDialog.transferFromIsCompleteControlClick(peerNickname)
 		case (.complete, .outgoing):
-			.TDCFileTransferDialog.rx7Xy(peerNickname)
+			.TDCFileTransferDialog.transferToIsComplete(peerNickname)
 		case (.connecting, _):
-			.TDCFileTransferDialog._7NfFr(peerNickname)
+			.TDCFileTransferDialog.statusWhileConnecting(peerNickname)
 		case (.waitingForResumeAccept, _):
-			.TDCFileTransferDialog.gxqZu(peerNickname)
+			.TDCFileTransferDialog.transferFromWaitingForResponse(peerNickname)
 		case (.fatalError, _), (.recoverableError, _), (.receiving, _), (.sending, _):
 			nil
 		@unknown default:
@@ -113,7 +113,7 @@ nonisolated enum FileTransferStrings {
 	) -> String {
 		let resource: LocalizedStringResource = switch (direction, timeRemaining) {
 		case let (.incoming, timeRemaining?):
-			.TDCFileTransferDialog._9Xn7J(
+			.TDCFileTransferDialog.ofSReceivedFromRemaining(
 				processedSize,
 				totalSize,
 				speed,
@@ -121,9 +121,9 @@ nonisolated enum FileTransferStrings {
 				timeRemaining
 			)
 		case (.incoming, nil):
-			.TDCFileTransferDialog._7DkLp(processedSize, totalSize, speed, peerNickname)
+			.TDCFileTransferDialog.ofSReceived(processedSize, totalSize, speed, peerNickname)
 		case let (.outgoing, timeRemaining?):
-			.TDCFileTransferDialog.u17Ql(
+			.TDCFileTransferDialog.ofSSentToRemaining(
 				processedSize,
 				totalSize,
 				speed,
@@ -131,7 +131,7 @@ nonisolated enum FileTransferStrings {
 				timeRemaining
 			)
 		case (.outgoing, nil):
-			.TDCFileTransferDialog.nvmNd(processedSize, totalSize, speed, peerNickname)
+			.TDCFileTransferDialog.ofSSent(processedSize, totalSize, speed, peerNickname)
 		}
 		return String(localized: resource)
 	}

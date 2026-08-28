@@ -14,38 +14,26 @@ import Foundation
 
 nonisolated enum ChannelSpotlightStrings {
 	static var noResults: String {
-		String(localized: .TDCChannelSpotlightController.tyvP6)
+		String(localized: .TDCChannelSpotlightController.noResults)
 	}
 
 	static func channelName(_ channelName: String) -> String {
-		String(localized: .TDCChannelSpotlightController.jpwCj(channelName))
+		String(localized: .TDCChannelSpotlightController.channelName(channelName))
 	}
 
 	static func networkSuffix(_ networkName: String) -> String {
-		String(localized: .TDCChannelSpotlightController.z685Q(networkName))
+		String(localized: .TDCChannelSpotlightController.networkNameSuffixOn(networkName))
 	}
 
 	static func unreadMessages(_ count: Int) -> String {
-		let countDescription = formattedNumber(count) as String
-
-		if count == 1 {
-			return String(localized: .TDCChannelSpotlightController._43SX4(countDescription))
-		}
-
-		return String(localized: .TDCChannelSpotlightController.vzj30(countDescription))
+		String(localized: .TDCChannelSpotlightController.unreadMessageCount(count))
 	}
 
 	static func highlights(_ count: Int) -> String {
-		let countDescription = formattedNumber(count) as String
-
-		if count == 1 {
-			return String(localized: .TDCChannelSpotlightController._0LzOh(countDescription))
-		}
-
-		return String(localized: .TDCChannelSpotlightController.c4U21(countDescription))
+		String(localized: .TDCChannelSpotlightController.highlightCount(count))
 	}
 
 	static func combined(_ firstDescription: String, _ secondDescription: String) -> String {
-		String(localized: .TDCChannelSpotlightController.et7C5(firstDescription, secondDescription))
+		String(localized: .TDCChannelSpotlightController.joinsTwoChannelStatus(firstDescription, secondDescription))
 	}
 }

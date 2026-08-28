@@ -1,140 +1,8 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "26u-j8": {
-      "comment": "Migrated from legacy key 26u-j8. Enabling wait for NickServ without a password.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter your NickServ password into the field labeled “Personal Password”"
-          }
-        }
-      }
-    },
-    "36n-u9": {
-      "comment": "Migrated from legacy key 36n-u9. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Redundancy"
-          }
-        }
-      }
-    },
-    "489-hG": {
-      "comment": "Migrated from legacy key 489-hG. Custom client-side certificate selection.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "There are no certificates in the keychain configured for identity purposes.\n\nCertificates must meet the following criteria:\n\t• Certificate is configured as type: “SSL Client”\n\t• Certificate has matching private key"
-          }
-        }
-      }
-    },
-    "5oz-07": {
-      "comment": "Migrated from legacy key 5oz-07. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Channel List"
-          }
-        }
-      }
-    },
-    "61f-6b": {
-      "comment": "Migrated from legacy key 61f-6b. Server specific highlight entry things.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All Channels"
-          }
-        }
-      }
-    },
-    "6wq-i4": {
-      "comment": "Migrated from legacy key 6wq-i4. Custom client-side certificate selection.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose An Identity"
-          }
-        }
-      }
-    },
-    "6xz-ec": {
-      "comment": "Migrated from legacy key 6xz-ec. Custom client-side certificate selection.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No Certificate Selected"
-          }
-        }
-      }
-    },
-    "8ik-qo": {
-      "comment": "Migrated from legacy key 8ik-qo. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Identity"
-          }
-        }
-      }
-    },
-    "8iw-q8": {
-      "comment": "Migrated from legacy key 8iw-q8. Error localizations.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Please enter a properly formatted username."
-          }
-        }
-      }
-    },
-    "8ug-ka": {
-      "comment": "Migrated from legacy key 8ug-ka. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Encoding"
-          }
-        }
-      }
-    },
-    "8uw-tz": {
-      "comment": "Migrated from legacy key 8uw-tz. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Advanced"
-          }
-        }
-      }
-    },
-    "8zc-6y": {
-      "comment": "Migrated from legacy key 8zc-6y. Server properties navigation menu.",
+    "address-book": {
+      "comment": "Server properties navigation menu. Legacy key: 8zc-6y.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -145,56 +13,44 @@
         }
       }
     },
-    "94r-eq": {
-      "comment": "Migrated from legacy key 94r-eq. Enabling wait for NickServ without a password.",
+    "all-channels": {
+      "comment": "Server specific highlight entry things. Legacy key: 61f-6b.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The preference you have enabled will not work correctly because you do not have a password set"
+            "value": "All Channels"
           }
         }
       }
     },
-    "agy-bp": {
-      "comment": "Migrated from legacy key agy-bp. Error localizations.",
+    "channel-list": {
+      "comment": "Server properties navigation menu. Legacy key: 5oz-07.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Please enter a properly formatted real name."
+            "value": "Channel List"
           }
         }
       }
     },
-    "b0g-0x": {
-      "comment": "Migrated from legacy key b0g-0x. Server properties Address Book entry types.",
+    "choose-an-identity": {
+      "comment": "Custom client-side certificate selection. Legacy key: 6wq-i4.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "User Tracking"
+            "value": "Choose An Identity"
           }
         }
       }
     },
-    "bzh-il": {
-      "comment": "Migrated from legacy key bzh-il. Cloud changes.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This connection's configuration has changed. Do you want to reload the Server Properties dialog?"
-          }
-        }
-      }
-    },
-    "ce7-kc": {
-      "comment": "Migrated from legacy key ce7-kc. Server properties navigation menu.",
+    "client-certificate": {
+      "comment": "Server properties navigation menu. Legacy key: ce7-kc.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -205,68 +61,8 @@
         }
       }
     },
-    "ehx-4d": {
-      "comment": "Migrated from legacy key ehx-4d. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "General"
-          }
-        }
-      }
-    },
-    "f7o-x4": {
-      "comment": "Migrated from legacy key f7o-x4. Server properties Address Book entry types.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "User Ignore"
-          }
-        }
-      }
-    },
-    "fcr-w8": {
-      "comment": "Migrated from legacy key fcr-w8. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Flood Control"
-          }
-        }
-      }
-    },
-    "ffy-xt": {
-      "comment": "Migrated from legacy key ffy-xt. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Network Socket"
-          }
-        }
-      }
-    },
-    "fsj-7f": {
-      "comment": "Migrated from legacy key fsj-7f. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ZNC Bouncer"
-          }
-        }
-      }
-    },
-    "hip-13": {
-      "comment": "Migrated from legacy key hip-13. Server properties navigation menu.",
+    "connect-commands": {
+      "comment": "Server properties navigation menu. Legacy key: hip-13.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -277,80 +73,68 @@
         }
       }
     },
-    "j34-yr": {
-      "comment": "Migrated from legacy key j34-yr. Server properties navigation menu.",
+    "enter-your-nickserv-password-into": {
+      "comment": "Enabling wait for NickServ without a password. Legacy key: 26u-j8.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Messages"
+            "value": "Enter your NickServ password into the field labeled “Personal Password”"
           }
         }
       }
     },
-    "jtx-hn": {
-      "comment": "Migrated from legacy key jtx-hn. Server properties navigation menu.",
+    "flood-control": {
+      "comment": "Server properties navigation menu. Legacy key: fcr-w8.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Highlights"
+            "value": "Flood Control"
           }
         }
       }
     },
-    "k50-8n": {
-      "comment": "Migrated from legacy key k50-8n. Cipher suites.",
+    "includes-the-following-cipher-suites": {
+      "comment": "Cipher suites. Legacy key: yko-5g.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@\n\nThese cipher suites are ordered by preference with the most preferred at the top."
+            "value": "The “%@” includes the following cipher suites:"
           }
         }
       }
     },
-    "lww-pc": {
-      "comment": "Migrated from legacy key lww-pc. Server properties navigation menu.",
+    "network-socket": {
+      "comment": "Server properties navigation menu. Legacy key: ffy-xt.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Server Properties"
+            "value": "Network Socket"
           }
         }
       }
     },
-    "mi4-fd": {
-      "comment": "Migrated from legacy key mi4-fd. Custom client-side certificate selection.",
+    "no-certificate-selected": {
+      "comment": "Custom client-side certificate selection. Legacy key: 6xz-ec.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select a certificate to send when you connect securely."
+            "value": "No Certificate Selected"
           }
         }
       }
     },
-    "oz4-kb": {
-      "comment": "Migrated from legacy key oz4-kb. Cloud changes.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You will loose unsaved changes if you click “Yes”"
-          }
-        }
-      }
-    },
-    "pmk-os": {
-      "comment": "Migrated from legacy key pmk-os. Custom client-side certificate selection.",
+    "no-certificates-available": {
+      "comment": "Custom client-side certificate selection. Legacy key: pmk-os.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -361,68 +145,8 @@
         }
       }
     },
-    "qcc-b4": {
-      "comment": "Migrated from legacy key qcc-b4. Server specific highlight entry things.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Exclude"
-          }
-        }
-      }
-    },
-    "t52-7a": {
-      "comment": "Migrated from legacy key t52-7a. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Proxy Server"
-          }
-        }
-      }
-    },
-    "tet-dk": {
-      "comment": "Migrated from legacy key tet-dk. Server specific highlight entry things.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Match"
-          }
-        }
-      }
-    },
-    "tlo-b6": {
-      "comment": "Migrated from legacy key tlo-b6. Error localizations.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Please enter a properly formatted proxy address."
-          }
-        }
-      }
-    },
-    "v27-8w": {
-      "comment": "Migrated from legacy key v27-8w. Server properties navigation menu.",
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vendor Specific"
-          }
-        }
-      }
-    },
-    "wlz-tb": {
-      "comment": "Migrated from legacy key wlz-tb. Error localizations.",
+    "please-enter-a-list-of-properly": {
+      "comment": "Error localizations. Legacy key: wlz-tb.",
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -433,14 +157,290 @@
         }
       }
     },
-    "yko-5g": {
-      "comment": "Migrated from legacy key yko-5g. Cipher suites.",
+    "please-enter-a-properly-formatted-proxy": {
+      "comment": "Error localizations. Legacy key: tlo-b6.",
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The “%@” includes the following cipher suites:"
+            "value": "Please enter a properly formatted proxy address."
+          }
+        }
+      }
+    },
+    "please-enter-a-properly-formatted-real": {
+      "comment": "Error localizations. Legacy key: agy-bp.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter a properly formatted real name."
+          }
+        }
+      }
+    },
+    "please-enter-a-properly-formatted-username": {
+      "comment": "Error localizations. Legacy key: 8iw-q8.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please enter a properly formatted username."
+          }
+        }
+      }
+    },
+    "preference-you-have-enabled-will-not": {
+      "comment": "Enabling wait for NickServ without a password. Legacy key: 94r-eq.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The preference you have enabled will not work correctly because you do not have a password set"
+          }
+        }
+      }
+    },
+    "proxy-server": {
+      "comment": "Server properties navigation menu. Legacy key: t52-7a.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proxy Server"
+          }
+        }
+      }
+    },
+    "select-a-certificate-to-send-when": {
+      "comment": "Custom client-side certificate selection. Legacy key: mi4-fd.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a certificate to send when you connect securely."
+          }
+        }
+      }
+    },
+    "server-properties": {
+      "comment": "Server properties navigation menu. Legacy key: lww-pc.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server Properties"
+          }
+        }
+      }
+    },
+    "server-properties-navigation-menu-advanced": {
+      "comment": "Server properties navigation menu. Legacy key: 8uw-tz.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        }
+      }
+    },
+    "server-properties-navigation-menu-encoding": {
+      "comment": "Server properties navigation menu. Legacy key: 8ug-ka.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encoding"
+          }
+        }
+      }
+    },
+    "server-properties-navigation-menu-general": {
+      "comment": "Server properties navigation menu. Legacy key: ehx-4d.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        }
+      }
+    },
+    "server-properties-navigation-menu-highlights": {
+      "comment": "Server properties navigation menu. Legacy key: jtx-hn.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highlights"
+          }
+        }
+      }
+    },
+    "server-properties-navigation-menu-identity": {
+      "comment": "Server properties navigation menu. Legacy key: 8ik-qo.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identity"
+          }
+        }
+      }
+    },
+    "server-properties-navigation-menu-messages": {
+      "comment": "Server properties navigation menu. Legacy key: j34-yr.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages"
+          }
+        }
+      }
+    },
+    "server-properties-navigation-menu-redundancy": {
+      "comment": "Server properties navigation menu. Legacy key: 36n-u9.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redundancy"
+          }
+        }
+      }
+    },
+    "server-specific-highlight-entry-exclude": {
+      "comment": "Server specific highlight entry things. Legacy key: qcc-b4.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclude"
+          }
+        }
+      }
+    },
+    "server-specific-highlight-entry-match": {
+      "comment": "Server specific highlight entry things. Legacy key: tet-dk.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Match"
+          }
+        }
+      }
+    },
+    "there-are-no-certificates": {
+      "comment": "Custom client-side certificate selection. Legacy key: 489-hG.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no certificates in the keychain configured for identity purposes.\n\nCertificates must meet the following criteria:\n\t• Certificate is configured as type: “SSL Client”\n\t• Certificate has matching private key"
+          }
+        }
+      }
+    },
+    "these-cipher-suites-are-ordered": {
+      "comment": "Cipher suites. Legacy key: k50-8n.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@\n\nThese cipher suites are ordered by preference with the most preferred at the top."
+          }
+        }
+      }
+    },
+    "this-connections-configuration-has-changed-do": {
+      "comment": "Cloud changes. Legacy key: bzh-il.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This connection's configuration has changed. Do you want to reload the Server Properties dialog?"
+          }
+        }
+      }
+    },
+    "user-ignore": {
+      "comment": "Server properties Address Book entry types. Legacy key: f7o-x4.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Ignore"
+          }
+        }
+      }
+    },
+    "user-tracking": {
+      "comment": "Server properties Address Book entry types. Legacy key: b0g-0x.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User Tracking"
+          }
+        }
+      }
+    },
+    "vendor-specific": {
+      "comment": "Server properties navigation menu. Legacy key: v27-8w.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vendor Specific"
+          }
+        }
+      }
+    },
+    "you-will-loose-unsaved-changes-if": {
+      "comment": "Cloud changes. Legacy key: oz4-kb.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will loose unsaved changes if you click “Yes”"
+          }
+        }
+      }
+    },
+    "znc-bouncer": {
+      "comment": "Server properties navigation menu. Legacy key: fsj-7f.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZNC Bouncer"
           }
         }
       }

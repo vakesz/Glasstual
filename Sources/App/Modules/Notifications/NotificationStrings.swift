@@ -38,12 +38,6 @@
 
 import Foundation
 
-private enum NotificationFileTransferByteCountBody: String {
-	case receiveSuccessful = "body-file-transfer-receive-successful"
-	case request = "body-file-transfer-request"
-	case sendSuccessful = "body-file-transfer-send-successful"
-}
-
 nonisolated enum NotificationStrings {
 	static var replyActionTitle: String {
 		String(localized: .Notifications.replyActionTitle)
@@ -55,6 +49,14 @@ nonisolated enum NotificationStrings {
 
 	static var replySendButtonTitle: String {
 		String(localized: .Notifications.replySendButton)
+	}
+
+	static func messageBody(formattedNickname: String, text: String) -> String {
+		String(localized: .Notifications.bodyMessageWithNickname(formattedNickname, text))
+	}
+
+	static func actionBody(nickname: String, text: String) -> String {
+		String(localized: .Notifications.bodyActionWithNickname(nickname, text))
 	}
 
 	static func eventTypeTitle(for event: TXNotificationType) -> String {
@@ -313,32 +315,33 @@ nonisolated enum NotificationStrings {
 		) -> String? {
 			switch event {
 			case .fileTransferSendSuccessful:
-				byteCountDescription(.sendSuccessful, filename: filename, byteCount: byteCount)
+				String(
+					localized: .Notifications.bodyFileTransferSendSuccessful(
+						filename,
+						LocalizedByteCount.formatted(byteCount)
+					)
+				)
 			case .fileTransferReceiveSuccessful:
-				byteCountDescription(.receiveSuccessful, filename: filename, byteCount: byteCount)
+				String(
+					localized: .Notifications.bodyFileTransferReceiveSuccessful(
+						filename,
+						LocalizedByteCount.formatted(byteCount)
+					)
+				)
 			case .fileTransferSendFailed:
 				String(localized: .Notifications.bodyFileTransferSendFailed(filename))
 			case .fileTransferReceiveFailed:
 				String(localized: .Notifications.bodyFileTransferReceiveFailed(filename))
 			case .fileTransferReceiveRequested:
-				byteCountDescription(.request, filename: filename, byteCount: byteCount)
+				String(
+					localized: .Notifications.bodyFileTransferRequest(
+						filename,
+						LocalizedByteCount.formatted(byteCount)
+					)
+				)
 			default:
 				nil
 			}
-		}
-
-		private static func byteCountDescription(
-			_ key: NotificationFileTransferByteCountBody,
-			filename: String,
-			byteCount: UInt64
-		) -> String {
-			let format = Bundle.main.localizedString(
-				forKey: key.rawValue,
-				value: nil,
-				table: "Notifications"
-			)
-
-			return String(format: format, filename, byteCount)
 		}
 	}
 }

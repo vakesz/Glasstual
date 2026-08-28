@@ -14,14 +14,14 @@ import Foundation
 
 nonisolated enum ChannelPropertiesStrings {
 	static var invalidChannelName: String {
-		String(localized: .TDCChannelPropertiesSheet._1Nd7X)
+		String(localized: .TDCChannelPropertiesSheet.pleaseEnterAProperlyFormattedChannel)
 	}
 
 	static var configurationChangedTitle: String {
-		String(localized: .TDCChannelPropertiesSheet.mvlR5)
+		String(localized: .TDCChannelPropertiesSheet.thisChannelsConfigurationHasChangedDo)
 	}
 
 	static var unsavedChangesWarning: String {
-		String(localized: .TDCChannelPropertiesSheet.qbyHi)
+		String(localized: .TDCChannelPropertiesSheet.youWillLooseUnsavedChangesIf)
 	}
 }

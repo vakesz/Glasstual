@@ -134,10 +134,10 @@ enum IRCNotificationPolicy {
 		text: String
 	) -> String {
 		if lineType == .action || lineType == .actionNoHighlight {
-			return String(format: NotificationPayload.actionNicknameFormat, nickname, text)
+			return NotificationStrings.actionBody(nickname: nickname, text: text)
 		}
 
-		return String(format: NotificationPayload.standardNicknameFormat, formattedNickname, text)
+		return NotificationStrings.messageBody(formattedNickname: formattedNickname, text: text)
 	}
 }
 
