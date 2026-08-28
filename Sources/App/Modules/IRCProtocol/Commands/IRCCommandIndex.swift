@@ -81,6 +81,8 @@ public final class CommandIndex: NSObject {
 	}
 }
 
+/* ISOLATION-EXCEPTION: the command tables are built once and read from the
+ command dispatcher and the plugin queue alike; the storage is lock-guarded. */
 private final class CommandIndexStorage: @unchecked Sendable {
 	private typealias CommandData = [String: [String: Any]]
 

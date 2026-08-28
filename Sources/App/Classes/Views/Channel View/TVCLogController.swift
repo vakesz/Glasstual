@@ -59,9 +59,9 @@ private nonisolated let logControllerLogger = Logger(
 	category: "LogController"
 )
 
-/// Carries legacy AppKit and Objective-C values across the controller's
-/// explicit hops between the main actor and the printing queue. The values are
-/// only ever touched at one end of a hop at a time.
+/** ISOLATION-EXCEPTION: carries AppKit and Objective-C values across the
+ controller's explicit hops between the main actor and the printing queue. The
+ values are only ever touched at one end of a hop at a time. */
 private final nonisolated class LogControllerMainActorTransfer<Value>: @unchecked Sendable {
 	let value: Value
 
