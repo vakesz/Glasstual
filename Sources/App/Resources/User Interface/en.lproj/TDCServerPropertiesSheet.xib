@@ -19,6 +19,7 @@
                 <outlet property="autoDisconnectOnSleepCheck" destination="2250" id="2253"/>
                 <outlet property="autoReconnectCheck" destination="1532" id="1936"/>
                 <outlet property="autojoinWaitsForNickServCheck" destination="B1u-e0-30u" id="44s-dS-Pu5"/>
+                <outlet property="disconnectOnSASLFailureCheck" destination="sfc-01-btn" id="sfc-01-out"/>
                 <outlet property="awayNicknameTextField" destination="2335" id="eE8-0s-KKE"/>
                 <outlet property="ctcpVersionReplyTextField" destination="cV1-rs-N0f" id="cV1-rs-N0j"/>
                 <outlet property="cancelButton" destination="1456" id="1463"/>
@@ -587,6 +588,13 @@ Gw
                         <font key="font" metaFont="system"/>
                     </buttonCell>
                 </button>
+                <button horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="sfc-01-btn">
+                    <rect key="frame" x="109" y="10" width="300" height="18"/>
+                    <buttonCell key="cell" type="check" title="Disconnect if SASL authentication fails" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="sfc-01-cel">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                </button>
                 <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="A3c-XH-Q30">
                     <rect key="frame" x="100" y="234" width="320" height="5"/>
                 </box>
@@ -712,7 +720,10 @@ Gw
                 <constraint firstItem="B1u-e0-30u" firstAttribute="centerX" secondItem="1563" secondAttribute="centerX" id="MVh-Xm-az8"/>
                 <constraint firstItem="1623" firstAttribute="firstBaseline" secondItem="1601" secondAttribute="firstBaseline" id="Znp-dw-sXj"/>
                 <constraint firstItem="tzn-BP-yin" firstAttribute="leading" secondItem="1563" secondAttribute="leading" constant="80" id="ama-2t-vUE"/>
-                <constraint firstAttribute="bottom" secondItem="ptP-ZP-JAf" secondAttribute="bottom" constant="35" id="bD4-Wl-er4"/>
+                <constraint firstAttribute="bottom" secondItem="sfc-01-btn" secondAttribute="bottom" constant="10" id="bD4-Wl-er4"/>
+                <constraint firstItem="sfc-01-btn" firstAttribute="top" secondItem="ptP-ZP-JAf" secondAttribute="bottom" constant="6" symbolic="YES" id="sfc-01-ct1"/>
+                <constraint firstItem="sfc-01-btn" firstAttribute="leading" secondItem="B1u-e0-30u" secondAttribute="leading" id="sfc-01-ct2"/>
+                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="sfc-01-btn" secondAttribute="trailing" constant="20" id="sfc-01-ct3"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="1604" secondAttribute="trailing" constant="20" id="eXk-Wd-Lgf"/>
                 <constraint firstItem="7sG-7N-mzK" firstAttribute="top" secondItem="A3c-XH-Q30" secondAttribute="bottom" constant="18" id="f6k-va-7Hj"/>
                 <constraint firstItem="2Zg-jJ-evU" firstAttribute="trailing" secondItem="A3c-XH-Q30" secondAttribute="trailing" id="hrg-nn-IWs"/>

@@ -204,6 +204,14 @@ extension IRCClient {
 		resumeQueuedCapabilityNegotiation()
 	}
 
+	/// The numerics that mean the server refused this SASL attempt, as opposed
+	/// to 903 (success) or 907 (already authenticated).
+	private static let saslFailureNumerics: Set<UInt> = [
+		IRCNumeric.saslfail.rawValue,
+		IRCNumeric.sasltoolong.rawValue,
+		IRCNumeric.saslaborted.rawValue,
+	]
+
 	private func handleSASLResultNumeric(_ numeric: UInt, message: Message, shouldPrint: Bool) {
 		if shouldPrint {
 			if numeric == IRCNumeric.saslsuccess.rawValue {
@@ -216,6 +224,13 @@ extension IRCClient {
 		setCapabilityDisabled(.isInSASLNegotiation)
 		saslScramClient = nil
 		saslIncomingPayload = nil
+		if Self.saslFailureNumerics.contains(numeric), config.disconnectOnSASLFailure {
+			// Otherwise registration completes unauthenticated, which many
+			// networks treat as a security failure.
+			printDebugInformation(IRCInboundStrings.Numeric.saslAuthenticationFailedDisconnecting)
+			quit()
+			return
+		}
 		resumeQueuedCapabilityNegotiation()
 	}
 

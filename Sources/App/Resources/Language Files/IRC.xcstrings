@@ -2041,6 +2041,18 @@
         }
       }
     },
+    "sasl-authentication-failed-disconnecting" : {
+      "comment" : "Printed before disconnecting a server whose \"Disconnect if SASL authentication fails\" option is enabled.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SASL authentication failed. Disconnecting."
+          }
+        }
+      }
+    },
     "sdn-yr" : {
       "comment" : "/mute/ command. Migrated from legacy key sdn-yr; compatibility key retained.",
       "extractionState" : "manual",
