@@ -79,9 +79,16 @@ final class LabeledDelivery: NSObject {
 }
 
 public extension IRCClient {
+	/// Whether an outgoing command can be labelled and its answer correlated.
+	///
+	/// IRCv3 `labeled-response` needs `message-tags` to carry the label, and
+	/// nothing else: when the server has no other response it MUST send `ACK`,
+	/// which resolves the delivery on its own. Requiring `echo-message` as
+	/// well meant a server offering labelled responses without echo had every
+	/// message go out untracked.
 	@objc(labeledResponseTrackingEnabled)
 	func labeledResponseTrackingEnabled() -> Bool {
-		isCapabilityEnabled(.labeledResponse) && isCapabilityEnabled(.echoMessage)
+		isCapabilityEnabled(.labeledResponse) && isCapabilityEnabled(.messageTags)
 	}
 
 	@objc(nextMessageLabel)

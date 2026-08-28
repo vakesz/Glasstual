@@ -342,7 +342,6 @@ public extension IRCClient {
 		}
 		guard groupedChannels.isEmpty == false else { return }
 		let targetGroups = IRCISupportInfo.chunkTargets(groupedChannels.map(\.name), limit: targetLimit)
-		let echoMessageEnabled = isCapabilityEnabled(.echoMessage)
 		var groupOffset = 0
 		for targetGroup in targetGroups {
 			let groupChannels = Array(groupedChannels[groupOffset ..< groupOffset + targetGroup.count])
@@ -359,19 +358,35 @@ public extension IRCClient {
 					)
 
 					guard mutableLine.length < lengthBeforeFormatting else { break }
-					if echoMessageEnabled == false {
-						for channel in groupChannels {
-							_ = printLocallyIfNeeded(
-								Self.redactedServiceMessage(message, sentTo: channel.name),
-								channel: channel,
-								outbound: outbound
-							)
+					/* One command carries one label, so only the first channel in
+					 the group registers a delivery; the rest print untracked. The
+					 label used to be discarded here, which left every grouped
+					 message uncorrelated. */
+					var deliveryLabel: String?
+					for (index, channel) in groupChannels.enumerated() {
+						let label = printLocallyIfNeeded(
+							Self.redactedServiceMessage(message, sentTo: channel.name),
+							channel: channel,
+							outbound: outbound,
+							registeringDelivery: index == 0
+						)
+
+						if index == 0 {
+							deliveryLabel = label
 						}
 					}
 					let wireMessage = outbound.lineType == .action
 						? CTCPPayload.framed(command: "ACTION", text: message, sanitizingLineBreaks: false)
 						: message
-					send(outbound.wireCommand, arguments: [targetList, wireMessage])
+					if let deliveryLabel {
+						sendCommand(
+							outbound.wireCommand,
+							arguments: [targetList, wireMessage],
+							tags: ["label": deliveryLabel]
+						)
+					} else {
+						send(outbound.wireCommand, arguments: [targetList, wireMessage])
+					}
 				}
 			}
 		}
@@ -408,25 +423,20 @@ public extension IRCClient {
 		_ message: String,
 		channel: IRCChannel,
 		outbound: OutboundTextCommand,
-		localCommand: String? = nil
+		localCommand: String? = nil,
+		registeringDelivery: Bool = true
 	) -> String? {
-		if isCapabilityEnabled(.echoMessage) {
-			guard labeledResponseTrackingEnabled() else { return nil }
-			guard let label = registerPendingDelivery(for: channel) else { return nil }
+		/* With echo-message the server sends this message back and the inbound
+		 path prints it, so printing here too would show it twice -- unless a
+		 label lets the echo be matched to the line printed now. */
+		if isCapabilityEnabled(.echoMessage), labeledResponseTrackingEnabled() == false {
+			return nil
+		}
+
+		let label = registeringDelivery ? registerPendingDelivery(for: channel) : nil
+
+		if label != nil {
 			nextLineDeliveryState = .pending
-			print(
-				message,
-				by: userNickname,
-				in: channel,
-				as: outbound.lineType,
-				command: localCommand ?? outbound.wireCommand,
-				receivedAt: Date(),
-				isEncrypted: false,
-				referenceMessage: nil
-			) { [weak self] context in
-				self?.attachLineNumber(context.lineNumber, toDeliveryWithLabel: label)
-			}
-			return label
 		}
 
 		print(
@@ -436,9 +446,14 @@ public extension IRCClient {
 			as: outbound.lineType,
 			command: localCommand ?? outbound.wireCommand,
 			receivedAt: Date(),
-			isEncrypted: false
-		)
-		return nil
+			isEncrypted: false,
+			referenceMessage: nil
+		) { [weak self] context in
+			guard let label else { return }
+			self?.attachLineNumber(context.lineNumber, toDeliveryWithLabel: label)
+		}
+
+		return label
 	}
 
 	@MainActor
