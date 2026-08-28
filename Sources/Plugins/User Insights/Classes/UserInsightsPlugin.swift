@@ -39,18 +39,15 @@ import Foundation
 import GlasstualPluginKit
 
 @objc(TPIUserInsights)
-final nonisolated class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, @unchecked Sendable {
+final class UserInsightsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling {
 	var subscribedUserInputCommands: [String] {
 		["clones", "namel", "finduser", "brag"]
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
-		Task { @MainActor [weak self] in
-			self?.handleCommand(invocation)
-		}
+		handleCommand(invocation)
 	}
 
-	@MainActor
 	private func handleCommand(_ invocation: PluginCommandInvocation) {
 		guard let channel = invocation.selectedChannel else { return }
 		let command = invocation.command

@@ -36,7 +36,6 @@
  *********************************************************************** */
 
 import Foundation
-import ObjectiveC.runtime
 
 public struct PluginApplicationSnapshot: Equatable, Sendable {
 	public let timeIntervalSinceLaunch: TimeInterval
@@ -86,68 +85,6 @@ public struct PluginThemeSnapshot: Equatable, Sendable {
 }
 
 public extension PluginHost {
-	static func applicationSnapshot() -> PluginApplicationSnapshot? {
-		guard let timeIntervalSinceLaunch = HostRuntime.classTimeInterval(
-			classNamed: "TPCApplicationInfo",
-			selectorNamed: "timeIntervalSinceApplicationLaunch"
-		), let timeIntervalSinceInstall = HostRuntime.classTimeInterval(
-			classNamed: "TPCApplicationInfo",
-			selectorNamed: "timeIntervalSinceApplicationInstall"
-		), let runCount = HostRuntime.classUInt(
-			classNamed: "TPCApplicationInfo",
-			selectorNamed: "applicationRunCount"
-		), let birthday = HostRuntime.classTimeInterval(
-			classNamed: "TPCApplicationInfo",
-			selectorNamed: "applicationBirthday"
-		)
-		else {
-			return nil
-		}
-
-		return PluginApplicationSnapshot(
-			timeIntervalSinceLaunch: timeIntervalSinceLaunch,
-			timeIntervalSinceInstall: timeIntervalSinceInstall,
-			runCount: runCount,
-			birthday: birthday
-		)
-	}
-
-	static func themeSnapshot() -> PluginThemeSnapshot? {
-		guard let controller = HostRuntime.classObject(
-			classNamed: "TXSharedApplication",
-			selectorNamed: "sharedThemeController"
-		), let name = HostRuntime.object(controller, selectorNamed: "name") as? String,
-		let storageRawValue = HostRuntime.uint(controller, selectorNamed: "storageLocation"),
-		let storageLocation = PluginThemeStorageLocation(rawValue: storageRawValue),
-		let theme = HostRuntime.object(controller, selectorNamed: "theme"),
-		let appearanceRawValue = HostRuntime.uint(theme, selectorNamed: "appearance"),
-		let appearance = PluginThemeAppearance(rawValue: appearanceRawValue)
-		else {
-			return nil
-		}
-
-		let resolvedAppearance: PluginThemeAppearance
-		if appearance == .system {
-			guard let hostAppearance = HostRuntime.classObject(
-				classNamed: "TXSharedApplication",
-				selectorNamed: "sharedAppearance"
-			), let properties = HostRuntime.object(hostAppearance, selectorNamed: "properties"),
-			let isDark = HostRuntime.bool(properties, selectorNamed: "isDarkAppearance")
-			else {
-				return nil
-			}
-			resolvedAppearance = isDark ? .dark : .light
-		} else {
-			resolvedAppearance = appearance
-		}
-
-		return PluginThemeSnapshot(
-			name: name,
-			storageLocation: storageLocation,
-			resolvedAppearance: resolvedAppearance
-		)
-	}
-
 	static func formattedNumber(_ number: Int) -> String {
 		number.formatted(.number.locale(.autoupdatingCurrent))
 	}
@@ -190,91 +127,6 @@ public extension PluginHost {
 		)
 
 		return formatStyle.format(dateRange)
-	}
-}
-
-enum HostRuntime {
-	typealias ObjectMethod = @convention(c) (AnyObject, Selector) -> Unmanaged<AnyObject>?
-	typealias TimeIntervalMethod = @convention(c) (AnyObject, Selector) -> TimeInterval
-	typealias UIntMethod = @convention(c) (AnyObject, Selector) -> UInt
-	typealias BoolMethod = @convention(c) (AnyObject, Selector) -> Bool
-
-	static func classObject(classNamed className: String, selectorNamed selectorName: String) -> AnyObject? {
-		guard let objectClass = NSClassFromString(className),
-		      let implementation = classImplementation(objectClass, selectorNamed: selectorName)
-		else {
-			return nil
-		}
-
-		let selector = NSSelectorFromString(selectorName)
-		let method = unsafeBitCast(implementation, to: ObjectMethod.self)
-		return method(objectClass, selector)?.takeUnretainedValue()
-	}
-
-	static func classTimeInterval(classNamed className: String, selectorNamed selectorName: String) -> TimeInterval? {
-		guard let objectClass = NSClassFromString(className),
-		      let implementation = classImplementation(objectClass, selectorNamed: selectorName)
-		else {
-			return nil
-		}
-
-		let selector = NSSelectorFromString(selectorName)
-		let method = unsafeBitCast(implementation, to: TimeIntervalMethod.self)
-		return method(objectClass, selector)
-	}
-
-	static func classUInt(classNamed className: String, selectorNamed selectorName: String) -> UInt? {
-		guard let objectClass = NSClassFromString(className),
-		      let implementation = classImplementation(objectClass, selectorNamed: selectorName)
-		else {
-			return nil
-		}
-
-		let selector = NSSelectorFromString(selectorName)
-		let method = unsafeBitCast(implementation, to: UIntMethod.self)
-		return method(objectClass, selector)
-	}
-
-	static func object(_ object: AnyObject, selectorNamed selectorName: String) -> AnyObject? {
-		guard let implementation = instanceImplementation(object, selectorNamed: selectorName) else {
-			return nil
-		}
-
-		let selector = NSSelectorFromString(selectorName)
-		let method = unsafeBitCast(implementation, to: ObjectMethod.self)
-		return method(object, selector)?.takeUnretainedValue()
-	}
-
-	static func uint(_ object: AnyObject, selectorNamed selectorName: String) -> UInt? {
-		guard let implementation = instanceImplementation(object, selectorNamed: selectorName) else {
-			return nil
-		}
-
-		let selector = NSSelectorFromString(selectorName)
-		let method = unsafeBitCast(implementation, to: UIntMethod.self)
-		return method(object, selector)
-	}
-
-	static func bool(_ object: AnyObject, selectorNamed selectorName: String) -> Bool? {
-		guard let implementation = instanceImplementation(object, selectorNamed: selectorName) else {
-			return nil
-		}
-
-		let selector = NSSelectorFromString(selectorName)
-		let method = unsafeBitCast(implementation, to: BoolMethod.self)
-		return method(object, selector)
-	}
-
-	private static func classImplementation(_ objectClass: AnyClass, selectorNamed selectorName: String) -> IMP? {
-		class_getClassMethod(objectClass, NSSelectorFromString(selectorName)).map(method_getImplementation)
-	}
-
-	private static func instanceImplementation(_ object: AnyObject, selectorNamed selectorName: String) -> IMP? {
-		guard let objectClass = object_getClass(object) else {
-			return nil
-		}
-
-		return class_getInstanceMethod(objectClass, NSSelectorFromString(selectorName)).map(method_getImplementation)
 	}
 }
 

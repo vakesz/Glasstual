@@ -42,8 +42,8 @@ import Security
 import SecurityInterface
 
 @objc(TPI_ZNCAdditions)
-final nonisolated class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, PluginServerInputHandling,
-	PluginServerMessageIntercepting, @unchecked Sendable
+final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling, PluginServerInputHandling,
+	PluginServerMessageIntercepting
 {
 	var subscribedUserInputCommands: [String] {
 		["detach", "attach", "znccert"]
@@ -59,18 +59,13 @@ final nonisolated class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCom
 		      input.messageSequence.hasPrefix("Disconnected from IRC")
 		else { return }
 
-		performSynchronouslyOnMainActor {
-			self.handleIRCSideDisconnect(client)
-		}
+		handleIRCSideDisconnect(client)
 	}
 
 	func userInputCommandInvoked(_ invocation: PluginCommandInvocation) {
-		Task { @MainActor [weak self] in
-			self?.handleUserCommand(invocation)
-		}
+		handleUserCommand(invocation)
 	}
 
-	@MainActor
 	private func handleUserCommand(_ invocation: PluginCommandInvocation) {
 		let client = invocation.client
 		guard client.isConnectedToZNC else {
@@ -93,7 +88,6 @@ final nonisolated class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCom
 		}
 	}
 
-	@MainActor
 	private func showCertificateChain(for client: PluginClient) {
 		guard let certificateData = client.zncCertificateChainData else {
 			client.printDebug(String(localized: .BasicLanguage.noInformationAvailable))
@@ -135,7 +129,6 @@ final nonisolated class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCom
 		)
 	}
 
-	@MainActor
 	private func updateAttachment(
 		command: String,
 		message: String,
@@ -202,7 +195,7 @@ final nonisolated class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCom
 		}
 		sender.hostmask = hostmask
 
-		let mutableInput = input.copy()
+		var mutableInput = input
 		let body = message as String
 		if body == "joined" {
 			mutableInput.command = "JOIN"
@@ -259,25 +252,10 @@ final nonisolated class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCom
 		}
 	}
 
-	@MainActor
 	private func handleIRCSideDisconnect(_ client: PluginClient) {
 		for channel in client.channels where channel.isActive && channel.name.hasPrefix("~#") == false {
 			channel.deactivate()
 		}
 		client.refreshSidebar()
-	}
-}
-
-private nonisolated func performSynchronouslyOnMainActor(_ work: @MainActor @Sendable () -> Void) {
-	if Thread.isMainThread {
-		MainActor.assumeIsolated {
-			work()
-		}
-	} else {
-		DispatchQueue.main.sync {
-			MainActor.assumeIsolated {
-				work()
-			}
-		}
 	}
 }

@@ -4,7 +4,7 @@
  *********************************************************************** */
 
 @testable import Glasstual
-@_spi(Host) import GlasstualPluginKit
+import GlasstualPluginKit
 import XCTest
 
 final class PluginRuntimeMigrationTests: XCTestCase {
@@ -28,7 +28,7 @@ final class PluginRuntimeMigrationTests: XCTestCase {
 	}
 
 	func testOutputSuppressionRulesUsePluginKitModel() {
-		let rule = PluginOutputSuppressionRule()
+		var rule = PluginOutputSuppressionRule()
 		rule.match = "NOTICE"
 		rule.restrictConsole = true
 
@@ -48,18 +48,16 @@ final class PluginRuntimeMigrationTests: XCTestCase {
 		defaults.set(true, forKey: "Smiley Converter Extension -> Enable Service")
 		defaults.set(false, forKey: "Smiley Converter Extension -> Enable Extra Emoticons")
 
-		let plugin = PluginItem()
-		XCTAssertTrue(plugin.loadBundle(bundle, host: makePluginHost(defaults: defaults)))
+		let plugin = try XCTUnwrap(PluginItem.load(bundle, host: makePluginHost(defaults: defaults)))
 		defer { plugin.unloadBundle() }
 
 		let primaryClass = try XCTUnwrap(plugin.primaryClass as? NSObject)
 		let preferenceChanged = NSSelectorFromString("preferenceChanged:")
 		XCTAssertTrue(primaryClass.responds(to: preferenceChanged))
-		XCTAssertNotNil(plugin.primaryClass as? any PluginMessageRendering)
+		let renderer = try XCTUnwrap(plugin.primaryClass as? any PluginMessageRendering)
 
 		let renderTask = Task.detached { () -> [String] in
-			guard let renderer = plugin.primaryClass as? any PluginMessageRendering else { return [] }
-			return (0 ..< 500).compactMap { _ in
+			(0 ..< 500).compactMap { _ in
 				renderer.willRenderMessage(
 					PluginRenderEvent(message: ":)", kind: .privateMessage)
 				)
@@ -81,6 +79,7 @@ final class PluginRuntimeMigrationTests: XCTestCase {
 	}
 }
 
+@MainActor
 private func makePluginHost(defaults: UserDefaults) -> PluginHostContext {
 	PluginHostContext(
 		defaults: defaults,
@@ -97,6 +96,8 @@ private func makePluginHost(defaults: UserDefaults) -> PluginHostContext {
 				usesDarkSidebar: false
 			)
 		},
+		applicationSnapshot: { nil },
+		themeSnapshot: { nil },
 		observeConnectionState: { handler in
 			handler(false)
 			return PluginObservation(cancellation: {})

@@ -37,17 +37,22 @@
 
 import AppKit
 import GlasstualPluginKit
+import os
 
 @objc(TPI_ChatFilterExtension)
-final nonisolated class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHandling,
+final class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncomingCommandHandling,
 	PluginPreferencesProviding,
-	PluginTextEventHandling, ChatFilterEditSheetDelegate, NSTableViewDataSource, NSTableViewDelegate,
-	@unchecked Sendable
+	PluginTextEventHandling, ChatFilterEditSheetDelegate, NSTableViewDataSource, NSTableViewDelegate
 {
+	private static let logger = Logger(
+		subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
+		category: "Extension['Chat Filter']"
+	)
+
 	private static let defaultsKey = "Glasstual Chat Filter Extension -> Filters"
 	private static let dragType = NSPasteboard.PasteboardType("filterTableDragToken")
 
-	@IBOutlet private var preferencesPaneView: NSView!
+	@IBOutlet private var preferencesPaneView: NSView?
 	@IBOutlet private var filterAddMenu: NSMenu!
 	@IBOutlet private var filterAddButton: NSButton!
 	@IBOutlet private var filterRemoveButton: NSButton!
@@ -88,8 +93,12 @@ final nonisolated class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncom
 
 	func pluginLoaded(using host: PluginHostContext) {
 		self.host = host
-		DispatchQueue.main.syncIfNeeded {
-			self.bundle.loadNibNamed("TPI_ChatFilterExtension", owner: self, topLevelObjects: nil)
+		if bundle.loadNibNamed("TPI_ChatFilterExtension", owner: self, topLevelObjects: nil) {
+			/* Registered here rather than in `awakeFromNib`, which AppKit calls
+			 without actor isolation. */
+			filterTable?.registerForDraggedTypes([Self.dragType])
+		} else {
+			Self.logger.error("Failed to load TPI_ChatFilterExtension.xib; the preferences pane is unavailable")
 		}
 		activeChatFilterIndex = -1
 		engine = ChatFilterEngine(parentObject: self, host: host)
@@ -99,6 +108,7 @@ final nonisolated class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncom
 			object: defaults,
 			queue: .main
 		) { [weak self] _ in
+			// The queue is `.main`, but the callback signature is not isolated.
 			Task { @MainActor in self?.defaultsChanged() }
 		}
 	}
@@ -112,19 +122,12 @@ final nonisolated class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncom
 		host = nil
 	}
 
-	var pluginPreferencesPaneView: NSView {
+	var pluginPreferencesPaneView: NSView? {
 		preferencesPaneView
 	}
 
 	var pluginPreferencesPaneMenuItemName: String {
 		String(localized: .TPIChatFilterExtension.preferencesPaneTitle)
-	}
-
-	override nonisolated func awakeFromNib() {
-		MainActor.assumeIsolated {
-			super.awakeFromNib()
-			filterTable.registerForDraggedTypes([Self.dragType])
-		}
 	}
 
 	private var filters: [ChatFilter] {
@@ -304,15 +307,5 @@ final nonisolated class ChatFilterPlugin: NSObject, GlasstualPlugin, PluginIncom
 		filterArrayController.insert(filter, atArrangedObjectIndex: destination)
 		saveFilters()
 		return true
-	}
-}
-
-private extension DispatchQueue {
-	func syncIfNeeded(_ work: () -> Void) {
-		if Thread.isMainThread {
-			work()
-		} else {
-			sync(execute: work)
-		}
 	}
 }
