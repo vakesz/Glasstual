@@ -31,6 +31,12 @@
  *********************************************************************** */
 
 import AppKit
+import os
+
+private let colorLogger = Logger(
+	subsystem: "com.codeux.frameworks.CocoaExtensions",
+	category: "Color"
+)
 
 public extension NSColor {
 	@objc(calibratedColorWithRed:green:blue:alpha:)
@@ -50,49 +56,60 @@ public extension NSColor {
 
 	@objc(hexadecimalValue)
 	var textualHexadecimalValue: String {
-		let components = if colorSpace.colorSpaceModel == .gray {
-			RGBComponents(red: whiteComponent, green: whiteComponent, blue: whiteComponent)
-		} else {
-			RGBComponents(red: redComponent, green: greenComponent, blue: blueComponent)
+		/* Asking a catalog or pattern colour for its components raises an
+		 uncatchable exception, and an extended-range colour can report a
+		 component outside 0...1. Convert first, clamp second. */
+		guard let color = usingColorSpace(.sRGB) else {
+			colorLogger.error("Could not convert a colour to sRGB for its hexadecimal value")
+
+			return "#000000"
 		}
 
 		return String(
 			format: "#%02X%02X%02X",
-			UInt(components.red * 0xFF),
-			UInt(components.green * 0xFF),
-			UInt(components.blue * 0xFF)
+			NSColor.textualChannelByte(color.redComponent),
+			NSColor.textualChannelByte(color.greenComponent),
+			NSColor.textualChannelByte(color.blueComponent)
 		)
+	}
+
+	private static func textualChannelByte(_ component: CGFloat) -> UInt {
+		UInt((min(max(component, 0), 1) * 0xFF).rounded())
 	}
 
 	@objc(colorWithHexadecimalValue:)
 	class func textual_color(hexadecimalValue value: String) -> NSColor? {
-		let value = value.hasPrefix("#") ? String(value.dropFirst()) : value
+		var value = value.hasPrefix("#") ? String(value.dropFirst()) : value
 
-		guard !value.isEmpty, value.count <= 8, value.count.isMultiple(of: 2),
-		      var color = UInt64(value, radix: 16)
-		else {
+		/* CSS shorthand: #rgb and #rgba repeat each digit. */
+		if value.count == 3 || value.count == 4 {
+			value = String(value.flatMap { [$0, $0] })
+		}
+
+		guard value.count == 6 || value.count == 8, var color = UInt64(value, radix: 16) else {
 			return nil
 		}
 
-		if value.count < 8 {
+		if value.count == 6 {
 			color = color << 8 | 0xFF
 		}
 
-		return textual_calibratedDeviceColor(
-			red: CGFloat((color & 0xFF00_0000) >> 24),
-			green: CGFloat((color & 0x00FF_0000) >> 16),
-			blue: CGFloat((color & 0x0000_FF00) >> 8),
-			alpha: CGFloat(color & 0x0000_00FF)
+		/* Channels here are 0-255. The convenience initialiser's "is this
+		 0-1 or 0-255?" heuristic reads a channel of exactly 1 as full
+		 intensity, so build the components directly. */
+		return NSColor(
+			deviceRed: textualChannel(color >> 24),
+			green: textualChannel(color >> 16),
+			blue: textualChannel(color >> 8),
+			alpha: textualChannel(color)
 		)
+	}
+
+	private class func textualChannel(_ value: UInt64) -> CGFloat {
+		CGFloat(value & 0xFF) / 0xFF
 	}
 
 	private class func normalized(_ component: CGFloat) -> CGFloat {
 		component > 1 ? component / 0xFF : component
 	}
-}
-
-private struct RGBComponents {
-	let red: CGFloat
-	let green: CGFloat
-	let blue: CGFloat
 }

@@ -336,8 +336,19 @@
           }
         }
       }
+    },
+    "dcc-ovr": {
+      "comment": "Error shown when a peer sends more data than the file transfer announced. The argument is the peer nickname.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer from %@ failed because the sender exceeded the announced file size."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
 }
-

@@ -138,9 +138,36 @@ public final class CapabilityRegistry: NSObject {
 	public static func parseCapabilityList(_ list: String) -> [String: [String]] {
 		var offered: [String: [String]] = [:]
 
+		for token in capabilityTokens(in: list) {
+			offered[token.name.lowercased()] = token.values
+		}
+
+		return offered
+	}
+
+	/// Maps each offered capability's lowercased name to the exact spelling the
+	/// server used.
+	///
+	/// IRCv3 capability names are case-sensitive, so a strict server can `NAK` a
+	/// `CAP REQ` whose spelling differs from what it advertised. Matching stays
+	/// case-insensitive; only what is echoed back changes.
+	@objc(offeredNamesFromCapabilityList:)
+	public static func offeredNames(fromCapabilityList list: String) -> [String: String] {
+		var names: [String: String] = [:]
+
+		for token in capabilityTokens(in: list) {
+			names[token.name.lowercased()] = token.name
+		}
+
+		return names
+	}
+
+	private static func capabilityTokens(in list: String) -> [(name: String, values: [String])] {
+		var tokens: [(name: String, values: [String])] = []
+
 		for token in list.components(separatedBy: CharacterSet.whitespaces) where token.isEmpty == false {
 			guard let equalsIndex = token.firstIndex(of: "=") else {
-				offered[token.lowercased()] = []
+				tokens.append((token, []))
 				continue
 			}
 
@@ -153,10 +180,10 @@ public final class CapabilityRegistry: NSObject {
 			let valueStart = token.index(after: equalsIndex)
 			let values = token[valueStart...].split(separator: ",").map(String.init)
 
-			offered[name.lowercased()] = values
+			tokens.append((name, values))
 		}
 
-		return offered
+		return tokens
 	}
 
 	@objc(capabilitiesToRequestFromOffered:)

@@ -587,6 +587,15 @@ public extension LogController {
 		atLineNumber lineNumber: String,
 		index: UInt
 	) {
+		/* The link parser's scheme set is user-extensible, so an address that
+		 became clickable is not necessarily one the inline-content service can
+		 handle. It only ever fetches over HTTP, and aborts on a file: URL. */
+		guard let scheme = URL(string: address)?.scheme?.lowercased(),
+		      scheme == "http" || scheme == "https"
+		else {
+			return
+		}
+
 		LogControllerInlineMediaService.shared().processAddress(
 			address,
 			withUniqueIdentifier: uniqueIdentifier,

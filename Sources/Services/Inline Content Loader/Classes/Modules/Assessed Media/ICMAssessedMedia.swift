@@ -40,6 +40,16 @@ import InlineContentKit
 
 @objc(ICMAssessedMedia)
 final class AssessedMediaModule: InlineContentModule {
+	/** Renders through the framework's own template into an escaped attribute,
+	 and carries no adult content of its own. */
+	override static var contentUntrusted: Bool {
+		false
+	}
+
+	override static var contentNotSafeForWork: Bool {
+		false
+	}
+
 	private var mediaAssessor: MediaAssessor?
 
 	@objc(_assessMedia)

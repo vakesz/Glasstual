@@ -94,6 +94,20 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 	@objc public private(set) var isConnecting = false
 	@objc public private(set) var isDisconnecting = false
 	@objc public private(set) var isSecured = false
+	@objc public private(set) var certificateTrustWasOverridden = false
+
+	/// Whether TLS is established *and* the server's chain validated on its own.
+	///
+	/// Distinct from ``isSecured``, which is also true when the user clicked
+	/// through the trust panel or the connection is configured to skip chain
+	/// validation. Anything that outlives the connection — an STS policy, for
+	/// instance — has to key on this instead.
+	@objc public var isSecuredWithValidatedCertificate: Bool {
+		isSecured
+			&& certificateTrustWasOverridden == false
+			&& config.connectionShouldValidateCertificateChain
+	}
+
 	@objc public private(set) var isSending = false
 	@objc public private(set) var EOFReceived = false
 	@objc public private(set) var connectedAddress: String?
@@ -127,6 +141,7 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 		isDisconnecting = false
 		EOFReceived = false
 		isSecured = false
+		certificateTrustWasOverridden = false
 		isSending = false
 		connectedAddress = nil
 		connectionInvalidatedVoluntarily = false
@@ -267,6 +282,13 @@ public final class Connection: NSObject, RemoteConnectionClientProtocol, @unchec
 
 	private func openInsecureCertificateTrustPanel(_ response: @escaping TrustDecisionHandler) {
 		guard trustPanel == nil else { return }
+
+		/* Reaching this panel means the chain did not validate. Whatever the
+		 user answers, this connection is no longer one whose certificate the
+		 system vouched for, and policies that outlive it must not be taken
+		 from it. */
+		certificateTrustWasOverridden = true
+
 		let response = TrustResponseBox(response)
 
 		exportSecureConnectionInformation { [weak self] policyName, _, _, certificateChain, _ in

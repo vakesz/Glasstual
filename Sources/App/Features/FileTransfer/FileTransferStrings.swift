@@ -23,6 +23,7 @@ enum FileTransferFailure: Equatable, Sendable {
 	case invalidResumePosition
 	case noListeningPort
 	case notConnectedToIRC
+	case oversizedTransfer
 	case sourceFileUnreadable
 	case sourceIPAddressUnknown
 	case storageFull
@@ -46,6 +47,8 @@ enum FileTransferStrings {
 			LocalizedStringResource.TDCFileTransferDialog.vxcSd(peerNickname)
 		case .notConnectedToIRC:
 			LocalizedStringResource.TDCFileTransferDialog._12P0V(peerNickname)
+		case .oversizedTransfer:
+			LocalizedStringResource.TDCFileTransferDialog.dccOvr(peerNickname)
 		case .sourceFileUnreadable:
 			LocalizedStringResource.TDCFileTransferDialog.nabDx(peerNickname)
 		case .sourceIPAddressUnknown:

@@ -38,11 +38,17 @@
 import CocoaExtensions
 import CoreGraphics
 import Foundation
+import os
 
 public let inlineContentErrorDomain = "ICLInlineContentErrorDomain"
 
 @objc(ICLPayload)
 open class InlineContentPayload: PortablePropertyObject, @unchecked Sendable {
+	fileprivate static let logger = Logger(
+		subsystem: "com.vakesz.glasstual.InlineContentLoader",
+		category: "Payload"
+	)
+
 	fileprivate var urlStorage = URL(string: "about:blank")!
 	fileprivate var urlToInlineStorage = URL(string: "about:blank")!
 	fileprivate var lineNumberStorage = ""
@@ -284,7 +290,20 @@ public final class InlineContentPayloadMutable: InlineContentPayload, @unchecked
 	@objc override public var urlToInline: URL {
 		get { urlToInlineStorage }
 		set {
-			precondition(!newValue.isFileURL)
+			/* This value is rendered into a `src` attribute in the log view.
+			 Modules build it from strings a remote server supplied, so it is
+			 filtered here rather than trusted — and an out-of-policy value is
+			 dropped instead of aborting the service process. */
+			guard let scheme = newValue.scheme?.lowercased(),
+			      InlineContentHelpers.permittedSchemes.contains(scheme)
+			else {
+				InlineContentPayload.logger.error(
+					"Refused inline URL with scheme '\(newValue.scheme ?? "(none)", privacy: .public)'"
+				)
+
+				return
+			}
+
 			urlToInlineStorage = newValue
 		}
 	}
