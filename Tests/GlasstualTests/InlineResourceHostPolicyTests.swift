@@ -6,6 +6,7 @@ import Testing
 /// page that holds the native `app` bridge, so the host is checked before the
 /// address is handed to the page.
 @Suite("Inline resource host policy")
+@MainActor
 struct InlineResourceHostPolicyTests {
 	@Test("A local file is copied and served from the theme directory")
 	func fileURLsArePermitted() throws {

@@ -16,7 +16,7 @@ import CocoaExtensions
 import os
 import UserNotifications
 
-enum NotificationPayload {
+nonisolated enum NotificationPayload {
 	static let clientIdentifierKey = "clientId"
 	static let channelIdentifierKey = "channelId"
 	static let standardNicknameFormat = "%@ %@"

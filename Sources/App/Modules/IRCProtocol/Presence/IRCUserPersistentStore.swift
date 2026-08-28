@@ -12,7 +12,7 @@
 
 import Foundation
 
-final class UserPersistentStore {
+final nonisolated class UserPersistentStore {
 	var relations: UserRelations?
 	var presentAwayMessageFor301LastEvent: CFAbsoluteTime = 0
 	var removeUserTimer: (any DispatchSourceTimer)?

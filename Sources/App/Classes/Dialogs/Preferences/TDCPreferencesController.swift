@@ -183,7 +183,7 @@ public final class PreferencesController: WindowBase, NSOutlineViewDataSource, N
 		}
 	}
 
-	override public func validateValue(
+	override public nonisolated func validateValue(
 		_ ioValue: AutoreleasingUnsafeMutablePointer<AnyObject?>,
 		forKey key: String
 	) throws {

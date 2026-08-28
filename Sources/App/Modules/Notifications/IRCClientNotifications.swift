@@ -40,59 +40,7 @@ import AppKit
 import CocoaExtensions
 import Foundation
 
-private enum IRCClientNotificationMainActorBridge {
-	static func sync<Result: Sendable>(
-		_ operation: @escaping @MainActor @Sendable () -> Result
-	) -> Result {
-		if Thread.isMainThread {
-			return MainActor.assumeIsolated(operation)
-		}
-
-		return DispatchQueue.main.sync {
-			MainActor.assumeIsolated(operation)
-		}
-	}
-}
-
-/// Carries the legacy tree-item reference through a synchronous handoff. The
-/// calling thread remains blocked, and the reference is dereferenced only by
-/// the main-actor operation, so it is never accessed concurrently by this seam.
-private struct IRCNotificationTargetReference: @unchecked Sendable {
-	let value: IRCTreeItem?
-}
-
-private struct IRCNotificationUserInfoSnapshot: Sendable {
-	private let propertyList: Data?
-
-	init(_ userInfo: [String: Any]?) {
-		propertyList = userInfo.flatMap {
-			try? PropertyListSerialization.data(fromPropertyList: $0, format: .binary, options: 0)
-		}
-	}
-
-	@MainActor
-	func dictionary() -> [String: Any]? {
-		guard let propertyList,
-		      let dictionary = try? PropertyListSerialization.propertyList(
-		      	from: propertyList,
-		      	options: [],
-		      	format: nil
-		      ) as? [String: Any]
-		else { return nil }
-
-		return dictionary
-	}
-}
-
 public extension IRCClient {
-	@objc(formatNotificationToSpeak:)
-	func formatNotification(toSpeak notification: SpokenNotification) -> String? {
-		IRCClientNotificationMainActorBridge.sync { [self, notification] in
-			formatSpokenNotification(notification)
-		}
-	}
-
-	@MainActor
 	private func formatSpokenNotification(_ notification: SpokenNotification) -> String? {
 		guard !isTerminating else { return nil }
 
@@ -262,9 +210,7 @@ public extension IRCClient {
 	}
 
 	@objc func clearEventsToSpeak() {
-		IRCClientNotificationMainActorBridge.sync { [self] in
-			SharedApplication.sharedSpeechSynthesizer().clearQueue(for: self)
-		}
+		SharedApplication.sharedSpeechSynthesizer().clearQueue(for: self)
 	}
 
 	@objc(speakEvent:lineType:target:nickname:text:)
@@ -275,20 +221,20 @@ public extension IRCClient {
 		nickname: String?,
 		text: String?
 	) {
-		let targetReference = IRCNotificationTargetReference(value: target)
-		IRCClientNotificationMainActorBridge.sync { [self, targetReference, nickname, text] in
-			let resolvedTarget = targetReference.value ?? self
-			let channel = (resolvedTarget as AnyObject) as? IRCChannel
-			guard SharedApplication.sharedNotificationController().speakEvent(event, in: channel) else { return }
-			let notification = SpokenNotification(
-				notificationType: event,
-				lineType: lineType,
-				target: resolvedTarget,
-				nickname: nickname,
-				text: text
-			)
-			SharedApplication.sharedSpeechSynthesizer().speak(notification)
-		}
+		let resolvedTarget = target ?? self
+		let channel = (resolvedTarget as AnyObject) as? IRCChannel
+		guard SharedApplication.sharedNotificationController().speakEvent(event, in: channel) else { return }
+		let notification = SpokenNotification(
+			notificationType: event,
+			lineType: lineType,
+			target: resolvedTarget,
+			nickname: nickname,
+			text: text
+		)
+		/* Formatting reads the client and the channel, so it happens here rather
+		 than on the synthesizer's queue. */
+		notification.spokenText = formatSpokenNotification(notification)
+		SharedApplication.sharedSpeechSynthesizer().speak(notification)
 	}
 
 	@objc(notifyText:lineType:target:nickname:text:)
@@ -327,17 +273,14 @@ public extension IRCClient {
 		text: String?,
 		userInfo: [String: Any]?
 	) -> Bool {
-		let userInfoSnapshot = IRCNotificationUserInfoSnapshot(userInfo)
-		return IRCClientNotificationMainActorBridge.sync { [self, target, nickname, text, userInfoSnapshot] in
-			deliverNotification(
-				event,
-				lineType: lineType,
-				target: target,
-				nickname: nickname,
-				text: text,
-				userInfo: userInfoSnapshot.dictionary()
-			)
-		}
+		deliverNotification(
+			event,
+			lineType: lineType,
+			target: target,
+			nickname: nickname,
+			text: text,
+			userInfo: userInfo
+		)
 	}
 
 	@MainActor

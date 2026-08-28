@@ -12,13 +12,23 @@
 
 import AppKit
 
-private struct SynchronousMainActorValue<Value>: @unchecked Sendable {
+private nonisolated struct SynchronousMainActorValue<Value>: @unchecked Sendable {
 	let value: Value
 }
 
 @objc(IRCChannelMemberListController)
 @MainActor
 public final class IRCChannelMemberListController: NSArrayController {
+	/** NSController's initializers are nonisolated, so they have to be spelled out
+	 to opt back out of the module's main-actor default. */
+	override public nonisolated init(content: Any?) {
+		super.init(content: content)
+	}
+
+	public required nonisolated init?(coder: NSCoder) {
+		super.init(coder: coder)
+	}
+
 	private weak var memberList: ChannelMemberList?
 
 	@IBOutlet public private(set) var tableView: MemberList!

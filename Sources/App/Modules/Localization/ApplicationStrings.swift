@@ -14,7 +14,7 @@ import Foundation
 
 /// Semantic access to application-wide strings retained in the legacy-compatible
 /// `BasicLanguage` table.
-enum ApplicationStrings {
+nonisolated enum ApplicationStrings {
 	static var unknownValue: String {
 		String(localized: .BasicLanguage.vblXi)
 	}

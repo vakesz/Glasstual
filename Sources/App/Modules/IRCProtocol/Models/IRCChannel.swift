@@ -40,6 +40,7 @@ import CocoaExtensions
 import Foundation
 import GlasstualPluginKit
 import os
+import Synchronization
 
 public extension Notification.Name {
 	static let ircChannelConfigurationWasUpdated = Notification.Name(
@@ -56,10 +57,6 @@ private enum ChannelStatusChange {
 	static let configurationNotification = Notification.Name.ircChannelConfigurationWasUpdated
 }
 
-private struct ChannelMainActorTransfer<Value>: @unchecked Sendable {
-	let value: Value
-}
-
 @objc(IRCChannel)
 open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProtocol {
 	private static let logger = Logger(
@@ -72,7 +69,10 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		category: "Termination"
 	)
 
-	@objc public private(set) var config: ChannelConfig
+	@objc public private(set) var config: ChannelConfig {
+		didSet { refreshDescription() }
+	}
+
 	@objc public var topic: String? {
 		didSet {
 			guard topic != oldValue else {
@@ -141,6 +141,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 
 		super.init()
 
+		refreshDescription()
 		config.writeSecretKeyToKeychain()
 	}
 
@@ -200,8 +201,23 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		self
 	}
 
-	override open var description: String {
-		"<IRCChannel [\(associatedClient?.description ?? "")]: \(name)>"
+	/** `NSObject.description` is nonisolated, so it cannot read the main-actor
+	 configuration the text is built from. The text is published here instead
+	 whenever the configuration changes. */
+	private let descriptionSnapshot = Mutex("<IRCChannel>")
+
+	override open nonisolated var description: String {
+		descriptionSnapshot.withLock { $0 }
+	}
+
+	override func associatedClientDidChange() {
+		refreshDescription()
+	}
+
+	/// Republishes the text `description` returns.
+	func refreshDescription() {
+		let text = "<IRCChannel [\(associatedClient?.description ?? "")]: \(name)>"
+		descriptionSnapshot.withLock { $0 = text }
 	}
 
 	override open var uniqueIdentifier: String {
@@ -369,13 +385,9 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 		if isUtility == false {
 			memberInfo = ChannelMemberList(channel: legacyChannel)
 
-			if isSelectedChannel {
-				let channel = legacyChannel
-				MainActor.assumeIsolated {
-					guard let mainWindow = NSObject.applicationController().mainWindow else { return }
-					mainWindow.memberList?.assign(to: channel)
-					mainWindow.updateMemberListVisibilityForSelection()
-				}
+			if isSelectedChannel, let mainWindow = NSObject.applicationController().mainWindow {
+				mainWindow.memberList?.assign(to: legacyChannel)
+				mainWindow.updateMemberListVisibilityForSelection()
 			}
 		}
 
@@ -436,10 +448,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 			window.close()
 		}
 
-		let treeItem = ChannelMainActorTransfer(value: legacyTreeItem)
-		MainActor.assumeIsolated {
-			NSObject.applicationController().mainWindow.inputHistoryManager().destroy(treeItem.value)
-		}
+		NSObject.applicationController().mainWindow.inputHistoryManager().destroy(legacyTreeItem)
 		viewController?.prepareForPermanentDestruction()
 	}
 
@@ -643,10 +652,7 @@ open class Channel: TreeItem, ChannelMemberListing, ChannelMemberListPrivateProt
 	}
 
 	private var isSelectedChannel: Bool {
-		let channel = ChannelMainActorTransfer(value: self)
-		return MainActor.assumeIsolated {
-			channel.value === NSObject.applicationController().mainWindow.selectedItem
-		}
+		self === NSObject.applicationController().mainWindow.selectedItem
 	}
 
 	override open var isActive: Bool {

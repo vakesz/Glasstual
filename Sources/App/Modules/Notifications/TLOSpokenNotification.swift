@@ -13,15 +13,19 @@
 import Foundation
 
 @objc(TLOSpokenNotification)
-public final class SpokenNotification: NSObject, @unchecked Sendable {
+public final nonisolated class SpokenNotification: NSObject, @unchecked Sendable {
 	@objc public private(set) weak var client: IRCClient!
 	@objc public private(set) weak var channel: IRCChannel!
 	@objc public private(set) var nickname: String!
 	@objc public private(set) var text: String!
 	@objc public private(set) var lineType: TVCLogLineType
 	@objc public private(set) var notificationType: TXNotificationType
+	/** The text the synthesizer speaks. Formatting reads main-actor client state,
+	 so the producer fills it in before the notification is queued. */
+	@objc public var spokenText: String?
 
 	@objc(initWithNotification:lineType:target:nickname:text:)
+	@MainActor
 	public init(
 		notificationType: TXNotificationType,
 		lineType: TVCLogLineType,

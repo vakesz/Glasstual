@@ -105,7 +105,7 @@ public final class TypingTracker: NSObject {
 		super.init()
 	}
 
-	deinit {
+	isolated deinit {
 		expiryTimer?.invalidate()
 	}
 

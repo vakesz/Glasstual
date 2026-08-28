@@ -12,7 +12,7 @@
 
 import Foundation
 
-enum ChannelPropertiesStrings {
+nonisolated enum ChannelPropertiesStrings {
 	static var invalidChannelName: String {
 		String(localized: .TDCChannelPropertiesSheet._1Nd7X)
 	}

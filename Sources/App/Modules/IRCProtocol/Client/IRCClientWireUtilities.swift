@@ -43,7 +43,7 @@ import Foundation
 /// seams. Keeping these transformations independent of connection state makes
 /// protocol output deterministic and directly testable.
 @objc(IRCClientWireUtilities)
-public final class ClientWireUtilities: NSObject {
+public final nonisolated class ClientWireUtilities: NSObject {
 	private static let credentialMask = "••••••"
 
 	/// Ceiling on `%<width>n` style padding in the nickname format. The width
@@ -361,19 +361,16 @@ public final class ClientWireUtilities: NSObject {
 		"CHATHISTORY BEFORE \(target) \(selector) \(limit)"
 	}
 
-	@objc(netsplitNicknameList:limit:)
-	public static func netsplitNicknameList(_ nicknames: NSOrderedSet, limit: UInt) -> String {
-		let allNicknames = nicknames.array.compactMap { $0 as? String }
-
-		guard UInt(allNicknames.count) > limit else {
-			return allNicknames.joined(separator: ", ")
+	public static func netsplitNicknameList(_ nicknames: [String], limit: UInt) -> String {
+		guard UInt(nicknames.count) > limit else {
+			return nicknames.joined(separator: ", ")
 		}
 
-		let shown = allNicknames.prefix(Int(limit)).joined(separator: ", ")
+		let shown = nicknames.prefix(Int(limit)).joined(separator: ", ")
 
 		return IRCInboundStrings.History.abbreviatedNicknames(
 			shown,
-			remaining: UInt(allNicknames.count - Int(limit))
+			remaining: UInt(nicknames.count - Int(limit))
 		)
 	}
 }

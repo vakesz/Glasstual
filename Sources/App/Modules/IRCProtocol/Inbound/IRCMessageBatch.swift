@@ -40,6 +40,20 @@ import Foundation
 public typealias IRCMessageBatchMessageContainer = MessageBatchContainer
 public typealias IRCMessageBatchMessage = MessageBatch
 
+/// What a batch can hold: a message, or a batch nested inside it.
+public enum BatchEntry {
+	case message(Message)
+	case batch(MessageBatch)
+
+	/// The entry as the object it wraps, for identity comparisons.
+	var object: AnyObject {
+		switch self {
+		case let .message(message): message
+		case let .batch(batch): batch
+		}
+	}
+}
+
 @objc(IRCMessageBatchMessageContainer)
 public final class MessageBatchContainer: NSObject {
 	private let lock = NSLock()
@@ -49,35 +63,19 @@ public final class MessageBatchContainer: NSObject {
 		lock.withLock { entries }
 	}
 
-	@objc(queueEntry:)
-	public func queueEntry(_ entry: Any) {
-		guard let entry = entry as? MessageBatch else {
-			return
-		}
-
+	public func queueEntry(_ entry: MessageBatch) {
 		lock.withLock {
 			entries[entry.batchToken] = entry
 		}
 	}
 
-	@objc(dequeueEntry:)
-	public func dequeueEntry(_ entry: Any) {
+	public func dequeueEntry(_ entry: MessageBatch) {
+		dequeueEntry(withBatchToken: entry.batchToken)
+	}
+
+	public func dequeueEntry(withBatchToken token: String) {
 		lock.withLock {
-			let batch: MessageBatch?
-			let token: String
-
-			if let entry = entry as? MessageBatch {
-				batch = entry
-				token = entry.batchToken
-			} else if let entry = entry as? String {
-				batch = entries[entry]
-				token = entry
-			} else {
-				return
-			}
-
-			batch?.dequeueEntries()
-			entries.removeValue(forKey: token)
+			entries.removeValue(forKey: token)?.dequeueEntries()
 		}
 	}
 
@@ -101,7 +99,7 @@ public final class MessageBatch: NSObject {
 	@objc public static let maximumQueuedEntries = 5000
 
 	private let lock = NSLock()
-	private var entries: [Any] = []
+	private var entries: [BatchEntry] = []
 
 	@objc public var batchIsOpen = false
 	@objc public var batchToken = ""
@@ -109,19 +107,14 @@ public final class MessageBatch: NSObject {
 	@objc public var batchParameters: [String]?
 	@objc public weak var parentBatchMessage: MessageBatch?
 
-	@objc public var queuedEntries: [Any] {
+	public var queuedEntries: [BatchEntry] {
 		lock.withLock { entries }
 	}
 
 	/// `true` when the entry was accepted; `false` when the queue is full.
 	@discardableResult
-	@objc(queueEntry:)
-	public func queueEntry(_ entry: Any) -> Bool {
-		guard entry is Message || entry is MessageBatch else {
-			return false
-		}
-
-		return lock.withLock {
+	public func queueEntry(_ entry: BatchEntry) -> Bool {
+		lock.withLock {
 			guard entries.count < MessageBatch.maximumQueuedEntries else {
 				return false
 			}
@@ -132,15 +125,29 @@ public final class MessageBatch: NSObject {
 		}
 	}
 
-	@objc(dequeueEntry:)
-	public func dequeueEntry(_ entry: Any) {
-		guard entry is Message || entry is MessageBatch else {
-			return
-		}
+	@discardableResult
+	public func queueEntry(_ message: Message) -> Bool {
+		queueEntry(.message(message))
+	}
 
+	@discardableResult
+	public func queueEntry(_ batch: MessageBatch) -> Bool {
+		queueEntry(.batch(batch))
+	}
+
+	public func dequeueEntry(_ entry: BatchEntry) {
+		let object = entry.object
 		lock.withLock {
-			entries.removeAll { ($0 as AnyObject).isEqual(entry) }
+			entries.removeAll { $0.object === object }
 		}
+	}
+
+	public func dequeueEntry(_ message: Message) {
+		dequeueEntry(.message(message))
+	}
+
+	public func dequeueEntry(_ batch: MessageBatch) {
+		dequeueEntry(.batch(batch))
 	}
 
 	@objc public func dequeueEntries() {

@@ -37,67 +37,8 @@
  *********************************************************************** */
 
 import Foundation
-import ObjectiveC
-
-private final class ClientUserStore: @unchecked Sendable {
-	private let lock = NSLock()
-	private var usersByNickname: [String: User] = [:]
-
-	var count: Int {
-		lock.withLock { usersByNickname.count }
-	}
-
-	var users: [User] {
-		lock.withLock { Array(usersByNickname.values) }
-	}
-
-	func user(forKey key: String) -> User? {
-		lock.withLock { usersByNickname[key] }
-	}
-
-	func insert(_ user: User, forKey key: String) {
-		lock.withLock { usersByNickname[key] = user }
-	}
-
-	func removeUser(forKey key: String) {
-		_ = lock.withLock { usersByNickname.removeValue(forKey: key) }
-	}
-
-	func removeAll() {
-		lock.withLock { usersByNickname.removeAll(keepingCapacity: false) }
-	}
-
-	func rekey(using keyForUser: (User) -> String) {
-		lock.withLock {
-			var rekeyedUsers: [String: User] = [:]
-			for user in usersByNickname.values {
-				rekeyedUsers[keyForUser(user)] = user
-			}
-			usersByNickname = rekeyedUsers
-		}
-	}
-}
-
-private nonisolated(unsafe) var clientUserStoreKey: UInt8 = 0
 
 public extension IRCClient {
-	private var userStore: ClientUserStore {
-		if let store = objc_getAssociatedObject(self, &clientUserStoreKey) as? ClientUserStore {
-			return store
-		}
-
-		objc_sync_enter(self)
-		defer { objc_sync_exit(self) }
-
-		if let store = objc_getAssociatedObject(self, &clientUserStoreKey) as? ClientUserStore {
-			return store
-		}
-
-		let store = ClientUserStore()
-		objc_setAssociatedObject(self, &clientUserStoreKey, store, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-		return store
-	}
-
 	@objc var myself: User? {
 		findUser(userNickname)
 	}
@@ -109,11 +50,14 @@ public extension IRCClient {
 
 	@objc(findUser:)
 	func findUser(_ nickname: String) -> User? {
-		userStore.user(forKey: casefoldNickname(nickname))
+		usersByNickname[casefoldNickname(nickname)]
 	}
 
 	@objc internal func rekeyUserList() {
-		userStore.rekey { self.casefoldNickname($0.nickname) }
+		usersByNickname = Dictionary(
+			usersByNickname.values.map { (casefoldNickname($0.nickname), $0) },
+			uniquingKeysWith: { _, latest in latest }
+		)
 	}
 
 	@objc(mutableCopyOfUserWithNickname:)
@@ -129,11 +73,11 @@ public extension IRCClient {
 	}
 
 	@objc var numberOfUsers: UInt {
-		UInt(userStore.count)
+		UInt(usersByNickname.count)
 	}
 
 	@objc var userList: [User] {
-		userStore.users
+		Array(usersByNickname.values)
 	}
 
 	@objc(addUser:)
@@ -153,7 +97,7 @@ public extension IRCClient {
 			storedUser = user
 		}
 
-		userStore.insert(storedUser, forKey: casefoldNickname(storedUser.nickname))
+		usersByNickname[casefoldNickname(storedUser.nickname)] = storedUser
 		storedUser.becamePrimaryUser()
 		return storedUser
 	}
@@ -180,11 +124,11 @@ public extension IRCClient {
 
 	@objc(removeUserWithNickname:)
 	func removeUser(withNickname nickname: String) {
-		userStore.removeUser(forKey: casefoldNickname(nickname))
+		usersByNickname.removeValue(forKey: casefoldNickname(nickname))
 	}
 
 	@objc internal func removeAllUsers() {
-		userStore.removeAll()
+		usersByNickname.removeAll()
 	}
 
 	@objc(renameUser:to:)

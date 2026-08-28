@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class LogViewJavaScriptTests: XCTestCase {
 	func testDescriptionUsesJavaScriptPrimitiveNames() {
 		XCTAssertEqual(LogViewJavaScript.describe(true as NSNumber), "true")

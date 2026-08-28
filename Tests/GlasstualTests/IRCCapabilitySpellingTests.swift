@@ -4,6 +4,7 @@ import Testing
 /// IRCv3 capability names are case-sensitive on the wire, so what the client
 /// echoes back in `CAP REQ` has to be what the server advertised.
 @Suite("Capability spelling")
+@MainActor
 struct IRCCapabilitySpellingTests {
 	@Test("Matching stays case-insensitive")
 	func matchingIsCaseInsensitive() {

@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientWireUtilitiesTests: XCTestCase {
 	func testModeChangesAreBatchedAtServerLimit() {
 		XCTAssertEqual(
@@ -126,10 +127,8 @@ final class IRCClientWireUtilitiesTests: XCTestCase {
 	}
 
 	func testShortNetsplitNicknameListsRetainOrder() {
-		let nicknames = NSOrderedSet(array: ["alice", "bob", "carol"])
-
 		XCTAssertEqual(
-			ClientWireUtilities.netsplitNicknameList(nicknames, limit: 10),
+			ClientWireUtilities.netsplitNicknameList(["alice", "bob", "carol"], limit: 10),
 			"alice, bob, carol"
 		)
 	}

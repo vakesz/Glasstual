@@ -204,6 +204,8 @@ targetTemplates:
         MinimumGlasstualVersion: 8.0.0
     settings:
       base:
+        # Plugins are UI/app-state code loaded into the app; main actor by default.
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         LD_RUNPATH_SEARCH_PATHS:
           - $(inherited)
           - "@loader_path/../../../Frameworks"
@@ -644,6 +646,9 @@ targets:
     productName: Glasstual
     settings:
       base:
+        # The app is AppKit UI and app state; main actor by default. Helpers,
+        # parsers and value types opt out with an explicit `nonisolated`.
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         REGISTER_APP_GROUPS: YES
         PRODUCT_NAME: Glasstual
         PRODUCT_BUNDLE_IDENTIFIER: $(GLASSTUAL_BUNDLE_IDENTIFIER)

@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class LocalizationCatalogBoundaryTests: XCTestCase {
 	func testAddressBookAndServerEndpointValidationCopy() {
 		XCTAssertEqual(

@@ -31,7 +31,7 @@
 
 import Foundation
 
-private final class PluginIncomingCommandContext: @unchecked Sendable {
+private struct PluginIncomingCommandContext {
 	let command: String
 	let text: String?
 	let author: Prefix
@@ -40,25 +40,6 @@ private final class PluginIncomingCommandContext: @unchecked Sendable {
 	let receivedAt: Date
 	let message: Message
 
-	init(
-		command: String,
-		text: String?,
-		author: Prefix,
-		destination: IRCChannel?,
-		client: IRCClient,
-		receivedAt: Date,
-		message: Message
-	) {
-		self.command = command
-		self.text = text
-		self.author = author
-		self.destination = destination
-		self.client = client
-		self.receivedAt = receivedAt
-		self.message = message
-	}
-
-	@MainActor
 	func dispatch() -> Bool {
 		PluginDispatcher.dispatchReceivedCommand(
 			command,
@@ -118,9 +99,7 @@ public extension IRCClient {
 			receivedAt: message.receivedAt,
 			message: message
 		)
-		let shouldPrint = MainActor.assumeIsolated {
-			context.dispatch()
-		}
+		let shouldPrint = context.dispatch()
 		if shouldPrint, let destination, collapseNetsplitMessage(message, in: destination) {
 			return false
 		}

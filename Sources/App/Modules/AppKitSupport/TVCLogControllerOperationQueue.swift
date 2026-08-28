@@ -14,7 +14,7 @@ import CocoaExtensions
 import Foundation
 import os
 
-private let logControllerOperationQueueLogger = Logger(
+private nonisolated let logControllerOperationQueueLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "LogControllerOperationQueue"
 )
@@ -41,7 +41,7 @@ private struct LogControllerPrintingOperationState {
 }
 
 @objc(TVCLogControllerPrintingOperation)
-public final class LogControllerPrintingOperation: Operation, @unchecked Sendable {
+public final nonisolated class LogControllerPrintingOperation: Operation, @unchecked Sendable {
 	var executionBlock: LogControllerPrintingBlock?
 	weak var viewController: LogController?
 	var pendingOperationsKey = ""
@@ -203,7 +203,7 @@ public final class LogControllerPrintingOperation: Operation, @unchecked Sendabl
 }
 
 @objc(TVCLogControllerPrintingOperationQueue)
-public final class LogControllerPrintingOperationQueue: OperationQueue, @unchecked Sendable {
+public final nonisolated class LogControllerPrintingOperationQueue: OperationQueue, @unchecked Sendable {
 	/* objc_sync was recursive. Keep that behavior while using a stable lock
 	 identity because operation completion can re-enter queue bookkeeping. */
 	private let pendingOperationsLock = NSRecursiveLock()

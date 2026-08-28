@@ -8,6 +8,7 @@ import Foundation
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class StringTokenizerMigrationTests: XCTestCase {
 	func testWhitespaceTokenReportsUTF16Ranges() {
 		let source: NSString = "JOIN    #swift"

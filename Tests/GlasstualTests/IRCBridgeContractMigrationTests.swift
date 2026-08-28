@@ -39,6 +39,7 @@
 import GlasstualPluginKit
 import XCTest
 
+@MainActor
 final class IRCBridgeContractMigrationTests: XCTestCase {
 	func testChannelTypeAndStatusRawValuesRemainStable() {
 		XCTAssertEqual(ChannelType.channel.rawValue, 0)

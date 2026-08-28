@@ -8,6 +8,7 @@ import XCTest
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
 @objc
+@MainActor
 class TLOInternetAddressLookupDelegateSpy: NSObject, InternetAddressLookupDelegate {
 	@objc
 	func internetAddressLookupReturnedAddress(_: String) {}

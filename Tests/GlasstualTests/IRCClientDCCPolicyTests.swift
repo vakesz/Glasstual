@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientDCCPolicyTests: XCTestCase {
 	func testParsesQuotedSendAndNormalizesToken() {
 		let request = DCCFileTransferRequestParser.parse("SEND \"hello world.txt\" 3232235777 0 42 T123")

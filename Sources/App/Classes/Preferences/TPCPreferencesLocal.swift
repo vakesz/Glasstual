@@ -45,7 +45,7 @@ private nonisolated(unsafe) var excludeKeywords: [String]?
 private nonisolated(unsafe) var matchKeywords: [String]?
 private nonisolated(unsafe) var keywordDefaultsObservation: AnyCancellable?
 
-public extension TextualPreferences {
+public nonisolated extension TextualPreferences {
 	private class func bool(_ key: String) -> Bool {
 		preferences.bool(forKey: key)
 	}

@@ -30,7 +30,7 @@ enum IRCCTCPLagRating: Sendable {
 	}
 }
 
-enum IRCCTCPStrings {
+nonisolated enum IRCCTCPStrings {
 	static var clientInfoReply: String {
 		String(localized: .IRC.jerJu)
 	}

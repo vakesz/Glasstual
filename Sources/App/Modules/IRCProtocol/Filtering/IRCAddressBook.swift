@@ -55,7 +55,7 @@ import Foundation
 }
 
 @objc(IRCAddressBookEntry)
-public class AddressBookEntry: PortablePropertyDict {
+public nonisolated class AddressBookEntry: PortablePropertyDict {
 	fileprivate var ignoreClientToClientProtocolStorage = false
 	fileprivate var ignoreFileTransferRequestsStorage = false
 	fileprivate var ignoreGeneralEventMessagesStorage = false
@@ -361,7 +361,7 @@ public class AddressBookEntry: PortablePropertyDict {
 }
 
 @objc(IRCAddressBookEntryMutable)
-public final class MutableAddressBookEntry: AddressBookEntry {
+public final nonisolated class MutableAddressBookEntry: AddressBookEntry {
 	override public static var isMutable: Bool {
 		true
 	}

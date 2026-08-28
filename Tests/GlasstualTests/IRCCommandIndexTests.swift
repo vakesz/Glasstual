@@ -38,6 +38,7 @@ import XCTest
  *
  *********************************************************************** */
 @objc
+@MainActor
 class IRCCommandIndexTests: XCTestCase {
 	@objc
 	override static func setUp() {

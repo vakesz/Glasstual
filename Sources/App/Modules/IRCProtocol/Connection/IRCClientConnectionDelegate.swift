@@ -84,8 +84,10 @@ public extension IRCClient {
 	func resetAllPropertyValues() {
 		batchMessages.dequeueEntries()
 		typingTracker.removeAll()
-		typingStateSent.removeAllObjects()
-		typingActiveSentAt.removeAllObjects()
+		typingStateSent.removeAll()
+		typingActiveSentAt.removeAll()
+		typingPauseTasks.values.forEach { $0.cancel() }
+		typingPauseTasks.removeAll()
 
 		nextLineReplyToMessageIdentifier = nil
 		nextMessageReplyIdentifier = nil

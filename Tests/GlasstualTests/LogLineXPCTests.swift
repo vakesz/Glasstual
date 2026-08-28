@@ -5,6 +5,7 @@ import Testing
 /// `LogLineXPC` is the wire format between the app and the historic-log
 /// service, so it has to survive a hostile archive without trapping.
 @Suite("Log line XPC transfer object")
+@MainActor
 struct LogLineXPCTests {
 	private static let keys = (
 		data: "data",

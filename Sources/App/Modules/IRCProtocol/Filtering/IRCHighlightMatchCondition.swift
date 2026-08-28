@@ -39,13 +39,13 @@ import CocoaExtensions
 import Foundation
 import os
 
-private let highlightConditionLogger = Logger(
+private nonisolated let highlightConditionLogger = Logger(
 	subsystem: Bundle.main.bundleIdentifier ?? "Glasstual",
 	category: "IRCHighlightMatchCondition"
 )
 
 @objc(IRCHighlightMatchCondition)
-public class HighlightMatchCondition: PortablePropertyDict {
+public nonisolated class HighlightMatchCondition: PortablePropertyDict {
 	fileprivate var matchIsExcludedStorage = false
 	fileprivate var matchChannelIdStorage: String?
 	fileprivate var matchKeywordStorage = ""
@@ -160,7 +160,7 @@ public class HighlightMatchCondition: PortablePropertyDict {
 }
 
 @objc(IRCHighlightMatchConditionMutable)
-public final class MutableHighlightMatchCondition: HighlightMatchCondition {
+public final nonisolated class MutableHighlightMatchCondition: HighlightMatchCondition {
 	override public static var isMutable: Bool {
 		true
 	}

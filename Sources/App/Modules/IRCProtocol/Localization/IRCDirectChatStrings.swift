@@ -38,7 +38,7 @@
 
 import Foundation
 
-enum IRCDirectChatStrings {
+nonisolated enum IRCDirectChatStrings {
 	static var notConnected: String {
 		String(localized: .IRC.dccC9)
 	}
@@ -88,7 +88,7 @@ enum IRCDirectChatStrings {
 	}
 }
 
-enum IRCFileTransferStrings {
+nonisolated enum IRCFileTransferStrings {
 	static func request(nickname: String, filename: String, byteCount: UInt64) -> String {
 		IRCLegacyFormat.fileTransferRequest.format(nickname, filename, byteCount)
 	}

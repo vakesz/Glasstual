@@ -15,20 +15,23 @@ import AppKit
 import CocoaExtensions
 import GlasstualPluginKit
 
-private func isBase10Numeric(_ character: unichar) -> Bool {
+private nonisolated func isBase10Numeric(_ character: unichar) -> Bool {
 	character >= 0x30 && character <= 0x39
 }
 
+private nonisolated let defaultHostmaskNicknameLength = 50
+
+@MainActor
 private func maximumHostmaskNicknameLength(on client: IRCClient?) -> Int {
 	guard let client, client.isConnectedToZNC == false, client.supportInfo.configurationReceived else {
-		return 50
+		return defaultHostmaskNicknameLength
 	}
 
 	let configuredMaximum = Int(client.supportInfo.maximumNicknameLength)
-	return configuredMaximum > 0 ? configuredMaximum : 50
+	return configuredMaximum > 0 ? configuredMaximum : defaultHostmaskNicknameLength
 }
 
-public extension NSString {
+public nonisolated extension NSString {
 	@objc(isValidInternetAddress)
 	var isValidInternetAddress: Bool {
 		guard length > 0 else {
@@ -62,19 +65,39 @@ public extension NSString {
 		username: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		address: AutoreleasingUnsafeMutablePointer<NSString?>?
 	) -> Bool {
-		hostmaskComponents(nickname, username: username, address: address, on: nil)
+		hostmaskComponents(
+			nickname,
+			username: username,
+			address: address,
+			maximumNicknameLength: defaultHostmaskNicknameLength
+		)
 	}
 
 	@objc(hostmaskComponents:username:address:onClient:)
+	@MainActor
 	func hostmaskComponents(
 		_ nickname: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		username: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		address: AutoreleasingUnsafeMutablePointer<NSString?>?,
 		on client: IRCClient?
 	) -> Bool {
+		hostmaskComponents(
+			nickname,
+			username: username,
+			address: address,
+			maximumNicknameLength: maximumHostmaskNicknameLength(on: client)
+		)
+	}
+
+	private func hostmaskComponents(
+		_ nickname: AutoreleasingUnsafeMutablePointer<NSString?>?,
+		username: AutoreleasingUnsafeMutablePointer<NSString?>?,
+		address: AutoreleasingUnsafeMutablePointer<NSString?>?,
+		maximumNicknameLength: Int
+	) -> Bool {
 		guard let components = IRCHostmask(
 			parsing: self as String,
-			maximumNicknameLength: maximumHostmaskNicknameLength(on: client)
+			maximumNicknameLength: maximumNicknameLength
 		) else {
 			return false
 		}
@@ -113,10 +136,11 @@ public extension NSString {
 
 	@objc(isHostmaskNickname)
 	var isHostmaskNickname: Bool {
-		isHostmaskNickname(on: nil)
+		IRCHostmask.isValidNickname(self as String, maximumLength: defaultHostmaskNicknameLength)
 	}
 
 	@objc(isHostmaskNicknameOn:)
+	@MainActor
 	func isHostmaskNickname(on client: IRCClient?) -> Bool {
 		IRCHostmask.isValidNickname(
 			self as String,
@@ -125,6 +149,7 @@ public extension NSString {
 	}
 
 	@objc(isChannelNameOn:)
+	@MainActor
 	func isChannelName(on client: IRCClient) -> Bool {
 		guard length > 0 else {
 			return false
@@ -157,6 +182,7 @@ public extension NSString {
 	}
 
 	@objc(channelNameWithoutBangOn:)
+	@MainActor
 	func channelNameWithoutBang(on client: IRCClient) -> String? {
 		guard isChannelName(on: client) else {
 			return self as String

@@ -64,29 +64,15 @@ enum IRCChatHistoryPolicy {
 	}
 }
 
-private enum HistoryMainActorBridge {
-	static func sync(_ operation: @escaping @MainActor @Sendable () -> Void) {
-		if Thread.isMainThread {
-			MainActor.assumeIsolated(operation)
-		} else {
-			DispatchQueue.main.sync { MainActor.assumeIsolated(operation) }
-		}
-	}
-}
-
-private struct HistoryChannelReference: @unchecked Sendable {
-	let value: IRCChannel
-}
-
 public extension IRCClient {
 	@objc(resetChatHistoryState)
 	func resetChatHistoryState() {
-		chatHistoryFailedTargets.removeAllObjects()
-		chatHistoryPendingBeforeTargets.removeAllObjects()
+		chatHistoryFailedTargets.removeAll()
+		chatHistoryPendingBeforeTargets.removeAll()
 		chatHistoryPrependChannel = nil
 		chatHistoryPrependedLines = nil
-		readMarkerSentDates.removeAllObjects()
-		readMarkerPendingChannels.removeAllObjects()
+		readMarkerSentDates.removeAll()
+		readMarkerPendingChannels.removeAll()
 		readMarkerTimer.stop()
 	}
 
@@ -163,7 +149,7 @@ public extension IRCClient {
 		guard chatHistoryIsAvailable(for: channel) else { return }
 		let target = casefoldedTarget(channel.name)
 		guard !chatHistoryPendingBeforeTargets.contains(target) else { return }
-		chatHistoryPendingBeforeTargets.add(target)
+		chatHistoryPendingBeforeTargets.insert(target)
 		sendLine(chatHistoryBeforeCommand(target: channel.name, date: date))
 	}
 
@@ -194,9 +180,11 @@ public extension IRCClient {
 		if prepend, let channel, let foldedTarget {
 			chatHistoryPendingBeforeTargets.remove(foldedTarget)
 			chatHistoryPrependChannel = channel
-			chatHistoryPrependedLines = NSMutableArray()
+			chatHistoryPrependedLines = []
 		}
-		for case let message as Message in batchMessage.queuedEntries where !chatHistoryMessageIsDuplicate(message) {
+		for case let .message(message) in batchMessage.queuedEntries
+			where !chatHistoryMessageIsDuplicate(message)
+		{
 			message.markAsHistoric()
 			processIncomingMessage(message)
 		}
@@ -209,14 +197,11 @@ public extension IRCClient {
 	@objc(flushChatHistoryPrependedLines)
 	func flushChatHistoryPrependedLines() {
 		let channel = chatHistoryPrependChannel
-		let lines = chatHistoryPrependedLines?.compactMap { $0 as? LogLine } ?? []
+		let lines = chatHistoryPrependedLines ?? []
 		chatHistoryPrependChannel = nil
 		chatHistoryPrependedLines = nil
 		guard let channel, !lines.isEmpty else { return }
-		let channelReference = HistoryChannelReference(value: channel)
-		HistoryMainActorBridge.sync { [channelReference, lines] in
-			channelReference.value.viewController?.prependHistoricLogLines(lines)
-		}
+		channel.viewController?.prependHistoricLogLines(lines)
 	}
 
 	@objc(noteChatHistoryFailure:)
@@ -226,7 +211,7 @@ public extension IRCClient {
 		let foldedTarget = casefoldedTarget(target)
 		chatHistoryPendingBeforeTargets.remove(foldedTarget)
 		guard !chatHistoryFailedTargets.contains(foldedTarget) else { return false }
-		chatHistoryFailedTargets.add(foldedTarget)
+		chatHistoryFailedTargets.insert(foldedTarget)
 		return true
 	}
 
@@ -259,19 +244,19 @@ public extension IRCClient {
 		guard readMarkerIsAvailable(for: channel),
 		      IRCChatHistoryPolicy.shouldAdvanceMarker(
 		      	candidate: date,
-		      	previous: readMarkerSentDates[channel.uniqueIdentifier] as? Date
+		      	previous: readMarkerSentDates[channel.uniqueIdentifier]
 		      )
 		else { return }
-		readMarkerPendingChannels.add(channel)
-		if !readMarkerTimer.timerIsActive {
+		readMarkerPendingChannels.append(channel)
+		if !readMarkerTimer.isActive {
 			readMarkerTimer.start(IRCChatHistoryPolicy.readMarkerDebounceInterval)
 		}
 	}
 
 	@objc(onReadMarkerTimer)
 	func onReadMarkerTimer() {
-		let channels = readMarkerPendingChannels.compactMap { $0 as? IRCChannel }
-		readMarkerPendingChannels.removeAllObjects()
+		let channels = readMarkerPendingChannels
+		readMarkerPendingChannels.removeAll()
 		for channel in channels {
 			sendReadMarker(for: channel)
 		}
@@ -282,7 +267,7 @@ public extension IRCClient {
 		guard readMarkerIsAvailable(for: channel), let newestDate = newestKnownLineDate(for: channel),
 		      IRCChatHistoryPolicy.shouldAdvanceMarker(
 		      	candidate: newestDate,
-		      	previous: readMarkerSentDates[channel.uniqueIdentifier] as? Date
+		      	previous: readMarkerSentDates[channel.uniqueIdentifier]
 		      )
 		else { return }
 		readMarkerSentDates[channel.uniqueIdentifier] = newestDate
@@ -297,7 +282,7 @@ public extension IRCClient {
 		else { return }
 		if IRCChatHistoryPolicy.shouldAdvanceMarker(
 			candidate: date,
-			previous: readMarkerSentDates[channel.uniqueIdentifier] as? Date
+			previous: readMarkerSentDates[channel.uniqueIdentifier]
 		) {
 			readMarkerSentDates[channel.uniqueIdentifier] = date
 		}
@@ -306,10 +291,7 @@ public extension IRCClient {
 
 	@objc(applyReadMarkerDate:toChannel:)
 	func applyReadMarker(_ date: Date, to channel: IRCChannel) {
-		let channelReference = HistoryChannelReference(value: channel)
-		HistoryMainActorBridge.sync { [self, channelReference, date] in
-			applyReadMarkerOnMainActor(date, to: channelReference.value)
-		}
+		applyReadMarkerOnMainActor(date, to: channel)
 	}
 }
 

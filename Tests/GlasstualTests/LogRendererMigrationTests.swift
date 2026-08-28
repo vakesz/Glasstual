@@ -11,6 +11,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class LogRendererMigrationTests: XCTestCase {
 	func testAttributedRenderingRemovesControlCharactersAndPreservesEffects() throws {
 		let bold = String(UnicodeScalar(UInt8(IRCTextFormatterControlCharacter.bold)))

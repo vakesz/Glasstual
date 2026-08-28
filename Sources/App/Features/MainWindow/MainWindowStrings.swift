@@ -13,8 +13,8 @@
 import Foundation
 import GlasstualPluginKit
 
-enum MainWindowStrings {
-	enum MemberList {
+nonisolated enum MainWindowStrings {
+	nonisolated enum MemberList {
 		static var userIsAway: String {
 			String(localized: .TVCMainWindow.jkrEd)
 		}
@@ -82,7 +82,7 @@ enum MainWindowStrings {
 		}
 	}
 
-	enum ConnectionStatus {
+	nonisolated enum ConnectionStatus {
 		case disconnected
 		case waitingToReconnect
 		case connecting
@@ -108,7 +108,7 @@ enum MainWindowStrings {
 		}
 	}
 
-	enum Loading {
+	nonisolated enum Loading {
 		static var configuration: String {
 			String(localized: .TVCMainWindow.iphA9)
 		}
@@ -118,7 +118,7 @@ enum MainWindowStrings {
 		}
 	}
 
-	enum Conversation {
+	nonisolated enum Conversation {
 		static var directChat: String {
 			String(localized: .TVCMainWindow.dccCh)
 		}
@@ -148,7 +148,7 @@ enum MainWindowStrings {
 		}
 	}
 
-	enum Toolbar {
+	nonisolated enum Toolbar {
 		static var connectionSecurity: String {
 			String(localized: .TVCMainWindow.tbCs)
 		}
@@ -162,7 +162,7 @@ enum MainWindowStrings {
 		}
 	}
 
-	enum InputBar {
+	nonisolated enum InputBar {
 		static var addServerOrChannel: String {
 			String(localized: .TVCMainWindow.ibAd)
 		}
@@ -200,7 +200,7 @@ enum MainWindowStrings {
 		}
 	}
 
-	enum Menu {
+	nonisolated enum Menu {
 		static func serverList(isVisible: Bool) -> String {
 			isVisible
 				? String(localized: .TVCMainWindow.mnuHsl)
@@ -214,13 +214,13 @@ enum MainWindowStrings {
 		}
 	}
 
-	enum Dock {
+	nonisolated enum Dock {
 		static func overflowBadge(maximum: String) -> String {
 			String(localized: .TVCMainWindow.dkiBg(maximum))
 		}
 	}
 
-	enum Reply {
+	nonisolated enum Reply {
 		static var anonymousMessage: String {
 			String(localized: .TVCMainWindow.rplAn)
 		}
@@ -235,7 +235,7 @@ enum MainWindowStrings {
 		}
 	}
 
-	enum Typing {
+	nonisolated enum Typing {
 		static func caption(for nicknames: [String]) -> String {
 			precondition(nicknames.isEmpty == false, "Typing captions require at least one nickname")
 

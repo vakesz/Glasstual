@@ -38,6 +38,7 @@ import XCTest
  *
  *********************************************************************** */
 @objc
+@MainActor
 class IRCMessageParsingTests: XCTestCase {
 	@objc
 	func testMessageTagsDecodeEscapesAndMetadata() {

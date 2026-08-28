@@ -39,6 +39,7 @@ import XCTest
  * SUCH DAMAGE.
  *
  *********************************************************************** */
+@MainActor
 class TLOSCRAMClientTests: XCTestCase {
 	private let serverFirst =
 		"r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096"

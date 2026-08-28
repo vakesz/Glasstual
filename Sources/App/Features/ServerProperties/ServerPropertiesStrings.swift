@@ -12,8 +12,8 @@
 
 import Foundation
 
-enum ServerPropertiesStrings {
-	enum AddressBook {
+nonisolated enum ServerPropertiesStrings {
+	nonisolated enum AddressBook {
 		static func entryType(_ entryType: IRCAddressBookEntryType) -> String {
 			switch entryType {
 			case .ignore, .mixed:
@@ -26,7 +26,7 @@ enum ServerPropertiesStrings {
 		}
 	}
 
-	enum Highlight {
+	nonisolated enum Highlight {
 		static var allChannels: String {
 			String(localized: .TDCServerPropertiesSheet._61F6B)
 		}
@@ -38,7 +38,7 @@ enum ServerPropertiesStrings {
 		}
 	}
 
-	enum Navigation {
+	nonisolated enum Navigation {
 		static var serverProperties: String {
 			String(localized: .TDCServerPropertiesSheet.lwwPc)
 		}
@@ -108,7 +108,7 @@ enum ServerPropertiesStrings {
 		}
 	}
 
-	enum Validation {
+	nonisolated enum Validation {
 		static var invalidUsername: String {
 			String(localized: .TDCServerPropertiesSheet._8IwQ8)
 		}
@@ -126,7 +126,7 @@ enum ServerPropertiesStrings {
 		}
 	}
 
-	enum Certificate {
+	nonisolated enum Certificate {
 		static var noneSelected: String {
 			String(localized: .TDCServerPropertiesSheet._6XzEc)
 		}
@@ -148,7 +148,7 @@ enum ServerPropertiesStrings {
 		}
 	}
 
-	enum CipherSuites {
+	nonisolated enum CipherSuites {
 		static func title(collectionName: String) -> String {
 			String(localized: .TDCServerPropertiesSheet.yko5G(collectionName))
 		}
@@ -158,7 +158,7 @@ enum ServerPropertiesStrings {
 		}
 	}
 
-	enum NickServ {
+	nonisolated enum NickServ {
 		static var missingPasswordTitle: String {
 			String(localized: .TDCServerPropertiesSheet._94REq)
 		}
@@ -168,7 +168,7 @@ enum ServerPropertiesStrings {
 		}
 	}
 
-	enum ExternalChange {
+	nonisolated enum ExternalChange {
 		static var reloadTitle: String {
 			String(localized: .TDCServerPropertiesSheet.bzhIl)
 		}

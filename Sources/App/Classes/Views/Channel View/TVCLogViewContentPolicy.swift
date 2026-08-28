@@ -193,7 +193,7 @@ public enum LogViewContentPolicy {
 		return "\"\(escaped)\""
 	}
 
-	public static func sanitizedStyleSheetText(_ text: String?) -> String? {
+	public nonisolated static func sanitizedStyleSheetText(_ text: String?) -> String? {
 		guard let text else {
 			return nil
 		}

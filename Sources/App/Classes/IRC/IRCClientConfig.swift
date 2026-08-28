@@ -41,7 +41,7 @@ import Foundation
 import GlasstualPluginKit
 import os
 
-private enum ClientConfigDefaults {
+private nonisolated enum ClientConfigDefaults {
 	static let dictionaryVersion: UInt = 710
 	static let proxyPort: UInt16 = 1080
 	static let serverPort: UInt16 = 6667
@@ -55,7 +55,7 @@ private enum ClientConfigDefaults {
 	static let maximumFloodMessages: UInt = 60
 }
 
-private func checkedModel<Model>(_ value: Any, as _: Model.Type) -> Model {
+private nonisolated func checkedModel<Model>(_ value: Any, as _: Model.Type) -> Model {
 	guard let model = value as? Model else {
 		preconditionFailure("Expected a \(Model.self) copy, received \(Swift.type(of: value))")
 	}
@@ -64,7 +64,7 @@ private func checkedModel<Model>(_ value: Any, as _: Model.Type) -> Model {
 }
 
 @objc(IRCClientConfig)
-open class ClientConfig: PortablePropertyDict {
+open nonisolated class ClientConfig: PortablePropertyDict {
 	fileprivate var autoConnectStorage = false
 	fileprivate var autoReconnectStorage = false
 	fileprivate var autoSleepModeDisconnectStorage = true
@@ -734,7 +734,7 @@ open class ClientConfig: PortablePropertyDict {
 	}
 }
 
-extension ClientConfig {
+nonisolated extension ClientConfig {
 	private var legacyServerAddress: String? {
 		serverListStorage.first?.serverAddress ?? legacyServerAddressStorage
 	}
@@ -1097,7 +1097,7 @@ extension ClientConfig {
 }
 
 @objc(IRCClientConfigMutable)
-public final class MutableClientConfig: ClientConfig {
+public final nonisolated class MutableClientConfig: ClientConfig {
 	override public static var isMutable: Bool {
 		true
 	}

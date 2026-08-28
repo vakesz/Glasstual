@@ -40,7 +40,7 @@
 import Foundation
 @testable import Glasstual
 
-final class GLTTestClientConfig: IRCClientConfig, @unchecked Sendable {
+final nonisolated class GLTTestClientConfig: IRCClientConfig, @unchecked Sendable {
 	var testNicknamePassword: String?
 
 	override var nicknamePassword: String? {
@@ -54,6 +54,7 @@ final class GLTTestClientConfig: IRCClientConfig, @unchecked Sendable {
 /// An IRC client double that records network and presentation output without
 /// opening a socket. Tests opt into real incoming-message handling when they
 /// need to exercise the production state machine.
+@MainActor
 final class GLTTestClient: IRCClient, @unchecked Sendable {
 	let sentCapabilityCommands = NSMutableArray()
 	let sentLines = NSMutableArray()

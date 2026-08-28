@@ -39,6 +39,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientNotificationPolicyTests: XCTestCase {
 	func testAdmissionDiscardsTerminatingAndCollapsedNetsplitEvents() {
 		XCTAssertEqual(admission(event: .highlight, terminating: true), .discard)

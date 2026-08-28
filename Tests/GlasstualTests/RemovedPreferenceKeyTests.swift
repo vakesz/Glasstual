@@ -19,13 +19,14 @@ import Testing
 /// registered default and a master-list entry, which is what made them look
 /// live from the outside.
 @Suite("Removed preference keys")
+@MainActor
 struct RemovedPreferenceKeyTests {
 	private static let removedKeys = [
 		"InlineMediaLimitInsecureContent",
 		"User List Mode Badge Colors -> no mode",
 	]
 
-	private static let preferencePlists = [
+	private nonisolated static let preferencePlists = [
 		"PreferenceKeyMasterList",
 		"RegisteredUserDefaultsInContainer",
 		"KeysExcludedFromExport",

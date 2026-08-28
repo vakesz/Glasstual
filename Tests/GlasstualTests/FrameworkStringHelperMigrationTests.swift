@@ -8,6 +8,7 @@ import Foundation
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class FrameworkStringHelperMigrationTests: XCTestCase {
 	func testHashesMatchPublishedDigests() {
 		let source: NSString = "abc"

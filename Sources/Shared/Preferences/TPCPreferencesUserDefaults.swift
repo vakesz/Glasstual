@@ -38,12 +38,12 @@
 import AppKit
 import CocoaExtensions
 
-public extension Notification.Name {
+public nonisolated extension Notification.Name {
 	static let textualUserDefaultsDidChange = Self("TPCPreferencesUserDefaultsDidChangeNotification")
 }
 
 @objc(TPCPreferencesUserDefaults)
-public final class TextualUserDefaults: UserDefaults {
+public final nonisolated class TextualUserDefaults: UserDefaults {
 	private static let storageSuiteName: String = {
 		#if DEBUG
 			if let reviewSuite = ProcessInfo.processInfo.environment["GLASSTUAL_UI_REVIEW_SUITE"],
@@ -137,7 +137,7 @@ public final class TextualUserDefaults: UserDefaults {
 }
 
 @objc(TPCPreferencesUserDefaultsController)
-public final class TextualUserDefaultsController: NSUserDefaultsController {
+public final nonisolated class TextualUserDefaultsController: NSUserDefaultsController {
 	required init?(coder _: NSCoder) {
 		super.init(defaults: TextualUserDefaults.shared(), initialValues: nil)
 	}

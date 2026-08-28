@@ -12,7 +12,7 @@
 
 import Foundation
 
-enum AboutStrings {
+nonisolated enum AboutStrings {
 	static var acknowledgementsButtonTitle: String {
 		String(localized: .TDCAboutDialog.acknowledgementsButton)
 	}

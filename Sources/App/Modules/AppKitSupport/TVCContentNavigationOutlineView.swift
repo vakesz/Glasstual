@@ -101,7 +101,7 @@ public final class ContentNavigationOutlineView: NSOutlineView {
 		return parent(forItem: lastSelection) as? ContentNavigationOutlineViewItem
 	}
 
-	override public func awakeFromNib() {
+	override public nonisolated func awakeFromNib() {
 		MainActor.assumeIsolated {
 			super.awakeFromNib()
 

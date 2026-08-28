@@ -6,6 +6,7 @@
 @testable import Glasstual
 import XCTest
 
+@MainActor
 final class IRCClientBatchHistoryPolicyTests: XCTestCase {
 	func testBatchTokenValidationPreservesOpeningAndClosingDirection() {
 		XCTAssertEqual(IRCBatchPolicy.normalizedToken("+history")?.token, "history")

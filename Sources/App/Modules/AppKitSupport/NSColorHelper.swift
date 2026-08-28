@@ -14,7 +14,7 @@
 import AppKit
 import CocoaExtensions
 
-public extension NSColor {
+public nonisolated extension NSColor {
 	private static func calibratedRGB(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat) -> NSColor {
 		NSColor.textual_calibratedColor(red: red, green: green, blue: blue, alpha: 1.0)
 	}
