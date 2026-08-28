@@ -58,9 +58,15 @@ final class InlineContentProcessDelegate: NSObject, NSXPCListenerDelegate {
 
 		let exportedObject = InlineContentProcess(xpcConnection: connection)
 		connection.exportedObject = exportedObject
+		/* Without this, an interrupted (rather than invalidated) client leaves in-flight
+		 modules retained and completing against a dead proxy. */
+		connection.interruptionHandler = {
+			exportedObject.connectionInvalidated()
+		}
 		connection.invalidationHandler = { [weak connection] in
 			exportedObject.connectionInvalidated()
 			connection?.exportedObject = nil
+			connection?.interruptionHandler = nil
 			connection?.invalidationHandler = nil
 		}
 

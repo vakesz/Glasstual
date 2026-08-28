@@ -101,12 +101,18 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		fatalError("Use a factory method")
 	}
 
-	public init(
+	/** Fails rather than traps: addresses derive from IRC messages and from remote
+	 responses, and this process is shared by every inline load. */
+	public init?(
 		url: URL,
 		expectedType: InlineContentMediaType,
 		completion: @escaping (MediaAssessment?, NSError?) -> Void
 	) {
-		precondition(!url.isFileURL)
+		guard !url.isFileURL else {
+			Self.logger.error("Refusing to assess a file URL")
+			return nil
+		}
+
 		configuration = MediaAssessorConfiguration(
 			completion: completion,
 			expectedType: expectedType,
@@ -115,11 +121,17 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		super.init()
 	}
 
+	deinit {
+		/* URLSession retains its delegate until it is invalidated. Without this, an
+		 assessor torn down mid-flight leaks the session, the queue and the completion. */
+		request?.session?.invalidateAndCancel()
+	}
+
 	@objc(assessorForURL:completionBlock:)
 	public static func assessor(
 		for url: URL,
 		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
-	) -> MediaAssessor {
+	) -> MediaAssessor? {
 		MediaAssessor(url: url, expectedType: .unknown, completion: completionBlock)
 	}
 
@@ -127,7 +139,7 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 	public static func assessor(
 		forAddress address: String,
 		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
-	) -> MediaAssessor {
+	) -> MediaAssessor? {
 		assessor(forAddress: address, with: .unknown, completionBlock: completionBlock)
 	}
 
@@ -136,7 +148,7 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		for url: URL,
 		with type: InlineContentMediaType,
 		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
-	) -> MediaAssessor {
+	) -> MediaAssessor? {
 		MediaAssessor(url: url, expectedType: type, completion: completionBlock)
 	}
 
@@ -145,18 +157,25 @@ public final class MediaAssessor: NSObject, URLSessionDataDelegate, URLSessionDo
 		forAddress address: String,
 		with type: InlineContentMediaType,
 		completionBlock: @escaping (MediaAssessment?, NSError?) -> Void
-	) -> MediaAssessor {
+	) -> MediaAssessor? {
 		guard let url = URL(string: address) else {
-			preconditionFailure("Invalid media address")
+			logger.error("Refusing to assess an unparseable media address")
+			return nil
 		}
+
 		return MediaAssessor(url: url, expectedType: type, completion: completionBlock)
 	}
 
 	@objc
 	public func resume() {
-		precondition(request == nil, "An assessment is already in progress")
+		guard request == nil else {
+			Self.logger.error("An assessment is already in progress")
+			return
+		}
+
 		guard let configuration else {
-			preconditionFailure("resume() called after the assessment finalized")
+			Self.logger.error("resume() called after the assessment finalized")
+			return
 		}
 
 		let delegateQueue = OperationQueue()

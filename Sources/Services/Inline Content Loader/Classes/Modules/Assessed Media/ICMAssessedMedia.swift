@@ -44,12 +44,13 @@ final class AssessedMediaModule: InlineContentModule {
 
 	@objc(_assessMedia)
 	private func assessMedia() {
-		let assessor = MediaAssessor(url: payload.url, expectedType: .unknown) { [weak self] assessment, error in
+		let completion: (MediaAssessment?, NSError?) -> Void = { [weak self] assessment, error in
 			guard let self else { return }
 
 			if
 				let assessment,
 				error == nil,
+				!assessment.url.isFileURL,
 				InlineContentModule.isTypeDeferrable(assessment.type)
 			{
 				payload.urlToInline = assessment.url
@@ -59,6 +60,14 @@ final class AssessedMediaModule: InlineContentModule {
 			}
 
 			mediaAssessor = nil
+		}
+
+		guard let assessor = MediaAssessor(
+			url: payload.url,
+			expectedType: .unknown,
+			completion: completion
+		) else {
+			return cancel()
 		}
 
 		mediaAssessor = assessor

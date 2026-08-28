@@ -143,6 +143,8 @@ public final class ApplicationController: NSObject, NSApplicationDelegate {
 	public func applicationWakeStepTwo() {
 		CommandIndex.populateCommandIndex()
 
+		SystemInformation.beginObservingSleepState()
+
 		prepareNetworkReachabilityNotifier()
 
 		let workspaceCenter = NSWorkspace.shared.notificationCenter
