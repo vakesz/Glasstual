@@ -4,6 +4,7 @@
  *********************************************************************** */
 
 import CocoaExtensions
+import Foundation
 @testable import Glasstual
 import GlasstualPluginKit
 import Testing

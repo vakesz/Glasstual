@@ -346,8 +346,10 @@ struct IRCClientHistoryTests {
 			], to: client)
 
 			let messages = processedMessages(of: client)
+			let everyMessageIsHistoric = messages.allSatisfy(\.isHistoric)
+
 			#expect(messages.map(\.sequence) == ["two again", "three"])
-			#expect(messages.allSatisfy(\.isHistoric))
+			#expect(everyMessageIsHistoric)
 		}
 	}
 
