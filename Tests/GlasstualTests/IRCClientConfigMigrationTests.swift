@@ -86,9 +86,7 @@ final class IRCClientConfigMigrationTests: XCTestCase {
 		let serverCopy = Server(serverAddress: "irc.example.test")
 		config.serverList = [serverCopy]
 
-		let channel = MutableChannelConfig()
-		channel.channelName = "#swift"
-		let channelCopy = try XCTUnwrap(channel.copy() as? ChannelConfig)
+		let channelCopy = ChannelConfig(channelName: "#swift")
 		config.channelList = [channelCopy]
 
 		let immutable = try XCTUnwrap(config.copy() as? ClientConfig)

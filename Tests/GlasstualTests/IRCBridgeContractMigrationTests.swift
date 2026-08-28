@@ -82,10 +82,7 @@ final class IRCBridgeContractMigrationTests: XCTestCase {
 	}
 
 	func testInactiveChannelKeepsMemberListNil() {
-		let channel = Channel(configDictionary: [
-			"channelName": "#inactive",
-			"channelType": ChannelType.channel.rawValue,
-		])
+		let channel = Channel(config: ChannelConfig(channelName: "#inactive"))
 
 		XCTAssertNil(channel.memberInfo)
 		XCTAssertNil(channel.memberList)

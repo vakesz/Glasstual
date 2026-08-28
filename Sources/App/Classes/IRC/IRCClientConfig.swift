@@ -245,7 +245,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 		proxyPortStorage
 	}
 
-	@objc public var channelList: [ChannelConfig] {
+	public var channelList: [ChannelConfig] {
 		channelListStorage
 	}
 
@@ -547,9 +547,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 			config.nicknamePasswordStorage = nicknamePasswordStorage ?? nicknamePasswordFromKeychain
 			config.proxyPasswordStorage = proxyPasswordStorage ?? proxyPasswordFromKeychain
 
-			config.channelListStorage = channelListStorage.map {
-				checkedModel($0.uniqueCopy(), as: ChannelConfig.self)
-			}
+			config.channelListStorage = channelListStorage.map { $0.uniqueCopy() }
 			config.highlightListStorage = highlightListStorage.map { $0.uniqueCopy() }
 			config.ignoreListStorage = ignoreListStorage.map { $0.uniqueCopy() }
 			config.serverListStorage = serverListStorage.map { $0.uniqueCopy() }
@@ -644,7 +642,7 @@ open nonisolated class ClientConfig: PortablePropertyDict {
 			return values
 		}
 
-		setSerialized(channelListStorage, on: dictionary, key: "channelList")
+		setEncoded(channelListStorage, on: dictionary, key: "channelList")
 		setEncoded(highlightListStorage, on: dictionary, key: "highlightList")
 		setEncoded(ignoreListStorage, on: dictionary, key: "ignoreList")
 		setEncoded(serverListStorage, on: dictionary, key: "serverList")
@@ -774,7 +772,10 @@ nonisolated extension ClientConfig {
 		}
 
 		channelListStorage = dictionaries(values["channelList"]).compactMap { entry in
-			let config = ChannelConfig(dictionary: entry)
+			guard let config = PropertyListModel.decode(ChannelConfig.self, from: entry) else {
+				return nil
+			}
+
 			return ignorePrivateMessages && config.type == .privateMessage ? nil : config
 		}
 		ignoreListStorage = dictionaries(values["ignoreList"]).compactMap {
@@ -1205,7 +1206,7 @@ public final nonisolated class MutableClientConfig: ClientConfig {
 		get { proxyPortStorage } set { proxyPortStorage = newValue }
 	}
 
-	@objc override public var channelList: [ChannelConfig] {
+	override public var channelList: [ChannelConfig] {
 		get { channelListStorage } set { channelListStorage = newValue }
 	}
 

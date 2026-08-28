@@ -12,10 +12,9 @@ import Testing
 @Suite("Channel list sort ordering")
 struct MenuChannelOrderingTests {
 	private func makeChannel(named name: String, isQuery: Bool) -> IRCChannel {
-		Channel(configDictionary: [
-			"channelName": name,
-			"channelType": NSNumber(value: (isQuery ? ChannelType.privateMessage : .channel).rawValue),
-		])
+		Channel(
+			config: ChannelConfig(channelName: name, type: isQuery ? .privateMessage : .channel)
+		)
 	}
 
 	@Test("Channels sort before queries in both directions")

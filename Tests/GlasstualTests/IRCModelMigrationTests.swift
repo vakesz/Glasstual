@@ -45,7 +45,7 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertNil(connection.connectedAddress)
 	}
 
-	func testChannelConfigDefaultsAndLegacyKeys() {
+	func testChannelConfigDefaultsAndLegacyKeys() throws {
 		let defaults = ChannelConfig.seed(withName: "#general")
 
 		XCTAssertTrue(defaults.autoJoin)
@@ -55,13 +55,13 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertEqual(defaults.channelName, "#general")
 		XCTAssertFalse(defaults.uniqueIdentifier.isEmpty)
 
-		let legacy = ChannelConfig(dictionary: [
+		let legacy = try XCTUnwrap(PropertyListModel.decode(ChannelConfig.self, from: [
 			"channelName": "#legacy",
 			"joinOnConnect": false,
 			"ignoreJPQActivity": true,
 			"enableNotifications": false,
 			"enableTreeBadgeCountDrawing": false,
-		])
+		]))
 
 		XCTAssertFalse(legacy.autoJoin)
 		XCTAssertTrue(legacy.ignoreGeneralEventMessages)
@@ -69,28 +69,27 @@ final class IRCModelMigrationTests: XCTestCase {
 		XCTAssertFalse(legacy.showTreeBadgeCount)
 	}
 
-	func testChannelConfigMutableAndUniqueCopiesPreserveValues() throws {
-		let mutable = MutableChannelConfig()
-		mutable.channelName = "#swift"
-		mutable.label = "Swift migration"
-		mutable.defaultModes = "+nt"
-		mutable.secretKey = "join-key"
+	func testChannelConfigCopiesAndUniqueCopiesPreserveValues() {
+		var config = ChannelConfig(channelName: "#swift")
+		config.label = "Swift migration"
+		config.defaultModes = "+nt"
+		config.secretKey = "join-key"
 
-		let copy = try XCTUnwrap(mutable.copy() as? ChannelConfig)
-		let unique = try XCTUnwrap(mutable.uniqueCopyMutable() as? MutableChannelConfig)
+		let copy = config
+		let unique = config.uniqueCopy()
 
 		XCTAssertEqual(copy.channelName, "#swift")
 		XCTAssertEqual(copy.label, "Swift migration")
 		XCTAssertEqual(copy.defaultModes, "+nt")
 		XCTAssertEqual(copy.secretKey, "join-key")
-		XCTAssertEqual(copy.uniqueIdentifier, mutable.uniqueIdentifier)
+		XCTAssertEqual(copy.uniqueIdentifier, config.uniqueIdentifier)
 		XCTAssertEqual(unique.channelName, "#swift")
 		XCTAssertEqual(unique.secretKey, "join-key")
-		XCTAssertNotEqual(unique.uniqueIdentifier, mutable.uniqueIdentifier)
+		XCTAssertNotEqual(unique.uniqueIdentifier, config.uniqueIdentifier)
 	}
 
 	func testChannelConfigNotificationOverridesUseThreeStateSemantics() {
-		let config = MutableChannelConfig()
+		var config = ChannelConfig()
 		let event = TXNotificationType.highlight
 
 		XCTAssertEqual(config.notificationEnabled(forEvent: event), .mixed)

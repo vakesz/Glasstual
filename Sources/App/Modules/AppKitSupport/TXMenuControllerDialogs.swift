@@ -127,12 +127,10 @@ public extension TXMenuController {
 		dialog(action, nil)
 	}
 
-	@objc(channelPropertiesSheet:onOk:)
 	func channelPropertiesSheet(_ sender: ChannelPropertiesSheet, onOk config: ChannelConfig) {
 		actionCoordinator.channelPropertiesDidAccept(sender, config: config)
 	}
 
-	@objc(channelPropertiesSheetWillClose:)
 	func channelPropertiesSheetWillClose(_ sender: ChannelPropertiesSheet) {
 		dialogDidClose(sender)
 	}
@@ -237,7 +235,8 @@ public extension TXMenuController {
 }
 
 extension TXMenuController: AboutDialogDelegate, ChannelInviteSheetDelegate, ChannelModifyTopicSheetDelegate,
-	ChannelModifyModesSheetDelegate, NicknameColorSheetDelegate, ServerChangeNicknameSheetDelegate
+	ChannelModifyModesSheetDelegate, ChannelPropertiesSheetDelegate, NicknameColorSheetDelegate,
+	ServerChangeNicknameSheetDelegate
 {}
 
 @MainActor
