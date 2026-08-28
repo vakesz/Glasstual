@@ -1,19 +1,23 @@
-@testable import Glasstual
-import XCTest
-
-/** *********************************************************************
+/*  *********************************************************************
  * Copyright (c) 2026 Codeux Software, LLC & respective contributors.
  * Please see Acknowledgements.pdf for additional information.
  *********************************************************************** */
+
+@testable import Glasstual
+import Testing
+
 @MainActor
-class OELReachabilityMigrationTests: XCTestCase {
-	func testFactoryCreatesNotifier() {
+@Suite("Reachability")
+struct OELReachabilityMigrationTests {
+	@Test("A fresh notifier starts out unreachable")
+	func factoryCreatesNotifier() {
 		let reachability = Reachability.reachabilityForInternetConnection()
 
-		XCTAssertFalse(reachability.reachable)
+		#expect(reachability.reachable == false)
 	}
 
-	func testFirstPathSeedsWithoutEvent() {
+	@Test("The first path seeds the state without reporting a change")
+	func firstPathSeedsWithoutEvent() {
 		var currentlyReachable = false
 		var receivedInitialPath = false
 		let event = Reachability.evaluatePathChange(
@@ -22,12 +26,13 @@ class OELReachabilityMigrationTests: XCTestCase {
 			receivedInitialPath: &receivedInitialPath
 		)
 
-		XCTAssertEqual(event, .none)
-		XCTAssertTrue(currentlyReachable)
-		XCTAssertTrue(receivedInitialPath)
+		#expect(event == .none)
+		#expect(currentlyReachable)
+		#expect(receivedInitialPath)
 	}
 
-	func testUnchangedPathProducesNoEvent() {
+	@Test("A path that repeats the current state reports nothing")
+	func unchangedPathProducesNoEvent() {
 		var currentlyReachable = true
 		var receivedInitialPath = true
 		let event = Reachability.evaluatePathChange(
@@ -36,11 +41,12 @@ class OELReachabilityMigrationTests: XCTestCase {
 			receivedInitialPath: &receivedInitialPath
 		)
 
-		XCTAssertEqual(event, .none)
-		XCTAssertTrue(currentlyReachable)
+		#expect(event == .none)
+		#expect(currentlyReachable)
 	}
 
-	func testReachabilityTransitionsEmitExpectedEvents() {
+	@Test("Losing and regaining the path reports one event each way")
+	func reachabilityTransitionsEmitExpectedEvents() {
 		var currentlyReachable = true
 		var receivedInitialPath = true
 		let becameUnreachable = Reachability.evaluatePathChange(
@@ -49,8 +55,8 @@ class OELReachabilityMigrationTests: XCTestCase {
 			receivedInitialPath: &receivedInitialPath
 		)
 
-		XCTAssertEqual(becameUnreachable, .becameUnreachable)
-		XCTAssertFalse(currentlyReachable)
+		#expect(becameUnreachable == .becameUnreachable)
+		#expect(currentlyReachable == false)
 
 		let becameReachable = Reachability.evaluatePathChange(
 			reachable: true,
@@ -58,18 +64,20 @@ class OELReachabilityMigrationTests: XCTestCase {
 			receivedInitialPath: &receivedInitialPath
 		)
 
-		XCTAssertEqual(becameReachable, .becameReachable)
-		XCTAssertTrue(currentlyReachable)
+		#expect(becameReachable == .becameReachable)
+		#expect(currentlyReachable)
 	}
 
-	func testStartAndStopNotifierRoundTrip() {
+	/// A path monitor is single use, so a restarted notifier has to build a new one.
+	@Test("A notifier can be started again after it has been stopped")
+	func startAndStopNotifierRoundTrip() {
 		let reachability = Reachability.reachabilityForInternetConnection()
 
-		XCTAssertTrue(reachability.startNotifier())
+		#expect(reachability.startNotifier())
 
 		reachability.stopNotifier()
 
-		XCTAssertTrue(reachability.startNotifier())
+		#expect(reachability.startNotifier())
 
 		reachability.stopNotifier()
 	}
