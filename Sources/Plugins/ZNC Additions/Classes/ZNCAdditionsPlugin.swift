@@ -175,8 +175,8 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 
 	private func interceptBufferExtras(_ input: PluginServerMessage, client: PluginClient) -> PluginServerMessage? {
 		var parameters = input.parameters
-		let message = NSMutableString(string: (parameters[1] as NSString).ceNormalizeSpaces)
-		let hostmask = message.ceToken
+		var message = CommandTokenizer(parameters[1].normalizingSpaces)
+		let hostmask = message.nextToken()
 		guard hostmask.isEmpty == false else { return input }
 
 		var sender = input.sender
@@ -196,7 +196,7 @@ final class ZNCAdditionsPlugin: NSObject, GlasstualPlugin, PluginCommandHandling
 		sender.hostmask = hostmask
 
 		var mutableInput = input
-		let body = message as String
+		let body = String(message.remainder)
 		if body == "joined" {
 			mutableInput.command = "JOIN"
 			parameters.remove(at: 1)

@@ -59,7 +59,7 @@ struct ParsedUserCommand {
 		if arguments.string.hasPrefix("/") {
 			arguments.deleteCharacters(in: NSRange(location: 0, length: 1))
 		}
-		command = arguments.ceTokenAsString
+		command = arguments.nextTokenAsString()
 	}
 }
 
@@ -219,8 +219,8 @@ public extension IRCClient {
 		case "gline", "gzline", "shun", "tempshun", "zline":
 			guard isLoggedIn else { return true }
 			let mutableArguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let firstSegment = mutableArguments.ceTokenAsString
-			let secondSegment = mutableArguments.ceTokenAsString
+			let firstSegment = mutableArguments.nextTokenAsString()
+			let secondSegment = mutableArguments.nextTokenAsString()
 			send(
 				parsed.command.uppercased(),
 				arguments: [firstSegment, secondSegment, mutableArguments.string]
@@ -229,7 +229,7 @@ public extension IRCClient {
 		case "kill":
 			guard isLoggedIn else { return true }
 			let mutableArguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let nickname = mutableArguments.ceTokenAsString
+			let nickname = mutableArguments.nextTokenAsString()
 			guard requireArguments(nickname, for: parsed.command) else { return true }
 			let reason = mutableArguments.string.isEmpty
 				? TextualPreferences.irCopDefaultKillMessage()
@@ -248,7 +248,7 @@ public extension IRCClient {
 		switch command {
 		case "conn":
 			let mutableArguments = NSMutableAttributedString(attributedString: parsed.arguments)
-			let serverAddress = mutableArguments.ceTokenAsString.lowercased()
+			let serverAddress = mutableArguments.nextTokenAsString().lowercased()
 			if serverAddress.isEmpty == false {
 				guard (serverAddress as NSString).isValidInternetAddress else {
 					printDebugInformation(IRCCommandStrings.invalidArguments)
@@ -292,7 +292,7 @@ public extension IRCClient {
 		case "nick":
 			guard isConnected else { return true }
 			let mutableArguments = NSMutableAttributedString(string: arguments)
-			let nickname = mutableArguments.ceTokenAsString
+			let nickname = mutableArguments.nextTokenAsString()
 			guard requireArguments(nickname, for: parsed.command) else { return true }
 			for client in currentClients() where client === self || TextualPreferences.nickAllConnections() {
 				client.changeNickname(nickname)
@@ -330,7 +330,7 @@ public extension IRCClient {
 		case "notifybubble":
 			let mutableArguments = NSMutableAttributedString(attributedString: parsed.arguments)
 			let notificationChannel = stringIsChannelName(mutableArguments.string)
-				? findChannel(mutableArguments.ceTokenAsString)
+				? findChannel(mutableArguments.nextTokenAsString())
 				: nil
 			guard requireArguments(mutableArguments.string, for: parsed.command) else { return true }
 			SharedApplication.sharedNotificationController().scheduleNotification(
@@ -342,7 +342,7 @@ public extension IRCClient {
 
 		case "notifysound":
 			let mutableArguments = NSMutableAttributedString(string: arguments)
-			let sound = mutableArguments.ceTokenAsString
+			let sound = mutableArguments.nextTokenAsString()
 			guard requireArguments(sound, for: parsed.command) else { return true }
 			SoundPlayer.playAlertSound(sound)
 
@@ -436,12 +436,12 @@ public extension IRCClient {
 		case "whois":
 			guard isLoggedIn else { return true }
 			let mutableArguments = NSMutableAttributedString(string: arguments)
-			var firstNickname = mutableArguments.ceTokenAsString
+			var firstNickname = mutableArguments.nextTokenAsString()
 			if firstNickname.isEmpty, let targetChannel, targetChannel.isPrivateMessage {
 				firstNickname = targetChannel.name
 			}
 			guard requireArguments(firstNickname, for: parsed.command) else { return true }
-			let secondNickname = mutableArguments.ceTokenAsString
+			let secondNickname = mutableArguments.nextTokenAsString()
 			if secondNickname.isEmpty {
 				send("WHOIS", arguments: [firstNickname, firstNickname])
 			} else {

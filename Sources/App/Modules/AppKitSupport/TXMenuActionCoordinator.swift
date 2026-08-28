@@ -183,7 +183,7 @@ public final class MenuActionCoordinator: NSObject {
 		case .modifyIgnore:
 			modifyIgnore(sender: sender)
 		case .memberListDoubleClick:
-			guard mainWindow.memberList.rowBeneathMouse >= 0 else { return }
+			guard mainWindow.memberList.rowBeneathMouse != nil else { return }
 			performDoubleClick(sender: sender)
 		case .channelViewDoubleClick:
 			performDoubleClick(sender: sender)
@@ -436,7 +436,7 @@ public final class MenuActionCoordinator: NSObject {
 			alternateButton: PromptStrings.Action.cancel,
 			prefillString: nil
 		) { response, input in
-			let vhost = (input as NSString).ceTrimAndGetFirstToken
+			let vhost = input.firstToken
 			guard response == .alertFirstButtonReturn, vhost.isEmpty == false else { return }
 			for nickname in nicknames {
 				client.sendCommand(

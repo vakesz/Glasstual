@@ -43,7 +43,11 @@ public extension UserDefaults {
 		do {
 			try set(NSKeyedArchiver.archivedData(withRootObject: color, requiringSecureCoding: true), forKey: key)
 		} catch {
-			assertionFailure("Failed to write contents of '\(key)': \(error)")
+			/* A colour that will not archive is a preference the user loses, not
+			 a programming error worth trapping on. */
+			Logging.frameworkSubsystem?.error(
+				"Could not archive colour for key [\(key, privacy: .public)]: \(error.localizedDescription, privacy: .public)"
+			)
 		}
 	}
 

@@ -522,10 +522,6 @@ public final class MemberListRowCell: NSTableRowView {
 
 	override public var isSelected: Bool {
 		didSet {
-			if isSelected == false, isInvalidatingSelectionBackground {
-				return
-			}
-
 			setNeedsDisplayOnChild()
 		}
 	}

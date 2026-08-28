@@ -155,7 +155,7 @@ public extension MenuActionCoordinator {
 		guard let selection = objcSelectedViewControllerBackingView()?.selection,
 		      selection.isEmpty == false,
 		      let encodedSelection = selection.addingPercentEncoding(
-		      	withAllowedCharacters: NSCharacterSet.textualPercentEncodedCharacterSet as CharacterSet
+		      	withAllowedCharacters: CharacterSet.textualPercentEncoded
 		      )
 		else { return }
 		OpenLink.open(string: "dict://\(encodedSelection)")

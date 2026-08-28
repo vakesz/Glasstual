@@ -746,8 +746,7 @@ public final class MemberList: NSTableView, NSTableViewDataSource, NSTableViewDe
 	// MARK: - Events
 
 	override public func menu(for _: NSEvent) -> NSMenu? {
-		let row = rowBeneathMouse
-		guard row >= 0, isGroupRow(row) == false else {
+		guard let row = rowBeneathMouse, isGroupRow(row) == false else {
 			return nil
 		}
 

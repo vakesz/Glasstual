@@ -156,49 +156,6 @@ private enum DictionaryValueConversion {
 	}
 }
 
-private func dictionaryValueIsEmpty(_ value: Any) -> Bool {
-	if value is NSNull {
-		return true
-	}
-	if let string = value as? String {
-		return string.isEmpty
-	}
-	if let data = value as? Data {
-		return data.isEmpty
-	}
-	if let array = value as? NSArray {
-		return array.count == 0
-	}
-	if let dictionary = value as? NSDictionary {
-		return dictionary.count == 0
-	}
-	if let set = value as? NSSet {
-		return set.count == 0
-	}
-	if let orderedSet = value as? NSOrderedSet {
-		return orderedSet.count == 0
-	}
-	if let indexSet = value as? NSIndexSet {
-		return indexSet.count == 0
-	}
-	if let attributedString = value as? NSAttributedString {
-		return attributedString.length == 0
-	}
-	if let hashTable = value as? NSHashTable<AnyObject> {
-		return hashTable.count == 0
-	}
-	if let mapTable = value as? NSMapTable<AnyObject, AnyObject> {
-		return mapTable.count == 0
-	}
-	if let pointerArray = value as? NSPointerArray {
-		return pointerArray.count == 0
-	}
-	if let collection = value as? any Collection {
-		return collection.isEmpty
-	}
-	return false
-}
-
 private func dictionaryObjectByPerforming(_ selector: Selector, on value: Any) -> AnyObject? {
 	guard let receiver = value as? NSObject, receiver.responds(to: selector) else { return nil }
 	return receiver.perform(selector)?.takeUnretainedValue()
@@ -451,7 +408,7 @@ public extension NSDictionary {
 
 		let result = NSMutableDictionary(capacity: entries.count)
 		for (key, value) in entries {
-			if dictionaryValueIsEmpty(value) {
+			if isEmptyValue(value) {
 				if !allowEmptyValues {
 					continue
 				}
@@ -488,7 +445,7 @@ public extension NSDictionary {
 	@objc(formDataUsingSeparator:)
 	func ce_formData(usingSeparator separator: String) -> String {
 		ce_formData(usingSeparator: separator) { value in
-			(value as NSString).cePercentEncodedString ?? value
+			value.percentEncoded ?? value
 		}
 	}
 

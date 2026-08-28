@@ -1,6 +1,6 @@
 /* *********************************************************************
  *
- *         Copyright (c) 2015 - 2020 Codeux Software, LLC
+ *         Copyright (c) 2016 - 2020 Codeux Software, LLC
  *     Please see ACKNOWLEDGEMENT for additional information.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,33 +32,14 @@
 
 import Foundation
 
-public func performSynchronously(
-	on queue: DispatchQueue,
-	_ block: @convention(block) () -> Void
-) {
-	queue.sync {
-		autoreleasepool(invoking: block)
-	}
-}
+public extension URL {
+	/// The receiver's path with the user's home directory replaced by `~`,
+	/// for display. `nil` when the receiver is not a file URL.
+	var standardizedTildePath: String? {
+		guard isFileURL else {
+			return nil
+		}
 
-public func performAsynchronously(
-	on queue: DispatchQueue,
-	_ block: @escaping @convention(block) () -> Void
-) {
-	let workItem = DispatchWorkItem {
-		autoreleasepool(invoking: block)
+		return path.standardizedTildePath
 	}
-	queue.async(execute: workItem)
-}
-
-public func performSynchronouslyOnMainQueue(_ block: @convention(block) () -> Void) {
-	if Thread.isMainThread {
-		autoreleasepool(invoking: block)
-	} else {
-		performSynchronously(on: .main, block)
-	}
-}
-
-public func performAsynchronouslyOnMainQueue(_ block: @escaping @convention(block) () -> Void) {
-	performAsynchronously(on: .main, block)
 }

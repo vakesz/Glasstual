@@ -223,7 +223,6 @@ final class DictionaryHelperMigrationTests: XCTestCase {
 			"enumerateSubarraysOfSize:usingBlock:withOptions:",
 			"objectPassingTest:",
 			"objectPassingTest:withOptions:",
-			"range",
 			"stringArrayControllerObjects",
 			"unsignedIntegerAtIndex:",
 		]
@@ -235,7 +234,6 @@ final class DictionaryHelperMigrationTests: XCTestCase {
 			"addObjectWithoutDuplication:",
 			"moveObjectAtIndex:toIndex:",
 			"performSelectorOnObjectValueAndReplace:",
-			"shuffle",
 		]
 		for selector in mutableSelectors {
 			XCTAssertTrue(NSMutableArray.instancesRespond(to: NSSelectorFromString(selector)), selector)

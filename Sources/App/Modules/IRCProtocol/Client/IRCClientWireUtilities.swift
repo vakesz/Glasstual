@@ -225,7 +225,7 @@ public final nonisolated class ClientWireUtilities: NSObject {
 
 	@objc(escapedDCCFilename:)
 	public static func escapedDCCFilename(_ filename: String) -> String {
-		var escaped = (filename as NSString).ceSafeFilename as String
+		var escaped = filename.safeFilename
 
 		guard escaped.contains(" ") else {
 			return escaped

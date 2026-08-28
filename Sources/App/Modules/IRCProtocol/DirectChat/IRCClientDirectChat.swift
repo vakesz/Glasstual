@@ -58,11 +58,11 @@ struct DCCChatOffer: Equatable {
 
 enum DCCChatPolicy {
 	static func parseOffer(_ source: String) -> DCCChatOffer? {
-		let input = NSMutableString(string: source)
-		guard input.ceUppercaseToken == "CHAT", input.ceUppercaseToken == "CHAT" else { return nil }
-		let address = ClientWireUtilities.displayDCCAddress(input.ceToken)
-		let portText = input.ceToken
-		let rawToken = input.ceToken
+		var input = CommandTokenizer(source)
+		guard input.nextUppercaseToken() == "CHAT", input.nextUppercaseToken() == "CHAT" else { return nil }
+		let address = ClientWireUtilities.displayDCCAddress(input.nextToken())
+		let portText = input.nextToken()
+		let rawToken = input.nextToken()
 		let tokenText = rawToken.hasPrefix("T") ? String(rawToken.dropFirst()) : rawToken
 		let token = tokenText.isEmpty ? nil : tokenText
 		guard portText.allSatisfy(\.isNumber), let portValue = Int(portText),
@@ -110,13 +110,13 @@ public extension IRCClient {
 		command: String,
 		targetChannel: IRCChannel?
 	) {
-		switch input.ceUppercaseToken {
+		switch input.nextTokenAsString().uppercased() {
 		case "CHAT":
 			guard isLoggedIn else {
 				printDebugInformation(toConsole: IRCTransportStrings.notConnected)
 				return
 			}
-			var nickname = input.ceTokenAsString
+			var nickname = input.nextTokenAsString()
 			if nickname.isEmpty, let targetChannel {
 				if targetChannel.isPrivateMessage {
 					nickname = targetChannel.name
@@ -131,7 +131,7 @@ public extension IRCClient {
 			}
 			startDirectChat(withNickname: nickname)
 		case "SEND":
-			let nickname = input.ceTokenAsString
+			let nickname = input.nextTokenAsString()
 			let path = (input.string.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).expandingTildeInPath
 			guard !nickname.isEmpty, stringIsNickname(nickname), !path.isEmpty else {
 				printInvalidSyntaxMessage(for: command)
@@ -250,7 +250,7 @@ public extension IRCClient {
 		}
 		let isAction = command == .privmsgAction
 		let lineType: TVCLogLineType = isAction ? .action : .privateMessage
-		for line in string.ceSplitIntoLines {
+		for line in string.splitIntoLines {
 			let remainder = NSMutableAttributedString(attributedString: line)
 			while remainder.length > 0 {
 				let lengthBeforeFormatting = remainder.length
