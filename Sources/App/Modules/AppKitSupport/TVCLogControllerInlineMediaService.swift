@@ -214,10 +214,12 @@ public final class LogControllerInlineMediaService: NSObject, InlineContentClien
 		}
 	}
 
+	@MainActor
 	private func processingPayloadSucceeded(_ payload: InlineContentPayload, forItem item: IRCTreeItem) {
 		(item.viewController as AnyObject as? LogController)?.processingInlineMediaPayloadSucceeded(payload)
 	}
 
+	@MainActor
 	private func processingPayload(
 		_ payload: InlineContentPayload,
 		forItem item: IRCTreeItem,

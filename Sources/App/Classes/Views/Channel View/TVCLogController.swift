@@ -42,6 +42,7 @@ import Foundation
 import GlasstualPluginKit
 import InlineContentKit
 import os
+import Synchronization
 
 public typealias TVCLogController = LogController
 
@@ -59,14 +60,31 @@ private let logControllerLogger = Logger(
 )
 
 /// Carries legacy AppKit and Objective-C values across the controller's
-/// explicit hop back to the main actor. These values are consumed only by the
-/// scheduled main-actor closure.
+/// explicit hops between the main actor and the printing queue. The values are
+/// only ever touched at one end of a hop at a time.
 private final class LogControllerMainActorTransfer<Value>: @unchecked Sendable {
 	let value: Value
 
 	init(value: Value) {
 		self.value = value
 	}
+}
+
+/// The work a printing operation produces off the main actor and hands back to
+/// it. Building the closure off-main is safe; only running it is isolated.
+private typealias LogControllerMainActorWork = LogControllerMainActorTransfer<@MainActor () -> Void>
+
+/// The controller state that is legitimately read from outside the main actor:
+/// the client and channel the renderer needs while it runs on the printing
+/// queue, and the newest and oldest line the IRC layer consults when it decides
+/// what history to ask the server for. Everything else the controller owns is
+/// main-actor state. Writes all happen on the main actor; the lock is what makes
+/// the reads safe.
+private struct LogControllerSharedState {
+	weak var client: IRCClient?
+	weak var channel: IRCChannel?
+	var lastLine: LogControllerMainActorTransfer<LogLine>?
+	var oldestLine: LogControllerMainActorTransfer<LogLine>?
 }
 
 @objc(TVCLogControllerPrintOperationContext)
@@ -90,16 +108,16 @@ public final class LogControllerPrintOperationContext: NSObject {
 
 @objc(TVCLogController)
 @objcMembers
-public final class LogController: NSObject, @unchecked Sendable {
+@MainActor
+public final class LogController: NSObject {
 	public private(set) var backingView: LogView!
 	public private(set) var viewIsLoaded = false
-	public private(set) weak var associatedClient: IRCClient!
-	public private(set) weak var associatedChannel: IRCChannel?
 	public private(set) weak var attachedWindow: TVCMainWindow!
 	public private(set) var newestLineNumberFromPreviousSession: String?
 	public private(set) var oldestLineNumber: String?
 	public private(set) var newestLineNumber: String?
 
+	private nonisolated let sharedState = Mutex(LogControllerSharedState())
 	private var terminating = false
 	private var historyLoadedForFirstTime = false
 	private var reloadingHistory = false
@@ -107,32 +125,42 @@ public final class LogController: NSObject, @unchecked Sendable {
 	private var historyLoaded = false
 	private var activeLineCount = 0
 	private var lastVisitedHighlight: String?
-	private var lastLineStorage: LogLine?
-	private var oldestLineStorage: LogLine?
 	private var highlightedLineNumbers: [String] = []
 	private var jumpToLineCallbacks: [String: (Bool) -> Void] = [:]
 	private var reactionsByMessageIdentifier: [String: [String: [String]]] = [:]
 	private var viewLoadedTimestamp: TimeInterval = 0
-	private let highlightLock = NSRecursiveLock()
-	private let reactionLock = NSLock()
-	private let callbackLock = NSLock()
 
-	private var associatedItem: IRCTreeItem {
-		if let associatedChannel {
-			return associatedChannel
-		}
-		return associatedClient
+	public nonisolated var associatedClient: IRCClient! {
+		sharedState.withLock { $0.client }
 	}
 
-	private var legacyController: TVCLogController {
+	public nonisolated var associatedChannel: IRCChannel? {
+		sharedState.withLock { $0.channel }
+	}
+
+	private nonisolated var associatedItem: IRCTreeItem? {
+		sharedState.withLock { $0.channel ?? $0.client }
+	}
+
+	private var lastLineStorage: LogLine? {
+		get { sharedState.withLock { $0.lastLine?.value } }
+		set { sharedState.withLock { $0.lastLine = newValue.map(LogControllerMainActorTransfer.init) } }
+	}
+
+	private var oldestLineStorage: LogLine? {
+		get { sharedState.withLock { $0.oldestLine?.value } }
+		set { sharedState.withLock { $0.oldestLine = newValue.map(LogControllerMainActorTransfer.init) } }
+	}
+
+	private nonisolated var legacyController: TVCLogController {
 		self
 	}
 
-	public var uniqueIdentifier: String {
-		associatedItem.uniqueIdentifier
+	public nonisolated var uniqueIdentifier: String {
+		associatedItem?.uniqueIdentifier ?? ""
 	}
 
-	private var baseURL: URL {
+	private nonisolated var baseURL: URL {
 		SharedApplication.sharedThemeController().temporaryURL
 	}
 
@@ -144,7 +172,7 @@ public final class LogController: NSObject, @unchecked Sendable {
 		UInt(max(activeLineCount, 0))
 	}
 
-	public var inlineMediaEnabledForView: Bool {
+	public nonisolated var inlineMediaEnabledForView: Bool {
 		guard let channel = associatedChannel else {
 			return false
 		}
@@ -152,13 +180,19 @@ public final class LogController: NSObject, @unchecked Sendable {
 		return TextualPreferences.showInlineMedia() ? !config.inlineMediaDisabled : config.inlineMediaEnabled
 	}
 
-	@MainActor public var viewIsSelected: Bool {
+	public var viewIsSelected: Bool {
 		attachedWindow.selectedViewController === self
 	}
 
-	@MainActor public var viewIsVisible: Bool {
+	public var viewIsVisible: Bool {
+		guard let attachedWindow else {
+			return false
+		}
 		if let associatedChannel {
 			return attachedWindow.isItemVisible(associatedChannel)
+		}
+		guard let associatedClient else {
+			return false
 		}
 		return attachedWindow.isItemVisible(associatedClient)
 	}
@@ -170,7 +204,7 @@ public final class LogController: NSObject, @unchecked Sendable {
 
 	@objc(initWithClient:inWindow:)
 	public init(client: IRCClient, in window: TVCMainWindow) {
-		associatedClient = client
+		sharedState.withLock { $0.client = client }
 		attachedWindow = window
 		super.init()
 		setUp()
@@ -178,8 +212,10 @@ public final class LogController: NSObject, @unchecked Sendable {
 
 	@objc(initWithChannel:inWindow:)
 	public init(channel: IRCChannel, in window: TVCMainWindow) {
-		associatedClient = channel.associatedClient
-		associatedChannel = channel
+		sharedState.withLock {
+			$0.client = channel.associatedClient
+			$0.channel = channel
+		}
 		attachedWindow = window
 		super.init()
 		setUp()
@@ -190,28 +226,30 @@ public final class LogController: NSObject, @unchecked Sendable {
 	}
 
 	private func setUp() {
-		MainActor.assumeIsolated {
-			backingView = LogView(viewController: self)
-			loadInitialDocument()
-		}
+		backingView = LogView(viewController: self)
+		loadInitialDocument()
 	}
 
-	@MainActor
 	private func loadInitialDocument() {
 		loadAlternateHTML(initialDocument())
 	}
 
-	@MainActor
 	private func loadAlternateHTML(_ html: String) {
 		backingView.stopLoading()
 		backingView.loadHTMLString(html, baseURL: baseURL)
 	}
 
 	private func historicLogForgetChannel() {
+		guard let associatedItem else {
+			return
+		}
 		LogControllerHistoricLogFile.shared().forgetItem(associatedItem)
 	}
 
 	private func historicLogResetChannel() {
+		guard let associatedItem else {
+			return
+		}
 		LogControllerHistoricLogFile.shared().resetData(for: associatedItem)
 	}
 
@@ -228,11 +266,8 @@ public final class LogController: NSObject, @unchecked Sendable {
 	private func prepareForTermination(_ isTerminatingApplication: Bool) {
 		terminating = true
 		viewIsLoaded = false
-		let view = backingView
+		backingView?.stopLoading()
 		backingView = nil
-		DispatchQueue.main.async {
-			MainActor.assumeIsolated { view?.stopLoading() }
-		}
 		printingQueue.cancelOperations(for: self)
 		if isTerminatingApplication {
 			closeHistoricLog()
@@ -251,6 +286,49 @@ public final class LogController: NSObject, @unchecked Sendable {
 		prepareForTermination(false)
 	}
 
+	/// Schedules `work` on the printing queue. `work` runs off the main actor
+	/// and returns the closure that applies its result; the operation is not
+	/// finished — and so the next operation for this controller does not start —
+	/// until that closure has run. That is what keeps the JavaScript this
+	/// controller evaluates in the order it was enqueued.
+	private func enqueuePrintingWork(
+		isStandalone: Bool = false,
+		_ work: @escaping (LogControllerPrintingOperation) -> LogControllerMainActorWork?
+	) {
+		printingQueue.enqueueAsynchronousMessageBlock({ operation in
+			let scheduled = work(operation)
+			Task { @MainActor in
+				defer { operation.finish() }
+				guard operation.isCancelled == false else {
+					return
+				}
+				scheduled?.value()
+			}
+		}, for: self, isStandalone: isStandalone)
+	}
+
+	/// Convenience for work that has nothing to do off the main actor.
+	private func enqueueMainActorWork(
+		isStandalone: Bool = false,
+		_ work: @escaping @MainActor () -> Void
+	) {
+		enqueuePrintingWork(isStandalone: isStandalone) { _ in
+			LogControllerMainActorTransfer(value: work)
+		}
+	}
+
+	/// Snapshot of the main-actor state that rendering needs.
+	private func makeRenderContext() -> LogLineRenderContext {
+		LogLineRenderContext(
+			channel: associatedChannel,
+			networkName: associatedClient?.networkNameAlt ?? "",
+			styleAbsolutePath: baseURL.path(percentEncoded: false),
+			inlineMediaEnabled: inlineMediaEnabledForView,
+			sessionIndicatorLineNumber: newestLineNumberFromPreviousSession,
+			sessionReactions: reactionsByMessageIdentifier
+		)
+	}
+
 	public func evaluateFunction(_ function: String, withArguments arguments: [Any]?) {
 		evaluateFunction(function, withArguments: arguments, onQueue: true)
 	}
@@ -261,22 +339,21 @@ public final class LogController: NSObject, @unchecked Sendable {
 			return
 		}
 		if onQueue {
-			printingQueue.enqueueMessageBlock({ [weak self] _ in
+			enqueueMainActorWork { [weak self] in
 				self?.evaluateFunctionNow(function, arguments: arguments)
-			}, for: self, isStandalone: false)
+			}
 		} else {
 			evaluateFunctionNow(function, arguments: arguments)
 		}
 	}
 
+	/// The controller's single path to the log view's JavaScript bridge. Every
+	/// caller is already on the main actor, so calls reach the view in order.
 	private func evaluateFunctionNow(_ function: String, arguments: [Any]?) {
 		guard viewIsLoaded, !terminating, let backingView else {
 			return
 		}
-		let transferredArguments = LogControllerMainActorTransfer(value: arguments)
-		Task { @MainActor in
-			backingView.evaluateFunction(function, withArguments: transferredArguments.value)
-		}
+		backingView.evaluateFunction(function, withArguments: arguments)
 	}
 
 	private func appendToDocumentBody(_ html: String, lineNumbers: [String]) {
@@ -284,18 +361,26 @@ public final class LogController: NSObject, @unchecked Sendable {
 	}
 
 	private func setInitialTopic() {
-		setTopic(associatedChannel?.topic)
+		setTopicNow(associatedChannel?.topic)
 	}
 
-	public func setTopic(_ topic: String?) {
+	/// `IRCChannel` publishes topic changes from a property observer that is not
+	/// isolated, so hop before touching any of the controller's state.
+	public nonisolated func setTopic(_ topic: String?) {
+		Task { @MainActor in
+			self.setTopicNow(topic)
+		}
+	}
+
+	private func setTopicNow(_ topic: String?) {
 		guard !terminating else {
 			return
 		}
-		printingQueue.enqueueMessageBlock({ [weak self] _ in
+		let topicString = topic?.isEmpty == false ? topic! : MainWindowStrings.Conversation.noTopic
+		enqueuePrintingWork(isStandalone: true) { [weak self] _ in
 			guard let self else {
-				return
+				return nil
 			}
-			let topicString = topic?.isEmpty == false ? topic! : MainWindowStrings.Conversation.noTopic
 			let attributes: LogRendererConfiguration = [
 				.renderLinks: true,
 				.lineType: TVCLogLineType.topic.rawValue,
@@ -306,8 +391,10 @@ public final class LogController: NSObject, @unchecked Sendable {
 				withAttributes: attributes.rawValues,
 				resultInfo: nil
 			)
-			evaluateFunctionNow("Glasstual.setTopicBarValue", arguments: [topicString, rendered])
-		}, for: self, isStandalone: true)
+			return LogControllerMainActorTransfer(value: { [weak self] in
+				self?.evaluateFunctionNow("Glasstual.setTopicBarValue", arguments: [topicString, rendered])
+			})
+		}
 	}
 
 	public func moveToTop() {
@@ -331,16 +418,16 @@ public final class LogController: NSObject, @unchecked Sendable {
 	}
 
 	private func enqueueHistoryMark(function: String, extraArguments: [Any]) {
-		printingQueue.enqueueMessageBlock({ [weak self] _ in
-			guard let self else {
-				return
-			}
+		enqueuePrintingWork { [weak self] _ in
 			let attributes: ThemeTemplateAttributes = [
 				.historyIndicatorMessage: MainWindowStrings.Conversation.unreadMessages,
 			]
 			let template = TVCLogRenderer.renderTemplateNamed(.historyIndicator, attributes: attributes)
-			evaluateFunctionNow(function, arguments: [template as Any] + extraArguments)
-		}, for: self, isStandalone: false)
+			let arguments = [template as Any] + extraArguments
+			return LogControllerMainActorTransfer(value: {
+				self?.evaluateFunctionNow(function, arguments: arguments)
+			})
+		}
 	}
 
 	public func unmark() {
@@ -355,28 +442,18 @@ public final class LogController: NSObject, @unchecked Sendable {
 		evaluateFunctionNow("_Glasstual.documentBodyAppendHistoric", arguments: [html, lineNumbers, isReload])
 	}
 
-	private func reloadOldLines(_ oldLines: [LogLine], isReload: Bool) {
+	private func applyReloadedLines(_ results: [LogLineRenderResult], isReload: Bool) {
 		var lineNumbers: [String] = []
 		var html = ""
 		var pluginObjects: [THOPluginDidPostNewMessageConcreteObject] = []
-		for logLine in oldLines {
-			var resultInfo: [AnyHashable: Any]?
-			guard let rendered = renderLogLine(logLine, resultInfo: &resultInfo) else {
-				logControllerLogger.error("Failed to render log line \(logLine.description, privacy: .public)")
-				continue
-			}
-			html += rendered
-			let lineNumber = logLine.uniqueIdentifier
-			lineNumbers.append(lineNumber)
-			if let pluginObject = resultInfo?[LogPresentationResultKey.pluginObject.rawValue]
-				as? THOPluginDidPostNewMessageConcreteObject
-			{
+		for result in results {
+			html += result.html
+			lineNumbers.append(result.lineNumber)
+			if let pluginObject = result.pluginObject {
 				pluginObjects.append(pluginObject)
 			}
-			if (resultInfo?[LogRendererResultKey.keywordMatchFound.rawValue] as? NSNumber)?
-				.boolValue == true
-			{
-				highlightLock.withLock { highlightedLineNumbers.append(lineNumber) }
+			if result.isHighlight {
+				highlightedLineNumbers.append(result.lineNumber)
 			}
 		}
 		appendHistoricMessageFragment(html, lineNumbers: lineNumbers, isReload: isReload)
@@ -386,14 +463,14 @@ public final class LogController: NSObject, @unchecked Sendable {
 		}
 	}
 
-	@MainActor private func maybeReloadHistory() {
+	private func maybeReloadHistory() {
 		guard viewIsLoaded, !historyLoaded else {
 			return
 		}
 		reloadHistory()
 	}
 
-	@MainActor private func reloadHistory() {
+	private func reloadHistory() {
 		guard !terminating else {
 			return
 		}
@@ -413,47 +490,69 @@ public final class LogController: NSObject, @unchecked Sendable {
 		}
 
 		reloadingHistory = true
+		fetchHistory(firstLoad: firstLoad)
+	}
+
+	private func fetchHistory(firstLoad: Bool) {
+		guard let associatedItem else {
+			return
+		}
+		let context = makeRenderContext()
+		let limitDate = Date(timeIntervalSince1970: viewLoadedTimestamp)
 		printingQueue.enqueueAsynchronousMessageBlock({ [weak self] operation in
 			guard let self else {
+				operation.finish()
 				return
 			}
-			let limitDate = Date(timeIntervalSince1970: viewLoadedTimestamp)
+			let renderer = ThemeLogLineRenderer(viewController: self)
 			LogControllerHistoricLogFile.shared().fetchEntries(
 				for: associatedItem,
 				ascending: false,
 				fetchLimit: 100,
 				limitToDate: limitDate
-			) { [weak self] entries in
-				guard let self else {
-					return
-				}
-				defer { self.printingQueue.finishOperation(operation) }
-				guard !operation.isCancelled else {
+			) { entries in
+				guard operation.isCancelled == false else {
+					operation.finish()
 					return
 				}
 				let entries = Array(entries.reversed())
-				if lastLineStorage == nil {
-					lastLineStorage = entries.last
+				let results = Self.render(entries, context: context, using: renderer)
+				let transfer = LogControllerMainActorTransfer(value: (entries: entries, results: results))
+				Task { @MainActor [weak self] in
+					defer { operation.finish() }
+					self?.applyReloadedHistory(
+						transfer.value.entries,
+						results: transfer.value.results,
+						firstLoad: firstLoad
+					)
 				}
-				noteOldestLineCandidate(entries.first)
-				if firstLoad {
-					newestLineNumberFromPreviousSession = entries.last?.uniqueIdentifier
-				}
-				reloadOldLines(entries, isReload: !firstLoad)
-				reloadingHistory = false
-				historyLoaded = true
-				historyLoadedForFirstTime = true
-				notifyViewFinishedLoadingHistory()
 			}
 		}, for: self, isStandalone: true)
+	}
+
+	private func applyReloadedHistory(
+		_ entries: [LogLine],
+		results: [LogLineRenderResult],
+		firstLoad: Bool
+	) {
+		if lastLineStorage == nil {
+			lastLineStorage = entries.last
+		}
+		noteOldestLineCandidate(entries.first)
+		if firstLoad {
+			newestLineNumberFromPreviousSession = entries.last?.uniqueIdentifier
+		}
+		applyReloadedLines(results, isReload: !firstLoad)
+		reloadingHistory = false
+		historyLoaded = true
+		historyLoadedForFirstTime = true
+		notifyViewFinishedLoadingHistory()
 	}
 }
 
 public extension LogController {
 	func reloadTheme() {
-		DispatchQueue.main.async { [weak self] in
-			self?.reloadThemeNow()
-		}
+		reloadThemeNow()
 	}
 
 	private func reloadThemeNow() {
@@ -466,7 +565,7 @@ public extension LogController {
 		reloadingTheme = false
 	}
 
-	private func dateIndicator(with date: Date) -> String {
+	private nonisolated func dateIndicator(with date: Date) -> String {
 		formatDate(date, .long, .none, false) ?? ""
 	}
 
@@ -492,17 +591,15 @@ public extension LogController {
 	@objc(jumpToLine:completionHandler:)
 	func jump(toLine lineNumber: String, completionHandler: ((Bool) -> Void)?) {
 		if let completionHandler {
-			callbackLock.withLock { jumpToLineCallbacks[lineNumber] = completionHandler }
+			jumpToLineCallbacks[lineNumber] = completionHandler
 		}
 		guard let backingView else {
 			return
 		}
-		Task { @MainActor in
-			backingView.evaluateFunction("Glasstual.jumpToLine", withArguments: [lineNumber])
-		}
+		backingView.evaluateFunction("Glasstual.jumpToLine", withArguments: [lineNumber])
 	}
 
-	@MainActor func notifyDidBecomeVisible() {
+	func notifyDidBecomeVisible() {
 		evaluateFunctionNow("_Glasstual.notifyDidBecomeVisible", arguments: nil)
 		maybeReloadHistory()
 	}
@@ -511,7 +608,7 @@ public extension LogController {
 		evaluateFunctionNow("_Glasstual.notifyDidBecomeHidden", arguments: nil)
 	}
 
-	@MainActor func notifySelectionChanged() {
+	func notifySelectionChanged() {
 		evaluateFunctionNow("_Glasstual.notifySelectionChanged", arguments: [viewIsSelected])
 	}
 
@@ -519,7 +616,7 @@ public extension LogController {
 		evaluateFunctionNow("_Glasstual.viewFinishedLoadingHistory", arguments: nil)
 	}
 
-	@MainActor func changeTextSize(_ bigger: Bool) {
+	func changeTextSize(_ bigger: Bool) {
 		evaluateFunctionNow("Glasstual.changeTextSizeMultiplier", arguments: [attachedWindow.textSizeMultiplier])
 		evaluateFunctionNow("Glasstual.viewFontSizeChanged", arguments: [bigger])
 	}
@@ -529,7 +626,7 @@ public extension LogController {
 	}
 
 	func notifyJumpToLine(_ lineNumber: String, successful: Bool, scrolledToBottom _: Bool) {
-		let callback = callbackLock.withLock { jumpToLineCallbacks.removeValue(forKey: lineNumber) }
+		let callback = jumpToLineCallbacks.removeValue(forKey: lineNumber)
 		callback?(successful)
 	}
 
@@ -557,14 +654,17 @@ public extension LogController {
 		guard !terminating else {
 			return
 		}
-		highlightLock.withLock { highlightedLineNumbers.removeAll { lineNumbers.contains($0) } }
+		highlightedLineNumbers.removeAll { lineNumbers.contains($0) }
 	}
 
 	func processingInlineMediaPayloadSucceeded(_ payload: InlineContentPayload) {
 		evaluateFunctionNow("_InlineMediaLoader.processPayload", arguments: [payload.javaScriptObject])
 	}
 
-	func processingInlineMediaPayload(_ payload: InlineContentPayload, failedWithError error: Error) {
+	nonisolated func processingInlineMediaPayload(
+		_ payload: InlineContentPayload,
+		failedWithError error: Error
+	) {
 		logControllerLogger.error(
 			"Processing request for '\(payload.uniqueIdentifier, privacy: .public)' at '\(payload.lineNumber, privacy: .public)' failed: \(error.localizedDescription, privacy: .public)"
 		)
@@ -587,6 +687,9 @@ public extension LogController {
 		atLineNumber lineNumber: String,
 		index: UInt
 	) {
+		guard let associatedItem else {
+			return
+		}
 		LogControllerInlineMediaService.shared().processAddress(
 			address,
 			withUniqueIdentifier: uniqueIdentifier,
@@ -600,7 +703,7 @@ public extension LogController {
 		guard viewIsLoaded, !terminating else {
 			return false
 		}
-		return highlightLock.withLock { !highlightedLineNumbers.isEmpty }
+		return !highlightedLineNumbers.isEmpty
 	}
 
 	func nextHighlight() {
@@ -612,21 +715,14 @@ public extension LogController {
 	}
 
 	private func visitHighlight(offset: Int) {
-		guard viewIsLoaded, !terminating else {
+		guard viewIsLoaded, !terminating, !highlightedLineNumbers.isEmpty else {
 			return
 		}
-		let target: String? = highlightLock.withLock {
-			guard !highlightedLineNumbers.isEmpty else {
-				return nil
-			}
-			let current = lastVisitedHighlight.flatMap(highlightedLineNumbers.firstIndex(of:))
-			let index = current.map { ($0 + offset + highlightedLineNumbers.count) % highlightedLineNumbers.count } ?? 0
-			lastVisitedHighlight = highlightedLineNumbers[index]
-			return lastVisitedHighlight
-		}
-		if let target {
-			jump(toLine: target)
-		}
+		let current = lastVisitedHighlight.flatMap(highlightedLineNumbers.firstIndex(of:))
+		let index = current.map { ($0 + offset + highlightedLineNumbers.count) % highlightedLineNumbers.count } ?? 0
+		let target = highlightedLineNumbers[index]
+		lastVisitedHighlight = target
+		jump(toLine: target)
 	}
 
 	private func clear(resetHistoricLog: Bool) {
@@ -637,7 +733,7 @@ public extension LogController {
 		if resetHistoricLog {
 			historicLogResetChannel()
 		}
-		highlightLock.withLock { highlightedLineNumbers.removeAll() }
+		highlightedLineNumbers.removeAll()
 		activeLineCount = 0
 		lastVisitedHighlight = nil
 		oldestLineNumber = nil
@@ -647,9 +743,7 @@ public extension LogController {
 		viewIsLoaded = false
 		reloadingHistory = false
 		historyLoaded = false
-		Task { @MainActor [weak self] in
-			self?.loadInitialDocument()
-		}
+		loadInitialDocument()
 	}
 
 	func clear() {
@@ -681,18 +775,27 @@ public extension LogController {
 		completionBlock: @escaping ([[AnyHashable: Any]]) -> Void
 	) {
 		precondition(maximumNumberOfLines > 0)
+		guard let associatedItem else {
+			return
+		}
+		let context = makeRenderContext()
 		printingQueue.enqueueMessageBlock({ [weak self] operation in
 			guard let self else {
 				return
 			}
+			let renderer = ThemeLogLineRenderer(viewController: self)
+			let historicLog = LogControllerHistoricLogFile.shared()
 			let completion: ([LogLine]) -> Void = { [weak self] entries in
-				guard let self, !operation.isCancelled else {
-					return
-				}
-				finishRendering(entries, completionBlock: completionBlock)
+				self?.finishRendering(
+					entries,
+					context: context,
+					renderer: renderer,
+					operation: operation,
+					completionBlock: completionBlock
+				)
 			}
 			if after {
-				LogControllerHistoricLogFile.shared().fetchEntries(
+				historicLog.fetchEntries(
 					for: associatedItem,
 					afterUniqueIdentifier: lineNumber,
 					fetchLimit: maximumNumberOfLines,
@@ -700,18 +803,21 @@ public extension LogController {
 					withCompletionBlock: completion
 				)
 			} else {
-				LogControllerHistoricLogFile.shared().fetchEntries(
+				historicLog.fetchEntries(
 					for: associatedItem,
 					beforeUniqueIdentifier: lineNumber,
 					fetchLimit: maximumNumberOfLines,
 					limitToDate: nil
 				) { [weak self] entries in
-					guard let self, !operation.isCancelled else {
+					guard let self, operation.isCancelled == false else {
 						return
 					}
-					noteOldestLineCandidate(entries.first)
-					if entries.isEmpty {
-						noteLocalScrollbackExhausted()
+					let transfer = LogControllerMainActorTransfer(value: entries)
+					Task { @MainActor [weak self] in
+						self?.noteOldestLineCandidate(transfer.value.first)
+						if transfer.value.isEmpty {
+							self?.noteLocalScrollbackExhausted()
+						}
 					}
 					completion(entries)
 				}
@@ -726,20 +832,28 @@ public extension LogController {
 		maximumNumberOfLines: UInt,
 		completionBlock: @escaping ([[AnyHashable: Any]]) -> Void
 	) {
+		guard let associatedItem else {
+			return
+		}
+		let context = makeRenderContext()
 		printingQueue.enqueueMessageBlock({ [weak self] operation in
 			guard let self else {
 				return
 			}
+			let renderer = ThemeLogLineRenderer(viewController: self)
 			LogControllerHistoricLogFile.shared().fetchEntries(
 				for: associatedItem,
 				afterUniqueIdentifier: lineNumberAfter,
 				beforeUniqueIdentifier: lineNumberBefore,
 				fetchLimit: maximumNumberOfLines
 			) { [weak self] entries in
-				guard let self, !operation.isCancelled else {
-					return
-				}
-				finishRendering(entries, completionBlock: completionBlock)
+				self?.finishRendering(
+					entries,
+					context: context,
+					renderer: renderer,
+					operation: operation,
+					completionBlock: completionBlock
+				)
 			}
 		}, for: self, isStandalone: true)
 	}
@@ -751,10 +865,15 @@ public extension LogController {
 		numberOfLinesAfter: UInt,
 		completionBlock: @escaping ([[AnyHashable: Any]]) -> Void
 	) {
+		guard let associatedItem else {
+			return
+		}
+		let context = makeRenderContext()
 		printingQueue.enqueueMessageBlock({ [weak self] operation in
 			guard let self else {
 				return
 			}
+			let renderer = ThemeLogLineRenderer(viewController: self)
 			LogControllerHistoricLogFile.shared().fetchEntries(
 				for: associatedItem,
 				withUniqueIdentifier: lineNumber,
@@ -762,95 +881,101 @@ public extension LogController {
 				afterFetchLimit: numberOfLinesAfter,
 				limitToDate: nil
 			) { [weak self] entries in
-				guard let self, !operation.isCancelled else {
-					return
-				}
-				finishRendering(entries, completionBlock: completionBlock)
+				self?.finishRendering(
+					entries,
+					context: context,
+					renderer: renderer,
+					operation: operation,
+					completionBlock: completionBlock
+				)
 			}
 		}, for: self, isStandalone: true)
 	}
 
-	private func finishRendering(
+	/// Renders `logLines` off the main actor and delivers them back on it.
+	private nonisolated func finishRendering(
 		_ logLines: [LogLine],
-		completionBlock: ([[AnyHashable: Any]]) -> Void
+		context: LogLineRenderContext,
+		renderer: ThemeLogLineRenderer,
+		operation: LogControllerPrintingOperation,
+		completionBlock: @escaping ([[AnyHashable: Any]]) -> Void
 	) {
-		var renderedLogLines: [[AnyHashable: Any]] = []
-		var pluginObjects: [THOPluginDidPostNewMessageConcreteObject] = []
-		for logLine in logLines {
-			var resultInfo: [AnyHashable: Any]?
-			guard let html = renderLogLine(logLine, resultInfo: &resultInfo) else {
-				logControllerLogger.error("Failed to render log line \(logLine.description, privacy: .public)")
-				continue
-			}
-			let renderedEntry: RenderedLogEntry = [
-				.lineNumber: logLine.uniqueIdentifier,
-				.html: html,
-				.timestamp: logLine.receivedAt.timeIntervalSince1970,
+		guard operation.isCancelled == false else {
+			return
+		}
+		let results = Self.render(logLines, context: context, using: renderer)
+		let renderedLogLines = results.map { result -> [AnyHashable: Any] in
+			let entry: RenderedLogEntry = [
+				.lineNumber: result.lineNumber,
+				.html: result.html,
+				.timestamp: result.timestamp,
 			]
-			renderedLogLines.append(renderedEntry.anyHashableValues)
-			if let pluginObject = resultInfo?[LogPresentationResultKey.pluginObject.rawValue]
-				as? THOPluginDidPostNewMessageConcreteObject
-			{
-				pluginObjects.append(pluginObject)
+			return entry.anyHashableValues
+		}
+		let transfer = LogControllerMainActorTransfer(value: (
+			results: results,
+			renderedLogLines: renderedLogLines,
+			completionBlock: completionBlock
+		))
+		Task { @MainActor in
+			for pluginObject in transfer.value.results.compactMap(\.pluginObject) {
+				pluginObject.isProcessedInBulk = true
+				PluginDispatcher.enqueueDidPostNewMessage(pluginObject)
 			}
+			transfer.value.completionBlock(transfer.value.renderedLogLines)
 		}
-		for pluginObject in pluginObjects {
-			pluginObject.isProcessedInBulk = true
-			PluginDispatcher.enqueueDidPostNewMessage(pluginObject)
-		}
-		completionBlock(renderedLogLines)
 	}
 
 	private func noteOldestLineCandidate(_ logLine: LogLine?) {
 		guard let logLine else {
 			return
 		}
-		if oldestLineStorage == nil || logLine.receivedAt < oldestLineStorage!.receivedAt {
+		guard let oldestLineStorage else {
 			oldestLineStorage = logLine
+			return
+		}
+		if logLine.receivedAt < oldestLineStorage.receivedAt {
+			self.oldestLineStorage = logLine
 		}
 	}
 
 	private func noteLocalScrollbackExhausted() {
-		guard let channel = associatedChannel, let oldestLineStorage else {
+		guard let channel = associatedChannel,
+		      let client = associatedClient,
+		      let oldestLineStorage
+		else {
 			return
 		}
-		DispatchQueue.main.async { [weak self] in
-			self?.associatedClient.requestChatHistory(before: oldestLineStorage.receivedAt, in: channel)
-		}
+		client.requestChatHistory(before: oldestLineStorage.receivedAt, in: channel)
 	}
 
 	func prependHistoricLogLines(_ logLines: [LogLine]) {
-		guard !terminating, !logLines.isEmpty else {
+		guard !terminating, !logLines.isEmpty, let associatedItem else {
 			return
 		}
-		let item = associatedItem
 		for logLine in logLines {
-			LogControllerHistoricLogFile.shared().indexLogLine(logLine, for: item)
+			LogControllerHistoricLogFile.shared().indexLogLine(logLine, for: associatedItem)
 		}
 		noteOldestLineCandidate(logLines.first)
-		printingQueue.enqueueMessageBlock({ [weak self] _ in
+		let context = makeRenderContext()
+		enqueuePrintingWork { [weak self] _ in
 			guard let self else {
-				return
+				return nil
 			}
-			var lineNumbers: [String] = []
-			var html = ""
-			for logLine in logLines {
-				var resultInfo: [AnyHashable: Any]?
-				guard let lineHTML = renderLogLine(logLine, resultInfo: &resultInfo) else {
-					logControllerLogger.error("Failed to render log line \(logLine.description, privacy: .public)")
-					continue
-				}
-				html += lineHTML
-				lineNumbers.append(logLine.uniqueIdentifier)
+			let renderer = ThemeLogLineRenderer(viewController: self)
+			let results = Self.render(logLines, context: context, using: renderer)
+			guard results.isEmpty == false else {
+				return nil
 			}
-			guard !lineNumbers.isEmpty else {
-				return
-			}
-			evaluateFunctionNow(
-				"_Glasstual.documentBodyPrependRemoteHistory",
-				arguments: [html, lineNumbers]
-			)
-		}, for: self, isStandalone: false)
+			let html = results.map(\.html).joined()
+			let lineNumbers = results.map(\.lineNumber)
+			return LogControllerMainActorTransfer(value: { [weak self] in
+				self?.evaluateFunctionNow(
+					"_Glasstual.documentBodyPrependRemoteHistory",
+					arguments: [html, lineNumbers]
+				)
+			})
+		}
 	}
 }
 
@@ -879,76 +1004,69 @@ public extension LogController {
 		}
 		lastLineStorage = logLine
 		noteOldestLineCandidate(logLine)
-		printingQueue.enqueueMessageBlock({ [weak self] _ in
+		let request = LogLineRenderRequest(logLine: logLine, context: makeRenderContext())
+		enqueuePrintingWork { [weak self] _ in
 			guard let self else {
-				return
+				return nil
 			}
-			var resultInfo: [AnyHashable: Any]?
-			guard let html = renderLogLine(logLine, resultInfo: &resultInfo) else {
+			let renderer = ThemeLogLineRenderer(viewController: self)
+			guard let result = Self.render(request, using: renderer) else {
 				logControllerLogger.error("Failed to render log line \(logLine.description, privacy: .public)")
-				return
+				return nil
 			}
-			let lineNumber = logLine.uniqueIdentifier
-			let users = resultInfo?[LogRendererResultKey.users.rawValue] as? Set<ChannelUser> ?? []
-			let processMedia = (resultInfo?[LogPresentationResultKey.processInlineMedia.rawValue] as? NSNumber)?
-				.boolValue ?? false
-			let highlighted = (resultInfo?[LogRendererResultKey.keywordMatchFound.rawValue] as? NSNumber)?
-				.boolValue ?? false
-			let pluginObject = resultInfo?[LogPresentationResultKey.pluginObject.rawValue]
-				as? THOPluginDidPostNewMessageConcreteObject
-			let transferredValues = LogControllerMainActorTransfer(value: (
-				logLine: logLine,
-				pluginObject: pluginObject,
-				resultInfo: resultInfo,
-				postPrintBlock: postPrintBlock
-			))
-			DispatchQueue.main.async { [weak self] in
-				guard let self, !self.terminating else {
-					return
-				}
-				let logLine = transferredValues.value.logLine
-				let pluginObject = transferredValues.value.pluginObject
-				let resultInfo = transferredValues.value.resultInfo
-				let postPrintBlock = transferredValues.value.postPrintBlock
-				if oldestLineNumber == nil {
-					oldestLineNumber = lineNumber
-				}
-				newestLineNumber = lineNumber
-				let client = associatedClient!
-				let channel = associatedChannel
-				if highlighted {
-					highlightLock.withLock { self.highlightedLineNumbers.append(lineNumber) }
-					if let channel, let nativeLogLine = (logLine as AnyObject) as? LogLine {
-						client.cacheHighlight(in: channel, with: nativeLogLine)
-					}
-				}
-				if let pluginObject {
-					PluginDispatcher.enqueueDidPostNewMessage(pluginObject)
-				}
-				appendToDocumentBody(html, lineNumbers: [lineNumber])
-				if processMedia {
-					let links = resultInfo?[LogRendererResultKey.links.rawValue] as? [LinkParserResult] ?? []
-					processInlineMedia(links, atLineNumber: lineNumber)
-				}
-				LogControllerHistoricLogFile.shared().writeNewEntry(with: logLine, for: associatedItem)
-				for user in users {
-					if logLine.memberType == .localUser {
-						user.outgoingConversation()
-					} else {
-						user.conversation()
-					}
-				}
-				if let postPrintBlock {
-					postPrintBlock(LogControllerPrintOperationContext(
-						client: client,
-						channel: channel,
-						highlight: highlighted,
-						logLine: logLine,
-						lineNumber: lineNumber
-					))
-				}
+			return LogControllerMainActorTransfer(value: { [weak self] in
+				self?.applyPrintedLine(logLine, result: result, completionBlock: postPrintBlock)
+			})
+		}
+	}
+
+	private func applyPrintedLine(
+		_ logLine: LogLine,
+		result: LogLineRenderResult,
+		completionBlock postPrintBlock: LogControllerPrintOperationCompletion?
+	) {
+		guard !terminating else {
+			return
+		}
+		/* The client can be torn down between enqueueing the line and printing
+		 it; there is nothing left to attribute the line to if it has been. */
+		guard let client = associatedClient, let associatedItem else {
+			return
+		}
+		let lineNumber = result.lineNumber
+		let channel = associatedChannel
+		if oldestLineNumber == nil {
+			oldestLineNumber = lineNumber
+		}
+		newestLineNumber = lineNumber
+		if result.isHighlight {
+			highlightedLineNumbers.append(lineNumber)
+			if let channel {
+				client.cacheHighlight(in: channel, with: logLine)
 			}
-		}, for: self, isStandalone: false)
+		}
+		if let pluginObject = result.pluginObject {
+			PluginDispatcher.enqueueDidPostNewMessage(pluginObject)
+		}
+		appendToDocumentBody(result.html, lineNumbers: [lineNumber])
+		if result.processesInlineMedia {
+			processInlineMedia(result.links, atLineNumber: lineNumber)
+		}
+		LogControllerHistoricLogFile.shared().writeNewEntry(with: logLine, for: associatedItem)
+		for user in result.users {
+			if logLine.memberType == .localUser {
+				user.outgoingConversation()
+			} else {
+				user.conversation()
+			}
+		}
+		postPrintBlock?(LogControllerPrintOperationContext(
+			client: client,
+			channel: channel,
+			highlight: result.isHighlight,
+			logLine: logLine,
+			lineNumber: lineNumber
+		))
 	}
 
 	func noteReaction(
@@ -959,205 +1077,33 @@ public extension LogController {
 		guard !emoji.isEmpty, !nickname.isEmpty, !messageIdentifier.isEmpty else {
 			return
 		}
-		reactionLock.withLock {
-			var reactions = reactionsByMessageIdentifier[messageIdentifier] ?? [:]
-			var nicknames = reactions[emoji] ?? []
-			if !nicknames.contains(nickname) {
-				nicknames.append(nickname)
-			}
-			reactions[emoji] = nicknames
-			reactionsByMessageIdentifier[messageIdentifier] = reactions
+		var reactions = reactionsByMessageIdentifier[messageIdentifier] ?? [:]
+		var nicknames = reactions[emoji] ?? []
+		if !nicknames.contains(nickname) {
+			nicknames.append(nickname)
 		}
+		reactions[emoji] = nicknames
+		reactionsByMessageIdentifier[messageIdentifier] = reactions
 	}
 
 	func reactionsForMessageIdentifier(_ messageIdentifier: String) -> [String: [String]]? {
-		reactionLock.withLock {
-			guard let reactions = reactionsByMessageIdentifier[messageIdentifier], !reactions.isEmpty else {
-				return nil
-			}
-			return reactions
-		}
-	}
-
-	private func reactions(for logLine: LogLine) -> [String: [String]]? {
-		let archived = logLine.reactions
-		let session = logLine.messageIdentifier.flatMap(reactionsForMessageIdentifier)
-		guard let session, !session.isEmpty else {
-			return archived
-		}
-		guard let archived, !archived.isEmpty else {
-			return session
-		}
-		var merged = archived
-		for (emoji, nicknames) in session {
-			var values = merged[emoji] ?? []
-			for nickname in nicknames where !values.contains(nickname) {
-				values.append(nickname)
-			}
-			merged[emoji] = values
-		}
-		return merged
-	}
-
-	private func renderLogLine(
-		_ logLine: LogLine,
-		resultInfo output: inout [AnyHashable: Any]?
-	) -> String? {
-		let lineType = logLine.lineType
-		let lineTypeString = logLine.lineTypeString ?? ""
-		let renderLinks = !LinkParser.bannedLineTypes.contains(lineTypeString)
-		var rendererAttributes = LogRendererConfiguration(rawValues: logLine.rendererAttributes ?? [:])
-		if let excludeKeywords = logLine.excludeKeywords {
-			rendererAttributes[.excludedKeywords] = excludeKeywords
-		}
-		if let highlightKeywords = logLine.highlightKeywords {
-			rendererAttributes[.highlightKeywords] = highlightKeywords
-		}
-		rendererAttributes[.renderLinks] = renderLinks
-		rendererAttributes[.lineType] = lineType.rawValue
-		rendererAttributes[.memberType] = logLine.memberType.rawValue
-
-		var rendererResults: NSDictionary?
-		let renderedBody = TVCLogRenderer.renderBody(
-			logLine.messageBody,
-			forViewController: legacyController,
-			withAttributes: rendererAttributes.rawValues,
-			resultInfo: &rendererResults
-		)
-		let results = LogRendererResults(rawValues: rendererResults as? [String: Any] ?? [:])
-		let highlighted = (results[.keywordMatchFound] as? NSNumber)?
-			.boolValue ?? false
-		let inlineMedia = inlineMediaEnabledForView && (lineType == .privateMessage || lineType == .action)
-		return finishRenderingLogLine(
-			logLine,
-			renderedBody: renderedBody,
-			results: results,
-			highlighted: highlighted,
-			inlineMedia: inlineMedia,
-			output: &output
-		)
-	}
-
-	private func finishRenderingLogLine(
-		_ logLine: LogLine,
-		renderedBody: String,
-		results: LogRendererResults,
-		highlighted: Bool,
-		inlineMedia: Bool,
-		output: inout [AnyHashable: Any]?
-	) -> String? {
-		let lineType = logLine.lineType
-		let lineTypeString = logLine.lineTypeString ?? ""
-		let lineNumber = logLine.uniqueIdentifier
-		let receivedAt = logLine.receivedAt
-		let activeTheme = SharedApplication.sharedThemeController().theme!
-
-		let lineClass: LogLineClassToken = if lineType == .privateMessage || lineType == .action || lineType ==
-			.notice
-		{
-			.text
-		} else {
-			.event
-		}
-		var templateAttributes: ThemeTemplateAttributes = [
-			.activeStyleAbsolutePath: baseURL.path(percentEncoded: false),
-			.applicationResourcePath: PathInfo.applicationResources,
-			.timestamp: receivedAt.timeIntervalSince1970,
-			.formattedTimestamp: logLine.formattedTimestamp,
-			.localizedTimestamp: formatDateLongStyle(receivedAt, false) ?? "",
-			.lineType: lineTypeString,
-			.command: logLine.command,
-			.rawCommand: logLine.command,
-			.lineClassAttribute: lineClass.rawValue,
-			.highlightAttribute: String(highlighted),
-			.message: logLine.messageBody,
-			.formattedMessage: renderedBody,
-			.isHighlight: highlighted,
-			.isRemoteMessage: logLine.memberType == .normal,
-			.inlineMediaEnabled: inlineMedia,
-			.lineNumber: lineNumber,
-			.lineRenderTime: Date().timeIntervalSince1970,
-		]
-
-		let nickname = logLine.formattedNickname(in: associatedChannel)?
-			.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-		if nickname.isEmpty {
-			templateAttributes[.isNicknameAvailable] = false
-		} else {
-			templateAttributes[.isNicknameAvailable] = true
-			templateAttributes[.nicknameColorStyle] = logLine.nicknameColorStyle
-			templateAttributes[.nicknameColorStyleOverride] = logLine.nicknameColorStyleOverride
-			templateAttributes[.nicknameColorHashingEnabled] = !TextualPreferences.disableNicknameColorHashing()
-			templateAttributes[.formattedNickname] = nickname
-			templateAttributes[.nickname] = logLine.nickname ?? ""
-			templateAttributes[.nicknameType] = logLine.memberTypeString
-		}
-		if let messageIdentifier = logLine.messageIdentifier, !messageIdentifier.isEmpty {
-			templateAttributes[.messageIdentifier] = messageIdentifier
-		}
-		if let deliveryState = logLine.deliveryStateString {
-			templateAttributes[.deliveryState] = deliveryState
-		}
-		if let replyIdentifier = logLine.replyToMessageIdentifier, !replyIdentifier.isEmpty {
-			templateAttributes[.replyToMessageIdentifier] = replyIdentifier
-		}
-		if let reactions = reactions(for: logLine),
-		   let data = try? JSONEncoder().encode(reactions),
-		   let json = String(data: data, encoding: .utf8)
-		{
-			templateAttributes[.reactionsJSON] = json
-		}
-		if logLine.isEncrypted {
-			templateAttributes[.isEncrypted] = true
-		}
-		templateAttributes[.configuredServerName] = associatedClient.networkNameAlt
-		if logLine.isFirstForDay, TextualPreferences.showDateChanges() {
-			templateAttributes[.showDateIndicator] = true
-			templateAttributes[.dateIndicatorMessage] = dateIndicator(with: receivedAt)
-		}
-		if lineNumber == newestLineNumberFromPreviousSession {
-			templateAttributes[.showSessionIndicator] = true
-			templateAttributes[.sessionIndicatorMessage] = MainWindowStrings.Conversation.currentSession
-		}
-
-		var result = results.rawValues
-		result[LogPresentationResultKey.processInlineMedia.rawValue] = inlineMedia
-		if SharedApplication.sharedPluginManager().supportsFeature(.newMessagePostedEvent) {
-			let pluginObject = THOPluginDidPostNewMessageConcreteObject()
-			pluginObject.keywordMatchFound = highlighted
-			pluginObject.lineTypeRawValue = lineType.rawValue
-			pluginObject.memberTypeRawValue = logLine.memberType.rawValue
-			pluginObject.senderNickname = logLine.nickname
-			pluginObject.receivedAt = receivedAt
-			pluginObject.lineNumber = lineNumber
-			pluginObject
-				.messageContents =
-				results.value(for: .bodyWithoutEffects, as: String.self) ?? ""
-			pluginObject
-				.hyperlinks =
-				results.value(for: .links, as: [LinkParserResult].self) ?? []
-			pluginObject
-				.users = Array(
-					results.value(for: .users, as: Set<ChannelUser>.self) ?? []
-				)
-			result[LogPresentationResultKey.pluginObject.rawValue] = pluginObject
-		}
-		output = Dictionary(uniqueKeysWithValues: result.map { (AnyHashable($0.key), $0.value) })
-		guard let template = activeTheme.template(withLineType: lineType) else {
+		guard let reactions = reactionsByMessageIdentifier[messageIdentifier], !reactions.isEmpty else {
 			return nil
 		}
-		return TVCLogRenderer.renderTemplate(template, attributes: templateAttributes)
+		return reactions
 	}
+}
 
-	@MainActor
+public extension LogController {
 	private func usesCustomScrollers() -> Bool {
 		NSScroller.preferredScrollerStyle != .overlay && TextualPreferences.themeChannelViewUsesCustomScrollers()
 	}
 
-	@MainActor
 	private func initialDocument() -> String {
 		let themeController = SharedApplication.sharedThemeController()
-		let activeTheme = themeController.theme!
+		guard let activeTheme = themeController.theme, let associatedClient else {
+			return ""
+		}
 		let settings = themeController.settings
 		var tokens = generateOverrideStyle()
 		tokens[.applicationResourcePath] = PathInfo.applicationResources
@@ -1193,7 +1139,6 @@ public extension LogController {
 		return TVCLogRenderer.renderTemplateNamed(.baseLayout, attributes: tokens) ?? ""
 	}
 
-	@MainActor
 	private func generateOverrideStyle() -> ThemeTemplateAttributes {
 		let settings = SharedApplication.sharedThemeController().settings
 		guard let channelFont = settings.themeChannelViewFont ?? TextualPreferences.themeChannelViewFont() else {
@@ -1219,7 +1164,7 @@ public extension LogController {
 		return tokens
 	}
 
-	@MainActor func logViewWebViewFinishedLoading() {
+	func logViewWebViewFinishedLoading() {
 		guard !viewIsLoaded,
 		      let associatedClient,
 		      let attachedWindow
@@ -1261,33 +1206,19 @@ public extension LogController {
 	}
 
 	func logViewWebViewKeyDown(_ event: NSEvent) {
-		let transferredEvent = LogControllerMainActorTransfer(value: event)
-		MainActor.assumeIsolated {
-			attachedWindow.redirectKeyDown(transferredEvent.value)
-		}
+		attachedWindow?.redirectKeyDown(event)
 	}
 
 	@objc(logViewWebViewReceivedDropWithFile:)
 	func logViewWebViewReceivedDrop(withFile filename: String) {
-		MainActor.assumeIsolated {
-			NSObject.applicationController().menuController?.memberSendDroppedFiles(toSelectedChannel: [filename])
-		}
+		NSObject.applicationController().menuController?.memberSendDroppedFiles(toSelectedChannel: [filename])
 	}
 
-	func lastLine() -> LogLine? {
-		lastLineStorage
+	nonisolated func lastLine() -> LogLine? {
+		sharedState.withLock { $0.lastLine?.value }
 	}
 
-	func oldestLine() -> LogLine? {
-		oldestLineStorage
-	}
-}
-
-private extension NSLocking {
-	@discardableResult
-	func withLock<Result>(_ body: () throws -> Result) rethrows -> Result {
-		lock()
-		defer { unlock() }
-		return try body()
+	nonisolated func oldestLine() -> LogLine? {
+		sharedState.withLock { $0.oldestLine?.value }
 	}
 }
